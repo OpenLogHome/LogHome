@@ -105,3 +105,6 @@ dist
 
 # 密钥文件
 SECRET.js
+
+# config文件
+config.js
