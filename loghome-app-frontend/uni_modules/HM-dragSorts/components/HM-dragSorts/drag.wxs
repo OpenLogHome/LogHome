@@ -1,0 +1,322 @@
+var rowHeight = 0; //行高
+var scrollOffSetTop = null; //滚动条位置
+var isAppOrH5 = false; //是否APPH5端
+var isLongTouch = false; //是否开启长按
+var isAutoScroll = true; //是否自动滚动
+var feedbackGeneratorState = false; //是否开启拖动触感反馈
+var longTouchTime = 350; //触发长安事件事件
+var isMove = false; //是否可拖动
+var touchTimer = false; //长按事件定时器
+var guid = '';
+
+function setScrollOffSetTop(tmpGuid) {
+	if (scrollOffSetTop == null) {
+		scrollOffSetTop = {};
+		scrollOffSetTop[tmpGuid] = 0;
+	} else if (typeof scrollOffSetTop[tmpGuid] == "undefined") {
+		scrollOffSetTop[tmpGuid] = 0;
+	}
+}
+
+function scroll(event, instance) {
+	var dataViewDOM = instance.selectComponent('#dataView');
+	var viewData = dataViewDOM.getDataset();
+	setScrollOffSetTop(viewData.guid)
+	scrollOffSetTop[viewData.guid] = event.detail.scrollTop;
+}
+
+function initVar(state, instance) {
+	var dataViewDOM = instance.selectComponent('#dataView');
+	var viewData = dataViewDOM.getDataset();
+	isAppOrH5 = viewData.isapph5 && JSON.parse(viewData.isapph5);
+	isLongTouch = viewData.islongtouch && JSON.parse(viewData.islongtouch);
+	isAutoScroll = viewData.isautoscroll && JSON.parse(viewData.isautoscroll);
+	guid = viewData.guid
+	feedbackGeneratorState = viewData.feedbackgeneratorstate && JSON.parse(viewData.feedbackgeneratorstate);
+	longTouchTime = parseInt(viewData.longtouchtime);
+	state.rowData.rownum = viewData.rownum;
+	state.rowData.listheight = viewData.listheight;
+	setScrollOffSetTop(guid)
+	state.initscrollOffSetTop = scrollOffSetTop[guid];
+}
+function getRowRealIndex(findId,instance,rowtype){
+	var rowBoxList = instance.selectAllComponents('.row' + rowtype);
+	for (var i = 0; i < rowBoxList.length; i++) {
+		var rowData = rowBoxList[i].getDataset();
+		if(rowData.id==findId){
+			return i;
+		}
+	}
+}
+function touchstart(event, instance) {
+	// reset()
+	isMove = false;
+	var rowStyle = event.instance.getComputedStyle(['height']);
+	rowHeight = parseInt(rowStyle.height); //获取行高
+	var rowData = event.instance.getDataset();
+	var rowtype = rowData.type == "A" ? "B" : "A";
+	//重置样式
+	resetRowStyle(state, instance, rowtype);
+	var state = instance.getState();
+	if (event.touches.length == 1) {
+		state.point = event.touches[0];
+
+		state.islongTap = true;
+		state.rowData = rowData;
+		//读取数据
+		initVar(state, instance);
+	}
+	
+	// 计算shadowRow.style.top
+	var rowIndex = getRowRealIndex(rowData.id,instance,rowtype);
+	rowData.index = rowIndex;
+	var shadowRowTop = rowIndex * rowHeight;
+	shadowRowTop = shadowRowTop - scrollOffSetTop[guid];
+	// 加载shadowRow数据
+	instance.callMethod("loadShadowRow", {
+		rowIndex: rowIndex
+	});
+	state.shadowRowTop = shadowRowTop;
+	var shadowBoxComponent = instance.selectComponent('#shadowRowBox');
+	shadowBoxComponent.setStyle({
+		'top': shadowRowTop + 'px'
+	})
+	//长按事件
+	if (isLongTouch) {
+		if (typeof setTimeout !== "undefined") {
+			touchTimer && clearTimeout(touchTimer);
+			touchTimer = setTimeout(function() {
+				longpress(event, instance);
+			}, longTouchTime)
+		}
+	}
+}
+
+function longpress(event, instance) {
+	if (isLongTouch) {
+		isMove = true;
+		moveRow(instance, 0)
+	}
+}
+
+function touchmove(event, instance) {
+
+	var state = instance.getState();
+	var rowData = event.instance.getDataset();
+	var movePoint = event.touches[0];
+	var initPoint = state.point;
+	var moveY = movePoint.pageY - initPoint.pageY;
+	if (isLongTouch) {
+		if (typeof setTimeout !== "undefined" && Math.abs(moveY) > 10) {
+			clearTimeout(touchTimer);
+		}
+		if (!isMove) {
+			return;
+		}
+	}
+	moveRow(instance, moveY);
+	//阻止滚动页面
+	if (event.preventDefault) {
+		event.preventDefault();
+	}
+	return false;
+}
+
+function touchend(event, instance) {
+	if (isLongTouch && typeof setTimeout !== "undefined") {
+		clearTimeout(touchTimer);
+	}
+
+	if (lastCommand != "stop") {
+		lastCommand = "stop";
+		isAutoScroll && instance.callMethod("pageScroll", {
+			'guid': guid,
+			'command': "stop"
+		});
+	}
+	var state = instance.getState();
+	var rowtype = state.rowData.type;
+
+	if (typeof state.offset !== "undefined" && state.rowData.index != state.offset && state.offset != null) {
+		instance.callMethod("sort", {
+			index: state.rowData.index,
+			offset: state.offset
+		});
+	} else {
+		resetRowStyle(state, instance, rowtype);
+		resetShadowRowStyle(instance)
+		feedbackGenerator(instance); //震动反馈
+		return false;
+	}
+	resetShadowRowStyle(instance)
+	typeof setTimeout !== "undefined" && setTimeout(function() {
+		resetRowStyle(state, instance, rowtype);
+	}, 500);
+	state.offset = null;
+	oldOffset = null;
+	feedbackGenerator(instance); //震动反馈
+	return false;
+}
+
+function resetRowStyle(state, instance, rowtype) {
+	var blockList = instance.selectAllComponents('.row' + rowtype);
+	for (var i = 0; i < blockList.length; i++) {
+		blockList[i].setStyle({
+			'height': rowHeight + 'px',
+			'transform': 'none',
+			'-webkit-transform': 'none'
+		});
+		blockList[i].removeClass('ani');
+		blockList[i].removeClass('hide');
+	}
+}
+
+function resetShadowRowStyle(instance) {
+	var shadowBoxComponent = instance.selectComponent('#shadowRowBox');
+	shadowBoxComponent.removeClass('show');
+	shadowBoxComponent.setStyle({});
+	shadowBoxComponent.removeClass('move');
+}
+var lastCommand = '';
+// move Row
+function moveRow(instance, moveY) {
+	var state = instance.getState();
+	var initIndex = parseInt(state.rowData.index);
+	var rowtype = state.rowData.type;
+	//显示拖拽行Box
+	var shadowBoxComponent = instance.selectComponent('#shadowRowBox');
+	shadowBoxComponent.hasClass('show') || shadowBoxComponent.addClass('show');
+	//隐藏列表对应行
+	var rowDom = instance.selectComponent('#row' + rowtype + state.rowData.id);
+	rowDom.hasClass('hide') || rowDom.addClass('hide');
+	//拖动shadowRow
+	var shadowRowDom = instance.selectComponent('#shadowRow');
+	shadowRowDom.hasClass('move') || shadowRowDom.addClass('move');
+	shadowRowDom.removeClass('ani');
+	var style = {
+		'transform': 'translate3d(0,' + moveY + 'px,10px)',
+		'-webkit-transform': 'translate3d(0,' + moveY + 'px,10px)'
+	}
+	shadowRowDom.setStyle(style);
+
+	var listheight = state.rowData.listheight
+	var listClientY = state.shadowRowTop + moveY;
+	var tmpscrollListTop = scrollOffSetTop[guid];
+	
+	// 拖拽至边缘滚动视图 距离顶部距离1.5行高触发上滚动 下滚动同理
+	var callMethodData = {
+		guid: guid,
+		command: listClientY < rowHeight * 1.5 ? "up" : listClientY > listheight - (rowHeight * 1.5) ? "down" :
+			"stop",
+		scrollTop: tmpscrollListTop,
+	}
+	//把滚动指令发给逻辑层
+	if (lastCommand != callMethodData.command) {
+		lastCommand = callMethodData.command;
+		isAutoScroll && instance.callMethod("pageScroll", callMethodData);
+	}
+
+	var moveOffset = moveY + scrollOffSetTop[guid] - state.initscrollOffSetTop;
+	var offset = calcOffset(initIndex, moveOffset);
+	if (offset <= 2 || offset >= state.rowData.rownum - 2) {
+		callMethodData.command = 'stop';
+	}
+	//为保证体验，非APPH5端，在滚动视图期间不进行位置交换
+	if (isAutoScroll && (!isAppOrH5) && callMethodData.command != 'stop') {
+		return;
+	}
+	oldOffset = oldOffset == null ? initIndex : oldOffset;
+	if (offset < 0 || offset >= state.rowData.rownum) {
+		return;
+	}
+	if (offset == oldOffset) {
+		return;
+	}
+
+	oldOffset = offset;
+	state.offset = offset;
+	//触发change事件
+	instance.callMethod("change", {
+		index: state.rowData.index,
+		moveTo: state.offset
+	});
+	feedbackGenerator(instance); //震动反馈
+	//根据offset对行进行位置交换，这里仅仅是样式控制位置改变，未修改list数据
+	var blockList = instance.selectAllComponents('.row' + rowtype);
+	for (var i = 0; i < blockList.length; i++) {
+		if (i == initIndex) {
+			continue;
+		}
+		var translateY = 0;
+		if ((i >= offset && i < initIndex) || (i <= offset && i > initIndex)) {
+			translateY = i < initIndex ? rowHeight : -rowHeight;
+		}
+		var style = {
+			'height': rowHeight + 'px',
+			'transform': 'translate3d(0,' + translateY + 'px,5px)',
+			'-webkit-transform': 'translate3d(0,' + translateY + 'px,5px)'
+		}
+		blockList[i].hasClass('ani') || blockList[i].addClass('ani');
+		blockList[i].setStyle(style);
+	}
+
+}
+//计算偏移index
+var oldOffset = null;
+
+function calcOffset(initIndex, moveY) {
+	var offset = initIndex + parseInt(moveY / rowHeight); //偏移 行高的倍数
+	var rest = moveY % rowHeight;
+	if (rest > 0) {
+		offset = offset + (rest / rowHeight >= 0.6 ? 1 : 0);
+		if (offset < oldOffset) {
+			offset = rest / rowHeight <= 0.4 ? offset : oldOffset;
+		}
+	} else {
+		offset = offset + (rest / rowHeight <= -0.6 ? -1 : 0);
+		if (offset > oldOffset) {
+			offset = rest / rowHeight >= -0.4 ? offset : oldOffset;
+		}
+	}
+	return offset;
+}
+
+//触感反馈
+//wxs 不支持条件编译，所以用此方法判断
+var isiOSAPP = typeof plus != "undefined" && plus.os.name == 'iOS';
+var UISelectionFeedbackGenerator;
+var UIImpactFeedbackGenerator;
+var impact
+
+if (isiOSAPP) {
+	UISelectionFeedbackGenerator = plus.ios.importClass("UISelectionFeedbackGenerator");
+	impact = new UISelectionFeedbackGenerator();
+	impact.init();
+}
+
+function feedbackGenerator(instance) {
+	if (!feedbackGeneratorState) {
+		//关闭触感反馈
+		return;
+	}
+	if (isiOSAPP) {
+		//异步，避免与点击事件冲突
+		setTimeout(function(){
+			impact.selectionChanged();
+		},0)
+	} else {
+		if (typeof plus != "undefined") {
+			plus.device.vibrate(12)
+		} else {
+			instance.callMethod("vibrate");
+		}
+	}
+}
+
+module.exports = {
+	scroll: scroll,
+	longpress: longpress,
+	touchstart: touchstart,
+	touchmove: touchmove,
+	touchend: touchend
+}

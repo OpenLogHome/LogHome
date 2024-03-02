@@ -1,0 +1,687 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+		    "path" : "pages/launch",
+		    "style" :                                                                                    
+		    {
+				"navigationStyle": "custom",
+		        "navigationBarTitleText": "原木社区",
+		        "enablePullDownRefresh": false
+		    }
+		},
+		{
+			"path": "pages/bookcase/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "书架",
+				"titleNView": {
+					"titleSize": "40rpx",
+					"buttons": [{
+						"text": "管理 ",
+						"fontSize": "34rpx"
+					}]
+				}
+			}
+		},
+		{
+			"path": "pages/library",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "书库"
+			}
+		},
+		{
+			"path": "pages/essays",
+			"style": {
+				"navigationBarTitleText": "创作",
+				"navigationStyle":"custom"
+			}
+		},
+		{
+			"path": "pages/bookcase/manage",
+			"style": {
+				"navigationBarTitleText": "书架管理",
+				"titleNView": {
+					"titleSize": "40rpx"
+				}
+			}
+		},
+		{
+			"path": "pages/me",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path": "pages/users/login_page",
+			"style": {
+				"navigationBarTitleText": "登录"
+			}
+		},
+		{
+			"path": "pages/users/login_page_mobile",
+			"style": {
+				"navigationBarTitleText": "手机号登录"
+			}
+		},
+		{
+			"path": "pages/users/login",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "登录"
+			}
+		},
+		{
+			"path": "pages/readers/bookInfo",
+			"style": {
+				"navigationStyle": "custom"
+				// "enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/readers/allArticles",
+			"style": {
+				"navigationBarTitleText": "所有章节"
+			}
+		},
+		{
+			"path": "pages/writers/allVolumes",
+			"style": {
+				"navigationBarTitleText": "所有分卷"
+			}
+		},
+		{
+			"path": "pages/readers/novel_fans",
+			"style": {
+				"navigationBarTitleText": "书籍打赏榜"
+			}
+		},
+		{
+			"path": "pages/readers/article",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/readers/article_old",
+			"style":{
+				"navigationBarBackgroundColor": "#00000088",
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(255, 255, 255)",
+					"buttons": [{
+						"fontSrc": "/static/iconfont/iconfont.ttf",
+						"text": "\ue790",
+						"fontSize": "25px",
+						"float": "right"
+					}]
+				}
+			}
+		},
+		{
+			"path": "pages/readers/article_split",
+			"style":{
+				"navigationBarBackgroundColor": "#00000088",
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(255, 255, 255)",
+					"buttons": [{
+						"fontSrc": "/static/iconfont/iconfont.ttf",
+						"text": "\ue790",
+						"fontSize": "25px",
+						"float": "right"
+					}]
+				}
+			}
+		},
+		{
+			"path": "pages/readers/article_world_vocab",
+			"style":{
+				"navigationBarBackgroundColor": "#00000088",
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(255, 255, 255)",
+					"buttons": [{
+						"fontSrc": "/static/iconfont/iconfont.ttf",
+						"text": "\ue790",
+						"fontSize": "25px",
+						"float": "right"
+					}]
+				}
+			}
+		},
+		{
+			"path": "pages/readers/article_rich",
+			"style":{
+				"navigationBarBackgroundColor": "#00000088",
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(255, 255, 255)",
+					"buttons": [{
+						"fontSrc": "/static/iconfont/iconfont.ttf",
+						"text": "\ue790",
+						"fontSize": "25px",
+						"float": "right"
+					}]
+				}
+			}
+		},
+		{
+		    "path" : "pages/readers/article_new",
+		    "style": {
+		    	"navigationStyle": "custom",
+				"app-plus":{
+					"bounce":"none"
+				}
+		    }
+		},
+		{
+			"path": "pages/users/changePwd",
+			"style": {
+				"navigationBarTitleText": "修改密码"
+			}
+		},
+		{
+			"path": "pages/users/clientSet",
+			"style": {
+				"navigationBarTitleText": "设置"
+			}
+		},
+		{
+			"path": "pages/users/donate",
+			"style": {
+				"navigationBarTitleText": "捐助"
+			}
+		},
+		{
+			"path": "pages/apps/about",
+			"style": {
+				"navigationBarTitleText": "关于我们"
+			}
+		},{
+            "path" : "pages/writers/newEssay",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "创建小说",
+                "enablePullDownRefresh": false
+            }
+        },{
+            "path" : "pages/writers/changeEssayInfo",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "修改小说信息",
+                "enablePullDownRefresh": false
+            }
+        },{
+            "path" : "pages/writers/allArticles",
+            "style" :                                                                                    
+            {
+                "enablePullDownRefresh": false,
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(180, 111, 88)",
+					"buttons": [{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue790 ",
+						    "fontSize": "25px",
+						    "float": "right"
+					}]
+				}
+            }
+        },{
+            "path" : "pages/writers/articlesDustbin",
+            "style" :                                                                                    
+            {
+                "enablePullDownRefresh": false,
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(180, 111, 88)"
+				}
+            }
+        },{
+            "path" : "pages/writers/sortArticles",
+            "style" :                                                                                    
+            {
+				"navigationBarTitleText": "章节排序",
+                "enablePullDownRefresh": false,
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(180, 111, 88)",
+					"buttons": [{
+						"text": "完成 ",
+						"fontSize": "36rpx",
+						"fontWeight": "bold"
+					}]
+				}
+            }
+        },{
+            "path" : "pages/writers/chapterEditor",
+            "style" :                                                                                    
+            {
+                "enablePullDownRefresh": false,
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(180, 111, 88)",
+					"buttons": [				
+						{
+						    "text": "完成 ",
+						    "fontSize": "36rpx",
+						    "float": "right"
+						},
+						{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue625 ",
+						    "fontSize": "25px",
+						    "float": "right"
+						},
+				        {
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+				            "text": "\ue624 ",
+				            "fontSize": "25px",
+				            "float": "right"
+				        },
+						{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue70f ",
+						    "fontSize": "25px",
+						    "float": "right"
+						},{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue629 ",
+						    "fontSize": "25px",
+						    "float": "right"
+						}
+				    ]
+				}
+            }
+        },
+		{
+		    "path": "pages/users/avater_upload",
+		    "style": {
+		        "navigationBarTitleText": "上传头像"
+		    }
+		},
+		{
+		    "path": "pages/writers/cover_upload",
+		    "style": {
+		        "navigationBarTitleText": "上传封面"
+		    }
+		},
+		{
+		    "path": "pages/users/change_user_info",
+		    "style": {
+		        "navigationBarTitleText": "修改个人信息"
+		    }
+		},
+		{
+		    "path": "pages/static/contentAgreement",
+		    "style": {
+		        "navigationBarTitleText": "用户内容上传协议"
+		    }
+		},
+		{
+		    "path": "pages/static/privacyAgreement",
+		    "style": {
+		        "navigationBarTitleText": "用户隐私政策"
+		    }
+		},
+		{
+		    "path": "pages/static/updateIntro",
+		    "style": {
+		        "navigationBarTitleText": "社区更新机制"
+		    }
+		},
+		{
+		    "path": "pages/static/grandUsers",
+		    "style": {
+		        "navigationBarTitleText": "社区荣誉用户"
+		    }
+		},
+		{
+			"path" : "pages/users/personalPage",
+			"style" :                                                                                    
+			{
+				"navigationBarTitleText": "个人主页",
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom"
+			}
+		},
+		{
+		    "path": "pages/users/top_pic_upload",
+		    "style": {
+		        "navigationBarTitleText": "上传个人主页背景图"
+		    }
+		},
+		{
+		    "path": "pages/community/friends",
+		    "style": {
+		        "navigationBarTitleText": "我的好友"
+		    }
+		},
+		{
+			"path": "pages/community/read_mail",
+			"style": {
+				"navigationBarTitleText": "查看站内信"
+			}
+		},
+		{
+			"path": "pages/community/send_mail",
+			"style": {
+				"navigationBarTitleText": "写站内信"
+			}
+		},
+		{
+		    "path": "pages/readers/bookComment",
+		    "style": {
+		        "navigationBarTitleText": "书籍评论"
+		    }
+		},
+		{
+		    "path": "pages/community/message",
+		    "style": {
+		        "navigationBarTitleText": "我的消息",
+				"titleNView": {
+					"titleSize": "36rpx",
+					"buttons": [				
+						{
+						    "text": "写站内信",
+						    "fontSize": "36rpx",
+						    "float": "right"
+						}
+				    ]
+				}
+		    }
+		},
+		{
+		    "path": "pages/writers/localBackup",
+		    "style": {
+		        "navigationBarTitleText": "本地备份"
+		    }
+		},
+		{
+		    "path": "pages/writers/richEditor",
+		    "style" :
+		    {
+		        "enablePullDownRefresh": false,
+		    	"titleNView": {
+		    		"titleSize": "40rpx",
+		    		"titleColor": "rgb(180, 111, 88)",
+		    		"buttons": [				
+		    			{
+		    			    "text": "完成 ",
+		    			    "fontSize": "36rpx",
+		    			    "float": "right"
+		    			},
+						{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue70f ",
+						    "fontSize": "25px",
+						    "float": "right"
+						},{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue629 ",
+						    "fontSize": "25px",
+						    "float": "right"
+						}
+		    	    ]
+		    	}
+		    }
+		},
+		{
+			"path": "pages/settings/autoSaveSettings",
+			"style": {
+				"navigationBarTitleText": "本地备份设置"
+			}
+		},
+		{
+			"path": "pages/settings/readerSettings",
+			"style": {
+				"navigationBarTitleText": "阅读器设置"
+			}
+		},
+		{
+			"path": "pages/bookImport/tangyuan",
+			"style": {
+				"navigationBarTitleText": "汤圆作品导入助手"
+			}
+		},
+		{
+			"path": "pages/writers/essaySet",
+			"style": {
+				"navigationBarTitleText": "作品设置"
+			}
+		},
+		{
+			"path": "pages/community/postEdit",
+			"style": {
+				"navigationBarTitleText": "帖子编辑"
+			}
+		},
+		{
+			"path": "pages/community/postView",
+			"style": {
+				"navigationBarTitleText": "帖子内容"
+			}
+		},
+		{
+			"path": "pages/users/activateAccount",
+			"style": {
+				"navigationBarTitleText": "绑定账号"
+			}
+		},
+		{
+			"path": "pages/users/activateAccount_oicq",
+			"style": {
+				"navigationBarTitleText": "绑定QQ号"
+			}
+		},
+		{
+			"path": "pages/users/activateAccount_mobile",
+			"style": {
+				"navigationBarTitleText": "绑定手机号"
+			}
+		},
+		{
+			"path": "pages/users/register",
+			"style": {
+				"navigationBarTitleText": "注册账户"
+			}
+		},
+		{
+			"path": "pages/treePlant/treeplant",
+			"style": {
+				"navigationBarTitleText": "原木树场",
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/apps/faqs/faq",
+			"style": {
+				"navigationBarTitleText": "帮助中心"
+			}
+		},
+		{
+			"path": "pages/apps/faqs/feedback",
+			"style": {
+				"navigationBarTitleText": "反馈详情"
+			}
+		},
+		{
+			"path": "pages/apps/faqs/user_feedback",
+			"style": {
+				"navigationBarTitleText": "我要反馈"
+			}
+		},
+		{
+			"path": "pages/readers/collections",
+			"style": {
+				"navigationBarTitleText": "作品集合"
+			}
+		},
+		{
+			"path": "pages/users/forgottenPwd",
+			"style": {
+				"navigationBarTitleText": "忘记账号或密码"
+			}
+		},
+		{
+			"path": "pages/writers/changeNovelTags",
+			"style": {
+				"navigationBarTitleText": "修改作品标签"
+			}
+		},
+		{
+			"path": "pages/settings/pushSettings",
+			"style": {
+				"navigationBarTitleText": "消息推送设置"
+			}
+		},
+		{
+			"path": "pages/writers/novel_statistics",
+			"style": {
+				"navigationBarTitleText": "作品数据"
+			}
+		},
+		{
+			"path": "pages/apps/h5webview",
+			"style": {
+				"navigationBarTitleText": "WebView"
+			}
+		},
+		{
+			"path": "pages/apps/openInBrowser",
+			"style": {
+				"navigationBarTitleText": "外部网页"
+			}
+		},{
+            "path" : "pages/users/user_credit",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "我的信誉分",
+                "enablePullDownRefresh": false
+            }
+            
+        },{
+            "path" : "pages/apps/badVersion",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "版本提示",
+                "enablePullDownRefresh": false
+            }
+        },{
+            "path" : "pages/readers/tags",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "标签广场",
+                "enablePullDownRefresh": false
+            }
+        },{
+            "path" : "pages/readers/tagCollections",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "标签合集",
+                "enablePullDownRefresh": false
+            }
+        },{
+            "path" : "pages/payments/recharge",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "支持社区",
+                "enablePullDownRefresh": false
+            }
+            
+        },{
+            "path" : "pages/payments/earnings",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "余额提现",
+                "enablePullDownRefresh": false
+            }
+        },{
+            "path" : "pages/worlds/worldPage",
+            "style" :                                                                                    
+            {
+				"navigationStyle": "custom",
+                "navigationBarTitleText": "世界设定",
+                "enablePullDownRefresh": false
+            }
+        },{
+		    "path": "pages/writers/worldVocabularyEditor",
+		    "style" :
+		    {
+		        "enablePullDownRefresh": false,
+		    	"titleNView": {
+		    		"titleSize": "40rpx",
+		    		"titleColor": "rgb(180, 111, 88)",
+		    		"buttons": [				
+		    			{
+		    			    "text": "完成 ",
+		    			    "fontSize": "36rpx",
+		    			    "float": "right"
+		    			},
+						{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue70f ",
+						    "fontSize": "25px",
+						    "float": "right"
+						}
+		    	    ]
+		    	}
+		    }
+		}
+    ],
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "rgb(180, 111, 88)",
+		"borderStyle": "white",
+		"backgroundColor": "#ffffff",
+		"spacing": "7rpx",
+		"list": [{
+				"pagePath": "pages/bookcase/index",
+				"iconPath": "./static/menu_bar/icon_books_unselected.png",
+				"selectedIconPath": "static/menu_bar/icon_books_selected.png",
+				"text": "书架"
+			},
+			{
+				"pagePath": "pages/library",
+				"iconPath": "./static/menu_bar/icon_library_unselected.png",
+				"selectedIconPath": "./static/menu_bar/icon_library_selected.png",
+				"text": "书库"
+			},
+			{
+				"pagePath": "pages/essays",
+				"iconPath": "./static/menu_bar/icon_writing_unselected.png",
+				"selectedIconPath": "./static/menu_bar/icon_writing_selected.png",
+				"text": "创作"
+			},
+			{
+				"pagePath": "pages/me",
+				"iconPath": "./static/menu_bar/icon_my_unselected.png",
+				"selectedIconPath": "./static/menu_bar/icon_my_selected.png",
+				"text": "我的"
+			}
+		],
+		"height": "130rpx",
+		"iconWidth": "60rpx",
+		"fontSize": "25rpx"
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarBackgroundColor": "#ffffff",
+		"backgroundColor": "#F2F2f2",
+		"titleNView": {
+			"titleSize": "35rpx",
+			"autoBackButton": true,
+			"titleColor": "#2d2d2d" 
+		},
+		"app-plus": {
+			"pullToRefresh": {
+				"style": "circle",
+				"color": "#FF9D00"
+			}
+
+		}
+	}
+}

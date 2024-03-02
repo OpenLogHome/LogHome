@@ -1,0 +1,35 @@
+@url=http://localhost:8081/users
+@json=Content-Type: application/json
+
+###
+
+get {{url}}
+
+###
+post {{url}}
+
+### 查询所有用户
+get {{url}}/all_users
+
+### 注册
+post {{url}}/register
+# Content-Type: application/json
+{{json}}
+
+{
+  "username": "user4",
+  "password": "123456"
+}
+
+### 登录
+post {{url}}/login
+{{json}}
+
+{
+  "username": "mihu",
+  "pwd": "defaultPwd"
+}
+
+### 个人信息
+get {{url}}/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlNDc1ODcyOTM2Mjg2NWE0MDk4YmRhYSIsImlhdCI6MTU4MTczNTAyM30.Nm6UhPY7EfP-WQIDFldayXzFoJlt5oIgVhidzDPy0gc
