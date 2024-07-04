@@ -95,22 +95,23 @@ app.use(async (req, res, next) => {
 });
 
 //路由中间件
-let libraryRouter = require('./routes/library');
-let usersRouter = require('./routes/users');
-let bookcaseRouter = require('./routes/bookcase');
-let articlesRouter = require('./routes/articles');
-let essaysRouter = require('./routes/essays');
-let communityRouter = require('./routes/community');
-let tangyuanExportRouter = require('./routes/tangyuanExport');
-let postsRouter = require('./routes/posts');
-let treePlantRouter = require('./routes/treePlant');
-let resourcesRouter = require('./routes/resource');
-let manageRouter = require('./routes/manage');
-let appRouter = require('./routes/app');
-let essayToolsRouter = require('./routes/essayTools');
-let paymentsRouter = require('./routes/payment');
-let worldRouter = require('./routes/world');
+const libraryRouter = require('./routes/library');
+const usersRouter = require('./routes/users');
+const bookcaseRouter = require('./routes/bookcase');
+const articlesRouter = require('./routes/articles');
+const essaysRouter = require('./routes/essays');
+const communityRouter = require('./routes/community');
+const tangyuanExportRouter = require('./routes/tangyuanExport');
+const postsRouter = require('./routes/posts');
+const treePlantRouter = require('./routes/treePlant');
+const resourcesRouter = require('./routes/resource');
+const manageRouter = require('./routes/manage');
+const appRouter = require('./routes/app');
+const essayToolsRouter = require('./routes/essayTools');
+const paymentsRouter = require('./routes/payment');
+const worldRouter = require('./routes/world');
 const creditRouter = require('./routes/credit');
+const uniImRouter = require('./routes/uni-im')
 
 app.use('/library', libraryRouter);
 app.use('/users', usersRouter);
@@ -128,6 +129,7 @@ app.use('/essayTools', essayToolsRouter);
 app.use('/credit', creditRouter);
 app.use('/payment', paymentsRouter);
 app.use('/world', worldRouter);
+app.use('/uni', uniImRouter);
 
 let server = app.listen(8081, function () {
 	let host = server.address().address;

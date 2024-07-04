@@ -284,6 +284,18 @@ router.post('/tipping', auth, async (req, res) => {
 	}
 });
 
+router.get('/get_tipping_amount_by_id', async function (req, res) {
+	try {
+		let results = await query(
+			'SELECT COUNT(*) count FROM tipping WHERE novel_id = ?',
+			[req.query.id],
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.get('/get_all_novel_fans', async function (req, res) {
 	try {
 		let results = await query(
@@ -304,6 +316,19 @@ router.get('/get_novel_tags', async function (req, res) {
 			'SELECT t.* FROM novel_tag nt,tags t WHERE nt.novel_id = ? AND nt.tag_id = t.tag_id',
 			[req.query.novel_id],
 		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/get_tag_by_id', async function (req, res) {
+	try {
+		let results = (await query(
+			'SELECT * FROM tags WHERE tag_id = ?',
+			[req.query.tag_id],
+		))[0];
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);

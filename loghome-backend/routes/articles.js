@@ -54,6 +54,71 @@ router.get('/get_article', async function (req, res) {
 	}
 });
 
+router.get('/get_my_article_cento', auth, async function (req, res) {
+	try {
+		let results = await query(
+			'SELECT * FROM article_cento WHERE article_id = ? AND user_id = ? AND is_delete = 0',
+			[req.query.article_id, req.user[0].user_id],
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+
+router.post('/add_article_cento', auth, async function (req, res) {
+	try {
+		await query(
+			'INSERT INTO article_cento(user_id, article_id, paragraph_id, paragraph) VALUES(?, ?, ?, ?)',
+			[req.user[0].user_id, req.body.article_id, req.body.paragraph_id, req.body.paragraph],
+		);
+		res.end("success");
+	} catch (e) {
+        console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.post('/remove_article_cento', auth, async function (req, res) {
+	try {
+		await query(
+			'UPDATE article_cento SET is_delete = 1 WHERE article_cento_id = ? AND user_id = ?',
+			[req.body.article_cento_id, req.user[0].user_id],
+		);
+		res.end("success");
+	} catch (e) {
+        console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.post('/get_paragraph_comment_amount', async function(req, res){
+    try{
+        let result = await query(`SELECT COUNT(*) count FROM novel_comments n, article_cento c WHERE n.cento_id != 0
+        AND n.deleted = 0 AND n.cento_id = c.article_cento_id AND c.paragraph_id = ? AND c.article_id = ?`, [
+            req.body.paragraph_id, req.body.article_id
+        ])
+        res.end(JSON.stringify(result));
+    } catch (e) {
+        console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+})
+
+router.get('/get_article_comment_amount', async function(req, res){
+    try{
+        let result = await query(`SELECT COUNT(*) count FROM novel_comments WHERE article_id = ?`, [
+            req.query.article_id
+        ])
+        res.end(JSON.stringify(result));
+    } catch (e) {
+        console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+})
+
+
 router.get('/get_novel_statistics', async function (req, res) {
 	try {
 		let time = new Date().getTime();

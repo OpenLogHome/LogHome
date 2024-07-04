@@ -53,7 +53,7 @@ router.get('/get_user_pay_code', auth, async function (req, res) {
 		user = JSON.parse(JSON.stringify(user))[0];
 		if (user.pay_code == undefined) {
 			let pay_code = randomRange(11, 11);
-			await query("UPDATE users set pay_code = ? WHERE user_id = ?", [randomRange(11, 11), user.user_id]);
+			await query("UPDATE users set pay_code = ? WHERE user_id = ?", [pay_code, user.user_id]);
 			res.end(pay_code);
 		} else {
 			res.end(user.pay_code);

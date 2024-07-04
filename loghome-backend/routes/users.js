@@ -63,7 +63,7 @@ router.get('/all_users', async function (req, res) {
 router.get('/user_profile_of', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT name,avatar_url,top_pic_url,user_group,motto,is_admin, uni_id FROM users WHERE user_id = ?',
+			'SELECT name,avatar_url,top_pic_url,user_group,motto,is_admin,uni_id FROM users WHERE user_id = ?',
 			[req.query.id],
 		);
 		res.end(JSON.stringify(results));
@@ -166,10 +166,6 @@ router.get('/heartbeat', auth, async (req, res) => {
 		[user.user_id],
 	);
 
-	await query(
-		'UPDATE user_message SET is_read = 1 WHERE to_id = ? AND is_read = 0',
-		[user.user_id],
-	);
 	let user_id = user.user_id;
 	res.send({
 		token: {
@@ -344,7 +340,7 @@ router.get('/get_verify_code', auth, async (req, res) => {
 router.get('/send_mobile_verify_code', async (req, res) => {
 	try {
 		if(userValidates[req.query.mobile] != undefined && userValidates[req.query.mobile].countdown > 0){
-			res.json(responses.BAD_REQUEST("验证码发送过于频繁，请等一分钟后再发送"));
+			res.json(400, "验证码发送过于频繁，请等一分钟后再发送");
 			return;
 		} else {
 			//生成6位的验证码
@@ -372,44 +368,39 @@ router.get('/send_mobile_verify_code', async (req, res) => {
 
 router.get('/verify_mobile', auth, async (req, res) => {
 	try {
-		let user = req.user;
+        let user = req.user;
 		user = JSON.parse(JSON.stringify(user))[0];
-		let axios = require('axios');
-		let FormData = require('form-data');
-		let data = new FormData();
-		data.append('mobile', req.query.mobile);
-		data.append('code', req.query.vcode);
-		let result = await query('SELECT * FROM users WHERE mobile = ?', [
-			req.query.mobile,
-		]);
-		if (result.length > 0) {
-			res.json(200, { msg: '该手机号已被绑定，换一个试试吧！' });
-			return;
+        let response = {
+			data:{
+				msg:"验证码错误"
+			}
 		}
-
-		let config = {
-			method: 'post',
-			url: 'https://sapi.kuailezan.com/api/login/index',
-			headers: {
-				...data.getHeaders(),
-			},
-			data: data,
-		};
-
-		axios(config)
-			.then(async function (response) {
-				if (response.data.msg == '登录成功') {
-					await query('UPDATE users SET mobile = ? WHERE user_id = ?', [
+		for (let key in userValidates) {
+			if (key == req.query.mobile) {
+				// 检查是否匹配
+				if(userValidates[key].validateCode == req.query.vcode){
+					response.data.msg = "登录成功";
+					let userCheck = await query('SELECT * FROM users WHERE mobile = ?', [
 						req.query.mobile,
-						user.user_id,
 					]);
+					if (userCheck.length > 0) {
+						// 手机号已被使用，不能注册
+						response.data.msg = "该手机号已被使用"
+					} else {
+						await query('UPDATE users SET mobile = ? WHERE user_id = ?', [
+                            req.query.mobile,
+                            user.user_id,
+                        ]);
+                        response.data.msg = "绑定成功"
+					}
+				} else {
+					response.data.msg = "验证码错误";
 				}
-				res.end(JSON.stringify(response.data));
-			})
-			.catch(function (error) {
-				console.log(error);
-			});
+			}
+		}
+		res.end(JSON.stringify(response.data));
 	} catch (e) {
+        console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });
@@ -535,6 +526,10 @@ router.get('/get_history_message', auth, async (req, res) => {
 			'SELECT m.*,u.name,u.avatar_url FROM user_message m,users u WHERE to_id = ? AND u.user_id = m.from_id ORDER BY time DESC LIMIT 0,100',
 			[user.user_id],
 		);
+        await query(
+            'UPDATE user_message SET is_read = 1 WHERE to_id = ? AND is_read = 0',
+            [user.user_id],
+        );
 		res.end(JSON.stringify(messages));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });

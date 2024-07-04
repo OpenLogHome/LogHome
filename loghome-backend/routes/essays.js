@@ -327,7 +327,11 @@ router.post('/add_article', auth, async (req, res) => {
 			[req.body.id, user.user_id],
 		);
 		if (novel.length > 0) {
-			if (!req.body.article_type) req.body.article_type = 'text';
+			if (!req.body.article_type) req.body.article_type = 'richtext';
+            if (req.body.article_type == 'text') {
+                req.body.article_type = 'richtext';
+                req.body.content = "[]"
+            }
 			let results = await query(
 				'INSERT INTO articles(title,content,novel_id,article_chapter,article_type,is_draft) VALUES(?,?,?,?,?,?)',
 				[
@@ -361,6 +365,25 @@ router.post('/modify_article', auth, async (req, res) => {
 				req.body.article_id,
 			],
 		);
+        // 字数统计
+        let textCount = 0;
+        let article = (await query('SELECT * FROM articles WHERE article_id = ?', [req.body.article_id]))[0];
+        if(article.article_type == 'richtext' || article.article_type == "worldOutline"){
+            for(let item of JSON.parse(article.content)){
+                if(item.type == "text"){
+                    textCount += item.value.length;
+                }
+            }
+        } else if(article.article_type == "worldVocabulary"){
+            textCount += JSON.parse(article.content).desc.length;
+        }
+        await query(
+			'UPDATE articles SET text_count = ? WHERE article_id = ? AND deleted = 0',
+			[
+				textCount,
+				req.body.article_id,
+			],
+		);
 		//如果不是草稿，则向所有收藏该小说的人发布更新信息
 		if (req.body.is_draft == 0) {
 			await query(
@@ -391,6 +414,21 @@ router.post('/modify_article', auth, async (req, res) => {
 			}
 		}
 		res.end(JSON.stringify(results));
+        // 同时更新全本字数
+        if (req.body.is_draft == 0) {
+            let novel = (await query(
+				'SELECT a.novel_id,n.name,n.is_personal FROM articles a,novels n WHERE a.article_id = ? AND a.novel_id = n.novel_id',
+				[req.body.article_id],
+			))[0];
+            let articles = await query('SELECT text_count, is_draft FROM articles WHERE novel_id = ?', [novel.novel_id]);
+            let novelTextCount = 0;
+            for(let item of articles){
+                if(item.is_draft == 0){
+                    novelTextCount += item.text_count;
+                }
+            }
+            await query(`UPDATE novels SET text_count = ? WHERE novel_id = ?`, [novelTextCount, novel.novel_id]);
+        }
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });

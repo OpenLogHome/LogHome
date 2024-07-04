@@ -145,6 +145,29 @@ router.post('/comment_on_novel', auth, async (req, res) => {
 			'评论了你的小说《' + novel.name + '》：' + req.body.content,
 			'readers/bookInfo?id=' + req.body.novel_id,
 		);
+        // 判断一下是不是章节评论，如果是的话就操作一下cento
+        if(req.body.paragraph_id != -1){
+            let article = JSON.parse((await query(`SELECT * FROM articles WHERE article_id = ?`, [req.body.article_id]))[0].content);
+            for(let paragraph of article){
+                if(paragraph.id == req.body.paragraph_id){
+                    let cento = await query(`SELECT * FROM article_cento WHERE article_id = ? AND paragraph = ? AND user_id = ? AND is_delete = 0`,
+                    [req.body.article_id, paragraph.value, req.user[0].user_id])
+                    let centoId = -1;
+                    if(cento.length > 0) centoId = cento[0].article_cento_id;
+                    else {
+                        let newCento = await query(
+                            'INSERT INTO article_cento(user_id, article_id, paragraph_id, paragraph) VALUES(?, ?, ?, ?)',
+                            [req.user[0].user_id, req.body.article_id, paragraph.id, paragraph.value],
+                        );
+                        centoId = newCento.insertId;
+                    }
+                    await query(
+                        'UPDATE novel_comments SET cento_id = ? WHERE essay_comment_id = ?',
+                        [centoId, results.insertId],
+                    );
+                }
+            }
+        }
 		res.end(JSON.stringify(results));
 	} catch (e) {
         console.log(e);
@@ -222,6 +245,14 @@ router.get('/novel_commonts_all', async function (req, res) {
 			for (let praiseItem of praise) {
 				if (praiseItem.type == 0) item.likeNum++;
 			}
+            if(item.cento_id != 0) {
+                let cento = (await query(
+                    `SELECT * FROM article_cento
+                                          WHERE article_cento_id = ?`,
+                    [item.cento_id],
+                ))[0]
+                item.cento = cento;
+            }
 		}
 		res.end(JSON.stringify(results));
 	} catch (e) {
