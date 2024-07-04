@@ -1,0 +1,56 @@
+<template>
+	<view class="video-box">
+		<video @click="showCloseBtnFn" v-if="url" :src="url" :autoplay="true" :page-gesture="true" :show-fullscreen-btn="false" class="video"></video>
+		<uni-icons v-if="showCloseBtn" @click="close" size="30px" color="#FFFFFF" type="closeempty" class="close-icon"></uni-icons>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				url:"",
+				showCloseBtn:true
+			};
+		},
+		onLoad({url}) {
+			// console.log({url});
+			this.url = url
+			setTimeout(()=> {
+				this.showCloseBtn = false
+			}, 1000);
+		},
+		methods:{
+			close(){
+				uni.navigateBack()
+			},
+			showCloseBtnFn(){
+				// console.log('showCloseBtnFn');
+				this.showCloseBtn = true
+				setTimeout(()=> {
+					this.showCloseBtn = false
+				}, 5000);
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+.video-box,.video{
+	width: 750rpx;
+	/* #ifndef APP-NVUE */
+	width: 100vw;
+	height: 100vh;
+	/* #endif */
+	flex: 1;
+}
+.close-icon{
+	position: fixed;
+	top: 80rpx;
+	left: 30rpx;
+	z-index: 9999;
+	/* #ifndef APP-NVUE */
+	text-shadow: 0 0 15px black;
+	/* #endif */
+}
+</style>

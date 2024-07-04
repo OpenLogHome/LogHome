@@ -1,0 +1,569 @@
+<template>
+	<view class="pages">
+		<view class="usersInfo">
+			<scroll-view class="usersInfo" scroll-y="true"  :enable-flex="true"	>
+				<view style="height: 150px;width: 750rpx;flex-direction: row;flex-wrap: wrap;">
+					<view class="invite-box">
+						<view class="invite">
+							<uni-icons @click="invite" color="#989898" size="20px" class="plusempty" type="plusempty">
+							</uni-icons>
+						</view>
+						<text class="nickname">邀请</text>
+					</view>
+					<view class="item" v-for="(item,index) in member_list" :key="index">
+						<image class="avatar"
+							:src="item.avatar_file ? item.avatar_file.url:'/uni_modules/uni-im/static/avatarUrl.png'"
+							mode="widthFix"></image>
+						<text class="nickname">{{item.nickname||'匿名用户'}}</text>
+						<uni-icons @click="expel(item)" v-if="manage" color="#e64348" size="20px" class="minus-filled"
+							type="minus-filled">
+						</uni-icons>
+					</view>
+				</view>
+			</scroll-view>
+		</view>
+		<uni-list>
+			<uni-list-item @click="toQRCode" :clickable="true" title="群号和二维码" v-if="conversation.group_id"	link>
+				<template v-slot:footer>
+					<view class="slot-code">
+						<!-- <text class="group-name"></text> 先省略，后续会建群号表关联 -->
+						<image class="group-code" src="/uni_modules/uni-im/static/qrCode.png" mode="widthFix"></image>
+					</view>
+				</template>
+			</uni-list-item>
+
+			<uni-list-item @click.native="openPopupInfo('editorName')" title="群聊名称" :showArrow="isAdmin" :clickable="true">
+				<template v-slot:footer>
+					<text class="introduction">{{conversation.group_info.name}}</text>
+				</template>
+			</uni-list-item>
+
+			<uni-list-item @click.native="openPopupInfo('editorInfo')" title="简介" :showArrow="isAdmin" :clickable="true">
+				<template v-slot:footer>
+					<text class="introduction">{{conversation.group_info.introduction || '未设置'}}</text>
+				</template>
+			</uni-list-item>
+			<uni-list-item @click.native="setAvatar" title="群头像" :clickable="true">
+				<template v-slot:footer>
+					<image class="logo" :src="logoUrl||'/uni_modules/uni-im/static/avatarUrl.png'" mode=""></image>
+				</template>
+			</uni-list-item>
+			<uni-list-item @click.native="setAddGroupType" title="加群方式" note="申请加入本群的验证规则" :clickable="true">
+				<template v-slot:footer>
+					<text class="join_option">{{join_option}}</text>
+				</template>
+			</uni-list-item>
+		</uni-list>
+		<button class="exitGroup" @click="exitGroup">{{isAdmin?'解散群聊':'退出群聊'}}</button>
+
+		<uni-popup ref="popupInfo" type="dialog">
+			<uni-popup-dialog mode="input" :title="editorType == 'editorName'?'编辑群聊名称':'编辑群聊简介'"
+				:placeholder="editorType == 'editorName'?'请输入群聊名称':'请输入群聊简介'" :duration="2000" :before-close="true"
+				:value="value" @close="closePopupInfo" @confirm="confirmPopupInfo"></uni-popup-dialog>
+		</uni-popup>
+	</view>
+</template>
+
+<script>
+	const db = uniCloud.database()
+	import uniIm from '@/uni_modules/uni-im/lib/main.js';
+	export default {
+		data() {
+			return {
+				conversation:{
+					group_info:{
+						user_id:""
+					},
+					group_member:{}
+				},
+				member_list:[],
+				manage: false,
+				editorType: '',
+				value: '',
+				groupType: '',
+				isAdmin:false
+			};
+		},
+		computed: {
+			...uniIm.mapState(['isWidescreen']),
+			logoUrl() {
+				return this.conversation.group_info.avatar_file ? this.conversation.group_info.avatar_file.url :
+					false
+			},
+			join_option() {
+				let val = this.conversation.group_info.join_option
+				return {
+					needPermission: "需要验证权限",
+					freeAccess: "自由加入",
+					disableApply: "禁止加入"
+				} [val]
+			}
+		},
+		watch: {
+			"conversation.group_info.user_id"(adminUserId){
+				this.isAdmin = adminUserId == uniCloud.getCurrentUserInfo().uid
+				//非群主 隐藏【管理】按钮
+				if (!this.isAdmin) {
+					if(!this.isWidescreen){
+						// #ifdef H5
+						let dom = document.getElementsByClassName('uni-page-head-btn')[1]
+						dom.style.visibility = 'hidden'; // 隐藏元素
+						// #endif
+						// #ifdef APP-PLUS
+						var webview = this.$scope.$getAppWebview();
+						// console.log('webview', webview);
+						webview.setStyle({
+							titleNView:{
+								buttons:[]
+							}
+						});
+						// #endif
+					}
+				}else{
+					if(this.isWidescreen){
+						this.manage = true
+					}
+				}
+			},
+			"conversation.group_member":{
+				handler(group_member, oldValue) {
+					console.log('group_member',group_member);
+					this.member_list = []
+					for (let key in group_member) {
+						this.member_list.push(group_member[key])
+					}
+					let title = "群信息（" + this.member_list.length + "人）"
+					uni.setNavigationBarTitle({
+						title
+					});
+				},
+				deep:true,
+				immediate:true
+			}
+			// （后续）通过监听实现实时切换管理员实时刷新权限
+			// console.log('isAdmin',isAdmin);
+		},
+		props: {
+			conversation_id: {
+				default(){
+					return false
+				}
+			},
+		},
+		async onLoad(e) {
+			if(!e.conversation_id){
+				throw new Error("会话id不能为空")
+			}
+			this.load(e.conversation_id)
+		},
+		mounted() { //pc端以组件模式加载时逻辑
+			if(this.conversation_id){
+				this.load(this.conversation_id)
+			}
+		},
+		onShow() {
+			// console.log("this.conversation: ", this.conversation.group_member);
+		},
+		onNavigationBarButtonTap(e) {
+			if (e.index === 0) {
+				this.manage = !this.manage
+
+				// #ifdef H5
+				let dom = document.getElementsByClassName('uni-btn-icon')[1]
+				// console.log("dom:22 ", dom);
+				dom.innerHTML = this.manage ? "退出管理" : "管理"
+				// #endif
+
+				// #ifdef APP-PLUS
+				var webview = this.$scope.$getAppWebview();
+				webview.setTitleNViewButtonStyle(0, {
+					text: this.manage ? "退出" : "管理"
+				});
+				// #endif
+			}
+		},
+		methods: {
+			async load(conversation_id){
+				this.conversation = await uniIm.conversation.get(conversation_id)
+			},
+			async expel(item) {
+				uni.showModal({
+					title: '确定要将该用户移出本群吗？',
+					content: '不能撤销，请谨慎操作',
+					cancelText: '取消',
+					confirmText: '确认',
+					complete: async (e) => {
+						// console.log(e);
+						if (e.confirm) {
+							uni.showLoading({
+								mask: true
+							});
+							try{
+								let res = await db.collection('uni-im-group-member').where({
+										user_id: item._id,
+										group_id: this.conversation.group_info._id
+									})
+									.remove()
+								if (res.result.deleted) {
+									uni.showToast({
+										title: '成功移除',
+										icon: 'none',
+										complete: () => {}
+									});
+									// console.log('exitGroup', res);
+								}
+							}catch(error){
+								uni.showToast({
+									title: error.message,
+									icon: 'error',
+									complete: () => {}
+								});
+								//TODO handle the exception
+							}
+							uni.hideLoading()
+						}
+					}
+				});
+			},
+			invite() {
+				console.log('group_info._id', this.conversation.group_info._id);
+				uni.navigateTo({
+					url: '/uni_modules/uni-im/pages/contacts/createGroup/createGroup?group_id=' + this
+						.conversation.group_info._id
+				})
+			},
+			async exitGroup() {
+				const group_id = this.conversation.group_info._id
+				if (this.isAdmin) {
+					uni.showModal({
+						title: '确认要解散群聊吗？',
+						content: '不能撤销，请谨慎操作',
+						cancelText: '取消',
+						confirmText: '确认',
+						complete: async (e) => {
+							console.log(e);
+							if (e.confirm) {
+								uni.showLoading({
+									mask: true
+								});
+								let res = await db.collection('uni-im-group')
+									.where({
+										_id: group_id
+									})
+									.remove()
+									.finally((res) => {
+										// uni.navigateBack({ // 收到离群的推送通知会自动关闭当前页面
+										// 	delta: 2
+										// })
+										uni.hideLoading()
+									})
+								console.log('exitGroup', res);
+							}
+						}
+					});
+				} else {
+					uni.showModal({
+						title: '确认要退出群聊吗？',
+						content: '不能撤销，请谨慎操作',
+						cancelText: '取消',
+						confirmText: '确认',
+						complete: async (e) => {
+							console.log(e);
+							if (e.confirm) {
+								// uni.navigateBack({ // 收到离群的推送通知会自动关闭当前页面
+								// 	delta: 2
+								// })
+								uni.showLoading({
+									mask: true
+								});
+								let res = await db.collection('uni-im-group-member').where({
+										user_id: uniCloud.getCurrentUserInfo().uid,
+										group_id
+									})
+									.remove()
+								if (res.result.deleted) {
+									uni.showToast({
+										title: '成功退出',
+										icon: 'none'
+									});
+								}
+								uni.hideLoading()
+								console.log('exitGroup', res);
+							}
+						}
+					});
+				}
+			},
+			openPopupInfo(type) {
+				console.log(type);
+
+				if (!this.isAdmin) return
+
+
+				this.editorType = type
+				console.log(this.conversation.group_info.name, 11);
+				console.log(this.conversation.group_info.introduction, 22);
+				if (type == 'editorName' && this.conversation.group_info.name) {
+					this.value = this.conversation.group_info.name
+				} else if (type == 'editorInfo' && this.conversation.group_info.introduction) {
+					this.value = this.conversation.group_info.introduction
+				} else {
+					this.value = ''
+				}
+				this.$refs.popupInfo.open()
+			},
+			closePopupInfo() {
+				this.$refs.popupInfo.close()
+			},
+			confirmPopupInfo(value) {
+				if (!value) {
+					uni.showToast({
+						title: '内容不能为空！',
+						icon: 'none'
+					});
+					return
+				}
+				console.log('----', value);
+				if (this.editorType == 'editorName') {
+					// 改群名称
+					this.editGroupInfo({
+						name: value
+					})
+				} else {
+					this.editGroupInfo({
+						introduction: value
+					})
+				}
+				this.$refs.popupInfo.close()
+			},
+			setAddGroupType() {
+				if (!this.isAdmin) return
+				uni.showActionSheet({
+					itemList: ['自由加入', '需要验证权限', '禁止加入'],
+					success: (e) => {
+						let join_option = ['freeAccess', 'needPermission', 'disableApply'][e.tapIndex]
+						this.editGroupInfo({
+							join_option
+						})
+					},
+					fail: (err) => {
+						console.log("err: ", err);
+					}
+				})
+			},
+			async editGroupInfo(group_info) {
+				console.log('group_info---------',group_info);
+				this.conversation.group_info = Object.assign(this.conversation.group_info,group_info)
+				let res = await db.collection('uni-im-group')
+					.doc(this.conversation.group_id)
+					.update(group_info)
+				console.log('change group info', res.result.updated,this.conversation);
+			},
+			async setAvatar() {
+				if (!this.isAdmin) return
+				const crop = {
+					quality: 100,
+					width: 600,
+					height: 600,
+					resize: true
+				};
+				uni.chooseImage({
+					count: 1,
+					crop,
+					success: async (res) => {
+						console.log(899889,res);
+						let tempFile = res.tempFiles[0],
+							avatar_file = {
+								// #ifdef H5
+								extname: tempFile.name.split('.')[tempFile.name.split('.').length - 1],
+								// #endif
+								// #ifndef H5
+								extname: tempFile.path.split('.')[tempFile.path.split('.').length - 1]
+								// #endif
+							},
+							filePath = res.tempFilePaths[0]
+						// #ifndef APP-PLUS
+						//非app端用前端组件剪裁头像，app端用内置的原生裁剪
+						let isPC = false
+						// #ifdef H5
+						isPC = !['ios', 'android'].includes(uni.getSystemInfoSync().platform)
+						// #endif
+						if (!isPC) {
+							filePath = await new Promise((callback) => {
+								uni.navigateTo({
+									url: '/uni_modules/uni-id-pages/pages/userinfo/cropImage/cropImage?path=' +
+										filePath + `&options=${JSON.stringify(crop)}`,
+									animationType: "fade-in",
+									events: {
+										success: url => {
+											callback(url)
+										}
+									},
+									complete(e) {
+										// console.log(e);
+									}
+								});
+							})
+						}
+						// #endif
+						// console.log(this.userInfo);
+						let cloudPath = uniCloud.getCurrentUserInfo().uid + '' + Date.now()
+						avatar_file.name = cloudPath
+						uni.showLoading({
+							title: "更新中",
+							mask: true
+						});
+						let {
+							fileID
+						} = await uniCloud.uploadFile({
+							filePath,
+							cloudPath,
+							fileType: "image"
+						});
+						// console.log(result)
+						avatar_file.url = fileID
+						// console.log({avatar_file});
+						uni.hideLoading()
+						this.editGroupInfo({
+							avatar_file
+						})
+					}
+				})
+			},
+			toQRCode() {
+				let url = this.logoUrl ? this.logoUrl : ''
+				uni.navigateTo({
+					url: '/uni_modules/uni-im/pages/group/groupQRCode?id=' +
+						this.conversation.group_info._id +
+						'&name=' + this.conversation.group_info.name +
+						'&avatar_file=' + url,
+					complete: (e) => {
+						// console.log(e);
+					}
+				});
+			}
+		}
+	}
+</script>
+
+<style lang="less" scoped>
+	/* #ifndef APP-NVUE */
+	page,
+	/* #endif */
+	.pages {
+		width: 750rpx;
+		flex: 1;
+		background-color: #f5f5f5;
+		/* #ifndef APP-NVUE */
+		height: 100vh;
+		/* #endif */
+	}
+
+	.usersInfo {
+		flex-direction: row;
+		// padding: 10px 0;
+		margin-bottom: 8px;
+		background-color: #FFFFFF;
+		flex-wrap: wrap;
+	}
+
+	.item {
+		width: 150rpx;
+		margin: 5px 0;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+	}
+
+	.minus-filled {
+		position: absolute;
+		top: 0;
+		right: 5px;
+		/* #ifdef H5 */
+		cursor: pointer;
+		/* #endif */
+	}
+
+	.avatar {
+		width: 100rpx;
+		height: 100rpx;
+		border-radius: 10px;
+	}
+
+	.nickname {
+		width: 150rpx;
+		text-align: center;
+		font-size: 14px;
+		color: #666;
+		padding: 0 16rpx;
+		/* #ifndef APP-NVUE */
+		white-space: nowrap;
+		/* #endif */
+		overflow: hidden;
+		text-overflow: ellipsis;
+		lines:1;
+	}
+
+	.logo {
+		width: 50px;
+		height: 50px;
+	}
+
+	.invite-box {
+		align-items: center;
+	}
+
+	.invite {
+		width: 100rpx;
+		height: 100rpx;
+		margin: 5px 0;
+		justify-content: center;
+		border-radius: 10px;
+		background-color: #f5f5f5;
+		/* #ifdef H5 */
+		cursor: pointer;
+		/* #endif */
+	}
+
+	.exitGroup {
+		margin: 10px 0;
+		background-color: #FFFFFF;
+		padding: 6px 0;
+		color: #e64141;
+		border-radius: 0;
+	}
+
+	/* #ifndef APP-NVUE */
+	.exitGroup::after {
+		display: none;
+	}
+	/* #endif */
+
+	.introduction {
+		color: #666;
+		font-size: 14px;
+		/* #ifndef APP-NVUE */
+		max-width: 560rpx;
+		/* #endif */
+		/* #ifdef APP-NVUE */
+		width: 560rpx;
+		/* #endif */
+		text-align: right;
+	}
+
+	.join_option {
+		color: #666;
+		font-size: 14px;
+	}
+
+	.slot-code {
+		align-items: center;
+		flex-direction: row;
+	}
+
+	.group-code {
+		width: 50rpx;
+		height: 50rpx;
+		margin-left: 10rpx;
+	}
+</style>

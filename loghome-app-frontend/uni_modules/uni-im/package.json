@@ -1,0 +1,92 @@
+{
+	"id": "uni-im",
+	"displayName": "uni-im",
+	"version": "2.0.15",
+	"description": "uni-im是云端一体的、全平台的、免费的、开源即时通讯系统",
+	"keywords": [
+        "im",
+        "即时通讯",
+        "客服",
+        "聊天"
+    ],
+	"repository": "https://gitcode.net/dcloud/hello-uni-im",
+	"engines": {
+		"HBuilderX": "^3.6.16"
+	},
+	"dcloudext": {
+		"sale": {
+			"regular": {
+				"price": 0
+			},
+			"sourcecode": {
+				"price": 0
+			}
+		},
+		"contact": {
+			"qq": ""
+		},
+		"declaration": {
+			"ads": "无",
+			"data": "无",
+			"permissions": "无"
+		},
+		"npmurl": "",
+		"type": "unicloud-template-page"
+	},
+	"uni_modules": {
+		"dependencies": [
+			"uni-id-pages",
+			"uni-config-center",
+			"uni-search-bar",
+			"uni-segmented-control",
+			"Sansnn-uQRCode",
+			"uni-nav-bar"
+		],
+		"encrypt": [],
+		"platforms": {
+			"cloud": {
+				"tcb": "y",
+				"aliyun": "y"
+			},
+			"client": {
+				"Vue": {
+					"vue2": "y",
+					"vue3": "y"
+				},
+				"App": {
+					"app-vue": "y",
+					"app-nvue": "y"
+				},
+				"H5-mobile": {
+					"Safari": "n",
+					"Android Browser": "y",
+					"微信浏览器(Android)": "y",
+					"QQ浏览器(Android)": "y"
+				},
+				"H5-pc": {
+					"Chrome": "y",
+					"IE": "u",
+					"Edge": "u",
+					"Firefox": "u",
+					"Safari": "n"
+				},
+				"小程序": {
+					"微信": "y",
+					"阿里": "n",
+					"百度": "n",
+					"字节跳动": "n",
+					"QQ": "n",
+					"钉钉": "n",
+					"快手": "n",
+					"飞书": "n",
+					"京东": "n"
+				},
+				"快应用": {
+					"华为": "n",
+					"联盟": "n"
+				}
+			}
+		}
+	},
+	"dependencies": {}
+}

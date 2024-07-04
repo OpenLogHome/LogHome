@@ -1,0 +1,108 @@
+{
+	"bsonType": "object",
+	"permission": {
+		"create": false,
+		"delete": false,
+		"read": true,// 在触发器中限制
+		"update": false
+	},
+	"required": [
+		"to_uid",
+		"body",
+		"type"
+	],
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"from_uid": {
+			"bsonType": "string",
+			"description": "消息发送方 UserID（用于指定发送消息方帐号）",
+			"forceDefaultValue": {
+				"$env": "uid"
+			}
+		},
+		"to_uid": {
+			"bsonType": "string",
+			"description": "消息接收方 UserID"
+		},
+		"conversation_id": {
+			"bsonType": "string",
+			"description": "conversation_id即消息的会话id",
+      		"foreignKey": "uni-im-conversation.id"
+		},
+		"group_id": {
+			"bsonType": "string",
+			"description": "group_id即消息接收群的id"
+		},
+		"body": {
+			"description": "消息内容，包含的键会随type变化。需要自己写valedateFunction验证"
+		},
+		"is_read": {
+			"bsonType": "bool",
+			"description": "是否已读",
+			"forceDefaultValue": false
+		},
+		"type": {
+			"bsonType": "string",
+			"enum": [
+				{
+					"text": "文本",
+					"value": "text"
+				},
+				{
+					"text": "图像",
+					"value": "image"
+				},
+				{
+					"text": "语音",
+					"value": "sound"
+				},
+				{
+					"text": "视频",
+					"value": "video"
+				},
+				{
+					"text": "文件",
+					"value": "file"
+				},
+				{
+					"text": "位置",
+					"value": "location"
+				}
+			]
+		},
+		"state": {
+			"bsonType": "int",
+			"description": "0 发送中，100发送成功，-100 发送失败，-200 禁止发送（内容不合法）"
+		},
+		"is_revoke":{
+			"bsonType": "bool",
+			"description": "是否被撤回",
+			"defaultValue": false
+		},
+		"about_msg_id":{
+			"bsonType": "string",
+			"description": "关于某条消息的id，一般用于回复某一条消息",
+			"defaultValue": false
+		},
+		"appid":{
+			"bsonType": "string",
+			"description": "接收消息的appid"
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"description": "消息发送时间戳",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"client_create_time": {
+			"bsonType": "timestamp",
+			"description": "客户端创建消息的时间戳",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}

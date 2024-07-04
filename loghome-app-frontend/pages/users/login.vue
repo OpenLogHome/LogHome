@@ -5,7 +5,7 @@
 		<div class="backImg">
 			<div class="appTitle">
 				<div class="title">原木社区</div>
-				<div class="subtitle">方块人的文艺世界</div>
+				<div class="subtitle">方块人的文学世界</div>
 			</div>
 			<div class="loginBtn button" @click="gotoLoginMobile">
 				使用手机号登录

@@ -2,7 +2,7 @@
 	<view class="qaBox">
 		<view class="">
 			<view :class="[{ watchMoreContent: isWatchMore  }, {contentt:isLongContent} ,'xzj']" :style="[zxy]" ><slot></slot></view>
-			<view class="watchMore" v-if="isLongContent" @click="watchMore">{{ isWatchMore ? '收起' : '查看更多' }}</view>
+			<view class="watchMore" v-if="isLongContent && showMoreButton" @click="watchMore">{{ isWatchMore ? '收起' : '查看更多' }}</view>
 		</view>
 	</view>
 </template>
@@ -29,6 +29,10 @@ export default {
 			type:[Number,String],
 			default:4,
 			// 4行
+		},
+		showMoreButton: {
+			type: [Boolean],
+			default: true
 		}
 	},
 	mounted() {

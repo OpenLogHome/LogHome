@@ -1,0 +1,124 @@
+<template>
+	<view class="container">
+		<uni-list :border="false" class="list">
+				<uni-list-chat 
+				:avatar="friend_info.avatar_file ? friend_info.avatar_file.url:'/uni_modules/uni-im/static/avatarUrl.png'" 
+				:title="friend_info.nickname" 
+			></uni-list-chat>
+		</uni-list>
+		<button v-if="isFriend" class="btn" plain type="warn" @click="deteleFriend">删除好友</button>
+		<text v-else style="color: #999;font-size: 14px;">- 非好友的临时会话无法设置 -</text>
+	</view>
+</template>
+
+<script>
+	const db = uniCloud.database();
+	import uniIm from '@/uni_modules/uni-im/lib/main.js';
+	export default {
+		data() {
+			return {
+				friend_uid:'',
+				friend_info:{
+					username:'',
+					nickname:'',
+					avatar_file:{
+						url:''
+					}
+				}
+			}
+		},
+		props: {
+			conversation_id: {
+				default(){
+					return false
+				}
+			},
+		},
+		computed:{
+			isFriend(){
+				let friendList =  uniIm.friend.get()
+				return friendList.find(i=>i._id == this.friend_uid)
+			}
+		},
+		async onLoad(options) {
+			this.load(options)
+		},
+		async mounted() {
+			if(this.conversation_id){
+				this.load({conversation_id:this.conversation_id})
+			}
+		},
+		methods: {
+			async load(options){
+				if(options.conversation_id){
+					let conversation = await uniIm.conversation.get(options.conversation_id)
+					options.user_id = conversation.friend_uid
+				}
+				
+				this.friend_uid = options.user_id
+				let res = await db.collection('uni-id-users')
+									.doc(this.friend_uid)
+									.field('_id,nickname,avatar_file')
+									.get()
+				// console.log("res: ",res);
+				this.friend_info = res.result.data[0]
+			},
+			async deteleFriend() {
+				uni.showModal({
+					title: '确认要删除好友吗',
+					content: '此操作不可撤销',
+					showCancel: true,
+					cancelText: '取消',
+					confirmText: '确认',
+					complete: async (e) => {
+						if (e.confirm) {
+							uni.showLoading({
+								mask: true
+							});
+							try{
+								await db.collection('uni-im-friend').where({
+									friend_uid: this.friend_uid,
+									user_id:uniCloud.getCurrentUserInfo().uid
+								}).remove()
+								// 收到push消息后store会自动，将此用户从列表中移除
+								uni.navigateBack({delta:2})
+							}catch(e){
+								uni.showModal({
+									content: JSON.stringify(e.message),
+									showCancel: false
+								});
+								//TODO handle the exception
+							}
+							uni.hideLoading()
+						}
+					}
+				});
+			},
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.container {
+		width: 750rpx;
+		align-items: center;
+		/* #ifndef APP-NVUE */
+		height: 100vh;
+		/* #endif */
+		flex: 1;
+		background-color: #fff;
+	}
+
+	.list {
+		width: 750rpx;
+		height: 100px;
+	}
+
+	.btn {
+		width: 600rpx;
+		/* height: 45px; */
+		text-align: center;
+		line-height: 45px;
+		border-radius: 20rpx;
+	}
+</style>

@@ -98,7 +98,7 @@
         },
         "template" : "count.html",
         "router" : {
-            "base" : "./",
+            "base" : "/",
             "mode" : "hash"
         },
         "title" : "原木社区",
@@ -107,7 +107,7 @@
         },
         "optimization" : {
             "treeShaking" : {
-                "enable" : false
+                "enable" : true
             }
         },
         "unipush" : {

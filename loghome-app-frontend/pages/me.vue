@@ -22,7 +22,7 @@
 					</view>
 					<view class="box-bd">
 						<view class="item" @tap="gotoActivate"
-							v-show="user.oicq_account == 'unbind' && user.mobile == 'unbind'">
+							v-show="user.mobile == 'unbind'">
 							<view class="icon activate"><img src="../static/icons/icon_activate.png"></view>
 							<view class="text" style="color:rgb(255, 141, 47);font-weight: bold;">激活账号</view>
 						</view>
@@ -189,11 +189,11 @@
 				})
 
 				//检查账号激活状态
-				if (_this.user.oicq_account == 'unbind' && _this.user.mobile == 'unbind') {
+				if (_this.user.mobile == 'unbind') {
 					uni.showModal({
 						title: '提示',
-						content: '你的账号尚未激活，为了保护你的账号安全和确保不间断使用，请尽快激活账号。',
-						cancelText: "下次再说",
+						content: '你的账号尚未绑定手机号，根据原木社区用户服务协议（24年4月6日新版），您需要绑定手机号才能继续使用账号功能。',
+						cancelText: "退出账号",
 						confirmText: "前往",
 						success: function(res) {
 							if (res.confirm) {
@@ -201,7 +201,11 @@
 									url: './users/activateAccount'
 								})
 							} else if (res.cancel) {
-
+								window.localStorage.removeItem('token');
+								window.localStorage.setItem('messages',[]);
+								uni.switchTab({
+									url: './library'
+								});	
 							}
 						}
 					});

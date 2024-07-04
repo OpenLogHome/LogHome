@@ -48,7 +48,7 @@
 							</div>
 						</div>
 						<div class="worlds">
-							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
+							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;" @longpress="handleNovelWorldLongpress(novel)">
 								<navigator :url="'./readers/bookInfo?id=' +  novel.novel_id" open-type="navigate"
 									class="books">
 									<img :src="novel.picUrl + '?thumbnail=1'" alt=""
@@ -69,8 +69,8 @@
 										<div class="description">{{novel.content}}</div>
 									</div>
 								</navigator>
-								<el-button icon="el-icon-delete" class="deleteBtn" size="mini" type="danger"
-									@click="deleteWorldNovelAsso(novel.world_id)"></el-button>
+<!-- 								<el-button icon="el-icon-delete" class="deleteBtn" size="mini" type="danger"
+									@click="deleteWorldNovelAsso(novel.world_id)"></el-button> -->
 							</div>
 						</div>
 						<div class="addButton" @click="bookSelectDrawer = true">添加作品世界</div>
@@ -480,6 +480,31 @@
 				}).then(function() {
 					uni.hideLoading();
 				})
+			},
+			handleNovelWorldLongpress(world){
+				let _this = this;
+				uni.showActionSheet({
+				    itemList: ['取消关联'],
+				    success: function (res) {
+				        if(res.tapIndex == 0) {
+							uni.showModal({
+								title: '提示',
+								content: '是否取消关联该作品世界？',
+								confirmColor:"#EA7034",
+								success: function (res) {
+									if (res.confirm) {
+										_this.deleteWorldNovelAsso(world.world_id);
+									} else if (res.cancel) {
+										return;
+									}
+								}
+							});
+						}
+				    },
+				    fail: function (res) {
+				        console.log(res.errMsg);
+				    }
+				});
 			}
 		}
 	}
@@ -735,7 +760,7 @@
 
 	.books {
 		height: 260rpx;
-		width: calc(100vw - 120rpx);
+		width: calc(100vw - 60rpx);
 		margin: 0 30rpx;
 		display: flex;
 		background-color: rgb(255, 255, 255);

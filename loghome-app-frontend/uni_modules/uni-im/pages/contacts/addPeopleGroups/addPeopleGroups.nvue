@@ -1,0 +1,325 @@
+<template>
+	<view>
+		<uni-nav-bar color="#999" :fixed="true" background-color="#ffffff" status-bar left-icon="left" @clickLeft="back">
+			<view class="segmented-box">
+				<uni-segmented-control :values="items" @clickItem="setActiveIndex" styleType="button" activeColor="#5fc08e" style="width:120px;"></uni-segmented-control>
+			</view>
+		</uni-nav-bar>
+		<view class="content">
+			<uni-search-bar :placeholder="activeIndex?'搜索群名称/群号':'搜索手机号/用户名/用户昵称'" :radius="100"
+				bgColor="#eeeeee"
+				v-model="keyword"
+				@confirm="doSearch"
+				@focus="searchFocus = true"
+				@blur="searchFocus = false"
+				@cancel="doClear"
+				@clear="doClear"
+			></uni-search-bar>
+			
+			<view v-if="activeIndex === 0">
+				<!-- 搜索 -->
+				<uni-list v-if="usersList.length">
+					<uni-list-chat v-for="(item,index) in usersList" :key="index"
+						:title="item.nickname" :avatarCircle="true"
+						:avatar="item.avatar_file&&item.avatar_file.url ? item.avatar_file.url : '/uni_modules/uni-im/static/avatarUrl.png'"  
+					>
+						<text @click="addUser(index)" class="chat-custom-right">加为好友</text>
+					</uni-list-chat>
+					<!--
+					v-if="keyword.length" 
+					<template v-else>
+						<uni-list-item v-for="(tab,index) in tabs" :key="index"
+							class="tab-item" :title="tab.title" 
+							:to="tab.url" showArrow :border="false"
+						></uni-list-item>
+					</template> -->
+				</uni-list>
+				<uni-load-more v-else :status="loading?'loading':(hasMore?'hasMore':'noMore')"></uni-load-more>
+			</view>
+			<view v-if="activeIndex === 1">
+				<uni-list v-if="groupList.length">
+					<uni-list-chat v-for="(item,index) in groupList" :key="index"
+						 :title="item.name" :avatarCircle="true"
+						:avatar="item.avatar_file && item.avatar_file.url ? item.avatar_file.url : '/uni_modules/uni-im/static/avatarUrl.png'" 
+					>
+						<text @click="addUser(index)" class="chat-custom-right">申请加入</text>
+					</uni-list-chat>
+				</uni-list>
+				<uni-load-more v-else :status="loading?'loading':(hasMore?'hasMore':'noMore')"></uni-load-more>
+			</view>
+		</view>
+		
+		<uni-popup ref="popup" type="dialog">
+			<uni-popup-dialog mode="input" :title="activeIndex?'申请加群':'申请添加好友'" 
+				placeholder="请输入验证信息" confirmText="发送" message="成功消息" 
+				:duration="2000" :before-close="true" :value="value"
+				@close="close" @confirm="confirm"
+			></uni-popup-dialog>
+		</uni-popup>
+	</view>
+</template>
+
+<script>
+import uniIm from '@/uni_modules/uni-im/lib/main.js';
+	const db = uniCloud.database();
+	export default {
+		data() {
+			return {
+				loading:true,
+				hasMore: false,
+				activeIndex:0,
+				value:'',
+				items: ['找人', '找群'],
+				searchFocus:false,//是否展示搜索列表
+				keyword:'',
+				tabs:[
+					{
+						'title':'添加手机联系人',
+						'url':''
+					},
+					{
+						'title':'扫一扫加好友',
+						'url':''
+					},
+					{
+						'title':'查找陌生人',
+						'url':''
+					}
+				],
+				usersData: [],
+				checkIndex:'',//申请加的群index
+				groupData:[]
+			}
+		},
+		computed: {
+			usersList() {
+				let current_uid = uniCloud.getCurrentUserInfo().uid
+				let friendList = uniIm.friend.dataList
+				return this.usersData.filter(item=>{
+					if(
+						friendList.find(i=>i._id == item._id)
+						||
+						item._id == current_uid
+					){
+						return false
+					}else{
+						return true
+					}
+				}) 
+			},
+			groupList() {
+				let groupList = uniIm.group.dataList
+				// console.log('groupList',groupList);
+				return this.groupData.filter(item=>{
+					console.log('i.group_info._id == item._id',item.group_info ,item._id);
+					if(
+						item.group_info && groupList.find(i=>i.group_info._id == item._id)
+					){
+						return false
+					}else{
+						return true
+					}
+				}) 
+			}
+		},
+		mounted() {
+			this.getUserList()
+			this.getGroupsList()
+		},
+		methods: {
+			async getGroupsList(){
+				const res =  await db.collection('uni-im-group').get()
+				// console.log("uni-im-group: ",res);
+				if(res.result.data.length){
+					this.loading = false
+					this.hasMore = true
+					this.groupData = res.result.data
+				}
+			},
+			async getUserList(){
+				try{
+					let res = await db.collection('uni-id-users')
+										.field('_id,nickname,avatar_file')
+										.get()
+					let data = res.result.data
+					// console.log("data: ",data);
+					if(data.length){
+						this.loading = false
+						this.hasMore = true
+						this.usersData = data
+					}
+				}catch(e){
+					console.log(e);
+					//TODO handle the exception
+				}
+			},
+			back() {
+				uni.navigateBack()
+			},
+			async doSearch(e){
+				console.log("doSearch: ",e,this.keyword);
+				if(this.activeIndex){
+					let res = await db.collection('uni-im-group')
+						.where(`
+							"name" == "${this.keyword}" || 
+							"_id" == "${this.keyword}"
+						`)
+						.get()
+					console.log(res);
+					this.groupData = res.result.data
+				}else{
+					let res = await db.collection('uni-id-users')
+										.where(`
+											"_id"		==	"${this.keyword}" || 
+											"username"	==	"${this.keyword}" || 
+											"nickname"	==	"${this.keyword}" || 
+											"email"		==	"${this.keyword}" || 
+											"mobile"	==	"${this.keyword}" 
+										`)
+										.field('_id,nickname,avatar_file')
+										.get()
+					console.log(res);
+					this.usersData = res.result.data
+				}
+			},
+			doClear() {
+				this.keyword = ''
+				this.getUserList()
+				this.getGroupsList()
+			},
+			setActiveIndex(e) {
+				// console.log("activeIndex: ",e);
+				if (this.activeIndex != e.currentIndex) {
+					this.activeIndex = e.currentIndex;
+				}
+			},
+			addUser(index){
+				this.checkIndex = index
+				this.$refs.popup.open()
+			},
+			async confirm(value){
+				// if(!value){
+				// 	uni.showToast({
+				// 		title: '验证信息不能为空！',
+				// 		icon:'none'
+				// 	});
+				// 	return
+				// }
+				// console.log('提供的验证信息',value);
+				this.value = value
+				this.$refs.popup.close()
+				if(this.activeIndex === 0){
+					//添加好友
+					const uniImCo = uniCloud.importObject("uni-im-co")
+					await uniImCo.addFriendInvite({
+						"to_uid": this.usersList[this.checkIndex]._id,
+						"message": this.value
+					}).then((res)=>{
+						console.log("res: ",res);
+						uni.showToast({
+							title: '已申请',
+							icon: 'none'
+						});
+					}).catch((err) => {
+						uni.showModal({
+							content: err.message || '请求服务失败',
+							showCancel: false
+						})
+					})
+					
+				}else{
+					// console.log('1233123132123132',this.groupData,this.checkIndex);
+					//申请加群
+					db.collection('uni-im-group-join').add({
+						"group_id":this.groupList[this.checkIndex]._id,
+						"message":this.value
+					}).then((res) => {
+						console.log("res: ",res);
+						uni.showToast({
+							icon: 'none',
+							title: '已申请'
+						})
+					}).catch((err) => {
+						uni.showModal({
+							content: err.message || '请求服务失败',
+							showCancel: false
+						})
+					})
+				}
+				setTimeout(()=> {
+					this.value = ''
+				}, 100);
+				
+			},
+			close(){
+				console.log('取消了');
+				this.$refs.popup.close()
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.segmented-box{
+		flex: 1;
+		justify-content: center;
+		align-items: center;
+	}
+	
+	/* #ifdef H5 */
+	@media screen and (min-width:960px){
+		::v-deep .uni-navbar__header-btns-left,
+		::v-deep .uni-navbar__placeholder,
+		{
+			display: none;
+		}
+		::v-deep .uni-navbar--fixed{
+			position: relative;
+			left: 0	
+		}
+	}
+	/* #endif */
+	
+	.content{
+		/* #ifdef APP-NVUE */
+		margin-top: 75px;
+		/* #endif */
+	}
+	.tab-item{
+		border-bottom: #f5f5f5 solid 1px;
+		height:60px;
+		justify-content: center;
+		padding: 0 15rpx;
+	}
+	.uni-list-item{
+		width:720rpx;
+	}
+	.background{
+		background-color: #f5f5f5;
+	}
+
+	.grey{
+		color: #ddd;
+	}
+	.chat-custom-right {
+		width:70px;
+		height:30px;
+		line-height: 30px;
+		color: #666;
+		font-size: 12px;
+		text-align: center;
+		background-color: #efefef;
+		/* #ifdef H5 */
+		cursor: pointer;
+		/* #endif */
+		border-radius: 100px;
+	}
+	.border{
+		border: #ddd solid 1px;
+	}
+	.state-text{
+		text-align: center;
+		font-size: 28rpx;
+	}
+	
+</style>

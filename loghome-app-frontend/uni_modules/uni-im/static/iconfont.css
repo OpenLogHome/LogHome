@@ -1,0 +1,181 @@
+@font-face {
+  font-family: "uni-im"; /* Project id 3726059 */
+  src: url('@/uni_modules/uni-im/static/iconfont.ttf') format('truetype');
+}
+
+.uni-im {
+  font-family: "uni-im" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.uni-im-zuixing-81:before {
+  content: "\e63f";
+}
+
+.uni-im-xuanzhuan:before {
+  content: "\e664";
+}
+
+.uni-im-file-unknown-fill:before {
+  content: "\e858";
+}
+
+.uni-im-wenjianjiafile-fill:before {
+  content: "\e7d0";
+}
+
+.uni-im-yuyin4:before {
+  content: "\e6f5";
+}
+
+.uni-im-Close:before {
+  content: "\e61a";
+}
+
+.uni-im-jianpan1:before {
+  content: "\e69f";
+}
+
+.uni-im-jianpan2:before {
+  content: "\e65b";
+}
+
+.uni-im-jianpan3:before {
+  content: "\e661";
+}
+
+.uni-im-jianpan:before {
+  content: "\e7b2";
+}
+
+.uni-im-zhankai:before {
+  content: "\e6a8";
+}
+
+.uni-im-zhankai1:before {
+  content: "\e619";
+}
+
+.uni-im-wenjianjia:before {
+  content: "\e601";
+}
+
+.uni-im-wenjianleixing-biaozhuntu-wenjianjia:before {
+  content: "\e6a5";
+}
+
+.uni-im-a-wenjianjiawenjian:before {
+  content: "\e69e";
+}
+
+.uni-im-shipin:before {
+  content: "\e600";
+}
+
+.uni-im-shipintianchong:before {
+  content: "\e690";
+}
+
+.uni-im-plus:before {
+  content: "\e606";
+}
+
+.uni-im-shipin1:before {
+  content: "\e607";
+}
+
+.uni-im-plussign:before {
+  content: "\e75a";
+}
+
+.uni-im-biaoqing:before {
+  content: "\e646";
+}
+
+.uni-im-shipin2:before {
+  content: "\e650";
+}
+
+.uni-im-yuyin:before {
+  content: "\e684";
+}
+
+.uni-im-biaoqing1:before {
+  content: "\e657";
+}
+
+.uni-im-shurufayuyin:before {
+  content: "\e660";
+}
+
+.uni-im-shipin3:before {
+  content: "\e678";
+}
+
+.uni-im-biaoqing2:before {
+  content: "\e63e";
+}
+
+.uni-im-shipin4:before {
+  content: "\e677";
+}
+
+.uni-im-yuyinqiehuan:before {
+  content: "\e7e2";
+}
+
+.uni-im-tukuxiangce:before {
+  content: "\e60b";
+}
+
+.uni-im-plus-circle:before {
+  content: "\e781";
+}
+
+.uni-im-xiangce:before {
+  content: "\e7be";
+}
+
+.uni-im-yuyin1:before {
+  content: "\e608";
+}
+
+.uni-im-xiangce1:before {
+  content: "\e612";
+}
+
+.uni-im-yuyin2:before {
+  content: "\e6a3";
+}
+
+.uni-im-Plus:before {
+  content: "\eab7";
+}
+
+.uni-im-shipin5:before {
+  content: "\e640";
+}
+
+.uni-im-wenjian:before {
+  content: "\e869";
+}
+
+.uni-im-yuyin3:before {
+  content: "\e61e";
+}
+
+.uni-im-share:before {
+  content: "\e6c4";
+}
+
+.uni-im-copy:before {
+  content: "\e67e";
+}
+
+.uni-im-delete:before {
+  content: "\e63d";
+}
+

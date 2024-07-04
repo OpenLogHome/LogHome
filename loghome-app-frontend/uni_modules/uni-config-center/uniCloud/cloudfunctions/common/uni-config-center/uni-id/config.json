@@ -8,8 +8,8 @@
   "passwordStrength": "medium",
   "tokenSecret": "abcdefgh",
   "requestAuthSecret": "abcdefgh",
-  "tokenExpiresIn": 7200,
-  "tokenExpiresThreshold": 3600, 
+  "tokenExpiresIn": 259200,
+  "tokenExpiresThreshold": 864000, 
   "maxTokenLength": 10,
   "passwordErrorLimit": 6,
   "passwordErrorRetryTime": 3600,
@@ -38,8 +38,8 @@
     }
   },
   "web": {
-    "tokenExpiresIn": 7200,
-    "tokenExpiresThreshold": 3600,
+    "tokenExpiresIn": 259200,
+    "tokenExpiresThreshold": 864000,
     "oauth": {
       "weixin-h5": {
         "appid": "",

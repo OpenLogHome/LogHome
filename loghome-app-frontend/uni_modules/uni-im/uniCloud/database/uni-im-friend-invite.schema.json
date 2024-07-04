@@ -1,0 +1,69 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": "doc.to_uid == auth.uid || doc.from_uid == auth.uid",
+		"create": true,
+		"update": "doc.to_uid == auth.uid",
+		"delete": "doc.to_uid == auth.uid"
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"from_uid": {
+			"description": "发出邀请的用户id",
+			"bsonType": "string",
+			"forceDefaultValue": {
+				"$env": "uid"
+			},
+			"foreignKey": "uni-id-users._id"
+		},
+		"to_uid": {
+			"defaultValue": "接收邀请的用户id",
+			"bsonType": "string",
+			"enum": {
+				"collection": "uni-id-users",
+				"field": "_id as value,username as text"
+			},
+			"foreignKey": "uni-id-users._id"
+		},
+		"message": {
+			"bsonType": "string",
+			"description": "申请加群的验证或请求信息"
+		},
+		"creat_time": {
+			"bsonType": "timestamp",
+			"description": "申请入群时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"state": {
+			"bsonType": "int",
+			"description": "状态",
+			"enum": [{
+					"text": "待处理",
+					"value": 0
+				},
+				{
+					"text": "已同意",
+					"value": 100
+				},
+				{
+					"text": "已拒绝",
+					"value": -100
+				}
+			],
+			"forceDefaultValue": 0
+		},
+		"update_time": {
+			"bsonType": "timestamp",
+			"description": "更新申请入群时间（多次申请加入更新此字段）",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}

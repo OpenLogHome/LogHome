@@ -28,7 +28,7 @@
 					</view>
 					<view class="tags" v-if="tags.length > 0">
 						<div class="tag" v-for="(item,index) in tags" :key="item.tag_id"
-							:class="{'activity':item.is_activity_tag}">
+							:class="{'activity':item.is_activity_tag}" @click="gotoTagDetail(item)">
 							{{item.tag_name}}
 						</div>
 					</view>
@@ -380,7 +380,6 @@
 				var beijing_datetime = this.timeConvert(new Date(parseInt(timestamp) * 1000))
 				return beijing_datetime;
 			},
-
 			navtoComment() {
 				uni.navigateTo({
 					url: `/pages/readers/bookComment?id=` + this.uid
@@ -563,7 +562,7 @@
 				}
 				if (_this.history == 1) {
 					uni.navigateTo({
-						url: './article?id=' + articles[0].article_id
+						url: './article?id=' + articles[0].article_id + '&novelId=' + this.uid
 					})
 					return;
 				} else {
@@ -575,7 +574,7 @@
 						}
 					})
 					uni.navigateTo({
-						url: './article?id=' + toId
+						url: './article?id=' + toId + '&novelId=' + this.uid
 					})
 				}
 			},
@@ -803,6 +802,99 @@
 					document.getElementById("gift_box").animate(giftAnimation, giftAnimTiming);
 					document.getElementById("gift_background").animate(giftBackgroundAnimation, giftBgAnimTiming);
 				})
+			},
+			loadMoreBookInfo() {
+				_this = this;
+				axios.get(this.$baseUrl + '/library/get_articles_all?id=' + this.uid, {}).then((res) => {
+					_this.articles = res.data;
+					// console.log(this.articles);
+					if (_this.articles.length != 0) {
+						_this.progressArticle = _this.articles[0];
+						let nflag = true;
+						_this.articles.forEach(item => {
+							if (item.article_chapter == _this.history) {
+								_this.progressArticle = item;
+								return;
+							}
+						})
+
+						//处理进度条动画
+
+						setTimeout(() => {
+							_this.$refs.processBar.$el.style.width = Math.min(_this.historyShown / _this
+								.articleLength * 100, 100) + '%';
+						}, 500)
+
+						axios.get(this.$baseUrl + '/articles/get_article?id=' + _this.progressArticle
+								.article_id, {})
+							.then((res) => {
+								_this.progressArticle = res.data[0];
+								// console.log(_this.progressArticle)
+							}).catch(function(error) {
+								_this.progressArticle = {
+									title: "哎呀，章节走丢了...",
+									content: "哎呀，章节走丢了..."
+								};
+								uni.showToast({
+									title: "哎呀，章节走丢了...",
+									icon: 'none',
+									duration: 2000
+								});
+							}).then(function() {
+								uni.hideLoading();
+							})
+					}
+				}).catch(function(error) {
+					uni.showToast({
+						title: "章节走丢了...",
+						icon: 'none',
+						duration: 2000
+					});
+				}).then(function() {
+					uni.hideLoading();
+				})
+				let tk = JSON.parse(window.localStorage.getItem('token'));
+				if (tk) tk = tk.tk;
+				let _this = this;
+				axios.get(this.$baseUrl + '/bookcase/get_likes_of', {
+					headers: {
+						'Content-Type': 'application/json', //设置请求头请求格式为JSON
+						'Authorization': tk //设置token 其中K名要和后端协调好
+					}
+				}).then((res) => {
+					// console.log(res.data);
+					res.data.forEach(item => {
+						if (item.novel_id == _this.uid) {
+							_this.isInBookcase = true;
+						}
+					})
+				}).catch(function(error) {
+					if (error.message == "Request failed with status code 401") {
+						window.localStorage.removeItem('token');
+						uni.navigateTo({
+							url: './users/login'
+						});
+					}
+				})
+
+
+				axios.get(this.$baseUrl + "/community/novel_commonts_all?id=" + this.uid)
+				.then((res) => {
+					let data = res.data;
+					data = data.slice(0, 3);
+					this.commentInfo = data;
+				}).catch(err => {
+					uni.showToast({
+						title: error.toString(),
+						icon: 'none',
+						duration: 2000
+					});
+				})
+			},
+			gotoTagDetail(tag){
+				uni.navigateTo({
+					url: "./tagCollections?tag_id=" + tag.tag_id
+				})
 			}
 		},
 		onPageScroll(res) {
@@ -819,6 +911,10 @@
 			}, 100);
 		},
 		onShow(option) {
+			// 如果是从世界详情页面跳回来的则直接返回
+			if (this.worldLoadTime == 1) {
+				uni.navigateBack();
+			}
 			uni.showLoading({
 				title: '加载中'
 			});
@@ -850,24 +946,27 @@
 			}
 
 			axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.uid, {}).then((res) => {
-				this.bookInfo = res.data[0];
+				let bookInfo = res.data[0];
 				// 如果是设定书，则应当跳转到世界设定查看页面
-				if (this.bookInfo.novel_type == "world") {
+				if (bookInfo.novel_type == "world") {
 					if (this.worldLoadTime == 0) {
-						uni.navigateTo({
-							url: "/pages/worlds/worldPage?novel_id=" + this.uid
-						})
+						setTimeout(() => {
+							uni.navigateTo({
+								url: "/pages/worlds/worldPage?novel_id=" + this.uid + "&noneAnimation=1"
+							})
+						}, 400);
 						this.worldLoadTime++;
-					} else {
-						uni.navigateBack();
 					}
 					return;
+				} else {
+					this.bookInfo = bookInfo;
+					uni.setNavigationBarTitle({
+						title: "书籍详情"
+					});
+					this.checkNovelRank();
+					this.addReaderHistory(res.data[0]);
+					this.loadMoreBookInfo();
 				}
-				uni.setNavigationBarTitle({
-					title: "书籍详情"
-				});
-				this.checkNovelRank();
-				this.addReaderHistory(res.data[0]);
 			}).catch(function(error) {
 				uni.showToast({
 					title: error.toString(),
@@ -875,93 +974,6 @@
 					duration: 2000
 				});
 			}).then(function() {})
-
-			axios.get(this.$baseUrl + '/library/get_articles_all?id=' + this.uid, {}).then((res) => {
-				_this.articles = res.data;
-				// console.log(this.articles);
-				if (_this.articles.length != 0) {
-					_this.progressArticle = _this.articles[0];
-					let nflag = true;
-					_this.articles.forEach(item => {
-						if (item.article_chapter == _this.history) {
-							_this.progressArticle = item;
-							return;
-						}
-					})
-
-					//处理进度条动画
-
-					setTimeout(() => {
-						_this.$refs.processBar.$el.style.width = Math.min(_this.historyShown / _this
-							.articleLength * 100, 100) + '%';
-					}, 500)
-
-					axios.get(this.$baseUrl + '/articles/get_article?id=' + _this.progressArticle.article_id, {})
-						.then((res) => {
-							_this.progressArticle = res.data[0];
-							// console.log(_this.progressArticle)
-						}).catch(function(error) {
-							_this.progressArticle = {
-								title: "哎呀，章节走丢了...",
-								content: "哎呀，章节走丢了..."
-							};
-							uni.showToast({
-								title: "哎呀，章节走丢了...",
-								icon: 'none',
-								duration: 2000
-							});
-						}).then(function() {
-							uni.hideLoading();
-						})
-				}
-			}).catch(function(error) {
-				uni.showToast({
-					title: "章节走丢了...",
-					icon: 'none',
-					duration: 2000
-				});
-			}).then(function() {
-				uni.hideLoading();
-			})
-			let tk = JSON.parse(window.localStorage.getItem('token'));
-			if (tk) tk = tk.tk;
-			let _this = this;
-			axios.get(this.$baseUrl + '/bookcase/get_likes_of', {
-				headers: {
-					'Content-Type': 'application/json', //设置请求头请求格式为JSON
-					'Authorization': tk //设置token 其中K名要和后端协调好
-				}
-			}).then((res) => {
-				// console.log(res.data);
-				res.data.forEach(item => {
-					if (item.novel_id == _this.uid) {
-						_this.isInBookcase = true;
-					}
-				})
-			}).catch(function(error) {
-				if (error.message == "Request failed with status code 401") {
-					window.localStorage.removeItem('token');
-					uni.navigateTo({
-						url: './users/login'
-					});
-				}
-			})
-
-
-			axios.get(this.$baseUrl + "/community/novel_commonts_all?id=" + this.uid)
-				.then((res) => {
-					let data = res.data;
-					data = data.slice(0, 3);
-					this.commentInfo = data;
-				}).catch(err => {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000
-					});
-				})
-
-
 		},
 		computed: {
 			articleLength() {

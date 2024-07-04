@@ -30,7 +30,8 @@
 			return{
 				tag_id:0,
 				books:[],
-				showList:false
+				showList:false,
+				tagInfo: {}
 			}
 		},
 		onLoad(params){
@@ -46,14 +47,31 @@
 				title: '加载中'
 			});
 			this.refreshCollections();
+			this.getTagInfo();
 		},
 		methods:{
 			refreshCollections(){
 				let _this = this;
 				axios.get(_this.$baseUrl + '/library/get_tag_collections?tag_id=' + this.tag_id, {}).then((res) => {
 					_this.books = res.data;
-					console.log(_this.books);
 					this.showList = true;
+				}).catch(function (error) {
+					uni.showToast({
+						title: error.toString(),
+						icon:'none',
+						duration: 2000
+					});
+				}).then(function(){
+					uni.hideLoading();
+				})
+			},
+			getTagInfo(){
+				let _this = this;
+				axios.get(_this.$baseUrl + '/library/get_tag_by_id?tag_id=' + this.tag_id, {}).then((res) => {
+					_this.tagInfo = res.data;
+					uni.setNavigationBarTitle({
+						title: "标签合集 - " + res.data.tag_name
+					})
 				}).catch(function (error) {
 					uni.showToast({
 						title: error.toString(),

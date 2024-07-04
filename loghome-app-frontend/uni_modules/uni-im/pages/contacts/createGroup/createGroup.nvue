@@ -1,0 +1,294 @@
+<template>
+	<view class="create-group-box">
+		<view class="header-box">
+			<uni-search-bar v-model="keyword"
+				placeholder="搜索" bgColor="#fff"
+				:radius="100"
+				@confirm="getFriendsData"
+				@cancel="doClear"
+				@clear="doClear"
+			></uni-search-bar>
+			<!--
+			checkFriendsSearchWidth
+			<view v-if="checkFriendIds.length" class="image-box"
+				:style="{'width':checkFriendsWidth + 'rpx','transform':'translateX' + ( translateXWidth + 'rpx')}">
+				<image v-for="(img,index) in checkFriendImg" :key="index" 
+					class="avatar" :src="img && img.url ? img.url : '/uni_modules/uni-im/static/avatarUrl.png'"
+				></image>
+			</view> -->
+		</view>
+		<view class="content-box">
+			<checkbox-group @change="checkboxChange">
+				<label v-for="(item,index) in friendList" :key="index" class="label-box" >
+					<checkbox :value="item._id" class="checkbox" />
+					<view>
+						<uni-list :border="false">
+							<uni-list-chat :avatar-circle="true" 
+								:title="item.nickname" 
+								:avatar="item.avatar_file && item.avatar_file.url ? item.avatar_file.url : '/uni_modules/uni-im/static/avatarUrl.png'"
+							>
+							</uni-list-chat>
+						</uni-list>
+					</view>
+				</label>
+			</checkbox-group>
+		</view>
+		<view class="foot-box">
+			<!-- 创建新群可以不选择好友直接创建，要求好友进群必须选择好友 -->
+			<button :disabled="group_id? !checkFriendIds.length : false " class="btn" type="primary" @click="createGroup">{{btnText}}{{checkFriendNum}}</button>
+		</view>
+		<uni-load-more :status="loading?'loading':(hasMore?'hasMore':'noMore')"
+			:contentText='{"contentnomore": friendList.length?"没有更多好友":"没有可以选择的好友"}'
+		></uni-load-more>
+	</view>
+</template>
+
+<script>
+import uniIm from '@/uni_modules/uni-im/lib/main.js';
+	const db = uniCloud.database();
+	export default {
+		data() {
+			return {
+				loading:true,
+				hasMore: false,
+				keyword:'',
+				checkFriendIds: [],
+				friendData: [],
+				groupMemberUid:[] ,//选人进群时，已经在群里的人的id
+				group_id:false
+			}
+		},
+		computed: {
+			friendList(){
+				return this.friendData.filter(item=>!this.groupMemberUid.includes(item._id))
+			},
+			checkFriendNum() {
+				return this.checkFriendIds.length > 0 ? '（'+ this.checkFriendIds.length  +'）': ''
+			},
+			btnText(){
+				return this.group_id ? '立即邀请' : '立即创建'
+			},
+			checkFriendsWidth() {
+				return this.checkFriendIds.length > 6 ? '360' : this.checkFriendIds.length * 65
+			},
+			// checkFriendsSearchWidth() {
+			// 	return this.checkFriendIds.length > 6 ? '360' : 720 - (this.checkFriendIds.length * 60)
+			// },
+			translateXWidth() {
+				return this.checkFriendIds.length > 6 ? this.checkFriendIds.length * 65 : '60'
+			},
+			checkFriendImg(){
+				return this.friendList.reduce((sum,current)=>{
+					if(this.checkFriendIds.includes(current._id)){
+						sum.push(current)
+					}
+					return sum
+				},[]).map(item=>item.avatar_file)
+			}
+		},
+		async onLoad(options) {
+			this.setParam(options)
+		},
+		methods: {
+			async setParam(options = {}){
+				console.log("group_id",options);
+				if(options.group_id){
+					this.group_id = options.group_id
+					uni.setNavigationBarTitle({
+						title:'邀请新成员'
+					})
+					//查本群，成员，
+					let res = await db.collection('uni-im-group-member').where({
+							group_id: options.group_id
+						})
+						.get()
+					console.log("res:查本群，成员 ",res);
+					this.groupMemberUid = res.result.data.map(item=>item.user_id)
+					console.log('this.groupMemberUid',this.groupMemberUid);
+				}
+				this.getFriendsData()
+			},
+			async getFriendsData(){
+				let whereString = {}
+				if(this.keyword){
+					whereString = `
+						"_id"		== 	"${this.keyword}" ||
+						"username"	== 	"${this.keyword}" || 
+						"nickname"	== 	"${this.keyword}" || 
+						"email"		== 	"${this.keyword}" || 
+						"mobile"	== 	"${this.keyword}" 
+					`
+				}
+				let res = await db.collection(
+					db.collection('uni-im-friend').where('"user_id" == $cloudEnv_uid').field('friend_uid,mark,class_name').getTemp(),
+					db.collection('uni-id-users').where(whereString).field('_id,nickname,avatar_file').getTemp()
+				).get()
+				// console.log(res);
+				let data = res.result.data
+				data.forEach((item,index)=>{
+					if(item.friend_uid[0]){
+						data[index] = item.friend_uid[0]
+					}else{
+						delete data[index]
+					}
+				})
+				this.friendData = data
+				this.loading = false
+				this.hasMore = this.friendList.length != 0
+			},
+			doClear() {
+				this.keyword = ''
+				this.getFriendsData()
+			},
+			checkboxChange(e) {
+				// console.log("checkboxChange-value",e.detail.value);
+				this.checkFriendIds = e.detail.value
+			},
+			async createGroup() {
+				// console.log('创建', this.checkFriendIds.length)
+				const uniImCo = uniCloud.importObject("uni-im-co")
+				let res = await uniImCo.chooseUserIntoGroup({
+					user_ids:this.checkFriendIds,
+					group_id:this.group_id
+				})
+				this.checkFriendIds = []
+				// console.log('createGroup',res);
+				if(this.group_id){
+					uni.navigateBack({
+						delta:1
+					})
+				}else{
+					// #ifdef H5
+					if(uniIm.isWidescreen){
+						uni.$emit('uni-im-toChat','group_' + res.data.group_id)
+					}else{
+						uni.redirectTo({
+							url: '/uni_modules/uni-im/pages/chat/chat?conversation_id=' + 'group_' + res.data.group_id,
+							animationDuration: 300,
+							fail: (e) => {
+								console.log(e);
+							}
+						})
+					}
+					// #endif
+					
+					// #ifndef H5
+					uni.redirectTo({
+						url: '/uni_modules/uni-im/pages/chat/chat?conversation_id=' + 'group_' + res.data.group_id,
+						animationDuration: 300,
+						complete: (e) => {
+							console.log(e);
+						}
+					})
+					// #endif
+				}
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.create-group-box {
+		flex: 1;
+		flex-direction: column;
+		position: relative;
+		background-color: #f5f5f5;
+		/* #ifdef H5 */
+		align-items: center;
+		height: 100vh;
+		padding-top: 60px;
+		/* #endif */
+		/* #ifdef MP-WEIXIN */
+		height: 100vh;
+		/* #endif */
+	}
+	
+	/* #ifdef H5 */
+	.create-group-box * {
+		max-width: 950px;
+	}
+	/* #endif */
+
+	.header-box {
+		width: 750rpx;
+		/* #ifdef H5 */
+		position: fixed;
+		top: 44px;
+		z-index: 99;
+		display: flex;
+		width: 100%;
+		/* #endif */
+		flex-direction: column;
+		background-color: #f5f5f5;
+	}
+
+	.image-box {
+		flex-direction: row;
+		align-items: center;
+		/* #ifndef APP-NVUE */
+		transition: 0.3s;
+		display: flex;
+		white-space: nowrap;
+		overflow-x: scroll;
+		/* #endif */
+	}
+
+	.avatar {
+		width: 60rpx;
+		height: 60rpx;
+		border-radius: 50px;
+		/* #ifndef APP-NVUE */
+		flex-shrink: 0;
+		/* #endif */
+	}
+	.content-box .label-box .uni-list-chat__content-title{
+		line-height: 41px;
+	}
+	
+	/* #ifdef H5 */
+	.content-box ::v-deep .uni-list-chat__content-title {
+	    position: relative;
+	    top: 8px;
+	}
+	/* #endif */
+	
+	.content-box {
+		/* #ifdef H5 */
+		// margin-top: 58px;
+		width: 100%;
+		/* #endif */
+		background-color: #fff;
+		z-index: 10;
+	}
+	.label-box{
+		flex-direction: row;
+		align-items: center;
+		height: 80px;
+		margin-right: 20rpx;
+	}
+	.checkbox{
+		margin: 0 20rpx 0 30rpx;
+		transform: scale(1.2);
+	}
+	.foot-box {
+		width: 750rpx;
+		height: 80px;
+		justify-content: center;
+		align-items: center;
+		position: fixed;
+		bottom: 0;
+		z-index: 99;
+		background-color: #f5f5f5;
+		/* #ifdef H5 */
+		width: 100%;
+		@media screen and (min-width:960px){
+			bottom: 10vh;
+			// right: 25vw;
+		}
+		/* #endif */
+	}
+
+	.btn {
+		width: 300px;
+	}
+</style>

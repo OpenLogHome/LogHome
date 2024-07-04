@@ -1,0 +1,28 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": true, //暂时就撤回消息任务，不做限制。后续在触发器内做相关限制
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"type": {
+			"description": "任务名称"
+		},
+		"user_id": {
+			"description": "接收任务的用户id"
+		},
+		"group_id": {
+			"description": "接收任务的群id"
+		},
+		"payload":{
+			
+		}
+	}
+}

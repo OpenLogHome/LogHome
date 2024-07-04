@@ -1,0 +1,69 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": ["name","join_option"],
+	"permission": {
+		"read": true,
+		"create": true,
+		"update": "auth.uid == doc.user_id",
+		"delete": "auth.uid == doc.user_id"
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"user_id":{
+			"bsonType": "string",
+			"description": "群主id",
+			"forceDefaultValue":{
+				"$env":"uid"
+			}
+		},
+		"name":{
+			"bsonType": "string",
+			"label": "群名称",
+			"maxLength": 30
+		},
+		"introduction":{
+			"bsonType": "string",
+			"label": "群简介",
+			"maxLength": 240
+		},
+		"notification":{
+			"bsonType": "string",
+			"label": "群公告",
+			"maxLength": 240
+		},
+		"avatar_file":{
+			"bsonType": "file",
+			"label": "群头像"
+		},
+		"join_option":{
+			"bsonType": "string",
+			"description": "申请加群选项",
+			"label": "申请加群方式",
+			"defaultValue":"needPermission",
+			"enum":[
+				{
+					"text": "需要验证权限",
+					"value": "needPermission"
+				},
+				{
+					"text": "自由加入",
+					"value": "freeAccess"
+				},
+				{
+					"text": "禁止加入",
+					"value": "disableApply"
+				}
+			]
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"description": "群创建的时间戳",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}

@@ -13,7 +13,6 @@
 			</uni-search-bar>
 			<uni-icons type="chat" size="26" :color="'#2d2d2d'" class="messageIcon" @click="gotoMessage"></uni-icons>
 		</div>
-		<popup class="popup" type="5" v-if="appUpdate.hasUpdate" :version="appUpdate.version" :content="appUpdate.desc" @close="closeMask()" @eventClick="update()"></popup>
 		<mescroll-body ref="mescrollRef" @init="mescrollInit" @down="downCallback" @up="upCallback" :fixed="false" :height="'100%'">
 			<div class="swiper" v-show="keyword.length == 0">
 				<Xsuu-swiper :swiperItems="newchartList" :margin="18" 
@@ -295,12 +294,6 @@
 					url:'./readers/collections?title=' +  title
 				})
 			},
-			closeMask(){//关闭弹窗
-				this.appUpdate.hasUpdate=false;
-			},
-			update(){//前往新版本下载页面
-				window.location.href=this.appUpdate.update_url;
-			},
 			//检查更新
 			checkUpdate(){
 				let _this = this;
@@ -309,12 +302,27 @@
 				let appVersion = this.$store.state.appVersion;
 				axios.get(this.$baseUrl + '/app/get_app_update', {}).then((res) => {
 					if(res.data[0].version > appVersion){
-						_this.appUpdate.hasUpdate = true;
-						_this.appUpdate.version = res.data[0].version;
-						_this.appUpdate.desc = res.data[0].version_info;
-						_this.appUpdate.update_url = res.data[0].update_url;
+						let msg = `发现新版本，是否前往更新？`;
+						if(res.data[0].is_forced) {
+							msg = `发现新版本，请前往更新。`
+						}
+						_this.$alert(msg, '新版本提示', {
+							  showClose: false,
+							  showCancelButton: !res.data[0].is_forced,
+							  cancelButtonText: '暂不更新',
+							  confirmButtonText: '立即前往',
+							  dangerouslyUseHTMLString:true,
+						  callback: action => {
+							  if(action == "confirm"){
+								  uni.navigateTo({
+									  url: "./newVersion"
+								  })
+							  }
+						  }
+						});
 					} else if(res.data[0].version < appVersion){
 						_this.$alert(`您使用的版本为非正式版本，可能存在各种问题，如发现请向开发人员反馈，感谢您参与内测！`, '内测版本提示', {
+							  showCancelButton: false,
 							  confirmButtonText: '确定',
 							  dangerouslyUseHTMLString:true,
 						  callback: action => {

@@ -2,35 +2,100 @@
 	<view class="tools">
 		<div class="btn" @click="gotoArticleComment">
 			<svg t="1708138815669" class="icon" 
-			viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2413" width="24" height="24">
+			viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2413" width="22" height="22">
 			<path d="M853.333333 768c35.413333 0 64-20.650667 64-55.978667V170.581333A63.978667 63.978667 0 0 0 853.333333 106.666667H170.666667C135.253333 106.666667 106.666667 135.253333 106.666667 170.581333v541.44C106.666667 747.285333 135.338667 768 170.666667 768h201.173333l110.016 117.44a42.752 42.752 0 0 0 60.586667 0.042667L651.904 768H853.333333z m-219.029333-42.666667h-6.250667l-115.797333 129.962667c-0.106667 0.106667-116.010667-129.962667-116.010667-129.962667H170.666667c-11.776 0-21.333333-1.621333-21.333334-13.312V170.581333A21.205333 21.205333 0 0 1 170.666667 149.333333h682.666666c11.776 0 21.333333 9.536 21.333334 21.248v541.44c0 11.754667-9.472 13.312-21.333334 13.312H634.304zM341.333333 490.666667a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z m170.666667 0a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z m170.666667 0a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z" fill="#3D3D3D" p-id="2414">
 			</path></svg>
-			<span style="margin-left: 5px;">章节评论</span>
+			<span style="margin-left: 5px;">{{commentAmount}}条</span>
+		</div>
+		<div class="btn" @click="tip">
+			<i class="el-icon-present" style="font-size: 20px;"></i>
+			<span style="margin-left: 5px;">{{tippingCount}}次</span>
 		</div>
 <!-- 		<div class="btn">
 			<svg t="1708138847942" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3514" width="20" height="20"><path d="M548.176998 749.701018 548.176998 438.86l457.121 0L1005.297998 219.44 711.72 219.44c56.117965-49.828045 100.636979-112.262042 129.013043-182.845952l-59.51 0c-34.69097 74.899968-90.268979 138.281984-159.307981 182.845952L419.59 219.44c-69.044019-44.564992-124.611994-107.945984-159.306957-182.845952l-59.514 0c28.380979 70.584013 72.89897 133.019034 129.014989 182.845952L36.201 219.44l0 219.42 91.429 0 0 548.546 786.248 0 0-402.27-54.855 0 0 347.419L182.47 932.555 182.47 438.86l310.86 0 0 310.841L548.177 749.701zM548.176998 274.294989l402.274 0 0 109.71L548.177 384.004989 548.177 274.295zM91.048038 384.005018l0-109.71 402.281 0 0 109.71L91.048 384.005018z" p-id="3515"></path></svg>
 			<span style="margin-left: 10px;">123</span>
 		</div> -->
+		<uni-popup ref="popup" type="bottom">
+			<view class="tippingBar">
+				<tippingBar :novel_id="article.novel_id"></tippingBar>
+			</view>
+		</uni-popup>
 	</view>
 </template>
 
 <script>
+	import axios from "axios"
+	import tippingBar from "./tipping/tippingBar.vue"
 	export default {
 		name:"article_tools",
 		props:["article"],
+		components: {
+			tippingBar
+		},
 		data() {
 			return {
-				
+				commentAmount: 0,
+				tippingCount: 0,
+				bookInfo: {}
 			};
 		},
 		mounted(){
-			console.log(this.article);
+			this.getArticleCommentAmount();
+			this.getTippingAmount();
 		},
 		methods: {
+			getNovelInfo(){
+				axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.article.novel_id, {}).then((res) => {
+					this.bookInfo = res.data[0];
+				}).catch(function(error) {
+					uni.showToast({
+						title: error.toString(),
+						icon: 'none',
+						duration: 2000
+					});
+				}).then(function() {})
+			},
+			getTippingAmount() {
+				axios.get(this.$baseUrl + '/library/get_tipping_amount_by_id?id=' + this.article.novel_id, {}).then((res) => {
+					this.tippingCount = res.data[0].count;
+				}).catch(function(error) {
+					uni.showToast({
+						title: error.toString(),
+						icon: 'none',
+						duration: 2000
+					});
+				}).then(function() {})
+			},
+			getArticleCommentAmount() {
+				axios.get(this.$baseUrl + '/articles/get_article_comment_amount?article_id=' + this.article.article_id).then((res) => {
+					this.commentAmount = res.data[0].count
+				}).catch(function(error) {
+					uni.showToast({
+						title: "获取评论数量失败",
+						icon: 'none',
+						duration: 20002
+					});
+				}).then(function() {
+					uni.hideLoading();
+				})
+			},
 			gotoArticleComment(){
 				uni.navigateTo({
 					url: `/pages/readers/bookComment?id=` + this.article.novel_id + `&articleId=` + this.article.article_id
 				})
+			},
+			tip(){
+				let tk = JSON.parse(window.localStorage.getItem('token'));
+				if (tk) tk = tk.id;
+				if (tk == this.bookInfo.auther_id) {
+					uni.showToast({
+						title: "不能给自己的书打赏哦",
+						icon: 'none',
+						duration: 2000
+					});
+				} else {
+					this.$refs.popup.open('bottom')
+				}
 			}
 		}
 	}
@@ -41,17 +106,18 @@
 	display: flex;
 	justify-content: space-between;
 	width: 100%;
-	margin: 30px 0;
+	margin: 30px 0 40px 0;
 	.btn{
 		font-size: 15px;
-		width: 30vw;
+		width: 35vw;
 		height: 40px;
-		background-color: #00000022;
+		background-color: #43434322;
 		color: #333;
 		border-radius: 100px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		margin: 0 5px;
 		span{
 			display: flex;
 			align-items: center;

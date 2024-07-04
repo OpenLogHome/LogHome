@@ -1,0 +1,63 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": "doc.user_id == auth.uid",
+		"create": true, // 触发器内限制
+		"update": "doc.user_id == auth.uid", // 触发器内限制只能更新 未读消息数
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成",
+			"permission": {
+				"write": false
+			}
+		},
+		"id": {
+			"description": "会话ID，由会话双方用户的id按一定规律排序后的哈希值",
+			"permission": {
+				"write": false //由触发器生成，用户不能自定义
+			}
+		},
+		"type": {
+			"description": "会话类型，区分：群聊和单聊",
+			"bsonType": "int",
+			"label": "会话类型",
+			"permission": {
+				"write": false //由触发器生成，用户不能自定义
+			}
+		},
+		"user_id": {
+			"description": "所属用户id",
+			"bsonType": "string",
+			"forceDefaultValue":{
+				"$env": "uid"
+			},
+      		"foreignKey": "uni-id-users._id"
+		},
+		"friend_uid": {
+			"description": "对话的好友的用户id"
+		},
+		"group_id": {
+			"description": "对话的群id",
+      		"foreignKey": "uni-im-group._id"
+		},
+		"unread_count": {
+			"description": "未读消息数量",
+			"bsonType": "int",
+			"defaultValue":0
+		},
+		"last_msg_note": {
+			"description": "最后一条消息概述（文本消息的前n个字，消息为多媒体时只描述类型）"
+		},
+		"update_time": {
+			"bsonType": "timestamp",
+			"description": "最后一次会话时间",
+			"defaultValue":{
+				"$env":"now"
+			}
+		}
+	}
+}

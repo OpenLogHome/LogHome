@@ -9,8 +9,8 @@
 						<template v-slot:title>
 							<div class="title" :style="{'color':item.article_type == 'spliter' ? '#444444' : '#763a18'}">
 								{{item.title}}
-								<el-tag type="warning" v-show="item.article_type == 'richtext'" effect="dark"
-								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">图文</el-tag>
+<!-- 								<el-tag type="warning" v-show="item.article_type == 'richtext'" effect="dark"
+								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">图文</el-tag> -->
 								<el-tag type="success" v-show="item.article_type == 'worldOutline'" effect="dark"
 								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">大纲</el-tag>
 								<el-tag type="success" v-show="item.article_type == 'worldVocabulary'" effect="dark"
@@ -57,11 +57,11 @@
 				<div class="newArticle" v-show="novel.novel_type != 'world'">
 					<div class="tit" style="background-color: #f2f2f2; padding: 5rpx 35rpx; color:#444444">新增普通章节</div>
 					<div class="share">
-						<div class="add commonArticle" @click="addArticle('text')">
+<!-- 						<div class="add commonArticle" @click="addArticle('richtext')">
 							+ 纯文本章节
-						</div>
+						</div> -->
 						<div class="add richArticle" @click="addArticle('richtext')">
-							+ 富文本章节
+							+ 章节
 						</div>
 					</div>
 					<div class="monopolize" v-show="bookPart.currentPart.id == -1">
@@ -303,7 +303,7 @@ export default{
 						is_draft: 1
 					},
 					"richtext":{
-						title: "新图文章节",
+						title: "新章节",
 						content: "[]",
 						name: "章节",
 						is_draft: 1
@@ -316,7 +316,7 @@ export default{
 					},
 					"worldOutline":{
 						title: "新世界大纲",
-						content: "新世界大纲",
+						content: "[]",
 						name: "世界大纲",
 						is_draft: 1
 					},
@@ -498,7 +498,7 @@ export default{
 				})
 			} else if(item.article_type == "richtext"){
 				uni.navigateTo({
-					url:'./richEditor?id=' +  item.article_id
+					url:'./chapterEditor?id=' +  item.article_id
 				})
 			} else if(item.article_type == "spliter"){
 				uni.showModal({
@@ -587,14 +587,14 @@ export default{
 			clearInterval(this.Loop); //再次清空定时器，防止重复注册定时器
 			this.Loop = setTimeout(function() {
 				if(this.touchNotMoved){
+					if(that.jsBridge.inApp){
+						that.jsBridge.vibrate();
+					}
 					uni.navigateTo({
 						url:"./sortArticles?id=" + that.uid
 					})
 				}
 				that.touchend();
-				if(that.jsBridge.inApp){
-					that.jsBridge.vibrate();
-				}
 			}.bind(this), 500);
 		},
 		touchmove(ev) {

@@ -63,8 +63,8 @@ export default {
 			})
 			
             // tabBar切换无动画
-            if (to.type == 'switchTab' || to.type == 'redirectTo' || to.query.noneAnimation) {
-                next && next();
+            if (to.type == 'switchTab' || to.type == 'redirectTo' || (to.query.noneAnimation && (to.type && to.type != 'navigateBack'))) {
+				next && next();
                 setTimeout(() => {
                     const page1_class = document.querySelector('uni-page').classList;
                     page1_class.add('hpa-show');

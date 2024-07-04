@@ -20,9 +20,14 @@
 					<xzj-readMore class="textSendMsg" hideLineNum="3" showHeight="100">
 					    {{reviewMsg.sendMsg}}
 					</xzj-readMore>
-					<div v-if="reviewMsg.article_id != 0" style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;" @click="navToChapter">
+					<div v-if="reviewMsg.article_id != 0 && showRef" style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;">
 						<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;"><path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2307"></path><path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2308"></path></svg>
-						来自章节 {{article.title}}
+						<span @click="navToChapter">来自章节 {{article.title}}</span>
+						<p v-if="reviewMsg.cento_id != 0" style="color: #aaa">
+							<xzj-readMore class="textSendMsg" hideLineNum="2" showHeight="50">
+								{{reviewMsg.cento.paragraph}}
+							</xzj-readMore>
+						</p>
 					</div>
 				</view>
 				<view class="iconRow">
@@ -62,6 +67,7 @@
 		name: 'review',
 		props: {
 			reviewMsg: [Object],
+			showRef: Boolean
 		},
 		components: {
 			dnIcon,followBtn

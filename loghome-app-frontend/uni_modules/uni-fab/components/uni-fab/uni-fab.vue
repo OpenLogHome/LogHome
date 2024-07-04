@@ -5,7 +5,9 @@
         'uni-fab--rightBottom': rightBottom,
         'uni-fab--leftTop': leftTop,
         'uni-fab--rightTop': rightTop
-      }" class="uni-fab">
+      }" class="uni-fab"
+				:style="nvueBottom"
+			>
 			<view :class="{
           'uni-fab__content--left': horizontal === 'left',
           'uni-fab__content--right': horizontal === 'right',
@@ -32,8 +34,8 @@
 		  'uni-fab__circle--leftTop': leftTop,
 		  'uni-fab__circle--rightTop': rightTop,
 		  'uni-fab__content--other-platform': !isAndroidNvue
-		}" class="uni-fab__circle uni-fab__plus" :style="{ 'background-color': styles.buttonColor }" @click="_onClick">
-			<uni-icons class="fab-circle-icon" type="plusempty" :color="styles.iconColor" size="32"
+		}" class="uni-fab__circle uni-fab__plus" :style="{ 'background-color': styles.buttonColor, 'bottom': nvueBottom }" @click="_onClick">
+			<uni-icons class="fab-circle-icon" :type="styles.icon" :color="styles.iconColor" size="32"
 				:class="{'uni-fab__plus--active': isShow && content.length > 0}"></uni-icons>
 			<!-- <view class="fab-circle-v"  :class="{'uni-fab__plus--active': isShow && content.length > 0}"></view>
 			<view class="fab-circle-h" :class="{'uni-fab__plus--active': isShow  && content.length > 0}"></view> -->
@@ -113,7 +115,8 @@
 					selectedColor: '#007AFF',
 					backgroundColor: '#fff',
 					buttonColor: '#007AFF',
-					iconColor: '#fff'
+					iconColor: '#fff',
+					icon: 'plusempty'
 				}
 			}
 		},
@@ -158,6 +161,16 @@
 			},
 			horizontalRight() {
 				return this.getPosition(2, 'horizontal', 'right')
+			},
+			// 计算 nvue bottom
+			nvueBottom() {
+				const safeBottom = uni.getSystemInfoSync().windowBottom;
+				// #ifdef APP-NVUE
+				return 30 + safeBottom
+				// #endif
+				// #ifndef APP-NVUE
+				return 30
+				// #endif
 			}
 		},
 		watch: {
@@ -194,6 +207,9 @@
 			 * 按钮点击事件
 			 */
 			_onItemClick(index, item) {
+				if (!this.isShow) {
+					return
+				}
 				this.$emit('trigger', {
 					index,
 					item
@@ -217,8 +233,8 @@
 	}
 </script>
 
-<style lang="scss" scoped>
-	$uni-shadow-base:0 1px 5px 2px rgba($color: #b4b4b4, $alpha: 0.3) !default;
+<style lang="scss" >
+	$uni-shadow-base:0 1px 5px 2px rgba($color: #000000, $alpha: 0.3) !default;
 
 	.uni-fab {
 		position: fixed;
@@ -227,7 +243,7 @@
 		/* #endif */
 		justify-content: center;
 		align-items: center;
-		z-index: 102;
+		z-index: 10;
 		border-radius: 45px;
 		box-shadow: $uni-shadow-base;
 	}
@@ -263,11 +279,11 @@
 	}
 
 	.uni-fab--rightBottom {
-		right: 20px;
-		bottom: 80px;
+		right: 15px;
+		bottom: 30px;
 		/* #ifdef H5 */
-		right: calc(20px + var(--window-right));
-		bottom: calc(80px + var(--window-bottom));
+		right: calc(15px + var(--window-right));
+		bottom: calc(30px + var(--window-bottom));
 		/* #endif */
 		// padding: 10px;
 	}
@@ -293,7 +309,7 @@
 		height: 55px;
 		background-color: #3c3e49;
 		border-radius: 45px;
-		z-index: 103;
+		z-index: 11;
 		// box-shadow: $uni-shadow-base;
 	}
 
@@ -316,11 +332,11 @@
 	}
 
 	.uni-fab__circle--rightBottom {
-		right: 20px;
-		bottom: 80px;
+		right: 15px;
+		bottom: 30px;
 		/* #ifdef H5 */
-		right: calc(20px + var(--window-right));
-		bottom: calc(80px + var(--window-bottom));
+		right: calc(15px + var(--window-right));
+		bottom: calc(30px + var(--window-bottom));
 		/* #endif */
 	}
 

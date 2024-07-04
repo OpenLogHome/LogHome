@@ -1,0 +1,394 @@
+<template>
+	<view class="container" @click="hiddenDeleteBtn">
+		<uni-list :border="false" class="list-box">
+			<template v-if="showMenu">
+				<uni-list-item v-for="(menu,menuIndex) in menuList" :key="menuIndex" class="menu-item"
+						:title="menu.title" link 
+						@click="openPages(menu)" :border="false" :showBadge="true"
+					>
+					<template v-slot:header>
+						<view class="slot-icon-box green">
+							<image class="slot-icon" :src="'/uni_modules/uni-im/static/noticeIcon/' + menu.srcName + '.png'" mode="widthFix"></image>
+						</view>
+					</template>
+				</uni-list-item>
+				
+				<uni-list-item v-for="(item,index) in noticeList" :key="item.id" class="menu-item" :title="item.title"
+					:showBadge="true" :badgeText="item.badge" :badgeStyle="item.badgeStyle" link @click="openPages(item)" :border="false">
+					<template v-slot:header>
+						<view class="slot-icon-box blue">
+							<image class="slot-icon" :src="item.icon" mode="widthFix"></image>
+						</view>
+					</template>
+				</uni-list-item>
+			</template>
+			
+			<template v-if="showUser">
+				<uni-list-item :customStyle="{padding:0}" :border="false">
+					<template v-slot:body>
+						<text class="grey">好友列表</text>
+					</template>
+				</uni-list-item>
+				<uni-list-item v-for="(item, index) in friendList" :key="item._id" :customStyle="{padding:0}" class="user-list-item">
+					<template v-slot:body>
+						<scroll-view scroll-x="true" @scroll="scroll"
+							:scroll-left="activeIndex === index ?'':scrollLeft[index]" :show-scrollbar="false"
+							:scroll-with-animation="true" class="user-list-item-scroll-view">
+							<view class="item" @click="toChat(item)" @touchstart.passive="activeIndex = index">
+								<image class="avatar"
+									:src="item.avatar_file&&item.avatar_file.url ? item.avatar_file.url : '/uni_modules/uni-im/static/avatarUrl.png'"
+									mode="widthFix"></image>
+								<text class="username">{{item.nickname}}</text>
+								<button @click.stop="deleteItem(item,index,$event)" class="delete-btn" size="mini" type="warn">删除</button>
+							</view>
+						</scroll-view>
+					</template>
+				</uni-list-item>
+				<uni-list-item :customStyle="{padding:0}">
+					<template v-slot:body>
+						<uni-load-more class="tip" :status="friendHasMore?'loading':'noMore'"></uni-load-more>
+					</template>
+				</uni-list-item>
+			</template>
+		</uni-list>
+	</view>
+</template>
+
+<script>
+import uniIm from '@/uni_modules/uni-im/lib/main.js';
+	const db = uniCloud.database()
+	export default {
+		emits:['clickMenu'],
+		props: {
+			// pc端时会控制隐藏
+			showMenu: {
+				type: Boolean,
+				default: true
+			},
+			// pc端时会控制隐藏
+			showUser: {
+				type: Boolean,
+				default: true
+			},
+		},
+		data() {
+			return {
+				scrollLeft: {
+					0: 0,
+					1: 1
+				},
+				activeIndex: false,
+				menuList:[
+					{
+						title:'加人/加群',
+						path:'./addPeopleGroups/addPeopleGroups',
+						srcName:'search'
+					},
+					{
+						title:'群聊',
+						path:'./groupList/groupList',
+						srcName:'group'
+					},
+					{
+						title:'创建群聊',
+						path:'./createGroup/createGroup',
+						srcName:'createGroup'
+					}
+				]
+			}
+		},
+		computed: {
+			//是否为pc宽屏（width>960px）
+			isWidescreen(){
+				return uniIm.isWidescreen
+			},
+			friendList() {
+				return uniIm.friend.dataList
+			},
+			friendHasMore(){
+				return uniIm.friend.hasMore
+			},
+			noticeList() {
+				return [{
+						title: "新朋友",
+						param: {
+							type: ['uni-im-friend-invite']
+						},
+						icon: "/uni_modules/uni-im/static/noticeIcon/newFriend.png"
+					},
+					{
+						title: "群通知",
+						param: {
+							type: ['uni-im-group-join-request']
+						},
+						icon: "/uni_modules/uni-im/static/noticeIcon/groupNotice.png"
+					},
+					{
+						title: "系统通知",
+						param: {
+							excludeType: ['uni-im-group-join-request', 'uni-im-friend-invite']
+						},
+						icon: "/uni_modules/uni-im/static/noticeIcon/notification.png"
+					}
+				].reduce((sum,item,index) => {
+					let {param:filterNotice,title} = item,
+						param = {filterNotice,title}
+						// console.log('param----',param);
+					sum.push({
+						title: item.title,
+						badge: this.getUnreadCount(item.param),
+						badgeStyle: {
+							backgroundColor: '#d60000'
+						},
+						path: "./notification/notification?param=" + encodeURIComponent(JSON.stringify(param)),
+						param,
+						icon: item.icon,
+						id:Date.now()+'-'+index
+					})
+					return sum
+				}, [])
+			}
+		},
+		onPullDownRefresh() {
+			this.$refs.udb.loadData({
+				clear: true
+			}, () => {
+				uni.stopPullDownRefresh()
+			})
+		},
+		onReachBottom() {
+			// this.$refs.udb.loadMore()
+		},
+		methods: {
+			openPages(item,index){
+				// #ifdef H5
+				if(this.isWidescreen){
+					let componentName = 'uni-im-' + item.path.split('/')[1],
+						param = item.param
+					return this.$emit('clickMenu',{componentName,param,title:item.title})
+				}
+				// #endif
+				// console.log('item',item);
+				uni.navigateTo({
+					url:item.path,
+					fail: (e) => {
+						console.error(e,item.path);
+					}
+				})
+			},
+			getUnreadCount(param) {
+				return uniIm.notification.unreadCount(param)
+			},
+			toChat(item) {
+				// console.log('this.isWidescreen',this.isWidescreen)
+				if (this.isWidescreen) {
+					//若为宽屏，则触发右侧详情页的自定义事件，通知右侧窗体刷新详情
+					uni.$emit('uni-im-toChat',{user_id:item._id})
+				} else {
+					// 若为窄屏，则打开新窗体，在新窗体打开详情页面
+					openPages('/uni_modules/uni-im/pages/chat/chat?user_id=' + item._id);
+				}
+
+				function openPages(url) {
+					uni.navigateTo({
+						url,
+						fail: (err1) => {
+							console.log({err1});
+							uni.switchTab({
+								url,
+								fail: (err2) => {
+									console.error({err1,err2})
+								}
+							});
+						}
+					});
+				}
+			},
+			hiddenDeleteBtn() {
+				this.activeIndex = false
+				this.$nextTick(() => {
+					for (let i in this.scrollLeft) {
+						this.$set(this.scrollLeft, i, 0)
+						// this.scrollLeft[i] = 0
+					}
+				})
+			},
+			async deleteItem(item, index,event) {
+				uni.showModal({
+					title: '确认要删除好友吗',
+					content: '此操作不可撤销',
+					showCancel: true,
+					cancelText: '取消',
+					confirmText: '确认',
+					complete: async (e) => {
+						if (e.confirm) {
+							uni.showLoading({
+								mask: true
+							});
+							await db.collection('uni-im-friend').where({
+								friend_uid: item._id,
+								user_id:uniCloud.getCurrentUserInfo().uid
+							}).remove()
+							uni.hideLoading()
+							// 收到push消息后会自动，将此用户从列表中移除
+						}
+					}
+				});
+				this.hiddenDeleteBtn()
+				event.stopPropagation()
+				event.preventDefault()
+			},
+			scroll(e) {
+				// console.log(this.inMove);
+				this.$set(this.scrollLeft, this.activeIndex, e.detail.scrollLeft)
+				// this.scrollLeft[this.activeIndex] = e.detail.scrollLeft
+				for (let i in this.scrollLeft) {
+					if (i != this.activeIndex) {
+						this.$set(this.scrollLeft, i, 0)
+						// this.scrollLeft[i] = 0
+					}
+				}
+			},
+			handleItemClick(id) {
+				uni.navigateTo({
+					url: './detail?id=' + id
+				})
+			},
+			fabClick() {
+				// 打开新增页面
+				uni.navigateTo({
+					url: './add',
+					events: {
+						// 监听新增数据成功后, 刷新当前页面数据
+						refreshData: () => {
+							this.$refs.udb.loadData({
+								clear: true
+							})
+						}
+					}
+				})
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.tip {
+		width: 750rpx;
+		/* #ifndef APP-NVUE */
+		position: relative;
+		// left: -15px;
+		/* #endif */
+		text-align: center;
+		padding:30px 0;
+		color: #999999;
+		/* #ifdef H5 */
+		cursor: default;
+		/* #endif */
+		background-color: #f5f5f5;
+	}
+	
+	.grey {
+		background-color: #f5f5f5;
+		text-align: left;
+		padding: 8px;
+		font-size: 12px;
+		width: 750rpx;
+	}
+
+	.container {
+		width: 750rpx;
+		/* #ifndef APP-NVUE */
+		height: 100vh;
+		/* #endif */
+		/* #ifdef APP-NVUE */
+		flex: 1;
+		/* #endif */
+		background-color: #f5f5f5;
+	}
+	/* #ifdef APP-NVUE */
+	.list-box{
+		background-color: #f5f5f5;
+	}
+	/* #endif */
+
+	.menu-item {
+		width: 750rpx;
+		height: 60px;
+		border-bottom: #f5f5f5 solid 1px;
+		justify-content: space-around;
+		/* #ifndef MP */
+		// padding: 0 15rpx;
+		/* #endif */
+	}
+	
+	.user-list-item-scroll-view{
+		width: 750rpx;
+		background-color: #ffffff;
+	}
+	/* #ifndef APP-NVUE */
+	.user-list-item-scroll-view ::v-deep .uni-scroll-view ::-webkit-scrollbar {
+	    display: none!important;
+	}
+	/* #endif */
+
+	.item {
+		width: 880rpx;
+		position: relative;
+		height: 60px;
+		align-items: center;
+		padding: 8px 15px;
+		flex-direction: row;
+	}
+
+	.avatar {
+		background-color: #fefefe;
+		width: 40px;
+		height: 40px;
+		border-radius: 5px;
+	}
+
+	.username {
+		line-height: 30px;
+		margin-left: 30rpx;
+		font-size: 16px;
+	}
+
+	.delete-btn {
+		border-radius: 0;
+		position: absolute;
+		right: 0;
+		top: 0;
+		height: 60px;
+		line-height: 60px;
+		width: 130rpx;
+		font-size: 26rpx;
+		padding: 0;
+	}
+
+	.slot-icon-box {
+		width: 80rpx;
+		height: 80rpx;
+		align-items: center;
+		justify-content: center;
+		border-radius: 10rpx;
+		margin-right: 20rpx;
+	}
+
+	.slot-icon {
+		width: 50rpx;
+		height: 50rpx;
+	}
+
+	.warn {
+		background-color: #FA9E3B;
+	}
+
+	.green {
+		background-color: #08C060;
+	}
+
+	.blue {
+		background-color: #5DBAFF;
+	}
+</style>

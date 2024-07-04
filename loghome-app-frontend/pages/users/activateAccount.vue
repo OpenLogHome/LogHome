@@ -11,13 +11,13 @@
 				<image class="to" src="../../static/user/to.png"  v-show="user.mobile == 'unbind'"></image>
 			</view>
 		</view>
-		<view class="list">
+<!-- 		<view class="list">
 			<view class="li" @click="gotoOicqActivate">
 				<view class="text">通过QQ号绑定</view>
 				<view  v-show="user.oicq_account != 'unbind'">{{user.oicq_account}}</view>
 				<image class="to" src="../../static/user/to.png" v-show="user.oicq_account == 'unbind'"></image>
 			</view>
-		</view>
+		</view> -->
 		<div class="info">
 			<p>我们暂时不支持解绑账号，如有相关诉求请至反馈中心反馈，我们的客服将协助你解决相关问题。</p>
 		</div>

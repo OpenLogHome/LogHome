@@ -1,10 +1,16 @@
 <template>
 	<view class="commentOuter">
-		<z-paging ref="paging" v-model="reviews" @query="refreshPage">
+		<view ref="paragraphPreview" class="paragraphPreview" v-if="paragraphInfo != undefined">
+			<xzj-readMore class="textSendMsg" hideLineNum="3" showHeight="80" :showMoreButton="false">
+				<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;"><path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2307"></path><path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2308"></path></svg>
+				{{ paragraphInfo.value }}
+			</xzj-readMore>
+		</view>
+		<z-paging ref="paging" v-model="reviews" @query="refreshPage" class="commentList">
 			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty"></nothing>
 			<view class="comments">
 				<commentItem v-for="item in reviews" :reviewMsg="item" :key="item.essay_comment_id"
-				@childReview="childReview($event)" @refresh="refreshPage(1,10)"></commentItem>
+				@childReview="childReview($event)" @refresh="refreshPage(1,10)" :showRef="paragraphInfo == undefined"></commentItem>
 			</view>
 			<view class="blank_box"></view>
 		</z-paging>
@@ -36,7 +42,10 @@
 				replyToId:-1,
 				isFocus:false,
 				fatherId:-1,
-				articleId: undefined
+				articleId: undefined,
+				paragraphId: undefined,
+				article: undefined,
+				paragraphInfo: undefined,
 			}
 		},
 		onLoad(params){
@@ -45,6 +54,13 @@
 				this.articleId = params.articleId;
 				uni.setNavigationBarTitle({
 					title: "章节评论"
+				})
+			}
+			if(params.paragraphId) {
+				this.paragraphId = params.paragraphId;
+				this.getParagraphInfo();
+				uni.setNavigationBarTitle({
+					title: "段落评论"
 				})
 			}
 		},
@@ -76,7 +92,9 @@
 				let reviewDatas = [];
 				let _this = this;
 				await axios.get(this.$baseUrl + "/community/novel_commonts_all?id=" + this.novelId
-				+ "&page=" + pageNo + "&pageSize=" + pageSize + ((this.articleId!= undefined) ? `&articleId=${this.articleId}` : ''))
+				+ "&page=" + pageNo + "&pageSize=" + pageSize 
+				+ ((this.articleId!= undefined) ? `&articleId=${this.articleId}` : '')
+				+ ((this.paragraphId!= undefined) ? `&paragraphId=${this.paragraphId}` : ''))
 				.then(async (res)=>{
 					let data = res.data;
 					for(let item of data){
@@ -126,7 +144,9 @@
 							likeNum:item.likeNum,
 							reviewLess:[],
 							reviewNum:0,
-							article_id: item.article_id
+							article_id: item.article_id,
+							cento_id: item.cento_id,
+							cento: item.cento
 						}
 						
 						for(let subItem of reviewDatas){
@@ -141,12 +161,45 @@
 								})
 							}
 						}
-						reviews.push(commentItem);
+						
+						if(this.paragraphId) {
+							if(commentItem.cento && commentItem.cento.paragraph_id == this.paragraphId) {
+								reviews.push(commentItem);
+							}
+						} else {
+							reviews.push(commentItem);
+						}
 						// console.log("commentItem",commentItem);
 					}
 				}
 				this.$refs.paging.complete(reviews);
 				uni.hideLoading();
+			},
+			getParagraphInfo(){
+				axios.get(this.$baseUrl + '/articles/get_article?id=' + this.articleId).then((res) => {
+					this.article = res.data[0];
+					try {
+						this.article.content = JSON.parse(this.article.content);
+					} catch (e) {}
+					for(let paragraph of this.article.content){
+						if(paragraph.id == this.paragraphId){
+							this.paragraphInfo = paragraph;
+							this.$forceUpdate();
+							setTimeout(() => {
+								this.$refs.paging.$el.style.top = this.$refs.paragraphPreview.$el.getBoundingClientRect().height + 44 + "px";
+							})
+							return;
+						}
+					}
+				}).catch(function(error) {
+					uni.showToast({
+						title: "获取文章失败",
+						icon: 'none',
+						duration: 2000
+					});
+				}).then(function() {
+					uni.hideLoading();
+				})
 			},
 			submitComment(){
 				let _this = this;
@@ -158,7 +211,8 @@
 						{
 							novel_id: this.novelId,
 							content: this.commentText,
-							article_id: this.articleId != undefined ? this.articleId : 0
+							article_id: this.articleId != undefined ? Number(this.articleId) : 0,
+							paragraph_id: this.paragraphId != undefined ? Number(this.paragraphId) : -1
 						},
 						{
 							headers: {
@@ -243,6 +297,10 @@
 <style lang="scss" scoped>
 	.commentOuter{
 		background-color: rgb(255, 248, 234);
+		.paragraphPreview{
+			padding: 30rpx;
+			background-color: #E6E6E6;
+		}
 		.comments{
 			
 		}

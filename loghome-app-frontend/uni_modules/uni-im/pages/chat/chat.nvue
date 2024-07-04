@@ -1,0 +1,1209 @@
+<template>
+	<!-- 设置导航栏标题，如与谁对话，群人数为几人等 -->
+	<page-meta>
+		<navigation-bar :title="navTitle" background-color="#f8f8f8" front-color="#000000" />
+	</page-meta>
+	<view class="page" id="uni-im-chat">
+		<!-- #ifdef H5 -->
+		<!-- H5端 左上角显示未读消息数 ，nvue端使用setTitleNViewButtonBadge设置-->
+		<view @click="tapUnreadCount" class="unread_count" v-if="unread_count != 0">
+			{{ unread_count > 99 ? '99+' : unread_count }}
+		</view>
+		<!-- #endif -->
+
+		<uni-im-msg-list v-if="conversation.id" :conversationId="conversation.id" 
+			ref="msg-list" @showControl="showControl" @retriesSendMsg="retriesSendMsg" 
+			:paddingBottom="imPlaceholderheight + 'px'" class="msg-list" @clickItem="hideKeyboard"
+		></uni-im-msg-list>
+
+		<!-- 聊天数据输入框 键盘弹出后要抬高底部内边距 全面屏的安全距离 -->
+		<view class="chat-foot" :style="{'padding-bottom':chatTootPaddingBottom}">
+			<!-- pc宽屏（width>960px）的输入框 -->
+			<!-- #ifdef H5 -->
+			<view v-if="isWidescreen" class="pc">
+				<view class="tool-bar">
+					<view class="icons">
+						<uni-im-icons v-for="(item,index) in menuList" :key="index" @click.native.stop="clickMenu(index,$event)" :code="item.iconCode" size="26"
+							:title.native="`选择${item.title}，并发送`"
+						></uni-im-icons>
+					</view>
+					<label class="code-model" style="flex-direction: row;margin-left: 10px;">
+						<text>代码模式：</text>
+						<switch style="transform: scale(0.8) translateX(-10px);" @change="isCodeText = $event.detail.value"></switch>
+					</label>
+				</view>
+				<view class="answer-msg" v-if="answerMsgIndex !== false">
+					<text class="answer-msg-text">{{getNicknameByUid(msgList[answerMsgIndex].from_uid)}}：{{msgList[answerMsgIndex].body}}</text>
+					<uni-icons @click="answerMsgIndex = false" type="clear" color="#aaa" size="16px"></uni-icons>
+				</view>
+				<textarea class="textarea" :maxlength="isCodeText?-1:250" v-model="chatText" @focus="onChatInputFocus()" @blur="isFocus = false" :focus="isFocus"></textarea>
+				<!-- @keyup.shift="onKeyup('shift')" @keydown.shift="onKeydown('shift')" @keydown.enter="onKeydown('enter')" -->
+				<view class="send-btn-box">
+					<text class="send-btn-tip">↵ 发送 / shift + ↵ 换行</text>
+					<button @click="beforeSendMsg()" :disabled="!chatText || !chatText.length" class="send" type="primary">发送</button>
+				</view>
+			</view>
+			<!-- #endif -->
+			
+			<!-- 非pc宽屏（width<960px）的输入框 -->
+			<template v-if="!isWidescreen">
+				<view v-if="showInputBox" class="input-box">
+					<!-- 切换为语音模式 -->
+					<!-- <uni-im-icons @click="changeSoundIsShow" :code="soundIsShow?'e69f':'e684'" size="30" class="icon"></uni-im-icons> -->
+					<view class="input-box-conetnt">
+						<view class="textarea-box">
+							<textarea
+								v-model="chatText" @input="input" @confirm="beforeSendMsg()" @linechange="linechange" :flex="true"
+								:style="{ height: textareaHeight + 'px' }" :disable-default-padding="false" :hold-keyboard="true" :confirm-hold="true"
+								:auto-blur="false" confirm-type="send" :show-confirm-bar="false" :cursor-spacing="20" maxlength="5000"
+								:focus="mpIsFocus" @focus="onChatInputFocus()" @blur="isFocus = false" :fixed="true"
+								:adjust-position="false" class="textarea" ref="input-box" @return="beforeSendMsg()"/>
+						</view>
+						<view class="answer-msg" v-if="answerMsgIndex !== false">
+							<text class="answer-msg-text">{{getNicknameByUid(msgList[answerMsgIndex].from_uid)}}：{{msgList[answerMsgIndex].body}}</text>
+							<uni-icons @click="answerMsgIndex = false" type="clear" color="#aaa" size="16"></uni-icons>
+						</view>
+						<uni-im-sound class="uni-im-sound" v-if="soundIsShow" @success="sendSound"></uni-im-sound>
+					</view>
+					<!-- <uni-im-icons @click.native.stop="changeEmojiIsShow" :code="emojiIsShow?'e69f':'e646'" size="30" class="icon"></uni-im-icons> -->
+					<text v-if="!soundIsShow&&chatText" @click.prevent="beforeSendMsg()" class="icon beforeSendMsg">发送</text>
+					<uni-icons v-else @click.native.stop="changeMenuIsShow" type="plusempty" size="30" class="icon"></uni-icons>
+				</view>
+				
+				<view v-if="menuIsShow||emojiIsShow" class="media-box" :style="{height:keyboardMaxHeight+'px'}">
+					<view v-if="menuIsShow" class="menu"  :style="{height:keyboardMaxHeight+'px'}">
+						<view class="menu-item" v-for="(item,index) in menuList" :key="index" @click.stop="clickMenu(index,$event)">
+							<view class="menu-item-icon">
+								<uni-icons :type="item.iconCode" size="26"></uni-icons>
+							</view>
+							<text class="menu-item-text">{{item.title}}</text>
+						</view>
+					</view>
+					<scroll-view :scroll-y="true" v-if="emojiIsShow" class="emojiListBox" :style="{height:keyboardMaxHeight+'px'}">
+						<text v-for="(uniCodeEmoji,index) in emojiCodes" :key="index" @click.stop="clickEmojiItem(uniCodeEmoji,$event)" 
+						class="emoji-item">{{uniCodeEmoji}}</text>
+					</scroll-view>
+				</view>
+				<view v-else :style="{height:keyboardHeight - phoneBH +'px'}"></view>
+			</template>
+		</view>
+		
+		<uni-im-control ref="uni-im-control" @answer="answer"></uni-im-control>
+		
+		<!-- <uni-icons v-if="hasNewMsg" class="hasNewMsg" @click="showLast(300)" color="#FFF" type="back" :style="{bottom:imPlaceholderheight + 10 + 'px'}"></uni-icons> -->
+		
+		<!-- <view style="position: fixed;top: 200px;left: 0;background-color: #FFFFFF;">
+			imPlaceholderheight:{{imPlaceholderheight}}
+			keyboardHeight:{{keyboardHeight}}
+			keyboardMaxHeight:{{keyboardMaxHeight}}
+			systemInfo.osName:{{systemInfo.osName}}
+		</view> -->
+	</view>
+</template>
+
+<script>
+	import uniIm from '@/uni_modules/uni-im/lib/main.js';
+	
+	// #ifdef APP-NVUE
+	// 定义weex的dom模块（https://doc.weex.io/zh/docs/modules/dom.html#scrolltoelement）
+	const dom = weex.requireModule('dom') || {};
+	// #endif
+
+	import {store as uniIdStore} from '@/uni_modules/uni-id-pages/common/store';
+	import uniImUtils from '@/uni_modules/uni-im/common/utils.js';
+	import emojiCodes from '@/uni_modules/uni-im/common/emojiCodes';
+	
+	let shiftKeyPressed = false;
+	export default {
+		data() {
+			return {
+				// 当前会话对象
+				conversation:{
+					id:false
+				},
+				//聊天输入框高度
+				textareaHeight: 26,
+				//收到正在对话的用户发来新消息，时悬浮按钮提示 (暂不支持)
+				hasNewMsg: false,
+				isCodeText:false,
+				menuIsShow:false,
+				emojiIsShow:false,
+				soundIsShow:false,
+				menuList:[
+					{
+						"title":"图片",
+						"iconCode":"image"
+					},
+					// {
+					// 	"title":"视频",
+					// 	"iconCode":"videocam"
+					// },
+					// {
+					// 	"title":"文件",
+					// 	"iconCode":"paperclip"
+					// }
+				],
+				keyboardHeight:0,
+				keyboardMaxHeight:260,
+				emojiCodes:emojiCodes,
+				isFocus:false,
+				answerMsgIndex:false
+			};
+		},
+		computed: {
+			...uniIm.mapState(['currentConversationId','conversationDatas','isWidescreen','systemInfo']),
+			unread_count(){
+				// 所有会话的未读消息数
+				const unreadCount = uniIm.conversation.unreadCount()
+				
+				// #ifdef APP-PLUS
+				// 给标题栏返回按钮添加数字角标，表示有几条其他会话的未读消息数
+				plus.webview.currentWebview().setTitleNViewButtonBadge({
+					index:0,
+					text:unreadCount
+				})
+				// #endif
+				
+				return unreadCount
+			},
+			isSafariPc() {
+				return this.systemInfo.browserName == 'safari' && this.isWidescreen
+			},
+			msgList() {
+				return this.conversation.msgList || []
+			},
+			//聊天数据
+			//当前会话的聊天框文字内容
+			chatText: {
+				get() {
+					// console.log('this.conversation',this.conversation);
+					return this.conversation?.chatText;
+				},
+				set(chatText) {
+					this.conversation.chatText = chatText
+				}
+			},
+			//当前用户自己的uid
+			current_uid() {
+				return uniIdStore.userInfo._id;
+			},
+			phoneBH(){
+				return this.systemInfo.screenHeight - this.systemInfo.safeArea.bottom
+			},
+			chatTootPaddingBottom(){
+				// #ifdef MP-WEIXIN
+				return this.phoneBH+'px'
+				// #endif
+				// #ifndef MP-WEIXIN
+				return 0
+				// #endif
+			},
+			imPlaceholderheight(){
+				// #ifdef H5
+					// 是否为pc宽屏（width>960px）
+					if(this.isWidescreen){
+						return 0
+					}
+				// #endif
+				
+				
+				let imPlaceholderheight = 32 + this.textareaHeight
+				if(this.keyboardHeight || this.menuIsShow || this.emojiIsShow){
+					imPlaceholderheight += this.keyboardMaxHeight
+				}
+				if(!this.keyboardHeight){
+					imPlaceholderheight += this.phoneBH
+				}
+				// console.log('imPlaceholderheight',imPlaceholderheight)
+				return imPlaceholderheight
+			},
+			mpIsFocus(){
+				// #ifdef MP
+				return this.isFocus
+				// #endif
+			},
+			// 临时方案 修复（兼容）微信小程序框架的bug：iOS端textarea组件 在 iOS 真机下 无法动态切换绑定 input 事件
+			// 大家可以一起顶帖 链接地址：https://developers.weixin.qq.com/community/develop/doc/0002a02800cd90b9632efeab55b000
+			showInputBox(){
+				// #ifndef MP-WEIXIN
+				return true
+				// #endif
+				// #ifdef MP-WEIXIN
+				return this.conversation.id
+				// #endif
+			},
+			navTitle(){
+				let {title} = this.conversation
+				if(this.conversation.group_id){
+					title += '('+ Object.keys(this.conversation.group_member).length +")";
+				}
+				return title
+			}
+		},
+		created() {
+			// 监听推送消息
+			this.onPushMessage = (res)=>{
+				//获取透传内容
+				const {
+					type,
+					data
+				} = res.data.payload;
+				//判断消息类型是否为im，且为当前页面对应会话消息
+				if (type == "uni-im" && data.conversation_id == this.currentConversationId) {
+					//因为已经打开，所以这里需要设为已读
+					uniIm.clearUnreadCount(this.currentConversationId);
+					// console.log('聊天页面-收到消息: ', JSON.stringify(res));
+					this.hasNewMsg = true;
+					//需要重新设置滚动条的高，以至于用户可以立即看到（即：滚动到最后一条消息）
+					// console.log(66666);
+					
+					// 注：为兼容web-PC端这里必须使用setTimeout 0
+					setTimeout(()=> {
+						this.showLast();
+					}, 0);
+				}
+			}
+			uni.onPushMessage(this.onPushMessage);
+			
+			// #ifdef H5
+			//通过监听窗口变化 获取键盘弹出或收起事件
+			window.addEventListener('resize', () => {
+				if(this.currentConversationId){
+					this.showLast(0);
+					this.soundIsShow = false
+				}
+			})
+			// #endif
+			
+			// #ifndef H5
+			this.onKeyboardHeightChange = ({height})=>{
+				this.keyboardHeight = height
+				// console.log('height',height)
+				if(height){
+					this.keyboardMaxHeight = height
+				}
+				this.$nextTick(()=> {
+					this.showLast();
+					// #ifdef APP-NVUE
+					// 临时方案：解决偶发nvue下不能滚动到最后一条消息的问题
+					setTimeout(()=>{
+						this.showLast()
+					},800)
+					// #endif
+				});
+			}
+			// 监听键盘高度变化显示最后一条消息
+			uni.onKeyboardHeightChange(this.onKeyboardHeightChange);
+			// #endif
+		},
+		mounted() {
+			// #ifdef H5
+			//上传图片并发送
+			let uploadAndSend = (blobUrl, type,{name,size}) => {
+				// console.log('blobUrl',JSON.stringify(blobUrl),);
+				uni.showLoading();
+				uniCloud.uploadFile({
+					filePath: blobUrl,
+					cloudPath: 'uni-im/' + this.currentConversationId + Date.now() + (type == 'image'?'.png':'')
+				})
+				.then( ({fileID:url}) => {
+					uni.hideLoading();
+					
+					let data = {};
+					if(!['image','video'].includes(type)){
+						type = 'file'
+					}
+					data[type] = {url,size,name};
+					this.beforeSendMsg(data);
+				})
+				.catch(e=>{
+					console.log(e);
+				})
+			};
+			
+			// 以下为实现拖拽或粘贴图片至聊天页面，直接发送的逻辑
+			const chatBodyDom = document.getElementById("uni-im-chat")
+			// 阻止默认事件
+			chatBodyDom.addEventListener(
+				'dragover',
+				function(event) {
+					event.preventDefault();
+				},
+				false
+			);
+			// 拖拽结束时触发
+			chatBodyDom.addEventListener(
+				'drop',
+				e => {
+					//取消默认浏览器拖拽效果
+					e.preventDefault();
+					//获取文件对象
+					let fileList = e.dataTransfer.files;
+					if (fileList.length == 0) {
+						return false;
+					}
+					let type = 'file'
+					if (fileList[0].type.includes('video')) {
+						uni.showToast({
+							title: 'video',
+							icon: 'none'
+						});
+						type = 'video'
+					} else if (fileList[0].type.includes('image')) {
+						uni.showToast({
+							title: 'image',
+							icon: 'none'
+						});
+						type = 'image'
+					}
+					let {name,size} = fileList[0]
+					// console.log(78979798,fileList);
+					let blobUrl = window.URL.createObjectURL(fileList[0]);
+					uploadAndSend(blobUrl,type,{name,size});
+				},
+				false
+			);
+			// 粘贴时触发
+			chatBodyDom.addEventListener('paste', event => {
+				if(!this.isFocus){
+					console.log('输入框获取焦点时粘贴才有效')
+					return //输入框获取焦点时粘贴才有效
+				}
+				if (event.clipboardData || event.originalEvent) {
+					//某些chrome版本使用的是event.originalEvent
+					let clipboardData = event.clipboardData || event.originalEvent.clipboardData;
+					let text = clipboardData.getData('text');
+					if (text) {
+						// console.log(text);
+						if (!this.isCodeText && text.length > 250) {
+							uni.showModal({
+								content: '你粘贴的文本长度超过250，将被截断。',
+								complete: e => {
+									if (!e.confirm) {
+										this.chatText = '';
+									}
+								}
+							});
+						}
+					}
+					if (clipboardData.items) {
+						let items = clipboardData.items,
+							len = items.length,
+							blob = null;
+						for (let i = 0; i < len; i++) {
+							// console.log(items[i]);
+							if (items[i].type.indexOf('image') !== -1) {
+								//getAsFile() 此方法只是living standard firefox ie11 并不支持
+								blob = items[i].getAsFile();
+							}
+						}
+						if (blob !== null) {
+							let blobUrl = URL.createObjectURL(blob);
+							let name = "来源截图工具数据",size = 0
+							uni.getFileInfo({
+								filePath:blobUrl,
+								success:e=>{
+									size = e.size
+									// console.log(blobUrl,{name,size});
+									uploadAndSend(blobUrl, 'image',{name,size});
+								}
+							})
+						}
+					}
+				}
+			});
+			// #endif
+			
+			// #ifdef H5 
+			//获得消息输入框对象
+			let adjunctKeydown = false
+			const textareaDom = document.querySelector('.pc textarea');
+			if (textareaDom) {
+				//键盘按下时
+				textareaDom.onkeydown = e => {
+					// console.log('onkeydown', e.keyCode)
+					if ([16, 17, 18, 93].includes(e.keyCode)) {
+						//按下了shift ctrl alt windows键
+						adjunctKeydown = true;
+					}
+					if (e.keyCode == 13 && !adjunctKeydown) {
+						this.beforeSendMsg();
+					}
+				};
+				textareaDom.onkeyup = e => {
+					//松开adjunct键
+					if ([16, 17, 18, 93].includes(e.keyCode)) {
+						adjunctKeydown = false;
+					}
+				};
+			}
+			// #endif
+		},
+		onShow() {
+			if (this.conversation.id) {
+				// 用于打开会话窗口后，切换到后台，再切回时设置当前会话id。
+				uniIm.currentConversationId = this.conversation.id
+				
+				//因为已经打开，所以这里需要设为已读
+				uniIm.clearUnreadCount(this.currentConversationId);
+			}
+		},
+		onUnload() {
+			// console.log('onUnload');
+			
+			// 关闭监听消息推送事件
+			uni.offPushMessage(this.onPushMessage);
+			
+			// #ifndef H5
+			uni.offKeyboardHeightChange(this.onKeyboardHeightChange)
+			// #endif
+			
+			//页面销毁之前销毁 全局变量 正在聊天的用户的id
+			uniIm.currentConversationId = false
+			// console.log('beforeDestroy');
+			// 关闭sound播放
+			uniIm.audioContext.stop()
+		},
+		beforeDestroy() {
+			//页面销毁之前销毁 全局变量 正在聊天的用户的id
+			uniIm.currentConversationId = false
+			// console.log('beforeDestroy');
+			// 关闭sound播放
+			uniIm.audioContext.stop()
+		},
+		onHide() {
+			uniIm.currentConversationId = false
+			// 关闭sound播放
+			uniIm.audioContext.stop()
+		},
+		async onLoad(param) {
+			//调用load方法，因为pc宽屏时本页面是以组件形式展示。如$refs.chatView.loadconversation_id()执行
+			await this.load(param);
+		},
+		methods: {
+			async load(param) {
+				this.answerMsgIndex = false
+				// conversation_id = "single_eff0518ad35e16a8a025cc8af03e0388"
+				
+				// console.log('conversation_id',conversation_id);
+				this.conversation = await uniIm.conversation.get(param)
+				// this.conversation.call_list = []
+				// console.log('this.conversation',this.conversation)
+				
+				//设置全局的app当前正在聊天的会话id（注：本页面可能是直达页）
+				uniIm.currentConversationId = this.conversation.id
+				this.$nextTick(()=>{
+					this.$refs['msg-list'].init()
+				})
+				
+				// console.log('this.conversation',this.conversation);
+				
+				//清除未读数
+				if (this.conversation.unread_count) {
+					uniIm.clearUnreadCount(this.conversation.id);
+				}
+
+				//debug用模拟一次性自动发送100条数据
+				// for (var i = 0; i < 20; i++) {
+				// 	this.chatText = '这是第'+i+'条消息'
+				// 	this.beforeSendMsg()
+				// }*/
+			},
+			/*onKeydown(keyname){
+				console.log('onKeydown keyname',keyname);
+				if(keyname == 'shift'){
+					//按下了shift键
+					shiftKeyPressed = true;
+				}
+				// 按下了回车 且 之前没按下 shift
+				if (keyname == 'enter' && !shiftKeyPressed) {
+					this.beforeSendMsg();
+				}
+			},
+			onKeyup(keyname){
+				console.log('onKeyup keyname',keyname);
+				if(keyname == 'shift'){
+					//按下了shift键
+					shiftKeyPressed = false;
+				}
+			},*/
+			getNicknameByUid(uid){
+				let userInfo = uniIm.usersInfo[uid]
+				if(userInfo){
+					return userInfo.nickname
+				}else{
+					return ''
+				}
+			},
+			onChatInputFocus(){
+				this.isFocus = true;
+				this.$nextTick(()=>{
+					this.menuIsShow = false
+					this.emojiIsShow = false
+				})
+			},
+			changeSoundIsShow() {
+				this.soundIsShow = !this.soundIsShow
+				if(this.soundIsShow){
+					// 将输入框高度记录，并设置为26
+					this.oldTextareaHeight = this.textareaHeight
+					this.textareaHeight = 26
+					
+					uni.hideKeyboard();
+				}else{
+					// 恢复切换之前的输入框高度
+					this.textareaHeight = this.oldTextareaHeight
+					
+					this.isFocus = true
+				}
+				uni.$emit('changeSoundIsShow');
+				this.$nextTick(()=>{
+					this.menuIsShow = false
+					this.emojiIsShow = false
+				})
+			},
+			changeMenuIsShow(e){
+				if(this.keyboardHeight){
+					this.menuIsShow = true
+					uni.hideKeyboard()
+				}else{
+					this.menuIsShow = !this.menuIsShow
+				}
+				this.emojiIsShow = false;
+				this.showLast(0)
+				e.stopPropagation()
+			},
+			changeEmojiIsShow(e){
+				this.soundIsShow = false
+				
+				if(this.keyboardHeight){
+					this.emojiIsShow = true
+					uni.hideKeyboard()
+				}else{
+					this.emojiIsShow = !this.emojiIsShow
+				}
+				this.menuIsShow = false
+				this.showLast(0)
+				e.stopPropagation()
+			},
+			async chooseAndUploadFile(type) {
+				uniCloud.chooseAndUploadFile({
+					type,
+					count: 9,
+					sizeType: ['compressed'],
+					success: e => {
+						// console.log(e);
+						e.tempFiles.forEach(event => {
+							let {
+								url,
+								name,
+								size
+							} = event;
+							console.log('event',event);
+							if(size > 15728640){
+								uni.showToast({
+									title: "附件大小不能超过15MB"
+								})
+								return;
+							}
+							
+							// #ifdef H5
+							type = event.type.split('/')[0];
+							// #endif
+							// #ifdef MP
+							type = event.fileType
+							// #endif
+							if(!['image','video'].includes(type)){
+								type = 'file'
+							}
+							// console.log('type===>', type);
+							let data = {};
+							data[type] = {url,size,name};
+							this.beforeSendMsg(data)
+						});
+					},
+					fail(e) {
+						console.error(e);
+						// uni.showToast({
+						// 	title: JSON.stringify(e),
+						// 	icon: 'none'
+						// });
+					},
+					complete() {
+						uni.hideLoading();
+					}
+				});
+			},
+			hideKeyboard() {
+				// console.log('hideKeyboard');
+				uni.hideKeyboard();
+				this.$nextTick(()=>{
+					this.menuIsShow = false
+					this.emojiIsShow = false
+					this.isFocus = false
+				})
+			},
+			input() {
+				// 非宽屏设备 && 非Android端 一旦输入换行符直接发送消息
+				if (!this.isWidescreen && this.systemInfo.platform != 'android' && this.chatText && this.chatText.indexOf('\n') >= 0) {
+					// console.log("有\n",this.chatText, this.chatText.length);
+					this.chatText = this.chatText.substring(0, this.chatText.length - 1);
+					//检查去除换行符后是否为空
+					if (clearBr(this.chatText).length) {
+						this.beforeSendMsg();
+					} else {
+						uni.showToast({
+							title: '不能发送空消息',
+							icon: 'none'
+						});
+						this.chatText = '';
+						this.$nextTick(() => {
+							this.chatText = '';
+							this.textareaHeight = 26;
+						});
+					}
+
+					function clearBr(key) {
+						key = key.replace(/<\/?.+?>/g, '');
+						key = key.replace(/[\r\n]/g, '');
+						return key;
+					}
+				}
+			},
+			sendSound(e){
+				// console.log('sendSound',e);
+				this.beforeSendMsg({sound:e})
+			},
+			async answer(msgIndex){
+				this.answerMsgIndex = msgIndex
+				console.log('answer',msgIndex)
+				this.isFocus = true
+			},
+			async beforeSendMsg(param = {}) {
+				// console.log('beforeSendMsg',{param});
+				let data = {
+					type: 'text',
+					to_uid: this.conversation.friend_uid,
+					conversation_id: this.conversation.id,
+					group_id: this.conversation.group_id,
+					client_create_time: Date.now(),
+					from_uid: uniCloud.getCurrentUserInfo().uid,
+					state: 0
+				}
+				// 根据传入的参数设置消息类型和内容
+				for (let key in param) {
+					if(param[key]){
+						data.type = key
+						data.body = param[key]
+					}
+				}
+				// 如果是文本类型需要做一些处理
+				if(data.type == 'text'){
+					// #ifdef H5
+					const textareaDom = document.querySelector('.pc textarea') || document.querySelector('.textarea-box textarea')
+					this.chatText = textareaDom.value
+					textareaDom.disabled = true
+					setTimeout(()=> {
+						textareaDom.disabled = false
+						this.isFocus = true
+					}, 0);
+					// #endif
+					//清除空格
+					data.body = this.chatText.trim();
+					// console.log('data.body',data.body);
+					// 阻止发送空消息
+					if(!data.body.length){
+						return uni.showToast({
+							title: '不能发送空消息',
+							icon: 'none'
+						});
+					}
+					
+					// 在下一个事件循环 清除输入框的文本内容
+					// 注意：为兼容web-pc端 这里必须用 setTimeout,0
+					this.$nextTick(e => {
+						this.chatText = '';
+						this.textareaHeight = 26;
+						this.answerMsgIndex = false
+					});
+					
+					// 当消息是否为 code类型开启时设置 -- 快速实现，临时方案 后续会优化
+					if(this.isCodeText){
+						data.type = 'code';
+					}
+				}
+				
+				//如果是回复某一条消息，需要带上相关id
+				if(this.answerMsgIndex !== false){
+					data.about_msg_id = this.msgList[this.answerMsgIndex]._id
+				}
+				
+				// 消息列表追加此消息。此时消息状态值为0，表示发送中
+				let resMsg = this.conversation.msgList.push(data)
+				
+				this.$nextTick(()=>{
+					this.showLast()
+					// #ifdef APP-NVUE
+					// 临时方案：解决偶发nvue下不能滚动到最后一条消息的问题
+					setTimeout(()=>{
+						this.showLast()
+					},800)
+					// #endif
+				})
+				
+				data.state = 0
+				// console.log('sendMsg-sendMsg-sendMsg', data);
+				// 存到本地数据库
+				await this.conversation.msgManager.localMsg.add(data)
+				// console.log('data被localMsg.add引用 会新增一个unique_id',data)
+				this.sendMsg(data);
+			},
+			sendMsg(data, callback) {
+				// console.log('sendMsg-sendMsg-sendMsg', data);
+				const uniImCo = uniCloud.importObject('uni-im-co', {
+					customUI: true
+				});
+				// 接收消息的appId，默认为当前应用的appId。如果你是2个不同appId的应用相互发，请修改此值为相对的appId
+				data.appId = this.systemInfo.appId
+				// 拿到当前消息的索引值
+				let index = this.conversation.msgList.findIndex(i=>i.unique_id == data.unique_id)
+				data = Object.assign({},data)
+				uniImCo.sendMsg(data)
+					.then(e => {
+						// console.log('uniImCo.sendMsg',{e,data});
+						data.state = e.errCode === 0 ? 100 : -100;
+						data.create_time = e.data.create_time;
+						data._id = e.data._id;
+						this.conversation.msgList.splice(index,1,data)
+						this.conversation.msgManager.localMsg.update(data.unique_id,data)
+					})
+					.catch(e => {
+						uni.showModal({
+							content: e.message,
+							showCancel: false,
+							confirmText: '关闭',
+						});
+						console.log('uniImCo.sendMsg error:', e.errCode, e.message);
+						// 必须要有create_time的值，否则indexDB通过创建时间索引找不到数据
+						data.create_time = Date.now();
+						data.state = -200;
+						this.conversation.msgList.splice(index,1,data)
+						this.conversation.msgManager.localMsg.update(data.unique_id,data)
+					})
+					.finally(e => {
+						if (callback) {
+							callback(e);
+						}
+					});
+			},
+			retriesSendMsg(data) {
+				uni.showLoading({
+					mask: true
+				});
+				// console.log('retriesSendMsg', data);
+				data.isRetries = true
+				this.sendMsg(data, e => {
+					uni.hideLoading();
+				});
+			},
+			showLast(duration = 300) {
+				let msgListRef = this.$refs['msg-list']
+				if(msgListRef){
+					msgListRef.showLast(duration)
+					this.hasNewMsg = false;
+				}
+			},
+			linechange(e) {
+				//console.log(e.detail);
+				let {
+					height,
+					lineCount
+				} = e.detail;
+				// console.log(height,lineCount);
+				if (lineCount === 1) {
+					this.textareaHeight = 26;
+				} else if (height <= 100) {
+					this.textareaHeight = height - 2;
+				}
+			},
+			touchmove(e){
+				// console.log('e',e);
+			},
+			async showControl({
+				index,
+				msgContentDomInfo,
+				coordinate
+			}) {
+				// console.log('index', index, this.msgList, this.msgList[index]);
+				let isSelf = this.msgList[index].from_uid == uniCloud.getCurrentUserInfo().uid
+				let controlData = {
+					msg: this.msgList[index],
+					msgIndex: index,
+					isInTop: false
+				};
+
+				// console.log('msgContentDomInfo', JSON.stringify(msgContentDomInfo));
+				let {
+					top,
+					bottom,
+					left,
+					right,
+					width,
+					height
+				} = msgContentDomInfo
+				controlData.width = width
+				if (isSelf) {
+					controlData.right = width / 3 + 'px'
+					controlData.left = ''
+				} else {
+					controlData.left = width / 3 + 'px'
+					controlData.right = ''
+				}
+
+				// #ifdef H5
+				if(this.isWidescreen){
+					let {left,top} = coordinate
+					controlData.right = ''
+					controlData.top	 = top - 80 + 'px'
+					controlData.left = left - uni.upx2px(200) + 'px'
+					
+					
+					// controlData.bottom = ''
+					top = parseInt(controlData.top)
+					// console.log('toptoptop',top)
+					if(top < 150){
+						controlData.top = (top + 110 + 'px')
+					};
+					// console.log('toptoptop',top)
+				}else{
+					if (top < 60) {
+						controlData.top = bottom + 55 + 'px'
+					} else {
+						controlData.top = top - 20 + 'px'
+					}
+				}
+				// #endif
+
+				// #ifndef H5
+				if (top < 60) {
+					controlData.top = bottom + 8 + 'px'
+				} else {
+					controlData.top = top - 65 + 'px'
+				}
+				// #endif
+				controlData.isInTop = top > 60
+				
+				this.$refs['uni-im-control'].show(controlData)
+				// console.log(index);
+			},
+			clickMenu(index,e){
+				// console.log('clickMenu-',index);
+				if(index<2){
+					this.chooseAndUploadFile(index === 0 ? 'image' : 'video')
+				}
+				if(index === 2){
+					// #ifdef APP-NVUE
+					return uni.showToast({
+						title: '暂不支持，发送文件',
+						icon: 'none'
+					});
+					// #endif
+					this.chooseAndUploadFile('all')
+				}
+				e.stopPropagation()
+			},
+			clickEmojiItem(emojiUniCode,e){
+				this.chatText += emojiUniCode
+				e.stopPropagation()
+			},
+			tapUnreadCount() {
+				//点击未读消息文字按钮事件
+				if (this.isWidescreen) {
+					// this.$emit('tapUnreadCount') //点击后会话列表自动滚动 置顶 待读项
+					// console.log('tapUnreadCount');
+				} else {
+					uni.navigateBack();
+				}
+			},
+			getkey(id,index){
+				// #ifndef APP
+				return index
+				// #endif
+				// #ifdef APP-NVUE
+				return id
+				// #endif
+			}
+		},
+		onNavigationBarButtonTap(e) {
+			if(e.index === 0){
+				if(this.conversation.group_id){
+					uni.navigateTo({
+						url:"/uni_modules/uni-im/pages/group/info?conversation_id=" + this.conversation.id
+					})
+				}else{
+					// console.log(this.conversation,6565);
+					uni.navigateTo({
+						url:"/uni_modules/uni-im/pages/chat/info?user_id=" + this.conversation.friend_uid
+					})
+					// uni.showToast({
+					// 	title: '仅群里可见，详细信息',
+					// 	icon: 'none'
+					// });
+				}
+			}
+			// uni.navigateBack();
+		}
+	};
+</script>
+
+<style lang="scss" scoped>
+	/* #ifndef APP-NVUE */
+	view {
+		display: flex;
+		flex-direction: column;
+		box-sizing: border-box;
+	}
+
+	page {
+		overflow-anchor: auto;
+		background-color: #efefef;
+	}
+	/* #endif */
+	
+	.page {
+		/* #ifdef APP-NVUE */
+		flex: 1;
+		/* #endif */
+		
+		/* #ifndef APP-NVUE */
+		height: calc(100vh - 45px);
+		/* #endif */
+		
+		/* #ifndef APP-NVUE */
+		background-color: #efefef;
+		/* #endif */
+		// border: solid 5px #2faf4c;
+	}
+	
+	.chat-foot {
+		flex-direction: column;
+		border-top: 1rpx solid #BBBBBB ;
+		background-color: #F7F7F7;
+		width: 750rpx;
+		
+		position: fixed;
+		bottom: 0;
+		
+		/* #ifndef APP-NVUE */
+		z-index: 999;
+		// overflow: hidden;
+		/* #endif */
+	}
+	/* #ifdef H5 */
+	.pc {
+		// .pc内的元素只有pc端打开才显示，样式在index页面
+		display: none;
+	}
+	/* #endif */
+
+	/* #ifdef H5 */
+	.chat-foot {
+		border: none;
+	}
+	/* #endif */
+
+	/* #ifndef APP-NVUE */
+	.chat-foot * {
+		//	border: solid 1px red;
+	}
+	/* #endif */
+	.textarea-box {
+		background-color: #ffffff;
+		padding: 10px;
+		width: 600rpx;
+		border-radius: 10px;
+	}
+	.textarea {
+		width: 550rpx;
+		padding: 0;
+		background-color: #ffffff;
+		color: #666666;
+		//padding: 20rpx;
+		font-size: 32rpx;
+	}
+
+	.tip-view {
+		position: fixed;
+		top: 100px;
+		width: 750rpx;
+		align-items: center;
+		color: #999999;
+	}
+	
+	.tip-null-msg {
+		color: #999999;
+		font-size: 14px;
+	}
+
+	.beforeSendMsg {
+		color: #ffffff;
+		font-size: 24rpx;
+		border-radius: 6px;
+		background-color: #2faf4c;
+		// width: 80rpx;
+		height: 28px;
+		line-height: 28px;
+		text-align: center;
+	}
+
+	.icon {
+		width: 70rpx;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.loadMore {
+		line-height: 80rpx;
+		height: 80rpx;
+		text-align: center;
+		width: 750rpx;
+		color: #adb3b7;
+		font-size: 12px;
+	}
+
+	.hasNewMsg {
+		position: fixed;
+		right: 20px;
+		background-color: #4CD964;
+		border-radius: 100px;
+		width: 20px;
+		height: 20px;
+		line-height: 20px;
+		text-align: center;
+		transform: rotate(270deg);
+	}
+
+	/* #ifndef APP-NVUE */
+	.unread_count {
+		position: fixed;
+		top: 10px;
+		left: 70rpx;
+		z-index: 9999;
+		background-color: #dfe2e9;
+		padding: 0 14rpx;
+		height: 14px;
+		line-height: 14px;
+		border-radius: 9px;
+		color: #0c1013;
+		font-size: 12px;
+		margin-top: 3px;
+	}
+	/* #endif */
+
+	.input-box {
+		flex-direction: row;
+		padding: 10rpx 18rpx;
+		justify-content: space-around;
+		align-items: center;
+	}
+	.menu{
+		padding: 36rpx;
+		width: 750rpx;
+		border-top: solid 1px #ededed;
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+	.menu-item,.menu-item-icon{
+		width: 160rpx;
+		height: 160rpx;
+		justify-content: space-around;
+		align-items: center;
+	}
+	.menu-item-icon{
+		width: 80rpx;
+		height: 80rpx;
+		background-color: #ffffff;
+		color: #6F6F6F;
+		border-radius: 10px;
+	}
+	.menu-item-text{
+		font-size: 12px;
+	}
+	.emojiListBox{
+		width: 750rpx;
+		padding: 27rpx;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: space-between;
+	}
+	.emoji-item{
+		text-align: center;
+		font-size: 65rpx;
+		width: 87rpx;
+		height: 87rpx;
+		justify-content: center;
+		align-items: center;
+		/* #ifndef APP-NVUE */
+		display: inline-block;
+		/* #endif */
+	}
+	.uni-im-sound{
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 999;
+	}
+	.system-msg-box{
+		width: 750rpx;
+		margin-bottom: 10px;
+		align-items: center;
+	}
+	.system-msg{
+		background-color: #f2f2f2;
+		color: #9d9e9d;
+		font-size: 14px;
+		height: 30px;
+		line-height: 30px;
+		padding:0 15rpx;
+		border-radius: 8px;
+	}
+	.answer-msg{
+		width: 450rpx;
+		padding:2px 5px;
+		margin:5px 0 3px 0;
+		background-color: #efefef;
+		color: #6a6a6a;
+		border-radius: 5px;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.answer-msg-text{
+		width: 400rpx;
+		/* #ifndef APP-NVUE */
+		white-space: nowrap; 
+		overflow: hidden;
+		/* #endif */
+		lines:2;
+		text-overflow: ellipsis; 
+		font-size: 12px;
+	}
+	
+	/* #ifdef H5 */
+	.send-btn-box{
+		flex-direction: row;
+		justify-content: end;
+		padding:0 10px 10px 0 ;
+	}
+	.send-btn-box .send{
+		font-size: 12px;
+		padding: 0 8px;
+	}
+	.send-btn-box .send-btn-tip {
+		color: #919396;
+		margin-right: 8px;
+		font-size: 12px;
+		line-height: 28px;
+	}
+	/* #endif */
+</style>
