@@ -1,7 +1,7 @@
 {
   "id": "uni-captcha",
   "displayName": "uni-captcha",
-  "version": "0.7.5",
+  "version": "0.6.4",
   "description": "云端一体图形验证码组件",
   "keywords": [
     "captcha",
@@ -14,7 +14,7 @@
   "engines": {
     "HBuilderX": "^3.1.0"
   },
-  "dcloudext": {
+"dcloudext": {
     "sale": {
       "regular": {
         "price": "0.00"
@@ -35,9 +35,7 @@
     "type": "unicloud-template-function"
   },
   "uni_modules": {
-    "dependencies": [
-      "uni-popup"
-    ],
+    "dependencies": [],
     "encrypt": [],
     "platforms": {
       "cloud": {
@@ -74,8 +72,8 @@
           "联盟": "u"
         },
         "Vue": {
-          "vue2": "y",
-          "vue3": "u"
+            "vue2": "y",
+            "vue3": "u"
         }
       }
     }

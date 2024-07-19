@@ -4,7 +4,8 @@ function isMobileCodeSupported () {
 }
 
 function isUniverifySupport () {
-  return true
+  const config = this.config
+  return !!(config.service && config.service.univerify && config.service.univerify.apiKey)
 }
 
 function isWeixinSupported () {

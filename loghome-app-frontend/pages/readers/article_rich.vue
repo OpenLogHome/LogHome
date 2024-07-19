@@ -43,19 +43,19 @@
 				</div>
 			</div>
 			<div class="underSettings" :class="{opened: settingsOpened}" ref="settings">
+
 			</div>
 		</div>
-		<div class="articleContent splitter" v-if="article.article_type=='spliter'">
-			<div class="title" style="font-size: 100rpx;" :class="readerSettings.theme">
+		<div class="articleContent spliter" v-if="article.article_type == 'spliter'">
+			<div class="title" :style="{fontSize:readerSettings.titleFontSize + 18 + 'rpx'}" :class="readerSettings.theme">
 				{{article.title}}
 			</div>
 		</div>
-		<div class="articleContent worldVocab" v-else-if="article.article_type=='worldVocabulary'">
+		<div class="articleContent worldVocabulary" v-else-if="article.article_type == 'worldVocabulary'">
 			<div class="topBar">
-				<div class="left">
+				<div class="left" @click="imgUploadVisible = true">
 					<div class="pic" v-if="article.content.pic == undefined && article.title">
-						{{article.title.slice(0, 1)}}
-					</div>
+						{{article.title.slice(0, 1)}} </div>
 					<img :src="article.content.pic" alt="" v-if="article.content.pic != undefined">
 				</div>
 				<div class="right">
@@ -71,7 +71,7 @@
 					{{article.content.desc}}
 				</div>
 				<el-card class="box-card" v-for="(item, index) in article.content.attributes"
-					style="margin-bottom: 20rpx;" body-style="">
+					style="margin-bottom: 20rpx;">
 					<div style="display:flex; justify-content:space-between;">
 						<div class="attr"><span style="color:#888888; margin-right: 40rpx;">{{item.name}}</span>
 							{{item.content}}
@@ -87,17 +87,9 @@
 			</div>
 			<div class="article"
 				:style="{fontSize:readerSettings.fontSize + 'rpx',lineHeight:lineHeightMode2Value(readerSettings.lineHeightMode)}"
-				:class="readerSettings.theme" v-if="article.content">
-				<div class="articleParagraph" v-for="item in article.content"
-					:class="'para'+item.id + (item.selected?' selected':'') + (item.isCentoed?' centoed':'')" @touchstart="touchstart($event, item)"
-					@touchend="touchend" @touchmove="touchmove">
-					<div v-if="item.type == 'text'">
-						{{item.value}}&nbsp;
-						<span class="paraCommentAmount" v-show="item.centoCount > 0" @click="gotoParagraphComments(item)">
-							<i class="icon el-icon-chat-round"></i>
-							<span class="amount">{{item.centoCount}}</span>
-						</span>
-					</div>
+				@tap="articleTapped" :class="readerSettings.theme" v-if="article.content">
+				<div v-for="item in JSON.parse(article.content)">
+					<div v-if="item.type == 'text'">{{item.value}}</div>
 					<img :src="item.img" alt="" v-else-if="item.type == 'image'" style="width:100%">
 					<div class="bookLink" v-else-if="item.type == 'novel'" style="display:flex; font-size:30rpx;">
 						<view style="display: flex; align-items: center;">
@@ -114,11 +106,11 @@
 				</div>
 			</div>
 		</div>
-<!-- 		<div class="underBar">
+
+		<!-- 		<div class="underBar">
 			<img src="../../static/icons/end.png" alt="">
 			<div>已经到底了哦</div>
 		</div> -->
-		<articleTools v-if="!isArticleLoading" :article="article"></articleTools>
 		<button type="default" :class="[{enabled:article.article_chapter != firstArticleChapter},readerSettings.theme]"
 			@click="changePage(-1)">
 			上一章<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg">
@@ -131,9 +123,6 @@
 			custom-class="bookMenu">
 			<bookMenu :novel_id="article.novel_id"></bookMenu>
 		</el-drawer>
-		<readerSelectionMenu class="readerSelectionMenu" v-if="readerSelectionMenu.visible" :shownButtons="readerSelectionMenu.shownButtons"
-			:style="{'top': readerSelectionMenu.top + 'px'}" @select="handleReaderSelectionMenuSelected">
-		</readerSelectionMenu>
 	</view>
 </template>
 
@@ -141,19 +130,13 @@
 	import axios from 'axios'
 	import bookMenu from '../../components/bookMenu.vue'
 	import bookInCase from '../../components/book_in_case.vue'
-	import readerSelectionMenu from "../../components/readerSelectionMenu.vue"
-	import articleTools from "../../components/article_tools.vue"
 	export default {
 		components: {
 			bookMenu,
-			bookInCase,
-			readerSelectionMenu,
-			articleTools
+			bookInCase
 		},
 		data() {
 			return {
-				uid: -1,
-				isArticleLoading: true,
 				article: {},
 				articles: [],
 				pageHeadBtn: [],
@@ -184,25 +167,27 @@
 						color: "#CECECE",
 					}
 				},
-				menuDrawer: false,
-				touchItem: undefined,
-				startTouchX: 0,
-				startTouchY: 0,
-				touchNotMoved: true,
-				Loop: undefined,
-				readerSelectionMenu: {
-					visible: false,
-					top: 0,
-					shownButtons: ["想法","划线","复制"]
-				},
-				my_article_centos: [],
-				needScrollPage: false
+				menuDrawer: false
 			}
 		},
 		onNavigationBarButtonTap(e) {
 			this.settingsOpened = !this.settingsOpened;
 		},
 		methods: {
+			refreshPage(articleId) {
+				axios.get(this.$baseUrl + '/articles/get_article?id=' + articleId).then((res) => {
+					this.article = res.data[0];
+					if (this.article.article_type == "worldVocabulary") {
+						this.article.content = JSON.parse(this.article.content);
+					}
+					this.getArticles(this.article.novel_id);
+					window.localStorage.setItem("ReaderHistory_" + this.article.novel_id, this.article
+					.article_chapter);
+				}).catch(function(error) {}).then(function() {
+					uni.hideLoading();
+				})
+				
+			},
 			changeTheme(themeName) {
 				this.readerSettings.theme = themeName;
 				window.localStorage.setItem("readerSettings", JSON.stringify(this.readerSettings));
@@ -232,52 +217,10 @@
 				let _this = this;
 				axios.get(this.$baseUrl + '/library/get_articles_all?id=' + uid, {}).then((res) => {
 					this.articles = res.data;
+					// console.log(this.articles.length)
 				}).catch(function(error) {
 					_this.articles.splice(0, 0);
 				}).then(function() {})
-			},
-			getMyCento() {
-				let _this = this;
-				for(let item of this.article.content) {
-					item.isCentoed = false;
-					item.cento = undefined;
-				}
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;
-				axios.get(this.$baseUrl + '/articles/get_my_article_cento?article_id=' + this.uid, {
-					headers: {
-						'Content-Type': 'application/json', //设置请求头请求格式为JSON
-						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-					}
-				}).then((res) => {
-					this.my_article_centos = res.data;
-					// 对于每一个标注，优先进行内容、ID双重配对
-					for(let item of this.article.content) {
-						if(item.type == "text") {
-							for(let cento of this.my_article_centos){
-								if(item.value == cento.paragraph && cento.paragraph_id == item.id){
-									cento.isFound = true;
-									item.isCentoed = true;
-									item.cento = cento;
-								}
-							}
-						}
-					}
-					// 然后再执行内容匹配
-					for(let item of this.article.content) {
-						if(item.type == "text") {
-							for(let cento of this.my_article_centos){
-								if(item.value == cento.paragraph && cento.isFound == false){
-									cento.isFound = true;
-									item.isCentoed = true;
-									item.cento = cento;
-								}
-							}
-						}
-					}
-					this.clearHighlight()
-					this.$forceUpdate();
-				}).catch(function(error) {}).then(function() {})
 			},
 			changePage(dp) {
 				let articles = this.articles;
@@ -300,11 +243,9 @@
 							if (this.articles[i].article_chapter >= this.article.article_chapter + dp &&
 								this.articles[i].is_draft == 0) {
 								let aid = this.articles[i].article_id;
-								this.needScrollPage = true;
-								this.reloadPage({
-									id: aid
-								})
+								this.refreshPage(aid);
 								this.settingsOpened = false;
+								this.scrollToTop();
 								return;
 							}
 						}
@@ -313,16 +254,20 @@
 							if (this.articles[i].article_chapter <= this.article.article_chapter + dp &&
 								this.articles[i].is_draft == 0) {
 								let aid = this.articles[i].article_id;
-								this.needScrollPage = true;
-								this.reloadPage({
-									id: aid
-								})
+								this.refreshPage(aid);
 								this.settingsOpened = false;
+								this.scrollToTop();
 								return;
 							}
 						}
 					}
 				}
+			},
+			scrollToTop(){
+				uni.pageScrollTo({
+					duration: 200, // 过渡时间
+					scrollTop: 0, // 滚动的实际距离
+				})
 			},
 			gotoMenu() {
 				// uni.navigateTo({
@@ -331,7 +276,34 @@
 				this.menuDrawer = true;
 			},
 			articleTapped(event) {
-				this.settingsOpened = !this.settingsOpened;
+				let touchHeight = event.detail.y;
+				let bodyHeight3 = document.body.clientHeight / 3;
+				let _this = this;
+				// console.log(bodyHeight3)
+				if (touchHeight < bodyHeight3) {
+					// console.log("向上滚动")
+					uni.createSelectorQuery().select(".article").boundingClientRect((res) => {
+						// console.log("top",res.top)
+						let scrollH = res.top;
+						// console.log("newTop",scrollH + bodyHeight3*2)
+						uni.pageScrollTo({
+							duration: 200, // 过渡时间
+							scrollTop: -scrollH - bodyHeight3 * 3 * 0.9, // 滚动的实际距离
+						})
+					}).exec()
+				} else if (touchHeight > bodyHeight3 * 2) {
+					// console.log("向下滚动")
+					uni.createSelectorQuery().select(".article").boundingClientRect((res) => {
+						// console.log("top",res.top)
+						let scrollH = res.top;
+						uni.pageScrollTo({
+							duration: 200, // 过渡时间
+							scrollTop: -scrollH + bodyHeight3 * 3 * 0.9, // 滚动的实际距离
+						})
+					}).exec()
+				} else {
+					this.settingsOpened = !this.settingsOpened;
+				}
 			},
 			toolsOuterClicked() {
 				this.settingsOpened = false;
@@ -342,215 +314,9 @@
 					url: './bookInfo?id=' + novel_id
 				})
 			},
-			touchstart(ev, item) {
-				let that = this;
-				this.touchItem = item;
-				this.startTouchX = ev.touches[0].pageX;
-				this.startTouchY = ev.touches[0].pageY;
-				this.touchNotMoved = true;
-				clearInterval(this.Loop); //再次清空定时器，防止重复注册定时器
-				this.Loop = setTimeout(function() {
-					if (this.touchNotMoved) {
-						this.touchNotMoved = false;
-						that.handleParagraphLongpressed(item);
-					}
-					that.touchend();
-				}.bind(this), 500);
-			},
-			touchmove(ev) {
-				let w = this.startTouchX - ev.touches[0].pageX;
-				let h = this.startTouchY - ev.touches[0].pageY;
-				if (w * w + h * h > 50) {
-					this.touchNotMoved = false;
-				}
-			},
-			touchend() {
-				if (this.touchItem != undefined && this.touchItem.isCentoed){
-					this.handleParagraphLongpressed(this.touchItem);
-				} else if (this.touchNotMoved) {
-					if (!this.clearHighlight()) {
-						this.articleTapped();
-					}
-				}
-				clearInterval(this.Loop);
-			},
-			clearHighlight() {
-				let flag = false;
-				for (let item of this.article.content) {
-					if (item.selected) {
-						item.selected = false;
-						flag = true;
-					}
-				}
-				this.readerSelectionMenu.visible = false;
-				this.$forceUpdate();
-				return flag;
-			},
-			// 富文本章节的高亮选择
-			handleParagraphLongpressed(item) {
-				if(item.isCentoed) {
-					this.readerSelectionMenu.shownButtons = ["想法", "取消划线", "复制"]
-				} else {
-					this.readerSelectionMenu.shownButtons = ["想法", "划线", "复制"]
-				}
-				this.clearHighlight()
-				item.selected = true;
-				this.$forceUpdate();
-				let paraDom = document.querySelector(".para" + item.id);
-				let pageHeight = document.body.getBoundingClientRect().height;
-				let bbRect = paraDom.getBoundingClientRect();
-				this.readerSelectionMenu.top = bbRect.y + bbRect.height;
-				if (this.readerSelectionMenu.top + 64 > pageHeight) {
-					this.readerSelectionMenu.top = bbRect.y - 64;
-				}
-				if (this.readerSelectionMenu.top < 0) {
-					this.readerSelectionMenu.top = pageHeight / 2
-				}
-				this.readerSelectionMenu.visible = true;
-			},
-			getParagraphCentoAmounts() {
-				for(let item of this.article.content){
-					if(item.type == "text"){
-						axios.post(this.$baseUrl + '/articles/get_paragraph_comment_amount', {
-							article_id: Number(this.uid),
-							paragraph_id: item.id
-						}).then((res) => {
-							item.centoCount = res.data[0].count;
-							this.$forceUpdate();
-						}).catch(function(error) {
-						}).then(function() {
-						})
-					}
-				}
-			},
-			gotoParagraphComments(item) {
-				uni.navigateTo({
-					url: `./bookComment?id=${this.article.novel_id}&articleId=${this.article.article_id}&paragraphId=${item.id}`
-				})
-			},
-			reloadPage(option) {
-				let _this = this;
-				this.isArticleLoading = true;
-				if (JSON.stringify(option) == "{}") {
-					uni.showToast({
-						title: "undefined",
-						icon: 'none',
-						duration: 2000
-					});
-					return;
-				}
-				uni.showLoading({
-					title: '加载中'
-				});
-				const uid = option.id;
-				this.uid = uid;
-				axios.get(this.$baseUrl + '/articles/get_article?id=' + uid).then((res) => {
-					this.article = res.data[0];
-					try {
-						this.article.content = JSON.parse(this.article.content);
-					} catch (e) {}
-					this.getArticles(this.article.novel_id);
-					if(this.article.type != "splitter" && this.article.type != "worldVocabulary"){
-						this.getMyCento();
-						this.getParagraphCentoAmounts();
-					}
-					window.localStorage.setItem("ReaderHistory_" + this.article.novel_id, this.article
-						.article_chapter);
-					if(this.needScrollPage){
-						uni.pageScrollTo({})
-						this.needScrollPage = false;
-					}
-					this.isArticleLoading = false;
-				}).catch(function(error) {
-					uni.showToast({
-						title: "获取文章失败",
-						icon: 'none',
-						duration: 2000
-					});
-				}).then(function() {
-					uni.hideLoading();
-				})
-			},
-			handleReaderSelectionMenuSelected(ev) {
-				let currentItem = undefined;
-				let _this = this;
-				for (let item of this.article.content) {
-					if (item.selected) {
-						currentItem = item;
-						break;
-					}
-				}
-				if (ev == "复制") {
-					let content = currentItem.value + ` ———————————————— 
-					版权声明：本文为原创文章，遵循 《原木社区用户内容上传协议》，转载请附上原文出处链接和本声明。 
-					原文链接：http://loghome.codesocean.top/#/pages/readers/article_rich?id=` + this.uid;
-					uni.setClipboardData({
-						data: content,
-						success: function() {}
-					})
-					this.clearHighlight();
-				} else if (ev == "划线") {
-					let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;
-					axios.post(this.$baseUrl + '/articles/add_article_cento',
-						{
-							article_id: this.uid,
-							paragraph_id: currentItem.id,
-							paragraph: currentItem.value
-						},
-						{
-							headers: {
-								'Content-Type': 'application/json', //设置请求头请求格式为JSON
-								'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-							}
-						},
-					)
-					.then(function(response) {
-						_this.getMyCento();
-					})
-					.catch(function(error) {
-						if (error) {
-							uni.showToast({
-								title: "划线失败",
-								icon: 'none',
-								duration: 2000
-							});
-						}
-					});
-				} else if(ev == "取消划线"){
-					let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;
-					axios.post(this.$baseUrl + '/articles/remove_article_cento',
-						{
-							article_cento_id: currentItem.cento.article_cento_id,
-						},
-						{
-							headers: {
-								'Content-Type': 'application/json', //设置请求头请求格式为JSON
-								'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-							}
-						},
-					)
-					.then(function(response) {
-						_this.getMyCento();
-					})
-					.catch(function(error) {
-						if (error) {
-							uni.showToast({
-								title: "取消划线失败",
-								icon: 'none',
-								duration: 2000
-							});
-						}
-					});
-				} else if(ev == "想法"){
-					uni.navigateTo({
-						url: `./bookComment?id=${this.article.novel_id}&articleId=${this.article.article_id}&paragraphId=${currentItem.id}`
-					})
-				}
-			}
 		},
 		onLoad(option) {
 			let _this = this;
-			this.uid = option.id;
 			let readerSettings = window.localStorage.getItem("readerSettings");
 			if (readerSettings && JSON.parse(readerSettings)["version"] == 211213) {
 				this.readerSettings = JSON.parse(readerSettings);
@@ -564,6 +330,17 @@
 				};
 				window.localStorage.setItem("readerSettings", JSON.stringify(this.readerSettings));
 			}
+			if (JSON.stringify(option) == "{}") {
+				uni.showToast({
+					title: "undefined",
+					icon: 'none',
+					duration: 2000
+				});
+				return;
+			}
+			uni.showLoading({
+				title: '加载中'
+			});
 
 			//设定导航栏显示效果
 			setTimeout(() => {
@@ -618,12 +395,7 @@
 
 				}
 			}, 300)
-
-			// 加载页面
-			// this.reloadPage(option);
-		},
-		onShow(){
-			this.reloadPage({id: this.uid})
+			this.refreshPage(option.id);
 		},
 		beforeDestroy() {
 			clearInterval(this.navigationBarController)
@@ -667,77 +439,6 @@
 			width: calc(100vw - 100rpx);
 			overflow: hidden;
 			white-space: pre-line;
-
-			.articleParagraph.selected {
-				// background-color: #c6c6c677;
-				// font-weight: bold;
-				text-shadow: #717171 1px 0 10px;
-				text-decoration: underline dotted;
-			}
-			
-			.articleParagraph.centoed{
-				text-decoration: #D19A66 underline wavy;
-			}
-			
-			.paraCommentAmount{
-				position: relative;
-				.amount {
-					position: absolute;
-					left: 35%;
-					transform: scale(0.5) translateX(-50%);
-				}
-				
-			}
-		}
-
-		div.articleContent {
-			.topBar {
-				box-sizing: border-box;
-				position: relative;
-				display: flex;
-				padding: 30rpx;
-				padding-top: 60rpx;
-
-				div.left {
-					transform: translateY(-5rpx);
-
-					.pic {
-						width: 150rpx;
-						height: 150rpx;
-						border-radius: 100%;
-						background-color: #6e3b24;
-						display: flex;
-						color: white;
-						justify-content: center;
-						align-items: center;
-						font-size: 50rpx;
-
-					}
-
-					img {
-						width: 150rpx;
-						height: 150rpx;
-						border-radius: 100%;
-					}
-				}
-
-				div.right {
-					margin-left: 30rpx;
-
-					.tit {
-						padding-left: 20rpx;
-						margin-bottom: 20rpx;
-					}
-
-					input {
-						padding-left: 20rpx;
-						font-size: 35rpx;
-						font-weight: bold;
-						line-height: 150%;
-					}
-				}
-
-			}
 		}
 
 		div.title {
@@ -805,7 +506,6 @@
 						color: #ffffff;
 						transform: scale(.9);
 					}
-				
 
 					button.inTopBar {
 						transform: scale(.75);
@@ -989,12 +689,58 @@
 		background-color: #282C35;
 		color: #cecece;
 	}
+
+	.articleContent {
+		.topBar {
+			box-sizing: border-box;
+			position: relative;
+			display: flex;
+			padding: 30rpx;
+			padding-top: 60rpx;
+
+			div.left {
+				transform: translateY(-5rpx);
+
+				.pic {
+					width: 150rpx;
+					height: 150rpx;
+					border-radius: 100%;
+					background-color: #6e3b24;
+					display: flex;
+					color: white;
+					justify-content: center;
+					align-items: center;
+					font-size: 50rpx;
+
+				}
+
+				img {
+					width: 150rpx;
+					height: 150rpx;
+					border-radius: 100%;
+				}
+			}
+
+			div.right {
+				margin-left: 30rpx;
+
+				.tit {
+					padding-left: 20rpx;
+					margin-bottom: 20rpx;
+				}
+
+				input {
+					padding-left: 20rpx;
+					font-size: 35rpx;
+					font-weight: bold;
+					line-height: 150%;
+				}
+			}
+
+		}
+	}
 </style>
 
 <style>
-	.readerSelectionMenu {
-		position: fixed;
-		left: 0;
-		top: 500rpx;
-	}
+
 </style>

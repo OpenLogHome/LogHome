@@ -22,11 +22,8 @@
 			<div class="desc">
 				{{world.content}}
 			</div>
-			<div style="display: flex;">
-				<div class="enterButton" @click="editWorld(world.novel_id)"
-					v-show="this.myUserInfo.user_id == world.creator_id">编辑设定</div>
-				<div class="enterButton" @click="navtoComment">世界评论 ({{commentAmount}})</div>
-			</div>
+			<div class="enterButton" @click="editWorld(world.novel_id)"
+				v-show="this.myUserInfo.user_id == world.creator_id">编辑设定</div>
 		</div>
 		<div class="content">
 			<el-tabs :lazy="true">
@@ -37,10 +34,13 @@
 							<div class="line"></div>
 							<span>世界大纲</span>
 						</div>
-						<el-collapse style="margin-top: 20rpx;" :accordion="true" 
-							v-show="worldOutlines.length != 0" v-model="selectedCollapseItem">
+						<el-collapse style="margin-top: 20rpx;" :accordion="true" @change="outlineAccordianChange"
+							v-show="worldOutlines.length != 0">
 							<el-collapse-item v-for="outline in worldOutlines" name="1" :key="outline.article_id"
-								:title="outline.title" :name="outline.article_id" @click.native="outlineAccordianChange(outline.article_id)">
+								:title="outline.title" :name="outline.article_id">
+								{{outline.content}}
+								<el-button type="primary" round size="mini" style="margin-left: 15rpx;"
+									@click="gotoArticle(outline.article_id)">全屏阅读</el-button>
 							</el-collapse-item>
 						</el-collapse>
 						<div class="nothing" v-show="worldOutlines.length == 0"
@@ -110,9 +110,7 @@
 				worldOutlines: [],
 				worldVoabs: [],
 				myUserInfo: {},
-				assoNovels: [],
-				selectedCollapseItem: -1,
-				commentAmount: 0
+				assoNovels: []
 			}
 		},
 		methods: {
@@ -141,7 +139,6 @@
 				if (this.options.id) {
 					axios.get(this.$baseUrl + '/world/get_world_by_id?world_id=' + this.options.id).then((res) => {
 						this.world = res.data[0];
-						this.getCommentNum()
 						this.getArticles(this.world.novel_id, this.world.world_id)
 					}).catch(function(error) {
 						uni.showToast({
@@ -157,7 +154,6 @@
 						res) => {
 							// console.log(res.data);
 							this.world = res.data[0];
-							this.getCommentNum()
 							this.getArticles(this.world.novel_id, this.world.world_id)
 						}).catch(function(error) {
 						uni.showToast({
@@ -202,24 +198,6 @@
 				})
 				this.getAssoNovels();
 			},
-			getCommentNum() {
-				axios.get(this.$baseUrl + "/community/novel_commonts_amount?id=" + this.world.asso_novel_id)
-					.then((res) => {
-						var commentAmountObject = res.data[0]
-						this.commentAmount = commentAmountObject["COUNT(*)"];
-					}).catch(err => {
-						uni.showToast({
-							title: error.toString(),
-							icon: 'none',
-							duration: 2000
-						});
-					})
-			},
-			navtoComment() {
-				uni.navigateTo({
-					url: `/pages/readers/bookComment?id=` + this.world.asso_novel_id
-				})
-			},
 			getAssoNovels() {
 				// 获取关联世界
 				axios.get(this.$baseUrl + '/world/get_asso_world_by_world_id?world_id=' + this.world.world_id).then((
@@ -250,9 +228,20 @@
 				})
 			},
 			outlineAccordianChange(activeName) {
-				this.selectedCollapseItem = undefined;
-				uni.navigateTo({
-					url: "../readers/article?id=" + activeName
+				if (activeName == "") return;
+				axios.get(this.$baseUrl + '/articles/get_article?id=' + activeName).then((res) => {
+					for (let item of this.worldOutlines) {
+						if (item.article_id == activeName) {
+							item.content = res.data[0].content;
+						}
+					}
+					this.$forceUpdate();
+				}).catch(function(error) {
+					uni.showToast({
+						title: error.toString(),
+						icon: 'none',
+						duration: 2000
+					});
 				})
 			},
 			gotoArticle(uid) {
@@ -350,7 +339,7 @@
 				align-items: center;
 				justify-content: center;
 				color: #4c4c4cee;
-				margin: 15rpx 10rpx;
+				margin: 15rpx 0;
 				transition: all .3s;
 				font-size: 26rpx;
 			}

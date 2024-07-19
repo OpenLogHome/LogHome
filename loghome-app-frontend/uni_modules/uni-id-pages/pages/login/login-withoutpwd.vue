@@ -94,31 +94,15 @@
 		onReady() {
 			// 是否优先启动一键登录。即：页面一加载就启动一键登录
 			//#ifdef APP-PLUS
-			if (config.loginTypes.includes('univerify') && this.type == "univerify") {
-				uni.preLogin({
-					provider: 'univerify',
-					success: () => {
-						const pages = getCurrentPages();
-						currentWebview = pages[pages.length - 1].$getAppWebview();
-						currentWebview.setStyle({
-							"top": "2000px" // 隐藏当前页面窗体
-						})
-						// this.type == this.loginTypes[1]
-						// console.log('开始一键登录');
-						this.$refs.uniFabLogin.login_before('univerify')
-					},
-					fail: (err) => {
-						console.log(err);
-						if (config.loginTypes.length > 1) {
-							this.$refs.uniFabLogin.login_before(config.loginTypes[1])
-						} else {
-							uni.showModal({
-								content: err.message,
-								showCancel: false
-							});
-						}
-					}
+			if (this.type == "univerify") {
+				const pages = getCurrentPages();
+				currentWebview = pages[pages.length - 1].$getAppWebview();
+				currentWebview.setStyle({
+					"top": "2000px" // 隐藏当前页面窗体
 				})
+				this.type == this.loginTypes[1]
+				// console.log('开始一键登录');
+				this.$refs.uniFabLogin.login_before('univerify')
 			}
 			//#endif
 		},

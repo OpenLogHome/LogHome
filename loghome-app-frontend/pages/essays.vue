@@ -29,8 +29,10 @@
 				<view class="bodyView" style="text-align: center;" v-if="this.curBook != -1">
 					<view class="bookTitle">{{books[curBook].name}}</view>
 					<view class="bookDescription">
-						<el-tag size="mini" v-show="books[curBook].is_personal==1" type="info" disable-transitions effect="dark">私有</el-tag>
-						<el-tag size="mini" v-show="books[curBook].is_personal==0" disable-transitions effect="dark">公开</el-tag>
+						<el-tag size="mini" v-show="books[curBook].is_personal==1" type="info" disable-transitions
+							effect="dark">私有</el-tag>
+						<el-tag size="mini" v-show="books[curBook].is_personal==0" disable-transitions
+							effect="dark">公开</el-tag>
 						<span> {{books[curBook].is_complete==1?"已完结":"连载中"}}</span>
 						<span>总计 {{books[curBook].text_count}} 字 </span>
 					</view>
@@ -48,9 +50,9 @@
 							</div>
 						</div>
 						<div class="worlds">
-							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;" @longpress="handleNovelWorldLongpress(novel)">
+							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
 								<navigator :url="'./readers/bookInfo?id=' +  novel.novel_id" open-type="navigate"
-									class="books">
+									class="books" @longpress="deleteWorldNovelAsso(novel.world_id)">
 									<img :src="novel.picUrl + '?thumbnail=1'" alt=""
 										:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"
 										style="border-radius: 10rpx; transform:scale(.90)">
@@ -69,8 +71,6 @@
 										<div class="description">{{novel.content}}</div>
 									</div>
 								</navigator>
-<!-- 								<el-button icon="el-icon-delete" class="deleteBtn" size="mini" type="danger"
-									@click="deleteWorldNovelAsso(novel.world_id)"></el-button> -->
 							</div>
 						</div>
 						<div class="addButton" @click="bookSelectDrawer = true">添加作品世界</div>
@@ -256,7 +256,7 @@
 		},
 		// 页面滚动监听
 		onPageScroll(e) {
-			console.log(this.pageScrollTop)
+			// console.log(this.pageScrollTop)
 			this.pageScrollTop = Math.floor(e.scrollTop);
 		},
 		methods: {
@@ -435,30 +435,41 @@
 				this.bookSelectDrawer = false;
 			},
 			deleteWorldNovelAsso(world_id) {
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;;
-				axios.get(this.$baseUrl + '/world/delete_world_novel_asso?world_id=' + world_id + "&novel_id=" + this
-					.books[this.curBook].novel_id, {
-						headers: {
-							'Content-Type': 'application/json', //设置请求头请求格式为JSON
-							'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+				let _this = this;
+				uni.showActionSheet({
+					itemList: ["取消关联设定"],
+					success: function(res) {
+						if (res.tapIndex == 0) {
+							let tk = JSON.parse(window.localStorage.getItem('token'));
+							if (tk) tk = tk.tk;
+							axios.get(_this.$baseUrl + '/world/delete_world_novel_asso?world_id=' + world_id +
+								"&novel_id=" + _this.books[_this.curBook].novel_id, {
+									headers: {
+										'Content-Type': 'application/json', //设置请求头请求格式为JSON
+										'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+									}
+								}).then((res) => {
+								uni.showToast({
+									title: "删除关联世界设定成功",
+									icon: 'none',
+									duration: 2000
+								});
+							}).catch(function(error) {
+								uni.showToast({
+									title: error.toString(),
+									icon: 'none',
+									duration: 2000
+								});
+							}).then(() => {
+								uni.hideLoading();
+								_this.refreshPage();
+							})
 						}
-					}).then((res) => {
-					uni.showToast({
-						title: "删除关联世界设定成功",
-						icon: 'none',
-						duration: 2000
-					});
-				}).catch(function(error) {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000
-					});
-				}).then(() => {
-					uni.hideLoading();
-					this.refreshPage();
-				})
+					},
+					fail: function(res) {
+						console.log(res.errMsg);
+					}
+				});
 			},
 			getMyWorlds() {
 				let _this = this;
@@ -480,31 +491,6 @@
 				}).then(function() {
 					uni.hideLoading();
 				})
-			},
-			handleNovelWorldLongpress(world){
-				let _this = this;
-				uni.showActionSheet({
-				    itemList: ['取消关联'],
-				    success: function (res) {
-				        if(res.tapIndex == 0) {
-							uni.showModal({
-								title: '提示',
-								content: '是否取消关联该作品世界？',
-								confirmColor:"#EA7034",
-								success: function (res) {
-									if (res.confirm) {
-										_this.deleteWorldNovelAsso(world.world_id);
-									} else if (res.cancel) {
-										return;
-									}
-								}
-							});
-						}
-				    },
-				    fail: function (res) {
-				        console.log(res.errMsg);
-				    }
-				});
 			}
 		}
 	}
@@ -627,7 +613,8 @@
 				text-align: left;
 				white-space: pre-wrap;
 				text-align: center;
-				span{
+
+				span {
 					margin: 0 10rpx;
 				}
 			}
@@ -760,7 +747,7 @@
 
 	.books {
 		height: 260rpx;
-		width: calc(100vw - 60rpx);
+		width: calc(100vw - 65rpx);
 		margin: 0 30rpx;
 		display: flex;
 		background-color: rgb(255, 255, 255);

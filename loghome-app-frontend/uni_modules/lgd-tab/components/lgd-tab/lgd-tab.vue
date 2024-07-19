@@ -3,20 +3,13 @@
 		<view class="scrollView" scroll-x show-scrollbar="false" :scroll-left="scrollLeft" scroll-with-animation>
 			<view class="tabBox" :style="{ 'justify-content': isOutWindow ? 'space-around' : 'space-around' }">
 				<view class="items" v-for="(item, index) in tabValue" :key="index" @click="clickTab(index)">
-					<el-badge is-dot class="item" v-if="tabBadge[index]">
-						<text class="tabText" :class="index == tIndex ? 'active' : ''"
-							:style="{ 'font-size': fontSize + ((index == tIndex)?5:0) + 'rpx', color: index == tIndex ? textColor : ''}">
-							{{item}}
-						</text>
-					</el-badge>
-					<text class="tabText" :class="index == tIndex ? 'active' : ''" v-if="!tabBadge[index]"
-						:style="{ 'font-size': fontSize + ((index == tIndex)?5:0) + 'rpx', color: index == tIndex ? textColor : ''}">
+					<text class="tabText" :class="index == tIndex ? 'active' : ''" 
+					:style="{ 'font-size': fontSize + ((index == tIndex)?5:0) + 'rpx', color: index == tIndex ? textColor : ''}">
 						{{item}}
 					</text>
 				</view>
 			</view>
-			<view class="underscore"
-				:style="{ width: inderWidth + 'px', 'margin-left': indexLeft + boxLeft + 'px', 'background-color': 'rgb(161,255,127)', height: '25rpx' }" />
+			<view class="underscore" :style="{ width: inderWidth + 'px', 'margin-left': indexLeft + boxLeft + 'px', 'background-color': 'rgb(161,255,127)', height: '25rpx' }" />
 		</view>
 	</view>
 </template>
@@ -29,10 +22,6 @@
 				default: [],
 				required: true
 			},
-			tabBadge: { // tab数据
-				type: Array,
-				default: () => []
-			},
 			textColor: { // 颜色
 				type: String,
 				default: '#34b2fa'
@@ -41,7 +30,7 @@
 				type: Number,
 				default: 30
 			},
-			firstTab: {
+			firstTab:{
 				default: 0
 			}
 		},
@@ -76,10 +65,10 @@
 					let width = data[0][index].width
 					let left = data[0][index].left
 					let newLeft = 0
-
+					
 					// 点击tab宽度
 					this.inderWidth = width;
-
+					
 					// 移动距离
 					this.indexLeft = left
 				})
@@ -95,9 +84,9 @@
 			})
 		},
 		mounted() {
-			setTimeout(() => {
+			setTimeout(()=>{
 				this.clickTab(this.firstTab)
-			}, 600)
+			},600)
 		}
 	}
 </script>
@@ -111,8 +100,8 @@
 	.tabBox {
 		display: flex;
 		align-items: center;
-		position: relative;
-		z-index: 1;
+		position:relative;
+		z-index:1;
 	}
 
 	.items {
@@ -131,8 +120,8 @@
 
 	.underscore {
 		transition: .3s all;
-		transform: translate(0, -40rpx);
+		transform: translate(0,-40rpx);
 		border-radius: 10rpx;
-		position: absolute;
+		position:absolute;
 	}
 </style>

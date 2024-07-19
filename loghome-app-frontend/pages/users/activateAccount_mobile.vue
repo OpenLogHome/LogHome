@@ -72,7 +72,7 @@
 				
 				var config = {
 				  method: 'get',
-				  url: this.$baseUrl + '/users/send_mobile_verify_code?mobile=' + _this.mobile,
+				  url: 'https://sapi.kuailezan.com/api/login/sendCode?mobile=' + _this.mobile,
 				  headers: { }
 				};
 				
@@ -80,7 +80,6 @@
 				.then(function (response) {
 				  uni.showToast({
 				  	title: response.data.msg,
-					icon:'none',
 				  	duration: 2000
 				  });
 				  _this.waitTime = 60;
@@ -95,13 +94,8 @@
 				})
 				.catch(function (error) {
 				  console.log(error);
-				  uni.showToast({
-				  	title: error.response.data,
-				  	icon: 'error',
-				  	duration: 2000
-				  });
 				});
-			
+
 			},
 			submit(){
 				uni.showLoading({

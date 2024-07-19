@@ -119,7 +119,7 @@
 				if (isNaN(num)) {
 					return num
 				} else {
-					var s = num.toString();
+					var s = num.toFixed(2).toString();
 					var result = s.substring(0, s.indexOf(".") + 3);
 					return result
 				}

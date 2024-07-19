@@ -129,9 +129,10 @@
 							filePath = res.tempFilePaths[0]
 							
 						//非app端剪裁头像，app端用内置的原生裁剪
-						// #ifdef H5
-						if (!this.isPC) {
-							filePath = await new Promise((callback) => {
+						// #ifndef APP-PLUS
+						filePath = await new Promise((callback) => {
+							// #ifdef H5
+							if (!this.isPC) {
 								uni.navigateTo({
 									url: '/uni_modules/uni-id-pages/pages/userinfo/cropImage/cropImage?path=' +
 										filePath + `&options=${JSON.stringify(crop)}`,
@@ -142,11 +143,12 @@
 										}
 									},
 									complete(e) {
-										console.log(e);
+										// console.log(e);
 									}
 								});
-							})
-						}
+							}
+							// #endif
+						})
 						// #endif
 						
 						let cloudPath = this.userInfo._id + '' + Date.now()

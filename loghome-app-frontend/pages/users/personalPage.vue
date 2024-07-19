@@ -13,8 +13,7 @@
 				<navigator url="./change_user_info" v-show="uid == myUserInfo.user_id">
 					<div class="button">编辑资料</div>
 				</navigator>
-				<div class="button" style="width: 120rpx; background-color: #555555"
-				 v-show="uid != myUserInfo.user_id" @click="gotoPrivateMessage">私信</div>
+				<!-- <div class="button" v-show="uid != myUserInfo.user_id" @click="gotoPrivateMessage">私信</div> -->
 			</view>
 			
 			<!-- 用户头像关注 -->
@@ -205,19 +204,19 @@
 					this.$previewImg([this.user.top_pic_url])
 				}
 			},
-			gotoPrivateMessage(){
-				if(this.user.uni_id != undefined){
-					uni.navigateTo({
-						url:"/uni_modules/uni-im/pages/chat/chat?user_id=" + this.user.uni_id
-					})
-				} else {
-					uni.showToast({
-						title: "该用户使用的版本太旧，还未开通私信功能哦",
-						icon: 'none',
-						duration: 2000
-					})
-				}
-			},
+			// gotoPrivateMessage(){
+			// 	if(this.user.uni_id != undefined){
+			// 		uni.navigateTo({
+			// 			url:"/uni_modules/uni-im/pages/chat/chat?user_id=" + this.user.uni_id
+			// 		})
+			// 	} else {
+			// 		uni.showToast({
+			// 			title: "该用户使用的版本太旧，还未开通私信功能哦",
+			// 			icon: 'none',
+			// 			duration: 2000
+			// 		})
+			// 	}
+			// },
 			onLoad(params) {
 				this.uid = params.id;
 			},
@@ -358,7 +357,7 @@
 	}
 	
 	.button {
-		height: 68rpx;
+		height: 60rpx;
 		width: 150rpx;
 		font-size: 14px;
 		text-align: center;
@@ -367,9 +366,6 @@
 		color: #ffffff;
 		background-color: rgb(180, 111, 88);
 		margin-left: 15rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 	
 	.user_id{

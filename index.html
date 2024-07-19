@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原木社区PC端</title>
+</head>
+<body>
+    <iframe id="my-iframe" src="https://loghome.codesocean.top" frameborder="0"></iframe>
+    <iframe id="sub-iframe" src="" frameborder="0"></iframe>
+    <div class="back">
+        <img src="https://img.codesocean.top/image/1699238984907" alt="" class="logo">
+        <div class="subscript">
+            原木社区PC端运行环境 Version 1.0 苏ICP备2021006745号
+        </div>
+    </div>
+</body>
+<style>
+    body{
+        display: flex;
+        justify-content: center;
+        margin: 0;
+    }
+    #my-iframe{
+        width: 55vh;
+        height: 100vh;
+    }
+    #sub-iframe{
+        width: calc(100vw - 55vh);
+        height: 100vh;
+        position:relative;
+        z-index:1;
+    }
+    div.back{
+        width: calc(100vw - 55vh);
+        height: 100vh;
+        position:absolute;
+        right: 0;
+        z-index: 0;
+        background-color: #f3f2f1;
+        display:flex;
+        align-items: center;
+        justify-content: center;
+    }
+    img.logo{
+        width: 150px;
+    }
+    div.back div.subscript{
+        position:absolute;
+        bottom: 5px;
+        font-size: 10px;
+        color:#8f8f8f;
+    }
+</style>
+<script>
+    window.sessionStorage.setItem("MobileRunnerEnv", "1.0.0");
+    const iframe = document.getElementById("my-iframe");
+    const subIframe = document.getElementById("sub-iframe");
+
+    function startSubIframe(url){
+        subIframe.style.opacity = "1";
+        subIframe.src = url;
+    }
+
+    setInterval(()=>{
+        // 检测是否打开了新的阅读页面或写作页面
+        if(iframe.contentWindow.location.href.indexOf("pages/readers/article_rich") != -1
+        || iframe.contentWindow.location.href.indexOf("pages/writers/richEditor") != -1
+        || iframe.contentWindow.location.href.indexOf("pages/writers/chapterEditor") != -1
+        || iframe.contentWindow.location.href.indexOf("pages/writers/worldVocabularyEditor") != -1){
+            let url = iframe.contentWindow.location.href;
+            window.history.back();
+            setTimeout(()=>{
+                startSubIframe(url);
+            }, 200)
+        }
+        if(subIframe.contentWindow.location.href.indexOf("pages/readers/article_rich") == -1
+        && subIframe.contentWindow.location.href.indexOf("pages/writers/richEditor") == -1
+        && subIframe.contentWindow.location.href.indexOf("pages/writers/chapterEditor") == -1
+        && subIframe.contentWindow.location.href.indexOf("pages/writers/worldVocabularyEditor") == -1
+        && subIframe.src != ""){
+            subIframe.style.opacity = "0";
+            subIframe.src = "";
+        }
+
+        if(subIframe.src != ""){
+            let head = subIframe.contentWindow.document.querySelector(".uni-page-head-btn");
+            if(head != undefined){
+                head.style.visibility = "hidden";
+            }
+        }
+    }, 200)
+</script>
+</html>
