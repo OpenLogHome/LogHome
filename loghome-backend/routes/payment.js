@@ -21,27 +21,27 @@ function randomRange(min, max) {
 let payType = [{
 	number: '300',
 	money: '3',
-	url: "https://afdian.net/item/2c2b071e6bf011eeaeda5254001e7c00"
+	url: "https://afdian.com/item/2c2b071e6bf011eeaeda5254001e7c00"
 },
 {
 	number: '520',
 	money: '5',
-	url: "https://afdian.net/item/ae822b0c6bf011eea29652540025c377"
+	url: "https://afdian.com/item/ae822b0c6bf011eea29652540025c377"
 },
 {
 	number: '1725',
 	money: '15',
-	url: "https://afdian.net/item/bb7eb0646bf011ee961552540025c377"
+	url: "https://afdian.com/item/bb7eb0646bf011ee961552540025c377"
 },
 {
 	number: '3840',
 	money: '32',
-	url: "https://afdian.net/item/e34d448e6bf011ee969d52540025c377"
+	url: "https://afdian.com/item/e34d448e6bf011ee969d52540025c377"
 },
 {
 	number: '8840',
 	money: '68',
-	url: "https://afdian.net/item/f3b4dae46bf011ee9b0e52540025c377"
+	url: "https://afdian.com/item/f3b4dae46bf011ee9b0e52540025c377"
 }]
 
 // 创建路由对象

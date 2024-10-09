@@ -107,6 +107,7 @@
 				saveInterval:undefined,
 				firstLocalCheck:true,
 				writerSettings:{},
+				lastDetailText: undefined,
 				themes:{
 					blue:{
 						color:"#115574",
@@ -177,7 +178,6 @@
 			    return parseInt(timestamp) * 1000; // 2017-03-31 16:02:06
 			},
 			fixFormat(delta){
-				console.log(delta);
 				let needFix = false;
 				let fixedRich = [];
 				let id = 1;
@@ -211,6 +211,13 @@
 					}
 				}
 				return {needFix, fixedRich};
+			},
+			handleSetContent(){
+				this.editorCtx.getContents({
+					success:(res)=>{
+						this.lastDetailText = res.text;
+					}
+				})
 			},
 			delta2Rich(delta){
 				let rich = [];
@@ -274,7 +281,10 @@
 					uni.createSelectorQuery().select('.textarea').context((res) => {
 					    this.editorCtx = res.context;
 					    this.editorCtx.setContents({//赋值
-					          delta: this.rich2Delta(JSON.parse(this.article.content))
+					          delta: this.rich2Delta(JSON.parse(this.article.content)),
+							  success: () => {
+								  this.handleSetContent();
+							  }
 						}); 
 					}).exec();
 					this.countText();
@@ -347,41 +357,38 @@
 				this.textCount = this.article.content.length;
 			},
 			onInput(e){
-				// console.log(e);
-				// let currentRichContent = JSON.parse(this.article.content);
-				// let rawText = "";
-				// for(let item of currentRichContent){
-				// 	if(item.type == "text") rawText += item.value + "\n";
-				// }
-				// rawText = rawText.substring(0, rawText.length - 1);
-				// console.log("before:", e.detail.text.length, "after:", rawText.length)
-				// console.log(e.detail.text, rawText)
-				// if(e.detail.text.length - rawText.length == 1){
-				// 	for(let i=0 ; i<e.detail.text.length ; i++){
-				// 		if(rawText[i] != e.detail.text[i]) {
-				// 			if(e.detail.text[i] == '\n'){
-				// 				this.$nextTick(function(){
-				// 					this.editorCtx.insertText({
-				// 						text:"　　"
-				// 					});
-				// 				})
-								
-				// 			}
-				// 			break;
-				// 		}
-				// 	}
-				// }
-				this.editorCtx.getContents({
-					success:(res)=>{
-						let result = this.fixFormat(res.delta);
-						console.log(result);
-						if(result.needFix) {
-							this.editorCtx.setContents({
-								delta: this.rich2Delta(result.fixedRich)
-							})
+				if(this.lastDetailText) {
+					let currentRichContent = JSON.parse(this.article.content);
+					// console.log("after:", e.detail.text.length, "before:", this.lastDetailText.length)
+					// console.log(e.detail.text, this.lastDetailText)
+					if(e.detail.text.length - this.lastDetailText.length == 1){
+						for(let i=0 ; i<e.detail.text.length ; i++){
+							if(this.lastDetailText[i] != e.detail.text[i]) {
+								if(e.detail.text[i] == '\n'){
+									this.$nextTick(function(){
+										this.editorCtx.insertText({
+											text:"　　"
+										});
+									})
+									
+								}
+								break;
+							}
 						}
 					}
-				})
+				}
+				this.lastDetailText = e.detail.text;
+				// this.editorCtx.getContents({
+				// 	success:(res)=>{
+				// 		let result = this.fixFormat(res.delta);
+				// 		console.log(result);
+				// 		if(result.needFix) {
+				// 			this.editorCtx.setContents({
+				// 				delta: this.rich2Delta(result.fixedRich)
+				// 			})
+				// 		}
+				// 	}
+				// })
 				this.article.content = JSON.stringify(this.delta2Rich(e.detail.delta));
 				this.article_changed = true;
 				this.countText();
@@ -416,6 +423,9 @@
 										insert:articleContent
 									  }
 								  ]
+							  },
+							  success: () => {
+							  	this.handleSetContent();
 							  }
 						});
 						uni.showToast({
@@ -509,7 +519,10 @@
 														uni.createSelectorQuery().select('.textarea').context((res) => {
 														    _this.editorCtx = res.context;
 														    _this.editorCtx.setContents({//赋值
-														          delta: _this.rich2Delta(JSON.parse(_this.article.content))
+														          delta: _this.rich2Delta(JSON.parse(_this.article.content)),
+																  success: () => {
+																  		_this.handleSetContent();
+																  }
 															});
 														}).exec();
 														_this.countText();
