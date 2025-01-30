@@ -1,0 +1,32 @@
+{
+	"white": {
+		"backgroundColor": "#F6F6F6",
+		"fontColor": "#3D3D3D",
+		"isBlack": false
+	},
+	"green": {
+		"backgroundColor": "#E4F0D8",
+		"fontColor": "#3D3D3D",
+		"isBlack": false
+	},
+	"yellow": {
+		"backgroundColor": "#FFF9EB",
+		"fontColor": "#3D3D3D",
+		"isBlack": false
+	},
+	"blue": {
+		"backgroundColor": "#f0fffe",
+		"fontColor": "#3D3D3D",
+		"isBlack": false
+	},
+	"pink": {
+		"backgroundColor": "#ffebfc",
+		"fontColor": "#3D3D3D",
+		"isBlack": true
+	},
+	"black": {
+		"backgroundColor": "#100f0e",
+		"fontColor": "#c6c6c6",
+		"isBlack": true
+	}
+}

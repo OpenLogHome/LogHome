@@ -357,7 +357,7 @@ router.post('/modify_article', auth, async (req, res) => {
 	user = JSON.parse(JSON.stringify(user))[0];
 	try {
 		let results = await query(
-			'UPDATE articles SET `title`=?,`content`=?,is_draft=? WHERE article_id=? AND deleted = 0',
+			'UPDATE articles SET `title`=?,`content`=?,is_draft=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0',
 			[
 				req.body.title,
 				req.body.content,

@@ -107,7 +107,7 @@
 
 					</view>
 
-					<view class="l-list" @click="startReading()" v-show="articleLength">
+					<view class="l-list" @click="startReading" v-show="articleLength">
 						<view class="l-h3">
 							<text class="l-h3-title">正在阅读 - {{Math.min((historyShown/articleLength*100),100).toFixed(0)}}%</text>
 						</view>
@@ -563,7 +563,7 @@
 				}
 				if (_this.history == 1) {
 					uni.navigateTo({
-						url: './article?id=' + articles[0].article_id
+						url: './newReader/article?id=' + articles[0].article_id
 					})
 					return;
 				} else {
@@ -575,7 +575,7 @@
 						}
 					})
 					uni.navigateTo({
-						url: './article?id=' + toId
+						url: './newReader/article?id=' + toId
 					})
 				}
 			},

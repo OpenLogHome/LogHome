@@ -123,6 +123,9 @@
 			custom-class="bookMenu">
 			<bookMenu :novel_id="article.novel_id"></bookMenu>
 		</el-drawer>
+		<div class="lastProgress" v-show="showLastProgress">
+			已恢复上次阅读进度  <div class="textbutton" style="margin-left: 10px;" @click="scrollToTop(true); showLastProgress=false">回到顶部</div>
+		</div>
 	</view>
 </template>
 
@@ -137,6 +140,7 @@
 		},
 		data() {
 			return {
+				articleId: -1,
 				article: {},
 				articles: [],
 				pageHeadBtn: [],
@@ -145,6 +149,8 @@
 				pageHead: {},
 				scrollTop: 0,
 				navigationBarController: {},
+				pageProgressInterval: undefined,
+				showLastProgress: false,
 				themes: {
 					white: {
 						color: "#001f41",
@@ -174,15 +180,42 @@
 			this.settingsOpened = !this.settingsOpened;
 		},
 		methods: {
+			loadPageProgress() {
+				let scrollTop = localStorage.getItem(`articleProgress_${this.articleId}`);
+				this.scrollToTop();
+				if(scrollTop != undefined && scrollTop != 0) {
+					uni.pageScrollTo({
+						duration: 200, // 过渡时间
+						scrollTop: Math.floor(scrollTop) // 滚动的实际距离
+					})
+					this.showLastProgress = true;
+					setTimeout(() => {
+						this.showLastProgress = false;
+					}, 5000);
+				}
+			},
+			updatePageProgress(){
+				this.pageProgressInterval = setInterval(() => {
+					let scrollTop = window.pageYOffset || document.body.scrollTop || document.documentElement.scrollTop
+					localStorage.setItem(`articleProgress_${this.articleId}`, scrollTop);
+				}, 2000);
+			},
 			refreshPage(articleId) {
+				uni.showLoading({
+					title: "加载中"
+				})
+				let _this = this;
 				axios.get(this.$baseUrl + '/articles/get_article?id=' + articleId).then((res) => {
+					this.articleId = articleId;
 					this.article = res.data[0];
 					if (this.article.article_type == "worldVocabulary") {
 						this.article.content = JSON.parse(this.article.content);
 					}
+					setTimeout(() => {
+						this.loadPageProgress();
+					})
 					this.getArticles(this.article.novel_id);
-					window.localStorage.setItem("ReaderHistory_" + this.article.novel_id, this.article
-					.article_chapter);
+					window.localStorage.setItem("ReaderHistory_" + this.article.novel_id, this.article.article_chapter);
 				}).catch(function(error) {}).then(function() {
 					uni.hideLoading();
 				})
@@ -245,7 +278,6 @@
 								let aid = this.articles[i].article_id;
 								this.refreshPage(aid);
 								this.settingsOpened = false;
-								this.scrollToTop();
 								return;
 							}
 						}
@@ -256,16 +288,15 @@
 								let aid = this.articles[i].article_id;
 								this.refreshPage(aid);
 								this.settingsOpened = false;
-								this.scrollToTop();
 								return;
 							}
 						}
 					}
 				}
 			},
-			scrollToTop(){
+			scrollToTop(duration){
 				uni.pageScrollTo({
-					duration: 200, // 过渡时间
+					duration: duration?200:0, // 过渡时间
 					scrollTop: 0, // 滚动的实际距离
 				})
 			},
@@ -280,30 +311,30 @@
 				let bodyHeight3 = document.body.clientHeight / 3;
 				let _this = this;
 				// console.log(bodyHeight3)
-				if (touchHeight < bodyHeight3) {
-					// console.log("向上滚动")
-					uni.createSelectorQuery().select(".article").boundingClientRect((res) => {
-						// console.log("top",res.top)
-						let scrollH = res.top;
-						// console.log("newTop",scrollH + bodyHeight3*2)
-						uni.pageScrollTo({
-							duration: 200, // 过渡时间
-							scrollTop: -scrollH - bodyHeight3 * 3 * 0.9, // 滚动的实际距离
-						})
-					}).exec()
-				} else if (touchHeight > bodyHeight3 * 2) {
-					// console.log("向下滚动")
-					uni.createSelectorQuery().select(".article").boundingClientRect((res) => {
-						// console.log("top",res.top)
-						let scrollH = res.top;
-						uni.pageScrollTo({
-							duration: 200, // 过渡时间
-							scrollTop: -scrollH + bodyHeight3 * 3 * 0.9, // 滚动的实际距离
-						})
-					}).exec()
-				} else {
-					this.settingsOpened = !this.settingsOpened;
-				}
+				// if (touchHeight < bodyHeight3) {
+				// 	// console.log("向上滚动")
+				// 	uni.createSelectorQuery().select(".article").boundingClientRect((res) => {
+				// 		// console.log("top",res.top)
+				// 		let scrollH = res.top;
+				// 		// console.log("newTop",scrollH + bodyHeight3*2)
+				// 		uni.pageScrollTo({
+				// 			duration: 200, // 过渡时间
+				// 			scrollTop: -scrollH - bodyHeight3 * 3 * 0.9, // 滚动的实际距离
+				// 		})
+				// 	}).exec()
+				// } else if (touchHeight > bodyHeight3 * 2) {
+				// 	// console.log("向下滚动")
+				// 	uni.createSelectorQuery().select(".article").boundingClientRect((res) => {
+				// 		// console.log("top",res.top)
+				// 		let scrollH = res.top;
+				// 		uni.pageScrollTo({
+				// 			duration: 200, // 过渡时间
+				// 			scrollTop: -scrollH + bodyHeight3 * 3 * 0.9, // 滚动的实际距离
+				// 		})
+				// 	}).exec()
+				// } else {
+				this.settingsOpened = !this.settingsOpened;
+				// }
 			},
 			toolsOuterClicked() {
 				this.settingsOpened = false;
@@ -396,9 +427,13 @@
 				}
 			}, 300)
 			this.refreshPage(option.id);
+			
+			// 启动页面滚动日志记录
+			this.updatePageProgress();
 		},
 		beforeDestroy() {
-			clearInterval(this.navigationBarController)
+			clearInterval(this.navigationBarController);
+			clearInterval(this.pageProgressInterval);
 		},
 		onPageScroll(res) {
 			this.scrollTop = res.scrollTop; //距离页面顶部距离
@@ -612,6 +647,26 @@
 			left: 0;
 			opacity: 1;
 		}
+		
+		
+		.lastProgress{
+			position: fixed;
+			bottom: 20vh;
+			left: 50vw;
+			transform: translateX(-50%);
+			background-color: #000000aa;
+			padding: 20rpx 0;
+			border-radius: 100rpx;
+			color: white;
+			font-size: 35rpx;
+			width: 80vw;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			.textbutton{
+				color: #FF8C00;
+			}
+		}
 	}
 
 	.button.theme {
@@ -661,8 +716,8 @@
 	}
 
 	view.content.white {
-		background-color: #fefefe;
-		color: #001f41;
+		background-color: #F8F8FA;
+		color: #020104;
 	}
 
 	view.content.blue {
@@ -676,17 +731,17 @@
 	}
 
 	view.content.green {
-		background-color: #C1E6C6;
-		color: #093811;
+		background-color: #C0EDC6;
+		color: #000B00;
 	}
 
 	view.content.purple {
-		background-color: #fde0ff;
+		background-color: #fde0ffee;
 		color: #310024;
 	}
 
 	view.content.black {
-		background-color: #282C35;
+		background-color: #111111;
 		color: #cecece;
 	}
 

@@ -16,12 +16,14 @@
     },
     "dependencies": {
         "axios": "^0.27.2",
+        "dexie": "^4.0.11",
         "element-ui": "^2.15.9",
         "fastclick": "^1.0.6",
         "html2canvas": "^1.4.1",
         "mobile-detect": "^1.4.5",
         "uview-ui": "^2.0.35",
         "vue-count-to": "^1.0.13",
+        "vue-flip-article": "^0.1.0",
         "vue-monoplasty-slide-verify": "^1.1.5"
     }
 }

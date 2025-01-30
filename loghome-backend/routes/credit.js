@@ -20,14 +20,4 @@ router.get('/history', auth, async (req, res) => {
 	}
 });
 
-// 如果要改成面向服务架构再解除注释
-
-// router.get('/value', auth, async (req, res) => {});
-
-// router.post('/', async (req, res) => {
-// })
-
-// router.put('/', auth, async (req, res) => {
-// })
-
 module.exports = router;

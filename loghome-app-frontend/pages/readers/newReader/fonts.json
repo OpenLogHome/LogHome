@@ -1,0 +1,27 @@
+{
+	"default": {
+		"name": "系统默认",
+		"family": "",
+		"familyBold": ""
+	},
+	"方正书宋": {
+		"name": "方正书宋",
+		"family": "FangZhengShuSongJianTi",
+		"familyBold": "FangZhengShuSongJianTi"
+	},
+	"思源黑体": {
+		"name": "思源黑体",
+		"family": "SourceHanSansSCRegular",
+		"familyBold": "SourceHanSansSCBold"
+	},
+	"方正楷体": {
+		"name": "方正楷体",
+		"family": "FangZhengKaiTiJianTi",
+		"familyBold": "FangZhengKaiTiJianTi"
+	},
+	"霞鹜文楷": {
+		"name": "霞鹜文楷",
+		"family": "LXGWWenKaiRegular",
+		"familyBold": "LXGWWenKaiMedium"
+	}
+}

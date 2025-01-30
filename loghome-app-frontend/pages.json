@@ -544,7 +544,15 @@
 		    	    ]
 		    	}
 		    }
-		}
+		},{
+            "path" : "pages/readers/newReader/article",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "新版阅读器",
+                "enablePullDownRefresh": false,
+				"navigationStyle": "custom"
+            }
+        }
     ],
 	"tabBar": {
 		"color": "#7A7E83",
