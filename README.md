@@ -48,7 +48,7 @@ loghome
 
 - 前端: uni-app, Vue.js, Flutter
 - 后端: Node.js
-- 数据库: MongoDB
+- 数据库: MySQL
 - 混合开发: Flutter
 
 ## 📄 许可证
