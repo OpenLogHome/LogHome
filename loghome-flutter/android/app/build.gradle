@@ -1,0 +1,78 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace = "top.codesocean.loghome.cannery"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        applicationId = "top.codesocean.loghome.cannery"
+        // 设置最低支持的 Android SDK 版本
+        minSdkVersion flutter.minSdkVersion
+        // 设置目标 Android SDK 版本
+        targetSdkVersion flutter.targetSdkVersion
+        // // 内部版本号，每次发布新版本都要递增
+        // versionCode 250201
+        // // 显示给用户看的版本号
+        // versionName "Canary_250201"
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+        
+        ndk {
+            abiFilters "arm64-v8a", "x86_64"
+        }
+    }
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        debug {
+            // 启用调试
+            debuggable true
+            // 禁用混淆
+            minifyEnabled false
+            // 禁用资源压缩
+            shrinkResources false
+        }
+        
+        release {
+            // 使用发布签名
+            signingConfig signingConfigs.release
+            // 禁用混淆
+            minifyEnabled false
+            // 禁用资源压缩
+            shrinkResources false
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
