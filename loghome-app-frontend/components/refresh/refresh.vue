@@ -3,7 +3,7 @@
 		<view class='refresh' :style="isZoom" :class="isEnd==2?'animationSmall':''">
 			<!-- <view class='refreshWord' v-if="isEnd == 0">松开刷新</view> -->
 			<view class='refreshCirle animation' v-if="isEnd == 1"></view>
-			<image class='iconYes' src='../static/icon-yes.png' v-if="isEnd==2"></image>
+			<img class='iconYes' src='../static/icon-yes.png' v-if="isEnd==2"></img>
 		</view>
 	</view>
 	</view>

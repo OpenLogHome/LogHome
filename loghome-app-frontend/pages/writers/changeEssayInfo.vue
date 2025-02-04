@@ -1,6 +1,6 @@
 <template>
 	<div class="outer">
-		<img class="cover" :src="imgSrc" alt="" @click="changeCover">
+		<log-image class="cover" :src="imgSrc" alt="" @click="changeCover"/>
 		<el-input
 		  type="text"
 		  placeholder="作品名"

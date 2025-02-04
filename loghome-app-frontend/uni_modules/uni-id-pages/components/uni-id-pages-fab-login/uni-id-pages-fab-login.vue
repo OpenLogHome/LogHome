@@ -3,7 +3,7 @@
 		<view class="fab-login-box">
 			<view class="item" v-for="(item,index) in servicesList" :key="index"
 				@click="item.path?toPage(item.path):login_before(item.id,false)">
-				<image class="logo" :src="item.logo" mode="scaleToFill"></image>
+				<log-image class="logo" :src="item.logo" mode="scaleToFill"></log-image>
 				<text class="login-title">{{item.text}}</text>
 			</view>
 		</view>

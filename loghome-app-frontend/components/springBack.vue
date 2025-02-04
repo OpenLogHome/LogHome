@@ -73,8 +73,8 @@
 		border-top-right-radius: 0;
 		width: 100%;
 		position: absolute;
-		background:linear-gradient(to bottom, #ffffffdd, #ffffffFF 40%);
-		backdrop-filter: blur(50px);
+		background:linear-gradient(to bottom, #fffcf2, #ffffff 40%);
+		/* backdrop-filter: blur(50px); */
 		z-index: 3;
 	}
 </style>

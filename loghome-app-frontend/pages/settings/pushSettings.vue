@@ -16,7 +16,7 @@
 			<view class="list">
 				<view class="li " @click="autoSaveSet">
 					<view class="text">状态：{{pushStatus == 1 ? "启用" : "停用"}}</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 		</div>
@@ -131,7 +131,7 @@
 				flex-shrink:0;
 				width:50upx;
 				height:50upx;
-				image{
+				img{
 					width:50upx;
 					height:50upx;
 				}

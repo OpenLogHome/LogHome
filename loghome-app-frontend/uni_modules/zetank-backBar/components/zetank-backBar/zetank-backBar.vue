@@ -1,5 +1,5 @@
 <template>
-	<view class="top_nav" :style="{background:bgColor}">
+	<view class="top_nav" :style="{background:bgColor, '--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<view class="toBar" :style="'height:'+toBarHeight">
 			<view>
 				<block v-if="showLeft == true">
@@ -77,7 +77,13 @@
 		},
 		methods: {
 			toback() {
-				uni.navigateBack({});
+				if(getCurrentPages().length == 1) {
+					uni.reLaunch({
+						url: "/pages/library"
+					})
+				} else {
+					uni.navigateBack();
+				}
 			},
 			tohome() {
 				uni.reLaunch({
@@ -148,7 +154,7 @@
 
 	.top_nav {
 		position: fixed;
-		top: 60upx;
+		top: calc(60upx + var(--statusBarHeight));
 		left: 15upx;
 		z-index: 80;
 	}

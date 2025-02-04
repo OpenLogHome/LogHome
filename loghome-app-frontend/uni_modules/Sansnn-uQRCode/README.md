@@ -221,7 +221,7 @@ const UQRCode = require('@uqrcode/js'); // npm install @uqrcode/js
             break;
         case 'image':
             /* 绘制图像 */
-            qrHtml += `<img style="position: absolute;left: ${drawModule.x}px;top: ${drawModule.y}px;width: ${drawModule.width}px;height: ${drawModule.height}px;" src="${drawModule.imageSrc}" />`;
+            qrHtml += `<log-image style="position: absolute;left: ${drawModule.x}px;top: ${drawModule.y}px;width: ${drawModule.width}px;height: ${drawModule.height}px;" src="${drawModule.imageSrc}" />`;
             break;
         }
     }
@@ -269,7 +269,7 @@ const UQRCode = require('@uqrcode/js'); // npm install @uqrcode/js
             break;
         case 'image':
             /* 绘制图像 */
-            qrHtml += `<image href="${drawModule.imageSrc}" x="${drawModule.x}" y="${drawModule.y}" width="${drawModule.width}" height="${drawModule.height}" />`;
+            qrHtml += `<log-image href="${drawModule.imageSrc}" x="${drawModule.x}" y="${drawModule.y}" width="${drawModule.width}" height="${drawModule.height}" />`;
             break;
         }
     }

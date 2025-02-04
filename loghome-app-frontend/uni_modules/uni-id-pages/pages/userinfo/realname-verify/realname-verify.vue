@@ -10,7 +10,7 @@
       <view class="uni-content">
         <template v-if="verifyFail">
           <view class="face-icon">
-            <image src="./face-verify-icon.svg" class="face-icon-image" />
+            <img src="./face-verify-icon.svg" class="face-icon-image" />
           </view>
           <view class="error-title">{{verifyFailTitle}}</view>
           <view class="error-description">{{verifyFailContent}}</view>

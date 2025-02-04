@@ -1,5 +1,5 @@
 <template>
-	<view class="content">
+	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<div class="tabBarUnder">
 			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" textColor="#2d2d2d"
 				ref="tabs" />
@@ -11,8 +11,8 @@
 		<div class="searchBar">
 			<uni-search-bar bgColor="rgb(211,211,211)" :radius="5" @input="searchBookCase" placeholder="搜索书架"
 				cancelButton="none">
-				<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;">
-				<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;">
+				<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;"/>
+				<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;"/>
 			</uni-search-bar>
 		</div>
 		<div class="bookcase">
@@ -105,7 +105,7 @@
 										console.log(history, articles);
 										if (history == 1) {
 											uni.navigateTo({
-												url: '../readers/article?id=' + articles[0].article_id
+												url: '../readers/newReader/article?id=' + articles[0].article_id
 											})
 											return;
 										} else {
@@ -117,7 +117,7 @@
 												}
 											})
 											uni.navigateTo({
-												url: '../readers/article?id=' + toId
+												url: '../readers/newReader/article?id=' + toId
 											})
 										}
 									}
@@ -142,8 +142,8 @@
 				this.Loop = setTimeout(function() {
 					that.gotoManage();
 					that.touchend();
-					if(that.jsBridge.inApp){
-						that.jsBridge.vibrate();
+					if(that.jsBridge.inApp && that.jsBridge.inApp){
+						// that.jsBridge.vibrate();
 					}
 				}.bind(this), 500);
 			},
@@ -250,6 +250,7 @@
 			left: 0;
 			margin: 0 0rpx;
 			padding: 10rpx 0;
+			padding-top: calc(10rpx + var(--statusBarHeight));
 			background-color: rgb(255, 255, 255);
 			display: flex;
 			box-shadow:
@@ -266,6 +267,7 @@
 			opacity: 0;
 			margin: 0 0rpx;
 			padding-top: 5rpx;
+			padding-top: calc(10rpx + var(--statusBarHeight));
 			padding-bottom: 5rpx;
 			background-color: rgb(255, 255, 255);
 			height: 75rpx;

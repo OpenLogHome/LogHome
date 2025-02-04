@@ -5,13 +5,13 @@
 					<navigator :url="'./bookInfo?id=' +  item.novel_id"
 							   open-type="navigate">    
 						<div class="books">
-							<img :src="item.picUrl" alt=""
-							:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`">
+							<log-image :src="item.picUrl" alt=""
+							:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
 							<div class="bookInfo">
 								<div class="title">{{item.name}}</div>
 								<view class="author">
-									<img :src="item.avatar_url" alt="" class="auther_avatar"
-									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+									<log-image :src="item.avatar_url" alt="" class="auther_avatar"
+									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 									<div class="auther_name">{{item.username}}</div>
 								</view>
 								<div class="description">{{item.content}}</div>

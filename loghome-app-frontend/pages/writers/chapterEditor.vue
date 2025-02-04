@@ -1,5 +1,6 @@
 <template>
-	<div class="outer" :class="writerSettings.theme" style="transition: all .5s;" @touchstart="documentOnPress=true" @touchend="documentOnPress=false">
+	<div class="outer" :class="writerSettings.theme" :style="{'transition': 'all .5s', '--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}"
+	@touchstart="documentOnPress=true; clearEditorImagesEditButton()" @touchend="documentOnPress=false">
 		<div class="topBar">
 			<input class="input" placeholder="章节标题" v-model="article.title"
 				:style="{ fontSize: writerSettings.fontSize + 'rpx' }" />
@@ -447,9 +448,9 @@ export default {
 						},
 						success: () => {
 							this.handleSetContent();
-							this.onInput({
-								detail: {
-									delta: { ops: formattedOps }
+							this.editorCtx.getContents({
+								success: (res) => {
+									this.onInput({ detail: { delta: res.delta } });
 								}
 							});
 							uni.showToast({
@@ -623,12 +624,6 @@ export default {
 				element.style.color = this.themes[this.writerSettings.theme].color;
 			})
 			pageHead.style.backgroundColor = this.themes[this.writerSettings.theme].backColor;
-			this.jsBridge.ready(() => {
-				this.jsBridge.setOptions({
-					statusBarColor: this.themes[this.writerSettings.theme].backColor,
-					statusBarBlackText: !(this.writerSettings.theme == 'black')
-				});
-			})
 		},
 		clearEditorImagesEditButton() {
 			const existingButtons = document.querySelectorAll('.image-edit-button');
@@ -725,7 +720,7 @@ export default {
 		initScrollListener() {
 			this.imageEditInterval = setInterval(() => {
 				this.showEditorImagesEditButton();
-			}, 250)
+			}, 500)
 		},
 	},
 	onNavigationBarButtonTap(e) {
@@ -887,13 +882,21 @@ export default {
 
 <style scoped lang="less">
 .outer {
-	height: calc(100vh - 90rpx);
+	height: calc(100vh - 44px - var(--statusBarHeight)) !important;
+	overflow: hidden !important;
 
 	.topBar {
-		box-sizing: border-box;
 		height: 100rpx;
 		border-bottom: #a6a6a6 1px solid;
 		position: relative;
+		box-shadow:
+		  0px 4px 1.5px rgba(0, 0, 0, 0.006),
+		  0px 9.7px 3.5px rgba(0, 0, 0, 0.008),
+		  0px 18.3px 6.6px rgba(0, 0, 0, 0.01),
+		  0px 32.6px 11.8px rgba(0, 0, 0, 0.012),
+		  0px 61px 22.1px rgba(0, 0, 0, 0.014),
+		  0px 146px 53px rgba(0, 0, 0, 0.02)
+		;
 
 		input {
 			height: 100%;
@@ -916,11 +919,12 @@ export default {
 
 	.middleBar {
 		box-sizing: border-box;
-		height: calc(100vh - 90rpx - 100rpx);
+		height: calc(100vh - 44px - 100rpx - var(--statusBarHeight)) !important;
 		overflow: hidden;
 
 		.textarea {
-			padding: 30rpx;
+			// margin: 30rpx 0;
+			padding: 0 30rpx;
 			width: calc(100vw);
 			height: calc(100%);
 			font-size: 35rpx;
@@ -931,6 +935,7 @@ export default {
 
 			:deep(.ql-editor) {
 				scroll-behavior: smooth;
+				margin: 30rpx 0 !important;
 				/* 确保编辑器内容区域也有平滑滚动 */
 			}
 		}

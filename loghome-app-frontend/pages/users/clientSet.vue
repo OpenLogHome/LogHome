@@ -4,31 +4,31 @@
 			<view class="list">
 				<view class="li " @click="autoSaveSet">
 					<view class="text">本地备份设置</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 <!-- 				<view class="li " @click="readerSet">
 					<view class="text">阅读器设置</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<log-image class="to" src="../../static/user/to.png"></log-image>
 				</view> -->
 			</view>
 			<view class="list">
 				<!-- <view class="li " @click="pushSet">
 					<view class="text">消息推送设置</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<log-image class="to" src="../../static/user/to.png"></log-image>
 				</view> -->
 				<view class="li " @click="changePwd">
 					<view class="text">修改密码</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 				<view class="li " @click="activateAccount">
 					<view class="text">账号绑定</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 			<view class="list">
 				<view class="li noborder" @click="logout">
 					<view class="text" style="color:red">登出</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 		</view>
@@ -128,7 +128,7 @@ page{
 			flex-shrink:0;
 			width:50upx;
 			height:50upx;
-			image{
+			img{
 				width:50upx;
 				height:50upx;
 			}

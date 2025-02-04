@@ -97,3 +97,48 @@ export function utc2beijing(utc_datetime) {
 	var timestamp = timestamp + 8 * 60 * 60;
 	return timestamp;
 }
+
+export function blendHexColors(bottomHex, topHex) {
+    // 解析颜色并转换为 RGBA
+    function parseHexColor(hex) {
+        hex = hex.replace(/^#/, "");
+        if (hex.length === 3) hex = hex.split("").map(c => c + c).join(""); // #RGB → #RRGGBB
+        if (hex.length === 4) hex = hex.split("").map(c => c + c).join(""); // #RGBA → #RRGGBBAA
+        if (hex.length === 6) hex += "FF"; // #RRGGBB → #RRGGBBAA
+
+        let r = parseInt(hex.slice(0, 2), 16);
+        let g = parseInt(hex.slice(2, 4), 16);
+        let b = parseInt(hex.slice(4, 6), 16);
+        let a = parseInt(hex.slice(6, 8), 16) / 255; // Alpha 转换为 0~1
+
+        return { r, g, b, a };
+    }
+
+    // 颜色叠加公式
+    function blendChannel(top, bottom, topAlpha, bottomAlpha) {
+        return Math.round(top * topAlpha + bottom * bottomAlpha * (1 - topAlpha));
+    }
+
+    let bottom = parseHexColor(bottomHex);
+    let top = parseHexColor(topHex);
+
+    // 透明度混合
+    let outA = top.a + bottom.a * (1 - top.a);
+    
+    // 处理完全透明的情况（如果两个都是透明的，返回 top 颜色）
+    if (top.a === 0 && bottom.a === 0) {
+        return topHex.length === 4 || topHex.length === 8 ? topHex : topHex + "FF";
+    }
+
+    // 计算新的 RGB 颜色值
+    let outR = blendChannel(top.r, bottom.r, top.a, bottom.a);
+    let outG = blendChannel(top.g, bottom.g, top.a, bottom.a);
+    let outB = blendChannel(top.b, bottom.b, top.a, bottom.a);
+
+    // 转换为十六进制
+    function toHex(value) {
+        return value.toString(16).padStart(2, "0").toUpperCase();
+    }
+
+    return `#${toHex(outR)}${toHex(outG)}${toHex(outB)}${toHex(Math.round(outA * 255))}`;
+}

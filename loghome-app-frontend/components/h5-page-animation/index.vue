@@ -1,31 +1,4 @@
 <script>
-let navigationbarColorExceptions = [
-	{
-		path:"/pages/me",
-		color:"#ffffff",
-		statusBarBlackText:true
-	},
-	{
-		path:"/pages/treePlant/treeplant",
-		color:"#A4D9FE",
-		statusBarBlackText:true
-	},
-	{
-		path:"/pages/users/personalPage",
-		color:"#000000",
-		statusBarBlackText:false
-	},
-	{
-		path:"/pages/readers/bookInfo",
-		color:"#000000",
-		statusBarBlackText:false
-	},
-	{
-		path:"/pages/worlds/worldPage",
-		color:"#fff2d0",
-		statusBarBlackText:true
-	}
-]
 
 // #ifdef H5
 var hpa_first_Show = true;
@@ -46,21 +19,6 @@ export default {
         hpa_first_Show = false;
 		let _this = this;
         this.$router.beforeEach((to, from, next) => {
-			
-			this.jsBridge.ready(function(){
-				_this.jsBridge.setOptions({
-					statusBarColor: "#ffffff",
-					statusBarBlackText:true
-				});
-				for(let item of navigationbarColorExceptions){
-					if(item.path == to.path){
-						_this.jsBridge.setOptions({
-						  statusBarColor: item.color,
-						  statusBarBlackText:item.statusBarBlackText
-						});
-					}
-				}
-			})
 			
             // tabBar切换无动画
             if (to.type == 'switchTab' || to.type == 'redirectTo' || to.query.noneAnimation) {
@@ -84,6 +42,7 @@ export default {
     },
     methods: {
         show(next) {
+			let animationTime = 300;
             // 填充虚拟页
             const page2 = document.getElementById('page2');
             page2.innerHTML = document.querySelector('uni-page').innerHTML;
@@ -112,13 +71,14 @@ export default {
                             page1_class.remove('hpa-animation', 'hpa-animation-before', 'hpa-animation-after');
                             page2_class.remove('hpa-show', 'hpa-low', 'hpa-animation', 'hpa-animation-enter');
                             page2.innerHTML = '';
-                        }, 300);
+                        }, animationTime);
                     }, 50);
                 }, 50);
             }, 5);
         },
         hide(next) {
             // 填充虚拟页
+			let animationTime = 300;
             const page2 = document.getElementById('page2');
             page2.innerHTML = document.querySelector('uni-page').innerHTML;
             // 调整虚拟页样式
@@ -142,7 +102,7 @@ export default {
                         page1_class.remove('hpa-animation', 'hpa-animation-after', 'hpa-animation-enter');
                         page2_class.remove('hpa-show', 'hpa-High', 'hpa-animation', 'hpa-animation-before');
                         page2.innerHTML = '';
-                    }, 300);
+                    }, animationTime);
                 }, 50);
             }, 5);
         }

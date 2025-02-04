@@ -78,7 +78,7 @@ by ZXLee
 							<view v-else-if="useChatRecordMode&&loadingStatus!==2&&realTotalData.length" class="zp-chat-record-loading-container">
 								<text v-if="loadingStatus!==1" @click="_scrollToUpper()"
 									:class="defaultThemeStyle==='white'?'zp-loading-more-text zp-loading-more-text-white':'zp-loading-more-text zp-loading-more-text-black'">{{chatRecordLoadingMoreText}}</text>
-								<image v-else :src="base64Flower" class="zp-chat-record-loading-custom-image" />
+								<log-image v-else :src="base64Flower" class="zp-chat-record-loading-custom-image" />
 							</view>
 							<!-- 全屏Loading -->
 							<slot v-if="$slots.loading&&showLoading&&!loadingFullFixed" name="loading" />
@@ -122,7 +122,7 @@ by ZXLee
 		<!-- 点击返回顶部view -->
 		<view v-if="showBackToTopClass" :class="backToTopClass" :style="[finalBackToTopStyle]" @click.stop="_backToTopClick">
 			<slot v-if="$slots.backToTop" name="backToTop" />
-			<image v-else class="zp-back-to-top-img" :src="backToTopImg.length?backToTopImg:base64BackToTop" />
+			<log-image v-else class="zp-back-to-top-img" :src="backToTopImg.length?backToTopImg:base64BackToTop" />
 		</view>
 		<!-- 全屏Loading(铺满z-paging并固定) -->
 		<view v-if="$slots.loading&&showLoading&&loadingFullFixed" class="zp-loading-fixed">
@@ -206,7 +206,7 @@ by ZXLee
 		<!-- 点击返回顶部view -->
 		<view v-if="showBackToTopClass" :class="backToTopClass" :style="[finalBackToTopStyle]" @click.stop="_backToTopClick">
 			<slot v-if="$slots.backToTop" name="backToTop" />
-			<image v-else class="zp-back-to-top-img" :src="backToTopImg.length?backToTopImg:base64BackToTop" />
+			<log-image v-else class="zp-back-to-top-img" :src="backToTopImg.length?backToTopImg:base64BackToTop" />
 		</view>
 		<!-- 全屏Loading(铺满z-paging并固定) -->
 		<view v-if="$slots.loading&&showLoading&&loadingFullFixed" class="zp-loading-fixed">

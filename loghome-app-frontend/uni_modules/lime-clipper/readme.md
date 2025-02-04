@@ -14,10 +14,10 @@
 
 ## 代码演示
 ### 基本用法
-`@success` 事件点击 👉 **确定** 后会返回生成的图片信息，包含 `url`、`width`、`height`
+`@success` 事件点击 ?? **确定** 后会返回生成的图片信息，包含 `url`、`width`、`height`
 
 ```html
-<image :src="url" v-if="url" mode="widthFix"></image>
+<log-image :src="url" v-if="url" mode="widthFix"></log-image>
 <l-clipper v-if="show" @success="url = $event.url; show = false" @cancel="show = false"  />
 <button @tap="show = true">裁剪</button>
 ```
@@ -38,12 +38,12 @@ export default {
 `image-url`可传入**相对路径**、**临时路径**、**本地路径**、**网络图片**<br>
 
 * **当为网络地址时**
-* H5：👉 需要解决跨域问题。 <br>
-* 小程序：👉 需要配置 downloadFile 域名 <br>
+* H5：?? 需要解决跨域问题。 <br>
+* 小程序：?? 需要配置 downloadFile 域名 <br>
 
 
 ```html
-<image :src="url" v-if="url" mode="widthFix"></image>
+<log-image :src="url" v-if="url" mode="widthFix"></log-image>
 <l-clipper v-if="show" :image-url="imageUrl"  @success="url = $event.url; show = false" @cancel="show = false"  />
 <button @tap="show = true">裁剪</button>
 ```
@@ -83,7 +83,7 @@ page {
 共五个插槽 `cancel` 取消按钮、 `photo` 选择图片按钮、 `rotate` 旋转按钮、 `confirm` 确定按钮和默认插槽。
 
 ```html
-<image :src="url" v-if="url" mode="widthFix"></image>
+<log-image :src="url" v-if="url" mode="widthFix"></log-image>
 <l-clipper 
 	v-if="show" 
 	:isLockWidth="isLockWidth"
@@ -209,7 +209,7 @@ export default {
 ## 常见问题
 - 1、H5端使用网络图片需要解决跨域问题。
 - 2、小程序使用网络图片需要去公众平台增加下载白名单！二级域名也需要配！
-- 3、H5端生成图片是base64，有时显示只有一半可以使用原生标签`<IMG/>`
+- 3、H5端生成图片是base64，有时显示只有一半可以使用原生标签`<log-image/>`
 - 4、IOS APP 请勿使用HBX2.9.3.20201014的版本！这个版本无法生成图片。
 - 5、APP端无成功反馈、也无失败反馈时，请更新基座和HBX。
 

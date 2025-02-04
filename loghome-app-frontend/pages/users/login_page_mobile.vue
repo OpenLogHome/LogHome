@@ -3,7 +3,7 @@
 		<div class="step0" v-if="step == 0">
 			<p>未注册手机号将自动创建账号</p>
 			<div class="longin-boder">
-				<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"></div>
+				<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon" /></div>
 				<input class="input" type="text" placeholder="请输入中国大陆手机号" v-model="mobile"/>
 			</div> 
 			<div class="button" @click="nextStep()">下一步</div>
@@ -34,7 +34,7 @@
 					<div class="btn wait" v-show="isWaiting">等待{{waitTime}}秒</div>
 				</div>
 				<div class="longin-boder">
-					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"></div>
+					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
 					<input class="input" type="text" placeholder="请输入验证码" v-model="verifyCode"/>
 				</div>
 				
@@ -46,12 +46,12 @@
 			<div class="step step3" v-if="step == 3">
 				<p>欢迎来到原木社区，请设置你的账号和密码。</p>
 				<div class="longin-boder" v-if="!forgetPwd">
-					<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"></div>
+					<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon" /></div>
 					<input class="input" type="text" placeholder="请输入账号" v-model="account" @input="checkAccount"/>
 				</div>
 				<div class="warn" v-show="accountUsed && !forgetPwd">该账号已被使用</div>
 				<div class="longin-boder">
-					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"></div>
+					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
 					<input class="input" type="password" placeholder="请输入密码" v-model="pwd"/>
 				</div>
 				
@@ -69,7 +69,7 @@
 					<div class="btn" @click="forgetPwd=true;step = 1">忘记密码</div>
 				</div>
 				<div class="longin-boder">
-					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"></div>
+					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
 					<input class="input" type="password" placeholder="请输入密码" v-model="pwd"/>
 				</div>
 				

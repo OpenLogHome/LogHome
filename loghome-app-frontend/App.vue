@@ -145,6 +145,52 @@
 					duration: 2000
 				});
 			})
+			
+			// 获取顶栏状态
+			this.$router.afterEach((to, from, next) => {
+				if(this.jsBridge && this.jsBridge.inApp) {
+					setTimeout(() => {
+						const uniPageHead = document.querySelectorAll("uni-page-head");
+						for(let item of uniPageHead) {
+							if(!item.classList.contains("heightChanged")) {
+								item.style.height = item.getBoundingClientRect().height + this.jsBridge.statusBarHeight + `px`;
+								item.classList.add("heightChanged");
+								let innerUniPageHead = document.querySelector(".uni-page-head");
+								item.style.backgroundColor = innerUniPageHead.style.backgroundColor;
+								innerUniPageHead.style.transform = `translateY(${this.jsBridge.statusBarHeight}px)`
+								document.styleSheets[0].insertRule(`.uni-page-head::before { content: ""; 
+																	 background-color: inherit;
+																	 height: ${this.jsBridge.statusBarHeight + 1}px;
+																	 top: -${this.jsBridge.statusBarHeight}px}`, 0);
+							}
+						}
+						const pageWrapper = document.querySelectorAll("uni-page-wrapper");
+						for(let item of pageWrapper) {
+							item.style.height = item.getBoundingClientRect().height - this.jsBridge.statusBarHeight + `px`;
+						}
+					})
+					
+					// 状态栏颜色调节
+					let navigationbarColorExceptions = [
+						{
+							path:"/pages/readers/bookInfo",
+							isDark: true
+						},
+						{
+							path:"/pages/readers/newReader/article"
+						},
+					]
+					this.jsBridge.ready(function(){
+						for(let item of navigationbarColorExceptions){
+							if(item.path == to.path){
+								if(item.isDark) jsBridge.setStatusBarStyle(item.isDark);
+								return;
+							}
+						}
+						jsBridge.setStatusBarStyle(false);
+					})
+				}
+			})
 		}
 	}
 </script>
@@ -224,7 +270,7 @@
 	
 	//tab-bar阴影
 		
-	div.uni-tabbar, div.uni-page-head, uni-page, uni-page2{
+	div.uni-tabbar, uni-page-head, uni-page, uni-page2{
 		box-shadow:
 		  0px 0px 2.2px rgba(0, 0, 0, 0.02),
 		  0px 0px 5.3px rgba(0, 0, 0, 0.028),
@@ -233,6 +279,26 @@
 		  0px 0px 33.4px rgba(0, 0, 0, 0.05),
 		  0px 0px 80px rgba(0, 0, 0, 0.07)
 		;
+		
+	}
+	
+	.uni-tabbar{
+		padding-bottom: 5px !important;
+		// backdrop-filter: blur(100px) !important;
+	}
+	
+	.uni-page-head{
+		overflow: visible !important;
+		// backdrop-filter: blur(100px) !important;
+	}
+	
+	.uni-page-head:before{
+		content: "";
+		display: block;
+		width: 100vw;
+		position: absolute;
+		left: 0;
+		// backdrop-filter: blur(100px) !important;
 	}
 	
 	uni-page,uni-page2{
@@ -242,5 +308,14 @@
 	.el-container{
 		display:none !important;
 	}
+	
+	.middleBar{
+		.textarea{
+			.ql-editor{
+				padding: 30rpx 0;
+			}
+		}
+	}
+
 
 </style>

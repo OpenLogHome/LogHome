@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<view class="title" :class="topNavStyle.class" :style="topNavStyle.style">
 			<view class="flex_col">
 				<view class="box1"></view>
@@ -13,10 +13,10 @@
 			</view>
 		</view>
 		<view class="noEssay" v-if="books.length==0" v-show="topNavArr[topNavIndex] == '小说'">
-			<img src="../static/images/icon_my_uplotolib.png" alt="">
+			<img src="../static/images/icon_my_uplotolib.png" alt=""/>
 			<p>创作之路，从这里开始</p>
 			<navigator url="./writers/newEssay">
-				<img src="../static/images/icon_my_upload_new.png" alt="">
+				<img src="../static/images/icon_my_upload_new.png" alt=""/>
 			</navigator>
 		</view>
 		<transition name="fade">
@@ -53,9 +53,9 @@
 							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
 								<navigator :url="'./readers/bookInfo?id=' +  novel.novel_id" open-type="navigate"
 									class="books" @longpress="deleteWorldNovelAsso(novel.world_id)">
-									<img :src="novel.picUrl + '?thumbnail=1'" alt=""
+									<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
 										:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"
-										style="border-radius: 10rpx; transform:scale(.90)">
+										style="border-radius: 10rpx; transform:scale(.90)" />
 									<div class="bookInfo" style="margin-left:10rpx;">
 										<div class="world-title">
 											{{novel.name}}
@@ -64,8 +64,8 @@
 												size="mini">世界设定</el-tag>
 										</div>
 										<view class="author">
-											<img :src="novel.avatar_url" alt="" class="auther_avatar"
-												onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+											<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
+												onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 											<div class="auther_name">{{novel.user_name}}</div>
 										</view>
 										<div class="description">{{novel.content}}</div>
@@ -148,12 +148,12 @@
 				<transition name='fade'>
 					<view style="text-align: center;position:relative;" v-if="this.curBook== -1">
 						<img src="../static/dig.png" alt=""
-							style="position:absolute;width:70vw;top:-120px;left:50vw;transform: translateX(-50%); z-index:102">
+							style="position:absolute;width:70vw;top:-120px;left:50vw;transform: translateX(-50%); z-index:102" />
 						<p style="color:#919191; font-weight: bold; font-size:40rpx; margin:20rpx; padding-top:130rpx;">
 							开个新坑
 						</p>
 						<img src="../static/images/icon_my_upload_new.png" alt="" @click="gotoNewEssay"
-							style="border-radius: 10rpx;margin-top:150rpx;" class="uploadBtn">
+							style="border-radius: 10rpx;margin-top:150rpx;" class="uploadBtn" />
 					</view>
 				</transition>
 				<view class="blank_box"></view>
@@ -167,20 +167,20 @@
 			<div class="searchBar" style="position:absolute; background-color: #ffe6b4; width:100%; z-index:100;">
 				<uni-search-bar bgColor="#ffffff" :radius="0" @input="searchLibrary" placeholder="搜索全站世界"
 					cancelButton="none">
-					<img src="../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;width:25px;">
-					<img src="../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;width:20px;">
+					<img src="../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;width:25px;"/>
+					<img src="../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;width:20px;"/>
 				</uni-search-bar>
 			</div>
 			<div style="height:52px; width:100%;"></div>
 			<navigator v-for="item in [...searchBooks]" :key="item.novel_id" @click="selectBook(item)">
 				<div class="books" style="margin:20rpx;">
-					<img :src="item.picUrl + '?thumbnail=1'" alt=""
-						:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`">
+					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
+						:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
 					<div class="bookInfo">
 						<div class="world-title">{{item.name}}</div>
 						<view class="author">
-							<img :src="item.avatar_url" alt="" class="auther_avatar"
-								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+							<log-image :src="item.avatar_url" alt="" class="auther_avatar"
+								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 							<div class="auther_name">{{item.user_name}}</div>
 						</view>
 						<div class="description">{{item.content}}</div>
@@ -247,7 +247,7 @@
 				let r = this.pageScrollTop / 100;
 				return {
 					"class": r >= 0.85 ? 'style2' : '',
-					"style": `background-color: rgba(255, 255, 255, ${r>=1?1:r});`
+					"style": `background-color: rgba(255, 255, 255, ${r>=1?1:r}); padding-top: ${jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0}`
 				}
 			}
 		},
@@ -592,12 +592,6 @@
 	}
 
 	.pageBody {
-		// background: linear-gradient(
-		// 		180deg,
-		// 		rgba(255, 255, 255,0),
-		// 		#ffffff,
-		// 		#ffffff
-		// 	);
 
 		.bodyView {
 			.bookTitle {

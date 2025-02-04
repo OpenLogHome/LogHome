@@ -3,7 +3,7 @@
 		<view class="mail_head">
 			<view class="mail_title">{{mail.title}}</view>
 			<view class="sender">
-				<image class="user_avatar" :src="mail.from.avatar_url"></image>
+				<log-image class="user_avatar" :src="mail.from.avatar_url"></log-image>
 				<view class="user_name">{{mail.from.user_name}}</view>
 			</view>
 			<view class="decoration_line"></view>

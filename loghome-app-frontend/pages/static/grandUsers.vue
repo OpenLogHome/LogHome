@@ -4,8 +4,8 @@
 		<view class="list fans" v-show="curTabIndex == 1">
 			<div class="users" v-for="item in greatUsers">
 				<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
-					<img :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+					<log-image :src="item.avatar_url" alt=""
+					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 					<div class="personInfo">
 						<div class="name">{{item.name}}</div>
 						<div class="motto">{{item.great_info}}</div>
@@ -18,8 +18,8 @@
 			
 				<div class="users" v-for="item in grandUsers">
 					<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
-						<img :src="item.avatar_url" alt=""
-						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+						<log-image :src="item.avatar_url" alt=""
+						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 						<div class="personInfo">
 							<div class="name">{{item.name}}</div>
 							<div class="motto">{{item.user_group}}</div>

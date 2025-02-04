@@ -392,7 +392,7 @@ export default {
             }
         },
         previewData: function(html) {
-            this.htmlData = html.replace(/\<img/gi, '<img style="max-width:100%;height:auto"');
+            this.htmlData = html.replace(/\<log-image/gi, '<log-image style="max-width:100%;height:auto"');
             this.showPreview = true;
         },
         preview: function() {

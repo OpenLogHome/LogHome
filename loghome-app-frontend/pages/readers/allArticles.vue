@@ -3,7 +3,7 @@
 		<nothing :msg="'这本书还没有章节哦\n快去评论区催更~'" v-show="articles.length == 0"></nothing>
 		<div class="articles">
 			<navigator v-for="item in articles" :key="item.article_id"
-					   :url="'./article?id=' +  item.article_id"
+					   :url="'./newReader/article?id=' +  item.article_id"
 					   open-type="navigate">  
 				<div class="article" :key="item.article_id">
 					<div class="title">{{item.title}}</div>

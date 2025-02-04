@@ -2,7 +2,7 @@
 	<div class="outer">
 		<div class="articles">
 			<navigator v-for="item in articles" :key="item.article_id"
-					   :url="'./article?id=' +  item.article_id"
+					   :url="'./newReader/article?id=' +  item.article_id"
 					   open-type="redirect">  
 				<div class="article" :key="item.article_id">
 					<div class="title">{{item.title}}</div>

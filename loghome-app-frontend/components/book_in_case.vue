@@ -1,8 +1,8 @@
 <template>
 	<div class="outer">
 		<div class="book">
-			<img :src="picUrl  + '?thumbnail=1' " alt="" :style="{display: picUrl=='' ? 'none' : 'block'}"
-			onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'">
+			<log-image :src="picUrl  + '?thumbnail=1' " alt="" :style="{display: picUrl=='' ? 'none' : 'block'}"
+			onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"/>
 		</div>
 		<div :class="{nameTag:true,empty:bookName==''}">
 			{{bookName}}

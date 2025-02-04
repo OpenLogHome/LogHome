@@ -5,9 +5,9 @@
 				<view v-if="isShowImg" class="uni-corpper" :style="'width:'+cropperInitW+'px;height:'+cropperInitH+'px;'">
 					<view class="cropper-modal" :style="'width:'+cropperInitW+'px;height:'+cropperInitH+'px;'"></view>
 					<view class="uni-corpper-content" :style="'width:'+cropperW+'px;height:'+cropperH+'px;left:'+cropperL+'px;top:'+cropperT+'px'">
-						<image :src="imageSrc" :style="'width:'+cropperW+'px;height:'+cropperH+'px'"></image>
+						<log-image :src="imageSrc" :style="'width:'+cropperW+'px;height:'+cropperH+'px'"></log-image>
 						<view class="cropper-modal-box" :style="'left:'+cutL+'px;top:'+cutT+'px;right:'+cutR+'px;bottom:'+cutB+'px'">
-							<img  :src="imageSrc" :style="'width:'+cropperW+'px;height:'+cropperH+'px;transform:translate3d('+cutL*-1+'px, '+cutT*-1+'px, 0px) '"  />
+							<log-image  :src="imageSrc" :style="'width:'+cropperW+'px;height:'+cropperH+'px;transform:translate3d('+cutL*-1+'px, '+cutT*-1+'px, 0px) '"  />
 						</view>
 						<view class="uni-corpper-crop-box" @touchstart.stop="contentStartMove" @touchmove.stop="contentMoveing" @touchend.stop="contentTouchEnd"
 						    :style="'left:'+cutL+'px;top:'+cutT+'px;right:'+cutR+'px;bottom:'+cutB+'px'">

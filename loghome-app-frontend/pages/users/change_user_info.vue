@@ -1,8 +1,8 @@
 <template>
 	<div class="outer">
 		<view class="avator">
-			<img :src="user.avatar_url" @click="gotoAvater"
-			onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+			<log-image :src="user.avatar_url" @click="gotoAvater"
+			onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 		</view>
 		<el-input
 		  type="text"

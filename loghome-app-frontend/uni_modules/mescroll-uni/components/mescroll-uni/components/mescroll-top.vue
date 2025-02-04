@@ -1,6 +1,6 @@
 <!-- 回到顶部的按钮 -->
 <template>
-	<image
+	<img
 		v-if="mOption.src"
 		class="mescroll-totop"
 		:class="[value ? 'mescroll-totop-in' : 'mescroll-totop-out', {'mescroll-totop-safearea': mOption.safearea}]"

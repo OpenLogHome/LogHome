@@ -2,9 +2,15 @@
 	<view class="commentOuter">
 		<z-paging ref="paging" v-model="reviews" @query="refreshPage">
 			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty"></nothing>
+			<div v-if="paragraphId != undefined" style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;" @click="navToChapter">
+				<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;"><path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2307"></path><path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2308"></path></svg>
+				<div class="cento" style="margin-top: 10rpx; color: #4b4b4b; padding: 0 30rpx;">
+					{{paragraph}}
+				</div>
+			</div>
 			<view class="comments">
 				<commentItem v-for="item in reviews" :reviewMsg="item" :key="item.essay_comment_id"
-				@childReview="childReview($event)" @refresh="refreshPage(1,10)"></commentItem>
+				@childReview="childReview($event)" @refresh="refreshPage(1,10)" :paragraphMode="paragraphId"></commentItem>
 			</view>
 			<view class="blank_box"></view>
 		</z-paging>
@@ -36,7 +42,9 @@
 				replyToId:-1,
 				isFocus:false,
 				fatherId:-1,
-				articleId: undefined
+				articleId: undefined,
+				paragraphId: undefined,
+				paragraph: undefined
 			}
 		},
 		onLoad(params){
@@ -46,6 +54,13 @@
 				uni.setNavigationBarTitle({
 					title: "章节评论"
 				})
+				if(params.paragraphId){
+					this.paragraphId = params.paragraphId;
+					this.loadParagraphInfo();
+					uni.setNavigationBarTitle({
+						title: "段落评论"
+					})
+				}
 			}
 		},
 		methods:{
@@ -79,6 +94,13 @@
 				+ "&page=" + pageNo + "&pageSize=" + pageSize + ((this.articleId!= undefined) ? `&articleId=${this.articleId}` : ''))
 				.then(async (res)=>{
 					let data = res.data;
+					console.log(data)
+					if(_this.paragraphId) {
+						data = data.filter((item) => {
+							return item.cento && item.cento.paragraph_id == _this.paragraphId
+						})
+					}
+					console.log(data);
 					for(let item of data){
 						reviewDatas.push(item)
 						await axios.get(this.$baseUrl + "/community/novel_commonts_reply_to?id=" + item.essay_comment_id)
@@ -115,6 +137,7 @@
 				for(let item of reviewDatas){
 					// console.log(item);
 					if(item.father_comment_id == -1){
+						console.log(item);
 						let commentItem = {
 							author_id:item.author_id,
 							comment_id:item.essay_comment_id,
@@ -126,7 +149,9 @@
 							likeNum:item.likeNum,
 							reviewLess:[],
 							reviewNum:0,
-							article_id: item.article_id
+							article_id: item.article_id,
+							cento_id: item.cento_id,
+							cento: item.cento
 						}
 						
 						for(let subItem of reviewDatas){
@@ -158,7 +183,8 @@
 						{
 							novel_id: this.novelId,
 							content: this.commentText,
-							article_id: this.articleId != undefined ? this.articleId : 0
+							article_id: this.articleId != undefined ? this.articleId : 0,
+							paragraph_id: this.paragraphId != undefined ? this.paragraphId : undefined,
 						},
 						{
 							headers: {
@@ -220,6 +246,29 @@
 						}
 					});
 				}
+			},
+			loadParagraphInfo() {
+				axios.get(this.$baseUrl + '/articles/get_article?id=' + this.articleId).then((res) => {
+					let article = res.data[0];
+					article.content = JSON.parse(article.content);
+					for(let item of article.content){
+						if(item.id == this.paragraphId) {
+							this.paragraph = item.value;
+							break;
+						}
+					}
+				}).catch(function(error) {
+					console.log(error);
+					if (error) {
+						uni.showToast({
+							title: "获取文章信息失败",
+							icon: 'none',
+							duration: 2000
+						});
+					}
+				}).then(function() {
+					uni.hideLoading();
+				})
 			},
 			childReview(item){
 				this.replyToId = item.review.comment_id;

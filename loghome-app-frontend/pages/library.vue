@@ -1,5 +1,5 @@
 <template>
-	<view class="content">
+	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<div class="searchBarUnder">
 			<uni-search-bar bgColor="#f2f2f2" :radius="8"
 							placeholder = "搜索书库或输入传送ID" cancelButton="none">
@@ -8,8 +8,8 @@
 		<div class="searchBar">
 			<uni-search-bar bgColor="#f2f2f2" :radius="8" @input="searchLibrary" 
 							placeholder = "搜索书库或输入传送ID" cancelButton="none" class="searchBarBox">
-				<img src="../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;">
-				<img src="../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;">
+				<img src="../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;"/>
+				<img src="../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;"/>
 			</uni-search-bar>
 			<uni-icons type="chat" size="26" :color="'#2d2d2d'" class="messageIcon" @click="gotoMessage"></uni-icons>
 		</div>
@@ -22,23 +22,23 @@
 				</Xsuu-swiper>
 				<div class="swiperNav">
 					<div class="navBtn">
-						<img src="../static/swiperNavIcons/category.png" alt="标签" @click="navBarJump('标签')">
+						<img src="../static/swiperNavIcons/category.png" alt="标签" @click="navBarJump('标签')"/>
 						<div class="name">标签</div>
 					</div>
  					<div class="navBtn">
-						<img src="../static/swiperNavIcons/activity.png" alt="活动" @click="navBarJump('活动')">
+						<img src="../static/swiperNavIcons/activity.png" alt="活动" @click="navBarJump('活动')"/>
 						<div class="name">活动</div>
 					</div>
  					<div class="navBtn">
-						<img src="../static/swiperNavIcons/ranks.png" alt="排行" @click="navBarJump('排行')">
+						<img src="../static/swiperNavIcons/ranks.png" alt="排行" @click="navBarJump('排行')"/>
 						<div class="name">排行</div>
 					</div>
 					<div class="navBtn">
-						<img src="../static/swiperNavIcons/recommands.png" alt="推荐" @click="navBarJump('推荐')">
+						<img src="../static/swiperNavIcons/recommands.png" alt="推荐" @click="navBarJump('推荐')"/>
 						<div class="name">推荐</div>
 					</div>
 					<div class="navBtn">
-						<img src="../static/swiperNavIcons/finish.png" alt="完结" @click="navBarJump('完结')">
+						<img src="../static/swiperNavIcons/finish.png" alt="完结" @click="navBarJump('完结')"/>
 						<div class="name">完结</div>
 					</div>
 				</div>
@@ -52,7 +52,7 @@
 							{{item.collection_title}}
 						</p>
 						<div class="lightLine"></div>
-						<img :src="item.icon" alt="" class="icon" v-show="item.icon!=''">
+						<log-image :src="item.icon" alt="" class="icon" v-show="item.icon!=''"/>
 					</div>
 					<div class="more" >
 						<uni-icons type="right" size="20" :color="'rgb(142,130,109)'"></uni-icons>
@@ -71,8 +71,8 @@
 						<div v-for="novel in item['novels'].slice(0,4)" :key="novel.novel_id">
 							<navigator :url="'./readers/bookInfo?id=' +  novel.novel_id"
 												   open-type="navigate" class="books">
-								<img :src="novel.picUrl + '?thumbnail=1'" alt=""
-								:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`" style="border-radius: 10rpx; transform:scale(.90)">
+								<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
+								:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`" style="border-radius: 10rpx; transform:scale(.90)"/>
 								<div class="bookInfo" style="margin-left:10rpx;">
 									<div class="title">
 										{{novel.name}}
@@ -80,8 +80,8 @@
 										style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">世界设定</el-tag>
 									</div>
 									<view class="author">
-										<img :src="novel.avatar_url" alt="" class="auther_avatar"
-										onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+										<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
+										onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 										<div class="auther_name">{{novel.user_name}}</div>
 									</view>
 									<div class="description">{{novel.content}}</div>
@@ -96,15 +96,15 @@
 			<div v-for="item in [...searchBooks,...books]" :key="item.book_id">
 				<navigator :url="'./readers/bookInfo?id=' +  item.novel_id"
 									   open-type="navigate" class="books">
-					<img :src="item.picUrl + '?thumbnail=1'" alt=""
-					:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`">
+					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
+					:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
 					<div class="bookInfo">
 						<div class="title">
 							{{item.name}}
 						</div>
 						<view class="author">
-							<img :src="item.auther_avatar" alt="" class="auther_avatar"
-							onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+							<log-image :src="item.auther_avatar" alt="" class="auther_avatar"
+							onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 							<div class="auther_name">{{item.author_name}}</div>
 						</view>
 						<div class="description">{{item.content}}</div>
@@ -304,7 +304,7 @@
 			//检查更新
 			checkUpdate(){
 				let _this = this;
-				let isApp = this.jsBridge.inApp;
+				let isApp = this.jsBridge.inApp && this.jsBridge.inApp;
 				if(!isApp) return;
 				let appVersion = this.$store.state.appVersion;
 				axios.get(this.$baseUrl + '/app/get_app_update', {}).then((res) => {
@@ -314,7 +314,7 @@
 						_this.appUpdate.desc = res.data[0].version_info;
 						_this.appUpdate.update_url = res.data[0].update_url;
 					} else if(res.data[0].version < appVersion){
-						_this.$alert(`您使用的版本为非正式版本，可能存在各种问题，如发现请向开发人员反馈，感谢您参与内测！`, '内测版本提示', {
+						_this.$alert(`您使用的版本为非正式版本，可能存在各种问题，如发现请向开发人员反馈，感谢您参与原木社区内测活动！`, '内测版本提示', {
 							  confirmButtonText: '确定',
 							  dangerouslyUseHTMLString:true,
 						  callback: action => {
@@ -371,7 +371,7 @@
 	}
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 	.content {
 		display: flex;
 		flex-direction: column;
@@ -388,7 +388,7 @@
 			left:0;
 			margin:0 0rpx;
 			padding:10rpx;
-			padding-top:5rpx;
+			padding-top:calc(5rpx + var(--statusBarHeight));
 			padding-bottom:5rpx;
 			background-color: rgb(255,255,255);
 			display:flex;
@@ -410,10 +410,11 @@
 		div.searchBarUnder{
 			opacity:0;
 			margin:0 0rpx;
-			padding-top:5rpx;
+			padding-top:calc(5rpx + var(--statusBarHeight));
 			padding-bottom:5rpx;
 			background-color: rgb(255,255,255);
 		}
+		
 		div.swiper{
 			margin:0;
 			background-color:white;
@@ -469,7 +470,7 @@
 			background-color:rgb(255,255,255);
 			.head{
 				margin:0rpx 25rpx;
-				padding: 30rpx 0;ss
+				padding: 30rpx 0;
 				height:45rpx;
 				div.title{
 					float:left;

@@ -13,11 +13,11 @@
 			<view class="list">
 <!-- 				<view class="li " @click="autoSaveSet">
 					<view class="text">状态：{{dbStatus == "enabled" ? "启用" : "停用"}}</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view> -->
 				<view class="li " @click="saveTimeSet" v-show="dbStatus == 'enabled'">
 					<view class="text">自动备份间隔：{{EditorAutoSaveProps.timeSpan}} 分钟</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 		</div>
@@ -131,7 +131,7 @@
 				flex-shrink:0;
 				width:50upx;
 				height:50upx;
-				image{
+				img{
 					width:50upx;
 					height:50upx;
 				}

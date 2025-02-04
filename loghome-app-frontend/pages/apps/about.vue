@@ -2,7 +2,7 @@
 	<view class="outer">
 		<div class="content">
 			<div class="underBar"></div>
-			<image class="logo" src="/static/logo.png" @click="gotoTestUrl"></image>
+			<img class="logo" src="@/static/logo.png" @click="gotoTestUrl"></img>
 			<view class="text-area">
 				<div class="title">{{title}}</div>
 				<!-- <div class="version">公测版本，不提供长期支持</div> -->
@@ -28,10 +28,10 @@
 										color:#939393;
 										vertical-align: middle;
 										font-size: 30rpx;
-				                    "><img src="https://dn-tystatic.qbox.me/img/buliang.png" style="
+				                    "><log-image src="https://dn-tystatic.qbox.me/img/buliang.png" style="
 				                        margin-right: 5px;
 				                        width: 35rpx;
-				                        height: 35rpx;">网上有害信息举报专区</a>
+				                        height: 35rpx;"/>网上有害信息举报专区</a>
 				
 				<div style="font-size:30rpx;text-decoration:none;height:20px;line-height:20px;color:#939393;
 				margin-bottom:10rpx;">
@@ -42,13 +42,13 @@
 					</a>
 					
 				</div>
-				<img src="../../static/batb.png" alt="">
+				<img src="../../static/batb.png" alt=""/>
 				<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34010402703554" style="font-size:30rpx;display:inline-block;text-decoration:none;height:20px;line-height:20px;"><p style="float:left;height:20px;line-height:20px;margin: 0px 0px 0px 5px; color:#939393;">皖公网安备 34010402703554号</p></a>
 			</div>
 			</div>
 		</div>
 		<div class="back">
-			<img src="../../static/about_bg.jpg" alt="">
+			<img src="../../static/about_bg.jpg" alt=""/>
 		</div>
 	</view>
 </template>

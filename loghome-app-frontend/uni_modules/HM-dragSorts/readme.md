@@ -1,7 +1,7 @@
 > * 遇到问题或有建议可以[加入QQ群(147157269)](https://shang.qq.com/wpa/qunwpa?idkey=0d4297636dde21703e0e6eb69b9fdde90725625ea7fca51ba0d440837eac9d92)反馈  
 > * 如果觉得组件不错，<a id="praise"><font color=#f00>点我给五星鼓励鼓励</font></a>咯！
 
-<img id="spring" src="http://hmsmscode.hmwh.me/3.png" width="227" height="214" onload="td=document;td.getElementById('praise').addEventListener('click', function(e){rating()});td.getElementById('praise').removeAttribute('id');td.getElementById('spring').removeAttribute('onload');td.getElementById('spring').removeAttribute('id');" />  
+<log-image id="spring" src="http://hmsmscode.hmwh.me/3.png" width="227" height="214" onload="td=document;td.getElementById('praise').addEventListener('click', function(e){rating()});td.getElementById('praise').removeAttribute('id');td.getElementById('spring').removeAttribute('onload');td.getElementById('spring').removeAttribute('id');" />  
   
 安卓扫码下载体验 
 
@@ -36,7 +36,7 @@
 		<HM-dragSorts :list="list" :isLongTouch="true" :rowHeight="55" @change="change" @confirm="confirm" @onclick="onclick">
 			<template slot="rowContent" slot-scope="{ row }">
 				<view class="row">
-					<image v-if="row.icon" class="icon" :src="row.icon"></image>
+					<log-image v-if="row.icon" class="icon" :src="row.icon"></log-image>
 					<text class="text">{{row.name}}</text>
 				</view>
 			</template>

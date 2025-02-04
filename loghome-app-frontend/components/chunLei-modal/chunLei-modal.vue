@@ -13,7 +13,7 @@
 		<block v-if="type=='select'">
 			<view class="select-view" @tap.stop>
 				<view v-for="(item,index) in mData" :key="index" class="select-box" @tap="tapConfirm(item)">
-					<view><image class="image" :src="item.icon" v-if="item.icon"></image>{{item.title}}</view>
+					<view><log-image class="image" :src="item.icon" v-if="item.icon"></log-image>{{item.title}}</view>
 					<view class="select-content">{{item.content}}</view>
 				</view>
 			</view>
@@ -22,7 +22,7 @@
 			<view class="select-view" @tap.stop>
 				<checkbox-group @change="checkboxChange">
 					<view v-for="(item,index) in mData" :key="index" class="select-box">
-						<view><image class="image" :src="item.icon" v-if="item.icon"></image>{{item.title}}</view>
+						<view><log-image class="image" :src="item.icon" v-if="item.icon"></log-image>{{item.title}}</view>
 						<view class="select-content">
 							<checkbox :value="item.title" :color="item.radioColor?item.radioColor:'#001AFF'" :checked="item.flag"></checkbox>
 						</view>
@@ -32,14 +32,14 @@
 		</block>
 		<block v-if="type=='advert'">
 			<view class="advert-view">
-				<image :src="mData.src" class="image confirm" @tap.stop="tapConfirm" :style="{width:mData.width?mData.width:'500rpx',height:mData.height?mData.height:'700rpx'}"></image>
-				<image class="image cancel" @tap.stop="tapCancel" src="../../static/chunLei-modal/close.png"></image>
+				<log-image :src="mData.src" class="image confirm" @tap.stop="tapConfirm" :style="{width:mData.width?mData.width:'500rpx',height:mData.height?mData.height:'700rpx'}"></log-image>
+				<img class="image cancel" @tap.stop="tapCancel" src="../../static/chunLei-modal/close.png"></img>
 			</view>
 		</block>
 		<block v-if="type=='notify'">
 			<view class="notify-view">
 				<view class="title" v-if="mData.title">{{mData.title}}</view>
-				<image class="image" :src="mData.src" v-if="mData.src"></image>
+				<log-image class="image" :src="mData.src" v-if="mData.src"></log-image>
 				<view class="content word-break">{{mData.content}}</view>
 				<view class="cancel" @tap="tapCancel" :style="{color:mData.cancelColor?mData.cancelColor:''}">{{mData.cancelText?mData.cancelText:'我知道了'}}</view>
 			</view>
@@ -47,7 +47,7 @@
 		<block v-if="type=='share'">
 			<view class="share-view" @tap.stop>
 				<view v-for="(item,index) in mData" :key="index" class="share-box" @tap="tapConfirm(item)">
-					<image class="image" :src="item.icon" v-if="item.icon"></image>{{item.title}}
+					<log-image class="image" :src="item.icon" v-if="item.icon"></log-image>{{item.title}}
 				</view>
 			</view>
 		</block>

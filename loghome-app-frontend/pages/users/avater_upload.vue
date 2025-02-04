@@ -9,7 +9,7 @@
 		show-icon
 		v-show="$store.state.appVersion">
 	</el-alert> -->
-	<image id="img" :src="url" @load="imgLoad"
+	<log-image id="img" :src="url" @load="imgLoad"
 		:style="{
 			width: imgWidth+'px',
 			height: imgHeight+'px',

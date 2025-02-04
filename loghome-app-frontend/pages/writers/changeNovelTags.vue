@@ -4,7 +4,7 @@
 			<div class="tag" v-for="(item,index) in tags" :key="item.tag_id" :class="{'activity':item.is_activity_tag, 'suggested': item.is_suggested}">
 				{{item.tag_name}}
 				<img src="../../static/icons/icon_r_x.png" alt="" class="deletePoint"
-				@click="deleteTag(item.tag_id)">
+				@click="deleteTag(item.tag_id)" />
 			</div>
 			<div class="tag add" @click="addCustomTag" v-show="tags.length < 8">
 				+

@@ -1,16 +1,16 @@
 <template>
-	<view>
+	<view :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<view class="header">
 			<view class="bg">
-				<image class="info-cover" :src="user.top_pic_url"
-					onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></image>
+				<log-image class="info-cover" :src="user.top_pic_url"
+					onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
 				<div class="box-shadow" @click="change_top_pic"></div>
 				<view class="box">
 					<view class="box-hd">
 						<navigator url="./users/change_user_info">
 							<view class="avator">
-								<img :src="user.avatar_url"
-									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+								<log-image :src="user.avatar_url"
+									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 							</view>
 						</navigator>
 						<view class="user-name">
@@ -23,26 +23,26 @@
 					<view class="box-bd">
 						<view class="item" @tap="gotoActivate"
 							v-show="user.oicq_account == 'unbind' && user.mobile == 'unbind'">
-							<view class="icon activate"><img src="../static/icons/icon_activate.png"></view>
+							<view class="icon activate"><log-image src="../static/icons/icon_activate.png"/></view>
 							<view class="text" style="color:rgb(255, 141, 47);font-weight: bold;">激活账号</view>
 						</view>
 						<view class="item" @tap="user_profile">
-							<view class="icon"><img src="../static/icons/icon_my_name_tag.png"></view>
+							<view class="icon"><img src="../static/icons/icon_my_name_tag.png"/></view>
 							<view class="text">名片</view>
 						</view>
 						<view class="item" @tap="gotoMessages">
 							<view class="icon" :class="{'newMessage':hasNewMessage}">
-								<img src="../static/icons/icon_info.png">
+								<img src="../static/icons/icon_info.png"/>
 							</view>
 							<view class="text">消息</view>
 						</view>
 						<view class="item" @tap="gotoFriends">
-							<view class="icon"><img src="../static/icons/icon_friends.png"></view>
+							<view class="icon"><img src="../static/icons/icon_friends.png"/></view>
 							<view class="text">好友</view>
 						</view>
 						<view class="item" @tap="gotoSettings">
 							<view class="icon" style="transform: scale(0.9);"><img
-									src="../static/icons/icon_setting.png"></view>
+									src="../static/icons/icon_setting.png"/></view>
 							<view class="text">设置</view>
 						</view>
 					</view>
@@ -55,26 +55,26 @@
 					<view class="li noborder">
 						<el-badge is-dot :hidden="!(treeState == '未种植' || treeState == '结果')">
 							<view class="icon">
-								<image src="../static/icons/icon_treecut1.png"></image>
+								<img src="../static/icons/icon_treecut1.png"/></img>
 							</view>
 						</el-badge>
 						<view class="text">原木树场</view>
-						<image class="to" src="../static/user/to.png"></image>
+						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
 				<navigator url="./payments/recharge">
 					<view class="li">
 						<view class="icon">
-							<image src="../static/icons/cridit_icon.png"></image>
+							<img src="../static/icons/cridit_icon.png"></img>
 						</view>
 						<view class="text">支持社区</view>
-						<image class="to" src="../static/user/to.png"></image>
+						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
 				<navigator url="./payments/earnings">
 					<view class="li">
 						<view class="icon">
-							<image src="../static/icons/cridit_sys_icon.png"></image>
+							<img src="../static/icons/cridit_sys_icon.png"></img>
 						</view>
 						<view class="text">余额提现</view>
 						<text style="width: 150rpx; color: #ff6a5f">{{earningsMoney}} 元</text>
@@ -86,37 +86,37 @@
 				<navigator url="./users/user_credit">
 					<view class="li">
 						<view class="icon">
-							<image src="../static/icons/icon_sponsored.png"></image>
+							<img src="../static/icons/icon_sponsored.png"></img>
 						</view>
 						<view class="text">我的信誉</view>
-						<image class="to" src="../static/user/to.png"></image>
+						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
 				<navigator url="./apps/about">
 					<view class="li">
 						<view class="icon">
-							<image src="../static/icons/icon_about_us.png"></image>
+							<img src="../static/icons/icon_about_us.png"></img>
 						</view>
 						<view class="text">关于社区</view>
-						<image class="to" src="../static/user/to.png"></image>
+						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
 				<navigator url="./apps/faqs/faq">
 					<view class="li">
 						<view class="icon">
-							<image src="../static/icons/icon_report.png"></image>
+							<img src="../static/icons/icon_report.png"></img>
 						</view>
 						<view class="text">意见反馈</view>
-						<image class="to" src="../static/user/to.png"></image>
+						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
 				<navigator url="./users/clientSet">
 					<view class="li noborder">
 						<view class="icon">
-							<image src="../static/icons/icon_setting.png"></image>
+							<img src="../static/icons/icon_setting.png"></img>
 						</view>
 						<view class="text">设置</view>
-						<image class="to" src="../static/user/to.png"></image>
+						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
 			</view>
@@ -343,6 +343,7 @@
 		height: 290upx;
 		width: 100vw;
 		padding-bottom: 110upx;
+		padding-top: var(--statusBarHeight);
 
 		.bg {
 			width: 100%;
@@ -355,7 +356,7 @@
 				left: 0;
 				top: 0;
 				width: 100vw;
-				height: 575rpx;
+				height: calc(575rpx + var(--statusBarHeight));
 				z-index: 0;
 			}
 
@@ -364,7 +365,7 @@
 				left: 0;
 				top: 0;
 				width: calc(100vw);
-				height: 575rpx;
+				height: calc(575rpx + var(--statusBarHeight));
 				z-index: 1;
 				background: linear-gradient(to bottom, #f2f2f233, #f2f2f255, #f2f2f277, #f2f2f2bb, #f2f2f2dd, #ffffffee, #ffffffff);
 			}
@@ -543,7 +544,7 @@
 				width: 50upx;
 				height: 50upx;
 
-				image {
+				img {
 					width: 50upx;
 					height: 50upx;
 				}

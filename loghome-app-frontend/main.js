@@ -3,12 +3,13 @@ import axios from 'axios'
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import 'element-theme/index.css';
-import jsBridge from './common/jsbridge-mini.js';
 import SlideVerify from 'vue-monoplasty-slide-verify';
+import LogImage from "./components/LogImage";
 
 // 注册全局modal组件
 import chunLeiModal from '@/components/chunLei-modal/chunLei-modal.vue'
 Vue.component('chunLei-modal',chunLeiModal);
+Vue.component('log-image', LogImage);
 
 const BASE_URL_PRODUCTION = "https://loghomeService.codesocean.top"
 const BASE_URL_DEV = "http://127.0.0.1:8081"
@@ -23,7 +24,7 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_DEV;
+Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
 	bookCover:"https://s4.ax1x.com/2022/01/13/7lYAlq.png"
@@ -56,7 +57,7 @@ Array.prototype.insert = function(index, value){
 let _this = this;
 axios.interceptors.request.use(function (config) {
     // APP版本包含在请求头
-	let env = jsBridge.inApp;
+	let env = window.jsBridge && jsBridge.inApp;
     if(env){
 		let chrArr = String(jsBridge.appVersion).split('');
     	store.state.appVersion = `Beta ${chrArr[0]}.${chrArr[1]}.${chrArr[2]}`;
@@ -238,14 +239,51 @@ Vue.prototype.timeConvert = function getDateDiff(dateTimeStamp) {
     return result;
 }
 
-Vue.prototype.jsBridge = jsBridge;
 
-jsBridge.ready(() => {
-	jsBridge.setOptions({
-		statusBarColor: "#fff2d9",
-		statusBarBlackText:true
-	});
-});
+// inapp注入 开发阶段用，结束后移除
+let inDev = true;
+if(inDev) {
+	window.jsBridge = {
+		inApp: true,
+		statusBarHeight: 30,
+		appVersion: "250",
+		ready(callback) {
+			callback();
+		},
+		setNavigationBarVisible(status) {
+			console.log("setNavigationBarVisible", status)
+		},
+		setStatusBarStyle(status) {
+			console.log("setStatusBarStyle", status)
+		}
+	}
+}
+
+
+
+if(window.jsBridge && window.jsBridge.inApp) {
+	let app = document.querySelector("uni-app");
+	if(app) {
+		app.classList.add("in-app");
+	}
+}
+
+if(window.jsBridge) {
+	// console.log(123);
+	// jsBridge.ready(() => {
+	// 	// jsBridge.setOptions({
+	// 	// 	statusBarColor: "#fff2d9",
+	// 	// 	statusBarBlackText:true
+	// 	// });
+	// });
+	// console.log("jsBridge", jsBridge.statusBarHeight)
+} else {
+	window.jsBridge = {
+		inApp: false
+	}
+}
+Vue.prototype.jsBridge = window.jsBridge;
+
 
 let clipBoardContent = "";
 

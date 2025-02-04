@@ -1,18 +1,18 @@
 <template>
 	<div class="outer">
 		<div class="content">
-			<image class="logo" src="/static/logo.png"></image>
+			<img class="logo" src="/static/logo.png"></img>
 			<view class="text-area">
 				<div class="title">原木通信证登录</div>
 				<div class="version" v-show="$store.state.appVersion">APP版本：{{this.$store.state.appVersion}}</div>
 			</view>
 			<div class="longin-boder">
-				<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"></div>
+				<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon" /></div>
 				<input class="input" type="text" placeholder="请输入账号/手机号/QQ" v-model="account"/>
 			</div> 
 			<!--End用户名输入框-->
 			<div class="longin-boder">
-				<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"></div>
+				<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
 				<input class="input" type="password" placeholder="请输入密码" v-model="pwd"/>
 			</div>
 			<!--End密码输入框-->
@@ -45,10 +45,10 @@
 										color:#939393;
 										vertical-align: middle;
 										font-size: 30rpx;
-				                    "><img src="https://dn-tystatic.qbox.me/img/buliang.png" style="
+				                    "><log-image src="https://dn-tystatic.qbox.me/img/buliang.png" style="
 				                        margin-right: 5px;
 				                        width: 35rpx;
-				                        height: 35rpx;">网上有害信息举报专区</a>
+				                        height: 35rpx;" />网上有害信息举报专区</a>
 				
 				<div style="font-size:30rpx;text-decoration:none;height:20px;line-height:20px;color:#939393;
 				margin-bottom:10rpx;">
@@ -59,12 +59,12 @@
 					</a>
 					
 				</div>
-				<img src="../../static/batb.png" alt="">
+				<img src="../../static/batb.png" alt="" />
 				<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34010402703554" style="font-size:30rpx;display:inline-block;text-decoration:none;height:20px;line-height:20px;"><p style="float:left;height:20px;line-height:20px;margin: 0px 0px 0px 5px; color:#939393;">皖公网安备 34010402703554号</p></a>
 			</div>
 			
 			<div class="back">
-				<img src="../../static/about_bg.jpg" alt="">
+				<img src="../../static/about_bg.jpg" alt="" />
 			</div>
 		</div>
 		</div>

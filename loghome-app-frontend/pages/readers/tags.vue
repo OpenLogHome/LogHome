@@ -44,20 +44,21 @@
 </script>
 
 <style scoped lang="scss">
-	.title_bar{
-		padding: 8px 30rpx;
-		font-size: 40rpx;
-		font-weight: bold;
-		background-color: #f2f2f2;
-		margin: 25rpx auto;
-		color: #934900;
-	}
+	// .title_bar{
+	// 	padding: 8px 30rpx;
+	// 	font-size: 40rpx;
+	// 	font-weight: bold;
+	// 	background-color: #f2f2f2;
+	// 	margin: 25rpx auto;
+	// 	color: #934900;
+	// }
 	.tags{
 		display:flex;
 		flex-wrap: wrap;
 		height:auto;
 		min-height:100rpx;
-		margin:30rpx;
+		padding: 30rpx;
+		background-color: #F2F2F2;
 		.tag{
 			background-color: #eeeeee;
 			font-size: 35rpx;

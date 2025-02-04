@@ -2,8 +2,8 @@
 	<view class="captcha-box">
 		<view class="captcha-img-box">
 			<uni-icons class="loding" size="20px" color="#BBB" v-if="loging" type="spinner-cycle"></uni-icons>
-			<image class="captcha-img" :class="{opacity:loging}" @click="getImageCaptcha" :src="captchaBase64"
-				mode="widthFix"></image>
+			<log-image class="captcha-img" :class="{opacity:loging}" @click="getImageCaptcha" :src="captchaBase64"
+				mode="widthFix"></log-image>
 		</view>
 		<input @blur="focusCaptchaInput = false" :focus="focusCaptchaInput" type="text" class="captcha"
 			:inputBorder="false" maxlength="4" v-model="val" placeholder="请输入验证码">

@@ -2,7 +2,7 @@
 <template>
 	<view class="uni-content">
 		<view class="login-logo">
-			<image :src="logo"></image>
+			<log-image :src="logo"></log-image>
 		</view>
 		<!-- 顶部文字 -->
 		<text class="title">请输入验证码</text>

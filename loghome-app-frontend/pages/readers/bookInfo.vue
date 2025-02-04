@@ -1,27 +1,26 @@
 <template>
-	<view class="content">
+	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<div class="gift_box" id="gift_box">
-			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
-			<img class="gift" id="gift" :src="giftImage"></img>
+			<img class="gift_background" id="gift_background" src="../../static/bg.png"></log-image>
+			<log-image class="gift" id="gift" :src="giftImage"></log-image>
 		</div>
 		<nothing :msg="'这本书还没有发布哦'" v-show="bookInfo.is_personal==undefined||bookInfo.is_personal==1"></nothing>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar textcolor="#000" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
 			navTitle='标题'></zetank-backBar>
 		<view class="l-body" v-show="bookInfo.is_personal!=undefined||bookInfo.is_personal==0">
-
 			<view class="l-dl">
-				<img class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
+				<log-image class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
 					onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
-					@click="$previewImg([bookInfo.picUrl])"></img>
+					@click="$previewImg([bookInfo.picUrl])"></log-image>
 				<view class="l-dd">
 					<view class="l-dd-title">
 						{{bookInfo.name}}
 					</view>
 					<view class="l-dd-sub">
 						<view class="author" @click="gotoUserProfile(bookInfo.auther_id)">
-							<img :src="bookInfo.auther_avatar" alt="" class="auther_avatar"
-								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+							<log-image :src="bookInfo.auther_avatar" alt="" class="auther_avatar"
+								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 							<div class="auther_name">{{bookInfo.author_name}}<uni-icons type="forward" size="18"
 									style="color:#dddddd"></uni-icons></div>
 						</view>
@@ -68,7 +67,7 @@
 				<div class="image"></div>
 			</div>
 
-			<springBack :top="novelRank.onRank ? '675rpx' : '550rpx'">
+			<springBack :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + ${jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'})`">
 
 				<div class="b-content" style="padding:32rpx;">
 					<p class="l-dd-content" @click="showDescription(bookInfo.content)">
@@ -78,31 +77,31 @@
 					<view class="l-body-select">
 						<transition name="newBee">
 							<img src="../../static/detail/newBee.png" alt="" class="newBee"
-								v-show="showNiubeeAnimation">
+								v-show="showNiubeeAnimation"/>
 						</transition>
 						<view class="l-body-tab" @tap="nice" v-show="!niceStatus">
-							<image class="l-icon-share l-icon-share-2" src="../../static/icons/icon_nice.png" mode="">
-							</image>{{nice_amount}} 赞
+							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_nice.png" mode="">
+							</img>{{nice_amount}} 赞
 						</view>
 						<view class="l-body-tab" @tap="nice" v-show="niceStatus">
-							<image class="l-icon-share l-icon-share-2" src="../../static/icons/icon_niced.png" mode="">
-							</image>{{nice_amount}} 赞
+							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_niced.png" mode="">
+							</img>{{nice_amount}} 赞
 						</view>
 						<view class="l-body-tab" @tap="shareBook">
-							<image class="l-icon-share l-icon-share-2" src="../../static/icons/icon_share.png" mode="">
-							</image>分享
+							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_share.png" mode="">
+							</img>分享
 						</view>
 						<view class="l-body-tab" @tap="addToBookcase" v-show="isInBookcase == false">
-							<image class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
-							</image>加入书架
+							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
+							</img>加入书架
 						</view>
 						<view class="l-body-tab" @tap="removeFromBookcase" v-show="isInBookcase == true">
-							<image class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
-							</image>从书架中移除
+							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
+							</img>从书架中移除
 						</view>
 						<view class="l-body-tab" @tap="navtoSection">
-							<image class="l-icon-share l-icon-share-4" src="../../static/icons/icon_index.png" mode="">
-							</image>目录
+							<img class="l-icon-share l-icon-share-4" src="../../static/icons/icon_index.png" mode="">
+							</img>目录
 						</view>
 
 					</view>
@@ -153,14 +152,14 @@
 						<div class="worlds">
 							<div class="nothing" v-show="worlds.length == 0"
 								style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 70rpx 0;">
-								<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;">
+								<log-image src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;"/>
 								<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
 							</div>
 							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
 								<navigator :url="'./bookInfo?id=' +  novel.novel_id" open-type="navigate" class="books">
-									<img :src="novel.picUrl + '?thumbnail=1'" alt=""
+									<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
 										:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"
-										style="border-radius: 10rpx; transform:scale(.90)">
+										style="border-radius: 10rpx; transform:scale(.90)"/>
 									<div class="bookInfo" style="margin-left:10rpx;">
 										<div class="world-title">
 											{{novel.name}}
@@ -169,8 +168,8 @@
 												size="mini">世界设定</el-tag>
 										</div>
 										<view class="author">
-											<img :src="novel.avatar_url" alt="" class="auther_avatar"
-												onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+											<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
+												onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 											<div class="auther_name">{{novel.user_name}}</div>
 										</view>
 										<div class="description">{{novel.content}}</div>
@@ -185,8 +184,8 @@
 						<view class="l-h3">
 							<text class="l-h3-title">最新评论</text>
 							<navigator :url="'./bookComment?id=' + uid">
-								<view class="l-h3-more">全部评论(共 {{commentAmount}} 条)<image class="l-icon-more"
-										src="../../static/l-icon-more.png" mode="widthFix"></image>
+								<view class="l-h3-more">全部评论(共 {{commentAmount}} 条)<img class="l-icon-more"
+										src="../../static/l-icon-more.png" mode="widthFix"></img>
 								</view>
 							</navigator>
 						</view>
@@ -212,8 +211,8 @@
 										<text class="l-list-c-foot-l-name">{{item.name}}</text>
 									</view>
 									<view class="l-list-c-foot-r">
-										<image class="l-icon-like" src="../../static/detail/l-icon-like.png" mode="">
-										</image>
+										<img class="l-icon-like" src="../../static/detail/l-icon-like.png" mode="">
+										</img>
 										{{item.likeNum}}
 									</view>
 								</view>
@@ -225,32 +224,32 @@
 						<view class="l-h3">
 							<text class="l-h3-title">粉丝榜</text>
 							<navigator :url="'./novel_fans?id=' + uid">
-								<view class="l-h3-more">查看粉丝榜<image class="l-icon-more"
-										src="../../static/l-icon-more.png" mode="widthFix"></image>
+								<view class="l-h3-more">查看粉丝榜<img class="l-icon-more"
+										src="../../static/l-icon-more.png" mode="widthFix"></img>
 								</view>
 							</navigator>
 						</view>
 
 						<div class="fans_rank">
 							<div class="second" v-if="fanInfo[1]">
-								<img :src="fanInfo[1].avatar_url" alt="" class="avatar">
-								<img src="../../static/rank/NO2.png" alt="" class="rank">
+								<log-image :src="fanInfo[1].avatar_url" alt="" class="avatar"/>
+								<img src="../../static/rank/NO2.png" alt="" class="rank"/>
 								<div class="description">
 									<p class="name">{{fanInfo[1].user_name}}</p>
 									<p class="value">{{fanInfo[1].fans_value}}</p>
 								</div>
 							</div>
 							<div class="first" v-if="fanInfo[0]">
-								<img :src="fanInfo[0].avatar_url" alt="" class="avatar">
-								<img src="../../static/rank/NO1.png" alt="" class="rank">
+								<log-image :src="fanInfo[0].avatar_url" alt="" class="avatar"/>
+								<img src="../../static/rank/NO1.png" alt="" class="rank"/>
 								<div class="description">
 									<p class="name">{{fanInfo[0].user_name}}</p>
 									<p class="value">{{fanInfo[0].fans_value}}</p>
 								</div>
 							</div>
 							<div class="third" v-if="fanInfo[2]">
-								<img :src="fanInfo[2].avatar_url" alt="" class="avatar">
-								<img src="../../static/rank/NO3.png" alt="" class="rank">
+								<log-image :src="fanInfo[2].avatar_url" alt="" class="avatar"/>
+								<img src="../../static/rank/NO3.png" alt="" class="rank"/>
 								<div class="description">
 									<p class="name">{{fanInfo[2].user_name}}</p>
 									<p class="value">{{fanInfo[2].fans_value}}</p>
@@ -263,8 +262,8 @@
 						<view class="l-h3">
 							<text class="l-h3-title">作品图册</text>
 							<navigator :url="'./bookComment?id=' + uid">
-								<view class="l-h3-more">全部图片<image class="l-icon-more"
-										src="../../static/l-icon-more.png" mode="widthFix"></image>
+								<view class="l-h3-more">全部图片<log-image class="l-icon-more"
+										src="../../static/l-icon-more.png" mode="widthFix"></log-image>
 								</view>
 							</navigator>
 						</view>
@@ -394,7 +393,7 @@
 			addToBookcase() {
 				let _this = this;
 				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;;
+				if (tk) tk = tk.tk;
 				axios.post(this.$baseUrl + '/bookcase/like_novel', {
 						novel_id: this.uid
 					}, {
@@ -562,8 +561,9 @@
 					return;
 				}
 				if (_this.history == 1) {
+					console.log(articles);
 					uni.navigateTo({
-						url: './newReader/article?id=' + articles[0].article_id
+						url: './newReader/article?id=' + articles[0].article_id + "&novelId=" + this.uid
 					})
 					return;
 				} else {
@@ -575,7 +575,7 @@
 						}
 					})
 					uni.navigateTo({
-						url: './newReader/article?id=' + toId
+						url: './newReader/article?id=' + toId + "&novelId=" + this.uid
 					})
 				}
 			},
@@ -876,8 +876,9 @@
 				});
 			}).then(function() {})
 
-			axios.get(this.$baseUrl + '/library/get_articles_all?id=' + this.uid, {}).then((res) => {
+			axios.get(this.$baseUrl + '/library/get_articles?id=' + this.uid, {}).then((res) => {
 				_this.articles = res.data;
+				console.log("articles", _this.articles);
 				// console.log(this.articles);
 				if (_this.articles.length != 0) {
 					_this.progressArticle = _this.articles[0];
@@ -890,7 +891,6 @@
 					})
 
 					//处理进度条动画
-
 					setTimeout(() => {
 						_this.$refs.processBar.$el.style.width = Math.min(_this.historyShown / _this
 							.articleLength * 100, 100) + '%';
@@ -965,19 +965,13 @@
 		},
 		computed: {
 			articleLength() {
-				let len = 0;
-				for (let item of this.articles) {
-					if (item.is_draft == 0) {
-						len++;
-					}
-				}
-				return len;
+				return this.articles.length;
 			},
 			//真正的阅读进度
 			historyShown() {
 				let his = 0;
 				for (let item of this.articles) {
-					if (item.is_draft == 0) his++;
+					his++;
 					if (item.article_chapter == this.history) {
 						return his;
 					}
@@ -1042,7 +1036,7 @@
 
 	.l-dl {
 		margin-top: 180rpx;
-		padding: 0 32rpx;
+		padding: var(--statusBarHeight) 32rpx;
 		display: flex;
 		width: calc(100vw - 64rpx);
 		height: 320rpx;
@@ -1469,9 +1463,10 @@
 			.image {
 				// filter:blur(30px) brightness(0.8);
 				background-color: #00000000;
-				backdrop-filter: blur(50px) brightness(0.7);
+				backdrop-filter: blur(30px) brightness(0.6);
+				transform: translateZ(0);
 				width: 100vw;
-				height: 100vh;
+				height: calc(500rpx + var(--statusBarHeight) + 135rpx + 120px);
 				position: absolute;
 			}
 		}
@@ -1485,7 +1480,7 @@
 			margin: 35rpx 30rpx;
 			border-radius: 0rpx;
 			height: 100rpx;
-			top: 500rpx;
+			top: calc(500rpx + var(--statusBarHeight));
 			display: flex;
 			color: #dfdfdf;
 			font-size: 30rpx;

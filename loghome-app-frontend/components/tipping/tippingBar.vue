@@ -2,9 +2,9 @@
 	<view class="outer">
 		<div class="balance">
 			<span>余额：</span>
-			<img src="@/static/resources/log.png" alt="">
+			<img src="../../static/resources/log.png" alt="" >
 			<span>{{resources.log}}</span>
-			<img src="@/static/resources/apple.png" alt="">
+			<img src="../../static/resources/apple.png" alt="" >
 			<span>{{resources.apple}}</span>
 		</div>
 		<div class="gifts">
@@ -12,11 +12,11 @@
 			:class="{'selected':selectedTippingItem == item.item_name}"
 			@click="selectedTippingItem = item.item_name">
 				<p>{{item.item_name}}</p>
-				<img :src="item.img_url" alt="" class="gift">
+				<log-image :src="item.img_url" alt="" class="gift" />
 				<div class="cost">
-					<img src="@/static/resources/log.png" alt=""
+					<img src="../../static/resources/log.png" alt=""
 					v-show="!item.is_log_free" class="cost">
-					<img src="@/static/resources/apple.png" alt=""
+					<img src="../../static/resources/apple.png" alt=""
 					v-show="item.is_log_free" class="cost">
 					<p v-show="!item.is_log_free">{{item.item_cost}}</p>
 					<p v-show="item.is_log_free">{{item.item_cost}}</p>

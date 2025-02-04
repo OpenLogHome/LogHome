@@ -7,14 +7,14 @@
 			<view class="uni-list-chat__container">
 				<view class="uni-list-chat__header-warp">
 					<view v-if="avatarCircle || avatarList.length === 0" class="uni-list-chat__header" :class="{ 'header--circle': avatarCircle }">
-						<image class="uni-list-chat__header-image" :class="{ 'header--circle': avatarCircle }" :src="avatarUrl" mode="aspectFill"></image>
+						<log-image class="uni-list-chat__header-image" :class="{ 'header--circle': avatarCircle }" :src="avatarUrl" mode="aspectFill"></log-image>
 					</view>
 					<!-- 头像组 -->
 					<view v-else class="uni-list-chat__header">
 						<view v-for="(item, index) in avatarList" :key="index" class="uni-list-chat__header-box" :class="computedAvatar"
 						 :style="{ width: imageWidth + 'px', height: imageWidth + 'px' }">
-							<image class="uni-list-chat__header-image" :style="{ width: imageWidth + 'px', height: imageWidth + 'px' }" :src="item.url"
-							 mode="aspectFill"></image>
+							<log-image class="uni-list-chat__header-image" :style="{ width: imageWidth + 'px', height: imageWidth + 'px' }" :src="item.url"
+							 mode="aspectFill"></log-image>
 						</view>
 					</view>
 				</view>

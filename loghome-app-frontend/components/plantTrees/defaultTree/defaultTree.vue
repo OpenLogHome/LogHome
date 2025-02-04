@@ -1,7 +1,7 @@
 <template>
 	<view class="outer">
-		<img src="@/static/plantTrees/defaultTree/static/cloud.png" alt="" class="back">
-		<img :src="state2imgs[state.tree_status]" mode="" class="tree"></img>
+		<img src="../../../static/plantTrees/defaultTree/static/cloud.png" alt="" class="back">
+		<log-image :src="state2imgs[state.tree_status]" mode="" class="tree"></log-image>
 	</view>
 </template>
 

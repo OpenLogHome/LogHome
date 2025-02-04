@@ -6,7 +6,7 @@
 			<view class="uni-collapse-item__title-wrap" @click="mainClick(clickInfo)">
 				<slot name="title">
 					<view class="uni-collapse-item__title-box" :class="{'is-disabled':disabled}">
-						<image v-if="thumb" :src="thumb" class="uni-collapse-item__title-img" />
+						<log-image v-if="thumb" :src="thumb" class="uni-collapse-item__title-img" />
 						<text class="uni-collapse-item__title-text">{{ title }}</text>
 					</view>
 				</slot>

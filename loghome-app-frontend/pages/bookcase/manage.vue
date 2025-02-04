@@ -8,7 +8,7 @@
 				 :class="{'deleted':item.deleted}">
 				<bookInCase :bookName="item.name" :picUrl="item.picUrl"></bookInCase>
 				<img src="../../static/icons/deletePointNew.png" v-show="item.novel_id > 0"
-				 alt="" class="deletePoint" @click="deleteItem(item.novel_id,index)" style="background-color: white;">
+				 alt="" class="deletePoint" @click="deleteItem(item.novel_id,index)" style="background-color: white;" />
 			</div>
 		</transition-group>
 		<div class="underBar"></div>

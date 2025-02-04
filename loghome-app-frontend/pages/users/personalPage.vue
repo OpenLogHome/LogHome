@@ -3,10 +3,10 @@
 		<!-- 后台按钮组件 -->
 		<zetank-backBar textcolor="#000" :showLeft="topNum == 0" :showTitle="false" navTitle='标题'></zetank-backBar>
 		<!-- 用户背景封面 -->
-		<image class="info-cover" @tap="change_top_pic" :src="user.top_pic_url"
-		onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></image>
+		<log-image class="info-cover" @tap="change_top_pic" :src="user.top_pic_url"
+		onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
 		
-		<springBack top="300rpx">
+		<springBack :top="`calc(300rpx + ${jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'})`">
 			<!-- 右侧悬浮按钮 -->
 			<view class="rightBtnGroup">
 				<followBtn :targetId="Number(uid)" v-show="uid != myUserInfo.user_id"/>
@@ -20,7 +20,7 @@
 			<view class="u-flex-wrap"
 				style="padding-top: 18rpx;padding-bottom: 18rpx;position: relative;align-items: center;display: flex;flex-direction: row;justify-content: flex-end;">
 				<view class="info-avatar" @click="$previewImg([user.avatar_url])">
-					<img :src="user.avatar_url" onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+					<log-image :src="user.avatar_url" onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 				</view>
 				<view style="margin-right: 50rpx;">
 					<view v-if='!showedit' style="height: 45rpx;"></view>
@@ -36,7 +36,7 @@
 				<span class="user_id">ID:{{uid}}</span>
 				<span class="user_group" :class="group2class[user.user_group]">{{user.user_group}}</span>
 				<span class="admin_title" v-show="user.is_admin">
-					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;">社区管理员</span>
+					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>社区管理员</span>
 			</view>
 	
 			<!-- 简介-->

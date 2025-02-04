@@ -26,7 +26,7 @@
 		<!-- #ifndef APP-NVUE -->
 		<view v-else-if="!webviewHide && status === 'loading' && showIcon"
 			:style="{width:iconSize+'px',height:iconSize+'px'}" class="uni-load-more__img uni-load-more__img--ios-H5">
-			<image :src="imgBase64" mode="widthFix"></image>
+			<log-image :src="imgBase64" mode="widthFix"></log-image>
 		</view>
 		<!-- #endif -->
 		<text v-if="showText" class="uni-load-more__text"

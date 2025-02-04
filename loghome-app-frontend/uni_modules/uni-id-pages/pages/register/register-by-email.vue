@@ -3,7 +3,7 @@
 	<view class="uni-content">
 		<match-media :min-width="690">
 			<view class="login-logo">
-				<image :src="logo"></image>
+				<log-image :src="logo"></log-image>
 			</view>
 			<!-- 顶部文字 -->
 			<text class="title title-box">邮箱验证码注册</text>

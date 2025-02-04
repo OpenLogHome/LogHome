@@ -4,11 +4,11 @@
 			<view class="list">
 				<view class="li " @click="setPersonalBtn">
 					<view class="text">作品状态：{{novel.is_personal==0?"公开":"私密"}}</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 				<view class="li " @click="setUpdateBtn">
 					<view class="text">更新状态：{{novel.is_complete==0?"连载":"完结"}}</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 				<view class="li high" @click="gotoChangeNovelTags">
 					<view class="text">作品标签：
@@ -20,17 +20,17 @@
 				</view>
 				<view class="li " @click="gotoChangeBookInfo">
 					<view class="text">修改作品信息</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 <!-- 				<view class="li " @click="gotoChangeNovelPic">
 					<view class="text">编辑作品图册</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view> -->
 			</view>
 			<view class="list">
 				<view class="li noborder" @click="deleteEssay">
 					<view class="text" style="color:red">删除作品</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 		</view>
@@ -295,7 +295,7 @@ page{
 			flex-shrink:0;
 			width:50upx;
 			height:50upx;
-			image{
+			img{
 				width:50upx;
 				height:50upx;
 			}

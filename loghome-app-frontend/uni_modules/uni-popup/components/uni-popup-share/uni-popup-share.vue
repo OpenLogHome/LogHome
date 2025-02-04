@@ -4,7 +4,7 @@
 		<view class="uni-share-content">
 			<view class="uni-share-content-box">
 				<view class="uni-share-content-item" v-for="(item,index) in bottomData" :key="index" @click.stop="select(item,index)">
-					<image class="uni-share-image" :src="item.icon" mode="aspectFill"></image>
+					<log-image class="uni-share-image" :src="item.icon" mode="aspectFill"></log-image>
 					<text class="uni-share-text">{{item.text}}</text>
 				</view>
 

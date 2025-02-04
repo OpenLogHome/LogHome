@@ -4,7 +4,7 @@
 		<view class="cenHost">
 			<view class="cenHeadImgContent">
 				<navigator class="" :url="'../../pages/users/personalPage?id='+reviewMsg.userId">
-					<image class="headImg" :src="reviewMsg.headImgSrc"></image>
+					<log-image class="headImg" :src="reviewMsg.headImgSrc"></log-image>
 				</navigator>
 			</view>
 			<view class="cenHostMsgContent" >
@@ -20,9 +20,12 @@
 					<xzj-readMore class="textSendMsg" hideLineNum="3" showHeight="100">
 					    {{reviewMsg.sendMsg}}
 					</xzj-readMore>
-					<div v-if="reviewMsg.article_id != 0" style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;" @click="navToChapter">
+					<div v-if="reviewMsg.article_id != 0 && !paragraphMode" style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;" @click="navToChapter">
 						<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;"><path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2307"></path><path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2308"></path></svg>
 						来自章节 {{article.title}}
+						<div class="cento" v-if="reviewMsg.cento" style="margin-top: 10rpx; color: #4b4b4b;">
+							{{reviewMsg.cento.paragraph}}
+						</div>
 					</div>
 				</view>
 				<view class="iconRow">
@@ -62,9 +65,10 @@
 		name: 'review',
 		props: {
 			reviewMsg: [Object],
+			paragraphMode: false
 		},
 		components: {
-			dnIcon,followBtn
+			dnIcon, followBtn
 		},
 		data() {
 			return {
@@ -94,7 +98,7 @@
 					
 				})
 				// 加载章节信息
-				console.log(this.reviewMsg.article_id);
+				console.log(this.reviewMsg);
 				if(this.reviewMsg.article_id != 0){
 					axios.get(this.$baseUrl + '/articles/get_article_info?id=' + this.reviewMsg.article_id).then((res) => {
 						this.article = res.data[0];
@@ -219,7 +223,7 @@
 			},
 			navToChapter(){
 				uni.navigateTo({
-					url: '../../pages/readers/article?id=' + this.reviewMsg.article_id
+					url: '../../pages/readers/newReader/article?id=' + this.reviewMsg.article_id
 				});
 				
 			}

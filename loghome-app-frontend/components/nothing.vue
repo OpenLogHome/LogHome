@@ -1,6 +1,6 @@
 <template>
 	<view class="outer">
-		<img src="../static/images/icon_nothing.png" alt="">
+		<img src="../static/images/icon_nothing.png" alt=""/>
 		<p class="text">{{msg}}</p>
 	</view>
 </template>

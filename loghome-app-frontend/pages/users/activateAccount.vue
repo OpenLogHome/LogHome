@@ -8,14 +8,14 @@
 			<view class="li " @click="gotoMobileActivate">
 				<view class="text">通过手机号绑定</view>
 				<view  v-show="user.mobile != 'unbind'">{{user.mobile}}</view>
-				<image class="to" src="../../static/user/to.png"  v-show="user.mobile == 'unbind'"></image>
+				<img class="to" src="../../static/user/to.png"  v-show="user.mobile == 'unbind'"></img>
 			</view>
 		</view>
 		<view class="list">
 			<view class="li" @click="gotoOicqActivate">
 				<view class="text">通过QQ号绑定</view>
 				<view  v-show="user.oicq_account != 'unbind'">{{user.oicq_account}}</view>
-				<image class="to" src="../../static/user/to.png" v-show="user.oicq_account == 'unbind'"></image>
+				<img class="to" src="../../static/user/to.png" v-show="user.oicq_account == 'unbind'"></img>
 			</view>
 		</view>
 		<div class="info">
@@ -140,7 +140,7 @@
 				flex-shrink:0;
 				width:50upx;
 				height:50upx;
-				image{
+				img{
 					width:50upx;
 					height:50upx;
 				}

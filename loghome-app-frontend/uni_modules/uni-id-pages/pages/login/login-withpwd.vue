@@ -2,7 +2,7 @@
 <template>
 	<view class="uni-content">
 		<view class="login-logo">
-			<image :src="logo"></image>
+			<log-image :src="logo"></log-image>
 		</view>
 		<!-- 顶部文字 -->
 		<text class="title title-box">账号密码登录</text>

@@ -3,8 +3,8 @@
 		<div class="list">
 			<div class="users" v-for="item in shownMessages">
 				<navigator class="avators" :url="'../users/personalPage?id='+item.from_id">
-					<img :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+					<log-image :src="item.avatar_url" alt=""
+					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 				</navigator>
 				<navigator class="users" :url="item.router ? '../' + item.router : './'">
 					<div class="personInfo">

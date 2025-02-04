@@ -16,7 +16,7 @@
 			<view class="list">
 				<view class="li " @click="readerSet">
 					<view class="text">状态：{{readerProps == "page" ? "分页阅读器" : readerProps == "text" ? "文本流阅读器" : "点击设置"}}</view>
-					<image class="to" src="../../static/user/to.png"></image>
+					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 		</div>
@@ -91,7 +91,7 @@
 				flex-shrink:0;
 				width:50upx;
 				height:50upx;
-				image{
+				img{
 					width:50upx;
 					height:50upx;
 				}

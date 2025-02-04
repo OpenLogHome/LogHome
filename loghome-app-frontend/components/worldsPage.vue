@@ -1,5 +1,5 @@
 <template>
-	<div class="worldWrapper">
+	<div class="worldWrapper" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<div class="outer">
 			<div class="title">
 			</div>
@@ -10,7 +10,7 @@
 		</div>
 		<div class="nothing" v-show="worlds.length == 0"
 			style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
-			<img src="../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;">
+			<img src="../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;"/>
 			<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
 		</div>
 		<div class="jiemian2" v-for="world in worlds">
@@ -144,6 +144,7 @@
 
 	.outer {
 		padding: 20px;
+		padding-top: calc(10px + var(--statusBarHeight));
 
 
 		.title {

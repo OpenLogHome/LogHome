@@ -7,4 +7,9 @@ articleDB.version(1).stores({
   novels: 'novel_id, name, content, author_id, picUrl, create_time, update_time, is_complete, text_count, novel_type'
 });
 
-export { articleDB };
+const imgDB = new Dexie('loghomeImgDatabase');
+imgDB.version(1).stores({
+  imgs: 'img_url, img_hash, img_blob, last_accessed_time',
+});
+
+export { articleDB, imgDB };

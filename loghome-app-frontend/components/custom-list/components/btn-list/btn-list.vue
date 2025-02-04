@@ -1,13 +1,13 @@
 <template>
 	<view class="edit_buttona">
 		<view class="rm_img" @tap="del(mobileLocation)">
-			<image src="../../static/del.png" class="imgup"></image>
+			<img src="../../static/del.png" class="imgup"></img>
 		</view>
 		<view class="top_img" @tap="top(mobileLocation)" v-if="mobileLocation!=0">
-			<image src="../../static/up.png" class="imgup"></image>
+			<img src="../../static/up.png" class="imgup"></img>
 		</view>
 		<view class="top_img" @tap="bottom(mobileLocation)" v-show="mobileLocation != list.length && list.length >1">
-			<image src="../../static/down.png" class="imgup"></image>
+			<img src="../../static/down.png" class="imgup"></img>
 		</view>
 	</view>
 </template>

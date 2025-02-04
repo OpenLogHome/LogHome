@@ -33,12 +33,12 @@
 					<button type="default" class="inTopBar"
 						:class="[{enabled:article.article_chapter != firstArticleChapter},readerSettings.theme]"
 						@click="changePage(-1)">
-						上一章<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg">
+						上一章<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg" />
 					</button>
 					<button type="default" class="inTopBar"
 						:class="[{enabled:article.article_chapter != lastArticleChapter},readerSettings.theme]"
 						@click="changePage(+1)">
-						<img src="../../static/icons/icon_reader_pgdn.png" alt="" class="pageChangeImg">下一章
+						<img src="../../static/icons/icon_reader_pgdn.png" alt="" class="pageChangeImg"/>下一章
 					</button>
 				</div>
 			</div>
@@ -56,7 +56,7 @@
 				<div class="left" @click="imgUploadVisible = true">
 					<div class="pic" v-if="article.content.pic == undefined && article.title">
 						{{article.title.slice(0, 1)}} </div>
-					<img :src="article.content.pic" alt="" v-if="article.content.pic != undefined">
+					<log-image :src="article.content.pic" alt="" v-if="article.content.pic != undefined"/>
 				</div>
 				<div class="right">
 					<div class="tit">词条名称</div>
@@ -90,7 +90,7 @@
 				@tap="articleTapped" :class="readerSettings.theme" v-if="article.content">
 				<div v-for="item in JSON.parse(article.content)">
 					<div v-if="item.type == 'text'">{{item.value}}</div>
-					<img :src="item.img" alt="" v-else-if="item.type == 'image'" style="width:100%">
+					<log-image :src="item.img" alt="" v-else-if="item.type == 'image'" style="width:100%"/>
 					<div class="bookLink" v-else-if="item.type == 'novel'" style="display:flex; font-size:30rpx;">
 						<view style="display: flex; align-items: center;">
 							<bookInCase :bookName="item.name" :picUrl="item.picUrl"
@@ -113,11 +113,11 @@
 		</div> -->
 		<button type="default" :class="[{enabled:article.article_chapter != firstArticleChapter},readerSettings.theme]"
 			@click="changePage(-1)">
-			上一章<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg">
+			上一章<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg"/>
 		</button>
 		<button type="default" :class="[{enabled:article.article_chapter != lastArticleChapter},readerSettings.theme]"
 			@click="changePage(+1)">
-			<img src="../../static/icons/icon_reader_pgdn.png" alt="" class="pageChangeImg">下一章
+			<img src="../../static/icons/icon_reader_pgdn.png" alt="" class="pageChangeImg"/>下一章
 		</button>
 		<el-drawer :with-header="false" :visible.sync="menuDrawer" direction="btt" :modal="false" size="50%"
 			custom-class="bookMenu">
@@ -391,23 +391,8 @@
 						element.style.color = "white";
 					})
 
-					this.jsBridge.ready(function() {
-						_this.jsBridge.setOptions({
-							statusBarColor: "#44423e",
-							statusBarBlackText: false
-						});
-					})
-
 				} else if (_this.scrollTop >= 120) {
 					_this.pageHead.style.opacity = "0"
-
-					this.jsBridge.ready(function() {
-						_this.jsBridge.setOptions({
-							statusBarColor: _this.themes[_this.readerSettings.theme].backColor,
-							statusBarBlackText: (_this.readerSettings.theme == "black" ? false :
-								true)
-						});
-					})
 
 				} else {
 					_this.pageHead.style.opacity = "1"
@@ -415,15 +400,6 @@
 					this.pageHeadBtn.forEach(element => {
 						element.style.color = _this.themes[_this.readerSettings.theme].color;
 					})
-
-					this.jsBridge.ready(function() {
-						_this.jsBridge.setOptions({
-							statusBarColor: _this.themes[_this.readerSettings.theme].backColor,
-							statusBarBlackText: (_this.readerSettings.theme == "black" ? false :
-								true)
-						});
-					})
-
 				}
 			}, 300)
 			this.refreshPage(option.id);

@@ -5,8 +5,8 @@
 			<p class="fansNums">共有 {{fans.length}} 个粉丝</p>
 			<div class="users" v-for="item in fans">
 				<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
-					<img :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+					<log-image :src="item.avatar_url" alt=""
+					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 					<div class="personInfo">
 						<div class="name">{{item.name}}</div>
 						<div class="motto">{{item.motto}}</div>
@@ -19,8 +19,8 @@
 			
 				<div class="users" v-for="item in follows">
 					<navigator class="users" :url="'../users/personalPage?id='+item.follow_id">
-						<img :src="item.avatar_url" alt=""
-						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+						<log-image :src="item.avatar_url" alt=""
+						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 						<div class="personInfo">
 							<div class="name">{{item.name}}</div>
 							<div class="motto">{{item.motto}}</div>

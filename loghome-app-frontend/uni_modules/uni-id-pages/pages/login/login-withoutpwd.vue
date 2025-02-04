@@ -2,7 +2,7 @@
 <template>
 	<view class="uni-content">
 		<view class="login-logo">
-			<image :src="logo"></image>
+			<log-image :src="logo"></log-image>
 		</view>
 		<!-- 顶部文字 -->
 		<text class="title">请选择登录方式</text>
@@ -10,8 +10,8 @@
 		<template v-if="['apple','weixin', 'weixinMobile'].includes(type)">
 			<text class="tip">将根据第三方账号服务平台的授权范围获取你的信息</text>
 			<view class="quickLogin">
-				<image v-if="type !== 'weixinMobile'" @click="quickLogin" :src="imgSrc" mode="widthFix"
-					class="quickLoginBtn"></image>
+				<log-image v-if="type !== 'weixinMobile'" @click="quickLogin" :src="imgSrc" mode="widthFix"
+					class="quickLoginBtn"></log-image>
 				<button v-else type="primary" open-type="getPhoneNumber" @getphonenumber="quickLogin"
 					class="uni-btn">微信授权手机号登录</button>
 				<uni-id-pages-agreements scope="register" ref="agreements"></uni-id-pages-agreements>

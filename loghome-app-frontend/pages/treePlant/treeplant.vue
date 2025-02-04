@@ -1,18 +1,18 @@
 <template>
-	<view class="outer">
+	<view class="outer" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<!-- 后台按钮组件 -->
 		<zetank-backBar textcolor="#000" :showLeft="true" :showTitle="false" navTitle='原木树场'></zetank-backBar>
 		<view class="balance">
 			<div class="b">
-				<img src="@/static/resources/log.png" alt="">
+				<img src="../../static/resources/log.png" alt="" />
 				<p>{{resources.log}}</p>
 			</div>
 			<div class="b">
-				<img src="@/static/resources/apple.png" alt="">
+				<img src="../../static/resources/apple.png" alt="" />
 				<p>{{resources.apple}}</p>
 			</div>
 			<div class="b">
-				<img src="@/static/resources/cropped_log.webp" alt="">
+				<img src="../../static/resources/cropped_log.webp" alt="" />
 				<p>{{resources.cropped_log}}</p>
 			</div>
 		</view>
@@ -241,7 +241,7 @@
 			width:200rpx;
 			height:50vh;
 			right:0rpx;
-			top:40rpx;
+			top:calc(40rpx + var(--statusBarHeight));
 			z-index: 5;
 			.b{
 				width:175rpx;

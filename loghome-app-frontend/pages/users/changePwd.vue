@@ -1,16 +1,16 @@
 <template>
 	<div class="content">
 		<div class="longin-boder">
-			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"></div>
+			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
 			<input class="input" type="password" placeholder="输入原密码" v-model="pwd" />
 		</div>
 		<!--End用户名输入框-->
 		<div class="longin-boder">
-			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"></div>
+			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
 			<input class="input" type="password" placeholder="输入新密码" v-model="newPwd1" />
 		</div>
 		<div class="longin-boder">
-			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"></div>
+			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
 			<input class="input" type="password" placeholder="重复新密码" v-model="newPwd2" />
 		</div>
 		<div style="display:flex;width:100%;justify-content: center;">

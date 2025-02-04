@@ -20,11 +20,11 @@
 				:current="index"
 				@click="clicked(item)"
 				>
-					<image 
+					<log-image 
 					class="Imges" :src="item.image" mode="aspectFill"
-					></image>
+					></log-image>
 					<!-- #ifdef APP-NVUE || APP-PLUS-NVUE -->
-					<image class="ImagesTextbg" src="/static/FatFatMeng-apps/FatFatMeng-image/FatFatMeng-style/FatFatMeng-SwiperTextbg2.png" mode="widthFix"></image>
+					<img class="ImagesTextbg" src="/static/FatFatMeng-apps/FatFatMeng-image/FatFatMeng-style/FatFatMeng-SwiperTextbg2.png" mode="widthFix"></img>
 					<!-- #endif -->
 					<view class="title">
 						<text class="text">{{item.title}}</text>

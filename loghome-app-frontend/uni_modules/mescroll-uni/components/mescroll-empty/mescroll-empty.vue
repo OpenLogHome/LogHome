@@ -4,7 +4,7 @@
 -->
 <template>
 	<view class="mescroll-empty" :class="{ 'empty-fixed': option.fixed }" :style="{ 'z-index': option.zIndex, top: option.top }">
-		<view> <image v-if="icon" class="empty-icon" :src="icon" mode="widthFix" /> </view>
+		<view> <log-image v-if="icon" class="empty-icon" :src="icon" mode="widthFix" /> </view>
 		<view v-if="tip" class="empty-tip">{{ tip }}</view>
 		<view v-if="btnText" class="empty-btn" @click="emptyClick">{{ btnText }}</view>
 	</view>

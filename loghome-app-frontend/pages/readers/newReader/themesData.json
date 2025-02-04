@@ -2,31 +2,37 @@
 	"white": {
 		"backgroundColor": "#F6F6F6",
 		"fontColor": "#3D3D3D",
+		"lineColor": "#848484",
 		"isBlack": false
 	},
 	"green": {
 		"backgroundColor": "#E4F0D8",
 		"fontColor": "#3D3D3D",
+		"lineColor": "#28ab56",
 		"isBlack": false
 	},
 	"yellow": {
 		"backgroundColor": "#FFF9EB",
 		"fontColor": "#3D3D3D",
+		"lineColor": "#ff6e42",
 		"isBlack": false
 	},
 	"blue": {
 		"backgroundColor": "#f0fffe",
 		"fontColor": "#3D3D3D",
+		"lineColor": "#4795e7",
 		"isBlack": false
 	},
 	"pink": {
 		"backgroundColor": "#ffebfc",
 		"fontColor": "#3D3D3D",
-		"isBlack": true
+		"lineColor": "#e24d7a",
+		"isBlack": false
 	},
 	"black": {
 		"backgroundColor": "#100f0e",
 		"fontColor": "#c6c6c6",
+		"lineColor": "#e3e3e3",
 		"isBlack": true
 	}
 }

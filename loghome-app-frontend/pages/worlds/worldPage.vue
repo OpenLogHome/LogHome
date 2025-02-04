@@ -1,5 +1,5 @@
 <template>
-	<div class="outer">
+	<div class="outer" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<div class="top">
 			<zetank-backBar textcolor="#000" :showLeft="true" :showHome="true" :showTitle="false"
 				navTitle='标题'></zetank-backBar>
@@ -8,8 +8,8 @@
 			</div>
 			<div class="info">
 				<view class="author" @click="gotoUserProfile(world.creator_id)">
-					<img :src="world.avatar_url" alt="" class="auther_avatar"
-						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+					<log-image :src="world.avatar_url" alt="" class="auther_avatar"
+						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 					<div class="auther_name">{{world.user_name}}<uni-icons type="forward" size="18"
 							style="color:#666666"></uni-icons>
 					</div>
@@ -45,7 +45,7 @@
 						</el-collapse>
 						<div class="nothing" v-show="worldOutlines.length == 0"
 							style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
-							<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;">
+							<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
 							<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
 						</div>
 						<div class="title" style="margin-top: 30rpx;">
@@ -58,7 +58,7 @@
 						</div>
 						<div class="nothing" v-show="worldVoabs.length == 0"
 							style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
-							<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;">
+							<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
 							<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
 						</div>
 					</div>
@@ -67,9 +67,9 @@
 					<span class="paneLabel" slot="label">关联作品</span>
 					<div v-for="novel in assoNovels" :key="novel.novel_id" v-show="assoNovels.length != 0">
 						<navigator :url="'../readers/bookInfo?id=' +  novel.novel_id" open-type="navigate" class="books">
-							<img :src="novel.picUrl + '?thumbnail=1'" alt=""
+							<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
 								:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"
-								style="border-radius: 10rpx; transform:scale(.90)">
+								style="border-radius: 10rpx; transform:scale(.90)" />
 							<div class="bookInfo" style="margin-left:10rpx;">
 								<div class="title">
 									{{novel.name}}
@@ -77,8 +77,8 @@
 										style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">世界设定</el-tag>
 								</div>
 								<view class="author">
-									<img :src="novel.avatar_url" alt="" class="auther_avatar"
-										onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+									<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
+										onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 									<div class="auther_name">{{novel.user_name}}</div>
 								</view>
 								<div class="description">{{novel.content}}</div>
@@ -87,7 +87,7 @@
 					</div>
 					<div class="nothing" v-show="assoNovels.length == 0"
 						style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 30rpx 0;">
-						<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;">
+						<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
 						<div style="color:#777777">这是一片什么都没有的荒原</div>
 					</div>
 				</el-tab-pane>
@@ -287,6 +287,7 @@
 			border-bottom: 1rpx solid #e1e1e1;
 			padding: 10rpx 40rpx;
 			background-image: linear-gradient(to top, #ffffff, #fff2d0);
+			padding-top: calc(10rpx + var(--statusBarHeight));
 
 			.title {
 				margin-top: 140rpx;

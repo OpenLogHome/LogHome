@@ -22,7 +22,7 @@
 							</view>
 							<!-- 图片 -->
 							<view class="image_bg" v-else-if="addlist[index].type == 'image'">
-								<img class="imga" mode="widthFix" :src="addlist[index].img" v-reload-img="10"></img>
+								<log-image class="imga" mode="widthFix" :src="addlist[index].img" v-reload-img="10"></log-image>
 								<!-- 移动 删除 begin -->
 								<btnList v-if="movementButton" :list="addlist" :mobileLocation="index" @change="listChange">
 								</btnList>
@@ -33,8 +33,8 @@
 								<view class="center1">
 									<view class="bgcolor">
 										<view style="display: flex; align-items: center;">
-											<image src="./static/fuzhikuang.png" style="width: 50rpx; height: 50rpx;">
-											</image>
+											<img src="./static/fuzhikuang.png" style="width: 50rpx; height: 50rpx;">
+											</img>
 											<view class="dazi">
 												<input v-model="addlist[index].name" maxlength="10"
 													placeholder="复制框提示文字" :disabled="!movementButton" />
@@ -85,19 +85,19 @@
 			<view class="buy-wrapper">
 				<view class="operate">
 					<view class="operate_wu" @click="add('image')">
-						<image class="operate_img" src="./static/1234/tup.png"></image>
+						<img class="operate_img" src="./static/1234/tup.png" /></img>
 						<view>+图片</view>
 					</view>
 					<view class="operate_wu" @click="add('text')">
-						<image class="operate_img" src="./static/1234/text.png"></image>
+						<img class="operate_img" src="./static/1234/text.png"></img>
 						<view>+文字</view>
 					</view>
 <!-- 					<view class="operate_wu" @click="add('copy')">
-						<image class="operate_img" src="./static/1234/fuzhi.png"></image>
+						<img class="operate_img" src="./static/1234/fuzhi.png"></img>
 						<view>+复制框</view>
 					</view> -->
 					<view class="operate_wu" @click="add('novel')">
-						<image class="operate_img" src="./static/1234/novel.png"></image>
+						<img class="operate_img" src="./static/1234/novel.png"></img>
 						<view>+书链</view>
 					</view>
 				</view>
@@ -112,21 +112,21 @@
 		  <div class="searchBar" style="position:absolute; background-color: #ffe6b4; width:100%; z-index:100;">
 		  	<uni-search-bar bgColor="#ffffff" :radius="0" @input="searchLibrary"
 		  					placeholder = "搜索书库" cancelButton="none">
-		  		<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;">
-		  		<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;">
+		  		<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;"/>
+		  		<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;"/>
 		  	</uni-search-bar>
 		  </div>
 		  <div style="height:52px; width:100%;"></div>
 		  <navigator v-for="item in [...searchBooks]" :key="item.novel_id"
 		  		   @click="selectBook(item)">    
 		  	<div class="books">
-		  		<img :src="item.picUrl + '?thumbnail=1'" alt=""
-		  		:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`">
+		  		<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
+		  		:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
 		  		<div class="bookInfo">
 		  			<div class="title">{{item.name}}</div>
 		  			<view class="author">
-		  				<img :src="item.auther_avatar" alt="" class="auther_avatar"
-		  				onerror="onerror=null;src='../static/user/defaultAvatar.jpg'">
+		  				<log-image :src="item.auther_avatar" alt="" class="auther_avatar"
+		  				onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
 		  				<div class="auther_name">{{item.author_name}}</div>
 		  			</view>
 		  			<div class="description">{{item.content}}</div>

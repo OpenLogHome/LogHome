@@ -1,20 +1,20 @@
 <template>
-	<view>
+	<view :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<view class="top-swiper">
 			 <view class="bg">
 				 <view class="placeholder"></view>
 				 <view class="image">
-					 <image v-for="(item,index) in swiper.books" :src="item.picUrl" mode="aspectFill" 
+					 <log-image v-for="(item,index) in swiper.books" :src="item.picUrl" mode="aspectFill" 
 							:style="{opacity:swiper.index == index ? 1 : 0}"
-							onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"></image>
+							onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"></log-image>
 				 </view>
 			 </view>
 			 <view class="box">
 				<view style="height: 44px;"></view>
 			 	<swiper class="swiper" :previous-margin="swiper.margin" :next-margin='swiper.margin' :circular="false" @change="swiperChange">
 			 		<swiper-item v-for="(item,index) in swiper.books" :key="index">
-			 			<img class='le-img' :src='item.picUrl' :class="{'le-active':swiper.index == index}"
-						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"></img>
+			 			<log-image class='le-img' :src='item.picUrl' :class="{'le-active':swiper.index == index}"
+						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"></log-image>
 			 		</swiper-item>
 					<swiper-item>
 						<div class='le-btn' :class="{'le-active':swiper.index == list.length}">
@@ -86,7 +86,7 @@
 	.top-swiper{
 		
 		.bg{
-			padding-top: var(--status-bar-height);
+			padding-top: calc(var(--status-bar-height) + var(--statusBarHeight));
 			box-sizing: content-box;
 			width: 100%;
 			position: relative;
@@ -110,7 +110,7 @@
 				
 				background-color: rgb(255,248,234);
 				
-				image{
+				img{
 					transition:opacity .5s;
 				}
 				
@@ -126,7 +126,7 @@
 					background-image: linear-gradient(to bottom ,transparent, #FFF);
 				}
 				
-				> image{
+				> img{
 					position: absolute;
 					box-sizing: content-box;
 					padding: 60px;
@@ -155,7 +155,7 @@
 		.swiper {
 			height: 590rpx;
 			margin: 0 0rpx;
-			padding-top: 10rpx;
+			padding-top: calc(10rpx + var(--statusBarHeight));
 			.le-img {
 				width: 100%;
 				height: 100%;

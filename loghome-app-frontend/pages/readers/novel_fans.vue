@@ -16,7 +16,7 @@
 				</view>
 				<view class="ownPic">
 					<navigator :url="'../users/personalPage?id=' + fan.user_id">
-						<image :src="fan.avatar_url" style="height: 100rpx;width: 100rpx;border-radius: 50%;"></image>
+						<log-image :src="fan.avatar_url" style="height: 100rpx;width: 100rpx;border-radius: 50%;"></log-image>
 					</navigator>
 				</view>
 				<view class="rightMod">
@@ -38,7 +38,7 @@
 		</view>
 		<view class="myInfo">
 			<view class="ownPic">
-				<image :src="myInfo.avatar_url" style="height: 100rpx;width: 100rpx;border-radius: 50%;"></image>
+				<log-image :src="myInfo.avatar_url" style="height: 100rpx;width: 100rpx;border-radius: 50%;"></log-image>
 			</view>
 			<view class="rightTop" style="position: relative;width: 75vw;">
 				<view style="font-size:30rpx;font-weight: bold;color:rgb(243, 175, 56);

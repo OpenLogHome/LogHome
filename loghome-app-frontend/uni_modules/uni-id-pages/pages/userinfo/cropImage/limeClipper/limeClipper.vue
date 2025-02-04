@@ -3,7 +3,7 @@
 		<view class="l-clipper-mask" @touchstart.stop.prevent="clipTouchStart" @touchmove.stop.prevent="clipTouchMove" @touchend.stop.prevent="clipTouchEnd">
 			<view class="l-clipper__content" :style="clipStyle"><view class="l-clipper__edge" v-for="(item, index) in [0, 0, 0, 0]" :key="index"></view></view>
 		</view>
-		<image
+		<log-image
 			class="l-clipper-image"
 			@error="imageLoad"
 			@load="imageLoad"
@@ -30,11 +30,11 @@
 				</view>
 				<view v-if="isShowPhotoBtn" @tap="uploadImage">
 					<slot name="photo" v-if="$slots.photo" />
-					<image v-else src="./images/photo.svg" />
+					<img v-else src="./images/photo.svg" />
 				</view>
 				<view v-if="isShowRotateBtn" @tap="rotate">
 					<slot name="rotate" v-if="$slots.rotate" />
-					<image v-else src="./images/rotate.svg" data-type="inverse" />
+					<img v-else src="./images/rotate.svg" data-type="inverse" />
 				</view>
 				<view v-if="isShowConfirmBtn" @tap="confirm">
 					<slot name="confirm" v-if="$slots.confirm" />

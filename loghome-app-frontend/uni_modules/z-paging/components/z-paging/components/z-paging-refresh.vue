@@ -4,11 +4,11 @@
 	<view style="height: 100%;">
 		<view :class="showUpdateTime?'zp-r-container zp-r-container-padding':'zp-r-container'">
 			<view class="zp-r-left">
-				<image v-if="status!==2" :class="leftImageClass"
+				<log-image v-if="status!==2" :class="leftImageClass"
 					:style="[{width: showUpdateTime?'36rpx':'30rpx',height: showUpdateTime?'36rpx':'30rpx','margin-right': showUpdateTime?'20rpx':'9rpx'},imgStyle]"
 					:src="defaultThemeStyle==='white'?(status===3?base64SuccessWhite:base64ArrowWhite):(status===3?base64Success:base64Arrow)" />
 				<!-- #ifndef APP-NVUE -->
-				<image v-else class="zp-line-loading-image zp-r-left-image"
+				<log-image v-else class="zp-line-loading-image zp-r-left-image"
 					:style="[{width: showUpdateTime?'36rpx':'30rpx',height: showUpdateTime?'36rpx':'30rpx','margin-right': showUpdateTime?'20rpx':'9rpx'},imgStyle]"
 					:src="defaultThemeStyle==='white'?base64FlowerWhite:base64Flower" />
 				<!-- #endif -->

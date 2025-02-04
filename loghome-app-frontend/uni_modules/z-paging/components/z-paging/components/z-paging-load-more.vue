@@ -5,9 +5,9 @@
 		<text v-if="zConfig.showNoMoreLine&&finalStatus===2" :class="zConfig.defaultThemeStyle==='white'?'zp-l-line zp-l-line-white':'zp-l-line zp-l-line-black'"
 			:style="[zConfig.noMoreLineCustomStyle]" />
 		<!-- #ifndef APP-NVUE -->
-		<image v-if="finalStatus===1&&zConfig.loadingIconCustomImage.length"
+		<log-image v-if="finalStatus===1&&zConfig.loadingIconCustomImage.length"
 			:src="zConfig.loadingIconCustomImage" :class="{'zp-l-line-loading-custom-image':true,'zp-l-line-loading-custom-image-animated':zConfig.loadingAnimated}" />
-		<image v-if="finalStatus===1&&zConfig.loadingIconType==='flower'&&!zConfig.loadingIconCustomImage.length"
+		<log-image v-if="finalStatus===1&&zConfig.loadingIconType==='flower'&&!zConfig.loadingIconCustomImage.length"
 			class="zp-line-loading-image" :style="[zConfig.iconCustomStyle]" :src="zConfig.defaultThemeStyle==='white'?base64FlowerWhite:base64Flower" />
 		<!-- #endif -->
 		<!-- #ifdef APP-NVUE -->

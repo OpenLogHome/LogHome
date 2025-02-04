@@ -26,10 +26,10 @@
 		<view class="keywordOrFunction-box border bg-color-white" :style="{'bottom':keyWordMenuHeight}">
 			<view v-if="currentPopupType != '字号'" class="titleMenu w-100 flex just-content-around align-center">
 				<view v-for="(item,index) in popupMenu" :key="index" @tap.stop="tapMenu(index)">
-					<image :src="item.img" :style="{
+					<log-image :src="item.img" :style="{
 						'width': item.w + 'rpx',
 						'height': item.h + 'rpx'
-					}"></image>
+					}"></log-image>
 				</view>
 			</view>
 			<view v-if="currentPopupType == '字号'" class="titleMenu w-100 flex align-center">
@@ -66,15 +66,15 @@
 						<view class="px-4 mt-3 mb-3 flex align-center">
 							<view class="flex just-content-around align-center fontFamily-left">
 								<view v-for="(item,index) in fontFamily" :key="index" :class="item.isSelect?'font-mian':''" class="flex align-center" @tap.stop="selectFamily(index)">
-									<image :src="item.img" :style="{
+									<log-image :src="item.img" :style="{
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
-									}"></image>
+									}"></log-image>
 									<view class="divider ml-4"></view>
 								</view>
 							</view>
 							<view class="fontFamily-right ml-2 flex just-content-center align-center" @tap.stop="removeFormat">
-								<image src="/static/editor/I-d.png" style="width: 32rpx;height: 38rpx;"></image>
+								<img src="/static/editor/I-d.png" style="width: 32rpx;height: 38rpx;"></img>
 							</view>
 						</view>
 						
@@ -83,10 +83,10 @@
 							<view class="mb-2"><text class="font-color-9A font-small font-weight-bold">字体颜色</text></view>
 							<view class="fontColor-box flex align-center just-content-around">
 								<view v-for="(item,index) in fontColor" :key="index" @tap="selectFontColor(index)">
-									<view v-if="index == 5"><image :src="item.img" style="margin-top: 12rpx;" :style="{
+									<view v-if="index == 5"><log-image :src="item.img" style="margin-top: 12rpx;" :style="{
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
-									}"></image></view>
+									}"></log-image></view>
 									<view v-else class="fColor flex just-content-center align-center" :style="'background-color: #'+item.img">
 										<text v-if="item.isSelect" class="icon iconfont h6 font-white">&#xe623;</text>
 									</view>
@@ -99,10 +99,10 @@
 							<view class="mb-2"><text class="font-color-9A font-small font-weight-bold">背景颜色</text></view>
 							<view class="fontColor-box flex align-center just-content-around">
 								<view v-for="(item,index) in bgColor" :key="index" @tap="selectBGColor(index)">
-									<view v-if="index > 3"><image :src="item.img" style="margin-top: 12rpx;" :style="{
+									<view v-if="index > 3"><log-image :src="item.img" style="margin-top: 12rpx;" :style="{
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
-									}"></image></view>
+									}"></log-image></view>
 									<view v-else class="bgColor flex just-content-center align-center" :style="'background-color: #'+item.img">
 										<text v-if="item.isSelect" class="icon iconfont h6 font-white">&#xe623;</text>
 									</view>
@@ -115,19 +115,19 @@
 						<view class="px-4 py-3 flex">
 							<view class="flex just-content-around align-center align-box-left">
 								<view v-for="(item,index) in alignWay" :key="index" class="flex align-center" @tap.stop="selectAlignMent(index)">
-									<image :src="item.img" :style="{
+									<log-image :src="item.img" :style="{
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
-									}"></image>
+									}"></log-image>
 									<view v-if="index != alignWay.length-1" class="divider ml-4"></view>
 								</view>
 							</view>
 							<view class="align-box-right ml-2 flex just-content-around align-center">
 								<view v-for="(item,index) in sortStyle" :key="index" class="flex align-center" @tap.stop="selectSortStyle(index)">
-									<image :src="item.img" :style="{
+									<log-image :src="item.img" :style="{
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
-									}"></image>
+									}"></log-image>
 									<view v-if="index != sortStyle.length-1" class="divider ml-4"></view>
 								</view>
 							</view>
@@ -140,10 +140,10 @@
 						<view class="pl-4">
 							<view v-for="(item,index) in indentition" :key="index" @tap.stop="selectIndent(index)">
 								<view class="py-3 flex align-center">
-									<image :src="item.img" class="mt-1" :style="{
+									<log-image :src="item.img" class="mt-1" :style="{
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
-									}"></image>
+									}"></log-image>
 									<view><text class="h5 font-color-666 ml-2">{{item.title}}</text></view>
 								</view>
 								<view class="view-hr"></view>
@@ -155,10 +155,10 @@
 						<view class="">
 							<view v-for="(item,index) in functionList" :key="index" @tap="selectFunction(index,item.value)">
 								<view class="py-3 pl-4 flex align-center">
-									<image :src="item.img" class="mt-1" :style="{
+									<log-image :src="item.img" class="mt-1" :style="{
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
-									}"></image>
+									}"></log-image>
 									<view><text class="h5 font-color-666 ml-2">{{item.title}}</text></view>
 								</view>
 								<view class="hr20" v-if="index == 3 || index == 5"></view>

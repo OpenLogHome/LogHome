@@ -1,5 +1,5 @@
 <template>
-	<view class="content">
+	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 			<div class="articles">
 				<uni-collapse accordion @touchstart.native="touchstart" @touchend.native="touchend" @touchmove.native="touchmove">
 				    <uni-collapse-item class="titleOuter" v-for="item in shownArticles"
@@ -577,9 +577,6 @@ export default{
 					})
 				}
 				that.touchend();
-				if(that.jsBridge.inApp){
-					that.jsBridge.vibrate();
-				}
 			}.bind(this), 500);
 		},
 		touchmove(ev) {
@@ -815,6 +812,7 @@ export default{
 	
 	.bookParts{
 		width:100%;
+		margin-top: var(--statusBarHeight);
 		.part{
 			padding-left:35rpx;
 			border-bottom: #cacaca 1rpx solid;

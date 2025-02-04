@@ -1,6 +1,6 @@
 <template>
 	<view @click="onClick" :style="{width,height}" style="justify-content: center;">
-		<image v-if="cSrc" :style="{width,height}" :src="cSrc" :mode="mode"></image>
+		<log-image v-if="cSrc" :style="{width,height}" :src="cSrc" :mode="mode"></log-image>
 	</view>
 </template>
 

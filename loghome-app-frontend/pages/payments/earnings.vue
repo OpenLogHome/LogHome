@@ -2,7 +2,7 @@
 	<view class="wp">
 		<view class="header">
 			<div class="b">
-				<img src="@/static/resources/cropped_log.webp" alt="">
+				<img src="../../static/resources/cropped_log.webp" alt=""/>
 				<p>{{resources.cropped_log}}</p>
 			</div>
 			<div class="recordBtn" @click="recordDrawer = true">

@@ -6,7 +6,7 @@
 			@touchend.stop.prevent="clipTouchEnd">
 			<view class="lime-clipper__content" :style="clipStyle"><view class="lime-clipper__edge" v-for="(item, index) in [0, 0, 0, 0]" :key="index"></view></view>
 		</view>
-		<image
+		<log-image
 			class="lime-clipper-image"
 			@error="imageLoad"
 			@load="imageLoad"
@@ -33,11 +33,11 @@
 				</view>
 				<view v-if="isShowPhotoBtn" @tap="uploadImage">
 					<slot name="photo" v-if="$slots.photo" />
-					<image v-else :src="photoImg" />
+					<log-image v-else :src="photoImg" />
 				</view>
 				<view v-if="isShowRotateBtn" @tap="rotate">
 					<slot name="rotate" v-if="$slots.rotate" />
-					<image v-else :src="rotateImg" data-type="inverse" />
+					<log-image v-else :src="rotateImg" data-type="inverse" />
 				</view>
 				<view v-if="isShowConfirmBtn" @tap="confirm" >
 					<slot name="confirm" v-if="$slots.confirm" />

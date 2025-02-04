@@ -3,7 +3,7 @@
 		<div class="topBar">
 			<div class="left" @click="imgUploadVisible = true">
 				<div class="pic" v-if="content.pic == undefined && article.title"> {{article.title.slice(0, 1)}} </div>
-				<img :src="content.pic" alt="" v-if="content.pic != undefined">
+				<log-image :src="content.pic" alt="" v-if="content.pic != undefined" />
 			</div>
 			<div class="right">
 				<div class="tit">词条名称</div>
@@ -114,7 +114,7 @@
 				<el-upload class="avatar-uploader" action="http://img.codesocean.top/upload/img"
 					name="img" :headers="{apikey: '45qEQfILCQ3tAXxmUJF8O562bJU2D0'}"
 					:show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
-					<img v-if="content.pic" :src="content.pic" class="avatar">
+					<log-image v-if="content.pic" :src="content.pic" class="avatar" />
 					<i v-else class="el-icon-plus avatar-uploader-icon"></i>
 				</el-upload>
 			</div>
@@ -540,12 +540,6 @@
 					element.style.color = this.themes[this.writerSettings.theme].color;
 				})
 				pageHead.style.backgroundColor = this.themes[this.writerSettings.theme].backColor;
-				this.jsBridge.ready(() => {
-					this.jsBridge.setOptions({
-						statusBarColor: this.themes[this.writerSettings.theme].backColor,
-						statusBarBlackText: !(this.writerSettings.theme == 'black')
-					});
-				})
 			},
 			changeViewMode(newValue) {
 				if (newValue) {

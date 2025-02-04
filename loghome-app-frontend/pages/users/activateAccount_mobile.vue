@@ -1,7 +1,7 @@
 <template>
 	<div class="content">
 		<div class="longin-boder">
-			<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"></div>
+			<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"/></div>
 			<input class="input" type="text" placeholder="输入手机号" v-model="mobile"/>
 			<div class="btn" v-show="!isWaiting" @click="sendCode">发送验证码</div>
 			<div class="btn wait" v-show="isWaiting">等待{{waitTime}}秒</div>
@@ -18,7 +18,7 @@
 		<!-- <move-verify @result='verifyResult' class="moveVerify"></move-verify> -->
 		<!--End用户名输入框-->
 		<div class="longin-boder">
-			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"></div>
+			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
 			<input class="input" type="text" placeholder="验证码" v-model="vcode" />
 		</div>
 		
