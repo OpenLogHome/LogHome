@@ -242,7 +242,7 @@ Vue.prototype.timeConvert = function getDateDiff(dateTimeStamp) {
 
 // inapp注入 开发阶段用，结束后移除
 let inDev = true;
-if(inDev) {
+if(inDev && !window.jsBridge) {
 	window.jsBridge = {
 		inApp: true,
 		statusBarHeight: 30,
@@ -255,6 +255,11 @@ if(inDev) {
 		},
 		setStatusBarStyle(status) {
 			console.log("setStatusBarStyle", status)
+		},
+		getBatteryLevel() {
+			return new Promise((resolve, reject) => {
+				resolve(0);
+			});
 		}
 	}
 }

@@ -15,5 +15,12 @@ window.jsBridge = {
     },
     setStatusBarStyle(isDark) {
         window.flutter_inappwebview.callHandler('setStatusBarStyle', isDark);
-    }
+    },
+    getBatteryLevel() {
+        return new Promise((resolve, reject) => {
+            window.flutter_inappwebview.callHandler('getBatteryLevel')
+                .then(resolve)
+                .catch(reject);
+        });
+    },
 };

@@ -1,5 +1,5 @@
 <template>
-	<div class="outer" :class="writerSettings.theme" :style="{'transition': 'all .5s', '--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}"
+	<div class="outer" :class="writerSettings.theme" :style="{'transition': 'background-color .5s, color .5s', '--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}"
 	@touchstart="documentOnPress=true; clearEditorImagesEditButton()" @touchend="documentOnPress=false">
 		<div class="topBar">
 			<input class="input" placeholder="章节标题" v-model="article.title"

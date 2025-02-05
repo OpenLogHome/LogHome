@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:collection';
 import 'dart:async';
+import 'package:battery_plus/battery_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,6 +70,7 @@ class WebViewPage extends StatefulWidget {
 
 class _WebViewPageState extends State<WebViewPage> {
   late InAppWebViewController _webViewController;
+  final Battery _battery = Battery();
   String? _localPath;
   DateTime? _lastPressedAt; // 添加变量跟踪返回键按下时间
   Timer? _colorCheckTimer; // 添加定时器变量
@@ -218,12 +220,6 @@ class _WebViewPageState extends State<WebViewPage> {
             await SystemChrome.setEnabledSystemUIMode(
               SystemUiMode.edgeToEdge,
             );
-            // 恢复状态栏样式
-            SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              statusBarBrightness: Brightness.light,
-              statusBarIconBrightness: Brightness.dark,
-            ));
           }
         }
       },
@@ -240,6 +236,19 @@ class _WebViewPageState extends State<WebViewPage> {
                 isDark ? Brightness.light : Brightness.dark,
             statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
           ));
+        }
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getBatteryLevel',
+      callback: (args) async {
+        try {
+          final batteryLevel = await _battery.batteryLevel;
+          return batteryLevel;
+        } catch (e) {
+          print('Error getting battery level: $e');
+          return -1;
         }
       },
     );

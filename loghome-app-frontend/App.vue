@@ -191,6 +191,17 @@
 					})
 				}
 			})
+			
+			window.onresize = () => {
+				if(this.jsBridge && this.jsBridge.inApp) {
+					setTimeout(() => {
+						const pageWrapper = document.querySelectorAll("uni-page-wrapper");
+						for(let item of pageWrapper) {
+							item.style.height = window.innerHeight - 44 - this.jsBridge.statusBarHeight + `px`;
+						}
+					})
+				}
+			}
 		}
 	}
 </script>

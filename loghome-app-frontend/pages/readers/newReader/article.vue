@@ -3,18 +3,20 @@
 		:style="{ 'backgroundColor': themesData[readerSettings.theme].isBlack ? '#262822' : '#F7F7F7', 
 				  '--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<div class="tools" :class="{ opened: settingsOpened }"
-			@click.self="settingsOpened = false; showReaderSetting = false" ref="tools">
+			@click.self="handleCloseTool" ref="tools">
 			<div class="settings" :class="{ opened: settingsOpened, showReaderSetting: showReaderSetting }"
 				ref="settings" :style="{
 					'backgroundColor': themesData[readerSettings.theme].backgroundColor,
 					'color': themesData[readerSettings.theme].fontColor
 				}">
 				<div class="line">
-					<div class="btn" style="width: 110rpx; margin: 0 30rpx 0 20rpx; font-size: 34rpx;">上一章</div>
-					<el-slider v-model="currentPageIdx" :min="0" :max="allPages.length - 1" :step="1"
-						style="width: calc(100vw - 220rpx - 170rpx);" :show-tooltip="false"
-						@change="handleCurrentPageChange"></el-slider>
-					<div class="btn" style="width: 110rpx; margin: 0 20rpx 0 30rpx; font-size: 34rpx;">下一章</div>
+					<div class="btn" style="width: 110rpx; margin: 0 30rpx 0 20rpx; font-size: 34rpx;" 
+						 @click="sliderTooltip.lastIdx=currentArticleIdx; gotoArticleIdx(currentArticleIdx - 1)">上一章</div>
+					<el-slider v-model="currentArticleIdx" :min="0" :max="allArticles.length - 1" :step="1"
+						style="width: calc(100vw - 220rpx - 170rpx);" :show-tooltip='false' @touchstart.native="startSlideArticleIndex"
+						@change="handleCurrentPageChange" @input="handleSliderInput"></el-slider>
+					<div class="btn" style="width: 110rpx; margin: 0 20rpx 0 30rpx; font-size: 34rpx;"
+						 @click="sliderTooltip.lastIdx=currentArticleIdx; gotoArticleIdx(currentArticleIdx + 1)">下一章</div>
 				</div>
 				<div class="line" style="margin-top: 40rpx; justify-content: space-around;">
 					<div class="iconBtn" @click="gotoMenu">
@@ -97,6 +99,21 @@
 			}">
 				<i class="el-icon-arrow-left" style="font-size: 50rpx;" @click="navigateBack"></i>
 			</div>
+			<!-- 滚动滚动条时显示的ToolTip -->
+			<div class="sliderTooltip" :class="{'show': showSliderTooltip}" :style="{bottom: showReaderSetting ? '700rpx' : '330rpx'}">
+				<div class="backBtn" @click="handleUndoSlider">
+					<div class="icon">
+						<i class="el-icon-refresh-left"></i>
+					</div>
+					<div class="t">
+						撤销
+					</div>
+				</div>
+				<div class="text">
+					<div class="title">{{sliderTooltip.title}}</div>
+					<div class="percent">{{sliderTooltip.percent.toFixed(1)}}%</div>
+				</div>
+			</div>
 		</div>
 		<div id="vLine" :style="{
 			'fontSize': readerSettings.fontSize + 'rpx',
@@ -141,9 +158,14 @@
 			}">
 				<div class="pageWrapper" :style="{'transform': `translateX(${pageWrapperOffset}px)`}">
 					<div class="topBar" :style="{'color': themesData[readerSettings.theme].isBlack ? '#fff8' : '#0008'}">
-						<i class="el-icon-arrow-left" style="margin-right: 5rpx;" @touchend.stop="navigateBack"></i>
-						{{ allPages[idx].idx == 0 ? novelInfo.name :
-							allArticleData[allPages[idx].articleId.toString()].title }}
+						<div class="left">
+							<i class="el-icon-arrow-left" style="margin-right: 5rpx;" @touchend.stop="navigateBack"></i>
+							{{ allPages[idx].idx == 0 ? novelInfo.name :
+								allArticleData[allPages[idx].articleId.toString()].title }}
+						</div>
+						<div class="right">
+							
+						</div>
 					</div>
 					<div v-if="allPages[idx].type == 'text'" :class="'textRender'" :id="idx"
 						:style="{ height: `${allPages[idx].viewHeight}px` }">
@@ -199,7 +221,8 @@
 				{{ currentPageIdx + 1 }}/{{ allPages.length }}
 			</div>
 			<div class="right">
-				{{ currentTime }}
+				{{ currentTime }} 
+				电池： {{currentBattery}}
 			</div>
 		</div>
 
@@ -320,7 +343,16 @@ export default {
 			shownCommentsBtn: [],
 			pageWrapperOffset: 0,
 			currentTime: '',
-			timeInterval: null
+			currentBattery: '',
+			timeInterval: null,
+			currentArticleIdx: 0,
+			isToolOpening: false,
+			showSliderTooltip: false,
+			sliderTooltip: {
+				percent: 0,
+				title: "",
+				lastIdx: 0
+			}
 		}
 	},
 	components: { bookMenu },
@@ -449,7 +481,6 @@ export default {
 		async calculatePageWrapperOffset() {
 			let vtext = document.getElementById("vText");
 			let characterWidth = vtext.getBoundingClientRect().width / 2;
-			console.log(characterWidth);
 			let remainder = (uni.getSystemInfoSync().screenWidth - rpxToPx(100)) % characterWidth;
 			this.pageWrapperOffset = remainder / 2 * 0.8;
 		},
@@ -568,7 +599,7 @@ export default {
 					this.nextPage();
 				}
 			} else if (Math.abs(deltaX) <= 5) {
-				if (this.touchTimer.count <= 4) {
+				if (this.touchTimer.timer, this.touchTimer.count <= 3) {
 					// 如果不处于选择模式，则认为在操作页面
 					if (this.selectionMode) {
 						this.clearSelection();
@@ -580,7 +611,7 @@ export default {
 						} else if (touchX >= screenWidth * 0.7) {
 							this.nextPage();
 						} else {
-							this.settingsOpened = !this.settingsOpened;
+							this.handleOpenTool();
 						}
 					}
 				}
@@ -656,9 +687,14 @@ export default {
 				uni.navigateBack();
 			}
 		},
-		handleCurrentPageChange() {
-			this.currentRenderIdx = [];
-			this.renderNewPages();
+		startSlideArticleIndex() {
+			this.sliderTooltip.lastIdx = this.currentArticleIdx;
+		},
+		handleCurrentPageChange(newArticleIdx) {
+			this.gotoArticleIdx(newArticleIdx)
+		},
+		handleSliderInput(newArticleIdx) {
+			this.formatSliderTooltip(newArticleIdx);
 		},
 		toggleNightMode() {
 			if (this.themesData[this.readerSettings.theme].isBlack) {
@@ -758,6 +794,7 @@ export default {
 			this.$forceUpdate();
 		},
 		handleParagraphLongpressed(event, paragraph) {
+			console.log(event);
 			this.clearSelection();
 			const touch = event.touches[0];
 			const screenWidth = uni.getSystemInfoSync().screenWidth;
@@ -876,7 +913,6 @@ export default {
 		},
 		async updateArticleCommentDisplay() {
 			if(this.doUpdateCommentDisplay && !this.isAnimating) {
-				console.log("updateArticleCommentDisplay");
 				this.doUpdateCommentDisplay = false;
 				let currentPageDom = document.querySelector(`.articlePage.idx${this.currentPageIdx}`);
 				if(!currentPageDom) return;
@@ -912,11 +948,58 @@ export default {
 				url: `../bookComment?id=${this.novelId}&articleId=${this.articleId}&paragraphId=${paragraphId}`
 			});
 		},
-		updateTime() {
+		updateTimeAndBattery() {
 			const now = new Date();
 			const hours = String(now.getHours()).padStart(2, '0');
 			const minutes = String(now.getMinutes()).padStart(2, '0'); 
 			this.currentTime = `${hours}:${minutes}`;
+			if(this.jsBridge && this.jsBridge.inApp) {
+				window.jsBridge.getBatteryLevel().then(batteryLevel => {
+				    this.currentBattery = batteryLevel;
+				}).catch(error => {
+				    console.error('Error getting battery level:', error);
+				});
+			}
+		},
+		getArticleIdx(articleId) {
+			for(let i = 0; i < this.allArticles.length; i++) {
+				if(this.allArticles[i].article_id == articleId){
+					return i;
+				}
+			}
+		},
+		formatSliderTooltip(val) {
+			if(this.settingsOpened) this.showSliderTooltip = true;
+			if(val >= 0) {
+				this.sliderTooltip.percent = (val + 1) / this.allArticles.length * 100;
+				this.sliderTooltip.title = this.allArticles[val].title;
+			}
+		},
+		handleUndoSlider() {
+			this.gotoArticleIdx(this.sliderTooltip.lastIdx);
+		},
+		handleOpenTool() {
+			this.settingsOpened = true;
+			this.isToolOpening = true;
+			setTimeout(() => {
+				this.isToolOpening = false;
+			}, 300)
+		},
+		handleCloseTool() {
+			if(!this.isToolOpening) {
+				this.settingsOpened = false;
+				this.showReaderSetting = false;
+			}
+		},
+		gotoArticleIdx(newArticleIdx) {
+			for(let i = 0; i < this.allPages.length; i ++) {
+				if(this.allPages[i].articleId == this.allArticles[newArticleIdx].article_id) {
+					this.currentPageIdx = i;
+					break;
+				}
+			}
+			this.currentRenderIdx = [];
+			this.renderNewPages();
 		}
 	},
 	watch: {
@@ -931,6 +1014,10 @@ export default {
 					// this.getArticleComments();
 				}
 			}
+			uni.setNavigationBarTitle({
+				title:this.allArticleData[this.allPages[newValue].articleId].title
+			})
+			this.currentArticleIdx = this.getArticleIdx(this.allPages[newValue].articleId);
 			this.doUpdateCommentDisplay = true;
 		},
 		readerSettings: {
@@ -947,14 +1034,17 @@ export default {
 			if(this.jsBridge && this.jsBridge.inApp) {
 				this.jsBridge.setNavigationBarVisible(newValue);
 			}
+			if(newValue == false){
+				this.showSliderTooltip = false;
+			}
 		}
 	},
 	computed: {
 	},
 	async onLoad(option) {
-		this.updateTime(); // 初始化时间
+		this.updateTimeAndBattery(); // 初始化时间
 		this.timeInterval = setInterval(() => {
-			this.updateTime();
+			this.updateTimeAndBattery();
 		}, 1000);
 		this.loadReaderSettings();
 		uni.showLoading({
@@ -1037,7 +1127,7 @@ export default {
 
 .readerOuter {
 	height: 100vh;
-	overflow: hidden;
+	overflow: hidden !important;
 
 	.readerPages {
 		position: absolute;
@@ -1108,6 +1198,10 @@ export default {
 				overflow: hidden;
 				word-break: break-all;
 				white-space: nowrap;
+				display: flex;
+				.right{
+					
+				}
 			}
 		}
 	}
@@ -1318,6 +1412,61 @@ export default {
 
 		div.topBar.opened {
 			transform: translateY(0rpx);
+		}
+		
+		div.sliderTooltip{
+			position: fixed;
+			width: 60vw;
+			left: 50vw;
+			transform: translateX(-50%);
+			height: 110rpx;
+			border-radius: 100rpx;
+			background-color: #000a;
+			opacity: 0;
+			transition: all .3s;
+			display: flex;
+			color: #e2e2e2;
+			
+			.backBtn{
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				width: 70rpx;
+				padding: 0 35rpx;
+				.icon{
+					i{
+						font-size: 40rpx;
+					}
+				}
+				.t{
+					font-size: 25rpx;
+				}
+			}
+			.text{
+				color: white;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				font-size: 25rpx;
+				width: calc(60vw - 180rpx);
+				color: #e2e2e2;
+				
+				.percent{
+					color: #ffffff;
+				}
+				.title{
+					margin-bottom: 10rpx;
+					white-space: nowrap; /* 禁止文本换行 */
+				    overflow: hidden; /* 隐藏超出范围的内容 */
+				    text-overflow: ellipsis; /* 使用省略号 */
+				}
+			}
+		}
+		
+		div.sliderTooltip.show{
+			opacity: 1;
 		}
 
 	}
