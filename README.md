@@ -61,4 +61,5 @@ loghome
 
 ## 📞 联系我们
 
-- 项目主页：[https://loghome.codesocean.top](https://loghome.codesocean.top)
+- 项目主页：[[https://loghome.codesocean.top](https://loghome.codesocean.top)](https://openloghome.github.io/homepage/)
+- 原木社区网页端：[https://loghome.codesocean.top](https://loghome.codesocean.top)
