@@ -138,7 +138,7 @@
 				searchBooks:[],
 				keyword:"",
 				appUpdate:{
-					hasUpdate:false,
+					hasUpdate: false,
 					version:'1.0',
 					desc:'1.更新内容更新内容 <br/> 2.更新内容更新内容 <br/>2.更新内容更新内容',
 					update_url:""
@@ -299,7 +299,9 @@
 				this.appUpdate.hasUpdate=false;
 			},
 			update(){//前往新版本下载页面
-				window.location.href=this.appUpdate.update_url;
+				if (this.jsBridge && this.jsBridge.inApp) {
+					this.jsBridge.openInBrowser(this.appUpdate.update_url);
+				}
 			},
 			//检查更新
 			checkUpdate(){
@@ -307,6 +309,7 @@
 				let isApp = this.jsBridge.inApp && this.jsBridge.inApp;
 				if(!isApp) return;
 				let appVersion = this.$store.state.appVersion;
+				console.log(appVersion);
 				axios.get(this.$baseUrl + '/app/get_app_update', {}).then((res) => {
 					if(res.data[0].version > appVersion){
 						_this.appUpdate.hasUpdate = true;

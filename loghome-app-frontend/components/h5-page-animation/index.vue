@@ -16,13 +16,13 @@ export default {
             // 预创建虚拟页
             document.write('<uni-page2 id="page2"></uni-page2>');
         }
-        hpa_first_Show = false;
 		let _this = this;
         this.$router.beforeEach((to, from, next) => {
 			
             // tabBar切换无动画
-            if (to.type == 'switchTab' || to.type == 'redirectTo' || to.query.noneAnimation) {
+            if (to.type == 'switchTab' || to.type == 'redirectTo' || to.query.noneAnimation || hpa_first_Show ) {
                 next && next();
+				hpa_first_Show = false;
                 setTimeout(() => {
                     const page1_class = document.querySelector('uni-page').classList;
                     page1_class.add('hpa-show');

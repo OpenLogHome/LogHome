@@ -152,7 +152,7 @@
 						<div class="worlds">
 							<div class="nothing" v-show="worlds.length == 0"
 								style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 70rpx 0;">
-								<log-image src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;"/>
+								<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;"/>
 								<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
 							</div>
 							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
@@ -1546,6 +1546,9 @@
 	.fans_rank {
 		display: flex;
 		justify-content: center;
+		// width: 100vw;
+		// height: 100%;
+		// overflow-x:hidden;
 
 		div {
 			margin: 20rpx;
@@ -1576,7 +1579,7 @@
 				top: 15vw;
 				padding-top: 20rpx;
 				font-size: 35rpx;
-				width: 20vw;
+				width: 18vw;
 				line-height: 50rpx;
 
 				p.name {

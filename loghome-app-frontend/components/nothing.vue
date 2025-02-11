@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" :style="{'height': height}">
 		<img src="../static/images/icon_nothing.png" alt=""/>
 		<p class="text">{{msg}}</p>
 	</view>
@@ -10,6 +10,9 @@
 		props:{
 			msg:{
 				default:"空空如也"
+			},
+			height: {
+				default: 'calc(100vh - 44px)'
 			}
 		}
 	}

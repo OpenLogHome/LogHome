@@ -221,12 +221,17 @@
 				{{ currentPageIdx + 1 }}/{{ allPages.length }}
 			</div>
 			<div class="right">
-				{{ currentTime }} 
-				电池： {{currentBattery}}
+				<span class="time">{{ currentTime }}</span>
+				<BatteryIcon 
+					:level="battery.currentBattery"
+					:is-charging="battery.isCharging"
+					:size="22"
+					style="margin-left: 15rpx; transform: translateY(4rpx);"
+				/>
 			</div>
 		</div>
 
-		<el-drawer title="选择字体" :visible.sync="showFontsSelectDrawer" :direction="'btt'" size="60%">
+		<el-drawer title="选择字体" :visible.sync="showFontsSelectDrawer" :direction="'btt'" size="55%">
 			<div class="fonts-container">
 				<div class="fonts-grid">
 					<div v-for="(font, key) in fonts" :key="key" class="font-item"
@@ -247,9 +252,14 @@
 			</div>
 		</el-drawer>
 
-		<el-drawer :with-header="false" :visible.sync="menuDrawerVisible" direction="btt" :modal="false" size="50%"
+		<el-drawer :with-header="false" :visible.sync="menuDrawerVisible" direction="btt" :modal="true" size="60%"
 			custom-class="bookMenu">
-			<bookMenu :novel_id="novelId"></bookMenu>
+			<bookMenu :novel_id="novelId" @change="gotoArticleIdx($event); menuDrawerVisible = false"></bookMenu>
+		</el-drawer>
+		
+		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="80%"
+			custom-class="commentDrawer" :destroy-on-close="true">
+			<BookComment :componentMode="true" :componentData="commentDrawerData" @navigate="commentDrawerVisible = false"></BookComment>
 		</el-drawer>
 
 		<div class="floating-panel" v-show="selectionMode"
@@ -297,6 +307,8 @@ import themesData from "./themesData.json"
 import fontSizes from "./fontSize.json"
 import fonts from "./fonts.json"
 import bookMenu from '../../../components/bookMenu.vue'
+import BatteryIcon from "../../../components/battery.vue"
+import BookComment from "../bookComment.vue"
 export default {
 	data() {
 		return {
@@ -343,7 +355,10 @@ export default {
 			shownCommentsBtn: [],
 			pageWrapperOffset: 0,
 			currentTime: '',
-			currentBattery: '',
+			battery: {
+				currentBattery: 100,
+				isCharging: false
+			},
 			timeInterval: null,
 			currentArticleIdx: 0,
 			isToolOpening: false,
@@ -352,10 +367,12 @@ export default {
 				percent: 0,
 				title: "",
 				lastIdx: 0
-			}
+			},
+			commentDrawerVisible: false,
+			commentDrawerData:{}
 		}
 	},
-	components: { bookMenu },
+	components: { bookMenu, BatteryIcon, BookComment },
 	methods: {
 		loadAllPages() {
 			return new Promise(async (resolve, reject) => {
@@ -944,9 +961,15 @@ export default {
 			this.clearSelection();
 		},
 		gotoParagraphComment(paragraphId){
-			uni.navigateTo({
-				url: `../bookComment?id=${this.novelId}&articleId=${this.articleId}&paragraphId=${paragraphId}`
-			});
+			// uni.navigateTo({
+			// 	url: `../bookComment?id=${this.novelId}&articleId=${this.articleId}&paragraphId=${paragraphId}`
+			// });
+			this.commentDrawerData = {
+				novelId: this.novelId,
+				articleId: this.articleId,
+				paragraphId: paragraphId
+			}
+			this.commentDrawerVisible = true;
 		},
 		updateTimeAndBattery() {
 			const now = new Date();
@@ -955,7 +978,16 @@ export default {
 			this.currentTime = `${hours}:${minutes}`;
 			if(this.jsBridge && this.jsBridge.inApp) {
 				window.jsBridge.getBatteryLevel().then(batteryLevel => {
-				    this.currentBattery = batteryLevel;
+				    this.battery.currentBattery = batteryLevel;
+				}).catch(error => {
+				    console.error('Error getting battery level:', error);
+				});
+				window.jsBridge.getBatteryState().then(batteryState => {
+					if(batteryState == 'charging'){
+						this.battery.isCharging = true;
+					} else {
+						this.battery.isCharging = false;
+					}
 				}).catch(error => {
 				    console.error('Error getting battery level:', error);
 				});
@@ -992,6 +1024,9 @@ export default {
 			}
 		},
 		gotoArticleIdx(newArticleIdx) {
+			if(newArticleIdx < 0 || newArticleIdx >= this.allArticles.length) {
+				return;
+			}
 			for(let i = 0; i < this.allPages.length; i ++) {
 				if(this.allPages[i].articleId == this.allArticles[newArticleIdx].article_id) {
 					this.currentPageIdx = i;
@@ -1030,9 +1065,14 @@ export default {
 			},
 			deep: true
 		},
-		settingsOpened(newValue, oldValue) {
+		async settingsOpened(newValue, oldValue) {
 			if(this.jsBridge && this.jsBridge.inApp) {
 				this.jsBridge.setNavigationBarVisible(newValue);
+				if(newValue) {
+					await jsBridge.disableVolumeKeyListener();
+				} else {
+					await jsBridge.enableVolumeKeyListener();
+				}
 			}
 			if(newValue == false){
 				this.showSliderTooltip = false;
@@ -1045,7 +1085,7 @@ export default {
 		this.updateTimeAndBattery(); // 初始化时间
 		this.timeInterval = setInterval(() => {
 			this.updateTimeAndBattery();
-		}, 1000);
+		}, 5000);
 		this.loadReaderSettings();
 		uni.showLoading({
 			title: '加载中'
@@ -1071,15 +1111,27 @@ export default {
 			this.updateArticleCommentDisplay();
 		}, 200)
 		await this.loadAllPages();
+		window.onVolumnKeyPressCallback = (event) => {
+		    if (event.detail === 'up') {
+				this.isAnimating = true;
+		        this.lastPage();
+		    } else if (event.detail === 'down') {
+				this.isAnimating = true;
+		        this.nextPage();
+		    }
+		};
+		window.addEventListener('volumeKeyPress', window.onVolumnKeyPressCallback);
 	},
-	onUnload() {
+	async onUnload() {
 		clearInterval(this.timeInterval);
 		clearInterval(this.updateCommentDisplayTimer);
 		if(this.jsBridge && this.jsBridge.inApp) {
 			jsBridge.setNavigationBarVisible(true);
+			await jsBridge.disableVolumeKeyListener();
 		}
+		window.removeEventListener('volumeKeyPress', window.onVolumnKeyPressCallback);
 	},
-	onShow() {
+	async onShow() {
 		this.renderNewPages();
 		this.showArticleCentos();
 		this.shownCommentsBtn = [];
@@ -1088,6 +1140,7 @@ export default {
 		}, 300)
 		if(this.jsBridge && this.jsBridge.inApp) {
 			jsBridge.setNavigationBarVisible(false);
+			await jsBridge.enableVolumeKeyListener();
 		}
 	}
 }
@@ -1218,6 +1271,15 @@ export default {
 		display: flex;
 		justify-content: space-between;
 		box-sizing: border-box;
+		.right {
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+			
+			.time {
+				line-height: 1;
+			}
+		}
 	}
 
 	#vLine {
@@ -1418,7 +1480,7 @@ export default {
 			position: fixed;
 			width: 60vw;
 			left: 50vw;
-			transform: translateX(-50%);
+			transform: translateX(-50%) scale(0);
 			height: 110rpx;
 			border-radius: 100rpx;
 			background-color: #000a;
@@ -1467,6 +1529,7 @@ export default {
 		
 		div.sliderTooltip.show{
 			opacity: 1;
+			transform: translateX(-50%) scale(1);
 		}
 
 	}

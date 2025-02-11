@@ -12,7 +12,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "top.codesocean.loghome.cannery"
+    namespace = "top.codesocean.loghome"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -26,7 +26,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "top.codesocean.loghome.cannery"
+        applicationId = "top.codesocean.loghome"
         // 设置最低支持的 Android SDK 版本
         minSdkVersion flutter.minSdkVersion
         // 设置目标 Android SDK 版本

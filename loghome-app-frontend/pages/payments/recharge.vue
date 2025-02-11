@@ -157,14 +157,14 @@
 							'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 						}
 					}).then((res) => {
-					this.$alert(`<view class="title" style="margin: 15rpx 0;"> <log-image src="https://img.codesocean.top/image/1697538884315"
+					this.$alert(`<view class="title" style="margin: 15rpx 0;"> <img src="https://img.codesocean.top/image/1697538884315"
 							style="width: 100%">
 							</view>`, '重要提示', {
 						dangerouslyUseHTMLString: true,
 						confirmButtonText:"理解，请继续"
 					}).then(() => {
-						if (this.jsBridge.inApp && this.jsBridge.inApp) {
-							// this.jsBridge.openInBrowser(res.data);
+						if (this.jsBridge && this.jsBridge.inApp) {
+							this.jsBridge.openInBrowser(res.data);
 						} else {
 							window.open(res.data);
 						}

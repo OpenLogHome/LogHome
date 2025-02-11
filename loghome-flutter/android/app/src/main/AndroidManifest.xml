@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="top.codesocean.loghome.cannery">
+    package="top.codesocean.loghome">
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="原木社区"

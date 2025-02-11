@@ -23,4 +23,38 @@ window.jsBridge = {
                 .catch(reject);
         });
     },
+    getBatteryState() {
+        return new Promise((resolve, reject) => {
+            window.flutter_inappwebview.callHandler('getBatteryState')
+                .then(resolve)
+                .catch(reject);
+        });
+    },
+    enableVolumeKeyListener() {
+        return window.flutter_inappwebview.callHandler('enableVolumeKeyListener');
+    },
+    disableVolumeKeyListener() {
+        return window.flutter_inappwebview.callHandler('disableVolumeKeyListener');
+    },
+    openInBrowser(url) {
+        return window.flutter_inappwebview.callHandler('openInBrowser', url);
+    },
 };
+
+// 使用示例:
+/*
+// 开启监听
+await window.jsBridge.enableVolumeKeyListener();
+
+// 添加事件监听
+window.addEventListener('volumeKeyPress', (event) => {
+    if (event.detail === 'up') {
+        console.log('音量+键被按下');
+    } else if (event.detail === 'down') {
+        console.log('音量-键被按下');
+    }
+});
+
+// 取消监听
+await window.jsBridge.disableVolumeKeyListener();
+*/

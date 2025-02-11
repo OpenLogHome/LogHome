@@ -153,16 +153,20 @@
 						const uniPageHead = document.querySelectorAll("uni-page-head");
 						for(let item of uniPageHead) {
 							if(!item.classList.contains("heightChanged")) {
-								item.style.height = item.getBoundingClientRect().height + this.jsBridge.statusBarHeight + `px`;
+								item.style.setProperty("height", `${this.jsBridge.statusBarHeight + 44}px`, "important")
+								// item.style.height = item.getBoundingClientRect().height + this.jsBridge.statusBarHeight + `px`;
 								item.classList.add("heightChanged");
 								let innerUniPageHead = document.querySelector(".uni-page-head");
 								item.style.backgroundColor = innerUniPageHead.style.backgroundColor;
-								innerUniPageHead.style.transform = `translateY(${this.jsBridge.statusBarHeight}px)`
+								innerUniPageHead.style.transform = `translateY(${this.jsBridge.statusBarHeight}px)`;
+								console.log("innerUniPageHeadHeight", innerUniPageHead.getBoundingClientRect().height)
+								innerUniPageHead.style.setProperty("height", "44px", "important");
+								innerUniPageHead.style.setProperty("padding", "7px 0", "important");
 								document.styleSheets[0].insertRule(`.uni-page-head::before { content: ""; 
 																	 background-color: inherit;
 																	 height: ${this.jsBridge.statusBarHeight + 1}px;
 																	 top: -${this.jsBridge.statusBarHeight}px}`, 0);
-							}
+							} //inherit
 						}
 						const pageWrapper = document.querySelectorAll("uni-page-wrapper");
 						for(let item of pageWrapper) {

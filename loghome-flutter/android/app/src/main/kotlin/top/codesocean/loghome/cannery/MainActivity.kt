@@ -1,4 +1,4 @@
-package top.codesocean.loghome.cannery
+package top.codesocean.loghome
 
 import io.flutter.embedding.android.FlutterActivity
 

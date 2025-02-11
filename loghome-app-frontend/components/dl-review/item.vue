@@ -1,11 +1,9 @@
 <template>
 	<view class="content">
-		<followBtn class="followButton" :targetId="reviewMsg.userId"></followBtn>
+		<followBtn class="followButton" :targetId="reviewMsg.userId" v-show="componentMode == false"></followBtn>
 		<view class="cenHost">
-			<view class="cenHeadImgContent">
-				<navigator class="" :url="'../../pages/users/personalPage?id='+reviewMsg.userId">
-					<log-image class="headImg" :src="reviewMsg.headImgSrc"></log-image>
-				</navigator>
+			<view class="cenHeadImgContent" @click="gotoPersonalPage(reviewMsg.userId)">
+				<log-image class="headImg" :src="reviewMsg.headImgSrc"></log-image>
 			</view>
 			<view class="cenHostMsgContent" >
 				<view class="viewMb viewMb-space-between">
@@ -18,9 +16,9 @@
 				</view>
 				<view class="cenHostReview viewMb" @click="openFatherReview" @longpress="openSubMenu(reviewMsg.comment_id,reviewMsg.userId)">
 					<xzj-readMore class="textSendMsg" hideLineNum="3" showHeight="100">
-					    {{reviewMsg.sendMsg}}
+					    {{praiseType == 1 ? '该评论被折叠' : reviewMsg.sendMsg}}
 					</xzj-readMore>
-					<div v-if="reviewMsg.article_id != 0 && !paragraphMode" style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;" @click="navToChapter">
+					<div v-if="reviewMsg.article_id != 0 && !paragraphMode && praiseType != 1" style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;" @click="navToChapter">
 						<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;"><path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2307"></path><path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2308"></path></svg>
 						来自章节 {{article.title}}
 						<div class="cento" v-if="reviewMsg.cento" style="margin-top: 10rpx; color: #4b4b4b;">
@@ -33,11 +31,12 @@
 						<dnIcon type="haoping" :color="praiseType == 0?'#ff6d00':'#C0C0C0'"></dnIcon>
 						<text style="padding-left: 5px;">{{reviewMsg.likeNum}}</text>
 					</view>
-					<view @click.prevent="praise(1)">
-						<dnIcon type="zan" :color="praiseType == 1?'#ff6d00':'#C0C0C0'"></dnIcon>
+					<view @click.prevent="praise(1)" style="transform: scaleY(-1);">
+						<dnIcon type="haoping" :color="praiseType == 1?'#ff6d00':'#C0C0C0'"></dnIcon>
 					</view>
+					<view @click="openFatherReview">回复</view>
 				</view>
-				<view class="threeReviewContent" v-if="reviewMsg.reviewLess.length">
+				<view class="threeReviewContent" v-if="reviewMsg.reviewLess.length && praiseType != 1">
 					<view class="threeReviewVueText" v-for="(reKey, key) in reviewMsg.reviewLess" :key="key"
 					@click.prevent="openChildReview(key)" @longpress="openSubMenu(reKey.comment_id,reKey.userId)">
 						<xzj-readMore class="textSendMsg" hideLineNum="2" showHeight="100">
@@ -65,7 +64,8 @@
 		name: 'review',
 		props: {
 			reviewMsg: [Object],
-			paragraphMode: false
+			paragraphMode: false,
+			componentMode: false
 		},
 		components: {
 			dnIcon, followBtn
@@ -78,6 +78,7 @@
 		},
 		mounted(){
 			this.refresh();
+			console.log(this.componentMode);
 		},
 		methods: {
 			refresh(){
@@ -226,6 +227,14 @@
 					url: '../../pages/readers/newReader/article?id=' + this.reviewMsg.article_id
 				});
 				
+			},
+			gotoPersonalPage(userId) {
+				this.$emit("navigate")
+				setTimeout(() => {
+					uni.navigateTo({
+						url: "/pages/users/personalPage?id=" + userId
+					})
+				}, this.componentMode ? 500 : 0);
 			}
 		}
 	}
@@ -356,7 +365,7 @@
 	}
 
 	.iconRow {
-		width: 25%;
+		width: 35%;
 		display: flex;
 		flex-direction: row;
 		justify-content: space-between;

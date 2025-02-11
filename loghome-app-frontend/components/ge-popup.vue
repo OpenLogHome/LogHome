@@ -277,7 +277,7 @@
 		left:10%;
 		padding:10rpx;
 		height:700rpx;
-		image{
+		img{
 			width:100%;
 			height:100%;
 		}

@@ -1,9 +1,9 @@
 <template>
 	<div class="outer">
 		<div class="articles">
-			<navigator v-for="item in articles" :key="item.article_id"
+			<navigator v-for="(item, idx) in articles" :key="item.article_id"
 					   :url="'./newReader/article?id=' +  item.article_id"
-					   open-type="redirect">  
+					   open-type="redirect" @click="$emit('change', idx)">  
 				<div class="article" :key="item.article_id">
 					<div class="title">{{item.title}}</div>
 				</div>
@@ -47,9 +47,8 @@
 <style scoped lang="scss">
 	.articles{
 		width:100%;
-		background-color: transparent;
-		backdrop-filter: blur(10px);
-		color:dddddd;
+		background-color: #000a;
+		color: #dddddd;
 		.article{
 			padding-left:35rpx;
 			border-bottom: #cacaca 1rpx solid;

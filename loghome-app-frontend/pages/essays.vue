@@ -14,7 +14,7 @@
 		</view>
 		<view class="noEssay" v-if="books.length==0" v-show="topNavArr[topNavIndex] == '小说'">
 			<img src="../static/images/icon_my_uplotolib.png" alt=""/>
-			<p>创作之路，从这里开始</p>
+			<p>方块跃然纸上，故事在此生长</p>
 			<navigator url="./writers/newEssay">
 				<img src="../static/images/icon_my_upload_new.png" alt=""/>
 			</navigator>

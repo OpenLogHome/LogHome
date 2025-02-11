@@ -34,7 +34,8 @@
 			
 			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx;">
 				<span class="user_id">ID:{{uid}}</span>
-				<span class="user_group" :class="group2class[user.user_group]">{{user.user_group}}</span>
+				<!-- <span class="user_group" :class="group2class[user.user_group]">{{user.user_group}}</span> -->
+				<groupLabel v-for="user_group in user.user_group" :userGroup="user_group"></groupLabel>
 				<span class="admin_title" v-show="user.is_admin">
 					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>社区管理员</span>
 			</view>
@@ -83,11 +84,12 @@
 <script>
 	import bookInCase from '../../components/book_in_case.vue'
 	import followBtn from '../../components/follow.vue'
+	import groupLabel from "../usergroup/groupLabel.vue"
 	import springBack from '../../components/springBack.vue'
 	import axios from 'axios'
 	export default {
 		components:{
-			bookInCase,followBtn,springBack
+			bookInCase,followBtn,springBack,groupLabel
 		},
 		data() {
 			return {
@@ -224,7 +226,7 @@
 				let _this = this;
 				axios.get(this.$baseUrl + '/users/user_profile_of?id=' + this.uid, {}).then((res) => {
 					_this.user = JSON.parse(JSON.stringify(res.data))[0];
-					console.log("user", _this.user);
+					_this.user.user_group = _this.user.user_group.split(',');
 				}).catch(function(error) {
 					uni.showToast({
 						title: "用户信息加载失败",
@@ -401,31 +403,6 @@
 			left:-25rpx;
 			top:-7.5rpx;
 		}
-	}
-	
-	.user_group.founder {
-		color: #885b00;
-		background: linear-gradient(135deg,
-				#ffaa00,
-				#ffff00,
-				#ffaa00,
-				#ffff00,
-				#ffaa00,
-			);
-		background-size: 200% 100%;
-		animation: gradient-move 10s linear infinite;
-	}
-	.user_group.copemate {
-		color: #ffffff;
-		background: linear-gradient(135deg,
-				#aa00ff,
-				#ff00ff,
-				#aa00ff,
-				#ff00ff,
-				#aa00ff,
-			);
-		background-size: 200% 100%;
-		animation: gradient-move 10s linear infinite;
 	}
 	
 	.user_group.nonTitle{

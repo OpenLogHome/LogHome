@@ -4,15 +4,15 @@
 		<zetank-backBar textcolor="#000" :showLeft="true" :showTitle="false" navTitle='标题'></zetank-backBar>
 		<div class="backImg">
 			<div class="appTitle">
-				<div class="title">原木社区</div>
-				<div class="subtitle">方块人的文艺世界</div>
+				<div class="title">欢迎来到 原木社区</div>
+				<div class="subtitle">方块跃然纸上，故事在此生长</div>
 			</div>
 			<div class="loginBtn button" @click="gotoLoginMobile">
 				使用手机号登录
 			</div>
-			<div class="loginBtn login2 button" @click="gotoLogin">
+<!-- 			<div class="loginBtn login2 button" @click="gotoLogin">
 				使用账号登录
-			</div>
+			</div> -->
 			<div class="checkBox" :class="{ shake: noActivated }">
 				<label style="display: flex;flex-direction: row;font-size: 22rpx; margin-top: 50rpx;
 				width:100vw; justify-content: center;">
@@ -114,7 +114,7 @@
 					color: #8f8f94;
 				}
 				.subtitle{
-					font-size:30rpx;
+					font-size:34rpx;
 					color: #8f8f94;
 				}
 			}
@@ -137,7 +137,7 @@
 			.checkBox{
 				position:absolute;
 				z-index:1;
-				top:93vh;
+				top:88vh;
 				margin-left:20rpx;
 			}
 		}

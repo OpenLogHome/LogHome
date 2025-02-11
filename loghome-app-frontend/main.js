@@ -241,7 +241,7 @@ Vue.prototype.timeConvert = function getDateDiff(dateTimeStamp) {
 
 
 // inapp注入 开发阶段用，结束后移除
-let inDev = true;
+let inDev = false;
 if(inDev && !window.jsBridge) {
 	window.jsBridge = {
 		inApp: true,
@@ -258,9 +258,22 @@ if(inDev && !window.jsBridge) {
 		},
 		getBatteryLevel() {
 			return new Promise((resolve, reject) => {
-				resolve(0);
+				resolve(50);
 			});
-		}
+		},
+		getBatteryState() {
+			return new Promise((resolve, reject) => {
+				resolve(false);
+			});
+		},
+		enableVolumeKeyListener() {
+			console.log("enableVolumeKeyListener")
+			// return window.flutter_inappwebview.callHandler('enableVolumeKeyListener');
+		},
+		disableVolumeKeyListener() {
+			console.log("disableVolumeKeyListener")
+			// return window.flutter_inappwebview.callHandler('disableVolumeKeyListener');
+		},
 	}
 }
 

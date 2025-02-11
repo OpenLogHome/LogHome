@@ -1,6 +1,6 @@
 <template>
 	<view class="outer">
-		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab" textColor="rgb(234,112,52)" ref="tabs"/>
+		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab" textColor="black" ref="tabs"/>
 		<view class="list fans" v-show="curTabIndex == 1">
 			<div class="users" v-for="item in greatUsers">
 				<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
@@ -22,7 +22,9 @@
 						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 						<div class="personInfo">
 							<div class="name">{{item.name}}</div>
-							<div class="motto">{{item.user_group}}</div>
+							<div class="motto">
+								<groupLabel v-for="user_group in item.user_group.split(',')" :userGroup="user_group"></groupLabel>
+							</div>
 						</div>
 					</navigator>
 					<followBtn class="button" :targetId="item.user_id"></followBtn>
@@ -34,15 +36,16 @@
 
 <script>
 	import followBtn from '../../components/follow.vue'
+	import groupLabel from "../usergroup/groupLabel.vue"
 	import axios from 'axios'
 	export default{
 		components:{
-			followBtn
+			followBtn, groupLabel
 		},
 		data(){
 			return{
 				tabValue:[
-					"社区元老用户","重大贡献用户"
+					"内/公测参与用户","重大贡献用户"
 				],
 				id:-1,
 				user:{},
@@ -95,7 +98,7 @@
 
 <style scoped lang="less">
 	.outer{
-		background-color:rgb(255, 248, 234);
+		background-color:#FFFFFF;
 		.tab{
 			height:80rpx;
 			width:100vw;

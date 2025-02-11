@@ -16,7 +16,7 @@
 						<view class="user-name">
 							<span>{{user.name}}</span>
 							<span class="user_id">ID:{{user.user_id}}</span>
-							<span class="user_group" :class="group2class[user.user_group]">{{user.user_group}}</span>
+							<groupLabel v-for="user_group in user.user_group" :userGroup="user_group"></groupLabel>
 						</view>
 						<view class="motto">{{user.motto}}</view>
 					</view>
@@ -127,19 +127,17 @@
 </template>
 <script>
 	import axios from 'axios'
+	import groupLabel from './usergroup/groupLabel.vue';
 	export default {
 		data() {
 			return {
 				user: {},
-				group2class: {
-					"社区奠基人": "founder",
-					"原木体验官": "copemate"
-				},
 				hasNewMessage: false,
 				treeState: "None",
 				earningsMoney: 0.00
 			}
 		},
+		components: {groupLabel},
 		onShow() {
 			uni.showLoading({
 				title: '加载中'
@@ -172,6 +170,7 @@
 				}
 			}).then((res) => {
 				_this.user = JSON.parse(JSON.stringify(res.data));
+				_this.user.user_group = _this.user.user_group.split(",");
 				if (window.localStorage.getItem('messages') == "") {
 					window.localStorage.setItem('messages', "[]");
 				}
@@ -417,40 +416,6 @@
 				margin-left: 15rpx;
 			}
 
-			.user_group {
-				font-size: 25rpx;
-				padding: 10rpx;
-				line-height: 40rpx;
-				margin-left: 15rpx;
-				border-radius: 10rpx;
-			}
-
-			.user_group.founder {
-				color: #885b00;
-				background: linear-gradient(135deg,
-						#ffaa00ee,
-						#ffff00ee,
-						#ffaa00ee,
-						#ffff00ee,
-						#ffaa00ee,
-					);
-				background-size: 200% 100%;
-				animation: gradient-move 15s linear infinite;
-			}
-
-			.user_group.copemate {
-				color: #ffffff;
-				background: linear-gradient(135deg,
-						#aa00ffee,
-						#ff00ffee,
-						#aa00ffee,
-						#ff00ffee,
-						#aa00ffee,
-					);
-				background-size: 200% 100%;
-				animation: gradient-move 15s linear infinite;
-			}
-
 			.motto {
 				margin: 15rpx 0 15rpx 0;
 				font-size: 28rpx;
@@ -614,20 +579,6 @@
 
 		40% {
 			transform: translateY(-0%);
-		}
-	}
-
-	@keyframes gradient-move {
-		0% {
-			background-position: 0% 0;
-		}
-
-		50% {
-			background-position: 100% 0;
-		}
-
-		100% {
-			background-position: 0% 0;
 		}
 	}
 </style>

@@ -35,8 +35,8 @@ router.get('/get_app_update', async function (req, res) {
 router.get('/get_grand_users', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT * FROM users WHERE user_group = ? OR user_group = ?',
-			['社区奠基人', '原木体验官'],
+			'SELECT * FROM users WHERE user_group != ?',
+			['用户'],
 		);
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -48,8 +48,7 @@ router.get('/get_grand_users', async function (req, res) {
 router.get('/get_great_users', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT u.*,g.great_info FROM users u,great_users g WHERE u.user_id = g.user_id',
-			['社区奠基人', '原木体验官'],
+			'SELECT u.*,g.great_info FROM users u,great_users g WHERE u.user_id = g.user_id'
 		);
 		res.end(JSON.stringify(results));
 	} catch (e) {
