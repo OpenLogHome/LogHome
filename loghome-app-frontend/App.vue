@@ -331,6 +331,22 @@
 			}
 		}
 	}
+	
+	uni-actionsheet{
+		z-index: 999 !important;
+	}
+	
+	.el-drawer__wrapper{
+		z-index: 998 !important;
+	}
+	
+	.v-modal{
+		z-index: 997 !important;
+	}
+	
+	uni-modal{
+		z-index: 999 !important;
+	}
 
 
 </style>

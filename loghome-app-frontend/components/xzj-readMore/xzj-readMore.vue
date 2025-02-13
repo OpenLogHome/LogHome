@@ -1,8 +1,17 @@
 <template>
 	<view class="qaBox">
-		<view class="">
-			<view :class="[{ watchMoreContent: isWatchMore  }, {contentt:isLongContent} ,'xzj']" :style="[zxy]" ><slot></slot></view>
-			<view class="watchMore" v-if="isLongContent" @click="watchMore">{{ isWatchMore ? '收起' : '查看更多' }}</view>
+		<view style="width: 100%; text-align: left;">
+			<span :class="[{ watchMoreContent: isWatchMore  }, {contentt:isLongContent} ,'xzj']" :style="[zxy]" @click="$emit('active')"><slot></slot></span>
+			<view class="menu" :class="{'singleLine': isSingleLineDisplayPossible}">
+				<div style="display: flex;" class="realMenu">
+					<view class="watchMore" v-if="isLongContent" @click="watchMore">
+						{{ isWatchMore ? '收起' : '查看更多' }}
+					</view>
+					<view class="more" v-if="showMenu" @click="$emit('menu')">
+						<i class="el-icon-more"></i>
+					</view>
+				</div>
+			</view>
 		</view>
 	</view>
 </template>
@@ -15,7 +24,8 @@ export default {
 			zxy:{
 				'-webkit-line-clamp':'', /* 行数*/
 				lineClamp: '', /*行数*/
-			}
+			},
+			isSingleLineDisplayPossible: false
 		};
 	},
 	props: {
@@ -29,6 +39,10 @@ export default {
 			type:[Number,String],
 			default:4,
 			// 4行
+		},
+		showMenu: {
+			type: Boolean,
+			default: false
 		}
 	},
 	mounted() {
@@ -47,14 +61,20 @@ export default {
 			this.isWatchMore = !this.isWatchMore;
 		},
 		init() {
-			this.getHeight('.xzj').then(res => {
+			this.getRect('.xzj').then(async res => {
 				// 判断高度，如果真实内容高度大于占位高度，则显示收起与展开的控制按钮
 				if (res.height > uni.upx2px(this.showHeight)) {
 					this.isLongContent = true;
 				}
+				// 判断宽度，如果宽度不足一行的话则将按钮显示在行内
+				let fatherRect = await this.getRect(".qaBox");
+				let menuRect = await this.getRect(".realMenu");
+				if(res.width + menuRect.width <= fatherRect.width) {
+					this.isSingleLineDisplayPossible = true;
+				}
 			});
 		},
-		getHeight(selector, all) {
+		getRect(selector, all) {
 			return new Promise(resolve => {
 				uni.createSelectorQuery()
 					.in(this)
@@ -82,6 +102,7 @@ export default {
 	margin-top: 14rpx;
 	color: #EA7034;
 	display: flex;
+	position: relative;
 }
 .contentt {
 	overflow: hidden;
@@ -96,15 +117,37 @@ export default {
 	color: #47494c;
 	font-size: 28rpx;
 	// text-align;
-	text-align: left;
-	word-break: break-all;
+	text-align: left !important;
+	word-break: normal;
+	width: auto;
 }
+
+.menu{
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+.menu.singleLine{
+	position: absolute;
+	top: 50%;
+	right: 0;
+	transform: translateY(-50%);
+}
+
+
+.menu *{
+	margin-top: 3px;
+	margin-left: 20rpx;
+}
+
+.menu.singleLine *{
+	margin-top: 0;
+}
+
+
 .watchMoreContent {
 	display: inline-block ;
 	width: 100%;
-}
-
-.watchMore {
-	margin-top: 20rpx;
 }
 </style>

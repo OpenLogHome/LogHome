@@ -41,6 +41,13 @@
 				_this.id = tk.id;
 				_this.refreshStatus();
 			}
+			this.$bus.$on("followUpdate", () => {
+				// console.log("AutoSave");
+				this.refreshStatus();
+			})
+		},
+		destroyed(){
+			this.$bus.$off("followUpdate");
 		},
 		methods:{
 			refreshStatus(){
@@ -72,6 +79,7 @@
 						icon: 'none',
 						duration: 2000
 					});
+					_this.$bus.$emit("followUpdate");
 					_this.refreshStatus();
 				})
 				.catch(function(error) {
@@ -110,6 +118,7 @@
 									icon: 'none',
 									duration: 2000
 								});
+								_this.$bus.$emit("followUpdate");
 								_this.refreshStatus();
 							})
 							.catch(function(error) {

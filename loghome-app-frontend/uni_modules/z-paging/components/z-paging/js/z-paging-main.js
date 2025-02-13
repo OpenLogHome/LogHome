@@ -187,6 +187,10 @@ export default {
 			type: Boolean,
 			default: u.gc('showConsoleError', true)
 		},
+		customOperationText: {
+			type: String,
+			default: "刷新"
+		}
 	},
 	mounted() {
 		this.wxsPropType = u.getTime().toString();

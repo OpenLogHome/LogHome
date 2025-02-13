@@ -1,6 +1,6 @@
 <template>
 	<view class="commentOuter" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
-		<z-paging ref="paging" v-model="reviews" @query="refreshPage" 
+		<z-paging ref="paging" v-model="reviews" @onRefresh="pullDown" @query="refreshPage" :customOperationText="componentMode ? '收起' : '刷新'"
 			:style="{'marginTop': `${componentMode ? '20vh' : (jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px')}`}">
 			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
 			<div v-if="paragraphId !== undefined" style="background-color: #e6e6e6; padding: 10px; margin: 0 0 5px 0; font-size: 14px;" @click="navToChapter">
@@ -108,7 +108,21 @@
 			    var beijing_datetime = this.timeConvert(new Date(parseInt(timestamp) * 1000))
 			    return beijing_datetime; // 2017-03-31 16:02:06
 			},
+			pullDown() {
+				if(this.componentMode) {
+					this.$emit("hide");
+				}
+			},
+			async delay() {
+				return new Promise((resolve) => {
+					this.$nextTick(() => {
+						resolve();
+					})
+				})
+			},
 			async refreshPage(pageNo,pageSize){
+				await this.delay();
+				if(this.$refs.paging == undefined) return;
 				uni.showLoading({
 					title: '加载中'
 				});
@@ -208,7 +222,7 @@
 							novel_id: this.novelId,
 							content: this.commentText,
 							article_id: this.articleId != undefined ? this.articleId : 0,
-							paragraph_id: this.paragraphId != undefined ? this.paragraphId : undefined,
+							paragraph_id: this.paragraphId != undefined ? this.paragraphId : -1,
 						},
 						{
 							headers: {

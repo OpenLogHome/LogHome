@@ -5,12 +5,12 @@ const i18nUpdateKey = 'z-paging-i18n-update';
 const t = {
 	refresherDefaultText: {
 		'en': 'Pull down to refresh',
-		'zh-cn': '继续下拉刷新',
+		'zh-cn': '继续下拉',
 		'zh-hant-cn': '繼續下拉重繪',
 	},
 	refresherPullingText: {
 		'en': 'Release to refresh',
-		'zh-cn': '松开立即刷新',
+		'zh-cn': '松开立即',
 		'zh-hant-cn': '鬆開立即重繪',
 	},
 	refresherRefreshingText: {

@@ -39,13 +39,13 @@ const ZPI18n = {
 			return zI18n._getPrivateLanguage(language, this.followSystemLanguage);
 		},
 		finalRefresherDefaultText() {
-			return this._getI18nText('refresherDefaultText', this.refresherDefaultText);
+			return (this._getI18nText('refresherDefaultText', this.refresherDefaultText) + this.customOperationText);
 		},
 		finalRefresherPullingText() {
-			return this._getI18nText('refresherPullingText', this.refresherPullingText);
+			return (this._getI18nText('refresherPullingText', this.refresherPullingText) + this.customOperationText);
 		},
 		finalRefresherRefreshingText() {
-			return this._getI18nText('refresherRefreshingText', this.refresherRefreshingText);
+			return this._getI18nText('refresherRefreshingText', this.refresherRefreshingText) ;
 		},
 		finalRefresherCompleteText() {
 			return this._getI18nText('refresherCompleteText', this.refresherCompleteText);

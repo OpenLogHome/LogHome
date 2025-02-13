@@ -257,9 +257,18 @@
 			<bookMenu :novel_id="novelId" @change="gotoArticleIdx($event); menuDrawerVisible = false"></bookMenu>
 		</el-drawer>
 		
-		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="80%"
+		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="calc(80% + 44px)"
 			custom-class="commentDrawer" :destroy-on-close="true">
-			<BookComment :componentMode="true" :componentData="commentDrawerData" @navigate="commentDrawerVisible = false"></BookComment>
+			<div class="bookCommentDrawer">
+				<div class="title">
+					段落评论
+				</div>
+				<div class="closeBtn" @click="commentDrawerVisible = false">
+					<i class="el-icon-close"></i>
+				</div>
+				<BookComment :componentMode="true" :componentData="commentDrawerData" @hide="commentDrawerVisible=false"
+						     @navigate="commentDrawerVisible = false"></BookComment>
+			</div>
 		</el-drawer>
 
 		<div class="floating-panel" v-show="selectionMode"
@@ -1264,7 +1273,7 @@ export default {
 		bottom: 10rpx;
 		left: 0px;
 		width: 100%;
-		z-index: 1000;
+		z-index: 994;
 		padding: 0 50rpx;
 		font-size: 34rpx;
 		color: #0008;
@@ -1320,7 +1329,7 @@ export default {
 		height: 100vh;
 		font-size: 36rpx;
 		// background-color: rgba(0, 0, 0, 0.2);
-		z-index: 1002;
+		z-index: 995;
 		visibility: hidden;
 		// opacity: 0;
 		transition: all .3s;
@@ -1593,7 +1602,7 @@ export default {
 
 	.floating-panel {
 		position: fixed;
-		z-index: 1002;
+		z-index: 996;
 		background-color: rgba(0, 0, 0, 0.8);
 		border-radius: 30rpx;
 		padding: 15rpx 30rpx;
@@ -1630,7 +1639,7 @@ export default {
 	
 	.commentBtn{
 		position: fixed;
-		z-index: 1001;
+		z-index: 996;
 		transform: translateY(10%);
 		.amount{
 			position: absolute;
@@ -1639,5 +1648,26 @@ export default {
 			transform: translateX(-50%) translateY(-60%);
 		}
 	}
+	
+	.commentDrawer{
+		.bookCommentDrawer{
+			border-radius: 16px 16px 0 0;
+			.title{
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 44px;
+				font-size: 18px;
+				font-weight: bold;
+			}
+			.closeBtn{
+				position: absolute;
+				right: 10px;
+				top: 10px;
+				font-size: 24px;
+			}
+		}
+	}
+	
 }
 </style>
