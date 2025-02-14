@@ -215,23 +215,33 @@ router.get('/novel_commonts_all', async function (req, res) {
 	try {
 		req.query.page = req.query.page ? req.query.page : 1;
 		req.query.pageSize = req.query.pageSize ? req.query.pageSize : 3;
+
+		// 首先处理是否是章节评论
+		if(req.query.paragraphId != undefined && req.query.articleId != undefined){
+			var centos = await query(`SELECT article_cento_id FROM article_cento c WHERE c.paragraph_id = ? AND c.article_id = ?`, [
+				req.query.paragraphId, req.query.articleId
+			])
+			centos = centos.map((item) => item.article_cento_id);
+		}
+
 		let results = await query(
 			`SELECT l.author_id,n.*,u.name,u.avatar_url,u.user_group 
 							FROM novel_comments n,users u,novels l
-							WHERE n.novel_id = ?
-							AND reply_to_id = -1 
+							WHERE reply_to_id = -1 
 							AND u.user_id = n.user_id
 							AND l.novel_id = n.novel_id
-							AND n.deleted = 0
-                            ` + ((req.query.articleId != undefined) ? ` AND n.article_id = "${req.query.articleId}"` : ``) + 
-                            ` ORDER BY n.essay_comment_id
+							AND n.deleted = 0 `
+							 + ((req.query.articleId != undefined) ? ` AND n.article_id = ${req.query.articleId}` : ``)
+							 + ((req.query.paragraphId != undefined) ? ` AND n.cento_id in (?)` : ``) + 
+                            ` AND n.novel_id = ?
+							ORDER BY n.essay_comment_id
 							DESC
 							LIMIT ?,?`,
-			[
+			[...(centos != undefined ? [centos] : []),...[
 				req.query.id,
 				Number(req.query.page - 1) * Number(req.query.pageSize),
 				Number(req.query.pageSize),
-			],
+			]],
 		);
 		results = JSON.parse(JSON.stringify(results));
 		for (let item of results) {

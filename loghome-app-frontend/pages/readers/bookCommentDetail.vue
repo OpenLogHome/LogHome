@@ -6,13 +6,13 @@
 			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
 			<div v-if="paragraphId !== undefined" style="background-color: #e6e6e6; padding: 10px; margin: 0 0 5px 0; font-size: 14px;" @click="navToChapter">
 				<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;"><path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2307"></path><path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z" fill="#8a8a8a" p-id="2308"></path></svg>
-				<div class="cento" style="margin-top: 10rpx; color: #4b4b4b; padding: 0 30rpx; ">
+				<div class="cento" style="margin-top: 10rpx; color: #4b4b4b; padding: 0 30rpx;">
 					{{paragraph}}
 				</div>
 			</div>
 			<view class="comments">
 				<commentItem v-for="item in reviews" :reviewMsg="item" :key="item.essay_comment_id" :componentMode="componentMode"
-				@childReview="childReview($event)" @refresh="refreshPage(1,10)" :paragraphMode="paragraphId != undefined" @navigate="$emit('navigate')"></commentItem>
+				@childReview="childReview($event)" @refresh="refreshPage(1,10)" :paragraphMode="paragraphId" @navigate="$emit('navigate')"></commentItem>
 			</view>
 			<view class="blank_box"></view>
 		</z-paging>
@@ -46,8 +46,7 @@
 				fatherId:-1,
 				articleId: undefined,
 				paragraphId: undefined,
-				paragraph: undefined,
-				extraCommentId: undefined
+				paragraph: undefined
 			}
 		},
 		props:{
@@ -86,9 +85,6 @@
 							title: "段落评论"
 						})
 					}
-				}
-				if(params.extraId !== undefined) {
-					this.extraCommentId = params.extraId;
 				}
 			}
 		},
@@ -334,13 +330,6 @@
 <style lang="scss" scoped>
 	.commentOuter{
 		background-color: rgb(255, 248, 234);
-		.cento{
-			overflow: hidden;
-			text-overflow: ellipsis;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 3;
-		}
 		.comments{
 			
 		}

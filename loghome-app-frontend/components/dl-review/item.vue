@@ -19,7 +19,7 @@
 					:showMenu="false" @active="openFatherReview">
 						{{praiseType == 1 ? '该评论被折叠' : reviewMsg.sendMsg}}
 					</xzj-readMore>
-					<div v-if="reviewMsg.article_id != 0 && !paragraphMode && praiseType != 1"
+					<div v-if="reviewMsg.article_id != 0 && (!paragraphMode) && praiseType != 1"
 						style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;"
 						@click="navToChapter">
 						<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1"
@@ -459,5 +459,13 @@
 		right: 25rpx;
 		top: 25rpx;
 		z-index: 100;
+	}
+	
+	.cento{
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
 	}
 </style>
