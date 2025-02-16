@@ -232,7 +232,14 @@
 				axios.get(this.$baseUrl + '/articles/get_article?id=' + activeName).then((res) => {
 					for (let item of this.worldOutlines) {
 						if (item.article_id == activeName) {
-							item.content = res.data[0].content;
+							let articleContent = JSON.parse(res.data[0].content);
+							let textContent = "";
+							for(let paragraph of articleContent) {
+								if(paragraph.type == 'text') {
+									textContent += paragraph.value + "\n";
+								}
+							}
+							item.content = textContent;
 						}
 					}
 					this.$forceUpdate();

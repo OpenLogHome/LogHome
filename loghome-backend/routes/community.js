@@ -222,6 +222,10 @@ router.get('/novel_commonts_all', async function (req, res) {
 				req.query.paragraphId, req.query.articleId
 			])
 			centos = centos.map((item) => item.article_cento_id);
+			if(centos.length == 0) {
+				res.end(JSON.stringify([]));
+				return;
+			};
 		}
 
 		let results = await query(

@@ -9,6 +9,7 @@ import 'dart:collection';
 import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:math';
 
 class WebViewPage extends StatefulWidget {
   final String localPath; // 新增参数
@@ -62,11 +63,11 @@ class _WebViewPageState extends State<WebViewPage> {
   Future<UnmodifiableListView<UserScript>> _prepareUserScripts() async {
     String jsContent = await rootBundle.loadString('assets/js/jsbridge.js');
 
-    final statusBarHeightPx = MediaQuery.of(context).padding.top;
+    final statusBarHeightPx = min(MediaQuery.of(context).padding.top, 29);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String buildNumber = packageInfo.buildNumber;
-    // print("statusBarHeightPx: $statusBarHeightPx");
+    print('statusBarHeightPx, $statusBarHeightPx');
 
     jsContent += """
         window.jsBridge.statusBarHeight = $statusBarHeightPx;

@@ -258,16 +258,16 @@
 		</el-drawer>
 		
 		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="calc(80% + 44px)"
-			custom-class="commentDrawer" :destroy-on-close="true">
+			custom-class="commentDrawer" :destroy-on-close="true" :wrapperClosable="false">
 			<div class="bookCommentDrawer">
 				<div class="title">
 					段落评论
 				</div>
-				<div class="closeBtn" @click="commentDrawerVisible = false">
+				<div class="closeBtn" @click="handleCloseCommentDraweraManually">
 					<i class="el-icon-close"></i>
 				</div>
-				<BookComment :componentMode="true" :componentData="commentDrawerData" @hide="commentDrawerVisible=false"
-						     @navigate="commentDrawerVisible = false"></BookComment>
+				<BookComment :componentMode="true" :componentData="commentDrawerData" @hide="handleCloseCommentDraweraManually"
+						     @navigate="handleCloseCommentDraweraManually"></BookComment>
 			</div>
 		</el-drawer>
 
@@ -970,15 +970,13 @@ export default {
 			this.clearSelection();
 		},
 		gotoParagraphComment(paragraphId){
-			// uni.navigateTo({
-			// 	url: `../bookComment?id=${this.novelId}&articleId=${this.articleId}&paragraphId=${paragraphId}`
-			// });
 			this.commentDrawerData = {
 				novelId: this.novelId,
 				articleId: this.articleId,
 				paragraphId: paragraphId
 			}
 			this.commentDrawerVisible = true;
+			window.history.pushState({ isCommentDrawerOpen: true }, '', window.location.href)
 		},
 		updateTimeAndBattery() {
 			const now = new Date();
@@ -1044,6 +1042,17 @@ export default {
 			}
 			this.currentRenderIdx = [];
 			this.renderNewPages();
+		},
+		browserBack() {
+			if(this.commentDrawerVisible) {
+				this.commentDrawerVisible = false;
+			}
+		},
+		handleCloseCommentDraweraManually() {
+			// #ifdef H5
+			window.history.go(-1)
+			// #endif
+			this.commentDrawerVisible = false;
 		}
 	},
 	watch: {
@@ -1086,7 +1095,7 @@ export default {
 			if(newValue == false){
 				this.showSliderTooltip = false;
 			}
-		}
+		},
 	},
 	computed: {
 	},
@@ -1130,6 +1139,9 @@ export default {
 		    }
 		};
 		window.addEventListener('volumeKeyPress', window.onVolumnKeyPressCallback);
+		// #ifdef H5
+		window.addEventListener('popstate', this.browserBack)
+		// #endif
 	},
 	async onUnload() {
 		clearInterval(this.timeInterval);
@@ -1139,6 +1151,9 @@ export default {
 			await jsBridge.disableVolumeKeyListener();
 		}
 		window.removeEventListener('volumeKeyPress', window.onVolumnKeyPressCallback);
+		// #ifdef H5
+		window.removeEventListener("popstate", this.browserBack);
+		// #endif
 	},
 	async onShow() {
 		this.renderNewPages();
