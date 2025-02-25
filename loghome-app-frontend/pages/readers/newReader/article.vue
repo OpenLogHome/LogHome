@@ -602,6 +602,10 @@ export default {
 					this.renderNewPages(+1);
 					this.isAnimating = false;
 				}, 250);
+			} else {
+				uni.navigateTo({
+					url: "../bookEnd"
+				})
 			}
 		},
 		renderNewPages(delta) {
