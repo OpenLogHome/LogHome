@@ -126,6 +126,7 @@
 	</view>
 </template>
 <script>
+	// VUE2
 	import axios from 'axios'
 	export default {
 		data() {
@@ -171,6 +172,7 @@
 					'Authorization': tk //设置token 其中K名要和后端协调好
 				}
 			}).then((res) => {
+				console.log('userprofile', res.data);
 				_this.user = JSON.parse(JSON.stringify(res.data));
 				if (window.localStorage.getItem('messages') == "") {
 					window.localStorage.setItem('messages', "[]");
