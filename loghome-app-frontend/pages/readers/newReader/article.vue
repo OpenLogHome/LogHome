@@ -453,16 +453,36 @@ export default {
 			return new Promise(resolve => setTimeout(resolve, ms));
 		},
 		async getNovelInfo() {
-			let res = await axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.novelId, {});
-			if (res.status == 200) {
-				return res.data[0];
+			try {
+				let res = await axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.novelId, {});
+				if (res.status == 200) {
+					articleDB.novels.put(res.data[0]);
+					return res.data[0];
+				}
+			} catch(e) {
+				console.log(this.novelId);
+				let matchedNovels = await articleDB.novels.where("novel_id").equals(Number(this.novelId)).toArray();
+				console.log("matchedNovels", matchedNovels)
+				if(matchedNovels.length > 0) {
+					return matchedNovels[0];
+				}
 			}
+			
 		},
 		async loadAllArticles() {
-			let res = await axios.get(this.$baseUrl + '/library/get_articles?id=' + this.novelId, {});
-			if (res.status == 200) {
-				return res.data;
+			try{
+				let res = await axios.get(this.$baseUrl + '/library/get_articles?id=' + this.novelId, {});
+				if (res.status == 200) {
+					return res.data;
+				} 
+			} catch(e) {
+				let articles = await articleDB.articles.where("novel_id").equals(this.novelId).toArray();
+				articles.sort((a, b) =>{
+					return a.article_chapter < b.article_chapter;
+				})
+				return articles;
 			}
+			
 		},
 		async getArticleContentById(article_id, onlineTime, allowHistory) {
 			if (allowHistory) {
@@ -476,6 +496,7 @@ export default {
 			}
 			try{
 				let res = await axios.get(this.$baseUrl + '/articles/get_article?id=' + article_id + "&isCaching=true", {});
+				console.log(res);
 				if (res.status == 200) {
 					articleDB.articles.put(res.data[0]);
 					if (res.data[0].article_type == "richtext") {
@@ -484,11 +505,20 @@ export default {
 					return res.data[0];
 				}
 			} catch(e){
-				setTimeout(() => {
-					uni.redirectTo({
-						url: "../article?id=" + this.articleId + '&novelId=' + this.novelId
+				let matchedArticles = await articleDB.articles.where("article_id").equals(Number(article_id)).toArray();
+				if(matchedArticles.length > 0) {
+					uni.showToast({
+						 title: "将使用离线模式加载此书",
+						 icon: "loading"
 					})
-				}, 300)
+					return matchedArticles[0];
+				} else {
+					setTimeout(() => {
+						uni.redirectTo({
+							url: "../article?id=" + this.articleId + '&novelId=' + this.novelId
+						})
+					}, 300)
+				}
 			}
 		},
 		async vRenderParagraph(text, title, showTitle) {

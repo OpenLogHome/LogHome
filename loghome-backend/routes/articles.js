@@ -40,7 +40,7 @@ router.get('/get_article', async function (req, res) {
 			'SELECT * FROM articles WHERE article_id = ? AND is_draft = 0 AND deleted = 0',
 			[req.query.id],
 		);
-		if (!req.query.isCaching) {
+		if (req.query.isCaching == undefined || req.query.isCaching == 'false') {
 			await statistics.novel_clicked(
 				JSON.parse(JSON.stringify(results))[0].novel_id,
 				req.query.id,
@@ -53,6 +53,24 @@ router.get('/get_article', async function (req, res) {
 		res.json(400, { msg: 'bad request' });
 	}
 });
+
+router.get('/novel_clicked', async function (req, res) {
+	try {
+		let results = await query(
+			'SELECT novel_id FROM articles WHERE article_id = ? AND is_draft = 0 AND deleted = 0',
+			[req.query.id],
+		);
+		await statistics.novel_clicked(
+			JSON.parse(JSON.stringify(results))[0].novel_id,
+			req.query.id,
+			req.ip,
+		);
+		sysLog('READ_ARTICLE', '-1', req.ip, req.query.id);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+})
 
 router.get('/get_my_article_cento', auth, async function (req, res) {
 	try {

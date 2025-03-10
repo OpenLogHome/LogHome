@@ -4,34 +4,34 @@
 			<div class="end-mark">尚未完结 · 敬请期待</div>
 
 			<div class="action-buttons">
-				<button class="btn urge-btn" onclick="urgeUpdate()">
+<!-- 				<button class="btn urge-btn" onclick="urgeUpdate()">
 					<i class="fas fa-bell"></i>催更
 				</button>
 				<button class="btn subscribe-btn" onclick="toggleSubscribe()">
 					<i class="fas fa-bookmark"></i>订阅
-				</button>
+				</button> -->
 				<!-- 		            <button class="btn rate-btn" onclick="rateNovel()">
 		                <i class="fas fa-star"></i>评分
 		            </button> -->
 			</div>
-			<div class="rate">
+<!-- 			<div class="rate">
 				<div>如果可以，打个分吧？</div>
 				<el-rate v-model="rate" @change="handleRateChange"></el-rate>
 				<el-button  class="rate-btn" type="primary" size="small" v-show="showRateConfirmButton">确认</el-button>
-			</div>
+			</div> -->
 
 			<div class="message">
 				📢 作者没跑路！只是鸽了！<br>
-				👥 当前订阅人数：<span id="subscribers">1</span>
+				<!-- 👥 当前订阅人数：<span id="subscribers">1</span> -->
 			</div>
 
 			<div class="navigation">
-				<button class="nav-btn" onclick="goToCatalog()">
-					<i class="fas fa-list"></i> 返回目录
-				</button>
-				<button class="nav-btn" onclick="nextVolume()" disabled>
+<!-- 				<button class="nav-btn" onclick="goToCatalog()">
+					<i class="fas fa-list"></i> 返回详情页
+				</button> -->
+<!-- 				<button class="nav-btn" onclick="nextVolume()" disabled>
 					<i class="fas fa-arrow-right"></i> 更多好书
-				</button>
+				</button> -->
 			</div>
 		</div>
 	</view>
@@ -138,9 +138,9 @@
 		}
 
 		.nav-btn {
-			padding: 10px 15px;
+			padding: 5px 15px;
 			border: 1px solid #ddd;
-			border-radius: 20px;
+			border-radius: 10px;
 			cursor: pointer;
 		}
 	}
