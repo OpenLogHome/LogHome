@@ -24,7 +24,7 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
+Vue.prototype.$baseUrl = BASE_URL_DEV;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
 	bookCover:"https://s4.ax1x.com/2022/01/13/7lYAlq.png"
@@ -241,7 +241,7 @@ Vue.prototype.timeConvert = function getDateDiff(dateTimeStamp) {
 
 
 // inapp注入 开发阶段用，结束后移除
-let inDev = false;
+let inDev = true;
 if(inDev && !window.jsBridge) {
 	window.jsBridge = {
 		inApp: true,
