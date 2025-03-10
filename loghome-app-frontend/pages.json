@@ -552,6 +552,13 @@
                 "enablePullDownRefresh": false,
 				"navigationStyle": "custom"
             }
+        },{
+            "path" : "pages/readers/bookEnd",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "书末页",
+                "enablePullDownRefresh": false
+            }
         }
     ],
 	"tabBar": {
