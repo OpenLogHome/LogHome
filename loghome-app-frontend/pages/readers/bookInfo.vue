@@ -552,6 +552,7 @@
 				const uid = this.uid;
 				let _this = this;
 				let articles = this.articles;
+				console.log(articles);
 				if (articles.length == 0) {
 					uni.showToast({
 						title: "本书还没有章节哦",
@@ -822,42 +823,27 @@
 			uni.showLoading({
 				title: '加载中'
 			});
-
+			
 			this.uid = this.options.id;
-
+		
 			this.getNices();
 			this.getCommentNum();
 			this.get_novel_pics();
 			this.getNovelTags();
 			this.getFansStatistics();
 			this.getWorlds();
-
-			//本地阅读记录管理
-			let readingHistory = window.localStorage.getItem("ReaderHistory_" + this.uid);
-			if (readingHistory != null) {
-				this.history = readingHistory;
-			} else {
-
-			}
-
-			if (JSON.stringify(option) == "{}") {
-				uni.showToast({
-					title: "undefined",
-					icon: 'none',
-					duration: 2000
-				});
-				return;
-			}
-
+			
 			axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.uid, {}).then((res) => {
 				this.bookInfo = res.data[0];
 				// 如果是设定书，则应当跳转到世界设定查看页面
 				if (this.bookInfo.novel_type == "world") {
 					if (this.worldLoadTime == 0) {
-						uni.navigateTo({
-							url: "/pages/worlds/worldPage?novel_id=" + this.uid
-						})
-						this.worldLoadTime++;
+						setTimeout(() => {
+							uni.redirectTo({
+								url: "/pages/worlds/worldPage?novel_id=" + this.uid
+							})
+							this.worldLoadTime++;
+						}, 300)
 					} else {
 						uni.navigateBack();
 					}
@@ -875,6 +861,23 @@
 					duration: 2000
 				});
 			}).then(function() {})
+
+			//本地阅读记录管理
+			let readingHistory = window.localStorage.getItem("ReaderHistory_" + this.uid);
+			if (readingHistory != null) {
+				this.history = readingHistory;
+			} else {
+
+			}
+
+			if (JSON.stringify(option) == "{}") {
+				uni.showToast({
+					title: "undefined",
+					icon: 'none',
+					duration: 2000
+				});
+				return;
+			}
 
 			axios.get(this.$baseUrl + '/library/get_articles?id=' + this.uid, {}).then((res) => {
 				_this.articles = res.data;
