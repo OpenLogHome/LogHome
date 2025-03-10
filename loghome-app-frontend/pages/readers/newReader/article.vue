@@ -475,7 +475,7 @@ export default {
 				}
 			}
 			try{
-				let res = await axios.get(this.$baseUrl + '/articles/get_article?id=' + article_id, {});
+				let res = await axios.get(this.$baseUrl + '/articles/get_article?id=' + article_id + "&isCaching=true", {});
 				if (res.status == 200) {
 					articleDB.articles.put(res.data[0]);
 					if (res.data[0].article_type == "richtext") {
@@ -1058,7 +1058,10 @@ export default {
 	watch: {
 		currentPageIdx(newValue, oldValue) {
 			if (!this.onRendering) {
-				this.updateHashQueryParam('id', this.allPages[newValue].articleId, false);
+				// this.updateHashQueryParam('id', this.allPages[newValue].articleId, false);
+				if(this.allPages[newValue].articleId != this.allPages[oldValue].articleId) {
+					axios.get(this.$baseUrl + '/articles/novel_clicked?id=' + this.allPages[newValue].articleId, {});
+				}
 				this.articleId = this.allPages[newValue].articleId;
 				window.localStorage.setItem("ReaderHistory_" + this.novelInfo.novel_id, this.allArticleData[this.allPages[newValue].articleId].article_chapter);
 				window.localStorage.setItem("ReaderHistoryPage_" + this.novelInfo.novel_id, this.allPages[newValue].idx);

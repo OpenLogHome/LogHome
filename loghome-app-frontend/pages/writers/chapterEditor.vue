@@ -74,6 +74,7 @@
 import axios from 'axios'
 import toolBox from '../../components/essay_toolBox/toolBox.vue'
 import uniFab from '../../uni_modules/uni-fab/components/uni-fab/uni-fab.vue'
+import { rpxToPx } from "../../lib/utils.js"
 export default {
 	components: {
 		uniFab, toolBox
@@ -362,6 +363,14 @@ export default {
 				this.article_changed = true;
 				this.countText();
 			}
+			setTimeout(() => {
+				let qlEditorDom = document.querySelector(".ql-editor");
+				if(qlEditorDom !== undefined){
+					if(qlEditorDom.scrollHeight - qlEditorDom.scrollTop - qlEditorDom.clientHeight <= rpxToPx(30)) {
+						qlEditorDom.scrollTo(0, qlEditorDom.scrollHeight + qlEditorDom.clientHeight)
+					}
+				}
+			})
 		},
 		insertPunctuation(punctuation) {
 			// 判断是否为成对标点

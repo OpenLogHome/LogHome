@@ -15,6 +15,7 @@
 			<div class="button" @click="gotoContentAgreement">用户内容上传协议</div>
 			<div class="button" @click="gotoPrivacyAgreement">用户隐私政策</div>
 			<div class="button" @click="gotoGrandUsers">社区荣誉用户</div>
+			<div class="button" @click="showDevInfo">显示调试信息</div>
 			
 			<div class="certification" style="margin-top: 200rpx; text-align: center;">
 				<a href="https://www.12377.cn/" target="_blank" style="
@@ -88,6 +89,16 @@
 				uni.navigateTo({
 					url:"../static/grandUsers"
 				})
+			},
+			showDevInfo() {
+				console.log(window.jsBridge)
+				if(window.jsBridge && window.jsBridge.inApp) {
+					uni.showModal({
+						title: "调试信息",
+						content: JSON.stringify(window.jsBridge),
+						showCancel: false
+					})
+				}
 			}
 		}
 	}
