@@ -331,14 +331,14 @@
 		    "style": {
 		        "navigationBarTitleText": "我的消息",
 				"titleNView": {
-					"titleSize": "36rpx",
-					"buttons": [				
-						{
-						    "text": "写站内信",
-						    "fontSize": "36rpx",
-						    "float": "right"
-						}
-				    ]
+					"titleSize": "36rpx"
+					// "buttons": [				
+					// 	{
+					// 	    "text": "写站内信",
+					// 	    "fontSize": "36rpx",
+					// 	    "float": "right"
+					// 	}
+				    // ]
 				}
 		    }
 		},
@@ -559,7 +559,57 @@
                 "navigationBarTitleText": "书末页",
                 "enablePullDownRefresh": false
             }
-        }
+        }, {
+			"path": "pages/manage/index",
+			"style": {
+				"navigationBarTitleText": "平台管理"
+			}
+		}, {
+			"path": "pages/manage/audit/index",
+			"style": {
+				"navigationBarTitleText": "文章审核"
+			}
+		}, {
+			"path": "pages/manage/audit/detail",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		}, {
+			"path": "pages/community/chat",
+			"style": {
+				"navigationBarTitleText": "聊天"
+			}
+		}, {
+			"path": "pages/manage/faqs/index",
+			"style": {
+				"navigationBarTitleText": "FAQ"
+			}
+		}, {
+			"path": "pages/manage/faqs/detail",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		}, {
+			"path": "pages/manage/library/roulous",
+			"style": {
+				"navigationBarTitleText": "图书馆轮播管理"
+			}
+		}, {
+			"path": "pages/manage/posts/index",
+			"style": {
+				"navigationBarTitleText": "帖子管理"
+			}
+		}, {
+			"path": "pages/manage/posts/detail",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		}, {
+			"path": "pages/manage/users/index",
+			"style": {
+				"navigationBarTitleText": "用户管理"
+			}
+		}
     ],
 	"tabBar": {
 		"color": "#7A7E83",

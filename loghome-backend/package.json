@@ -23,7 +23,7 @@
 		"node-fetch": "^3.1.0",
 		"node-gyp": "^8.4.0",
 		"node-schedule": "^2.1.0",
-		"nodemon": "^2.0.20",
+		"nodemon": "^2.0.7",
 		"pino": "^7.6.4",
 		"pino-pretty": "^7.5.1",
 		"svg-captcha": "^1.4.0",

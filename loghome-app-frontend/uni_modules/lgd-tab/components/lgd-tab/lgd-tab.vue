@@ -3,10 +3,13 @@
 		<view class="scrollView" scroll-x show-scrollbar="false" :scroll-left="scrollLeft" scroll-with-animation>
 			<view class="tabBox" :style="{ 'justify-content': isOutWindow ? 'space-around' : 'space-around' }">
 				<view class="items" v-for="(item, index) in tabValue" :key="index" @click="clickTab(index)">
-					<text class="tabText" :class="index == tIndex ? 'active' : ''" 
-					:style="{ 'font-size': fontSize + ((index == tIndex)?5:0) + 'rpx', color: index == tIndex ? textColor : ''}">
-						{{item}}
-					</text>
+					<view class="tab-item-wrapper">
+						<text class="tabText" :class="index == tIndex ? 'active' : ''" 
+						:style="{ 'font-size': fontSize + ((index == tIndex)?5:0) + 'rpx', color: index == tIndex ? textColor : ''}">
+							{{item}}
+						</text>
+						<view v-if="showBadge && badgeIndexes.includes(index)" class="tab-badge"></view>
+					</view>
 				</view>
 			</view>
 			<view class="underscore" :style="{ width: inderWidth + 'px', 'margin-left': indexLeft + boxLeft + 'px', 'background-color': 'rgb(161,255,127)', height: '25rpx' }" />
@@ -32,6 +35,14 @@
 			},
 			firstTab:{
 				default: 0
+			},
+			showBadge: { // 是否显示小红点
+				type: Boolean,
+				default: false
+			},
+			badgeIndexes: { // 需要显示小红点的tab索引数组
+				type: Array,
+				default: () => []
 			}
 		},
 		data() {
@@ -72,6 +83,16 @@
 					// 移动距离
 					this.indexLeft = left
 				})
+				
+				// 点击后触发事件，通知父组件该tab已被点击
+				this.$emit("tabClicked", index)
+			},
+			// 清除指定tab的小红点
+			clearBadge(index) {
+				if (this.badgeIndexes.includes(index)) {
+					const newBadgeIndexes = this.badgeIndexes.filter(i => i !== index);
+					this.$emit('update:badgeIndexes', newBadgeIndexes);
+				}
 			}
 		},
 		created() {
@@ -107,6 +128,11 @@
 	.items {
 		padding: 6px 20rpx;
 	}
+	
+	.tab-item-wrapper {
+		position: relative;
+		display: inline-block;
+	}
 
 	.tabText {
 		color: #666666;
@@ -123,5 +149,15 @@
 		transform: translate(0,-40rpx);
 		border-radius: 10rpx;
 		position:absolute;
+	}
+	
+	.tab-badge {
+		position: absolute;
+		top: 0;
+		right: -10rpx;
+		width: 16rpx;
+		height: 16rpx;
+		border-radius: 50%;
+		background-color: #ff4d4f;
 	}
 </style>

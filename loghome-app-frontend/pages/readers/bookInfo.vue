@@ -1,7 +1,7 @@
 <template>
 	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<div class="gift_box" id="gift_box">
-			<img class="gift_background" id="gift_background" src="../../static/bg.png"></log-image>
+			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
 		</div>
 		<nothing :msg="'这本书还没有发布哦'" v-show="bookInfo.is_personal==undefined||bookInfo.is_personal==1"></nothing>
@@ -10,9 +10,13 @@
 			navTitle='标题'></zetank-backBar>
 		<view class="l-body" v-show="bookInfo.is_personal!=undefined||bookInfo.is_personal==0">
 			<view class="l-dl">
-				<log-image class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
-					onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
-					@click="$previewImg([bookInfo.picUrl])"></log-image>
+				<div class="l-dt">
+					<log-image class="l-dt":src="bookInfo.picUrl" mode="aspectFill"
+						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
+						@click="$previewImg([bookInfo.picUrl])">
+					</log-image>
+					<div class="book-id-tag">ID {{bookInfo.novel_id}}</div>
+				</div>
 				<view class="l-dd">
 					<view class="l-dd-title">
 						{{bookInfo.name}}
@@ -591,7 +595,7 @@
 			shareBook() {
 				let content = "我正在原木社区读《" + this.bookInfo.name + "》，你也一起来看看吧！\n" +
 					"https://loghome.codesocean.top/#/pages/readers/bookInfo?id=" + this.uid +
-					"\n用浏览器打开链接，或在原木社区APP中搜索代码 “" + this.uid + "” 即可查看哦！";
+					"\n用浏览器打开链接，或在原木社区APP中搜索代码 " + this.uid + " 即可查看哦！";
 				uni.setClipboardData({
 					data: content,
 					success: function() {
@@ -1052,6 +1056,20 @@
 		height: 100%;
 		border-radius: 0rpx;
 		margin-right: 30rpx;
+		position: relative;
+	}
+
+	.book-id-tag {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0, 0, 0, 0.6);
+		color: #ffffff;
+		font-size: 20rpx;
+		padding: 4rpx 8rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.l-dd {

@@ -31,10 +31,34 @@ router.get('/get_faqs_amount_to_solve', auth, async function (req, res) {
 	}
 });
 
-router.get('/get_all_faqs', auth, async function (req, res) {
+router.get('/get_faqs_amount_typical', auth, async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT f.*,u.name FROM faqs f,users u WHERE f.user_id = u.user_id ORDER BY faq_id DESC LIMIT ?,20',
+			'SELECT COUNT(*) count FROM faqs WHERE is_typical = 1',
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/get_all_faqs', auth, async function (req, res) {
+	try {
+		let sqlQuery = 'SELECT f.*,u.name FROM faqs f,users u WHERE f.user_id = u.user_id';
+		
+		// 添加过滤条件
+		if (req.query.filter === 'unsolved') {
+			sqlQuery += ' AND f.solved = 0';
+		} else if (req.query.filter === 'typical') {
+			sqlQuery += ' AND f.is_typical = 1';
+		}
+		
+		// 添加排序和分页
+		sqlQuery += ' ORDER BY f.faq_id DESC LIMIT ?,20';
+		
+		let results = await query(
+			sqlQuery,
 			[(Number(req.query.page) - 1) * 20],
 		);
 		res.end(JSON.stringify(results));

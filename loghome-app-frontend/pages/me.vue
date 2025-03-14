@@ -31,7 +31,7 @@
 							<view class="text">名片</view>
 						</view>
 						<view class="item" @tap="gotoMessages">
-							<view class="icon" :class="{'newMessage':hasNewMessage}">
+							<view class="icon" :class="{'newMessage': hasNewMessage || hasNewPrivateMessage}">
 								<img src="../static/icons/icon_info.png"/>
 							</view>
 							<view class="text">消息</view>
@@ -80,7 +80,6 @@
 						<text style="width: 150rpx; color: #ff6a5f">{{earningsMoney}} 元</text>
 					</view>
 				</navigator>
-				</navigator>
 			</view>
 			<view class="list">
 				<navigator url="./users/user_credit">
@@ -110,6 +109,15 @@
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
+				<navigator url="./manage/index" v-if="user.is_admin == 1">
+					<view class="li noborder">
+						<view class="icon">
+							<img src="../static/icons/icon_treecut3.png"></img>
+						</view>
+						<view class="text">平台管理</view>
+						<img class="to" src="../static/user/to.png"></img>
+					</view>
+				</navigator>
 				<navigator url="./users/clientSet">
 					<view class="li noborder">
 						<view class="icon">
@@ -134,6 +142,7 @@
 			return {
 				user: {},
 				hasNewMessage: false,
+				hasNewPrivateMessage: false,
 				treeState: "None",
 				earningsMoney: 0.00
 			}
@@ -181,13 +190,20 @@
 				for (let item of curMessage) {
 					if (item.is_read == 0 && item.to_id == _this.user.user_id) {
 						this.hasNewMessage = true;
-						return;
+						break;
 					}
 				}
-				this.hasNewMessage = false;
-				uni.hideTabBarRedDot({
-					index: 3
-				})
+				
+				// 检查是否有未读私信
+				let unreadPrivateMessages = window.localStorage.getItem('unreadPrivateMessages');
+				this.hasNewPrivateMessage = unreadPrivateMessages && parseInt(unreadPrivateMessages) > 0;
+				
+				// 如果没有未读系统消息和私信，隐藏小红点
+				if (!this.hasNewMessage && !this.hasNewPrivateMessage) {
+					uni.hideTabBarRedDot({
+						index: 3
+					});
+				}
 
 				//检查账号激活状态
 				if (_this.user.oicq_account == 'unbind' && _this.user.mobile == 'unbind') {
@@ -250,6 +266,8 @@
 				uni.navigateTo({
 					url: "./community/message"
 				})
+				this.hasNewMessage = false;
+				this.hasNewPrivateMessage = false;
 			},
 			gotoActivate() {
 				uni.navigateTo({

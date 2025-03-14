@@ -62,15 +62,42 @@
 								window.localStorage.setItem('messages',JSON.stringify(newMessages));
 							}
 						}
-						// 检查本地消息库中的消息是否都被阅读过，如果有未读消息则使小红点亮起。
-						curMessage = JSON.parse(window.localStorage.getItem('messages'));
-						for(let item of curMessage){
-							if(item.is_read == 0){
+						
+						// 2. 检查是否有未读私信
+						axios.get(baseUrl + '/community/unread_messages_count', {
+							headers: {
+								'Content-Type': 'application/json',
+								'Authorization': 'Bearer ' + tk
+							}
+						}).then((unreadRes) => {
+							// 保存未读私信数量到本地存储
+							window.localStorage.setItem('unreadPrivateMessages', unreadRes.data.count);
+							
+							// 检查本地消息库中的消息是否都被阅读过，或者是否有未读私信
+							// 如果有未读消息或未读私信则使小红点亮起
+							curMessage = JSON.parse(window.localStorage.getItem('messages'));
+							let hasUnreadSystemMessage = false;
+							for(let item of curMessage){
+								if(item.is_read == 0){
+									hasUnreadSystemMessage = true;
+									break;
+								}
+							}
+							
+							let hasUnreadPrivateMessage = unreadRes.data.count > 0;
+							
+							if(hasUnreadSystemMessage || hasUnreadPrivateMessage){
 								uni.showTabBarRedDot({
 									index: 3
-								})
+								});
+							} else {
+								uni.hideTabBarRedDot({
+									index: 3
+								});
 							}
-						}
+						}).catch(function(error) {
+							console.log('获取未读私信数量失败', error);
+						});
 					}).catch(function(error) {
 						console.log(error);
 					})
@@ -206,6 +233,8 @@
 					})
 				}
 			}
+
+			this.heartbeatInit();
 		}
 	}
 </script>
