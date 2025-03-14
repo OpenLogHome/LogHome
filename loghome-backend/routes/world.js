@@ -145,5 +145,17 @@ router.get('/delete_world_novel_asso',auth, async function (req, res){
 	}
 });
 
+router.get('/get_worlds_by_author', async function (req, res) {
+	try {
+		let user_id = req.query.user_id;
+		let results = await query(`SELECT w.*, n.*, u.name user_name, u.avatar_url FROM world w, novels n, users u 
+		WHERE w.creator_id = ? AND w.is_delete = 0 AND n.deleted = 0 AND w.asso_novel_id = n.novel_id AND n.is_personal = 0
+		AND u.user_id = w.creator_id`, [user_id]);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
 
 module.exports = router;

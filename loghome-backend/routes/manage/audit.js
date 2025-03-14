@@ -8,87 +8,85 @@ let bank = require('../../bin/bank.js');
 let axios = require('axios');
 
 //审核接口
-/*
-async function checkText(content){
-    
-    //首先将字符串切割为150长度，以便送进审核接口。
-    let contentArr = [];
-    
-    for (let i = 0; i < content.length ; i += 150) {
-        contentArr.push(content.slice(i,i + 150))
-    }
 
-    let type2class= ["低质灌水","暴恐违禁","文本色情","政治敏感","恶意推广","低俗辱骂",'恶意推广-联系方式','恶意推广-软文推广','广告法审核'];
-    let suspectClasses = new Set();
-
-    var FormData = require('form-data');
-    for(let content of contentArr){
-        var data = new FormData();
-        data.append('content', content);
-        data.append('type', 'textcensor');
-        data.append('apiType', 'censor');
-    
-        var config = {
-            method: 'post',
-            url: 'https://ai.baidu.com/aidemo',
-            headers: { 
-                ...data.getHeaders()
-            },
-            data : data
-        };
-        
-        async function getResult(config){
-            await axios(config).then(async function(response){
-                console.log(response.data);
-                for(item of [...response.data.data.result.pass, ...response.data.data.result.reject,...response.data.data.result.review]){
-                    if(item.score >= 0.7){
-                        suspectClasses.add(type2class[item.label])
-                    }
-                }
-                await sleep(1000);
-            }).catch(function (error) {
-                return undefined;
-            });;
-        }
-        
-        await getResult(config);
-
-    }
-    return Array.from(suspectClasses);
-
-}
-*/
-
-//暂时打回人工审核
 async function checkText(content) {
-	return ['需人工审核'];
+	//首先将字符串切割为199长度，以便送进审核接口。
+	let contentArr = [];
+
+	for (let i = 0; i < content.length; i += 199) {
+		contentArr.push(content.slice(i, i + 199))
+	}
+
+	let suspectClasses = new Set();
+
+	for (let text of contentArr) {
+		try {
+			const response = await axios({
+				method: 'post',
+				url: 'http://127.0.0.1:8787/api/check',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				data: `text=${encodeURIComponent(text)}`
+			});
+
+			if (response.data.code === 0) {
+				if (response.data.result !== 'pass') {
+					suspectClasses.add(response.data.remark);
+				}
+			} else {
+				console.error('文本审核接口返回错误:', response.data);
+				suspectClasses.add('接口异常需人工审核');
+			}
+
+		} catch (error) {
+			console.error('调用审核接口出错');
+			suspectClasses.add('接口异常需人工审核');
+		}
+		await new Promise(resolve => setTimeout(resolve, 1000)); // 延迟1秒
+	}
+
+	return Array.from(suspectClasses);
 }
 
 // 创建路由对象
 let router = express.Router();
 
-// 定义一个QPS为1的自动文章审核函数
-let isArticleAuditRunning = false;
+// 定义一个QPS为5的自动文章审核函数
+let isArticleAuditRunning = true;
 let articlesToAudit = [];
 setInterval(async function () {
 	if (isArticleAuditRunning) return;
 	isArticleAuditRunning = true;
+	articlesToAudit = await query(
+		'SELECT * FROM articles WHERE audit_status = \'Uncheck\' LIMIT 0,5',
+	);
 	try {
-		articlesToAudit = await query(
-			'SELECT * FROM articles WHERE audit_status = \'Uncheck\' LIMIT 0,5',
-		);
 		for (let i = 0; i < articlesToAudit.length; i++) {
-			// console.log("正在识别 " + articlesToAudit[i].article_id + " " + articlesToAudit[i].title)
+			console.log("正在自动审核文章 " + articlesToAudit[i].article_id + " " + articlesToAudit[i].title)
+			if(articlesToAudit[i].article_type == "richtext") {
+				articlesToAudit[i].content = JSON.parse(articlesToAudit[i].content);
+				let content = "";
+				for(let j = 0; j < articlesToAudit[i].content.length; j++) {
+					if(articlesToAudit[i].content[j].type == "text") {
+						content += articlesToAudit[i].content[j].value;
+					}
+				}
+				articlesToAudit[i].content = content;
+			}
+			// console.log(articlesToAudit[i].content)
 			let result = await checkText(
 				articlesToAudit[i].title + ' ' + articlesToAudit[i].content,
 			);
 			// if(result != undefined) console.log("识别结果：",result);
 			if (result.length == 0) {
+				console.log("审核通过")
 				await query(
 					'UPDATE articles SET audit_status = \'Checked\' WHERE article_id = ?',
 					[articlesToAudit[i].article_id],
 				);
 			} else {
+				console.log("审核完毕，存在问题：" + String(result))
 				await query(
 					'UPDATE articles SET audit_status = ? WHERE article_id = ?',
 					[String(result), articlesToAudit[i].article_id],
@@ -100,7 +98,7 @@ setInterval(async function () {
 		console.log(e);
 		isArticleAuditRunning = false;
 	}
-}, 5000);
+}, 1000);
 
 router.get('/get_articles_to_audit', auth, async function (req, res) {
 	try {
@@ -171,12 +169,12 @@ router.post('/submit_result', auth, async function (req, res) {
 			message.sendMsg(
 				-1,
 				article[0].author_id,
-				'你的作品《' +
-					article[0].novel_name +
-					'》的章节' +
-					'《' +
-					article[0].title +
-					'》经审核违反了《原木社区用户内容上传协议》，已经打回草稿，请重新编辑。',
+				'抱歉，您的作品《' +
+				article[0].novel_name +
+				'》的章节' +
+				'《' +
+				article[0].title +
+				'》未能通过审核已被退回，您可以编辑后重新发布。',
 				'writers/chapterEditor?id=' + req.body.article_id,
 				true,
 			);

@@ -1,1 +1,1 @@
-node main.js >> log/loghome.log
+node main.js

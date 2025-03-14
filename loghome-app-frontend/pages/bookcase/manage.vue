@@ -115,32 +115,33 @@ export default {
 	.content{
 		background-color: #f2f2f2;
 		font-size:30rpx;
-		
 	}
+	
 	@keyframes toDelete{
 		0%{
-			transform:matrix(1, 0, 0, 1, 0.4, 0.1);
+			transform: scale(1) rotate(0deg);
+			opacity: 1;
 		}
 		25%{
-			transform:matrix(1, 0.01, -0.01, 1, -0.1, 0);
-		}
-		50%{
-			transform:matrix(1, 0, 0, 1, -0.4, -0.1);
+			transform: scale(1.02) rotate(-1deg);
 		}
 		75%{
-			transform:matrix(1, -0.01, 0.01, 1, 0.1, 0);
+			transform: scale(0.98) rotate(1deg);
 		}
 		100%{
-			transform:matrix(1, 0, 0, 1, 0.4, 0.1);
+			transform: scale(1) rotate(0deg);
+			opacity: 1;
 		}
 	}
 	
 	@keyframes deleted{
 		0%{
-			transform:scale(1);
+			transform: scale(1) translateY(0);
+			opacity: 1;
 		}
 		100%{
-			transform:scale(0);
+			transform: scale(0.5) translateY(20px);
+			opacity: 0;
 		}
 	}
 	
@@ -152,28 +153,57 @@ export default {
 		flex-flow: wrap;
 		padding:0 20rpx;
 		padding-bottom:40rpx;
+		
+		.bookInCase {
+			position: relative;
+			transition: all 0.3s ease;
+			
+			&:hover {
+				transform: translateY(-5px);
+				box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+			}
+			
+			&.deleted {
+				animation: deleted 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+			}
+			
+			&:not(.deleted) {
+				animation: toDelete 1.5s ease-in-out infinite;
+			}
+		}
 	}
-	.bookInCase{
-		position:relative;
-		animation:toDelete 0.2s linear infinite;
-	}
-	.bookInCase.deleted{
-		animation:deleted 0.5s linear infinite;
-	}
+	
 	.deletePoint{
-		position:absolute;
-		height:50rpx;
-		top:0rpx;
-		right:0rpx;
+		position: absolute;
+		height: 50rpx;
+		top: 0rpx;
+		right: 0rpx;
 		transform: scale(.9);
+		transition: transform 0.2s ease;
+		cursor: pointer;
+		
+		&:hover {
+			transform: scale(1.1);
+		}
 	}
+	
+	.flip-list-enter-active,
+	.flip-list-leave-active {
+		transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+	
+	.flip-list-enter-from,
+	.flip-list-leave-to {
+		opacity: 0;
+		transform: translateY(30px);
+	}
+	
 	div.searchBar{
 		margin:0 20rpx;
 		padding-top:20rpx;
 	}
+	
 	div.underBar{
 		height: 150rpx
 	}
-
-
 </style>

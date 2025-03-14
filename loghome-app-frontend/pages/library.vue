@@ -257,8 +257,11 @@
 						})
 					}
 				}).catch(function (error) {
+					uni.switchTab({
+						url: './bookcase/index'
+					})
 					uni.showToast({
-						title: error.toString(),
+						title: "离线模式",
 						icon:'none',
 						duration: 2000
 					});

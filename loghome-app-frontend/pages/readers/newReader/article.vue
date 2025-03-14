@@ -478,8 +478,9 @@ export default {
 			} catch(e) {
 				let articles = await articleDB.articles.where("novel_id").equals(this.novelId).toArray();
 				articles.sort((a, b) =>{
-					return a.article_chapter < b.article_chapter;
+					return a.article_chapter - b.article_chapter;
 				})
+				console.log(articles)
 				return articles;
 			}
 			
@@ -691,7 +692,7 @@ export default {
 				}, 250);
 			} else {
 				uni.navigateTo({
-					url: "../bookEnd"
+					url: `../bookEnd?novelId=${this.novelId}`
 				})
 			}
 		},

@@ -66,33 +66,36 @@
 			}
 		},
 		props:["novel_id"],
-		watch:{
-			novel_id(newValue,oldValue){
-				let _this = this;
-				axios.get(this.$baseUrl + '/essays/get_novel_by_id?id=' + newValue, {}).then((res) => {
-					this.novel = res.data[0];
-					this.problems.unPublic = this.novel.is_personal;
-					this.problems.badDescription = this.novel.content.length < 30;
-					this.problems.defaultCover = (this.novel.picUrl === "http://img.codesocean.top/img/1641194344563.png");
-					//this.problems.noTags = this.;
-					console.log(res.data[0]);
-				}).catch(function(error) {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000,
-					});
-				}).then(function() {});
-				axios.get(this.$baseUrl + '/library/get_novel_tags?novel_id=' + newValue, {}).then((res) => {
-					_this.problems.noTags = (res.data.length===0);
-					console.log(res.data+"我在这");
-				}).catch(function (error) {
-					uni.showToast({
-						title: error.toString(),
-						icon:'none',
-						duration: 2000
-					});
-				}).then(function(){})
+		watch: {
+			novel_id: {
+				handler(newValue, oldValue){
+					let _this = this;
+					axios.get(this.$baseUrl + '/essays/get_novel_by_id?id=' + newValue, {}).then((res) => {
+						this.novel = res.data[0];
+						this.problems.unPublic = this.novel.is_personal;
+						this.problems.badDescription = this.novel.content.length < 30;
+						this.problems.defaultCover = (this.novel.picUrl === "http://img.codesocean.top/img/1641194344563.png");
+						//this.problems.noTags = this.;
+						console.log(res.data[0]);
+					}).catch(function(error) {
+						uni.showToast({
+							title: error.toString(),
+							icon: 'none',
+							duration: 2000,
+						});
+					}).then(function() {});
+					axios.get(this.$baseUrl + '/library/get_novel_tags?novel_id=' + newValue, {}).then((res) => {
+						_this.problems.noTags = (res.data.length===0);
+						console.log(res.data+"我在这");
+					}).catch(function (error) {
+						uni.showToast({
+							title: error.toString(),
+							icon:'none',
+							duration: 2000
+						});
+					}).then(function(){})
+				},
+				immediate: true
 			}
 		}
 	}

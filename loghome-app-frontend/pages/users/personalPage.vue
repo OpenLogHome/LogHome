@@ -13,7 +13,7 @@
 				<navigator url="./change_user_info" v-show="uid == myUserInfo.user_id">
 					<div class="button">编辑资料</div>
 				</navigator>
-				<!-- <div class="button" v-show="uid != myUserInfo.user_id" @click="gotoPrivateMessage">私信</div> -->
+				<div class="button" v-show="uid != myUserInfo.user_id" @click="gotoPrivateMessage">私信</div>
 			</view>
 			
 			<!-- 用户头像关注 -->
@@ -68,6 +68,8 @@
 					:class="current == 0?'tabbarsh':'notabbarsh'" @tap="fnBarClick(0)">作品</view>
 				<view style="font-size: 32rpx;font-weight: bold;text-align: center;width: 128rpx;"
 					:class="current == 1?'tabbarsh':'notabbarsh'" @tap="fnBarClick(1)" v-show="false">动态</view>
+				<view style="font-size: 32rpx;font-weight: bold;text-align: center;width: 128rpx;"
+					:class="current == 2?'tabbarsh':'notabbarsh'" @tap="fnBarClick(2)">世界</view>
 			</view>
 	
 			<!-- 导航显示内容 -->
@@ -75,6 +77,12 @@
 				<div class="bookcase">
 					<bookInCase v-for="item in booksOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.novel_id"
 								@click.native="readBook(item.novel_id)" v-show="!item.is_personal"></bookInCase>
+				</div>
+			</view>
+			<view v-show="current == 2">
+				<div class="bookcase">
+					<bookInCase v-for="item in worldsOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.world_id"
+								@click.native="readBook(item.novel_id)"></bookInCase>
 				</div>
 			</view>
 		</springBack>
@@ -137,6 +145,7 @@
 					"社区管理员":'nonTitle',
 					"系统消息":'nonTitle'
 				},
+				worldsOnShow: [],
 			}
 		},
 		onLoad(option) {
@@ -206,19 +215,22 @@
 					this.$previewImg([this.user.top_pic_url])
 				}
 			},
-			// gotoPrivateMessage(){
-			// 	if(this.user.uni_id != undefined){
-			// 		uni.navigateTo({
-			// 			url:"/uni_modules/uni-im/pages/chat/chat?user_id=" + this.user.uni_id
-			// 		})
-			// 	} else {
-			// 		uni.showToast({
-			// 			title: "该用户使用的版本太旧，还未开通私信功能哦",
-			// 			icon: 'none',
-			// 			duration: 2000
-			// 		})
-			// 	}
-			// },
+			gotoPrivateMessage(){
+				uni.navigateTo({
+					url: '/pages/community/chat?id=' + this.uid
+				});
+				// if(this.user.uni_id != undefined){
+				// 	uni.navigateTo({
+				// 		url:"/uni_modules/uni-im/pages/chat/chat?user_id=" + this.user.uni_id
+				// 	})
+				// } else {
+				// 	uni.showToast({
+				// 		title: "该用户使用的版本太旧，还未开通私信功能哦",
+				// 		icon: 'none',
+				// 		duration: 2000
+				// 	})
+				// }
+			},
 			onLoad(params) {
 				this.uid = params.id;
 			},
@@ -288,6 +300,17 @@
 						duration: 2000
 					})
 				})
+				
+				axios.get(this.$baseUrl + '/world/get_worlds_by_author?user_id=' + _this.uid, {
+				}).then((res) => {
+					_this.worldsOnShow = res.data;
+				}).catch(function(error) {
+					uni.showToast({
+						title: "世界信息加载失败",
+						icon: 'none',
+						duration: 2000
+					})
+				});
 				
 			}
 		}
@@ -359,7 +382,7 @@
 	}
 	
 	.button {
-		height: 60rpx;
+		height: 68rpx;
 		width: 150rpx;
 		font-size: 14px;
 		text-align: center;
@@ -368,6 +391,9 @@
 		color: #ffffff;
 		background-color: rgb(180, 111, 88);
 		margin-left: 15rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 	
 	.user_id{

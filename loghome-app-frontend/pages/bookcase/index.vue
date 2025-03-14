@@ -29,6 +29,7 @@
 	import uniSearchBar from '../../uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue'
 	import uniNavBar from '../../uni_modules/uni-nav-bar/components/uni-nav-bar/uni-nav-bar.vue'
 	import axios from 'axios'
+	import { articleDB } from '../../lib/db.js'
 	export default {
 		components: {
 			bookInCase,
@@ -66,63 +67,27 @@
 					})
 				}
 			},
-			readBook(novel_id) {
+			async readBook(novel_id) {
 				let _this = this;
 				if (novel_id > 0) {
 					if (this.isOffline) {
 						//如果是离线，则获取阅读记录、并直接跳转到对应章节。
-						let history = 1;
+						let history = 0;
 						//本地阅读记录管理
 						let readingHistory = window.localStorage.getItem("ReaderHistory_" + novel_id);
-						let articles = [];
 						if (readingHistory != null) {
 							history = readingHistory;
 						}
-						//开一个IndexedDB数据库事务
-						let dbStatus = window.localStorage.getItem("IndexedDB");
-						// indexedDB本地缓存文章查询
-						if (dbStatus == "enabled") {
-							let version = _this.$DBVersion
-							let IDBOpenDBRequest = indexedDB.open('LogCommunity', version);
-							let db;
-							IDBOpenDBRequest.onsuccess = function(e) {
-
-								db = e.target.result;
-								// 创建一个事务，类型：IDBTransaction，文档地址： https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction
-								let transaction = db.transaction('offlineArticleCache', 'readonly');
-								// 通过事务来获取IDBObjectStore
-								let store = transaction.objectStore('offlineArticleCache');
-								var request = store.openCursor();
-
-								request.onsuccess = function(e) {
-									var cursor = e.target.result;
-									// 如果找到数据了
-									if (cursor) {
-										var result = cursor.value;
-										if (result.novel_id == novel_id) articles.push(result);
-										cursor.continue();
-									} else {
-										console.log(history, articles);
-										if (history == 1) {
-											uni.navigateTo({
-												url: '../readers/newReader/article?id=' + articles[0].article_id
-											})
-											return;
-										} else {
-											let toId = articles[0].article_id;
-											articles.forEach(item => {
-												if (item.article_chapter == history) {
-													toId = item.article_id
-													return;
-												}
-											})
-											uni.navigateTo({
-												url: '../readers/newReader/article?id=' + toId
-											})
-										}
-									}
-								}
-							}
+						let articles = await articleDB.articles.where("novel_id").equals(novel_id).toArray();
+						if(articles.length > 0){
+							uni.navigateTo({
+								url: '../readers/newReader/article?id=' + articles[history].article_id + '&Id=' + novel_id
+							})
+						} else {
+							uni.showToast({
+								title: "未缓存该书籍，无法阅读",
+								icon: 'none'
+							})
 						}
 					} else {
 						uni.navigateTo({

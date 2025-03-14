@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Express.js-4.17.1-purple" alt="Express">
   <img src="https://img.shields.io/badge/Flutter-3.6.1-blue" alt="Flutter">
   <img src="https://img.shields.io/badge/License-GPL-pink" alt="License">
-  <img src="https://img.shields.io/badge/version-2.5.3-orange" alt="Version">
+  <img src="https://img.shields.io/badge/version-2.6.3-orange" alt="Version">
 </p>
 
 ## 📖 项目介绍

@@ -79,4 +79,19 @@ router.post('/edit_post', auth, async function (req, res) {
 	}
 });
 
+router.post('/delete_post', auth, async function (req, res) {
+	try {
+		if (!req.body.post_id) {
+			return res.json(400, { msg: 'missing post_id' });
+		}
+		// 删除帖子
+		await query('UPDATE posts SET deleted = 1 WHERE post_id = ?', [req.body.post_id]);
+		
+		res.end('success');
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 module.exports = router;

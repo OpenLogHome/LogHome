@@ -435,4 +435,212 @@ router.get('/get_mail', auth, async (req, res) => {
 	}
 });
 
+router.post('/send_message', auth, async function (req, res) {
+	try {
+		const { to_id, message_content } = req.body;
+		const from_id = req.user[0].user_id;
+		console.log(from_id);
+
+		const result = await query(
+			'INSERT INTO private_messages (sender_id, receiver_id, message_content) VALUES (?, ?, ?)',
+			[from_id, to_id, message_content]
+		);
+
+		res.json({ 
+			msg: 'Message sent successfully',
+			id: result.insertId // 返回新创建的消息ID
+		});
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ msg: 'Internal server error' });
+	}
+});
+
+router.get('/message_history', auth, async function (req, res) {
+	try {
+		const user_id = req.user[0].user_id;
+		const friend_id = req.query.friend_id;
+		const pageSize = parseInt(req.query.pageSize) || 20;
+
+		// 获取最早的消息ID作为分页基准
+		const lastMessageId = req.query.lastMessageId ? parseInt(req.query.lastMessageId) : null;
+		
+		let query_str = 'SELECT * FROM private_messages WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))';
+		let params = [user_id, friend_id, friend_id, user_id];
+		
+		// 如果有lastMessageId，则只获取比这个ID更早的消息
+		if (lastMessageId) {
+			query_str += ' AND id < ?';
+			params.push(lastMessageId);
+		}
+		
+		query_str += ' ORDER BY sent_at DESC LIMIT ?';
+		params.push(pageSize);
+		
+		const messages = await query(query_str, params);
+
+		// 返回结果前反转数组，使最早的消息在前面
+		res.json(messages.reverse());
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ msg: 'Internal server error' });
+	}
+});
+
+router.post('/mark_as_read', auth, async function (req, res) {
+	try {
+		const { message_id } = req.body;
+
+		await query(
+			'UPDATE private_messages SET is_read = TRUE WHERE id = ?',
+			[message_id]
+		);
+
+		res.json({ msg: 'Message marked as read' });
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ msg: 'Internal server error' });
+	}
+});
+
+// 获取新消息的接口
+router.get('/new_messages', auth, async function (req, res) {
+	try {
+		const user_id = req.user[0].user_id;
+		const friend_id = req.query.friend_id;
+		const since_id = parseInt(req.query.since_id) || 0;
+		
+		// 获取比since_id更新的消息
+		const query_str = `
+			SELECT * FROM private_messages 
+			WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+			AND id > ?
+			ORDER BY sent_at ASC
+		`;
+		
+		const messages = await query(query_str, [
+			user_id, friend_id, 
+			friend_id, user_id, 
+			since_id
+		]);
+		
+		res.json(messages);
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ msg: 'Internal server error' });
+	}
+});
+
+// 获取消息已读状态的接口
+router.get('/messages_read_status', auth, async function (req, res) {
+	try {
+		const user_id = req.user[0].user_id;
+		
+		// 检查是否提供了消息ID列表
+		if (!req.query.message_ids) {
+			return res.status(400).json({ msg: 'Missing message_ids parameter' });
+		}
+		
+		// 解析消息ID列表
+		const messageIds = req.query.message_ids.split(',').map(id => parseInt(id));
+		
+		// 获取这些消息的已读状态
+		const query_str = `
+			SELECT id, is_read 
+			FROM private_messages 
+			WHERE id IN (?) AND sender_id = ?
+		`;
+		
+		const messages = await query(query_str, [messageIds, user_id]);
+		
+		res.json(messages);
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ msg: 'Internal server error' });
+	}
+});
+
+// 获取私信好友列表
+router.get('/chat_friends', auth, async function (req, res) {
+	try {
+		const user_id = req.user[0].user_id;
+		
+		// 查询与当前用户有过私信往来的所有用户
+		const query_str = `
+			SELECT 
+				u.user_id, 
+				u.name, 
+				u.avatar_url,
+				(
+					SELECT message_content 
+					FROM private_messages 
+					WHERE (sender_id = u.user_id AND receiver_id = ?) 
+						OR (sender_id = ? AND receiver_id = u.user_id)
+					ORDER BY sent_at DESC 
+					LIMIT 1
+				) as last_message_content,
+				(
+					SELECT sent_at 
+					FROM private_messages 
+					WHERE (sender_id = u.user_id AND receiver_id = ?) 
+						OR (sender_id = ? AND receiver_id = u.user_id)
+					ORDER BY sent_at DESC 
+					LIMIT 1
+				) as last_message_time,
+				(
+					SELECT COUNT(*) 
+					FROM private_messages 
+					WHERE sender_id = u.user_id 
+						AND receiver_id = ? 
+						AND is_read = FALSE
+				) as unread_count
+			FROM users u
+			WHERE u.user_id IN (
+				SELECT DISTINCT 
+					CASE 
+						WHEN sender_id = ? THEN receiver_id
+						ELSE sender_id
+					END as friend_id
+				FROM private_messages
+				WHERE sender_id = ? OR receiver_id = ?
+			)
+			ORDER BY unread_count DESC, last_message_time DESC
+		`;
+		
+		const friends = await query(query_str, [
+			user_id, user_id, 
+			user_id, user_id, 
+			user_id, 
+			user_id, 
+			user_id, user_id
+		]);
+		
+		res.json(friends);
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ msg: 'Internal server error' });
+	}
+});
+
+// 获取未读私信数量
+router.get('/unread_messages_count', auth, async function (req, res) {
+	try {
+		const user_id = req.user[0].user_id;
+		
+		// 查询未读私信总数
+		const query_str = `
+			SELECT COUNT(*) as count
+			FROM private_messages
+			WHERE receiver_id = ? AND is_read = FALSE
+		`;
+		
+		const result = await query(query_str, [user_id]);
+		
+		res.json({ count: result[0].count });
+	} catch (e) {
+		console.error(e);
+		res.status(500).json({ msg: 'Internal server error' });
+	}
+});
+
 module.exports = router;

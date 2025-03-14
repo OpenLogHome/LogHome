@@ -8,7 +8,14 @@
 						:data-index="index" @tap="changeTopNav">{{item}}</view>
 				</view>
 				<view class="box1 align_r">
-					<!-- 					<uni-icons type="bars" size="30" @click="showMoreInfo"></uni-icons> -->
+					<el-button 
+						:icon="viewMode === 'scroll' ? 'el-icon-s-help' : 'el-icon-s-grid'" 
+						circle 
+						size="mini" 
+						@click="toggleViewMode"
+						:title="viewMode === 'scroll' ? '切换到网格视图' : '切换到滚动视图'"
+						v-show="books.length > 0 && topNavArr[topNavIndex] == '小说'">
+					</el-button>
 				</view>
 			</view>
 		</view>
@@ -19,151 +26,101 @@
 				<img src="../static/images/icon_my_upload_new.png" alt=""/>
 			</navigator>
 		</view>
-		<transition name="fade">
-			<card-swiper class="swiper" v-if="books.length>0" :list="books" @swiperChange="swiperChange"
-				ref="cardSwiper" v-show="topNavArr[topNavIndex] == '小说'"></card-swiper>
-		</transition>
-		<transition name="fade">
-			<view style="padding-top: 20rpx;height: 300px;" class="pageBody" v-if="books.length>0"
-				v-show="topNavArr[topNavIndex] == '小说'">
-				<view class="bodyView" style="text-align: center;" v-if="this.curBook != -1">
-					<view class="bookTitle">{{books[curBook].name}}</view>
-					<view class="bookDescription">
-						<el-tag size="mini" v-show="books[curBook].is_personal==1" type="info" disable-transitions
-							effect="dark">私有</el-tag>
-						<el-tag size="mini" v-show="books[curBook].is_personal==0" disable-transitions
-							effect="dark">公开</el-tag>
-						<span> {{books[curBook].is_complete==1?"已完结":"连载中"}}</span>
-						<span>总计 {{books[curBook].text_count}} 字 </span>
-					</view>
-					<div class="buttons">
-						<div class="button" @click="gotoAllArticles">所有章节</div>
-						<div class="button" @click="readNovel(books[curBook].is_personal)">阅读</div>
-						<div class="button long" @click="gotoEssaySet">作品设置</div>
-					</div>
 
-					<div class="statistic-box">
-						<div class="head">
-							<div class="box-title">作品世界</div>
-							<div class="more">
-								<p>为你的作品关联世界设定</p>
-							</div>
-						</div>
-						<div class="worlds">
-							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
-								<navigator :url="'./readers/bookInfo?id=' +  novel.novel_id" open-type="navigate"
-									class="books" @longpress="deleteWorldNovelAsso(novel.world_id)">
-									<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
-										:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"
-										style="border-radius: 10rpx; transform:scale(.90)" />
-									<div class="bookInfo" style="margin-left:10rpx;">
-										<div class="world-title">
-											{{novel.name}}
-											<el-tag type="warning" v-show="novel.novel_type == 'world'" effect="dark"
-												style="margin-left:10rpx; transform:translateY(-5rpx)"
-												size="mini">世界设定</el-tag>
-										</div>
-										<view class="author">
-											<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
-												onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-											<div class="auther_name">{{novel.user_name}}</div>
-										</view>
-										<div class="description">{{novel.content}}</div>
-									</div>
-								</navigator>
-							</div>
-						</div>
-						<div class="addButton" @click="bookSelectDrawer = true">添加作品世界</div>
-					</div>
-
-					<writerHelper :novel_id="books[curBook].novel_id"></writerHelper>
-
-					<div class="statistic-box">
-						<div class="head">
-							<div class="box-title">作品数据盒</div>
-							<div class="more">
-								<p>凌晨3点更新昨日数据</p>
-							</div>
-						</div>
-						<div class="statistics-body no-statistic" v-if="novel_statistic.length < 2">
-							暂无数据
-						</div>
-						<div class="statistics-body" v-if="novel_statistic.length >= 2">
-							<div class="card" @click="gotoStatistics()">
-								<p class="numeral">
-									{{novel_statistic[0].clicks}}
-									<span
-										class="change">较昨日+{{novel_statistic[0].clicks - novel_statistic[1].clicks}}</span>
-								</p>
-								<p class="name">
-									阅读量
-								</p>
-							</div>
-							<div class="card" @click="gotoStatistics()">
-								<p class="numeral">
-									{{novel_statistic[0].nices}}
-									<span
-										class="change">较昨日+{{novel_statistic[0].nices - novel_statistic[1].nices}}</span>
-								</p>
-								<p class="name">
-									点赞数
-								</p>
-							</div>
-							<div class="card" @click="gotoStatistics()">
-								<p class="numeral">
-									{{novel_statistic[0].likes}}
-									<span
-										class="change">较昨日+{{novel_statistic[0].likes - novel_statistic[1].likes}}</span>
-								</p>
-								<p class="name">
-									收藏数
-								</p>
-							</div>
-							<div class="card" @click="gotoStatistics()">
-								<p class="numeral">
-									{{novel_statistic[0].comments}}
-									<span
-										class="change">较昨日+{{novel_statistic[0].comments - novel_statistic[1].comments}}</span>
-								</p>
-								<p class="name">
-									评论数
-								</p>
-							</div>
-							<div class="card" @click="gotoStatistics()">
-								<p class="numeral">
-									{{novel_statistic[0].tippings}}
-									<span
-										class="change">较昨日+{{novel_statistic[0].tippings - novel_statistic[1].tippings}}</span>
-								</p>
-								<p class="name">
-									打赏值
-								</p>
-							</div>
-						</div>
-					</div>
-
-
-
+		<!-- 滚动视图模式 -->
+		<template v-if="viewMode === 'scroll'">
+			<transition name="fade">
+				<card-swiper class="swiper" v-if="books.length>0" :list="books" @swiperChange="swiperChange"
+					ref="cardSwiper" v-show="topNavArr[topNavIndex] == '小说'"></card-swiper>
+			</transition>
+			<transition name="fade">
+				<view style="padding-top: 20rpx;height: 300px;" class="pageBody" v-if="books.length>0"
+					v-show="topNavArr[topNavIndex] == '小说'">
+					<book-detail-view 
+						v-if="curBook !== -1"
+						:book="books[curBook]"
+						:worlds="worlds"
+						:statistics="novel_statistic"
+						:isDrawerMode="viewMode === 'grid'"
+						@goto-all-articles="gotoAllArticles"
+						@read-novel="readNovel"
+						@goto-essay-set="gotoEssaySet"
+						@delete-world-novel-asso="deleteWorldNovelAsso"
+						@show-book-select="bookSelectDrawer = true"
+						@goto-statistics="gotoStatistics"
+					></book-detail-view>
+					<transition name='fade'>
+						<view style="text-align: center;position:relative;" v-if="curBook === -1">
+							<img src="../static/dig.png" alt=""
+								style="position:absolute;width:70vw;top:-120px;left:50vw;transform: translateX(-50%); z-index:102" />
+							<p style="color:#919191; font-weight: bold; font-size:40rpx; margin:20rpx; padding-top:130rpx;">
+								开个新坑
+							</p>
+							<img src="../static/images/icon_my_upload_new.png" alt="" @click="gotoNewEssay"
+								style="border-radius: 10rpx;margin-top:150rpx;" class="uploadBtn" />
+						</view>
+					</transition>
 				</view>
-				<transition name='fade'>
-					<view style="text-align: center;position:relative;" v-if="this.curBook== -1">
-						<img src="../static/dig.png" alt=""
-							style="position:absolute;width:70vw;top:-120px;left:50vw;transform: translateX(-50%); z-index:102" />
-						<p style="color:#919191; font-weight: bold; font-size:40rpx; margin:20rpx; padding-top:130rpx;">
-							开个新坑
-						</p>
-						<img src="../static/images/icon_my_upload_new.png" alt="" @click="gotoNewEssay"
-							style="border-radius: 10rpx;margin-top:150rpx;" class="uploadBtn" />
-					</view>
-				</transition>
-				<view class="blank_box"></view>
+			</transition>
+		</template>
+
+		<!-- 书架视图模式 -->
+		<template v-else>
+			<view class="bookshelf" v-if="books.length>0" v-show="topNavArr[topNavIndex] == '小说'">
+				<div class="book-grid">
+					<div v-for="(book, index) in books" :key="book.novel_id" class="book-item" @click="selectBook(index)">
+						<img :src="book.picUrl" :alt="book.name" class="book-cover" 
+							:onerror="`this.src='${$backupResources.bookCover}'`"/>
+						<div class="book-title">{{book.name}}</div>
+					</div>
+					<div class="book-item new-book" @click="gotoNewEssay">
+						+
+					</div>
+				</div>
 			</view>
-		</transition>
+		</template>
+
 		<transition name="fade">
 			<worldPage v-show="topNavArr[topNavIndex] == '世界'" ref="worldPage"></worldPage>
 		</transition>
+		<!-- 书籍详情抽屉 -->
+		<el-drawer 
+			:visible.sync="showBookDetail" 
+			:with-header="false"
+			size="90%"
+			:direction="'btt'"
+			custom-class="book-detail-wrapper"
+			:modal-append-to-body="true">
+			<div class="drawer-container">
+				<div class="drawer-header">
+					<el-button icon="el-icon-close" circle size="medium" @click="showBookDetail = false"
+					type="text" style="transform: scale(1.2);"></el-button>
+				</div>
+				<book-detail-view 
+					v-if="curBook !== -1"
+					:book="books[curBook]"
+					:worlds="worlds"
+					:statistics="novel_statistic"
+					:isDrawerMode="viewMode === 'grid'"
+					@goto-all-articles="gotoAllArticles"
+					@read-novel="readNovel"
+					@goto-essay-set="gotoEssaySet"
+					@delete-world-novel-asso="deleteWorldNovelAsso"
+					@show-book-select="bookSelectDrawer = true"
+					@goto-statistics="gotoStatistics"
+					@goto-world-novel="gotoWorldNovel"
+				></book-detail-view>
+			</div>
+		</el-drawer>
 
-		<el-drawer title="世界选择" :visible.sync="bookSelectDrawer" :with-header="false" :direction="'btt'" size="80%">
+		<el-drawer 
+			:visible.sync="bookSelectDrawer" 
+			:with-header="false" 
+			:direction="'btt'" 
+			size="80%"
+			class="book-select-drawer"
+			custom-class="book-select-wrapper"
+			modal-class="book-select-overlay">
 			<div class="searchBar" style="position:absolute; background-color: #ffe6b4; width:100%; z-index:100;">
 				<uni-search-bar bgColor="#ffffff" :radius="0" @input="searchLibrary" placeholder="搜索全站世界"
 					cancelButton="none">
@@ -172,7 +129,7 @@
 				</uni-search-bar>
 			</div>
 			<div style="height:52px; width:100%;"></div>
-			<navigator v-for="item in [...searchBooks]" :key="item.novel_id" @click="selectBook(item)">
+			<navigator v-for="item in [...searchBooks]" :key="item.novel_id" @click="selectWorldBook(item)">
 				<div class="books" style="margin:20rpx;">
 					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
 						:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
@@ -188,6 +145,7 @@
 				</div>
 			</navigator>
 		</el-drawer>
+
 	</view>
 </template>
 
@@ -195,10 +153,13 @@
 	import cardSwiper from "@/components/helang-cardSwiper/helang-cardSwiper"
 	import writerHelper from "@/components/writer_helper"
 	import worldPage from '@/components/worldsPage.vue'
+	import BookDetailView from '@/components/book-detail-view.vue'
 	import axios from 'axios'
 	export default {
 		data() {
 			return {
+				viewMode: localStorage.getItem('loghome_essay_view_mode') || 'scroll', // 从本地存储获取上次的视图模式
+				showBookDetail: false,
 				topNavIndex: 0,
 				topNavArr: ['小说', '世界'],
 				pageScrollTop: 0, // 页面滚动距离
@@ -209,13 +170,15 @@
 				bookSelectDrawer: false, //是否打开书籍选择抽屉
 				bookSelectItemIndex: undefined, //即将需要选择书籍的书链item的index
 				timer: undefined,
-				searchBooks: [] //搜索到的书
+				searchBooks: [], //搜索到的书
+				showBookDetailModal: true, //是否打开书籍详情遮罩
 			}
 		},
 		components: {
 			cardSwiper,
 			writerHelper,
-			worldPage
+			worldPage,
+			BookDetailView
 		},
 		onShow() {
 			if (this.$isFromLogin) {
@@ -260,6 +223,17 @@
 			this.pageScrollTop = Math.floor(e.scrollTop);
 		},
 		methods: {
+			toggleViewMode() {
+				this.viewMode = this.viewMode === 'scroll' ? 'grid' : 'scroll'
+				localStorage.setItem('loghome_essay_view_mode', this.viewMode) // 保存视图模式到本地存储
+			},
+			selectBook(index) {
+				if (this.viewMode === 'grid') {
+					this.curBook = index
+					this.showBookDetail = true
+					this.swiperChange(index)
+				}
+			},
 			// 顶部导航改变 
 			changeTopNav(e) {
 				this.topNavIndex = e.currentTarget.dataset.index
@@ -356,9 +330,13 @@
 				})
 			},
 			gotoAllArticles() {
+				this.showBookDetail = false;
 				uni.navigateTo({
 					url: "./writers/allArticles?id=" + this.books[this.curBook].novel_id
 				})
+			},
+			gotoWorldNovel(novel_id) {
+				this.showBookDetail = false;
 			},
 			readNovel(is_personal) {
 				if (is_personal == 1) {
@@ -368,17 +346,20 @@
 						duration: 2000
 					});
 				} else {
+					this.showBookDetail = false;
 					uni.navigateTo({
 						url: "./readers/bookInfo?id=" + this.books[this.curBook].novel_id
 					})
 				}
 			},
 			gotoEssaySet() {
+				this.showBookDetail = false;
 				uni.navigateTo({
 					url: "./writers/essaySet?id=" + this.books[this.curBook].novel_id
 				})
 			},
 			gotoStatistics() {
+				this.showBookDetail = false;
 				uni.navigateTo({
 					url: './writers/novel_statistics?id=' + this.books[this.curBook].novel_id
 				})
@@ -405,34 +386,6 @@
 					}
 
 				}, 500)
-			},
-			//选择书籍
-			selectBook(book_item) {
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;;
-				axios.get(this.$baseUrl + '/world/add_world_novel_asso?world_id=' + book_item.world_id + "&novel_id=" +
-					this.books[this.curBook].novel_id, {
-						headers: {
-							'Content-Type': 'application/json', //设置请求头请求格式为JSON
-							'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-						}
-					}).then((res) => {
-					uni.showToast({
-						title: "添加关联世界设定成功",
-						icon: 'none',
-						duration: 2000
-					});
-				}).catch(function(error) {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000
-					});
-				}).then(() => {
-					uni.hideLoading();
-					this.refreshPage();
-				})
-				this.bookSelectDrawer = false;
 			},
 			deleteWorldNovelAsso(world_id) {
 				let _this = this;
@@ -491,7 +444,34 @@
 				}).then(function() {
 					uni.hideLoading();
 				})
-			}
+			},
+			selectWorldBook(book_item) {
+				let tk = JSON.parse(window.localStorage.getItem('token'));
+				if (tk) tk = tk.tk;;
+				axios.get(this.$baseUrl + '/world/add_world_novel_asso?world_id=' + book_item.world_id + "&novel_id=" +
+					this.books[this.curBook].novel_id, {
+						headers: {
+							'Content-Type': 'application/json', //设置请求头请求格式为JSON
+							'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+						}
+					}).then((res) => {
+					uni.showToast({
+						title: "添加关联世界设定成功",
+						icon: 'none',
+						duration: 2000
+					});
+				}).catch(function(error) {
+					uni.showToast({
+						title: error.toString(),
+						icon: 'none',
+						duration: 2000
+					});
+				}).then(() => {
+					uni.hideLoading();
+					this.refreshPage();
+				})
+				this.bookSelectDrawer = false;
+			},
 		}
 	}
 </script>
@@ -501,7 +481,7 @@
 
 	view.outer {
 		height: calc(100%);
-		background-color: #ffffff;
+		background-color: #ffffff !important;
 	}
 
 	/* 标题栏 */
@@ -851,5 +831,105 @@
 	.fade-enter,
 	.fade-leave-active {
 		opacity: 0
+	}
+
+	.bookshelf {
+		min-height: 100vh;
+		padding: 20rpx;
+		padding-top: calc(44px + var(--statusBarHeight) + 20rpx); // 标题栏高度 + 状态栏高度 + 额外间距
+		// background-color: white;
+		background: linear-gradient(to bottom, rgb(255, 248, 234) 0%, rgb(255, 248, 234) 30%, rgb(255, 255, 255) 100%);
+		padding-bottom: 150rpx;
+		
+		.book-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 20rpx;
+			padding: 10rpx;
+			
+			.book-item {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				cursor: pointer;
+				
+				.book-cover {
+					width: 200rpx;
+					height: 280rpx;
+					border-radius: 8rpx;
+					box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+				}
+				
+				.book-title {
+					margin-top: 10rpx;
+					font-size: 24rpx;
+					text-align: center;
+					width: 200rpx;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+				}
+
+				&.new-book {
+					height: 280rpx;
+					width: 200rpx;
+					border: 4rpx dashed #4c4c4c33;
+					border-radius: 8rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 60rpx;
+					color: #4c4c4c66;
+					background-color: #f8f8f8;
+					transition: all 0.3s ease;
+					margin: 0 auto;
+					
+					&:active {
+						transform: scale(0.95);
+						background-color: #4c4c4c11;
+						border-color: #4c4c4c55;
+						color: #4c4c4c88;
+					}
+				}
+			}
+		}
+	}
+
+	.drawer-container {
+		height: 100%;
+		overflow-y: auto;
+		
+		.drawer-header {
+			position: sticky;
+			top: 0;
+			z-index: 100;
+			padding: 20rpx;
+			text-align: right;
+			background: rgb(255, 248, 234);
+		}
+	}
+
+	.el-drawer {
+		&.book-select-drawer {
+			z-index: 3100 !important;
+		}
+	}
+
+	:deep(.el-drawer__wrapper) {
+		&.book-select-wrapper {
+			z-index: 3100 !important;
+		}
+	}
+
+	:deep(.el-overlay) {
+		&.book-select-overlay {
+			z-index: 3000 !important;
+		}
+	}
+
+	.el-drawer {
+		&.book-select-drawer {
+			z-index: 3100 !important;
+		}
 	}
 </style>

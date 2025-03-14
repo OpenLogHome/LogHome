@@ -34,7 +34,7 @@ uni-page.hpa-animation-before {
 
 uni-page.hpa-animation-after {
    opacity:1;
-   transform: translateX(0);
+   transform: translateX(0px);
    transform-origin: 50vw 50vh;
    background-color: #f2f2f2;
 }
