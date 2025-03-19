@@ -593,15 +593,23 @@ input {
     padding: 20rpx;
     border: 1px solid #ddd;
     border-radius: 15rpx;
-    margin-right: 20rpx;
+    /* margin-right: 20rpx; */
+    height: 80rpx;
+    box-sizing: border-box;
+    margin-right:20rpx;
 }
 
 button {
-    padding: 0rpx 25rpx;
+    height: 80rpx !important;
+    padding: 0 30rpx !important;
     background-color: #007aff;
     color: #fff;
     border: none;
     border-radius: 10rpx;
+}
+
+button:active{
+    background-color: #0056b3;
 }
 
 .new-message-toast {

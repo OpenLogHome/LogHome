@@ -42,7 +42,7 @@ export default {
     },
     methods: {
         show(next) {
-			let animationTime = 300;
+			let animationTime = 400;
             // 填充虚拟页
             const page2 = document.getElementById('page2');
             page2.innerHTML = document.querySelector('uni-page').innerHTML;
@@ -78,7 +78,7 @@ export default {
         },
         hide(next) {
             // 填充虚拟页
-			let animationTime = 300;
+			let animationTime = 400;
             const page2 = document.getElementById('page2');
             page2.innerHTML = document.querySelector('uni-page').innerHTML;
             // 调整虚拟页样式

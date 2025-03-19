@@ -1,51 +1,48 @@
 <template>
 	<view class="outer">
+		<!-- 顶部导航按钮 -->
+		<view class="top-nav">
+			<view class="nav-button" @click="navigateToNotification">
+				<text>系统通知</text>
+				<view v-if="unreadNotifications" class="unread-dot"></view>
+			</view>
+			<view class="nav-button" @click="navigateToPrivateMessage">
+				<text>私信</text>
+				<view v-if="unreadPrivateMessages" class="unread-dot"></view>
+			</view>
+		</view>
+
+		<!-- 互动消息分类 -->
 		<lgd-tab class="tab" 
 			:firstTab="firstTab" 
-			:tabValue="tabValue" 
+			:tabValue="['评论', '@我的', '赞与收藏']" 
 			@getIndex="changeTab" 
 			textColor="#2d2d2d" 
-			ref="tabs"
-			:showBadge="true"
-			:badgeIndexes="badgeIndexes"
-			@tabClicked="handleTabClicked"/>
+			ref="tabs"/>
 		
-		<!-- 消息栏目 -->
-		<view class="list" v-show="curTabIndex == 0">
-			<div class="users" v-for="item in shownMessages">
-				<navigator class="avators" :url="'../users/personalPage?id='+item.from_id">
+		<!-- 消息列表 -->
+		<view class="list">
+			<div class="users" v-for="item in filteredMessages">
+				<div class="avators" @click="navigateTo('../users/personalPage?id='+item.from_id)">
 					<log-image :src="item.avatar_url" alt=""
 					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-				</navigator>
-				<navigator class="users" :url="item.router ? '../' + item.router : './'">
-					<div class="personInfo" style="display: flex; flex-direction: column; justify-content: center;">
-						<div class="name_time" style="display: flex; justify-content: space-between;">
+				</div>
+				<div class="users" @click="navigateTo(item.router ? '../' + item.router : './')">
+					<div class="personInfo">
+						<div class="name_time">
 							<div class="name">{{item.name}}</div>
-							<div class="time" style="margin-right: 20rpx;">{{utc2beijing(item.time)}}</div>
+							<div class="time">{{utc2beijing(item.time)}}</div>
 						</div>
 						<div class="motto">{{item.message_content}}</div>
 					</div>
-				</navigator>
-			</div>
-		</view>
-		
-		<!-- 私信栏目 -->
-		<view class="list" v-show="curTabIndex == 1">
-			<div class="users" v-for="item in chatFriends" @click="navigateToChat(item)">
-				<view class="avators">
-					<log-image :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-					<view v-if="item.unread_count > 0" class="unread-badge">{{item.unread_count}}</view>
-				</view>
-				<div class="personInfo">
-					<div class="name-row">
-						<div class="name">{{item.name}}</div>
-						<div class="time">{{utc2beijing(item.last_message_time)}}</div>
-					</div>
-					<div class="motto">{{item.last_message_content}}</div>
 				</div>
 			</div>
 		</view>
+
+		<div class="nouser" v-if="filteredMessages.length == 0" style="display: flex; 
+			justify-content: center; align-items: center; height: 300rpx; background-color: #F2F2F2; color: #333">
+			暂无消息
+		</div>
 	</view>
 </template>
 
@@ -58,28 +55,28 @@
 		},
 		data(){
 			return{
-				tabValue: ["消息", "私信"],
+				tabValue: ["评论", "@我的", "赞与收藏"],
 				firstTab: 0,
 				id: -1,
 				user: {},
-				isMe: false,
 				curTabIndex: 0,
-				follows: [],
 				messages: [],
-				shownMessages: [],
-				chatFriends: [], // 私信好友列表
-				page: 0,
-				pageDOM: undefined,
-				badgeIndexes: [] // 需要显示小红点的tab索引
+				unreadNotifications: 0,
+				unreadPrivateMessages: 0
 			}
 		},
-		// onNavigationBarButtonTap(e){
-		// 	uni.navigateTo({
-		// 		url: './send_mail'
-		// 	});
-		// },
-		onLoad(){
-			let _this = this;
+		computed: {
+			filteredMessages() {
+				const messageTypes = {
+					0: 'comment',
+					1: 'mention',
+					2: 'like_collect'
+				};
+				console.log(messageTypes[this.curTabIndex], this.messages);
+				return this.messages.filter(msg => 
+					msg.message_type === messageTypes[this.curTabIndex]
+				);
+			}
 		},
 		onShow(){
 			let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
@@ -113,13 +110,12 @@
 					//设置所有消息为已读
 					for(let i = 0 ; i < messages.length ; i ++){
 						if(messages[i].to_id == _this.user.user_id){
-							messages[i].is_read = 1;
+							// messages[i].is_read = 1;
 							myMessage.push(messages[i])
 						}
 					}
 					_this.messages = myMessage;
-					_this.shownMessages = _this.messages.splice(0,100);
-					window.localStorage.setItem("messages",JSON.stringify(_this.shownMessages));
+					window.localStorage.setItem("messages",JSON.stringify(_this.messages));
 					uni.hideTabBarRedDot({
 						index: 3
 					});
@@ -157,6 +153,16 @@
 			this.$refs.tabs.clickTab(this.firstTab);
 		},
 		methods:{
+			navigateToNotification() {
+				uni.navigateTo({
+					url: './notification'
+				});
+			},
+			navigateToPrivateMessage() {
+				uni.navigateTo({
+					url: './private-message'
+				});
+			},
 			// 检查是否有未读私信
 			checkUnreadMessages() {
 				let unreadPrivateMessages = window.localStorage.getItem('unreadPrivateMessages');
@@ -237,6 +243,11 @@
 				var beijing_datetime = this.timeConvert(new Date(parseInt(timestamp) * 1000))
 			    return beijing_datetime; // 2017-03-31 16:02:06
 			},
+			navigateTo(url) {
+				uni.navigateTo({
+					url
+				})
+			}
 		}
 	}
 </script>
@@ -245,10 +256,27 @@
 	.outer{
 		background-color: #ffffff;
 		padding-top: 4px;
+	}
+	
+	.top-nav {
+		padding: 20rpx 0;
+		border-bottom: 1px solid #eee;
 		
-		.tab{
-			height: 40px;
-			width: 100vw;
+		.nav-button {
+			position: relative;
+			padding: 15rpx 40rpx;
+			font-size: 28rpx;
+			color: #333;
+			
+			.unread-dot {
+				position: absolute;
+				top: 0;
+				right: 0;
+				width: 16rpx;
+				height: 16rpx;
+				background-color: #ff4d4f;
+				border-radius: 50%;
+			}
 		}
 	}
 	
@@ -287,12 +315,12 @@
 			position: relative;
 			border-bottom: #cacaca solid 1px;
 			flex: 1;
-			
-			.name-row {
+
+			.name_time{
 				display: flex;
 				justify-content: space-between;
 				align-items: center;
-				margin-top: 20rpx;
+				margin-top: 15rpx;
 				padding-right: 15rpx;
 			}
 			
@@ -318,16 +346,20 @@
 			margin-top: 8rpx;
 			font-size: 28rpx;
 			margin-bottom: 10rpx;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
+			// overflow: hidden;
+			// text-overflow: ellipsis;
+			// white-space: nowrap;
 		}
-		
-		.button{
-			position: absolute;
-			right: 30rpx;
-			top: 50%;
-			transform: translateY(-50%);
-		}
+	}
+
+	.users:active{
+		background-color: #e3e3e3;
+	}
+	
+	.tab {
+		margin-top: 15rpx;
+		margin-bottom: 15rpx;
+		height: 40px;
+		width: 100vw;
 	}
 </style>
