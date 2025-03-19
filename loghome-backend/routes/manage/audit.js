@@ -32,7 +32,21 @@ async function checkText(content) {
 
 			if (response.data.code === 0) {
 				if (response.data.result !== 'pass') {
-					suspectClasses.add(response.data.remark);
+					if(response.data.remark.indexOf("色情") != -1) {
+						suspectClasses.add("色情");
+					}
+					if(response.data.remark.indexOf("赌博") != -1) {
+						suspectClasses.add("赌博");
+					}
+					if(response.data.remark.indexOf("政") != -1) {
+						suspectClasses.add("涉政");
+					}
+					if(response.data.remark.indexOf("恐怖") != -1) {
+						suspectClasses.add("恐怖");
+					}
+					if(response.data.remark.indexOf("广告") != -1) {
+						suspectClasses.add("广告");
+					}
 				}
 			} else {
 				console.error('文本审核接口返回错误:', response.data);
@@ -43,7 +57,7 @@ async function checkText(content) {
 			console.error('调用审核接口出错');
 			suspectClasses.add('接口异常需人工审核');
 		}
-		await new Promise(resolve => setTimeout(resolve, 1000)); // 延迟1秒
+		await new Promise(resolve => setTimeout(resolve, 2000)); // 延迟1秒
 	}
 
 	return Array.from(suspectClasses);
@@ -53,7 +67,7 @@ async function checkText(content) {
 let router = express.Router();
 
 // 定义一个QPS为5的自动文章审核函数
-let isArticleAuditRunning = true;
+let isArticleAuditRunning = false;
 let articlesToAudit = [];
 setInterval(async function () {
 	if (isArticleAuditRunning) return;
