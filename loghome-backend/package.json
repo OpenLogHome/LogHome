@@ -12,7 +12,6 @@
 		"compressing": "^1.6.2",
 		"crypto": "^1.0.1",
 		"express": "^4.17.1",
-		"express-pino-logger": "^7.0.0",
 		"form-data": "^4.0.0",
 		"html-to-text": "^8.1.0",
 		"js-md5": "^0.8.3",
@@ -24,8 +23,6 @@
 		"node-gyp": "^8.4.0",
 		"node-schedule": "^2.1.0",
 		"nodemon": "^2.0.7",
-		"pino": "^7.6.4",
-		"pino-pretty": "^7.5.1",
 		"svg-captcha": "^1.4.0",
 		"tencentcloud-sdk-nodejs": "^4.0.652",
 		"tencentcloud-sdk-nodejs-sms": "^4.0.651"
@@ -38,7 +35,8 @@
 	"scripts": {
 		"lint": "eslint --quiet .",
 		"lint:strict": "eslint .",
-		"dev": "nodemon main.js"
+		"dev": "nodemon main.js",
+		"start": "node main.js"
 	},
 	"repository": {
 		"type": "git",

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "community",
+    "path": "/community",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\community.vue",
+    "chunkName": "pages/community",
+    "_name": "_cf860a0c"
+  },
+  {
+    "name": "read",
+    "path": "/read",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\read.vue",
+    "chunkName": "pages/read",
+    "_name": "_696b2495"
+  },
+  {
+    "name": "write",
+    "path": "/write",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\write.vue",
+    "chunkName": "pages/write",
+    "_name": "_95b6c720"
+  },
+  {
+    "name": "article-id",
+    "path": "/article/:id?",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\article\\\\_id.vue",
+    "chunkName": "pages/article/_id",
+    "_name": "_9360bffa"
+  },
+  {
+    "name": "novel-id",
+    "path": "/novel/:id?",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\novel\\\\_id.vue",
+    "chunkName": "pages/novel/_id",
+    "_name": "_08d7133d"
+  },
+  {
+    "name": "index",
+    "path": "/",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\index.vue",
+    "chunkName": "pages/index",
+    "_name": "_4e54883a"
+  },
+  {
+    "name": "release",
+    "path": "/release/",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\index.vue",
+    "_name": "_4e54883a"
+  }
+]

@@ -23,7 +23,7 @@ async function checkText(content) {
 		try {
 			const response = await axios({
 				method: 'post',
-				url: 'http://127.0.0.1:8787/api/check',
+				url: 'http://49.234.114.90:8787/api/check',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded'
 				},
@@ -73,7 +73,7 @@ setInterval(async function () {
 	if (isArticleAuditRunning) return;
 	isArticleAuditRunning = true;
 	articlesToAudit = await query(
-		'SELECT * FROM articles WHERE audit_status = \'Uncheck\' LIMIT 0,5',
+		'SELECT * FROM articles WHERE audit_status = \'Uncheck\' and is_draft = 0 LIMIT 0,5',
 	);
 	try {
 		for (let i = 0; i < articlesToAudit.length; i++) {

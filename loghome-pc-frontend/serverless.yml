@@ -1,0 +1,40 @@
+component: http
+name: http-nuxtjs-D4n_ml__Ix
+inputs:
+  src:
+    dist: ./
+    hook: npm run build
+    exclude:
+      - .env
+  faas:
+    runtime: Nodejs12.16
+    framework: nuxtjs
+    name: '${name}'
+    environments:
+      - key: STATIC_URL
+        value: 'https://loghome-pc-dev-1301117745.cos.ap-guangzhou.myqcloud.com'
+    events:
+      - http:
+          parameters:
+            netConfig:
+              enableIntranet: false
+              enableExtranet: true
+            qualifier: $DEFAULT
+            authType: NONE
+    eip: false
+    timeout: 3
+    memorySize: 512
+    tags: []
+    layers:
+      - name: '${output:${stage}:${app}:loghome-pc-layer.name}'
+        version: '${output:${stage}:${app}:loghome-pc-layer.version}'
+  region: ap-guangzhou
+  isAutoCiDeploy: false
+  assets:
+    cos:
+      bucket: loghome-pc-dev-1301117745
+      acl:
+        permissions: public-read
+org: '1301117745'
+app: loghome-pc
+stage: dev

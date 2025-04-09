@@ -892,6 +892,11 @@
 					}
 				}
 			}
+			
+			.book-item:active{
+				transform: scale(0.95);
+				transition: all .3s;
+			}
 		}
 	}
 

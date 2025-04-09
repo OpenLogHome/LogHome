@@ -7,17 +7,21 @@ let app = express();
 app.use('/public', express.static('public'));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: false, limit: '5mb' }));
-const pino = require('pino');
-const expressPino = require('express-pino-logger');
-const logger = pino({
-	level: process.env.LOG_LEVEL || 'info',
-	transport: {
-		target: 'pino-pretty',
-	},
-	prettyPrint: true,
-});
-const expressLogger = expressPino({ logger });
-const svgCaptcha = require('svg-captcha');
+// const pino = require('pino');
+// const expressPino = require('express-pino-logger');
+// const logger = pino({
+// 	level: process.env.LOG_LEVEL || 'info',
+// 	transport: {
+// 		target: 'pino-pretty',
+// 		options: {
+// 			singleLine: true,
+// 			sync: true
+// 		}
+// 	},
+// 	prettyPrint: true,
+// });
+// const expressLogger = expressPino({ logger });
+// const svgCaptcha = require('svg-captcha');
 
 // app.use(expressLogger);
 
@@ -38,49 +42,18 @@ app.use(async (req, res, next) => {
 	next();
 	QpsStatistic[req.ip] =
 		QpsStatistic[req.ip] == undefined ? 0 : QpsStatistic[req.ip] + 1;
-	// if(SuspiciousUsers.includes(req.ip)){
-	//     res.end(JSON.stringify({msg:"QPS too High."}))
-	// } else {
-	//     next();
-	// }
 });
 
 setInterval(function () {
-	// if(QpsStatistic){
-	//     for(let item in QpsStatistic){
-	//         if(QpsStatistic[item] >= 15){
-	//             generateVerifCode(item);
-	//         }
-	//     }
-	// }
-	// console.log(QpsStatistic)
 	QpsStatistic = new Array();
 }, 30000);
-
-// async function generateVerifCode(ip) {
-//     const codeConfig = {
-//       size: 4, // 验证码长度
-//       ignoreChars: '0oO1ilI', // 验证码字符中排除 0oO1ilI
-//       noise: 2, // 干扰线条的数量
-//       width: 160,
-//       height: 50,
-//       fontSize: 50,
-//       color: true, // 验证码的字符是否有颜色，默认没有，如果设定了背景，则默认有
-//       background: '#eee',
-//     };
-//     const captcha = svgCaptcha.create(codeConfig);
-//     SuspiciousUsers[ip]={
-//         text:captcha.text.toLowerCase(),
-//         img:captcha.data
-//     }
-// }
 
 app.get('/get_online_amount', async function (req, res) {
 	try {
 		let result = QpsStatistic;
 		res.end(String(Object.keys(result).length));
 	} catch (e) {
-		logger.error(e);
+		// logger.error(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });
@@ -131,7 +104,7 @@ app.use('/payment', paymentsRouter);
 app.use('/world', worldRouter);
 app.use('/uni', uniImRouter);
 
-let server = app.listen(8081, function () {
+let server = app.listen(9000, function () {
 	let host = server.address().address;
 	let port = server.address().port;
 	console.log('服务器已在' + host + ':' + port + '上启动。');
