@@ -5,11 +5,12 @@
 <h1 align="center">LogHome 原木社区</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/uniapp-Vue2-green" alt="Uniapp">
+  <img src="https://img.shields.io/badge/Uniapp-Vue2-green" alt="Uniapp">
+  <img src="https://img.shields.io/badge/Nuxt.js-3-green" alt="Nuxt">
   <img src="https://img.shields.io/badge/Express.js-4.17.1-purple" alt="Express">
   <img src="https://img.shields.io/badge/Flutter-3.6.1-blue" alt="Flutter">
   <img src="https://img.shields.io/badge/License-GPL-pink" alt="License">
-  <img src="https://img.shields.io/badge/version-2.6.3-orange" alt="Version">
+  <img src="https://img.shields.io/badge/Version-2.6.3-orange" alt="Version">
 </p>
 
 ## 📖 项目介绍
