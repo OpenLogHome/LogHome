@@ -210,6 +210,7 @@ router.get('/nice_novel', auth, async function (req, res) {
 				novel[0].author_id,
 				'赞了你的小说《' + novel[0].name + '》',
 				'readers/bookInfo?id=' + novel[0].novel_id,
+				'like_collect',
 			);
 			res.json(200, { msg: 'ok' });
 		}
@@ -265,6 +266,7 @@ router.post('/tipping', auth, async (req, res) => {
 					'个' +
 					req.body.item_name,
 				'readers/bookInfo?id=' + novel[0].novel_id,
+				'like_collect',
 				true,
 			);
 			if (req.body.resource_name == 'log') {

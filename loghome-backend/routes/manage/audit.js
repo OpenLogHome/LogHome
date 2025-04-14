@@ -190,6 +190,7 @@ router.post('/submit_result', auth, async function (req, res) {
 				article[0].title +
 				'》未能通过审核已被退回，您可以编辑后重新发布。',
 				'writers/chapterEditor?id=' + req.body.article_id,
+				'notification',
 				true,
 			);
 			res.end(JSON.stringify(results));

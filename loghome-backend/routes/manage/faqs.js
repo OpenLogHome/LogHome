@@ -107,6 +107,7 @@ router.post('/submit_answer', auth, async function (req, res) {
 			result[0].user_id,
 			'你的反馈已经被回复，快来看看吧！',
 			'apps/faqs/feedback?id=' + result[0].faq_id,
+			'notification',
 			true,
 		);
 		res.end(JSON.stringify(results));

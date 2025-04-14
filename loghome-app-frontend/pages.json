@@ -332,13 +332,6 @@
 		        "navigationBarTitleText": "我的消息",
 				"titleNView": {
 					"titleSize": "36rpx"
-					// "buttons": [				
-					// 	{
-					// 	    "text": "写站内信",
-					// 	    "fontSize": "36rpx",
-					// 	    "float": "right"
-					// 	}
-				    // ]
 				}
 		    }
 		},
@@ -575,6 +568,16 @@
 				"navigationBarTitleText": ""
 			}
 		}, {
+			"path": "pages/community/privateMessages",
+			"style": {
+				"navigationBarTitleText": "私信列表"
+			}
+		},{
+			"path": "pages/community/notifications",
+			"style": {
+				"navigationBarTitleText": "通知消息"
+			}
+		},{
 			"path": "pages/community/chat",
 			"style": {
 				"navigationBarTitleText": "聊天"

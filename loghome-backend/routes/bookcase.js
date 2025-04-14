@@ -41,6 +41,7 @@ router.post('/like_novel', auth, async (req, res) => {
 			novel.author_id,
 			'等朋友收藏了你的作品《' + novel.name + '》',
 			'readers/bookInfo?id=' + req.body.novel_id,
+			'like_collect',
 		);
 		res.end(JSON.stringify(results));
 	} catch (e) {

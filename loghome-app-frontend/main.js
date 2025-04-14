@@ -11,8 +11,8 @@ import chunLeiModal from '@/components/chunLei-modal/chunLei-modal.vue'
 Vue.component('chunLei-modal',chunLeiModal);
 Vue.component('log-image', LogImage);
 
-const BASE_URL_PRODUCTION = "https://loghomes.codesocean.top"
-const BASE_URL_DEV = "http://127.0.0.1:8081"
+const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
+const BASE_URL_DEV = "http://127.0.0.1:9000"
 
 Vue.use(SlideVerify);
 Vue.use(ElementUI);

@@ -67,6 +67,39 @@ const apiService = {
         console.error('获取标签相关小说失败:', error)
         return []
       }
+    },
+    
+    // 获取轮播图数据
+    getLibraryRoulousChart: async () => {
+      try {
+        const response = await fetch(`${process.env.baseUrl}/library/get_library_roulous_chart`)
+        return await response.json()
+      } catch (error) {
+        console.error('获取轮播图数据失败:', error)
+        return []
+      }
+    },
+    
+    // 获取所有推荐集合
+    getLibraryCollections: async () => {
+      try {
+        const response = await fetch(`${process.env.baseUrl}/library/recommand/get_library_collections`)
+        return await response.json()
+      } catch (error) {
+        console.error('获取推荐集合失败:', error)
+        return []
+      }
+    },
+    
+    // 获取推荐集合中的小说
+    getCollectionNovels: async (title, page = 1, amount = 10) => {
+      try {
+        const response = await fetch(`${process.env.baseUrl}/library/recommand/get_library_recommend_titles?title=${encodeURIComponent(title)}&page=${page}&amount=${amount}`)
+        return await response.json()
+      } catch (error) {
+        console.error(`获取集合 ${title} 的小说失败:`, error)
+        return []
+      }
     }
   },
   

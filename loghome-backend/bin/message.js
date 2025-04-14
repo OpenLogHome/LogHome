@@ -3,7 +3,7 @@ let express = require('express');
 let { query } = require('../sql.js');
 let auth = require('../bin/auth.js');
 
-async function sendMsg(from_id, to_id, content, router, ignoreRepeat) {
+async function sendMsg(from_id, to_id, content, router, type="notification", ignoreRepeat=false) {
 	let result = await query(
 		'SELECT * FROM user_message WHERE from_id = ? AND to_id = ? AND message_content = ? AND unix_timestamp(CURRENT_TIMESTAMP()) - unix_timestamp(`time`) < 3600',
 		[from_id, to_id, content],
@@ -11,8 +11,8 @@ async function sendMsg(from_id, to_id, content, router, ignoreRepeat) {
 	result = JSON.parse(JSON.stringify(result));
 	if ((result.length == 0 && !ignoreRepeat) || ignoreRepeat) {
 		await query(
-			'INSERT INTO user_message(from_id,to_id,message_content,router) VALUES(?,?,?,?)',
-			[from_id, to_id, content, router],
+			'INSERT INTO user_message(from_id,to_id,message_content,router,message_type) VALUES(?,?,?,?,?)',
+			[from_id, to_id, content, router, type],
 		);
 	}
 }

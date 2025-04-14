@@ -2,49 +2,42 @@
   {
     "name": "community",
     "path": "/community",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\community.vue",
-    "chunkName": "pages/community",
-    "_name": "_cf860a0c"
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\community.vue",
+    "chunkName": "pages/community"
   },
   {
     "name": "read",
     "path": "/read",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\read.vue",
-    "chunkName": "pages/read",
-    "_name": "_696b2495"
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\read.vue",
+    "chunkName": "pages/read"
   },
   {
     "name": "write",
     "path": "/write",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\write.vue",
-    "chunkName": "pages/write",
-    "_name": "_95b6c720"
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\write.vue",
+    "chunkName": "pages/write"
   },
   {
     "name": "article-id",
     "path": "/article/:id?",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\article\\\\_id.vue",
-    "chunkName": "pages/article/_id",
-    "_name": "_9360bffa"
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\article\\\\_id.vue",
+    "chunkName": "pages/article/_id"
   },
   {
     "name": "novel-id",
     "path": "/novel/:id?",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\novel\\\\_id.vue",
-    "chunkName": "pages/novel/_id",
-    "_name": "_08d7133d"
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\novel\\\\_id.vue",
+    "chunkName": "pages/novel/_id"
   },
   {
     "name": "index",
     "path": "/",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\index.vue",
-    "chunkName": "pages/index",
-    "_name": "_4e54883a"
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\index.vue",
+    "chunkName": "pages/index"
   },
   {
     "name": "release",
     "path": "/release/",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc\\\\pages\\\\index.vue",
-    "_name": "_4e54883a"
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\index.vue"
   }
 ]

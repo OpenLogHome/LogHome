@@ -2,8 +2,8 @@ export default {
   env: {
     STATIC_URL: process.env.STATIC_URL || '',
     baseUrl: process.env.NODE_ENV === 'production' 
-      ? 'https://api.original-community.com' // 生产环境API地址
-      : 'http://localhost:9000', // 开发环境API地址
+      ? 'http://loghomeservice.codesocean.top' // 生产环境API地址
+      : 'http://127.0.0.1:9000', // 开发环境API地址
   },
   /*
    ** Build configuration

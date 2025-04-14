@@ -103,6 +103,7 @@ router.post('/follow', auth, async (req, res) => {
 			req.body.follow_id,
 			'关注了你。',
 			'users/personalPage?id=' + user.user_id,
+			'notification',
 		);
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
@@ -144,6 +145,7 @@ router.post('/comment_on_novel', auth, async (req, res) => {
 			novel.author_id,
 			'评论了你的小说《' + novel.name + '》：' + req.body.content,
 			'readers/bookInfo?id=' + req.body.novel_id,
+			'comment',
 		);
         // 判断一下是不是章节评论，如果是的话就操作一下cento
         if(req.body.paragraph_id != -1){
@@ -203,6 +205,7 @@ router.post('/reply_to_novel_comment', auth, async (req, res) => {
 			comment.user_id,
 			'回复了你的评论：' + req.body.content,
 			'readers/bookInfo?id=' + req.body.novel_id,
+			'comment',
 		);
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -382,6 +385,7 @@ router.post('/praise_on_comment', auth, async (req, res) => {
 					comment[0].user_id,
 					'点赞了你的评论：' + comment[0].content,
 					'readers/bookInfo?id=' + comment[0].novel_id,
+					'like_collect',
 				);
 			}
 			if (JSON.parse(JSON.stringify(results)).length == 0) {

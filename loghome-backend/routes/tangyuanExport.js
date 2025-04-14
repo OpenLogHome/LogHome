@@ -217,11 +217,12 @@ async function importBook(id, ty_id, cookie, user_id) {
 									'》发生了错误，请手动处理！',
 								'/',
 								true,
+								'notification',
 							);
 							console.log(error);
 						});
 				}
-				message.sendMsg(-1, user_id, '小说导入已全部完成。', '/', true);
+				message.sendMsg(-1, user_id, '小说导入已全部完成。', '/', 'notification', true);
 			}
 		})
 		.catch(function (error) {

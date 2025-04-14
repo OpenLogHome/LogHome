@@ -138,6 +138,7 @@ router.get('/export_novel', auth, async function (req, res) {
 				user.user_id,
 				'作品《' + results[0].novel_name + '》于' + currentTime() + '导出成功，点击下载。',
 				'apps/openInBrowser?url=https://loghomeservice.codesocean.top/'+ `${dirName}.zip`,
+				'notification',
 			);
             
         }).catch((e)=>{
@@ -147,7 +148,8 @@ router.get('/export_novel', auth, async function (req, res) {
 				-1,
 				user.user_id,
 				'作品《' + results[0].novel_name + '》导出失败了，请联系管理员！',
-				''
+				'',
+				'notification',
 			);
         });
 	} catch (e) {
@@ -410,6 +412,7 @@ router.post('/modify_article', auth, async (req, res) => {
 					u.user_id,
 					'你收藏的作品《' + novel[0].name + '》更新了，快去看看吧！',
 					'readers/bookInfo?id=' + novel[0].novel_id,
+					'notification',
 				);
 			}
 		}

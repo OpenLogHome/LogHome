@@ -1,8 +1,8 @@
 <template>
   <div class="home-container">
     <div class="hero-section">
-      <h1 class="hero-title">欢迎来到小说阅读社区</h1>
-      <p class="hero-subtitle">这里是文学爱好者的天堂，阅读、创作、交流的绝佳平台</p>
+      <h1 class="hero-title">欢迎来到 原木社区</h1>
+      <p class="hero-subtitle">方块跃然纸上，故事在此生长。</p>
       <div class="hero-buttons">
         <nuxt-link to="/read" class="hero-button primary">开始阅读</nuxt-link>
         <nuxt-link to="/write" class="hero-button secondary">开始创作</nuxt-link>
@@ -30,28 +30,6 @@
           <p class="feature-desc">与作者读者互动，分享阅读心得</p>
           <nuxt-link to="/community" class="feature-link">去交流</nuxt-link>
         </div>
-      </div>
-    </div>
-
-    <div class="trending-section">
-      <h2 class="section-title">热门推荐</h2>
-      <div class="novel-grid">
-        <div class="novel-card" v-for="i in 6" :key="i">
-          <div class="novel-cover" :style="`background-color: hsl(${i * 60}, 70%, 80%)`">
-            <span class="novel-category">{{['奇幻', '科幻', '言情', '悬疑', '历史', '武侠'][i-1]}}</span>
-          </div>
-          <div class="novel-info">
-            <h3 class="novel-title">示例小说标题 {{i}}</h3>
-            <p class="novel-author">作者名称</p>
-            <p class="novel-stats">
-              <span>👁️ 1.2万</span>
-              <span>⭐ 4.8</span>
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="view-more">
-        <nuxt-link to="/read" class="view-more-link">查看更多小说</nuxt-link>
       </div>
     </div>
   </div>
@@ -134,7 +112,7 @@ export default {
 .section-title {
   font-size: 32px;
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 60px;
   color: #704C35;
 }
 

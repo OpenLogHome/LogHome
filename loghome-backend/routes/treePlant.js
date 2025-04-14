@@ -35,6 +35,7 @@ async function updateTreeStatus() {
 						item.user_id,
 						'[原木树场]你的树长成啦，快来收获吧！',
 						'treePlant/treeplant',
+						'notification',
 					);
 				}
 				continue;

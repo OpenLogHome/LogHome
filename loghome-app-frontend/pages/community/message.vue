@@ -2,14 +2,16 @@
 	<view class="outer">
 		<!-- 顶部导航按钮 -->
 		<view class="top-nav">
-			<view class="nav-button" @click="navigateToNotification">
+			<div class="nav-button" @click="navigateToNotification">
+				<img src="../../static/notification.png" alt="" class="nav-button-icon">
 				<text>系统通知</text>
-				<view v-if="unreadNotifications" class="unread-dot"></view>
-			</view>
-			<view class="nav-button" @click="navigateToPrivateMessage">
+				<view v-if="unreadNotifications > 0" class="unread-badge">{{unreadNotifications}}</view>
+			</div>
+			<div class="nav-button" @click="navigateToPrivateMessage">
+				<img src="../../static/private_message.png" alt="" class="nav-button-icon">
 				<text>私信</text>
-				<view v-if="unreadPrivateMessages" class="unread-dot"></view>
-			</view>
+				<view v-if="unreadPrivateMessages > 0" class="unread-badge">{{unreadPrivateMessages}}</view>
+			</div>
 		</view>
 
 		<!-- 互动消息分类 -->
@@ -18,6 +20,8 @@
 			:tabValue="['评论', '@我的', '赞与收藏']" 
 			@getIndex="changeTab" 
 			textColor="#2d2d2d" 
+			:showBadge="true"
+			:badgeIndexes="badgeIndexes"
 			ref="tabs"/>
 		
 		<!-- 消息列表 -->
@@ -62,19 +66,20 @@
 				curTabIndex: 0,
 				messages: [],
 				unreadNotifications: 0,
-				unreadPrivateMessages: 0
+				unreadPrivateMessages: 0,
+				badgeIndexes: [], // 需要显示小红点的tab索引
+				unreadCounts: [0, 0, 0], // 各分类未读消息数量
+				messageTypes:{
+					0: 'comment',
+					1: 'mention',
+					2: 'like_collect'
+				}
 			}
 		},
 		computed: {
 			filteredMessages() {
-				const messageTypes = {
-					0: 'comment',
-					1: 'mention',
-					2: 'like_collect'
-				};
-				console.log(messageTypes[this.curTabIndex], this.messages);
 				return this.messages.filter(msg => 
-					msg.message_type === messageTypes[this.curTabIndex]
+					msg.message_type === this.messageTypes[this.curTabIndex]
 				);
 			}
 		},
@@ -88,10 +93,14 @@
 				return;
 			}
 			//验活
+			uni.showLoading({
+				title: '加载中',
+				mask: true
+			});
 			axios.get( this.$baseUrl + '/users/userprofile', {
 				headers: { 
-				     'Content-Type': 'application/json',//设置请求头请求格式为JSON
-				     'Authorization': tk //设置token 其中K名要和后端协调好
+				     'Content-Type': 'application/json',
+				     'Authorization': tk
 				}
 			}).then((res) => {
 				_this.user = JSON.parse(JSON.stringify(res.data));
@@ -100,52 +109,60 @@
 				// 获取系统消息
 				axios.get( this.$baseUrl + '/users/get_history_message', {
 					headers: { 
-					     'Content-Type': 'application/json',//设置请求头请求格式为JSON
-					     'Authorization': tk //设置token 其中K名要和后端协调好
+					     'Content-Type': 'application/json',
+					     'Authorization': tk
 					}
 				}).then((res) => {
-					window.localStorage.setItem('messages',JSON.stringify(res.data));
-					let messages = JSON.parse(window.localStorage.getItem('messages'));
+					let messages = res.data;
 					let myMessage = [];
-					//设置所有消息为已读
+					// 统计未读消息
+					let unreadCounts = [0, 0, 0];
+					let unreadNotifications = 0;
+					
 					for(let i = 0 ; i < messages.length ; i ++){
 						if(messages[i].to_id == _this.user.user_id){
-							// messages[i].is_read = 1;
-							myMessage.push(messages[i])
+							myMessage.push(messages[i]);
+							
+							// 统计各类型未读消息数量
+							if(messages[i].is_read === 0) {
+								if(messages[i].message_type === 'notification') {
+									unreadNotifications++;
+								} else if(messages[i].message_type === 'comment') {
+									unreadCounts[0]++;
+								} else if(messages[i].message_type === 'mention') {
+									unreadCounts[1]++;
+								} else if(messages[i].message_type === 'like_collect') {
+									unreadCounts[2]++;
+								}
+							}
 						}
 					}
+					
 					_this.messages = myMessage;
+					_this.unreadCounts = unreadCounts;
+					_this.unreadNotifications = unreadNotifications;
+					
+					// 更新小红点显示
+					_this.updateBadgeIndexes();
+					
 					window.localStorage.setItem("messages",JSON.stringify(_this.messages));
 					uni.hideTabBarRedDot({
 						index: 3
 					});
+					uni.hideLoading();
 				});
 				
 				// 获取私信好友列表
 				_this.fetchChatFriends();
 				
-				// 检查是否有未读私信，如果有则显示小红点
-				this.checkUnreadMessages();
+				// 检查是否有未读私信
+				this.checkUnreadPrivateMessages();
 			}).catch(function(error) {
 				if(error.message == "Request failed with status code 401"){
 					window.localStorage.removeItem('token');
 					uni.navigateTo({
 						url: './users/login'
 					});
-				} else if(error.name == "SyntaxError"){
-					uni.showModal({
-						title: '异常提示',
-						content: '发生异常，我们已为您修复，相关信息将复制到您的剪贴板，建议您反馈到"意见反馈"栏目。',
-						success(res) {
-							uni.setClipboardData({
-								data: window.localStorage.getItem('messages'),
-								success: function () {
-								    console.log('success');
-								}
-							})
-							window.localStorage.removeItem('messages')
-						}
-					  });
 				}
 			})
 		},
@@ -153,44 +170,41 @@
 			this.$refs.tabs.clickTab(this.firstTab);
 		},
 		methods:{
+			// 更新小红点显示
+			updateBadgeIndexes() {
+				this.badgeIndexes = this.unreadCounts.map((count, index) => count > 0 ? index : -1).filter(index => index !== -1);
+			},
+			
 			navigateToNotification() {
 				uni.navigateTo({
-					url: './notification'
+					url: './notifications'
 				});
 			},
 			navigateToPrivateMessage() {
 				uni.navigateTo({
-					url: './private-message'
+					url: './privateMessages'
 				});
 			},
 			// 检查是否有未读私信
-			checkUnreadMessages() {
+			checkUnreadPrivateMessages() {
 				let unreadPrivateMessages = window.localStorage.getItem('unreadPrivateMessages');
-				if (unreadPrivateMessages && parseInt(unreadPrivateMessages) > 0) {
-					// 如果有未读私信，在私信tab上显示小红点
-					this.badgeIndexes = [1]; // 1是私信tab的索引
-				} else {
-					this.badgeIndexes = [];
-				}
-				this.$forceUpdate();
-			},
-			
-			// 处理tab点击事件
-			handleTabClicked(index) {
-				// 如果点击的是私信tab，清除小红点
-				if (index === 1) {
-					this.badgeIndexes = [];
-				}
+				this.unreadPrivateMessages = parseInt(unreadPrivateMessages) || 0;
 			},
 			
 			changeTab(index){ 
 				this.curTabIndex = index;
-				if(index == 1){
-					this.fetchChatFriends();
-					// 切换到私信tab时，清除小红点
-					this.badgeIndexes = [];
+				let messages = window.localStorage.getItem("messages");
+				for(let i = 0 ; i < messages.length ; i ++){
+					if(messages[i].message_type === this.messageTypes[index]){
+						messages[i].is_read = 1;
+					}
 				}
+				window.localStorage.setItem("messages",JSON.stringify(messages));
+				// 更新本地未读计数
+				this.unreadCounts[index] = 0;
+				this.updateBadgeIndexes();
 			},
+			
 			// 获取私信好友列表
 			fetchChatFriends() {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk;
@@ -217,12 +231,7 @@
 					console.error('获取私信好友列表失败', error);
 				});
 			},
-			// 跳转到聊天页面
-			navigateToChat(friend) {
-				uni.navigateTo({
-					url: './chat?id=' + friend.user_id
-				});
-			},
+			
 			utc2beijing(utc_datetime) {
 			    // 转为正常的时间格式 年-月-日 时:分:秒
 			    var T_pos = utc_datetime.indexOf('T');
@@ -259,24 +268,46 @@
 	}
 	
 	.top-nav {
-		padding: 20rpx 0;
+		padding: 0rpx 0;
 		border-bottom: 1px solid #eee;
+		width: 100vw;
 		
 		.nav-button {
 			position: relative;
-			padding: 15rpx 40rpx;
+			padding: 30rpx 40rpx;
 			font-size: 28rpx;
-			color: #333;
-			
-			.unread-dot {
-				position: absolute;
-				top: 0;
-				right: 0;
-				width: 16rpx;
-				height: 16rpx;
-				background-color: #ff4d4f;
-				border-radius: 50%;
+			color: #000000;
+			width: calc(100% - 80rpx);
+			display: flex;
+			align-items: center;
+			transition: all .3s;
+			.nav-button-icon{
+				width: 80rpx;
+				height: 80rpx;
+				margin-right: 24rpx;
 			}
+
+			text{
+				font-size: 30rpx;
+			}
+			
+			.unread-badge {
+				position: relative;
+				right: -25rpx;
+				background-color: #ff4d4f;
+				color: white;
+				font-size: 24rpx;
+				min-width: 32rpx;
+				height: 32rpx;
+				border-radius: 16rpx;
+				text-align: center;
+				line-height: 32rpx;
+				padding: 0 6rpx;
+			}
+		}
+
+		.nav-button:active{
+			transform: scale(0.98);
 		}
 	}
 	
@@ -293,21 +324,6 @@
 				border: #cacaca 1rpx solid;
 				border-radius: 7rpx;
 				margin: 15rpx;
-			}
-			
-			.unread-badge {
-				position: absolute;
-				top: 10rpx;
-				right: 10rpx;
-				background-color: #ff4d4f;
-				color: white;
-				font-size: 24rpx;
-				min-width: 32rpx;
-				height: 32rpx;
-				border-radius: 16rpx;
-				text-align: center;
-				line-height: 32rpx;
-				padding: 0 6rpx;
 			}
 		}
 		
@@ -346,9 +362,6 @@
 			margin-top: 8rpx;
 			font-size: 28rpx;
 			margin-bottom: 10rpx;
-			// overflow: hidden;
-			// text-overflow: ellipsis;
-			// white-space: nowrap;
 		}
 	}
 

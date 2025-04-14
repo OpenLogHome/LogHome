@@ -16,6 +16,7 @@ router.post('/send_message', auth, async function (req, res) {
 			req.body.to_id,
 			req.body.msg,
 			req.body.navigate_to,
+			"mention",
 			true,
 		);
 		res.end('success');
