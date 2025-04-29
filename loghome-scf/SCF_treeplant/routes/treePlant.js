@@ -57,8 +57,7 @@ async function updateTreeStatus() {
 }
 
 //每小时的30分钟触发，更新用户种树数据
-//采用定时任务，此段弃用
-//schedule.scheduleJob('* 30 * * * *', updateTreeStatus);
+schedule.scheduleJob('* 30 * * * *', updateTreeStatus);
 
 router.get('/get_treePlant_of', auth, async (req, res) => {
 	let user = req.user;
