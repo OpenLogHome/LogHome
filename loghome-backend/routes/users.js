@@ -8,6 +8,45 @@ const SECRET = require('../SECRET.js').SECRET;
 let getSignature = require('../bin/uni-cloud/sig.js');
 let tencentSms = require('../bin/tencent-sms.js');
 let config = require("../config.js")
+const fetch = require('node-fetch');
+const { generateRandomUsername } = require('../bin/username-generator.js');
+
+// 发送邮件的函数
+async function sendEmail(to, code) {
+    try {
+        // API key
+        let myHeaders = {
+            "x-api-key": config.emailApiKey
+        };
+
+        // 构造请求
+        let urlencoded = new URLSearchParams();
+        urlencoded.append("emailId", "3");
+        urlencoded.append("templateId", "3");
+        urlencoded.append("recipients", to);
+        urlencoded.append("parameters", JSON.stringify({"validateCode": code}));
+        
+        let requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: urlencoded,
+            redirect: 'follow'
+        };
+        
+        const response = await fetch("http://email.codesocean.top/api/send", requestOptions);
+        
+        if (response.ok) {
+            console.log('邮件发送成功');
+            return true;
+        } else {
+            console.error('邮件发送失败: 状态码', response.status);
+            return false;
+        }
+    } catch (error) {
+        console.error('邮件发送失败:', error);
+        return false;
+    }
+}
 
 // 创建路由对象
 let router = express.Router();
@@ -49,6 +88,17 @@ function getCode(len = 10) {
 	}
 	return code;
 }
+
+// 临时存储跨站点登录令牌
+let crossSiteTokens = {};
+// 每秒清理过期的跨站点令牌
+setInterval(() => {
+    for (let key in crossSiteTokens) {
+        if (crossSiteTokens[key].expireTime < Date.now()) {
+            delete crossSiteTokens[key];
+        }
+    }
+}, 1000);
 
 router.get('/all_users', async function (req, res) {
 	//获取用户列表的所有用户信息
@@ -95,13 +145,25 @@ router.get('/check_account', async function (req, res) {
 	}
 });
 
+router.get('/check_email', async function (req, res) {
+	try {
+		let results = await query(
+			'SELECT account FROM users WHERE email = ? AND activated = 1',
+			[req.query.email],
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.post('/login', async (req, res) => {
 	let user = undefined;
 	// 1.看用户是否存在
 	try {
 		user = await query(
-			'SELECT * FROM users WHERE account = ? OR mobile = ? OR oicq_account = ? AND activated = 1',
-			[req.body.username, req.body.username, req.body.username],
+			'SELECT * FROM users WHERE account = ? OR mobile = ? OR oicq_account = ? OR email= ? AND activated = 1',
+			[req.body.username, req.body.username, req.body.username, req.body.username],
 		);
 	} catch (e) {
 		res.status(422).send({
@@ -166,6 +228,12 @@ router.get('/heartbeat', auth, async (req, res) => {
 		[user.user_id],
 	);
 
+	// 获取用户的邮箱信息
+	let userInfo = await query(
+		'SELECT email FROM users WHERE user_id = ?',
+		[user.user_id],
+	);
+	
 	let user_id = user.user_id;
 	res.send({
 		token: {
@@ -173,6 +241,7 @@ router.get('/heartbeat', auth, async (req, res) => {
 			id: user_id,
 		},
 		messages,
+		email: userInfo[0].email || '',
 	});
 });
 
@@ -212,45 +281,48 @@ router.post('/change_pwd', auth, async (req, res) => {
 	res.json(200, { msg: 'ok' });
 });
 
-router.get('/register_with_mobile', async (req, res) => {
+
+router.get('/register_with_email', async (req, res) => {
 	try {
 		let response = {
 			data:{
-				msg:"手机号或验证码错误"
+				msg:"邮箱或验证码错误"
 			}
 		}
-		for (let key in userValidates) {
-			if (key == req.query.mobile) {
-				// 检查是否匹配
-				if(userValidates[key].validateCode == req.query.vcode){
-					response.data.msg = "登录成功";
-					let userCheck = await query('SELECT * FROM users WHERE mobile = ?', [
-						req.query.mobile,
-					]);
-					let verify_code = getCode();
-					if (userCheck.length > 0) {
-						// 登录
-						await query(
-							'UPDATE users SET register_verify = ? WHERE mobile = ?',
-							[verify_code, req.query.mobile],
-						);
-					} else {
-						// 注册
-						await query(
-							'INSERT INTO users(`name`,account,mobile,activated,register_verify) VALUES(?,?,?,0,?)',
-							[
-								req.query.mobile,
-								req.query.mobile,
-								req.query.mobile,
-								verify_code,
-							],
-						);
-					}
-					response.data.register_code = verify_code;
-				} else {
-					response.data.msg = "手机号或验证码错误";
-				}
+		
+		// 从数据库获取验证码
+		let validateCode = await query('SELECT * FROM user_validate_code WHERE email = ? AND create_time > DATE_SUB(NOW(), INTERVAL 30 MINUTE)', [req.query.email]);
+		
+		if (validateCode.length > 0 && validateCode[0].code === req.query.vcode) {
+			response.data.msg = "登录成功";
+			let userCheck = await query('SELECT * FROM users WHERE email = ?', [
+				req.query.email,
+			]);
+			let verify_code = getCode();
+			if (userCheck.length > 0) {
+				// 登录
+				await query(
+					'UPDATE users SET register_verify = ? WHERE email = ?',
+					[verify_code, req.query.email],
+				);
+			} else {
+				// 注册 - 使用随机生成的Minecraft风格昵称
+				const randomUsername = generateRandomUsername();
+				await query(
+					'INSERT INTO users(`name`,account,email,activated,register_verify) VALUES(?,?,?,0,?)',
+					[
+						randomUsername,
+						req.query.email,
+						req.query.email,
+						verify_code,
+					],
+				);
 			}
+			response.data.register_code = verify_code;
+			// 验证成功后删除验证码
+			await query('DELETE FROM user_validate_code WHERE email = ?', [req.query.email]);
+		} else {
+			response.data.msg = "邮箱或验证码错误";
 		}
 		res.end(JSON.stringify(response.data));
 	} catch (e) {
@@ -262,10 +334,22 @@ router.get('/register_with_mobile', async (req, res) => {
 router.post('/register', async (req, res) => {
 	try {
 		require('bcryptjs').hash(req.body.password, 10, async (err, pwd) => {
-			let user = await query(
-				'SELECT * FROM users WHERE mobile = ? AND register_verify = ?',
-				[req.body.mobile, req.body.verifyCode],
-			);
+			let user = undefined;
+			if (req.body.mobile) {
+				user = await query(
+					'SELECT * FROM users WHERE mobile = ? AND register_verify = ?',
+					[req.body.mobile, req.body.verifyCode],
+				);
+			} else if (req.body.email) {
+				user = await query(
+					'SELECT * FROM users WHERE email = ? AND register_verify = ?',
+					[req.body.email, req.body.verifyCode],
+				);
+			} else {
+				res.json(400, { msg: 'bad request' });
+				return;
+			}
+			
 			let forgetPwd = false;
 			if (user.length == 0) {
 				res.json(400, { msg: 'bad request' });
@@ -273,20 +357,47 @@ router.post('/register', async (req, res) => {
 			} else if (user[0].activated == 1) {
 				forgetPwd = true;
 			}
+			
 			if (forgetPwd) {
-				await query(
-					'UPDATE users SET pwd = ?, activated = 1 WHERE mobile = ?',
-					[pwd, req.body.mobile],
-				);
+				if (req.body.mobile) {
+					await query(
+						'UPDATE users SET pwd = ?, activated = 1 WHERE mobile = ?',
+						[pwd, req.body.mobile],
+					);
+				} else if (req.body.email) {
+					await query(
+						'UPDATE users SET pwd = ?, activated = 1 WHERE email = ?',
+						[pwd, req.body.email],
+					);
+				}
 			} else {
-				await query(
-					'UPDATE users SET name = ? ,account = ?, pwd = ?, activated = 1 WHERE mobile = ?',
-					[req.body.username, req.body.username, pwd, req.body.mobile],
-				);
+				// 如果用户提供了用户名，则使用用户提供的，否则保留预注册时生成的随机昵称
+				const username = req.body.username || user[0].name;
+				
+				if (req.body.mobile) {
+					await query(
+						'UPDATE users SET name = ? ,account = ?, pwd = ?, activated = 1 WHERE mobile = ?',
+						[generateRandomUsername(), username, pwd, req.body.mobile],
+					);
+				} else if (req.body.email) {
+					await query(
+						'UPDATE users SET name = ? ,account = ?, pwd = ?, activated = 1 WHERE email = ?',
+						[generateRandomUsername(), username, pwd, req.body.email],
+					);
+				}
 			}
-			let results = await query('SELECT * FROM users WHERE mobile = ?', [
-				req.body.mobile,
-			]);
+			
+			let results = undefined;
+			if (req.body.mobile) {
+				results = await query('SELECT * FROM users WHERE mobile = ?', [
+					req.body.mobile,
+				]);
+			} else if (req.body.email) {
+				results = await query('SELECT * FROM users WHERE email = ?', [
+					req.body.email,
+				]);
+			}
+			
 			if (!forgetPwd) {
 				let verifyCode = getCode();
 				await query(
@@ -311,6 +422,7 @@ router.post('/register', async (req, res) => {
 			});
 		});
 	} catch (e) {
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });
@@ -337,36 +449,49 @@ router.get('/get_verify_code', auth, async (req, res) => {
 	}
 });
 
-router.get('/send_mobile_verify_code', async (req, res) => {
+router.get('/send_email_verify_code', async (req, res) => {
 	try {
-		if(userValidates[req.query.mobile] != undefined && userValidates[req.query.mobile].countdown > 0){
+		// 检查是否在冷却时间内
+		let lastCode = await query('SELECT * FROM user_validate_code WHERE email = ? AND create_time > DATE_SUB(NOW(), INTERVAL 1 MINUTE)', [req.query.email]);
+		
+		if (lastCode.length > 0) {
 			res.json(400, "验证码发送过于频繁，请等一分钟后再发送");
 			return;
+		}
+
+		//生成6位的验证码
+		let code = ('000000' + Math.floor(Math.random() * 999999)).slice(-6);
+		if(config.developerMode){
+			code = '123456';
+		}
+
+		// 删除旧的验证码（如果存在）
+		await query('DELETE FROM user_validate_code WHERE email = ?', [req.query.email]);
+		
+		// 插入新的验证码
+		await query('INSERT INTO user_validate_code(email, code) VALUES(?, ?)', [req.query.email, code]);
+
+		if(config.developerMode){
+			res.json(200, { msg: '当前处于开发者模式，验证码为123456' });
 		} else {
-			//生成6位的验证码
-			let code = ('000000' + Math.floor(Math.random() * 999999)).slice(-6);
-			if(config.developerMode){
-				code = '123456';
+			// 发送邮件验证码
+			const emailSent = await sendEmail(req.query.email, code);
+			
+			if (emailSent) {
+				res.json(200, { msg: '已发送验证码到您的邮箱' });
 			} else {
-				tencentSms.sendVerifyCode(req.query.mobile, code, 15);
-			}
-			userValidates[req.query.mobile] = {
-				validateCode: code,
-				countdown: 60,
-				validateCountdown: 15*60
-			}
-			if(config.developerMode){
-				res.json(200, { msg: '当前处于开发者模式，验证码为123456' });
-			} else {
-				res.json(200, { msg: '已发送验证码' });
+				// 如果发送失败，删除验证码记录
+				await query('DELETE FROM user_validate_code WHERE email = ?', [req.query.email]);
+				res.json(400, { msg: '验证码发送失败，请稍后重试' });
 			}
 		}
 	} catch (e) {
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
-})
+});
 
-router.get('/verify_mobile', auth, async (req, res) => {
+router.get('/verify_email', auth, async (req, res) => {
 	try {
         let user = req.user;
 		user = JSON.parse(JSON.stringify(user))[0];
@@ -375,28 +500,29 @@ router.get('/verify_mobile', auth, async (req, res) => {
 				msg:"验证码错误"
 			}
 		}
-		for (let key in userValidates) {
-			if (key == req.query.mobile) {
-				// 检查是否匹配
-				if(userValidates[key].validateCode == req.query.vcode){
-					response.data.msg = "登录成功";
-					let userCheck = await query('SELECT * FROM users WHERE mobile = ?', [
-						req.query.mobile,
-					]);
-					if (userCheck.length > 0) {
-						// 手机号已被使用，不能注册
-						response.data.msg = "该手机号已被使用"
-					} else {
-						await query('UPDATE users SET mobile = ? WHERE user_id = ?', [
-                            req.query.mobile,
-                            user.user_id,
-                        ]);
-                        response.data.msg = "绑定成功"
-					}
-				} else {
-					response.data.msg = "验证码错误";
-				}
+		
+		// 从数据库获取验证码
+		let validateCode = await query('SELECT * FROM user_validate_code WHERE email = ? AND create_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE)', [req.query.email]);
+		
+		if (validateCode.length > 0 && validateCode[0].code === req.query.vcode) {
+			response.data.msg = "登录成功";
+			let userCheck = await query('SELECT * FROM users WHERE email = ?', [
+				req.query.email,
+			]);
+			if (userCheck.length > 0) {
+				// 邮箱已被使用，不能注册
+				response.data.msg = "该邮箱已被使用"
+			} else {
+				await query('UPDATE users SET email = ? WHERE user_id = ?', [
+                    req.query.email,
+                    user.user_id,
+                ]);
+                response.data.msg = "绑定成功"
 			}
+			// 验证成功后删除验证码
+			await query('DELETE FROM user_validate_code WHERE email = ?', [req.query.email]);
+		} else {
+			response.data.msg = "验证码错误或已过期";
 		}
 		res.end(JSON.stringify(response.data));
 	} catch (e) {
@@ -560,6 +686,194 @@ router.get('/device_verify', async (req, res) => {
 	}
 });
 
+// 发送邮箱绑定验证码
+router.get('/send_bind_email_code', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		
+		// 检查邮箱是否已被其他用户使用
+		let emailCheck = await query('SELECT * FROM users WHERE email = ? AND user_id != ?', [
+			req.query.email,
+			user.user_id
+		]);
+		
+		if (emailCheck.length > 0) {
+			res.json(400, { msg: '该邮箱已被其他用户绑定' });
+			return;
+		}
+		
+		// 检查是否在冷却时间内
+		let lastCode = await query('SELECT * FROM user_validate_code WHERE email = ? AND create_time > DATE_SUB(NOW(), INTERVAL 1 MINUTE)', [req.query.email]);
+		
+		if (lastCode.length > 0) {
+			res.json(400, "验证码发送过于频繁，请等一分钟后再发送");
+			return;
+		}
+
+		//生成6位的验证码
+		let code = ('000000' + Math.floor(Math.random() * 999999)).slice(-6);
+		if(config.developerMode){
+			code = '123456';
+		}
+
+		// 删除旧的验证码（如果存在）
+		await query('DELETE FROM user_validate_code WHERE email = ?', [req.query.email]);
+		
+		// 插入新的验证码
+		await query('INSERT INTO user_validate_code(email, code) VALUES(?, ?)', [req.query.email, code]);
+
+		if(config.developerMode){
+			res.json(200, { msg: '当前处于开发者模式，验证码为123456' });
+		} else {
+			// 发送邮件验证码
+			const emailSent = await sendEmail(req.query.email, code);
+			
+			if (emailSent) {
+				res.json(200, { msg: '已发送验证码到您的邮箱' });
+			} else {
+				// 如果发送失败，删除验证码记录
+				await query('DELETE FROM user_validate_code WHERE email = ?', [req.query.email]);
+				res.json(400, { msg: '验证码发送失败，请稍后重试' });
+			}
+		}
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 验证邮箱绑定
+router.post('/verify_bind_email', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		
+		// 如果此用户已绑定邮箱且不是请求更换邮箱
+		if (user.email != 'unbind' && !req.body.force) {
+			res.json(400, { msg: '您已绑定邮箱，如需更换请先解绑' });
+			return;
+		}
+		
+		// 检查邮箱是否已被其他用户使用
+		let emailCheck = await query('SELECT * FROM users WHERE email = ? AND user_id != ?', [
+			req.body.email,
+			user.user_id
+		]);
+		
+		if (emailCheck.length > 0) {
+			res.json(400, { msg: '该邮箱已被其他用户绑定' });
+			return;
+		}
+		
+		let verified = false;
+		let response = {
+			code: 400,
+			msg: "验证码错误或已过期"
+		};
+		
+		// 验证验证码
+		if (userValidates[req.body.email] && 
+			userValidates[req.body.email].validateCode === req.body.code &&
+			userValidates[req.body.email].validateCountdown > 0) {
+			
+			// 确认是同一个用户的请求
+			if (userValidates[req.body.email].userId === user.user_id) {
+				// 更新用户邮箱
+				await query('UPDATE users SET email = ? WHERE user_id = ?', [
+					req.body.email,
+					user.user_id
+				]);
+				
+				// 清除验证记录
+				delete userValidates[req.body.email];
+				
+				verified = true;
+				response = {
+					code: 200,
+					msg: "邮箱绑定成功"
+				};
+			} else {
+				response.msg = "验证码不属于当前用户";
+			}
+		}
+		
+		res.json(response.code, { msg: response.msg, success: verified });
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 签发短期跨站点登录令牌 - 供已登录用户使用
+router.get('/generate_cross_site_token', auth, async (req, res) => {
+    try {
+        let user = req.user;
+        user = JSON.parse(JSON.stringify(user))[0];
+        
+        // 生成一个8字符的随机令牌
+        const crossSiteToken = getCode(8);
+        
+        // 存储令牌及关联用户信息，有效期15秒
+        crossSiteTokens[crossSiteToken] = {
+            userId: user.user_id,
+            userPwd: user.pwd,
+            expireTime: Date.now() + 15000 // 当前时间+15秒
+        };
+        
+        res.json(200, { 
+            crossSiteToken: crossSiteToken,
+            expireIn: 15 // 15秒后过期
+        });
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
+// 通过跨站点令牌获取登录token
+router.get('/token_by_cross_site', async (req, res) => {
+    try {
+        const crossSiteToken = req.query.token;
+        
+        if (!crossSiteToken || !crossSiteTokens[crossSiteToken]) {
+            return res.json(400, { msg: '无效的跨站点令牌或令牌已过期' });
+        }
+        
+        // 验证令牌是否过期
+        if (crossSiteTokens[crossSiteToken].expireTime < Date.now()) {
+            delete crossSiteTokens[crossSiteToken]; // 删除过期令牌
+            return res.json(400, { msg: '令牌已过期' });
+        }
+        
+        // 获取用户信息
+        const userId = crossSiteTokens[crossSiteToken].userId;
+        const userPwd = crossSiteTokens[crossSiteToken].userPwd;
+        
+        // 生成标准JWT token
+        const token = jwt.sign(
+            {
+                id: String(userId),
+                pwd: String(userPwd),
+            },
+            SECRET,
+        );
+        
+        // 删除使用过的令牌，防止重复使用
+        delete crossSiteTokens[crossSiteToken];
+        
+        // 返回登录token
+        res.json(200, {
+            token: {
+                tk: token,
+                id: userId,
+            }
+        });
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
 
 // 一些尝试去使用uni-im的遗留代码，不得不说是真tm难用，根本调不通，莫名其妙的没有任何报错信息的错误，根本没法调！
 // router.post('/get_uni_token', auth, async (req, res) => {

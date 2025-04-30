@@ -54,9 +54,10 @@ export default {
     // 检查IndexedDB中是否有缓存的图片
     async checkImageCache(url) {
       try {
-        const cachedImg = await imgDB.imgs.get(url);
-		this.dbDone = true;
-		// console.log("cached");
+        // 将 http:// 转换为 https://
+        const secureUrl = url.replace('http://', 'https://');
+        const cachedImg = await imgDB.imgs.get(secureUrl);
+        this.dbDone = true;
 
         if (cachedImg) {
           // 如果找到缓存，则直接使用缓存的图片
@@ -64,14 +65,14 @@ export default {
           this.imageSrc = URL.createObjectURL(this.imgBlob); // 创建blob URL
           this.isLoaded = true;
           this.updateLastAccessedTime(cachedImg);
-		  this.hasError = false
+          this.hasError = false
         } else {
           // 如果没有缓存，则从网络加载图片
-          this.loadImageFromNetwork(url);
+          this.loadImageFromNetwork(secureUrl);
         }
       } catch (error) {
         console.error('Error checking image cache:', error);
-        this.loadImageFromNetwork(url); // 如果访问缓存出错，加载网络图片
+        this.loadImageFromNetwork(url.replace('http://', 'https://')); // 使用安全URL
       }
     },
 

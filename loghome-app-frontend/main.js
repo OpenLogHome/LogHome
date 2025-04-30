@@ -24,7 +24,7 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
+Vue.prototype.$baseUrl = BASE_URL_DEV;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
 	bookCover:"https://s4.ax1x.com/2022/01/13/7lYAlq.png"

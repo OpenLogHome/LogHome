@@ -107,7 +107,7 @@
         },
         "optimization" : {
             "treeShaking" : {
-                "enable" : false
+                "enable" : true
             }
         },
         "unipush" : {

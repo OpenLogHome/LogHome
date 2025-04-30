@@ -1,7 +1,7 @@
 <template>
 	<view class="outer">
 		<div class="step0" v-if="step == 0">
-			<p>未注册手机号将自动创建账号</p>
+			<p>仅支持已注册手机号登录</p>
 			<div class="longin-boder">
 				<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon" /></div>
 				<input class="input" type="text" placeholder="请输入中国大陆手机号" v-model="mobile"/>
@@ -10,16 +10,8 @@
 		</div>
 		<transition name="slide-fade" mode="out-in">
 			<div class="step step1" v-if="step == 1">
-				<p>滑动验证以发送验证码到{{mobile}}</p>
-				<div style="display:flex;width:100%;justify-content: center;">
-					<slide-verify :l="42"
-					            :r="10"
-					            :h="155"
-					            slider-text="向右滑动"
-					            @success="verifyResult"
-								:imgs="$moveVerifyImgs"
-					            ></slide-verify>
-				</div>
+				<p>我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持新手机号注册，请尽快迁移至邮箱登录。</p>
+				<p>如果您需要找回账号，请通过原木社区开源计划交流群联系我们：701928273。</p>
 				<div class="button cancel" @click="step = 0">上一步</div>
 			</div>
 		</transition>

@@ -7,12 +7,12 @@
 				<div class="title">欢迎来到 原木社区</div>
 				<div class="subtitle">方块跃然纸上，故事在此生长</div>
 			</div>
-			<div class="loginBtn button" @click="gotoLoginMobile">
-				使用手机号登录
+			<div class="loginBtn button" @click="gotoLoginEmail">
+				使用邮箱登录
 			</div>
-<!-- 			<div class="loginBtn login2 button" @click="gotoLogin">
-				使用账号登录
-			</div> -->
+			<div class="loginBtn login2 button" @click="gotoLoginMobile">
+				使用手机号登录（旧版通道）
+			</div>
 			<div class="checkBox" :class="{ shake: noActivated }">
 				<label style="display: flex;flex-direction: row;font-size: 22rpx; margin-top: 50rpx;
 				width:100vw; justify-content: center;">
@@ -65,7 +65,23 @@
 						this.noActivated = false;
 					},820)
 				}
-				
+			},
+			gotoLoginEmail() {
+				if(this.checked){
+					uni.navigateTo({
+						url:"./login_page_email"
+					})
+				} else {
+					uni.showToast({
+						title: "请先阅读并同意《原木社区用户隐私政策》",
+						icon: 'none',
+						duration: 2000
+					});
+					this.noActivated = true;
+					setTimeout(()=>{
+						this.noActivated = false;
+					},820)
+				}
 			},
 			gotoLogin(){
 				if(this.checked){
@@ -137,7 +153,7 @@
 			.checkBox{
 				position:absolute;
 				z-index:1;
-				top:88vh;
+				bottom: 25rpx;
 				margin-left:20rpx;
 			}
 		}

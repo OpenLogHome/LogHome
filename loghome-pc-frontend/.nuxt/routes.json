@@ -3,41 +3,77 @@
     "name": "community",
     "path": "/community",
     "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\community.vue",
-    "chunkName": "pages/community"
+    "chunkName": "pages/community",
+    "_name": "_16042d1f"
+  },
+  {
+    "name": "login",
+    "path": "/login",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\login.vue",
+    "chunkName": "pages/login",
+    "_name": "_0bd528c2"
+  },
+  {
+    "name": "me",
+    "path": "/me",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\me.vue",
+    "chunkName": "pages/me",
+    "_name": "_2c7e72d2"
   },
   {
     "name": "read",
     "path": "/read",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\read.vue",
-    "chunkName": "pages/read"
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\read\\\\index.vue",
+    "chunkName": "pages/read/index",
+    "_name": "_f8ade99c"
   },
   {
     "name": "write",
     "path": "/write",
     "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\write.vue",
-    "chunkName": "pages/write"
+    "chunkName": "pages/write",
+    "_name": "_0cbca915"
+  },
+  {
+    "name": "novel-fans",
+    "path": "/novel/fans",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\novel\\\\fans.vue",
+    "chunkName": "pages/novel/fans",
+    "_name": "_7f8108b2"
+  },
+  {
+    "name": "read-collections",
+    "path": "/read/collections",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\read\\\\collections.vue",
+    "chunkName": "pages/read/collections",
+    "_name": "_5d5c3875"
+  },
+  {
+    "name": "tag-collections",
+    "path": "/tag/collections",
+    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\tag\\\\collections.vue",
+    "chunkName": "pages/tag/collections",
+    "_name": "_5aaaacf5"
   },
   {
     "name": "article-id",
     "path": "/article/:id?",
     "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\article\\\\_id.vue",
-    "chunkName": "pages/article/_id"
+    "chunkName": "pages/article/_id",
+    "_name": "_b4180084"
   },
   {
     "name": "novel-id",
     "path": "/novel/:id?",
     "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\novel\\\\_id.vue",
-    "chunkName": "pages/novel/_id"
+    "chunkName": "pages/novel/_id",
+    "_name": "_43f625b8"
   },
   {
     "name": "index",
     "path": "/",
     "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\index.vue",
-    "chunkName": "pages/index"
-  },
-  {
-    "name": "release",
-    "path": "/release/",
-    "component": "D:\\\\Project-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\index.vue"
+    "chunkName": "pages/index",
+    "_name": "_306dc888"
   }
 ]

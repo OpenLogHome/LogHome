@@ -6,10 +6,21 @@
 			<text class="num">{{resources.log}}</text>
 		</view>
 
-		<view class="title" style="margin-bottom: 15rpx">
-			<text class="text">你的原木个人支付码：</text>
-			<text class="num">{{pay_code}}</text>
-			<el-button size="small" type="danger" style="margin-left: 20rpx" @click="copyPayCode">点击复制</el-button>
+		<view class="quick-links">
+			<navigator url="/pages/payments/order_history">
+				<view class="quick-link-item">
+					<!-- <image class="icon" src="../../static/icons/icon_history.png" mode="aspectFit"></image> -->
+					<text>历史订单</text>
+					<image class="to" src="../../static/user/to.png"></image>
+				</view>
+			</navigator>
+			<navigator url="/pages/payments/gift_code">
+				<view class="quick-link-item">
+					<!-- <image class="icon" src="../../static/icons/icon_gift.png" mode="aspectFit"></image> -->
+					<text>礼品码兑换</text>
+					<image class="to" src="../../static/user/to.png"></image>
+				</view>
+			</navigator>
 		</view>
 
 		<view class="number">
@@ -33,23 +44,26 @@
 			</view>
 		</view>
 
-
 		<view class="tip">
-			<text class="titl">温馨提示</text>
+			<p class="titl" style="padding-bottom: 6rpx;">温馨提示</p>
 			<view>
 				<text>1、捐赠对应数额，将获得社区给予的</text>
 				<text>原木</text>
 			</view>
 			<view>
-				<text>2、请在网络状态良好的情况下进行捐赠，为了保证捐赠顺利，请耐心等待捐赠，不要进行其他操作</text>
+				<text>2、我们使用由 <span>
+					<img src="static/images/afdian_logo.png" alt="" style="width: 30rpx; height: 30rpx;"> 爱发电
+				</span> 提供的支付服务来收取捐赠，请</text>
+				<text>不要修改跳转后的链接和订单号</text>
+				<text>，否则我们将无法收到捐赠</text>
 			</view>
 			<view>
-				<text>3、您的每一笔捐赠我们都将记录在案，并用于</text>
+				<text>3、您的每笔捐赠我们都将记录在案，并用于</text>
 				<text>支持社区运营和发展</text>
 			</view>
 			<view>
 				<text>4、在支付过程中遇到任何问题（如原木未到账等问题），请联系官方微信客服：</text>
-				<text>LogHomeCommunity</text>
+				<text>CodesOcean</text>
 			</view>
 		</view>
 	</view>
@@ -91,7 +105,6 @@
 		created() {},
 		mounted() {
 			this.refreshResources();
-			this.getPayCode();
 		},
 		methods: {
 			pick(index) {
@@ -103,27 +116,6 @@
 					success: function() {
 						// console.log('success');
 					}
-				})
-			},
-			getPayCode() {
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;;
-				axios.get(this.$baseUrl + '/payment/get_user_pay_code', {
-					headers: {
-						'Content-Type': 'application/json', //设置请求头请求格式为JSON
-						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-					}
-				}).then((res) => {
-					this.pay_code = res.data;
-					console.log(res.data);
-				}).catch(function(error) {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000
-					});
-				}).then(function() {
-					uni.hideLoading();
 				})
 			},
 			refreshResources() {
@@ -147,37 +139,45 @@
 					uni.hideLoading();
 				})
 			},
-			getPaymentUrl() {
+			getPaymentUrl: async function() {
 				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;;
-				axios.get(this.$baseUrl + '/payment/get_payment_url?money=' + this.list[this.num].money + "&log=" + this
-					.list[this.num].number, {
+				if (tk) tk = tk.tk;
+				const log_amount = this.list[this.num].number;
+				const pay_amount = this.list[this.num].money;
+				try {
+					// 1. 创建订单
+					const orderRes = await axios.post(this.$baseUrl + '/payment/create_order', {
+						log_amount,
+						pay_amount
+					}, {
 						headers: {
-							'Content-Type': 'application/json', //设置请求头请求格式为JSON
-							'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-						}
-					}).then((res) => {
-					this.$alert(`<view class="title" style="margin: 15rpx 0;"> <img src="https://img.codesocean.top/image/1697538884315"
-							style="width: 100%">
-							</view>`, '重要提示', {
-						dangerouslyUseHTMLString: true,
-						confirmButtonText:"理解，请继续"
-					}).then(() => {
-						if (this.jsBridge && this.jsBridge.inApp) {
-							this.jsBridge.openInBrowser(res.data);
-						} else {
-							window.open(res.data);
+							'Content-Type': 'application/json',
+							'Authorization': 'Bearer ' + tk
 						}
 					});
-				}).catch(function(error) {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000
+					if (!orderRes.data || orderRes.data.code !== 200) {
+						uni.showToast({ title: '订单创建失败', icon: 'none' });
+						return;
+					}
+					const payment_id = orderRes.data.data.payment_id;
+
+					// 2. 获取支付链接
+					const payUrlRes = await axios.get(this.$baseUrl + '/payment/get_payment_url?money=' + pay_amount + '&log=' + log_amount + '&payment_id=' + payment_id, {
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': 'Bearer ' + tk
+						}
 					});
-				}).then(function() {
+
+					// 3. 跳转到跳转支付页
+					uni.navigateTo({
+						url: `/pages/payments/jump_to_pay?pay_url=${encodeURIComponent(payUrlRes.data)}&payment_id=${payment_id}`
+					});
+				} catch (error) {
+					uni.showToast({ title: error.toString(), icon: 'none' });
+				} finally {
 					uni.hideLoading();
-				})
+				}
 			}
 		},
 	};
@@ -191,7 +191,7 @@
 		.title {
 			display: flex;
 			align-items: center;
-			padding: 42rpx 0 20rpx 50rpx;
+			padding: 42rpx 0 40rpx 50rpx;
 			background-color: #ffffff;
 
 			>img {
@@ -319,8 +319,43 @@
 			}
 		}
 
+		.quick-links {
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			margin: 18rpx 0 0 0;
+			background: #fff;
+			padding: 0 40rpx;
+
+			.quick-link-item {
+				width: 100%;
+				height: 110rpx;
+				background: #fff;
+				display: flex;
+				align-items: center;
+				padding: 0 20rpx;
+				margin-bottom: 0;
+
+				.icon {
+					width: 32rpx;
+					height: 32rpx;
+					margin-right: 12rpx;
+				}
+				text {
+					flex: 1;
+					font-size: 30rpx;
+					color: #666;
+				}
+				.to {
+					width: 32rpx;
+					height: 32rpx;
+					margin-right: 20rpx;
+				}
+			}
+		}
+
 		.tip {
-			height: 394rpx;
+			// height: 394rpx;
 			background: #ffffff;
 			margin-top: 18rpx;
 			padding: 40rpx;
@@ -332,6 +367,7 @@
 				color: #666666;
 				line-height: 40rpx;
 				margin-bottom: 6rpx;
+				padding-bottom: 20rpx;
 			}
 
 			>view {
@@ -349,10 +385,14 @@
 					}
 				}
 
-				&:nth-child(4) {
+				&:nth-child(3) {
 					>text:nth-child(2) {
 						color: #ff6a5f;
 						font-weight: 600;
+					}
+
+					span{
+						color: #8B63DB;
 					}
 				}
 

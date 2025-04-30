@@ -22,9 +22,9 @@
 					</view>
 					<view class="box-bd">
 						<view class="item" @tap="gotoActivate"
-							v-show="user.oicq_account == 'unbind' && user.mobile == 'unbind'">
+							v-show="user.email == 'unbind'">
 							<view class="icon activate"><log-image src="../static/icons/icon_activate.png"/></view>
-							<view class="text" style="color:rgb(255, 141, 47);font-weight: bold;">激活账号</view>
+							<view class="text" style="color:rgb(255, 141, 47);font-weight: bold;">绑定邮箱</view>
 						</view>
 						<view class="item" @tap="user_profile">
 							<view class="icon"><img src="../static/icons/icon_my_name_tag.png"/></view>
@@ -67,7 +67,7 @@
 						<view class="icon">
 							<img src="../static/icons/cridit_icon.png"></img>
 						</view>
-						<view class="text">支持社区</view>
+						<view class="text">原木充值</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -205,11 +205,11 @@
 					});
 				}
 
-				//检查账号激活状态
-				if (_this.user.oicq_account == 'unbind' && _this.user.mobile == 'unbind') {
+				//检查账号邮箱绑定状态
+				if (_this.user.email == 'unbind') {
 					uni.showModal({
 						title: '提示',
-						content: '你的账号尚未激活，为了保护你的账号安全和确保不间断使用，请尽快激活账号。',
+						content: '你的账号尚未绑定邮箱，为了保护你的账号安全和确保不间断使用，请尽快绑定电子邮箱账号。',
 						cancelText: "下次再说",
 						confirmText: "前往",
 						success: function(res) {

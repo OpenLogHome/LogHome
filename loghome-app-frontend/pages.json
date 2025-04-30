@@ -66,6 +66,12 @@
 			}
 		},
 		{
+			"path": "pages/users/login_page_email",
+			"style": {
+				"navigationBarTitleText": "电子邮箱登录"
+			}
+		},
+		{
 			"path": "pages/users/login",
 			"style": {
 				"navigationStyle": "custom",
@@ -390,6 +396,12 @@
 			}
 		},
 		{
+			"path": "pages/users/activateAccount_email",
+			"style": {
+				"navigationBarTitleText": "绑定邮箱"
+			}
+		},
+		{
 			"path": "pages/users/register",
 			"style": {
 				"navigationBarTitleText": "注册账户"
@@ -611,6 +623,27 @@
 			"path": "pages/manage/users/index",
 			"style": {
 				"navigationBarTitleText": "用户管理"
+			}
+		}, {
+			"path": "pages/users/external_login",
+			"style": {
+				"navigationBarTitleText": "外部登录",
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/payments/jump_to_pay",
+			"style": {
+				"navigationBarTitleText": "支付页"
+			}
+		}, {
+			"path": "pages/payments/order_history",
+			"style": {
+				"navigationBarTitleText": "历史订单"
+			}
+		}, {
+			"path": "pages/payments/gift_code",
+			"style": {
+				"navigationBarTitleText": "礼品卡兑换"
 			}
 		}
     ],

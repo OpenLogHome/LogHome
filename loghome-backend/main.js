@@ -2,6 +2,8 @@ let express = require('express');
 let schedule = require('node-schedule');
 require('./bin/objectFilter');
 
+process.env.TZ = 'Asia/Shanghai';
+
 let app = express();
 
 app.use('/public', express.static('public'));

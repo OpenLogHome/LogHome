@@ -3,13 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:permission_handler/permission_handler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:collection';
 import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
+import '../main.dart';  // 导入SplashScreen
 
 class WebViewPage extends StatefulWidget {
   final String localPath; // 新增参数
@@ -33,7 +33,33 @@ class _WebViewPageState extends State<WebViewPage> {
   @override
   void initState() {
     super.initState();
-    // 移除 _prepareWebContent 方法，不再需要
+    _verifyResourcePath();
+  }
+
+  // 验证资源文件是否存在，不存在则重新初始化
+  Future<void> _verifyResourcePath() async {
+    // 验证本地文件是否存在
+    final file = File(widget.localPath);
+    if (!await file.exists()) {
+      print('资源文件不存在，需要重新初始化: ${widget.localPath}');
+      // 显示错误信息
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('资源文件丢失，正在尝试恢复...'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        
+        // 等待提示显示后，重新导航到启动页面以重新初始化
+        await Future.delayed(const Duration(seconds: 3));
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const SplashScreen()),
+          );
+        }
+      }
+    }
   }
 
   Future<bool> _onWillPop() async {
@@ -302,77 +328,95 @@ class _WebViewPageState extends State<WebViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final mediaQuery = MediaQuery.of(context);
+    final bottomPadding = mediaQuery.padding.bottom;
 
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         // 设置为true允许内容区域随键盘调整
         resizeToAvoidBottomInset: true,
-        body: Padding(
-          padding: EdgeInsets.only(bottom: bottomPadding),
-          child: FutureBuilder<UnmodifiableListView<UserScript>>(
-            future: _prepareUserScripts(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                print("UserScript Error: ${snapshot.error}"); // 错误日志
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+        body: Container(
+          width: MediaQuery.of(context).size.width,
+          color: Colors.black,
+          margin: const EdgeInsets.all(0),
+          padding: const EdgeInsets.all(0),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: bottomPadding),
+            child: FutureBuilder<UnmodifiableListView<UserScript>>(
+              future: _prepareUserScripts(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  print("UserScript Error: ${snapshot.error}"); // 错误日志
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              return InAppWebView(
-                initialSettings: InAppWebViewSettings(
-                  javaScriptEnabled: true,
-                  allowFileAccess: true,
-                  allowFileAccessFromFileURLs: true,
-                  allowUniversalAccessFromFileURLs: true,
-                  useShouldInterceptRequest: true,
-                  // 开启硬件加速
-                  useHybridComposition: true,
-                  // 启用WebView硬件加速
-                  hardwareAcceleration: true,
-                ),
-                initialUserScripts: snapshot.data,
-                onWebViewCreated: (controller) {
-                  _webViewController = controller;
-                  _initializeJavaScriptHandlers(controller);
-                  print("WebView Created"); // 调试日志
+                return InAppWebView(
+                  initialSettings: InAppWebViewSettings(
+                    javaScriptEnabled: true,
+                    allowFileAccess: true,
+                    allowFileAccessFromFileURLs: true,
+                    allowUniversalAccessFromFileURLs: true,
+                    useShouldInterceptRequest: true,
+                    // 开启硬件加速
+                    useHybridComposition: true,
+                    // 启用WebView硬件加速
+                    hardwareAcceleration: true,
+                    // 设置填满屏幕
+                    transparentBackground: true,
+                    // 设置显示区域，包括刘海区域
+                    supportZoom: false,
+                    verticalScrollBarEnabled: false,
+                    horizontalScrollBarEnabled: false,
+                    displayZoomControls: false,
+                    // 防止过度滚动
+                    overScrollMode: OverScrollMode.NEVER,
+                  ),
+                  initialUserScripts: snapshot.data,
+                  onWebViewCreated: (controller) {
+                    _webViewController = controller;
+                    _initializeJavaScriptHandlers(controller);
+                    print("WebView Created"); // 调试日志
 
-                  final uri = Uri.file(widget.localPath); // 使用传入的路径
-                  print("Loading URL: $uri"); // 调试日志
-                  controller.loadUrl(
-                    urlRequest: URLRequest(
-                      url: WebUri.uri(uri),
-                    ),
-                  );
-                },
-                onLoadStart: (controller, url) {
-                  print("Page load started: $url"); // 调试日志
-                },
-                onLoadStop: (controller, url) async {
-                  print("Page load finished: $url");
-
-                  // 取消之前的定时器（如果存在）
-                  _colorCheckTimer?.cancel();
-
-                  // 创建新的定时器，每500毫秒检查一次颜色
-                  // _colorCheckTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-                  //   _updateStatusBarStyle();
-                  // });
-
-                  // 验证注入
-                  controller.evaluateJavascript(
-                      source: "console.log('JS Bridge verification test');");
-                },
-                onConsoleMessage: (controller, consoleMessage) {
-                  print("Console Message: ${consoleMessage.message}");
-                  print("Console: ${consoleMessage.message}"); // 调试日志
-                },
-              );
-            },
+                    final uri = Uri.file(widget.localPath); // 使用传入的路径
+                    print("Loading URL: $uri"); // 调试日志
+                    controller.loadUrl(
+                      urlRequest: URLRequest(
+                        url: WebUri.uri(uri),
+                      ),
+                    );
+                  },
+                  onLoadStart: (controller, url) {
+                    print("Page load started: $url"); // 调试日志
+                  },
+                  onLoadStop: (controller, url) async {
+                    print("Page load finished: $url");
+                  },
+                  onLoadError: (controller, url, code, message) async {
+                    print("Page load error: $message (code: $code)");
+                    // 处理加载错误，如果是本地资源加载错误，可能是文件丢失
+                    if (url.toString().startsWith('file://')) {
+                      _verifyResourcePath();
+                    }
+                  },
+                  onReceivedError: (controller, request, error) {
+                    print("Received error: ${error.description}");
+                    // 处理加载错误，尝试验证资源路径
+                    if (request.url.toString().startsWith('file://')) {
+                      _verifyResourcePath();
+                    }
+                  },
+                  onConsoleMessage: (controller, consoleMessage) {
+                    print("Console Message: ${consoleMessage.message}");
+                    print("Console: ${consoleMessage.message}"); // 调试日志
+                  },
+                );
+              },
+            ),
           ),
         ),
       ),

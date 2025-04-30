@@ -49,7 +49,11 @@
 						     'Authorization': 'Bearer '  + tk 
 						}
 					}).then((res) => {
-						window.localStorage.setItem('token', JSON.stringify(res.data.token));
+						// 更新token
+						if(res.data && res.data.token && res.data.token.tk) {
+							window.localStorage.setItem('token', JSON.stringify(res.data.token));
+						}
+						
 						// 获取本地消息记录中的新消息
 						let curMessage = JSON.parse(window.localStorage.getItem('messages'));
 						if(curMessage == null){
@@ -131,33 +135,33 @@
 		mounted(){
 			this.initializeHistory();
 			//检测是否为电脑打开
-			var os = function() {
-			    var ua = navigator.userAgent,
-			        isWindowsPhone = /(?:Windows Phone)/.test(ua),
-			        isSymbian = /(?:SymbianOS)/.test(ua) || isWindowsPhone,
-			        isAndroid = /(?:Android)/.test(ua),
-			        isFireFox = /(?:Firefox)/.test(ua),
-			        isChrome = /(?:Chrome|CriOS)/.test(ua),
-			        isTablet = /(?:iPad|PlayBook)/.test(ua) || (isAndroid && !/(?:Mobile)/.test(ua)) || (isFireFox && /(?:Tablet)/.test(ua)),
-			        isPhone = /(?:iPhone)/.test(ua) && !isTablet,
-			        isPc = !isPhone && !isAndroid && !isSymbian;
-			    return {
-			        isTablet: isTablet,
-			        isPhone: isPhone,
-			        isAndroid: isAndroid,
-			        isPc: isPc
-			    };
-			}();
+			// var os = function() {
+			//     var ua = navigator.userAgent,
+			//         isWindowsPhone = /(?:Windows Phone)/.test(ua),
+			//         isSymbian = /(?:SymbianOS)/.test(ua) || isWindowsPhone,
+			//         isAndroid = /(?:Android)/.test(ua),
+			//         isFireFox = /(?:Firefox)/.test(ua),
+			//         isChrome = /(?:Chrome|CriOS)/.test(ua),
+			//         isTablet = /(?:iPad|PlayBook)/.test(ua) || (isAndroid && !/(?:Mobile)/.test(ua)) || (isFireFox && /(?:Tablet)/.test(ua)),
+			//         isPhone = /(?:iPhone)/.test(ua) && !isTablet,
+			//         isPc = !isPhone && !isAndroid && !isSymbian;
+			//     return {
+			//         isTablet: isTablet,
+			//         isPhone: isPhone,
+			//         isAndroid: isAndroid,
+			//         isPc: isPc
+			//     };
+			// }();
 			
 			//如果是平板或手机打开则跳转到手机模式
-			if(os.isAndroid || os.isPhone) {
+			// if(os.isAndroid || os.isPhone) {
 				
-			} else if(os.isTablet || os.isPc) {
-				let mobileRunnerEnv = sessionStorage.getItem("MobileRunnerEnv");
-				if(mobileRunnerEnv == undefined){
-					window.location.href="/pc"
-				}
-			}
+			// } else if(os.isTablet || os.isPc) {
+			// 	let mobileRunnerEnv = sessionStorage.getItem("MobileRunnerEnv");
+			// 	if(mobileRunnerEnv == undefined){
+			// 		window.location.href="/pc"
+			// 	}
+			// }
 		
 			// 获取整站设置状态，并决定应用哪些，比如是否开启全局灰色模式等。
 			axios.get(this.$baseUrl + '/app/get_site_set', {}).then((res) => {
@@ -219,6 +223,14 @@
 							}
 						}
 						jsBridge.setStatusBarStyle(false);
+					})
+				}
+				
+				if(window.sessionStorage.getItem("hideBack") == "true") {
+					setTimeout(() => {
+						let backBtn = document.querySelector(".uni-page-head-hd");
+						console.log(backBtn);
+						backBtn.style.display = "none";
 					})
 				}
 			})
