@@ -16,50 +16,6 @@ function getInervalHour(startDate, endDate) {
 	return Math.floor(ms / 1000 / 60 / 60);
 }
 
-async function updateTreeStatus() {
-	try {
-		let results = await query(
-			'SELECT * FROM treeplant WHERE is_gotten = 0 AND messaged = 0',
-		);
-		for (let item of results) {
-			let hour = getInervalHour(item.plant_time, new Date());
-			if (hour >= 8) {
-				let ratio = 0.6;
-				if (Math.random() <= ratio) {
-					await query(
-						'UPDATE treeplant SET tree_status = \'结果\', messaged = 1 WHERE plant_id = ?',
-						[item.plant_id],
-					);
-					message.sendMsg(
-						-1,
-						item.user_id,
-						'[原木树场]你的树长成啦，快来收获吧！',
-						'treePlant/treeplant',
-						'notification',
-					);
-				}
-				continue;
-			}
-			if (hour >= 4) {
-				let ratio = 0.8;
-				if (Math.random() <= ratio) {
-					await query(
-						'UPDATE treeplant SET tree_status = \'开花\' WHERE plant_id = ?',
-						[item.plant_id],
-					);
-				}
-				continue;
-			}
-		}
-	} catch (e) {
-		console.log(e);
-	}
-}
-
-//每小时的30分钟触发，更新用户种树数据
-//采用定时任务，此段弃用
-//schedule.scheduleJob('* 30 * * * *', updateTreeStatus);
-
 router.get('/get_treePlant_of', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
