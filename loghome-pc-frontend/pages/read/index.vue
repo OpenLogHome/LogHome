@@ -36,7 +36,7 @@
               </div>
             </div>
   
-            <div class="novel-list" v-else-if="item.collection_type === 'cards'">
+            <div class="novel-list" v-else> <!---if="item.collection_type === 'cards'"-->
               <div class="list-wrapper">
                 <nuxt-link class="book-card" v-for="novel in (item.novels || []).slice(0, 4)" :key="novel.novel_id"
                   :to="`/novel/${novel.novel_id}`">

@@ -1,5 +1,6 @@
 <template>
-	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view class="content" v-dark
+		:style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 			<div class="articles">
 				<uni-collapse accordion @touchstart.native="touchstart" @touchend.native="touchend" @touchmove.native="touchmove">
 				    <uni-collapse-item class="titleOuter" v-for="item in shownArticles"
@@ -810,7 +811,11 @@ export default{
 		}
 	}
 	
-	.bookParts{
+	.content.dark-mode{
+		background-color: #1e1e1e;
+	}
+	
+	.bookParts{ 
 		width:100%;
 		margin-top: var(--statusBarHeight);
 		.part{

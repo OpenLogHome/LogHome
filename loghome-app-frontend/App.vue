@@ -1,6 +1,7 @@
 <script>
 	import axios from 'axios'
 	import h5PageAnimation from './components/h5-page-animation/';
+	import '@/common/theme.scss';
 	export default {
 		mixins: [h5PageAnimation],
 		onShow: function() {
@@ -130,10 +131,77 @@
 					this.$bus.$emit("AutoSave");
 					// console.log("本地保存");
 				},EditorAutoSaveProps.timeSpan*1000*60);
+			},
+			updateNavidationBarTheme(){
+				if(this.$store.state.isDarkMode) {
+					uni.setTabBarStyle({
+						color: "#7A7E83",
+						selectedColor: "#d3442b",
+						borderStyle: "white",
+						backgroundColor: "#000000",
+					})
+				} else {
+					uni.setTabBarStyle({
+						color: "#7A7E83",
+						selectedColor: "#d3442b",
+						borderStyle: "white",
+						backgroundColor: "#ffffff",
+					})
+				}
+			},
+			// 初始化主题模式
+			initTheme() {
+				// 获取保存的主题模式
+				const savedTheme = window.localStorage.getItem('themeMode');
+				
+				// 检查系统是否处于深色模式
+				const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				
+				// 优先使用保存的主题模式，如果没有保存过则使用系统主题模式
+				if (savedTheme === 'dark' || (savedTheme !== 'light' && prefersDarkMode)) {
+					document.documentElement.classList.add('dark-mode');
+					this.$store.state.isDarkMode = true;
+					this.updateNavidationBarTheme();
+				} else {
+					document.documentElement.classList.remove('dark-mode');
+					this.$store.state.isDarkMode = false;
+					this.updateNavidationBarTheme();
+				}
+				
+				// 监听系统主题变化，如果用户没有手动设置过主题模式
+				if (!savedTheme) {
+					window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+						if (e.matches) {
+							document.documentElement.classList.add('dark-mode');
+							this.$store.state.isDarkMode = true;
+							this.updateNavidationBarTheme();
+						} else {
+							document.documentElement.classList.remove('dark-mode');
+							this.$store.state.isDarkMode = false;
+							this.updateNavidationBarTheme();
+						}
+					});
+				}
+			},
+			// 切换主题模式
+			toggleTheme() {
+				const isDarkMode = document.documentElement.classList.contains('dark-mode');
+				if (isDarkMode) {
+					document.documentElement.classList.remove('dark-mode');
+					window.localStorage.setItem('themeMode', 'light');
+					this.$store.state.isDarkMode = false;
+					this.updateNavidationBarTheme();
+				} else {
+					document.documentElement.classList.add('dark-mode');
+					window.localStorage.setItem('themeMode', 'dark');
+					this.$store.state.isDarkMode = true;
+					this.updateNavidationBarTheme();
+				}
 			}
 		},
 		mounted(){
 			this.initializeHistory();
+			this.initTheme(); // 初始化主题
 			//检测是否为电脑打开
 			// var os = function() {
 			//     var ua = navigator.userAgent,

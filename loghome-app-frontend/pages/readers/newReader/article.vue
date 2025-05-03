@@ -23,6 +23,10 @@
 						<i class="el-icon-tickets" style="font-size: 50rpx;"></i>
 						<p style="font-size: 26rpx; margin-top: 6rpx;">目录</p>
 					</div>
+					<div class="iconBtn" @click="openExcerpts">
+						<i class="el-icon-collection" style="font-size: 50rpx;"></i>
+						<p style="font-size: 26rpx; margin-top: 6rpx;">书摘</p>
+					</div>
 					<div class="iconBtn" @click="toggleNightMode">
 						<i class="el-icon-moon" style="font-size: 50rpx;"
 							v-show="!themesData[readerSettings.theme].isBlack"></i>
@@ -136,10 +140,10 @@
 				}" v-show="vRenderShowTitle">
 					{{ vRenderTitle }}
 				</div>
-				<div class="paragraph" :style="{
+				<div v-for="(para, idx) in vRenderText" :class="'paragraph ' + 'p' + vRenderIds[idx]" :style="{
 					'minHeight': readerSettings.fontSize * readerSettings.lineHeight + 'rpx',
 					'fontFamily': fonts[readerSettings.font].family
-				}" v-for="para in vRenderText">
+				}">
 					{{para}}
 				</div>
 			</div>
@@ -178,14 +182,15 @@
 						}">
 							{{ allArticleData[allPages[idx].articleId.toString()].title }}
 						</div>
-						<div :class="`paragraph ${para.cento ? 'cento' : ''} ${para.selected ? 'selected' : ''}`" :style="{
+						<div :class="`paragraph ${para.cento ? 'cento ' : ''}${para.selected ? 'selected ' : ''}${paragraphId==para.id ? 'highlighted' : ''}`" :style="{
 							'minHeight': readerSettings.fontSize * readerSettings.lineHeight + 'rpx',
 							'fontFamily': fonts[readerSettings.font].family,
 							'text-decoration-color': para.cento ? themesData[readerSettings.theme].lineColor : 'transparent'
 						}" v-for="para in allArticleData[allPages[idx].articleId.toString()].content" v-show="para.type == 'text'"
 							:key="para.id" @longpress="handleParagraphLongpressed($event, para)">
 							<div v-show="para.value && para.value.startsWith('\u3000\u3000')" class="lineShelterBox"
-								 :style="{'backgroundColor': para.selected ? blendHexColors(themesData[readerSettings.theme].backgroundColor, '#7774') : themesData[readerSettings.theme].backgroundColor, 
+								 :style="{'backgroundColor': (para.selected) ? blendHexColors(themesData[readerSettings.theme].backgroundColor, '#7774')
+								  : ((paragraphId==para.id) ? blendHexColors(themesData[readerSettings.theme].backgroundColor, '#FADD0044') : themesData[readerSettings.theme].backgroundColor), 
 								 'width': readerSettings.fontSize * 2 + 'rpx',
 								 'height': '20rpx', 
 								 'top': readerSettings.fontSize * readerSettings.lineHeight - 20 + 'rpx'}">
@@ -271,6 +276,19 @@
 			</div>
 		</el-drawer>
 
+		<el-drawer :with-header="false" :visible.sync="excerptDrawerVisible" direction="btt" :modal="excerptDrawerVisible" size="calc(80% + 44px)"
+			custom-class="commentDrawer" :destroy-on-close="true" :wrapperClosable="false">
+			<div class="bookCommentDrawer">
+				<div class="title">
+					划线书摘
+				</div>
+				<div class="closeBtn" @click="handleCloseExcerptDrawerManually">
+					<i class="el-icon-close"></i>
+				</div>
+				<BookExcerpts :novelId="novelId" :componentMode="true" @navigate="handleExcerptNavigation"></BookExcerpts>
+			</div>
+		</el-drawer>
+
 		<div class="floating-panel" v-show="selectionMode"
 			:style="{ left: panelPosition.x + 'px', top: panelPosition.y + 'px' }">
 			<div class="panel-button" @click="handleCopy">
@@ -294,7 +312,7 @@
 		
 		<div class="commentBtn" v-for="item in shownCommentsBtn" @click="gotoParagraphComment(item.paragraphId)"
 			:style="{'fontSize': readerSettings.fontSize * 1.2 + 'rpx', 'left': item.x, 'top': item.y,
-			'color': themesData[readerSettings.theme].fontColor}">
+			'color': themesData[readerSettings.theme].fontColor}" v-show="!settingsOpened">
 			<i class="el-icon-chat-square"></i>
 			<div class="amount" :style="{'fontSize': readerSettings.fontSize * 0.6 + 'rpx'}">
 				{{item.amount}}
@@ -318,6 +336,7 @@ import fonts from "./fonts.json"
 import bookMenu from '../../../components/bookMenu.vue'
 import BatteryIcon from "../../../components/battery.vue"
 import BookComment from "../bookComment.vue"
+import BookExcerpts from "../bookExcerpts.vue"
 export default {
 	data() {
 		return {
@@ -326,11 +345,13 @@ export default {
 			titleMarginBottomRatio: 0.2,
 			novelId: -1,
 			articleId: -1,
+			paragraphId: -1,
 			allArticles: [],
 			readerArticleData: {},
 			allArticleData: {},
 			allPages: [],
 			currentPageIdx: -1,
+			vRenderIds: [],
 			vRenderText: [],
 			vRenderTitle: "",
 			vRenderShowTitle: false,
@@ -378,10 +399,11 @@ export default {
 				lastIdx: 0
 			},
 			commentDrawerVisible: false,
-			commentDrawerData:{}
+			commentDrawerData: {},
+			excerptDrawerVisible: false
 		}
 	},
-	components: { bookMenu, BatteryIcon, BookComment },
+	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts },
 	methods: {
 		loadAllPages() {
 			return new Promise(async (resolve, reject) => {
@@ -421,6 +443,9 @@ export default {
 							this.currentPageIdx += articlePages.length;
 						}
 					}
+					if(this.paragraphId != -1) {
+						this.gotoParagraph(articleData.article_id, this.paragraphId);
+					}
 					let renderFlag = false;
 					for (let i = 0; i < this.allArticles.length; i++) {
 						if (i > centerArticleIdx) {
@@ -431,7 +456,7 @@ export default {
 							this.allPages.push(...articlePages);
 						}
 						if (i == centerArticleIdx || i == centerArticleIdx + 1) {
-							if (!renderFlag && this.historyMode) {
+							if (!renderFlag && this.historyMode && this.paragraphId == -1) {
 								this.currentPageIdx = Math.min(this.currentPageIdx + Number(historyPage), this.allPages.length - 1);
 								renderFlag = true;
 							}
@@ -460,9 +485,7 @@ export default {
 					return res.data[0];
 				}
 			} catch(e) {
-				console.log(this.novelId);
 				let matchedNovels = await articleDB.novels.where("novel_id").equals(Number(this.novelId)).toArray();
-				console.log("matchedNovels", matchedNovels)
 				if(matchedNovels.length > 0) {
 					return matchedNovels[0];
 				}
@@ -480,10 +503,8 @@ export default {
 				articles.sort((a, b) =>{
 					return a.article_chapter - b.article_chapter;
 				})
-				console.log(articles)
 				return articles;
 			}
-			
 		},
 		async getArticleContentById(article_id, onlineTime, allowHistory) {
 			if (allowHistory) {
@@ -497,7 +518,6 @@ export default {
 			}
 			try{
 				let res = await axios.get(this.$baseUrl + '/articles/get_article?id=' + article_id + "&isCaching=true", {});
-				console.log(res);
 				if (res.status == 200) {
 					articleDB.articles.put(res.data[0]);
 					if (res.data[0].article_type == "richtext") {
@@ -522,11 +542,12 @@ export default {
 				}
 			}
 		},
-		async vRenderParagraph(text, title, showTitle) {
+		async vRenderParagraph(text, ids, title, showTitle) {
+			this.vRenderIds = ids;
 			this.vRenderText = text;
 			this.vRenderTitle = title;
 			this.vRenderShowTitle = showTitle;
-			await this.delay(1);
+			await this.delay(0);
 			let vPage = document.getElementById("vPage");
 			return vPage.scrollHeight;
 		},
@@ -548,6 +569,7 @@ export default {
 
 				let mergedContent = [];
 				let currentTextValue = [];
+				let currentTextIds = [];
 				let isCollecting = false;
 
 				for (let i = 0; i < articleData.content.length; i++) {
@@ -555,8 +577,10 @@ export default {
 					if (item.type === 'text') {
 						if (isCollecting) {
 							currentTextValue.push(item.value);
+							currentTextIds.push(item.id);
 						} else {
 							currentTextValue = [item.value];
+							currentTextIds = [item.id];
 							isCollecting = true;
 						}
 						// 如果是最后一个元素或下一个元素不是text类型，保存收集的文本
@@ -568,7 +592,8 @@ export default {
 							if (!isEmptyParagraph) {
 								mergedContent.push({
 									type: 'text',
-									value: currentTextValue
+									value: currentTextValue,
+									ids: currentTextIds
 								});
 							}
 							isCollecting = false;
@@ -594,9 +619,18 @@ export default {
 			for (let k = 0; k < vRenderContent.length; k++) {
 				let mergedParagraph = vRenderContent[k];
 				if (mergedParagraph.type == "text") {
-					let paragraphHeight = await this.vRenderParagraph(mergedParagraph.value, articleData.title, k == 0);
+					let paragraphHeight = await this.vRenderParagraph(mergedParagraph.value, mergedParagraph.ids, articleData.title, k == 0);
+					let paragraphDoms = document.querySelectorAll("#vPage .paragraph");
+					let paraDomInfos = Array.from(paragraphDoms).map(item => ({
+						y: item.getBoundingClientRect().y,
+						id: item.classList[1].replace("p", "")
+					}));
 					let lines = paragraphHeight / lineHeight;
 					for (let i = 0; i < lines / actualLineAmount; i++) {
+						let inPageParaDoms = paraDomInfos.filter(item => {
+							return (item.y >= i * pageScrollHeight && item.y < (i+1) * pageScrollHeight) 
+						})
+						let inPagesParagraphIds = inPageParaDoms.map((item => item.id));
 						generatedPages.push({
 							type: "text",
 							scrollHeight: lastParagraphHeight + pageScrollHeight * i,
@@ -604,6 +638,7 @@ export default {
 							viewHeight: Math.min(paragraphHeight - (pageScrollHeight * i), pageScrollHeight) +
 								(pageIdxInArticle == 0 ? this.actualLineHeight * this.titleMarginBottomRatio : 0),
 							idx: (pageIdxInArticle++),
+							inPagesParagraphIds
 						})
 					}
 					lastParagraphHeight += paragraphHeight;
@@ -799,32 +834,6 @@ export default {
 				this.loadAllPages();
 			})
 		},
-		updateQueryParam(key, value, usePushState = false) {
-			let currentUrl = new URL(window.location.href);
-			currentUrl.searchParams.set(key, value);
-
-			if (usePushState) {
-				window.history.pushState({}, '', currentUrl.toString());
-			} else {
-				window.history.replaceState({}, '', currentUrl.toString());
-			}
-		},
-		updateHashQueryParam(key, value, usePushState = false) {
-			let hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
-			let [hashPath, hashQuery] = hash.split('?'); // 拆分路径和查询参数
-			let searchParams = new URLSearchParams(hashQuery || ''); // 解析查询参数
-
-			searchParams.set(key, value); // 修改参数
-
-			let newHash = `${hashPath}?${searchParams.toString()}`; // 重新拼接哈希部分
-			let newUrl = `${window.location.origin}${window.location.pathname}#${newHash}`; // 组合完整 URL
-
-			if (usePushState) {
-				window.history.pushState({}, '', newUrl);
-			} else {
-				window.history.replaceState({}, '', newUrl);
-			}
-		},
 		gotoMenu() {
 			this.menuDrawerVisible = true;
 		},
@@ -855,7 +864,6 @@ export default {
 			this.$forceUpdate();
 		},
 		handleParagraphLongpressed(event, paragraph) {
-			console.log(event);
 			this.clearSelection();
 			const touch = event.touches[0];
 			const screenWidth = uni.getSystemInfoSync().screenWidth;
@@ -1070,6 +1078,7 @@ export default {
 				return;
 			}
 			for(let i = 0; i < this.allPages.length; i ++) {
+				this.currentPageIdx = 0;
 				if(this.allPages[i].articleId == this.allArticles[newArticleIdx].article_id) {
 					this.currentPageIdx = i;
 					break;
@@ -1078,9 +1087,26 @@ export default {
 			this.currentRenderIdx = [];
 			this.renderNewPages();
 		},
+		gotoParagraph(articleId, paragraphId) {
+			for(let i = 0; i < this.allPages.length; i ++) {
+				let page = this.allPages[i];
+				if(page.articleId == articleId && page.inPagesParagraphIds.indexOf(String(paragraphId)) != -1) {
+					this.currentPageIdx = i;
+					this.currentRenderIdx = [];
+					this.paragraphId = paragraphId;
+					this.renderNewPages();
+					setTimeout(() => {
+						this.paragraphId = -1;
+					}, 2000)
+					return;
+				}
+			}
+		},
 		browserBack() {
 			if(this.commentDrawerVisible) {
 				this.commentDrawerVisible = false;
+			} else if(this.excerptDrawerVisible) {
+				this.excerptDrawerVisible = false;
 			}
 		},
 		handleCloseCommentDraweraManually() {
@@ -1088,12 +1114,26 @@ export default {
 			window.history.go(-1)
 			// #endif
 			this.commentDrawerVisible = false;
-		}
+		},
+		handleCloseExcerptDrawerManually() {
+			// #ifdef H5
+			window.history.go(-1)
+			// #endif
+			this.excerptDrawerVisible = false;
+		},
+		openExcerpts() {
+			this.excerptDrawerVisible = true;
+			window.history.pushState({ isExcerptDrawerOpen: true }, '', window.location.href)
+		},
+		handleExcerptNavigation(data) {
+			// 关闭书摘抽屉
+			this.handleCloseExcerptDrawerManually();
+			this.gotoParagraph(data.articleId, data.paragraphId);
+		},
 	},
 	watch: {
 		currentPageIdx(newValue, oldValue) {
 			if (!this.onRendering) {
-				// this.updateHashQueryParam('id', this.allPages[newValue].articleId, false);
 				if(this.allPages[newValue].articleId != this.allPages[oldValue].articleId) {
 					axios.get(this.$baseUrl + '/articles/novel_clicked?id=' + this.allPages[newValue].articleId, {});
 				}
@@ -1102,7 +1142,6 @@ export default {
 				window.localStorage.setItem("ReaderHistoryPage_" + this.novelInfo.novel_id, this.allPages[newValue].idx);
 				if (this.allPages[newValue].articleId != this.allPages[oldValue].articleId) {
 					this.showArticleCentos(newValue);
-					// this.getArticleComments();
 				}
 			}
 			uni.setNavigationBarTitle({
@@ -1156,6 +1195,7 @@ export default {
 		}
 		this.articleId = option.id;
 		if(option.novelId) this.novelId = option.novelId;
+		if(option.paragraphId) this.paragraphId = option.paragraphId;
 		let article = await this.getArticleContentById(this.articleId);
 		this.novelId = article.novel_id;
 		this.novelInfo = await this.getNovelInfo();
@@ -1277,6 +1317,10 @@ export default {
 						top: 0;
 						transition: all .3s;
 					}
+				}
+
+				.paragraph.highlighted {
+					background-color: #FADD0044;
 				}
 
 				.paragraph.selected {

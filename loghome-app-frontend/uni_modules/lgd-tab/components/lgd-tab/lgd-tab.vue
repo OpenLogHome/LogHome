@@ -4,7 +4,7 @@
 			<view class="tabBox" :style="{ 'justify-content': isOutWindow ? 'space-around' : 'space-around' }">
 				<view class="items" v-for="(item, index) in tabValue" :key="index" @click="clickTab(index)">
 					<view class="tab-item-wrapper">
-						<text class="tabText" :class="index == tIndex ? 'active' : ''" 
+						<text class="tabText" :class="index == tIndex ? 'active' : ''" v-dark
 						:style="{ 'font-size': fontSize + ((index == tIndex)?5:0) + 'rpx', color: index == tIndex ? textColor : ''}">
 							{{item}}
 						</text>
@@ -12,7 +12,8 @@
 					</view>
 				</view>
 			</view>
-			<view class="underscore" :style="{ width: inderWidth + 'px', 'margin-left': indexLeft + boxLeft + 'px', 'background-color': 'rgb(161,255,127)', height: '25rpx' }" />
+			<view class="underscore" v-dark
+				:style="{ width: inderWidth + 'px', 'margin-left': indexLeft + boxLeft + 'px', height: '25rpx' }" />
 		</view>
 	</view>
 </template>
@@ -138,6 +139,9 @@
 		color: #666666;
 		transition: .3s all;
 		line-height: 50rpx;
+		&.dark-mode{
+			color: #cecece;
+		}
 	}
 
 	.active {
@@ -149,6 +153,10 @@
 		transform: translate(0,-40rpx);
 		border-radius: 10rpx;
 		position:absolute;
+		background-color: rgb(161,255,127);
+		&.dark-mode{
+			background-color: #39582E;
+		}
 	}
 	
 	.tab-badge {

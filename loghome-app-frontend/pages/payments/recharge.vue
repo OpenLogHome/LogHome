@@ -1,12 +1,12 @@
 <template>
-	<view class="buy">
-		<view class="title">
+	<view class="buy" v-dark>
+		<view class="title" v-dark>
 			<img src="../../static/resources/log.png"></img>
 			<text class="text">余额：</text>
 			<text class="num">{{resources.log}}</text>
 		</view>
 
-		<view class="quick-links">
+		<view class="quick-links" v-dark>
 			<navigator url="/pages/payments/order_history">
 				<view class="quick-link-item">
 					<!-- <image class="icon" src="../../static/icons/icon_history.png" mode="aspectFit"></image> -->
@@ -23,16 +23,16 @@
 			</navigator>
 		</view>
 
-		<view class="number">
+		<view class="number" v-dark>
 			<view class="list">
-				<view :class="num == index ? 'item real' : 'item'" v-for="(item, index) in list" :key="index"
+				<view :class="num == index ? 'item real' : 'item'" v-for="(item, index) in list" :key="index" v-dark
 					@click="pick(index)">
 					<view class="card">
 						<view class="top">
-							<text>{{ item.number }}</text>
+							<text v-dark>{{ item.number }}</text>
 							<img src="../../static/resources/log.png"></img>
 						</view>
-						<text class="money">{{ item.money }}元</text>
+						<text class="money" v-dark>{{ item.money }}元</text>
 					</view>
 					<view v-if="index === 2" class="recommend">
 						<text>推荐</text>
@@ -44,8 +44,8 @@
 			</view>
 		</view>
 
-		<view class="tip">
-			<p class="titl" style="padding-bottom: 6rpx;">温馨提示</p>
+		<view class="tip" v-dark>
+			<p class="titl" style="padding-bottom: 6rpx;" v-dark>温馨提示</p>
 			<view>
 				<text>1、捐赠对应数额，将获得社区给予的</text>
 				<text>原木</text>
@@ -187,6 +187,10 @@
 	.buy {
 		width: 100%;
 		height: 100%;
+		
+		&.dark-mode{
+			background-color: #1e1e1e;
+		}
 
 		.title {
 			display: flex;
@@ -212,6 +216,16 @@
 				color: #ff4141;
 			}
 		}
+		
+		.title.dark-mode{
+			background-color: #000000;
+			>text{
+				color: #eaeaea;
+			}
+			.num {
+				color: #ff4141;
+			}
+		}
 
 		.number {
 			width: 100%;
@@ -221,6 +235,10 @@
 			display: flex;
 			flex-direction: column;
 			align-items: center;
+			
+			&.number.dark-mode{
+				background-color: #000;
+			}
 
 			.list {
 				display: flex;
@@ -235,6 +253,10 @@
 					box-shadow: 0rpx 0rpx 6rpx 0rpx rgba(0, 0, 0, 0.1);
 					margin-bottom: 44rpx;
 					display: flex;
+					
+					&.dark-mode{
+						background: #1e1e1e;
+					}
 
 					.card {
 						width: 194rpx;
@@ -255,6 +277,10 @@
 								color: #666666;
 								line-height: 44rpx;
 								margin-right: 12rpx;
+								
+								&.dark-mode{
+									color: #dedede;
+								}
 							}
 
 							>img {
@@ -318,6 +344,7 @@
 				}
 			}
 		}
+		
 
 		.quick-links {
 			display: flex;
@@ -353,12 +380,26 @@
 				}
 			}
 		}
+		
+		.quick-links.dark-mode{
+			background: #000;
+			.quick-link-item{
+				background: #000;
+				text {
+					color: #eaeaea;
+				}
+			}
+		}
 
 		.tip {
 			// height: 394rpx;
 			background: #ffffff;
 			margin-top: 18rpx;
 			padding: 40rpx;
+			
+			&.dark-mode{
+				background-color: #1e1e1e;
+			}
 
 			.titl {
 				font-size: 28rpx;
@@ -368,6 +409,10 @@
 				line-height: 40rpx;
 				margin-bottom: 6rpx;
 				padding-bottom: 20rpx;
+				
+				&.dark-mode{
+					color: #eaeaea;
+				}
 			}
 
 			>view {

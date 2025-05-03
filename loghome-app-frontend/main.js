@@ -3,13 +3,22 @@ import axios from 'axios'
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import 'element-theme/index.css';
+import 'element-theme/dark-theme.css'; // 导入Element UI深色模式样式
 import SlideVerify from 'vue-monoplasty-slide-verify';
 import LogImage from "./components/LogImage";
+import darkNavigationMixin from './mixins/dark-navigation.vue';
+
+// 导入自定义指令
+import './plugins/directives'
 
 // 注册全局modal组件
 import chunLeiModal from '@/components/chunLei-modal/chunLei-modal.vue'
 Vue.component('chunLei-modal',chunLeiModal);
 Vue.component('log-image', LogImage);
+
+// 注册主题切换组件
+import ThemeSwitch from '@/components/theme-switch.vue';
+Vue.component('theme-switch', ThemeSwitch);
 
 const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
@@ -24,7 +33,7 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_DEV;
+Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
 	bookCover:"https://s4.ax1x.com/2022/01/13/7lYAlq.png"
@@ -314,6 +323,7 @@ let clipBoardContent = "";
 // 	}
 // },3000)
 
+Vue.mixin(darkNavigationMixin);
 
 Vue.config.productionTip = false;
 App.mpType = 'app'

@@ -200,7 +200,7 @@
           <i class="el-icon-document-copy"></i>
           <span>复制</span>
         </div>
-        <div class="panel-button" @click="gotoParagraphComment">
+        <div class="panel-button" @click="openParagraphCommentWindow(selectedParagraph.id)">
           <i class="el-icon-chat-line-round"></i>
           <span>评论</span>
         </div>
@@ -319,12 +319,11 @@ export default {
         }).join('');
       } catch (e) {
         // 如果不是JSON格式，则按原来的方式处理纯文本内容
-        let paragraphId = 0;
         return this.article.content
           .split('\n')
           .filter(para => para.trim().length > 0)
           .map(para => {
-            const id = ++paragraphId;
+            const id = para.id;
             return `<p class="article-paragraph" id="paragraph-${id}" data-paragraph-id="${id}" data-paragraph-text="${encodeURIComponent(para)}">${para}</p>`;
           })
           .join('');
@@ -841,11 +840,7 @@ export default {
           // 筛选出文本段落
           paragraphs = content.filter(item => item.type === 'text').map(item => item.id);
         } catch (e) {
-          // 如果不是JSON格式，则按原来的方式处理纯文本内容
-          const textParagraphs = this.article.content
-            .split('\n')
-            .filter(para => para.trim().length > 0);
-          paragraphs = Array.from({length: textParagraphs.length}, (_, i) => i + 1);
+          console.log("not JSON format")
         }
         
         // 为每个段落ID获取评论数量
@@ -891,7 +886,7 @@ export default {
       // 添加到段落末尾
       paragraph.appendChild(iconContainer);
     },
-    
+
     // 打开段落评论窗口
     async openParagraphCommentWindow(paragraphId) {
       try {
@@ -904,8 +899,13 @@ export default {
             url: `${process.env.mobileUrl}/#/pages/users/external_login?token=${
                   token}&redirectTo=${encodeURIComponent(`/pages/readers/bookComment?id=${this.novel.novel_id}&articleId=${this.article.article_id}&paragraphId=${paragraphId}`)}&hideback=true`,
             width: 400,
-            height: 800
+            height: Math.min(800, window.screen.height - 200)
           });
+          
+          // 如果是从选择面板调用的，清除选择状态
+          if (this.selectionMode) {
+            this.clearSelection();
+          }
         } else {
           this.$router.push("/login");
         }
@@ -1046,25 +1046,6 @@ export default {
         .catch(() => {
           this.$message.error('复制失败');
         });
-    },
-
-    // 跳转到段落评论
-    async gotoParagraphComment() {
-      const tokenData = localStorage.getItem('token');
-      if (tokenData) {
-        let token = (await this.$api.users.generateCrossSiteToken()).crossSiteToken;
-        console.log(token)
-        this.$windowManager.createWindow({
-          title: '段落评论',
-          url: `${process.env.mobileUrl}/#/pages/users/external_login?token=${
-                token}&redirectTo=${encodeURIComponent(`/pages/readers/bookComment?id=${this.novel.novel_id}&articleId=${this.article.article_id}&paragraphId=${this.selectedParagraph.id}`)}&hideback=true`,
-          width: 500,
-          height: 800
-        })
-      } else {
-        this.$router.push("/login")
-      }
-      this.clearSelection()
     },
 
     // 处理文档点击事件，关闭菜单

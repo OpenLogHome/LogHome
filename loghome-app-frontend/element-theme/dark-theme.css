@@ -1,0 +1,123 @@
+/* Element UI 深色模式覆盖样式 */
+.dark-mode .el-button--primary {
+  background-color: var(--main-color);
+  border-color: var(--main-color);
+}
+
+.dark-mode .el-input__inner {
+  background-color: #2c2c2c;
+  border-color: var(--border-color);
+  color: var(--text-color-primary);
+}
+
+.dark-mode .el-select-dropdown {
+  background-color: #2c2c2c;
+  border-color: var(--border-color);
+}
+
+.dark-mode .el-select-dropdown__item {
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-select-dropdown__item.hover, 
+.dark-mode .el-select-dropdown__item:hover {
+  background-color: #3c3c3c;
+}
+
+.dark-mode .el-pagination {
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-pagination button {
+  background-color: #2c2c2c;
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-pagination .el-pagination__total {
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-pagination .btn-prev, 
+.dark-mode .el-pagination .btn-next {
+  background-color: #2c2c2c;
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-dialog {
+  background-color: var(--card-background);
+}
+
+.dark-mode .el-dialog__title {
+  color: var(--text-color-primary);
+}
+
+.dark-mode .el-form-item__label {
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-tabs__item {
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-tabs__item.is-active {
+  color: var(--main-color);
+}
+
+.dark-mode .el-tabs__active-bar {
+  background-color: var(--main-color);
+}
+
+.dark-mode .el-table {
+  background-color: var(--card-background);
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-table th {
+  background-color: #1a1a1a;
+}
+
+.dark-mode .el-table tr {
+  background-color: var(--card-background);
+}
+
+.dark-mode .el-table--striped .el-table__body tr.el-table__row--striped td {
+  background-color: #1a1a1a;
+}
+
+.dark-mode .el-table td, 
+.dark-mode .el-table th.is-leaf {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .el-table--border, 
+.dark-mode .el-table--group {
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .el-card {
+  background-color: var(--card-background);
+  border-color: var(--border-color);
+  color: var(--text-color-primary);
+}
+
+.dark-mode .el-message-box {
+  background-color: var(--card-background);
+  border-color: var(--border-color);
+}
+
+.dark-mode .el-message-box__title {
+  color: var(--text-color-primary);
+}
+
+.dark-mode .el-message-box__content {
+  color: var(--text-color-regular);
+}
+
+.dark-mode .el-loading-mask {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.dark-mode .el-message {
+  background-color: var(--card-background);
+  border-color: var(--border-color);
+} 

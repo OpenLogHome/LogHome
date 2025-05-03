@@ -89,17 +89,6 @@ function getCode(len = 10) {
 	return code;
 }
 
-// 临时存储跨站点登录令牌
-let crossSiteTokens = {};
-// 每秒清理过期的跨站点令牌
-setInterval(() => {
-    for (let key in crossSiteTokens) {
-        if (crossSiteTokens[key].expireTime < Date.now()) {
-            delete crossSiteTokens[key];
-        }
-    }
-}, 1000);
-
 router.get('/all_users', async function (req, res) {
 	//获取用户列表的所有用户信息
 	try {
@@ -814,12 +803,14 @@ router.get('/generate_cross_site_token', auth, async (req, res) => {
         // 生成一个8字符的随机令牌
         const crossSiteToken = getCode(8);
         
-        // 存储令牌及关联用户信息，有效期15秒
-        crossSiteTokens[crossSiteToken] = {
-            userId: user.user_id,
-            userPwd: user.pwd,
-            expireTime: Date.now() + 15000 // 当前时间+15秒
-        };
+        // 计算过期时间 - 15秒后过期
+        const expireTime = new Date(Date.now() + 15000);
+        
+        // 存储令牌到数据库
+        await query(
+            'INSERT INTO user_cross_site_tokens(token, user_id, expire_time) VALUES(?, ?, ?)',
+            [crossSiteToken, user.user_id, expireTime]
+        );
         
         res.json(200, { 
             crossSiteToken: crossSiteToken,
@@ -836,19 +827,33 @@ router.get('/token_by_cross_site', async (req, res) => {
     try {
         const crossSiteToken = req.query.token;
         
-        if (!crossSiteToken || !crossSiteTokens[crossSiteToken]) {
+        if (!crossSiteToken) {
+            return res.json(400, { msg: '无效的跨站点令牌' });
+        }
+        
+        // 从数据库获取令牌信息
+        const tokenResults = await query(
+            'SELECT t.*, u.pwd FROM user_cross_site_tokens t JOIN users u ON t.user_id = u.user_id WHERE t.token = ?',
+            [crossSiteToken]
+        );
+        
+        if (tokenResults.length === 0) {
             return res.json(400, { msg: '无效的跨站点令牌或令牌已过期' });
         }
         
+        const tokenInfo = tokenResults[0];
+        const currentTime = new Date();
+        
         // 验证令牌是否过期
-        if (crossSiteTokens[crossSiteToken].expireTime < Date.now()) {
-            delete crossSiteTokens[crossSiteToken]; // 删除过期令牌
+        if (new Date(tokenInfo.expire_time) < currentTime) {
+            // 删除过期令牌
+            await query('DELETE FROM user_cross_site_tokens WHERE token = ?', [crossSiteToken]);
             return res.json(400, { msg: '令牌已过期' });
         }
         
         // 获取用户信息
-        const userId = crossSiteTokens[crossSiteToken].userId;
-        const userPwd = crossSiteTokens[crossSiteToken].userPwd;
+        const userId = tokenInfo.user_id;
+        const userPwd = tokenInfo.pwd;
         
         // 生成标准JWT token
         const token = jwt.sign(
@@ -860,7 +865,7 @@ router.get('/token_by_cross_site', async (req, res) => {
         );
         
         // 删除使用过的令牌，防止重复使用
-        delete crossSiteTokens[crossSiteToken];
+        await query('DELETE FROM user_cross_site_tokens WHERE expire_time < NOW()');
         
         // 返回登录token
         res.json(200, {

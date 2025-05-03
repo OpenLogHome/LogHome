@@ -10,12 +10,6 @@ let router = express.Router();
 let schedule = require('node-schedule');
 let bank = require('../bin/bank.js');
 
-function getInervalHour(startDate, endDate) {
-	let ms = endDate.getTime() - startDate.getTime();
-	if (ms < 0) return 0;
-	return Math.floor(ms / 1000 / 60 / 60);
-}
-
 router.get('/get_treePlant_of', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];

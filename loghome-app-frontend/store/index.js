@@ -6,9 +6,13 @@ const store = new Vuex.Store({
     state: {
 		version:"非正式版本",
 		appVersion:null,
-		hypernotion:false
+		hypernotion:false,
+		isDarkMode: false
 	},
     mutations: {
+		updateDarkMode(state, isDark) {
+			state.isDarkMode = isDark;
+		}
 	},
     actions: {}
 })

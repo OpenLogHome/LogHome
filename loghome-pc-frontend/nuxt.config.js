@@ -3,9 +3,8 @@ export default {
     STATIC_URL: process.env.STATIC_URL || '',
     baseUrl: process.env.NODE_ENV === 'production' 
       ? 'https://loghomeservice.codesocean.top' // 生产环境API地址
-      : 'http://127.0.0.1:9000', // 开发环境API地址
-    // mobileUrl: "http://loghome.codesocean.top"
-    mobileUrl: process.env.NODE_ENV === 'production' ? "https://loghome.codesocean.top" : "http://127.0.0.1:8080"
+      : 'https://loghomeservice.codesocean.top', // 开发环境API地址
+    mobileUrl: process.env.NODE_ENV === 'production' ? "https://loghome.codesocean.top" : "https://loghome.codesocean.top"
   },
   /*
    ** Build configuration

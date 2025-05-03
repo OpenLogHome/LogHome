@@ -5,6 +5,11 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const SECRET = require('../SECRET.js').SECRET;
 
+// 用户最后更新时间的缓存
+const userLastUpdateTimeCache = new Map();
+// 更新时间间隔（毫秒），设置为5分钟
+const UPDATE_INTERVAL = 5 * 60 * 1000;
+
 // 中间件：验证授权
 const auth = async (req, res, next) => {
 	try {
@@ -25,10 +30,19 @@ const auth = async (req, res, next) => {
 					[id, pwd],
 				);
 				if (req.user && req.user.length > 0) {
-					await query('UPDATE users SET online_time = ? WHERE user_id = ?', [
-						new Date(),
-						req.user[0].user_id,
-					]);
+					const userId = req.user[0].user_id;
+					const currentTime = Date.now();
+					const lastUpdateTime = userLastUpdateTimeCache.get(userId) || 0;
+					
+					// 只有当距离上次更新时间超过设定间隔时，才更新用户在线时间
+					if (currentTime - lastUpdateTime > UPDATE_INTERVAL) {
+						await query('UPDATE users SET online_time = ? WHERE user_id = ?', [
+							new Date(),
+							userId,
+						]);
+						// 更新缓存中的最后更新时间
+						userLastUpdateTimeCache.set(userId, currentTime);
+					}
 				} else {
 					res.json(401, {
 						status: 401,

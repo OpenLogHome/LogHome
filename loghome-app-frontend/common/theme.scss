@@ -1,0 +1,43 @@
+:root {
+  /* 亮色模式变量 */
+  --background-color: #ffffff;
+  --background-color-secondary: #f9f9f9;
+  --text-color-primary: #303133;
+  --text-color-regular: #606266;
+  --text-color-secondary: #909399;
+  --border-color: rgba(223,223,223,1);
+  --main-color: #59C65D;
+  --hr-color: #f0f2f5;
+  --card-background: #ffffff;
+  --shadow-color: rgba(245,245,250,1);
+}
+
+/* 暗色模式变量 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #121212;
+    --background-color-secondary: #1e1e1e;
+    --text-color-primary: #e5e5e5;
+    --text-color-regular: #b8b8b8;
+    --text-color-secondary: #909399;
+    --border-color: rgba(75,75,75,1);
+    --main-color: #59C65D;
+    --hr-color: #2c2c2c;
+    --card-background: #252525;
+    --shadow-color: rgba(0,0,0,0.3);
+  }
+}
+
+/* 手动切换的暗色模式类 */
+.dark-mode {
+  --background-color: #121212;
+  --background-color-secondary: #1e1e1e;
+  --text-color-primary: #e5e5e5;
+  --text-color-regular: #b8b8b8;
+  --text-color-secondary: #909399;
+  --border-color: rgba(75,75,75,1);
+  --main-color: #59C65D;
+  --hr-color: #2c2c2c;
+  --card-background: #252525;
+  --shadow-color: rgba(0,0,0,0.3);
+} 

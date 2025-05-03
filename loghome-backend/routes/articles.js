@@ -242,4 +242,46 @@ async function novelStatistics() {
 //每晚凌晨三点的小说数据统计功能,记录全站小说数据情况
 schedule.scheduleJob('0 0 3 * * *', novelStatistics);
 
+// 获取用户对某本小说的全部划线段落
+router.get('/get_my_novel_centos', auth, async function (req, res) {
+    try {
+        let results = await query(
+            `SELECT ac.*, a.title, a.article_chapter FROM article_cento ac 
+            JOIN articles a ON ac.article_id = a.article_id 
+            WHERE a.novel_id = ? AND ac.user_id = ? AND ac.is_delete = 0
+			ORDER BY article_chapter ASC`,
+            [req.query.novel_id, req.user[0].user_id],
+        );
+        res.end(JSON.stringify(results));
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
+// 获取某本小说的热门划线段落
+router.get('/get_hot_novel_centos', async function (req, res) {
+    try {
+        // 热门划线段落，按划线次数和评论数降序排序
+        let results = await query(
+            `SELECT ac.paragraph_id, ac.paragraph, 
+            COUNT(DISTINCT ac.article_cento_id) AS highlight_count, 
+            COUNT(DISTINCT nc.essay_comment_id) AS comment_count,
+            a.title AS article_title, a.article_chapter, a.article_id
+            FROM article_cento ac
+            JOIN articles a ON ac.article_id = a.article_id
+            LEFT JOIN novel_comments nc ON nc.cento_id = ac.article_cento_id AND nc.deleted = 0
+            WHERE a.novel_id = ? AND ac.is_delete = 0
+            GROUP BY ac.paragraph_id, ac.paragraph, a.title, a.article_chapter
+            ORDER BY highlight_count DESC, comment_count DESC
+            LIMIT ?`,
+            [req.query.novel_id, Number(req.query.limit) || 10],
+        );
+        res.end(JSON.stringify(results));
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
 module.exports = router;

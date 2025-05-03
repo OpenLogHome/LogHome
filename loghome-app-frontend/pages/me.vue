@@ -1,5 +1,8 @@
 <template>
-	<view :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view :style="{
+		'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px',
+	}">
+		<theme-switch style="position:fixed; z-index: 100; right: 30rpx; top: 30rpx;"></theme-switch>
 		<view class="header">
 			<view class="bg">
 				<log-image class="info-cover" :src="user.top_pic_url"
@@ -130,7 +133,6 @@
 			</view>
 			<view class="blank_box"></view>
 		</view>
-
 	</view>
 </template>
 <script>
@@ -547,9 +549,6 @@
 				height: 40upx;
 			}
 		}
-
-
-
 	}
 
 

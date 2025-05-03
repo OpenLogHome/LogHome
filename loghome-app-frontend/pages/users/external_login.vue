@@ -67,6 +67,7 @@
 		},
 		methods: {
 			verifyToken() {
+				console.log("token", this.token);
 				// 首先通过短时token获取JWT token
 				axios.get(this.$baseUrl + '/users/token_by_cross_site', {
 					params: {
