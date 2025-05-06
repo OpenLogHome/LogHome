@@ -149,6 +149,14 @@
 					})
 				}
 			},
+			updatePageState() {
+				this.updateNavidationBarTheme();
+				if(this.$store.state.isDarkMode) {
+					document.body.classList.add('dark-mode');
+				} else {
+					document.body.classList.remove('dark-mode');
+				}
+			},
 			// 初始化主题模式
 			initTheme() {
 				// 获取保存的主题模式
@@ -161,11 +169,11 @@
 				if (savedTheme === 'dark' || (savedTheme !== 'light' && prefersDarkMode)) {
 					document.documentElement.classList.add('dark-mode');
 					this.$store.state.isDarkMode = true;
-					this.updateNavidationBarTheme();
+					this.updatePageState();
 				} else {
 					document.documentElement.classList.remove('dark-mode');
 					this.$store.state.isDarkMode = false;
-					this.updateNavidationBarTheme();
+					this.updatePageState();
 				}
 				
 				// 监听系统主题变化，如果用户没有手动设置过主题模式
@@ -174,11 +182,11 @@
 						if (e.matches) {
 							document.documentElement.classList.add('dark-mode');
 							this.$store.state.isDarkMode = true;
-							this.updateNavidationBarTheme();
+							this.updatePageState();
 						} else {
 							document.documentElement.classList.remove('dark-mode');
 							this.$store.state.isDarkMode = false;
-							this.updateNavidationBarTheme();
+							this.updatePageState();
 						}
 					});
 				}
@@ -190,12 +198,12 @@
 					document.documentElement.classList.remove('dark-mode');
 					window.localStorage.setItem('themeMode', 'light');
 					this.$store.state.isDarkMode = false;
-					this.updateNavidationBarTheme();
+					this.updatePageState();
 				} else {
 					document.documentElement.classList.add('dark-mode');
 					window.localStorage.setItem('themeMode', 'dark');
 					this.$store.state.isDarkMode = true;
-					this.updateNavidationBarTheme();
+					this.updatePageState();
 				}
 			}
 		},
