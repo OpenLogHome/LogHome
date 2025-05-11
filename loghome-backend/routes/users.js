@@ -5,11 +5,10 @@ let auth = require('../bin/auth.js');
 const jwt = require('jsonwebtoken');
 let axios = require('axios');
 const SECRET = require('../SECRET.js').SECRET;
-let getSignature = require('../bin/uni-cloud/sig.js');
-let tencentSms = require('../bin/tencent-sms.js');
 let config = require("../config.js")
 const fetch = require('node-fetch');
 const { generateRandomUsername } = require('../bin/username-generator.js');
+const UniCloud = require('../bin/unicloud.js');
 
 // 发送邮件的函数
 async function sendEmail(to, code) {
@@ -760,31 +759,25 @@ router.post('/verify_bind_email', auth, async (req, res) => {
 			code: 400,
 			msg: "验证码错误或已过期"
 		};
+
+		// 从数据库获取验证码，参考 verify_email 接口
+		let validateCode = await query('SELECT * FROM user_validate_code WHERE email = ? AND create_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE)', [req.body.email]);
 		
-		// 验证验证码
-		if (userValidates[req.body.email] && 
-			userValidates[req.body.email].validateCode === req.body.code &&
-			userValidates[req.body.email].validateCountdown > 0) {
+		if (validateCode.length > 0 && validateCode[0].code === req.body.code) {
+			// 更新用户邮箱
+			await query('UPDATE users SET email = ? WHERE user_id = ?', [
+				req.body.email,
+				user.user_id
+			]);
 			
-			// 确认是同一个用户的请求
-			if (userValidates[req.body.email].userId === user.user_id) {
-				// 更新用户邮箱
-				await query('UPDATE users SET email = ? WHERE user_id = ?', [
-					req.body.email,
-					user.user_id
-				]);
-				
-				// 清除验证记录
-				delete userValidates[req.body.email];
-				
-				verified = true;
-				response = {
-					code: 200,
-					msg: "邮箱绑定成功"
-				};
-			} else {
-				response.msg = "验证码不属于当前用户";
-			}
+			// 验证成功后删除验证码
+			await query('DELETE FROM user_validate_code WHERE email = ?', [req.body.email]);
+			
+			verified = true;
+			response = {
+				code: 200,
+				msg: "邮箱绑定成功"
+			};
 		}
 		
 		res.json(response.code, { msg: response.msg, success: verified });
@@ -864,7 +857,7 @@ router.get('/token_by_cross_site', async (req, res) => {
             SECRET,
         );
         
-        // 删除使用过的令牌，防止重复使用
+        // 删除过期的令牌
         await query('DELETE FROM user_cross_site_tokens WHERE expire_time < NOW()');
         
         // 返回登录token
@@ -880,101 +873,94 @@ router.get('/token_by_cross_site', async (req, res) => {
     }
 });
 
-// 一些尝试去使用uni-im的遗留代码，不得不说是真tm难用，根本调不通，莫名其妙的没有任何报错信息的错误，根本没法调！
-// router.post('/get_uni_token', auth, async (req, res) => {
-// 	// 这里进行的是uni-id得到外部系统联登
-// 	let params = {
-// 		externalUid: "lguser" + req.user[0].user_id,
-// 	}
-// 	let sig = getSignature(params);
-	
-// 	console.log(req.body.clientInfo, params);
+// 通过跨站点令牌获取UniCloud登录token
+router.get('/unicloud_token_by_cross_site', async (req, res) => {
+    try {
+        const crossSiteToken = req.query.token;
+        
+        if (!crossSiteToken) {
+            return res.json(400, { msg: '无效的跨站点令牌' });
+        }
+        
+        // 从数据库获取令牌信息
+        const tokenResults = await query(
+            'SELECT t.*, u.pwd, u.uni_id FROM user_cross_site_tokens t JOIN users u ON t.user_id = u.user_id WHERE t.token = ?',
+            [crossSiteToken]
+        );
+        
+        if (tokenResults.length === 0) {
+            return res.json(400, { msg: '无效的跨站点令牌或令牌已过期' });
+        }
+        
+        const tokenInfo = tokenResults[0];
+        const currentTime = new Date();
+        
+        // 验证令牌是否过期
+        if (new Date(tokenInfo.expire_time) < currentTime) {
+            // 删除过期令牌
+            await query('DELETE FROM user_cross_site_tokens WHERE token = ?', [crossSiteToken]);
+            return res.json(400, { msg: '令牌已过期' });
+        }
 
-// 	let config = {
-// 		method: 'post',
-// 		maxBodyLength: Infinity,
-// 		url: 'http://fc-mp-e1064b8d-45cc-43f3-b55b-61ad80dbee0c.next.bspapp.com/uniId/externalLogin',
-// 		headers: {
-// 			'content-type': 'application/json',
-// 			"uni-id-nonce": sig.nonce,
-// 			"uni-id-timestamp": sig.timestamp,
-// 			"uni-id-signature": sig.signature,
-// 		},
-// 		data: {
-// 			clientInfo: {
-// 				uniPlatform: req.body.clientInfo.uniPlatform,
-// 				appId: req.body.clientInfo.appId,
-// 				deviceId: req.body.clientInfo.deviceId
-// 			},
-// 			params: params
-// 		}
-// 	};
+        // 检查用户是否有UniCloud账号
+        if (!tokenInfo.uni_id) {
+            return res.json(400, { msg: '用户未绑定UniCloud账号' });
+        }
+        
+        // 获取用户信息
+        const userId = tokenInfo.user_id;
+        const userPwd = tokenInfo.pwd;
+        
+        // 生成UniCloud用户名和密码
+        const username = UniCloud.generateUsername(userId);
+        const pwdMd5 = UniCloud.generatePasswordMd5(userPwd);
+		console.log("username", username);
+		console.log("pwdMd5", pwdMd5);
+        
+        // 使用UniCloud登录
+        const uniCloud = new UniCloud();
+        const loginResult = await uniCloud.login(username, pwdMd5);
+        
+        if (!loginResult || loginResult.code !== 0) {
+            return res.json(400, { msg: 'UniCloud登录失败' });
+        }
+        
+        // 删除过期的令牌
+        await query('DELETE FROM user_cross_site_tokens WHERE expire_time < NOW()');
 
-// 	await axios.request(config)
-// 	.then(async (response) => {
-// 		console.log(JSON.stringify(response.data));
-// 		// await query('UPDATE users SET uni_id = ? WHERE user_id = ?', [
-// 		// 	response.data.uid,
-// 		// 	req.user[0].user_id,
-// 		// ]);
-// 		// if(response.data.errCode == "uni-id-illegal-request"){
-// 		// 	//进行账号注册
-// 		// 	registerUniId(req.user[0], req.body.clientInfo);
-// 		// }
-// 		res.end(JSON.stringify(response.data));
-// 	})
-// 	.catch((error) => {
-// 		console.log(error);
-// 	});
+		// 获取用户信息
+		const userInfo = await query('SELECT * FROM users WHERE user_id = ?', [userId]);
 
-// })
+		// 更新用户信息
+		await uniCloud.updateUserInfo({
+			nickname: userInfo[0].name,
+			avatar: userInfo[0].avatar_url,
+			background: userInfo[0].top_pic_url,
+			gxqm: userInfo[0].motto,
+			gender: 0
+		}, loginResult.token);
+        
+        // 返回UniCloud登录token
+        res.json(200, {
+            token: loginResult.token,
+            tokenExpired: loginResult.tokenExpired,
+			userInfo: loginResult.userInfo
+        });
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
 
 
-// function registerUniId(user, clientInfo){
-// 	let params = {
-// 		externalUid: "loghomeuserid" + user.user_id,
-// 		nickname: user.name,
-// 		avatar: user.avatar_url,
-// 		gender: 0
-// 	}
-// 	let signature = getSignature(params);
-// 	let signatureData = {
-// 		"uni-id-nonce": signature.nonce,
-// 		"uni-id-timestamp": signature.timestamp,
-// 		"uni-id-signature": signature.signature,
-// 	};
-
-// 	let config = {
-// 		method: 'post',
-// 		maxBodyLength: Infinity,
-// 		url: 'https://fc-mp-e1064b8d-45cc-43f3-b55b-61ad80dbee0c.next.bspapp.com/uniId/externalRegister',
-// 		headers: {
-// 			'Content-Type': 'application/json',
-// 			...signatureData
-// 		},
-// 		data: {
-// 			clientInfo: clientInfo, 
-// 			params
-// 		}
-// 	};
-
-// 	axios.request(config)
-// 	.then((response) => {
-// 		console.log(response.data);
-// 	})
-// 	.catch((error) => {
-// 		console.log(error);
-// 	});
-// }
+router.get('/get_user_id_by_uni_id', async function (req, res) {
+	//获取用户列表的所有用户信息
+	try {
+		let results = await query('SELECT user_id FROM users WHERE uni_id = ?', [req.query.uni_id]);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
 
 module.exports = router;
-
-// async function sqldo(){
-//     let result = await query(`(SELECT COUNT(*) add_count,a.novel_id,n.name FROM articles a,(SELECT * FROM LOG WHERE TIME < "2022-4-08 00:00:00" AND TIME > "2022-4-07 12:00:00") m,novels n WHERE a.article_id = m.content AND n.novel_id = a.novel_id GROUP BY a.novel_id ORDER BY add_count DESC)`);
-//     console.log(result);
-//     for(let item of result){
-//         await query('UPDATE novels SET clicks = clicks - ' + item.add_count + ' WHERE novel_id = ?',[item.novel_id])
-//     }
-// }
-
-// sqldo();

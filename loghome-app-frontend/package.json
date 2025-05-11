@@ -1,19 +1,9 @@
 {
-    "id": "lf-kn-editor",
-    "name": "富文本编辑器，rich-text原生组件二次封装，操作条跟随键盘高度",
+    "id": "loghome-app-frontend",
+    "name": "Loghome",
     "version": "1.0.0",
-    "description": "rich-text原生组件二次封装，操作条跟随键盘高度。颜色，文字大小，格式，背景色都可以调整。",
-    "keywords": [
-        "富文本",
-        "通用",
-        "文本编辑"
-    ],
-    "dcloudext": {
-        "category": [
-            "前端组件",
-            "通用组件"
-        ]
-    },
+    "description": "原木社区前端代码",
+    "keywords": [],
     "dependencies": {
         "axios": "^0.27.2",
         "dexie": "^4.0.11",
@@ -21,9 +11,14 @@
         "fastclick": "^1.0.6",
         "html2canvas": "^1.4.1",
         "mobile-detect": "^1.4.5",
+        "qiankun": "^2.10.16",
         "uview-ui": "^2.0.35",
         "vue-count-to": "^1.0.13",
         "vue-flip-article": "^0.1.0",
-        "vue-monoplasty-slide-verify": "^1.1.5"
+        "vue-monoplasty-slide-verify": "^1.1.5",
+        "wujie-vue2": "^1.0.28"
+    },
+    "devDependencies": {
+        "babel-helper-vue-jsx-merge-props": "^2.0.3"
     }
 }

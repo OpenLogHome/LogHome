@@ -5,7 +5,8 @@
         <div class="navbar-left">
           <nuxt-link to="/" class="logo">
             <img src="~/assets/images/logo.png" alt="原木社区" class="logo-img">
-            <span class="logo-text">原木社区</span>
+            <img src="~/static/logo_text.png" alt="原木社区" class="logo-text">
+            <!-- <span class="logo-text">原木社区</span> -->
           </nuxt-link>
         </div>
         <div class="navbar-center">
@@ -235,17 +236,27 @@ body {
   display: flex;
   align-items: center;
   text-decoration: none;
+  transition: transform 0.3s;
 }
 
 .logo-img {
   height: 40px;
-  margin-right: 10px;
+  margin-right: 6px;
+}
+
+.logo-text{
+  height: 36px;
+  transform: translateY(1px);
 }
 
 .logo-text {
   font-size: 20px;
   font-weight: bold;
   color: #947358;
+}
+
+.logo:hover{
+  transform: scale(1.05);
 }
 
 .nav-link {

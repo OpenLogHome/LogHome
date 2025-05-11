@@ -86,7 +86,6 @@ const essayToolsRouter = require('./routes/essayTools');
 const paymentsRouter = require('./routes/payment');
 const worldRouter = require('./routes/world');
 const creditRouter = require('./routes/credit');
-const uniImRouter = require('./routes/uni-im')
 
 app.use('/library', libraryRouter);
 app.use('/users', usersRouter);
@@ -104,9 +103,8 @@ app.use('/essayTools', essayToolsRouter);
 app.use('/credit', creditRouter);
 app.use('/payment', paymentsRouter);
 app.use('/world', worldRouter);
-app.use('/uni', uniImRouter);
 
-let server = app.listen(9000, function () {
+let server = app.listen(9001, function () {
 	let host = server.address().address;
 	let port = server.address().port;
 	console.log('服务器已在' + host + ':' + port + '上启动。');

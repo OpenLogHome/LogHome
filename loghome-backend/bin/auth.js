@@ -3,12 +3,12 @@ let express = require('express');
 let { query } = require('../sql.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const SECRET = require('../SECRET.js').SECRET;
 
-// 用户最后更新时间的缓存
-const userLastUpdateTimeCache = new Map();
-// 更新时间间隔（毫秒），设置为5分钟
-const UPDATE_INTERVAL = 5 * 60 * 1000;
+const UniCloud = require('../bin/unicloud.js');
+
+const uniCloud = new UniCloud();
 
 // 中间件：验证授权
 const auth = async (req, res, next) => {
@@ -32,16 +32,22 @@ const auth = async (req, res, next) => {
 				if (req.user && req.user.length > 0) {
 					const userId = req.user[0].user_id;
 					const currentTime = Date.now();
-					const lastUpdateTime = userLastUpdateTimeCache.get(userId) || 0;
+					const lastOnlineTime = new Date(req.user[0].online_time).getTime();
 					
-					// 只有当距离上次更新时间超过设定间隔时，才更新用户在线时间
-					if (currentTime - lastUpdateTime > UPDATE_INTERVAL) {
+					// 只有当距离上次在线时间超过1分钟时，才更新用户在线时间
+					if (currentTime - lastOnlineTime > 60 * 1000) {
 						await query('UPDATE users SET online_time = ? WHERE user_id = ?', [
 							new Date(),
 							userId,
 						]);
-						// 更新缓存中的最后更新时间
-						userLastUpdateTimeCache.set(userId, currentTime);
+					}
+
+					// 检查UniCloud用户是否存在，不存在的话就注册用户
+					if (req.user[0].uni_id == null) {
+						const username = UniCloud.generateUsername(userId);
+						const pwdMd5 = UniCloud.generatePasswordMd5(req.user[0].pwd);
+						let result = await uniCloud.registerUser(username, pwdMd5);
+						await query('UPDATE users SET uni_id = ? WHERE user_id = ?', [result.userInfo._id, userId]);
 					}
 				} else {
 					res.json(401, {

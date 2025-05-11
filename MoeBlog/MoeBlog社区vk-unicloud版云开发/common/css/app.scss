@@ -1,0 +1,747 @@
+/* 这里是你自己写的全局css样式 */
+/* #ifdef H5 */
+.uni-mask,
+.uni-modal,
+uni-toast,
+uni-modal,
+.uni-actionsheet {
+	z-index: 999999 !important;
+}
+/* #endif */
+
+/* Margin Classes */
+/* mgr, mgl, mgt, mgb */
+.mgr5 {
+	margin-right: 5rpx;
+}
+
+.mgr10 {
+	margin-right: 10rpx;
+}
+
+.mgr15 {
+	margin-right: 15rpx;
+}
+
+.mgr20 {
+	margin-right: 20rpx;
+}
+
+.mgr25 {
+	margin-right: 25rpx;
+}
+.mgr30{
+	margin-right: 30rpx;
+}
+.mgr35{
+	margin-right: 35rpx;
+}
+.mgr40{
+	margin-right: 40rpx;
+}
+.mgl5 {
+	margin-left: 5rpx;
+}
+
+.mgl10 {
+	margin-left: 10rpx;
+}
+
+.mgl15 {
+	margin-left: 15rpx;
+}
+
+.mgl20 {
+	margin-left: 20rpx;
+}
+
+.mgl25 {
+	margin-left: 25rpx;
+}
+
+.mgt5 {
+	margin-top: 5rpx;
+}
+
+.mgt10 {
+	margin-top: 10rpx;
+}
+
+.mgt15 {
+	margin-top: 15rpx;
+}
+
+.mgt20 {
+	margin-top: 20rpx;
+}
+
+.mgt25 {
+	margin-top: 25rpx;
+}
+
+.mgb5 {
+	margin-bottom: 5rpx;
+}
+
+.mgb10 {
+	margin-bottom: 10rpx;
+}
+
+.mgb15 {
+	margin-bottom: 15rpx;
+}
+
+.mgb20 {
+	margin-bottom: 20rpx;
+}
+
+.mgb25 {
+	margin-bottom: 25rpx;
+}
+.mgb30 {
+	margin-bottom: 30rpx;
+}
+.mgb35 {
+	margin-bottom: 35rpx;
+}
+.mgb40 {
+	margin-bottom: 40rpx;
+}
+.mgb45 {
+	margin-bottom: 45rpx;
+}
+/* mg and pd */
+.mg5 {
+	margin: 5rpx;
+}
+
+.mg10 {
+	margin: 10rpx;
+}
+
+.mg15 {
+	margin: 15rpx;
+}
+
+.mg20 {
+	margin: 20rpx;
+}
+
+.mg25 {
+	margin: 25rpx;
+}
+
+.mg30 {
+	margin: 30rpx;
+}
+
+.mg35 {
+	margin: 35rpx;
+}
+
+.mg40 {
+	margin: 40rpx;
+}
+
+.mg45 {
+	margin: 45rpx;
+}
+
+.mg50 {
+	margin: 50rpx;
+}
+
+.mg55 {
+	margin: 55rpx;
+}
+
+.mg60 {
+	margin: 60rpx;
+}
+
+.pd5 {
+	padding: 5rpx;
+}
+
+.pd10 {
+	padding: 10rpx;
+}
+
+.pd15 {
+	padding: 15rpx;
+}
+
+.pd20 {
+	padding: 20rpx;
+}
+
+.pd25 {
+	padding: 25rpx;
+}
+
+.pd30 {
+	padding: 30rpx;
+}
+
+.pd35 {
+	padding: 35rpx;
+}
+
+.pd40 {
+	padding: 40rpx;
+}
+
+.pd45 {
+	padding: 45rpx;
+}
+
+.pd50 {
+	padding: 50rpx;
+}
+
+.pd55 {
+	padding: 55rpx;
+}
+
+.pd60 {
+	padding: 60rpx;
+}
+
+/* pdr, pdl, pdt, pdb */
+.pdr5 {
+	padding-right: 5rpx;
+}
+
+.pdr10 {
+	padding-right: 10rpx;
+}
+
+.pdr15 {
+	padding-right: 15rpx;
+}
+
+.pdr20 {
+	padding-right: 20rpx;
+}
+
+.pdr25 {
+	padding-right: 25rpx;
+}
+
+.pdr30 {
+	padding-right: 30rpx;
+}
+
+.pdr35 {
+	padding-right: 35rpx;
+}
+
+.pdr40 {
+	padding-right: 40rpx;
+}
+
+.pdl5 {
+	padding-left: 5rpx;
+}
+
+.pdl10 {
+	padding-left: 10rpx;
+}
+
+.pdl15 {
+	padding-left: 15rpx;
+}
+
+.pdl20 {
+	padding-left: 20rpx;
+}
+
+.pdl25 {
+	padding-left: 25rpx;
+}
+
+.pdl30 {
+	padding-left: 30rpx;
+}
+
+.pdl35 {
+	padding-left: 35rpx;
+}
+
+.pdl40 {
+	padding-left: 40rpx;
+}
+
+.pdt5 {
+	padding-top: 5rpx;
+}
+
+.pdt10 {
+	padding-top: 10rpx;
+}
+
+.pdt15 {
+	padding-top: 15rpx;
+}
+
+.pdt20 {
+	padding-top: 20rpx;
+}
+
+.pdt25 {
+	padding-top: 25rpx;
+}
+
+.pdb5 {
+	padding-bottom: 5rpx;
+}
+
+.pdb10 {
+	padding-bottom: 10rpx;
+}
+
+.pdb15 {
+	padding-bottom: 15rpx;
+}
+
+.pdb20 {
+	padding-bottom: 20rpx;
+}
+
+.pdb25 {
+	padding-bottom: 25rpx;
+}
+
+.pdb30 {
+	padding-bottom: 30rpx;
+}
+
+.pdb35 {
+	padding-bottom: 35rpx;
+}
+
+.pdb40 {
+	padding-bottom: 40rpx;
+}
+
+.pdb45 {
+	padding-bottom: 45rpx;
+}
+
+.pdb50 {
+	padding-bottom: 50rpx;
+}
+
+.pdb55 {
+	padding-bottom: 55rpx;
+}
+
+.pdb60 {
+	padding-bottom: 60rpx;
+}
+
+.pdb65 {
+	padding-bottom: 65rpx;
+}
+
+.pdb70 {
+	padding-bottom: 70rpx;
+}
+
+/* ft */
+.ft22 {
+	font-size: 22rpx;
+}
+
+.ft24 {
+	font-size: 24rpx;
+}
+
+.ft26 {
+	font-size: 26rpx;
+}
+
+.ft28 {
+	font-size: 28rpx;
+}
+
+.ft30 {
+	font-size: 30rpx;
+}
+
+.ft32 {
+	font-size: 32rpx;
+}
+
+.ft34 {
+	font-size: 34rpx;
+}
+
+.ft36 {
+	font-size: 36rpx;
+}
+
+.ft38 {
+	font-size: 38rpx;
+}
+
+.ft40 {
+	font-size: 40rpx;
+}
+.ft42 {
+	font-size: 42rpx;
+}
+
+.ft44 {
+	font-size: 44rpx;
+}
+.ft46 {
+	font-size: 46rpx;
+}
+.ft48 {
+	font-size: 48rpx;
+}
+.ft50 {
+	font-size: 50rpx;
+}
+.ftb {
+	font-weight: 550;
+}
+
+/* bdr */
+.bdr5 {
+	border-radius: 5rpx;
+}
+
+.bdr10 {
+	border-radius: 10rpx;
+}
+
+.bdr15 {
+	border-radius: 15rpx;
+}
+
+.bdr20 {
+	border-radius: 20rpx;
+}
+
+.bdr25 {
+	border-radius: 25rpx;
+}
+
+/* pdtb (padding top and bottom) */
+.pdtb5 {
+	padding: 5rpx 0;
+}
+
+.pdtb10 {
+	padding: 10rpx 0;
+}
+
+.pdtb15 {
+	padding: 15rpx 0;
+}
+
+.pdtb20 {
+	padding: 20rpx 0;
+}
+
+.pdtb25 {
+	padding: 25rpx 0;
+}
+
+/* pdlf (padding left and right) */
+.pdlf5 {
+	padding: 0 5rpx;
+}
+
+.pdlf10 {
+	padding: 0 10rpx;
+}
+
+.pdlf15 {
+	padding: 0 15rpx;
+}
+
+.pdlf20 {
+	padding: 0 20rpx;
+}
+
+.pdlf25 {
+	padding: 0 25rpx;
+}
+
+/* mgtb (margin top and bottom) */
+.mgtb5 {
+	margin: 5rpx 0;
+}
+
+.mgtb10 {
+	margin: 10rpx 0;
+}
+
+.mgtb15 {
+	margin: 15rpx 0;
+}
+
+.mgtb20 {
+	margin: 20rpx 0;
+}
+
+.mgtb25 {
+	margin: 25rpx 0;
+}
+
+/* mglf (margin left and right) */
+.mglf5 {
+	margin: 0 5rpx;
+}
+
+.mglf10 {
+	margin: 0 10rpx;
+}
+
+.mglf15 {
+	margin: 0 15rpx;
+}
+
+.mglf20 {
+	margin: 0 20rpx;
+}
+
+.mglf25 {
+	margin: 0 25rpx;
+}
+
+/* bdr */
+.bdr5 {
+	border-radius: 5rpx;
+}
+
+.bdr10 {
+	border-radius: 10rpx;
+}
+
+.bdr15 {
+	border-radius: 15rpx;
+}
+
+.bdr20 {
+	border-radius: 20rpx;
+}
+
+.bdr25 {
+	border-radius: 25rpx;
+}
+
+.bdr30 {
+	border-radius: 30rpx;
+}
+
+.bdr35 {
+	border-radius: 35rpx;
+}
+
+.bdr40 {
+	border-radius: 40rpx;
+}
+
+.bdr {
+	border-radius: 50%;
+}
+
+.ftB {
+	font-weight: 555;
+}
+
+.flex {
+	display: flex;
+}
+
+.flex-C {
+	display: flex;
+	align-items: center;
+}
+.flex-J{
+	display: flex;
+	justify-content: center;
+}
+.flex-C-C {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.flex-C-B {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.flex-C-A {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+}
+
+.flex-S {
+	display: flex;
+	align-items: flex-start;
+}
+
+.flex-E {
+	display: flex;
+	align-items: flex-end;
+}
+
+.flex-column {
+	flex-direction: column;
+}
+
+.flex-row {
+	flex-direction: row;
+}
+
+.flex-wrap {
+	flex-wrap: wrap;
+}
+
+.nowrap {
+	white-space: nowrap;
+}
+
+.wrap1 {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 1;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+}
+
+.wrap2 {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+}
+
+.wrap3 {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+}
+
+.wrap4 {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+}
+
+/* 颜色管理 */
+.bgf {
+	background: #fff;
+}
+
+/* 白色背景 */
+.bgb {
+	background: #000;
+}
+
+/* 黑色背景 */
+.bgr {
+	background: red;
+}
+
+/* 红色背景 */
+.bgy {
+	background: yellow;
+}
+
+/* 黄色背景 */
+.bgbg {
+	background: #333;
+}
+
+/* 深灰色背景 */
+.bgg {
+	background: green;
+}
+
+/* 绿色背景 */
+.bgbp {
+	background: purple;
+}
+
+/* 紫色背景 */
+.bgor {
+	background: orange;
+}
+
+/* 橙色背景 */
+.bgbu {
+	background: blue;
+}
+
+/* 蓝色背景 */
+.bgc {
+	background: cyan;
+}
+
+/* 青色背景 */
+.bgm {
+	background: magenta;
+}
+
+/* 洋红色背景 */
+.bgl {
+	background: lime;
+}
+
+/* 酸橙色背景 */
+.bgp {
+	background: pink;
+}
+
+/* 粉红色背景 */
+.bgbr {
+	background: brown;
+}
+
+/* 棕色背景 */
+.bgt {
+	background: teal;
+}
+
+/* 海蓝色背景 */
+.bgs {
+	background: silver;
+}
+
+/* 银色背景 */
+.bgd {
+	background: dodgerblue;
+}
+.custom-button {
+  padding: 0; /* 移除内边距 */
+  margin: 0; /* 移除外边距 */
+  border: none; /* 移除边框 */
+  background: none; /* 移除背景颜色或图像 */
+  font-size: inherit; /* 使用父元素的字体大小 */
+  color: inherit; /* 使用父元素的颜色 */
+  line-height: inherit; /* 使用父元素的行高 */
+  text-align: inherit; /* 使用父元素的文本对齐方式 */
+  display: inline-block; /* 根据需要调整显示属性 */
+  outline: none; /* 可选：移除获得焦点时的外边框 */
+  -webkit-appearance: none; /* 移除原生按钮外观 */
+  -webkit-tap-highlight-color: rgba(0,0,0,0); /* 移动设备上的点击高亮 */
+}
+/* 道奇蓝色背景 */

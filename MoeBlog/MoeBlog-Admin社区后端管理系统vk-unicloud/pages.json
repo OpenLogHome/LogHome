@@ -1,0 +1,112 @@
+{
+	"pages": [
+		{ "path": "pages/index/index" },
+		{
+			"path": "pages/login/index",
+			"style": {
+				"topWindow": false,
+				"leftWindow": false,
+				"navigationBarTitleText": "登录"
+			}
+		},
+		{
+			"path" : "pages/MoeBanner/list",
+			"style" : 
+			{
+				"navigationBarTitleText" : "轮播图列表",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/MoeTaxonomy/list2",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/MoeTaxonomy/list1",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/MoeArt/list",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/comments/list",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/MoeUser/list",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/index/taxonomy",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		}
+	],
+	"subPackages": [{
+			"root": "pages_plugs",
+			"pages": [
+				{ "path": "error/404", "style": { "navigationBarTitleText": "页面不存在" } },
+				{ "path": "error/403", "style": { "navigationBarTitleText": "无权访问" } },
+				{ "path": "error/500", "style": { "navigationBarTitleText": "服务器出错了" } },
+				{ "path": "system/user/list" },
+				{ "path": "system/role/list" },
+				{ "path": "system/permission/list" },
+				{ "path": "system/menu/list" },
+				{ "path": "system/app/list" },
+				{ "path": "system/app-upgrade-center/list" },
+				{ "path": "system_uni/vk-global-data" },
+				{ "path": "system_uni/uni-id-log" },
+				{ "path": "system_uni/opendb-admin-log" },
+				{ "path": "system_uni/vk-components-dynamic" },
+				{ "path": "system_uni/uni-id-files/list" },
+				{ "path": "system_uni/vk-pay-orders" }
+			]
+		}
+	],
+	"globalStyle": {
+		"navigationStyle": "custom",
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "管理后台",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"topWindow": {
+		"path": "windows/topWindow",
+		"style": {
+			"height": "100px"
+		},
+		"matchMedia": {
+			"minWidth": 0
+		}
+	},
+	"leftWindow": {
+		"path": "windows/leftWindow",
+		"style": {
+			"width": "240px"
+		}
+	}
+}

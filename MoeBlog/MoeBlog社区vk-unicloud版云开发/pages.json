@@ -1,0 +1,296 @@
+{
+	"pages": [{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "首页",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path" : "pages/square/square",
+			"style" : 
+			{
+				"navigationBarTitleText" : "圈子",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/message/message",
+			"style" : 
+			{
+				"navigationBarTitleText" : "消息",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/my/my",
+			"style" : 
+			{
+				"navigationBarTitleText" : "我的",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/push/push",
+			"style" : 
+			{
+				"navigationBarTitleText" : "发布",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/auth/auth",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/auth/external_login",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false,
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path" : "pages/art/addArt",
+			"style" : 
+			{
+				"navigationBarTitleText" : "发布文章",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/square/squareInfo",
+			"style" : 
+			{
+				"navigationBarTitleText" : "圈子详情",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/art/art",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/comments_detail/comments_detail",
+			"style" : 
+			{
+				"navigationBarTitleText" : "用户评论",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/userinfo/userinfo",
+			"style" : 
+			{
+				"navigationBarTitleText" : "用户中心",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/my/userCenter",
+			"style" : 
+			{
+				"navigationBarTitleText" : "编辑资料",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/square/addSquare",
+			"style" : 
+			{
+				"navigationBarTitleText" : "申请圈子",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/square/Mysquare",
+			"style" : 
+			{
+				"navigationBarTitleText" : "我的圈子",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/my/myArt",
+			"style" : 
+			{
+				"navigationBarTitleText" : "我的文章",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/my/myFans",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/square/squareUser",
+			"style" : 
+			{
+				"navigationBarTitleText" : "圈子用户",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/comments_detail/comments_content",
+			"style" : 
+			{
+				"navigationBarTitleText" : "评论详情",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/square/allSquare",
+			"style" : 
+			{
+				"navigationBarTitleText" : "全部圈子",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/search/search",
+			"style" : 
+			{
+				"navigationBarTitleText" : "搜索文章",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/my/myAbout",
+			"style" : 
+			{
+				"navigationBarTitleText" : "关于我们",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/my/pubMyArt",
+			"style" : 
+			{
+				"navigationBarTitleText" : "我的喜欢",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/Admin/Admin",
+			"style" : 
+			{
+				"navigationBarTitleText" : "后台管理",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/Admin/Art",
+			"style" : 
+			{
+				"navigationBarTitleText" : "文章管理",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/Admin/comments",
+			"style" : 
+			{
+				"navigationBarTitleText" : "评论管理",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/Admin/square",
+			"style" : 
+			{
+				"navigationBarTitleText" : "圈子管理",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/Admin/banner",
+			"style" : 
+			{
+				"navigationBarTitleText" : "轮播图管理",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/my/AvatarFrame",
+			"style" : 
+			{
+				"navigationBarTitleText" : "头像框",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/userinfo/SA",
+			"style" : 
+			{
+				"navigationBarTitleText" : "用户协议",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/userinfo/PP",
+			"style" : 
+			{
+				"navigationBarTitleText" : "隐私政策",
+				"enablePullDownRefresh" : false
+			}
+		},
+		{
+			"path" : "pages/userinfo/GroupOwnerAgreement",
+			"style" : 
+			{
+				"navigationBarTitleText" : "圈主协议",
+				"enablePullDownRefresh" : false
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "",
+		// #ifndef MP-ALIPAY
+		"navigationBarBackgroundColor": "#F8F8F8",
+		// #endif
+		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"color": "#7A7E83",
+			"selectedColor": "#55ffff",
+			"borderStyle": "white",
+			"backgroundColor": "#ffffff",
+			"list": [
+				// {
+				// 	"pagePath": "pages/index/index",
+				// 	"iconPath": "/static/tabbar/index.png",
+				// 	"selectedIconPath": "/static/tabbar/indexs.png"
+				// }, {
+				// 	"pagePath": "pages/square/square",
+				// 	"iconPath": "/static/tabbar/square.png",
+				// 	"selectedIconPath": "static/tabbar/squares.png"
+				// }, {
+				// 	"pagePath": "pages/push/push",
+				// 	"iconPath": "/static/tabbar/push.png",
+				// 	"selectedIconPath": "/static/tabbar/push.png"
+				// }, {
+				// 	"pagePath": "pages/message/message",
+				// 	"iconPath": "/static/tabbar/msg.png",
+				// 	"selectedIconPath": "/static/tabbar/msgs.png"
+				// }, {
+				// 	"pagePath": "pages/my/my",
+				// 	"iconPath": "/static/tabbar/my.png",
+				// 	"selectedIconPath": "/static/tabbar/mys.png"
+				// }
+			]
+	}
+}

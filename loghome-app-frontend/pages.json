@@ -645,6 +645,12 @@
 			"style": {
 				"navigationBarTitleText": "礼品卡兑换"
 			}
+		}, {
+			"path": "pages/community/frame/index",
+			"style": {
+				"navigationBarTitleText": "社区",
+				"navigationStyle": "custom"
+			}
 		}
     ],
 	"tabBar": {
@@ -665,12 +671,12 @@
 				"selectedIconPath": "./static/menu_bar/icon_library_selected.png",
 				"text": "书库"
 			},
-			// {
-			// 	"pagePath": "pages/community/index",
-			// 	"iconPath": "./static/menu_bar/icon_社区_unselected.png",
-			// 	"selectedIconPath": "./static/menu_bar/icon_社区_selected.png",
-			// 	"text": "社区"
-			// },
+			{
+				"pagePath": "pages/community/frame/index",
+				"iconPath": "./static/menu_bar/icon_社区_unselected.png",
+				"selectedIconPath": "./static/menu_bar/icon_社区_selected.png",
+				"text": "社区"
+			},
 			{
 				"pagePath": "pages/essays",
 				"iconPath": "./static/menu_bar/icon_writing_unselected.png",

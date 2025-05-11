@@ -10,6 +10,17 @@
 		onHide: function() {
 			console.log('App Hide')
 		},
+		onLaunch: function() {
+			console.log('App Launch');
+			// #ifdef H5
+			this.initTheme();
+			// #endif
+		},
+		data() {
+			return {
+				
+			}
+		},
 		methods:{
 			utc2timestamp(utc_datetime) {
 			    // 转为正常的时间格式 年-月-日 时:分:秒
@@ -205,7 +216,7 @@
 					this.$store.state.isDarkMode = true;
 					this.updatePageState();
 				}
-			}
+			},
 		},
 		mounted(){
 			this.initializeHistory();

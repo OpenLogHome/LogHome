@@ -1,0 +1,18 @@
+@import "@/common/css/uni.scss";
+@import "@/uni_modules/vk-uview-ui/theme.scss";
+@mixin flex{
+	display: flex;
+	align-items: center;
+}
+@mixin flex-center{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+@mixin ellipsis($line:1){
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display:-webkit-box; //作为弹性伸缩盒子模型显示。
+	-webkit-box-orient:vertical; //设置伸缩盒子的子元素排列方式--从上到下垂直排列
+	-webkit-line-clamp:$line; //显示的行
+}
