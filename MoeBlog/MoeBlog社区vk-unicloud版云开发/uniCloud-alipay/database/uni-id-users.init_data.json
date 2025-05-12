@@ -1,0 +1,15 @@
+[
+  {
+    "_id": "001",
+    "username": "admin",
+    "password": "03caebb36670995fc261a275d212cad65e4bbebd",
+    "register_date": 1596416400000,
+    "register_ip": "127.0.0.1",
+    "nickname": "超级管理员",
+    "role": [
+      "admin"
+    ],
+    "token": [],
+    "allow_login_background": true
+  }
+]

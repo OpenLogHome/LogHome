@@ -66,6 +66,12 @@
 			}
 		},
 		{
+			"path": "pages/users/login_page_email",
+			"style": {
+				"navigationBarTitleText": "电子邮箱登录"
+			}
+		},
+		{
 			"path": "pages/users/login",
 			"style": {
 				"navigationStyle": "custom",
@@ -390,6 +396,12 @@
 			}
 		},
 		{
+			"path": "pages/users/activateAccount_email",
+			"style": {
+				"navigationBarTitleText": "绑定邮箱"
+			}
+		},
+		{
 			"path": "pages/users/register",
 			"style": {
 				"navigationBarTitleText": "注册账户"
@@ -612,6 +624,33 @@
 			"style": {
 				"navigationBarTitleText": "用户管理"
 			}
+		}, {
+			"path": "pages/users/external_login",
+			"style": {
+				"navigationBarTitleText": "外部登录",
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/payments/jump_to_pay",
+			"style": {
+				"navigationBarTitleText": "支付页"
+			}
+		}, {
+			"path": "pages/payments/order_history",
+			"style": {
+				"navigationBarTitleText": "历史订单"
+			}
+		}, {
+			"path": "pages/payments/gift_code",
+			"style": {
+				"navigationBarTitleText": "礼品卡兑换"
+			}
+		}, {
+			"path": "pages/community/frame/index",
+			"style": {
+				"navigationBarTitleText": "社区",
+				"navigationStyle": "custom"
+			}
 		}
     ],
 	"tabBar": {
@@ -632,12 +671,12 @@
 				"selectedIconPath": "./static/menu_bar/icon_library_selected.png",
 				"text": "书库"
 			},
-			// {
-			// 	"pagePath": "pages/community/index",
-			// 	"iconPath": "./static/menu_bar/icon_社区_unselected.png",
-			// 	"selectedIconPath": "./static/menu_bar/icon_社区_selected.png",
-			// 	"text": "社区"
-			// },
+			{
+				"pagePath": "pages/community/frame/index",
+				"iconPath": "./static/menu_bar/icon_社区_unselected.png",
+				"selectedIconPath": "./static/menu_bar/icon_社区_selected.png",
+				"text": "社区"
+			},
 			{
 				"pagePath": "pages/essays",
 				"iconPath": "./static/menu_bar/icon_writing_unselected.png",

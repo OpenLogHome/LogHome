@@ -1,0 +1,62 @@
+[
+  {
+    "IndexName": "_add_time",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "_add_time",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "permission_id",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "permission_id",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": true
+    }
+  },
+  {
+    "IndexName": "parent_id",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "parent_id",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "url",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "url",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "sort",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "sort",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  }
+]

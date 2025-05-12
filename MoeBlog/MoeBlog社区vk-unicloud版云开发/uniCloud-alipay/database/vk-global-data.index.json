@@ -1,0 +1,38 @@
+[
+  {
+    "IndexName": "_add_time",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "_add_time",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "key",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "key",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": true
+    }
+  },
+  {
+    "IndexName": "expired_at",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "expired_at",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  }
+]

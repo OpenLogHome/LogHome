@@ -18,7 +18,6 @@ export default {
         }
 		let _this = this;
         this.$router.beforeEach((to, from, next) => {
-			
             // tabBar切换无动画
             if (to.type == 'switchTab' || to.type == 'redirectTo' || to.query.noneAnimation || hpa_first_Show ) {
                 next && next();

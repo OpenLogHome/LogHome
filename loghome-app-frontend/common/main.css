@@ -21,17 +21,17 @@
 	color: #19be6b;
 }
 .bg-color-f0f2f5{
-	background-color: #f0f2f5;
+	background-color: var(--hr-color);
 }
 
 /* 背景色 */
 .bg-color-white{
-	background-color: #FFFFFF;
+	background-color: var(--background-color);
 }
 /* 边框 */
 .border-top{
 	border-top-width: 1px;
-	border-top-color: rgba(223,223,223,1);
+	border-top-color: var(--border-color);
 	border-top-style: solid;
 }
 .border{
@@ -53,17 +53,17 @@
 	border-left-width: 1px;
 	border-right-width: 1px;
 	border-bottom-width: 1px;
-	border-top-color: #59C65D;
-	border-left-color: #59C65D;
-	border-right-color: #59C65D;
-	border-bottom-color: #59C65D;
+	border-top-color: var(--main-color);
+	border-left-color: var(--main-color);
+	border-right-color: var(--main-color);
+	border-bottom-color: var(--main-color);
 	border-top-style: solid;
 	border-left-style: solid;
 	border-right-style: solid;
 	border-bottom-style: solid;
 }
 .border-bottom{
-	border-bottom: 1px solid #f0f2f5;
+	border-bottom: 1px solid var(--hr-color);
 }
 
 /* icon */
@@ -75,14 +75,14 @@
 
 /* 主背景色 */
 .main-bgColor{
-	background-color: #59C65D;
+	background-color: var(--main-color);
 }
 
 .page{
 	/* #ifdef APP-PLUS-NVUE */
 	flex: 1;
 	/* #endif */
-	background-color: #f9f9f9;
+	background-color: var(--background-color-secondary);
 	/* #ifndef APP-PLUS-NVUE */
 	min-height: 100%;
 	height: auto;
@@ -110,12 +110,12 @@
 .view-hr{
 	height:1px;
 	border-radius: 10rpx;
-	background-color:rgba(223,223,223,1);
+	background-color: var(--border-color);
 }
 .hr20{
 	width:750rpx;
 	height:20rpx;
-	background-color:#f0f2f5;
+	background-color: var(--hr-color);
 }
 .hr-weight-2{
 	height:2px;
@@ -129,7 +129,7 @@
 .hr-color-green{
 	height:1px;
 	border-radius: 10rpx;
-	background-color:rgba(89,198,93,1);
+	background-color: var(--main-color);
 }
 .hr-color-error{
 	height:1px;
@@ -139,13 +139,13 @@
 
 /* 文字颜色 */
 .font-mian{
-	color: #4CAF50;
+	color: var(--main-color);
 }
 .font-conventional{
-	color: #606266;
+	color: var(--text-color-regular);
 }
 .font-secondary{
-	color: #CCCCCC;
+	color: var(--text-color-secondary);
 }
 .font-placeholder{
 	color: #c0c4cc;
@@ -154,25 +154,25 @@
 	color: #FFFFFF;
 }
 .font-black{
-	color: #000000;
+	color: var(--text-color-primary);
 }
 .font-error{
 	color: #FF6262;
 }
 .font-color-333{
-	color: #333333;
+	color: var(--text-color-primary);
 }
 .font-color-666{
-	color: #666666;
+	color: var(--text-color-regular);
 }
 .font-color-999{
-	color: #999999;
+	color: var(--text-color-secondary);
 }
 .font-color-c0{
 	color: #C0C0C0;
 }
 .font-color-light-green{
-	color: #59C65D;
+	color: var(--main-color);
 }
 .font-color-9A{
 	color: #9A9A9A;
@@ -203,7 +203,7 @@
 
 /* 阴影 */
 .box-shadow{
-	box-shadow:0px 4px 4px 0px rgba(245,245,250,1);
+	box-shadow: 0px 4px 4px 0px var(--shadow-color);
 }
 
 /* 文字删除线 */

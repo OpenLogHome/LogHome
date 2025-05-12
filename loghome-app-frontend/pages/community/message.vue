@@ -19,7 +19,7 @@
 			:firstTab="firstTab" 
 			:tabValue="['评论', '@我的', '赞与收藏']" 
 			@getIndex="changeTab" 
-			textColor="#2d2d2d" 
+			:textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
 			:showBadge="true"
 			:badgeIndexes="badgeIndexes"
 			ref="tabs"/>

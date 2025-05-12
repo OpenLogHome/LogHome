@@ -236,27 +236,36 @@
 
 						<div class="fans_rank">
 							<div class="second" v-if="fanInfo[1]">
-								<log-image :src="fanInfo[1].avatar_url" alt="" class="avatar"/>
-								<img src="../../static/rank/NO2.png" alt="" class="rank"/>
-								<div class="description">
-									<p class="name">{{fanInfo[1].user_name}}</p>
-									<p class="value">{{fanInfo[1].fans_value}}</p>
+								<div class="rank-container">
+									<log-image :src="fanInfo[1].avatar_url" alt="" class="avatar"/>
+									<img src="../../static/rank/NO2.png" alt="" class="rank"/>
+									<div class="crown-glow silver"></div>
+									<div class="description">
+										<p class="name">{{fanInfo[1].user_name}}</p>
+										<p class="value"><span class="value-icon">💫</span> {{fanInfo[1].fans_value}}</p>
+									</div>
 								</div>
 							</div>
 							<div class="first" v-if="fanInfo[0]">
-								<log-image :src="fanInfo[0].avatar_url" alt="" class="avatar"/>
-								<img src="../../static/rank/NO1.png" alt="" class="rank"/>
-								<div class="description">
-									<p class="name">{{fanInfo[0].user_name}}</p>
-									<p class="value">{{fanInfo[0].fans_value}}</p>
+								<div class="rank-container">
+									<log-image :src="fanInfo[0].avatar_url" alt="" class="avatar"/>
+									<img src="../../static/rank/NO1.png" alt="" class="rank"/>
+									<div class="crown-glow gold"></div>
+									<div class="description">
+										<p class="name">{{fanInfo[0].user_name}}</p>
+										<p class="value"><span class="value-icon">✨</span> {{fanInfo[0].fans_value}}</p>
+									</div>
 								</div>
 							</div>
 							<div class="third" v-if="fanInfo[2]">
-								<log-image :src="fanInfo[2].avatar_url" alt="" class="avatar"/>
-								<img src="../../static/rank/NO3.png" alt="" class="rank"/>
-								<div class="description">
-									<p class="name">{{fanInfo[2].user_name}}</p>
-									<p class="value">{{fanInfo[2].fans_value}}</p>
+								<div class="rank-container">
+									<log-image :src="fanInfo[2].avatar_url" alt="" class="avatar"/>
+									<img src="../../static/rank/NO3.png" alt="" class="rank"/>
+									<div class="crown-glow bronze"></div>
+									<div class="description">
+										<p class="name">{{fanInfo[2].user_name}}</p>
+										<p class="value"><span class="value-icon">⭐</span> {{fanInfo[2].fans_value}}</p>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -1567,46 +1576,137 @@
 	.fans_rank {
 		display: flex;
 		justify-content: center;
-		// width: 100vw;
-		// height: 100%;
-		// overflow-x:hidden;
+		padding: 40rpx 20rpx;
+		background-color: rgba(202, 202, 202, 0.1);
+		border-radius: 16rpx;
+		margin-top: 32rpx;
+		position: relative;
+		overflow: hidden;
 
 		div {
-			margin: 20rpx;
-			margin-top: 40rpx;
-			width: 100%;
 			position: relative;
+			width: 30%;
+			margin: 0 10rpx;
+			display: flex;
+			justify-content: center;
+
+			.rank-container {
+				position: relative;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				width: 100%;
+				min-height: 300rpx;
+				padding: 20rpx 0;
+			}
 
 			img.rank {
 				position: absolute;
 				height: 20vw;
-				z-index: 0;
+				z-index: 1;
+				transform: translateY(-10rpx);
 			}
 
 			img.avatar {
 				height: 15vw;
-				position: absolute;
-				left: 6vw;
-				top: 2vw;
-				z-index: 0;
+				width: 15vw;
+				position: relative;
+				z-index: 2;
 				border-radius: 50%;
+				border: 4rpx solid #ffffff;
+				box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+				object-fit: cover;
+			}
+
+			.crown-glow {
+				position: absolute;
+				width: 16vw;
+				height: 16vw;
+				border-radius: 50%;
+				z-index: 0;
+				opacity: 0.6;
+				filter: blur(10rpx);
+				transform: translateY(3rpx);
+			}
+
+			.crown-glow.gold {
+				background: radial-gradient(circle, #ffd700 10%, transparent 70%);
+			}
+
+			.crown-glow.silver {
+				background: radial-gradient(circle, #c0c0c0 10%, transparent 70%);
+			}
+
+			.crown-glow.bronze {
+				background: radial-gradient(circle, #cd7f32 10%, transparent 70%);
 			}
 
 			div.description {
 				display: flex;
 				flex-direction: column;
 				align-items: center;
-				position: absolute;
-				top: 15vw;
-				padding-top: 20rpx;
-				font-size: 35rpx;
-				width: 18vw;
-				line-height: 50rpx;
+				position: relative;
+				margin-top: 20rpx;
+				padding: 15rpx 10rpx;
+				width: 100%;
+				background-color: rgba(255, 255, 255, 0.1);
+				border-radius: 12rpx;
+				z-index: 3;
+				box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 
 				p.name {
-					font-size: 35rpx;
-					font-weight: bold;
+					font-size: 28rpx;
+					font-weight: 600;
+					margin-bottom: 10rpx;
+					color: #333;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					max-width: 100%;
 				}
+
+				p.value {
+					font-size: 30rpx;
+					color: #EA7034;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					
+					.value-icon {
+						margin-right: 6rpx;
+						font-size: 32rpx;
+					}
+				}
+			}
+		}
+
+		.first {
+			transform: translateY(-20rpx);
+			z-index: 3;
+
+			.rank-container {
+				transform: scale(1.1);
+			}
+
+			img.avatar {
+				box-shadow: 0 6rpx 16rpx rgba(255, 180, 0, 0.3);
+				border: 4rpx solid #ffd700;
+			}
+
+			div.description {
+				background-color: rgba(255, 245, 214, 0.7);
+			}
+			
+			p.value {
+				font-weight: bold;
+			}
+		}
+
+		.second, .third {
+			z-index: 2;
+			
+			div.description {
+				background-color: rgba(255, 255, 255, 0.6);
 			}
 		}
 	}

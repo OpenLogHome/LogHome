@@ -1,6 +1,7 @@
 <template>
 	<view class="outer">
-		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab" textColor="#2d2d2d" ref="tabs"/>
+		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab"
+		:textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'" ref="tabs"/>
 		<view class="list fans" v-show="curTabIndex == 1">
 			<p class="fansNums">共有 {{fans.length}} 个粉丝</p>
 			<div class="users" v-for="item in fans">

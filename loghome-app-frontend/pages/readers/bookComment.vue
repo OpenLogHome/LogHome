@@ -72,6 +72,7 @@
 			} 
 		},
 		onLoad(params){
+			console.log(this.componentMode);
 			if(!this.componentMode) {
 				this.novelId = params.id;
 				if(params.articleId !== undefined){

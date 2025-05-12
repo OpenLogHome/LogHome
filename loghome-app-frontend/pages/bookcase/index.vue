@@ -1,15 +1,16 @@
 <template>
-	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view class="content" v-dark
+		:style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
 		<div class="tabBarUnder">
-			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" textColor="#2d2d2d"
+			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
 				ref="tabs" />
 		</div>
-		<div class="tabBar">
-			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" textColor="#2d2d2d"
+		<div class="tabBar" v-dark>
+			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
 				ref="tabs" />
 		</div>
 		<div class="searchBar">
-			<uni-search-bar bgColor="rgb(211,211,211)" :radius="5" @input="searchBookCase" placeholder="搜索书架"
+			<uni-search-bar :bgColor="$store.state.isDarkMode ? '#2C2C2C' : 'rgb(211,211,211)'" :radius="5" @input="searchBookCase" placeholder="搜索书架"
 				cancelButton="none">
 				<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;"/>
 				<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;"/>
@@ -206,6 +207,9 @@
 	.content {
 		background-color: #f2f2f2;
 		font-size: 30rpx;
+		&.dark-mode{
+			background-color: #1E1E1E;
+		}
 
 		div.tabBar {
 			position: fixed;
@@ -226,6 +230,10 @@
 				0px 0px 33.4px rgba(0, 0, 0, 0.05),
 				0px 0px 80px rgba(0, 0, 0, 0.07);
 			height: 75rpx;
+
+			&.dark-mode{
+				background-color: #1E1E1E;
+			}
 		}
 
 		div.tabBarUnder {

@@ -1,0 +1,74 @@
+[
+  {
+    "IndexName": "_add_time",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "_add_time",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "appid",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "appid",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": true
+    }
+  },
+  {
+    "IndexName": "name",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "name",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "type",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "type",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "create_date",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "create_date",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "enable_upgrade_center",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "enable_upgrade_center",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  }
+]

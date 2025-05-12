@@ -1,0 +1,20 @@
+{
+    "name": "vk-unicloud",
+    "version": "2.17.5",
+    "description": "【云函数端SDK】VK云函数路由模式uniCloud开发框架，在router目录下执行 npm i vk-unicloud 进行安装和升级",
+    "main": "index.js",
+    "homepage": "https:\/\/gitee.com\/vk-uni\/vk-uni-cloud-router.git",
+    "repository": {
+        "type": "git",
+        "url": "git+https:\/\/gitee.com\/vk-uni\/vk-uni-cloud-router.git"
+    },
+    "files": [
+        "dist"
+    ],
+    "author": "VK",
+    "license": "Apache-2.0",
+    "origin-plugin-dev-name": "Moe-Blog",
+    "origin-plugin-version": "MoeX 3.4.5",
+    "plugin-dev-name": "Moe-Blog",
+    "plugin-version": "MoeX 3.6.0"
+}

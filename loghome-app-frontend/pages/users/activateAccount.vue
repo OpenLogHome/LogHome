@@ -2,20 +2,28 @@
 	<view class="outer">
 		<div class="info">
 			<p>亲爱的朋友，欢迎你加入原木社区大家庭！</p>
-			<p>为确保社区稳定运行，我们需要你绑定账号，为了保证不间断的使用，请任选以下账号绑定与激活方式：</p>
+			<p>我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持使用手机号作为验证方式，请尽快迁移至邮箱登录。</p>
+			<p>为了保证不间断的使用，请通过以下激活方式激活账号：</p>
 		</div>
 		<view class="list">
-			<view class="li " @click="gotoMobileActivate">
+			<view class="li ">
 				<view class="text">通过手机号绑定</view>
 				<view  v-show="user.mobile != 'unbind'">{{user.mobile}}</view>
-				<img class="to" src="../../static/user/to.png"  v-show="user.mobile == 'unbind'"></img>
+				<!-- <img class="to" src="../../static/user/to.png"  v-show="user.mobile == 'unbind'"></img> -->
 			</view>
 		</view>
 		<view class="list">
-			<view class="li" @click="gotoOicqActivate">
+			<view class="li">
 				<view class="text">通过QQ号绑定</view>
 				<view  v-show="user.oicq_account != 'unbind'">{{user.oicq_account}}</view>
-				<img class="to" src="../../static/user/to.png" v-show="user.oicq_account == 'unbind'"></img>
+				<!-- <img class="to" src="../../static/user/to.png" v-show="user.oicq_account == 'unbind'"></img> -->
+			</view>
+		</view>
+		<view class="list">
+			<view class="li noborder" @click="gotoEmailActivate">
+				<view class="text">通过邮箱绑定</view>
+				<view v-show="user.email && user.email != 'unbind'">{{user.email}}</view>
+				<img class="to" src="../../static/user/to.png" v-show="!user.email || user.email == 'unbind'"></img>
 			</view>
 		</view>
 		<div class="info">
@@ -45,6 +53,12 @@
 				if(this.user.mobile != 'unbind') return;
 				uni.navigateTo({
 					url:"./activateAccount_mobile"
+				})
+			},
+			gotoEmailActivate(){
+				if(this.user.email && this.user.email != 'unbind') return;
+				uni.navigateTo({
+					url:"./activateAccount_email"
 				})
 			}
 		},

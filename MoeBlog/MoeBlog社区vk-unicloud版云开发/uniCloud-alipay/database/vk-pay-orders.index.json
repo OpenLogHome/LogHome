@@ -1,0 +1,74 @@
+[
+  {
+    "IndexName": "_add_time",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "_add_time",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "out_trade_no",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "out_trade_no",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": true
+    }
+  },
+  {
+    "IndexName": "user_order_success",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "user_order_success",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "transaction_id",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "transaction_id",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "total_fee",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "total_fee",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  },
+  {
+    "IndexName": "pid",
+    "MgoKeySchema": {
+      "MgoIndexKeys": [
+        {
+          "Name": "pid",
+          "Direction": "1"
+        }
+      ],
+      "MgoIsUnique": false
+    }
+  }
+]

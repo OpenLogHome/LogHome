@@ -1,0 +1,22 @@
+[
+  {
+    "_id": "001",
+    "appid": "__UNI__01F080F",
+    "type": "client",
+    "name": "用户端",
+    "description": "此为用户端应用",
+    "create_date": 1596416400000,
+    "_add_time": 1596416400000,
+    "_add_time_str": "2020-08-03 09:00:00"
+  },
+  {
+    "_id": "002",
+    "appid": "__UNI__570A7FB",
+    "type": "admin",
+    "name": "管理端",
+    "description": "此为管理端应用",
+    "create_date": 1596416400000,
+    "_add_time": 1596416400000,
+    "_add_time_str": "2020-08-03 09:00:00"
+  }
+]

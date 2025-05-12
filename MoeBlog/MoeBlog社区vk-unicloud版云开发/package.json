@@ -1,0 +1,18 @@
+{
+    "id": "Moe-Blog",
+    "name": "原木社区vk-unicloud版云开发",
+    "displayName": "原木社区vk-unicloud版云开发",
+    "version": "MoeX 3.4.5",
+    "description": "原木社区论坛 是一款由风华绝代打造的校内社交多端程序，在这里 可以交流学习、吃瓜、社交、找对象、失物招领等功能一 应俱全!可以更轻松地结交新朋友!让你更方便地在校园 里享受互助互爱的美好",
+    "keywords": [
+        "原木社区",
+        "vk",
+        "unicloud"
+    ],
+    "dcloudext": {
+        "category": [
+            "uniCloud",
+            "云端一体项目模板"
+        ]
+    }
+}

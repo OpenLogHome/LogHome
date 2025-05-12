@@ -4,7 +4,7 @@
 			<log-image :src="picUrl  + '?thumbnail=1' " alt="" :style="{display: picUrl=='' ? 'none' : 'block'}"
 			onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"/>
 		</div>
-		<div :class="{nameTag:true,empty:bookName==''}">
+		<div :class="{nameTag:true, empty:bookName==''}" v-dark>
 			{{bookName}}
 		</div>
 	</div>
@@ -53,6 +53,9 @@
 			color:#535353;
 			line-height: 30rpx;
 			font-size:28rpx !important;
+			&.dark-mode{
+				color:#E5E5E5;
+			}
 		}
 		div.nameTag.empty{
 			margin-bottom: 30rpx;

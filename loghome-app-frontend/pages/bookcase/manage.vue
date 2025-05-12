@@ -1,5 +1,5 @@
 <template>
-	<view class="content">
+	<view class="content" v-dark>
 		<div class="searchBar">
 		</div>
 		<transition-group name="flip-list" tag="div" class="bookcase">
@@ -115,6 +115,9 @@ export default {
 	.content{
 		background-color: #f2f2f2;
 		font-size:30rpx;
+		&.dark-mode{
+			background-color: #1E1E1E;
+		}
 	}
 	
 	@keyframes toDelete{

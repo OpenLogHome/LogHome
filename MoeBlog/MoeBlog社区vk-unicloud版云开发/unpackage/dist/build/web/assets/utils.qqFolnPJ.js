@@ -1,0 +1,1 @@
+function n(n){return n.nickname||n.username||"默认昵称"}function t(n){return n.avatar||"/static/img/user-default.png"}function r(n){return n.gxqm||"此人还没有个性签名"}function a(n){return n.gender||2}function u(n){return n.background||"/static/img/default-bg.jpg"}function e(n){return n.frame||25}export{t as a,u as b,a as c,e as f,r as g,n as u};

@@ -74,7 +74,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // 同时执行资源准备和延时
       final results = await Future.wait([
         AssetUtils.prepareAssets(),
-        Future.delayed(const Duration(seconds: 2)), // 最小显示时间3秒
+        Future.delayed(const Duration(seconds: 2)), // 最小显示时间2秒
       ]);
 
       if (mounted) {
@@ -92,6 +92,21 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (e) {
       print('初始化失败: $e');
+      // 显示错误信息并允许用户重试
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('应用初始化失败，请尝试重启应用'),
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: '重试',
+              onPressed: () {
+                _initialize(); // 重试初始化
+              },
+            ),
+          ),
+        );
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<view class="tags">
 			<div class="tag" v-for="(item,index) in tags" :key="item.tag_id"
 			:class="{'activity':item.is_activity_tag, 'suggested': item.is_suggested}"
@@ -120,5 +120,47 @@
 	}
 	.outer{
 		background-color: #ffffff;
+		
+		&.dark-mode{
+			background-color: #1E1E1E;
+		}
+	}
+	
+	.dark-mode {
+		.tags {
+			background-color: #2C2C2C;
+			
+			.tag {
+				background-color: #3C3C3C;
+				color: #CCCCCC;
+				
+				&.activity {
+					color: #ec8600;
+					background-color: #573013;
+				}
+				
+				&.suggested {
+					border: solid 1px #ec8600;
+					color: #ec8600;
+				}
+			}
+		}
+		
+		.suggested_tags {
+			.tag {
+				background-color: #3C3C3C;
+				color: #CCCCCC;
+				
+				&.activity {
+					color: #ec8600;
+					background-color: #573013;
+				}
+				
+				&.chosen {
+					border: solid 1px #ec8600;
+					color: #ec8600;
+				}
+			}
+		}
 	}
 </style>

@@ -1,6 +1,7 @@
 <script>
 	import axios from 'axios'
 	import h5PageAnimation from './components/h5-page-animation/';
+	import '@/common/theme.scss';
 	export default {
 		mixins: [h5PageAnimation],
 		onShow: function() {
@@ -8,6 +9,17 @@
 		},
 		onHide: function() {
 			console.log('App Hide')
+		},
+		onLaunch: function() {
+			console.log('App Launch');
+			// #ifdef H5
+			this.initTheme();
+			// #endif
+		},
+		data() {
+			return {
+				
+			}
 		},
 		methods:{
 			utc2timestamp(utc_datetime) {
@@ -49,7 +61,11 @@
 						     'Authorization': 'Bearer '  + tk 
 						}
 					}).then((res) => {
-						window.localStorage.setItem('token', JSON.stringify(res.data.token));
+						// 更新token
+						if(res.data && res.data.token && res.data.token.tk) {
+							window.localStorage.setItem('token', JSON.stringify(res.data.token));
+						}
+						
 						// 获取本地消息记录中的新消息
 						let curMessage = JSON.parse(window.localStorage.getItem('messages'));
 						if(curMessage == null){
@@ -126,38 +142,113 @@
 					this.$bus.$emit("AutoSave");
 					// console.log("本地保存");
 				},EditorAutoSaveProps.timeSpan*1000*60);
-			}
+			},
+			updateNavidationBarTheme(){
+				if(this.$store.state.isDarkMode) {
+					uni.setTabBarStyle({
+						color: "#7A7E83",
+						selectedColor: "#d3442b",
+						borderStyle: "white",
+						backgroundColor: "#000000",
+					})
+				} else {
+					uni.setTabBarStyle({
+						color: "#7A7E83",
+						selectedColor: "#d3442b",
+						borderStyle: "white",
+						backgroundColor: "#ffffff",
+					})
+				}
+			},
+			updatePageState() {
+				this.updateNavidationBarTheme();
+				if(this.$store.state.isDarkMode) {
+					document.body.classList.add('dark-mode');
+				} else {
+					document.body.classList.remove('dark-mode');
+				}
+			},
+			// 初始化主题模式
+			initTheme() {
+				// 获取保存的主题模式
+				const savedTheme = window.localStorage.getItem('themeMode');
+				
+				// 检查系统是否处于深色模式
+				const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				
+				// 优先使用保存的主题模式，如果没有保存过则使用系统主题模式
+				if (savedTheme === 'dark' || (savedTheme !== 'light' && prefersDarkMode)) {
+					document.documentElement.classList.add('dark-mode');
+					this.$store.state.isDarkMode = true;
+					this.updatePageState();
+				} else {
+					document.documentElement.classList.remove('dark-mode');
+					this.$store.state.isDarkMode = false;
+					this.updatePageState();
+				}
+				
+				// 监听系统主题变化，如果用户没有手动设置过主题模式
+				if (!savedTheme) {
+					window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+						if (e.matches) {
+							document.documentElement.classList.add('dark-mode');
+							this.$store.state.isDarkMode = true;
+							this.updatePageState();
+						} else {
+							document.documentElement.classList.remove('dark-mode');
+							this.$store.state.isDarkMode = false;
+							this.updatePageState();
+						}
+					});
+				}
+			},
+			// 切换主题模式
+			toggleTheme() {
+				const isDarkMode = document.documentElement.classList.contains('dark-mode');
+				if (isDarkMode) {
+					document.documentElement.classList.remove('dark-mode');
+					window.localStorage.setItem('themeMode', 'light');
+					this.$store.state.isDarkMode = false;
+					this.updatePageState();
+				} else {
+					document.documentElement.classList.add('dark-mode');
+					window.localStorage.setItem('themeMode', 'dark');
+					this.$store.state.isDarkMode = true;
+					this.updatePageState();
+				}
+			},
 		},
 		mounted(){
 			this.initializeHistory();
+			this.initTheme(); // 初始化主题
 			//检测是否为电脑打开
-			var os = function() {
-			    var ua = navigator.userAgent,
-			        isWindowsPhone = /(?:Windows Phone)/.test(ua),
-			        isSymbian = /(?:SymbianOS)/.test(ua) || isWindowsPhone,
-			        isAndroid = /(?:Android)/.test(ua),
-			        isFireFox = /(?:Firefox)/.test(ua),
-			        isChrome = /(?:Chrome|CriOS)/.test(ua),
-			        isTablet = /(?:iPad|PlayBook)/.test(ua) || (isAndroid && !/(?:Mobile)/.test(ua)) || (isFireFox && /(?:Tablet)/.test(ua)),
-			        isPhone = /(?:iPhone)/.test(ua) && !isTablet,
-			        isPc = !isPhone && !isAndroid && !isSymbian;
-			    return {
-			        isTablet: isTablet,
-			        isPhone: isPhone,
-			        isAndroid: isAndroid,
-			        isPc: isPc
-			    };
-			}();
+			// var os = function() {
+			//     var ua = navigator.userAgent,
+			//         isWindowsPhone = /(?:Windows Phone)/.test(ua),
+			//         isSymbian = /(?:SymbianOS)/.test(ua) || isWindowsPhone,
+			//         isAndroid = /(?:Android)/.test(ua),
+			//         isFireFox = /(?:Firefox)/.test(ua),
+			//         isChrome = /(?:Chrome|CriOS)/.test(ua),
+			//         isTablet = /(?:iPad|PlayBook)/.test(ua) || (isAndroid && !/(?:Mobile)/.test(ua)) || (isFireFox && /(?:Tablet)/.test(ua)),
+			//         isPhone = /(?:iPhone)/.test(ua) && !isTablet,
+			//         isPc = !isPhone && !isAndroid && !isSymbian;
+			//     return {
+			//         isTablet: isTablet,
+			//         isPhone: isPhone,
+			//         isAndroid: isAndroid,
+			//         isPc: isPc
+			//     };
+			// }();
 			
 			//如果是平板或手机打开则跳转到手机模式
-			if(os.isAndroid || os.isPhone) {
+			// if(os.isAndroid || os.isPhone) {
 				
-			} else if(os.isTablet || os.isPc) {
-				let mobileRunnerEnv = sessionStorage.getItem("MobileRunnerEnv");
-				if(mobileRunnerEnv == undefined){
-					window.location.href="/pc"
-				}
-			}
+			// } else if(os.isTablet || os.isPc) {
+			// 	let mobileRunnerEnv = sessionStorage.getItem("MobileRunnerEnv");
+			// 	if(mobileRunnerEnv == undefined){
+			// 		window.location.href="/pc"
+			// 	}
+			// }
 		
 			// 获取整站设置状态，并决定应用哪些，比如是否开启全局灰色模式等。
 			axios.get(this.$baseUrl + '/app/get_site_set', {}).then((res) => {
@@ -219,6 +310,14 @@
 							}
 						}
 						jsBridge.setStatusBarStyle(false);
+					})
+				}
+				
+				if(window.sessionStorage.getItem("hideBack") == "true") {
+					setTimeout(() => {
+						let backBtn = document.querySelector(".uni-page-head-hd");
+						console.log(backBtn);
+						backBtn.style.display = "none";
 					})
 				}
 			})

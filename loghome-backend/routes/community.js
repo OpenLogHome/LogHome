@@ -280,10 +280,36 @@ router.get('/novel_commonts_all', async function (req, res) {
 
 router.get('/novel_commonts_amount', async function (req, res) {
 	try {
-		let results = await query(
-			'SELECT COUNT(*) FROM novel_comments WHERE novel_id = ? AND deleted = 0 AND reply_to_id = -1',
-			[req.query.id],
-		);
+		// 基本查询 - 获取小说评论总数
+		let query_ = 'SELECT COUNT(*) FROM novel_comments WHERE novel_id = ? AND deleted = 0 AND reply_to_id = -1';
+		let params = [req.query.id];
+
+		// 如果提供了文章ID但没有提供段落ID，则只查询该文章的评论数量
+		if (req.query.articleId && !req.query.paragraphId) {
+			query_ = 'SELECT COUNT(*) FROM novel_comments WHERE novel_id = ? AND article_id = ? AND deleted = 0 AND reply_to_id = -1';
+			params = [req.query.id, req.query.articleId];
+		}
+		// 如果提供了文章ID和段落ID参数，则查询该段落的评论数量
+		else if (req.query.articleId && req.query.paragraphId) {
+			// 首先获取段落的cento_id
+			let centos = await query(
+				`SELECT article_cento_id FROM article_cento c WHERE c.paragraph_id = ? AND c.article_id = ? AND c.is_delete = 0`, 
+				[req.query.paragraphId, req.query.articleId]
+			);
+			
+			if (centos && centos.length > 0) {
+				// 如果找到了cento记录，则查询该cento对应的评论数量
+				let centoIds = centos.map(item => item.article_cento_id);
+				query_ = 'SELECT COUNT(*) FROM novel_comments WHERE novel_id = ? AND deleted = 0 AND reply_to_id = -1 AND cento_id IN (?)';
+				params = [req.query.id, centoIds];
+			} else {
+				// 如果没有找到cento记录，返回0
+				res.end(JSON.stringify([{ 'COUNT(*)': 0 }]));
+				return;
+			}
+		}
+
+		let results = await query(query_, params);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);

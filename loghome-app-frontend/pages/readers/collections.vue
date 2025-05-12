@@ -1,6 +1,6 @@
 <template>
 	<transition name="fade" class="transition">
-		<div class="outer" v-if="showList">
+		<div class="outer" v-dark v-if="showList">
 				<div v-for="item in books" :key="item.novel_id">
 					<navigator :url="'./bookInfo?id=' +  item.novel_id"
 							   open-type="navigate">    
@@ -74,6 +74,11 @@
 <style scoped lang="scss">
 	.outer{
 		background-color: #f2f2f2;
+		
+		&.dark-mode {
+			background-color: #1E1E1E;
+		}
+		
 		.books {
 			height: 260rpx;
 			width: calc(100vw - 40rpx);
@@ -81,7 +86,6 @@
 			display: flex;
 			background-color:rgb(255,255,255);
 			border-radius:10rpx;
-			
 			
 			img {
 				height: 260rpx;
@@ -144,6 +148,29 @@
 			}
 		}
 	}
+	
+	.dark-mode {
+		.books {
+			background-color: #2C2C2C;
+			
+			.bookInfo {
+				.title {
+					color: #FFFFFF;
+				}
+				
+				.author {
+					.auther_name {
+						color: #CCCCCC;
+					}
+				}
+				
+				.description {
+					color: #A0A0A0;
+				}
+			}
+		}
+	}
+	
 	.fade-enter-active, .fade-leave-active {
 	  transition: all .5s;
 	}

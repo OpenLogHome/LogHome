@@ -1,6 +1,7 @@
 <template>
 	<view class="outer">
-		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab" textColor="black" ref="tabs"/>
+		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab" 
+		:textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'" ref="tabs"/>
 		<view class="list fans" v-show="curTabIndex == 1">
 			<div class="users" v-for="item in greatUsers">
 				<navigator class="users" :url="'../users/personalPage?id='+item.user_id">

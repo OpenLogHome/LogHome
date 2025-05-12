@@ -2,8 +2,9 @@ export default {
   env: {
     STATIC_URL: process.env.STATIC_URL || '',
     baseUrl: process.env.NODE_ENV === 'production' 
-      ? 'http://loghomeservice.codesocean.top' // 生产环境API地址
-      : 'http://127.0.0.1:9000', // 开发环境API地址
+      ? 'https://loghomeservice.codesocean.top' // 生产环境API地址
+      : 'https://loghomeservice.codesocean.top', // 开发环境API地址
+    mobileUrl: process.env.NODE_ENV === 'production' ? "https://loghome.codesocean.top" : "https://loghome.codesocean.top"
   },
   /*
    ** Build configuration
@@ -14,6 +15,15 @@ export default {
       if (!isDev && process.env.STATIC_URL) {
         config.output.publicPath = process.env.STATIC_URL
       }
+    },
+    transpile: [/^element-ui/],
+    loaders: {
+      scss: {
+        implementation: require('sass'),
+        sassOptions: {
+          fiber: false
+        }
+      }
     }
   },
   router: {
@@ -21,28 +31,21 @@ export default {
     base: '/',
     // custom route
     extendRoutes(routes, resolve) {
-      let customRoutes = [
-        {
-          name: 'release',
-          path: '/release/',
-          component: resolve(__dirname, 'pages/index.vue')
-        }
-      ]
-      customRoutes?.forEach(item => routes.push(item));
+      // 移除不存在的路由配置
     }
   },
   /*
    ** Headers of the page
    */
   head: {
-    title: 'Serverless Nuxt.js Application',
+    title: '原木社区 - 方块人的文艺世界',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       {
         hid: 'description',
         name: 'description',
-        content: 'Serverless Nuxt.js Application Created By Serverless Framework'
+        content: '原木社区 - 方块人的文艺世界'
       }
     ],
     link: [
@@ -52,16 +55,25 @@ export default {
   /*
    ** Customize the progress-bar color
    */
-  loading: { color: '#fff' },
+  loading: {
+    color: '#947358', // 使用主题色
+    height: '6px',
+    throttle: 200,
+    continuous: true
+  },
   /*
    ** Global CSS
    */
-  css: [],
+  css: [
+    'element-ui/lib/theme-chalk/index.css'
+  ],
   /*
    ** Plugins to load before mounting the App
    */
   plugins: [
-    '~/plugins/api.js'
+    '~/plugins/api.js',
+    '~/plugins/element-ui.js',
+    '~/plugins/window-manager.js'
   ],
   /*
    ** Nuxt.js dev-modules

@@ -221,7 +221,6 @@
 				}
 			},
 			handleDeleteReview(id) {
-				console.log(this.reviewMsg);
 				let _this = this;
 				uni.showModal({
 					title: '提示',
@@ -267,8 +266,9 @@
 				});
 			},
 			navToChapter() {
+				console.log(this.reviewMsg.cento);
 				uni.navigateTo({
-					url: '../../pages/readers/newReader/article?id=' + this.reviewMsg.article_id
+					url: '../../pages/readers/newReader/article?id=' + this.reviewMsg.article_id + '&paragraphId=' + this.reviewMsg.cento.paragraph_id
 				});
 			
 			},
