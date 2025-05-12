@@ -25,7 +25,7 @@ router.get('/get_library_recommend_titles', async function (req, res) {
 				`SELECT n.*, u.name user_name, u.avatar_url FROM novel_updates nu
 				LEFT JOIN novel_updates nu0 ON nu.novel_id = nu0.novel_id AND nu.time < nu0.time 
 				INNER JOIN novels n ON nu.novel_id = n.novel_id AND n.deleted = 0 AND n.is_personal = 0
-				LEFT JOIN users u ON n.author_id = u.user_id WHERE nu0.novel_id IS NULL`
+				LEFT JOIN users u ON n.author_id = u.user_id WHERE nu0.novel_id IS NULL ORDER BY nu.record_id DESC`
 			);
 			res.end(JSON.stringify(results));
 		}
