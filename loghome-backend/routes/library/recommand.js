@@ -19,7 +19,17 @@ router.get('/get_library_recommend_titles', async function (req, res) {
 				AND n.is_personal = 0 ORDER BY n.ranking DESC LIMIT 100`,
 			);
 			res.json(results);
-		} else {
+		}
+		else if(req.query.title === '最近更新') {
+			const results = await query(
+				`SELECT n.*, u.name user_name, u.avatar_url FROM novel_updates nu
+				LEFT JOIN novel_updates nu0 ON nu.novel_id = nu0.novel_id AND nu.time < nu0.time 
+				INNER JOIN novels n ON nu.novel_id = n.novel_id AND n.deleted = 0 AND n.is_personal = 0
+				LEFT JOIN users u ON n.author_id = u.user_id WHERE nu0.novel_id IS NULL`
+			);
+			res.end(JSON.stringify(results));
+		}
+		else {
 			const results = await query(
 				`SELECT DISTINCT n.*,u.name user_name,u.avatar_url,n.novel_type FROM novels n,library_recommend c,users u
 								WHERE c.novel_id = n.novel_id AND c.title = ? 
@@ -52,8 +62,105 @@ router.get('/get_library_collections', async function (req, res) {
 });
 
 router.get('/check_novel_rank', async function (req, res) {
+	//榜单最大数量
+	const recommend_limit=100;
+
 	try {
-		let target = await query(
+		//首先被动更新小说原木力
+		let power=await statistics.update_logpower(req.query.id);
+		
+		//获取榜单
+		let table = await query(
+			`SELECT * FROM library_recommend_new WHERE title = '原木力爆棚' ORDER BY recommend_id`
+		);
+		
+		console.log("Get table success:"+JSON.stringify(table));
+
+		//寻找小说原位和实际排名
+		let target_pos=-1, origin_pos=-1;
+		for(let t in table)
+		{
+			if(target_pos===-1&&table[t].criteria<=power) target_pos=parseInt(t);
+			if(table[t].novel_id==req.query.id) origin_pos=parseInt(t);
+			if(target_pos!=-1&&origin_pos!=-1) break;
+		}
+		console.log(`Ranking process: ${target_pos}, ${origin_pos}`);
+
+		//如果原位和现排名相同则不动
+		if(target_pos===origin_pos&&target_pos!=-1)
+		{
+			await query(
+				`UPDATE library_recommend_new SET criteria = ? WHERE novel_id = ? AND title = '原木力爆棚'`,
+				[power, req.query.id]
+			)
+			res.end(JSON.stringify([{
+				rank: target_pos+1,
+				ranking: power
+			}]))
+			return;
+		}
+
+		//没有找到目标排名也没有原排名的情况
+		if(target_pos===-1&&origin_pos===-1)
+		{
+			if(table.length<recommend_limit)
+			{
+				await query(
+					`INSERT INTO library_recommend_new (recommend_id, title, novel_id, criteria, last_update)
+					VALUES (?, '原木力爆棚', ?, ?, CURRENT_TIMESTAMP)`,
+					[table.length+1, req.query.id, power]
+				);
+				res.end(JSON.stringify([{
+					rank: table.length+1,
+					ranking: power
+				}]));
+			}
+			else res.end(JSON.stringify([]))
+		}
+		//找到目标排名但没有原排名
+		else if(target_pos!=-1&&origin_pos===-1)
+		{
+			await query(
+				`UPDATE library_recommend_new SET novel_id = ?, criteria = ?, last_update = CURRENT_TIMESTAMP WHERE recommend_id = ?`,
+				[req.query.id, power, target_pos+1]
+			);
+			res.end(JSON.stringify([{
+				rank: target_pos+1,
+				ranking: power
+			}]));
+		}
+		//没有目标排名但有原排名
+		else if(target_pos===-1&&origin_pos!=-1)
+		{
+			await query(
+				`UPDATE library_recommend_new SET novel_id = ?, criteria = ?, last_update = CURRENT_TIMESTAMP WHERE recommend_id = ?`,
+				[req.query.id, power, table.length]
+			);
+			await query(
+				`UPDATE library_recommend_new SET novel_id = ?, criteria = ?, last_update = CURRENT_TIMESTAMP WHERE recommend_id = ?`,
+				[table[table.length-1].novel_id, table[table.length-1].criteria, origin_pos+1]
+			);
+			res.end(JSON.stringify([]))
+		}
+		//有目标排名和原排名
+		else if(target_pos!=-1&&origin_pos!=-1)
+		{
+			await query(
+				`UPDATE library_recommend_new SET novel_id = ?, criteria = ?, last_update = CURRENT_TIMESTAMP WHERE recommend_id = ?`,
+				[req.query.id, power, target_pos+1]
+			);
+			await query(
+				`UPDATE library_recommend_new SET novel_id = ?, criteria = ?, last_update = CURRENT_TIMESTAMP WHERE recommend_id = ?`,
+				[table[target_pos].novel_id, table[target_pos].criteria, origin_pos+1]
+			);
+			res.end(JSON.stringify([{
+				rank: target_pos+1,
+				ranking: power
+			}]))
+		}
+		else throw "error";
+
+		/*let target = await query(
 			'SELECT * FROM library_recommend WHERE novel_id = ? AND title = \'原木力爆棚\'',
 			[req.query.id],
 		);
@@ -70,7 +177,7 @@ router.get('/check_novel_rank', async function (req, res) {
 			res.end(JSON.stringify(target));
 		} else {
 			res.end(JSON.stringify([]));
-		}
+		}*/
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -121,10 +228,10 @@ async function updateBestWelcomedNovels() {
 	await query('UPDATE novels SET rank_last = ranking'); // 转移旧原木力
 	for (let i = 0; i < results.length; i++) {
 		// 赋值新原木力
-		await query('UPDATE novels SET ranking=? WHERE novel_id=?', [
+		/*await query('UPDATE novels SET ranking=? WHERE novel_id=?', [
 			results[i].ranking,
 			results[i].novel_id,
-		]);
+		]);*/
 
 		// 加入原木力历史记录表
 

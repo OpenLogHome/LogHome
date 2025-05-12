@@ -367,26 +367,26 @@ router.post('/modify_article', auth, async (req, res) => {
 				req.body.article_id,
 			],
 		);
-        // 字数统计
-        let textCount = 0;
-        let article = (await query('SELECT * FROM articles WHERE article_id = ?', [req.body.article_id]))[0];
-        if(article.article_type == 'richtext' || article.article_type == "worldOutline"){
-            for(let item of JSON.parse(article.content)){
-                if(item.type == "text"){
-                    textCount += item.value.length;
-                }
-            }
-        } else if(article.article_type == "worldVocabulary"){
-            textCount += JSON.parse(article.content).desc.length;
+    // 字数统计
+    let textCount = 0;
+    let article = (await query('SELECT * FROM articles WHERE article_id = ?', [req.body.article_id]))[0];
+    if(article.article_type == 'richtext' || article.article_type == "worldOutline"){
+      for(let item of JSON.parse(article.content)){
+        if(item.type == "text"){
+          textCount += item.value.length;
         }
-        await query(
+      }
+    } else if(article.article_type == "worldVocabulary"){
+      textCount += JSON.parse(article.content).desc.length;
+    }
+    await query(
 			'UPDATE articles SET text_count = ? WHERE article_id = ? AND deleted = 0',
 			[
 				textCount,
 				req.body.article_id,
 			],
 		);
-		//如果不是草稿，则向所有收藏该小说的人发布更新信息
+		//如果不是草稿，则推送至更新记录，并向所有收藏该小说的人发布更新信息
 		if (req.body.is_draft == 0) {
 			await query(
 				'UPDATE novels SET update_time = CURRENT_TIMESTAMP WHERE novel_id = (SELECT novel_id FROM articles WHERE article_id = ?)',
