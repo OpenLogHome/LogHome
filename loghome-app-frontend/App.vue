@@ -104,11 +104,11 @@
 							
 							if(hasUnreadSystemMessage || hasUnreadPrivateMessage){
 								uni.showTabBarRedDot({
-									index: 3
+									index: 4
 								});
 							} else {
 								uni.hideTabBarRedDot({
-									index: 3
+									index: 4
 								});
 							}
 						}).catch(function(error) {

@@ -43,7 +43,7 @@ export function createApp() {
   // 引入 vk框架前端
   app.use(vk, config);
 
-  app.config.globalProperties.$framePostman = new FramePostman.Sub();
+  app.config.globalProperties.$framePostman = new FramePostman.Sub("moeblog");
   
   return { app }
 }

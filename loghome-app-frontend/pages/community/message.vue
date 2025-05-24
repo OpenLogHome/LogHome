@@ -147,7 +147,7 @@
 					
 					window.localStorage.setItem("messages",JSON.stringify(_this.messages));
 					uni.hideTabBarRedDot({
-						index: 3
+						index: 4
 					});
 					uni.hideLoading();
 				});

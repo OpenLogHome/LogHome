@@ -40,6 +40,10 @@ export default {
 			.catch(error => {
 				console.error('连接失败:', error);
 			});
+
+		setInterval(() => {
+			this.$framePostman.send({type: "REFRESH_TABBAR", currentUrl: document.baseURI});
+		}, 2500);
 	},
 	onShow: function () {
 		if (config.debug) console.log("App Show");

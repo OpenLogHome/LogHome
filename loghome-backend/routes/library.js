@@ -12,7 +12,7 @@ let router = express.Router();
 router.get('/get_library_roulous_chart', async function (req, res) {
 	try {
 		let roulous_chart = await query(
-			'SELECT * FROM library_roulous_chart WHERE isValid = 1',
+			'SELECT * FROM library_roulous_chart WHERE isValid = 1 ORDER BY `order` ASC',
 		);
 		res.end(JSON.stringify(roulous_chart));
 	} catch (e) {

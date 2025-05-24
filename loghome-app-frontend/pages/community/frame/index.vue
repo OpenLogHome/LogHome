@@ -39,7 +39,8 @@ export default {
                 info: {
                     app: 'loghome-app',
                     version: '1.0'
-                }
+                },
+                token: "moeblog"
             })
 
             postman.listen((msg, e) => {
@@ -87,8 +88,10 @@ export default {
                     if (res.statusCode === 200) {
                         // 将token添加到url中
                         const separator = this.baseUrl.includes('?') ? '&' : '?';
-                        this.url = `${this.baseUrl}/#/pages/auth/external_login${separator}token=${res.data.crossSiteToken}`;
-                        console.log("this.url", this.url)
+                        this.url = "about:blank"
+                        setTimeout(() => {
+                            this.url = `${this.baseUrl}/#/pages/auth/external_login${separator}token=${res.data.crossSiteToken}`;
+                        }, 300)
                     }
                 },
                 fail: (error) => {

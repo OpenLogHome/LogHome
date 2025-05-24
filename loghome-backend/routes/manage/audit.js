@@ -116,21 +116,35 @@ setInterval(async function () {
 
 router.get('/get_articles_to_audit', auth, async function (req, res) {
 	try {
-		let results = await query(
-			'SELECT a.article_id,a.title,n.name novel_name,a.text_count,a.audit_status,n.novel_id,n.author_id FROM articles a,novels n WHERE a.novel_id = n.novel_id AND a.audit_status != "Checked" AND a.audit_status != "Uncheck" LIMIT ?,20',
-			[(Number(req.query.page) - 1) * 20],
-		);
-		for (let item of results) {
-			let result = await query(
-				'SELECT u.name FROM users u,novels n WHERE u.user_id = n.author_id AND u.user_id = ?',
-				[item.author_id],
-			);
-			if (result[0] == undefined) {
-				item.author_name = '作者已删除';
-			} else {
-				item.author_name = result[0].name;
-			}
+		// 构建基础查询SQL和参数数组
+		let sqlQuery = `
+			SELECT a.article_id, a.title, n.name novel_name, a.text_count, a.audit_status, n.novel_id, n.author_id, u.name author_name
+			FROM articles a, novels n, users u
+			WHERE a.novel_id = n.novel_id 
+			AND n.author_id = u.user_id
+			AND a.audit_status != "Checked" 
+			AND a.audit_status != "Uncheck"
+		`;
+		let params = [];
+		
+		// 添加标题筛选
+		if (req.query.title && req.query.title.trim() !== '') {
+			sqlQuery += ` AND a.title LIKE ?`;
+			params.push(`%${req.query.title}%`);
 		}
+		
+		// 添加作者筛选
+		if (req.query.author && req.query.author.trim() !== '') {
+			sqlQuery += ` AND u.name LIKE ?`;
+			params.push(`%${req.query.author}%`);
+		}
+		
+		// 添加分页和排序
+		sqlQuery += ` ORDER BY a.article_id DESC LIMIT ?,20`;
+		params.push((Number(req.query.page) - 1) * 20);
+		
+		let results = await query(sqlQuery, params);
+		
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);
@@ -140,9 +154,30 @@ router.get('/get_articles_to_audit', auth, async function (req, res) {
 
 router.get('/get_articles_to_audit_amount', auth, async function (req, res) {
 	try {
-		let results = await query(
-			'SELECT COUNT(*) count FROM articles WHERE audit_status != "Checked" AND audit_status != "Uncheck"',
-		);
+		// 构建基础查询SQL和参数数组
+		let sqlQuery = `
+			SELECT COUNT(*) count 
+			FROM articles a, novels n, users u
+			WHERE a.novel_id = n.novel_id 
+			AND n.author_id = u.user_id
+			AND a.audit_status != "Checked" 
+			AND a.audit_status != "Uncheck"
+		`;
+		let params = [];
+		
+		// 添加标题筛选
+		if (req.query.title && req.query.title.trim() !== '') {
+			sqlQuery += ` AND a.title LIKE ?`;
+			params.push(`%${req.query.title}%`);
+		}
+		
+		// 添加作者筛选
+		if (req.query.author && req.query.author.trim() !== '') {
+			sqlQuery += ` AND u.name LIKE ?`;
+			params.push(`%${req.query.author}%`);
+		}
+		
+		let results = await query(sqlQuery, params);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);

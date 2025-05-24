@@ -1,0 +1,1 @@
+import{a as s,x as e,o,i as t}from"./index-C69BgsYY.js";import{o as a}from"./uni-app.es.4Bntlf4B.js";const r={__name:"userinfo",setup(r){const{proxy:n}=e();return a((s=>{s.id&&n.$framePostman.send({type:"USER_PAGE",id:s.id}),setTimeout((()=>{}),1)})),(e,a)=>{const r=t;return o(),s(r)}}};export{r as default};

@@ -1,0 +1,17 @@
+{
+    "id": "event770-pageAnimation",
+    "displayName": "H5页面动画pageAnimation（vue3）",
+    "version": "1.0",
+    "description": "vue3已不能使用 this.$router，也不能用vue-router，原本好好的动画突然摸瞎，于是重造",
+    "keywords": [
+        "页面动画",
+        "路由动画",
+        "页面切换动画"
+    ],
+    "dcloudext": {
+        "category": [
+            "JS SDK",
+            "通用 SDK"
+        ]
+    }
+}

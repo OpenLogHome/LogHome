@@ -104,7 +104,7 @@ app.use('/credit', creditRouter);
 app.use('/payment', paymentsRouter);
 app.use('/world', worldRouter);
 
-let server = app.listen(9001, function () {
+let server = app.listen(9000, function () {
 	let host = server.address().address;
 	let port = server.address().port;
 	console.log('服务器已在' + host + ':' + port + '上启动。');

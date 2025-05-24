@@ -43,7 +43,7 @@ module.exports = {
 		},
 		"service": {
 			// 外部服务器URL配置
-			"externalServerUrl": "http://127.0.0.1:9001", // 请替换为你的外部服务器地址
+			"externalServerUrl": "http://loghomeservice.codesocean.top", // 请替换为你的外部服务器地址
 			// 邮箱发送服务
 			"email": {
 				"codeExpiresIn": 180, // 邮件验证码有效期（单位秒）

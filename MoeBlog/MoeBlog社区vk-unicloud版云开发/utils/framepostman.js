@@ -1,17 +1,23 @@
 function FramePostman({
 	element,
-	info
+	info,
+	token
 }) {
 	this.frameWin = element.contentWindow
 	this.info = info
+	this.token = token
 	window.addEventListener('message', (e) => {
 		if (e.data && e.data.type) {
+			// 验证口令
+			if (e.data.token !== this.token) {
+				return
+			}
 			switch (e.data.type) {
 				case 'common':
 					this.callback(e.data.data, e)
 					break
 				case 'connect':
-					postMessageAnyOrigin(this.frameWin, { type: 'connect_ok', info: this.info })
+					postMessageAnyOrigin(this.frameWin, { type: 'connect_ok', info: this.info, token: this.token })
 					break
 			}
 		}
@@ -23,17 +29,22 @@ function postMessageAnyOrigin(win, msg) {
 }
 
 FramePostman.prototype.send = function (message) {
-	postMessageAnyOrigin(this.frameWin, { type: 'common', data: message })
+	postMessageAnyOrigin(this.frameWin, { type: 'common', data: message, token: this.token })
 }
 
 FramePostman.prototype.listen = function (callback) {
 	this.callback = callback
 }
 
-FramePostman.Sub = function () {
+FramePostman.Sub = function (token) {
 	this.topWin = window.top
+	this.token = token
 	window.addEventListener('message', (e) => {
 		if (e.data && e.data.type) {
+			// 验证口令
+			if (e.data.token !== this.token) {
+				return
+			}
 			switch (e.data.type) {
 				case 'common':
 					this.callback(e.data.data, e)
@@ -47,11 +58,11 @@ FramePostman.Sub = function () {
 }
 
 FramePostman.Sub.prototype.send = function (message) {
-	postMessageAnyOrigin(this.topWin, { type: 'common', data: message })
+	postMessageAnyOrigin(this.topWin, { type: 'common', data: message, token: this.token })
 }
 
 FramePostman.Sub.prototype.connect = function (timeout = 5000) {
-	postMessageAnyOrigin(this.topWin, { type: 'connect' })
+	postMessageAnyOrigin(this.topWin, { type: 'connect', token: this.token })
 	return new Promise((resolve, reject) => {
 		this.resolve = (value) => {
 			resolve(value)

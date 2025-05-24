@@ -1,0 +1,97 @@
+/* 页面过渡动画 */
+/* 在页面上使用 transform 会导致页面内的 fixed 定位渲染为 absolute，需要在动画完成后移除 */
+/* base、before、after有顺序要求，不要变更排序 */
+
+/* #ifdef H5 */
+uni-page {
+    opacity: 1;
+    transform-origin: 50vw 50vh;
+    background-color: #ffffff;
+}
+
+.dark-mode uni-page {
+    background-color: #121212;
+}
+
+uni-page.animation-show {
+    opacity: 1;
+    min-height: 100%;
+}
+
+/* 默认 */
+uni-page.animation-base {
+    transform: translateX(0px);
+}
+uni-page.animation-before {
+    transform: translateX(100vw);
+}
+uni-page.animation-after {
+    transform: translateX(0px);
+}
+uni-page.animation-in {
+    transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);
+}
+uni-page.animation-out {
+    transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);
+}
+
+/* 右侧进入 */
+uni-page.animation-right-base {transform: translateX(0px);}
+uni-page.animation-right-before {transform: translateX(100vw);}
+uni-page.animation-right-after {transform: translateX(0px);}
+uni-page.animation-right-in {transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);}
+uni-page.animation-right-out {transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);}
+
+/* 左侧进入 */
+uni-page.animation-left-base {transform: translateX(0px);}
+uni-page.animation-left-before {transform: translateX(-30px);}
+uni-page.animation-left-after {transform: translateX(0px);}
+uni-page.animation-left-in {transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);}
+uni-page.animation-left-out {transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);}
+
+/* 虚拟页面样式 - 参考Vue2版本 */
+uni-page2 {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   min-height: 100%;
+   display: none;
+   background-color: #f2f2f2;
+   transform-origin: 50vw 50vh;
+}
+
+.dark-mode uni-page2 {
+   background-color: #121212;
+}
+
+uni-page2.animation-show {
+   position: fixed;
+   display: block;
+}
+
+uni-page2.animation-high {
+   z-index: 999;
+}
+
+uni-page2.animation-low {
+   z-index: -1;
+}
+
+uni-page2.animation-in {
+   transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);
+   transform-origin: 50vw 50vh;
+}
+
+uni-page2.animation-enter {
+   transform: translateX(-20vw);
+   overflow: hidden;
+}
+
+uni-page2.animation-before {
+   transform: translateX(100vw);
+   transform-origin: 50vw 50vh;
+   overflow: hidden;
+}
+
+/* #endif */
