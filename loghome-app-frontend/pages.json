@@ -368,7 +368,14 @@
 		{
 			"path": "pages/community/postEdit",
 			"style": {
-				"navigationBarTitleText": "帖子编辑"
+				"navigationBarTitleText": "帖子编辑",
+				"titleNView": {
+					"buttons": [{
+						"text": "发布",
+						"fontSize": "34rpx",
+						"color": "#EA7034"
+					}]
+				}
 			}
 		},
 		{
@@ -646,19 +653,46 @@
 				"navigationBarTitleText": "礼品卡兑换"
 			}
 		}, {
-			"path": "pages/community/frame/index",
+			"path": "pages/community/index",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "社区",
-				"navigationStyle": "custom"
+				"enablePullDownRefresh": true
+			}
+		}, {
+			"path": "pages/community/circles",
+			"style": {
+				"navigationBarTitleText": "圈子广场",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/community/createCircle",
+			"style": {
+				"navigationBarTitleText": "创建圈子"
+			}
+		},
+		{
+			"path": "pages/community/circle",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "圈子详情"
+			}
+		},
+		{
+			"path": "pages/community/postDetail",
+			"style": {
+				"navigationBarTitleText": "帖子详情",
+				"enablePullDownRefresh": true
 			}
 		}
     ],
 	"tabBar": {
-		"color": "#7A7E83",
+		"color": "#A5987E",
 		"selectedColor": "#d3442b",
 		"borderStyle": "white",
 		"backgroundColor": "#ffffff",
-		"spacing": "7rpx",
+		"spacing": "4rpx",
 		"list": [{
 				"pagePath": "pages/bookcase/index",
 				"iconPath": "./static/menu_bar/icon_books_unselected.png",
@@ -672,9 +706,9 @@
 				"text": "书库"
 			},
 			{
-				"pagePath": "pages/community/frame/index",
-				"iconPath": "./static/menu_bar/icon_社区_unselected.png",
-				"selectedIconPath": "./static/menu_bar/icon_社区_selected.png",
+				"pagePath": "pages/community/index",
+				"iconPath": "./static/menu_bar/icon_community_unselected.png",
+				"selectedIconPath": "./static/menu_bar/icon_community_selected.png",
 				"text": "社区"
 			},
 			{
@@ -690,9 +724,9 @@
 				"text": "我的"
 			}
 		],
-		"height": "130rpx",
-		"iconWidth": "60rpx",
-		"fontSize": "25rpx"
+		"height": "110rpx",
+		"iconWidth": "46rpx",
+		"fontSize": "23rpx"
 	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

@@ -1,7 +1,6 @@
 <template>
     <div class="community-frame-container">
-        <web-view id="blogIframe" :src="url" frameborder="0" class="pc iframe" scrolling="auto">
-        </web-view>
+        <web-view id="blogIframe" :src="url" frameborder="0" class="pc iframe" scrolling="auto"> </web-view>
     </div>
 
 </template>
@@ -44,7 +43,6 @@ export default {
             })
 
             postman.listen((msg, e) => {
-                console.log("gotMsg", msg)
                 if (!msg.type) return;
                 switch (msg.type) {
                     case "LOGIN_NEEDED":
@@ -54,7 +52,7 @@ export default {
                         break;
                     case "REFRESH_TABBAR":
                         let url = msg.currentUrl.split('#')[1];
-                        if (url && url == '/') {
+                        if (url && (url == '/' || url.indexOf('/pages/auth/external_login') != -1)) {
                             uni.showTabBar();
                         } else {
                             uni.hideTabBar();

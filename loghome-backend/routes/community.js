@@ -8,6 +8,15 @@ let moment = require('moment');
 const SECRET = require('../SECRET.js').SECRET;
 let message = require('../bin/message.js');
 
+// 引入子路由
+const circlesRouter = require('./community/circles.js');
+const postsRouter = require('./community/posts.js');
+const commentsRouter = require('./community/comments.js');
+const interactionsRouter = require('./community/interactions.js');
+const searchRouter = require('./community/search.js');
+const notificationsRouter = require('./community/notifications.js');
+const auditRouter = require('./community/audit.js');
+
 let router = express.Router();
 
 router.get('/get_follows_of', async function (req, res) {
@@ -672,5 +681,14 @@ router.get('/unread_messages_count', auth, async function (req, res) {
 		res.status(500).json({ msg: 'Internal server error' });
 	}
 });
+
+// 注册子路由
+router.use('/circles', circlesRouter);
+router.use('/posts', postsRouter);
+router.use('/comments', commentsRouter);
+router.use('/interactions', interactionsRouter);
+router.use('/search', searchRouter);
+router.use('/notifications', notificationsRouter);
+router.use('/audit', auditRouter);
 
 module.exports = router;
