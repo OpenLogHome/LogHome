@@ -34,6 +34,14 @@ class _WebViewPageState extends State<WebViewPage> {
   void initState() {
     super.initState();
     _verifyResourcePath();
+    // 设置状态栏为白色背景，黑色图标
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.white,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
+    // 设置为edgeToEdge模式，确保状态栏显示
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
   // 验证资源文件是否存在，不存在则重新初始化
@@ -330,19 +338,20 @@ class _WebViewPageState extends State<WebViewPage> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final bottomPadding = mediaQuery.padding.bottom;
+    final topPadding = mediaQuery.padding.top;
 
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         // 设置为true允许内容区域随键盘调整
         resizeToAvoidBottomInset: true,
-        body: Container(
-          width: MediaQuery.of(context).size.width,
-          color: Colors.black,
-          margin: const EdgeInsets.all(0),
-          padding: const EdgeInsets.all(0),
-          child: Padding(
-            padding: EdgeInsets.only(bottom: bottomPadding),
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            color: Colors.white,
+            margin: const EdgeInsets.all(0),
+            padding: const EdgeInsets.all(0),
             child: FutureBuilder<UnmodifiableListView<UserScript>>(
               future: _prepareUserScripts(),
               builder: (context, snapshot) {
