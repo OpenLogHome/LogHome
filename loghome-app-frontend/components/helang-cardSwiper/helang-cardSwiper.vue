@@ -1,5 +1,5 @@
 <template>
-	<view :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view>
 		<view class="top-swiper">
 			 <view class="bg">
 				 <view class="placeholder"></view>

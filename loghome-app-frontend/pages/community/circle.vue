@@ -1,5 +1,5 @@
 <template>
-  <view class="circle-container" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+  <view class="circle-container" :style="{'--statusBarHeight': 0 + 'px'}">
     <!-- 添加后退导航栏 -->
     <zetank-backBar textcolor="#fff" :showLeft="true" :showHome="true" :showTitle="false" navTitle="圈子详情"></zetank-backBar>
     
@@ -32,7 +32,34 @@
         <view class="action-btn" @tap="showCircleInfo">
           圈子公告
         </view>
+        <!-- 添加编辑按钮，仅圈主和管理员可见 -->
+        <view class="action-btn" v-if="isJoined && (userRole === 1 || userRole === 2)" @tap="editCircle">
+          圈子设置
+        </view>
       </view>
+    </view>
+    
+    <!-- 圈子成员模块 -->
+    <view class="circle-members">
+      <view class="section-header">
+        <text class="section-title">成员 ({{circle.member_count || 0}})</text>
+        <view class="more-btn" @tap="navigateToMembers">
+          <text>更多</text>
+          <uni-icons type="right" size="14" color="#999"></uni-icons>
+        </view>
+      </view>
+      <scroll-view scroll-x class="members-scroll" show-scrollbar="false">
+        <view class="members-list">
+          <view class="member-item" v-for="(member, index) in members" :key="index" @tap="navigateToUser(member.user_id)">
+            <view class="member-avatar-wrapper">
+              <log-image class="member-avatar" :src="member.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <view class="member-role" v-if="member.role === 2">圈主</view>
+              <view class="member-role admin" v-else-if="member.role === 1">管理员</view>
+            </view>
+            <text class="member-name">{{member.name}}</text>
+          </view>
+        </view>
+      </scroll-view>
     </view>
     
     <!-- 帖子筛选 -->
@@ -165,6 +192,7 @@ export default {
       ],
       currentFilter: 'all',
       posts: [],
+      members: [], // 圈子成员列表
       page: 1,
       pageSize: 10,
       isRefreshing: false,
@@ -182,6 +210,7 @@ export default {
       this.circleId = options.id;
       this.checkLoginStatus();
       this.loadCircleInfo();
+      this.loadMembers(); // 加载圈子成员
       this.loadPosts();
     } else {
       uni.showToast({
@@ -193,6 +222,25 @@ export default {
       }, 1500);
     }
   },
+  onShow() {
+    // 如果已经加载过圈子ID，在每次显示页面时刷新数据
+    if (this.circleId) {
+      this.checkLoginStatus();
+      this.checkMemberStatus(); // 刷新成员状态
+      this.loadMembers(); // 刷新成员列表
+      
+      // 刷新帖子列表
+      this.page = 1;
+      this.posts = [];
+      this.hasMore = true;
+      this.loadPosts().then(() => {
+        // 获取帖子点赞状态
+        setTimeout(() => {
+          this.getPostsLikeStatus();
+        }, 100);
+      });
+    }
+  },
   onPullDownRefresh() {
     this.page = 1;
     this.posts = [];
@@ -200,6 +248,7 @@ export default {
     
     Promise.all([
       this.loadCircleInfo(),
+      this.loadMembers(),
       this.loadPosts()
     ]).finally(() => {
       uni.stopPullDownRefresh();
@@ -253,6 +302,22 @@ export default {
         console.error('检查成员状态失败', error);
       }
     },
+    async loadMembers() {
+      try {
+        // 获取圈子成员，按照角色排序，最多获取10个
+        const params = {
+          pageSize: 10,
+          page: 1
+        };
+        const res = await axios.get(this.$baseUrl + `/community/circles/${this.circleId}/members`, { params });
+        
+        if (res.data && res.data.list) {
+          this.members = res.data.list;
+        }
+      } catch (error) {
+        console.error('加载圈子成员失败', error);
+      }
+    },
     async loadPosts() {
       if (!this.hasMore || this.loadingStatus === 'loading') return;
       
@@ -285,7 +350,14 @@ export default {
               } catch (e) {
                 post.media_urls = [];
               }
+            } else {
+              post.media_urls = [];
             }
+            
+            // 初始化点赞状态
+            post.is_liked = false;
+            post.is_liked_checked = false;
+            
             return post;
           });
           
@@ -293,6 +365,13 @@ export default {
           this.page++;
           this.hasMore = this.posts.length < res.data.total;
           this.loadingStatus = this.hasMore ? 'more' : 'noMore';
+          
+          // 获取点赞状态
+          if (this.isLoggedIn) {
+            setTimeout(() => {
+              this.getPostsLikeStatus();
+            }, 100);
+          }
         } else {
           this.loadingStatus = 'noMore';
         }
@@ -343,15 +422,110 @@ export default {
             icon: 'success'
           });
         } else {
-          // 加入圈子
-          await axios.post(this.$baseUrl + '/community/circles/join', {
-            circle_id: this.circleId
-          }, {
-            headers: {
-              'Authorization': 'Bearer ' + token
+          // 检查圈子是否需要验证
+          if (this.circle.need_verification) {
+            this.showJoinVerificationPopup();
+          } else {
+            // 直接加入圈子
+            await this.joinCircle();
+          }
+        }
+      } catch (error) {
+        console.error('操作失败', error);
+        uni.showToast({
+          title: error.response?.data?.msg || '操作失败，请重试',
+          icon: 'none'
+        });
+      }
+    },
+    // 显示加入验证弹窗
+    showJoinVerificationPopup() {
+      uni.showModal({
+        title: '加入圈子',
+        content: '该圈子需要验证才能加入，是否继续？',
+        confirmText: '继续',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            // 获取验证问题
+            this.getVerificationQuestions();
+          }
+        }
+      });
+    },
+    // 获取验证问题
+    async getVerificationQuestions() {
+      try {
+        // 使用公开接口获取验证问题
+        const res = await axios.get(this.$baseUrl + `/community/circles/${this.circleId}/verification-questions`);
+        
+        let verificationPrompt = '请输入验证信息';
+        if (res.data && res.data.verification_questions) {
+          verificationPrompt = res.data.verification_questions;
+        }
+        
+        // 显示输入框
+        uni.showModal({
+          title: verificationPrompt,
+          content: '',
+          editable: true,
+          placeholderText: '请输入...',
+          confirmText: '提交',
+          cancelText: '取消',
+          success: async (res) => {
+            if (res.confirm) {
+              // 提交验证信息
+              await this.joinCircle(res.content);
             }
+          }
+        });
+      } catch (error) {
+        console.error('获取验证问题失败', error);
+        // 如果获取失败，使用默认提示
+        uni.showModal({
+          title: '入圈验证',
+          content: '',
+          editable: true,
+          placeholderText: '请输入...',
+          confirmText: '提交',
+          cancelText: '取消',
+          success: async (res) => {
+            if (res.confirm) {
+              // 提交验证信息
+              await this.joinCircle(res.content);
+            }
+          }
+        });
+      }
+    },
+    // 加入圈子
+    async joinCircle(verification_info = null) {
+      try {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk;
+        const data = {
+          circle_id: this.circleId
+        };
+        
+        // 如果有验证信息，添加到请求中
+        if (verification_info) {
+          data.verification_info = verification_info;
+        }
+        
+        const res = await axios.post(this.$baseUrl + '/community/circles/join', data, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        
+        // 如果需要验证，提示用户等待审核
+        if (this.circle.need_verification) {
+          uni.showToast({
+            title: '申请已提交，等待审核',
+            icon: 'none',
+            duration: 2000
           });
-          
+        } else {
+          // 直接加入成功
           this.isJoined = true;
           this.circle.member_count++;
           
@@ -361,7 +535,7 @@ export default {
           });
         }
       } catch (error) {
-        console.error('操作失败', error);
+        console.error('加入圈子失败', error);
         uni.showToast({
           title: error.response?.data?.msg || '操作失败，请重试',
           icon: 'none'
@@ -384,27 +558,30 @@ export default {
       
       try {
         const token = JSON.parse(window.localStorage.getItem('token')).tk;
-        const url = this.$baseUrl + '/community/interactions/like';
-        const data = {
+        const res = await axios.post(this.$baseUrl + '/community/interactions/like', {
           target_id: post.post_id,
-          target_type: 'post',
-          action: post.is_liked ? 'unlike' : 'like'
-        };
-        
-        await axios.post(url, data, {
+          target_type: 1
+        }, {
           headers: {
             'Authorization': 'Bearer ' + token
           }
         });
         
-        // 更新点赞状态
-        post.is_liked = !post.is_liked;
-        post.like_count += post.is_liked ? 1 : -1;
+        // 根据后端返回的结果更新点赞状态
+        if (res.data && res.data.liked !== undefined) {
+          post.is_liked = res.data.liked;
+          post.like_count += post.is_liked ? 1 : -1;
+        } else {
+          // 如果后端没有返回明确状态，则切换当前状态
+          post.is_liked = !post.is_liked;
+          post.like_count += post.is_liked ? 1 : -1;
+        }
         
+        console.log(`帖子 ${post.post_id} 点赞状态更新为: ${post.is_liked}`);
       } catch (error) {
-        console.error('点赞操作失败', error);
+        console.error('点赞失败', error);
         uni.showToast({
-          title: '操作失败，请重试',
+          title: '操作失败',
           icon: 'none'
         });
       }
@@ -454,6 +631,11 @@ export default {
         url: `/pages/users/personalPage?id=${userId}`
       });
     },
+    navigateToMembers() {
+      uni.navigateTo({
+        url: `/pages/community/circleMembers?id=${this.circleId}&name=${encodeURIComponent(this.circle.name)}`
+      });
+    },
     createPost() {
       if (!this.isLoggedIn) {
         uni.navigateTo({
@@ -470,9 +652,108 @@ export default {
         return;
       }
       
-      uni.navigateTo({
-        url: `/pages/community/postEdit?circle_id=${this.circleId}`
+      // 检查是否被禁言
+      this.checkBanStatus().then(isBanned => {
+        if (isBanned) {
+          // 禁言状态在 checkBanStatus 中已经显示提示，这里不需要额外操作
+          return;
+        }
+        
+        // 未被禁言，跳转到发帖页面
+        uni.navigateTo({
+          url: `/pages/community/postEdit?circle_id=${this.circleId}`
+        });
+      }).catch(error => {
+        console.error('检查禁言状态失败', error);
+        // 出错时，为了用户体验，仍然允许跳转
+        uni.navigateTo({
+          url: `/pages/community/postEdit?circle_id=${this.circleId}`
+        });
       });
+    },
+    // 检查用户在圈子中的禁言状态
+    async checkBanStatus() {
+      try {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk;
+        const res = await axios.get(this.$baseUrl + `/community/circles/${this.circleId}/my-status`, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        
+        if (res.data && res.data.is_banned) {
+          const banInfo = res.data.ban_info;
+          const endTimeText = banInfo.end_time ? 
+            `，将于 ${new Date(banInfo.end_time).toLocaleString()} 解除` : 
+            '，永久禁言';
+            
+          uni.showModal({
+            title: '禁言提示',
+            content: `您在该圈子中已被禁言${endTimeText}，无法发布帖子`,
+            showCancel: false
+          });
+          
+          return true;
+        }
+        
+        return false;
+      } catch (error) {
+        console.error('获取禁言状态失败', error);
+        return false;
+      }
+    },
+    editCircle() {
+      // 跳转到圈子设置页面
+      uni.navigateTo({
+        url: `/pages/community/editCircle?id=${this.circleId}&role=${this.userRole}`
+      });
+    },
+    // 添加获取帖子点赞状态的方法
+    async getPostsLikeStatus() {
+      try {
+        // 检查是否已登录
+        if (!this.isLoggedIn || !window.localStorage.getItem('token')) {
+          console.log('用户未登录，跳过获取点赞状态');
+          return;
+        }
+        
+        const token = JSON.parse(window.localStorage.getItem('token')).tk;
+        
+        // 获取所有未检查点赞状态的帖子
+        const uncheckedPosts = this.posts.filter(post => !post.is_liked_checked);
+        
+        // 如果没有未检查的帖子，直接返回
+        if (uncheckedPosts.length === 0) {
+          return;
+        }
+        
+        console.log(`开始获取${uncheckedPosts.length}个帖子的点赞状态`);
+        
+        // 为每个帖子获取点赞状态
+        for (const post of uncheckedPosts) {
+          try {
+            const res = await axios.get(this.$baseUrl + '/community/interactions/like/status', {
+              params: {
+                target_id: post.post_id,
+                target_type: 1
+              },
+              headers: {
+                'Authorization': 'Bearer ' + token
+              }
+            });
+            
+            // 更新帖子的点赞状态
+            post.is_liked = res.data.liked;
+            post.is_liked_checked = true; // 标记已检查
+            
+            console.log(`帖子 ${post.post_id} 点赞状态: ${post.is_liked}`);
+          } catch (err) {
+            console.error(`获取帖子 ${post.post_id} 点赞状态失败:`, err);
+          }
+        }
+      } catch (error) {
+        console.error('获取点赞状态失败:', error);
+      }
     }
   }
 }
@@ -483,7 +764,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: rgb(255, 248, 234);
+  background-color: #F8F8F8;
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -583,7 +864,7 @@ export default {
 .action-bar {
   display: flex;
   justify-content: space-between;
-  margin-top: 30rpx;
+  margin-top: 20rpx;
 }
 
 .action-btn {
@@ -887,5 +1168,90 @@ export default {
 .member-name {
   font-size: 26rpx;
   color: #333;
+}
+
+.circle-members {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin: 0 20rpx 20rpx 20rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding: 0 10rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.more-btn {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: #999;
+}
+
+.members-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.members-list {
+  display: inline-flex;
+  padding: 10rpx 0;
+}
+
+.member-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 30rpx;
+  width: 100rpx;
+}
+
+.member-avatar-wrapper {
+  position: relative;
+  width: 80rpx;
+  height: 80rpx;
+  margin-bottom: 10rpx;
+}
+
+.member-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+}
+
+.member-role {
+  position: absolute;
+  bottom: -6rpx;
+  right: -10rpx;
+  background-color: #FFD700;
+  padding: 2rpx 8rpx;
+  border-radius: 10rpx;
+  font-size: 18rpx;
+  color: #fff;
+  transform: scale(0.8);
+}
+
+.member-role.admin {
+  background-color: #EA7034;
+}
+
+.member-name {
+  font-size: 22rpx;
+  color: #666;
+  width: 100%;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style> 

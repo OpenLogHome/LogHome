@@ -1,6 +1,6 @@
 <template>
 	<view class="content" v-dark
-		:style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+		:style="{'--statusBarHeight': 0 + 'px'}">
 		<div class="tabBarUnder">
 			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
 				ref="tabs" />

@@ -1,64 +1,36 @@
 <template>
-	<view class="container">		
+	<view class="container">
+		<zetank-backBar title="社区管理"></zetank-backBar>
+		
 		<view class="list-content">
 			<view class="list">
-				<navigator url="./audit/index">
+				<navigator url="./circles">
 					<view class="li">
 						<view class="icon">
-							<!-- <img src="../../static/icons/icon_audit.png"/> -->
+							<!-- <img src="../../../static/icons/icon_circle.png"/> -->
 						</view>
-						<view class="text">文章审核</view>
-						<img class="to" src="../../static/user/to.png"/>
+						<view class="text">圈子管理</view>
+						<img class="to" src="../../../static/user/to.png"/>
 					</view>
 				</navigator>
 				
-				<navigator url="./faqs/index">
+				<navigator url="./posts">
 					<view class="li">
 						<view class="icon">
-							<!-- <img src="../../static/icons/icon_faq.png"/> -->
-						</view>
-						<view class="text">FAQ管理</view>
-						<img class="to" src="../../static/user/to.png"/>
-					</view>
-				</navigator>
-
-				<navigator url="./library/roulous">
-					<view class="li">
-						<view class="icon">
-							<!-- <img src="../../static/icons/icon_library.png"/> -->
-						</view>
-						<view class="text">图书馆轮播管理</view>
-						<img class="to" src="../../static/user/to.png"/>
-					</view>
-				</navigator>
-
-				<navigator url="./posts/index">
-					<view class="li">
-						<view class="icon">
-							<!-- <img src="../../static/icons/icon_posts.png"/> -->
+							<!-- <img src="../../../static/icons/icon_posts.png"/> -->
 						</view>
 						<view class="text">帖子管理</view>
-						<img class="to" src="../../static/user/to.png"/>
+						<img class="to" src="../../../static/user/to.png"/>
 					</view>
 				</navigator>
 				
-				<navigator url="./community/index">
-					<view class="li">
-						<view class="icon">
-							<!-- <img src="../../static/icons/icon_community.png"/> -->
-						</view>
-						<view class="text">社区管理</view>
-						<img class="to" src="../../static/user/to.png"/>
-					</view>
-				</navigator>
-
-				<navigator url="./users/index">
+				<navigator url="./reports">
 					<view class="li noborder">
 						<view class="icon">
-							<!-- <img src="../../static/icons/icon_users.png"/> -->
+							<!-- <img src="../../../static/icons/icon_report.png"/> -->
 						</view>
-						<view class="text">用户管理</view>
-						<img class="to" src="../../static/user/to.png"/>
+						<view class="text">举报处理</view>
+						<img class="to" src="../../../static/user/to.png"/>
 					</view>
 				</navigator>
 			</view>
@@ -83,7 +55,7 @@ export default {
 			});
 			setTimeout(() => {
 				uni.navigateTo({
-					url: '../users/login'
+					url: '../../users/login'
 				});
 			}, 1500);
 			return;

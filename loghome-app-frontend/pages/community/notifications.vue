@@ -171,9 +171,6 @@
 			margin-top: 8rpx;
 			font-size: 28rpx;
 			margin-bottom: 10rpx;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
 		}
 	}
 </style>

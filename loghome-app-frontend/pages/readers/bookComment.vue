@@ -1,7 +1,7 @@
 <template>
-	<view class="commentOuter" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view class="commentOuter" :style="{'--statusBarHeight': 0 + 'px'}">
 		<z-paging ref="paging" v-model="reviews" @onRefresh="pullDown" @query="refreshPage" :customOperationText="componentMode ? '收起' : '刷新'"
-			:style="{'marginTop': `${componentMode ? '20vh' : (jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px')}`}"
+			:style="{'marginTop': `${componentMode ? '20vh' : (0 + 'px')}`}"
 			:default-page-size="componentMode ? 10 : 10">
 			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
 			<div v-if="paragraphId !== undefined" style="background-color: #e6e6e6; padding: 10px; margin: 0 0 5px 0; font-size: 14px;" @click="navToChapter">

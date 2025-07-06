@@ -6,6 +6,7 @@
       class="content-scroll"
       :refresher-triggered="isRefreshing"
       @scrolltolower="loadMoreComments"
+      :style="{ height: scrollHeight + 'px' }"
     >
       <!-- 主帖内容 -->
       <view class="post-content">
@@ -24,7 +25,10 @@
         
         <view class="post-body">
           <text class="post-title">{{post.title}}</text>
-          <text class="post-text">{{post.content}}</text>
+          <view class="post-text">
+            {{post.content}}
+          </view>
+          
           
           <!-- 图片展示 -->
           <view class="post-images" v-if="post.media_urls && post.media_urls.length > 0">
@@ -59,15 +63,15 @@
       
       <!-- 评论列表 -->
       <view class="comments-section">
-        <view class="section-title">评论 {{post.comment_count}}</view>
-        <view class="comments-list">
+        <view class="section-title">评论 {{post.comment_count || 0}}</view>
+        <view class="comments-list" v-if="comments.length > 0">
           <view v-for="comment in comments" :key="comment.comment_id" class="comment-item">
             <!-- 主评论 -->
             <view class="comment-main">
-              <log-image class="comment-avatar" :src="comment.author_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <log-image class="comment-avatar" :src="comment.user_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
               <view class="comment-content">
                 <view class="comment-header">
-                  <text class="comment-username">{{comment.author_name}}</text>
+                  <text class="comment-username">{{comment.user_name}}</text>
                   <text class="comment-time">{{formatTime(comment.create_time)}}</text>
                 </view>
                 <text class="comment-text">{{comment.content}}</text>
@@ -85,7 +89,7 @@
                 <view class="comment-actions">
                   <view class="comment-like" @tap="likeComment(comment)">
                     <uni-icons :type="comment.is_liked ? 'heart-filled' : 'heart'" size="14" :color="comment.is_liked ? '#EA7034' : '#999'"></uni-icons>
-                    <text :class="{'liked': comment.is_liked}">{{comment.like_count}}</text>
+                    <text :class="{'liked': comment.is_liked}">{{comment.like_count || 0}}</text>
                   </view>
                   <text class="comment-reply" @tap="replyToComment(comment)">回复</text>
                 </view>
@@ -95,11 +99,11 @@
             <!-- 子评论 -->
             <view class="replies-list" v-if="comment.replies && comment.replies.length > 0">
               <view v-for="reply in comment.replies" :key="reply.comment_id" class="reply-item">
-                <log-image class="reply-avatar" :src="reply.author_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+                <log-image class="reply-avatar" :src="reply.user_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
                 <view class="reply-content">
                   <view class="reply-header">
-                    <text class="reply-username">{{reply.author_name}}</text>
-                    <text class="reply-target" v-if="reply.reply_to_user">回复 {{reply.reply_to_user}}</text>
+                    <text class="reply-username">{{reply.user_name}}</text>
+                    <text class="reply-target" v-if="reply.reply_user_name">回复 {{reply.reply_user_name}}</text>
                     <text class="reply-time">{{formatTime(reply.create_time)}}</text>
                   </view>
                   <text class="reply-text">{{reply.content}}</text>
@@ -117,7 +121,7 @@
                   <view class="reply-actions">
                     <view class="reply-like" @tap="likeComment(reply)">
                       <uni-icons :type="reply.is_liked ? 'heart-filled' : 'heart'" size="14" :color="reply.is_liked ? '#EA7034' : '#999'"></uni-icons>
-                      <text :class="{'liked': reply.is_liked}">{{reply.like_count}}</text>
+                      <text :class="{'liked': reply.is_liked}">{{reply.like_count || 0}}</text>
                     </view>
                     <text class="reply-btn" @tap="replyToComment(reply, comment)">回复</text>
                   </view>
@@ -130,22 +134,27 @@
           </view>
         </view>
         
+        <view class="no-comments" v-if="comments.length === 0 && !isLoading">
+          <text>暂无评论，快来发表第一条评论吧</text>
+        </view>
+        
         <!-- 加载更多 -->
         <uni-load-more :status="loadingStatus"></uni-load-more>
       </view>
     </scroll-view>
     
     <!-- 评论输入框 -->
-    <view class="comment-input" :class="{'with-image': selectedImages.length > 0}">
+    <view class="comment-input" :class="{'with-image': selectedImages.length > 0}" :style="{ bottom: keyboardHeight + 'px' }">
       <view class="input-wrapper">
         <textarea 
           v-model="commentText" 
-          :placeholder="replyTo ? `回复 ${replyTo.author_name}` : '写下你的评论...'"
+          :placeholder="replyTo ? `回复 ${replyTo.user_name}` : '写下你的评论...'"
           auto-height
           :maxlength="1000"
           :focus="inputFocus"
           @focus="onInputFocus"
           @blur="onInputBlur"
+          adjust-position="false"
         ></textarea>
         <view class="input-actions">
           <view class="image-upload" @tap="chooseImage">
@@ -190,13 +199,23 @@ export default {
       hasMore: true,
       inputFocus: false,
       replyTo: null,
-      parentComment: null
+      parentComment: null,
+      scrollHeight: 0,
+      keyboardHeight: 0,
+      isLoading: true
     }
   },
   onLoad(params) {
     this.postId = params.id
     this.loadPostDetail()
     this.loadComments()
+    this.calculateScrollHeight()
+  },
+  onReady() {
+    this.calculateScrollHeight()
+  },
+  onShow() {
+    this.calculateScrollHeight()
   },
   onPullDownRefresh() {
     Promise.all([
@@ -207,10 +226,20 @@ export default {
     })
   },
   methods: {
+    calculateScrollHeight() {
+      const systemInfo = uni.getSystemInfoSync();
+      const windowHeight = systemInfo.windowHeight;
+      // 假设评论输入框高度为 60px (120rpx)，可以根据实际情况调整
+      const inputHeight = 60;
+      this.scrollHeight = windowHeight - inputHeight;
+    },
     async loadPostDetail() {
       try {
         const res = await axios.get(this.$baseUrl + '/community/posts/detail/' + this.postId)
         this.post = res.data
+        
+        // 获取帖子的点赞状态
+        await this.getLikeStatus()
       } catch (error) {
         uni.showToast({
           title: '加载失败',
@@ -219,10 +248,30 @@ export default {
       }
     },
     
+    async getLikeStatus() {
+      try {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk
+        const res = await axios.get(this.$baseUrl + '/community/interactions/like/status', {
+          params: {
+            target_id: this.postId,
+            target_type: 1
+          },
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        })
+        
+        this.post.is_liked = res.data.liked
+      } catch (error) {
+        console.error('获取点赞状态失败:', error)
+      }
+    },
+    
     async loadComments(refresh = false) {
       if (!refresh && (!this.hasMore || this.loadingStatus === 'loading')) return
       
       this.loadingStatus = 'loading'
+      this.isLoading = true
       try {
         const res = await axios.get(this.$baseUrl + '/community/comments/list', {
           params: {
@@ -232,22 +281,61 @@ export default {
           }
         })
         
-        if (refresh) {
-          this.comments = res.data.list || []
-          this.page = 1
-        } else {
-          this.comments.push(...(res.data.list || []))
-          this.page++
+        // 处理评论数据
+        const comments = res.data.list || [];
+        for (let comment of comments) {
+          // 处理媒体URL
+          if (comment.image_url) {
+            comment.media_urls = [comment.image_url];
+          } else {
+            comment.media_urls = [];
+          }
+          
+          // 初始化回复数组
+          comment.replies = [];
+          comment.total_replies = comment.reply_count || 0;
+          
+          // 获取评论的点赞状态
+          await this.getCommentLikeStatus(comment);
         }
         
-        this.hasMore = res.data.list && res.data.list.length === this.pageSize
-        this.loadingStatus = this.hasMore ? 'more' : 'noMore'
+        if (refresh) {
+          this.comments = comments;
+          this.page = 1;
+        } else {
+          this.comments.push(...comments);
+          this.page++;
+        }
+        
+        this.hasMore = comments.length === this.pageSize;
+        this.loadingStatus = this.hasMore ? 'more' : 'noMore';
       } catch (error) {
-        this.loadingStatus = 'more'
+        this.loadingStatus = 'more';
         uni.showToast({
           title: '加载失败',
           icon: 'none'
         })
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
+    async getCommentLikeStatus(comment) {
+      try {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk
+        const res = await axios.get(this.$baseUrl + '/community/interactions/like/status', {
+          params: {
+            target_id: comment.comment_id,
+            target_type: 2
+          },
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        })
+        
+        comment.is_liked = res.data.liked
+      } catch (error) {
+        console.error('获取评论点赞状态失败:', error)
       }
     },
     
@@ -261,7 +349,21 @@ export default {
           }
         })
         
-        comment.replies.push(...(res.data.list || []))
+        // 处理回复数据
+        const replies = res.data.list || [];
+        for (let reply of replies) {
+          // 处理媒体URL
+          if (reply.image_url) {
+            reply.media_urls = [reply.image_url];
+          } else {
+            reply.media_urls = [];
+          }
+          
+          // 获取回复的点赞状态
+          await this.getCommentLikeStatus(reply);
+        }
+        
+        comment.replies.push(...replies);
       } catch (error) {
         uni.showToast({
           title: '加载失败',
@@ -272,14 +374,20 @@ export default {
     
     async likePost() {
       try {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk
         await axios.post(this.$baseUrl + '/community/interactions/like', {
           target_id: this.post.post_id,
           target_type: 1
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
         })
         
         this.post.is_liked = !this.post.is_liked
         this.post.like_count += this.post.is_liked ? 1 : -1
       } catch (error) {
+        console.error('点赞失败:', error);
         uni.showToast({
           title: '操作失败',
           icon: 'none'
@@ -289,14 +397,20 @@ export default {
     
     async likeComment(comment) {
       try {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk
         await axios.post(this.$baseUrl + '/community/interactions/like', {
           target_id: comment.comment_id,
           target_type: 2
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
         })
         
         comment.is_liked = !comment.is_liked
         comment.like_count += comment.is_liked ? 1 : -1
       } catch (error) {
+        console.error('点赞失败:', error);
         uni.showToast({
           title: '操作失败',
           icon: 'none'
@@ -315,26 +429,24 @@ export default {
       
       try {
         // 先上传图片
-        const mediaUrls = []
+        let image_url = null;
         if (this.selectedImages.length > 0) {
           uni.showLoading({ title: '正在上传图片...' })
-          for (const image of this.selectedImages) {
-            const uploadRes = await this.uploadFile(image)
-            mediaUrls.push(uploadRes.url)
-          }
+          const uploadRes = await this.uploadFile(this.selectedImages[0]);
+          image_url = uploadRes.url;
         }
         
         // 发送评论
         const data = {
           post_id: this.postId,
           content: this.commentText,
-          media_urls: mediaUrls
+          image_url: image_url
         }
         
         if (this.replyTo) {
-          data.reply_to_id = this.replyTo.comment_id
+          data.reply_to_user_id = this.replyTo.user_id;
           if (this.parentComment) {
-            data.parent_id = this.parentComment.comment_id
+            data.parent_id = this.parentComment.comment_id;
           }
         }
         
@@ -343,7 +455,7 @@ export default {
         
         await axios.post(this.$baseUrl + '/community/comments/create', data, {
           headers: {
-            'Authorization': token
+            'Authorization': 'Bearer ' + token
           }
         })
         
@@ -446,7 +558,24 @@ export default {
     },
     
     formatTime(time) {
-      return moment(time).fromNow()
+      const now = moment();
+      const postTime = moment(time);
+      const diff = now.diff(postTime, 'minutes');
+      
+      if (diff < 1) return '刚刚';
+      if (diff < 60) return `${diff}分钟前`;
+      
+      const hourDiff = now.diff(postTime, 'hours');
+      if (hourDiff < 24) return `${hourDiff}小时前`;
+      
+      const dayDiff = now.diff(postTime, 'days');
+      if (dayDiff < 30) return `${dayDiff}天前`;
+      
+      const monthDiff = now.diff(postTime, 'months');
+      if (monthDiff < 12) return `${monthDiff}个月前`;
+      
+      const yearDiff = now.diff(postTime, 'years');
+      return `${yearDiff}年前`;
     },
     
     navigateToUser(userId) {
@@ -469,8 +598,13 @@ export default {
       this.inputFocus = true
     },
     
-    onInputFocus() {
-      // 可以在这里添加额外的聚焦逻辑
+    onInputFocus(e) {
+      // 监听键盘高度
+      uni.onKeyboardHeightChange(res => {
+        this.keyboardHeight = res.height;
+        // 重新计算滚动区域高度
+        this.calculateScrollHeight();
+      });
     },
     
     onInputBlur() {
@@ -479,6 +613,9 @@ export default {
           this.replyTo = null
           this.parentComment = null
         }
+        // 键盘收起后重置高度
+        this.keyboardHeight = 0;
+        this.calculateScrollHeight();
       }, 100)
     }
   }
@@ -489,13 +626,18 @@ export default {
 .post-detail {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  // height: 100vh;
   background-color: #f8f8f8;
+  position: relative;
 }
 
 .content-scroll {
   flex: 1;
-  height: 0;
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
 }
 
 .post-content {
@@ -563,6 +705,8 @@ export default {
   font-size: 28rpx;
   color: #666;
   line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .post-images {
@@ -617,6 +761,7 @@ export default {
 .comments-section {
   background-color: #fff;
   padding: 20rpx;
+  min-height: 200rpx;
 }
 
 .section-title {
@@ -624,6 +769,15 @@ export default {
   font-weight: bold;
   color: #333;
   margin-bottom: 20rpx;
+}
+
+.no-comments {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60rpx 0;
+  color: #999;
+  font-size: 28rpx;
 }
 
 .comment-item {
@@ -640,10 +794,12 @@ export default {
   height: 64rpx;
   border-radius: 50%;
   margin-right: 20rpx;
+  flex-shrink: 0;
 }
 
 .comment-content {
   flex: 1;
+  overflow: hidden;
 }
 
 .comment-header {
@@ -656,18 +812,24 @@ export default {
   font-size: 28rpx;
   font-weight: bold;
   color: #333;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .comment-time {
   font-size: 24rpx;
   color: #999;
-  margin-left: 20rpx;
+  margin-left: auto;
 }
 
 .comment-text {
   font-size: 28rpx;
   color: #666;
   line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .comment-images {
@@ -731,10 +893,12 @@ export default {
   height: 48rpx;
   border-radius: 50%;
   margin-right: 16rpx;
+  flex-shrink: 0;
 }
 
 .reply-content {
   flex: 1;
+  overflow: hidden;
 }
 
 .reply-header {
@@ -748,23 +912,34 @@ export default {
   font-size: 26rpx;
   font-weight: bold;
   color: #333;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reply-target {
   font-size: 26rpx;
   color: #666;
   margin: 0 10rpx;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reply-time {
   font-size: 22rpx;
   color: #999;
+  margin-left: auto;
 }
 
 .reply-text {
   font-size: 26rpx;
   color: #666;
   line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .reply-images {
@@ -819,6 +994,11 @@ export default {
   border-top: 1rpx solid #f0f0f0;
   padding: 20rpx;
   transition: all 0.3s;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
 }
 
 .comment-input.with-image {

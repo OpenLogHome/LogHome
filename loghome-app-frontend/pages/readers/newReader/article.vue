@@ -1,7 +1,7 @@
 <template>
 	<div class="readerOuter"
 		:style="{ 'backgroundColor': themesData[readerSettings.theme].isBlack ? '#262822' : '#F7F7F7', 
-				  '--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+				  '--statusBarHeight': 0 + 'px'}">
 		<div class="tools" :class="{ opened: settingsOpened }"
 			@click.self="handleCloseTool" ref="tools">
 			<div class="settings" :class="{ opened: settingsOpened, showReaderSetting: showReaderSetting }"
@@ -1155,7 +1155,7 @@ export default {
 				window.localStorage.setItem("newReaderSettings", JSON.stringify(this.readerSettings));
 				// 状态栏颜色调整
 				if(this.jsBridge && this.jsBridge.inApp) {
-					jsBridge.setStatusBarStyle(this.themesData[this.readerSettings.theme].isBlack)
+					jsBridge.setSystemUIStyle(this.themesData[this.readerSettings.theme].backgroundColor, this.themesData[this.readerSettings.theme].fontColor);
 				}
 			},
 			deep: true

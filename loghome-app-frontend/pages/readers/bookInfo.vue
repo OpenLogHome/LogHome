@@ -1,5 +1,5 @@
 <template>
-	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view class="content" :style="{'--statusBarHeight': 0 + 'px'}">
 		<div class="gift_box" id="gift_box">
 			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
@@ -71,7 +71,7 @@
 				<div class="image"></div>
 			</div>
 
-			<springBack :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + ${jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'})`">
+			<springBack :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + ${0 + 'px'})`">
 
 				<div class="b-content" style="padding:32rpx;">
 					<p class="l-dd-content" @click="showDescription(bookInfo.content)">

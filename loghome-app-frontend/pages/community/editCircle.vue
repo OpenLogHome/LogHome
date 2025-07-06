@@ -1,9 +1,9 @@
-<!-- 创建圈子页面 -->
+<!-- 圈子设置页面 -->
 <template>
-  <view class="create-circle-container">
-    
+  <view class="edit-circle-container">
     <!-- 表单内容 -->
     <scroll-view scroll-y class="form-scroll">
+      
       <!-- 圈子图标 -->
       <view class="form-item">
         <text class="form-label">圈子图标</text>
@@ -28,7 +28,7 @@
         </view>
       </view>
       
-      <!-- 圈子名称 -->
+      <!-- 圈子名称 (仅圈主可编辑) -->
       <view class="form-item">
         <text class="form-label">圈子名称</text>
         <input 
@@ -37,23 +37,9 @@
           placeholder="请输入圈子名称（2-20个字符）"
           class="form-input"
           maxlength="20"
+          :disabled="userRole !== 2"
         />
-      </view>
-      
-      <!-- 圈子分类 -->
-      <view class="form-item">
-        <text class="form-label">圈子分类</text>
-        <picker 
-          :range="categories" 
-          range-key="name"
-          @change="onCategoryChange"
-          class="category-picker"
-        >
-          <view class="picker-value">
-            {{selectedCategory ? selectedCategory.name : '请选择圈子分类'}}
-            <uni-icons type="right" size="16" color="#999"></uni-icons>
-          </view>
-        </picker>
+        <text v-if="userRole !== 2" class="tip-text">只有圈主可以修改圈子名称</text>
       </view>
       
       <!-- 圈子简介 -->
@@ -80,19 +66,52 @@
         <text class="word-count">{{formData.rules.length}}/500</text>
       </view>
       
-      <!-- 创建须知 -->
-      <view class="notice-box">
-        <text class="notice-title">创建须知：</text>
-        <text class="notice-item">1. 账号注册满30天且无违规记录</text>
-        <text class="notice-item">2. 圈子名称不能重复</text>
-        <text class="notice-item">3. 圈子创建后需要等待审核</text>
-        <text class="notice-item">4. 创建成功后您将成为圈主</text>
+      <!-- 圈子公告 -->
+      <view class="form-item">
+        <text class="form-label">圈子公告</text>
+        <textarea 
+          v-model="formData.announcement"
+          placeholder="请输入圈子公告（可选）"
+          class="form-textarea"
+          maxlength="500"
+        ></textarea>
+        <text class="word-count">{{formData.announcement.length}}/500</text>
+      </view>
+      
+      <!-- 圈子设置 (仅圈主可见) -->
+      <view class="form-item" v-if="userRole === 2">
+        <text class="form-label">圈子设置</text>
+        
+        <!-- 加入验证设置 -->
+        <view class="setting-item">
+          <view class="setting-header">
+            <text class="setting-title">加入验证</text>
+            <switch 
+              :checked="circleSettings.need_verification === 1" 
+              color="#EA7034" 
+              @change="toggleVerification"
+            />
+          </view>
+          <text class="setting-desc">开启后，用户加入圈子需要经过审核</text>
+          
+          <!-- 验证问题设置 -->
+          <view class="verification-questions" v-if="circleSettings.need_verification === 1">
+            <text class="question-label">验证信息提示（可选）</text>
+            <textarea 
+              v-model="circleSettings.verification_questions"
+              placeholder="请输入验证提示信息，例如：请简要介绍自己，以及为什么想加入本圈子"
+              class="form-textarea"
+              maxlength="200"
+            ></textarea>
+            <text class="word-count">{{(circleSettings.verification_questions || '').length}}/200</text>
+          </view>
+        </view>
       </view>
     </scroll-view>
     
     <!-- 提交按钮 -->
     <view class="submit-btn" @tap="submitForm" :class="{ disabled: !isFormValid }">
-      提交申请
+      保存修改
     </view>
   </view>
 </template>
@@ -103,51 +122,124 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      categories: [],
-      selectedCategory: null,
+      circleId: null,
+      userRole: 0, // 0-普通成员 1-管理员 2-圈主
       formData: {
         name: '',
         description: '',
         rules: '',
+        announcement: '',
         icon: '',
-        bg_url: '',
-        category_id: null
-      }
+        bg_url: ''
+      },
+      circleSettings: {
+        need_verification: 0,
+        verification_questions: ''
+      },
+      originalData: {}, // 用于存储原始数据，比较是否有修改
+      originalSettings: {} // 用于存储原始设置，比较是否有修改
     }
   },
   computed: {
     isFormValid() {
       return this.formData.name.length >= 2 &&
-             this.formData.description.length >= 10 &&
-             this.formData.icon &&
-             this.formData.category_id;
+             this.formData.description.length >= 10;
+    },
+    hasChanges() {
+      const basicInfoChanged = this.formData.name !== this.originalData.name ||
+             this.formData.description !== this.originalData.description ||
+             this.formData.rules !== this.originalData.rules ||
+             this.formData.announcement !== this.originalData.announcement ||
+             this.formData.icon !== this.originalData.icon ||
+             this.formData.bg_url !== this.originalData.bg_url;
+             
+      const settingsChanged = this.circleSettings.need_verification !== this.originalSettings.need_verification ||
+             this.circleSettings.verification_questions !== this.originalSettings.verification_questions;
+             
+      return basicInfoChanged || settingsChanged;
     }
   },
-  onLoad() {
-    this.loadCategories();
+  onLoad(options) {
+    if (options.id) {
+      this.circleId = options.id;
+      if (options.role) {
+        this.userRole = parseInt(options.role);
+      }
+      this.loadCircleInfo();
+      if (this.userRole === 2) {
+        this.loadCircleSettings();
+      }
+    } else {
+      uni.showToast({
+        title: '参数错误',
+        icon: 'none'
+      });
+      setTimeout(() => {
+        uni.navigateBack();
+      }, 1500);
+    }
   },
   methods: {
     goBack() {
       uni.navigateBack();
     },
-    async loadCategories() {
+    async loadCircleInfo() {
       try {
-        const res = await axios.get(this.$baseUrl + '/community/circles/categories');
-        if (res.data && res.data.length > 0) {
-          this.categories = res.data;
+        const res = await axios.get(this.$baseUrl + `/community/circles/detail/${this.circleId}`);
+        
+        if (res.data) {
+          // 填充表单数据
+          this.formData = {
+            name: res.data.name || '',
+            description: res.data.description || '',
+            rules: res.data.rules || '',
+            announcement: res.data.announcement || '',
+            icon: res.data.icon || '',
+            bg_url: res.data.bg_url || ''
+          };
+          
+          // 保存原始数据
+          this.originalData = {...this.formData};
         }
       } catch (error) {
-        console.error('加载分类失败', error);
+        console.error('加载圈子信息失败', error);
         uni.showToast({
-          title: '加载分类失败',
+          title: '加载圈子信息失败',
           icon: 'none'
         });
       }
     },
-    onCategoryChange(e) {
-      const index = e.detail.value;
-      this.selectedCategory = this.categories[index];
-      this.formData.category_id = this.selectedCategory.category_id;
+    async loadCircleSettings() {
+      try {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk;
+        // 获取圈子设置
+        const res = await axios.get(this.$baseUrl + `/community/circles/${this.circleId}/settings`, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        
+        if (res.data) {
+          this.circleSettings = {
+            need_verification: res.data.need_verification || 0,
+            verification_questions: res.data.verification_questions || ''
+          };
+          
+          // 保存原始设置
+          this.originalSettings = {...this.circleSettings};
+        }
+      } catch (error) {
+        console.error('加载圈子设置失败', error);
+        // 如果设置不存在，使用默认值
+        this.circleSettings = {
+          need_verification: 0,
+          verification_questions: ''
+        };
+        this.originalSettings = {...this.circleSettings};
+      }
+    },
+    toggleVerification(e) {
+      this.circleSettings.need_verification = e.detail.value ? 1 : 0;
     },
     async uploadIcon() {
       try {
@@ -238,28 +330,48 @@ export default {
         return;
       }
       
+      if (!this.hasChanges) {
+        uni.showToast({
+          title: '未做任何修改',
+          icon: 'none'
+        });
+        return;
+      }
+      
       try {
         const token = JSON.parse(window.localStorage.getItem('token')).tk;
-        const res = await axios.post(this.$baseUrl + '/community/circles/create', this.formData, {
+        
+        // 更新圈子基本信息
+        const res = await axios.put(this.$baseUrl + `/community/circles/${this.circleId}`, this.formData, {
           headers: {
             'Authorization': 'Bearer ' + token
           }
         });
         
-        if (res.data) {
-          uni.showToast({
-            title: '申请提交成功',
-            icon: 'success'
+        // 如果是圈主，更新圈子设置
+        if (this.userRole === 2) {
+          await axios.put(this.$baseUrl + `/community/circles/${this.circleId}/settings`, {
+            need_verification: this.circleSettings.need_verification,
+            verification_questions: this.circleSettings.verification_questions
+          }, {
+            headers: {
+              'Authorization': 'Bearer ' + token
+            }
           });
-          
-          setTimeout(() => {
-            uni.navigateBack();
-          }, 1500);
         }
-      } catch (error) {
-        console.error('创建圈子失败', error);
+        
         uni.showToast({
-          title: error.response?.data?.msg || '创建失败，请重试',
+          title: '修改成功',
+          icon: 'success'
+        });
+        
+        setTimeout(() => {
+          uni.navigateBack();
+        }, 1500);
+      } catch (error) {
+        console.error('修改圈子信息失败', error);
+        uni.showToast({
+          title: error.response?.data?.msg || '修改失败，请重试',
           icon: 'none'
         });
       }
@@ -269,19 +381,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.create-circle-container {
+.edit-circle-container {
   display: flex;
   flex-direction: column;
-  // height: 100vh;
+//   height: 100vh;
   background-color: rgb(255, 248, 234);
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
+  padding-top: 20rpx;
 }
 
 .form-scroll {
   flex: 1;
-  padding: 20rpx 30rpx;
+  padding: 0 30rpx;
   padding-bottom: 120rpx;
   width: 100%;
   box-sizing: border-box;
@@ -360,23 +473,16 @@ export default {
   box-sizing: border-box;
 }
 
-.category-picker {
-  height: 80rpx;
-  width: 100%;
+.form-input:disabled {
+  background-color: #f0f0f0;
+  color: #999;
 }
 
-.picker-value {
-  height: 80rpx;
-  background-color: #f8f8f8;
-  border-radius: 8rpx;
-  padding: 0 20rpx;
-  font-size: 28rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #333;
-  width: 100%;
-  box-sizing: border-box;
+.tip-text {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 10rpx;
+  display: block;
 }
 
 .form-textarea {
@@ -399,32 +505,42 @@ export default {
   box-sizing: border-box;
 }
 
-.notice-box {
-  background-color: #fff;
-  border-radius: 12rpx;
+.setting-item {
+  background-color: #f8f8f8;
+  border-radius: 8rpx;
   padding: 20rpx;
   margin-bottom: 20rpx;
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.notice-title {
+.setting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.setting-title {
   font-size: 28rpx;
   color: #333;
   font-weight: bold;
-  margin-bottom: 20rpx;
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.notice-item {
+.setting-desc {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.verification-questions {
+  margin-top: 20rpx;
+}
+
+.question-label {
   font-size: 26rpx;
-  color: #666;
+  color: #333;
   margin-bottom: 10rpx;
   display: block;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .submit-btn {
@@ -441,9 +557,11 @@ export default {
   justify-content: center;
   align-items: center;
   z-index: 10;
+  box-shadow: 0 4rpx 12rpx rgba(234, 112, 52, 0.3);
 }
 
 .submit-btn.disabled {
   background-color: #ccc;
+  box-shadow: none;
 }
 </style> 

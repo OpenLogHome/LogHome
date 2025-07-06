@@ -1,5 +1,5 @@
 <template>
-	<view class="top_nav" :style="{background:bgColor, '--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view class="top_nav" :style="{background:bgColor, '--statusBarHeight': 0 + 'px'}">
 		<view class="toBar" :style="'height:'+toBarHeight">
 			<view>
 				<block v-if="showLeft == true">

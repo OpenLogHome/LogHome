@@ -197,6 +197,49 @@ router.post('/create', auth, async (req, res) => {
             return res.status(403).json({ msg: '您不是该圈子成员，无法发布帖子' });
         }
         
+        // 检查用户是否被禁言
+        if (member[0].is_banned === 1) {
+            // 获取禁言详情
+            const banInfo = await query(
+                `SELECT * FROM comm_circle_bans 
+                 WHERE circle_id = ? AND user_id = ? AND ban_type = 0 AND status = 1
+                 ORDER BY create_time DESC LIMIT 1`,
+                [circle_id, user.user_id]
+            );
+            
+            if (banInfo.length > 0) {
+                // 检查禁言是否已过期
+                if (banInfo[0].end_time) {
+                    const endTime = new Date(banInfo[0].end_time);
+                    const now = new Date();
+                    
+                    if (endTime > now) {
+                        return res.status(403).json({ 
+                            msg: '您已被禁言，无法发布帖子',
+                            ban_info: banInfo[0]
+                        });
+                    } else {
+                        // 禁言已过期，更新状态
+                        await query(
+                            'UPDATE comm_circle_members SET is_banned = 0, ban_end_time = NULL WHERE circle_id = ? AND user_id = ?',
+                            [circle_id, user.user_id]
+                        );
+                        
+                        await query(
+                            'UPDATE comm_circle_bans SET status = 0 WHERE ban_id = ?',
+                            [banInfo[0].ban_id]
+                        );
+                    }
+                } else {
+                    // 永久禁言
+                    return res.status(403).json({ 
+                        msg: '您已被永久禁言，无法发布帖子',
+                        ban_info: banInfo[0]
+                    });
+                }
+            }
+        }
+        
         // 检查标签是否属于该圈子
         if (tag_ids && tag_ids.length > 0) {
             for (const tagId of tag_ids) {
@@ -224,9 +267,8 @@ router.post('/create', auth, async (req, res) => {
             mediaUrlsJson = JSON.stringify(media_urls);
         }
         
-        // 判断是否需要审核
-        const isOfficial = circle[0].is_official === 1;
-        const initialStatus = isOfficial ? 1 : 0; // 官方圈子直接发布，用户圈子需要审核
+        // 判断是否需要审核 - 改为用户加入圈子后直接发布，无需审核
+        const initialStatus = 1; // 直接发布
         
         // 创建帖子
         const result = await query(
@@ -273,7 +315,13 @@ router.post('/create', auth, async (req, res) => {
         );
         
         // 如果需要审核，通知管理员
-        if (!isOfficial) {
+        if (initialStatus === 1) { // 直接发布，不通知管理员
+            res.json({ 
+                msg: '帖子发布成功',
+                post_id: postId,
+                status: initialStatus
+            });
+        } else { // 需要审核，通知管理员
             // 获取圈主和管理员
             const admins = await query(
                 'SELECT user_id FROM comm_circle_members WHERE circle_id = ? AND (role = 1 OR role = 2) AND status = 1',
@@ -292,12 +340,6 @@ router.post('/create', auth, async (req, res) => {
             
             res.json({ 
                 msg: '帖子已提交，等待审核',
-                post_id: postId,
-                status: initialStatus
-            });
-        } else {
-            res.json({ 
-                msg: '帖子发布成功',
                 post_id: postId,
                 status: initialStatus
             });

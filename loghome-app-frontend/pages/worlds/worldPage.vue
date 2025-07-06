@@ -1,5 +1,5 @@
 <template>
-	<div class="outer" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<div class="outer" :style="{'--statusBarHeight': 0 + 'px'}">
 		<div class="top">
 			<zetank-backBar textcolor="#000" :showLeft="true" :showHome="true" :showTitle="false"
 				navTitle='标题'></zetank-backBar>

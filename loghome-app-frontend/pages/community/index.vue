@@ -25,7 +25,7 @@
       <!-- 推荐圈子 -->
       <view class="section" v-if="recommendCircles && recommendCircles.length > 0">
         <view class="section-header">
-          <text class="section-title">推荐圈子</text>
+          <text class="section-title">圈子</text>
           <text class="section-more" @tap="navigateToCircles">更多</text>
         </view>
         <view class="square-grid">
@@ -57,11 +57,6 @@
             </view>
             <!-- 第二行：一个小图 + 全部圈子按钮 -->
             <view class="square-grid-bottom">
-              <view class="bottom-item" @tap="navigateToCircle(getCircleId(3))" v-if="hasCircle(3)">
-                <image mode="aspectFill" :src="getCircleIcon(3)"></image>
-                <view>{{ getCircleName(3) }}</view>
-                <text>{{ getCircleMemberCount(3) }}人</text>
-              </view>
               <view class="bottom-item all-circles" @tap="navigateToCircles">
                 <view>全部圈子</view>
                 <uni-icons type="arrow-right" size="16"></uni-icons>
@@ -74,7 +69,7 @@
       <!-- 帖子列表 -->
       <view class="section">
         <view class="section-header">
-          <text class="section-title">推荐帖子</text>
+          <text class="section-title">帖子</text>
           <view class="section-actions">
             <text class="sort-btn" :class="{active: sortType === 'hot'}" @tap="changeSort('hot')">热门</text>
             <text class="sort-btn" :class="{active: sortType === 'new'}" @tap="changeSort('new')">最新</text>
@@ -88,7 +83,7 @@
                 <image class="user-avatar" :src="post.author_avatar" mode="aspectFill"></image>
                 <view class="user-meta">
                   <text class="user-name">{{post.author_name}}</text>
-                  <text class="post-time">{{formatTime(post.create_time)}}</text>
+                  <view class="post-time">{{formatTime(post.create_time)}}</view>
                 </view>
               </view>
               <view class="post-circle" @tap.stop="navigateToCircle(post.circle_id)">
@@ -168,6 +163,11 @@ export default {
     this.loadRecommendCircles();
     this.loadPosts();
     this.getUnreadCount();
+    
+    // 确保在页面完全加载后获取点赞状态
+    setTimeout(() => {
+      this.getPostsLikeStatus();
+    }, 500);
   },
 
   onPullDownRefresh() {
@@ -177,7 +177,10 @@ export default {
     Promise.all([
       this.loadRecommendCircles(),
       this.loadPosts()
-    ]).finally(() => {
+    ]).then(() => {
+      // 刷新后重新获取点赞状态
+      this.getPostsLikeStatus();
+    }).finally(() => {
       uni.stopPullDownRefresh();
     });
   },
@@ -229,17 +232,80 @@ export default {
                 post.media_urls = [];
               }
             }
+            
+            // 初始化点赞状态
+            post.is_liked = false;
+            post.is_liked_checked = false;
+            
             return post;
           });
           
-          this.posts = [...this.posts, ...newPosts];
+          // 更新帖子列表
+          if (this.page === 1) {
+            this.posts = newPosts;
+          } else {
+            this.posts = [...this.posts, ...newPosts];
+          }
+          
           this.page++;
           this.hasMore = this.posts.length < res.data.total;
           this.loadingStatus = this.hasMore ? 'more' : 'noMore';
+          
+          // 获取帖子的点赞状态
+          setTimeout(() => {
+            this.getPostsLikeStatus();
+          }, 100);
         }
       } catch (error) {
         console.error('加载帖子失败', error);
         this.loadingStatus = 'more';
+      }
+    },
+
+    async getPostsLikeStatus() {
+      try {
+        // 检查是否已登录
+        if (!window.localStorage.getItem('token')) {
+          console.log('用户未登录，跳过获取点赞状态');
+          return;
+        }
+        
+        const token = JSON.parse(window.localStorage.getItem('token')).tk;
+        
+        // 获取所有未检查点赞状态的帖子
+        const uncheckedPosts = this.posts.filter(post => !post.is_liked_checked);
+        
+        // 如果没有未检查的帖子，直接返回
+        if (uncheckedPosts.length === 0) {
+          return;
+        }
+        
+        console.log(`开始获取${uncheckedPosts.length}个帖子的点赞状态`);
+        
+        // 为每个帖子获取点赞状态
+        for (const post of uncheckedPosts) {
+          try {
+            const res = await axios.get(this.$baseUrl + '/community/interactions/like/status', {
+              params: {
+                target_id: post.post_id,
+                target_type: 1
+              },
+              headers: {
+                'Authorization': 'Bearer ' + token
+              }
+            });
+            
+            // 更新帖子的点赞状态
+            post.is_liked = res.data.liked;
+            post.is_liked_checked = true; // 标记已检查
+            
+            console.log(`帖子 ${post.post_id} 点赞状态: ${post.is_liked}`);
+          } catch (err) {
+            console.error(`获取帖子 ${post.post_id} 点赞状态失败:`, err);
+          }
+        }
+      } catch (error) {
+        console.error('获取点赞状态失败:', error);
       }
     },
 
@@ -330,13 +396,27 @@ export default {
 
     async likePost(post) {
       try {
-        await axios.post(this.$baseUrl + '/community/interactions/like', {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk
+        const res = await axios.post(this.$baseUrl + '/community/interactions/like', {
           target_id: post.post_id,
           target_type: 1
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
         });
         
-        post.is_liked = !post.is_liked;
-        post.like_count += post.is_liked ? 1 : -1;
+        // 根据后端返回的结果更新点赞状态
+        if (res.data && res.data.liked !== undefined) {
+          post.is_liked = res.data.liked;
+          post.like_count += post.is_liked ? 1 : -1;
+        } else {
+          // 如果后端没有返回明确状态，则切换当前状态
+          post.is_liked = !post.is_liked;
+          post.like_count += post.is_liked ? 1 : -1;
+        }
+        
+        console.log(`帖子 ${post.post_id} 点赞状态更新为: ${post.is_liked}`);
       } catch (error) {
         console.error('点赞失败', error);
         uni.showToast({
@@ -411,7 +491,7 @@ export default {
 .community-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  // height: 100vh;
   background-color: #f8f8f8;
 }
 
@@ -471,7 +551,7 @@ export default {
 
 .content-scroll {
   margin-top: 90rpx;
-  height: calc(100vh - 90rpx);
+  // height: calc(100vh - 62px);
 }
 
 .section {
@@ -608,9 +688,6 @@ export default {
             font-size: 26rpx;
             margin: 0 20rpx;
             flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
           }
 
           text {
@@ -622,10 +699,9 @@ export default {
 
     .square-grid-bottom {
       display: flex;
-      justify-content: space-between;
 
       .bottom-item {
-        width: 48%;
+        width: calc(100% - 50rpx);
         height: 80rpx;
         background: #333;
         border-radius: 12rpx;
@@ -784,7 +860,7 @@ export default {
 .float-btn {
   position: fixed;
   right: 40rpx;
-  bottom: 120rpx;
+  bottom: 180rpx;
   width: 100rpx;
   height: 100rpx;
   background: #EA7034;

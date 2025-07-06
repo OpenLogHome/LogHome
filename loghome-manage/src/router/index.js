@@ -13,6 +13,11 @@ import postsManage from "../views/system/postsManage.vue"
 import novelsManage from "../views/library/novelsManage.vue"
 import articlesManage from "../views/library/articlesManage.vue"
 
+// 导入社区管理页面
+import CircleManage from "../views/community/CircleManage.vue"
+import CommunityPostsManage from "../views/community/PostsManage.vue"
+import ReportsManage from "../views/community/ReportsManage.vue"
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -99,6 +104,37 @@ const routes = [
                 requireAuth: true,
                 breadNumber: 1,
                 parentName:"系统管理"
+            }
+        },
+        // 社区管理路由
+        {
+            path:'/circleManage',
+            component:CircleManage,
+            name:'圈子管理',
+            meta: {
+                requireAuth: true,
+                breadNumber: 1,
+                parentName:"社区管理"
+            }
+        },
+        {
+            path:'/communityPosts',
+            component:CommunityPostsManage,
+            name:'社区帖子管理',
+            meta: {
+                requireAuth: true,
+                breadNumber: 1,
+                parentName:"社区管理"
+            }
+        },
+        {
+            path:'/reportsManage',
+            component:ReportsManage,
+            name:'举报管理',
+            meta: {
+                requireAuth: true,
+                breadNumber: 1,
+                parentName:"社区管理"
             }
         }
     ]

@@ -1,5 +1,5 @@
 <template>
-	<div class="worldWrapper" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<div class="worldWrapper">
 		<div class="outer">
 			<div class="title">
 			</div>
@@ -144,7 +144,7 @@
 
 	.outer {
 		padding: 20px;
-		padding-top: calc(10px + var(--statusBarHeight));
+		padding-top: calc(10px);
 
 
 		.title {

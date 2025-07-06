@@ -1,6 +1,6 @@
 <template>
     <view class="chat-container"
-        :style="{ '--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px' }">
+        :style="{ '--statusBarHeight': 0 + 'px' }">
         <followBtn class="follow-btn" :targetId="Number(friend_id)"/>
         <view class="messages">
             <div v-for="message in sortedMessages" :key="message.id" class="message-wrapper"

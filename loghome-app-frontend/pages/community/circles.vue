@@ -265,8 +265,7 @@ export default {
 .circles-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-color: rgb(255, 248, 234);
+  background-color: #F8F8F8;
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -419,7 +418,7 @@ export default {
 .create-btn {
   position: fixed;
   right: 40rpx;
-  bottom: 120rpx;
+  bottom: 40rpx;
   height: 80rpx;
   background-color: #EA7034;
   border-radius: 40rpx;

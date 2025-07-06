@@ -103,11 +103,17 @@
 				contentCount: 0,
 				circles: [],
 				selectedCircle: null,
-				isSubmitting: false
+				isSubmitting: false,
+				isBanned: false, // 是否被禁言
+				banInfo: null // 禁言信息
 			}
 		},
-		onLoad() {
-			this.loadCircles()
+		onLoad(options) {
+			if (options.circle_id) {
+				this.postData.circle_id = options.circle_id;
+				this.checkCircleBanStatus(options.circle_id);
+			}
+			this.loadCircles();
 		},
 		onNavigationBarButtonTap() {
 			this.submitPost()
@@ -144,29 +150,52 @@
 						sourceType: ['album', 'camera']
 					})
 					
+					uni.showLoading({ title: '正在上传图片...' })
+					
 					for (let tempFile of res.tempFilePaths) {
-						const token = JSON.parse(window.localStorage.getItem('token')).tk
-						const uploadRes = await uni.uploadFile({
-							url: this.$baseUrl + '/upload/image',
-							filePath: tempFile,
-							name: 'file',
-							header: {
-								'Authorization': 'Bearer ' + token
-							}
-						})
-						
-						const data = JSON.parse(uploadRes.data)
-						if (data.url) {
-							this.postData.media_urls.push(data.url)
-						}
+						const uploadRes = await this.uploadFile(tempFile)
+						this.postData.media_urls.push(uploadRes.url)
 					}
+					
+					uni.hideLoading()
 				} catch (error) {
+					uni.hideLoading()
 					console.error('上传图片失败', error)
 					uni.showToast({
 						title: '上传图片失败',
 						icon: 'none'
 					})
 				}
+			},
+			async uploadFile(filePath) {
+				return new Promise((resolve, reject) => {
+					uni.showToast({
+						title: "图片上传中",
+						icon: 'loading',
+						duration: 2000
+					});
+					uni.uploadFile({
+						url: 'https://storage.codesocean.top/api/resource/upload?container=172018735018984',
+						filePath: filePath,
+						name: 'file',
+						header: {
+							ServiceKey: "a24785bedb466b9733dd317771d4b69c08da07fd"
+						},
+						success: (uploadRes) => {
+							try {
+								const data = JSON.parse(uploadRes.data);
+								resolve({
+									url: "https://storage.codesocean.top/api/resource/get/" + data.data.resource_id
+								});
+							} catch (e) {
+								reject(e);
+							}
+						},
+						fail: (error) => {
+							reject(error);
+						}
+					});
+				});
 			},
 			deleteImage(index) {
 				this.postData.media_urls.splice(index, 1)
@@ -177,11 +206,56 @@
 			hideCirclePopup() {
 				this.$refs.circlePopup.close()
 			},
-			selectCircle(circle) {
-				this.selectedCircle = circle
-				this.postData.circle_id = circle.circle_id
-				this.hideCirclePopup()
+			// 检查用户在圈子中的禁言状态
+			async checkCircleBanStatus(circleId) {
+				try {
+					const token = JSON.parse(window.localStorage.getItem('token')).tk;
+					const res = await axios.get(this.$baseUrl + `/community/circles/${circleId}/my-status`, {
+						headers: {
+							'Authorization': 'Bearer ' + token
+						}
+					});
+					
+					if (res.data) {
+						this.isBanned = res.data.is_banned;
+						this.banInfo = res.data.ban_info;
+						
+						// 如果被禁言，显示提示
+						if (this.isBanned) {
+							const endTimeText = this.banInfo.end_time ? 
+								`，将于 ${this.formatBanEndTime(this.banInfo.end_time)} 解除` : 
+								'，永久禁言';
+								
+							uni.showModal({
+								title: '禁言提示',
+								content: `您在该圈子中已被禁言${endTimeText}，无法发布帖子`,
+								showCancel: false,
+								success: () => {
+									uni.navigateBack();
+								}
+							});
+						}
+					}
+				} catch (error) {
+					console.error('获取禁言状态失败', error);
+				}
 			},
+			
+			// 格式化禁言结束时间
+			formatBanEndTime(time) {
+				if (!time) return '永久';
+				return new Date(time).toLocaleString();
+			},
+			
+			selectCircle(circle) {
+				this.selectedCircle = circle;
+				this.postData.circle_id = circle.circle_id;
+				this.hideCirclePopup();
+				
+				// 检查选择的圈子的禁言状态
+				this.checkCircleBanStatus(circle.circle_id);
+			},
+			
 			async submitPost() {
 				if (this.isSubmitting) return
 				
@@ -207,6 +281,20 @@
 						icon: 'none'
 					})
 					return
+				}
+				
+				// 检查是否被禁言
+				if (this.isBanned) {
+					const endTimeText = this.banInfo.end_time ? 
+						`，将于 ${this.formatBanEndTime(this.banInfo.end_time)} 解除` : 
+						'，永久禁言';
+						
+					uni.showModal({
+						title: '禁言提示',
+						content: `您在该圈子中已被禁言${endTimeText}，无法发布帖子`,
+						showCancel: false
+					});
+					return;
 				}
 				
 				this.isSubmitting = true

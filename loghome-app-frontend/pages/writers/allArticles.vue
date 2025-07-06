@@ -1,6 +1,6 @@
 <template>
 	<view class="content" v-dark
-		:style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+		:style="{'--statusBarHeight': 0 + 'px'}">
 			<div class="articles">
 				<uni-collapse accordion @touchstart.native="touchstart" @touchend.native="touchend" @touchmove.native="touchmove">
 				    <uni-collapse-item class="titleOuter" v-for="item in shownArticles"

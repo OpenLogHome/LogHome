@@ -73,6 +73,30 @@
                 </el-menu-item>
             </router-link>
           </el-submenu>
+          <el-submenu index="3">
+            <template slot="title">
+                <i class="el-icon-chat-dot-round"></i>
+                <span>社区管理</span>
+            </template>
+            <router-link to="/circleManage">
+                <el-menu-item index="3-1">
+                    <i class="el-icon-connection"></i>
+                    圈子管理
+                </el-menu-item>
+            </router-link>
+            <router-link to="/communityPosts">
+                <el-menu-item index="3-2">
+                    <i class="el-icon-document"></i>
+                    帖子管理
+                </el-menu-item>
+            </router-link>
+            <router-link to="/reportsManage">
+                <el-menu-item index="3-3">
+                    <i class="el-icon-warning-outline"></i>
+                    举报管理
+                </el-menu-item>
+            </router-link>
+          </el-submenu>
         </el-menu>
       </div>
     <div class="rightAside">

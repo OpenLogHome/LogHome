@@ -1,5 +1,5 @@
 <template>
-	<view class="outer" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view class="outer" :style="{'--statusBarHeight': 0 + 'px'}">
 		<!-- 后台按钮组件 -->
 		<zetank-backBar textcolor="#000" :showLeft="true" :showTitle="false" navTitle='原木树场'></zetank-backBar>
 		<view class="balance">

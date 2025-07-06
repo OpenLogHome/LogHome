@@ -6,7 +6,7 @@
 		<log-image class="info-cover" @tap="change_top_pic" :src="user.top_pic_url"
 		onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
 		
-		<springBack :top="`calc(300rpx + ${jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'})`">
+		<springBack :top="`calc(300rpx + ${0 + 'px'})`">
 			<!-- 右侧悬浮按钮 -->
 			<view class="rightBtnGroup">
 				<followBtn :targetId="Number(uid)" v-show="uid != myUserInfo.user_id"/>

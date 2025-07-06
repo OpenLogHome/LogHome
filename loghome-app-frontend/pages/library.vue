@@ -1,5 +1,5 @@
 <template>
-	<view class="content" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}"
+	<view class="content"
 	v-dark>
 		<div class="searchBarUnder">
 			<uni-search-bar bgColor="#f2f2f2" :radius="8"

@@ -11,7 +11,7 @@ Vue.use(VueClipboard)
 // 挂载到vue原型链上
 Vue.prototype.axios = axios;
 const BASE_URL_PRODUCTION = "http://loghomeservice.codesocean.top"
-const BASE_URL_DEV = "http://127.0.0.1:9001"
+const BASE_URL_DEV = "http://127.0.0.1:9000"
 Vue.prototype.$baseUrl = BASE_URL_DEV;
 Vue.prototype.$imgBaseUrl = "http://img.codesocean.top"
 

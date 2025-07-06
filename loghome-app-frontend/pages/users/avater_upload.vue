@@ -1,5 +1,5 @@
 <template>
-	<view class="body" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view class="body" :style="{'--statusBarHeight': 0 + 'px'}">
 		<!-- 	<el-alert
 		title="提示"
 		type="warning"

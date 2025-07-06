@@ -685,6 +685,20 @@
 				"navigationBarTitleText": "帖子详情",
 				"enablePullDownRefresh": true
 			}
+		},
+		{
+			"path": "pages/community/editCircle",
+			"style": {
+				"navigationBarTitleText": "圈子设置",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/community/circleMembers",
+			"style": {
+				"navigationBarTitleText": "圈子成员",
+				"enablePullDownRefresh": true
+			}
 		}
     ],
 	"tabBar": {

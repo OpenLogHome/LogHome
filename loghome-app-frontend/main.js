@@ -35,7 +35,7 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_DEV;
+Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
 Vue.prototype.$baseUrlCommunity = BASE_URL_COMMUNITY_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
@@ -265,8 +265,8 @@ if(inDev && !window.jsBridge) {
 		setNavigationBarVisible(status) {
 			console.log("setNavigationBarVisible", status)
 		},
-		setStatusBarStyle(status) {
-			console.log("setStatusBarStyle", status)
+		setSystemUIStyle(bgColor) {
+			console.log("setSystemUIStyle", bgColor)
 		},
 		getBatteryLevel() {
 			return new Promise((resolve, reject) => {

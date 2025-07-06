@@ -27,6 +27,12 @@ void main() async {
     await Permission.storage.request();
     await InAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
+  
+  // 确保系统UI模式设置为edgeToEdge，但保持状态栏和导航栏可见
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge,
+    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+  );
 
   runApp(const MyApp());
 }
@@ -36,12 +42,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 设置状态栏完全透明和图标颜色
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    // 设置状态栏和导航栏样式
+    final systemUiStyle = SystemUiOverlayStyle(
+      // 状态栏设置
       statusBarColor: Colors.transparent,
       statusBarBrightness: Brightness.light, // iOS状态栏
       statusBarIconBrightness: Brightness.dark, // Android状态栏图标
-    ));
+      // 导航栏设置
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: Colors.transparent,
+    );
+    
+    SystemChrome.setSystemUIOverlayStyle(systemUiStyle);
 
     return MaterialApp(
       title: '原木社区',
@@ -67,6 +80,12 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _initialize();
+    
+    // 确保启动屏幕的系统UI设置正确
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+    );
   }
 
   Future<void> _initialize() async {
@@ -74,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // 同时执行资源准备和延时
       final results = await Future.wait([
         AssetUtils.prepareAssets(),
-        Future.delayed(const Duration(seconds: 2)), // 最小显示时间2秒
+        Future.delayed(const Duration(seconds: 3)), // 最小显示时间2秒
       ]);
 
       if (mounted) {
@@ -112,14 +131,35 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/splash.png'),
-            fit: BoxFit.cover,
+    // 设置启动屏的系统UI样式
+    final splashSystemUiStyle = SystemUiOverlayStyle(
+      // 状态栏设置
+      statusBarColor: const Color(0xFF1B4B88),
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      // 导航栏设置
+      systemNavigationBarColor: const Color(0xFF1B4B88),
+      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarDividerColor: const Color(0xFF1B4B88),
+    );
+    
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: splashSystemUiStyle,
+      child: Scaffold(
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: const Color(0xFF1B4B88), // 设置背景色为#1B4B88
+          child: SafeArea(
+            // 使用SafeArea确保内容不会被系统UI覆盖
+            bottom: true, // 特别注意底部安全区域
+            child: Align(
+              alignment: Alignment.bottomCenter, // 图片沿屏幕底部对齐
+              child: Image.asset(
+                'assets/images/splash.png',
+                fit: BoxFit.fitWidth, // 图片宽度适应屏幕
+              ),
+            ),
           ),
         ),
       ),

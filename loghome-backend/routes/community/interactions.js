@@ -66,6 +66,11 @@ router.post('/like', auth, async (req, res) => {
                     'UPDATE comm_posts SET like_count = like_count - 1 WHERE post_id = ?',
                     [target_id]
                 );
+            } else if (target_type === 2) { // 评论
+                await query(
+                    'UPDATE comm_comments SET like_count = like_count - 1 WHERE comment_id = ?',
+                    [target_id]
+                );
             }
             
             res.json({ 
@@ -83,6 +88,11 @@ router.post('/like', auth, async (req, res) => {
             if (target_type === 1) { // 帖子
                 await query(
                     'UPDATE comm_posts SET like_count = like_count + 1 WHERE post_id = ?',
+                    [target_id]
+                );
+            } else if (target_type === 2) { // 评论
+                await query(
+                    'UPDATE comm_comments SET like_count = like_count + 1 WHERE comment_id = ?',
                     [target_id]
                 );
             }

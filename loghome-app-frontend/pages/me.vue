@@ -1,6 +1,6 @@
 <template>
 	<view :style="{
-		'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px',
+		'--statusBarHeight': 0 + 'px',
 	}">
 		<theme-switch style="position:fixed; z-index: 100; right: 30rpx; top: 30rpx;"></theme-switch>
 		<view class="header">

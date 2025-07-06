@@ -13,8 +13,23 @@ window.jsBridge = {
     setNavigationBarVisible(visible) {
         window.flutter_inappwebview.callHandler('setNavigationBarVisible', visible);
     },
-    setStatusBarStyle(isDark) {
-        window.flutter_inappwebview.callHandler('setStatusBarStyle', isDark);
+    /**
+     * 设置状态栏和导航栏样式
+     * @param {string} backgroundColor - 系统UI（状态栏和导航栏）背景色，16进制颜色值，如 '#FFFFFF'
+     * @returns {Promise<boolean>} - 设置是否成功
+     */
+    setSystemUIStyle(backgroundColor) {
+        return window.flutter_inappwebview.callHandler('setStatusBarStyle', backgroundColor);
+    },
+    
+    /**
+     * 设置状态栏样式（兼容旧版本）
+     * @param {string} backgroundColor - 状态栏背景色，16进制颜色值，如 '#FFFFFF'
+     * @returns {Promise<boolean>} - 设置是否成功
+     * @deprecated 请使用 setSystemUIStyle 代替
+     */
+    setStatusBarStyle(backgroundColor) {
+        return this.setSystemUIStyle(backgroundColor);
     },
     getBatteryLevel() {
         return new Promise((resolve, reject) => {
@@ -43,6 +58,7 @@ window.jsBridge = {
 
 // 使用示例:
 /*
+// 音量键监听示例
 // 开启监听
 await window.jsBridge.enableVolumeKeyListener();
 
@@ -57,4 +73,20 @@ window.addEventListener('volumeKeyPress', (event) => {
 
 // 取消监听
 await window.jsBridge.disableVolumeKeyListener();
+
+// 系统UI样式设置示例
+// 设置状态栏和导航栏背景色为蓝色
+await window.jsBridge.setSystemUIStyle('#1B4B88');
+console.log('设置系统UI为蓝色');
+
+// 设置状态栏和导航栏背景色为白色
+await window.jsBridge.setSystemUIStyle('#FFFFFF');
+console.log('设置系统UI为白色');
+
+// 设置状态栏和导航栏背景色为黑色
+await window.jsBridge.setSystemUIStyle('#000000');
+console.log('设置系统UI为黑色');
+
+// 兼容旧版本的调用方式
+// await window.jsBridge.setStatusBarStyle('#1B4B88');
 */
