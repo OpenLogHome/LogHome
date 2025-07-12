@@ -138,9 +138,14 @@ router.post('/comment_on_novel', auth, async (req, res) => {
 	user = JSON.parse(JSON.stringify(user))[0];
 	try {
 		let results = await query(
-			`INSERT INTO novel_comments(user_id,novel_id,content, article_id) 
-                                VALUES(?,?,?, ?)`,
-			[user.user_id, req.body.novel_id, req.body.content, req.body.article_id],
+			`INSERT INTO novel_comments(user_id,novel_id,content, article_id, media_urls) 
+                                VALUES(?,?,?,?,?)`,
+			[user.user_id, req.body.novel_id, req.body.content, req.body.article_id, 
+			 req.body.media_urls ? JSON.stringify(req.body.media_urls) : null],
+		);
+		let comment = await query(
+			`SELECT * FROM novel_comments n,users u WHERE n.user_id = u.user_id AND n.essay_comment_id = ?`,
+			[results.insertId],
 		);
 		let novel = JSON.parse(
 			JSON.stringify(
@@ -179,7 +184,7 @@ router.post('/comment_on_novel', auth, async (req, res) => {
                 }
             }
         }
-		res.end(JSON.stringify(results));
+		res.end(JSON.stringify(comment[0]));
 	} catch (e) {
         console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -198,16 +203,21 @@ router.post('/reply_to_novel_comment', auth, async (req, res) => {
 		if (comment == undefined) res.json(400, { msg: 'bad request' });
 		let novel_id = comment.novel_id;
 		let results = await query(
-			`INSERT INTO novel_comments(reply_to_id,user_id,novel_id,content,father_comment_id, article_id) 
-                                VALUES(?,?,?,?,?, ?)`,
+			`INSERT INTO novel_comments(reply_to_id,user_id,novel_id,content,father_comment_id,article_id,media_urls) 
+                                VALUES(?,?,?,?,?,?,?)`,
 			[
 				req.body.essay_comment_id,
 				user.user_id,
 				novel_id,
 				req.body.content,
 				req.body.fatherId,
-                req.body.article_id
+                req.body.article_id,
+                req.body.media_urls ? JSON.stringify(req.body.media_urls) : null
 			],
+		);
+		let newComment = await query(
+			`SELECT * FROM novel_comments n,users u WHERE n.user_id = u.user_id AND n.essay_comment_id = ?`,
+			[results.insertId],
 		);
 		message.sendMsg(
 			user.user_id,
@@ -216,7 +226,7 @@ router.post('/reply_to_novel_comment', auth, async (req, res) => {
 			'readers/bookInfo?id=' + req.body.novel_id,
 			'comment',
 		);
-		res.end(JSON.stringify(results));
+		res.end(JSON.stringify(newComment[0]));
 	} catch (e) {
         console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -279,6 +289,17 @@ router.get('/novel_commonts_all', async function (req, res) {
                 ))[0]
                 item.cento = cento;
             }
+            
+            // Parse media_urls from JSON string to array
+            if (item.media_urls) {
+                try {
+                    item.media_urls = JSON.parse(item.media_urls);
+                } catch (e) {
+                    item.media_urls = [];
+                }
+            } else {
+                item.media_urls = [];
+            }
 		}
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -336,6 +357,21 @@ router.get('/novel_commonts_reply_to', async function (req, res) {
 							AND n.deleted = 0`,
 			[req.query.id],
 		);
+        
+        // Parse media_urls for each reply
+        results = JSON.parse(JSON.stringify(results));
+        for (let item of results) {
+            if (item.media_urls) {
+                try {
+                    item.media_urls = JSON.parse(item.media_urls);
+                } catch (e) {
+                    item.media_urls = [];
+                }
+            } else {
+                item.media_urls = [];
+            }
+        }
+        
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });

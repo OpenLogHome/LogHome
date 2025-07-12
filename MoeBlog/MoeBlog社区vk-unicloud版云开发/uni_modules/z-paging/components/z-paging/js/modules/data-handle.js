@@ -305,7 +305,7 @@ export default {
 			// #ifndef APP-NVUE
 			this.finalUseVirtualList && this._setCellIndex(data, 'top')
 			// #endif
-			
+			console.log("addDataFromTop", data);
 			this.totalData = addFromTop ? [...data, ...this.totalData] : [...this.totalData, ...data];
 			if (toTop) {
 				u.delay(() => this.useChatRecordMode ? this.scrollToBottom(toTopWithAnimate) : this.scrollToTop(toTopWithAnimate));

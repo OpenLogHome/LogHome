@@ -1,5 +1,5 @@
 <template>
-	<view class="outer" :style="{'--statusBarHeight': jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0 + 'px'}">
+	<view class="outer" :style="{'--statusBarHeight': 0 + 'px'}">
 		<view class="title" :class="topNavStyle.class" :style="topNavStyle.style">
 			<view class="flex_col">
 				<view class="box1"></view>
@@ -210,7 +210,7 @@
 				let r = this.pageScrollTop / 100;
 				return {
 					"class": r >= 0.85 ? 'style2' : '',
-					"style": `background-color: rgba(255, 255, 255, ${r>=1?1:r}); padding-top: ${jsBridge.inApp ? jsBridge.statusBarHeight + 'px' : 0}`
+					"style": `background-color: rgba(255, 255, 255, ${r>=1?1:r}); padding-top: 0}`
 				}
 			}
 		},

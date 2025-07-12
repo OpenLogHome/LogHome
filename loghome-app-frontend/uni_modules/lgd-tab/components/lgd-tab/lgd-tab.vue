@@ -4,7 +4,7 @@
 			<view class="tabBox" :style="{ 'justify-content': isOutWindow ? 'space-around' : 'space-around' }">
 				<view class="items" v-for="(item, index) in tabValue" :key="index" @click="clickTab(index)">
 					<view class="tab-item-wrapper">
-						<text class="tabText" :class="index == tIndex ? 'active' : ''" v-dark
+						<text class="tabText" :class="[index == tIndex ? 'active' : '', isAnimating ? 'animating' : '']" v-dark
 						:style="{ 'font-size': fontSize + ((index == tIndex)?5:0) + 'rpx', color: index == tIndex ? textColor : ''}">
 							{{item}}
 						</text>
@@ -12,7 +12,7 @@
 					</view>
 				</view>
 			</view>
-			<view class="underscore" v-dark
+			<view class="underscore" v-dark :class="{'animating': isAnimating}"
 				:style="{ width: inderWidth + 'px', 'margin-left': indexLeft + boxLeft + 'px', height: '25rpx' }" />
 		</view>
 	</view>
@@ -55,13 +55,23 @@
 				indexLeft: 0,
 				scrollLeft: 0,
 				tIndex: 0,
+				isAnimating: false // 是否正在执行过渡动画
 			};
 		},
 		methods: {
 			clickTab(index) {
+				// 如果正在动画中或点击了当前活跃的tab，则不处理
+				if (this.isAnimating || this.tIndex === index) {
+					return;
+				}
+                
+                // 设置动画状态
+                this.isAnimating = true;
+                
 				// 更改选中下标
 				this.tIndex = index
 				this.$emit("getIndex", index)
+				
 				// 获取盒子移动距离
 				if (this.isOutWindow && index >= 0) {
 					uni.createSelectorQuery().in(this).select(".tabBox").boundingClientRect().exec((data) => {
@@ -73,16 +83,22 @@
 						}
 					})
 				}
+				
+				// 设置下划线动画
 				uni.createSelectorQuery().in(this).selectAll(".items").boundingClientRect().exec((data) => {
 					let width = data[0][index].width
 					let left = data[0][index].left
-					let newLeft = 0
 					
 					// 点击tab宽度
 					this.inderWidth = width;
 					
 					// 移动距离
 					this.indexLeft = left
+					
+					// 动画结束后重置动画状态
+					setTimeout(() => {
+						this.isAnimating = false;
+					}, 300);
 				})
 				
 				// 点击后触发事件，通知父组件该tab已被点击
@@ -147,6 +163,10 @@
 	.active {
 		font-weight: bold;
 	}
+	
+	.animating {
+		transition: all 0.3s ease-in-out;
+	}
 
 	.underscore {
 		transition: .3s all;
@@ -156,6 +176,9 @@
 		background-color: rgb(161,255,127);
 		&.dark-mode{
 			background-color: #39582E;
+		}
+		&.animating {
+			transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 		}
 	}
 	

@@ -67,8 +67,12 @@
 				</navigator>
 			</div>
 
-			<div class="book-bg" :style="{'background':'url(' + bookInfo.picUrl + ')'}" ref="navigationBarColorPixer">
-				<div class="image"></div>
+			<div class="book-bg">
+				<div class="image">
+					<log-image class="img":src="bookInfo.picUrl" mode="scaleToFill" style="width: 100%; height: 100%; transform: scale(1.2);"
+						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'">
+					</log-image>
+				</div>
 			</div>
 
 			<springBack :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + ${0 + 'px'})`">
@@ -524,8 +528,8 @@
 				uni.showModal({
 					title: '提示',
 					content: '确定取消收藏吗？',
-					cancelText: "取消", // 取消按钮的文字  
-					confirmText: "确认", // 确认按钮的文字  
+					cancelText: "我再想想", // 取消按钮的文字  
+					confirmText: "狠心取消", // 确认按钮的文字  
 					showCancel: true, // 是否显示取消按钮，默认为 true
 					confirmColor: '#f59037',
 					cancelColor: '#343434',
@@ -817,6 +821,23 @@
 					document.getElementById("gift_box").animate(giftAnimation, giftAnimTiming);
 					document.getElementById("gift_background").animate(giftBackgroundAnimation, giftBgAnimTiming);
 				})
+			},
+			async getBookInfo() {
+				uni.showLoading({
+					title: '加载中'
+				});
+				try{
+					let res = await axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.uid, {})
+					return res.data[0];
+				} catch(error) {
+					uni.showToast({
+						title: error.toString(),
+						icon: 'none',
+						duration: 2000
+					});
+				} finally {
+					uni.hideLoading();
+				}
 			}
 		},
 		onPageScroll(res) {
@@ -832,12 +853,36 @@
 				});
 			}, 100);
 		},
-		onShow(option) {
+		async onShow(option) {
 			uni.showLoading({
 				title: '加载中'
 			});
 			
 			this.uid = this.options.id;
+
+			let bookInfo = await this.getBookInfo();
+			// 如果是设定书，则应当跳转到世界设定查看页面
+			if (bookInfo.novel_type == "world") {
+				if (this.worldLoadTime == 0) {
+					setTimeout(() => {
+						uni.redirectTo({
+							url: "/pages/worlds/worldPage?novel_id=" + this.uid
+						})
+						this.worldLoadTime++;
+					}, 350)
+				} else {
+					uni.navigateBack();
+				}
+				return;
+			} else {
+				this.bookInfo = bookInfo;
+			}
+
+			uni.setNavigationBarTitle({
+				title: "书籍详情"
+			});
+			this.checkNovelRank();
+			this.addReaderHistory(bookInfo);
 		
 			this.getNices();
 			this.getCommentNum();
@@ -845,35 +890,6 @@
 			this.getNovelTags();
 			this.getFansStatistics();
 			this.getWorlds();
-			
-			axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.uid, {}).then((res) => {
-				this.bookInfo = res.data[0];
-				// 如果是设定书，则应当跳转到世界设定查看页面
-				if (this.bookInfo.novel_type == "world") {
-					if (this.worldLoadTime == 0) {
-						setTimeout(() => {
-							uni.redirectTo({
-								url: "/pages/worlds/worldPage?novel_id=" + this.uid
-							})
-							this.worldLoadTime++;
-						}, 300)
-					} else {
-						uni.navigateBack();
-					}
-					return;
-				}
-				uni.setNavigationBarTitle({
-					title: "书籍详情"
-				});
-				this.checkNovelRank();
-				this.addReaderHistory(res.data[0]);
-			}).catch(function(error) {
-				uni.showToast({
-					title: error.toString(),
-					icon: 'none',
-					duration: 2000
-				});
-			}).then(function() {})
 
 			//本地阅读记录管理
 			let readingHistory = window.localStorage.getItem("ReaderHistory_" + this.uid);
@@ -1491,9 +1507,8 @@
 			background-size: 100%;
 
 			.image {
-				// filter:blur(30px) brightness(0.8);
+				filter: blur(30px) brightness(0.6);
 				background-color: #00000000;
-				backdrop-filter: blur(30px) brightness(0.6);
 				transform: translateZ(0);
 				width: 100vw;
 				height: calc(500rpx + var(--statusBarHeight) + 135rpx + 120px);

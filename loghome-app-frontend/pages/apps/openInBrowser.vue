@@ -13,8 +13,8 @@
 		},
 		onLoad(params){
 			console.log(params.url);
-			if (this.jsBridge && this.jsBridge.inApp) {
-			  this.jsBridge.openInBrowser(params.url);
+			if (window.jsBridge && window.jsBridge.inApp) {
+			  window.jsBridge.openInBrowser(params.url);
 			} else {    
 			  window.open(params.url);
 			}

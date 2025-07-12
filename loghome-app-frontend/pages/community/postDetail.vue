@@ -1,12 +1,10 @@
 <template>
-  <view class="post-detail">
+  <view class="post-detail" @scroll="onPageScroll">
     <!-- 帖子内容 -->
     <scroll-view 
       scroll-y 
       class="content-scroll"
       :refresher-triggered="isRefreshing"
-      @scrolltolower="loadMoreComments"
-      :style="{ height: scrollHeight + 'px' }"
     >
       <!-- 主帖内容 -->
       <view class="post-content">
@@ -92,6 +90,7 @@
                     <text :class="{'liked': comment.is_liked}">{{comment.like_count || 0}}</text>
                   </view>
                   <text class="comment-reply" @tap="replyToComment(comment)">回复</text>
+                  <text v-if="canDeleteComment(comment)" class="comment-delete" @tap="deleteComment(comment)">删除</text>
                 </view>
               </view>
             </view>
@@ -124,6 +123,7 @@
                       <text :class="{'liked': reply.is_liked}">{{reply.like_count || 0}}</text>
                     </view>
                     <text class="reply-btn" @tap="replyToComment(reply, comment)">回复</text>
+                    <text v-if="canDeleteComment(reply)" class="reply-delete" @tap="deleteComment(reply, comment)">删除</text>
                   </view>
                 </view>
               </view>
@@ -138,13 +138,19 @@
           <text>暂无评论，快来发表第一条评论吧</text>
         </view>
         
-        <!-- 加载更多 -->
-        <uni-load-more :status="loadingStatus"></uni-load-more>
+        <!-- 加载状态提示 -->
+        <view class="loading-more" v-if="loadingStatus === 'loading'">
+          <view class="loading-spinner"></view>
+          <text>加载中...</text>
+        </view>
+        <view class="loading-more" v-if="loadingStatus === 'noMore'">
+          <text>没有更多数据了</text>
+        </view>
       </view>
     </scroll-view>
     
     <!-- 评论输入框 -->
-    <view class="comment-input" :class="{'with-image': selectedImages.length > 0}" :style="{ bottom: keyboardHeight + 'px' }">
+    <view class="comment-input" :class="{'with-image': selectedImages.length > 0}">
       <view class="input-wrapper">
         <textarea 
           v-model="commentText" 
@@ -152,7 +158,6 @@
           auto-height
           :maxlength="1000"
           :focus="inputFocus"
-          @focus="onInputFocus"
           @blur="onInputBlur"
           adjust-position="false"
         ></textarea>
@@ -200,22 +205,18 @@ export default {
       inputFocus: false,
       replyTo: null,
       parentComment: null,
-      scrollHeight: 0,
-      keyboardHeight: 0,
-      isLoading: true
+      isLoading: true,
+      userRole: -1, // -1: 未知, 0: 普通成员, 1: 管理员, 2: 圈主
     }
   },
   onLoad(params) {
     this.postId = params.id
     this.loadPostDetail()
     this.loadComments()
-    this.calculateScrollHeight()
   },
   onReady() {
-    this.calculateScrollHeight()
   },
   onShow() {
-    this.calculateScrollHeight()
   },
   onPullDownRefresh() {
     Promise.all([
@@ -225,14 +226,56 @@ export default {
       uni.stopPullDownRefresh();
     })
   },
+  onNavigationBarButtonTap(e) {
+		let _this = this;
+		if(e.text=="\ue790 "){
+			let itemList = ["分享贴子"];
+      let user = localStorage.getItem("LogHomeUserInfo");
+      if(user) {
+        user = JSON.parse(user);
+        // 管理员/圈主/作者可删除，作者可编辑
+        const canDelete = user.is_admin == 1 || user.user_id == this.post.user_id || this.userRole == 1 || this.userRole == 2;
+        const canEdit = user.user_id == this.post.user_id;
+        if(canDelete) itemList.push("删除帖子");
+        if(canEdit) itemList.push("编辑帖子");
+      }
+      uni.showActionSheet({
+          itemList,
+          success: function (res) {
+              if(itemList[res.tapIndex] == '分享贴子') {
+                // 更多逻辑
+              } else if(itemList[res.tapIndex] == '编辑帖子') {
+                uni.navigateTo({
+                  url: `/pages/community/postEdit?post_id=${_this.post.post_id}`
+                });
+              } else if(itemList[res.tapIndex] == '删除帖子') {
+                uni.showModal({
+                  title: '确认删除',
+                  content: '确定要删除该帖子吗？',
+                  success: async (modalRes) => {
+                    if(modalRes.confirm) {
+                      try {
+                        const token = JSON.parse(window.localStorage.getItem('token')).tk;
+                        await axios.delete(_this.$baseUrl + `/community/posts/${_this.post.post_id}`, {
+                          headers: { 'Authorization': 'Bearer ' + token }
+                        });
+                        uni.showToast({ title: '删除成功', icon: 'success' });
+                        setTimeout(() => { uni.navigateBack(); }, 1200);
+                      } catch (err) {
+                        uni.showToast({ title: '删除失败', icon: 'none' });
+                      }
+                    }
+                  }
+                });
+              }
+          },
+          fail: function (res) {
+              console.log(res.errMsg);
+          }
+      });
+		}
+	},
   methods: {
-    calculateScrollHeight() {
-      const systemInfo = uni.getSystemInfoSync();
-      const windowHeight = systemInfo.windowHeight;
-      // 假设评论输入框高度为 60px (120rpx)，可以根据实际情况调整
-      const inputHeight = 60;
-      this.scrollHeight = windowHeight - inputHeight;
-    },
     async loadPostDetail() {
       try {
         const res = await axios.get(this.$baseUrl + '/community/posts/detail/' + this.postId)
@@ -240,6 +283,8 @@ export default {
         
         // 获取帖子的点赞状态
         await this.getLikeStatus()
+        // 获取当前用户在圈子的角色
+        await this.getUserRole()
       } catch (error) {
         uni.showToast({
           title: '加载失败',
@@ -269,7 +314,6 @@ export default {
     
     async loadComments(refresh = false) {
       if (!refresh && (!this.hasMore || this.loadingStatus === 'loading')) return
-      
       this.loadingStatus = 'loading'
       this.isLoading = true
       try {
@@ -280,7 +324,6 @@ export default {
             pageSize: this.pageSize
           }
         })
-        
         // 处理评论数据
         const comments = res.data.list || [];
         for (let comment of comments) {
@@ -290,15 +333,14 @@ export default {
           } else {
             comment.media_urls = [];
           }
-          
           // 初始化回复数组
           comment.replies = [];
           comment.total_replies = comment.reply_count || 0;
-          
           // 获取评论的点赞状态
           await this.getCommentLikeStatus(comment);
+          // 自动加载前3条子评论
+          await this.loadRepliesForComment(comment, 1, 3);
         }
-        
         if (refresh) {
           this.comments = comments;
           this.page = 1;
@@ -306,7 +348,6 @@ export default {
           this.comments.push(...comments);
           this.page++;
         }
-        
         this.hasMore = comments.length === this.pageSize;
         this.loadingStatus = this.hasMore ? 'more' : 'noMore';
       } catch (error) {
@@ -319,7 +360,32 @@ export default {
         this.isLoading = false
       }
     },
-    
+    async loadRepliesForComment(comment, page = 1, pageSize = 3) {
+      try {
+        const res = await axios.get(this.$baseUrl + '/community/comments/replies', {
+          params: {
+            comment_id: comment.comment_id,
+            page,
+            pageSize
+          }
+        });
+        const replies = res.data.list || [];
+        for (let reply of replies) {
+          if (reply.image_url) {
+            reply.media_urls = [reply.image_url];
+          } else {
+            reply.media_urls = [];
+          }
+          await this.getCommentLikeStatus(reply);
+        }
+        comment.replies = replies;
+        // 同步 total_replies
+        comment.total_replies = res.data.total || replies.length;
+      } catch (error) {
+        // 可选：错误提示
+        console.error('加载回复失败:', error);
+      }
+    },
     async getCommentLikeStatus(comment) {
       try {
         const token = JSON.parse(window.localStorage.getItem('token')).tk
@@ -341,30 +407,32 @@ export default {
     
     async loadMoreReplies(comment) {
       try {
+        const nextPage = Math.floor(comment.replies.length / 10) + 1;
         const res = await axios.get(this.$baseUrl + '/community/comments/replies', {
           params: {
             comment_id: comment.comment_id,
-            page: Math.ceil(comment.replies.length / 10) + 1,
+            page: nextPage,
             pageSize: 10
           }
         })
-        
         // 处理回复数据
         const replies = res.data.list || [];
         for (let reply of replies) {
-          // 处理媒体URL
           if (reply.image_url) {
             reply.media_urls = [reply.image_url];
           } else {
             reply.media_urls = [];
           }
-          
-          // 获取回复的点赞状态
           await this.getCommentLikeStatus(reply);
         }
-        
-        comment.replies.push(...replies);
+        // 去重追加
+        const existingIds = new Set(comment.replies.map(r => r.comment_id));
+        const newReplies = replies.filter(r => !existingIds.has(r.comment_id));
+        comment.replies.push(...newReplies);
+        // 同步 total_replies
+        comment.total_replies = res.data.total || comment.replies.length;
       } catch (error) {
+        console.error('加载更多回复失败:', error);
         uni.showToast({
           title: '加载失败',
           icon: 'none'
@@ -419,14 +487,21 @@ export default {
     },
     
     replyToComment(comment, parent = null) {
-      this.replyTo = comment
-      this.parentComment = parent
-      this.inputFocus = true
+      // parent: 如果是主评论，parent=null；如果是子评论，parent=主评论
+      if (!parent) {
+        // 回复主评论
+        this.replyTo = comment;
+        this.parentComment = comment;
+      } else {
+        // 回复子评论
+        this.replyTo = comment;
+        this.parentComment = parent;
+      }
+      this.inputFocus = true;
     },
     
     async submitComment() {
       if (!this.commentText && this.selectedImages.length === 0) return
-      
       try {
         // 先上传图片
         let image_url = null;
@@ -435,29 +510,85 @@ export default {
           const uploadRes = await this.uploadFile(this.selectedImages[0]);
           image_url = uploadRes.url;
         }
-        
         // 发送评论
         const data = {
           post_id: this.postId,
           content: this.commentText,
           image_url: image_url
         }
-        
         if (this.replyTo) {
           data.reply_to_user_id = this.replyTo.user_id;
-          if (this.parentComment) {
-            data.parent_id = this.parentComment.comment_id;
-          }
+          // parent_id 必须为被回复的评论id
+          data.parent_id = this.replyTo.comment_id;
         }
-        
         // 获取token并添加到请求头
         const token = JSON.parse(window.localStorage.getItem('token')).tk
-        
-        await axios.post(this.$baseUrl + '/community/comments/create', data, {
+        const response = await axios.post(this.$baseUrl + '/community/comments/create', data, {
           headers: {
             'Authorization': 'Bearer ' + token
           }
         })
+        
+        // 获取新创建的评论数据
+        const newComment = response.data.comment;
+        
+        // 处理新评论的媒体URL
+        if (newComment.image_url) {
+          newComment.media_urls = [newComment.image_url];
+        } else {
+          newComment.media_urls = [];
+        }
+        
+        // 添加用户信息
+        const userInfo = JSON.parse(localStorage.getItem('LogHomeUserInfo') || '{}');
+        newComment.user_name = userInfo.name;
+        newComment.user_avatar = userInfo.avatar_url;
+        
+        // 增加帖子评论计数
+        this.post.comment_count++;
+        
+        // 根据评论类型决定如何插入
+        if (!this.replyTo) {
+          // 新的主评论，直接添加到评论列表末尾
+          newComment.replies = [];
+          newComment.total_replies = 0;
+          newComment.reply_count = 0;
+          newComment.is_liked = false;
+          newComment.like_count = 0;
+          
+          // 添加到列表末尾（因为是时间升序）
+          this.comments.push(newComment);
+        } else if (this.parentComment) {
+          // 回复某个评论
+          newComment.is_liked = false;
+          newComment.like_count = 0;
+          
+          // 如果是回复主评论
+          if (this.replyTo.comment_id === this.parentComment.comment_id) {
+            // 更新主评论的回复计数
+            this.parentComment.total_replies++;
+            this.parentComment.reply_count = this.parentComment.total_replies;
+            
+            // 添加到回复列表末尾
+            if (!this.parentComment.replies) {
+              this.parentComment.replies = [];
+            }
+            this.parentComment.replies.push(newComment);
+          } else {
+            // 回复子评论，更新父主评论的回复区域
+            this.parentComment.total_replies++;
+            this.parentComment.reply_count = this.parentComment.total_replies;
+            
+            // 添加回复用户名称
+            newComment.reply_user_name = this.replyTo.user_name;
+            
+            // 添加到回复列表末尾
+            if (!this.parentComment.replies) {
+              this.parentComment.replies = [];
+            }
+            this.parentComment.replies.push(newComment);
+          }
+        }
         
         // 重置状态
         this.commentText = ''
@@ -465,9 +596,6 @@ export default {
         this.replyTo = null
         this.parentComment = null
         this.inputFocus = false
-        
-        // 刷新评论列表
-        this.loadComments(true)
         
         uni.showToast({
           title: '发送成功',
@@ -590,21 +718,17 @@ export default {
       })
     },
     
-    loadMoreComments() {
-      this.loadComments()
+    onPageScroll(ev) {
+      let pageHeight = document.querySelector('.content-scroll').scrollHeight;
+      let scrollTop = ev.scrollTop;
+      let screenHeight = uni.getSystemInfoSync().windowHeight;
+      if (scrollTop + screenHeight + 100 >= pageHeight) {
+        this.loadComments()
+      }
     },
     
     focusComment() {
       this.inputFocus = true
-    },
-    
-    onInputFocus(e) {
-      // 监听键盘高度
-      uni.onKeyboardHeightChange(res => {
-        this.keyboardHeight = res.height;
-        // 重新计算滚动区域高度
-        this.calculateScrollHeight();
-      });
     },
     
     onInputBlur() {
@@ -613,10 +737,103 @@ export default {
           this.replyTo = null
           this.parentComment = null
         }
-        // 键盘收起后重置高度
-        this.keyboardHeight = 0;
-        this.calculateScrollHeight();
       }, 100)
+    },
+    async getUserRole() {
+      try {
+        const token = JSON.parse(window.localStorage.getItem('token')).tk;
+        const res = await axios.get(this.$baseUrl + '/community/circles/my-circles', {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        if (res.data && res.data.length > 0 && this.post.circle_id) {
+          const circle = res.data.find(c => c.circle_id == this.post.circle_id);
+          if (circle) {
+            this.userRole = circle.role;
+          } else {
+            this.userRole = 0;
+          }
+        }
+      } catch (error) {
+        this.userRole = 0;
+      }
+    },
+    canDeleteComment(comment) {
+      const user = JSON.parse(localStorage.getItem('LogHomeUserInfo') || '{}');
+      return (
+        user.user_id === comment.user_id || // 评论作者
+        user.user_id === this.post.user_id || // 帖子作者
+        user.is_admin == 1 || // 超级管理员
+        this.userRole == 1 || this.userRole == 2 // 圈主/管理员
+      );
+    },
+    async refreshRepliesForComment(parentComment) {
+      // 刷新父主评论的 replies 区域，数量与当前显示一致
+      await this.loadRepliesForComment(parentComment, 1, parentComment.replies.length || 3);
+    },
+    async deleteComment(comment, parentComment = null) {
+      uni.showModal({
+        title: '确认删除',
+        content: '确定要删除该评论吗？',
+        success: async (modalRes) => {
+          if (modalRes.confirm) {
+            try {
+              const token = JSON.parse(window.localStorage.getItem('token')).tk;
+              await axios.delete(this.$baseUrl + `/community/comments/${comment.comment_id}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+              });
+              uni.showToast({ title: '删除成功', icon: 'success' });
+              
+              // 判断是主评论还是子评论
+              if (comment.parent_id === 0) {
+                // 主评论，直接从数组中移除
+                const index = this.comments.findIndex(c => c.comment_id === comment.comment_id);
+                if (index !== -1) {
+                  this.comments.splice(index, 1);
+                  
+                  // 更新帖子评论计数
+                  if (this.post.comment_count > 0) {
+                    this.post.comment_count -= 1 + (comment.reply_count || 0);
+                  }
+                }
+              } else {
+                // 子评论，刷新父主评论的 replies
+                // parentComment 传递自模板
+                let parent = parentComment;
+                if (!parent) {
+                  // fallback: 尝试在 this.comments 中查找
+                  parent = this.comments.find(c => c.comment_id === comment.root_id || c.comment_id === comment.parent_id);
+                }
+                
+                if (parent) {
+                  // 直接从父评论的 replies 数组中移除这条回复
+                  const replyIndex = parent.replies.findIndex(r => r.comment_id === comment.comment_id);
+                  if (replyIndex !== -1) {
+                    parent.replies.splice(replyIndex, 1);
+                    
+                    // 更新回复计数
+                    if (parent.total_replies > 0) {
+                      parent.total_replies--;
+                    }
+                    
+                    // 更新帖子评论计数
+                    if (this.post.comment_count > 0) {
+                      this.post.comment_count--;
+                    }
+                  }
+                } else {
+                  // 如果找不到父评论，则刷新全部（应该很少发生）
+                  this.loadComments(true);
+                }
+              }
+            } catch (err) {
+              console.error('删除评论失败:', err);
+              uni.showToast({ title: '删除失败', icon: 'none' });
+            }
+          }
+        }
+      });
     }
   }
 }
@@ -762,6 +979,7 @@ export default {
   background-color: #fff;
   padding: 20rpx;
   min-height: 200rpx;
+  margin-bottom: 112rpx;
 }
 
 .section-title {
@@ -872,6 +1090,12 @@ export default {
   color: #999;
 }
 
+.comment-delete {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 30rpx;
+}
+
 .replies-list {
   margin-left: 84rpx;
   padding: 20rpx;
@@ -980,6 +1204,12 @@ export default {
 .reply-btn {
   font-size: 22rpx;
   color: #999;
+}
+
+.reply-delete {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: 30rpx;
 }
 
 .show-more {
@@ -1103,5 +1333,33 @@ textarea {
 
 .add-image uni-icons {
   position: absolute;
+}
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx 0;
+  color: #999;
+  font-size: 26rpx;
+}
+
+.loading-spinner {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 12rpx;
+  border: 3rpx solid #EA7034;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: loading-rotate 0.8s linear infinite;
+}
+
+@keyframes loading-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

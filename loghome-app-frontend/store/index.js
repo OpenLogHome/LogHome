@@ -6,6 +6,7 @@ const store = new Vuex.Store({
     state: {
 		version:"非正式版本",
 		appVersion:null,
+		appVersionStr:null,
 		hypernotion:false,
 		isDarkMode: false
 	},

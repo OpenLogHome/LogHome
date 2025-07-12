@@ -47,8 +47,8 @@ export default {
   methods: {
     openPaymentPage() {
       // 打开支付链接
-      if(this.jsBridge && this.jsBridge.inApp) {
-        this.jsBridge.openInBrowser(this.payUrl)
+      if(window.jsBridge && window.jsBridge.inApp) {
+        window.jsBridge.openInBrowser(this.payUrl)
       } else {
         window.open(this.payUrl)
       }

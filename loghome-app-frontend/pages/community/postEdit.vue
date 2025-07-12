@@ -105,13 +105,20 @@
 				selectedCircle: null,
 				isSubmitting: false,
 				isBanned: false, // 是否被禁言
-				banInfo: null // 禁言信息
+				banInfo: null, // 禁言信息
+				isEdit: false, // 是否为编辑模式
+				postId: null // 帖子ID
 			}
 		},
 		onLoad(options) {
 			if (options.circle_id) {
-				this.postData.circle_id = options.circle_id;
+				this.postData.circle_id = Number(options.circle_id);
 				this.checkCircleBanStatus(options.circle_id);
+			}
+			if (options.post_id) {
+				this.isEdit = true;
+				this.postId = options.post_id;
+				this.loadPostDetail(options.post_id);
 			}
 			this.loadCircles();
 		},
@@ -128,6 +135,13 @@
 						}
 					})
 					this.circles = res.data
+					if(this.postData.circle_id != "") {
+						for(let circle of this.circles) {
+							if(circle.circle_id == this.postData.circle_id) {
+								this.selectCircle(circle);
+							}
+						}
+					}
 				} catch (error) {
 					console.error('加载圈子失败', error)
 					uni.showToast({
@@ -149,10 +163,12 @@
 						sizeType: ['compressed'],
 						sourceType: ['album', 'camera']
 					})
+
+					console.log(res);
 					
 					uni.showLoading({ title: '正在上传图片...' })
 					
-					for (let tempFile of res.tempFilePaths) {
+					for (let tempFile of res[1].tempFilePaths) {
 						const uploadRes = await this.uploadFile(tempFile)
 						this.postData.media_urls.push(uploadRes.url)
 					}
@@ -255,53 +271,57 @@
 				// 检查选择的圈子的禁言状态
 				this.checkCircleBanStatus(circle.circle_id);
 			},
+
+			async loadPostDetail(postId) {
+				try {
+					const res = await axios.get(this.$baseUrl + '/community/posts/detail/' + postId);
+					const post = res.data;
+					this.postData.title = post.title;
+					this.postData.content = post.content;
+					this.postData.media_urls = post.media_urls || [];
+					this.postData.circle_id = post.circle_id;
+					this.selectedCircle = this.circles.find(c => c.circle_id == post.circle_id) || null;
+					this.titleCount = post.title.length;
+					this.contentCount = post.content.length;
+				} catch (error) {
+					uni.showToast({ title: '加载帖子失败', icon: 'none' });
+				}
+			},
 			
 			async submitPost() {
 				if (this.isSubmitting) return
-				
 				if (!this.postData.title.trim()) {
-					uni.showToast({
-						title: '请输入标题',
-						icon: 'none'
-					})
+					uni.showToast({ title: '请输入标题', icon: 'none' })
 					return
 				}
-				
 				if (!this.postData.content.trim()) {
-					uni.showToast({
-						title: '请输入内容',
-						icon: 'none'
-					})
+					uni.showToast({ title: '请输入内容', icon: 'none' })
 					return
 				}
-				
 				if (!this.postData.circle_id) {
-					uni.showToast({
-						title: '请选择圈子',
-						icon: 'none'
-					})
+					uni.showToast({ title: '请选择圈子', icon: 'none' })
 					return
 				}
-				
-				// 检查是否被禁言
 				if (this.isBanned) {
-					const endTimeText = this.banInfo.end_time ? 
-						`，将于 ${this.formatBanEndTime(this.banInfo.end_time)} 解除` : 
-						'，永久禁言';
-						
-					uni.showModal({
-						title: '禁言提示',
-						content: `您在该圈子中已被禁言${endTimeText}，无法发布帖子`,
-						showCancel: false
-					});
+					const endTimeText = this.banInfo && this.banInfo.end_time ? `，将于 ${this.formatBanEndTime(this.banInfo.end_time)} 解除` : '，永久禁言';
+					uni.showModal({ title: '禁言提示', content: `您在该圈子中已被禁言${endTimeText}，无法发布帖子`, showCancel: false });
 					return;
 				}
-				
 				this.isSubmitting = true
-				
 				try {
 					const token = JSON.parse(window.localStorage.getItem('token')).tk
-					const res = await axios.post(this.$baseUrl + '/community/posts/create', {
+          let res;
+          if (this.isEdit && this.postId) {
+            // 编辑模式
+            res = await axios.put(this.$baseUrl + `/community/posts/${this.postId}`, {
+              title: this.postData.title.trim(),
+              content: this.postData.content.trim(),
+              media_urls: this.postData.media_urls
+            }, {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+          } else {
+					res = await axios.post(this.$baseUrl + '/community/posts/create', {
 						circle_id: this.postData.circle_id,
 						title: this.postData.title.trim(),
 						content: this.postData.content.trim(),
@@ -312,21 +332,17 @@
 							'Authorization': 'Bearer ' + token
 						}
 					})
-					
+          }
 					uni.showToast({
-						title: res.data.status === 1 ? '发布成功' : '提交成功，等待审核',
+						title: res.data.status === 1 ? (this.isEdit ? '编辑成功' : '发布成功') : '提交成功，等待审核',
 						icon: 'none'
 					})
-					
 					setTimeout(() => {
 						uni.navigateBack()
 					}, 1500)
 				} catch (error) {
 					console.error('发布失败', error)
-					uni.showToast({
-						title: '发布失败，请重试',
-						icon: 'none'
-					})
+					uni.showToast({ title: this.isEdit ? '编辑失败，请重试' : '发布失败，请重试', icon: 'none' })
 				} finally {
 					this.isSubmitting = false
 				}

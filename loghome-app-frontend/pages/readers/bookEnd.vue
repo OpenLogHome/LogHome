@@ -174,8 +174,8 @@
 				uni.showModal({
 					title: '提示',
 					content: '确定取消收藏吗？',
-					cancelText: "取消",
-					confirmText: "确认",
+					cancelText: "我再想想",
+					confirmText: "狠心取消",
 					showCancel: true,
 					confirmColor: '#f59037',
 					cancelColor: '#343434',

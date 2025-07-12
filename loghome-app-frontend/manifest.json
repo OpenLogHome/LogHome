@@ -123,5 +123,6 @@
         "uniStatistics" : {
             "enable" : true
         }
-    }
+    },
+	"sassImplementationName": "node-sass"
 }

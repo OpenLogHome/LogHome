@@ -34,13 +34,10 @@
 							<div class="line"></div>
 							<span>世界大纲</span>
 						</div>
-						<el-collapse style="margin-top: 20rpx;" :accordion="true" @change="outlineAccordianChange"
-							v-show="worldOutlines.length != 0">
-							<el-collapse-item v-for="outline in worldOutlines" name="1" :key="outline.article_id"
-								:title="outline.title" :name="outline.article_id">
-								{{outline.content}}
-								<el-button type="primary" round size="mini" style="margin-left: 15rpx;"
-									@click="gotoArticle(outline.article_id)">全屏阅读</el-button>
+						<el-collapse style="margin-top: 20rpx;" :accordion="true" :value="''"
+							v-show="worldOutlines.length != 0" class="collapse2list">
+							<el-collapse-item v-for="outline in worldOutlines" name="1" :key="outline.article_id" 
+								:title="outline.title" :name="outline.article_id" :disabled="true" style="color: black !important;" @click.native="gotoArticle(outline.article_id)">
 							</el-collapse-item>
 						</el-collapse>
 						<div class="nothing" v-show="worldOutlines.length == 0"
@@ -229,27 +226,28 @@
 			},
 			outlineAccordianChange(activeName) {
 				if (activeName == "") return;
-				axios.get(this.$baseUrl + '/articles/get_article?id=' + activeName).then((res) => {
-					for (let item of this.worldOutlines) {
-						if (item.article_id == activeName) {
-							let articleContent = JSON.parse(res.data[0].content);
-							let textContent = "";
-							for(let paragraph of articleContent) {
-								if(paragraph.type == 'text') {
-									textContent += paragraph.value + "\n";
-								}
-							}
-							item.content = textContent;
-						}
-					}
-					this.$forceUpdate();
-				}).catch(function(error) {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000
-					});
-				})
+				this.gotoArticle(activeName);
+				// axios.get(this.$baseUrl + '/articles/get_article?id=' + activeName).then((res) => {
+				// 	for (let item of this.worldOutlines) {
+				// 		if (item.article_id == activeName) {
+				// 			let articleContent = JSON.parse(res.data[0].content);
+				// 			let textContent = "";
+				// 			for(let paragraph of articleContent) {
+				// 				if(paragraph.type == 'text') {
+				// 					textContent += paragraph.value + "\n";
+				// 				}
+				// 			}
+				// 			item.content = textContent;
+				// 		}
+				// 	}
+				// 	this.$forceUpdate();
+				// }).catch(function(error) {
+				// 	uni.showToast({
+				// 		title: error.toString(),
+				// 		icon: 'none',
+				// 		duration: 2000
+				// 	});
+				// })
 			},
 			gotoArticle(uid) {
 				uni.navigateTo({

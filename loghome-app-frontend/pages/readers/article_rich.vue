@@ -390,16 +390,26 @@
 					this.pageHeadBtn.forEach(element => {
 						element.style.color = "white";
 					})
+					if(window.jsBridge && window.jsBridge.inApp) {
+						jsBridge.setSystemUIStyle("#000000", "#ffffff");
+					}
 
 				} else if (_this.scrollTop >= 120) {
 					_this.pageHead.style.opacity = "0"
-
+					// 状态栏颜色调整
+					if(window.jsBridge && window.jsBridge.inApp) {
+						jsBridge.setSystemUIStyle(_this.themes[_this.readerSettings.theme].backColor, _this.themes[_this.readerSettings.theme].color);
+					}
 				} else {
 					_this.pageHead.style.opacity = "1"
 					_this.pageHead.style.backgroundColor = _this.themes[_this.readerSettings.theme].backColor;
 					this.pageHeadBtn.forEach(element => {
 						element.style.color = _this.themes[_this.readerSettings.theme].color;
 					})
+					// 状态栏颜色调整
+					if(window.jsBridge && window.jsBridge.inApp) {
+						jsBridge.setSystemUIStyle(_this.themes[_this.readerSettings.theme].backColor, _this.themes[_this.readerSettings.theme].color);
+					}
 				}
 			}, 300)
 			this.refreshPage(option.id);

@@ -405,4 +405,91 @@ router.post('/redeem_gift_card', auth, async function (req, res) {
 	}
 });
 
+// 去皮原木兑换原木
+router.post('/exchange_logs', auth, async function (req, res) {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		
+		const cropped_log_amount = parseFloat(req.body.cropped_log_amount);
+		if (!cropped_log_amount || cropped_log_amount <= 0) {
+			res.json(400, { msg: '兑换数量必须大于0' });
+			return;
+		}
+		
+		// 获取用户当前资源情况
+		const userBank = await query(
+			'SELECT * FROM user_bank WHERE user_id = ?',
+			[user.user_id]
+		);
+		
+		if (userBank.length === 0) {
+			res.json(404, { msg: '用户资源记录不存在' });
+			return;
+		}
+		
+		const currentCroppedLog = parseInt(userBank[0].cropped_log) || 0;
+		
+		// 检查余额是否足够
+		if (currentCroppedLog < cropped_log_amount) {
+			res.json(400, { msg: '去皮原木余额不足' });
+			return;
+		}
+		
+		// 计算兑换结果 (1:1.25 比例)，舍去小数部分
+		const log_amount = Math.floor(cropped_log_amount * 1.25);
+		
+		// 开始事务
+		await query('START TRANSACTION');
+		
+		try {
+			// 扣除去皮原木
+			await query(
+				'UPDATE user_bank SET cropped_log = cropped_log - ? WHERE user_id = ?',
+				[cropped_log_amount, user.user_id]
+			);
+			
+			// 增加普通原木
+			await query(
+				'UPDATE user_bank SET log = log + ? WHERE user_id = ?',
+				[log_amount, user.user_id]
+			);
+			
+			// 记录兑换日志
+			await query(
+				'INSERT INTO recharge_payments (payment_id, log_amount, pay_amount, user_id, status, create_time, update_time, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+				[`EXCHANGE-${Date.now()}`, log_amount, 0, user.user_id, 'paid', new Date(), new Date(), `从 ${cropped_log_amount} 去皮原木兑换`]
+			);
+			
+			// 发送消息通知
+			await message.sendMail(
+				-1, 
+				user.user_id, 
+				`去皮原木兑换成功\n您已成功将 ${cropped_log_amount} 去皮原木兑换为 ${log_amount} 原木（兑换比例1:1.25，小数部分已舍去），已到账，请注意查收。`,
+				"None",
+				false
+			);
+			
+			// 提交事务
+			await query('COMMIT');
+			
+			res.json({
+				code: 200,
+				msg: '兑换成功',
+				data: {
+					cropped_log_amount: cropped_log_amount,
+					log_amount: log_amount
+				}
+			});
+		} catch (error) {
+			// 发生错误，回滚事务
+			await query('ROLLBACK');
+			throw error;
+		}
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: '兑换失败' });
+	}
+});
+
 module.exports = router;

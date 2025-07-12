@@ -653,6 +653,11 @@
 				"navigationBarTitleText": "礼品卡兑换"
 			}
 		}, {
+			"path": "pages/payments/exchange",
+			"style": {
+				"navigationBarTitleText": "去皮原木兑换"
+			}
+		}, {
 			"path": "pages/community/index",
 			"style": {
 				"navigationStyle": "custom",
@@ -683,7 +688,15 @@
 			"path": "pages/community/postDetail",
 			"style": {
 				"navigationBarTitleText": "帖子详情",
-				"enablePullDownRefresh": true
+				"enablePullDownRefresh": true,
+				"titleNView": {
+					"buttons": [{
+						"fontSrc": "/static/iconfont/iconfont.ttf",
+						"text": "\ue790 ",
+						"fontSize": "25px",
+						"float": "right"
+					}]
+				}
 			}
 		},
 		{
@@ -698,6 +711,21 @@
 			"style": {
 				"navigationBarTitleText": "圈子成员",
 				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/community/search",
+			"style": {
+				"navigationBarTitleText": "搜索",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/update",
+			"style": {
+				"navigationBarTitleText": "应用更新",
+				"navigationStyle": "custom"
 			}
 		}
     ],

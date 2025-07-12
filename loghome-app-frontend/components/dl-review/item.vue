@@ -19,6 +19,19 @@
 					:showMenu="false" @active="openFatherReview">
 						{{praiseType == 1 ? '该评论被折叠' : reviewMsg.sendMsg}}
 					</xzj-readMore>
+					
+					<!-- 显示评论附带的图片 -->
+					<view class="comment-images" v-if="reviewMsg.media_urls && reviewMsg.media_urls.length > 0 && praiseType != 1">
+						<view 
+							class="comment-image-item" 
+							v-for="(image, index) in reviewMsg.media_urls" 
+							:key="index"
+							@tap="previewImage(index, reviewMsg.media_urls)"
+						>
+							<log-image :src="image" mode="aspectFill"></log-image>
+						</view>
+					</view>
+					
 					<div v-if="reviewMsg.article_id != 0 && (!paragraphMode) && praiseType != 1"
 						style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;"
 						@click="navToChapter">
@@ -62,6 +75,18 @@
 							<span style="color:#929292">{{reKey.targetUserName}}</span>
 							:{{reKey.sendMsg}}
 						</xzj-readMore>
+						
+						<!-- 显示回复中的图片 -->
+						<view class="comment-images small" v-if="reKey.media_urls && reKey.media_urls.length > 0">
+							<view 
+								class="comment-image-item" 
+								v-for="(image, index) in reKey.media_urls" 
+								:key="index"
+								@tap="previewImage(index, reKey.media_urls)"
+							>
+								<log-image :src="image" mode="aspectFill"></log-image>
+							</view>
+						</view>
 					</view>
 					<view class="reviewNumContent" v-if="reviewMsg.reviewNum > 3">
 						<text>共{{reviewMsg.reviewNum}}条回复</text>
@@ -101,6 +126,14 @@
 			this.currentUserId = tk.id;
 		},
 		methods: {
+			previewImage(current, urls) {
+				// 图片预览
+				uni.previewImage({
+					current: current,
+					urls: urls,
+					indicator: 'number'
+				});
+			},
 			refresh() {
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;
@@ -128,11 +161,11 @@
 					}).catch(function(error) {
 						console.log(error);
 						if (error) {
-							uni.showToast({
-								title: "获取文章信息失败",
-								icon: 'none',
-								duration: 2000
-							});
+							// uni.showToast({
+							// 	title: "获取文章信息失败",
+							// 	icon: 'none',
+							// 	duration: 2000
+							// });
 						}
 					}).then(function() {
 						uni.hideLoading();
@@ -174,8 +207,20 @@
 						}
 					}, )
 					.then(function(response) {
+						let changeNum = 0;
+						if(_this.praiseType == 0){ // 原本处于点赞状态
+							changeNum = -1;
+						} else if(_this.praiseType == 1){ // 原本处于点踩状态
+							if(submitType == 3) {
+								changeNum = 0;
+							} else {
+								changeNum = (submitType == 0 ? 1 : -1);
+							}
+						} else { // 原本处于未点赞/未点踩状态
+							changeNum = (submitType == 0 ? 1 : 0);
+						}
 						_this.refresh();
-						_this.$emit('refresh', event);
+						_this.$emit('changePraise', {id: _this.reviewMsg.comment_id, changeNum: changeNum});
 					})
 					.catch(function(error) {
 						console.log(error);
@@ -222,6 +267,9 @@
 			},
 			handleDeleteReview(id) {
 				let _this = this;
+				uni.showLoading({
+					title: '删除中'
+				});
 				uni.showModal({
 					title: '提示',
 					content: '要删除此条评论吗？',
@@ -247,11 +295,13 @@
 									duration: 2000
 								});
 								_this.refresh();
-								_this.$emit('refresh', event);
+								_this.$emit('deleteComment', id);
+								uni.hideLoading();
 							})
 							.catch(function(error) {
 								console.log(error);
-								if (error) {
+								uni.hideLoading();
+								if (error) {	
 									uni.showToast({
 										title: "操作失败",
 										icon: 'none',
@@ -260,7 +310,7 @@
 								}
 							});
 						} else if (res.cancel) {
-				
+							uni.hideLoading();
 						}
 					}
 				});
@@ -462,10 +512,43 @@
 	}
 	
 	.cento{
-		overflow: hidden;
-		text-overflow: ellipsis;
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+}
+
+.comment-images {
+	display: flex;
+	flex-wrap: wrap;
+	margin: 10rpx 0;
+	
+	&.small {
+		margin: 5rpx 0;
 	}
+	
+	.comment-image-item {
+		width: 180rpx;
+		height: 180rpx;
+		margin-right: 10rpx;
+		margin-bottom: 10rpx;
+		border-radius: 8rpx;
+		overflow: hidden;
+		
+		log-image {
+			width: 100%;
+			height: 100%;
+		}
+		
+		&:nth-child(3n) {
+			margin-right: 0;
+		}
+	}
+	
+	&.small .comment-image-item {
+		width: 140rpx;
+		height: 140rpx;
+	}
+}
 </style>

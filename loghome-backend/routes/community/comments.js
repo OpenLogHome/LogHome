@@ -19,13 +19,13 @@ router.get('/list', async (req, res) => {
             return res.status(400).json({ msg: '缺少必要参数post_id' });
         }
         
-        // 获取主评论
+        // 获取主评论，按照时间从早到晚排序
         const comments = await query(
             `SELECT c.*, u.name as user_name, u.avatar_url as user_avatar
              FROM comm_comments c
              LEFT JOIN users u ON c.user_id = u.user_id
              WHERE c.post_id = ? AND c.parent_id = 0 AND c.status = 1
-             ORDER BY c.create_time DESC
+             ORDER BY c.create_time ASC
              LIMIT ?, ?`,
             [postId, (page - 1) * pageSize, pageSize]
         );
@@ -168,7 +168,7 @@ router.post('/create', auth, async (req, res) => {
                     user.user_id,
                     mentionId,
                     `在评论中提到了你：${content.substring(0, 30)}${content.length > 30 ? '...' : ''}`,
-                    `community/post?id=${post_id}&comment=${commentId}`,
+                    `community/postDetail?id=${post_id}&comment=${commentId}`,
                     'notification'
                 );
             }
@@ -182,7 +182,7 @@ router.post('/create', auth, async (req, res) => {
                     user.user_id,
                     post[0].user_id,
                     `评论了你的帖子：${content.substring(0, 30)}${content.length > 30 ? '...' : ''}`,
-                    `community/post?id=${post_id}&comment=${commentId}`,
+                    `community/postDetail?id=${post_id}&comment=${commentId}`,
                     'comment'
                 );
             }
@@ -193,7 +193,7 @@ router.post('/create', auth, async (req, res) => {
                     user.user_id,
                     reply_to_user_id,
                     `回复了你的评论：${content.substring(0, 30)}${content.length > 30 ? '...' : ''}`,
-                    `community/post?id=${post_id}&comment=${rootId}`,
+                    `community/postDetail?id=${post_id}&comment=${rootId}`,
                     'comment'
                 );
             }

@@ -25,7 +25,41 @@ router.get('/get_app_update', async function (req, res) {
 		let results = await query(
 			'SELECT * FROM app_update_log ORDER BY app_update_id DESC LIMIT 0,1',
 		);
+		// 直接返回所有字段，包括 allow_hot, is_forced, asset_url
 		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 检查当前版本到最新版本之间是否所有版本都支持热更新
+router.get('/check_hot_update_compatibility', async function (req, res) {
+	try {
+		const currentVersion = req.query.current_version;
+		if (!currentVersion) {
+			return res.json(400, { msg: 'current_version is required' });
+		}
+
+		// 获取当前版本和最新版本之间的所有版本记录
+		const versions = await query(
+			`SELECT * FROM app_update_log 
+			WHERE version > ? 
+			ORDER BY app_update_id ASC`,
+			[currentVersion]
+		);
+
+		// 检查是否所有版本都支持热更新
+		const allVersionsSupportHotUpdate = versions.every(v => v.allow_hot === 1);
+		
+		// 获取最新版本信息
+		const latestVersion = versions.length > 0 ? versions[versions.length - 1] : null;
+		
+		res.json({
+			allow_hot: allVersionsSupportHotUpdate && latestVersion.allow_hot === 1,
+			latest_version: latestVersion,
+			versions_between: versions
+		});
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });

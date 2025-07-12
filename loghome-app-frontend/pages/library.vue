@@ -1,21 +1,15 @@
 <template>
 	<view class="content"
 	v-dark>
-		<div class="searchBarUnder">
-			<uni-search-bar bgColor="#f2f2f2" :radius="8"
-							placeholder = "搜索书库或输入传送ID" cancelButton="none">
-			</uni-search-bar>
-		</div>
 		<div class="searchBar" v-dark>
-			<uni-search-bar :bgColor="$store.state.isDarkMode ? '#2c2c2c' : '#f2f2f2'" :radius="8" @input="searchLibrary" 
-							placeholder = "搜索书库或输入传送ID" cancelButton="none" class="searchBarBox">
-				<img src="../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;"/>
-				<img src="../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;"/>
-			</uni-search-bar>
+			<div class="search-input-wrapper" @tap="navigateToSearch">
+				<uni-icons type="search" size="18" color="#999"></uni-icons>
+				<view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
+			</div>
 			<uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'" class="messageIcon" @click="gotoMessage"></uni-icons>
 		</div>
-		<popup class="popup" type="5" v-if="appUpdate.hasUpdate" :version="appUpdate.version" :content="appUpdate.desc" @close="closeMask()" @eventClick="update()"></popup>
-		<mescroll-body ref="mescrollRef" @init="mescrollInit" @down="downCallback" @up="upCallback" :fixed="false" :height="'100%'">
+		<mescroll-body ref="mescrollRef" @init="mescrollInit" style="margin-top: 105rpx;"
+			@down="downCallback" @up="upCallback" :fixed="false" :height="'100%'">
 			<div class="swiper" v-show="keyword.length == 0" v-dark>
 				<Xsuu-swiper :swiperItems="newchartList" :margin="18" 
 				:borderRadius="10" @clicked="roulousChartClicked"
@@ -183,8 +177,8 @@
 				this.checkAncientVersion();
 				this.refreshRecommends();
 				this.books = [];
-				// if(this.jsBridge.inApp){
-				// 	this.jsBridge.vibrate();
+				// if(window.jsBridge.inApp){
+				// 	window.jsBridge.vibrate();
 				// }
 			},
 			upCallback(){
@@ -217,6 +211,7 @@
 						icon:'none',
 						duration: 2000
 					});
+					console.log(error);
 					this.mescroll.endErr();
 				}).then(function(){
 					
@@ -292,7 +287,14 @@
 					
 				})
 			},
-			// 搜索图书馆
+			// 跳转到搜索页面
+			navigateToSearch() {
+				uni.navigateTo({
+					url: '/pages/community/search?origin=library'
+				});
+			},
+
+			// 搜索图书馆 - 保留此函数以防其他地方调用
 			searchLibrary(e){
 				clearTimeout(this.timer);
 				let _this = this;
@@ -321,33 +323,21 @@
 					url:'./readers/collections?title=' +  title
 				})
 			},
-			closeMask(){//关闭弹窗
-				this.appUpdate.hasUpdate=false;
-			},
-			update(){//前往新版本下载页面
-				if (this.jsBridge && this.jsBridge.inApp) {
-					this.jsBridge.openInBrowser(this.appUpdate.update_url);
-				}
-			},
 			//检查更新
 			checkUpdate(){
-				let _this = this;
-				let isApp = this.jsBridge.inApp && this.jsBridge.inApp;
-				if(!isApp) return;
+				let isApp = window.jsBridge && window.jsBridge.inApp;
+				if(!isApp) {
+					console.log("not in app")
+					return;
+				}
 				let appVersion = this.$store.state.appVersion;
-				console.log(appVersion);
 				axios.get(this.$baseUrl + '/app/get_app_update', {}).then((res) => {
-					if(res.data[0].version > appVersion){
-						_this.appUpdate.hasUpdate = true;
-						_this.appUpdate.version = res.data[0].version;
-						_this.appUpdate.desc = res.data[0].version_info;
-						_this.appUpdate.update_url = res.data[0].update_url;
-					} else if(res.data[0].version < appVersion){
-						_this.$alert(`您使用的版本为非正式版本，可能存在各种问题，如发现请向开发人员反馈，感谢您参与原木社区内测活动！`, '内测版本提示', {
-							  confirmButtonText: '确定',
-							  dangerouslyUseHTMLString:true,
-						  callback: action => {
-						  }
+					const update = res.data[0];
+					// console.error(update.version_number, String(appVersion))
+					if(update.version_number > appVersion){
+						// 直接跳转到update页面，由update页面自己获取数据
+						uni.navigateTo({
+							url: '/pages/update'
 						});
 					}
 				}).catch(function (error) {
@@ -426,6 +416,8 @@
 			padding-bottom:5rpx;
 			background-color: rgb(255,255,255);
 			display:flex;
+			align-items: center;
+			height: 110rpx;
 			box-shadow:
 			  0px 0px 2.2px rgba(0, 0, 0, 0.02),
 			  0px 0px 5.3px rgba(0, 0, 0, 0.028),
@@ -447,19 +439,34 @@
 				;
 			}
 			
-			.searchBarBox{
-				width:100%;
-			}
 			.messageIcon{
 				margin:24rpx 5rpx 20rpx 5rpx;
 			}
-		}
-		div.searchBarUnder{
-			opacity:0;
-			margin:0 0rpx;
-			padding-top:calc(5rpx + var(--statusBarHeight));
-			padding-bottom:5rpx;
-			background-color: rgb(255,255,255);
+
+			.search-input-wrapper {
+				flex: 1;
+				display: flex;
+				align-items: center;
+				background-color: #f5f5f5;
+				border-radius: 36rpx;
+				padding: 0 20rpx;
+				height: 72rpx;
+				margin-right: 10rpx;
+				margin-left: 10rpx;
+
+				.dark-mode & {
+					background-color: #333;
+				}
+			}
+
+			.search-input-placeholder {
+				flex: 1;
+				height: 72rpx;
+				line-height: 72rpx;
+				padding: 0 20rpx;
+				font-size: 28rpx;
+				color: #999;
+			}
 		}
 		
 		div.swiper{

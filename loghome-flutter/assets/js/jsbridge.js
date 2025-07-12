@@ -54,6 +54,15 @@ window.jsBridge = {
     openInBrowser(url) {
         return window.flutter_inappwebview.callHandler('openInBrowser', url);
     },
+    /**
+     * 执行热更新
+     * @param {string} url - 资源包URL
+     * @param {string} version - 新版本号
+     * @returns {Promise<boolean>} - 更新是否成功
+     */
+    hotUpdateAssets(url, version) {
+        return window.flutter_inappwebview.callHandler('hotUpdateAssets', url, version);
+    },
 };
 
 // 使用示例:
@@ -89,4 +98,7 @@ console.log('设置系统UI为黑色');
 
 // 兼容旧版本的调用方式
 // await window.jsBridge.setStatusBarStyle('#1B4B88');
+
+// 触发热更新示例：
+await window.jsBridge.hotUpdateAssets('https://yourdomain.com/web.zip', '250202');
 */

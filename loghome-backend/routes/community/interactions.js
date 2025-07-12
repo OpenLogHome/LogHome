@@ -101,8 +101,8 @@ router.post('/like', auth, async (req, res) => {
             if (targetOwnerId !== user.user_id) {
                 const targetTypeStr = target_type === 1 ? '帖子' : '评论';
                 const url = target_type === 1 
-                    ? `community/post?id=${target_id}` 
-                    : `community/post?id=${await getPostIdFromComment(target_id)}&comment=${target_id}`;
+                    ? `community/postDetail?id=${target_id}` 
+                    : `community/postDetail?id=${await getPostIdFromComment(target_id)}&comment=${target_id}`;
                 
                 message.sendMsg(
                     user.user_id,
@@ -328,7 +328,7 @@ router.post('/favorite', auth, async (req, res) => {
                     user.user_id,
                     post[0].user_id,
                     `收藏了你的帖子：${post[0].title}`,
-                    `community/post?id=${post_id}`,
+                    `community/postDetail?id=${post_id}`,
                     'like_collect'
                 );
             }

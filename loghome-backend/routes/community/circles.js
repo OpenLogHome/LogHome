@@ -29,6 +29,7 @@ router.get('/list', async (req, res) => {
         const pageSize = parseInt(req.query.pageSize) || 10;
         const categoryId = req.query.category_id;
         const keyword = req.query.keyword;
+        const sort = req.query.sort || 'default'; // default, random
         
         let queryStr = `
             SELECT c.*, u.name as creator_name, u.avatar_url as creator_avatar, 
@@ -50,7 +51,14 @@ router.get('/list', async (req, res) => {
             params.push(`%${keyword}%`, `%${keyword}%`);
         }
         
-        queryStr += ' ORDER BY c.is_official DESC, c.member_count DESC LIMIT ?, ?';
+        // 根据排序方式设置ORDER BY子句
+        if (sort === 'random') {
+            queryStr += ' ORDER BY RAND()';
+        } else {
+            queryStr += ' ORDER BY c.is_official DESC, c.member_count DESC';
+        }
+        
+        queryStr += ' LIMIT ?, ?';
         params.push((page - 1) * pageSize, pageSize);
         
         const circles = await query(queryStr, params);

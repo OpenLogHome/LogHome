@@ -302,7 +302,7 @@ router.post('/create', auth, async (req, res) => {
                     user.user_id,
                     mentionId,
                     `在帖子《${title}》中提到了你`,
-                    `community/post?id=${postId}`,
+                    `community/postDetail?id=${postId}`,
                     'notification'
                 );
             }
@@ -378,15 +378,6 @@ router.put('/:id', auth, async (req, res) => {
             if (member.length === 0) {
                 return res.status(403).json({ msg: '只有帖子作者、圈主或管理员可以编辑帖子' });
             }
-        } else {
-            // 检查发布时间是否超过24小时
-            const createTime = new Date(post[0].create_time);
-            const now = new Date();
-            const hoursDiff = (now - createTime) / (1000 * 60 * 60);
-            
-            if (hoursDiff > 24) {
-                return res.status(403).json({ msg: '帖子发布超过24小时，无法编辑' });
-            }
         }
         
         // 处理媒体URL
@@ -437,7 +428,7 @@ router.put('/:id', auth, async (req, res) => {
             }
         }
         
-        res.json({ msg: '帖子更新成功' });
+        res.json({ msg: '帖子更新成功', post_id: postId, status: 1 });
     } catch (e) {
         console.error(e);
         res.status(500).json({ msg: 'Internal server error' });
@@ -617,7 +608,7 @@ router.post('/:id/essence', auth, async (req, res) => {
                 user.user_id,
                 post[0].user_id,
                 `恭喜！您的帖子《${post[0].title}》被设为精华帖`,
-                `community/post?id=${postId}`,
+                `community/postDetail?id=${postId}`,
                 'notification'
             );
         }
@@ -675,7 +666,7 @@ router.post('/:id/audit', auth, async (req, res) => {
                 user.user_id,
                 post[0].user_id,
                 `您的帖子《${post[0].title}》已审核通过`,
-                `community/post?id=${postId}`,
+                `community/postDetail?id=${postId}`,
                 'notification'
             );
         } else {

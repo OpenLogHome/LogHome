@@ -685,9 +685,12 @@ export default{
 		bookPart:{
 			handler:function(newValue,oldValue){
 				let _this = this;
-				uni.setNavigationBarTitle({
-					title:_this.bookPart.currentPart.name + (_this.bookPart.btnOpened?" ▴":" ▾")
-				});
+				// 仅在当前页面时，才设置标题
+				if(this.$router.history.current.meta.name == "pages-writers-allArticles"){
+					uni.setNavigationBarTitle({
+						title:_this.bookPart.currentPart.name + (_this.bookPart.btnOpened?" ▴":" ▾")
+					});
+				}
 			},
 			deep:true,
 			immediate:true

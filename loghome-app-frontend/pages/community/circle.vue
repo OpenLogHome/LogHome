@@ -3,11 +3,10 @@
     <!-- 添加后退导航栏 -->
     <zetank-backBar textcolor="#fff" :showLeft="true" :showHome="true" :showTitle="false" navTitle="圈子详情"></zetank-backBar>
     
-    <!-- 圈子背景图 -->
-    <view class="circle-bg" :style="{ backgroundImage: `url(${circle.bg_url || circle.icon || '../../static/default-circle.png'})` }"></view>
-    
     <!-- 圈子头部信息 -->
     <view class="circle-header">
+      <!-- 圈子背景图 -->
+      <view class="circle-bg" :style="{ backgroundImage: `url(${circle.bg_url || circle.icon || '../../static/default-circle.png'})` }"></view>
       <view class="header-overlay"></view>
       <view class="circle-info">
         <log-image class="circle-avatar" :src="circle.icon" mode="aspectFill" onerror="onerror=null;src='../../static/default-circle.png'"></log-image>
@@ -20,7 +19,7 @@
             <text>{{circle.member_count}}成员</text>
             <text>{{circle.post_count}}帖子</text>
           </view>
-          <view class="circle-description">{{circle.description}}</view>
+          <view class="circle-description" @click="showCircleInfo">{{circle.description}}</view>
         </view>
       </view>
       
@@ -147,10 +146,14 @@
     <uni-popup ref="infoPopup" type="center">
       <view class="info-popup">
         <view class="popup-header">
-          <text class="popup-title">圈子公告</text>
+          <text class="popup-title">圈子信息</text>
           <uni-icons type="closeempty" size="24" color="#999" @click="closeInfoPopup"></uni-icons>
         </view>
         <view class="popup-content">
+          <view class="info-section">
+            <text class="info-title">圈子简介</text>
+            <text class="info-text">{{circle.description || '暂无圈子简介'}}</text>
+          </view>
           <view class="info-section">
             <text class="info-title">圈子规则</text>
             <text class="info-text">{{circle.rules || '暂无圈子规则'}}</text>
@@ -770,24 +773,27 @@ export default {
   overflow-x: hidden;
 }
 
-.circle-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 450rpx;
-  background-size: cover;
-  background-position: center;
-  z-index: 0;
-  margin: 0;
-}
+
 
 .circle-header {
   position: relative;
   padding: 30rpx;
   padding-top: calc(var(--statusBarHeight) + 120rpx);
   margin-bottom: 20rpx;
+  height: calc(450rpx - 150rpx);
   z-index: 1;
+
+  .circle-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 450rpx;
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+    margin: 0;
+  }
 }
 
 .header-overlay {
@@ -798,12 +804,14 @@ export default {
   bottom: 0;
   height: 450rpx;
   background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
-  z-index: -1;
+  z-index: 2;
 }
 
 .circle-info {
   display: flex;
   margin-top: 30rpx;
+  position: relative;
+  z-index: 3;
 }
 
 .circle-avatar {
@@ -865,6 +873,8 @@ export default {
   display: flex;
   justify-content: space-between;
   margin-top: 20rpx;
+  position: relative;
+  z-index: 3;
 }
 
 .action-btn {

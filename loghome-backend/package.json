@@ -22,6 +22,7 @@
 		"node-fetch": "^2.7.0",
 		"node-gyp": "^8.4.0",
 		"node-schedule": "^2.1.0",
+		"nodejieba": "^3.4.4",
 		"nodemailer": "^6.10.1",
 		"nodemon": "^2.0.7",
 		"svg-captcha": "^1.4.0",

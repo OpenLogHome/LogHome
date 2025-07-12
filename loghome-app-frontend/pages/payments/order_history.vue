@@ -12,7 +12,7 @@
       <view v-else class="order-list">
         <view v-for="(order, index) in orders" :key="order.payment_id" class="order-item">
           <view class="order-header">
-            <text class="order-id">订单号: {{ formatOrderId(order.payment_id) }}</text>
+            <text class="order-id">订单号: {{ order.payment_id }}</text>
             <text :class="['order-status', getStatusClass(order.status)]">{{ getStatusText(order.status) }}</text>
           </view>
           
@@ -116,11 +116,6 @@ export default {
       if (!this.hasMore || this.loading) return
       this.page++
       this.getOrderHistory()
-    },
-    formatOrderId(orderId) {
-      if (!orderId) return ''
-      // 只显示订单号后8位
-      return orderId.slice(-8)
     },
     formatTime(timeStr) {
       if (!timeStr) return ''

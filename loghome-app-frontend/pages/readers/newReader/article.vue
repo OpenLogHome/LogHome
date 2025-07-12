@@ -1026,7 +1026,7 @@ export default {
 			const hours = String(now.getHours()).padStart(2, '0');
 			const minutes = String(now.getMinutes()).padStart(2, '0'); 
 			this.currentTime = `${hours}:${minutes}`;
-			if(this.jsBridge && this.jsBridge.inApp) {
+			if(window.jsBridge && window.jsBridge.inApp) {
 				window.jsBridge.getBatteryLevel().then(batteryLevel => {
 				    this.battery.currentBattery = batteryLevel;
 				}).catch(error => {
@@ -1154,15 +1154,15 @@ export default {
 			handler(newValue, oldValue) {
 				window.localStorage.setItem("newReaderSettings", JSON.stringify(this.readerSettings));
 				// 状态栏颜色调整
-				if(this.jsBridge && this.jsBridge.inApp) {
+				if(window.jsBridge && window.jsBridge.inApp) {
 					jsBridge.setSystemUIStyle(this.themesData[this.readerSettings.theme].backgroundColor, this.themesData[this.readerSettings.theme].fontColor);
 				}
 			},
 			deep: true
 		},
 		async settingsOpened(newValue, oldValue) {
-			if(this.jsBridge && this.jsBridge.inApp) {
-				this.jsBridge.setNavigationBarVisible(newValue);
+			if(window.jsBridge && window.jsBridge.inApp) {
+				window.jsBridge.setNavigationBarVisible(newValue);
 				if(newValue) {
 					await jsBridge.disableVolumeKeyListener();
 				} else {
@@ -1224,7 +1224,7 @@ export default {
 	async onUnload() {
 		clearInterval(this.timeInterval);
 		clearInterval(this.updateCommentDisplayTimer);
-		if(this.jsBridge && this.jsBridge.inApp) {
+		if(window.jsBridge && window.jsBridge.inApp) {
 			jsBridge.setNavigationBarVisible(true);
 			await jsBridge.disableVolumeKeyListener();
 		}
@@ -1240,7 +1240,7 @@ export default {
 		setTimeout(() => {
 			this.doUpdateCommentDisplay = true;
 		}, 300)
-		if(this.jsBridge && this.jsBridge.inApp) {
+		if(window.jsBridge && window.jsBridge.inApp) {
 			jsBridge.setNavigationBarVisible(false);
 			await jsBridge.enableVolumeKeyListener();
 		}
@@ -1626,6 +1626,7 @@ export default {
 				}
 				.title{
 					margin-bottom: 10rpx;
+					max-width: calc(60vw - 180rpx);
 					white-space: nowrap; /* 禁止文本换行 */
 				    overflow: hidden; /* 隐藏超出范围的内容 */
 				    text-overflow: ellipsis; /* 使用省略号 */

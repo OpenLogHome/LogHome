@@ -10,6 +10,7 @@ import 'package:battery_plus/battery_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import '../main.dart';  // 导入SplashScreen
+import '../utils/asset_utils.dart'; // 修正为相对路径导入
 
 class WebViewPage extends StatefulWidget {
   final String localPath; // 新增参数
@@ -165,14 +166,14 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
 
     final statusBarHeightPx = min(MediaQuery.of(context).padding.top, 29);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    String buildNumber = packageInfo.buildNumber;
+    // 获取当前资源文件的版本号
+    String assetVersion = await AssetUtils.getCurrentAssetVersion();
     print('statusBarHeightPx, $statusBarHeightPx');
 
     jsContent += """
         window.jsBridge.statusBarHeight = $statusBarHeightPx;
         window.jsBridge.navigationBarHeight = $bottomPadding;
-        window.jsBridge.appVersion = '$buildNumber';
+        window.jsBridge.appVersion = '$assetVersion';
     """;
 
 
@@ -390,6 +391,101 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
               await launchUrl(uri);
               return true;
             }
+          }
+        }
+        return false;
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'hotUpdateAssets',
+      callback: (args) async {
+        if (args.length >= 2 && args[0] is String && args[1] is String) {
+          String url = args[0];
+          String newVersion = args[1];
+          try {
+            // 显示进度弹窗
+            double progress = 0.0;
+            String statusText = '准备更新...';
+            
+            // 创建一个可更新的对话框
+            BuildContext? dialogContext;
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) {
+                dialogContext = context;
+                return StatefulBuilder(
+                  builder: (context, setState) {
+                    return AlertDialog(
+                      title: Text(statusText.contains('下载') ? '正在下载资源包' : 
+                                 statusText.contains('解压') ? '正在解压资源包' : 
+                                 statusText.contains('完成') ? '更新完成' : '极速更新中'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          LinearProgressIndicator(value: progress),
+                          const SizedBox(height: 16),
+                          Text('${(progress * 100).toStringAsFixed(1)}%'),
+                          const SizedBox(height: 8),
+                          Text(statusText, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+            
+            // 执行热更新，使用Flutter内部的进度回调更新对话框
+            await AssetUtils.hotUpdateAssets(
+              url: url,
+              newVersion: newVersion,
+              onProgress: (p, status) {
+                // 更新进度和状态
+                progress = p;
+                if (status == 'downloading') {
+                  statusText = '下载资源包中... ${(p * 100).toStringAsFixed(1)}%';
+                } else if (status == 'extracting') {
+                  statusText = '解压资源包中... ${(p * 100).toStringAsFixed(1)}%';
+                } else if (status == 'completed') {
+                  statusText = '更新完成，准备重启应用...';
+                } else if (status == 'failed') {
+                  statusText = '更新失败，请尝试重新更新';
+                }
+                
+                // 使用dialogContext更新对话框
+                if (dialogContext != null) {
+                  (dialogContext! as Element).markNeedsBuild();
+                }
+              },
+            );
+            
+            // 给用户一点时间看到完成信息
+            if (statusText.contains('完成')) {
+              await Future.delayed(const Duration(seconds: 1));
+            }
+            
+            // 关闭对话框
+            if (dialogContext != null) {
+              Navigator.of(dialogContext!, rootNavigator: true).pop();
+            }
+            
+            // 重启应用（重启到SplashScreen）
+            if (mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const SplashScreen()),
+                (route) => false,
+              );
+            }
+            return true;
+          } catch (e) {
+            // 关闭对话框并显示错误
+            Navigator.of(context, rootNavigator: true).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('极速更新失败: $e')),
+            );
+            return false;
           }
         }
         return false;

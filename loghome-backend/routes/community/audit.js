@@ -255,7 +255,7 @@ router.post('/posts/:id', auth, async (req, res) => {
                 user.user_id,
                 post[0].user_id,
                 `您的帖子已审核通过`,
-                `community/post?id=${postId}`,
+                `community/postDetail?id=${postId}`,
                 'notification'
             );
             

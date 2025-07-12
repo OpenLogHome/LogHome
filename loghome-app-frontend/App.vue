@@ -17,9 +17,6 @@
 			// #endif
 		},
 		data() {
-			return {
-				
-			}
 		},
 		methods:{
 			utc2timestamp(utc_datetime) {
@@ -121,8 +118,8 @@
 				
 				// 应用启动时立即执行一次心跳，检查登陆状态
 				heartBeat();
-				// 之后每10秒执行一次心跳
-				setInterval(heartBeat,10000);
+				// 之后每30秒执行一次心跳
+				setInterval(heartBeat,30000);
 			},
 			editorInit(){
 				let _this = this;
@@ -272,29 +269,29 @@
 			
 			// 获取顶栏状态
 			this.$router.afterEach((to, from, next) => {
-				if(this.jsBridge && this.jsBridge.inApp) {
+				if(window.jsBridge && window.jsBridge.inApp) {
 					// setTimeout(() => {
 					// 	const uniPageHead = document.querySelectorAll("uni-page-head");
 					// 	for(let item of uniPageHead) {
 					// 		if(!item.classList.contains("heightChanged")) {
-					// 			item.style.setProperty("height", `${this.jsBridge.statusBarHeight + 44}px`, "important")
-					// 			// item.style.height = item.getBoundingClientRect().height + this.jsBridge.statusBarHeight + `px`;
+					// 			item.style.setProperty("height", `${window.jsBridge.statusBarHeight + 44}px`, "important")
+					// 			// item.style.height = item.getBoundingClientRect().height + window.jsBridge.statusBarHeight + `px`;
 					// 			item.classList.add("heightChanged");
 					// 			let innerUniPageHead = document.querySelector(".uni-page-head");
 					// 			item.style.backgroundColor = innerUniPageHead.style.backgroundColor;
-					// 			innerUniPageHead.style.transform = `translateY(${this.jsBridge.statusBarHeight}px)`;
+					// 			innerUniPageHead.style.transform = `translateY(${window.jsBridge.statusBarHeight}px)`;
 					// 			console.log("innerUniPageHeadHeight", innerUniPageHead.getBoundingClientRect().height)
 					// 			innerUniPageHead.style.setProperty("height", "44px", "important");
 					// 			innerUniPageHead.style.setProperty("padding", "7px 0", "important");
 					// 			document.styleSheets[0].insertRule(`.uni-page-head::before { content: ""; 
 					// 												 background-color: inherit;
-					// 												 height: ${this.jsBridge.statusBarHeight + 1}px;
-					// 												 top: -${this.jsBridge.statusBarHeight}px}`, 0);
+					// 												 height: ${window.jsBridge.statusBarHeight + 1}px;
+					// 												 top: -${window.jsBridge.statusBarHeight}px}`, 0);
 					// 		} //inherit
 					// 	}
 					// 	const pageWrapper = document.querySelectorAll("uni-page-wrapper");
 					// 	for(let item of pageWrapper) {
-					// 		item.style.height = item.getBoundingClientRect().height - this.jsBridge.statusBarHeight + `px`;
+					// 		item.style.height = item.getBoundingClientRect().height - window.jsBridge.statusBarHeight + `px`;
 					// 	}
 					// })
 					
@@ -305,14 +302,14 @@
 							backgroundColor: "#252525",
 						},
 					]
-					this.jsBridge.ready(() => {
+					window.jsBridge.ready(() => {
 						for(let item of navigationbarColorExceptions){
 							if(item.path == to.path){
-								this.jsBridge.setSystemUIStyle(item.backgroundColor);
+								window.jsBridge.setSystemUIStyle(item.backgroundColor);
 								return;
 							}
 						}
-						this.jsBridge.setSystemUIStyle(this.$store.state.isDarkMode ? "#252525" : "#ffffff");
+						window.jsBridge.setSystemUIStyle(this.$store.state.isDarkMode ? "#252525" : "#ffffff");
 					})
 				}
 				
@@ -326,11 +323,11 @@
 			})
 			
 			window.onresize = () => {
-				if(this.jsBridge && this.jsBridge.inApp) {
+				if(window.jsBridge && window.jsBridge.inApp) {
 					// setTimeout(() => {
 					// 	const pageWrapper = document.querySelectorAll("uni-page-wrapper");
 					// 	for(let item of pageWrapper) {
-					// 		item.style.height = window.innerHeight - 44 - this.jsBridge.statusBarHeight + `px`;
+					// 		item.style.height = window.innerHeight - 44 - window.jsBridge.statusBarHeight + `px`;
 					// 	}
 					// })
 				}
@@ -474,6 +471,12 @@
 	
 	uni-modal{
 		z-index: 999 !important;
+	}
+
+	.el-collapse.collapse2list{
+		.el-collapse-item__header{
+			color: #333333 !important;
+		}
 	}
 
 

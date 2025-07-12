@@ -633,6 +633,10 @@ export default {
 				element.style.color = this.themes[this.writerSettings.theme].color;
 			})
 			pageHead.style.backgroundColor = this.themes[this.writerSettings.theme].backColor;
+			// 状态栏颜色调整
+			if(window.jsBridge && window.jsBridge.inApp) {
+				jsBridge.setSystemUIStyle(this.themes[this.writerSettings.theme].backColor, this.themes[this.writerSettings.theme].color);
+			}
 		},
 		clearEditorImagesEditButton() {
 			const existingButtons = document.querySelectorAll('.image-edit-button');

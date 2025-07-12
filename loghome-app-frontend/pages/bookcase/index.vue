@@ -2,12 +2,11 @@
 	<view class="content" v-dark
 		:style="{'--statusBarHeight': 0 + 'px'}">
 		<div class="tabBarUnder">
-			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
-				ref="tabs" />
+			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"/>
 		</div>
 		<div class="tabBar" v-dark>
 			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
-				ref="tabs" />
+				ref="tabDom" />
 		</div>
 		<div class="searchBar">
 			<uni-search-bar :bgColor="$store.state.isDarkMode ? '#2C2C2C' : 'rgb(211,211,211)'" :radius="5" @input="searchBookCase" placeholder="搜索书架"
@@ -16,10 +15,9 @@
 				<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;"/>
 			</uni-search-bar>
 		</div>
-		<div class="bookcase">
+		<div class="bookcase" @touchstart="touchstart($event)" @touchmove="touchmove($event)" @touchend="touchend" :class="{'fade-out': isTabSwitching}">
 			<bookInCase v-for="item in booksOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.novel_id"
-				@click.native="readBook(item.novel_id)" @touchstart.native="touchstart()"
-				@touchend.native="touchend"></bookInCase>
+				@click.native="readBook(item.novel_id)"></bookInCase>
 		</div>
 		<div class="underBar"></div>
 	</view>
@@ -39,11 +37,24 @@
 		},
 		methods: {
 			changeTab(value) {
-				this.curTabIndex = value;
-				if(this.tabValue[value] == "收藏"){
-					this.getLikedBooks();
-				} else if(this.tabValue[value] == "历史") {
-					this.getHistoryBooks();
+				if (this.curTabIndex !== value) {
+					// 添加切换动画
+					this.isTabSwitching = true;
+					
+					// 延迟切换，等待淡出动画完成
+					setTimeout(() => {
+						this.curTabIndex = value;
+						if(this.tabValue[value] == "收藏"){
+							this.getLikedBooks();
+						} else if(this.tabValue[value] == "历史") {
+							this.getHistoryBooks();
+						}
+						
+						// 淡入动画
+						setTimeout(() => {
+							this.isTabSwitching = false;
+						}, 50);
+					}, 150);
 				}
 			},
 			searchBookCase(e) {
@@ -102,19 +113,82 @@
 					url: './manage'
 				});
 			},
-			touchstart() {
+			touchstart(event) {
+				// 记录触摸开始位置
+				this.touchStartX = event.touches[0].clientX;
+				this.touchStartY = event.touches[0].clientY;
+				this.touchStartTime = new Date().getTime();
+				
 				let that = this;
-				clearInterval(this.Loop); //再次清空定时器，防止重复注册定时器
+				clearInterval(this.Loop); // 再次清空定时器，防止重复注册定时器
 				this.Loop = setTimeout(function() {
-					that.gotoManage();
-					that.touchend();
-					if(that.jsBridge.inApp && that.jsBridge.inApp){
-						// that.jsBridge.vibrate();
+					// 长按时间达到，但需要检查是否有明显位移
+					if (!that.hasMoved) {
+						that.gotoManage();
+						if(that.jsBridge && that.jsBridge.inApp){
+							// that.jsBridge.vibrate();
+						}
 					}
+					that.touchend();
 				}.bind(this), 500);
+				
+				// 初始化移动标志
+				this.hasMoved = false;
 			},
-			touchend() {
+			touchmove(event) {
+				if (!this.touchStartX || !this.touchStartY) return;
+				
+				// 计算位移距离
+				const moveX = event.touches[0].clientX - this.touchStartX;
+				const moveY = event.touches[0].clientY - this.touchStartY;
+				
+				// 计算位移距离的绝对值
+				const absX = Math.abs(moveX);
+				const absY = Math.abs(moveY);
+				
+				// 如果位移超过阈值，标记为已移动
+				const threshold = 10; // 10像素的移动阈值
+				if (absX > threshold || absY > threshold) {
+					this.hasMoved = true;
+					clearInterval(this.Loop); // 清除长按定时器
+				}
+				
+				// 存储当前移动的位置，用于手势结束时判断
+				this.touchCurrentX = event.touches[0].clientX;
+			},
+			touchend(event) {
 				clearInterval(this.Loop);
+				
+				// 检测是否是水平滑动切换tab
+				if (this.touchStartX && this.touchCurrentX) {
+					const swipeDistance = this.touchCurrentX - this.touchStartX;
+					const swipeTime = new Date().getTime() - this.touchStartTime;
+					
+					// 判断是否是有效的水平滑动手势 (距离足够且速度适当)
+					if (Math.abs(swipeDistance) > 50 && swipeTime < 300) {
+						// 向左滑，切换到下一个tab（如果有）
+						if (swipeDistance < 0 && this.curTabIndex < this.tabValue.length - 1) {
+							this.switchTabWithAnimation(this.curTabIndex + 1);
+						}
+						// 向右滑，切换到上一个tab（如果有）
+						else if (swipeDistance > 0 && this.curTabIndex > 0) {
+							this.switchTabWithAnimation(this.curTabIndex - 1);
+						}
+					}
+				}
+				
+				// 重置触摸状态
+				this.touchStartX = null;
+				this.touchStartY = null;
+				this.touchCurrentX = null;
+				this.hasMoved = false;
+			},
+			// 带动画效果的切换tab
+			switchTabWithAnimation(targetIndex) {
+				if (targetIndex !== this.curTabIndex && this.$refs.tabDom) {
+					// 调用lgd-tab组件的clickTab方法来切换tab
+					this.$refs.tabDom.clickTab(targetIndex);
+				}
 			},
 			getLikedBooks(){
 				uni.showLoading({
@@ -194,7 +268,14 @@
 					"收藏", "历史"
 				],
 				curTabIndex: 0,
-				firstTab: 0
+				firstTab: 0,
+				touchStartX: null, // 触摸开始X坐标
+				touchStartY: null, // 触摸开始Y坐标
+				touchCurrentX: null, // 当前触摸X坐标
+				touchStartTime: null, // 触摸开始时间
+				hasMoved: false, // 是否已移动
+				isTabSwitching: false, // 是否正在切换tab
+				tabDom: null
 			}
 		},
 		onNavigationBarButtonTap() {
@@ -255,7 +336,11 @@
 		flex-flow: wrap;
 		padding: 0 20rpx;
 		padding-bottom: 40rpx;
-
+		transition: opacity 0.3s ease; /* Add transition for content switch */
+		
+		&.fade-out {
+			opacity: 0;
+		}
 	}
 
 	div.searchBar {
@@ -265,5 +350,16 @@
 
 	div.underBar {
 		height: 150rpx
+	}
+	
+	/* 添加滑动过渡动画 */
+	@keyframes fadeIn {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
+	
+	@keyframes fadeOut {
+		from { opacity: 1; }
+		to { opacity: 0; }
 	}
 </style>

@@ -8,10 +8,6 @@
           <view class="search-btn" @tap="navigateToSearch">
             <uni-icons type="search" size="22" color="#333"></uni-icons>
           </view>
-          <view class="message-btn" @tap="navigateToNotifications">
-            <uni-icons type="notification" size="22" color="#333"></uni-icons>
-            <view class="badge" v-if="unreadCount > 0">{{unreadCount > 99 ? '99+' : unreadCount}}</view>
-          </view>
         </view>
       </view>
     </view>
@@ -25,7 +21,7 @@
       <!-- 推荐圈子 -->
       <view class="section" v-if="recommendCircles && recommendCircles.length > 0">
         <view class="section-header">
-          <text class="section-title">圈子</text>
+          <text class="section-title">推圈</text>
           <text class="section-more" @tap="navigateToCircles">更多</text>
         </view>
         <view class="square-grid">
@@ -145,7 +141,7 @@ import moment from 'moment';
 export default {
   data() {
     return {
-      sortType: 'hot',
+      sortType: 'new',
       isRefreshing: false,
       loadingStatus: 'more',
       page: 1,
@@ -157,12 +153,26 @@ export default {
     }
   },
 
-  onLoad() {
+  onShow() {
+    if (this.$isFromLogin) {
+      this.$isFromLogin = false;
+      uni.switchTab({
+        url: '../library'
+      })
+      return;
+    }
+    // 登录检测，未登录则跳转到登录页
+    if (!window.localStorage.getItem('token')) {
+      this.$isFromLogin = true;
+      uni.navigateTo({
+        url: '/pages/users/login?msg=unAuthorized'
+      });
+      return;
+    }
     // 初始化推荐圈子数组，避免渲染错误
     this.recommendCircles = [];
     this.loadRecommendCircles();
     this.loadPosts();
-    this.getUnreadCount();
     
     // 确保在页面完全加载后获取点赞状态
     setTimeout(() => {
@@ -192,7 +202,7 @@ export default {
           params: {
             page: 1,
             pageSize: 4,
-            sort: 'recommend'
+            sort: 'random'
           }
         });
         
@@ -318,17 +328,6 @@ export default {
       this.loadPosts();
     },
 
-    async getUnreadCount() {
-      try {
-        const res = await axios.get(this.$baseUrl + '/community/notifications/unread/count');
-        if (res.data) {
-          this.unreadCount = res.data.count;
-        }
-      } catch (error) {
-        console.error('获取未读消息数失败', error);
-      }
-    },
-
     formatTime(time) {
       const now = moment();
       const postTime = moment(time);
@@ -347,7 +346,7 @@ export default {
     },
 
     navigateToSearch() {
-      uni.navigateTo({ url: '/pages/community/search' });
+      uni.navigateTo({ url: '/pages/community/search?origin=community' });
     },
 
     navigateToNotifications() {

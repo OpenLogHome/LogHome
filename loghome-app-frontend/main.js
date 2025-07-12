@@ -35,7 +35,7 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
+Vue.prototype.$baseUrl = BASE_URL_DEV;
 Vue.prototype.$baseUrlCommunity = BASE_URL_COMMUNITY_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
@@ -72,7 +72,8 @@ axios.interceptors.request.use(function (config) {
 	let env = window.jsBridge && jsBridge.inApp;
     if(env){
 		let chrArr = String(jsBridge.appVersion).split('');
-    	store.state.appVersion = `Beta ${chrArr[0]}.${chrArr[1]}.${chrArr[2]}`;
+    	store.state.appVersion = jsBridge.appVersion;
+		store.state.appVersionStr = `Beta ${chrArr[0]}.${chrArr[1]}.${chrArr[2]}`;
 		config.headers.appVersion = `Beta ${chrArr[0]}.${chrArr[1]}.${chrArr[2]}`;
     } else {
 		config.headers.appVersion = "WebBrowser";
@@ -226,7 +227,7 @@ Vue.prototype.timeConvert = function getDateDiff(dateTimeStamp) {
     var diffValue = now - timestamp;
     var result;
     if (diffValue < 0) {
-        return;
+        return "刚刚";
     }
     var yearC = diffValue / year;
     var monthC = diffValue / month;
@@ -258,7 +259,7 @@ if(inDev && !window.jsBridge) {
 	window.jsBridge = {
 		inApp: true,
 		statusBarHeight: 30,
-		appVersion: "250",
+		appVersion: "269",
 		ready(callback) {
 			callback();
 		},
@@ -286,6 +287,9 @@ if(inDev && !window.jsBridge) {
 			console.log("disableVolumeKeyListener")
 			// return window.flutter_inappwebview.callHandler('disableVolumeKeyListener');
 		},
+		hotUpdateAssets(url, version) {
+			console.log("hotUpdateAssets", url, version)
+		},
 	}
 }
 
@@ -299,19 +303,12 @@ if(window.jsBridge && window.jsBridge.inApp) {
 }
 
 if(window.jsBridge) {
-	// console.log(123);
-	// jsBridge.ready(() => {
-	// 	// jsBridge.setOptions({
-	// 	// 	statusBarColor: "#fff2d9",
-	// 	// 	statusBarBlackText:true
-	// 	// });
-	// });
-	// console.log("jsBridge", jsBridge.statusBarHeight)
 } else {
 	window.jsBridge = {
 		inApp: false
 	}
 }
+
 Vue.prototype.jsBridge = window.jsBridge;
 
 

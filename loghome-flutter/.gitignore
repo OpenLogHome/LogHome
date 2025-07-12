@@ -45,5 +45,6 @@ app.*.map.json
 /android/app/release
 
 gradle-8.3-all.zip
+gradle-8.4-all.zip
 
 web.zip

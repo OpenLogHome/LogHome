@@ -21,6 +21,12 @@
 					<image class="to" src="../../static/user/to.png"></image>
 				</view>
 			</navigator>
+			<navigator url="/pages/payments/exchange">
+				<view class="quick-link-item">
+					<text>去皮原木兑换</text>
+					<image class="to" src="../../static/user/to.png"></image>
+				</view>
+			</navigator>
 		</view>
 
 		<view class="number" v-dark>

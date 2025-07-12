@@ -291,15 +291,15 @@ async function updateBestCompletedNovels() {
 }
 
 //每6小时的15分钟触发，更新原木力爆棚作品
-schedule.scheduleJob(
-	'0 15 */6 * * *',
-	updateBestWelcomedNovels,
-);
+// schedule.scheduleJob(
+// 	'0 15 */6 * * *',
+// 	updateBestWelcomedNovels,
+// );
 //每小时的45分钟触发，更新完本经典作品
-schedule.scheduleJob(
-	'0 45 * * * *',
-	updateBestCompletedNovels,
-);
+// schedule.scheduleJob(
+// 	'0 45 * * * *',
+// 	updateBestCompletedNovels,
+// );
 
 async function updateNovelCraftNovels(){
 	await query('DELETE FROM library_recommend WHERE title = "干草块杯活动专辑"');
@@ -316,7 +316,7 @@ async function updateNovelCraftNovels(){
 }
 
 //每小时的30分钟触发，更新干草块杯活动作品
-schedule.scheduleJob(
-	'0 30 * * * *',
-	updateNovelCraftNovels,
-);
+// schedule.scheduleJob(
+// 	'0 30 * * * *',
+// 	updateNovelCraftNovels,
+// );
