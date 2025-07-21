@@ -213,7 +213,7 @@ export default {
 	},
 	data() {
 		return {
-			loading: false, // 确认按钮是否正在加载中
+			loading: false, // 确认按钮是否正在努力加载中
 			popupValue: false
 		};
 	},
@@ -284,7 +284,7 @@ export default {
 			this.$emit("input", false);
 			this.$emit("update:modelValue", false);
 		},
-		// 清除加载中的状态
+		// 清除努力加载中的状态
 		clearLoading() {
 			this.loading = false;
 		}

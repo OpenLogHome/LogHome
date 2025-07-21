@@ -727,6 +727,26 @@
 				"navigationBarTitleText": "应用更新",
 				"navigationStyle": "custom"
 			}
+		},
+		{
+			"path": "pages/writers/articleFeedbacks",
+			"style": {
+				"navigationBarTitleText": "错误反馈"
+			}
+		},
+		{
+			"path": "pages/apps/inviteCard",
+			"style": {
+				"navigationBarTitleText": "邀请好友",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/apps/enterInviteCode",
+			"style": {
+				"navigationBarTitleText": "填写邀请码",
+				"enablePullDownRefresh": false
+			}
 		}
     ],
 	"tabBar": {

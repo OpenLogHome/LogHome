@@ -46,7 +46,7 @@
 		},
 		onShow(){
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			this.refreshCollections();
 		},

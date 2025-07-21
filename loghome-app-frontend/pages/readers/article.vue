@@ -22,7 +22,7 @@
 		},
 		onShow() {
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			let _this = this;
 			console.log(this.articleId)

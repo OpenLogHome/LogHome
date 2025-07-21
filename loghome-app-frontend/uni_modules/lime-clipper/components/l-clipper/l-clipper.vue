@@ -754,7 +754,7 @@ export default {
 				return;
 			}
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			const { canvasHeight, canvasWidth, clipHeight, clipWidth, ctx, scale, imageLeft, imageTop, clipX, clipY, angle, scaleRatio: dpr, image, quality, fileType, type: imageType, canvasId } = this;
 			const draw = () => {

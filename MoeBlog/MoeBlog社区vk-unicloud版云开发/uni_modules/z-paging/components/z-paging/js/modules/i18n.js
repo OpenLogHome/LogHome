@@ -58,7 +58,7 @@ export default {
 		finalLoadingMoreDefaultText() {
 			return this._getI18nText('zp.loadingMore.default', this.loadingMoreDefaultText);
 		},
-		// 最终的底部加载更多加载中文字
+		// 最终的底部加载更多努力加载中文字
 		finalLoadingMoreLoadingText() {
 			return this._getI18nText('zp.loadingMore.loading', this.loadingMoreLoadingText);
 		},

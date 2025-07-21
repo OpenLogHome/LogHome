@@ -264,7 +264,7 @@
 					return
 				}
 				uni.showLoading({
-					title: '图片加载中...',
+					title: '图片努力加载中...',
 				})
 
 				_this.getImageInfoEx(_this.imageSrc,function(res){

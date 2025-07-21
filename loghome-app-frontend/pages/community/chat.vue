@@ -334,7 +334,7 @@ export default {
             // 当滚动到顶部时加载更多消息
             if (messagesContainer.scrollTop === 0 && !this.loading && !this.noMoreMessages) {
                 uni.showLoading({
-                    title: '加载中',
+                    title: '努力加载中',
                     mask: true
                 });
                 this.fetchMessages(true);

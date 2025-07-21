@@ -25,6 +25,24 @@
 			width: 100vw;
 		}
 		
+		#global-loading-box{
+			position: fixed;
+			top: 50vh;
+			left: 50vw;
+			opacity: 0;
+			transform: translate(-50%, -50%) scale(0);
+			z-index: 20000;
+			background-color: #333333aa;
+			transition: all .3s;
+		}
+
+		#global-loading-box img{
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			transform: scale(0.95)
+		}
+
 	</style>
 
 	<body>
@@ -36,6 +54,12 @@
 <!-- 			<log-image src="https://img.codesocean.top/image/1655861323878" alt="" id="startPage"> -->
 		</div>
 		<div id="app"></div>
+		<div id="global-loading-box">
+			<img src="./static/loading.gif" alt="">
+			<div class="title">
+				努力加载中
+			</div>
+		</div>
 	</body>
 
 	<script>
@@ -80,5 +104,7 @@
 		
 		
 	</script>
+
+	<script src="./common/quill.min.js"></script>
 
 </html>

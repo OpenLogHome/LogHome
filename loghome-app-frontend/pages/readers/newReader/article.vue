@@ -308,6 +308,10 @@
 				<i class="el-icon-chat-line-round"></i>
 				<span>评论</span>
 			</div>
+			<div class="panel-button" @click="handleFeedback">
+				<i class="el-icon-warning-outline"></i>
+				<span>错误反馈</span>
+			</div>
 		</div>
 		
 		<div class="commentBtn" v-for="item in shownCommentsBtn" @click="gotoParagraphComment(item.paragraphId)"
@@ -318,6 +322,32 @@
 				{{item.amount}}
 			</div>
 		</div>
+
+		<el-dialog
+			title="错误反馈"
+			:visible.sync="feedbackDialogVisible"
+			width="80%"
+			:before-close="handleCloseFeedbackDialog">
+			<div class="feedback-container">
+				<div class="paragraph-preview">
+					<p>选中的段落：</p>
+					<div class="paragraph-text">{{ selectedParagraph ? selectedParagraph.value : '' }}</div>
+				</div>
+				<div class="feedback-input">
+					<p>请描述您发现的错误：</p>
+					<el-input
+						type="textarea"
+						:rows="4"
+						placeholder="请输入错误描述，如错别字、语法错误等"
+						v-model="feedbackContent">
+					</el-input>
+				</div>
+			</div>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="handleCloseFeedbackDialog">取消</el-button>
+				<el-button type="primary" @click="submitFeedback" :disabled="!feedbackContent">提交</el-button>
+			</span>
+		</el-dialog>
 	</div>
 </template>
 
@@ -400,7 +430,9 @@ export default {
 			},
 			commentDrawerVisible: false,
 			commentDrawerData: {},
-			excerptDrawerVisible: false
+			excerptDrawerVisible: false,
+			feedbackDialogVisible: false,
+			feedbackContent: ''
 		}
 	},
 	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts },
@@ -878,7 +910,7 @@ export default {
 			let y = touch.clientY - panelHeight - 20; // 默认在触摸点上方显示
 
 			// 确保不超出左右边界
-			x = Math.max(40, Math.min(x, screenWidth - panelWidth - 40));
+			x = Math.max(40, Math.min(x, screenWidth - panelWidth - 100));
 
 			// 如果上方空间不足,则显示在下方
 			if (y < 10) {
@@ -1130,6 +1162,44 @@ export default {
 			this.handleCloseExcerptDrawerManually();
 			this.gotoParagraph(data.articleId, data.paragraphId);
 		},
+		handleFeedback() {
+			this.feedbackDialogVisible = true;
+		},
+		handleCloseFeedbackDialog() {
+			this.feedbackDialogVisible = false;
+			this.feedbackContent = '';
+		},
+		async submitFeedback() {
+			if (!this.selectedParagraph) return;
+
+			let tk = JSON.parse(window.localStorage.getItem('token'));
+			if (tk) tk = tk.tk;
+
+			try {
+				await axios.post(this.$baseUrl + '/articles/submit_feedback', {
+					article_id: this.allPages[this.currentPageIdx].articleId,
+					paragraph_id: this.selectedParagraph.id,
+					feedback_content: this.feedbackContent,
+					feedback_type: 'error' // 错误反馈类型
+				}, {
+					headers: {
+						'Authorization': 'Bearer ' + tk
+					}
+				});
+				uni.showToast({
+					title: '反馈提交成功',
+					icon: 'none'
+				});
+				this.handleCloseFeedbackDialog();
+				this.clearSelection();
+			} catch (error) {
+				console.error(error);
+				uni.showToast({
+					title: '反馈提交失败',
+					icon: 'none'
+				});
+			}
+		}
 	},
 	watch: {
 		currentPageIdx(newValue, oldValue) {
@@ -1183,7 +1253,7 @@ export default {
 		}, 5000);
 		this.loadReaderSettings();
 		uni.showLoading({
-			title: '加载中'
+			title: '努力加载中'
 		});
 		if (JSON.stringify(option) == "{}") {
 			uni.showToast({
@@ -1707,7 +1777,7 @@ export default {
 		display: flex;
 		align-items: center;
 		justify-content: space-around;
-		width: 300rpx;
+		width: 400rpx;
 		height: 100rpx;
 		box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 		transition: all 0.2s ease; // 添加过渡动画
@@ -1767,5 +1837,32 @@ export default {
 		}
 	}
 	
+}
+
+.feedback-container {
+	.paragraph-preview {
+		margin-bottom: 20rpx;
+		p {
+			font-size: 28rpx;
+			color: #606266;
+			margin-bottom: 10rpx;
+		}
+		.paragraph-text {
+			background-color: #f5f7fa;
+			padding: 15rpx;
+			border-radius: 8rpx;
+			font-size: 30rpx;
+			line-height: 1.5;
+			max-height: 200rpx;
+			overflow-y: auto;
+		}
+	}
+	.feedback-input {
+		p {
+			font-size: 28rpx;
+			color: #606266;
+			margin-bottom: 10rpx;
+		}
+	}
 }
 </style>

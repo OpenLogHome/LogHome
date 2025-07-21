@@ -15,8 +15,37 @@
 			// #ifdef H5
 			this.initTheme();
 			// #endif
+			this.globalLoadingDom = document.getElementById("global-loading-box");
+			// 覆写uni.showLoading方法
+			uni.showLoading = (options) => {
+				this.globalLoadingDom.classList.add("show");
+				let callable = (func) => {
+					if(typeof func == "function"){
+						return func;
+					}
+					return () => {};
+				}
+				if(options.success && callable(options.success)){
+					options.success(callable(options.success));
+				}
+				if(options.title) {
+					let titleDom = this.globalLoadingDom.querySelector(".title");
+					titleDom.textContent = options.title;
+				} else {
+					let titleDom = this.globalLoadingDom.querySelector(".title");
+					titleDom.textContent = "努力加载中";
+				}
+			}
+			uni.hideLoading = () => {
+				setTimeout(() => {
+					this.globalLoadingDom.classList.remove("show");
+				}, 300);
+			}
 		},
 		data() {
+			return {
+				globalLoadingDom: undefined
+			}
 		},
 		methods:{
 			utc2timestamp(utc_datetime) {
@@ -479,5 +508,23 @@
 		}
 	}
 
+	#global-loading-box{
+		width: 200rpx;
+		padding-bottom: 10rpx;
+		border-radius: 40rpx;
+		.title{
+			color: white;
+			font-size: 22rpx;
+			text-align: center;
+			margin-top: 0;
+			transform: translateY(-30rpx);
+		}
+	}
+
+
+	#global-loading-box.show{
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
 
 </style>

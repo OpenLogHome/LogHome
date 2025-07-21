@@ -162,7 +162,7 @@
 	 * @property {String | Number}	height					组件高度（默认 130 ）
 	 * @property {String}			bgColor					背景颜色（默认 	'#f3f4f6' ）
 	 * @property {String | Number}	radius					组件圆角，数值或带单位的字符串（默认 4 ）
-	 * @property {Boolean}			loading					是否加载中（默认 false ）
+	 * @property {Boolean}			loading					是否努力加载中（默认 false ）
 	 * @property {Boolean}			showTitle				是否显示标题，要求数组对象中有title属性（默认 false ）
 	 * @event {Function(index)}	click	点击轮播图时触发	index：点击了第几张图片，从0开始
 	 * @event {Function(index)}	change	轮播图切换时触发(自动或者手动切换)	index：切换到了第几张图片，从0开始
@@ -288,7 +288,7 @@
 			    type: [String, Number],
 			    default: 4
 			},
-			// 是否加载中
+			// 是否努力加载中
 			loading: {
 			    type: Boolean,
 			    default: false

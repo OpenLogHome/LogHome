@@ -14,22 +14,22 @@ export default {
 			type: Object,
 			default: u.gc('loadingMoreTitleCustomStyle', {})
 		},
-		// 自定义底部加载更多加载中动画样式
+		// 自定义底部加载更多努力加载中动画样式
 		loadingMoreLoadingIconCustomStyle: {
 			type: Object,
 			default: u.gc('loadingMoreLoadingIconCustomStyle', {})
 		},
-		// 自定义底部加载更多加载中动画图标类型，可选flower或circle，默认为flower
+		// 自定义底部加载更多努力加载中动画图标类型，可选flower或circle，默认为flower
 		loadingMoreLoadingIconType: {
 			type: String,
 			default: u.gc('loadingMoreLoadingIconType', 'flower')
 		},
-		// 自定义底部加载更多加载中动画图标图片
+		// 自定义底部加载更多努力加载中动画图标图片
 		loadingMoreLoadingIconCustomImage: {
 			type: String,
 			default: u.gc('loadingMoreLoadingIconCustomImage', '')
 		},
-		// 底部加载更多加载中view是否展示旋转动画，默认为是
+		// 底部加载更多努力加载中view是否展示旋转动画，默认为是
 		loadingMoreLoadingAnimated: {
 			type: Boolean,
 			default: u.gc('loadingMoreLoadingAnimated', true)
@@ -44,7 +44,7 @@ export default {
 			type: Boolean,
 			default: u.gc('toBottomLoadingMoreEnabled', true)
 		},
-		// 滑动到底部状态为默认状态时，以加载中的状态展示，默认为否。若设置为是，可避免滚动到底部看到默认状态然后立刻变为加载中状态的问题，但分页数量未超过一屏时，不会显示【点击加载更多】
+		// 滑动到底部状态为默认状态时，以努力加载中的状态展示，默认为否。若设置为是，可避免滚动到底部看到默认状态然后立刻变为努力加载中状态的问题，但分页数量未超过一屏时，不会显示【点击加载更多】
 		loadingMoreDefaultAsLoading: {
 			type: Boolean,
 			default: u.gc('loadingMoreDefaultAsLoading', false)
@@ -54,7 +54,7 @@ export default {
 			type: [String, Object],
 			default: u.gc('loadingMoreDefaultText', null)
 		},
-		// 滑动到底部"加载中"文字，默认为【正在加载...】
+		// 滑动到底部"努力加载中"文字，默认为【正在加载...】
 		loadingMoreLoadingText: {
 			type: [String, Object],
 			default: u.gc('loadingMoreLoadingText', null)
@@ -164,7 +164,7 @@ export default {
 		showLoadingMoreDefault() {
 			return this._showLoadingMore('Default');
 		},
-		// 是否显示加载中状态下的底部加载更多
+		// 是否显示努力加载中状态下的底部加载更多
 		showLoadingMoreLoading() {
 			return this._showLoadingMore('Loading');
 		},
@@ -255,7 +255,7 @@ export default {
 			}
 			// emit scrolltolower
 			this.$emit('scrolltolower', from);
-			// 如果是只使用下拉刷新 或者 禁用底部加载更多 或者 底部加载更多不是默认状态或加载失败状态 或者 是加载中状态 或者 空数据图已经展示了，则return，不触发内部加载更多逻辑
+			// 如果是只使用下拉刷新 或者 禁用底部加载更多 或者 底部加载更多不是默认状态或加载失败状态 或者 是努力加载中状态 或者 空数据图已经展示了，则return，不触发内部加载更多逻辑
 			if (this.refresherOnly || !this.loadingMoreEnabled || !(this.loadingStatus === Enum.More.Default || this.loadingStatus === Enum.More.Fail) || this.loading || this.showEmpty) return;
 			// #ifdef MP-WEIXIN
 			if (!this.isIos && !this.refresherOnly && !this.usePageScroll) {

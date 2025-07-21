@@ -300,14 +300,91 @@ router.get('/get_tipping_amount_by_id', async function (req, res) {
 
 router.get('/get_all_novel_fans', async function (req, res) {
 	try {
+		let timeFilter = '';
+		if (req.query.type === 'month') {
+			// 当前月的第一天和下个月的第一天
+			const currentMonth = moment().format('YYYY-MM-01');
+			const nextMonth = moment().add(1, 'month').format('YYYY-MM-01');
+			timeFilter = ` AND tipping_time >= '${currentMonth}' AND tipping_time < '${nextMonth}'`;
+		}
+		
 		let results = await query(
 			`SELECT * FROM (SELECT from_id user_id, SUM(item_amount * item_cost) fans_value 
-					FROM tipping WHERE novel_id = ? GROUP BY from_id) a 
+					FROM tipping WHERE novel_id = ?${timeFilter} GROUP BY from_id) a 
 					JOIN open_users USING(user_id) ORDER BY fans_value DESC`,
 			[req.query.novel_id],
 		);
+		
+		// 获取粉丝留言
+		let messages = await query(
+			`SELECT * FROM novel_fans_messages WHERE novel_id = ?`,
+			[req.query.novel_id]
+		);
+		
+		// 将留言信息合并到结果中
+		for (let i = 0; i < results.length; i++) {
+			let userMessage = messages.find(m => m.user_id === results[i].user_id);
+			results[i].message = userMessage ? userMessage.message : null;
+		}
+		
 		res.end(JSON.stringify(results));
 	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 添加更新粉丝留言的API
+router.post('/update_fan_message', auth, async function (req, res) {
+	try {
+		const user = req.user[0];
+		const novel_id = req.body.novel_id;
+		const message = req.body.message;
+		
+		// 验证用户是否是小说的粉丝（有打赏记录）
+		const isFan = await query(
+			`SELECT COUNT(*) as count FROM tipping WHERE novel_id = ? AND from_id = ?`,
+			[novel_id, user.user_id]
+		);
+		
+		if (isFan[0].count > 0) {
+			// 插入或更新留言
+			await query(
+				`INSERT INTO novel_fans_messages (novel_id, user_id, message) 
+				 VALUES (?, ?, ?) 
+				 ON DUPLICATE KEY UPDATE message = ?`,
+				[novel_id, user.user_id, message, message]
+			);
+			
+			res.json({ success: true });
+		} else {
+			res.json({ success: false, msg: '只有粉丝才能留言' });
+		}
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取用户的粉丝留言
+router.get('/get_user_fan_message', auth, async function (req, res) {
+	try {
+		const user = req.user[0];
+		const novel_id = req.query.novel_id;
+		
+		// 获取用户对该小说的留言
+		const message = await query(
+			`SELECT * FROM novel_fans_messages WHERE novel_id = ? AND user_id = ?`,
+			[novel_id, user.user_id]
+		);
+		
+		if (message.length > 0) {
+			res.json({ success: true, message: message[0].message });
+		} else {
+			res.json({ success: true, message: "" });
+		}
+	} catch (e) {
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });
@@ -470,6 +547,28 @@ router.get('/get_novel_pics', async function (req, res) {
 		]);
 		res.end(JSON.stringify(results));
 	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// Banner相关API路由
+router.get('/get_banners', async function (req, res) {
+	try {
+		const page = req.query.page || 'library'; // 默认为library页面
+		const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
+		
+		let results = await query(
+			`SELECT * FROM banners 
+			WHERE page_location = ? 
+			AND is_active = 1 
+			AND (start_time IS NULL OR start_time <= ?) 
+			AND (end_time IS NULL OR end_time >= ?) 
+			ORDER BY \`order\` ASC`,
+			[page, currentTime, currentTime]
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });

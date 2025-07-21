@@ -138,7 +138,7 @@ export default {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
 				uni.showLoading({
-					title: '加载中'
+					title: '努力加载中'
 				})
 				
 				// 获取总数
@@ -197,7 +197,7 @@ export default {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
 				uni.showLoading({
-					title: '加载中'
+					title: '努力加载中'
 				})
 				
 				const res = await axios.get(this.$baseUrl + '/manage/posts/get_post_by_id', {

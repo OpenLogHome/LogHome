@@ -8,7 +8,7 @@ const WxsMixin = {
 				scrollTop:0, // 滚动条的距离
 				bodyHeight:0, // body的高度
 				isDownScrolling:false, // 是否正在下拉刷新中
-				isUpScrolling:false, // 是否正在上拉加载中
+				isUpScrolling:false, // 是否正在上拉努力加载中
 				isScrollBody:true, // 是否为mescroll-body滚动
 				isUpBoth:true, // 上拉加载时,是否同时可以下拉刷新
 				t: 0 // 数据更新的标记 (只有数据更新了,才会触发wxs的Observer)

@@ -19,6 +19,10 @@
 				</view>
 			</view>
 		</view>
+
+		<!-- 添加Banner组件 -->
+		<banner page="essays" v-show="topNavArr[topNavIndex] == '小说'" />
+		
 		<view class="noEssay" v-if="books.length==0" v-show="topNavArr[topNavIndex] == '小说'">
 			<img src="../static/images/icon_my_uplotolib.png" alt=""/>
 			<p>方块跃然纸上，故事在此生长</p>
@@ -154,6 +158,7 @@
 	import writerHelper from "@/components/writer_helper"
 	import worldPage from '@/components/worldsPage.vue'
 	import BookDetailView from '@/components/book-detail-view.vue'
+	import banner from '@/components/banner.vue'
 	import axios from 'axios'
 	export default {
 		data() {
@@ -178,7 +183,8 @@
 			cardSwiper,
 			writerHelper,
 			worldPage,
-			BookDetailView
+			BookDetailView,
+			banner
 		},
 		onShow() {
 			if (this.$isFromLogin) {
@@ -198,7 +204,7 @@
 				return;
 			}
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			this.refreshPage();
 			this.$refs.worldPage.refreshPage();

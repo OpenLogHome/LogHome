@@ -792,7 +792,7 @@ var component = Object(componentNormalizer["a" /* default */])(
     },
     // 富文本转纯文本
     richtext2text(richtext) {
-      if (!richtext) return '加载中';
+      if (!richtext) return '努力加载中';
       try {
         const richArr = JSON.parse(richtext);
         let richStr = "";

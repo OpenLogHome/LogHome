@@ -20,7 +20,7 @@ export default {
 		mOption(){
 			return this.option || {}
 		},
-		// 是否在加载中
+		// 是否在努力加载中
 		isDownLoading(){
 			return this.type === 3
 		},

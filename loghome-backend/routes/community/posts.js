@@ -164,6 +164,21 @@ router.get('/detail/:id', async (req, res) => {
         
         post.mentions = mentions;
         
+        // 如果帖子绑定了作品，获取作品信息
+        if (post.novel_id) {
+            const novel = await query(
+                `SELECT n.*, u.name as author_name, u.avatar_url as auther_avatar
+                 FROM novels n
+                 LEFT JOIN users u ON n.author_id = u.user_id
+                 WHERE n.novel_id = ? AND n.deleted = 0`,
+                [post.novel_id]
+            );
+            
+            if (novel.length > 0) {
+                post.novel_info = novel[0];
+            }
+        }
+        
         res.json(post);
     } catch (e) {
         console.error(e);
@@ -175,7 +190,7 @@ router.get('/detail/:id', async (req, res) => {
 router.post('/create', auth, async (req, res) => {
     try {
         const user = req.user[0];
-        const { circle_id, title, content, type, media_urls, tag_ids, mention_ids } = req.body;
+        const { circle_id, title, content, type, media_urls, tag_ids, mention_ids, novel_id } = req.body;
         
         // 检查圈子是否存在
         const circle = await query(
@@ -270,11 +285,28 @@ router.post('/create', auth, async (req, res) => {
         // 判断是否需要审核 - 改为用户加入圈子后直接发布，无需审核
         const initialStatus = 1; // 直接发布
         
+        // 检查如果提供了novel_id，确认该小说存在且用户有权限绑定
+        if (novel_id) {
+            const novel = await query(
+                'SELECT * FROM novels WHERE novel_id = ? AND deleted = 0',
+                [novel_id]
+            );
+            
+            if (novel.length === 0) {
+                return res.status(404).json({ msg: '作品不存在或已被删除' });
+            }
+            
+            // 验证用户是否有权限绑定该作品（作者本人）
+            if (novel[0].author_id !== user.user_id) {
+                return res.status(403).json({ msg: '您只能绑定自己创作的作品' });
+            }
+        }
+        
         // 创建帖子
         const result = await query(
-            `INSERT INTO comm_posts (circle_id, user_id, title, content, type, media_urls, status, create_time) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-            [circle_id, user.user_id, title, content, type || 0, mediaUrlsJson, initialStatus]
+            `INSERT INTO comm_posts (circle_id, user_id, title, content, type, media_urls, status, create_time, novel_id) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+            [circle_id, user.user_id, title, content, type || 0, mediaUrlsJson, initialStatus, novel_id || null]
         );
         
         const postId = result.insertId;
@@ -355,7 +387,7 @@ router.put('/:id', auth, async (req, res) => {
     try {
         const user = req.user[0];
         const postId = req.params.id;
-        const { title, content, media_urls, tag_ids } = req.body;
+        const { title, content, media_urls, tag_ids, novel_id } = req.body;
         
         // 检查帖子是否存在
         const post = await query(
@@ -389,10 +421,27 @@ router.put('/:id', auth, async (req, res) => {
             mediaUrlsJson = JSON.stringify(media_urls);
         }
         
+        // 检查如果提供了novel_id，确认该小说存在且用户有权限绑定
+        if (novel_id) {
+            const novel = await query(
+                'SELECT * FROM novels WHERE novel_id = ? AND deleted = 0',
+                [novel_id]
+            );
+            
+            if (novel.length === 0) {
+                return res.status(404).json({ msg: '作品不存在或已被删除' });
+            }
+            
+            // 验证用户是否有权限绑定该作品（作者本人）
+            if (novel[0].author_id !== user.user_id) {
+                return res.status(403).json({ msg: '您只能绑定自己创作的作品' });
+            }
+        }
+        
         // 更新帖子
         await query(
-            'UPDATE comm_posts SET title = ?, content = ?, media_urls = ?, update_time = NOW() WHERE post_id = ?',
-            [title, content, mediaUrlsJson, postId]
+            'UPDATE comm_posts SET title = ?, content = ?, media_urls = ?, novel_id = ?, update_time = NOW() WHERE post_id = ?',
+            [title, content, mediaUrlsJson, novel_id || null, postId]
         );
         
         // 更新标签关联

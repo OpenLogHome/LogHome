@@ -178,7 +178,7 @@
 					for (let item of res.data) {
 						if (item.article_type == "worldOutline") {
 							_this.worldOutlines.push(item);
-							item.content = "加载中"
+							item.content = "努力加载中"
 						} else if (item.article_type == "worldVocabulary") {
 							_this.worldVoabs.push(item);
 						}

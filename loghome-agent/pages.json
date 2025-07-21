@@ -1,0 +1,247 @@
+[
+  {
+    "name": "home",
+    "description": "前往起始页面",
+    "generator": "home_page",
+    "params": {},
+    "energy_cost": 0,
+    "operations": ["bookcase", "library", "messages"]
+  },
+  {
+    "name": "messages",
+    "description": "前往私信列表页面",
+    "generator": "messages_list_page",
+    "params": {},
+    "energy_cost": 1,
+    "operations": ["view_messages", "send_message", "home"]
+  },
+  {
+    "name": "view_messages",
+    "description": "查看与特定用户的私信对话",
+    "generator": "view_messages_page",
+    "params": {
+      "user_id": {
+        "description": "用户ID",
+        "type": "int",
+        "required": true
+      },
+      "page_size": {
+        "description": "显示消息数量",
+        "type": "int",
+        "required": false
+      }
+    },
+    "energy_cost": 5,
+    "operations": ["send_message", "messages", "home"]
+  },
+  {
+    "name": "send_message",
+    "description": "向特定用户发送私信",
+    "generator": "send_message_page",
+    "params": {
+      "to_id": {
+        "description": "接收者ID",
+        "type": "int",
+        "required": true
+      },
+      "message_content": {
+        "description": "消息内容",
+        "type": "string",
+        "required": true
+      }
+    },
+    "energy_cost": 5,
+    "operations": ["view_messages", "messages", "home"]
+  },
+  {
+    "name": "bookcase",
+    "description": "前往书架页面",
+    "generator": "bookcase_page",
+    "params": {},
+    "energy_cost": 1,
+    "operations": ["novel", "home"]
+  },
+  {
+    "name": "library",
+    "description": "前往书库页面",
+    "generator": "library_page",
+    "params": {},
+    "energy_cost": 1,
+    "operations": ["novel", "home"]
+  },
+  {
+    "name": "novel",
+    "description": "前往小说信息页面",
+    "generator": "novel_page",
+    "params": {
+      "novel_id": {
+        "description": "小说ID",
+        "type": "int",
+        "required": true
+      }
+    },
+    "energy_cost": 1,
+    "operations": ["article", "home", "novel_nice", "novel_un_nice", "novel_collect", "novel_un_collect", "novel_comments"]
+  },
+  {
+    "name": "novel_nice",
+    "description": "点赞小说",
+    "generator": "novel_nice_page",
+    "params": {
+      "novel_id": {
+        "description": "小说ID",
+        "type": "int",
+        "required": true
+      }
+    },
+    "energy_cost": 5,
+    "operations": ["novel", "home", "novel_un_nice", "novel_nice", "novel_un_collect", "novel_collect"]
+  },
+  {
+    "name": "novel_un_nice",
+    "description": "取消点赞小说",
+    "generator": "novel_un_nice_page",
+    "params": {
+      "novel_id": {
+        "description": "小说ID",
+        "type": "int",
+        "required": true
+      }
+    },
+    "energy_cost": 5,
+    "operations": ["novel", "home", "novel_nice", "novel_un_collect", "novel_collect", "novel_un_nice"]
+  },
+  {
+    "name": "novel_collect",
+    "description": "收藏小说",
+    "generator": "novel_collect_page",
+    "params": {
+      "novel_id": {
+        "description": "小说ID",
+        "type": "int",
+        "required": true
+      }
+    },
+    "energy_cost": 5,
+    "operations": ["novel", "home", "novel_un_collect", "novel_collect", "novel_un_nice", "novel_nice"]
+  },
+  {
+    "name": "novel_un_collect",
+    "description": "取消收藏小说",
+    "generator": "novel_un_collect_page",
+    "params": {
+      "novel_id": {
+        "description": "小说ID",
+        "type": "int",
+        "required": true
+      }
+    },
+    "energy_cost": 5,
+    "operations": ["novel", "home", "novel_collect", "novel_un_nice", "novel_nice", "novel_un_collect"]
+  },
+  {
+    "name": "article",
+    "description": "前往文章页面",
+    "generator": "article_page",
+    "params": {
+      "article_id": {
+        "description": "文章ID",
+        "type": "int",
+        "required": true
+      }
+    },
+    "energy_cost": 5,
+    "operations": ["novel", "article", "home", "article_comments"]
+  }, 
+  {
+    "name": "novel_comments",
+    "description": "前往小说评论页面",
+    "generator": "novel_comments_page",
+    "params": {
+      "novel_id": {
+        "description": "小说ID",
+        "type": "int",
+        "required": true
+      },
+      "page": {
+        "description": "评论页码",
+        "type": "int",
+        "required": false
+      }
+    },
+    "energy_cost": 10,
+    "operations": ["novel", "home", "submit_comment"]
+  },
+  {
+    "name": "submit_comment",
+    "description": "提交评论，可以创建评论，也可以回复已有的评论。如果回复评论，请在reply_to_comment_id中填写被回复的评论ID，否则不要传这个参数。",
+    "generator": "submit_comment_page",
+    "params": {
+      "novel_id": {
+        "description": "小说ID",
+        "type": "int",
+        "required": true
+      },
+      "reply_to_comment_id": {
+        "description": "回复的评论ID",
+        "type": "int",
+        "required": false
+      },
+      "content": {
+        "description": "评论内容",
+        "type": "string",
+        "required": true
+      }
+    },
+    "energy_cost": 10,
+    "operations": ["novel", "home", "novel_comments"]
+  },
+  {
+    "name": "article_comments",
+    "generator": "article_comments_page",
+    "params": {
+        "article_id": {
+          "description": "文章ID",
+          "type": "int",
+          "required": true
+        },
+        "page": {
+          "description": "评论页码",
+          "type": "int",
+          "required": false
+        }
+    },
+    "description": "查看章节评论",
+    "energy_cost": 10,
+    "operations": ["article", "home", "submit_article_comment"]
+},
+{
+    "name": "submit_article_comment",
+    "generator": "submit_article_comment_page",
+    "params": {
+        "article_id": {
+          "description": "文章ID",
+          "type": "int",
+          "required": true
+        },
+        "content": {
+          "description": "评论内容",
+          "type": "string",
+          "required": true
+        },
+        "paragraph_id": {
+          "description": "段落ID",
+          "type": "int",
+          "required": false
+        },
+        "reply_to_comment_id": {
+          "description": "回复的评论ID",
+          "type": "int",
+          "required": false
+        }
+    },
+    "description": "提交章节评论，可以创建评论，也可以回复已有的评论。如果回复评论，请在reply_to_comment_id中填写被回复的评论ID，否则不要传这个参数。可以只对整个章节评论，也可以对章节中的段落评论。如果对段落评论，请在paragraph_id中填写段落ID，否则不要传这个参数。",
+    "energy_cost": 10,
+    "operations": ["article", "home", "article_comments"]
+}
+]

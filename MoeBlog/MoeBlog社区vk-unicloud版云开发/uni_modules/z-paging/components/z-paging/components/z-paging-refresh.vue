@@ -3,7 +3,7 @@
 	<view style="height: 100%;">
 		<view :class="showUpdateTime?'zp-r-container zp-r-container-padding':'zp-r-container'">
 			<view class="zp-r-left">
-				<!-- 非加载中(继续下拉刷新、松手立即刷新状态图片) -->
+				<!-- 非努力加载中(继续下拉刷新、松手立即刷新状态图片) -->
 				<image v-if="status!==R.Loading" :class="leftImageClass" :style="[leftImageStyle,imgStyle]" :src="leftImageSrc" />
 				<!-- 加载状态图片 -->
 				<!-- #ifndef APP-NVUE -->

@@ -27,6 +27,20 @@
             {{post.content}}
           </view>
           
+          <!-- 显示绑定的作品 -->
+          <view class="bound-novel" v-if="post.novel_info" @tap="navigateToNovel(post.novel_info.novel_id)">
+            <view class="novel-card">
+              <log-image class="novel-cover" :src="post.novel_info.picUrl" mode="aspectFill" 
+                onerror="onerror=null;src='../../static/images/defaultBookCover.png'"></log-image>
+              <view class="novel-info">
+                <text class="novel-title">《{{post.novel_info.name}}》</text>
+                <view class="novel-author">
+                  <text>作者: {{post.novel_info.author_name}}</text>
+                </view>
+                <text class="novel-desc">{{post.novel_info.content && post.novel_info.content.length > 100 ? post.novel_info.content.substring(0, 100) + '...' : post.novel_info.content}}</text>
+              </view>
+            </view>
+          </view>
           
           <!-- 图片展示 -->
           <view class="post-images" v-if="post.media_urls && post.media_urls.length > 0">
@@ -141,7 +155,7 @@
         <!-- 加载状态提示 -->
         <view class="loading-more" v-if="loadingStatus === 'loading'">
           <view class="loading-spinner"></view>
-          <text>加载中...</text>
+          <text>努力加载中...</text>
         </view>
         <view class="loading-more" v-if="loadingStatus === 'noMore'">
           <text>没有更多数据了</text>
@@ -718,6 +732,12 @@ export default {
       })
     },
     
+    navigateToNovel(novelId) {
+      uni.navigateTo({
+        url: '/pages/readers/bookInfo?id=' + novelId
+      })
+    },
+    
     onPageScroll(ev) {
       let pageHeight = document.querySelector('.content-scroll').scrollHeight;
       let scrollTop = ev.scrollTop;
@@ -924,6 +944,63 @@ export default {
   line-height: 1.6;
   word-break: break-all;
   white-space: pre-wrap;
+}
+
+.bound-novel {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background-color: #f8f8f8;
+  border-radius: 12rpx;
+}
+
+.novel-card {
+  display: flex;
+  align-items: center;
+  // background-color: #fff;
+  border-radius: 12rpx;
+  overflow: hidden;
+  // box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.novel-cover {
+  width: 120rpx;
+  height: 160rpx;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+}
+
+.novel-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.novel-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novel-author {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+.novel-desc {
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .post-images {

@@ -65,6 +65,15 @@
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
+				<navigator url="./apps/inviteCard">
+					<view class="li">
+						<view class="icon">
+							<img src="../static/icons/icon_share.png"></img>
+						</view>
+						<view class="text">邀请好友</view>
+						<img class="to" src="../static/user/to.png"></img>
+					</view>
+				</navigator>
 				<navigator url="./payments/recharge">
 					<view class="li">
 						<view class="icon">
@@ -85,7 +94,7 @@
 				</navigator>
 			</view>
 			<view class="list">
-				<navigator url="./users/user_credit">
+				<!-- <navigator url="./users/user_credit">
 					<view class="li">
 						<view class="icon">
 							<img src="../static/icons/icon_sponsored.png"></img>
@@ -93,7 +102,7 @@
 						<view class="text">我的信誉</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
-				</navigator>
+				</navigator> -->
 				<navigator url="./apps/about">
 					<view class="li">
 						<view class="icon">
@@ -103,7 +112,7 @@
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
-				<navigator url="./apps/faqs/faq">
+				<!-- <navigator url="./apps/faqs/faq">
 					<view class="li">
 						<view class="icon">
 							<img src="../static/icons/icon_report.png"></img>
@@ -111,7 +120,7 @@
 						<view class="text">意见反馈</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
-				</navigator>
+				</navigator> -->
 				<navigator url="./manage/index" v-if="user.is_admin == 1">
 					<view class="li noborder">
 						<view class="icon">
@@ -152,7 +161,7 @@
 		components: {groupLabel},
 		onShow() {
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			// 用于判断是否从登录页返回，是的话则直接退回首页。
 			if (this.$isFromLogin) {
@@ -172,6 +181,7 @@
 				uni.navigateTo({
 					url: './users/login?msg=' + 'unAuthorized'
 				});
+				uni.hideLoading();
 				return;
 			}
 			//获取用户资料
@@ -228,6 +238,7 @@
 				// 做下本地缓存，在网络不佳的情况下先获取本地数据
 				window.localStorage.setItem("LogHomeUserInfo", JSON.stringify(res.data));
 			}).catch(function(error) {
+				uni.hideLoading();
 				// 如果鉴权失败说明token失效，则重新登录
 				if (error.message == "Request failed with status code 401") {
 					window.localStorage.removeItem('token');

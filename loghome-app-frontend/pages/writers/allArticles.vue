@@ -18,6 +18,8 @@
 								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">分卷</el-tag>
 								<el-tag type="danger" v-show="item.is_draft == true" effect="dark"
 								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">草稿</el-tag>
+								<el-tag type="warning" v-if="item.feedback_count && item.feedback_count > 0" effect="dark"
+								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{item.feedback_count}}处反馈</el-tag>
 							</div>
 							<div class="miniTitle">
 								<div v-show="item.article_type != 'spliter'">
@@ -44,6 +46,13 @@
 								<div class="subTitle"> 
 									<uni-icons type="loop" size="20" color="rgb(113, 52, 24)"/>
 									<span>本地备份</span>
+								</div>
+							</navigator>
+							<navigator :url="'./articleFeedbacks?id=' +  item.article_id"
+									   open-type="navigate" v-show="item.article_type != 'spliter' && item.feedback_count > 0">
+								<div class="subTitle"> 
+									<uni-icons type="help" size="20" color="rgb(113, 52, 24)"/>
+									<span>错误反馈 ({{item.feedback_count}})</span>
 								</div>
 							</navigator>
 							<div class="subTitle" @click="deleteArticle(item.article_id)">
@@ -125,7 +134,7 @@ export default{
 	},
 	onLoad(option){
 		uni.showLoading({
-			title: '加载中'
+			title: '努力加载中'
 		});
 		if(JSON.stringify(option) == "{}"){
 			uni.showToast({
@@ -181,7 +190,7 @@ export default{
 		},
 		refreshPage(changeToNewestBookPart){
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			//清除文章排序信息，该功能应当被移除！
 			window.localStorage.removeItem('articleSortSetting');

@@ -21,7 +21,7 @@
       <!-- 我的书摘 -->
       <div v-if="activeTab === 'my'" class="my-excerpts">
         <div v-if="loading" class="loading">
-          <i class="el-icon-loading"></i> 加载中...
+          <i class="el-icon-loading"></i> 努力加载中...
         </div>
         <div v-else-if="myExcerpts.length === 0" class="empty-state">
           <i class="el-icon-document"></i>
@@ -49,7 +49,7 @@
       <!-- 热门书摘 -->
       <div v-if="activeTab === 'hot'" class="hot-excerpts">
         <div v-if="loadingHot" class="loading">
-          <i class="el-icon-loading"></i> 加载中...
+          <i class="el-icon-loading"></i> 努力加载中...
         </div>
         <div v-else-if="hotExcerpts.length === 0" class="empty-state">
           <i class="el-icon-data-analysis"></i>

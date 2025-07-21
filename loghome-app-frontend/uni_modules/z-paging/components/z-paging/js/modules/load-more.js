@@ -18,24 +18,24 @@ const ZPLoadMore = {
 				return u.gc('loadingMoreTitleCustomStyle', {});
 			}
 		},
-		//自定义底部加载更多加载中动画样式
+		//自定义底部加载更多努力加载中动画样式
 		loadingMoreLoadingIconCustomStyle: {
 			type: Object,
 			default: function() {
 				return u.gc('loadingMoreLoadingIconCustomStyle', {});
 			}
 		},
-		//自定义底部加载更多加载中动画图标类型，可选flower或circle，默认为flower
+		//自定义底部加载更多努力加载中动画图标类型，可选flower或circle，默认为flower
 		loadingMoreLoadingIconType: {
 			type: String,
 			default: u.gc('loadingMoreLoadingIconType', 'flower')
 		},
-		//自定义底部加载更多加载中动画图标图片
+		//自定义底部加载更多努力加载中动画图标图片
 		loadingMoreLoadingIconCustomImage: {
 			type: String,
 			default: u.gc('loadingMoreLoadingIconCustomImage', '')
 		},
-		//底部加载更多加载中view是否展示旋转动画，默认为是
+		//底部加载更多努力加载中view是否展示旋转动画，默认为是
 		loadingMoreLoadingAnimated: {
 			type: Boolean,
 			default: u.gc('loadingMoreLoadingAnimated', true)
@@ -50,7 +50,7 @@ const ZPLoadMore = {
 			type: Boolean,
 			default: u.gc('toBottomLoadingMoreEnabled', true)
 		},
-		//滑动到底部状态为默认状态时，以加载中的状态展示，默认为否。若设置为是，可避免滚动到底部看到默认状态然后立刻变为加载中状态的问题，但分页数量未超过一屏时，不会显示【点击加载更多】
+		//滑动到底部状态为默认状态时，以努力加载中的状态展示，默认为否。若设置为是，可避免滚动到底部看到默认状态然后立刻变为努力加载中状态的问题，但分页数量未超过一屏时，不会显示【点击加载更多】
 		loadingMoreDefaultAsLoading: {
 			type: [Boolean],
 			default: u.gc('loadingMoreDefaultAsLoading', false)
@@ -60,7 +60,7 @@ const ZPLoadMore = {
 			type: [String, Object],
 			default: u.gc('loadingMoreDefaultText', null)
 		},
-		//滑动到底部"加载中"文字，默认为【正在加载...】
+		//滑动到底部"努力加载中"文字，默认为【正在加载...】
 		loadingMoreLoadingText: {
 			type: [String, Object],
 			default: u.gc('loadingMoreLoadingText', null)

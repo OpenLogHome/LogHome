@@ -21,9 +21,9 @@
 			</div>
 			<view class="comments">
 				<commentItem v-for="item in reviews" :reviewMsg="item" :key="item.essay_comment_id"
-					:componentMode="componentMode" @childReview="childReview($event)"
-					@changePraise="changePraise($event)" @deleteComment="deleteComment($event)"
-					:paragraphMode="paragraphId != undefined" @navigate="$emit('navigate')"></commentItem>
+					:componentMode="componentMode" @childReview="childReview($event)" :id="'comment_' + item.comment_id"
+					@changePraise="changePraise($event)" @deleteComment="deleteComment($event)" class="comment_item" :class="{highlight_comment: preLoadCommentId == item.comment_id}"
+					:paragraphMode="paragraphId != undefined" @navigate="$emit('navigate')" :fanRanks="fanRanks" :novelId="novelId"></commentItem>
 			</view>
 			<view class="blank_box"></view>
 		</z-paging>
@@ -73,6 +73,7 @@ export default {
 	data() {
 		return {
 			novelId: 0,
+			preLoadCommentId: undefined,
 			reviews: [],
 			commentText: "",
 			commentPlaceholder: "发一条友善的评论",
@@ -84,7 +85,11 @@ export default {
 			paragraphId: undefined,
 			paragraph: undefined,
 			extraCommentId: undefined,
-			media_urls: [] // 存储图片URL
+			media_urls: [], // 存储图片URL
+			fanRanks: {
+				totalRanks: [],
+				monthlyRanks: []
+			}
 		}
 	},
 	props: {
@@ -106,10 +111,14 @@ export default {
 					this.loadParagraphInfo();
 				}
 			}
+			// 获取粉丝排名
+			this.fetchFanRanks();
 		}
 	},
 	onLoad(params) {
-		console.log(this.componentMode);
+		if (params.comment_id !== undefined) {
+			this.preLoadCommentId = params.comment_id;
+		}
 		if (!this.componentMode) {
 			this.novelId = params.id;
 			if (params.articleId !== undefined) {
@@ -128,6 +137,8 @@ export default {
 			if (params.extraId !== undefined) {
 				this.extraCommentId = params.extraId;
 			}
+			// 获取粉丝排名
+			this.fetchFanRanks();
 		}
 	},
 	methods: {
@@ -151,6 +162,18 @@ export default {
 			var beijing_datetime = this.timeConvert(new Date(parseInt(timestamp) * 1000))
 			return beijing_datetime; // 2017-03-31 16:02:06
 		},
+		// 获取粉丝排名数据
+		fetchFanRanks() {
+			axios.get(this.$baseUrl + '/community/get_novel_fan_ranks', {
+				params: { novel_id: this.novelId }
+			})
+			.then((res) => {
+				this.fanRanks = res.data;
+			})
+			.catch((error) => {
+				console.log('获取粉丝排名失败', error);
+			});
+		},
 		pullDown() {
 			if (this.componentMode) {
 				this.$emit("hide");
@@ -163,11 +186,50 @@ export default {
 				})
 			})
 		},
+		async loadComment(commentId) {
+			let res = await axios.get(this.$baseUrl + "/community/novel_comment_from_comment_id?comment_id=" + commentId);
+			let data = res.data;
+			if (data.length > 0) {
+				let commentItem = {
+					author_id: data[0].author_id,
+					comment_id: data[0].essay_comment_id,
+					headImgSrc: data[0].avatar_url,
+					userName: data[0].name,
+					userId: data[0].user_id,
+					sendTime: this.utc2beijing(data[0].comment_time),
+					sendMsg: data[0].content,
+					likeNum: data[0].likeNum,
+					reviewLess: [],
+					reviewNum: 0,
+					article_id: data[0].article_id,
+					cento_id: data[0].cento_id,
+					cento: data[0].cento,
+					media_urls: data[0].media_urls || []
+				}
+				// 加载回复
+				await axios.get(this.$baseUrl + "/community/novel_commonts_reply_to?id=" + commentId)
+					.then((res) => {
+						let data = res.data;
+						for (let item of data) {
+							commentItem.reviewLess.push({
+								comment_id: item.essay_comment_id,
+								userName: item.name,
+								userId: item.user_id,
+								targetUserName: data[0].name,
+								sendMsg: item.content,
+								article_id: item.article_id,
+								media_urls: item.media_urls || []
+							});
+						}
+					})
+				this.$refs.paging.addDataFromTop([commentItem], true, true);
+			}
+		},
 		async refreshPage(pageNo, pageSize) {
 			await this.delay();
 			if (this.$refs.paging == undefined) return;
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			let reviewDatas = [];
 			let _this = this;
@@ -255,6 +317,24 @@ export default {
 			}
 			this.$refs.paging.complete(reviews);
 			uni.hideLoading();
+
+			if (this.preLoadCommentId !== undefined && pageNo == 1) {
+				for (let item of reviews) {
+					if (item.comment_id == this.preLoadCommentId) {
+						setTimeout(() => {
+							this.$refs.paging.scrollIntoViewById('comment_' + item.comment_id, 0, true);
+						}, 100);
+						setTimeout(() => {
+							this.preLoadCommentId = -1;
+						}, 1000);
+						return;
+					}
+				}
+				await this.loadComment(this.preLoadCommentId);
+				setTimeout(() => {
+					this.preLoadCommentId = -1;
+				}, 1000);
+			}
 		},
 		submitComment() {
 			let _this = this;
@@ -616,6 +696,14 @@ export default {
 				padding-top: 5rpx;
 			}
 		}
+	}
+
+	.comment_item {
+		transition: filter 0.3s ease;
+	}
+
+	.highlight_comment {
+		filter: brightness(0.9);
 	}
 
 	.blank_box {

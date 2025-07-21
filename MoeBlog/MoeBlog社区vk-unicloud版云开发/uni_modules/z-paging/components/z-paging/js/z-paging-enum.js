@@ -14,7 +14,7 @@ export default {
 		Complete: 'complete',
 		GoF2: 'go-f2'
 	},
-	// 底部加载更多状态 default:默认状态 loading:加载中 no-more:没有更多数据 fail:加载失败
+	// 底部加载更多状态 default:默认状态 loading:努力加载中 no-more:没有更多数据 fail:加载失败
 	More: {
 		Default: 'default',
 		Loading: 'loading',

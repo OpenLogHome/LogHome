@@ -24,7 +24,7 @@ export default {
 			type: Boolean,
 			default: u.gc('systemLoadingMask', true)
 		},
-		// 显示系统Loading时显示的文字，默认为"加载中"
+		// 显示系统Loading时显示的文字，默认为"努力加载中"
 		systemLoadingText: {
 			type: [String, Object],
 			default: u.gc('systemLoadingText', null)

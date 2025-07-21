@@ -192,7 +192,7 @@
 			},
 			getLikedBooks(){
 				uni.showLoading({
-					title: '加载中'
+					title: '努力加载中'
 				});
 				if (this.$isFromLogin) {
 					this.$isFromLogin = false;
@@ -243,7 +243,7 @@
 			},
 			getHistoryBooks(){
 				uni.showLoading({
-					title: '加载中'
+					title: '努力加载中'
 				});
 				let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"));
 				if(readerHistory != null){
@@ -255,7 +255,16 @@
 				uni.hideLoading();
 			}
 		},
+		onLoad() {
+			// 页面初始化时加载数据
+			if(this.tabValue[this.curTabIndex] == "收藏"){
+				this.getLikedBooks();
+			} else if(this.tabValue[this.curTabIndex] == "历史") {
+				this.getHistoryBooks();
+			}
+		},
 		onShow() {
+			// 页面显示时刷新数据
 			this.changeTab(this.curTabIndex);
 		},
 		data() {

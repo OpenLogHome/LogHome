@@ -32,7 +32,7 @@
 					<!-- 上拉加载区域 (下拉刷新时不显示,支付宝小程序子组件传参给子子组件仍报单项数据流的异常,暂时不通过mescroll-up组件实现)-->
 					<!-- <mescroll-up v-if="mescroll.optUp.use && downLoadType !== 3" :option="mescroll.optUp" :type="upLoadType"></mescroll-up> -->
 					<view class="mescroll-upwarp" :style="{'background':mescroll.optUp.bgColor,'color':mescroll.optUp.textColor}">
-						<!-- 加载中 (此处不能用v-if,否则android小程序快速上拉可能会不断触发上拉回调) -->
+						<!-- 努力加载中 (此处不能用v-if,否则android小程序快速上拉可能会不断触发上拉回调) -->
 						<view v-show="upLoadType===1">
 							<view class="upwarp-progress mescroll-rotate"></view>
 							<view class="upwarp-tip">{{ mescroll.optUp.textLoading }}</view>
@@ -177,7 +177,7 @@
 				if(this.disableScroll) return false
 				return this.downLoadType===0 || this.isDownReset
 			},
-			// 是否在加载中
+			// 是否在努力加载中
 			isDownLoading() {
 				return this.downLoadType === 3;
 			},
@@ -308,7 +308,7 @@
 				},
 				// 上拉加载的配置
 				up: {
-					// 显示加载中的回调
+					// 显示努力加载中的回调
 					showLoading() {
 						vm.upLoadType = 1;
 					},

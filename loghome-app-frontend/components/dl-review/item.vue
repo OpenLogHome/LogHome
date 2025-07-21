@@ -9,6 +9,8 @@
 				<view class="viewMb viewMb-space-between">
 					<view>
 						<text class="textSize">{{reviewMsg.userName}}</text>
+						<!-- 粉丝排名标牌 -->
+						<text class="fan-rank-badge" v-if="fanRank" @click="gotoNovelFans()">{{fanRank}}</text>
 					</view>
 				</view>
 				<view class="viewMb">
@@ -108,6 +110,16 @@
 			reviewMsg: [Object],
 			paragraphMode: false,
 			componentMode: false,
+			fanRanks: {
+				type: Object,
+				default: () => ({
+					totalRanks: [],
+					monthlyRanks: []
+				})
+			},
+			novelId: {
+				default: 0
+			}
 		},
 		components: {
 			dnIcon,
@@ -118,6 +130,41 @@
 				praiseType: 3,
 				article: {},
 				currentUserId: undefined
+			}
+		},
+		computed: {
+			// 计算粉丝排名标牌显示内容
+			fanRank() {
+				if (!this.fanRanks || !this.reviewMsg) return null;
+				
+				let totalRank = null;
+				let monthlyRank = null;
+				
+				// 查找总榜排名
+				const totalRankInfo = this.fanRanks.totalRanks.find(
+					rank => rank.user_id === this.reviewMsg.userId
+				);
+				if (totalRankInfo && totalRankInfo.rank_num <= 10) {
+					totalRank = `粉丝总榜第${totalRankInfo.rank_num}名`;
+				}
+				
+				// 查找月榜排名
+				const monthlyRankInfo = this.fanRanks.monthlyRanks.find(
+					rank => rank.user_id === this.reviewMsg.userId
+				);
+				if (monthlyRankInfo && monthlyRankInfo.rank_num <= 10) {
+					monthlyRank = `粉丝月榜第${monthlyRankInfo.rank_num}名`;
+				}
+				
+				// 优先显示更高的排名
+				if (totalRank && monthlyRank) {
+					const totalRankNum = totalRankInfo.rank_num;
+					const monthlyRankNum = monthlyRankInfo.rank_num;
+					
+					return totalRankNum <= monthlyRankNum ? totalRank : monthlyRank;
+				}
+				
+				return totalRank || monthlyRank;
 			}
 		},
 		mounted() {
@@ -329,6 +376,11 @@
 						url: "/pages/users/personalPage?id=" + userId
 					})
 				}, this.componentMode ? 500 : 0);
+			},
+			gotoNovelFans() {
+				uni.navigateTo({
+					url: '/pages/readers/novel_fans?id=' + this.novelId
+				})
 			}
 		},
 	}
@@ -550,5 +602,19 @@
 		width: 140rpx;
 		height: 140rpx;
 	}
+}
+
+/* 粉丝排名标牌样式 */
+.fan-rank-badge {
+	display: inline-block;
+	background: linear-gradient(135deg, #ff9800, #ff5722);
+	color: #fff;
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 10px;
+	margin-left: 5px;
+	vertical-align: middle;
+	font-weight: bold;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 </style>

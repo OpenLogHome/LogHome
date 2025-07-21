@@ -25,7 +25,7 @@
 		props:['novel_id'],
 		mounted(){
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			const uid = this.novel_id;
 			axios.get(this.$baseUrl + '/library/get_articles?id=' + uid, {}).then((res) => {

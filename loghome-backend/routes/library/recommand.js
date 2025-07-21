@@ -31,7 +31,7 @@ router.get('/get_library_recommend_titles', async function (req, res) {
 		}
 		else {
 			const results = await query(
-				`SELECT DISTINCT n.*,u.name user_name,u.avatar_url,n.novel_type FROM novels n,library_recommend c,users u
+				`SELECT DISTINCT n.*,u.name user_name,u.avatar_url,n.novel_type,c.recommend_id FROM novels n,library_recommend c,users u
 								WHERE c.novel_id = n.novel_id AND c.title = ? 
                                 AND u.user_id = n.author_id
 								AND n.deleted = 0

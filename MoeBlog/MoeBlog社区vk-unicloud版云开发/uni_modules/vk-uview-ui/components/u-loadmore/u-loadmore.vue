@@ -6,7 +6,7 @@
 		height: $u.addUnit(height)
 	}">
 		<u-line color="#d4d4d4" length="50"></u-line>
-		<!-- 加载中和没有更多的状态才显示两边的横线 -->
+		<!-- 努力加载中和没有更多的状态才显示两边的横线 -->
 		<view :class="status == 'loadmore' || status == 'nomore' ? 'u-more' : ''" class="u-load-more-inner">
 			<view class="u-loadmore-icon-wrap">
 				<u-loading class="u-loadmore-icon" :color="iconColor" :mode="iconType == 'circle' ? 'circle' : 'flower'" :show="status == 'loading' && icon"></u-loading>
@@ -27,9 +27,9 @@
 	 * @tutorial https://www.uviewui.com/components/loadMore.html
 	 * @property {String} status 组件状态（默认loadmore）
 	 * @property {String} bg-color 组件背景颜色，在页面是非白色时会用到（默认#ffffff）
-	 * @property {Boolean} icon 加载中时是否显示图标（默认true）
-	 * @property {String} icon-type 加载中时的图标类型（默认circle）
-	 * @property {String} icon-color icon-type为circle时有效，加载中的动画图标的颜色（默认#b7b7b7）
+	 * @property {Boolean} icon 努力加载中时是否显示图标（默认true）
+	 * @property {String} icon-type 努力加载中时的图标类型（默认circle）
+	 * @property {String} icon-color icon-type为circle时有效，努力加载中的动画图标的颜色（默认#b7b7b7）
 	 * @property {Boolean} is-dot status为nomore时，内容显示为一个"●"（默认false）
 	 * @property {String} color 字体颜色（默认#606266）
 	 * @property {String Number} margin-top 到上一个相邻元素的距离
@@ -47,7 +47,7 @@
 				type: String,
 				default: 'transparent'
 			},
-			// 是否显示加载中的图标
+			// 是否显示努力加载中的图标
 			icon: {
 				type: Boolean,
 				default: true
@@ -62,12 +62,12 @@
 				type: String, 
 				default: '#606266'
 			},
-			// 组件状态，loadmore-加载前的状态，loading-加载中的状态，nomore-没有更多的状态
+			// 组件状态，loadmore-加载前的状态，loading-努力加载中的状态，nomore-没有更多的状态
 			status: {
 				type: String,
 				default: 'loadmore'
 			},
-			// 加载中状态的图标，flower-花朵状图标，circle-圆圈状图标
+			// 努力加载中状态的图标，flower-花朵状图标，circle-圆圈状图标
 			iconType: {
 				type: String,
 				default: 'circle'
@@ -88,7 +88,7 @@
 				type: Boolean,
 				default: false
 			},
-			// 加载中显示圆圈动画时，动画的颜色
+			// 努力加载中显示圆圈动画时，动画的颜色
 			iconColor: {
 				type: String,
 				default: '#b7b7b7'
@@ -124,16 +124,16 @@
 					position: 'relative',
 					zIndex: 1,
 					backgroundColor: this.bgColor,
-					// 如果是加载中状态，动画和文字需要距离近一点
+					// 如果是努力加载中状态，动画和文字需要距离近一点
 				}
 			},
-			// 加载中圆圈动画的样式
+			// 努力加载中圆圈动画的样式
 			cricleStyle() {
 				return {
 					borderColor: `#e5e5e5 #e5e5e5 #e5e5e5 ${this.circleColor}`
 				}
 			},
-			// 加载中花朵动画形式
+			// 努力加载中花朵动画形式
 			// 动画由base64图片生成，暂不支持修改
 			flowerStyle() {
 				return {

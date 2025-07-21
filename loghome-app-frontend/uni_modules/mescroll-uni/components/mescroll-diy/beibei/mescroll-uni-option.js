@@ -26,7 +26,7 @@ const GlobalOption = {
 		// 中文
 		zh: {
 			up: {
-				textLoading: '加载中 ...', // 加载中的提示文本
+				textLoading: '努力加载中 ...', // 努力加载中的提示文本
 				textNoMore: '-- END --', // 没有更多数据的提示文本
 				empty: {
 					tip: '~ 暂无相关数据 ~' // 空提示

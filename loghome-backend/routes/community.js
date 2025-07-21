@@ -158,7 +158,7 @@ router.post('/comment_on_novel', auth, async (req, res) => {
 			user.user_id,
 			novel.author_id,
 			'评论了你的小说《' + novel.name + '》：' + req.body.content,
-			'readers/bookInfo?id=' + req.body.novel_id,
+			'readers/bookComment?id=' + req.body.novel_id + '&comment_id=' + results.insertId,
 			'comment',
 		);
         // 判断一下是不是章节评论，如果是的话就操作一下cento
@@ -223,7 +223,7 @@ router.post('/reply_to_novel_comment', auth, async (req, res) => {
 			user.user_id,
 			comment.user_id,
 			'回复了你的评论：' + req.body.content,
-			'readers/bookInfo?id=' + req.body.novel_id,
+			'readers/bookComment?id=' + req.body.novel_id + '&comment_id=' + req.body.fatherId,
 			'comment',
 		);
 		res.end(JSON.stringify(newComment[0]));
@@ -301,6 +301,26 @@ router.get('/novel_commonts_all', async function (req, res) {
                 item.media_urls = [];
             }
 		}
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/novel_comment_from_comment_id', async function (req, res) {
+	try {
+		let results = await query(
+			`SELECT l.author_id,n.*,u.name,u.avatar_url,u.user_group 
+							FROM novel_comments n,users u,novels l
+							WHERE reply_to_id = -1 
+							AND u.user_id = n.user_id
+							AND l.novel_id = n.novel_id
+							AND n.deleted = 0 
+							AND n.essay_comment_id = ? 
+							AND n.deleted = 0`,
+			[req.query.comment_id],
+		);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);
@@ -392,6 +412,59 @@ router.get('/get_comment_praise_status', auth, async (req, res) => {
 	}
 });
 
+// 获取小说粉丝排名信息
+router.get('/get_novel_fan_ranks', async function (req, res) {
+	try {
+		const novel_id = req.query.novel_id;
+		
+		// 获取总榜前10名
+		const totalRanks = await query(
+			`SELECT user_id, (@rank := @rank + 1) as rank_num 
+			 FROM (
+				SELECT from_id as user_id, SUM(item_amount * item_cost) as fans_value 
+				FROM tipping 
+				WHERE novel_id = ? 
+				GROUP BY from_id 
+				ORDER BY fans_value DESC
+				LIMIT 10
+			 ) as ranked_fans, 
+			 (SELECT @rank := 0) as r`,
+			[novel_id]
+		);
+		
+		// 获取月榜前10名
+		const currentMonth = moment().format('YYYY-MM-01');
+		const nextMonth = moment().add(1, 'month').format('YYYY-MM-01');
+		
+		const monthlyRanks = await query(
+			`SELECT user_id, (@mrank := @mrank + 1) as rank_num 
+			 FROM (
+				SELECT from_id as user_id, SUM(item_amount * item_cost) as fans_value 
+				FROM tipping 
+				WHERE novel_id = ? 
+				AND tipping_time >= ? 
+				AND tipping_time < ?
+				GROUP BY from_id 
+				ORDER BY fans_value DESC
+				LIMIT 10
+			 ) as ranked_fans, 
+			 (SELECT @mrank := 0) as r`,
+			[novel_id, currentMonth, nextMonth]
+		);
+		
+		// 合并结果
+		const results = {
+			totalRanks: totalRanks,
+			monthlyRanks: monthlyRanks
+		};
+		
+		res.json(results);
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.get('/delete_comment', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
@@ -455,7 +528,7 @@ router.post('/praise_on_comment', auth, async (req, res) => {
 					user.user_id,
 					comment[0].user_id,
 					'点赞了你的评论：' + comment[0].content,
-					'readers/bookInfo?id=' + comment[0].novel_id,
+					'readers/bookComment?id=' + comment[0].novel_id + '&comment_id=' + req.body.essay_comment_id,
 					'like_collect',
 				);
 			}

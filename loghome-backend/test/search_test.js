@@ -37,10 +37,10 @@ async function testSearch() {
       
       // 显示搜索结果统计
       console.log('搜索结果统计:');
-      console.log(`- 书籍: ${results.books?.list.length || 0}/${results.books?.total || 0}`);
-      console.log(`- 帖子: ${results.posts?.list.length || 0}/${results.posts?.total || 0}`);
-      console.log(`- 圈子: ${results.circles?.list.length || 0}/${results.circles?.total || 0}`);
-      console.log(`- 用户: ${results.users?.list.length || 0}/${results.users?.total || 0}`);
+      console.log(`- 书籍: ${results.books.list.length || 0}/${results.books.total || 0}`);
+      console.log(`- 帖子: ${results.posts.list.length || 0}/${results.posts.total || 0}`);
+      console.log(`- 圈子: ${results.circles.list.length || 0}/${results.circles.total || 0}`);
+      console.log(`- 用户: ${results.users.list.length || 0}/${results.users.total || 0}`);
       
       // 显示部分结果
       if (results.books && results.books.list.length > 0) {

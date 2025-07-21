@@ -128,7 +128,7 @@
 										分卷
 									</view>
 									<view class="l-list-c-body" v-else-if="!progressArticle.content">
-										加载中
+										努力加载中
 									</view>
 									<view class="l-list-c-body"
 										v-else-if="progressArticle.content && progressArticle.article_type=='text'">
@@ -275,6 +275,18 @@
 						</div>
 					</view>
 
+					<!-- 4-10名粉丝列表 -->
+					<div class="fans-list-container" v-if="fanInfo.length > 3">
+						<div class="fans-list-item" v-for="(fan, index) in fanInfo.slice(3, 10)" :key="index">
+							<div class="fans-rank">{{index + 4}}</div>
+							<log-image :src="fan.avatar_url" alt="" class="fans-avatar"/>
+							<div class="fans-info">
+								<div class="fans-name">{{fan.user_name}}</div>
+								<div class="fans-message" v-if="fan.message">{{fan.message}}</div>
+							</div>
+							<div class="fans-value"><span class="fans-value-icon">🔸</span>{{fan.fans_value}}</div>
+						</div>
+					</div>
 					<!-- <view class="l-list">
 						<view class="l-h3">
 							<text class="l-h3-title">作品图册</text>
@@ -682,7 +694,7 @@
 					}
 					return richStr;
 				} else {
-					return "加载中";
+					return "努力加载中";
 				}
 			},
 			checkNovelRank() {
@@ -824,7 +836,7 @@
 			},
 			async getBookInfo() {
 				uni.showLoading({
-					title: '加载中'
+					title: '努力加载中'
 				});
 				try{
 					let res = await axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.uid, {})
@@ -855,7 +867,7 @@
 		},
 		async onShow(option) {
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			
 			this.uid = this.options.id;
@@ -1591,8 +1603,8 @@
 	.fans_rank {
 		display: flex;
 		justify-content: center;
-		padding: 40rpx 20rpx;
-		background-color: rgba(202, 202, 202, 0.1);
+		padding: 40rpx 20rpx 0 20rpx;
+		// background-color: rgba(202, 202, 202, 0.1);
 		border-radius: 16rpx;
 		margin-top: 32rpx;
 		position: relative;
@@ -1722,6 +1734,94 @@
 			
 			div.description {
 				background-color: rgba(255, 255, 255, 0.6);
+			}
+		}
+	}
+
+	.fans-list-container {
+		display: flex;
+		flex-direction: column;
+		margin-top: -30rpx;
+		padding: 10rpx 20rpx;
+		background-color: rgba(202, 202, 202, 0.1);
+		border-radius: 16rpx;
+		overflow: hidden;
+
+		.fans-list-item {
+			display: flex;
+			align-items: center;
+			padding: 8rpx 0;
+			border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+			position: relative;
+
+			&:last-child {
+				border-bottom: none;
+			}
+
+			.fans-rank {
+				font-size: 22rpx;
+				font-weight: bold;
+				color: #EA7034;
+				width: 34rpx;
+				height: 34rpx;
+				line-height: 34rpx;
+				text-align: center;
+				margin-right: 10rpx;
+				background-color: rgba(234, 112, 52, 0.1);
+				border-radius: 50%;
+				flex-shrink: 0;
+			}
+
+			.fans-avatar {
+				height: 30rpx;
+				width: 30rpx;
+				border-radius: 50%;
+				border: 1rpx solid #ffffff;
+				box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
+				margin-right: 10rpx;
+				flex-shrink: 0;
+			}
+
+			.fans-info {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				flex-grow: 1;
+				overflow: hidden;
+
+				.fans-name {
+					font-size: 24rpx;
+					color: #333;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+					max-width: 150rpx;
+				}
+				
+				.fans-message {
+					font-size: 20rpx;
+					color: #795548;
+					max-width: 180rpx;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+					margin-top: 2rpx;
+				}
+			}
+			
+			.fans-value {
+				font-size: 24rpx;
+				color: #EA7034;
+				display: flex;
+				align-items: center;
+				margin-left: auto;
+				font-weight: bold;
+				padding-left: 10rpx;
+
+				.fans-value-icon {
+					margin-right: 4rpx;
+					font-size: 22rpx;
+				}
 			}
 		}
 	}

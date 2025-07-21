@@ -19,9 +19,9 @@ modulesNames.map((modulesName, index) => {
 		});
 		moduleList.push(moduleItem);
 	} catch (err) {
-		console.error(`【异常】加载中间件【${modulesName}】异常，请检查！↓↓↓请查看下方的错误提示↓↓↓`);
+		console.error(`【异常】努力加载中间件【${modulesName}】异常，请检查！↓↓↓请查看下方的错误提示↓↓↓`);
 		console.error(err);
-		console.error(`【异常】加载中间件【${modulesName}】异常，请检查！↑↑↑请查看上方的错误提示↑↑↑`);
+		console.error(`【异常】努力加载中间件【${modulesName}】异常，请检查！↑↑↑请查看上方的错误提示↑↑↑`);
 	}
 });
 

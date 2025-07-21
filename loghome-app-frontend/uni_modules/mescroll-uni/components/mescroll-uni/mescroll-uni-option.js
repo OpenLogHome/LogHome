@@ -29,12 +29,12 @@ const GlobalOption = {
 			down: {
 				textInOffset: '下拉刷新', // 下拉的距离在offset范围内的提示文本
 				textOutOffset: '释放更新', // 下拉的距离大于offset范围的提示文本
-				textLoading: '加载中 ...', // 加载中的提示文本
+				textLoading: '努力加载中 ...', // 努力加载中的提示文本
 				textSuccess: '加载成功', // 加载成功的文本
 				textErr: '加载失败', // 加载失败的文本
 			},
 			up: {
-				textLoading: '加载中 ...', // 加载中的提示文本
+				textLoading: '努力加载中 ...', // 努力加载中的提示文本
 				textNoMore: '-- END --', // 没有更多数据的提示文本
 				empty: {
 					tip: '~ 空空如也 ~' // 空提示

@@ -3,7 +3,12 @@ let express = require('express');
 let { query } = require('../../sql.js');
 let auth = require('../../bin/auth.js');
 // 引入中文分词工具
-const nodejieba = require('nodejieba');
+// const nodejieba = require('nodejieba');
+// 替换为纯 JavaScript 实现的分词工具
+const Segment = require('segment');
+const segment = new Segment();
+// 使用默认的词典和规则
+segment.useDefault();
 
 // 创建路由对象
 let router = express.Router();
@@ -363,7 +368,13 @@ router.get('/', async (req, res) => {
         const fullKeywordResults = await performSearch(keyword, type, page, pageSize);
         
         // 2. 使用分词工具对关键词进行分词
-        const segmentedKeywords = nodejieba.cut(keyword, true);
+        // const segmentedKeywords = nodejieba.cut(keyword, true);
+        // 替换为 segment 的分词方法
+        const segmentResult = segment.doSegment(keyword, {
+            simple: true,
+            stripPunctuation: true
+        });
+        const segmentedKeywords = segmentResult.map(token => token.w || token);
 
         console.log(segmentedKeywords);
         

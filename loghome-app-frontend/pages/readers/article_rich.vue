@@ -202,7 +202,7 @@
 			},
 			refreshPage(articleId) {
 				uni.showLoading({
-					title: "加载中"
+					title: "努力加载中"
 				})
 				let _this = this;
 				axios.get(this.$baseUrl + '/articles/get_article?id=' + articleId).then((res) => {
@@ -370,7 +370,7 @@
 				return;
 			}
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 
 			//设定导航栏显示效果

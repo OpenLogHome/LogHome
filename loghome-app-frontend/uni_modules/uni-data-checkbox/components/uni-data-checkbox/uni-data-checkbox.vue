@@ -174,7 +174,7 @@
 				range: [],
 				contentText: {
 					contentdown: '查看更多',
-					contentrefresh: '加载中',
+					contentrefresh: '努力加载中',
 					contentnomore: '没有更多'
 				},
 				isLocal:true,

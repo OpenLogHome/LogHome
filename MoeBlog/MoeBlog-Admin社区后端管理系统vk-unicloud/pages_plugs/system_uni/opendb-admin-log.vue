@@ -32,7 +32,7 @@ export default {
 	data() {
 		// 页面数据变量
 		return {
-			// 页面是否请求中或加载中
+			// 页面是否请求中或努力加载中
 			loading: false,
 			// init请求返回的数据
 			data: {},

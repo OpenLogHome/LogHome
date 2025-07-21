@@ -92,12 +92,12 @@ const ZPEmptyView = {
 				return u.gc('emptyViewCenter', true)
 			}
 		},
-		//加载中时是否自动隐藏空数据图，默认为是
+		//努力加载中时是否自动隐藏空数据图，默认为是
 		autoHideEmptyViewWhenLoading: {
 			type: Boolean,
 			default: u.gc('autoHideEmptyViewWhenLoading', true)
 		},
-		//用户下拉列表触发下拉刷新加载中时是否自动隐藏空数据图，默认为是
+		//用户下拉列表触发下拉刷新努力加载中时是否自动隐藏空数据图，默认为是
 		autoHideEmptyViewWhenPull: {
 			type: Boolean,
 			default: u.gc('autoHideEmptyViewWhenPull', true)

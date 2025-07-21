@@ -55,7 +55,7 @@ MeScroll.prototype.extendDownScroll = function(optDown) {
 		minAngle: 45, // 向下滑动最少偏移的角度,取值区间  [0,90];默认45度,即向下滑动的角度大于45度则触发下拉;而小于45度,将不触发下拉,避免与左右滑动的轮播等组件冲突;
 		textInOffset: '下拉刷新', // 下拉的距离在offset范围内的提示文本
 		textOutOffset: '释放更新', // 下拉的距离大于offset范围的提示文本
-		textLoading: '加载中 ...', // 加载中的提示文本
+		textLoading: '努力加载中 ...', // 努力加载中的提示文本
 		textSuccess: '加载成功', // 加载成功的文本
 		textErr: '加载失败', // 加载失败的文本
 		beforeEndDelay: 0, // 延时结束的时长 (显示加载成功/失败的时长, android小程序设置此项结束下拉会卡顿, 配置后请注意测试)
@@ -94,12 +94,12 @@ MeScroll.prototype.extendUpScroll = function(optUp) {
 		},
 		noMoreSize: 5, // 如果列表已无数据,可设置列表的总数量要大于等于5条才显示无更多数据;避免列表数据过少(比如只有一条数据),显示无更多数据会不好看
 		offset: 150, // 距底部多远时,触发upCallback,仅mescroll-uni生效 ( mescroll-body配置的是pages.json的 onReachBottomDistance )
-		textLoading: '加载中 ...', // 加载中的提示文本
+		textLoading: '努力加载中 ...', // 努力加载中的提示文本
 		textNoMore: '-- END --', // 没有更多数据的提示文本
 		bgColor: "transparent", // 背景颜色 (建议在pages.json中再设置一下backgroundColorBottom)
 		textColor: "gray", // 文本颜色 (当bgColor配置了颜色,而textColor未配置时,则textColor会默认为白色)
 		inited: null, // 初始化完毕的回调
-		showLoading: null, // 显示加载中的回调
+		showLoading: null, // 显示努力加载中的回调
 		showNoMore: null, // 显示无更多数据的回调
 		hideUpScroll: null, // 隐藏上拉加载的回调
 		errDistance: 60, // endErr的时候需往上滑动一段距离,使其往下滑动时再次触发onReachBottom,仅mescroll-body生效
@@ -391,7 +391,7 @@ MeScroll.prototype.endDownScroll = function() {
 	let delay = 0;
 	if (me.optDown.beforeEndDownScroll) {
 		delay = me.optDown.beforeEndDownScroll(me); // 结束下拉刷新的延时,单位ms
-		if(me.isDownEndSuccess == null) delay = 0; // 没有执行加载中,则不延时
+		if(me.isDownEndSuccess == null) delay = 0; // 没有执行努力加载中,则不延时
 	}
 	if (typeof delay === 'number' && delay > 0) {
 		setTimeout(endScroll, delay);
@@ -501,7 +501,7 @@ MeScroll.prototype.triggerUpScroll = function(isCheck) {
 			}
 			if (canUp === false) return;
 		}
-		this.showUpScroll(); // 上拉加载中...
+		this.showUpScroll(); // 上拉努力加载中...
 		this.optUp.page.num++; // 预先加一页,如果失败则减回
 		this.isUpAutoLoad = true; // 标记上拉已经自动执行过,避免初始化时多次触发上拉回调
 		this.num = this.optUp.page.num; // 把最新的页数赋值在mescroll上,避免对page的影响
@@ -511,9 +511,9 @@ MeScroll.prototype.triggerUpScroll = function(isCheck) {
 	}
 }
 
-/* 显示上拉加载中 */
+/* 显示上拉努力加载中 */
 MeScroll.prototype.showUpScroll = function() {
-	this.isUpScrolling = true; // 标记上拉加载中
+	this.isUpScrolling = true; // 标记上拉努力加载中
 	this.optUp.showLoading && this.optUp.showLoading(this); // 回调
 }
 

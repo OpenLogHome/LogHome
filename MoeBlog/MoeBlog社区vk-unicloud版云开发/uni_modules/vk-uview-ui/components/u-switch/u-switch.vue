@@ -27,7 +27,7 @@
  * switch 开关选择器
  * @description 选择开关一般用于只有两个选择，且只能选其一的场景。
  * @tutorial https://www.uviewui.com/components/switch.html
- * @property {Boolean} loading 是否处于加载中（默认false）
+ * @property {Boolean} loading 是否处于努力加载中（默认false）
  * @property {Boolean} disabled 是否禁用（默认false）
  * @property {String Number} size 开关尺寸，单位rpx（默认50）
  * @property {String} active-color 打开时的背景色（默认#2979ff）
@@ -50,7 +50,7 @@ export default {
 			type: Boolean,
 			default: false
 		},
-		// 是否为加载中状态
+		// 是否为努力加载中状态
 		loading: {
 			type: Boolean,
 			default: false

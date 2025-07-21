@@ -2,7 +2,7 @@
   <view class="order-history">
     <view class="content">
       <view v-if="loading" class="loading">
-        <text>加载中...</text>
+        <text>努力加载中...</text>
       </view>
       
       <view v-else-if="orders.length === 0" class="empty">

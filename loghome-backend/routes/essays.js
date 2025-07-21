@@ -259,7 +259,8 @@ router.get('/get_articles', auth, async function (req, res) {
 	try {
 		let results = await query(
 			`SELECT a.article_id,a.title,a.novel_id,a.article_chapter,
-                               a.is_draft,a.deleted,a.update_time,a.text_count,a.article_type,n.name novel_name 
+                               a.is_draft,a.deleted,a.update_time,a.text_count,a.article_type,n.name novel_name,
+                               (SELECT COUNT(*) FROM article_feedback WHERE article_id = a.article_id AND status = 0) as feedback_count
                                FROM articles a,novels n
                                WHERE a.novel_id = n.novel_id 
                                AND a.novel_id = ? 
@@ -412,7 +413,7 @@ router.post('/modify_article', auth, async (req, res) => {
 					u.user_id,
 					'你收藏的作品《' + novel[0].name + '》更新了，快去看看吧！',
 					'readers/bookInfo?id=' + novel[0].novel_id,
-					'notification',
+					'followed',
 				);
 			}
 		}
@@ -563,6 +564,91 @@ router.get('/master_work_of', auth, async (req, res) => {
 			[user.user_id],
 		);
 		res.end(JSON.stringify(master_work));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取文章的错误反馈列表
+router.get('/get_article_feedbacks', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		// 确认作者权限
+		let isAuthor = await query(
+			'SELECT n.author_id FROM novels n JOIN articles a ON n.novel_id = a.novel_id WHERE a.article_id = ? AND n.author_id = ?',
+			[req.query.id, user.user_id]
+		);
+		
+		if (isAuthor.length === 0) {
+			return res.status(403).json({ msg: '没有权限查看此文章的反馈' });
+		}
+		
+		// 获取反馈列表
+		let results = await query(
+			`SELECT af.*, u.name as username, u.avatar_url
+			 FROM article_feedback af
+			 JOIN users u ON af.user_id = u.user_id
+			 WHERE af.article_id = ?
+			 ORDER BY af.status ASC, af.create_time DESC`,
+			[req.query.id]
+		);
+		
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 更新错误反馈的状态
+router.post('/update_feedback_status', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		// 确认作者权限
+		let feedbackInfo = await query(
+			`SELECT af.*, a.novel_id 
+			 FROM article_feedback af
+			 JOIN articles a ON af.article_id = a.article_id
+			 WHERE af.feedback_id = ?`,
+			[req.body.feedback_id]
+		);
+		
+		if (feedbackInfo.length === 0) {
+			return res.status(404).json({ msg: '未找到指定反馈' });
+		}
+		
+		let isAuthor = await query(
+			'SELECT * FROM novels WHERE novel_id = ? AND author_id = ?',
+			[feedbackInfo[0].novel_id, user.user_id]
+		);
+		
+		if (isAuthor.length === 0) {
+			return res.status(403).json({ msg: '没有权限更新此反馈状态' });
+		}
+		
+		// 更新反馈状态
+		await query(
+			'UPDATE article_feedback SET status = ? WHERE feedback_id = ?',
+			[req.body.status, req.body.feedback_id]
+		);
+		
+		// 如果标记为已处理，给反馈者发送通知
+		if (req.body.status === 1) {
+			const message = require('../bin/message.js');
+			message.sendMsg(
+				user.user_id,
+				feedbackInfo[0].user_id,
+				`提交的错误反馈已被作者处理，原木社区有你更美好！`,
+				'readers/newReader/article?id=' + feedbackInfo[0].article_id,
+				'notification',
+				true
+			);
+		}
+		
+		res.json({ success: true });
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });

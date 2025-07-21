@@ -4,5 +4,5 @@
 3.修复在nvue中可能出现的快速切换tab或加载更多后触发reload导致的滚动到底部view消失的bug。  
 4.修复在vue3+支付宝小程序中报错的bug。  
 5.`z-paging-swiper`新增`swiper-style`属性，支持设置此组件样式。  
-6.新增`loading-more-default-as-loading`属性，支持设置滑动到底部状态为默认状态时，以加载中的状态展示。
+6.新增`loading-more-default-as-loading`属性，支持设置滑动到底部状态为默认状态时，以努力加载中的状态展示。
 

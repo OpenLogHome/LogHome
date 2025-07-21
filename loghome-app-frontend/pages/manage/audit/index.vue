@@ -58,7 +58,7 @@ export default {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
 				uni.showLoading({
-					title: '加载中'
+					title: '努力加载中'
 				})
 				// 获取总数
 				const countRes = await axios.get(this.$baseUrl + '/manage/audit/get_articles_to_audit_amount', {

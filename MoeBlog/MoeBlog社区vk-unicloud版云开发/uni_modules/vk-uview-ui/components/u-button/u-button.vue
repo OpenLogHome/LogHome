@@ -156,7 +156,7 @@ export default {
 			type: Boolean,
 			default: false
 		},
-		// 是否加载中
+		// 是否努力加载中
 		loading: {
 			type: Boolean,
 			default: false

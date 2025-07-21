@@ -261,7 +261,7 @@ by ZXLee
 	 * @property {Boolean} auto-scroll-to-top-when-reload reload时是否自动滚动到顶部，默认为是
 	 * @property {Boolean} auto-clean-list-when-reload reload时是否立即自动清空原list，默认为是，若立即自动清空，则在reload之后、请求回调之前页面是空白的
 	 * @property {Boolean} show-refresher-when-reload 列表刷新时是否自动显示下拉刷新view，默认为否
-	 * @property {Boolean} show-loading-more-when-reload 列表刷新时自动显示加载更多view，且为加载中状态(仅初始设置有效，不可动态修改)
+	 * @property {Boolean} show-loading-more-when-reload 列表刷新时自动显示加载更多view，且为努力加载中状态(仅初始设置有效，不可动态修改)
 	 * @property {Boolean} refresher-update-time-key 如果需要区别不同页面的最后更新时间，请为不同页面的z-paging的`refresher-update-time-key`设置不同的字符串
 	 * @property {Boolean} use-custom-refresher 是否使用自定义的下拉刷新，默认为是，即使用z-paging的下拉刷新。设置为false即代表使用uni scroll-view自带的下拉刷新，h5、App、微信小程序以外的平台不支持uni scroll-view自带的下拉刷新
 	 * @property {Number|String} refresher-fps 自定义下拉刷新下拉帧率，默认为40，过高可能会出现抖动问题
@@ -273,14 +273,14 @@ by ZXLee
 	 * @property {String|Object} refresher-complete-text 自定义下拉刷新刷新结束状态下的文字
 	 * @property {Boolean} refresher-end-bounce-enabled 是否开启自定义下拉刷新刷新结束回弹效果，默认为是
 	 * @property {Object} loading-more-custom-style 自定义底部加载更多样式
-	 * @property {Object} loading-more-loading-icon-custom-style 自定义底部加载更多加载中动画样式
-	 * @property {String} loading-more-loading-icon-type 自定义底部加载更多加载中动画图标类型，可选circle或flower，默认为circle
-	 * @property {String} loading-more-loading-icon-custom-image 自定义底部加载更多加载中动画图标图片
-	 * @property {Boolean} loading-more-loading-animated 底部加载更多加载中view是否展示旋转动画(loading-more-loading-icon-custom-image有值时有效，nvue无效)
+	 * @property {Object} loading-more-loading-icon-custom-style 自定义底部加载更多努力加载中动画样式
+	 * @property {String} loading-more-loading-icon-type 自定义底部加载更多努力加载中动画图标类型，可选circle或flower，默认为circle
+	 * @property {String} loading-more-loading-icon-custom-image 自定义底部加载更多努力加载中动画图标图片
+	 * @property {Boolean} loading-more-loading-animated 底部加载更多努力加载中view是否展示旋转动画(loading-more-loading-icon-custom-image有值时有效，nvue无效)
 	 * @property {Boolean} loading-more-enabled 是否启用加载更多数据(含滑动到底部加载更多数据和点击加载更多数据)，默认为是
 	 * @property {Boolean} to-bottom-loading-more-enabled 是否启用滑动到底部加载更多数据
 	 * @property {String|Object} loading-more-default-text 滑动到底部"默认"文字，默认为【点击加载更多】
-	 * @property {String|Object} loading-more-loading-text 滑动到底部"加载中"文字，默认为【正在加载...】
+	 * @property {String|Object} loading-more-loading-text 滑动到底部"努力加载中"文字，默认为【正在加载...】
 	 * @property {String|Object} loading-more-no-more-text 滑动到底部"没有更多"文字，默认为【没有更多了】
 	 * @property {String|Object} loading-more-fail-text 滑动到底部"加载失败"文字，默认为【加载失败，点击重新加载】
 	 * @property {Boolean} hide-loading-more-when-no-more-and-inside-of-paging 当没有更多数据且分页内容未超出z-paging时是否隐藏没有更多数据的view，默认为是
@@ -304,8 +304,8 @@ by ZXLee
 	 * @property {Object} empty-view-reload-style 空数据图重新加载按钮样式
 	 * @property {Boolean} empty-view-fixed 空数据图片是否铺满z-paging，默认为是。若设置为否，则为填充满z-paging的剩余部分
 	 * @property {Boolean} empty-view-center 空数据图片是否垂直居中，默认为是。emptyViewFixed为false时有效
-	 * @property {Boolean} auto-hide-empty-view-when-loading 加载中时是否自动隐藏空数据图，默认为是
-	 * @property {Boolean} auto-hide-empty-view-when-pull 用户下拉列表触发下拉刷新加载中时是否自动隐藏空数据图，默认为是
+	 * @property {Boolean} auto-hide-empty-view-when-loading 努力加载中时是否自动隐藏空数据图，默认为是
+	 * @property {Boolean} auto-hide-empty-view-when-pull 用户下拉列表触发下拉刷新努力加载中时是否自动隐藏空数据图，默认为是
 	 * @property {Boolean} auto-hide-loading-after-first-loaded 第一次加载后是否自动隐藏loading slot，默认为是
 	 * @property {Boolean} loading-full-fixed loading slot是否铺满屏幕并固定，默认为否
 	 * @property {Boolean} auto-show-back-to-top 自动显示点击返回顶部按钮，默认为否

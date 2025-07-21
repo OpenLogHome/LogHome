@@ -111,7 +111,7 @@ class Request {
 			responseType: 'text',
 			showLoading: true, // 是否显示请求中的loading
 			loadingText: '请求中...',
-			loadingTime: 800, // 在此时间内，请求还没回来的话，就显示加载中动画，单位ms
+			loadingTime: 800, // 在此时间内，请求还没回来的话，就显示努力加载中动画，单位ms
 			timer: null, // 定时器
 			originalData: false, // 是否在拦截器中返回服务端的原始数据，见文档说明
 			loadingMask: true, // 展示loading的时候，是否给一个透明的蒙层，防止触摸穿透

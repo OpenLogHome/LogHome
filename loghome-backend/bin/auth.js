@@ -34,6 +34,41 @@ const auth = async (req, res, next) => {
 					const currentTime = Date.now();
 					const lastOnlineTime = new Date(req.user[0].online_time).getTime();
 					
+					// 检查用户是否符合回归用户资格（超过90天未登录）
+					const daysDiff = Math.floor((currentTime - lastOnlineTime) / (1000 * 60 * 60 * 24));
+					if (daysDiff >= 90) {
+						try {
+							// 计算资格过期时间（14天后）
+							const expiryDate = new Date(currentTime + 14 * 24 * 60 * 60 * 1000);
+							
+							// 直接使用INSERT IGNORE，依靠数据库的唯一键约束避免重复插入
+							const result = await query(
+								'INSERT IGNORE INTO return_user_eligibility (user_id, expiry_date) VALUES (?, ?)',
+								[userId, expiryDate]
+							);
+							
+							// 检查是否真的插入了新记录
+							if (result.affectedRows > 0) {
+								// 如果插入成功，发送通知
+								try {
+									const message = require('./message.js');
+									message.sendMsg(
+										-1,
+										userId,
+										'欢迎回归原木社区！您现在有资格填写回归用户邀请码，获得500原木奖励。此资格将在14天后过期。',
+										'',
+										'notification',
+										true
+									);
+								} catch (e) {
+									console.log('发送回归通知失败:', e);
+								}
+							}
+						} catch (err) {
+							console.log('回归资格处理失败:', err);
+						}
+					}
+					
 					// 只有当距离上次在线时间超过1分钟时，才更新用户在线时间
 					if (currentTime - lastOnlineTime > 60 * 1000) {
 						await query('UPDATE users SET online_time = ? WHERE user_id = ?', [
@@ -43,12 +78,12 @@ const auth = async (req, res, next) => {
 					}
 
 					// 检查UniCloud用户是否存在，不存在的话就注册用户
-					if (req.user[0].uni_id == null) {
-						const username = UniCloud.generateUsername(userId);
-						const pwdMd5 = UniCloud.generatePasswordMd5(req.user[0].pwd);
-						let result = await uniCloud.registerUser(username, pwdMd5);
-						await query('UPDATE users SET uni_id = ? WHERE user_id = ?', [result.userInfo._id, userId]);
-					}
+					// if (req.user[0].uni_id == null) {
+					// 	const username = UniCloud.generateUsername(userId);
+					// 	const pwdMd5 = UniCloud.generatePasswordMd5(req.user[0].pwd);
+					// 	let result = await uniCloud.registerUser(username, pwdMd5);
+					// 	await query('UPDATE users SET uni_id = ? WHERE user_id = ?', [result.userInfo._id, userId]);
+					// }
 				} else {
 					res.json(401, {
 						status: 401,

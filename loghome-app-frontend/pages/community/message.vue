@@ -17,7 +17,7 @@
 		<!-- 互动消息分类 -->
 		<lgd-tab class="tab" 
 			:firstTab="firstTab" 
-			:tabValue="['评论', '@我的', '赞与收藏']" 
+			:tabValue="tabValue" 
 			@getIndex="changeTab" 
 			:textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
 			:showBadge="true"
@@ -59,7 +59,7 @@
 		},
 		data(){
 			return{
-				tabValue: ["评论", "@我的", "赞与收藏"],
+				tabValue: ["评论", "关注", "赞与收藏"],
 				firstTab: 0,
 				id: -1,
 				user: {},
@@ -71,7 +71,7 @@
 				unreadCounts: [0, 0, 0], // 各分类未读消息数量
 				messageTypes:{
 					0: 'comment',
-					1: 'mention',
+					1: 'followed',
 					2: 'like_collect'
 				}
 			}
@@ -94,7 +94,7 @@
 			}
 			//验活
 			uni.showLoading({
-				title: '加载中',
+				title: '努力加载中',
 				mask: true
 			});
 			axios.get( this.$baseUrl + '/users/userprofile', {
@@ -129,7 +129,7 @@
 									unreadNotifications++;
 								} else if(messages[i].message_type === 'comment') {
 									unreadCounts[0]++;
-								} else if(messages[i].message_type === 'mention') {
+								} else if(messages[i].message_type === 'followed') {
 									unreadCounts[1]++;
 								} else if(messages[i].message_type === 'like_collect') {
 									unreadCounts[2]++;

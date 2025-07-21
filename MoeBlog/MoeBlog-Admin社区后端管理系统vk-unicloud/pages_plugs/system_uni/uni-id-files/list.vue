@@ -154,7 +154,7 @@ export default {
 		return {
 			// 选中的
 			selectedIds: [],
-			// 页面是否请求中或加载中
+			// 页面是否请求中或努力加载中
 			loading: {
 				nav: false,
 				main: false

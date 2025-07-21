@@ -35,7 +35,7 @@
 			<!-- 上拉加载区域 (下拉刷新时不显示, 支付宝小程序子组件传参给子子组件仍报单项数据流的异常,暂时不通过mescroll-up组件实现)-->
 			<!-- <mescroll-up v-if="mescroll.optUp.use && !isDownLoading && upLoadType!==3" :option="mescroll.optUp" :type="upLoadType"></mescroll-up> -->
 			<view v-if="mescroll.optUp.use && !isDownLoading && upLoadType!==3" class="mescroll-upwarp" :style="{'background':mescroll.optUp.bgColor,'color':mescroll.optUp.textColor}">
-				<!-- 加载中 (此处不能用v-if,否则android小程序快速上拉可能会不断触发上拉回调) -->
+				<!-- 努力加载中 (此处不能用v-if,否则android小程序快速上拉可能会不断触发上拉回调) -->
 				<view v-show="upLoadType===1">
 					<view class="upwarp-progress mescroll-rotate" :style="{'border-color':mescroll.optUp.textColor}"></view>
 					<view class="upwarp-tip">{{ mescroll.optUp.textLoading }}</view>
@@ -148,7 +148,7 @@
 			translateY() {
 				return this.downHight > 0 ? 'translateY(' + this.downHight + 'px)' : ''; // transform会使fixed失效,需注意把fixed元素写在mescroll之外
 			},
-			// 是否在加载中
+			// 是否在努力加载中
 			isDownLoading(){
 				return this.downLoadType === 3
 			},
@@ -226,7 +226,7 @@
 				},
 				// 上拉加载的配置
 				up: {
-					// 显示加载中的回调
+					// 显示努力加载中的回调
 					showLoading() {
 						vm.upLoadType = 1;
 					},

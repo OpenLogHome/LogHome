@@ -101,7 +101,7 @@
 				isShow: false,
 				opacity: 1,
 				time: this.duration,
-				loadStatus: '', // 默认是懒加载中的状态
+				loadStatus: '', // 默认是懒努力加载中的状态
 				isError: false, // 图片加载失败
 				elIndex: this.$u.guid()
 			}
@@ -152,7 +152,7 @@
 				this.isError = false;
 				this.loadStatus = '';
 			},
-			// 点击图片触发的事件,loadlazy-还是懒加载中状态，loading-图片正在加载，loaded-图片加加载完成
+			// 点击图片触发的事件,loadlazy-还是懒努力加载中状态，loading-图片正在加载，loaded-图片加加载完成
 			clickImg() {
 				let whichImg = '';
 				// 如果isShow为false，意味着图片还没开始加载，点击的只能是最开始的占位图

@@ -40,7 +40,7 @@
 <script>
 /**
  * Image 图片
- * @description 此组件为uni-app的image组件的加强版，在继承了原有功能外，还支持淡入动画、加载中、加载失败提示、圆角值和形状等。
+ * @description 此组件为uni-app的image组件的加强版，在继承了原有功能外，还支持淡入动画、努力加载中、加载失败提示、圆角值和形状等。
  * @tutorial https://uviewui.com/components/image.html
  * @property {String} src 图片地址
  * @property {String} mode 裁剪模式，见官网说明
@@ -64,9 +64,9 @@
  * @property {String | Number} border-radius 圆角值，单位任意，如果为数值，则为rpx单位（默认 0）
  * @property {Boolean} lazy-load 是否懒加载，仅微信小程序、App、百度小程序、字节跳动小程序有效（默认 true）
  * @property {Boolean} show-menu-by-longpress 是否开启长按图片显示识别小程序码菜单，仅微信小程序有效（默认 false）
- * @property {String} loading-icon 加载中的图标，或者小图片（默认 photo）
+ * @property {String} loading-icon 努力加载中的图标，或者小图片（默认 photo）
  * @property {String} error-icon 加载失败的图标，或者小图片（默认 error-circle）
- * @property {Boolean} show-loading 是否显示加载中的图标或者自定义的slot（默认 true）
+ * @property {Boolean} show-loading 是否显示努力加载中的图标或者自定义的slot（默认 true）
  * @property {Boolean} show-error 是否显示加载错误的图标或者自定义的slot（默认 true）
  * @property {Boolean} fade 是否需要淡入效果（默认 true）
  * @property {String Number} width 传入图片路径时图片的宽度
@@ -122,7 +122,7 @@ export default {
 			type: Boolean,
 			default: true
 		},
-		// 加载中的图标，或者小图片
+		// 努力加载中的图标，或者小图片
 		loadingIcon: {
 			type: String,
 			default: 'photo'
@@ -132,7 +132,7 @@ export default {
 			type: String,
 			default: 'error-circle'
 		},
-		// 是否显示加载中的图标或者自定义的slot
+		// 是否显示努力加载中的图标或者自定义的slot
 		showLoading: {
 			type: Boolean,
 			default: true
@@ -167,7 +167,7 @@ export default {
 		return {
 			// 图片是否加载错误，如果是，则显示错误占位图
 			isError: false,
-			// 初始化组件时，默认为加载中状态
+			// 初始化组件时，默认为努力加载中状态
 			loading: true,
 			// 不透明度，为了实现淡入淡出的效果
 			opacity: 1,

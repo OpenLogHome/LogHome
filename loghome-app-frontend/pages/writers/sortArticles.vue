@@ -29,7 +29,7 @@
 		},
 		onLoad(option){
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			if(JSON.stringify(option) == "{}"){
 				uni.showToast({

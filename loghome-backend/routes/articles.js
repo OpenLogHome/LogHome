@@ -284,4 +284,75 @@ router.get('/get_hot_novel_centos', async function (req, res) {
     }
 });
 
+// 提交文本错误反馈
+router.post('/submit_feedback', auth, async function (req, res) {
+    try {
+        // 首先获取段落内容
+        let articleInfo = await query(
+            'SELECT * FROM articles WHERE article_id = ? AND deleted = 0',
+            [req.body.article_id],
+        );
+        
+        if (articleInfo.length === 0) {
+            return res.status(404).json({ msg: '文章不存在' });
+        }
+        
+        let article = articleInfo[0];
+        let paragraphText = '';
+        
+        // 根据文章类型获取段落内容
+        if (article.article_type === 'richtext' || article.article_type === 'worldOutline') {
+            let content = JSON.parse(article.content);
+            for (let item of content) {
+                if (item.id === req.body.paragraph_id) {
+                    paragraphText = item.value;
+                    break;
+                }
+            }
+        } else if (article.article_type === 'worldVocabulary') {
+            let content = JSON.parse(article.content);
+            paragraphText = content.desc || '';
+        }
+        
+        if (!paragraphText) {
+            return res.status(404).json({ msg: '未找到指定段落' });
+        }
+        
+        // 插入反馈记录
+        await query(
+            'INSERT INTO article_feedback (article_id, paragraph_id, user_id, feedback_content, paragraph_text) VALUES (?, ?, ?, ?, ?)',
+            [
+                req.body.article_id,
+                req.body.paragraph_id,
+                req.user[0].user_id,
+                req.body.feedback_content,
+                paragraphText
+            ],
+        );
+        
+        // 获取作者ID并发送消息通知
+        let novelInfo = await query(
+            'SELECT n.author_id, n.name FROM novels n JOIN articles a ON n.novel_id = a.novel_id WHERE a.article_id = ?',
+            [req.body.article_id],
+        );
+        
+        if (novelInfo.length > 0) {
+            const message = require('../bin/message.js');
+            message.sendMsg(
+                req.user[0].user_id,
+                novelInfo[0].author_id,
+                `您的作品《${novelInfo[0].name}》收到了一条文本错误反馈，点击查看。`,
+                'writers/articleFeedbacks?id=' + article.article_id,
+                'notification',
+				true
+            );
+        }
+        
+        res.json({ success: true });
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
 module.exports = router;

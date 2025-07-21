@@ -40,7 +40,7 @@
 			</div>
 			
 			
-			<div class="card" v-for="(item,index) in collections" v-show="keyword.length == 0" v-dark>
+			<div class="card" v-for="(item,index) in collections" v-show="keyword.length == 0" v-dark v-if="index != 1">
 				<div class="head" @click="gotoCollections(item.collection_title)">
 					<div class="title">
 						<p>
@@ -87,27 +87,50 @@
 				</div>
 				
 				<div class="dense-card-outer-container" v-else-if="item.collection_type=='dense_card'" style="min-height: 200rpx;">
-					<div class="dense-card-container">
-						<div class="dense-card-scroll">
-							<div class="dense-card-column" v-for="col in 3" :key="'col-'+col">
-								<div class="dense-card-item" v-for="(novel, index) in item['novels'].slice((col-1)*3, col*3)" :key="novel.novel_id" @click="readBook(novel.novel_id)">
-									<div class="dense-card-rank" :class="{'rank-top': (col-1)*3 + index < 3}">{{(col-1)*3 + index + 1}}</div>
-									<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
-									:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
-									<div class="dense-card-info">
-										<div class="dense-card-title">
-											{{novel.name}}
+					<swiper class="dense-card-swiper" 
+						:indicator-dots="false" 
+						:autoplay="false"
+						:interval="3000" 
+						:duration="500"
+						:circular="true"
+						indicator-active-color="#FFD700"
+						indicator-color="rgba(255, 255, 255, 0.4)">
+						<swiper-item v-for="page in 2" :key="'page-'+page" class="dense-card-swiper-item">
+							<div class="dense-card-page">
+								<div class="dense-card-column">
+									<div class="dense-card-item" v-for="(novel, index) in item['novels'].slice((page-1)*6, (page-1)*6+3)" :key="novel.novel_id" @click="readBook(novel.novel_id)">
+										<div class="dense-card-rank" :class="{'rank-top': (page-1)*6 + index < 3}">{{(page-1)*6 + index + 1}}</div>
+										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
+										:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
+										<div class="dense-card-info">
+											<div class="dense-card-title">
+												{{novel.name}}
+											</div>
+											<div class="dense-card-author">{{novel.user_name}}</div>
 										</div>
-										<div class="dense-card-author">{{novel.user_name}}</div>
+									</div>
+								</div>
+								<div class="dense-card-column">
+									<div class="dense-card-item" v-for="(novel, index) in item['novels'].slice((page-1)*6+3, page*6)" :key="novel.novel_id" @click="readBook(novel.novel_id)">
+										<div class="dense-card-rank" :class="{'rank-top': (page-1)*6+3 + index < 3}">{{(page-1)*6+3 + index + 1}}</div>
+										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
+										:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
+										<div class="dense-card-info">
+											<div class="dense-card-title">
+												{{novel.name}}
+											</div>
+											<div class="dense-card-author">{{novel.user_name}}</div>
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
-					</div>
-					<div class="dense-card-mask"></div>
+						</swiper-item>
+					</swiper>
 				</div>
 				
 			</div>
+			<!-- 使用Banner组件 -->
+			<banner page="library" v-else v-show="keyword.length == 0"/>
 			
 			<div v-for="item in [...searchBooks,...books]" :key="item.book_id">
 				<navigator :url="'./readers/bookInfo?id=' +  item.novel_id"
@@ -140,9 +163,11 @@
 	import XsuuSwiper from "../components/Xss-swiper/Xsuu-swiper.vue"
 	import MescrollMixin from "@/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-mixins.js";
 	import darkModeMixin from '@/mixins/dark-mode.js'
+	import banner from '@/components/banner.vue'
+	
 	export default {
 		components:{
-			bookInCase,popup,XsuuSwiper
+			bookInCase, popup, XsuuSwiper, banner
 		},
 		mixins: [MescrollMixin, darkModeMixin], // 使用mixin
 		data() {
@@ -384,9 +409,11 @@
 						this.gotoCollections("完本经典");
 						break;
 				}
-			}
-		},
+			},
 
+		},
+		onShow() {
+		}
 	}
 </script>
 
@@ -540,9 +567,15 @@
 							color: var(--text-color-primary);
 						}
 					}
+					transition: all .3s;
+				}
+
+				.navBtn:active{
+					transform: translate(0,10rpx) scale(.95);
 				}
 			}
 		}
+
 		div.card{
 			margin:20rpx 0rpx;
 			padding:0 0 0rpx 0;
@@ -796,47 +829,34 @@
 		overflow: hidden;
 	}
 	
-	.dense-card-container {
+	.dense-card-swiper {
 		width: 100%;
-		overflow-x: auto;
-		padding: 10rpx 0 10rpx 0;
+		height: 470rpx;
+		margin: 20rpx 0;
 	}
 	
-	.dense-card-mask {
-		position: absolute;
-		top: 0;
-		right: 0;
-		width: 150rpx;
-		height: 100%;
-		background: linear-gradient(to left, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
-		pointer-events: none;
-		z-index: 2;
-		
-		.dark-mode & {
-			background: linear-gradient(to left, var(--card-background), rgba(37, 37, 37, 0));
-		}
-	}
-	
-	.dense-card-scroll {
+	.dense-card-swiper-item {
 		display: flex;
-		overflow-x: auto;
-		width: fit-content;
-		padding: 10rpx 10rpx;
+		justify-content: center;
+		align-items: center;
+	}
+	
+	.dense-card-page {
+		display: flex;
+		width: 100%;
+		justify-content: space-between;
+		padding: 0 15rpx;
 	}
 	
 	.dense-card-column {
 		display: flex;
 		flex-direction: column;
-		margin-right: 20rpx;
-		
-		&:first-child {
-			margin-left: 20rpx;
-		}
+		width: 48%;
 	}
 	
 	.dense-card-item {
 		display: flex;
-		width: 340rpx;
+		width: 100%;
 		margin-top: 10rpx;
 		margin-bottom: 20rpx;
 		align-items: center;

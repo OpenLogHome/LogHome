@@ -3209,14 +3209,14 @@ exports.default = {
       }
     },
     select: {
-      loading: '加载中',
+      loading: '努力加载中',
       noMatch: '无匹配数据',
       noData: '无数据',
       placeholder: '请选择'
     },
     cascader: {
       noMatch: '无匹配数据',
-      loading: '加载中',
+      loading: '努力加载中',
       placeholder: '请选择',
       noData: '暂无数据'
     },

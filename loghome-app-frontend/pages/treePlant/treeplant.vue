@@ -40,7 +40,7 @@
 				plant_time:Date.now(),
 				is_gotten:0,
 				state:{},
-				btnText:"加载中",
+				btnText:"努力加载中",
 				selectedTreeType:"defaultTree",
 				resources:{
 					log:0,
@@ -98,9 +98,9 @@
 			},
 			handleMainBtnClick(){
 				switch(this.btnText){
-					case "加载中":
+					case "努力加载中":
 						uni.showToast({
-							title: "加载中",
+							title: "努力加载中",
 							icon:'none',
 							duration: 2000
 						});
@@ -220,7 +220,7 @@
 		},
 		onShow(){
 			uni.showLoading({
-				title: '加载中'
+				title: '努力加载中'
 			});
 			this.refreshPage();
 			this.refreshResources();

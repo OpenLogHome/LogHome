@@ -25,7 +25,7 @@ declare global {
     type GoF2Status = 'go' | 'close';
 
     /**
-     * 底部加载更多状态：default:默认状态 loading:加载中 no-more:没有更多数据 fail:加载失败
+     * 底部加载更多状态：default:默认状态 loading:努力加载中 no-more:没有更多数据 fail:加载失败
      */
     type LoadMoreStatus = 'default' | 'loading' | 'no-more' | 'fail';
 
@@ -183,10 +183,10 @@ declare global {
     }
 
     /**
-     * 聊天记录加载中Slot的props
+     * 聊天记录努力加载中Slot的props
      */
     interface ChatLoadingSlotProps {
-      /** 底部加载更多状态：default:默认状态 loading:加载中 no-more:没有更多数据 fail:加载失败 */
+      /** 底部加载更多状态：default:默认状态 loading:努力加载中 no-more:没有更多数据 fail:加载失败 */
       loadingMoreStatus: ZPagingEnums.LoadMoreStatus; 
     }
   }
@@ -401,7 +401,7 @@ declare interface ZPagingProps {
   showRefresherWhenReload?: boolean
 
   /**
-   * 列表刷新时自动显示加载更多view，且为加载中状态 (仅初始设置有效，不可动态修改)
+   * 列表刷新时自动显示加载更多view，且为努力加载中状态 (仅初始设置有效，不可动态修改)
    * @default false
    * @since 1.7.2
    */
@@ -726,25 +726,25 @@ declare interface ZPagingProps {
   loadingMoreTitleCustomStyle?: Record<string, any>
 
   /**
-   * 自定义底部加载更多加载中动画样式
+   * 自定义底部加载更多努力加载中动画样式
    */
   loadingMoreLoadingIconCustomStyle?: Record<string, any>
 
   /**
-   * 自定义底部加载更多加载中动画图标类型
+   * 自定义底部加载更多努力加载中动画图标类型
    * - 可选flower或circle，默认为flower (nvue不支持)
    * @default 'flower'
    */
   loadingMoreLoadingIconType?: 'flower' | 'circle'
 
   /**
-   * 自定义底部加载更多加载中动画图标图片
+   * 自定义底部加载更多努力加载中动画图标图片
    * - 若设置则使用自定义的动画图标，loading-more-loading-icon-type将无效 (nvue无效)
    */
   loadingMoreLoadingIconCustomImage?: string
 
   /**
-   * 底部加载更多加载中view是否展示旋转动画
+   * 底部加载更多努力加载中view是否展示旋转动画
    * - loading-more-loading-icon-custom-image有值时有效，nvue无效
    * @default true
    * @since 1.9.4
@@ -759,7 +759,7 @@ declare interface ZPagingProps {
   loadingMoreDefaultText?: string | _I18nText
 
   /**
-   * 滑动到底部"加载中"文字 
+   * 滑动到底部"努力加载中"文字 
    * - 支持直接传字符串或形如：{'en':'英文','zh-Hans':'简体中文','zh-Hant':'繁体中文'}的i18n配置
    * @default '正在加载...'
    */
@@ -803,8 +803,8 @@ declare interface ZPagingProps {
   insideMore?: boolean
 
   /**
-   * 滑动到底部状态为默认状态时，以加载中的状态展示
-   * - 若设置为是，可避免滚动到底部看到默认状态然后立刻变为加载中状态的问题，但分页数量未超过一屏时，不会显示【点击加载更多】
+   * 滑动到底部状态为默认状态时，以努力加载中的状态展示
+   * - 若设置为是，可避免滚动到底部看到默认状态然后立刻变为努力加载中状态的问题，但分页数量未超过一屏时，不会显示【点击加载更多】
    * @default false
    * @since 2.2.0
    */
@@ -932,13 +932,13 @@ declare interface ZPagingProps {
   showEmptyViewReloadWhenError?: boolean
 
   /**
-   * 加载中时是否自动隐藏空数据图
+   * 努力加载中时是否自动隐藏空数据图
    * @default true
    */
   autoHideEmptyViewWhenLoading?: boolean
 
   /**
-   * 用户下拉列表触发下拉刷新加载中时是否自动隐藏空数据图
+   * 用户下拉列表触发下拉刷新努力加载中时是否自动隐藏空数据图
    * @default true
    * @since 2.0.9
    */
@@ -970,7 +970,7 @@ declare interface ZPagingProps {
   /**
    * 显示系统Loading时显示的文字
    * - 支持直接传字符串或形如：{'en':'英文','zh-Hans':'简体中文','zh-Hant':'繁体中文'}的i18n配置
-   * @default '加载中...'
+   * @default '努力加载中...'
    * @since 2.3.7
    */
   systemLoadingText?: string | _I18nText
@@ -1167,7 +1167,7 @@ declare interface ZPagingProps {
   bottomBgColor?: string;
 
   /**
-   * 在聊天记录模式中滑动到顶部状态为默认状态时，是否以加载中的状态展示
+   * 在聊天记录模式中滑动到顶部状态为默认状态时，是否以努力加载中的状态展示
    * @default true
    * @since 2.7.5
    */
@@ -1419,7 +1419,7 @@ declare interface ZPagingProps {
   /**
    * 自定义下拉刷新状态改变
    * - use-custom-refresher为false时无效
-   * @param status 底部加载更多状态：default:默认状态 loading:加载中 no-more:没有更多数据 fail:加载失败
+   * @param status 底部加载更多状态：default:默认状态 loading:努力加载中 no-more:没有更多数据 fail:加载失败
    */
   onLoadingStatusChange?: (status: ZPagingEnums.LoadMoreStatus) => void
 
@@ -1612,7 +1612,7 @@ declare interface ZPagingSlots {
   ['loadingMoreDefault']?: () => any
 
   /**
-   * 自定义滑动到底部"加载中"状态的view
+   * 自定义滑动到底部"努力加载中"状态的view
    */
   ['loadingMoreLoading']?: () => any
 
@@ -1676,7 +1676,7 @@ declare interface ZPagingSlots {
   /**
    * 使用聊天记录模式时自定义顶部加载更多view(除没有更多数据外)
    * - use-chat-record-mode为true时有效
-   * @param loadingMoreStatus 底部加载更多状态：default:默认状态 loading:加载中 no-more:没有更多数据 fail:加载失败
+   * @param loadingMoreStatus 底部加载更多状态：default:默认状态 loading:努力加载中 no-more:没有更多数据 fail:加载失败
    */
   ['chatLoading']?: (props: ZPagingParams.ChatLoadingSlotProps) => any
 

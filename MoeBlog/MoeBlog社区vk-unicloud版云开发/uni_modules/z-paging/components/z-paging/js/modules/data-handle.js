@@ -88,7 +88,7 @@ export default {
 			type: Boolean,
 			default: u.gc('showRefresherWhenReload', false)
 		},
-		// 列表刷新时自动显示加载更多view，且为加载中状态，默认为否
+		// 列表刷新时自动显示加载更多view，且为努力加载中状态，默认为否
 		showLoadingMoreWhenReload: {
 			type: Boolean,
 			default: u.gc('showLoadingMoreWhenReload', false)

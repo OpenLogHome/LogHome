@@ -41,7 +41,7 @@
 			}
 		},
 		computed: {
-			// 加载中圆圈动画的样式
+			// 努力加载中圆圈动画的样式
 			cricleStyle() {
 				let style = {};
 				style.width = this.size + 'rpx';

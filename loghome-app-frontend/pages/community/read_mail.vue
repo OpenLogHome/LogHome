@@ -19,13 +19,13 @@
 			return {
 				mail: {
 					id: 0,
-					title: "加载中",
+					title: "努力加载中",
 					from: {
 						user_id: -1,
-						user_name: "加载中",
+						user_name: "努力加载中",
 						avatar_url: ""
 					},
-					content: "加载中"
+					content: "努力加载中"
 				}
 			}
 		},
