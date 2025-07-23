@@ -3,6 +3,13 @@
 		<div class="book">
 			<log-image :src="picUrl  + '?thumbnail=1' " alt="" :style="{display: picUrl=='' ? 'none' : 'block'}"
 			onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"/>
+			<!-- 更新标签 -->
+			<div 
+				v-if="updateInfo && updateInfo.has_updates" 
+				class="update-badge"
+			>
+				<text class="update-text">更新{{ updateInfo.new_chapters_count }}章</text>
+			</div>
 		</div>
 		<div :class="{nameTag:true, empty:bookName==''}" v-dark>
 			{{bookName}}
@@ -21,6 +28,10 @@
 			picUrl:{
 				type:String,
 				default:""
+			},
+			updateInfo:{
+				type: Object,
+				default: null
 			}
 		}
 	}
@@ -36,10 +47,31 @@
 			background-color: #d3d3d3;
 			margin-bottom:20rpx;
 			border-radius: 7rpx;
+			position: relative;
 			img{
 				height:100%;
 				width:100%;
 				border-radius: 7rpx;
+			}
+			
+			.update-badge {
+				position: absolute;
+				top: 0rpx;
+				right: 0rpx;
+				background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+				padding: 4rpx 8rpx;
+				max-width: 180rpx;
+				overflow: hidden;
+				border-radius: 0 7rpx 0 12rpx;
+			}
+			
+			.update-text {
+				color: white;
+				font-size: 20rpx;
+				font-weight: 600;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				overflow: hidden;
 			}
 		}
 		div.nameTag{

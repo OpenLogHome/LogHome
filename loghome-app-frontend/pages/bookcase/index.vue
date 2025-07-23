@@ -1,12 +1,13 @@
 <template>
 	<view class="content" v-dark
 		:style="{'--statusBarHeight': 0 + 'px'}">
-		<div class="tabBarUnder">
+		<!-- <div class="tabBarUnder">
 			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"/>
-		</div>
+		</div> -->
 		<div class="tabBar" v-dark>
+			<uni-icons type="left" size="27" color="310000" class="backBtn" @click="goBack"/>
 			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
-				ref="tabDom" />
+				ref="tabDom" scrollWidth="calc(100vw - 30rpx)" :underBarBias="-35"/>
 		</div>
 		<div class="searchBar">
 			<uni-search-bar :bgColor="$store.state.isDarkMode ? '#2C2C2C' : 'rgb(211,211,211)'" :radius="5" @input="searchBookCase" placeholder="搜索书架"
@@ -16,7 +17,7 @@
 			</uni-search-bar>
 		</div>
 		<div class="bookcase" @touchstart="touchstart($event)" @touchmove="touchmove($event)" @touchend="touchend" :class="{'fade-out': isTabSwitching}">
-			<bookInCase v-for="item in booksOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.novel_id"
+			<bookInCase v-for="item in booksOnShow" :bookName="item.name" :picUrl="item.picUrl" :updateInfo="item.updateInfo" :key="item.novel_id"
 				@click.native="readBook(item.novel_id)"></bookInCase>
 		</div>
 		<div class="underBar"></div>
@@ -190,7 +191,51 @@
 					this.$refs.tabDom.clickTab(targetIndex);
 				}
 			},
-			getLikedBooks(){
+			// 检查书籍更新
+			async checkBooksUpdates() {
+				if (this.isOffline) return
+				
+				try {
+					// 为每本收藏的书籍检查更新
+					const updatePromises = this.booksAll.map(async (book) => {
+						try {
+							// 从本地数据库获取该书籍的最新章节
+							const localArticles = await articleDB.articles
+								.where('novel_id')
+								.equals(book.novel_id)
+								.toArray()
+							
+							let localLatestChapter = 0
+							if (localArticles.length > 0) {
+								localLatestChapter = Math.max(...localArticles.map(a => a.article_chapter || 0))
+							}
+							
+							// 调用后端API检查更新
+							const response = await axios.get(this.$baseUrl + '/library/check_novel_updates', {
+								params: {
+									novel_id: book.novel_id,
+									latest_chapter: localLatestChapter
+								}
+							})
+							
+							if (response.data && response.data.has_updates) {
+								this.updateInfo.set(book.novel_id, {
+									new_chapters_count: response.data.new_chapters_count,
+									has_updates: true,
+									latest_update_time: response.data.latest_update_time
+								})
+							}
+						} catch (error) {
+							console.error(`检查书籍 ${book.novel_id} 更新失败:`, error)
+						}
+					})
+					
+					await Promise.all(updatePromises)
+				} catch (error) {
+					console.error('检查书籍更新失败:', error)
+				}
+			},
+			async getLikedBooks(){
 				uni.showLoading({
 					title: '努力加载中'
 				});
@@ -201,24 +246,61 @@
 					})
 					return;
 				}
+				
+				// 清空更新信息
+				this.updateInfo = new Map();
+				
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;
 				let _this = this;
 				let trimBookOnShow = this.trimBookOnShow;
-				axios.get(this.$baseUrl + '/bookcase/get_likes_of', {
-					headers: {
-						'Content-Type': 'application/json', //设置请求头请求格式为JSON
-						'Authorization': "Bearer " + tk //设置token 其中K名要和后端协调好
-					}
-				}).then((res) => {
-					_this.booksAll = res.data;
-					_this.booksAll.sort(function(item1, item2) {
-						return (Date.parse(item2.update_time) - Date.parse(item1.update_time));
+				
+				try {
+					const res = await axios.get(this.$baseUrl + '/bookcase/get_likes_of', {
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': "Bearer " + tk
+						}
 					});
+					
+					_this.booksAll = res.data;
+					
+					// 检查书籍更新
+					await _this.checkBooksUpdates();
+					
+					// 为书籍添加更新信息并排序
+					_this.booksAll = _this.booksAll.map(book => {
+						const updateInfo = _this.updateInfo.get(book.novel_id);
+						return {
+							...book,
+							updateInfo: updateInfo
+						};
+					});
+					
+					// 按更新时间排序（有更新的在前，更新时间越新越靠前）
+					_this.booksAll.sort(function(item1, item2) {
+						const item1HasUpdate = item1.updateInfo && item1.updateInfo.has_updates;
+						const item2HasUpdate = item2.updateInfo && item2.updateInfo.has_updates;
+						
+						// 有更新的书籍优先
+						if (item1HasUpdate && !item2HasUpdate) return -1;
+						if (!item1HasUpdate && item2HasUpdate) return 1;
+						
+						// 都有更新或都没更新时，按更新时间排序
+						if (item1HasUpdate && item2HasUpdate) {
+							const time1 = item1.updateInfo.latest_update_time ? new Date(item1.updateInfo.latest_update_time) : new Date(0);
+							const time2 = item2.updateInfo.latest_update_time ? new Date(item2.updateInfo.latest_update_time) : new Date(0);
+							return time2 - time1;
+						} else {
+							return (Date.parse(item2.update_time) - Date.parse(item1.update_time));
+						}
+					});
+					
 					_this.booksOnShow = _this.booksAll;
 					trimBookOnShow();
 					window.localStorage.setItem("LogHomeLikedBooks", JSON.stringify(res.data));
-				}).catch(function(error) {
+					
+				} catch (error) {
 					console.log(error);
 					if (error.message == "Request failed with status code 401") {
 						window.localStorage.removeItem('token');
@@ -237,9 +319,9 @@
 							trimBookOnShow();
 						}
 					}
-				}).then(function() {
+				} finally {
 					uni.hideLoading();
-				})
+				}
 			},
 			getHistoryBooks(){
 				uni.showLoading({
@@ -253,6 +335,9 @@
 					this.trimBookOnShow()
 				}
 				uni.hideLoading();
+			},
+			goBack() {
+				uni.navigateBack();
 			}
 		},
 		onLoad() {
@@ -284,7 +369,8 @@
 				touchStartTime: null, // 触摸开始时间
 				hasMoved: false, // 是否已移动
 				isTabSwitching: false, // 是否正在切换tab
-				tabDom: null
+				tabDom: null,
+				updateInfo: new Map() // 存储书籍更新信息
 			}
 		},
 		onNavigationBarButtonTap() {
@@ -302,7 +388,7 @@
 		}
 
 		div.tabBar {
-			position: fixed;
+			// position: fixed;
 			width: 100vw;
 			z-index: 10;
 			top: 0;
@@ -312,6 +398,7 @@
 			padding-top: calc(10rpx + var(--statusBarHeight));
 			background-color: rgb(255, 255, 255);
 			display: flex;
+			align-items: center;
 			box-shadow:
 				0px 0px 2.2px rgba(0, 0, 0, 0.02),
 				0px 0px 5.3px rgba(0, 0, 0, 0.028),
@@ -320,6 +407,10 @@
 				0px 0px 33.4px rgba(0, 0, 0, 0.05),
 				0px 0px 80px rgba(0, 0, 0, 0.07);
 			height: 75rpx;
+
+			.backBtn{
+				margin: 0 10rpx;
+			}
 
 			&.dark-mode{
 				background-color: #1E1E1E;

@@ -1,6 +1,6 @@
 <template>
 	<view>
-		<view class="scrollView" scroll-x show-scrollbar="false" :scroll-left="scrollLeft" scroll-with-animation>
+		<view class="scrollView" scroll-x show-scrollbar="false" :scroll-left="scrollLeft" scroll-with-animation :style="{ 'width': scrollWidth}">
 			<view class="tabBox" :style="{ 'justify-content': isOutWindow ? 'space-around' : 'space-around' }">
 				<view class="items" v-for="(item, index) in tabValue" :key="index" @click="clickTab(index)">
 					<view class="tab-item-wrapper">
@@ -44,6 +44,14 @@
 			badgeIndexes: { // 需要显示小红点的tab索引数组
 				type: Array,
 				default: () => []
+			},
+			scrollWidth: {
+				type: String,
+				default: '100vw'
+			},
+			underBarBias: {
+				type: Number,
+				default: 0
 			}
 		},
 		data() {
@@ -61,9 +69,9 @@
 		methods: {
 			clickTab(index) {
 				// 如果正在动画中或点击了当前活跃的tab，则不处理
-				if (this.isAnimating || this.tIndex === index) {
-					return;
-				}
+				// if (this.isAnimating || this.tIndex === index) {
+				// 	return;
+				// }
                 
                 // 设置动画状态
                 this.isAnimating = true;
@@ -91,9 +99,9 @@
 					
 					// 点击tab宽度
 					this.inderWidth = width;
-					
+					console.log(this.underBarBias)
 					// 移动距离
-					this.indexLeft = left
+					this.indexLeft = left + Number(this.underBarBias)
 					
 					// 动画结束后重置动画状态
 					setTimeout(() => {
@@ -124,7 +132,7 @@
 		mounted() {
 			setTimeout(()=>{
 				this.clickTab(this.firstTab)
-			},600)
+			},1000)
 		}
 	}
 </script>

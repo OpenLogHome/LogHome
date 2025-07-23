@@ -29,8 +29,9 @@
 							v-for="(image, index) in reviewMsg.media_urls" 
 							:key="index"
 							@tap="previewImage(index, reviewMsg.media_urls)"
+							@longpress="showImageOptionsMenu(image)"
 						>
-							<log-image :src="image" mode="aspectFill"></log-image>
+							<log-image :src="image" mode="aspectFill" style="width: 100%; height: 100%;"></log-image>
 						</view>
 					</view>
 					
@@ -85,8 +86,9 @@
 								v-for="(image, index) in reKey.media_urls" 
 								:key="index"
 								@tap="previewImage(index, reKey.media_urls)"
+								@longpress="showImageOptionsMenu(image)"
 							>
-								<log-image :src="image" mode="aspectFill"></log-image>
+								<log-image :src="image" mode="aspectFill" style="width: 100%; height: 100%;"></log-image>
 							</view>
 						</view>
 					</view>
@@ -97,6 +99,19 @@
 				</view>
 			</view>
 		</view>
+		
+		<!-- 图片长按菜单 -->
+		<uni-popup ref="imageOptionsPopup" type="center">
+			<view class="popup-content">
+				<view class="popup-item" @tap="saveAsSticker">
+					<uni-icons type="star" size="20" color="#EA7034"></uni-icons>
+					<text>收藏为表情</text>
+				</view>
+				<view class="popup-item cancel" @tap="hideImageOptionsMenu">
+					<text>取消</text>
+				</view>
+			</view>
+		</uni-popup>
 	</view>
 </template>
 
@@ -129,7 +144,9 @@
 			return {
 				praiseType: 3,
 				article: {},
-				currentUserId: undefined
+				currentUserId: undefined,
+				currentImageUrl: '', // 当前长按选中的图片URL
+				showImageOptions: false // 控制图片操作菜单显示
 			}
 		},
 		computed: {
@@ -381,6 +398,119 @@
 				uni.navigateTo({
 					url: '/pages/readers/novel_fans?id=' + this.novelId
 				})
+			},
+			// 显示图片操作菜单
+			showImageOptionsMenu(imageUrl) {
+				this.currentImageUrl = imageUrl;
+				this.$refs.imageOptionsPopup.open();
+			},
+			// 隐藏图片操作菜单
+			hideImageOptionsMenu() {
+				this.$refs.imageOptionsPopup.close();
+			},
+			// 收藏图片为表情包
+			async saveAsSticker() {
+				if (!this.currentImageUrl) {
+					uni.showToast({
+						title: '图片地址无效',
+						icon: 'none'
+					});
+					return;
+				}
+				
+				try {
+					uni.showLoading({ title: '收藏中...' });
+					
+					const token = JSON.parse(window.localStorage.getItem('token'))?.tk;
+					if (!token) {
+						uni.showToast({
+							title: '请先登录',
+							icon: 'none'
+						});
+						return;
+					}
+					
+					// 检查图片是否已存在对应的sticker
+					const checkRes = await axios.get(this.$baseUrl + '/community/stickers', {
+						params: { url: this.currentImageUrl },
+						headers: { 'Authorization': 'Bearer ' + token }
+					});
+					
+					let stickerId = null;
+					let needCreateSticker = false;
+					
+					if (checkRes.data && checkRes.data.length > 0) {
+						// 图片已存在对应的sticker
+						const existingSticker = checkRes.data[0];
+						const userId = JSON.parse(window.localStorage.getItem('token')).id;
+						
+						if (existingSticker.is_private === 0) {
+							// 公开的，直接收藏
+							stickerId = existingSticker.sticker_id;
+						} else if (existingSticker.user_id === userId) {
+							// 私密的，但是是自己的，直接收藏
+							stickerId = existingSticker.sticker_id;
+						} else {
+							// 私密的，且不是自己的，需要重新创建
+							needCreateSticker = true;
+						}
+					} else {
+						// 图片不存在对应的sticker，需要创建
+						needCreateSticker = true;
+					}
+					
+					// 如果需要创建新的sticker
+					if (needCreateSticker) {
+						const createRes = await axios.post(this.$baseUrl + '/community/stickers', {
+							url: this.currentImageUrl,
+							is_private: false // 默认创建为公开的
+						}, {
+							headers: { 'Authorization': 'Bearer ' + token }
+						});
+						
+						stickerId = createRes.data.sticker_id;
+					}
+					
+					// 收藏sticker
+					if (stickerId) {
+						// 检查是否已收藏
+						const favoritesRes = await axios.get(this.$baseUrl + '/community/stickers/favorites', {
+							headers: { 'Authorization': 'Bearer ' + token }
+						});
+						
+						// 适配新的API返回结构，data.stickers 是表情列表
+						const stickers = favoritesRes.data.stickers || favoritesRes.data;
+						const isAlreadyFavorite = Array.isArray(stickers) && stickers.some(item => item.sticker_id === stickerId);
+						
+						if (!isAlreadyFavorite) {
+							await axios.post(this.$baseUrl + '/community/stickers/favorites', {
+								sticker_id: stickerId
+							}, {
+								headers: { 'Authorization': 'Bearer ' + token }
+							});
+						}
+						
+						uni.showToast({
+							title: '已添加到表情收藏',
+							icon: 'success'
+						});
+					} else {
+						uni.showToast({
+							title: '收藏失败',
+							icon: 'none'
+						});
+					}
+					
+				} catch (error) {
+					console.error('收藏失败:', error);
+					uni.showToast({
+						title: '收藏失败',
+						icon: 'none'
+					});
+				} finally {
+					uni.hideLoading();
+					this.hideImageOptionsMenu();
+				}
 			}
 		},
 	}
@@ -560,7 +690,7 @@
 		position: absolute;
 		right: 25rpx;
 		top: 25rpx;
-		z-index: 100;
+		z-index: 50;
 	}
 	
 	.cento{
@@ -605,16 +735,48 @@
 }
 
 /* 粉丝排名标牌样式 */
-.fan-rank-badge {
-	display: inline-block;
-	background: linear-gradient(135deg, #ff9800, #ff5722);
-	color: #fff;
-	font-size: 10px;
-	padding: 2px 6px;
-	border-radius: 10px;
-	margin-left: 5px;
-	vertical-align: middle;
-	font-weight: bold;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
+	.fan-rank-badge {
+		display: inline-block;
+		background: linear-gradient(135deg, #ff9800, #ff5722);
+		color: #fff;
+		font-size: 10px;
+		padding: 2px 6px;
+		border-radius: 10px;
+		margin-left: 5px;
+		vertical-align: middle;
+		font-weight: bold;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	}
+	
+	/* 图片长按菜单样式 */
+	.popup-content {
+		background-color: #fff;
+		border-radius: 20rpx;
+		padding: 40rpx 0;
+		width: calc(100vw - 100rpx);
+	}
+	
+	.popup-item {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 30rpx 0;
+		font-size: 32rpx;
+		color: #333;
+		border-bottom: 1rpx solid #f0f0f0;
+	}
+	
+	.popup-item:last-child {
+		border-bottom: none;
+	}
+	
+	.popup-item.cancel {
+		color: #999;
+		margin-top: 20rpx;
+		border-top: 20rpx solid #f8f8f8;
+	}
+	
+	.popup-item text {
+		margin-left: 20rpx;
+	}
 </style>

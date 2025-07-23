@@ -573,6 +573,54 @@ router.get('/get_banners', async function (req, res) {
 	}
 });
 
+// 检查书籍更新章节数量
+router.get('/check_novel_updates', async function (req, res) {
+	try {
+		const novel_id = req.query.novel_id;
+		const local_latest_chapter = parseInt(req.query.latest_chapter) || 0;
+		
+		if (!novel_id) {
+			res.json(400, { msg: 'novel_id is required' });
+			return;
+		}
+		
+		// 查询该小说在服务器上的最新章节及其更新时间
+		let latestChapter = await query(
+			'SELECT MAX(article_chapter) as max_chapter, MAX(update_time) as latest_update_time FROM articles WHERE novel_id = ? AND is_draft = 0 AND deleted = 0',
+			[novel_id]
+		);
+		
+		const server_latest_chapter = latestChapter[0].max_chapter || 0;
+		const latest_update_time = latestChapter[0].latest_update_time;
+		const new_chapters_count = Math.max(0, server_latest_chapter - local_latest_chapter);
+		
+		res.json({
+			novel_id: novel_id,
+			local_latest_chapter: local_latest_chapter,
+			server_latest_chapter: server_latest_chapter,
+			new_chapters_count: new_chapters_count,
+			has_updates: new_chapters_count > 0,
+			latest_update_time: latest_update_time
+		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取图书馆首页标签
+router.get('/get_index_tags', async function (req, res) {
+	try {
+		let results = await query(
+			'SELECT * FROM library_index_tags WHERE is_active = 1 ORDER BY order_index ASC',
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 let recommendRouter = require('./library/recommand');
 
 router.use('/recommand', recommendRouter);

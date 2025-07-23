@@ -1,23 +1,50 @@
 <template>
   <view class="community-container">
-    <!-- 顶部导航栏 -->
-    <view class="header">
-      <view class="nav-bar">
-        <view class="title">社区</view>
-        <view class="actions">
-          <view class="search-btn" @tap="navigateToSearch">
-            <uni-icons type="search" size="22" color="#333"></uni-icons>
-          </view>
-        </view>
-      </view>
-    </view>
+    <!-- 顶部搜索栏 -->
+    <div class="searchBar">
+      <div class="search-input-wrapper" @tap="navigateToSearch">
+        <uni-icons type="search" size="18" color="#999"></uni-icons>
+        <view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
+      </div>
+      <uni-icons type="chat" size="26" color="#2d2d2d" class="messageIcon" @click="gotoMessage"></uni-icons>
+    </div>
 
     <!-- 内容区域 -->
-    <scroll-view 
-      scroll-y 
+    <view 
       class="content-scroll" 
-      @scrolltolower="loadMore"
+      style="margin-top: 105rpx;"
     >
+
+      <!-- 轮播图区域 -->
+      <div class="swiper" v-dark>
+        <Xsuu-swiper :swiperItems="newchartList" :margin="18" 
+        :borderRadius="10" @clicked="roulousChartClicked"
+        class="swiperImgs">
+        </Xsuu-swiper>
+        <!-- <div class="swiperNav" v-dark>
+          <div class="navBtn">
+            <img src="../static/swiperNavIcons/category.png" alt="标签" @click="navBarJump('标签')"/>
+            <div class="name">标签</div>
+          </div>
+          <div class="navBtn">
+            <img src="../static/swiperNavIcons/activity.png" alt="活动" @click="navBarJump('活动')"/>
+            <div class="name">活动</div>
+          </div>
+          <div class="navBtn">
+            <img src="../static/swiperNavIcons/ranks.png" alt="排行" @click="navBarJump('排行')"/>
+            <div class="name">排行</div>
+          </div>
+          <div class="navBtn">
+            <img src="../static/swiperNavIcons/recommands.png" alt="推荐" @click="navBarJump('推荐')"/>
+            <div class="name">推荐</div>
+          </div>
+          <div class="navBtn">
+            <img src="../static/swiperNavIcons/finish.png" alt="完结" @click="navBarJump('完结')"/>
+            <div class="name">完结</div>
+          </div>
+        </div> -->
+      </div>
+
       <!-- 推荐圈子 -->
       <view class="section" v-if="recommendCircles && recommendCircles.length > 0">
         <view class="section-header">
@@ -61,6 +88,9 @@
           </view>
         </view>
       </view>
+
+      <!-- 添加Banner组件 -->
+      <banner page="community_index" style="margin-bottom: 20rpx;"/>
 
       <!-- 帖子列表 -->
       <view class="section">
@@ -124,7 +154,7 @@
         <!-- 加载更多 -->
         <uni-load-more :status="loadingStatus"></uni-load-more>
       </view>
-    </scroll-view>
+    </view>
 
     <!-- 悬浮按钮 -->
     <view class="float-btn" @tap="navigateToCreatePost">
@@ -137,8 +167,14 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import moment from 'moment';
+import banner from '@/components/banner.vue'
+import XsuuSwiper from "@/components/Xss-swiper/Xsuu-swiper.vue"
 
 export default {
+  components: {
+    banner,
+    XsuuSwiper
+  },
   data() {
     return {
       sortType: 'new',
@@ -149,7 +185,10 @@ export default {
       posts: [],
       recommendCircles: [],
       unreadCount: 0,
-      hasMore: true
+      hasMore: true,
+      chartList: [],
+      newchartList: [],
+      scrollThrottle: false
     }
   },
 
@@ -173,6 +212,7 @@ export default {
     this.recommendCircles = [];
     this.loadRecommendCircles();
     this.loadPosts();
+    this.refreshSwiperData();
     
     // 确保在页面完全加载后获取点赞状态
     setTimeout(() => {
@@ -186,13 +226,37 @@ export default {
     this.hasMore = true;
     Promise.all([
       this.loadRecommendCircles(),
-      this.loadPosts()
+      this.loadPosts(),
+      this.refreshSwiperData()
     ]).then(() => {
       // 刷新后重新获取点赞状态
       this.getPostsLikeStatus();
     }).finally(() => {
       uni.stopPullDownRefresh();
     });
+  },
+
+  onPageScroll(e) {
+    if (this.scrollThrottle) return;
+    
+    this.scrollThrottle = true;
+    setTimeout(() => {
+      this.scrollThrottle = false;
+      // 获取页面信息
+      uni.createSelectorQuery().selectViewport().scrollOffset((res) => {
+        const { scrollTop, scrollHeight } = res;
+        // 获取窗口高度
+        const windowHeight = uni.getSystemInfoSync().windowHeight;
+
+        console.log(scrollTop, scrollHeight, windowHeight);
+        
+        // 当滚动到距离底部100px时开始加载更多
+        if (scrollTop + windowHeight >= scrollHeight - 500) {
+          this.loadMore();
+          console.log("loadmore");
+        }
+      }).exec();
+    }, 100);
   },
 
   methods: {
@@ -386,6 +450,8 @@ export default {
       }
     },
 
+
+
     previewImage(images, index) {
       uni.previewImage({
         urls: images,
@@ -467,7 +533,74 @@ export default {
              this.recommendCircles[index] && 
              this.recommendCircles[index].circle_id && 
              this.recommendCircles[index].circle_id !== 0;
-    }
+    },
+
+    gotoMessage() {
+      uni.navigateTo({
+        url: "./message"
+      });
+    },
+
+    // 刷新轮播图数据
+    async refreshSwiperData() {
+      try {
+        const res = await axios.get(this.$baseUrl + '/library/get_library_roulous_chart');
+        this.chartList = res.data;
+        this.newchartList = [];
+        for(let item of this.chartList){
+          if(item.isValid == 1){
+            this.newchartList.push({
+              img: item.image,
+              title: item.title,
+              Subtitle: item.name,
+              button: (item.navigate_to == "None") ? 0 : 1,
+              navigate_to: item.navigate_to
+            });
+          }
+        }
+      } catch (error) {
+        console.error('加载轮播图失败', error);
+      }
+    },
+
+    // 响应轮播图点击事件
+    roulousChartClicked(item) {
+      if(item.navigate_to && item.navigate_to != "None"){
+        uni.navigateTo({
+          url: "/pages/" + item.navigate_to
+        });
+      }
+    },
+
+    // 导航按钮跳转
+    // navBarJump(func) {
+    //   switch(func){
+    //     case "标签":
+    //       uni.navigateTo({
+    //         url: "./readers/tags"
+    //       });
+    //       break;
+    //     case "活动":
+    //       this.gotoCollections("干草块杯活动专辑");
+    //       break;
+    //     case "排行":
+    //       this.gotoCollections("原木力爆棚");
+    //       break;
+    //     case "推荐":
+    //       this.gotoCollections("原木力飙升");
+    //       break;
+    //     case "完结":
+    //       this.gotoCollections("完本经典");
+    //       break;
+    //   }
+    // },
+
+    // 前往推荐集合的详情界面
+    // gotoCollections(title) {
+    //   uni.navigateTo({
+    //     url: './readers/collections?title=' + title
+    //   });
+    // }
   }
 }
 </script>
@@ -494,63 +627,138 @@ export default {
   background-color: #f8f8f8;
 }
 
-.header {
+.searchBar {
   position: fixed;
+  width: calc(100vw - 20rpx);
+  z-index: 10;
   top: 0;
   left: 0;
-  right: 0;
-  z-index: 100;
-  background-color: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.nav-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 90rpx;
-  padding: 0 30rpx;
-}
-
-.title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.actions {
+  margin: 0 0rpx;
+  padding: 10rpx;
+  padding-top: calc(5rpx + var(--statusBarHeight));
+  padding-bottom: 5rpx;
+  background-color: rgb(255, 255, 255);
   display: flex;
   align-items: center;
-}
+  height: 110rpx;
+  box-shadow:
+    0px 0px 2.2px rgba(0, 0, 0, 0.02),
+    0px 0px 5.3px rgba(0, 0, 0, 0.028),
+    0px 0px 10px rgba(0, 0, 0, 0.035),
+    0px 0px 17.9px rgba(0, 0, 0, 0.042),
+    0px 0px 33.4px rgba(0, 0, 0, 0.05),
+    0px 0px 80px rgba(0, 0, 0, 0.07);
 
-.search-btn, .message-btn {
-  width: 80rpx;
-  height: 80rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
+  .messageIcon {
+    margin: 24rpx 5rpx 20rpx 5rpx;
+  }
 
-.badge {
-  position: absolute;
-  top: 10rpx;
-  right: 10rpx;
-  background-color: #EA7034;
-  color: #fff;
-  font-size: 20rpx;
-  min-width: 32rpx;
-  height: 32rpx;
-  border-radius: 16rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 6rpx;
+  .search-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background-color: #f5f5f5;
+    border-radius: 36rpx;
+    padding: 0 20rpx;
+    height: 72rpx;
+    margin-right: 10rpx;
+    margin-left: 10rpx;
+  }
+
+  .search-input-placeholder {
+    flex: 1;
+    height: 72rpx;
+    line-height: 72rpx;
+    padding: 0 20rpx;
+    font-size: 28rpx;
+    color: #999;
+  }
 }
 
 .content-scroll {
-  margin-top: 90rpx;
-  // height: calc(100vh - 62px);
+  min-height: calc(100vh - 105rpx);
+}
+
+.swiper {
+  margin: 0;
+  background-color: white;
+  padding: 20rpx 0;
+  width: 750rpx;
+  
+  &.dark-mode {
+    background-color: var(--card-background);
+  }
+  
+  .swiperImgs {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .swiperNav {
+    position: relative;
+    height: 200rpx;
+    margin: 0 9px;
+    margin-top: -10rpx;
+    width: calc(100% - 18px);
+    background: linear-gradient(
+      180deg,
+      rgb(255, 255, 255),
+      rgb(252, 233, 164)
+    );
+    z-index: 0;
+    border-radius: 0 0 10rpx 10rpx;
+    box-shadow:
+      0px 0px 2.2px rgba(0, 0, 0, 0.02),
+      0px 0px 5.3px rgba(0, 0, 0, 0.028),
+      0px 0px 10px rgba(0, 0, 0, 0.035),
+      0px 0px 17.9px rgba(0, 0, 0, 0.042),
+      0px 0px 33.4px rgba(0, 0, 0, 0.05),
+      0px 0px 80px rgba(0, 0, 0, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    
+    &.dark-mode {
+      background: linear-gradient(
+        180deg,
+        var(--card-background),
+        rgb(80, 70, 40)
+      );
+      box-shadow:
+        0px 0px 2.2px rgba(0, 0, 0, 0.1),
+        0px 0px 5.3px rgba(0, 0, 0, 0.13),
+        0px 0px 10px rgba(0, 0, 0, 0.15),
+        0px 0px 17.9px rgba(0, 0, 0, 0.17),
+        0px 0px 33.4px rgba(0, 0, 0, 0.2),
+        0px 0px 80px rgba(0, 0, 0, 0.3);
+    }
+    
+    .navBtn {
+      transform: translate(0, 10rpx);
+      
+      img {
+        height: 100rpx;
+        filter: drop-shadow(0px 2px 10rpx #17181944);
+      }
+      
+      div.name {
+        text-align: center;
+        color: rgb(45, 45, 45);
+        font-size: 25rpx;
+        margin-top: 5rpx;
+        
+        .dark-mode & {
+          color: var(--text-color-primary);
+        }
+      }
+      
+      transition: all .3s;
+    }
+    
+    .navBtn:active {
+      transform: translate(0, 10rpx) scale(.95);
+    }
+  }
 }
 
 .section {

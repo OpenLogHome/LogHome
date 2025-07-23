@@ -639,7 +639,7 @@ export default {
 			}
 			if (articleData.article_type == "spliter") return [{ type: "spliter", idx: 0, articleId: articleData.article_id }];
 			let screenHeight = document.body.clientHeight;
-			let usableScreenHeight = screenHeight - rpxToPx(100) - rpxToPx(70);
+			let usableScreenHeight = screenHeight - rpxToPx(50) - rpxToPx(70);
 			let lineHeight = this.actualLineHeight;
 			let actualLineAmount = Math.floor(usableScreenHeight / lineHeight);
 			let pageScrollHeight = actualLineAmount * lineHeight;
@@ -1021,7 +1021,7 @@ export default {
 				this.shownCommentsBtn = [];
 				for(let item of paraEndLocateDoms) {
 					let rect = item.getBoundingClientRect();
-					if(rect.y >= rpxToPx(120) && rect.y <= rpxToPx(100) + this.allPages[this.currentPageIdx].viewHeight){
+					if(rect.y >= rpxToPx(90) && rect.y <= rpxToPx(80) + this.allPages[this.currentPageIdx].viewHeight){
 						let amount = await this.getParagraphCommentsAmount(Number(item.classList[1].replace("paragraphId", '')));
 						if(amount > 0){
 							this.shownCommentsBtn.push({
@@ -1359,9 +1359,9 @@ export default {
 		z-index: 2;
 
 		.articlePage {
-			padding: 50rpx 51rpx 51rpx 50rpx;
+			padding: 20rpx 51rpx 31rpx 50rpx;
 			width: calc(100vw - 100rpx);
-			height: calc(100vh - 100rpx);
+			height: calc(100vh - 50rpx);
 			overflow: hidden;
 			white-space: pre-wrap;
 			word-wrap: break-word;

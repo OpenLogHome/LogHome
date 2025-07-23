@@ -19,9 +19,6 @@
 				</view>
 			</view>
 		</view>
-
-		<!-- 添加Banner组件 -->
-		<banner page="essays" v-show="topNavArr[topNavIndex] == '小说'" />
 		
 		<view class="noEssay" v-if="books.length==0" v-show="topNavArr[topNavIndex] == '小说'">
 			<img src="../static/images/icon_my_uplotolib.png" alt=""/>
@@ -158,7 +155,6 @@
 	import writerHelper from "@/components/writer_helper"
 	import worldPage from '@/components/worldsPage.vue'
 	import BookDetailView from '@/components/book-detail-view.vue'
-	import banner from '@/components/banner.vue'
 	import axios from 'axios'
 	export default {
 		data() {
@@ -184,7 +180,6 @@
 			writerHelper,
 			worldPage,
 			BookDetailView,
-			banner
 		},
 		onShow() {
 			if (this.$isFromLogin) {

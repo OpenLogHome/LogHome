@@ -1,7 +1,6 @@
 <template>
-	<view class="content"
-	v-dark>
-		<div class="searchBar" v-dark>
+	<view class="content" v-dark>
+		<div class="searchBar" :class="{top: scrollTop <= 5}" v-dark>
 			<div class="search-input-wrapper" @tap="navigateToSearch">
 				<uni-icons type="search" size="18" color="#999"></uni-icons>
 				<view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
@@ -9,37 +8,9 @@
 			<uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'" class="messageIcon" @click="gotoMessage"></uni-icons>
 		</div>
 		<mescroll-body ref="mescrollRef" @init="mescrollInit" style="margin-top: 105rpx;"
-			@down="downCallback" @up="upCallback" :fixed="false" :height="'100%'">
-			<div class="swiper" v-show="keyword.length == 0" v-dark>
-				<Xsuu-swiper :swiperItems="newchartList" :margin="18" 
-				:borderRadius="10" @clicked="roulousChartClicked"
-				class="swiperImgs">
-				</Xsuu-swiper>
-				<div class="swiperNav" v-dark>
-					<div class="navBtn">
-						<img src="../static/swiperNavIcons/category.png" alt="标签" @click="navBarJump('标签')"/>
-						<div class="name">标签</div>
-					</div>
- 					<div class="navBtn">
-						<img src="../static/swiperNavIcons/activity.png" alt="活动" @click="navBarJump('活动')"/>
-						<div class="name">活动</div>
-					</div>
- 					<div class="navBtn">
-						<img src="../static/swiperNavIcons/ranks.png" alt="排行" @click="navBarJump('排行')"/>
-						<div class="name">排行</div>
-					</div>
-					<div class="navBtn">
-						<img src="../static/swiperNavIcons/recommands.png" alt="推荐" @click="navBarJump('推荐')"/>
-						<div class="name">推荐</div>
-					</div>
-					<div class="navBtn">
-						<img src="../static/swiperNavIcons/finish.png" alt="完结" @click="navBarJump('完结')"/>
-						<div class="name">完结</div>
-					</div>
-				</div>
-			</div>
-			
-			
+			@down="downCallback" @up="upCallback" @scroll="onPageScroll" :fixed="false" :height="'100%'">
+			<HorizontalTags ref="HorizontalTagsRef"></HorizontalTags>
+			<bookshelfHorizontal ref="bookshelfHorizontalRef"></bookshelfHorizontal>
 			<div class="card" v-for="(item,index) in collections" v-show="keyword.length == 0" v-dark v-if="index != 1">
 				<div class="head" @click="gotoCollections(item.collection_title)">
 					<div class="title">
@@ -160,21 +131,21 @@
 	import axios from 'axios'
 	import bookInCase from '../components/book_in_case.vue'
 	import popup from "@/components/ge-popup.vue"
-	import XsuuSwiper from "../components/Xss-swiper/Xsuu-swiper.vue"
+	import bookshelfHorizontal from "@/components/bookshelf-horizontal.vue"
 	import MescrollMixin from "@/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-mixins.js";
 	import darkModeMixin from '@/mixins/dark-mode.js'
 	import banner from '@/components/banner.vue'
+	import HorizontalTags from '../components/horizontal-tags.vue';
 	
 	export default {
 		components:{
-			bookInCase, popup, XsuuSwiper, banner
+			bookInCase, popup, banner, bookshelfHorizontal, HorizontalTags
 		},
 		mixins: [MescrollMixin, darkModeMixin], // 使用mixin
 		data() {
 			return {
+				scrollTop: 0,
 				books: [],
-				chartList:[],
-				newchartList:[],
 				collections:[],
 				timer:undefined,
 				searchBooks:[],
@@ -190,8 +161,16 @@
 		onLoad(){
 		},
 		onShow() {
+			this.reloadComponents();
 		},
 		methods: {
+			reloadComponents(){
+				if(this.$refs.bookshelfHorizontalRef) this.$refs.bookshelfHorizontalRef.loadBooks();
+				if(this.$refs.HorizontalTagsRef) this.$refs.HorizontalTagsRef.loadTags();
+			},
+			onPageScroll(ev) {
+				this.scrollTop = ev.scrollTop;
+			},
 			mescrollInit(mescroll){
 				this.mescroll = mescroll;
 			},
@@ -201,6 +180,7 @@
 				this.checkUpdate();
 				this.checkAncientVersion();
 				this.refreshRecommends();
+				this.this.reloadComponents();
 				this.books = [];
 				// if(window.jsBridge.inApp){
 				// 	window.jsBridge.vibrate();
@@ -211,36 +191,10 @@
 			},
 			//刷新页面
 			async refreshPage() {
-				//刷新轮播图
-				let _this = this;
-				axios.get(this.$baseUrl + '/library/get_library_roulous_chart', {}).then((res) => {
-					this.chartList = res.data;
-					_this.newchartList = [];
-					for(let item of _this.chartList){
-						if(item.isValid == 1){
-							_this.newchartList.push({
-								img:item.image,
-								title:item.title,
-								Subtitle:item.name,
-								button:(item.navigate_to == "None")?0:1,
-								navigate_to:item.navigate_to
-							})
-						}
-					}
-					setTimeout(()=>{
-						this.mescroll.endSuccess();
-					},1000);
-				}).catch(function (error) {
-					uni.showToast({
-						title: error.toString(),
-						icon:'none',
-						duration: 2000
-					});
-					console.log(error);
-					this.mescroll.endErr();
-				}).then(function(){
-					
-				})
+				// 刷新推荐内容
+				setTimeout(()=>{
+					this.mescroll.endSuccess();
+				},1000);
 			},
 			async getMoreNovels(){
 				//获取更多小说
@@ -260,14 +214,7 @@
 					uni.hideLoading();
 				})
 			},
-			//响应轮播图点击事件
-			roulousChartClicked(item){
-				if(item.navigate_to && item.navigate_to !="None"){
-					uni.navigateTo({
-						url:item.navigate_to
-					})
-				}
-			},
+
 			//响应进入书籍详情页面事件
 			readBook(novel_id) {
 				if(novel_id > 0) {
@@ -389,30 +336,8 @@
 					})
 				}
 			},
-			navBarJump(func){
-				switch(func){
-					case "标签":
-						uni.navigateTo({
-							url:"./readers/tags"
-						})
-						break;
-					case "活动":
-						this.gotoCollections("干草块杯活动专辑");
-						break;
-					case "排行":
-						this.gotoCollections("原木力爆棚");
-						break;
-					case "推荐":
-						this.gotoCollections("原木力飙升");
-						break;
-					case "完结":
-						this.gotoCollections("完本经典");
-						break;
-				}
-			},
 
-		},
-		onShow() {
+
 		}
 	}
 </script>
@@ -424,7 +349,7 @@
 		align-items: center;
 		justify-content: center;
 		flex-flow: wrap;
-		background-color: rgb(242,242,242);
+		background-color: #fefefe;
 		width:100vw;
 		
 		&.dark-mode {
@@ -433,12 +358,12 @@
 		
 		div.searchBar{
 			position:fixed;
-			width:calc(100vw - 20rpx);
+			width:calc(100vw - 10rpx);
 			z-index:10;
 			top:0;
 			left:0;
 			margin:0 0rpx;
-			padding:10rpx;
+			padding-right:10rpx;
 			padding-top:calc(5rpx + var(--statusBarHeight));
 			padding-bottom:5rpx;
 			background-color: rgb(255,255,255);
@@ -478,8 +403,8 @@
 				border-radius: 36rpx;
 				padding: 0 20rpx;
 				height: 72rpx;
-				margin-right: 10rpx;
-				margin-left: 10rpx;
+				margin-right: 25rpx;
+				margin-left: 25rpx;
 
 				.dark-mode & {
 					background-color: #333;
@@ -495,92 +420,19 @@
 				color: #999;
 			}
 		}
-		
-		div.swiper{
-			margin:0;
-			background-color:white;
-			padding:20rpx 0;
-			width: 750rpx;
-			
-			&.dark-mode {
-				background-color: var(--card-background);
-			}
-			
-			.swiperImgs{
-				position:relative;
-				z-index:1;
-			}
-			.swiperNav{
-				position:relative;
-				height:200rpx;
-				margin:0 9px;
-				margin-top:-10rpx;
-				width:calc(100% - 18px);
-				background:linear-gradient(
-					180deg,
-					rgb(255, 255, 255),
-					rgb(252,233,164),
-				);
-				z-index:0;
-				border-radius: 0 0 10rpx 10rpx;
-				box-shadow:
-				  0px 0px 2.2px rgba(0, 0, 0, 0.02),
-				  0px 0px 5.3px rgba(0, 0, 0, 0.028),
-				  0px 0px 10px rgba(0, 0, 0, 0.035),
-				  0px 0px 17.9px rgba(0, 0, 0, 0.042),
-				  0px 0px 33.4px rgba(0, 0, 0, 0.05),
-				  0px 0px 80px rgba(0, 0, 0, 0.07)
-				;
-				display:flex;
-				align-items: center;
-				justify-content: space-around;
-				
-				&.dark-mode {
-					background:linear-gradient(
-						180deg,
-						var(--card-background),
-						rgb(80, 70, 40),
-					);
-					box-shadow:
-					  0px 0px 2.2px rgba(0, 0, 0, 0.1),
-					  0px 0px 5.3px rgba(0, 0, 0, 0.13),
-					  0px 0px 10px rgba(0, 0, 0, 0.15),
-					  0px 0px 17.9px rgba(0, 0, 0, 0.17),
-					  0px 0px 33.4px rgba(0, 0, 0, 0.2),
-					  0px 0px 80px rgba(0, 0, 0, 0.3)
-					;
-				}
-				
-				.navBtn{
-					transform: translate(0,10rpx);
-					img{
-						height:100rpx;
-						filter: drop-shadow(0px 2px 10rpx #17181944);
-					}
-					div.name{
-						text-align: center;
-						color:rgb(45,45,45);
-						font-size: 25rpx;
-						margin-top:5rpx;
-						
-						.dark-mode & {
-							color: var(--text-color-primary);
-						}
-					}
-					transition: all .3s;
-				}
 
-				.navBtn:active{
-					transform: translate(0,10rpx) scale(.95);
-				}
-			}
+		.searchBar.top{
+			background-color: #FEFEFE;
+			box-shadow: none;
 		}
+		
+
 
 		div.card{
 			margin:20rpx 0rpx;
 			padding:0 0 0rpx 0;
 			box-sizing: border-box;
-			background-color:rgb(255,255,255);
+			// background-color:rgb(255,255,255);
 			
 			&.dark-mode {
 				background-color: var(--card-background);
@@ -588,7 +440,7 @@
 			
 			.head{
 				margin:0rpx 25rpx;
-				padding: 30rpx 0 20rpx 0;
+				padding: 20rpx 0 20rpx 0;
 				height:45rpx;
 				div.title{
 					float:left;
@@ -831,7 +683,7 @@
 	
 	.dense-card-swiper {
 		width: 100%;
-		height: 470rpx;
+		height: calc(470rpx + 10rpx);
 		margin: 20rpx 0;
 	}
 	
@@ -839,6 +691,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+		padding: 5rpx 0;
 	}
 	
 	.dense-card-page {

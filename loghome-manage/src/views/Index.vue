@@ -96,6 +96,30 @@
                     举报管理
                 </el-menu-item>
             </router-link>
+            <router-link to="/activity-messages">
+                <el-menu-item index="3-4">
+                    <i class="el-icon-date"></i>
+                    活动消息
+                </el-menu-item>
+            </router-link>
+          </el-submenu>
+          <el-submenu index="4">
+            <template slot="title">
+                <i class="el-icon-money"></i>
+                <span>支付管理</span>
+            </template>
+            <router-link to="/bank-accounts">
+                <el-menu-item index="4-1">
+                    <i class="el-icon-bank-card"></i>
+                    原木银行账户
+                </el-menu-item>
+            </router-link>
+            <router-link to="/payment-orders">
+                <el-menu-item index="4-2">
+                    <i class="el-icon-shopping-cart-full"></i>
+                    充值订单管理
+                </el-menu-item>
+            </router-link>
           </el-submenu>
         </el-menu>
       </div>

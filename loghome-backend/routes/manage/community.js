@@ -1374,4 +1374,132 @@ router.get('/users/list', auth, async function (req, res) {
     }
 });
 
+// 获取活动消息列表
+router.get('/activity-messages', auth, async function (req, res) {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 20;
+        const keyword = req.query.keyword || '';
+        
+        let whereClause = 'WHERE message_type = "activity"';
+        let params = [];
+        
+        if (keyword) {
+            whereClause += ' AND message_content LIKE ?';
+            params.push(`%${keyword}%`);
+        }
+        
+        const offset = (page - 1) * pageSize;
+        params.push(offset, pageSize);
+        
+        // 获取活动消息列表
+        let results = await query(
+            `SELECT m.message_id, m.from_id, m.to_id, m.message_content, m.time, m.is_read, m.router, m.message_type, m.bg_url, 
+             (SELECT COUNT(*) FROM user_message WHERE message_content = m.message_content AND bg_url = m.bg_url AND message_type = 'activity') as total_count,
+             (SELECT COUNT(*) FROM user_message WHERE message_content = m.message_content AND bg_url = m.bg_url AND message_type = 'activity' AND is_read = 1) as read_count
+             FROM user_message m
+             ${whereClause}
+             GROUP BY m.message_id, m.from_id, m.to_id, m.message_content, m.time, m.is_read, m.router, m.message_type, m.bg_url
+             ORDER BY m.time DESC LIMIT ?, ?`,
+            params
+        );
+        
+        // 获取总数
+        let countParams = [];
+        if (keyword) {
+            countParams.push(`%${keyword}%`);
+        }
+        
+        let countResult = await query(
+            `SELECT COUNT(*) as total 
+             FROM (SELECT DISTINCT message_content, bg_url, router 
+                   FROM user_message
+                   ${whereClause}) as temp`,
+            countParams
+        );
+        
+        res.json({
+            list: results,
+            total: countResult[0].total,
+            page,
+            pageSize
+        });
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({ msg: 'bad request' });
+    }
+});
+
+// 发送活动消息
+router.post('/activity-messages', auth, async function (req, res) {
+    try {
+        const { content, bgUrl, router, sendType, userIds } = req.body;
+        
+        if (!content) {
+            return res.status(400).json({ msg: 'missing content' });
+        }
+        
+        // 系统消息用户ID为-1
+        const fromId = -1;
+        
+        if (sendType === 1) {
+            // 发送给所有用户
+            const users = await query('SELECT user_id FROM users WHERE status = 1');
+            
+            for (const user of users) {
+                await query(
+                    'INSERT INTO user_message(from_id, to_id, message_content, router, message_type, bg_url) VALUES(?, ?, ?, ?, ?, ?)',
+                    [fromId, user.user_id, content, router || '', 'activity', bgUrl || null]
+                );
+            }
+            
+            res.json({ msg: 'success', count: users.length });
+        } else if (sendType === 2 && Array.isArray(userIds) && userIds.length > 0) {
+            // 发送给指定用户
+            for (const userId of userIds) {
+                await query(
+                    'INSERT INTO user_message(from_id, to_id, message_content, router, message_type, bg_url) VALUES(?, ?, ?, ?, ?, ?)',
+                    [fromId, userId, content, router || '', 'activity', bgUrl || null]
+                );
+            }
+            
+            res.json({ msg: 'success', count: userIds.length });
+        } else {
+            res.status(400).json({ msg: 'invalid sendType or userIds' });
+        }
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({ msg: 'bad request' });
+    }
+});
+
+// 删除活动消息
+router.delete('/activity-messages/:id', auth, async function (req, res) {
+    try {
+        const messageId = req.params.id;
+        
+        if (!messageId) {
+            return res.status(400).json({ msg: 'missing message_id' });
+        }
+        
+        // 获取消息信息
+        const message = await query('SELECT * FROM user_message WHERE message_id = ?', [messageId]);
+        
+        if (message.length === 0) {
+            return res.status(404).json({ msg: 'message not found' });
+        }
+        
+        // 删除相同内容的所有活动消息
+        await query(
+            'DELETE FROM user_message WHERE message_content = ? AND bg_url = ? AND message_type = "activity"',
+            [message[0].message_content, message[0].bg_url]
+        );
+        
+        res.json({ msg: 'success' });
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({ msg: 'bad request' });
+    }
+});
+
 module.exports = router;

@@ -29,13 +29,24 @@
 		</z-paging>
 
 		<view class="reply">
+			<!-- 回复状态提示条 -->
+			<view class="reply-status" v-if="replyToId !== -1">
+				<text class="reply-status-text">回复 {{replyToUserName}}</text>
+				<view class="cancel-reply-btn" @tap="cancelReply">
+					<uni-icons type="closeempty" size="20" color="#999"></uni-icons>
+				</view>
+			</view>
+			
 			<div class="reply-row">
 				<textarea type="text" auto-height :placeholder="commentPlaceholder" maxlength="300"
 					v-model="commentText" @focus="textFocus" @blur="textBlur"></textarea>
 
 				<view class="icon-row">
+					<view class="emoji-icon">
+						<emoji-picker @select="onEmojiSelect"></emoji-picker>
+					</view>
 					<view class="image-icon" @tap="toggleImageUpload">
-						<uni-icons type="image" size="30" color="#999999"></uni-icons>
+						<uni-icons type="image" size="30" color="#666666"></uni-icons>
 					</view>
 					<view class="send-icon">
 						<uni-icons type="redo-filled" size="30" color="#EA7034" @click="submitComment"
@@ -48,7 +59,7 @@
 			<view class="image-upload-area" v-if="media_urls.length > 0 && isFocus">
 				<view class="image-grid">
 					<view class="image-item" v-for="(image, index) in media_urls" :key="index">
-						<log-image :src="image" mode="aspectFill"></log-image>
+						<log-image :src="image" mode="aspectFill" style="width: 100%; height: 100%;"></log-image>
 						<view class="delete-btn" @tap.stop="deleteImage(index)">
 							<uni-icons type="closeempty" size="20" color="#fff"></uni-icons>
 						</view>
@@ -59,6 +70,8 @@
 				</view>
 			</view>
 		</view>
+		
+
 	</view>
 </template>
 
@@ -66,9 +79,10 @@
 import nothing from '../../components/nothing.vue'
 import axios from 'axios'
 import commentItem from "../../components/dl-review/item.vue"
+import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 export default {
 	components: {
-		commentItem, nothing
+		commentItem, nothing, emojiPicker
 	},
 	data() {
 		return {
@@ -382,8 +396,9 @@ export default {
 							media_urls: _this.media_urls || []
 						}
 						_this.$refs.paging.addDataFromTop([commentItem], true, true);
-						_this.commentText = "";
-						_this.media_urls = []; // 清空已上传图片
+					_this.commentText = "";
+					_this.media_urls = []; // 清空已上传图片
+					_this.isFocus = false; // 关闭焦点状态
 					})
 					.catch(function (error) {
 						if (error) {
@@ -438,8 +453,10 @@ export default {
 							}
 						}
 						_this.$forceUpdate();
-						_this.commentText = "";
-						_this.media_urls = []; // 清空已上传图片
+					_this.commentText = "";
+					_this.media_urls = []; // 清空已上传图片
+					// 重置回复状态
+					_this.cancelReply();
 					})
 					.catch(function (error) {
 						if (error) {
@@ -479,20 +496,28 @@ export default {
 			this.fatherId = item.father;
 			this.replyToUserName = item.review.userName;
 			this.commentPlaceholder = "回复 " + item.review.userName + "：";
+			this.isFocus = true;
 			document.querySelector("textarea").focus();
+		},
+		cancelReply() {
+			this.replyToId = -1;
+			this.fatherId = -1;
+			this.replyToUserName = "";
+			this.commentPlaceholder = "发一条友善的评论";
+			if (this.media_urls.length === 0) {
+				this.isFocus = false;
+			}
 		},
 		textFocus() {
 			this.isFocus = true;
 		},
 		textBlur() {
-			// 延迟关闭，确保能点击上传按钮
+			// 延迟关闭，确保能点击上传按钮和其他操作
 			setTimeout(() => {
-				this.commentPlaceholder = "发一条友善的评论";
-				if (this.media_urls.length === 0) {
+				// 只有在非回复状态且没有图片时才关闭焦点状态
+				if (this.replyToId === -1 && this.media_urls.length === 0) {
 					this.isFocus = false;
 				}
-				this.replyToId = -1;
-				this.replyToUserName = "";
 			}, 300)
 		},
 		changePraise(ev) {
@@ -582,7 +607,20 @@ export default {
 		},
 		deleteImage(index) {
 			this.media_urls.splice(index, 1);
-		}
+		},
+		// 处理表情选择
+		onEmojiSelect(data) {
+			if (data.type === 'emoji') {
+				// 直接插入Emoji表情
+				this.commentText += data.content;
+			} else if (data.type === 'sticker') {
+				// 直接将表情包作为图片添加到 media_urls 中
+				this.media_urls.push(data.content);
+				// 确保焦点状态
+				this.isFocus = true;
+			}
+		},
+
 	}
 }
 </script>
@@ -599,8 +637,6 @@ export default {
 		-webkit-line-clamp: 3;
 	}
 
-	.comments {}
-
 	.reply {
 		position: fixed;
 		background-color: #f2f2f2;
@@ -609,7 +645,28 @@ export default {
 		width: 100vw;
 		display: flex;
 		flex-direction: column;
-		z-index: 150;
+		z-index: 50;
+
+		.reply-status {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 10rpx 20rpx;
+			background-color: #e8f4fd;
+			border-bottom: 1rpx solid #d0d0d0;
+			
+			.reply-status-text {
+				font-size: 28rpx;
+				color: #666;
+			}
+			
+			.cancel-reply-btn {
+				padding: 5rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+		}
 
 		.reply-row {
 			display: flex;
@@ -681,6 +738,15 @@ export default {
 			align-items: center;
 			padding: 0 20rpx 20rpx 20rpx;
 			margin-top: 10rpx;
+
+			.emoji-icon {
+				width: 40rpx;
+				height: 40rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-right: 20rpx;
+			}
 
 			.image-icon {
 				width: 40rpx;

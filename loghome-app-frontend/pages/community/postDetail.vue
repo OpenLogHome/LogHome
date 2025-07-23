@@ -52,6 +52,7 @@
                 mode="aspectFill" 
                 class="post-image"
                 @tap="previewImage(post.media_urls, imgIndex)"
+                @longpress="showImageOptions(img)"
               ></image>
             </view>
           </view>
@@ -96,6 +97,7 @@
                     mode="aspectFill"
                     class="comment-image"
                     @tap="previewImage(comment.media_urls, index)"
+                    @longpress="showImageOptions(img)"
                   ></log-image>
                 </view>
                 <view class="comment-actions">
@@ -129,6 +131,7 @@
                       mode="aspectFill"
                       class="reply-image"
                       @tap="previewImage(reply.media_urls, index)"
+                      @longpress="showImageOptions(img)"
                     ></log-image>
                   </view>
                   <view class="reply-actions">
@@ -168,7 +171,7 @@
       <view class="input-wrapper">
         <textarea 
           v-model="commentText" 
-          :placeholder="replyTo ? `回复 ${replyTo.user_name}` : '写下你的评论...'"
+          :placeholder="replyTo ? `回复 ${replyTo.user_name}` : '写下你的评论...'" 
           auto-height
           :maxlength="1000"
           :focus="inputFocus"
@@ -176,6 +179,7 @@
           adjust-position="false"
         ></textarea>
         <view class="input-actions">
+          <emoji-picker @select="onEmojiSelect"></emoji-picker>
           <view class="image-upload" @tap="chooseImage">
             <uni-icons type="image" size="24" color="#666"></uni-icons>
           </view>
@@ -197,14 +201,31 @@
         </view>
       </view>
     </view>
+    
+    <!-- 图片长按菜单 -->
+    <uni-popup ref="imageOptionsPopup" type="bottom">
+      <view class="popup-content">
+        <view class="popup-item" @tap="saveAsSticker">
+          <uni-icons type="star" size="20" color="#EA7034"></uni-icons>
+          <text>收藏为表情</text>
+        </view>
+        <view class="popup-item cancel" @tap="hideImageOptions">
+          <text>取消</text>
+        </view>
+      </view>
+    </uni-popup>
   </view>
 </template>
 
 <script>
 import axios from 'axios'
 import moment from 'moment'
+import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 
 export default {
+  components: {
+    emojiPicker
+  },
   data() {
     return {
       post: {},
@@ -221,6 +242,7 @@ export default {
       parentComment: null,
       isLoading: true,
       userRole: -1, // -1: 未知, 0: 普通成员, 1: 管理员, 2: 圈主
+      currentImageUrl: '', // 当前长按选中的图片URL
     }
   },
   onLoad(params) {
@@ -517,17 +539,26 @@ export default {
     async submitComment() {
       if (!this.commentText && this.selectedImages.length === 0) return
       try {
-        // 先上传图片
+        // 使用评论文本，不需要处理表情包标记
+        let processedText = this.commentText;
+        
+        // 处理图片上传
         let image_url = null;
         if (this.selectedImages.length > 0) {
           uni.showLoading({ title: '正在上传图片...' })
-          const uploadRes = await this.uploadFile(this.selectedImages[0]);
-          image_url = uploadRes.url;
+          // 检查图片URL是否已经是完整的网络URL（表情包的情况）
+          if (this.selectedImages[0].startsWith('http')) {
+            image_url = this.selectedImages[0];
+          } else {
+            // 本地图片需要上传
+            const uploadRes = await this.uploadFile(this.selectedImages[0]);
+            image_url = uploadRes.url;
+          }
         }
         // 发送评论
         const data = {
           post_id: this.postId,
-          content: this.commentText,
+          content: processedText.trim(),
           image_url: image_url
         }
         if (this.replyTo) {
@@ -687,6 +718,104 @@ export default {
       })
     },
     
+    showImageOptions(imageUrl) {
+      this.currentImageUrl = imageUrl;
+      this.$refs.imageOptionsPopup.open();
+    },
+    
+    hideImageOptions() {
+      this.$refs.imageOptionsPopup.close();
+    },
+    
+    async saveAsSticker() {
+       try {
+         uni.showLoading({ title: '处理中...' });
+         const token = JSON.parse(window.localStorage.getItem('token')).tk;
+         const userId = JSON.parse(window.localStorage.getItem('token')).id;
+         
+         // 1. 检查图片链接是否已存在对应的sticker项目
+         const checkRes = await axios.get(this.$baseUrl + '/community/stickers', {
+           params: { url: this.currentImageUrl },
+           headers: { 'Authorization': 'Bearer ' + token }
+         });
+         
+         let stickerId = null;
+         let needCreateSticker = false;
+         
+         if (checkRes.data && checkRes.data.length > 0) {
+           // 图片已存在对应的sticker
+           const existingSticker = checkRes.data[0];
+           
+           if (existingSticker.is_private === 0) {
+             // 公开的，直接收藏
+             stickerId = existingSticker.sticker_id;
+           } else if (existingSticker.user_id === userId) {
+             // 私密的，但是是自己的，直接收藏
+             stickerId = existingSticker.sticker_id;
+           } else {
+             // 私密的，且不是自己的，需要重新创建
+             needCreateSticker = true;
+           }
+         } else {
+           // 不存在，需要创建
+           needCreateSticker = true;
+         }
+         
+         // 2. 如果需要创建新的sticker
+         if (needCreateSticker) {
+           const createRes = await axios.post(this.$baseUrl + '/community/stickers', {
+             url: this.currentImageUrl,
+             is_private: false // 默认创建为公开的
+           }, {
+             headers: { 'Authorization': 'Bearer ' + token }
+           });
+           
+           stickerId = createRes.data.sticker_id;
+         }
+         
+         // 3. 收藏sticker
+         if (stickerId) {
+           // 检查是否已收藏
+           const favoritesRes = await axios.get(this.$baseUrl + '/community/stickers/favorites', {
+             headers: { 'Authorization': 'Bearer ' + token }
+           });
+           
+           // 适配新的API返回结构，data.stickers 是表情列表
+           const stickers = favoritesRes.data.stickers || favoritesRes.data;
+           const isAlreadyFavorite = Array.isArray(stickers) && stickers.some(item => item.sticker_id === stickerId);
+           
+           if (!isAlreadyFavorite) {
+             await axios.post(this.$baseUrl + '/community/stickers/favorites', {
+               sticker_id: stickerId
+             }, {
+               headers: { 'Authorization': 'Bearer ' + token }
+             });
+           }
+           
+           uni.hideLoading();
+           uni.showToast({
+             title: '已添加到表情收藏',
+             icon: 'success'
+           });
+         } else {
+           uni.hideLoading();
+           uni.showToast({
+             title: '收藏失败',
+             icon: 'none'
+           });
+         }
+         
+         this.hideImageOptions();
+       } catch (error) {
+         uni.hideLoading();
+         console.error('收藏表情失败:', error);
+         uni.showToast({
+           title: '收藏失败',
+           icon: 'none'
+         });
+       }
+     },
+    
     sharePost() {
       uni.setClipboardData({
         data: `来自原木社区的分享：${this.post.title}\n${this.post.content.substring(0, 50)}${this.post.content.length > 50 ? '...' : ''}\n点击链接查看详情：${window.location.origin}/#/pages/community/postDetail?id=${this.post.post_id}`,
@@ -758,6 +887,17 @@ export default {
           this.parentComment = null
         }
       }, 100)
+    },
+    
+    // 处理表情选择
+    onEmojiSelect(data) {
+      if (data.type === 'emoji') {
+        // 直接插入Emoji表情
+        this.commentText += data.content;
+      } else if (data.type === 'sticker') {
+        // 直接将表情包作为图片添加到 selectedImages 中
+        this.selectedImages.push(data.content);
+      }
     },
     async getUserRole() {
       try {
@@ -866,6 +1006,19 @@ export default {
   // height: 100vh;
   background-color: #f8f8f8;
   position: relative;
+}
+
+/* 表情选择器样式 */
+.input-actions {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+/* 确保表情选择器在移动端正确显示 */
+.emoji-picker-container {
+  position: relative;
+  z-index: 100;
 }
 
 .content-scroll {
@@ -1332,6 +1485,7 @@ textarea {
 .input-actions {
   display: flex;
   align-items: center;
+  gap: 10rpx;
 }
 
 .image-upload {
@@ -1438,5 +1592,32 @@ textarea {
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* 图片长按菜单样式 */
+.popup-content {
+  background-color: #fff;
+  border-radius: 20rpx 20rpx 0 0;
+  overflow: hidden;
+}
+
+.popup-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx 0;
+  font-size: 32rpx;
+  color: #333;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.popup-item uni-icons {
+  margin-right: 10rpx;
+}
+
+.popup-item.cancel {
+  color: #999;
+  margin-top: 20rpx;
+  border-bottom: none;
 }
 </style>

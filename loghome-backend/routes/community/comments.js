@@ -105,7 +105,7 @@ router.post('/create', auth, async (req, res) => {
         const user = req.user[0];
         const { post_id, content, image_url, parent_id = 0, reply_to_user_id, mention_ids } = req.body;
         
-        if (!post_id || !content) {
+        if (!post_id || content == undefined) {
             return res.status(400).json({ msg: '缺少必要参数' });
         }
         

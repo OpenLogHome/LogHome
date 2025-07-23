@@ -29,7 +29,7 @@
 export default {
     data(){
         return{
-            user:{name:"admin"},
+            user:{name:"管理员"},
             menuData:[],
             operationToFill:false,
             onlineAmount:0,
@@ -40,10 +40,14 @@ export default {
     },
     mounted(){
         let user = JSON.parse(window.localStorage.getItem("UserInfo"));
-        this.user = user;
+        if (user) {
+            this.user = user;
+        }
         let _this = this;
         _this.axios.get( this.$baseUrl + '/users/userprofile').then((res) => {
-            _this.user = JSON.parse(JSON.stringify(res.data));
+            if (res.data) {
+                _this.user = JSON.parse(JSON.stringify(res.data));
+            }
         }).catch(function(error) {
             if(error.message == "Request failed with status code 401"){
                 window.localStorage.removeItem('token');
@@ -111,24 +115,25 @@ export default {
     },
     methods:{
         getHello(){
-             var h = new Date().getHours();
+            var h = new Date().getHours();
+            const userName = this.user && this.user.name ? this.user.name : '管理员';
             // 3. 判断小时数改变文字信息
             if(h < 6){
-                return this.user.name + '，夜深了，早点休息哦。';
+                return userName + '，夜深了，早点休息哦。';
             }else if (h < 9){
-                return this.user.name + '，美好的一天从清晨开始。';
+                return userName + '，美好的一天从清晨开始。';
             }else if (h < 12){
-                return this.user.name + '，上午好！';
+                return userName + '，上午好！';
             }else if (h < 14){
-                return this.user.name + '，中午好，别忘了吃午饭哦。';
+                return userName + '，中午好，别忘了吃午饭哦。';
             }else if (h < 17){
-                return this.user.name + '，下午好！';
+                return userName + '，下午好！';
             }else if (h < 19){
-                return this.user.name + '，下午好！';
+                return userName + '，下午好！';
             }else if (h < 22){
-                return this.user.name + '，晚上好！';
+                return userName + '，晚上好！';
             }else {
-                return this.user.name + '，夜深了，早点休息哦。';
+                return userName + '，夜深了，早点休息哦。';
             }
         }
     }

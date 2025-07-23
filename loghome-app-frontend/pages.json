@@ -13,7 +13,7 @@
 			"path": "pages/bookcase/index",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "书架",
+				"navigationBarTitleText": "我的书架",
 				"titleNView": {
 					"titleSize": "40rpx",
 					"buttons": [{
@@ -40,7 +40,7 @@
 		{
 			"path": "pages/bookcase/manage",
 			"style": {
-				"navigationBarTitleText": "书架管理",
+				"navigationBarTitleText": "我的书架",
 				"titleNView": {
 					"titleSize": "40rpx"
 				}
@@ -747,6 +747,13 @@
 				"navigationBarTitleText": "填写邀请码",
 				"enablePullDownRefresh": false
 			}
+		},
+		{
+			"path": "pages/community/activityMessages",
+			"style": {
+				"navigationBarTitleText": "活动消息",
+				"enablePullDownRefresh": false
+			}
 		}
     ],
 	"tabBar": {
@@ -755,17 +762,18 @@
 		"borderStyle": "white",
 		"backgroundColor": "#ffffff",
 		"spacing": "4rpx",
-		"list": [{
-				"pagePath": "pages/bookcase/index",
-				"iconPath": "./static/menu_bar/icon_books_unselected.png",
-				"selectedIconPath": "static/menu_bar/icon_books_selected.png",
-				"text": "书架"
-			},
+		"list": [
+			// {
+			// 	"pagePath": "pages/bookcase/index",
+			// 	"iconPath": "./static/menu_bar/icon_books_unselected.png",
+			// 	"selectedIconPath": "static/menu_bar/icon_books_selected.png",
+			// 	"text": "书架"
+			// },
 			{
 				"pagePath": "pages/library",
 				"iconPath": "./static/menu_bar/icon_library_unselected.png",
 				"selectedIconPath": "./static/menu_bar/icon_library_selected.png",
-				"text": "书库"
+				"text": "阅读"
 			},
 			{
 				"pagePath": "pages/community/index",

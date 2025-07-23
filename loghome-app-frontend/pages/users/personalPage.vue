@@ -1,5 +1,5 @@
 <template>
-	<view style="background-color:rgb(255, 248, 234);">
+	<view style="background-color: #FFFFFF">
 		<!-- 后台按钮组件 -->
 		<zetank-backBar textcolor="#000" :showLeft="topNum == 0" :showTitle="false" navTitle='标题'></zetank-backBar>
 		<!-- 用户背景封面 -->
@@ -62,29 +62,83 @@
 			
 			</view>
 	
-			<view id="tabbar" :class="isFixed?'tabbar-fixed':''"
-				style=" align-items: stretch;height: 90rpx;line-height: 90rpx; display: flex;flex-direction: row;justify-content: space-around;">
+			<view id="tabbar" :class="isFixed?'tabbar-fixed':''" 
+				style="align-items: stretch;height: 90rpx;line-height: 90rpx; display: flex;
+				flex-direction: row;justify-content: space-around; margin:0 80rpx;">
 				<view style="font-size: 32rpx;font-weight: bold;text-align: center;width: 128rpx;"
 					:class="current == 0?'tabbarsh':'notabbarsh'" @tap="fnBarClick(0)">作品</view>
 				<view style="font-size: 32rpx;font-weight: bold;text-align: center;width: 128rpx;"
-					:class="current == 1?'tabbarsh':'notabbarsh'" @tap="fnBarClick(1)" v-show="false">动态</view>
+					:class="current == 1?'tabbarsh':'notabbarsh'" @tap="fnBarClick(1)">动态</view>
 				<view style="font-size: 32rpx;font-weight: bold;text-align: center;width: 128rpx;"
 					:class="current == 2?'tabbarsh':'notabbarsh'" @tap="fnBarClick(2)">世界</view>
 			</view>
 	
 			<!-- 导航显示内容 -->
-			<view v-show="current == 0">
-				<div class="bookcase">
-					<bookInCase v-for="item in booksOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.novel_id"
-								@click.native="readBook(item.novel_id)" v-show="!item.is_personal"></bookInCase>
-				</div>
-			</view>
-			<view v-show="current == 2">
-				<div class="bookcase">
-					<bookInCase v-for="item in worldsOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.world_id"
-								@click.native="readBook(item.novel_id)"></bookInCase>
-				</div>
-			</view>
+			<swiper class="content-swiper" 
+				:current="current"
+				@change="swiperChange"
+				:indicator-dots="false"
+				:autoplay="false"
+				:duration="300"
+				:circular="false"
+				:style="swiperStyle">
+				<swiper-item>
+					<div class="bookcase tabpage">
+						<bookInCase v-for="item in booksOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.novel_id"
+									@click.native="readBook(item.novel_id)" v-show="!item.is_personal"></bookInCase>
+					</div>
+				</swiper-item>
+				<swiper-item>
+					<div class="post-list tabpage" @scrolltolower="loadMorePosts">
+						<view class="post-item" v-for="(post, index) in userPosts" :key="index" @tap="navigateToPost(post.post_id)">
+							<view class="post-header">
+								<view class="post-circle" @tap.stop="navigateToCircle(post.circle_id)">
+									{{post.circle_name}}
+								</view>
+								<view class="post-time">{{formatTime(post.create_time)}}</view>
+							</view>
+							<view class="post-content">
+								<text class="post-title">{{post.title}}</text>
+								<text class="post-text">{{post.content}}</text>
+							</view>
+							<!-- 图片展示 -->
+							<view class="post-images" v-if="post.media_urls && post.media_urls.length > 0">
+								<view class="image-grid" :class="'grid-' + (post.media_urls.length > 3 ? 'multi' : post.media_urls.length)">
+									<image 
+										v-for="(img, imgIndex) in post.media_urls.slice(0, 9)" 
+										:key="imgIndex" 
+										:src="img" 
+										mode="aspectFill" 
+										class="post-image"
+										@tap.stop="previewImage(post.media_urls, imgIndex)"
+									></image>
+									<view class="image-count" v-if="post.media_urls.length > 9">+{{post.media_urls.length - 9}}</view>
+								</view>
+							</view>
+							<view class="post-footer">
+								<view class="post-action">
+									<uni-icons type="chat" size="18" color="#666"></uni-icons>
+									<text>{{post.comment_count || 0}}</text>
+								</view>
+								<view class="post-action">
+									<uni-icons type="heart" size="18" color="#666"></uni-icons>
+									<text>{{post.like_count || 0}}</text>
+								</view>
+							</view>
+						</view>
+						<view class="no-data" v-if="userPosts.length === 0">
+							<text>暂无动态</text>
+						</view>
+						<uni-load-more :status="postsLoadingStatus"></uni-load-more>
+					</div>
+				</swiper-item>
+				<swiper-item>
+					<div class="bookcase tabpage">
+						<bookInCase v-for="item in worldsOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.world_id"
+									@click.native="readBook(item.novel_id)"></bookInCase>
+					</div>
+				</swiper-item>
+			</swiper>
 		</springBack>
 	</view>
 </template>
@@ -95,6 +149,7 @@
 	import groupLabel from "../usergroup/groupLabel.vue"
 	import springBack from '../../components/springBack.vue'
 	import axios from 'axios'
+	import moment from 'moment'
 	export default {
 		components:{
 			bookInCase,followBtn,springBack,groupLabel
@@ -146,6 +201,18 @@
 					"系统消息":'nonTitle'
 				},
 				worldsOnShow: [],
+				// 用户帖子列表
+				userPosts: [],
+				// 帖子加载状态
+				postsLoadingStatus: 'more',
+				// 帖子分页
+				postsPage: 1,
+				postsPageSize: 10,
+				postsHasMore: true,
+				// swiper高度样式对象
+				swiperStyle: {
+					height: 'auto'
+				},
 			}
 		},
 		onLoad(option) {
@@ -156,49 +223,105 @@
 				this.showedit = true
 			}
 
-
+			// 页面加载完成后初始化swiper高度
+			setTimeout(() => {
+				this.updateSwiperHeight();
+			}, 500);
 		},
 		methods: {
-			/// 顶部导航选项点击
-			fnBarClick(current) {
-				// console.log(current);
-				// 是否当前项点击
-				if (this.current == current) {
-					this.timeOutUserInfo += 1;
-					// 是否为刷新值和连续点击2次
-					// console.log('timeOutUserInfo',this.timeOutUserInfo);
-					if (!this.clickRefresh && this.timeOutUserInfo >= 2) {
-						// 刷新值开
-						// console.log('点击了两下');
-						this.clickRefresh = true;
+				/// 顶部导航选项点击
+				fnBarClick(current) {
+					// console.log(current);
+					// 是否当前项点击
+					if (this.current == current) {
+						this.timeOutUserInfo += 1;
+						// 是否为刷新值和连续点击2次
+						// console.log('timeOutUserInfo',this.timeOutUserInfo);
+						if (!this.clickRefresh && this.timeOutUserInfo >= 2) {
+							// 刷新值开
+							// console.log('点击了两下');
+							this.clickRefresh = true;
+							// 获取新数据
+							if (current === 1) {
+								// 重置帖子分页并重新加载
+								this.postsPage = 1;
+								this.postsHasMore = true;
+								this.loadUserPosts();
+							}
+
+							// 定时器重置
+							this.timeOutUserInfo = setTimeout(() => {
+								// 清除定时器
+								// console.log('5秒后清除定时器');
+								clearTimeout(this.timeOutUserInfo)
+								// 连续触发记录重置
+								this.timeOutUserInfo = 0;
+								// 5秒后刷新值关
+								this.clickRefresh = false;
+							}, 5000);
+						}
+					} else {
+						// 改变顶部导航选中
+						this.current = current;
 						// 获取新数据
+						if (current === 1 && this.userPosts.length === 0) {
+							// 加载用户帖子
+							this.loadUserPosts();
+						}
 
-						// 定时器重置
-						this.timeOutUserInfo = setTimeout(() => {
-							// 清除定时器
-							// console.log('5秒后清除定时器');
-							clearTimeout(this.timeOutUserInfo)
-							// 连续触发记录重置
-							this.timeOutUserInfo = 0;
-							// 5秒后刷新值关
-							this.clickRefresh = false;
-						}, 5000);
+						// 清除定时器
+						clearTimeout(this.timeOutUserInfo)
+						// 连续触发记录重置
+						this.timeOutUserInfo = 0;
+						// 刷新值关
+						this.clickRefresh = false;
+						
+						// 更新swiper高度
+						setTimeout(() => {
+							this.updateSwiperHeight();
+						}, 500);
 					}
-				} else {
-					// 改变顶部导航选中
+				},
+				
+				// swiper滑动切换事件
+				swiperChange(e) {
+					const current = e.detail.current;
+					// 更新当前选中的选项卡
 					this.current = current;
-					// 首次选中激活顶部导航关联页状态
-					if (!this.status.praise && this.current == 1) this.status.praise = true;
-					// 获取新数据
-
+					
 					// 清除定时器
-					clearTimeout(this.timeOutUserInfo)
+					clearTimeout(this.timeOutUserInfo);
 					// 连续触发记录重置
 					this.timeOutUserInfo = 0;
 					// 刷新值关
 					this.clickRefresh = false;
-				}
-			},
+					
+					// 如果切换到动态标签页，加载用户帖子
+					if (current === 1 && this.userPosts.length === 0) {
+						this.loadUserPosts();
+					}
+					
+					// 更新swiper高度
+					this.$nextTick(() => {
+						this.updateSwiperHeight();
+					});
+				},
+				
+				// 更新swiper高度
+				updateSwiperHeight() {
+					// 获取当前激活的swiper-item索引
+					const currentIndex = this.current;
+					// 直接通过 document 查询 bookcase 元素
+					const tabpages = document.querySelectorAll('.tabpage');
+					if (!tabpages || tabpages.length === 0 || !tabpages[currentIndex]) return;
+					const contentHeight = tabpages[currentIndex].scrollHeight;
+					if (!contentHeight) return;
+					const actualHeight = Math.max(contentHeight, 200);
+					console.log(actualHeight);
+					this.swiperStyle = {
+						height: actualHeight + 'px'
+					};
+				},
 			readBook(novel_id) {
 				if(novel_id > 0) {
 					uni.navigateTo({
@@ -219,20 +342,14 @@
 				uni.navigateTo({
 					url: '/pages/community/chat?id=' + this.uid
 				});
-				// if(this.user.uni_id != undefined){
-				// 	uni.navigateTo({
-				// 		url:"/uni_modules/uni-im/pages/chat/chat?user_id=" + this.user.uni_id
-				// 	})
-				// } else {
-				// 	uni.showToast({
-				// 		title: "该用户使用的版本太旧，还未开通私信功能哦",
-				// 		icon: 'none',
-				// 		duration: 2000
-				// 	})
-				// }
 			},
 			onLoad(params) {
 				this.uid = params.id;
+				
+				// 页面加载完成后初始化swiper高度
+				setTimeout(() => {
+					this.updateSwiperHeight();
+				}, 500);
 			},
 			onShow(params) {
 				let _this = this;
@@ -251,6 +368,10 @@
 				}).then((res) => {
 					_this.booksOnShow=res.data;
 					console.log(_this.booksOnShow)
+					// 数据加载完成后，更新swiper高度
+					_this.$nextTick(() => {
+						_this.updateSwiperHeight();
+					});
 				}).catch(function(error) {
 					uni.showToast({
 						title: "作品信息加载失败",
@@ -304,6 +425,10 @@
 				axios.get(this.$baseUrl + '/world/get_worlds_by_author?user_id=' + _this.uid, {
 				}).then((res) => {
 					_this.worldsOnShow = res.data;
+					// 数据加载完成后，更新swiper高度
+					_this.$nextTick(() => {
+						_this.updateSwiperHeight();
+					});
 				}).catch(function(error) {
 					uni.showToast({
 						title: "世界信息加载失败",
@@ -312,6 +437,113 @@
 					})
 				});
 				
+				// 如果当前是动态标签页，加载用户帖子
+				if (this.current === 1) {
+					this.loadUserPosts();
+				}
+			},
+			
+			// 加载用户帖子
+			async loadUserPosts() {
+				if (!this.postsHasMore || this.postsLoadingStatus === 'loading') return;
+				
+				this.postsLoadingStatus = 'loading';
+				try {
+					const res = await axios.get(this.$baseUrl + '/community/posts/list', {
+						params: {
+							page: this.postsPage,
+							pageSize: this.postsPageSize,
+							user_id: this.uid
+						}
+					});
+					
+					if (res.data && res.data.list) {
+						const newPosts = res.data.list.map(post => {
+							if (post.media_urls && typeof post.media_urls === 'string') {
+								try {
+									post.media_urls = JSON.parse(post.media_urls);
+								} catch (e) {
+									post.media_urls = [];
+								}
+							}
+							return post;
+						});
+						
+						// 更新帖子列表
+						if (this.postsPage === 1) {
+							this.userPosts = newPosts;
+						} else {
+							this.userPosts = [...this.userPosts, ...newPosts];
+						}
+						
+						this.postsPage++;
+						this.postsHasMore = this.userPosts.length < res.data.total;
+						this.postsLoadingStatus = this.postsHasMore ? 'more' : 'noMore';
+						
+						// 更新swiper高度
+						this.$nextTick(() => {
+							this.updateSwiperHeight();
+						});
+					}
+				} catch (error) {
+					console.error('加载用户帖子失败', error);
+					this.postsLoadingStatus = 'more';
+					uni.showToast({
+						title: "加载用户动态失败",
+						icon: 'none',
+						duration: 2000
+					});
+				}
+			},
+			
+			// 加载更多帖子
+			loadMorePosts() {
+				if (this.postsHasMore) {
+					this.loadUserPosts();
+				}
+			},
+			
+			// 格式化时间
+			formatTime(time) {
+				const now = moment();
+				const postTime = moment(time);
+				const diff = now.diff(postTime, 'minutes');
+				
+				if (diff < 1) return '刚刚';
+				if (diff < 60) return `${diff}分钟前`;
+				
+				const hourDiff = now.diff(postTime, 'hours');
+				if (hourDiff < 24) return `${hourDiff}小时前`;
+				
+				const dayDiff = now.diff(postTime, 'days');
+				if (dayDiff < 30) return `${dayDiff}天前`;
+				
+				return postTime.format('YYYY-MM-DD');
+			},
+			
+			// 导航到帖子详情
+			navigateToPost(postId) {
+				uni.navigateTo({ url: `/pages/community/postDetail?id=${postId}` });
+			},
+			
+			// 导航到圈子详情
+			navigateToCircle(circleId) {
+				if (!circleId || circleId === 0) {
+					uni.showToast({
+						title: '圈子不存在',
+						icon: 'none'
+					});
+					return;
+				}
+				uni.navigateTo({ url: `/pages/community/circle?id=${circleId}` });
+			},
+			
+			// 预览图片
+			previewImage(images, index) {
+				uni.previewImage({
+					urls: images,
+					current: images[index]
+				});
 			}
 		}
 	}
@@ -323,6 +555,7 @@
 		display: block;
 		width: 100vw;
 		height:100vw;
+		background-color: #FFFFFF;
 	}
 
 	.info-avatar {
@@ -344,6 +577,125 @@
 		color: rgb(180, 111, 88);
 		border-bottom: 4rpx rgb(180, 111, 88) solid;
 	}
+	
+	// 帖子列表样式
+	.post-list {
+		padding: 20rpx;
+		
+		.post-item {
+			background: #fff;
+			border-radius: 12rpx;
+			padding: 30rpx;
+			margin-bottom: 20rpx;
+			border: 1px solid #f0f0f0;
+
+			.post-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 20rpx;
+
+				.post-circle {
+					font-size: 24rpx;
+					color: #EA7034;
+					background: rgba(234, 112, 52, 0.1);
+					padding: 4rpx 16rpx;
+					border-radius: 20rpx;
+				}
+				
+				.post-time {
+					font-size: 24rpx;
+					color: #999;
+				}
+			}
+
+			.post-content {
+				.post-title {
+					font-size: 32rpx;
+					font-weight: bold;
+					color: #333;
+					margin-bottom: 10rpx;
+					display: block;
+				}
+
+				.post-text {
+					font-size: 28rpx;
+					color: #666;
+					line-height: 1.6;
+					display: -webkit-box;
+					-webkit-box-orient: vertical;
+					-webkit-line-clamp: 3;
+					overflow: hidden;
+				}
+			}
+
+			.post-images {
+				margin: 20rpx 0;
+
+				.image-grid {
+					display: flex;
+					flex-wrap: wrap;
+
+					&.grid-1 .post-image {
+						width: 400rpx;
+						height: 300rpx;
+					}
+
+					&.grid-2 .post-image,
+					&.grid-3 .post-image,
+					&.grid-multi .post-image {
+						width: calc(33.33% - 10rpx);
+						height: 200rpx;
+						margin: 5rpx;
+					}
+
+					.post-image {
+						border-radius: 8rpx;
+					}
+					
+					.image-count {
+						position: absolute;
+						right: 10rpx;
+						bottom: 10rpx;
+						background: rgba(0, 0, 0, 0.5);
+						color: #fff;
+						font-size: 24rpx;
+						padding: 4rpx 12rpx;
+						border-radius: 20rpx;
+					}
+				}
+			}
+
+			.post-footer {
+				display: flex;
+				justify-content: space-around;
+				padding-top: 20rpx;
+				border-top: 1rpx solid #f0f0f0;
+
+				.post-action {
+					display: flex;
+					align-items: center;
+					font-size: 24rpx;
+					color: #666;
+
+					text {
+						margin-left: 8rpx;
+
+						&.liked {
+							color: #EA7034;
+						}
+					}
+				}
+			}
+		}
+		
+		.no-data {
+			text-align: center;
+			padding: 40rpx 0;
+			color: #999;
+			font-size: 28rpx;
+		}
+	}
 
 	.notabbarsh {
 		color: #555555;
@@ -364,14 +716,42 @@
 		margin-bottom: 0;
 	}
 	
+	.content-swiper {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		height: auto;
+		min-height: 200rpx;
+	}
+	
+	.content-swiper swiper-item {
+		height: auto;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		overflow: visible;
+	}
+	
+	.content-swiper .uni-swiper-item {
+		height: auto;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		overflow: visible;
+	}
+	
 	.bookcase {
 		display: flex;
 		flex-direction: row;
-		align-items: center;
+		align-items: flex-start;
 		justify-content: center;
 		flex-flow: wrap;
 		padding-bottom:40rpx;
 		font-size:30rpx;
+		width: 100%;
+		height: auto;
+		min-height: 200rpx;
+		overflow-y: visible;
 	}
 	
 	.rightBtnGroup{

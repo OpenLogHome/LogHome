@@ -2,7 +2,8 @@ const mysql = require('mysql');
 const config = require("./config")
 let pool = mysql.createPool({
 	...config.database,
-	timezone: '+08:00'
+	timezone: '+08:00',
+	charset: 'utf8mb4'
 });
 
 const query = async function (sql, values) {

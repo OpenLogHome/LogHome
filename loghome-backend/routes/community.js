@@ -16,6 +16,7 @@ const interactionsRouter = require('./community/interactions.js');
 const searchRouter = require('./community/search.js');
 const notificationsRouter = require('./community/notifications.js');
 const auditRouter = require('./community/audit.js');
+const stickersRouter = require('./community/stickers.js');
 
 let router = express.Router();
 
@@ -799,5 +800,6 @@ router.use('/interactions', interactionsRouter);
 router.use('/search', searchRouter);
 router.use('/notifications', notificationsRouter);
 router.use('/audit', auditRouter);
+router.use('/stickers', stickersRouter);
 
 module.exports = router;

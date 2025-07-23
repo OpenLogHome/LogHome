@@ -1,9 +1,9 @@
 <template>
     <div class="banner-container" v-if="banners.length > 0" v-dark>
         <swiper class="banner-swiper" 
-            :indicator-dots="true" 
+            :indicator-dots="false" 
             :autoplay="autoplay" 
-            :interval="3000" 
+            :interval="8000" 
             :duration="500"
             :circular="true"
             indicator-active-color="#ffffff"
@@ -37,7 +37,7 @@ export default {
         // 新增可配置项
         autoplay: {
             type: Boolean,
-            default: false
+            default: true
         },
         interval: {
             type: Number,
@@ -91,7 +91,7 @@ export default {
 
 <style scoped lang="scss">
 .banner-container {
-    margin: 10rpx 0 20rpx 0;
+    margin: 10rpx 0 10rpx 0;
     padding: 10rpx 0;
     
     &.dark-mode {
@@ -100,7 +100,7 @@ export default {
 
     .banner-swiper {
         width: 710rpx;
-        height: 203rpx; /* 7:2比例 (710/203 ≈ 7/2) */
+        height: 150rpx; /* 7:2比例 (710/203 ≈ 7/2) */
         margin: 0 20rpx;
     }
 

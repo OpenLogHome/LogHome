@@ -18,6 +18,10 @@ import CircleManage from "../views/community/CircleManage.vue"
 import CommunityPostsManage from "../views/community/PostsManage.vue"
 import ReportsManage from "../views/community/ReportsManage.vue"
 
+// 导入支付管理页面
+import BankAccountsManage from "../views/payments/BankAccountsManage.vue"
+import PaymentOrdersManage from "../views/payments/PaymentOrdersManage.vue"
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -136,9 +140,29 @@ const routes = [
                 breadNumber: 1,
                 parentName:"社区管理"
             }
-        }
-    ]
-  },
+        },
+        {            path: '/activity-messages',            name: 'ActivityMessagesManage',            component: () => import('../views/community/ActivityMessagesManage.vue'),            meta: { title: '活动消息管理', requiresAuth: true }        },
+        // 支付管理路由
+        {
+            path: '/bank-accounts',
+            component: BankAccountsManage,
+            name: '原木银行账户',
+            meta: {
+                requireAuth: true,
+                breadNumber: 1,
+                parentName: "支付管理"
+            }
+        },
+        {
+            path: '/payment-orders',
+            component: PaymentOrdersManage,
+            name: '充值订单管理',
+            meta: {
+                requireAuth: true,
+                breadNumber: 1,
+                parentName: "支付管理"
+            }
+        }    ]  },
   {
       path:'/login',
       component:Login,

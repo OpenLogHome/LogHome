@@ -3,14 +3,19 @@
 		<!-- 顶部导航按钮 -->
 		<view class="top-nav">
 			<div class="nav-button" @click="navigateToNotification">
-				<img src="../../static/notification.png" alt="" class="nav-button-icon">
+				<img src="../../static/user/bell.png" alt="" class="nav-button-icon">
 				<text>系统通知</text>
 				<view v-if="unreadNotifications > 0" class="unread-badge">{{unreadNotifications}}</view>
 			</div>
 			<div class="nav-button" @click="navigateToPrivateMessage">
-				<img src="../../static/private_message.png" alt="" class="nav-button-icon">
+				<img src="../../static/user/post.png" alt="" class="nav-button-icon">
 				<text>私信</text>
 				<view v-if="unreadPrivateMessages > 0" class="unread-badge">{{unreadPrivateMessages}}</view>
+			</div>
+			<div class="nav-button" @click="navigateToActivityMessage">
+				<img src="../../static/user/megaphone.png" alt="" class="nav-button-icon">
+				<text>活动消息</text>
+				<view v-if="unreadActivityMessages > 0" class="unread-badge">{{unreadActivityMessages}}</view>
 			</div>
 		</view>
 
@@ -67,6 +72,7 @@
 				messages: [],
 				unreadNotifications: 0,
 				unreadPrivateMessages: 0,
+				unreadActivityMessages: 0, // 新增：未读活动消息数量
 				badgeIndexes: [], // 需要显示小红点的tab索引
 				unreadCounts: [0, 0, 0], // 各分类未读消息数量
 				messageTypes:{
@@ -118,6 +124,7 @@
 					// 统计未读消息
 					let unreadCounts = [0, 0, 0];
 					let unreadNotifications = 0;
+					let unreadActivityMessages = 0; // 新增：未读活动消息计数
 					
 					for(let i = 0 ; i < messages.length ; i ++){
 						if(messages[i].to_id == _this.user.user_id){
@@ -127,6 +134,8 @@
 							if(messages[i].is_read === 0) {
 								if(messages[i].message_type === 'notification') {
 									unreadNotifications++;
+								} else if(messages[i].message_type === 'activity') { // 新增：活动消息类型
+									unreadActivityMessages++;
 								} else if(messages[i].message_type === 'comment') {
 									unreadCounts[0]++;
 								} else if(messages[i].message_type === 'followed') {
@@ -141,11 +150,13 @@
 					_this.messages = myMessage;
 					_this.unreadCounts = unreadCounts;
 					_this.unreadNotifications = unreadNotifications;
+					_this.unreadActivityMessages = unreadActivityMessages; // 新增：设置未读活动消息数量
 					
 					// 更新小红点显示
 					_this.updateBadgeIndexes();
 					
 					window.localStorage.setItem("messages",JSON.stringify(_this.messages));
+					window.localStorage.setItem('unreadActivityMessages', unreadActivityMessages.toString()); // 新增：保存未读活动消息数量
 					uni.hideTabBarRedDot({
 						index: 4
 					});
@@ -183,6 +194,11 @@
 			navigateToPrivateMessage() {
 				uni.navigateTo({
 					url: './privateMessages'
+				});
+			},
+			navigateToActivityMessage() {
+				uni.navigateTo({
+					url: './activityMessages'
 				});
 			},
 			// 检查是否有未读私信

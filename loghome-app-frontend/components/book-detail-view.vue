@@ -28,6 +28,9 @@
         <div class="button long" @click="$emit('goto-essay-set')">作品设置</div>
       </div>
 
+      <!-- 添加Banner组件 -->
+      <banner page="essays" style="margin-top: 30rpx; transform: scale(0.98);"/>
+
       <div class="statistic-box">
         <div class="head">
           <div class="box-title">作品世界</div>
@@ -118,11 +121,13 @@
 
 <script>
 import writerHelper from "./writer_helper"
+import banner from './banner.vue'
 
 export default {
   name: 'BookDetailView',
   components: {
-    writerHelper
+    writerHelper,
+    banner
   },
   props: {
     book: {
