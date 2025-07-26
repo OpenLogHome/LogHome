@@ -5,9 +5,9 @@
 			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"/>
 		</div> -->
 		<div class="tabBar" v-dark>
-			<uni-icons type="left" size="27" color="310000" class="backBtn" @click="goBack"/>
+			<uni-icons type="left" size="27" color="310000" class="backBtn" @click="goBack" style="position: absolute; z-index: 10;"/>
 			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
-				ref="tabDom" scrollWidth="calc(100vw - 30rpx)" :underBarBias="-35"/>
+				ref="tabDom" :underBarBias="-0"/>
 		</div>
 		<div class="searchBar">
 			<uni-search-bar :bgColor="$store.state.isDarkMode ? '#2C2C2C' : 'rgb(211,211,211)'" :radius="5" @input="searchBookCase" placeholder="搜索书架"
@@ -389,7 +389,6 @@
 
 		div.tabBar {
 			// position: fixed;
-			width: 100vw;
 			z-index: 10;
 			top: 0;
 			left: 0;

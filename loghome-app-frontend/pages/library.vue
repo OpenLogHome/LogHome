@@ -378,17 +378,14 @@
 			  0px 0px 33.4px rgba(0, 0, 0, 0.05),
 			  0px 0px 80px rgba(0, 0, 0, 0.07)
 			;
+
+			&.top{
+				background-color: #FEFEFE;
+				box-shadow: none;
+			}
 			
 			&.dark-mode {
 				background-color: var(--card-background);
-				box-shadow:
-				  0px 0px 2.2px rgba(0, 0, 0, 0.1),
-				  0px 0px 5.3px rgba(0, 0, 0, 0.13),
-				  0px 0px 10px rgba(0, 0, 0, 0.15),
-				  0px 0px 17.9px rgba(0, 0, 0, 0.17),
-				  0px 0px 33.4px rgba(0, 0, 0, 0.2),
-				  0px 0px 80px rgba(0, 0, 0, 0.3)
-				;
 			}
 			
 			.messageIcon{
@@ -419,11 +416,6 @@
 				font-size: 28rpx;
 				color: #999;
 			}
-		}
-
-		.searchBar.top{
-			background-color: #FEFEFE;
-			box-shadow: none;
 		}
 		
 

@@ -1,12 +1,12 @@
 <template>
-  <view class="community-container">
+  <view class="community-container" v-dark>
     <!-- 顶部搜索栏 -->
-    <div class="searchBar">
+    <div class="searchBar" v-dark>
       <div class="search-input-wrapper" @tap="navigateToSearch">
         <uni-icons type="search" size="18" color="#999"></uni-icons>
         <view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
       </div>
-      <uni-icons type="chat" size="26" color="#2d2d2d" class="messageIcon" @click="gotoMessage"></uni-icons>
+      <uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'" class="messageIcon" @click="gotoMessage"></uni-icons>
     </div>
 
     <!-- 内容区域 -->
@@ -169,12 +169,14 @@ import axios from 'axios';
 import moment from 'moment';
 import banner from '@/components/banner.vue'
 import XsuuSwiper from "@/components/Xss-swiper/Xsuu-swiper.vue"
+import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
   components: {
     banner,
     XsuuSwiper
   },
+  mixins: [darkModeMixin], // 使用暗黑模式mixin
   data() {
     return {
       sortType: 'new',
@@ -625,6 +627,10 @@ export default {
   flex-direction: column;
   // height: 100vh;
   background-color: #f8f8f8;
+  
+  &.dark-mode {
+    background-color: var(--background-color-secondary);
+  }
 }
 
 .searchBar {
@@ -648,6 +654,10 @@ export default {
     0px 0px 17.9px rgba(0, 0, 0, 0.042),
     0px 0px 33.4px rgba(0, 0, 0, 0.05),
     0px 0px 80px rgba(0, 0, 0, 0.07);
+    
+  &.dark-mode {
+    background-color: var(--card-background);
+  }
 
   .messageIcon {
     margin: 24rpx 5rpx 20rpx 5rpx;
@@ -663,6 +673,10 @@ export default {
     height: 72rpx;
     margin-right: 10rpx;
     margin-left: 10rpx;
+    
+    .dark-mode & {
+      background-color: #333;
+    }
   }
 
   .search-input-placeholder {
@@ -765,6 +779,10 @@ export default {
   padding: 20rpx 30rpx;
   background-color: #fff;
   margin-bottom: 20rpx;
+  
+  .dark-mode & {
+    background-color: var(--card-background);
+  }
 }
 
 .section-header {
@@ -780,6 +798,10 @@ export default {
   color: #333;
   position: relative;
   padding-left: 20rpx;
+  
+  .dark-mode & {
+    color: var(--text-color-primary);
+  }
 }
 
 .section-title::before {
@@ -797,6 +819,10 @@ export default {
 .section-more {
   font-size: 24rpx;
   color: #999;
+  
+  .dark-mode & {
+    color: var(--text-color-regular);
+  }
 }
 
 .section-actions {
@@ -810,6 +836,10 @@ export default {
   margin-left: 20rpx;
   padding: 6rpx 12rpx;
   border-radius: 20rpx;
+  
+  .dark-mode & {
+    color: var(--text-color-regular);
+  }
 }
 
 .sort-btn.active {
@@ -884,6 +914,11 @@ export default {
           align-items: center;
           padding: 0 20rpx;
           color: #fff;
+          
+          .dark-mode & {
+            background: #444;
+            box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.3);
+          }
 
           image {
             width: 50rpx;
@@ -937,11 +972,17 @@ export default {
         }
 
         &.all-circles {
-          background: #fff;
-          border: 2rpx solid #333;
-          color: #333;
-          justify-content: space-between;
-        }
+            background: #fff;
+            border: 2rpx solid #333;
+            color: #333;
+            justify-content: space-between;
+            
+            .dark-mode & {
+              background: var(--card-background);
+              border: 2rpx solid #666;
+              color: var(--text-color-primary);
+            }
+          }
       }
     }
   }
@@ -949,10 +990,14 @@ export default {
 
 .post-list {
   .post-item {
-    background: #fff;
-    border-radius: 12rpx;
-    padding: 30rpx;
-    margin-bottom: 20rpx;
+      background: #fff;
+      border-radius: 12rpx;
+      padding: 30rpx;
+      margin-bottom: 20rpx;
+      
+      .dark-mode & {
+        background: var(--card-background);
+      }
 
     .post-header {
       display: flex;
@@ -976,12 +1021,20 @@ export default {
             font-size: 28rpx;
             font-weight: bold;
             color: #333;
+            
+            .dark-mode & {
+              color: var(--text-color-primary);
+            }
           }
 
           .post-time {
             font-size: 24rpx;
             color: #999;
             margin-top: 4rpx;
+            
+            .dark-mode & {
+              color: var(--text-color-regular);
+            }
           }
         }
       }
@@ -992,26 +1045,38 @@ export default {
         background: rgba(234, 112, 52, 0.1);
         padding: 4rpx 16rpx;
         border-radius: 20rpx;
+        
+        .dark-mode & {
+          background: rgba(234, 112, 52, 0.2);
+        }
       }
     }
 
     .post-content {
       .post-title {
-        font-size: 32rpx;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 10rpx;
-      }
+          font-size: 32rpx;
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 10rpx;
+          
+          .dark-mode & {
+            color: var(--text-color-primary);
+          }
+        }
 
       .post-text {
-        font-size: 28rpx;
-        color: #666;
-        line-height: 1.6;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
-        overflow: hidden;
-      }
+          font-size: 28rpx;
+          color: #666;
+          line-height: 1.6;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 3;
+          overflow: hidden;
+          
+          .dark-mode & {
+            color: var(--text-color-regular);
+          }
+        }
     }
 
     .post-images {
@@ -1041,16 +1106,24 @@ export default {
     }
 
     .post-footer {
-      display: flex;
-      justify-content: space-around;
-      padding-top: 20rpx;
-      border-top: 1rpx solid #f0f0f0;
+        display: flex;
+        justify-content: space-around;
+        padding-top: 20rpx;
+        border-top: 1rpx solid #f0f0f0;
+        
+        .dark-mode & {
+          border-top: 1rpx solid #333;
+        }
 
       .post-action {
-        display: flex;
-        align-items: center;
-        font-size: 24rpx;
-        color: #666;
+          display: flex;
+          align-items: center;
+          font-size: 24rpx;
+          color: #666;
+          
+          .dark-mode & {
+            color: var(--text-color-regular);
+          }
 
         text {
           margin-left: 8rpx;
@@ -1077,5 +1150,10 @@ export default {
   align-items: center;
   box-shadow: 0 4rpx 12rpx rgba(234, 112, 52, 0.3);
   z-index: 99;
+  
+  .dark-mode & {
+    background: #EA7034;
+    box-shadow: 0 4rpx 12rpx rgba(234, 112, 52, 0.5);
+  }
 }
 </style>

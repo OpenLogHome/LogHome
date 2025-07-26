@@ -1,13 +1,18 @@
 <template>
-	<view class="commentOuter" :style="{ '--statusBarHeight': 0 + 'px' }">
+	<view class="commentOuter" :style="{ '--statusBarHeight': 0 + 'px' }" v-dark>
 		<z-paging ref="paging" v-model="reviews" @onRefresh="pullDown" @query="refreshPage"
 			:customOperationText="componentMode ? '收起' : '刷新'"
 			:style="{ 'marginTop': `${componentMode ? '20vh' : (0 + 'px')}` }"
 			:default-page-size="componentMode ? 10 : 10">
 			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
 			<div v-if="paragraphId !== undefined"
-				style="background-color: #e6e6e6; padding: 10px; margin: 0 0 5px 0; font-size: 14px;"
-				@click="navToChapter">
+			:style="{
+				backgroundColor: $store.state.isDarkMode ? '#333' : '#e6e6e6',
+				padding: '10px',
+				margin: '0 0 5px 0',
+				fontSize: '14px'
+			}"
+			@click="navToChapter">
 				<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1"
 					xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;">
 					<path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z"
@@ -15,7 +20,11 @@
 					<path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z"
 						fill="#8a8a8a" p-id="2308"></path>
 				</svg>
-				<div class="cento" style="margin-top: 10rpx; color: #4b4b4b; padding: 0 30rpx; ">
+				<div class="cento" :style="{
+					marginTop: '10rpx',
+					color: $store.state.isDarkMode ? '#b8b8b8' : '#4b4b4b',
+					padding: '0 30rpx'
+				}">
 					{{ paragraph }}
 				</div>
 			</div>
@@ -80,10 +89,12 @@ import nothing from '../../components/nothing.vue'
 import axios from 'axios'
 import commentItem from "../../components/dl-review/item.vue"
 import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
+import darkModeMixin from '@/mixins/dark-mode.js'
 export default {
 	components: {
 		commentItem, nothing, emojiPicker
 	},
+	mixins: [darkModeMixin],
 	data() {
 		return {
 			novelId: 0,
@@ -628,6 +639,10 @@ export default {
 <style lang="scss" scoped>
 .commentOuter {
 	background-color: rgb(255, 248, 234);
+	
+	&.dark-mode {
+		background-color: #1c1c1c;
+	}
 
 	.cento {
 		overflow: hidden;
@@ -646,6 +661,11 @@ export default {
 		display: flex;
 		flex-direction: column;
 		z-index: 50;
+		
+		.dark-mode & {
+			background-color: #252525;
+			border-top: 1rpx #444 solid;
+		}
 
 		.reply-status {
 			display: flex;
@@ -655,9 +675,18 @@ export default {
 			background-color: #e8f4fd;
 			border-bottom: 1rpx solid #d0d0d0;
 			
+			.dark-mode & {
+				background-color: #333;
+				border-bottom: 1rpx solid #444;
+			}
+			
 			.reply-status-text {
 				font-size: 28rpx;
 				color: #666;
+				
+				.dark-mode & {
+					color: #b8b8b8;
+				}
 			}
 			
 			.cancel-reply-btn {
@@ -682,7 +711,12 @@ export default {
 			background-color: rgba(127, 127, 127, 0.2);
 			font-size: 35rpx;
 			line-height: 35rpx;
-			color: rgb(113, 113, 113)
+			color: rgb(113, 113, 113);
+			
+			.dark-mode & {
+				background-color: rgba(80, 80, 80, 0.3);
+				color: #e5e5e5;
+			}
 		}
 
 		.image-upload-area {
@@ -729,6 +763,11 @@ export default {
 			justify-content: center;
 			align-items: center;
 			border: 2rpx dashed #ddd;
+			
+			.dark-mode & {
+				background-color: #333;
+				border: 2rpx dashed #555;
+			}
 		}
 
 		.icon-row {

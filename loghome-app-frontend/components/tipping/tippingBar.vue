@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="balance">
 			<div class="balance-item">
 				<img src="../../static/resources/log.png" alt="">
@@ -63,6 +63,7 @@
 
 <script>
 	import axios from 'axios'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default{
 		data(){
 			return{
@@ -83,6 +84,7 @@
 			}
 		},
 		props:["novel_id"],
+		mixins: [darkModeMixin],
 		computed: {
 			totalCost(){
 				if (!this.selectedTippingItem) return 0;
@@ -341,6 +343,11 @@
 		border-radius: 20rpx 20rpx 0 0;
 		box-shadow: 0 -5rpx 15rpx rgba(0, 0, 0, 0.1);
 		
+		&.dark-mode {
+			background-color: #1c1c1e;
+			box-shadow: 0 -5rpx 15rpx rgba(0, 0, 0, 0.3);
+		}
+		
 		div.balance{
 			display: flex;
 			align-items: center;
@@ -350,6 +357,11 @@
 			border-radius: 10rpx;
 			background-color: rgba(255, 255, 255, 0.6);
 			box-shadow: 0 2rpx 5rpx rgba(0, 0, 0, 0.05);
+			
+			.dark-mode & {
+				background-color: rgba(45, 45, 45, 0.6);
+				box-shadow: 0 2rpx 5rpx rgba(0, 0, 0, 0.2);
+			}
 			
 			.balance-item {
 				display: flex;
@@ -366,6 +378,10 @@
 					font-size: 28rpx;
 					color: #795548;
 					font-weight: bold;
+					
+					.dark-mode & {
+						color: #d4b8a8;
+					}
 				}
 			}
 			
@@ -378,6 +394,10 @@
 				justify-content: center;
 				border-radius: 50%;
 				background-color: rgba(121, 85, 72, 0.1);
+				
+				.dark-mode & {
+					background-color: rgba(200, 170, 160, 0.15);
+				}
 			}
 		}
 		
@@ -402,6 +422,11 @@
 				transition: all .2s;
 				background-color: rgba(255, 255, 255, 0.6);
 				
+				.dark-mode & {
+					background-color: rgba(45, 45, 45, 0.6);
+					border: solid 2rpx rgba(100, 100, 100, 0.5);
+				}
+				
 				&:active {
 					transform: scale(0.95);
 				}
@@ -410,12 +435,20 @@
 					font-size: 24rpx;
 					margin-bottom: 8rpx;
 					color: #795548;
+					
+					.dark-mode & {
+						color: #d4b8a8;
+					}
 				}
 				
 				.gift-img {
 					height: 120rpx;
 					width: 120rpx;
 					object-fit: contain;
+					
+					.dark-mode & {
+						filter: brightness(0.9);
+					}
 				}
 				
 				div.cost{
@@ -433,6 +466,10 @@
 						font-size: 24rpx;
 						color: #EA7034;
 						font-weight: bold;
+						
+						.dark-mode & {
+							color: #ff9966;
+						}
 					}
 				}
 			}
@@ -442,12 +479,22 @@
 				box-shadow: 0 2rpx 10rpx rgba(255, 112, 67, 0.2);
 				background-color: rgba(255, 248, 234, 0.8);
 				transform: translateY(-3rpx);
+				
+				.dark-mode & {
+					background-color: rgba(255, 112, 67, 0.15);
+					border: solid 2rpx rgba(255, 112, 67, 0.6);
+					box-shadow: 0 2rpx 10rpx rgba(255, 112, 67, 0.3);
+				}
 			}
 		}
 		
 		.message-area {
 			margin-bottom: 20rpx;
 			position: relative;
+			
+			.dark-mode & {
+				color: #d4b8a8;
+			}
 			
 			.message-input {
 				width: 100%;
@@ -459,6 +506,12 @@
 				border: solid 2rpx rgba(200, 200, 200, 0.5);
 				box-sizing: border-box;
 				color: #333;
+				
+				.dark-mode & {
+					background-color: rgba(45, 45, 45, 0.6);
+					border: solid 2rpx rgba(100, 100, 100, 0.5);
+					color: #e0e0e0;
+				}
 			}
 			
 			.message-counter {
@@ -467,107 +520,151 @@
 				right: 10rpx;
 				font-size: 22rpx;
 				color: #999;
+				
+				.dark-mode & {
+					color: #777;
+				}
 			}
 		}
 		
 		.amount-selector {
-			display: flex;
-			align-items: center;
-			margin-bottom: 20rpx;
+		display: flex;
+		align-items: center;
+		margin-bottom: 20rpx;
+		
+		.dark-mode & {
+			color: var(--text-color-primary);
+		}
+		
+		.amount-label {
+			font-size: 28rpx;
+			color: #795548;
+			margin-right: 15rpx;
 			
-			.amount-label {
-				font-size: 28rpx;
-				color: #795548;
-				margin-right: 15rpx;
+			.dark-mode & {
+				color: #d4b8a8;
 			}
+		}
 			
 			.amount-stepper {
+			display: flex;
+			align-items: center;
+			
+			.dark-mode & {
+				border-color: rgba(100, 100, 100, 0.5);
+			}
+			
+			.amount-btn {
+				width: 60rpx;
+				height: 60rpx;
+				border-radius: 30rpx;
 				display: flex;
 				align-items: center;
+				justify-content: center;
+				font-size: 36rpx;
+				color: #fff;
+				background-color: rgba(234, 112, 52, 0.8);
+				font-weight: bold;
+				box-shadow: 0 2rpx 5rpx rgba(0, 0, 0, 0.1);
 				
-				.amount-btn {
-					width: 60rpx;
-					height: 60rpx;
-					border-radius: 30rpx;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					font-size: 36rpx;
-					color: #fff;
-					background-color: rgba(234, 112, 52, 0.8);
-					font-weight: bold;
-					box-shadow: 0 2rpx 5rpx rgba(0, 0, 0, 0.1);
-					
-					&:active {
-						transform: scale(0.95);
-					}
+				.dark-mode & {
+					background-color: rgba(234, 112, 52, 0.7);
+					box-shadow: 0 2rpx 5rpx rgba(0, 0, 0, 0.2);
 				}
+				
+				&:active {
+					transform: scale(0.95);
+				}
+			}
 				
 				.amount-value {
-					min-width: 100rpx;
-					padding: 0 20rpx;
-					height: 60rpx;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					font-size: 32rpx;
-					background-color: rgba(255, 255, 255, 0.6);
-					border-radius: 30rpx;
-					margin: 0 10rpx;
-					color: #333;
-					font-weight: bold;
-					border: 2rpx dashed rgba(200, 200, 200, 0.5);
+				min-width: 100rpx;
+				padding: 0 20rpx;
+				height: 60rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 32rpx;
+				background-color: rgba(255, 255, 255, 0.6);
+				border-radius: 30rpx;
+				margin: 0 10rpx;
+				color: #333;
+				font-weight: bold;
+				border: 2rpx dashed rgba(200, 200, 200, 0.5);
+				
+				.dark-mode & {
+					background-color: rgba(45, 45, 45, 0.6);
+					color: #e0e0e0;
+					border: 2rpx dashed rgba(100, 100, 100, 0.5);
 				}
+			}
 			}
 		}
 		
 		.total-cost {
-			display: flex;
-			align-items: center;
-			justify-content: flex-end;
-			margin-bottom: 30rpx;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		margin-bottom: 30rpx;
+		
+		.dark-mode & {
+			color: var(--text-color-primary);
+		}
+		
+		.total-label {
+			font-size: 28rpx;
+			color: #795548;
+			margin-right: 15rpx;
 			
-			.total-label {
-				font-size: 28rpx;
-				color: #795548;
-				margin-right: 15rpx;
+			.dark-mode & {
+				color: #d4b8a8;
 			}
+		}
 			
 			.total-value {
-				display: flex;
-				align-items: center;
+			display: flex;
+			align-items: center;
+			
+			.total-icon {
+				width: 36rpx;
+				height: 36rpx;
+				margin-right: 8rpx;
+			}
+			
+			span {
+				font-size: 36rpx;
+				font-weight: bold;
+				color: #EA7034;
 				
-				.total-icon {
-					width: 36rpx;
-					height: 36rpx;
-					margin-right: 8rpx;
-				}
-				
-				span {
-					font-size: 36rpx;
-					font-weight: bold;
-					color: #EA7034;
+				.dark-mode & {
+					color: #ff9966;
 				}
 			}
 		}
+		}
 		
 		.tip-button {
-			height: 90rpx;
-			background: linear-gradient(135deg, #ff9800, #ff5722);
-			border-radius: 45rpx;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: white;
-			font-size: 32rpx;
-			font-weight: bold;
-			box-shadow: 0 5rpx 15rpx rgba(255, 87, 34, 0.3);
-			transition: all 0.2s;
-			
-			&:active {
-				transform: scale(0.98);
-				box-shadow: 0 2rpx 8rpx rgba(255, 87, 34, 0.2);
-			}
+		height: 90rpx;
+		background: linear-gradient(135deg, #ff9800, #ff5722);
+		border-radius: 45rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+		font-size: 32rpx;
+		font-weight: bold;
+		box-shadow: 0 5rpx 15rpx rgba(255, 87, 34, 0.3);
+		transition: all 0.2s;
+		
+		.dark-mode & {
+			background: linear-gradient(135deg, #e67e00, #e64a00);
+			box-shadow: 0 5rpx 15rpx rgba(255, 87, 34, 0.2);
+		}
+		
+		&:active {
+			transform: scale(0.98);
+			box-shadow: 0 2rpx 8rpx rgba(255, 87, 34, 0.2);
+		}
 		}
 	}
 </style>

@@ -1,5 +1,5 @@
 <template>
-	<view class="content" :style="{'--statusBarHeight': 0 + 'px'}">
+	<view class="content" v-dark :style="{'--statusBarHeight': 0 + 'px'}">
 		<div class="gift_box" id="gift_box">
 			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
@@ -351,6 +351,7 @@
 	import springBack from '../../components/springBack.vue'
 	import html2canvas from 'html2canvas'
 	import countTo from "vue-count-to"
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default {
 		components: {
 			nothing,
@@ -358,6 +359,7 @@
 			springBack,
 			countTo
 		},
+		mixins: [darkModeMixin],
 		data() {
 			return {
 				uid: 0,
@@ -1055,6 +1057,10 @@
 		white-space: nowrap;
 		background-color: rgb(255, 248, 234);
 		justify-content: space-between;
+		
+		.dark-mode & {
+			background-color: var(--background-color-secondary);
+		}
 	}
 
 	.l-look-btn {
@@ -1120,6 +1126,10 @@
 		* {
 			margin: 5rpx 0;
 		}
+		
+		.dark-mode & {
+			color: var(--text-color-primary);
+		}
 	}
 
 	.l-dd-title {
@@ -1152,6 +1162,10 @@
 		font-size: 32rpx;
 		color: #eeeeee;
 		margin-left: 60rpx;
+		
+		.dark-mode & {
+			color: var(--text-color-primary);
+		}
 	}
 
 	.l-dd-content {
@@ -1164,6 +1178,10 @@
 		-webkit-line-clamp: 5;
 		white-space: pre-wrap;
 		overflow: hidden;
+		
+		.dark-mode & {
+			color: var(--text-color-regular);
+		}
 	}
 
 	.tags,
@@ -1330,6 +1348,11 @@
 		border-radius: 0rpx;
 		padding: 35rpx 32rpx;
 		margin-top: 32rpx;
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+			border: 2px rgba(60, 60, 60, 0) solid;
+		}
 	}
 
 	.l-list-content.bg {
@@ -1347,6 +1370,10 @@
 
 	.l-list-content.noprocess {
 		background-color: rgba(202, 202, 202, 0.2);
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+		}
 	}
 
 	.l-list-c-foot-l-name {
@@ -1356,6 +1383,10 @@
 	.l-list-c-head {
 		font-size: 32rpx;
 		padding-bottom: 25rpx;
+		
+		.dark-mode & {
+			color: var(--text-color-primary);
+		}
 	}
 
 	.l-list-c-body {
@@ -1366,6 +1397,10 @@
 		color: #95A1A6;
 		font-size: 24rpx;
 		margin-bottom: 35rpx;
+		
+		.dark-mode & {
+			color: var(--text-color-regular);
+		}
 	}
 
 	.l-list-d-body {
@@ -1394,6 +1429,10 @@
 				display: flex;
 				background-color: rgb(255, 255, 255);
 				border-radius: 10rpx;
+				
+				.dark-mode & {
+					background-color: var(--card-background);
+				}
 
 
 				img {
@@ -1419,6 +1458,10 @@
 						-webkit-line-clamp: 1;
 						color: rgb(45, 45, 45);
 						margin: 5rpx;
+						
+						.dark-mode & {
+							color: var(--text-color-primary);
+						}
 					}
 
 					.author {
@@ -1445,6 +1488,10 @@
 							display: -webkit-box;
 							-webkit-box-orient: vertical;
 							-webkit-line-clamp: 1;
+							
+							.dark-mode & {
+								color: var(--text-color-regular);
+							}
 						}
 					}
 
@@ -1456,6 +1503,10 @@
 						display: -webkit-box;
 						-webkit-box-orient: vertical;
 						-webkit-line-clamp: 3;
+						
+						.dark-mode & {
+							color: var(--text-color-regular);
+						}
 					}
 
 
@@ -1472,7 +1523,11 @@
 		font-size: 28rpx;
 		padding-top: 0;
 		margin-top: 0;
-
+		
+		.dark-mode & {
+			background-color: var(--background-color-secondary);
+			color: var(--text-color-primary);
+		}
 	}
 
 	/* init button */
@@ -1505,6 +1560,10 @@
 
 	.content {
 		position: relative;
+		
+		&.dark-mode {
+			background-color: var(--background-color-secondary);
+		}
 	}
 
 
@@ -1525,6 +1584,10 @@
 				width: 100vw;
 				height: calc(500rpx + var(--statusBarHeight) + 135rpx + 120px);
 				position: absolute;
+				
+				.dark-mode & {
+					filter: blur(30px) brightness(0.4);
+				}
 			}
 		}
 
@@ -1598,6 +1661,11 @@
 		background-color: white;
 		width: 100vw;
 		box-shadow: -10px 0px 10px rgba(113, 52, 24, .3);
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+			box-shadow: -10px 0px 10px rgba(0, 0, 0, .3);
+		}
 	}
 
 	.fans_rank {
@@ -1609,6 +1677,10 @@
 		margin-top: 32rpx;
 		position: relative;
 		overflow: hidden;
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+		}
 
 		div {
 			position: relative;
@@ -1669,27 +1741,36 @@
 			}
 
 			div.description {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				position: relative;
-				margin-top: 20rpx;
-				padding: 15rpx 10rpx;
-				width: 100%;
-				background-color: rgba(255, 255, 255, 0.1);
-				border-radius: 12rpx;
-				z-index: 3;
-				box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					position: relative;
+					margin-top: 20rpx;
+					padding: 15rpx 10rpx;
+					width: 100%;
+					background-color: rgba(255, 255, 255, 0.1);
+					border-radius: 12rpx;
+					z-index: 3;
+					box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+					
+					.dark-mode & {
+						background-color: var(--card-background);
+						box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+					}
 
 				p.name {
-					font-size: 28rpx;
-					font-weight: 600;
-					margin-bottom: 10rpx;
-					color: #333;
-					white-space: nowrap;
-					overflow: hidden;
-					text-overflow: ellipsis;
-					max-width: 100%;
+						font-size: 28rpx;
+						font-weight: 600;
+						margin-bottom: 10rpx;
+						color: #333;
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						max-width: 100%;
+						
+						.dark-mode & {
+							color: var(--text-color-primary);
+						}
 				}
 
 				p.value {
@@ -1746,6 +1827,10 @@
 		background-color: rgba(202, 202, 202, 0.1);
 		border-radius: 16rpx;
 		overflow: hidden;
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+		}
 
 		.fans-list-item {
 			display: flex;
@@ -1796,6 +1881,10 @@
 					text-overflow: ellipsis;
 					white-space: nowrap;
 					max-width: 150rpx;
+					
+					.dark-mode & {
+						color: var(--text-color-primary);
+					}
 				}
 				
 				.fans-message {
@@ -1806,6 +1895,10 @@
 					text-overflow: ellipsis;
 					white-space: nowrap;
 					margin-top: 2rpx;
+					
+					.dark-mode & {
+						color: var(--text-color-secondary);
+					}
 				}
 			}
 			

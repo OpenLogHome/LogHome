@@ -1,6 +1,6 @@
 <template>
-	<div class="worldWrapper">
-		<div class="outer">
+  <div class="worldWrapper" v-dark>
+    <div class="outer">
 			<div class="title">
 			</div>
 			<div class="portal" @click="createNewWorld">
@@ -11,9 +11,9 @@
 		<div class="nothing" v-show="worlds.length == 0"
 			style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
 			<img src="../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;"/>
-			<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
+			<div style="color:#777777; font-size: 25rpx;" :class="{'dark-mode': isDarkMode}">这是一片什么都没有的荒原</div>
 		</div>
-		<div class="jiemian2" v-for="world in worlds">
+		<div class="jiemian2" v-for="world in worlds" v-dark>
 			<div class="hang1">
 				<div class="biaoti">
 					{{world.name}}
@@ -52,7 +52,9 @@
 
 <script>
 	import axios from "axios";
+	import darkModeMixin from '@/mixins/dark-mode.js';
 	export default {
+		mixins: [darkModeMixin],
 		data() {
 			return {
 				worlds: [],
@@ -138,20 +140,29 @@
 
 <style scoped lang="scss">
 	.worldWrapper {
-		background-image: linear-gradient(to top, #f7f7f7, #f7f7f7, #fff2d0);
-		min-height: calc(100vh - 44px);
+	background-image: linear-gradient(to top, #f7f7f7, #f7f7f7, #fff2d0);
+	min-height: calc(100vh - 44px);
+	
+	&.dark-mode {
+		background-image: none;
+		background-color: var(--background-color-secondary);
 	}
+}
 
 	.outer {
-		padding: 20px;
-		padding-top: calc(10px);
+	padding: 20px;
+	padding-top: calc(10px);
 
 
-		.title {
-			font-size: 24px;
-			margin-top: 50px;
-			font-weight: bold;
+	.title {
+		font-size: 24px;
+		margin-top: 50px;
+		font-weight: bold;
+		
+		.dark-mode & {
+			color: var(--text-color-primary);
 		}
+	}
 
 		.portal {
 			background-color: #bfa;
@@ -208,6 +219,10 @@
 		border-radius: 14px;
 		width: calc(100vw - 140rpx);
 		margin-bottom: 20px;
+		
+		.dark-mode & {
+			background-color: var(--background-color-tertiary);
+		}
 
 		.hang1 {
 			display: flex;
@@ -220,6 +235,10 @@
 				-webkit-background-clip: text;
 				color: transparent;
 				letter-spacing: -1px;
+				
+				.dark-mode & {
+					background-image: linear-gradient(to right, #e5e5e5, rgb(192, 128, 126));
+				}
 			}
 
 			.jinru {
@@ -232,7 +251,12 @@
 				border-radius: 20px;
 				border: 1.4px solid #4c4c4c55;
 				margin-left: 30px;
-				color: #575757
+				color: #575757;
+				
+				.dark-mode & {
+					color: var(--text-color-regular);
+					border-color: var(--border-color-lighter);
+				}
 			}
 
 		}
@@ -248,6 +272,10 @@
 			-webkit-box-orient: vertical;
 			-webkit-line-clamp: 2;
 			overflow: hidden;
+			
+			.dark-mode & {
+				color: var(--text-color-regular);
+			}
 		}
 
 
@@ -275,6 +303,10 @@
 
 			.zh1 {
 				font-size: 32rpx;
+				
+				.dark-mode & {
+					color: var(--text-color-primary);
+				}
 			}
 
 			.zh2 {
@@ -287,6 +319,10 @@
 				-webkit-box-orient: vertical;
 				-webkit-line-clamp: 1;
 				margin-top: 3rpx;
+				
+				.dark-mode & {
+					color: var(--text-color-regular);
+				}
 			}
 
 			.t3 {
@@ -312,13 +348,26 @@
 			margin: 10rpx 0;
 			transition: all .3s;
 			font-size: 26rpx;
+			
+			.dark-mode & {
+				color: var(--text-color-regular);
+				border-color: var(--border-color-lighter);
+			}
 		}
 		
 		.enterButton:active{
 			transform: scale(0.95);
 			background-color: #4c4c4c22;
+			
+			.dark-mode & {
+				background-color: #6c6c6c22;
+			}
 		}
 
 
+	}
+
+	.jiemian2.dark-mode{
+		background-color: #333333;
 	}
 </style>

@@ -1,7 +1,7 @@
 <template>
-	<view style="background-color: #FFFFFF">
+	<view style="background-color: #FFFFFF" v-dark>
 		<!-- 后台按钮组件 -->
-		<zetank-backBar textcolor="#000" :showLeft="topNum == 0" :showTitle="false" navTitle='标题'></zetank-backBar>
+		<zetank-backBar :textcolor="isDarkMode ? '#e5e5e5' : '#000'" :showLeft="topNum == 0" :showTitle="false" navTitle='标题'></zetank-backBar>
 		<!-- 用户背景封面 -->
 		<log-image class="info-cover" @tap="change_top_pic" :src="user.top_pic_url"
 		onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
@@ -28,7 +28,7 @@
 			</view>
 			<!-- 用户名 -->
 			<view style="display: flex;align-items: center;margin-left: 50rpx;margin-top: 28rpx;">
-				<text style="font-size: 40rpx;color: #111111;font-weight: bold;margin-right: 10rpx;">{{user.name}}</text>
+				<text :style="'font-size: 40rpx;color: ' + (isDarkMode ? '#e5e5e5' : '#111111') + ';font-weight: bold;margin-right: 10rpx;'">{{user.name}}</text>
 				
 			</view>
 			
@@ -41,19 +41,19 @@
 			</view>
 	
 			<!-- 简介-->
-			<view style="font-size: 28rpx;color: #555555;margin:20rpx 50rpx;">
+			<view :style="'font-size: 28rpx;color: ' + (isDarkMode ? '#b8b8b8' : '#555555') + ';margin:20rpx 50rpx;'">
 				<text style="margin-right: 20rpx;">{{user.motto==''?'暂无简介':user.motto}}</text>
 			</view>
 			<view style="display: flex;align-items: center;margin-left: 50rpx;margin-top: 20rpx;margin-bottom: 20rpx;">
 				<navigator :url="'../community/friends?id=' + uid + '&tab=1'">
 					<text
-						style="font-size: 40rpx;font-weight: bold;color: #555555;margin-right: 18rpx;">{{fans}}</text><text
-						style="font-size: 28rpx;color: gray;margin-right: 28rpx;">粉丝</text>
+						:style="'font-size: 40rpx;font-weight: bold;color: ' + (isDarkMode ? '#e5e5e5' : '#555555') + ';margin-right: 18rpx;'">{{fans}}</text><text
+						:style="'font-size: 28rpx;color: ' + (isDarkMode ? '#999' : 'gray') + ';margin-right: 28rpx;'">粉丝</text>
 				</navigator>
 				<navigator :url="'../community/friends?id=' + uid + '&tab=0'">
 					<text
-						style="font-size: 40rpx;font-weight: bold;color: #555555;margin-right: 18rpx;">{{follows}}</text><text
-						style="font-size: 28rpx;color: gray;margin-right: 28rpx;">关注</text>
+						:style="'font-size: 40rpx;font-weight: bold;color: ' + (isDarkMode ? '#e5e5e5' : '#555555') + ';margin-right: 18rpx;'">{{follows}}</text><text
+						:style="'font-size: 28rpx;color: ' + (isDarkMode ? '#999' : 'gray') + ';margin-right: 28rpx;'">关注</text>
 				</navigator>
 			
 	<!-- 			<text
@@ -117,11 +117,11 @@
 							</view>
 							<view class="post-footer">
 								<view class="post-action">
-									<uni-icons type="chat" size="18" color="#666"></uni-icons>
+									<uni-icons type="chat" size="18" :color="isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
 									<text>{{post.comment_count || 0}}</text>
 								</view>
 								<view class="post-action">
-									<uni-icons type="heart" size="18" color="#666"></uni-icons>
+									<uni-icons type="heart" size="18" :color="isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
 									<text>{{post.like_count || 0}}</text>
 								</view>
 							</view>
@@ -146,14 +146,16 @@
 <script>
 	import bookInCase from '../../components/book_in_case.vue'
 	import followBtn from '../../components/follow.vue'
-	import groupLabel from "../usergroup/groupLabel.vue"
+	import groupLabel from '../usergroup/groupLabel.vue'
 	import springBack from '../../components/springBack.vue'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	import axios from 'axios'
 	import moment from 'moment'
 	export default {
 		components:{
 			bookInCase,followBtn,springBack,groupLabel
 		},
+		mixins: [darkModeMixin],
 		data() {
 			return {
 				uid: -1,
@@ -556,6 +558,10 @@
 		width: 100vw;
 		height:100vw;
 		background-color: #FFFFFF;
+		
+		.dark-mode & {
+			background-color: #252525;
+		}
 	}
 
 	.info-avatar {
@@ -576,6 +582,11 @@
 	.tabbarsh {
 		color: rgb(180, 111, 88);
 		border-bottom: 4rpx rgb(180, 111, 88) solid;
+		
+		.dark-mode & {
+			color: #d1a980;
+			border-bottom: 4rpx #d1a980 solid;
+		}
 	}
 	
 	// 帖子列表样式
@@ -588,6 +599,11 @@
 			padding: 30rpx;
 			margin-bottom: 20rpx;
 			border: 1px solid #f0f0f0;
+			
+			.dark-mode & {
+				background: #252525;
+				border: 1px solid #3a3a3a;
+			}
 
 			.post-header {
 				display: flex;
@@ -601,11 +617,19 @@
 					background: rgba(234, 112, 52, 0.1);
 					padding: 4rpx 16rpx;
 					border-radius: 20rpx;
+					
+					.dark-mode & {
+						background: rgba(234, 112, 52, 0.2);
+					}
 				}
 				
 				.post-time {
 					font-size: 24rpx;
 					color: #999;
+					
+					.dark-mode & {
+						color: #777;
+					}
 				}
 			}
 
@@ -616,6 +640,10 @@
 					color: #333;
 					margin-bottom: 10rpx;
 					display: block;
+					
+					.dark-mode & {
+						color: #e5e5e5;
+					}
 				}
 
 				.post-text {
@@ -626,6 +654,10 @@
 					-webkit-box-orient: vertical;
 					-webkit-line-clamp: 3;
 					overflow: hidden;
+					
+					.dark-mode & {
+						color: #b8b8b8;
+					}
 				}
 			}
 
@@ -671,12 +703,20 @@
 				justify-content: space-around;
 				padding-top: 20rpx;
 				border-top: 1rpx solid #f0f0f0;
+				
+				.dark-mode & {
+					border-top: 1rpx solid #3a3a3a;
+				}
 
 				.post-action {
 					display: flex;
 					align-items: center;
 					font-size: 24rpx;
 					color: #666;
+					
+					.dark-mode & {
+						color: #b8b8b8;
+					}
 
 					text {
 						margin-left: 8rpx;
@@ -694,11 +734,19 @@
 			padding: 40rpx 0;
 			color: #999;
 			font-size: 28rpx;
+			
+			.dark-mode & {
+				color: #777;
+			}
 		}
 	}
 
 	.notabbarsh {
 		color: #555555;
+		
+		.dark-mode & {
+			color: #b8b8b8;
+		}
 	}
 
 	.tabbar-fixed {
@@ -714,6 +762,10 @@
 		z-index: 300;
 		background: #ffffff;
 		margin-bottom: 0;
+		
+		.dark-mode & {
+			background: #252525;
+		}
 	}
 	
 	.content-swiper {
@@ -774,6 +826,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		
+		.dark-mode & {
+			background-color: #8a5a47;
+		}
 	}
 	
 	.user_id{
@@ -783,6 +839,11 @@
 		padding:5rpx;
 		line-height: 40rpx;
 		border-radius: 10rpx;
+		
+		.dark-mode & {
+			color: #e0e0e0;
+			background-color: #505050;
+		}
 	}
 	.user_group{
 		font-size:20rpx;
@@ -790,6 +851,10 @@
 		line-height: 40rpx; 
 		margin-left:10rpx;
 		border-radius: 10rpx;
+		
+		.dark-mode & {
+			color: #e0e0e0;
+		}
 	}
 	
 	.admin_title{
@@ -808,6 +873,10 @@
 			position:absolute;
 			left:-25rpx;
 			top:-7.5rpx;
+		}
+		
+		.dark-mode & {
+			background: #3a7ab8;
 		}
 	}
 	

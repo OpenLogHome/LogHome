@@ -1,5 +1,5 @@
 <template>
-	<view class="mask" @tap="tapMask" :style="{backgroundColor:value?`rgba(0,0,0,${opacity})`:'rgba(0,0,0,0)'}" :class="!value?'':'mask-show'" @touchmove.stop.prevent>
+	<view class="mask" v-dark @tap="tapMask" :style="{backgroundColor:value?`rgba(0,0,0,${opacity})`:'rgba(0,0,0,0)'}" :class="!value?'':'mask-show'" @touchmove.stop.prevent>
 		<block v-if="type=='default'">
 			<view class="default-view" @tap.stop>
 				<view class="title">{{mData.title}}</view>
@@ -89,6 +89,7 @@
 
 <script>
 	import TabMask from './tabMask.js'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default{
 		props:{
 			type:{
@@ -120,6 +121,7 @@
 				default:0.6
 			},
 		},
+		mixins: [darkModeMixin],
 		data(){
 			return{
 				tabMask:null
@@ -221,11 +223,19 @@
 		font-size: 18px;
 		background-color: #fff;
 		border-radius: 6rpx;
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+		}
 		.title{
 			height: 100rpx;
 			display: flex;
 			justify-content: center;
 			align-items: center;
+			
+			.dark-mode & {
+				color: var(--text-color-primary);
+			}
 		}
 		.content{
 			padding: 40rpx 48rpx;
@@ -234,18 +244,31 @@
 			line-height: 1.4;
 			color: #999;
 			text-align: center;
+			
+			.dark-mode & {
+				color: var(--text-color-secondary);
+			}
 		}
 		.btn{
 			height: 100rpx;
 			display: flex;
 			flex-direction: row;
 			border-top:1px solid #ccc;
+			
+			.dark-mode & {
+				border-top:1px solid var(--border-color-light);
+			}
 			.cancel{
 				display: flex;
 				flex: 1;
 				justify-content: center;
 				align-items: center;
 				border-right:1px solid #ccc;
+				
+				.dark-mode & {
+					border-right:1px solid var(--border-color-light);
+					color: var(--text-color-regular);
+				}
 			}
 			.confirm{
 				display: flex;
@@ -260,6 +283,10 @@
 		width: 600rpx;
 		background-color: #fff;
 		border-radius: 6rpx;
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+		}
 		.select-box{
 			height: 100rpx;
 			padding: 20rpx;
@@ -268,6 +295,11 @@
 			justify-content: space-between;
 			align-items: center;
 			border-bottom: 0.5px solid #ddd;
+			
+			.dark-mode & {
+				border-bottom: 0.5px solid var(--border-color-light);
+				color: var(--text-color-primary);
+			}
 			.select-content{
 				color: #aaa;
 				font-size: 12px;
@@ -288,6 +320,10 @@
 		width: 600rpx;
 		background-color: #fff;
 		border-radius: 6rpx;
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+		}
 		.image{
 			width: 600rpx;
 			height: 150rpx;
@@ -341,6 +377,11 @@
 		flex-direction: row;
 		flex-wrap: wrap;
 		font-size: 18px;
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+			color: var(--text-color-primary);
+		}
 		.share-box{
 			display: flex;
 			flex-direction: column;
@@ -361,12 +402,21 @@
 		font-size: 18px;
 		background-color: #fff;
 		border-radius: 6rpx;
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+		}
 		.title{
 			height: 100rpx;
 			display: flex;
 			justify-content: center;
 			align-items: center;
 			border-bottom: 1px solid #ccc;
+			
+			.dark-mode & {
+				border-bottom: 1px solid var(--border-color-light);
+				color: var(--text-color-primary);
+			}
 		}
 		.content{
 			padding: 40rpx 48rpx;
@@ -378,13 +428,27 @@
 		.input-box{
 			display: flex;
 			margin-bottom: 20rpx;
+			
+			.dark-mode & {
+				color: var(--text-color-primary);
+			}
+			
 			.view{
 				margin-right: 20rpx;
 				min-width: 150rpx;
+				
+				.dark-mode & {
+					color: var(--text-color-primary);
+				}
 			}
 			.input{
 				
 				font-size: 18px;
+				
+				.dark-mode & {
+					color: var(--text-color-primary);
+					background-color: var(--background-color-base);
+				}
 			}
 		}
 		.btn{

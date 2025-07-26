@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab"
 		:textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'" ref="tabs"/>
 		<view class="list fans" v-show="curTabIndex == 1">
@@ -36,11 +36,13 @@
 
 <script>
 	import followBtn from '../../components/follow.vue'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	import axios from 'axios'
 	export default{
 		components:{
 			followBtn
 		},
+		mixins: [darkModeMixin],
 		data(){
 			return{
 				tabValue:[
@@ -208,6 +210,10 @@
 	.outer{
 		background-color: #ffffff;
 		padding-top: 4px;
+		
+		.dark-mode & {
+			background-color: #252525;
+		}
 		.tab{
 			height: 40px;
 			width: 100vw;
@@ -219,6 +225,11 @@
 				font-size: 30rpx;
 				color:rgb(48, 48, 48);
 				border-bottom: #cacaca 1rpx solid;
+				
+				.dark-mode & {
+					color: #e5e5e5;
+					border-bottom: #3a3a3a 1rpx solid;
+				}
 			}
 		}
 	}
@@ -229,11 +240,20 @@
 		border-bottom: #cacaca 1rpx solid;
 		display: flex;
 		position:relative;
+		
+		.dark-mode & {
+			border-bottom: #3a3a3a 1rpx solid;
+		}
+		
 		img {
 			height: 100rpx;
 			border:#cacaca 1rpx solid;
 			border-radius: 7rpx;
 			margin:15rpx;
+			
+			.dark-mode & {
+				border:#3a3a3a 1rpx solid;
+			}
 		}
 		.name {
 			margin-top: 20rpx;
@@ -244,6 +264,10 @@
 			-webkit-box-orient: vertical;
 			-webkit-line-clamp: 1;
 			color:rgb(180, 111, 88);
+			
+			.dark-mode & {
+				color: #d1a980;
+			}
 		}
 		.motto{
 			color:rgb(97, 97, 97);
@@ -254,6 +278,10 @@
 			-webkit-line-clamp: 1;
 			margin-top: 8rpx;
 			font-size: 28rpx;
+			
+			.dark-mode & {
+				color: #b8b8b8;
+			}
 		}
 		.button{
 			position:absolute;

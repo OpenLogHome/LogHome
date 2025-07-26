@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<view class="tags">
 			<div class="tag" v-for="(item,index) in tags" :key="item.tag_id" :class="{'activity':item.is_activity_tag, 'suggested': item.is_suggested}">
 				{{item.tag_name}}
@@ -24,7 +24,9 @@
 
 <script>
 	import axios from "axios"
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default{
+		mixins: [darkModeMixin],
 		data(){
 			return{
 				novel_id: -1,
@@ -164,6 +166,11 @@
 		background-color: #f2f2f2;
 		margin: 25rpx auto;
 		color: #934900;
+		
+		.dark-mode & {
+			background-color: var(--background-color-tertiary);
+			color: var(--main-color);
+		}
 	}
 	.tags{
 		display:flex;
@@ -182,19 +189,39 @@
 			margin-right: 30rpx;
 			margin-bottom: 30rpx;
 			display:flex;
+			
+			.dark-mode & {
+				background-color: #333333;
+				color: var(--text-color-regular);
+			}
 		}
 		.tag.activity{
 			color:#ec8600;
 			background-color: #ffcfa5;
+			
+			.dark-mode & {
+				background-color: rgba(255, 207, 165, 0.2);
+				color: #ff9800;
+			}
 		}
 		.tag.add{
 			background-color: #eeeeee;
 			border:4rpx dashed #787878;
 			box-sizing: border-box;
+			
+			.dark-mode & {
+				background-color: #333333;
+				border:4rpx dashed var(--border-color);
+			}
 		}
 		.tag.suggested{
 			border: solid 1px #ec8600;
 			color: #ec8600;
+			
+			.dark-mode & {
+				border: solid 1px #ff9800;
+				color: #ff9800;
+			}
 		}
 		.deletePoint{
 			margin-left: 10rpx;
@@ -228,9 +255,18 @@
 		.tag.chosen{
 			border: solid 1px #ec8600;
 			color: #ec8600;
+			
+			.dark-mode & {
+				border: solid 1px #ff9800;
+				color: #ff9800;
+			}
 		}
 	}
 	.outer{
 		background-color: #ffffff;
+		
+		&.dark-mode {
+			background-color: var(--background-color-secondary);
+		}
 	}
 </style>

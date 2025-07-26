@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view v-dark>
 		<view class="list-content">
 			<view class="list">
 				<view class="li " @click="setPersonalBtn">
@@ -38,6 +38,7 @@
 </template>
 <script>
 	import axios from 'axios'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default {
 		data() {
 			return {
@@ -46,6 +47,7 @@
 				tags:[]
 			}
 		},
+		mixins: [darkModeMixin],
 		onLoad(params) {
 			this.id = params.id;
 			this.refreshPage();
@@ -264,20 +266,38 @@
 .text{
 	font-size: 30rpx;
 	width: 100%;
+	
+	.dark-mode & {
+		color: var(--text-color-primary);
+	}
 }		
 
 page{
 	background-color:rgb(255, 248, 234);
 	font-size: 30upx;
+	
+	&.dark-mode {
+		background-color: var(--background-color-secondary);
+	}
 }
 .list-content{
 	background: #fff;
 	margin-top:20upx;
+	
+	.dark-mode & {
+		background: var(--card-background);
+	}
 }
 .list{
 	width:100%;
 	border-bottom:15upx solid #f2f2f2;
 	background: #fff;
+	
+	.dark-mode & {
+		background: var(--card-background);
+		border-bottom:15upx solid var(--border-color);
+	}
+	
 	&:last-child{
 		border: none;
 	}
@@ -288,6 +308,11 @@ page{
 		border-bottom:1px solid rgb(255, 248, 234);
 		display:flex;
 		align-items:center;
+		
+		.dark-mode & {
+			border-bottom:1px solid var(--border-color);
+		}
+		
 		&.noborder{
 			border-bottom:0
 		}
@@ -306,6 +331,10 @@ page{
 			padding-left:20upx;
 			width:100%;
 			color:#666;
+			
+			.dark-mode & {
+				color: var(--text-color-regular);
+			}
 		}
 		.to{
 			flex-shrink:0;
@@ -325,10 +354,18 @@ page{
 			padding:0 10upx;
 			border-radius: 10upx;
 			margin-right: 10upx;
+			
+			.dark-mode & {
+				background-color: var(--background-color-secondary);
+			}
 		}
 		.tag.activity{
 			color:#ec8600;
 			background-color: #ffcfa5;
+			
+			.dark-mode & {
+				background-color: rgba(236, 134, 0, 0.2);
+			}
 		}
 	}
 }

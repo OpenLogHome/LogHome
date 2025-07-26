@@ -1,7 +1,7 @@
 <template>
 	<view :style="{
 		'--statusBarHeight': 0 + 'px',
-	}">
+	}" v-dark>
 		<theme-switch style="position:fixed; z-index: 100; right: 30rpx; top: 30rpx;"></theme-switch>
 		<view class="header">
 			<view class="bg">
@@ -148,6 +148,7 @@
 	// VUE2
 	import axios from 'axios'
 	import groupLabel from './usergroup/groupLabel.vue';
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default {
 		data() {
 			return {
@@ -159,6 +160,7 @@
 			}
 		},
 		components: {groupLabel},
+		mixins: [darkModeMixin],
 		onShow() {
 			uni.showLoading({
 				title: '努力加载中'
@@ -362,12 +364,21 @@
 	.text {
 		font-size: 30rpx;
 		width: 100%;
+		
+		.dark-mode & {
+			color: var(--text-color-regular);
+		}
 	}
 
 	page {
 		background-color: #f2f2f2;
 		font-size: 30upx;
 		color: rgb(25, 25, 25);
+		
+		.dark-mode & {
+			background-color: var(--background-color);
+			color: var(--text-color-primary);
+		}
 	}
 
 	.header {
@@ -376,6 +387,10 @@
 		width: 100vw;
 		padding-bottom: 110upx;
 		padding-top: var(--statusBarHeight);
+		
+		.dark-mode & {
+			background: var(--background-color-secondary);
+		}
 
 		.bg {
 			width: 100%;
@@ -400,6 +415,10 @@
 				height: calc(575rpx + var(--statusBarHeight));
 				z-index: 1;
 				background: linear-gradient(to bottom, #f2f2f233, #f2f2f255, #f2f2f277, #f2f2f2bb, #f2f2f2dd, #ffffffee, #ffffffff);
+				
+				.dark-mode & {
+					background: linear-gradient(to bottom, #00000033, #00000055, #00000077, #000000bb, #000000dd, #1c1c1cee, #1c1c1cff);
+				}
 			}
 		}
 	}
@@ -437,6 +456,10 @@
 				margin-top: 15rpx;
 				font-size: 40rpx;
 				font-weight: bold;
+				
+				.dark-mode & {
+					color: var(--text-color-primary);
+				}
 			}
 
 			.user_id {
@@ -447,12 +470,21 @@
 				line-height: 40rpx;
 				border-radius: 10rpx;
 				margin-left: 15rpx;
+				
+				.dark-mode & {
+					color: #ffffff;
+					background-color: #ffffff33;
+				}
 			}
 
 			.motto {
 				margin: 15rpx 0 15rpx 0;
 				font-size: 28rpx;
 				color: #444444;
+				
+				.dark-mode & {
+					color: var(--text-color-regular);
+				}
 			}
 		}
 
@@ -470,6 +502,10 @@
 				justify-content: center;
 				border-right: 1px solid #cccccc;
 				margin: 15upx 0;
+				
+				.dark-mode & {
+					border-right: 1px solid #444444;
+				}
 
 				&:last-child {
 					border: none;
@@ -498,6 +534,10 @@
 					width: 100%;
 					text-align: center;
 					margin-top: 10upx;
+					
+					.dark-mode & {
+						color: var(--text-color-regular);
+					}
 				}
 			}
 		}
@@ -514,24 +554,37 @@
 		background-color: #f2f2f2;
 		position: relative;
 		z-index: 2;
+		
+		.dark-mode & {
+			background: var(--background-color-secondary);
+			background-color: var(--background-color);
+		}
 	}
 
 	.list {
 		width: 100%;
 		margin-bottom: 8px;
 		background: #fff;
+		
+		.dark-mode & {
+			background: var(--background-color-secondary);
+		}
 
 		&:last-child {
 			border: none;
 		}
 
 		.li {
-			width: 92%;
-			height: 100upx;
-			padding: 0 4%;
-			border-bottom: 1px solid rgb(255, 248, 234);
-			display: flex;
-			align-items: center;
+				width: 92%;
+				height: 100upx;
+				padding: 0 4%;
+				border-bottom: 1px solid rgb(255, 248, 234);
+				display: flex;
+				align-items: center;
+				
+				.dark-mode & {
+					border-bottom: 1px solid #333333;
+				}
 
 			&.noborder {
 				border-bottom: 0
@@ -549,10 +602,14 @@
 			}
 
 			.text {
-				padding-left: 20upx;
-				width: 100%;
-				color: #666;
-			}
+					padding-left: 20upx;
+					width: 100%;
+					color: #666;
+					
+					.dark-mode & {
+						color: var(--text-color-regular);
+					}
+				}
 
 			.to {
 				flex-shrink: 0;

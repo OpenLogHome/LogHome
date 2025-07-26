@@ -1,5 +1,5 @@
 <template>
-	<div class="helper-box" v-show="!Object.values(problems).every((item)=>{return item == false})">
+	<div class="helper-box" v-show="!Object.values(problems).every((item)=>{return item == false})" v-dark>
 		<div class="head">
 			<div class="box-title">创作建议君</div>
 			<div class="more">
@@ -52,8 +52,11 @@
 </template>
 
 <script>
-	import axios from 'axios'
-	export default{
+import axios from 'axios'
+import darkModeMixin from '@/mixins/dark-mode.js'
+
+export default {
+		mixins: [darkModeMixin],
 		data(){
 			return{
 				novel:{},
@@ -106,6 +109,10 @@
 		margin:0rpx 0rpx;
 		box-sizing: border-box;
 		background-color: #ffffff;
+		
+		&.dark-mode {
+			background-color: var(--card-background);
+		}
 		.head{
 			margin:0rpx 50rpx;
 			padding: 35rpx 0;
@@ -116,6 +123,10 @@
 				font-weight: bold;
 				color:#2d2d2d;
 				height:30rpx;
+				
+				.dark-mode & {
+					color: var(--text-color-primary);
+				}
 			}
 			div.more{
 				float:right;
@@ -127,6 +138,10 @@
 					font-size: 26rpx;
 					line-height: 44rpx;
 					height:44rpx;
+					
+					.dark-mode & {
+						color: var(--text-color-regular);
+					}
 				}
 				.moreImg{
 					height:30rpx;
@@ -145,14 +160,26 @@
 				width:calc(100vw - 80rpx - 20rpx - 50rpx);
 				background-color: #00000009;
 				text-align:left;
+				
+				.dark-mode & {
+					background-color: var(--background-color-tertiary);
+				}
 				.suggestion{
 					font-size: 35rpx;
 					margin-bottom:10rpx;
 					font-weight: bold;
 					color:rgb(113, 52, 24);
+					
+					.dark-mode & {
+						color: var(--text-color-primary);
+					}
 				}
 				.description{
 					font-size: 28rpx;
+					
+					.dark-mode & {
+						color: var(--text-color-regular);
+					}
 				}
 			}
 		}

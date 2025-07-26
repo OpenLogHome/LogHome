@@ -12,4 +12,9 @@ imgDB.version(1).stores({
   imgs: 'img_url, img_hash, img_blob, last_accessed_time',
 });
 
-export { articleDB, imgDB };
+const writerArticleDB = new Dexie('writerArticleDB');
+writerArticleDB.version(1).stores({
+  articles: `article_id, article_type, title, content, novel_id, article_chapter, create_time`
+})
+
+export { articleDB, imgDB, writerArticleDB };

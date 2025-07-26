@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<!-- 消息栏目 -->
 		<view class="list">
 			<div class="users" v-for="item in notifications">
@@ -19,8 +19,14 @@
 			</div>
 		</view>
 
-		<div class="nouser" v-if="notifications.length == 0" style="display: flex; 
-			justify-content: center; align-items: center; height: 300rpx; background-color: #F2F2F2; color: #333">
+		<div class="nouser" v-if="notifications.length == 0" :style="{
+			display: 'flex', 
+			justifyContent: 'center', 
+			alignItems: 'center', 
+			height: '300rpx', 
+			backgroundColor: $store.state.isDarkMode ? 'var(--background-color)' : '#F2F2F2', 
+			color: $store.state.isDarkMode ? 'var(--text-color-regular)' : '#333'
+		}">
 			暂无系统通知
 		</div>
 	</view>
@@ -28,7 +34,9 @@
 
 <script>
 	import axios from 'axios'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default{
+		mixins: [darkModeMixin],
 		data(){
 			return{
 				id: -1,
@@ -118,12 +126,20 @@
 	.outer{
 		background-color: #ffffff;
 		padding-top: 4px;
+		
+		&.dark-mode {
+			background-color: var(--background-color);
+		}
 	}
 	
 	.users {
 		width: 100vw;
 		display: flex;
 		position: relative;
+		
+		.dark-mode & {
+			background-color: var(--background-color-secondary);
+		}
 		
 		.avators {
 			position: relative;
@@ -141,6 +157,10 @@
 			border-bottom: #cacaca solid 1px;
 			flex: 1;
 			
+			.dark-mode & {
+				border-bottom: #444 solid 1px;
+			}
+			
 			.name_time {
 				display: flex;
 				justify-content: space-between;
@@ -152,6 +172,10 @@
 			.time{
 				font-size: 30rpx;
 				color: #999;
+				
+				.dark-mode & {
+					color: #777;
+				}
 			}
 		}
 		
@@ -163,6 +187,10 @@
 			-webkit-box-orient: vertical;
 			-webkit-line-clamp: 1;
 			color: rgb(180, 111, 88);
+			
+			.dark-mode & {
+				color: rgb(220, 151, 128);
+			}
 		}
 		
 		.motto{
@@ -171,6 +199,10 @@
 			margin-top: 8rpx;
 			font-size: 28rpx;
 			margin-bottom: 10rpx;
+			
+			.dark-mode & {
+				color: var(--text-color-regular);
+			}
 		}
 	}
 </style>

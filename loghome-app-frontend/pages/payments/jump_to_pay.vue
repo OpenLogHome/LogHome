@@ -1,5 +1,5 @@
 <template>
-  <view class="jump-pay">
+	<view class="jump-pay" v-dark>
     <view v-if="loading" class="loading">
       <text>正在查询订单状态...</text>
     </view>
@@ -16,8 +16,10 @@
 
 <script>
 import axios from 'axios'
+import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
+  mixins: [darkModeMixin],
   data() {
     return {
       payUrl: '',
@@ -162,16 +164,28 @@ export default {
   align-items: center;
   justify-content: flex-start;
   
+  &.dark-mode {
+    background: #252525;
+  }
+  
   .loading {
     margin-top: 20rpx;
     color: #999;
     font-size: 28rpx;
+    
+    .dark-mode & {
+      color: #777;
+    }
   }
   
   .tips {
     margin-top: 40rpx;
     text-align: center;
     color: #666;
+    
+    .dark-mode & {
+      color: #b8b8b8;
+    }
     
     .pay-btn {
       margin-top: 30rpx;
@@ -193,6 +207,10 @@ export default {
       
       &:disabled {
         background: #ccc;
+        
+        .dark-mode & {
+          background: #444;
+        }
       }
     }
   }
@@ -201,6 +219,10 @@ export default {
     margin-top: 20rpx;
     font-size: 24rpx;
     color: #999;
+    
+    .dark-mode & {
+      color: #777;
+    }
   }
 }
-</style> 
+</style>

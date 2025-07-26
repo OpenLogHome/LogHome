@@ -67,52 +67,52 @@ async function checkText(content) {
 let router = express.Router();
 
 // 定义一个QPS为5的自动文章审核函数
-let isArticleAuditRunning = false;
-let articlesToAudit = [];
-setInterval(async function () {
-	if (isArticleAuditRunning) return;
-	isArticleAuditRunning = true;
-	articlesToAudit = await query(
-		'SELECT * FROM articles WHERE audit_status = \'Uncheck\' and is_draft = 0 LIMIT 0,5',
-	);
-	try {
-		for (let i = 0; i < articlesToAudit.length; i++) {
-			console.log("正在自动审核文章 " + articlesToAudit[i].article_id + " " + articlesToAudit[i].title)
-			if(articlesToAudit[i].article_type == "richtext") {
-				articlesToAudit[i].content = JSON.parse(articlesToAudit[i].content);
-				let content = "";
-				for(let j = 0; j < articlesToAudit[i].content.length; j++) {
-					if(articlesToAudit[i].content[j].type == "text") {
-						content += articlesToAudit[i].content[j].value;
-					}
-				}
-				articlesToAudit[i].content = content;
-			}
-			// console.log(articlesToAudit[i].content)
-			let result = await checkText(
-				articlesToAudit[i].title + ' ' + articlesToAudit[i].content,
-			);
-			// if(result != undefined) console.log("识别结果：",result);
-			if (result.length == 0) {
-				console.log("审核通过")
-				await query(
-					'UPDATE articles SET audit_status = \'Checked\' WHERE article_id = ?',
-					[articlesToAudit[i].article_id],
-				);
-			} else {
-				console.log("审核完毕，存在问题：" + String(result))
-				await query(
-					'UPDATE articles SET audit_status = ? WHERE article_id = ?',
-					[String(result), articlesToAudit[i].article_id],
-				);
-			}
-		}
-		isArticleAuditRunning = false;
-	} catch (e) {
-		console.log(e);
-		isArticleAuditRunning = false;
-	}
-}, 1000);
+// let isArticleAuditRunning = false;
+// let articlesToAudit = [];
+// setInterval(async function () {
+// 	if (isArticleAuditRunning) return;
+// 	isArticleAuditRunning = true;
+// 	articlesToAudit = await query(
+// 		'SELECT * FROM articles WHERE audit_status = \'Uncheck\' and is_draft = 0 LIMIT 0,5',
+// 	);
+// 	try {
+// 		for (let i = 0; i < articlesToAudit.length; i++) {
+// 			console.log("正在自动审核文章 " + articlesToAudit[i].article_id + " " + articlesToAudit[i].title)
+// 			if(articlesToAudit[i].article_type == "richtext") {
+// 				articlesToAudit[i].content = JSON.parse(articlesToAudit[i].content);
+// 				let content = "";
+// 				for(let j = 0; j < articlesToAudit[i].content.length; j++) {
+// 					if(articlesToAudit[i].content[j].type == "text") {
+// 						content += articlesToAudit[i].content[j].value;
+// 					}
+// 				}
+// 				articlesToAudit[i].content = content;
+// 			}
+// 			// console.log(articlesToAudit[i].content)
+// 			let result = await checkText(
+// 				articlesToAudit[i].title + ' ' + articlesToAudit[i].content,
+// 			);
+// 			// if(result != undefined) console.log("识别结果：",result);
+// 			if (result.length == 0) {
+// 				console.log("审核通过")
+// 				await query(
+// 					'UPDATE articles SET audit_status = \'Checked\' WHERE article_id = ?',
+// 					[articlesToAudit[i].article_id],
+// 				);
+// 			} else {
+// 				console.log("审核完毕，存在问题：" + String(result))
+// 				await query(
+// 					'UPDATE articles SET audit_status = ? WHERE article_id = ?',
+// 					[String(result), articlesToAudit[i].article_id],
+// 				);
+// 			}
+// 		}
+// 		isArticleAuditRunning = false;
+// 	} catch (e) {
+// 		console.log(e);
+// 		isArticleAuditRunning = false;
+// 	}
+// }, 1000);
 
 router.get('/get_articles_to_audit', auth, async function (req, res) {
 	try {

@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<view class="page-header">
 			<text class="page-title">粉丝排行榜</text>
 		</view>
@@ -68,7 +68,9 @@
 
 <script>
 	import axios from 'axios'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default{
+		mixins: [darkModeMixin],
 		data(){
 			return{
 				topTitle:['月榜','总榜'],
@@ -216,6 +218,10 @@
 		min-height: calc(100vh - 44px); // 减去导航栏高度
 		box-sizing: border-box;
 		
+		&.dark-mode {
+			background-color: var(--background-color-secondary);
+		}
+		
 		.page-header {
 			width: 100%;
 			padding: 30rpx 40rpx;
@@ -226,6 +232,11 @@
 			box-sizing: border-box;
 			display: flex;
 			align-items: center;
+			
+			.dark-mode & {
+				background: linear-gradient(135deg, #b36800, #993600);
+				box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.2);
+			}
 			
 			.page-title {
 				font-size: 36rpx;
@@ -241,6 +252,11 @@
 			height: 80rpx;
 			box-sizing: border-box;
 			
+			.dark-mode & {
+				background-color: var(--card-background);
+				box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.1);
+			}
+			
 			.chooseList {
 				height: 80rpx;
 				width: 50%;
@@ -252,6 +268,10 @@
 				font-weight: bold;
 				position: relative;
 				transition: all 0.3s ease;
+				
+				.dark-mode & {
+					color: var(--text-color-regular);
+				}
 				
 				&.active {
 					color: #ff9800;
@@ -295,11 +315,19 @@
 					color: #795548;
 					font-weight: bold;
 					margin-bottom: 10rpx;
+					
+					.dark-mode & {
+						color: var(--text-color-primary);
+					}
 				}
 				
 				.empty-subtext {
 					font-size: 28rpx;
 					color: #a1887f;
+					
+					.dark-mode & {
+						color: var(--text-color-secondary);
+					}
 				}
 			}
 		}
@@ -348,6 +376,11 @@
 			font-size: 28rpx;
 			font-weight: bold;
 			background: #fff0e1;
+			
+			.dark-mode & {
+				background: rgba(255, 240, 225, 0.2);
+				color: var(--text-color-primary);
+			}
 		}
 		
 		.ownPic{
@@ -420,9 +453,20 @@
 				transition: all 0.3s ease;
 				box-sizing: border-box;
 				
+				.dark-mode & {
+					background-color: var(--card-background);
+					border-bottom: 2rpx solid rgba(255,255,255,0.05);
+					box-shadow: 0 2rpx 15rpx rgba(0,0,0,0.1);
+				}
+				
 				&.top-three {
 					background: linear-gradient(180deg, #fff, #fff8e1);
 					border-left: 8rpx solid #ff9800;
+					
+					.dark-mode & {
+						background: linear-gradient(180deg, var(--card-background), rgba(255, 248, 225, 0.1));
+						border-left: 8rpx solid #ff9800;
+					}
 				}
 				
 				&:hover, &:active {
@@ -446,14 +490,18 @@
 						margin-bottom: 15rpx;
 						
 						.username {
-							font-size: 30rpx;
-							font-weight: bold;
-							color: #795548;
-							margin-right: 2vw;
-							white-space: nowrap;
-							overflow: hidden;
-							text-overflow: ellipsis;
-							max-width: 65%;
+						font-size: 30rpx;
+						font-weight: bold;
+						color: #795548;
+						margin-right: 2vw;
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						max-width: 65%;
+						
+						.dark-mode & {
+							color: var(--text-color-primary);
+						}
 						}
 						
 						.fans-value {
@@ -477,6 +525,11 @@
 					position: relative;
 					box-sizing: border-box;
 					word-break: break-word;
+					
+					.dark-mode & {
+						background-color: rgba(255, 248, 225, 0.1);
+						color: var(--text-color-regular);
+					}
 					
 					&:before {
 						content: "";

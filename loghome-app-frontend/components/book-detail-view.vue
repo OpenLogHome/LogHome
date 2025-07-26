@@ -1,6 +1,6 @@
 <template>
   <div class="book-detail">
-    <view class="bodyView" :class="{'drawer-mode': isDrawerMode}" style="text-align: center;" v-if="book">
+    <view class="bodyView" :class="{'drawer-mode': isDrawerMode}" style="text-align: center;" v-if="book" v-dark>
       <div class="book-header" v-if="isDrawerMode">
         <log-image class="book-cover" :src="book.picUrl" mode="aspectFill" 
           :onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
@@ -114,7 +114,8 @@
           </div>
         </div>
       </div>
-      <div style="height: 200rpx; background-color: #fff;"></div>
+      <div style="height: 200rpx; background-color: #fff;" :style="{backgroundColor: $store.state.isDarkMode ? '#252525' : '#fff'}">
+      </div>
     </view>
   </div>
 </template>
@@ -122,6 +123,7 @@
 <script>
 import writerHelper from "./writer_helper"
 import banner from './banner.vue'
+import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
   name: 'BookDetailView',
@@ -129,6 +131,7 @@ export default {
     writerHelper,
     banner
   },
+  mixins: [darkModeMixin],
   props: {
     book: {
       type: Object,
@@ -169,6 +172,10 @@ export default {
 .book-detail {
   .bodyView {
     background-color: white !important;
+    
+    &.dark-mode {
+      background-color: var(--background-color-secondary) !important;
+    }
     &.drawer-mode {
       .book-header {
         display: flex;
@@ -177,6 +184,10 @@ export default {
         text-align: left;
         margin-bottom: 0rpx;
         background: linear-gradient(to bottom, rgb(255, 248, 234) 0%, rgb(255, 248, 234) 30%, rgb(255, 255, 255) 100%);
+        
+        .dark-mode & {
+          background: linear-gradient(to bottom, rgba(60, 55, 40, 0.8) 0%, rgba(60, 55, 40, 0.8) 30%, var(--background-color-secondary) 100%);
+        }
         // background-color: rgb(255, 248, 234);
         
         .book-cover {
@@ -186,6 +197,10 @@ export default {
           margin-right: 30rpx;
           flex-shrink: 0;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          
+          .dark-mode & {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          }
         }
         
         .book-info {
@@ -200,6 +215,10 @@ export default {
             margin-bottom: 20rpx;
             text-align: left;
             color: rgb(45, 45, 45);
+            
+            .dark-mode & {
+              color: var(--text-color-primary);
+            }
           }
           
           .bookDescription {
@@ -210,6 +229,10 @@ export default {
             
             span {
               margin: 0 10rpx;
+            }
+            
+            .dark-mode & {
+              color: var(--text-color-secondary);
             }
           }
 
@@ -223,6 +246,10 @@ export default {
             overflow: hidden;
             text-overflow: ellipsis;
             cursor: pointer;
+            
+            .dark-mode & {
+              color: var(--text-color-regular);
+            }
           }
         }
       }
@@ -235,6 +262,10 @@ export default {
     .bookTitle {
       font-size: 50rpx;
       font-weight: bold;
+      
+      .dark-mode & {
+        color: var(--text-color-primary);
+      }
     }
 
     .bookDescription {
@@ -248,6 +279,10 @@ export default {
 
       span {
         margin: 0 10rpx;
+      }
+      
+      .dark-mode & {
+        color: var(--text-color-secondary);
       }
     }
 
@@ -273,6 +308,14 @@ export default {
         &:active {
           background-color: #b46f58;
         }
+        
+        .dark-mode & {
+          background-color: rgb(150, 91, 68);
+          
+          &:active {
+            background-color: #9c5e48;
+          }
+        }
       }
 
       .button.long {
@@ -284,6 +327,10 @@ export default {
       margin: 0rpx 0rpx;
       box-sizing: border-box;
       background-color: white;
+      
+      .dark-mode & {
+        background-color: var(--card-background);
+      }
 
       .head {
         margin: 0rpx 50rpx;
@@ -296,6 +343,10 @@ export default {
           font-weight: bold;
           color: #2d2d2d;
           height: 30rpx;
+          
+          .dark-mode & {
+            color: var(--text-color-primary);
+          }
         }
 
         div.more {
@@ -309,6 +360,10 @@ export default {
             font-size: 26rpx;
             line-height: 44rpx;
             height: 44rpx;
+            
+            .dark-mode & {
+              color: var(--text-color-regular);
+            }
           }
 
           .moreImg {
@@ -330,10 +385,18 @@ export default {
           width: calc(50vw - 40rpx - 20rpx - 50rpx);
           background-color: #00000009;
           text-align: left;
+          
+          .dark-mode & {
+            background-color: var(--background-color-tertiary);
+          }
 
           .numeral {
             font-size: 40rpx;
             margin-bottom: 10rpx;
+            
+            .dark-mode & {
+              color: var(--text-color-primary);
+            }
 
             span.change {
               font-size: 28rpx;
@@ -346,6 +409,10 @@ export default {
             font-size: 28rpx;
             font-weight: bold;
             color: #2d2d2d;
+            
+            .dark-mode & {
+              color: var(--text-color-primary);
+            }
           }
         }
       }
@@ -367,10 +434,19 @@ export default {
         border-style: dashed;
         font-size: 30rpx;
         margin: 15rpx 40rpx 0 40rpx;
+        
+        .dark-mode & {
+          color: var(--text-color-regular);
+          border-color: var(--border-color-lighter);
+        }
 
         &:active {
           transform: scale(0.95);
           background-color: #4c4c4c22;
+          
+          .dark-mode & {
+            background-color: #6c6c6c22;
+          }
         }
       }
     }
@@ -383,6 +459,10 @@ export default {
         display: flex;
         background-color: rgb(255, 255, 255);
         border-radius: 10rpx;
+        
+        .dark-mode & {
+          background-color: var(--background-color-tertiary);
+        }
 
         img {
           height: 260rpx;
@@ -408,6 +488,10 @@ export default {
             color: rgb(45, 45, 45);
             margin: 5rpx;
             text-align: left;
+            
+            .dark-mode & {
+              color: var(--text-color-primary);
+            }
           }
 
           .author {
@@ -434,6 +518,10 @@ export default {
               display: -webkit-box;
               -webkit-box-orient: vertical;
               -webkit-line-clamp: 1;
+              
+              .dark-mode & {
+                color: var(--text-color-regular);
+              }
             }
           }
 
@@ -446,10 +534,34 @@ export default {
             text-align: left;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 3;
+            
+            .dark-mode & {
+              color: var(--text-color-regular);
+            }
+          }
+          
+          .tags {
+            display: flex;
+            flex-wrap: wrap;
+
+            .tag {
+              font-size: 20rpx;
+              color: #4c4c4c;
+              background-color: #f5f5f5;
+              padding: 2rpx 10rpx;
+              border-radius: 10rpx;
+              margin-right: 10rpx;
+              margin-bottom: 10rpx;
+              
+              .dark-mode & {
+                color: var(--text-color-regular);
+                background-color: var(--background-color-base);
+              }
+            }
           }
         }
       }
     }
   }
 }
-</style> 
+</style>

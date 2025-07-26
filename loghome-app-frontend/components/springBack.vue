@@ -5,12 +5,13 @@
 				top:top,
 				
 			}]" @touchstart="coverTouchstart"
-	 @touchmove="coverTouchmove" @touchend="coverTouchend">
+	 @touchmove="coverTouchmove" @touchend="coverTouchend" v-dark>
 		<slot></slot>
 	</view>
 </template>
 
 <script>
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	let startY = 0,
 		moveY = 0,
 		pageAtTop = true;
@@ -21,6 +22,7 @@
 				default: () => '30%'
 			},
 		},
+		mixins: [darkModeMixin],
 		data() {
 			return {
 				coverTransform: 'translateY(0px)',
@@ -76,5 +78,9 @@
 		background:linear-gradient(to bottom, #fffcf2, #ffffff 40%);
 		/* backdrop-filter: blur(50px); */
 		z-index: 3;
+		
+		&.dark-mode {
+			background:linear-gradient(to bottom, #2c2c2c, #1c1c1c 40%);
+		}
 	}
 </style>

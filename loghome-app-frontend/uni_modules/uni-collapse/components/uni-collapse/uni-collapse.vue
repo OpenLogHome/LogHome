@@ -1,9 +1,10 @@
 <template>
-	<view class="uni-collapse">
+	<view class="uni-collapse" v-dark>
 		<slot />
 	</view>
 </template>
 <script>
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	/**
 	 * Collapse 折叠面板
 	 * @description 展示可以折叠 / 展开的内容区域
@@ -13,6 +14,7 @@
 	 * @event {Function} change 切换面板时触发，如果是手风琴模式，返回类型为string，否则为array
 	 */
 	export default {
+		mixins: [darkModeMixin],
 		name: 'uniCollapse',
 		emits:['change','activeItem','input','update:modelValue'],
 		props: {
@@ -142,5 +144,9 @@
 		/* #endif */
 		flex-direction: column;
 		background-color: #fff;
+		
+		&.dark-mode {
+			background-color: var(--card-background);
+		}
 	}
 </style>

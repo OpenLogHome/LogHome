@@ -1,5 +1,5 @@
 <template>
-  <view class="order-history">
+  <view class="order-history" v-dark>
     <view class="content">
       <view v-if="loading" class="loading">
         <text>努力加载中...</text>
@@ -56,8 +56,10 @@
 
 <script>
 import axios from 'axios'
+import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
+  mixins: [darkModeMixin],
   data() {
     return {
       orders: [],
@@ -220,6 +222,10 @@ export default {
   background-color: #f8f8f8;
   min-height: 100vh;
   
+  &.dark-mode {
+    background-color: #252525;
+  }
+  
   .header {
     height: 90rpx;
     background-color: #ffffff;
@@ -227,6 +233,10 @@ export default {
     align-items: center;
     padding: 0 30rpx;
     position: relative;
+    
+    .dark-mode & {
+      background-color: #1c1c1c;
+    }
     
     .back {
       width: 50rpx;
@@ -248,6 +258,10 @@ export default {
       font-size: 34rpx;
       font-weight: 500;
       color: #333333;
+      
+      .dark-mode & {
+        color: #e5e5e5;
+      }
     }
   }
   
@@ -263,6 +277,10 @@ export default {
     text {
       font-size: 28rpx;
       color: #999999;
+      
+      .dark-mode & {
+        color: #777;
+      }
     }
   }
   
@@ -274,6 +292,11 @@ export default {
       margin-bottom: 20rpx;
       box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
       
+      .dark-mode & {
+        background-color: #1c1c1c;
+        box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.2);
+      }
+      
       .order-header {
         display: flex;
         justify-content: space-between;
@@ -281,9 +304,17 @@ export default {
         padding-bottom: 20rpx;
         border-bottom: 1rpx solid #f5f5f5;
         
+        .dark-mode & {
+          border-bottom: 1rpx solid #333;
+        }
+        
         .order-id {
           font-size: 26rpx;
           color: #666666;
+          
+          .dark-mode & {
+            color: #b8b8b8;
+          }
         }
         
         .order-status {
@@ -331,6 +362,10 @@ export default {
               font-size: 32rpx;
               font-weight: 600;
               color: #333333;
+              
+              .dark-mode & {
+                color: #e5e5e5;
+              }
             }
           }
           
@@ -338,6 +373,10 @@ export default {
             font-size: 32rpx;
             font-weight: 600;
             color: #ff6a5f;
+            
+            .dark-mode & {
+              color: #ff8a7f;
+            }
           }
         }
         
@@ -349,6 +388,10 @@ export default {
             font-size: 24rpx;
             color: #999999;
             margin-top: 6rpx;
+            
+            .dark-mode & {
+              color: #777;
+            }
           }
         }
         
@@ -358,6 +401,10 @@ export default {
           margin-top: 20rpx;
           padding-top: 20rpx;
           border-top: 1rpx dashed #eee;
+          
+          .dark-mode & {
+            border-top: 1rpx dashed #333;
+          }
           
           .action-btn {
             height: 60rpx;
@@ -380,6 +427,10 @@ export default {
             text {
               color: #ffffff;
             }
+            
+            .dark-mode & {
+              background-color: #e05a50;
+            }
           }
           
           .cancel-btn {
@@ -388,6 +439,15 @@ export default {
             
             text {
               color: #666666;
+            }
+            
+            .dark-mode & {
+              background-color: #333;
+              border: 1rpx solid #444;
+              
+              text {
+                color: #b8b8b8;
+              }
             }
           }
         }
@@ -402,11 +462,19 @@ export default {
     text {
       font-size: 26rpx;
       color: #999999;
+      
+      .dark-mode & {
+        color: #777;
+      }
     }
   }
   
   .load-more text {
     color: #ff6a5f;
+    
+    .dark-mode & {
+      color: #ff8a7f;
+    }
   }
 }
-</style> 
+</style>

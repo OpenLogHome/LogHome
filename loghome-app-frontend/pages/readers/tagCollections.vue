@@ -1,6 +1,6 @@
 <template>
 	<transition name="fade" class="transition">
-		<div class="outer" v-if="showList">
+		<div class="outer" v-if="showList" v-dark>
 				<div v-for="item in books" :key="item.novel_id">
 					<navigator :url="'./bookInfo?id=' +  item.novel_id"
 							   open-type="navigate">    
@@ -25,7 +25,9 @@
 
 <script>
 	import axios from 'axios'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default{
+		mixins: [darkModeMixin],
 		data(){
 			return{
 				tag_id:0,
@@ -71,6 +73,10 @@
 <style scoped lang="scss">
 	.outer{
 		background-color: #f2f2f2;
+		
+		&.dark-mode {
+			background-color: var(--background-color-secondary);
+		}
 		.books {
 			height: 260rpx;
 			width: calc(100vw - 40rpx);
@@ -78,6 +84,10 @@
 			display: flex;
 			background-color:rgb(255,255,255);
 			border-radius:10rpx;
+			
+			.dark-mode & {
+				background-color: var(--card-background);
+			}
 			
 			
 			img {
@@ -101,6 +111,10 @@
 					-webkit-line-clamp: 1;
 					color:rgb(45,45,45);
 					margin:5rpx;
+					
+					.dark-mode & {
+						color: var(--text-color-primary);
+					}
 				}
 				.author{
 					position:relative;
@@ -125,6 +139,10 @@
 						display:-webkit-box;
 						-webkit-box-orient: vertical;
 						-webkit-line-clamp: 1;
+						
+						.dark-mode & {
+							color: var(--text-color-regular);
+						}
 					}
 				}
 				
@@ -137,6 +155,10 @@
 					display: -webkit-box;
 					-webkit-box-orient: vertical;
 					-webkit-line-clamp: 3;
+					
+					.dark-mode & {
+						color: var(--text-color-secondary);
+					}
 				}
 			}
 		}

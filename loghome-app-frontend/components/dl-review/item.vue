@@ -1,5 +1,5 @@
 <template>
-	<view class="content">
+	<view class="content" v-dark>
 		<followBtn class="followButton" :targetId="reviewMsg.userId" v-show="componentMode == false"></followBtn>
 		<view class="cenHost">
 			<view class="cenHeadImgContent" @click="gotoPersonalPage(reviewMsg.userId)">
@@ -19,7 +19,9 @@
 				<view class="cenHostReview viewMb">
 					<xzj-readMore class="textSendMsg" hideLineNum="3" showHeight="100"
 					:showMenu="false" @active="openFatherReview">
-						{{praiseType == 1 ? '该评论被折叠' : reviewMsg.sendMsg}}
+						<span :style="{color: $store.state.isDarkMode && praiseType != 1 ? '#e5e5e5' : 'inherit'}">
+							{{praiseType == 1 ? '该评论被折叠' : reviewMsg.sendMsg}}
+						</span>
 					</xzj-readMore>
 					
 					<!-- 显示评论附带的图片 -->
@@ -36,18 +38,26 @@
 					</view>
 					
 					<div v-if="reviewMsg.article_id != 0 && (!paragraphMode) && praiseType != 1"
-						style="background-color: #e6e6e6; padding: 10px; margin: 5px 0; font-size: 14px;"
-						@click="navToChapter">
+			:style="{
+				backgroundColor: $store.state.isDarkMode ? '#333' : '#e6e6e6',
+				padding: '10px',
+				margin: '5px 0',
+				fontSize: '14px'
+			}"
+			@click="navToChapter">
 						<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1"
 							xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14"
 							style="margin: 0 5px 0 0;">
 							<path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z"
-								fill="#8a8a8a" p-id="2307"></path>
+								:fill="$store.state.isDarkMode ? '#b8b8b8' : '#8a8a8a'" p-id="2307"></path>
 							<path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z"
-								fill="#8a8a8a" p-id="2308"></path>
+								:fill="$store.state.isDarkMode ? '#b8b8b8' : '#8a8a8a'" p-id="2308"></path>
 						</svg>
-						来自章节 {{article.title}}
-						<div class="cento" v-if="reviewMsg.cento" style="margin-top: 10rpx; color: #4b4b4b;">
+						<span :style="{color: $store.state.isDarkMode ? '#e5e5e5' : 'inherit'}">来自章节 {{article.title}}</span>
+						<div class="cento" v-if="reviewMsg.cento" :style="{
+					marginTop: '10rpx',
+					color: $store.state.isDarkMode ? '#b8b8b8' : '#4b4b4b'
+				}">
 							{{reviewMsg.cento.paragraph}}
 						</div>
 					</div>
@@ -56,7 +66,10 @@
 					<div class="left">
 						<view @click.prevent="praise(0)">
 							<dnIcon type="haoping" :color="praiseType == 0?'#ff6d00':'#C0C0C0'"></dnIcon>
-							<text style="padding-left: 5px;">{{reviewMsg.likeNum}}</text>
+							<text :style="{
+								paddingLeft: '5px',
+								color: $store.state.isDarkMode ? '#e5e5e5' : 'inherit'
+							}">{{reviewMsg.likeNum}}</text>
 						</view>
 						<view @click.prevent="praise(1)" style="transform: scaleY(-1);">
 							<dnIcon type="haoping" :color="praiseType == 1?'#ff6d00':'#C0C0C0'"></dnIcon>
@@ -73,10 +86,10 @@
 						<xzj-readMore class="textSendMsg" hideLineNum="2" showHeight="100" 
 							:showMenu="true" @active="openChildReview(key)"
 							@menu="openSubMenu($event, reKey.comment_id, reKey.userId, key)">
-							<span style="color:#929292">{{reKey.userName}}</span>
+							<span :style="{color: $store.state.isDarkMode ? '#b8b8b8' : '#929292'}">{{reKey.userName}}</span>
 							<text class="defaultBlack">回复</text>
-							<span style="color:#929292">{{reKey.targetUserName}}</span>
-							:{{reKey.sendMsg}}
+							<span :style="{color: $store.state.isDarkMode ? '#b8b8b8' : '#929292'}">{{reKey.targetUserName}}</span>
+							<span :style="{color: $store.state.isDarkMode ? '#e5e5e5' : 'inherit'}">:{{reKey.sendMsg}}</span>
 						</xzj-readMore>
 						
 						<!-- 显示回复中的图片 -->
@@ -119,6 +132,7 @@
 	import dnIcon from '../dn-icon/dn-icon.vue';
 	import followBtn from '../follow.vue'
 	import axios from 'axios'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default {
 		name: 'review',
 		props: {
@@ -136,6 +150,7 @@
 				default: 0
 			}
 		},
+		mixins: [darkModeMixin],
 		components: {
 			dnIcon,
 			followBtn
@@ -521,6 +536,10 @@
 		width: 100%;
 		overflow: hidden;
 		position: relative;
+		
+		&.dark-mode {
+			background-color: #1c1c1c;
+		}
 	}
 
 	.cenHost-Content {
@@ -561,21 +580,37 @@
 		font-size: 14px;
 		position: relative;
 		width: 100%;
+		
+		.dark-mode & {
+			color: #e5e5e5;
+		}
 	}
 
 	.textSize {
 		font-size: 13px;
 		color: #808080;
 		margin-right: 10px;
+		
+		.dark-mode & {
+			color: #b8b8b8;
+		}
 	}
 
 	.textCenMsg {
 		color: #999999;
 		font-size: 12px;
+		
+		.dark-mode & {
+			color: #777;
+		}
 	}
 
 	.defaultBlack {
 		color: #000000;
+		
+		.dark-mode & {
+			color: #e5e5e5;
+		}
 	}
 
 
@@ -599,6 +634,10 @@
 		flex-direction: column;
 		align-items: center;
 		background-color: #ffffff;
+		
+		&.dark-mode {
+			background-color: #252525;
+		}
 	}
 
 	.cenHost {
@@ -611,6 +650,10 @@
 		margin-top: 5px;
 		overflow: hidden;
 		/* max-height:600rpx; */
+		
+		.dark-mode & {
+			border-bottom: 1px solid #333;
+		}
 	}
 
 	.cenHostMsgContent {
@@ -636,10 +679,18 @@
 	.cenHostMsg3 {
 		color: #999999;
 		margin-right: 10px;
+		
+		.dark-mode & {
+			color: #b8b8b8;
+		}
 	}
 
 	.cenHostMsg4 {
 		color: #999999;
+		
+		.dark-mode & {
+			color: #b8b8b8;
+		}
 	}
 
 	.iconRow {
@@ -654,13 +705,25 @@
 			display: flex;
 			view{
 				margin-right: 40rpx;
+				
+				.dark-mode & {
+					color: #b8b8b8;
+				}
 			}
 		}
 		.right {
 			display: flex;
 			view{
 				margin-left: 40rpx;
+				
+				.dark-mode & {
+					color: #b8b8b8;
+				}
 			}
+		}
+		
+		.dark-mode & {
+			color: #b8b8b8;
 		}
 	}
 
@@ -669,6 +732,10 @@
 		margin-top: 10px;
 		margin-bottom: 10px;
 		padding: 8px;
+		
+		.dark-mode & {
+			background-color: #333;
+		}
 	}
 
 	.threeReviewVueText {
@@ -678,12 +745,24 @@
 		overflow: hidden;
 		position: relative;
 		width: calc(100% - 16px);
+		
+		.dark-mode & {
+			color: #ff8533; /* 更亮的橙色，在暗背景下更易读 */
+		}
 	}
 
 	.reviewNumContent {
 		color: #ff6d00;
 		font-size: 12px;
 		margin-left: 8px;
+		
+		.dark-mode & {
+			color: #ff8533; /* 更亮的橙色，在暗背景下更易读 */
+			
+			text {
+				color: #e5e5e5;
+			}
+		}
 	}
 
 	.followButton {
@@ -754,6 +833,10 @@
 		border-radius: 20rpx;
 		padding: 40rpx 0;
 		width: calc(100vw - 100rpx);
+		
+		.dark-mode & {
+			background-color: #333;
+		}
 	}
 	
 	.popup-item {
@@ -764,6 +847,11 @@
 		font-size: 32rpx;
 		color: #333;
 		border-bottom: 1rpx solid #f0f0f0;
+		
+		.dark-mode & {
+			color: #e5e5e5;
+			border-bottom: 1rpx solid #444;
+		}
 	}
 	
 	.popup-item:last-child {
@@ -774,6 +862,11 @@
 		color: #999;
 		margin-top: 20rpx;
 		border-top: 20rpx solid #f8f8f8;
+		
+		.dark-mode & {
+			color: #777;
+			border-top: 20rpx solid #222;
+		}
 	}
 	
 	.popup-item text {

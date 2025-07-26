@@ -1,5 +1,5 @@
 <template>
-  <view class="gift-code">
+	<view class="gift-code" v-dark>
     <!-- 添加顶部余额显示 -->
     <view class="title">
       <img src="../../static/resources/log.png"></img>
@@ -76,8 +76,10 @@
 
 <script>
 import axios from 'axios'
+import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
+  mixins: [darkModeMixin],
   data() {
     return {
       codeValue: '',
@@ -188,11 +190,19 @@ export default {
   background-color: #f8f8f8;
   position: relative;
   
+  &.dark-mode {
+    background-color: #252525;
+  }
+  
   .title {
     display: flex;
     align-items: center;
     padding: 42rpx 0 40rpx 50rpx;
     background-color: #ffffff;
+    
+    .dark-mode & {
+      background-color: #1c1c1c;
+    }
 
     >img {
       width: 32rpx;
@@ -206,6 +216,10 @@ export default {
       font-weight: 400;
       color: #666666;
       line-height: 40rpx;
+      
+      .dark-mode & {
+        color: #b8b8b8;
+      }
     }
 
     .num {
@@ -220,6 +234,10 @@ export default {
     align-items: center;
     padding: 0 30rpx;
     position: relative;
+    
+    .dark-mode & {
+      background-color: #1c1c1c;
+    }
     
     .back {
       width: 50rpx;
@@ -241,6 +259,10 @@ export default {
       font-size: 34rpx;
       font-weight: 500;
       color: #333333;
+      
+      .dark-mode & {
+        color: #e5e5e5;
+      }
     }
   }
   
@@ -253,6 +275,11 @@ export default {
       padding: 40rpx 30rpx;
       margin-bottom: 30rpx;
       box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
+      
+      .dark-mode & {
+        background-color: #1c1c1c;
+        box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.2);
+      }
       
       .card-image {
         display: flex;
@@ -273,6 +300,10 @@ export default {
           color: #333;
           margin-bottom: 20rpx;
           font-weight: 500;
+          
+          .dark-mode & {
+            color: #e5e5e5;
+          }
         }
         
         .code-input {
@@ -283,6 +314,12 @@ export default {
           font-size: 32rpx;
           letter-spacing: 4rpx;
           text-align: center;
+          
+          .dark-mode & {
+            border-color: #3a3a3a;
+            background-color: #252525;
+            color: #e5e5e5;
+          }
         }
         
         .input-tips {
@@ -290,6 +327,10 @@ export default {
           color: #999;
           margin-top: 20rpx;
           display: block;
+          
+          .dark-mode & {
+            color: #777;
+          }
         }
       }
       
@@ -306,6 +347,10 @@ export default {
         
         &.disabled {
           background-color: #ccc;
+          
+          .dark-mode & {
+            background-color: #444;
+          }
         }
       }
     }
@@ -316,11 +361,20 @@ export default {
       padding: 30rpx;
       box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
       
+      .dark-mode & {
+        background-color: #1c1c1c;
+        box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.2);
+      }
+      
       .tip-title {
         font-size: 28rpx;
         color: #333;
         font-weight: 500;
         margin-bottom: 30rpx;
+        
+        .dark-mode & {
+          color: #e5e5e5;
+        }
       }
       
       .tip-item {
@@ -345,6 +399,10 @@ export default {
           font-size: 26rpx;
           color: #666;
           line-height: 36rpx;
+          
+          .dark-mode & {
+            color: #b8b8b8;
+          }
         }
       }
     }
@@ -371,6 +429,10 @@ export default {
       flex-direction: column;
       align-items: center;
       
+      .dark-mode & {
+        background-color: #252525;
+      }
+      
       .success-icon {
         margin-bottom: 30rpx;
         
@@ -385,6 +447,10 @@ export default {
         color: #333;
         font-weight: 600;
         margin-bottom: 20rpx;
+        
+        .dark-mode & {
+          color: #e5e5e5;
+        }
       }
       
       .success-desc {
@@ -393,6 +459,10 @@ export default {
         margin-bottom: 40rpx;
         display: flex;
         align-items: center;
+        
+        .dark-mode & {
+          color: #b8b8b8;
+        }
         
         .log-amount {
           color: #ff6a5f;
@@ -421,4 +491,4 @@ export default {
     }
   }
 }
-</style> 
+</style>

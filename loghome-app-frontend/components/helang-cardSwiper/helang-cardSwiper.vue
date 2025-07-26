@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view v-dark>
 		<view class="top-swiper">
 			 <view class="bg">
 				 <view class="placeholder"></view>
@@ -30,7 +30,9 @@
 </template>
 
 <script>
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default {
+		mixins: [darkModeMixin],
 		props:{
 			list:{
 				type:Array,
@@ -110,6 +112,10 @@
 				
 				background-color: rgb(255,248,234);
 				
+				.dark-mode & {
+					background-color: var(--background-color-secondary);
+				}
+				
 				img{
 					transition:opacity .5s;
 				}
@@ -124,6 +130,10 @@
 					left: 0;
 					height: 65%;
 					background-image: linear-gradient(to bottom ,transparent, #FFF);
+					
+					.dark-mode & {
+						background-image: linear-gradient(to bottom ,transparent, var(--background-color-secondary));
+					}
 				}
 				
 				> img{
@@ -184,12 +194,23 @@
 				vertical-align:middle;
 				line-height: 100%;
 				padding-top:40%;
+				
+				.dark-mode & {
+					background-color: rgba(50, 50, 50, 0.5);
+					border-color: #555;
+				}
+				
 				p{
 					background: linear-gradient(to bottom, #a2e689, #d3e3ce);
 					-webkit-background-clip: text;
 					color: transparent;
 					// 转变为行内块元素 文字渐变才会生效
 					display: inline-block;
+					
+					.dark-mode & {
+						background: linear-gradient(to bottom, #7ac563, #a8b8a3);
+						-webkit-background-clip: text;
+					}
 				}
 				&.le-active {
 					transform: scale(.9);

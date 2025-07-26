@@ -109,10 +109,12 @@ import axios from 'axios'
 import uniCollapse from '../../uni_modules/uni-collapse/components/uni-collapse/uni-collapse.vue'
 import uniCollapseItem from '../../uni_modules/uni-collapse/components/uni-collapse-item/uni-collapse-item.vue'
 import uniIcons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
+import darkModeMixin from '@/mixins/dark-mode.js'
 export default{
 	components:{
 		uniCollapse,uniCollapseItem,uniIcons
 	},
+	mixins: [darkModeMixin],
 	data(){
 		return{
 			uid:0,
@@ -720,6 +722,11 @@ export default{
 			border-bottom: #bec3ca 1px solid;
 			font-size: 35rpx;
 			color:rgb(113, 52, 24);
+			
+			.dark-mode & {
+				background-color: var(--card-background);
+				color: var(--text-color-primary);
+			}
 			span{
 				margin-left: 10rpx;
 			}
@@ -741,6 +748,10 @@ export default{
 		font-weight: bold;
 		color:rgb(113, 52, 24);
 		line-height: 35rpx;
+		
+		.dark-mode & {
+			color: var(--text-color-primary);
+		}
 		.draft{
 			font-size: 28rpx;
 			margin-left: 10rpx;
@@ -761,6 +772,10 @@ export default{
 	.newArticle{
 		margin-top:10rpx;
 		background-color: rgb(255, 255, 255);
+		
+		.dark-mode & {
+			background-color: var(--card-background);
+		}
 		div.add{
 			width:100%;
 			margin:10rpx 0;
@@ -772,6 +787,11 @@ export default{
 			border-radius: 14rpx;
 			text-align: center;
 			transition: all .3s;
+			
+			.dark-mode & {
+				background-color: rgba(255, 255, 255, 0.05);
+				color: var(--text-color-primary);
+			}
 		}
 		div.add:active{
 			transform:scale(.95);
@@ -799,6 +819,10 @@ export default{
 		color:rgb(134, 133, 132);
 		line-height: 50rpx;
 		margin-bottom: 10rpx;
+		
+		.dark-mode & {
+			color: var(--text-color-regular);
+		}
 		.openBtn{
 		}
 	}
@@ -811,6 +835,10 @@ export default{
 		flex-flow: wrap;
 		background-color: #f2f2f2;
 		width:100vw;
+		
+		&.dark-mode {
+			background-color: var(--background-color-secondary);
+		}
 		.articles{
 			width:100%;
 			.article{
@@ -838,6 +866,10 @@ export default{
 				font-size: 35rpx;
 				color:#444444;
 				line-height: 80rpx;
+				
+				.dark-mode & {
+					color: var(--text-color-primary);
+				}
 			}
 		}
 		.part.selected{
@@ -845,6 +877,10 @@ export default{
 			.partTitle{
 				color:#222222;
 				font-weight: bold;
+				
+				.dark-mode & {
+					color: var(--text-color-primary);
+				}
 			}
 		}
 		

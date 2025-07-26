@@ -1444,7 +1444,7 @@ router.post('/activity-messages', auth, async function (req, res) {
         
         if (sendType === 1) {
             // 发送给所有用户
-            const users = await query('SELECT user_id FROM users WHERE status = 1');
+            const users = await query('SELECT user_id FROM users WHERE activated = 1');
             
             for (const user of users) {
                 await query(

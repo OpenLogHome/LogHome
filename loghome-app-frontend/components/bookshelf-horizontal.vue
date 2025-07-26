@@ -287,7 +287,7 @@ export default {
 
 .book-scroll {
 	width: 100%;
-	height: 165rpx;
+	height: 210rpx;
 }
 
 .book-list {
@@ -303,13 +303,13 @@ export default {
 	flex-direction: column;
 	align-items: center;
 	flex-shrink: 0;
-	width: 120rpx;
+	width: 144rpx;
 }
 
 .book-cover-container {
 	position: relative;
-	width: 120rpx;
-	height: 160rpx;
+	width: 144rpx;
+	height: 192rpx;
     transition: transform .5s;
 }
 
@@ -331,7 +331,7 @@ export default {
 	background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
 	// border-radius: 12rpx;
 	padding: 4rpx 8rpx;
-	max-width: 120rpx;
+	max-width: 144rpx;
 	overflow: hidden;
 }
 
@@ -345,8 +345,8 @@ export default {
 }
 
 .more-cover {
-	width: 120rpx;
-	height: 160rpx;
+	width: 144rpx;
+	height: 192rpx;
 	border-radius: 8rpx;
 	// background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     background-color: #b2b2b2;
@@ -369,7 +369,7 @@ export default {
 	color: #666666;
 	text-align: center;
 	margin-top: 8rpx;
-	max-width: 120rpx;
+	max-width: 144rpx;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

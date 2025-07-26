@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="container">
 			<div class="end-mark">{{bookInfo.is_complete ? '已完结，感谢陪伴' : '尚未完结 · 敬请期待'}}</div>
 
@@ -58,8 +58,10 @@
 
 <script>
 	import axios from 'axios'
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	
 	export default {
+		mixins: [darkModeMixin],
 		data() {
 			return {
 				rate: null,
@@ -278,6 +280,10 @@
 		line-height: 1.6;
 		min-height: 100vh;
 		box-sizing: border-box;
+		
+		&.dark-mode {
+			background-color: var(--background-color-secondary);
+		}
 
 		.container {
 			max-width: 600px;
@@ -286,6 +292,11 @@
 			padding: 40px;
 			border-radius: 16px;
 			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+			
+			.dark-mode & {
+				background-color: var(--card-background);
+				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+			}
 		}
 
 		.end-mark {
@@ -296,6 +307,11 @@
 			margin: 30px 0 40px;
 			padding: 20px 0;
 			border-bottom: 1px dashed #e9ecef;
+			
+			.dark-mode & {
+				color: var(--text-color-primary);
+				border-bottom: 1px dashed var(--border-color-light);
+			}
 			
 			&.complete {
 				color: #20bf6b;
@@ -354,6 +370,10 @@
 			margin: 30px 0;
 			font-size: 28rpx;
 			letter-spacing: 1px;
+			
+			.dark-mode & {
+				color: var(--text-color-regular);
+			}
 		}
 
 		.navigation {
@@ -398,17 +418,21 @@
 
 			.recommend-section {
 				.section-title {
-					margin-bottom: 30px;
-					text-align: center;
+				margin-bottom: 30px;
+				text-align: center;
+				
+				h3 {
+					font-size: 32rpx;
+					color: #2c3e50;
+					margin: 0;
+					padding: 0;
+					font-weight: 600;
+					position: relative;
+					display: inline-block;
 					
-					h3 {
-						font-size: 32rpx;
-						color: #2c3e50;
-						margin: 0;
-						padding: 0;
-						font-weight: 600;
-						position: relative;
-						display: inline-block;
+					.dark-mode & {
+						color: var(--text-color-primary);
+					}
 
 						&:after {
 							content: '';
@@ -426,23 +450,32 @@
 
 				.recommend-books {
 					.book-item {
-						display: flex;
-						margin-bottom: 30rpx;
-						padding: 20px;
-						background: white;
-						border-radius: 12px;
-						cursor: pointer;
-						transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-						box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+					display: flex;
+					margin-bottom: 30rpx;
+					padding: 20px;
+					background: white;
+					border-radius: 12px;
+					cursor: pointer;
+					transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+					box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+					
+					.dark-mode & {
+						background: var(--card-background);
+						box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+					}
 
-						&:last-child {
-							margin-bottom: 0;
-						}
+					&:last-child {
+						margin-bottom: 0;
+					}
 
-						&:hover {
-							transform: translateY(-2px);
-							box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+					&:hover {
+						transform: translateY(-2px);
+						box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+						
+						.dark-mode & {
+							box-shadow: 0 6px 16px rgba(0,0,0,0.3);
 						}
+					}
 
 						img {
 							width: 100px;
@@ -458,21 +491,29 @@
 							overflow: hidden;
 
 							.book-title {
-								font-size: 32rpx;
-								font-weight: 600;
-								color: #2c3e50;
-								margin-bottom: 12px;
-								overflow: hidden;
-								text-overflow: ellipsis;
-								white-space: nowrap;
+						font-size: 32rpx;
+						font-weight: 600;
+						color: #2c3e50;
+						margin-bottom: 12px;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap;
+						
+						.dark-mode & {
+							color: var(--text-color-primary);
+						}
 							}
 
 							.book-author {
-								display: flex;
-								align-items: center;
-								margin-bottom: 12px;
-								font-size: 26rpx;
-								color: #495057;
+						display: flex;
+						align-items: center;
+						margin-bottom: 12px;
+						font-size: 26rpx;
+						color: #495057;
+						
+						.dark-mode & {
+							color: var(--text-color-regular);
+						}
 
 								.author-avatar {
 									width: 36rpx;
@@ -484,14 +525,18 @@
 							}
 
 							.book-desc {
-								font-size: 26rpx;
-								color: #6c757d;
-								line-height: 1.6;
-								overflow: hidden;
-								text-overflow: ellipsis;
-								display: -webkit-box;
-								-webkit-line-clamp: 2;
-								-webkit-box-orient: vertical;
+						font-size: 26rpx;
+						color: #6c757d;
+						line-height: 1.6;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						display: -webkit-box;
+						-webkit-line-clamp: 2;
+						-webkit-box-orient: vertical;
+						
+						.dark-mode & {
+							color: var(--text-color-secondary);
+						}
 							}
 						}
 					}
