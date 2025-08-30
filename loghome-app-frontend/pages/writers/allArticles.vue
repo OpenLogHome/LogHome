@@ -20,10 +20,23 @@
 								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">草稿</el-tag>
 								<el-tag type="warning" v-if="item.feedback_count && item.feedback_count > 0" effect="dark"
 								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{item.feedback_count}}处反馈</el-tag>
+								<el-tag type="danger" v-if="item.hasWriterModify == true && item.is_draft == false"
+								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">发布后有编辑</el-tag>
+								<el-tag type="info" v-if="item.hasCloudCollision == true"
+								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark">
+								<i class="el-icon-warning-outline" style="margin-right: 5rpx;"></i>存在云冲突
+								</el-tag>
+								<i class="el-icon-loading" v-if="item.isCheckingStatus" style="margin-left:10rpx; color:#444444;"></i>
+
 							</div>
 							<div class="miniTitle">
-								<div v-show="item.article_type != 'spliter'">
-									{{item.text_count}}字 {{utc2beijing(item.update_time)}}
+								<div v-if="item.article_type != 'spliter' && item.hasWriterModify && item.is_draft == false">
+									{{item.modifiedTextCount}}字 
+									{{item.modify_time}}
+								</div>
+								<div v-else-if="item.article_type != 'spliter'">
+									{{item.text_count}}字 
+									{{utc2beijing(item.update_time)}} 
 								</div>
 							</div>
 						</template>
@@ -41,11 +54,11 @@
 									<span>阅读</span>
 								</div>
 							</navigator>
-							<navigator :url="'./localBackup?id=' +  item.article_id"
+							<navigator :url="'./chapterTimeMachine?id=' +  item.article_id + '&novelId=' + item.novel_id"
 									   open-type="navigate" v-show="item.article_type != 'spliter'">
 								<div class="subTitle"> 
 									<uni-icons type="loop" size="20" color="rgb(113, 52, 24)"/>
-									<span>本地备份</span>
+									<span>章节时光机</span>
 								</div>
 							</navigator>
 							<navigator :url="'./articleFeedbacks?id=' +  item.article_id"
@@ -94,7 +107,7 @@
 			</div>
 			<uni-popup ref="setPopup" type="top" style="z-index:101" background-color="fff2d9">
 				<div class="bookParts">
-					<navigator v-for="(item, index) in bookPart.parts" :key="index" @click="changeBookPart(item)">  
+					<navigator v-for="(item, index) in bookPart.parts" :key="index" @click="changeBookPart(item, true)">  
 						<div class="part" :class="{'selected': item.id == bookPart.currentPart.id}">
 							<div class="partTitle">{{item.name}}</div>
 						</div>
@@ -110,6 +123,8 @@ import uniCollapse from '../../uni_modules/uni-collapse/components/uni-collapse/
 import uniCollapseItem from '../../uni_modules/uni-collapse/components/uni-collapse-item/uni-collapse-item.vue'
 import uniIcons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
 import darkModeMixin from '@/mixins/dark-mode.js'
+import { getServerTime } from '@/lib/utils';
+import { writerArticleDB } from "../../lib/db.js"
 export default{
 	components:{
 		uniCollapse,uniCollapseItem,uniIcons
@@ -190,10 +205,12 @@ export default{
 		    var beijing_datetime = new Date(parseInt(timestamp) * 1000).toLocaleString("chinese",{ hour12: false }).replace(/年|月/g, "-").replace(/日/g, " ");
 		    return beijing_datetime; // 2017-03-31 16:02:06
 		},
-		refreshPage(changeToNewestBookPart){
+		async refreshPage(changeToLastBookpart = false){
 			uni.showLoading({
 				title: '努力加载中'
 			});
+			let currentServerTime = await getServerTime();
+			console.log("currentServerTime", currentServerTime);
 			//清除文章排序信息，该功能应当被移除！
 			window.localStorage.removeItem('articleSortSetting');
 			
@@ -217,12 +234,23 @@ export default{
 					'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 				}
 			}
-			).then((res) => {
+			).then(async (res) => {
 				this.articles = res.data;
 				this.refreshBookPart();
-				if(changeToNewestBookPart){
-					// 判断并打开最新的分卷
-					this.changeBookPart(this.bookPart.parts[this.bookPart.parts.length - 1]);
+				if(changeToLastBookpart){
+					// 判断并打开上次打开的分卷
+					let lastPartId = window.localStorage.getItem('lastPartId_' + this.uid);
+					if(lastPartId){
+						for(let index = 0; index < this.bookPart.parts.length; index ++){
+							let item = this.bookPart.parts[index];
+							if(item.id == lastPartId){
+								this.changeBookPart(item);
+								break;
+							}
+						}
+					} else {
+						this.changeBookPart(this.bookPart.parts[this.bookPart.parts.length - 1]);
+					}
 				}
 			}).catch(function (error) {
 				uni.showToast({
@@ -601,8 +629,12 @@ export default{
 		touchend() {
 			clearInterval(this.Loop);
 		},
-		changeBookPart(bookPart){
+		changeBookPart(bookPart, isManual = false){
 			this.bookPart.currentPart = bookPart;
+			if(isManual) {
+				window.localStorage.setItem('lastPartId_' + this.uid, bookPart.id);
+			}
+			console.log(this.bookPart.currentPart);
 			// 如果不是全部分卷，则只显示当前选择的分卷
 			this.shownArticles = [];
 			if(bookPart.id != -1){
@@ -620,8 +652,118 @@ export default{
 			} else {
 				this.shownArticles = this.articles;
 			}
+			this.checkArticleStatus();
 			this.bookPart.btnOpened = false;
 			this.$refs.setPopup.close();
+			this.$forceUpdate();
+		},
+		checkArticleStatus() {
+			for(let item of this.shownArticles) {
+				this._checkArticleStatusSingle(item)
+			}
+		},
+		async getArticleWriter(articleId) {
+			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
+			let res = await axios.get(this.$baseUrl + '/essays/get_article_writer?id=' + articleId,
+				{
+					headers: {
+						'Content-Type': 'application/json', //设置请求头请求格式为JSON
+						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+					}
+				}
+			)
+			return res;
+		},
+		async getArticle(articleId) {
+			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
+			let res = await axios.get(this.$baseUrl + '/essays/get_article?id=' + articleId,
+				{
+					headers: {
+						'Content-Type': 'application/json', //设置请求头请求格式为JSON
+						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+					}
+				}
+			)
+			return res;
+		},
+		countText(content) {
+			let textCount = 0;
+			let imageCount = 0;
+			for(let item of content){
+				if(item.type == "text"){
+					textCount += item.value.length;
+				} else if(item.type == "image") {
+					imageCount ++;
+				}
+			}
+			return {
+				textCount: textCount,
+				imageCount: imageCount
+			}
+		},
+		async _checkArticleStatusSingle(article) {
+			article.isCheckingStatus = true;
+			// 查找最近保存的本地文章和云端文章
+			const localArticles = await writerArticleDB.articles
+				.where('article_id')
+				.equals(article.article_id)
+				.toArray();
+			let latestLocalArticle = null;
+			if(localArticles.length > 0) {
+				latestLocalArticle = localArticles.reduce((latest, current) => {
+					return latest.create_time > current.create_time ? latest : current;
+				});
+			}
+			let latestRemoteArticle = await this.getArticleWriter(article.article_id);
+			if(latestRemoteArticle.data != "no data") {
+				latestRemoteArticle = latestRemoteArticle.data;
+			} else {
+				latestRemoteArticle = null;
+			}
+
+			let writerArticle = null;
+
+			// 比较本地和云端的文章状态
+			if(latestLocalArticle == null && latestRemoteArticle == null) {
+				// 本地和云端都没有保存过文章
+			} else if(latestLocalArticle == null) {
+				writerArticle = latestRemoteArticle;
+				// 本地没有保存过文章，但是云端有保存过文章
+			} else if(latestRemoteArticle == null) {
+				writerArticle = latestLocalArticle;
+				// 本地有保存过文章，但是云端没有保存过文章
+			} else {
+				// 本地和云端都有保存过文章
+				// 比较本地和云端的文章内容
+				if(latestLocalArticle.create_time != latestRemoteArticle.create_time || latestLocalArticle.content != latestRemoteArticle.content) {
+					// 本地和云端的文章内容不一致
+					article.hasCloudCollision = true;
+					this.$forceUpdate();
+				} else {
+					writerArticle = latestLocalArticle;
+				}
+			}
+
+			if(writerArticle != null) {
+				article.content = (await this.getArticle(article.article_id)).data[0].content;
+				if(writerArticle.content != article.content) {
+					article.hasWriterModify = true;
+					// 将writerArticle.create_time原本的YYYYMMDDhhmmss格式调整为YYYY/MM/DD hh:mm:ss
+					article.modify_time = Number(writerArticle.create_time.substring(0, 4)) + "/" + 
+					Number(writerArticle.create_time.substring(4, 6)) + "/" + 
+					Number(writerArticle.create_time.substring(6, 8)) + " " + 
+					writerArticle.create_time.substring(8, 10) + ":" + 
+					writerArticle.create_time.substring(10, 12) + ":" + 
+					writerArticle.create_time.substring(12, 14);
+
+					// 统计字数
+					let {textCount, imageCount} = this.countText(JSON.parse(writerArticle.content));
+					article.modifiedTextCount = textCount;
+					article.modifiedImageCount = imageCount;
+					this.$forceUpdate();
+				}
+			}
+			article.isCheckingStatus = false;
 			this.$forceUpdate();
 		}
 	},

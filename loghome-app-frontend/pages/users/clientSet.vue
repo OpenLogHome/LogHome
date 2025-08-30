@@ -2,10 +2,10 @@
 	<view>
 		<view class="list-content">
 			<view class="list">
-				<view class="li " @click="autoSaveSet">
+				<!-- <view class="li " @click="autoSaveSet">
 					<view class="text">本地备份设置</view>
 					<img class="to" src="../../static/user/to.png"></img>
-				</view>
+				</view> -->
 <!-- 				<view class="li " @click="readerSet">
 					<view class="text">阅读器设置</view>
 					<log-image class="to" src="../../static/user/to.png"></log-image>
@@ -22,6 +22,10 @@
 				</view>
 				<view class="li " @click="activateAccount">
 					<view class="text">账号绑定</view>
+					<img class="to" src="../../static/user/to.png"></img>
+				</view>
+				<view class="li " @click="storageManage">
+					<view class="text">空间占用管理</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
@@ -86,6 +90,11 @@
 			readerSet(){
 				uni.navigateTo({
 					url: "../settings/readerSettings"
+				})
+			},
+			storageManage(){
+				uni.navigateTo({
+					url: "./storageManage"
 				})
 			}
 		}

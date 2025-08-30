@@ -321,6 +321,122 @@ router.get('/get_article', auth, async function (req, res) {
 	}
 });
 
+
+router.get('/get_article_writer', auth, async function (req, res) {
+	try {
+		let readerResults = await query(
+			`SELECT * FROM articles WHERE article_id = ?`,
+			[req.query.id],
+		)
+		let results = await query(
+			`SELECT a.* FROM articles_writer a, novels n
+                               WHERE n.novel_id = a.novel_id 
+                               AND article_id = ? 
+                               AND n.deleted = 0
+							   ORDER BY create_time DESC
+							   LIMIT 1`,
+			[req.query.id],
+		); 
+        if(results.length > 0){
+            let novel_info = await query(
+                `SELECT * FROM novels WHERE novel_id = ?`,
+                [results[0].novel_id],
+            );
+            results[0].novel_info = novel_info[0];
+        } else {
+			res.end("no data");
+			return;
+		}
+		res.end(JSON.stringify({...readerResults[0], ...results[0]}));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.post('/sync_article_writer_from_reader', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		let article_reader = await query(
+			'SELECT a.* FROM articles a, novels n WHERE a.novel_id = n.novel_id AND article_id = ? AND n.author_id = ?',
+			[req.body.article_id, user.user_id],
+		);
+		if(article_reader.length == 0){
+			res.json(400, { msg: 'article does not exist' });
+		}
+		article_reader = article_reader[0];
+
+		let results = await query(
+			'INSERT INTO articles_writer(article_id,title,content,create_time,novel_id) VALUES(?,?,?,?,?)',
+			[
+				req.body.article_id,
+				article_reader.title,
+				article_reader.content,
+				req.body.create_time,
+				article_reader.novel_id,
+			],
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+
+router.post('/upload_article_writer', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		if(req.body.is_fast_save){
+			let article_writer = await query(
+				'SELECT * FROM articles_writer WHERE article_id = ? ORDER BY create_time DESC LIMIT 1',
+				[req.body.article_id],
+			);
+
+			let results = await query(
+				'UPDATE articles_writer SET `title`=?,`content`=?,create_time = ? WHERE id=?',
+				[
+					req.body.title,
+					req.body.content,
+					req.body.create_time,
+					article_writer[0].id,
+				],
+			);
+			res.end(JSON.stringify(results));
+		} else {
+
+			if(!req.body.is_force){
+				// 检查是否与上次记录不一样
+				let latestLocalArticle = await query(
+					'SELECT * FROM articles_writer WHERE article_id = ? ORDER BY create_time DESC LIMIT 1',
+					[req.body.article_id],
+				);
+				if(latestLocalArticle.length > 0 && latestLocalArticle[0].content == req.body.content && latestLocalArticle[0].title == req.body.title) {
+					res.json(200, { msg: 'content does not change' });
+					return;
+				}
+			}
+
+			let results = await query(
+				'INSERT INTO articles_writer(article_id,title,content,create_time,novel_id) VALUES(?,?,?,?,?)',
+				[
+					req.body.article_id,
+					req.body.title,
+					req.body.content,
+					req.body.create_time,
+					req.body.novel_id,
+				],
+			);
+			res.end(JSON.stringify(results));
+		}
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.post('/add_article', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
@@ -433,6 +549,43 @@ router.post('/modify_article', auth, async (req, res) => {
             }
             await query(`UPDATE novels SET text_count = ? WHERE novel_id = ?`, [novelTextCount, novel.novel_id]);
         }
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取文章历史记录
+router.get('/get_article_history', auth, async function (req, res) {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		// 验证用户是否有权限查看该文章的历史记录
+		let article = await query(
+			`SELECT a.* FROM articles a, novels n 
+							   WHERE a.novel_id = n.novel_id 
+							   AND a.article_id = ? 
+							   AND n.author_id = ? 
+							   AND a.deleted = 0 
+							   AND n.deleted = 0`,
+			[req.query.id, user.user_id],
+		);
+		
+		if (article.length === 0) {
+			res.json(403, { msg: 'unauthorized access' });
+			return;
+		}
+		
+		// 获取文章的历史记录
+		let results = await query(
+			`SELECT id, article_id, title, content, create_time, novel_id 
+							   FROM articles_writer 
+							   WHERE article_id = ? 
+							   ORDER BY create_time DESC`,
+			[req.query.id],
+		);
+		
+		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });

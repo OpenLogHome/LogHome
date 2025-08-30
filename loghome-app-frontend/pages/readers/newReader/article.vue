@@ -97,11 +97,21 @@
 					</div>
 				</div>
 			</div>
+			<!--顶部工具栏-->
 			<div class="topBar" :class="{ opened: settingsOpened }" ref="topBar" :style="{
 				'backgroundColor': themesData[readerSettings.theme].backgroundColor,
 				'color': themesData[readerSettings.theme].fontColor
 			}">
 				<i class="el-icon-arrow-left" style="font-size: 50rpx;" @click="navigateBack"></i>
+				<div class="right">
+					<div style="position: relative; display: inline-block;">
+						<i class="el-icon-headset" style="font-size: 50rpx;" @click="openListenDrawer"></i>
+						<span style="position: absolute; bottom: -15rpx; right: -15rpx; 
+							background-color: #ff4d4f; color: white; 
+							font-size: 20rpx; padding: 2rpx 6rpx;
+							border-radius: 6rpx;">限免</span>
+					</div>
+				</div>
 			</div>
 			<!-- 滚动滚动条时显示的ToolTip -->
 			<div class="sliderTooltip" :class="{'show': showSliderTooltip}" :style="{bottom: showReaderSetting ? '700rpx' : '330rpx'}">
@@ -139,6 +149,7 @@
 					'fontFamily': fonts[readerSettings.font].family
 				}" v-show="vRenderShowTitle">
 					{{ vRenderTitle }}
+					<i class="el-icon-video-play" style="color: #888; margin-left: 10rpx;"></i>
 				</div>
 				<div v-for="(para, idx) in vRenderText" :class="'paragraph ' + 'p' + vRenderIds[idx]" :style="{
 					'minHeight': readerSettings.fontSize * readerSettings.lineHeight + 'rpx',
@@ -181,8 +192,9 @@
 							'fontFamily': fonts[readerSettings.font].family
 						}">
 							{{ allArticleData[allPages[idx].articleId.toString()].title }}
+							<span :class="'paraTitleEndLocate'" style="margin-left: 10rpx;"></span>
 						</div>
-						<div :class="`paragraph ${para.cento ? 'cento ' : ''}${para.selected ? 'selected ' : ''}${paragraphId==para.id ? 'highlighted' : ''}`" :style="{
+						<div :class="`paragraph ${para.cento ? 'cento ' : ''}${para.selected ? 'selected ' : ''}${paragraphId==para.id || listeningParagraphId==para.id ? 'highlighted' : ''}`" :style="{
 							'minHeight': readerSettings.fontSize * readerSettings.lineHeight + 'rpx',
 							'fontFamily': fonts[readerSettings.font].family,
 							'text-decoration-color': para.cento ? themesData[readerSettings.theme].lineColor : 'transparent'
@@ -190,7 +202,7 @@
 							:key="para.id" @longpress="handleParagraphLongpressed($event, para)">
 							<div v-show="para.value && para.value.startsWith('\u3000\u3000')" class="lineShelterBox"
 								 :style="{'backgroundColor': (para.selected) ? blendHexColors(themesData[readerSettings.theme].backgroundColor, '#7774')
-								  : ((paragraphId==para.id) ? blendHexColors(themesData[readerSettings.theme].backgroundColor, '#FADD0044') : themesData[readerSettings.theme].backgroundColor), 
+								  : (((paragraphId==para.id) || (listeningParagraphId==para.id)) ? blendHexColors(themesData[readerSettings.theme].backgroundColor, '#FADD0044') : themesData[readerSettings.theme].backgroundColor), 
 								 'width': readerSettings.fontSize * 2 + 'rpx',
 								 'height': '20rpx', 
 								 'top': readerSettings.fontSize * readerSettings.lineHeight - 20 + 'rpx'}">
@@ -207,6 +219,7 @@
 						'fontFamily': fonts[readerSettings.font].family
 					}">
 						{{ allArticleData[allPages[idx].articleId.toString()].title }}
+						<span :class="'paraTitleEndLocate'" style="margin-left: 10rpx;"></span>
 					</div>
 					<div v-if="allPages[idx].type == 'image'" class="textRender imgRender" :id="idx">
 						<div class='title' :style="{
@@ -215,6 +228,7 @@
 							'fontWeight': 'bold', 'position': 'absolute', 'top': '0'
 						}" v-show="allPages[idx].idx == 0">
 							{{ allArticleData[allPages[idx].articleId.toString()].title }}
+							<span :class="'paraTitleEndLocate'" style="margin-left: 10rpx;"></span>
 						</div>
 						<log-image :src="allPages[idx].url" alt="" style="width:calc(100vw - 100rpx)"/>
 					</div>
@@ -289,6 +303,20 @@
 			</div>
 		</el-drawer>
 
+		<el-drawer :with-header="false" :visible.sync="listenDrawerVisible" direction="ttb" :modal="true" size="auto">
+			<div class="listen-drawer-container">
+				<AudiobookPlayer 
+					ref="audiobookPlayer"
+					:articleIds="currentArticleIds" 
+					:coverUrl="currentNovelCover"
+					:initialVoice="'zh-CN-XiaoxiaoNeural'"
+					:allArticleData="allArticleData"
+					:startArticleId="articleId"
+					@change="handleBookListenChange"
+				/>
+			</div>
+		</el-drawer>
+
 		<div class="floating-panel" v-show="selectionMode"
 			:style="{ left: panelPosition.x + 'px', top: panelPosition.y + 'px' }">
 			<div class="panel-button" @click="handleCopy">
@@ -310,7 +338,11 @@
 			</div>
 			<div class="panel-button" @click="handleFeedback">
 				<i class="el-icon-warning-outline"></i>
-				<span>错误反馈</span>
+				<span>反馈</span>
+			</div>
+			<div class="panel-button" @click="listenFromParagraph(selectedParagraph.id)">
+				<i class="el-icon-video-play"></i>
+				<span>朗读</span>
 			</div>
 		</div>
 		
@@ -321,6 +353,14 @@
 			<div class="amount" :style="{'fontSize': readerSettings.fontSize * 0.6 + 'rpx'}">
 				{{item.amount}}
 			</div>
+		</div>
+
+		<div class="listenBtn" v-for="item in shownParaTitleListenBtns" @click="playFromCurrentParagraph"
+			:style="{'minHeight': readerSettings.fontSize * readerSettings.lineHeight + 'rpx',
+					 'fontSize': readerSettings.fontSize * 1.2 + 'rpx', 'left': item.x, 'top': item.y,
+					 'transform': 'translateY(16rpx)',
+					 'color': '#888'}" v-show="!settingsOpened">
+			<i class="el-icon-video-play"></i>
 		</div>
 
 		<el-dialog
@@ -367,6 +407,7 @@ import bookMenu from '../../../components/bookMenu.vue'
 import BatteryIcon from "../../../components/battery.vue"
 import BookComment from "../bookComment.vue"
 import BookExcerpts from "../bookExcerpts.vue"
+import AudiobookPlayer from "../../../components/audiobook-player.vue"
 export default {
 	data() {
 		return {
@@ -378,6 +419,8 @@ export default {
 			paragraphId: -1,
 			allArticles: [],
 			readerArticleData: {},
+			currentArticleIds: [],
+			currentNovelCover: '',
 			allArticleData: {},
 			allPages: [],
 			currentPageIdx: -1,
@@ -432,10 +475,13 @@ export default {
 			commentDrawerData: {},
 			excerptDrawerVisible: false,
 			feedbackDialogVisible: false,
-			feedbackContent: ''
+			feedbackContent: '',
+			listenDrawerVisible: false,
+			listeningParagraphId: -1,
+			shownParaTitleListenBtns: []
 		}
 	},
-	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts },
+	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer },
 	methods: {
 		loadAllPages() {
 			return new Promise(async (resolve, reject) => {
@@ -695,12 +741,14 @@ export default {
 				this.touchTimer.count += 1;
 			}, 100);
 			this.shownCommentsBtn = [];
+			this.shownParaTitleListenBtns = [];
 		},
 
 		handleTouchMove(e) {
 			const deltaX = e.touches[0].clientX - this.touchStartX;
 			this.translateX = deltaX;
 			this.shownCommentsBtn = [];
+			this.shownParaTitleListenBtns = [];
 		},
 		lastPage() {
 			if (this.currentPageIdx > 0) {
@@ -1014,6 +1062,7 @@ export default {
 		},
 		async updateArticleCommentDisplay() {
 			if(this.doUpdateCommentDisplay && !this.isAnimating) {
+				this.updateArticleTitleListenPlayDisplay();
 				this.doUpdateCommentDisplay = false;
 				let currentPageDom = document.querySelector(`.articlePage.idx${this.currentPageIdx}`);
 				if(!currentPageDom) return;
@@ -1120,9 +1169,10 @@ export default {
 			this.renderNewPages();
 		},
 		gotoParagraph(articleId, paragraphId) {
+			console.log("gotoParagraph", articleId, paragraphId);
 			for(let i = 0; i < this.allPages.length; i ++) {
 				let page = this.allPages[i];
-				if(page.articleId == articleId && page.inPagesParagraphIds.indexOf(String(paragraphId)) != -1) {
+				if(page.articleId == articleId && page.inPagesParagraphIds && (page.inPagesParagraphIds.indexOf(String(paragraphId)) != -1 || paragraphId == -1)) {
 					this.currentPageIdx = i;
 					this.currentRenderIdx = [];
 					this.paragraphId = paragraphId;
@@ -1139,6 +1189,8 @@ export default {
 				this.commentDrawerVisible = false;
 			} else if(this.excerptDrawerVisible) {
 				this.excerptDrawerVisible = false;
+			} else if(this.listenDrawerVisible) {
+				this.listenDrawerVisible = false;
 			}
 		},
 		handleCloseCommentDraweraManually() {
@@ -1156,6 +1208,51 @@ export default {
 		openExcerpts() {
 			this.excerptDrawerVisible = true;
 			window.history.pushState({ isExcerptDrawerOpen: true }, '', window.location.href)
+		},
+		openListenDrawer() {
+			// 设置当前文章ID列表，从当前章节开始
+			this.currentArticleIds = [];
+			for (let i = 0; i < this.allArticles.length; i++) {
+				if(this.allArticles[i].article_type == "richtext" || this.allArticles[i].article_type == "spliter"){
+					this.currentArticleIds.push(this.allArticles[i].article_id);
+				}
+			}
+			// 设置小说封面
+			if (this.novelInfo && this.novelInfo.picUrl) {
+				this.currentNovelCover = this.novelInfo.picUrl;
+			}
+			// 打开抽屉
+			this.listenDrawerVisible = true;
+		},
+		handleBookListenChange(data){
+			console.log("handleBookListenChange", data.articleId, data.paragraphId);
+			this.gotoParagraph(data.articleId, data.paragraphId);
+			this.listeningParagraphId = data.paragraphId;
+		},
+		async updateArticleTitleListenPlayDisplay() {
+			console.log("update");
+			let currentPageDom = document.querySelector(`.articlePage.idx${this.currentPageIdx}`);
+			if(!currentPageDom) return;
+			let paraTitleEndLocateDoms = currentPageDom.getElementsByClassName("paraTitleEndLocate");
+			for(let item of paraTitleEndLocateDoms) {
+				let rect = item.getBoundingClientRect();
+				this.shownParaTitleListenBtns.push({
+					x: rect.x,
+					y: rect.y
+				})
+			}
+		},
+		playFromCurrentParagraph() {
+			this.openListenDrawer();
+			setTimeout(() => {
+				this.$refs.audiobookPlayer.navToArticleParagraph(this.articleId, -1);
+			}, 300);
+		},
+		listenFromParagraph(paragraphId) {
+			this.openListenDrawer();
+			setTimeout(() => {
+				this.$refs.audiobookPlayer.navToArticleParagraph(this.articleId, paragraphId);
+			}, 300);
 		},
 		handleExcerptNavigation(data) {
 			// 关闭书摘抽屉
@@ -1242,7 +1339,7 @@ export default {
 			if(newValue == false){
 				this.showSliderTooltip = false;
 			}
-		},
+		}
 	},
 	computed: {
 	},
@@ -1307,6 +1404,7 @@ export default {
 		this.renderNewPages();
 		this.showArticleCentos();
 		this.shownCommentsBtn = [];
+		this.shownParaTitleListenBtns = [];
 		setTimeout(() => {
 			this.doUpdateCommentDisplay = true;
 		}, 300)
@@ -1349,6 +1447,29 @@ export default {
 	src: url("../../../static/fonts/SourceHanSansSC-Regular.otf");
 }
 
+
+.listen-drawer-container {
+	padding: 20px;
+	height: auto;
+	overflow: visible;
+}
+
+.drawer-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.drawer-title {
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.drawer-close {
+	cursor: pointer;
+	font-size: 20px;
+}
 
 .readerOuter {
 	height: 100vh;
@@ -1513,6 +1634,8 @@ export default {
 			transform: translateY(-120%);
 			color: rgb(203, 203, 203);
 			transition: all .3s;
+			display: flex;
+			justify-content: space-between;
 			box-shadow:
 				0px 0px 2.4px rgba(0, 0, 0, 0.021),
 				0px 0px 6.8px rgba(0, 0, 0, 0.03),
@@ -1805,7 +1928,7 @@ export default {
 		}
 	}
 	
-	.commentBtn{
+	.commentBtn, .listenBtn{
 		position: fixed;
 		z-index: 996;
 		transform: translateY(10%);

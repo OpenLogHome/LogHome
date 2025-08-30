@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'dart:io';
-import 'dart:ui' as ui;
-import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:collection';
 import 'dart:async';
+import 'dart:convert';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import '../main.dart';  // 导入SplashScreen
 import '../utils/asset_utils.dart'; // 修正为相对路径导入
+import '../services/audio_player_handler.dart';
+
+// 使用main.dart中声明的全局变量
+// 不需要再次声明_audioHandler
 
 class WebViewPage extends StatefulWidget {
   final String localPath; // 新增参数
@@ -491,6 +494,80 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
         return false;
       },
     );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'replacePlaylist',
+      callback: (args) async {
+        if (args.isNotEmpty && args[0] is List) {
+          List<String> articleIds = List<String>.from(args[0]);
+          String? startArticleId;
+          
+          // 检查是否提供了起始文章ID
+          if (args.length > 1 && args[1] != null) {
+            startArticleId = args[1].toString();
+            print('指定从文章ID: $startArticleId 开始播放');
+          }
+          
+          await audioHandler.loadPlaylist(articleIds, startArticleId: startArticleId);
+          return true;
+        }
+        return false;
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'playAudio',
+      callback: (args) async {
+        audioHandler.play();
+        return true;
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'pauseAudio',
+      callback: (args) async {
+        audioHandler.pause();
+        return true;
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getPlaybackProgress',
+      callback: (args) async {
+        final progress = audioHandler.getProgress();
+        // 将Map转换为JSON字符串，以便在JavaScript中正确解析
+        return progress != null ? jsonEncode(progress) : null;
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setVoice',
+      callback: (args) async {
+        if (args.isNotEmpty && args[0] is String) {
+          String voice = args[0];
+          print('设置语音: $voice');
+          audioHandler.setVoice(voice);
+          return true;
+        }
+        return false;
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'jumpToArticleParagraph',
+      callback: (args) async {
+        print('收到跳转请求');
+        print(args);
+        if (args.length >= 2 && args[0] is String && args[1] is String) {
+          String articleId = args[0];
+          String paragraphId = args[1];
+          print('收到跳转请求：文章ID=$articleId, 段落ID=$paragraphId');
+          bool result = await audioHandler.jumpToArticleParagraph(articleId, paragraphId);
+          return result;
+        }
+        return false;
+      },
+    );
   }
 
   @override
@@ -515,8 +592,15 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
         systemNavigationBarColor: _currentNavBarColor,
         systemNavigationBarIconBrightness: _currentNavBarColor.computeLuminance() > 0.5 ? Brightness.dark : Brightness.light,
       ),
-      child: WillPopScope(
-        onWillPop: _onWillPop,
+      child: PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) async {
+          if (didPop) return;
+          final shouldPop = await _onWillPop();
+          if (shouldPop && context.mounted) {
+            Navigator.of(context).pop();
+          }
+        },
         child: Scaffold(
           // 设置为true允许内容区域随键盘调整
           resizeToAvoidBottomInset: true,
@@ -568,13 +652,25 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
                       _initializeJavaScriptHandlers(controller);
                       print("WebView Created");
 
-                      final uri = Uri.file(widget.localPath);
-                      print("Loading URL: $uri");
-                      controller.loadUrl(
-                        urlRequest: URLRequest(
-                          url: WebUri.uri(uri),
-                        ),
-                      );
+                      if (const bool.fromEnvironment('dart.vm.product') == false) {
+                        // 调试模式下加载特定链接
+                        final debugUrl = "http://10.0.2.2:8080";
+                        print("Debug mode: Loading URL: $debugUrl");
+                        controller.loadUrl(
+                          urlRequest: URLRequest(
+                            url: WebUri(debugUrl),
+                          ),
+                        );
+                      } else {
+                        // 非调试模式下加载本地文件
+                        final uri = Uri.file(widget.localPath);
+                        print("Production mode: Loading URL: $uri");
+                        controller.loadUrl(
+                          urlRequest: URLRequest(
+                            url: WebUri.uri(uri),
+                          ),
+                        );
+                      }
                     },
                     onLoadStart: (controller, url) {
                       print("Page load started: $url");

@@ -150,25 +150,6 @@
 				// 之后每30秒执行一次心跳
 				setInterval(heartBeat,30000);
 			},
-			editorInit(){
-				let _this = this;
-				//这里初始化并进行编辑器自动保存的相关工作
-				let EditorAutoSaveProps = window.localStorage.getItem("EditorAutoSave");
-				if(EditorAutoSaveProps){
-					EditorAutoSaveProps = JSON.parse(EditorAutoSaveProps);
-				} else {
-					EditorAutoSaveProps = {
-						timeSpan:5,
-						maxAmount:100
-					}
-					window.localStorage.setItem("EditorAutoSave",JSON.stringify(EditorAutoSaveProps));
-				}
-				
-				setInterval(()=>{
-					this.$bus.$emit("AutoSave");
-					// console.log("本地保存");
-				},EditorAutoSaveProps.timeSpan*1000*60);
-			},
 			updateNavidationBarTheme(){
 				if(this.$store.state.isDarkMode) {
 					uni.setTabBarStyle({

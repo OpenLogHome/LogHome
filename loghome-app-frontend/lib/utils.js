@@ -1,3 +1,6 @@
+import axios from 'axios';
+import Vue from 'vue';
+
 /**
  * date转化为hh:mm
  */
@@ -141,4 +144,26 @@ export function blendHexColors(bottomHex, topHex) {
     }
 
     return `#${toHex(outR)}${toHex(outG)}${toHex(outB)}${toHex(Math.round(outA * 255))}`;
+}
+
+/**
+ * 获取服务器时间，格式为yyyymmddhhmmss
+ * @returns {Promise<string>} 格式化的服务器时间
+ */
+export async function getServerTime() {
+    try {
+        // 发送请求获取服务器时间
+        const response = await axios.get(Vue.prototype.$baseUrl + '/app/get_server_time');
+        
+        // 如果请求成功并且返回了时间数据
+        if (response.data) {
+            return response.data.server_time;
+        } else {
+            console.error('获取服务器时间失败:', response.data);
+            return '';
+        }
+    } catch (error) {
+        console.error('获取服务器时间出错:', error);
+        return '';
+    }
 }

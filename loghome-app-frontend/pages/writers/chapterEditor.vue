@@ -1,10 +1,15 @@
 <template>
-	<div class="outer" :class="writerSettings.theme" :style="{'transition': 'background-color .5s, color .5s', '--statusBarHeight': 0 + 'px'}"
-	@touchstart="documentOnPress=true; clearEditorImagesEditButton()" @touchend="documentOnPress=false">
+	<div class="outer" :class="writerSettings.theme"
+		:style="{ 'transition': 'background-color .5s, color .5s', '--statusBarHeight': 0 + 'px' }"
+		@touchstart="documentOnPress = true; clearEditorImagesEditButton()" @touchend="documentOnPress = false">
 		<div class="topBar">
 			<input class="input" placeholder="章节标题" v-model="article.title"
 				:style="{ fontSize: writerSettings.fontSize + 'rpx' }" />
-			<div class="textCount">{{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图</div>
+			<div class="textCount">
+				{{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图
+				<div class="saveNotify"><complete-icon ref="completeIcon" style="margin-right: 5rpx; transform: translateY(5rpx);"></complete-icon>
+				</div>
+			</div>
 		</div>
 		<div class="middleBar">
 			<editor class="textarea" placeholder="" @input="onInput" @ready="onEditorReady"
@@ -67,6 +72,9 @@
 				</div>
 			</view>
 		</uni-popup>
+
+		<!-- 版本冲突对话框 -->
+		<conflict-dialog ref="conflictDialog"></conflict-dialog>
 	</div>
 </template>
 
@@ -74,10 +82,15 @@
 import axios from 'axios'
 import toolBox from '../../components/essay_toolBox/toolBox.vue'
 import uniFab from '../../uni_modules/uni-fab/components/uni-fab/uni-fab.vue'
+import conflictDialog from '../../components/conflictDialog.vue'
 import { rpxToPx } from "../../lib/utils.js"
+import { writerArticleDB } from "../../lib/db.js"
+import { getServerTime } from "../../lib/utils.js"
+import completeIcon from '../../components/completeIcon.vue'
+import uniIcons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
 export default {
 	components: {
-		uniFab, toolBox
+		uniFab, toolBox, conflictDialog, completeIcon, uniIcons
 	},
 	data() {
 		return {
@@ -110,6 +123,7 @@ export default {
 			article_changed: false,
 			selectText: "",
 			saveInterval: undefined,
+			slowSaveInterval: undefined, // 慢保存定时器
 			firstLocalCheck: true,
 			writerSettings: {},
 			lastDetailText: undefined,
@@ -140,28 +154,21 @@ export default {
 				}
 			},
 			imageEditInterval: undefined,
-			documentOnPress: false
+			documentOnPress: false,
+			loadComplete: false,
+			notIncrementalChangeCount: 0,
+			lastSaveTime: new Date(),
+			lastInputTime: new Date(),
+			lastUploadTime: new Date(),
+			hasNewInput: false,
+			saveNotifyText: "已保存"
 		}
 	},
 	onBackPress(e) {
-		if (e.from === 'navigateBack') {
-			return false;
-		}
-		if (this.article_changed) {
-			this.$nextTick(function () {
-				uni.showModal({
-					title: '提示',
-					content: '您的改动还没有保存，确定离开吗？',
-					success: function (res) {
-						if (res.confirm) {
-							uni.navigateBack({});
-						}
-					}
-				});
-			})
-			return true;
-		} else {
-		}
+	},
+	beforeDestroy() {
+		// 组件销毁前清理所有定时器
+		this.endLocalSaveTimer();
 	},
 	methods: {
 		utc2timestamp(utc_datetime) {
@@ -234,21 +241,205 @@ export default {
 			}
 			return delta;
 		},
-		//编辑器准备完毕以后执行初始化代码
-		onEditorReady() {
-			uni.hideLoading();
+		async getArticleWriter() {
 			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
-			axios.get(this.$baseUrl + '/essays/get_article?id=' + this.chapterId,
+			let res = await axios.get(this.$baseUrl + '/essays/get_article_writer?id=' + this.chapterId,
 				{
 					headers: {
 						'Content-Type': 'application/json', //设置请求头请求格式为JSON
 						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 					}
 				}
-			).then((res) => {
-				this.article = res.data[0];
-				this.cloudTime = this.article.update_time;
-				let that = this;
+			)
+			return res;
+		},
+		async syncArticleWriter() {
+			let currentServerTime = await getServerTime();
+			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
+			let res = await axios.post(this.$baseUrl + '/essays/sync_article_writer_from_reader',
+				{
+					article_id: this.chapterId,
+					create_time: currentServerTime
+				},
+				{
+					headers: {
+						'Content-Type': 'application/json', //设置请求头请求格式为JSON
+						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+					}
+				}
+			)
+			return res;
+		},
+		async uploadArticleWriter(currentServerTime, isFastSave=false, isForce=false) {
+			this.lastUploadTime = new Date();
+			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
+			let res = await axios.post(this.$baseUrl + '/essays/upload_article_writer',
+				{
+					article_id: this.chapterId,
+					title: this.article.title,
+					content: this.article.content,
+					create_time: currentServerTime,
+					novel_id: this.article.novel_info.novel_id,
+					is_fast_save: isFastSave,
+					is_force: isForce
+				},
+				{
+					headers: {
+						'Content-Type': 'application/json', //设置请求头请求格式为JSON
+						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+					}
+				}
+			)
+			// uni.showToast({
+			// 	title: '同步成功',
+			// 	icon: 'success',
+			// 	duration: 2000
+			// })
+			return res;
+		},
+		//编辑器准备完毕以后执行初始化代码
+		async onEditorReady() {
+			uni.hideLoading();
+			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
+			try {
+				let res = await this.getArticleWriter();
+
+				const localArticles = await writerArticleDB.articles
+					.where('article_id')
+					.equals(Number(this.chapterId))
+					.toArray();
+
+				let latestLocalArticle = undefined;
+				if (localArticles.length > 0) {
+					latestLocalArticle = localArticles.reduce((latest, current) => {
+						return latest.create_time > current.create_time ? latest : current;
+					});
+				}
+
+				// 判断云端内容和本地内容的情况
+				let hasLocalContent = (latestLocalArticle != undefined);
+				let hasCloudContent = (res.data != "no data");
+
+
+				if (hasCloudContent && hasLocalContent) {
+					// 云端内容与本地内容时间不一致，提示用户保留哪一份
+					if (latestLocalArticle.create_time != res.data.create_time) {
+						await new Promise((resolve, reject) => {
+							// 解析云端和本地版本的content，统计字数、图数
+							const localContent = JSON.parse(latestLocalArticle.content);
+							const cloudContent = JSON.parse(res.data.content);
+
+							// 统计本地版本的字数和图片数
+							let localTextCount = 0;
+							let localImageCount = 0;
+							localContent.forEach(item => {
+								if (item.type === 'text') {
+									localTextCount += item.value.length;
+								} else if (item.type === 'image') {
+									localImageCount++;
+								}
+							});
+
+							// 统计云端版本的字数和图片数
+							let cloudTextCount = 0;
+							let cloudImageCount = 0;
+							cloudContent.forEach(item => {
+								if (item.type === 'text') {
+									cloudTextCount += item.value.length;
+								} else if (item.type === 'image') {
+									cloudImageCount++;
+								}
+							});
+
+							// 将YYYYMMDDhhmmdd格式的字符串转换为时间格式YYYY-MM-DD HH:MM:SS
+							const formatTime = (dateString) => {
+								// 确保输入是字符串
+								dateString = String(dateString);
+
+								// 解析YYYYMMDDhhmmdd格式
+								const year = dateString.substring(0, 4);
+								const month = dateString.substring(4, 6);
+								const day = dateString.substring(6, 8);
+								const hours = dateString.substring(8, 10);
+								const minutes = dateString.substring(10, 12);
+								const seconds = dateString.length >= 14 ? dateString.substring(12, 14) : '00';
+
+								return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+							};
+
+							const localTimeFormatted = formatTime(latestLocalArticle.create_time);
+							const cloudTimeFormatted = formatTime(res.data.create_time);
+
+							// 尝试使用自定义弹窗组件，提供更舒适的UI体验
+							try {
+								this.$refs.conflictDialog.show({
+									title: '版本冲突提示',
+									type: 'conflict',
+									local: {
+										time: localTimeFormatted,
+										isNewer: localTimeFormatted > cloudTimeFormatted,
+										textCount: localTextCount,
+										imageCount: localImageCount
+									},
+									cloud: {
+										time: cloudTimeFormatted,
+										isNewer: cloudTimeFormatted > localTimeFormatted,
+										textCount: cloudTextCount,
+										imageCount: cloudImageCount
+									},
+									callback: async (action) => {
+										if (action === 'local') {
+											// 保留本地内容
+											this.article = { ...res.data, ...latestLocalArticle };
+											resolve();
+										} else if (action === 'cloud') {
+											// 保留云端内容
+											this.article = res.data;
+											resolve();
+										} else {
+											// 取消操作
+											resolve();
+										}
+										// 无论如何，同步本地内容、上传云端内容
+										let currentServerTime = await getServerTime();
+										this.slowSaveLocalArticle(currentServerTime, true);
+										this.uploadArticleWriter(currentServerTime, false, true);
+									}
+								});
+							} catch (error) {
+								uni.showToast({
+									title: '版本冲突检测失败，请联系管理员',
+									icon: 'none',
+									duration: 2000
+								});
+								return;
+							}
+						})
+					} else {
+						// 云端内容与本地内容时间一致，使用哪个都没问题
+						this.article = { ...res.data, ...latestLocalArticle };
+					}
+				}
+
+				if (hasCloudContent && !hasLocalContent) {
+					// 本地没有内容，云端有内容，使用云端内容
+					this.article = res.data;
+				}
+
+
+				if(!hasCloudContent) {
+					// 云端没有内容，向云端请求从reader_articles中把内容同步过来。
+					await this.syncArticleWriter();
+					// 同步完成后，重新获取一次内容
+					await new Promise((resolve, reject) => {
+						setTimeout(() => {
+							resolve();
+						}, 500);
+					});
+					res = await this.getArticleWriter();
+					this.article = res.data;
+				}
+
 				uni.createSelectorQuery().select('.textarea').context((res) => {
 					this.editorCtx = res.context;
 					this.editorCtx.setContents({//赋值
@@ -259,20 +450,17 @@ export default {
 					});
 				}).exec();
 				this.countText();
-				let dbStatus = window.localStorage.getItem("IndexedDB");
-
-				if (this.chapterId && dbStatus == "enabled" && this.$store.state.appVersion) {
-					this.saveToBackUp(this.article.title, this.article.content);
-				}
-			}).catch(function (error) {
+				// 启动本地备份服务
+				this.startLocalSaveTimer()
+			} catch (error) {
 				uni.showToast({
 					title: error.toString(),
 					icon: 'none',
 					duration: 2000
 				});
-			}).then(function () {
-				uni.hideLoading();
-			})
+			}
+			this.loadComplete = true;
+			uni.hideLoading();
 		},
 		save(drafting, msg) {
 			if (this.article.title.replace(/(^\s*)|(\s*$)/g, "") == "" || this.article.content.replace(/(^\s*)|(\s*$)/g, "") == "") {
@@ -325,19 +513,19 @@ export default {
 				})
 		},
 		countText() {
-			// 获取编辑器内容
-			this.editorCtx.getContents({
-				success: (res) => {
-					// 字数统计：去除空格和换行符后的长度
-					let text = res.text.replace(/\s+/g, '');
-					this.textCount = text.length;
-
-					// 图片统计：通过 delta 数据统计图片数量
-					this.imageCount = res.delta.ops.filter(op => op.insert && op.insert.image).length;
+			this.textCount = 0;
+			this.imageCount = 0;
+			for(let item of JSON.parse(this.article.content)){
+				if(item.type == "text"){
+					this.textCount += item.value.length;
+				} else if(item.type == "image") {
+					this.imageCount ++;
 				}
-			});
+			}
 		},
 		onInput(e) {
+			this.lastInputTime = new Date();
+			this.hasNewInput = true;
 			if (e.detail.text) {
 				if (this.lastDetailText) {
 					let currentRichContent = JSON.parse(this.article.content);
@@ -365,8 +553,8 @@ export default {
 			}
 			setTimeout(() => {
 				let qlEditorDom = document.querySelector(".ql-editor");
-				if(qlEditorDom !== undefined){
-					if(qlEditorDom.scrollHeight - qlEditorDom.scrollTop - qlEditorDom.clientHeight <= rpxToPx(30)) {
+				if (qlEditorDom !== undefined) {
+					if (qlEditorDom.scrollHeight - qlEditorDom.scrollTop - qlEditorDom.clientHeight <= rpxToPx(30)) {
 						qlEditorDom.scrollTo(0, qlEditorDom.scrollHeight + qlEditorDom.clientHeight)
 					}
 				}
@@ -472,151 +660,293 @@ export default {
 				}
 			});
 		},
-		saveToBackUp(title, content) {
-			let version = this.$DBVersion
-			let _this = this;
-			let IDBOpenDBRequest = indexedDB.open('LogCommunity', version);
+		async saveLocalArticle(currentServerTime) {
+			console.log("saveLocalArticle - 快保存");
+			this.lastSaveTime = new Date();
+			try {
+				// 获取当前文章内容
+				const currentContent = JSON.parse(this.article.content);
+				const articleId = this.article.article_id;
+				console.log(articleId)
 
-			var db;
+				// 查找最近保存的本地文章（只查找快保存的记录）
+				const localArticles = await writerArticleDB.articles
+					.where('article_id')
+					.equals(articleId)
+					.and(article => article.is_slow_save !== true) // 只查找快保存的记录
+					.toArray();
 
-			IDBOpenDBRequest.onsuccess = function (e) {
+				console.log(`找到 ${localArticles.length} 个本地快保存的文章版本`);
 
-				db = e.target.result;
+				if (localArticles.length === 0) {
+					// 如果不存在本地文章，则保存当前版本
+					console.log('不存在本地快保存文章，保存当前版本');
+					await writerArticleDB.articles.add({
+						article_id: articleId,
+						title: this.article.title,
+						content: this.article.content,
+						create_time: currentServerTime,
+						is_slow_save: false // 标记为快保存
+					});
+					this.updateSaveNotify("已保存更改", true);
+					console.log('本地快保存文章保存成功');
+				} else {
+					// 获取最新的本地文章
+					const latestLocalArticle = localArticles.reduce((latest, current) => {
+						return latest.create_time > current.create_time ? latest : current;
+					});
 
-				// 创建一个事务，类型：IDBTransaction，文档地址： https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction
-				var transaction = db.transaction('articleBackup', 'readwrite');
+					const localContent = JSON.parse(latestLocalArticle.content);
 
-				// 通过事务来获取IDBObjectStore
-				var store = transaction.objectStore('articleBackup');
+					// 使用双指针算法检测增量修改
+					let isIncrementalChange = true;
+					let hasNewContent = false;
 
-				let data = {
-					article_title: _this.article.title,
-					article_content: _this.article.content,
-					article_id: _this.chapterId,
-					time: Date.now(),
-					text_count: _this.textCount
-				}
+					// 创建一个映射来跟踪本地内容中每个元素的位置
+					const localItemMap = new Map();
+					localContent.forEach((item, index) => {
+						// 使用类型和内容作为键
+						const key = item.type === 'text' ?
+							`text_${item.value}` :
+							`image_${item.img}`;
 
+						if (!localItemMap.has(key)) {
+							localItemMap.set(key, []);
+						}
+						localItemMap.get(key).push(index);
+					});
 
-				// 往store表中添加数据
-				var addArticleRequest = store.add(data);
+					// 使用动态规划找到最长公共子序列
+					const lcs = [];
+					const matchedLocal = new Set();
+					const matchedCurrent = new Set();
 
-			};
+					// 检查文本是否为增量修改（只增加了字符，没有删除字符）
+					const isTextIncremental = (oldText, newText) => {
+						// 如果新文本比旧文本短，肯定不是增量修改
+						if (newText.length < oldText.length) return false;
 
-		},
-		saveLocalArticle() {
-			let dbStatus = window.localStorage.getItem("IndexedDB");
-			let chapterId = this.chapterId;
-			// console.log(this.article);
-			let _this = this;
-			// indexedDB本地文章查询
-			if (chapterId != 0 && dbStatus == "enabled") {
+						// 使用双指针检查是否只是增加了字符
+						let i = 0, j = 0;
+						while (i < oldText.length && j < newText.length) {
+							if (oldText[i] === newText[j]) {
+								i++;
+								j++;
+							} else {
+								// 如果字符不匹配，只移动新文本指针
+								j++;
+							}
+						}
 
-				let version = this.$DBVersion
-				let IDBOpenDBRequest = indexedDB.open('LogCommunity', version);
+						// 如果旧文本指针到达末尾，说明所有旧字符都在新文本中找到了
+						return i === oldText.length;
+					};
 
-				var db;
+					// 第一遍：找出完全匹配的元素和增量修改的文本
+					currentContent.forEach((currentItem, currentIndex) => {
+						// 对于图片，使用完全匹配
+						if (currentItem.type === 'image') {
+							const key = `image_${currentItem.img}`;
 
-				IDBOpenDBRequest.onsuccess = function (e) {
-
-					db = e.target.result
-
-					// 创建一个事务，类型：IDBTransaction，文档地址： https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction
-					var transaction = db.transaction('localArticles', 'readwrite');
-
-					// 通过事务来获取IDBObjectStore
-					var store = transaction.objectStore('localArticles');
-
-					var request = store.openCursor(IDBKeyRange.only(chapterId.toString()));
-
-					request.onsuccess = function (e) {
-						uni.hideLoading();
-						var cursor = e.target.result;
-						// 如果找到数据了
-						if (cursor) {
-							var result = cursor.value;
-							// console.log("localArticles",result)
-							if (_this.article.content != undefined) {
-								let cloudTime = _this.cloudTime;
-								//如果本地存档新于云端存档
-								if (_this.utc2timestamp(cloudTime) < result.time) {
-									// console.log(_this.utc2timestamp(cloudTime),result.time);
-									if (_this.firstLocalCheck) {
-										if (result.article_content != _this.article.content) {
-											_this.endLocalSaveTimer();
-											uni.showModal({
-												title: '提示',
-												content: '你有未保存的存稿，是否恢复到上次退出时状态？',
-												success: function (res) {
-													if (res.confirm) {
-														_this.article.title = result.article_title;
-														_this.article.content = result.article_content;
-													}
-													uni.createSelectorQuery().select('.textarea').context((res) => {
-														_this.editorCtx = res.context;
-														_this.editorCtx.setContents({//赋值
-															delta: _this.rich2Delta(JSON.parse(_this.article.content)),
-															success: () => {
-																_this.handleSetContent();
-															}
-														});
-													}).exec();
-													_this.countText();
-													_this.startLocalSaveTimer();
-												}
-											});
-										}
-										_this.firstLocalCheck = false;
-									} else {
-										store.put({
-											article_id: chapterId,
-											article_title: _this.article.title,
-											article_content: _this.article.content,
-											time: Date.now() - 1000,
-										}).onsuccess = function (event) {
-											// console.log('存稿保存成功');
-										};
+							if (localItemMap.has(key)) {
+								// 找到第一个未匹配的位置
+								const possibleMatches = localItemMap.get(key);
+								for (const localIndex of possibleMatches) {
+									if (!matchedLocal.has(localIndex)) {
+										lcs.push({ currentIndex, localIndex });
+										matchedLocal.add(localIndex);
+										matchedCurrent.add(currentIndex);
+										break;
 									}
-								} else {
-									_this.firstLocalCheck = false;
-									store.put({
-										article_id: chapterId,
-										article_title: _this.article.title,
-										article_content: _this.article.content,
-										time: Date.now() - 1000,
-									}).onsuccess = function (event) {
-										// console.log('存稿保存成功');
-									};
 								}
 							}
-						} else {
-							//没有找到数据
-							console.log("没找到本地文章数据")
-							_this.firstLocalCheck = false;
-							if (_this.article.content != undefined) {
-								store.add({
-									article_id: chapterId,
-									article_title: _this.article.title,
-									article_content: _this.article.content,
-									time: Date.now() - 1000,
-								}).onsuccess = function (event) {
-									console.log('数据写入成功');
-								};
+						} else { // 对于文本，先尝试完全匹配，再尝试增量匹配
+							const key = `text_${currentItem.value}`;
+
+							// 尝试完全匹配
+							if (localItemMap.has(key)) {
+								const possibleMatches = localItemMap.get(key);
+								for (const localIndex of possibleMatches) {
+									if (!matchedLocal.has(localIndex)) {
+										lcs.push({ currentIndex, localIndex });
+										matchedLocal.add(localIndex);
+										matchedCurrent.add(currentIndex);
+										break;
+									}
+								}
+							} else {
+								// 如果没有完全匹配，尝试查找增量修改的文本
+								for (let i = 0; i < localContent.length; i++) {
+									if (!matchedLocal.has(i) && localContent[i].type === 'text') {
+										const oldText = localContent[i].value;
+										const newText = currentItem.value;
+
+										if (isTextIncremental(oldText, newText)) {
+											console.log(`检测到段落内增量修改: ${oldText} -> ${newText}`);
+											lcs.push({ currentIndex, localIndex: i });
+											matchedLocal.add(i);
+											matchedCurrent.add(currentIndex);
+											break;
+										}
+									}
+								}
 							}
-
-
 						}
+					});
+
+					// 排序LCS，确保顺序正确
+					lcs.sort((a, b) => a.localIndex - b.localIndex);
+
+					// 统计段落内增量修改的数量
+					let internalIncrementalCount = 0;
+					lcs.forEach(match => {
+						const localItem = localContent[match.localIndex];
+						const currentItem = currentContent[match.currentIndex];
+
+						if (localItem.type === 'text' && currentItem.type === 'text' &&
+							localItem.value !== currentItem.value) {
+							internalIncrementalCount++;
+						}
+					});
+
+					// 检查是否有新增内容（包括新段落或段落内的增量修改）
+					hasNewContent = currentContent.length > lcs.length || internalIncrementalCount > 0;
+
+					if(latestLocalArticle.title != this.article.title) {
+						hasNewContent = true;
 					}
-				};
+
+					// 检查是否是纯增量修改
+					// 如果所有本地内容都在当前内容中找到了匹配，则是增量修改
+					isIncrementalChange = matchedLocal.size === localContent.length;
+
+					console.log(`LCS长度: ${lcs.length}, 本地内容长度: ${localContent.length}, 当前内容长度: ${currentContent.length}`);
+					console.log(`段落内增量修改数量: ${internalIncrementalCount}`);
+					console.log(`是否为增量修改: ${isIncrementalChange}, 是否有新增内容: ${hasNewContent}`);
+
+					// 如果有未匹配的本地内容，则不是增量修改
+					if (matchedLocal.size < localContent.length) {
+						console.log(`有 ${localContent.length - matchedLocal.size} 个本地段落未匹配，非增量修改`);
+						isIncrementalChange = false;
+					}
+
+					// 如果是增量修改，删除上个版本并保存新版本
+					if (isIncrementalChange && hasNewContent) {
+						console.log('检测到增量修改');
+						await writerArticleDB.articles.delete(latestLocalArticle.id);
+						await writerArticleDB.articles.add({
+							article_id: articleId,
+							title: this.article.title,
+							content: this.article.content,
+							create_time: currentServerTime,
+							is_slow_save: false // 标记为快保存
+						});
+						this.updateSaveNotify("已保存更改", true);
+						console.log('新版本保存成功');
+					} else if (!isIncrementalChange) {
+						// 如果不是增量修改，直接保存新版本
+						console.log('检测到非增量修改');
+						this.notIncrementalChangeCount ++;
+						if(this.notIncrementalChangeCount >= 10) {
+							// 非增量修改次数超过10次，执行慢保存
+							this.notIncrementalChangeCount = 0;
+							await this.slowSaveLocalArticle(currentServerTime);
+							await this.uploadArticleWriter(currentServerTime);
+							return;
+						}
+						await writerArticleDB.articles.delete(latestLocalArticle.id);
+						await writerArticleDB.articles.add({
+							article_id: articleId,
+							title: this.article.title,
+							content: this.article.content,
+							create_time: currentServerTime,
+							is_slow_save: false // 标记为快保存
+						});
+						this.updateSaveNotify("已保存更改", true);
+						console.log('新版本保存成功');
+					} else {
+						console.log('内容未发生变化，无需保存');
+					}
+				}
+			} catch (error) {
+				console.error('保存本地文章时出错:', error);
+			}
+		},
+
+		// 慢保存方法 - 如果与上次记录不一样就保存
+		async slowSaveLocalArticle(currentServerTime, isForce) {
+			console.log("slowSaveLocalArticle - 慢保存");
+			// let currentServerTime = await getServerTime();
+			try {
+				// 获取当前文章内容
+				const articleId = this.article.article_id;
+				console.log(`慢保存文章ID: ${articleId}`);
+
+				if(!isForce) {
+					// 检查是否与上次记录不一样
+					const localArticles = await writerArticleDB.articles
+						.where('article_id')
+						.equals(Number(this.article.article_id))
+						.toArray();
+					let latestLocalArticle = null;
+					console.log(localArticles);
+					if(localArticles.length > 0) {
+						latestLocalArticle = localArticles.reduce((prev, current) => {
+							return prev.create_time > current.create_time ? prev : current;
+						});
+					}
+
+					if(latestLocalArticle && latestLocalArticle.content == this.article.content && latestLocalArticle.title == this.article.title) {
+						console.log('内容未发生变化，无需保存');
+						return;
+					}
+				}
+
+				// 直接保存当前版本，不进行增量修改检测
+				await writerArticleDB.articles.add({
+					article_id: articleId,
+					title: this.article.title,
+					content: this.article.content,
+					create_time: currentServerTime,
+					is_slow_save: true // 标记为慢保存
+				});
+				console.log('慢保存成功');
+
+			} catch (error) {
+				console.error('慢保存本地文章时出错:', error);
 			}
 		},
 		startLocalSaveTimer() {
-			this.saveInterval = setInterval(() => {
-				this.saveLocalArticle();
-			}, 1000)
+			// 快保存定时器 - 1秒一次
+			this.saveInterval = setInterval(async () => {
+				// 检查是否超过1秒未输入
+				if (new Date() - this.lastInputTime > 1000 && this.hasNewInput) {
+					// 超过1秒未输入，执行快保存
+					this.lastInputTime = new Date();
+					this.hasNewInput = false;
+					let currentServerTime = await getServerTime();
+					this.saveLocalArticle(currentServerTime);
+					this.uploadArticleWriter(currentServerTime, true);
+					return;
+				}
+
+				if (new Date() - this.lastSaveTime > 10000) {
+					// 超过10秒未保存，执行快保存
+					let currentServerTime = await getServerTime();
+					await this.saveLocalArticle(currentServerTime);
+					await this.uploadArticleWriter(currentServerTime, true);
+					return;
+				}
+			}, 1000);
 		},
-		endLocalSaveTimer() {
+		async endLocalSaveTimer() {
+			// 清理所有定时器
 			clearInterval(this.saveInterval);
+			let currentServerTime = await getServerTime();
+			if (this.loadComplete) {
+				this.slowSaveLocalArticle(currentServerTime);
+				this.uploadArticleWriter(currentServerTime, false);
+			}
 		},
 		fontSizeChanged() {
 			window.localStorage.setItem("writerSettings", JSON.stringify(this.writerSettings));
@@ -634,7 +964,7 @@ export default {
 			})
 			pageHead.style.backgroundColor = this.themes[this.writerSettings.theme].backColor;
 			// 状态栏颜色调整
-			if(window.jsBridge && window.jsBridge.inApp) {
+			if (window.jsBridge && window.jsBridge.inApp) {
 				jsBridge.setSystemUIStyle(this.themes[this.writerSettings.theme].backColor, this.themes[this.writerSettings.theme].color);
 			}
 		},
@@ -646,8 +976,8 @@ export default {
 		showEditorImagesEditButton() {
 			// 1. 首先移除所有已存在的编辑按钮
 			this.clearEditorImagesEditButton();
-			
-			if(this.documentOnPress) return;
+
+			if (this.documentOnPress) return;
 
 			// 2. 获取编辑器和所有图片
 			const editor = document.querySelector('.ql-editor');
@@ -735,9 +1065,20 @@ export default {
 				this.showEditorImagesEditButton();
 			}, 500)
 		},
+		updateSaveNotify(text, playAnimation) {
+			this.saveNotifyText = text;
+			if(playAnimation) this.$refs.completeIcon.playAnimation();
+		},
 	},
 	onNavigationBarButtonTap(e) {
-		if (e.text == "\ue61f ") {
+		if (e.text == '\ue60e ') {
+			uni.navigateBack();
+			setTimeout(()=> {
+				uni.navigateTo({
+					url: `/pages/writers/chapterTimeMachine?id=${this.chapterId}&novelId=${this.article.novel_info.novel_id}`
+				});
+			}, 300)
+		}else if (e.text == "\ue61f ") {
 			uni.chooseImage({
 				success: (chooseImageRes) => {
 					uni.showToast({
@@ -797,10 +1138,14 @@ export default {
 			});
 		} else if (e.text == "\ue629 ") {//整理样式
 			this.formatEssay();
-		} else if (e.text == "完成 ") {
+		} else if (e.text == "发布 ") {
 			let _this = this;
+			let itemList = ['发布章节'];
+			if(_this.article.is_draft == 0){
+				itemList.push("退回章节为草稿");
+			}
 			uni.showActionSheet({
-				itemList: ['发布章节', "保存为草稿"],
+				itemList,
 				success: function (res) {
 					if (res.tapIndex == 0) {
 						if (_this.article.novel_info.is_personal == 1) {
@@ -817,7 +1162,7 @@ export default {
 						if (_this.article.is_draft == 0) {
 							uni.showModal({
 								title: '提示',
-								content: '存草稿会使已发布的章节下架，确定继续吗？',
+								content: '退回章节为草稿会使已发布的章节下架，确定继续吗？',
 								success: function (res) {
 									if (res.confirm) {
 										_this.save(1, "保存成功");
@@ -843,19 +1188,6 @@ export default {
 			title: '编辑器初始化'
 		});
 
-		let dbStatus = window.localStorage.getItem("IndexedDB");
-		// indexedDB历史备份查询
-		if (params.id && dbStatus == "enabled") {
-			this.$bus.$on("AutoSave", () => {
-				// console.log("AutoSave");
-				this.saveToBackUp(this.article.title, this.article.content);
-			})
-		}
-
-		this.startLocalSaveTimer()
-
-
-		let _this = this;
 		let writerSettings = window.localStorage.getItem("writerSettings");
 		if (writerSettings && JSON.parse(writerSettings)["version"] == 220412) {
 			this.writerSettings = JSON.parse(writerSettings);
@@ -885,7 +1217,6 @@ export default {
 
 	},
 	beforeDestroy() {
-		this.$bus.$off('AutoSave');
 		clearInterval(this.imageEditInterval);
 		this.clearEditorImagesEditButton();
 		this.endLocalSaveTimer();
@@ -903,13 +1234,12 @@ export default {
 		border-bottom: #a6a6a6 1px solid;
 		position: relative;
 		box-shadow:
-		  0px 4px 1.5px rgba(0, 0, 0, 0.006),
-		  0px 9.7px 3.5px rgba(0, 0, 0, 0.008),
-		  0px 18.3px 6.6px rgba(0, 0, 0, 0.01),
-		  0px 32.6px 11.8px rgba(0, 0, 0, 0.012),
-		  0px 61px 22.1px rgba(0, 0, 0, 0.014),
-		  0px 146px 53px rgba(0, 0, 0, 0.02)
-		;
+			0px 4px 1.5px rgba(0, 0, 0, 0.006),
+			0px 9.7px 3.5px rgba(0, 0, 0, 0.008),
+			0px 18.3px 6.6px rgba(0, 0, 0, 0.01),
+			0px 32.6px 11.8px rgba(0, 0, 0, 0.012),
+			0px 61px 22.1px rgba(0, 0, 0, 0.014),
+			0px 146px 53px rgba(0, 0, 0, 0.02);
 
 		input {
 			height: 100%;
@@ -922,11 +1252,40 @@ export default {
 		}
 
 		div.textCount {
+			display: flex;
 			position: absolute;
 			right: 8rpx;
 			bottom: 0;
 			font-size: 28rpx;
 			color: rgb(175, 81, 38);
+			align-items: center;
+
+			div.saveNotify{
+				display: flex;
+				align-items: center;
+				margin-left: 10rpx;
+				color: rgb(156, 156, 156);
+			}
+			
+			div.time-machine-btn {
+				display: flex;
+				align-items: center;
+				margin-left: 15rpx;
+				padding: 5rpx 10rpx;
+				background-color: rgba(180, 111, 88, 0.1);
+				border-radius: 8rpx;
+				cursor: pointer;
+				
+				text {
+					margin-left: 5rpx;
+					color: #B46F58;
+					font-size: 24rpx;
+				}
+				
+				&:active {
+					opacity: 0.8;
+				}
+			}
 		}
 	}
 

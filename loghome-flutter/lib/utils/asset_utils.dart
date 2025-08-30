@@ -5,6 +5,12 @@ import 'package:archive/archive.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AssetUtils {
+  /// 判断当前是否为调试模式
+  static bool get isDebugMode {
+    // 使用Flutter内置的方法判断是否为调试模式
+    return const bool.fromEnvironment('dart.vm.product') == false;
+  }
+  
   /// 将版本字符串转换为可比较的整数值
   static int parseVersionString(String version) {
     try {

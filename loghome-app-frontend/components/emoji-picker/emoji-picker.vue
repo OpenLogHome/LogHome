@@ -162,7 +162,7 @@
 		</view>
 		
 		<!-- 表情包操作菜单 -->
-		<uni-popup ref="stickerOptionsPopup" type="bottom" :z-index="999">
+		<uni-popup ref="stickerOptionsPopup" type="bottom" :z-index="2000">
 			<view class="sticker-options">
 				<view class="option-item" @tap="toggleFavorite">
 					<text>{{ currentSticker.is_favorite ? '取消收藏' : '收藏' }}</text>
@@ -746,7 +746,6 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		z-index: 999;
 		/* 确保在移动端能正常滚动 */
 		-webkit-overflow-scrolling: touch;
 	}

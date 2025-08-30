@@ -1,5 +1,5 @@
 {
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+	"pages": [
 		{
 		    "path" : "pages/launch",
 		    "style" :                                                                                    
@@ -92,12 +92,6 @@
 			}
 		},
 		{
-			"path": "pages/writers/allVolumes",
-			"style": {
-				"navigationBarTitleText": "所有分卷"
-			}
-		},
-		{
 			"path": "pages/readers/novel_fans",
 			"style": {
 				"navigationBarTitleText": "书籍打赏榜"
@@ -147,6 +141,11 @@
 			"path": "pages/apps/about",
 			"style": {
 				"navigationBarTitleText": "关于我们"
+			}
+		},{
+			"path": "pages/apps/audio_test",
+			"style": {
+				"navigationBarTitleText": "有声书测试"
 			}
 		},{
             "path" : "pages/writers/newEssay",
@@ -205,6 +204,13 @@
 				}
             }
         },{
+            "path" : "pages/writers/chapterTimeMachine",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "章节时光机",
+                "enablePullDownRefresh": false
+            }
+        },{
             "path" : "pages/writers/chapterEditor",
             "style" :                                                                                    
             {
@@ -214,7 +220,7 @@
 					"titleColor": "rgb(180, 111, 88)",
 					"buttons": [				
 						{
-						    "text": "完成 ",
+						    "text": "发布 ",
 						    "fontSize": "36rpx",
 						    "float": "right"
 						},
@@ -245,8 +251,12 @@
 						    "text": "\ue61f ",
 						    "fontSize": "25px",
 						    "float": "right"
+						},{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue60e ",
+						    "fontSize": "24px",
+						    "float": "right"
 						}
-						
 				    ]
 				}
             }
@@ -382,6 +392,13 @@
 			"path": "pages/community/postView",
 			"style": {
 				"navigationBarTitleText": "帖子内容"
+			}
+		},
+		{
+			"path": "pages/users/storageManage",
+			"style": {
+				"navigationBarTitleText": "空间占用管理",
+				"enablePullDownRefresh": false
 			}
 		},
 		{

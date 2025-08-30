@@ -6,10 +6,24 @@ import 'dart:io';
 import 'utils/asset_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
-import 'pages/webview_page.dart';  // 新增导入
+import 'pages/webview_page.dart'; // 新增导入
+import 'package:audio_service/audio_service.dart';
+import 'services/audio_player_handler.dart';
+
+// 声明为全局变量，使其可以在其他文件中访问
+late AudioPlayerHandler audioHandler;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  audioHandler = await AudioService.init(
+    builder: () => AudioPlayerHandler(),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: 'io.loghome.app.channel.audio',
+      androidNotificationChannelName: 'Audio Playback',
+      androidNotificationOngoing: true,
+    ),
+  );
 
   await FlutterDisplayMode.setHighRefreshRate();
 
@@ -17,7 +31,7 @@ void main() async {
   if (Platform.isAndroid || Platform.isIOS) {
     await SystemChrome.setApplicationSwitcherDescription(
       const ApplicationSwitcherDescription(
-        label: '原木社区',
+        label: 'LogHome',
         primaryColor: 0xFF2196F3, // Material Blue
       ),
     );
@@ -27,7 +41,7 @@ void main() async {
     await Permission.storage.request();
     await InAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
-  
+
   // 确保系统UI模式设置为edgeToEdge，但保持状态栏和导航栏可见
   await SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.edgeToEdge,
@@ -53,11 +67,11 @@ class MyApp extends StatelessWidget {
       systemNavigationBarIconBrightness: Brightness.dark,
       systemNavigationBarDividerColor: Colors.transparent,
     );
-    
+
     SystemChrome.setSystemUIOverlayStyle(systemUiStyle);
 
     return MaterialApp(
-      title: '原木社区',
+      title: 'LogHome',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -134,13 +148,13 @@ class _SplashScreenState extends State<SplashScreen> {
     // 设置启动屏的系统UI样式
     final splashSystemUiStyle = SystemUiOverlayStyle(
       // 状态栏设置
-      statusBarColor: const Color(0xFF1B4B88),
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
       // 导航栏设置
-      systemNavigationBarColor: const Color(0xFF1B4B88),
-      systemNavigationBarIconBrightness: Brightness.light,
-      systemNavigationBarDividerColor: const Color(0xFF1B4B88),
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: Colors.transparent,
     );
     
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -149,12 +163,12 @@ class _SplashScreenState extends State<SplashScreen> {
         body: Container(
           width: double.infinity,
           height: double.infinity,
-          color: const Color(0xFF1B4B88), // 设置背景色为#1B4B88
+          color: Colors.white, // 设置背景色为白色
           child: SafeArea(
             // 使用SafeArea确保内容不会被系统UI覆盖
             bottom: true, // 特别注意底部安全区域
             child: Align(
-              alignment: Alignment.bottomCenter, // 图片沿屏幕底部对齐
+              alignment: Alignment.center, // 图片居中显示
               child: Image.asset(
                 'assets/images/splash.png',
                 fit: BoxFit.fitWidth, // 图片宽度适应屏幕

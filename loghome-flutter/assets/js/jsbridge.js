@@ -63,6 +63,47 @@ window.jsBridge = {
     hotUpdateAssets(url, version) {
         return window.flutter_inappwebview.callHandler('hotUpdateAssets', url, version);
     },
+
+    /**
+     * 替换播放列表
+     * @param {Array<string>} articleIds - 文章ID列表
+     * @param {string} [startArticleId] - 可选，指定从哪个文章开始播放，如果不指定则从第一个文章开始
+     * @returns {Promise<boolean>} - 替换是否成功
+     */
+    replacePlaylist(articleIds, startArticleId) {
+        return window.flutter_inappwebview.callHandler('replacePlaylist', articleIds, startArticleId);
+    },
+
+    /**
+     * 设置TTS语音
+     * @param {string} voice - 语音标识符，例如 'zh-CN-XiaoxiaoNeural'
+     * @returns {Promise<boolean>} - 设置是否成功
+     */
+    setVoice(voice) {
+        return window.flutter_inappwebview.callHandler('setVoice', voice);
+    },
+
+    playAudio() {
+        return window.flutter_inappwebview.callHandler('playAudio');
+    },
+
+    pauseAudio() {
+        return window.flutter_inappwebview.callHandler('pauseAudio');
+    },
+
+    getPlaybackProgress() {
+        return window.flutter_inappwebview.callHandler('getPlaybackProgress');
+    },
+
+    /**
+     * 跳转到指定文章的指定段落
+     * @param {string} articleId - 文章ID
+     * @param {string} paragraphId - 段落ID
+     * @returns {Promise<boolean>} - 跳转是否成功
+     */
+    jumpToArticleParagraph(articleId, paragraphId) {
+        return window.flutter_inappwebview.callHandler('jumpToArticleParagraph', articleId, paragraphId);
+    },
 };
 
 // 使用示例:

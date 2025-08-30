@@ -12,9 +12,9 @@ imgDB.version(1).stores({
   imgs: 'img_url, img_hash, img_blob, last_accessed_time',
 });
 
-const writerArticleDB = new Dexie('writerArticleDB');
-writerArticleDB.version(1).stores({
-  articles: `article_id, article_type, title, content, novel_id, article_chapter, create_time`
+const writerArticleDB = new Dexie('writerArticleDatabase');
+writerArticleDB.version(5).stores({
+  articles: `++id, article_id, title, content, create_time, is_slow_save`
 })
 
 export { articleDB, imgDB, writerArticleDB };

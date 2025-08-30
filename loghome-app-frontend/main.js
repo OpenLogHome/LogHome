@@ -22,8 +22,8 @@ Vue.component('theme-switch', ThemeSwitch);
 
 const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
-const BASE_URL_COMMUNITY_DEV = "http://127.0.0.1:5173"
-const BASE_URL_COMMUNITY_PRODUCTION = "https://loghome-moeblog.codesocean.top"
+const BASE_URL_EMULATOR_DEV = "http://10.0.2.2:9000"
+
 
 Vue.use(SlideVerify);
 Vue.use(ElementUI);
@@ -36,7 +36,6 @@ import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
 Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
-Vue.prototype.$baseUrlCommunity = BASE_URL_COMMUNITY_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
 	bookCover:"https://s4.ax1x.com/2022/01/13/7lYAlq.png"

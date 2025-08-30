@@ -492,4 +492,26 @@ router.get('/check_invite_eligibility', auth, async function (req, res) {
     }
 });
 
+// 获取服务器当前时间
+router.get('/get_server_time', async function (req, res) {
+    try {
+        const now = new Date();
+        
+        // 格式化为yyyymmddhhmmss
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const formattedTime = `${year}${month}${day}${hours}${minutes}${seconds}`;
+        
+        res.json({ server_time: formattedTime });
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({ msg: '获取服务器时间失败' });
+    }
+});
+
 module.exports = router;
