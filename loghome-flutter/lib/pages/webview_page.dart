@@ -568,6 +568,36 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
         return false;
       },
     );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'copyToClipboard',
+      callback: (args) async {
+        if (args.isNotEmpty && args[0] is String) {
+          String text = args[0];
+          try {
+            await Clipboard.setData(ClipboardData(text: text));
+            return true;
+          } catch (e) {
+            print('复制到剪贴板失败: $e');
+            return false;
+          }
+        }
+        return false;
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getClipboardData',
+      callback: (args) async {
+        try {
+          ClipboardData? data = await Clipboard.getData('text/plain');
+          return data?.text ?? '';
+        } catch (e) {
+          print('从剪贴板获取内容失败: $e');
+          return '';
+        }
+      },
+    );
   }
 
   @override

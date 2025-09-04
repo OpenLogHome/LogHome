@@ -104,6 +104,31 @@ window.jsBridge = {
     jumpToArticleParagraph(articleId, paragraphId) {
         return window.flutter_inappwebview.callHandler('jumpToArticleParagraph', articleId, paragraphId);
     },
+
+    /**
+     * 获取系统剪贴板内容
+     * @returns {Promise<string>} - 剪贴板内容，如果获取失败则返回空字符串
+     */
+    getClipboardData() {
+        return new Promise((resolve, reject) => {
+            window.flutter_inappwebview.callHandler('getClipboardData')
+                .then(resolve)
+                .catch(reject);
+        });
+    },
+
+    /**
+     * 复制文本到系统剪贴板
+     * @param {string} text - 要复制的文本内容
+     * @returns {Promise<boolean>} - 复制是否成功
+     */
+    copyToClipboard(text) {
+        return new Promise((resolve, reject) => {
+            window.flutter_inappwebview.callHandler('copyToClipboard', text)
+                .then(resolve)
+                .catch(reject);
+        });
+    },
 };
 
 // 使用示例:
@@ -142,4 +167,13 @@ console.log('设置系统UI为黑色');
 
 // 触发热更新示例：
 await window.jsBridge.hotUpdateAssets('https://yourdomain.com/web.zip', '250202');
+
+// 剪贴板操作示例
+// 复制文本到剪贴板
+await window.jsBridge.copyToClipboard('要复制的文本内容');
+console.log('文本已复制到剪贴板');
+
+// 获取剪贴板内容
+const clipboardText = await window.jsBridge.getClipboardData();
+console.log('剪贴板内容:', clipboardText);
 */

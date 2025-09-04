@@ -1,1 +1,2 @@
-npm run start
+#!/bin/bash
+/var/lang/node14/bin/node main.js

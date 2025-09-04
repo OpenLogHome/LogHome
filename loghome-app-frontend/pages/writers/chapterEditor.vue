@@ -322,8 +322,8 @@ export default {
 
 
 				if (hasCloudContent && hasLocalContent) {
-					// 云端内容与本地内容时间不一致，提示用户保留哪一份
-					if (latestLocalArticle.create_time != res.data.create_time) {
+					// 云端内容与本地内容不一致，提示用户保留哪一份
+					if (latestLocalArticle.content != res.data.content) {
 						await new Promise((resolve, reject) => {
 							// 解析云端和本地版本的content，统计字数、图数
 							const localContent = JSON.parse(latestLocalArticle.content);

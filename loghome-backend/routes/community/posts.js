@@ -889,4 +889,138 @@ router.get('/following', auth, async (req, res) => {
     }
 });
 
+// 创建帖子分享口令
+router.post('/create_share_code', auth, async function (req, res) {
+	try {
+		const { post_id, share_message, expires_hours = 24 } = req.body;
+		const user_id = req.user[0].user_id;
+		
+		if (!post_id) {
+			return res.status(400).json({ msg: '缺少帖子ID' });
+		}
+		
+		// 检查帖子是否存在且可访问
+		const post = await query(
+			'SELECT * FROM comm_posts WHERE post_id = ? AND status = 1',
+			[post_id]
+		);
+		
+		if (post.length === 0) {
+			return res.status(404).json({ msg: '帖子不存在或已被删除' });
+		}
+		
+		// 生成8位随机口令码
+		const generateCode = () => {
+			const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+			let result = '';
+			for (let i = 0; i < 8; i++) {
+				result += chars.charAt(Math.floor(Math.random() * chars.length));
+			}
+			return result;
+		};
+		
+		let code;
+		let isUnique = false;
+		
+		// 确保口令码唯一
+		while (!isUnique) {
+			code = generateCode();
+			const existing = await query('SELECT id FROM share_codes WHERE code = ?', [code]);
+			if (existing.length === 0) {
+				isUnique = true;
+			}
+		}
+		
+		const share_content = `${post[0].title} - ${post[0].content.substring(0, 50)}${post[0].content.length > 50 ? '...' : ''}`;
+		const target_url = `/pages/community/postDetail?id=${post_id}`;
+		const expires_at = moment().add(expires_hours, 'hours').format('YYYY-MM-DD HH:mm:ss');
+		
+		const result = await query(
+			`INSERT INTO share_codes (code, share_user_id, share_type, share_content, target_url, expires_at) 
+			 VALUES (?, ?, ?, ?, ?, ?)`,
+			[code, user_id, 'post', share_content, target_url, expires_at]
+		);
+		
+		res.json({
+			success: true,
+			code: code,
+			share_text: `【原木社区】${code}，` + (share_message || `我在原木社区发现了一个有趣的帖子：${post[0].title}，快来看看吧！`),
+			msg: '口令创建成功'
+		});
+		
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ msg: '服务器错误' });
+	}
+});
+
+// 解析分享口令
+router.post('/parse_share_code', async function (req, res) {
+	try {
+		const { code } = req.body;
+		
+		if (!code) {
+			return res.status(400).json({ msg: '口令不能为空' });
+		}
+		
+		// 查询口令信息
+		const shareInfo = await query(
+			`SELECT sc.*, u.name as share_user_name, u.avatar_url as share_user_avatar 
+			 FROM share_codes sc 
+			 LEFT JOIN users u ON sc.share_user_id = u.user_id 
+			 WHERE sc.code = ? AND sc.is_active = 1`,
+			[code]
+		);
+		
+		if (shareInfo.length === 0) {
+			return res.status(404).json({ msg: '口令不存在或已失效' });
+		}
+		
+		const share = shareInfo[0];
+		
+		// 检查是否过期
+		if (moment().isAfter(moment(share.expires_at))) {
+			return res.status(400).json({ msg: '口令已过期' });
+		}
+		
+		// 如果是帖子类型，检查帖子是否还存在
+		if (share.share_type === 'post') {
+			const postId = share.target_url.match(/id=(\d+)/)?.[1];
+			if (postId) {
+				const post = await query(
+					'SELECT * FROM comm_posts WHERE post_id = ? AND status = 1',
+					[postId]
+				);
+				if (post.length === 0) {
+					return res.status(404).json({ msg: '分享的帖子已被删除或不存在' });
+				}
+			}
+		}
+		
+		// 增加使用次数
+		await query(
+			'UPDATE share_codes SET use_count = use_count + 1 WHERE id = ?',
+			[share.id]
+		);
+		
+		res.json({
+			success: true,
+			data: {
+				share_type: share.share_type,
+				share_content: share.share_content,
+				target_url: share.target_url,
+				share_user_name: share.share_user_name,
+				share_user_avatar: share.share_user_avatar,
+				created_at: share.created_at,
+				use_count: share.use_count + 1
+			},
+			msg: '口令解析成功'
+		});
+		
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ msg: '服务器错误' });
+	}
+});
+
 module.exports = router;

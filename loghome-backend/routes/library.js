@@ -621,6 +621,114 @@ router.get('/get_index_tags', async function (req, res) {
 	}
 });
 
+// 创建分享口令
+router.post('/create_share_code', auth, async function (req, res) {
+	try {
+		const { share_type, share_content, target_url, expires_hours = 24 } = req.body;
+		const user_id = req.user[0].user_id;
+		
+		if (!share_type || !share_content || !target_url) {
+			return res.status(400).json({ msg: '缺少必要参数' });
+		}
+		
+		// 生成8位随机口令码
+		const generateCode = () => {
+			const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+			let result = '';
+			for (let i = 0; i < 8; i++) {
+				result += chars.charAt(Math.floor(Math.random() * chars.length));
+			}
+			return result;
+		};
+		
+		let code;
+		let isUnique = false;
+		
+		// 确保口令码唯一
+		while (!isUnique) {
+			code = generateCode();
+			const existing = await query('SELECT id FROM share_codes WHERE code = ?', [code]);
+			if (existing.length === 0) {
+				isUnique = true;
+			}
+		}
+		
+		const expires_at = moment().add(expires_hours, 'hours').format('YYYY-MM-DD HH:mm:ss');
+		
+		const result = await query(
+			`INSERT INTO share_codes (code, share_user_id, share_type, share_content, target_url, expires_at) 
+			 VALUES (?, ?, ?, ?, ?, ?)`,
+			[code, user_id, share_type, share_content, target_url, expires_at]
+		);
+		
+		res.json({
+			success: true,
+			code: code,
+			share_text: `【原木社区】${code}，` + req.body.share_message,
+			msg: '口令创建成功'
+		});
+		
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ msg: '服务器错误' });
+	}
+});
+
+// 解析分享口令
+router.post('/parse_share_code', async function (req, res) {
+	try {
+		const { code } = req.body;
+		
+		if (!code) {
+			return res.status(400).json({ msg: '口令不能为空' });
+		}
+		
+		// 查询口令信息
+		const shareInfo = await query(
+			`SELECT sc.*, u.name as share_user_name, u.avatar_url as share_user_avatar 
+			 FROM share_codes sc 
+			 LEFT JOIN users u ON sc.share_user_id = u.user_id 
+			 WHERE sc.code = ? AND sc.is_active = 1`,
+			[code]
+		);
+		
+		if (shareInfo.length === 0) {
+			return res.status(404).json({ msg: '口令不存在或已失效' });
+		}
+		
+		const share = shareInfo[0];
+		
+		// 检查是否过期
+		if (moment().isAfter(moment(share.expires_at))) {
+			return res.status(400).json({ msg: '口令已过期' });
+		}
+		
+		// 增加使用次数
+		await query(
+			'UPDATE share_codes SET use_count = use_count + 1 WHERE id = ?',
+			[share.id]
+		);
+		
+		res.json({
+			success: true,
+			data: {
+				share_type: share.share_type,
+				share_content: share.share_content,
+				target_url: share.target_url,
+				share_user_name: share.share_user_name,
+				share_user_avatar: share.share_user_avatar,
+				created_at: share.created_at,
+				use_count: share.use_count + 1
+			},
+			msg: '口令解析成功'
+		});
+		
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ msg: '服务器错误' });
+	}
+});
+
 let recommendRouter = require('./library/recommand');
 
 router.use('/recommand', recommendRouter);

@@ -817,15 +817,70 @@ export default {
      },
     
     sharePost() {
-      uni.setClipboardData({
-        data: `来自原木社区的分享：${this.post.title}\n${this.post.content.substring(0, 50)}${this.post.content.length > 50 ? '...' : ''}\n点击链接查看详情：${window.location.origin}/#/pages/community/postDetail?id=${this.post.post_id}`,
-        success: () => {
-          uni.showToast({
-            title: '分享链接已复制',
-            icon: 'none'
-          })
+      this.createShareCode();
+    },
+    
+    traditionalShare() {
+      return `来自原木社区的分享：${this.post.title}\n${this.post.content.substring(0, 50)}${this.post.content.length > 50 ? '...' : ''}\n点击链接查看详情：https://loghome.codesocean.top/#/pages/community/postDetail?id=${this.post.post_id}`;
+    },
+    
+    createShareCode() {
+      uni.showLoading({
+        title: '创建口令中...'
+      });
+
+      let tk = JSON.parse(window.localStorage.getItem('token'));
+      if (!tk || !tk.tk) {
+        uni.hideLoading();
+        uni.showToast({
+          title: '请先登录',
+          icon: 'none',
+          duration: 2000
+        });
+        return;
+      }
+
+      axios.post(this.$baseUrl + '/community/posts/create_share_code', {
+        post_id: this.post.post_id,
+        share_message: this.traditionalShare(),
+        expires_hours: 24 * 30 // 30天有效期
+      }, {
+        headers: {
+          'Authorization': 'Bearer ' + tk.tk
         }
-      })
+      }).then((res) => {
+        uni.hideLoading();
+
+        if (res.data.success) {
+          // 复制口令到剪贴板
+          this.$bus.$emit("clipboardChange", res.data.share_text)
+          uni.setClipboardData({
+            data: res.data.share_text,
+            success: () => {
+              uni.showModal({
+                title: '口令创建成功',
+                content: `口令：${res.data.code}\n\n口令已复制到剪贴板，分享给好友即可！`,
+                showCancel: false,
+                confirmText: '知道了'
+              });
+            }
+          });
+        } else {
+          uni.showToast({
+            title: res.data.msg || '口令创建失败',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+      }).catch((error) => {
+        uni.hideLoading();
+        console.error('创建口令失败:', error);
+        uni.showToast({
+          title: '网络错误，请稍后重试',
+          icon: 'none',
+          duration: 2000
+        });
+      });
     },
     
     formatTime(time) {

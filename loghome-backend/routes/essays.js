@@ -8,7 +8,8 @@ let statistics = require('../bin/statistics');
 let bank = require('../bin/bank.js');
 const fs = require('fs'); // 引入文件系统模块
 const compressing = require('compressing');
-const path = require('path')
+const path = require('path');
+const crypto = require('crypto'); // 引入crypto模块用于md5
 
 function currentTime()  
 {   
@@ -322,6 +323,28 @@ router.get('/get_article', auth, async function (req, res) {
 });
 
 
+router.get('/get_article_hash', auth, async function (req, res) {
+	try {
+		let results = await query(
+			`SELECT a.* FROM articles a,novels n 
+                               WHERE n.novel_id = a.novel_id 
+                               AND article_id = ? 
+                               AND n.deleted = 0
+                               AND a.deleted = 0`,
+			[req.query.id],
+		);
+		if (results && results.length > 0 && results[0].content) {
+			// 使用crypto模块生成md5哈希
+			results[0].contentHash = crypto.createHash('md5').update(results[0].content).digest('hex');
+			results[0].content = undefined;
+		}
+		res.end(JSON.stringify(results[0]));
+	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+
 router.get('/get_article_writer', auth, async function (req, res) {
 	try {
 		let readerResults = await query(
@@ -353,6 +376,44 @@ router.get('/get_article_writer', auth, async function (req, res) {
 		res.json(400, { msg: 'bad request' });
 	}
 });
+
+
+router.get('/get_article_writer_hash', auth, async function (req, res) {
+	try {
+		let readerResults = await query(
+			`SELECT * FROM articles WHERE article_id = ?`,
+			[req.query.id],
+		)
+		readerResults[0].content = undefined;
+		let results = await query(
+			`SELECT a.* FROM articles_writer a, novels n
+                               WHERE n.novel_id = a.novel_id 
+                               AND article_id = ? 
+                               AND n.deleted = 0
+							   ORDER BY create_time DESC
+							   LIMIT 1`,
+			[req.query.id],
+		); 
+
+        if(results.length > 0){
+            let novel_info = await query(
+                `SELECT * FROM novels WHERE novel_id = ?`,
+                [results[0].novel_id],
+            );
+            results[0].novel_info = novel_info[0];
+			results[0].contentHash = crypto.createHash('md5').update(results[0].content).digest('hex');
+			// results[0].content = undefined;
+        } else {
+			res.end("no data");
+			return;
+		}
+		res.end(JSON.stringify({...readerResults[0], ...results[0]}));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 
 router.post('/sync_article_writer_from_reader', auth, async (req, res) => {
 	let user = req.user;
