@@ -429,7 +429,7 @@ router.post('/sync_article_writer_from_reader', auth, async (req, res) => {
 		article_reader = article_reader[0];
 
 		let results = await query(
-			'INSERT INTO articles_writer(article_id,title,content,create_time,novel_id) VALUES(?,?,?,?,?)',
+			'INSERT INTO articles_writer(article_id, title, content, create_time, novel_id) VALUES(?,?,?,?,?)',
 			[
 				req.body.article_id,
 				article_reader.title,
