@@ -11,6 +11,16 @@ const compressing = require('compressing');
 const path = require('path');
 const crypto = require('crypto'); // 引入crypto模块用于md5
 
+/**
+ * 计算内容的MD5哈希值
+ * @param {string} content - 要计算哈希的内容
+ * @returns {string} MD5哈希值
+ */
+function calculateContentHash(content) {
+    if (!content) return '';
+    return crypto.createHash('md5').update(content).digest('hex');
+}
+
 function currentTime()  
 {   
     var now = new Date();  
@@ -259,20 +269,87 @@ router.get('/get_articles', auth, async function (req, res) {
 	user = JSON.parse(JSON.stringify(user))[0];
 	try {
 		let results = await query(
-			`SELECT a.article_id,a.title,a.novel_id,a.article_chapter,
-                               a.is_draft,a.deleted,a.update_time,a.text_count,a.article_type,n.name novel_name,
-                               (SELECT COUNT(*) FROM article_feedback WHERE article_id = a.article_id AND status = 0) as feedback_count
-                               FROM articles a,novels n
-                               WHERE a.novel_id = n.novel_id 
-                               AND a.novel_id = ? 
-                               AND n.author_id= ?  
-                               AND n.deleted = 0 
-                               AND a.deleted = 0 
-                               ORDER BY article_chapter ASC`,
+			`SELECT 
+				a.article_id,
+				a.title,
+				a.novel_id,
+				a.article_chapter, 
+				a.content_hash,
+				a.is_draft,
+				a.deleted,
+				a.update_time,
+				a.text_count,
+				a.article_type,
+				n.name as novel_name,
+				(SELECT COUNT(*) FROM article_feedback WHERE article_id = a.article_id AND status = 0) as feedback_count,
+				aw.article_id as writer_article_id,
+				aw.content_hash as writer_content_hash,
+				aw.create_time as writer_create_time,
+				aw.id as writer_id,
+				aw.novel_id as writer_novel_id,
+				aw.title as writer_title
+			FROM articles a
+			INNER JOIN novels n ON a.novel_id = n.novel_id
+			LEFT JOIN (
+				SELECT 
+					aw1.article_id,
+					aw1.content_hash,
+					aw1.create_time,
+					aw1.id,
+					aw1.novel_id,
+					aw1.title
+				FROM articles_writer aw1
+				INNER JOIN (
+					SELECT article_id, MAX(aw2.create_time) as max_create_time
+					FROM articles_writer aw2
+					INNER JOIN novels n2 ON aw2.novel_id = n2.novel_id
+					WHERE n2.deleted = 0
+					GROUP BY article_id
+				) latest ON aw1.article_id = latest.article_id AND aw1.create_time = latest.max_create_time
+			) aw ON a.article_id = aw.article_id
+			WHERE a.novel_id = ? 
+				AND n.author_id = ?  
+				AND n.deleted = 0 
+				AND a.deleted = 0 
+			ORDER BY a.article_chapter ASC`,
 			[req.query.id, user.user_id],
 		);
-		res.end(JSON.stringify(results));
+		
+		// 重新组织数据结构以保持原有的返回格式
+		const formattedResults = results.map(row => {
+			const article = {
+				article_id: row.article_id,
+				title: row.title,
+				novel_id: row.novel_id,
+				article_chapter: row.article_chapter,
+				content_hash: row.content_hash,
+				is_draft: row.is_draft,
+				deleted: row.deleted,
+				update_time: row.update_time,
+				text_count: row.text_count,
+				article_type: row.article_type,
+				novel_name: row.novel_name,
+				feedback_count: row.feedback_count
+			};
+			
+			// 如果存在writer信息，添加到article对象中
+			if (row.writer_article_id) {
+				article.article_writer = {
+					article_id: row.writer_article_id,
+					content_hash: row.writer_content_hash,
+					create_time: row.writer_create_time,
+					id: row.writer_id,
+					novel_id: row.writer_novel_id,
+					title: row.writer_title
+				};
+			}
+			
+			return article;
+		});
+		
+		res.end(JSON.stringify(formattedResults));
 	} catch (e) {
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });
@@ -428,12 +505,15 @@ router.post('/sync_article_writer_from_reader', auth, async (req, res) => {
 		}
 		article_reader = article_reader[0];
 
+		const contentHash = calculateContentHash(article_reader.content);
+
 		let results = await query(
-			'INSERT INTO articles_writer(article_id, title, content, create_time, novel_id) VALUES(?,?,?,?,?)',
+			'INSERT INTO articles_writer(article_id, title, content, content_hash, create_time, novel_id) VALUES(?,?,?,?,?,?)',
 			[
 				req.body.article_id,
 				article_reader.title,
 				article_reader.content,
+				contentHash,
 				req.body.create_time,
 				article_reader.novel_id,
 			],
@@ -456,11 +536,14 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 				[req.body.article_id],
 			);
 
+			const contentHash = calculateContentHash(req.body.content);
+
 			let results = await query(
-				'UPDATE articles_writer SET `title`=?,`content`=?,create_time = ? WHERE id=?',
+				'UPDATE articles_writer SET `title`=?, `content`=?, `content_hash`=?, create_time = ? WHERE id=?',
 				[
 					req.body.title,
 					req.body.content,
+					contentHash,
 					req.body.create_time,
 					article_writer[0].id,
 				],
@@ -480,12 +563,15 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 				}
 			}
 
+			const contentHash = calculateContentHash(req.body.content);
+
 			let results = await query(
-				'INSERT INTO articles_writer(article_id,title,content,create_time,novel_id) VALUES(?,?,?,?,?)',
+				'INSERT INTO articles_writer(article_id,title,content, content_hash, create_time,novel_id) VALUES(?,?,?,?,?,?)',
 				[
 					req.body.article_id,
 					req.body.title,
 					req.body.content,
+					contentHash,
 					req.body.create_time,
 					req.body.novel_id,
 				],
@@ -512,11 +598,13 @@ router.post('/add_article', auth, async (req, res) => {
                 req.body.article_type = 'richtext';
                 req.body.content = "[]"
             }
+			const contentHash = calculateContentHash(req.body.content);
 			let results = await query(
-				'INSERT INTO articles(title,content,novel_id,article_chapter,article_type,is_draft) VALUES(?,?,?,?,?,?)',
+				'INSERT INTO articles(title,content,content_hash,novel_id,article_chapter,article_type,is_draft) VALUES(?,?,?,?,?,?,?)',
 				[
 					req.body.title,
 					req.body.content,
+					contentHash,
 					req.body.id,
 					req.body.article_chapter,
 					req.body.article_type,
@@ -535,12 +623,14 @@ router.post('/add_article', auth, async (req, res) => {
 router.post('/modify_article', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
+	const contentHash = calculateContentHash(req.body.content);
 	try {
 		let results = await query(
-			'UPDATE articles SET `title`=?,`content`=?,is_draft=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0',
+			'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0',
 			[
 				req.body.title,
 				req.body.content,
+				contentHash,
 				req.body.is_draft,
 				req.body.article_id,
 			],

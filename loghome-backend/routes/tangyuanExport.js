@@ -6,6 +6,16 @@ let axios = require('axios');
 const { htmlToText } = require('html-to-text');
 let message = require('../bin/message.js');
 
+/**
+ * 计算内容的MD5哈希值
+ * @param {string} content - 要计算哈希的内容
+ * @returns {string} MD5哈希值
+ */
+function calculateContentHash(content) {
+    if (!content) return '';
+    return crypto.createHash('md5').update(content).digest('hex');
+}
+
 // 创建路由对象
 let router = express.Router();
 
@@ -196,11 +206,13 @@ async function importBook(id, ty_id, cookie, user_id) {
 
 					await axios(config)
 						.then(async function (response) {
+							const contentHash = calculateContentHash(response.data);
 							await query(
-								'INSERT INTO articles(title,content,novel_id,article_chapter,is_draft,text_count) VALUES(?,?,?,?,?,?)',
+								'INSERT INTO articles(title,content,content_hash,novel_id,article_chapter,is_draft,text_count) VALUES(?,?,?,?,?,?,?)',
 								[
 									chapterTitle,
 									htmlToText(response.data),
+									contentHash,
 									id,
 									i,
 									isDraft,

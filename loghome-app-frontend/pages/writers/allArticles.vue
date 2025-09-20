@@ -32,7 +32,7 @@
 						</div>
 						<div class="miniTitle">
 							<div
-								v-if="item.article_type != 'spliter' && item.hasWriterModify && item.is_draft == false">
+								v-if="item.article_type != 'spliter' && item.hasWriterModify">
 								{{ item.modifiedTextCount }}字
 								{{ item.modify_time }}
 							</div>
@@ -214,8 +214,6 @@ export default {
 			});
 			let currentServerTime = await getServerTime();
 			console.log("currentServerTime", currentServerTime);
-			//清除文章排序信息，该功能应当被移除！
-			window.localStorage.removeItem('articleSortSetting');
 
 			const uid = this.uid;
 			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
@@ -664,8 +662,8 @@ export default {
 			this.$forceUpdate();
 		},
 		async checkArticleStatus() {
-			// 5个5个地并行查询
-			const batchSize = 5;
+			// 10个10个地并行查询
+			const batchSize = 10;
 			for (let item of this.shownArticles) {
 				item.isCheckingStatus = true;
 			}
@@ -673,6 +671,7 @@ export default {
 				const batch = this.shownArticles.slice(i, i + batchSize);
 				// 并行处理当前批次的文章
 				await Promise.all(batch.map(item => this._checkArticleStatusSingle(item)));
+				this.$forceUpdate();
 			}
 		},
 		async getArticleWriter(articleId) {
@@ -687,17 +686,12 @@ export default {
 			)
 			return res;
 		},
-		async getArticleWriterHash(articleId) {
-			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
-			let res = await axios.get(this.$baseUrl + '/essays/get_article_writer_hash?id=' + articleId,
-				{
-					headers: {
-						'Content-Type': 'application/json', //设置请求头请求格式为JSON
-						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-					}
-				}
-			)
-			return res;
+		getArticleWriterHash(article) {
+			if(article.article_writer) {
+				return article.article_writer;
+			} else {
+				return "no data";
+			}
 		},
 		async getArticle(articleId) {
 			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
@@ -750,12 +744,10 @@ export default {
 				latestLocalArticle = localArticles.reduce((latest, current) => {
 					return latest.create_time > current.create_time ? latest : current;
 				});
-				latestLocalArticle.contentHash = crypto.createHash('md5').update(latestLocalArticle.content).digest('hex');
+				latestLocalArticle.content_hash = crypto.createHash('md5').update(latestLocalArticle.content).digest('hex');
 			}
-			let latestRemoteArticle = await this.getArticleWriterHash(article.article_id);
-			if (latestRemoteArticle.data != "no data") {
-				latestRemoteArticle = latestRemoteArticle.data;
-			} else {
+			let latestRemoteArticle = this.getArticleWriterHash(article);
+			if (latestRemoteArticle == "no data") {
 				latestRemoteArticle = null;
 			}
 
@@ -773,7 +765,9 @@ export default {
 			} else {
 				// 本地和云端都有保存过文章
 				// 比较本地和云端的文章内容
-				if (latestLocalArticle.contentHash != latestRemoteArticle.contentHash) {
+				if (latestLocalArticle.content_hash != latestRemoteArticle.content_hash) {
+					console.log(latestLocalArticle, latestRemoteArticle)
+					writerArticle = latestRemoteArticle;
 					// 本地和云端的文章内容不一致
 					article.hasCloudCollision = true;
 					this.$forceUpdate();
@@ -783,10 +777,8 @@ export default {
 			}
 
 			if (writerArticle != null) {
-				article.contentHash = (await this.getArticleHash(article.article_id)).data.contentHash;
-				if (writerArticle.contentHash != article.contentHash) {
-					article.content = (await this.getArticle(article.article_id)).data[0].content;
-					writerArticle.content = (await this.getArticleWriter(article.article_id)).data.content;
+				if (writerArticle.content_hash != article.content_hash) {
+					if(!writerArticle.content) writerArticle.content = (await this.getArticleWriter(article.article_id)).data.content;
 					article.hasWriterModify = true;
 					// 将writerArticle.create_time原本的YYYYMMDDhhmmss格式调整为YYYY/MM/DD hh:mm:ss
 					article.modify_time = Number(writerArticle.create_time.substring(0, 4)) + "/" +
@@ -798,15 +790,13 @@ export default {
 
 					// 统计字数
 					let { textCount, imageCount } = this.countText(JSON.parse(writerArticle.content));
+					article.title = writerArticle.title;
 					article.modifiedTextCount = textCount;
 					article.modifiedImageCount = imageCount;
-					this.$forceUpdate();
 				}
 			}
 
 			article.isCheckingStatus = false;
-
-			this.$forceUpdate();
 		}
 	},
 	onNavigationBarButtonTap(e) {

@@ -6,6 +6,16 @@ let moment = require('moment');
 let message = require('../../bin/message.js');
 let bank = require('../../bin/bank.js');
 
+/**
+ * 计算内容的MD5哈希值
+ * @param {string} content - 要计算哈希的内容
+ * @returns {string} MD5哈希值
+ */
+function calculateContentHash(content) {
+    if (!content) return '';
+    return crypto.createHash('md5').update(content).digest('hex');
+}
+
 // 创建路由对象
 let router = express.Router();
 
@@ -305,6 +315,10 @@ router.post('/update_article', auth, async function (req, res) {
 		if (req.body.content !== undefined) {
 			updateFields.push('content = ?');
 			params.push(req.body.content);
+			// 计算新的content_hash
+			const contentHash = calculateContentHash(req.body.content);
+			updateFields.push('content_hash = ?');
+			params.push(contentHash);
 		}
 		
 		if (req.body.is_draft !== undefined) {
