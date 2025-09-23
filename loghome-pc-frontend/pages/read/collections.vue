@@ -43,7 +43,7 @@
           <div class="novel-update-time">
             <span title="更新时间">🕒 {{ formatDateTime(novel.update_time) }}</span>
           </div>
-          <nuxt-link :to="`/novel/${novel.novel_id}`" class="read-button">开始阅读</nuxt-link>
+          <nuxt-link :to="novel.novel_type === 'world' ? `/world/${novel.novel_id}` : `/novel/${novel.novel_id}`" class="read-button">开始阅读</nuxt-link>
         </div>
       </div>
     </div>
@@ -409,4 +409,4 @@ $background-color: #f8f8f8;
     grid-template-columns: 1fr;
   }
 }
-</style> 
+</style>

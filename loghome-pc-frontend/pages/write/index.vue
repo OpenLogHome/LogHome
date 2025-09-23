@@ -56,7 +56,7 @@
               <p class="work-desc">{{work.description}}</p>
               <p class="work-update">最近更新: {{work.lastUpdate}}</p>
               <div class="work-actions">
-                <button class="work-action primary" @click="$router.push(`/write/edit/${work.id}`)">全部章节</button>
+                <button class="work-action primary" @click="openEditPage(work.id)">开始写作</button>
                 <button class="work-action" @click="$router.push(`/write/settings/${work.id}`)">编辑信息</button>
               </div>
             </div>
@@ -327,6 +327,12 @@ export default {
     createNewWork() {
       // 跳转到创建新作品页面
       this.$router.push('/write/new')
+    },
+    
+    openEditPage(workId) {
+      // 在新窗口中打开编辑页面
+      const url = `/write/edit/${workId}`
+      window.open(url, '_blank')
     }
   }
 }

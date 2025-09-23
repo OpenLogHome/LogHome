@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="240" viewBox="0 0 160 240">
+  <rect width="160" height="240" fill="#f0f0f0"/>
+  <rect x="10" y="10" width="140" height="220" fill="#e0e0e0" stroke="#d0d0d0" stroke-width="2"/>
+  <text x="80" y="120" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#888888">暂无封面</text>
+  <path d="M80 80 L80 160 M40 120 L120 120" stroke="#888888" stroke-width="2" stroke-linecap="round"/>
+</svg>

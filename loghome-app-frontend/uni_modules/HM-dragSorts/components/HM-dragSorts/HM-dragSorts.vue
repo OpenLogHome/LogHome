@@ -24,14 +24,18 @@
 									<!-- 内容  -->
 									<slot name="rowContent" :row="row"></slot>
 									<!-- 拖拽图标 -->
-									<view class="drag" :style="{'height': rowHeight+'px'}" :data-id="row.id"
-										:data-type="listType" @touchstart="drag.touchstart" @touchmove="drag.touchmove"
-										@touchend="drag.touchend" <!-- #ifdef MP-WEIXIN -->
-										@longpress="drag.longpress"
-										<!-- #endif -->
-										>
-										<text class="iconfont icon-drag"></text>
-									</view>
+										<view class="drag" :style="{'height': rowHeight+'px'}" :data-id="row.id"
+											:data-type="listType" @touchstart="drag.touchstart" @touchmove="drag.touchmove"
+											@touchend="drag.touchend" 
+											<!-- #ifdef MP-WEIXIN -->
+											@longpress="drag.longpress"
+											<!-- #endif -->
+											<!-- #ifdef H5 -->
+											@mousedown="pcDragStart($event, row, listType, index)"
+											<!-- #endif -->
+											>
+											<text class="iconfont icon-drag"></text>
+										</view>
 								</view>
 							</view>
 						</view>
@@ -151,6 +155,15 @@
 				isHoldTouch: false, //是否正在拖拽
 				isScrolling: false, //是否正在滚动视图
 				scrollTimer: null, //定时器-控制滚动 微信小程序端使用 实现类似requestAnimationFrame效果
+				
+				// PC端拖拽状态
+				isDragging: false, // 是否正在拖拽
+				dragStartY: 0, // 拖拽开始的Y坐标
+				dragCurrentRow: null, // 当前拖拽的行数据
+				dragCurrentIndex: null, // 当前拖拽行的索引
+				dragCurrentListType: null, // 当前拖拽行的列表类型
+				dragCurrentOffset: null, // 当前拖拽的目标位置
+				dragStartScrollTop: 0 // 拖拽开始时的滚动位置
 			}
 		},
 		props: {
@@ -364,6 +377,197 @@
 					this.dragList[listType] = tmpList;
 				})
 				this.shadowRow = {};
+			},
+			// PC端拖拽相关方法
+			pcDragStart(event, row, listType, index) {
+				// #ifdef H5
+				if (!this.isAppH5) return;
+				
+				event.preventDefault();
+				this.isDragging = true;
+				this.dragStartY = event.clientY;
+				this.dragCurrentRow = row;
+				this.dragCurrentIndex = index;
+				this.dragCurrentListType = listType;
+				this.dragStartScrollTop = this.scrollViewTop;
+				
+				// 显示拖拽阴影
+				this.shadowRow = JSON.parse(JSON.stringify(row));
+				this.$nextTick(() => {
+					const shadowBox = document.getElementById('shadowRowBox');
+					if (shadowBox) {
+						shadowBox.classList.add('show');
+						shadowBox.style.top = (index * this.rowHeight - this.scrollViewTop) + 'px';
+					}
+					
+					// 隐藏原始行
+					const originalRow = document.getElementById('row' + listType + row.id);
+					if (originalRow) {
+						originalRow.classList.add('hide');
+					}
+					
+					// 显示拖拽状态
+					const shadowRow = document.getElementById('shadowRow');
+					if (shadowRow) {
+						shadowRow.classList.add('move');
+					}
+				});
+				
+				// 添加全局事件监听
+				document.addEventListener('mousemove', this.pcDragMove);
+				document.addEventListener('mouseup', this.pcDragEnd);
+				// #endif
+			},
+			pcDragMove(event) {
+				// #ifdef H5
+				if (!this.isDragging) return;
+				
+				event.preventDefault();
+				const moveY = event.clientY - this.dragStartY;
+				
+				// 更新拖拽阴影位置
+				const shadowRow = document.getElementById('shadowRow');
+				if (shadowRow) {
+					shadowRow.style.transform = `translate3d(0, ${moveY}px, 10px)`;
+					shadowRow.style.webkitTransform = `translate3d(0, ${moveY}px, 10px)`;
+				}
+				
+				// 计算新位置
+				const moveOffset = moveY + this.scrollViewTop - this.dragStartScrollTop;
+				const newIndex = this.calcPCOffset(this.dragCurrentIndex, moveOffset);
+				
+				if (newIndex >= 0 && newIndex < this.list.length && newIndex !== this.dragCurrentOffset) {
+					this.dragCurrentOffset = newIndex;
+					this.updatePCRowPositions();
+					
+					// 触发change事件
+					this.$emit('change', {
+						index: this.dragCurrentIndex,
+						moveTo: newIndex
+					});
+				}
+				
+				// 自动滚动处理
+				this.handlePCAutoScroll(event.clientY);
+				// #endif
+			},
+			pcDragEnd(event) {
+				// #ifdef H5
+				if (!this.isDragging) return;
+				
+				this.isDragging = false;
+				
+				// 移除全局事件监听
+				document.removeEventListener('mousemove', this.pcDragMove);
+				document.removeEventListener('mouseup', this.pcDragEnd);
+				
+				// 隐藏拖拽阴影
+				const shadowBox = document.getElementById('shadowRowBox');
+				if (shadowBox) {
+					shadowBox.classList.remove('show');
+				}
+				
+				const shadowRow = document.getElementById('shadowRow');
+				if (shadowRow) {
+					shadowRow.classList.remove('move');
+					shadowRow.style.transform = 'none';
+					shadowRow.style.webkitTransform = 'none';
+				}
+				
+				// 显示原始行
+				const originalRow = document.getElementById('row' + this.dragCurrentListType + this.dragCurrentRow.id);
+				if (originalRow) {
+					originalRow.classList.remove('hide');
+				}
+				
+				// 如果位置发生变化，触发排序
+				if (typeof this.dragCurrentOffset !== 'undefined' && 
+					this.dragCurrentIndex !== this.dragCurrentOffset && 
+					this.dragCurrentOffset !== null) {
+					this.sort({
+						index: this.dragCurrentIndex,
+						offset: this.dragCurrentOffset
+					});
+				} else {
+					// 重置行样式
+					this.resetPCRowStyles();
+				}
+				
+				// 清理状态
+				this.dragCurrentOffset = null;
+				this.dragCurrentRow = null;
+				this.dragCurrentIndex = null;
+				this.dragCurrentListType = null;
+				// #endif
+			},
+			calcPCOffset(initIndex, moveY) {
+				// #ifdef H5
+				let offset = initIndex + parseInt(moveY / this.rowHeight);
+				const rest = moveY % this.rowHeight;
+				
+				if (rest > 0) {
+					offset = offset + (rest / this.rowHeight >= 0.6 ? 1 : 0);
+				} else {
+					offset = offset + (rest / this.rowHeight <= -0.6 ? -1 : 0);
+				}
+				
+				return Math.max(0, Math.min(offset, this.list.length - 1));
+				// #endif
+			},
+			updatePCRowPositions() {
+				// #ifdef H5
+				const listType = this.dragCurrentListType;
+				const initIndex = this.dragCurrentIndex;
+				const offset = this.dragCurrentOffset;
+				
+				const rows = document.querySelectorAll('.row' + listType);
+				rows.forEach((row, i) => {
+					if (i === initIndex) return;
+					
+					let translateY = 0;
+					if ((i >= offset && i < initIndex) || (i <= offset && i > initIndex)) {
+						translateY = i < initIndex ? this.rowHeight : -this.rowHeight;
+					}
+					
+					row.style.transform = `translate3d(0, ${translateY}px, 5px)`;
+					row.style.webkitTransform = `translate3d(0, ${translateY}px, 5px)`;
+					row.classList.add('ani');
+				});
+				// #endif
+			},
+			resetPCRowStyles() {
+				// #ifdef H5
+				const listType = this.dragCurrentListType;
+				const rows = document.querySelectorAll('.row' + listType);
+				rows.forEach(row => {
+					row.style.transform = 'none';
+					row.style.webkitTransform = 'none';
+					row.classList.remove('ani');
+					row.classList.remove('hide');
+				});
+				// #endif
+			},
+			handlePCAutoScroll(clientY) {
+				// #ifdef H5
+				if (!this.isAutoScroll) return;
+				
+				const containerRect = document.getElementById('scrollView_' + this.guid)?.getBoundingClientRect();
+				if (!containerRect) return;
+				
+				const threshold = this.rowHeight * 1.5;
+				const relativeY = clientY - containerRect.top;
+				
+				if (relativeY < threshold) {
+					// 向上滚动
+					this.pageScroll({ command: 'up', scrollTop: this.scrollViewTop });
+				} else if (relativeY > containerRect.height - threshold) {
+					// 向下滚动
+					this.pageScroll({ command: 'down', scrollTop: this.scrollViewTop });
+				} else {
+					// 停止滚动
+					this.pageScroll({ command: 'stop' });
+				}
+				// #endif
 			}
 		}
 	}
@@ -426,6 +630,14 @@
 		flex-direction: column;
 		position: relative;
 		
+		// PC端拖拽样式优化
+		/* #ifdef H5 */
+		user-select: none;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		/* #endif */
+		
 		//拖动时的动态盒子的CSS效果
 		.rowBox-shadow {
 			width: 100%;
@@ -460,17 +672,24 @@
 					justify-content: space-between;
 
 					.drag {
-						width: 22px;
-						flex-shrink: 0;
-						display: flex;
-						flex-direction: row;
-						justify-content: center;
-						align-items: center;
+								width: 22px;
+								flex-shrink: 0;
+								display: flex;
+								flex-direction: row;
+								justify-content: center;
+								align-items: center;
+								
+								/* #ifdef H5 */
+								cursor: grab;
+								&:active {
+									cursor: grabbing;
+								}
+								/* #endif */
 
-						.iconfont {
-							font-size: 20px;
-						}
-					}
+								.iconfont {
+									font-size: 20px;
+								}
+							}
 				}
 
 			}
@@ -538,6 +757,13 @@
 							flex-direction: row;
 							justify-content: center;
 							align-items: center;
+							
+							/* #ifdef H5 */
+							cursor: grab;
+							&:active {
+								cursor: grabbing;
+							}
+							/* #endif */
 
 							.iconfont {
 								font-size: 20px;

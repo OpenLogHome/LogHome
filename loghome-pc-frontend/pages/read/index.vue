@@ -1,8 +1,5 @@
 <template>
     <div class="read-page">
-      <div class="page-header">
-        <h1 class="page-title">书库</h1>
-      </div>
   
       <div class="banner-container">
         <BannerSwiper :chartList="chartList" />
@@ -10,56 +7,61 @@
   
       <div class="collections-container">
         <div class="collection-cards">
-          <div class="collection-card" v-for="(item, index) in safeCollections" :key="index">
-            <div class="collection-header" @click="gotoCollections(item.collection_title)">
-              <div class="collection-title">
-                <h3>{{ item.collection_title }}</h3>
-                <div class="light-line"></div>
-                <img v-if="item.icon" :src="item.icon" :alt="item.collection_title" class="collection-icon">
-              </div>
-              <div class="more-button">
-                <span>更多</span>
-                <i class="right-icon">❯</i>
-              </div>
-            </div>
-  
-            <div class="novel-slide" v-if="item.collection_type === 'slide'">
-              <div class="slide-wrapper">
-                <div class="book-cover" v-for="novel in item.novels || []" :key="novel.novel_id"
-                  @click="readBook(novel.novel_id)">
-                  <div class="cover-image"
-                    :style="novel.picUrl ? `background-image: url(${novel.picUrl})` : `background-color: hsl(${novel.novel_id * 30 % 360}, 70%, 80%)`">
-                    <span class="novel-type" v-if="novel.novel_type === 'world'">世界设定</span>
-                  </div>
-                  <div class="book-title">{{ novel.name }}</div>
-                </div>
-              </div>
-            </div>
-  
-            <div class="novel-list" v-else> <!---if="item.collection_type === 'cards'"-->
-              <div class="list-wrapper">
-                <nuxt-link class="book-card" v-for="novel in (item.novels || []).slice(0, 4)" :key="novel.novel_id"
-                  :to="`/novel/${novel.novel_id}`">
-                  <div class="book-cover">
-                    <img :src="novel.picUrl ? novel.picUrl + '?thumbnail=1' : '/static/user/defaultCover.jpg'"
-                      :alt="novel.name" :onerror="`this.onerror=null;this.src='/static/user/defaultCover.jpg'`">
-                  </div>
-                  <div class="book-info">
-                    <h4 class="book-title">
-                      {{ novel.name }}
-                      <span class="book-tag" v-if="novel.novel_type === 'world'">世界设定</span>
-                    </h4>
-                    <div class="book-author">
-                      <img :src="novel.avatar_url || '/static/user/defaultAvatar.jpg'" alt="作者头像" class="author-avatar"
-                        :onerror="`this.onerror=null;this.src='/static/user/defaultAvatar.jpg'`">
-                      <span class="author-name">{{ novel.user_name || novel.author_name || '佚名' }}</span>
-                    </div>
-                    <p class="book-desc">{{ truncateText(novel.content, 80) }}</p>
-                  </div>
-                </nuxt-link>
-              </div>
-            </div>
-          </div>
+          <template v-for="(item, index) in safeCollections">
+             <div class="collection-card" v-if="index != 1" :key="'collection-' + index">
+               <div class="collection-header" @click="gotoCollections(item.collection_title)">
+                 <div class="collection-title">
+                   <h3>{{ item.collection_title }}</h3>
+                   <div class="light-line"></div>
+                   <img v-if="item.icon" :src="item.icon" :alt="item.collection_title" class="collection-icon">
+                 </div>
+                 <div class="more-button">
+                   <span>更多</span>
+                   <i class="right-icon">❯</i>
+                 </div>
+               </div>
+     
+               <div class="novel-slide" v-if="item.collection_type === 'slide'">
+                 <div class="slide-wrapper">
+                   <div class="book-cover" v-for="novel in item.novels || []" :key="novel.novel_id"
+                     @click="readBook(novel.novel_id, novel.novel_type)">
+                     <div class="cover-image"
+                       :style="novel.picUrl ? `background-image: url(${novel.picUrl})` : `background-color: hsl(${novel.novel_id * 30 % 360}, 70%, 80%)`">
+                       <span class="novel-type" v-if="novel.novel_type === 'world'">世界设定</span>
+                     </div>
+                     <div class="book-title">{{ novel.name }}</div>
+                   </div>
+                 </div>
+               </div>
+     
+               <div class="novel-list" v-else>
+                 <div class="list-wrapper">
+                   <nuxt-link class="book-card" v-for="novel in (item.novels || []).slice(0, 4)" :key="novel.novel_id"
+                     :to="`/novel/${novel.novel_id}`">
+                     <div class="book-cover">
+                       <img :src="novel.picUrl ? novel.picUrl + '?thumbnail=1' : '/static/user/defaultCover.jpg'"
+                         :alt="novel.name" :onerror="`this.onerror=null;this.src='/static/user/defaultCover.jpg'`">
+                     </div>
+                     <div class="book-info">
+                       <h4 class="book-title">
+                         {{ novel.name }}
+                         <span class="book-tag" v-if="novel.novel_type === 'world'">世界设定</span>
+                       </h4>
+                       <div class="book-author">
+                         <img :src="novel.avatar_url || '/static/user/defaultAvatar.jpg'" alt="作者头像" class="author-avatar"
+                           :onerror="`this.onerror=null;this.src='/static/user/defaultAvatar.jpg'`">
+                         <span class="author-name">{{ novel.user_name || novel.author_name || '佚名' }}</span>
+                       </div>
+                       <p class="book-desc">{{ truncateText(novel.content, 80) }}</p>
+                     </div>
+                   </nuxt-link>
+                 </div>
+               </div>
+             </div>
+             
+             <!-- 使用Banner组件 -->
+             <Banner page="library" v-if="index === 1" :key="'banner-' + index" />
+           </template>
         </div>
       </div>
   
@@ -167,10 +169,12 @@
   
   <script>
   import BannerSwiper from '~/components/read/BannerSwiper.vue'
+  import Banner from '~/components/Banner.vue'
   
   export default {
     components: {
-      BannerSwiper
+      BannerSwiper,
+      Banner
     },
     head() {
       return {
@@ -197,7 +201,7 @@
                 img: item.image,
                 title: item.title,
                 Subtitle: item.name,
-                navigate_to: item.navigate_to
+                navigate_to: item.navigate_to_pc
               })
             }
           }
@@ -393,10 +397,15 @@
         }
       },
   
-      // 阅读小说
-      readBook(novelId) {
+      // 阅读小说或世界设定
+      readBook(novelId, novelType) {
         if (novelId) {
-          this.$router.push(`/novel/${novelId}`)
+          // 如果是世界设定类型，跳转到world页面，否则跳转到novel页面
+          if (novelType === 'world') {
+            this.$router.push(`/world/${novelId}`)
+          } else {
+            this.$router.push(`/novel/${novelId}`)
+          }
         }
       },
     },

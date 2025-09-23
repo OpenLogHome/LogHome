@@ -7,7 +7,8 @@
 				:style="{ fontSize: writerSettings.fontSize + 'rpx' }" />
 			<div class="textCount">
 				{{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图
-				<div class="saveNotify"><complete-icon ref="completeIcon" style="margin-right: 5rpx; transform: translateY(5rpx);"></complete-icon>
+				<div class="saveNotify"><complete-icon ref="completeIcon"
+						style="margin-right: 5rpx; transform: translateY(5rpx);"></complete-icon>
 				</div>
 			</div>
 		</div>
@@ -161,16 +162,65 @@ export default {
 			lastInputTime: new Date(),
 			lastUploadTime: new Date(),
 			hasNewInput: false,
-			saveNotifyText: "已保存"
-		}
-	},
-	onBackPress(e) {
+			saveNotifyText: "已保存",
+			frameInfo: {
+				isEnabled: false
+			}
+		};
 	},
 	beforeDestroy() {
 		// 组件销毁前清理所有定时器
 		this.endLocalSaveTimer();
+		// 清理postMessage事件监听器
+		window.removeEventListener('message', this.handleParentMessage);
+		// 清理其他定时器和监听器
+		clearInterval(this.imageEditInterval);
+		this.clearEditorImagesEditButton();
 	},
 	methods: {
+		// iframe环境检测和通信方法
+		checkFrameEnvironment() {
+			if (window.self !== window.top) {
+				// 运行在iframe中
+				console.log('ChapterEditor: 检测到iframe环境');
+				// 添加消息监听器
+				window.addEventListener('message', this.handleParentMessage);
+				// 发送握手消息
+			setTimeout(() => {
+				this.sendMessageToParent({
+					type: 'iframe_ready',
+					source: 'chapterEditor'
+				});
+			}, 500)
+			}
+		},
+		handleParentMessage(event) {
+			console.log('ChapterEditor: 收到父框架消息', event.data);
+			if (event.data.type === 'frame_confirmed' && event.data.target === 'chapterEditor') {
+				this.frameInfo.isEnabled = true;
+				console.log('ChapterEditor: iframe模式已启用');
+				// 发送当前编辑的文章ID
+				if (this.chapterId) {
+					this.sendCurrentArticleInfo();
+				}
+			}
+		},
+		sendMessageToParent(message) {
+			if (window.parent && window.parent !== window) {
+				window.parent.postMessage(message, '*');
+			}
+		},
+		sendCurrentArticleInfo() {
+			if (this.frameInfo.isEnabled && this.chapterId) {
+				this.sendMessageToParent({
+					type: 'current_selected',
+					source: 'chapterEditor',
+					data: {
+						article_id: this.chapterId
+					}
+				});
+			}
+		},
 		utc2timestamp(utc_datetime) {
 			// 转为正常的时间格式 年-月-日 时:分:秒
 			var T_pos = utc_datetime.indexOf('T');
@@ -270,7 +320,7 @@ export default {
 			)
 			return res;
 		},
-		async uploadArticleWriter(currentServerTime, isFastSave=false, isForce=false) {
+		async uploadArticleWriter(currentServerTime, isFastSave = false, isForce = false) {
 			this.lastUploadTime = new Date();
 			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
 			let res = await axios.post(this.$baseUrl + '/essays/upload_article_writer',
@@ -427,7 +477,7 @@ export default {
 				}
 
 
-				if(!hasCloudContent) {
+				if (!hasCloudContent) {
 					// 云端没有内容，向云端请求从reader_articles中把内容同步过来。
 					await this.syncArticleWriter();
 					// 同步完成后，重新获取一次内容
@@ -515,11 +565,11 @@ export default {
 		countText() {
 			this.textCount = 0;
 			this.imageCount = 0;
-			for(let item of JSON.parse(this.article.content)){
-				if(item.type == "text"){
+			for (let item of JSON.parse(this.article.content)) {
+				if (item.type == "text") {
 					this.textCount += item.value.length;
-				} else if(item.type == "image") {
-					this.imageCount ++;
+				} else if (item.type == "image") {
+					this.imageCount++;
 				}
 			}
 		},
@@ -812,7 +862,7 @@ export default {
 					// 检查是否有新增内容（包括新段落或段落内的增量修改）
 					hasNewContent = currentContent.length > lcs.length || internalIncrementalCount > 0;
 
-					if(latestLocalArticle.title != this.article.title) {
+					if (latestLocalArticle.title != this.article.title) {
 						hasNewContent = true;
 					}
 
@@ -846,8 +896,8 @@ export default {
 					} else if (!isIncrementalChange) {
 						// 如果不是增量修改，直接保存新版本
 						console.log('检测到非增量修改');
-						this.notIncrementalChangeCount ++;
-						if(this.notIncrementalChangeCount >= 10) {
+						this.notIncrementalChangeCount++;
+						if (this.notIncrementalChangeCount >= 10) {
 							// 非增量修改次数超过10次，执行慢保存
 							this.notIncrementalChangeCount = 0;
 							await this.slowSaveLocalArticle(currentServerTime);
@@ -882,7 +932,7 @@ export default {
 				const articleId = this.article.article_id;
 				console.log(`慢保存文章ID: ${articleId}`);
 
-				if(!isForce) {
+				if (!isForce) {
 					// 检查是否与上次记录不一样
 					const localArticles = await writerArticleDB.articles
 						.where('article_id')
@@ -890,13 +940,13 @@ export default {
 						.toArray();
 					let latestLocalArticle = null;
 					console.log(localArticles);
-					if(localArticles.length > 0) {
+					if (localArticles.length > 0) {
 						latestLocalArticle = localArticles.reduce((prev, current) => {
 							return prev.create_time > current.create_time ? prev : current;
 						});
 					}
 
-					if(latestLocalArticle && latestLocalArticle.content == this.article.content && latestLocalArticle.title == this.article.title) {
+					if (latestLocalArticle && latestLocalArticle.content == this.article.content && latestLocalArticle.title == this.article.title) {
 						console.log('内容未发生变化，无需保存');
 						return;
 					}
@@ -1067,18 +1117,18 @@ export default {
 		},
 		updateSaveNotify(text, playAnimation) {
 			this.saveNotifyText = text;
-			if(playAnimation) this.$refs.completeIcon.playAnimation();
+			if (playAnimation) this.$refs.completeIcon.playAnimation();
 		},
 	},
 	onNavigationBarButtonTap(e) {
 		if (e.text == '\ue60e ') {
 			uni.navigateBack();
-			setTimeout(()=> {
+			setTimeout(() => {
 				uni.navigateTo({
 					url: `/pages/writers/chapterTimeMachine?id=${this.chapterId}&novelId=${this.article.novel_info.novel_id}`
 				});
 			}, 300)
-		}else if (e.text == "\ue61f ") {
+		} else if (e.text == "\ue61f ") {
 			uni.chooseImage({
 				success: (chooseImageRes) => {
 					uni.showToast({
@@ -1141,7 +1191,7 @@ export default {
 		} else if (e.text == "发布 ") {
 			let _this = this;
 			let itemList = ['发布章节'];
-			if(_this.article.is_draft == 0){
+			if (_this.article.is_draft == 0) {
 				itemList.push("退回章节为草稿");
 			}
 			uni.showActionSheet({
@@ -1204,6 +1254,11 @@ export default {
 			window.localStorage.setItem("writerSettings", JSON.stringify(this.writerSettings));
 		}
 
+		if (params.hideback == "true") {
+			let backBtn = document.querySelector(".uni-page-head-hd");
+			backBtn.innerHTML = "";
+		}
+
 		setTimeout(() => {
 			this.applyNavigationBarTheme();
 		})
@@ -1213,13 +1268,13 @@ export default {
 		this.$nextTick(() => {
 			this.initScrollListener();
 		});
-
-
+		
+		// 检测是否运行在iframe中并与父框架通信
+		this.checkFrameEnvironment();
 	},
-	beforeDestroy() {
-		clearInterval(this.imageEditInterval);
-		this.clearEditorImagesEditButton();
-		this.endLocalSaveTimer();
+	onShow() {
+		// onShow时也检查一次iframe环境（兼容性处理）
+		this.checkFrameEnvironment();
 	}
 }
 </script>
@@ -1260,13 +1315,13 @@ export default {
 			color: rgb(175, 81, 38);
 			align-items: center;
 
-			div.saveNotify{
+			div.saveNotify {
 				display: flex;
 				align-items: center;
 				margin-left: 10rpx;
 				color: rgb(156, 156, 156);
 			}
-			
+
 			div.time-machine-btn {
 				display: flex;
 				align-items: center;
@@ -1275,13 +1330,13 @@ export default {
 				background-color: rgba(180, 111, 88, 0.1);
 				border-radius: 8rpx;
 				cursor: pointer;
-				
+
 				text {
 					margin-left: 5rpx;
 					color: #B46F58;
 					font-size: 24rpx;
 				}
-				
+
 				&:active {
 					opacity: 0.8;
 				}

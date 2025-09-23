@@ -65,7 +65,8 @@ export default {
    ** Global CSS
    */
   css: [
-    'element-ui/lib/theme-chalk/index.css'
+    'element-ui/lib/theme-chalk/index.css',
+    '~/assets/css/global.css'
   ],
   /*
    ** Plugins to load before mounting the App
@@ -73,7 +74,8 @@ export default {
   plugins: [
     '~/plugins/api.js',
     '~/plugins/element-ui.js',
-    '~/plugins/window-manager.js'
+    '~/plugins/window-manager.js',
+    '~/plugins/image-preview.js'
   ],
   /*
    ** Nuxt.js dev-modules
@@ -84,42 +86,22 @@ export default {
    */
   modules: [
     '@nuxtjs/axios',
-    '@nuxtjs/auth-next'
   ],
-  /*
-   ** Auth module configuration
-   */
-  auth: {
-    strategies: {
-      local: {
-        token: {
-          property: 'token',
-          global: true,
-          required: true,
-          type: 'Bearer'
-        },
-        user: {
-          property: 'user',
-          autoFetch: true
-        },
-        endpoints: {
-          login: { url: '/api/auth/login', method: 'post' },
-          logout: { url: '/api/auth/logout', method: 'post' },
-          user: { url: '/api/auth/user', method: 'get' }
-        }
-      }
-    },
-    redirect: {
-      login: '/login',
-      logout: '/',
-      home: '/'
-    }
-  },
   /*
    ** Axios module configuration
    */
   axios: {
     baseURL: process.env.baseUrl,
     credentials: true
+  },
+  
+  /*
+   ** Vue configuration
+   */
+  vue: {
+    config: {
+      ignoredElements: [
+      ]
+    }
   }
 }

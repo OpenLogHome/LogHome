@@ -85,10 +85,10 @@
         <!-- 文章底部导航 -->
         <div class="article-footer">
           <div class="like-action">
-            <button @click="toggleLike" class="like-btn" :class="{ active: isLiked }">
+            <!-- <button @click="toggleLike" class="like-btn" :class="{ active: isLiked }">
               <span class="like-icon">❤️</span>
               <span>{{ isLiked ? '已喜欢' : '喜欢' }}</span>
-            </button>
+            </button> -->
           </div>
           <div class="chapter-nav">
             <button @click="navigateChapter('prev')" class="nav-btn" :disabled="!hasPrevious">
@@ -626,8 +626,14 @@ export default {
       if (!localStorage.getItem("token")) return
       
       try {
-        const userInfo = await this.$auth.fetchUser()
-        this.userInfo = userInfo
+        // 先尝试从本地缓存获取用户信息
+        const cachedUserInfo = localStorage.getItem('LogHomeUserInfo');
+        if (cachedUserInfo) {
+          this.userInfo = JSON.parse(cachedUserInfo);
+        } else {
+          // 使用API服务获取用户信息
+          this.userInfo = await this.$api.users.getUserProfile();
+        }
       } catch (error) {
         console.error('获取用户信息失败:', error)
       }
@@ -1062,7 +1068,7 @@ export default {
 
     // 获取用户页面
     goToUserPage(userId) {
-      this.$router.push(`/user/${userId}`)
+      this.$router.push(`/users/${userId}`)
     },
   }
 }

@@ -4,10 +4,10 @@
 			<uni-collapse accordion @touchstart.native="touchstart" @touchend.native="touchend"
 				@touchmove.native="touchmove">
 				<uni-collapse-item class="titleOuter" v-for="item in shownArticles" :key="item.article_id"
-					:mainClick="gotoEditor" :clickInfo="item"
-					:style="{ backgroundColor: item.article_type == 'spliter' ? '#dddddd' : '#ffffff' }">
+				:mainClick="gotoEditor" :clickInfo="item"
+				:style="{ backgroundColor: item.article_type == 'spliter' ? '#dddddd' : (frameInfo.isEnabled && frameInfo.currentSelected == item.article_id ? '#FFFAF0' : '#ffffff') }">
 					<template v-slot:title>
-						<div class="title" :style="{ 'color': item.article_type == 'spliter' ? '#444444' : '#763a18' }">
+						<div class="title" :style="{ 'color': item.article_type == 'spliter' ? '#444444' : (frameInfo.isEnabled && frameInfo.currentSelected == item.article_id ? '#0A0E16' : '#763a18') }">
 							{{ item.title }}
 							<el-tag type="success" v-show="item.article_type == 'worldOutline'" effect="dark"
 								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">大纲</el-tag>
@@ -50,7 +50,7 @@
 							</div>
 						</navigator>
 						<navigator :url="'../readers/article?id=' + item.article_id" open-type="navigate"
-							v-show="item.is_draft == false">
+							v-show="item.is_draft == false && !frameInfo.isEnabled">
 							<div class="subTitle">
 								<uni-icons type="eye" size="20" color="rgb(113, 52, 24)" />
 								<span>阅读</span>
@@ -149,7 +149,11 @@ export default {
 			titleBtn: undefined,
 			startTouchX: 0,
 			startTouchY: 0,
-			touchNotMoved: true
+			touchNotMoved: true,
+			frameInfo: {
+				isEnabled: false,
+				currentSelected: -1
+			}
 		}
 	},
 	onLoad(option) {
@@ -175,9 +179,14 @@ export default {
 			this.titleBtn.addEventListener("click", this.toggleTitleBtn);
 			this.titleBtn.style.fontSize = "17px";
 		}, 200)
+		
+		// 检测是否运行在iframe中并与父框架通信
+		this.checkFrameEnvironment();
 	},
 	beforeDestroy() {
 		this.titleBtn.removeEventListener("click", this.toggleTitleBtn);
+		// 清理postMessage事件监听器
+		window.removeEventListener('message', this.handleParentMessage);
 	},
 	methods: {
 		toggleTitleBtn() {
@@ -213,7 +222,6 @@ export default {
 				title: '努力加载中'
 			});
 			let currentServerTime = await getServerTime();
-			console.log("currentServerTime", currentServerTime);
 
 			const uid = this.uid;
 			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
@@ -525,6 +533,8 @@ export default {
 				})
 		},
 		gotoEditor(item) {
+			
+			// 原有的跳转逻辑
 			if (item.article_type == "spliter") {
 				uni.showModal({
 					title: '修改分卷名',
@@ -544,6 +554,20 @@ export default {
 					url: './worldVocabularyEditor?id=' + item.article_id
 				})
 			} else {
+				// 如果在iframe模式下，向父框架发送编辑消息
+				if (this.frameInfo.isEnabled) {
+					this.sendMessageToParent({
+						type: 'edit_article',
+						source: 'allArticles',
+						data: {
+							article_id: item.article_id,
+							article_type: item.article_type,
+							title: item.title,
+							novel_id: item.novel_id
+						}
+					});
+					return;
+				}
 				uni.navigateTo({
 					url: './chapterEditor?id=' + item.article_id
 				})
@@ -766,7 +790,6 @@ export default {
 				// 本地和云端都有保存过文章
 				// 比较本地和云端的文章内容
 				if (latestLocalArticle.content_hash != latestRemoteArticle.content_hash) {
-					console.log(latestLocalArticle, latestRemoteArticle)
 					writerArticle = latestRemoteArticle;
 					// 本地和云端的文章内容不一致
 					article.hasCloudCollision = true;
@@ -797,6 +820,72 @@ export default {
 			}
 
 			article.isCheckingStatus = false;
+		},
+		
+		checkFrameEnvironment() {
+			// 检测是否运行在iframe中
+			if (window.self !== window.top) {
+				console.log('检测到运行在iframe中，尝试与父框架通信');
+				
+				// 监听来自父框架的消息
+				window.addEventListener('message', this.handleParentMessage);
+				
+				// 向父框架发送握手消息
+				this.sendMessageToParent({
+					type: 'iframe_ready',
+					source: 'allArticles',
+					message: '移动端编辑器已准备就绪'
+				});
+			} else {
+				console.log('运行在独立窗口中');
+			}
+		},
+		
+		handleParentMessage(event) {
+			// 验证消息来源（可选，根据实际需求调整）
+			// if (event.origin !== 'http://localhost:3000') return;
+			
+			console.log('收到父框架消息:', event.data);
+			
+			if (event.data.type === 'frame_confirmed') {
+				// 父框架确认通信成功
+				this.frameInfo.isEnabled = true;
+				
+				// 向父框架发送确认消息
+				this.sendMessageToParent({
+					type: 'frame_enabled',
+					source: 'allArticles',
+					message: 'iframe模式已启用'
+				});
+			} else if (event.data.type === 'current_selected' && (event.data.source === 'chapterEditor' || event.data.source === 'parentFrame')) {
+				this.handleCurrentSelected(event.data.data);
+				setTimeout(() => {
+					this.refreshPage();
+				}, 100)
+			} else if (event.data.type === 'clear_selection' && event.data.source === 'parentFrame') {
+				// 处理取消选中消息
+				console.log('AllArticles: 收到取消选中消息，清除当前选中状态');
+				this.frameInfo.currentSelected = null;
+				setTimeout(() => {
+					this.refreshPage();
+				}, 100)
+			}
+		},
+		
+		sendMessageToParent(data) {
+			if (window.parent && window.parent !== window) {
+				window.parent.postMessage(data, '*');
+				console.log('向父框架发送消息:', data);
+			}
+		},
+		
+		handleCurrentSelected(data) {
+			console.log('AllArticles: 收到当前选中文章信息', data);
+			if (data.article_id) {
+				// 更新当前选中的文章ID
+				this.frameInfo.currentSelected = parseInt(data.article_id);
+				console.log('AllArticles: 设置当前选中文章ID为', this.frameInfo.currentSelected);
+			}
 		}
 	},
 	onNavigationBarButtonTap(e) {
@@ -917,6 +1006,7 @@ export default {
 
 .titleOuter {
 	background-color: rgb(255, 255, 255);
+	cursor:pointer;
 }
 
 .title {

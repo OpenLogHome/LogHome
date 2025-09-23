@@ -97,7 +97,8 @@ router.get('/list', async (req, res) => {
             list: posts,
             total,
             page,
-            pageSize
+            pageSize,
+            has_more: page * pageSize < total
         });
     } catch (e) {
         console.error(e);

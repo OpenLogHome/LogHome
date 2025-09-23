@@ -30,7 +30,7 @@
       </div>
 
       <!-- 当前用户信息条 -->
-      <div class="my-info-wrapper" v-if="$auth.loggedIn && myInfo.name">
+      <div class="my-info-wrapper" v-if="isLogin && myInfo.name">
         <div class="my-info-rank">
           {{ myInfo.rank }}
         </div>
@@ -77,10 +77,13 @@ export default {
         name: "",
         avatar_url: ""
       },
-      rankClasses: ['rank-first', 'rank-second', 'rank-third']
+      rankClasses: ['rank-first', 'rank-second', 'rank-third'],
+      isLogin: false,
+      userInfo: null
     }
   },
   async mounted() {
+    this.checkLoginStatus()
     await this.getFansList()
   },
   methods: {
@@ -105,19 +108,22 @@ export default {
     async getMyInfo() {
       try {
         // 获取当前用户信息
-        const userInfo = this.$auth.user
-        if (!userInfo) return
+        if (!this.userInfo) {
+          this.userInfo = await this.$api.users.getUserProfile()
+        }
+        
+        if (!this.userInfo) return
         
         this.myInfo = {
           ...this.myInfo,
-          ...userInfo,
-          avatar_url: userInfo.avatar,
-          name: userInfo.name || userInfo.username
+          ...this.userInfo,
+          avatar_url: this.userInfo.avatar_url,
+          name: this.userInfo.name || '用户'
         }
         
         // 查找用户在粉丝榜中的排名
         for (let i = 0; i < this.fanInfo.length; i++) {
-          if (this.fanInfo[i].user_id == userInfo.id) {
+          if (this.fanInfo[i].user_id == this.userInfo.user_id) {
             this.myInfo.rank = `第 ${i + 1} 名`
             this.myInfo.fans_value = this.fanInfo[i].fans_value
             break
@@ -129,7 +135,28 @@ export default {
     },
     
     gotoUserProfile(userId) {
-      this.$router.push(`/user/${userId}`)
+      this.$router.push(`/users/${userId}`)
+    },
+    
+    // 检查登录状态
+    checkLoginStatus() {
+      try {
+        const tokenData = localStorage.getItem('token');
+        if (tokenData) {
+          this.isLogin = true;
+          
+          // 尝试从本地缓存获取用户信息
+          const cachedUserInfo = localStorage.getItem('LogHomeUserInfo');
+          if (cachedUserInfo) {
+            this.userInfo = JSON.parse(cachedUserInfo);
+          }
+        } else {
+          this.isLogin = false;
+          this.userInfo = null;
+        }
+      } catch (e) {
+        console.error("检查登录状态错误", e);
+      }
     }
   }
 }
@@ -367,4 +394,4 @@ $border-light: #f5f5f5;
     }
   }
 }
-</style> 
+</style>

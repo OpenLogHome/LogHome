@@ -235,7 +235,7 @@ export default {
 
       // 如果是设定书，则应当跳转到世界设定查看页面
       if (novelData.novel_type === "world") {
-        return redirect(`/worlds?novel_id=${novelData.novel_id}`)
+        return redirect(`/world/${novelData.novel_id}`)
       }
 
       // 获取章节列表 - 用于SEO的服务端渲染
@@ -276,7 +276,9 @@ export default {
       },
       worlds: [],
       showTippingPopup: false,
-      giftImage: ""
+      giftImage: "",
+      userInfo: null,
+      isLogin: false
     }
   },
   head() {
@@ -304,6 +306,12 @@ export default {
     }
   },
   async mounted() {
+    // 检查登录状态
+    this.checkLoginStatus()
+    // 如果已登录，获取用户信息
+    if (this.isLogin) {
+      await this.getUserInfo()
+    }
     // 补充其他客户端数据
     await this.fetchClientData()
   },
@@ -351,7 +359,7 @@ export default {
       }
     },
         
-        // 获取小说标签
+    // 获取小说标签
     async getNovelTags() {
       try {
         const tags = await this.$api.novels.getNovelTags(this.novel.novel_id)
@@ -517,6 +525,31 @@ export default {
       }
     },
     
+    // 检查登录状态
+    checkLoginStatus() {
+      const token = localStorage.getItem('token')
+      this.isLogin = !!token
+      return this.isLogin
+    },
+    
+    // 获取用户信息
+    async getUserInfo() {
+      if (!this.isLogin) return null
+      
+      try {
+        if (!this.userInfo) {
+          const userInfoResponse = await this.$api.users.getUserProfile()
+          if (userInfoResponse) {
+            this.userInfo = userInfoResponse
+          }
+        }
+        return this.userInfo
+      } catch (error) {
+        console.error('获取用户信息失败', error)
+        return null
+      }
+    },
+    
     // 开始阅读
     startReading() {
       if (this.chapters.length === 0) {
@@ -584,13 +617,17 @@ export default {
     },
 
     // 打赏功能
-    tip() {
+    async tip() {
       if (!localStorage.getItem("token")) {
         this.$router.push('/login')
         return
       }
 
-      if (this.$auth.user.id === this.novel.auther_id) {
+      // 获取用户信息，替换原来的$auth.fetchUser()
+      const userInfo = await this.getUserInfo()
+      console.log(userInfo);
+
+      if (userInfo.user_id === this.novel.auther_id) {
         this.$message.info("不能给自己的书打赏哦")
         return
       }
@@ -671,7 +708,7 @@ export default {
 
     // 跳转到用户主页
     gotoUserProfile(userId) {
-      this.$router.push(`/user/${userId}`)
+      this.$router.push(`/users/${userId}`)
     },
 
     // 显示简介
@@ -1503,4 +1540,4 @@ $heart-color: #FF6B6B;
     }
   }
 }
-</style> 
+</style>

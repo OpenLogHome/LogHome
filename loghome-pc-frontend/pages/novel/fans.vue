@@ -55,7 +55,7 @@
       </div>
 
       <!-- 当前用户信息条 -->
-      <div class="my-info-wrapper" v-if="$auth.loggedIn && myInfo.name">
+      <div class="my-info-wrapper" v-if="isLogin && myInfo.name">
         <div class="my-info-rank">
           {{ myInfo.rank }}
         </div>
@@ -122,7 +122,9 @@ export default {
         name: "",
         avatar_url: ""
       },
-      rankClasses: ['rank-first', 'rank-second', 'rank-third']
+      rankClasses: ['rank-first', 'rank-second', 'rank-third'],
+      isLogin: false,
+      userInfo: null
     }
   },
   head() {
@@ -131,27 +133,53 @@ export default {
     }
   },
   async mounted() {
-    if (localStorage.getItem("token")) {
+    this.checkLoginStatus()
+    if (this.isLogin) {
+      await this.getUserInfo()
       await this.getMyInfo()
     }
   },
   methods: {
+    // 检查登录状态
+    checkLoginStatus() {
+      const token = localStorage.getItem('token')
+      this.isLogin = !!token
+      return this.isLogin
+    },
+    
+    // 获取用户信息
+    async getUserInfo() {
+      if (!this.isLogin) return null
+      
+      try {
+        if (!this.userInfo) {
+          const userInfoResponse = await this.$api.users.getUserProfile()
+          if (userInfoResponse) {
+            this.userInfo = userInfoResponse
+          }
+        }
+        return this.userInfo
+      } catch (error) {
+        console.error('获取用户信息失败', error)
+        return null
+      }
+    },
+    
     async getMyInfo() {
       try {
         // 获取当前用户信息
-        const userInfo = this.$auth.user
-        if (!userInfo) return
+        if (!this.userInfo) return
         
         this.myInfo = {
           ...this.myInfo,
-          ...userInfo,
-          avatar_url: userInfo.avatar,
-          name: userInfo.name || userInfo.username
+          ...this.userInfo,
+          avatar_url: this.userInfo.avatar,
+          name: this.userInfo.name || this.userInfo.username
         }
         
         // 查找用户在粉丝榜中的排名
         for (let i = 0; i < this.fansList.length; i++) {
-          if (this.fansList[i].user_id == userInfo.id) {
+          if (this.fansList[i].user_id == this.userInfo.id) {
             this.myInfo.rank = `第 ${i + 1} 名`
             this.myInfo.fans_value = this.fansList[i].fans_value
             break
@@ -163,7 +191,7 @@ export default {
     },
     
     gotoUserProfile(userId) {
-      this.$router.push(`/user/${userId}`)
+      this.$router.push(`/users/${userId}`)
     }
   }
 }
@@ -517,4 +545,4 @@ $accent-color: #EA7034;
     }
   }
 }
-</style> 
+</style>

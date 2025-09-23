@@ -92,6 +92,52 @@ router.get('/list', async (req, res) => {
     }
 });
 
+// 获取推荐圈子
+router.get('/recommend', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const sort = req.query.sort || 'default'; // default, random
+        
+        let queryStr = `
+            SELECT c.*, u.name as creator_name, u.avatar_url as creator_avatar, 
+                  cc.name as category_name
+            FROM comm_circles c
+            LEFT JOIN users u ON c.creator_id = u.user_id
+            LEFT JOIN comm_circle_categories cc ON c.category_id = cc.category_id
+            WHERE c.status = 1
+        `;
+        
+        // 根据排序方式设置ORDER BY子句
+        if (sort === 'random') {
+            queryStr += ' ORDER BY RAND()';
+        } else {
+            queryStr += ' ORDER BY c.is_official DESC, c.member_count DESC, c.create_time DESC';
+        }
+        
+        queryStr += ' LIMIT ?, ?';
+        
+        const circles = await query(queryStr, [(page - 1) * pageSize, pageSize]);
+        
+        // 获取总数
+        const totalResult = await query(
+            'SELECT COUNT(*) as total FROM comm_circles WHERE status = 1'
+        );
+        const total = totalResult[0].total;
+        
+        res.json({
+            list: circles,
+            total,
+            page,
+            pageSize,
+            has_more: page * pageSize < total
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ msg: 'Internal server error' });
+    }
+});
+
 // 获取圈子详情
 router.get('/detail/:id', async (req, res) => {
     try {

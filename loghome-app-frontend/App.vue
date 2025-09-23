@@ -459,7 +459,7 @@ export default {
 			if (window.sessionStorage.getItem("hideBack") == "true") {
 				setTimeout(() => {
 					let backBtn = document.querySelector(".uni-page-head-hd");
-					console.log(backBtn);
+					console.log(backBtn, "hideBack");
 					backBtn.style.display = "none";
 				})
 			}

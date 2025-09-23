@@ -48,7 +48,7 @@ if ($config._app) {
   __webpack_public_path__ = urlJoin($config._app.cdnURL, $config._app.assetsPath)
 }
 
-Object.assign(Vue.config, {"silent":false,"performance":true})
+Object.assign(Vue.config, {"ignoredElements":[],"silent":false,"performance":true})
 
 const logs = NUXT.logs || []
   if (logs.length > 0) {
