@@ -35,6 +35,13 @@
     "_name": "_43808479"
   },
   {
+    "name": "tags",
+    "path": "/tags",
+    "component": "D:\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\tags\\\\index.vue",
+    "chunkName": "pages/tags/index",
+    "_name": "_56463498"
+  },
+  {
     "name": "write",
     "path": "/write",
     "component": "D:\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\write\\\\index.vue",
@@ -131,6 +138,13 @@
     "component": "D:\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\write\\\\settings\\\\_id.vue",
     "chunkName": "pages/write/settings/_id",
     "_name": "_e318ec6e"
+  },
+  {
+    "name": "write-activity-form-workId-tagId",
+    "path": "/write/activity-form/:workId?/:tagId?",
+    "component": "D:\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\write\\\\activity-form\\\\_workId\\\\_tagId.vue",
+    "chunkName": "pages/write/activity-form/_workId/_tagId",
+    "_name": "_6b9fb29d"
   },
   {
     "name": "article-id",

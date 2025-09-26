@@ -18,6 +18,7 @@ import nuxt_plugin_api_785206da from 'nuxt_plugin_api_785206da' // Source: ..\\p
 import nuxt_plugin_elementui_72a9ed1c from 'nuxt_plugin_elementui_72a9ed1c' // Source: ..\\plugins\\element-ui.js (mode: 'all')
 import nuxt_plugin_windowmanager_d3b7af1e from 'nuxt_plugin_windowmanager_d3b7af1e' // Source: ..\\plugins\\window-manager.js (mode: 'all')
 import nuxt_plugin_imagepreview_3b5c3c57 from 'nuxt_plugin_imagepreview_3b5c3c57' // Source: ..\\plugins\\image-preview.js (mode: 'all')
+import nuxt_plugin_devicedetect_6fcee933 from 'nuxt_plugin_devicedetect_6fcee933' // Source: ..\\plugins\\device-detect.js (mode: 'all')
 
 // Component: <ClientOnly>
 Vue.component(ClientOnly.name, ClientOnly)
@@ -232,6 +233,10 @@ async function createApp(ssrContext, config = {}) {
 
   if (typeof nuxt_plugin_imagepreview_3b5c3c57 === 'function') {
     await nuxt_plugin_imagepreview_3b5c3c57(app.context, inject)
+  }
+
+  if (typeof nuxt_plugin_devicedetect_6fcee933 === 'function') {
+    await nuxt_plugin_devicedetect_6fcee933(app.context, inject)
   }
 
   // Lock enablePreview in context

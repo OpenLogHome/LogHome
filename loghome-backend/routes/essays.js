@@ -959,4 +959,118 @@ router.post('/update_feedback_status', auth, async (req, res) => {
 	}
 });
 
+// 获取作品的活动信息
+router.get('/get_novel_activity', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		// 首先检查作品是否属于当前用户
+		let novel = await query(
+			'SELECT * FROM novels WHERE novel_id = ? AND author_id = ? AND deleted = 0',
+			[req.query.novel_id, user.user_id]
+		);
+		
+		if (novel.length === 0) {
+			return res.json(400, { msg: 'Novel not found or access denied' });
+		}
+
+		// 获取作品的标签，并检查是否有活动标签
+		let activityTags = await query(`
+			SELECT t.tag_id, t.tag_name, a.activity_name, a.activity_description, 
+				   a.activity_news, a.required_fields
+			FROM novel_tag nt
+			JOIN tags t ON nt.tag_id = t.tag_id
+			JOIN activity a ON t.tag_id = a.tag_id
+			WHERE nt.novel_id = ? AND t.is_activity_tag = 1 AND t.is_deleted = 0
+		`, [req.query.novel_id]);
+
+		if (activityTags.length === 0) {
+			return res.json({ hasActivity: false });
+		}
+
+		// 获取用户已填写的活动信息
+		let userActivityInfo = await query(`
+			SELECT ai.*, a.required_fields
+			FROM activity_information ai
+			JOIN activity a ON ai.tag_id = a.tag_id
+			WHERE ai.user_id = ? AND ai.novel_id = ?
+		`, [user.user_id, req.query.novel_id]);
+
+		// 解析JSON字段
+		activityTags = activityTags.map(tag => ({
+			...tag,
+			activity_news: JSON.parse(tag.activity_news || '[]'),
+			required_fields: JSON.parse(tag.required_fields || '[]')
+		}));
+
+		userActivityInfo = userActivityInfo.map(info => ({
+			...info,
+			form_data: JSON.parse(info.form_data || '{}')
+		}));
+
+		res.json({
+			hasActivity: true,
+			activities: activityTags,
+			userInfo: userActivityInfo
+		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 提交活动信息
+router.post('/submit_activity_info', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		const { novel_id, tag_id, form_data } = req.body;
+
+		// 验证作品是否属于当前用户
+		let novel = await query(
+			'SELECT * FROM novels WHERE novel_id = ? AND author_id = ? AND deleted = 0',
+			[novel_id, user.user_id]
+		);
+		
+		if (novel.length === 0) {
+			return res.json(400, { msg: 'Novel not found or access denied' });
+		}
+
+		// 验证标签是否为活动标签
+		let activityTag = await query(
+			'SELECT * FROM tags WHERE tag_id = ? AND is_activity_tag = 1 AND is_deleted = 0',
+			[tag_id]
+		);
+		
+		if (activityTag.length === 0) {
+			return res.json(400, { msg: 'Invalid activity tag' });
+		}
+
+		// 检查是否已存在记录
+		let existingInfo = await query(
+			'SELECT * FROM activity_information WHERE user_id = ? AND novel_id = ? AND tag_id = ?',
+			[user.user_id, novel_id, tag_id]
+		);
+
+		if (existingInfo.length > 0) {
+			// 更新现有记录
+			await query(
+				'UPDATE activity_information SET information_data = ?, update_time = CURRENT_TIMESTAMP WHERE user_id = ? AND novel_id = ? AND tag_id = ?',
+				[JSON.stringify(form_data), user.user_id, novel_id, tag_id]
+			);
+		} else {
+			// 插入新记录
+			await query(
+				'INSERT INTO activity_information (user_id, novel_id, tag_id, information_data, submit_time, update_time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+				[user.user_id, novel_id, tag_id, JSON.stringify(form_data)]
+			);
+		}
+
+		res.json({ success: true, msg: 'Activity information submitted successfully' });
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 module.exports = router;

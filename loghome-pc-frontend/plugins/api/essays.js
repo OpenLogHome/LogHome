@@ -236,6 +236,49 @@ const essays = {
             console.error('获取作品章节列表失败:', error)
             return []
         }
+    },
+
+    // 获取小说活动信息
+    getNovelActivity: async (novelId) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/essays/get_novel_activity?novel_id=${novelId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            return await response.json()
+        } catch (error) {
+            console.error('获取小说活动信息失败:', error)
+            return null
+        }
+    },
+
+    // 提交活动信息
+    submitActivityInfo: async (novelId, tagId, formData) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/essays/submit_activity_info`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    novel_id: novelId,
+                    tag_id: tagId,
+                    form_data: formData
+                })
+            })
+            return await response.json()
+        } catch (error) {
+            console.error('提交活动信息失败:', error)
+            throw error
+        }
     }
 };
 

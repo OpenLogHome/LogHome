@@ -37,7 +37,7 @@
 						:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
 						@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 						@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="bookSelectDrawer = true"
-						@goto-statistics="gotoStatistics"></book-detail-view>
+						@goto-statistics="gotoStatistics" @open-activity-form="openActivityForm"></book-detail-view>
 					<transition name='fade'>
 						<view style="text-align: center;position:relative;" v-if="curBook === -1">
 							<img src="../static/dig.png" alt=""
@@ -86,7 +86,7 @@
 					:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
 					@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 					@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="bookSelectDrawer = true"
-					@goto-statistics="gotoStatistics" @goto-world-novel="gotoWorldNovel"></book-detail-view>
+					@goto-statistics="gotoStatistics" @goto-world-novel="gotoWorldNovel" @open-activity-form="openActivityForm"></book-detail-view>
 			</div>
 		</el-drawer>
 
@@ -118,6 +118,44 @@
 			</navigator>
 		</el-drawer>
 
+		<!-- 活动表单弹窗 -->
+		<el-drawer v-if="currentActivity && currentActivity.required_fields"
+				   :visible.sync="showActivityForm" :with-header="false" size="80%" :direction="'btt'"
+			custom-class="activity-form-wrapper">
+			<div class="activity-form-container">
+				<div class="form-header">
+					<h3>{{ currentActivity.activity_name || '活动信息填写' }}</h3>
+					<el-button icon="el-icon-close" circle size="medium" @click="showActivityForm = false" type="text"></el-button>
+				</div>
+				
+				<div class="form-content" v-if="currentActivity && currentActivity.required_fields">
+					
+					<div class="form-fields">
+						<div v-for="field in currentActivity.required_fields" :key="field.name" class="form-field">
+							<label class="field-label">
+								{{ field.name }}
+								<span v-if="field.required" class="required-mark">*</span>
+							</label>
+							
+							<!-- 文本输入框 -->
+							<el-input 
+								v-model="activityFormData[field.name]"
+								:placeholder="field.placeholder || '请输入' + field.name"
+								:maxlength="field.maxLength"
+								show-word-limit>
+							</el-input>
+						</div>
+					</div>
+					
+					<div class="form-actions">
+						<el-button @click="showActivityForm = false">取消</el-button>
+						<el-button type="primary" @click="submitActivityForm">提交</el-button>
+					</div>
+					<div class="blank" style="height: 110rpx;"></div>
+				</div>
+			</div>
+		</el-drawer>
+
 	</view>
 </template>
 
@@ -145,6 +183,10 @@ export default {
 			timer: undefined,
 			searchBooks: [], //搜索到的书
 			showBookDetailModal: true, //是否打开书籍详情遮罩
+			// 活动表单相关数据
+			showActivityForm: false,
+			currentActivity: null,
+			activityFormData: {},
 		}
 	},
 	components: {
@@ -200,6 +242,95 @@ export default {
 		toggleViewMode() {
 			this.viewMode = this.viewMode === 'scroll' ? 'grid' : 'scroll'
 			localStorage.setItem('loghome_essay_view_mode', this.viewMode) // 保存视图模式到本地存储
+		},
+		// 打开活动表单
+		openActivityForm(activity, activityInfo) {
+			this.currentActivity = activity;
+			this.showActivityForm = true;
+			console.log(activityInfo);
+			// 如果已有填写的数据，预填充表单
+			if (activityInfo.userInfo && activityInfo.userInfo.length > 0) {
+				const existingInfo = activityInfo.userInfo[0];
+				if (existingInfo) {
+					// 从 information_data 字段解析实际的表单数据
+					try {
+						this.activityFormData = existingInfo.information_data ? JSON.parse(existingInfo.information_data) : {};
+					} catch (e) {
+						console.error('解析已填写的表单数据失败:', e);
+						this.activityFormData = {};
+					}
+				} else {
+					this.activityFormData = {};
+				}
+			} else {
+				this.activityFormData = {};
+			}
+		},
+		// 提交活动表单
+		async submitActivityForm() {
+			try {
+				// 验证必填字段
+				if (this.currentActivity?.required_fields) {
+					for (const field of this.currentActivity.required_fields) {
+						if (field.required && (!this.activityFormData[field.name] || this.activityFormData[field.name].toString().trim() === '')) {
+							uni.showToast({
+								title: `请填写${field.name}`,
+								icon: 'none'
+							});
+							return;
+						}
+					}
+				}
+
+				const token = JSON.parse(localStorage.getItem('token'))?.tk;
+				if (!token) {
+					uni.showToast({
+						title: '请先登录',
+						icon: 'none'
+					});
+					return;
+				}
+
+				uni.showLoading({
+					title: '提交中...'
+				});
+
+				const response = await axios.post(this.$baseUrl + '/essays/submit_activity_info', {
+					novel_id: this.books[this.curBook].novel_id,
+					tag_id: this.currentActivity.tag_id,
+					form_data: this.activityFormData
+				}, {
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + token
+					}
+				});
+
+				uni.hideLoading();
+				uni.showToast({
+					title: '提交成功',
+					icon: 'success'
+				});
+
+				this.showActivityForm = false;
+				// 重置表单数据
+				this.activityFormData = {};
+
+			} catch (error) {
+				uni.hideLoading();
+				console.error('提交活动信息失败:', error);
+				if (error.response?.status === 401) {
+					localStorage.removeItem('token');
+					uni.navigateTo({
+						url: './users/login?msg=unAuthorized'
+					});
+				} else {
+					uni.showToast({
+						title: error.response?.data?.message || '提交失败，请重试',
+						icon: 'none'
+					});
+				}
+			}
 		},
 		selectBook(index) {
 			if (this.viewMode === 'grid') {
@@ -1005,4 +1136,182 @@ view.outer {
 		&.book-select-drawer {
 			z-index: 3100 !important;
 		}
-	}</style>
+	}
+
+	// 活动表单样式
+	:deep(.activity-form-wrapper) {
+		.el-drawer__body {
+			padding: 0;
+		}
+	}
+
+	.activity-form-container {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		background-color: #fff;
+
+		.dark-mode & {
+			background-color: var(--background-color-secondary);
+		}
+
+		.form-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 40rpx;
+			border-bottom: 1px solid #eee;
+
+			.dark-mode & {
+				border-bottom-color: rgba(255, 255, 255, 0.1);
+			}
+
+			h3 {
+				margin: 0;
+				font-size: 36rpx;
+				font-weight: 600;
+				color: #333;
+
+				.dark-mode & {
+					color: var(--text-color-primary);
+				}
+			}
+		}
+
+		.form-content {
+			flex: 1;
+			padding: 40rpx;
+			overflow-y: auto;
+
+			.activity-description {
+				margin-bottom: 40rpx;
+				padding: 30rpx;
+				background-color: #f8f9fa;
+				border-radius: 12rpx;
+				border-left: 4px solid #007aff;
+
+				.dark-mode & {
+					background-color: rgba(255, 255, 255, 0.05);
+					border-left-color: #409eff;
+				}
+
+				p {
+					margin: 0;
+					font-size: 28rpx;
+					line-height: 1.6;
+					color: #666;
+
+					.dark-mode & {
+						color: var(--text-color-secondary);
+					}
+				}
+			}
+
+			.form-fields {
+				.form-field {
+					margin-bottom: 40rpx;
+
+					.field-label {
+						display: block;
+						margin-bottom: 16rpx;
+						font-size: 28rpx;
+						font-weight: 500;
+						color: #333;
+
+						.dark-mode & {
+							color: var(--text-color-primary);
+						}
+
+						.required-mark {
+							color: #f56c6c;
+							margin-left: 4rpx;
+						}
+					}
+
+					.field-description {
+						margin-top: 12rpx;
+						font-size: 24rpx;
+						color: #999;
+						line-height: 1.4;
+
+						.dark-mode & {
+							color: var(--text-color-tertiary);
+						}
+					}
+
+					:deep(.el-input),
+					:deep(.el-select),
+					:deep(.el-date-picker),
+					:deep(.el-input-number) {
+						width: 100%;
+
+						.el-input__inner {
+							border-radius: 8rpx;
+							border: 1px solid #ddd;
+							font-size: 28rpx;
+							padding: 24rpx 20rpx;
+
+							.dark-mode & {
+								background-color: rgba(255, 255, 255, 0.05);
+								border-color: rgba(255, 255, 255, 0.1);
+								color: var(--text-color-primary);
+							}
+
+							&:focus {
+								border-color: #007aff;
+								box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+							}
+						}
+
+						.el-textarea__inner {
+							border-radius: 8rpx;
+							border: 1px solid #ddd;
+							font-size: 28rpx;
+							padding: 20rpx;
+							resize: vertical;
+
+							.dark-mode & {
+								background-color: rgba(255, 255, 255, 0.05);
+								border-color: rgba(255, 255, 255, 0.1);
+								color: var(--text-color-primary);
+							}
+
+							&:focus {
+								border-color: #007aff;
+								box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+							}
+						}
+					}
+				}
+			}
+
+			.form-actions {
+				display: flex;
+				justify-content: flex-end;
+				gap: 20rpx;
+				padding-top: 40rpx;
+				border-top: 1px solid #eee;
+
+				.dark-mode & {
+					border-top-color: rgba(255, 255, 255, 0.1);
+				}
+
+				:deep(.el-button) {
+					padding: 20rpx 40rpx;
+					font-size: 28rpx;
+					border-radius: 8rpx;
+
+					&.el-button--primary {
+						background-color: #007aff;
+						border-color: #007aff;
+
+						&:hover {
+							background-color: #0056cc;
+							border-color: #0056cc;
+						}
+					}
+				}
+			}
+		}
+	}
+</style>

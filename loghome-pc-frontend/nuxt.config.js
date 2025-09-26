@@ -2,9 +2,12 @@ export default {
   env: {
     STATIC_URL: process.env.STATIC_URL || '',
     baseUrl: process.env.NODE_ENV === 'production' 
-      ? 'https://loghomeservice.codesocean.top' // 生产环境API地址
-      : 'https://loghomeservice.codesocean.top', // 开发环境API地址
-    mobileUrl: process.env.NODE_ENV === 'production' ? "https://loghome.codesocean.top" : "https://loghome.codesocean.top"
+      ? 'https://loghome.ink' // 生产环境API地址
+      : 'http://127.0.0.1:9000', // 开发环境API地址
+    // 移动端SPA应用的URL配置
+    mobileUrl: process.env.NODE_ENV === 'production' 
+      ? "https://m.loghome.ink" // 生产环境移动端URL
+      : "http://localhost:8080" // 开发环境移动端URL，可根据实际端口调整
   },
   /*
    ** Build configuration
@@ -29,6 +32,8 @@ export default {
   router: {
     // base route
     base: '/',
+    // 添加全局中间件
+    middleware: ['device-detect'],
     // custom route
     extendRoutes(routes, resolve) {
       // 移除不存在的路由配置
@@ -75,7 +80,8 @@ export default {
     '~/plugins/api.js',
     '~/plugins/element-ui.js',
     '~/plugins/window-manager.js',
-    '~/plugins/image-preview.js'
+    '~/plugins/image-preview.js',
+    '~/plugins/device-detect.js'
   ],
   /*
    ** Nuxt.js dev-modules

@@ -200,7 +200,7 @@ export async function setContext (app, context) {
       payload: context.payload,
       error: context.error,
       base: app.router.options.base,
-      env: {"STATIC_URL":"","baseUrl":"https://loghomeservice.codesocean.top","mobileUrl":"https://loghome.codesocean.top"}
+      env: {"STATIC_URL":"","baseUrl":"http://127.0.0.1:9000","mobileUrl":"http://localhost:8080"}
     }
     // Only set once
 

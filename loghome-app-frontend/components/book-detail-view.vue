@@ -31,6 +31,50 @@
       <!-- 添加Banner组件 -->
       <banner page="essays" style="margin-top: 30rpx; transform: scale(0.98);"/>
 
+      <!-- 创作活动板块 -->
+      <div class="statistic-box" v-if="activityInfo && activityInfo.hasActivity">
+        <div class="head">
+          <div class="box-title">创作活动</div>
+          <div class="more">
+            <p>参与创作活动，获得更多曝光</p>
+          </div>
+        </div>
+        <div class="activity-content">
+          <div v-for="activity in activityInfo.activities" :key="activity.tag_id" class="activity-item">
+            <div class="activity-header">
+              <div class="activity-name">{{activity.activity_name}}</div>
+              <el-tag size="mini" type="success" effect="dark">活动中</el-tag>
+            </div>
+            <div class="activity-description">{{activity.activity_description}}</div>
+            
+            <!-- 活动资讯 -->
+            <div class="activity-news" v-if="activity.activity_news && activity.activity_news.length > 0">
+              <div class="news-title">活动资讯</div>
+              <div class="news-list">
+                <div v-for="news in activity.activity_news" :key="news.title" class="news-item" 
+                  @click="openNewsLink(news)">
+                  <div class="news-item-title">{{news.title}}</div>
+                  <uni-icons type="right" size="14" color="#999"></uni-icons>
+                </div>
+              </div>
+            </div>
+
+            <!-- 信息填写入口 -->
+            <div class="activity-form" v-if="activity.required_fields && activity.required_fields.length > 0">
+              <div class="form-status">
+                <div class="form-title">活动参与信息</div>
+                <div class="form-status-text" :class="getFormStatusClass(activity.tag_id)">
+                  {{getFormStatusText(activity.tag_id, activity.required_fields)}}
+                </div>
+              </div>
+              <div class="form-button" @click="openActivityForm(activity)">
+                {{hasFilledForm(activity.tag_id) ? '修改信息' : '填写信息'}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="statistic-box">
         <div class="head">
           <div class="box-title">作品世界</div>
@@ -123,6 +167,7 @@
 <script>
 import writerHelper from "./writer_helper"
 import banner from './banner.vue'
+import axios from 'axios'
 import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
@@ -150,6 +195,11 @@ export default {
       default: false
     }
   },
+  data() {
+    return {
+      activityInfo: null
+    }
+  },
   methods: {
     showFullDescription() {
       uni.showModal({
@@ -158,10 +208,125 @@ export default {
         confirmText: '关闭',
         confirmColor: "#EA7034"
       });
+    },
+    // 获取活动信息
+    async fetchActivityInfo() {
+      try {
+        uni.showLoading({
+          title: '加载中',
+          mask: true
+        });
+        let tk = JSON.parse(window.localStorage.getItem('token'));
+        if (tk) tk = tk.tk;
+        
+        const response = await axios.get(this.$baseUrl + '/essays/get_novel_activity', {
+          params: {
+            novel_id: this.book.novel_id
+          },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + tk
+          }
+        });
+        uni.hideLoading();
+        if (response.data && response.data.hasActivity) {
+          this.activityInfo = response.data;
+        } else {
+          this.activityInfo = null;
+        }
+      } catch (error) {
+        console.error('获取活动信息失败:', error);
+        if (error.message == "Request failed with status code 401") {
+          window.localStorage.removeItem('token');
+          this.$isFromLogin = true;
+          uni.navigateTo({
+            url: './users/login?msg=' + 'unAuthorized'
+          });
+        }
+      }
+    },
+    // 打开资讯链接
+    openNewsLink(news) {
+      if (news.mobile_link) {
+        uni.navigateTo({
+          url: news.mobile_link
+        });
+      }
+    },
+    // 打开活动表单
+    async openActivityForm(activity) {
+      await this.fetchActivityInfo();
+      this.$emit('open-activity-form', activity, this.activityInfo);
+    },
+    // 检查是否已填写表单
+    hasFilledForm(tagId) {
+      if (!this.activityInfo || !this.activityInfo.userInfo) return false;
+      return this.activityInfo.userInfo.some(info => info.tag_id === tagId);
+    },
+    // 获取表单状态文本
+    getFormStatusText(tagId, requiredFields) {
+      if (!this.hasFilledForm(tagId)) {
+        const requiredCount = requiredFields.filter(field => field.required).length;
+        return requiredCount > 0 ? `有${requiredCount}项必填信息未填写` : '信息未填写';
+      }
+      
+      const userInfo = this.activityInfo.userInfo.find(info => info.tag_id === tagId);
+      if (!userInfo) return '信息未填写';
+      
+      // 从 information_data 字段解析实际的表单数据
+      let formData = {};
+      try {
+        formData = userInfo.information_data ? JSON.parse(userInfo.information_data) : {};
+      } catch (e) {
+        console.error('解析表单数据失败:', e);
+        formData = {};
+      }
+      
+      const missingRequired = requiredFields.filter(field => 
+        field.required && (!formData[field.name] || formData[field.name].toString().trim() === '')
+      );
+      
+      return missingRequired.length > 0 
+        ? `还有${missingRequired.length}项必填信息未完善` 
+        : '信息已完善';
+    },
+    // 获取表单状态样式类
+    getFormStatusClass(tagId) {
+      if (!this.hasFilledForm(tagId)) return 'status-incomplete';
+      
+      const userInfo = this.activityInfo.userInfo.find(info => info.tag_id === tagId);
+      if (!userInfo) return 'status-incomplete';
+      
+      const activity = this.activityInfo.activities.find(act => act.tag_id === tagId);
+      if (!activity) return 'status-incomplete';
+      
+      // 从 information_data 字段解析实际的表单数据
+      let formData = {};
+      try {
+        formData = userInfo.information_data ? JSON.parse(userInfo.information_data) : {};
+      } catch (e) {
+        console.error('解析表单数据失败:', e);
+        formData = {};
+      }
+      
+      const missingRequired = activity.required_fields.filter(field => 
+        field.required && (!formData[field.name] || formData[field.name].toString().trim() === '')
+      );
+      
+      return missingRequired.length > 0 ? 'status-incomplete' : 'status-complete';
     }
   },
   onShow() {
-    console.log(this.book);
+  },
+  watch: {
+    book: {
+      handler(newBook) {
+        if (newBook && newBook.novel_id) {
+          this.fetchActivityInfo();
+        }
+      },
+      immediate: true
+    }
   }
 }
 </script>
@@ -446,6 +611,175 @@ export default {
           
           .dark-mode & {
             background-color: #6c6c6c22;
+          }
+        }
+      }
+    }
+
+    // 创作活动板块样式
+    .activity-content {
+      margin: 0 40rpx;
+      
+      .activity-item {
+        margin-bottom: 30rpx;
+        padding: 30rpx;
+        background-color: #f8f9fa;
+        border-radius: 15rpx;
+        
+        .dark-mode & {
+          background-color: var(--background-color-tertiary);
+        }
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        .activity-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15rpx;
+          
+          .activity-name {
+            font-size: 32rpx;
+            font-weight: bold;
+            color: #2d2d2d;
+            
+            .dark-mode & {
+              color: var(--text-color-primary);
+            }
+          }
+        }
+        
+        .activity-description {
+          font-size: 28rpx;
+          color: #666;
+          margin-bottom: 25rpx;
+          line-height: 1.5;
+          text-align: left;
+          
+          .dark-mode & {
+            color: var(--text-color-regular);
+          }
+        }
+        
+        .activity-news {
+          margin-bottom: 25rpx;
+          text-align: left;
+          
+          .news-title {
+            font-size: 28rpx;
+            font-weight: bold;
+            color: #2d2d2d;
+            margin-bottom: 15rpx;
+            
+            .dark-mode & {
+              color: var(--text-color-primary);
+            }
+          }
+          
+          .news-list {
+            .news-item {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 20rpx 25rpx;
+              background-color: white;
+              border-radius: 10rpx;
+              margin-bottom: 10rpx;
+              transition: all 0.3s;
+              
+              .dark-mode & {
+                background-color: var(--background-color-base);
+              }
+              
+              &:active {
+                transform: scale(0.98);
+                background-color: #f0f0f0;
+                
+                .dark-mode & {
+                  background-color: var(--background-color-secondary);
+                }
+              }
+              
+              .news-item-title {
+                font-size: 26rpx;
+                color: #333;
+                flex: 1;
+                
+                .dark-mode & {
+                  color: var(--text-color-primary);
+                }
+              }
+              
+              .news-arrow {
+                font-size: 24rpx;
+                color: #999;
+                margin-left: 15rpx;
+                
+                .dark-mode & {
+                  color: var(--text-color-secondary);
+                }
+              }
+            }
+          }
+        }
+        
+        .activity-form {
+          .form-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20rpx;
+            
+            .form-title {
+              font-size: 28rpx;
+              font-weight: bold;
+              color: #2d2d2d;
+              
+              .dark-mode & {
+                color: var(--text-color-primary);
+              }
+            }
+            
+            .form-status-text {
+              font-size: 24rpx;
+              
+              &.status-incomplete {
+                color: #ff6b6b;
+              }
+              
+              &.status-complete {
+                color: #51cf66;
+              }
+            }
+          }
+          
+          .form-button {
+            width: 100%;
+            height: 80rpx;
+            background-color: rgb(180, 111, 88);
+            color: white;
+            border-radius: 10rpx;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28rpx;
+            font-weight: bold;
+            transition: all 0.3s;
+            
+            .dark-mode & {
+              background-color: rgb(150, 91, 68);
+            }
+            
+            &:active {
+              transform: scale(0.98);
+              background-color: #b46f58;
+              
+              .dark-mode & {
+                background-color: #9c5e48;
+              }
+            }
           }
         }
       }

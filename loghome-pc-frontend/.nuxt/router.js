@@ -9,6 +9,7 @@ const _62e64bb0 = () => interopDefault(import('..\\pages\\login.vue' /* webpackC
 const _35c3b8e9 = () => interopDefault(import('..\\pages\\me.vue' /* webpackChunkName: "pages/me" */))
 const _1f8baefb = () => interopDefault(import('..\\pages\\read\\index.vue' /* webpackChunkName: "pages/read/index" */))
 const _43808479 = () => interopDefault(import('..\\pages\\search.vue' /* webpackChunkName: "pages/search" */))
+const _56463498 = () => interopDefault(import('..\\pages\\tags\\index.vue' /* webpackChunkName: "pages/tags/index" */))
 const _76a00f24 = () => interopDefault(import('..\\pages\\write\\index.vue' /* webpackChunkName: "pages/write/index" */))
 const _0eb78800 = () => interopDefault(import('..\\pages\\agreement\\content.vue' /* webpackChunkName: "pages/agreement/content" */))
 const _15553600 = () => interopDefault(import('..\\pages\\community\\chat.vue' /* webpackChunkName: "pages/community/chat" */))
@@ -23,6 +24,7 @@ const _15354a1c = () => interopDefault(import('..\\pages\\community\\circle\\_id
 const _ffb8f5bc = () => interopDefault(import('..\\pages\\community\\post\\_id.vue' /* webpackChunkName: "pages/community/post/_id" */))
 const _68c50e7c = () => interopDefault(import('..\\pages\\write\\edit\\_id.vue' /* webpackChunkName: "pages/write/edit/_id" */))
 const _e318ec6e = () => interopDefault(import('..\\pages\\write\\settings\\_id.vue' /* webpackChunkName: "pages/write/settings/_id" */))
+const _6b9fb29d = () => interopDefault(import('..\\pages\\write\\activity-form\\_workId\\_tagId.vue' /* webpackChunkName: "pages/write/activity-form/_workId/_tagId" */))
 const _f33455d6 = () => interopDefault(import('..\\pages\\article\\_id.vue' /* webpackChunkName: "pages/article/_id" */))
 const _40bb64cf = () => interopDefault(import('..\\pages\\novel\\_id.vue' /* webpackChunkName: "pages/novel/_id" */))
 const _3aa99afa = () => interopDefault(import('..\\pages\\users\\_id.vue' /* webpackChunkName: "pages/users/_id" */))
@@ -60,6 +62,10 @@ export const routerOptions = {
     path: "/search",
     component: _43808479,
     name: "search"
+  }, {
+    path: "/tags",
+    component: _56463498,
+    name: "tags"
   }, {
     path: "/write",
     component: _76a00f24,
@@ -116,6 +122,10 @@ export const routerOptions = {
     path: "/write/settings/:id?",
     component: _e318ec6e,
     name: "write-settings-id"
+  }, {
+    path: "/write/activity-form/:workId?/:tagId?",
+    component: _6b9fb29d,
+    name: "write-activity-form-workId-tagId"
   }, {
     path: "/article/:id?",
     component: _f33455d6,
