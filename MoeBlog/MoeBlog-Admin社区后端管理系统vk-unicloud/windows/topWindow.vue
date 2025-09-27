@@ -154,7 +154,7 @@ export default {
 				// },
 				{
 					text: "打开社区",
-					url: "https://loghome.codesocean.top"
+					url: "https://loghome.ink"
 				}
 			],
 			popupMenuOpened: false,

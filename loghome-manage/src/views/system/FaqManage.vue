@@ -263,7 +263,7 @@ export default {
             return '';
         },
         showMoreInfo(faq_id){
-            window.open('http://loghome.codesocean.top/#/pages/apps/faqs/feedback?id=' + faq_id,'_blank');
+            window.open('http://loghome.ink/#/pages/apps/faqs/feedback?id=' + faq_id,'_blank');
         },
         handleDialogClosed() {
             // 对话框关闭后的处理

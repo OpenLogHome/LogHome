@@ -6,7 +6,7 @@
 			class="alert"
 			:closable="false"
 			close-text="知道了"
-			description="近期部分用户反馈APP端在一些手机上无法正常上传图片,如果您遭遇了相似情形,请前往网页端 http://loghome.codesocean.top 更换图片,给您造成的不便我们深感歉意!"
+			description="近期部分用户反馈APP端在一些手机上无法正常上传图片,如果您遭遇了相似情形,请前往网页端 http://loghome.ink 更换图片,给您造成的不便我们深感歉意!"
 			show-icon
 			v-show="$store.state.appVersion"
 			>

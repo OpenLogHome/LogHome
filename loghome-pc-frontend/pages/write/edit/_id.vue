@@ -140,8 +140,7 @@ export default {
           
           // 构建移动端URL
           const redirectUrl = encodeURIComponent(`/pages/writers/allArticles?id=${this.workId}`)
-          // this.panelUrl = `${process.env.mobileUrl}/#/pages/users/external_login?token=${this.token}&redirectTo=${redirectUrl}`
-          this.panelUrl = `${"http://localhost:8080"}/#/pages/users/external_login?token=${this.token}&hideback=true&redirectTo=${redirectUrl}`
+          this.panelUrl = `${process.env.mobileUrl}/#/pages/users/external_login?token=${this.token}&hideback=true&redirectTo=${redirectUrl}`
           
           console.log('移动端URL:', this.panelUrl)
         } else {
@@ -213,8 +212,6 @@ export default {
     },
     
     handleIframeMessage(event) {
-      // 验证消息来源（可选，根据实际需求调整）
-      // if (event.origin !== 'http://localhost:8080') return;
       
       console.log('父框架收到iframe消息:', event.data)
       
@@ -287,7 +284,7 @@ export default {
       
       if (editorUrl) {
         // 构建完整的编辑器URL
-        const fullEditorUrl = `${'http://localhost:8080'}/#${editorUrl}&hideback=true&token=${this.token}`
+        const fullEditorUrl = `${process.env.mobileUrl}/#${editorUrl}&hideback=true&token=${this.token}`
         
         // 更新右侧面板内容
         this.$nextTick(() => {

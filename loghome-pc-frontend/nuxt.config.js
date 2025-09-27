@@ -2,12 +2,12 @@ export default {
   env: {
     STATIC_URL: process.env.STATIC_URL || '',
     baseUrl: process.env.NODE_ENV === 'production' 
-      ? 'https://loghome.ink' // 生产环境API地址
-      : 'http://127.0.0.1:9000', // 开发环境API地址
+      ? 'https://loghomeservice.codesocean.top' // 生产环境API地址
+      : 'https://loghomeservice.codesocean.top', // 开发环境API地址
     // 移动端SPA应用的URL配置
     mobileUrl: process.env.NODE_ENV === 'production' 
       ? "https://m.loghome.ink" // 生产环境移动端URL
-      : "http://localhost:8080" // 开发环境移动端URL，可根据实际端口调整
+      : "https://m.loghome.ink" // 开发环境移动端URL，可根据实际端口调整
   },
   /*
    ** Build configuration

@@ -627,7 +627,7 @@ export default {
 		},
 		traditionalShare() {
 			let content = "我正在原木社区读《" + this.bookInfo.name + "》，你也一起来看看吧！\n" +
-				"https://loghome.codesocean.top/#/pages/readers/bookInfo?id=" + this.uid +
+				"https://loghome.ink/#/pages/readers/bookInfo?id=" + this.uid +
 				"\n用浏览器打开链接，或复制这段文本打开原木社区APP即可查看哦！";
 			return content;
 		},

@@ -18,7 +18,7 @@
 			gotoDonate(){
 				console.log("nononono");
 				uni.navigateTo({
-					url:"apps/h5webview?url=https://loghome.codesocean.top/activities/novelcraft&title=干草块杯活动页面&baseUrl=loghome.codesocean.top/activities/novelcraft"
+					url:"apps/h5webview?url=https://loghome.ink/activities/novelcraft&title=干草块杯活动页面&baseUrl=loghome.ink/activities/novelcraft"
 				})
 			},
 		}

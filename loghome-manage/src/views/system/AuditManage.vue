@@ -201,7 +201,7 @@ export default {
             return '';
         },
         showMoreInfo(article_id){
-            window.open(`http://loghome.codesocean.top/#/pages/articles/detail?id=${article_id}`, '_blank');
+            window.open(`http://loghome.ink/#/pages/articles/detail?id=${article_id}`, '_blank');
         },
         refresh_article_audit_amount(){
             let _this = this;

@@ -1033,7 +1033,7 @@ export default {
 				data: `${this.selectedParagraph.value}
 ===================
 版权声明：本文为原创文章，遵循 《原木社区用户内容上传协议》，转载请附上原文出处链接和本声明。 
-原文链接：http://loghome.codesocean.top/#/pages/readers/newReader/article?id=${this.articleId}`,
+原文链接：http://loghome.ink/#/pages/readers/newReader/article?id=${this.articleId}`,
 				success: () => {
 					uni.showToast({
 						title: '已复制',
