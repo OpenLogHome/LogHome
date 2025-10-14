@@ -90,7 +90,7 @@
 					duration: 2000
 				});
 			}
-			this.$alert("旧版登录通道即将在7月30日关闭，为了保证你的正常使用，请还未绑定手机号的用户尽快前往设置=>账号绑定进行手机号绑定，谢谢。")
+			// this.$alert("旧版登录通道即将在7月30日关闭，为了保证你的正常使用，请还未绑定手机号的用户尽快前往设置=>账号绑定进行手机号绑定，谢谢。")
 		},
 		onBackPress(e) {
 			// uni.switchTab({
@@ -133,7 +133,7 @@
 			},
 			register(){
 				uni.navigateTo({
-					url:"./login_page_mobile"
+					url:"./login_page_email"
 				})
 			},
 			selectCk(e){

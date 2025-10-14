@@ -343,6 +343,7 @@ export default {
         })
         
         this.post.is_liked = res.data.liked
+        this.$forceUpdate();
       } catch (error) {
         console.error('获取点赞状态失败:', error)
       }
@@ -821,7 +822,7 @@ export default {
     },
     
     traditionalShare() {
-      return `来自原木社区的分享：${this.post.title}\n${this.post.content.substring(0, 50)}${this.post.content.length > 50 ? '...' : ''}\n点击链接查看详情：https://loghome.ink/#/pages/community/postDetail?id=${this.post.post_id}`;
+      return `来自原木社区的分享：${this.post.title}\n${this.post.content.substring(0, 50)}${this.post.content.length > 50 ? '...' : ''}\n点击链接查看详情：https://loghome.ink/community/post/${this.post.post_id}`;
     },
     
     createShareCode() {

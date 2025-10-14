@@ -13,7 +13,7 @@ import { createStore } from './store.js'
 
 /* Plugins */
 
-import nuxt_plugin_axios_390cb76f from 'nuxt_plugin_axios_390cb76f' // Source: .\\axios.js (mode: 'all')
+import nuxt_plugin_axios_c3b2abc8 from 'nuxt_plugin_axios_c3b2abc8' // Source: .\\axios.js (mode: 'all')
 import nuxt_plugin_api_785206da from 'nuxt_plugin_api_785206da' // Source: ..\\plugins\\api.js (mode: 'all')
 import nuxt_plugin_elementui_72a9ed1c from 'nuxt_plugin_elementui_72a9ed1c' // Source: ..\\plugins\\element-ui.js (mode: 'all')
 import nuxt_plugin_windowmanager_d3b7af1e from 'nuxt_plugin_windowmanager_d3b7af1e' // Source: ..\\plugins\\window-manager.js (mode: 'all')
@@ -86,7 +86,7 @@ async function createApp(ssrContext, config = {}) {
   // here we inject the router and store to all child components,
   // making them available everywhere as `this.$router` and `this.$store`.
   const app = {
-    head: {"title":"原木社区 - 方块人的文艺世界","meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1"},{"hid":"description","name":"description","content":"原木社区 - 方块人的文艺世界"}],"link":[{"rel":"icon","type":"image\u002Fx-icon","href":"\u002Ffavicon.ico"}],"style":[],"script":[]},
+    head: {"title":"原木社区 - 方块人的文艺世界","meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1"},{"hid":"description","name":"description","content":"原木社区是专为Minecraft及其衍生文化爱好者搭建的文艺作品读写一体化平台，你可以在这里自由地创作与Minecraft相关的文艺内容，也可以在这些作品中徜徉，感受方块世界的美好。"}],"link":[{"rel":"icon","type":"image\u002Fx-icon","href":"\u002Ffavicon.ico"}],"style":[],"script":[]},
 
     store,
     router,
@@ -215,8 +215,8 @@ async function createApp(ssrContext, config = {}) {
   }
   // Plugin execution
 
-  if (typeof nuxt_plugin_axios_390cb76f === 'function') {
-    await nuxt_plugin_axios_390cb76f(app.context, inject)
+  if (typeof nuxt_plugin_axios_c3b2abc8 === 'function') {
+    await nuxt_plugin_axios_c3b2abc8(app.context, inject)
   }
 
   if (typeof nuxt_plugin_api_785206da === 'function') {

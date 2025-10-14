@@ -1,11 +1,11 @@
 export default {
   env: {
     STATIC_URL: process.env.STATIC_URL || '',
-    baseUrl: process.env.NODE_ENV === 'production' 
+    baseUrl: process.env.NODE_ENV === 'production'
       ? 'https://loghomeservice.codesocean.top' // 生产环境API地址
       : 'https://loghomeservice.codesocean.top', // 开发环境API地址
     // 移动端SPA应用的URL配置
-    mobileUrl: process.env.NODE_ENV === 'production' 
+    mobileUrl: process.env.NODE_ENV === 'production'
       ? "https://m.loghome.ink" // 生产环境移动端URL
       : "https://m.loghome.ink" // 开发环境移动端URL，可根据实际端口调整
   },
@@ -13,7 +13,7 @@ export default {
    ** Build configuration
    */
   build: {
-	publicPath : process.env.STATIC_URL,
+    publicPath: process.env.STATIC_URL,
     extend(config, { isDev, isClient }) {
       if (!isDev && process.env.STATIC_URL) {
         config.output.publicPath = process.env.STATIC_URL
@@ -24,10 +24,12 @@ export default {
       scss: {
         implementation: require('sass'),
         sassOptions: {
-          fiber: false
-        }
-      }
-    }
+          fiber: false,
+          silenceDeprecations: ['import', 'slash-div', 'global-builtin', 'legacy-js-api', 'color-functions'],
+        },
+      },
+    },
+    postcss: null
   },
   router: {
     // base route
@@ -50,7 +52,7 @@ export default {
       {
         hid: 'description',
         name: 'description',
-        content: '原木社区 - 方块人的文艺世界'
+        content: '原木社区是专为Minecraft及其衍生文化爱好者搭建的文艺作品读写一体化平台，你可以在这里自由地创作与Minecraft相关的文艺内容，也可以在这些作品中徜徉，感受方块世界的美好。'
       }
     ],
     link: [
@@ -100,7 +102,7 @@ export default {
     baseURL: process.env.baseUrl,
     credentials: true
   },
-  
+
   /*
    ** Vue configuration
    */
@@ -109,5 +111,5 @@ export default {
       ignoredElements: [
       ]
     }
-  }
+  },
 }

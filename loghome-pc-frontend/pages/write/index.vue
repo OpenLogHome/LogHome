@@ -149,6 +149,7 @@ export default {
     }
   },
   async mounted() {
+    this.checkLoginStatus();
     await this.fetchWorks()
     await this.loadActivityData()
   },
@@ -167,6 +168,13 @@ export default {
     }
   },
   methods: {
+    checkLoginStatus() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        this.$message.warning('请先登录');
+        this.$router.push('/login');
+      }
+    },
     async fetchWorks() {
       this.loading = true
       this.error = null

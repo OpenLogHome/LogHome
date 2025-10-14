@@ -1,109 +1,116 @@
-exports.ids = [9];
+exports.ids = [10];
 exports.modules = {
 
-/***/ 112:
+/***/ 110:
 /***/ (function(module, exports) {
 
 module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAhdEVYdENyZWF0aW9uIFRpbWUAMjAyMToxMDoyNSAxODoxMToyNknx73wAAACkSURBVGhD7daLCcMgFIVhmzGcyTkcyjmcyTVaKgaiWFLKtRzk/yCYBxIuJ17jAAAAIOPRxmVSSs92WsUYl73zaOMW/p7MyDKprZKhGFV0M1V0M1UUo4pupopiVJl9v3f7yR2LtUQyM2cy3vt6/a1SSh1JZkAxqihGlXk3G7tSzrnbf0II3fNP835BMjPsM8aWF/NeI9ej3V6CNTPDXzMAYG/OvQClOznLoM6LkQAAAABJRU5ErkJggg=="
 
 /***/ }),
 
-/***/ 116:
+/***/ 114:
 /***/ (function(module, exports) {
 
 module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAYAAADFw8lbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAhdEVYdENyZWF0aW9uIFRpbWUAMjAyMToxMDoyNSAxODoxMToyNknx73wAAACLSURBVFhH7dSBCYAgEIVhawxncg6Hcg5nco1CMahANBUy+z+IK4M4jtcJAAAwtSXWYsaYLd52obUu6mGNdXjVE5VShudazrlQp5sojfbWnFGl1OUb1trLVki9J6Nv+09G73KZPZDRHD/J+zS91PlT/Ey9/bdRvxXOVzxu9pmJVu/RXqbbowAAjESIHegNN+wSNyQsAAAAAElFTkSuQmCC"
 
 /***/ }),
 
-/***/ 117:
+/***/ 115:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(150);
+var content = __webpack_require__(151);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
 var add = __webpack_require__(6).default
 module.exports.__inject__ = function (context) {
-  add("52869cb6", content, true, context)
+  add("62354da1", content, true, context)
 };
 
 /***/ }),
 
-/***/ 118:
+/***/ 116:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(152);
+var content = __webpack_require__(153);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
 var add = __webpack_require__(6).default
 module.exports.__inject__ = function (context) {
-  add("48ef868d", content, true, context)
+  add("95d1f9de", content, true, context)
 };
 
 /***/ }),
 
 /***/ 149:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(117);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
-
+module.exports = __webpack_require__.p + "img/logo.578df2f.png";
 
 /***/ }),
 
 /***/ 150:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-// Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(5);
-var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
-// Module
-___CSS_LOADER_EXPORT___.push([module.i, "\n.slide-verify[data-v-46b3df03] {\r\n  position: relative;\r\n  margin: 0 auto;\r\n  user-select: none;\r\n  padding: 15px;\r\n  background-color: #f5f5f5;\r\n  border-radius: 4px;\r\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.verify-status[data-v-46b3df03] {\r\n  text-align: center;\r\n  margin-top: 10px;\r\n  color: #947358;\r\n  font-size: 14px;\n}\n.verify-status.success[data-v-46b3df03] {\r\n  color: #67c23a;\n}\r\n\r\n/* 自定义 Element UI 滑块样式 */\n.slide-verify[data-v-46b3df03] .el-slider__runway {\r\n  height: 40px;\r\n  margin: 0;\r\n  background-color: #e4e7eb;\r\n  border-radius: 4px;\n}\n.slide-verify[data-v-46b3df03] .el-slider__bar {\r\n  height: 40px;\r\n  background-color: #d1e9fe;\r\n  border-radius: 4px;\n}\n.slide-verify[data-v-46b3df03] .el-slider__button-wrapper {\r\n  top: 0;\r\n  width: 40px;\r\n  height: 40px;\n}\n.slide-verify[data-v-46b3df03] .el-slider__button {\r\n  width: 40px;\r\n  height: 40px;\r\n  border: 1px solid #e4e7eb;\r\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\r\n  background-color: #fff;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\n}\n.slide-verify[data-v-46b3df03] .el-slider__button::after {\r\n  content: '>';\r\n  color: #947358;\r\n  font-size: 20px;\n}\n.slide-verify.success[data-v-46b3df03] .el-slider__button::after {\r\n  content: 'OK';\r\n  color: #67c23a;\n}\r\n", ""]);
-// Exports
-module.exports = ___CSS_LOADER_EXPORT___;
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(115);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SlideVerify_vue_vue_type_style_index_0_id_46b3df03_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
 /***/ 151:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(118);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_3_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
-
-
-/***/ }),
-
-/***/ 152:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
 var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(5);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "\n.login-container[data-v-22560504] {\r\n  display: flex;\r\n  justify-content: center;\r\n  align-items: center;\r\n  min-height: 80vh;\r\n  padding: 20px;\n}\n.login-box[data-v-22560504] {\r\n  width: 460px;\r\n  background-color: white;\r\n  border-radius: 8px;\r\n  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);\r\n  padding: 40px;\r\n  position: relative;\r\n  overflow: hidden; /* 防止内容溢出 */\n}\n.login-header[data-v-22560504] {\r\n  text-align: center;\r\n  margin-bottom: 30px;\n}\n.login-header h1[data-v-22560504] {\r\n  color: #947358;\r\n  font-size: 32px;\r\n  margin-bottom: 10px;\n}\n.login-header p[data-v-22560504] {\r\n  color: #666;\r\n  font-size: 16px;\n}\n.login-step[data-v-22560504] {\r\n  height: 280px;\r\n  position: absolute;\r\n  width: calc(100% - 80px); /* 减去左右padding */\r\n  transition: opacity 0.3s, transform 0.3s;\n}\n.step-tip[data-v-22560504] {\r\n  color: #333;\r\n  margin-bottom: 20px;\r\n  font-size: 16px;\n}\n.input-group[data-v-22560504] {\r\n  display: flex;\r\n  align-items: center;\r\n  border: 1px solid #ddd;\r\n  border-radius: 4px;\r\n  background-color: #f5f5f5;\r\n  margin-bottom: 20px;\r\n  height: 50px;\n}\n.input-icon[data-v-22560504] {\r\n  width: 50px;\r\n  display: flex;\r\n  justify-content: center;\r\n  align-items: center;\n}\n.icon[data-v-22560504] {\r\n  width: 35px;\r\n  height: 35px;\n}\n.login-input[data-v-22560504] {\r\n  flex: 1;\r\n  height: 48px;\r\n  border: none;\r\n  background-color: #f5f5f5;\r\n  padding: 0 15px;\r\n  font-size: 16px;\n}\n.login-input[data-v-22560504]:focus {\r\n  outline: none;\n}\n.warning-text[data-v-22560504] {\r\n  color: #ff5500;\r\n  font-size: 14px;\r\n  text-align: right;\r\n  margin-top: -15px;\r\n  margin-bottom: 15px;\n}\n.login-btn[data-v-22560504] {\r\n  width: 100%;\r\n  height: 50px;\r\n  background-color: #947358;\r\n  color: white;\r\n  border: none;\r\n  border-radius: 4px;\r\n  font-size: 16px;\r\n  font-weight: bold;\r\n  cursor: pointer;\r\n  margin-bottom: 15px;\r\n  transition: background-color 0.3s;\n}\n.login-btn[data-v-22560504]:hover {\r\n  background-color: #826347;\n}\n.cancel-btn[data-v-22560504] {\r\n  background-color: white;\r\n  color: #947358;\r\n  border: 1px solid #947358;\n}\n.cancel-btn[data-v-22560504]:hover {\r\n  background-color: #f9f9f9;\n}\n.verify-container[data-v-22560504] {\r\n  display: flex;\r\n  justify-content: center;\r\n  margin: 30px 0;\n}\n.slide-verify-placeholder[data-v-22560504] {\r\n  width: 100%;\r\n  height: 155px;\r\n  background-color: #f0f0f0;\r\n  display: flex;\r\n  justify-content: center;\r\n  align-items: center;\r\n  border-radius: 4px;\r\n  color: #999;\n}\n.verify-info[data-v-22560504] {\r\n  display: flex;\r\n  justify-content: space-between;\r\n  margin-bottom: 20px;\r\n  color: #333;\n}\n.resend-btn[data-v-22560504] {\r\n  color: #947358;\r\n  cursor: pointer;\n}\n.wait-timer[data-v-22560504] {\r\n  color: #999;\n}\n.login-footer[data-v-22560504] {\r\n  text-align: center;\r\n  margin-top: 320px; /* 增加底部空间，确保有足够空间容纳步骤div */\r\n  color: #999;\r\n  font-size: 14px;\n}\r\n\r\n/* 过渡动画 */\n.fade-enter-active[data-v-22560504], .fade-leave-active[data-v-22560504] {\r\n  transition: all 0.3s;\r\n  position: absolute;\r\n  width: calc(100% - 80px);\n}\n.fade-enter[data-v-22560504] {\r\n  transform: translateX(20px);\r\n  opacity: 0;\n}\n.fade-leave-to[data-v-22560504] {\r\n  transform: translateX(-20px);\r\n  opacity: 0;\n}\r\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.i, "\n.slide-verify[data-v-46b3df03] {\n  position: relative;\n  margin: 0 auto;\n  user-select: none;\n  padding: 15px;\n  background-color: #f5f5f5;\n  border-radius: 4px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.verify-status[data-v-46b3df03] {\n  text-align: center;\n  margin-top: 10px;\n  color: #947358;\n  font-size: 14px;\n}\n.verify-status.success[data-v-46b3df03] {\n  color: #67c23a;\n}\n\n/* 自定义 Element UI 滑块样式 */\n.slide-verify[data-v-46b3df03] .el-slider__runway {\n  height: 40px;\n  margin: 0;\n  background-color: #e4e7eb;\n  border-radius: 4px;\n}\n.slide-verify[data-v-46b3df03] .el-slider__bar {\n  height: 40px;\n  background-color: #d1e9fe;\n  border-radius: 4px;\n}\n.slide-verify[data-v-46b3df03] .el-slider__button-wrapper {\n  top: 0;\n  width: 40px;\n  height: 40px;\n}\n.slide-verify[data-v-46b3df03] .el-slider__button {\n  width: 40px;\n  height: 40px;\n  border: 1px solid #e4e7eb;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n  background-color: #fff;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.slide-verify[data-v-46b3df03] .el-slider__button::after {\n  content: '>';\n  color: #947358;\n  font-size: 20px;\n}\n.slide-verify.success[data-v-46b3df03] .el-slider__button::after {\n  content: 'OK';\n  color: #67c23a;\n}\n", ""]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
 
-/***/ 216:
+/***/ 152:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(116);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_login_vue_vue_type_style_index_0_id_22560504_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+
+
+/***/ }),
+
+/***/ 153:
+/***/ (function(module, exports, __webpack_require__) {
+
+// Imports
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(5);
+var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
+// Module
+___CSS_LOADER_EXPORT___.push([module.i, "\n.login-container[data-v-22560504] {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  min-height: 80vh;\n  padding: 20px;\n}\n.login-box[data-v-22560504] {\n  width: 460px;\n  background-color: white;\n  border-radius: 8px;\n  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);\n  padding: 40px;\n  position: relative;\n  overflow: hidden; /* 防止内容溢出 */\n}\n.login-header[data-v-22560504] {\n  text-align: center;\n  margin-bottom: 30px;\n}\n.login-header h1[data-v-22560504] {\n  color: #947358;\n  font-size: 32px;\n  margin-bottom: 10px;\n}\n.login-header p[data-v-22560504] {\n  color: #666;\n  font-size: 16px;\n}\n.login-step[data-v-22560504] {\n  height: 280px;\n  position: absolute;\n  width: calc(100% - 80px); /* 减去左右padding */\n  transition: opacity 0.3s, transform 0.3s;\n}\n.step-tip[data-v-22560504] {\n  color: #333;\n  margin-bottom: 20px;\n  font-size: 16px;\n}\n.input-group[data-v-22560504] {\n  display: flex;\n  align-items: center;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  background-color: #f5f5f5;\n  margin-bottom: 20px;\n  height: 50px;\n}\n.input-icon[data-v-22560504] {\n  width: 50px;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}\n.icon[data-v-22560504] {\n  width: 35px;\n  height: 35px;\n}\n.login-input[data-v-22560504] {\n  flex: 1;\n  height: 48px;\n  border: none;\n  background-color: #f5f5f5;\n  padding: 0 15px;\n  font-size: 16px;\n}\n.login-input[data-v-22560504]:focus {\n  outline: none;\n}\n.warning-text[data-v-22560504] {\n  color: #ff5500;\n  font-size: 14px;\n  text-align: right;\n  margin-top: -15px;\n  margin-bottom: 15px;\n}\n.login-btn[data-v-22560504] {\n  width: 100%;\n  height: 50px;\n  background-color: #947358;\n  color: white;\n  border: none;\n  border-radius: 4px;\n  font-size: 16px;\n  font-weight: bold;\n  cursor: pointer;\n  margin-bottom: 15px;\n  transition: background-color 0.3s;\n}\n.login-btn[data-v-22560504]:hover {\n  background-color: #826347;\n}\n.cancel-btn[data-v-22560504] {\n  background-color: white;\n  color: #947358;\n  border: 1px solid #947358;\n}\n.cancel-btn[data-v-22560504]:hover {\n  background-color: #f9f9f9;\n}\n.verify-container[data-v-22560504] {\n  display: flex;\n  justify-content: center;\n  margin: 30px 0;\n}\n.slide-verify-placeholder[data-v-22560504] {\n  width: 100%;\n  height: 155px;\n  background-color: #f0f0f0;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  border-radius: 4px;\n  color: #999;\n}\n.verify-info[data-v-22560504] {\n  display: flex;\n  justify-content: space-between;\n  margin-bottom: 20px;\n  color: #333;\n}\n.resend-btn[data-v-22560504] {\n  color: #947358;\n  cursor: pointer;\n}\n.wait-timer[data-v-22560504] {\n  color: #999;\n}\n.login-footer[data-v-22560504] {\n  text-align: center;\n  margin-top: 320px; /* 增加底部空间，确保有足够空间容纳步骤div */\n  color: #999;\n  font-size: 14px;\n}\n\n/* 过渡动画 */\n.fade-enter-active[data-v-22560504], .fade-leave-active[data-v-22560504] {\n  transition: all 0.3s;\n  position: absolute;\n  width: calc(100% - 80px);\n}\n.fade-enter[data-v-22560504] {\n  transform: translateX(20px);\n  opacity: 0;\n}\n.fade-leave-to[data-v-22560504] {\n  transform: translateX(-20px);\n  opacity: 0;\n}\n", ""]);
+// Exports
+module.exports = ___CSS_LOADER_EXPORT___;
+
+
+/***/ }),
+
+/***/ 221:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -116,7 +123,7 @@ var render = function render() {
     _c = _vm._self._c;
   return _c('div', {
     staticClass: "login-container"
-  }, [_vm._ssrNode("<div class=\"login-box\" data-v-22560504>", "</div>", [_vm._ssrNode("<div class=\"login-header\" data-v-22560504><img" + _vm._ssrAttr("src", __webpack_require__(55)) + " alt style=\"width: 100px; margin-bottom: 20px;\" data-v-22560504> <h1 data-v-22560504>原木社区</h1> <p data-v-22560504>方块跃然纸上，故事在此生长。</p></div> " + (_vm.step == 0 ? "<div class=\"login-step\" data-v-22560504><p class=\"step-tip\" data-v-22560504>未注册邮箱将自动创建账号</p> <div class=\"input-group\" data-v-22560504><div class=\"input-icon\" data-v-22560504><img" + _vm._ssrAttr("src", __webpack_require__(116)) + " alt=\"用户\" class=\"icon\" data-v-22560504></div> <input type=\"email\" placeholder=\"请输入电子邮箱\"" + _vm._ssrAttr("value", _vm.email) + " class=\"login-input\" data-v-22560504></div> <button class=\"login-btn\" data-v-22560504>下一步</button></div>" : "<!---->") + " "), _c('transition', {
+  }, [_vm._ssrNode("<div class=\"login-box\" data-v-22560504>", "</div>", [_vm._ssrNode("<div class=\"login-header\" data-v-22560504><img" + _vm._ssrAttr("src", __webpack_require__(149)) + " alt style=\"width: 100px; margin-bottom: 20px;\" data-v-22560504> <h1 data-v-22560504>原木社区</h1> <p data-v-22560504>方块跃然纸上，故事在此生长。</p></div> " + (_vm.step == 0 ? "<div class=\"login-step\" data-v-22560504><p class=\"step-tip\" data-v-22560504>未注册邮箱将自动创建账号</p> <div class=\"input-group\" data-v-22560504><div class=\"input-icon\" data-v-22560504><img" + _vm._ssrAttr("src", __webpack_require__(114)) + " alt=\"用户\" class=\"icon\" data-v-22560504></div> <input type=\"email\" placeholder=\"请输入电子邮箱\"" + _vm._ssrAttr("value", _vm.email) + " class=\"login-input\" data-v-22560504></div> <button class=\"login-btn\" data-v-22560504>下一步</button></div>" : "<!---->") + " "), _c('transition', {
     attrs: {
       "name": "fade"
     }
@@ -175,7 +182,7 @@ var render = function render() {
   }, [_c('img', {
     staticClass: "icon",
     attrs: {
-      "src": __webpack_require__(112),
+      "src": __webpack_require__(110),
       "alt": "验证码"
     }
   })]), _vm._v(" "), _c('input', {
@@ -228,7 +235,7 @@ var render = function render() {
   }, [_c('img', {
     staticClass: "icon",
     attrs: {
-      "src": __webpack_require__(116),
+      "src": __webpack_require__(114),
       "alt": "用户"
     }
   })]), _vm._v(" "), _c('input', {
@@ -267,7 +274,7 @@ var render = function render() {
   }, [_c('img', {
     staticClass: "icon",
     attrs: {
-      "src": __webpack_require__(112),
+      "src": __webpack_require__(110),
       "alt": "密码"
     }
   })]), _vm._v(" "), _c('input', {
@@ -328,7 +335,7 @@ var render = function render() {
   }, [_c('img', {
     staticClass: "icon",
     attrs: {
-      "src": __webpack_require__(112),
+      "src": __webpack_require__(110),
       "alt": "密码"
     }
   })]), _vm._v(" "), _c('input', {
@@ -456,7 +463,7 @@ var componentNormalizer = __webpack_require__(1);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(149)
+  var style0 = __webpack_require__(150)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -470,7 +477,7 @@ var component = Object(componentNormalizer["a" /* default */])(
   false,
   injectStyles,
   "46b3df03",
-  "b798aae4"
+  "df0f7c30"
   
 )
 
@@ -622,7 +629,7 @@ var component = Object(componentNormalizer["a" /* default */])(
 
 function login_injectStyles (context) {
   
-  var style0 = __webpack_require__(151)
+  var style0 = __webpack_require__(152)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -636,7 +643,7 @@ var login_component = Object(componentNormalizer["a" /* default */])(
   false,
   login_injectStyles,
   "22560504",
-  "3c3e9e57"
+  "80a1c986"
   
 )
 

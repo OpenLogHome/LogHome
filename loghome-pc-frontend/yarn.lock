@@ -934,11 +934,6 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@micro-zoe/micro-app@^0.8.11":
-  version "0.8.11"
-  resolved "https://registry.npmmirror.com/@micro-zoe/micro-app/-/micro-app-0.8.11.tgz"
-  integrity sha512-4NapVlAomUagOcpHQlcPgTHlVZgeb/OSSuS6lQWV9uOEhsKqbE6j3KBWb3RPN2olfvrbFXGaUKyA0pup92ja9g==
-
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz"

@@ -155,19 +155,7 @@ export default {
       // 返回上一页
       this.$router.go(-1)
     },
-    
-    onMicroAppMounted(e) {
-      console.log('micro-app mounted:', e)
-    },
-    
-    onMicroAppUnmount(e) {
-      console.log('micro-app unmount:', e)
-    },
-    
-    onMicroAppError(e) {
-      console.error('micro-app error:', e)
-    },
-    
+
     startResize(e) {
       this.isResizing = true
       this.startX = e.clientX

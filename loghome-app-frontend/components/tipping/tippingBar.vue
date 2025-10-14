@@ -46,7 +46,7 @@
 		<div class="total-cost">
 			<div class="total-label">总计：</div>
 			<div class="total-value">
-				<img :src="selectedTippingItem && selectedTippingItem.is_log_free ? '../../static/resources/apple.png' : '../../static/resources/log.png'" 
+				<img :src="selectedTippingItem && selectedTippingItem.is_log_free ? '/static/resources/apple.png' : '/static/resources/log.png'" 
 					 alt="" class="total-icon">
 				<span>{{totalCost}}</span>
 			</div>

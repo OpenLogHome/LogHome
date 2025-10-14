@@ -13,6 +13,7 @@ export default {
     '/read/collections': '/pages/readers/collections',  // 标签页面
     '/community/post/edit': '/pages/community/postEdit',
     '/me': '/pages/me',
+    '/write/new': '/pages/writers/newEssay',
   },
 
   // 参数匹配规则 - 支持动态参数

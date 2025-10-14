@@ -39,9 +39,6 @@
               <span v-if="item.is_suggested" class="badge suggested-badge">推荐标签</span>
             </div>
           </div>
-          <div class="tag-hover-overlay">
-            <span class="view-text">查看作品</span>
-          </div>
         </div>
       </div>
     </div>
@@ -233,10 +230,6 @@ $card-background: #fff;
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     border-color: $primary-color;
-    
-    .tag-hover-overlay {
-      opacity: 1;
-    }
   }
   
   &.activity {
@@ -301,26 +294,7 @@ $card-background: #fff;
   }
 }
 
-.tag-hover-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba($primary-color, 0.9) 0%, rgba($secondary-color, 0.9) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 10px;
-  
-  .view-text {
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-  }
-}
+
 
 // 响应式设计
 @media (max-width: 768px) {

@@ -135,8 +135,20 @@
             <p>你还没有创作作品</p>
             <el-button type="primary" @click="gotoWrite">开始创作</el-button>
           </div>
-          <div class="work-list" v-else>
-            <!-- 这里显示用户作品列表 -->
+          <div class="works-grid" v-else>
+            <div 
+              class="work-item" 
+              v-for="work in userWorks" 
+              :key="work.novel_id"
+              @click="navigateToWork(work.novel_id)"
+              v-show="!work.is_personal"
+            >
+              <img :src="work.picUrl" alt="作品封面" class="work-cover" />
+              <div class="work-info">
+                <h3 class="work-title">{{ work.name }}</h3>
+                <p class="work-desc">{{ work.content || '暂无简介' }}</p>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -170,7 +182,9 @@ export default {
       treeState: "无",
       earningsMoney: 0.00,
       userWorks: [],
-      userBookcase: []
+      userBookcase: [],
+      worksLoading: false,
+      bookcaseLoading: false
     }
   },
   mounted() {
@@ -178,6 +192,7 @@ export default {
     this.checkMessages()
     this.checkTreePlant()
     this.refreshResources()
+    this.loadUserWorks()
   },
   methods: {
     loadUserInfo() {
@@ -253,6 +268,24 @@ export default {
         this.earningsMoney = result.earningsMoney
       } catch (error) {
         console.error('获取资源信息失败', error)
+      }
+    },
+    
+    // 加载用户作品
+    async loadUserWorks() {
+      this.worksLoading = true
+      try {
+        const response = await this.$api.users.getUserNovels(this.user.user_id)
+        if (response.code === 0) {
+          this.userWorks = response.data || []
+        } else {
+          throw new Error(response.message || '获取作品失败')
+        }
+      } catch (error) {
+        console.error('加载用户作品失败', error)
+        this.$message.error('作品信息加载失败')
+      } finally {
+        this.worksLoading = false
       }
     },
     
@@ -333,6 +366,13 @@ export default {
     
     gotoLibrary() {
       this.$router.push("/read")
+    },
+    
+    // 导航到作品
+    navigateToWork(novelId) {
+      if (novelId > 0) {
+        this.$router.push(`/novel/${novelId}`)
+      }
     }
   }
 }
@@ -634,6 +674,61 @@ export default {
   }
 }
 
+.works-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.work-item {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .work-cover {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    background-color: #f5f5f5;
+  }
+  
+  .work-info {
+    padding: 15px;
+    
+    .work-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      margin: 0 0 8px 0;
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .work-desc {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+  }
+}
+
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -645,4 +740,4 @@ export default {
     transform: scale(1);
   }
 }
-</style> 
+</style>

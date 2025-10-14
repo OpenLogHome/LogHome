@@ -4,8 +4,8 @@
       <div class="navbar-container">
         <div class="navbar-left">
           <nuxt-link to="/" class="logo">
-            <img src="~/assets/images/logo.png" alt="原木社区" class="logo-img">
-            <img src="~/static/logo_text.png" alt="原木社区" class="logo-text">
+            <img src="~/static/logo_new.png" alt="原木社区" class="logo-img">
+            <!-- <img src="~/static/logo_text.png" alt="原木社区" class="logo-text"> -->
             <!-- <span class="logo-text">原木社区</span> -->
           </nuxt-link>
         </div>
@@ -15,22 +15,13 @@
           <nuxt-link to="/community" class="nav-link" exact-active-class="nav-link-active">社区</nuxt-link>
         </div>
         <div class="navbar-right">
-          <div class="search-box" :class="{'active': isSearchFocused}">
+          <div class="search-box" :class="{ 'active': isSearchFocused }">
             <i class="el-icon-search search-icon"></i>
-            <input 
-              type="text" 
-              placeholder="全站搜索..." 
-              class="search-input"
-              v-model="searchKeyword"
-              @input="onSearchInput"
-              @focus="onSearchFocus"
-              @blur="onSearchBlur"
-              @keyup.enter="handleSearch"
-              ref="searchInput"
-            >
+            <input type="text" placeholder="全站搜索..." class="search-input" v-model="searchKeyword" @input="onSearchInput"
+              @focus="onSearchFocus" @blur="onSearchBlur" @keyup.enter="handleSearch" ref="searchInput">
             <i v-if="searchKeyword" class="el-icon-close search-clear" @click="clearKeyword"></i>
           </div>
-          
+
           <!-- 搜索结果下拉框 -->
           <div class="search-dropdown" v-show="showSearchDropdown">
             <!-- 搜索历史 -->
@@ -42,37 +33,30 @@
                 </button>
               </div>
               <div class="history-list">
-                <div 
-                  class="history-item" 
-                  v-for="(item, index) in searchHistory" 
-                  :key="'history-' + index"
-                  @click="searchWithKeyword(item)"
-                >
+                <div class="history-item" v-for="(item, index) in searchHistory" :key="'history-' + index"
+                  @click="searchWithKeyword(item)">
                   <i class="el-icon-time"></i>
-                  <span>{{item}}</span>
+                  <span>{{ item }}</span>
                 </div>
               </div>
             </div>
-            
+
             <!-- 热门搜索 -->
             <div class="search-section" v-if="hotSearches.length > 0 && !searchKeyword">
               <div class="section-header">
                 <span class="section-title">热门搜索</span>
               </div>
               <div class="hot-list">
-                <span 
-                  class="hot-item" 
-                  v-for="(item, index) in hotSearches" 
-                  :key="'hot-' + index"
-                  @click="searchWithKeyword(item.keyword)"
-                >
-                  {{item.keyword}}
+                <span class="hot-item" v-for="(item, index) in hotSearches" :key="'hot-' + index"
+                  @click="searchWithKeyword(item.keyword)">
+                  {{ item.keyword }}
                 </span>
               </div>
             </div>
-            
+
             <!-- 搜索结果 -->
-            <div class="search-results" v-if="searchKeyword && (searchResults.books.length > 0 || searchResults.posts.length > 0 || searchResults.circles.length > 0 || searchResults.users.length > 0)">
+            <div class="search-results"
+              v-if="searchKeyword && (searchResults.books.length > 0 || searchResults.posts.length > 0 || searchResults.circles.length > 0 || searchResults.users.length > 0)">
               <!-- 书籍结果 -->
               <div class="result-section" v-if="searchResults.books.length > 0">
                 <div class="section-header">
@@ -80,21 +64,17 @@
                   <span class="view-all" @click="viewAllResults('books')">查看全部</span>
                 </div>
                 <div class="book-results">
-                  <div 
-                    class="book-item" 
-                    v-for="(book, index) in searchResults.books.slice(0, 3)" 
-                    :key="'book-' + index"
-                    @click="navigateToBook(book.novel_id)"
-                  >
+                  <div class="book-item" v-for="(book, index) in searchResults.books.slice(0, 3)" :key="'book-' + index"
+                    @click="navigateToBook(book.novel_id)">
                     <img class="book-cover" :src="book.picUrl + '?thumbnail=1'" :alt="book.name">
                     <div class="book-info">
-                      <div class="book-title">{{book.name}}</div>
-                      <div class="book-author">{{book.author_name}}</div>
+                      <div class="book-title">{{ book.name }}</div>
+                      <div class="book-author">{{ book.author_name }}</div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- 帖子结果 -->
               <div class="result-section" v-if="searchResults.posts.length > 0">
                 <div class="section-header">
@@ -102,21 +82,17 @@
                   <span class="view-all" @click="viewAllResults('posts')">查看全部</span>
                 </div>
                 <div class="post-results">
-                  <div 
-                    class="post-item" 
-                    v-for="(post, index) in searchResults.posts.slice(0, 3)" 
-                    :key="'post-' + index"
-                    @click="navigateToPost(post.post_id)"
-                  >
-                    <div class="post-title">{{post.title}}</div>
+                  <div class="post-item" v-for="(post, index) in searchResults.posts.slice(0, 3)" :key="'post-' + index"
+                    @click="navigateToPost(post.post_id)">
+                    <div class="post-title">{{ post.title }}</div>
                     <div class="post-meta">
-                      <span class="post-author">{{post.author_name}}</span>
-                      <span class="post-time">{{formatTime(post.create_time)}}</span>
+                      <span class="post-author">{{ post.author_name }}</span>
+                      <span class="post-time">{{ formatTime(post.create_time) }}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- 圈子结果 -->
               <div class="result-section" v-if="searchResults.circles.length > 0">
                 <div class="section-header">
@@ -124,21 +100,17 @@
                   <span class="view-all" @click="viewAllResults('circles')">查看全部</span>
                 </div>
                 <div class="circle-results">
-                  <div 
-                    class="circle-item" 
-                    v-for="(circle, index) in searchResults.circles.slice(0, 3)" 
-                    :key="'circle-' + index"
-                    @click="navigateToCircle(circle.circle_id)"
-                  >
+                  <div class="circle-item" v-for="(circle, index) in searchResults.circles.slice(0, 3)"
+                    :key="'circle-' + index" @click="navigateToCircle(circle.circle_id)">
                     <img class="circle-icon" :src="circle.icon || '/default-circle.png'" :alt="circle.name">
                     <div class="circle-info">
-                      <div class="circle-name">{{circle.name}}</div>
-                      <div class="circle-meta">{{circle.member_count || 0}}人</div>
+                      <div class="circle-name">{{ circle.name }}</div>
+                      <div class="circle-meta">{{ circle.member_count || 0 }}人</div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- 用户结果 -->
               <div class="result-section" v-if="searchResults.users.length > 0">
                 <div class="section-header">
@@ -146,22 +118,18 @@
                   <span class="view-all" @click="viewAllResults('users')">查看全部</span>
                 </div>
                 <div class="user-results">
-                  <div 
-                    class="user-item" 
-                    v-for="(user, index) in searchResults.users.slice(0, 3)" 
-                    :key="'user-' + index"
-                    @click="navigateToUser(user.user_id)"
-                  >
+                  <div class="user-item" v-for="(user, index) in searchResults.users.slice(0, 3)" :key="'user-' + index"
+                    @click="navigateToUser(user.user_id)">
                     <img class="user-avatar" :src="user.avatar_url || '/default-avatar.png'" :alt="user.name">
                     <div class="user-info">
-                      <div class="user-name">{{user.name || '匿名用户'}}</div>
-                      <div class="user-motto">{{user.motto || '这个人很懒，还没有设置个性签名'}}</div>
+                      <div class="user-name">{{ user.name || '匿名用户' }}</div>
+                      <div class="user-motto">{{ user.motto || '这个人很懒，还没有设置个性签名' }}</div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <!-- 无搜索结果 -->
             <div class="no-results" v-if="searchKeyword && noResults">
               <div class="no-results-icon">
@@ -175,27 +143,23 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 未登录状态 -->
           <div class="user-actions" v-if="!isLogin">
             <nuxt-link to="/login" class="user-link">登录</nuxt-link>
           </div>
-          
+
           <!-- 已登录状态 -->
           <div class="user-actions" v-else>
             <el-dropdown trigger="click" @command="handleCommand">
               <div class="user-profile">
-                <img 
-                  :src="userInfo && userInfo.avatar_url ? userInfo.avatar_url : '/default-avatar.png'" 
-                  class="user-avatar"
-                >
+                <img :src="userInfo && userInfo.avatar_url ? userInfo.avatar_url : '/default-avatar.png'"
+                  class="user-avatar">
                 <span class="user-nickname">{{ userInfo ? userInfo.name || '用户' : '用户' }}</span>
                 <i class="el-icon-arrow-down"></i>
               </div>
               <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                <el-dropdown-item command="myworks">我的作品</el-dropdown-item>
-                <el-dropdown-item command="bookcase">我的书架</el-dropdown-item>
                 <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
@@ -208,10 +172,16 @@
     </main>
     <footer class="site-footer">
       <div class="footer-container">
-        <p>© 2023 原木社区 版权所有</p>
+        <p style="display: flex; justify-content: center; margin-bottom: 5px;">
+          <a href="https://beian.miit.gov.cn/" target="_blank" style="color:#FFEFD6; margin-right: 30px;">苏ICP备2021006745号</a><br>
+          <a href="https://beian.mps.gov.cn/" target="_blank" style="color:#FFEFD6; margin-right: 30px;">皖公安网备34010402703554号</a><br>
+          <a href="OpenSourcePlan.html" style="color:#FFEFD6">原木社区开源计划</a>
+        </p>
+        <p style="margin-bottom: 5px;">非 Minecraft 官方产品。未获 Mojang 许可，亦与 Mojang 无任何关联。</p>
+        <p>© {{(new Date()).getFullYear()}} 原木社区 版权所有</p>
       </div>
     </footer>
-    
+
     <!-- 添加窗口管理器 -->
     <WindowManager />
   </div>
@@ -219,7 +189,6 @@
 
 <script>
 import WindowManager from '~/components/WindowManager.vue'
-import microApp from '@micro-zoe/micro-app'
 
 export default {
   name: 'default',
@@ -257,22 +226,20 @@ export default {
   mounted() {
     // 客户端才执行
     if (process.client) {
-      // 初始化micro-app
-      microApp.start()
-      
+
       this.checkLoginStatus();
-      
+
       // 定期检查登录状态
       this.checkTimer = setInterval(() => {
         this.checkLoginStatus();
       }, 5000);
-      
+
       // 监听localStorage变化
       window.addEventListener('storage', this.onStorageChange);
-      
+
       // 监听登录状态变化的自定义事件
       window.addEventListener('auth-state-changed', this.checkLoginStatus);
-      
+
       // 初始化搜索相关数据
       this.loadSearchHistory();
       this.getHotSearches();
@@ -282,7 +249,7 @@ export default {
     if (this.checkTimer) {
       clearInterval(this.checkTimer);
     }
-    
+
     if (process.client) {
       window.removeEventListener('storage', this.onStorageChange);
       window.removeEventListener('auth-state-changed', this.checkLoginStatus);
@@ -295,7 +262,7 @@ export default {
         const tokenData = localStorage.getItem('token');
         if (tokenData) {
           this.isLogin = true;
-          
+
           // 如果没有用户信息，先尝试从本地缓存获取
           if (!this.userInfo) {
             const cachedUserInfo = localStorage.getItem('LogHomeUserInfo');
@@ -314,7 +281,7 @@ export default {
         console.error("检查登录状态错误", e);
       }
     },
-    
+
     // 获取用户信息
     async fetchUserInfo() {
       try {
@@ -322,7 +289,7 @@ export default {
         this.userInfo = await this.$api.users.getUserProfile();
       } catch (error) {
         console.error('获取用户信息失败:', error);
-        
+
         if (error.response && error.response.status === 401) {
           localStorage.removeItem('token');
           this.isLogin = false;
@@ -330,16 +297,16 @@ export default {
         }
       }
     },
-    
+
     // 监听localStorage变化
     onStorageChange(event) {
       if (event.key === 'token') {
         this.checkLoginStatus();
       }
     },
-    
+
     handleCommand(command) {
-      switch(command) {
+      switch (command) {
         case 'profile':
           this.$router.push('/me');
           break;
@@ -354,7 +321,7 @@ export default {
           break;
       }
     },
-    
+
     logout() {
       localStorage.removeItem('token');
       localStorage.removeItem('LogHomeUserInfo');
@@ -363,7 +330,7 @@ export default {
       this.$message.success('已退出登录');
       this.$router.push('/');
     },
-    
+
     // 搜索相关方法
     onSearchInput() {
       if (this.searchTimer) {
@@ -375,14 +342,14 @@ export default {
         }
       }, 300)
     },
-    
+
     onSearchFocus() {
       this.isSearchFocused = true
       this.showSearchDropdown = true
       this.loadSearchHistory()
       this.getHotSearches()
     },
-    
+
     onSearchBlur() {
       // 延迟隐藏，以便点击下拉框中的选项
       setTimeout(() => {
@@ -390,12 +357,12 @@ export default {
         this.showSearchDropdown = false
       }, 200)
     },
-    
+
     clearKeyword() {
       this.searchKeyword = ''
       this.showSearchDropdown = false
     },
-    
+
     handleSearch() {
       if (!this.searchKeyword.trim()) return
       this.saveSearchHistory(this.searchKeyword.trim())
@@ -405,7 +372,7 @@ export default {
       })
       this.showSearchDropdown = false
     },
-    
+
     searchWithKeyword(keyword) {
       this.searchKeyword = keyword
       this.saveSearchHistory(keyword)
@@ -415,19 +382,19 @@ export default {
       })
       this.showSearchDropdown = false
     },
-    
+
     switchSearchType(type) {
       this.searchType = type
       if (this.hasSearched) {
         this.search()
       }
     },
-    
+
     async search() {
       if (this.isSearching || !this.searchKeyword.trim()) return
-      
+
       this.isSearching = true
-      
+
       try {
         // 搜索所有类型，但只获取少量结果用于预览
         await Promise.all([
@@ -442,7 +409,7 @@ export default {
         this.isSearching = false
       }
     },
-    
+
     async searchBooks() {
       try {
         const result = await this.$api.search.searchNovels({
@@ -456,7 +423,7 @@ export default {
         this.searchResults.books = []
       }
     },
-    
+
     async searchPosts() {
       try {
         const result = await this.$api.search.searchPosts({
@@ -498,30 +465,30 @@ export default {
         this.searchResults.users = []
       }
     },
-    
 
-    
+
+
     saveSearchHistory(keyword) {
       if (!keyword || keyword.trim() === '') return
-      
+
       let history = JSON.parse(localStorage.getItem('searchHistory') || '[]')
       history = history.filter(item => item !== keyword)
       history.unshift(keyword)
       history = history.slice(0, 10) // 最多保存10条
-      
+
       localStorage.setItem('searchHistory', JSON.stringify(history))
       this.searchHistory = history
     },
-    
+
     loadSearchHistory() {
       this.searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]')
     },
-    
+
     clearSearchHistory() {
       localStorage.removeItem('searchHistory')
       this.searchHistory = []
     },
-    
+
     async getHotSearches() {
       try {
         this.hotSearches = await this.$api.search.getHotSearches()
@@ -537,13 +504,13 @@ export default {
         ]
       }
     },
-    
+
     formatTime(timestamp) {
       if (!timestamp) return ''
       const date = new Date(timestamp)
       const now = new Date()
       const diff = now - date
-      
+
       if (diff < 60000) {
         return '刚刚'
       } else if (diff < 3600000) {
@@ -554,19 +521,19 @@ export default {
         return Math.floor(diff / 86400000) + '天前'
       }
     },
-    
+
     // 查看全部结果
     viewAllResults(type) {
       this.$router.push({
         path: '/search',
-        query: { 
+        query: {
           keyword: this.searchKeyword,
           type: type
         }
       })
       this.showSearchDropdown = false
     },
-    
+
     // 在搜索页面中查看
     searchInPage() {
       this.$router.push({
@@ -575,7 +542,7 @@ export default {
       })
       this.showSearchDropdown = false
     },
-    
+
     // 导航方法
     navigateToBook(novelId, novelType) {
       // 如果是世界设定类型，跳转到world页面，否则跳转到novel页面
@@ -586,17 +553,17 @@ export default {
       }
       this.showSearchDropdown = false
     },
-    
+
     navigateToPost(postId) {
       this.$router.push(`/community/post/${postId}`)
       this.showSearchDropdown = false
     },
-    
+
     navigateToCircle(circleId) {
       this.$router.push(`/community/circle/${circleId}`)
       this.showSearchDropdown = false
     },
-    
+
     navigateToUser(userId) {
       this.$router.push(`/users/${userId}`)
       this.showSearchDropdown = false
@@ -628,7 +595,9 @@ export default {
   height: 60px;
 }
 
-.navbar-left, .navbar-center, .navbar-right {
+.navbar-left,
+.navbar-center,
+.navbar-right {
   display: flex;
   align-items: center;
 }
@@ -645,7 +614,7 @@ export default {
   margin-right: 6px;
 }
 
-.logo-text{
+.logo-text {
   height: 36px;
   transform: translateY(1px);
 }
@@ -656,7 +625,7 @@ export default {
   color: #947358;
 }
 
-.logo:hover{
+.logo:hover {
   transform: scale(1.05);
 }
 

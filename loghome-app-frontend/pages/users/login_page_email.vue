@@ -8,7 +8,7 @@
 			</div> 
 			<div class="button" @click="nextStep()">下一步</div>
 		</div>
-		<transition name="slide-fade" mode="out-in">
+		<!-- <transition name="slide-fade" mode="out-in">
 			<div class="step step1" v-if="step == 1">
 				<p>滑动验证以发送验证码到{{email}}</p>
 				<div style="display:flex;width:100%;justify-content: center;">
@@ -22,7 +22,7 @@
 				</div>
 				<div class="button cancel" @click="step = 0">上一步</div>
 			</div>
-		</transition>
+		</transition> -->
 		<transition name="slide-fade" mode="out-in">
 			<div class="step step2" v-if="step == 2">
 				<div class="lr">
@@ -66,7 +66,7 @@
 						<div>即将使用以下邮箱登录：</div>
 						<div>{{email}}</div>
 					</div>
-					<div class="btn" @click="forgetPwd=true;step = 1">忘记密码</div>
+					<div class="btn" @click="forgetPwd=true;step = 2">忘记密码</div>
 				</div>
 				<div class="longin-boder">
 					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
@@ -147,7 +147,7 @@
 							if(res.data.length > 0){
 								this.step = 5;
 							} else {
-								this.step = 1;
+								this.step = 2;
 							}
 						}).catch(function (error) {
 							uni.showToast({
@@ -335,7 +335,7 @@
 				let passwordPattern = /^[a-zA-Z0-9]{6,22}$/;
 				if(!accountPattern.test(this.account) && !this.forgetPwd){
 					uni.showToast({
-						title: "账号格式：4-12位字母、数字、下划线组合",
+						title: "账号格式：4-12位字母、数字组合",
 						icon:'none',
 						duration: 2000
 					});

@@ -46,7 +46,7 @@ router.get('/check_hot_update_compatibility', async function (req, res) {
 		// 获取当前版本和最新版本之间的所有版本记录
 		const versions = await query(
 			`SELECT * FROM app_update_log 
-			WHERE version > ? 
+			WHERE version_number > ? 
 			ORDER BY app_update_id ASC`,
 			[currentVersion]
 		);

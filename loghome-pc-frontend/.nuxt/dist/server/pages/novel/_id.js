@@ -1,5 +1,23 @@
-exports.ids = [11];
+exports.ids = [12];
 exports.modules = {
+
+/***/ 139:
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(205);
+if(content.__esModule) content = content.default;
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add CSS to SSR context
+var add = __webpack_require__(6).default
+module.exports.__inject__ = function (context) {
+  add("25973492", content, true, context)
+};
+
+/***/ }),
 
 /***/ 140:
 /***/ (function(module, exports, __webpack_require__) {
@@ -7,56 +25,38 @@ exports.modules = {
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(202);
+var content = __webpack_require__(207);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
 var add = __webpack_require__(6).default
 module.exports.__inject__ = function (context) {
-  add("f7511e64", content, true, context)
+  add("7fecdc9c", content, true, context)
 };
 
 /***/ }),
 
-/***/ 141:
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(204);
-if(content.__esModule) content = content.default;
-if(typeof content === 'string') content = [[module.i, content, '']];
-if(content.locals) module.exports = content.locals;
-// add CSS to SSR context
-var add = __webpack_require__(6).default
-module.exports.__inject__ = function (context) {
-  add("1b97f58a", content, true, context)
-};
-
-/***/ }),
-
-/***/ 200:
+/***/ 203:
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__.p + "img/bg.a726195.png";
 
 /***/ }),
 
-/***/ 201:
+/***/ 204:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(140);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(139);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_NovelFansList_vue_vue_type_style_index_0_id_a9959f8e_prod_lang_scss_scoped_true__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 202:
+/***/ 205:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
@@ -70,19 +70,19 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 203:
+/***/ 206:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(141);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_oneOf_1_2_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_3_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(140);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_7_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_7_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_sass_loader_dist_cjs_js_ref_7_oneOf_1_2_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3f768649_prod_lang_scss__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 204:
+/***/ 207:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
@@ -96,7 +96,7 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 218:
+/***/ 223:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -114,7 +114,7 @@ var render = function render() {
     attrs: {
       "to": "/read"
     }
-  }, [_vm._v("返回小说列表")])], 2) : _vm._e(), _vm._ssrNode(" "), _vm._ssrNode("<div class=\"novel-container\">", "</div>", [_vm._ssrNode("<div id=\"gift-box\" class=\"gift-box\"><img id=\"gift-background\"" + _vm._ssrAttr("src", __webpack_require__(200)) + " class=\"gift-background\"> <img id=\"gift\"" + _vm._ssrAttr("src", _vm.giftImage) + " class=\"gift\"></div> <div class=\"novel-header\">" + (_vm.novel.picUrl ? "<div class=\"novel-cover\"" + _vm._ssrStyle(null, `background-image: url(${_vm.novel.picUrl})`, null) + "></div>" : "<div class=\"novel-cover\"" + _vm._ssrStyle(null, `background-color: hsl(${_vm.novel.novel_id * 30 % 360}, 70%, 80%)`, null) + "></div>") + " <div class=\"book-id-tag\">" + _vm._ssrEscape("ID " + _vm._s(_vm.novel.novel_id)) + "</div> <div class=\"novel-info\"><h1 class=\"novel-title\">" + _vm._ssrEscape(_vm._s(_vm.novel.name)) + "</h1> <div class=\"novel-meta\"><div class=\"author-info\">" + (_vm.novel.auther_avatar ? "<img" + _vm._ssrAttr("src", _vm.novel.auther_avatar) + " alt=\"作者头像\" class=\"author-avatar\">" : "<div class=\"author-avatar-placeholder\">" + _vm._ssrEscape(_vm._s(_vm.novel.author_name ? _vm.novel.author_name.charAt(0) : '作') + "\n            ") + "</div>") + " <span class=\"author-name\">" + _vm._ssrEscape(_vm._s(_vm.novel.author_name || '佚名')) + "</span></div></div> <div class=\"novel-stats\"><div class=\"stat-item\"><span class=\"stat-icon\">👁️</span> <span class=\"stat-value\">" + _vm._ssrEscape(_vm._s(_vm.formatNumber(_vm.novel.clicks || 0))) + "</span> <span class=\"stat-label\">阅读量</span></div> <div class=\"stat-item\"><span class=\"stat-icon\">❤️</span> <span class=\"stat-value\">" + _vm._ssrEscape(_vm._s(_vm.formatNumber(_vm.nice_amount || 0))) + "</span> <span class=\"stat-label\">喜欢</span></div> <div class=\"stat-item\"><span class=\"stat-icon\">📃</span> <span class=\"stat-value\">" + _vm._ssrEscape(_vm._s(_vm.formatNumber(_vm.novel.text_count || 0))) + "</span> <span class=\"stat-label\">字数</span></div> <div class=\"stat-item\"><span class=\"stat-icon\">📚</span> <span class=\"stat-value\">" + _vm._ssrEscape(_vm._s(_vm.novel.is_complete == 1 ? "已完结" : "连载中")) + "</span> <span class=\"stat-label\">状态</span></div></div> <div class=\"novel-tags\">" + _vm._ssrList(_vm.tags, function (tag) {
+  }, [_vm._v("返回小说列表")])], 2) : _vm._e(), _vm._ssrNode(" "), _vm._ssrNode("<div class=\"novel-container\">", "</div>", [_vm._ssrNode("<div id=\"gift-box\" class=\"gift-box\"><img id=\"gift-background\"" + _vm._ssrAttr("src", __webpack_require__(203)) + " class=\"gift-background\"> <img id=\"gift\"" + _vm._ssrAttr("src", _vm.giftImage) + " class=\"gift\"></div> <div class=\"novel-header\">" + (_vm.novel.picUrl ? "<div class=\"novel-cover\"" + _vm._ssrStyle(null, `background-image: url(${_vm.novel.picUrl})`, null) + "></div>" : "<div class=\"novel-cover\"" + _vm._ssrStyle(null, `background-color: hsl(${_vm.novel.novel_id * 30 % 360}, 70%, 80%)`, null) + "></div>") + " <div class=\"book-id-tag\">" + _vm._ssrEscape("ID " + _vm._s(_vm.novel.novel_id)) + "</div> <div class=\"novel-info\"><h1 class=\"novel-title\">" + _vm._ssrEscape(_vm._s(_vm.novel.name)) + "</h1> <div class=\"novel-meta\"><div class=\"author-info\">" + (_vm.novel.auther_avatar ? "<img" + _vm._ssrAttr("src", _vm.novel.auther_avatar) + " alt=\"作者头像\" class=\"author-avatar\">" : "<div class=\"author-avatar-placeholder\">" + _vm._ssrEscape(_vm._s(_vm.novel.author_name ? _vm.novel.author_name.charAt(0) : '作') + "\n            ") + "</div>") + " <span class=\"author-name\">" + _vm._ssrEscape(_vm._s(_vm.novel.author_name || '佚名')) + "</span></div></div> <div class=\"novel-stats\"><div class=\"stat-item\"><span class=\"stat-icon\">👁️</span> <span class=\"stat-value\">" + _vm._ssrEscape(_vm._s(_vm.formatNumber(_vm.novel.clicks || 0))) + "</span> <span class=\"stat-label\">阅读量</span></div> <div class=\"stat-item\"><span class=\"stat-icon\">❤️</span> <span class=\"stat-value\">" + _vm._ssrEscape(_vm._s(_vm.formatNumber(_vm.nice_amount || 0))) + "</span> <span class=\"stat-label\">喜欢</span></div> <div class=\"stat-item\"><span class=\"stat-icon\">📃</span> <span class=\"stat-value\">" + _vm._ssrEscape(_vm._s(_vm.formatNumber(_vm.novel.text_count || 0))) + "</span> <span class=\"stat-label\">字数</span></div> <div class=\"stat-item\"><span class=\"stat-icon\">📚</span> <span class=\"stat-value\">" + _vm._ssrEscape(_vm._s(_vm.novel.is_complete == 1 ? "已完结" : "连载中")) + "</span> <span class=\"stat-label\">状态</span></div></div> <div class=\"novel-tags\">" + _vm._ssrList(_vm.tags, function (tag) {
     return "<span" + _vm._ssrClass("tag", {
       'activity': tag.is_activity_tag
     }) + ">" + _vm._ssrEscape(_vm._s(tag.tag_name)) + "</span>";
@@ -320,7 +320,7 @@ var componentNormalizer = __webpack_require__(1);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(201)
+  var style0 = __webpack_require__(204)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -334,7 +334,7 @@ var component = Object(componentNormalizer["a" /* default */])(
   false,
   injectStyles,
   "a9959f8e",
-  "340848de"
+  "218471b8"
   
 )
 
@@ -926,7 +926,7 @@ var component = Object(componentNormalizer["a" /* default */])(
 
 function _id_injectStyles (context) {
   
-  var style0 = __webpack_require__(203)
+  var style0 = __webpack_require__(206)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -940,7 +940,7 @@ var _id_component = Object(componentNormalizer["a" /* default */])(
   false,
   _id_injectStyles,
   null,
-  "169caf88"
+  "4218496e"
   
 )
 

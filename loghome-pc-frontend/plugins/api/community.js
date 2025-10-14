@@ -671,6 +671,109 @@ const community = {
                 message: error.message || '标记消息已读失败'
             }
         }
+    },
+
+    // 获取圈子分类
+    getCircleCategories: async () => {
+        try {
+            const response = await fetch(`${process.env.baseUrl}/community/circles/categories`)
+            return await response.json()
+        } catch (error) {
+            console.error('获取圈子分类失败:', error)
+            return []
+        }
+    },
+
+    // 获取圈子列表（按分类）
+    getCirclesList: async (params = {}) => {
+        try {
+            const response = await fetch(`${process.env.baseUrl}/community/circles/list?${new URLSearchParams(params)}`)
+            return await response.json()
+        } catch (error) {
+            console.error('获取圈子列表失败:', error)
+            return { list: [], total: 0, has_more: false }
+        }
+    },
+
+    // 创建圈子
+    createCircle: async (circleData) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/community/circles/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(circleData)
+            })
+            return await response.json()
+        } catch (error) {
+            console.error('创建圈子失败:', error)
+            throw error
+        }
+    },
+
+    // 更新圈子信息
+    updateCircle: async (circleId, circleData) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/community/circles/${circleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(circleData)
+            })
+            return await response.json()
+        } catch (error) {
+            console.error('更新圈子失败:', error)
+            throw error
+        }
+    },
+
+    // 获取圈子设置
+    getCircleSettings: async (circleId) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/community/circles/${circleId}/settings`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            return await response.json()
+        } catch (error) {
+            console.error('获取圈子设置失败:', error)
+            throw error
+        }
+    },
+
+    // 更新圈子设置
+    updateCircleSettings: async (circleId, settings) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/community/circles/${circleId}/settings`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(settings)
+            })
+            return await response.json()
+        } catch (error) {
+            console.error('更新圈子设置失败:', error)
+            throw error
+        }
     }
 };
 
