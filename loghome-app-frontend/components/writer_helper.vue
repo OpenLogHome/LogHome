@@ -8,7 +8,7 @@
 		</div>
 		<div class="helper-body">
 			<div class="card" v-show="problems.unPublic">
-				<navigator :url="'../pages/writers/essaySet?id='+novel_id">
+				<navigator @click="$emit('close-book-detail')" :url="'../pages/writers/essaySet?id='+novel_id">
 					<p class="suggestion">
 						作品处于私有状态
 					</p>
@@ -18,7 +18,7 @@
 				</navigator>
 			</div>
 			<div class="card" v-show="problems.badDescription">
-				<navigator :url="'../pages/writers/changeEssayInfo?id='+novel_id">
+				<navigator @click="$emit('close-book-detail')" :url="'../pages/writers/changeEssayInfo?id='+novel_id">
 					<p class="suggestion">
 						作品简介太短了
 					</p>
@@ -28,7 +28,7 @@
 				</navigator>
 			</div>
 			<div class="card" v-show="problems.defaultCover">
-				<navigator :url="'../pages/writers/changeEssayInfo?id='+novel_id">
+				<navigator @click="$emit('close-book-detail')" :url="'../pages/writers/changeEssayInfo?id='+novel_id">
 					<p class="suggestion">
 						没有上传封面
 					</p>
@@ -38,7 +38,7 @@
 				</navigator>
 			</div>
 			<div class="card" v-show="problems.noTags">
-				<navigator :url="'../pages/writers/changeNovelTags?id='+novel_id">
+				<navigator @click="$emit('close-book-detail')" :url="'../pages/writers/changeNovelTags?id='+novel_id">
 					<p class="suggestion">
 						没有设置标签
 					</p>

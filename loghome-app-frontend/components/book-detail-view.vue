@@ -108,7 +108,7 @@
         <div class="addButton" @click="$emit('show-book-select')">添加作品世界</div>
       </div>
 
-      <writerHelper :novel_id="book.novel_id"></writerHelper>
+      <writerHelper :novel_id="book.novel_id" @close-book-detail="$emit('close-book-detail')"></writerHelper>
 
       <div class="statistic-box">
         <div class="head">
@@ -248,6 +248,7 @@ export default {
     // 打开资讯链接
     openNewsLink(news) {
       if (news.mobile_link) {
+        this.$emit('close-book-detail');
         uni.navigateTo({
           url: news.mobile_link
         });

@@ -35,6 +35,7 @@
 					v-show="topNavArr[topNavIndex] == '小说'">
 					<book-detail-view v-if="curBook !== -1" :book="books[curBook]" :worlds="worlds"
 						:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
+						@close-book-detail="closeBookDetail"
 						@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 						@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="bookSelectDrawer = true"
 						@goto-statistics="gotoStatistics" @open-activity-form="openActivityForm"></book-detail-view>
@@ -84,6 +85,7 @@
 				</div>
 				<book-detail-view v-if="curBook !== -1" :book="books[curBook]" :worlds="worlds"
 					:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
+					@close-book-detail="closeBookDetail"
 					@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 					@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="bookSelectDrawer = true"
 					@goto-statistics="gotoStatistics" @goto-world-novel="gotoWorldNovel" @open-activity-form="openActivityForm"></book-detail-view>
@@ -242,6 +244,9 @@ export default {
 		toggleViewMode() {
 			this.viewMode = this.viewMode === 'scroll' ? 'grid' : 'scroll'
 			localStorage.setItem('loghome_essay_view_mode', this.viewMode) // 保存视图模式到本地存储
+			setTimeout(() => {
+				this.swiperChange(0)
+			});
 		},
 		// 打开活动表单
 		openActivityForm(activity, activityInfo) {
@@ -576,6 +581,9 @@ export default {
 				this.refreshPage();
 			})
 			this.bookSelectDrawer = false;
+		},
+		closeBookDetail() {
+			this.showBookDetail = false;
 		},
 	}
 }
@@ -959,20 +967,20 @@ view.outer {
 					color: var(--text-color-regular);
 				}
 			}
+		}
 
-			.description {
-				font-size: 25rpx;
-				color: rgb(142, 130, 109);
-				margin: 5rpx 0;
-				overflow: hidden;
-				display: -webkit-box;
-				text-align: left;
-				-webkit-box-orient: vertical;
-				-webkit-line-clamp: 3;
+		.description {
+			font-size: 25rpx;
+			color: rgb(142, 130, 109);
+			margin: 5rpx 0;
+			overflow: hidden;
+			display: -webkit-box;
+			text-align: left;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 3;
 
-				.dark-mode & {
-					color: rgba(142, 130, 109, 0.8);
-				}
+			.dark-mode & {
+				color: rgba(142, 130, 109, 0.8);
 			}
 		}
 
