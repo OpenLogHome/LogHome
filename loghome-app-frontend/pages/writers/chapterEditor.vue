@@ -1271,6 +1271,44 @@ export default {
 		
 		// 检测是否运行在iframe中并与父框架通信
 		this.checkFrameEnvironment();
+		
+		// 测试：测试实时同步功能
+		setInterval(() => {
+			console.log("实时同步")
+			  const qlEditor = document.querySelector('.ql-editor');
+			  // 获取当前选择对象（包含光标信息）
+			  const selection = window.getSelection();
+			  
+			  // 检查是否有有效的选择范围（光标也是范围的一种）
+			  if (selection.rangeCount === 0) {
+			    console.log('无光标或选择范围');
+			    return;
+			  }
+			  
+			  // 获取当前光标所在的范围
+			  const range = selection.getRangeAt(0);
+			  // 光标起点所在的节点（可能是文本节点或元素节点）
+			  let currentNode = range.startContainer;
+			  
+			  // 若起点是文本节点，取其父元素（文本节点的父元素才是实际的容器元素）
+			  if (currentNode.nodeType === Node.TEXT_NODE) {
+			    currentNode = currentNode.parentNode;
+			  }
+			  
+			  // 确保当前节点是qlEditor的子元素（避免超出范围）
+			  while (currentNode && currentNode !== qlEditor && !qlEditor.contains(currentNode)) {
+			    currentNode = currentNode.parentNode;
+			  }
+			  
+			  // 输出结果
+			  if (currentNode && currentNode !== qlEditor) {
+			    console.log('光标当前所在的子元素：', currentNode);
+			    console.log('子元素标签名：', currentNode.tagName);
+			    console.log('子元素class：', currentNode.className);
+			  } else {
+			    console.log('光标位于ql-editor根节点或外部');
+			  }
+		}, 5000)
 	},
 	onShow() {
 		// onShow时也检查一次iframe环境（兼容性处理）
