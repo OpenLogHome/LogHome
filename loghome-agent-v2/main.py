@@ -3,6 +3,7 @@ import os
 import time
 from utils.mysql_client import MySQLClient
 from utils.mllm_client import MLLMClient
+from secret import DB_CONFIG, MEMORY_DB_CONFIG, API_INFO, COMMUNITY_TOKEN
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
 
@@ -37,20 +38,6 @@ def main():
             task_module.logic(API_INFO, COMMUNITY_TOKEN, db, memory_db)
 
         time.sleep(3600)
-
-        # response = client.chat(
-        #     message=user_input,
-        #     model=GLM_MODEL,
-        #     use_search=False
-        # )
-        
-        # # 提取并显示回复
-        # ai_response = client.get_last_response(response)
-        # if ai_response:
-        #     print(f"🤖 AI: {ai_response}")
-        # else:
-        #     print("❌ 未能获取有效回复")
-        #     print(f"响应数据: {response}")
 
 if __name__ == "__main__":
     main()
