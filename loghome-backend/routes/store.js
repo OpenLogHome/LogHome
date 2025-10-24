@@ -8,7 +8,7 @@ let router = express.Router();
 // 获取商店商品列表
 router.get('/products', async function (req, res) {
     try {
-        const { page = 1, limit = 20, category, search } = req.query;
+        const { page = 1, limit = 20, category, search, sort } = req.query;
         const offset = (page - 1) * limit;
         
         let sql = `SELECT * FROM store_products WHERE status = 'active'`;
@@ -26,10 +26,50 @@ router.get('/products', async function (req, res) {
             params.push(`%${search}%`, `%${search}%`);
         }
         
-        sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+        // 添加排序功能
+        let orderBy = 'created_at DESC';
+        if (sort) {
+            switch (sort) {
+                case 'price_asc':
+                    orderBy = 'price ASC';
+                    break;
+                case 'price_desc':
+                    orderBy = 'price DESC';
+                    break;
+                case 'name':
+                    orderBy = 'name ASC';
+                    break;
+                default:
+                    orderBy = 'created_at DESC';
+            }
+        }
+        
+        sql += ` ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
         params.push(parseInt(limit), parseInt(offset));
         
         const products = await query(sql, params);
+        
+        // 处理图片URL字段，将JSON字符串转换为数组
+        products.forEach(product => {
+            if (product.image_url) {
+                try {
+                    // 如果是JSON字符串，解析为数组
+                    if (typeof product.image_url === 'string' && product.image_url.startsWith('[')) {
+                        product.images = JSON.parse(product.image_url);
+                        product.image_url = product.images[0] || null; // 主图为第一张
+                    } else {
+                        // 如果是单个URL，转换为数组格式
+                        product.images = [product.image_url];
+                    }
+                } catch (e) {
+                    // 解析失败时，使用原始值
+                    product.images = [product.image_url];
+                }
+            } else {
+                product.images = [];
+                product.image_url = null;
+            }
+        });
         
         // 获取总数
         let countSql = `SELECT COUNT(*) as total FROM store_products WHERE status = 'active'`;
@@ -53,6 +93,7 @@ router.get('/products', async function (req, res) {
             message: '获取商品列表成功',
             data: {
                 products,
+                total,
                 pagination: {
                     page: parseInt(page),
                     limit: parseInt(limit),
@@ -86,10 +127,32 @@ router.get('/products/:id', async function (req, res) {
             });
         }
         
+        const product = products[0];
+        
+        // 处理图片URL字段，将JSON字符串转换为数组
+        if (product.image_url) {
+            try {
+                // 如果是JSON字符串，解析为数组
+                if (typeof product.image_url === 'string' && product.image_url.startsWith('[')) {
+                    product.images = JSON.parse(product.image_url);
+                    product.image_url = product.images[0] || null; // 主图为第一张
+                } else {
+                    // 如果是单个URL，转换为数组格式
+                    product.images = [product.image_url];
+                }
+            } catch (e) {
+                // 解析失败时，使用原始值
+                product.images = [product.image_url];
+            }
+        } else {
+            product.images = [];
+            product.image_url = null;
+        }
+        
         res.json({
             code: 200,
             message: '获取商品详情成功',
-            data: products[0]
+            data: product
         });
     } catch (error) {
         console.error('获取商品详情失败:', error);
@@ -102,15 +165,20 @@ router.get('/products/:id', async function (req, res) {
 });
 
 // 获取商品分类
+// 获取分类列表
 router.get('/categories', async function (req, res) {
     try {
-        const sql = `SELECT DISTINCT category FROM store_products WHERE status = 'active' AND category IS NOT NULL`;
+        // 获取一级分类（parent_id 为 NULL 或 0）
+        const sql = `SELECT id, name, icon, description, sort_order 
+                     FROM store_categories 
+                     WHERE status = 'active' AND (parent_id IS NULL OR parent_id = 0)
+                     ORDER BY sort_order ASC, id ASC`;
         const categories = await query(sql);
         
         res.json({
             code: 200,
             message: '获取分类成功',
-            data: categories.map(item => item.category)
+            data: categories
         });
     } catch (error) {
         console.error('获取分类失败:', error);

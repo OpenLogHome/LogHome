@@ -52,7 +52,7 @@
 
           <div class="item-info">
             <img 
-              :src="item.image_url || '/placeholder-product.jpg'" 
+              :src="getMainImage(item) || '/placeholder-product.jpg'" 
               :alt="item.name"
               class="item-image"
               @click="goToProduct(item.id)"
@@ -160,6 +160,14 @@ const router = useRouter()
 const cartItems = ref([])
 const loading = ref(false)
 const selectAll = ref(false)
+
+// 获取商品主图
+const getMainImage = (product) => {
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    return product.images[0]
+  }
+  return product.image_url
+}
 
 // 计算属性
 const selectedItems = computed(() => cartItems.value.filter(item => item.selected))

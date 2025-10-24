@@ -6,30 +6,67 @@
     </div>
 
     <div v-else-if="product" class="product-content">
-      <!-- 返回按钮 -->
-      <button class="back-btn" @click="goBack">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="m12 19-7-7 7-7"></path>
-          <path d="m19 12H5"></path>
-        </svg>
-        返回商品列表
-      </button>
 
       <div class="product-main">
-        <!-- 商品图片 -->
+        <!-- 商品图片轮播 -->
         <div class="product-images">
-          <div class="main-image">
-            <img :src="currentImage || '/placeholder-product.jpg'" :alt="product.name" />
-          </div>
-          <div class="image-thumbnails" v-if="product.images && product.images.length > 1">
-            <img 
-              v-for="(image, index) in product.images" 
-              :key="index"
-              :src="image"
-              :alt="`${product.name} ${index + 1}`"
-              :class="{ active: currentImage === image }"
-              @click="currentImage = image"
-            />
+          <div class="image-carousel" v-if="productImages.length > 0">
+            <div 
+              class="carousel-container"
+              @touchstart="handleTouchStart"
+              @touchmove="handleTouchMove"
+              @touchend="handleTouchEnd"
+              @mousedown="handleMouseDown"
+              @mousemove="handleMouseMove"
+              @mouseup="handleMouseUp"
+              @mouseleave="handleMouseUp"
+            >
+              <div 
+                class="carousel-track"
+                :style="{ transform: `translateX(-${currentImageIndex * 100}%)` }"
+              >
+                <div 
+                  v-for="(image, index) in productImages" 
+                  :key="index"
+                  class="carousel-slide"
+                >
+                  <img :src="image" :alt="`${product.name} ${index + 1}`" />
+                </div>
+              </div>
+              
+              <!-- 导航按钮 -->
+              <button 
+                v-if="productImages.length > 1"
+                class="carousel-btn prev-btn"
+                @click="prevImage"
+                :disabled="currentImageIndex === 0"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button 
+                v-if="productImages.length > 1"
+                class="carousel-btn next-btn"
+                @click="nextImage"
+                :disabled="currentImageIndex === productImages.length - 1"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- 指示器 -->
+            <div class="carousel-indicators" v-if="productImages.length > 1">
+              <button
+                v-for="(image, index) in productImages"
+                :key="index"
+                :class="{ active: currentImageIndex === index }"
+                @click="goToImage(index)"
+                class="indicator"
+              ></button>
+            </div>
           </div>
         </div>
 
@@ -114,7 +151,7 @@
             class="related-item"
             @click="goToProduct(relatedProduct.id)"
           >
-            <img :src="relatedProduct.image_url || '/placeholder-product.jpg'" :alt="relatedProduct.name" />
+            <img :src="getMainImage(relatedProduct) || '/placeholder-product.jpg'" :alt="relatedProduct.name" />
             <h4>{{ relatedProduct.name }}</h4>
             <p class="related-price">¥{{ relatedProduct.price }}</p>
           </div>
@@ -143,10 +180,31 @@ const relatedProducts = ref([])
 const loading = ref(false)
 const quantity = ref(1)
 const selectedSpecs = ref({})
-const currentImage = ref('')
+const currentImageIndex = ref(0)
+
+// 触摸和拖拽相关
+const touchStartX = ref(0)
+const touchEndX = ref(0)
+const isDragging = ref(false)
+const dragStartX = ref(0)
 
 // 计算属性
 const productId = computed(() => route.params.id)
+
+// 获取商品图片数组
+const productImages = computed(() => {
+  if (!product.value) return []
+  
+  if (product.value.images && Array.isArray(product.value.images) && product.value.images.length > 0) {
+    return product.value.images
+  }
+  
+  if (product.value.image_url) {
+    return [product.value.image_url]
+  }
+  
+  return ['/placeholder-product.jpg']
+})
 
 // 方法
 // 获取商品详情
@@ -157,7 +215,7 @@ const fetchProductDetail = async () => {
     
     if (response.code == 200) {
       product.value = response.data
-      currentImage.value = product.value.image_url || (product.value.images && product.value.images[0])
+      currentImageIndex.value = 0
       
       // 初始化规格选择
       if (product.value.specs) {
@@ -262,6 +320,85 @@ const goToProduct = (id) => {
   router.push(`/product/${id}`)
 }
 
+// 轮播图控制方法
+const nextImage = () => {
+  if (currentImageIndex.value < productImages.value.length - 1) {
+    currentImageIndex.value++
+  }
+}
+
+const prevImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--
+  }
+}
+
+const goToImage = (index) => {
+  currentImageIndex.value = index
+}
+
+// 触摸事件处理
+const handleTouchStart = (e) => {
+  touchStartX.value = e.touches[0].clientX
+}
+
+const handleTouchMove = (e) => {
+  e.preventDefault()
+}
+
+const handleTouchEnd = (e) => {
+  touchEndX.value = e.changedTouches[0].clientX
+  handleSwipe()
+}
+
+// 鼠标事件处理
+const handleMouseDown = (e) => {
+  isDragging.value = true
+  dragStartX.value = e.clientX
+}
+
+const handleMouseMove = (e) => {
+  if (!isDragging.value) return
+  e.preventDefault()
+}
+
+const handleMouseUp = (e) => {
+  if (!isDragging.value) return
+  isDragging.value = false
+  
+  const dragEndX = e.clientX
+  const dragDistance = dragStartX.value - dragEndX
+  
+  if (Math.abs(dragDistance) > 50) {
+    if (dragDistance > 0) {
+      nextImage()
+    } else {
+      prevImage()
+    }
+  }
+}
+
+// 滑动处理
+const handleSwipe = () => {
+  const swipeDistance = touchStartX.value - touchEndX.value
+  
+  if (Math.abs(swipeDistance) > 50) {
+    if (swipeDistance > 0) {
+      nextImage()
+    } else {
+      prevImage()
+    }
+  }
+}
+
+// 获取商品主图
+const getMainImage = (product) => {
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    return product.images[0]
+  }
+  return product.image_url
+}
+
 // 生命周期
 onMounted(() => {
   fetchProductDetail()
@@ -308,38 +445,119 @@ onMounted(() => {
   gap: 15px;
 }
 
-.main-image {
+/* 轮播图样式 */
+.image-carousel {
+  width: 100%;
+}
+
+.carousel-container {
+  position: relative;
   width: 100%;
   height: 400px;
   border-radius: 8px;
   overflow: hidden;
   background: #f8f9fa;
+  cursor: grab;
 }
 
-.main-image img {
+.carousel-container:active {
+  cursor: grabbing;
+}
+
+.carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-slide img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.image-thumbnails {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-}
-
-.image-thumbnails img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 6px;
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
 }
 
-.image-thumbnails img.active {
-  border-color: #007bff;
+.carousel-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: translateY(-50%) scale(0.9);
+}
+
+.carousel-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.carousel-btn:hover:not(:disabled) svg {
+  transform: scale(1.1);
+}
+
+.prev-btn {
+  left: 10px;
+}
+
+.next-btn {
+  right: 10px;
+}
+
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.indicator.active {
+  background: #007bff;
+}
+
+.indicator:hover {
+  background: #999;
+}
+
+.indicator.active:hover {
+  background: #0056b3;
 }
 
 .product-info {
@@ -352,10 +570,6 @@ onMounted(() => {
   margin: 0 0 20px 0;
   color: #333;
   line-height: 1.3;
-}
-
-.product-price {
-  margin-bottom: 15px;
 }
 
 .current-price {
@@ -519,8 +733,143 @@ onMounted(() => {
 }
 
 .description-content {
+  line-height: 1.8;
+  color: #333;
+  font-size: 16px;
+}
+
+/* 富文本内容样式 */
+.description-content h1,
+.description-content h2,
+.description-content h3,
+.description-content h4,
+.description-content h5,
+.description-content h6 {
+  margin: 24px 0 16px 0;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.description-content h1 { font-size: 28px; }
+.description-content h2 { font-size: 24px; }
+.description-content h3 { font-size: 20px; }
+.description-content h4 { font-size: 18px; }
+.description-content h5 { font-size: 16px; }
+.description-content h6 { font-size: 14px; }
+
+.description-content p {
+  margin: 16px 0;
+  line-height: 1.8;
+}
+
+.description-content ul,
+.description-content ol {
+  margin: 16px 0;
+  padding-left: 24px;
+}
+
+.description-content li {
+  margin: 8px 0;
   line-height: 1.6;
-  color: #666;
+}
+
+.description-content blockquote {
+  margin: 20px 0;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+  font-style: italic;
+  color: #555;
+}
+
+.description-content code {
+  background: #f1f3f4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #d63384;
+}
+
+.description-content pre {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid #e9ecef;
+}
+
+.description-content pre code {
+  background: none;
+  padding: 0;
+  color: #333;
+}
+
+.description-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.description-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: white;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.description-content th,
+.description-content td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.description-content th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+}
+
+.description-content tr:last-child td {
+  border-bottom: none;
+}
+
+.description-content a {
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.description-content a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.description-content strong,
+.description-content b {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.description-content em,
+.description-content i {
+  font-style: italic;
+  color: #6c757d;
+}
+
+.description-content hr {
+  margin: 32px 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #dee2e6, transparent);
 }
 
 .related-products {

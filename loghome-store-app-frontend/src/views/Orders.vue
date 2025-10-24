@@ -49,7 +49,7 @@
             @click="goToProductDetail(item.product_id)"
           >
             <img 
-              :src="item.product_image || '/placeholder-product.jpg'" 
+              :src="getMainImage(item) || '/placeholder-product.jpg'" 
               :alt="item.product_name"
               class="item-image"
             />
@@ -217,6 +217,14 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// 获取商品主图
+const getMainImage = (product) => {
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    return product.images[0]
+  }
+  return product.product_image || product.image_url
 }
 
 const getStatusText = (status) => {

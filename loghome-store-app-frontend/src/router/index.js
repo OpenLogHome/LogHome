@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ProductList from '../views/ProductList.vue'
 import ProductDetail from '../views/ProductDetail.vue'
+import CategoryProducts from '../views/CategoryProducts.vue'
 import Cart from '../views/Cart.vue'
 import Orders from '../views/Orders.vue'
 
@@ -25,6 +26,14 @@ const router = createRouter({
       component: ProductDetail,
       meta: {
         title: '商品详情'
+      }
+    },
+    {
+      path: '/category/:id',
+      name: 'CategoryProducts',
+      component: CategoryProducts,
+      meta: {
+        title: '分类商品'
       }
     },
     {

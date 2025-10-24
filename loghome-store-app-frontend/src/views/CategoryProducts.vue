@@ -1,46 +1,31 @@
 <template>
-  <div class="product-list">
-    <!-- 固定顶栏 -->
-    <div class="top-bar">
-      <div class="top-bar-content">
-        <button class="top-bar-btn" @click="handleSearch">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+  <div class="category-products">
+
+    <!-- 搜索和排序区域 -->
+    <div class="search-sort-section">
+      <div class="search-bar">
+        <input 
+          v-model="searchKeyword" 
+          type="text" 
+          placeholder="搜索商品..." 
+          class="search-input"
+          @input="handleSearchInput"
+        />
+        <button class="search-btn" @click="performSearch">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
         </button>
-        <button class="top-bar-btn" @click="handleCustomerService">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M3 5a2 2 0 0 1 2-2h3.28a1 1 0 0 1 .948.684l1.498 4.493a1 1 0 0 1-.502 1.21l-2.257 1.13a11.042 11.042 0 0 0 5.516 5.516l1.13-2.257a1 1 0 0 1 1.21-.502l4.493 1.498a1 1 0 0 1 .684.949V19a2 2 0 0 1-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-          </svg>
-        </button>
-        <button class="top-bar-btn" @click="handleUser">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </button>
-        <button class="top-bar-btn" @click="handleCart">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="8" cy="21" r="1"/>
-            <circle cx="19" cy="21" r="1"/>
-            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
-          </svg>
-        </button>
       </div>
-    </div>
-
-    <!-- 分类栏 -->
-    <div class="category-bar">
-      <div class="category-item" 
-           v-for="category in categories" 
-           :key="category.id"
-           @click="handleCategorySelect(category.id, category.name)"
-           :class="{ active: selectedCategory === category.id }">
-        <div class="category-icon">
-          <img :src="category.icon || '/placeholder-icon.jpg'" :alt="category.name" />
-        </div>
-        <div class="category-name">{{ category.name }}</div>
+      
+      <div class="sort-section">
+        <select v-model="sortBy" @change="handleSort" class="sort-select">
+          <option value="default">默认排序</option>
+          <option value="price_asc">价格从低到高</option>
+          <option value="price_desc">价格从高到低</option>
+          <option value="name">按名称排序</option>
+        </select>
       </div>
     </div>
 
@@ -78,7 +63,7 @@
 
     <!-- 空状态 -->
     <div v-if="!loading && products.length === 0" class="empty-state">
-      <p>暂无商品</p>
+      <p>该分类下暂无商品</p>
     </div>
 
     <!-- 分页 -->
@@ -108,21 +93,22 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { productAPI, cartAPI, errorHandler, formatter } from '@/utils/api'
-import { useRouter } from 'vue-router'
+import { productAPI, errorHandler } from '@/utils/api'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 
 // 响应式数据
 const products = ref([])
-const categories = ref([])
 const loading = ref(false)
 const searchKeyword = ref('')
-const selectedCategory = ref('')
 const sortBy = ref('default')
 const currentPage = ref(1)
 const pageSize = ref(12)
 const totalProducts = ref(0)
+const categoryId = ref(route.params.id)
+const categoryName = ref(route.query.name || '商品分类')
 
 // 计算属性
 const totalPages = computed(() => Math.ceil(totalProducts.value / pageSize.value))
@@ -135,7 +121,7 @@ const fetchProducts = async () => {
       page: currentPage.value,
       limit: pageSize.value,
       search: searchKeyword.value,
-      category: selectedCategory.value,
+      category: categoryId.value,
       sort: sortBy.value
     }
     
@@ -157,28 +143,18 @@ const fetchProducts = async () => {
   }
 }
 
-const fetchCategories = async () => {
-  try {
-    const response = await productAPI.getCategories()
-    
-    if (response.code == 200) {
-      categories.value = response.data;
-    } else {
-      console.error('获取分类失败:', response.message)
-    }
-  } catch (error) {
-    console.error('获取分类失败:', error)
-  }
+const handleSearchInput = () => {
+  // 实时搜索可以在这里添加防抖逻辑
+}
+
+const performSearch = () => {
+  currentPage.value = 1
+  fetchProducts()
 }
 
 const handleSearch = () => {
-  currentPage.value = 1
-  fetchProducts()
-}
-
-const handleCategoryChange = () => {
-  currentPage.value = 1
-  fetchProducts()
+  // 顶栏搜索按钮点击
+  performSearch()
 }
 
 const handleSort = () => {
@@ -191,24 +167,20 @@ const changePage = (page) => {
   fetchProducts()
 }
 
+const goBack = () => {
+  router.go(-1)
+}
+
 const handleCustomerService = () => {
-  // 客服功能
   console.log('客服')
 }
 
 const handleUser = () => {
-  // 用户中心
   router.push('/user')
 }
 
 const handleCart = () => {
-  // 购物车
   router.push('/cart')
-}
-
-const handleCategorySelect = (categoryId, categoryName) => {
-  // 跳转到分类页面而不是筛选
-  router.push(`/category/${categoryId}?name=${encodeURIComponent(categoryName)}`)
 }
 
 const goToProductDetail = (productId) => {
@@ -226,101 +198,72 @@ const getMainImage = (product) => {
 // 生命周期
 onMounted(() => {
   fetchProducts()
-  fetchCategories()
 })
 </script>
 
 <style scoped>
-.product-list {
+.category-products {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 80px 20px 20px; /* 增加顶部padding为顶栏留出空间 */
+  padding: 20px 20px;
 }
 
-/* 固定顶栏样式 */
-.top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.top-bar-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 100%;
+/* 搜索和排序区域 */
+.search-sort-section {
+  margin-bottom: 30px;
   display: flex;
-  justify-content: flex-end;
+  gap: 20px;
   align-items: center;
-  padding: 0 20px;
-  gap: 15px;
+  flex-wrap: wrap;
 }
 
-.top-bar-btn {
-  background: none;
+.search-bar {
+  display: flex;
+  flex: 1;
+  min-width: 300px;
+  gap: 10px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.search-btn {
+  padding: 12px 16px;
+  background-color: #007bff;
+  color: white;
   border: none;
-  color: #495057;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.top-bar-btn:hover {
-  background-color: rgba(0,0,0,0.1);
+.search-btn:hover {
+  background-color: #0056b3;
 }
 
-/* 分类栏样式 */
-.category-bar {
+.sort-section {
   display: flex;
-  overflow-x: auto;
-  padding: 20px 0;
-  gap: 20px;
-  border-bottom: 1px solid #eee;
-  margin-bottom: 20px;
+  gap: 15px;
 }
 
-.category-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 80px;
-  padding: 10px;
-  cursor: pointer;
+.sort-select {
+  padding: 10px 15px;
+  border: 2px solid #e1e5e9;
   border-radius: 8px;
-  transition: all 0.2s;
+  background-color: white;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 150px;
 }
 
-.category-item:hover {
-  background-color: #f5f5f5;
-}
-
-.category-item.active {
-  background-color: #667eea;
-  color: white;
-}
-
-.category-icon {
-  color: #666;
-}
-
-.category-item.active .category-icon {
-  color: white;
-}
-
-.category-name {
-  font-size: 12px;
-  text-align: center;
-  white-space: nowrap;
-}
-
+/* 商品网格样式 */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -453,18 +396,23 @@ onMounted(() => {
 
 /* 移动端适配 */
 @media (max-width: 768px) {
-  .product-list {
-    padding: 80px 15px 15px; /* 保持顶栏空间 */
+  .category-products {
+    padding: 15px 15px;
   }
   
-  .category-bar {
-    padding: 15px 0;
+  .search-sort-section {
+    flex-direction: column;
     gap: 15px;
   }
   
-  .category-item {
-    min-width: 60px;
-    padding: 8px;
+  .search-bar {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .sort-select {
+    min-width: auto;
+    width: 100%;
   }
   
   .products-grid {
@@ -475,6 +423,10 @@ onMounted(() => {
   .pagination {
     flex-direction: column;
     gap: 10px;
+  }
+  
+  .category-title {
+    font-size: 16px;
   }
 }
 
@@ -487,8 +439,7 @@ onMounted(() => {
     padding: 0 10px;
   }
   
-  .category-bar {
-    padding: 10px 0;
+  .top-bar-actions {
     gap: 10px;
   }
   
