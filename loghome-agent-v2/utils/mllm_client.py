@@ -66,6 +66,9 @@ class MLLMClient:
             
             # 添加处理器到记录器
             self.logger.addHandler(file_handler)
+            
+            # 防止日志传播到根记录器（避免输出到控制台）
+            self.logger.propagate = False
         
         # 记录初始化信息
         self.logger.info("MLLMClient initialized")

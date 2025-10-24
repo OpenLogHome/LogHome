@@ -324,7 +324,7 @@ def extract_full_text_from_chapter_content(chapter_title: str,content_list, api_
     for item in content_list:
         if item.get('type') == 'text' and 'value' in item:
             text_parts.append(item['value'].strip())
-        elif item.get('type') == 'image' and 'img' in item and image_client:
+        elif item.get('type') == 'image' and 'img' in item:
             # 为图片分析创建单独的MLLM客户端
             if api_info:
                 image_client = MLLMClient(**api_info)
