@@ -108,9 +108,26 @@
 					});
 			},
 			changeCover(){
-				uni.navigateTo({
-					url:"./cover_upload??noneAnimation=true&id=" + this.id
-				})
+				let _this = this;
+				uni.showActionSheet({
+				    itemList: ['上传封面', '封面制作器'],
+				    success: function (res) {
+				        if(res.tapIndex == 0) {
+							uni.navigateTo({
+								url:"./cover_upload??noneAnimation=true&id=" + _this.id
+							})
+						}
+						if(res.tapIndex == 1) {
+							let url = "https://m.loghome.ink/subtasks/cover-maker.html?novelid=" + _this.id;
+							uni.navigateTo({
+								url:`../apps/h5webview?url=${encodeURIComponent(url)}&title=封面制作器`
+							})
+						}
+				    },
+				    fail: function (res) {
+				        console.log(res.errMsg);
+				    }
+				});
 			}
 		}
 	}

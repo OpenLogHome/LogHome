@@ -74,6 +74,22 @@
 			</view>
 		</uni-popup>
 
+		<!-- 定时发布弹窗 -->
+		<uni-popup ref="schedulePopup" type="center">
+			<view class="schedule-box" style="background-color: white; padding: 20px; border-radius: 10px; width: 300px;">
+				<view style="margin-bottom: 15px; font-weight: bold; text-align: center;">选择定时发布时间</view>
+				<view style="margin-bottom: 20px;">
+					<el-date-picker v-model="scheduleTime" type="datetime" placeholder="选择定时发布时间"
+						style="width: 100%;" value-format="yyyy-MM-dd HH:mm">
+					</el-date-picker>
+				</view>
+				<view style="display: flex; justify-content: space-between;">
+					<button size="mini" @click="$refs.schedulePopup.close()">取消</button>
+					<button size="mini" type="primary" @click="confirmSchedule">确定</button>
+				</view>
+			</view>
+		</uni-popup>
+
 		<!-- 版本冲突对话框 -->
 		<conflict-dialog ref="conflictDialog"></conflict-dialog>
 	</div>
@@ -96,6 +112,7 @@ export default {
 	data() {
 		return {
 			chapterId: 0,
+			scheduleTime: null,
 			article: {},
 			fab_pattern: {
 				color: 'gray',
@@ -512,7 +529,19 @@ export default {
 			this.loadComplete = true;
 			uni.hideLoading();
 		},
-		save(drafting, msg) {
+		confirmSchedule() {
+			if (!this.scheduleTime) {
+				uni.showToast({
+					title: '请选择时间',
+					icon: 'none'
+				});
+				return;
+			}
+			// element-ui date-picker with value-format returns formatted string directly
+			this.save(1, "定时发布设置成功", this.scheduleTime);
+			this.$refs.schedulePopup.close();
+		},
+		save(drafting, msg, scheduleTime = null) {
 			if (this.article.title.replace(/(^\s*)|(\s*$)/g, "") == "" || this.article.content.replace(/(^\s*)|(\s*$)/g, "") == "") {
 				uni.showToast({
 					title: "标题或文章内容不能为空",
@@ -529,7 +558,8 @@ export default {
 					title: this.article.title,
 					content: this.article.content,
 					is_draft: drafting,
-					article_id: this.chapterId
+					article_id: this.chapterId,
+					schedule_time: scheduleTime
 				},
 				{
 					headers: {
@@ -1190,7 +1220,7 @@ export default {
 			this.formatEssay();
 		} else if (e.text == "发布 ") {
 			let _this = this;
-			let itemList = ['发布章节'];
+			let itemList = ['立即发布', '定时发布'];
 			if (_this.article.is_draft == 0) {
 				itemList.push("退回章节为草稿");
 			}
@@ -1209,6 +1239,17 @@ export default {
 						_this.save(0, "发布成功")
 					}
 					if (res.tapIndex == 1) {
+						if (_this.article.novel_info.is_personal == 1) {
+							uni.showToast({
+								title: "小说尚未公开，无法发布文章",
+								icon: 'none',
+								duration: 2000
+							});
+							return;
+						}
+						_this.$refs.schedulePopup.open();
+					}
+					if (res.tapIndex == 2) {
 						if (_this.article.is_draft == 0) {
 							uni.showModal({
 								title: '提示',
@@ -1271,44 +1312,6 @@ export default {
 		
 		// 检测是否运行在iframe中并与父框架通信
 		this.checkFrameEnvironment();
-		
-		// 测试：测试实时同步功能
-		setInterval(() => {
-			console.log("实时同步")
-			  const qlEditor = document.querySelector('.ql-editor');
-			  // 获取当前选择对象（包含光标信息）
-			  const selection = window.getSelection();
-			  
-			  // 检查是否有有效的选择范围（光标也是范围的一种）
-			  if (selection.rangeCount === 0) {
-			    console.log('无光标或选择范围');
-			    return;
-			  }
-			  
-			  // 获取当前光标所在的范围
-			  const range = selection.getRangeAt(0);
-			  // 光标起点所在的节点（可能是文本节点或元素节点）
-			  let currentNode = range.startContainer;
-			  
-			  // 若起点是文本节点，取其父元素（文本节点的父元素才是实际的容器元素）
-			  if (currentNode.nodeType === Node.TEXT_NODE) {
-			    currentNode = currentNode.parentNode;
-			  }
-			  
-			  // 确保当前节点是qlEditor的子元素（避免超出范围）
-			  while (currentNode && currentNode !== qlEditor && !qlEditor.contains(currentNode)) {
-			    currentNode = currentNode.parentNode;
-			  }
-			  
-			  // 输出结果
-			  if (currentNode && currentNode !== qlEditor) {
-			    console.log('光标当前所在的子元素：', currentNode);
-			    console.log('子元素标签名：', currentNode.tagName);
-			    console.log('子元素class：', currentNode.className);
-			  } else {
-			    console.log('光标位于ql-editor根节点或外部');
-			  }
-		}, 5000)
 	},
 	onShow() {
 		// onShow时也检查一次iframe环境（兼容性处理）

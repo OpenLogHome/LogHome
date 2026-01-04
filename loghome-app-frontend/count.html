@@ -43,6 +43,58 @@
 			transform: scale(0.95)
 		}
 
+		/* 弹窗海报样式 */
+		#popup-poster-box {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			background-color: rgba(0, 0, 0, 0.7);
+			z-index: 30000;
+			display: none;
+			justify-content: center;
+			align-items: center;
+			opacity: 0;
+			transition: opacity 0.3s;
+		}
+
+		#popup-poster-box.show {
+			display: flex;
+			opacity: 1;
+		}
+
+		#popup-poster-box .poster-content {
+			position: relative;
+			width: 80vw;
+			max-width: 400px;
+			max-height: 80vh;
+		}
+
+		#popup-poster-box .poster-img {
+			width: 100%;
+			height: auto;
+			border-radius: 10px;
+			display: block;
+		}
+
+		#popup-poster-box .close-btn {
+			position: absolute;
+			bottom: -40px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 30px;
+			height: 30px;
+			border: 2px solid white;
+			border-radius: 50%;
+			color: white;
+			font-size: 20px;
+			text-align: center;
+			line-height: 26px;
+			cursor: pointer;
+			background-color: rgba(0,0,0,0.3);
+		}
+
 	</style>
 
 	<body>
@@ -58,6 +110,13 @@
 			<img src="./static/loading.gif" alt="">
 			<div class="title">
 				努力加载中
+			</div>
+		</div>
+		<!-- 弹窗海报容器 -->
+		<div id="popup-poster-box">
+			<div class="poster-content">
+				<img src="" alt="Popup Poster" class="poster-img">
+				<div class="close-btn">×</div>
 			</div>
 		</div>
 	</body>

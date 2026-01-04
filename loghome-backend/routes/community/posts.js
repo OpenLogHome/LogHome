@@ -296,11 +296,6 @@ router.post('/create', auth, async (req, res) => {
             if (novel.length === 0) {
                 return res.status(404).json({ msg: '作品不存在或已被删除' });
             }
-            
-            // 验证用户是否有权限绑定该作品（作者本人）
-            if (novel[0].author_id !== user.user_id) {
-                return res.status(403).json({ msg: '您只能绑定自己创作的作品' });
-            }
         }
         
         // 创建帖子

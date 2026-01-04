@@ -1,0 +1,2 @@
+#!/bin/bash
+/var/lang/python39/bin/python3.9 -u ws_server.py

@@ -1,0 +1,14 @@
+{
+  "name": "timer_loghome_search_keywords",
+  "version": "1.0.0",
+  "description": "定时维护搜索关键词的云函数",
+  "main": "index.js",
+  "dependencies": {
+    "mysql": "^2.18.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+} 

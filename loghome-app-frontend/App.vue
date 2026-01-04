@@ -362,6 +362,60 @@ export default {
 					duration: 2000
 				});
 			}
+		},
+		checkPopupPoster(path) {
+			const popupBox = document.getElementById("popup-poster-box");
+			if (!popupBox) return;
+
+			axios.get(this.$baseUrl + '/app/get_popup_poster', {
+				params: { url: path }
+			}).then((res) => {
+				const posters = res.data;
+				if (posters && posters.length > 0) {
+					const poster = posters[0];
+					// 检查是否已展示
+					let shownIds = [];
+					try {
+						shownIds = JSON.parse(window.localStorage.getItem('shown_popup_posters') || '[]');
+					} catch (e) {
+						shownIds = [];
+					}
+					
+					if (!shownIds.includes(poster.id)) {
+						// 展示海报
+						const img = popupBox.querySelector(".poster-img");
+						if (img) {
+							img.src = poster.image_url;
+							// 点击图片跳转
+							img.onclick = () => {
+								if (poster.target_url) {
+									this.navigateToTarget(poster.target_url);
+									popupBox.classList.remove("show");
+									// 跳转后通常也认为展示过了
+									if (!shownIds.includes(poster.id)) {
+										shownIds.push(poster.id);
+										window.localStorage.setItem('shown_popup_posters', JSON.stringify(shownIds));
+									}
+								}
+							};
+						}
+						popupBox.classList.add("show");
+						
+						// 关闭逻辑
+						const closeBtn = popupBox.querySelector(".close-btn");
+						if (closeBtn) {
+							closeBtn.onclick = (e) => {
+								e.stopPropagation(); // 防止触发图片的点击事件
+								popupBox.classList.remove("show");
+								shownIds.push(poster.id);
+								window.localStorage.setItem('shown_popup_posters', JSON.stringify(shownIds));
+							};
+						}
+					}
+				}
+			}).catch(err => {
+				console.log('获取弹窗海报失败', err);
+			});
 		}
 	},
 	mounted() {
@@ -412,6 +466,9 @@ export default {
 
 		// 获取顶栏状态
 		this.$router.afterEach((to, from, next) => {
+			// 检查弹窗海报
+			this.checkPopupPoster(to.path);
+
 			if (window.jsBridge && window.jsBridge.inApp) {
 				// setTimeout(() => {
 				// 	const uniPageHead = document.querySelectorAll("uni-page-head");

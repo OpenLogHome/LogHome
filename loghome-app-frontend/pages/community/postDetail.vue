@@ -279,7 +279,7 @@ export default {
           itemList,
           success: function (res) {
               if(itemList[res.tapIndex] == '分享贴子') {
-                // 更多逻辑
+                _this.sharePost();
               } else if(itemList[res.tapIndex] == '编辑帖子') {
                 uni.navigateTo({
                   url: `/pages/community/postEdit?post_id=${_this.post.post_id}`

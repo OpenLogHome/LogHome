@@ -119,54 +119,28 @@ router.post('/modify_novel', auth, async (req, res) => {
 });
 
 router.get('/export_novel', auth, async function (req, res) {
-	let user = req.user;
-	user = JSON.parse(JSON.stringify(user))[0];
-	res.end("success");
-	try {
-		let results = await query(
-			`SELECT a.article_id,a.title,a.novel_id,a.article_chapter,a.content,
-                               a.is_draft,a.deleted,a.update_time,a.text_count,a.article_type,n.name novel_name 
-                               FROM articles a,novels n
-                               WHERE a.novel_id = n.novel_id 
-                               AND a.novel_id = ? 
-                               AND n.author_id= ?  
-                               AND n.deleted = 0 
-                               AND a.deleted = 0 
-                               ORDER BY article_chapter ASC`,
-			[req.query.id, user.user_id],
-		);
-        let dirName = `public/${results[0].novel_id}_${Date.now()}_${Math.floor(Math.random()*9999)}`;
-        fs.mkdirSync(dirName);
-        for(let chapter of results){
-            let reg = new RegExp('[\\\\/:*?\"<>|]');
-            fs.writeFileSync(`${dirName}/${chapter.article_chapter} ${chapter.is_draft?"[草稿]":""}${chapter.title.replace(reg, '')}.txt`,chapter.content);
-        }
-        compressing.zip.compressDir(dirName, `${dirName}.zip`).then(()=>{
-            // res.sendFile(path.resolve(`${dirName}.zip`));
-			// 通过消息通知成功。
-			message.sendMsg(
-				-1,
-				user.user_id,
-				'作品《' + results[0].novel_name + '》于' + currentTime() + '导出成功，点击下载。',
-				'apps/openInBrowser?url=https://loghomeservice.codesocean.top/'+ `${dirName}.zip`,
-				'notification',
-			);
-            
-        }).catch((e)=>{
-            console.log(e);
-			// 通过消息通知压缩失败。
-			message.sendMsg(
-				-1,
-				user.user_id,
-				'作品《' + results[0].novel_name + '》导出失败了，请联系管理员！',
-				'',
-				'notification',
-			);
+    let user = req.user;
+    user = JSON.parse(JSON.stringify(user))[0];
+    res.end("success");
+    try {
+        let results = await query(
+            `SELECT n.name novel_name 
+                               FROM novels n
+                               WHERE n.novel_id = ? 
+                               AND n.author_id= ?`,
+            [req.query.id, user.user_id],
+        );
+
+        axios.post('http://localhost:9000/export_novel', {
+            novel_id: req.query.id,
+            user_id: user.user_id,
+            novel_name: results[0].novel_name
         });
-	} catch (e) {
+
+    } catch (e) {
         console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
+        res.json(400, { msg: 'bad request' });
+    }
 });
 
 router.post('/set_novel_status', auth, async (req, res) => {
@@ -300,12 +274,17 @@ router.get('/get_articles', auth, async function (req, res) {
 					aw1.title
 				FROM articles_writer aw1
 				INNER JOIN (
-					SELECT article_id, MAX(aw2.create_time) as max_create_time
+					SELECT MAX(aw2.id) as max_id
 					FROM articles_writer aw2
-					INNER JOIN novels n2 ON aw2.novel_id = n2.novel_id
-					WHERE n2.deleted = 0
-					GROUP BY article_id
-				) latest ON aw1.article_id = latest.article_id AND aw1.create_time = latest.max_create_time
+					INNER JOIN (
+						SELECT article_id, MAX(aw3.create_time) as max_create_time
+						FROM articles_writer aw3
+						INNER JOIN novels n2 ON aw3.novel_id = n2.novel_id
+						WHERE n2.deleted = 0
+						GROUP BY article_id
+					) latest ON aw2.article_id = latest.article_id AND aw2.create_time = latest.max_create_time
+					GROUP BY aw2.article_id
+				) latest_unique ON aw1.id = latest_unique.max_id
 			) aw ON a.article_id = aw.article_id
 			WHERE a.novel_id = ? 
 				AND n.author_id = ?  
@@ -359,19 +338,88 @@ router.get('/get_articles_deleted', auth, async function (req, res) {
 	user = JSON.parse(JSON.stringify(user))[0];
 	try {
 		let results = await query(
-			`SELECT a.article_id,a.title,a.novel_id,a.article_chapter,
-                               a.is_draft,a.deleted,a.update_time,a.text_count,n.name novel_name 
-                               FROM articles a,novels n
-                               WHERE a.novel_id = n.novel_id 
-                               AND a.novel_id = ? 
-                               AND n.author_id= ?  
-                               AND n.deleted = 0 
-                               AND a.deleted = 1
-                               ORDER BY article_chapter ASC`,
+			`SELECT 
+				a.article_id,
+				a.title,
+				a.novel_id,
+				a.article_chapter,
+				a.content_hash,
+				a.is_draft,
+				a.deleted,
+				a.update_time,
+				a.text_count,
+				n.name as novel_name,
+				aw.article_id as writer_article_id,
+				aw.content_hash as writer_content_hash,
+				aw.create_time as writer_create_time,
+				aw.id as writer_id,
+				aw.novel_id as writer_novel_id,
+				aw.title as writer_title
+			FROM articles a
+			INNER JOIN novels n ON a.novel_id = n.novel_id
+			LEFT JOIN (
+				SELECT 
+					aw1.article_id,
+					aw1.content_hash,
+					aw1.create_time,
+					aw1.id,
+					aw1.novel_id,
+					aw1.title
+				FROM articles_writer aw1
+				INNER JOIN (
+					SELECT MAX(aw2.id) as max_id
+					FROM articles_writer aw2
+					INNER JOIN (
+						SELECT article_id, MAX(aw3.create_time) as max_create_time
+						FROM articles_writer aw3
+						INNER JOIN novels n2 ON aw3.novel_id = n2.novel_id
+						WHERE n2.deleted = 0
+						GROUP BY article_id
+					) latest ON aw2.article_id = latest.article_id AND aw2.create_time = latest.max_create_time
+					GROUP BY aw2.article_id
+				) latest_unique ON aw1.id = latest_unique.max_id
+			) aw ON a.article_id = aw.article_id
+			WHERE a.novel_id = ? 
+				AND n.author_id = ?  
+				AND n.deleted = 0 
+				AND a.deleted = 1 
+			ORDER BY a.article_chapter ASC`,
 			[req.query.id, user.user_id],
 		);
-		res.end(JSON.stringify(results));
+
+		// 重新组织数据结构以保持原有的返回格式
+		const formattedResults = results.map(row => {
+			const article = {
+				article_id: row.article_id,
+				title: row.title,
+				novel_id: row.novel_id,
+				article_chapter: row.article_chapter,
+				content_hash: row.content_hash,
+				is_draft: row.is_draft,
+				deleted: row.deleted,
+				update_time: row.update_time,
+				text_count: row.text_count,
+				novel_name: row.novel_name
+			};
+			
+			// 如果存在writer信息，添加到article对象中
+			if (row.writer_article_id) {
+				article.article_writer = {
+					article_id: row.writer_article_id,
+					content_hash: row.writer_content_hash,
+					create_time: row.writer_create_time,
+					id: row.writer_id,
+					novel_id: row.writer_novel_id,
+					title: row.writer_title
+				};
+			}
+			
+			return article;
+		});
+
+		res.end(JSON.stringify(formattedResults));
 	} catch (e) {
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });
@@ -625,6 +673,24 @@ router.post('/modify_article', auth, async (req, res) => {
 	user = JSON.parse(JSON.stringify(user))[0];
 	const contentHash = calculateContentHash(req.body.content);
 	try {
+		// 如果是定时发布
+		if (req.body.schedule_time) {
+			// 强制设为草稿
+			req.body.is_draft = 1;
+			
+			// 删除该文章已有的待执行定时任务
+			await query(
+				'DELETE FROM scheduled_publish_tasks WHERE article_id = ? AND status = "pending"',
+				[req.body.article_id]
+			);
+			
+			// 插入新的定时任务
+			await query(
+				'INSERT INTO scheduled_publish_tasks (article_id, publish_time, status) VALUES (?, ?, "pending")',
+				[req.body.article_id, req.body.schedule_time]
+			);
+		}
+
 		let results = await query(
 			'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0',
 			[
@@ -656,6 +722,13 @@ router.post('/modify_article', auth, async (req, res) => {
 		);
 		//如果不是草稿，则推送至更新记录，并向所有收藏该小说的人发布更新信息
 		if (req.body.is_draft == 0) {
+			// 审核状态设为未审核
+			await query(
+				'UPDATE articles SET audit_status = \'Uncheck\' WHERE article_id = ? AND deleted = 0',
+				[
+					req.body.article_id,
+				],
+			);
 			await query(
 				'UPDATE novels SET update_time = CURRENT_TIMESTAMP WHERE novel_id = (SELECT novel_id FROM articles WHERE article_id = ?)',
 				[req.body.article_id],
@@ -1067,6 +1140,67 @@ router.post('/submit_activity_info', auth, async (req, res) => {
 		}
 
 		res.json({ success: true, msg: 'Activity information submitted successfully' });
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取定时发布任务列表
+router.get('/get_scheduled_tasks', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		let results = await query(
+			`SELECT 
+				t.task_id,
+				t.publish_time,
+				t.status,
+				a.article_id,
+				a.title as article_title,
+				a.article_chapter,
+				n.novel_id,
+				n.name as novel_name
+			FROM scheduled_publish_tasks t
+			JOIN articles a ON t.article_id = a.article_id
+			JOIN novels n ON a.novel_id = n.novel_id
+			WHERE n.author_id = ? AND t.status = 'pending'
+			ORDER BY t.publish_time ASC`,
+			[user.user_id]
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 取消定时发布任务
+router.post('/cancel_scheduled_task', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		// 验证任务是否属于当前用户
+		let task = await query(
+			`SELECT t.* 
+			 FROM scheduled_publish_tasks t
+			 JOIN articles a ON t.article_id = a.article_id
+			 JOIN novels n ON a.novel_id = n.novel_id
+			 WHERE t.task_id = ? AND n.author_id = ?`,
+			[req.body.task_id, user.user_id]
+		);
+
+		if (task.length === 0) {
+			return res.json(400, { msg: 'Task not found or access denied' });
+		}
+
+		// 删除任务
+		await query(
+			'DELETE FROM scheduled_publish_tasks WHERE task_id = ?',
+			[req.body.task_id]
+		);
+
+		res.json({ success: true, msg: 'Scheduled task canceled successfully' });
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });

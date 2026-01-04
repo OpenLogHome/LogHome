@@ -35,7 +35,7 @@
 					v-show="topNavArr[topNavIndex] == '小说'">
 					<book-detail-view v-if="curBook !== -1" :book="books[curBook]" :worlds="worlds"
 						:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
-						@close-book-detail="closeBookDetail"
+						@close-book-detail="handleCloseBookDrawerManually"
 						@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 						@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="bookSelectDrawer = true"
 						@goto-statistics="gotoStatistics" @open-activity-form="openActivityForm"></book-detail-view>
@@ -80,12 +80,12 @@
 			custom-class="book-detail-wrapper" :modal-append-to-body="true">
 			<div class="drawer-container">
 				<div class="drawer-header">
-					<el-button icon="el-icon-close" circle size="medium" @click="showBookDetail = false" type="text"
+					<el-button icon="el-icon-close" circle size="medium" @click="handleCloseBookDrawerManually" type="text"
 						style="transform: scale(1.2);"></el-button>
 				</div>
 				<book-detail-view v-if="curBook !== -1" :book="books[curBook]" :worlds="worlds"
 					:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
-					@close-book-detail="closeBookDetail"
+					@close-book-detail="handleCloseBookDrawerManually"
 					@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 					@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="bookSelectDrawer = true"
 					@goto-statistics="gotoStatistics" @goto-world-novel="gotoWorldNovel" @open-activity-form="openActivityForm"></book-detail-view>
@@ -233,7 +233,10 @@ export default {
 		}
 	},
 	onLoad() {
-
+		window.addEventListener('popstate', this.browserBack);
+	},
+	onUnload() {
+		window.removeEventListener('popstate', this.browserBack);
 	},
 	// 页面滚动监听
 	onPageScroll(e) {
@@ -340,9 +343,16 @@ export default {
 		selectBook(index) {
 			if (this.viewMode === 'grid') {
 				this.curBook = index
-				this.showBookDetail = true
+				this.showBookDetail = true;
+				window.history.pushState({ isBookDetailDrawerOpen: true }, '', window.location.href);
 				this.swiperChange(index)
 			}
+		},
+		handleCloseBookDrawerManually() {
+			// #ifdef H5
+			window.history.go(-1)
+			// #endif
+			this.showBookDetail = false;
 		},
 		// 顶部导航改变 
 		changeTopNav(e) {
@@ -582,8 +592,10 @@ export default {
 			})
 			this.bookSelectDrawer = false;
 		},
-		closeBookDetail() {
-			this.showBookDetail = false;
+		browserBack() {
+			if(this.showBookDetail) {
+				this.showBookDetail = false;
+			}
 		},
 	}
 }

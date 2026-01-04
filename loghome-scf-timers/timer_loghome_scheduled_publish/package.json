@@ -1,0 +1,11 @@
+{
+  "name": "timer_loghome_scheduled_publish",
+  "version": "1.0.0",
+  "description": "Timer for scheduled publishing of novels",
+  "main": "index.js",
+  "dependencies": {
+    "mysql": "^2.18.1"
+  },
+  "author": "",
+  "license": "ISC"
+}

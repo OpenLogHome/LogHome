@@ -221,6 +221,13 @@
 						{{ allArticleData[allPages[idx].articleId.toString()].title }}
 						<span :class="'paraTitleEndLocate'" style="margin-left: 10rpx;"></span>
 					</div>
+					<worldVocabulary v-if="allPages[idx].type == 'worldVocabulary'" 
+						:article="allArticleData[allPages[idx].articleId.toString()]"
+						:readerSettings="readerSettings"
+						:themesData="themesData"
+						:fonts="fonts"
+						@jumpToArticle="gotoArticleById"
+					></worldVocabulary>
 					<div v-if="allPages[idx].type == 'image'" class="textRender imgRender" :id="idx">
 						<div class='title' :style="{
 							'minHeight': readerSettings.fontSize * readerSettings.lineHeight + 'rpx',
@@ -408,6 +415,7 @@ import BatteryIcon from "../../../components/battery.vue"
 import BookComment from "../bookComment.vue"
 import BookExcerpts from "../bookExcerpts.vue"
 import AudiobookPlayer from "../../../components/audiobook-player.vue"
+import worldVocabulary from "./worldVocabulary.vue"
 export default {
 	data() {
 		return {
@@ -481,7 +489,7 @@ export default {
 			shownParaTitleListenBtns: []
 		}
 	},
-	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer },
+	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer, worldVocabulary },
 	methods: {
 		loadAllPages() {
 			return new Promise(async (resolve, reject) => {
@@ -588,7 +596,7 @@ export default {
 			if (allowHistory) {
 				let matchedArticles = await articleDB.articles.where("article_id").equals(article_id).toArray();
 				if (matchedArticles.length > 0 && utc2beijing(matchedArticles[0].update_time) >= utc2beijing(onlineTime)) {
-					if (matchedArticles[0].article_type == "richtext") {
+					if (matchedArticles[0].article_type == "richtext" || matchedArticles[0].article_type == "worldOutline") {
 						matchedArticles[0].content = JSON.parse(matchedArticles[0].content);
 					}
 					return matchedArticles[0];
@@ -598,7 +606,7 @@ export default {
 				let res = await axios.get(this.$baseUrl + '/articles/get_article?id=' + article_id + "&isCaching=true", {});
 				if (res.status == 200) {
 					articleDB.articles.put(res.data[0]);
-					if (res.data[0].article_type == "richtext") {
+					if (res.data[0].article_type == "richtext" || res.data[0].article_type == "worldOutline") {
 						res.data[0].content = JSON.parse(res.data[0].content);
 					}
 					return res.data[0];
@@ -684,6 +692,7 @@ export default {
 				return mergedContent;
 			}
 			if (articleData.article_type == "spliter") return [{ type: "spliter", idx: 0, articleId: articleData.article_id }];
+			if (articleData.article_type == "worldVocabulary") return [{ type: "worldVocabulary", idx: 0, articleId: articleData.article_id }];
 			let screenHeight = document.body.clientHeight;
 			let usableScreenHeight = screenHeight - rpxToPx(50) - rpxToPx(70);
 			let lineHeight = this.actualLineHeight;
@@ -1184,6 +1193,17 @@ export default {
 				}
 			}
 		},
+		gotoArticleById(articleId) {
+			for(let i = 0; i < this.allPages.length; i ++) {
+				this.currentPageIdx = 0;
+				if(this.allPages[i].articleId == articleId) {
+					this.currentPageIdx = i;
+					break;
+				}
+			}
+			this.currentRenderIdx = [];
+			this.renderNewPages();
+		},
 		browserBack() {
 			if(this.commentDrawerVisible) {
 				this.commentDrawerVisible = false;
@@ -1213,7 +1233,7 @@ export default {
 			// 设置当前文章ID列表，从当前章节开始
 			this.currentArticleIds = [];
 			for (let i = 0; i < this.allArticles.length; i++) {
-				if(this.allArticles[i].article_type == "richtext" || this.allArticles[i].article_type == "spliter"){
+				if(this.allArticles[i].article_type == "richtext" || this.allArticles[i].article_type == "spliter" || this.allArticles[i].article_type == "worldOutline"){
 					this.currentArticleIds.push(this.allArticles[i].article_id);
 				}
 			}

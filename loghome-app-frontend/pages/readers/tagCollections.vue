@@ -41,6 +41,11 @@
 			} else {
 				this.tag_id = params.tag_id;
 			}
+			if(params.title){
+				uni.setNavigationBarTitle({
+					title: "标签：" + params.title
+				})
+			}
 			this.refreshCollections();
 		},
 		onShow(){

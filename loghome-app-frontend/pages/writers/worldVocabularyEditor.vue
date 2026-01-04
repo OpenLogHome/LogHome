@@ -69,10 +69,41 @@
 
 			</div>
 			<div class="enterButton" @click="vocabAttr.id = -1; vocabAttrVisible = true">+</div>
-			<!-- 			<div class="tit">
+			<div class="tit">
 				词条关系
 			</div>
-			<div class="enterButton" @click="vocabRela.id = -1;vocabRelaVisible = true">+</div> -->
+			<div class="attrs">
+				<el-card class="box-card" v-for="(item, index) in content.relations" style="margin-bottom: 20rpx;">
+					<div style="display:flex; justify-content:space-between;">
+						<div class="attr"><span style="color:#888888; margin-right: 40rpx;">{{item.name}}</span>
+							{{item.relation}}
+						</div>
+						<div class="btns">
+							<el-button type="primary" icon="el-icon-edit" circle size="mini"
+								@click="editRela(index)"></el-button>
+							<el-button type="danger" icon="el-icon-delete" circle size="mini"
+								@click="deleteRela(index)"></el-button>
+						</div>
+					</div>
+				</el-card>
+			
+				<div v-if="suggestions.length > 0">
+					<div class="tit" style="font-size: 30rpx; margin-top: 20rpx; color: #666;">
+						关系建议
+					</div>
+					<el-card class="box-card" v-for="(item, index) in suggestions" style="margin-bottom: 20rpx; background-color: #f0f9eb">
+						<div style="display:flex; justify-content:space-between; align-items: center;">
+							<div class="attr" style="font-size: 28rpx;">
+								<span style="font-weight: bold;">{{item.name}}</span> 指向本词条关系为 "{{item.theirRelation}}"
+							</div>
+							<div class="btns">
+								<el-button type="success" size="mini" @click="acceptSuggestion(item)">添加逆向关系</el-button>
+							</div>
+						</div>
+					</el-card>
+				</div>
+			</div>
+			<div class="enterButton" @click="vocabRela.id = -1;vocabRelaVisible = true">+</div>
 		</div>
 
 		<el-drawer :title="(vocabAttr.id == -1 ? '添加' : '编辑') +  '词条属性'" :visible.sync="vocabAttrVisible"
@@ -103,9 +134,20 @@
 			direction="btt" size="80%">
 			<div class="drawerOuter" style="margin: 0 30rpx">
 				<div class="tit">
-					<div>请为 <span style="color:#6e3b24">{{article.title}}</span> 输入</div>
-					<div>想与 TA 有关联的词条名</div>
+					目标词条
 				</div>
+				<el-select v-model="vocabRela.targetId" filterable placeholder="请选择词条" style="width: 100%; margin-top: 20rpx;">
+					<el-option v-for="item in vocabularies" :key="item.article_id" :label="item.title"
+						:value="item.article_id">
+					</el-option>
+				</el-select>
+				<div class="tit" style="margin-top: 20rpx;">
+					关系描述 (单向)
+				</div>
+				<el-input type="text" placeholder="请输入关系，如“父亲”、“死敌”" v-model="vocabRela.relation" maxlength="20"
+					show-word-limit style="margin: 20rpx 0 0 0;">
+				</el-input>
+				<el-button type="primary" style="margin: 20rpx 0; width: 100%;" @click="confirmVocabRela">确定</el-button>
 			</div>
 		</el-drawer>
 
@@ -226,8 +268,13 @@
 					id: -1
 				},
 				vocabRela: {
-
-				}
+					id: -1,
+					targetId: "",
+					targetTitle: "",
+					relation: ""
+				},
+				vocabularies: [],
+				suggestions: []
 			}
 		},
 		onBackPress(e) {
@@ -293,6 +340,8 @@
 						});
 					}).exec();
 					that.content = JSON.parse(that.article.content);
+					if (!that.content.relations) that.$set(that.content, 'relations', []);
+					this.loadVocabularies();
 					let dbStatus = window.localStorage.getItem("IndexedDB");
 
 					if (this.chapterId && dbStatus == "enabled" && this.$store.state.appVersion) {
@@ -626,6 +675,143 @@
 					title:"上传中..."
 				})
 				return isLt2M;
+			},
+			async loadVocabularies() {
+				if (!this.article.novel_id) return;
+				let tk = JSON.parse(window.localStorage.getItem('token'));
+				if (tk) tk = tk.tk;
+				try {
+					let res = await axios.get(this.$baseUrl + '/essays/get_articles?id=' + this.article.novel_id, {
+						headers: {
+							'Authorization': 'Bearer ' + tk
+						}
+					});
+					this.vocabularies = res.data.filter(item => item.article_id != this.chapterId && item.article_type == 'worldVocabulary');
+					this.checkReverseRelations();
+				} catch (e) {
+					console.error(e);
+				}
+			},
+			async checkReverseRelations() {
+				this.suggestions = [];
+				const batchSize = 10;
+				let tk = JSON.parse(window.localStorage.getItem('token'));
+				if (tk) tk = tk.tk;
+
+				for (let i = 0; i < this.vocabularies.length; i += batchSize) {
+					const batch = this.vocabularies.slice(i, i + batchSize);
+					await Promise.all(batch.map(async (vocab) => {
+						try {
+							let res = await axios.get(this.$baseUrl + '/essays/get_article?id=' + vocab
+								.article_id, {
+									headers: {
+										'Authorization': 'Bearer ' + tk
+									}
+								});
+							if (res.data && res.data[0]) {
+								let art = res.data[0];
+								let content = JSON.parse(art.content);
+								if (content.relations) {
+									for (let rel of content.relations) {
+										if (rel.id == this.chapterId) {
+											let myRelations = this.content.relations || [];
+											let hasBack = myRelations.some(r => r.id == vocab.article_id);
+											if (!hasBack) {
+												this.suggestions.push({
+													id: vocab.article_id,
+													name: vocab.title,
+													theirRelation: rel.relation
+												});
+											}
+										}
+									}
+								}
+							}
+						} catch (e) {
+							console.error(e);
+						}
+					}));
+				}
+			},
+			confirmVocabRela() {
+				if (this.content.relations == undefined) {
+					this.content.relations = [];
+				}
+				
+				// Find target title if not set (should be set by UI, but double check)
+				if(!this.vocabRela.targetTitle) {
+					let target = this.vocabularies.find(v => v.article_id == this.vocabRela.targetId);
+					if(target) this.vocabRela.targetTitle = target.title;
+				}
+
+				if (this.vocabRela.id == -1) {
+					this.content.relations.push({
+						id: this.vocabRela.targetId,
+						name: this.vocabRela.targetTitle,
+						relation: this.vocabRela.relation
+					})
+				} else {
+					// Editing existing relation (by index)
+					// Actually id in vocabRela logic for attrs was ID, but here relations don't have unique ID other than targetId.
+					// Let's use index or targetId. 
+					// The existing UI logic used 'id' as a unique identifier for attributes. 
+					// Relations: targetId is unique? A vocabulary can have multiple relations to same target? 
+					// "Father", "Teacher". Usually yes.
+					// Let's assume targetId is unique for simplicity, or just use index.
+					// If using index, vocabRela.id should be the index.
+					
+					// However, looking at `confirmVocabAttr`, it uses `id` property on attribute object.
+					// For relations, I'll stick to array operations.
+					
+					// Let's assume vocabRela.id is the INDEX in content.relations when editing.
+					// Wait, in confirmVocabAttr:
+					// let maxId = -1; for(item of attributes) maxId = Math.max...
+					// It assigns a new ID.
+					// For relations, maybe I don't need an ID. Just use targetId? 
+					// But if I want to edit, I need to know which one.
+					
+					// Let's just use index.
+					if(this.vocabRela.id >= 0 && this.vocabRela.id < this.content.relations.length) {
+						this.content.relations[this.vocabRela.id] = {
+							id: this.vocabRela.targetId,
+							name: this.vocabRela.targetTitle,
+							relation: this.vocabRela.relation
+						};
+					}
+				}
+				this.vocabRela = {
+					id: -1,
+					targetId: "",
+					targetTitle: "",
+					relation: ""
+				}
+				this.vocabRelaVisible = false;
+				this.onContentChange(this.content);
+				this.$forceUpdate();
+				
+				// Re-check suggestions as we might have added the missing one
+				this.checkReverseRelations();
+			},
+			deleteRela(index) {
+				this.content.relations.splice(index, 1);
+				this.$forceUpdate();
+				this.onContentChange(this.content);
+				this.checkReverseRelations();
+			},
+			editRela(index) {
+				let rel = this.content.relations[index];
+				this.vocabRela.targetId = rel.id;
+				this.vocabRela.targetTitle = rel.name;
+				this.vocabRela.relation = rel.relation;
+				this.vocabRela.id = index;
+				this.vocabRelaVisible = true;
+			},
+			acceptSuggestion(suggestion) {
+				this.vocabRela.targetId = suggestion.id;
+				this.vocabRela.targetTitle = suggestion.name;
+				this.vocabRela.relation = ""; // User needs to fill this
+				this.vocabRela.id = -1;
+				this.vocabRelaVisible = true;
 			}
 		},
 		onNavigationBarButtonTap(e) {

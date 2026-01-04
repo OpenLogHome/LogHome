@@ -1,0 +1,8 @@
+websockets
+pymysql
+upyun
+toml
+requests
+reportlab
+
+Pillow

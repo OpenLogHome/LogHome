@@ -9,6 +9,7 @@
  
 <script>
 import {FramePostman} from '../../lib/framepostman.js';
+import axios from 'axios';
 export default {
   data () {
     return {
@@ -17,8 +18,9 @@ export default {
     }
   },
   onLoad(params){
+	let targetUrl = "";
 	if(params.url){
-		this.url = params.url;
+		targetUrl = params.url;
 	}
 	if(params.title){
 		uni.setNavigationBarTitle({
@@ -28,6 +30,35 @@ export default {
 	if(params.baseUrl){
 		this.baseUrl = params.baseUrl
 	}
+
+	// 尝试获取跨站登录token
+	let tk = null;
+	try {
+		let tokenObj = JSON.parse(window.localStorage.getItem('token'));
+		if(tokenObj) tk = tokenObj.tk;
+	} catch (e) {
+		console.log(e);
+	}
+
+	if(tk){
+		axios.get(this.$baseUrl + '/users/generate_cross_site_token', {
+			headers: { 
+				'Authorization': tk 
+			}
+		}).then((res) => {
+			if(res.status === 200 && res.data.crossSiteToken){
+				let separator = targetUrl.includes('?') ? '&' : '?';
+				this.url = targetUrl + separator + 'crossSiteToken=' + res.data.crossSiteToken;
+			} else {
+				this.url = targetUrl;
+			}
+		}).catch((e)=>{
+			console.log("Cross site token generation failed", e);
+			this.url = targetUrl;
+		});
+	} else {
+		this.url = targetUrl;
+	}
   },
   onShow() {
   },
@@ -35,6 +66,7 @@ export default {
 	  setTimeout(()=>{
 		  const postman = new FramePostman({
 		  	element: document.getElementById('iframe'),
+			token: "loghome",
 		  	info: {
 		  		app: 'loghome-app',
 		  		version: '1.0'
@@ -50,6 +82,16 @@ export default {
 					uni.navigateTo({
 						url:'../readers/bookInfo?id=' +  msgSplit[1]
 					})
+					break;
+				case "OpenInBrowser":
+					console.log("跳转到浏览器",msgSplit[1]);
+					uni.navigateTo({
+						url:'./openInBrowser?url=' +  msgSplit[1]
+					})
+					break;
+				case "NavigateBack":
+					console.log("返回上一页");
+					uni.navigateBack()
 					break;
 				default:
 					uni.showToast({

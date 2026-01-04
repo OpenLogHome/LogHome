@@ -82,7 +82,6 @@
 			"path": "pages/readers/bookInfo",
 			"style": {
 				"navigationStyle": "custom"
-				// "enablePullDownRefresh": true
 			}
 		},
 		{
@@ -771,6 +770,19 @@
 				"navigationBarTitleText": "活动消息",
 				"enablePullDownRefresh": false
 			}
+		},
+		{
+			"path": "pages/writers/scheduledTasks",
+			"style": {
+				"navigationBarTitleText": "定时发布任务"
+			}
+		},
+		{
+			"path": "pages/worlds/worldRelations",
+			"style": {
+				"navigationBarTitleText": "世界关系网",
+				"navigationStyle": "custom"
+			}
 		}
     ],
 	"tabBar": {
@@ -780,12 +792,6 @@
 		"backgroundColor": "#ffffff",
 		"spacing": "4rpx",
 		"list": [
-			// {
-			// 	"pagePath": "pages/bookcase/index",
-			// 	"iconPath": "./static/menu_bar/icon_books_unselected.png",
-			// 	"selectedIconPath": "static/menu_bar/icon_books_selected.png",
-			// 	"text": "书架"
-			// },
 			{
 				"pagePath": "pages/library",
 				"iconPath": "./static/menu_bar/icon_library_unselected.png",

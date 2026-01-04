@@ -417,10 +417,18 @@ router.get('/get_tag_by_id', async function (req, res) {
 
 router.get('/get_all_tags', async function (req, res) {
 	try {
-		let results = await query(
-			`SELECT t.*, count(*) count from tags t, novel_tag nt, novels n where nt.tag_id = t.tag_id
-            and nt.novel_id = n.novel_id and n.deleted = 0 and n.is_personal = 0 group by t.tag_id order by count desc`
-		);
+		let sql = `SELECT t.*, count(*) count from tags t, novel_tag nt, novels n where nt.tag_id = t.tag_id
+            and nt.novel_id = n.novel_id and n.deleted = 0 and n.is_personal = 0`;
+		let params = [];
+		
+		if (req.query.keyword) {
+			sql += ` AND t.tag_name LIKE ?`;
+			params.push('%' + req.query.keyword + '%');
+		}
+		
+		sql += ` group by t.tag_id order by count desc`;
+		
+		let results = await query(sql, params);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);

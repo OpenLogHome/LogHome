@@ -272,7 +272,7 @@ router.get('/get_hot_novel_centos', async function (req, res) {
             JOIN articles a ON ac.article_id = a.article_id
             LEFT JOIN novel_comments nc ON nc.cento_id = ac.article_cento_id AND nc.deleted = 0
             WHERE a.novel_id = ? AND ac.is_delete = 0
-            GROUP BY ac.paragraph_id, ac.paragraph, a.title, a.article_chapter
+            GROUP BY ac.paragraph_id, ac.paragraph, a.title, a.article_chapter, a.article_id
             ORDER BY highlight_count DESC, comment_count DESC
             LIMIT ?`,
             [req.query.novel_id, Number(req.query.limit) || 10],

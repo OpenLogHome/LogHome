@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说导出</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #fdf6e3;
+            /* Warm, paper-like background */
+            color: #586e75;
+            /* Softer text color */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fffcf2;
+            /* Lighter paper color */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 {
+            color: #cb4b16;
+            /* A warm accent color */
+            margin-bottom: 30px;
+        }
+
+        #novel-info {
+            margin-bottom: 30px;
+            border-left: 3px solid #2aa198;
+            /* Another accent color */
+            padding-left: 15px;
+            text-align: left;
+        }
+
+        #novel-info p {
+            margin: 5px 0;
+        }
+
+        .button-container {
+            margin-bottom: 30px;
+        }
+
+        button {
+            background-color: #268bd2;
+            /* A calm blue */
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2074b0;
+        }
+
+        #progress-container {
+            width: 100%;
+            background-color: #eee8d5;
+            /* Background for progress bar */
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 30px;
+            background-color: #859900;
+            /* A soft green */
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            border-radius: 5px;
+            transition: width 0.4s ease;
+        }
+
+        #download-link {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #download-link a {
+            display: inline-block;
+            background-color: #6c71c4;
+            /* A soft purple */
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #download-link a:hover {
+            background-color: #585cc1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>原木社区作品导出</h1>
+        <div id="novel-info">
+            <p><strong>小说名称:</strong> <span id="novel-name">加载中...</span></p>
+            <p><strong>作者:</strong> <span id="author-name">加载中...</span></p>
+        </div>
+        <div class="button-container">
+            <button onclick="exportNovel('published')">导出读者版本</button>
+            <button onclick="exportNovel('draft')">导出存稿版本</button>
+        </div>
+        <div id="progress-container">
+            <div id="progress-bar">0%</div>
+        </div>
+        <div id="download-link">
+            <a href="#" download>下载导出的 ZIP 文件</a>
+        </div>
+    </div>
+    <script type="text/javascript" src="./framepostman.js"></script>
+    <script>
+        const framePostman = new FramePostman.Sub("loghome");
+        let isInApp = false;
+
+        framePostman.connect().then(info => {
+            console.log('连接成功，收到父应用信息:', info);
+            isInApp = true;
+        }).catch(error => {
+            console.error('连接失败:', error);
+        });
+
+        const novelId = new URLSearchParams(window.location.search).get('novel_id');
+        const ws = new WebSocket(`wss://loghomeservice.codesocean.top/novel-export`);
+
+        ws.onopen = () => {
+            if (novelId) {
+                ws.send(JSON.stringify({ type: 'get_novel_info', novel_id: novelId }));
+            } else {
+                document.getElementById('novel-name').textContent = '错误';
+                document.getElementById('author-name').textContent = 'URL 中缺少小说 ID。';
+            }
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            switch (data.type) {
+                case 'novel_info':
+                    document.getElementById('novel-name').textContent = data.novel_name;
+                    document.getElementById('author-name').textContent = data.author_name;
+                    break;
+                case 'progress':
+                    const progressBar = document.getElementById('progress-bar');
+                    const percentage = Math.round(data.percentage);
+                    progressBar.style.width = percentage + '%';
+                    progressBar.textContent = percentage + '%';
+                    document.getElementById('progress-container').style.display = 'block';
+                    break;
+                case 'export_complete':
+                    const downloadLink = document.getElementById('download-link').querySelector('a');
+                    document.getElementById('download-link').style.display = 'block';
+                    document.getElementById('progress-container').style.display = 'none';
+                    if(!isInApp) {
+                        downloadLink.href = data.download_url;
+                    } else {
+                        downloadLink.addEventListener("click", () => {
+                            framePostman.send({msg: "OpenInBrowser " + data.download_url});
+                        })
+                    }
+
+                    break;
+                case 'error':
+                    alert('错误: ' + data.message);
+                    break;
+            }
+        };
+
+        function exportNovel(exportType) {
+            if (novelId) {
+                ws.send(JSON.stringify({ type: 'export_novel', novel_id: novelId, export_type: exportType }));
+                document.getElementById('progress-container').style.display = 'block';
+                document.getElementById('progress-bar').style.width = '0%';
+                document.getElementById('progress-bar').textContent = '0%';
+                document.getElementById('download-link').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

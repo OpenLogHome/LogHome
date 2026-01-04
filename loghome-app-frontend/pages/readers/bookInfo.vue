@@ -8,16 +8,17 @@
 		<!-- 后台按钮组件 -->
 		<zetank-backBar textcolor="#000" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
 			navTitle='标题'></zetank-backBar>
-		<view class="l-body" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
+		<view class="l-body">
 			<view class="l-dl">
 				<div class="l-dt">
-					<log-image class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
+					<log-image id="book-cover-image" class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
 						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
-						@click="$previewImg([bookInfo.picUrl])">
+						:style="{ opacity: (isCoverLoaded ? 1 : 0) + ' !important' }"
+						@click="$previewImg([bookInfo.picUrl])" @load="onCoverLoaded">
 					</log-image>
-					<div class="book-id-tag">ID {{ bookInfo.novel_id }}</div>
+					<div class="book-id-tag" v-show="bookInfo.novel_id">ID {{ bookInfo.novel_id }}</div>
 				</div>
-				<view class="l-dd">
+				<view class="l-dd" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
 					<view class="l-dd-title">
 						{{ bookInfo.name }}
 					</view>
@@ -31,7 +32,7 @@
 					</view>
 					<view class="tags" v-if="tags.length > 0">
 						<div class="tag" v-for="(item, index) in tags" :key="item.tag_id"
-							:class="{ 'activity': item.is_activity_tag }">
+							:class="{ 'activity': item.is_activity_tag }" @click="gotoTag(item.tag_id, item.tag_name)">
 							{{ item.tag_name }}
 						</div>
 					</view>
@@ -71,14 +72,14 @@
 				<div class="image">
 					<log-image class="img" :src="bookInfo.picUrl" mode="scaleToFill"
 						style="width: 100%; height: 100%; transform: scale(1.2);"
-						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'">
+						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`">
 					</log-image>
 				</div>
 			</div>
 
 			<springBack :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + ${0 + 'px'})`">
 
-				<div class="b-content" style="padding:32rpx;">
+				<div class="b-content" style="padding:32rpx;" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
 					<p class="l-dd-content" @click="showDescription(bookInfo.content)">
 						{{ bookInfo.content }}
 					</p>
@@ -117,8 +118,7 @@
 
 					<view class="l-list" @click="startReading" v-show="articleLength">
 						<view class="l-h3">
-							<text class="l-h3-title">正在阅读 -
-								{{ Math.min((historyShown / articleLength * 100), 100).toFixed(0) }}%</text>
+							<text class="l-h3-title">正在阅读 - {{ Math.min((historyShown / articleLength * 100), 100).toFixed(0) }}%</text>
 						</view>
 						<view class="processlist">
 							<view class="l-list-content">
@@ -192,9 +192,9 @@
 
 					<view class="l-list">
 						<view class="l-h3">
-							<text class="l-h3-title">最新评论</text>
+							<text class="l-h3-title">评论</text>
 							<navigator :url="'./bookComment?id=' + uid">
-								<view class="l-h3-more">全部评论(共 {{ commentAmount }} 条)<img class="l-icon-more"
+								<view class="l-h3-more">全部(共 {{ commentAmount }} 条)<img class="l-icon-more"
 										src="../../static/l-icon-more.png" mode="widthFix"></img>
 								</view>
 							</navigator>
@@ -365,6 +365,7 @@ export default {
 	mixins: [darkModeMixin],
 	data() {
 		return {
+			isCoverLoaded: false,
 			uid: 0,
 			bookInfo: {},
 			articles: [],
@@ -916,6 +917,26 @@ export default {
 			} finally {
 				uni.hideLoading();
 			}
+		},
+		gotoTag(tag_id, title) {
+			uni.navigateTo({
+				url: "/pages/readers/tagCollections?tag_id=" + tag_id + "&title=" + title
+			})
+		},
+		onCoverLoaded() {
+			window.hpa_book_info_ready = true;
+			
+			const showImage = () => {
+				this.isCoverLoaded = true;
+			};
+
+			window.hpa_after_cleanup_callback = showImage;
+
+			if (window.hpa_finish_hero_animation) {
+				window.hpa_finish_hero_animation();
+			} else if (!window.hpa_active) {
+				showImage();
+			}
 		}
 	},
 	onPageScroll(res) {
@@ -1057,7 +1078,6 @@ export default {
 			}
 		})
 
-
 		axios.get(this.$baseUrl + "/community/novel_commonts_all?id=" + this.uid)
 			.then((res) => {
 				let data = res.data;
@@ -1070,7 +1090,6 @@ export default {
 					duration: 2000
 				});
 			})
-
 
 	},
 	computed: {

@@ -142,7 +142,7 @@ async function performSearch(keyword, type, page, pageSize, isSegmentedKeyword =
              LEFT JOIN comm_circle_tags t ON pt.tag_id = t.tag_id
              WHERE p.status = 1 
                    AND (p.title LIKE ? OR p.content LIKE ? OR t.name LIKE ?)
-             GROUP BY p.post_id
+             GROUP BY p.post_id, u.name, u.avatar_url, c.name
              ORDER BY 
                 CASE 
                     WHEN p.title LIKE ? THEN 0
@@ -219,31 +219,47 @@ async function performSearch(keyword, type, page, pageSize, isSegmentedKeyword =
             // 如果关键词是数字，尝试按ID搜索
             booksQuery = `
                 SELECT n.*, u.name as author_name, u.avatar_url as auther_avatar 
-                FROM novels n, users u 
-                WHERE u.user_id = n.author_id 
-                AND n.deleted = 0
+                FROM novels n
+                JOIN users u ON u.user_id = n.author_id 
+                WHERE n.deleted = 0
                 AND n.is_personal = 0
                 AND novel_id = ?
                 LIMIT ?, ?
             `;
             booksParams = [keyWordToId, (page - 1) * pageSize, pageSize];
         } else {
-            // 否则按名称和内容搜索
+            // 否则按名称、内容或标签搜索（使用 EXISTS 避免重复并兼容 only_full_group_by）
             booksQuery = `
                 SELECT n.*, u.name as author_name, u.avatar_url as auther_avatar 
-                FROM novels n, users u 
-                WHERE u.user_id = n.author_id 
-                AND n.deleted = 0
+                FROM novels n
+                JOIN users u ON u.user_id = n.author_id 
+                WHERE n.deleted = 0
                 AND n.is_personal = 0
-                AND (n.name LIKE ? OR n.content LIKE ?)
+                AND (
+                    n.name LIKE ? OR n.content LIKE ? OR EXISTS (
+                        SELECT 1
+                        FROM novel_tag nt
+                        JOIN tags t ON t.tag_id = nt.tag_id
+                        WHERE nt.novel_id = n.novel_id
+                          AND t.tag_name LIKE ?
+                    )
+                )
                 ORDER BY 
                     CASE 
                         WHEN n.name LIKE ? THEN 0
-                        ELSE 1
-                    END
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM novel_tag nt
+                            JOIN tags t ON t.tag_id = nt.tag_id
+                            WHERE nt.novel_id = n.novel_id
+                              AND t.tag_name LIKE ?
+                        ) THEN 1
+                        ELSE 2
+                    END,
+                    n.novel_id ASC
                 LIMIT ?, ?
             `;
-            booksParams = [searchKeyword, searchKeyword, `${keyword}%`, (page - 1) * pageSize, pageSize];
+            booksParams = [searchKeyword, searchKeyword, searchKeyword, `${keyword}%`, `${keyword}%`, (page - 1) * pageSize, pageSize];
         }
         
         const books = await query(booksQuery, booksParams);
@@ -253,9 +269,9 @@ async function performSearch(keyword, type, page, pageSize, isSegmentedKeyword =
         if (!isNaN(keyWordToId)) {
             countQuery = `
                 SELECT COUNT(*) as total
-                FROM novels n, users u 
-                WHERE u.user_id = n.author_id 
-                AND n.deleted = 0
+                FROM novels n
+                JOIN users u ON u.user_id = n.author_id 
+                WHERE n.deleted = 0
                 AND n.is_personal = 0
                 AND novel_id = ?
             `;
@@ -263,13 +279,21 @@ async function performSearch(keyword, type, page, pageSize, isSegmentedKeyword =
         } else {
             countQuery = `
                 SELECT COUNT(*) as total
-                FROM novels n, users u 
-                WHERE u.user_id = n.author_id 
-                AND n.deleted = 0
+                FROM novels n
+                JOIN users u ON u.user_id = n.author_id 
+                WHERE n.deleted = 0
                 AND n.is_personal = 0
-                AND (n.name LIKE ? OR n.content LIKE ?)
+                AND (
+                    n.name LIKE ? OR n.content LIKE ? OR EXISTS (
+                        SELECT 1
+                        FROM novel_tag nt
+                        JOIN tags t ON t.tag_id = nt.tag_id
+                        WHERE nt.novel_id = n.novel_id
+                          AND t.tag_name LIKE ?
+                    )
+                )
             `;
-            countParams = [searchKeyword, searchKeyword];
+            countParams = [searchKeyword, searchKeyword, searchKeyword];
         }
         
         const booksCount = await query(countQuery, countParams);
@@ -694,4 +718,4 @@ router.delete('/keyword/:keywordId', auth, async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;

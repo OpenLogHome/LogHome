@@ -116,6 +116,24 @@
 				</navigator>
 			</div>
 		</uni-popup>
+		<uni-popup ref="exportPopup" type="bottom" background-color="#FFFFFF">
+			<view class="share-popup">
+				<view class="share-title">导出作品</view>
+				<view class="share-content">
+					<view class="share-item" @click="exportSimple">
+						<image src="/static/simple_pack.png" mode=""></image>
+						<view class="share-text">仅打包</view>
+					</view>
+					<view class="share-item" @click="exportAdvanced">
+						<image src="/static/e_book.png" mode=""></image>
+						<view class="share-text">导出电子书 <text style="font-size: 20rpx; color: #ff0000; border: 1rpx solid #ff0000; border-radius: 4rpx; padding: 0 4rpx; margin-left: 8rpx;">限免</text></view>
+					</view>
+				</view>
+				<view class="share-bottom">
+					<view class="share-btn-cancel" @click="cancelExport">取消</view>
+				</view>
+			</view>
+		</uni-popup>
 	</view>
 </template>
 
@@ -604,33 +622,22 @@ export default {
 			}
 		},
 		exportNovel() {
-			uni.showLoading({
-				title: '导出中，请稍候...'
+			this.$refs.exportPopup.open();
+		},
+		cancelExport() {
+			this.$refs.exportPopup.close();
+		},
+		exportSimple() {
+			uni.navigateTo({
+				url: '../apps/h5webview?url=https://m.loghome.ink/subtasks/novel-export.html?novel_id=' + this.uid + '&title=仅打包导出作品'
 			});
-			const uid = this.uid;
-			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
-			axios.get(this.$baseUrl + '/essays/export_novel?id=' + uid,
-				{
-					headers: {
-						'Content-Type': 'application/json', //设置请求头请求格式为JSON
-						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-					}
-				}
-			).then((res) => {
-				uni.showModal({
-					title: '提示',
-					content: '已经开始导出作品，导出完成后将通过“我的”->“我的通知”提示，请关注。',
-					showCancel: false,
-				});
-			}).catch(function (error) {
-				uni.showToast({
-					title: error.toString(),
-					icon: 'none',
-					duration: 2000
-				});
-			}).then(function () {
-				uni.hideLoading();
-			})
+			this.cancelExport();
+		},
+		exportAdvanced() {
+			uni.navigateTo({
+				url: '../apps/h5webview?url=https://m.loghome.ink/subtasks/novel-export-vip.html?novel_id=' + this.uid + '&title=导出电子书'
+			});
+			this.cancelExport();
 		},
 		touchstart(ev) {
 			let that = this;
@@ -893,7 +900,7 @@ export default {
 		if (e.text == "\ue790 ") {
 			if (this.novel.novel_type == "world") {
 				uni.showActionSheet({
-					itemList: ['章节排序', "章节回收站", "查看世界", "世界设置"],
+					itemList: ['章节排序', "章节回收站", "定时发布管理", "查看世界", "世界设置"],
 					success: function (res) {
 						if (res.tapIndex == 0) {
 							uni.navigateTo({
@@ -907,10 +914,15 @@ export default {
 						}
 						if (res.tapIndex == 2) {
 							uni.navigateTo({
-								url: "../worlds/worldPage?id=" + _this.worldId
+								url: "./scheduledTasks?id=" + _this.uid
 							})
 						}
 						if (res.tapIndex == 3) {
+							uni.navigateTo({
+								url: "../worlds/worldPage?id=" + _this.worldId
+							})
+						}
+						if (res.tapIndex == 4) {
 							uni.navigateTo({
 								url: "./essaySet?id=" + _this.uid
 							})
@@ -922,7 +934,7 @@ export default {
 				});
 			} else {
 				uni.showActionSheet({
-					itemList: ['章节排序', "章节回收站", "阅读", "作品设置", "导出作品"],
+					itemList: ['章节排序', "章节回收站", "定时发布管理", "阅读", "作品设置", "导出作品"],
 					success: function (res) {
 						if (res.tapIndex == 0) {
 							uni.navigateTo({
@@ -936,15 +948,20 @@ export default {
 						}
 						if (res.tapIndex == 2) {
 							uni.navigateTo({
-								url: "../readers/bookInfo?id=" + _this.uid
+								url: "./scheduledTasks?id=" + _this.uid
 							})
 						}
 						if (res.tapIndex == 3) {
 							uni.navigateTo({
-								url: "./essaySet?id=" + _this.uid
+								url: "../readers/bookInfo?id=" + _this.uid
 							})
 						}
 						if (res.tapIndex == 4) {
+							uni.navigateTo({
+								url: "./essaySet?id=" + _this.uid
+							})
+						}
+						if (res.tapIndex == 5) {
 							_this.exportNovel();
 						}
 					},
@@ -1167,5 +1184,109 @@ export default {
 		}
 	}
 
+}
+
+/* 导出作品弹出菜单样式 */
+.share-popup {
+	padding: 20rpx;
+	border-radius: 20rpx 20rpx 0 0;
+	background-color: #FFFFFF;
+
+	.dark-mode & {
+		background-color: var(--card-background);
+	}
+
+	.share-title {
+		font-size: 32rpx;
+		font-weight: bold;
+		text-align: center;
+		padding-bottom: 20rpx;
+		color: #333333;
+
+		.dark-mode & {
+			color: var(--text-color-primary);
+		}
+	}
+
+	.share-content {
+		display: flex;
+		justify-content: space-around;
+		padding: 20rpx 0;
+		border-bottom: 1rpx solid #EEEEEE;
+
+		.dark-mode & {
+			border-bottom-color: var(--border-color);
+		}
+
+		.share-item {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			width: 30%;
+			padding: 30rpx 40rpx;
+			border-radius: 16rpx;
+			background-color: #F8F9FA;
+			transition: all 0.2s ease;
+
+			.dark-mode & {
+				background-color: var(--background-color-secondary);
+			}
+
+			&:active {
+				background-color: #E9ECEF;
+				transform: scale(0.95);
+
+				.dark-mode & {
+					background-color: var(--background-color-tertiary);
+				}
+			}
+
+			image {
+				width: 80rpx;
+				height: 80rpx;
+				margin-bottom: 15rpx;
+			}
+
+			.share-text {
+				margin-top: 10rpx;
+				font-size: 28rpx;
+				color: #495057;
+				font-weight: 500;
+
+				.dark-mode & {
+					color: var(--text-color-regular);
+				}
+			}
+		}
+	}
+
+	.share-bottom {
+		padding-top: 20rpx;
+
+		.share-btn-cancel {
+			width: 100%;
+			height: 80rpx;
+			line-height: 80rpx;
+			text-align: center;
+			font-size: 32rpx;
+			color: #6C757D;
+			background-color: transparent;
+			transition: all 0.2s ease;
+
+			.dark-mode & {
+				color: var(--text-color-secondary);
+			}
+
+			&:active {
+				background-color: #F1F3F5;
+				color: #495057;
+
+				.dark-mode & {
+					background-color: var(--background-color-secondary);
+					color: var(--text-color-primary);
+				}
+			}
+		}
+	}
 }
 </style>

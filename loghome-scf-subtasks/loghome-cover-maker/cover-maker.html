@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>手机端书籍封面制作器</title>
+    <script src="./tailwind.js"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/7.0.1/css/all.min.css" rel="stylesheet">
+    <style>
+
+        body {
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+            /* 禁用全局滚动，改用内部滚动 */
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 画布自动适应容器 */
+        #canvas-container canvas {
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            object-fit: contain;
+        }
+
+        .template-card {
+            aspect-ratio: 499/646;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 3px solid transparent;
+            position: relative;
+        }
+
+        .template-card.active {
+            border-color: #3b82f6;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .input-group:focus-within {
+            transform: translateY(-1px);
+        }
+
+        /* 颜色选择器样式优化 */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 40px;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+        }
+
+        .hidden-opt {
+            display: none;
+        }
+
+        /* 拖动手柄区域 */
+        #drag-handle {
+            touch-action: none; /* 关键：防止浏览器默认滚动行为干扰拖动 */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部：画布预览区 (高度自适应) -->
+    <!-- 增加 pt-2 pb-2 确保看起来不拥挤 -->
+    <div id="preview-area" class="flex-1 bg-gray-200 flex flex-col items-center justify-center relative min-h-[20%] overflow-hidden">
+        <div id="canvas-container" class="w-full h-full flex items-center justify-center p-4">
+            <canvas id="coverCanvas" width="499" height="646"></canvas>
+        </div>
+    </div>
+
+    <!-- 拖动手柄条 -->
+    <div id="drag-handle" class="h-8 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] relative z-20 flex items-center justify-center cursor-ns-resize -mt-4 border-t border-gray-100">
+        <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+    </div>
+
+    <!-- 底部：操作面板 (高度可调) -->
+    <div id="control-panel" class="bg-white z-10 overflow-y-auto pb-8" style="height: 55%;">
+        
+        <div class="p-5 space-y-6 max-w-lg mx-auto">
+            
+            <!-- 标题栏放在这里 -->
+            <div class="flex items-center justify-center pb-2 border-b border-gray-100">
+                 <h1 class="text-lg font-bold text-gray-800"><i class="fas fa-book-open text-blue-500 mr-2"></i>书籍封面制作</h1>
+            </div>
+
+            <!-- 基础输入表单 -->
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">书名</label>
+                    <input type="text" id="titleInput" placeholder="请输入书名" value="未闻花名" 
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-lg bg-gray-50">
+                </div>
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">作者</label>
+                    <input type="text" id="authorInput" placeholder="请输入作者" value="匿名作家" 
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50">
+                </div>
+
+                <!-- 高级设置折叠面板 -->
+                <div class="border border-gray-100 rounded-xl p-3 bg-white shadow-sm">
+                    <button id="toggleAdvanced" class="flex items-center justify-between w-full text-left text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">
+                        <span><i class="fas fa-sliders-h mr-2"></i>个性化调整</span>
+                        <i class="fas fa-chevron-down transform transition-transform" id="arrowIcon"></i>
+                    </button>
+                    
+                    <div id="advancedPanel" class="hidden mt-4 space-y-4 animate-fade-in">
+                        
+                        <!-- 字体大小控制 -->
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm font-medium text-gray-700">书名字号</label>
+                                <span id="fontSizeDisplay" class="text-xs text-gray-500">48px</span>
+                            </div>
+                            <input type="range" id="fontSizeInput" min="24" max="120" value="48" 
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        </div>
+
+                        <!-- 动态显示的选项：装饰文字 -->
+                        <div id="extraTextGroup" class="hidden-opt">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">装饰文字 / 副标题</label>
+                            <input type="text" id="extraTextInput" placeholder="例如：推荐语、英文名等" 
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 outline-none text-sm bg-gray-50">
+                        </div>
+
+                        <!-- 动态显示的选项：主题色 -->
+                        <div id="colorGroup" class="hidden-opt">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">主题颜色</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="color" id="colorInput" value="#000000" class="flex-1 shadow-sm border border-gray-200 h-10">
+                                <button id="resetColorBtn" class="px-3 py-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition h-10">重置默认</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模板选择 -->
+            <div>
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3 px-1">选择风格</h3>
+                <div class="grid grid-cols-3 gap-3" id="templateGrid">
+                    <!-- 模板缩略图将通过 JS 生成 -->
+                </div>
+            </div>
+
+            <!-- 下载按钮 -->
+            <div class="pt-2">
+                <button id="downloadBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2 text-lg">
+                    <i class="fas fa-download"></i> 保存封面
+                </button>
+                <button id="updateBtn" class="hidden w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2 text-lg mt-3">
+                    <i class="fas fa-sync-alt"></i> 立即更换
+                </button>
+                <p class="text-xs text-center text-gray-400 mt-2 pb-safe">图片尺寸 499 × 646 px</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="./framepostman.js"></script>
+    <script>
+        // 初始化 FramePostman
+        const framePostman = new FramePostman.Sub("loghome");
+        let isInApp = false;
+
+        framePostman.connect().then(info => {
+            console.log('连接成功，收到父应用信息:', info);
+            isInApp = true;
+        }).catch(error => {
+            console.error('连接失败:', error);
+        });
+
+        // 尝试获取跨站Token并登录
+        const urlParams = new URLSearchParams(window.location.search);
+        const crossSiteToken = urlParams.get('crossSiteToken');
+        const novelid = urlParams.get('novelid');
+        const updateBtn = document.getElementById('updateBtn');
+
+        if(crossSiteToken) {
+            fetch(`https://loghomeservice.codesocean.top/users/token_by_cross_site?token=${crossSiteToken}`)
+            .then(response => response.json())
+            .then(data => {
+                if(data && data.token && data.token.tk){
+                    window.authToken = data.token.tk;
+                    window.localStorage.setItem('token', JSON.stringify(data.token));
+                    console.log("Cross site login success", data.token);
+
+                    if(novelid){
+                        fetch(`https://loghomeservice.codesocean.top/essays/get_novel_by_id?id=${novelid}`)
+                        .then(res => res.json())
+                        .then(novelData => {
+                             if(novelData && novelData.length > 0){
+                                 const novel = novelData[0];
+                                 // Ensure elements are available (callback runs after script load)
+                                 const titleIn = document.getElementById('titleInput');
+                                 const authorIn = document.getElementById('authorInput');
+                                 
+                                 if(titleIn) titleIn.value = novel.name;
+                                 if(state) state.title = novel.name;
+                                 
+                                 if(novel.author_name){
+                                     if(authorIn) authorIn.value = novel.author_name;
+                                     if(state) state.author = novel.author_name;
+                                 }
+                                 
+                                 if(typeof render === 'function') render();
+                                 if(updateBtn) updateBtn.classList.remove('hidden');
+                             }
+                        });
+                    }
+                }
+            })
+            .catch(e => console.error("Cross site login failed", e));
+        }
+
+        if(updateBtn){
+            updateBtn.addEventListener('click', async () => {
+                const confirmed = await showCustomDialog('确认', '确定要立即更换当前小说的封面吗？', true);
+                if (!confirmed) return;
+                
+                const canvasEl = document.getElementById('coverCanvas');
+                const dataURL = canvasEl.toDataURL('image/png');
+                
+                updateBtn.disabled = true;
+                updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...';
+
+                fetch('https://loghomeservice.codesocean.top/essays/change_cover', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': window.authToken
+                    },
+                    body: JSON.stringify({
+                        img: dataURL,
+                        novel_id: novelid
+                    })
+                })
+                .then(async res => {
+                     if(res.ok){
+                         await showCustomDialog('提示', "封面更换成功！");
+                         if(framePostman){
+                            framePostman.send({msg: "NavigateBack"});
+                         }
+                     } else {
+                         showCustomDialog('提示', "更换失败，请重试");
+                     }
+                })
+                .catch(e => {
+                    console.error(e);
+                    showCustomDialog('提示', "更换失败，请稍后重试");
+                })
+                .finally(() => {
+                    updateBtn.disabled = false;
+                    updateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 立即更换';
+                });
+            });
+        }
+
+        // DOM 元素
+        const canvas = document.getElementById('coverCanvas');
+        const ctx = canvas.getContext('2d');
+        const titleInput = document.getElementById('titleInput');
+        const authorInput = document.getElementById('authorInput');
+        const extraTextInput = document.getElementById('extraTextInput');
+        const fontSizeInput = document.getElementById('fontSizeInput');
+        const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+        const colorInput = document.getElementById('colorInput');
+        const resetColorBtn = document.getElementById('resetColorBtn');
+        
+        const extraTextGroup = document.getElementById('extraTextGroup');
+        const colorGroup = document.getElementById('colorGroup');
+        const templateGrid = document.getElementById('templateGrid');
+        
+        // 面板切换
+        const toggleAdvanced = document.getElementById('toggleAdvanced');
+        const advancedPanel = document.getElementById('advancedPanel');
+        const arrowIcon = document.getElementById('arrowIcon');
+
+        toggleAdvanced.addEventListener('click', () => {
+            advancedPanel.classList.toggle('hidden');
+            arrowIcon.classList.toggle('rotate-180');
+        });
+
+        // --- 拖拽面板逻辑 ---
+        const dragHandle = document.getElementById('drag-handle');
+        const controlPanel = document.getElementById('control-panel');
+        let isDragging = false;
+        let startY = 0;
+        let startHeight = 0;
+
+        function startDrag(e) {
+            isDragging = true;
+            startY = e.touches ? e.touches[0].clientY : e.clientY;
+            startHeight = controlPanel.offsetHeight;
+            document.body.style.userSelect = 'none'; // 防止拖拽时选中文字
+        }
+
+        function onDrag(e) {
+            if (!isDragging) return;
+            const currentY = e.touches ? e.touches[0].clientY : e.clientY;
+            const deltaY = startY - currentY; // 向上拖动 delta为正
+            
+            let newHeight = startHeight + deltaY;
+            const screenHeight = window.innerHeight;
+            
+            // 限制高度范围：最小 20%，最大 85%
+            const minH = screenHeight * 0.2;
+            const maxH = screenHeight * 0.85;
+
+            if (newHeight < minH) newHeight = minH;
+            if (newHeight > maxH) newHeight = maxH;
+
+            controlPanel.style.height = `${newHeight}px`;
+        }
+
+        function endDrag() {
+            isDragging = false;
+            document.body.style.userSelect = '';
+        }
+
+        dragHandle.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', endDrag);
+
+        dragHandle.addEventListener('touchstart', startDrag);
+        document.addEventListener('touchmove', onDrag);
+        document.addEventListener('touchend', endDrag);
+
+
+        // --- 核心绘图逻辑 ---
+
+        // 自定义弹窗逻辑
+
+        function showCustomDialog(title, message, isConfirm = false) {
+            const customDialogOverlay = document.getElementById('customDialogOverlay');
+            const customDialog = document.getElementById('customDialog');
+            const customDialogTitle = document.getElementById('customDialogTitle');
+            const customDialogMessage = document.getElementById('customDialogMessage');
+            const customDialogConfirm = document.getElementById('customDialogConfirm');
+            const customDialogCancel = document.getElementById('customDialogCancel');
+
+            return new Promise(resolve => {
+                customDialogTitle.textContent = title;
+                customDialogMessage.textContent = message;
+                customDialogCancel.classList.toggle('hidden', !isConfirm);
+
+                customDialogOverlay.classList.remove('hidden');
+                console.log('showCustomDialog called, overlay classList:', customDialogOverlay.classList);
+                setTimeout(() => {
+                    customDialog.classList.remove('scale-95', 'opacity-0');
+                    customDialog.classList.add('scale-100', 'opacity-100');
+                }, 10);
+
+                const confirmHandler = () => {
+                    hideCustomDialog();
+                    resolve(true);
+                };
+
+                const cancelHandler = () => {
+                    hideCustomDialog();
+                    resolve(false);
+                };
+
+                customDialogConfirm.onclick = confirmHandler;
+                customDialogCancel.onclick = cancelHandler;
+            });
+        }
+
+        function hideCustomDialog() {
+            const customDialogOverlay = document.getElementById('customDialogOverlay');
+            const customDialog = document.getElementById('customDialog');
+            
+            customDialog.classList.remove('scale-100', 'opacity-100');
+            customDialog.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                customDialogOverlay.classList.add('hidden');
+            }, 200); // Match CSS transition duration
+        }
+
+        // 状态管理
+        let state = {
+            title: titleInput.value,
+            author: authorInput.value,
+            extraText: "",
+            fontSize: 48,
+            customColor: null, 
+            templateId: 0
+        };
+
+        // 辅助工具：颜色调整
+        function adjustColor(color, amount) {
+            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+        }
+
+        function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+            const words = text.split('');
+            let line = '';
+            const lines = [];
+
+            for(let n = 0; n < words.length; n++) {
+                const testLine = line + words[n];
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n];
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            lines.forEach((l, i) => {
+                ctx.fillText(l, x, y + (i * lineHeight));
+            });
+            
+            return lines.length * lineHeight;
+        }
+
+        // 模板定义
+        const templates = [
+            {
+                name: "极简白",
+                baseSize: 48,
+                allowColor: true, 
+                defaultColor: "#000000",
+                allowExtra: true, 
+                draw: (ctx, w, h, s) => {
+                    const color = s.customColor || "#000000";
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, w, h);
+                    
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(30, 30, w-60, h-60);
+
+                    ctx.fillStyle = color;
+                    ctx.font = `bold ${s.fontSize}px 'Noto Sans SC'`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    drawWrappedText(ctx, s.title, w/2, h/2 - 60, w-100, s.fontSize * 1.25);
+
+                    if (s.extraText) {
+                        ctx.font = "italic 20px 'Noto Serif SC'";
+                        ctx.fillStyle = "#666";
+                        ctx.fillText(s.extraText, w/2, h/2 + 40);
+                    }
+
+                    ctx.font = "normal 24px 'Noto Sans SC'";
+                    ctx.fillStyle = color;
+                    ctx.fillText(s.author, w/2, h - 80);
+                }
+            },
+            {
+                name: "经典红",
+                baseSize: 52,
+                allowColor: true, 
+                defaultColor: "#8B0000",
+                allowExtra: false,
+                draw: (ctx, w, h, s) => {
+                    const bg = s.customColor || "#8B0000";
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    
+                    ctx.strokeStyle = "#FFD700";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(20, 20, w-40, h-40);
+                    ctx.strokeRect(25, 25, w-50, h-50);
+
+                    ctx.fillStyle = "#FFD700";
+                    ctx.font = `bold ${s.fontSize}px 'Noto Serif SC'`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "alphabetic"; 
+                    drawWrappedText(ctx, s.title, w/2, 200, w-80, s.fontSize * 1.4);
+
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.font = "italic 24px 'Noto Serif SC'";
+                    ctx.fillText("By " + s.author, w/2, h - 100);
+                }
+            },
+            {
+                name: "午夜蓝",
+                baseSize: 60,
+                allowColor: true,
+                defaultColor: "#0f172a",
+                allowExtra: true,
+                draw: (ctx, w, h, s) => {
+                    const base = s.customColor || "#0f172a";
+                    const lighter = adjustColor(base, 40);
+
+                    const grd = ctx.createLinearGradient(0, 0, 0, h);
+                    grd.addColorStop(0, base);
+                    grd.addColorStop(1, lighter);
+                    ctx.fillStyle = grd;
+                    ctx.fillRect(0, 0, w, h);
+
+                    ctx.fillStyle = "#ffffff"; 
+                    ctx.globalAlpha = 0.1;
+                    ctx.beginPath();
+                    ctx.arc(w, 0, 250, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = `900 ${s.fontSize}px 'Noto Sans SC'`;
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    drawWrappedText(ctx, s.title, 40, 150, w-80, s.fontSize * 1.3);
+
+                    ctx.fillStyle = "#3b82f6";
+                    ctx.fillRect(40, 400, 100, 6);
+
+                    if (s.extraText) {
+                        ctx.fillStyle = "#94a3b8";
+                        ctx.font = "18px 'Noto Sans SC'";
+                        ctx.fillText(s.extraText.toUpperCase(), 40, 120);
+                    }
+
+                    ctx.fillStyle = "#cbd5e1";
+                    ctx.font = "28px 'Noto Sans SC'";
+                    ctx.fillText(s.author, 40, 450);
+                }
+            },
+            {
+                name: "日系轻",
+                baseSize: 56,
+                allowColor: true,
+                defaultColor: "#f87171",
+                allowExtra: true,
+                draw: (ctx, w, h, s) => {
+                    ctx.fillStyle = "#fefce8";
+                    ctx.fillRect(0, 0, w, h);
+
+                    const circleColor = s.customColor || "#f87171";
+                    
+                    ctx.fillStyle = circleColor;
+                    ctx.beginPath();
+                    ctx.arc(w/2, h/2 - 50, 120, 0, 2 * Math.PI);
+                    ctx.fill();
+
+                    ctx.fillStyle = "#fff";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.font = `bold ${s.fontSize}px 'Noto Serif SC'`;
+                    drawWrappedText(ctx, s.title, w/2, h/2 - 80, w-140, s.fontSize * 1.2);
+
+                    ctx.fillStyle = "#000";
+                    ctx.font = "24px 'Noto Serif SC'";
+                    ctx.fillText("著 / " + s.author, w/2, h - 60);
+
+                    if (s.extraText) {
+                         ctx.fillStyle = "#444";
+                         ctx.font = "16px 'Noto Serif SC'";
+                         const chars = s.extraText.split('');
+                         chars.forEach((char, i) => {
+                             ctx.fillText(char, w - 40, 100 + (i * 24));
+                         });
+                    }
+                }
+            },
+            {
+                name: "科技感",
+                baseSize: 48,
+                allowColor: true,
+                defaultColor: "#00ff00",
+                allowExtra: true,
+                draw: (ctx, w, h, s) => {
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(0, 0, w, h);
+                    
+                    const neon = s.customColor || "#00ff00";
+
+                    ctx.strokeStyle = neon;
+                    ctx.lineWidth = 0.5;
+                    ctx.globalAlpha = 0.2;
+                    for(let i=0; i<w; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,h); ctx.stroke(); }
+                    for(let i=0; i<h; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(w,i); ctx.stroke(); }
+                    ctx.globalAlpha = 1.0;
+
+                    ctx.fillStyle = neon;
+                    ctx.font = `bold ${s.fontSize}px 'Courier New'`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = neon;
+                    drawWrappedText(ctx, s.title.toUpperCase(), w/2, h/2, w-60, s.fontSize * 1.2);
+                    ctx.shadowBlur = 0;
+
+                    if (s.extraText) {
+                        ctx.font = "16px 'Courier New'";
+                        ctx.fillText(`[SYSTEM]: ${s.extraText}`, w/2, h/2 + 80);
+                    }
+
+                    ctx.font = "20px 'Courier New'";
+                    ctx.fillText("> AUTHOR: " + s.author, w/2, h - 100);
+                }
+            },
+            {
+                name: "自然绿",
+                baseSize: 56,
+                allowColor: true, 
+                defaultColor: "#15803d",
+                allowExtra: false,
+                draw: (ctx, w, h, s) => {
+                    // 逻辑修改：背景色根据主题色自动变浅
+                    const leafColor = s.customColor || "#15803d";
+                    // 极大的提亮颜色作为背景 (增加200亮度，类似混入白色)
+                    const bgColor = adjustColor(leafColor, 180);
+                    const darkLeaf = adjustColor(leafColor, -40);
+
+                    ctx.fillStyle = bgColor; 
+                    ctx.fillRect(0, 0, w, h);
+
+                    ctx.fillStyle = leafColor;
+                    ctx.beginPath();
+                    ctx.moveTo(0, h);
+                    ctx.bezierCurveTo(w/2, h, w, h/2, w, 0);
+                    ctx.lineTo(w, h);
+                    ctx.fill();
+
+                    ctx.fillStyle = darkLeaf;
+                    ctx.font = `900 ${s.fontSize}px 'Noto Sans SC'`;
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    drawWrappedText(ctx, s.title, 30, 100, w-60, s.fontSize * 1.3);
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "30px 'Noto Sans SC'";
+                    ctx.textAlign = "right";
+                    ctx.fillText(s.author, w-30, h-30);
+                }
+            },
+            {
+                name: "夕阳变",
+                baseSize: 52,
+                allowColor: true,
+                defaultColor: "#fb923c",
+                allowExtra: true,
+                draw: (ctx, w, h, s) => {
+                    const midColor = s.customColor || "#fb923c";
+                    const startColor = adjustColor(midColor, 60); 
+                    const endColor = adjustColor(midColor, -60); 
+
+                    const grd = ctx.createLinearGradient(0, 0, 0, h);
+                    grd.addColorStop(0, startColor);
+                    grd.addColorStop(0.5, midColor);
+                    grd.addColorStop(1, endColor);
+                    ctx.fillStyle = grd;
+                    ctx.fillRect(0, 0, w, h);
+
+                    ctx.fillStyle = "rgba(255,255,255,0.9)";
+                    ctx.fillRect(40, 80, w-80, h-160);
+
+                    ctx.fillStyle = endColor;
+                    ctx.font = `bold ${s.fontSize}px 'Noto Serif SC'`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    drawWrappedText(ctx, s.title, w/2, h/2 - 40, w-140, s.fontSize * 1.3);
+
+                    if (s.extraText) {
+                        ctx.fillStyle = "#333";
+                        ctx.font = "18px 'Noto Serif SC'";
+                        ctx.fillText(s.extraText, w/2, h/2 + 40);
+                    }
+
+                    ctx.fillStyle = "#000";
+                    ctx.font = "small-caps 24px 'Noto Serif SC'";
+                    ctx.fillText("WRITTEN BY", w/2, h/2 + 100);
+                    ctx.font = "bold 28px 'Noto Serif SC'";
+                    ctx.fillText(s.author, w/2, h/2 + 135);
+                }
+            },
+            {
+                name: "悬疑黑",
+                baseSize: 64,
+                allowColor: true,
+                defaultColor: "#dc2626",
+                allowExtra: false,
+                draw: (ctx, w, h, s) => {
+                    ctx.fillStyle = "#1c1917";
+                    ctx.fillRect(0, 0, w, h);
+
+                    const scratchColor = s.customColor || "#dc2626";
+
+                    ctx.strokeStyle = scratchColor;
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(0, h/2);
+                    ctx.lineTo(w, h/2 - 50);
+                    ctx.stroke();
+
+                    ctx.fillStyle = "#f5f5f4";
+                    ctx.font = `900 ${s.fontSize}px 'Noto Sans SC'`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.letterSpacing = "4px";
+                    drawWrappedText(ctx, s.title, w/2, h/3, w-40, s.fontSize * 1.3);
+
+                    ctx.fillStyle = scratchColor;
+                    ctx.font = "32px 'Noto Sans SC'";
+                    ctx.fillText(s.author, w/2, h - 150);
+                }
+            },
+            {
+                name: "学术风",
+                baseSize: 48,
+                allowColor: true,
+                defaultColor: "#374151",
+                allowExtra: true,
+                draw: (ctx, w, h, s) => {
+                    ctx.fillStyle = "#e5e7eb";
+                    ctx.fillRect(0, 0, w, h);
+
+                    const headerColor = s.customColor || "#374151";
+
+                    ctx.fillStyle = headerColor;
+                    ctx.fillRect(0, 0, w, 200);
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = `bold ${s.fontSize}px 'Noto Sans SC'`;
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "alphabetic";
+                    drawWrappedText(ctx, s.title, 30, 100, w-60, s.fontSize * 1.3);
+                    
+                    if (s.extraText) {
+                         ctx.fillStyle = "#ffffff";
+                         ctx.font = "italic 20px 'Noto Serif SC'";
+                         ctx.globalAlpha = 0.8;
+                         ctx.fillText(s.extraText, 30, 180);
+                         ctx.globalAlpha = 1.0;
+                    }
+
+                    ctx.fillStyle = headerColor;
+                    ctx.font = "24px 'Noto Serif SC'";
+                    ctx.textAlign = "left";
+                    ctx.fillText("AUTHOR", 30, 250);
+                    
+                    ctx.font = "bold 32px 'Noto Serif SC'";
+                    ctx.fillText(s.author, 30, 290);
+
+                    ctx.fillRect(30, h-50, w-60, 4);
+                }
+            }
+        ];
+
+        // 渲染主函数
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const tpl = templates[state.templateId];
+            ctx.save();
+            tpl.draw(ctx, canvas.width, canvas.height, state);
+            ctx.restore();
+        }
+
+        // 更新UI控件可见性
+        function updateUIControls() {
+            const tpl = templates[state.templateId];
+            
+            // 颜色控件
+            if (tpl.allowColor) {
+                colorGroup.classList.remove('hidden-opt');
+                if (!state.customColor) {
+                    colorInput.value = tpl.defaultColor;
+                } else {
+                    colorInput.value = state.customColor;
+                }
+            } else {
+                colorGroup.classList.add('hidden-opt');
+            }
+
+            // 装饰文字控件
+            if (tpl.allowExtra) {
+                extraTextGroup.classList.remove('hidden-opt');
+            } else {
+                extraTextGroup.classList.add('hidden-opt');
+            }
+
+            fontSizeDisplay.textContent = state.fontSize + 'px';
+        }
+
+        // 初始化模板选择器
+        function initTemplateSelector() {
+            templateGrid.innerHTML = '';
+            templates.forEach((tpl, index) => {
+                const btn = document.createElement('div');
+                btn.className = `template-card bg-gray-100 rounded overflow-hidden relative ${index === state.templateId ? 'active' : ''}`;
+                btn.onclick = () => {
+                    state.templateId = index;
+                    state.fontSize = tpl.baseSize;
+                    fontSizeInput.value = tpl.baseSize;
+                    state.customColor = null; 
+                    updateUIControls();
+                    document.querySelectorAll('.template-card').forEach(el => el.classList.remove('active'));
+                    btn.classList.add('active');
+                    render();
+                };
+
+                const previewCanvas = document.createElement('canvas');
+                previewCanvas.width = 499;
+                previewCanvas.height = 646;
+                previewCanvas.style.width = "100%";
+                previewCanvas.style.height = "100%";
+                
+                const pCtx = previewCanvas.getContext('2d');
+                tpl.draw(pCtx, 499, 646, {
+                    title: "样式",
+                    author: (index+1).toString(),
+                    fontSize: tpl.baseSize,
+                    customColor: null,
+                    extraText: tpl.allowExtra ? "装饰" : ""
+                });
+                
+                btn.appendChild(previewCanvas);
+                templateGrid.appendChild(btn);
+            });
+        }
+
+        // 事件监听
+        const inputs = [
+            { el: titleInput, key: 'title' },
+            { el: authorInput, key: 'author' },
+            { el: extraTextInput, key: 'extraText' }
+        ];
+
+        inputs.forEach(item => {
+            item.el.addEventListener('input', (e) => {
+                state[item.key] = e.target.value;
+                render();
+            });
+        });
+
+        fontSizeInput.addEventListener('input', (e) => {
+            state.fontSize = parseInt(e.target.value);
+            fontSizeDisplay.textContent = state.fontSize + 'px';
+            render();
+        });
+
+        colorInput.addEventListener('input', (e) => {
+            state.customColor = e.target.value;
+            render();
+        });
+
+        resetColorBtn.addEventListener('click', () => {
+            state.customColor = null;
+            updateUIControls(); 
+            render();
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            const safeTitle = state.title.replace(/[^a-z0-9\u4e00-\u9fa5]/gi, '_').substring(0, 20) || 'cover';
+            link.download = `${safeTitle}_cover.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        });
+
+        initTemplateSelector();
+        updateUIControls();
+        fontSizeInput.value = state.fontSize;
+        render();
+        setTimeout(render, 1000);
+
+    </script>
+
+    <!-- Custom Alert/Confirm Dialog -->
+    <div id="customDialogOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full transform transition-all scale-95 opacity-0" id="customDialog">
+            <h3 id="customDialogTitle" class="text-lg font-bold text-gray-800 mb-4"></h3>
+            <p id="customDialogMessage" class="text-gray-700 mb-6"></p>
+            <div class="flex justify-end space-x-3">
+                <button id="customDialogCancel" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors hidden">取消</button>
+                <button id="customDialogConfirm" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .scale-95 { transform: scale(0.95); }
+        .opacity-0 { opacity: 0; }
+        .scale-100 { transform: scale(1); }
+        .opacity-100 { opacity: 1; }
+        .transition-all { transition: all 0.2s ease-out; }
+    </style>
+</body>
+</html>

@@ -514,4 +514,29 @@ router.get('/get_server_time', async function (req, res) {
     }
 });
 
+// 获取弹窗海报
+router.get('/get_popup_poster', async function (req, res) {
+    try {
+        const currentUrl = req.query.url;
+        if (!currentUrl) {
+            return res.json([]);
+        }
+
+        // 查询当前时间在有效期内，且匹配当前URL的海报
+        const results = await query(
+            `SELECT * FROM popup_posters 
+            WHERE page_url = ? 
+            AND start_time <= NOW() 
+            AND end_time >= NOW()
+            ORDER BY id DESC LIMIT 1`,
+            [currentUrl]
+        );
+        
+        res.json(results);
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({ msg: '获取弹窗海报失败' });
+    }
+});
+
 module.exports = router;

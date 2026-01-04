@@ -125,8 +125,9 @@ export default {
       return hash;
     },
 
-    handleLoad() {
+    handleLoad(event) {
       // this.isLoaded = true; // 图片加载完成
+	  this.$emit('load', event);
     },
 
     handleError() {
