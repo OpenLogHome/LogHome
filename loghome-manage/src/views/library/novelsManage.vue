@@ -262,15 +262,13 @@ export default {
 <style lang="scss" scoped>
 .outer {
     padding: 20px;
-    height: 93vh;
-    overflow-y: auto;
 }
 .block {
     background-color: white;
     padding: 20px;
     border-radius: 5px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    width: calc(100% - 300px);
+    width: 100%;
 }
 .pagination-container {
     margin-top: 20px;

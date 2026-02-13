@@ -218,6 +218,10 @@
 				<tippingBar :novel_id="world.novel_id" @tip="runGiftAnimation($event)"></tippingBar>
 			</view>
 		</uni-popup>
+		<task-reward-modal 
+			ref="taskRewardModal"
+			@harvest="handleHarvestFromModal">
+		</task-reward-modal>
 	</div>
 </template>
 
@@ -225,10 +229,12 @@
 	import axios from "axios";
 	import tippingBar from "../../components/tipping/tippingBar.vue"
 	import nothing from '../../components/nothing.vue'
+	import TaskRewardModal from "../../components/TaskRewardModal.vue"
 	export default {
 		components: {
 			tippingBar,
-			nothing
+			nothing,
+			TaskRewardModal
 		},
 		data() {
 			return {
@@ -519,6 +525,36 @@
 							'Authorization': "Bearer " + tk //设置token 其中K名要和后端协调好
 						}
 					}).then((res) => {
+						if (!_this.niceStatus) {
+							// 点赞任务
+							axios.post(_this.$baseUrl + '/treePlant/do_task', 
+								{ task_code: 'daily_like_novel' },
+								{
+									headers: {
+										'Content-Type': 'application/json',
+										'Authorization': 'Bearer ' + tk
+									}
+								}
+							).then((taskRes) => {
+								const data = taskRes.data || {};
+								const modal = _this.$refs.taskRewardModal;
+								if (modal) {
+									modal.show({
+										reward: typeof data.reward === 'number' ? data.reward : 10,
+										taskName: '每日任务：为世界设定点赞',
+										icon: data.task_icon,
+										currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
+										maxGrowth: 100,
+										canHarvest: data.tree_status === '结果'
+									});
+								}
+							}).catch((err) => {
+								const message = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg);
+								if (message !== 'Task already completed today') {
+									// 忽略任务已完成的错误提示
+								}
+							});
+						}
 						_this.getNices();
 					}).catch(function (error) {
 						if (error.message == "Request failed with status code 401") {
@@ -633,6 +669,33 @@
 								});
 							}
 						});
+
+						// 触发分享任务
+						axios.post(this.$baseUrl + '/treePlant/do_task', 
+							{ task_code: 'daily_share_work' },
+							{
+								headers: {
+									'Content-Type': 'application/json',
+									'Authorization': 'Bearer ' + tk.tk
+								}
+							}
+						).then((taskRes) => {
+							const data = taskRes.data || {};
+							const modal = this.$refs.taskRewardModal;
+							if (modal) {
+								modal.show({
+									reward: typeof data.reward === 'number' ? data.reward : 15,
+									taskName: '每日任务：分享作品',
+									icon: data.task_icon,
+									currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
+									maxGrowth: 100,
+									canHarvest: data.tree_status === '结果'
+								});
+							}
+						}).catch((err) => {
+							// 忽略错误
+						});
+
 					} else {
 						uni.showToast({
 							title: res.data.msg || '口令创建失败',
@@ -786,6 +849,11 @@
 						// 	duration: 2000
 						// });
 					})
+			},
+			handleHarvestFromModal() {
+				uni.navigateTo({
+					url: '/pages/treePlant/treeplant'
+				});
 			},
 		},
 		onLoad(option) {

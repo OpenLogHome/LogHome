@@ -39,6 +39,15 @@
 			} else {
 				this.title = params.title;
 			}
+			
+			// 如果是原木力爆棚，直接跳转到新榜单页面
+			if (this.title === '原木力爆棚') {
+				uni.redirectTo({
+					url: './logPowerRank'
+				});
+				return;
+			}
+
 			uni.setNavigationBarTitle({
 				title:this.title
 			})

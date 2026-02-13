@@ -71,7 +71,7 @@
 							<log-image :src="sticker.url" mode="aspectFill" style="width: 100%; height: 100%;"></log-image>
 						</view>
 						<!-- 上传按钮 -->
-						<view class="sticker-upload" @tap="uploadSticker">
+						<view class="sticker-upload" @tap="uploadSticker" v-if="activeCategory !== 'logwood'">
 							<uni-icons type="plusempty" size="30" color="#999"></uni-icons>
 						</view>
 					</view>
@@ -117,6 +117,13 @@
 								@tap="selectCategory('public')"
 							>
 								<text>公开</text>
+							</view>
+							<view 
+								class="category-item" 
+								:class="{active: activeCategory === 'logwood'}"
+								@tap="selectCategory('logwood')"
+							>
+								<text>原木娘专属</text>
 							</view>
 						</view>
 					</scroll-view>
@@ -385,7 +392,8 @@
 					// 根据分类显示不同的日志信息
 					const categoryName = this.activeCategory === 'all' ? '全部' : 
 										this.activeCategory === 'my' ? '我上传的' : 
-										this.activeCategory === 'public' ? '公开' : this.activeCategory;
+										this.activeCategory === 'public' ? '公开' :
+										this.activeCategory === 'logwood' ? '原木娘专属' : this.activeCategory;
 					console.log(`加载${categoryName}分类表情包:`, res.data);
 					
 					// 更新分页信息

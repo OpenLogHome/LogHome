@@ -1,7 +1,14 @@
 <template>
 	<div class="relations-page">
-		<div class="chart-container" ref="chart" id="chart"></div>
-		<div class="back-btn" @click="goBack">返回</div>
+		<div
+			class="chart-container"
+			ref="chart"
+			id="chart"
+			@touchstart.stop
+			@touchmove.stop.prevent
+			@touchend.stop
+		></div>
+		<div class="back-btn" @tap="goBack">返回</div>
         <div class="loading" v-if="loading">加载关系数据中... {{loadedCount}}/{{totalCount}}</div>
 	</div>
 </template>
@@ -15,6 +22,7 @@ export default {
 		return {
 			novelId: null,
 			chart: null,
+			resizeHandler: null,
 			nodes: [],
 			links: [],
 			loading: true,
@@ -30,6 +38,18 @@ export default {
 	},
 	onLoad(options) {
 		this.novelId = options.novel_id;
+	},
+	onUnload() {
+		if (this.resizeHandler && typeof window !== 'undefined' && window.removeEventListener) {
+			window.removeEventListener('resize', this.resizeHandler);
+		}
+		this.resizeHandler = null;
+		if (this.chart) {
+			try {
+				this.chart.dispose();
+			} catch (e) {}
+			this.chart = null;
+		}
 	},
 	mounted() {
 		if (this.novelId) {
@@ -91,6 +111,16 @@ export default {
                     if (contentStr) {
                         try {
                             let content = JSON.parse(contentStr);
+                            
+                            // 更新节点的图片
+                            if (content.pic) {
+                                let node = this.nodes.find(n => n.id === articleId.toString());
+                                if (node) {
+                                    node.symbol = 'image://' + content.pic;
+                                    node.symbolSize = 60; // 图片节点稍微大一点
+                                }
+                            }
+
                             if(content.relations) {
                                 content.relations.forEach(rel => {
                                     // Check if target node exists
@@ -127,7 +157,7 @@ export default {
                 return;
             }
             console.log("Initializing ECharts...");
-            this.chart = echarts.init(this.$refs.chart);
+            this.chart = echarts.init(this.$refs.chart, null, { renderer: 'canvas' });
             this.renderChart();
             
             // 使用 'click' 事件监听
@@ -141,9 +171,12 @@ export default {
                 }
             });
             
-            window.addEventListener('resize', () => {
-                if(this.chart) this.chart.resize();
-            });
+			if (typeof window !== 'undefined' && window.addEventListener) {
+				this.resizeHandler = () => {
+					if (this.chart) this.chart.resize();
+				};
+				window.addEventListener('resize', this.resizeHandler);
+			}
         },
         updateChart() {
             if(this.chart) {
@@ -159,7 +192,7 @@ export default {
         renderChart() {
             const option = {
                 title: {
-                    text: '世界人物关系图',
+                    text: '世界词条关系图',
                     left: 'center',
                     top: 20
                 },
@@ -226,6 +259,11 @@ export default {
     width: 100%;
     height: 100%;
     z-index: 1;
+	touch-action: none;
+	overscroll-behavior: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
 }
 .back-btn {
     position: absolute;

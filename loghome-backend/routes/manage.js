@@ -11,6 +11,7 @@ let auditRouter = require('./manage/audit');
 let postsRouter = require('./manage/posts');
 let communityRouter = require('./manage/community');
 let bankRouter = require('./manage/bank');
+let storeRouter = require('./manage/store');
 
 router.use('/library', libraryRouter);
 router.use('/users', userRouter);
@@ -19,5 +20,6 @@ router.use('/audit', auditRouter);
 router.use('/posts', postsRouter);
 router.use('/community', communityRouter);
 router.use('/bank', bankRouter);
+router.use('/store', storeRouter);
 
 module.exports = router;

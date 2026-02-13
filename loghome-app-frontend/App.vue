@@ -262,6 +262,13 @@ export default {
 				const code = match[1];
 				console.log("检测到原木口令：", code);
 				
+				// 检查是否与上一次解析成功的口令相同
+				const lastParsedCode = window.localStorage.getItem('lastParsedShareCode');
+				if (lastParsedCode === code) {
+					console.log("与上一次解析成功的口令相同，跳过");
+					return;
+				}
+				
 				// 提取share_message部分（口令后面的内容）
 				const codeEndIndex = match.index + match[0].length;
 				const shareMessage = clipboardText.substring(codeEndIndex).trim();
@@ -277,11 +284,13 @@ export default {
 			
 			// 首先尝试解析书籍分享口令
 		axios.post(this.$baseUrl + '/library/parse_share_code', {
-			code: code
-		}).then((res) => {
+				code: code
+			}).then((res) => {
 				uni.hideLoading();
 				
 				if (res.data.success) {
+					// 解析成功，保存口令
+					window.localStorage.setItem('lastParsedShareCode', code);
 					const shareData = res.data.data;
 					
 					// 将share_message添加到shareData中
@@ -301,6 +310,8 @@ export default {
 				uni.hideLoading();
 				
 				if (res.data.success) {
+					// 解析成功，保存口令
+					window.localStorage.setItem('lastParsedShareCode', code);
 					const shareData = res.data.data;
 					
 					// 将share_message添加到shareData中

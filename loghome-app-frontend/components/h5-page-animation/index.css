@@ -16,9 +16,10 @@ uni-page.hpa-show {
 }
 
 uni-page.hpa-animation {
-	transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);
- 	/* transition: all .3s ease-in;  */
+	transition: transform .4s cubic-bezier(0.140, 0.525, 0.000, 1.005), opacity .4s cubic-bezier(0.140, 0.525, 0.000, 1.005);
 	transform-origin: 50vw 50vh;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
 uni-page.hpa-animation-enter {
@@ -72,9 +73,10 @@ uni-page2.hpa-low {
 }
 
 uni-page2.hpa-animation {
-/* 	transition: all .45s cubic-bezier(0.140, 0.525, 0.000, 1.005); */
-	transition: all .4s cubic-bezier(0.140, 0.525, 0.000, 1.005); 
+	transition: transform .4s cubic-bezier(0.140, 0.525, 0.000, 1.005), opacity .4s cubic-bezier(0.140, 0.525, 0.000, 1.005); 
 	transform-origin: 50vw 50vh;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
 uni-page2.hpa-animation-enter {

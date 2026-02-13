@@ -61,7 +61,25 @@
 								<img src="../static/icons/icon_treecut1.png"/></img>
 							</view>
 						</el-badge>
-						<view class="text">原木树场</view>
+						<view class="text tree-growth-text">
+							<view class="title-row">
+								<text>原木树场</text>
+							</view>
+							<view
+								class="growth-bar-wrapper"
+								v-if="treeState && treeState !== '未种植' && treeMaxGrowth > 0"
+							>
+								<view class="growth-bar-track">
+									<view
+										class="growth-bar-inner"
+										:style="{ width: treeGrowthPercent + '%' }"
+									></view>
+								</view>
+								<text class="growth-val">
+									{{ Math.floor(treeGrowthVal) }}/{{ treeMaxGrowth }}
+								</text>
+							</view>
+						</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -90,6 +108,15 @@
 						</view>
 						<view class="text">余额提现</view>
 						<text style="width: 150rpx; color: #ff6a5f">{{earningsMoney}} 元</text>
+					</view>
+				</navigator>
+				<navigator url="./store/index">
+					<view class="li">
+						<view class="icon">
+							<img src="../static/icons/icon_sponsored.png"></img>
+						</view>
+						<view class="text">积分商城</view>
+						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
 			</view>
@@ -156,7 +183,17 @@
 				hasNewMessage: false,
 				hasNewPrivateMessage: false,
 				treeState: "None",
+				treeGrowthVal: 0,
+				treeMaxGrowth: 0,
 				earningsMoney: 0.00
+			}
+		},
+		computed: {
+			treeGrowthPercent() {
+				if (!this.treeMaxGrowth || this.treeMaxGrowth <= 0) return 0;
+				const val = this.treeGrowthVal || 0;
+				const percent = val / this.treeMaxGrowth * 100;
+				return Math.max(0, Math.min(100, percent));
 			}
 		},
 		components: {groupLabel},
@@ -294,6 +331,12 @@
 					url: "./users/donate"
 				})
 			},
+			gotoStore() {
+				const storeUrl = this.$storeBaseUrl + '/cross_site_login?redirect=/products';
+				uni.navigateTo({
+					url: './apps/h5webview?url=' + encodeURIComponent(storeUrl) + '&title=原木购'
+				})
+			},
 			checkTreePlant() {
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;;
@@ -304,9 +347,14 @@
 					}
 				}).then((res) => {
 					if (res.data.length > 0) {
-						this.treeState = res.data[0].tree_status;
+						const data = res.data[0];
+						this.treeState = data.tree_status;
+						this.treeGrowthVal = data.growth_val || 0;
+						this.treeMaxGrowth = data.max_growth || 0;
 					} else {
 						this.treeState = "未种植";
+						this.treeGrowthVal = 0;
+						this.treeMaxGrowth = 0;
 					}
 				}).catch(function(error) {
 					uni.showToast({
@@ -602,14 +650,60 @@
 			}
 
 			.text {
-					padding-left: 20upx;
-					width: 100%;
-					color: #666;
-					
-					.dark-mode & {
-						color: var(--text-color-regular);
-					}
+				padding-left: 20upx;
+				width: 100%;
+				color: #666;
+				
+				.dark-mode & {
+					color: var(--text-color-regular);
 				}
+			}
+
+			.tree-growth-text {
+				display: flex;
+				flex-direction: column;
+
+				.title-row {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+				}
+
+				.status-tag {
+					flex-shrink: 0;
+					font-size: 22rpx;
+					padding: 4rpx 12rpx;
+					border-radius: 20rpx;
+					background-color: #e8f5e9;
+					color: #2e7d32;
+				}
+
+				.growth-bar-wrapper {
+					margin-top: 10rpx;
+					display: flex;
+					align-items: center;
+				}
+
+				.growth-bar-track {
+					flex: 1;
+					height: 10rpx;
+					background-color: #eeeeee;
+					border-radius: 999rpx;
+					overflow: hidden;
+					margin-right: 12rpx;
+				}
+
+				.growth-bar-inner {
+					height: 100%;
+					background-color: #81c784;
+					transition: width 0.4s ease-out;
+				}
+
+				.growth-val {
+					font-size: 22rpx;
+					color: #999999;
+				}
+			}
 
 			.to {
 				flex-shrink: 0;

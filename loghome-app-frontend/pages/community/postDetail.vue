@@ -214,6 +214,11 @@
         </view>
       </view>
     </uni-popup>
+    
+    <task-reward-modal 
+      ref="taskRewardModal"
+      @harvest="handleHarvestFromModal">
+    </task-reward-modal>
   </view>
 </template>
 
@@ -221,10 +226,12 @@
 import axios from 'axios'
 import moment from 'moment'
 import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
+import TaskRewardModal from "../../components/TaskRewardModal.vue"
 
 export default {
   components: {
-    emojiPicker
+    emojiPicker,
+    TaskRewardModal
   },
   data() {
     return {
@@ -647,6 +654,33 @@ export default {
           title: '发送成功',
           icon: 'success'
         })
+
+        // 触发回帖任务
+        axios.post(this.$baseUrl + '/treePlant/do_task', 
+          { task_code: 'daily_reply' },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            }
+          }
+        ).then((taskRes) => {
+          const data = taskRes.data || {};
+          const modal = this.$refs.taskRewardModal;
+          if (modal) {
+            modal.show({
+              reward: typeof data.reward === 'number' ? data.reward : 15,
+              taskName: '每日任务：首次回帖',
+              icon: data.task_icon,
+              currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
+              maxGrowth: 100,
+              canHarvest: data.tree_status === '结果'
+            });
+          }
+        }).catch((err) => {
+          // 忽略错误
+        });
+
       } catch (error) {
         console.error('评论发送失败:', error);
         uni.showToast({
@@ -658,6 +692,12 @@ export default {
       }
     },
     
+    handleHarvestFromModal() {
+      uni.navigateTo({
+        url: '/pages/treePlant/treeplant'
+      });
+    },
+
     async uploadFile(filePath) {
       return new Promise((resolve, reject) => {
         uni.showToast({

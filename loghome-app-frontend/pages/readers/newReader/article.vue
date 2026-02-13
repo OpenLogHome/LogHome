@@ -244,7 +244,7 @@
 		</div>
 		<div class="bottomBar" :style="{'color': themesData[readerSettings.theme].isBlack ? '#fff8' : '#0008'}">
 			<div class="left">
-				{{ currentPageIdx + 1 }}/{{ allPages.length }}
+				{{ currentChapterPageInfo.current }}/{{ currentChapterPageInfo.total }} 页 - {{ allArticles.length > 0 ? ((currentArticleIdx + 1) / allArticles.length * 100).toFixed(1) : 0 }}%
 			</div>
 			<div class="right">
 				<span class="time">{{ currentTime }}</span>
@@ -280,7 +280,7 @@
 
 		<el-drawer :with-header="false" :visible.sync="menuDrawerVisible" direction="btt" :modal="true" size="60%"
 			custom-class="bookMenu">
-			<bookMenu :novel_id="novelId" @change="gotoArticleIdx($event); menuDrawerVisible = false"></bookMenu>
+			<bookMenu :novel_id="novelId" :currentIdx="currentArticleIdx" v-if="menuDrawerVisible" @change="gotoArticleIdx($event); menuDrawerVisible = false"></bookMenu>
 		</el-drawer>
 		
 		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="calc(80% + 44px)"
@@ -395,6 +395,11 @@
 				<el-button type="primary" @click="submitFeedback" :disabled="!feedbackContent">提交</el-button>
 			</span>
 		</el-dialog>
+		
+		<task-reward-modal 
+			ref="taskRewardModal"
+			@harvest="handleHarvestFromModal">
+		</task-reward-modal>
 	</div>
 </template>
 
@@ -416,6 +421,7 @@ import BookComment from "../bookComment.vue"
 import BookExcerpts from "../bookExcerpts.vue"
 import AudiobookPlayer from "../../../components/audiobook-player.vue"
 import worldVocabulary from "./worldVocabulary.vue"
+import TaskRewardModal from "../../../components/TaskRewardModal.vue"
 export default {
 	data() {
 		return {
@@ -486,12 +492,46 @@ export default {
 			feedbackContent: '',
 			listenDrawerVisible: false,
 			listeningParagraphId: -1,
-			shownParaTitleListenBtns: []
+			shownParaTitleListenBtns: [],
+			readingTimer: null,
+			dailyReadingSeconds: 0,
+			isTaskSubmitted: false,
+			cloudProgressSyncTimer: null,
+			pendingCloudProgress: null,
+			loadedArticleRange: { min: -1, max: -1 },
+			isLoadingMore: false,
+			loadGenerationId: 0
 		}
 	},
-	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer, worldVocabulary },
+	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer, worldVocabulary, TaskRewardModal },
 	methods: {
+		async loadArticleAtIndex(idx, append = true) {
+			let currentGenId = this.loadGenerationId;
+			if (idx < 0 || idx >= this.allArticles.length) return;
+			let articleInfo = this.allArticles[idx];
+			let articleData = await this.getArticleContentById(articleInfo.article_id, articleInfo.update_time, true);
+			if (currentGenId != this.loadGenerationId) return;
+			
+			this.allArticleData[articleData.article_id.toString()] = articleData;
+			let articlePages = await this.generateArticleRenderData(articleData);
+			if (currentGenId != this.loadGenerationId) return;
+			
+			if (append) {
+				this.allPages.push(...articlePages);
+				this.loadedArticleRange.max = Math.max(this.loadedArticleRange.max, idx);
+			} else {
+				this.allPages.unshift(...articlePages);
+				this.loadedArticleRange.min = Math.min(this.loadedArticleRange.min, idx);
+				// Adjust indices
+				for (let j = 0; j < this.currentRenderIdx.length; j++) {
+					this.currentRenderIdx[j] += articlePages.length;
+				}
+				this.currentPageIdx += articlePages.length;
+			}
+			return articlePages;
+		},
 		loadAllPages() {
+			this.loadGenerationId++;
 			return new Promise(async (resolve, reject) => {
 				uni.showLoading({
 					title: '编排页面中'
@@ -503,62 +543,63 @@ export default {
 				await this.calculatePageWrapperOffset();
 				setTimeout(async () => {
 					this.allArticles = await this.loadAllArticles();
-					let articleData = await this.getArticleContentById(this.articleId);
-					this.allArticleData[articleData.article_id.toString()] = articleData;
-					let articlePages = await this.generateArticleRenderData(articleData);
-					this.allPages = articlePages;
-					this.currentPageIdx = 0;
-					// 开始预渲染全部的页面
+					
 					let centerArticleIdx = 0;
-					for (centerArticleIdx = 0; centerArticleIdx <= this.allArticles.length; centerArticleIdx++) {
+					for (centerArticleIdx = 0; centerArticleIdx < this.allArticles.length; centerArticleIdx++) {
 						if (this.articleId == this.allArticles[centerArticleIdx].article_id) {
 							break;
 						}
 					}
-					// 由于Vue的渲染问题，前面的页面需要先完成计算，然后后面的可以慢慢计算
-					for (let i = centerArticleIdx; i >= 0; i--) {
-						if (i < centerArticleIdx) {
-							let articleData = await this.getArticleContentById(this.allArticles[i].article_id,
-								this.allArticles[i].update_time, true);
-							this.allArticleData[articleData.article_id.toString()] = articleData;
-							let articlePages = await this.generateArticleRenderData(articleData);
-							this.allPages.unshift(...articlePages);
-							for (let j = 0; j <= this.currentRenderIdx.length - 1; j++) {
-								this.currentRenderIdx[j] += articlePages.length;
-							}
-							this.currentPageIdx += articlePages.length;
-						}
+					
+					// 重置并只加载当前章节
+					this.allPages = [];
+					this.loadedArticleRange = { min: centerArticleIdx, max: centerArticleIdx - 1 };
+					
+					await this.loadArticleAtIndex(centerArticleIdx, true);
+					
+					this.currentPageIdx = 0;
+					
+					// 恢复历史位置
+					if(this.historyMode && this.paragraphId == -1) {
+						this.currentPageIdx = Math.min(this.currentPageIdx + Number(historyPage), this.allPages.length - 1);
 					}
+					
 					if(this.paragraphId != -1) {
-						this.gotoParagraph(articleData.article_id, this.paragraphId);
+						this.gotoParagraph(this.articleId, this.paragraphId);
 					}
-					let renderFlag = false;
-					for (let i = 0; i < this.allArticles.length; i++) {
-						if (i > centerArticleIdx) {
-							let articleData = await this.getArticleContentById(this.allArticles[i].article_id,
-								this.allArticles[i].update_time, true);
-							this.allArticleData[articleData.article_id.toString()] = articleData;
-							let articlePages = await this.generateArticleRenderData(articleData);
-							this.allPages.push(...articlePages);
-						}
-						if (i == centerArticleIdx || i == centerArticleIdx + 1) {
-							if (!renderFlag && this.historyMode && this.paragraphId == -1) {
-								this.currentPageIdx = Math.min(this.currentPageIdx + Number(historyPage), this.allPages.length - 1);
-								renderFlag = true;
-							}
-							this.renderNewPages();
-							this.showArticleCentos();
-							this.shownCommentsBtn = [];
-							setTimeout(() => {
-								this.doUpdateCommentDisplay = true;
-							}, 300)
-							uni.hideLoading();
-						}
-					}
+					
+					this.renderNewPages();
+					this.showArticleCentos();
+					this.shownCommentsBtn = [];
+					setTimeout(() => {
+						this.doUpdateCommentDisplay = true;
+					}, 300)
+					uni.hideLoading();
+					
 					this.onRendering = false;
 					resolve();
+					
+					// 延迟加载前后章节
+					this.preloadSurroundingArticles();
 				})
 			})
+		},
+		async preloadSurroundingArticles() {
+			if (this.isLoadingMore) return;
+			this.isLoadingMore = true;
+			try {
+				// 向前加载1章
+				if (this.loadedArticleRange.min > 0) {
+					 await this.loadArticleAtIndex(this.loadedArticleRange.min - 1, false);
+				}
+				// 向后加载2章
+				let nextTarget = Math.min(this.allArticles.length - 1, this.loadedArticleRange.max + 2);
+				while (this.loadedArticleRange.max < nextTarget) {
+					await this.loadArticleAtIndex(this.loadedArticleRange.max + 1, true);
+				}
+			} finally {
+				this.isLoadingMore = false;
+			}
 		},
 		delay(ms) {
 			return new Promise(resolve => setTimeout(resolve, ms));
@@ -1163,19 +1204,27 @@ export default {
 				this.showReaderSetting = false;
 			}
 		},
-		gotoArticleIdx(newArticleIdx) {
+		async gotoArticleIdx(newArticleIdx) {
 			if(newArticleIdx < 0 || newArticleIdx >= this.allArticles.length) {
 				return;
 			}
-			for(let i = 0; i < this.allPages.length; i ++) {
-				this.currentPageIdx = 0;
-				if(this.allPages[i].articleId == this.allArticles[newArticleIdx].article_id) {
-					this.currentPageIdx = i;
-					break;
+			
+			// 检查目标章节是否已加载
+			if (newArticleIdx >= this.loadedArticleRange.min && newArticleIdx <= this.loadedArticleRange.max) {
+				for(let i = 0; i < this.allPages.length; i ++) {
+					this.currentPageIdx = 0;
+					if(this.allPages[i].articleId == this.allArticles[newArticleIdx].article_id) {
+						this.currentPageIdx = i;
+						break;
+					}
 				}
+				this.currentRenderIdx = [];
+				this.renderNewPages();
+			} else {
+				// 未加载，重新加载
+				this.articleId = this.allArticles[newArticleIdx].article_id;
+				await this.loadAllPages();
 			}
-			this.currentRenderIdx = [];
-			this.renderNewPages();
 		},
 		gotoParagraph(articleId, paragraphId) {
 			console.log("gotoParagraph", articleId, paragraphId);
@@ -1316,6 +1365,191 @@ export default {
 					icon: 'none'
 				});
 			}
+		},
+		startReadingTimer() {
+			if (this.readingTimer) return;
+			
+			const today = new Date().toISOString().split('T')[0];
+			const STORAGE_KEY = 'daily_reading_status';
+			
+			try {
+				const statusStr = window.localStorage.getItem(STORAGE_KEY);
+				let status = statusStr ? JSON.parse(statusStr) : null;
+				
+				// If no status or date doesn't match today, reset
+				if (!status || status.date !== today) {
+					status = {
+						date: today,
+						seconds: 0,
+						submitted: false
+					};
+					window.localStorage.setItem(STORAGE_KEY, JSON.stringify(status));
+				}
+				
+				this.dailyReadingSeconds = status.seconds || 0;
+				this.isTaskSubmitted = status.submitted || false;
+				
+				this.readingTimer = setInterval(() => {
+					this.dailyReadingSeconds++;
+					
+					// Update storage
+					const currentStatus = {
+						date: today,
+						seconds: this.dailyReadingSeconds,
+						submitted: this.isTaskSubmitted
+					};
+					window.localStorage.setItem(STORAGE_KEY, JSON.stringify(currentStatus));
+					
+					// Check for 5 minutes (300 seconds)
+					if (this.dailyReadingSeconds >= 300 && !this.isTaskSubmitted) {
+						this.checkAndSubmitReadingTask(STORAGE_KEY);
+					}
+				}, 1000);
+			} catch (e) {
+				console.error('Error managing reading timer:', e);
+			}
+		},
+		stopReadingTimer() {
+			if (this.readingTimer) {
+				clearInterval(this.readingTimer);
+				this.readingTimer = null;
+			}
+		},
+		checkAndSubmitReadingTask(storageKey) {
+			if (this.isTaskSubmitted) return;
+			
+			// Double check localStorage
+			try {
+				const statusStr = window.localStorage.getItem(storageKey);
+				if (statusStr) {
+					const status = JSON.parse(statusStr);
+					if (status.submitted) {
+						this.isTaskSubmitted = true;
+						return;
+					}
+				}
+			} catch (e) {
+				console.error(e);
+			}
+
+			let tk = JSON.parse(window.localStorage.getItem('token'));
+			if (tk) tk = tk.tk;
+			
+			if (!tk) return;
+
+			axios.post(this.$baseUrl + '/treePlant/do_task', 
+				{ task_code: 'daily_reading' },
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tk
+					}
+				}
+			).then((taskRes) => {
+				const data = taskRes.data || {};
+				
+				// Mark as submitted
+				this.isTaskSubmitted = true;
+				
+				// Update storage
+				const today = new Date().toISOString().split('T')[0];
+				const newStatus = {
+					date: today,
+					seconds: this.dailyReadingSeconds,
+					submitted: true
+				};
+				window.localStorage.setItem(storageKey, JSON.stringify(newStatus));
+				
+				const modal = this.$refs.taskRewardModal;
+				if (modal) {
+					modal.show({
+						reward: typeof data.reward === 'number' ? data.reward : 20,
+						taskName: '每日任务：阅读5分钟',
+						icon: data.task_icon,
+						currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
+						maxGrowth: 100,
+						canHarvest: data.tree_status === '结果'
+					});
+				}
+			}).catch((err) => {
+				const message = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg);
+				if (message === 'Task already completed today') {
+					this.isTaskSubmitted = true;
+					// Update storage
+					const today = new Date().toISOString().split('T')[0];
+					const newStatus = {
+						date: today,
+						seconds: this.dailyReadingSeconds,
+						submitted: true
+					};
+					window.localStorage.setItem(storageKey, JSON.stringify(newStatus));
+				}
+			});
+		},
+		handleHarvestFromModal() {
+			uni.navigateTo({
+				url: '/pages/treePlant/treeplant'
+			});
+		},
+		scheduleCloudProgressSync(payload) {
+			let tk = JSON.parse(window.localStorage.getItem('token'));
+			if (tk) tk = tk.tk;
+			if (!tk) return;
+			
+			this.pendingCloudProgress = payload;
+			if (this.cloudProgressSyncTimer) {
+				clearTimeout(this.cloudProgressSyncTimer);
+			}
+			
+			this.cloudProgressSyncTimer = setTimeout(async () => {
+				const pending = this.pendingCloudProgress;
+				this.pendingCloudProgress = null;
+				this.cloudProgressSyncTimer = null;
+				
+				let tk2 = JSON.parse(window.localStorage.getItem('token'));
+				if (tk2) tk2 = tk2.tk;
+				if (!tk2 || !pending) return;
+				
+				try {
+					await axios.post(
+						this.$baseUrl + '/library/update_reading_progress',
+						pending,
+						{
+							headers: {
+								'Content-Type': 'application/json',
+								'Authorization': 'Bearer ' + tk2
+							}
+						},
+					);
+				} catch (e) {}
+			}, 800);
+		},
+		async flushCloudProgressSync() {
+			if (this.cloudProgressSyncTimer) {
+				clearTimeout(this.cloudProgressSyncTimer);
+				this.cloudProgressSyncTimer = null;
+			}
+			
+			const pending = this.pendingCloudProgress;
+			this.pendingCloudProgress = null;
+			if (!pending) return;
+			
+			let tk = JSON.parse(window.localStorage.getItem('token'));
+			if (tk) tk = tk.tk;
+			if (!tk) return;
+			
+			try {
+				await axios.post(
+					this.$baseUrl + '/library/update_reading_progress',
+					pending,
+					{
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': 'Bearer ' + tk
+						}
+					},
+				);
+			} catch (e) {}
 		}
 	},
 	watch: {
@@ -1327,8 +1561,30 @@ export default {
 				this.articleId = this.allPages[newValue].articleId;
 				window.localStorage.setItem("ReaderHistory_" + this.novelInfo.novel_id, this.allArticleData[this.allPages[newValue].articleId].article_chapter);
 				window.localStorage.setItem("ReaderHistoryPage_" + this.novelInfo.novel_id, this.allPages[newValue].idx);
+				this.scheduleCloudProgressSync({
+					novel_id: this.novelInfo.novel_id,
+					article_id: this.allPages[newValue].articleId,
+					article_chapter: this.allArticleData[this.allPages[newValue].articleId].article_chapter,
+					page_idx: this.allPages[newValue].idx
+				});
 				if (this.allPages[newValue].articleId != this.allPages[oldValue].articleId) {
 					this.showArticleCentos(newValue);
+				}
+				
+				// 预加载检查
+				if (!this.isLoadingMore) {
+					if (newValue >= this.allPages.length - 5 && this.loadedArticleRange.max < this.allArticles.length - 1) {
+						this.isLoadingMore = true;
+						this.loadArticleAtIndex(this.loadedArticleRange.max + 1, true).finally(() => {
+							this.isLoadingMore = false;
+						});
+					}
+					if (newValue <= 5 && this.loadedArticleRange.min > 0) {
+						this.isLoadingMore = true;
+						this.loadArticleAtIndex(this.loadedArticleRange.min - 1, false).finally(() => {
+							this.isLoadingMore = false;
+						});
+					}
 				}
 			}
 			uni.setNavigationBarTitle({
@@ -1362,6 +1618,15 @@ export default {
 		}
 	},
 	computed: {
+		currentChapterPageInfo() {
+			if (this.currentPageIdx < 0 || !this.allPages[this.currentPageIdx]) return { current: 1, total: 1 };
+			const currentArticleId = this.allPages[this.currentPageIdx].articleId;
+			const chapterPages = this.allPages.filter(p => p.articleId === currentArticleId);
+			return {
+				current: this.allPages[this.currentPageIdx].idx + 1,
+				total: chapterPages.length
+			};
+		}
 	},
 	async onLoad(option) {
 		this.updateTimeAndBattery(); // 初始化时间
@@ -1409,6 +1674,8 @@ export default {
 		// #endif
 	},
 	async onUnload() {
+		await this.flushCloudProgressSync();
+		this.stopReadingTimer();
 		clearInterval(this.timeInterval);
 		clearInterval(this.updateCommentDisplayTimer);
 		if(window.jsBridge && window.jsBridge.inApp) {
@@ -1421,7 +1688,6 @@ export default {
 		// #endif
 	},
 	async onShow() {
-		this.renderNewPages();
 		this.showArticleCentos();
 		this.shownCommentsBtn = [];
 		this.shownParaTitleListenBtns = [];
@@ -1432,6 +1698,11 @@ export default {
 			jsBridge.setNavigationBarVisible(false);
 			await jsBridge.enableVolumeKeyListener();
 		}
+		this.startReadingTimer();
+	},
+	onHide() {
+		this.flushCloudProgressSync();
+		this.stopReadingTimer();
 	}
 }
 </script>

@@ -115,13 +115,49 @@ export default {
 		// 获取阅读历史
 		getHistoryBooks() {
 			return new Promise((resolve) => {
-				let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"))
-				if (readerHistory != null) {
-					// 从旧到新排序（reverse后变成从新到旧）
-					readerHistory.reverse()
-					this.historyBooks = readerHistory
+				let tk = JSON.parse(window.localStorage.getItem('token'))
+				if (tk) tk = tk.tk
+				
+				if (!tk) {
+					let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"))
+					if (readerHistory != null) {
+						readerHistory.reverse()
+						this.historyBooks = readerHistory
+					}
+					resolve()
+					return
 				}
-				resolve()
+				
+				axios.get(this.$baseUrl + '/library/reading_history', {
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tk
+					}
+				}).then((res) => {
+					if (Array.isArray(res.data) && res.data.length > 0) {
+						this.historyBooks = res.data
+						window.localStorage.setItem("loghomeReaderHistory", JSON.stringify(res.data))
+						resolve()
+						return
+					}
+					
+					let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"))
+					if (readerHistory != null) {
+						readerHistory.reverse()
+						this.historyBooks = readerHistory
+					}
+					resolve()
+				}).catch((error) => {
+					if (error && error.message == "Request failed with status code 401") {
+						window.localStorage.removeItem('token')
+					}
+					let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"))
+					if (readerHistory != null) {
+						readerHistory.reverse()
+						this.historyBooks = readerHistory
+					}
+					resolve()
+				})
 			})
 		},
 		

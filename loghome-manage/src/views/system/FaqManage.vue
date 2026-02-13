@@ -284,7 +284,6 @@ export default {
 <style scoped lang="scss">
 .outer{
     width:100%;
-    height: 100%;
 }
 .search {
   width: 100%;

@@ -44,39 +44,39 @@ router.get('/get_novels_all', async function (req, res) {
 
 router.get('/get_novels_search', async function (req, res) {
 	try {
-        let keyWordToId = parseInt(req.query.keyword);
-        if(!isNaN(keyWordToId)){
-            let results = await query(
-                `SELECT n.*,u.name author_name,u.avatar_url auther_avatar 
+		let keyWordToId = parseInt(req.query.keyword);
+		if(!isNaN(keyWordToId)){
+			let results = await query(
+				`SELECT n.*,u.name author_name,u.avatar_url auther_avatar 
                                    FROM novels n,users u 
                                    WHERE u.user_id = n.author_id 
                                    AND n.deleted = 0
                                    AND n.is_personal = 0
                                    AND novel_id = ?`,
-                [keyWordToId],
-            );
-            res.end(JSON.stringify(results));
-            return;
-        } else {
-            let keyword = '%' + req.query.keyword + '%';
-            let results = await query(
-                `SELECT n.*,u.name author_name,u.avatar_url auther_avatar 
+				[keyWordToId],
+			);
+			res.end(JSON.stringify(results));
+			return;
+		} else {
+			let keyword = '%' + req.query.keyword + '%';
+			let results = await query(
+				`SELECT n.*,u.name author_name,u.avatar_url auther_avatar 
                                 FROM novels n,users u 
                                 WHERE u.user_id = n.author_id 
                                 AND n.deleted = 0
                                 AND n.is_personal = 0
                                 AND (n.name LIKE ? OR n.content LIKE ?)`,
-                [keyword, keyword],
-            );
+				[keyword, keyword],
+			);
 
-            for (let i = 0; i < results.length; i++) {
-                let r = Math.floor(Math.random() * results.length);
-                let t = results[i];
-                results[i] = results[r];
-                results[r] = t;
-            }
-            res.end(JSON.stringify(results));
-        }
+			for (let i = 0; i < results.length; i++) {
+				let r = Math.floor(Math.random() * results.length);
+				let t = results[i];
+				results[i] = results[r];
+				results[r] = t;
+			}
+			res.end(JSON.stringify(results));
+		}
 
 	} catch (e) {
 		console.log(e);
@@ -317,8 +317,8 @@ router.get('/get_all_novel_fans', async function (req, res) {
 		
 		// 获取粉丝留言
 		let messages = await query(
-			`SELECT * FROM novel_fans_messages WHERE novel_id = ?`,
-			[req.query.novel_id]
+			'SELECT * FROM novel_fans_messages WHERE novel_id = ?',
+			[req.query.novel_id],
 		);
 		
 		// 将留言信息合并到结果中
@@ -343,8 +343,8 @@ router.post('/update_fan_message', auth, async function (req, res) {
 		
 		// 验证用户是否是小说的粉丝（有打赏记录）
 		const isFan = await query(
-			`SELECT COUNT(*) as count FROM tipping WHERE novel_id = ? AND from_id = ?`,
-			[novel_id, user.user_id]
+			'SELECT COUNT(*) as count FROM tipping WHERE novel_id = ? AND from_id = ?',
+			[novel_id, user.user_id],
 		);
 		
 		if (isFan[0].count > 0) {
@@ -353,7 +353,7 @@ router.post('/update_fan_message', auth, async function (req, res) {
 				`INSERT INTO novel_fans_messages (novel_id, user_id, message) 
 				 VALUES (?, ?, ?) 
 				 ON DUPLICATE KEY UPDATE message = ?`,
-				[novel_id, user.user_id, message, message]
+				[novel_id, user.user_id, message, message],
 			);
 			
 			res.json({ success: true });
@@ -374,14 +374,14 @@ router.get('/get_user_fan_message', auth, async function (req, res) {
 		
 		// 获取用户对该小说的留言
 		const message = await query(
-			`SELECT * FROM novel_fans_messages WHERE novel_id = ? AND user_id = ?`,
-			[novel_id, user.user_id]
+			'SELECT * FROM novel_fans_messages WHERE novel_id = ? AND user_id = ?',
+			[novel_id, user.user_id],
 		);
 		
 		if (message.length > 0) {
 			res.json({ success: true, message: message[0].message });
 		} else {
-			res.json({ success: true, message: "" });
+			res.json({ success: true, message: '' });
 		}
 	} catch (e) {
 		console.log(e);
@@ -422,11 +422,11 @@ router.get('/get_all_tags', async function (req, res) {
 		let params = [];
 		
 		if (req.query.keyword) {
-			sql += ` AND t.tag_name LIKE ?`;
+			sql += ' AND t.tag_name LIKE ?';
 			params.push('%' + req.query.keyword + '%');
 		}
 		
-		sql += ` group by t.tag_id order by count desc`;
+		sql += ' group by t.tag_id order by count desc';
 		
 		let results = await query(sql, params);
 		res.end(JSON.stringify(results));
@@ -441,7 +441,7 @@ router.get('/get_tag_collections', async function (req, res) {
 		let results = await query(
 			`SELECT n.*, u.name username, u.avatar_url from tags t, novel_tag nt, novels n, users u where nt.tag_id = t.tag_id and u.user_id = n.author_id
             and nt.novel_id = n.novel_id and n.deleted = 0 and n.is_personal = 0 and t.tag_id = ?`,
-            [req.query.tag_id]
+			[req.query.tag_id],
 		);
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -465,7 +465,7 @@ router.get('/get_suggested_tags', async function (req, res) {
 				if(results[j].tag_id===novel_tag[i].tag_id){
 					results[j].is_chosen=true;
 					break;
-				 }
+				}
 			}
 		}
 		res.end(JSON.stringify(results));
@@ -480,17 +480,17 @@ router.get('/delete_novel_tag', auth, async function (req, res) {
 		let user = req.user;
 		user = JSON.parse(JSON.stringify(user))[0];
 		let novel = await query('SELECT * FROM novels WHERE novel_id = ? AND author_id = ?', [
-			req.query.novel_id,req.user[0].user_id
+			req.query.novel_id,req.user[0].user_id,
 		]);
 		if (novel.length > 0 && novel[0].author_id == user.user_id) {
-            //检查是不是已结束的活动标签，如果是则不允许删除
-            let tags = await query('SELECT * FROM tags WHERE tag_id = ?', [
+			//检查是不是已结束的活动标签，如果是则不允许删除
+			let tags = await query('SELECT * FROM tags WHERE tag_id = ?', [
 				req.query.tag_id,
 			]);
-            if(tags.length > 0 && tags[0].is_activity_tag == 1 && tags[0].is_suggested == 0){
-                res.json(400, { msg: '该活动已结束，不得移除标签' });
-                return;
-            }
+			if(tags.length > 0 && tags[0].is_activity_tag == 1 && tags[0].is_suggested == 0){
+				res.json(400, { msg: '该活动已结束，不得移除标签' });
+				return;
+			}
 			let results = await query(
 				'DELETE FROM novel_tag WHERE novel_id = ? AND tag_id = ?',
 				[req.query.novel_id, req.query.tag_id],
@@ -500,7 +500,7 @@ router.get('/delete_novel_tag', auth, async function (req, res) {
 			res.json(400, { msg: 'bad request' });
 		}
 	} catch (e) {
-        console.log(e);
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });
@@ -517,18 +517,18 @@ router.get('/add_novel_tag', auth, async function (req, res) {
 				req.query.tag_name,
 			]);
 			if (tags.length > 0) {
-                //检查是不是已结束的活动标签，如果是则不允许添加
-                if(tags[0].is_activity_tag == 1 && tags[0].is_suggested == 0){
-                    res.json(400, { msg: '该活动已结束，不得添加标签' });
-                    return;
-                }
+				//检查是不是已结束的活动标签，如果是则不允许添加
+				if(tags[0].is_activity_tag == 1 && tags[0].is_suggested == 0){
+					res.json(400, { msg: '该活动已结束，不得添加标签' });
+					return;
+				}
 				let results = await query(
 					'INSERT INTO novel_tag(novel_id,tag_id) VALUES(?,?)',
 					[req.query.novel_id, tags[0].tag_id],
 				);
 				res.end(JSON.stringify(results));
 			} else {
-                //已有标签库中没有该标签，则添加新的自定义标签
+				//已有标签库中没有该标签，则添加新的自定义标签
 				let newTag = await query(
 					'INSERT INTO tags(tag_name,create_user_id) VALUES(?,?)',
 					[req.query.tag_name, user.user_id],
@@ -572,7 +572,7 @@ router.get('/get_banners', async function (req, res) {
 			AND (start_time IS NULL OR start_time <= ?) 
 			AND (end_time IS NULL OR end_time >= ?) 
 			ORDER BY \`order\` ASC`,
-			[page, currentTime, currentTime]
+			[page, currentTime, currentTime],
 		);
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -595,7 +595,7 @@ router.get('/check_novel_updates', async function (req, res) {
 		// 查询该小说在服务器上的最新章节及其更新时间
 		let latestChapter = await query(
 			'SELECT MAX(article_chapter) as max_chapter, MAX(update_time) as latest_update_time FROM articles WHERE novel_id = ? AND is_draft = 0 AND deleted = 0',
-			[novel_id]
+			[novel_id],
 		);
 		
 		const server_latest_chapter = latestChapter[0].max_chapter || 0;
@@ -608,8 +608,137 @@ router.get('/check_novel_updates', async function (req, res) {
 			server_latest_chapter: server_latest_chapter,
 			new_chapters_count: new_chapters_count,
 			has_updates: new_chapters_count > 0,
-			latest_update_time: latest_update_time
+			latest_update_time: latest_update_time,
 		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取云端阅读记录列表
+router.get('/reading_history', auth, async function (req, res) {
+	try {
+		const user_id = req.user[0].user_id;
+		const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+		const offset = parseInt(req.query.offset) || 0;
+		
+		let results = await query(
+			`SELECT 
+				n.novel_id,
+				n.name,
+				n.picUrl,
+				n.update_time,
+				rh.last_article_id,
+				rh.last_article_chapter,
+				rh.last_page_idx,
+				rh.updated_at as last_read_time
+			FROM user_reading_history rh
+			INNER JOIN novels n ON n.novel_id = rh.novel_id
+			WHERE rh.user_id = ? AND n.deleted = 0
+			ORDER BY rh.updated_at DESC
+			LIMIT ?, ?`,
+			[user_id, offset, limit],
+		);
+		
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取某本书的云端阅读进度
+router.get('/reading_progress', auth, async function (req, res) {
+	try {
+		const user_id = req.user[0].user_id;
+		const novel_id = parseInt(req.query.novel_id);
+		
+		if (!novel_id) {
+			return res.json(400, { msg: 'missing novel_id parameter' });
+		}
+		
+		let results = await query(
+			`SELECT 
+				novel_id,
+				last_article_id,
+				last_article_chapter,
+				last_page_idx,
+				updated_at as last_read_time
+			FROM user_reading_history
+			WHERE user_id = ? AND novel_id = ?
+			LIMIT 1`,
+			[user_id, novel_id],
+		);
+		
+		if (results.length === 0) {
+			res.end(JSON.stringify([]));
+			return;
+		}
+		
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 更新云端阅读进度（写入/更新阅读记录）
+router.post('/update_reading_progress', auth, async function (req, res) {
+	try {
+		const user_id = req.user[0].user_id;
+		const novel_id = parseInt(req.body.novel_id);
+		
+		if (!novel_id) {
+			return res.json(400, { msg: 'missing novel_id parameter' });
+		}
+		
+		const article_id =
+			req.body.article_id === undefined || req.body.article_id === null || req.body.article_id === ''
+				? null
+				: parseInt(req.body.article_id);
+		const article_chapter =
+			req.body.article_chapter === undefined || req.body.article_chapter === null || req.body.article_chapter === ''
+				? null
+				: parseInt(req.body.article_chapter);
+		const page_idx =
+			req.body.page_idx === undefined || req.body.page_idx === null || req.body.page_idx === ''
+				? null
+				: parseInt(req.body.page_idx);
+		
+		const existing = await query(
+			'SELECT last_article_id, last_article_chapter, last_page_idx FROM user_reading_history WHERE user_id = ? AND novel_id = ? LIMIT 1',
+			[user_id, novel_id],
+		);
+		
+		if (existing.length === 0) {
+			await query(
+				`INSERT INTO user_reading_history (user_id, novel_id, last_article_id, last_article_chapter, last_page_idx)
+				 VALUES (?, ?, ?, ?, ?)`,
+				[user_id, novel_id, article_id, article_chapter, page_idx],
+			);
+			res.json(200, { msg: 'ok' });
+			return;
+		}
+		
+		const prev = existing[0];
+		await query(
+			`UPDATE user_reading_history
+			 SET last_article_id = ?,
+				 last_article_chapter = ?,
+				 last_page_idx = ?,
+				 updated_at = CURRENT_TIMESTAMP
+			 WHERE user_id = ? AND novel_id = ?`,
+			[
+				article_id === null ? prev.last_article_id : article_id,
+				article_chapter === null ? prev.last_article_chapter : article_chapter,
+				page_idx === null ? prev.last_page_idx : page_idx,
+				user_id,
+				novel_id,
+			],
+		);
+		
+		res.json(200, { msg: 'ok' });
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -663,17 +792,17 @@ router.post('/create_share_code', auth, async function (req, res) {
 		
 		const expires_at = moment().add(expires_hours, 'hours').format('YYYY-MM-DD HH:mm:ss');
 		
-		const result = await query(
+		await query(
 			`INSERT INTO share_codes (code, share_user_id, share_type, share_content, target_url, expires_at) 
 			 VALUES (?, ?, ?, ?, ?, ?)`,
-			[code, user_id, share_type, share_content, target_url, expires_at]
+			[code, user_id, share_type, share_content, target_url, expires_at],
 		);
 		
 		res.json({
 			success: true,
 			code: code,
 			share_text: `【原木社区】${code}，` + req.body.share_message,
-			msg: '口令创建成功'
+			msg: '口令创建成功',
 		});
 		
 	} catch (e) {
@@ -697,7 +826,7 @@ router.post('/parse_share_code', async function (req, res) {
 			 FROM share_codes sc 
 			 LEFT JOIN users u ON sc.share_user_id = u.user_id 
 			 WHERE sc.code = ? AND sc.is_active = 1`,
-			[code]
+			[code],
 		);
 		
 		if (shareInfo.length === 0) {
@@ -714,7 +843,7 @@ router.post('/parse_share_code', async function (req, res) {
 		// 增加使用次数
 		await query(
 			'UPDATE share_codes SET use_count = use_count + 1 WHERE id = ?',
-			[share.id]
+			[share.id],
 		);
 		
 		res.json({
@@ -726,9 +855,9 @@ router.post('/parse_share_code', async function (req, res) {
 				share_user_name: share.share_user_name,
 				share_user_avatar: share.share_user_avatar,
 				created_at: share.created_at,
-				use_count: share.use_count + 1
+				use_count: share.use_count + 1,
 			},
-			msg: '口令解析成功'
+			msg: '口令解析成功',
 		});
 		
 	} catch (e) {

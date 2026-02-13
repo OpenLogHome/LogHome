@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说记忆库查看器</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }
+        header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        select { padding: 10px; font-size: 16px; min-width: 300px; }
+        .memory-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; padding: 20px; border-left: 5px solid #007bff; }
+        .chapter-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .chapter-title { font-size: 1.2em; font-weight: bold; color: #333; }
+        .update-time { color: #888; font-size: 0.9em; }
+        .section-title { font-weight: bold; margin-top: 15px; color: #555; font-size: 1.05em; }
+        .content-box { background: #f9f9f9; padding: 10px; border-radius: 4px; margin-top: 5px; white-space: pre-wrap; }
+        .character-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 5px; }
+        .character-card { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
+        .char-name { font-weight: bold; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 5px; }
+        .char-detail { font-size: 0.9em; color: #666; margin-bottom: 3px; }
+        
+        .char-content-wrapper {
+            max-height: 120px;
+            overflow: hidden;
+            position: relative;
+            transition: max-height 0.3s ease-out;
+        }
+        .char-content-wrapper.expanded {
+            max-height: 2000px;
+        }
+        .char-content-wrapper:not(.expanded).has-overflow::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(transparent, #fff);
+            pointer-events: none;
+        }
+        .char-toggle-btn {
+            display: none;
+            width: 100%;
+            text-align: center;
+            padding: 4px 0;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 0.85em;
+            background: none;
+            border: none;
+            border-top: 1px solid #f0f0f0;
+            margin-top: 5px;
+        }
+        .char-toggle-btn:hover {
+            background-color: #f9f9f9;
+        }
+
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .error { color: red; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>小说记忆库查看器</h1>
+        <select id="novelSelect">
+            <option value="">加载中...</option>
+        </select>
+    </header>
+
+    <div id="memoryContainer">
+        <div class="loading">请选择一本小说查看记忆</div>
+    </div>
+
+    <script>
+        const novelSelect = document.getElementById('novelSelect');
+        const memoryContainer = document.getElementById('memoryContainer');
+
+        // Fetch novels list
+        async function fetchNovels() {
+            try {
+                const response = await fetch('/api/novels');
+                const novels = await response.json();
+                
+                novelSelect.innerHTML = '<option value="">-- 请选择小说 --</option>';
+                novels.forEach(novel => {
+                    const option = document.createElement('option');
+                    option.value = novel.novel_id;
+                    option.textContent = `${novel.name} (ID: ${novel.novel_id})`;
+                    novelSelect.appendChild(option);
+                });
+
+                // Auto select first if available
+                if (novels.length > 0) {
+                    novelSelect.value = novels[0].novel_id;
+                    loadMemories(novels[0].novel_id);
+                }
+            } catch (err) {
+                console.error(err);
+                novelSelect.innerHTML = '<option>加载失败</option>';
+            }
+        }
+
+        // Fetch and render memories
+        async function loadMemories(novelId) {
+            if (!novelId) return;
+            
+            memoryContainer.innerHTML = '<div class="loading">加载记忆中...</div>';
+            
+            try {
+                const response = await fetch(`/api/memories/${novelId}`);
+                const memories = await response.json();
+                
+                if (memories.length === 0) {
+                    memoryContainer.innerHTML = '<div class="loading">该小说暂无记忆数据</div>';
+                    return;
+                }
+
+                memoryContainer.innerHTML = '';
+                memories.forEach(renderMemory);
+                
+                // Check for overflows to show/hide buttons
+                setTimeout(checkOverflows, 100);
+            } catch (err) {
+                console.error(err);
+                memoryContainer.innerHTML = '<div class="error">加载记忆失败，请重试</div>';
+            }
+        }
+
+        function renderMemory(memory) {
+            const chapComp = memory.chapter_comprehension || {};
+            const charComp = memory.character_comprehension || {};
+            const chars = charComp || [];
+
+            const div = document.createElement('div');
+            div.className = 'memory-card';
+            div.innerHTML = `
+                <div class="chapter-header">
+                    <div class="chapter-title">第 ${memory.article_chapter} 章：${memory.title}</div>
+                    <div class="update-time">记忆更新：${new Date(memory.updated_at).toLocaleString()}</div>
+                </div>
+
+                <div class="section-title">📖 超短摘要</div>
+                <div class="content-box">${chapComp.summary || '无'}</div>
+
+                <div class="section-title">📝 剧情摘要</div>
+                <div class="content-box">${chapComp.abstract || '无'}</div>
+
+                <div class="section-title">🔍 伏笔挖掘</div>
+                <div class="content-box">${chapComp.implication || '无'}</div>
+
+                <div class="section-title">👥 角色分析</div>
+                <div class="character-grid">
+                    ${chars.length > 0 ? chars.map(c => `
+                        <div class="character-card">
+                            <div class="char-name">${c.name}</div>
+                            <div class="char-content-wrapper">
+                                <div class="char-detail"><strong>行为:</strong> ${c.behavior || '-'}</div>
+                                <div class="char-detail"><strong>情感:</strong> ${c.emotion || '-'}</div>
+                                <div class="char-detail"><strong>关系:</strong> ${c.relationship || '-'}</div>
+                            </div>
+                            <button class="char-toggle-btn" onclick="toggleCharCard(this)">展开</button>
+                        </div>
+                    `).join('') : '<div style="color:#999; padding:5px;">本章无主要角色分析</div>'}
+                </div>
+            `;
+            memoryContainer.appendChild(div);
+        }
+
+        function checkOverflows() {
+            document.querySelectorAll('.char-content-wrapper').forEach(wrapper => {
+                // If scrollHeight is significantly larger than clientHeight (allow 1-2px tolerance)
+                if (wrapper.scrollHeight > wrapper.clientHeight + 2) {
+                    wrapper.classList.add('has-overflow');
+                    const btn = wrapper.nextElementSibling;
+                    if (btn && btn.classList.contains('char-toggle-btn')) {
+                        btn.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        function toggleCharCard(btn) {
+            const wrapper = btn.previousElementSibling;
+            if (wrapper.classList.contains('expanded')) {
+                wrapper.classList.remove('expanded');
+                btn.textContent = '展开';
+                // Scroll back to top of card if needed? Not necessary for small cards.
+            } else {
+                wrapper.classList.add('expanded');
+                btn.textContent = '收起';
+            }
+        }
+
+        novelSelect.addEventListener('change', (e) => loadMemories(e.target.value));
+
+        // Init
+        fetchNovels();
+    </script>
+</body>
+</html>

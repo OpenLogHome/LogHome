@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "mode": "apply",
+    "generated_at": "2026-01-20T16:00:46.009Z",
+    "effective_date_local": "2026-01-21",
+    "tag_id": 236,
+    "row_count": 16
+  },
+  "novels": [
+    {
+      "novel_id": 176,
+      "author_id": 71,
+      "name": "非正式事件·删减版"
+    },
+    {
+      "novel_id": 602,
+      "author_id": 13,
+      "name": "HayCraft2025 参赛指南"
+    },
+    {
+      "novel_id": 604,
+      "author_id": 13,
+      "name": "冰封的日子"
+    },
+    {
+      "novel_id": 606,
+      "author_id": 532,
+      "name": "阳光之花"
+    },
+    {
+      "novel_id": 607,
+      "author_id": 532,
+      "name": "阳光之花"
+    },
+    {
+      "novel_id": 608,
+      "author_id": 49,
+      "name": "五粒可可豆"
+    },
+    {
+      "novel_id": 609,
+      "author_id": 76,
+      "name": "自黑暗中来"
+    },
+    {
+      "novel_id": 610,
+      "author_id": 1,
+      "name": "1"
+    },
+    {
+      "novel_id": 611,
+      "author_id": 75,
+      "name": "勇者后传"
+    },
+    {
+      "novel_id": 613,
+      "author_id": 34,
+      "name": "溯"
+    },
+    {
+      "novel_id": 615,
+      "author_id": 25,
+      "name": "唯有她不在的世界"
+    },
+    {
+      "novel_id": 616,
+      "author_id": 155,
+      "name": "1"
+    },
+    {
+      "novel_id": 619,
+      "author_id": 37,
+      "name": "剑心犹在"
+    },
+    {
+      "novel_id": 622,
+      "author_id": 22,
+      "name": "可是勇者不是已经死了吗？"
+    },
+    {
+      "novel_id": 624,
+      "author_id": 1,
+      "name": "剑客"
+    },
+    {
+      "novel_id": 625,
+      "author_id": 107,
+      "name": "真实频率"
+    }
+  ]
+}

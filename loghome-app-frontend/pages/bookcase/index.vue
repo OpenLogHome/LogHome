@@ -327,14 +327,55 @@
 				uni.showLoading({
 					title: '努力加载中'
 				});
-				let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"));
-				if(readerHistory != null){
-					readerHistory.reverse();
-					this.booksAll = readerHistory;
-					this.booksOnShow = this.booksAll;
-					this.trimBookOnShow()
+				let tk = JSON.parse(window.localStorage.getItem('token'));
+				if (tk) tk = tk.tk;
+				if (!tk) {
+					let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"));
+					if(readerHistory != null){
+						readerHistory.reverse();
+						this.booksAll = readerHistory;
+						this.booksOnShow = this.booksAll;
+						this.trimBookOnShow()
+					}
+					uni.hideLoading();
+					return;
 				}
-				uni.hideLoading();
+				
+				axios.get(this.$baseUrl + '/library/reading_history', {
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tk
+					}
+				}).then((res) => {
+					if (Array.isArray(res.data) && res.data.length > 0) {
+						this.booksAll = res.data;
+						this.booksOnShow = this.booksAll;
+						this.trimBookOnShow();
+						window.localStorage.setItem("loghomeReaderHistory", JSON.stringify(res.data));
+						return;
+					}
+					
+					let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"));
+					if(readerHistory != null){
+						readerHistory.reverse();
+						this.booksAll = readerHistory;
+						this.booksOnShow = this.booksAll;
+						this.trimBookOnShow()
+					}
+				}).catch((error) => {
+					if (error && error.message == "Request failed with status code 401") {
+						window.localStorage.removeItem('token');
+					}
+					let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"));
+					if(readerHistory != null){
+						readerHistory.reverse();
+						this.booksAll = readerHistory;
+						this.booksOnShow = this.booksAll;
+						this.trimBookOnShow()
+					}
+				}).then(() => {
+					uni.hideLoading();
+				});
 			},
 			goBack() {
 				uni.navigateBack();

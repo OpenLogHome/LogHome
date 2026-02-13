@@ -667,8 +667,6 @@ export default {
 <style lang="scss" scoped>
 .outer {
     padding: 20px;
-    height: 93vh;
-    overflow-y: auto;
 }
 .block {
     background-color: white;

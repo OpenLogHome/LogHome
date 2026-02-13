@@ -56,14 +56,14 @@
 			</view>
 
 			<div class="novel_Rank" v-show="novelRank.onRank">
-				<navigator url="./collections?title=原木力爆棚">
+				<navigator url="./logPowerRank">
 					实时原木力榜第
 					<span style="font-size: 40rpx; line-height: 100%; padding:0 10rpx;">
 						<countTo :startVal="999" :endVal="novelRank.rank" :duration="1500"></countTo>
 					</span>
 					位
 				</navigator>
-				<navigator url="./collections?title=原木力爆棚" style="font-size: 40rpx; transform: translateY(-5rpx);">
+				<navigator :url="`./logPower?name=${bookInfo.name}&clicks=${bookInfo.clicks}&nices=${nice_amount}&bookmarks=${bookInfo.likes ? bookInfo.likes.length : 0}&comments=${commentAmount}&update_time=${bookInfo.update_time}&ranking=${novelRank.ranking}`" style="font-size: 40rpx; transform: translateY(-5rpx);">
 					<countTo :startVal="0" :endVal="novelRank.ranking" :duration="1500"></countTo>
 				</navigator>
 			</div>
@@ -344,6 +344,10 @@
 				<tippingBar :novel_id="uid" @tip="runGiftAnimation($event)"></tippingBar>
 			</view>
 		</uni-popup>
+		<task-reward-modal 
+			ref="taskRewardModal"
+			@harvest="handleHarvestFromModal">
+		</task-reward-modal>
 	</view>
 </template>
 
@@ -355,12 +359,15 @@ import springBack from '../../components/springBack.vue'
 import html2canvas from 'html2canvas'
 import countTo from "vue-count-to"
 import darkModeMixin from '@/mixins/dark-mode.js'
+import TaskRewardModal from "../../components/TaskRewardModal.vue"
+
 export default {
 	components: {
 		nothing,
 		tippingBar,
 		springBack,
-		countTo
+		countTo,
+		TaskRewardModal
 	},
 	mixins: [darkModeMixin],
 	data() {
@@ -523,6 +530,37 @@ export default {
 				}).then((res) => {
 					if (!_this.niceStatus) {
 						_this.showNiubeeAnimation = true;
+						axios.post(_this.$baseUrl + '/treePlant/do_task', 
+							{ task_code: 'daily_like_novel' },
+							{
+								headers: {
+									'Content-Type': 'application/json',
+									'Authorization': 'Bearer ' + tk
+								}
+							}
+						).then((taskRes) => {
+							const data = taskRes.data || {};
+							const modal = _this.$refs.taskRewardModal;
+							if (modal) {
+								modal.show({
+									reward: typeof data.reward === 'number' ? data.reward : 10,
+									taskName: '每日任务：为小说点赞',
+									icon: data.task_icon,
+									currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
+									maxGrowth: 100,
+									canHarvest: data.tree_status === '结果'
+								});
+							}
+						}).catch((err) => {
+							const message = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg);
+							if (message !== 'Task already completed today') {
+								uni.showToast({
+									title: err.toString(),
+									icon: 'none',
+									duration: 2000
+								});
+							}
+						});
 					}
 					_this.getNices();
 				}).catch(function (error) {
@@ -538,6 +576,11 @@ export default {
 					url: '../users/login?msg=' + 'unAuthorized'
 				});
 			}
+		},
+		handleHarvestFromModal() {
+			uni.navigateTo({
+				url: '/pages/treePlant/treeplant'
+			});
 		},
 		removeFromBookcase() {
 			let _this = this;
@@ -639,6 +682,7 @@ export default {
 
 			const shareContent = `《${this.bookInfo.name}》- ${this.bookInfo.author_name}`;
 			const targetUrl = `/pages/readers/bookInfo?id=${this.uid}`;
+			let _this = this;
 
 			let tk = JSON.parse(window.localStorage.getItem('token'));
 			if (!tk || !tk.tk) {
@@ -678,6 +722,39 @@ export default {
 							});
 						}
 					});
+
+					axios.post(_this.$baseUrl + '/treePlant/do_task', 
+						{ task_code: 'daily_share_work' },
+						{
+							headers: {
+								'Content-Type': 'application/json',
+								'Authorization': 'Bearer ' + tk.tk
+							}
+						}
+					).then((taskRes) => {
+						const data = taskRes.data || {};
+						const modal = _this.$refs.taskRewardModal;
+						if (modal) {
+							modal.show({
+								reward: typeof data.reward === 'number' ? data.reward : 25,
+								taskName: '每日任务：分享作品',
+								icon: data.task_icon,
+								currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
+								maxGrowth: 100,
+								canHarvest: data.tree_status === '结果'
+							});
+						}
+					}).catch((err) => {
+						const message = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg);
+						if (message !== 'Task already completed today') {
+							uni.showToast({
+								title: err.toString(),
+								icon: 'none',
+								duration: 2000
+							});
+						}
+					});
+
 				} else {
 					uni.showToast({
 						title: res.data.msg || '口令创建失败',
@@ -685,6 +762,8 @@ export default {
 						duration: 2000
 					});
 				}
+
+				
 			}).catch((error) => {
 				uni.hideLoading();
 				console.error('创建口令失败:', error);
@@ -780,18 +859,53 @@ export default {
 				});
 			})
 		},
-		addReaderHistory(bookInfo) {
-			let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory"));
-			if (readerHistory != null) {
-				readerHistory = readerHistory.filter(item => {
-					if (item.novel_id == bookInfo.novel_id) {
-
-					} else {
-						return item;
+		async loadCloudReadingProgress() {
+			let tk = JSON.parse(window.localStorage.getItem('token'));
+			if (tk) tk = tk.tk;
+			if (!tk) return;
+			
+			try {
+				const res = await axios.get(this.$baseUrl + '/library/reading_progress', {
+					params: {
+						novel_id: this.uid
+					},
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tk
 					}
-				})
-				readerHistory.push(bookInfo);
-				window.localStorage.setItem("loghomeReaderHistory", JSON.stringify(readerHistory));
+				});
+				
+				if (Array.isArray(res.data) && res.data.length > 0) {
+					const progress = res.data[0] || {};
+					if (progress.last_article_chapter !== null && progress.last_article_chapter !== undefined) {
+						this.history = progress.last_article_chapter;
+						window.localStorage.setItem("ReaderHistory_" + this.uid, String(progress.last_article_chapter));
+					}
+					if (progress.last_page_idx !== null && progress.last_page_idx !== undefined) {
+						window.localStorage.setItem("ReaderHistoryPage_" + this.uid, String(progress.last_page_idx));
+					}
+				}
+			} catch (e) {}
+		},
+		addReaderHistory(bookInfo) {
+			let readerHistory = JSON.parse(window.localStorage.getItem("loghomeReaderHistory")) || [];
+			readerHistory = readerHistory.filter(item => item && item.novel_id != bookInfo.novel_id);
+			readerHistory.push(bookInfo);
+			window.localStorage.setItem("loghomeReaderHistory", JSON.stringify(readerHistory));
+			
+			let tk = JSON.parse(window.localStorage.getItem('token'));
+			if (tk) tk = tk.tk;
+			if (tk) {
+				axios.post(
+					this.$baseUrl + '/library/update_reading_progress',
+					{ novel_id: bookInfo.novel_id },
+					{
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': 'Bearer ' + tk
+						}
+					},
+				).catch(() => {});
 			}
 		},
 		getWorlds() {
@@ -924,19 +1038,7 @@ export default {
 			})
 		},
 		onCoverLoaded() {
-			window.hpa_book_info_ready = true;
-			
-			const showImage = () => {
-				this.isCoverLoaded = true;
-			};
-
-			window.hpa_after_cleanup_callback = showImage;
-
-			if (window.hpa_finish_hero_animation) {
-				window.hpa_finish_hero_animation();
-			} else if (!window.hpa_active) {
-				showImage();
-			}
+			this.isCoverLoaded = true;
 		}
 	},
 	onPageScroll(res) {
@@ -982,6 +1084,7 @@ export default {
 		});
 		this.checkNovelRank();
 		this.addReaderHistory(bookInfo);
+		await this.loadCloudReadingProgress();
 
 		this.getNices();
 		this.getCommentNum();

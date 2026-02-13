@@ -92,6 +92,9 @@
 
 		<!-- 版本冲突对话框 -->
 		<conflict-dialog ref="conflictDialog"></conflict-dialog>
+		
+		<!-- 任务奖励弹窗 -->
+		<TaskRewardModal ref="taskRewardModal" @harvest="handleHarvestFromModal"></TaskRewardModal>
 	</div>
 </template>
 
@@ -105,9 +108,10 @@ import { writerArticleDB } from "../../lib/db.js"
 import { getServerTime } from "../../lib/utils.js"
 import completeIcon from '../../components/completeIcon.vue'
 import uniIcons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
+import TaskRewardModal from "../../components/TaskRewardModal.vue"
 export default {
 	components: {
-		uniFab, toolBox, conflictDialog, completeIcon, uniIcons
+		uniFab, toolBox, conflictDialog, completeIcon, uniIcons, TaskRewardModal
 	},
 	data() {
 		return {
@@ -182,7 +186,10 @@ export default {
 			saveNotifyText: "已保存",
 			frameInfo: {
 				isEnabled: false
-			}
+			},
+			writingTimer: null,
+			dailyWritingSeconds: 0,
+			isTaskSubmitted: false
 		};
 	},
 	beforeDestroy() {
@@ -195,6 +202,131 @@ export default {
 		this.clearEditorImagesEditButton();
 	},
 	methods: {
+		startWritingTimer() {
+			if (this.writingTimer) return;
+			
+			const today = new Date().toISOString().split('T')[0];
+			const STORAGE_KEY = 'daily_writing_status';
+			
+			try {
+				const statusStr = window.localStorage.getItem(STORAGE_KEY);
+				let status = statusStr ? JSON.parse(statusStr) : null;
+				
+				// If no status or date doesn't match today, reset
+				if (!status || status.date !== today) {
+					status = {
+						date: today,
+						seconds: 0,
+						submitted: false
+					};
+					window.localStorage.setItem(STORAGE_KEY, JSON.stringify(status));
+				}
+				
+				this.dailyWritingSeconds = status.seconds || 0;
+				this.isTaskSubmitted = status.submitted || false;
+				
+				this.writingTimer = setInterval(() => {
+					this.dailyWritingSeconds++;
+					
+					// Update storage
+					const currentStatus = {
+						date: today,
+						seconds: this.dailyWritingSeconds,
+						submitted: this.isTaskSubmitted
+					};
+					window.localStorage.setItem(STORAGE_KEY, JSON.stringify(currentStatus));
+					
+					// Check for 5 minutes (300 seconds)
+					if (this.dailyWritingSeconds >= 300 && !this.isTaskSubmitted) {
+						this.checkAndSubmitWritingTask(STORAGE_KEY);
+					}
+				}, 1000);
+			} catch (e) {
+				console.error('Error managing writing timer:', e);
+			}
+		},
+		stopWritingTimer() {
+			if (this.writingTimer) {
+				clearInterval(this.writingTimer);
+				this.writingTimer = null;
+			}
+		},
+		checkAndSubmitWritingTask(storageKey) {
+			if (this.isTaskSubmitted) return;
+			
+			// Double check localStorage
+			try {
+				const statusStr = window.localStorage.getItem(storageKey);
+				if (statusStr) {
+					const status = JSON.parse(statusStr);
+					if (status.submitted) {
+						this.isTaskSubmitted = true;
+						return;
+					}
+				}
+			} catch (e) {
+				console.error(e);
+			}
+
+			let tk = JSON.parse(window.localStorage.getItem('token'));
+			if (tk) tk = tk.tk;
+			
+			if (!tk) return;
+
+			axios.post(this.$baseUrl + '/treePlant/do_task', 
+				{ task_code: 'daily_writing' },
+				{
+					headers: {
+						'Content-Type': 'application/json', //设置请求头请求格式为JSON
+						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+					}
+				}
+			).then((taskRes) => {
+				const data = taskRes.data || {};
+				
+				// Mark as submitted
+				this.isTaskSubmitted = true;
+				
+				// Update storage
+				const today = new Date().toISOString().split('T')[0];
+				const newStatus = {
+					date: today,
+					seconds: this.dailyWritingSeconds,
+					submitted: true
+				};
+				window.localStorage.setItem(storageKey, JSON.stringify(newStatus));
+				
+				const modal = this.$refs.taskRewardModal;
+				if (modal) {
+					modal.show({
+						reward: typeof data.reward === 'number' ? data.reward : 20,
+						taskName: '每日任务：写作5分钟',
+						icon: data.task_icon,
+						currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
+						maxGrowth: 100,
+						canHarvest: data.tree_status === '结果'
+					});
+				}
+			}).catch((err) => {
+				const message = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg);
+				if (message === 'Task already completed today') {
+					this.isTaskSubmitted = true;
+					// Update storage
+					const today = new Date().toISOString().split('T')[0];
+					const newStatus = {
+						date: today,
+						seconds: this.dailyWritingSeconds,
+						submitted: true
+					};
+					window.localStorage.setItem(storageKey, JSON.stringify(newStatus));
+				}
+			});
+		},
+		handleHarvestFromModal() {
+			uni.navigateTo({
+				url: '/pages/treePlant/treeplant'
+			});
+		},
 		// iframe环境检测和通信方法
 		checkFrameEnvironment() {
 			if (window.self !== window.top) {
@@ -203,12 +335,12 @@ export default {
 				// 添加消息监听器
 				window.addEventListener('message', this.handleParentMessage);
 				// 发送握手消息
-			setTimeout(() => {
-				this.sendMessageToParent({
-					type: 'iframe_ready',
-					source: 'chapterEditor'
-				});
-			}, 500)
+				setTimeout(() => {
+					this.sendMessageToParent({
+						type: 'iframe_ready',
+						source: 'chapterEditor'
+					});
+				}, 500)
 			}
 		},
 		handleParentMessage(event) {
@@ -1313,7 +1445,11 @@ export default {
 		// 检测是否运行在iframe中并与父框架通信
 		this.checkFrameEnvironment();
 	},
+	onUnload() {
+		this.stopWritingTimer();
+	},
 	onShow() {
+		this.startWritingTimer();
 		// onShow时也检查一次iframe环境（兼容性处理）
 		this.checkFrameEnvironment();
 	}
@@ -1399,7 +1535,6 @@ export default {
 			line-height: 60rpx;
 			// background-color: #fffaf0;
 			// color:#3d3d3d;
-			line-height: 150%;
 
 			:deep(.ql-editor) {
 				scroll-behavior: smooth;

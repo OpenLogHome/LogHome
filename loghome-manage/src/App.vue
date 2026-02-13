@@ -11,9 +11,20 @@ export default {
 </script>
 
 <style lang="scss">
+@font-face {
+    font-family: "思源黑体";
+    src: url("./assets/Source Han Sans CN Regular.ttf");
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-  margin: 0;
-  padding: 0;
+    margin: 0;
+    padding: 0;
+    font-family: "思源黑体", Arial, Helvetica, sans-serif, "宋体" !important;
+    -webkit-user-drag: none;
 }
 
 .aside .el-submenu__title:hover,
@@ -52,15 +63,6 @@ a {
 }
 .el-submenu__title {
     font-size: 15px !important;
-}
-@font-face {
-    font-family: "思源黑体";
-    src: url("./assets/Source Han Sans CN Regular.ttf");
-}
-body {
-    margin: 0;
-    font-family: "思源黑体", Arial, Helvetica, sans-serif, "宋体" !important;
-    -webkit-user-drag: none;
 }
 .el-table__cell{
     font-family: "思源黑体", Arial, Helvetica, sans-serif, "宋体" !important;

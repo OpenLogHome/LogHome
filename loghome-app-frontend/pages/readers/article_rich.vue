@@ -216,6 +216,25 @@
 					})
 					this.getArticles(this.article.novel_id);
 					window.localStorage.setItem("ReaderHistory_" + this.article.novel_id, this.article.article_chapter);
+					
+					let tk = JSON.parse(window.localStorage.getItem('token'));
+					if (tk) tk = tk.tk;
+					if (tk) {
+						axios.post(
+							this.$baseUrl + '/library/update_reading_progress',
+							{
+								novel_id: this.article.novel_id,
+								article_id: this.article.article_id,
+								article_chapter: this.article.article_chapter
+							},
+							{
+								headers: {
+									'Content-Type': 'application/json',
+									'Authorization': 'Bearer ' + tk
+								}
+							},
+						).catch(() => {});
+					}
 				}).catch(function(error) {}).then(function() {
 					uni.hideLoading();
 				})

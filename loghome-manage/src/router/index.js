@@ -21,6 +21,8 @@ import ReportsManage from "../views/community/ReportsManage.vue"
 // 导入支付管理页面
 import BankAccountsManage from "../views/payments/BankAccountsManage.vue"
 import PaymentOrdersManage from "../views/payments/PaymentOrdersManage.vue"
+import StoreProductsManage from "../views/store/ProductsManage.vue"
+import StoreOrdersManage from "../views/store/OrdersManage.vue"
 
 Vue.use(VueRouter)
 
@@ -161,6 +163,26 @@ const routes = [
                 requireAuth: true,
                 breadNumber: 1,
                 parentName: "支付管理"
+            }
+        },
+        {
+            path: '/store-products',
+            component: StoreProductsManage,
+            name: '积分商城商品管理',
+            meta: {
+                requireAuth: true,
+                breadNumber: 1,
+                parentName: "积分商城"
+            }
+        },
+        {
+            path: '/store-orders',
+            component: StoreOrdersManage,
+            name: '积分商城订单管理',
+            meta: {
+                requireAuth: true,
+                breadNumber: 1,
+                parentName: "积分商城"
             }
         }    ]  },
   {

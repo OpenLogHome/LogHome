@@ -9,6 +9,14 @@ module.exports = {
 	'parserOptions': {
 		'ecmaVersion': 'latest',
 	},
+	'overrides': [
+		{
+			'files': ['scripts/**/*.js'],
+			'rules': {
+				'linebreak-style': 0,
+			},
+		},
+	],
 	'rules': {
 		'indent': ['error', 'tab'],
 		'linebreak-style': ['error', 'windows'],

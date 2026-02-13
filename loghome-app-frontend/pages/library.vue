@@ -240,67 +240,6 @@ export default {
 		//响应进入书籍详情页面事件
 		readBook(novel,novel_id, event) {
 
-			// #ifdef H5
-			if (event && novel.novel_type == "novel") {
-				let img = null;
-				// 尝试获取点击坐标
-				let clientX, clientY;
-				if (event.changedTouches && event.changedTouches.length > 0) {
-					clientX = event.changedTouches[0].clientX;
-					clientY = event.changedTouches[0].clientY;
-				} else if (event.detail && (typeof event.detail.clientX === 'number' || typeof event.detail.x === 'number')) {
-					clientX = event.detail.clientX || event.detail.x;
-					clientY = event.detail.clientY || event.detail.y;
-				} else if (event.clientX !== undefined) {
-					// 可能是原生事件
-					clientX = event.clientX;
-					clientY = event.clientY;
-				}
-
-				if (clientX !== undefined && clientY !== undefined) {
-					let target = document.elementFromPoint(clientX, clientY);
-					if (target) {
-						// 1. 如果点中的是图片本身
-						if (target.tagName === 'IMG') {
-							img = target;
-						}
-						// 2. 如果点中的是容器，在其内部找图片
-						else {
-							// 往上找 .books 容器，再找图片
-							const bookCard = target.closest('.books') || target.closest('.dense-card-item') || target.closest('bookincase'); // bookincase 是组件标签名可能不同，但在H5中通常是uni-view或自定义标签
-							if (bookCard) {
-								// 尝试找 log-image 下的 img
-								img = bookCard.querySelector('log-image img') || bookCard.querySelector('img');
-							}
-							// 最后的尝试：如果是 bookInCase 组件（可能渲染为其他结构），尝试直接在 target 内部找
-							if (!img) {
-								img = target.querySelector('img');
-							}
-						}
-					}
-				}
-
-				if (img && novel.novel_type == "novel") {
-					const rect = img.getBoundingClientRect();
-					const rectData = {
-						top: rect.top,
-						left: rect.left,
-						width: rect.width,
-						height: rect.height
-					};
-					window.hpa_hero_animation = {
-						src: img.src,
-						rect: rectData
-					};
-					// Store the current book ID and Rect for reverse animation
-					window.hpa_return_target = {
-						id: novel_id,
-						rect: rectData
-					};
-				}
-			}
-			// #endif
-
 			if (novel_id > 0) {
 				uni.navigateTo({
 					url: './readers/bookInfo?id=' + novel_id

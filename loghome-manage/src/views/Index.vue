@@ -121,6 +121,24 @@
                 </el-menu-item>
             </router-link>
           </el-submenu>
+          <el-submenu index="5">
+            <template slot="title">
+                <i class="el-icon-present"></i>
+                <span>积分商城</span>
+            </template>
+            <router-link to="/store-products">
+                <el-menu-item index="5-1">
+                    <i class="el-icon-goods"></i>
+                    商品管理
+                </el-menu-item>
+            </router-link>
+            <router-link to="/store-orders">
+                <el-menu-item index="5-2">
+                    <i class="el-icon-tickets"></i>
+                    订单管理
+                </el-menu-item>
+            </router-link>
+          </el-submenu>
         </el-menu>
       </div>
     <div class="rightAside">
@@ -262,12 +280,12 @@ export default {
 <style lang="scss" scoped>
 .outer{
     display: flex;
-    flex-wrap: wrap;
     width: 100vw;
-    overflow-x:hidden;
+    overflow: hidden;
 }
 .aside{
   width: 15vw;
+  min-width: 200px; // 增加最小宽度保护
   background-color: #795548;
   overflow: hidden;
   height: 100vh;
@@ -301,15 +319,15 @@ export default {
 }
 .rightAside{
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     height: 100vh;
-    width: 85vw;
+    flex: 1;
+    overflow: hidden;
     .header{
         display: flex;
         align-items: center;
         height: 7vh;
-        width: 85vw;
+        width: 100%;
         box-shadow: 1px 1px 4px 2px rgba(154, 158, 165,.8);
         z-index: 9;
         .naviIcon{
@@ -335,9 +353,9 @@ export default {
         }
     }
     .main{
-        height: 93vh;
-        width: 85vw;
-        overflow: hidden;
+        flex: 1;
+        width: 100%;
+        overflow: auto;
     }
 
 }

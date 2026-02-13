@@ -102,7 +102,7 @@
           </view>
         </view>
 
-        <view class="post-list">
+        <view class="post-list" v-if="posts.length > 0">
           <view class="post-item" v-for="(post, index) in posts" :key="index" @tap="navigateToPost(post.post_id)">
             <view class="post-header">
               <view class="user-info" @tap.stop="navigateToUser(post.user_id)">
@@ -150,9 +150,68 @@
             </view>
           </view>
         </view>
+        <view class="post-list post-skeleton-list" v-else-if="loadingStatus === 'loading'">
+          <el-skeleton animated>
+            <template slot="template">
+              <view class="post-item skeleton-post" v-for="n in 6" :key="n">
+                <view class="post-header">
+                  <view class="user-info">
+                    <el-skeleton-item class="skeleton-avatar" variant="circle"></el-skeleton-item>
+                    <view class="user-meta">
+                      <el-skeleton-item class="skeleton-line skeleton-name" variant="text"></el-skeleton-item>
+                      <el-skeleton-item class="skeleton-line skeleton-time" variant="text"></el-skeleton-item>
+                    </view>
+                  </view>
+                  <el-skeleton-item class="skeleton-pill" variant="text"></el-skeleton-item>
+                </view>
+                <view class="post-content">
+                  <el-skeleton-item class="skeleton-line skeleton-title" variant="text"></el-skeleton-item>
+                  <el-skeleton-item class="skeleton-line skeleton-text" variant="text"></el-skeleton-item>
+                  <el-skeleton-item class="skeleton-line skeleton-text short" variant="text"></el-skeleton-item>
+                </view>
+                <view class="post-footer">
+                  <view class="post-action">
+                    <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
+                    <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
+                  </view>
+                  <view class="post-action">
+                    <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
+                    <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
+                  </view>
+                  <view class="post-action">
+                    <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
+                    <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
+                  </view>
+                </view>
+              </view>
+            </template>
+          </el-skeleton>
+        </view>
 
         <!-- 加载更多 -->
-        <uni-load-more :status="loadingStatus"></uni-load-more>
+        <view class="post-list post-loadmore-skeleton" v-if="loadingStatus === 'loading' && posts.length > 0">
+          <el-skeleton animated>
+            <template slot="template">
+              <view class="post-item skeleton-post compact" v-for="n in 2" :key="n">
+                <view class="post-header">
+                  <view class="user-info">
+                    <el-skeleton-item class="skeleton-avatar" variant="circle"></el-skeleton-item>
+                    <view class="user-meta">
+                      <el-skeleton-item class="skeleton-line skeleton-name" variant="text"></el-skeleton-item>
+                      <el-skeleton-item class="skeleton-line skeleton-time" variant="text"></el-skeleton-item>
+                    </view>
+                  </view>
+                  <el-skeleton-item class="skeleton-pill" variant="text"></el-skeleton-item>
+                </view>
+                <view class="post-content">
+                  <el-skeleton-item class="skeleton-line skeleton-title" variant="text"></el-skeleton-item>
+                  <el-skeleton-item class="skeleton-line skeleton-text" variant="text"></el-skeleton-item>
+                </view>
+              </view>
+            </template>
+          </el-skeleton>
+        </view>
+        <uni-load-more v-else :status="loadingStatus"></uni-load-more>
       </view>
     </view>
 
@@ -1190,6 +1249,79 @@ export default {
       }
     }
   }
+}
+
+.post-list {
+  .skeleton-post {
+    overflow: hidden;
+
+    &.compact {
+      padding-bottom: 24rpx;
+    }
+  }
+
+  .skeleton-avatar {
+    width: 80rpx;
+    height: 80rpx;
+    flex: 0 0 80rpx;
+    margin-right: 20rpx;
+  }
+
+  .skeleton-line {
+    display: block;
+    height: 28rpx;
+    border-radius: 8rpx;
+
+    &.skeleton-name {
+      width: 180rpx;
+      height: 30rpx;
+    }
+
+    &.skeleton-time {
+      width: 120rpx;
+      height: 24rpx;
+      margin-top: 12rpx;
+    }
+
+    &.skeleton-title {
+      width: 70%;
+      height: 34rpx;
+      margin-bottom: 14rpx;
+    }
+
+    &.skeleton-text {
+      width: 100%;
+      height: 26rpx;
+      margin-top: 10rpx;
+
+      &.short {
+        width: 80%;
+      }
+    }
+  }
+
+  .skeleton-pill {
+    width: 140rpx;
+    height: 28rpx;
+    border-radius: 20rpx;
+  }
+
+  .skeleton-icon {
+    width: 36rpx;
+    height: 36rpx;
+    flex: 0 0 36rpx;
+  }
+
+  .skeleton-count {
+    width: 60rpx;
+    height: 24rpx;
+    margin-left: 12rpx;
+    border-radius: 8rpx;
+  }
+}
+
+.post-loadmore-skeleton {
+  padding-top: 10rpx;
 }
 
 .float-btn {

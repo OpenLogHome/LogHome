@@ -435,8 +435,6 @@ export default {
 <style scoped>
 .payment-orders-container {
   padding: 20px;
-  height: calc(100% - 40px);
-  overflow-y: auto;
 }
 .search-container {
   margin-bottom: 20px;

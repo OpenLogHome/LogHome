@@ -44,7 +44,14 @@ router.get('/', auth, async (req, res) => {
             countParams.push(url);
         } else {
             // 根据分类筛选
-            if (category === 'my') {
+            if (category === 'logwood') {
+                sql += ' AND s.user_id = 520';
+                countSql += ' AND s.user_id = 520';
+                if (Number(userId) !== 0) {
+                    sql += ' AND s.is_private = 0';
+                    countSql += ' AND s.is_private = 0';
+                }
+            } else if (category === 'my') {
                 sql += ' AND s.user_id = ?';
                 countSql += ' AND s.user_id = ?';
                 params.push(userId);

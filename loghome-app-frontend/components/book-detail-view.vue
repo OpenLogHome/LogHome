@@ -151,6 +151,13 @@
           </div>
           <div class="card" @click="$emit('goto-statistics')">
             <p class="numeral">
+              {{statistics[0].shares || 0}}
+              <span class="change">较昨日+{{(statistics[0].shares || 0) - (statistics[1].shares || 0)}}</span>
+            </p>
+            <p class="name">分享数</p>
+          </div>
+          <div class="card" @click="$emit('goto-statistics')">
+            <p class="numeral">
               {{statistics[0].tippings}}
               <span class="change">较昨日+{{statistics[0].tippings - statistics[1].tippings}}</span>
             </p>

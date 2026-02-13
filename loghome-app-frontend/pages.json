@@ -85,6 +85,18 @@
 			}
 		},
 		{
+			"path": "pages/readers/logPower",
+			"style": {
+				"navigationBarTitleText": "原木力详情"
+			}
+		},
+		{
+			"path": "pages/readers/logPowerRank",
+			"style": {
+				"navigationBarTitleText": "原木力榜"
+			}
+		},
+		{
 			"path": "pages/readers/allArticles",
 			"style": {
 				"navigationBarTitleText": "所有章节"
@@ -672,6 +684,36 @@
 			"path": "pages/payments/exchange",
 			"style": {
 				"navigationBarTitleText": "去皮原木兑换"
+			}
+		}, {
+			"path": "pages/store/index",
+			"style": {
+				"navigationBarTitleText": "积分商城"
+			}
+		}, {
+			"path": "pages/store/detail",
+			"style": {
+				"navigationBarTitleText": "商品详情"
+			}
+		}, {
+			"path": "pages/store/checkout",
+			"style": {
+				"navigationBarTitleText": "确认订单"
+			}
+		}, {
+			"path": "pages/store/orders",
+			"style": {
+				"navigationBarTitleText": "兑换记录"
+			}
+		}, {
+			"path": "pages/store/address_list",
+			"style": {
+				"navigationBarTitleText": "收货地址"
+			}
+		}, {
+			"path": "pages/store/address_form",
+			"style": {
+				"navigationBarTitleText": "编辑地址"
 			}
 		}, {
 			"path": "pages/community/index",

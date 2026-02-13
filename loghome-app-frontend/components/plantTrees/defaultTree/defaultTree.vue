@@ -28,21 +28,30 @@
 
 <style scoped lang="scss">
 	.outer{
-		height:100vh;
-		width:100vw;
-		position:relative;
+		height: 100%;
+		width: 100%;
+		position: relative;
 		overflow: hidden;
-		img.tree{
-			width:80vw;
-			position:absolute;
-			left:calc(50vw - 40vw);
-			bottom:15vh;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		
+		.tree{
+			width: 80vw;
+			position: relative;
+			z-index: 2;
 			animation: tree-float 5s linear infinite;
+			margin-top: 10vh; // 稍微向下偏移，让它在屏幕中下部
 		}
-		img.back{
-			width:100vw;
-			left:0;
-			top:0;
+		.back{
+			width: 100vw;
+			height: 100vh;
+			position: absolute;
+			left: 0;
+			top: 0;
+			z-index: 1;
+			object-fit: cover;
 		}
 	}
 	@keyframes tree-float {

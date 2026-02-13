@@ -298,17 +298,15 @@ export default {
 <style lang="scss" scoped>
     .outer{
         width:100%;
-        height:100%;
-        display:block;
+        padding: 20px;
         div.block{
-            margin:50px;
+            margin: 20px 0;
         }
         div.imgBlock{
-            margin:50px;
+            margin: 20px 0;
             display:flex;
             justify-content: center;
             position:relative;
-            transform: scale(1.1);
             .inner{
                 width:375px;
                 height:210px;

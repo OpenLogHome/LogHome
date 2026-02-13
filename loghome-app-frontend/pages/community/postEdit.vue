@@ -27,17 +27,31 @@
 				<view class="image-grid">
 					<view 
 						class="image-item" 
-						v-for="(image, index) in postData.media_urls" 
-						:key="index"
+						v-for="item in displayImages" 
+						:key="item.id"
+						@tap="handleImageItemTap(item)"
 					>
-						<log-image :src="image" mode="aspectFill"></log-image>
-						<view class="delete-btn" @tap.stop="deleteImage(index)">
+						<log-image :src="item.src" mode="aspectFill"></log-image>
+						<view class="upload-mask" v-if="item.kind === 'upload'">
+							<view class="progress-wrapper">
+								<progress
+									:percent="item.progress"
+									:active="item.status === 'uploading'"
+									:stroke-width="4"
+									backgroundColor="rgba(255,255,255,0.25)"
+									activeColor="#EA7034"
+								/>
+								<text class="progress-text" v-if="item.status === 'error'">上传失败，点图重试</text>
+								<text class="progress-text" v-else>{{item.progress}}%</text>
+							</view>
+						</view>
+						<view class="delete-btn" @tap.stop="handleDeleteImage(item)">
 							<uni-icons type="closeempty" size="20" color="#fff"></uni-icons>
 						</view>
 					</view>
 					<view 
 						class="upload-btn" 
-						v-if="postData.media_urls.length < 9"
+						v-if="canAddMoreImages"
 						@tap="chooseImage"
 					>
 						<uni-icons type="plusempty" size="30" color="#999"></uni-icons>
@@ -141,13 +155,22 @@
 				</div>
 			</view>
 		</el-drawer>
+		
+		<task-reward-modal 
+			ref="taskRewardModal"
+			@harvest="handleHarvestFromModal">
+		</task-reward-modal>
 	</view>
 </template>
 
 <script>
 	import axios from 'axios'
+	import TaskRewardModal from "../../components/TaskRewardModal.vue"
 
 	export default {
+		components: {
+			TaskRewardModal
+		},
 		data() {
 			return {
 				postData: {
@@ -157,6 +180,7 @@
 					circle_id: '',
 					novel_id: null // 添加novel_id字段保存绑定的作品ID
 				},
+				uploadingImages: [],
 				titleCount: 0,
 				contentCount: 0,
 				circles: [],
@@ -170,6 +194,32 @@
 				bookSelectDrawer: false, // 是否显示作品选择抽屉
 				searchBooks: [], // 搜索到的作品
 				timer: undefined
+			}
+		},
+		computed: {
+			displayImages() {
+				const uploaded = (this.postData.media_urls || []).map((url, index) => ({
+					id: `remote-${index}-${url}`,
+					kind: 'remote',
+					src: url,
+					remoteIndex: index
+				}));
+				const uploading = (this.uploadingImages || []).map((item) => ({
+					id: item.id,
+					kind: 'upload',
+					src: item.localPath,
+					progress: item.progress,
+					status: item.status
+				}));
+				return [...uploaded, ...uploading];
+			},
+			canAddMoreImages() {
+				return this.remainingImageSlots > 0;
+			},
+			remainingImageSlots() {
+				const uploadedCount = (this.postData.media_urls || []).length;
+				const uploadingCount = (this.uploadingImages || []).length;
+				return Math.max(0, 9 - uploadedCount - uploadingCount);
 			}
 		},
 		onLoad(options) {
@@ -276,24 +326,18 @@
 			},
 			async chooseImage() {
 				try {
+					if (!this.canAddMoreImages) return;
 					const res = await uni.chooseImage({
-						count: 9 - this.postData.media_urls.length,
+						count: this.remainingImageSlots,
 						sizeType: ['compressed'],
 						sourceType: ['album', 'camera']
 					})
-
-					console.log(res);
-					
-					uni.showLoading({ title: '正在上传图片...' })
-					
-					for (let tempFile of res[1].tempFilePaths) {
-						const uploadRes = await this.uploadFile(tempFile)
-						this.postData.media_urls.push(uploadRes.url)
+					const tempFilePaths = (res && res[1] && res[1].tempFilePaths) ? res[1].tempFilePaths : [];
+					if (!tempFilePaths.length) return;
+					for (const tempFile of tempFilePaths) {
+						this.enqueueImageUpload(tempFile);
 					}
-					
-					uni.hideLoading()
 				} catch (error) {
-					uni.hideLoading()
 					console.error('上传图片失败', error)
 					uni.showToast({
 						title: '上传图片失败',
@@ -301,14 +345,49 @@
 					})
 				}
 			},
-			async uploadFile(filePath) {
+			enqueueImageUpload(filePath) {
+				const id = `upload-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+				const item = {
+					id,
+					localPath: filePath,
+					progress: 0,
+					status: 'uploading',
+					task: null
+				};
+				this.uploadingImages.push(item);
+				this.uploadFile(filePath, {
+					onProgress: (progress) => {
+						const target = this.uploadingImages.find((x) => x.id === id);
+						if (!target || target.status !== 'uploading') return;
+						target.progress = Math.max(0, Math.min(100, Math.floor(progress)));
+					},
+					onTask: (task) => {
+						const target = this.uploadingImages.find((x) => x.id === id);
+						if (!target) return;
+						target.task = task;
+					}
+				}).then((uploadRes) => {
+					const target = this.uploadingImages.find((x) => x.id === id);
+					if (!target) return;
+					target.progress = 100;
+					target.status = 'success';
+					setTimeout(() => {
+						const stillThere = this.uploadingImages.find((x) => x.id === id);
+						if (!stillThere) return;
+						this.postData.media_urls.push(uploadRes.url);
+						this.uploadingImages = this.uploadingImages.filter((x) => x.id !== id);
+					}, 200);
+				}).catch((error) => {
+					const target = this.uploadingImages.find((x) => x.id === id);
+					if (!target) return;
+					if (target.status === 'canceled') return;
+					target.status = 'error';
+					console.error('上传图片失败', error);
+				});
+			},
+			async uploadFile(filePath, { onProgress, onTask } = {}) {
 				return new Promise((resolve, reject) => {
-					uni.showToast({
-						title: "图片上传中",
-						icon: 'loading',
-						duration: 2000
-					});
-					uni.uploadFile({
+					const uploadTask = uni.uploadFile({
 						url: 'https://storage.codesocean.top/api/resource/upload?container=172018735018984',
 						filePath: filePath,
 						name: 'file',
@@ -317,7 +396,8 @@
 						},
 						success: (uploadRes) => {
 							try {
-								const data = JSON.parse(uploadRes.data);
+								let data = uploadRes.data;
+								if (typeof data === 'string') data = JSON.parse(data);
 								resolve({
 									url: "https://storage.codesocean.top/api/resource/get/" + data.data.resource_id
 								});
@@ -329,10 +409,66 @@
 							reject(error);
 						}
 					});
+					if (onTask && uploadTask) onTask(uploadTask);
+					if (uploadTask && typeof uploadTask.onProgressUpdate === 'function') {
+						uploadTask.onProgressUpdate((progressRes) => {
+							if (!progressRes || typeof progressRes.progress !== 'number') return;
+							if (onProgress) onProgress(progressRes.progress);
+						});
+					}
 				});
 			},
-			deleteImage(index) {
-				this.postData.media_urls.splice(index, 1)
+			handleDeleteImage(item) {
+				if (!item) return;
+				if (item.kind === 'upload') {
+					const target = this.uploadingImages.find((x) => x.id === item.id);
+					if (target && target.task && target.status === 'uploading' && typeof target.task.abort === 'function') {
+						target.status = 'canceled';
+						target.task.abort();
+					}
+					this.uploadingImages = this.uploadingImages.filter((x) => x.id !== item.id);
+					return;
+				}
+				if (typeof item.remoteIndex === 'number' && item.remoteIndex >= 0) {
+					this.postData.media_urls.splice(item.remoteIndex, 1);
+					return;
+				}
+			},
+			handleImageItemTap(item) {
+				if (!item || item.kind !== 'upload') return;
+				const target = this.uploadingImages.find((x) => x.id === item.id);
+				if (!target || target.status !== 'error') return;
+				target.progress = 0;
+				target.status = 'uploading';
+				this.uploadFile(target.localPath, {
+					onProgress: (progress) => {
+						const current = this.uploadingImages.find((x) => x.id === item.id);
+						if (!current || current.status !== 'uploading') return;
+						current.progress = Math.max(0, Math.min(100, Math.floor(progress)));
+					},
+					onTask: (task) => {
+						const current = this.uploadingImages.find((x) => x.id === item.id);
+						if (!current) return;
+						current.task = task;
+					}
+				}).then((uploadRes) => {
+					const current = this.uploadingImages.find((x) => x.id === item.id);
+					if (!current) return;
+					current.progress = 100;
+					current.status = 'success';
+					setTimeout(() => {
+						const stillThere = this.uploadingImages.find((x) => x.id === item.id);
+						if (!stillThere) return;
+						this.postData.media_urls.push(uploadRes.url);
+						this.uploadingImages = this.uploadingImages.filter((x) => x.id !== item.id);
+					}, 200);
+				}).catch((error) => {
+					const current = this.uploadingImages.find((x) => x.id === item.id);
+					if (!current) return;
+					if (current.status === 'canceled') return;
+					current.status = 'error';
+					console.error('上传图片失败', error);
+				});
 			},
 			showCirclePopup() {
 				this.$refs.circlePopup.open()
@@ -421,6 +557,14 @@
 			
 			async submitPost() {
 				if (this.isSubmitting) return
+				if ((this.uploadingImages || []).some((x) => x.status === 'uploading')) {
+					uni.showToast({ title: '图片上传中，请稍候', icon: 'none' })
+					return
+				}
+				if ((this.uploadingImages || []).some((x) => x.status === 'error')) {
+					uni.showToast({ title: '有图片上传失败，请重试或删除', icon: 'none' })
+					return
+				}
 				if (!this.postData.title.trim()) {
 					uni.showToast({ title: '请输入标题', icon: 'none' })
 					return
@@ -470,6 +614,35 @@
 						title: res.data.status === 1 ? (this.isEdit ? '编辑成功' : '发布成功') : '提交成功，等待审核',
 						icon: 'none'
 					})
+					
+					// 触发发帖任务
+					if (!this.isEdit) {
+						axios.post(this.$baseUrl + '/treePlant/do_task', 
+							{ task_code: 'daily_post' },
+							{
+								headers: {
+									'Content-Type': 'application/json',
+									'Authorization': 'Bearer ' + token
+								}
+							}
+						).then((taskRes) => {
+							const data = taskRes.data || {};
+							const modal = this.$refs.taskRewardModal;
+							if (modal) {
+								modal.show({
+									reward: typeof data.reward === 'number' ? data.reward : 25,
+									taskName: '每日任务：首次发帖',
+									icon: data.task_icon,
+									currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
+									maxGrowth: 100,
+									canHarvest: data.tree_status === '结果'
+								});
+							}
+						}).catch((err) => {
+							// 忽略错误
+						});
+					}
+
 					setTimeout(() => {
 						uni.navigateBack()
 					}, 1500)
@@ -479,6 +652,11 @@
 				} finally {
 					this.isSubmitting = false
 				}
+			},
+			handleHarvestFromModal() {
+				uni.navigateTo({
+					url: '/pages/treePlant/treeplant'
+				});
 			}
 		}
 	}
@@ -540,6 +718,31 @@
 	.image-item log-image {
 		width: 100%;
 		height: 100%;
+	}
+	
+	.upload-mask {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		display: flex;
+		align-items: flex-end;
+		pointer-events: none;
+	}
+	
+	.progress-wrapper {
+		width: 100%;
+		padding: 12rpx;
+		background-color: rgba(0, 0, 0, 0.35);
+	}
+	
+	.progress-text {
+		display: block;
+		text-align: right;
+		margin-top: 6rpx;
+		font-size: 22rpx;
+		color: rgba(255, 255, 255, 0.92);
 	}
 
 	.delete-btn {

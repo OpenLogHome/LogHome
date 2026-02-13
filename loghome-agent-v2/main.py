@@ -18,7 +18,7 @@ TASK_CONFIGS = [
         module_path="read_and_interact",
         interval_hours=6.0,  # 每6小时执行一次
         enabled=True,
-        run_immediately=False  # 可以设置为True来立即启动阅读任务
+        run_immediately=True  # 可以设置为True来立即启动阅读任务
     ),
     TaskConfig(
         name="private_messages",

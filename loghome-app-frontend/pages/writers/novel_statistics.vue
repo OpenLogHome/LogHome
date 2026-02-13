@@ -65,21 +65,31 @@
 			</view>
 		</view>
 
-		<view class="trend-section">
-			<view class="trend-title">
-				<text>评论趋势</text>
-				<text class="trend-subtitle">每日更新</text>
-			</view>
-			<view class="chart-container">
-				<canvas canvas-id="commentsChart" id="commentsChart" class="charts"></canvas>
-			</view>
+	<view class="trend-section">
+		<view class="trend-title">
+			<text>评论趋势</text>
+			<text class="trend-subtitle">每日更新</text>
 		</view>
+		<view class="chart-container">
+			<canvas canvas-id="commentsChart" id="commentsChart" class="charts"></canvas>
+		</view>
+	</view>
 
-		<view class="trend-section">
-			<view class="trend-title">
-				<text>打赏趋势</text>
-				<text class="trend-subtitle">每日更新</text>
-			</view>
+	<view class="trend-section">
+		<view class="trend-title">
+			<text>分享趋势</text>
+			<text class="trend-subtitle">每日更新</text>
+		</view>
+		<view class="chart-container">
+			<canvas canvas-id="sharesChart" id="sharesChart" class="charts"></canvas>
+		</view>
+	</view>
+
+	<view class="trend-section">
+		<view class="trend-title">
+			<text>打赏趋势</text>
+			<text class="trend-subtitle">每日更新</text>
+		</view>
 			<view class="chart-container">
 				<canvas canvas-id="tipsChart" id="tipsChart" class="charts"></canvas>
 			</view>
@@ -94,6 +104,7 @@ var readChartInstance = {};
 var likesChartInstance = {};
 var favoritesChartInstance = {};
 var commentsChartInstance = {};
+var sharesChartInstance = {};
 var tipsChartInstance = {};
 
 export default {
@@ -142,6 +153,7 @@ export default {
 				this.drawLikesChart(dateLabels, statistics.map(item => item.nices || 0))
 				this.drawFavoritesChart(dateLabels, statistics.map(item => item.likes || 0))
 				this.drawCommentsChart(dateLabels, statistics.map(item => item.comments || 0))
+				this.drawSharesChart(dateLabels, statistics.map(item => item.shares || 0))
 				this.drawTipsChart(dateLabels, statistics.map(item => item.tippings || 0))
 
 			} catch (error) {
@@ -371,6 +383,49 @@ export default {
 				}
 			});
 		},
+		drawSharesChart(categories, data) {
+			const ctx = uni.createCanvasContext('sharesChart', this)
+			sharesChartInstance = new uCharts({
+				type: 'line',
+				context: ctx,
+				width: uni.upx2px(700),
+				height: uni.upx2px(500),
+				categories: categories,
+				dataLabel: false,
+				series: [{
+					name: '分享',
+					data: data,
+					color: '#74b9ff',
+					type: 'line',
+					style: 'curve',
+					pointShape: 'circle'
+				}],
+				padding: [15, 15, 15, 15],
+				legend: { show: false },
+				xAxis: {
+					disableGrid: true,
+					fontColor: '#666666',
+					fontSize: 12,
+					labelCount: 5,
+					boundaryGap: 'justify'
+				},
+				yAxis: {
+					gridType: 'dash',
+					dashLength: 4,
+					data: [{ min: 0 }],
+					fontColor: '#666666',
+					fontSize: 12,
+					format: 'integer'
+				},
+				extra: {
+					line: {
+						width: 2,
+						activeType: 'hollow',
+						linearType: 'none'
+					}
+				}
+			});
+		},
 		drawTipsChart(categories, data) {
 			const ctx = uni.createCanvasContext('tipsChart', this)
 			tipsChartInstance = new uCharts({
@@ -433,6 +488,7 @@ export default {
 		if (likesChartInstance) likesChartInstance.resize()
 		if (favoritesChartInstance) favoritesChartInstance.resize()
 		if (commentsChartInstance) commentsChartInstance.resize()
+		if (sharesChartInstance) sharesChartInstance.resize()
 		if (tipsChartInstance) tipsChartInstance.resize()
 	}
 }

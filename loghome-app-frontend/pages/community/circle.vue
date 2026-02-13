@@ -8,33 +8,50 @@
       <!-- 圈子背景图 -->
       <view class="circle-bg" :style="{ backgroundImage: `url(${circle.bg_url || circle.icon || '../../static/default-circle.png'})` }"></view>
       <view class="header-overlay"></view>
-      <view class="circle-info">
-        <log-image class="circle-avatar" :src="circle.icon" mode="aspectFill" onerror="onerror=null;src='../../static/default-circle.png'"></log-image>
-        <view class="circle-meta">
-          <view class="circle-name">
-            {{circle.name}}
-            <view class="official-tag" v-if="circle.is_official">官方</view>
+      <view v-if="!circleLoading">
+        <view class="circle-info">
+          <log-image class="circle-avatar" :src="circle.icon" mode="aspectFill" onerror="onerror=null;src='../../static/default-circle.png'"></log-image>
+          <view class="circle-meta">
+            <view class="circle-name">
+              {{circle.name}}
+              <view class="official-tag" v-if="circle.is_official">官方</view>
+            </view>
+            <view class="circle-stats">
+              <text>{{circle.member_count}}成员</text>
+              <text>{{circle.post_count}}帖子</text>
+            </view>
+            <view class="circle-description" @click="showCircleInfo">{{circle.description}}</view>
           </view>
-          <view class="circle-stats">
-            <text>{{circle.member_count}}成员</text>
-            <text>{{circle.post_count}}帖子</text>
+        </view>
+        
+        <view class="action-bar">
+          <view class="action-btn" :class="{ 'active': isJoined }" @tap="toggleJoin">
+            {{ isJoined ? '已加入' : '加入圈子' }}
           </view>
-          <view class="circle-description" @click="showCircleInfo">{{circle.description}}</view>
+          <view class="action-btn" @tap="showCircleInfo">
+            圈子公告
+          </view>
+          <view class="action-btn" v-if="isJoined && (userRole === 1 || userRole === 2)" @tap="editCircle">
+            圈子设置
+          </view>
         </view>
       </view>
-      
-      <!-- 操作按钮 -->
-      <view class="action-bar">
-        <view class="action-btn" :class="{ 'active': isJoined }" @tap="toggleJoin">
-          {{ isJoined ? '已加入' : '加入圈子' }}
-        </view>
-        <view class="action-btn" @tap="showCircleInfo">
-          圈子公告
-        </view>
-        <!-- 添加编辑按钮，仅圈主和管理员可见 -->
-        <view class="action-btn" v-if="isJoined && (userRole === 1 || userRole === 2)" @tap="editCircle">
-          圈子设置
-        </view>
+      <view v-else class="circle-header-skeleton">
+        <el-skeleton animated>
+          <template slot="template">
+            <view class="circle-info">
+              <el-skeleton-item class="circle-skeleton-avatar" variant="image"></el-skeleton-item>
+              <view class="circle-meta">
+                <el-skeleton-item class="circle-skeleton-line name" variant="text"></el-skeleton-item>
+                <el-skeleton-item class="circle-skeleton-line stats" variant="text"></el-skeleton-item>
+                <el-skeleton-item class="circle-skeleton-line desc" variant="text"></el-skeleton-item>
+              </view>
+            </view>
+            <view class="action-bar action-bar-skeleton">
+              <el-skeleton-item class="action-skeleton-btn" variant="text" v-for="n in 3" :key="n"></el-skeleton-item>
+            </view>
+          </template>
+        </el-skeleton>
       </view>
     </view>
     
@@ -48,7 +65,7 @@
         </view>
       </view>
       <scroll-view scroll-x class="members-scroll" show-scrollbar="false">
-        <view class="members-list">
+        <view class="members-list" v-if="members.length > 0">
           <view class="member-item" v-for="(member, index) in members" :key="index" @tap="navigateToUser(member.user_id)">
             <view class="member-avatar-wrapper">
               <log-image class="member-avatar" :src="member.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
@@ -57,6 +74,18 @@
             </view>
             <text class="member-name">{{member.name}}</text>
           </view>
+        </view>
+        <view class="members-list members-skeleton" v-else-if="membersLoading">
+          <el-skeleton animated>
+            <template slot="template">
+              <view class="member-item" v-for="n in 8" :key="n">
+                <view class="member-avatar-wrapper">
+                  <el-skeleton-item class="member-skeleton-avatar" variant="circle"></el-skeleton-item>
+                </view>
+                <el-skeleton-item class="member-skeleton-name" variant="text"></el-skeleton-item>
+              </view>
+            </template>
+          </el-skeleton>
         </view>
       </scroll-view>
     </view>
@@ -80,7 +109,7 @@
       class="posts-scroll" 
       @scrolltolower="loadMore"
     >
-      <view class="posts-list">
+      <view class="posts-list" v-if="posts.length > 0">
         <view class="post-item" v-for="(post, index) in posts" :key="index" @tap="navigateToPost(post.post_id)">
           <view class="post-header">
             <view class="user-info" @tap.stop="navigateToUser(post.user_id)">
@@ -127,13 +156,72 @@
         </view>
         
         <!-- 加载更多 -->
-        <uni-load-more :status="loadingStatus"></uni-load-more>
+        <view class="posts-list posts-loadmore-skeleton" v-if="loadingStatus === 'loading' && posts.length > 0">
+          <el-skeleton animated>
+            <template slot="template">
+              <view class="post-item skeleton-post compact" v-for="n in 2" :key="n">
+                <view class="post-header">
+                  <view class="user-info">
+                    <el-skeleton-item class="skeleton-avatar" variant="circle"></el-skeleton-item>
+                    <view class="user-meta">
+                      <el-skeleton-item class="skeleton-line skeleton-name" variant="text"></el-skeleton-item>
+                      <el-skeleton-item class="skeleton-line skeleton-time" variant="text"></el-skeleton-item>
+                    </view>
+                  </view>
+                  <el-skeleton-item class="skeleton-pill" variant="text"></el-skeleton-item>
+                </view>
+                <view class="post-content">
+                  <el-skeleton-item class="skeleton-line skeleton-title" variant="text"></el-skeleton-item>
+                  <el-skeleton-item class="skeleton-line skeleton-text" variant="text"></el-skeleton-item>
+                </view>
+              </view>
+            </template>
+          </el-skeleton>
+        </view>
+        <uni-load-more v-else :status="loadingStatus"></uni-load-more>
       </view>
       
       <!-- 空状态 -->
       <view class="empty-state" v-if="posts.length === 0 && loadingStatus !== 'loading'">
         <image src="../../static/nothing.png" mode="aspectFit" class="empty-image"></image>
         <text class="empty-text">暂无帖子</text>
+      </view>
+      <view class="posts-list post-skeleton-list" v-else-if="loadingStatus === 'loading'">
+        <el-skeleton animated>
+          <template slot="template">
+            <view class="post-item skeleton-post" v-for="n in 6" :key="n">
+              <view class="post-header">
+                <view class="user-info">
+                  <el-skeleton-item class="skeleton-avatar" variant="circle"></el-skeleton-item>
+                  <view class="user-meta">
+                    <el-skeleton-item class="skeleton-line skeleton-name" variant="text"></el-skeleton-item>
+                    <el-skeleton-item class="skeleton-line skeleton-time" variant="text"></el-skeleton-item>
+                  </view>
+                </view>
+                <el-skeleton-item class="skeleton-pill" variant="text"></el-skeleton-item>
+              </view>
+              <view class="post-content">
+                <el-skeleton-item class="skeleton-line skeleton-title" variant="text"></el-skeleton-item>
+                <el-skeleton-item class="skeleton-line skeleton-text" variant="text"></el-skeleton-item>
+                <el-skeleton-item class="skeleton-line skeleton-text short" variant="text"></el-skeleton-item>
+              </view>
+              <view class="post-footer">
+                <view class="post-action">
+                  <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
+                  <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
+                </view>
+                <view class="post-action">
+                  <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
+                  <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
+                </view>
+                <view class="post-action">
+                  <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
+                  <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
+                </view>
+              </view>
+            </view>
+          </template>
+        </el-skeleton>
       </view>
     </scroll-view>
     
@@ -186,6 +274,7 @@ export default {
     return {
       circleId: null,
       circle: {},
+      circleLoading: true,
       isJoined: false,
       userRole: 0, // 0-普通成员 1-管理员 2-圈主
       filters: [
@@ -196,6 +285,7 @@ export default {
       currentFilter: 'all',
       posts: [],
       members: [], // 圈子成员列表
+      membersLoading: true,
       page: 1,
       pageSize: 10,
       isRefreshing: false,
@@ -266,6 +356,7 @@ export default {
       uni.navigateBack();
     },
     async loadCircleInfo() {
+      this.circleLoading = true;
       try {
         const res = await axios.get(this.$baseUrl + `/community/circles/detail/${this.circleId}`);
         
@@ -283,6 +374,8 @@ export default {
           title: '加载圈子信息失败',
           icon: 'none'
         });
+      } finally {
+        this.circleLoading = false;
       }
     },
     async checkMemberStatus() {
@@ -306,6 +399,7 @@ export default {
       }
     },
     async loadMembers() {
+      this.membersLoading = true;
       try {
         // 获取圈子成员，按照角色排序，最多获取10个
         const params = {
@@ -319,6 +413,8 @@ export default {
         }
       } catch (error) {
         console.error('加载圈子成员失败', error);
+      } finally {
+        this.membersLoading = false;
       }
     },
     async loadPosts() {
@@ -880,6 +976,53 @@ export default {
   flex: 1;
 }
 
+.circle-header-skeleton {
+  position: relative;
+  z-index: 3;
+  margin-top: 30rpx;
+}
+
+.circle-skeleton-avatar {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 20rpx;
+  margin-right: 30rpx;
+  flex: 0 0 140rpx;
+}
+
+.circle-skeleton-line {
+  display: block;
+  border-radius: 10rpx;
+
+  &.name {
+    width: 60%;
+    height: 34rpx;
+    margin-bottom: 16rpx;
+  }
+
+  &.stats {
+    width: 40%;
+    height: 26rpx;
+    margin-bottom: 18rpx;
+  }
+
+  &.desc {
+    width: 100%;
+    height: 26rpx;
+  }
+}
+
+.action-bar-skeleton {
+  margin-top: 20rpx;
+}
+
+.action-skeleton-btn {
+  flex: 1;
+  height: 70rpx;
+  border-radius: 35rpx;
+  margin: 0 10rpx;
+}
+
 .circle-name {
   font-size: 36rpx;
   font-weight: bold;
@@ -991,6 +1134,73 @@ export default {
 
 .posts-list {
   padding: 20rpx;
+}
+
+.skeleton-post {
+  overflow: hidden;
+
+  &.compact {
+    padding-bottom: 24rpx;
+  }
+}
+
+.skeleton-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  flex: 0 0 80rpx;
+  margin-right: 20rpx;
+}
+
+.skeleton-line {
+  display: block;
+  height: 28rpx;
+  border-radius: 8rpx;
+
+  &.skeleton-name {
+    width: 180rpx;
+    height: 30rpx;
+  }
+
+  &.skeleton-time {
+    width: 120rpx;
+    height: 24rpx;
+    margin-top: 12rpx;
+  }
+
+  &.skeleton-title {
+    width: 70%;
+    height: 34rpx;
+    margin-bottom: 14rpx;
+  }
+
+  &.skeleton-text {
+    width: 100%;
+    height: 26rpx;
+    margin-top: 10rpx;
+
+    &.short {
+      width: 80%;
+    }
+  }
+}
+
+.skeleton-pill {
+  width: 140rpx;
+  height: 28rpx;
+  border-radius: 20rpx;
+}
+
+.skeleton-icon {
+  width: 36rpx;
+  height: 36rpx;
+  flex: 0 0 36rpx;
+}
+
+.skeleton-count {
+  width: 60rpx;
+  height: 24rpx;
+  margin-left: 12rpx;
+  border-radius: 8rpx;
 }
 
 .post-item {
@@ -1269,6 +1479,21 @@ export default {
 .members-list {
   display: inline-flex;
   padding: 10rpx 0;
+}
+
+.members-skeleton {
+  align-items: center;
+}
+
+.member-skeleton-avatar {
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.member-skeleton-name {
+  width: 80%;
+  height: 22rpx;
+  border-radius: 8rpx;
 }
 
 .member-item {
