@@ -9,14 +9,23 @@
       <!-- 主帖内容 -->
       <view class="post-content">
         <view class="post-header">
-          <view class="user-info" @tap="navigateToUser(post.user_id)">
+          <view class="user-info clickable" @tap="navigateToUser(post.user_id)">
             <log-image class="user-avatar" :src="post.author_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
             <view class="user-meta">
-              <text class="user-name">{{post.author_name}}</text>
+              <view class="user-name-row">
+                <text class="user-name">{{post.author_name}}</text>
+                <view
+                  v-if="post.author_badge"
+                  class="user-badge-tap"
+                  @tap.stop="goToBadgeDetail(post.author_badge, post.user_id)"
+                >
+                  <honor-badge :badge="post.author_badge" size="sm" class="user-badge" scale="1.2" />
+                </view>
+              </view>
               <text class="post-time">{{formatTime(post.create_time)}}</text>
             </view>
           </view>
-          <view class="post-circle" @tap="navigateToCircle(post.circle_id)">
+          <view class="post-circle clickable" @tap="navigateToCircle(post.circle_id)">
             {{post.circle_name}}
           </view>
         </view>
@@ -28,7 +37,7 @@
           </view>
           
           <!-- 显示绑定的作品 -->
-          <view class="bound-novel" v-if="post.novel_info" @tap="navigateToNovel(post.novel_info.novel_id)">
+          <view class="bound-novel clickable" v-if="post.novel_info" @tap="navigateToNovel(post.novel_info.novel_id)">
             <view class="novel-card">
               <log-image class="novel-cover" :src="post.novel_info.picUrl" mode="aspectFill" 
                 onerror="onerror=null;src='../../static/images/defaultBookCover.png'"></log-image>
@@ -59,15 +68,15 @@
         </view>
         
         <view class="post-actions">
-          <view class="action-btn" @tap="likePost">
+          <view class="action-btn clickable" @tap="likePost">
             <uni-icons :type="post.is_liked ? 'heart-filled' : 'heart'" size="24" :color="post.is_liked ? '#EA7034' : '#666'"></uni-icons>
             <text :class="{'liked': post.is_liked}">{{post.like_count}}</text>
           </view>
-          <view class="action-btn" @tap="focusComment">
+          <view class="action-btn clickable" @tap="focusComment">
             <uni-icons type="chat" size="24" color="#666"></uni-icons>
             <text>{{post.comment_count}}</text>
           </view>
-          <view class="action-btn" @tap="sharePost">
+          <view class="action-btn clickable" @tap="sharePost">
             <uni-icons type="redo" size="24" color="#666"></uni-icons>
             <text>分享</text>
           </view>
@@ -81,10 +90,19 @@
           <view v-for="comment in comments" :key="comment.comment_id" class="comment-item">
             <!-- 主评论 -->
             <view class="comment-main">
-              <log-image class="comment-avatar" :src="comment.user_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <log-image class="comment-avatar clickable" :src="comment.user_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'" @tap="navigateToUser(comment.user_id)"></log-image>
               <view class="comment-content">
                 <view class="comment-header">
-                  <text class="comment-username">{{comment.user_name}}</text>
+                  <view class="comment-username-row">
+                    <text class="comment-username">{{comment.user_name}}</text>
+                    <view
+                      v-if="comment.user_badge"
+                      class="comment-badge-tap"
+                      @tap.stop="goToBadgeDetail(comment.user_badge, comment.user_id)"
+                    >
+                      <honor-badge :badge="comment.user_badge" size="sm" class="comment-badge" scale="1.0" />
+                    </view>
+                  </view>
                   <text class="comment-time">{{formatTime(comment.create_time)}}</text>
                 </view>
                 <text class="comment-text">{{comment.content}}</text>
@@ -101,12 +119,12 @@
                   ></log-image>
                 </view>
                 <view class="comment-actions">
-                  <view class="comment-like" @tap="likeComment(comment)">
+                  <view class="comment-like clickable" @tap="likeComment(comment)">
                     <uni-icons :type="comment.is_liked ? 'heart-filled' : 'heart'" size="14" :color="comment.is_liked ? '#EA7034' : '#999'"></uni-icons>
                     <text :class="{'liked': comment.is_liked}">{{comment.like_count || 0}}</text>
                   </view>
-                  <text class="comment-reply" @tap="replyToComment(comment)">回复</text>
-                  <text v-if="canDeleteComment(comment)" class="comment-delete" @tap="deleteComment(comment)">删除</text>
+                  <text class="comment-reply clickable" @tap="replyToComment(comment)">回复</text>
+                  <text v-if="canDeleteComment(comment)" class="comment-delete clickable" @tap="deleteComment(comment)">删除</text>
                 </view>
               </view>
             </view>
@@ -114,10 +132,19 @@
             <!-- 子评论 -->
             <view class="replies-list" v-if="comment.replies && comment.replies.length > 0">
               <view v-for="reply in comment.replies" :key="reply.comment_id" class="reply-item">
-                <log-image class="reply-avatar" :src="reply.user_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+                <log-image class="reply-avatar clickable" :src="reply.user_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'" @tap="navigateToUser(reply.user_id)"></log-image>
                 <view class="reply-content">
                   <view class="reply-header">
-                    <text class="reply-username">{{reply.user_name}}</text>
+                    <view class="reply-username-row">
+                      <text class="reply-username">{{reply.user_name}}</text>
+                      <view
+                        v-if="reply.user_badge"
+                        class="reply-badge-tap"
+                        @tap.stop="goToBadgeDetail(reply.user_badge, reply.user_id)"
+                      >
+                        <honor-badge :badge="reply.user_badge" size="sm" class="reply-badge" scale="1.0" />
+                      </view>
+                    </view>
                     <text class="reply-target" v-if="reply.reply_user_name">回复 {{reply.reply_user_name}}</text>
                     <text class="reply-time">{{formatTime(reply.create_time)}}</text>
                   </view>
@@ -135,16 +162,16 @@
                     ></log-image>
                   </view>
                   <view class="reply-actions">
-                    <view class="reply-like" @tap="likeComment(reply)">
+                    <view class="reply-like clickable" @tap="likeComment(reply)">
                       <uni-icons :type="reply.is_liked ? 'heart-filled' : 'heart'" size="14" :color="reply.is_liked ? '#EA7034' : '#999'"></uni-icons>
                       <text :class="{'liked': reply.is_liked}">{{reply.like_count || 0}}</text>
                     </view>
-                    <text class="reply-btn" @tap="replyToComment(reply, comment)">回复</text>
-                    <text v-if="canDeleteComment(reply)" class="reply-delete" @tap="deleteComment(reply, comment)">删除</text>
+                    <text class="reply-btn clickable" @tap="replyToComment(reply, comment)">回复</text>
+                    <text v-if="canDeleteComment(reply)" class="reply-delete clickable" @tap="deleteComment(reply, comment)">删除</text>
                   </view>
                 </view>
               </view>
-              <text class="show-more" v-if="comment.total_replies > comment.replies.length" @tap="loadMoreReplies(comment)">
+              <text class="show-more clickable" v-if="comment.total_replies > comment.replies.length" @tap="loadMoreReplies(comment)">
                 展开更多回复
               </text>
             </view>
@@ -180,10 +207,10 @@
         ></textarea>
         <view class="input-actions">
           <emoji-picker @select="onEmojiSelect"></emoji-picker>
-          <view class="image-upload" @tap="chooseImage">
+          <view class="image-upload clickable" @tap="chooseImage">
             <uni-icons type="image" size="24" color="#666"></uni-icons>
           </view>
-          <button class="send-btn" :disabled="!commentText && selectedImages.length === 0" @tap="submitComment">
+          <button class="send-btn clickable" :disabled="!commentText && selectedImages.length === 0" @tap="submitComment">
             发送
           </button>
         </view>
@@ -227,11 +254,14 @@ import axios from 'axios'
 import moment from 'moment'
 import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
+import HonorBadge from '../../components/honor-badge.vue'
+import { settleAndNotifyExpTaskCompletion } from '../../lib/treeExpTaskNotifier.js'
 
 export default {
   components: {
     emojiPicker,
-    TaskRewardModal
+    TaskRewardModal,
+    HonorBadge
   },
   data() {
     return {
@@ -361,28 +391,27 @@ export default {
       this.loadingStatus = 'loading'
       this.isLoading = true
       try {
+        const token = window.localStorage.getItem('token');
+        const headers = token ? { 'Authorization': 'Bearer ' + JSON.parse(token).tk } : {};
+        
         const res = await axios.get(this.$baseUrl + '/community/comments/list', {
           params: {
             post_id: this.postId,
             page: refresh ? 1 : this.page,
             pageSize: this.pageSize
-          }
+          },
+          headers
         })
-        // 处理评论数据
+        
         const comments = res.data.list || [];
         for (let comment of comments) {
-          // 处理媒体URL
           if (comment.image_url) {
             comment.media_urls = [comment.image_url];
           } else {
             comment.media_urls = [];
           }
-          // 初始化回复数组
           comment.replies = [];
           comment.total_replies = comment.reply_count || 0;
-          // 获取评论的点赞状态
-          await this.getCommentLikeStatus(comment);
-          // 自动加载前3条子评论
           await this.loadRepliesForComment(comment, 1, 3);
         }
         if (refresh) {
@@ -406,12 +435,16 @@ export default {
     },
     async loadRepliesForComment(comment, page = 1, pageSize = 3) {
       try {
+        const token = window.localStorage.getItem('token');
+        const headers = token ? { 'Authorization': 'Bearer ' + JSON.parse(token).tk } : {};
+        
         const res = await axios.get(this.$baseUrl + '/community/comments/replies', {
           params: {
             comment_id: comment.comment_id,
             page,
             pageSize
-          }
+          },
+          headers
         });
         const replies = res.data.list || [];
         for (let reply of replies) {
@@ -420,13 +453,10 @@ export default {
           } else {
             reply.media_urls = [];
           }
-          await this.getCommentLikeStatus(reply);
         }
         comment.replies = replies;
-        // 同步 total_replies
         comment.total_replies = res.data.total || replies.length;
       } catch (error) {
-        // 可选：错误提示
         console.error('加载回复失败:', error);
       }
     },
@@ -451,15 +481,18 @@ export default {
     
     async loadMoreReplies(comment) {
       try {
+        const token = window.localStorage.getItem('token');
+        const headers = token ? { 'Authorization': 'Bearer ' + JSON.parse(token).tk } : {};
+        
         const nextPage = Math.floor(comment.replies.length / 10) + 1;
         const res = await axios.get(this.$baseUrl + '/community/comments/replies', {
           params: {
             comment_id: comment.comment_id,
             page: nextPage,
             pageSize: 10
-          }
+          },
+          headers
         })
-        // 处理回复数据
         const replies = res.data.list || [];
         for (let reply of replies) {
           if (reply.image_url) {
@@ -467,13 +500,10 @@ export default {
           } else {
             reply.media_urls = [];
           }
-          await this.getCommentLikeStatus(reply);
         }
-        // 去重追加
         const existingIds = new Set(comment.replies.map(r => r.comment_id));
         const newReplies = replies.filter(r => !existingIds.has(r.comment_id));
         comment.replies.push(...newReplies);
-        // 同步 total_replies
         comment.total_replies = res.data.total || comment.replies.length;
       } catch (error) {
         console.error('加载更多回复失败:', error);
@@ -656,6 +686,7 @@ export default {
         })
 
         // 触发回帖任务
+        settleAndNotifyExpTaskCompletion(this, 'community_reply', 1).catch(() => {})
         axios.post(this.$baseUrl + '/treePlant/do_task', 
           { task_code: 'daily_reply' },
           {
@@ -951,6 +982,35 @@ export default {
       })
     },
     
+    goToBadgeDetail(badge, ownerId) {
+      if (!badge) return
+      uni.setStorageSync('badgeDetailPayload', badge)
+      const ownerIdNum = Number(ownerId)
+      if (Number.isFinite(ownerIdNum) && ownerIdNum > 0) {
+        uni.setStorageSync('badgeDetailOwnerId', ownerIdNum)
+      }
+      let encodedBadge = ''
+      try {
+        encodedBadge = encodeURIComponent(JSON.stringify(badge))
+      } catch (e) {
+        encodedBadge = ''
+      }
+      const query = []
+      if (encodedBadge) query.push('badge=' + encodedBadge)
+      if (Number.isFinite(ownerIdNum) && ownerIdNum > 0) query.push('owner_id=' + ownerIdNum)
+      query.push('is_selected=1')
+      uni.navigateTo({
+        url: '/pages/users/badgeDetail' + (query.length ? ('?' + query.join('&')) : ''),
+        fail() {
+          uni.navigateTo({
+            url: Number.isFinite(ownerIdNum) && ownerIdNum > 0
+              ? '/pages/users/badgeDetail?owner_id=' + ownerIdNum
+              : '/pages/users/badgeDetail'
+          })
+        }
+      })
+    },
+    
     navigateToCircle(circleId) {
       uni.navigateTo({
         url: '/pages/community/circle?id=' + circleId
@@ -1156,10 +1216,25 @@ export default {
   flex-direction: column;
 }
 
+.user-name-row {
+  display: inline-flex;
+  align-items: center;
+}
+
 .user-name {
   font-size: 28rpx;
   font-weight: bold;
   color: #333;
+}
+
+.user-badge-tap {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10rpx;
+}
+
+.user-badge {
+  transform: translateY(2rpx);
 }
 
 .post-time {
@@ -1352,14 +1427,31 @@ export default {
   margin-bottom: 8rpx;
 }
 
+.comment-username-row {
+  display: inline-flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
 .comment-username {
   font-size: 28rpx;
   font-weight: bold;
   color: #333;
-  max-width: 60%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 200rpx;
+}
+
+.comment-badge-tap {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8rpx;
+}
+
+.comment-badge {
+  transform: translateY(2rpx);
 }
 
 .comment-time {
@@ -1458,14 +1550,31 @@ export default {
   margin-bottom: 8rpx;
 }
 
+.reply-username-row {
+  display: inline-flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
 .reply-username {
   font-size: 26rpx;
   font-weight: bold;
   color: #333;
-  max-width: 40%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 150rpx;
+}
+
+.reply-badge-tap {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8rpx;
+}
+
+.reply-badge {
+  transform: translateY(2rpx);
 }
 
 .reply-target {
@@ -1715,5 +1824,94 @@ textarea {
   color: #999;
   margin-top: 20rpx;
   border-bottom: none;
+}
+
+.clickable {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: inherit;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  
+  &:active::after {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.user-info,
+.post-circle {
+  &.clickable:active {
+    opacity: 0.7;
+  }
+}
+
+.bound-novel {
+  &.clickable:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+.action-btn {
+  &.clickable:active {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
+
+.comment-like,
+.comment-reply,
+.comment-delete,
+.reply-like,
+.reply-btn,
+.reply-delete {
+  &.clickable:active {
+    opacity: 0.6;
+  }
+}
+
+.show-more {
+  &.clickable:active {
+    opacity: 0.6;
+    transform: scale(0.98);
+  }
+}
+
+.image-upload {
+  &.clickable:active {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
+
+.send-btn {
+  &.clickable:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  
+  &.clickable:disabled:active {
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>

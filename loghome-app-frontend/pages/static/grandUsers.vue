@@ -23,9 +23,7 @@
 						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 						<div class="personInfo">
 							<div class="name">{{item.name}}</div>
-							<div class="motto">
-								<groupLabel v-for="user_group in item.user_group.split(',')" :userGroup="user_group"></groupLabel>
-							</div>
+							<div class="motto">官方荣誉用户</div>
 						</div>
 					</navigator>
 					<followBtn class="button" :targetId="item.user_id"></followBtn>
@@ -37,11 +35,10 @@
 
 <script>
 	import followBtn from '../../components/follow.vue'
-	import groupLabel from "../usergroup/groupLabel.vue"
 	import axios from 'axios'
 	export default{
 		components:{
-			followBtn, groupLabel
+			followBtn
 		},
 		data(){
 			return{

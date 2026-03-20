@@ -42,6 +42,8 @@
 import axios from 'axios'
 import { articleDB } from '../lib/db.js'
 
+const BOOKSHELF_HORIZONTAL_CACHE_KEY = 'LogHomeBookshelfHorizontal'
+
 export default {
 	name: 'BookshelfHorizontal',
 	data() {
@@ -50,29 +52,92 @@ export default {
 			historyBooks: [], // 阅读历史
 			sortedBooks: [], // 排序后的书籍
 			isOffline: false,
-			updateInfo: new Map() // 存储书籍更新信息
+			updateInfo: new Map(), // 存储书籍更新信息
+			loadVersion: 0
 		}
 	},
 	mounted() {
 		this.loadBooks()
 	},
 	methods: {
+		restoreCachedBookshelf() {
+			let restored = false
+			try {
+				const cachedPayload = JSON.parse(window.localStorage.getItem(BOOKSHELF_HORIZONTAL_CACHE_KEY) || 'null')
+				const cachedSortedBooks = Array.isArray(cachedPayload)
+					? cachedPayload
+					: (Array.isArray(cachedPayload?.sortedBooks) ? cachedPayload.sortedBooks : [])
+				const cachedUpdateInfoEntries = Array.isArray(cachedPayload?.updateInfoEntries)
+					? cachedPayload.updateInfoEntries
+					: []
+				if (Array.isArray(cachedSortedBooks) && cachedSortedBooks.length > 0) {
+					this.sortedBooks = cachedSortedBooks
+					if (cachedUpdateInfoEntries.length > 0) {
+						this.updateInfo = new Map(cachedUpdateInfoEntries)
+					} else {
+						const nextUpdateInfo = new Map()
+						cachedSortedBooks.forEach((book) => {
+							if (book && book.novel_id && book.updateInfo && book.updateInfo.has_updates) {
+								nextUpdateInfo.set(book.novel_id, book.updateInfo)
+							}
+						})
+						this.updateInfo = nextUpdateInfo
+					}
+					restored = true
+				}
+			} catch (error) {
+				console.error('restoreCachedBookshelf failed:', error)
+			}
+
+			try {
+				const cachedLikedBooks = JSON.parse(window.localStorage.getItem("LogHomeLikedBooks") || 'null')
+				const cachedHistoryBooks = JSON.parse(window.localStorage.getItem("loghomeReaderHistory") || 'null')
+				if (Array.isArray(cachedLikedBooks)) {
+					this.likedBooks = cachedLikedBooks
+				}
+				if (Array.isArray(cachedHistoryBooks)) {
+					this.historyBooks = [...cachedHistoryBooks].reverse()
+				}
+				if (!restored && (this.likedBooks.length > 0 || this.historyBooks.length > 0)) {
+					this.sortBooksByHistory()
+					restored = this.sortedBooks.length > 0
+				}
+			} catch (error) {
+				console.error('restoreCachedBookshelf fallback failed:', error)
+			}
+
+			return restored
+		},
+		persistCachedBookshelf() {
+			try {
+				window.localStorage.setItem(BOOKSHELF_HORIZONTAL_CACHE_KEY, JSON.stringify({
+					sortedBooks: this.sortedBooks,
+					updateInfoEntries: Array.from(this.updateInfo.entries())
+				}))
+			} catch (error) {
+				console.error('persistCachedBookshelf failed:', error)
+			}
+		},
 		// 加载书籍数据
 		async loadBooks() {
+			const loadVersion = ++this.loadVersion
 			try {
-                this.likedBooks = [];
-                this.historyBooks = [];
-                this.updateInfo = new Map();
-                console.log("loadbooks");
+				this.isOffline = false
+				this.restoreCachedBookshelf()
 				// 并行获取收藏书籍和阅读历史
 				await Promise.all([
 					this.getLikedBooks(),
 					this.getHistoryBooks()
 				])
 				// 检查书籍更新
-				await this.checkBooksUpdates()
+				if (loadVersion !== this.loadVersion) return
 				// 合并并排序书籍
 				this.sortBooksByHistory()
+				this.persistCachedBookshelf()
+				this.updateInfo = await this.fetchBooksUpdateInfo(this.likedBooks)
+				if (loadVersion !== this.loadVersion) return
+				this.sortBooksByHistory()
+				this.persistCachedBookshelf()
 			} catch (error) {
 				console.error('加载书籍失败:', error)
 			}
@@ -162,47 +227,54 @@ export default {
 		},
 		
 		// 检查书籍更新
-		async checkBooksUpdates() {
-			if (this.isOffline) return
+		async fetchBooksUpdateInfo(books = []) {
+			if (this.isOffline || !Array.isArray(books) || books.length === 0) return new Map()
 			
 			try {
-				// 为每本收藏的书籍检查更新
-				const updatePromises = this.likedBooks.map(async (book) => {
-					try {
-						// 从本地数据库获取该书籍的最新章节
-						const localArticles = await articleDB.articles
-							.where('novel_id')
-							.equals(book.novel_id)
-							.toArray()
-						
-						let localLatestChapter = 0
-						if (localArticles.length > 0) {
-							localLatestChapter = Math.max(...localArticles.map(a => a.article_chapter || 0))
-						}
-						
-						// 调用后端API检查更新
-						const response = await axios.get(this.$baseUrl + '/library/check_novel_updates', {
-							params: {
-								novel_id: book.novel_id,
-								latest_chapter: localLatestChapter
-							}
-						})
-						
-						if (response.data && response.data.has_updates) {
-							this.updateInfo.set(book.novel_id, {
-								new_chapters_count: response.data.new_chapters_count,
-								has_updates: true,
-								latest_update_time: response.data.latest_update_time
-							})
-						}
-					} catch (error) {
-						console.error(`检查书籍 ${book.novel_id} 更新失败:`, error)
+				const nextUpdateInfo = new Map()
+				const booksToCheck = []
+				
+				for (const book of books) {
+					const localArticles = await articleDB.articles
+						.where('novel_id')
+						.equals(book.novel_id)
+						.toArray()
+					
+					let localLatestChapter = 0
+					if (localArticles.length > 0) {
+						localLatestChapter = Math.max(...localArticles.map(a => a.article_chapter || 0))
+					}
+					
+					booksToCheck.push({
+						novel_id: book.novel_id,
+						latest_chapter: localLatestChapter
+					})
+				}
+				
+				if (booksToCheck.length === 0) return nextUpdateInfo
+				
+				const response = await axios.get(this.$baseUrl + '/library/check_novel_updates_batch', {
+					params: {
+						books: JSON.stringify(booksToCheck)
 					}
 				})
 				
-				await Promise.all(updatePromises)
+				if (response.data && response.data.updates) {
+					response.data.updates.forEach(update => {
+						if (update.has_updates) {
+							nextUpdateInfo.set(update.novel_id, {
+								new_chapters_count: update.new_chapters_count,
+								has_updates: true,
+								latest_update_time: update.latest_update_time
+							})
+						}
+					})
+				}
+				
+				return nextUpdateInfo
 			} catch (error) {
-				console.error('检查书籍更新失败:', error)
+				console.error('fetchBooksUpdateInfo failed:', error)
+				return new Map()
 			}
 		},
 		

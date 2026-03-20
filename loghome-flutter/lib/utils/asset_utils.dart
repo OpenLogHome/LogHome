@@ -29,14 +29,20 @@ class AssetUtils {
   }
 
   static Future<String> prepareAssets() async {
+    final totalStart = DateTime.now();
+    print('[Performance] AssetUtils.prepareAssets started');
+    
     try {
       final appDir = await getApplicationDocumentsDirectory();
       final webDir = Directory('${appDir.path}/web');
       
-      print('Web directory: ${webDir.path}');
+      print('[Performance] Web directory: ${webDir.path}');
       
+      final packageStart = DateTime.now();
       final packageInfo = await PackageInfo.fromPlatform();
       final currentPackageVersion = packageInfo.buildNumber;
+      print('[Performance] Got package info in ${DateTime.now().difference(packageStart).inMilliseconds}ms');
+      
       final versionFile = File('${webDir.path}/.version');
       
       bool needExtract = !await webDir.exists();
@@ -44,38 +50,42 @@ class AssetUtils {
       if (await webDir.exists() && await versionFile.exists()) {
         final savedVersion = await versionFile.readAsString();
         
-        // 使用新的版本比较逻辑
-        print('Comparing versions: saved=$savedVersion, current=$currentPackageVersion');
+        print('[Performance] Comparing versions: saved=$savedVersion, current=$currentPackageVersion');
         final savedVersionInt = int.parse(savedVersion);
         final currentVersionInt = int.parse(currentPackageVersion);
         
         if (savedVersionInt < currentVersionInt) {
-          print('App version changed: $savedVersion -> $currentPackageVersion');
+          print('[Performance] App version changed: $savedVersion -> $currentPackageVersion');
           needExtract = true;
+          final deleteStart = DateTime.now();
           await webDir.delete(recursive: true);
+          print('[Performance] Deleted old web dir in ${DateTime.now().difference(deleteStart).inMilliseconds}ms');
         } else {
-          print('Using cached web content (version: $currentPackageVersion)');
+          print('[Performance] Using cached web content (version: $currentPackageVersion)');
         }
       }
       
       if (needExtract) {
-        print('Extracting web content (version: $currentPackageVersion)');
+        print('[Performance] Extracting web content (version: $currentPackageVersion)');
         
         if (!await webDir.exists()) {
           await webDir.create(recursive: true);
         }
 
+        final loadStart = DateTime.now();
         final ByteData data = await rootBundle.load('assets/web/web.zip');
-        print('Zip file size: ${data.lengthInBytes}');
+        print('[Performance] Loaded zip file in ${DateTime.now().difference(loadStart).inMilliseconds}ms, size: ${data.lengthInBytes}');
         
+        final decodeStart = DateTime.now();
         final List<int> bytes = data.buffer.asUint8List();
         final archive = ZipDecoder().decodeBytes(bytes);
+        print('[Performance] Decoded zip in ${DateTime.now().difference(decodeStart).inMilliseconds}ms, files: ${archive.files.length}');
         
+        final extractStart = DateTime.now();
         for (final file in archive) {
           final filename = file.name;
           if (file.isFile) {
             final filePath = '${webDir.path}/$filename';
-            print('Extracting: $filePath');
             
             final fileDir = Directory(File(filePath).parent.path);
             if (!await fileDir.exists()) {
@@ -85,6 +95,7 @@ class AssetUtils {
             await File(filePath).writeAsBytes(file.content as List<int>);
           }
         }
+        print('[Performance] Extracted all files in ${DateTime.now().difference(extractStart).inMilliseconds}ms');
         
         await versionFile.writeAsString(currentPackageVersion);
       }
@@ -94,10 +105,12 @@ class AssetUtils {
         throw Exception('index.html not found: $indexPath');
       }
       
+      print('[Performance] Total prepareAssets took ${DateTime.now().difference(totalStart).inMilliseconds}ms');
+      
       return indexPath;
     } catch (e, stack) {
-      print('Asset preparation error: $e');
-      print('Stack trace: $stack');
+      print('[Performance] Asset preparation error: $e');
+      print('[Performance] Stack trace: $stack');
       rethrow;
     }
   }

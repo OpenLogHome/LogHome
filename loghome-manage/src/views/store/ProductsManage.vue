@@ -5,7 +5,7 @@
       <el-button @click="loadList">刷新</el-button>
     </div>
     <el-table :data="list" border v-loading="loading">
-      <el-table-column prop="product_id" label="ID" width="80"></el-table-column>
+      <el-table-column prop="id" label="ID" width="80"></el-table-column>
       <el-table-column prop="title" label="标题" min-width="180"></el-table-column>
       <el-table-column prop="type" label="类型" width="100">
         <template slot-scope="scope">
@@ -41,7 +41,7 @@
       />
     </div>
 
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="640px">
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="1240px">
       <el-form :model="form" label-width="120px">
         <el-form-item label="标题">
           <el-input v-model="form.title" />
@@ -59,7 +59,31 @@
           <el-input v-model.number="form.stock" type="number" />
         </el-form-item>
         <el-form-item label="封面图">
-          <el-input v-model="form.cover_url" />
+          <el-input v-model="form.cover_url" placeholder="请输入图片URL" />
+          <div class="image-preview" v-if="form.cover_url">
+            <el-image :src="form.cover_url" style="max-width: 200px; max-height: 200px;" fit="contain">
+              <div slot="error" class="image-error">
+                <i class="el-icon-picture-outline"></i>
+              </div>
+            </el-image>
+          </div>
+          <el-upload
+            class="cover-upload"
+            action="http://img.codesocean.top/upload/img"
+            :show-file-list="false"
+            :headers="uploadHeaders"
+            :on-success="handleCoverUploadSuccess"
+            :on-error="handleCoverUploadError"
+            :on-progress="handleCoverUploadProgress"
+            :before-upload="beforeCoverUpload"
+            :disabled="uploading"
+            accept="image/*"
+            name="img">
+            <el-button size="small" type="primary" :loading="uploading">
+              {{ uploading ? `上传中 ${uploadProgress}%` : '点击上传封面' }}
+            </el-button>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5MB</div>
+          </el-upload>
         </el-form-item>
         <el-form-item label="发货时效">
           <el-input v-model="form.shipping_desc" />
@@ -74,7 +98,7 @@
           <el-input v-model="form.summary" />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input type="textarea" v-model="form.description" />
+          <div id="editor-container"></div>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -87,6 +111,7 @@
 
 <script>
 import axios from 'axios'
+import E from 'wangeditor'
 
 export default {
   name: 'ProductsManage',
@@ -100,8 +125,14 @@ export default {
       dialogVisible: false,
       dialogTitle: '新增商品',
       submitLoading: false,
+      editor: null,
+      uploadHeaders: {
+        apikey: 'iSnMUQ9OLZpCVY3p7E3T5b2YwC39TS'
+      },
+      uploadProgress: 0,
+      uploading: false,
       form: {
-        product_id: null,
+        id: null,
         title: '',
         type: 'virtual',
         price: 0,
@@ -117,11 +148,95 @@ export default {
   mounted() {
     this.loadList()
   },
+  beforeDestroy() {
+    if (this.editor) {
+      this.editor.destroy()
+      this.editor = null
+    }
+  },
   methods: {
     getToken() {
       let tk = JSON.parse(window.localStorage.getItem('token'))
       if (tk) tk = tk.tk
       return tk
+    },
+    initEditor() {
+      this.$nextTick(() => {
+        if (this.editor) {
+          this.editor.destroy()
+        }
+        this.editor = new E('#editor-container')
+        this.editor.config.menus = [
+          'head',
+          'bold',
+          'fontSize',
+          'italic',
+          'underline',
+          'strikeThrough',
+          'foreColor',
+          'backColor',
+          'link',
+          'list',
+          'justify',
+          'quote',
+          'emoticon',
+          'image',
+          'table',
+          'undo',
+          'redo'
+        ]
+        this.editor.config.uploadFileName = 'img'
+        this.editor.config.uploadImgServer = 'http://img.codesocean.top/upload/img'
+        this.editor.config.uploadImgHooks = {
+          customInsert: function (insertImg, result, editor) {
+            console.log('富文本图片上传成功:', result)
+            if (result && result.url) {
+              insertImg(result.url)
+            } else {
+              console.error('富文本图片上传返回格式错误:', result)
+            }
+          }
+        }
+        this.editor.config.onchange = (html) => {
+          this.form.description = html
+        }
+        this.editor.create()
+        this.editor.txt.html(this.form.description || '')
+      })
+    },
+    beforeCoverUpload(file) {
+      const isImage = file.type.indexOf('image/') === 0
+      const isLt5M = file.size / 1024 / 1024 < 5
+      if (!isImage) {
+        this.$message.error('只能上传图片文件!')
+        return false
+      }
+      if (!isLt5M) {
+        this.$message.error('图片大小不能超过 5MB!')
+        return false
+      }
+      this.uploading = true
+      this.uploadProgress = 0
+      return true
+    },
+    handleCoverUploadProgress(event) {
+      this.uploadProgress = Math.floor(event.percent)
+    },
+    handleCoverUploadSuccess(response) {
+      console.log('封面上传成功:', response)
+      this.uploading = false
+      this.uploadProgress = 0
+      if (response && response.url) {
+        this.form.cover_url = response.url
+        this.$message.success('上传成功')
+      } else {
+        this.$message.error('上传失败，返回格式错误')
+      }
+    },
+    handleCoverUploadError() {
+      this.uploading = false
+      this.uploadProgress = 0
+      this.$message.error('上传失败，请重试')
     },
     loadList() {
       this.loading = true
@@ -143,7 +258,7 @@ export default {
     },
     resetForm() {
       this.form = {
-        product_id: null,
+        id: null,
         title: '',
         type: 'virtual',
         price: 0,
@@ -159,11 +274,17 @@ export default {
       this.resetForm()
       this.dialogTitle = '新增商品'
       this.dialogVisible = true
+      this.$nextTick(() => {
+        this.initEditor()
+      })
     },
     openEdit(row) {
       this.form = { ...row }
       this.dialogTitle = '编辑商品'
       this.dialogVisible = true
+      this.$nextTick(() => {
+        this.initEditor()
+      })
     },
     submit() {
       if (!this.form.title || !this.form.type || !this.form.price) {
@@ -172,9 +293,9 @@ export default {
       }
       this.submitLoading = true
       const tk = this.getToken()
-      const isEdit = !!this.form.product_id
+      const isEdit = !!this.form.id
       const url = isEdit
-        ? (this.$baseUrl + '/manage/store/products/' + this.form.product_id)
+        ? (this.$baseUrl + '/manage/store/products/' + this.form.id)
         : (this.$baseUrl + '/manage/store/products')
       const method = isEdit ? 'put' : 'post'
       axios({
@@ -200,7 +321,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete(this.$baseUrl + '/manage/store/products/' + row.product_id, {
+        axios.delete(this.$baseUrl + '/manage/store/products/' + row.id, {
           headers: { Authorization: this.getToken() }
         }).then(() => {
           this.$message.success('已删除')
@@ -222,5 +343,26 @@ export default {
 .pagination {
   margin-top: 10px;
   text-align: right;
+}
+.image-preview {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #eee;
+  padding: 5px;
+  text-align: center;
+}
+.image-error {
+  font-size: 30px;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.cover-upload {
+  margin-top: 10px;
+}
+#editor-container {
+  border: 1px solid #ccc;
 }
 </style>

@@ -9,6 +9,7 @@ let config = require("../config.js")
 const fetch = require('node-fetch');
 const { generateRandomUsername } = require('../bin/username-generator.js');
 const UniCloud = require('../bin/unicloud.js');
+const achievements = require('../bin/achievements.js');
 
 // 发送邮件的函数
 async function sendEmail(to, code) {
@@ -104,6 +105,9 @@ router.get('/user_profile_of', async function (req, res) {
 			'SELECT name,avatar_url,top_pic_url,user_group,motto,is_admin,uni_id FROM users WHERE user_id = ?',
 			[req.query.id],
 		);
+		if (results && results.length > 0) {
+			results[0].selected_badge = await achievements.getUserBadge(req.query.id);
+		}
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
@@ -237,8 +241,78 @@ router.get('/userprofile', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
 	user.pwd = undefined;
+	user.selected_badge = await achievements.getUserBadge(user.user_id);
 
 	res.end(JSON.stringify(user));
+});
+
+router.get('/achievements_definitions', auth, async (req, res) => {
+	try {
+		const list = await achievements.getAchievementDefinitions({
+			officialOnly: true,
+		});
+		res.json({ list });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+router.get('/achievements', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		const list = await achievements.getUserAchievements(user.user_id);
+		res.json({
+			list,
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+router.get('/achievements_summary', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		const summary = await achievements.getUserAchievementSummary(user.user_id);
+		res.json(summary);
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+router.post('/select_badge', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+
+		const selectedBadge = await achievements.setUserBadge(
+			user.user_id,
+			req.body.achievement_id,
+		);
+
+		if (
+			req.body.achievement_id !== null &&
+			req.body.achievement_id !== undefined &&
+			req.body.achievement_id !== 0 &&
+			!selectedBadge
+		) {
+			return res.status(400).json({
+				msg: 'achievement not unlocked or not selectable',
+			});
+		}
+
+		res.json({
+			msg: 'ok',
+			selected_badge: selectedBadge,
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
 });
 
 // 使用旧密码更新密码
@@ -630,6 +704,78 @@ router.get('/push_set', auth, async (req, res) => {
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
 	}
+});
+
+// 获取/生成用户绑定码
+router.get('/get_binding_code', auth, async (req, res) => {
+    try {
+        let user = req.user;
+        user = JSON.parse(JSON.stringify(user))[0];
+        let user_id = user.user_id;
+        
+        // 查询是否已有绑定码
+        let results = await query('SELECT binding_code, push_start_time, push_end_time FROM user_bindings WHERE user_id = ?', [user_id]);
+        
+        if (results.length > 0 && req.query.refresh != 'true') {
+            res.json(200, { 
+                binding_code: results[0].binding_code,
+                push_start_time: results[0].push_start_time || '00:00',
+                push_end_time: results[0].push_end_time || '23:59'
+            });
+        } else {
+            // 生成新的绑定码
+            let newCode = getCode(8);
+            
+            // 确保唯一性（简单重试机制）
+            let check = await query('SELECT user_id FROM user_bindings WHERE binding_code = ?', [newCode]);
+            let retryCount = 0;
+            while (check.length > 0 && retryCount < 5) {
+                newCode = getCode(8);
+                check = await query('SELECT user_id FROM user_bindings WHERE binding_code = ?', [newCode]);
+                retryCount++;
+            }
+            
+            if (retryCount >= 5) {
+                 return res.json(500, { msg: '生成绑定码失败，请重试' });
+            }
+            
+            if (results.length > 0) {
+                await query('UPDATE user_bindings SET binding_code = ? WHERE user_id = ?', [newCode, user_id]);
+            } else {
+                await query('INSERT INTO user_bindings (user_id, binding_code, push_start_time, push_end_time) VALUES (?, ?, "00:00", "23:59")', [user_id, newCode]);
+            }
+            res.json(200, { 
+                binding_code: newCode,
+                push_start_time: results.length > 0 ? (results[0].push_start_time || '00:00') : '00:00',
+                push_end_time: results.length > 0 ? (results[0].push_end_time || '23:59') : '23:59'
+            });
+        }
+    } catch (e) {
+        console.log(e);
+        res.json(500, { msg: '服务器错误' });
+    }
+});
+
+// 更新推送时间设置
+router.post('/update_push_time', auth, async (req, res) => {
+    try {
+        let user = req.user;
+        user = JSON.parse(JSON.stringify(user))[0];
+        let user_id = user.user_id;
+        
+        let { start_time, end_time } = req.body;
+        
+        if (!start_time || !end_time) {
+            return res.json(400, { msg: '参数不完整' });
+        }
+        
+        await query('UPDATE user_bindings SET push_start_time = ?, push_end_time = ? WHERE user_id = ?', [start_time, end_time, user_id]);
+        
+        res.json(200, { msg: '设置成功' });
+    } catch (e) {
+        console.log(e);
+        res.json(500, { msg: '服务器错误' });
+    }
 });
 
 router.get('/get_history_message', auth, async (req, res) => {

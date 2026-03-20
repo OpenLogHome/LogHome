@@ -1,4 +1,8 @@
 {
+  "name": "timer_loghome_treeplant",
+  "engines": {
+    "node": ">=8"
+  },
   "dependencies": {
     "mysql": "^2.18.1"
   }

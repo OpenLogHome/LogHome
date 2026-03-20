@@ -415,8 +415,13 @@
 				// })
 			},
 			gotoArticle(uid) {
+				const readerProps = window.localStorage.getItem("readerProps");
+				const isPageReader = readerProps === "page";
+				const url = isPageReader
+					? `../readers/newReader/article?id=${uid}&novelId=${this.world.novel_id}`
+					: `../readers/article_rich?id=${uid}`;
 				uni.navigateTo({
-					url: '../readers/newReader/article?id=' + uid + "&novelId=" + this.world.novel_id
+					url
 				})
 			},
 			gotoRelations() {

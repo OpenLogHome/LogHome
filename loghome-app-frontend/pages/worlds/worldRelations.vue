@@ -165,8 +165,13 @@ export default {
                 console.log("Chart clicked:", params.dataType, params);
                 if (params.dataType === 'node') {
                     console.log("Node clicked, navigating to:", params.data.value);
+					const readerProps = window.localStorage.getItem("readerProps");
+					const isPageReader = readerProps === "page";
+					const url = isPageReader
+						? `/pages/readers/newReader/article?id=${params.data.value}&novelId=${this.novelId}`
+						: `/pages/readers/article_rich?id=${params.data.value}`;
                     uni.navigateTo({
-                        url: '/pages/readers/newReader/article?id=' + params.data.value + '&novelId=' + this.novelId
+                        url
                     });
                 }
             });

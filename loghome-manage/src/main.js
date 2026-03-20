@@ -12,7 +12,7 @@ Vue.use(VueClipboard)
 Vue.prototype.axios = axios;
 const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
-Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
+Vue.prototype.$baseUrl = BASE_URL_DEV;
 Vue.prototype.$imgBaseUrl = "http://img.codesocean.top"
 
 Vue.use(ElementUI);

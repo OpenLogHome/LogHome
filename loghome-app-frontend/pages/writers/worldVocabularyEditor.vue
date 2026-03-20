@@ -169,6 +169,7 @@
 	import toolBox from '../../components/essay_toolBox/toolBox.vue'
 	import uniFab from '../../uni_modules/uni-fab/components/uni-fab/uni-fab.vue'
 	import customlist from '../../components/custom-list/index.js'
+	import { createTreeExpReporter } from '../../lib/treeExpReporter.js'
 	export default {
 		components: {
 			uniFab,
@@ -203,6 +204,7 @@
 				selectText: "",
 				saveInterval: undefined,
 				firstLocalCheck: true,
+				writeExpReporter: null,
 				writerSettings: {},
 				themes: {
 					blue: {
@@ -297,6 +299,23 @@
 			} else {}
 		},
 		methods: {
+			startWritingExpTimer() {
+				if (!this.writeExpReporter) {
+					this.writeExpReporter = createTreeExpReporter(this, 'write_seconds', { activeWindowMs: 45000 });
+				}
+				this.writeExpReporter.start();
+				this.writeExpReporter.markActive();
+			},
+			async stopWritingExpTimer() {
+				if (this.writeExpReporter) {
+					await this.writeExpReporter.stop();
+				}
+			},
+			markWritingActivity() {
+				if (this.writeExpReporter) {
+					this.writeExpReporter.markActive();
+				}
+			},
 			utc2timestamp(utc_datetime) {
 				// 转为正常的时间格式 年-月-日 时:分:秒
 				var T_pos = utc_datetime.indexOf('T');
@@ -407,6 +426,7 @@
 					})
 			},
 			onInput(e) {
+				this.markWritingActivity();
 				// console.log(e);
 				if (e.detail.text.length - this.article.content.length == 1) {
 					for (let i = 0; i < e.detail.text.length; i++) {
@@ -606,6 +626,7 @@
 				}
 			},
 			onContentChange(content) {
+				this.markWritingActivity();
 				this.article.content = JSON.stringify(content);
 				this.article_changed = true;
 				this.editorCtx.setContents({ //赋值
@@ -916,11 +937,24 @@
 
 
 		},
-		beforeDestroy() {
+		async beforeDestroy() {
+			await this.stopWritingExpTimer();
 			this.$bus.$off('AutoSave');
 			this.endLocalSaveTimer();
 		},
+		onShow() {
+			this.startWritingExpTimer();
+		},
+		async onHide() {
+			await this.stopWritingExpTimer();
+		},
+		async onUnload() {
+			await this.stopWritingExpTimer();
+		},
 		watch: {
+			'article.title'() {
+				this.markWritingActivity();
+			},
 			content: {
 				handler(newVal, oldVal) { //对象式监听，立即监听，深度监听
 					this.onContentChange(newVal);

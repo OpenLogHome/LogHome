@@ -144,6 +144,36 @@ router.get('/like/status', auth, async (req, res) => {
     }
 });
 
+// 批量获取点赞状态
+router.post('/like/status/batch', auth, async (req, res) => {
+    try {
+        const user = req.user[0];
+        const { target_ids, target_type } = req.body;
+        
+        if (!target_ids || !Array.isArray(target_ids) || target_ids.length === 0) {
+            return res.status(400).json({ msg: '请提供目标ID列表' });
+        }
+        
+        const placeholders = target_ids.map(() => '?').join(',');
+        const likes = await query(
+            `SELECT target_id FROM comm_likes 
+             WHERE user_id = ? AND target_type = ? AND target_id IN (${placeholders})`,
+            [user.user_id, target_type, ...target_ids]
+        );
+        
+        const likedSet = new Set(likes.map(l => l.target_id));
+        const result = {};
+        target_ids.forEach(id => {
+            result[id] = likedSet.has(id);
+        });
+        
+        res.json(result);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ msg: 'Internal server error' });
+    }
+});
+
 // 获取收藏夹列表
 router.get('/collections', auth, async (req, res) => {
     try {

@@ -20,6 +20,41 @@ const stickersRouter = require('./community/stickers.js');
 
 let router = express.Router();
 
+function parseCommentMediaUrls(item) {
+	if (item.media_urls) {
+		try {
+			item.media_urls = JSON.parse(item.media_urls);
+		} catch (e) {
+			item.media_urls = [];
+		}
+	} else {
+		item.media_urls = [];
+	}
+	return item;
+}
+
+function attachCentoData(item) {
+	if (Number(item.cento_id) !== 0 && item.cento_item_id) {
+		item.cento = {
+			article_cento_id: item.cento_item_id,
+			article_id: item.cento_article_id,
+			paragraph_id: item.cento_paragraph_id,
+			paragraph: item.cento_paragraph,
+			user_id: item.cento_user_id,
+		};
+	} else {
+		item.cento = null;
+	}
+
+	delete item.cento_item_id;
+	delete item.cento_article_id;
+	delete item.cento_paragraph_id;
+	delete item.cento_paragraph;
+	delete item.cento_user_id;
+
+	return item;
+}
+
 router.get('/get_follows_of', async function (req, res) {
 	try {
 		let results = await query(
@@ -399,6 +434,113 @@ router.get('/novel_commonts_reply_to', async function (req, res) {
 	}
 });
 
+router.get('/novel_commonts_all_fast', async function (req, res) {
+	try {
+		req.query.page = req.query.page ? req.query.page : 1;
+		req.query.pageSize = req.query.pageSize ? req.query.pageSize : 3;
+
+		let centos;
+		if (req.query.paragraphId != undefined && req.query.articleId != undefined) {
+			centos = await query(
+				'SELECT article_cento_id FROM article_cento c WHERE c.paragraph_id = ? AND c.article_id = ? AND c.is_delete = 0',
+				[req.query.paragraphId, req.query.articleId],
+			);
+			centos = centos.map((item) => item.article_cento_id);
+			if (centos.length == 0) {
+				res.end(JSON.stringify([]));
+				return;
+			}
+		}
+
+		let conditions = [
+			'n.reply_to_id = -1',
+			'n.deleted = 0',
+			'n.novel_id = ?',
+		];
+		let params = [req.query.id];
+
+		if (req.query.articleId != undefined) {
+			conditions.push('n.article_id = ?');
+			params.push(req.query.articleId);
+		}
+		if (req.query.paragraphId != undefined) {
+			conditions.push('n.cento_id IN (?)');
+			params.push(centos);
+		}
+
+		params.push(
+			Number(req.query.page - 1) * Number(req.query.pageSize),
+			Number(req.query.pageSize),
+		);
+
+		let results = await query(
+			`SELECT
+				l.author_id,
+				n.*,
+				u.name,
+				u.avatar_url,
+				u.user_group,
+				a.title AS article_title,
+				COALESCE(p.like_num, 0) AS likeNum,
+				c.article_cento_id AS cento_item_id,
+				c.article_id AS cento_article_id,
+				c.paragraph_id AS cento_paragraph_id,
+				c.paragraph AS cento_paragraph,
+				c.user_id AS cento_user_id
+			FROM novel_comments n
+			INNER JOIN users u ON u.user_id = n.user_id
+			INNER JOIN novels l ON l.novel_id = n.novel_id
+			LEFT JOIN articles a ON a.article_id = n.article_id
+			LEFT JOIN (
+				SELECT novel_comment_id, SUM(CASE WHEN type = 0 THEN 1 ELSE 0 END) AS like_num
+				FROM novel_comments_praise
+				GROUP BY novel_comment_id
+			) p ON p.novel_comment_id = n.essay_comment_id
+			LEFT JOIN article_cento c ON c.article_cento_id = n.cento_id AND c.is_delete = 0
+			WHERE ${conditions.join(' AND ')}
+			ORDER BY n.essay_comment_id DESC
+			LIMIT ?,?`,
+			params,
+		);
+		results = JSON.parse(JSON.stringify(results));
+
+		const rootCommentIds = results.map((item) => item.essay_comment_id);
+		let replyRows = [];
+		if (rootCommentIds.length > 0) {
+			replyRows = await query(
+				`SELECT n.*,u.name,u.avatar_url,u.user_group
+				FROM novel_comments n
+				INNER JOIN users u ON u.user_id = n.user_id
+				WHERE n.father_comment_id IN (?) AND n.deleted = 0
+				ORDER BY n.essay_comment_id ASC`,
+				[rootCommentIds],
+			);
+			replyRows = JSON.parse(JSON.stringify(replyRows));
+		}
+
+		let repliesByFatherId = new Map();
+		for (let reply of replyRows) {
+			parseCommentMediaUrls(reply);
+			if (!repliesByFatherId.has(reply.father_comment_id)) {
+				repliesByFatherId.set(reply.father_comment_id, []);
+			}
+			repliesByFatherId.get(reply.father_comment_id).push(reply);
+		}
+
+		for (let item of results) {
+			item.likeNum = Number(item.likeNum) || 0;
+			parseCommentMediaUrls(item);
+			attachCentoData(item);
+			item.replies = repliesByFatherId.get(item.essay_comment_id) || [];
+		}
+
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.get('/get_comment_praise_status', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
@@ -409,6 +551,31 @@ router.get('/get_comment_praise_status', auth, async (req, res) => {
 		);
 		res.end(JSON.stringify(results));
 	} catch (err) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/get_comment_praise_statuses', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		const commentIds = String(req.query.comment_ids || '')
+			.split(',')
+			.map((id) => Number(id))
+			.filter((id) => Number.isInteger(id) && id > 0);
+
+		if (commentIds.length == 0) {
+			res.end(JSON.stringify([]));
+			return;
+		}
+
+		let results = await query(
+			'SELECT novel_comment_id,type FROM novel_comments_praise WHERE user_id = ? AND novel_comment_id IN (?)',
+			[user.user_id, commentIds],
+		);
+		res.end(JSON.stringify(results));
+	} catch (err) {
+		console.log(err);
 		res.json(400, { msg: 'bad request' });
 	}
 });

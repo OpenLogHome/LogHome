@@ -23,6 +23,7 @@ Vue.component('theme-switch', ThemeSwitch);
 const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
 const BASE_URL_EMULATOR_DEV = "http://10.0.2.2:9000"
+const BASE_URL_SCF = "https://loghomeinnerservice.codesocean.top"
 
 const STORE_BASE_URL_PRODUCTION = "http://store.codesocean.top"
 const STORE_BASE_URL_DEV = "http://localhost:5173"
@@ -37,8 +38,8 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
-Vue.prototype.$storeBaseUrl = STORE_BASE_URL_DEV;
+Vue.prototype.$baseUrl = BASE_URL_DEV;
+Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
 	bookCover:"https://s4.ax1x.com/2022/01/13/7lYAlq.png"
@@ -291,6 +292,10 @@ if(inDev && !window.jsBridge) {
 		},
 		hotUpdateAssets(url, version) {
 			console.log("hotUpdateAssets", url, version)
+		},
+		downloadFont(fontKey, fontUrl, fontFormat, fontVersion) {
+			console.log("downloadFont", fontKey, fontUrl, fontFormat, fontVersion)
+			return Promise.resolve(fontUrl);
 		},
 	}
 }

@@ -22,6 +22,8 @@
 								size="mini">{{ item.feedback_count }}处反馈</el-tag>
 							<el-tag type="danger" v-if="item.hasWriterModify == true && item.is_draft == false"
 								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">发布后有编辑</el-tag>
+							<el-tag type="warning" v-if="item.isSyncing == true"
+								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark">Syncing</el-tag>
 							<el-tag type="info" v-if="item.hasCloudCollision == true"
 								style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark">
 								<i class="el-icon-warning-outline" style="margin-right: 5rpx;"></i>存在云冲突
@@ -146,6 +148,10 @@ import darkModeMixin from '@/mixins/dark-mode.js'
 import { getServerTime } from '@/lib/utils';
 import { writerArticleDB } from "../../lib/db.js"
 import crypto from 'crypto'
+
+const SYNC_PENDING_SUPPRESS_MS = 30 * 1000;
+const SYNC_RECHECK_DELAY_MS = 3000;
+
 export default {
 	components: {
 		uniCollapse, uniCollapseItem, uniIcons
@@ -171,7 +177,8 @@ export default {
 			frameInfo: {
 				isEnabled: false,
 				currentSelected: -1
-			}
+			},
+			statusRecheckTimers: {}
 		}
 	},
 	onLoad(option) {
@@ -202,9 +209,15 @@ export default {
 		this.checkFrameEnvironment();
 	},
 	beforeDestroy() {
-		this.titleBtn.removeEventListener("click", this.toggleTitleBtn);
+		if (this.titleBtn) {
+			this.titleBtn.removeEventListener("click", this.toggleTitleBtn);
+		}
 		// 清理postMessage事件监听器
 		window.removeEventListener('message', this.handleParentMessage);
+		Object.values(this.statusRecheckTimers).forEach((timerId) => {
+			clearTimeout(timerId);
+		});
+		this.statusRecheckTimers = {};
 	},
 	methods: {
 		toggleTitleBtn() {
@@ -556,7 +569,7 @@ export default {
 			if (item.article_type == "spliter") {
 				uni.showModal({
 					title: '修改分卷名',
-					content: '',
+					content: item.title,
 					editable: true,
 					placeholderText: "输入分卷名",
 					success: (res) => {
@@ -724,6 +737,41 @@ export default {
 				return "no data";
 			}
 		},
+		getSyncPendingStorageKey(articleId) {
+			return `writer_sync_pending_${Number(articleId || 0)}`;
+		},
+		getSyncPendingState(articleId) {
+			const raw = window.localStorage.getItem(
+				this.getSyncPendingStorageKey(articleId)
+			);
+			if (!raw) return null;
+			try {
+				return JSON.parse(raw);
+			} catch (error) {
+				return null;
+			}
+		},
+		isSyncPending(articleId, maxAgeMs = SYNC_PENDING_SUPPRESS_MS) {
+			const state = this.getSyncPendingState(articleId);
+			if (!state || state.pending !== true) return false;
+			if (!state.updated_at) return true;
+			return Date.now() - Number(state.updated_at) <= maxAgeMs;
+		},
+		scheduleArticleStatusRecheck(articleId) {
+			if (this.statusRecheckTimers[articleId]) {
+				return;
+			}
+			this.statusRecheckTimers[articleId] = setTimeout(async () => {
+				delete this.statusRecheckTimers[articleId];
+				const target = this.shownArticles.find(
+					(item) => Number(item.article_id) === Number(articleId)
+				);
+				if (!target) return;
+				target.isCheckingStatus = true;
+				await this._checkArticleStatusSingle(target);
+				this.$forceUpdate();
+			}, SYNC_RECHECK_DELAY_MS);
+		},
 		async getArticle(articleId) {
 			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;
 			let res = await axios.get(this.$baseUrl + '/essays/get_article?id=' + articleId,
@@ -765,6 +813,8 @@ export default {
 		},
 		async _checkArticleStatusSingle(article) {
 			article.articleStatusChecked = true;
+			article.hasCloudCollision = false;
+			article.isSyncing = false;
 			// 查找最近保存的本地文章和云端文章
 			const localArticles = await writerArticleDB.articles
 				.where('article_id')
@@ -799,7 +849,12 @@ export default {
 				if (latestLocalArticle.content_hash != latestRemoteArticle.content_hash) {
 					writerArticle = latestRemoteArticle;
 					// 本地和云端的文章内容不一致
-					article.hasCloudCollision = true;
+					if (this.isSyncPending(article.article_id)) {
+						article.isSyncing = true;
+						this.scheduleArticleStatusRecheck(article.article_id);
+					} else {
+						article.hasCloudCollision = true;
+					}
 					this.$forceUpdate();
 				} else {
 					writerArticle = latestLocalArticle;

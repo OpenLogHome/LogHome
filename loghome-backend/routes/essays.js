@@ -6,6 +6,10 @@ let axios = require('axios');
 let message = require('../bin/message.js');
 let statistics = require('../bin/statistics');
 let bank = require('../bin/bank.js');
+const {
+	decodeBase64Image,
+	ensureImageDominantColor,
+} = require('../bin/image-dominant-color.js');
 const fs = require('fs'); // 引入文件系统模块
 const compressing = require('compressing');
 const path = require('path');
@@ -74,8 +78,10 @@ router.get('/get_novels_of', auth, async (req, res) => {
 router.get('/get_novel_by_id', async function (req, res) {
 	try {
 		let results = await query(
-			`SELECT n.*,u.user_id auther_id,u.name author_name,u.avatar_url auther_avatar FROM novels n,users u 
-						WHERE n.author_id = u.user_id AND novel_id = ? AND n.deleted = 0`,
+			`SELECT n.*,u.user_id auther_id,u.name author_name,u.avatar_url auther_avatar,ic.dominant_color pic_dominant_color FROM novels n
+						JOIN users u ON n.author_id = u.user_id
+						LEFT JOIN image_dominant_colors ic ON ic.image_url = n.picUrl AND ic.extract_status = 'success'
+						WHERE novel_id = ? AND n.deleted = 0`,
 			[req.query.id],
 		);
 		let likes = await query('SELECT * FROM bookcase WHERE novel_id = ?', [
@@ -177,31 +183,35 @@ router.post('/change_cover', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
 	try {
-		axios
-			.post(
-				'http://img.codesocean.top/upload/imgbase64',
-				{
-					img: req.body.img,
-					apikey: '45qEQfILCQ3tAXxmUJF8O562bJU2D0',
+		const coverBuffer = decodeBase64Image(req.body.img);
+		const uploadResponse = await axios.post(
+			'http://img.codesocean.top/upload/imgbase64',
+			{
+				img: req.body.img,
+				apikey: '45qEQfILCQ3tAXxmUJF8O562bJU2D0',
+			},
+			{
+				headers: {
+					'Content-Type': 'application/json', //设置请求头请求格式为JSON
 				},
-				{
-					headers: {
-						'Content-Type': 'application/json', //设置请求头请求格式为JSON
-					},
-				},
-			)
-			.then(function (response) {
-				console.log(response.data);
-				let result = query(
-					'UPDATE novels SET picUrl = ? WHERE novel_id = ? AND deleted = 0',
-					[response.data.url, req.body.novel_id],
-				);
-				res.json(200, { msg: 'ok' });
-			})
-			.catch(function (error) {
-				console.log(error);
-				res.json(400, { msg: 'bad request' });
+			},
+		);
+		console.log(uploadResponse.data);
+		await query('UPDATE novels SET picUrl = ? WHERE novel_id = ? AND deleted = 0', [
+			uploadResponse.data.url,
+			req.body.novel_id,
+		]);
+
+		let dominantColor = null;
+		try {
+			dominantColor = await ensureImageDominantColor(uploadResponse.data.url, {
+				imageBuffer: coverBuffer,
 			});
+		} catch (colorError) {
+			console.log('extract novel cover dominant color failed', colorError);
+		}
+
+		res.json(200, { msg: 'ok', dominant_color: dominantColor });
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -495,7 +505,7 @@ router.get('/get_article_writer', auth, async function (req, res) {
 			res.end("no data");
 			return;
 		}
-		res.end(JSON.stringify({...readerResults[0], ...results[0]}));
+		res.end(JSON.stringify({ ...(readerResults[0] || {}), ...results[0] }));
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -509,7 +519,9 @@ router.get('/get_article_writer_hash', auth, async function (req, res) {
 			`SELECT * FROM articles WHERE article_id = ?`,
 			[req.query.id],
 		)
-		readerResults[0].content = undefined;
+		if (readerResults.length > 0) {
+			readerResults[0].content = undefined;
+		}
 		let results = await query(
 			`SELECT a.* FROM articles_writer a, novels n
                                WHERE n.novel_id = a.novel_id 
@@ -532,7 +544,7 @@ router.get('/get_article_writer_hash', auth, async function (req, res) {
 			res.end("no data");
 			return;
 		}
-		res.end(JSON.stringify({...readerResults[0], ...results[0]}));
+		res.end(JSON.stringify({ ...(readerResults[0] || {}), ...results[0] }));
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -549,7 +561,7 @@ router.post('/sync_article_writer_from_reader', auth, async (req, res) => {
 			[req.body.article_id, user.user_id],
 		);
 		if(article_reader.length == 0){
-			res.json(400, { msg: 'article does not exist' });
+			return res.json(400, { msg: 'article does not exist' });
 		}
 		article_reader = article_reader[0];
 
@@ -585,6 +597,22 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 			);
 
 			const contentHash = calculateContentHash(req.body.content);
+
+			if (article_writer.length === 0) {
+				let results = await query(
+					'INSERT INTO articles_writer(article_id,title,content, content_hash, create_time,novel_id) VALUES(?,?,?,?,?,?)',
+					[
+						req.body.article_id,
+						req.body.title,
+						req.body.content,
+						contentHash,
+						req.body.create_time,
+						req.body.novel_id,
+					],
+				);
+				res.end(JSON.stringify(results));
+				return;
+			}
 
 			let results = await query(
 				'UPDATE articles_writer SET `title`=?, `content`=?, `content_hash`=?, create_time = ? WHERE id=?',

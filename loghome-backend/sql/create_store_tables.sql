@@ -1,0 +1,42 @@
+CREATE TABLE IF NOT EXISTS store_products (
+  product_id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL COMMENT '商品标题',
+  summary TEXT COMMENT '商品摘要',
+  description TEXT COMMENT '商品描述（富文本）',
+  type ENUM('virtual', 'physical') NOT NULL DEFAULT 'virtual' COMMENT '商品类型：virtual-虚拟，physical-实物',
+  price DECIMAL(10, 2) NOT NULL DEFAULT 0.00 COMMENT '商品价格',
+  stock INT NOT NULL DEFAULT 0 COMMENT '库存数量（仅实物商品）',
+  cover_url VARCHAR(500) COMMENT '封面图片URL',
+  media_urls TEXT COMMENT '其他媒体图片URL（JSON数组）',
+  shipping_desc VARCHAR(255) COMMENT '发货时效描述',
+  status ENUM('on', 'off') NOT NULL DEFAULT 'on' COMMENT '商品状态：on-上架，off-下架',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_type (type),
+  INDEX idx_status (status),
+  INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='积分商城商品表';
+
+CREATE TABLE IF NOT EXISTS store_orders (
+  order_id INT AUTO_INCREMENT PRIMARY KEY,
+  order_no VARCHAR(50) NOT NULL UNIQUE COMMENT '订单编号',
+  user_id INT NOT NULL COMMENT '用户ID',
+  product_id INT NOT NULL COMMENT '商品ID',
+  product_title VARCHAR(255) NOT NULL COMMENT '商品标题（快照）',
+  product_type ENUM('virtual', 'physical') NOT NULL COMMENT '商品类型（快照）',
+  price DECIMAL(10, 2) NOT NULL COMMENT '订单价格',
+  status ENUM('pending', 'shipped', 'completed', 'cancelled') NOT NULL DEFAULT 'pending' COMMENT '订单状态：pending-待发货，shipped-已发货，completed-已完成，cancelled-已取消',
+  pay_log TEXT COMMENT '支付日志（JSON）',
+  pay_cropped_log TEXT COMMENT '支付裁剪日志（JSON）',
+  tracking_number VARCHAR(100) COMMENT '物流单号',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  shipped_at TIMESTAMP NULL COMMENT '发货时间',
+  completed_at TIMESTAMP NULL COMMENT '完成时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_user_id (user_id),
+  INDEX idx_product_id (product_id),
+  INDEX idx_status (status),
+  INDEX idx_created_at (created_at),
+  INDEX idx_order_no (order_no),
+  FOREIGN KEY (product_id) REFERENCES store_products(product_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='积分商城订单表';

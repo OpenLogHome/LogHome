@@ -12,10 +12,14 @@
 				</view> -->
 			</view>
 			<view class="list">
-				<!-- <view class="li " @click="pushSet">
-					<view class="text">消息推送设置</view>
+				<view class="li " @click="pushSet">
+					<view class="text">消息推送与QQ绑定</view>
 					<log-image class="to" src="../../static/user/to.png"></log-image>
-				</view> -->
+				</view>
+				<view class="li " @click="readerSet">
+					<view class="text">阅读器设置</view>
+					<img class="to" src="../../static/user/to.png"></img>
+				</view>
 				<view class="li " @click="changePwd">
 					<view class="text">修改密码</view>
 					<img class="to" src="../../static/user/to.png"></img>

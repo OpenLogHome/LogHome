@@ -22,7 +22,7 @@ void main() async {
       androidNotificationChannelId: 'io.loghome.app.channel.audio',
       androidNotificationChannelName: 'Audio Playback',
       androidNotificationOngoing: true,
-    ),
+    ), 
   );
 
   await FlutterDisplayMode.setHighRefreshRate();
@@ -103,18 +103,27 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initialize() async {
+    final initStart = DateTime.now();
+    print('[Performance] Initialization started at $initStart');
+    
     try {
-      // 同时执行资源准备和延时
       final results = await Future.wait([
-        AssetUtils.prepareAssets(),
-        Future.delayed(const Duration(seconds: 3)), // 最小显示时间2秒
+        AssetUtils.prepareAssets().then((path) {
+          final assetTime = DateTime.now().difference(initStart).inMilliseconds;
+          print('[Performance] Assets prepared in ${assetTime}ms');
+          return path;
+        }),
+        Future.delayed(const Duration(seconds: 3)),
       ]);
 
+      final totalTime = DateTime.now().difference(initStart).inMilliseconds;
+      print('[Performance] Total initialization took ${totalTime}ms');
+      
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => WebViewPage(
-              localPath: results[0], // 资源路径在results[0]
+              localPath: results[0],
             ),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
@@ -124,8 +133,7 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
     } catch (e) {
-      print('初始化失败: $e');
-      // 显示错误信息并允许用户重试
+      print('[Performance] Initialization failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -134,7 +142,7 @@ class _SplashScreenState extends State<SplashScreen> {
             action: SnackBarAction(
               label: '重试',
               onPressed: () {
-                _initialize(); // 重试初始化
+                _initialize();
               },
             ),
           ),

@@ -14,6 +14,7 @@
 		"express": "^4.17.1",
 		"form-data": "^4.0.0",
 		"html-to-text": "^8.1.0",
+		"jimp": "^0.22.12",
 		"js-md5": "^0.8.3",
 		"jsonwebtoken": "^8.5.1",
 		"moment": "^2.29.1",
@@ -25,6 +26,7 @@
 		"nodemailer": "^6.10.1",
 		"nodemon": "^2.0.7",
 		"segment": "^0.1.3",
+		"sharp": "^0.33.5",
 		"svg-captcha": "^1.4.0",
 		"tencentcloud-sdk-nodejs": "^4.0.652",
 		"tencentcloud-sdk-nodejs-sms": "^4.0.651"

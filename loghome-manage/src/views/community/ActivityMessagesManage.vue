@@ -50,11 +50,11 @@
       <el-table-column
         prop="router"
         label="跳转链接"
-        width="150"
+        min-width="150"
       ></el-table-column>
       <el-table-column
         label="发送时间"
-        width="180"
+        min-width="180"
       >
         <template slot-scope="scope">
           {{ formatDate(scope.row.time) }}
@@ -62,7 +62,7 @@
       </el-table-column>
       <el-table-column
         label="已读/总数"
-        width="100"
+        min-width="100"
       >
         <template slot-scope="scope">
           {{ scope.row.read_count }}/{{ scope.row.total_count }}
@@ -70,7 +70,7 @@
       </el-table-column>
       <el-table-column
         label="操作"
-        width="150"
+        min-width="150"
       >
         <template slot-scope="scope">
           <el-button
@@ -106,7 +106,8 @@
     <el-dialog
       title="发送活动消息"
       :visible.sync="dialogVisible"
-      width="600px"
+      width="90%"
+      max-width="600px"
     >
       <el-form :model="messageForm" :rules="rules" ref="messageForm" label-width="100px">
         <el-form-item label="消息内容" prop="content">
@@ -183,7 +184,8 @@
     <el-dialog
       title="活动消息详情"
       :visible.sync="detailDialogVisible"
-      width="600px"
+      width="90%"
+      max-width="600px"
     >
       <div class="message-detail">
         <div class="detail-item">
@@ -450,7 +452,8 @@ export default {
 }
 
 .search-input {
-  width: 300px;
+  flex: 1;
+  min-width: 200px;
   margin-right: 15px;
 }
 

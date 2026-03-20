@@ -1,16 +1,16 @@
 <template>
 	<view class="content" v-dark>
 		<div class="searchBar" :class="{ top: scrollTop <= 5 }" v-dark>
-			<div class="search-input-wrapper" @tap="navigateToSearch">
+			<div class="search-input-wrapper clickable" @tap="navigateToSearch">
 				<uni-icons type="search" size="18" color="#999"></uni-icons>
 				<view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
 			</div>
 			<uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'"
-				class="messageIcon" @click="gotoMessage"></uni-icons>
+				class="messageIcon clickable" @click="gotoMessage"></uni-icons>
 		</div>
 		<mescroll-body ref="mescrollRef" @init="mescrollInit" style="margin-top: 105rpx;" @down="downCallback"
-			@up="upCallback" @scroll="onPageScroll" :fixed="false" :height="'100%'">
-			<div class="appRecommendInfo" @click="gotoUpdate" v-show="showAppRecommendInfo == 'android'">
+			@up="upCallback" @scroll="onPageScroll" :fixed="false" :height="'100%'" :up="mescrollUpOption">
+			<div class="appRecommendInfo clickable" @click="gotoUpdate" v-show="showAppRecommendInfo == 'android'">
 				<div class="left">
 					<view class="desc">
 						推荐您使用 <span style="color: rgb(234, 112, 52);">原木社区 APP</span>
@@ -25,8 +25,9 @@
 			</div>
 			<HorizontalTags ref="HorizontalTagsRef"></HorizontalTags>
 			<bookshelfHorizontal ref="bookshelfHorizontalRef"></bookshelfHorizontal>
-			<div class="card" v-for="(item, index) in collections" v-show="keyword.length == 0" v-dark v-if="index != 1">
-				<div class="head" @click="gotoCollections(item.collection_title)">
+			<div class="card" v-for="(item, index) in collections" v-show="keyword.length == 0" v-dark v-if="index != 1"
+				:class="{ 'is-refreshing': denseCardRefreshAnimating }">
+				<div class="head clickable" @click="gotoCollections(item.collection_title)">
 					<div class="title">
 						<p>
 							{{ item.collection_title }}
@@ -51,7 +52,7 @@
 					<transition-group name="fade" class="transition" type="in-out">
 						<div v-for="novel in item['novels'].slice(0, 4)" :key="novel.novel_id">
 							<div @click="readBook(novel, novel.novel_id, $event)"
-								class="books" v-dark :id="'book-cover-' + novel.novel_id">
+								class="books clickable" v-dark :id="'book-cover-' + novel.novel_id">
 								<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
 									:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"
 									style="border-radius: 10rpx; transform:scale(.90)" />
@@ -76,13 +77,71 @@
 
 				<div class="dense-card-outer-container" v-else-if="item.collection_type == 'dense_card'"
 					style="min-height: 200rpx;">
-					<swiper class="dense-card-swiper" :indicator-dots="false" :autoplay="false" :interval="3000"
+					<view class="dense-card-skeleton" v-if="denseCardLoading">
+						<swiper-item class="dense-card-swiper-item">
+							<view class="dense-card-page">
+								<view class="dense-card-column">
+									<view class="dense-card-item">
+										<view class="skeleton-rank"></view>
+										<view class="skeleton-cover"></view>
+										<view class="skeleton-info">
+											<view class="skeleton-title"></view>
+											<view class="skeleton-author"></view>
+										</view>
+									</view>
+									<view class="dense-card-item">
+										<view class="skeleton-rank"></view>
+										<view class="skeleton-cover"></view>
+										<view class="skeleton-info">
+											<view class="skeleton-title"></view>
+											<view class="skeleton-author"></view>
+										</view>
+									</view>
+									<view class="dense-card-item">
+										<view class="skeleton-rank"></view>
+										<view class="skeleton-cover"></view>
+										<view class="skeleton-info">
+											<view class="skeleton-title"></view>
+											<view class="skeleton-author"></view>
+										</view>
+									</view>
+								</view>
+								<view class="dense-card-column">
+									<view class="dense-card-item">
+										<view class="skeleton-rank"></view>
+										<view class="skeleton-cover"></view>
+										<view class="skeleton-info">
+											<view class="skeleton-title"></view>
+											<view class="skeleton-author"></view>
+										</view>
+									</view>
+									<view class="dense-card-item">
+										<view class="skeleton-rank"></view>
+										<view class="skeleton-cover"></view>
+										<view class="skeleton-info">
+											<view class="skeleton-title"></view>
+											<view class="skeleton-author"></view>
+										</view>
+									</view>
+									<view class="dense-card-item">
+										<view class="skeleton-rank"></view>
+										<view class="skeleton-cover"></view>
+										<view class="skeleton-info">
+											<view class="skeleton-title"></view>
+											<view class="skeleton-author"></view>
+										</view>
+									</view>
+								</view>
+							</view>
+						</swiper-item>
+					</view>
+					<swiper class="dense-card-swiper" v-show="!denseCardLoading" :indicator-dots="false" :autoplay="false" :interval="3000"
 						:duration="500" :circular="true" indicator-active-color="#FFD700"
 						indicator-color="rgba(255, 255, 255, 0.4)">
 						<swiper-item v-for="page in 2" :key="'page-' + page" class="dense-card-swiper-item">
 							<div class="dense-card-page">
 								<div class="dense-card-column">
-									<div class="dense-card-item"
+									<div class="dense-card-item clickable"
 										v-for="(novel, index) in item['novels'].slice((page - 1) * 6, (page - 1) * 6 + 3)"
 										:key="novel.novel_id" @click="readBook(novel, novel.novel_id, $event)"
 										:id="'book-cover-' + novel.novel_id">
@@ -99,7 +158,7 @@
 									</div>
 								</div>
 								<div class="dense-card-column">
-									<div class="dense-card-item"
+									<div class="dense-card-item clickable"
 										v-for="(novel, index) in item['novels'].slice((page - 1) * 6 + 3, page * 6)"
 										:key="novel.novel_id" @click="readBook(novel, novel.novel_id, $event)"
 										:id="'book-cover-' + novel.novel_id">
@@ -125,7 +184,7 @@
 			<banner page="library" v-else v-show="keyword.length == 0" />
 
 			<div v-for="item in [...searchBooks, ...books]" :key="item.book_id">
-				<div @click="readBook(item, item.novel_id, $event)" class="books" v-dark :id="'book-cover-' + item.novel_id">
+				<div @click="readBook(item, item.novel_id, $event)" class="books clickable" v-dark :id="'book-cover-' + item.novel_id">
 					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
 						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
 					<div class="bookInfo">
@@ -157,6 +216,9 @@ import darkModeMixin from '@/mixins/dark-mode.js'
 import banner from '@/components/banner.vue'
 import HorizontalTags from '../components/horizontal-tags.vue';
 
+const LIBRARY_FIRST_SCREEN_CACHE_KEY = 'loghome_library_first_screen_cache';
+const LIBRARY_FIRST_SCREEN_CACHE_VERSION = 1;
+
 export default {
 	components: {
 		bookInCase, popup, banner, bookshelfHorizontal, HorizontalTags
@@ -176,16 +238,136 @@ export default {
 				desc: '1.更新内容更新内容 <br/> 2.更新内容更新内容 <br/>2.更新内容更新内容',
 				update_url: ""
 			},
-			showAppRecommendInfo: "none"
+			showAppRecommendInfo: "none",
+			hasLibraryCache: false,
+			denseCardRefreshAnimating: false,
+			denseCardRefreshTimer: null,
+			denseCardLoading: true,
+			mescrollUpOption: {
+				page: {
+					size: 6
+				}
+			}
 		}
 	},
 	onLoad() {
+		this.restoreFirstScreenCache();
 	},
 	onShow() {
 		this.reloadComponents();
 		this.checkSystem();
+		this.checkReaderSetting();
+	},
+	beforeUnmount() {
+		this.clearDenseCardAnimation();
 	},
 	methods: {
+		restoreFirstScreenCache() {
+			try {
+				const cache = uni.getStorageSync(LIBRARY_FIRST_SCREEN_CACHE_KEY);
+				if (!cache || cache.version !== LIBRARY_FIRST_SCREEN_CACHE_VERSION) {
+					return;
+				}
+				const cachedCollections = Array.isArray(cache.collections) ? cache.collections : [];
+				const cachedBooks = Array.isArray(cache.books) ? cache.books : [];
+				if (!cachedCollections.length && !cachedBooks.length) {
+					return;
+				}
+				this.collections = cachedCollections;
+				this.books = cachedBooks;
+				this.hasLibraryCache = true;
+			} catch (error) {
+				console.error('restoreFirstScreenCache failed:', error);
+			}
+		},
+		persistFirstScreenCache() {
+			try {
+				uni.setStorageSync(LIBRARY_FIRST_SCREEN_CACHE_KEY, {
+					version: LIBRARY_FIRST_SCREEN_CACHE_VERSION,
+					updatedAt: Date.now(),
+					collections: this.collections,
+					books: this.books
+				});
+				this.hasLibraryCache = this.collections.length > 0 || this.books.length > 0;
+			} catch (error) {
+				console.error('persistFirstScreenCache failed:', error);
+			}
+		},
+		clearDenseCardAnimation() {
+			if (this.denseCardRefreshTimer) {
+				clearTimeout(this.denseCardRefreshTimer);
+				this.denseCardRefreshTimer = null;
+			}
+			this.denseCardRefreshAnimating = false;
+		},
+		triggerDenseCardAnimation() {
+			this.clearDenseCardAnimation();
+			this.$nextTick(() => {
+				this.denseCardRefreshAnimating = true;
+				this.denseCardRefreshTimer = setTimeout(() => {
+					this.denseCardRefreshAnimating = false;
+					this.denseCardRefreshTimer = null;
+				}, 650);
+			});
+		},
+		async refreshFirstScreenRecommends(options = {}) {
+			const { silent = false } = options;
+			this.denseCardLoading = true;
+			try {
+				const res = await axios.get(this.$baseUrl + '/library/recommand/get_library_collections', {});
+				const collections = Array.isArray(res.data) ? res.data : [];
+				const collectionWithNovels = await Promise.all(collections.map(async (item) => {
+					try {
+						const novelsRes = await axios.get(this.$baseUrl
+							+ '/library/recommand/get_library_recommend_titles?title='
+							+ item.collection_title + "&page=1&amount=10", {});
+						return {
+							...item,
+							novels: Array.isArray(novelsRes.data) ? novelsRes.data : []
+						};
+					} catch (error) {
+						console.error('refreshFirstScreenRecommends title failed:', item.collection_title, error);
+						return {
+							...item,
+							novels: []
+						};
+					}
+				}));
+				this.collections = collectionWithNovels;
+				this.persistFirstScreenCache();
+				this.denseCardLoading = false;
+				this.$nextTick(() => {
+					this.triggerDenseCardAnimation();
+				});
+			} catch (error) {
+				if (!silent && !this.hasLibraryCache) {
+					uni.showToast({
+						title: "绂荤嚎妯″紡",
+						icon: 'none',
+						duration: 2000
+					});
+				} else {
+					console.error('refreshFirstScreenRecommends failed:', error);
+				}
+				this.denseCardLoading = false;
+			}
+		},
+		checkReaderSetting() {
+			if (!window.localStorage.getItem("readerProps")) {
+				uni.showModal({
+					title: '提示',
+					content: '您尚未设置阅读器偏好，请前往设置',
+					showCancel: false,
+					success: function (res) {
+						if (res.confirm) {
+							uni.navigateTo({
+								url: '/pages/settings/readerSettings'
+							});
+						}
+					}
+				});
+			}
+		},
 		reloadComponents() {
 			if (this.$refs.bookshelfHorizontalRef) this.$refs.bookshelfHorizontalRef.loadBooks();
 			if (this.$refs.HorizontalTagsRef) this.$refs.HorizontalTagsRef.loadTags();
@@ -197,44 +379,48 @@ export default {
 			this.mescroll = mescroll;
 		},
 		downCallback() {
-			this.mescroll.resetUpScroll();
 			this.refreshPage();
 			this.checkUpdate();
 			this.checkAncientVersion();
-			this.refreshRecommends();
-			this.this.reloadComponents();
-			this.books = [];
+			this.reloadComponents();
+			this.mescroll.resetUpScroll();
 			// if(window.jsBridge.inApp){
 			// 	window.jsBridge.vibrate();
 			// }
 		},
-		upCallback() {
-			this.getMoreNovels();
+		upCallback(page) {
+			this.getMoreNovels(page);
 		},
 		//刷新页面
 		async refreshPage() {
 			// 刷新推荐内容
-			setTimeout(() => {
-				this.mescroll.endSuccess();
-			}, 1000);
+			await this.refreshFirstScreenRecommends({ silent: this.hasLibraryCache });
 		},
-		async getMoreNovels() {
+		async getMoreNovels(page = { num: 1 }) {
 			//获取更多小说
-			axios.get(this.$baseUrl + '/library/get_novels_all', {}).then((res) => {
-				this.books = [...this.books, ...res.data];
-				setTimeout(() => {
-					this.mescroll.endSuccess();
-				}, 1000);
-			}).catch(function (error) {
-				uni.showToast({
-					title: error.toString(),
-					icon: 'none',
-					duration: 2000
-				});
+			const isFirstPage = !page || page.num === 1;
+			try {
+				const res = await axios.get(this.$baseUrl + '/library/get_novels_all', {});
+				const novels = Array.isArray(res.data) ? res.data : [];
+				this.books = isFirstPage ? novels : [...this.books, ...novels];
+				this.persistFirstScreenCache();
+				const pageSize = this.mescrollUpOption.page.size;
+				const hasNext = novels.length >= pageSize;
+				this.mescroll.endSuccess(novels.length, hasNext);
+			} catch (error) {
+				if (!this.hasLibraryCache) {
+					uni.showToast({
+						title: error.toString(),
+						icon: 'none',
+						duration: 2000
+					});
+				} else {
+					console.error('getMoreNovels failed:', error);
+				}
 				this.mescroll.endErr();
-			}).then(function () {
+			} finally {
 				uni.hideLoading();
-			})
+			}
 		},
 
 		//响应进入书籍详情页面事件
@@ -247,7 +433,8 @@ export default {
 			}
 		},
 		//刷新推荐
-		refreshRecommends() {
+		async refreshRecommends(options = {}) {
+			return this.refreshFirstScreenRecommends(options);
 			// 获取所有推荐集合
 			let _this = this;
 			axios.get(this.$baseUrl + '/library/recommand/get_library_collections', {}).then((res) => {
@@ -470,6 +657,20 @@ export default {
 
 		&.dark-mode {
 			background-color: var(--card-background);
+		}
+
+		&.is-refreshing {
+			.dense-card-item {
+				will-change: transform, opacity;
+				animation: card-refresh 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+			}
+
+			.dense-card-item:nth-child(1) { animation-delay: 0s; }
+			.dense-card-item:nth-child(2) { animation-delay: 0.06s; }
+			.dense-card-item:nth-child(3) { animation-delay: 0.12s; }
+			.dense-card-item:nth-child(4) { animation-delay: 0.18s; }
+			.dense-card-item:nth-child(5) { animation-delay: 0.24s; }
+			.dense-card-item:nth-child(6) { animation-delay: 0.30s; }
 		}
 
 		.head {
@@ -744,6 +945,136 @@ export default {
 	overflow: hidden;
 }
 
+.dense-card-skeleton {
+	width: 100%;
+	height: 480rpx;
+	overflow: hidden;
+
+	.dense-card-swiper-item {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 5rpx 0;
+		height: 100%;
+	}
+
+	.dense-card-page {
+		display: flex;
+		width: 100%;
+		height: 100%;
+		justify-content: space-between;
+		padding: 0 15rpx;
+	}
+
+	.dense-card-column {
+		display: flex;
+		flex-direction: column;
+		width: 48%;
+		height: 100%;
+	}
+
+	.dense-card-item {
+		display: flex;
+		width: 100%;
+		margin-top: 10rpx;
+		margin-bottom: 20rpx;
+		align-items: center;
+		position: relative;
+	}
+
+	.skeleton-rank {
+		position: absolute;
+		left: 10rpx;
+		top: 0;
+		width: 40rpx;
+		height: 40rpx;
+		background: #e0e0e0;
+		border-radius: 5rpx;
+		overflow: hidden;
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+			animation: skeleton-shimmer 1.2s ease-in-out infinite;
+		}
+		.dark-mode & {
+			background: rgba(255, 255, 255, 0.15);
+		}
+	}
+
+	.skeleton-cover {
+		width: 105rpx;
+		height: 140rpx;
+		background: #e0e0e0;
+		border-radius: 8rpx;
+		flex-shrink: 0;
+		margin-left: 10rpx;
+		position: relative;
+		overflow: hidden;
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+			animation: skeleton-shimmer 1.2s ease-in-out infinite;
+		}
+		.dark-mode & {
+			background: rgba(255, 255, 255, 0.15);
+		}
+	}
+
+	.skeleton-info {
+		flex: 1;
+		margin-left: 20rpx;
+		overflow: hidden;
+	}
+
+	.skeleton-title {
+		height: 92rpx;
+		background: #e0e0e0;
+		border-radius: 6rpx;
+		margin-bottom: 10rpx;
+		position: relative;
+		overflow: hidden;
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+			animation: skeleton-shimmer 1.2s ease-in-out infinite;
+		}
+		.dark-mode & {
+			background: rgba(255, 255, 255, 0.15);
+		}
+	}
+
+	.skeleton-author {
+		height: 30rpx;
+		width: 60%;
+		background: #e0e0e0;
+		border-radius: 6rpx;
+		position: relative;
+		overflow: hidden;
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+			animation: skeleton-shimmer 1.2s ease-in-out infinite;
+		}
+		.dark-mode & {
+			background: rgba(255, 255, 255, 0.15);
+		}
+	}
+}
+
+@keyframes skeleton-shimmer {
+	to {
+		transform: translateX(100%);
+	}
+}
+
 .dense-card-swiper {
 	width: 100%;
 	height: calc(470rpx + 10rpx);
@@ -875,6 +1206,95 @@ export default {
 		img{
 			height: 150rpx;
 		}
+	}
+}
+
+@keyframes card-refresh {
+	from {
+		opacity: 0.55;
+		transform: translateY(18rpx) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.clickable {
+	position: relative;
+	overflow: hidden;
+	cursor: pointer;
+	transition: transform 0.2s ease;
+
+	&::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.1);
+		border-radius: inherit;
+		transform: translate(-50%, -50%) scale(0);
+		opacity: 0;
+		transition: all 0.3s ease;
+		pointer-events: none;
+	}
+
+	&:active::after {
+		transform: translate(-50%, -50%) scale(1);
+		opacity: 1;
+	}
+
+	&:active {
+		transform: scale(0.98);
+	}
+}
+
+.search-input-wrapper {
+	&.clickable:active {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	.dark-mode &.clickable:active {
+		background: rgba(255, 255, 255, 0.05);
+	}
+}
+
+.messageIcon {
+	&.clickable:active {
+		opacity: 0.6;
+	}
+}
+
+.appRecommendInfo {
+	&.clickable:active {
+		opacity: 0.8;
+		transform: scale(0.98);
+	}
+}
+
+.head {
+	&.clickable:active {
+		opacity: 0.8;
+	}
+}
+
+.books {
+	&.clickable:active {
+		transform: scale(0.98);
+		box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.12);
+
+		.dark-mode & {
+			box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.4);
+		}
+	}
+}
+
+.dense-card-item {
+	&.clickable:active {
+		transform: scale(0.98);
+		opacity: 0.9;
 	}
 }
 </style>

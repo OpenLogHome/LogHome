@@ -67,9 +67,9 @@
 							<div class="btn pad" @click="changeFontSize(+1)">
 								A<i class="el-icon-sort-up"></i>
 							</div>
-							<div class="btn" @click="showFontsSelectDrawer = true">
-								<span :style="{ 'fontFamily': fonts[readerSettings.font].family }">{{
-									fonts[readerSettings.font].name }}</span>
+							<div class="btn" @click="showFontsSelectDrawer = true" v-if="canSwitchFont">
+								<span :style="{ 'fontFamily': getCurrentFontFamily() }">{{
+									getCurrentFontName() }}</span>
 								<i class="el-icon-arrow-right"></i>
 							</div>
 						</div>
@@ -244,7 +244,7 @@
 		</div>
 		<div class="bottomBar" :style="{'color': themesData[readerSettings.theme].isBlack ? '#fff8' : '#0008'}">
 			<div class="left">
-				{{ currentChapterPageInfo.current }}/{{ currentChapterPageInfo.total }} 页 - {{ allArticles.length > 0 ? ((currentArticleIdx + 1) / allArticles.length * 100).toFixed(1) : 0 }}%
+				{{ currentPageIdx + 1 }}/{{ allPages.length }}
 			</div>
 			<div class="right">
 				<span class="time">{{ currentTime }}</span>
@@ -257,13 +257,18 @@
 			</div>
 		</div>
 
-		<el-drawer title="选择字体" :visible.sync="showFontsSelectDrawer" :direction="'btt'" size="55%">
+		<el-drawer v-if="canSwitchFont" title="选择字体" :visible.sync="showFontsSelectDrawer" :direction="'btt'" size="55%">
 			<div class="fonts-container">
 				<div class="fonts-grid">
-					<div v-for="(font, key) in fonts" :key="key" class="font-item"
+					<div v-for="(font, key) in selectableFonts" :key="key" class="font-item"
 						:class="{ 'selected': readerSettings.font === key }" @click="selectFont(key)">
 						<div class="font-info">
-							<div class="font-name">{{ font.name }}</div>
+							<div class="font-name">
+								{{ font.name }}
+								<span v-if="fontDownloadState[key] === 'downloading'" style="font-size: 22rpx; margin-left: 12rpx; color: #888;">
+									下载中...
+								</span>
+							</div>
 							<div class="font-preview" :style="{
 								fontFamily: font.family || 'inherit'
 							}">
@@ -280,7 +285,7 @@
 
 		<el-drawer :with-header="false" :visible.sync="menuDrawerVisible" direction="btt" :modal="true" size="60%"
 			custom-class="bookMenu">
-			<bookMenu :novel_id="novelId" :currentIdx="currentArticleIdx" v-if="menuDrawerVisible" @change="gotoArticleIdx($event); menuDrawerVisible = false"></bookMenu>
+			<bookMenu :novel_id="novelId" @change="gotoArticleIdx($event); menuDrawerVisible = false"></bookMenu>
 		</el-drawer>
 		
 		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="calc(80% + 44px)"
@@ -316,7 +321,7 @@
 					ref="audiobookPlayer"
 					:articleIds="currentArticleIds" 
 					:coverUrl="currentNovelCover"
-					:initialVoice="'zh-CN-XiaoxiaoNeural'"
+					:initialVoice="'system-default'"
 					:allArticleData="allArticleData"
 					:startArticleId="articleId"
 					@change="handleBookListenChange"
@@ -395,11 +400,6 @@
 				<el-button type="primary" @click="submitFeedback" :disabled="!feedbackContent">提交</el-button>
 			</span>
 		</el-dialog>
-		
-		<task-reward-modal 
-			ref="taskRewardModal"
-			@harvest="handleHarvestFromModal">
-		</task-reward-modal>
 	</div>
 </template>
 
@@ -414,14 +414,14 @@ import {
 import { articleDB } from "../../../lib/db.js"
 import themesData from "./themesData.json"
 import fontSizes from "./fontSize.json"
-import fonts from "./fonts.json"
+import fontsConfig from "./fonts.json"
 import bookMenu from '../../../components/bookMenu.vue'
 import BatteryIcon from "../../../components/battery.vue"
 import BookComment from "../bookComment.vue"
 import BookExcerpts from "../bookExcerpts.vue"
 import AudiobookPlayer from "../../../components/audiobook-player.vue"
 import worldVocabulary from "./worldVocabulary.vue"
-import TaskRewardModal from "../../../components/TaskRewardModal.vue"
+import { createTreeExpReporter } from "../../../lib/treeExpReporter.js"
 export default {
 	data() {
 		return {
@@ -451,7 +451,10 @@ export default {
 			settingsOpened: false,
 			readerSettings: {},
 			themesData,
-			fonts,
+			fonts: JSON.parse(JSON.stringify(fontsConfig)),
+			isAppEnv: false,
+			fontDownloadState: {},
+			runtimeLoadedFonts: {},
 			showReaderSetting: false,
 			showFontsSelectDrawer: false,
 			onRendering: false,
@@ -493,45 +496,329 @@ export default {
 			listenDrawerVisible: false,
 			listeningParagraphId: -1,
 			shownParaTitleListenBtns: [],
-			readingTimer: null,
-			dailyReadingSeconds: 0,
-			isTaskSubmitted: false,
-			cloudProgressSyncTimer: null,
-			pendingCloudProgress: null,
-			loadedArticleRange: { min: -1, max: -1 },
-			isLoadingMore: false,
-			loadGenerationId: 0
+			readExpReporter: null,
+			readingProgressSyncTimer: null,
+			lastSyncedReadingProgressKey: "",
+			syncingReadingProgress: false,
+			pendingReadingProgressSync: false
 		}
 	},
-	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer, worldVocabulary, TaskRewardModal },
+	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer, worldVocabulary },
 	methods: {
-		async loadArticleAtIndex(idx, append = true) {
-			let currentGenId = this.loadGenerationId;
-			if (idx < 0 || idx >= this.allArticles.length) return;
-			let articleInfo = this.allArticles[idx];
-			let articleData = await this.getArticleContentById(articleInfo.article_id, articleInfo.update_time, true);
-			if (currentGenId != this.loadGenerationId) return;
-			
-			this.allArticleData[articleData.article_id.toString()] = articleData;
-			let articlePages = await this.generateArticleRenderData(articleData);
-			if (currentGenId != this.loadGenerationId) return;
-			
-			if (append) {
-				this.allPages.push(...articlePages);
-				this.loadedArticleRange.max = Math.max(this.loadedArticleRange.max, idx);
-			} else {
-				this.allPages.unshift(...articlePages);
-				this.loadedArticleRange.min = Math.min(this.loadedArticleRange.min, idx);
-				// Adjust indices
-				for (let j = 0; j < this.currentRenderIdx.length; j++) {
-					this.currentRenderIdx[j] += articlePages.length;
-				}
-				this.currentPageIdx += articlePages.length;
+		markReadActivity() {
+			if (this.readExpReporter) {
+				this.readExpReporter.markActive();
 			}
-			return articlePages;
+		},
+		getCurrentReadingProgressPayload() {
+			let currentPage = this.allPages[this.currentPageIdx];
+			if (!currentPage || !this.novelId) {
+				return null;
+			}
+			let articleData = this.allArticleData[currentPage.articleId] || this.allArticleData[currentPage.articleId?.toString()];
+			if (!articleData || articleData.article_chapter == undefined || articleData.article_chapter == null) {
+				return null;
+			}
+			return {
+				novel_id: Number(this.novelId),
+				article_id: currentPage.articleId,
+				article_chapter: articleData.article_chapter,
+				page_idx: currentPage.idx
+			};
+		},
+		getReadingProgressSyncKey(payload) {
+			if (!payload) {
+				return "";
+			}
+			return `${payload.novel_id}|${payload.article_id}|${payload.article_chapter}|${payload.page_idx}`;
+		},
+		scheduleReadingProgressSync(delay = 800) {
+			if (this.readingProgressSyncTimer) {
+				clearTimeout(this.readingProgressSyncTimer);
+			}
+			this.readingProgressSyncTimer = setTimeout(() => {
+				this.readingProgressSyncTimer = null;
+				if (this.syncingReadingProgress) {
+					this.pendingReadingProgressSync = true;
+					return;
+				}
+				this.syncReadingProgress();
+			}, delay);
+		},
+		async syncReadingProgress(force = false) {
+			if (this.readingProgressSyncTimer) {
+				clearTimeout(this.readingProgressSyncTimer);
+				this.readingProgressSyncTimer = null;
+			}
+			let payload = this.getCurrentReadingProgressPayload();
+			if (!payload) {
+				return;
+			}
+			let tk = JSON.parse(window.localStorage.getItem('token'));
+			if (tk) tk = tk.tk;
+			if (!tk) {
+				return;
+			}
+			if (this.syncingReadingProgress) {
+				this.pendingReadingProgressSync = true;
+				return;
+			}
+			let progressKey = this.getReadingProgressSyncKey(payload);
+			if (!force && progressKey == this.lastSyncedReadingProgressKey) {
+				return;
+			}
+			this.syncingReadingProgress = true;
+			try {
+				await axios.post(
+					this.$baseUrl + '/library/update_reading_progress',
+					payload,
+					{
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': 'Bearer ' + tk
+						}
+					},
+				);
+				this.lastSyncedReadingProgressKey = progressKey;
+			} catch (error) {
+				console.error("syncReadingProgress failed", error);
+			} finally {
+				this.syncingReadingProgress = false;
+				if (this.pendingReadingProgressSync) {
+					this.pendingReadingProgressSync = false;
+					this.scheduleReadingProgressSync(0);
+				}
+			}
+		},
+		getDefaultFonts() {
+			return JSON.parse(JSON.stringify(fontsConfig));
+		},
+		getCurrentFontConfig() {
+			if (!this.readerSettings || !this.readerSettings.font) {
+				return this.fonts.default || { name: "系统默认", family: "" };
+			}
+			return this.fonts[this.readerSettings.font] || this.fonts.default || { name: "系统默认", family: "" };
+		},
+		getCurrentFontFamily() {
+			return this.getCurrentFontConfig().family || "";
+		},
+		getCurrentFontName() {
+			return this.getCurrentFontConfig().name || "系统默认";
+		},
+		normalizeReaderFont() {
+			if (!this.canSwitchFont) {
+				this.readerSettings.font = "default";
+				this.showFontsSelectDrawer = false;
+				return;
+			}
+			if (!this.readerSettings.font || !this.fonts[this.readerSettings.font]) {
+				this.readerSettings.font = "default";
+			}
+		},
+		getServerFontVersion(font) {
+			if (!font || font.font_version == undefined || font.font_version == null) {
+				return "1";
+			}
+			return String(font.font_version);
+		},
+		mergeServerFonts(serverFonts) {
+			let defaultFonts = this.getDefaultFonts();
+			let mergedFonts = {
+				default: defaultFonts.default || { name: "系统默认", family: "", familyBold: "", version: "1" }
+			};
+			if (!Array.isArray(serverFonts)) {
+				this.fonts = mergedFonts;
+				return;
+			}
+			for (let item of serverFonts) {
+				if (!item || !item.font_key || !item.font_name || !item.regular_family || !item.regular_url) {
+					continue;
+				}
+				mergedFonts[item.font_key] = {
+					name: item.font_name,
+					family: item.regular_family,
+					familyBold: item.bold_family || item.regular_family,
+					version: this.getServerFontVersion(item),
+					regular: {
+						url: item.regular_url,
+						format: item.regular_format || "ttf"
+					},
+					bold: item.bold_url ? {
+						url: item.bold_url,
+						format: item.bold_format || "ttf"
+					} : null
+				};
+			}
+			this.fonts = mergedFonts;
+		},
+		async loadReaderFontsFromServer() {
+			try {
+				let res = await axios.get(this.$baseUrl + '/app/get_reader_fonts', {});
+				if (res.status == 200 && Array.isArray(res.data)) {
+					this.mergeServerFonts(res.data);
+					return;
+				}
+			} catch (e) {
+				console.warn("loadReaderFontsFromServer failed", e);
+			}
+			this.fonts = this.getDefaultFonts();
+		},
+		normalizeFontFormat(format) {
+			let normalized = String(format || "").toLowerCase();
+			if (normalized == "otf") return "opentype";
+			if (normalized == "woff") return "woff";
+			if (normalized == "woff2") return "woff2";
+			return "truetype";
+		},
+		registerRuntimeFontFace(fontFamily, fontUri, format) {
+			if (!fontFamily || !fontUri) {
+				return;
+			}
+			let styleId = `reader-font-face-${String(fontFamily).replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+			if (document.getElementById(styleId)) {
+				return;
+			}
+			let style = document.createElement("style");
+			style.id = styleId;
+			style.innerHTML = `@font-face { font-family: "${fontFamily}"; src: url("${fontUri}") format("${this.normalizeFontFormat(format)}"); font-display: swap; }`;
+			document.head.appendChild(style);
+		},
+		logReaderFontError(stage, error, extra = {}) {
+			let debugInfo = {
+				stage,
+				...extra,
+				errorName: error?.name || "",
+				errorMessage: error?.message || String(error || ""),
+				errorStack: error?.stack || ""
+			};
+			console.error("[reader-font]", JSON.stringify(debugInfo), error?.stack || error);
+			try {
+				window.__readerFontLastError = {
+					at: new Date().toISOString(),
+					...debugInfo
+				};
+			} catch (storageError) {
+				console.warn("[reader-font] store debug info failed", storageError);
+			}
+		},
+		async ensureFontAssetDownloaded(fontKey, assetConfig, assetType) {
+			if (!assetConfig || !assetConfig.url || !assetConfig.family) {
+				return true;
+			}
+			if (this.runtimeLoadedFonts[assetConfig.family]) {
+				return true;
+			}
+			if (!window.jsBridge || !window.jsBridge.downloadFont) {
+				throw new Error("downloadFont bridge unavailable");
+			}
+			let fontMeta = this.fonts[fontKey] || {};
+			let version = String(fontMeta.version || "1");
+			let bridgeFontKey = `${fontKey}_${assetType}`;
+			try {
+				console.log("[reader-font] start download", JSON.stringify({
+					fontKey,
+					bridgeFontKey,
+					assetType,
+					family: assetConfig.family,
+					url: assetConfig.url,
+					format: assetConfig.format || "ttf",
+					version
+				}));
+				let fontUri = await window.jsBridge.downloadFont(
+					bridgeFontKey,
+					assetConfig.url,
+					assetConfig.format || "ttf",
+					version
+				);
+				console.log("[reader-font] downloadFont resolved", JSON.stringify({
+					fontKey,
+					bridgeFontKey,
+					assetType,
+					fontUri
+				}));
+				if (!fontUri || typeof fontUri !== "string") {
+					throw new Error("invalid font uri");
+				}
+				this.registerRuntimeFontFace(assetConfig.family, fontUri, assetConfig.format);
+				if (document.fonts && document.fonts.load) {
+					await document.fonts.load(`16px "${assetConfig.family}"`);
+					console.log("[reader-font] document.fonts.load resolved", JSON.stringify({
+						fontKey,
+						assetType,
+						family: assetConfig.family
+					}));
+				}
+				this.$set(this.runtimeLoadedFonts, assetConfig.family, true);
+				return true;
+			} catch (error) {
+				this.logReaderFontError("ensureFontAssetDownloaded", error, {
+					fontKey,
+					bridgeFontKey,
+					assetType,
+					family: assetConfig.family,
+					url: assetConfig.url,
+					format: assetConfig.format || "ttf",
+					version
+				});
+				throw error;
+			}
+		},
+		async ensureRuntimeFontReady(fontKey) {
+			if (!fontKey || fontKey == "default") {
+				return true;
+			}
+			if (!this.canSwitchFont) {
+				return false;
+			}
+			if (this.fontDownloadState[fontKey] == "downloading") {
+				return false;
+			}
+			let targetFont = this.fonts[fontKey];
+			if (!targetFont || !targetFont.regular || !targetFont.regular.url) {
+				return false;
+			}
+			try {
+				this.$set(this.fontDownloadState, fontKey, "downloading");
+				await this.ensureFontAssetDownloaded(fontKey, {
+					...targetFont.regular,
+					family: targetFont.family
+				}, "regular");
+				if (targetFont.bold && targetFont.bold.url && targetFont.familyBold) {
+					await this.ensureFontAssetDownloaded(fontKey, {
+						...targetFont.bold,
+						family: targetFont.familyBold
+					}, "bold");
+				}
+				this.$set(this.fontDownloadState, fontKey, "ready");
+				return true;
+			} catch (e) {
+				this.logReaderFontError("ensureRuntimeFontReady", e, {
+					fontKey,
+					targetFont
+				});
+				this.$set(this.fontDownloadState, fontKey, "failed");
+				uni.showToast({
+					title: "字体下载失败",
+					icon: "none"
+				});
+				return false;
+			}
+		},
+		async initReaderFonts() {
+			this.isAppEnv = !!(window.jsBridge && window.jsBridge.inApp);
+			if (!this.canSwitchFont) {
+				this.fonts = { default: this.getDefaultFonts().default };
+				this.normalizeReaderFont();
+				return;
+			}
+			await this.loadReaderFontsFromServer();
+			this.normalizeReaderFont();
+			let ready = await this.ensureRuntimeFontReady(this.readerSettings.font);
+			if (this.readerSettings.font != "default" && !ready) {
+				this.readerSettings.font = "default";
+			}
 		},
 		loadAllPages() {
-			this.loadGenerationId++;
 			return new Promise(async (resolve, reject) => {
 				uni.showLoading({
 					title: '编排页面中'
@@ -543,63 +830,62 @@ export default {
 				await this.calculatePageWrapperOffset();
 				setTimeout(async () => {
 					this.allArticles = await this.loadAllArticles();
-					
+					let articleData = await this.getArticleContentById(this.articleId);
+					this.allArticleData[articleData.article_id.toString()] = articleData;
+					let articlePages = await this.generateArticleRenderData(articleData);
+					this.allPages = articlePages;
+					this.currentPageIdx = 0;
+					// 开始预渲染全部的页面
 					let centerArticleIdx = 0;
-					for (centerArticleIdx = 0; centerArticleIdx < this.allArticles.length; centerArticleIdx++) {
+					for (centerArticleIdx = 0; centerArticleIdx <= this.allArticles.length; centerArticleIdx++) {
 						if (this.articleId == this.allArticles[centerArticleIdx].article_id) {
 							break;
 						}
 					}
-					
-					// 重置并只加载当前章节
-					this.allPages = [];
-					this.loadedArticleRange = { min: centerArticleIdx, max: centerArticleIdx - 1 };
-					
-					await this.loadArticleAtIndex(centerArticleIdx, true);
-					
-					this.currentPageIdx = 0;
-					
-					// 恢复历史位置
-					if(this.historyMode && this.paragraphId == -1) {
-						this.currentPageIdx = Math.min(this.currentPageIdx + Number(historyPage), this.allPages.length - 1);
+					// 由于Vue的渲染问题，前面的页面需要先完成计算，然后后面的可以慢慢计算
+					for (let i = centerArticleIdx; i >= 0; i--) {
+						if (i < centerArticleIdx) {
+							let articleData = await this.getArticleContentById(this.allArticles[i].article_id,
+								this.allArticles[i].update_time, true);
+							this.allArticleData[articleData.article_id.toString()] = articleData;
+							let articlePages = await this.generateArticleRenderData(articleData);
+							this.allPages.unshift(...articlePages);
+							for (let j = 0; j <= this.currentRenderIdx.length - 1; j++) {
+								this.currentRenderIdx[j] += articlePages.length;
+							}
+							this.currentPageIdx += articlePages.length;
+						}
 					}
-					
 					if(this.paragraphId != -1) {
-						this.gotoParagraph(this.articleId, this.paragraphId);
+						this.gotoParagraph(articleData.article_id, this.paragraphId);
 					}
-					
-					this.renderNewPages();
-					this.showArticleCentos();
-					this.shownCommentsBtn = [];
-					setTimeout(() => {
-						this.doUpdateCommentDisplay = true;
-					}, 300)
-					uni.hideLoading();
-					
+					let renderFlag = false;
+					for (let i = 0; i < this.allArticles.length; i++) {
+						if (i > centerArticleIdx) {
+							let articleData = await this.getArticleContentById(this.allArticles[i].article_id,
+								this.allArticles[i].update_time, true);
+							this.allArticleData[articleData.article_id.toString()] = articleData;
+							let articlePages = await this.generateArticleRenderData(articleData);
+							this.allPages.push(...articlePages);
+						}
+						if (i == centerArticleIdx || i == centerArticleIdx + 1) {
+							if (!renderFlag && this.historyMode && this.paragraphId == -1) {
+								this.currentPageIdx = Math.min(this.currentPageIdx + Number(historyPage), this.allPages.length - 1);
+								renderFlag = true;
+							}
+							this.renderNewPages();
+							this.showArticleCentos();
+							this.shownCommentsBtn = [];
+							setTimeout(() => {
+								this.doUpdateCommentDisplay = true;
+							}, 300)
+							uni.hideLoading();
+						}
+					}
 					this.onRendering = false;
 					resolve();
-					
-					// 延迟加载前后章节
-					this.preloadSurroundingArticles();
 				})
 			})
-		},
-		async preloadSurroundingArticles() {
-			if (this.isLoadingMore) return;
-			this.isLoadingMore = true;
-			try {
-				// 向前加载1章
-				if (this.loadedArticleRange.min > 0) {
-					 await this.loadArticleAtIndex(this.loadedArticleRange.min - 1, false);
-				}
-				// 向后加载2章
-				let nextTarget = Math.min(this.allArticles.length - 1, this.loadedArticleRange.max + 2);
-				while (this.loadedArticleRange.max < nextTarget) {
-					await this.loadArticleAtIndex(this.loadedArticleRange.max + 1, true);
-				}
-			} finally {
-				this.isLoadingMore = false;
-			}
 		},
 		delay(ms) {
 			return new Promise(resolve => setTimeout(resolve, ms));
@@ -784,6 +1070,7 @@ export default {
 		},
 		// 动画
 		handleTouchStart(e) {
+			this.markReadActivity();
 			this.touchStartX = e.touches[0].clientX;
 			this.isAnimating = false;
 			this.touchTimer.count = 0;
@@ -856,6 +1143,10 @@ export default {
 					this.isAnimating = false;
 				}, 250);
 			} else {
+				if(window.jsBridge && window.jsBridge.inApp) {
+					jsBridge.setNavigationBarVisible(true);
+					jsBridge.disableVolumeKeyListener();
+				}
 				uni.navigateTo({
 					url: `../bookEnd?novelId=${this.novelId}`
 				})
@@ -902,6 +1193,9 @@ export default {
 					theme: "white"
 				};
 				window.localStorage.setItem("newReaderSettings", JSON.stringify(this.readerSettings));
+			}
+			if (!this.readerSettings.font) {
+				this.readerSettings.font = "default";
 			}
 		},
 		navigateBack(ev) {
@@ -953,8 +1247,14 @@ export default {
 				this.loadAllPages();
 			})
 		},
-		selectFont(fontKey) {
+		async selectFont(fontKey) {
 			if (this.onRendering) return;
+			if (!this.canSwitchFont) return;
+			if (!this.fonts[fontKey]) return;
+			if (fontKey != "default") {
+				let ready = await this.ensureRuntimeFontReady(fontKey);
+				if (!ready) return;
+			}
 			this.readerSettings.font = fontKey;
 			this.showFontsSelectDrawer = false;
 			// 重新加载页面以应用新字体
@@ -1015,7 +1315,7 @@ export default {
 				y = touch.clientY + 20;
 			}
 
-			// 确保不超出上下边界 
+			// 确保不超出上下边界
 			y = Math.max(10, Math.min(y, screenHeight - panelHeight - 10));
 
 			this.panelPosition = { x, y };
@@ -1082,7 +1382,7 @@ export default {
 			uni.setClipboardData({
 				data: `${this.selectedParagraph.value}
 ===================
-版权声明：本文为原创文章，遵循 《原木社区用户内容上传协议》，转载请附上原文出处链接和本声明。 
+版权声明：本文为原创文章，遵循 《原木社区用户内容上传协议》，转载请附上原文出处链接和本声明。
 原文链接：http://loghome.ink/article/${this.articleId}`,
 				success: () => {
 					uni.showToast({
@@ -1204,27 +1504,19 @@ export default {
 				this.showReaderSetting = false;
 			}
 		},
-		async gotoArticleIdx(newArticleIdx) {
+		gotoArticleIdx(newArticleIdx) {
 			if(newArticleIdx < 0 || newArticleIdx >= this.allArticles.length) {
 				return;
 			}
-			
-			// 检查目标章节是否已加载
-			if (newArticleIdx >= this.loadedArticleRange.min && newArticleIdx <= this.loadedArticleRange.max) {
-				for(let i = 0; i < this.allPages.length; i ++) {
-					this.currentPageIdx = 0;
-					if(this.allPages[i].articleId == this.allArticles[newArticleIdx].article_id) {
-						this.currentPageIdx = i;
-						break;
-					}
+			for(let i = 0; i < this.allPages.length; i ++) {
+				this.currentPageIdx = 0;
+				if(this.allPages[i].articleId == this.allArticles[newArticleIdx].article_id) {
+					this.currentPageIdx = i;
+					break;
 				}
-				this.currentRenderIdx = [];
-				this.renderNewPages();
-			} else {
-				// 未加载，重新加载
-				this.articleId = this.allArticles[newArticleIdx].article_id;
-				await this.loadAllPages();
 			}
+			this.currentRenderIdx = [];
+			this.renderNewPages();
 		},
 		gotoParagraph(articleId, paragraphId) {
 			console.log("gotoParagraph", articleId, paragraphId);
@@ -1365,191 +1657,6 @@ export default {
 					icon: 'none'
 				});
 			}
-		},
-		startReadingTimer() {
-			if (this.readingTimer) return;
-			
-			const today = new Date().toISOString().split('T')[0];
-			const STORAGE_KEY = 'daily_reading_status';
-			
-			try {
-				const statusStr = window.localStorage.getItem(STORAGE_KEY);
-				let status = statusStr ? JSON.parse(statusStr) : null;
-				
-				// If no status or date doesn't match today, reset
-				if (!status || status.date !== today) {
-					status = {
-						date: today,
-						seconds: 0,
-						submitted: false
-					};
-					window.localStorage.setItem(STORAGE_KEY, JSON.stringify(status));
-				}
-				
-				this.dailyReadingSeconds = status.seconds || 0;
-				this.isTaskSubmitted = status.submitted || false;
-				
-				this.readingTimer = setInterval(() => {
-					this.dailyReadingSeconds++;
-					
-					// Update storage
-					const currentStatus = {
-						date: today,
-						seconds: this.dailyReadingSeconds,
-						submitted: this.isTaskSubmitted
-					};
-					window.localStorage.setItem(STORAGE_KEY, JSON.stringify(currentStatus));
-					
-					// Check for 5 minutes (300 seconds)
-					if (this.dailyReadingSeconds >= 300 && !this.isTaskSubmitted) {
-						this.checkAndSubmitReadingTask(STORAGE_KEY);
-					}
-				}, 1000);
-			} catch (e) {
-				console.error('Error managing reading timer:', e);
-			}
-		},
-		stopReadingTimer() {
-			if (this.readingTimer) {
-				clearInterval(this.readingTimer);
-				this.readingTimer = null;
-			}
-		},
-		checkAndSubmitReadingTask(storageKey) {
-			if (this.isTaskSubmitted) return;
-			
-			// Double check localStorage
-			try {
-				const statusStr = window.localStorage.getItem(storageKey);
-				if (statusStr) {
-					const status = JSON.parse(statusStr);
-					if (status.submitted) {
-						this.isTaskSubmitted = true;
-						return;
-					}
-				}
-			} catch (e) {
-				console.error(e);
-			}
-
-			let tk = JSON.parse(window.localStorage.getItem('token'));
-			if (tk) tk = tk.tk;
-			
-			if (!tk) return;
-
-			axios.post(this.$baseUrl + '/treePlant/do_task', 
-				{ task_code: 'daily_reading' },
-				{
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization': 'Bearer ' + tk
-					}
-				}
-			).then((taskRes) => {
-				const data = taskRes.data || {};
-				
-				// Mark as submitted
-				this.isTaskSubmitted = true;
-				
-				// Update storage
-				const today = new Date().toISOString().split('T')[0];
-				const newStatus = {
-					date: today,
-					seconds: this.dailyReadingSeconds,
-					submitted: true
-				};
-				window.localStorage.setItem(storageKey, JSON.stringify(newStatus));
-				
-				const modal = this.$refs.taskRewardModal;
-				if (modal) {
-					modal.show({
-						reward: typeof data.reward === 'number' ? data.reward : 20,
-						taskName: '每日任务：阅读5分钟',
-						icon: data.task_icon,
-						currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
-						maxGrowth: 100,
-						canHarvest: data.tree_status === '结果'
-					});
-				}
-			}).catch((err) => {
-				const message = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg);
-				if (message === 'Task already completed today') {
-					this.isTaskSubmitted = true;
-					// Update storage
-					const today = new Date().toISOString().split('T')[0];
-					const newStatus = {
-						date: today,
-						seconds: this.dailyReadingSeconds,
-						submitted: true
-					};
-					window.localStorage.setItem(storageKey, JSON.stringify(newStatus));
-				}
-			});
-		},
-		handleHarvestFromModal() {
-			uni.navigateTo({
-				url: '/pages/treePlant/treeplant'
-			});
-		},
-		scheduleCloudProgressSync(payload) {
-			let tk = JSON.parse(window.localStorage.getItem('token'));
-			if (tk) tk = tk.tk;
-			if (!tk) return;
-			
-			this.pendingCloudProgress = payload;
-			if (this.cloudProgressSyncTimer) {
-				clearTimeout(this.cloudProgressSyncTimer);
-			}
-			
-			this.cloudProgressSyncTimer = setTimeout(async () => {
-				const pending = this.pendingCloudProgress;
-				this.pendingCloudProgress = null;
-				this.cloudProgressSyncTimer = null;
-				
-				let tk2 = JSON.parse(window.localStorage.getItem('token'));
-				if (tk2) tk2 = tk2.tk;
-				if (!tk2 || !pending) return;
-				
-				try {
-					await axios.post(
-						this.$baseUrl + '/library/update_reading_progress',
-						pending,
-						{
-							headers: {
-								'Content-Type': 'application/json',
-								'Authorization': 'Bearer ' + tk2
-							}
-						},
-					);
-				} catch (e) {}
-			}, 800);
-		},
-		async flushCloudProgressSync() {
-			if (this.cloudProgressSyncTimer) {
-				clearTimeout(this.cloudProgressSyncTimer);
-				this.cloudProgressSyncTimer = null;
-			}
-			
-			const pending = this.pendingCloudProgress;
-			this.pendingCloudProgress = null;
-			if (!pending) return;
-			
-			let tk = JSON.parse(window.localStorage.getItem('token'));
-			if (tk) tk = tk.tk;
-			if (!tk) return;
-			
-			try {
-				await axios.post(
-					this.$baseUrl + '/library/update_reading_progress',
-					pending,
-					{
-						headers: {
-							'Content-Type': 'application/json',
-							'Authorization': 'Bearer ' + tk
-						}
-					},
-				);
-			} catch (e) {}
 		}
 	},
 	watch: {
@@ -1561,30 +1668,9 @@ export default {
 				this.articleId = this.allPages[newValue].articleId;
 				window.localStorage.setItem("ReaderHistory_" + this.novelInfo.novel_id, this.allArticleData[this.allPages[newValue].articleId].article_chapter);
 				window.localStorage.setItem("ReaderHistoryPage_" + this.novelInfo.novel_id, this.allPages[newValue].idx);
-				this.scheduleCloudProgressSync({
-					novel_id: this.novelInfo.novel_id,
-					article_id: this.allPages[newValue].articleId,
-					article_chapter: this.allArticleData[this.allPages[newValue].articleId].article_chapter,
-					page_idx: this.allPages[newValue].idx
-				});
+				this.scheduleReadingProgressSync();
 				if (this.allPages[newValue].articleId != this.allPages[oldValue].articleId) {
 					this.showArticleCentos(newValue);
-				}
-				
-				// 预加载检查
-				if (!this.isLoadingMore) {
-					if (newValue >= this.allPages.length - 5 && this.loadedArticleRange.max < this.allArticles.length - 1) {
-						this.isLoadingMore = true;
-						this.loadArticleAtIndex(this.loadedArticleRange.max + 1, true).finally(() => {
-							this.isLoadingMore = false;
-						});
-					}
-					if (newValue <= 5 && this.loadedArticleRange.min > 0) {
-						this.isLoadingMore = true;
-						this.loadArticleAtIndex(this.loadedArticleRange.min - 1, false).finally(() => {
-							this.isLoadingMore = false;
-						});
-					}
 				}
 			}
 			uni.setNavigationBarTitle({
@@ -1592,6 +1678,7 @@ export default {
 			})
 			this.currentArticleIdx = this.getArticleIdx(this.allPages[newValue].articleId);
 			this.doUpdateCommentDisplay = true;
+			this.markReadActivity();
 		},
 		readerSettings: {
 			handler(newValue, oldValue) {
@@ -1618,22 +1705,25 @@ export default {
 		}
 	},
 	computed: {
-		currentChapterPageInfo() {
-			if (this.currentPageIdx < 0 || !this.allPages[this.currentPageIdx]) return { current: 1, total: 1 };
-			const currentArticleId = this.allPages[this.currentPageIdx].articleId;
-			const chapterPages = this.allPages.filter(p => p.articleId === currentArticleId);
-			return {
-				current: this.allPages[this.currentPageIdx].idx + 1,
-				total: chapterPages.length
-			};
+		canSwitchFont() {
+			return this.isAppEnv && !!(window.jsBridge && window.jsBridge.downloadFont);
+		},
+		selectableFonts() {
+			if (this.canSwitchFont) {
+				return this.fonts;
+			}
+			return { default: this.fonts.default || { name: "系统默认", family: "" } };
 		}
 	},
 	async onLoad(option) {
+		this.readExpReporter = createTreeExpReporter(this, 'read_seconds', { activeWindowMs: 180000 });
+		this.readExpReporter.start();
 		this.updateTimeAndBattery(); // 初始化时间
 		this.timeInterval = setInterval(() => {
 			this.updateTimeAndBattery();
 		}, 5000);
 		this.loadReaderSettings();
+		await this.initReaderFonts();
 		uni.showLoading({
 			title: '努力加载中'
 		});
@@ -1659,6 +1749,7 @@ export default {
 			this.updateArticleCommentDisplay();
 		}, 200)
 		await this.loadAllPages();
+		this.scheduleReadingProgressSync(0);
 		window.onVolumnKeyPressCallback = (event) => {
 		    if (event.detail === 'up') {
 				this.isAnimating = true;
@@ -1674,8 +1765,10 @@ export default {
 		// #endif
 	},
 	async onUnload() {
-		await this.flushCloudProgressSync();
-		this.stopReadingTimer();
+		if (this.readExpReporter) {
+			await this.readExpReporter.stop();
+		}
+		await this.syncReadingProgress(true);
 		clearInterval(this.timeInterval);
 		clearInterval(this.updateCommentDisplayTimer);
 		if(window.jsBridge && window.jsBridge.inApp) {
@@ -1687,7 +1780,21 @@ export default {
 		window.removeEventListener("popstate", this.browserBack);
 		// #endif
 	},
+	async onHide() {
+		if (this.readExpReporter) {
+			await this.readExpReporter.stop();
+		}
+		await this.syncReadingProgress(true);
+	},
 	async onShow() {
+		if (this.readExpReporter) {
+			this.readExpReporter.start();
+			this.readExpReporter.markActive();
+		}
+		if (this.canSwitchFont && this.readerSettings.font && this.readerSettings.font != "default") {
+			await this.ensureRuntimeFontReady(this.readerSettings.font);
+		}
+		this.renderNewPages();
 		this.showArticleCentos();
 		this.shownCommentsBtn = [];
 		this.shownParaTitleListenBtns = [];
@@ -1698,47 +1805,11 @@ export default {
 			jsBridge.setNavigationBarVisible(false);
 			await jsBridge.enableVolumeKeyListener();
 		}
-		this.startReadingTimer();
-	},
-	onHide() {
-		this.flushCloudProgressSync();
-		this.stopReadingTimer();
 	}
 }
 </script>
 
 <style scoped lang="scss">
-@font-face {
-	font-family: "FangZhengKaiTiJianTi";
-	src: url("../../../static/fonts/FangZhengKaiTiJianTi-1.ttf");
-}
-
-@font-face {
-	font-family: "FangZhengShuSongJianTi";
-	src: url("../../../static/fonts/FangZhengShuSongJianTi-1.ttf");
-}
-
-@font-face {
-	font-family: "LXGWWenKaiMedium";
-	src: url("../../../static/fonts/LXGWWenKai-Medium.ttf");
-}
-
-@font-face {
-	font-family: "LXGWWenKaiRegular";
-	src: url("../../../static/fonts/LXGWWenKai-Regular.ttf");
-}
-
-@font-face {
-	font-family: "SourceHanSansSCBold";
-	src: url("../../../static/fonts/SourceHanSansSC-Bold.otf");
-}
-
-@font-face {
-	font-family: "SourceHanSansSCRegular";
-	src: url("../../../static/fonts/SourceHanSansSC-Regular.otf");
-}
-
-
 .listen-drawer-container {
 	padding: 20px;
 	height: auto;

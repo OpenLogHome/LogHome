@@ -1,5 +1,5 @@
 <template>
-  <div class="outer" >
+  <div class="faq-outer" >
     <el-form ref="filterForm" :model="filterForm" class="search">
       <div class="infoName">筛选问题:</div>
       <el-select v-model="filterForm.filter" placeholder="筛选条件" class="inputBox" size="small" @change="handleFilterChange">
@@ -284,6 +284,7 @@ export default {
 <style scoped lang="scss">
 .outer{
     width:100%;
+    display: block;
 }
 .search {
   width: 100%;
@@ -301,7 +302,8 @@ export default {
   }
   .inputBox {
     margin-left: 15px;
-    width: 200px;
+    flex: 1;
+    min-width: 150px;
     height: 40px;
     align-items: center;
     margin-top: 6px;
@@ -350,7 +352,7 @@ export default {
 .userMsg {
   width: 100%;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
   .msgTable {
     width: 100%;

@@ -4,7 +4,13 @@
 			<image class="cover" :src="product.cover_url" mode="aspectFill"></image>
 			<view class="info">
 				<view class="title">{{ product.title }}</view>
-				<view class="price">🪵 {{ product.price }}</view>
+				<view class="price-row">
+					<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
+					<image src="../../static/resources/log.png" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
+					<text class="price">
+						{{ product.price }}
+					</text>
+				</view>
 			</view>
 		</view>
 		<view class="address-card" v-if="product.type === 'physical'">
@@ -28,7 +34,11 @@
 		<view class="summary-card">
 			<view class="row">
 				<text>商品价格</text>
-				<text>🪵 {{ product.price }}</text>
+				<view class="price-row-small">
+					<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
+					<image src="../../static/resources/log.png" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
+					<text>{{ product.price }}</text>
+				</view>
 			</view>
 			<view class="row">
 				<text>支付方式</text>
@@ -228,11 +238,16 @@ export default {
 		font-weight: 600;
 		color: #333333;
 	}
-	.price {
+	.price-row {
 		margin-top: 12rpx;
-		font-size: 28rpx;
-		color: #ff6a5f;
-		font-weight: 600;
+		display: flex;
+		align-items: center;
+		gap: 8rpx;
+		.price {
+			font-size: 28rpx;
+			font-weight: 700;
+			color: #ff6a5f;
+		}
 	}
 	&.dark-mode {
 		.title {
@@ -299,6 +314,17 @@ export default {
 		font-size: 26rpx;
 		color: #555555;
 		margin-bottom: 12rpx;
+		align-items: center;
+	}
+	.price-row-small {
+		display: flex;
+		align-items: center;
+		gap: 6rpx;
+		text {
+			font-size: 26rpx;
+			color: #ff6a5f;
+			font-weight: 600;
+		}
 	}
 	&.dark-mode {
 		.row {

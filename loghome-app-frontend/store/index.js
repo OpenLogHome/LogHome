@@ -8,11 +8,15 @@ const store = new Vuex.Store({
 		appVersion:null,
 		appVersionStr:null,
 		hypernotion:false,
-		isDarkMode: false
+		isDarkMode: false,
+		themeMode: "system"
 	},
     mutations: {
 		updateDarkMode(state, isDark) {
 			state.isDarkMode = isDark;
+		},
+		updateThemeMode(state, mode) {
+			state.themeMode = mode;
 		}
 	},
     actions: {}

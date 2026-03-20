@@ -1,7 +1,7 @@
 <template>
 	<view class="content" v-dark>
 		<nothing :msg="'这本书还没有章节哦\n快去评论区催更~'" v-show="articles.length == 0"></nothing>
-		<div class="articles">
+		<div class="articles" ref="articlesContainer">
 			<div class="volume" v-for="(volume, vIndex) in volumeList" :key="vIndex">
 				<div class="volume-header" @click="toggleVolume(vIndex)" v-if="volumeList.length > 1 || volume.title !== '正文'">
 					<div class="volume-title">{{ volume.title }}</div>
@@ -9,14 +9,19 @@
 				</div>
 				<div class="chapter-list" v-show="volume.isExpanded">
 					<navigator v-for="item in volume.chapters" :key="item.article_id"
-							   :url="'./newReader/article?id=' +  item.article_id"
+							   :url="getReaderUrl(item.article_id)"
 							   open-type="navigate">  
-						<div class="article">
+						<div class="article" :class="{'is-last-read': item.article_chapter === lastReadChapter}" :data-chapter="item.article_chapter">
 							<div class="title">{{item.title}}</div>
+							<div class="last-read-tag" v-if="item.article_chapter === lastReadChapter">阅读到这里</div>
 						</div>
 					</navigator>
 				</div>
 			</div>
+		</div>
+		<div class="jump-button" v-if="lastReadChapter && !isLastReadVisible" @click="scrollToLastRead">
+			<uni-icons type="bottom" size="16" color="#ffffff"></uni-icons>
+			<span>跳转到阅读进度</span>
 		</div>
 	</view>
 </template>
@@ -35,7 +40,9 @@ export default{
 			uid:0,
 			bookInfo:{},
 			articles:[],
-			volumeList: []
+			volumeList: [],
+			lastReadChapter: null,
+			isLastReadVisible: true
 		}
 	},
 	onLoad(option){
@@ -50,13 +57,17 @@ export default{
 			});
 			return;
 		}
-		const uid = option.id;
-		axios.get(this.$baseUrl + '/library/get_articles?id=' + uid, {}).then((res) => {
+		this.uid = option.id;
+		this.lastReadChapter = Number(window.localStorage.getItem("ReaderHistory_" + this.uid));
+		axios.get(this.$baseUrl + '/library/get_articles?id=' + this.uid, {}).then((res) => {
 			this.articles = res.data;
 			this.processVolumes();
 			console.log(this.articles)
 			uni.setNavigationBarTitle({
 				title:this.bookInfo.name
+			});
+			this.$nextTick(() => {
+				this.checkLastReadVisibility();
 			});
 		}).catch(function (error) {
 			uni.showToast({
@@ -68,7 +79,42 @@ export default{
 			uni.hideLoading();
 		})
 	},
+	onPageScroll(e) {
+		this.checkLastReadVisibility();
+	},
 	methods: {
+		getReaderUrl(articleId) {
+			const readerProps = window.localStorage.getItem("readerProps");
+			const isPageReader = readerProps === "page";
+			let url = isPageReader
+				? `/pages/readers/newReader/article?id=${articleId}`
+				: `/pages/readers/article_rich?id=${articleId}`;
+			if (this.uid) {
+				url += `&novelId=${this.uid}`;
+			}
+			return url;
+		},
+		checkLastReadVisibility() {
+			if (!this.lastReadChapter) {
+				this.isLastReadVisible = true;
+				return;
+			}
+			const targetEl = document.querySelector(`.article[data-chapter="${this.lastReadChapter}"]`);
+			if (!targetEl) {
+				this.isLastReadVisible = false;
+				return;
+			}
+			const rect = targetEl.getBoundingClientRect();
+			const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+			this.isLastReadVisible = rect.top >= 0 && rect.bottom <= viewportHeight;
+		},
+		scrollToLastRead() {
+			if (!this.lastReadChapter) return;
+			const targetEl = document.querySelector(`.article[data-chapter="${this.lastReadChapter}"]`);
+			if (targetEl) {
+				targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+		},
 		processVolumes() {
 			let volumes = [];
 			let currentVolume = {
@@ -160,6 +206,7 @@ export default{
 						padding-left:35rpx;
 						border-bottom: #eeeeee 1rpx solid;
 						background-color: #ffffff;
+						position: relative;
 						
 						.dark-mode & {
 							border-bottom: #444 1rpx solid;
@@ -176,12 +223,57 @@ export default{
 								color: var(--text-color-primary);
 							}
 						}
+						
+						.last-read-tag{
+							position: absolute;
+							right: 35rpx;
+							top: 50%;
+							transform: translateY(-50%);
+							font-size: 22rpx;
+							color: #ff6600;
+							background-color: #fff3e6;
+							padding: 6rpx 16rpx;
+							border-radius: 20rpx;
+							
+							.dark-mode & {
+								color: #ffaa55;
+								background-color: #3d2a1a;
+							}
+						}
+						
+						&.is-last-read{
+							background-color: #fff8f0;
+							
+							.dark-mode & {
+								background-color: #2d2218;
+							}
+						}
 					}
 				}
 			}
 		}
 		div.underBar{
 			height: 150rpx
+		}
+	}
+	.jump-button{
+		position: fixed;
+		bottom: 150rpx;
+		right: 30rpx;
+		background-color: #ff6600;
+		color: #ffffff;
+		padding: 16rpx 24rpx;
+		border-radius: 40rpx;
+		font-size: 26rpx;
+		display: flex;
+		align-items: center;
+		gap: 8rpx;
+		box-shadow: 0 4rpx 12rpx rgba(255, 102, 0, 0.4);
+		z-index: 100;
+		
+		.dark-mode & {
+			background-color: #ff8533;
+			box-shadow: 0 4rpx 12rpx rgba(255, 133, 51, 0.4);
 		}
 	}
 </style>

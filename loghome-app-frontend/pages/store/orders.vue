@@ -10,7 +10,7 @@
 				{{ tab.label }}
 			</view>
 		</view>
-		<view class="order-card" v-for="item in orders" :key="item.order_id">
+		<view class="order-card" v-for="item in orders" :key="item.id">
 			<view class="order-header">
 				<text class="time">{{ formatTime(item.created_at) }}</text>
 				<text class="status" :class="statusClass(item.status)">{{ statusText(item) }}</text>
@@ -30,7 +30,12 @@
 			</view>
 			<view class="order-footer">
 				<view class="amount">
-					<text>合计：🪵 {{ item.price }}</text>
+					<view class="price-row">
+						<text>合计：</text>
+						<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
+						<image src="../../static/resources/log.png" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
+						<text>{{ item.price }}</text>
+					</view>
 					<text class="detail" v-if="item.pay_log !== undefined">
 						原木-{{ item.pay_log }} 去皮-{{ item.pay_cropped_log }}
 					</text>
@@ -185,7 +190,7 @@ export default {
 				content: '确认已收到商品吗？',
 				success: (res) => {
 					if (!res.confirm) return
-					axios.post(this.$baseUrl + `/store/orders/${item.order_id}/confirm`, {}, {
+					axios.post(this.$baseUrl + `/store/orders/${item.id}/confirm`, {}, {
 						headers: {
 							'Content-Type': 'application/json',
 							'Authorization': 'Bearer ' + tk,
@@ -315,6 +320,16 @@ export default {
 			display: flex;
 			flex-direction: column;
 			gap: 6rpx;
+			.price-row {
+				display: flex;
+				align-items: center;
+				gap: 6rpx;
+				text {
+					font-size: 24rpx;
+					color: #ff6a5f;
+					font-weight: 600;
+				}
+			}
 			.detail {
 				color: #999999;
 				font-size: 22rpx;

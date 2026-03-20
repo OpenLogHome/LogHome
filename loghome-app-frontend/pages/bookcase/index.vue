@@ -93,8 +93,13 @@
 						}
 						let articles = await articleDB.articles.where("novel_id").equals(novel_id).toArray();
 						if(articles.length > 0){
+							const readerProps = window.localStorage.getItem("readerProps");
+							const isPageReader = readerProps === "page";
+							const url = isPageReader
+								? `../readers/newReader/article?id=${articles[history].article_id}&novelId=${novel_id}`
+								: `../readers/article_rich?id=${articles[history].article_id}`;
 							uni.navigateTo({
-								url: '../readers/newReader/article?id=' + articles[history].article_id + '&Id=' + novel_id
+								url
 							})
 						} else {
 							uni.showToast({
@@ -196,41 +201,44 @@
 				if (this.isOffline) return
 				
 				try {
-					// 为每本收藏的书籍检查更新
-					const updatePromises = this.booksAll.map(async (book) => {
-						try {
-							// 从本地数据库获取该书籍的最新章节
-							const localArticles = await articleDB.articles
-								.where('novel_id')
-								.equals(book.novel_id)
-								.toArray()
-							
-							let localLatestChapter = 0
-							if (localArticles.length > 0) {
-								localLatestChapter = Math.max(...localArticles.map(a => a.article_chapter || 0))
-							}
-							
-							// 调用后端API检查更新
-							const response = await axios.get(this.$baseUrl + '/library/check_novel_updates', {
-								params: {
-									novel_id: book.novel_id,
-									latest_chapter: localLatestChapter
-								}
-							})
-							
-							if (response.data && response.data.has_updates) {
-								this.updateInfo.set(book.novel_id, {
-									new_chapters_count: response.data.new_chapters_count,
-									has_updates: true,
-									latest_update_time: response.data.latest_update_time
-								})
-							}
-						} catch (error) {
-							console.error(`检查书籍 ${book.novel_id} 更新失败:`, error)
+					const booksToCheck = []
+					
+					for (const book of this.booksAll) {
+						const localArticles = await articleDB.articles
+							.where('novel_id')
+							.equals(book.novel_id)
+							.toArray()
+						
+						let localLatestChapter = 0
+						if (localArticles.length > 0) {
+							localLatestChapter = Math.max(...localArticles.map(a => a.article_chapter || 0))
+						}
+						
+						booksToCheck.push({
+							novel_id: book.novel_id,
+							latest_chapter: localLatestChapter
+						})
+					}
+					
+					if (booksToCheck.length === 0) return
+					
+					const response = await axios.get(this.$baseUrl + '/library/check_novel_updates_batch', {
+						params: {
+							books: JSON.stringify(booksToCheck)
 						}
 					})
 					
-					await Promise.all(updatePromises)
+					if (response.data && response.data.updates) {
+						response.data.updates.forEach(update => {
+							if (update.has_updates) {
+								this.updateInfo.set(update.novel_id, {
+									new_chapters_count: update.new_chapters_count,
+									has_updates: true,
+									latest_update_time: update.latest_update_time
+								})
+							}
+						})
+					}
 				} catch (error) {
 					console.error('检查书籍更新失败:', error)
 				}

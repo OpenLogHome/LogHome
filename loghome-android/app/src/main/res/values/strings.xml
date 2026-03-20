@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">原木社区</string>
+    <string name="loading">正在加载...</string>
+    <string name="retry">重试</string>
+    <string name="init_failed">应用初始化失败，请尝试重试</string>
+    <string name="resource_missing">资源文件丢失，正在尝试恢复...</string>
+    <string name="press_again_exit">再按一次退出应用</string>
+    <string name="download_updating">正在下载资源包</string>
+    <string name="extract_updating">正在解压资源包</string>
+    <string name="update_complete">更新完成</string>
+    <string name="hot_update_title">极速更新中</string>
+    <string name="hot_update_prepare">准备更新...</string>
+    <string name="hot_update_failed">极速更新失败</string>
+    <string name="load_failed">加载失败</string>
+    <string name="grant_notification_permission">为显示后台播放通知，请允许通知权限。</string>
+</resources>

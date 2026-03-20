@@ -11,7 +11,7 @@ router.get('/products', auth, async (req, res) => {
 		const offset = (page - 1) * pageSize;
 		const count = await query('SELECT COUNT(*) total FROM store_products');
 		const list = await query(
-			'SELECT product_id, title, type, price, stock, status, shipping_desc, cover_url FROM store_products ORDER BY product_id DESC LIMIT ?, ?',
+			'SELECT id, title, summary, type, price, stock, status, shipping_desc, cover_url FROM store_products ORDER BY id DESC LIMIT ?, ?',
 			[offset, pageSize],
 		);
 		res.json({ code: 200, data: { total: count[0].total, list } });
@@ -89,7 +89,7 @@ router.put('/products/:id', auth, async (req, res) => {
 			return;
 		}
 		values.push(productId);
-		await query(`UPDATE store_products SET ${sets.join(', ')} WHERE product_id = ?`, values);
+		await query(`UPDATE store_products SET ${sets.join(', ')} WHERE id = ?`, values);
 		res.json({ code: 200 });
 	} catch (e) {
 		console.log(e);
@@ -100,7 +100,7 @@ router.put('/products/:id', auth, async (req, res) => {
 router.delete('/products/:id', auth, async (req, res) => {
 	try {
 		const productId = Number(req.params.id);
-		await query('DELETE FROM store_products WHERE product_id = ?', [productId]);
+		await query('DELETE FROM store_products WHERE id = ?', [productId]);
 		res.json({ code: 200 });
 	} catch (e) {
 		console.log(e);
@@ -115,7 +115,7 @@ router.get('/orders', auth, async (req, res) => {
 		const offset = (page - 1) * pageSize;
 		const count = await query('SELECT COUNT(*) total FROM store_orders');
 		const list = await query(
-			'SELECT order_id, order_no, user_id, product_title, product_type, price, status, pay_log, pay_cropped_log, tracking_number, created_at, shipped_at, completed_at FROM store_orders ORDER BY order_id DESC LIMIT ?, ?',
+			'SELECT id, order_no, user_id, product_title, product_type, price, status, pay_log, pay_cropped_log, tracking_number, created_at, shipped_at, completed_at FROM store_orders ORDER BY id DESC LIMIT ?, ?',
 			[offset, pageSize],
 		);
 		res.json({ code: 200, data: { total: count[0].total, list } });
@@ -131,7 +131,7 @@ router.post('/orders/:id/ship', auth, async (req, res) => {
 		const tracking = req.body.tracking_number || null;
 		const now = new Date();
 		const result = await query(
-			'UPDATE store_orders SET status = ?, tracking_number = ?, shipped_at = ?, updated_at = ? WHERE order_id = ? AND status = ?',
+			'UPDATE store_orders SET status = ?, tracking_number = ?, shipped_at = ?, updated_at = ? WHERE id = ? AND status = ?',
 			['shipped', tracking, now, now, orderId, 'pending'],
 		);
 		if (result.affectedRows === 0) {

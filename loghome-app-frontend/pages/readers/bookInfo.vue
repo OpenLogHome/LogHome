@@ -6,7 +6,7 @@
 		</div>
 		<nothing :msg="'这本书还没有发布哦'" v-show="bookInfo.is_personal == undefined || bookInfo.is_personal == 1"></nothing>
 		<!-- 后台按钮组件 -->
-		<zetank-backBar textcolor="#000" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
+		<zetank-backBar :bgColor="currentTopColor" :textcolor="currentTopTextColor" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
 			navTitle='标题'></zetank-backBar>
 		<view class="l-body">
 			<view class="l-dl">
@@ -23,7 +23,7 @@
 						{{ bookInfo.name }}
 					</view>
 					<view class="l-dd-sub">
-						<view class="author" @click="gotoUserProfile(bookInfo.auther_id)">
+						<view class="author clickable" @click="gotoUserProfile(bookInfo.auther_id)">
 							<log-image :src="bookInfo.auther_avatar" alt="" class="auther_avatar"
 								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 							<div class="auther_name">{{ bookInfo.author_name }}<uni-icons type="forward" size="18"
@@ -31,7 +31,7 @@
 						</view>
 					</view>
 					<view class="tags" v-if="tags.length > 0">
-						<div class="tag" v-for="(item, index) in tags" :key="item.tag_id"
+						<div class="tag clickable" v-for="(item, index) in tags" :key="item.tag_id"
 							:class="{ 'activity': item.is_activity_tag }" @click="gotoTag(item.tag_id, item.tag_name)">
 							{{ item.tag_name }}
 						</div>
@@ -55,7 +55,7 @@
 				</view>
 			</view>
 
-			<div class="novel_Rank" v-show="novelRank.onRank">
+			<div class="novel_Rank clickable" v-show="novelRank.onRank">
 				<navigator url="./logPowerRank">
 					实时原木力榜第
 					<span style="font-size: 40rpx; line-height: 100%; padding:0 10rpx;">
@@ -68,14 +68,7 @@
 				</navigator>
 			</div>
 
-			<div class="book-bg">
-				<div class="image">
-					<log-image class="img" :src="bookInfo.picUrl" mode="scaleToFill"
-						style="width: 100%; height: 100%; transform: scale(1.2);"
-						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`">
-					</log-image>
-				</div>
-			</div>
+			<div class="book-bg" :style="bookBackgroundStyle"></div>
 
 			<springBack :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + ${0 + 'px'})`">
 
@@ -248,7 +241,7 @@
 									<div class="crown-glow silver"></div>
 									<div class="description">
 										<p class="name">{{ fanInfo[1].user_name }}</p>
-										<p class="value"><span class="value-icon">💫</span> {{ fanInfo[1].fans_value }}
+										<p class="value">{{ fanInfo[1].fans_value }}
 										</p>
 									</div>
 								</div>
@@ -260,7 +253,7 @@
 									<div class="crown-glow gold"></div>
 									<div class="description">
 										<p class="name">{{ fanInfo[0].user_name }}</p>
-										<p class="value"><span class="value-icon">✨</span> {{ fanInfo[0].fans_value }}</p>
+										<p class="value">{{ fanInfo[0].fans_value }}</p>
 									</div>
 								</div>
 							</div>
@@ -271,7 +264,7 @@
 									<div class="crown-glow bronze"></div>
 									<div class="description">
 										<p class="name">{{ fanInfo[2].user_name }}</p>
-										<p class="value"><span class="value-icon">⭐</span> {{ fanInfo[2].fans_value }}</p>
+										<p class="value">{{ fanInfo[2].fans_value }}</p>
 									</div>
 								</div>
 							</div>
@@ -287,7 +280,7 @@
 								<div class="fans-name">{{ fan.user_name }}</div>
 								<div class="fans-message" v-if="fan.message">{{ fan.message }}</div>
 							</div>
-							<div class="fans-value"><span class="fans-value-icon">🔸</span>{{ fan.fans_value }}</div>
+							<div class="fans-value">{{ fan.fans_value }}</div>
 						</div>
 					</div>
 					<!-- <view class="l-list">
@@ -329,13 +322,13 @@
 		</view>
 
 		<view class="l-body-fixed" v-show="bookInfo.is_personal == 0">
-			<view class="l-handle-btn l-look-btn" @tap="tip">
+			<view class="l-handle-btn l-look-btn clickable" @tap="tip">
 				打赏
 			</view>
-			<view class="l-handle-btn l-buy-btn" v-show="this.history == 1" @tap="startReading">
+			<view class="l-handle-btn l-buy-btn clickable" v-show="this.history == 1" @tap="startReading">
 				立即阅读
 			</view>
-			<view class="l-handle-btn l-buy-btn" v-show="this.history != 1" @tap="startReading">
+			<view class="l-handle-btn l-buy-btn clickable" v-show="this.history != 1" @tap="startReading">
 				继续阅读
 			</view>
 		</view>
@@ -360,6 +353,119 @@ import html2canvas from 'html2canvas'
 import countTo from "vue-count-to"
 import darkModeMixin from '@/mixins/dark-mode.js'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
+
+function normalizeHexColor(color) {
+	if (typeof color !== 'string') {
+		return null
+	}
+
+	const trimmed = color.trim()
+	if (!trimmed) {
+		return null
+	}
+
+	const hex = trimmed[0] === '#' ? trimmed.slice(1) : trimmed
+	if (/^[0-9a-fA-F]{6}$/.test(hex)) {
+		return '#' + hex.toUpperCase()
+	}
+
+	if (/^[0-9a-fA-F]{3}$/.test(hex)) {
+		return (
+			'#' +
+			hex
+				.split('')
+				.map((channel) => channel + channel)
+				.join('')
+				.toUpperCase()
+		)
+	}
+
+	return null
+}
+
+function hexToRgb(color) {
+	const normalizedColor = normalizeHexColor(color)
+	if (!normalizedColor) {
+		return null
+	}
+
+	return {
+		r: parseInt(normalizedColor.slice(1, 3), 16),
+		g: parseInt(normalizedColor.slice(3, 5), 16),
+		b: parseInt(normalizedColor.slice(5, 7), 16)
+	}
+}
+
+function clampChannel(value) {
+	return Math.max(0, Math.min(255, Math.round(value)))
+}
+
+function clampUnit(value) {
+	return Math.max(0, Math.min(1, value))
+}
+
+function mixHexColor(colorA, colorB, weight) {
+	const rgbA = hexToRgb(colorA)
+	const rgbB = hexToRgb(colorB)
+	if (!rgbA || !rgbB) {
+		return normalizeHexColor(colorA) || normalizeHexColor(colorB) || '#8C6A5A'
+	}
+
+	const ratio = clampUnit(weight)
+	return (
+		'#' +
+		[
+			clampChannel(rgbA.r + (rgbB.r - rgbA.r) * ratio),
+			clampChannel(rgbA.g + (rgbB.g - rgbA.g) * ratio),
+			clampChannel(rgbA.b + (rgbB.b - rgbA.b) * ratio)
+		]
+			.map((channel) => channel.toString(16).padStart(2, '0'))
+			.join('')
+			.toUpperCase()
+	)
+}
+
+function toRgba(color, alpha) {
+	const rgb = hexToRgb(color)
+	const opacity = clampUnit(alpha)
+	if (!rgb) {
+		return `rgba(0, 0, 0, ${opacity})`
+	}
+
+	return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`
+}
+
+function rpxToPx(rpx) {
+	if (typeof uni !== 'undefined' && typeof uni.upx2px === 'function') {
+		return uni.upx2px(rpx)
+	}
+
+	if (typeof window !== 'undefined' && typeof window.innerWidth === 'number') {
+		return (window.innerWidth / 750) * rpx
+	}
+
+	return rpx / 2
+}
+
+function getRelativeLuminance(color) {
+	const rgb = hexToRgb(color)
+	if (!rgb) {
+		return 0
+	}
+
+	const channels = [rgb.r, rgb.g, rgb.b].map((channel) => {
+		const normalized = channel / 255
+		return normalized <= 0.03928
+			? normalized / 12.92
+			: Math.pow((normalized + 0.055) / 1.055, 2.4)
+	})
+
+	return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+}
+
+function getReadableTextColor(backgroundColor) {
+	return getRelativeLuminance(backgroundColor) > 0.45 ? '#000000' : '#FFFFFF'
+}
 
 export default {
 	components: {
@@ -641,8 +747,13 @@ export default {
 			}
 			if (_this.history == 1) {
 				console.log(articles);
+				const readerProps = window.localStorage.getItem("readerProps");
+				const isPageReader = readerProps === "page";
+				const url = isPageReader
+					? `./newReader/article?id=${articles[0].article_id}&novelId=${this.uid}`
+					: `./article_rich?id=${articles[0].article_id}`;
 				uni.navigateTo({
-					url: './newReader/article?id=' + articles[0].article_id + "&novelId=" + this.uid
+					url
 				})
 				return;
 			} else {
@@ -653,8 +764,13 @@ export default {
 						return;
 					}
 				})
+				const readerProps = window.localStorage.getItem("readerProps");
+				const isPageReader = readerProps === "page";
+				const url = isPageReader
+					? `./newReader/article?id=${toId}&novelId=${this.uid}`
+					: `./article_rich?id=${toId}`;
 				uni.navigateTo({
-					url: './newReader/article?id=' + toId + "&novelId=" + this.uid
+					url
 				})
 			}
 		},
@@ -1037,12 +1153,22 @@ export default {
 				url: "/pages/readers/tagCollections?tag_id=" + tag_id + "&title=" + title
 			})
 		},
+		applyPageSystemUiStyle(color = this.currentTopColor, textColor = this.currentTopTextColor) {
+			if (window.jsBridge && window.jsBridge.inApp && window.jsBridge.setSystemUIStyle) {
+				window.jsBridge.setSystemUIStyle(color, textColor)
+			}
+		},
+		resetPageSystemUiStyle() {
+			if (window.jsBridge && window.jsBridge.inApp && window.jsBridge.setSystemUIStyle) {
+				window.jsBridge.setSystemUIStyle('#FFFFFF', '#000000')
+			}
+		},
 		onCoverLoaded() {
 			this.isCoverLoaded = true;
 		}
 	},
 	onPageScroll(res) {
-		this.scrollTop = res.scrollTop; //距离页面顶部距离
+		this.scrollTop = res.scrollTop;
 	},
 	onLoad(option) {
 		this.options = option;
@@ -1077,6 +1203,7 @@ export default {
 			return;
 		} else {
 			this.bookInfo = bookInfo;
+			this.applyPageSystemUiStyle();
 		}
 
 		uni.setNavigationBarTitle({
@@ -1195,7 +1322,106 @@ export default {
 			})
 
 	},
+	onUnload() {
+		this.resetPageSystemUiStyle();
+	},
 	computed: {
+		bookColorPalette() {
+			const fallbackBase = this.isDarkMode ? '#3D302A' : '#8C6A5A'
+			const baseColor =
+				normalizeHexColor(this.bookInfo.pic_dominant_color) || fallbackBase
+			return {
+				baseColor,
+				startColor: mixHexColor(
+					baseColor,
+					this.isDarkMode ? '#161312' : '#FFF4EA',
+					this.isDarkMode ? 0.12 : 0.28
+				),
+				endColor: mixHexColor(
+					baseColor,
+					this.isDarkMode ? '#080808' : '#241812',
+					this.isDarkMode ? 0.72 : 0.46
+				),
+				pageTopColor: this.isDarkMode ? '#2C2C2C' : '#FFFCF2',
+				pageBaseColor: this.isDarkMode ? '#1C1C1C' : '#FFFFFF',
+				pageFadeColor: this.isDarkMode ? '#181818' : '#FFF8EA'
+			}
+		},
+		bookStatusBarColor() {
+			return this.bookColorPalette.startColor
+		},
+		currentTopColor() {
+			const springBackStartPx = rpxToPx(this.novelRank.onRank ? 675 : 550)
+			const bookBgHeightPx = rpxToPx(500 + 135 + 220)
+			const bookFadeHeightPx = rpxToPx(180)
+			const springFadeDistancePx = Math.max(rpxToPx(260), 1)
+
+			if (this.scrollTop >= springBackStartPx) {
+				const pageProgress = clampUnit((this.scrollTop - springBackStartPx) / springFadeDistancePx)
+				return mixHexColor(
+					this.bookColorPalette.pageTopColor,
+					this.bookColorPalette.pageBaseColor,
+					pageProgress
+				)
+			}
+
+			const gradientProgress = clampUnit(
+				this.scrollTop / Math.max(bookBgHeightPx * 0.82, 1)
+			)
+			let currentColor = mixHexColor(
+				this.bookColorPalette.startColor,
+				this.bookColorPalette.endColor,
+				gradientProgress
+			)
+
+			const fadeStartPx = Math.max(bookBgHeightPx - bookFadeHeightPx, 0)
+			if (this.scrollTop > fadeStartPx) {
+				const fadeProgress = clampUnit(
+					(this.scrollTop - fadeStartPx) / Math.max(bookFadeHeightPx, 1)
+				)
+				currentColor = mixHexColor(
+					currentColor,
+					this.bookColorPalette.pageFadeColor,
+					fadeProgress
+				)
+			}
+
+			return currentColor
+		},
+		currentTopTextColor() {
+			return getReadableTextColor(this.currentTopColor)
+		},
+		currentSystemUiStyleKey() {
+			return `${this.currentTopColor}|${this.currentTopTextColor}`
+		},
+		bookBackgroundStyle() {
+			const baseColor = this.bookColorPalette.baseColor
+			const startColor = this.bookColorPalette.startColor
+			const endColor = this.bookColorPalette.endColor
+			const glowColor = mixHexColor(
+				baseColor,
+				this.isDarkMode ? '#FFFFFF' : '#FFE8C8',
+				this.isDarkMode ? 0.08 : 0.20
+			)
+			const sideGlowColor = mixHexColor(
+				baseColor,
+				'#FFFFFF',
+				this.isDarkMode ? 0.04 : 0.12
+			)
+
+			return {
+				'--book-bg-start': startColor,
+				'--book-bg-end': endColor,
+				'--book-bg-glow': toRgba(glowColor, this.isDarkMode ? 0.16 : 0.34),
+				'--book-bg-side-glow': toRgba(sideGlowColor, this.isDarkMode ? 0.10 : 0.20),
+				'--book-bg-bottom-shadow': this.isDarkMode
+					? 'rgba(0, 0, 0, 0.42)'
+					: 'rgba(36, 24, 18, 0.22)',
+				'--book-bg-page-fade': this.isDarkMode
+					? 'rgba(24, 24, 24, 0.96)'
+					: 'rgba(255, 248, 234, 0.96)'
+			}
+		},
 		articleLength() {
 			return this.articles.length;
 		},
@@ -1209,6 +1435,11 @@ export default {
 				}
 			}
 			return this.history;
+		}
+	},
+	watch: {
+		currentSystemUiStyleKey() {
+			this.applyPageSystemUiStyle();
 		}
 	}
 }
@@ -1230,11 +1461,22 @@ export default {
 	padding-bottom: 500rpx;
 }
 
+.dynamic-nav-bg {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 128rpx;
+	z-index: 79;
+	pointer-events: none;
+	transition: background 0.12s linear;
+}
+
 .l-body-fixed {
 	position: fixed;
 	bottom: 0;
 	left: 0;
-	height: 90rpx;
+	height: 100rpx;
 	display: flex;
 	width: 100vw;
 	padding: 0 0;
@@ -1243,6 +1485,7 @@ export default {
 	white-space: nowrap;
 	background-color: rgb(255, 248, 234);
 	justify-content: space-between;
+	box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
 
 	.dark-mode & {
 		background-color: var(--background-color-secondary);
@@ -1252,13 +1495,55 @@ export default {
 .l-look-btn {
 	width: 40%;
 	color: white;
-	background-color: rgb(255, 0, 127);
+	background: linear-gradient(135deg, #ff3d7f 0%, #ff0080 100%);
+	border-radius: 0;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	position: relative;
+	overflow: hidden;
+}
+
+.l-look-btn::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.l-look-btn:active {
+	transform: scale(0.98);
+}
+
+.l-look-btn:active::before {
+	opacity: 1;
 }
 
 .l-buy-btn {
 	color: white;
 	width: 60%;
-	background-color: rgb(234, 112, 52);
+	background: linear-gradient(135deg, #ff8c42 0%, #EA7034 100%);
+	border-radius: 0;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	position: relative;
+	overflow: hidden;
+}
+
+.l-buy-btn::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.l-buy-btn:active {
+	transform: scale(0.98);
+}
+
+.l-buy-btn:active::before {
+	opacity: 1;
 }
 
 .l-handle-btn {
@@ -1267,7 +1552,7 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 90rpx;
+	height: 100rpx;
 }
 
 .l-dl {
@@ -1283,9 +1568,12 @@ export default {
 .l-dt {
 	width: 230rpx;
 	height: 100%;
-	border-radius: 0rpx;
+	border-radius: 16rpx;
 	margin-right: 30rpx;
 	position: relative;
+	overflow: hidden;
+	box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+	flex-shrink: 0;
 }
 
 .book-id-tag {
@@ -1295,10 +1583,12 @@ export default {
 	background-color: rgba(0, 0, 0, 0.6);
 	color: #ffffff;
 	font-size: 20rpx;
-	padding: 4rpx 8rpx;
+	padding: 4rpx 12rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	border-radius: 12rpx 0 12rpx 0;
+	backdrop-filter: blur(4rpx);
 }
 
 .l-dd {
@@ -1333,21 +1623,33 @@ export default {
 	margin-bottom: 5rpx;
 	transform: scale(.95);
 	transform-origin: left;
+	transition: all 0.2s ease;
+	padding: 0;
+	border-radius: 30rpx;
+	display: flex;
+	align-items: center;
+	height: 50rpx;
+}
+
+.author:active {
+	opacity: 0.8;
 }
 
 .author .auther_avatar {
 	position: absolute;
-	top: -8rpx;
+	top: 0rpx;
 	left: 0rpx;
 	height: 50rpx;
 	width: 50rpx;
-	border-radius: 0rpx;
+	border-radius: 50%;
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .author .auther_name {
 	font-size: 32rpx;
 	color: #eeeeee;
 	margin-left: 60rpx;
+	line-height: 50rpx;
 
 	.dark-mode & {
 		color: var(--text-color-primary);
@@ -1379,7 +1681,6 @@ export default {
 	overflow-x: auto;
 	align-items: center;
 	height: 60rpx;
-	margin: 10rpx 0;
 	flex-shrink: 0;
 }
 
@@ -1389,11 +1690,17 @@ export default {
 	height: 46rpx;
 	font-size: 28rpx;
 	line-height: 40rpx;
-	padding: 0 10upx;
-	border-radius: 0upx;
-	margin-right: 10upx;
-	margin-top: 10rpx;
+	padding: 0 16rpx;
+	border-radius: 20rpx;
+	margin-right: 12rpx;
 	flex-shrink: 0;
+	transition: all 0.2s ease;
+	cursor: pointer;
+}
+
+.tags .tag:active {
+	transform: scale(0.95);
+	opacity: 0.8;
 }
 
 .tag.activity {
@@ -1404,13 +1711,13 @@ export default {
 .notag .tag {
 	color: #eeeeee;
 	background-color: #eeeeee00;
-	border: solid 2px #eeeeee;
+	border: solid 2rpx #eeeeee;
 	height: 46rpx;
 	font-size: 28rpx;
 	line-height: 40rpx;
-	padding: 0 10upx;
-	border-radius: 0upx;
-	margin-right: 10upx;
+	padding: 0 16rpx;
+	border-radius: 20rpx;
+	margin-right: 12rpx;
 	margin-top: 10rpx;
 }
 
@@ -1474,13 +1781,28 @@ export default {
 	padding: 20rpx 0;
 	font-size: 35rpx;
 	flex: 1 0 50%;
-	transition: all .1s;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	align-items: center;
+	border-radius: 16rpx;
+	position: relative;
+	overflow: hidden;
+}
+
+.l-body-tab::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background-color: rgba(0, 0, 0, 0.04);
+	opacity: 0;
+	transition: opacity 0.25s ease;
 }
 
 .l-body-tab:active {
-	background-color: #d8d8dc;
-	transform: scale(0.9);
+	transform: scale(0.96);
+}
+
+.l-body-tab:active::before {
+	opacity: 1;
 }
 
 .l-list {
@@ -1529,16 +1851,23 @@ export default {
 .l-list-content {
 	position: relative;
 	box-sizing: border-box;
-	border: 2px rgba(202, 202, 202, 0) solid;
+	border: 2rpx rgba(202, 202, 202, 0) solid;
 	background-color: rgba(202, 202, 202, 0.1);
-	border-radius: 0rpx;
+	border-radius: 16rpx;
 	padding: 35rpx 32rpx;
 	margin-top: 32rpx;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 
 	.dark-mode & {
 		background-color: var(--card-background);
-		border: 2px rgba(60, 60, 60, 0) solid;
+		border: 2rpx rgba(60, 60, 60, 0) solid;
 	}
+}
+
+.l-list-content:active {
+	transform: scale(0.99);
+	box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
 }
 
 .l-list-content.bg {
@@ -1556,10 +1885,18 @@ export default {
 
 .l-list-content.noprocess {
 	background-color: rgba(202, 202, 202, 0.2);
+	border-radius: 16rpx;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 
 	.dark-mode & {
 		background-color: var(--card-background);
 	}
+}
+
+.l-list-content.noprocess:active {
+	transform: scale(0.99);
+	box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
 }
 
 .l-list-c-foot-l-name {
@@ -1614,17 +1951,25 @@ export default {
 			margin: 10rpx 0;
 			display: flex;
 			background-color: rgb(255, 255, 255);
-			border-radius: 10rpx;
+			border-radius: 16rpx;
+			transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+			box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+			overflow: hidden;
 
 			.dark-mode & {
 				background-color: var(--card-background);
+			}
+
+			.books:active {
+				transform: scale(0.99);
+				box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
 			}
 
 
 			img {
 				height: 260rpx;
 				width: 200rpx;
-				border-radius: 10rpx 0 0 10rpx;
+				border-radius: 16rpx 0 0 16rpx;
 				margin: 0rpx;
 				flex-shrink: 0;
 			}
@@ -1655,6 +2000,7 @@ export default {
 					margin-top: 15rpx;
 					margin-bottom: 10rpx;
 					display: flex;
+					align-items: center;
 
 					.auther_avatar {
 						position: absolute;
@@ -1759,21 +2105,31 @@ img {
 	.book-bg {
 		position: absolute;
 		width: 100vw;
-		height: 100vh;
+		height: calc(500rpx + var(--statusBarHeight) + 135rpx + 220rpx);
 		overflow: hidden;
-		background-size: 100%;
+		background:
+			linear-gradient(180deg, var(--book-bg-start) 0%, var(--book-bg-end) 82%);
 
-		.image {
-			filter: blur(30px) brightness(0.6);
-			background-color: #00000000;
-			transform: translateZ(0);
-			width: 100vw;
-			height: calc(500rpx + var(--statusBarHeight) + 135rpx + 120px);
+		&::before,
+		&::after {
+			content: '';
 			position: absolute;
+			inset: 0;
+		}
 
-			.dark-mode & {
-				filter: blur(30px) brightness(0.4);
-			}
+		&::before {
+			background:
+				radial-gradient(circle at 50% 12%, var(--book-bg-glow) 0%, transparent 46%),
+				radial-gradient(circle at 12% 24%, var(--book-bg-side-glow) 0%, transparent 34%),
+				radial-gradient(circle at 88% 18%, var(--book-bg-side-glow) 0%, transparent 38%),
+				linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, var(--book-bg-bottom-shadow) 100%);
+		}
+
+		&::after {
+			top: auto;
+			height: 180rpx;
+			background:
+				linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--book-bg-page-fade) 100%);
 		}
 	}
 
@@ -1784,7 +2140,7 @@ img {
 		padding: 0 30rpx;
 		width: calc(100vw - 120rpx);
 		margin: 35rpx 30rpx;
-		border-radius: 0rpx;
+		border-radius: 16rpx;
 		height: 100rpx;
 		top: calc(500rpx + var(--statusBarHeight));
 		display: flex;
@@ -1792,6 +2148,13 @@ img {
 		font-size: 30rpx;
 		line-height: 100rpx;
 		justify-content: space-between;
+		backdrop-filter: blur(10rpx);
+		box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+		transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.novel_Rank:active {
+		transform: scale(0.99);
 	}
 }
 
@@ -1858,11 +2221,12 @@ view.tippingBar {
 	display: flex;
 	justify-content: center;
 	padding: 40rpx 20rpx 0 20rpx;
-	// background-color: rgba(202, 202, 202, 0.1);
-	border-radius: 16rpx;
+	border-radius: 20rpx;
 	margin-top: 32rpx;
 	position: relative;
 	overflow: hidden;
+	background: linear-gradient(180deg, rgba(255, 245, 235, 0.6) 0%, rgba(255, 248, 240, 0.3) 100%);
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
 
 	.dark-mode & {
 		background-color: var(--card-background);
@@ -2012,8 +2376,9 @@ view.tippingBar {
 	margin-top: -30rpx;
 	padding: 10rpx 20rpx;
 	background-color: rgba(202, 202, 202, 0.1);
-	border-radius: 16rpx;
+	border-radius: 20rpx;
 	overflow: hidden;
+	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 
 	.dark-mode & {
 		background-color: var(--card-background);
@@ -2022,12 +2387,17 @@ view.tippingBar {
 	.fans-list-item {
 		display: flex;
 		align-items: center;
-		padding: 8rpx 0;
+		padding: 12rpx 0;
 		border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
 		position: relative;
+		transition: all 0.2s ease;
 
 		&:last-child {
 			border-bottom: none;
+		}
+
+		&:active {
+			background-color: rgba(0, 0, 0, 0.02);
 		}
 
 		.fans-rank {
@@ -2133,5 +2503,26 @@ view.tippingBar {
 	left: 20%;
 	width: 60%;
 	height: 60%;
+}
+
+.clickable {
+	cursor: pointer;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clickable:active {
+	opacity: 0.7;
+	transform: scale(0.98);
+}
+
+.l-h3-more {
+	transition: all 0.2s ease;
+	padding: 8rpx 16rpx;
+	border-radius: 20rpx;
+}
+
+.l-h3-more:active {
+	background-color: rgba(0, 0, 0, 0.05);
+	transform: scale(0.98);
 }
 </style>

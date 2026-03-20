@@ -5,6 +5,11 @@
     "description": "原木社区前端代码",
     "keywords": [],
     "dependencies": {
+        "@tiptap/extension-image": "^2.27.2",
+        "@tiptap/extension-placeholder": "^2.27.2",
+        "@tiptap/pm": "^2.27.2",
+        "@tiptap/starter-kit": "^2.27.2",
+        "@tiptap/vue-2": "^2.27.2",
         "axios": "^0.27.2",
         "dexie": "^4.0.11",
         "echarts": "^6.0.0",

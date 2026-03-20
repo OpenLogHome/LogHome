@@ -14,6 +14,7 @@ export default {
 		console.log('App Launch');
 		// #ifdef H5
 		this.initTheme();
+		this.setupTabbarClickEffects();
 		// #endif
 		this.globalLoadingDom = document.getElementById("global-loading-box");
 		// 覆写uni.showLoading方法
@@ -48,6 +49,27 @@ export default {
 		}
 	},
 	methods: {
+		setupTabbarClickEffects() {
+			setTimeout(() => {
+				const tabbar = document.querySelector('.uni-tabbar');
+				if (!tabbar) return;
+				
+				const items = tabbar.querySelectorAll('.uni-tabbar__item');
+				items.forEach(item => {
+					item.addEventListener('click', function(e) {
+						const bd = this.querySelector('.uni-tabbar__bd');
+						if (!bd) return;
+						
+						bd.style.transform = 'scale(0.9)';
+						bd.style.transition = 'transform 0.15s ease-out';
+						
+						setTimeout(() => {
+							bd.style.transform = 'scale(1)';
+						}, 150);
+					});
+				});
+			}, 500);
+		},
 		utc2timestamp(utc_datetime) {
 			// 转为正常的时间格式 年-月-日 时:分:秒
 			var T_pos = utc_datetime.indexOf('T');
@@ -551,7 +573,6 @@ export default {
 </script>
 
 <style lang="scss">
-@import './common/user_group.scss';
 
 * {
 	font-family: "Noto Sans SC", "思源黑体 CN", "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;

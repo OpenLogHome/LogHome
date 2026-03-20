@@ -7,7 +7,13 @@
 		</swiper>
 		<view class="product-info">
 			<view class="title">{{ product.title }}</view>
-			<view class="price">🪵 {{ product.price }}</view>
+			<view class="price-row">
+				<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
+				<image src="../../static/resources/log.png" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
+				<text class="price">
+					{{ product.price }}
+				</text>
+			</view>
 			<view class="stock" v-if="product.type === 'physical'">库存：{{ product.stock }}</view>
 			<view class="shipping" v-if="product.shipping_desc">{{ product.shipping_desc }}</view>
 		</view>
@@ -128,11 +134,16 @@ export default {
 		font-weight: 600;
 		color: #222222;
 	}
-	.price {
+	.price-row {
 		margin-top: 16rpx;
-		font-size: 32rpx;
-		color: #ff6a5f;
-		font-weight: 700;
+		display: flex;
+		align-items: center;
+		gap: 8rpx;
+		.price {
+			font-size: 32rpx;
+			font-weight: 700;
+			color: #ff6a5f;
+		}
 	}
 	.stock {
 		margin-top: 8rpx;

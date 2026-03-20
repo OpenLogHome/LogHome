@@ -1,5 +1,5 @@
 <template>
-  <div class="outer">
+  <div class="articles-manage-outer">
     <div class="block">
         <div class="novel-info" v-if="novel">
             <div class="title-container">
@@ -665,7 +665,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.outer {
+.articles-manage-outer {
     padding: 20px;
 }
 .block {

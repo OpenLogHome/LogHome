@@ -4,6 +4,7 @@ let { query } = require('../../sql.js');
 let auth = require('../../bin/auth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
+let achievements = require('../../bin/achievements.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -132,6 +133,9 @@ router.get('/detail/:id', async (req, res) => {
         }
         
         const post = posts[0];
+        
+        // 获取作者勋章
+        post.author_badge = await achievements.getUserBadge(post.user_id);
         
         // 处理媒体URL
         if (post.media_urls) {

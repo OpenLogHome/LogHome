@@ -4,7 +4,7 @@
       <el-button @click="loadList">刷新</el-button>
     </div>
     <el-table :data="list" border v-loading="loading">
-      <el-table-column prop="order_id" label="订单ID" width="100"></el-table-column>
+      <el-table-column prop="id" label="订单ID" width="100"></el-table-column>
       <el-table-column prop="order_no" label="订单号" width="220"></el-table-column>
       <el-table-column prop="user_id" label="用户ID" width="100"></el-table-column>
       <el-table-column prop="product_title" label="商品名称" min-width="180"></el-table-column>
@@ -82,7 +82,7 @@ export default {
       shipDialogVisible: false,
       submitLoading: false,
       shipForm: {
-        order_id: null,
+        id: null,
         order_no: '',
         tracking_number: ''
       }
@@ -140,7 +140,7 @@ export default {
       return `${y}-${m}-${dd} ${h}:${mm}`
     },
     openShip(row) {
-      this.shipForm = { order_id: row.order_id, order_no: row.order_no, tracking_number: '' }
+      this.shipForm = { id: row.id, order_no: row.order_no, tracking_number: '' }
       this.shipDialogVisible = true
     },
     submitShip() {
@@ -149,7 +149,7 @@ export default {
         return
       }
       this.submitLoading = true
-      axios.post(this.$baseUrl + `/manage/store/orders/${this.shipForm.order_id}/ship`, {
+      axios.post(this.$baseUrl + `/manage/store/orders/${this.shipForm.id}/ship`, {
         tracking_number: this.shipForm.tracking_number
       }, {
         headers: { Authorization: this.getToken() }

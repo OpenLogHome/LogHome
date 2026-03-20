@@ -1,6 +1,6 @@
 <template>
   <div class="book-detail">
-    <view class="bodyView" :class="{'drawer-mode': isDrawerMode}" style="text-align: center;" v-if="book" v-dark>
+    <view class="bodyView" :class="{'drawer-mode': isDrawerMode}" v-if="book" v-dark>
       <div class="book-header" v-if="isDrawerMode">
         <log-image class="book-cover" :src="book.picUrl" mode="aspectFill" 
           :onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
@@ -10,9 +10,16 @@
             <el-tag size="mini" v-show="book.is_personal==1" type="info" disable-transitions effect="dark">私有</el-tag>
             <el-tag size="mini" v-show="book.is_personal==0" disable-transitions effect="dark">公开</el-tag>
             <span> {{book.is_complete==1?"已完结":"连载中"}}</span>
-            <span>{{book.text_count}} 字 </span>
+            <span>{{book.text_count}} 字</span>
           </view>
-          <div class="book-content" @click="showFullDescription">{{book.content}}</div>
+          <div class="book-intro">
+            <div class="book-content" :class="{ expanded: isDescriptionExpanded, empty: !hasDescription }">
+              {{ introText }}
+            </div>
+            <div class="book-content-toggle" v-if="shouldShowIntroToggle" @click="toggleDescription">
+              {{ isDescriptionExpanded ? '收起简介' : '展开简介' }}
+            </div>
+          </div>
         </view>
       </div>
       <view class="bookTitle" v-else>{{book.name}}</view>
@@ -20,8 +27,16 @@
         <el-tag size="mini" v-show="book.is_personal==1" type="info" disable-transitions effect="dark">私有</el-tag>
         <el-tag size="mini" v-show="book.is_personal==0" disable-transitions effect="dark">公开</el-tag>
         <span> {{book.is_complete==1?"已完结":"连载中"}}</span>
-        <span>总计 {{book.text_count}} 字 </span>
+        <span>总计 {{book.text_count}} 字</span>
       </view>
+      <div class="book-intro" v-if="!isDrawerMode">
+        <div class="book-content" :class="{ expanded: isDescriptionExpanded, empty: !hasDescription }">
+          {{ introText }}
+        </div>
+        <div class="book-content-toggle" v-if="shouldShowIntroToggle" @click="toggleDescription">
+          {{ isDescriptionExpanded ? '收起简介' : '展开简介' }}
+        </div>
+      </div>
       <div class="buttons">
         <div class="button" @click="$emit('goto-all-articles')">所有章节</div>
         <div class="button" @click="$emit('read-novel', book.is_personal)">阅读</div>
@@ -29,7 +44,7 @@
       </div>
 
       <!-- 添加Banner组件 -->
-      <banner page="essays" style="margin-top: 30rpx; transform: scale(0.98);"/>
+      <banner page="essays" class="section-banner"/>
 
       <!-- 创作活动板块 -->
       <div class="statistic-box" v-if="activityInfo && activityInfo.hasActivity">
@@ -83,17 +98,21 @@
           </div>
         </div>
         <div class="worlds">
-          <div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
+          <div class="empty-state" v-if="worlds.length === 0">
+            <div class="empty-title">还没有关联作品世界</div>
+            <div class="empty-subtitle">点击下方“添加作品世界”，为当前作品关联世界设定</div>
+          </div>
+          <div v-for="novel in worlds" :key="novel.novel_id" class="world-item">
             <navigator :url="'./readers/bookInfo?id=' +  novel.novel_id" open-type="navigate" class="books" 
               @longpress="$emit('delete-world-novel-asso', novel.world_id)" @click="$emit('goto-world-novel')">
               <log-image :src="novel.picUrl + '?thumbnail=1'" alt="" 
                 :onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`" 
-                style="border-radius: 10rpx; transform:scale(.90)" />
-              <div class="bookInfo" style="margin-left:10rpx;">
+                class="world-book-cover" />
+              <div class="bookInfo world-book-info">
                 <div class="world-title">
                   {{novel.name}}
                   <el-tag type="warning" v-show="novel.novel_type == 'world'" effect="dark" 
-                    style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">世界设定</el-tag>
+                    class="world-tag" size="mini">世界设定</el-tag>
                 </div>
                 <view class="author">
                   <log-image :src="novel.avatar_url" alt="" class="auther_avatar" 
@@ -108,7 +127,7 @@
         <div class="addButton" @click="$emit('show-book-select')">添加作品世界</div>
       </div>
 
-      <writerHelper :novel_id="book.novel_id" @close-book-detail="$emit('close-book-detail')"></writerHelper>
+      <!-- <writerHelper :novel_id="book.novel_id" @close-book-detail="$emit('close-book-detail')"></writerHelper> -->
 
       <div class="statistic-box">
         <div class="head">
@@ -118,7 +137,10 @@
           </div>
         </div>
         <div class="statistics-body no-statistic" v-if="statistics.length < 2">
-          暂无数据
+          <div class="empty-state">
+            <div class="empty-title">暂无数据</div>
+            <div class="empty-subtitle">继续更新内容，次日凌晨 3:00 后可查看</div>
+          </div>
         </div>
         <div class="statistics-body" v-if="statistics.length >= 2">
           <div class="card" @click="$emit('goto-statistics')">
@@ -165,7 +187,7 @@
           </div>
         </div>
       </div>
-      <div style="height: 200rpx; background-color: #fff;" :style="{backgroundColor: $store.state.isDarkMode ? '#252525' : '#fff'}">
+      <div class="bottom-spacer">
       </div>
     </view>
   </div>
@@ -204,17 +226,25 @@ export default {
   },
   data() {
     return {
-      activityInfo: null
+      activityInfo: null,
+      isDescriptionExpanded: false
+    }
+  },
+  computed: {
+    hasDescription() {
+      return !!(this.book && this.book.content && this.book.content.toString().trim());
+    },
+    introText() {
+      if (this.hasDescription) return this.book.content;
+      return '暂无作品简介，可在作品设置中补充。';
+    },
+    shouldShowIntroToggle() {
+      return this.hasDescription && this.book.content.toString().trim().length > 40;
     }
   },
   methods: {
-    showFullDescription() {
-      uni.showModal({
-        content: this.book.content,
-        showCancel: false,
-        confirmText: '关闭',
-        confirmColor: "#EA7034"
-      });
+    toggleDescription() {
+      this.isDescriptionExpanded = !this.isDescriptionExpanded;
     },
     // 获取活动信息
     async fetchActivityInfo() {
@@ -329,6 +359,7 @@ export default {
   watch: {
     book: {
       handler(newBook) {
+        this.isDescriptionExpanded = false;
         if (newBook && newBook.novel_id) {
           this.fetchActivityInfo();
         }
@@ -344,36 +375,50 @@ export default {
 
 .book-detail {
   .bodyView {
-    background-color: white !important;
+    --page-x: 40rpx;
+    --section-gap: 28rpx;
+    --card-gap: 18rpx;
+    --card-radius: 16rpx;
+    --surface-base: #ffffff;
+    --surface-muted: #f8f9fa;
+    --surface-subtle: #00000009;
+    --text-primary: #2d2d2d;
+    --text-secondary: #666666;
+    --text-tertiary: #95a1a6;
+    --accent: rgb(180, 111, 88);
+    --accent-press: #b46f58;
+    --header-gradient: linear-gradient(to bottom, rgb(255, 248, 234) 0%, rgb(255, 248, 234) 35%, #ffffff 100%);
+    background-color: var(--surface-base) !important;
+    text-align: left;
+    box-sizing: border-box;
     
     &.dark-mode {
-      background-color: var(--background-color-secondary) !important;
+      --surface-base: var(--background-color-secondary);
+      --surface-muted: rgba(255, 255, 255, 0.06);
+      --surface-subtle: rgba(255, 255, 255, 0.08);
+      --text-primary: var(--text-color-primary);
+      --text-secondary: rgba(255, 255, 255, 0.86);
+      --text-tertiary: rgba(255, 255, 255, 0.72);
+      --accent: rgb(150, 91, 68);
+      --accent-press: #9c5e48;
+      --header-gradient: linear-gradient(to bottom, rgba(60, 55, 40, 0.8) 0%, rgba(60, 55, 40, 0.8) 35%, var(--background-color-secondary) 100%);
+      background-color: var(--surface-base) !important;
     }
     &.drawer-mode {
       .book-header {
         display: flex;
-        padding: 32rpx 48rpx;
-        padding-bottom: 15rpx;
+        gap: 24rpx;
+        padding: 32rpx var(--page-x) 20rpx;
         text-align: left;
-        margin-bottom: 0rpx;
-        background: linear-gradient(to bottom, rgb(255, 248, 234) 0%, rgb(255, 248, 234) 30%, rgb(255, 255, 255) 100%);
-        
-        .dark-mode & {
-          background: linear-gradient(to bottom, rgba(60, 55, 40, 0.8) 0%, rgba(60, 55, 40, 0.8) 30%, var(--background-color-secondary) 100%);
-        }
-        // background-color: rgb(255, 248, 234);
+        margin-bottom: 0;
+        background: var(--header-gradient);
         
         .book-cover {
           width: 230rpx;
           height: 320rpx;
-          border-radius: 10rpx;
-          margin-right: 30rpx;
+          border-radius: 12rpx;
           flex-shrink: 0;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          
-          .dark-mode & {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          }
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
         }
         
         .book-info {
@@ -383,260 +428,269 @@ export default {
           flex: 1;
           
           .bookTitle {
+            padding: 0;
             font-size: 42rpx;
             font-weight: bold;
-            margin-bottom: 20rpx;
+            margin-bottom: 16rpx;
             text-align: left;
-            color: rgb(45, 45, 45);
-            
-            .dark-mode & {
-              color: var(--text-color-primary);
-            }
+            color: var(--text-primary);
           }
           
           .bookDescription {
             text-align: left;
             font-size: 28rpx;
-            color: #95A1A6;
+            color: var(--text-tertiary);
+            margin-top: 0;
             padding: 0;
             
             span {
-              margin: 0 10rpx;
-            }
-            
-            .dark-mode & {
-              color: var(--text-color-secondary);
+              margin-right: 12rpx;
             }
           }
 
-          .book-content {
-            margin-top: 20rpx;
-            font-size: 28rpx;
-            color: #777777;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 4;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            cursor: pointer;
-            
-            .dark-mode & {
-              color: var(--text-color-regular);
-            }
+          .book-intro {
+            margin-top: 18rpx;
+            padding: 0;
           }
         }
       }
 
       .buttons {
-        margin-top: 20rpx;
+        margin-top: 10rpx;
       }
     }
 
     .bookTitle {
-      font-size: 50rpx;
+      padding: 0 var(--page-x);
+      font-size: 48rpx;
       font-weight: bold;
-      
-      .dark-mode & {
-        color: var(--text-color-primary);
-      }
+      line-height: 1.28;
+      color: var(--text-primary);
+      text-align: left;
     }
 
     .bookDescription {
       font-size: 28rpx;
-      padding-left: 50rpx;
-      padding-right: 50rpx;
-      padding-top: 20rpx;
+      margin-top: 14rpx;
+      padding: 0 var(--page-x);
+      line-height: 1.5;
       text-align: left;
       white-space: pre-wrap;
-      text-align: center;
+      color: var(--text-tertiary);
 
       span {
-        margin: 0 10rpx;
+        margin-right: 12rpx;
       }
-      
-      .dark-mode & {
-        color: var(--text-color-secondary);
+    }
+
+    .book-intro {
+      margin-top: 18rpx;
+      padding: 0 var(--page-x);
+
+      .book-content {
+        font-size: 28rpx;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        &.expanded {
+          display: block;
+          -webkit-line-clamp: unset;
+          overflow: visible;
+        }
+
+        &.empty {
+          color: var(--text-tertiary);
+        }
+      }
+
+      .book-content-toggle {
+        margin-top: 12rpx;
+        width: fit-content;
+        font-size: 24rpx;
+        font-weight: 600;
+        color: var(--accent);
+
+        &:active {
+          opacity: 0.75;
+        }
       }
     }
 
     .buttons {
-      width: 100vw;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16rpx;
+      padding: 22rpx var(--page-x) 0;
 
       .button {
-        height: 40px;
-        width: 40vw;
-        margin-top: 15px;
-        margin-left: 10px;
-        margin-right: 10px;
-        font-size: 16px;
+        min-height: 84rpx;
+        width: 100%;
+        font-size: 30rpx;
         font-weight: bold;
-        line-height: 38px;
-        border-radius: 5px;
+        line-height: 84rpx;
+        border-radius: 12rpx;
+        text-align: center;
         color: #ffffff;
-        background-color: rgb(180, 111, 88);
+        background-color: var(--accent);
+        transition: transform 0.2s, background-color 0.2s;
 
         &:active {
-          background-color: #b46f58;
-        }
-        
-        .dark-mode & {
-          background-color: rgb(150, 91, 68);
-          
-          &:active {
-            background-color: #9c5e48;
-          }
+          transform: scale(0.98);
+          background-color: var(--accent-press);
         }
       }
 
       .button.long {
-        width: calc(80vw + 20px);
+        grid-column: 1 / -1;
+      }
+    }
+
+    .section-banner {
+      margin: 30rpx var(--page-x) 0;
+      transform: scale(0.98);
+      transform-origin: center top;
+      display: block;
+    }
+
+    .empty-state {
+      padding: 26rpx 24rpx;
+      border: 2rpx dashed rgba(76, 76, 76, 0.35);
+      border-radius: var(--card-radius);
+      background-color: var(--surface-muted);
+
+      .dark-mode & {
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+
+      .empty-title {
+        font-size: 28rpx;
+        font-weight: bold;
+        color: var(--text-primary);
+      }
+
+      .empty-subtitle {
+        margin-top: 8rpx;
+        font-size: 24rpx;
+        line-height: 1.5;
+        color: var(--text-secondary);
       }
     }
 
     .statistic-box {
-      margin: 0rpx 0rpx;
+      margin-top: var(--section-gap);
       box-sizing: border-box;
-      background-color: white;
-      
-      .dark-mode & {
-        background-color: var(--card-background);
-      }
+      background-color: var(--surface-base);
+      padding-bottom: 8rpx;
 
       .head {
-        margin: 0rpx 50rpx;
-        padding: 35rpx 0;
-        height: 30rpx;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20rpx;
+        padding: 32rpx var(--page-x) 18rpx;
 
         div.box-title {
-          float: left;
           font-size: 34rpx;
           font-weight: bold;
-          color: #2d2d2d;
-          height: 30rpx;
-          
-          .dark-mode & {
-            color: var(--text-color-primary);
-          }
+          line-height: 1.25;
+          color: var(--text-primary);
         }
 
         div.more {
-          float: right;
-          display: flex;
-          margin-top: 5rpx;
+          margin-top: 4rpx;
 
           p {
-            margin: 0rpx;
-            color: #2d2d2d;
+            margin: 0;
+            text-align: right;
             font-size: 26rpx;
-            line-height: 44rpx;
-            height: 44rpx;
-            
-            .dark-mode & {
-              color: var(--text-color-regular);
-            }
-          }
-
-          .moreImg {
-            height: 30rpx;
-            width: 30rpx;
-            margin-right: 8rpx;
+            line-height: 1.5;
+            color: var(--text-secondary);
           }
         }
       }
 
       .statistics-body {
-        display: flex;
-        margin: 0 40rpx;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--card-gap);
+        padding: 0 var(--page-x);
 
         .card {
-          margin: 10rpx 10rpx;
-          padding: 25rpx;
-          width: calc(50vw - 40rpx - 20rpx - 50rpx);
-          background-color: #00000009;
+          margin: 0;
+          padding: 22rpx;
+          width: auto;
+          border-radius: var(--card-radius);
+          background-color: var(--surface-subtle);
           text-align: left;
-          
-          .dark-mode & {
-            background-color: var(--background-color-tertiary);
-          }
 
           .numeral {
+            margin: 0;
             font-size: 40rpx;
-            margin-bottom: 10rpx;
-            
-            .dark-mode & {
-              color: var(--text-color-primary);
-            }
+            line-height: 1.2;
+            color: var(--text-primary);
 
             span.change {
-              font-size: 28rpx;
+              display: block;
+              margin-top: 8rpx;
+              font-size: 24rpx;
               color: #FF9B17;
-              margin-left: 10rpx;
             }
           }
 
           .name {
+            margin: 10rpx 0 0;
             font-size: 28rpx;
             font-weight: bold;
-            color: #2d2d2d;
-            
-            .dark-mode & {
-              color: var(--text-color-primary);
-            }
+            color: var(--text-primary);
           }
         }
       }
 
       .statistics-body.no-statistic {
-        justify-content: center;
+        display: block;
+        padding: 0 var(--page-x);
       }
 
       .addButton {
-        width: calc(100vw - 90rpx);
+        width: auto;
+        min-height: 132rpx;
+        margin: 18rpx var(--page-x) 0;
         border: 4rpx solid #4c4c4c55;
-        border-radius: 10rpx;
-        height: 150rpx;
+        border-radius: var(--card-radius);
         display: flex;
         align-items: center;
         justify-content: center;
         color: #4c4c4cee;
-        transition: all .3s;
+        transition: transform 0.2s, background-color 0.2s;
         border-style: dashed;
         font-size: 30rpx;
-        margin: 15rpx 40rpx 0 40rpx;
         
         .dark-mode & {
-          color: var(--text-color-regular);
+          color: var(--text-secondary);
           border-color: var(--border-color-lighter);
         }
 
         &:active {
-          transform: scale(0.95);
+          transform: scale(0.98);
           background-color: #4c4c4c22;
-          
-          .dark-mode & {
-            background-color: #6c6c6c22;
-          }
         }
       }
     }
 
     // 创作活动板块样式
     .activity-content {
-      margin: 0 40rpx;
+      padding: 0 var(--page-x);
       
       .activity-item {
-        margin-bottom: 30rpx;
-        padding: 30rpx;
-        background-color: #f8f9fa;
-        border-radius: 15rpx;
-        
-        .dark-mode & {
-          background-color: var(--background-color-tertiary);
-        }
+        margin-bottom: var(--card-gap);
+        padding: 24rpx;
+        background-color: var(--surface-muted);
+        border-radius: var(--card-radius);
         
         &:last-child {
           margin-bottom: 0;
@@ -646,44 +700,32 @@ export default {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 15rpx;
+          margin-bottom: 14rpx;
           
           .activity-name {
             font-size: 32rpx;
             font-weight: bold;
-            color: #2d2d2d;
-            
-            .dark-mode & {
-              color: var(--text-color-primary);
-            }
+            color: var(--text-primary);
           }
         }
         
         .activity-description {
           font-size: 28rpx;
-          color: #666;
-          margin-bottom: 25rpx;
-          line-height: 1.5;
+          color: var(--text-secondary);
+          margin-bottom: 20rpx;
+          line-height: 1.55;
           text-align: left;
-          
-          .dark-mode & {
-            color: var(--text-color-regular);
-          }
         }
         
         .activity-news {
-          margin-bottom: 25rpx;
+          margin-bottom: 20rpx;
           text-align: left;
           
           .news-title {
             font-size: 28rpx;
             font-weight: bold;
-            color: #2d2d2d;
-            margin-bottom: 15rpx;
-            
-            .dark-mode & {
-              color: var(--text-color-primary);
-            }
+            color: var(--text-primary);
+            margin-bottom: 12rpx;
           }
           
           .news-list {
@@ -691,43 +733,21 @@ export default {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              padding: 20rpx 25rpx;
-              background-color: white;
-              border-radius: 10rpx;
+              padding: 18rpx 22rpx;
+              background-color: var(--surface-base);
+              border-radius: 12rpx;
               margin-bottom: 10rpx;
-              transition: all 0.3s;
-              
-              .dark-mode & {
-                background-color: var(--background-color-base);
-              }
+              transition: transform 0.2s, background-color 0.2s;
               
               &:active {
                 transform: scale(0.98);
                 background-color: #f0f0f0;
-                
-                .dark-mode & {
-                  background-color: var(--background-color-secondary);
-                }
               }
               
               .news-item-title {
                 font-size: 26rpx;
-                color: #333;
+                color: var(--text-primary);
                 flex: 1;
-                
-                .dark-mode & {
-                  color: var(--text-color-primary);
-                }
-              }
-              
-              .news-arrow {
-                font-size: 24rpx;
-                color: #999;
-                margin-left: 15rpx;
-                
-                .dark-mode & {
-                  color: var(--text-color-secondary);
-                }
               }
             }
           }
@@ -743,11 +763,7 @@ export default {
             .form-title {
               font-size: 28rpx;
               font-weight: bold;
-              color: #2d2d2d;
-              
-              .dark-mode & {
-                color: var(--text-color-primary);
-              }
+              color: var(--text-primary);
             }
             
             .form-status-text {
@@ -765,28 +781,20 @@ export default {
           
           .form-button {
             width: 100%;
-            height: 80rpx;
-            background-color: rgb(180, 111, 88);
+            min-height: 80rpx;
+            background-color: var(--accent);
             color: white;
-            border-radius: 10rpx;
+            border-radius: 12rpx;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 28rpx;
             font-weight: bold;
-            transition: all 0.3s;
-            
-            .dark-mode & {
-              background-color: rgb(150, 91, 68);
-            }
+            transition: transform 0.2s, background-color 0.2s;
             
             &:active {
               transform: scale(0.98);
-              background-color: #b46f58;
-              
-              .dark-mode & {
-                background-color: #9c5e48;
-              }
+              background-color: var(--accent-press);
             }
           }
         }
@@ -794,59 +802,67 @@ export default {
     }
 
     .worlds {
+      display: flex;
+      flex-direction: column;
+      gap: var(--card-gap);
+      padding: 0 var(--page-x);
+
+      .world-item {
+        position: relative;
+      }
+
       .books {
-        height: 260rpx;
-        width: calc(100vw - 65rpx);
-        margin: 0 30rpx;
+        min-height: 260rpx;
+        width: 100%;
+        margin: 0;
         display: flex;
-        background-color: rgb(255, 255, 255);
-        border-radius: 10rpx;
-        
-        .dark-mode & {
-          background-color: var(--background-color-tertiary);
-        }
+        background-color: var(--surface-muted);
+        border-radius: var(--card-radius);
+        overflow: hidden;
+      }
 
-        img {
-          height: 260rpx;
-          width: 200rpx;
-          border-radius: 10rpx 0 0 10rpx;
-          margin: 0rpx;
-          flex-shrink: 0;
-        }
+      .world-book-cover {
+        width: 200rpx;
+        height: 260rpx;
+        border-radius: var(--card-radius) 0 0 var(--card-radius);
+        flex-shrink: 0;
+      }
 
-        .bookInfo {
-          margin-left: 30rpx;
-          margin-top: 22rpx;
+      .bookInfo.world-book-info {
+        margin-left: 20rpx;
+        margin-top: 20rpx;
+        margin-right: 20rpx;
+        flex: 1;
 
           .world-title {
             font-size: 34rpx;
-            height: 42rpx;
+            line-height: 1.3;
             margin-bottom: 10rpx;
             overflow: hidden;
             display: -webkit-box;
             font-weight: bold;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 1;
-            color: rgb(45, 45, 45);
-            margin: 5rpx;
+            color: var(--text-primary);
             text-align: left;
-            
-            .dark-mode & {
-              color: var(--text-color-primary);
-            }
+          }
+
+          .world-tag {
+            margin-left: 8rpx;
+            transform: translateY(-2rpx);
           }
 
           .author {
             position: relative;
-            margin-top: 15rpx;
+            margin-top: 12rpx;
             margin-bottom: 10rpx;
             display: flex;
             text-align: left;
 
             .auther_avatar {
               position: absolute;
-              top: 0rpx;
-              left: 5rpx;
+              top: 0;
+              left: 0;
               height: 35rpx;
               width: 35rpx;
               border-radius: 5rpx;
@@ -854,32 +870,25 @@ export default {
 
             .auther_name {
               font-size: 25rpx;
-              color: rgb(45, 45, 45);
+              color: var(--text-secondary);
               overflow: hidden;
               margin-left: 45rpx;
               display: -webkit-box;
               -webkit-box-orient: vertical;
               -webkit-line-clamp: 1;
-              
-              .dark-mode & {
-                color: var(--text-color-regular);
-              }
             }
           }
 
           .description {
             font-size: 25rpx;
-            color: rgb(142, 130, 109);
+            color: var(--text-secondary);
+            line-height: 1.5;
             margin: 5rpx 0;
             overflow: hidden;
             display: -webkit-box;
             text-align: left;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 3;
-            
-            .dark-mode & {
-              color: var(--text-color-regular);
-            }
           }
           
           .tags {
@@ -888,22 +897,23 @@ export default {
 
             .tag {
               font-size: 20rpx;
-              color: #4c4c4c;
-              background-color: #f5f5f5;
+              color: var(--text-secondary);
+              background-color: var(--surface-base);
               padding: 2rpx 10rpx;
               border-radius: 10rpx;
               margin-right: 10rpx;
               margin-bottom: 10rpx;
-              
-              .dark-mode & {
-                color: var(--text-color-regular);
-                background-color: var(--background-color-base);
-              }
             }
           }
-        }
       }
+    }
+
+    .bottom-spacer {
+      height: 200rpx;
+      background-color: var(--surface-base);
     }
   }
 }
 </style>
+
+

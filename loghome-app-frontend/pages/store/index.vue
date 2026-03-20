@@ -25,7 +25,7 @@
 			</view>
 		</view>
 		<view class="product-grid" v-if="products.length > 0">
-			<view class="product-card" v-for="item in products" :key="item.product_id" @tap="goDetail(item)">
+			<view class="product-card" v-for="item in products" :key="item.id" @tap="goDetail(item)">
 				<image class="cover" :src="item.cover_url" mode="aspectFill"></image>
 				<view class="title">{{ item.title }}</view>
 				<view class="tags">
@@ -33,7 +33,11 @@
 					<text class="tag warning" v-if="showStockWarning(item)">仅剩 {{ item.stock }} 件</text>
 				</view>
 				<view class="price-row">
-					<text class="price">🪵 {{ item.price }}</text>
+					<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
+					<image src="../../static/resources/log.png" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
+					<text class="price">
+						{{ item.price }}
+					</text>
 				</view>
 				<view class="shipping" v-if="item.shipping_desc">{{ item.shipping_desc }}</view>
 			</view>
@@ -146,7 +150,7 @@ export default {
 		},
 		goDetail(item) {
 			uni.navigateTo({
-				url: `/pages/store/detail?product_id=${item.product_id}`,
+				url: `/pages/store/detail?product_id=${item.id}`,
 			})
 		},
 		goOrders() {
@@ -197,7 +201,7 @@ export default {
 }
 
 .balance-bar {
-	margin: 0 30rpx 20rpx;
+	margin: 20rpx 30rpx 20rpx;
 	padding: 24rpx 28rpx;
 	background-color: #ffffff;
 	border-radius: 16rpx;
@@ -300,6 +304,9 @@ export default {
 	}
 	.price-row {
 		margin-top: 10rpx;
+		display: flex;
+		align-items: center;
+		gap: 8rpx;
 		.price {
 			font-size: 30rpx;
 			font-weight: 700;

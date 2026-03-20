@@ -8,7 +8,7 @@
 				</div>
 				<div class="chapter-list" v-show="volume.isExpanded">
 					<navigator v-for="(item, idx) in volume.chapters" :key="item.article_id"
-							   :url="'./newReader/article?id=' +  item.article_id"
+							   :url="getReaderUrl(item.article_id)"
 							   open-type="redirect" @click="$emit('change', item.originalIndex)">  
 						<div class="article" :key="item.article_id" :id="'chapter-' + item.originalIndex" :class="{'current': item.originalIndex === currentIdx}">
 							<div class="title">{{item.title}}</div>
@@ -55,6 +55,17 @@
 			})
 		},
 		methods: {
+			getReaderUrl(articleId) {
+				const readerProps = window.localStorage.getItem("readerProps");
+				const isPageReader = readerProps === "page";
+				let url = isPageReader
+					? `/pages/readers/newReader/article?id=${articleId}`
+					: `/pages/readers/article_rich?id=${articleId}`;
+				if (this.novel_id) {
+					url += `&novelId=${this.novel_id}`;
+				}
+				return url;
+			},
 			processVolumes() {
 				let volumes = [];
 				let currentVolume = {

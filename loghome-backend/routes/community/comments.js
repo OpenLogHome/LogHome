@@ -4,6 +4,7 @@ let { query } = require('../../sql.js');
 let auth = require('../../bin/auth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
+let achievements = require('../../bin/achievements.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -19,7 +20,6 @@ router.get('/list', async (req, res) => {
             return res.status(400).json({ msg: '缺少必要参数post_id' });
         }
         
-        // 获取主评论，按照时间从早到晚排序
         const comments = await query(
             `SELECT c.*, u.name as user_name, u.avatar_url as user_avatar
              FROM comm_comments c
@@ -30,16 +30,43 @@ router.get('/list', async (req, res) => {
             [postId, (page - 1) * pageSize, pageSize]
         );
         
-        // 获取每个主评论的回复数
-        for (const comment of comments) {
-            const replies = await query(
-                'SELECT COUNT(*) as count FROM comm_comments WHERE root_id = ? AND status = 1',
-                [comment.comment_id]
-            );
-            comment.reply_count = replies[0].count;
+        // 获取每个评论用户的勋章
+        for (let comment of comments) {
+            comment.user_badge = await achievements.getUserBadge(comment.user_id);
         }
         
-        // 获取总评论数
+        const commentIds = comments.map(c => c.comment_id);
+        
+        if (commentIds.length > 0) {
+            const countsResult = await query(
+                `SELECT root_id, COUNT(*) as count FROM comm_comments 
+                 WHERE root_id IN (${commentIds.map(() => '?').join(',')}) AND status = 1 GROUP BY root_id`,
+                commentIds
+            );
+            const countMap = {};
+            countsResult.forEach(r => { countMap[r.root_id] = r.count; });
+            comments.forEach(c => { c.reply_count = countMap[c.comment_id] || 0; });
+            
+            let userId = null;
+            try {
+                const authReq = require('../../bin/auth.js');
+                const token = req.headers.authorization?.replace('Bearer ', '');
+                if (token) {
+                    const jwt = require('jsonwebtoken');
+                    const decoded = jwt.verify(token, 'loghome-secret');
+                    const userResult = await query('SELECT user_id FROM users WHERE user_id = ?', [decoded.user_id]);
+                    if (userResult.length > 0) {
+                        userId = userResult[0].user_id;
+                    }
+                }
+            } catch (e) {}
+            
+            if (userId) {
+                const likeStatus = await getLikesStatus(userId, commentIds, 2);
+                comments.forEach(c => { c.is_liked = likeStatus[c.comment_id] || false; });
+            }
+        }
+        
         const totalResult = await query(
             'SELECT COUNT(*) as total FROM comm_comments WHERE post_id = ? AND parent_id = 0 AND status = 1',
             [postId]
@@ -68,7 +95,6 @@ router.get('/replies', async (req, res) => {
             return res.status(400).json({ msg: '缺少必要参数comment_id' });
         }
         
-        // 获取回复
         const replies = await query(
             `SELECT c.*, u.name as user_name, u.avatar_url as user_avatar,
                     ru.name as reply_user_name
@@ -81,7 +107,33 @@ router.get('/replies', async (req, res) => {
             [commentId, (page - 1) * pageSize, pageSize]
         );
         
-        // 获取总回复数
+        // 获取每个回复用户的勋章
+        for (let reply of replies) {
+            reply.user_badge = await achievements.getUserBadge(reply.user_id);
+        }
+        
+        const replyIds = replies.map(r => r.comment_id);
+        
+        if (replyIds.length > 0) {
+            let userId = null;
+            try {
+                const token = req.headers.authorization?.replace('Bearer ', '');
+                if (token) {
+                    const jwt = require('jsonwebtoken');
+                    const decoded = jwt.verify(token, 'loghome-secret');
+                    const userResult = await query('SELECT user_id FROM users WHERE user_id = ?', [decoded.user_id]);
+                    if (userResult.length > 0) {
+                        userId = userResult[0].user_id;
+                    }
+                }
+            } catch (e) {}
+            
+            if (userId) {
+                const likeStatus = await getLikesStatus(userId, replyIds, 2);
+                replies.forEach(r => { r.is_liked = likeStatus[r.comment_id] || false; });
+            }
+        }
+        
         const totalResult = await query(
             'SELECT COUNT(*) as total FROM comm_comments WHERE root_id = ? AND status = 1',
             [commentId]
@@ -300,5 +352,26 @@ router.delete('/:id', auth, async (req, res) => {
         res.status(500).json({ msg: 'Internal server error' });
     }
 });
+
+async function getLikesStatus(userId, targetIds, targetType) {
+    if (!targetIds || targetIds.length === 0) {
+        return {};
+    }
+    
+    const placeholders = targetIds.map(() => '?').join(',');
+    const likes = await query(
+        `SELECT target_id FROM comm_likes 
+         WHERE user_id = ? AND target_type = ? AND target_id IN (${placeholders})`,
+        [userId, targetType, ...targetIds]
+    );
+    
+    const likedSet = new Set(likes.map(l => l.target_id));
+    const result = {};
+    targetIds.forEach(id => {
+        result[id] = likedSet.has(id);
+    });
+    
+    return result;
+}
 
 module.exports = router;

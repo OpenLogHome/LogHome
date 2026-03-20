@@ -1,7 +1,6 @@
-<template>
+﻿<template>
 	<view class="theme-switch" @click="toggleTheme">
-		<view v-if="isDarkMode" class="switch-icon">🌙</view>
-		<view v-else class="switch-icon">☀️</view>
+		<view class="switch-icon">{{ switchIcon }}</view>
 	</view>
 </template>
 
@@ -9,8 +8,17 @@
 	export default {
 		name: 'theme-switch',
 		computed: {
-			isDarkMode() {
-				return this.$store.state.isDarkMode;
+			themeMode() {
+				return this.$store.state.themeMode || 'system';
+			},
+			switchIcon() {
+				if (this.themeMode === 'dark') {
+					return 'D';
+				}
+				if (this.themeMode === 'light') {
+					return 'L';
+				}
+				return 'A';
 			}
 		},
 		methods: {
@@ -34,6 +42,7 @@
 	}
 	
 	.switch-icon {
-		font-size: 40rpx;
+		font-size: 34rpx;
+		font-weight: 600;
 	}
-</style> 
+</style>

@@ -31,7 +31,7 @@
 						:key="item.id"
 						@tap="handleImageItemTap(item)"
 					>
-						<log-image :src="item.src" mode="aspectFill"></log-image>
+						<image :src="item.src" mode="aspectFill" class="image-preview"></image>
 						<view class="upload-mask" v-if="item.kind === 'upload'">
 							<view class="progress-wrapper">
 								<progress
@@ -166,6 +166,7 @@
 <script>
 	import axios from 'axios'
 	import TaskRewardModal from "../../components/TaskRewardModal.vue"
+	import { settleAndNotifyExpTaskCompletion } from "../../lib/treeExpTaskNotifier.js"
 
 	export default {
 		components: {
@@ -617,6 +618,7 @@
 					
 					// 触发发帖任务
 					if (!this.isEdit) {
+						settleAndNotifyExpTaskCompletion(this, 'community_post', 1).catch(() => {})
 						axios.post(this.$baseUrl + '/treePlant/do_task', 
 							{ task_code: 'daily_post' },
 							{
@@ -715,7 +717,7 @@
 		position: relative;
 	}
 
-	.image-item log-image {
+	.image-item .image-preview {
 		width: 100%;
 		height: 100%;
 	}

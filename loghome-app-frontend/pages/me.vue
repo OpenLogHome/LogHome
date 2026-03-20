@@ -2,7 +2,10 @@
 	<view :style="{
 		'--statusBarHeight': 0 + 'px',
 	}" v-dark>
-		<theme-switch style="position:fixed; z-index: 100; right: 30rpx; top: 30rpx;"></theme-switch>
+		<view class="theme-switch-wrapper">
+			<theme-switch></theme-switch>
+			<view class="theme-switch-label">{{ themeModeLabel }}</view>
+		</view>
 		<view class="header">
 			<view class="bg">
 				<log-image class="info-cover" :src="user.top_pic_url"
@@ -17,9 +20,18 @@
 							</view>
 						</navigator>
 						<view class="user-name">
-							<span>{{user.name}}</span>
-							<span class="user_id">ID:{{user.user_id}}</span>
-							<groupLabel v-for="user_group in user.user_group" :userGroup="user_group"></groupLabel>
+							<view class="user-name-row">
+								<span>{{user.name}}</span>
+								<span class="user_id">ID:{{user.user_id}}</span>
+								<view
+									v-if="user.selected_badge"
+									class="name-badge-tap"
+									@tap="goToBadgeDetail(user.selected_badge)"
+									@click="goToBadgeDetail(user.selected_badge)"
+								>
+									<honor-badge class="name-badge" :badge="user.selected_badge" size="name" scale="1.5"/>
+								</view>
+							</view>
 						</view>
 						<view class="motto">{{user.motto}}</view>
 					</view>
@@ -56,7 +68,7 @@
 			<view class="list">
 				<navigator url="./treePlant/treeplant">
 					<view class="li noborder">
-						<el-badge is-dot :hidden="!(treeState == '未种植' || treeState == '结果')">
+						<el-badge is-dot :hidden="!((treeState == '未种植' || treeState == '结果') || !isSignedToday)">
 							<view class="icon">
 								<img src="../static/icons/icon_treecut1.png"/></img>
 							</view>
@@ -64,6 +76,7 @@
 						<view class="text tree-growth-text">
 							<view class="title-row">
 								<text>原木树场</text>
+								<text v-if="!isSignedToday" style="font-size: 24rpx; color: #ff6a5f; margin-left: 10rpx; font-weight: normal;">可签到</text>
 							</view>
 							<view
 								class="growth-bar-wrapper"
@@ -80,6 +93,15 @@
 								</text>
 							</view>
 						</view>
+						<img class="to" src="../static/user/to.png"></img>
+					</view>
+				</navigator>
+				<navigator url="./users/achievements">
+					<view class="li">
+						<view class="icon">
+							<img src="../static/icons/cridit_sys_icon.png"></img>
+						</view>
+						<view class="text">原木勋章墙</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -104,13 +126,13 @@
 				<navigator url="./payments/earnings">
 					<view class="li">
 						<view class="icon">
-							<img src="../static/icons/cridit_sys_icon.png"></img>
+							<img src="../static/icons/icon_sponsored.png"></img>
 						</view>
 						<view class="text">余额提现</view>
 						<text style="width: 150rpx; color: #ff6a5f">{{earningsMoney}} 元</text>
 					</view>
 				</navigator>
-				<navigator url="./store/index">
+				<!-- <navigator url="./store/index">
 					<view class="li">
 						<view class="icon">
 							<img src="../static/icons/icon_sponsored.png"></img>
@@ -118,7 +140,7 @@
 						<view class="text">积分商城</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
-				</navigator>
+				</navigator> -->
 			</view>
 			<view class="list">
 				<!-- <navigator url="./users/user_credit">
@@ -174,7 +196,7 @@
 <script>
 	// VUE2
 	import axios from 'axios'
-	import groupLabel from './usergroup/groupLabel.vue';
+	import HonorBadge from '../components/honor-badge.vue';
 	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default {
 		data() {
@@ -185,7 +207,8 @@
 				treeState: "None",
 				treeGrowthVal: 0,
 				treeMaxGrowth: 0,
-				earningsMoney: 0.00
+				earningsMoney: 0.00,
+				isSignedToday: true
 			}
 		},
 		computed: {
@@ -194,9 +217,15 @@
 				const val = this.treeGrowthVal || 0;
 				const percent = val / this.treeMaxGrowth * 100;
 				return Math.max(0, Math.min(100, percent));
+			},
+			themeModeLabel() {
+				const mode = this.$store.state.themeMode || 'system';
+				if (mode === 'dark') return '深色';
+				if (mode === 'light') return '浅色';
+				return '跟随系统';
 			}
 		},
-		components: {groupLabel},
+		components: {HonorBadge},
 		mixins: [darkModeMixin],
 		onShow() {
 			uni.showLoading({
@@ -232,7 +261,6 @@
 			}).then((res) => {
 				console.log('userprofile', res.data);
 				_this.user = JSON.parse(JSON.stringify(res.data));
-				_this.user.user_group = _this.user.user_group.split(",");
 				if (window.localStorage.getItem('messages') == "") {
 					window.localStorage.setItem('messages', "[]");
 				}
@@ -337,6 +365,34 @@
 					url: './apps/h5webview?url=' + encodeURIComponent(storeUrl) + '&title=原木购'
 				})
 			},
+			goToBadgeDetail(badge) {
+				if (!badge) return
+				uni.setStorageSync('badgeDetailPayload', badge)
+				const ownerId = Number(this.user && this.user.user_id)
+				if (Number.isFinite(ownerId) && ownerId > 0) {
+					uni.setStorageSync('badgeDetailOwnerId', ownerId)
+				}
+				let encodedBadge = ''
+				try {
+					encodedBadge = encodeURIComponent(JSON.stringify(badge))
+				} catch (e) {
+					encodedBadge = ''
+				}
+				const query = []
+				if (encodedBadge) query.push('badge=' + encodedBadge)
+				if (Number.isFinite(ownerId) && ownerId > 0) query.push('owner_id=' + ownerId)
+				query.push('is_selected=1')
+				uni.navigateTo({
+					url: '/pages/users/badgeDetail' + (query.length ? ('?' + query.join('&')) : ''),
+					fail() {
+						uni.navigateTo({
+							url: Number.isFinite(ownerId) && ownerId > 0
+								? '/pages/users/badgeDetail?owner_id=' + ownerId
+								: '/pages/users/badgeDetail'
+						})
+					}
+				})
+			},
 			checkTreePlant() {
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;;
@@ -351,10 +407,20 @@
 						this.treeState = data.tree_status;
 						this.treeGrowthVal = data.growth_val || 0;
 						this.treeMaxGrowth = data.max_growth || 0;
+						
+						// Check sign-in status
+						const tasks = data.tasks || [];
+						const signInTask = tasks.find(t => t.task_name && t.task_name.includes('签到'));
+						if (signInTask && signInTask.status !== 'completed') {
+							this.isSignedToday = false;
+						} else {
+							this.isSignedToday = true;
+						}
 					} else {
 						this.treeState = "未种植";
 						this.treeGrowthVal = 0;
 						this.treeMaxGrowth = 0;
+						this.isSignedToday = true;
 					}
 				}).catch(function(error) {
 					uni.showToast({
@@ -416,6 +482,26 @@
 		.dark-mode & {
 			color: var(--text-color-regular);
 		}
+	}
+	
+	.theme-switch-wrapper {
+		position: fixed;
+		z-index: 100;
+		right: 30rpx;
+		top: 30rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10rpx;
+	}
+	
+	.theme-switch-label {
+		font-size: 22rpx;
+		padding: 6rpx 14rpx;
+		border-radius: 999rpx;
+		background-color: var(--card-background);
+		color: var(--text-color-regular);
+		box-shadow: 0 6rpx 16rpx var(--shadow-color);
 	}
 
 	page {
@@ -504,9 +590,26 @@
 				margin-top: 15rpx;
 				font-size: 40rpx;
 				font-weight: bold;
+				// display: flex;
+				// flex-direction: column;
 				
 				.dark-mode & {
 					color: var(--text-color-primary);
+				}
+
+				.user-name-row {
+					display: inline-flex;
+					align-items: center;
+				}
+
+				.name-badge {
+					margin-left: 20rpx;
+					transform: translateY(0);
+				}
+
+				.name-badge-tap {
+					display: inline-flex;
+					align-items: center;
 				}
 			}
 

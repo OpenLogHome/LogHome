@@ -1,8 +1,9 @@
 <template>
-	<view class="commentOuter" :style="{ '--statusBarHeight': 0 + 'px' }" v-dark>
+	<view class="commentOuter" :class="{ 'component-mode': componentMode }" :style="{ '--statusBarHeight': 0 + 'px' }" v-dark>
 		<z-paging ref="paging" v-model="reviews" @onRefresh="pullDown" @query="refreshPage"
 			:customOperationText="componentMode ? '收起' : '刷新'"
-			:style="{ 'marginTop': `${componentMode ? '20vh' : (0 + 'px')}` }"
+			:fixed="!componentMode"
+			:style="{ 'marginTop': '0px', 'height': componentMode ? '100%' : 'auto' }"
 			:default-page-size="componentMode ? 10 : 10">
 			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
 			<div v-if="paragraphId !== undefined"
@@ -211,6 +212,75 @@ export default {
 				})
 			})
 		},
+		getTokenInfo() {
+			try {
+				return JSON.parse(window.localStorage.getItem('token'));
+			} catch (e) {
+				return null;
+			}
+		},
+		async fetchPraiseStatusMap(commentIds) {
+			const tokenInfo = this.getTokenInfo();
+			if (!tokenInfo || !tokenInfo.tk || !commentIds.length) {
+				return {};
+			}
+			try {
+				const res = await axios.get(this.$baseUrl + '/community/get_comment_praise_statuses', {
+					params: {
+						comment_ids: commentIds.join(',')
+					},
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tokenInfo.tk
+					}
+				});
+				let praiseStatusMap = {};
+				for (let item of (res.data || [])) {
+					praiseStatusMap[item.novel_comment_id] = item.type;
+				}
+				return praiseStatusMap;
+			} catch (e) {
+				return {};
+			}
+		},
+		buildCommentItem(item, praiseStatusMap = {}) {
+			const replies = Array.isArray(item.replies) ? item.replies : [];
+			let userNameMap = {
+				[item.essay_comment_id]: item.name
+			};
+			for (let reply of replies) {
+				userNameMap[reply.essay_comment_id] = reply.name;
+			}
+
+			return {
+				author_id: item.author_id,
+				comment_id: item.essay_comment_id,
+				headImgSrc: item.avatar_url,
+				userName: item.name,
+				userId: item.user_id,
+				sendTime: this.utc2beijing(item.comment_time),
+				sendMsg: item.content,
+				likeNum: item.likeNum || 0,
+				reviewLess: replies.map((reply) => ({
+					comment_id: reply.essay_comment_id,
+					userName: reply.name,
+					userId: reply.user_id,
+					targetUserName: userNameMap[reply.reply_to_id] || item.name,
+					sendMsg: reply.content,
+					article_id: reply.article_id,
+					media_urls: reply.media_urls || []
+				})),
+				reviewNum: replies.length,
+				article_id: item.article_id,
+				article_title: item.article_title || '',
+				cento_id: item.cento_id,
+				cento: item.cento,
+				media_urls: item.media_urls || [],
+				praiseType: Object.prototype.hasOwnProperty.call(praiseStatusMap, item.essay_comment_id)
+					? praiseStatusMap[item.essay_comment_id]
+					: 3
+			}
+		},
 		async loadComment(commentId) {
 			let res = await axios.get(this.$baseUrl + "/community/novel_comment_from_comment_id?comment_id=" + commentId);
 			let data = res.data;
@@ -280,10 +350,10 @@ export default {
 
 							}).catch((err) => {
 								uni.showToast({
-									title: "评论信息获取失败",
-									icon: 'none',
-									duration: 2000
-								});
+					title: "评论信息获取失败",
+					icon: 'none',
+					duration: 2000
+				});
 							})
 					}
 				}).catch((err) => {
@@ -361,6 +431,19 @@ export default {
 				}, 1000);
 			}
 		},
+		async loadComment(commentId) {
+			const [commentRes, replyRes] = await Promise.all([
+				axios.get(this.$baseUrl + "/community/novel_comment_from_comment_id?comment_id=" + commentId),
+				axios.get(this.$baseUrl + "/community/novel_commonts_reply_to?id=" + commentId),
+			]);
+			let data = commentRes.data;
+			if (data.length > 0) {
+				const rootComment = data[0];
+				rootComment.replies = replyRes.data || [];
+				const praiseStatusMap = await this.fetchPraiseStatusMap([rootComment.essay_comment_id]);
+				this.$refs.paging.addDataFromTop([this.buildCommentItem(rootComment, praiseStatusMap)], true, true);
+			}
+		},
 		submitComment() {
 			let _this = this;
 			if (this.commentText == "") return;
@@ -402,9 +485,11 @@ export default {
 							reviewLess: [],
 							reviewNum: 0,
 							article_id: item.article_id,
+							article_title: item.article_title || '',
 							cento_id: item.cento_id,
 							cento: item.cento,
-							media_urls: _this.media_urls || []
+							media_urls: _this.media_urls || [],
+							praiseType: 3
 						}
 						_this.$refs.paging.addDataFromTop([commentItem], true, true);
 					_this.commentText = "";
@@ -639,9 +724,14 @@ export default {
 <style lang="scss" scoped>
 .commentOuter {
 	background-color: rgb(255, 248, 234);
+	height: 100%;
 	
 	&.dark-mode {
 		background-color: #1c1c1c;
+	}
+
+	&.component-mode {
+		min-height: 0;
 	}
 
 	.cento {

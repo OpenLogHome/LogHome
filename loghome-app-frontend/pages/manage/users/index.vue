@@ -40,6 +40,7 @@
 						<view class="action-btn" :class="user.activated ? 'disable' : 'enable'" @click="toggleUserStatus(user)">
 							{{user.activated ? '禁用' : '启用'}}
 						</view>
+						<view class="action-btn honor" @click="grantAchievement(user)">发成就</view>
 						<view class="action-btn message" @click="sendMessage(user)">发消息</view>
 					</view>
 				</view>
@@ -102,16 +103,23 @@ export default {
 			showMessageModal: false,
 			currentUser: null,
 			messageContent: '',
-			submitting: false
+			submitting: false,
+			achievementDefs: [],
+			loadingAchievementDefs: false,
+			grantingAchievement: false,
 		}
 	},
 	onShow() {
 		this.loadUsers()
+		this.loadAchievementDefs()
 	},
 	methods: {
+		getToken() {
+			return JSON.parse(window.localStorage.getItem('token')).tk
+		},
 		async loadUsers() {
 			try {
-				let tk = JSON.parse(window.localStorage.getItem('token')).tk
+				let tk = this.getToken()
 				uni.showLoading({
 					title: '努力加载中'
 				})
@@ -151,7 +159,7 @@ export default {
 		},
 		async toggleUserStatus(user) {
 			try {
-				let tk = JSON.parse(window.localStorage.getItem('token')).tk
+				let tk = this.getToken()
 				
 				await axios.post(this.$baseUrl + '/manage/users/user_activating_set', {
 					user_id: user.user_id,
@@ -199,7 +207,7 @@ export default {
 			
 			try {
 				this.submitting = true
-				let tk = JSON.parse(window.localStorage.getItem('token')).tk
+				let tk = this.getToken()
 				let userInfo = JSON.parse(window.localStorage.getItem('LogHomeUserInfo'))
 				
 				await axios.post(this.$baseUrl + '/manage/users/send_message', {
@@ -247,7 +255,79 @@ export default {
 				   date.getDate().toString().padStart(2, '0') + ' ' +
 				   date.getHours().toString().padStart(2, '0') + ':' +
 				   date.getMinutes().toString().padStart(2, '0')
-		}
+		},
+		async loadAchievementDefs() {
+			if (this.loadingAchievementDefs) return
+			this.loadingAchievementDefs = true
+			try {
+				const tk = this.getToken()
+				const res = await axios.get(this.$baseUrl + '/manage/users/achievements', {
+					headers: {
+						Authorization: tk,
+					},
+				})
+				this.achievementDefs = (res.data && res.data.list) || []
+			} catch (e) {
+				this.achievementDefs = []
+			} finally {
+				this.loadingAchievementDefs = false
+			}
+		},
+		async grantAchievement(user) {
+			if (this.grantingAchievement) return
+			if (!user || !user.user_id) return
+
+			if (!Array.isArray(this.achievementDefs) || this.achievementDefs.length === 0) {
+				await this.loadAchievementDefs()
+			}
+
+			if (!Array.isArray(this.achievementDefs) || this.achievementDefs.length === 0) {
+				uni.showToast({
+					title: '暂无可发放成就',
+					icon: 'none',
+				})
+				return
+			}
+
+			uni.showActionSheet({
+				itemList: this.achievementDefs.map((item) => item.title),
+				success: async (actionRes) => {
+					const chosen = this.achievementDefs[actionRes.tapIndex]
+					if (!chosen) return
+					this.grantingAchievement = true
+					try {
+						const tk = this.getToken()
+						const grantRes = await axios.post(
+							this.$baseUrl + '/manage/users/grant_achievement',
+							{
+								user_id: user.user_id,
+								achievement_id: chosen.achievement_id,
+							},
+							{
+								headers: {
+									Authorization: tk,
+								},
+							},
+						)
+						const msg = grantRes && grantRes.data && grantRes.data.already_granted
+							? '该成就已拥有'
+							: '发放成功'
+						uni.showToast({
+							title: msg,
+							icon: 'none',
+						})
+					} catch (e) {
+						uni.showToast({
+							title: '发放失败',
+							icon: 'none',
+						})
+					} finally {
+						this.grantingAchievement = false
+					}
+				},
+				fail: () => {},
+			})
+		},
 	}
 }
 </script>
@@ -347,6 +427,10 @@ export default {
 				
 				&.message {
 					background-color: #2196F3;
+				}
+
+				&.honor {
+					background-color: #C9902A;
 				}
 			}
 		}

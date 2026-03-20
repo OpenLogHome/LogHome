@@ -209,8 +209,11 @@ export default {
         });
       } else {
         // 否则直接跳转到对应的文章和段落
+        const readerProps = window.localStorage.getItem("readerProps");
+        const isPageReader = readerProps === "page";
+        const baseUrl = isPageReader ? '/pages/readers/newReader/article' : '/pages/readers/article_rich';
         uni.navigateTo({
-          url: `./newReader/article?id=${articleId}&paragraphId=${paragraphId}`
+          url: `${baseUrl}?id=${articleId}&paragraphId=${paragraphId}`
         });
       }
     },
@@ -225,8 +228,11 @@ export default {
         });
       } else {
         // 否则直接跳转到对应的文章和段落
+        const readerProps = window.localStorage.getItem("readerProps");
+        const isPageReader = readerProps === "page";
+        const baseUrl = isPageReader ? '/pages/readers/newReader/article' : '/pages/readers/article_rich';
         uni.navigateTo({
-          url: `./newReader/article?id=${excerpt.article_id || ''}&paragraphId=${excerpt.paragraph_id}`
+          url: `${baseUrl}?id=${excerpt.article_id || ''}&paragraphId=${excerpt.paragraph_id}`
         });
       }
     },

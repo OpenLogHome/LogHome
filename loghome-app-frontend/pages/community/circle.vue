@@ -20,18 +20,18 @@
               <text>{{circle.member_count}}成员</text>
               <text>{{circle.post_count}}帖子</text>
             </view>
-            <view class="circle-description" @click="showCircleInfo">{{circle.description}}</view>
+            <view class="circle-description clickable" @click="showCircleInfo">{{circle.description}}</view>
           </view>
         </view>
         
         <view class="action-bar">
-          <view class="action-btn" :class="{ 'active': isJoined }" @tap="toggleJoin">
+          <view class="action-btn clickable" :class="{ 'active': isJoined }" @tap="toggleJoin">
             {{ isJoined ? '已加入' : '加入圈子' }}
           </view>
-          <view class="action-btn" @tap="showCircleInfo">
+          <view class="action-btn clickable" @tap="showCircleInfo">
             圈子公告
           </view>
-          <view class="action-btn" v-if="isJoined && (userRole === 1 || userRole === 2)" @tap="editCircle">
+          <view class="action-btn clickable" v-if="isJoined && (userRole === 1 || userRole === 2)" @tap="editCircle">
             圈子设置
           </view>
         </view>
@@ -59,14 +59,14 @@
     <view class="circle-members">
       <view class="section-header">
         <text class="section-title">成员 ({{circle.member_count || 0}})</text>
-        <view class="more-btn" @tap="navigateToMembers">
+        <view class="more-btn clickable" @tap="navigateToMembers">
           <text>更多</text>
           <uni-icons type="right" size="14" color="#999"></uni-icons>
         </view>
       </view>
       <scroll-view scroll-x class="members-scroll" show-scrollbar="false">
         <view class="members-list" v-if="members.length > 0">
-          <view class="member-item" v-for="(member, index) in members" :key="index" @tap="navigateToUser(member.user_id)">
+          <view class="member-item clickable" v-for="(member, index) in members" :key="index" @tap="navigateToUser(member.user_id)">
             <view class="member-avatar-wrapper">
               <log-image class="member-avatar" :src="member.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
               <view class="member-role" v-if="member.role === 2">圈主</view>
@@ -93,7 +93,7 @@
     <!-- 帖子筛选 -->
     <view class="filter-bar">
       <view 
-        class="filter-item" 
+        class="filter-item clickable" 
         v-for="(item, index) in filters" 
         :key="index"
         :class="{ active: currentFilter === item.value }"
@@ -110,9 +110,9 @@
       @scrolltolower="loadMore"
     >
       <view class="posts-list" v-if="posts.length > 0">
-        <view class="post-item" v-for="(post, index) in posts" :key="index" @tap="navigateToPost(post.post_id)">
+        <view class="post-item clickable" v-for="(post, index) in posts" :key="index" @tap="navigateToPost(post.post_id)">
           <view class="post-header">
-            <view class="user-info" @tap.stop="navigateToUser(post.user_id)">
+            <view class="user-info clickable" @tap.stop="navigateToUser(post.user_id)">
               <log-image class="user-avatar" :src="post.author_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
               <view class="user-meta">
                 <text class="user-name">{{post.author_name}}</text>
@@ -144,11 +144,11 @@
               <uni-icons type="chat" size="18" color="#666"></uni-icons>
               <text>{{post.comment_count}}</text>
             </view>
-            <view class="post-action" @tap.stop="likePost(post)">
+            <view class="post-action clickable" @tap.stop="likePost(post)">
               <uni-icons :type="post.is_liked ? 'heart-filled' : 'heart'" size="18" :color="post.is_liked ? '#EA7034' : '#666'"></uni-icons>
               <text :class="{'liked': post.is_liked}">{{post.like_count}}</text>
             </view>
-            <view class="post-action" @tap.stop="sharePost(post)">
+            <view class="post-action clickable" @tap.stop="sharePost(post)">
               <uni-icons type="redo" size="18" color="#666"></uni-icons>
               <text>分享</text>
             </view>
@@ -226,7 +226,7 @@
     </scroll-view>
     
     <!-- 悬浮按钮 -->
-    <view class="float-btn" @tap="createPost">
+    <view class="float-btn clickable" @tap="createPost">
       <uni-icons type="plusempty" size="24" color="#fff"></uni-icons>
     </view>
     
@@ -235,7 +235,7 @@
       <view class="info-popup">
         <view class="popup-header">
           <text class="popup-title">圈子信息</text>
-          <uni-icons type="closeempty" size="24" color="#999" @click="closeInfoPopup"></uni-icons>
+          <uni-icons type="closeempty" size="24" color="#999" class="clickable" @click="closeInfoPopup"></uni-icons>
         </view>
         <view class="popup-content">
           <view class="info-section">
@@ -252,7 +252,7 @@
           </view>
           <view class="info-section">
             <text class="info-title">圈主</text>
-            <view class="member-item" @tap="navigateToUser(circle.creator_id)">
+            <view class="member-item clickable" @tap="navigateToUser(circle.creator_id)">
               <log-image class="member-avatar" :src="circle.creator_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
               <text class="member-name">{{circle.creator_name}}</text>
             </view>
@@ -863,7 +863,6 @@ export default {
     // 添加获取帖子点赞状态的方法
     async getPostsLikeStatus() {
       try {
-        // 检查是否已登录
         if (!this.isLoggedIn || !window.localStorage.getItem('token')) {
           console.log('用户未登录，跳过获取点赞状态');
           return;
@@ -871,38 +870,27 @@ export default {
         
         const token = JSON.parse(window.localStorage.getItem('token')).tk;
         
-        // 获取所有未检查点赞状态的帖子
         const uncheckedPosts = this.posts.filter(post => !post.is_liked_checked);
         
-        // 如果没有未检查的帖子，直接返回
         if (uncheckedPosts.length === 0) {
           return;
         }
         
-        console.log(`开始获取${uncheckedPosts.length}个帖子的点赞状态`);
+        const targetIds = uncheckedPosts.map(post => post.post_id);
         
-        // 为每个帖子获取点赞状态
-        for (const post of uncheckedPosts) {
-          try {
-            const res = await axios.get(this.$baseUrl + '/community/interactions/like/status', {
-              params: {
-                target_id: post.post_id,
-                target_type: 1
-              },
-              headers: {
-                'Authorization': 'Bearer ' + token
-              }
-            });
-            
-            // 更新帖子的点赞状态
-            post.is_liked = res.data.liked;
-            post.is_liked_checked = true; // 标记已检查
-            
-            console.log(`帖子 ${post.post_id} 点赞状态: ${post.is_liked}`);
-          } catch (err) {
-            console.error(`获取帖子 ${post.post_id} 点赞状态失败:`, err);
+        const res = await axios.post(this.$baseUrl + '/community/interactions/like/status/batch', {
+          target_ids: targetIds,
+          target_type: 1
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + token
           }
-        }
+        });
+        
+        uncheckedPosts.forEach(post => {
+          post.is_liked = res.data[post.post_id] || false;
+          post.is_liked_checked = true;
+        });
       } catch (error) {
         console.error('获取点赞状态失败:', error);
       }
@@ -1541,5 +1529,100 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.clickable {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: inherit;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  
+  &:active::after {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.float-btn.clickable {
+  position: fixed;
+}
+
+.circle-description {
+  &.clickable:active {
+    opacity: 0.7;
+  }
+}
+
+.action-btn {
+  &.clickable:active {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+}
+
+.more-btn {
+  &.clickable:active {
+    opacity: 0.6;
+  }
+}
+
+.member-item {
+  &.clickable:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+.filter-item {
+  &.clickable:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+.post-item {
+  &.clickable:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+.user-info {
+  &.clickable:active {
+    opacity: 0.7;
+  }
+}
+
+.post-action {
+  &.clickable:active {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
+
+.float-btn {
+  &.clickable:active {
+    transform: scale(0.95);
+    box-shadow: 0 2rpx 8rpx rgba(234, 112, 52, 0.4);
+  }
 }
 </style>

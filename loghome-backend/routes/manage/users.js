@@ -5,6 +5,7 @@ let auth = require('../../bin/adminAuth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
 let bank = require('../../bin/bank.js');
+const achievements = require('../../bin/achievements.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -68,6 +69,66 @@ router.post('/user_activating_set', auth, async function (req, res) {
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/achievements', auth, async function (req, res) {
+	try {
+		const list = await achievements.getAchievementDefinitions({
+			officialOnly: true,
+		});
+		res.json({ list });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+router.get('/get_user_achievements', auth, async function (req, res) {
+	try {
+		const userId = Number(req.query.user_id);
+		if (!Number.isFinite(userId) || userId <= 0) {
+			return res.status(400).json({ msg: 'invalid user_id' });
+		}
+
+		const list = await achievements.getUserAchievements(userId);
+		res.json({ list });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+router.post('/grant_achievement', auth, async function (req, res) {
+	try {
+		const adminUser = req.user && req.user[0] ? req.user[0] : null;
+		const userId = Number(req.body.user_id);
+		const achievementId = Number(req.body.achievement_id);
+		const achievementKey = req.body.achievement_key;
+
+		if (!Number.isFinite(userId) || userId <= 0) {
+			return res.status(400).json({ msg: 'invalid user_id' });
+		}
+
+		if ((!Number.isFinite(achievementId) || achievementId <= 0) && !achievementKey) {
+			return res.status(400).json({ msg: 'invalid achievement selector' });
+		}
+
+		const result = await achievements.grantAchievementToUser({
+			userId,
+			achievementId,
+			achievementKey,
+			adminUserId: adminUser ? adminUser.user_id : null,
+			reason: req.body.reason || '',
+		});
+
+		res.json({
+			msg: result.granted ? 'granted' : 'already granted',
+			...result,
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
 	}
 });
 

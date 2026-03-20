@@ -35,6 +35,11 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
   bool _volumeKeyEnabled = false;
   Color _currentNavBarColor = Colors.white; // 当前导航栏颜色
   SystemUiOverlayStyle? _currentStyle; // 当前系统UI样式
+  
+  // 缓存 UserScripts，避免每次重建都重新加载
+  UnmodifiableListView<UserScript>? _cachedUserScripts;
+  bool _isLoading = true; // WebView 加载状态
+  String? _loadingError; // 加载错误信息
 
   @override
   void initState() {
@@ -59,6 +64,36 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
     
     // 设置初始导航栏颜色
     _currentNavBarColor = Colors.white;
+    
+    // 预加载 UserScripts
+    _loadUserScripts();
+  }
+  
+  Future<void> _loadUserScripts() async {
+    final startTime = DateTime.now();
+    print('[Performance] Starting to load UserScripts...');
+    
+    try {
+      _cachedUserScripts = await _prepareUserScripts();
+      final loadTime = DateTime.now().difference(startTime).inMilliseconds;
+      print('[Performance] UserScripts loaded in ${loadTime}ms');
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      final loadTime = DateTime.now().difference(startTime).inMilliseconds;
+      print('[Performance] UserScripts failed to load in ${loadTime}ms: $e');
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadingError = e.toString();
+        });
+      }
+    }
   }
   
   @override
@@ -165,12 +200,21 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
   }
 
   Future<UnmodifiableListView<UserScript>> _prepareUserScripts() async {
+    final totalStart = DateTime.now();
+    
+    final jsStart = DateTime.now();
     String jsContent = await rootBundle.loadString('assets/js/jsbridge.js');
+    print('[Performance] Loaded jsbridge.js in ${DateTime.now().difference(jsStart).inMilliseconds}ms');
 
+    final statusBarStart = DateTime.now();
     final statusBarHeightPx = min(MediaQuery.of(context).padding.top, 29);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    // 获取当前资源文件的版本号
+    print('[Performance] Got status bar height in ${DateTime.now().difference(statusBarStart).inMilliseconds}ms');
+    
+    final versionStart = DateTime.now();
     String assetVersion = await AssetUtils.getCurrentAssetVersion();
+    print('[Performance] Got asset version in ${DateTime.now().difference(versionStart).inMilliseconds}ms');
+    
     print('statusBarHeightPx, $statusBarHeightPx');
 
     jsContent += """
@@ -178,7 +222,8 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
         window.jsBridge.navigationBarHeight = $bottomPadding;
         window.jsBridge.appVersion = '$assetVersion';
     """;
-
+    
+    print('[Performance] Total _prepareUserScripts took ${DateTime.now().difference(totalStart).inMilliseconds}ms');
 
     return UnmodifiableListView([
       UserScript(
@@ -602,11 +647,108 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    // 移除观察者
     WidgetsBinding.instance.removeObserver(this);
     HardwareKeyboard.instance.removeHandler(volumeKeyHandler);
     _colorCheckTimer?.cancel();
     super.dispose();
+  }
+  
+  Widget _buildWebViewContent() {
+    if (_loadingError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('加载失败: $_loadingError'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                  _loadingError = null;
+                });
+                _loadUserScripts();
+              },
+              child: const Text('重试'),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    if (_isLoading || _cachedUserScripts == null) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('正在加载...'),
+          ],
+        ),
+      );
+    }
+    
+    print("UserScript loaded successfully, initializing WebView...");
+    print("Local path: ${widget.localPath}");
+    print("File exists: ${File(widget.localPath).existsSync()}");
+    
+    final uri = Uri.file(widget.localPath);
+    print("Loading URL: $uri");
+    
+    return InAppWebView(
+      initialUrlRequest: URLRequest(
+        url: WebUri.uri(uri),
+      ),
+      initialSettings: InAppWebViewSettings(
+        javaScriptEnabled: true,
+        allowFileAccess: true,
+        allowFileAccessFromFileURLs: true,
+        allowUniversalAccessFromFileURLs: true,
+        useShouldInterceptRequest: false,
+        useHybridComposition: true,
+        hardwareAcceleration: true,
+        transparentBackground: true,
+        supportZoom: false,
+        verticalScrollBarEnabled: false,
+        horizontalScrollBarEnabled: false,
+        displayZoomControls: false,
+        overScrollMode: OverScrollMode.NEVER,
+      ),
+      initialUserScripts: _cachedUserScripts,
+      onWebViewCreated: (controller) {
+        final createTime = DateTime.now();
+        print("[Performance] WebView Created at $createTime");
+        _webViewController = controller;
+        _initializeJavaScriptHandlers(controller);
+      },
+      onLoadStart: (controller, url) {
+        print("[Performance] Page load started: $url");
+      },
+      onLoadStop: (controller, url) async {
+        print("[Performance] Page load finished: $url");
+        if (_currentStyle != null) {
+          SystemChrome.setSystemUIOverlayStyle(_currentStyle!);
+        }
+      },
+      onLoadError: (controller, url, code, message) async {
+        print("Page load error: $message (code: $code, url: $url)");
+        if (url.toString().startsWith('file://')) {
+          _verifyResourcePath();
+        }
+      },
+      onReceivedError: (controller, request, error) {
+        print("Received error: ${error.description}, type: ${error.type}");
+        if (request.url.toString().startsWith('file://')) {
+          _verifyResourcePath();
+        }
+      },
+      onConsoleMessage: (controller, consoleMessage) {
+        print("Console Message: ${consoleMessage.message}");
+      },
+    );
   }
 
   @override
@@ -639,97 +781,11 @@ class _WebViewPageState extends State<WebViewPage> with WidgetsBindingObserver {
           extendBody: false,
           extendBodyBehindAppBar: false,
           body: SafeArea(
-            // 使用SafeArea确保内容在安全区域内
             child: Container(
-              width: MediaQuery.of(context).size.width,
-              color: Colors.white, // WebView容器背景色
-              child: FutureBuilder<UnmodifiableListView<UserScript>>(
-                future: _prepareUserScripts(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    print("UserScript Error: ${snapshot.error}");
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  return InAppWebView(
-                    initialSettings: InAppWebViewSettings(
-                      javaScriptEnabled: true,
-                      allowFileAccess: true,
-                      allowFileAccessFromFileURLs: true,
-                      allowUniversalAccessFromFileURLs: true,
-                      useShouldInterceptRequest: true,
-                      // 开启硬件加速
-                      useHybridComposition: true,
-                      // 启用WebView硬件加速
-                      hardwareAcceleration: true,
-                      // 设置填满屏幕
-                      transparentBackground: true,
-                      // 设置显示区域，包括刘海区域
-                      supportZoom: false,
-                      verticalScrollBarEnabled: false,
-                      horizontalScrollBarEnabled: false,
-                      displayZoomControls: false,
-                      // 防止过度滚动
-                      overScrollMode: OverScrollMode.NEVER,
-                    ),
-                    initialUserScripts: snapshot.data,
-                    onWebViewCreated: (controller) {
-                      _webViewController = controller;
-                      _initializeJavaScriptHandlers(controller);
-                      print("WebView Created");
-
-                      if (const bool.fromEnvironment('dart.vm.product') == false) {
-                        // 调试模式下加载特定链接
-                        final debugUrl = "http://10.0.2.2:8080";
-                        print("Debug mode: Loading URL: $debugUrl");
-                        controller.loadUrl(
-                          urlRequest: URLRequest(
-                            url: WebUri(debugUrl),
-                          ),
-                        );
-                      } else {
-                        // 非调试模式下加载本地文件
-                        final uri = Uri.file(widget.localPath);
-                        print("Production mode: Loading URL: $uri");
-                        controller.loadUrl(
-                          urlRequest: URLRequest(
-                            url: WebUri.uri(uri),
-                          ),
-                        );
-                      }
-                    },
-                    onLoadStart: (controller, url) {
-                      print("Page load started: $url");
-                    },
-                    onLoadStop: (controller, url) async {
-                      print("Page load finished: $url");
-                      // 页面加载完成后，再次确保系统UI样式正确
-                      if (_currentStyle != null) {
-                        SystemChrome.setSystemUIOverlayStyle(_currentStyle!);
-                      }
-                    },
-                    onLoadError: (controller, url, code, message) async {
-                      print("Page load error: $message (code: $code)");
-                      if (url.toString().startsWith('file://')) {
-                        _verifyResourcePath();
-                      }
-                    },
-                    onReceivedError: (controller, request, error) {
-                      print("Received error: ${error.description}");
-                      if (request.url.toString().startsWith('file://')) {
-                        _verifyResourcePath();
-                      }
-                    },
-                    onConsoleMessage: (controller, consoleMessage) {
-                      print("Console Message: ${consoleMessage.message}");
-                    },
-                  );
-                },
-              ),
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.white,
+              child: _buildWebViewContent(),
             ),
           ),
         ),

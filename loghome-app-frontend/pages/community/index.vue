@@ -1,13 +1,13 @@
 <template>
   <view class="community-container" v-dark>
     <!-- 顶部搜索栏 -->
-    <div class="searchBar" v-dark>
-      <div class="search-input-wrapper" @tap="navigateToSearch">
-        <uni-icons type="search" size="18" color="#999"></uni-icons>
-        <view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
+      <div class="searchBar" v-dark>
+        <div class="search-input-wrapper clickable" @tap="navigateToSearch">
+          <uni-icons type="search" size="18" color="#999"></uni-icons>
+          <view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
+        </div>
+        <uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'" class="messageIcon clickable" @click="gotoMessage"></uni-icons>
       </div>
-      <uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'" class="messageIcon" @click="gotoMessage"></uni-icons>
-    </div>
 
     <!-- 内容区域 -->
     <view 
@@ -46,41 +46,57 @@
       </div>
 
       <!-- 推荐圈子 -->
-      <view class="section" v-if="recommendCircles && recommendCircles.length > 0">
+      <view
+        class="section recommend-circles-section"
+        :class="{ 'is-refreshing': circleRefreshAnimating }"
+        v-if="recommendCirclesLoading || hasRecommendCircles"
+      >
         <view class="section-header">
           <text class="section-title">推圈</text>
-          <text class="section-more" @tap="navigateToCircles">更多</text>
+          <text class="section-more clickable" @tap="navigateToCircles">更多</text>
         </view>
-        <view class="square-grid">
+        <view class="square-grid square-grid-skeleton" v-if="recommendCirclesLoading">
+          <view class="square-grid-row">
+            <view class="skeleton-block skeleton-main"></view>
+            <view class="skeleton-side">
+              <view class="skeleton-block skeleton-side-item"></view>
+              <view class="skeleton-block skeleton-side-item"></view>
+            </view>
+          </view>
+          <view class="square-grid-bottom">
+            <view class="skeleton-block skeleton-bottom-item"></view>
+          </view>
+        </view>
+        <view class="square-grid" v-else>
           <view class="square-grid-content">
             <!-- 第一行：大图 + 两个小图 -->
             <view class="square-grid-row">
               <!-- 左侧大图 -->
-              <view class="square-grid-main" @tap="navigateToCircle(getCircleId(0))" v-if="hasCircle(0)">
-                <image mode="aspectFill" :src="getCircleImage(0)"></image>
+              <view class="square-grid-main clickable" @tap="navigateToCircle(mainRecommendCircle.circle_id)" v-if="mainRecommendCircle">
+                <image mode="aspectFill" :src="mainRecommendCircle.bg_url"></image>
                 <view class="circle-info">
-                  <image :src="getCircleIcon(0)" mode="aspectFill"></image>
-                  <view>{{ getCircleName(0) }}</view>
-                  <text>{{ getCircleMemberCount(0) }}人</text>
+                  <image :src="mainRecommendCircle.icon" mode="aspectFill"></image>
+                  <view>{{ mainRecommendCircle.name }}</view>
+                  <text>{{ mainRecommendCircle.member_count }}人</text>
                 </view>
               </view>
               <!-- 右侧两个小图 -->
               <view class="square-grid-side">
-                <view class="side-item" @tap="navigateToCircle(getCircleId(1))" v-if="hasCircle(1)">
-                  <image mode="aspectFill" :src="getCircleIcon(1)"></image>
-                  <view>{{ getCircleName(1) }}</view>
-                  <text>{{ getCircleMemberCount(1) }}人</text>
+                <view class="side-item clickable" @tap="navigateToCircle(recommendCircleSlots[1].circle_id)" v-if="recommendCircleSlots[1]">
+                  <image mode="aspectFill" :src="recommendCircleSlots[1].icon" lazy-load></image>
+                  <view>{{ recommendCircleSlots[1].name }}</view>
+                  <text>{{ recommendCircleSlots[1].member_count }}人</text>
                 </view>
-                <view class="side-item" @tap="navigateToCircle(getCircleId(2))" v-if="hasCircle(2)">
-                  <image mode="aspectFill" :src="getCircleIcon(2)"></image>
-                  <view>{{ getCircleName(2) }}</view>
-                  <text>{{ getCircleMemberCount(2) }}人</text>
+                <view class="side-item clickable" @tap="navigateToCircle(recommendCircleSlots[2].circle_id)" v-if="recommendCircleSlots[2]">
+                  <image mode="aspectFill" :src="recommendCircleSlots[2].icon" lazy-load></image>
+                  <view>{{ recommendCircleSlots[2].name }}</view>
+                  <text>{{ recommendCircleSlots[2].member_count }}人</text>
                 </view>
               </view>
             </view>
             <!-- 第二行：一个小图 + 全部圈子按钮 -->
             <view class="square-grid-bottom">
-              <view class="bottom-item all-circles" @tap="navigateToCircles">
+              <view class="bottom-item all-circles clickable" @tap="navigateToCircles">
                 <view>全部圈子</view>
                 <uni-icons type="arrow-right" size="16"></uni-icons>
               </view>
@@ -97,133 +113,111 @@
         <view class="section-header">
           <text class="section-title">帖子</text>
           <view class="section-actions">
-            <text class="sort-btn" :class="{active: sortType === 'hot'}" @tap="changeSort('hot')">热门</text>
-            <text class="sort-btn" :class="{active: sortType === 'new'}" @tap="changeSort('new')">最新</text>
+            <text class="sort-btn clickable" :class="{active: sortType === 'hot'}" @tap="changeSort('hot')">热门</text>
+            <text class="sort-btn clickable" :class="{active: sortType === 'new'}" @tap="changeSort('new')">最新</text>
           </view>
         </view>
 
         <view class="post-list" v-if="posts.length > 0">
-          <view class="post-item" v-for="(post, index) in posts" :key="index" @tap="navigateToPost(post.post_id)">
-            <view class="post-header">
-              <view class="user-info" @tap.stop="navigateToUser(post.user_id)">
-                <image class="user-avatar" :src="post.author_avatar" mode="aspectFill"></image>
-                <view class="user-meta">
-                  <text class="user-name">{{post.author_name}}</text>
-                  <view class="post-time">{{formatTime(post.create_time)}}</view>
+          <view class="post-waterfall">
+            <view class="waterfall-column" v-for="(column, columnIndex) in waterfallPostColumns" :key="columnIndex">
+              <view
+                class="post-card clickable"
+                v-for="item in column"
+                :key="item.post.post_id"
+                @tap="navigateToPost(item.post.post_id)"
+              >
+                <view
+                  class="post-card-image"
+                  :class="item.layoutClass"
+                >
+                  <image
+                    v-if="item.post.media_urls && item.post.media_urls.length > 0"
+                    :src="item.post.media_urls[0]"
+                    mode="aspectFill"
+                    class="card-image"
+                  ></image>
+                  <view v-else class="card-color-bg" :style="{ backgroundColor: getRandomColor(item.index) }">
+                    <text class="card-text-preview">{{item.post.content || item.post.title}}</text>
+                  </view>
                 </view>
-              </view>
-              <view class="post-circle" @tap.stop="navigateToCircle(post.circle_id)">
-                {{post.circle_name}}
-              </view>
-            </view>
-            <view class="post-content">
-              <text class="post-title">{{post.title}}</text>
-              <text class="post-text">{{post.content}}</text>
-            </view>
-            <!-- 图片展示 -->
-            <view class="post-images" v-if="post.media_urls && post.media_urls.length > 0">
-              <view class="image-grid" :class="'grid-' + (post.media_urls.length > 3 ? 'multi' : post.media_urls.length)">
-                <image 
-                  v-for="(img, imgIndex) in post.media_urls.slice(0, 9)" 
-                  :key="imgIndex" 
-                  :src="img" 
-                  mode="aspectFill" 
-                  class="post-image"
-                  @tap.stop="previewImage(post.media_urls, imgIndex)"
-                ></image>
-                <view class="image-count" v-if="post.media_urls.length > 9">+{{post.media_urls.length - 9}}</view>
-              </view>
-            </view>
-            <view class="post-footer">
-              <view class="post-action">
-                <uni-icons type="chat" size="18" color="#666"></uni-icons>
-                <text>{{post.comment_count}}</text>
-              </view>
-              <view class="post-action" @tap.stop="likePost(post)">
-                <uni-icons :type="post.is_liked ? 'heart-filled' : 'heart'" size="18" :color="post.is_liked ? '#EA7034' : '#666'"></uni-icons>
-                <text :class="{'liked': post.is_liked}">{{post.like_count}}</text>
-              </view>
-              <view class="post-action" @tap.stop="sharePost(post)">
-                <uni-icons type="redo" size="18" color="#666"></uni-icons>
-                <text>分享</text>
+                <view class="post-card-content">
+                  <text class="card-title">{{item.post.title}}</text>
+                  <view class="card-footer">
+                    <view class="card-user clickable" @tap.stop="navigateToUser(item.post.user_id)">
+                      <image class="card-avatar" :src="item.post.author_avatar" mode="aspectFill"></image>
+                      <text class="card-username">{{item.post.author_name}}</text>
+                    </view>
+                    <view class="card-likes clickable" @tap.stop="likePost(item.post)">
+                      <uni-icons :type="item.post.is_liked ? 'heart-filled' : 'heart'" 
+                                 size="14" 
+                                 :color="item.post.is_liked ? '#EA7034' : '#999'"></uni-icons>
+                      <text>{{item.post.like_count}}</text>
+                    </view>
+                  </view>
+                </view>
               </view>
             </view>
           </view>
         </view>
         <view class="post-list post-skeleton-list" v-else-if="loadingStatus === 'loading'">
-          <el-skeleton animated>
-            <template slot="template">
-              <view class="post-item skeleton-post" v-for="n in 6" :key="n">
-                <view class="post-header">
-                  <view class="user-info">
-                    <el-skeleton-item class="skeleton-avatar" variant="circle"></el-skeleton-item>
-                    <view class="user-meta">
-                      <el-skeleton-item class="skeleton-line skeleton-name" variant="text"></el-skeleton-item>
-                      <el-skeleton-item class="skeleton-line skeleton-time" variant="text"></el-skeleton-item>
-                    </view>
-                  </view>
-                  <el-skeleton-item class="skeleton-pill" variant="text"></el-skeleton-item>
-                </view>
-                <view class="post-content">
+          <view class="post-waterfall">
+            <view class="waterfall-column" v-for="n in 2" :key="n">
+              <view class="post-card skeleton-post" v-for="m in 3" :key="m">
+                <view class="post-card-image skeleton-image"></view>
+                <view class="post-card-content">
                   <el-skeleton-item class="skeleton-line skeleton-title" variant="text"></el-skeleton-item>
-                  <el-skeleton-item class="skeleton-line skeleton-text" variant="text"></el-skeleton-item>
-                  <el-skeleton-item class="skeleton-line skeleton-text short" variant="text"></el-skeleton-item>
-                </view>
-                <view class="post-footer">
-                  <view class="post-action">
-                    <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
-                    <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
-                  </view>
-                  <view class="post-action">
-                    <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
-                    <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
-                  </view>
-                  <view class="post-action">
-                    <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
-                    <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
+                  <view class="card-footer">
+                    <view class="card-user">
+                      <el-skeleton-item class="skeleton-avatar" variant="circle"></el-skeleton-item>
+                      <el-skeleton-item class="skeleton-line skeleton-name" variant="text"></el-skeleton-item>
+                    </view>
+                    <view class="card-likes">
+                      <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
+                      <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
+                    </view>
                   </view>
                 </view>
               </view>
-            </template>
-          </el-skeleton>
+            </view>
+          </view>
         </view>
 
         <!-- 加载更多 -->
         <view class="post-list post-loadmore-skeleton" v-if="loadingStatus === 'loading' && posts.length > 0">
-          <el-skeleton animated>
-            <template slot="template">
-              <view class="post-item skeleton-post compact" v-for="n in 2" :key="n">
-                <view class="post-header">
-                  <view class="user-info">
-                    <el-skeleton-item class="skeleton-avatar" variant="circle"></el-skeleton-item>
-                    <view class="user-meta">
+          <view class="post-waterfall">
+            <view class="waterfall-column" v-for="n in 2" :key="n">
+              <view class="post-card skeleton-post" v-for="m in 1" :key="m">
+                <view class="post-card-image skeleton-image"></view>
+                <view class="post-card-content">
+                  <el-skeleton-item class="skeleton-line skeleton-title" variant="text"></el-skeleton-item>
+                  <view class="card-footer">
+                    <view class="card-user">
+                      <el-skeleton-item class="skeleton-avatar" variant="circle"></el-skeleton-item>
                       <el-skeleton-item class="skeleton-line skeleton-name" variant="text"></el-skeleton-item>
-                      <el-skeleton-item class="skeleton-line skeleton-time" variant="text"></el-skeleton-item>
+                    </view>
+                    <view class="card-likes">
+                      <el-skeleton-item class="skeleton-icon" variant="circle"></el-skeleton-item>
+                      <el-skeleton-item class="skeleton-count" variant="text"></el-skeleton-item>
                     </view>
                   </view>
-                  <el-skeleton-item class="skeleton-pill" variant="text"></el-skeleton-item>
-                </view>
-                <view class="post-content">
-                  <el-skeleton-item class="skeleton-line skeleton-title" variant="text"></el-skeleton-item>
-                  <el-skeleton-item class="skeleton-line skeleton-text" variant="text"></el-skeleton-item>
                 </view>
               </view>
-            </template>
-          </el-skeleton>
+            </view>
+          </view>
         </view>
         <uni-load-more v-else :status="loadingStatus"></uni-load-more>
       </view>
     </view>
 
     <!-- 悬浮按钮 -->
-    <view class="float-btn" @tap="navigateToCreatePost">
+    <view class="float-btn clickable" @tap="navigateToCreatePost">
       <uni-icons type="plusempty" size="24" color="#fff"></uni-icons>
     </view>
   </view>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import moment from 'moment';
 import banner from '@/components/banner.vue'
@@ -245,6 +239,9 @@ export default {
       pageSize: 10,
       posts: [],
       recommendCircles: [],
+      recommendCirclesLoading: false,
+      circleRefreshAnimating: false,
+      circleRefreshTimer: null,
       unreadCount: 0,
       hasMore: true,
       chartList: [],
@@ -276,9 +273,6 @@ export default {
     this.refreshSwiperData();
     
     // 确保在页面完全加载后获取点赞状态
-    setTimeout(() => {
-      this.getPostsLikeStatus();
-    }, 500);
   },
 
   onPullDownRefresh() {
@@ -289,16 +283,22 @@ export default {
       this.loadRecommendCircles(),
       this.loadPosts(),
       this.refreshSwiperData()
-    ]).then(() => {
+    ]).finally(() => {
       // 刷新后重新获取点赞状态
-      this.getPostsLikeStatus();
-    }).finally(() => {
       uni.stopPullDownRefresh();
     });
   },
 
+  beforeUnmount() {
+    this.clearRecommendCirclesAnimation();
+  },
+
+  onReachBottom() {
+    this.loadMore();
+  },
+
   onPageScroll(e) {
-    if (this.scrollThrottle) return;
+    if (this.scrollThrottle || !this.hasMore || this.loadingStatus === 'loading') return;
     
     this.scrollThrottle = true;
     setTimeout(() => {
@@ -309,19 +309,147 @@ export default {
         // 获取窗口高度
         const windowHeight = uni.getSystemInfoSync().windowHeight;
 
-        console.log(scrollTop, scrollHeight, windowHeight);
         
         // 当滚动到距离底部100px时开始加载更多
         if (scrollTop + windowHeight >= scrollHeight - 500) {
           this.loadMore();
-          console.log("loadmore");
         }
       }).exec();
     }, 100);
   },
 
+  computed: {
+    recommendCircleSlots() {
+      if (!Array.isArray(this.recommendCircles)) {
+        return [];
+      }
+
+      return this.recommendCircles
+        .filter(circle => circle && circle.circle_id)
+        .slice(0, 3)
+        .map(circle => ({
+          ...circle,
+          bg_url: circle.bg_url || circle.icon || '../../static/default-circle.png',
+          icon: circle.icon || '../../static/default-circle.png',
+          name: circle.name || '未知圈子',
+          member_count: circle.member_count || 0
+        }));
+    },
+
+    mainRecommendCircle() {
+      return this.recommendCircleSlots[0] || null;
+    },
+
+    hasRecommendCircles() {
+      return this.recommendCircleSlots.length > 0;
+    },
+
+    waterfallPostColumns() {
+      const columns = [[], []];
+      const heights = [0, 0];
+
+      this.posts.forEach((post, index) => {
+        const estimatedHeight = this.estimatePostCardWeight(post, index);
+        const targetColumn = heights[0] <= heights[1] ? 0 : 1;
+
+        columns[targetColumn].push({
+          post,
+          index,
+          layoutClass: this.getPostImageLayoutClass(post, index)
+        });
+        heights[targetColumn] += estimatedHeight;
+      });
+
+      return columns;
+    }
+  },
+
   methods: {
+    getRandomColor(index) {
+      const colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+        '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+        '#F8B500', '#FF6F61', '#6B5B95', '#88B04B', '#F7CAC9',
+        '#92A8D1', '#955251', '#B565A7', '#009B77', '#DD4124'
+      ];
+      return colors[index % colors.length];
+    },
+
+    getPostImageLayoutClass(post, index) {
+      if (!post || !post.media_urls || post.media_urls.length === 0) {
+        return 'is-text-only';
+      }
+
+      const variants = ['is-tall', 'is-medium', 'is-short'];
+      return variants[index % variants.length];
+    },
+
+    estimatePostCardWeight(post, index) {
+      const titleLength = ((post && post.title) || '').length;
+      const contentLength = ((post && post.content) || '').length;
+      const hasImage = !!(post && post.media_urls && post.media_urls.length > 0);
+      const imageWeightMap = [360, 320, 280];
+      const imageWeight = hasImage ? imageWeightMap[index % imageWeightMap.length] : 140;
+      const textWeight = Math.min(titleLength * 2 + contentLength * 0.6, 180);
+
+      return 160 + imageWeight + textWeight;
+    },
+
+    clearRecommendCirclesAnimation() {
+      if (this.circleRefreshTimer) {
+        clearTimeout(this.circleRefreshTimer);
+        this.circleRefreshTimer = null;
+      }
+      this.circleRefreshAnimating = false;
+    },
+
+    triggerRecommendCirclesAnimation() {
+      this.clearRecommendCirclesAnimation();
+      this.$nextTick(() => {
+        this.circleRefreshAnimating = true;
+        this.circleRefreshTimer = setTimeout(() => {
+          this.circleRefreshAnimating = false;
+          this.circleRefreshTimer = null;
+        }, 650);
+      });
+    },
+
+    preloadRecommendCircleImage(src) {
+      if (!src) {
+        return Promise.resolve();
+      }
+
+      return new Promise((resolve) => {
+        uni.getImageInfo({
+          src,
+          success: () => resolve(),
+          fail: () => resolve()
+        });
+      });
+    },
+
+    preloadRecommendCircleAssets(circles) {
+      if (!Array.isArray(circles) || circles.length === 0) {
+        return Promise.resolve();
+      }
+
+      const imageUrls = [...new Set(
+        circles.reduce((urls, circle) => {
+          if (circle && circle.bg_url) {
+            urls.push(circle.bg_url);
+          }
+          if (circle && circle.icon) {
+            urls.push(circle.icon);
+          }
+          return urls;
+        }, []).filter(Boolean)
+      )];
+
+      return Promise.all(imageUrls.map(url => this.preloadRecommendCircleImage(url)));
+    },
+
     async loadRecommendCircles() {
+      this.recommendCirclesLoading = true;
       try {
         const res = await axios.get(this.$baseUrl + '/community/circles/list', {
           params: {
@@ -333,15 +461,27 @@ export default {
         
         // 确保有数据
         if (res.data && res.data.list && Array.isArray(res.data.list)) {
-          this.recommendCircles = res.data.list;
+          const circles = res.data.list;
+          this.recommendCircles = circles;
+          this.recommendCirclesLoading = false;
+          if (circles.length > 0) {
+            this.triggerRecommendCirclesAnimation();
+            this.preloadRecommendCircleAssets(circles).catch(() => {});
+          } else {
+            this.clearRecommendCirclesAnimation();
+          }
         } else {
           // 如果没有数据，设置为空数组
           this.recommendCircles = [];
+          this.recommendCirclesLoading = false;
+          this.clearRecommendCirclesAnimation();
         }
       } catch (error) {
         console.error('加载推荐圈子失败', error);
         // 出错时设置为空数组
         this.recommendCircles = [];
+        this.recommendCirclesLoading = false;
+        this.clearRecommendCirclesAnimation();
       }
     },
 
@@ -387,9 +527,9 @@ export default {
           this.loadingStatus = this.hasMore ? 'more' : 'noMore';
           
           // 获取帖子的点赞状态
-          setTimeout(() => {
+          this.$nextTick(() => {
             this.getPostsLikeStatus();
-          }, 100);
+          });
         }
       } catch (error) {
         console.error('加载帖子失败', error);
@@ -399,7 +539,6 @@ export default {
 
     async getPostsLikeStatus() {
       try {
-        // 检查是否已登录
         if (!window.localStorage.getItem('token')) {
           console.log('用户未登录，跳过获取点赞状态');
           return;
@@ -407,38 +546,27 @@ export default {
         
         const token = JSON.parse(window.localStorage.getItem('token')).tk;
         
-        // 获取所有未检查点赞状态的帖子
         const uncheckedPosts = this.posts.filter(post => !post.is_liked_checked);
         
-        // 如果没有未检查的帖子，直接返回
         if (uncheckedPosts.length === 0) {
           return;
         }
         
-        console.log(`开始获取${uncheckedPosts.length}个帖子的点赞状态`);
+        const targetIds = uncheckedPosts.map(post => post.post_id);
         
-        // 为每个帖子获取点赞状态
-        for (const post of uncheckedPosts) {
-          try {
-            const res = await axios.get(this.$baseUrl + '/community/interactions/like/status', {
-              params: {
-                target_id: post.post_id,
-                target_type: 1
-              },
-              headers: {
-                'Authorization': 'Bearer ' + token
-              }
-            });
-            
-            // 更新帖子的点赞状态
-            post.is_liked = res.data.liked;
-            post.is_liked_checked = true; // 标记已检查
-            
-            console.log(`帖子 ${post.post_id} 点赞状态: ${post.is_liked}`);
-          } catch (err) {
-            console.error(`获取帖子 ${post.post_id} 点赞状态失败:`, err);
+        const res = await axios.post(this.$baseUrl + '/community/interactions/like/status/batch', {
+          target_ids: targetIds,
+          target_type: 1
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + token
           }
-        }
+        });
+        
+        uncheckedPosts.forEach(post => {
+          post.is_liked = res.data[post.post_id] || false;
+          post.is_liked_checked = true;
+        });
       } catch (error) {
         console.error('获取点赞状态失败:', error);
       }
@@ -899,6 +1027,114 @@ export default {
   }
 }
 
+.recommend-circles-section {
+  .square-grid-main,
+  .side-item,
+  .bottom-item {
+    will-change: transform, opacity;
+  }
+
+  &.is-refreshing {
+    .square-grid-main,
+    .side-item,
+    .bottom-item {
+      animation: recommend-circle-refresh 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .square-grid-main {
+      animation-delay: 0s;
+    }
+
+    .side-item:nth-child(1) {
+      animation-delay: 0.08s;
+    }
+
+    .side-item:nth-child(2) {
+      animation-delay: 0.14s;
+    }
+
+    .bottom-item {
+      animation-delay: 0.2s;
+    }
+  }
+
+  .square-grid-skeleton {
+    .square-grid-row {
+      display: flex;
+      margin-bottom: 20rpx;
+    }
+
+    .skeleton-side {
+      width: 48%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .skeleton-block {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12rpx;
+      background: #f1f2f4;
+
+      .dark-mode & {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+        animation: recommend-circle-skeleton 1.1s ease-in-out infinite;
+      }
+    }
+
+    .skeleton-main {
+      width: 48%;
+      height: 300rpx;
+      margin-right: 20rpx;
+    }
+
+    .skeleton-side-item {
+      height: 140rpx;
+    }
+
+    .skeleton-bottom-item {
+      width: calc(100% - 50rpx);
+      height: 80rpx;
+    }
+  }
+}
+
+@keyframes recommend-circle-refresh {
+  from {
+    opacity: 0.55;
+    transform: translateY(18rpx) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes recommend-circle-skeleton {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -1103,6 +1339,152 @@ export default {
 }
 
 .post-list {
+  margin: 0 -30rpx;
+  
+  .post-waterfall {
+    display: flex;
+    padding: 0 16rpx;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  .waterfall-column {
+    width: 343rpx;
+  }
+
+  .post-card {
+    width: 100%;
+    margin-bottom: 16rpx;
+    background: #fff;
+    border-radius: 12rpx;
+    overflow: hidden;
+    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+    
+    .dark-mode & {
+      background: var(--card-background);
+      box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+    }
+
+    .post-card-image {
+      width: 100%;
+      min-height: 220rpx;
+      position: relative;
+      overflow: hidden;
+
+      &.is-tall {
+        height: 420rpx;
+      }
+
+      &.is-medium {
+        height: 340rpx;
+      }
+
+      &.is-short {
+        height: 280rpx;
+      }
+
+      &.is-text-only {
+        height: 240rpx;
+      }
+
+      .card-image {
+        width: 100%;
+        height: 100%;
+      }
+
+      .card-color-bg {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20rpx;
+        box-sizing: border-box;
+
+        .card-text-preview {
+          font-size: 24rpx;
+          color: #fff;
+          text-align: center;
+          line-height: 1.5;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 4;
+          overflow: hidden;
+          word-break: break-all;
+          width: 100%;
+        }
+      }
+    }
+
+    .post-card-content {
+      padding: 16rpx;
+
+      .card-title {
+        font-size: 28rpx;
+        font-weight: bold;
+        color: #333;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        margin-bottom: 16rpx;
+        line-height: 1.4;
+        
+        .dark-mode & {
+          color: var(--text-color-primary);
+        }
+      }
+
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .card-user {
+          display: flex;
+          align-items: center;
+          flex: 1;
+          overflow: hidden;
+          min-width: 0;
+
+          .card-avatar {
+            width: 36rpx;
+            height: 36rpx;
+            border-radius: 50%;
+            margin-right: 10rpx;
+            flex-shrink: 0;
+          }
+
+          .card-username {
+            font-size: 22rpx;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            
+            .dark-mode & {
+              color: var(--text-color-regular);
+            }
+          }
+        }
+
+        .card-likes {
+          display: flex;
+          align-items: center;
+          font-size: 22rpx;
+          color: #999;
+          flex-shrink: 0;
+          margin-left: 10rpx;
+
+          text {
+            margin-left: 4rpx;
+          }
+        }
+      }
+    }
+  }
+
   .post-item {
       background: #fff;
       border-radius: 12rpx;
@@ -1252,76 +1634,84 @@ export default {
 }
 
 .post-list {
+  margin-top: 20rpx;
+  
+  .post-waterfall {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16rpx;
+  }
+  
+  .waterfall-column {
+    width: 343rpx;
+  }
+
   .skeleton-post {
     overflow: hidden;
-
-    &.compact {
-      padding-bottom: 24rpx;
-    }
-  }
-
-  .skeleton-avatar {
-    width: 80rpx;
-    height: 80rpx;
-    flex: 0 0 80rpx;
-    margin-right: 20rpx;
-  }
-
-  .skeleton-line {
-    display: block;
-    height: 28rpx;
-    border-radius: 8rpx;
-
-    &.skeleton-name {
-      width: 180rpx;
-      height: 30rpx;
+    margin-bottom: 16rpx;
+    background: #fff;
+    border-radius: 12rpx;
+    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+    
+    .dark-mode & {
+      background: var(--card-background);
+      box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
     }
 
-    &.skeleton-time {
-      width: 120rpx;
-      height: 24rpx;
-      margin-top: 12rpx;
-    }
-
-    &.skeleton-title {
-      width: 70%;
-      height: 34rpx;
-      margin-bottom: 14rpx;
-    }
-
-    &.skeleton-text {
+    .skeleton-image {
       width: 100%;
-      height: 26rpx;
-      margin-top: 10rpx;
-
-      &.short {
-        width: 80%;
+      height: 220rpx;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 37%, #f0f0f0 63%);
+      background-size: 400% 100%;
+      animation: skeleton-loading 1.4s ease-in-out infinite;
+      
+      .dark-mode & {
+        background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 37%, #2a2a2a 63%);
+        background-size: 400% 100%;
       }
     }
-  }
 
-  .skeleton-pill {
-    width: 140rpx;
-    height: 28rpx;
-    border-radius: 20rpx;
-  }
+    .post-card-content {
+      padding: 16rpx;
+    }
 
-  .skeleton-icon {
-    width: 36rpx;
-    height: 36rpx;
-    flex: 0 0 36rpx;
-  }
+    .skeleton-avatar {
+      width: 36rpx;
+      height: 36rpx;
+      flex: 0 0 36rpx;
+      margin-right: 10rpx;
+    }
 
-  .skeleton-count {
-    width: 60rpx;
-    height: 24rpx;
-    margin-left: 12rpx;
-    border-radius: 8rpx;
-  }
-}
+    .skeleton-line {
+      display: block;
+      border-radius: 8rpx;
 
-.post-loadmore-skeleton {
-  padding-top: 10rpx;
+      &.skeleton-name {
+        width: 100rpx;
+        height: 24rpx;
+        flex: 1;
+      }
+
+      &.skeleton-title {
+        width: 100%;
+        height: 32rpx;
+        margin-bottom: 16rpx;
+      }
+    }
+
+    .skeleton-icon {
+      width: 28rpx;
+      height: 28rpx;
+      flex: 0 0 28rpx;
+    }
+
+    .skeleton-count {
+      width: 40rpx;
+      height: 22rpx;
+      margin-left: 8rpx;
+      border-radius: 6rpx;
+    }
+  }
 }
 
 .float-btn {
@@ -1341,6 +1731,102 @@ export default {
   .dark-mode & {
     background: #EA7034;
     box-shadow: 0 4rpx 12rpx rgba(234, 112, 52, 0.5);
+  }
+}
+
+.clickable {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: inherit;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  
+  &:active::after {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.float-btn.clickable {
+  position: fixed;
+}
+
+.search-input-wrapper {
+  &.clickable:active {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  
+  .dark-mode &.clickable:active {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.messageIcon {
+  &.clickable:active {
+    opacity: 0.6;
+  }
+}
+
+.section-more,
+.sort-btn {
+  &.clickable:active {
+    opacity: 0.6;
+  }
+}
+
+.square-grid-main,
+.side-item,
+.bottom-item {
+  &.clickable:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+.post-card {
+  &.clickable:active {
+    transform: scale(0.98);
+    box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.12);
+    
+    .dark-mode & {
+      box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.4);
+    }
+  }
+}
+
+.card-user,
+.card-likes {
+  &.clickable:active {
+    opacity: 0.6;
+  }
+}
+
+.float-btn {
+  &.clickable:active {
+    transform: scale(0.95);
+    box-shadow: 0 2rpx 8rpx rgba(234, 112, 52, 0.4);
+    
+    .dark-mode & {
+      box-shadow: 0 2rpx 8rpx rgba(234, 112, 52, 0.6);
+    }
   }
 }
 </style>

@@ -29,13 +29,18 @@
 			<!-- 用户名 -->
 			<view style="display: flex;align-items: center;margin-left: 50rpx;margin-top: 28rpx;">
 				<text :style="'font-size: 40rpx;color: ' + (isDarkMode ? '#e5e5e5' : '#111111') + ';font-weight: bold;margin-right: 10rpx;'">{{user.name}}</text>
-				
 			</view>
 			
-			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx;">
+			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx; display: flex;align-items: center;">
 				<span class="user_id">ID:{{uid}}</span>
-				<!-- <span class="user_group" :class="group2class[user.user_group]">{{user.user_group}}</span> -->
-				<groupLabel v-for="user_group in user.user_group" :userGroup="user_group"></groupLabel>
+				<view
+					v-if="user.selected_badge"
+					class="profile-badge-tap"
+					@tap="goToBadgeDetail(user.selected_badge)"
+					@click="goToBadgeDetail(user.selected_badge)"
+				>
+					<honor-badge :badge="user.selected_badge" size="sm" class="profile-badge" scale="1.2" />
+				</view>
 				<span class="admin_title" v-show="user.is_admin">
 					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>社区管理员</span>
 			</view>
@@ -146,14 +151,14 @@
 <script>
 	import bookInCase from '../../components/book_in_case.vue'
 	import followBtn from '../../components/follow.vue'
-	import groupLabel from '../usergroup/groupLabel.vue'
 	import springBack from '../../components/springBack.vue'
+	import HonorBadge from '../../components/honor-badge.vue'
 	import darkModeMixin from '@/mixins/dark-mode.js'
 	import axios from 'axios'
 	import moment from 'moment'
 	export default {
 		components:{
-			bookInCase,followBtn,springBack,groupLabel
+			bookInCase,followBtn,springBack,HonorBadge
 		},
 		mixins: [darkModeMixin],
 		data() {
@@ -195,13 +200,6 @@
 				likes:0,
 				follows:0,
 				fans:0,
-				group2class:{
-					"社区奠基人":"founder",
-					"原木体验官":"copemate",
-					"用户":'nonTitle',
-					"社区管理员":'nonTitle',
-					"系统消息":'nonTitle'
-				},
 				worldsOnShow: [],
 				// 用户帖子列表
 				userPosts: [],
@@ -324,6 +322,34 @@
 						height: actualHeight + 'px'
 					};
 				},
+			goToBadgeDetail(badge) {
+				if (!badge) return
+				uni.setStorageSync('badgeDetailPayload', badge)
+				const ownerId = Number(this.uid)
+				if (Number.isFinite(ownerId) && ownerId > 0) {
+					uni.setStorageSync('badgeDetailOwnerId', ownerId)
+				}
+				let encodedBadge = ''
+				try {
+					encodedBadge = encodeURIComponent(JSON.stringify(badge))
+				} catch (e) {
+					encodedBadge = ''
+				}
+				const query = []
+				if (encodedBadge) query.push('badge=' + encodedBadge)
+				if (Number.isFinite(ownerId) && ownerId > 0) query.push('owner_id=' + ownerId)
+				query.push('is_selected=1')
+				uni.navigateTo({
+					url: '/pages/users/badgeDetail' + (query.length ? ('?' + query.join('&')) : ''),
+					fail() {
+						uni.navigateTo({
+							url: Number.isFinite(ownerId) && ownerId > 0
+								? '/pages/users/badgeDetail?owner_id=' + ownerId
+								: '/pages/users/badgeDetail'
+						})
+					}
+				})
+			},
 			readBook(novel_id) {
 				if(novel_id > 0) {
 					uni.navigateTo({
@@ -357,7 +383,6 @@
 				let _this = this;
 				axios.get(this.$baseUrl + '/users/user_profile_of?id=' + this.uid, {}).then((res) => {
 					_this.user = JSON.parse(JSON.stringify(res.data))[0];
-					_this.user.user_group = _this.user.user_group.split(',');
 				}).catch(function(error) {
 					uni.showToast({
 						title: "用户信息加载失败",
@@ -577,6 +602,16 @@
 		border-radius: 8rpx;
 		width: 100%;
 		height: 100%;
+	}
+
+	.profile-badge {
+		transform: translateY(2rpx);
+	}
+
+	.profile-badge-tap {
+		display: inline-flex;
+		align-items: center;
+		margin: 0 5rpx 0 15rpx;
 	}
 
 	.tabbarsh {
@@ -836,7 +871,7 @@
 		color:#808080;
 		font-size:20rpx;
 		background-color: #c8c8c8;
-		padding:5rpx;
+		padding:5rpx 10rpx;
 		line-height: 40rpx;
 		border-radius: 10rpx;
 		
@@ -845,18 +880,6 @@
 			background-color: #505050;
 		}
 	}
-	.user_group{
-		font-size:20rpx;
-		padding:5rpx;
-		line-height: 40rpx; 
-		margin-left:10rpx;
-		border-radius: 10rpx;
-		
-		.dark-mode & {
-			color: #e0e0e0;
-		}
-	}
-	
 	.admin_title{
 		font-size:20rpx;
 		padding:5rpx;
@@ -878,10 +901,6 @@
 		.dark-mode & {
 			background: #3a7ab8;
 		}
-	}
-	
-	.user_group.nonTitle{
-		display:none;
 	}
 	
 	@keyframes gradient-move {

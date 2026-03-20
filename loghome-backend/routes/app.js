@@ -6,6 +6,10 @@ let sysLog = require('../bin/log.js');
 let statistics = require('../bin/statistics.js');
 let bank = require('../bin/bank.js');
 let message = require('../bin/message.js');
+let {
+	ensureReaderFontsTable,
+	getEnabledReaderFonts,
+} = require('../bin/reader-fonts.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -19,6 +23,17 @@ router.get('/get_web_update', async function (req, res) {
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/get_reader_fonts', async function (req, res) {
+	try {
+		await ensureReaderFontsTable();
+		let fonts = await getEnabledReaderFonts();
+		res.json(fonts);
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
 	}
 });
 

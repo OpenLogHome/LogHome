@@ -48,7 +48,7 @@ router.get('/products', async (req, res) => {
 			params,
 		);
 		const list = await query(
-			`SELECT product_id, title, summary, type, price, stock, cover_url, shipping_desc FROM store_products ${where} ORDER BY product_id DESC LIMIT ?, ?`,
+			`SELECT id, title, summary, type, price, stock, cover_url, shipping_desc FROM store_products ${where} ORDER BY id DESC LIMIT ?, ?`,
 			[...params, offset, pageSize],
 		);
 		res.json({
@@ -70,7 +70,7 @@ router.get('/products/:id', async (req, res) => {
 	try {
 		const productId = Number(req.params.id);
 		const result = await query(
-			'SELECT product_id, title, summary, description, type, price, stock, cover_url, media_urls, shipping_desc, status FROM store_products WHERE product_id = ?',
+			'SELECT id, title, summary, description, type, price, stock, cover_url, media_urls, shipping_desc, status FROM store_products WHERE id = ?',
 			[productId],
 		);
 		if (result.length === 0) {
@@ -293,7 +293,7 @@ router.post('/orders', auth, async (req, res) => {
 			return;
 		}
 		const productList = await query(
-			'SELECT product_id, title, type, price, stock, cover_url, shipping_desc, status FROM store_products WHERE product_id = ?',
+			'SELECT id, title, type, price, stock, cover_url, shipping_desc, status FROM store_products WHERE id = ?',
 			[product_id],
 		);
 		if (productList.length === 0 || productList[0].status !== 'on') {
@@ -347,8 +347,8 @@ router.post('/orders', auth, async (req, res) => {
 		}
 
 		const stockResult = await query(
-			'UPDATE store_products SET stock = stock - 1 WHERE product_id = ? AND stock > 0',
-			[product.product_id],
+			'UPDATE store_products SET stock = stock - 1 WHERE id = ? AND stock > 0',
+			[product.id],
 		);
 		if (stockResult.affectedRows === 0) {
 			await query(
@@ -369,7 +369,7 @@ router.post('/orders', auth, async (req, res) => {
 				[
 					orderNo,
 					user.user_id,
-					product.product_id,
+					product.id,
 					product.title,
 					product.cover_url,
 					product.type,
@@ -394,7 +394,7 @@ router.post('/orders', auth, async (req, res) => {
 			res.json({
 				code: 200,
 				data: {
-					order_id: result.insertId,
+					id: result.insertId,
 					order_no: orderNo,
 					status,
 					pay_log: payLog,
@@ -407,8 +407,8 @@ router.post('/orders', auth, async (req, res) => {
 				[payLog, payCropped, user.user_id],
 			);
 			await query(
-				'UPDATE store_products SET stock = stock + 1 WHERE product_id = ?',
-				[product.product_id],
+				'UPDATE store_products SET stock = stock + 1 WHERE id = ?',
+				[product.id],
 			);
 			throw e;
 		}
@@ -442,7 +442,7 @@ router.get('/orders', auth, async (req, res) => {
 			params,
 		);
 		const list = await query(
-			`SELECT order_id, order_no, product_id, product_title, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, shipped_at, completed_at FROM store_orders ${where} ORDER BY created_at DESC LIMIT ?, ?`,
+			`SELECT id, order_no, product_id, product_title, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, shipped_at, completed_at FROM store_orders ${where} ORDER BY created_at DESC LIMIT ?, ?`,
 			[...params, offset, pageSize],
 		);
 		res.json({
@@ -465,7 +465,7 @@ router.get('/orders/:id', auth, async (req, res) => {
 		const user = getUser(req);
 		const orderId = Number(req.params.id);
 		const result = await query(
-			'SELECT order_id, order_no, product_id, product_title, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, shipped_at, completed_at FROM store_orders WHERE order_id = ? AND user_id = ?',
+			'SELECT id, order_no, product_id, product_title, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, shipped_at, completed_at FROM store_orders WHERE id = ? AND user_id = ?',
 			[orderId, user.user_id],
 		);
 		if (result.length === 0) {
@@ -485,7 +485,7 @@ router.post('/orders/:id/confirm', auth, async (req, res) => {
 		const orderId = Number(req.params.id);
 		const now = new Date();
 		const result = await query(
-			'UPDATE store_orders SET status = ?, completed_at = ?, updated_at = ? WHERE order_id = ? AND user_id = ? AND status = ?',
+			'UPDATE store_orders SET status = ?, completed_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND status = ?',
 			['completed', now, now, orderId, user.user_id, 'shipped'],
 		);
 		if (result.affectedRows === 0) {

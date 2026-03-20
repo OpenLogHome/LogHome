@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="content" v-dark>
 		<followBtn class="followButton" :targetId="reviewMsg.userId" v-show="componentMode == false"></followBtn>
 		<view class="cenHost">
@@ -9,7 +9,7 @@
 				<view class="viewMb viewMb-space-between">
 					<view>
 						<text class="textSize">{{reviewMsg.userName}}</text>
-						<!-- 粉丝排名标牌 -->
+						<!-- 粉丝排名标签 -->
 						<text class="fan-rank-badge" v-if="fanRank" @click="gotoNovelFans()">{{fanRank}}</text>
 					</view>
 				</view>
@@ -24,7 +24,7 @@
 						</span>
 					</xzj-readMore>
 					
-					<!-- 显示评论附带的图片 -->
+					<!-- 显示评论附带的图片-->
 					<view class="comment-images" v-if="reviewMsg.media_urls && reviewMsg.media_urls.length > 0 && praiseType != 1">
 						<view 
 							class="comment-image-item" 
@@ -106,7 +106,7 @@
 						</view>
 					</view>
 					<view class="reviewNumContent" v-if="reviewMsg.reviewNum > 3">
-						<text>共{{reviewMsg.reviewNum}}条回复</text>
+						<text>查看{{reviewMsg.reviewNum}}条回复</text>
 						<dnIcon type="tiaozhuan" size="12" style="margin-left: 5px;"></dnIcon>
 					</view>
 				</view>
@@ -118,7 +118,7 @@
 			<view class="popup-content">
 				<view class="popup-item" @tap="saveAsSticker">
 					<uni-icons type="star" size="20" color="#EA7034"></uni-icons>
-					<text>收藏为表情</text>
+					<text>收藏为表情包</text>
 				</view>
 				<view class="popup-item cancel" @tap="hideImageOptionsMenu">
 					<text>取消</text>
@@ -165,7 +165,7 @@
 			}
 		},
 		computed: {
-			// 计算粉丝排名标牌显示内容
+			// 计算粉丝排名标签显示内容
 			fanRank() {
 				if (!this.fanRanks || !this.reviewMsg) return null;
 				
@@ -202,7 +202,7 @@
 		mounted() {
 			this.refresh();
 			let tk = JSON.parse(window.localStorage.getItem('token'));
-			this.currentUserId = tk.id;
+			this.currentUserId = tk ? tk.id : undefined;
 		},
 		methods: {
 			previewImage(current, urls) {
@@ -220,9 +220,9 @@
 				axios.get(this.$baseUrl + '/community/get_comment_praise_status?essay_comment_id=' + this.reviewMsg
 					.comment_id, {
 						headers: {
-							'Content-Type': 'application/json', //设置请求头请求格式为JSON
-							'Authorization': "Bearer " + tk //设置token 其中K名要和后端协调好
-						}
+								'Content-Type': 'application/json', //设置请求头请求格式为JSON
+								'Authorization': "Bearer " + tk //设置token 其中K名要和后端配置好
+							}
 					}).then((res) => {
 					if (res.data.length > 0) {
 						_this.praiseType = res.data[0].type;
@@ -233,22 +233,22 @@
 
 				})
 				// 加载章节信息
-				console.log(this.reviewMsg);
-				if (this.reviewMsg.article_id != 0) {
-					axios.get(this.$baseUrl + '/articles/get_article_info?id=' + this.reviewMsg.article_id).then((res) => {
-						this.article = res.data[0];
-					}).catch(function(error) {
-						console.log(error);
-						if (error) {
-							// uni.showToast({
-							// 	title: "获取文章信息失败",
-							// 	icon: 'none',
-							// 	duration: 2000
-							// });
-						}
-					}).then(function() {
-						uni.hideLoading();
-					})
+			console.log(this.reviewMsg);
+			if (this.reviewMsg.article_id != 0) {
+				axios.get(this.$baseUrl + '/articles/get_article_info?id=' + this.reviewMsg.article_id).then((res) => {
+					this.article = res.data[0];
+				}).catch(function(error) {
+					console.log(error);
+					if (error) {
+						// uni.showToast({
+						// 	title: "获取文章信息失败",
+						// 	icon: 'none',
+						// 	duration: 2000
+						// });
+					}
+				}).then(function() {
+					uni.hideLoading();
+				})
 				}
 			},
 			openFatherReview() {
@@ -281,23 +281,23 @@
 
 					}, {
 						headers: {
-							'Content-Type': 'application/json', //设置请求头请求格式为JSON
-							'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+							'Content-Type': 'application/json', //璁剧疆璇锋眰澶磋姹傛牸寮忎负JSON
+							'Authorization': 'Bearer ' + tk //璁剧疆token 鍏朵腑K鍚嶈鍜屽悗绔崗璋冨ソ
 						}
 					}, )
 					.then(function(response) {
 						let changeNum = 0;
 						if(_this.praiseType == 0){ // 原本处于点赞状态
-							changeNum = -1;
-						} else if(_this.praiseType == 1){ // 原本处于点踩状态
-							if(submitType == 3) {
-								changeNum = 0;
-							} else {
-								changeNum = (submitType == 0 ? 1 : -1);
-							}
-						} else { // 原本处于未点赞/未点踩状态
-							changeNum = (submitType == 0 ? 1 : 0);
-						}
+				changeNum = -1;
+			} else if(_this.praiseType == 1){ // 原本处于点踩状态
+				if(submitType == 3) {
+					changeNum = 0;
+				} else {
+					changeNum = (submitType == 0 ? 1 : -1);
+				}
+			} else { // 原本处于未点赞未点踩状态
+				changeNum = (submitType == 0 ? 1 : 0);
+			}
 						_this.refresh();
 						_this.$emit('changePraise', {id: _this.reviewMsg.comment_id, changeNum: changeNum});
 					})
@@ -305,10 +305,10 @@
 						console.log(error);
 						if (error) {
 							uni.showToast({
-								title: "操作失败",
-								icon: 'none',
-								duration: 2000
-							});
+							title: "操作失败",
+							icon: 'none',
+							duration: 2000
+						});
 						}
 					});
 			},
@@ -322,9 +322,9 @@
 					token = tk.token;
 					myUserId = tk.id;
 				}
-				if (this.reviewMsg.author_id == myUserId //如果是自己的小说 
+				if (this.reviewMsg.author_id == myUserId 
 					||
-					userId == myUserId) //或者评论人是自己
+					userId == myUserId) 
 				{
 					itemList.push("删除")
 				}
@@ -351,7 +351,7 @@
 				});
 				uni.showModal({
 					title: '提示',
-					content: '要删除此条评论吗？',
+					content: '要删除此评论吗？',
 					confirmColor: "#EA7034",
 					success: function(res) {
 						if (res.confirm) {
@@ -361,9 +361,9 @@
 							axios.get(_this.$baseUrl +
 								'/community/delete_comment?id=' + id, {
 									headers: {
-										'Content-Type': 'application/json', //设置请求头请求格式为JSON
+										'Content-Type': 'application/json', 
 										'Authorization': 'Bearer ' +
-											tk //设置token 其中K名要和后端协调好
+											tk 
 									}
 								},
 							)
@@ -382,10 +382,10 @@
 								uni.hideLoading();
 								if (error) {	
 									uni.showToast({
-										title: "操作失败",
-										icon: 'none',
-										duration: 2000
-									});
+							title: "操作失败",
+							icon: 'none',
+							duration: 2000
+						});
 								}
 							});
 						} else if (res.cancel) {
@@ -396,9 +396,16 @@
 			},
 			navToChapter() {
 				console.log(this.reviewMsg.cento);
-				uni.navigateTo({
-					url: '../../pages/readers/newReader/article?id=' + this.reviewMsg.article_id + '&paragraphId=' + this.reviewMsg.cento.paragraph_id
-				});
+				const readerProps = window.localStorage.getItem("readerProps");
+				const isPageReader = readerProps === "page";
+				const paragraphId = this.reviewMsg?.cento?.paragraph_id;
+				let url = isPageReader
+					? `/pages/readers/newReader/article?id=${this.reviewMsg.article_id}`
+					: `/pages/readers/article_rich?id=${this.reviewMsg.article_id}`;
+				if (paragraphId) {
+					url += `&paragraphId=${paragraphId}`;
+				}
+				uni.navigateTo({ url });
 			
 			},
 			gotoPersonalPage(userId) {
@@ -455,47 +462,47 @@
 					let needCreateSticker = false;
 					
 					if (checkRes.data && checkRes.data.length > 0) {
-						// 图片已存在对应的sticker
-						const existingSticker = checkRes.data[0];
-						const userId = JSON.parse(window.localStorage.getItem('token')).id;
-						
-						if (existingSticker.is_private === 0) {
-							// 公开的，直接收藏
-							stickerId = existingSticker.sticker_id;
-						} else if (existingSticker.user_id === userId) {
-							// 私密的，但是是自己的，直接收藏
-							stickerId = existingSticker.sticker_id;
-						} else {
-							// 私密的，且不是自己的，需要重新创建
-							needCreateSticker = true;
-						}
+					// 图片已存在对应的sticker
+					const existingSticker = checkRes.data[0];
+					const userId = JSON.parse(window.localStorage.getItem('token')).id;
+					
+					if (existingSticker.is_private === 0) {
+						// 公开的，直接收藏
+						stickerId = existingSticker.sticker_id;
+					} else if (existingSticker.user_id === userId) {
+						// 私密的，但是是自己的，直接收藏
+						stickerId = existingSticker.sticker_id;
 					} else {
-						// 图片不存在对应的sticker，需要创建
+						// 私密的，且不是自己的，需要重新创建
 						needCreateSticker = true;
 					}
+				} else {
+					// 图片不存在对应的sticker，需要创建
+					needCreateSticker = true;
+				}
 					
 					// 如果需要创建新的sticker
-					if (needCreateSticker) {
-						const createRes = await axios.post(this.$baseUrl + '/community/stickers', {
-							url: this.currentImageUrl,
-							is_private: false // 默认创建为公开的
-						}, {
-							headers: { 'Authorization': 'Bearer ' + token }
-						});
-						
-						stickerId = createRes.data.sticker_id;
-					}
+				if (needCreateSticker) {
+					const createRes = await axios.post(this.$baseUrl + '/community/stickers', {
+						url: this.currentImageUrl,
+						is_private: false // 默认创建为公开的
+					}, {
+						headers: { 'Authorization': 'Bearer ' + token }
+					});
 					
-					// 收藏sticker
-					if (stickerId) {
-						// 检查是否已收藏
-						const favoritesRes = await axios.get(this.$baseUrl + '/community/stickers/favorites', {
-							headers: { 'Authorization': 'Bearer ' + token }
-						});
-						
-						// 适配新的API返回结构，data.stickers 是表情列表
-						const stickers = favoritesRes.data.stickers || favoritesRes.data;
-						const isAlreadyFavorite = Array.isArray(stickers) && stickers.some(item => item.sticker_id === stickerId);
+					stickerId = createRes.data.sticker_id;
+				}
+				
+				// 收藏sticker
+				if (stickerId) {
+					// 检查是否已收藏
+					const favoritesRes = await axios.get(this.$baseUrl + '/community/stickers/favorites', {
+						headers: { 'Authorization': 'Bearer ' + token }
+					});
+					
+					// 适配不同的API返回结构，data.stickers 是数组
+					const stickers = favoritesRes.data.stickers || favoritesRes.data;
+					const isAlreadyFavorite = Array.isArray(stickers) && stickers.some(item => item.sticker_id === stickerId);
 						
 						if (!isAlreadyFavorite) {
 							await axios.post(this.$baseUrl + '/community/stickers/favorites', {
@@ -526,6 +533,131 @@
 					uni.hideLoading();
 					this.hideImageOptionsMenu();
 				}
+			},
+			refresh() {
+				const tokenInfo = JSON.parse(window.localStorage.getItem('token') || 'null');
+				const token = tokenInfo ? tokenInfo.tk : '';
+
+				if (this.reviewMsg && this.reviewMsg.praiseType !== undefined && this.reviewMsg.praiseType !== null) {
+					this.praiseType = this.reviewMsg.praiseType;
+				} else if (token) {
+					axios.get(this.$baseUrl + '/community/get_comment_praise_status?essay_comment_id=' + this.reviewMsg.comment_id, {
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': "Bearer " + token
+						}
+					}).then((res) => {
+						if (res.data.length > 0) {
+							this.praiseType = res.data[0].type;
+						} else {
+							this.praiseType = 3;
+						}
+					}).catch(() => {
+						this.praiseType = 3;
+					});
+				} else {
+					this.praiseType = 3;
+				}
+
+				if (this.reviewMsg.article_id != 0) {
+					if (this.reviewMsg.article_title) {
+						this.article = {
+							...this.article,
+							title: this.reviewMsg.article_title
+						};
+					} else {
+						axios.get(this.$baseUrl + '/articles/get_article_info?id=' + this.reviewMsg.article_id).then((res) => {
+							this.article = res.data[0];
+						}).catch((error) => {
+							console.log(error);
+						});
+					}
+				}
+			},
+			praise(type) {
+				let submitType = 0;
+				if (type == this.praiseType) {
+					submitType = 3;
+				} else {
+					submitType = type;
+				}
+				let tk = JSON.parse(window.localStorage.getItem('token') || 'null');
+				if (tk) tk = tk.tk;
+				axios.post(this.$baseUrl + '/community/praise_on_comment', {
+					essay_comment_id: this.reviewMsg.comment_id,
+					type: submitType
+				}, {
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tk
+					}
+				}).then(() => {
+					let changeNum = 0;
+					if (this.praiseType == 0) {
+						changeNum = -1;
+					} else if (this.praiseType == 1) {
+						if (submitType == 3) {
+							changeNum = 0;
+						} else {
+							changeNum = (submitType == 0 ? 1 : -1);
+						}
+					} else {
+						changeNum = (submitType == 0 ? 1 : 0);
+					}
+					this.praiseType = submitType == 3 ? 3 : submitType;
+					this.$emit('changePraise', { id: this.reviewMsg.comment_id, changeNum: changeNum });
+				}).catch((error) => {
+					console.log(error);
+					if (error) {
+						uni.showToast({
+							title: "操作失败",
+							icon: 'none',
+							duration: 2000
+						});
+					}
+				});
+			},
+			handleDeleteReview(id) {
+				uni.showLoading({
+					title: 'Deleting'
+				});
+				uni.showModal({
+					title: 'Notice',
+					content: 'Delete this comment?',
+					confirmColor: "#EA7034",
+					success: (res) => {
+						if (res.confirm) {
+							let tk = JSON.parse(window.localStorage.getItem('token') || 'null');
+							if (tk) tk = tk.tk;
+							axios.get(this.$baseUrl + '/community/delete_comment?id=' + id, {
+								headers: {
+									'Content-Type': 'application/json',
+									'Authorization': 'Bearer ' + tk
+								}
+							}).then(() => {
+								uni.showToast({
+									title: 'Deleted',
+									icon: 'none',
+									duration: 2000
+								});
+								this.$emit('deleteComment', id);
+								uni.hideLoading();
+							}).catch((error) => {
+								console.log(error);
+								uni.hideLoading();
+								if (error) {
+									uni.showToast({
+									title: 'Failed',
+										icon: 'none',
+										duration: 2000
+									});
+								}
+							});
+						} else if (res.cancel) {
+							uni.hideLoading();
+						}
+					}
+				});
 			}
 		},
 	}
@@ -747,7 +879,7 @@
 		width: calc(100% - 16px);
 		
 		.dark-mode & {
-			color: #ff8533; /* 更亮的橙色，在暗背景下更易读 */
+			color: #ff8533; /* 更亮的橙色，在深色背景下更醒目 */
 		}
 	}
 
@@ -757,12 +889,12 @@
 		margin-left: 8px;
 		
 		.dark-mode & {
-			color: #ff8533; /* 更亮的橙色，在暗背景下更易读 */
-			
-			text {
-				color: #e5e5e5;
-			}
+		color: #ff8533; /* 更亮的橙色，在深色背景下更醒目 */
+		
+		text {
+			color: #e5e5e5;
 		}
+	}
 	}
 
 	.followButton {
@@ -813,7 +945,7 @@
 	}
 }
 
-/* 粉丝排名标牌样式 */
+/* 粉丝排名标签样式 */
 	.fan-rank-badge {
 		display: inline-block;
 		background: linear-gradient(135deg, #ff9800, #ff5722);

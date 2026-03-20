@@ -105,7 +105,7 @@
 		{
 			"path": "pages/readers/novel_fans",
 			"style": {
-				"navigationBarTitleText": "书籍打赏榜"
+				"navigationBarTitleText": "书籍打赏"
 			}
 		},
 		{
@@ -273,6 +273,57 @@
             }
         },
 		{
+            "path" : "pages/writers/chapterEditorNew",
+            "style" :                                                                                    
+            {
+                "enablePullDownRefresh": false,
+				"titleNView": {
+					"titleSize": "40rpx",
+					"titleColor": "rgb(180, 111, 88)",
+					"buttons": [				
+						{
+						    "text": "发布 ",
+						    "fontSize": "36rpx",
+						    "float": "right"
+						},
+						{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue625 ",
+						    "fontSize": "25px",
+						    "float": "right"
+						},
+				        {
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+				            "text": "\ue624 ",
+				            "fontSize": "25px",
+				            "float": "right"
+				        },
+						{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue70f ",
+						    "fontSize": "25px",
+						    "float": "right"
+						},{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue629 ",
+						    "fontSize": "25px",
+						    "float": "right"
+						},{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue61f ",
+						    "fontSize": "25px",
+						    "float": "right"
+						},{
+							"fontSrc": "/static/iconfont/iconfont.ttf",
+						    "text": "\ue60e ",
+						    "fontSize": "24px",
+						    "float": "right"
+						}
+				    ]
+				}
+            }
+        },
+		{
 		    "path": "pages/users/avater_upload",
 		    "style": {
 		        "navigationBarTitleText": "上传头像"
@@ -288,6 +339,19 @@
 		    "path": "pages/users/change_user_info",
 		    "style": {
 		        "navigationBarTitleText": "修改个人信息"
+		    }
+		},
+		{
+		    "path": "pages/users/achievements",
+		    "style": {
+		        "navigationBarTitleText": "我的成就"
+		    }
+		},
+		{
+		    "path": "pages/users/badgeDetail",
+		    "style": {
+		        "navigationStyle": "custom",
+		        "navigationBarTitleText": "勋章详情"
 		    }
 		},
 		{
@@ -324,11 +388,11 @@
 			}
 		},
 		{
-		    "path": "pages/users/top_pic_upload",
-		    "style": {
-		        "navigationBarTitleText": "上传个人主页背景图"
-		    }
-		},
+    "path": "pages/users/top_pic_upload",
+    "style": {
+        "navigationBarTitleText": "上传个人主页背景"
+    }
+},
 		{
 		    "path": "pages/community/friends",
 		    "style": {
@@ -421,13 +485,13 @@
 		{
 			"path": "pages/users/activateAccount_oicq",
 			"style": {
-				"navigationBarTitleText": "绑定QQ号"
+				"navigationBarTitleText": "绑定QQ"
 			}
 		},
 		{
 			"path": "pages/users/activateAccount_mobile",
 			"style": {
-				"navigationBarTitleText": "绑定手机号"
+				"navigationBarTitleText": "绑定手机"
 			}
 		},
 		{
@@ -513,7 +577,7 @@
             "path" : "pages/users/user_credit",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "我的信誉分",
+                "navigationBarTitleText": "我的信誉",
                 "enablePullDownRefresh": false
             }
             
@@ -596,7 +660,7 @@
             "path" : "pages/readers/bookEnd",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "书末页",
+                "navigationBarTitleText": "书末",
                 "enablePullDownRefresh": false
             }
         }, {
@@ -668,7 +732,7 @@
 		}, {
 			"path": "pages/payments/jump_to_pay",
 			"style": {
-				"navigationBarTitleText": "支付页"
+				"navigationBarTitleText": "支付"
 			}
 		}, {
 			"path": "pages/payments/order_history",
@@ -822,7 +886,7 @@
 		{
 			"path": "pages/worlds/worldRelations",
 			"style": {
-				"navigationBarTitleText": "世界关系网",
+				"navigationBarTitleText": "世界关系树",
 				"navigationStyle": "custom"
 			}
 		}
@@ -881,3 +945,5 @@
 		}
 	}
 }
+
+

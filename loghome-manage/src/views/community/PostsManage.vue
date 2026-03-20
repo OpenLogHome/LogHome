@@ -943,7 +943,8 @@ export default {
       align-items: center;
       
       .search-input {
-        width: 300px;
+        flex: 1;
+        min-width: 200px;
         margin-right: 15px;
       }
       

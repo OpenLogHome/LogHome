@@ -55,12 +55,20 @@
 </template>
 
 <script>
+const FALLBACK_VOICES = [
+  {
+    id: 'system-default',
+    name: 'System default',
+    description: 'Use an available offline device voice first'
+  }
+];
+
 export default {
   name: 'AudiobookPlayer',
   props: {
     allArticleData: {
       type: Object,
-      default: {}
+      default: () => ({})
     },
     articleIds: {
       type: Array,
@@ -72,7 +80,7 @@ export default {
     },
     initialVoice: {
       type: String,
-      default: 'default'
+      default: 'system-default'
     },
     startArticleId: {
       default: '-1'
@@ -81,7 +89,7 @@ export default {
   data() {
     return {
       isPlaying: false,
-      currentVoice: this.initialVoice,
+      currentVoice: this.initialVoice || 'system-default',
       chapterTitle: '加载中...',
       paragraphContent: '',
       progressPercentage: 0,
@@ -97,24 +105,66 @@ export default {
         { id: 'zh-CN-shaanxi-XiaoniNeural', name: '晓妮 (女声)', description: '方言 - 明亮' }
       ],
       currentProgress: null,
+      availableVoices: [...FALLBACK_VOICES],
       lastArticleId: -1,
-      lastParagraphId: -1
+      lastParagraphId: -1,
+      progressInterval: null
     };
   },
   computed: {
   },
   mounted() {
-    this.initPlayer();
+    this.loadAvailableVoices()
+      .catch(error => {
+        console.error('loadAvailableVoices failed', error);
+      })
+      .finally(() => {
+        this.initPlayer();
     // 定期获取播放进度
     this.progressInterval = setInterval(() => {
       this.getPlaybackProgress();
     }, 2000);
+      });
   },
   beforeDestroy() {
     clearInterval(this.progressInterval);
   },
   methods: {
-    initPlayer() {
+    async loadAvailableVoices() {
+      if (!window.jsBridge || !window.jsBridge.getAvailableVoices) {
+        this.availableVoices = [...FALLBACK_VOICES];
+        this.currentVoice = this.currentVoice || 'system-default';
+        return;
+      }
+
+      try {
+        const result = await window.jsBridge.getAvailableVoices();
+        const parsedVoices = typeof result === 'string' ? JSON.parse(result) : result;
+
+        if (Array.isArray(parsedVoices) && parsedVoices.length > 0) {
+          this.availableVoices = parsedVoices
+            .filter(voice => voice && voice.id)
+            .map(voice => ({
+              id: voice.id,
+              name: voice.name || voice.id,
+              description: voice.description || ''
+            }));
+        } else {
+          this.availableVoices = [...FALLBACK_VOICES];
+        }
+      } catch (error) {
+        console.error('getAvailableVoices failed', error);
+        this.availableVoices = [...FALLBACK_VOICES];
+      }
+
+      const hasCurrentVoice = this.availableVoices.some(voice => voice.id === this.currentVoice);
+      if (!hasCurrentVoice) {
+        const defaultVoice = this.availableVoices.find(voice => voice.id === 'system-default');
+        this.currentVoice = (defaultVoice || this.availableVoices[0] || FALLBACK_VOICES[0]).id;
+      }
+    },
+    async initPlayer() {
+      await this.setVoice(this.currentVoice);
       if (this.articleIds && this.articleIds.length > 0) {
         if(this.startArticleId != -1) {
           this.replacePlaylist(this.articleIds, this.startArticleId);
@@ -123,7 +173,6 @@ export default {
           this.replacePlaylist(this.articleIds);
         }
       }
-      this.setVoice(this.currentVoice);
     },
     checkJsBridge() {
       if (!window.jsBridge) {
@@ -152,11 +201,12 @@ export default {
         console.error('replacePlaylist方法未找到');
       }
     },
-    setVoice(voice) {
-      if (!this.checkJsBridge()) return;
+    async setVoice(voice) {
+      if (!this.checkJsBridge()) return false;
       if (window.jsBridge.setVoice) {
-        window.jsBridge.setVoice(voice);
-        this.currentVoice = voice;
+        const nextVoice = voice || 'system-default';
+        await window.jsBridge.setVoice(nextVoice);
+        this.currentVoice = nextVoice;
         console.log(`语音已设置为${voice}`);
       } else {
         console.error('setVoice方法未找到');
@@ -254,7 +304,7 @@ export default {
       }
       
       // 假设进度计算
-      this.progressPercentage = (currentParagraphIdx / paragraphCounts) * 100;
+      this.progressPercentage = paragraphCounts > 0 ? (currentParagraphIdx / paragraphCounts) * 100 : 0;
     },
     formatTime(seconds) {
       const mins = Math.floor(seconds / 60);
@@ -264,8 +314,8 @@ export default {
     toggleVoiceSelector() {
       this.showVoiceSelector = !this.showVoiceSelector;
     },
-    selectVoice(voiceId) {
-      this.setVoice(voiceId);
+    async selectVoice(voiceId) {
+      await this.setVoice(voiceId);
       this.showVoiceSelector = false;
     },
     /**

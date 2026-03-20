@@ -2,26 +2,63 @@
 	"default": {
 		"name": "系统默认",
 		"family": "",
-		"familyBold": ""
+		"familyBold": "",
+		"version": "1"
 	},
 	"方正书宋": {
 		"name": "方正书宋",
 		"family": "FangZhengShuSongJianTi",
-		"familyBold": "FangZhengShuSongJianTi"
+		"familyBold": "FangZhengShuSongJianTi",
+		"version": "20260318",
+		"regular": {
+			"url": "https://storage.codesocean.top/api/resource/download/177381841456048",
+			"format": "ttf"
+		},
+		"bold": {
+			"url": "https://storage.codesocean.top/api/resource/download/177381841456048",
+			"format": "ttf"
+		}
 	},
 	"思源黑体": {
 		"name": "思源黑体",
 		"family": "SourceHanSansSCRegular",
-		"familyBold": "SourceHanSansSCBold"
+		"familyBold": "SourceHanSansSCBold",
+		"version": "20260318",
+		"regular": {
+			"url": "https://storage.codesocean.top/api/resource/download/177381841455677",
+			"format": "otf"
+		},
+		"bold": {
+			"url": "https://storage.codesocean.top/api/resource/download/177381841453935",
+			"format": "otf"
+		}
 	},
 	"方正楷体": {
 		"name": "方正楷体",
 		"family": "FangZhengKaiTiJianTi",
-		"familyBold": "FangZhengKaiTiJianTi"
+		"familyBold": "FangZhengKaiTiJianTi",
+		"version": "20260318",
+		"regular": {
+			"url": "https://storage.codesocean.top/api/resource/download/177381841453504",
+			"format": "ttf"
+		},
+		"bold": {
+			"url": "https://storage.codesocean.top/api/resource/download/177381841453504",
+			"format": "ttf"
+		}
 	},
 	"霞鹜文楷": {
 		"name": "霞鹜文楷",
 		"family": "LXGWWenKaiRegular",
-		"familyBold": "LXGWWenKaiMedium"
+		"familyBold": "LXGWWenKaiMedium",
+		"version": "20260318",
+		"regular": {
+			"url": "https://storage.codesocean.top/api/resource/download/177381841453453",
+			"format": "ttf"
+		},
+		"bold": {
+			"url": "https://storage.codesocean.top/api/resource/download/177381841454916",
+			"format": "ttf"
+		}
 	}
 }

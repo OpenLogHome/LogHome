@@ -87,8 +87,10 @@ router.get('/get_novels_search', async function (req, res) {
 router.get('/get_novel_by_id', async function (req, res) {
 	try {
 		let results = await query(
-			`SELECT n.*,u.user_id auther_id,u.name author_name,u.avatar_url auther_avatar,n.text_count FROM novels n,users u 
-                                   WHERE n.author_id = u.user_id AND novel_id = ? AND n.deleted = 0 AND n.is_personal = 0`,
+			`SELECT n.*,u.user_id auther_id,u.name author_name,u.avatar_url auther_avatar,n.text_count,ic.dominant_color pic_dominant_color FROM novels n
+                                   JOIN users u ON n.author_id = u.user_id
+                                   LEFT JOIN image_dominant_colors ic ON ic.image_url = n.picUrl AND ic.extract_status = 'success'
+                                   WHERE novel_id = ? AND n.deleted = 0 AND n.is_personal = 0`,
 			[req.query.id],
 		);
 		let likes = await query('SELECT * FROM bookcase WHERE novel_id = ?', [
@@ -610,6 +612,74 @@ router.get('/check_novel_updates', async function (req, res) {
 			has_updates: new_chapters_count > 0,
 			latest_update_time: latest_update_time,
 		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 批量检查书籍更新章节数量
+router.get('/check_novel_updates_batch', async function (req, res) {
+	try {
+		const booksParam = req.query.books;
+		
+		if (!booksParam) {
+			res.json(400, { msg: 'books parameter is required' });
+			return;
+		}
+		
+		let books;
+		try {
+			books = JSON.parse(booksParam);
+		} catch (parseError) {
+			res.json(400, { msg: 'invalid books parameter format' });
+			return;
+		}
+		
+		if (!Array.isArray(books) || books.length === 0) {
+			res.json({ updates: [] });
+			return;
+		}
+		
+		const novelIds = books.map(b => b.novel_id);
+		
+		const results = await query(
+			`SELECT 
+				novel_id, 
+				MAX(article_chapter) as max_chapter, 
+				MAX(update_time) as latest_update_time 
+			FROM articles 
+			WHERE novel_id IN (${novelIds.map(() => '?').join(',')}) 
+				AND is_draft = 0 
+				AND deleted = 0 
+			GROUP BY novel_id`,
+			novelIds,
+		);
+		
+		const serverDataMap = new Map();
+		results.forEach(row => {
+			serverDataMap.set(row.novel_id, {
+				server_latest_chapter: row.max_chapter || 0,
+				latest_update_time: row.latest_update_time
+			});
+		});
+		
+		const updates = books.map(book => {
+			const serverData = serverDataMap.get(book.novel_id) || { server_latest_chapter: 0, latest_update_time: null };
+			const local_latest_chapter = parseInt(book.latest_chapter) || 0;
+			const new_chapters_count = Math.max(0, serverData.server_latest_chapter - local_latest_chapter);
+			
+			return {
+				novel_id: book.novel_id,
+				local_latest_chapter: local_latest_chapter,
+				server_latest_chapter: serverData.server_latest_chapter,
+				new_chapters_count: new_chapters_count,
+				has_updates: new_chapters_count > 0,
+				latest_update_time: serverData.latest_update_time,
+			};
+		});
+		
+		res.json({ updates });
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });

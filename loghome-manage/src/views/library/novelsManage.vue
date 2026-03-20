@@ -1,5 +1,5 @@
 <template>
-  <div class="outer">
+  <div class="novel-manage-outer">
     <div class="block">
         <el-form :inline="true" :model="filterForm" class="demo-form-inline">
             <el-form-item label="关键词搜索">
@@ -15,8 +15,9 @@
 
         <el-table
             :data="novelsList"
-            style="width: 100%"
-            border>
+            border
+            :fit="true"
+            width="100%">
             <el-table-column
                 prop="novel_id"
                 label="ID"
@@ -50,7 +51,7 @@
             <el-table-column
                 prop="content"
                 label="简介"
-                min-width="250">
+                width="300">
                 <template slot-scope="scope">
                     <div class="novel-desc">{{ scope.row.content }}</div>
                 </template>
@@ -260,8 +261,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.outer {
+.novel-manage-outer {
     padding: 20px;
+    box-sizing: border-box;
+    width: 100%;
 }
 .block {
     background-color: white;
@@ -278,7 +281,6 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 400px;
 }
 .novel-detail {
     padding: 10px;

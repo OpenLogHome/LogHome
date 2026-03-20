@@ -12,9 +12,9 @@
       </div>
       
       <el-table :data="banners" style="width: 100%" v-loading="loading" border>
-        <el-table-column label="ID" prop="banner_id" width="80"></el-table-column>
+        <el-table-column label="ID" prop="banner_id" min-width="80"></el-table-column>
         <el-table-column label="标题" prop="title"></el-table-column>
-        <el-table-column label="图片" width="150">
+        <el-table-column label="图片" min-width="150">
           <template slot-scope="scope">
             <el-image 
               style="width: 100px; height: 40px" 
@@ -24,16 +24,16 @@
             </el-image>
           </template>
         </el-table-column>
-        <el-table-column label="页面位置" prop="page_location" width="120"></el-table-column>
-        <el-table-column label="链接地址" prop="link_url" width="200" :show-overflow-tooltip="true"></el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column label="页面位置" prop="page_location" min-width="120"></el-table-column>
+        <el-table-column label="链接地址" prop="link_url" min-width="200" :show-overflow-tooltip="true"></el-table-column>
+        <el-table-column label="状态" min-width="100">
           <template slot-scope="scope">
             <el-tag :type="scope.row.is_active ? 'success' : 'info'">
               {{ scope.row.is_active ? '激活' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="有效期" width="280">
+        <el-table-column label="有效期" min-width="280">
           <template slot-scope="scope">
             <div v-if="scope.row.start_time || scope.row.end_time">
               {{ scope.row.start_time || '无限制' }} 至 {{ scope.row.end_time || '无限制' }}
@@ -41,8 +41,8 @@
             <div v-else>无限制</div>
           </template>
         </el-table-column>
-        <el-table-column label="排序" prop="order" width="80"></el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="排序" prop="order" min-width="80"></el-table-column>
+        <el-table-column label="操作" min-width="150" fixed="right">
           <template slot-scope="scope">
             <el-button type="text" size="small" @click="handleEdit(scope.row)">编辑</el-button>
             <el-button type="text" size="small" @click="handleToggleStatus(scope.row)">
@@ -55,7 +55,7 @@
     </el-card>
     
     <!-- 添加/编辑对话框 -->
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px" @close="resetForm">
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="90%" max-width="600px" @close="resetForm">
       <el-form :model="form" :rules="rules" ref="bannerForm" label-width="100px">
         <el-form-item label="标题" prop="title">
           <el-input v-model="form.title" placeholder="请输入标题"></el-input>
