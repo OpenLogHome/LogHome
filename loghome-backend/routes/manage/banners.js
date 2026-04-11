@@ -1,7 +1,7 @@
 // 引入依赖包
 let express = require('express');
 let { query } = require('../../sql.js');
-let auth = require('../../bin/auth.js');
+let auth = require('../../bin/adminAuth.js');
 let moment = require('moment');
 
 // 创建路由对象

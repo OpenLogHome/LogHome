@@ -4,6 +4,8 @@ let express = require('express');
 let { query } = require('../sql.js');
 let auth = require('../bin/auth.js');
 let bank = require('../bin/bank.js');
+let message = require('../bin/message.js');
+let achievements = require('../bin/achievements.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -14,6 +16,16 @@ const TREE_STATUS = {
     BLOOMING: '开花',
     FRUITING: '结果',
 };
+
+const DEFAULT_TREE_SCENE_THEME = 'oak_island';
+const TREE_SCENE_THEME_KEYS = new Set([
+    'oak_island',
+    'birch_blossom',
+    'snow_spruce',
+    'sakura_grove',
+    'savanna_acacia',
+    'swamp_redwood',
+]);
 
 const DEFAULT_EXP_SETTINGS = {
     max_pending_orbs: 30,
@@ -28,6 +40,12 @@ const DEFAULT_EXP_SETTINGS = {
     orb_pos_y_min: 16,
     orb_pos_y_max: 56,
     max_growth: 100,
+    steal_min_pending_reward: 3,
+    steal_ratio: 0.35,
+    steal_min_reward: 1,
+    steal_max_reward: 8,
+    steal_friend_limit: 18,
+    steal_log_limit: 12,
     timezone: 'Asia/Shanghai',
 };
 
@@ -35,6 +53,8 @@ const RANDOM_SPAWN_PROGRESS_CODE = '__exp_random_spawn__';
 
 let expSchemaReady = null;
 let expSchemaCheckAt = 0;
+let stealSchemaReady = null;
+let stealSchemaCheckAt = 0;
 let expTasksCache = { data: [], ts: 0 };
 let expSettingsCache = { data: DEFAULT_EXP_SETTINGS, ts: 0 };
 
@@ -110,6 +130,12 @@ function calcTreeStatusByGrowth(growthValue) {
     return TREE_STATUS.GROWING;
 }
 
+function normalizeTreeSceneTheme(value) {
+    const normalized = typeof value === 'string' ? value.trim() : '';
+    if (!normalized || normalized === 'defaultTree') return DEFAULT_TREE_SCENE_THEME;
+    return TREE_SCENE_THEME_KEYS.has(normalized) ? normalized : DEFAULT_TREE_SCENE_THEME;
+}
+
 async function ensureExpSchemaReady() {
     const now = Date.now();
     if (expSchemaReady === true) return true;
@@ -163,6 +189,12 @@ async function loadExpSettings(force = false) {
         merged.orb_pos_y_min = toNumber(merged.orb_pos_y_min, DEFAULT_EXP_SETTINGS.orb_pos_y_min);
         merged.orb_pos_y_max = toNumber(merged.orb_pos_y_max, DEFAULT_EXP_SETTINGS.orb_pos_y_max);
         merged.max_growth = toPositiveInt(merged.max_growth, DEFAULT_EXP_SETTINGS.max_growth);
+        merged.steal_min_pending_reward = toPositiveInt(merged.steal_min_pending_reward, DEFAULT_EXP_SETTINGS.steal_min_pending_reward);
+        merged.steal_ratio = Math.max(0.1, Math.min(0.9, Number(merged.steal_ratio || DEFAULT_EXP_SETTINGS.steal_ratio)));
+        merged.steal_min_reward = toPositiveInt(merged.steal_min_reward, DEFAULT_EXP_SETTINGS.steal_min_reward);
+        merged.steal_max_reward = toPositiveInt(merged.steal_max_reward, DEFAULT_EXP_SETTINGS.steal_max_reward);
+        merged.steal_friend_limit = toPositiveInt(merged.steal_friend_limit, DEFAULT_EXP_SETTINGS.steal_friend_limit);
+        merged.steal_log_limit = toPositiveInt(merged.steal_log_limit, DEFAULT_EXP_SETTINGS.steal_log_limit);
         merged.timezone = String(merged.timezone || DEFAULT_EXP_SETTINGS.timezone);
 
         expSettingsCache = { data: merged, ts: Date.now() };
@@ -222,6 +254,30 @@ async function getActiveTree(userId) {
     return trees[0];
 }
 
+async function getLatestTree(userId) {
+    const rows = await query('SELECT * FROM treeplant WHERE user_id = ? ORDER BY plant_id DESC LIMIT 1', [userId]);
+    if (!rows || rows.length === 0) return null;
+    return rows[0];
+}
+
+function buildUnplantedTreePlaceholder(userId, latestTree = null) {
+    const preferredTheme = normalizeTreeSceneTheme(latestTree && latestTree.treeType);
+    return {
+        plant_id: latestTree && latestTree.plant_id ? latestTree.plant_id : 0,
+        user_id: userId,
+        treeType: preferredTheme,
+        tree_status: TREE_STATUS.UNPLANTED,
+        growth_val: 0,
+        max_growth: DEFAULT_EXP_SETTINGS.max_growth,
+        plant_time: latestTree && latestTree.plant_time ? latestTree.plant_time : null,
+        is_gotten: 1,
+        tasks: [],
+        exp_tasks: [],
+        exp_orbs: [],
+        exp_feature_enabled: false,
+    };
+}
+
 async function applyGrowthReward(tree, reward, maxGrowth) {
     const currentGrowth = toNumber(tree.growth_val, 0);
     const rewardVal = toNumber(reward, 0);
@@ -273,6 +329,623 @@ async function getPendingOrbs(userId, plantId) {
         spawn_type: row.spawn_type,
         created_at: row.created_at,
     }));
+}
+
+async function ensureStealSchemaReady() {
+    const expReady = await ensureExpSchemaReady();
+    if (!expReady) return false;
+
+    const now = Date.now();
+    if (stealSchemaReady === true) return true;
+    if (stealSchemaReady === false && now - stealSchemaCheckAt < 60 * 1000) return false;
+
+    try {
+        await query(
+            'SELECT record_id, source_user_id, source_plant_id, target_user_id, target_plant_id, reward, date_key FROM tree_exp_steal_records LIMIT 1'
+        );
+        stealSchemaReady = true;
+    } catch (err) {
+        if (isTableMissingError(err)) {
+            stealSchemaReady = false;
+        } else {
+            throw err;
+        }
+    }
+
+    stealSchemaCheckAt = now;
+    return stealSchemaReady;
+}
+
+function buildSqlPlaceholders(values) {
+    return values.map(() => '?').join(',');
+}
+
+function calcStealRewardByPending(pendingReward, settings) {
+    const totalPending = toNumber(pendingReward, 0);
+    const threshold = toPositiveInt(settings.steal_min_pending_reward, DEFAULT_EXP_SETTINGS.steal_min_pending_reward);
+    if (totalPending < threshold) return 0;
+
+    const minReward = toPositiveInt(settings.steal_min_reward, DEFAULT_EXP_SETTINGS.steal_min_reward);
+    const maxReward = toPositiveInt(settings.steal_max_reward, DEFAULT_EXP_SETTINGS.steal_max_reward);
+    const ratio = Math.max(0.1, Math.min(0.9, Number(settings.steal_ratio || DEFAULT_EXP_SETTINGS.steal_ratio)));
+    const rawReward = Math.floor(totalPending * ratio);
+    const targetReward = rawReward > 0 ? rawReward : minReward;
+    return Math.max(minReward, Math.min(maxReward, targetReward));
+}
+
+async function getPendingOrbStats(userId, plantId) {
+    const rows = await query(
+        `SELECT COUNT(*) AS pending_orb_count,
+                COALESCE(SUM(reward), 0) AS pending_reward_total
+         FROM tree_exp_orbs
+         WHERE user_id = ?
+           AND plant_id = ?
+           AND status = 'pending'
+           AND (expire_at IS NULL OR expire_at > NOW())`,
+        [userId, plantId]
+    );
+
+    return {
+        pending_orb_count: toNumber(rows?.[0]?.pending_orb_count, 0),
+        pending_reward_total: toNumber(rows?.[0]?.pending_reward_total, 0),
+    };
+}
+
+async function isMutualFriend(userId, targetUserId) {
+    const rows = await query(
+        `SELECT 1
+         FROM user_follow f1
+         INNER JOIN user_follow f2
+            ON f1.follow_id = f2.user_id
+           AND f2.follow_id = f1.user_id
+         WHERE f1.user_id = ?
+           AND f1.follow_id = ?
+         LIMIT 1`,
+        [userId, targetUserId]
+    );
+    return rows.length > 0;
+}
+
+async function getUserBasicInfo(userId) {
+    const rows = await query(
+        `SELECT user_id, name, avatar_url
+         FROM users
+         WHERE user_id = ?
+         LIMIT 1`,
+        [userId]
+    );
+    return rows.length > 0
+        ? rows[0]
+        : { user_id: userId, name: '好友', avatar_url: '' };
+}
+
+async function getTodayStealRecord(sourceUserId, targetUserId, dateKey) {
+    const rows = await query(
+        `SELECT record_id, reward, orb_count_affected
+         FROM tree_exp_steal_records
+         WHERE source_user_id = ?
+           AND target_user_id = ?
+           AND date_key = ?
+         LIMIT 1`,
+        [sourceUserId, targetUserId, dateKey]
+    );
+    return rows.length > 0 ? rows[0] : null;
+}
+
+function buildStealAllowance(pendingRewardTotal, alreadyStolenReward, settings) {
+    const currentPendingReward = toNumber(pendingRewardTotal, 0);
+    const todayStolenReward = toNumber(alreadyStolenReward, 0);
+    const totalStealReward = calcStealRewardByPending(currentPendingReward + todayStolenReward, settings);
+    return {
+        total_steal_reward: totalStealReward,
+        today_stolen_reward: todayStolenReward,
+        remaining_steal_reward: Math.max(totalStealReward - todayStolenReward, 0),
+    };
+}
+
+function buildVisitStealTip(context) {
+    const threshold = toPositiveInt(context.threshold, DEFAULT_EXP_SETTINGS.steal_min_pending_reward);
+    const pendingRewardTotal = toNumber(context.pending_reward_total, 0);
+    const remainingStealReward = toNumber(context.remaining_steal_reward, 0);
+    const todayStolenReward = toNumber(context.today_stolen_reward, 0);
+    const pendingOrbCount = toPositiveInt(context.pending_orb_count, 0);
+
+    if (!context.has_active_tree) {
+        return '对方还没种树，先去别的好友树场看看。';
+    }
+    if (context.need_own_tree) {
+        return '先种下自己的树苗，才能从好友树场顺走成长值。';
+    }
+    if (pendingOrbCount <= 0) {
+        return todayStolenReward > 0
+            ? '今天能偷的已经拿完了，对方树上也没有剩余经验球。'
+            : '对方树上的经验球已经被收走了，换个好友看看。';
+    }
+    if (remainingStealReward <= 0) {
+        return '今天在这个好友树场的偷取额度已经用完了，明天再来。';
+    }
+    if (pendingRewardTotal < threshold && todayStolenReward <= 0) {
+        return `还差 ${Math.max(threshold - pendingRewardTotal, 0)} 点成长值才能开偷。`;
+    }
+    if (todayStolenReward > 0) {
+        return `今天还可以继续顺走 ${remainingStealReward} 点成长值。`;
+    }
+    return `今天最多可顺走 ${remainingStealReward} 点成长值，点经验球也能手动偷取。`;
+}
+
+async function buildVisitTreeScene(viewerUserId, targetUserId, options = {}) {
+    const settings = options.settings || await loadExpSettings();
+    const dateKey = options.dateKey || getDateKeyByTimezone(settings.timezone);
+    const myTree = Object.prototype.hasOwnProperty.call(options, 'myTree')
+        ? options.myTree
+        : await getActiveTree(viewerUserId);
+    const targetTree = Object.prototype.hasOwnProperty.call(options, 'targetTree')
+        ? options.targetTree
+        : await getActiveTree(targetUserId);
+    const targetUser = options.targetUser || await getUserBasicInfo(targetUserId);
+
+    if (!targetTree) {
+        return {
+            target_user_id: Number(targetUser.user_id || targetUserId),
+            target_name: targetUser.name || '好友',
+            target_avatar_url: targetUser.avatar_url || '',
+            has_active_tree: false,
+            need_own_tree: !myTree,
+            can_steal: false,
+            pending_orb_count: 0,
+            pending_reward_total: 0,
+            total_steal_reward: 0,
+            remaining_steal_reward: 0,
+            today_stolen_reward: 0,
+            steal_tip: buildVisitStealTip({
+                has_active_tree: false,
+                need_own_tree: !myTree,
+                pending_orb_count: 0,
+                pending_reward_total: 0,
+                remaining_steal_reward: 0,
+                today_stolen_reward: 0,
+                threshold: settings.steal_min_pending_reward,
+            }),
+            tree: {
+                ...buildUnplantedTreePlaceholder(targetUserId),
+                treeType: DEFAULT_TREE_SCENE_THEME,
+            },
+        };
+    }
+
+    const expOrbs = Array.isArray(options.expOrbs)
+        ? options.expOrbs
+        : await getPendingOrbs(targetUserId, targetTree.plant_id);
+    const pendingRewardTotal = expOrbs.reduce((sum, item) => sum + toNumber(item.reward, 0), 0);
+    const existingRecord = Object.prototype.hasOwnProperty.call(options, 'existingRecord')
+        ? options.existingRecord
+        : await getTodayStealRecord(targetUserId, viewerUserId, dateKey);
+    const allowance = buildStealAllowance(pendingRewardTotal, existingRecord?.reward, settings);
+    const maxGrowth = toPositiveInt(settings.max_growth, DEFAULT_EXP_SETTINGS.max_growth);
+
+    return {
+        target_user_id: Number(targetUser.user_id || targetUserId),
+        target_name: targetUser.name || '好友',
+        target_avatar_url: targetUser.avatar_url || '',
+        has_active_tree: true,
+        need_own_tree: !myTree,
+        can_steal: !!myTree && allowance.remaining_steal_reward > 0 && expOrbs.length > 0,
+        pending_orb_count: expOrbs.length,
+        pending_reward_total: pendingRewardTotal,
+        total_steal_reward: allowance.total_steal_reward,
+        remaining_steal_reward: allowance.remaining_steal_reward,
+        today_stolen_reward: allowance.today_stolen_reward,
+        steal_tip: buildVisitStealTip({
+            has_active_tree: true,
+            need_own_tree: !myTree,
+            pending_orb_count: expOrbs.length,
+            pending_reward_total: pendingRewardTotal,
+            remaining_steal_reward: allowance.remaining_steal_reward,
+            today_stolen_reward: allowance.today_stolen_reward,
+            threshold: settings.steal_min_pending_reward,
+        }),
+        tree: {
+            ...targetTree,
+            treeType: normalizeTreeSceneTheme(targetTree.treeType),
+            tasks: [],
+            exp_tasks: [],
+            exp_orbs: expOrbs,
+            max_growth: maxGrowth,
+            exp_feature_enabled: true,
+        },
+    };
+}
+
+async function takeRewardFromOrb(userId, orb, rewardToTake) {
+    const orbReward = toNumber(orb && orb.reward, 0);
+    const actualTake = Math.min(orbReward, toNumber(rewardToTake, 0));
+    if (actualTake <= 0) {
+        return 0;
+    }
+
+    let updateRes = null;
+    if (actualTake >= orbReward) {
+        updateRes = await query(
+            `UPDATE tree_exp_orbs
+             SET status = 'collected', collected_at = NOW()
+             WHERE orb_id = ?
+               AND user_id = ?
+               AND status = 'pending'
+             LIMIT 1`,
+            [orb.orb_id, userId]
+        );
+    } else {
+        updateRes = await query(
+            `UPDATE tree_exp_orbs
+             SET reward = reward - ?
+             WHERE orb_id = ?
+               AND user_id = ?
+               AND status = 'pending'
+               AND reward >= ?
+             LIMIT 1`,
+            [actualTake, orb.orb_id, userId, actualTake]
+        );
+    }
+
+    return toNumber(updateRes?.affectedRows, 0) > 0 ? actualTake : 0;
+}
+
+async function performStealAgainstFriend(user, targetUserId, options = {}) {
+    const result = {
+        ok: false,
+        msg: 'System error',
+    };
+
+    const myTree = await getActiveTree(user.user_id);
+    if (!myTree) {
+        result.msg = '先种下自己的树苗，再去好友树场串门';
+        return result;
+    }
+
+    const mutualFriend = await isMutualFriend(user.user_id, targetUserId);
+    if (!mutualFriend) {
+        result.msg = '只有互相关注的好友之间才能偷取';
+        return result;
+    }
+
+    const settings = await loadExpSettings();
+    const dateKey = getDateKeyByTimezone(settings.timezone);
+    const targetTree = await getActiveTree(targetUserId);
+    if (!targetTree) {
+        result.msg = '对方还没种树，偷不到成长值';
+        return result;
+    }
+
+    const targetUser = await getUserBasicInfo(targetUserId);
+    const pendingOrbs = await getPendingOrbs(targetUserId, targetTree.plant_id);
+    if (pendingOrbs.length === 0) {
+        result.msg = '对方树上的经验球已经被收走了';
+        return result;
+    }
+
+    const pendingRewardTotal = pendingOrbs.reduce((sum, item) => sum + toNumber(item.reward, 0), 0);
+    const existingRecord = await getTodayStealRecord(targetUserId, user.user_id, dateKey);
+    const allowance = buildStealAllowance(pendingRewardTotal, existingRecord?.reward, settings);
+    const threshold = toPositiveInt(settings.steal_min_pending_reward, DEFAULT_EXP_SETTINGS.steal_min_pending_reward);
+
+    if (allowance.total_steal_reward <= 0) {
+        result.msg = `对方未收取成长值不足 ${threshold} 点，还偷不了`;
+        return result;
+    }
+    if (allowance.remaining_steal_reward <= 0) {
+        result.msg = '今天已经把这个好友能偷的都偷完了，明天再来吧';
+        return result;
+    }
+
+    const preferredOrbId = toPositiveInt(options.orbId, 0);
+    let actualReward = 0;
+    let affectedOrbCount = 0;
+
+    if (preferredOrbId) {
+        const selectedOrb = pendingOrbs.find((item) => Number(item.orb_id) === preferredOrbId);
+        if (!selectedOrb) {
+            result.msg = '这个经验球已经被收走了';
+            return result;
+        }
+        actualReward = await takeRewardFromOrb(targetUserId, selectedOrb, allowance.remaining_steal_reward);
+        if (actualReward > 0) {
+            affectedOrbCount = 1;
+        }
+    } else {
+        let remainingReward = allowance.remaining_steal_reward;
+        for (const orb of pendingOrbs) {
+            if (remainingReward <= 0) break;
+            const takenReward = await takeRewardFromOrb(targetUserId, orb, remainingReward);
+            if (takenReward <= 0) continue;
+            actualReward += takenReward;
+            remainingReward -= takenReward;
+            affectedOrbCount += 1;
+        }
+    }
+
+    if (actualReward <= 0) {
+        result.msg = '手慢了，成长值刚被对方收走';
+        return result;
+    }
+
+    const growthResult = await applyGrowthReward(
+        myTree,
+        actualReward,
+        toPositiveInt(settings.max_growth, DEFAULT_EXP_SETTINGS.max_growth)
+    );
+    myTree.growth_val = growthResult.growth_val;
+    myTree.tree_status = growthResult.tree_status;
+
+    if (existingRecord) {
+        await query(
+            `UPDATE tree_exp_steal_records
+             SET reward = reward + ?,
+                 orb_count_affected = orb_count_affected + ?,
+                 updated_at = NOW()
+             WHERE record_id = ?
+             LIMIT 1`,
+            [actualReward, affectedOrbCount, existingRecord.record_id]
+        );
+    } else {
+        await query(
+            `INSERT INTO tree_exp_steal_records
+             (source_user_id, source_plant_id, target_user_id, target_plant_id, reward, orb_count_affected, date_key, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            [targetUserId, targetTree.plant_id, user.user_id, myTree.plant_id, actualReward, affectedOrbCount, dateKey]
+        );
+        try {
+            await message.sendMsg(
+                user.user_id,
+                targetUserId,
+                `${user.name || '一位好友'} 来树场串门，顺走了你 ${actualReward} 点成长值。`,
+                'treePlant/treeplant',
+                'notification',
+                true
+            );
+        } catch (notifyErr) {
+            console.log(notifyErr);
+        }
+    }
+
+    let dashboard = null;
+    try {
+        dashboard = await buildStealDashboard(user.user_id);
+    } catch (dashboardErr) {
+        console.log(dashboardErr);
+    }
+
+    let visitScene = null;
+    try {
+        visitScene = await buildVisitTreeScene(user.user_id, targetUserId, {
+            myTree,
+            targetTree,
+            targetUser,
+            settings,
+            dateKey,
+        });
+    } catch (visitErr) {
+        console.log(visitErr);
+    }
+
+    return {
+        ok: true,
+        msg: '偷取成功',
+        reward: actualReward,
+        target_user_id: Number(targetUser.user_id || targetUserId),
+        target_name: targetUser.name || '好友',
+        target_avatar_url: targetUser.avatar_url || '',
+        growth_val: growthResult.growth_val,
+        tree_status: growthResult.tree_status,
+        steal_dashboard: dashboard,
+        visit_scene: visitScene,
+        affected_orb_count: affectedOrbCount,
+    };
+}
+
+async function getMutualFriends(userId, limit) {
+    return await query(
+        `SELECT DISTINCT u.user_id, u.name, u.avatar_url, u.user_group, u.motto
+         FROM user_follow f1
+         INNER JOIN user_follow f2
+            ON f1.follow_id = f2.user_id
+           AND f2.follow_id = f1.user_id
+         INNER JOIN users u
+            ON u.user_id = f1.follow_id
+         WHERE f1.user_id = ?
+         ORDER BY u.user_id DESC
+         LIMIT ?`,
+        [userId, limit]
+    );
+}
+
+async function getRecentStealLogs(userId, limit) {
+    return await query(
+        `SELECT r.record_id,
+                r.reward,
+                r.orb_count_affected,
+                r.created_at,
+                u.user_id AS thief_user_id,
+                u.name AS thief_name,
+                u.avatar_url AS thief_avatar_url
+         FROM tree_exp_steal_records r
+         LEFT JOIN users u
+            ON u.user_id = r.target_user_id
+         WHERE r.source_user_id = ?
+         ORDER BY r.created_at DESC, r.record_id DESC
+         LIMIT ?`,
+        [userId, limit]
+    );
+}
+
+async function buildStealDashboard(userId) {
+    const ready = await ensureStealSchemaReady();
+    if (!ready) {
+        return {
+            steal_feature_enabled: false,
+            has_active_tree: false,
+            can_be_stolen: false,
+            my_pending_orb_count: 0,
+            my_pending_reward_total: 0,
+            can_steal_count: 0,
+            today_i_stole_count: 0,
+            today_i_stole_reward: 0,
+            today_stolen_me_count: 0,
+            today_stolen_me_reward: 0,
+            steal_warn_threshold: DEFAULT_EXP_SETTINGS.steal_min_pending_reward,
+            steal_targets: [],
+            recent_steal_logs: [],
+        };
+    }
+
+    const settings = await loadExpSettings();
+    const threshold = toPositiveInt(settings.steal_min_pending_reward, DEFAULT_EXP_SETTINGS.steal_min_pending_reward);
+    const dateKey = getDateKeyByTimezone(settings.timezone);
+    const currentTree = await getActiveTree(userId);
+    const selfPendingStats = currentTree
+        ? await getPendingOrbStats(userId, currentTree.plant_id)
+        : { pending_orb_count: 0, pending_reward_total: 0 };
+
+    const todayIStoleRows = await query(
+        `SELECT COUNT(*) AS steal_count, COALESCE(SUM(reward), 0) AS total_reward
+         FROM tree_exp_steal_records
+         WHERE target_user_id = ? AND date_key = ?`,
+        [userId, dateKey]
+    );
+    const todayStolenMeRows = await query(
+        `SELECT COUNT(*) AS steal_count, COALESCE(SUM(reward), 0) AS total_reward
+         FROM tree_exp_steal_records
+         WHERE source_user_id = ? AND date_key = ?`,
+        [userId, dateKey]
+    );
+
+    const friendLimit = toPositiveInt(settings.steal_friend_limit, DEFAULT_EXP_SETTINGS.steal_friend_limit);
+    const friends = await getMutualFriends(userId, friendLimit);
+    let stealTargets = [];
+
+    if (friends.length > 0) {
+        const friendIds = friends.map((item) => item.user_id);
+        const placeholders = buildSqlPlaceholders(friendIds);
+
+        const activeTrees = await query(
+            `SELECT user_id, plant_id, tree_status
+             FROM treeplant
+             WHERE is_gotten = 0
+               AND user_id IN (${placeholders})`,
+            friendIds
+        );
+        const pendingStatsRows = await query(
+            `SELECT user_id,
+                    plant_id,
+                    COUNT(*) AS pending_orb_count,
+                    COALESCE(SUM(reward), 0) AS pending_reward_total
+             FROM tree_exp_orbs
+             WHERE status = 'pending'
+               AND (expire_at IS NULL OR expire_at > NOW())
+               AND user_id IN (${placeholders})
+             GROUP BY user_id, plant_id`,
+            friendIds
+        );
+        const stolenTodayRows = await query(
+            `SELECT source_user_id,
+                    COUNT(*) AS steal_count,
+                    COALESCE(SUM(reward), 0) AS total_reward,
+                    MAX(created_at) AS last_steal_at
+             FROM tree_exp_steal_records
+             WHERE target_user_id = ?
+               AND date_key = ?
+               AND source_user_id IN (${placeholders})
+             GROUP BY source_user_id`,
+            [userId, dateKey, ...friendIds]
+        );
+
+        const treeMap = new Map(activeTrees.map((item) => [Number(item.user_id), item]));
+        const pendingMap = new Map(pendingStatsRows.map((item) => [Number(item.user_id), item]));
+        const stolenTodayMap = new Map(stolenTodayRows.map((item) => [Number(item.source_user_id), item]));
+        const statusRank = { ready: 0, stolen_today: 1, not_ready: 2, no_tree: 3 };
+
+        stealTargets = friends.map((friend) => {
+            const friendId = Number(friend.user_id);
+            const targetTree = treeMap.get(friendId);
+            const pendingStats = pendingMap.get(friendId);
+            const pendingRewardTotal = toNumber(pendingStats?.pending_reward_total, 0);
+            const pendingOrbCount = toNumber(pendingStats?.pending_orb_count, 0);
+            const stolenToday = stolenTodayMap.get(friendId);
+            const todayStolenReward = toNumber(stolenToday?.total_reward, 0);
+            const todayAlreadyStolen = todayStolenReward > 0;
+            const allowance = buildStealAllowance(pendingRewardTotal, todayStolenReward, settings);
+            const availableStealReward = allowance.remaining_steal_reward;
+
+            let stealStatus = 'not_ready';
+            let stealStatusText = '再等等';
+            let stealTip = `还差 ${Math.max(threshold - pendingRewardTotal, 0)} 点成长值可偷`;
+
+            if (!targetTree) {
+                stealStatus = 'no_tree';
+                stealStatusText = '未开种';
+                stealTip = '对方还没种树，先去催他种下树苗';
+            } else if (pendingOrbCount <= 0) {
+                stealStatus = 'not_ready';
+                stealStatusText = '已空树';
+                stealTip = '这棵树上的经验球已经被收完了';
+            } else if (availableStealReward > 0) {
+                stealStatus = 'ready';
+                stealStatusText = '串门';
+                stealTip = todayAlreadyStolen
+                    ? `今天还可以继续顺走 ${availableStealReward} 点成长值`
+                    : `当前可顺走约 ${availableStealReward} 点成长值`;
+            } else if (todayAlreadyStolen) {
+                stealStatus = 'stolen_today';
+                stealStatusText = '已偷完';
+                stealTip = '今天在这位好友树场的偷取额度已经用完了';
+            }
+
+            return {
+                user_id: friendId,
+                name: friend.name || '好友',
+                avatar_url: friend.avatar_url || '',
+                user_group: friend.user_group,
+                motto: friend.motto || '',
+                has_active_tree: !!targetTree,
+                tree_status: targetTree ? targetTree.tree_status : TREE_STATUS.UNPLANTED,
+                pending_orb_count: pendingOrbCount,
+                pending_reward_total: pendingRewardTotal,
+                today_already_stolen: todayAlreadyStolen,
+                today_stolen_reward: todayStolenReward,
+                total_steal_reward: allowance.total_steal_reward,
+                remaining_steal_reward: allowance.remaining_steal_reward,
+                available_steal_reward: availableStealReward,
+                can_steal: !!targetTree && pendingOrbCount > 0 && availableStealReward > 0,
+                steal_status: stealStatus,
+                steal_status_text: stealStatusText,
+                steal_tip: stealTip,
+            };
+        }).sort((a, b) => {
+            const statusDiff = (statusRank[a.steal_status] || 99) - (statusRank[b.steal_status] || 99);
+            if (statusDiff !== 0) return statusDiff;
+            if (b.pending_reward_total !== a.pending_reward_total) return b.pending_reward_total - a.pending_reward_total;
+            return Number(b.user_id) - Number(a.user_id);
+        });
+    }
+
+    const logLimit = toPositiveInt(settings.steal_log_limit, DEFAULT_EXP_SETTINGS.steal_log_limit);
+    const recentStealLogs = await getRecentStealLogs(userId, logLimit);
+
+    return {
+        steal_feature_enabled: true,
+        has_active_tree: !!currentTree,
+        can_be_stolen: toNumber(selfPendingStats.pending_reward_total, 0) >= threshold,
+        my_pending_orb_count: toNumber(selfPendingStats.pending_orb_count, 0),
+        my_pending_reward_total: toNumber(selfPendingStats.pending_reward_total, 0),
+        steal_warn_threshold: threshold,
+        can_steal_count: stealTargets.filter((item) => item.can_steal).length,
+        today_i_stole_count: toNumber(todayIStoleRows?.[0]?.steal_count, 0),
+        today_i_stole_reward: toNumber(todayIStoleRows?.[0]?.total_reward, 0),
+        today_stolen_me_count: toNumber(todayStolenMeRows?.[0]?.steal_count, 0),
+        today_stolen_me_reward: toNumber(todayStolenMeRows?.[0]?.total_reward, 0),
+        steal_targets: stealTargets,
+        recent_steal_logs: recentStealLogs,
+        today_date_key: dateKey,
+    };
 }
 
 function buildExpProgressText(task, progressValue) {
@@ -636,11 +1309,13 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
         );
 
         if (trees.length === 0) {
-            res.end(JSON.stringify([]));
+            const latestTree = await getLatestTree(user.user_id);
+            res.end(JSON.stringify([buildUnplantedTreePlaceholder(user.user_id, latestTree)]));
             return;
         }
 
         let tree = trees[0];
+        tree.treeType = normalizeTreeSceneTheme(tree.treeType);
 
         let tasks = await query('SELECT * FROM tree_tasks ORDER BY task_id ASC');
         let userTasks = await query(
@@ -697,6 +1372,136 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
     }
 });
 
+router.post('/set_tree_scene_theme', auth, async (req, res) => {
+    let user = req.user;
+    user = JSON.parse(JSON.stringify(user))[0];
+
+    try {
+        const nextTheme = normalizeTreeSceneTheme(req.body?.tree_type || req.query?.tree_type);
+        const activeTree = await getActiveTree(user.user_id);
+
+        if (activeTree) {
+            await query(
+                'UPDATE treeplant SET treeType = ? WHERE plant_id = ?',
+                [nextTheme, activeTree.plant_id]
+            );
+            return res.json(200, {
+                msg: 'ok',
+                tree_type: nextTheme,
+                has_active_tree: true,
+            });
+        }
+
+        const latestTree = await getLatestTree(user.user_id);
+        if (latestTree) {
+            await query(
+                'UPDATE treeplant SET treeType = ? WHERE plant_id = ?',
+                [nextTheme, latestTree.plant_id]
+            );
+            return res.json(200, {
+                msg: 'ok',
+                tree_type: nextTheme,
+                has_active_tree: false,
+            });
+        }
+
+        await query(
+            'INSERT INTO treeplant(treeType, user_id, tree_status, growth_val, is_gotten) VALUES(?, ?, ?, ?, 1)',
+            [nextTheme, user.user_id, TREE_STATUS.UNPLANTED, 0]
+        );
+
+        return res.json(200, {
+            msg: 'ok',
+            tree_type: nextTheme,
+            has_active_tree: false,
+        });
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
+// 偷能量互动面板
+router.get('/steal_dashboard', auth, async (req, res) => {
+    let user = req.user;
+    user = JSON.parse(JSON.stringify(user))[0];
+
+    try {
+        const dashboard = await buildStealDashboard(user.user_id);
+        res.json(200, dashboard);
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
+router.get('/visit_friend_tree', auth, async (req, res) => {
+    let user = req.user;
+    user = JSON.parse(JSON.stringify(user))[0];
+
+    const targetUserId = toPositiveInt(req.query?.target_user_id, 0);
+    if (!targetUserId) {
+        return res.json(400, { msg: '缺少目标好友' });
+    }
+    if (Number(targetUserId) === Number(user.user_id)) {
+        return res.json(400, { msg: '不能串门到自己的树场' });
+    }
+
+    try {
+        const ready = await ensureStealSchemaReady();
+        if (!ready) {
+            return res.json(400, { msg: '偷能量功能未初始化，请先执行数据库升级脚本' });
+        }
+
+        const mutualFriend = await isMutualFriend(user.user_id, targetUserId);
+        if (!mutualFriend) {
+            return res.json(400, { msg: '只有互相关注的好友之间才能串门' });
+        }
+
+        const targetTree = await getActiveTree(targetUserId);
+        if (!targetTree) {
+            return res.json(400, { msg: '对方还没种树，暂时没有可串门的树场' });
+        }
+
+        const scene = await buildVisitTreeScene(user.user_id, targetUserId);
+        res.json(200, scene);
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
+// 从好友树场偷取未收成长值
+router.post('/steal_friend_energy', auth, async (req, res) => {
+    let user = req.user;
+    user = JSON.parse(JSON.stringify(user))[0];
+
+    const targetUserId = toPositiveInt(req.body?.target_user_id, 0);
+    const orbId = toPositiveInt(req.body?.orb_id, 0);
+    if (!targetUserId) {
+        return res.json(400, { msg: '缺少目标好友' });
+    }
+    if (Number(targetUserId) === Number(user.user_id)) {
+        return res.json(400, { msg: '不能偷自己的树场' });
+    }
+
+    try {
+        const ready = await ensureStealSchemaReady();
+        if (!ready) {
+            return res.json(400, { msg: '偷能量功能未初始化，请先执行数据库升级脚本' });
+        }
+        const stealResult = await performStealAgainstFriend(user, targetUserId, { orbId });
+        if (!stealResult.ok) {
+            return res.json(400, { msg: stealResult.msg });
+        }
+
+        res.json(200, stealResult);
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'System error' });
+    }
+});
+
 // 种树
 router.get('/plant_tree', auth, async (req, res) => {
     let user = req.user;
@@ -711,6 +1516,7 @@ router.get('/plant_tree', auth, async (req, res) => {
         } else {
             let initialGrowth = 0;
             let initialStatus = TREE_STATUS.GROWING;
+            let nextTreeTheme = DEFAULT_TREE_SCENE_THEME;
 
             let lastTrees = await query(
                 'SELECT * FROM treeplant WHERE user_id = ? ORDER BY plant_id DESC LIMIT 1',
@@ -719,15 +1525,20 @@ router.get('/plant_tree', auth, async (req, res) => {
 
             if (lastTrees.length > 0) {
                 let lastTree = lastTrees[0];
+                nextTreeTheme = normalizeTreeSceneTheme(lastTree.treeType);
                 if (lastTree.growth_val > 100) {
                     initialGrowth = lastTree.growth_val - 100;
                     initialStatus = calcTreeStatusByGrowth(initialGrowth);
                 }
             }
 
+            if (req.query.tree_type) {
+                nextTreeTheme = normalizeTreeSceneTheme(req.query.tree_type);
+            }
+
             let insertRes = await query(
                 'INSERT INTO treeplant(treeType, user_id, tree_status, growth_val) VALUES(?, ?, ?, ?)',
-                [req.query.tree_type, user.user_id, initialStatus, initialGrowth],
+                [nextTreeTheme, user.user_id, initialStatus, initialGrowth],
             );
             res.end(JSON.stringify(insertRes));
         }
@@ -832,9 +1643,25 @@ router.post('/report_exp_activity', auth, async (req, res) => {
     }
 
     try {
+        const shouldRecordAchievementMetric = activity_type === 'read_seconds' || activity_type === 'write_seconds';
+        if (shouldRecordAchievementMetric) {
+            await achievements.recordMetricProgress(user.user_id, activity_type, deltaSeconds, {
+                reason: '阅读/写作时长上报',
+                suppressNotification: true,
+            });
+        }
+
         const ready = await ensureExpSchemaReady();
         if (!ready) {
-            return res.json(400, { msg: '经验球功能未初始化，请先执行数据库升级脚本' });
+            return res.json(200, {
+                msg: shouldRecordAchievementMetric ? 'ok' : '经验球功能未初始化，请先执行数据库升级脚本',
+                exp_tasks: [],
+                settled_tasks: [],
+                total_reward: 0,
+                growth_val: 0,
+                tree_status: null,
+                has_active_tree: false,
+            });
         }
 
         const settings = await loadExpSettings();
@@ -842,7 +1669,15 @@ router.post('/report_exp_activity', auth, async (req, res) => {
 
         const matchedTasks = tasks.filter((task) => task.source_code === activity_type);
         if (matchedTasks.length === 0) {
-            return res.json(400, { msg: '当前未配置该类经验任务' });
+            return res.json(200, {
+                msg: 'ok',
+                exp_tasks: [],
+                settled_tasks: [],
+                total_reward: 0,
+                growth_val: 0,
+                tree_status: null,
+                has_active_tree: false,
+            });
         }
 
         for (const task of matchedTasks) {

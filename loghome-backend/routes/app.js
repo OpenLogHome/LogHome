@@ -6,10 +6,7 @@ let sysLog = require('../bin/log.js');
 let statistics = require('../bin/statistics.js');
 let bank = require('../bin/bank.js');
 let message = require('../bin/message.js');
-let {
-	ensureReaderFontsTable,
-	getEnabledReaderFonts,
-} = require('../bin/reader-fonts.js');
+let { getEnabledReaderFonts } = require('../bin/reader-fonts.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -28,7 +25,6 @@ router.get('/get_web_update', async function (req, res) {
 
 router.get('/get_reader_fonts', async function (req, res) {
 	try {
-		await ensureReaderFontsTable();
 		let fonts = await getEnabledReaderFonts();
 		res.json(fonts);
 	} catch (e) {
@@ -537,13 +533,25 @@ router.get('/get_popup_poster', async function (req, res) {
             return res.json([]);
         }
 
+        await query(
+            `CREATE TABLE IF NOT EXISTS popup_posters (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                page_url VARCHAR(255) NOT NULL,
+                image_url VARCHAR(500) NOT NULL,
+                target_url VARCHAR(500) DEFAULT NULL,
+                start_time DATETIME NOT NULL,
+                end_time DATETIME NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
+        );
+
         // 查询当前时间在有效期内，且匹配当前URL的海报
         const results = await query(
             `SELECT * FROM popup_posters 
             WHERE page_url = ? 
             AND start_time <= NOW() 
             AND end_time >= NOW()
-            ORDER BY id DESC LIMIT 1`,
+            ORDER BY start_time DESC, id DESC LIMIT 1`,
             [currentUrl]
         );
         

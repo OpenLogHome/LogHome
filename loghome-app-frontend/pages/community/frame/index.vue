@@ -1,5 +1,5 @@
 <template>
-    <div class="community-frame-container">
+    <div class="community-frame-container" v-dark>
         <web-view id="blogIframe" :src="url" frameborder="0" class="pc iframe" scrolling="auto"> </web-view>
     </div>
 
@@ -118,6 +118,6 @@ export default {
 .community-frame-container {
     width: 100%;
     height: calc(100vh - 133rpx);
-    background-color: #fff;
+    background-color: var(--background-color);
 }
 </style>

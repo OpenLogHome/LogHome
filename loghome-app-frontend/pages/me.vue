@@ -31,6 +31,9 @@
 								>
 									<honor-badge class="name-badge" :badge="user.selected_badge" size="name" scale="1.5"/>
 								</view>
+								<view v-if="user.display_title" class="user-title-chip">
+									{{user.display_title}}
+								</view>
 							</view>
 						</view>
 						<view class="motto">{{user.motto}}</view>
@@ -132,15 +135,15 @@
 						<text style="width: 150rpx; color: #ff6a5f">{{earningsMoney}} 元</text>
 					</view>
 				</navigator>
-				<!-- <navigator url="./store/index">
+				<navigator url="./store/index">
 					<view class="li">
 						<view class="icon">
-							<img src="../static/icons/icon_sponsored.png"></img>
+							<img src="../static/icons/store.png"></img>
 						</view>
-						<view class="text">积分商城</view>
+						<view class="text">原木商城</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
-				</navigator> -->
+				</navigator>
 			</view>
 			<view class="list">
 				<!-- <navigator url="./users/user_credit">
@@ -610,6 +613,21 @@
 				.name-badge-tap {
 					display: inline-flex;
 					align-items: center;
+				}
+
+				.user-title-chip {
+					margin-left: 16rpx;
+					padding: 8rpx 18rpx;
+					border-radius: 999rpx;
+					font-size: 24rpx;
+					line-height: 1.2;
+					max-width: 320rpx;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+					color: #fff4df;
+					background: linear-gradient(120deg, rgba(160, 104, 54, 0.92) 0%, rgba(117, 69, 33, 0.92) 100%);
+					box-shadow: 0 8rpx 18rpx rgba(117, 69, 33, 0.18);
 				}
 			}
 

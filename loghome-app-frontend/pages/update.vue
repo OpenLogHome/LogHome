@@ -27,7 +27,7 @@
       </view>
       
       <view class="update-actions">
-        <button v-if="allowHot" class="btn-primary" @click="doHotUpdate">极速更新（推荐）</button>
+        <button v-if="allowHot" class="btn-primary" @click="doHotUpdate">极速更新</button>
         <button class="btn-secondary" @click="gotoDownload">下载全量包</button>
         <button v-if="!isForced" class="btn-cancel" @click="goBack">暂不更新</button>
       </view>

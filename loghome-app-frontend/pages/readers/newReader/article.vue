@@ -208,7 +208,7 @@
 								 'top': readerSettings.fontSize * readerSettings.lineHeight - 20 + 'rpx'}">
 							</div>
 								{{ para.value }}
-							<span :class="'paraEndLocate paragraphId' + para.id">
+							<span class="paraEndLocate" :data-paragraph-id="para.id">
 							</span>
 						</div>
 					</div>
@@ -285,7 +285,12 @@
 
 		<el-drawer :with-header="false" :visible.sync="menuDrawerVisible" direction="btt" :modal="true" size="60%"
 			custom-class="bookMenu">
-			<bookMenu :novel_id="novelId" @change="gotoArticleIdx($event); menuDrawerVisible = false"></bookMenu>
+			<bookMenu
+				:novel_id="novelId"
+				:currentIdx="currentArticleIdx"
+				:visible="menuDrawerVisible"
+				@change="gotoArticleIdx($event); menuDrawerVisible = false"
+			></bookMenu>
 		</el-drawer>
 		
 		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="calc(80% + 44px)"
@@ -298,6 +303,7 @@
 					<i class="el-icon-close"></i>
 				</div>
 				<BookComment :componentMode="true" :componentData="commentDrawerData" @hide="handleCloseCommentDraweraManually"
+						     @commentChanged="handleParagraphCommentChanged"
 						     @navigate="handleCloseCommentDraweraManually"></BookComment>
 			</div>
 		</el-drawer>
@@ -358,7 +364,7 @@
 			</div>
 		</div>
 		
-		<div class="commentBtn" v-for="item in shownCommentsBtn" @click="gotoParagraphComment(item.paragraphId)"
+		<div class="commentBtn" v-for="item in shownCommentsBtn" :key="`comment-${item.paragraphId}`" @click="gotoParagraphComment(item.paragraphId)"
 			:style="{'fontSize': readerSettings.fontSize * 1.2 + 'rpx', 'left': item.x, 'top': item.y,
 			'color': themesData[readerSettings.theme].fontColor}" v-show="!settingsOpened">
 			<i class="el-icon-chat-square"></i>
@@ -367,7 +373,7 @@
 			</div>
 		</div>
 
-		<div class="listenBtn" v-for="item in shownParaTitleListenBtns" @click="playFromCurrentParagraph"
+		<div class="listenBtn" v-for="item in shownParaTitleListenBtns" :key="`listen-${item.x}-${item.y}`" @click="playFromCurrentParagraph"
 			:style="{'minHeight': readerSettings.fontSize * readerSettings.lineHeight + 'rpx',
 					 'fontSize': readerSettings.fontSize * 1.2 + 'rpx', 'left': item.x, 'top': item.y,
 					 'transform': 'translateY(16rpx)',
@@ -471,8 +477,11 @@ export default {
 				y: 0
 			},
 			selectedParagraph: null,
-			doUpdateCommentDisplay: true,
 			shownCommentsBtn: [],
+			paragraphCommentAmounts: {},
+			paragraphCommentLoading: {},
+			commentDisplayTaskId: 0,
+			commentDisplayTimer: null,
 			pageWrapperOffset: 0,
 			currentTime: '',
 			battery: {
@@ -876,9 +885,8 @@ export default {
 							this.renderNewPages();
 							this.showArticleCentos();
 							this.shownCommentsBtn = [];
-							setTimeout(() => {
-								this.doUpdateCommentDisplay = true;
-							}, 300)
+							this.shownParaTitleListenBtns = [];
+							this.scheduleCommentDisplayUpdate(80);
 							uni.hideLoading();
 						}
 					}
@@ -919,24 +927,39 @@ export default {
 				return articles;
 			}
 		},
+		normalizeArticleParagraphIds(articleData) {
+			if (!articleData || !Array.isArray(articleData.content)) {
+				return articleData;
+			}
+			for (let item of articleData.content) {
+				if (item && item.id == undefined && item.paragraph_id != undefined) {
+					item.id = item.paragraph_id;
+				}
+			}
+			return articleData;
+		},
+		parseReaderArticleContent(articleData) {
+			if (!articleData) {
+				return articleData;
+			}
+			if ((articleData.article_type == "richtext" || articleData.article_type == "worldOutline") &&
+				typeof articleData.content === "string") {
+				articleData.content = JSON.parse(articleData.content);
+			}
+			return this.normalizeArticleParagraphIds(articleData);
+		},
 		async getArticleContentById(article_id, onlineTime, allowHistory) {
 			if (allowHistory) {
 				let matchedArticles = await articleDB.articles.where("article_id").equals(article_id).toArray();
 				if (matchedArticles.length > 0 && utc2beijing(matchedArticles[0].update_time) >= utc2beijing(onlineTime)) {
-					if (matchedArticles[0].article_type == "richtext" || matchedArticles[0].article_type == "worldOutline") {
-						matchedArticles[0].content = JSON.parse(matchedArticles[0].content);
-					}
-					return matchedArticles[0];
+					return this.parseReaderArticleContent(matchedArticles[0]);
 				}
 			}
 			try{
 				let res = await axios.get(this.$baseUrl + '/articles/get_article?id=' + article_id + "&isCaching=true", {});
 				if (res.status == 200) {
 					articleDB.articles.put(res.data[0]);
-					if (res.data[0].article_type == "richtext" || res.data[0].article_type == "worldOutline") {
-						res.data[0].content = JSON.parse(res.data[0].content);
-					}
-					return res.data[0];
+					return this.parseReaderArticleContent(res.data[0]);
 				}
 			} catch(e){
 				let matchedArticles = await articleDB.articles.where("article_id").equals(Number(article_id)).toArray();
@@ -945,7 +968,7 @@ export default {
 						 title: "将使用离线模式加载此书",
 						 icon: "loading"
 					})
-					return matchedArticles[0];
+					return this.parseReaderArticleContent(matchedArticles[0]);
 				} else {
 					setTimeout(() => {
 						uni.redirectTo({
@@ -1073,6 +1096,7 @@ export default {
 			this.markReadActivity();
 			this.touchStartX = e.touches[0].clientX;
 			this.isAnimating = false;
+			this.invalidateCommentDisplayUpdate();
 			this.touchTimer.count = 0;
 			this.touchTimer.timer = setInterval(() => {
 				this.touchTimer.count += 1;
@@ -1084,6 +1108,7 @@ export default {
 		handleTouchMove(e) {
 			const deltaX = e.touches[0].clientX - this.touchStartX;
 			this.translateX = deltaX;
+			this.invalidateCommentDisplayUpdate();
 			this.shownCommentsBtn = [];
 			this.shownParaTitleListenBtns = [];
 		},
@@ -1130,8 +1155,8 @@ export default {
 			this.translateX = 0; // 重置位移
 			
 			setTimeout(() => {
-				this.doUpdateCommentDisplay = true;
 				this.isAnimating = false;
+				this.scheduleCommentDisplayUpdate(0);
 			}, 300)
 		},
 		nextPage() {
@@ -1162,6 +1187,7 @@ export default {
 						})
 					}
 				}
+				this.scheduleCommentDisplayUpdate(0);
 			})
 			if (this.currentRenderIdx.length == 0 || this.currentRenderIdx.length > 30 || !delta) {
 				this.currentRenderIdx = Array.from({
@@ -1403,36 +1429,319 @@ export default {
 				para.selected = false;
 			}
 		},
-		async getParagraphCommentsAmount(paragraphId) {
-			let res = await axios.post(this.$baseUrl + '/articles/get_paragraph_comment_amount?id=' + this.novelId, 
-				{paragraph_id: paragraphId, article_id: this.articleId});
-			if (res.status == 200) {
-				return res.data[0].count;
+		getParagraphCommentAmountCache(articleId) {
+			return this.paragraphCommentAmounts[String(articleId)];
+		},
+		hasParagraphCommentAmount(articleId, paragraphId) {
+			let articleCache = this.getParagraphCommentAmountCache(articleId);
+			if (!articleCache) {
+				return false;
+			}
+			return Object.prototype.hasOwnProperty.call(articleCache, String(Number(paragraphId)));
+		},
+		getCachedParagraphCommentAmount(articleId, paragraphId) {
+			let articleCache = this.getParagraphCommentAmountCache(articleId);
+			if (!articleCache) {
+				return undefined;
+			}
+			let paragraphKey = String(Number(paragraphId));
+			if (!Object.prototype.hasOwnProperty.call(articleCache, paragraphKey)) {
+				return undefined;
+			}
+			return Number(articleCache[paragraphKey]) || 0;
+		},
+		setParagraphCommentAmount(articleId, paragraphId, amount) {
+			let articleKey = String(articleId);
+			let paragraphKey = String(Number(paragraphId));
+			if (!this.paragraphCommentAmounts[articleKey]) {
+				this.$set(this.paragraphCommentAmounts, articleKey, {});
+			}
+			this.$set(this.paragraphCommentAmounts[articleKey], paragraphKey, Number(amount) || 0);
+		},
+		getParagraphCommentLoadingKey(articleId, paragraphId) {
+			return `${articleId}_${paragraphId}`;
+		},
+		getPageParagraphIds(pageIdx) {
+			let page = this.allPages[pageIdx];
+			if (!page || !Array.isArray(page.inPagesParagraphIds)) {
+				return [];
+			}
+			return Array.from(new Set(page.inPagesParagraphIds
+				.map((item) => Number(item))
+				.filter((item) => Number.isFinite(item) && item > 0)));
+		},
+		getNearbyPageParagraphIds(pageIdx, radius = 1, includeCurrent = true) {
+			let currentPage = this.allPages[pageIdx];
+			if (!currentPage) {
+				return [];
+			}
+			let paragraphIds = [];
+			let startIdx = Math.max(0, pageIdx - radius);
+			let endIdx = Math.min(this.allPages.length - 1, pageIdx + radius);
+			for (let i = startIdx; i <= endIdx; i++) {
+				if (!includeCurrent && i == pageIdx) {
+					continue;
+				}
+				let page = this.allPages[i];
+				if (!page || page.articleId != currentPage.articleId) {
+					continue;
+				}
+				paragraphIds.push(...this.getPageParagraphIds(i));
+			}
+			return Array.from(new Set(paragraphIds));
+		},
+		getCurrentPageDecorationSnapshot() {
+			let pageIdx = this.currentPageIdx;
+			let currentPage = this.allPages[pageIdx];
+			if (!currentPage) {
+				return null;
+			}
+			let currentPageDom = document.querySelector(`.articlePage.idx${pageIdx}`);
+			if (!currentPageDom) {
+				return null;
+			}
+			let minY = rpxToPx(90);
+			let maxY = rpxToPx(80) + (currentPage.viewHeight || 0);
+			let commentAnchors = Array.from(currentPageDom.querySelectorAll(".paraEndLocate[data-paragraph-id]"))
+				.map((item) => {
+					let rect = item.getBoundingClientRect();
+					return {
+						paragraphId: Number(item.dataset.paragraphId),
+						x: rect.x,
+						y: rect.y
+					};
+				})
+				.filter((item) => Number.isFinite(item.paragraphId) && item.y >= minY && item.y <= maxY);
+			let listenAnchors = Array.from(currentPageDom.getElementsByClassName("paraTitleEndLocate")).map((item) => {
+				let rect = item.getBoundingClientRect();
+				return {
+					x: rect.x,
+					y: rect.y
+				};
+			});
+			return {
+				pageIdx,
+				articleId: currentPage.articleId,
+				commentAnchors,
+				listenAnchors
+			};
+		},
+		isSamePageSnapshot(snapshot) {
+			if (!snapshot) {
+				return false;
+			}
+			let currentPage = this.allPages[this.currentPageIdx];
+			return !!currentPage && snapshot.pageIdx == this.currentPageIdx && snapshot.articleId == currentPage.articleId;
+		},
+		buildShownCommentButtons(snapshot) {
+			if (!snapshot) {
+				return [];
+			}
+			return snapshot.commentAnchors.reduce((result, item) => {
+				let amount = this.getCachedParagraphCommentAmount(snapshot.articleId, item.paragraphId);
+				if (amount > 0) {
+					result.push({
+						paragraphId: item.paragraphId,
+						amount,
+						x: item.x,
+						y: item.y
+					});
+				}
+				return result;
+			}, []);
+		},
+		scheduleCommentDisplayUpdate(delay = 0) {
+			this.commentDisplayTaskId += 1;
+			let taskId = this.commentDisplayTaskId;
+			if (this.commentDisplayTimer) {
+				clearTimeout(this.commentDisplayTimer);
+			}
+			this.commentDisplayTimer = setTimeout(() => {
+				this.commentDisplayTimer = null;
+				this.refreshCurrentPageDecorations(taskId);
+			}, delay);
+		},
+		invalidateCommentDisplayUpdate() {
+			this.commentDisplayTaskId += 1;
+			if (this.commentDisplayTimer) {
+				clearTimeout(this.commentDisplayTimer);
+				this.commentDisplayTimer = null;
 			}
 		},
-		async updateArticleCommentDisplay() {
-			if(this.doUpdateCommentDisplay && !this.isAnimating) {
-				this.updateArticleTitleListenPlayDisplay();
-				this.doUpdateCommentDisplay = false;
-				let currentPageDom = document.querySelector(`.articlePage.idx${this.currentPageIdx}`);
-				if(!currentPageDom) return;
-				let paraEndLocateDoms = currentPageDom.getElementsByClassName("paraEndLocate");
+		async refreshCurrentPageDecorations(taskId) {
+			if (taskId != this.commentDisplayTaskId || this.isAnimating) {
+				return;
+			}
+			await new Promise((resolve) => this.$nextTick(resolve));
+			await this.delay(0);
+			if (taskId != this.commentDisplayTaskId || this.isAnimating) {
+				return;
+			}
+			let snapshot = this.getCurrentPageDecorationSnapshot();
+			if (!snapshot) {
 				this.shownCommentsBtn = [];
-				for(let item of paraEndLocateDoms) {
-					let rect = item.getBoundingClientRect();
-					if(rect.y >= rpxToPx(90) && rect.y <= rpxToPx(80) + this.allPages[this.currentPageIdx].viewHeight){
-						let amount = await this.getParagraphCommentsAmount(Number(item.classList[1].replace("paragraphId", '')));
-						if(amount > 0){
-							this.shownCommentsBtn.push({
-								paragraphId: Number(item.classList[1].replace("paragraphId", '')),
-								amount,
-								x: rect.x,
-								y: rect.y
-							})
+				this.shownParaTitleListenBtns = [];
+				return;
+			}
+			this.shownParaTitleListenBtns = snapshot.listenAnchors;
+			this.shownCommentsBtn = this.buildShownCommentButtons(snapshot);
+			let currentParagraphIds = snapshot.commentAnchors.map((item) => item.paragraphId);
+			if (currentParagraphIds.length) {
+				await this.ensureParagraphCommentAmounts(snapshot.articleId, currentParagraphIds);
+				if (taskId != this.commentDisplayTaskId || this.isAnimating || !this.isSamePageSnapshot(snapshot)) {
+					return;
+				}
+				this.shownCommentsBtn = this.buildShownCommentButtons(snapshot);
+			}
+			this.prefetchNearbyParagraphCommentAmounts(snapshot.pageIdx, 1);
+		},
+		async getParagraphCommentsAmount(articleId, paragraphId) {
+			let res = await axios.post(this.$baseUrl + '/articles/get_paragraph_comment_amount?id=' + this.novelId,
+				{ paragraph_id: paragraphId, article_id: articleId });
+			if (res.status == 200 && Array.isArray(res.data) && res.data[0]) {
+				return Number(res.data[0].count) || 0;
+			}
+			return 0;
+		},
+		async getParagraphCommentsAmountBatch(articleId, paragraphIds) {
+			let normalizedParagraphIds = Array.from(new Set(paragraphIds
+				.map((item) => Number(item))
+				.filter((item) => Number.isFinite(item) && item > 0)));
+			let commentAmounts = {};
+			for (let paragraphId of normalizedParagraphIds) {
+				commentAmounts[paragraphId] = 0;
+			}
+			if (!normalizedParagraphIds.length) {
+				return commentAmounts;
+			}
+			try {
+				let res = await axios.post(this.$baseUrl + '/articles/get_paragraph_comment_amounts?id=' + this.novelId, {
+					article_id: articleId,
+					paragraph_ids: normalizedParagraphIds
+				});
+				if (res.status == 200 && Array.isArray(res.data)) {
+					for (let item of res.data) {
+						let paragraphId = Number(item.paragraph_id);
+						if (Number.isFinite(paragraphId)) {
+							commentAmounts[paragraphId] = Number(item.count) || 0;
 						}
 					}
+					return commentAmounts;
+				}
+			} catch (error) {
+				if (error?.response?.status == 404) {
+					console.warn("get_paragraph_comment_amounts is unavailable, fallback to single requests");
+				} else {
+					console.error("getParagraphCommentsAmountBatch failed", error);
 				}
 			}
+			let fallbackResults = await Promise.all(normalizedParagraphIds.map(async (paragraphId) => {
+				try {
+					let amount = await this.getParagraphCommentsAmount(articleId, paragraphId);
+					return [paragraphId, amount];
+				} catch (error) {
+					console.error("getParagraphCommentsAmount fallback failed", articleId, paragraphId, error);
+					return [paragraphId, 0];
+				}
+			}));
+			for (let [paragraphId, amount] of fallbackResults) {
+				commentAmounts[paragraphId] = Number(amount) || 0;
+			}
+			return commentAmounts;
+		},
+		async ensureParagraphCommentAmounts(articleId, paragraphIds) {
+			let normalizedParagraphIds = Array.from(new Set(paragraphIds
+				.map((item) => Number(item))
+				.filter((item) => Number.isFinite(item) && item > 0)));
+			if (!normalizedParagraphIds.length) {
+				return;
+			}
+			let loadingPromises = [];
+			let paragraphIdsToLoad = [];
+			for (let paragraphId of normalizedParagraphIds) {
+				if (this.hasParagraphCommentAmount(articleId, paragraphId)) {
+					continue;
+				}
+				let loadingKey = this.getParagraphCommentLoadingKey(articleId, paragraphId);
+				if (this.paragraphCommentLoading[loadingKey]) {
+					loadingPromises.push(this.paragraphCommentLoading[loadingKey]);
+					continue;
+				}
+				paragraphIdsToLoad.push(paragraphId);
+			}
+			if (paragraphIdsToLoad.length) {
+				let requestPromise = this.getParagraphCommentsAmountBatch(articleId, paragraphIdsToLoad)
+					.then((commentAmounts) => {
+						for (let paragraphId of paragraphIdsToLoad) {
+							this.setParagraphCommentAmount(articleId, paragraphId, commentAmounts[paragraphId] || 0);
+						}
+					})
+					.finally(() => {
+						for (let paragraphId of paragraphIdsToLoad) {
+							this.$delete(this.paragraphCommentLoading,
+								this.getParagraphCommentLoadingKey(articleId, paragraphId));
+						}
+					});
+				for (let paragraphId of paragraphIdsToLoad) {
+					this.$set(this.paragraphCommentLoading,
+						this.getParagraphCommentLoadingKey(articleId, paragraphId), requestPromise);
+				}
+				loadingPromises.push(requestPromise);
+			}
+			if (loadingPromises.length) {
+				await Promise.allSettled(Array.from(new Set(loadingPromises)));
+			}
+		},
+		prefetchNearbyParagraphCommentAmounts(pageIdx, radius = 1) {
+			let currentPage = this.allPages[pageIdx];
+			if (!currentPage) {
+				return;
+			}
+			let nearbyParagraphIds = this.getNearbyPageParagraphIds(pageIdx, radius, false);
+			if (!nearbyParagraphIds.length) {
+				return;
+			}
+			this.ensureParagraphCommentAmounts(currentPage.articleId, nearbyParagraphIds);
+		},
+		async refreshParagraphCommentAmount(articleId, paragraphId) {
+			let normalizedParagraphId = Number(paragraphId);
+			if (!Number.isFinite(normalizedParagraphId) || normalizedParagraphId <= 0) {
+				return;
+			}
+			try {
+				let amount = await this.getParagraphCommentsAmount(articleId, normalizedParagraphId);
+				this.setParagraphCommentAmount(articleId, normalizedParagraphId, amount);
+				this.scheduleCommentDisplayUpdate(0);
+			} catch (error) {
+				console.error("refreshParagraphCommentAmount failed", error);
+			}
+		},
+		applyParagraphCommentAmountDelta(articleId, paragraphId, delta) {
+			let normalizedArticleId = Number(articleId);
+			let normalizedParagraphId = Number(paragraphId);
+			let normalizedDelta = Number(delta);
+			if (!Number.isFinite(normalizedArticleId) || !Number.isFinite(normalizedParagraphId) ||
+				normalizedParagraphId <= 0 || !Number.isFinite(normalizedDelta) || normalizedDelta == 0) {
+				return;
+			}
+			if (!this.hasParagraphCommentAmount(normalizedArticleId, normalizedParagraphId)) {
+				return;
+			}
+			let currentAmount = this.getCachedParagraphCommentAmount(normalizedArticleId, normalizedParagraphId);
+			let nextAmount = Math.max(0, (Number.isFinite(currentAmount) ? currentAmount : 0) + normalizedDelta);
+			this.setParagraphCommentAmount(normalizedArticleId, normalizedParagraphId, nextAmount);
+			this.scheduleCommentDisplayUpdate(0);
+		},
+		handleParagraphCommentChanged(payload = {}) {
+			let articleId = payload.articleId ?? this.commentDrawerData.articleId;
+			let paragraphId = payload.paragraphId ?? this.commentDrawerData.paragraphId;
+			if (!Number.isFinite(Number(paragraphId)) || Number(paragraphId) <= 0) {
+				return;
+			}
+			if (payload.delta) {
+				this.applyParagraphCommentAmountDelta(articleId, paragraphId, payload.delta);
+			}
+			this.refreshParagraphCommentAmount(articleId, paragraphId);
 		},
 		handleComment() {
 			if (!this.selectedParagraph) return;
@@ -1443,14 +1752,44 @@ export default {
 			});
 			this.clearSelection();
 		},
+		getParagraphText(articleId, paragraphId) {
+			const targetArticleId = articleId ?? this.allPages[this.currentPageIdx]?.articleId ?? this.articleId;
+			const targetParagraphId = Number(paragraphId);
+			const articleData = this.allArticleData[targetArticleId] || this.allArticleData[String(targetArticleId)];
+			if (!articleData || !Array.isArray(articleData.content) || !Number.isFinite(targetParagraphId)) {
+				return '';
+			}
+			const targetParagraph = articleData.content.find((item) => {
+				if (!item || (item.type && item.type !== 'text')) {
+					return false;
+				}
+				return Number(item.id ?? item.paragraph_id) === targetParagraphId;
+			});
+			if (!targetParagraph) {
+				return '';
+			}
+			return Array.isArray(targetParagraph.value) ? targetParagraph.value.join('') : (targetParagraph.value || '');
+		},
 		gotoParagraphComment(paragraphId){
+			const currentArticleId = this.allPages[this.currentPageIdx]?.articleId ?? this.articleId;
 			this.commentDrawerData = {
 				novelId: this.novelId,
-				articleId: this.articleId,
-				paragraphId: paragraphId
+				articleId: currentArticleId,
+				paragraphId: paragraphId,
+				paragraphText: this.getParagraphText(currentArticleId, paragraphId)
 			}
 			this.commentDrawerVisible = true;
 			window.history.pushState({ isCommentDrawerOpen: true }, '', window.location.href)
+		},
+		async closeCommentDrawer(syncHistory = false) {
+			let commentData = { ...this.commentDrawerData };
+			this.commentDrawerVisible = false;
+			if (syncHistory) {
+				// #ifdef H5
+				window.history.go(-1)
+				// #endif
+			}
+			await this.refreshParagraphCommentAmount(commentData.articleId, commentData.paragraphId);
 		},
 		updateTimeAndBattery() {
 			const now = new Date();
@@ -1547,7 +1886,7 @@ export default {
 		},
 		browserBack() {
 			if(this.commentDrawerVisible) {
-				this.commentDrawerVisible = false;
+				this.closeCommentDrawer(false);
 			} else if(this.excerptDrawerVisible) {
 				this.excerptDrawerVisible = false;
 			} else if(this.listenDrawerVisible) {
@@ -1555,10 +1894,7 @@ export default {
 			}
 		},
 		handleCloseCommentDraweraManually() {
-			// #ifdef H5
-			window.history.go(-1)
-			// #endif
-			this.commentDrawerVisible = false;
+			this.closeCommentDrawer(true);
 		},
 		handleCloseExcerptDrawerManually() {
 			// #ifdef H5
@@ -1589,19 +1925,6 @@ export default {
 			console.log("handleBookListenChange", data.articleId, data.paragraphId);
 			this.gotoParagraph(data.articleId, data.paragraphId);
 			this.listeningParagraphId = data.paragraphId;
-		},
-		async updateArticleTitleListenPlayDisplay() {
-			console.log("update");
-			let currentPageDom = document.querySelector(`.articlePage.idx${this.currentPageIdx}`);
-			if(!currentPageDom) return;
-			let paraTitleEndLocateDoms = currentPageDom.getElementsByClassName("paraTitleEndLocate");
-			for(let item of paraTitleEndLocateDoms) {
-				let rect = item.getBoundingClientRect();
-				this.shownParaTitleListenBtns.push({
-					x: rect.x,
-					y: rect.y
-				})
-			}
 		},
 		playFromCurrentParagraph() {
 			this.openListenDrawer();
@@ -1661,23 +1984,30 @@ export default {
 	},
 	watch: {
 		currentPageIdx(newValue, oldValue) {
+			let newPage = this.allPages[newValue];
+			let oldPage = this.allPages[oldValue];
+			if (!newPage) {
+				return;
+			}
 			if (!this.onRendering) {
-				if(this.allPages[newValue].articleId != this.allPages[oldValue].articleId) {
-					axios.get(this.$baseUrl + '/articles/novel_clicked?id=' + this.allPages[newValue].articleId, {});
+				if(!oldPage || newPage.articleId != oldPage.articleId) {
+					axios.get(this.$baseUrl + '/articles/novel_clicked?id=' + newPage.articleId, {});
 				}
-				this.articleId = this.allPages[newValue].articleId;
-				window.localStorage.setItem("ReaderHistory_" + this.novelInfo.novel_id, this.allArticleData[this.allPages[newValue].articleId].article_chapter);
-				window.localStorage.setItem("ReaderHistoryPage_" + this.novelInfo.novel_id, this.allPages[newValue].idx);
+				this.articleId = newPage.articleId;
+				window.localStorage.setItem("ReaderHistory_" + this.novelInfo.novel_id, this.allArticleData[newPage.articleId].article_chapter);
+				window.localStorage.setItem("ReaderHistoryPage_" + this.novelInfo.novel_id, newPage.idx);
 				this.scheduleReadingProgressSync();
-				if (this.allPages[newValue].articleId != this.allPages[oldValue].articleId) {
+				if (!oldPage || newPage.articleId != oldPage.articleId) {
 					this.showArticleCentos(newValue);
 				}
 			}
 			uni.setNavigationBarTitle({
-				title:this.allArticleData[this.allPages[newValue].articleId].title
+				title:this.allArticleData[newPage.articleId].title
 			})
-			this.currentArticleIdx = this.getArticleIdx(this.allPages[newValue].articleId);
-			this.doUpdateCommentDisplay = true;
+			this.currentArticleIdx = this.getArticleIdx(newPage.articleId);
+			this.shownCommentsBtn = [];
+			this.shownParaTitleListenBtns = [];
+			this.scheduleCommentDisplayUpdate(80);
 			this.markReadActivity();
 		},
 		readerSettings: {
@@ -1745,9 +2075,6 @@ export default {
 		if (window.localStorage.getItem("ReaderHistory_" + this.novelInfo.novel_id) == article.article_chapter) {
 			this.historyMode = true;
 		}
-		this.updateCommentDisplayTimer = setInterval(() => {
-			this.updateArticleCommentDisplay();
-		}, 200)
 		await this.loadAllPages();
 		this.scheduleReadingProgressSync(0);
 		window.onVolumnKeyPressCallback = (event) => {
@@ -1770,7 +2097,7 @@ export default {
 		}
 		await this.syncReadingProgress(true);
 		clearInterval(this.timeInterval);
-		clearInterval(this.updateCommentDisplayTimer);
+		this.invalidateCommentDisplayUpdate();
 		if(window.jsBridge && window.jsBridge.inApp) {
 			jsBridge.setNavigationBarVisible(true);
 			await jsBridge.disableVolumeKeyListener();
@@ -1798,9 +2125,7 @@ export default {
 		this.showArticleCentos();
 		this.shownCommentsBtn = [];
 		this.shownParaTitleListenBtns = [];
-		setTimeout(() => {
-			this.doUpdateCommentDisplay = true;
-		}, 300)
+		this.scheduleCommentDisplayUpdate(80);
 		if(window.jsBridge && window.jsBridge.inApp) {
 			jsBridge.setNavigationBarVisible(false);
 			await jsBridge.enableVolumeKeyListener();

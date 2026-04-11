@@ -1,105 +1,255 @@
-import { doChapterComprehension } from './tasks/chapter-comprehension/index.js';
-import { getPriorityNovels, getPendingChapters } from './utils/memoryManager.js';
+import {
+  doChapterComprehension,
+  SourceVersionChangedError,
+} from './tasks/chapter-comprehension/index.js';
+import { initMemoryTable, getPendingChapters } from './utils/memoryManager.js';
+import {
+  claimNextQueueJob,
+  hasQueuedManualJob,
+  heartbeatQueueJob,
+  initIndexQueueTable,
+  removeQueueJob,
+  requeueQueueJob,
+  resetQueueOnStartup,
+  requeueStaleJobs,
+  syncAutoQueue,
+} from './utils/indexQueueManager.js';
+import { isMllmTemporarilyUnavailableError } from './utils/mllmClient.js';
 import pool, { memoryPool } from './utils/db.js';
 
-// Delay helper
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const CHAPTER_DELAY_MS = 3000;
+const IDLE_POLL_MS = 15000;
+const AUTO_SYNC_INTERVAL_MS = 60000;
+const HEARTBEAT_INTERVAL_MS = 15000;
+const STALE_JOB_MINUTES = 5;
+const RETRY_DELAY_MINUTES = 5;
+const MLLM_OUTAGE_PAUSE_MINUTES = 120;
 
-async function main() {
-    try {
-        console.log("Starting Agent...");
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-        // 1. Get priority novels
-        const novels = await getPriorityNovels(100);
-        if (novels.length === 0) {
-            console.log("No active novels found.");
-            return;
-        }
-        console.log(`Found ${novels.length} active novels.`);
+let shuttingDown = false;
+let lastAutoSyncAt = 0;
+let pausedUntil = 0;
 
-        let processedNovel = false;
-
-        for (const novel of novels) {
-            // 2. Get pending chapters
-            const chapters = await getPendingChapters(novel.novel_id);
-            if (chapters.length === 0) {
-                // Try next novel
-                continue;
-            }
-            
-            console.log(`Selected Novel: ${novel.name} (ID: ${novel.novel_id}) - ${chapters.length} pending chapters.`);
-            processedNovel = true;
-
-            // 3. Process chapters sequentially
-            for (let i = 0; i < chapters.length; i++) {
-                const chapter = chapters[i];
-                console.log(`Processing Chapter ${chapter.article_chapter}: ${chapter.title} (Article ID: ${chapter.article_id})...`);
-
-                try {
-                    await doChapterComprehension(chapter.article_id);
-                    console.log(`Finished processing Chapter ${chapter.article_chapter}.`);
-                } catch (err) {
-                    console.error(`Error processing Chapter ${chapter.article_chapter}:`, err);
-                    // Continue to next chapter
-                }
-
-                // Delay between chapters (except after the last one)
-                if (i < chapters.length - 1) {
-                    console.log("Waiting 5 seconds...");
-                    await delay(5000);
-                }
-            }
-            
-            // Found and processed a novel, break the loop
-            break;
-        }
-
-        if (!processedNovel) {
-            console.log("Checked all active novels, no pending chapters found.");
-        } else {
-            console.log("Task completed for the selected novel.");
-        }
-
-    } catch (error) {
-        console.error("Main loop error:", error);
-    }
+function pauseWorkerForMllmOutage() {
+  pausedUntil = Math.max(
+    pausedUntil,
+    Date.now() + MLLM_OUTAGE_PAUSE_MINUTES * 60 * 1000
+  );
+  console.warn(
+    `All MLLM models are temporarily unavailable. Pausing worker until ${new Date(
+      pausedUntil
+    ).toISOString()}.`
+  );
 }
 
-// Global flag to prevent concurrent execution
-let isRunning = false;
+async function waitIfPaused() {
+  const remainingMs = pausedUntil - Date.now();
+  if (remainingMs <= 0) {
+    pausedUntil = 0;
+    return false;
+  }
 
-async function scheduleLoop() {
-    console.log("Scheduler started. Will run main() every hour.");
-    
-    const run = async () => {
-        if (isRunning) {
-            console.log("Skipping run: main() is already running.");
-            return;
-        }
+  console.log(
+    `Worker paused for MLLM recovery. Waiting ${Math.ceil(
+      remainingMs / 1000
+    )} seconds before retrying.`
+  );
+  await delay(Math.min(remainingMs, IDLE_POLL_MS));
+  return true;
+}
 
-        isRunning = true;
-        try {
-            await main();
-        } catch (e) {
-            console.error("Unexpected error in scheduled run:", e);
-        } finally {
-            isRunning = false;
-        }
+async function runWithHeartbeat(novelId, fields, work) {
+  let heartbeatTimer = null;
+
+  try {
+    await heartbeatQueueJob(novelId, fields);
+    heartbeatTimer = setInterval(() => {
+      heartbeatQueueJob(novelId, fields).catch((error) => {
+        console.error('Heartbeat update failed:', error);
+      });
+    }, HEARTBEAT_INTERVAL_MS);
+
+    return await work();
+  } finally {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+    }
+  }
+}
+
+async function processNovelJob(job) {
+  const chapters = await getPendingChapters(job.novel_id);
+
+  if (chapters.length === 0) {
+    console.log(`Novel ${job.novel_id} has no pending chapters. Removing from queue.`);
+    await removeQueueJob(job.novel_id);
+    return;
+  }
+
+  console.log(
+    `Processing novel ${job.novel_id}. Pending chapters: ${chapters.length}.`
+  );
+
+  let failed = false;
+  let lastError = null;
+
+  for (let index = 0; index < chapters.length; index++) {
+    if (shuttingDown) {
+      return;
+    }
+
+    const chapter = chapters[index];
+    const scopeLabel = chapter.memory_scope === 'author' ? '作者稿' : '正式版';
+    const completedChapters = index;
+    const pendingChapters = chapters.length - index;
+    const heartbeatFields = {
+      status: 'indexing',
+      currentArticleId: chapter.article_id,
+      currentArticleTitle: `${scopeLabel}：${chapter.title}`,
+      totalChapters: chapters.length,
+      pendingChapters,
+      completedChapters,
     };
 
-    // Run immediately on start
-    await run();
+    console.log(
+      `Processing ${scopeLabel} chapter ${chapter.article_chapter}: ${chapter.title} (Article ID: ${chapter.article_id})`
+    );
 
-    // Schedule every hour (3600000 ms)
-    setInterval(run, 3600 * 1000);
+    try {
+      await runWithHeartbeat(job.novel_id, heartbeatFields, async () => {
+        await doChapterComprehension(chapter);
+      });
+
+      await heartbeatQueueJob(job.novel_id, {
+        ...heartbeatFields,
+        pendingChapters: chapters.length - index - 1,
+        completedChapters: index + 1,
+      });
+
+      console.log(`Finished ${scopeLabel} chapter ${chapter.article_chapter}.`);
+    } catch (error) {
+      failed = true;
+      lastError = error?.message || String(error);
+      console.error(
+        `Error processing ${scopeLabel} chapter ${chapter.article_chapter}:`,
+        error
+      );
+
+      if (isMllmTemporarilyUnavailableError(error)) {
+        pauseWorkerForMllmOutage();
+        await requeueQueueJob(
+          job.novel_id,
+          lastError,
+          MLLM_OUTAGE_PAUSE_MINUTES
+        );
+        return;
+      }
+
+      if (error instanceof SourceVersionChangedError || error?.code === 'SOURCE_VERSION_CHANGED') {
+        console.log(
+          `Source changed while processing novel ${job.novel_id}. Requeueing immediately.`
+        );
+        await requeueQueueJob(job.novel_id, lastError, 0);
+        return;
+      }
+    }
+
+    if (index < chapters.length - 1) {
+      if (
+        job.trigger_source === 'auto' &&
+        (await hasQueuedManualJob(job.novel_id))
+      ) {
+        console.log(
+          `Manual indexing request detected. Requeueing auto novel ${job.novel_id} to give way.`
+        );
+        await requeueQueueJob(job.novel_id, null, 0);
+        return;
+      }
+
+      await delay(CHAPTER_DELAY_MS);
+    }
+  }
+
+  const remainingChapters = await getPendingChapters(job.novel_id);
+  if (remainingChapters.length === 0) {
+    console.log(`Novel ${job.novel_id} indexing finished.`);
+    await removeQueueJob(job.novel_id);
+    return;
+  }
+
+  console.log(
+    `Novel ${job.novel_id} still has ${remainingChapters.length} pending chapters. Requeueing.`
+  );
+  await requeueQueueJob(
+    job.novel_id,
+    failed ? lastError || 'chapter processing failed' : null,
+    failed ? RETRY_DELAY_MINUTES : 0
+  );
 }
 
-// Handle graceful shutdown to close pools
-process.on('SIGINT', async () => {
-    console.log("Shutting down...");
+async function syncAutoQueueIfNeeded(force = false) {
+  const now = Date.now();
+  if (!force && now - lastAutoSyncAt < AUTO_SYNC_INTERVAL_MS) {
+    return;
+  }
+
+  const candidates = await syncAutoQueue(100);
+  lastAutoSyncAt = now;
+  console.log(`Auto queue synced. Active novels: ${candidates.length}.`);
+}
+
+async function workerLoop() {
+  console.log('Agent worker starting...');
+
+  await initMemoryTable();
+  await initIndexQueueTable();
+  await resetQueueOnStartup();
+  await syncAutoQueueIfNeeded(true);
+
+  while (!shuttingDown) {
+    try {
+      if (await waitIfPaused()) {
+        continue;
+      }
+
+      await requeueStaleJobs(STALE_JOB_MINUTES);
+      await syncAutoQueueIfNeeded();
+
+      const job = await claimNextQueueJob();
+      if (!job) {
+        await delay(IDLE_POLL_MS);
+        continue;
+      }
+
+      await processNovelJob(job);
+    } catch (error) {
+      console.error('Worker loop error:', error);
+      await delay(IDLE_POLL_MS);
+    }
+  }
+}
+
+async function shutdown() {
+  if (shuttingDown) {
+    return;
+  }
+
+  shuttingDown = true;
+  console.log('Shutting down agent worker...');
+
+  try {
     await pool.end();
     await memoryPool.end();
+  } finally {
     process.exit(0);
-});
+  }
+}
 
-scheduleLoop();
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+workerLoop().catch(async (error) => {
+  console.error('Fatal worker error:', error);
+  await shutdown();
+});

@@ -1,7 +1,6 @@
 const {
 	BUSINESS_IMAGE_SOURCES,
 	ensureImageDominantColor,
-	ensureImageDominantColorsTable,
 	extractImageUrlsFromValue,
 	getImageDominantColorRecord,
 	runQueryWithRetry,
@@ -145,7 +144,6 @@ async function processImageUrls(imageUrls, options) {
 
 async function main() {
 	const options = parseCliArgs();
-	await ensureImageDominantColorsTable();
 
 	const availableSources = await getAvailableSources();
 	console.log(

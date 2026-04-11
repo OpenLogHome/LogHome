@@ -41,6 +41,9 @@
 				>
 					<honor-badge :badge="user.selected_badge" size="sm" class="profile-badge" scale="1.2" />
 				</view>
+				<view v-if="user.display_title" class="profile-title-chip">
+					{{user.display_title}}
+				</view>
 				<span class="admin_title" v-show="user.is_admin">
 					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>社区管理员</span>
 			</view>
@@ -612,6 +615,21 @@
 		display: inline-flex;
 		align-items: center;
 		margin: 0 5rpx 0 15rpx;
+	}
+
+	.profile-title-chip {
+		margin-left: 12rpx;
+		padding: 7rpx 16rpx;
+		border-radius: 999rpx;
+		font-size: 22rpx;
+		line-height: 1.2;
+		max-width: 320rpx;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		color: #fff3df;
+		background: linear-gradient(120deg, rgba(160, 104, 54, 0.94) 0%, rgba(117, 69, 33, 0.94) 100%);
+		box-shadow: 0 8rpx 18rpx rgba(117, 69, 33, 0.18);
 	}
 
 	.tabbarsh {

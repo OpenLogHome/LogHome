@@ -1,0 +1,23 @@
+
+=== MLLM Transaction Log ===
+Time: 2026-04-11T03:26:43.867Z
+Mode: speed
+Model: doubao-seed-1-6-flash-250828
+Status: ERROR
+
+--- Request Prompt ---
+[object Object],[object Object]
+
+--- Response ---
+Error: fetch failed
+Stack: TypeError: fetch failed
+    at node:internal/deps/undici/undici:13502:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async MLLMClient.call (file:///D:/LogHome/loghome-agent-v3/utils/mllmClient.js:101:30)
+    at async processRichText (file:///D:/LogHome/loghome-agent-v3/utils/contentParser.js:34:41)
+    at async doChapterComprehension (file:///D:/LogHome/loghome-agent-v3/tasks/chapter-comprehension/index.js:171:19)
+    at async file:///D:/LogHome/loghome-agent-v3/index.js:121:9
+    at async runWithHeartbeat (file:///D:/LogHome/loghome-agent-v3/index.js:73:12)
+    at async processNovelJob (file:///D:/LogHome/loghome-agent-v3/index.js:120:7)
+    at async workerLoop (file:///D:/LogHome/loghome-agent-v3/index.js:225:7)
+============================

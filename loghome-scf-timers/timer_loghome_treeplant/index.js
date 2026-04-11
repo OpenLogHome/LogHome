@@ -5,7 +5,7 @@ const TIMER_AUTO_SPAWN_PROGRESS_CODE = '__exp_timer_auto_spawn__';
 const TIMER_PENDING_LIMIT_NOTICE_PREFIX = '__exp_timer_limit_notice__:';
 const TIMER_PENDING_LIMIT_NOTICE_DATE_KEY = '1970-01-01';
 const TIMER_PENDING_ORB_CAP = 5;
-const TREEPLANT_MESSAGE_ROUTE = '/pages/treePlant/treeplant';
+const TREEPLANT_MESSAGE_ROUTE = 'treePlant/treeplant';
 
 const DEFAULT_EXP_SETTINGS = {
   max_pending_orbs: 30,
@@ -215,7 +215,7 @@ async function notifyPendingLimitReached(userId, plantId, pendingLimit, pendingC
   if (notified) return false;
 
   const safePendingCount = toPositiveInt(pendingCount, pendingLimit);
-  const content = `树场待收集经验球已达到 ${safePendingCount} 个，上限为 ${pendingLimit} 个。请先收集后再等待新的随机经验球。`;
+  const content = `树场待收集经验球已经满啦！快来收集一下吧。`;
 
   try {
     await sendMsg(-1, userId, content, TREEPLANT_MESSAGE_ROUTE, 'notification', true);

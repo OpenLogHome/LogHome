@@ -27,7 +27,7 @@
       <el-table-column label="操作" width="220" fixed="right">
         <template slot-scope="scope">
           <el-button size="mini" @click="openEdit(scope.row)">编辑</el-button>
-          <el-button size="mini" type="danger" @click="remove(scope.row)">删除</el-button>
+          <el-button size="mini" type="danger" @click="remove(scope.row)">下架</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -59,31 +59,13 @@
           <el-input v-model.number="form.stock" type="number" />
         </el-form-item>
         <el-form-item label="封面图">
-          <el-input v-model="form.cover_url" placeholder="请输入图片URL" />
-          <div class="image-preview" v-if="form.cover_url">
-            <el-image :src="form.cover_url" style="max-width: 200px; max-height: 200px;" fit="contain">
-              <div slot="error" class="image-error">
-                <i class="el-icon-picture-outline"></i>
-              </div>
-            </el-image>
-          </div>
-          <el-upload
-            class="cover-upload"
-            action="http://img.codesocean.top/upload/img"
-            :show-file-list="false"
-            :headers="uploadHeaders"
-            :on-success="handleCoverUploadSuccess"
-            :on-error="handleCoverUploadError"
-            :on-progress="handleCoverUploadProgress"
-            :before-upload="beforeCoverUpload"
-            :disabled="uploading"
-            accept="image/*"
-            name="img">
-            <el-button size="small" type="primary" :loading="uploading">
-              {{ uploading ? `上传中 ${uploadProgress}%` : '点击上传封面' }}
-            </el-button>
-            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5MB</div>
-          </el-upload>
+          <image-upload-field
+            v-model="form.cover_url"
+            button-text="点击上传封面"
+            :preview-width="200"
+            :preview-height="200"
+            tip="只能上传图片文件，且不超过 5MB"
+          />
         </el-form-item>
         <el-form-item label="发货时效">
           <el-input v-model="form.shipping_desc" />
@@ -112,9 +94,13 @@
 <script>
 import axios from 'axios'
 import E from 'wangeditor'
+import ImageUploadField from '../../components/ImageUploadField.vue'
 
 export default {
   name: 'ProductsManage',
+  components: {
+    ImageUploadField
+  },
   data() {
     return {
       list: [],
@@ -126,11 +112,6 @@ export default {
       dialogTitle: '新增商品',
       submitLoading: false,
       editor: null,
-      uploadHeaders: {
-        apikey: 'iSnMUQ9OLZpCVY3p7E3T5b2YwC39TS'
-      },
-      uploadProgress: 0,
-      uploading: false,
       form: {
         id: null,
         title: '',
@@ -203,40 +184,6 @@ export default {
         this.editor.create()
         this.editor.txt.html(this.form.description || '')
       })
-    },
-    beforeCoverUpload(file) {
-      const isImage = file.type.indexOf('image/') === 0
-      const isLt5M = file.size / 1024 / 1024 < 5
-      if (!isImage) {
-        this.$message.error('只能上传图片文件!')
-        return false
-      }
-      if (!isLt5M) {
-        this.$message.error('图片大小不能超过 5MB!')
-        return false
-      }
-      this.uploading = true
-      this.uploadProgress = 0
-      return true
-    },
-    handleCoverUploadProgress(event) {
-      this.uploadProgress = Math.floor(event.percent)
-    },
-    handleCoverUploadSuccess(response) {
-      console.log('封面上传成功:', response)
-      this.uploading = false
-      this.uploadProgress = 0
-      if (response && response.url) {
-        this.form.cover_url = response.url
-        this.$message.success('上传成功')
-      } else {
-        this.$message.error('上传失败，返回格式错误')
-      }
-    },
-    handleCoverUploadError() {
-      this.uploading = false
-      this.uploadProgress = 0
-      this.$message.error('上传失败，请重试')
     },
     loadList() {
       this.loading = true
@@ -316,7 +263,7 @@ export default {
       })
     },
     remove(row) {
-      this.$confirm('确定删除该商品吗？', '提示', {
+      this.$confirm('确定下架该商品吗？下架后用户端将不可继续兑换。', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -324,7 +271,7 @@ export default {
         axios.delete(this.$baseUrl + '/manage/store/products/' + row.id, {
           headers: { Authorization: this.getToken() }
         }).then(() => {
-          this.$message.success('已删除')
+          this.$message.success('已下架')
           this.loadList()
         })
       }).catch(() => {})

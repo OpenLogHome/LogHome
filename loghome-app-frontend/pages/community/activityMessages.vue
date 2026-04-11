@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<!-- 消息列表 -->
 		<view class="activity-list">
 			<div class="activity-card" v-for="item in displayMessages" :key="item.message_id" @click="navigateTo(item.router ? '../' + item.router : './')">
@@ -15,8 +15,7 @@
 			</div>
 		</view>
 
-		<div class="nouser" v-if="activityMessages.length == 0" style="display: flex; 
-			justify-content: center; align-items: center; height: 300rpx; background-color: #F2F2F2; color: #333">
+		<div class="nouser" v-if="activityMessages.length == 0">
 			暂无活动消息
 		</div>
 	</view>
@@ -173,7 +172,7 @@
 
 <style scoped lang="less">
 	.outer{
-		background-color: #F2F2F2;
+		background-color: var(--background-color-secondary);
 		min-height: calc(100vh - 44px); /* 确保最小高度占满屏幕 */
 		display: flex;
 		flex-direction: column;
@@ -191,8 +190,8 @@
 		margin-bottom: 30rpx;
 		border-radius: 20rpx;
 		overflow: hidden;
-		box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
-		background-color: #fff;
+		box-shadow: 0 2rpx 10rpx var(--shadow-color);
+		background-color: var(--card-background);
 		transition: all 0.3s;
 		
 		&:active {
@@ -218,14 +217,14 @@
 			
 			.message-content {
 				font-size: 30rpx;
-				color: #333;
+				color: var(--text-color-primary);
 				line-height: 1.5;
 				margin-bottom: 20rpx;
 			}
 			
 			.message-time {
 				font-size: 24rpx;
-				color: #999;
+				color: var(--text-color-regular);
 				text-align: right;
 			}
 		}
@@ -236,5 +235,8 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+		min-height: 300rpx;
+		background-color: var(--background-color-secondary);
+		color: var(--text-color-primary);
 	}
 </style>

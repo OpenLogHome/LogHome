@@ -8,6 +8,15 @@ let messageController = require('../../bin/message.js');
 // 创建路由对象
 let router = express.Router();
 
+function generateGiftCardCode(length = 10) {
+	const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+	let result = '';
+	for (let i = 0; i < length; i += 1) {
+		result += chars.charAt(Math.floor(Math.random() * chars.length));
+	}
+	return result;
+}
+
 // 获取用户银行账户总数
 router.get('/get_bank_accounts_amount', auth, async function (req, res) {
 	try {
@@ -344,6 +353,244 @@ router.post('/update_payment_order_status', auth, async function (req, res) {
 			code: 200,
 			msg: '订单状态更新成功',
 			data: updatedOrder[0]
+		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取提现申请列表
+router.get('/earning-services', auth, async function (req, res) {
+	try {
+		const page = parseInt(req.query.page, 10) || 1;
+		const pageSize = parseInt(req.query.pageSize, 10) || 20;
+		const offset = (page - 1) * pageSize;
+		const status = req.query.status || '';
+		const keyword = req.query.keyword || '';
+
+		let whereClause = 'WHERE 1 = 1';
+		let params = [];
+
+		if (status === 'pending') {
+			whereClause += ' AND es.finished = 0';
+		} else if (status === 'finished') {
+			whereClause += ' AND es.finished = 1';
+		}
+
+		if (keyword) {
+			whereClause += ' AND (es.user_id LIKE ? OR u.name LIKE ? OR u.account LIKE ? OR es.wechat LIKE ?)';
+			params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+		}
+
+		const list = await query(
+			`SELECT es.*, u.name, u.account, u.avatar_url
+			 FROM earning_service es
+			 LEFT JOIN users u ON es.user_id = u.user_id
+			 ${whereClause}
+			 ORDER BY es.service_id DESC
+			 LIMIT ?, ?`,
+			[...params, offset, pageSize],
+		);
+
+		const totalRows = await query(
+			`SELECT COUNT(*) AS total
+			 FROM earning_service es
+			 LEFT JOIN users u ON es.user_id = u.user_id
+			 ${whereClause}`,
+			params,
+		);
+
+		res.json({
+			code: 200,
+			data: {
+				list,
+				total: totalRows[0] ? totalRows[0].total : 0,
+			},
+		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 完成提现申请
+router.post('/earning-services/:id/finish', auth, async function (req, res) {
+	try {
+		const serviceId = Number(req.params.id);
+		const resultText = String(req.body.result || '').trim();
+		const sendMessage = req.body.send_message !== false;
+
+		if (!serviceId || !resultText) {
+			return res.json(400, { msg: '参数不完整' });
+		}
+
+		const rows = await query('SELECT * FROM earning_service WHERE service_id = ?', [serviceId]);
+		if (!rows.length) {
+			return res.json(404, { msg: '提现申请不存在' });
+		}
+
+		await query(
+			'UPDATE earning_service SET finished = 1, result = ? WHERE service_id = ?',
+			[resultText, serviceId],
+		);
+
+		if (sendMessage) {
+			await messageController.sendMsg(
+				-1,
+				rows[0].user_id,
+				`您的提现申请已处理，结果：${resultText}`,
+				'',
+				'notification',
+				true,
+			);
+		}
+
+		res.json({ code: 200, msg: 'success' });
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取礼品卡列表
+router.get('/gift-cards', auth, async function (req, res) {
+	try {
+		const page = parseInt(req.query.page, 10) || 1;
+		const pageSize = parseInt(req.query.pageSize, 10) || 20;
+		const offset = (page - 1) * pageSize;
+		const status = req.query.status || '';
+		const keyword = req.query.keyword || '';
+
+		let whereClause = 'WHERE 1 = 1';
+		let params = [];
+
+		if (status === 'unused') {
+			whereClause += ' AND gc.is_used = 0';
+		} else if (status === 'used') {
+			whereClause += ' AND gc.is_used = 1';
+		}
+
+		if (keyword) {
+			whereClause += ' AND (gc.card_code LIKE ? OR gc.used_by LIKE ? OR u.name LIKE ?)';
+			params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+		}
+
+		const list = await query(
+			`SELECT gc.*, u.name AS used_user_name
+			 FROM log_gift_card gc
+			 LEFT JOIN users u ON gc.used_by = u.user_id
+			 ${whereClause}
+			 ORDER BY gc.is_used ASC, gc.used_time DESC, gc.card_code DESC
+			 LIMIT ?, ?`,
+			[...params, offset, pageSize],
+		);
+
+		const totalRows = await query(
+			`SELECT COUNT(*) AS total
+			 FROM log_gift_card gc
+			 LEFT JOIN users u ON gc.used_by = u.user_id
+			 ${whereClause}`,
+			params,
+		);
+
+		res.json({
+			code: 200,
+			data: {
+				list,
+				total: totalRows[0] ? totalRows[0].total : 0,
+			},
+		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 创建礼品卡
+router.post('/gift-cards', auth, async function (req, res) {
+	try {
+		const logAmount = Number(req.body.log_amount);
+		const quantity = Math.max(1, Math.min(100, Number(req.body.quantity) || 1));
+
+		if (!Number.isFinite(logAmount) || logAmount <= 0) {
+			return res.json(400, { msg: '无效的原木数量' });
+		}
+
+		const created = [];
+		for (let i = 0; i < quantity; i += 1) {
+			let cardCode = '';
+			let exists = true;
+
+			while (exists) {
+				cardCode = generateGiftCardCode();
+				const rows = await query('SELECT card_code FROM log_gift_card WHERE card_code = ?', [cardCode]);
+				exists = rows.length > 0;
+			}
+
+			await query(
+				'INSERT INTO log_gift_card (card_code, log_amount, is_used) VALUES (?, ?, 0)',
+				[cardCode, logAmount],
+			);
+			created.push({
+				card_code: cardCode,
+				log_amount: logAmount,
+			});
+		}
+
+		res.json({
+			code: 200,
+			data: {
+				list: created,
+			},
+		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取去皮原木兑换记录
+router.get('/exchange-records', auth, async function (req, res) {
+	try {
+		const page = parseInt(req.query.page, 10) || 1;
+		const pageSize = parseInt(req.query.pageSize, 10) || 20;
+		const offset = (page - 1) * pageSize;
+		const keyword = req.query.keyword || '';
+
+		let whereClause = 'WHERE p.payment_id LIKE ?';
+		let params = ['EXCHANGE-%'];
+
+		if (keyword) {
+			whereClause += ' AND (p.payment_id LIKE ? OR p.user_id LIKE ? OR u.name LIKE ?)';
+			params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+		}
+
+		const list = await query(
+			`SELECT p.payment_id, p.log_amount, p.user_id, p.status, p.create_time, p.update_time, p.remark,
+			        u.name, u.account, u.avatar_url
+			 FROM recharge_payments p
+			 LEFT JOIN users u ON p.user_id = u.user_id
+			 ${whereClause}
+			 ORDER BY p.create_time DESC
+			 LIMIT ?, ?`,
+			[...params, offset, pageSize],
+		);
+
+		const totalRows = await query(
+			`SELECT COUNT(*) AS total
+			 FROM recharge_payments p
+			 LEFT JOIN users u ON p.user_id = u.user_id
+			 ${whereClause}`,
+			params,
+		);
+
+		res.json({
+			code: 200,
+			data: {
+				list,
+				total: totalRows[0] ? totalRows[0].total : 0,
+			},
 		});
 	} catch (e) {
 		console.log(e);

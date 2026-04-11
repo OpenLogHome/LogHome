@@ -61,11 +61,13 @@
           <el-input v-model="form.title" placeholder="请输入标题"></el-input>
         </el-form-item>
         <el-form-item label="图片" prop="image_url">
-          <el-input v-model="form.image_url" placeholder="请输入图片URL"></el-input>
-          <div class="image-preview" v-if="form.image_url">
-            <el-image :src="form.image_url" style="max-width: 400px; max-height: 180px;"></el-image>
-          </div>
-          <div class="el-upload__tip">建议尺寸: 750px × 320px (21:9比例)</div>
+          <image-upload-field
+            v-model="form.image_url"
+            button-text="上传 Banner"
+            :preview-width="400"
+            :preview-height="180"
+            tip="建议尺寸: 750px × 320px (21:9比例)，大小不超过 5MB"
+          />
         </el-form-item>
         <el-form-item label="链接地址" prop="link_url">
           <el-input v-model="form.link_url" placeholder="请输入链接地址"></el-input>
@@ -113,10 +115,13 @@
 </template>
 
 <script>
-import axios from 'axios'
+import ImageUploadField from '../../components/ImageUploadField.vue'
 
 export default {
   name: "BannerManage",
+  components: {
+    ImageUploadField
+  },
   data() {
     return {
       banners: [],
@@ -138,7 +143,7 @@ export default {
       dateRange: [],
       rules: {
         image_url: [
-          { required: true, message: "请输入图片URL", trigger: "blur" }
+          { required: true, message: "请上传 Banner 图片", trigger: "change" }
         ],
         page_location: [
           { required: true, message: "请选择页面位置", trigger: "change" }
@@ -153,8 +158,8 @@ export default {
     // 获取横幅广告数据
     fetchData() {
       this.loading = true;
-      axios
-        .get("/api/manage/banners")
+      this.axios
+        .get(this.$baseUrl + "/manage/banners")
         .then(response => {
           this.banners = response.data;
           this.loading = false;
@@ -204,8 +209,8 @@ export default {
         type: 'warning'
       }).then(() => {
         const newStatus = row.is_active ? 0 : 1;
-        axios
-          .put(`/api/manage/banners/${row.banner_id}/status`, { is_active: newStatus })
+        this.axios
+          .put(this.$baseUrl + `/manage/banners/${row.banner_id}/status`, { is_active: newStatus })
           .then(() => {
             row.is_active = newStatus;
             this.$message.success(`${newStatus ? '启用' : '禁用'}成功`);
@@ -223,8 +228,8 @@ export default {
         cancelButtonText: '取消',
         type: 'error'
       }).then(() => {
-        axios
-          .delete(`/api/manage/banners/${row.banner_id}`)
+        this.axios
+          .delete(this.$baseUrl + `/manage/banners/${row.banner_id}`)
           .then(() => {
             this.banners = this.banners.filter(item => item.banner_id !== row.banner_id);
             this.$message.success('删除成功');
@@ -242,9 +247,11 @@ export default {
           this.submitLoading = true;
           
           const method = this.form.banner_id ? 'put' : 'post';
-          const url = this.form.banner_id ? `/api/manage/banners/${this.form.banner_id}` : '/api/manage/banners';
+          const url = this.form.banner_id
+            ? this.$baseUrl + `/manage/banners/${this.form.banner_id}`
+            : this.$baseUrl + '/manage/banners';
           
-          axios[method](url, this.form)
+          this.axios[method](url, this.form)
             .then(response => {
               this.$message.success(`${this.form.banner_id ? '更新' : '添加'}成功`);
               this.dialogVisible = false;

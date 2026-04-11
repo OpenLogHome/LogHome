@@ -2,9 +2,13 @@
 <template>
 	<view class="outer" :style="{'--statusBarHeight': 0 + 'px'}">
 		<view class="bg-gradient"></view>
-		<zetank-backBar textcolor="#fff" :showLeft="true" :showTitle="false" navTitle="原木树场"></zetank-backBar>
+		<zetank-backBar textcolor="#fff" :showLeft="true" :showTitle="false" :navTitle="navTitleText"></zetank-backBar>
 
-        <view class="balance-bar" :style="{top: 'calc(20rpx + var(--statusBarHeight))'}">
+        <button class="tree-settings-entry" @click="openTreeSceneSettings">
+            <uni-icons type="gear-filled" size="18" color="rgba(231, 236, 242, 0.92)"></uni-icons>
+        </button>
+
+		<view class="balance-bar" :style="{top: 'calc(20rpx + var(--statusBarHeight))'}">
 			<view class="res-item">
 				<image src="../../static/resources/log.png" mode="aspectFit"></image>
 				<text>{{resources.log}}</text>
@@ -19,9 +23,18 @@
 			</view>
 		</view>
 
-		<view class="screen" :style="{height: 'calc(100vh - ' + (panelHeight - 5) + 'px)'}">
-			<view v-bind:is="treeType" :state="state"></view>
-            <view class="orb-layer" v-if="expOrbs.length > 0 || orbBursts.length > 0">
+		<view class="screen" :style="{height: 'calc(100vh - ' + (scenePanelHeight - 5) + 'px)'}">
+			<view
+                v-if="isTreeSceneResolved"
+                v-bind:is="activeTreeComponent"
+                :state="state"
+                :scene-theme="treeSceneTheme"
+                @scene-unavailable="handleThreeTreeUnavailable"
+            ></view>
+            <view v-else class="scene-loading">
+                <view class="scene-loading-pill">树场加载中</view>
+            </view>
+            <view class="orb-layer" v-if="isTreeSceneResolved && (expOrbs.length > 0 || orbBursts.length > 0)">
                 <view
                     class="exp-orb"
                     v-for="orb in expOrbs"
@@ -51,22 +64,41 @@
             </view>
 		</view>
 
+        <view class="visit-entry-btn" :style="{top: 'calc(250rpx + var(--statusBarHeight))'}" @tap.stop.prevent="handleVisitEntryTap">
+            <text class="entry-emoji">🦝</text>
+            <view class="entry-text">
+                <text>串</text>
+                <text>门</text>
+            </view>
+            <view class="entry-badge" v-if="canStealTargetCount > 0">{{canStealTargetCount}}</view>
+        </view>
+
 		<view class="btns" :style="{bottom: (panelHeight + 20) + 'px'}">
-			<button v-if="btnText" type="default" class="mainBtn" @click="handleMainBtnClick" :class="{harvest: state.tree_status == '结果'}">
+			<button
+                v-if="isViewingFriendTree"
+                type="default"
+                class="mainBtn visit-steal"
+                :disabled="!canStealVisitedTree"
+                :class="{ disabled: !canStealVisitedTree }"
+                @click="collectAllExpOrbs"
+            >
+				{{visitPrimaryButtonText}}
+			</button>
+			<button v-else-if="btnText" type="default" class="mainBtn" @click="handleMainBtnClick" :class="{harvest: state.tree_status == '结果'}">
 				{{btnText}}
 			</button>
-            <view class="orb-actions" v-if="state.tree_status != '未种植'">
+            <view class="orb-actions visit-actions" v-if="isViewingFriendTree">
+                <button class="small-btn back" @click="leaveFriendVisit">返回我的树场</button>
+            </view>
+            <view class="orb-actions" v-else-if="state.tree_status != '未种植'">
                 <button class="small-btn collect" @click="collectAllExpOrbs" :disabled="isCollectingOrbs || expOrbs.length === 0">一键收集经验</button>
             </view>
 		</view>
 
         <view class="bottom-sheet" :class="{dragging: isDragging}" :style="{height: panelHeight + 'px'}">
-            <view class="drag-handle-area" @touchstart="handleDragStart" @touchmove="handleDragMove" @touchend="handleDragEnd">
+            <view class="drag-handle-area" @touchstart="handleDragStart" @touchmove="handleDragMove" @touchend="handleDragEnd" @touchcancel="handleDragEnd">
                 <view class="drag-handle"></view>
-            </view>
-
-            <view class="sheet-content">
-                <view class="growth-card" v-if="state.tree_status != '未种植' && state.tree_status != '结果'">
+                <view class="growth-card" v-if="!isViewingFriendTree && state.tree_status != '未种植' && state.tree_status != '结果'">
                     <view class="growth-header">
                         <view class="growth-title">
                             <text class="icon">🌲</text>
@@ -80,60 +112,98 @@
                         </view>
                     </view>
                 </view>
+            </view>
 
-                <view class="sheet-header">
-                    <text class="title">📋 每日任务</text>
-                    <view class="task-summary" v-if="tasks.length > 0">{{completedTaskCount}}/{{tasks.length}}</view>
-                </view>
-                <view scroll-y="true" class="task-list">
-                    <view class="task-item" v-for="task in tasks" :key="task.task_code">
-                        <view class="task-icon">
-                            <image v-if="task.icon" :src="task.icon" mode="aspectFit"></image>
-                            <text v-else>🌱</text>
+            <view class="sheet-content">
+                <scroll-view scroll-y="true" class="sheet-scroll">
+                    <template v-if="isViewingFriendTree">
+                        <view class="visit-scene-card">
+                            <view class="visit-scene-head">
+                                <image
+                                    v-if="visitScene.target_avatar_url"
+                                    :src="visitScene.target_avatar_url"
+                                    mode="aspectFill"
+                                    class="visit-avatar"
+                                ></image>
+                                <view v-else class="visit-avatar placeholder">{{getUserInitial(visitScene.target_name)}}</view>
+                                <view class="visit-copy">
+                                    <text class="visit-name">{{visitScene.target_name || '好友'}}</text>
+                                </view>
+                            </view>
+                            <view class="visit-scene-stats">
+                                <view class="visit-stat">
+                                    <text class="num">{{visitScene.pending_reward_total || 0}}</text>
+                                    <text class="label">待偷成长值</text>
+                                </view>
+                                <view class="visit-stat">
+                                    <text class="num">{{visitScene.remaining_steal_reward || 0}}</text>
+                                    <text class="label">剩余可偷</text>
+                                </view>
+                                <view class="visit-stat">
+                                    <text class="num">{{expOrbs.length}}</text>
+                                    <text class="label">经验球</text>
+                                </view>
+                            </view>
+                            <view class="visit-scene-tip">{{visitScene.steal_tip || '点击树上的经验球即可偷取，也可以点一键偷取。'}}</view>
                         </view>
-                        <view class="task-content">
-                            <view class="task-name">{{task.task_name}}</view>
-                            <view class="task-desc">{{task.task_desc}}</view>
-                        </view>
-                        <view class="task-action">
-                            <view class="reward-tag">+{{task.growth_reward}} XP</view>
-                            <button
-                                v-if="task.task_name.includes('签到')"
-                                class="do-btn"
-                                size="mini"
-                                :disabled="task.status == 'completed'"
-                                @click="doTask(task)"
-                            >
-                                {{task.status == 'completed' ? '已完成' : '领取'}}
-                            </button>
-                            <button v-else-if="task.status == 'completed'" class="do-btn" size="mini" disabled>已完成</button>
-                        </view>
-                    </view>
-                    <view class="empty-tip" v-if="tasks.length === 0"><text>💤 暂无任务，休息一下吧~</text></view>
-                </view>
+                    </template>
 
-                <view class="sheet-header exp-header">
-                    <text class="title">🪄 经验任务</text>
-                    <view class="task-summary" v-if="expTasks.length > 0">{{completedExpTaskCount}}/{{expTasks.length}}</view>
-                </view>
-                <view class="task-list exp-task-list">
-                    <view class="task-item" v-for="task in expTasks" :key="task.task_code">
-                        <view class="task-icon">
-                            <text v-if="!task.icon">✨</text>
-                            <image v-else :src="task.icon" mode="aspectFit"></image>
-                        </view>
-                        <view class="task-content">
-                            <view class="task-name">{{task.task_name}}</view>
-                            <view class="task-desc">{{task.task_desc}}</view>
-                            <view class="task-progress">{{task.progress_text}} · {{task.completed_times}}/{{task.daily_limit}} 次</view>
-                        </view>
-                        <view class="task-action">
-                            <view class="reward-tag">成长值 +{{task.exp_reward}}</view>
-                            <view class="auto-status" :class="{ done: task.status === 'completed' }">{{getExpTaskStatusText(task)}}</view>
-                        </view>
+                    <template v-else>
+                    <view class="sheet-header">
+                        <text class="title">📋 每日任务</text>
+                        <view class="task-summary" v-if="tasks.length > 0">{{completedTaskCount}}/{{tasks.length}}</view>
                     </view>
-                    <view class="empty-tip" v-if="expTasks.length === 0"><text>🫧 暂无经验任务</text></view>
-                </view>
+                    <view class="task-list">
+                        <view class="task-item" v-for="task in tasks" :key="task.task_code">
+                            <view class="task-icon">
+                                <image v-if="task.icon" :src="task.icon" mode="aspectFit"></image>
+                                <text v-else>🌱</text>
+                            </view>
+                            <view class="task-content">
+                                <view class="task-name">{{task.task_name}}</view>
+                                <view class="task-desc">{{task.task_desc}}</view>
+                            </view>
+                            <view class="task-action">
+                                <view class="reward-tag">+{{task.growth_reward}} XP</view>
+                                <button
+                                    v-if="task.task_name.includes('签到')"
+                                    class="do-btn"
+                                    size="mini"
+                                    :disabled="task.status == 'completed'"
+                                    @click="doTask(task)"
+                                >
+                                    {{task.status == 'completed' ? '已完成' : '领取'}}
+                                </button>
+                                <button v-else-if="task.status == 'completed'" class="do-btn" size="mini" disabled>已完成</button>
+                            </view>
+                        </view>
+                        <view class="empty-tip" v-if="tasks.length === 0"><text>💤 暂无任务，休息一下吧~</text></view>
+                    </view>
+
+                    <view class="sheet-header exp-header">
+                        <text class="title">🪄 经验任务</text>
+                        <view class="task-summary" v-if="expTasks.length > 0">{{completedExpTaskCount}}/{{expTasks.length}}</view>
+                    </view>
+                    <view class="task-list exp-task-list">
+                        <view class="task-item" v-for="task in expTasks" :key="task.task_code">
+                            <view class="task-icon">
+                                <text v-if="!task.icon">✨</text>
+                                <image v-else :src="task.icon" mode="aspectFit"></image>
+                            </view>
+                            <view class="task-content">
+                                <view class="task-name">{{task.task_name}}</view>
+                                <view class="task-desc">{{task.task_desc}}</view>
+                                <view class="task-progress">{{task.progress_text}} · {{task.completed_times}}/{{task.daily_limit}} 次</view>
+                            </view>
+                            <view class="task-action">
+                                <view class="reward-tag">成长值 +{{task.exp_reward}}</view>
+                                <view class="auto-status" :class="{ done: task.status === 'completed' }">{{getExpTaskStatusText(task)}}</view>
+                            </view>
+                        </view>
+                        <view class="empty-tip" v-if="expTasks.length === 0"><text>🫧 暂无经验任务</text></view>
+                    </view>
+                    </template>
+                </scroll-view>
             </view>
         </view>
 
@@ -154,6 +224,76 @@
             </view>
         </view>
 
+        <view class="visit-panel-mask" v-if="showVisitPanel" :class="{ active: visitPanelActive }" @click="closeVisitPanel">
+            <view class="visit-panel" :class="{ active: visitPanelActive }" @click.stop>
+                <view class="visit-panel-header">
+                    <view class="visit-panel-title">
+                        <text class="emoji">🦝</text>
+                        <text class="title">树场串门</text>
+                    </view>
+                    <button class="visit-close-btn" @click="closeVisitPanel">收起</button>
+                </view>
+
+                <view class="visit-panel-scroll">
+                    <view class="visit-section">
+                        <view class="sheet-header steal-header">
+                            <text class="title">👥 好友列表</text>
+                            <view class="task-summary" v-if="stealTargets.length > 0">{{stealTargets.length}} 位好友</view>
+                        </view>
+                        <view class="steal-list">
+                            <view class="steal-item" v-for="friend in stealTargets" :key="friend.user_id">
+                                <view class="friend-avatar-wrap">
+                                    <image v-if="friend.avatar_url" :src="friend.avatar_url" mode="aspectFill" class="friend-avatar"></image>
+                                    <view v-else class="friend-avatar placeholder">{{getUserInitial(friend.name)}}</view>
+                                    <view class="friend-status" :class="friend.steal_status">{{friend.steal_status_text}}</view>
+                                </view>
+                                <view class="friend-content">
+                                    <view class="friend-name-row">
+                                        <text class="friend-name">{{friend.name}}</text>
+                                    </view>
+                                    <view class="friend-meta">未收成长值 {{friend.pending_reward_total}} · 经验球 {{friend.pending_orb_count}}</view>
+                                </view>
+                                <view class="friend-action">
+                                    <view class="steal-reward-chip" v-if="friend.remaining_steal_reward > 0">可偷 {{friend.remaining_steal_reward}}</view>
+                                    <button
+                                        class="steal-btn"
+                                        size="mini"
+                                        :class="{ ready: canStealFriend(friend) }"
+                                        :disabled="!canStealFriend(friend)"
+                                        @click="handleStealFriend(friend)"
+                                    >
+                                        {{getStealButtonText(friend)}}
+                                    </button>
+                                </view>
+                            </view>
+                            <view class="empty-tip" v-if="stealTargets.length === 0"><text>🌿 暂时还没有可串门的好友树场</text></view>
+                        </view>
+                    </view>
+
+                    <view class="visit-section">
+                        <view class="sheet-header steal-log-header">
+                            <text class="title">📜 串门记录</text>
+                            <view class="task-summary" v-if="stolenLogs.length > 0">{{stolenLogs.length}} 条记录</view>
+                        </view>
+                        <view class="steal-log-list">
+                            <view class="steal-log-item" v-for="log in stolenLogs" :key="log.record_id">
+                                <image v-if="log.thief_avatar_url" :src="log.thief_avatar_url" mode="aspectFill" class="log-avatar"></image>
+                                <view v-else class="log-avatar placeholder">{{getUserInitial(log.thief_name)}}</view>
+                                <view class="log-content">
+                                    <view class="log-title">
+                                        <text class="log-name">{{log.thief_name || '好友'}}</text>
+                                        <text class="log-time">{{formatStealTime(log.created_at)}}</text>
+                                    </view>
+                                    <view class="log-desc">顺走了你 {{log.reward}} 点成长值，动了 {{log.orb_count_affected}} 个经验球</view>
+                                </view>
+                            </view>
+                            <view class="empty-tip" v-if="stolenLogs.length === 0"><text>🛡️ 还没有新的串门记录</text></view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+        </view>
+
         <task-reward-modal ref="taskRewardModal" @harvest="handleHarvestFromModal"></task-reward-modal>
 	</view>
 </template>
@@ -161,11 +301,51 @@
 <script>
 import axios from 'axios'
 import defaultTree from '../../components/plantTrees/defaultTree/defaultTree.vue'
+import threeOakTree from '../../components/plantTrees/threeOakTree/threeOakTree.vue'
 import TaskRewardModal from '../../components/TaskRewardModal.vue'
+import {
+    canUseHighQualityTreeScene,
+    DEFAULT_TREE_PLANT_SCENE_THEME,
+    isTreePlantLowPerformanceMode,
+    normalizeTreePlantSceneTheme,
+    shouldUseTreePlant3DScene,
+    TREE_PLANT_SCENE_THEMES,
+} from '../../lib/treeSceneSettings'
+
+const createDefaultStealSummary = () => ({
+    has_active_tree: false,
+    can_be_stolen: false,
+    my_pending_orb_count: 0,
+    my_pending_reward_total: 0,
+    can_steal_count: 0,
+    today_i_stole_count: 0,
+    today_i_stole_reward: 0,
+    today_stolen_me_count: 0,
+    today_stolen_me_reward: 0,
+    steal_warn_threshold: 3,
+})
+
+const createDefaultVisitScene = () => ({
+    active: false,
+    target_user_id: 0,
+    target_name: '',
+    target_avatar_url: '',
+    has_active_tree: false,
+    need_own_tree: false,
+    can_steal: false,
+    pending_orb_count: 0,
+    pending_reward_total: 0,
+    total_steal_reward: 0,
+    remaining_steal_reward: 0,
+    today_stolen_reward: 0,
+    steal_tip: '',
+    tree: null,
+})
 
 export default {
     components: {
         defaultTree,
+        threeOakTree,
         TaskRewardModal,
     },
     created() {
@@ -175,18 +355,21 @@ export default {
     },
     beforeDestroy() {
         this.clearAllOrbEffects()
+        this.clearVisitPanelTimer()
     },
     beforeUnmount() {
         this.clearAllOrbEffects()
+        this.clearVisitPanelTimer()
     },
     data() {
         return {
-            treeType: 'defaultTree',
             plant_time: Date.now(),
             is_gotten: 0,
             state: {},
             btnText: '',
-            selectedTreeType: 'defaultTree',
+            useThreeTreeScene: false,
+            treeSceneTheme: DEFAULT_TREE_PLANT_SCENE_THEME,
+            isTreeSceneResolved: false,
             resources: {
                 log: 0,
                 apple: 0,
@@ -205,6 +388,7 @@ export default {
             },
             isDragging: false,
             panelHeight: 0,
+            scenePanelHeight: 0,
             screenHeight: 0,
             startY: 0,
             startHeight: 0,
@@ -212,9 +396,37 @@ export default {
             orbEnterDuration: 680,
             orbCollectDuration: 460,
             batchCollectStagger: 70,
+            stealFeatureEnabled: false,
+            stealSummary: createDefaultStealSummary(),
+            stealTargets: [],
+            stolenLogs: [],
+            isStealing: false,
+            visitScene: createDefaultVisitScene(),
+            showVisitPanel: false,
+            visitPanelActive: false,
+            visitPanelTimer: null,
+            visitPanelAnimationDuration: 260,
         }
     },
     computed: {
+        activeTreeComponent() {
+            return this.useThreeTreeScene ? 'threeOakTree' : 'defaultTree'
+        },
+        isViewingFriendTree() {
+            return !!(this.visitScene && this.visitScene.active && Number(this.visitScene.target_user_id))
+        },
+        navTitleText() {
+            if (this.isViewingFriendTree) {
+                const targetName = this.visitScene.target_name || '好友'
+                return `${targetName}的树场`
+            }
+            return this.treeSceneThemeLabel
+        },
+        treeSceneThemeLabel() {
+            if (!this.isTreeSceneResolved) return '树场'
+            const currentTheme = TREE_PLANT_SCENE_THEMES.find((item) => item.key === this.treeSceneTheme)
+            return currentTheme ? currentTheme.label : '橡岛晴岚'
+        },
         completedTaskCount() {
             return this.tasks.filter((t) => t.status === 'completed').length
         },
@@ -224,6 +436,24 @@ export default {
         heightLevels() {
             if (!this.screenHeight) return [0, 0, 0]
             return [this.screenHeight * 0.2, this.screenHeight * 0.4, this.screenHeight * 0.6]
+        },
+        canStealTargetCount() {
+            return this.stealTargets.filter((item) => item.can_steal).length
+        },
+        canStealVisitedTree() {
+            if (!this.isViewingFriendTree) return false
+            if (this.isCollectingOrbs) return false
+            if (this.visitScene.need_own_tree) return false
+            if (Number(this.visitScene.remaining_steal_reward || 0) <= 0) return false
+            return this.expOrbs.length > 0
+        },
+        visitPrimaryButtonText() {
+            if (!this.isViewingFriendTree) return ''
+            if (this.isCollectingOrbs) return '偷取中'
+            if (this.visitScene.need_own_tree) return '先种树'
+            if (Number(this.visitScene.remaining_steal_reward || 0) <= 0) return '今日已偷完'
+            if (this.expOrbs.length === 0) return '没有可偷经验球'
+            return '⚡ 一键偷取'
         },
     },
     methods: {
@@ -239,6 +469,11 @@ export default {
             return new Promise((resolve) => {
                 setTimeout(resolve, ms)
             })
+        },
+        clearVisitPanelTimer() {
+            if (!this.visitPanelTimer) return
+            clearTimeout(this.visitPanelTimer)
+            this.visitPanelTimer = null
         },
         clearOrbTimer(orbId) {
             const timerKey = String(orbId)
@@ -269,7 +504,9 @@ export default {
                 reward: Number(orb && orb.reward ? orb.reward : 0),
                 pos_x: Number(orb && orb.pos_x ? orb.pos_x : 50),
                 pos_y: Number(orb && orb.pos_y ? orb.pos_y : 45),
-                uiState: existingOrb ? existingOrb.uiState || 'idle' : (animateEnter ? 'entering' : 'idle'),
+                uiState: existingOrb && existingOrb.uiState === 'entering'
+                    ? 'entering'
+                    : (animateEnter ? 'entering' : 'idle'),
             }
             if (model.uiState === 'entering') {
                 this.scheduleOrbState(model.orb_id, 'idle', this.orbEnterDuration)
@@ -365,44 +602,237 @@ export default {
             if (task && Number(task.available_claim_times || 0) > 0) return '待自动结算'
             return '进行中'
         },
-        refreshPage() {
+        syncStealDashboard(payload) {
+            const data = payload && typeof payload === 'object' ? payload : {}
+            this.stealFeatureEnabled = !!data.steal_feature_enabled
+            this.stealSummary = {
+                ...createDefaultStealSummary(),
+                ...data,
+            }
+            this.stealTargets = Array.isArray(data.steal_targets) ? data.steal_targets : []
+            this.stolenLogs = Array.isArray(data.recent_steal_logs) ? data.recent_steal_logs : []
+        },
+        resetVisitScene() {
+            this.visitScene = createDefaultVisitScene()
+        },
+        applyOwnTreePayload(data) {
+            this.resetVisitScene()
+            if (data) {
+                const resolvedTheme = normalizeTreePlantSceneTheme(data.treeType)
+                this.treeSceneTheme = resolvedTheme
+                this.plant_time = data.plant_time
+                this.is_gotten = data.is_gotten
+                this.state = {
+                    ...data,
+                    treeType: resolvedTheme,
+                }
+                this.tasks = data.tasks || []
+                this.expTasks = data.exp_tasks || []
+                this.syncExpOrbs(data.exp_orbs || [], { animateNew: false })
+                this.growth_val = data.growth_val || 0
+                this.max_growth = data.max_growth || 100
+            } else {
+                this.treeSceneTheme = DEFAULT_TREE_PLANT_SCENE_THEME
+                this.plant_time = Date.now()
+                this.is_gotten = 0
+                this.state = {
+                    tree_status: '未种植',
+                    treeType: DEFAULT_TREE_PLANT_SCENE_THEME,
+                }
+                this.tasks = []
+                this.expTasks = []
+                this.syncExpOrbs([], { animateNew: false })
+                this.growth_val = 0
+                this.max_growth = 100
+            }
+            this.handleData()
+            this.isTreeSceneResolved = true
+            this.$forceUpdate()
+        },
+        applyVisitScenePayload(payload) {
+            const scene = payload && typeof payload === 'object' ? payload : {}
+            const tree = scene.tree && typeof scene.tree === 'object' ? scene.tree : null
+            const resolvedTheme = normalizeTreePlantSceneTheme(tree && tree.treeType)
+
+            this.visitScene = {
+                ...createDefaultVisitScene(),
+                ...scene,
+                active: true,
+                target_user_id: Number(scene.target_user_id || scene.user_id || 0),
+                tree: tree
+                    ? {
+                        ...tree,
+                        treeType: resolvedTheme,
+                    }
+                    : null,
+            }
+            this.treeSceneTheme = resolvedTheme
+            this.plant_time = tree && tree.plant_time ? tree.plant_time : Date.now()
+            this.is_gotten = tree && typeof tree.is_gotten !== 'undefined' ? tree.is_gotten : 0
+            this.state = tree
+                ? {
+                    ...tree,
+                    treeType: resolvedTheme,
+                }
+                : {
+                    tree_status: '未种植',
+                    treeType: resolvedTheme,
+                }
+            this.tasks = []
+            this.expTasks = []
+            this.syncExpOrbs(tree && Array.isArray(tree.exp_orbs) ? tree.exp_orbs : [], { animateNew: false })
+            this.growth_val = tree && typeof tree.growth_val === 'number' ? tree.growth_val : 0
+            this.max_growth = tree && tree.max_growth ? tree.max_growth : 100
+            this.handleData()
+            this.isTreeSceneResolved = true
+            this.$forceUpdate()
+        },
+        refreshStealDashboard(silent = true) {
+            axios
+                .get(this.$baseUrl + '/treePlant/steal_dashboard', { headers: this.getAuthHeaders() })
+                .then((res) => {
+                    this.syncStealDashboard(res.data || {})
+                })
+                .catch((error) => {
+                    this.syncStealDashboard({ steal_feature_enabled: false })
+                    if (!silent) {
+                        const msg = error.response ? error.response.data.msg : error.toString()
+                        uni.showToast({ title: msg, icon: 'none' })
+                    }
+                })
+        },
+        canStealFriend(friend) {
+            if (!friend || this.isStealing) return false
+            return !!friend.has_active_tree
+        },
+        getStealButtonText(friend) {
+            if (!friend || !friend.has_active_tree) return '未种植'
+            if (this.isStealing) return '切换中'
+            return '串门'
+        },
+        getUserInitial(name) {
+            if (!name) return '友'
+            return String(name).trim().slice(0, 1).toUpperCase()
+        },
+        formatStealTime(value) {
+            if (!value) return '刚刚'
+            const ts = new Date(value).getTime()
+            if (!Number.isFinite(ts)) return String(value)
+            const diff = Date.now() - ts
+            if (diff < 60 * 1000) return '刚刚'
+            if (diff < 60 * 60 * 1000) return Math.max(Math.floor(diff / (60 * 1000)), 1) + ' 分钟前'
+            if (diff < 24 * 60 * 60 * 1000) return Math.max(Math.floor(diff / (60 * 60 * 1000)), 1) + ' 小时前'
+            const date = new Date(ts)
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            const hours = String(date.getHours()).padStart(2, '0')
+            const minutes = String(date.getMinutes()).padStart(2, '0')
+            return `${month}-${day} ${hours}:${minutes}`
+        },
+        openTreeSceneSettings() {
+            uni.navigateTo({
+                url: '/pages/treePlant/treeSceneSettings',
+            })
+        },
+        handleVisitEntryTap() {
+            this.openVisitPanel()
+        },
+        loadVisitScene(friend, options = {}) {
+            const targetUserId = Number(
+                friend && (friend.user_id || friend.target_user_id || friend.targetUserId)
+                    ? (friend.user_id || friend.target_user_id || friend.targetUserId)
+                    : this.visitScene.target_user_id
+            )
+            if (!targetUserId) return
+
+            this.isStealing = true
+            this.isTreeSceneResolved = false
+            if (options.closePanel !== false) {
+                this.closeVisitPanel()
+            }
+            uni.showLoading({ title: options.loadingTitle || '串门中' })
+            axios
+                .get(this.$baseUrl + '/treePlant/visit_friend_tree?target_user_id=' + targetUserId, { headers: this.getAuthHeaders() })
+                .then((res) => {
+                    this.applyVisitScenePayload(res.data || {})
+                    this.refreshStealDashboard()
+                })
+                .catch((error) => {
+                    this.isTreeSceneResolved = true
+                    const msg = error.response ? error.response.data.msg : error.toString()
+                    uni.showToast({ title: msg, icon: 'none' })
+                })
+                .finally(() => {
+                    uni.hideLoading()
+                    this.isStealing = false
+                })
+        },
+        leaveFriendVisit() {
+            if (!this.isViewingFriendTree) return
+            this.isTreeSceneResolved = false
+            this.resetVisitScene()
+            uni.showLoading({ title: '返回中' })
+            this.refreshPage({ forceOwn: true })
+        },
+        openVisitPanel() {
+            this.clearVisitPanelTimer()
+            if (!this.showVisitPanel) {
+                this.showVisitPanel = true
+                this.visitPanelActive = false
+                this.visitPanelTimer = setTimeout(() => {
+                    this.visitPanelActive = true
+                    this.visitPanelTimer = null
+                }, 20)
+            } else if (!this.visitPanelActive) {
+                this.visitPanelTimer = setTimeout(() => {
+                    this.visitPanelActive = true
+                    this.visitPanelTimer = null
+                }, 20)
+            }
+            this.refreshStealDashboard(false)
+        },
+        closeVisitPanel() {
+            if (!this.showVisitPanel) return
+            this.clearVisitPanelTimer()
+            this.visitPanelActive = false
+            this.visitPanelTimer = setTimeout(() => {
+                this.showVisitPanel = false
+                this.visitPanelTimer = null
+            }, this.visitPanelAnimationDuration)
+        },
+        handleStealFriend(friend) {
+            if (!friend) return
+            if (!friend.has_active_tree) {
+                uni.showToast({ title: '对方还没种树，暂时没有可串门的树场', icon: 'none' })
+                return
+            }
+            if (this.isStealing) return
+            this.loadVisitScene(friend)
+        },
+        refreshPage(options = {}) {
             axios
                 .get(this.$baseUrl + '/treePlant/get_treePlant_of', { headers: this.getAuthHeaders() })
                 .then((res) => {
-                    if (res.data.length > 0) {
-                        const data = res.data[0]
-                        this.treeType = data.treeType
-                        this.plant_time = data.plant_time
-                        this.is_gotten = data.is_gotten
-                        this.state = data
-                        this.tasks = data.tasks || []
-                        this.expTasks = data.exp_tasks || []
-                        this.syncExpOrbs(data.exp_orbs || [], { animateNew: false })
-                        this.growth_val = data.growth_val || 0
-                        this.max_growth = data.max_growth || 100
-                    } else {
-                        this.treeType = 'defaultTree'
-                        this.plant_time = Date.now()
-                        this.is_gotten = 0
-                        this.state = { tree_status: '未种植' }
-                        this.tasks = []
-                        this.expTasks = []
-                        this.syncExpOrbs([], { animateNew: false })
-                        this.growth_val = 0
-                        this.max_growth = 100
-                    }
-                    this.handleData()
-                    this.$forceUpdate()
+                    const rows = Array.isArray(res.data) ? res.data : []
+                    this.applyOwnTreePayload(rows.length > 0 ? rows[0] : null)
+                    this.refreshStealDashboard()
                 })
                 .catch((error) => {
-                    uni.showToast({ title: error.toString(), icon: 'none', duration: 2000 })
+                    if (!this.isTreeSceneResolved) {
+                        this.applyOwnTreePayload(null)
+                    }
+                    const msg = error.response ? error.response.data.msg : error.toString()
+                    uni.showToast({ title: msg, icon: 'none', duration: 2000 })
                 })
                 .then(() => {
                     uni.hideLoading()
                 })
         },
         handleData() {
-            if (this.treeType !== 'defaultTree') return
+            if (this.isViewingFriendTree) {
+                this.btnText = ''
+                return
+            }
             if (this.state.tree_status == '未种植') {
                 this.btnText = '🌱 种下树苗'
             } else if (this.state.tree_status == '结果') {
@@ -418,6 +848,24 @@ export default {
             } else if (this.btnText.includes('收获')) {
                 this.gotTree()
             }
+        },
+        handleThreeTreeUnavailable(reason) {
+            if (!this.useThreeTreeScene) return
+            try {
+                console.info(
+                    '[TREE3D_FALLBACK]' +
+                        JSON.stringify({
+                            reason: reason || 'scene_unavailable',
+                            href: typeof window !== 'undefined' && window.location ? window.location.href : '',
+                        })
+                )
+            } catch (e) {}
+            this.useThreeTreeScene = false
+            uni.showToast({
+                title: '当前环境无法启用高质量 3D，已切回经典模式',
+                icon: 'none',
+                duration: 2200,
+            })
         },
         doTask(task) {
             if (task.status == 'completed') return
@@ -454,6 +902,10 @@ export default {
                 })
         },
         collectExpOrb(orb) {
+            if (this.isViewingFriendTree) {
+                this.stealVisitOrb(orb)
+                return
+            }
             if (!orb || this.isCollectingOrbs || orb.uiState === 'collecting') return
             this.isCollectingOrbs = true
             this.startOrbCollectAnimation(orb)
@@ -472,6 +924,7 @@ export default {
                         { animateNew: false }
                     )
                     this.emitOrbBurst(orb, `+${reward} XP`)
+                    this.refreshStealDashboard()
                     uni.showToast({ title: `+${reward} 经验`, icon: 'none' })
                     this.handleData()
                 })
@@ -484,7 +937,62 @@ export default {
                     this.isCollectingOrbs = false
                 })
         },
+        stealVisitOrb(orb) {
+            if (!orb || this.isCollectingOrbs || orb.uiState === 'collecting') return
+            if (!this.isViewingFriendTree || !this.visitScene.target_user_id) return
+            if (this.visitScene.need_own_tree) {
+                uni.showToast({ title: '先种下自己的树苗，再来好友树场串门', icon: 'none' })
+                return
+            }
+            if (Number(this.visitScene.remaining_steal_reward || 0) <= 0) {
+                uni.showToast({ title: '今天在这位好友树场已经偷满了', icon: 'none' })
+                return
+            }
+
+            this.isCollectingOrbs = true
+            this.startOrbCollectAnimation(orb)
+            Promise.all([
+                axios.post(
+                    this.$baseUrl + '/treePlant/steal_friend_energy',
+                    {
+                        target_user_id: this.visitScene.target_user_id,
+                        orb_id: orb.orb_id,
+                    },
+                    { headers: this.getAuthHeaders() }
+                ),
+                this.wait(this.orbCollectDuration),
+            ])
+                .then(([res]) => {
+                    const reward = Number(res.data && res.data.reward ? res.data.reward : Number(orb.reward || 0))
+                    if (res.data && res.data.visit_scene) {
+                        this.applyVisitScenePayload(res.data.visit_scene)
+                    }
+                    if (res.data && res.data.steal_dashboard) {
+                        this.syncStealDashboard(res.data.steal_dashboard)
+                    } else {
+                        this.refreshStealDashboard()
+                    }
+                    this.emitOrbBurst(orb, `偷走 ${reward}`)
+                    uni.showToast({
+                        title: `从${res.data.target_name || this.visitScene.target_name || '好友'}那顺走 ${reward} 点成长值`,
+                        icon: 'none',
+                        duration: 2200,
+                    })
+                })
+                .catch((error) => {
+                    this.resetOrbState(orb.orb_id)
+                    const msg = error.response ? error.response.data.msg : error.toString()
+                    uni.showToast({ title: msg, icon: 'none' })
+                })
+                .finally(() => {
+                    this.isCollectingOrbs = false
+                })
+        },
         collectAllExpOrbs() {
+            if (this.isViewingFriendTree) {
+                this.stealAllVisitedOrbs()
+                return
+            }
             if (this.isCollectingOrbs || this.expOrbs.length === 0) return
             this.isCollectingOrbs = true
             const orbsToCollect = this.expOrbs.slice()
@@ -507,6 +1015,7 @@ export default {
                     this.growth_val = res.data && typeof res.data.growth_val === 'number' ? res.data.growth_val : this.growth_val
                     this.state.tree_status = res.data && res.data.tree_status ? res.data.tree_status : this.state.tree_status
                     this.syncExpOrbs(res.data && Array.isArray(res.data.exp_orbs) ? res.data.exp_orbs : [], { animateNew: false })
+                    this.refreshStealDashboard()
                     uni.showToast({ title: `收集 ${res.data.collect_count || 0} 个经验球`, icon: 'none' })
                     this.handleData()
                 })
@@ -523,13 +1032,86 @@ export default {
                     this.isCollectingOrbs = false
                 })
         },
+        stealAllVisitedOrbs() {
+            if (this.isCollectingOrbs || !this.isViewingFriendTree || this.expOrbs.length === 0) return
+            if (this.visitScene.need_own_tree) {
+                uni.showToast({ title: '先种下自己的树苗，再来好友树场串门', icon: 'none' })
+                return
+            }
+            if (Number(this.visitScene.remaining_steal_reward || 0) <= 0) {
+                uni.showToast({ title: '今天在这位好友树场已经偷满了', icon: 'none' })
+                return
+            }
+
+            this.isCollectingOrbs = true
+            const orbsToCollect = this.expOrbs.slice()
+            const animateOrbs = []
+            let remainingQuota = Number(this.visitScene.remaining_steal_reward || 0)
+
+            for (const item of orbsToCollect.slice(0, 12)) {
+                if (remainingQuota <= 0) break
+                animateOrbs.push(item)
+                const orbReward = Number(item.reward || 0)
+                remainingQuota -= Math.min(orbReward, remainingQuota)
+            }
+
+            const collectTimers = []
+            animateOrbs.forEach((item, index) => {
+                const timer = setTimeout(() => {
+                    this.startOrbCollectAnimation(item)
+                }, index * this.batchCollectStagger)
+                collectTimers.push(timer)
+            })
+
+            Promise.all([
+                axios.post(
+                    this.$baseUrl + '/treePlant/steal_friend_energy',
+                    { target_user_id: this.visitScene.target_user_id },
+                    { headers: this.getAuthHeaders() }
+                ),
+                this.wait(this.orbCollectDuration + Math.max(animateOrbs.length - 1, 0) * this.batchCollectStagger),
+            ])
+                .then(([res]) => {
+                    animateOrbs.forEach((item, index) => {
+                        this.emitOrbBurst(item, `偷取`, index * 60)
+                    })
+                    if (res.data && res.data.visit_scene) {
+                        this.applyVisitScenePayload(res.data.visit_scene)
+                    }
+                    if (res.data && res.data.steal_dashboard) {
+                        this.syncStealDashboard(res.data.steal_dashboard)
+                    } else {
+                        this.refreshStealDashboard()
+                    }
+                    uni.showToast({
+                        title: `从${res.data.target_name || this.visitScene.target_name || '好友'}那顺走 ${res.data.reward || 0} 点成长值`,
+                        icon: 'none',
+                        duration: 2200,
+                    })
+                })
+                .catch((error) => {
+                    collectTimers.forEach((timer) => clearTimeout(timer))
+                    animateOrbs.forEach((item) => {
+                        this.resetOrbState(item.orb_id)
+                    })
+                    const msg = error.response ? error.response.data.msg : error.toString()
+                    uni.showToast({ title: msg, icon: 'none' })
+                })
+                .finally(() => {
+                    collectTimers.forEach((timer) => clearTimeout(timer))
+                    this.isCollectingOrbs = false
+                })
+        },
         handleHarvestFromModal() {
             this.gotTree()
         },
         plantTree() {
             uni.showLoading({ title: '播种中' })
             axios
-                .get(this.$baseUrl + '/treePlant/plant_tree?tree_type=' + this.selectedTreeType, { headers: this.getAuthHeaders() })
+                .get(
+                    this.$baseUrl + '/treePlant/plant_tree?tree_type=' + encodeURIComponent(this.treeSceneTheme),
+                    { headers: this.getAuthHeaders() }
+                )
                 .then(() => {
                     this.refreshPage()
                     uni.showToast({ title: '已种下树苗', icon: 'none', duration: 2000 })
@@ -602,7 +1184,6 @@ export default {
             this.panelHeight = newHeight
         },
         handleDragEnd() {
-            this.isDragging = false
             const current = this.panelHeight
             let closest = this.heightLevels[0]
             let minDiff = Math.abs(current - closest)
@@ -614,6 +1195,8 @@ export default {
                 }
             })
             this.panelHeight = closest
+            this.scenePanelHeight = closest
+            this.isDragging = false
         },
         applyPageSystemUiStyle(color = '#C0E7FE') {
             if (window.jsBridge && window.jsBridge.inApp && window.jsBridge.setSystemUIStyle) {
@@ -628,11 +1211,28 @@ export default {
     },
     onShow() {
         this.applyPageSystemUiStyle()
+        const treeSceneDiagnostics = {
+            href: typeof window !== 'undefined' && window.location ? window.location.href : '',
+            lowPerformanceMode: isTreePlantLowPerformanceMode(),
+            canUseHighQuality: canUseHighQualityTreeScene(),
+            shouldUse3D: shouldUseTreePlant3DScene(),
+        }
+        try {
+            console.info('[TREE3D_ENTRY]' + JSON.stringify(treeSceneDiagnostics))
+        } catch (e) {}
+        this.useThreeTreeScene = treeSceneDiagnostics.shouldUse3D
+        this.treeSceneTheme = DEFAULT_TREE_PLANT_SCENE_THEME
+        this.isTreeSceneResolved = false
         uni.showLoading({ title: '加载中' })
         const res = uni.getSystemInfoSync()
         this.screenHeight = res.windowHeight
         this.panelHeight = this.screenHeight * 0.4
-        this.refreshPage()
+        this.scenePanelHeight = this.panelHeight
+        if (this.isViewingFriendTree && this.visitScene.target_user_id) {
+            this.loadVisitScene(this.visitScene, { closePanel: false, loadingTitle: '加载中' })
+        } else {
+            this.refreshPage()
+        }
         this.refreshResources()
     },
     onUnload() {
@@ -689,7 +1289,34 @@ export default {
         }
     }
 
-        .screen {
+    .tree-settings-entry {
+        position: absolute;
+        top: calc(60upx + var(--statusBarHeight) - 26upx);
+        left: 134upx;
+        z-index: 82;
+        width: 82upx;
+        height: 82upx;
+        margin: 0;
+        padding: 0;
+        border-radius: 10rpx;
+        border: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: none;
+
+        &::after {
+            border: none;
+        }
+
+        &:active {
+            transform: translateY(1px);
+            background: rgba(0, 0, 0, 0.48);
+        }
+    }
+
+    .screen {
         width: 100vw;
         overflow: hidden;
         position: absolute;
@@ -699,6 +1326,29 @@ export default {
         display: flex;
         align-items: center;
         justify-content: center;
+
+        .scene-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+
+            .scene-loading-pill {
+                padding: 16rpx 28rpx;
+                border-radius: 999rpx;
+                background: rgba(255, 255, 255, 0.72);
+                border: 2rpx solid rgba(93, 64, 55, 0.16);
+                color: #5d4037;
+                font-size: 24rpx;
+                font-weight: 700;
+                letter-spacing: 1rpx;
+                backdrop-filter: blur(8rpx);
+            }
+        }
 
         .orb-layer {
             position: absolute;
@@ -845,6 +1495,67 @@ export default {
                 }
             }
         }
+
+    }
+
+    .visit-entry-btn {
+        position: absolute;
+        right: 20rpx;
+        z-index: 70;
+        width: 110rpx;
+        min-height: 156rpx;
+        padding: 18rpx 0 16rpx 0;
+        box-sizing: border-box;
+        border-radius: 34rpx 0 0 34rpx;
+        border: 4rpx solid #3e2723;
+        background: linear-gradient(180deg, #fff4c4 0%, #ffca28 100%);
+        box-shadow: 0 8rpx 0 rgba(62, 39, 35, 0.9), 0 18rpx 30rpx rgba(62, 39, 35, 0.18);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6rpx;
+        pointer-events: auto;
+
+        .entry-emoji {
+            font-size: 34rpx;
+            line-height: 1;
+        }
+
+        .entry-text {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rpx;
+
+            text {
+                font-size: 24rpx;
+                line-height: 1.2;
+                font-weight: 900;
+                color: #4e342e;
+            }
+        }
+
+        .entry-badge {
+            min-width: 42rpx;
+            height: 42rpx;
+            padding: 0 10rpx;
+            border-radius: 999rpx;
+            background: #ff7043;
+            border: 2rpx solid #3e2723;
+            color: #fff8e1;
+            font-size: 22rpx;
+            font-weight: 900;
+            line-height: 38rpx;
+            text-align: center;
+        }
+
+        &:active {
+            transform: translateY(4rpx);
+            box-shadow: 0 4rpx 0 rgba(62, 39, 35, 0.9), 0 12rpx 24rpx rgba(62, 39, 35, 0.15);
+        }
+
     }
 
     .btns {
@@ -876,6 +1587,18 @@ export default {
             &.harvest {
                 background-color: #ffd54f;
                 animation: pulse 2s infinite;
+            }
+
+            &.visit-steal {
+                background: linear-gradient(180deg, #fff59d 0%, #ffca28 100%);
+            }
+
+            &.disabled,
+            &[disabled] {
+                background: #cfd8dc;
+                color: #607d8b;
+                border-color: #607d8b;
+                box-shadow: none;
             }
 
             &:active {
@@ -913,6 +1636,10 @@ export default {
                     box-shadow: none;
                     border-color: #607d8b;
                 }
+
+                &.back {
+                    background: #eceff1;
+                }
             }
         }
     }
@@ -936,10 +1663,12 @@ export default {
 
         .drag-handle-area {
             width: 100%;
-            height: 50rpx;
+            flex-shrink: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
+            padding: 18rpx 30rpx 24rpx 30rpx;
+            box-sizing: border-box;
 
             .drag-handle {
                 width: 80rpx;
@@ -947,22 +1676,16 @@ export default {
                 background: #d7ccc8;
                 border: 2rpx solid #8d6e63;
                 border-radius: 5rpx;
+                margin-bottom: 18rpx;
             }
-        }
-
-        .sheet-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: auto;
-            padding: 0 30rpx 30rpx 30rpx;
 
             .growth-card {
+                width: 100%;
+                box-sizing: border-box;
                 background: #e1f5fe;
                 border: 3rpx solid #333;
                 border-radius: 20rpx;
                 padding: 20rpx;
-                margin-bottom: 25rpx;
                 box-shadow: 4rpx 4rpx 0 #333;
 
                 .growth-header {
@@ -1013,6 +1736,418 @@ export default {
                             animation: glare 2s infinite;
                         }
                     }
+                }
+            }
+        }
+
+        .sheet-content {
+            flex: 1;
+            min-height: 0;
+            padding: 0 30rpx 30rpx 30rpx;
+            box-sizing: border-box;
+            overflow: hidden;
+
+            .sheet-scroll {
+                height: 100%;
+            }
+
+            .visit-scene-card {
+                background: #fffef7;
+                border: 3rpx solid #333;
+                border-radius: 24rpx;
+                padding: 24rpx;
+                margin-bottom: 22rpx;
+                box-shadow: 4rpx 4rpx 0 rgba(158, 158, 158, 0.35);
+
+                .visit-scene-head {
+                    display: flex;
+                    align-items: center;
+                    gap: 18rpx;
+                    margin-bottom: 20rpx;
+                }
+
+                .visit-avatar {
+                    width: 92rpx;
+                    height: 92rpx;
+                    border-radius: 50%;
+                    border: 3rpx solid #333;
+                    background: #fff8e1;
+                    flex-shrink: 0;
+
+                    &.placeholder {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 34rpx;
+                        font-weight: 900;
+                        color: #5d4037;
+                        background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%);
+                    }
+                }
+
+                .visit-copy {
+                    min-width: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8rpx;
+                }
+
+                .visit-name {
+                    font-size: 32rpx;
+                    font-weight: 900;
+                    color: #333;
+                }
+
+                .visit-scene-stats {
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 14rpx;
+                    margin-bottom: 18rpx;
+                }
+
+                .visit-stat {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 120rpx;
+                    border-radius: 20rpx;
+                    border: 2rpx solid #d7ccc8;
+                    background: #fffaf0;
+                    padding: 12rpx;
+                    text-align: center;
+
+                    .num {
+                        font-size: 34rpx;
+                        font-weight: 900;
+                        color: #e65100;
+                        line-height: 1.1;
+                    }
+
+                    .label {
+                        margin-top: 8rpx;
+                        font-size: 20rpx;
+                        line-height: 1.35;
+                        color: #6d4c41;
+                        font-weight: 700;
+                    }
+                }
+
+                .visit-scene-tip {
+                    font-size: 22rpx;
+                    line-height: 1.6;
+                    color: #6d4c41;
+                    background: #fff8e1;
+                    border: 2rpx dashed #ffcc80;
+                    border-radius: 18rpx;
+                    padding: 16rpx 18rpx;
+                }
+            }
+
+            .steal-overview-card {
+                background: linear-gradient(135deg, #fff3e0 0%, #ffe082 100%);
+                border: 3rpx solid #333;
+                border-radius: 24rpx;
+                padding: 24rpx;
+                margin-bottom: 24rpx;
+                box-shadow: 4rpx 4rpx 0 rgba(62, 39, 35, 0.25);
+
+                .overview-main {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 24rpx;
+                    align-items: flex-start;
+                }
+
+                .overview-copy {
+                    flex: 1;
+
+                    .overview-title {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 10rpx;
+
+                        .icon {
+                            margin-right: 10rpx;
+                            font-size: 34rpx;
+                        }
+
+                        .label {
+                            font-size: 30rpx;
+                            font-weight: 900;
+                            color: #4e342e;
+                        }
+                    }
+
+                    .overview-desc {
+                        font-size: 24rpx;
+                        line-height: 1.5;
+                        color: #5d4037;
+                        font-weight: 700;
+                    }
+                }
+
+                .overview-badges {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12rpx;
+                    align-items: flex-end;
+
+                    .overview-badge {
+                        min-width: 150rpx;
+                        text-align: center;
+                        padding: 10rpx 16rpx;
+                        border-radius: 999rpx;
+                        border: 2rpx solid #333;
+                        font-size: 22rpx;
+                        font-weight: 800;
+                        color: #4e342e;
+
+                        &.warm {
+                            background: #ffcc80;
+                        }
+
+                        &.cool {
+                            background: #d1f2ff;
+                        }
+                    }
+                }
+
+                .overview-foot {
+                    margin-top: 18rpx;
+                    padding-top: 18rpx;
+                    border-top: 2rpx dashed rgba(93, 64, 55, 0.35);
+                    font-size: 22rpx;
+                    line-height: 1.5;
+                    color: #6d4c41;
+                    font-weight: 700;
+                }
+            }
+
+            .steal-list {
+                margin-bottom: 20rpx;
+
+                .steal-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 20rpx;
+                    background: #fffef7;
+                    border: 3rpx solid #333;
+                    border-radius: 22rpx;
+                    margin-bottom: 18rpx;
+                    box-shadow: 4rpx 4rpx 0 rgba(158, 158, 158, 0.35);
+
+                    .friend-avatar-wrap {
+                        position: relative;
+                        margin-right: 18rpx;
+
+                        .friend-avatar {
+                            width: 92rpx;
+                            height: 92rpx;
+                            border-radius: 50%;
+                            border: 3rpx solid #333;
+                            background: #fff8e1;
+
+                            &.placeholder {
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 34rpx;
+                                font-weight: 900;
+                                color: #5d4037;
+                                background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%);
+                            }
+                        }
+
+                        .friend-status {
+                            position: absolute;
+                            left: 50%;
+                            bottom: -12rpx;
+                            transform: translateX(-50%);
+                            min-width: 104rpx;
+                            padding: 4rpx 10rpx;
+                            border-radius: 999rpx;
+                            border: 2rpx solid #333;
+                            background: #e0e0e0;
+                            text-align: center;
+                            font-size: 18rpx;
+                            font-weight: 900;
+                            color: #5d4037;
+
+                            &.ready {
+                                background: #c5e1a5;
+                                color: #1b5e20;
+                            }
+
+                            &.stolen_today {
+                                background: #d7ccc8;
+                            }
+
+                            &.not_ready {
+                                background: #ffe0b2;
+                            }
+
+                            &.no_tree {
+                                background: #cfd8dc;
+                                color: #546e7a;
+                            }
+                        }
+                    }
+
+                    .friend-content {
+                        flex: 1;
+                        min-width: 0;
+
+                        .friend-name-row {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            margin-bottom: 8rpx;
+                            gap: 12rpx;
+
+                            .friend-name {
+                                font-size: 28rpx;
+                                color: #333;
+                                font-weight: 900;
+                            }
+                        }
+
+                        .friend-meta {
+                            font-size: 22rpx;
+                            color: #616161;
+                            margin-bottom: 6rpx;
+                        }
+
+                        .friend-tip {
+                            font-size: 20rpx;
+                            line-height: 1.45;
+                            color: #8d6e63;
+                        }
+                    }
+
+                    .friend-action {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-end;
+                        gap: 12rpx;
+                        margin-left: 14rpx;
+
+                        .steal-reward-chip {
+                            padding: 4rpx 12rpx;
+                            border-radius: 999rpx;
+                            background: #fff8e1;
+                            color: #e65100;
+                            border: 2rpx solid #ffb300;
+                            font-size: 20rpx;
+                            font-weight: 900;
+                        }
+
+                        .steal-btn {
+                            margin: 0;
+                            min-width: 132rpx;
+                            height: 64rpx;
+                            line-height: 58rpx;
+                            border-radius: 32rpx;
+                            border: 3rpx solid #5d4037;
+                            background: #d7ccc8;
+                            color: #5d4037;
+                            font-size: 24rpx;
+                            font-weight: 900;
+                            box-shadow: none;
+
+                            &.ready {
+                                background: #ffca28;
+                                color: #4e342e;
+                                box-shadow: 0 4rpx 0 #5d4037;
+                            }
+
+                            &[disabled] {
+                                background: #eceff1;
+                                border-color: #90a4ae;
+                                color: #78909c;
+                                box-shadow: none;
+                            }
+                        }
+                    }
+                }
+
+                .empty-tip {
+                    text-align: center;
+                    color: #8d6e63;
+                    padding: 24rpx 0 12rpx 0;
+                    font-weight: 800;
+                }
+            }
+
+            .steal-log-list {
+                margin-bottom: 22rpx;
+
+                .steal-log-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 18rpx 20rpx;
+                    background: #ffffff;
+                    border: 3rpx solid #333;
+                    border-radius: 20rpx;
+                    margin-bottom: 16rpx;
+                    box-shadow: 4rpx 4rpx 0 rgba(176, 190, 197, 0.45);
+
+                    .log-avatar {
+                        width: 74rpx;
+                        height: 74rpx;
+                        border-radius: 50%;
+                        border: 3rpx solid #333;
+                        margin-right: 18rpx;
+                        background: #fff8e1;
+
+                        &.placeholder {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 28rpx;
+                            font-weight: 900;
+                            color: #5d4037;
+                            background: linear-gradient(135deg, #ffe082 0%, #ffb74d 100%);
+                        }
+                    }
+
+                    .log-content {
+                        flex: 1;
+                        min-width: 0;
+
+                        .log-title {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            margin-bottom: 6rpx;
+                            gap: 12rpx;
+
+                            .log-name {
+                                font-size: 26rpx;
+                                color: #333;
+                                font-weight: 900;
+                            }
+
+                            .log-time {
+                                font-size: 20rpx;
+                                color: #8d6e63;
+                                white-space: nowrap;
+                            }
+                        }
+
+                        .log-desc {
+                            font-size: 22rpx;
+                            line-height: 1.45;
+                            color: #616161;
+                        }
+                    }
+                }
+
+                .empty-tip {
+                    text-align: center;
+                    color: #8d6e63;
+                    padding: 22rpx 0 10rpx 0;
+                    font-weight: 800;
                 }
             }
 
@@ -1222,6 +2357,336 @@ export default {
                 box-shadow: 0 6rpx 0 #3e2723;
             }
         }
+    }
+
+    .visit-panel-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 180;
+        background: rgba(44, 32, 24, 0.34);
+        display: flex;
+        justify-content: flex-end;
+        opacity: 0;
+        transition: opacity 0.26s ease;
+
+        &.active {
+            opacity: 1;
+        }
+
+        .visit-panel {
+            width: 82vw;
+            max-width: 720rpx;
+            height: 100vh;
+            background: linear-gradient(180deg, #fffef5 0%, #fff4d6 100%);
+            border-left: 4rpx solid #3e2723;
+            box-shadow: -18rpx 0 42rpx rgba(62, 39, 35, 0.22);
+            display: flex;
+            flex-direction: column;
+            padding-top: calc(24rpx + var(--statusBarHeight));
+            transform: translateX(100%);
+            transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
+        }
+
+        &.active .visit-panel {
+            transform: translateX(0);
+        }
+
+        .visit-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16rpx;
+            padding: 12rpx 24rpx 22rpx 24rpx;
+            border-bottom: 3rpx solid rgba(62, 39, 35, 0.14);
+
+            .visit-panel-title {
+                display: flex;
+                gap: 14rpx;
+                align-items: center;
+                min-width: 0;
+
+                .emoji {
+                    font-size: 40rpx;
+                    line-height: 1;
+                }
+
+                .title {
+                    font-size: 34rpx;
+                    font-weight: 900;
+                    color: #4e342e;
+                }
+            }
+
+            .visit-close-btn {
+                margin: 0;
+                min-width: 110rpx;
+                height: 64rpx;
+                line-height: 58rpx;
+                border-radius: 999rpx;
+                border: 3rpx solid #5d4037;
+                background: #fff3e0;
+                color: #5d4037;
+                font-size: 24rpx;
+                font-weight: 900;
+                box-shadow: 0 4rpx 0 rgba(93, 64, 55, 0.85);
+            }
+        }
+
+        .visit-panel-scroll {
+            flex: 1;
+            overflow: auto;
+            padding: 24rpx;
+        }
+
+        .visit-section {
+            margin-bottom: 24rpx;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20rpx;
+
+            .title {
+                font-size: 32rpx;
+                font-weight: 900;
+                color: #5d4037;
+            }
+
+            .task-summary {
+                font-size: 24rpx;
+                color: #5d4037;
+                background: #ffe082;
+                padding: 5rpx 15rpx;
+                border: 2rpx solid #333;
+                border-radius: 20rpx;
+                font-weight: bold;
+            }
+        }
+
+        .steal-list {
+            margin-bottom: 20rpx;
+
+            .steal-item {
+                display: flex;
+                align-items: center;
+                padding: 20rpx;
+                background: #fffef7;
+                border: 3rpx solid #333;
+                border-radius: 22rpx;
+                margin-bottom: 18rpx;
+                box-shadow: 4rpx 4rpx 0 rgba(158, 158, 158, 0.35);
+
+                .friend-avatar-wrap {
+                    position: relative;
+                    margin-right: 18rpx;
+
+                    .friend-avatar {
+                        width: 92rpx;
+                        height: 92rpx;
+                        border-radius: 50%;
+                        border: 3rpx solid #333;
+                        background: #fff8e1;
+
+                        &.placeholder {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 34rpx;
+                            font-weight: 900;
+                            color: #5d4037;
+                            background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%);
+                        }
+                    }
+
+                    .friend-status {
+                        position: absolute;
+                        left: 50%;
+                        bottom: -12rpx;
+                        transform: translateX(-50%);
+                        min-width: 104rpx;
+                        padding: 4rpx 10rpx;
+                        border-radius: 999rpx;
+                        border: 2rpx solid #333;
+                        background: #e0e0e0;
+                        text-align: center;
+                        font-size: 18rpx;
+                        font-weight: 900;
+                        color: #5d4037;
+
+                        &.ready {
+                            background: #c5e1a5;
+                            color: #1b5e20;
+                        }
+
+                        &.stolen_today {
+                            background: #d7ccc8;
+                        }
+
+                        &.not_ready {
+                            background: #ffe0b2;
+                        }
+
+                        &.no_tree {
+                            background: #cfd8dc;
+                            color: #546e7a;
+                        }
+                    }
+                }
+
+                .friend-content {
+                    flex: 1;
+                    min-width: 0;
+
+                    .friend-name-row {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 8rpx;
+                        gap: 12rpx;
+
+                        .friend-name {
+                            font-size: 28rpx;
+                            color: #333;
+                            font-weight: 900;
+                        }
+                    }
+
+                    .friend-meta {
+                        font-size: 22rpx;
+                        color: #616161;
+                        margin-bottom: 6rpx;
+                    }
+                }
+
+                .friend-action {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    gap: 12rpx;
+                    margin-left: 14rpx;
+
+                    .steal-reward-chip {
+                        padding: 4rpx 12rpx;
+                        border-radius: 999rpx;
+                        background: #fff8e1;
+                        color: #e65100;
+                        border: 2rpx solid #ffb300;
+                        font-size: 20rpx;
+                        font-weight: 900;
+                    }
+
+                    .steal-btn {
+                        margin: 0;
+                        min-width: 132rpx;
+                        height: 64rpx;
+                        line-height: 58rpx;
+                        border-radius: 32rpx;
+                        border: 3rpx solid #5d4037;
+                        background: #d7ccc8;
+                        color: #5d4037;
+                        font-size: 24rpx;
+                        font-weight: 900;
+                        box-shadow: none;
+
+                        &.ready {
+                            background: #ffca28;
+                            color: #4e342e;
+                            box-shadow: 0 4rpx 0 #5d4037;
+                        }
+
+                        &[disabled] {
+                            background: #eceff1;
+                            border-color: #90a4ae;
+                            color: #78909c;
+                            box-shadow: none;
+                        }
+                    }
+                }
+            }
+
+            .empty-tip {
+                text-align: center;
+                color: #8d6e63;
+                padding: 24rpx 0 12rpx 0;
+                font-weight: 800;
+            }
+        }
+
+        .steal-log-list {
+            margin-bottom: 22rpx;
+
+            .steal-log-item {
+                display: flex;
+                align-items: center;
+                padding: 18rpx 20rpx;
+                background: #ffffff;
+                border: 3rpx solid #333;
+                border-radius: 20rpx;
+                margin-bottom: 16rpx;
+                box-shadow: 4rpx 4rpx 0 rgba(176, 190, 197, 0.45);
+
+                .log-avatar {
+                    width: 74rpx;
+                    height: 74rpx;
+                    border-radius: 50%;
+                    border: 3rpx solid #333;
+                    margin-right: 18rpx;
+                    background: #fff8e1;
+
+                    &.placeholder {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 28rpx;
+                        font-weight: 900;
+                        color: #5d4037;
+                        background: linear-gradient(135deg, #ffe082 0%, #ffb74d 100%);
+                    }
+                }
+
+                .log-content {
+                    flex: 1;
+                    min-width: 0;
+
+                    .log-title {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 6rpx;
+                        gap: 12rpx;
+
+                        .log-name {
+                            font-size: 26rpx;
+                            color: #333;
+                            font-weight: 900;
+                        }
+
+                        .log-time {
+                            font-size: 20rpx;
+                            color: #8d6e63;
+                            white-space: nowrap;
+                        }
+                    }
+
+                    .log-desc {
+                        font-size: 22rpx;
+                        line-height: 1.45;
+                        color: #616161;
+                    }
+                }
+            }
+
+            .empty-tip {
+                text-align: center;
+                color: #8d6e63;
+                padding: 22rpx 0 10rpx 0;
+                font-weight: 800;
+            }
+        }
+
     }
 }
 

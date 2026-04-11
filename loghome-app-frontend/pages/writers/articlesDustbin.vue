@@ -53,6 +53,7 @@ export default{
 	data(){
 		return{
 			uid:0,
+			currentUserId: 0,
 			bookName:"",
 			bookInfo:{},
 			articles:[]
@@ -77,6 +78,10 @@ export default{
 		this.refreshPage();
 	},
 	methods:{
+		resolveCurrentUserId() {
+			let token = JSON.parse(window.localStorage.getItem('token'));
+			this.currentUserId = token && token.id ? Number(token.id) : 0;
+		},
 		utc2beijing(utc_datetime) {
 		    // 转为正常的时间格式 年-月-日 时:分:秒
 		    var T_pos = utc_datetime.indexOf('T');
@@ -98,6 +103,7 @@ export default{
 		    return beijing_datetime; // 2017-03-31 16:02:06
 		},
 		refreshPage(){
+			this.resolveCurrentUserId();
 			const uid = this.uid;
 			let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
 			axios.get(this.$baseUrl + '/essays/get_articles_deleted?id=' + uid, 
@@ -182,8 +188,8 @@ export default{
         async _checkArticleStatusSingle(article) {
 			// 查找最近保存的本地文章和云端文章
 			const localArticles = await writerArticleDB.articles
-				.where('article_id')
-				.equals(article.article_id)
+				.where('[user_id+article_id]')
+				.equals([Number(this.currentUserId || 0), Number(article.article_id)])
 				.toArray();
 			let latestLocalArticle = null;
 			if (localArticles.length > 0) {

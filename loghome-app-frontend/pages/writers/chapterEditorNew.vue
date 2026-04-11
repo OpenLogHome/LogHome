@@ -15,10 +15,11 @@
         placeholder="章节标题"
         v-model="article.title"
         @input="handleTitleInput"
-        :style="{ fontSize: writerSettings.fontSize + 'rpx' }"
+        :style="titleInputStyle"
       />
       <div class="textCount">
         {{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图
+        <span class="editorRole" v-if="editorRoleText">{{ editorRoleText }}</span>
         <div class="saveNotify">
           <complete-icon
             ref="completeIcon"
@@ -33,13 +34,13 @@
         v-if="editor"
         :editor="editor"
         class="textarea"
-        :style="{ '--editor-font-size': writerSettings.fontSize + 'rpx' }"
+        :style="editorContentStyle"
         :class="{ symbolsShown: writerSettings.showSymbols }"
       ></editor-content>
       <div
         v-else
         class="textarea"
-        :style="{ '--editor-font-size': writerSettings.fontSize + 'rpx' }"
+        :style="editorContentStyle"
         :class="{ symbolsShown: writerSettings.showSymbols }"
       ></div>
 
@@ -150,38 +151,6 @@
       </view>
     </uni-popup>
 
-    <uni-popup ref="schedulePopup" type="center">
-      <view
-        class="schedule-box"
-        style="
-          background-color: white;
-          padding: 20px;
-          border-radius: 10px;
-          width: 300px;
-        "
-      >
-        <view style="margin-bottom: 15px; font-weight: bold; text-align: center"
-          >选择定时发布时间</view
-        >
-        <view style="margin-bottom: 20px">
-          <el-date-picker
-            v-model="scheduleTime"
-            type="datetime"
-            placeholder="选择定时发布时间"
-            style="width: 100%"
-            value-format="yyyy-MM-dd HH:mm"
-          >
-          </el-date-picker>
-        </view>
-        <view style="display: flex; justify-content: space-between">
-          <button size="mini" @click="$refs.schedulePopup.close()">取消</button>
-          <button size="mini" type="primary" @click="confirmSchedule">
-            确定
-          </button>
-        </view>
-      </view>
-    </uni-popup>
-
     <conflict-dialog ref="conflictDialog"></conflict-dialog>
   </div>
 </template>
@@ -189,6 +158,7 @@
 <script>
 import axios from "axios";
 import { Editor, EditorContent, Extension } from "@tiptap/vue-2";
+import Paragraph from "@tiptap/extension-paragraph";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import conflictDialog from "../../components/conflictDialog.vue";
@@ -232,6 +202,36 @@ const NewParagraphSpace = Extension.create({
   },
 });
 
+const LegacyParagraph = Paragraph.extend({
+  addAttributes() {
+    return {
+      ...(this.parent ? this.parent() : {}),
+      legacyId: {
+        default: null,
+        parseHTML: (element) => {
+          const rawId = element.getAttribute("data-legacy-id");
+          if (rawId === null || rawId === undefined || rawId === "") {
+            return null;
+          }
+          const normalizedId = Number(rawId);
+          return Number.isFinite(normalizedId) && normalizedId > 0
+            ? normalizedId
+            : null;
+        },
+        renderHTML: (attributes) => {
+          const normalizedId = Number(attributes.legacyId);
+          if (!Number.isFinite(normalizedId) || normalizedId <= 0) {
+            return {};
+          }
+          return {
+            "data-legacy-id": String(normalizedId),
+          };
+        },
+      },
+    };
+  },
+});
+
 const DEFAULT_SETTINGS = {
   version: 24031701,
   showSymbols: true,
@@ -245,6 +245,31 @@ const DEFAULT_SETTINGS = {
 const DEFAULT_CONTENT = stringifyLegacyContent([{ type: "text", value: "" }]);
 const INPUT_SYNC_DELAY_MS = 350;
 const SYNC_PENDING_MAX_AGE_MS = 3 * 60 * 1000;
+const EDIT_LOCK_HEARTBEAT_MS = 30 * 1000;
+
+function toResponsivePx(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "";
+  }
+
+  if (typeof uni !== "undefined" && typeof uni.upx2px === "function") {
+    const pxValue = Number(uni.upx2px(numericValue));
+    if (Number.isFinite(pxValue)) {
+      return `${pxValue}px`;
+    }
+  }
+
+  if (
+    typeof window !== "undefined" &&
+    Number.isFinite(Number(window.innerWidth)) &&
+    Number(window.innerWidth) > 0
+  ) {
+    return `${((numericValue * Number(window.innerWidth)) / 750).toFixed(2)}px`;
+  }
+
+  return `${numericValue}rpx`;
+}
 
 export default {
   components: {
@@ -255,7 +280,7 @@ export default {
   data() {
     return {
       chapterId: 0,
-      scheduleTime: null,
+      currentUserId: 0,
       editor: null,
       article: {
         article_id: 0,
@@ -264,6 +289,14 @@ export default {
         novel_info: {},
         is_draft: 1,
       },
+      editorAccess: {
+        access_role: "owner",
+        can_publish: true,
+        can_edit_draft: true,
+      },
+      editSessionId: "",
+      currentEditLock: null,
+      lockHeartbeatTimer: null,
       textCount: 0,
       imageCount: 0,
       punctuations: ["，", "。", "、", "！", "？", "：", "“”", "《》"],
@@ -316,16 +349,51 @@ export default {
     currentTheme() {
       return this.themes[this.writerSettings.theme] || this.themes.yellow;
     },
+    canPublishArticle() {
+      return !!(this.editorAccess && this.editorAccess.can_publish === true);
+    },
+    editorRoleText() {
+      if (this.editorAccess.access_role === "collaborator") {
+        return "协作草稿";
+      }
+      return "";
+    },
     pageStyle() {
       return {
         transition: "background-color .5s, color .5s",
         "--statusBarHeight": 0 + "px",
       };
     },
+    fontSizeStyleValue() {
+      return toResponsivePx(this.writerSettings.fontSize || DEFAULT_SETTINGS.fontSize);
+    },
+    titleInputStyle() {
+      return {
+        fontSize: this.fontSizeStyleValue,
+      };
+    },
+    editorContentStyle() {
+      return {
+        fontSize: this.fontSizeStyleValue,
+        "--editor-font-size": this.fontSizeStyleValue,
+      };
+    },
+  },
+  watch: {
+    "writerSettings.fontSize": {
+      immediate: true,
+      handler() {
+        this.$nextTick(() => {
+          this.applyEditorFontSize();
+        });
+      },
+    },
   },
   async beforeDestroy() {
     await this.stopWritingTimer();
     await this.endLocalSaveTimer();
+    this.stopLockHeartbeat();
+    await this.releaseEditLock();
     clearTimeout(this.inputSyncTimer);
     clearInterval(this.imageEditInterval);
     this.clearEditorImagesEditButton();
@@ -338,6 +406,67 @@ export default {
     window.removeEventListener("pagehide", this.handlePageHide);
   },
   methods: {
+    getPublishDraftStorageKey(articleId = this.chapterId) {
+      return `writer_publish_payload_${Number(this.currentUserId || 0)}_${Number(articleId || 0)}`;
+    },
+    validatePublishableArticle() {
+      if (
+        this.article.title.replace(/(^\s*)|(\s*$)/g, "") === "" ||
+        this.isArticleContentEmpty()
+      ) {
+        uni.showToast({
+          title: "标题或文章内容不能为空",
+          icon: "none",
+          duration: 2000,
+        });
+        return false;
+      }
+
+      return true;
+    },
+    persistPublishDraft() {
+      if (!this.validatePublishableArticle()) {
+        return false;
+      }
+
+      window.localStorage.setItem(
+        this.getPublishDraftStorageKey(),
+        JSON.stringify({
+          article_id: Number(this.chapterId || this.article.article_id || 0),
+          title: this.article.title,
+          content: this.article.content,
+          is_draft: this.article.is_draft,
+          article_chapter: this.article.article_chapter,
+          novel_info: this.article.novel_info || {},
+          saved_at: Date.now(),
+        })
+      );
+
+      return true;
+    },
+    getTokenInfo() {
+      let token = JSON.parse(window.localStorage.getItem("token"));
+      return token || null;
+    },
+    getAuthToken() {
+      const token = this.getTokenInfo();
+      return token ? token.tk : null;
+    },
+    resolveCurrentUserId() {
+      const token = this.getTokenInfo();
+      this.currentUserId = token && token.id ? Number(token.id) : 0;
+      return this.currentUserId;
+    },
+    generateEditSessionId() {
+      return `writer_${this.chapterId}_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 10)}`;
+    },
+    getScopedArticleCollection(articleId) {
+      return writerArticleDB.articles
+        .where("[user_id+article_id]")
+        .equals([Number(this.currentUserId || 0), Number(articleId)]);
+    },
     initializeWriterSettings() {
       const raw = window.localStorage.getItem("writerSettings");
       if (!raw) {
@@ -374,7 +503,7 @@ export default {
       this.scheduleInputSync();
     },
     getSyncPendingStorageKey(articleId = this.chapterId) {
-      return `writer_sync_pending_${Number(articleId || 0)}`;
+      return `writer_sync_pending_${Number(this.currentUserId || 0)}_${Number(articleId || 0)}`;
     },
     getSyncPendingState(articleId = this.chapterId) {
       if (!articleId) return null;
@@ -423,18 +552,126 @@ export default {
     },
     handleVisibilityChange() {
       if (document.visibilityState === "hidden") {
+        this.stopLockHeartbeat();
         this.flushDraftToCloud({
           isFastSave: true,
           forceSlowSave: false,
           waitForBusy: false,
         });
+        return;
+      }
+
+      if (this.loadComplete) {
+        this.claimEditLock();
       }
     },
     handlePageHide() {
+      this.stopLockHeartbeat();
       this.flushDraftToCloud({
         isFastSave: true,
         forceSlowSave: false,
         waitForBusy: false,
+      });
+      this.releaseEditLock();
+    },
+    async claimEditLock() {
+      const tk = this.getAuthToken();
+      if (!tk || !this.chapterId || !this.editSessionId) return false;
+
+      try {
+        const response = await axios.post(
+          this.$baseUrl + "/essays/claim_article_edit_lock",
+          {
+            article_id: this.chapterId,
+            session_id: this.editSessionId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + tk,
+            },
+          }
+        );
+        this.currentEditLock = response.data.lock || null;
+        this.startLockHeartbeat();
+        return true;
+      } catch (error) {
+        if (error.response && error.response.status === 409) {
+          this.currentEditLock = error.response.data.lock || null;
+          this.handleLockConflict(error.response.data.lock);
+          return false;
+        }
+        throw error;
+      }
+    },
+    startLockHeartbeat() {
+      this.stopLockHeartbeat();
+      this.lockHeartbeatTimer = setInterval(() => {
+        this.heartbeatEditLock();
+      }, EDIT_LOCK_HEARTBEAT_MS);
+    },
+    stopLockHeartbeat() {
+      if (this.lockHeartbeatTimer) {
+        clearInterval(this.lockHeartbeatTimer);
+        this.lockHeartbeatTimer = null;
+      }
+    },
+    async heartbeatEditLock() {
+      const tk = this.getAuthToken();
+      if (!tk || !this.chapterId || !this.editSessionId) return;
+
+      try {
+        const response = await axios.post(
+          this.$baseUrl + "/essays/heartbeat_article_edit_lock",
+          {
+            article_id: this.chapterId,
+            session_id: this.editSessionId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + tk,
+            },
+          }
+        );
+        this.currentEditLock = response.data.lock || null;
+      } catch (error) {
+        this.stopLockHeartbeat();
+        if (error.response && error.response.status === 409) {
+          this.currentEditLock = error.response.data.lock || null;
+          this.handleLockConflict(error.response.data.lock);
+        }
+      }
+    },
+    async releaseEditLock() {
+      const tk = this.getAuthToken();
+      if (!tk || !this.chapterId || !this.editSessionId) return;
+
+      try {
+        await axios.post(
+          this.$baseUrl + "/essays/release_article_edit_lock",
+          {
+            article_id: this.chapterId,
+            session_id: this.editSessionId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + tk,
+            },
+          }
+        );
+      } catch (error) {}
+    },
+    handleLockConflict(lockInfo) {
+      const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
+      uni.showModal({
+        title: "章节已被占用",
+        content: `${lockName} 正在编辑这个章节，请稍后再试。`,
+        showCancel: false,
+        success: () => {
+          uni.navigateBack();
+        },
       });
     },
     async executeSyncTask(task, waitForBusy = false) {
@@ -573,8 +810,86 @@ export default {
         dateString.length >= 14 ? dateString.substring(12, 14) : "00";
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     },
+    normalizeCreateTime(dateString) {
+      return String(dateString || "").replace(/\D/g, "").slice(0, 14);
+    },
+    async getArticleHistoryMeta() {
+      let tk = this.getAuthToken();
+      const response = await axios.get(
+        this.$baseUrl + "/essays/get_article_history_meta?id=" + this.chapterId,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + tk,
+          },
+        }
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    },
+    getRemoteEditorsSince(historyRecords, sinceCreateTime) {
+      const since = this.normalizeCreateTime(sinceCreateTime);
+      const editors = [];
+      const seen = new Set();
+
+      for (const record of historyRecords || []) {
+        const recordTime = this.normalizeCreateTime(record.create_time);
+        if (since && recordTime && recordTime <= since) {
+          continue;
+        }
+
+        const editorId = Number(record.editor_user_id || 0);
+        const editorName = String(record.editor_name || "").trim();
+        if (editorId && editorId === Number(this.currentUserId || 0)) {
+          continue;
+        }
+        if (!editorId && !editorName) {
+          continue;
+        }
+
+        const uniqueKey = editorId ? `user:${editorId}` : `name:${editorName}`;
+        if (seen.has(uniqueKey)) {
+          continue;
+        }
+        seen.add(uniqueKey);
+        editors.push({
+          user_id: editorId || null,
+          name: editorName || "未知作者",
+        });
+      }
+
+      return editors;
+    },
+    formatConflictEditorsSummary(editors) {
+      if (!editors || editors.length === 0) {
+        return "";
+      }
+
+      const names = editors
+        .map((editor) => String(editor.name || "").trim())
+        .filter(Boolean);
+      if (names.length === 0) {
+        return "";
+      }
+      if (names.length === 1) {
+        return `${names[0]}编辑过本章`;
+      }
+      if (names.length === 2) {
+        return `${names[0]}、${names[1]}编辑过本章`;
+      }
+      return `${names[0]}等${names.length}人编辑过本章`;
+    },
+    buildConflictDialogSubtitle(editors) {
+      const summary = this.formatConflictEditorsSummary(editors);
+      if (summary) {
+        return `自从你上次保存后，${summary}。请选择要保留的版本。`;
+      }
+      return "检测到本地草稿和云端草稿不一致，请选择要保留的版本。";
+    },
     buildArticle(raw) {
       const article = raw || {};
+      if (article.current_access) {
+        this.editorAccess = article.current_access;
+      }
       return {
         ...article,
         article_id: Number(article.article_id || this.chapterId),
@@ -590,6 +905,34 @@ export default {
       );
       this.textCount = stats.textCount;
       this.imageCount = stats.imageCount;
+    },
+    applyEditorFontSize(editorInstance = null) {
+      const fontSize = this.fontSizeStyleValue;
+      if (!fontSize) return;
+
+      const pageRoot = this.$el || document;
+      const editorContainer = pageRoot.querySelector(".textarea");
+      if (editorContainer) {
+        editorContainer.style.fontSize = fontSize;
+        editorContainer.style.setProperty("--editor-font-size", fontSize);
+      }
+
+      const activeEditor =
+        editorInstance && editorInstance.view && editorInstance.view.dom
+          ? editorInstance.view.dom
+          : this.editor && this.editor.view && this.editor.view.dom
+            ? this.editor.view.dom
+            : pageRoot.querySelector(".writer-prosemirror");
+
+      if (!activeEditor) return;
+
+      activeEditor.style.fontSize = fontSize;
+      activeEditor.style.setProperty("--editor-font-size", fontSize);
+
+      const paragraphs = activeEditor.querySelectorAll("p");
+      paragraphs.forEach((paragraph) => {
+        paragraph.style.fontSize = fontSize;
+      });
     },
     createEditorFromArticle() {
       if (this.editor) {
@@ -609,8 +952,10 @@ export default {
             italic: false,
             listItem: false,
             orderedList: false,
+            paragraph: false,
             strike: false,
           }),
+          LegacyParagraph,
           Image.configure({
             inline: false,
           }),
@@ -628,6 +973,9 @@ export default {
           const blocks = docToLegacyBlocks(editor.getJSON());
           this.article.content = stringifyLegacyContent(blocks);
           this.refreshCounts();
+          this.$nextTick(() => {
+            this.applyEditorFontSize(editor);
+          });
         },
         onUpdate: ({ editor }) => {
           const blocks = docToLegacyBlocks(editor.getJSON());
@@ -658,8 +1006,7 @@ export default {
       );
     },
     async getArticleWriter() {
-      let tk = JSON.parse(window.localStorage.getItem("token"));
-      if (tk) tk = tk.tk;
+      let tk = this.getAuthToken();
       return axios.get(
         this.$baseUrl + "/essays/get_article_writer?id=" + this.chapterId,
         {
@@ -671,8 +1018,7 @@ export default {
       );
     },
     async getArticle() {
-      let tk = JSON.parse(window.localStorage.getItem("token"));
-      if (tk) tk = tk.tk;
+      let tk = this.getAuthToken();
       return axios.get(
         this.$baseUrl + "/essays/get_article?id=" + this.chapterId,
         {
@@ -685,13 +1031,13 @@ export default {
     },
     async syncArticleWriter() {
       const currentServerTime = await getServerTime();
-      let tk = JSON.parse(window.localStorage.getItem("token"));
-      if (tk) tk = tk.tk;
+      let tk = this.getAuthToken();
       return axios.post(
         this.$baseUrl + "/essays/sync_article_writer_from_reader",
         {
           article_id: this.chapterId,
           create_time: currentServerTime,
+          edit_session_id: this.editSessionId,
         },
         {
           headers: {
@@ -708,8 +1054,7 @@ export default {
       snapshotVersion = this.contentVersion
     ) {
       this.lastUploadTime = new Date();
-      let tk = JSON.parse(window.localStorage.getItem("token"));
-      if (tk) tk = tk.tk;
+      let tk = this.getAuthToken();
 
       try {
         const response = await axios.post(
@@ -722,6 +1067,7 @@ export default {
             novel_id: this.article.novel_info.novel_id || this.article.novel_id,
             is_fast_save: isFastSave,
             is_force: isForce,
+            edit_session_id: this.editSessionId,
           },
           {
             headers: {
@@ -752,11 +1098,10 @@ export default {
       try {
         let res = await this.getArticleWriter();
         let fallbackReaderArticle;
+        let currentAccess =
+          res.data && res.data !== "no data" ? res.data.current_access : null;
 
-        const localArticles = await writerArticleDB.articles
-          .where("article_id")
-          .equals(Number(this.chapterId))
-          .toArray();
+        const localArticles = await this.getScopedArticleCollection(this.chapterId).toArray();
 
         let latestLocalArticle = undefined;
         if (localArticles.length > 0) {
@@ -775,7 +1120,25 @@ export default {
             : articleRes.data;
           if (articleData && articleData.article_id) {
             fallbackReaderArticle = articleData;
+            currentAccess = articleData.current_access || currentAccess;
           }
+        }
+
+        if (currentAccess) {
+          this.editorAccess = currentAccess;
+        }
+
+        if (currentAccess && currentAccess.can_edit_draft === false) {
+          uni.hideLoading();
+          uni.showToast({
+            title: "你没有编辑章节权限",
+            icon: "none",
+            duration: 2000,
+          });
+          setTimeout(() => {
+            uni.navigateBack({});
+          }, 800);
+          return;
         }
 
         if (
@@ -783,32 +1146,55 @@ export default {
           hasLocalContent &&
           latestLocalArticle.content !== res.data.content
         ) {
+          let remoteEditors = [];
+          try {
+            const historyMeta = await this.getArticleHistoryMeta();
+            remoteEditors = this.getRemoteEditorsSince(
+              historyMeta,
+              latestLocalArticle.create_time
+            );
+          } catch (error) {}
+
           const localStats = countLegacyContent(
             parseLegacyContent(latestLocalArticle.content)
           );
           const cloudStats = countLegacyContent(
             parseLegacyContent(res.data.content)
           );
+          const latestCloudEditorName = String(
+            res.data.editor_name ||
+              (remoteEditors[0] && remoteEditors[0].name) ||
+              ""
+          ).trim();
 
           const action = await new Promise((resolve) => {
             this.$refs.conflictDialog.show({
-              title: "版本冲突提示",
+              title: "协作草稿有更新",
+              subtitle: this.buildConflictDialogSubtitle(remoteEditors),
               type: "conflict",
               local: {
+                title: "本地草稿",
                 time: this.formatCreateTime(latestLocalArticle.create_time),
                 isNewer:
                   String(latestLocalArticle.create_time) >
                   String(res.data.create_time),
                 textCount: localStats.textCount,
                 imageCount: localStats.imageCount,
+                editorLabel: "当前设备上的草稿",
+                selectLabel: "保留本地草稿",
               },
               cloud: {
+                title: "云端草稿",
                 time: this.formatCreateTime(res.data.create_time),
                 isNewer:
                   String(res.data.create_time) >
                   String(latestLocalArticle.create_time),
                 textCount: cloudStats.textCount,
                 imageCount: cloudStats.imageCount,
+                editorLabel: latestCloudEditorName
+                  ? `最近提交：${latestCloudEditorName}`
+                  : "最近提交：云端协作草稿",
+                selectLabel: "保留云端草稿",
               },
               callback: resolve,
             });
@@ -845,6 +1231,11 @@ export default {
         }
 
         this.refreshCounts();
+        const lockClaimed = await this.claimEditLock();
+        if (!lockClaimed) {
+          uni.hideLoading();
+          return;
+        }
         this.createEditorFromArticle();
         this.startLocalSaveTimer();
         this.loadComplete = true;
@@ -865,34 +1256,53 @@ export default {
         (block) => block.type === "image" || block.value.trim()
       );
     },
-    confirmSchedule() {
-      if (!this.scheduleTime) {
-        uni.showToast({
-          title: "请选择时间",
-          icon: "none",
-          duration: 2000,
-        });
+    async save(drafting, msg, scheduleTime = null) {
+      if (!this.validatePublishableArticle()) {
         return;
       }
 
-      this.save(1, "定时发布设置成功", this.scheduleTime);
-      this.$refs.schedulePopup.close();
-    },
-    save(drafting, msg, scheduleTime = null) {
-      if (
-        this.article.title.replace(/(^\s*)|(\s*$)/g, "") === "" ||
-        this.isArticleContentEmpty()
-      ) {
-        uni.showToast({
-          title: "标题或文章内容不能为空",
-          icon: "none",
-          duration: 2000,
-        });
+      if (!this.canPublishArticle) {
+        if (drafting === 0 || scheduleTime) {
+          uni.showToast({
+            title: "协作者不能直接发布章节",
+            icon: "none",
+            duration: 2000,
+          });
+          return;
+        }
+
+        try {
+          const currentServerTime = await getServerTime();
+          await this.slowSaveLocalArticle(currentServerTime, true);
+          await this.uploadArticleWriter(
+            currentServerTime,
+            false,
+            true,
+            this.contentVersion
+          );
+          uni.showToast({
+            title: "协作草稿已保存",
+            icon: "none",
+            duration: 2000,
+          });
+          clearInterval(this.saveInterval);
+          clearTimeout(this.inputSyncTimer);
+          this.hasNewInput = false;
+          this.markSyncSynced(currentServerTime);
+          setTimeout(() => {
+            uni.navigateBack({});
+          }, 1200);
+        } catch (error) {
+          uni.showToast({
+            title: "协作草稿保存失败，请重试",
+            icon: "none",
+            duration: 2000,
+          });
+        }
         return;
       }
 
-      let tk = JSON.parse(window.localStorage.getItem("token"));
-      if (tk) tk = tk.tk;
+      let tk = this.getAuthToken();
 
       axios
         .post(
@@ -969,15 +1379,14 @@ export default {
         const currentContent = parseLegacyContent(this.article.content);
         const articleId = Number(this.article.article_id || this.chapterId);
 
-        const localArticles = await writerArticleDB.articles
-          .where("article_id")
-          .equals(articleId)
+        const localArticles = await this.getScopedArticleCollection(articleId)
           .and((article) => article.is_slow_save !== true)
           .toArray();
 
         if (localArticles.length === 0) {
           await writerArticleDB.articles.add({
             article_id: articleId,
+            user_id: Number(this.currentUserId || 0),
             title: this.article.title,
             content: this.article.content,
             create_time: currentServerTime,
@@ -1090,6 +1499,7 @@ export default {
           await writerArticleDB.articles.delete(latestLocalArticle.id);
           await writerArticleDB.articles.add({
             article_id: articleId,
+            user_id: Number(this.currentUserId || 0),
             title: this.article.title,
             content: this.article.content,
             create_time: currentServerTime,
@@ -1108,6 +1518,7 @@ export default {
           await writerArticleDB.articles.delete(latestLocalArticle.id);
           await writerArticleDB.articles.add({
             article_id: articleId,
+            user_id: Number(this.currentUserId || 0),
             title: this.article.title,
             content: this.article.content,
             create_time: currentServerTime,
@@ -1124,10 +1535,7 @@ export default {
         const articleId = Number(this.article.article_id || this.chapterId);
 
         if (!isForce) {
-          const localArticles = await writerArticleDB.articles
-            .where("article_id")
-            .equals(articleId)
-            .toArray();
+          const localArticles = await this.getScopedArticleCollection(articleId).toArray();
 
           let latestLocalArticle = null;
           if (localArticles.length > 0) {
@@ -1147,6 +1555,7 @@ export default {
 
         await writerArticleDB.articles.add({
           article_id: articleId,
+          user_id: Number(this.currentUserId || 0),
           title: this.article.title,
           content: this.article.content,
           create_time: currentServerTime,
@@ -1191,6 +1600,7 @@ export default {
       }
     },
     fontSizeChanged() {
+      this.applyEditorFontSize();
       window.localStorage.setItem(
         "writerSettings",
         JSON.stringify(this.writerSettings)
@@ -1388,55 +1798,17 @@ export default {
       });
     },
     handlePublishAction() {
-      const itemList = ["立即发布", "定时发布"];
-      if (this.article.is_draft === 0) {
-        itemList.push("退回章节为草稿");
+      if (!this.canPublishArticle) {
+        this.save(1, "协作草稿已保存");
+        return;
       }
 
-      uni.showActionSheet({
-        itemList,
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            if (this.article.novel_info.is_personal === 1) {
-              uni.showToast({
-                title: "小说尚未公开，无法发布文章",
-                icon: "none",
-                duration: 2000,
-              });
-              return;
-            }
-            this.save(0, "发布成功");
-          }
+      if (!this.persistPublishDraft()) {
+        return;
+      }
 
-          if (res.tapIndex === 1) {
-            if (this.article.novel_info.is_personal === 1) {
-              uni.showToast({
-                title: "小说尚未公开，无法发布文章",
-                icon: "none",
-                duration: 2000,
-              });
-              return;
-            }
-            this.$refs.schedulePopup.open();
-          }
-
-          if (res.tapIndex === 2) {
-            if (this.article.is_draft === 0) {
-              uni.showModal({
-                title: "提示",
-                content: "退回章节为草稿会使已发布的章节下架，确定继续吗？",
-                success: (modalRes) => {
-                  if (modalRes.confirm) {
-                    this.save(1, "保存成功");
-                  }
-                },
-              });
-              return;
-            }
-
-            this.save(1, "保存成功");
-          }
-        },
+      uni.navigateTo({
+        url: `/pages/writers/workPublish?id=${this.chapterId}`,
       });
     },
   },
@@ -1482,6 +1854,8 @@ export default {
   },
   onLoad(params) {
     this.chapterId = Number(params.id);
+    this.resolveCurrentUserId();
+    this.editSessionId = this.generateEditSessionId();
     this.initializeWriterSettings();
     document.removeEventListener("visibilitychange", this.handleVisibilityChange);
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
@@ -1506,14 +1880,17 @@ export default {
   },
   async onUnload() {
     await this.stopWritingTimer();
+    this.stopLockHeartbeat();
     await this.flushDraftToCloud({
       isFastSave: true,
       forceSlowSave: false,
       waitForBusy: false,
     });
+    await this.releaseEditLock();
   },
   async onHide() {
     await this.stopWritingTimer();
+    this.stopLockHeartbeat();
     await this.flushDraftToCloud({
       isFastSave: true,
       forceSlowSave: false,
@@ -1523,6 +1900,9 @@ export default {
   onShow() {
     this.startWritingTimer();
     this.checkFrameEnvironment();
+    if (this.loadComplete) {
+      this.claimEditLock();
+    }
   },
 };
 </script>
@@ -1565,6 +1945,18 @@ export default {
         margin-left: 10rpx;
         color: rgb(156, 156, 156);
       }
+
+      .editorRole {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 10rpx;
+        padding: 2rpx 10rpx;
+        border-radius: 999rpx;
+        font-size: 22rpx;
+        color: #9a4f1f;
+        background-color: rgba(255, 186, 120, 0.18);
+      }
+
     }
   }
 
@@ -1606,7 +1998,7 @@ export default {
 
       :deep(.writer-prosemirror img) {
         width: auto !important;
-        max-width: 100% !important;
+        max-width: calc(100% - 40rpx) !important;
         height: auto;
         display: block;
         margin: 12rpx auto;
@@ -1836,7 +2228,7 @@ div.outer.white {
 .writer-prosemirror > img {
   display: block !important;
   width: auto !important;
-  max-width: calc(100vw - 60rpx) !important;
+  max-width: calc(100vw - 80rpx) !important;
   height: auto !important;
 }
 </style>

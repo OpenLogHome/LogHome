@@ -2,6 +2,10 @@
 let express = require('express');
 let { query } = require('../sql.js');
 let auth = require('../bin/auth.js');
+const {
+	COLLABORATOR_STATUS,
+	serializeAccess,
+} = require('../bin/novelCollaboration.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -10,9 +14,95 @@ router.get('/get_my_worlds', auth, async function (req, res) {
 	try {
 		let user = req.user;
 		user = JSON.parse(JSON.stringify(user))[0];
-		let results = await query(`SELECT w.*, n.*, u.name user_name, u.avatar_url FROM world w, novels n, users u 
-		WHERE w.creator_id = ? AND w.is_delete = 0 AND n.deleted = 0 AND w.asso_novel_id = n.novel_id
-		AND u.user_id = w.creator_id`, [user.user_id]);
+		let results = await query(
+			`SELECT
+				w.*,
+				n.*,
+				u.name user_name,
+				u.avatar_url,
+				EXISTS(
+					SELECT 1
+					FROM novel_collaborators nc_active
+					WHERE nc_active.novel_id = n.novel_id
+						AND nc_active.status = ?
+					LIMIT 1
+				) AS has_active_collaborators,
+				nc.role AS collaborator_role,
+				nc.status AS collaborator_status,
+				nc.can_edit_article,
+				nc.can_add_article,
+				nc.can_delete_article,
+				nc.can_sort_article,
+				nc.can_publish_article
+			FROM world w
+			JOIN novels n ON w.asso_novel_id = n.novel_id
+			JOIN users u ON u.user_id = w.creator_id
+			LEFT JOIN novel_collaborators nc
+				ON nc.novel_id = n.novel_id
+				AND nc.user_id = ?
+			WHERE w.is_delete = 0
+				AND n.deleted = 0
+				AND (
+					w.creator_id = ?
+					OR nc.status = ?
+				)
+			ORDER BY n.update_time DESC`,
+			[
+				COLLABORATOR_STATUS.ACTIVE,
+				user.user_id,
+				user.user_id,
+				COLLABORATOR_STATUS.ACTIVE,
+			],
+		);
+		results = JSON.parse(JSON.stringify(results)).map((row) => {
+			const isOwner =
+				Number(row.author_id) === Number(user.user_id) ||
+				Number(row.creator_id) === Number(user.user_id);
+			const canEditArticleAccess =
+				isOwner || Number(row.can_edit_article) === 1;
+			const canAddArticleAccess =
+				isOwner || Number(row.can_add_article) === 1;
+			const canDeleteArticleAccess =
+				isOwner || Number(row.can_delete_article) === 1;
+			const canSortArticleAccess =
+				isOwner || Number(row.can_sort_article) === 1;
+			const canPublishArticleAccess =
+				isOwner || Number(row.can_publish_article) === 1;
+			const access = {
+				viewer_user_id: Number(user.user_id),
+				novel_id: Number(row.novel_id),
+				author_id: Number(row.author_id),
+				access_role: isOwner ? 'owner' : 'collaborator',
+				collaborator_role: row.collaborator_role || null,
+				collaborator_status: isOwner
+					? null
+					: row.collaborator_status || COLLABORATOR_STATUS.ACTIVE,
+				can_view_novel: true,
+				can_view_articles: true,
+				can_edit_article: canEditArticleAccess,
+				can_edit_draft: canEditArticleAccess,
+				can_add_article: canAddArticleAccess,
+				can_delete_article: canDeleteArticleAccess,
+				can_sort_article: canSortArticleAccess,
+				can_publish_article: canPublishArticleAccess,
+				can_publish: canPublishArticleAccess,
+				can_manage_structure:
+					canAddArticleAccess ||
+					canDeleteArticleAccess ||
+					canSortArticleAccess,
+				can_manage_collaborators: isOwner,
+				can_respond_invitation: false,
+				is_owner: isOwner,
+				is_collaborator: !isOwner,
+			};
+			const serializedAccess = serializeAccess(access);
+
+			return {
+				...row,
+				...serializedAccess,
+				current_access: serializedAccess,
+			};
+		});
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);

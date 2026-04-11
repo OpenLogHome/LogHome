@@ -3,36 +3,38 @@
 		<view class="conflict-dialog">
 			<view class="dialog-header">
 				<text class="dialog-title">{{ title }}</text>
-				<text class="dialog-subtitle">请选择要保留的版本</text>
+				<text class="dialog-subtitle">{{ subtitle }}</text>
 			</view>
 			
 			<view class="dialog-content">
 				<!-- 本地版本卡片 -->
 				<view class="version-card" :class="{ 'newer': local.isNewer }" @click="selectVersion('local')">
 					<view class="card-header">
-						<text class="card-title">本地版本</text>
+						<text class="card-title">{{ local.title || '本地版本' }}</text>
 						<text v-if="local.isNewer" class="newer-badge">更新</text>
 					</view>
 					<view class="card-time">{{ local.time }}</view>
+					<view class="card-editor" v-if="local.editorLabel">{{ local.editorLabel }}</view>
 					<view class="card-stats">
 						<text class="stat-item">{{ local.textCount }} 字</text>
 						<text class="stat-item">{{ local.imageCount }} 图片</text>
 					</view>
-					<view class="select-button local">选择本地版本</view>
+					<view class="select-button local">{{ local.selectLabel || '选择本地版本' }}</view>
 				</view>
 				
 				<!-- 云端版本卡片 -->
 				<view class="version-card" :class="{ 'newer': cloud.isNewer }" @click="selectVersion('cloud')">
 					<view class="card-header">
-						<text class="card-title">云端版本</text>
+						<text class="card-title">{{ cloud.title || '云端版本' }}</text>
 						<text v-if="cloud.isNewer" class="newer-badge">更新</text>
 					</view>
 					<view class="card-time">{{ cloud.time }}</view>
+					<view class="card-editor" v-if="cloud.editorLabel">{{ cloud.editorLabel }}</view>
 					<view class="card-stats">
 						<text class="stat-item">{{ cloud.textCount }} 字</text>
 						<text class="stat-item">{{ cloud.imageCount }} 图片</text>
 					</view>
-					<view class="select-button cloud">选择云端版本</view>
+					<view class="select-button cloud">{{ cloud.selectLabel || '选择云端版本' }}</view>
 				</view>
 			</view>
 			
@@ -46,21 +48,41 @@
 <script>
 export default {
 	name: 'ConflictDialog',
+	computed: {
+		defaultCard() {
+			return {
+				title: '',
+				time: '',
+				isNewer: false,
+				textCount: 0,
+				imageCount: 0,
+				editorLabel: '',
+				selectLabel: '',
+			};
+		},
+	},
 	data() {
 		return {
 			title: '版本冲突',
+			subtitle: '请选择要保留的版本',
 			type: '',
 			local: {
+				title: '',
 				time: '',
 				isNewer: false,
 				textCount: 0,
-				imageCount: 0
+				imageCount: 0,
+				editorLabel: '',
+				selectLabel: '',
 			},
 			cloud: {
+				title: '',
 				time: '',
 				isNewer: false,
 				textCount: 0,
-				imageCount: 0
+				imageCount: 0,
+				editorLabel: '',
+				selectLabel: '',
 			},
 			callback: null
 		};
@@ -68,9 +90,16 @@ export default {
 	methods: {
 		show(options) {
 			this.title = options.title || '版本冲突';
+			this.subtitle = options.subtitle || '请选择要保留的版本';
 			this.type = options.type || 'conflict';
-			this.local = options.local || this.local;
-			this.cloud = options.cloud || this.cloud;
+			this.local = {
+				...this.defaultCard,
+				...(options.local || {}),
+			};
+			this.cloud = {
+				...this.defaultCard,
+				...(options.cloud || {}),
+			};
 			this.callback = options.callback || null;
 			this.$refs.popup.open();
 		},
@@ -169,6 +198,13 @@ export default {
 	font-size: 28rpx;
 	color: #666;
 	margin-bottom: 16rpx;
+}
+
+.card-editor {
+	font-size: 26rpx;
+	color: #8a5c35;
+	margin-bottom: 16rpx;
+	line-height: 1.5;
 }
 
 .card-stats {

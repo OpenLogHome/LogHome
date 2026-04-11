@@ -1,6 +1,6 @@
 <!-- 圈子设置页面 -->
 <template>
-  <view class="edit-circle-container">
+  <view class="edit-circle-container" v-dark>
     <!-- 表单内容 -->
     <scroll-view scroll-y class="form-scroll">
       
@@ -385,7 +385,7 @@ export default {
   display: flex;
   flex-direction: column;
 //   height: 100vh;
-  background-color: rgb(255, 248, 234);
+  background-color: var(--background-color);
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -401,7 +401,7 @@ export default {
 }
 
 .form-item {
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 12rpx;
   padding: 20rpx;
   margin-bottom: 20rpx;
@@ -411,7 +411,7 @@ export default {
 
 .form-label {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-color-primary);
   font-weight: bold;
   margin-bottom: 20rpx;
   display: block;
@@ -424,7 +424,7 @@ export default {
   height: 160rpx;
   border-radius: 20rpx;
   overflow: hidden;
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
 }
 
 .bg-upload {
@@ -432,7 +432,7 @@ export default {
   height: 300rpx;
   border-radius: 12rpx;
   overflow: hidden;
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
   box-sizing: border-box;
 }
 
@@ -459,28 +459,30 @@ export default {
 
 .upload-placeholder text {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-top: 10rpx;
 }
 
 .form-input {
   height: 80rpx;
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
   border-radius: 8rpx;
   padding: 0 20rpx;
   font-size: 28rpx;
   width: 100%;
   box-sizing: border-box;
+  color: var(--text-color-primary);
 }
 
 .form-input:disabled {
-  background-color: #f0f0f0;
-  color: #999;
+  background-color: var(--background-color-secondary);
+  color: var(--text-color-secondary);
+  opacity: 0.85;
 }
 
 .tip-text {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-top: 10rpx;
   display: block;
 }
@@ -488,16 +490,17 @@ export default {
 .form-textarea {
   width: 100%;
   height: 200rpx;
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
   border-radius: 8rpx;
   padding: 20rpx;
   font-size: 28rpx;
   box-sizing: border-box;
+  color: var(--text-color-primary);
 }
 
 .word-count {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   text-align: right;
   margin-top: 10rpx;
   display: block;
@@ -506,7 +509,7 @@ export default {
 }
 
 .setting-item {
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
   border-radius: 8rpx;
   padding: 20rpx;
   margin-bottom: 20rpx;
@@ -521,13 +524,13 @@ export default {
 
 .setting-title {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-color-primary);
   font-weight: bold;
 }
 
 .setting-desc {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-bottom: 20rpx;
   display: block;
 }
@@ -538,7 +541,7 @@ export default {
 
 .question-label {
   font-size: 26rpx;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 10rpx;
   display: block;
 }
@@ -561,7 +564,7 @@ export default {
 }
 
 .submit-btn.disabled {
-  background-color: #ccc;
+  background-color: var(--border-color);
   box-shadow: none;
 }
-</style> 
+</style>

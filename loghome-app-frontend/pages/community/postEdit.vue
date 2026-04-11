@@ -1,5 +1,5 @@
 <template>
-	<view class="post-edit-container">
+	<view class="post-edit-container" v-dark>
 		<!-- 内容区域 -->
 		<view class="content-area">
 			<!-- 标题输入 -->
@@ -54,7 +54,7 @@
 						v-if="canAddMoreImages"
 						@tap="chooseImage"
 					>
-						<uni-icons type="plusempty" size="30" color="#999"></uni-icons>
+						<uni-icons type="plusempty" size="30" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 					</view>
 				</view>
 			</view>
@@ -64,7 +64,7 @@
 				<text class="label">发布到</text>
 				<text class="selected-circle" v-if="selectedCircle">{{selectedCircle.name}}</text>
 				<text class="placeholder" v-else>选择圈子</text>
-				<uni-icons type="right" size="16" color="#999"></uni-icons>
+				<uni-icons type="right" size="16" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 			</view>
 			
 			<!-- 绑定作品 -->
@@ -72,7 +72,7 @@
 				<text class="label">绑定作品（可选）</text>
 				<text class="selected-book" v-if="selectedBook">{{selectedBook.name}}</text>
 				<text class="placeholder" v-else>选择作品</text>
-				<uni-icons type="right" size="16" color="#999"></uni-icons>
+				<uni-icons type="right" size="16" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 			</view>
 			<!-- 如果已选择作品，显示作品卡片 -->
 			<view class="selected-book-card" v-if="selectedBook">
@@ -85,7 +85,7 @@
 						<text class="book-desc">{{selectedBook.content && selectedBook.content.length > 50 ? selectedBook.content.substr(0, 50) + '...' : selectedBook.content}}</text>
 					</view>
 					<view class="remove-book" @tap.stop="removeBook">
-						<uni-icons type="trash" size="20" color="#999"></uni-icons>
+						<uni-icons type="trash" size="20" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 					</view>
 				</view>
 			</view>
@@ -93,11 +93,11 @@
 		
 		<!-- 圈子选择弹窗 -->
 		<uni-popup ref="circlePopup" type="bottom">
-			<view class="popup-content">
+			<view class="popup-content" v-dark>
 				<view class="popup-header">
 					<text class="popup-title">选择圈子</text>
 					<view class="close-btn" @tap="hideCirclePopup">
-						<uni-icons type="closeempty" size="24" color="#999"></uni-icons>
+						<uni-icons type="closeempty" size="24" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 					</view>
 				</view>
 				<scroll-view scroll-y class="circle-list">
@@ -131,8 +131,8 @@
 			class="book-select-drawer"
 			custom-class="book-select-wrapper"
 			modal-class="book-select-overlay">
-			<div class="searchBar" style="position:absolute; background-color: #ffe6b4; width:100%; z-index:100;">
-				<uni-search-bar bgColor="#ffffff" :radius="0" @input="searchLibrary" placeholder="搜索我的作品"
+			<div class="searchBar" v-dark :style="{ position: 'absolute', backgroundColor: isDarkMode ? 'var(--background-color-secondary)' : '#ffe6b4', width: '100%', zIndex: 100 }">
+				<uni-search-bar :bgColor="isDarkMode ? '#252525' : '#ffffff'" :radius="0" @input="searchLibrary" placeholder="搜索我的作品"
 					cancelButton="none">
 					<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;width:25px;"/>
 					<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;width:20px;"/>
@@ -140,7 +140,7 @@
 			</div>
 			<div style="height:52px; width:100%;"></div>
 			<view v-for="item in searchBooks" :key="item.novel_id" @click="selectBook(item)">
-				<div class="books" style="margin:20rpx;">
+				<div class="books" v-dark style="margin:20rpx;">
 					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
 						:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
 					<div class="bookInfo">
@@ -167,11 +167,13 @@
 	import axios from 'axios'
 	import TaskRewardModal from "../../components/TaskRewardModal.vue"
 	import { settleAndNotifyExpTaskCompletion } from "../../lib/treeExpTaskNotifier.js"
+	import darkModeMixin from '@/mixins/dark-mode.js'
 
 	export default {
 		components: {
 			TaskRewardModal
 		},
+		mixins: [darkModeMixin],
 		data() {
 			return {
 				postData: {
@@ -667,7 +669,7 @@
 <style lang="scss" scoped>
 	.post-edit-container {
 		min-height: 100vh;
-		background-color: #fff;
+		background-color: var(--background-color);
 		padding: 30rpx;
 	}
 
@@ -680,6 +682,7 @@
 		font-weight: bold;
 		padding: 20rpx 0;
 		width: 100%;
+		color: var(--text-color-primary);
 	}
 
 	.content-input {
@@ -688,11 +691,12 @@
 		padding: 20rpx 0;
 		width: 100%;
 		height: 300rpx;
+		color: var(--text-color-primary);
 	}
 
 	.count-text {
 		font-size: 24rpx;
-		color: #999;
+		color: var(--text-color-regular);
 		text-align: right;
 		display: block;
 		margin-top: 10rpx;
@@ -761,23 +765,23 @@
 	}
 
 	.upload-btn {
-		background-color: #f8f8f8;
+		background-color: var(--background-color-secondary);
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		border: 2rpx dashed #ddd;
+		border: 2rpx dashed var(--border-color);
 	}
 
 	.circle-selector, .book-selector {
 		display: flex;
 		align-items: center;
 		padding: 30rpx 0;
-		border-top: 1rpx solid #f0f0f0;
+		border-top: 1rpx solid var(--border-color);
 	}
 
 	.label {
 		font-size: 28rpx;
-		color: #333;
+		color: var(--text-color-primary);
 		margin-right: 20rpx;
 	}
 
@@ -789,12 +793,12 @@
 
 	.placeholder {
 		font-size: 28rpx;
-		color: #999;
+		color: var(--text-color-regular);
 		flex: 1;
 	}
 
 	.popup-content {
-		background-color: #fff;
+		background-color: var(--card-background);
 		border-radius: 20rpx 20rpx 0 0;
 		padding-bottom: env(safe-area-inset-bottom);
 	}
@@ -804,13 +808,13 @@
 		justify-content: space-between;
 		align-items: center;
 		padding: 30rpx;
-		border-bottom: 1rpx solid #f0f0f0;
+		border-bottom: 1rpx solid var(--border-color);
 	}
 
 	.popup-title {
 		font-size: 32rpx;
 		font-weight: bold;
-		color: #333;
+		color: var(--text-color-primary);
 	}
 
 	.close-btn {
@@ -825,7 +829,7 @@
 		display: flex;
 		align-items: center;
 		padding: 30rpx;
-		border-bottom: 1rpx solid #f0f0f0;
+		border-bottom: 1rpx solid var(--border-color);
 	}
 
 	.circle-icon {
@@ -841,19 +845,19 @@
 
 	.circle-name {
 		font-size: 28rpx;
-		color: #333;
+		color: var(--text-color-primary);
 		margin-bottom: 6rpx;
 	}
 
 	.circle-desc {
 		font-size: 24rpx;
-		color: #999;
+		color: var(--text-color-regular);
 	}
 	
 	/* 作品卡片样式 */
 	.selected-book-card {
 		margin: 20rpx 0;
-		background-color: #f9f9f9;
+		background-color: var(--background-color-secondary);
 		border-radius: 8rpx;
 		padding: 15rpx;
 	}
@@ -881,19 +885,19 @@
 	.book-name {
 		font-size: 28rpx;
 		font-weight: bold;
-		color: #333;
+		color: var(--text-color-primary);
 		margin-bottom: 10rpx;
 	}
 	
 	.book-author {
 		font-size: 24rpx;
-		color: #666;
+		color: var(--text-color-regular);
 		margin-bottom: 10rpx;
 	}
 	
 	.book-desc {
 		font-size: 24rpx;
-		color: #999;
+		color: var(--text-color-regular);
 		display: -webkit-box;
 		-webkit-line-clamp: 3;
 		-webkit-box-orient: vertical;
@@ -913,7 +917,7 @@
 		width: calc(100vw - 65rpx);
 		margin: 0 30rpx;
 		display: flex;
-		background-color: rgb(255, 255, 255);
+		background-color: var(--card-background);
 		border-radius: 10rpx;
 		
 		log-image {
@@ -937,7 +941,7 @@
 				font-weight: bold;
 				-webkit-box-orient: vertical;
 				-webkit-line-clamp: 1;
-				color: rgb(45, 45, 45);
+				color: var(--text-color-primary);
 				margin: 5rpx;
 			}
 			
@@ -958,7 +962,7 @@
 				
 				.auther_name {
 					font-size: 25rpx;
-					color: rgb(45, 45, 45);
+					color: var(--text-color-primary);
 					overflow: hidden;
 					margin-left: 45rpx;
 					display: -webkit-box;
@@ -969,7 +973,7 @@
 			
 			.description {
 				font-size: 25rpx;
-				color: rgb(142, 130, 109);
+				color: var(--text-color-regular);
 				margin: 5rpx 0;
 				overflow: hidden;
 				display: -webkit-box;
@@ -977,5 +981,10 @@
 				-webkit-line-clamp: 3;
 			}
 		}
+	}
+
+	::v-deep .book-select-wrapper,
+	::v-deep .book-select-wrapper .el-drawer__body {
+		background-color: var(--background-color);
 	}
 </style>

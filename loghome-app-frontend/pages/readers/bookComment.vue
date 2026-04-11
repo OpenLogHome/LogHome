@@ -59,7 +59,7 @@
 						<uni-icons type="image" size="30" color="#666666"></uni-icons>
 					</view>
 					<view class="send-icon">
-						<uni-icons type="redo-filled" size="30" color="#EA7034" @click="submitComment"
+						<uni-icons :type="isSubmitting ? 'spinner-cycle' : 'redo-filled'" size="30" :color="isSubmitting ? '#BDBDBD' : '#EA7034'" @click="submitComment"
 							:focus="isFocus"></uni-icons>
 					</view>
 				</view>
@@ -111,6 +111,7 @@ export default {
 			paragraphId: undefined,
 			paragraph: undefined,
 			extraCommentId: undefined,
+			isSubmitting: false,
 			media_urls: [], // 存储图片URL
 			fanRanks: {
 				totalRanks: [],
@@ -128,17 +129,11 @@ export default {
 	},
 	mounted() {
 		if (this.componentMode) {
-			console.log(this.componentMode, this.componentData);
-			this.novelId = this.componentData.novelId;
-			if (this.componentData.articleId !== undefined) {
-				this.articleId = this.componentData.articleId;
-				if (this.componentData.paragraphId !== undefined) {
-					this.paragraphId = this.componentData.paragraphId;
-					this.loadParagraphInfo();
-				}
-			}
+			this.applyCommentContext(this.componentData);
 			// 获取粉丝排名
-			this.fetchFanRanks();
+			if (this.novelId) {
+				this.fetchFanRanks();
+			}
 		}
 	},
 	onLoad(params) {
@@ -146,15 +141,12 @@ export default {
 			this.preLoadCommentId = params.comment_id;
 		}
 		if (!this.componentMode) {
-			this.novelId = params.id;
+			this.applyCommentContext(params);
 			if (params.articleId !== undefined) {
-				this.articleId = params.articleId;
 				uni.setNavigationBarTitle({
 					title: "章节评论"
 				})
 				if (params.paragraphId !== undefined) {
-					this.paragraphId = params.paragraphId;
-					this.loadParagraphInfo();
 					uni.setNavigationBarTitle({
 						title: "段落评论"
 					})
@@ -164,10 +156,52 @@ export default {
 				this.extraCommentId = params.extraId;
 			}
 			// 获取粉丝排名
-			this.fetchFanRanks();
+			if (this.novelId) {
+				this.fetchFanRanks();
+			}
 		}
 	},
 	methods: {
+		applyCommentContext(data = {}) {
+			this.novelId = data.novelId !== undefined ? data.novelId : data.id;
+			this.articleId = data.articleId !== undefined ? data.articleId : undefined;
+			this.paragraphId = data.paragraphId !== undefined ? data.paragraphId : undefined;
+			if (data.paragraphText !== undefined) {
+				this.paragraph = data.paragraphText;
+			} else if (data.paragraphId === undefined) {
+				this.paragraph = undefined;
+			}
+			if (this.paragraphId !== undefined && (this.paragraph === undefined || this.paragraph === null || this.paragraph === '')) {
+				this.loadParagraphInfo();
+			}
+		},
+		getParagraphIdentity(item) {
+			if (!item) {
+				return undefined;
+			}
+			const paragraphId = item.id !== undefined ? item.id : item.paragraph_id;
+			if (paragraphId === undefined || paragraphId === null || paragraphId === '') {
+				return undefined;
+			}
+			return Number(paragraphId);
+		},
+		emitCommentChanged(delta = 0) {
+			this.$emit('commentChanged', {
+				novelId: this.novelId,
+				articleId: this.articleId,
+				paragraphId: this.paragraphId,
+				delta: Number(delta) || 0
+			});
+		},
+		getParagraphValue(item) {
+			if (!item) {
+				return undefined;
+			}
+			if (Array.isArray(item.value)) {
+				return item.value.join('');
+			}
+			return item.value;
+		},
 		utc2beijing(utc_datetime) {
 			// 转为正常的时间格式 年-月-日 时:分:秒
 			var T_pos = utc_datetime.indexOf('T');
@@ -444,14 +478,18 @@ export default {
 				this.$refs.paging.addDataFromTop([this.buildCommentItem(rootComment, praiseStatusMap)], true, true);
 			}
 		},
-		submitComment() {
-			let _this = this;
-			if (this.commentText == "") return;
+		async submitComment() {
+			if (this.commentText == "" || this.isSubmitting) return;
+			this.isSubmitting = true;
+			uni.showLoading({
+				title: '发送中...',
+				mask: true
+			});
 			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;;
-			//console.log(tk);
-			// 发表根评论
-			if (this.replyToId == -1) {
-				axios.post(this.$baseUrl + '/community/comment_on_novel',
+			try {
+				// 发表根评论
+				if (this.replyToId == -1) {
+					const response = await axios.post(this.$baseUrl + '/community/comment_on_novel',
 					{
 						novel_id: this.novelId,
 						content: this.commentText,
@@ -465,49 +503,39 @@ export default {
 							'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 						}
 					},
-				)
-					.then(function (response) {
-						uni.showToast({
-							title: "发表成功",
-							icon: 'none',
-							duration: 2000
-						});
-						let item = response.data;
-						let commentItem = {
-							author_id: item.author_id,
-							comment_id: item.essay_comment_id,
-							headImgSrc: item.avatar_url,
-							userName: item.name,
-							userId: item.user_id,
-							sendTime: _this.utc2beijing(item.comment_time),
-							sendMsg: item.content,
-							likeNum: item.likeNum,
-							reviewLess: [],
-							reviewNum: 0,
-							article_id: item.article_id,
-							article_title: item.article_title || '',
-							cento_id: item.cento_id,
-							cento: item.cento,
-							media_urls: _this.media_urls || [],
-							praiseType: 3
-						}
-						_this.$refs.paging.addDataFromTop([commentItem], true, true);
-					_this.commentText = "";
-					_this.media_urls = []; // 清空已上传图片
-					_this.isFocus = false; // 关闭焦点状态
-					})
-					.catch(function (error) {
-						if (error) {
-							uni.showToast({
-								title: "发表失败",
-								icon: 'none',
-								duration: 2000
-							});
-						}
+					);
+					uni.showToast({
+						title: "发表成功",
+						icon: 'none',
+						duration: 2000
 					});
-			} else {
-				// 发表回复
-				axios.post(this.$baseUrl + '/community/reply_to_novel_comment',
+					let item = response.data;
+					let commentItem = {
+						author_id: item.author_id,
+						comment_id: item.essay_comment_id,
+						headImgSrc: item.avatar_url,
+						userName: item.name,
+						userId: item.user_id,
+						sendTime: this.utc2beijing(item.comment_time),
+						sendMsg: item.content,
+						likeNum: item.likeNum,
+						reviewLess: [],
+						reviewNum: 0,
+						article_id: item.article_id,
+						article_title: item.article_title || '',
+						cento_id: item.cento_id,
+						cento: item.cento,
+						media_urls: this.media_urls || [],
+						praiseType: 3
+					}
+					this.$refs.paging.addDataFromTop([commentItem], true, true);
+					this.commentText = "";
+					this.media_urls = []; // 清空已上传图片
+					this.isFocus = false; // 关闭焦点状态
+					this.emitCommentChanged(1);
+				} else {
+					// 发表回复
+					const response = await axios.post(this.$baseUrl + '/community/reply_to_novel_comment',
 					{
 						essay_comment_id: this.replyToId,
 						novel_id: this.novelId,
@@ -522,61 +550,73 @@ export default {
 							'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 						}
 					},
-				)
-					.then(function (response) {
-						uni.showToast({
-							title: "发表成功",
-							icon: 'none',
-							duration: 2000
-						});
-						// _this.refreshPage(1,10);
-						for (let item of _this.reviews) {
-							let items = [item, ...item.reviewLess];
-							for (let subItem of items) {
-								if (subItem.comment_id == response.data.reply_to_id) {
-									console.log("reply_to", subItem);
-									item.reviewLess.push({
-										comment_id: response.data.essay_comment_id,
-										userName: response.data.name,
-										userId: response.data.user_id,
-										targetUserName: _this.replyToUserName,
-										sendMsg: response.data.content,
-										article_id: item.article_id,
-										media_urls: _this.media_urls || []
-									});
-									break;
-								}
+					);
+					uni.showToast({
+						title: "发表成功",
+						icon: 'none',
+						duration: 2000
+					});
+					// this.refreshPage(1,10);
+					for (let item of this.reviews) {
+						let items = [item, ...item.reviewLess];
+						for (let subItem of items) {
+							if (subItem.comment_id == response.data.reply_to_id) {
+								console.log("reply_to", subItem);
+								item.reviewLess.push({
+									comment_id: response.data.essay_comment_id,
+									userName: response.data.name,
+									userId: response.data.user_id,
+									targetUserName: this.replyToUserName,
+									sendMsg: response.data.content,
+									article_id: item.article_id,
+									media_urls: this.media_urls || []
+								});
+								break;
 							}
 						}
-						_this.$forceUpdate();
-					_this.commentText = "";
-					_this.media_urls = []; // 清空已上传图片
+					}
+					this.$forceUpdate();
+					this.commentText = "";
+					this.media_urls = []; // 清空已上传图片
 					// 重置回复状态
-					_this.cancelReply();
-					})
-					.catch(function (error) {
-						if (error) {
-							uni.showToast({
-								title: "发表失败",
-								icon: 'none',
-								duration: 2000
-							});
-						}
+					this.cancelReply();
+					this.emitCommentChanged(1);
+				}
+			} catch (error) {
+				if (error) {
+					uni.showToast({
+						title: "发表失败",
+						icon: 'none',
+						duration: 2000
 					});
+				}
+			} finally {
+				this.isSubmitting = false;
+				uni.hideLoading();
 			}
 		},
 		loadParagraphInfo() {
+			const targetParagraphId = Number(this.paragraphId);
+			if (!this.articleId || !Number.isFinite(targetParagraphId)) {
+				this.paragraph = undefined;
+				return;
+			}
 			axios.get(this.$baseUrl + '/articles/get_article?id=' + this.articleId).then((res) => {
-				let article = res.data[0];
-				article.content = JSON.parse(article.content);
-				for (let item of article.content) {
-					if (item.id == this.paragraphId) {
-						this.paragraph = item.value;
-						break;
-					}
+				let article = res.data[0] || {};
+				let content = article.content;
+				if (typeof content === 'string') {
+					content = JSON.parse(content);
 				}
-			}).catch(function (error) {
+				if (!Array.isArray(content)) {
+					content = [];
+				}
+				const targetParagraph = content.find((item) => {
+					return item && (!item.type || item.type === 'text') && this.getParagraphIdentity(item) === targetParagraphId;
+				});
+				this.paragraph = this.getParagraphValue(targetParagraph);
+			}).catch((error) => {
 				console.log(error);
+				this.paragraph = undefined;
 				if (error) {
 					// uni.showToast({
 					// 	title: "获取文章信息失败",
@@ -584,7 +624,7 @@ export default {
 					// 	duration: 2000
 					// });
 				}
-			}).then(function () {
+			}).then(() => {
 			})
 		},
 		childReview(item) {
@@ -628,12 +668,14 @@ export default {
 				if (item.comment_id == id) {
 					this.reviews.splice(this.reviews.indexOf(item), 1);
 					console.log("delete", item);
+					this.emitCommentChanged(-1);
 					break;
 				}
 				for (let subItem of item.reviewLess) {
 					if (subItem.comment_id == id) {
 						item.reviewLess.splice(item.reviewLess.indexOf(subItem), 1);
 						console.log("delete", subItem);
+						this.emitCommentChanged(-1);
 						break;
 					}
 				}

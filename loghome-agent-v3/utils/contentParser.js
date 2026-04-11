@@ -32,9 +32,9 @@ export async function processRichText(content) {
                 try {
                     console.log(`Analyzing image: ${imgUrl}`);
                     const description = await mllmClient.call([
-                        { type: "text", text: "请简要描述这张图片的内容，重点关注人物外貌、场景氛围等对小说理解有帮助的信息。" },
+                        { type: "text", text: "请简要描述这张图片的内容，重点关注人物外貌、场景氛围等对小说理解有帮助的信息。保持简短。" },
                         { type: "image_url", image_url: { url: imgUrl } }
-                    ], 'fast', IMAGE_MLLM_CONFIG);
+                    ], 'speed', IMAGE_MLLM_CONFIG);
                     
                     resultText += `\n[图片描述: ${description}]\n`;
                 } catch (err) {

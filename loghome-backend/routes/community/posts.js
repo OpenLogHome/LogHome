@@ -136,6 +136,8 @@ router.get('/detail/:id', async (req, res) => {
         
         // 获取作者勋章
         post.author_badge = await achievements.getUserBadge(post.user_id);
+        post.author_title = await achievements.getUserTitleProfile(post.user_id);
+        post.author_title_text = post.author_title.display_text;
         
         // 处理媒体URL
         if (post.media_urls) {
@@ -310,6 +312,12 @@ router.post('/create', auth, async (req, res) => {
         );
         
         const postId = result.insertId;
+        if (initialStatus === 1) {
+            await achievements.recordMetricProgress(user.user_id, 'community_post_count', 1, {
+                reason: '社区发帖',
+                suppressNotification: true,
+            });
+        }
         
         // 添加标签关联
         if (tag_ids && tag_ids.length > 0) {
@@ -701,6 +709,12 @@ router.post('/:id/audit', auth, async (req, res) => {
             'UPDATE comm_posts SET status = ?, audit_user_id = ?, audit_time = NOW(), audit_reason = ? WHERE post_id = ?',
             [status, user.user_id, reason || null, postId]
         );
+        if (Number(status) === 1 && Number(post[0].status) !== 1) {
+            await achievements.recordMetricProgress(post[0].user_id, 'community_post_count', 1, {
+                reason: '社区发帖审核通过',
+                suppressNotification: true,
+            });
+        }
         
         // 记录审核日志
         await query(

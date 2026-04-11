@@ -75,7 +75,7 @@ router.post('/user_activating_set', auth, async function (req, res) {
 router.get('/achievements', auth, async function (req, res) {
 	try {
 		const list = await achievements.getAchievementDefinitions({
-			officialOnly: true,
+			officialOnly: false,
 		});
 		res.json({ list });
 	} catch (e) {

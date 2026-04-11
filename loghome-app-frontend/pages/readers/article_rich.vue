@@ -163,7 +163,11 @@
 
 		<el-drawer :with-header="false" :visible.sync="menuDrawer" direction="btt" :modal="false" size="50%"
 			custom-class="bookMenu">
-			<bookMenu :novel_id="article.novel_id"></bookMenu>
+			<bookMenu
+				:novel_id="article.novel_id"
+				:currentIdx="currentMenuIdx"
+				:visible="menuDrawer"
+			></bookMenu>
 		</el-drawer>
 		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt"
 			:modal="commentDrawerVisible" size="calc(80% + 44px)" custom-class="commentDrawer" :destroy-on-close="true"
@@ -283,19 +287,56 @@ export default {
 				this.readExpReporter.markActive();
 			}
 		},
+		buildPlainTextArticleContent(rawContent) {
+			const text = String(rawContent || '').replace(/\r\n/g, '\n');
+			if (!text.trim()) {
+				return [];
+			}
+			return text.split('\n').map((line) => ({
+				type: 'text',
+				value: line
+			}));
+		},
 		normalizeArticleContent(rawContent) {
 			let content = [];
-			try {
-				content = typeof rawContent === 'string' ? JSON.parse(rawContent) : (rawContent || []);
-			} catch (e) {
+			if (Array.isArray(rawContent)) {
+				content = rawContent;
+			} else if (rawContent && Array.isArray(rawContent.content)) {
+				content = rawContent.content;
+			} else if (typeof rawContent === 'string') {
+				try {
+					const parsed = JSON.parse(rawContent);
+					if (Array.isArray(parsed)) {
+						content = parsed;
+					} else if (parsed && Array.isArray(parsed.content)) {
+						content = parsed.content;
+					} else if (typeof parsed === 'string') {
+						content = this.buildPlainTextArticleContent(parsed);
+					}
+				} catch (e) {
+					content = this.buildPlainTextArticleContent(rawContent);
+				}
+			}
+			if (!Array.isArray(content)) {
 				content = [];
 			}
 			let autoId = 1;
 			return content.map(item => {
-				if (item.type === 'text') {
+				if (!item) {
+					return {
+						type: 'text',
+						value: '',
+						id: autoId++,
+						selected: false,
+						cento: null
+					}
+				}
+				if (item.type === 'text' || item.type == undefined) {
 					const paragraphId = item.id ?? item.paragraph_id ?? autoId++;
 					return {
 						...item,
+						type: 'text',
+						value: Array.isArray(item.value) ? item.value.join('') : (item.value || ''),
 						id: paragraphId,
 						selected: false,
 						cento: item.cento || null
@@ -335,7 +376,7 @@ export default {
 				if (this.article.article_type == "worldVocabulary") {
 					this.article.content = JSON.parse(this.article.content);
 				}
-				if (this.article.article_type == "richtext") {
+				if (this.article.article_type == "richtext" || this.article.article_type == "worldOutline") {
 					this.articleContent = this.normalizeArticleContent(this.article.content);
 					this.showArticleCentos();
 				} else {
@@ -470,6 +511,22 @@ export default {
 			if (paragraphDom) {
 				paragraphDom.scrollIntoView({ behavior: 'smooth', block: 'center' });
 			}
+		},
+		getParagraphText(paragraphId) {
+			const targetParagraphId = Number(paragraphId);
+			if (!Number.isFinite(targetParagraphId) || !Array.isArray(this.articleContent)) {
+				return '';
+			}
+			const targetParagraph = this.articleContent.find((item) => {
+				if (!item || (item.type && item.type !== 'text')) {
+					return false;
+				}
+				return Number(item.id ?? item.paragraph_id) === targetParagraphId;
+			});
+			if (!targetParagraph) {
+				return '';
+			}
+			return Array.isArray(targetParagraph.value) ? targetParagraph.value.join('') : (targetParagraph.value || '');
 		},
 		gotoMenu() {
 			// uni.navigateTo({
@@ -681,22 +738,32 @@ export default {
 			this.commentDrawerData = {
 				novelId: this.article.novel_id,
 				articleId: this.articleId,
-				paragraphId: paragraphId
+				paragraphId: paragraphId,
+				paragraphText: this.getParagraphText(paragraphId)
 			}
 			this.commentDrawerVisible = true;
 			if (typeof window !== 'undefined' && window.history) {
 				window.history.pushState({ isCommentDrawerOpen: true }, '', window.location.href)
 			}
 		},
-		async handleCloseCommentDraweraManually() {
+		async closeCommentDrawer(syncHistory = false) {
 			const paragraphId = this.activeCommentParagraphId || this.commentDrawerData.paragraphId;
-			if (typeof window !== 'undefined' && window.history) {
-				window.history.go(-1)
-			}
 			this.commentDrawerVisible = false;
 			this.activeCommentParagraphId = null;
+			if (syncHistory && typeof window !== 'undefined' && window.history) {
+				window.history.go(-1)
+			}
 			await this.refreshParagraphCommentAmount(paragraphId);
 			this.doUpdateCommentDisplay = true;
+		},
+		async browserBack() {
+			if (!this.commentDrawerVisible) {
+				return;
+			}
+			await this.closeCommentDrawer(false);
+		},
+		async handleCloseCommentDraweraManually() {
+			await this.closeCommentDrawer(true);
 		},
 		handleFeedback() {
 			if (!this.selectedParagraph) return;
@@ -822,6 +889,9 @@ export default {
 			this.pendingParagraphId = option.paragraphId;
 		}
 		this.refreshPage(option.id);
+		// #ifdef H5
+		window.addEventListener('popstate', this.browserBack)
+		// #endif
 
 		// 启动页面滚动日志记录
 		this.updatePageProgress();
@@ -833,6 +903,9 @@ export default {
 		clearInterval(this.navigationBarController);
 		clearInterval(this.pageProgressInterval);
 		clearInterval(this.updateCommentDisplayTimer);
+		// #ifdef H5
+		window.removeEventListener("popstate", this.browserBack);
+		// #endif
 	},
 	onShow() {
 		if (this.readExpReporter) {
@@ -849,6 +922,9 @@ export default {
 		if (this.readExpReporter) {
 			await this.readExpReporter.stop();
 		}
+		// #ifdef H5
+		window.removeEventListener("popstate", this.browserBack);
+		// #endif
 	},
 	onPageScroll(res) {
 		this.scrollTop = res.scrollTop; //距离页面顶部距离
@@ -856,6 +932,14 @@ export default {
 		this.markReadActivity();
 	},
 	computed: {
+		currentMenuIdx() {
+			const currentArticleId = Number(this.article.article_id || this.articleId || 0);
+			if (!currentArticleId || !Array.isArray(this.articles) || this.articles.length === 0) {
+				return -1;
+			}
+			const publishedArticles = this.articles.filter((item) => Number(item.is_draft) === 0);
+			return publishedArticles.findIndex((item) => Number(item.article_id) === currentArticleId);
+		},
 		firstArticleChapter() {
 			for (let item of this.articles) {
 				if (item.is_draft == 0) {

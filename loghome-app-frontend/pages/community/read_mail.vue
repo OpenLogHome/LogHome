@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view class="read-mail-page" v-dark>
 		<view class="mail_head">
 			<view class="mail_title">{{mail.title}}</view>
 			<view class="sender">
@@ -84,8 +84,15 @@
 </script>
 
 <style lang="less">
+	.read-mail-page{
+		min-height: 100vh;
+		background-color: var(--background-color);
+		padding-bottom: 30rpx;
+	}
 	.mail_head{
-		border-top: solid #cacaca 1px;
+		border-top: solid var(--border-color) 1px;
+		background-color: var(--card-background);
+		padding-top: 10rpx;
 		.decoration_line{
 			border-bottom: #7f7356 4px solid;
 			border-right: #472100 30rpx solid;
@@ -100,11 +107,15 @@
 			font-weight: bold;
 			color: #713418;
 			height: 30px;
+
+			.dark-mode & {
+				color: #d1a980;
+			}
 		}
 		.sender{
 			padding: 0 30rpx;
 			font-size: 18px;
-			color: #808080;
+			color: var(--text-color-regular);
 			position: relative;
 			.user_avatar{
 				width: 28px;
@@ -125,6 +136,7 @@
 		padding: 0 12rpx;
 		font-size: 18px;
 		height: 36vh;
+		color: var(--text-color-primary);
 	}
 
 </style>

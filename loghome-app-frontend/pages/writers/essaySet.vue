@@ -1,7 +1,19 @@
 <template>
 	<view v-dark>
-		<view class="list-content">
+			<view class="list-content">
 			<view class="list">
+				<view class="li noborder" @click="gotoIndexing">
+					<view class="text">全文智能索引</view>
+					<img class="to" src="../../static/user/to.png"></img>
+				</view>
+			</view>
+			<view class="list">
+				<view class="li noborder" @click="gotoCollaborationSettings">
+					<view class="text">多人协作</view>
+					<img class="to" src="../../static/user/to.png"></img>
+				</view>
+			</view>
+			<view class="list" v-if="isOwner">
 				<view class="li " @click="setPersonalBtn">
 					<view class="text">作品状态：{{novel.is_personal==0?"公开":"私密"}}</view>
 					<img class="to" src="../../static/user/to.png"></img>
@@ -27,7 +39,7 @@
 					<img class="to" src="../../static/user/to.png"></img>
 				</view> -->
 			</view>
-			<view class="list">
+			<view class="list" v-if="isOwner">
 				<view class="li noborder" @click="deleteEssay">
 					<view class="text" style="color:red">删除作品</view>
 					<img class="to" src="../../static/user/to.png"></img>
@@ -44,10 +56,21 @@
 			return {
 				id:-1,
 				novel:{},
-				tags:[]
+				tags:[],
+				access: {
+					access_role: 'owner',
+					can_manage_collaborators: true,
+					can_manage_structure: true,
+					can_respond_invitation: false,
+				},
 			}
 		},
 		mixins: [darkModeMixin],
+		computed: {
+			isOwner() {
+				return this.access && this.access.access_role === 'owner';
+			},
+		},
 		onLoad(params) {
 			this.id = params.id;
 			this.refreshPage();
@@ -56,10 +79,32 @@
 			this.refreshPage();
 		},
 		methods: {
+			getTokenInfo() {
+				let token = JSON.parse(window.localStorage.getItem('token'));
+				return token || null;
+			},
+			getAuthToken() {
+				const token = this.getTokenInfo();
+				return token ? token.tk : null;
+			},
+			async loadCollaborationInfo() {
+				const tk = this.getAuthToken();
+				const res = await axios.get(this.$baseUrl + '/essays/get_novel_collaboration_info?novel_id=' + this.id, {
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tk
+					}
+				});
+				this.access = res.data.access || this.access;
+				return res.data;
+			},
 			refreshPage(){
 				this.getNovelTags();
-				axios.get(this.$baseUrl + '/essays/get_novel_by_id?id=' + this.id, {}).then((res) => {
-					this.novel = res.data[0];
+				Promise.all([
+					axios.get(this.$baseUrl + '/essays/get_novel_by_id?id=' + this.id, {}),
+					this.loadCollaborationInfo(),
+				]).then(([novelRes, _]) => {
+					this.novel = novelRes.data[0];
 					console.log(this.novel);
 				}).catch(function(error) {
 					uni.showToast({
@@ -68,6 +113,16 @@
 						duration: 2000
 					});
 				}).then(function() {})
+			},
+			gotoIndexing(){
+				uni.navigateTo({
+					url:"./essayIndexing?id=" + this.id
+				})
+			},
+			gotoCollaborationSettings(){
+				uni.navigateTo({
+					url:"./essayCollaborationSettings?id=" + this.id
+				})
 			},
 			gotoChangeBookInfo(){
 				uni.navigateTo({

@@ -23,11 +23,14 @@
 						{{ bookInfo.name }}
 					</view>
 					<view class="l-dd-sub">
-						<view class="author clickable" @click="gotoUserProfile(bookInfo.auther_id)">
-							<log-image :src="bookInfo.auther_avatar" alt="" class="auther_avatar"
+						<view class="author clickable" @click="gotoUserProfile(primaryAuthor.user_id || bookInfo.auther_id)">
+							<log-image :src="primaryAuthor.avatar_url || bookInfo.auther_avatar" alt="" class="auther_avatar"
 								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-							<div class="auther_name">{{ bookInfo.author_name }}<uni-icons type="forward" size="18"
-									style="color:#dddddd"></uni-icons></div>
+							<div class="auther_name">
+								<view class="auther_name_text">{{ authorSummaryText }}</view>
+								<uni-icons class="auther_name_icon" type="forward" size="18"
+									style="color:#dddddd"></uni-icons>
+							</div>
 						</view>
 					</view>
 					<view class="tags" v-if="tags.length > 0">
@@ -107,6 +110,31 @@
 							</img>目录
 						</view>
 
+					</view>
+
+					<view class="l-list collaborator-authors" v-if="isCollaborativeWork">
+						<view class="l-h3">
+							<text class="l-h3-title">协作者</text>
+						</view>
+						<scroll-view scroll-x class="collaborator-scroll" show-scrollbar="false">
+							<view class="collaborator-row">
+								<view
+									class="collaborator-card clickable"
+									v-for="author in collaborationAuthors"
+									:key="author.user_id"
+									@click="gotoUserProfile(author.user_id)"
+								>
+									<log-image
+										:src="author.avatar_url"
+										alt=""
+										class="collaborator-avatar"
+										onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"
+									/>
+									<view class="collaborator-name">{{ author.name }}</view>
+									<view class="collaborator-badge" v-if="author.is_owner">所有者</view>
+								</view>
+							</view>
+						</scroll-view>
 					</view>
 
 					<view class="l-list" @click="startReading" v-show="articleLength">
@@ -322,6 +350,10 @@
 		</view>
 
 		<view class="l-body-fixed" v-show="bookInfo.is_personal == 0">
+			<view class="l-handle-btn l-ai-btn clickable" @tap="gotoAskLogGirl">
+				<view class="ai-entry-icon">AI</view>
+				<view class="ai-entry-text">问问原木娘</view>
+			</view>
 			<view class="l-handle-btn l-look-btn clickable" @tap="tip">
 				打赏
 			</view>
@@ -503,7 +535,8 @@ export default {
 			},
 			worldLoadTime: 0,
 			worlds: [],
-			giftImage: ""
+			giftImage: "",
+			collaborationAuthors: []
 		}
 	},
 	methods: {
@@ -536,6 +569,11 @@ export default {
 		navtoSection() {
 			uni.navigateTo({
 				url: "./allArticles?id=" + this.uid
+			})
+		},
+		gotoAskLogGirl() {
+			uni.navigateTo({
+				url: '/pages/readers/askLogGirl?novel_id=' + this.uid + '&novel_name=' + encodeURIComponent(this.bookInfo.name || '')
 			})
 		},
 		addToBookcase() {
@@ -1148,6 +1186,24 @@ export default {
 				uni.hideLoading();
 			}
 		},
+		async getCollaborativeAuthors() {
+			try {
+				const res = await axios.get(
+					this.$baseUrl + '/library/get_novel_public_authors?novel_id=' + this.uid,
+					{}
+				);
+				const data = res.data || {};
+				this.collaborationAuthors = Array.isArray(data.authors) ? data.authors : [];
+				return data;
+			} catch (error) {
+				this.collaborationAuthors = [];
+				return {
+					has_collaboration: false,
+					total_author_count: 0,
+					authors: [],
+				};
+			}
+		},
 		gotoTag(tag_id, title) {
 			uni.navigateTo({
 				url: "/pages/readers/tagCollections?tag_id=" + tag_id + "&title=" + title
@@ -1204,6 +1260,7 @@ export default {
 		} else {
 			this.bookInfo = bookInfo;
 			this.applyPageSystemUiStyle();
+			await this.getCollaborativeAuthors();
 		}
 
 		uni.setNavigationBarTitle({
@@ -1422,6 +1479,29 @@ export default {
 					: 'rgba(255, 248, 234, 0.96)'
 			}
 		},
+		primaryAuthor() {
+			if (this.collaborationAuthors.length > 0) {
+				return this.collaborationAuthors[0];
+			}
+			return {
+				user_id: this.bookInfo.auther_id,
+				name: this.bookInfo.author_name,
+				avatar_url: this.bookInfo.auther_avatar,
+				is_owner: true,
+			};
+		},
+		isCollaborativeWork() {
+			return this.collaborationAuthors.length > 1;
+		},
+		authorSummaryText() {
+			const ownerName = this.primaryAuthor && this.primaryAuthor.name
+				? this.primaryAuthor.name
+				: this.bookInfo.author_name || '';
+			if (this.collaborationAuthors.length > 1) {
+				return `${ownerName} 等 ${this.collaborationAuthors.length} 位作者`;
+			}
+			return ownerName;
+		},
 		articleLength() {
 			return this.articles.length;
 		},
@@ -1493,7 +1573,7 @@ export default {
 }
 
 .l-look-btn {
-	width: 40%;
+	width: 24%;
 	color: white;
 	background: linear-gradient(135deg, #ff3d7f 0%, #ff0080 100%);
 	border-radius: 0;
@@ -1521,7 +1601,7 @@ export default {
 
 .l-buy-btn {
 	color: white;
-	width: 60%;
+	width: 52%;
 	background: linear-gradient(135deg, #ff8c42 0%, #EA7034 100%);
 	border-radius: 0;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1553,6 +1633,45 @@ export default {
 	align-items: center;
 	justify-content: center;
 	height: 100rpx;
+}
+
+.l-ai-btn {
+	width: 24%;
+	color: #3d2d1e;
+	background: linear-gradient(135deg, #ffeab8 0%, #ffd36f 100%);
+	flex-direction: column;
+	gap: 4rpx;
+
+	.dark-mode & {
+		color: #fff1cf;
+		background: linear-gradient(135deg, #5c4921 0%, #8d6a17 100%);
+	}
+}
+
+.ai-entry-icon {
+	min-width: 52rpx;
+	height: 52rpx;
+	padding: 0 12rpx;
+	border-radius: 999rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24rpx;
+	font-weight: 800;
+	letter-spacing: 2rpx;
+	background: rgba(255, 255, 255, 0.65);
+	box-shadow: inset 0 0 0 1rpx rgba(115, 78, 7, 0.08);
+
+	.dark-mode & {
+		background: rgba(255, 255, 255, 0.12);
+		box-shadow: inset 0 0 0 1rpx rgba(255, 255, 255, 0.08);
+	}
+}
+
+.ai-entry-text {
+	font-size: 22rpx;
+	font-weight: 700;
+	line-height: 1.1;
 }
 
 .l-dl {
@@ -1645,15 +1764,37 @@ export default {
 	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
-.author .auther_name {
+.l-dd-sub .author {
+	width: 100%;
+	min-width: 0;
+}
+
+.l-dd-sub .author .auther_name {
 	font-size: 32rpx;
 	color: #eeeeee;
 	margin-left: 60rpx;
 	line-height: 50rpx;
+	display: flex;
+	align-items: center;
+	max-width: calc(100% - 60rpx);
+	min-width: 0;
 
 	.dark-mode & {
 		color: var(--text-color-primary);
 	}
+}
+
+.l-dd-sub .author .auther_name_text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.l-dd-sub .author .auther_name_icon {
+	flex-shrink: 0;
+	margin-left: 8rpx;
 }
 
 .l-dd-content {
@@ -1807,6 +1948,82 @@ export default {
 
 .l-list {
 	padding-top: 40rpx;
+}
+
+.collaborator-authors {
+	padding-top: 36rpx;
+}
+
+.collaborator-scroll {
+	margin-top: 20rpx;
+	white-space: nowrap;
+}
+
+.collaborator-row {
+	display: inline-flex;
+	align-items: stretch;
+}
+
+.collaborator-card {
+	width: 156rpx;
+	flex: 0 0 156rpx;
+	min-height: 160rpx;
+	margin-right: 18rpx;
+	padding: 10rpx 0;
+	border-radius: 16rpx;
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+
+.collaborator-card:last-child {
+	margin-right: 0;
+}
+
+.collaborator-avatar {
+	width: 72rpx;
+	height: 72rpx;
+	border-radius: 50%;
+	object-fit: cover;
+	box-shadow: 0 3rpx 10rpx rgba(0, 0, 0, 0.12);
+}
+
+.collaborator-name {
+	margin-top: 12rpx;
+	width: 100%;
+	padding: 0 8rpx;
+	box-sizing: border-box;
+	font-size: 24rpx;
+	font-weight: bold;
+	color: #4a2c18;
+	line-height: 1.3;
+	text-align: center;
+	white-space: normal;
+	word-break: break-all;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+
+	.dark-mode & {
+		color: #f2e0cf;
+	}
+}
+
+.collaborator-badge {
+	margin-top: 8rpx;
+	padding: 4rpx 12rpx;
+	border-radius: 999rpx;
+	font-size: 20rpx;
+	line-height: 1;
+	color: #8a521d;
+
+	.dark-mode & {
+		color: #ffd8aa;
+	}
 }
 
 .l-h3 {

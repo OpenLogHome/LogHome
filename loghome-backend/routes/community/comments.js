@@ -33,6 +33,8 @@ router.get('/list', async (req, res) => {
         // 获取每个评论用户的勋章
         for (let comment of comments) {
             comment.user_badge = await achievements.getUserBadge(comment.user_id);
+            comment.user_title = await achievements.getUserTitleProfile(comment.user_id);
+            comment.user_title_text = comment.user_title.display_text;
         }
         
         const commentIds = comments.map(c => c.comment_id);
@@ -110,6 +112,8 @@ router.get('/replies', async (req, res) => {
         // 获取每个回复用户的勋章
         for (let reply of replies) {
             reply.user_badge = await achievements.getUserBadge(reply.user_id);
+            reply.user_title = await achievements.getUserTitleProfile(reply.user_id);
+            reply.user_title_text = reply.user_title.display_text;
         }
         
         const replyIds = replies.map(r => r.comment_id);
@@ -200,6 +204,10 @@ router.post('/create', auth, async (req, res) => {
         );
         
         const commentId = result.insertId;
+        await achievements.recordMetricProgress(user.user_id, 'comment_count', 1, {
+            reason: '社区评论',
+            suppressNotification: true,
+        });
         
         // 更新帖子评论数
         await query(
@@ -259,6 +267,11 @@ router.post('/create', auth, async (req, res) => {
              WHERE c.comment_id = ?`,
             [commentId]
         );
+        if (newComment && newComment[0]) {
+            newComment[0].user_badge = await achievements.getUserBadge(newComment[0].user_id);
+            newComment[0].user_title = await achievements.getUserTitleProfile(newComment[0].user_id);
+            newComment[0].user_title_text = newComment[0].user_title.display_text;
+        }
         
         res.json({
             msg: '评论发表成功',

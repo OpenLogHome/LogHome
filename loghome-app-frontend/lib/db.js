@@ -13,8 +13,8 @@ imgDB.version(1).stores({
 });
 
 const writerArticleDB = new Dexie('writerArticleDatabase');
-writerArticleDB.version(5).stores({
-  articles: `++id, article_id, title, content, create_time, is_slow_save`
+writerArticleDB.version(6).stores({
+  articles: `++id, article_id, user_id, [user_id+article_id], title, content, create_time, is_slow_save`
 })
 
 export { articleDB, imgDB, writerArticleDB };

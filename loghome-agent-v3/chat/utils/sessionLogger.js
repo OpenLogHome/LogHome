@@ -7,9 +7,12 @@ export class SessionLogger {
     }
 
     init() {
-        const logDir = path.join(process.cwd(), 'logs');
+        const now = new Date();
+        const isoString = now.toISOString();
+        const hourDir = isoString.slice(0, 13).replace('T', '_');
+        const logDir = path.join(process.cwd(), 'logs', hourDir);
         if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
-        this.logPath = path.join(logDir, `chat_session_${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
+        this.logPath = path.join(logDir, `chat_session_${isoString.replace(/[:.]/g, '-')}.log`);
         console.log(`Full logs will be saved to: ${this.logPath}`);
     }
 

@@ -1,7 +1,6 @@
 let express = require('express');
-let { query } = require('../sql.js');
+let { query, withTransaction } = require('../sql.js');
 let auth = require('../bin/auth.js');
-let bank = require('../bin/bank.js');
 
 let router = express.Router();
 
@@ -29,6 +28,27 @@ let generateTrackingCode = () => {
 	const now = Date.now().toString(36).toUpperCase();
 	const rand = Math.random().toString(36).slice(2, 10).toUpperCase();
 	return `${now}${rand}`.slice(0, 16);
+};
+
+let createBusinessError = (message, statusCode = 400) => {
+	const error = new Error(message);
+	error.isBusinessError = true;
+	error.statusCode = statusCode;
+	return error;
+};
+
+let isDuplicateKeyError = (error) => {
+	return error && (error.code === 'ER_DUP_ENTRY' || error.errno === 1062);
+};
+
+let buildOrderSubmitData = (orderRow) => {
+	return {
+		id: orderRow.id,
+		order_no: orderRow.order_no,
+		status: orderRow.status,
+		pay_log: Number(orderRow.pay_log || 0),
+		pay_cropped_log: Number(orderRow.pay_cropped_log || 0),
+	};
 };
 
 router.get('/products', async (req, res) => {
@@ -70,8 +90,8 @@ router.get('/products/:id', async (req, res) => {
 	try {
 		const productId = Number(req.params.id);
 		const result = await query(
-			'SELECT id, title, summary, description, type, price, stock, cover_url, media_urls, shipping_desc, status FROM store_products WHERE id = ?',
-			[productId],
+			'SELECT id, title, summary, description, type, price, stock, cover_url, media_urls, shipping_desc, status FROM store_products WHERE id = ? AND status = ?',
+			[productId, 'on'],
 		);
 		if (result.length === 0) {
 			res.json(404, { msg: '商品不存在' });
@@ -287,84 +307,112 @@ router.delete('/addresses/:id', auth, async (req, res) => {
 router.post('/orders', auth, async (req, res) => {
 	try {
 		const user = getUser(req);
-		const { product_id, address_id } = req.body;
+		const { product_id, address_id, client_request_id } = req.body;
 		if (!product_id) {
 			res.json(400, { msg: '商品参数缺失' });
 			return;
 		}
-		const productList = await query(
-			'SELECT id, title, type, price, stock, cover_url, shipping_desc, status FROM store_products WHERE id = ?',
-			[product_id],
-		);
-		if (productList.length === 0 || productList[0].status !== 'on') {
-			res.json(404, { msg: '商品不存在或已下架' });
-			return;
-		}
-		const product = productList[0];
-		if (product.stock <= 0) {
-			res.json(400, { msg: '库存不足' });
-			return;
-		}
-		await bank.checkAccount(user);
-		const bankRows = await query(
-			'SELECT log, cropped_log FROM user_bank WHERE user_id = ?',
-			[user.user_id],
-		);
-		const logAmount = Number(bankRows[0].log || 0);
-		const croppedAmount = Number(bankRows[0].cropped_log || 0);
-		const price = Number(product.price);
-		if (logAmount + croppedAmount < price) {
-			res.json(400, { msg: '余额不足' });
-			return;
-		}
-		const payCropped = Math.min(croppedAmount, price);
-		const payLog = price - payCropped;
-
-		let addressSnapshot = null;
-		if (product.type === 'physical') {
-			if (!address_id) {
-				res.json(400, { msg: '请选择收货地址' });
-				return;
+		const requestKey = String(client_request_id || '').trim().slice(0, 64);
+		const orderData = await withTransaction(async (transactionalQuery) => {
+			if (requestKey) {
+				try {
+					await transactionalQuery(
+						'INSERT INTO store_order_requests (request_key, user_id, product_id, address_id, status) VALUES (?, ?, ?, ?, ?)',
+						[requestKey, user.user_id, Number(product_id), address_id || null, 'processing'],
+					);
+				} catch (error) {
+					if (!isDuplicateKeyError(error)) {
+						throw error;
+					}
+					const existingRequestList = await transactionalQuery(
+						'SELECT order_id, status FROM store_order_requests WHERE request_key = ? LIMIT 1',
+						[requestKey],
+					);
+					const existingRequest = existingRequestList[0];
+					if (
+						existingRequest &&
+						existingRequest.status === 'succeeded' &&
+						existingRequest.order_id
+					) {
+						const existingOrderList = await transactionalQuery(
+							'SELECT id, order_no, status, pay_log, pay_cropped_log FROM store_orders WHERE id = ? AND user_id = ? LIMIT 1',
+							[existingRequest.order_id, user.user_id],
+						);
+						if (existingOrderList.length > 0) {
+							return buildOrderSubmitData(existingOrderList[0]);
+						}
+					}
+					throw createBusinessError('订单处理中，请勿重复提交', 409);
+				}
 			}
-			const addressList = await query(
-				'SELECT address_id, receiver_name, receiver_phone, province, city, district, detail FROM store_addresses WHERE address_id = ? AND user_id = ?',
-				[address_id, user.user_id],
+
+			await transactionalQuery('INSERT IGNORE INTO user_bank(user_id) VALUES(?)', [
+				user.user_id,
+			]);
+
+			const productList = await transactionalQuery(
+				'SELECT id, title, type, price, stock, cover_url, shipping_desc, status FROM store_products WHERE id = ? LIMIT 1',
+				[product_id],
 			);
-			if (addressList.length === 0) {
-				res.json(400, { msg: '收货地址不存在' });
-				return;
+			if (productList.length === 0 || productList[0].status !== 'on') {
+				throw createBusinessError('商品不存在或已下架', 404);
 			}
-			addressSnapshot = addressList[0];
-		}
 
-		const bankResult = await query(
-			'UPDATE user_bank SET log = log - ?, cropped_log = cropped_log - ? WHERE user_id = ? AND log >= ? AND cropped_log >= ?',
-			[payLog, payCropped, user.user_id, payLog, payCropped],
-		);
-		if (bankResult.affectedRows === 0) {
-			res.json(400, { msg: '余额不足' });
-			return;
-		}
+			const product = productList[0];
+			if (Number(product.stock) <= 0) {
+				throw createBusinessError('库存不足');
+			}
 
-		const stockResult = await query(
-			'UPDATE store_products SET stock = stock - 1 WHERE id = ? AND stock > 0',
-			[product.id],
-		);
-		if (stockResult.affectedRows === 0) {
-			await query(
-				'UPDATE user_bank SET log = log + ?, cropped_log = cropped_log + ? WHERE user_id = ?',
-				[payLog, payCropped, user.user_id],
+			const bankRows = await transactionalQuery(
+				'SELECT log, cropped_log FROM user_bank WHERE user_id = ? LIMIT 1',
+				[user.user_id],
 			);
-			res.json(400, { msg: '库存不足' });
-			return;
-		}
+			const logAmount = Number(bankRows[0].log || 0);
+			const croppedAmount = Number(bankRows[0].cropped_log || 0);
+			const price = Number(product.price || 0);
+			if (logAmount + croppedAmount < price) {
+				throw createBusinessError('余额不足');
+			}
 
-		const status = product.type === 'virtual' ? 'completed' : 'pending';
-		const trackingNumber = product.type === 'virtual' ? generateTrackingCode() : null;
-		const orderNo = generateOrderNo();
-		const now = new Date();
-		try {
-			const result = await query(
+			const payCropped = Math.min(croppedAmount, price);
+			const payLog = price - payCropped;
+			let addressSnapshot = null;
+
+			if (product.type === 'physical') {
+				if (!address_id) {
+					throw createBusinessError('请选择收货地址');
+				}
+				const addressList = await transactionalQuery(
+					'SELECT address_id, receiver_name, receiver_phone, province, city, district, detail FROM store_addresses WHERE address_id = ? AND user_id = ? LIMIT 1',
+					[address_id, user.user_id],
+				);
+				if (addressList.length === 0) {
+					throw createBusinessError('收货地址不存在');
+				}
+				addressSnapshot = addressList[0];
+			}
+
+			const bankResult = await transactionalQuery(
+				'UPDATE user_bank SET log = log - ?, cropped_log = cropped_log - ? WHERE user_id = ? AND log >= ? AND cropped_log >= ?',
+				[payLog, payCropped, user.user_id, payLog, payCropped],
+			);
+			if (bankResult.affectedRows === 0) {
+				throw createBusinessError('余额不足');
+			}
+
+			const stockResult = await transactionalQuery(
+				'UPDATE store_products SET stock = stock - 1 WHERE id = ? AND stock > 0',
+				[product.id],
+			);
+			if (stockResult.affectedRows === 0) {
+				throw createBusinessError('库存不足');
+			}
+
+			const status = product.type === 'virtual' ? 'completed' : 'pending';
+			const trackingNumber = product.type === 'virtual' ? generateTrackingCode() : null;
+			const orderNo = generateOrderNo();
+			const now = new Date();
+			const result = await transactionalQuery(
 				'INSERT INTO store_orders (order_no, user_id, product_id, product_title, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, address_id, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
 				[
 					orderNo,
@@ -391,29 +439,33 @@ router.post('/orders', auth, async (req, res) => {
 					product.type === 'virtual' ? now : null,
 				],
 			);
-			res.json({
-				code: 200,
-				data: {
-					id: result.insertId,
-					order_no: orderNo,
-					status,
-					pay_log: payLog,
-					pay_cropped_log: payCropped,
-				},
+
+			if (requestKey) {
+				await transactionalQuery(
+					'UPDATE store_order_requests SET order_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE request_key = ?',
+					[result.insertId, 'succeeded', requestKey],
+				);
+			}
+
+			return buildOrderSubmitData({
+				id: result.insertId,
+				order_no: orderNo,
+				status,
+				pay_log: payLog,
+				pay_cropped_log: payCropped,
 			});
-		} catch (e) {
-			await query(
-				'UPDATE user_bank SET log = log + ?, cropped_log = cropped_log + ? WHERE user_id = ?',
-				[payLog, payCropped, user.user_id],
-			);
-			await query(
-				'UPDATE store_products SET stock = stock + 1 WHERE id = ?',
-				[product.id],
-			);
-			throw e;
-		}
+		}, 'store.createOrder');
+
+		res.json({
+			code: 200,
+			data: orderData,
+		});
 	} catch (e) {
 		console.log(e);
+		if (e && e.isBusinessError) {
+			res.json(e.statusCode || 400, { msg: e.message });
+			return;
+		}
 		res.json(400, { msg: '下单失败' });
 	}
 });

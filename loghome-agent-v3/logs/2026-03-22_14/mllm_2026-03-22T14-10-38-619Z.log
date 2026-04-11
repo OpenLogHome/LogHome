@@ -1,0 +1,22 @@
+
+=== MLLM Transaction Log ===
+Time: 2026-03-22T14:10:38.619Z
+Mode: speed
+Model: undefined
+Status: ERROR
+
+--- Request Prompt ---
+[object Object],[object Object]
+
+--- Response ---
+Error: API call failed: 400 Bad Request - {"error":{"code":"MissingParameter","message":"The request failed because it is missing `model` parameter. Request id: 021774188638711fc7b414ede9ab35234ab808cc92596bcb6d625","param":"","type":"Bad Request"}}
+Stack: Error: API call failed: 400 Bad Request - {"error":{"code":"MissingParameter","message":"The request failed because it is missing `model` parameter. Request id: 021774188638711fc7b414ede9ab35234ab808cc92596bcb6d625","param":"","type":"Bad Request"}}
+    at MLLMClient.call (file:///D:/LogHome/loghome-agent-v3/utils/mllmClient.js:97:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async processRichText (file:///D:/LogHome/loghome-agent-v3/utils/contentParser.js:34:41)
+    at async doChapterComprehension (file:///D:/LogHome/loghome-agent-v3/tasks/chapter-comprehension/index.js:116:19)
+    at async file:///D:/LogHome/loghome-agent-v3/index.js:86:9
+    at async runWithHeartbeat (file:///D:/LogHome/loghome-agent-v3/index.js:39:12)
+    at async processNovelJob (file:///D:/LogHome/loghome-agent-v3/index.js:85:7)
+    at async workerLoop (file:///D:/LogHome/loghome-agent-v3/index.js:168:7)
+============================

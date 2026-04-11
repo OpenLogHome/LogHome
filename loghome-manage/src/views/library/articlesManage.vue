@@ -278,48 +278,13 @@
                             
                             <!-- 图片块编辑 -->
                             <div v-else-if="block.type === 'image'" class="image-block-editor">
-                                <el-row :gutter="10">
-                                    <el-col :span="block.img ? 16 : 24">
-                                        <el-input 
-                                            placeholder="图片URL" 
-                                            v-model="block.img">
-                                        </el-input>
-                                    </el-col>
-                                    <el-col :span="8" v-if="block.img">
-                                        <el-button type="danger" size="small" @click="block.img = ''">清除</el-button>
-                                    </el-col>
-                                </el-row>
-                                
-                                <!-- 图片上传 -->
-                                <div class="image-upload-container">
-                                    <el-upload
-                                        ref="imageUpload"
-                                        action="http://img.codesocean.top/upload/img"
-                                        :file-list="[]"
-                                        :show-file-list="false"
-                                        :headers="{'apikey': 'iSnMUQ9OLZpCVY3p7E3T5b2YwC39TS'}"
-                                        :before-upload="validateImageUpload"
-                                        :on-success="(res) => handleImageUploadSuccess(res, block)"
-                                        :on-error="handleImageUploadError"
-                                        name="img"
-                                        list-type="picture-card"
-                                        accept="image/*">
-                                        <i class="el-icon-plus"></i>
-                                        <div slot="tip" class="el-upload__tip">点击上传图片，只能上传不超过5MB的图片文件</div>
-                                    </el-upload>
-                                </div>
-                                
-                                <!-- 图片预览 -->
-                                <div class="image-preview" v-if="block.img">
-                                    <el-image 
-                                        :src="block.img" 
-                                        fit="contain"
-                                        style="max-width: 100%; height: 200px; margin-top: 10px;">
-                                        <div slot="error" class="image-error">
-                                            <i class="el-icon-picture-outline"></i>
-                                        </div>
-                                    </el-image>
-                                </div>
+                                <image-upload-field
+                                    v-model="block.img"
+                                    button-text="上传图片块"
+                                    :preview-width="520"
+                                    :preview-height="260"
+                                    tip="点击上传图片，只能上传不超过 5MB 的图片文件"
+                                />
                             </div>
                         </div>
                         
@@ -361,7 +326,12 @@
 </template>
 
 <script>
+import ImageUploadField from '../../components/ImageUploadField.vue'
+
 export default {
+    components: {
+        ImageUploadField
+    },
     data() {
         return {
             novel: null,

@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<!-- 私信栏目 -->
 		<view class="list">
 			<div class="users" v-for="item in chatFriends" @click="navigateToChat(item)">
@@ -13,7 +13,7 @@
 						<div class="name">{{item.name}}</div>
 						<div class="time">{{utc2beijing(item.last_message_time)}}</div>
 					</div>
-					<div class="motto">{{item.last_message_content}}</div>
+					<div class="motto">{{formatMessagePreview(item.last_message_content)}}</div>
 				</div>
 			</div>
 		</view>
@@ -22,6 +22,8 @@
 
 <script>
 	import axios from 'axios'
+	const PRIVATE_MESSAGE_PREFIX = '__LOGHOME_DM__:';
+	const PRIVATE_MESSAGE_VERSION = 1;
 	export default{
 		data(){
 			return{
@@ -62,6 +64,29 @@
 			})
 		},
 		methods:{
+			formatMessagePreview(messageContent) {
+				if (typeof messageContent !== 'string' || !messageContent.startsWith(PRIVATE_MESSAGE_PREFIX)) {
+					return messageContent || '';
+				}
+				try {
+					const payload = JSON.parse(messageContent.slice(PRIVATE_MESSAGE_PREFIX.length));
+					if (!payload || payload.version !== PRIVATE_MESSAGE_VERSION) {
+						return messageContent;
+					}
+					if (payload.type === 'image') {
+						return '[图片]';
+					}
+					if (payload.type === 'novel_share' && payload.novel && payload.novel.name) {
+						return `分享了作品《${payload.novel.name}》`;
+					}
+					if (payload.type === 'novel_share') {
+						return '分享了作品';
+					}
+				} catch (error) {
+					console.error('解析私信预览失败', error);
+				}
+				return messageContent;
+			},
 			// 获取私信好友列表
 			fetchChatFriends() {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk;
@@ -120,8 +145,9 @@
 
 <style scoped lang="less">
 	.outer{
-		background-color: #ffffff;
+		background-color: var(--background-color);
 		padding-top: 4px;
+		min-height: 100vh;
 	}
 	
 	.users {
@@ -134,7 +160,7 @@
 			
 			img {
 				height: 100rpx;
-				border: #cacaca 1rpx solid;
+				border: var(--border-color) 1rpx solid;
 				border-radius: 7rpx;
 				margin: 15rpx;
 			}
@@ -155,9 +181,9 @@
 			}
 		}
 		
-		.personInfo{
+			.personInfo{
 			position: relative;
-			border-bottom: #cacaca solid 1px;
+			border-bottom: var(--border-color) solid 1px;
 			flex: 1;
 			
 			.name-row {
@@ -170,7 +196,7 @@
 			
 			.time{
 				font-size: 30rpx;
-				color: #999;
+				color: var(--text-color-regular);
 			}
 		}
 		
@@ -182,10 +208,14 @@
 			-webkit-box-orient: vertical;
 			-webkit-line-clamp: 1;
 			color: rgb(180, 111, 88);
+
+			.dark-mode & {
+				color: #d1a980;
+			}
 		}
 		
 		.motto{
-			color: rgb(97, 97, 97);
+			color: var(--text-color-regular);
 			width: 80vw;
 			margin-top: 8rpx;
 			font-size: 28rpx;
@@ -197,6 +227,6 @@
 	}
 
     .users:active{
-        background-color: #f5f5f5;
+        background-color: var(--background-color-secondary);
     }
 </style>

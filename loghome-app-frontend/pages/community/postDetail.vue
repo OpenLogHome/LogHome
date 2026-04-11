@@ -1,5 +1,5 @@
 <template>
-  <view class="post-detail" @scroll="onPageScroll">
+  <view class="post-detail" v-dark @scroll="onPageScroll">
     <!-- 帖子内容 -->
     <scroll-view 
       scroll-y 
@@ -20,6 +20,9 @@
                   @tap.stop="goToBadgeDetail(post.author_badge, post.user_id)"
                 >
                   <honor-badge :badge="post.author_badge" size="sm" class="user-badge" scale="1.2" />
+                </view>
+                <view v-if="post.author_title_text" class="title-chip user-title-chip">
+                  {{post.author_title_text}}
                 </view>
               </view>
               <text class="post-time">{{formatTime(post.create_time)}}</text>
@@ -68,16 +71,44 @@
         </view>
         
         <view class="post-actions">
-          <view class="action-btn clickable" @tap="likePost">
-            <uni-icons :type="post.is_liked ? 'heart-filled' : 'heart'" size="24" :color="post.is_liked ? '#EA7034' : '#666'"></uni-icons>
+          <view
+            class="action-btn action-btn-like clickable"
+            :class="{
+              'is-liked': post.is_liked,
+              'is-bursting': postLikeAnimating
+            }"
+            @tap="likePost"
+          >
+            <view class="post-like-icon-wrap">
+              <view
+                v-if="postLikeAnimating"
+                :key="'burst-' + likeAnimationTick"
+                class="pixel-heart-burst"
+              >
+                <view
+                  v-for="burst in likeBurstParticles"
+                  :key="burst.key"
+                  class="pixel-heart pixel-heart-float"
+                  :style="getLikeBurstStyle(burst)"
+                ></view>
+              </view>
+              <view
+                v-if="postLikeAnimating"
+                :key="'core-' + likeAnimationTick"
+                class="pixel-heart pixel-heart-core"
+              ></view>
+              <view class="heart-icon-shell">
+                <uni-icons :type="post.is_liked ? 'heart-filled' : 'heart'" size="24" :color="post.is_liked ? '#EA7034' : (isDarkMode ? '#b8b8b8' : '#666')"></uni-icons>
+              </view>
+            </view>
             <text :class="{'liked': post.is_liked}">{{post.like_count}}</text>
           </view>
           <view class="action-btn clickable" @tap="focusComment">
-            <uni-icons type="chat" size="24" color="#666"></uni-icons>
+            <uni-icons type="chat" size="24" :color="isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
             <text>{{post.comment_count}}</text>
           </view>
           <view class="action-btn clickable" @tap="sharePost">
-            <uni-icons type="redo" size="24" color="#666"></uni-icons>
+            <uni-icons type="redo" size="24" :color="isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
             <text>分享</text>
           </view>
         </view>
@@ -102,6 +133,9 @@
                     >
                       <honor-badge :badge="comment.user_badge" size="sm" class="comment-badge" scale="1.0" />
                     </view>
+                    <view v-if="comment.user_title_text" class="title-chip comment-title-chip">
+                      {{comment.user_title_text}}
+                    </view>
                   </view>
                   <text class="comment-time">{{formatTime(comment.create_time)}}</text>
                 </view>
@@ -120,7 +154,7 @@
                 </view>
                 <view class="comment-actions">
                   <view class="comment-like clickable" @tap="likeComment(comment)">
-                    <uni-icons :type="comment.is_liked ? 'heart-filled' : 'heart'" size="14" :color="comment.is_liked ? '#EA7034' : '#999'"></uni-icons>
+                    <uni-icons :type="comment.is_liked ? 'heart-filled' : 'heart'" size="14" :color="comment.is_liked ? '#EA7034' : (isDarkMode ? '#b8b8b8' : '#999')"></uni-icons>
                     <text :class="{'liked': comment.is_liked}">{{comment.like_count || 0}}</text>
                   </view>
                   <text class="comment-reply clickable" @tap="replyToComment(comment)">回复</text>
@@ -144,6 +178,9 @@
                       >
                         <honor-badge :badge="reply.user_badge" size="sm" class="reply-badge" scale="1.0" />
                       </view>
+                      <view v-if="reply.user_title_text" class="title-chip reply-title-chip">
+                        {{reply.user_title_text}}
+                      </view>
                     </view>
                     <text class="reply-target" v-if="reply.reply_user_name">回复 {{reply.reply_user_name}}</text>
                     <text class="reply-time">{{formatTime(reply.create_time)}}</text>
@@ -163,7 +200,7 @@
                   </view>
                   <view class="reply-actions">
                     <view class="reply-like clickable" @tap="likeComment(reply)">
-                      <uni-icons :type="reply.is_liked ? 'heart-filled' : 'heart'" size="14" :color="reply.is_liked ? '#EA7034' : '#999'"></uni-icons>
+                      <uni-icons :type="reply.is_liked ? 'heart-filled' : 'heart'" size="14" :color="reply.is_liked ? '#EA7034' : (isDarkMode ? '#b8b8b8' : '#999')"></uni-icons>
                       <text :class="{'liked': reply.is_liked}">{{reply.like_count || 0}}</text>
                     </view>
                     <text class="reply-btn clickable" @tap="replyToComment(reply, comment)">回复</text>
@@ -208,10 +245,10 @@
         <view class="input-actions">
           <emoji-picker @select="onEmojiSelect"></emoji-picker>
           <view class="image-upload clickable" @tap="chooseImage">
-            <uni-icons type="image" size="24" color="#666"></uni-icons>
+            <uni-icons type="image" size="24" :color="isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
           </view>
-          <button class="send-btn clickable" :disabled="!commentText && selectedImages.length === 0" @tap="submitComment">
-            发送
+          <button class="send-btn clickable" :disabled="isSubmitting || (!commentText && selectedImages.length === 0)" @tap="submitComment">
+            {{ isSubmitting ? '发送中...' : '发送' }}
           </button>
         </view>
       </view>
@@ -224,7 +261,7 @@
           </view>
         </view>
         <view class="add-image" v-if="selectedImages.length < 9" @tap="chooseImage">
-          <uni-icons type="plusempty" size="32" color="#999"></uni-icons>
+          <uni-icons type="plusempty" size="32" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
         </view>
       </view>
     </view>
@@ -256,6 +293,7 @@ import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
 import HonorBadge from '../../components/honor-badge.vue'
 import { settleAndNotifyExpTaskCompletion } from '../../lib/treeExpTaskNotifier.js'
+import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
   components: {
@@ -263,6 +301,7 @@ export default {
     TaskRewardModal,
     HonorBadge
   },
+  mixins: [darkModeMixin],
   data() {
     return {
       post: {},
@@ -277,9 +316,21 @@ export default {
       inputFocus: false,
       replyTo: null,
       parentComment: null,
+      isSubmitting: false,
       isLoading: true,
       userRole: -1, // -1: 未知, 0: 普通成员, 1: 管理员, 2: 圈主
       currentImageUrl: '', // 当前长按选中的图片URL
+      postLikeAnimating: false,
+      likeAnimationTick: 0,
+      likeAnimationTimer: null,
+      likeBurstParticles: [
+        { key: 'tl', left: '4rpx', top: '8rpx', driftX: '-14rpx', driftY: '-20rpx', delay: '0ms', duration: '520ms', scale: '0.72' },
+        { key: 'tm', left: '12rpx', top: '2rpx', driftX: '0rpx', driftY: '-28rpx', delay: '40ms', duration: '560ms', scale: '0.88' },
+        { key: 'tr', left: '22rpx', top: '8rpx', driftX: '14rpx', driftY: '-18rpx', delay: '80ms', duration: '520ms', scale: '0.72' },
+        { key: 'ml', left: '2rpx', top: '18rpx', driftX: '-18rpx', driftY: '-10rpx', delay: '30ms', duration: '500ms', scale: '0.64' },
+        { key: 'mr', left: '24rpx', top: '18rpx', driftX: '18rpx', driftY: '-10rpx', delay: '70ms', duration: '500ms', scale: '0.64' },
+        { key: 'bm', left: '12rpx', top: '24rpx', driftX: '0rpx', driftY: '-16rpx', delay: '110ms', duration: '480ms', scale: '0.58' }
+      ]
     }
   },
   onLoad(params) {
@@ -290,6 +341,9 @@ export default {
   onReady() {
   },
   onShow() {
+  },
+  onUnload() {
+    this.clearPostLikeAnimation()
   },
   onPullDownRefresh() {
     Promise.all([
@@ -349,6 +403,35 @@ export default {
 		}
 	},
   methods: {
+    getLikeBurstStyle(burst) {
+      return {
+        left: burst.left,
+        top: burst.top,
+        animationDelay: burst.delay,
+        animationDuration: burst.duration,
+        '--drift-x': burst.driftX,
+        '--drift-y': burst.driftY,
+        '--heart-scale': burst.scale
+      }
+    },
+    triggerPostLikeAnimation() {
+      this.clearPostLikeAnimation()
+      this.likeAnimationTick += 1
+      this.$nextTick(() => {
+        this.postLikeAnimating = true
+        this.likeAnimationTimer = setTimeout(() => {
+          this.postLikeAnimating = false
+          this.likeAnimationTimer = null
+        }, 760)
+      })
+    },
+    clearPostLikeAnimation() {
+      if (this.likeAnimationTimer) {
+        clearTimeout(this.likeAnimationTimer)
+        this.likeAnimationTimer = null
+      }
+      this.postLikeAnimating = false
+    },
     async loadPostDetail() {
       try {
         const res = await axios.get(this.$baseUrl + '/community/posts/detail/' + this.postId)
@@ -526,8 +609,17 @@ export default {
           }
         })
         
-        this.post.is_liked = !this.post.is_liked
-        this.post.like_count += this.post.is_liked ? 1 : -1
+        const nextLiked = !this.post.is_liked
+        const currentLikeCount = Number(this.post.like_count) || 0
+
+        this.post.is_liked = nextLiked
+        this.post.like_count = Math.max(0, currentLikeCount + (nextLiked ? 1 : -1))
+
+        if (nextLiked) {
+          this.triggerPostLikeAnimation()
+        } else {
+          this.clearPostLikeAnimation()
+        }
       } catch (error) {
         console.error('点赞失败:', error);
         uni.showToast({
@@ -575,7 +667,12 @@ export default {
     },
     
     async submitComment() {
-      if (!this.commentText && this.selectedImages.length === 0) return
+      if (this.isSubmitting || (!this.commentText && this.selectedImages.length === 0)) return
+      this.isSubmitting = true
+      uni.showLoading({
+        title: '发送中...',
+        mask: true
+      })
       try {
         // 使用评论文本，不需要处理表情包标记
         let processedText = this.commentText;
@@ -583,7 +680,10 @@ export default {
         // 处理图片上传
         let image_url = null;
         if (this.selectedImages.length > 0) {
-          uni.showLoading({ title: '正在上传图片...' })
+          uni.showLoading({
+            title: '正在上传图片...',
+            mask: true
+          })
           // 检查图片URL是否已经是完整的网络URL（表情包的情况）
           if (this.selectedImages[0].startsWith('http')) {
             image_url = this.selectedImages[0];
@@ -719,6 +819,7 @@ export default {
           icon: 'none'
         })
       } finally {
+        this.isSubmitting = false
         uni.hideLoading()
       }
     },
@@ -1160,7 +1261,7 @@ export default {
   display: flex;
   flex-direction: column;
   // height: 100vh;
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
   position: relative;
 }
 
@@ -1187,7 +1288,7 @@ export default {
 }
 
 .post-content {
-  background-color: #fff;
+  background-color: var(--card-background);
   padding: 20rpx;
   margin-bottom: 20rpx;
 }
@@ -1224,7 +1325,7 @@ export default {
 .user-name {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
 }
 
 .user-badge-tap {
@@ -1237,16 +1338,36 @@ export default {
   transform: translateY(2rpx);
 }
 
+.title-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  line-height: 1.2;
+  max-width: 220rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #fff4df;
+  background: linear-gradient(120deg, rgba(160, 104, 54, 0.94) 0%, rgba(117, 69, 33, 0.94) 100%);
+  box-shadow: 0 6rpx 14rpx rgba(117, 69, 33, 0.16);
+}
+
+.user-title-chip {
+  margin-left: 8rpx;
+  font-size: 20rpx;
+}
+
 .post-time {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-top: 4rpx;
 }
 
 .post-circle {
   font-size: 24rpx;
-  color: #666;
-  background-color: #f5f5f5;
+  color: var(--text-color-regular);
+  background-color: var(--background-color-secondary);
   padding: 8rpx 20rpx;
   border-radius: 20rpx;
 }
@@ -1258,13 +1379,13 @@ export default {
 .post-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 16rpx;
 }
 
 .post-text {
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-color-regular);
   line-height: 1.6;
   word-break: break-all;
   white-space: pre-wrap;
@@ -1273,7 +1394,7 @@ export default {
 .bound-novel {
   margin-top: 20rpx;
   padding: 20rpx;
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
   border-radius: 12rpx;
 }
 
@@ -1303,7 +1424,7 @@ export default {
 .novel-title {
   font-size: 30rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 8rpx;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1312,13 +1433,13 @@ export default {
 
 .novel-author {
   font-size: 24rpx;
-  color: #666;
+  color: var(--text-color-regular);
   margin-bottom: 8rpx;
 }
 
 .novel-desc {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1340,7 +1461,7 @@ export default {
 .post-image {
   margin: 5rpx;
   border-radius: 8rpx;
-  background-color: #f5f5f5;
+  background-color: var(--background-color-secondary);
 }
 
 .grid-1 .post-image {
@@ -1357,7 +1478,7 @@ export default {
   display: flex;
   justify-content: space-around;
   padding-top: 20rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 1rpx solid var(--border-color);
 }
 
 .action-btn {
@@ -1367,8 +1488,10 @@ export default {
 }
 
 .action-btn text {
+  display: inline-flex;
+  align-items: center;
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-color-regular);
   margin-left: 10rpx;
 }
 
@@ -1376,8 +1499,149 @@ export default {
   color: #EA7034;
 }
 
+.action-btn-like.clickable {
+  position: relative;
+  overflow: visible;
+}
+
+.post-like-icon-wrap {
+  position: relative;
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.heart-icon-shell {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+}
+
+.action-btn-like.is-liked .heart-icon-shell {
+  filter: drop-shadow(0 0 10rpx rgba(234, 112, 52, 0.18));
+}
+
+.action-btn-like.is-bursting .heart-icon-shell {
+  animation: post-like-heart-pop 460ms steps(4, end);
+}
+
+.action-btn-like.is-bursting > text {
+  animation: post-like-count-pop 420ms steps(4, end);
+}
+
+.pixel-heart-burst {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pixel-heart {
+  position: absolute;
+  width: 4rpx;
+  height: 4rpx;
+  background: #ff7a59;
+  box-shadow:
+    8rpx 0 #ff7a59,
+    0 4rpx #ff7a59,
+    4rpx 4rpx #ff7a59,
+    8rpx 4rpx #ff7a59,
+    12rpx 4rpx #ff7a59,
+    16rpx 4rpx #ff7a59,
+    0 8rpx #ff7a59,
+    4rpx 8rpx #ff7a59,
+    8rpx 8rpx #ff7a59,
+    12rpx 8rpx #ff7a59,
+    16rpx 8rpx #ff7a59,
+    4rpx 12rpx #ff7a59,
+    8rpx 12rpx #ff7a59,
+    12rpx 12rpx #ff7a59,
+    8rpx 16rpx #ff7a59;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: 10rpx 10rpx;
+  filter: drop-shadow(0 4rpx 0 rgba(217, 87, 46, 0.26));
+}
+
+.pixel-heart-core {
+  left: 12rpx;
+  top: 12rpx;
+  z-index: 1;
+  animation: post-like-core-pop 540ms steps(4, end);
+}
+
+.pixel-heart-float {
+  animation-name: post-like-pixel-float;
+  animation-timing-function: steps(5, end);
+  animation-fill-mode: forwards;
+}
+
+@keyframes post-like-heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.24);
+  }
+  65% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes post-like-count-pop {
+  0% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-4rpx);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes post-like-core-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  35% {
+    opacity: 0.92;
+    transform: translateY(-8rpx) scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-24rpx) scale(1.42);
+  }
+}
+
+@keyframes post-like-pixel-float {
+  0% {
+    opacity: 0;
+    transform: scale(var(--heart-scale, 0.7));
+  }
+  25% {
+    opacity: 1;
+    transform: translate3d(0, -4rpx, 0) scale(calc(var(--heart-scale, 0.7) + 0.08));
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift-x), var(--drift-y), 0) scale(calc(var(--heart-scale, 0.7) + 0.18));
+  }
+}
+
 .comments-section {
-  background-color: #fff;
+  background-color: var(--card-background);
   padding: 20rpx;
   min-height: 200rpx;
   margin-bottom: 112rpx;
@@ -1386,7 +1650,7 @@ export default {
 .section-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 20rpx;
 }
 
@@ -1395,7 +1659,7 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 60rpx 0;
-  color: #999;
+  color: var(--text-color-regular);
   font-size: 28rpx;
 }
 
@@ -1437,7 +1701,7 @@ export default {
 .comment-username {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1454,15 +1718,20 @@ export default {
   transform: translateY(2rpx);
 }
 
+.comment-title-chip {
+  margin-left: 8rpx;
+  font-size: 19rpx;
+}
+
 .comment-time {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-left: auto;
 }
 
 .comment-text {
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-color-regular);
   line-height: 1.6;
   word-break: break-all;
   white-space: pre-wrap;
@@ -1495,7 +1764,7 @@ export default {
 
 .comment-like text {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-left: 6rpx;
 }
 
@@ -1505,19 +1774,19 @@ export default {
 
 .comment-reply {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
 }
 
 .comment-delete {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-left: 30rpx;
 }
 
 .replies-list {
   margin-left: 84rpx;
   padding: 20rpx;
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
   border-radius: 12rpx;
 }
 
@@ -1560,7 +1829,7 @@ export default {
 .reply-username {
   font-size: 26rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1577,9 +1846,14 @@ export default {
   transform: translateY(2rpx);
 }
 
+.reply-title-chip {
+  margin-left: 8rpx;
+  font-size: 18rpx;
+}
+
 .reply-target {
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-color-regular);
   margin: 0 10rpx;
   max-width: 40%;
   overflow: hidden;
@@ -1589,13 +1863,13 @@ export default {
 
 .reply-time {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-left: auto;
 }
 
 .reply-text {
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-color-regular);
   line-height: 1.6;
   word-break: break-all;
   white-space: pre-wrap;
@@ -1628,7 +1902,7 @@ export default {
 
 .reply-like text {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-left: 6rpx;
 }
 
@@ -1638,25 +1912,25 @@ export default {
 
 .reply-btn {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-color-regular);
 }
 
 .reply-delete {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-left: 30rpx;
 }
 
 .show-more {
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-color-regular);
   text-align: center;
   padding: 20rpx 0 0;
 }
 
 .comment-input {
-  background-color: #fff;
-  border-top: 1rpx solid #f0f0f0;
+  background-color: var(--card-background);
+  border-top: 1rpx solid var(--border-color);
   padding: 20rpx;
   transition: all 0.3s;
   position: fixed;
@@ -1682,9 +1956,10 @@ textarea {
   font-size: 28rpx;
   line-height: 1.5;
   padding: 16rpx 20rpx;
-  background-color: #f5f5f5;
+  background-color: var(--background-color-secondary);
   border-radius: 36rpx;
   margin-right: 20rpx;
+  color: var(--text-color-primary);
 }
 
 .input-actions {
@@ -1754,7 +2029,7 @@ textarea {
 .add-image {
   width: calc(25% - 20rpx);
   margin: 10rpx;
-  background-color: #f5f5f5;
+  background-color: var(--background-color-secondary);
   border-radius: 8rpx;
   display: flex;
   justify-content: center;
@@ -1776,7 +2051,7 @@ textarea {
   align-items: center;
   justify-content: center;
   padding: 30rpx 0;
-  color: #999;
+  color: var(--text-color-regular);
   font-size: 26rpx;
 }
 
@@ -1801,7 +2076,7 @@ textarea {
 
 /* 图片长按菜单样式 */
 .popup-content {
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 20rpx 20rpx 0 0;
   overflow: hidden;
 }
@@ -1812,8 +2087,8 @@ textarea {
   justify-content: center;
   padding: 30rpx 0;
   font-size: 32rpx;
-  color: #333;
-  border-bottom: 1rpx solid #f0f0f0;
+  color: var(--text-color-primary);
+  border-bottom: 1rpx solid var(--border-color);
 }
 
 .popup-item uni-icons {
@@ -1821,7 +2096,7 @@ textarea {
 }
 
 .popup-item.cancel {
-  color: #999;
+  color: var(--text-color-regular);
   margin-top: 20rpx;
   border-bottom: none;
 }

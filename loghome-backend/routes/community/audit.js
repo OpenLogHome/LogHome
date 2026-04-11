@@ -5,6 +5,7 @@ let auth = require('../../bin/auth.js');
 let adminAuth = require('../../bin/adminAuth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
+let achievements = require('../../bin/achievements.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -251,6 +252,10 @@ router.post('/posts/:id', auth, async (req, res) => {
         
         // 发送通知给作者
         if (status === 1) {
+            await achievements.recordMetricProgress(post[0].user_id, 'community_post_count', 1, {
+                reason: '社区发帖审核通过',
+                suppressNotification: true,
+            });
             message.sendMsg(
                 user.user_id,
                 post[0].user_id,

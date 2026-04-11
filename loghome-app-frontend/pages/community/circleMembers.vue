@@ -1,6 +1,6 @@
 <!-- 圈子成员列表页面 -->
 <template>
-  <view class="members-container">
+  <view class="members-container" v-dark>
     <!-- 顶部标签页 -->
     <view class="tabs">
       <view class="tab" :class="{ active: currentTab === 'members' }" @tap="switchTab('members')">成员列表</view>
@@ -52,7 +52,7 @@
               <view class="member-role-tag" :class="member.role === 2 ? 'owner' : 'admin'">{{member.role === 2 ? '圈主' : '管理员'}}</view>
               <!-- 圈主可以取消管理员 -->
               <view v-if="isOwner && member.role === 1" class="action-btn" @tap.stop="showAdminActionSheet(member)">
-                <uni-icons type="more-filled" size="20" color="#666"></uni-icons>
+                <uni-icons type="more-filled" size="20" :color="$store.state.isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
               </view>
             </view>
           </view>
@@ -73,11 +73,11 @@
             </view>
             <!-- 圈主可以设置管理员 -->
             <view v-if="isOwner" class="action-btn" @tap.stop="showMemberActionSheet(member)">
-              <uni-icons type="more-filled" size="20" color="#666"></uni-icons>
+              <uni-icons type="more-filled" size="20" :color="$store.state.isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
             </view>
             <!-- 管理员可以踢出普通成员 -->
             <view v-else-if="userRole === 1" class="action-btn" @tap.stop="showMemberKickActionSheet(member)">
-              <uni-icons type="more-filled" size="20" color="#666"></uni-icons>
+              <uni-icons type="more-filled" size="20" :color="$store.state.isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
             </view>
           </view>
         </view>
@@ -828,6 +828,8 @@ export default {
 <style lang="scss" scoped>
 .members-container {
   padding: 20rpx;
+  min-height: 100vh;
+  background-color: var(--background-color-secondary);
 }
 
 .members-list {
@@ -835,7 +837,7 @@ export default {
 }
 
 .role-group {
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 12rpx;
   padding: 20rpx;
   margin-bottom: 20rpx;
@@ -844,7 +846,7 @@ export default {
 .role-title {
   font-size: 30rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 20rpx;
   padding-left: 10rpx;
   border-left: 6rpx solid #EA7034;
@@ -860,7 +862,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid var(--border-color);
 }
 
 .member-item:last-child {
@@ -888,13 +890,13 @@ export default {
 
 .member-name {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 6rpx;
 }
 
 .member-motto {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   width: 400rpx;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -903,7 +905,7 @@ export default {
 
 .request-time {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-top: 4rpx;
 }
 
@@ -949,7 +951,7 @@ export default {
 
 .empty-text {
   font-size: 28rpx;
-  color: #999;
+  color: var(--text-color-regular);
 }
 
 .load-more-wrapper {
@@ -990,7 +992,7 @@ export default {
 
 .tabs {
   display: flex;
-  background-color: #fff;
+  background-color: var(--card-background);
   padding: 20rpx;
   margin-bottom: 20rpx;
 }
@@ -999,7 +1001,7 @@ export default {
   flex: 1;
   text-align: center;
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-color-regular);
   padding: 10rpx 0;
   position: relative;
 }
@@ -1029,7 +1031,13 @@ export default {
 
 .ban-reason {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
+  margin-top: 4rpx;
+}
+
+.ban-time {
+  font-size: 24rpx;
+  color: var(--text-color-regular);
   margin-top: 4rpx;
 }
 
@@ -1040,4 +1048,4 @@ export default {
   padding: 6rpx 20rpx;
   border-radius: 30rpx;
 }
-</style> 
+</style>

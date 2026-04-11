@@ -20,7 +20,10 @@
             <view class="record-title">{{ item.title }}</view>
             <view class="record-info">
               <text class="record-time">{{ item.create_time }}</text>
-              <text class="record-source">{{ item.source }}</text>
+              <text class="record-source">{{ getRecordSourceLabel(item) }}</text>
+              <text class="record-editor" v-if="getRecordEditorLabel(item)">{{
+                getRecordEditorLabel(item)
+              }}</text>
               <text class="record-count"
                 >{{ getTextCount(item.content) }}字
                 {{ getImageCount(item.content) }}图</text
@@ -39,6 +42,9 @@
           <text class="preview-title">{{ selectedRecord.title }}</text>
           <view class="preview-info">
             <text>{{ selectedRecord.create_time }}</text>
+            <text v-if="getRecordEditorLabel(selectedRecord)">{{
+              getRecordEditorLabel(selectedRecord)
+            }}</text>
             <text
               >{{ getTextCount(selectedRecord.content) }}字
               {{ getImageCount(selectedRecord.content) }}图</text
@@ -89,6 +95,7 @@ export default {
     return {
       novelId: 0,
       articleId: 0,
+      currentUserId: 0,
       historyRecords: [],
       selectedRecordIndex: -1,
       selectedRecord: null,
@@ -111,6 +118,7 @@ export default {
 
     this.articleId = option.id;
     this.novelId = option.novelId;
+    this.resolveCurrentUserId();
     this.loadHistoryRecords();
   },
   computed: {
@@ -126,6 +134,27 @@ export default {
     },
   },
   methods: {
+    mergeCloudRecordMeta(targetRecord, cloudRecord) {
+      if (!targetRecord || !cloudRecord) return targetRecord;
+
+      targetRecord.editor_user_id = cloudRecord.editor_user_id || null;
+      targetRecord.editor_name = cloudRecord.editor_name || null;
+      targetRecord.editor_avatar_url = cloudRecord.editor_avatar_url || null;
+      targetRecord.edit_session_id = cloudRecord.edit_session_id || null;
+      return targetRecord;
+    },
+    getRecordSourceLabel(record) {
+      if (!record) return "";
+      return record.source || "";
+    },
+    getRecordEditorLabel(record) {
+      if (!record || !record.editor_name) return "";
+      return `提交人：${record.editor_name}`;
+    },
+    resolveCurrentUserId() {
+      let token = JSON.parse(window.localStorage.getItem("token"));
+      this.currentUserId = token && token.id ? Number(token.id) : 0;
+    },
     utc2beijing(utc_datetime) {
       // 转为正常的时间格式 年-月-日 时:分:秒
       var T_pos = utc_datetime.indexOf("T");
@@ -191,6 +220,7 @@ export default {
             existingEntry.record.source = "本地&云端";
             // 保留云端记录的is_slow_save标记
             existingEntry.record.is_slow_save = true;
+            this.mergeCloudRecordMeta(existingEntry.record, cloudRecord);
           } else {
             // 如果没有相同记录，添加到Map
             recordMap.set(key, { record: cloudRecord, sources: ["云端备份"] });
@@ -258,8 +288,8 @@ export default {
       try {
         // 从IndexedDB加载本地历史记录
         const records = await writerArticleDB.articles
-          .where("article_id")
-          .equals(Number(this.articleId))
+          .where("[user_id+article_id]")
+          .equals([Number(this.currentUserId || 0), Number(this.articleId)])
           .toArray();
 
         // 添加来源标记
@@ -296,6 +326,10 @@ export default {
           source: "云端备份",
           create_time: record.create_time,
           is_slow_save: true, // 云端备份视为完整备份
+          editor_user_id: record.editor_user_id || null,
+          editor_name: record.editor_name || null,
+          editor_avatar_url: record.editor_avatar_url || null,
+          edit_session_id: record.edit_session_id || null,
         }));
       } catch (error) {
         console.error("加载云端历史记录失败:", error);
@@ -412,6 +446,7 @@ export default {
 
               writerArticleDB.articles.add({
                 article_id: Number(this.articleId),
+                user_id: Number(this.currentUserId || 0),
                 title: this.selectedRecord.title,
                 content: this.selectedRecord.content,
                 create_time: currentServerTime,
@@ -521,9 +556,14 @@ export default {
 
 .record-time,
 .record-source,
+.record-editor,
 .record-count {
   font-size: 24rpx;
   color: #999;
+}
+
+.record-editor {
+  color: #7c532e;
 }
 
 .record-tag {
@@ -566,6 +606,7 @@ export default {
 
 .preview-info {
   display: flex;
+  flex-wrap: wrap;
   gap: 20rpx;
   font-size: 24rpx;
   color: #999;

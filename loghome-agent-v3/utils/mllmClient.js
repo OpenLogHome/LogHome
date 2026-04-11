@@ -17,6 +17,18 @@ try {
 
 const MLLM_CONFIG_LIST = secret.MLLM_CONFIG_LIST || [];
 export const IMAGE_MLLM_CONFIG = secret.IMAGE_MLLM_CONFIG || null;
+export const MLLM_TEMPORARILY_UNAVAILABLE_CODE = 'MLLM_TEMPORARILY_UNAVAILABLE';
+
+function createTemporarilyUnavailableError() {
+    const error = new Error("All MLLM models are temporarily unavailable. Task stopped.");
+    error.code = MLLM_TEMPORARILY_UNAVAILABLE_CODE;
+    return error;
+}
+
+function isMllmTemporarilyUnavailableError(error) {
+    return error?.code === MLLM_TEMPORARILY_UNAVAILABLE_CODE
+        || error?.message === "All MLLM models are temporarily unavailable. Task stopped.";
+}
 
 class MLLMClient {
     constructor() {
@@ -27,6 +39,14 @@ class MLLMClient {
         this.configs = MLLM_CONFIG_LIST;
         this.currentConfigIndex = 0;
         this.consecutiveFailures = 0;
+    }
+
+    getMaxContextLength() {
+        if (!this.configs || this.configs.length === 0) {
+            return 128000;
+        }
+        const config = this.configs[this.currentConfigIndex];
+        return config.maxContextLength || 128000;
     }
 
     /**
@@ -125,7 +145,7 @@ class MLLMClient {
             this.consecutiveFailures = 0;
 
             if (this.currentConfigIndex >= this.configs.length) {
-                throw new Error("All MLLM models are temporarily unavailable. Task stopped.");
+                throw createTemporarilyUnavailableError();
             }
 
             console.log(`Retrying with Config ${this.currentConfigIndex}...`);
@@ -138,8 +158,14 @@ class MLLMClient {
     }
 
     _logTransaction(startTime, mode, model, prompt, response, error) {
-        const timestamp = startTime.toISOString().replace(/[:.]/g, '-');
-        const logFile = path.join(this.logDir, `mllm_${timestamp}.log`);
+        const isoString = startTime.toISOString();
+        const hourDir = isoString.slice(0, 13).replace('T', '_');
+        const logSubDir = path.join(this.logDir, hourDir);
+        if (!fs.existsSync(logSubDir)) {
+            fs.mkdirSync(logSubDir, { recursive: true });
+        }
+        const timestamp = isoString.replace(/[:.]/g, '-');
+        const logFile = path.join(logSubDir, `mllm_${timestamp}.log`);
         
         const logContent = `
 === MLLM Transaction Log ===
@@ -165,3 +191,4 @@ ${error ? `Error: ${error.message}\nStack: ${error.stack}` : response}
 }
 
 export const mllmClient = new MLLMClient();
+export { isMllmTemporarilyUnavailableError };

@@ -200,6 +200,36 @@ router.post('/get_paragraph_comment_amount', async function(req, res){
 	}
 });
 
+router.post('/get_paragraph_comment_amounts', async function(req, res){
+	try{
+		let articleId = Number(req.body.article_id);
+		let paragraphIds = Array.isArray(req.body.paragraph_ids)
+			? Array.from(new Set(req.body.paragraph_ids
+				.map((item) => Number(item))
+				.filter((item) => Number.isInteger(item) && item > 0)))
+			: [];
+		if (!Number.isInteger(articleId) || articleId <= 0 || paragraphIds.length == 0) {
+			res.end(JSON.stringify([]));
+			return;
+		}
+		let result = await query(`SELECT c.paragraph_id, COUNT(*) count
+			FROM novel_comments n
+			INNER JOIN article_cento c ON n.cento_id = c.article_cento_id
+			WHERE n.cento_id != 0
+			  AND n.deleted = 0
+			  AND c.article_id = ?
+			  AND c.paragraph_id IN (?)
+			GROUP BY c.paragraph_id`, [
+			articleId,
+			paragraphIds,
+		]);
+		res.end(JSON.stringify(result));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.get('/get_article_comment_amount', async function(req, res){
 	try{
 		let result = await query('SELECT COUNT(*) count FROM novel_comments WHERE article_id = ?', [

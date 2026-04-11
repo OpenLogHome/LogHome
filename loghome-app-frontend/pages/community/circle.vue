@@ -1,5 +1,5 @@
 <template>
-  <view class="circle-container" :style="{'--statusBarHeight': 0 + 'px'}">
+  <view class="circle-container" v-dark :style="{'--statusBarHeight': 0 + 'px'}">
     <!-- 添加后退导航栏 -->
     <zetank-backBar textcolor="#fff" :showLeft="true" :showHome="true" :showTitle="false" navTitle="圈子详情"></zetank-backBar>
     
@@ -61,7 +61,7 @@
         <text class="section-title">成员 ({{circle.member_count || 0}})</text>
         <view class="more-btn clickable" @tap="navigateToMembers">
           <text>更多</text>
-          <uni-icons type="right" size="14" color="#999"></uni-icons>
+          <uni-icons type="right" size="14" :color="$store.state.isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
         </view>
       </view>
       <scroll-view scroll-x class="members-scroll" show-scrollbar="false">
@@ -141,15 +141,15 @@
           </view>
           <view class="post-footer">
             <view class="post-action">
-              <uni-icons type="chat" size="18" color="#666"></uni-icons>
+              <uni-icons type="chat" size="18" :color="$store.state.isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
               <text>{{post.comment_count}}</text>
             </view>
             <view class="post-action clickable" @tap.stop="likePost(post)">
-              <uni-icons :type="post.is_liked ? 'heart-filled' : 'heart'" size="18" :color="post.is_liked ? '#EA7034' : '#666'"></uni-icons>
+              <uni-icons :type="post.is_liked ? 'heart-filled' : 'heart'" size="18" :color="post.is_liked ? '#EA7034' : ($store.state.isDarkMode ? '#b8b8b8' : '#666')"></uni-icons>
               <text :class="{'liked': post.is_liked}">{{post.like_count}}</text>
             </view>
             <view class="post-action clickable" @tap.stop="sharePost(post)">
-              <uni-icons type="redo" size="18" color="#666"></uni-icons>
+              <uni-icons type="redo" size="18" :color="$store.state.isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
               <text>分享</text>
             </view>
           </view>
@@ -235,7 +235,7 @@
       <view class="info-popup">
         <view class="popup-header">
           <text class="popup-title">圈子信息</text>
-          <uni-icons type="closeempty" size="24" color="#999" class="clickable" @click="closeInfoPopup"></uni-icons>
+          <uni-icons type="closeempty" size="24" :color="$store.state.isDarkMode ? '#b8b8b8' : '#999'" class="clickable" @click="closeInfoPopup"></uni-icons>
         </view>
         <view class="popup-content">
           <view class="info-section">
@@ -904,7 +904,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #F8F8F8;
+  background-color: var(--background-color-secondary);
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -1081,9 +1081,9 @@ export default {
 
 .filter-bar {
   display: flex;
-  background-color: #fff;
+  background-color: var(--card-background);
   padding: 0 20rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid var(--border-color);
   position: relative;
   z-index: 2;
 }
@@ -1095,7 +1095,7 @@ export default {
   justify-content: center;
   align-items: center;
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-color-regular);
   position: relative;
 }
 
@@ -1192,7 +1192,7 @@ export default {
 }
 
 .post-item {
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 12rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
@@ -1224,13 +1224,13 @@ export default {
 
 .user-name {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-color-primary);
   font-weight: bold;
 }
 
 .post-time {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-top: 6rpx;
 }
 
@@ -1255,14 +1255,14 @@ export default {
 .post-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 10rpx;
   display: block;
 }
 
 .post-text {
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-color-regular);
   line-height: 1.6;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -1315,7 +1315,7 @@ export default {
 .post-footer {
   display: flex;
   justify-content: space-around;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 1rpx solid var(--border-color);
   padding-top: 20rpx;
 }
 
@@ -1323,7 +1323,7 @@ export default {
   display: flex;
   align-items: center;
   font-size: 24rpx;
-  color: #666;
+  color: var(--text-color-regular);
 }
 
 .post-action text {
@@ -1365,12 +1365,12 @@ export default {
 
 .empty-text {
   font-size: 28rpx;
-  color: #999;
+  color: var(--text-color-regular);
 }
 
 .info-popup {
   width: 600rpx;
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 20rpx;
   overflow: hidden;
 }
@@ -1380,13 +1380,13 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid var(--border-color);
 }
 
 .popup-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
 }
 
 .popup-content {
@@ -1402,14 +1402,14 @@ export default {
 .info-title {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 10rpx;
   display: block;
 }
 
 .info-text {
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-color-regular);
   line-height: 1.6;
 }
 
@@ -1428,11 +1428,11 @@ export default {
 
 .member-name {
   font-size: 26rpx;
-  color: #333;
+  color: var(--text-color-primary);
 }
 
 .circle-members {
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 12rpx;
   padding: 20rpx;
   margin: 0 20rpx 20rpx 20rpx;
@@ -1449,14 +1449,14 @@ export default {
 .section-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
 }
 
 .more-btn {
   display: flex;
   align-items: center;
   font-size: 26rpx;
-  color: #999;
+  color: var(--text-color-regular);
 }
 
 .members-scroll {
@@ -1523,7 +1523,7 @@ export default {
 
 .member-name {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-color-regular);
   width: 100%;
   text-align: center;
   overflow: hidden;

@@ -18,39 +18,36 @@
 				</view>
 				<view class="li " @click="readerSet">
 					<view class="text">阅读器设置</view>
-					<img class="to" src="../../static/user/to.png"></img>
+					<img class="to" src="../../static/user/to.png" />
 				</view>
 				<view class="li " @click="changePwd">
 					<view class="text">修改密码</view>
-					<img class="to" src="../../static/user/to.png"></img>
+					<img class="to" src="../../static/user/to.png" />
 				</view>
 				<view class="li " @click="activateAccount">
 					<view class="text">账号绑定</view>
-					<img class="to" src="../../static/user/to.png"></img>
+					<img class="to" src="../../static/user/to.png" />
 				</view>
 				<view class="li " @click="storageManage">
 					<view class="text">空间占用管理</view>
-					<img class="to" src="../../static/user/to.png"></img>
+					<img class="to" src="../../static/user/to.png" />
 				</view>
 			</view>
 			<view class="list">
 				<view class="li noborder" @click="logout">
 					<view class="text" style="color:red">登出</view>
-					<img class="to" src="../../static/user/to.png"></img>
+					<img class="to" src="../../static/user/to.png" />
 				</view>
 			</view>
 		</view>
 	</view>
 </template>
 <script>
-	import axios from 'axios'
 	export default {
 		data() {
 			return {
 				user:{}
 			}
-		},
-		onShow() {
 		},
 		methods: {
 			logout(){

@@ -85,6 +85,12 @@
 			}
 		},
 		{
+			"path": "pages/readers/askLogGirl",
+			"style": {
+				"navigationBarTitleText": "问问原木娘"
+			}
+		},
+		{
 			"path": "pages/readers/logPower",
 			"style": {
 				"navigationBarTitleText": "原木力详情"
@@ -451,6 +457,24 @@
 			}
 		},
 		{
+			"path": "pages/writers/essayCollaborationSettings",
+			"style": {
+				"navigationBarTitleText": "多人协作"
+			}
+		},
+		{
+			"path": "pages/writers/essayIndexing",
+			"style": {
+				"navigationBarTitleText": "全文智能索引"
+			}
+		},
+		{
+			"path": "pages/writers/novelCollaborators",
+			"style": {
+				"navigationBarTitleText": "协作作者"
+			}
+		},
+		{
 			"path": "pages/community/postEdit",
 			"style": {
 				"navigationBarTitleText": "帖子编辑",
@@ -512,6 +536,12 @@
 				"navigationBarTitleText": "原木树场",
 				"enablePullDownRefresh": false,
 				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/treePlant/treeSceneSettings",
+			"style": {
+				"navigationBarTitleText": "树场设置"
 			}
 		},
 		{
@@ -881,6 +911,12 @@
 			"path": "pages/writers/scheduledTasks",
 			"style": {
 				"navigationBarTitleText": "定时发布任务"
+			}
+		},
+		{
+			"path": "pages/writers/workPublish",
+			"style": {
+				"navigationBarTitleText": "作品发布"
 			}
 		},
 		{

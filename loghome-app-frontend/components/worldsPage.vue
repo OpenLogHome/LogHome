@@ -13,7 +13,7 @@
 			<img src="../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;"/>
 			<div style="color:#777777; font-size: 25rpx;" :class="{'dark-mode': isDarkMode}">这是一片什么都没有的荒原</div>
 		</div>
-		<div class="jiemian2" v-for="world in worlds" v-dark>
+		<div class="jiemian2" v-for="world in worlds" :key="world.world_id || world.novel_id" v-dark>
 			<div class="hang1">
 				<div class="biaoti">
 					{{world.name}}
@@ -24,6 +24,7 @@
 				<el-tag type= "info" style="margin-right: 10px;" v-show="world.is_personal">私密</el-tag>
 				<el-tag type="success" style="margin-right: 10px;" v-show="!world.is_personal && world.allow_fork">允许二创</el-tag>
 				<el-tag type= "info" style="margin-right: 10px;" v-show="!world.allow_fork">不允许二创</el-tag>
+				<el-tag type="warning" style="margin-right: 10px;" v-if="showCollaborativeTag(world)">协作作品</el-tag>
 			</div>
 			<div class="h2">
 				{{world.content}}
@@ -38,7 +39,7 @@
 				</div>
 			</div> -->
 			<div class="enterButtons" style="display:flex; margin-top: 15rpx;">
-				<div class="enterButton" @click="editWorld(world.novel_id, world.world_id)" style="margin-right: 15rpx;">编辑设定</div>
+				<div class="enterButton" @click="editWorld(world.novel_id, world.world_id)" style="margin-right: 15rpx;">{{ getEditButtonText(world) }}</div>
 				<div class="enterButton" @click="enterWorld(world.world_id)" v-show="!world.is_personal">进入设定</div>
 			</div>
 
@@ -61,6 +62,20 @@
 			}
 		},
 		methods: {
+			isWorldOwner(world) {
+				return !!(world && (world.is_owner === true || world.access_role === 'owner' || !world.access_role));
+			},
+			showCollaborativeTag(world) {
+				if (!world) return false;
+				return (
+					world.access_role === 'collaborator' ||
+					world.is_collaborator === true ||
+					Number(world.has_active_collaborators || 0) === 1
+				);
+			},
+			getEditButtonText(world) {
+				return this.isWorldOwner(world) ? '编辑设定' : '协作设定';
+			},
 			createNewWorld() {
 				let _this = this;
 				uni.showModal({

@@ -1,0 +1,13 @@
+
+=== MLLM Transaction Log ===
+Time: 2026-04-11T04:22:30.339Z
+Mode: speed
+Model: doubao-seed-2-0-mini-260215
+Status: SUCCESS
+
+--- Request Prompt ---
+[object Object],[object Object]
+
+--- Response ---
+这张图没有人物和场景氛围，仅纯白背景上展示了深度学习Transformer自注意力机制的打分公式$S = Q\cdot K^T$，右侧标注了公式编号(1)，整体简洁规整。
+============================

@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<view class="post" v-html="post.content"></view>
 	</view>
 	
@@ -37,17 +37,32 @@
 
 <style scoped lang="scss">
 	.outer{
-		background-color: #ffffff;
+		background-color: var(--background-color);
+		min-height: 100vh;
 	}
 	.post{
 		width:90vw;
 		padding:5vw;
 		overflow:hidden;
+		color: var(--text-color-primary);
 		/deep/ img{
 			max-width:90vw;
 		}
 	}
 	/deep/ .post{
+		color: var(--text-color-primary);
 		line-height: 1.6;
+	}
+	/deep/ .post p,
+	/deep/ .post span,
+	/deep/ .post div,
+	/deep/ .post li,
+	/deep/ .post h1,
+	/deep/ .post h2,
+	/deep/ .post h3,
+	/deep/ .post h4,
+	/deep/ .post h5,
+	/deep/ .post h6{
+		color: inherit !important;
 	}
 </style>

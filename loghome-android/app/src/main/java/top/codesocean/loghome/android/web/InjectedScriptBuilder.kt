@@ -52,6 +52,49 @@ object InjectedScriptBuilder {
 })();
 """
 
+    private const val TREE_SCENE_DIAGNOSTICS = """
+(function() {
+    function reportTreeSceneDiagnostics() {
+        try {
+            const canvas = document.createElement("canvas");
+            let webgl2 = null;
+            let webgl = null;
+            try {
+                webgl2 = canvas.getContext("webgl2");
+            } catch (error) {}
+            try {
+                webgl = webgl2 || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+            } catch (error) {}
+            let lowPerformanceMode = null;
+            try {
+                lowPerformanceMode = window.localStorage ? window.localStorage.getItem("loghomeTreePlantLowPerformance") : null;
+            } catch (error) {
+                lowPerformanceMode = "__storage_error__";
+            }
+            console.info("[TREE3D_DIAG]" + JSON.stringify({
+                href: window.location ? window.location.href : "",
+                readyState: document.readyState,
+                lowPerformanceMode: lowPerformanceMode,
+                hasWebGLRenderingContext: typeof window.WebGLRenderingContext !== "undefined",
+                hasWebGL2RenderingContext: typeof window.WebGL2RenderingContext !== "undefined",
+                webgl2Context: !!webgl2,
+                webglContext: !!webgl
+            }));
+        } catch (error) {
+            console.info("[TREE3D_DIAG_FAIL]" + String((error && error.message) || error));
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(reportTreeSceneDiagnostics, 0);
+        }, { once: true });
+    } else {
+        setTimeout(reportTreeSceneDiagnostics, 0);
+    }
+})();
+"""
+
     suspend fun build(
         context: Context,
         statusBarHeightDp: Double,
@@ -65,7 +108,9 @@ object InjectedScriptBuilder {
             appendLine("window.jsBridge.appVersion = ${JSONObject.quote(assetVersion)};")
         }
 
-        sanitizeForInlineScript(listOf(BRIDGE_SHIM, jsBridgeSource, assignments).joinToString("\n"))
+        sanitizeForInlineScript(
+            listOf(BRIDGE_SHIM, jsBridgeSource, assignments, TREE_SCENE_DIAGNOSTICS).joinToString("\n"),
+        )
     }
 
     private fun sanitizeForInlineScript(source: String): String {

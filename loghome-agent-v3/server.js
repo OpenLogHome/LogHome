@@ -29,17 +29,14 @@ app.get('/api/novels', async (req, res) => {
 app.get('/api/memories/:novelId', async (req, res) => {
     try {
         const novelId = req.params.novelId;
-        const memories = await getNovelMemories(novelId);
+        const scope = req.query.scope || 'reader';
+        const memories = await getNovelMemories(novelId, { scope });
         
-        // Parse JSON fields for easier frontend handling
         const processedMemories = memories.map(m => ({
             ...m,
-            chapter_comprehension: typeof m.chapter_comprehension === 'string' 
-                ? JSON.parse(m.chapter_comprehension) 
-                : m.chapter_comprehension,
-            character_comprehension: typeof m.character_comprehension === 'string' 
-                ? JSON.parse(m.character_comprehension) 
-                : m.character_comprehension
+            characters: typeof m.characters === 'string' 
+                ? JSON.parse(m.characters) 
+                : m.characters
         }));
 
         res.json(processedMemories);

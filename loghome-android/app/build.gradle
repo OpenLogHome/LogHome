@@ -45,8 +45,8 @@ android {
         applicationId "top.codesocean.loghome"
         minSdk 24
         targetSdk 34
-        versionCode 295
-        versionName "2.9.5"
+        versionCode 300
+        versionName "2.9.10"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

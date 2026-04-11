@@ -33,10 +33,17 @@ export function normalizeLegacyBlocks(blocks) {
       };
     }
 
-    return {
+    const normalizedBlock = {
       type: "text",
       value: block && typeof block.value === "string" ? block.value : "",
     };
+
+    const blockId = normalizeBlockId(block);
+    if (blockId !== null) {
+      normalizedBlock.id = blockId;
+    }
+
+    return normalizedBlock;
   });
 }
 
@@ -70,6 +77,7 @@ export function legacyBlocksToDoc(blocks) {
 
     return {
       type: "paragraph",
+      attrs: buildParagraphAttrs(block),
       content: textToParagraphContent(block.value),
     };
   });
@@ -88,7 +96,7 @@ export function docToLegacyBlocks(doc) {
     collectLegacyBlocks(node, blocks);
   });
 
-  return normalizeLegacyBlocks(blocks);
+  return assignMissingLegacyIds(normalizeLegacyBlocks(blocks));
 }
 
 export function formatLegacyBlocks(blocks, options = {}) {
@@ -108,10 +116,14 @@ export function formatLegacyBlocks(blocks, options = {}) {
 
     const trimmed = block.value.trim();
     if (trimmed) {
-      formatted.push({
+      const nextBlock = {
         type: "text",
         value: indent + trimmed,
-      });
+      };
+      if (block.id !== undefined) {
+        nextBlock.id = block.id;
+      }
+      formatted.push(nextBlock);
       if (addParagraphSpacing) {
         formatted.push({ type: "text", value: "" });
       }
@@ -170,10 +182,15 @@ function collectLegacyBlocks(node, blocks) {
   }
 
   if (isTextBlockNode(node.type)) {
-    blocks.push({
+    const block = {
       type: "text",
       value: extractText(node),
-    });
+    };
+    const blockId = normalizeBlockId(node && node.attrs);
+    if (blockId !== null) {
+      block.id = blockId;
+    }
+    blocks.push(block);
     return;
   }
 
@@ -200,4 +217,78 @@ function extractText(node) {
 
   const children = Array.isArray(node.content) ? node.content : [];
   return children.map((child) => extractText(child)).join("");
+}
+
+function normalizeBlockId(block) {
+  if (!block) {
+    return null;
+  }
+
+  const rawId =
+    block.id ??
+    block.paragraph_id ??
+    block.legacyId ??
+    block.legacy_id ??
+    null;
+
+  if (rawId === null || rawId === undefined || rawId === "") {
+    return null;
+  }
+
+  const normalizedId = Number(rawId);
+  if (!Number.isFinite(normalizedId) || normalizedId <= 0) {
+    return null;
+  }
+
+  return normalizedId;
+}
+
+function buildParagraphAttrs(block) {
+  const blockId = normalizeBlockId(block);
+  if (blockId === null) {
+    return {};
+  }
+
+  return {
+    legacyId: blockId,
+  };
+}
+
+function assignMissingLegacyIds(blocks) {
+  if (!Array.isArray(blocks) || blocks.length === 0) {
+    return [{ type: "text", value: "", id: 1 }];
+  }
+
+  const usedIds = new Set();
+  let nextId = 1;
+  blocks.forEach((block) => {
+    const blockId = normalizeBlockId(block);
+    if (blockId !== null) {
+      usedIds.add(blockId);
+      nextId = Math.max(nextId, blockId + 1);
+    }
+  });
+
+  return blocks.map((block) => {
+    if (!block || block.type !== "text") {
+      return block;
+    }
+
+    const blockId = normalizeBlockId(block);
+    if (blockId !== null) {
+      return {
+        ...block,
+        id: blockId,
+      };
+    }
+
+    const assignedId = nextId;
+    usedIds.add(assignedId);
+    nextId += 1;
+
+    return {
+      ...block,
+      id: assignedId,
+    };
+  });
 }

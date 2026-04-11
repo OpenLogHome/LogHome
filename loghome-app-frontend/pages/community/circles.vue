@@ -1,5 +1,5 @@
 <template>
-  <view class="circles-container">
+  <view class="circles-container" v-dark>
     
     <!-- 搜索框 -->
     <view class="search-box">
@@ -8,6 +8,7 @@
         @confirm="searchCircles"
         @input="searchInput"
         :radius="100"
+        :bgColor="$store.state.isDarkMode ? '#2C2C2C' : '#ffffff'"
         cancelButton="none"
       ></uni-search-bar>
     </view>
@@ -265,7 +266,7 @@ export default {
 .circles-container {
   display: flex;
   flex-direction: column;
-  background-color: #F8F8F8;
+  background-color: var(--background-color-secondary);
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -273,7 +274,7 @@ export default {
 
 .search-box {
   padding: 20rpx 30rpx;
-  background-color: #fff;
+  background-color: var(--card-background);
   width: 100%;
   box-sizing: border-box;
 }
@@ -287,7 +288,7 @@ export default {
 
 .category-section {
   margin-bottom: 30rpx;
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 12rpx;
   overflow: hidden;
   width: 100%;
@@ -299,7 +300,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid var(--border-color);
   width: 100%;
   box-sizing: border-box;
 }
@@ -307,12 +308,12 @@ export default {
 .category-name {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
 }
 
 .circle-count {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
 }
 
 .circles-grid {
@@ -325,7 +326,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 20rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid var(--border-color);
   width: 100%;
   box-sizing: border-box;
 }
@@ -350,7 +351,7 @@ export default {
 .circle-name {
   font-size: 30rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 10rpx;
   display: flex;
   align-items: center;
@@ -375,13 +376,13 @@ export default {
 
 .member-count, .post-count {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-regular);
   margin-right: 20rpx;
 }
 
 .circle-description {
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-color-regular);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
@@ -405,8 +406,8 @@ export default {
 .joined-btn {
   width: 120rpx;
   height: 60rpx;
-  background-color: #f0f0f0;
-  color: #999;
+  background-color: var(--background-color-secondary);
+  color: var(--text-color-regular);
   font-size: 28rpx;
   border-radius: 30rpx;
   display: flex;
@@ -454,6 +455,6 @@ export default {
 
 .empty-text {
   font-size: 28rpx;
-  color: #999;
+  color: var(--text-color-regular);
 }
-</style> 
+</style>

@@ -1,0 +1,13 @@
+
+=== MLLM Transaction Log ===
+Time: 2026-04-10T14:37:25.810Z
+Mode: speed
+Model: doubao-seed-1-6-flash-250828
+Status: SUCCESS
+
+--- Request Prompt ---
+[object Object],[object Object]
+
+--- Response ---
+这是动漫《东方Project》中的博丽灵梦，特写形象：黑色长发，头顶巨大红色蝴蝶结（边缘饰白褶边），身着红底白褶边的巫女服，胸前系黄色领结，表情冷淡平静，背景纯白。服饰与神态凸显其巫女身份及清冷可靠的性格。
+============================

@@ -2,7 +2,8 @@
   <div class="outer" :style="{height : fullHeight + 'px'}">
     <div class="aside" :style="{height : fullHeight + 'px'}">
         <el-menu
-          default-active="0"
+          :default-active="$route.path"
+          router
           class="el-menu-vertical-demo"
           @open="handleOpen"
           @close="handleClose"
@@ -19,125 +20,133 @@
             </div>
             <div class="title">原木罗盘系统</div>
           </div>
-          <router-link to="/">
-                <el-menu-item index="0">
-                    <i class="el-icon-data-analysis"></i>
-                    仪表盘
-                </el-menu-item>
-          </router-link>
-          <el-submenu index="1">
+          <el-menu-item index="/">
+              <i class="el-icon-data-analysis"></i>
+              仪表盘
+          </el-menu-item>
+          <el-submenu index="library">
             <template slot="title">
                 <i class="el-icon-notebook-1"></i>
                 <span>书库管理</span>
             </template>
-            <router-link to="/libraryRoulousChart">
-                <el-menu-item index="1-1">
-                    <i class="el-icon-picture-outline"></i>
-                    轮播图管理
-                </el-menu-item>
-            </router-link>
-            <router-link to="/novelsManage">
-                <el-menu-item index="1-2">
-                    <i class="el-icon-reading"></i>
-                    小说管理
-                </el-menu-item>
-            </router-link>
-            <router-link to="/auditManage">
-                <el-menu-item index="1-3">
-                    <i class="el-icon-coordinate"></i>
-                    文章审核
-                </el-menu-item>
-            </router-link>
+            <el-menu-item index="/libraryRoulousChart">
+                <i class="el-icon-picture-outline"></i>
+                轮播图管理
+            </el-menu-item>
+            <el-menu-item index="/novelsManage">
+                <i class="el-icon-reading"></i>
+                小说管理
+            </el-menu-item>
+            <el-menu-item index="/auditManage">
+                <i class="el-icon-coordinate"></i>
+                文章审核
+            </el-menu-item>
           </el-submenu>
-           <el-submenu index="2">
+           <el-submenu index="system">
             <template slot="title">
                 <i class="el-icon-setting"></i>
                 <span>系统管理</span>
             </template>
-            <router-link to="/UserManage">
-                <el-menu-item index="2-1">
-                    <i class="el-icon-user"></i>
-                    用户管理
-                </el-menu-item>
-            </router-link>
-            <router-link to="/faqsManage">
-                <el-menu-item index="2-2">
-                    <i class="el-icon-phone-outline"></i>
-                    反馈管理
-                </el-menu-item>
-            </router-link>
-            <router-link to="/postsManage">
-                <el-menu-item index="2-3">
-                    <i class="el-icon-document-copy"></i>
-                    帖子管理
-                </el-menu-item>
-            </router-link>
+            <el-menu-item index="/UserManage">
+                <i class="el-icon-user"></i>
+                用户管理
+            </el-menu-item>
+            <el-menu-item index="/faqsManage">
+                <i class="el-icon-phone-outline"></i>
+                反馈管理
+            </el-menu-item>
+            <el-menu-item index="/postsManage">
+                <i class="el-icon-document-copy"></i>
+                帖子管理
+            </el-menu-item>
+            <el-menu-item index="/achievementsManage">
+                <i class="el-icon-medal"></i>
+                勋章管理
+            </el-menu-item>
           </el-submenu>
-          <el-submenu index="3">
+          <el-submenu index="community">
             <template slot="title">
                 <i class="el-icon-chat-dot-round"></i>
                 <span>社区管理</span>
             </template>
-            <router-link to="/circleManage">
-                <el-menu-item index="3-1">
-                    <i class="el-icon-connection"></i>
-                    圈子管理
-                </el-menu-item>
-            </router-link>
-            <router-link to="/communityPosts">
-                <el-menu-item index="3-2">
-                    <i class="el-icon-document"></i>
-                    帖子管理
-                </el-menu-item>
-            </router-link>
-            <router-link to="/reportsManage">
-                <el-menu-item index="3-3">
-                    <i class="el-icon-warning-outline"></i>
-                    举报管理
-                </el-menu-item>
-            </router-link>
-            <router-link to="/activity-messages">
-                <el-menu-item index="3-4">
-                    <i class="el-icon-date"></i>
-                    活动消息
-                </el-menu-item>
-            </router-link>
+            <el-menu-item index="/circleManage">
+                <i class="el-icon-connection"></i>
+                圈子管理
+            </el-menu-item>
+            <el-menu-item index="/communityPosts">
+                <i class="el-icon-document"></i>
+                帖子管理
+            </el-menu-item>
+            <el-menu-item index="/reportsManage">
+                <i class="el-icon-warning-outline"></i>
+                举报管理
+            </el-menu-item>
+            <el-menu-item index="/activity-messages">
+                <i class="el-icon-date"></i>
+                活动消息
+            </el-menu-item>
+            <el-menu-item index="/community-search-keywords">
+                <i class="el-icon-search"></i>
+                搜索关键词运营
+            </el-menu-item>
+            <el-menu-item index="/community-audit-tools">
+                <i class="el-icon-lock"></i>
+                敏感词与审核日志
+            </el-menu-item>
           </el-submenu>
-          <el-submenu index="4">
+          <el-submenu index="payments">
             <template slot="title">
                 <i class="el-icon-money"></i>
                 <span>支付管理</span>
             </template>
-            <router-link to="/bank-accounts">
-                <el-menu-item index="4-1">
-                    <i class="el-icon-bank-card"></i>
-                    原木银行账户
-                </el-menu-item>
-            </router-link>
-            <router-link to="/payment-orders">
-                <el-menu-item index="4-2">
-                    <i class="el-icon-shopping-cart-full"></i>
-                    充值订单管理
-                </el-menu-item>
-            </router-link>
+            <el-menu-item index="/bank-accounts">
+                <i class="el-icon-bank-card"></i>
+                原木银行账户
+            </el-menu-item>
+            <el-menu-item index="/payment-orders">
+                <i class="el-icon-shopping-cart-full"></i>
+                充值订单管理
+            </el-menu-item>
+            <el-menu-item index="/earning-services">
+                <i class="el-icon-wallet"></i>
+                提现申请处理
+            </el-menu-item>
+            <el-menu-item index="/gift-cards">
+                <i class="el-icon-present"></i>
+                礼品卡管理
+            </el-menu-item>
+            <el-menu-item index="/exchange-records">
+                <i class="el-icon-sort"></i>
+                原木兑换记录
+            </el-menu-item>
           </el-submenu>
-          <el-submenu index="5">
+          <el-submenu index="store">
             <template slot="title">
                 <i class="el-icon-present"></i>
                 <span>积分商城</span>
             </template>
-            <router-link to="/store-products">
-                <el-menu-item index="5-1">
-                    <i class="el-icon-goods"></i>
-                    商品管理
-                </el-menu-item>
-            </router-link>
-            <router-link to="/store-orders">
-                <el-menu-item index="5-2">
-                    <i class="el-icon-tickets"></i>
-                    订单管理
-                </el-menu-item>
-            </router-link>
+            <el-menu-item index="/store-products">
+                <i class="el-icon-goods"></i>
+                商品管理
+            </el-menu-item>
+            <el-menu-item index="/store-orders">
+                <i class="el-icon-tickets"></i>
+                订单管理
+            </el-menu-item>
+          </el-submenu>
+          <el-submenu index="operations">
+            <template slot="title">
+                <i class="el-icon-s-operation"></i>
+                <span>运营配置</span>
+            </template>
+            <el-menu-item index="/popup-posters">
+                <i class="el-icon-picture-outline"></i>
+                弹窗海报
+            </el-menu-item>
+            <el-menu-item index="/banners">
+                <i class="el-icon-picture"></i>
+                Banner 管理
+            </el-menu-item>
           </el-submenu>
         </el-menu>
       </div>

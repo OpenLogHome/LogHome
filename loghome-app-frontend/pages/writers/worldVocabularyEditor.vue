@@ -7,11 +7,12 @@
 			</div>
 			<div class="right">
 				<div class="tit">词条名称</div>
-				<input class="input" placeholder="请输入词条名称" v-model="article.title" style="fontSize: 50rpx" />
+				<input class="input" placeholder="请输入词条名称" v-model="article.title" @input="handleTitleInput"
+					style="fontSize: 50rpx" />
 			</div>
 
 		</div>
-		<div class="middleBar" v-show="writerSettings.codeMode">
+		<div class="middleBar" v-if="writerSettings.codeMode">
 			<editor class="textarea" placeholder="" @input="onInput" @ready="onEditorReady"
 				:style="{fontSize:writerSettings.fontSize + 'rpx'}"></editor>
 		</div>
@@ -170,6 +171,65 @@
 	import uniFab from '../../uni_modules/uni-fab/components/uni-fab/uni-fab.vue'
 	import customlist from '../../components/custom-list/index.js'
 	import { createTreeExpReporter } from '../../lib/treeExpReporter.js'
+
+	const DEFAULT_SETTINGS = {
+		version: 24031701,
+		showSymbols: true,
+		fontSize: 35,
+		openTypeSet: false,
+		showFab: false,
+		theme: 'yellow',
+		codeMode: false
+	}
+
+	const EDIT_LOCK_HEARTBEAT_MS = 30 * 1000
+
+	function createEmptyVocabularyContent() {
+		return {
+			desc: '',
+			pic: undefined,
+			attributes: [],
+			relations: []
+		}
+	}
+
+	function parseVocabularyContent(rawContent) {
+		if (typeof rawContent !== 'string' || rawContent.trim() === '') {
+			return createEmptyVocabularyContent()
+		}
+
+		try {
+			const parsed = JSON.parse(rawContent)
+			if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+				return createEmptyVocabularyContent()
+			}
+			return {
+				desc: typeof parsed.desc === 'string' ? parsed.desc : '',
+				pic: typeof parsed.pic === 'string' && parsed.pic.trim() !== '' ? parsed.pic : undefined,
+				attributes: Array.isArray(parsed.attributes) ? parsed.attributes : [],
+				relations: Array.isArray(parsed.relations) ? parsed.relations : []
+			}
+		} catch (error) {
+			return createEmptyVocabularyContent()
+		}
+	}
+
+	function parseVocabularyContentStrict(rawContent) {
+		if (typeof rawContent !== 'string' || rawContent.trim() === '') {
+			return createEmptyVocabularyContent()
+		}
+
+		const parsed = JSON.parse(rawContent)
+		if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+			throw new Error('invalid vocabulary content shape')
+		}
+		return {
+			desc: typeof parsed.desc === 'string' ? parsed.desc : '',
+			pic: typeof parsed.pic === 'string' && parsed.pic.trim() !== '' ? parsed.pic : undefined,
+			attributes: Array.isArray(parsed.attributes) ? parsed.attributes : [],
+			relations: Array.isArray(parsed.relations) ? parsed.relations : []
+		}
+	}
 	export default {
 		components: {
 			uniFab,
@@ -179,7 +239,22 @@
 		data() {
 			return {
 				chapterId: 0,
-				article: {},
+				currentUserId: 0,
+				article: {
+					article_id: 0,
+					title: '',
+					content: JSON.stringify(createEmptyVocabularyContent()),
+					novel_info: {},
+					is_draft: 1
+				},
+				editorAccess: {
+					access_role: 'owner',
+					can_publish: true,
+					can_edit_draft: true
+				},
+				editSessionId: '',
+				currentEditLock: null,
+				lockHeartbeatTimer: null,
 				fab_pattern: {
 					color: 'gray',
 					backgroundColor: '#FFFFFF',
@@ -205,7 +280,10 @@
 				saveInterval: undefined,
 				firstLocalCheck: true,
 				writeExpReporter: null,
-				writerSettings: {},
+				loadComplete: false,
+				suppressContentWatcher: false,
+				isSyncingEditorContent: false,
+				writerSettings: { ...DEFAULT_SETTINGS },
 				themes: {
 					blue: {
 						color: "#115574",
@@ -232,7 +310,7 @@
 						color: "#000000",
 					}
 				},
-				content: {},
+				content: createEmptyVocabularyContent(),
 				defaultAttrs: [
 					"性别", "年龄", "身高", "体重", "血型", "生日", "学历", "性取向", "0/1",
 					"信息素", "力量", "敏捷", "智力", "种族", "发色", "瞳色", "职业",
@@ -279,6 +357,14 @@
 				suggestions: []
 			}
 		},
+		computed: {
+			currentTheme() {
+				return this.themes[this.writerSettings.theme] || this.themes.yellow;
+			},
+			canPublishArticle() {
+				return !!(this.editorAccess && this.editorAccess.can_publish === true);
+			}
+		},
 		onBackPress(e) {
 			if (e.from === 'navigateBack') {
 				return false;
@@ -316,6 +402,308 @@
 					this.writeExpReporter.markActive();
 				}
 			},
+			getTokenInfo() {
+				const raw = window.localStorage.getItem('token');
+				if (!raw) return null;
+				try {
+					return JSON.parse(raw);
+				} catch (error) {
+					return null;
+				}
+			},
+			getAuthToken() {
+				const token = this.getTokenInfo();
+				return token ? token.tk : null;
+			},
+			resolveCurrentUserId() {
+				const token = this.getTokenInfo();
+				this.currentUserId = token && token.id ? Number(token.id) : 0;
+				return this.currentUserId;
+			},
+			generateEditSessionId() {
+				return `world_vocab_${this.chapterId}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+			},
+			persistWriterSettings() {
+				window.localStorage.setItem("writerSettings", JSON.stringify(this.writerSettings));
+			},
+			initializeWriterSettings() {
+				const raw = window.localStorage.getItem("writerSettings");
+				if (!raw) {
+					this.writerSettings = { ...DEFAULT_SETTINGS };
+					this.persistWriterSettings();
+					return;
+				}
+
+				try {
+					const parsed = JSON.parse(raw);
+					this.writerSettings = {
+						...DEFAULT_SETTINGS,
+						...parsed,
+						version: DEFAULT_SETTINGS.version
+					};
+				} catch (error) {
+					this.writerSettings = { ...DEFAULT_SETTINGS };
+				}
+
+				this.persistWriterSettings();
+			},
+			handleTitleInput() {
+				this.markWritingActivity();
+				this.article_changed = true;
+			},
+			handleVisibilityChange() {
+				if (document.visibilityState === "hidden") {
+					this.stopLockHeartbeat();
+					this.releaseEditLock();
+					return;
+				}
+
+				if (this.loadComplete) {
+					this.claimEditLock();
+				}
+			},
+			handlePageHide() {
+				this.stopLockHeartbeat();
+				this.releaseEditLock();
+			},
+			async claimEditLock() {
+				const tk = this.getAuthToken();
+				if (!tk || !this.chapterId || !this.editSessionId) return false;
+
+				try {
+					const response = await axios.post(
+						this.$baseUrl + "/essays/claim_article_edit_lock",
+						{
+							article_id: this.chapterId,
+							session_id: this.editSessionId,
+						},
+						{
+							headers: {
+								"Content-Type": "application/json",
+								Authorization: "Bearer " + tk,
+							},
+						}
+					);
+					this.currentEditLock = response.data.lock || null;
+					this.startLockHeartbeat();
+					return true;
+				} catch (error) {
+					if (error.response && error.response.status === 409) {
+						this.currentEditLock = error.response.data.lock || null;
+						this.handleLockConflict(error.response.data.lock);
+						return false;
+					}
+					return false;
+				}
+			},
+			startLockHeartbeat() {
+				this.stopLockHeartbeat();
+				this.lockHeartbeatTimer = setInterval(() => {
+					this.heartbeatEditLock();
+				}, EDIT_LOCK_HEARTBEAT_MS);
+			},
+			stopLockHeartbeat() {
+				if (this.lockHeartbeatTimer) {
+					clearInterval(this.lockHeartbeatTimer);
+					this.lockHeartbeatTimer = null;
+				}
+			},
+			async heartbeatEditLock() {
+				const tk = this.getAuthToken();
+				if (!tk || !this.chapterId || !this.editSessionId) return;
+
+				try {
+					const response = await axios.post(
+						this.$baseUrl + "/essays/heartbeat_article_edit_lock",
+						{
+							article_id: this.chapterId,
+							session_id: this.editSessionId,
+						},
+						{
+							headers: {
+								"Content-Type": "application/json",
+								Authorization: "Bearer " + tk,
+							},
+						}
+					);
+					this.currentEditLock = response.data.lock || null;
+				} catch (error) {
+					this.stopLockHeartbeat();
+					if (error.response && error.response.status === 409) {
+						this.currentEditLock = error.response.data.lock || null;
+						this.handleLockConflict(error.response.data.lock);
+					}
+				}
+			},
+			async releaseEditLock() {
+				const tk = this.getAuthToken();
+				if (!tk || !this.chapterId || !this.editSessionId) return;
+
+				try {
+					await axios.post(
+						this.$baseUrl + "/essays/release_article_edit_lock",
+						{
+							article_id: this.chapterId,
+							session_id: this.editSessionId,
+						},
+						{
+							headers: {
+								"Content-Type": "application/json",
+								Authorization: "Bearer " + tk,
+							},
+						}
+					);
+				} catch (error) {}
+			},
+			handleLockConflict(lockInfo) {
+				const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
+				uni.showModal({
+					title: "词条已被占用",
+					content: `${lockName} 正在编辑这个词条，请稍后再试。`,
+					showCancel: false,
+					success: () => {
+						uni.navigateBack({});
+					},
+				});
+			},
+			getArticle() {
+				return axios.get(this.$baseUrl + '/essays/get_article?id=' + this.chapterId, {
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + this.getAuthToken()
+					}
+				});
+			},
+			getArticleWriter() {
+				return axios.get(this.$baseUrl + '/essays/get_article_writer?id=' + this.chapterId, {
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + this.getAuthToken()
+					}
+				});
+			},
+			buildArticle(raw) {
+				const article = raw || {};
+				if (article.current_access) {
+					this.editorAccess = article.current_access;
+				}
+				return {
+					...this.article,
+					...article,
+					article_id: Number(article.article_id || this.chapterId),
+					title: article.title || "",
+					content: article.content || JSON.stringify(createEmptyVocabularyContent()),
+					novel_info: article.novel_info || {},
+					is_draft: article.is_draft == null ? 1 : article.is_draft,
+				};
+			},
+			isVocabularyContentEmpty() {
+				const parsedContent = parseVocabularyContent(this.article.content);
+				const hasDesc = parsedContent.desc.trim() !== '';
+				const hasPic = typeof parsedContent.pic === 'string' && parsedContent.pic.trim() !== '';
+				const hasAttr = parsedContent.attributes.some((item) => {
+					return String(item.name || '').trim() !== '' || String(item.content || '').trim() !== '';
+				});
+				const hasRelation = parsedContent.relations.some((item) => {
+					return String(item.name || '').trim() !== '' || String(item.relation || '').trim() !== '';
+				});
+				return !hasDesc && !hasPic && !hasAttr && !hasRelation;
+			},
+			syncCodeEditorContent(content = this.article.content) {
+				if (!this.editorCtx || this.isSyncingEditorContent) return;
+
+				this.isSyncingEditorContent = true;
+				try {
+					this.editorCtx.setContents({
+						delta: {
+							ops: [{
+								insert: content || ""
+							}]
+						}
+					});
+				} catch (error) {}
+
+				setTimeout(() => {
+					this.isSyncingEditorContent = false;
+				}, 0);
+			},
+			syncStructuredContentFromCodeMode() {
+				if (!this.writerSettings.codeMode) {
+					return true;
+				}
+
+				try {
+					const parsedContent = parseVocabularyContentStrict(this.article.content);
+					this.suppressContentWatcher = true;
+					this.content = parsedContent;
+					this.article.content = JSON.stringify(parsedContent);
+					this.$nextTick(() => {
+						this.suppressContentWatcher = false;
+					});
+					return true;
+				} catch (error) {
+					uni.showToast({
+						title: '源码模式内容不是合法 JSON',
+						icon: 'none',
+						duration: 2000
+					});
+					return false;
+				}
+			},
+			async initializeArticle() {
+				uni.showLoading({
+					title: '编辑器初始化'
+				});
+
+				try {
+					let articleData = null;
+					const writerRes = await this.getArticleWriter();
+					if (writerRes.data && writerRes.data !== 'no data') {
+						articleData = writerRes.data;
+					}
+
+					if (!articleData) {
+						const articleRes = await this.getArticle();
+						articleData = Array.isArray(articleRes.data) ? articleRes.data[0] : articleRes.data;
+					}
+
+					this.article = this.buildArticle(articleData);
+					this.cloudTime = this.article.update_time;
+
+					if (this.editorAccess && this.editorAccess.can_edit_draft === false) {
+						uni.hideLoading();
+						uni.showToast({
+							title: '你没有编辑词条权限',
+							icon: 'none',
+							duration: 2000
+						});
+						setTimeout(() => {
+							uni.navigateBack({});
+						}, 800);
+						return;
+					}
+
+					this.suppressContentWatcher = true;
+					this.content = parseVocabularyContent(this.article.content);
+					this.$nextTick(() => {
+						this.suppressContentWatcher = false;
+						this.syncCodeEditorContent(this.article.content);
+					});
+
+					this.loadVocabularies();
+					this.startLocalSaveTimer();
+					this.loadComplete = true;
+					this.claimEditLock();
+				} catch (error) {
+					uni.showToast({
+						title: error.toString(),
+						icon: 'none',
+						duration: 2000
+					});
+				} finally {
+					uni.hideLoading();
+				}
+			},
 			utc2timestamp(utc_datetime) {
 				// 转为正常的时间格式 年-月-日 时:分:秒
 				var T_pos = utc_datetime.indexOf('T');
@@ -336,58 +724,31 @@
 				return parseInt(timestamp) * 1000; // 2017-03-31 16:02:06
 			},
 			onEditorReady() {
-				uni.hideLoading();
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;
-				axios.get(this.$baseUrl + '/essays/get_article?id=' + this.chapterId, {
-					headers: {
-						'Content-Type': 'application/json', //设置请求头请求格式为JSON
-						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-					}
-				}).then((res) => {
-					this.article = res.data[0];
-					this.cloudTime = this.article.update_time;
-					let that = this;
-					uni.createSelectorQuery().select('.textarea').context((res) => {
-						this.editorCtx = res.context;
-						this.editorCtx.setContents({ //赋值
-							delta: {
-								ops: [{
-									insert: this.article.content
-								}]
-							}
-						});
-					}).exec();
-					that.content = JSON.parse(that.article.content);
-					if (!that.content.relations) that.$set(that.content, 'relations', []);
-					this.loadVocabularies();
-					let dbStatus = window.localStorage.getItem("IndexedDB");
-
-					if (this.chapterId && dbStatus == "enabled" && this.$store.state.appVersion) {
-						this.saveToBackUp(this.article.title, this.article.content);
-					}
-				}).catch(function(error) {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000
-					});
-				}).then(function() {
-					uni.hideLoading();
-				})
+				uni.createSelectorQuery().select('.textarea').context((res) => {
+					this.editorCtx = res && res.context ? res.context : undefined;
+					this.syncCodeEditorContent(this.article.content);
+				}).exec();
 			},
 			save(drafting, msg) {
-				if (this.article.title.replace(/(^\s*)|(\s*$)/g, "") == "" || this.article.content.replace(
-						/(^\s*)|(\s*$)/g, "") == "") {
+				if (!this.syncStructuredContentFromCodeMode()) {
+					return;
+				}
+
+				if (this.article.title.replace(/(^\s*)|(\s*$)/g, "") == "" || this.isVocabularyContentEmpty()) {
 					uni.showToast({
 						title: "标题或文章内容不能为空",
 						icon: 'none',
 						duration: 2000
 					});
 					return;
-				};
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;;
+				}
+
+				if (!this.canPublishArticle && Number(drafting) === 0) {
+					drafting = 1;
+					msg = "协作草稿已保存";
+				}
+
+				let tk = this.getAuthToken();
 				let _this = this;
 				this.buttonLock = false;
 				axios.post(this.$baseUrl + '/essays/modify_article', {
@@ -402,6 +763,8 @@
 						}
 					}, )
 					.then(function(response) {
+						_this.article.is_draft = drafting;
+						_this.article_changed = false;
 						uni.showToast({
 							title: msg,
 							icon: 'none',
@@ -415,10 +778,9 @@
 						}, 2000)
 					})
 					.catch(function(error) {
-						//console.log(error);
 						if (error) {
 							uni.showToast({
-								title: "章节上传失败，请重试",
+								title: "词条上传失败，请重试",
 								icon: 'none',
 								duration: 2000
 							});
@@ -426,23 +788,10 @@
 					})
 			},
 			onInput(e) {
-				this.markWritingActivity();
-				// console.log(e);
-				if (e.detail.text.length - this.article.content.length == 1) {
-					for (let i = 0; i < e.detail.text.length; i++) {
-						if (this.article.content[i] != e.detail.text[i]) {
-							if (e.detail.text[i] == '\n') {
-								this.$nextTick(function() {
-									this.editorCtx.insertText({
-										text: "　　"
-									});
-								})
-
-							}
-							break;
-						}
-					}
+				if (this.isSyncingEditorContent) {
+					return;
 				}
+				this.markWritingActivity();
 				this.article.content = e.detail.text;
 				this.article_changed = true;
 			},
@@ -511,8 +860,9 @@
 								// console.log("localArticles",result)
 								if (_this.article.content != undefined) {
 									let cloudTime = _this.cloudTime;
+									let remoteTime = cloudTime ? _this.utc2timestamp(cloudTime) : 0;
 									//如果本地存档新于云端存档
-									if (_this.utc2timestamp(cloudTime) < result.time) {
+									if (remoteTime < result.time) {
 										// console.log(_this.utc2timestamp(cloudTime),result.time);
 										if (_this.firstLocalCheck) {
 											if (result.article_content != _this.article.content) {
@@ -525,22 +875,14 @@
 															_this.article.title = result.article_title;
 															_this.article.content = result
 																.article_content;
+															_this.article_changed = true;
 														}
-														uni.createSelectorQuery().select('.textarea')
-															.context((res) => {
-																_this.editorCtx = res.context;
-																_this.editorCtx.setContents({ //赋值
-																	delta: {
-																		ops: [{
-																			insert: _this
-																				.article
-																				.content
-																		}]
-																	}
-																});
-															}).exec();
-														_this.content = JSON.parse(_this.article
-															.content);
+														_this.suppressContentWatcher = true;
+														_this.content = parseVocabularyContent(_this.article.content);
+														_this.$nextTick(() => {
+															_this.suppressContentWatcher = false;
+															_this.syncCodeEditorContent(_this.article.content);
+														});
 														_this.startLocalSaveTimer();
 													}
 												});
@@ -590,6 +932,7 @@
 				}
 			},
 			startLocalSaveTimer() {
+				this.endLocalSaveTimer();
 				this.saveInterval = setInterval(() => {
 					this.saveLocalArticle();
 				}, 1000)
@@ -599,43 +942,55 @@
 			},
 			changeTheme(themeName) {
 				this.writerSettings.theme = themeName;
-				window.localStorage.setItem("writerSettings", JSON.stringify(this.writerSettings));
+				this.persistWriterSettings();
 				this.applyNavigationBarTheme();
 			},
 			applyNavigationBarTheme() {
 				let pageHead = document.getElementsByClassName('uni-page-head')[0];
+				if (!pageHead) return;
 				let pageHeadBtn = document.querySelectorAll('.uni-page-head .uni-btn-icon');
 				pageHeadBtn.forEach(element => {
-					element.style.color = this.themes[this.writerSettings.theme].color;
+					element.style.color = this.currentTheme.color;
 				})
-				pageHead.style.backgroundColor = this.themes[this.writerSettings.theme].backColor;
+				pageHead.style.backgroundColor = this.currentTheme.backColor;
+				if (window.jsBridge && window.jsBridge.inApp) {
+					jsBridge.setSystemUIStyle(this.currentTheme.backColor, this.currentTheme.color);
+				}
 			},
 			changeViewMode(newValue) {
 				if (newValue) {
-					this.$confirm('您正在尝试启用源代码模式，这些设置仅供高级用户使用，修改不当可能造成章节内容丢失，您需要自行承担修改源代码造成的任何后果。', '警告', {
+					this.$confirm('您正在尝试启用源代码模式，这些设置仅供高级用户使用，修改不当可能造成词条内容丢失，您需要自行承担修改源代码造成的任何后果。', '警告', {
 						confirmButtonText: '启用源代码模式',
 						cancelButtonText: '取消',
 						type: 'warning'
 					}).then(() => {
 						this.writerSettings.codeMode = true;
+						this.persistWriterSettings();
+						this.$nextTick(() => {
+							this.syncCodeEditorContent(this.article.content);
+						});
 					}).catch(() => {
 						this.writerSettings.codeMode = false;
+						this.persistWriterSettings();
 					})
 				} else {
-					this.content = JSON.parse(this.article.content);
+					if (!this.syncStructuredContentFromCodeMode()) {
+						this.writerSettings.codeMode = true;
+						this.persistWriterSettings();
+						return;
+					}
+					this.writerSettings.codeMode = false;
+					this.persistWriterSettings();
 				}
 			},
 			onContentChange(content) {
+				if (this.suppressContentWatcher) {
+					return;
+				}
 				this.markWritingActivity();
-				this.article.content = JSON.stringify(content);
+				this.article.content = JSON.stringify(parseVocabularyContent(JSON.stringify(content)));
 				this.article_changed = true;
-				this.editorCtx.setContents({ //赋值
-					delta: {
-						ops: [{
-							insert: JSON.stringify(content)
-						}]
-					}
-				});
+				this.syncCodeEditorContent(this.article.content);
 			},
 			confirmVocabAttr() {
 				if (this.content.attributes == undefined) {
@@ -698,11 +1053,11 @@
 				return isLt2M;
 			},
 			async loadVocabularies() {
-				if (!this.article.novel_id) return;
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;
+				const novelId = Number(this.article.novel_id || (this.article.novel_info && this.article.novel_info.novel_id) || 0);
+				if (!novelId) return;
+				let tk = this.getAuthToken();
 				try {
-					let res = await axios.get(this.$baseUrl + '/essays/get_articles?id=' + this.article.novel_id, {
+					let res = await axios.get(this.$baseUrl + '/essays/get_articles?id=' + novelId, {
 						headers: {
 							'Authorization': 'Bearer ' + tk
 						}
@@ -716,8 +1071,7 @@
 			async checkReverseRelations() {
 				this.suggestions = [];
 				const batchSize = 10;
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;
+				let tk = this.getAuthToken();
 
 				for (let i = 0; i < this.vocabularies.length; i += batchSize) {
 					const batch = this.vocabularies.slice(i, i + batchSize);
@@ -731,7 +1085,7 @@
 								});
 							if (res.data && res.data[0]) {
 								let art = res.data[0];
-								let content = JSON.parse(art.content);
+								let content = parseVocabularyContent(art.content);
 								if (content.relations) {
 									for (let rel of content.relations) {
 										if (rel.id == this.chapterId) {
@@ -836,29 +1190,17 @@
 			}
 		},
 		onNavigationBarButtonTap(e) {
-			if (e.text == "\ue6fa ") {
-				let _this = this;
-				this.editorCtx.getSelectionText({
-					success(e) {
-						if (e.text == "") {
-							_this.editorCtx.getContents({
-								success: (res) => {
-									_this.selectText = res.text;
-								},
-							})
-						} else {
-							_this.selectText = e.text;
-						}
-						_this.$refs.popup.open('bottom');
-					}
-				})
-			} else if (e.text == "\ue70f ") {
-				let _this = this;
-				_this.$refs.setPopup.open('top');
+			if (e.text == "\ue70f ") {
+				this.$refs.setPopup.open('bottom');
 			} else if (e.text == "完成 ") {
+				if (!this.canPublishArticle) {
+					this.save(1, "协作草稿已保存");
+					return;
+				}
+
 				let _this = this;
 				uni.showActionSheet({
-					itemList: ['发布章节', "保存为草稿"],
+					itemList: ['发布词条', "保存为草稿"],
 					success: function(res) {
 						if (res.tapIndex == 0) {
 							if (_this.article.novel_info.is_personal == 1) {
@@ -897,64 +1239,50 @@
 
 		},
 		onLoad(params) {
-			this.chapterId = params.id;
-			uni.showLoading({
-				title: '编辑器初始化'
-			});
-
-			let dbStatus = window.localStorage.getItem("IndexedDB");
-			// indexedDB历史备份查询
-			if (params.id && dbStatus == "enabled") {
-				this.$bus.$on("AutoSave", () => {
-					// console.log("AutoSave");
-					this.saveToBackUp(this.article.title, this.article.content);
-				})
-			}
-
-			this.startLocalSaveTimer()
-
-
-			let _this = this;
-			let writerSettings = window.localStorage.getItem("writerSettings");
-			if (writerSettings && JSON.parse(writerSettings)["version"] == 220412) {
-				this.writerSettings = JSON.parse(writerSettings);
-			} else {
-				this.writerSettings = {
-					version: 220412,
-					showSymbols: true,
-					fontSize: 35,
-					openTypeSet: false,
-					showFab: false,
-					theme: "yellow",
-					codeMode: false
-				};
-				window.localStorage.setItem("writerSettings", JSON.stringify(this.writerSettings));
-			}
+			this.chapterId = Number(params.id);
+			this.resolveCurrentUserId();
+			this.editSessionId = this.generateEditSessionId();
+			this.initializeWriterSettings();
+			document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+			document.addEventListener("visibilitychange", this.handleVisibilityChange);
+			window.removeEventListener("pagehide", this.handlePageHide);
+			window.addEventListener("pagehide", this.handlePageHide);
 
 			setTimeout(() => {
 				this.applyNavigationBarTheme();
 			})
-
-
+			this.initializeArticle();
 		},
 		async beforeDestroy() {
 			await this.stopWritingExpTimer();
-			this.$bus.$off('AutoSave');
+			this.stopLockHeartbeat();
+			await this.releaseEditLock();
 			this.endLocalSaveTimer();
+			document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+			window.removeEventListener("pagehide", this.handlePageHide);
 		},
 		onShow() {
 			this.startWritingExpTimer();
+			if (this.loadComplete) {
+				this.startLocalSaveTimer();
+				this.claimEditLock();
+			}
 		},
 		async onHide() {
 			await this.stopWritingExpTimer();
+			this.stopLockHeartbeat();
+			this.endLocalSaveTimer();
+			this.saveLocalArticle();
+			await this.releaseEditLock();
 		},
 		async onUnload() {
 			await this.stopWritingExpTimer();
+			this.stopLockHeartbeat();
+			this.endLocalSaveTimer();
+			this.saveLocalArticle();
+			await this.releaseEditLock();
 		},
 		watch: {
-			'article.title'() {
-				this.markWritingActivity();
-			},
 			content: {
 				handler(newVal, oldVal) { //对象式监听，立即监听，深度监听
 					this.onContentChange(newVal);
@@ -1162,6 +1490,12 @@
 		border: 2px #83878c solid !important;
 	}
 
+	.button.white {
+		background-color: #ffffff44;
+		color: #ffffff;
+		border: 2px #ffffff solid !important;
+	}
+
 	div.outer.blue {
 		background-color: #DDF3FE;
 		color: #115574;
@@ -1185,6 +1519,11 @@
 	div.outer.black {
 		background-color: #282C35;
 		color: #cecece;
+	}
+
+	div.outer.white {
+		background-color: #ffffff;
+		color: #000000;
 	}
 
 	.vocabularyEditor {

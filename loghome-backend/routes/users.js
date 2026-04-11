@@ -107,6 +107,8 @@ router.get('/user_profile_of', async function (req, res) {
 		);
 		if (results && results.length > 0) {
 			results[0].selected_badge = await achievements.getUserBadge(req.query.id);
+			results[0].title_profile = await achievements.getUserTitleProfile(req.query.id);
+			results[0].display_title = results[0].title_profile.display_text;
 		}
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -242,6 +244,8 @@ router.get('/userprofile', auth, async (req, res) => {
 	user = JSON.parse(JSON.stringify(user))[0];
 	user.pwd = undefined;
 	user.selected_badge = await achievements.getUserBadge(user.user_id);
+	user.title_profile = await achievements.getUserTitleProfile(user.user_id);
+	user.display_title = user.title_profile.display_text;
 
 	res.end(JSON.stringify(user));
 });
@@ -249,7 +253,7 @@ router.get('/userprofile', auth, async (req, res) => {
 router.get('/achievements_definitions', auth, async (req, res) => {
 	try {
 		const list = await achievements.getAchievementDefinitions({
-			officialOnly: true,
+			officialOnly: false,
 		});
 		res.json({ list });
 	} catch (e) {
@@ -278,6 +282,53 @@ router.get('/achievements_summary', auth, async (req, res) => {
 		user = JSON.parse(JSON.stringify(user))[0];
 		const summary = await achievements.getUserAchievementSummary(user.user_id);
 		res.json(summary);
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+router.get('/title_profile', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		const titleProfile = await achievements.getUserTitleProfile(user.user_id);
+		res.json({ title_profile: titleProfile });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+router.post('/title_profile', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		const titleProfile = await achievements.setUserTitleShowcase(user.user_id, req.body || {});
+		res.json({
+			msg: 'ok',
+			title_profile: titleProfile,
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: e.message || 'bad request' });
+	}
+});
+
+router.get('/achievement_progress', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		const achievementId = Number(req.query.achievement_id);
+		if (!Number.isFinite(achievementId) || achievementId <= 0) {
+			return res.status(400).json({ msg: 'invalid achievement_id' });
+		}
+		const result = await achievements.evaluateAchievementForUser(achievementId, user.user_id, {
+			grantIfMatched: false,
+			allowProgressOutsideWindow: true,
+			clampToValidWindow: true,
+		});
+		res.json({ result });
 	} catch (e) {
 		console.log(e);
 		res.status(400).json({ msg: 'bad request' });

@@ -26,12 +26,13 @@
 			dragSorts
 		},
 		data(){
-			return{
-				uid:0,
-				bookInfo:{},
-				articles:[],
-				draglist:[]
-			}
+		return{
+			uid:0,
+			currentUserId: 0,
+			bookInfo:{},
+			articles:[],
+			draglist:[]
+		}
 		},
 		onLoad(option){
 			uni.showLoading({
@@ -51,8 +52,13 @@
 		onShow(){
 			this.refreshPage();
 		},
-		methods:{
+	methods:{
+			resolveCurrentUserId() {
+				let token = JSON.parse(window.localStorage.getItem('token'));
+				this.currentUserId = token && token.id ? Number(token.id) : 0;
+			},
 			refreshPage(){
+				this.resolveCurrentUserId();
 				const uid = this.uid;
 				let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
 				let _this = this;
@@ -132,8 +138,8 @@
             async _checkArticleStatusSingle(article) {
                 // 查找最近保存的本地文章和云端文章
                 const localArticles = await writerArticleDB.articles
-                    .where('article_id')
-                    .equals(article.article_id)
+                    .where('[user_id+article_id]')
+                    .equals([Number(this.currentUserId || 0), Number(article.article_id)])
                     .toArray();
                 let latestLocalArticle = null;
                 if (localArticles.length > 0) {

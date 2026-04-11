@@ -100,7 +100,7 @@ router.put('/products/:id', auth, async (req, res) => {
 router.delete('/products/:id', auth, async (req, res) => {
 	try {
 		const productId = Number(req.params.id);
-		await query('DELETE FROM store_products WHERE id = ?', [productId]);
+		await query('UPDATE store_products SET status = ? WHERE id = ?', ['off', productId]);
 		res.json({ code: 200 });
 	} catch (e) {
 		console.log(e);
@@ -115,7 +115,7 @@ router.get('/orders', auth, async (req, res) => {
 		const offset = (page - 1) * pageSize;
 		const count = await query('SELECT COUNT(*) total FROM store_orders');
 		const list = await query(
-			'SELECT id, order_no, user_id, product_title, product_type, price, status, pay_log, pay_cropped_log, tracking_number, created_at, shipped_at, completed_at FROM store_orders ORDER BY id DESC LIMIT ?, ?',
+			'SELECT id, order_no, user_id, product_title, product_type, price, status, pay_log, pay_cropped_log, shipping_desc, tracking_number, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, created_at, shipped_at, completed_at, updated_at FROM store_orders ORDER BY id DESC LIMIT ?, ?',
 			[offset, pageSize],
 		);
 		res.json({ code: 200, data: { total: count[0].total, list } });

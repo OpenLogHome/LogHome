@@ -1,57 +1,81 @@
 <template>
 	<view class="checkout-page" v-dark>
-		<view class="product-card">
-			<image class="cover" :src="product.cover_url" mode="aspectFill"></image>
-			<view class="info">
-				<view class="title">{{ product.title }}</view>
-				<view class="price-row">
-					<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
-					<image src="../../static/resources/log.png" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
-					<text class="price">
-						{{ product.price }}
-					</text>
-				</view>
-			</view>
+		<view v-if="loadingProduct && !product.id" class="page-state">
+			<text>正在加载结算信息...</text>
 		</view>
-		<view class="address-card" v-if="product.type === 'physical'">
-			<view v-if="address">
-				<view class="address-line">
-					<text class="name">{{ address.receiver_name }}</text>
-					<text class="phone">{{ address.receiver_phone }}</text>
-				</view>
-				<view class="address-detail">
-					{{ address.province }}{{ address.city }}{{ address.district }}{{ address.detail }}
-				</view>
-				<view class="address-actions">
-					<view class="action" @tap="chooseAddress">更换地址</view>
-					<view class="action" @tap="manageAddress">管理</view>
-				</view>
-			</view>
-			<view class="address-empty" v-else>
-				<view class="add-btn" @tap="manageAddress">+ 添加收货地址</view>
-			</view>
+
+		<view v-else-if="loadError && !product.id" class="page-state">
+			<text>{{ loadError }}</text>
+			<view class="state-action" @tap="refreshCheckout">重新加载</view>
 		</view>
-		<view class="summary-card">
-			<view class="row">
-				<text>商品价格</text>
-				<view class="price-row-small">
-					<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
-					<image src="../../static/resources/log.png" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
-					<text>{{ product.price }}</text>
+
+		<template v-else>
+			<view class="notice-card error" v-if="loadError">
+				<text>{{ loadError }}</text>
+			</view>
+			<view class="notice-card" v-if="!isLoggedIn">
+				<text>登录后才能提交兑换订单，地址和余额也会在登录后自动加载。</text>
+				<view class="notice-action" @tap="goLogin">去登录</view>
+			</view>
+			<view class="product-card" v-if="product.id">
+				<image class="cover" :src="product.cover_url" mode="aspectFill"></image>
+				<view class="info">
+					<view class="title">{{ product.title }}</view>
+					<view class="price-row">
+						<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
+						<image src="../../static/resources/log.png" mode="aspectFit" style="width: 40rpx; height: 40rpx;"></image>
+						<text class="price">
+							{{ product.price }}
+						</text>
+					</view>
 				</view>
 			</view>
-			<view class="row">
-				<text>支付方式</text>
-				<text>自动扣除（优先去皮原木）</text>
+			<view class="address-card" v-if="product.type === 'physical'">
+				<view v-if="address">
+					<view class="address-line">
+						<text class="name">{{ address.receiver_name }}</text>
+						<text class="phone">{{ address.receiver_phone }}</text>
+					</view>
+					<view class="address-detail">
+						{{ address.province }}{{ address.city }}{{ address.district }}{{ address.detail }}
+					</view>
+					<view class="address-actions">
+						<view class="action" @tap="chooseAddress">更换地址</view>
+						<view class="action" @tap="manageAddress">管理</view>
+					</view>
+				</view>
+				<view class="address-empty" v-else>
+					<view class="add-btn" @tap="manageAddress">+ 添加收货地址</view>
+				</view>
 			</view>
-			<view class="row" v-if="product.price">
-				<text>预计扣除</text>
-				<text>{{ payCropped }} 去皮 + {{ payLog }} 原木</text>
+			<view class="summary-card" v-if="product.id">
+				<view class="row">
+					<text>商品价格</text>
+					<view class="price-row-small">
+						<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
+						<image src="../../static/resources/log.png" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
+						<text>{{ product.price }}</text>
+					</view>
+				</view>
+				<view class="row">
+					<text>支付方式</text>
+					<text>自动扣除（优先去皮原木）</text>
+				</view>
+				<view class="row">
+					<text>订单说明</text>
+					<text>{{ product.type === 'physical' ? '提交后等待发货' : '提交后自动发放' }}</text>
+				</view>
+				<view class="row" v-if="product.price">
+					<text>预计扣除</text>
+					<text>{{ payCropped }} 去皮 + {{ payLog }} 原木</text>
+				</view>
 			</view>
-		</view>
-		<view class="bottom-bar">
-			<button class="confirm-btn" :disabled="!canSubmit" @tap="submitOrder">确认下单</button>
-		</view>
+			<view class="bottom-bar">
+				<button class="confirm-btn" :disabled="submitDisabled" @tap="submitOrder">
+					{{ submitButtonText }}
+				</button>
+			</view>
+		</template>
 	</view>
 </template>
 
@@ -70,9 +94,16 @@ export default {
 				cropped_log: 0,
 			},
 			address: null,
+			submitting: false,
+			submitRequestId: '',
+			loadError: '',
+			loadingProduct: false,
 		}
 	},
 	computed: {
+		isLoggedIn() {
+			return !!this.getToken()
+		},
 		totalBalance() {
 			return Number(this.resources.log || 0) + Number(this.resources.cropped_log || 0)
 		},
@@ -90,13 +121,33 @@ export default {
 			if (this.product.type === 'physical' && !this.address) return false
 			return true
 		},
+		submitDisabled() {
+			if (this.submitting) return true
+			if (this.loadError) return true
+			if (!this.product.price) return true
+			if (!this.isLoggedIn) return false
+			return !this.canSubmit
+		},
+		submitButtonText() {
+			if (this.submitting) return '提交中...'
+			if (this.loadError) return '商品不可下单'
+			if (!this.product.price) return '商品信息加载中'
+			if (!this.isLoggedIn) return '登录后下单'
+			if (this.product.type === 'physical' && !this.address) return '请选择地址'
+			if (this.totalBalance < Number(this.product.price)) return '余额不足'
+			return '确认下单'
+		},
 	},
 	onLoad(options) {
 		this.productId = options.product_id
-		this.fetchProduct()
-		this.fetchResources()
+		this.submitRequestId = this.createRequestId()
+		this.refreshCheckout()
+	},
+	onPullDownRefresh() {
+		this.refreshCheckout()
 	},
 	onShow() {
+		this.fetchResources()
 		const selectedId = window.localStorage.getItem('store_selected_address')
 		if (selectedId) {
 			window.localStorage.removeItem('store_selected_address')
@@ -113,9 +164,20 @@ export default {
 			if (tk) tk = tk.tk
 			return tk
 		},
+		goLogin() {
+			uni.navigateTo({
+				url: '/pages/users/login?msg=store',
+			})
+		},
+		createRequestId() {
+			return ['store', Date.now().toString(36), Math.random().toString(36).slice(2, 10)].join('_')
+		},
 		fetchResources() {
 			const tk = this.getToken()
-			if (!tk) return
+			if (!tk) {
+				this.resources = { log: 0, cropped_log: 0 }
+				return
+			}
 			axios.get(this.$baseUrl + '/resource/get_resources', {
 				headers: {
 					'Content-Type': 'application/json',
@@ -123,22 +185,47 @@ export default {
 				},
 			}).then((res) => {
 				this.resources = res.data[0] || { log: 0, cropped_log: 0 }
-			}).catch(() => {})
+			}).catch(() => {
+				this.resources = { log: 0, cropped_log: 0 }
+			})
 		},
 		fetchProduct() {
+			this.loadingProduct = true
+			this.loadError = ''
 			axios.get(this.$baseUrl + '/store/products/' + this.productId)
 				.then((res) => {
 					if (res.data && res.data.code === 200) {
 						this.product = res.data.data
+						this.loadError = ''
 						if (this.product.type === 'physical') {
 							this.fetchDefaultAddress()
+						} else {
+							this.address = null
 						}
+					} else {
+						this.product = {}
+						this.address = null
+						this.loadError = res.data.msg || '商品不存在或已下架'
 					}
+				}).catch((error) => {
+					this.product = {}
+					this.address = null
+					this.loadError = error.response?.data?.msg || '商品不存在或已下架'
+				}).finally(() => {
+					this.loadingProduct = false
+					uni.stopPullDownRefresh()
 				})
+		},
+		refreshCheckout() {
+			this.fetchProduct()
+			this.fetchResources()
 		},
 		fetchDefaultAddress() {
 			const tk = this.getToken()
-			if (!tk) return
+			if (!tk) {
+				this.address = null
+				return
+			}
 			axios.get(this.$baseUrl + '/store/addresses/default', {
 				headers: {
 					'Content-Type': 'application/json',
@@ -173,13 +260,24 @@ export default {
 			this.manageAddress()
 		},
 		submitOrder() {
-			if (!this.canSubmit) return
+			if (this.submitting) return
 			const tk = this.getToken()
-			if (!tk) return
+			if (!tk) {
+				this.goLogin()
+				return
+			}
+			if (!this.canSubmit) {
+				uni.showToast({ title: this.submitButtonText, icon: 'none' })
+				return
+			}
+			const requestId = this.submitRequestId || this.createRequestId()
+			this.submitRequestId = requestId
+			this.submitting = true
 			uni.showLoading({ title: '下单中...' })
 			axios.post(this.$baseUrl + '/store/orders', {
 				product_id: this.productId,
 				address_id: this.address ? this.address.address_id : null,
+				client_request_id: requestId,
 			}, {
 				headers: {
 					'Content-Type': 'application/json',
@@ -197,6 +295,7 @@ export default {
 			}).catch((error) => {
 				uni.showToast({ title: error.response?.data?.msg || '下单失败', icon: 'none' })
 			}).finally(() => {
+				this.submitting = false
 				uni.hideLoading()
 			})
 		},
@@ -207,11 +306,50 @@ export default {
 <style lang="scss" scoped>
 .checkout-page {
 	min-height: 100vh;
-	background-color: #f6f6f6;
+	background: linear-gradient(180deg, #fff8f4 0%, #f6f6f6 220rpx);
 	padding: 24rpx 30rpx 140rpx;
 	&.dark-mode {
-		background-color: #111111;
+		background: #111111;
 	}
+}
+
+.page-state {
+	margin-top: 180rpx;
+	text-align: center;
+	font-size: 26rpx;
+	color: #9a9a9a;
+}
+
+.state-action {
+	margin: 20rpx auto 0;
+	display: inline-flex;
+	padding: 12rpx 20rpx;
+	border-radius: 999rpx;
+	background: rgba(255, 106, 95, 0.1);
+	color: #ff6a5f;
+}
+
+.notice-card {
+	margin-bottom: 20rpx;
+	padding: 20rpx 22rpx;
+	border-radius: 18rpx;
+	background: rgba(255, 106, 95, 0.08);
+	font-size: 24rpx;
+	line-height: 1.6;
+	color: #9a6e63;
+	.notice-action {
+		margin-top: 14rpx;
+		display: inline-flex;
+		padding: 10rpx 18rpx;
+		border-radius: 999rpx;
+		background: #ff6a5f;
+		color: #ffffff;
+	}
+}
+
+.notice-card.error {
+	background: rgba(255, 77, 79, 0.08);
+	color: #b34a4c;
 }
 
 .product-card {
@@ -338,11 +476,12 @@ export default {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	padding: 20rpx 30rpx;
-	background-color: #ffffff;
+	padding: 20rpx 30rpx calc(20rpx + env(safe-area-inset-bottom));
+	background: rgba(255, 255, 255, 0.96);
+	backdrop-filter: blur(12rpx);
 	box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);
 	&.dark-mode {
-		background-color: #000000;
+		background: rgba(0, 0, 0, 0.95);
 	}
 	.confirm-btn {
 		width: 100%;
@@ -356,6 +495,17 @@ export default {
 	}
 	.confirm-btn:disabled {
 		background-color: #cccccc;
+	}
+}
+
+.checkout-page.dark-mode {
+	.notice-card {
+		background: #1b1b1b;
+		color: #d0b1a8;
+	}
+	.notice-card.error {
+		background: #221516;
+		color: #e1aaaa;
 	}
 }
 </style>

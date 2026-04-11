@@ -1,0 +1,13 @@
+
+=== MLLM Transaction Log ===
+Time: 2026-04-10T14:36:55.004Z
+Mode: speed
+Model: doubao-seed-1-6-flash-250828
+Status: SUCCESS
+
+--- Request Prompt ---
+[object Object],[object Object]
+
+--- Response ---
+这是动漫风格的博丽灵梦形象：黑中长发，红色菱形发饰（配红流苏与樱桃状装饰），白色短袖上衣（饰黑色蝴蝶结），表情开怀大笑（眼弯嘴张），姿态活泼（身体微倾，手似摆动作）；背景纯白，氛围轻松欢快，凸显角色的灵动开朗。
+============================

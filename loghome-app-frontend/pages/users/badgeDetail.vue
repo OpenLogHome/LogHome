@@ -13,11 +13,11 @@
 			class="medal-hero"
 			:style="heroGradientStyle"
 		>
-			<view class="ambient-glow ambient-glow-1"></view>
-			<view class="ambient-glow ambient-glow-2"></view>
-			<view class="ambient-glow ambient-glow-3"></view>
+			<view v-if="showHeroEffects" class="ambient-glow ambient-glow-1"></view>
+			<view v-if="showHeroEffects" class="ambient-glow ambient-glow-2"></view>
+			<view v-if="showHeroEffects" class="ambient-glow ambient-glow-3"></view>
 
-			<view class="particle-container">
+			<view v-if="showHeroEffects" class="particle-container">
 				<view v-for="i in 12" :key="i" class="particle" :style="getParticleStyle(i)"></view>
 			</view>
 
@@ -36,16 +36,22 @@
 				@mouseup.stop="onTouchEnd"
 				@mouseleave.stop="onTouchEnd"
 			>
-				<view class="medal-halo" v-if="badge"></view>
-				<view class="medal-halo medal-halo-2" v-if="badge"></view>
+				<view class="medal-halo" v-if="badge && showHeroEffects"></view>
+				<view class="medal-halo medal-halo-2" v-if="badge && showHeroEffects"></view>
 				<view class="medal-shadow" :style="medalShadowStyle" v-if="badge"></view>
-				<view class="medal-3d" :style="medal3dStyle" v-if="badge" @longpress="onMedalLongPress">
-					<view class="medal-face medal-front">
+				<view
+					class="medal-3d"
+					:class="{ 'is-locked-medal': isLockedBadge }"
+					:style="medal3dStyle"
+					v-if="badge"
+					@longpress="onMedalLongPress"
+				>
+					<view class="medal-face medal-front" :class="{ 'is-locked-front': isLockedBadge }">
 						<img class="medal-image" :src="visual.medal_image" mode="aspectFit"></img>
 					</view>
-					<view class="medal-face medal-back"></view>
-					<view v-if="visual.shine" class="medal-glow" :style="{ opacity: glowIntensity }"></view>
-					<view v-if="visual.shine" class="shine-effect"></view>
+					<view class="medal-face medal-back" :class="{ 'is-locked-back': isLockedBadge }"></view>
+					<view v-if="visual.shine && showHeroEffects" class="medal-glow" :style="{ opacity: glowIntensity }"></view>
+					<view v-if="visual.shine && showHeroEffects" class="shine-effect"></view>
 				</view>
 				<view v-else class="medal-placeholder">
 					<view class="placeholder-ring"></view>
@@ -54,7 +60,7 @@
 			</view>
 
 			<view class="hero-text" v-if="badge">
-				<text class="hero-subtitle">HONOR</text>
+				<text class="hero-subtitle" :class="{ 'is-locked-subtitle': isLockedBadge }">{{ heroSubtitleText }}</text>
 			</view>
 		</view>
 
@@ -62,18 +68,82 @@
 			<view class="card-shine-line"></view>
 			<view class="info-header">
 				<view class="header-accent"></view>
-				<text class="info-name">{{ badge.title || 'Official Badge' }}</text>
+				<text class="info-name">{{ (badge && badge.title) || 'Official Badge' }}</text>
 				<view class="header-accent"></view>
 			</view>
 			<view class="info-desc">
-				{{ badge.description || 'Official Honor Badge' }}
+				{{ (badge && badge.description) || 'Official Honor Badge' }}
+			</view>
+			<view v-if="badge && badge.title_term_text" class="title-term-card">
+				<view class="title-term-label">解锁词条</view>
+				<view class="title-term-value">{{ formatTitleTermType(badge.title_term_type) }} · {{ badge.title_term_text }}</view>
+				<view class="title-term-desc">获得该勋章后，即可将这个词条加入你的个人称号组合。</view>
 			</view>
 			<view class="info-divider">
 				<view class="divider-line"></view>
 				<view class="divider-diamond"></view>
 				<view class="divider-line"></view>
 			</view>
-			<view class="info-meta">
+			<view v-if="isLockedBadge" class="locked-detail">
+				<view class="locked-status-row">
+					<text class="locked-status-tag">{{ lockedStatusTag }}</text>
+					<text class="locked-status-text">{{ lockedProgressSummary }}</text>
+				</view>
+
+				<view v-if="lockedProgressLoading" class="locked-loading">
+					正在计算当前进度...
+				</view>
+
+				<view v-else class="locked-sections">
+					<view class="locked-section">
+						<text class="locked-section-title">获得条件</text>
+
+						<view
+							v-for="(group, groupIndex) in lockedConditionGroups"
+							:key="'group-' + groupIndex"
+							class="locked-group-card"
+						>
+							<view class="locked-group-head">
+								<text class="locked-group-title">{{ getLockedGroupTitle(groupIndex) }}</text>
+								<text class="locked-group-state" :class="{ matched: group.matched }">
+									{{ group.matched ? '已达成' : '进行中' }}
+								</text>
+							</view>
+
+							<view
+								v-for="condition in group.conditions"
+								:key="condition.condition_id"
+								class="locked-condition"
+							>
+								<view class="locked-condition-top">
+									<text class="locked-condition-name">{{ formatMetric(condition.metric_code) }}</text>
+									<text class="locked-condition-progress">{{ formatConditionProgress(condition) }}</text>
+								</view>
+								<text class="locked-condition-rule">{{ formatConditionRule(condition) }}</text>
+								<view class="locked-progress-track">
+									<view
+										class="locked-progress-fill"
+										:class="{ matched: condition.matched }"
+										:style="{ width: formatProgressPercent(condition.progress_ratio) }"
+									></view>
+								</view>
+							</view>
+						</view>
+
+						<view v-if="lockedConditionGroups.length === 0" class="locked-empty-card">
+							{{ lockedRequirementText }}
+						</view>
+					</view>
+
+					<view class="locked-section">
+						<text class="locked-section-title">当前进度</text>
+						<view class="locked-progress-note">
+							{{ lockedProgressDetail }}
+						</view>
+					</view>
+				</view>
+			</view>
+			<view v-else class="info-meta">
 				<view class="meta-item">
 					<text class="meta-label">获得日期</text>
 					<text class="meta-value">{{ formatTime(badge.granted_at) }}</text>
@@ -147,6 +217,9 @@ export default {
 			mouseUpHandler: null,
 			pointerMoveHandler: null,
 			pointerUpHandler: null,
+			isLocked: false,
+			lockedProgressLoading: false,
+			lockedProgress: null,
 		}
 	},
 	onLoad(options) {
@@ -158,6 +231,9 @@ export default {
 		}
 		if (options && options.is_selected !== undefined) {
 			this.isSelected = String(options.is_selected) === '1'
+		}
+		if (options && options.locked !== undefined) {
+			this.isLocked = String(options.locked) === '1'
 		}
 		if (options && options.badge) {
 			try {
@@ -178,6 +254,12 @@ export default {
 				this.ownerId = cachedOwnerId
 			}
 		}
+		if (this.badge && this.badge.is_locked !== undefined) {
+			this.isLocked = !!this.badge.is_locked
+		}
+		if (this.badge && this.isLocked) {
+			this.badge.is_locked = true
+		}
 		if (this.badge && this.badge.is_selected !== undefined) {
 			this.isSelected = !!this.badge.is_selected
 		}
@@ -187,7 +269,10 @@ export default {
 	},
 	async onShow() {
 		this.isPageActive = true
-		await this.resolveOwnerState()
+		await Promise.all([
+			this.resolveOwnerState(),
+			this.ensureLockedProgress(),
+		])
 		if (!this.isDragging) {
 			this.startAutoRotate()
 		}
@@ -227,7 +312,21 @@ export default {
 		backBarTextColor() {
 			return '#fff'
 		},
+		isLockedBadge() {
+			return !!(this.isLocked || (this.badge && this.badge.is_locked))
+		},
+		showHeroEffects() {
+			return !this.isLockedBadge
+		},
+		heroSubtitleText() {
+			return this.isLockedBadge ? 'LOCKED' : 'HONOR'
+		},
 		heroGradientStyle() {
+			if (this.isLockedBadge) {
+				return {
+					background: 'linear-gradient(180deg, #111418 0%, #252b33 50%, #101318 100%)',
+				}
+			}
 			return {
 				background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%)',
 			}
@@ -249,11 +348,91 @@ export default {
 			}
 		},
 		canOperateBadge() {
-			return !!(this.isOwner && this.badge && this.badge.achievement_id)
+			return !!(this.isOwner && this.badge && this.badge.achievement_id && !this.isLockedBadge)
 		},
 		actionButtonText() {
 			if (this.actionLoading) return this.isSelected ? '取消中...' : '设置中...'
 			return this.isSelected ? '取消展示' : '设为展示'
+		},
+		lockedConditionGroups() {
+			if (!this.lockedProgress || !Array.isArray(this.lockedProgress.group_results)) return []
+			return this.lockedProgress.group_results
+		},
+		lockedTotalConditionCount() {
+			return this.lockedConditionGroups.reduce((total, group) => {
+				return total + ((group && Array.isArray(group.conditions)) ? group.conditions.length : 0)
+			}, 0)
+		},
+		lockedMatchedConditionCount() {
+			return this.lockedConditionGroups.reduce((total, group) => {
+				const conditions = Array.isArray(group && group.conditions) ? group.conditions : []
+				return total + conditions.filter(item => item && item.matched).length
+			}, 0)
+		},
+		lockedStatusTag() {
+			if (this.lockedProgress && this.lockedProgress.matched) {
+				return this.badge && this.badge.grant_type === 'rule_review' ? '待审核发放' : '条件已满足'
+			}
+			return '未获得'
+		},
+		lockedRequirementText() {
+			if (this.badge && this.badge.rule_summary) {
+				return this.badge.rule_summary
+			}
+			if (this.badge && this.badge.grant_type === 'manual') {
+				return '该勋章由官方根据活动、身份或贡献情况发放。'
+			}
+			if (this.badge && this.badge.grant_type === 'rule_review') {
+				return '满足规则后，还需要等待审核通过后发放。'
+			}
+			return '满足对应规则后即可获得该勋章。'
+		},
+		lockedValidWindowText() {
+			const startText = this.badge && this.badge.valid_from ? this.formatTime(this.badge.valid_from) : ''
+			const endText = this.badge && this.badge.valid_to ? this.formatTime(this.badge.valid_to) : ''
+			if (startText && endText) return `${startText} 至 ${endText}`
+			if (startText) return `${startText} 起`
+			if (endText) return `截止 ${endText}`
+			return '当前有效时间范围'
+		},
+		lockedProgressSummary() {
+			if (this.lockedProgressLoading) {
+				return '正在加载当前进度'
+			}
+			if (this.lockedProgress && this.lockedProgress.reason === 'out_of_valid_window') {
+				return `当前不在统计时间内，进度按 ${this.lockedValidWindowText} 统计`
+			}
+			if (this.lockedProgress && this.lockedProgress.matched) {
+				if (this.badge && this.badge.grant_type === 'rule_review') {
+					return '你已满足获得条件，等待审核发放。'
+				}
+				return '你已满足获得条件，等待系统发放。'
+			}
+			if (this.lockedTotalConditionCount > 0) {
+				return `已完成 ${this.lockedMatchedConditionCount}/${this.lockedTotalConditionCount} 项条件`
+			}
+			if (this.badge && this.badge.grant_type === 'manual') {
+				return '该勋章由官方发放，暂无可量化进度。'
+			}
+			return '暂时没有可展示的进度数据。'
+		},
+		lockedProgressDetail() {
+			if (this.lockedProgressLoading) {
+				return '正在根据你的当前数据计算解锁进度。'
+			}
+			if (this.lockedProgress && this.lockedProgress.reason === 'out_of_valid_window') {
+				return `当前页面展示的是 ${this.lockedValidWindowText} 这段有效时间内累计的进度。`
+			}
+			if (this.lockedProgress && this.lockedProgress.matched) {
+				if (this.badge && this.badge.grant_type === 'rule_review') {
+					return '规则条件已经满足，当前处于等待审核或人工发放状态。'
+				}
+				return '规则条件已经满足，等待系统完成发放即可点亮。'
+			}
+			if (this.lockedTotalConditionCount > 0) {
+				return `继续完成剩余条件即可解锁，当前共满足 ${this.lockedMatchedConditionCount} 项。`
+			}
+			return this.lockedRequirementText
 		},
 	},
 	methods: {
@@ -269,6 +448,39 @@ export default {
 			return {
 				'Content-Type': 'application/json',
 				Authorization: 'Bearer ' + tk,
+			}
+		},
+		async ensureLockedProgress() {
+			if (!this.isLockedBadge || !this.badge || !this.badge.achievement_id || this.lockedProgressLoading) {
+				return
+			}
+			const cachedAchievementId = Number(this.lockedProgress && this.lockedProgress.achievement && this.lockedProgress.achievement.achievement_id)
+			const currentAchievementId = Number(this.badge && this.badge.achievement_id)
+			if (cachedAchievementId > 0 && cachedAchievementId === currentAchievementId) {
+				return
+			}
+			if (!this.getToken()) return
+
+			this.lockedProgressLoading = true
+			try {
+				const res = await axios.get(this.$baseUrl + '/users/achievement_progress', {
+					params: {
+						achievement_id: this.badge.achievement_id,
+					},
+					headers: this.getAuthHeaders(),
+				})
+				this.lockedProgress = res.data && res.data.result ? res.data.result : null
+				if (this.lockedProgress && this.lockedProgress.achievement) {
+					this.badge = {
+						...this.badge,
+						...this.lockedProgress.achievement,
+						is_locked: true,
+					}
+				}
+			} catch (e) {
+				this.lockedProgress = null
+			} finally {
+				this.lockedProgressLoading = false
 			}
 		},
 		async getCurrentUserId() {
@@ -317,7 +529,7 @@ export default {
 			} else {
 				this.isOwner = false
 			}
-			if (this.isOwner) {
+			if (this.isOwner && !this.isLockedBadge) {
 				await this.refreshSelectedState()
 			}
 		},
@@ -595,6 +807,57 @@ export default {
 			if (source === 'legacy_user_group_migration') return '历史荣誉迁移'
 			return '官方发放'
 		},
+		formatTitleTermType(type) {
+			if (type === 'adjective') return '形容词词条'
+			if (type === 'noun') return '名词词条'
+			return '称号词条'
+		},
+		formatMetric(metricCode) {
+			const metricMap = {
+				read_seconds: '累计阅读时长（秒）',
+				write_seconds: '累计写作时长（秒）',
+				community_post_count: '累计发帖数',
+				comment_count: '累计评论数',
+			}
+			return metricMap[metricCode] || metricCode || '进度指标'
+		},
+		formatPeriod(periodType) {
+			const periodMap = {
+				lifetime: '累计',
+				month: '本月',
+				quarter: '本季度',
+				year: '本年',
+			}
+			return periodMap[periodType] || periodType || '累计'
+		},
+		formatConditionNumber(value) {
+			const n = Number(value)
+			if (!Number.isFinite(n)) return '0'
+			if (Math.abs(n - Math.round(n)) < 0.001) {
+				return String(Math.round(n))
+			}
+			return n.toFixed(2)
+		},
+		formatConditionProgress(condition) {
+			if (!condition) return '0 / 0'
+			return `${this.formatConditionNumber(condition.current_value)} / ${this.formatConditionNumber(condition.threshold_value)}`
+		},
+		formatConditionRule(condition) {
+			if (!condition) return this.lockedRequirementText
+			return `${this.formatMetric(condition.metric_code)} / ${this.formatPeriod(condition.period_type)}，需 ${condition.comparator || '>='} ${this.formatConditionNumber(condition.threshold_value)}`
+		},
+		formatProgressPercent(value) {
+			const ratio = Number(value)
+			if (!Number.isFinite(ratio)) return '0%'
+			const percent = Math.max(0, Math.min(100, Math.round(ratio * 100)))
+			return `${percent}%`
+		},
+		getLockedGroupTitle(groupIndex) {
+			if (this.lockedConditionGroups.length > 1) {
+				return `解锁路径 ${groupIndex + 1}`
+			}
+			return '解锁条件'
+		},
 		formatTime(value) {
 			if (!value) return '未知'
 			const d = new Date(value)
@@ -804,6 +1067,10 @@ export default {
 	filter: brightness(1.08);
 }
 
+.medal-3d.is-locked-medal .medal-image {
+	filter: grayscale(100%) brightness(0.82);
+}
+
 @keyframes medal-entrance-fade {
 	0% {
 		opacity: 0;
@@ -836,6 +1103,11 @@ export default {
 	border: 4rpx solid rgba(255, 200, 100, 0.25);
 }
 
+.medal-front.is-locked-front {
+	background: linear-gradient(145deg, rgba(78, 82, 88, 0.92) 0%, rgba(48, 53, 60, 0.95) 100%);
+	border-color: rgba(214, 220, 228, 0.18);
+}
+
 .medal-back {
 	background: linear-gradient(145deg, rgba(30, 25, 15, 0.95) 0%, rgba(20, 15, 10, 0.98) 100%);
 	box-shadow:
@@ -843,6 +1115,11 @@ export default {
 		inset 0 -4rpx 20rpx rgba(255, 200, 100, 0.05);
 	border: 4rpx solid rgba(180, 140, 60, 0.2);
 	transform: rotateY(180deg);
+}
+
+.medal-back.is-locked-back {
+	background: linear-gradient(145deg, rgba(36, 40, 45, 0.96) 0%, rgba(23, 27, 31, 0.98) 100%);
+	border-color: rgba(173, 181, 189, 0.16);
 }
 
 .medal-image {
@@ -958,6 +1235,10 @@ export default {
 	font-weight: 300;
 }
 
+.hero-subtitle.is-locked-subtitle {
+	color: rgba(214, 220, 228, 0.46);
+}
+
 .info-card {
 	position: relative;
 	margin: -40rpx 28rpx 28rpx;
@@ -1038,6 +1319,35 @@ export default {
 	padding: 0 16rpx;
 }
 
+.title-term-card {
+	margin-top: 22rpx;
+	padding: 22rpx 24rpx;
+	border-radius: 26rpx;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1rpx solid rgba(255, 200, 100, 0.08);
+}
+
+.title-term-label {
+	font-size: 22rpx;
+	color: #bfa78b;
+	letter-spacing: 1rpx;
+}
+
+.title-term-value {
+	margin-top: 10rpx;
+	font-size: 30rpx;
+	font-weight: 700;
+	line-height: 1.45;
+	color: #f4dfbf;
+}
+
+.title-term-desc {
+	margin-top: 10rpx;
+	font-size: 22rpx;
+	line-height: 1.6;
+	color: #a79279;
+}
+
 .info-divider {
 	display: flex;
 	align-items: center;
@@ -1063,6 +1373,159 @@ export default {
 	margin-top: 8rpx;
 	padding-top: 24rpx;
 	border-top: 1rpx solid rgba(255, 200, 100, 0.06);
+}
+
+.locked-detail {
+	margin-top: 8rpx;
+	padding-top: 24rpx;
+	border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.locked-status-row {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 14rpx;
+}
+
+.locked-status-tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8rpx 18rpx;
+	border-radius: 999rpx;
+	font-size: 22rpx;
+	font-weight: 600;
+	color: #e9edf2;
+	background: rgba(255, 255, 255, 0.1);
+	border: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.locked-status-text {
+	font-size: 24rpx;
+	line-height: 1.7;
+	color: #c3ccd6;
+}
+
+.locked-loading {
+	margin-top: 24rpx;
+	padding: 26rpx 24rpx;
+	border-radius: 22rpx;
+	background: rgba(255, 255, 255, 0.06);
+	font-size: 24rpx;
+	color: #aab4bf;
+	text-align: center;
+}
+
+.locked-sections {
+	margin-top: 24rpx;
+	display: flex;
+	flex-direction: column;
+	gap: 24rpx;
+}
+
+.locked-section {
+	display: flex;
+	flex-direction: column;
+	gap: 16rpx;
+}
+
+.locked-section-title {
+	font-size: 24rpx;
+	font-weight: 700;
+	letter-spacing: 1rpx;
+	color: #f0e5d5;
+}
+
+.locked-group-card,
+.locked-empty-card,
+.locked-progress-note {
+	padding: 22rpx 24rpx;
+	border-radius: 24rpx;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.locked-group-card + .locked-group-card {
+	margin-top: 8rpx;
+}
+
+.locked-group-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16rpx;
+}
+
+.locked-group-title {
+	font-size: 24rpx;
+	font-weight: 600;
+	color: #f2e7d6;
+}
+
+.locked-group-state {
+	font-size: 21rpx;
+	color: #b4bec8;
+}
+
+.locked-group-state.matched {
+	color: #ffe0a7;
+}
+
+.locked-condition {
+	margin-top: 18rpx;
+}
+
+.locked-condition-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14rpx;
+}
+
+.locked-condition-name {
+	font-size: 23rpx;
+	font-weight: 600;
+	color: #e8edf2;
+}
+
+.locked-condition-progress {
+	flex-shrink: 0;
+	font-size: 22rpx;
+	color: #ced7df;
+}
+
+.locked-condition-rule {
+	display: block;
+	margin-top: 8rpx;
+	font-size: 21rpx;
+	line-height: 1.6;
+	color: #9fabb7;
+}
+
+.locked-progress-track {
+	margin-top: 14rpx;
+	height: 10rpx;
+	border-radius: 999rpx;
+	background: rgba(255, 255, 255, 0.08);
+	overflow: hidden;
+}
+
+.locked-progress-fill {
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, #8f98a3 0%, #c4ccd4 100%);
+}
+
+.locked-progress-fill.matched {
+	background: linear-gradient(90deg, #d9a95f 0%, #f4d497 100%);
+}
+
+.locked-empty-card,
+.locked-progress-note {
+	font-size: 23rpx;
+	line-height: 1.7;
+	color: #bbc6d0;
 }
 
 .meta-item {

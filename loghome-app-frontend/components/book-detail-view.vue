@@ -9,6 +9,7 @@
           <view class="bookDescription">
             <el-tag size="mini" v-show="book.is_personal==1" type="info" disable-transitions effect="dark">私有</el-tag>
             <el-tag size="mini" v-show="book.is_personal==0" disable-transitions effect="dark">公开</el-tag>
+            <el-tag size="mini" v-if="showCollaborativeTag" type="warning" disable-transitions effect="dark">协作作品</el-tag>
             <span> {{book.is_complete==1?"已完结":"连载中"}}</span>
             <span>{{book.text_count}} 字</span>
           </view>
@@ -26,6 +27,7 @@
       <view class="bookDescription" v-if="!isDrawerMode">
         <el-tag size="mini" v-show="book.is_personal==1" type="info" disable-transitions effect="dark">私有</el-tag>
         <el-tag size="mini" v-show="book.is_personal==0" disable-transitions effect="dark">公开</el-tag>
+        <el-tag size="mini" v-if="showCollaborativeTag" type="warning" disable-transitions effect="dark">协作作品</el-tag>
         <span> {{book.is_complete==1?"已完结":"连载中"}}</span>
         <span>总计 {{book.text_count}} 字</span>
       </view>
@@ -40,14 +42,14 @@
       <div class="buttons">
         <div class="button" @click="$emit('goto-all-articles')">所有章节</div>
         <div class="button" @click="$emit('read-novel', book.is_personal)">阅读</div>
-        <div class="button long" @click="$emit('goto-essay-set')">作品设置</div>
+        <div class="button long" @click="$emit('goto-essay-set')">{{ isOwner ? '作品设置' : '协作设置' }}</div>
       </div>
 
       <!-- 添加Banner组件 -->
       <banner page="essays" class="section-banner"/>
 
       <!-- 创作活动板块 -->
-      <div class="statistic-box" v-if="activityInfo && activityInfo.hasActivity">
+      <div class="statistic-box" v-if="isOwner && activityInfo && activityInfo.hasActivity">
         <div class="head">
           <div class="box-title">创作活动</div>
           <div class="more">
@@ -104,7 +106,7 @@
           </div>
           <div v-for="novel in worlds" :key="novel.novel_id" class="world-item">
             <navigator :url="'./readers/bookInfo?id=' +  novel.novel_id" open-type="navigate" class="books" 
-              @longpress="$emit('delete-world-novel-asso', novel.world_id)" @click="$emit('goto-world-novel')">
+              @longpress="isOwner ? $emit('delete-world-novel-asso', novel.world_id) : null" @click="$emit('goto-world-novel')">
               <log-image :src="novel.picUrl + '?thumbnail=1'" alt="" 
                 :onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`" 
                 class="world-book-cover" />
@@ -124,7 +126,7 @@
             </navigator>
           </div>
         </div>
-        <div class="addButton" @click="$emit('show-book-select')">添加作品世界</div>
+        <div class="addButton" v-if="isOwner" @click="$emit('show-book-select')">添加作品世界</div>
       </div>
 
       <!-- <writerHelper :novel_id="book.novel_id" @close-book-detail="$emit('close-book-detail')"></writerHelper> -->
@@ -231,6 +233,17 @@ export default {
     }
   },
   computed: {
+    isOwner() {
+      return !!(this.book && (this.book.is_owner === true || this.book.access_role === 'owner' || !this.book.access_role));
+    },
+    showCollaborativeTag() {
+      if (!this.book) return false;
+      return (
+        this.book.access_role === 'collaborator' ||
+        this.book.is_collaborator === true ||
+        Number(this.book.has_active_collaborators || 0) === 1
+      );
+    },
     hasDescription() {
       return !!(this.book && this.book.content && this.book.content.toString().trim());
     },
@@ -248,6 +261,10 @@ export default {
     },
     // 获取活动信息
     async fetchActivityInfo() {
+      if (!this.isOwner) {
+        this.activityInfo = null;
+        return;
+      }
       try {
         uni.showLoading({
           title: '加载中',
@@ -915,5 +932,3 @@ export default {
   }
 }
 </style>
-
-

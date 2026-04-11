@@ -24,6 +24,17 @@
         </template>
       </el-table-column>
       <el-table-column prop="tracking_number" label="快递单号/兑换码" min-width="180"></el-table-column>
+      <el-table-column label="收货信息" min-width="260">
+        <template slot-scope="scope">
+          <div v-if="scope.row.product_type === 'physical'">
+            <div>{{ scope.row.receiver_name || '-' }} {{ scope.row.receiver_phone || '' }}</div>
+            <div>
+              {{ formatAddress(scope.row) }}
+            </div>
+          </div>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="时间" min-width="260">
         <template slot-scope="scope">
           创建：{{ format(scope.row.created_at) }}<br/>
@@ -119,15 +130,23 @@ export default {
       if (s === 'pending') return '待发货'
       if (s === 'shipped') return '已发货'
       if (s === 'completed') return '已完成'
-      if (s === 'canceled') return '已取消'
+      if (s === 'canceled' || s === 'cancelled') return '已取消'
       return s
     },
     statusType(s) {
       if (s === 'pending') return 'warning'
       if (s === 'shipped') return 'info'
       if (s === 'completed') return 'success'
-      if (s === 'canceled') return ''
+      if (s === 'canceled' || s === 'cancelled') return ''
       return ''
+    },
+    formatAddress(row) {
+      return [
+        row.receiver_province || '',
+        row.receiver_city || '',
+        row.receiver_district || '',
+        row.receiver_detail || ''
+      ].join('') || '-'
     },
     format(t) {
       if (!t) return '-'

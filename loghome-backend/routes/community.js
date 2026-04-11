@@ -7,6 +7,7 @@ let axios = require('axios');
 let moment = require('moment');
 const SECRET = require('../SECRET.js').SECRET;
 let message = require('../bin/message.js');
+let achievements = require('../bin/achievements.js');
 
 // 引入子路由
 const circlesRouter = require('./community/circles.js');
@@ -183,6 +184,10 @@ router.post('/comment_on_novel', auth, async (req, res) => {
 			`SELECT * FROM novel_comments n,users u WHERE n.user_id = u.user_id AND n.essay_comment_id = ?`,
 			[results.insertId],
 		);
+		await achievements.recordMetricProgress(user.user_id, 'comment_count', 1, {
+			reason: '书籍评论',
+			suppressNotification: true,
+		});
 		let novel = JSON.parse(
 			JSON.stringify(
 				await query('SELECT * FROM novels WHERE novel_id = ?', [
@@ -255,6 +260,10 @@ router.post('/reply_to_novel_comment', auth, async (req, res) => {
 			`SELECT * FROM novel_comments n,users u WHERE n.user_id = u.user_id AND n.essay_comment_id = ?`,
 			[results.insertId],
 		);
+		await achievements.recordMetricProgress(user.user_id, 'comment_count', 1, {
+			reason: '书籍评论回复',
+			suppressNotification: true,
+		});
 		message.sendMsg(
 			user.user_id,
 			comment.user_id,

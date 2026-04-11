@@ -10,20 +10,6 @@ try {
 	sharpLoadError = error;
 }
 
-const CREATE_IMAGE_DOMINANT_COLORS_TABLE_SQL = `
-CREATE TABLE IF NOT EXISTS image_dominant_colors (
-	id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-	image_url VARCHAR(512) NOT NULL COMMENT '图片URL',
-	dominant_color CHAR(7) DEFAULT NULL COMMENT '主色，格式 #RRGGBB',
-	extract_status ENUM('success', 'failed') NOT NULL DEFAULT 'success' COMMENT '提取状态',
-	error_message VARCHAR(255) DEFAULT NULL COMMENT '失败原因',
-	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	PRIMARY KEY (id),
-	UNIQUE KEY uniq_image_url (image_url)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='图片主色缓存表'
-`;
-
 const DEFAULT_SAMPLE_SIZE = 64;
 const DEFAULT_BUCKET_SIZE = 32;
 const DEFAULT_FETCH_TIMEOUT = 15000;
@@ -32,7 +18,6 @@ const DEFAULT_DOWNLOAD_RETRY_TIMES = 2;
 const MIN_ALPHA = 128;
 const MIN_BRIGHTNESS = 18;
 const MAX_BRIGHTNESS = 245;
-let ensureTablePromise = null;
 
 const BUSINESS_IMAGE_SOURCES = [
 	{ table: 'novels', field: 'picUrl' },
@@ -232,26 +217,12 @@ function decodeBase64Image(imageBase64) {
 	return Buffer.from(base64Payload, 'base64');
 }
 
-async function ensureImageDominantColorsTable() {
-	if (!ensureTablePromise) {
-		ensureTablePromise = runQueryWithRetry(
-			CREATE_IMAGE_DOMINANT_COLORS_TABLE_SQL,
-		).catch((error) => {
-			ensureTablePromise = null;
-			throw error;
-		});
-	}
-
-	return ensureTablePromise;
-}
-
 async function getImageDominantColorRecord(imageUrl) {
 	const normalizedImageUrl = normalizeImageUrl(imageUrl);
 	if (!normalizedImageUrl) {
 		return null;
 	}
 
-	await ensureImageDominantColorsTable();
 	const rows = await runQueryWithRetry(
 		'SELECT image_url, dominant_color, extract_status, error_message FROM image_dominant_colors WHERE image_url = ? LIMIT 1',
 		[normalizedImageUrl],
@@ -260,7 +231,6 @@ async function getImageDominantColorRecord(imageUrl) {
 }
 
 async function saveImageDominantColor(imageUrl, dominantColor) {
-	await ensureImageDominantColorsTable();
 	await runQueryWithRetry(
 		`INSERT INTO image_dominant_colors (image_url, dominant_color, extract_status, error_message)
 		VALUES (?, ?, 'success', NULL)
@@ -273,7 +243,6 @@ async function saveImageDominantColor(imageUrl, dominantColor) {
 }
 
 async function saveImageDominantColorFailure(imageUrl, error) {
-	await ensureImageDominantColorsTable();
 	await runQueryWithRetry(
 		`INSERT INTO image_dominant_colors (image_url, dominant_color, extract_status, error_message)
 		VALUES (?, NULL, 'failed', ?)
@@ -458,10 +427,8 @@ function extractImageUrlsFromValue(value, parser = 'single') {
 
 module.exports = {
 	BUSINESS_IMAGE_SOURCES,
-	CREATE_IMAGE_DOMINANT_COLORS_TABLE_SQL,
 	decodeBase64Image,
 	ensureImageDominantColor,
-	ensureImageDominantColorsTable,
 	extractDominantColorFromBuffer,
 	extractImageUrlsFromValue,
 	getImageDominantColorRecord,

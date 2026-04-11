@@ -1499,7 +1499,361 @@ router.delete('/activity-messages/:id', auth, async function (req, res) {
     } catch (e) {
         console.log(e);
         res.status(400).json({ msg: 'bad request' });
-    }
+	}
+});
+
+// 获取搜索关键词列表
+router.get('/search/keywords', auth, async function (req, res) {
+	try {
+		const page = parseInt(req.query.page, 10) || 1;
+		const pageSize = parseInt(req.query.pageSize, 10) || 20;
+		const keyword = req.query.keyword || '';
+		const category = req.query.category || '';
+		const isRecommended =
+			req.query.is_recommended === undefined || req.query.is_recommended === ''
+				? null
+				: Number(req.query.is_recommended);
+		const sort = req.query.sort || 'count';
+
+		let whereClause = 'WHERE status = 1';
+		let params = [];
+
+		if (keyword) {
+			whereClause += ' AND keyword LIKE ?';
+			params.push(`%${keyword}%`);
+		}
+
+		if (category && category !== 'all') {
+			whereClause += ' AND category = ?';
+			params.push(category);
+		}
+
+		if (isRecommended !== null && !Number.isNaN(isRecommended)) {
+			whereClause += ' AND is_recommended = ?';
+			params.push(isRecommended);
+		}
+
+		let orderBy = 'search_count DESC';
+		if (sort === 'recent') {
+			orderBy = 'last_searched_at DESC';
+		} else if (sort === 'alpha') {
+			orderBy = 'keyword ASC';
+		}
+
+		const offset = (page - 1) * pageSize;
+		const list = await query(
+			`SELECT keyword_id, keyword, search_count, category, is_recommended, status, last_searched_at, created_at
+			 FROM search_keywords
+			 ${whereClause}
+			 ORDER BY ${orderBy}
+			 LIMIT ?, ?`,
+			[...params, offset, pageSize],
+		);
+
+		const totalRows = await query(
+			`SELECT COUNT(*) AS total
+			 FROM search_keywords
+			 ${whereClause}`,
+			params,
+		);
+
+		const categoryStats = await query(
+			`SELECT category, COUNT(*) AS count, COALESCE(SUM(search_count), 0) AS total_searches
+			 FROM search_keywords
+			 WHERE status = 1
+			 GROUP BY category
+			 ORDER BY total_searches DESC`,
+		);
+
+		const overallRows = await query(
+			`SELECT COUNT(*) AS total_keywords,
+			        COALESCE(SUM(search_count), 0) AS total_searches,
+			        SUM(CASE WHEN is_recommended = 1 THEN 1 ELSE 0 END) AS recommended_count
+			 FROM search_keywords
+			 WHERE status = 1`,
+		);
+
+		res.json({
+			list,
+			total: totalRows[0] ? totalRows[0].total : 0,
+			page,
+			pageSize,
+			stats: {
+				categories: categoryStats,
+				overall: overallRows[0] || {
+					total_keywords: 0,
+					total_searches: 0,
+					recommended_count: 0,
+				},
+			},
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 创建搜索关键词
+router.post('/search/keywords', auth, async function (req, res) {
+	try {
+		const keyword = String(req.body.keyword || '').trim();
+		const category = req.body.category || 'all';
+		const isRecommended = req.body.is_recommended ? 1 : 0;
+
+		if (!keyword) {
+			return res.status(400).json({ msg: 'missing keyword' });
+		}
+
+		const existing = await query(
+			'SELECT keyword_id FROM search_keywords WHERE keyword = ? LIMIT 1',
+			[keyword],
+		);
+
+		if (existing.length > 0) {
+			await query(
+				'UPDATE search_keywords SET category = ?, is_recommended = ?, status = 1 WHERE keyword_id = ?',
+				[category, isRecommended, existing[0].keyword_id],
+			);
+			return res.json({ msg: 'success', keyword_id: existing[0].keyword_id, mode: 'update' });
+		}
+
+		const result = await query(
+			'INSERT INTO search_keywords (keyword, search_count, category, is_recommended, status) VALUES (?, 0, ?, ?, 1)',
+			[keyword, category, isRecommended],
+		);
+
+		res.json({ msg: 'success', keyword_id: result.insertId, mode: 'create' });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 更新搜索关键词
+router.put('/search/keywords/:id', auth, async function (req, res) {
+	try {
+		const keywordId = Number(req.params.id);
+		const keyword = String(req.body.keyword || '').trim();
+		const category = req.body.category;
+		const isRecommended =
+			req.body.is_recommended === undefined ? undefined : req.body.is_recommended ? 1 : 0;
+		const status =
+			req.body.status === undefined || req.body.status === null ? undefined : Number(req.body.status);
+
+		if (!keywordId) {
+			return res.status(400).json({ msg: 'invalid keyword id' });
+		}
+
+		const existing = await query(
+			'SELECT keyword_id, keyword, category, is_recommended, status FROM search_keywords WHERE keyword_id = ? LIMIT 1',
+			[keywordId],
+		);
+		if (!existing.length) {
+			return res.status(404).json({ msg: 'keyword not found' });
+		}
+
+		const current = existing[0];
+		await query(
+			'UPDATE search_keywords SET keyword = ?, category = ?, is_recommended = ?, status = ? WHERE keyword_id = ?',
+			[
+				keyword || current.keyword,
+				category || current.category,
+				isRecommended === undefined ? current.is_recommended : isRecommended,
+				status === undefined || Number.isNaN(status) ? current.status : status,
+				keywordId,
+			],
+		);
+
+		res.json({ msg: 'success' });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 删除搜索关键词
+router.delete('/search/keywords/:id', auth, async function (req, res) {
+	try {
+		const keywordId = Number(req.params.id);
+		if (!keywordId) {
+			return res.status(400).json({ msg: 'invalid keyword id' });
+		}
+
+		await query('UPDATE search_keywords SET status = 0 WHERE keyword_id = ?', [keywordId]);
+		res.json({ msg: 'success' });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 获取敏感词列表
+router.get('/audit/sensitive-words', auth, async function (req, res) {
+	try {
+		const page = parseInt(req.query.page, 10) || 1;
+		const pageSize = parseInt(req.query.pageSize, 10) || 20;
+		const keyword = req.query.keyword || '';
+		const offset = (page - 1) * pageSize;
+
+		let whereClause = 'WHERE 1 = 1';
+		let params = [];
+
+		if (keyword) {
+			whereClause += ' AND word LIKE ?';
+			params.push(`%${keyword}%`);
+		}
+
+		const list = await query(
+			`SELECT * FROM comm_sensitive_words
+			 ${whereClause}
+			 ORDER BY level DESC, word ASC
+			 LIMIT ?, ?`,
+			[...params, offset, pageSize],
+		);
+
+		const totalRows = await query(
+			`SELECT COUNT(*) AS total
+			 FROM comm_sensitive_words
+			 ${whereClause}`,
+			params,
+		);
+
+		res.json({
+			list,
+			total: totalRows[0] ? totalRows[0].total : 0,
+			page,
+			pageSize,
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 创建敏感词
+router.post('/audit/sensitive-words', auth, async function (req, res) {
+	try {
+		const word = String(req.body.word || '').trim();
+		const level = Number(req.body.level) || 1;
+
+		if (!word) {
+			return res.status(400).json({ msg: 'missing word' });
+		}
+
+		const existing = await query(
+			'SELECT word_id FROM comm_sensitive_words WHERE word = ? LIMIT 1',
+			[word],
+		);
+		if (existing.length > 0) {
+			return res.status(400).json({ msg: 'word already exists' });
+		}
+
+		const result = await query(
+			'INSERT INTO comm_sensitive_words (word, level, create_time) VALUES (?, ?, NOW())',
+			[word, level],
+		);
+
+		res.json({ msg: 'success', word_id: result.insertId });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 更新敏感词
+router.put('/audit/sensitive-words/:id', auth, async function (req, res) {
+	try {
+		const wordId = Number(req.params.id);
+		const word = String(req.body.word || '').trim();
+		const level = Number(req.body.level) || 1;
+
+		if (!wordId || !word) {
+			return res.status(400).json({ msg: 'missing required parameters' });
+		}
+
+		await query(
+			'UPDATE comm_sensitive_words SET word = ?, level = ?, update_time = NOW() WHERE word_id = ?',
+			[word, level, wordId],
+		);
+
+		res.json({ msg: 'success' });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 删除敏感词
+router.delete('/audit/sensitive-words/:id', auth, async function (req, res) {
+	try {
+		const wordId = Number(req.params.id);
+		if (!wordId) {
+			return res.status(400).json({ msg: 'invalid word id' });
+		}
+
+		await query('DELETE FROM comm_sensitive_words WHERE word_id = ?', [wordId]);
+		res.json({ msg: 'success' });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 获取审核日志
+router.get('/audit/logs', auth, async function (req, res) {
+	try {
+		const page = parseInt(req.query.page, 10) || 1;
+		const pageSize = parseInt(req.query.pageSize, 10) || 20;
+		const targetType =
+			req.query.target_type === undefined || req.query.target_type === ''
+				? null
+				: Number(req.query.target_type);
+		const action =
+			req.query.action === undefined || req.query.action === ''
+				? null
+				: Number(req.query.action);
+		const offset = (page - 1) * pageSize;
+
+		let whereClause = 'WHERE 1 = 1';
+		let params = [];
+
+		if (targetType !== null && !Number.isNaN(targetType)) {
+			whereClause += ' AND l.target_type = ?';
+			params.push(targetType);
+		}
+
+		if (action !== null && !Number.isNaN(action)) {
+			whereClause += ' AND l.action = ?';
+			params.push(action);
+		}
+
+		const list = await query(
+			`SELECT l.*, u.name AS operator_name, u.avatar_url AS operator_avatar
+			 FROM comm_audit_logs l
+			 LEFT JOIN users u ON l.user_id = u.user_id
+			 ${whereClause}
+			 ORDER BY l.create_time DESC
+			 LIMIT ?, ?`,
+			[...params, offset, pageSize],
+		);
+
+		const totalRows = await query(
+			`SELECT COUNT(*) AS total
+			 FROM comm_audit_logs l
+			 ${whereClause}`,
+			params,
+		);
+
+		res.json({
+			list,
+			total: totalRows[0] ? totalRows[0].total : 0,
+			page,
+			pageSize,
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
 });
 
 module.exports = router;

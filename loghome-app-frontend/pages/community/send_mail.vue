@@ -1,8 +1,8 @@
 <template>
-	<view>
-		<view style="background-color: #ffffff;">
+	<view class="send-mail-page" v-dark>
+		<view class="send-mail-content">
 			<uni-drawer ref="receiver_select" :width="500">
-				<scroll-view class="drawer_inner" scroll-y="true">
+				<scroll-view class="drawer_inner" scroll-y="true" v-dark>
 					<button v-for="user in users" @click="getReceiver(user)" class="user_select_button">
 						<log-image class="user_avatar" :src="user.avatar_url"></log-image>
 						<text style="margin-left:10rpx;">{{user.name}}</text>
@@ -106,26 +106,39 @@
 
 
 <style scoped lang="less">
+	.send-mail-page{
+		min-height: 100vh;
+		background-color: var(--background-color);
+	}
+	.send-mail-content{
+		min-height: 100vh;
+		background-color: var(--background-color);
+		padding-bottom: 40rpx;
+	}
 	.mail_title{
 		width: 696rpx;
 		margin: 20rpx auto;
-		border: #cacaca 1rpx solid;
+		border: var(--border-color) 1rpx solid;
 		padding: 0 12rpx;
 		font-size: 18px;
 		height: 30px;
 		border-radius: 5px;
+		background-color: var(--card-background);
+		color: var(--text-color-primary);
 	}
 	.mail_content{
 		width: 696rpx;
 		margin: 20rpx auto;
-		border: #CACACA 1rpx solid;
+		border: var(--border-color) 1rpx solid;
 		padding: 4px 12rpx;
 		font-size: 18px;
 		height: 36vh;
 		border-radius: 5px;
+		background-color: var(--card-background);
+		color: var(--text-color-primary);
 	}
 	.drawer_inner{
-		background-color: #ffffff;
+		background-color: var(--card-background);
 	}
 	
 	.normal_button {
@@ -144,12 +157,12 @@
 	.fake-input{
 		width: 720rpx;
 		margin: 20rpx auto;
-		border: #cacaca 1rpx solid;
+		border: var(--border-color) 1rpx solid;
 		padding: 0 12rpx;
 		font-size: 18px;
 		height: 34px;
-		background-color: rgba(0, 0, 0, 0);
-		color: #808080;
+		background-color: var(--card-background);
+		color: var(--text-color-regular);
 		text-align: left;
 		font-size: 16px;
 	}
@@ -160,6 +173,11 @@
 		justify-content: row;
 		padding-top: 4px;
 		color: #713418;
+		border-bottom: 1rpx solid var(--border-color);
+
+		.dark-mode & {
+			color: #d1a980;
+		}
 		.user_avatar{
 			height: 40px;
 			width: 40px;

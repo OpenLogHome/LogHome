@@ -5,6 +5,7 @@ let auth = require('../bin/auth.js');
 let moment = require('moment');
 let message = require('../bin/message.js');
 let bank = require('../bin/bank.js');
+let { handleReaderNovelChatStream } = require('../bin/readerNovelAiChat.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -100,6 +101,96 @@ router.get('/get_novel_by_id', async function (req, res) {
 		results[0]['likes'] = likes;
 		res.end(JSON.stringify(results));
 	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/get_novel_public_authors', async function (req, res) {
+	try {
+		const novelId = Number(req.query.novel_id || 0);
+		if (!novelId) {
+			return res.end(
+				JSON.stringify({
+					novel_id: 0,
+					has_collaboration: false,
+					total_author_count: 0,
+					authors: [],
+				})
+			);
+		}
+
+		const ownerRows = await query(
+			`SELECT
+				n.novel_id,
+				u.user_id,
+				u.name,
+				u.avatar_url
+			FROM novels n
+			INNER JOIN users u ON u.user_id = n.author_id
+			WHERE n.novel_id = ?
+				AND n.deleted = 0
+				AND n.is_personal = 0
+			LIMIT 1`,
+			[novelId],
+		);
+
+		if (!ownerRows || ownerRows.length === 0) {
+			return res.end(
+				JSON.stringify({
+					novel_id: novelId,
+					has_collaboration: false,
+					total_author_count: 0,
+					authors: [],
+				})
+			);
+		}
+
+		const collaboratorRows = await query(
+			`SELECT
+				nc.user_id,
+				u.name,
+				u.avatar_url,
+				nc.accepted_at
+			FROM novel_collaborators nc
+			INNER JOIN novels n ON n.novel_id = nc.novel_id
+			INNER JOIN users u ON u.user_id = nc.user_id
+			WHERE nc.novel_id = ?
+				AND nc.status = 'active'
+				AND n.deleted = 0
+				AND n.is_personal = 0
+			ORDER BY
+				CASE WHEN nc.accepted_at IS NULL THEN 1 ELSE 0 END ASC,
+				nc.accepted_at ASC,
+				nc.user_id ASC`,
+			[novelId],
+		);
+
+		const owner = ownerRows[0];
+		const authors = [
+			{
+				user_id: Number(owner.user_id),
+				name: owner.name,
+				avatar_url: owner.avatar_url,
+				is_owner: true,
+			},
+			...JSON.parse(JSON.stringify(collaboratorRows || [])).map((row) => ({
+				user_id: Number(row.user_id),
+				name: row.name,
+				avatar_url: row.avatar_url,
+				is_owner: false,
+			})),
+		];
+
+		res.end(
+			JSON.stringify({
+				novel_id: Number(owner.novel_id),
+				has_collaboration: authors.length > 1,
+				total_author_count: authors.length,
+				authors,
+			})
+		);
+	} catch (e) {
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });
@@ -934,6 +1025,10 @@ router.post('/parse_share_code', async function (req, res) {
 		console.log(e);
 		res.status(500).json({ msg: '服务器错误' });
 	}
+});
+
+router.post('/reader_novel_ai_chat_stream', async function (req, res) {
+	return handleReaderNovelChatStream(req, res);
 });
 
 let recommendRouter = require('./library/recommand');

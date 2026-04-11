@@ -1,9 +1,9 @@
 <template>
-    <view class="search-container">
+    <view class="search-container" v-dark>
       <!-- 搜索头部 -->
       <view class="search-header">
         <view class="search-input-wrapper">
-          <uni-icons type="search" size="18" color="#999"></uni-icons>
+          <uni-icons type="search" size="18" :color="$store.state.isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
           <input 
             class="search-input" 
             v-model="keyword" 
@@ -16,7 +16,7 @@
             v-if="keyword" 
             type="clear" 
             size="18" 
-            color="#999" 
+            :color="$store.state.isDarkMode ? '#b8b8b8' : '#999'"
             @click="clearKeyword"
           ></uni-icons>
         </view>
@@ -29,7 +29,7 @@
         <view class="search-section" v-if="searchHistory.length > 0">
           <view class="section-header">
             <text class="section-title">搜索历史</text>
-            <uni-icons type="trash" size="18" color="#999" @click="clearSearchHistory"></uni-icons>
+            <uni-icons type="trash" size="18" :color="$store.state.isDarkMode ? '#b8b8b8' : '#999'" @click="clearSearchHistory"></uni-icons>
           </view>
           <view class="tag-list">
             <view 
@@ -625,14 +625,14 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background-color: #f8f8f8;
+    background-color: var(--background-color);
   }
   
   .search-header {
     display: flex;
     align-items: center;
     padding: 20rpx 30rpx;
-    background-color: #fff;
+    background-color: var(--card-background);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -642,7 +642,7 @@
     flex: 1;
     display: flex;
     align-items: center;
-    background-color: #f5f5f5;
+    background-color: var(--background-color-secondary);
     border-radius: 36rpx;
     padding: 0 20rpx;
     height: 72rpx;
@@ -653,12 +653,13 @@
     height: 72rpx;
     padding: 0 20rpx;
     font-size: 28rpx;
+    color: var(--text-color-primary);
   }
   
   .search-cancel {
     padding: 0 20rpx;
     font-size: 28rpx;
-    color: #333;
+    color: var(--text-color-primary);
   }
   
   .search-content {
@@ -679,7 +680,7 @@
   .section-title {
     font-size: 28rpx;
     font-weight: bold;
-    color: #333;
+    color: var(--text-color-primary);
   }
   
   .tag-list {
@@ -691,17 +692,17 @@
     display: inline-block;
     padding: 10rpx 20rpx;
     margin: 10rpx;
-    background-color: #f5f5f5;
+    background-color: var(--background-color-secondary);
     border-radius: 30rpx;
     font-size: 24rpx;
-    color: #666;
+    color: var(--text-color-regular);
   }
   
   .search-tabs {
     display: flex;
-    background-color: #fff;
+    background-color: var(--card-background);
     padding: 0 20rpx;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-color);
   }
   
   .tab-item {
@@ -709,7 +710,7 @@
     text-align: center;
     padding: 20rpx 0;
     font-size: 28rpx;
-    color: #666;
+    color: var(--text-color-regular);
     position: relative;
   }
   
@@ -738,9 +739,9 @@
   .result-title {
     font-size: 28rpx;
     font-weight: bold;
-    color: #333;
+    color: var(--text-color-primary);
     padding: 20rpx 30rpx;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-color);
   }
   
   // 书籍搜索结果样式
@@ -751,8 +752,8 @@
   .book-item {
     display: flex;
     padding: 20rpx 30rpx;
-    background-color: #fff;
-    border-bottom: 1px solid #f0f0f0;
+    background-color: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
   }
 
   .book-cover {
@@ -769,7 +770,7 @@
   .book-title {
     font-size: 28rpx;
     font-weight: bold;
-    color: #333;
+    color: var(--text-color-primary);
     margin-bottom: 10rpx;
   }
 
@@ -788,12 +789,12 @@
 
   .book-author text {
     font-size: 24rpx;
-    color: #999;
+    color: var(--text-color-regular);
   }
 
   .book-desc {
     font-size: 24rpx;
-    color: #666;
+    color: var(--text-color-regular);
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
@@ -808,8 +809,8 @@
   .circle-item {
     display: flex;
     padding: 20rpx 30rpx;
-    background-color: #fff;
-    border-bottom: 1px solid #f0f0f0;
+    background-color: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
   }
   
   .circle-icon {
@@ -826,13 +827,13 @@
   .circle-name {
     font-size: 28rpx;
     font-weight: bold;
-    color: #333;
+    color: var(--text-color-primary);
     margin-bottom: 10rpx;
   }
   
   .circle-meta {
     font-size: 24rpx;
-    color: #999;
+    color: var(--text-color-regular);
     margin-bottom: 10rpx;
   }
   
@@ -842,7 +843,7 @@
   
   .circle-desc {
     font-size: 24rpx;
-    color: #666;
+    color: var(--text-color-regular);
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
@@ -856,8 +857,8 @@
   
   .post-item {
     padding: 30rpx;
-    background: #fff;
-    border-bottom: 1px solid #f0f0f0;
+    background: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
   }
   
   .post-header {
@@ -883,12 +884,12 @@
     .user-name {
       font-size: 28rpx;
       font-weight: bold;
-      color: #333;
+      color: var(--text-color-primary);
     }
   
     .post-time {
       font-size: 24rpx;
-      color: #999;
+      color: var(--text-color-regular);
       margin-top: 4rpx;
     }
   }
@@ -905,13 +906,13 @@
     .post-title {
       font-size: 32rpx;
       font-weight: bold;
-      color: #333;
+      color: var(--text-color-primary);
       margin-bottom: 10rpx;
     }
   
     .post-text {
       font-size: 28rpx;
-      color: #666;
+      color: var(--text-color-regular);
       line-height: 1.6;
       display: -webkit-box;
       -webkit-box-orient: vertical;
@@ -965,8 +966,8 @@
   .user-item {
     display: flex;
     padding: 20rpx 30rpx;
-    background-color: #fff;
-    border-bottom: 1px solid #f0f0f0;
+    background-color: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
   }
   
   .user-info {
@@ -977,13 +978,13 @@
   .user-name {
     font-size: 28rpx;
     font-weight: bold;
-    color: #333;
+    color: var(--text-color-primary);
     margin-bottom: 10rpx;
   }
   
   .user-motto {
     font-size: 24rpx;
-    color: #999;
+    color: var(--text-color-regular);
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
@@ -1007,6 +1008,6 @@
   
   .no-results text {
     font-size: 28rpx;
-    color: #999;
+    color: var(--text-color-regular);
   }
   </style>
