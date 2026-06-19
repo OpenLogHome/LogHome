@@ -5,6 +5,10 @@ let auth = require('../../bin/adminAuth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
 let bank = require('../../bin/bank.js');
+const {
+	calculateContentHash: calculateArticleContentHash,
+	ensureArticleParagraphIds: ensureArticleParagraphIdsForStorage,
+} = require('../../bin/articleParagraphIds.js');
 
 /**
  * 计算内容的MD5哈希值
@@ -12,8 +16,28 @@ let bank = require('../../bin/bank.js');
  * @returns {string} MD5哈希值
  */
 function calculateContentHash(content) {
-    if (!content) return '';
-    return crypto.createHash('md5').update(content).digest('hex');
+    return calculateArticleContentHash(content);
+}
+
+/**
+ * 解析段落ID，支持多种格式
+ */
+function parsePositiveParagraphId(rawId) {
+    if (rawId === null || rawId === undefined || rawId === '') {
+        return null;
+    }
+    const normalizedId = Number(rawId);
+    return Number.isInteger(normalizedId) && normalizedId > 0
+        ? normalizedId
+        : null;
+}
+
+/**
+ * 确保文章内容中的段落ID是正确的
+ * 修复段落ID损坏问题（如所有ID都变成1的情况）
+ */
+function ensureArticleParagraphIds(content) {
+    return ensureArticleParagraphIdsForStorage(content);
 }
 
 // 创建路由对象
@@ -313,10 +337,12 @@ router.post('/update_article', auth, async function (req, res) {
 		}
 		
 		if (req.body.content !== undefined) {
+			// 使用修复后的内容（包含正常的段落ID）
+			const fixedContent = ensureArticleParagraphIds(req.body.content);
 			updateFields.push('content = ?');
-			params.push(req.body.content);
+			params.push(fixedContent);
 			// 计算新的content_hash
-			const contentHash = calculateContentHash(req.body.content);
+			const contentHash = calculateContentHash(fixedContent);
 			updateFields.push('content_hash = ?');
 			params.push(contentHash);
 		}

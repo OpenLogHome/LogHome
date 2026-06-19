@@ -89,6 +89,10 @@
 import axios from "axios";
 import { writerArticleDB } from "../../lib/db.js";
 import { getServerTime } from "../../lib/utils.js";
+import {
+  getLegacyContentComparableSignature,
+  normalizeLegacyContentForStorage,
+} from "../../lib/writerEditorLegacyAdapter.js";
 
 export default {
   data() {
@@ -151,6 +155,13 @@ export default {
       if (!record || !record.editor_name) return "";
       return `提交人：${record.editor_name}`;
     },
+    buildRecordMergeKey(record) {
+      return JSON.stringify([
+        String(record && record.create_time ? record.create_time : ""),
+        String(record && record.title ? record.title : ""),
+        getLegacyContentComparableSignature(record && record.content),
+      ]);
+    },
     resolveCurrentUserId() {
       let token = JSON.parse(window.localStorage.getItem("token"));
       this.currentUserId = token && token.id ? Number(token.id) : 0;
@@ -205,19 +216,21 @@ export default {
 
         // 处理本地记录
         localRecords.forEach((localRecord) => {
-          const key = `${localRecord.create_time}-${localRecord.title}-${localRecord.content}`;
+          const key = this.buildRecordMergeKey(localRecord);
           recordMap.set(key, { record: localRecord, sources: ["本地备份"] });
         });
 
         // 处理云端记录，检查是否有相同记录
         cloudRecords.forEach((cloudRecord) => {
-          const key = `${cloudRecord.create_time}-${cloudRecord.title}-${cloudRecord.content}`;
+          const key = this.buildRecordMergeKey(cloudRecord);
 
           if (recordMap.has(key)) {
             // 如果有相同记录，合并来源
             const existingEntry = recordMap.get(key);
             existingEntry.sources.push("云端备份");
             existingEntry.record.source = "本地&云端";
+            existingEntry.record.content =
+              cloudRecord.content || existingEntry.record.content;
             // 保留云端记录的is_slow_save标记
             existingEntry.record.is_slow_save = true;
             this.mergeCloudRecordMeta(existingEntry.record, cloudRecord);
@@ -419,18 +432,21 @@ export default {
 
               // 获取当前服务器时间
               const currentServerTime = await getServerTime();
+              const restoredContent = normalizeLegacyContentForStorage(
+                this.selectedRecord.content
+              );
 
               // 更新云端内容
               let tk = JSON.parse(window.localStorage.getItem("token"));
               if (tk) tk = tk.tk;
 
               // 发送请求
-              let res = axios.post(
+              await axios.post(
                 this.$baseUrl + "/essays/upload_article_writer",
                 {
                   article_id: this.articleId,
                   title: this.selectedRecord.title,
-                  content: this.selectedRecord.content,
+                  content: restoredContent,
                   create_time: currentServerTime,
                   novel_id: this.novelId,
                   is_fast_save: false,
@@ -444,11 +460,11 @@ export default {
                 }
               );
 
-              writerArticleDB.articles.add({
+              await writerArticleDB.articles.add({
                 article_id: Number(this.articleId),
                 user_id: Number(this.currentUserId || 0),
                 title: this.selectedRecord.title,
-                content: this.selectedRecord.content,
+                content: restoredContent,
                 create_time: currentServerTime,
                 is_slow_save: true, // 标记为慢保存
               });

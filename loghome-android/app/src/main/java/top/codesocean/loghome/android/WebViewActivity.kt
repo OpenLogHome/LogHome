@@ -13,6 +13,7 @@ import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Rect
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
@@ -20,6 +21,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.KeyEvent
+import android.view.ViewTreeObserver
 import android.webkit.ConsoleMessage
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -67,6 +69,7 @@ class WebViewActivity : AppCompatActivity() {
     private var volumeKeyEnabled = false
     private var topInsetCss = 0.0
     private var bottomInsetCss = 0.0
+    private var lastKeyboardVisible: Boolean? = null
     private var lastBackPressedAt = 0L
     private var injectedScript: String? = null
     private var pendingRestart = false
@@ -79,6 +82,24 @@ class WebViewActivity : AppCompatActivity() {
     private var audioService: AudioPlaybackService? = null
     private var isAudioServiceBound = false
     private val serviceWaiters = mutableListOf<CancellableContinuation<AudioPlaybackService>>()
+    private val keyboardVisibleFrame = Rect()
+    private val keyboardLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+        val rootView = binding.root.rootView ?: return@OnGlobalLayoutListener
+        val rootHeight = rootView.height
+        if (rootHeight <= 0) {
+            return@OnGlobalLayoutListener
+        }
+
+        binding.root.getWindowVisibleDisplayFrame(keyboardVisibleFrame)
+        val heightDiff = (rootHeight - keyboardVisibleFrame.bottom).coerceAtLeast(0)
+        val density = resources.displayMetrics.density.toDouble()
+        val keyboardVisible = heightDiff > (100 * density)
+
+        updateKeyboardVisibility(
+            visible = keyboardVisible,
+            heightCss = if (keyboardVisible) heightDiff / density else 0.0,
+        )
+    }
 
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -210,6 +231,7 @@ class WebViewActivity : AppCompatActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, true)
         setupWindowInsets()
+        setupKeyboardVisibilityFallback()
         setupBackHandling()
         setupRetry()
         setupWebView()
@@ -240,6 +262,8 @@ class WebViewActivity : AppCompatActivity() {
             isAudioServiceBound = false
         }
         audioService = null
+        binding.root.viewTreeObserver.takeIf { it.isAlive }
+            ?.removeOnGlobalLayoutListener(keyboardLayoutListener)
         binding.webView.destroy()
         super.onDestroy()
     }
@@ -264,12 +288,39 @@ class WebViewActivity : AppCompatActivity() {
     private fun setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            val keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             val density = resources.displayMetrics.density.toDouble()
 
             topInsetCss = minOf(bars.top / density, 29.0)
             bottomInsetCss = bars.bottom / density
+            val keyboardHeightCss = ime.bottom / density
+
+            updateKeyboardVisibility(
+                visible = keyboardVisible,
+                heightCss = if (keyboardVisible) keyboardHeightCss else 0.0,
+            )
 
             insets
+        }
+    }
+
+    private fun setupKeyboardVisibilityFallback() {
+        binding.root.viewTreeObserver.addOnGlobalLayoutListener(keyboardLayoutListener)
+    }
+
+    private fun updateKeyboardVisibility(visible: Boolean, heightCss: Double) {
+        val previousKeyboardVisible = lastKeyboardVisible
+        if (previousKeyboardVisible == visible) {
+            return
+        }
+
+        lastKeyboardVisible = visible
+        if (previousKeyboardVisible != null || visible) {
+            dispatchKeyboardVisibilityEvent(
+                visible = visible,
+                heightCss = heightCss,
+            )
         }
     }
 
@@ -818,6 +869,17 @@ class WebViewActivity : AppCompatActivity() {
         val script =
             "window.dispatchEvent(new CustomEvent('volumeKeyPress', { detail: ${JSONObject.quote(direction)} }));"
         binding.webView.evaluateJavascript(script, null)
+    }
+
+    private fun dispatchKeyboardVisibilityEvent(visible: Boolean, heightCss: Double) {
+        val detail = JSONObject()
+            .put("visible", visible)
+            .put("height", heightCss)
+        val script =
+            "window.dispatchEvent(new CustomEvent('keyboardVisibilityChange', { detail: $detail }));"
+        binding.webView.post {
+            binding.webView.evaluateJavascript(script, null)
+        }
     }
 
     private suspend fun runHotUpdate(url: String, newVersion: String): Boolean {

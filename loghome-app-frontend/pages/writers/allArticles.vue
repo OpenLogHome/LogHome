@@ -39,8 +39,8 @@
 						<div class="searchResultHeader">
 							<div class="searchResultTitle" v-html="item.highlightedTitle"></div>
 							<div class="searchResultTags">
-								<el-tag size="mini" effect="dark" :type="item.versionTagType">{{ item.versionLabel }}</el-tag>
-								<el-tag size="mini" effect="plain" v-if="item.typeLabel">{{ item.typeLabel }}</el-tag>
+								<el-tag size="mini" effect="dark" :type="item.versionTagType" disable-transitions>{{ item.versionLabel }}</el-tag>
+								<el-tag size="mini" effect="plain" v-if="item.typeLabel" disable-transitions>{{ item.typeLabel }}</el-tag>
 							</div>
 						</div>
 						<div class="searchResultMeta">
@@ -60,23 +60,23 @@
 						<template v-slot:title>
 							<div class="title" :style="{ 'color': item.article_type == 'spliter' ? '#444444' : (frameInfo.isEnabled && frameInfo.currentSelected == item.article_id ? '#0A0E16' : '#763a18') }">
 								{{ item.title }}
-								<el-tag type="success" v-show="item.article_type == 'worldOutline'" effect="dark"
+								<el-tag type="success" v-show="item.article_type == 'worldOutline'" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">大纲</el-tag>
-								<el-tag type="success" v-show="item.article_type == 'worldVocabulary'" effect="dark"
+								<el-tag type="success" v-show="item.article_type == 'worldVocabulary'" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">词条</el-tag>
-								<el-tag type="info" v-show="item.article_type == 'spliter'" effect="dark"
+								<el-tag type="info" v-show="item.article_type == 'spliter'" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">分卷</el-tag>
-								<el-tag type="danger" v-show="item.is_draft == true" effect="dark"
+								<el-tag type="danger" v-show="item.is_draft == true" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">草稿</el-tag>
-								<el-tag type="warning" v-if="item.feedback_count && item.feedback_count > 0" effect="dark"
+								<el-tag type="warning" v-if="item.feedback_count && item.feedback_count > 0" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)"
 									size="mini">{{ item.feedback_count }}处反馈</el-tag>
-								<el-tag type="danger" v-if="item.hasWriterModify == true && item.is_draft == false"
+								<el-tag type="danger" v-if="item.hasWriterModify == true && item.is_draft == false" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">发布后有编辑</el-tag>
-								<el-tag type="warning" v-if="item.isSyncing == true"
+								<el-tag type="warning" v-if="item.isSyncing == true" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark">Syncing</el-tag>
-								<el-tag type="info" v-if="item.hasCloudCollision == true"
-									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark">
+								<el-tag type="info" v-if="item.hasCloudCollision == true" disable-transitions
+									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark" >
 									<i class="el-icon-warning-outline" style="margin-right: 5rpx;"></i>存在云冲突
 								</el-tag>
 								<el-tag
@@ -85,6 +85,7 @@
 									style="margin-left:10rpx; transform:translateY(-5rpx)"
 									size="mini"
 									effect="dark"
+									disable-transitions
 								>
 									{{ item.remoteEditSummary }}
 								</el-tag>
@@ -217,11 +218,15 @@ import uniCollapseItem from '../../uni_modules/uni-collapse/components/uni-colla
 import uniIcons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
 import darkModeMixin from '@/mixins/dark-mode.js'
 import { writerArticleDB } from "../../lib/db.js"
-import crypto from 'crypto'
+import {
+	computeWriterContentHash,
+	readWriterSyncState,
+} from "../../lib/writerSyncState.js"
+import { areLegacyContentsEquivalent } from "../../lib/writerEditorLegacyAdapter.js"
 
-const SYNC_PENDING_SUPPRESS_MS = 30 * 1000;
 const SYNC_RECHECK_DELAY_MS = 3000;
 const SEARCH_DEBOUNCE_MS = 250;
+const RECOVERABLE_SYNC_STATE_STATUSES = ["pending", "invalidated"];
 
 export default {
 	components: {
@@ -655,7 +660,10 @@ export default {
 				? {
 					title: snapshot.latest_writer.title || "",
 					content: snapshot.latest_writer.content || "",
-					timestamp: snapshot.latest_writer.create_time || "",
+					timestamp:
+						snapshot.latest_writer.updated_at ||
+						snapshot.latest_writer.create_time ||
+						"",
 				}
 				: null;
 			const localVersion = localLatest
@@ -1393,25 +1401,131 @@ export default {
 				return "no data";
 			}
 		},
-		getSyncPendingStorageKey(articleId) {
-			return `writer_sync_pending_${Number(this.currentUserId || 0)}_${Number(articleId || 0)}`;
-		},
-		getSyncPendingState(articleId) {
-			const raw = window.localStorage.getItem(
-				this.getSyncPendingStorageKey(articleId)
-			);
-			if (!raw) return null;
+		async getArticleWriterWithContent(article, latestRemoteArticle) {
+			if (!latestRemoteArticle || latestRemoteArticle.content) {
+				return latestRemoteArticle;
+			}
+
 			try {
-				return JSON.parse(raw);
+				const response = await this.getArticleWriter(article.article_id);
+				if (!response || !response.data || response.data === "no data") {
+					return latestRemoteArticle;
+				}
+				return {
+					...latestRemoteArticle,
+					...response.data,
+				};
 			} catch (error) {
-				return null;
+				return latestRemoteArticle;
 			}
 		},
-		isSyncPending(articleId, maxAgeMs = SYNC_PENDING_SUPPRESS_MS) {
-			const state = this.getSyncPendingState(articleId);
-			if (!state || state.pending !== true) return false;
-			if (!state.updated_at) return true;
-			return Date.now() - Number(state.updated_at) <= maxAgeMs;
+		getSyncState(articleId) {
+			return readWriterSyncState(this.currentUserId, articleId);
+		},
+		isRecoverableSyncState(syncState) {
+			return !!syncState && RECOVERABLE_SYNC_STATE_STATUSES.includes(String(syncState.status || ""));
+		},
+		getLocalWriterHash(article) {
+			if (!article) {
+				return "";
+			}
+			if (article.content) {
+				return computeWriterContentHash(article.content);
+			}
+			return article.content_hash || "";
+		},
+		getVersionMarker(record) {
+			if (!record) {
+				return "";
+			}
+			return this.normalizeCreateTime(
+				record.updated_at ||
+				record.remote_updated_at ||
+				record.writer_updated_at ||
+				record.create_time ||
+				record.timestamp ||
+				""
+			);
+		},
+		doesSyncStateMatchLocal(syncState, latestLocalArticle) {
+			if (!this.isRecoverableSyncState(syncState) || !latestLocalArticle) {
+				return false;
+			}
+
+			const localHash = this.getLocalWriterHash(latestLocalArticle);
+			return !!syncState.local_hash && syncState.local_hash === localHash;
+		},
+		async resolveRecoverableSyncState(article, latestLocalArticle, latestRemoteArticle) {
+			const syncState = this.getSyncState(article.article_id);
+			if (!this.doesSyncStateMatchLocal(syncState, latestLocalArticle)) {
+				return {
+					isRecoverable: false,
+					syncState,
+					remoteEditors: [],
+				};
+			}
+
+			const baseRemoteCreateTime = this.normalizeCreateTime(
+				syncState.remote_updated_at || syncState.remote_create_time || ""
+			);
+			const remoteCreateTime = this.getVersionMarker(latestRemoteArticle);
+			const remoteSessionId = String(
+				(latestRemoteArticle && latestRemoteArticle.edit_session_id) || ""
+			).trim();
+			const syncSessionId = String(syncState.session_id || "").trim();
+
+			if (
+				baseRemoteCreateTime &&
+				remoteCreateTime &&
+				remoteCreateTime > baseRemoteCreateTime &&
+				remoteSessionId &&
+				syncSessionId &&
+				remoteSessionId !== syncSessionId
+			) {
+				return {
+					isRecoverable: false,
+					syncState,
+					remoteEditors: [],
+				};
+			}
+
+			if (!baseRemoteCreateTime) {
+				return {
+					isRecoverable: true,
+					syncState,
+					remoteEditors: [],
+				};
+			}
+
+			try {
+				const historyRecords = await this.getArticleHistoryMeta(article.article_id);
+				const remoteEditors = this.getRemoteEditorsSince(
+					historyRecords,
+					baseRemoteCreateTime
+				);
+				return {
+					isRecoverable: remoteEditors.length === 0,
+					syncState,
+					remoteEditors,
+				};
+			} catch (error) {
+				return {
+					isRecoverable: false,
+					syncState,
+					remoteEditors: [],
+				};
+			}
+		},
+		async markRemoteConflict(article, sinceCreateTime) {
+			const historyRecords = await this.getArticleHistoryMeta(article.article_id);
+			const editors = this.getRemoteEditorsSince(historyRecords, sinceCreateTime);
+			const summary = this.formatRemoteEditSummary(editors);
+			if (summary) {
+				article.remoteEditSummary = summary;
+			} else {
+				article.hasCloudCollision = true;
+			}
+			return editors;
 		},
 		scheduleArticleStatusRecheck(articleId) {
 			if (this.statusRecheckTimers[articleId]) {
@@ -1489,7 +1603,17 @@ export default {
 			return request;
 		},
 		normalizeCreateTime(createTime) {
-			return String(createTime || "").replace(/\D/g, "").slice(0, 14);
+			const digits = String(createTime || "").replace(/\D/g, "");
+			if (!digits) {
+				return "";
+			}
+			if (digits.length >= 20) {
+				return digits.slice(0, 20);
+			}
+			if (digits.length >= 14) {
+				return `${digits.slice(0, 14)}${digits.slice(14, 20).padEnd(6, "0")}`;
+			}
+			return digits.padEnd(20, "0");
 		},
 		getRemoteEditorsSince(historyRecords, sinceCreateTime) {
 			const since = this.normalizeCreateTime(sinceCreateTime);
@@ -1497,7 +1621,7 @@ export default {
 			const seen = new Set();
 
 			for (const record of historyRecords || []) {
-				const recordTime = this.normalizeCreateTime(record.create_time);
+				const recordTime = this.getVersionMarker(record);
 				if (since && recordTime && recordTime <= since) {
 					continue;
 				}
@@ -1562,6 +1686,7 @@ export default {
 			article.articleStatusChecked = true;
 			article.hasCloudCollision = false;
 			article.isSyncing = false;
+			article.hasWriterModify = false;
 			article.remoteEditSummary = "";
 			// 查找最近保存的本地文章和云端文章
 			const localArticles = await writerArticleDB.articles
@@ -1573,7 +1698,7 @@ export default {
 				latestLocalArticle = localArticles.reduce((latest, current) => {
 					return latest.create_time > current.create_time ? latest : current;
 				});
-				latestLocalArticle.content_hash = crypto.createHash('md5').update(latestLocalArticle.content).digest('hex');
+				latestLocalArticle.content_hash = this.getLocalWriterHash(latestLocalArticle);
 			}
 			let latestRemoteArticle = this.getArticleWriterHash(article);
 			if (latestRemoteArticle == "no data") {
@@ -1591,39 +1716,71 @@ export default {
 			} else if (latestRemoteArticle == null) {
 				writerArticle = latestLocalArticle;
 				// 本地有保存过文章，但是云端没有保存过文章
+				const recoverableSync = await this.resolveRecoverableSyncState(
+					article,
+					latestLocalArticle,
+					null
+				);
+				if (recoverableSync.isRecoverable) {
+					article.isSyncing = true;
+					this.scheduleArticleStatusRecheck(article.article_id);
+				}
 			} else {
 				// 本地和云端都有保存过文章
 				// 比较本地和云端的文章内容
 				if (latestLocalArticle.content_hash != latestRemoteArticle.content_hash) {
-					writerArticle = latestRemoteArticle;
-					// 本地和云端的文章内容不一致
-					if (this.isSyncPending(article.article_id)) {
-						article.isSyncing = true;
-						this.scheduleArticleStatusRecheck(article.article_id);
+					latestRemoteArticle = await this.getArticleWriterWithContent(
+						article,
+						latestRemoteArticle
+					);
+					if (
+						latestRemoteArticle.content &&
+						areLegacyContentsEquivalent(
+							latestLocalArticle.content,
+							latestRemoteArticle.content
+						)
+					) {
+						writerArticle = latestRemoteArticle;
+						this.$forceUpdate();
 					} else {
-						const latestRemoteTime = this.normalizeCreateTime(latestRemoteArticle.create_time);
-						const latestLocalTime = this.normalizeCreateTime(latestLocalArticle.create_time);
-						if (latestRemoteTime && latestLocalTime && latestRemoteTime > latestLocalTime) {
-							try {
-								const historyRecords = await this.getArticleHistoryMeta(article.article_id);
-								const editors = this.getRemoteEditorsSince(
-									historyRecords,
-									latestLocalArticle.create_time
+						const recoverableSync = await this.resolveRecoverableSyncState(
+							article,
+							latestLocalArticle,
+							latestRemoteArticle
+						);
+						// 本地和云端的文章内容不一致
+						if (recoverableSync.isRecoverable) {
+							writerArticle = latestLocalArticle;
+							article.isSyncing = true;
+							this.scheduleArticleStatusRecheck(article.article_id);
+						} else {
+							writerArticle = latestRemoteArticle;
+							if (
+								Array.isArray(recoverableSync.remoteEditors) &&
+								recoverableSync.remoteEditors.length > 0
+							) {
+								article.remoteEditSummary = this.formatRemoteEditSummary(
+									recoverableSync.remoteEditors
 								);
-								const summary = this.formatRemoteEditSummary(editors);
-								if (summary) {
-									article.remoteEditSummary = summary;
+							} else {
+								const latestRemoteTime = this.getVersionMarker(latestRemoteArticle);
+								const latestLocalTime = this.getVersionMarker(latestLocalArticle);
+								if (latestRemoteTime && latestLocalTime && latestRemoteTime > latestLocalTime) {
+									try {
+										await this.markRemoteConflict(
+											article,
+											latestLocalArticle.create_time
+										);
+									} catch (error) {
+										article.hasCloudCollision = true;
+									}
 								} else {
 									article.hasCloudCollision = true;
 								}
-							} catch (error) {
-								article.hasCloudCollision = true;
 							}
-						} else {
-							article.hasCloudCollision = true;
 						}
+						this.$forceUpdate();
 					}
-					this.$forceUpdate();
 				} else {
 					writerArticle = latestLocalArticle;
 				}

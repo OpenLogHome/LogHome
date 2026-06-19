@@ -1,84 +1,114 @@
 <template>
 	<view class="ask-log-girl-page" v-dark>
+		<!-- 自定义导航栏 -->
+		<view class="custom-nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="custom-nav-content">
+				<view class="nav-left">
+					<view class="nav-back-btn" @tap="handleNavBack">
+						<uni-icons type="left" size="20" :color="navIconColor"></uni-icons>
+					</view>
+				</view>
+				<view class="nav-center">
+					<text class="nav-title">问问原木娘</text>
+				</view>
+				<view class="nav-right">
+					<view class="nav-history-btn" @tap="openHistoryPanel">
+						<uni-icons type="chat" size="18" :color="navAccentColor"></uni-icons>
+					</view>
+				</view>
+			</view>
+		</view>
+
 		<view class="chat-shell">
 			<view class="chat-header">
-				<view class="chat-badge">AI</view>
+				<image class="chat-badge" src="https://storage.codesocean.top/api/resource/get/177882044429077" mode="aspectFit"></image>
 				<view class="chat-header-main">
-					<view class="chat-title">问问原木娘</view>
-					<view class="chat-subtitle">{{ novelName || ('作品 ' + novelId) }}</view>
+					<view class="chat-subtitle">
+						<text>{{ effectiveNovelName || ('作品 ' + effectiveNovelId) }}</text>
+						<text class="active-novel-chip" v-if="!isActiveNovelOriginal">临时切换</text>
+					</view>
+					<view class="chat-active-origin" v-if="!isActiveNovelOriginal">
+						原作品：{{ novelName || ('作品 ' + novelId) }}
+					</view>
 					<view class="chat-session-name">{{ currentSessionTitle }}</view>
 				</view>
-				<view class="chat-history-trigger" @tap="openHistoryPanel">历史记录</view>
 			</view>
 
-			<view class="chat-tip">
-				你可以直接问我剧情、角色关系、设定相关的任何问题。
-			</view>
-
-			<scroll-view
-				class="chat-messages"
-				scroll-y
-				:scroll-into-view="scrollAnchorId"
-			>
+			<view class="chat-messages">
 				<view
 					class="chat-row"
 					v-for="message in messages"
 					:key="message.id"
 					:class="message.role === 'user' ? 'user' : 'assistant'"
 				>
-					<view class="chat-bubble">
+					<view class="chat-bubble" @longpress.stop="openMessageActionMenu(message)">
 						<view
 							class="chat-thinking"
-							v-if="message.role === 'assistant' && (hasReasoningSummary(message) || hasToolTrace(message))"
+							v-if="message.role === 'assistant' && (hasToolTrace(message) || shouldShowThinkingHint(message))"
 						>
-							<view class="chat-thinking-group" v-if="hasReasoningSummary(message)">
-								<view class="chat-thinking-label">思考过程</view>
-								<view
-									class="chat-thinking-line"
-									v-for="(step, index) in message.reasoningSteps"
-									:key="message.id + '-reasoning-' + index"
-								>
-									{{ step }}
+							<view
+								class="chat-thinking-panel"
+								:class="{ expanded: message.thinkingExpanded }"
+							>
+								<view class="chat-thinking-group">
+									<view class="chat-thinking-status" v-if="shouldShowThinkingHint(message)">
+										<text class="chat-thinking-status-text">{{ currentThinkingHintText }}</text>
+										<text class="chat-thinking-dot dot-one">.</text>
+										<text class="chat-thinking-dot dot-two">.</text>
+										<text class="chat-thinking-dot dot-three">.</text>
+									</view>
+									<view
+										class="chat-thinking-line"
+										v-for="(step, index) in getVisibleThinkingSteps(message)"
+										:key="message.id + '-thinking-visible-' + index"
+									>
+										{{ getVisibleThinkingStepText(step, message) }}
+									</view>
+									<view class="chat-thinking-line active" v-if="getVisibleCurrentThinkingText(message)">
+										{{ getVisibleCurrentThinkingText(message) }}
+									</view>
 								</view>
 							</view>
-							<view class="chat-thinking-group" v-if="hasToolTrace(message)">
-								<view class="chat-thinking-label" v-if="hasReasoningSummary(message)">工具链</view>
-								<view
-									class="chat-thinking-line"
-									v-for="(step, index) in message.thinkingSteps"
-									:key="message.id + '-thinking-' + index"
-								>
-									{{ step }}
-								</view>
-								<view class="chat-thinking-line active" v-if="message.currentThinkingText">
-									{{ message.currentThinkingText }}
-								</view>
+							<view
+								class="chat-thinking-toggle"
+								v-if="canToggleThinking(message)"
+								@tap.stop="toggleThinkingExpanded(message)"
+							>
+								{{ message.thinkingExpanded ? '收起' : '展开' }}
 							</view>
 						</view>
-						<view class="chat-content" v-if="message.content">
+						<view class="chat-content" v-if="getVisibleMessageContent(message)">
 							<rich-text
 								v-if="message.role === 'assistant'"
 								class="chat-richtext"
 								:nodes="renderAssistantMarkdown(message)"
 								@itemclick="handleAssistantItemClick($event, message)"
 							></rich-text>
-							<text v-else>{{ message.content }}</text>
+							<text v-else>{{ getVisibleMessageContent(message) }}</text>
 						</view>
 						<view
 							class="chat-content chat-content-placeholder"
-							v-if="!message.content && message.role === 'assistant' && (hasReasoningSummary(message) || hasToolTrace(message))"
+							v-if="!getVisibleMessageContent(message) && message.role === 'assistant' && !shouldShowThinkingHint(message) && hasToolTrace(message)"
 						>
 							正在生成回答...
 						</view>
 					</view>
 				</view>
-				<view :id="scrollAnchorId" class="scroll-anchor"></view>
-			</scroll-view>
+			</view>
 
 			<view class="chat-input-wrap">
+				<view
+					class="chat-clear-icon-btn"
+					@tap.stop="clearConversation"
+					v-if="messages.length > 1 && !loading"
+					aria-label="清空上下文"
+				>
+					<i class="el-icon-brush chat-clear-icon"></i>
+				</view>
 				<textarea
 					v-model="draft"
 					class="chat-textarea"
+					:class="{ 'with-clear-context': messages.length > 1 && !loading }"
 					placeholder="输入你想问的问题"
 					auto-height
 					maxlength="-1"
@@ -87,11 +117,57 @@
 				/>
 				<view class="chat-action-row">
 					<view class="chat-action-left">
-						<view class="chat-toggle" :class="{ active: deepThinking, disabled: loading }" @tap="toggleDeepThinking">
-							深度思考 {{ deepThinking ? '开' : '关' }}
+						<view class="index-status-wrap" @tap.stop="toggleIndexStatusTooltip" v-if="novelId">
+							<view class="index-status-box">
+								<view class="index-status-water" :style="novelIndexWaterStyle">
+									<view class="index-status-wave"></view>
+								</view>
+								<view class="index-status-core">{{ novelIndexPercent }}%</view>
+							</view>
+							<view
+								class="index-status-tooltip"
+								v-if="indexStatusTooltipVisible"
+								:style="indexStatusTooltipStyle"
+								@tap.stop
+							>
+								<view class="index-status-tooltip-arrow" :style="indexStatusTooltipArrowStyle"></view>
+								<view class="index-tooltip-title">全文智能索引</view>
+								<view class="index-tooltip-percent">{{ novelIndexPercent }}%</view>
+								<view class="index-tooltip-text">{{ novelIndexStatusText }}</view>
+								<view class="index-tooltip-meta">索引进度会影响回答质量</view>
+							</view>
 						</view>
-						<view class="chat-clear" @tap="clearConversation" v-if="messages.length > 1 && !loading">
-							清空上下文
+						<view class="context-usage-wrap" @tap.stop="toggleContextUsageTooltip">
+							<view class="context-usage-ring" :style="contextUsageRingStyle">
+								<view class="context-usage-core">{{ contextUsagePercent }}%</view>
+							</view>
+							<view
+								class="context-usage-tooltip"
+								v-if="contextUsageTooltipVisible"
+								:style="contextUsageTooltipStyle"
+								@tap.stop
+							>
+								<view class="context-usage-tooltip-arrow" :style="contextUsageTooltipArrowStyle"></view>
+								<view class="context-tooltip-title">背景信息窗口</view>
+								<view class="context-tooltip-percent">{{ contextUsagePercent }} % 已用</view>
+								<view class="context-tooltip-note">背景信息会自动压缩</view>
+							</view>
+						</view>
+					</view>
+					<view class="chat-mode-toggle" :class="{ disabled: loading }">
+						<view
+							class="chat-mode-option"
+							:class="{ active: retrieverMode === 'fast' }"
+							@tap="setRetrieverMode('fast')"
+						>
+							快速
+						</view>
+						<view
+							class="chat-mode-option"
+							:class="{ active: retrieverMode === 'deep' }"
+							@tap="setRetrieverMode('deep')"
+						>
+							深度 <el-tag size="mini" type="danger" style="margin-left: 8rpx;">限免</el-tag>
 						</view>
 					</view>
 					<view class="chat-send" :class="{ disabled: !canSend }" @tap="submitQuestion">
@@ -101,50 +177,66 @@
 			</view>
 		</view>
 
-		<view class="history-mask" v-if="historyPanelVisible" @tap="closeHistoryPanel"></view>
-		<view class="history-panel" v-if="historyPanelVisible">
-			<view class="history-panel-header">
-				<view class="history-panel-title">历史聊天记录</view>
-				<view class="history-panel-close" @tap="closeHistoryPanel">关闭</view>
-			</view>
-			<view class="history-search">
-				<input
-					v-model="historyKeyword"
-					class="history-search-input"
-					type="text"
-					confirm-type="search"
-					placeholder="按书名或聊天内容搜索"
-					placeholder-style="color: #b8a58a;"
-				/>
-			</view>
-			<scroll-view class="history-panel-scroll" scroll-y>
-				<block v-if="historyBookGroups.length > 0">
-					<view
-						class="history-book-group"
-						v-for="book in historyBookGroups"
-						:key="'history-book-' + book.novelId"
-					>
-						<view class="history-book-title">{{ book.novelName || ('作品 ' + book.novelId) }}</view>
-						<view
-							class="history-session-card"
-							v-for="session in book.sessions"
-							:key="session.sessionId"
-							:class="{ active: isCurrentHistorySession(book.novelId, session.sessionId) }"
-							@tap="selectHistorySession(book, session)"
-						>
-							<view class="history-session-title">{{ session.title }}</view>
-							<view class="history-session-meta">
-								{{ formatHistoryTime(session.updatedAt) }}
-								<text v-if="session.deepThinking"> · 深度思考</text>
-							</view>
-							<view class="history-session-preview">{{ session.preview || '暂无对话内容' }}</view>
-						</view>
-					</view>
-				</block>
-				<view v-else class="history-empty">
-					{{ historyKeyword ? '没有找到匹配的历史记录' : '暂时还没有历史聊天记录' }}
+		<!-- 历史记录抽屉 -->
+		<view class="history-drawer" :class="{ open: historyPanelVisible }">
+			<view class="history-drawer-mask" v-if="historyPanelVisible" @tap="closeHistoryPanel"></view>
+			<view class="history-drawer-panel" :class="{ open: historyPanelVisible }">
+				<view class="history-drawer-handle">
+					<view class="history-drawer-handle-bar"></view>
 				</view>
-			</scroll-view>
+				<view class="history-drawer-header">
+					<text class="history-drawer-title">历史聊天记录</text>
+					<view class="history-drawer-close" @tap="closeHistoryPanel">
+						<uni-icons type="closeempty" size="20" :color="isDarkMode ? '#f4ebdb' : '#8a6c45'"></uni-icons>
+					</view>
+				</view>
+				<view class="history-drawer-search">
+					<view class="history-search-wrap">
+						<uni-icons type="search" size="16" color="#b8a58a" class="search-icon"></uni-icons>
+						<input
+							v-model="historyKeyword"
+							class="history-search-input"
+							type="text"
+							confirm-type="search"
+							placeholder="搜索本书聊天内容"
+							placeholder-class="history-search-placeholder"
+						/>
+					</view>
+				</view>
+				<scroll-view class="history-drawer-scroll" scroll-y :thumb-style="{ borderRadius: '10rpx' }">
+					<block v-if="historyBookGroups.length > 0">
+						<view
+							class="history-book-group"
+							v-for="book in historyBookGroups"
+							:key="'history-book-' + book.novelId"
+						>
+							<view class="history-book-title">{{ book.novelName || ('作品 ' + book.novelId) }}</view>
+							<view
+								class="history-session-card"
+								v-for="session in book.sessions"
+								:key="session.sessionId"
+								:class="{ active: isCurrentHistorySession(book.novelId, session.sessionId), swiped: swipedSessionId === session.sessionId }"
+								@tap="handleHistoryCardTap(book, session)"
+								@touchstart="onHistoryCardTouchStart($event, book, session)"
+								@touchmove="onHistoryCardTouchMove($event)"
+								@touchend="onHistoryCardTouchEnd($event, book, session)"
+							>
+								<view class="history-session-delete" @tap.stop="deleteHistorySession(book, session)">删除</view>
+								<view class="history-session-content">
+									<view class="history-session-title">{{ session.title }}</view>
+									<view class="history-session-meta">
+										{{ formatHistoryTime(session.updatedAt) }}
+									</view>
+									<view class="history-session-preview">{{ session.preview || '暂无对话内容' }}</view>
+								</view>
+							</view>
+						</view>
+					</block>
+					<view v-else class="history-empty">
+						{{ historyKeyword ? '没有找到匹配的历史记录' : '暂时还没有历史聊天记录' }}
+					</view>
+				</scroll-view>
+			</view>
 		</view>
 	</view>
 </template>
@@ -153,9 +245,40 @@
 import darkModeMixin from '@/mixins/dark-mode.js'
 
 const STREAM_ROUTE = '/library/reader_novel_ai_chat_stream'
-const SCROLL_ANCHOR_ID = 'chat-bottom-anchor'
+const INDEX_STATUS_ROUTE = '/library/reader_novel_summary_index_status'
 const HISTORY_STORAGE_KEY = 'reader_ask_log_girl_history_v2'
 const LEGACY_STORAGE_KEY_PREFIX = 'reader_ask_log_girl_'
+const THINKING_HINT_TEXTS = [
+	'正在阅读中',
+	'正在整理中',
+	'正在誊写中',
+	'正在分析中',
+]
+const DEFAULT_NOVEL_INDEX_STATUS = {
+	loading: false,
+	loaded: false,
+	error: '',
+	totalChapters: 0,
+	indexedChapters: 0,
+	indexedSummaryChapters: 0,
+	pendingSummaryChapters: 0,
+	percent: 0,
+	queueStatus: '',
+	queue: null,
+}
+const DEFAULT_CONTEXT_USAGE = {
+	usedTokens: 0,
+	limitTokens: 200000,
+	thresholdTokens: 160000,
+	percent: 0,
+	compressed: false,
+	compressedCount: 0,
+}
+const TYPEWRITER_INTERVAL_MS = 24
+const THINKING_TYPEWRITER_INTERVAL_MS = 18
+const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 180
+const AUTO_SCROLL_DELAY_MS = 16
+const AUTO_SCROLL_SETTLE_DELAY_MS = 48
 const MARKDOWN_STYLES = {
 	h1: 'font-size: 34rpx; font-weight: 700; margin: 20rpx 0 12rpx; line-height: 1.45;',
 	h2: 'font-size: 31rpx; font-weight: 700; margin: 18rpx 0 12rpx; line-height: 1.45;',
@@ -169,6 +292,9 @@ const MARKDOWN_STYLES = {
 	code: 'padding: 2rpx 8rpx; border-radius: 8rpx; background: rgba(0, 0, 0, 0.06); font-family: monospace;',
 	hr: 'margin: 18rpx 0; border: none; border-top: 1rpx solid rgba(120, 120, 120, 0.18);',
 	a: 'color: #b66a16; text-decoration: underline;',
+	table: 'width: 100%; margin: 0 0 16rpx; border-collapse: collapse; table-layout: fixed; overflow-wrap: anywhere;',
+	th: 'padding: 10rpx 12rpx; border: 1rpx solid rgba(150, 118, 70, 0.26); background: rgba(207, 169, 96, 0.14); font-weight: 700; line-height: 1.6; word-break: break-word; vertical-align: top;',
+	td: 'padding: 10rpx 12rpx; border: 1rpx solid rgba(150, 118, 70, 0.22); line-height: 1.6; word-break: break-word; vertical-align: top;',
 }
 
 function escapeHtml(text) {
@@ -218,6 +344,84 @@ function renderParagraph(lines) {
 		return ''
 	}
 	return '<p style="' + MARKDOWN_STYLES.p + '">' + content + '</p>'
+}
+
+function splitMarkdownTableRow(line) {
+	let source = String(line || '').trim()
+	if (!source || source.indexOf('|') === -1) {
+		return []
+	}
+	if (source.startsWith('|')) {
+		source = source.slice(1)
+	}
+	if (source.endsWith('|')) {
+		source = source.slice(0, -1)
+	}
+
+	const cells = []
+	let cell = ''
+	let escaping = false
+	for (let index = 0; index < source.length; index += 1) {
+		const char = source[index]
+		if (char === '\\' && !escaping) {
+			escaping = true
+			cell += char
+			continue
+		}
+		if (char === '|' && !escaping) {
+			cells.push(cell.trim().replace(/\\\|/g, '|'))
+			cell = ''
+			continue
+		}
+		escaping = false
+		cell += char
+	}
+	cells.push(cell.trim().replace(/\\\|/g, '|'))
+	return cells
+}
+
+function isMarkdownTableRow(line) {
+	return splitMarkdownTableRow(line).length >= 2
+}
+
+function isMarkdownTableSeparator(line) {
+	const cells = splitMarkdownTableRow(line)
+	return cells.length >= 2 && cells.every(function (cell) {
+		return /^:?-{3,}:?$/.test(String(cell || '').replace(/\s+/g, ''))
+	})
+}
+
+function getMarkdownTableAlignments(separatorLine) {
+	return splitMarkdownTableRow(separatorLine).map(function (cell) {
+		const value = String(cell || '').replace(/\s+/g, '')
+		if (/^:-+:$/.test(value)) {
+			return 'center'
+		}
+		if (/^-+:$/.test(value)) {
+			return 'right'
+		}
+		return 'left'
+	})
+}
+
+function renderMarkdownTable(headerCells, alignments, bodyRows) {
+	const columnCount = headerCells.length
+	const safeAlignments = alignments.length > 0 ? alignments : headerCells.map(function () { return 'left' })
+	const headerHtml = headerCells.map(function (cell, index) {
+		const align = safeAlignments[index] || 'left'
+		return '<th style="' + MARKDOWN_STYLES.th + ' text-align: ' + align + ';">' + renderInlineMarkdown(cell) + '</th>'
+	}).join('')
+	const bodyHtml = bodyRows.map(function (row) {
+		const cells = row.slice(0, columnCount)
+		while (cells.length < columnCount) {
+			cells.push('')
+		}
+		return '<tr>' + cells.map(function (cell, index) {
+			const align = safeAlignments[index] || 'left'
+			return '<td style="' + MARKDOWN_STYLES.td + ' text-align: ' + align + ';">' + renderInlineMarkdown(cell) + '</td>'
+		}).join('') + '</tr>'
+	}).join('')
+	return '<table style="' + MARKDOWN_STYLES.table + '"><thead><tr>' + headerHtml + '</tr></thead><tbody>' + bodyHtml + '</tbody></table>'
 }
 
 function renderMarkdownToHtml(markdownText) {
@@ -278,7 +482,8 @@ function renderMarkdownToHtml(markdownText) {
 		codeLines = []
 	}
 
-	lines.forEach(function (line) {
+	for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+		const line = lines[lineIndex]
 		const trimmed = line.trim()
 
 		if (trimmed.startsWith('```')) {
@@ -290,25 +495,47 @@ function renderMarkdownToHtml(markdownText) {
 				inCodeBlock = true
 				codeLines = []
 			}
-			return
+			continue
 		}
 
 		if (inCodeBlock) {
 			codeLines.push(line)
-			return
+			continue
 		}
 
 		if (!trimmed) {
 			flushParagraph()
 			flushList()
-			return
+			continue
 		}
 
 		if (/^---+$/.test(trimmed) || /^\*\*\*+$/.test(trimmed)) {
 			flushParagraph()
 			flushList()
 			htmlParts.push('<hr style="' + MARKDOWN_STYLES.hr + '" />')
-			return
+			continue
+		}
+
+		const nextLine = lines[lineIndex + 1] || ''
+		if (isMarkdownTableRow(trimmed) && isMarkdownTableSeparator(nextLine)) {
+			flushParagraph()
+			flushList()
+			const headerCells = splitMarkdownTableRow(trimmed)
+			const alignments = getMarkdownTableAlignments(nextLine)
+			const bodyRows = []
+			lineIndex += 2
+			while (lineIndex < lines.length) {
+				const tableLine = lines[lineIndex]
+				const tableTrimmed = tableLine.trim()
+				if (!tableTrimmed || !isMarkdownTableRow(tableTrimmed) || isMarkdownTableSeparator(tableTrimmed)) {
+					lineIndex -= 1
+					break
+				}
+				bodyRows.push(splitMarkdownTableRow(tableLine))
+				lineIndex += 1
+			}
+			htmlParts.push(renderMarkdownTable(headerCells, alignments, bodyRows))
+			continue
 		}
 
 		const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/)
@@ -319,7 +546,7 @@ function renderMarkdownToHtml(markdownText) {
 			const tag = 'h' + level
 			const style = MARKDOWN_STYLES[tag]
 			htmlParts.push('<' + tag + ' style="' + style + '">' + renderInlineMarkdown(headingMatch[2]) + '</' + tag + '>')
-			return
+			continue
 		}
 
 		const quoteMatch = trimmed.match(/^>\s?(.*)$/)
@@ -327,7 +554,7 @@ function renderMarkdownToHtml(markdownText) {
 			flushParagraph()
 			flushList()
 			htmlParts.push('<blockquote style="' + MARKDOWN_STYLES.blockquote + '">' + renderInlineMarkdown(quoteMatch[1]) + '</blockquote>')
-			return
+			continue
 		}
 
 		const unorderedMatch = trimmed.match(/^[-*+]\s+(.*)$/)
@@ -338,7 +565,7 @@ function renderMarkdownToHtml(markdownText) {
 			}
 			listType = 'ul'
 			listItems.push(unorderedMatch[1])
-			return
+			continue
 		}
 
 		const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/)
@@ -349,7 +576,7 @@ function renderMarkdownToHtml(markdownText) {
 			}
 			listType = 'ol'
 			listItems.push(orderedMatch[1])
-			return
+			continue
 		}
 
 		if (listType) {
@@ -357,7 +584,7 @@ function renderMarkdownToHtml(markdownText) {
 		}
 
 		paragraphLines.push(trimmed)
-	})
+	}
 
 	flushParagraph()
 	flushList()
@@ -370,37 +597,316 @@ function createSessionId() {
 	return 'session-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
 }
 
+function normalizeCitationId(rawId) {
+	const value = String(rawId || '').trim()
+	if (!value) {
+		return ''
+	}
+
+	const directMatch = value.match(/^a(\d+)(?:p(\d+))?$/i)
+	if (directMatch) {
+		return 'a' + Number(directMatch[1]) + (directMatch[2] ? 'p' + Number(directMatch[2]) : '')
+	}
+
+	const citationIdMatch = value.match(/(?:^|[\s,;&?])citation_id\s*[:=]\s*([a-zA-Z0-9_-]+)/i)
+	if (citationIdMatch) {
+		return normalizeCitationId(citationIdMatch[1])
+	}
+
+	const articleMatch = value.match(/(?:^|[\s,;&?])article_id\s*[:=]\s*(\d+)/i)
+		|| value.match(/^article[_-]?(\d+)$/i)
+	const paragraphMatch = value.match(/(?:^|[\s,;&?])paragraph_id\s*[:=]\s*(\d+)/i)
+		|| value.match(/(?:^|[\s,;&?])paragraph\s*[:=]\s*(\d+)/i)
+		|| value.match(/(?:^|[\s,;&?])p\s*[:=]\s*(\d+)/i)
+	if (articleMatch) {
+		return 'a' + Number(articleMatch[1]) + (paragraphMatch ? 'p' + Number(paragraphMatch[1]) : '')
+	}
+
+	if (/^\d+$/.test(value)) {
+		return 'a' + Number(value)
+	}
+
+	return value.replace(/[^\w-]/g, '')
+}
+
+function normalizeCitationMarkerText(text) {
+	return String(text || '').replace(/\[\[cite:([^\]]+)\]\]/g, function (match, rawId) {
+		const citationId = normalizeCitationId(rawId)
+		return citationId ? '[[cite:' + citationId + ']]' : ''
+	})
+}
+
 function stripCitationMarkers(text) {
-	return String(text || '').replace(/\[\[cite:[a-zA-Z0-9_-]+\]\]/g, '').replace(/\s+/g, ' ').trim()
+	return normalizeCitationMarkerText(text).replace(/\[\[cite:[^\]]+\]\]/g, '').replace(/\s+/g, ' ').trim()
+}
+
+function createDefaultContextUsage() {
+	return {
+		...DEFAULT_CONTEXT_USAGE,
+	}
+}
+
+function normalizeConversationPayloadMessages(rawMessages) {
+	return (Array.isArray(rawMessages) ? rawMessages : [])
+		.filter((message) => message && typeof message === 'object')
+		.map((message) => ({
+			role: message.role === 'assistant' ? 'assistant' : 'user',
+			content: normalizeCitationMarkerText(message.content).replace(/\[\[cite:[^\]]+\]\]/g, '').trim(),
+		}))
+		.filter((message) => String(message.content || '').trim())
+}
+
+function normalizeActiveNovel(rawNovel, fallbackNovelId = 0, fallbackNovelName = '') {
+	const source = rawNovel && typeof rawNovel === 'object' ? rawNovel : {}
+	const rawNovelId = Number(source.novelId || source.novel_id || fallbackNovelId || 0)
+	if (!Number.isFinite(rawNovelId) || rawNovelId <= 0) {
+		return null
+	}
+	const tags = Array.isArray(source.tags)
+		? source.tags.map((item) => String(item || '').trim()).filter(Boolean)
+		: []
+	return {
+		novelId: Math.floor(rawNovelId),
+		novelName: String(source.novelName || source.name || fallbackNovelName || ''),
+		author: String(source.author || ''),
+		description: String(source.description || ''),
+		tags,
+		chapterCount: Number(source.chapterCount || source.chapter_count || 0) || 0,
+		latestChapter: source.latestChapter !== undefined && source.latestChapter !== null
+			? Number(source.latestChapter)
+			: (source.latest_chapter !== undefined && source.latest_chapter !== null ? Number(source.latest_chapter) : null),
+		isOriginal: source.isOriginal !== undefined
+			? source.isOriginal === true
+			: (source.is_original !== undefined ? source.is_original === true : Number(rawNovelId) === Number(fallbackNovelId || 0)),
+	}
+}
+
+function normalizePendingReplyTask(rawTask) {
+	if (!rawTask || typeof rawTask !== 'object') {
+		return null
+	}
+
+	const taskId = String(rawTask.taskId || rawTask.task_id || '').trim()
+	const sessionId = String(rawTask.sessionId || rawTask.session_id || '').trim()
+	const messageId = String(rawTask.messageId || rawTask.message_id || '').trim()
+	if (!taskId || !messageId) {
+		return null
+	}
+
+	const lastEventId = Number(rawTask.lastEventId || rawTask.last_event_id || 0)
+	const novelId = Number(rawTask.novelId || rawTask.novel_id || 0)
+	const activeNovelId = Number(rawTask.activeNovelId || rawTask.active_novel_id || rawTask.currentNovelId || rawTask.current_novel_id || novelId || 0)
+	const rawRetrieverMode = String(rawTask.retrieverMode || rawTask.retriever_mode || rawTask.searchMode || rawTask.search_mode || 'deep')
+	const retrieverMode = rawRetrieverMode === 'fast' ? 'fast' : 'deep'
+	return {
+		taskId,
+		sessionId,
+		messageId,
+		novelId: Number.isFinite(novelId) && novelId > 0 ? novelId : 0,
+		activeNovelId: Number.isFinite(activeNovelId) && activeNovelId > 0 ? activeNovelId : 0,
+		retrieverMode,
+		lastEventId: Number.isFinite(lastEventId) && lastEventId > 0 ? Math.floor(lastEventId) : 0,
+		status: String(rawTask.status || 'running') === 'error' ? 'error' : (String(rawTask.status || 'running') === 'completed' ? 'completed' : 'running'),
+		createdAt: Number(rawTask.createdAt || rawTask.created_at || Date.now()),
+	}
+}
+
+function createPendingReplyTask(options = {}) {
+	return normalizePendingReplyTask({
+		taskId: options.taskId || '',
+		sessionId: options.sessionId || '',
+		messageId: options.messageId || '',
+		novelId: options.novelId || 0,
+		activeNovelId: options.activeNovelId || options.active_novel_id || options.novelId || 0,
+		retrieverMode: options.retrieverMode || options.retriever_mode || 'deep',
+		lastEventId: options.lastEventId || 0,
+		status: options.status || 'running',
+		createdAt: options.createdAt || Date.now(),
+	})
+}
+
+function createAbortError() {
+	const error = new Error('The operation was aborted.')
+	error.name = 'AbortError'
+	return error
+}
+
+function getTypewriterStepSize(remaining, fast = false) {
+	const safeRemaining = Number(remaining || 0)
+	if (safeRemaining <= 0) {
+		return 0
+	}
+	if (fast) {
+		return safeRemaining > 240 ? 14 : safeRemaining > 140 ? 10 : safeRemaining > 70 ? 6 : 3
+	}
+	return safeRemaining > 160 ? 8 : safeRemaining > 80 ? 6 : safeRemaining > 30 ? 4 : 2
+}
+
+function getContextUsageRawValue(source, camelKey, snakeKey, fallbackValue) {
+	if (source && source[camelKey] !== undefined && source[camelKey] !== null) {
+		return source[camelKey]
+	}
+	if (source && source[snakeKey] !== undefined && source[snakeKey] !== null) {
+		return source[snakeKey]
+	}
+	return fallbackValue
+}
+
+function normalizeContextUsage(rawUsage, fallbackUsage) {
+	const source = rawUsage && typeof rawUsage === 'object' ? rawUsage : {}
+	const fallback = fallbackUsage && typeof fallbackUsage === 'object'
+		? fallbackUsage
+		: createDefaultContextUsage()
+	const fallbackLimitTokens = Number(fallback.limitTokens || DEFAULT_CONTEXT_USAGE.limitTokens)
+	const rawLimitTokens = Number(getContextUsageRawValue(source, 'limitTokens', 'limit_tokens', fallbackLimitTokens))
+	const limitTokens = Number.isFinite(rawLimitTokens) && rawLimitTokens > 0
+		? rawLimitTokens
+		: DEFAULT_CONTEXT_USAGE.limitTokens
+	const rawUsedTokens = Number(getContextUsageRawValue(source, 'usedTokens', 'used_tokens', fallback.usedTokens || 0))
+	const usedTokens = Number.isFinite(rawUsedTokens) && rawUsedTokens >= 0 ? rawUsedTokens : 0
+	const rawThresholdTokens = Number(getContextUsageRawValue(source, 'thresholdTokens', 'threshold_tokens', fallback.thresholdTokens || 0))
+	const thresholdTokens = Number.isFinite(rawThresholdTokens) && rawThresholdTokens > 0
+		? rawThresholdTokens
+		: Math.round(limitTokens * 0.8)
+	const rawPercent = Number(getContextUsageRawValue(source, 'percent', 'percent', fallback.percent))
+	const computedPercent = limitTokens > 0 ? Math.round((usedTokens / limitTokens) * 100) : 0
+	const percent = Number.isFinite(rawPercent)
+		? Math.max(0, Math.min(100, rawPercent))
+		: Math.max(0, Math.min(100, computedPercent))
+	const rawCompressedCount = Number(getContextUsageRawValue(source, 'compressedCount', 'compressed_count', fallback.compressedCount || 0))
+	const hasCompressedValue = source.compressed !== undefined && source.compressed !== null
+	return {
+		usedTokens,
+		limitTokens,
+		thresholdTokens,
+		percent,
+		compressed: hasCompressedValue ? source.compressed === true || source.compressed === 'true' : fallback.compressed === true,
+		compressedCount: Number.isFinite(rawCompressedCount) && rawCompressedCount > 0 ? rawCompressedCount : 0,
+	}
+}
+
+function createDefaultNovelIndexStatus() {
+	return {
+		...DEFAULT_NOVEL_INDEX_STATUS,
+	}
+}
+
+function getNovelIndexRawValue(source, camelKey, snakeKey, fallbackValue) {
+	if (source && source[camelKey] !== undefined && source[camelKey] !== null) {
+		return source[camelKey]
+	}
+	if (source && source[snakeKey] !== undefined && source[snakeKey] !== null) {
+		return source[snakeKey]
+	}
+	return fallbackValue
+}
+
+function normalizeNovelIndexStatus(rawStatus, fallbackStatus) {
+	const source = rawStatus && typeof rawStatus === 'object' ? rawStatus : {}
+	const fallback = fallbackStatus && typeof fallbackStatus === 'object'
+		? fallbackStatus
+		: createDefaultNovelIndexStatus()
+	const totalChapters = Number(getNovelIndexRawValue(source, 'totalChapters', 'total_chapters', fallback.totalChapters || 0))
+	const indexedChapters = Number(getNovelIndexRawValue(source, 'indexedChapters', 'indexed_chapters', fallback.indexedChapters || 0))
+	const indexedSummaryChapters = Number(getNovelIndexRawValue(source, 'indexedSummaryChapters', 'indexed_summary_chapters', fallback.indexedSummaryChapters || 0))
+	const pendingSummaryChapters = Number(getNovelIndexRawValue(source, 'pendingSummaryChapters', 'pending_summary_chapters', fallback.pendingSummaryChapters || 0))
+	const rawPercent = Number(getNovelIndexRawValue(source, 'percent', 'percent', fallback.percent || 0))
+	const safeTotalChapters = Number.isFinite(totalChapters) && totalChapters > 0 ? totalChapters : 0
+	const safeIndexedSummaryChapters = Number.isFinite(indexedSummaryChapters) && indexedSummaryChapters > 0 ? indexedSummaryChapters : 0
+	const computedPercent = safeTotalChapters > 0
+		? Math.round((safeIndexedSummaryChapters / safeTotalChapters) * 100)
+		: 0
+	const queue = source.queue && typeof source.queue === 'object'
+		? source.queue
+		: (fallback.queue || null)
+	return {
+		loading: source.loading === true,
+		loaded: source.loaded === true || fallback.loaded === true,
+		error: String(source.error || ''),
+		totalChapters: safeTotalChapters,
+		indexedChapters: Number.isFinite(indexedChapters) && indexedChapters > 0 ? indexedChapters : 0,
+		indexedSummaryChapters: safeIndexedSummaryChapters,
+		pendingSummaryChapters: Number.isFinite(pendingSummaryChapters) && pendingSummaryChapters > 0
+			? pendingSummaryChapters
+			: Math.max(0, safeTotalChapters - safeIndexedSummaryChapters),
+		percent: Number.isFinite(rawPercent)
+			? Math.max(0, Math.min(100, Math.round(rawPercent)))
+			: Math.max(0, Math.min(100, computedPercent)),
+		queueStatus: String(source.queueStatus || source.queue_status || fallback.queueStatus || ''),
+		queue,
+	}
 }
 
 export default {
 	mixins: [darkModeMixin],
 	data() {
 		return {
+			statusBarHeight: 0,
 			novelId: 0,
 			novelName: '',
+			activeNovel: null,
 			currentSessionId: '',
 			draft: '',
+			retrieverMode: 'deep',
 			loading: false,
+			autoScrollTimer: null,
+			autoScrollPendingForce: false,
+			autoScrollShouldFollow: true,
+			autoScrollWindowListenerRegistered: false,
+			autoScrollLastScrollTop: 0,
 			statusText: '',
 			streamErrorMessage: '',
-			deepThinking: false,
 			historyPanelVisible: false,
 			historyKeyword: '',
 			chatHistoryStore: {
 				version: 2,
 				books: [],
 			},
-			scrollAnchorId: SCROLL_ANCHOR_ID,
+			thinkingHintIndex: 0,
+			thinkingHintTimer: null,
 			nextMessageId: 1,
 			abortController: null,
+			contextUsageTooltipVisible: false,
+			contextUsageTooltipStyle: {},
+			contextUsageTooltipArrowStyle: {},
+			indexStatusTooltipVisible: false,
+			indexStatusTooltipStyle: {},
+			indexStatusTooltipArrowStyle: {},
+			contextUsage: createDefaultContextUsage(),
+			novelIndexStatus: createDefaultNovelIndexStatus(),
 			messages: [],
+			swipedSessionId: null,
+			touchStartX: 0,
+			activeReplyTask: null,
+			typewriterTimers: {},
+			thinkingTypewriterTimers: {},
+			thinkingDisplayState: {},
+			resumeTaskInProgress: false,
 		}
 	},
 	computed: {
+		navIconColor() {
+			return this.isDarkMode ? '#f4ebdb' : '#2f2418'
+		},
+		navAccentColor() {
+			return this.isDarkMode ? '#d9c7a8' : '#8a6c45'
+		},
 		canSend() {
 			return !!String(this.draft || '').trim() && !this.loading
+		},
+		effectiveNovelId() {
+			const activeNovelId = Number(this.activeNovel && this.activeNovel.novelId)
+			return Number.isFinite(activeNovelId) && activeNovelId > 0 ? activeNovelId : Number(this.novelId || 0)
+		},
+		effectiveNovelName() {
+			return String(
+				(this.activeNovel && this.activeNovel.novelName)
+				|| this.novelName
+				|| ''
+			)
+		},
+		isActiveNovelOriginal() {
+			return Number(this.effectiveNovelId) === Number(this.novelId || 0)
 		},
 		currentSessionTitle() {
 			const session = this.getCurrentSession()
@@ -409,59 +915,210 @@ export default {
 		historyBookGroups() {
 			return this.getFilteredHistoryBooks()
 		},
+		contextUsagePercent() {
+			const percent = Number(this.contextUsage && this.contextUsage.percent)
+			if (Number.isFinite(percent)) {
+				return Math.max(0, Math.min(100, Math.round(percent)))
+			}
+			const usedTokens = Number(this.contextUsage && this.contextUsage.usedTokens)
+			const limitTokens = Number(this.contextUsage && this.contextUsage.limitTokens)
+			if (!Number.isFinite(usedTokens) || !Number.isFinite(limitTokens) || limitTokens <= 0) {
+				return 0
+			}
+			return Math.max(0, Math.min(100, Math.round((usedTokens / limitTokens) * 100)))
+		},
+		contextUsageRingStyle() {
+			const degree = Math.round(this.contextUsagePercent * 3.6)
+			const activeColor = this.contextUsagePercent >= 80 ? '#c55f22' : '#cf8a25'
+			return {
+				background: `conic-gradient(${activeColor} 0deg ${degree}deg, rgba(207, 169, 96, 0.18) ${degree}deg 360deg)`,
+			}
+		},
+		novelIndexPercent() {
+			const percent = Number(this.novelIndexStatus && this.novelIndexStatus.percent)
+			if (Number.isFinite(percent)) {
+				return Math.max(0, Math.min(100, Math.round(percent)))
+			}
+			return 0
+		},
+		novelIndexWaterStyle() {
+			return {
+				height: this.novelIndexPercent + '%',
+			}
+		},
+		novelIndexStatusText() {
+			if (this.novelIndexStatus.loading && !this.novelIndexStatus.loaded) {
+				return '正在读取索引情况'
+			}
+			if (this.novelIndexStatus.error) {
+				return this.novelIndexStatus.error
+			}
+			const indexed = Number(this.novelIndexStatus.indexedSummaryChapters || 0)
+			const total = Number(this.novelIndexStatus.totalChapters || 0)
+			if (!total) {
+				return '暂无可索引章节'
+			}
+			return '已索引摘要 ' + indexed + ' / ' + total + ' 章'
+		},
+		currentThinkingHintText() {
+			return THINKING_HINT_TEXTS[this.thinkingHintIndex % THINKING_HINT_TEXTS.length] || THINKING_HINT_TEXTS[0]
+		}
+	},
+	watch: {
+		draft() {
+			this.persistCurrentDraft()
+		},
 	},
 	onLoad(option) {
+		const systemInfo = uni.getSystemInfoSync()
+		this.statusBarHeight = systemInfo.statusBarHeight || 20
 		this.novelId = Number(option.novel_id || 0)
 		this.novelName = option.novel_name ? decodeURIComponent(option.novel_name) : ''
+		this.activeNovel = this.createDefaultActiveNovel()
 		this.initializeConversation(option.session_id || '')
+		this.startThinkingHintRotation()
+		this.loadNovelIndexStatus()
+		this.resumePendingReplyIfNeeded()
+	},
+	onShow() {
+		this.registerWindowScrollListener()
+		this.resumePendingReplyIfNeeded()
+	},
+	mounted() {
+		this.registerWindowScrollListener()
+		this.$nextTick(() => {
+			this.updateAutoScrollState()
+		})
+	},
+	onPageScroll(event) {
+		this.updateAutoScrollState(event && event.scrollTop)
+	},
+	onHide() {
+		this.persistConversation()
+		this.abortActiveRequest()
+		this.unregisterWindowScrollListener()
 	},
 	onUnload() {
-		this.abortActiveRequest()
 		this.persistConversation()
+		this.abortActiveRequest()
+		this.clearAutoScrollTimer()
+		this.unregisterWindowScrollListener()
+		this.stopAllTypewriters()
+		this.stopAllThinkingTypewriters()
+		this.stopThinkingHintRotation()
+	},
+	beforeDestroy() {
+		this.clearAutoScrollTimer()
+		this.unregisterWindowScrollListener()
+		this.stopAllTypewriters()
+		this.stopAllThinkingTypewriters()
+		this.stopThinkingHintRotation()
 	},
 	methods: {
+		handleNavBack() {
+			const pages = getCurrentPages()
+			if (pages.length > 1) {
+				uni.navigateBack()
+			} else {
+				uni.reLaunch({ url: '/pages/library' })
+			}
+		},
+		startThinkingHintRotation() {
+			this.stopThinkingHintRotation()
+			this.thinkingHintTimer = setInterval(() => {
+				this.thinkingHintIndex = (this.thinkingHintIndex + 1) % THINKING_HINT_TEXTS.length
+			}, 5000)
+		},
+		stopThinkingHintRotation() {
+			if (this.thinkingHintTimer) {
+				clearInterval(this.thinkingHintTimer)
+				this.thinkingHintTimer = null
+			}
+		},
 		getStorageKey() {
 			return HISTORY_STORAGE_KEY
 		},
 		getLegacyStorageKey(novelId = this.novelId) {
 			return LEGACY_STORAGE_KEY_PREFIX + String(novelId || 0)
 		},
+		createDefaultActiveNovel() {
+			return normalizeActiveNovel({
+				novelId: this.novelId,
+				novelName: this.novelName,
+				isOriginal: true,
+			}, this.novelId, this.novelName)
+		},
+		normalizeSessionActiveNovel(rawNovel) {
+			return normalizeActiveNovel(rawNovel, this.novelId, this.novelName) || this.createDefaultActiveNovel()
+		},
 		normalizeStoredCitations(rawCitations) {
 			return (Array.isArray(rawCitations) ? rawCitations : [])
 				.filter((item) => item && typeof item === 'object' && Number(item.article_id))
-				.map((item, index) => ({
-					citation_id: String(item.citation_id || ('citation-' + index)),
-					article_id: Number(item.article_id),
-					chapter: item.chapter === null || item.chapter === undefined ? null : Number(item.chapter),
-					title: String(item.title || ''),
-					paragraph_id: item.paragraph_id === null || item.paragraph_id === undefined || item.paragraph_id === ''
-						? null
-						: Number(item.paragraph_id),
-					snippet: String(item.snippet || ''),
-					source: String(item.source || ''),
-					displayIndex: Number(item.displayIndex || item.display_index || (index + 1)),
-				}))
+				.map((item, index) => {
+					const rawCitationId = String(item.citation_id || ('citation-' + index))
+					return {
+						citation_id: normalizeCitationId(rawCitationId) || rawCitationId,
+						novel_id: Number(item.novel_id || item.novelId || 0) || null,
+						article_id: Number(item.article_id),
+						chapter: item.chapter === null || item.chapter === undefined ? null : Number(item.chapter),
+						title: String(item.title || ''),
+						paragraph_id: item.paragraph_id === null || item.paragraph_id === undefined || item.paragraph_id === ''
+							? null
+							: Number(item.paragraph_id),
+						snippet: String(item.snippet || ''),
+						source: String(item.source || ''),
+						displayIndex: Number(item.displayIndex || item.display_index || (index + 1)),
+					}
+				})
 		},
 		buildCitationDisplayMap(citations) {
 			const map = {}
 			this.normalizeStoredCitations(citations).forEach((item, index) => {
-				map[item.citation_id] = Number(item.displayIndex || (index + 1))
+				const displayIndex = Number(item.displayIndex || (index + 1))
+				const targetCitationId = String(item.citation_id || '')
+				const articleId = Number(item.article_id || 0)
+				const paragraphId = Number(item.paragraph_id || 0)
+				const setMapValue = (key) => {
+					const normalizedKey = normalizeCitationId(key)
+					if (!normalizedKey || map[normalizedKey]) {
+						return
+					}
+					map[normalizedKey] = {
+						citationId: targetCitationId,
+						displayIndex,
+					}
+				}
+				setMapValue(targetCitationId)
+				if (articleId) {
+					setMapValue('a' + articleId)
+					if (paragraphId > 0) {
+						setMapValue('a' + articleId + 'p' + paragraphId)
+					}
+				}
 			})
 			return map
 		},
 		renderAssistantMarkdown(message) {
-			const content = typeof message === 'string' ? message : String((message && message.content) || '')
+			const content = normalizeCitationMarkerText(
+				typeof message === 'string' ? message : String(this.getVisibleMessageContent(message) || '')
+			)
 			const citationMap = this.buildCitationDisplayMap(message && message.citations)
 			const citationTokens = []
-			let normalizedContent = content.replace(/\[\[cite:([a-zA-Z0-9_-]+)\]\]/g, (match, citationId) => {
-				const normalizedCitationId = String(citationId || '').trim()
-				const displayIndex = citationMap[normalizedCitationId]
+			let normalizedContent = content.replace(/\[\[cite:([^\]]+)\]\]/g, (match, citationId) => {
+				const normalizedCitationId = normalizeCitationId(citationId)
+				const citationEntry = citationMap[normalizedCitationId]
+				const displayIndex = citationEntry && typeof citationEntry === 'object'
+					? Number(citationEntry.displayIndex || 0)
+					: Number(citationEntry || 0)
 				if (!displayIndex) {
 					return ''
 				}
+				const targetCitationId = citationEntry && typeof citationEntry === 'object'
+					? String(citationEntry.citationId || normalizedCitationId)
+					: normalizedCitationId
 				const token = '@@CITATIONTOKEN' + citationTokens.length + '@@'
 				citationTokens.push(
-					'<a href="citation://' + escapeAttribute(normalizedCitationId)
+					'<a href="citation://' + escapeAttribute(targetCitationId)
 					+ '" style="display:inline-block; margin: 0 4rpx; font-size: 22rpx; color: #a46d25; text-decoration: underline;">['
 					+ displayIndex
 					+ ']</a>'
@@ -493,10 +1150,13 @@ export default {
 				id: 'msg-' + this.nextMessageId,
 				role: role === 'user' ? 'user' : 'assistant',
 				content: String(content || ''),
-				thinkingSteps: Array.isArray(extra.thinkingSteps) ? extra.thinkingSteps.slice(0, 12) : [],
-				reasoningSteps: Array.isArray(extra.reasoningSteps) ? extra.reasoningSteps.slice(0, 12) : [],
+				displayContent: role === 'assistant'
+					? String(extra.displayContent !== undefined ? extra.displayContent : (content || ''))
+					: String(content || ''),
+				thinkingSteps: Array.isArray(extra.thinkingSteps) ? extra.thinkingSteps.slice(-80) : [],
 				citations: this.normalizeStoredCitations(extra.citations),
 				currentThinkingText: String(extra.currentThinkingText || ''),
+				thinkingExpanded: extra.thinkingExpanded === true,
 			}
 			this.nextMessageId += 1
 			return message
@@ -509,7 +1169,10 @@ export default {
 				title: String(options.title || this.buildSessionTitleFromMessages(messages, createdAt)),
 				createdAt,
 				updatedAt: Number(options.updatedAt || createdAt),
-				deepThinking: options.deepThinking === true,
+				activeNovel: this.normalizeSessionActiveNovel(options.activeNovel),
+				draft: String(options.draft || ''),
+				contextUsage: normalizeContextUsage(options.contextUsage),
+				pendingTask: normalizePendingReplyTask(options.pendingTask),
 				messages,
 			}
 		},
@@ -520,20 +1183,24 @@ export default {
 					id: typeof message.id === 'string' && message.id ? message.id : 'msg-' + (index + 1),
 					role: message.role === 'user' ? 'user' : 'assistant',
 					content: String(message.content || ''),
+					displayContent: message.role === 'assistant'
+						? String(message.displayContent !== undefined ? message.displayContent : (message.display_content !== undefined ? message.display_content : (message.content || '')))
+						: String(message.content || ''),
 					thinkingSteps: Array.isArray(message.thinkingSteps)
-						? message.thinkingSteps.map((item) => String(item || '')).filter(Boolean).slice(0, 12)
-						: [],
-					reasoningSteps: Array.isArray(message.reasoningSteps)
-						? message.reasoningSteps.map((item) => String(item || '')).filter(Boolean).slice(0, 12)
+						? message.thinkingSteps.map((item) => String(item || '')).filter(Boolean).slice(-80)
 						: [],
 					citations: this.normalizeStoredCitations(message.citations),
-					currentThinkingText: '',
+					currentThinkingText: String(message.currentThinkingText || message.current_thinking_text || ''),
+					thinkingExpanded: message.thinkingExpanded === true,
 				}))
 				.filter((message) => {
 					return message.role === 'user'
 						|| String(message.content || '').trim()
+						|| String(message.displayContent || '').trim()
+						|| String(message.currentThinkingText || '').trim()
+						|| message.thinkingExpanded === true
+						|| (this.activeReplyTask && String(this.activeReplyTask.messageId || '') === String(message.id || ''))
 						|| (message.thinkingSteps && message.thinkingSteps.length > 0)
-						|| (message.reasoningSteps && message.reasoningSteps.length > 0)
 				})
 		},
 		normalizeSessionRecord(rawSession, index = 0) {
@@ -544,7 +1211,10 @@ export default {
 				title: String((rawSession && rawSession.title) || this.buildSessionTitleFromMessages(messages, createdAt)),
 				createdAt,
 				updatedAt: Number((rawSession && rawSession.updatedAt) || createdAt),
-				deepThinking: rawSession && rawSession.deepThinking === true,
+				activeNovel: this.normalizeSessionActiveNovel(rawSession && rawSession.activeNovel),
+				draft: String((rawSession && rawSession.draft) || ''),
+				contextUsage: normalizeContextUsage(rawSession && rawSession.contextUsage),
+				pendingTask: normalizePendingReplyTask(rawSession && rawSession.pendingTask),
 				messages,
 			}
 		},
@@ -639,17 +1309,14 @@ export default {
 				.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))
 		},
 		getFilteredHistoryBooks() {
-			const books = this.getSortedHistoryBooks()
+			const currentNovelId = Number(this.novelId)
+			const books = this.getSortedHistoryBooks().filter((book) => Number(book.novelId) === currentNovelId)
 			const keyword = String(this.historyKeyword || '').trim().toLowerCase()
 			if (!keyword) {
 				return books
 			}
 			return books
 				.map((book) => {
-					const bookName = String(book.novelName || '').toLowerCase()
-					if (bookName.includes(keyword)) {
-						return book
-					}
 					const sessions = (Array.isArray(book.sessions) ? book.sessions : []).filter((session) => {
 						return this.buildSessionSearchText(session).includes(keyword)
 					})
@@ -734,20 +1401,41 @@ export default {
 			if (!session) {
 				return
 			}
+			this.stopAllTypewriters()
+			this.stopAllThinkingTypewriters()
 			this.currentSessionId = String(session.sessionId || '')
+			this.activeNovel = this.normalizeSessionActiveNovel(session.activeNovel)
+			this.draft = String(session.draft || '')
 			this.messages = this.normalizeStoredMessages(session.messages)
-			this.deepThinking = session.deepThinking === true
+			this.contextUsage = normalizeContextUsage(session.contextUsage)
+			this.activeReplyTask = normalizePendingReplyTask(session.pendingTask)
+			this.rebuildThinkingDisplayState({
+				seedFromMessage: true,
+			})
+			this.contextUsageTooltipVisible = false
 			this.statusText = ''
 			this.streamErrorMessage = ''
+			this.loading = !!(this.activeReplyTask && this.activeReplyTask.status === 'running')
+			if (!this.loading) {
+				this.messages.forEach((message) => {
+					if (message.role === 'assistant') {
+						message.displayContent = String(message.content || '')
+					}
+				})
+			}
 			this.computeNextMessageId(this.messages)
 			const bookGroup = this.ensureCurrentBookGroup()
 			bookGroup.lastSessionId = this.currentSessionId
 			bookGroup.updatedAt = Number(session.updatedAt || Date.now())
 			this.persistHistoryStore()
-			this.scrollToBottom()
+			this.resumeLocalTypewriterIfNeeded()
+			if (this.activeReplyTask && this.activeReplyTask.status === 'running') {
+				this.startThinkingTypewriter(this.activeReplyTask.messageId)
+			}
 			if (options.closePanel !== false) {
 				this.historyPanelVisible = false
 			}
+			this.loadNovelIndexStatus()
 		},
 		syncCurrentSession() {
 			if (!this.novelId) {
@@ -760,7 +1448,6 @@ export default {
 				session = this.createSessionRecord({
 					sessionId: this.currentSessionId || createSessionId(),
 					messages: this.messages,
-					deepThinking: this.deepThinking,
 					createdAt: currentTime,
 					updatedAt: currentTime,
 				})
@@ -768,7 +1455,12 @@ export default {
 				this.currentSessionId = session.sessionId
 			}
 			session.messages = this.normalizeStoredMessages(this.messages)
-			session.deepThinking = this.deepThinking === true
+			session.activeNovel = this.normalizeSessionActiveNovel(this.activeNovel)
+			session.draft = String(this.draft || '')
+			session.contextUsage = normalizeContextUsage(this.contextUsage, session.contextUsage)
+			session.pendingTask = this.activeReplyTask && this.activeReplyTask.status === 'running'
+				? normalizePendingReplyTask(this.activeReplyTask)
+				: null
 			session.updatedAt = currentTime
 			session.title = this.buildSessionTitleFromMessages(session.messages, session.createdAt || currentTime)
 			bookGroup.lastSessionId = session.sessionId
@@ -779,6 +1471,23 @@ export default {
 		},
 		persistConversation() {
 			this.syncCurrentSession()
+		},
+		persistCurrentDraft() {
+			if (!this.novelId || !this.currentSessionId || !this.chatHistoryStore) {
+				return
+			}
+			const bookGroup = this.findBookGroup(this.novelId)
+			if (!bookGroup || !Array.isArray(bookGroup.sessions)) {
+				return
+			}
+			const session = bookGroup.sessions.find((item) => item && String(item.sessionId) === String(this.currentSessionId))
+			if (!session) {
+				return
+			}
+			session.draft = String(this.draft || '')
+			try {
+				uni.setStorageSync(this.getStorageKey(), JSON.stringify(this.chatHistoryStore))
+			} catch (error) {}
 		},
 		migrateLegacyConversation() {
 			if (!this.novelId) {
@@ -799,7 +1508,6 @@ export default {
 				const bookGroup = this.ensureCurrentBookGroup()
 				const session = this.createSessionRecord({
 					messages: legacyMessages,
-					deepThinking: parsed.deepThinking === true,
 					createdAt: Date.now(),
 					updatedAt: Date.now(),
 				})
@@ -815,7 +1523,6 @@ export default {
 			const currentTime = Date.now()
 			const session = this.createSessionRecord({
 				messages: this.createInitialMessages(),
-				deepThinking: this.deepThinking,
 				createdAt: currentTime,
 				updatedAt: currentTime,
 			})
@@ -823,12 +1530,25 @@ export default {
 			bookGroup.lastSessionId = session.sessionId
 			bookGroup.updatedAt = currentTime
 			this.currentSessionId = session.sessionId
+			this.stopAllTypewriters()
+			this.stopAllThinkingTypewriters()
+			this.activeNovel = this.createDefaultActiveNovel()
+			session.activeNovel = this.normalizeSessionActiveNovel(this.activeNovel)
+			this.draft = ''
+			session.draft = ''
 			this.messages = this.normalizeStoredMessages(session.messages)
+			this.rebuildThinkingDisplayState({
+				seedFromMessage: true,
+			})
+			this.contextUsage = normalizeContextUsage(session.contextUsage)
+			this.activeReplyTask = null
+			this.contextUsageTooltipVisible = false
 			this.computeNextMessageId(this.messages)
+			this.loading = false
 			this.statusText = ''
 			this.streamErrorMessage = ''
 			this.persistHistoryStore()
-			this.scrollToBottom()
+			this.loadNovelIndexStatus()
 			if (options.closePanel !== false) {
 				this.historyPanelVisible = false
 			}
@@ -860,7 +1580,7 @@ export default {
 		closeHistoryPanel() {
 			this.historyPanelVisible = false
 		},
-		getReaderArticleUrl(articleId, paragraphId) {
+		getReaderArticleUrl(articleId, paragraphId, novelId = this.effectiveNovelId) {
 			let readerProps = ''
 			if (typeof uni !== 'undefined' && typeof uni.getStorageSync === 'function') {
 				readerProps = uni.getStorageSync('readerProps') || ''
@@ -871,8 +1591,8 @@ export default {
 			let url = isPageReader
 				? `/pages/readers/newReader/article?id=${articleId}`
 				: `/pages/readers/article_rich?id=${articleId}`
-			if (this.novelId) {
-				url += `&novelId=${this.novelId}`
+			if (novelId) {
+				url += `&novelId=${Number(novelId)}`
 			}
 			if (paragraphId !== null && paragraphId !== undefined && Number(paragraphId) > 0) {
 				url += `&paragraphId=${Number(paragraphId)}`
@@ -884,7 +1604,7 @@ export default {
 				return
 			}
 			uni.navigateTo({
-				url: this.getReaderArticleUrl(Number(citation.article_id), citation.paragraph_id),
+				url: this.getReaderArticleUrl(Number(citation.article_id), citation.paragraph_id, citation.novel_id || this.effectiveNovelId),
 			})
 		},
 		handleAssistantItemClick(event, message) {
@@ -914,6 +1634,488 @@ export default {
 				}
 			}
 		},
+		getVisibleMessageContent(message) {
+			if (!message) {
+				return ''
+			}
+			if (message.role === 'assistant') {
+				return String(message.displayContent !== undefined ? message.displayContent : (message.content || ''))
+			}
+			return String(message.content || '')
+		},
+		createThinkingDisplayState(message, options = {}) {
+			const seedFromMessage = options.seedFromMessage !== false
+			return {
+				steps: seedFromMessage
+					? (Array.isArray(message && message.thinkingSteps) ? message.thinkingSteps.map((item) => String(item || '')) : [])
+					: [],
+				currentText: seedFromMessage ? String(message && message.currentThinkingText || '') : '',
+			}
+		},
+		rebuildThinkingDisplayState(options = {}) {
+			const nextState = {}
+			this.messages.forEach((message) => {
+				if (!message || message.role !== 'assistant') {
+					return
+				}
+				nextState[message.id] = this.createThinkingDisplayState(message, options)
+			})
+			this.thinkingDisplayState = nextState
+		},
+		resetThinkingDisplayStateForMessage(messageId, options = {}) {
+			const target = this.getTargetMessageForTask(messageId)
+			if (!target || target.role !== 'assistant') {
+				if (this.thinkingDisplayState && this.thinkingDisplayState[messageId] !== undefined && typeof this.$delete === 'function') {
+					this.$delete(this.thinkingDisplayState, messageId)
+				}
+				return null
+			}
+			const nextState = this.createThinkingDisplayState(target, options)
+			if (typeof this.$set === 'function') {
+				this.$set(this.thinkingDisplayState, messageId, nextState)
+			} else {
+				this.thinkingDisplayState[messageId] = nextState
+			}
+			return nextState
+		},
+		ensureThinkingDisplayState(message, options = {}) {
+			if (!message || !message.id) {
+				return null
+			}
+			let state = this.thinkingDisplayState && this.thinkingDisplayState[message.id]
+			if (!state) {
+				state = this.createThinkingDisplayState(message, options)
+				if (typeof this.$set === 'function') {
+					this.$set(this.thinkingDisplayState, message.id, state)
+				} else {
+					this.thinkingDisplayState[message.id] = state
+				}
+			}
+			if (!Array.isArray(state.steps)) {
+				state.steps = []
+			}
+			if (typeof state.currentText !== 'string') {
+				state.currentText = ''
+			}
+			return state
+		},
+		getCommonPrefixText(sourceText, targetText) {
+			const source = String(sourceText || '')
+			const target = String(targetText || '')
+			let prefixLength = 0
+			while (
+				prefixLength < source.length
+				&& prefixLength < target.length
+				&& source[prefixLength] === target[prefixLength]
+			) {
+				prefixLength += 1
+			}
+			return target.slice(0, prefixLength)
+		},
+		syncThinkingDisplayState(message) {
+			const state = this.ensureThinkingDisplayState(message, {
+				seedFromMessage: true,
+			})
+			if (!state) {
+				return null
+			}
+			const targetSteps = Array.isArray(message && message.thinkingSteps)
+				? message.thinkingSteps.map((item) => String(item || ''))
+				: []
+			if (state.steps.length > targetSteps.length) {
+				state.steps = state.steps.slice(0, targetSteps.length)
+			}
+			targetSteps.forEach((targetText, index) => {
+				const displayText = String(state.steps[index] || '')
+				if (state.steps[index] === undefined) {
+					state.steps.push('')
+					return
+				}
+				if (!targetText.startsWith(displayText)) {
+					state.steps.splice(index, 1, this.getCommonPrefixText(displayText, targetText))
+				}
+			})
+			const targetCurrentText = String(message && message.currentThinkingText || '')
+			if (!targetCurrentText.startsWith(String(state.currentText || ''))) {
+				state.currentText = this.getCommonPrefixText(state.currentText, targetCurrentText)
+			}
+			return state
+		},
+		getThinkingDisplaySteps(message) {
+			const state = message && this.thinkingDisplayState ? this.thinkingDisplayState[message.id] : null
+			if (state && Array.isArray(state.steps)) {
+				return state.steps
+			}
+			return Array.isArray(message && message.thinkingSteps) ? message.thinkingSteps : []
+		},
+		getThinkingDisplayCurrentText(message) {
+			const state = message && this.thinkingDisplayState ? this.thinkingDisplayState[message.id] : null
+			if (state && typeof state.currentText === 'string') {
+				return state.currentText
+			}
+			return String(message && message.currentThinkingText || '')
+		},
+		resumeLocalTypewriterIfNeeded() {
+			this.messages.forEach((message) => {
+				if (
+					message
+					&& message.role === 'assistant'
+					&& String(message.displayContent || '').length < String(message.content || '').length
+				) {
+					this.startTypewriter(message.id)
+				}
+			})
+		},
+		stopTypewriter(messageId) {
+			const timer = this.typewriterTimers && this.typewriterTimers[messageId]
+			if (timer) {
+				clearInterval(timer)
+				delete this.typewriterTimers[messageId]
+			}
+		},
+		stopAllTypewriters() {
+			Object.keys(this.typewriterTimers || {}).forEach((messageId) => {
+				this.stopTypewriter(messageId)
+			})
+		},
+		stopThinkingTypewriter(messageId) {
+			const timer = this.thinkingTypewriterTimers && this.thinkingTypewriterTimers[messageId]
+			if (timer) {
+				clearInterval(timer)
+				delete this.thinkingTypewriterTimers[messageId]
+			}
+		},
+		stopAllThinkingTypewriters() {
+			Object.keys(this.thinkingTypewriterTimers || {}).forEach((messageId) => {
+				this.stopThinkingTypewriter(messageId)
+			})
+		},
+		clearAutoScrollTimer() {
+			if (this.autoScrollTimer) {
+				clearTimeout(this.autoScrollTimer)
+				this.autoScrollTimer = null
+			}
+			this.autoScrollPendingForce = false
+		},
+		registerWindowScrollListener() {
+			if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+				return
+			}
+			if (this.autoScrollWindowListenerRegistered) {
+				return
+			}
+			window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
+			this.autoScrollWindowListenerRegistered = true
+		},
+		unregisterWindowScrollListener() {
+			if (typeof window === 'undefined' || typeof window.removeEventListener !== 'function') {
+				return
+			}
+			if (!this.autoScrollWindowListenerRegistered) {
+				return
+			}
+			window.removeEventListener('scroll', this.handleWindowScroll)
+			this.autoScrollWindowListenerRegistered = false
+		},
+		handleWindowScroll() {
+			this.updateAutoScrollState()
+		},
+		getPageScrollMetrics(scrollTopOverride) {
+			if (typeof window === 'undefined' || typeof document === 'undefined') {
+				return {
+					scrollTop: 0,
+					clientHeight: 0,
+					scrollHeight: 0,
+					distanceFromBottom: 0,
+				}
+			}
+
+			const scrollingElement = document.scrollingElement || document.documentElement || document.body
+			const documentElement = document.documentElement || {}
+			const body = document.body || {}
+			const rawScrollTop = Number(scrollTopOverride)
+			const scrollTop = Number.isFinite(rawScrollTop)
+				? rawScrollTop
+				: Number(
+					window.pageYOffset
+					|| (scrollingElement && scrollingElement.scrollTop)
+					|| documentElement.scrollTop
+					|| body.scrollTop
+					|| 0
+				)
+			const clientHeight = Number(
+				window.innerHeight
+				|| (scrollingElement && scrollingElement.clientHeight)
+				|| documentElement.clientHeight
+				|| body.clientHeight
+				|| 0
+			)
+			const scrollHeight = Math.max(
+				clientHeight,
+				Number(scrollingElement && scrollingElement.scrollHeight || 0),
+				Number(documentElement.scrollHeight || 0),
+				Number(body.scrollHeight || 0)
+			)
+			return {
+				scrollTop,
+				clientHeight,
+				scrollHeight,
+				distanceFromBottom: Math.max(0, scrollHeight - scrollTop - clientHeight),
+			}
+		},
+		isNearPageBottom(metrics = this.getPageScrollMetrics()) {
+			return Number(metrics && metrics.distanceFromBottom || 0) <= AUTO_SCROLL_BOTTOM_THRESHOLD_PX
+		},
+		updateAutoScrollState(scrollTop) {
+			const metrics = this.getPageScrollMetrics(scrollTop)
+			const previousScrollTop = Number(this.autoScrollLastScrollTop || 0)
+			const currentScrollTop = Number(metrics.scrollTop || 0)
+			const isScrollingUp = currentScrollTop < previousScrollTop - 2
+			const isNearBottom = this.isNearPageBottom(metrics)
+			this.autoScrollLastScrollTop = currentScrollTop
+
+			if (isScrollingUp) {
+				this.autoScrollShouldFollow = false
+				return
+			}
+
+			this.autoScrollShouldFollow = isNearBottom
+		},
+		shouldAutoScrollForNewContent() {
+			return this.autoScrollShouldFollow && this.isNearPageBottom()
+		},
+		startThinkingTypewriter(messageId) {
+			const target = this.getTargetMessageForTask(messageId)
+			if (!target || target.role !== 'assistant') {
+				return
+			}
+			this.syncThinkingDisplayState(target)
+			if (this.thinkingTypewriterTimers[messageId]) {
+				return
+			}
+
+			this.thinkingTypewriterTimers[messageId] = setInterval(() => {
+				const currentTarget = this.getTargetMessageForTask(messageId)
+				if (!currentTarget || currentTarget.role !== 'assistant') {
+					this.stopThinkingTypewriter(messageId)
+					return
+				}
+				const state = this.syncThinkingDisplayState(currentTarget)
+				if (!state) {
+					this.stopThinkingTypewriter(messageId)
+					return
+				}
+				const targetSteps = Array.isArray(currentTarget.thinkingSteps)
+					? currentTarget.thinkingSteps.map((item) => String(item || ''))
+					: []
+				let hasPending = false
+
+				for (let index = 0; index < targetSteps.length; index += 1) {
+					const fullText = targetSteps[index]
+					const displayText = String(state.steps[index] || '')
+					if (displayText.length >= fullText.length) {
+						continue
+					}
+					hasPending = true
+					const nextLength = Math.min(
+						fullText.length,
+						displayText.length + getTypewriterStepSize(fullText.length - displayText.length, true)
+					)
+					state.steps.splice(index, 1, fullText.slice(0, nextLength))
+					break
+				}
+
+				if (!hasPending) {
+					const fullCurrentText = String(currentTarget.currentThinkingText || '')
+					const displayCurrentText = String(state.currentText || '')
+					if (displayCurrentText.length < fullCurrentText.length) {
+						hasPending = true
+						const nextLength = Math.min(
+							fullCurrentText.length,
+							displayCurrentText.length + getTypewriterStepSize(fullCurrentText.length - displayCurrentText.length, true)
+						)
+						state.currentText = fullCurrentText.slice(0, nextLength)
+					}
+				}
+
+				this.scrollToBottom()
+
+				if (!hasPending) {
+					this.stopThinkingTypewriter(messageId)
+				}
+			}, THINKING_TYPEWRITER_INTERVAL_MS)
+		},
+		startTypewriter(messageId) {
+			const target = this.messages.find((message) => message.id === messageId)
+			if (!target || target.role !== 'assistant') {
+				return
+			}
+			if (String(target.displayContent || '').length >= String(target.content || '').length) {
+				target.displayContent = String(target.content || '')
+				this.stopTypewriter(messageId)
+				return
+			}
+			if (this.typewriterTimers[messageId]) {
+				return
+			}
+
+			this.typewriterTimers[messageId] = setInterval(() => {
+				const currentTarget = this.messages.find((message) => message.id === messageId)
+				if (!currentTarget || currentTarget.role !== 'assistant') {
+					this.stopTypewriter(messageId)
+					return
+				}
+				const fullText = String(currentTarget.content || '')
+				const displayText = String(currentTarget.displayContent || '')
+				if (displayText.length >= fullText.length) {
+					currentTarget.displayContent = fullText
+					this.stopTypewriter(messageId)
+					this.persistConversation()
+					return
+				}
+				const remaining = fullText.length - displayText.length
+				const step = getTypewriterStepSize(remaining, false)
+				currentTarget.displayContent = fullText.slice(0, Math.min(fullText.length, displayText.length + step))
+				this.persistConversation()
+				this.scrollToBottom()
+				if (currentTarget.displayContent.length >= fullText.length) {
+					this.stopTypewriter(messageId)
+				}
+			}, TYPEWRITER_INTERVAL_MS)
+		},
+		getTargetMessageForTask(messageId) {
+			return this.messages.find((message) => message && message.id === messageId) || null
+		},
+		buildReplyTaskId(messageId) {
+			return ['reader-ai', this.novelId, this.currentSessionId, messageId].join(':')
+		},
+		createActiveReplyTask(messageId) {
+			return createPendingReplyTask({
+				taskId: this.buildReplyTaskId(messageId),
+				sessionId: this.currentSessionId,
+				messageId,
+				novelId: this.novelId,
+				activeNovelId: this.effectiveNovelId,
+				retrieverMode: this.retrieverMode,
+				status: 'running',
+				lastEventId: 0,
+				createdAt: Date.now(),
+			})
+		},
+		buildConversationPayloadForTask(messageId) {
+			const targetIndex = this.messages.findIndex((message) => message && message.id === messageId)
+			const sourceMessages = targetIndex >= 0 ? this.messages.slice(0, targetIndex) : this.messages
+			return normalizeConversationPayloadMessages(sourceMessages)
+		},
+		updateActiveReplyTask(patch = {}) {
+			const nextTask = createPendingReplyTask({
+				...(this.activeReplyTask || {}),
+				...patch,
+			})
+			this.activeReplyTask = nextTask
+			this.persistConversation()
+		},
+		clearActiveReplyTask() {
+			this.activeReplyTask = null
+			this.persistConversation()
+		},
+		completeReplyTask(messageId, status = 'completed') {
+			const target = this.getTargetMessageForTask(messageId)
+			if (target) {
+				target.thinkingExpanded = false
+				target.currentThinkingText = ''
+				if (target.role === 'assistant') {
+					target.displayContent = String(target.content || '')
+				}
+				this.resetThinkingDisplayStateForMessage(messageId, {
+					seedFromMessage: true,
+				})
+			}
+			this.stopTypewriter(messageId)
+			this.stopThinkingTypewriter(messageId)
+			this.loading = false
+			this.statusText = ''
+			if (this.activeReplyTask && String(this.activeReplyTask.messageId) === String(messageId)) {
+				this.clearActiveReplyTask()
+			}
+			this.persistConversation()
+			this.scrollToBottom()
+		},
+		handleReplyFailure(messageId, error, options = {}) {
+			if (error && error.name === 'AbortError') {
+				return
+			}
+			const fallbackMessage = error && error.message ? error.message : '原木娘暂时没有响应，请稍后再试'
+			const target = this.getTargetMessageForTask(messageId)
+			if (target && !String(target.content || '').trim()) {
+				this.updateMessageContent(messageId, fallbackMessage)
+			}
+			if (options.showToast !== false) {
+				this.showToast(fallbackMessage)
+			}
+			this.completeReplyTask(messageId, 'error')
+		},
+		resetReplyMessageForRestart(messageId) {
+			const target = this.getTargetMessageForTask(messageId)
+			if (!target) {
+				return
+			}
+			target.content = ''
+			target.displayContent = ''
+			target.citations = []
+			target.thinkingSteps = []
+			target.currentThinkingText = ''
+			target.thinkingExpanded = true
+			this.resetThinkingDisplayStateForMessage(messageId, {
+				seedFromMessage: true,
+			})
+			this.contextUsage = createDefaultContextUsage()
+			this.streamErrorMessage = ''
+			this.statusText = ''
+			this.stopTypewriter(messageId)
+			this.clearTypewriterFadeTimer(messageId)
+			this.stopThinkingTypewriter(messageId)
+			this.persistConversation()
+		},
+		async resumePendingReplyIfNeeded() {
+			if (this.resumeTaskInProgress || this.abortController) {
+				return
+			}
+			const task = normalizePendingReplyTask(this.activeReplyTask)
+			if (!task || task.status !== 'running') {
+				return
+			}
+			const target = this.getTargetMessageForTask(task.messageId)
+			if (!target) {
+				this.clearActiveReplyTask()
+				this.loading = false
+				return
+			}
+
+			this.resumeTaskInProgress = true
+			this.loading = true
+			target.thinkingExpanded = true
+			this.startTypewriter(task.messageId)
+			this.startThinkingTypewriter(task.messageId)
+			try {
+				await this.streamChat(task.messageId, {
+					taskState: task,
+					requestMessages: this.buildConversationPayloadForTask(task.messageId),
+				})
+				const finalMessage = this.getTargetMessageForTask(task.messageId)
+				if (!finalMessage || !String(finalMessage.content || '').trim()) {
+					this.updateMessageContent(task.messageId, '这次我没有顺利组织出答案，你可以换个问法再试一次。')
+				}
+			} catch (error) {
+				if (error && error.name === 'AbortError') {
+					return
+				}
+				this.handleReplyFailure(task.messageId, error, { showToast: false })
+			} finally {
+				this.resumeTaskInProgress = false
+				this.abortController = null
+			}
+		},
 		hasToolTrace(message) {
 			return !!(
 				message
@@ -923,12 +2125,203 @@ export default {
 				)
 			)
 		},
-		hasReasoningSummary(message) {
-			return !!(
-				message
-				&& Array.isArray(message.reasoningSteps)
-				&& message.reasoningSteps.length > 0
-			)
+		canToggleThinking(message) {
+			if (!message || message.role !== 'assistant') {
+				return false
+			}
+			const thinkingText = [
+				...(Array.isArray(message.thinkingSteps) ? message.thinkingSteps : []),
+				String(message.currentThinkingText || ''),
+			].join('\n')
+			const lineCount = (Array.isArray(message.thinkingSteps) ? message.thinkingSteps.length : 0)
+				+ (String(message.currentThinkingText || '').trim() ? 1 : 0)
+				+ (this.shouldShowThinkingHint(message) ? 1 : 0)
+			return lineCount > 5 || thinkingText.length > 120
+		},
+		getVisibleThinkingSteps(message) {
+			const steps = Array.isArray(message && message.thinkingSteps)
+				? this.getThinkingDisplaySteps(message)
+				: []
+			if (!message || message.thinkingExpanded || !this.canToggleThinking(message)) {
+				return steps
+			}
+			const reservedLineCount = (this.shouldShowThinkingHint(message) ? 1 : 0)
+				+ (String(message.currentThinkingText || '').trim() ? 1 : 0)
+			const visibleStepCount = Math.max(0, 5 - reservedLineCount)
+			return visibleStepCount > 0 ? steps.slice(-visibleStepCount) : []
+		},
+		getVisibleThinkingStepText(step, message) {
+			const text = String(step || '').trim()
+			if (!text || !message || message.thinkingExpanded || !this.canToggleThinking(message) || text.length <= 120) {
+				return text
+			}
+			return '...' + text.slice(-120)
+		},
+		getVisibleCurrentThinkingText(message) {
+			const text = String(this.getThinkingDisplayCurrentText(message) || '').trim()
+			if (!text || !message || message.thinkingExpanded || !this.canToggleThinking(message) || text.length <= 360) {
+				return text
+			}
+			return '...' + text.slice(-360)
+		},
+		toggleThinkingExpanded(message) {
+			if (!message) {
+				return
+			}
+			message.thinkingExpanded = !message.thinkingExpanded
+			this.persistConversation()
+		},
+		setRetrieverMode(mode) {
+			if (this.loading) {
+				return
+			}
+			this.retrieverMode = mode === 'fast' ? 'fast' : 'deep'
+		},
+		getMessageActionIndex(actionItems, actionText) {
+			return actionItems.findIndex((item) => item === actionText)
+		},
+		getMessageIndex(message) {
+			return this.messages.findIndex((item) => item && message && item.id === message.id)
+		},
+		getCopyableMessageText(message) {
+			return normalizeCitationMarkerText(message && message.content).replace(/\[\[cite:[^\]]+\]\]/g, '').trim()
+		},
+		openMessageActionMenu(message) {
+			const messageIndex = this.getMessageIndex(message)
+			if (messageIndex === -1) {
+				return
+			}
+			const actionItems = ['复制']
+			const canMutateMessage = !this.loading && messageIndex > 0
+			if (canMutateMessage) {
+				actionItems.push('删除')
+				if (message && message.role === 'user') {
+					actionItems.push('回滚')
+				}
+			}
+			uni.showActionSheet({
+				itemList: actionItems,
+				success: (res) => {
+					const tapIndex = Number(res.tapIndex)
+					if (tapIndex === this.getMessageActionIndex(actionItems, '复制')) {
+						this.copyMessageContent(message)
+						return
+					}
+					if (tapIndex === this.getMessageActionIndex(actionItems, '删除')) {
+						this.deleteMessage(message)
+						return
+					}
+					if (tapIndex === this.getMessageActionIndex(actionItems, '回滚')) {
+						this.rollbackToMessage(message)
+					}
+				},
+			})
+		},
+		copyMessageContent(message) {
+			const content = this.getCopyableMessageText(message)
+			if (!content) {
+				this.showToast('这条消息没有可复制的内容')
+				return
+			}
+			if (typeof uni !== 'undefined' && typeof uni.setClipboardData === 'function') {
+				uni.setClipboardData({
+					data: content,
+					success: () => {
+						this.showToast('已复制')
+					},
+					fail: () => {
+						this.showToast('复制失败')
+					},
+				})
+				return
+			}
+			if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+				navigator.clipboard.writeText(content)
+					.then(() => {
+						this.showToast('已复制')
+					})
+					.catch(() => {
+						this.showToast('复制失败')
+					})
+				return
+			}
+			this.showToast('当前环境不支持复制')
+		},
+		commitMessageListChange() {
+			this.stopAllThinkingTypewriters()
+			this.messages = this.normalizeStoredMessages(this.messages)
+			this.rebuildThinkingDisplayState({
+				seedFromMessage: true,
+			})
+			if (this.messages.length === 0) {
+				this.messages = this.createInitialMessages()
+				this.rebuildThinkingDisplayState({
+					seedFromMessage: true,
+				})
+			}
+			this.computeNextMessageId(this.messages)
+			this.contextUsageTooltipVisible = false
+			this.indexStatusTooltipVisible = false
+			this.persistConversation()
+		},
+		deleteMessage(message) {
+			if (this.loading) {
+				this.showToast('回复生成中，稍后再试')
+				return
+			}
+			const messageIndex = this.getMessageIndex(message)
+			if (messageIndex <= 0) {
+				return
+			}
+			this.messages.splice(messageIndex, 1)
+			this.commitMessageListChange()
+			this.showToast('已删除')
+		},
+		rollbackToMessage(message) {
+			if (this.loading) {
+				this.showToast('回复生成中，稍后再试')
+				return
+			}
+			if (!message || message.role !== 'user') {
+				return
+			}
+			const messageIndex = this.getMessageIndex(message)
+			if (messageIndex <= 0) {
+				return
+			}
+			const rollbackText = String(message.content || '').trim()
+			const removeCount = this.messages.length - messageIndex
+			uni.showModal({
+				title: '确认回滚',
+				content: '将删除这条消息及之后的 ' + removeCount + ' 条消息，并把这条消息放回输入框，确定继续吗？',
+				confirmText: '回滚',
+				confirmColor: '#c0503a',
+				cancelText: '取消',
+				success: (res) => {
+					if (!res.confirm) {
+						return
+					}
+					this.messages = this.messages.slice(0, messageIndex)
+					this.draft = rollbackText
+					this.commitMessageListChange()
+					this.showToast('已回滚')
+				},
+			})
+		},
+		isActiveAssistantMessage(message) {
+			if (!this.loading || !message || message.role !== 'assistant') {
+				return false
+			}
+			for (let index = this.messages.length - 1; index >= 0; index -= 1) {
+				const item = this.messages[index]
+				if (item && item.role === 'assistant') {
+					return item.id === message.id
+				}
+			}
+			return false
+		},
+		shouldShowThinkingHint(message) {
+			return this.isActiveAssistantMessage(message) && !this.streamErrorMessage
 		},
 		isCurrentHistorySession(novelId, sessionId) {
 			return Number(novelId) === Number(this.novelId) && String(sessionId) === String(this.currentSessionId)
@@ -937,6 +2330,7 @@ export default {
 			if (!book || !session) {
 				return
 			}
+			this.contextUsageTooltipVisible = false
 			if (Number(book.novelId) === Number(this.novelId)) {
 				this.setCurrentSession(session)
 				return
@@ -948,25 +2342,204 @@ export default {
 					+ '&session_id=' + encodeURIComponent(session.sessionId || '')
 			})
 		},
-		toggleDeepThinking() {
-			if (this.loading) {
+		handleHistoryCardTap(book, session) {
+			if (this.swipedSessionId === session.sessionId) {
+				this.swipedSessionId = null
+			} else {
+				this.selectHistorySession(book, session)
+			}
+		},
+		onHistoryCardTouchStart(e, book, session) {
+			this.touchStartX = e.touches ? e.touches[0].clientX : e.detail.x
+		},
+		onHistoryCardTouchMove(e) {
+		},
+		onHistoryCardTouchEnd(e, book, session) {
+			const endX = e.changedTouches ? e.changedTouches[0].clientX : e.detail.x
+			const deltaX = endX - this.touchStartX
+			if (deltaX < -60) {
+				this.swipedSessionId = session.sessionId
+			} else if (deltaX > 60) {
+				this.swipedSessionId = null
+			}
+		},
+		deleteHistorySession(book, session) {
+			if (!book || !session) {
 				return
 			}
-			this.deepThinking = !this.deepThinking
-			this.syncCurrentSession()
+			uni.showModal({
+				title: '确认删除',
+				content: '确定要删除这条聊天记录吗？删除后无法恢复。',
+				confirmText: '删除',
+				confirmColor: '#c0503a',
+				cancelText: '取消',
+				success: (res) => {
+					if (!res.confirm) {
+						return
+					}
+					const storedBook = this.findBookGroup(book.novelId)
+					if (!storedBook) {
+						return
+					}
+					const sessions = storedBook.sessions || []
+					const deletedSessionId = String(session.sessionId)
+					const index = sessions.findIndex((item) => String(item.sessionId) === deletedSessionId)
+					if (index === -1) {
+						return
+					}
+					const wasCurrentSession = this.isCurrentHistorySession(book.novelId, session.sessionId)
+					const wasLastSession = String(storedBook.lastSessionId || '') === deletedSessionId
+					sessions.splice(index, 1)
+					this.swipedSessionId = null
+					if (wasCurrentSession) {
+						if (sessions.length > 0) {
+							this.setCurrentSession(sessions[0])
+						} else {
+							this.createNewSession()
+						}
+					} else {
+						if (wasLastSession) {
+							storedBook.lastSessionId = sessions[0] ? sessions[0].sessionId : ''
+						}
+						storedBook.updatedAt = sessions[0] ? Number(sessions[0].updatedAt || Date.now()) : Date.now()
+					}
+					this.persistHistoryStore()
+					this.showToast('已删除该条记录')
+				}
+			})
 		},
 		clearConversation() {
 			if (this.loading) {
 				return
 			}
+			this.contextUsageTooltipVisible = false
 			this.createNewSession()
 			this.showToast('已新建会话')
 		},
-		appendMessage(role, content, extra = {}) {
+		toggleContextUsageTooltip() {
+			const nextVisible = !this.contextUsageTooltipVisible
+			this.contextUsageTooltipVisible = nextVisible
+			if (nextVisible) {
+				this.$nextTick(() => {
+					this.updateContextUsageTooltipPosition()
+				})
+			}
+		},
+		updateContextUsageTooltipPosition() {
+			if (typeof uni === 'undefined' || typeof uni.createSelectorQuery !== 'function') {
+				this.contextUsageTooltipStyle = {}
+				this.contextUsageTooltipArrowStyle = {}
+				return
+			}
+			const systemInfo = typeof uni.getSystemInfoSync === 'function' ? uni.getSystemInfoSync() : {}
+			const windowWidth = Number(systemInfo.windowWidth || 0)
+			if (!windowWidth) {
+				this.contextUsageTooltipStyle = {}
+				this.contextUsageTooltipArrowStyle = {}
+				return
+			}
+			const query = uni.createSelectorQuery().in(this)
+			query.select('.context-usage-wrap').boundingClientRect()
+			query.exec((rects) => {
+				const rect = rects && rects[0]
+				if (!rect) {
+					this.contextUsageTooltipStyle = {}
+					this.contextUsageTooltipArrowStyle = {}
+					return
+				}
+				const rpxToPx = windowWidth / 750
+				const tooltipWidth = 260 * rpxToPx
+				const minViewportLeft = 12 * rpxToPx
+				const maxViewportLeft = Math.max(minViewportLeft, windowWidth - tooltipWidth - minViewportLeft)
+				const anchorCenterX = Number(rect.left || 0) + (Number(rect.width || 0) / 2)
+				const idealViewportLeft = anchorCenterX - (tooltipWidth / 2)
+				const viewportLeft = Math.min(maxViewportLeft, Math.max(minViewportLeft, idealViewportLeft))
+				const relativeLeft = viewportLeft - Number(rect.left || 0)
+				const arrowLeft = Math.min(tooltipWidth - (18 * rpxToPx), Math.max(18 * rpxToPx, anchorCenterX - viewportLeft))
+				this.contextUsageTooltipStyle = {
+					left: relativeLeft + 'px',
+				}
+				this.contextUsageTooltipArrowStyle = {
+					left: arrowLeft + 'px',
+				}
+			})
+		},
+		toggleIndexStatusTooltip() {
+			const nextVisible = !this.indexStatusTooltipVisible
+			this.indexStatusTooltipVisible = nextVisible
+			if (nextVisible) {
+				this.$nextTick(() => {
+					this.updateIndexStatusTooltipPosition()
+				})
+			}
+		},
+		updateIndexStatusTooltipPosition() {
+			if (typeof uni === 'undefined' || typeof uni.createSelectorQuery !== 'function') {
+				this.indexStatusTooltipStyle = {}
+				this.indexStatusTooltipArrowStyle = {}
+				return
+			}
+			const systemInfo = typeof uni.getSystemInfoSync === 'function' ? uni.getSystemInfoSync() : {}
+			const windowWidth = Number(systemInfo.windowWidth || 0)
+			if (!windowWidth) {
+				this.indexStatusTooltipStyle = {}
+				this.indexStatusTooltipArrowStyle = {}
+				return
+			}
+			const query = uni.createSelectorQuery().in(this)
+			query.select('.index-status-wrap').boundingClientRect()
+			query.exec((rects) => {
+				const rect = rects && rects[0]
+				if (!rect) {
+					this.indexStatusTooltipStyle = {}
+					this.indexStatusTooltipArrowStyle = {}
+					return
+				}
+				const rpxToPx = windowWidth / 750
+				const tooltipWidth = 260 * rpxToPx
+				const minViewportLeft = 12 * rpxToPx
+				const maxViewportLeft = Math.max(minViewportLeft, windowWidth - tooltipWidth - minViewportLeft)
+				const anchorCenterX = Number(rect.left || 0) + (Number(rect.width || 0) / 2)
+				const idealViewportLeft = anchorCenterX - (tooltipWidth / 2)
+				const viewportLeft = Math.min(maxViewportLeft, Math.max(minViewportLeft, idealViewportLeft))
+				const relativeLeft = viewportLeft - Number(rect.left || 0)
+				const arrowLeft = Math.min(tooltipWidth - (18 * rpxToPx), Math.max(18 * rpxToPx, anchorCenterX - viewportLeft))
+				this.indexStatusTooltipStyle = {
+					left: relativeLeft + 'px',
+				}
+				this.indexStatusTooltipArrowStyle = {
+					left: arrowLeft + 'px',
+				}
+			})
+		},
+		updateContextUsage(payload = {}) {
+			this.contextUsage = normalizeContextUsage(payload, this.contextUsage)
+			this.syncCurrentSession()
+		},
+		updateActiveNovel(payload = {}) {
+			const nextNovel = this.normalizeSessionActiveNovel(payload)
+			if (!nextNovel || !nextNovel.novelId) {
+				return
+			}
+			const previousNovelId = Number(this.effectiveNovelId || 0)
+			this.activeNovel = nextNovel
+			this.syncCurrentSession()
+			if (Number(nextNovel.novelId) !== previousNovelId) {
+				this.loadNovelIndexStatus()
+			}
+		},
+		appendMessage(role, content, extra = {}, options = {}) {
 			const message = this.createMessage(role, content, extra)
 			this.messages.push(message)
-			this.scrollToBottom()
+			if (message.role === 'assistant') {
+				this.resetThinkingDisplayStateForMessage(message.id, {
+					seedFromMessage: true,
+				})
+			}
 			this.persistConversation()
+			this.scrollToBottom({
+				force: options.forceScroll === true,
+			})
 			return message
 		},
 		updateMessageContent(messageId, content) {
@@ -975,10 +2548,26 @@ export default {
 				return
 			}
 			target.content = String(content || '')
-			this.scrollToBottom()
+			if (target.role === 'assistant') {
+				const displayText = String(target.displayContent || '')
+				if (!displayText) {
+					target.displayContent = ''
+				} else if (!target.content.startsWith(displayText)) {
+					let prefixLength = 0
+					while (
+						prefixLength < displayText.length
+						&& prefixLength < target.content.length
+						&& displayText[prefixLength] === target.content[prefixLength]
+					) {
+						prefixLength += 1
+					}
+					target.displayContent = target.content.slice(0, prefixLength)
+				}
+				this.startTypewriter(messageId)
+			}
 			this.persistConversation()
 		},
-		appendThinkingStep(messageId, text) {
+		appendThinkingStep(messageId, text, options = {}) {
 			const target = this.messages.find((message) => message.id === messageId)
 			const normalizedText = String(text || '').trim()
 			if (!target || !normalizedText) {
@@ -986,24 +2575,26 @@ export default {
 			}
 
 			target.thinkingSteps = Array.isArray(target.thinkingSteps) ? target.thinkingSteps : []
-			if (target.thinkingSteps[target.thinkingSteps.length - 1] !== normalizedText) {
+			this.commitCurrentThinkingText(target)
+			const shouldAppendStep = target.thinkingSteps[target.thinkingSteps.length - 1] !== normalizedText
+			if (shouldAppendStep) {
 				target.thinkingSteps.push(normalizedText)
 			}
+			target.thinkingSteps = target.thinkingSteps.slice(-80)
+			const state = this.ensureThinkingDisplayState(target, {
+				seedFromMessage: true,
+			})
+			if (state && shouldAppendStep) {
+				state.steps = Array.isArray(state.steps) ? state.steps : []
+				state.steps.push(options.immediate === true ? normalizedText : '')
+				state.steps = state.steps.slice(-80)
+				state.currentText = ''
+			}
 			target.currentThinkingText = ''
-			this.scrollToBottom()
-			this.persistConversation()
-		},
-		appendReasoningStep(messageId, text) {
-			const target = this.messages.find((message) => message.id === messageId)
-			const normalizedText = String(text || '').trim()
-			if (!target || !normalizedText) {
-				return
+			target.thinkingExpanded = true
+			if (options.immediate !== true) {
+				this.startThinkingTypewriter(messageId)
 			}
-			target.reasoningSteps = Array.isArray(target.reasoningSteps) ? target.reasoningSteps : []
-			if (target.reasoningSteps[target.reasoningSteps.length - 1] !== normalizedText) {
-				target.reasoningSteps.push(normalizedText)
-			}
-			this.scrollToBottom()
 			this.persistConversation()
 		},
 		updateMessageCitations(messageId, citations) {
@@ -1020,31 +2611,249 @@ export default {
 				return
 			}
 			target.currentThinkingText = String(text || '').trim()
-			this.scrollToBottom()
+			target.thinkingExpanded = true
+			const state = this.ensureThinkingDisplayState(target, {
+				seedFromMessage: false,
+			})
+			if (state) {
+				state.currentText = this.getCommonPrefixText(state.currentText, target.currentThinkingText)
+			}
+			this.startThinkingTypewriter(messageId)
 		},
-		clearCurrentThinkingText(messageId) {
+		appendCurrentThinkingText(messageId, text) {
+			const target = this.messages.find((message) => message.id === messageId)
+			const normalizedText = String(text || '')
+			if (!target || !normalizedText) {
+				return
+			}
+			target.currentThinkingText = String(target.currentThinkingText || '') + normalizedText
+			this.ensureThinkingDisplayState(target, {
+				seedFromMessage: false,
+			})
+			this.startThinkingTypewriter(messageId)
+		},
+		commitCurrentThinkingText(target) {
+			const normalizedText = String(target && target.currentThinkingText || '').trim()
+			if (!target || !normalizedText) {
+				return
+			}
+			target.thinkingSteps = Array.isArray(target.thinkingSteps) ? target.thinkingSteps : []
+			const shouldAppendStep = target.thinkingSteps[target.thinkingSteps.length - 1] !== normalizedText
+			if (shouldAppendStep) {
+				target.thinkingSteps.push(normalizedText)
+				target.thinkingSteps = target.thinkingSteps.slice(-80)
+			}
+			if (shouldAppendStep) {
+				const state = this.ensureThinkingDisplayState(target, {
+					seedFromMessage: false,
+				})
+				if (state) {
+					const seededText = normalizedText.startsWith(String(state.currentText || ''))
+						? String(state.currentText || '')
+						: this.getCommonPrefixText(state.currentText, normalizedText)
+					state.steps = Array.isArray(state.steps) ? state.steps : []
+					state.steps.push(seededText)
+					state.steps = state.steps.slice(-80)
+					state.currentText = ''
+				}
+			}
+			target.currentThinkingText = ''
+			this.startThinkingTypewriter(target.id)
+		},
+		clearCurrentThinkingText(messageId, options = {}) {
 			const target = this.messages.find((message) => message.id === messageId)
 			if (!target) {
 				return
 			}
+			if (options.commit === true) {
+				this.commitCurrentThinkingText(target)
+			}
 			target.currentThinkingText = ''
+			const state = this.ensureThinkingDisplayState(target, {
+				seedFromMessage: false,
+			})
+			if (state) {
+				state.currentText = ''
+			}
 			this.persistConversation()
 		},
 		getConversationPayload() {
-			return this.messages
-				.filter((message) => {
-					return (message.role === 'user' || message.role === 'assistant')
-						&& String(message.content || '').trim()
-				})
-				.map((message) => ({
-					role: message.role,
-					content: String(message.content || '').replace(/\[\[cite:[a-zA-Z0-9_-]+\]\]/g, '').trim(),
-				}))
+			return normalizeConversationPayloadMessages(this.messages)
+		},
+		getReaderAiBaseUrl() {
+			let overrideBaseUrl = ''
+			try {
+				overrideBaseUrl = typeof uni !== 'undefined' && typeof uni.getStorageSync === 'function'
+					? String(uni.getStorageSync('reader_ai_base_url_override') || '').trim()
+					: ''
+			} catch (error) {
+				overrideBaseUrl = ''
+			}
+
+			return String(overrideBaseUrl || this.$readerAiBaseUrl || this.$baseUrl || '')
+				.replace(/\/+$/, '')
 		},
 		abortActiveRequest() {
 			if (this.abortController) {
-				this.abortController.abort()
+				if (typeof this.abortController.abort === 'function') {
+					this.abortController.abort()
+				}
 				this.abortController = null
+			}
+		},
+		canUseXhrStreaming() {
+			return typeof XMLHttpRequest !== 'undefined'
+		},
+		streamChatWithXhr(url, payload, messageId) {
+			return new Promise((resolve, reject) => {
+				const xhr = new XMLHttpRequest()
+				let processedLength = 0
+				let buffer = ''
+				let settled = false
+
+				const finish = (callback) => {
+					if (settled) {
+						return
+					}
+					settled = true
+					callback()
+				}
+
+				const processIncomingText = () => {
+					const responseText = typeof xhr.responseText === 'string' ? xhr.responseText : ''
+					if (responseText.length <= processedLength) {
+						return
+					}
+					buffer += responseText.slice(processedLength)
+					processedLength = responseText.length
+					buffer = this.consumeStreamBuffer(buffer, messageId)
+				}
+
+				xhr.open('POST', url, true)
+				xhr.setRequestHeader('Content-Type', 'application/json')
+				xhr.setRequestHeader('Accept', 'application/x-ndjson')
+
+				xhr.onprogress = () => {
+					processIncomingText()
+				}
+
+				xhr.onreadystatechange = () => {
+					if (xhr.readyState === 3) {
+						processIncomingText()
+					}
+				}
+
+				xhr.onerror = () => {
+					finish(() => {
+						reject(new Error('请求失败，请稍后再试'))
+					})
+				}
+
+				xhr.onabort = () => {
+					finish(() => {
+						reject(createAbortError())
+					})
+				}
+
+				xhr.onload = () => {
+					processIncomingText()
+					buffer += typeof xhr.responseText === 'string' ? xhr.responseText.slice(processedLength) : ''
+					if (buffer.trim()) {
+						this.processNdjsonBlock(buffer, messageId)
+					}
+
+					if (xhr.status < 200 || xhr.status >= 300) {
+						let message = '请求失败，请稍后再试'
+						try {
+							const data = JSON.parse(xhr.responseText || '{}')
+							message = data.msg || data.message || message
+						} catch (error) {}
+						finish(() => {
+							reject(new Error(message))
+						})
+						return
+					}
+
+					if (this.streamErrorMessage) {
+						finish(() => {
+							reject(new Error(this.streamErrorMessage))
+						})
+						return
+					}
+
+					finish(() => {
+						resolve()
+					})
+				}
+
+				this.abortController = {
+					abort() {
+						try {
+							xhr.abort()
+						} catch (error) {}
+					},
+				}
+
+				try {
+					xhr.send(JSON.stringify(payload))
+				} catch (error) {
+					finish(() => {
+						reject(error)
+					})
+				}
+			})
+		},
+		async loadNovelIndexStatus() {
+			const targetNovelId = Number(this.effectiveNovelId || this.novelId || 0)
+			if (!targetNovelId) {
+				this.novelIndexStatus = createDefaultNovelIndexStatus()
+				return
+			}
+
+			const previousStatus = this.novelIndexStatus
+			this.novelIndexStatus = normalizeNovelIndexStatus({
+				...previousStatus,
+				loading: true,
+				error: '',
+			}, previousStatus)
+
+			try {
+				const readerAiBaseUrl = this.getReaderAiBaseUrl()
+				const response = await fetch(
+					readerAiBaseUrl + INDEX_STATUS_ROUTE + '?novel_id=' + encodeURIComponent(targetNovelId),
+					{
+						method: 'GET',
+						headers: {
+							'Accept': 'application/json',
+						},
+					}
+				)
+				if (!response.ok) {
+					throw new Error('request failed')
+				}
+				const payload = await response.json()
+				if (Number(this.effectiveNovelId || this.novelId || 0) !== targetNovelId) {
+					return
+				}
+				const rawStatus = payload && payload.data && typeof payload.data === 'object'
+					? payload.data
+					: payload
+				this.novelIndexStatus = normalizeNovelIndexStatus({
+					...rawStatus,
+					loading: false,
+					loaded: true,
+					error: '',
+				}, previousStatus)
+			} catch (error) {
+				if (Number(this.effectiveNovelId || this.novelId || 0) !== targetNovelId) {
+					return
+				}
+				this.novelIndexStatus = normalizeNovelIndexStatus({
+					...previousStatus,
+					loading: false,
+					loaded: true,
+					error: '索引情况暂时不可用',
+				}, previousStatus)
 			}
 		},
 		async submitQuestion() {
@@ -1058,15 +2867,28 @@ export default {
 			}
 
 			this.streamErrorMessage = ''
-			this.appendMessage('user', content)
+			this.contextUsageTooltipVisible = false
+			this.appendMessage('user', content, {}, {
+				forceScroll: true,
+			})
 			this.draft = ''
 
-			const assistantMessage = this.appendMessage('assistant', '')
+			const assistantMessage = this.appendMessage('assistant', '', {
+				displayContent: '',
+				thinkingExpanded: true,
+			}, {
+				forceScroll: true,
+			})
+			this.activeReplyTask = this.createActiveReplyTask(assistantMessage.id)
 			this.loading = true
 			this.statusText = '原木娘正在整理这本书的资料'
+			this.persistConversation()
 
 			try {
-				await this.streamChat(assistantMessage.id)
+				await this.streamChat(assistantMessage.id, {
+					taskState: this.activeReplyTask,
+					requestMessages: this.buildConversationPayloadForTask(assistantMessage.id),
+				})
 				const finalMessage = this.messages.find((message) => message.id === assistantMessage.id)
 				if (!finalMessage || !String(finalMessage.content || '').trim()) {
 					this.updateMessageContent(assistantMessage.id, '这次我没有顺利组织出答案，你可以换个问法再试一次。')
@@ -1075,32 +2897,50 @@ export default {
 				if (error && error.name === 'AbortError') {
 					return
 				}
-				const fallbackMessage = error && error.message ? error.message : '原木娘暂时没有响应，请稍后再试'
-				this.updateMessageContent(assistantMessage.id, fallbackMessage)
-				this.showToast(fallbackMessage)
+				this.handleReplyFailure(assistantMessage.id, error)
 			} finally {
-				this.loading = false
-				this.statusText = ''
-				this.streamErrorMessage = ''
 				this.abortController = null
+				if (!this.activeReplyTask) {
+					this.loading = false
+					this.statusText = ''
+					this.streamErrorMessage = ''
+				}
 			}
 		},
-		async streamChat(messageId) {
+		async streamChat(messageId, options = {}) {
 			this.abortActiveRequest()
+			const readerAiBaseUrl = this.getReaderAiBaseUrl()
+			const taskState = normalizePendingReplyTask(options.taskState || this.activeReplyTask || this.createActiveReplyTask(messageId))
+			const requestMessages = Array.isArray(options.requestMessages) && options.requestMessages.length > 0
+				? normalizeConversationPayloadMessages(options.requestMessages)
+				: this.buildConversationPayloadForTask(messageId)
+			const requestPayload = {
+				novel_id: this.novelId,
+				active_novel_id: taskState && taskState.activeNovelId ? taskState.activeNovelId : this.effectiveNovelId,
+				retriever_mode: taskState && taskState.retrieverMode ? taskState.retrieverMode : this.retrieverMode,
+				session_id: this.currentSessionId,
+				message_id: messageId,
+				task_id: taskState && taskState.taskId ? taskState.taskId : this.buildReplyTaskId(messageId),
+				resume_from_event_id: taskState && taskState.lastEventId ? taskState.lastEventId : 0,
+				messages: requestMessages,
+			}
+			const requestUrl = readerAiBaseUrl + STREAM_ROUTE
+
+			if (this.canUseXhrStreaming()) {
+				await this.streamChatWithXhr(requestUrl, requestPayload, messageId)
+				return
+			}
+
 			const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
 			this.abortController = controller
 
-			const response = await fetch(this.$baseUrl + STREAM_ROUTE, {
+			const response = await fetch(requestUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					'Accept': 'application/x-ndjson',
 				},
-				body: JSON.stringify({
-					novel_id: this.novelId,
-					messages: this.getConversationPayload(),
-					deep_thinking: this.deepThinking,
-				}),
+				body: JSON.stringify(requestPayload),
 				signal: controller ? controller.signal : undefined,
 			})
 
@@ -1170,6 +3010,35 @@ export default {
 					this.handleStreamEvent(line, messageId)
 				})
 		},
+		getStreamEventText(event) {
+			if (!event || typeof event !== 'object') {
+				return ''
+			}
+			if (event.message !== undefined && event.message !== null) {
+				return String(event.message)
+			}
+			if (event.text !== undefined && event.text !== null) {
+				return String(event.text)
+			}
+			if (event.content !== undefined && event.content !== null) {
+				return String(event.content)
+			}
+			if (event.delta !== undefined && event.delta !== null) {
+				if (typeof event.delta === 'string') {
+					return event.delta
+				}
+				if (typeof event.delta === 'object') {
+					return String(event.delta.text || event.delta.content || event.delta.message || '')
+				}
+			}
+			if (event.reasoning !== undefined && event.reasoning !== null) {
+				return String(event.reasoning)
+			}
+			if (event.thinking !== undefined && event.thinking !== null) {
+				return String(event.thinking)
+			}
+			return ''
+		},
 		handleStreamEvent(rawLine, messageId) {
 			let event
 			try {
@@ -1183,18 +3052,88 @@ export default {
 			}
 
 			if (event.type === 'status') {
-				this.statusText = event.message || ''
-				this.setCurrentThinkingText(messageId, event.message || '')
+				this.clearCurrentThinkingText(messageId, { commit: true })
+				const statusText = this.getStreamEventText(event)
+				this.statusText = statusText
+				this.setCurrentThinkingText(messageId, statusText)
 				return
 			}
 
-			if (event.type === 'trace') {
-				this.appendThinkingStep(messageId, event.text || '')
+			if (event.type === 'task') {
+				const shouldResetForRestart = event.created === true
+					&& this.activeReplyTask
+					&& String(this.activeReplyTask.messageId) === String(messageId)
+					&& Number(this.activeReplyTask.lastEventId || 0) > 0
+				if (shouldResetForRestart) {
+					this.resetReplyMessageForRestart(messageId)
+				}
+				this.updateActiveReplyTask({
+					taskId: event.task_id || (this.activeReplyTask && this.activeReplyTask.taskId) || this.buildReplyTaskId(messageId),
+					sessionId: event.session_id || this.currentSessionId,
+					messageId: event.message_id || messageId,
+					novelId: this.novelId,
+					activeNovelId: Number(event.active_novel_id || (this.activeReplyTask && this.activeReplyTask.activeNovelId) || this.effectiveNovelId || 0),
+					retrieverMode: event.retriever_mode || (this.activeReplyTask && this.activeReplyTask.retrieverMode) || this.retrieverMode,
+					status: event.status || 'running',
+					lastEventId: shouldResetForRestart ? 0 : ((this.activeReplyTask && this.activeReplyTask.lastEventId) || 0),
+				})
 				return
 			}
 
-			if (event.type === 'reasoning') {
-				this.appendReasoningStep(messageId, event.text || '')
+			if (this.activeReplyTask && String(this.activeReplyTask.messageId) === String(messageId)) {
+				const eventId = Number(event.event_id || 0)
+				if (Number.isFinite(eventId) && eventId > 0) {
+					this.updateActiveReplyTask({
+						lastEventId: eventId,
+					})
+				}
+			}
+
+			if (
+				event.type === 'trace'
+				|| event.type === 'tool'
+				|| event.type === 'tool_call'
+				|| event.type === 'tool_result'
+				|| event.type === 'reasoning'
+				|| event.type === 'thinking'
+				|| event.type === 'reasoning_summary'
+				|| event.type === 'thinking_summary'
+			) {
+				const immediateStep = event.type === 'trace'
+					|| event.type === 'tool'
+					|| event.type === 'tool_call'
+					|| event.type === 'tool_result'
+				this.appendThinkingStep(messageId, this.getStreamEventText(event), {
+					immediate: immediateStep,
+				})
+				return
+			}
+
+			if (
+				event.type === 'reasoning_delta'
+				|| event.type === 'thinking_delta'
+				|| event.type === 'thought_delta'
+			) {
+				this.appendCurrentThinkingText(messageId, this.getStreamEventText(event))
+				return
+			}
+
+			if (
+				event.type === 'reasoning_done'
+				|| event.type === 'thinking_done'
+				|| event.type === 'thought_done'
+			) {
+				this.clearCurrentThinkingText(messageId, { commit: true })
+				return
+			}
+
+			if (event.type === 'context_usage') {
+				this.updateContextUsage(event)
+				return
+			}
+
+			if (event.type === 'active_novel') {
+				this.updateActiveNovel(event)
 				return
 			}
 
@@ -1210,22 +3149,91 @@ export default {
 				return
 			}
 
+			if (event.type === 'replace') {
+				this.updateMessageContent(messageId, event.content || '')
+				return
+			}
+
 			if (event.type === 'error') {
 				this.streamErrorMessage = event.message || '原木娘暂时没有响应，请稍后再试'
 				this.clearCurrentThinkingText(messageId)
+				const target = this.getTargetMessageForTask(messageId)
+				if (target) {
+					target.thinkingExpanded = false
+				}
+				this.completeReplyTask(messageId, 'error')
 				return
 			}
 
 			if (event.type === 'done') {
 				this.statusText = ''
-				this.clearCurrentThinkingText(messageId)
+				this.clearCurrentThinkingText(messageId, { commit: true })
+				const target = this.getTargetMessageForTask(messageId)
+				if (target) {
+					target.thinkingExpanded = false
+				}
+				this.completeReplyTask(messageId, 'completed')
+			}
+
+			if (this.loading) {
+				this.scrollToBottom()
 			}
 		},
-		scrollToBottom() {
-			this.scrollAnchorId = ''
-			this.$nextTick(() => {
-				this.scrollAnchorId = SCROLL_ANCHOR_ID
-			})
+		scrollToBottom(options = {}) {
+			const force = options.force === true
+			if (force) {
+				this.autoScrollPendingForce = true
+				this.autoScrollShouldFollow = true
+			}
+			if (this.autoScrollTimer) {
+				return
+			}
+			if (!force && !this.shouldAutoScrollForNewContent()) {
+				return
+			}
+
+			this.autoScrollTimer = setTimeout(() => {
+				this.autoScrollTimer = null
+				this.$nextTick(() => {
+					const shouldForce = this.autoScrollPendingForce
+					this.autoScrollPendingForce = false
+					if (!shouldForce && !this.autoScrollShouldFollow) {
+						return
+					}
+					this.scrollPageToBottom()
+					setTimeout(() => {
+						if (!shouldForce && !this.autoScrollShouldFollow) {
+							return
+						}
+						this.scrollPageToBottom()
+					}, AUTO_SCROLL_SETTLE_DELAY_MS)
+				})
+			}, AUTO_SCROLL_DELAY_MS)
+		},
+		scrollPageToBottom() {
+			const metrics = this.getPageScrollMetrics()
+			const scrollTop = Math.max(0, Number(metrics.scrollHeight || 0))
+			if (typeof uni !== 'undefined' && typeof uni.pageScrollTo === 'function') {
+				try {
+					uni.pageScrollTo({
+						scrollTop,
+						duration: 0,
+					})
+				} catch (error) {}
+			}
+
+			if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+				const scrollingElement = document.scrollingElement || document.documentElement || document.body
+				const documentHeight = Math.max(scrollTop, Number(metrics.scrollHeight || 0))
+				try {
+					window.scrollTo(0, documentHeight)
+					if (scrollingElement) {
+						scrollingElement.scrollTop = documentHeight
+					}
+				} catch (error) {}
+			}
+			this.autoScrollShouldFollow = true
+			this.autoScrollLastScrollTop = scrollTop
 		},
 		showToast(title) {
 			uni.showToast({
@@ -1252,8 +3260,96 @@ export default {
 	}
 }
 
+.custom-nav-bar {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	background:
+		radial-gradient(circle at top left, rgba(255, 230, 173, 0.42) 0%, rgba(255, 230, 173, 0) 34%),
+		linear-gradient(180deg, #fff8ee 0%, #f7efe3 100%);
+
+	.dark-mode & {
+		background:
+			radial-gradient(circle at top left, rgba(188, 145, 53, 0.18) 0%, rgba(188, 145, 53, 0) 36%),
+			linear-gradient(180deg, #1f1a14 0%, #16120e 100%);
+	}
+}
+
+.custom-nav-content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 88rpx;
+	padding: 0 24rpx;
+	box-sizing: border-box;
+}
+
+.nav-left {
+	display: flex;
+	align-items: center;
+	min-width: 80rpx;
+}
+
+.nav-back-btn {
+	width: 60rpx;
+	height: 60rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.72);
+	backdrop-filter: blur(10rpx);
+	box-shadow: 0 4rpx 12rpx rgba(145, 106, 33, 0.08);
+
+	.dark-mode & {
+		background: rgba(255, 255, 255, 0.1);
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.18);
+	}
+}
+
+.nav-center {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.nav-title {
+	font-size: 32rpx;
+	font-weight: 700;
+	color: #2f2418;
+
+	.dark-mode & {
+		color: #f4ebdb;
+	}
+}
+
+.nav-right {
+	display: flex;
+	align-items: center;
+	min-width: 80rpx;
+	justify-content: flex-end;
+}
+
+.nav-history-btn {
+	width: 60rpx;
+	height: 60rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.72);
+	backdrop-filter: blur(10rpx);
+	box-shadow: 0 4rpx 12rpx rgba(145, 106, 33, 0.08);
+
+	.dark-mode & {
+		background: rgba(255, 255, 255, 0.1);
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.18);
+	}
+}
+
 .chat-shell {
-	min-height: 100vh;
+	min-height: calc(100vh - 88rpx);
 	display: flex;
 	flex-direction: column;
 	padding: 32rpx 24rpx calc(280rpx + env(safe-area-inset-bottom));
@@ -1277,17 +3373,13 @@ export default {
 }
 
 .chat-badge {
-	width: 84rpx;
-	height: 84rpx;
-	border-radius: 24rpx;
+	width: 80rpx;
+	height: 80rpx;
+	border-radius: 20rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 28rpx;
-	font-weight: 800;
-	letter-spacing: 3rpx;
-	color: #5d4014;
-	background: linear-gradient(135deg, #ffeab8 0%, #ffd36f 100%);
+	overflow: hidden;
 }
 
 .chat-header-main {
@@ -1323,9 +3415,42 @@ export default {
 	margin-top: 8rpx;
 	font-size: 24rpx;
 	color: #876d4d;
+	display: flex;
+	align-items: center;
+	gap: 10rpx;
+	flex-wrap: wrap;
 
 	.dark-mode & {
 		color: #c3b49d;
+	}
+}
+
+.active-novel-chip {
+	display: inline-flex;
+	align-items: center;
+	height: 32rpx;
+	padding: 0 12rpx;
+	border-radius: 999rpx;
+	font-size: 20rpx;
+	font-weight: 700;
+	line-height: 32rpx;
+	color: #9a5b13;
+	background: rgba(207, 138, 37, 0.16);
+
+	.dark-mode & {
+		color: #e1bf82;
+		background: rgba(207, 138, 37, 0.2);
+	}
+}
+
+.chat-active-origin {
+	margin-top: 6rpx;
+	font-size: 21rpx;
+	line-height: 1.4;
+	color: #a08764;
+
+	.dark-mode & {
+		color: #b9a98e;
 	}
 }
 
@@ -1390,15 +3515,48 @@ export default {
 	border-bottom: 1rpx solid rgba(120, 120, 120, 0.12);
 }
 
-.chat-thinking-group + .chat-thinking-group {
-	margin-top: 12rpx;
+.chat-thinking-panel {
+	width: 100%;
+	max-height: 198rpx;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	overflow: hidden;
+	box-sizing: border-box;
 }
 
-.chat-thinking-label {
-	margin-bottom: 8rpx;
-	font-size: 21rpx;
-	line-height: 1.4;
-	color: #a69a89;
+.chat-thinking-panel.expanded {
+	max-height: none;
+	display: block;
+	overflow: visible;
+}
+
+.chat-thinking-group {
+	width: 100%;
+	min-height: 0;
+	padding-bottom: 2rpx;
+}
+
+.chat-thinking-status {
+	display: flex;
+	align-items: center;
+	font-size: 22rpx;
+	font-weight: 700;
+	line-height: 1.45;
+	color: #7f786b;
+
+	.dark-mode & {
+		color: #c7b9a4;
+	}
+}
+
+.chat-thinking-status-text {
+	display: inline-block;
+	animation: thinking-word 5s ease-in-out infinite;
+}
+
+.chat-thinking-status + .chat-thinking-line {
+	margin-top: 8rpx;
 }
 
 .chat-thinking-line {
@@ -1407,12 +3565,83 @@ export default {
 	color: #9a9489;
 }
 
+.chat-thinking-panel:not(.expanded) .chat-thinking-line {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.chat-thinking-panel:not(.expanded) .chat-thinking-line.active {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	white-space: normal;
+}
+
 .chat-thinking-line + .chat-thinking-line {
 	margin-top: 6rpx;
 }
 
 .chat-thinking-line.active {
 	color: #7f786b;
+
+	.dark-mode & {
+		color: #c7b9a4;
+	}
+}
+
+.chat-thinking-toggle {
+	margin-top: 8rpx;
+	font-size: 22rpx;
+	font-weight: 700;
+	line-height: 1.4;
+	color: #b26f1f;
+
+	.dark-mode & {
+		color: #d8b06b;
+	}
+}
+
+.chat-thinking-dot {
+	display: inline-block;
+	animation: thinking-dot 1.2s ease-in-out infinite;
+	opacity: 0.25;
+}
+
+.dot-two {
+	animation-delay: 0.16s;
+}
+
+.dot-three {
+	animation-delay: 0.32s;
+}
+
+@keyframes thinking-dot {
+	0%,
+	64%,
+	100% {
+		opacity: 0.25;
+		transform: translateY(0);
+	}
+
+	30% {
+		opacity: 1;
+		transform: translateY(-2rpx);
+	}
+}
+
+@keyframes thinking-word {
+	0%,
+	100% {
+		opacity: 0.72;
+		transform: translateY(0);
+	}
+
+	12%,
+	84% {
+		opacity: 1;
+		transform: translateY(-1rpx);
+	}
 }
 
 .chat-content {
@@ -1445,10 +3674,6 @@ export default {
 	background: linear-gradient(135deg, #d1902f 0%, #b96a17 100%);
 }
 
-.scroll-anchor {
-	height: 2rpx;
-}
-
 .chat-input-wrap {
 	position: fixed;
 	left: 24rpx;
@@ -1458,6 +3683,7 @@ export default {
 	border-radius: 28rpx;
 	background: rgba(255, 255, 255, 0.82);
 	box-shadow: 0 18rpx 60rpx rgba(145, 106, 33, 0.1);
+	backdrop-filter: blur(5px);
 	z-index: 10;
 
 	.dark-mode & {
@@ -1466,8 +3692,36 @@ export default {
 	}
 }
 
+.chat-clear-icon-btn {
+	position: absolute;
+	top: 16rpx;
+	right: 16rpx;
+	width: 56rpx;
+	height: 56rpx;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #8a6c45;
+	background: rgba(207, 169, 96, 0.13);
+	box-shadow: inset 0 0 0 1rpx rgba(160, 120, 56, 0.12);
+	z-index: 2;
+
+	.dark-mode & {
+		color: #e8d6b6;
+		background: rgba(207, 169, 96, 0.12);
+		box-shadow: inset 0 0 0 1rpx rgba(255, 255, 255, 0.08);
+	}
+}
+
+.chat-clear-icon {
+	font-size: 30rpx;
+	line-height: 1;
+}
+
 .chat-textarea {
 	width: 100%;
+	box-sizing: border-box;
 	min-height: 96rpx;
 	max-height: 320rpx;
 	font-size: 28rpx;
@@ -1477,6 +3731,10 @@ export default {
 	.dark-mode & {
 		color: #f1e7d6;
 	}
+}
+
+.chat-textarea.with-clear-context {
+	padding-right: 72rpx;
 }
 
 .chat-action-row {
@@ -1493,40 +3751,297 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 12rpx;
-	overflow: hidden;
+	overflow: visible;
 }
 
-.chat-toggle {
-	padding: 12rpx 18rpx;
+.chat-mode-toggle {
+	flex: 0 0 auto;
+	height: 62rpx;
+	padding: 4rpx;
 	border-radius: 999rpx;
-	font-size: 22rpx;
-	font-weight: 700;
-	color: #8a6c45;
-	background: rgba(207, 169, 96, 0.12);
+	display: flex;
+	align-items: center;
+	background: rgba(207, 169, 96, 0.13);
+	box-shadow: inset 0 0 0 1rpx rgba(160, 120, 56, 0.1);
 
 	.dark-mode & {
-		color: #d6c4a6;
-		background: rgba(207, 169, 96, 0.18);
+		background: rgba(207, 169, 96, 0.12);
+		box-shadow: inset 0 0 0 1rpx rgba(255, 255, 255, 0.08);
 	}
 }
 
-.chat-toggle.active {
-	color: #fff8ec;
-	background: linear-gradient(135deg, #cf8a25 0%, #ae6111 100%);
+.chat-mode-toggle.disabled {
+	opacity: 0.58;
 }
 
-.chat-toggle.disabled {
-	opacity: 0.5;
-}
-
-.chat-clear {
-	padding: 12rpx 18rpx;
-	font-size: 22rpx;
+.chat-mode-option {
+	min-width: 72rpx;
+	height: 54rpx;
+	padding: 0 16rpx;
+	border-radius: 999rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24rpx;
+	font-weight: 700;
+	line-height: 1;
 	color: #8a6c45;
 	white-space: nowrap;
 
 	.dark-mode & {
 		color: #c9b89b;
+	}
+}
+
+.chat-mode-option.active {
+	color: #fff7ea;
+	background: linear-gradient(135deg, #cf8a25 0%, #ae6111 100%);
+	box-shadow: 0 8rpx 20rpx rgba(167, 99, 17, 0.18);
+
+	.dark-mode & {
+		color: #fff7ea;
+	}
+}
+
+.index-status-wrap {
+	position: relative;
+	width: 58rpx;
+	height: 58rpx;
+	flex: 0 0 58rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 12;
+}
+
+.index-status-box {
+	position: relative;
+	width: 52rpx;
+	height: 52rpx;
+	border-radius: 12rpx;
+	overflow: hidden;
+	background: rgba(207, 169, 96, 0.12);
+	box-shadow: inset 0 0 0 1rpx rgba(160, 120, 56, 0.12);
+
+	.dark-mode & {
+		background: rgba(207, 169, 96, 0.1);
+		box-shadow: inset 0 0 0 1rpx rgba(207, 169, 96, 0.15);
+	}
+}
+
+.index-status-water {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: linear-gradient(180deg, #65a978 0%, #4a9462 100%);
+	transition: height 0.3s ease;
+}
+
+.index-status-wave {
+	position: absolute;
+	top: -4rpx;
+	left: 0;
+	right: 0;
+	height: 8rpx;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%);
+	border-radius: 50% 50% 0 0;
+}
+
+.index-status-core {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 17rpx;
+	font-weight: 800;
+	line-height: 1;
+	color: #fff;
+	text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.2);
+
+	.dark-mode & {
+		color: #f0e6d2;
+		text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.3);
+	}
+}
+
+.index-status-tooltip {
+	position: absolute;
+	left: 0;
+	bottom: 72rpx;
+	width: 260rpx;
+	padding: 18rpx 20rpx;
+	border-radius: 18rpx;
+	background: rgba(47, 36, 24, 0.94);
+	box-shadow: 0 16rpx 42rpx rgba(40, 25, 7, 0.2);
+	z-index: 30;
+	box-sizing: border-box;
+
+	.dark-mode & {
+		background: rgba(245, 234, 216, 0.96);
+	}
+}
+
+.index-status-tooltip-arrow {
+	position: absolute;
+	bottom: -10rpx;
+	width: 20rpx;
+	height: 20rpx;
+	transform: translateX(-50%) rotate(45deg);
+	background: rgba(47, 36, 24, 0.94);
+
+	.dark-mode & {
+		background: rgba(245, 234, 216, 0.96);
+	}
+}
+
+.index-tooltip-title {
+	font-size: 22rpx;
+	font-weight: 700;
+	line-height: 1.35;
+	color: #fff4df;
+
+	.dark-mode & {
+		color: #2f2418;
+	}
+}
+
+.index-tooltip-percent {
+	margin-top: 8rpx;
+	font-size: 30rpx;
+	font-weight: 800;
+	line-height: 1.2;
+	color: #7ed49e;
+
+	.dark-mode & {
+		color: #4a9462;
+	}
+}
+
+.index-tooltip-text {
+	margin-top: 8rpx;
+	font-size: 21rpx;
+	line-height: 1.45;
+	color: rgba(255, 244, 223, 0.82);
+
+	.dark-mode & {
+		color: rgba(47, 36, 24, 0.72);
+	}
+}
+
+.index-tooltip-meta {
+	margin-top: 6rpx;
+	font-size: 20rpx;
+	line-height: 1.4;
+	color: rgba(255, 244, 223, 0.62);
+
+	.dark-mode & {
+		color: rgba(47, 36, 24, 0.58);
+	}
+}
+
+.context-usage-wrap {
+	position: relative;
+	width: 58rpx;
+	height: 58rpx;
+	flex: 0 0 58rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 12;
+}
+
+.context-usage-ring {
+	width: 58rpx;
+	height: 58rpx;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: inset 0 0 0 1rpx rgba(160, 120, 56, 0.08);
+}
+
+.context-usage-core {
+	width: 44rpx;
+	height: 44rpx;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18rpx;
+	font-weight: 800;
+	line-height: 1;
+	color: #8a6c45;
+	background: rgba(255, 250, 242, 0.96);
+
+	.dark-mode & {
+		color: #e0c997;
+		background: rgba(33, 27, 20, 0.98);
+	}
+}
+
+.context-usage-tooltip {
+	position: absolute;
+	left: 0;
+	bottom: 72rpx;
+	width: 260rpx;
+	padding: 18rpx 20rpx;
+	border-radius: 18rpx;
+	background: rgba(47, 36, 24, 0.94);
+	box-shadow: 0 16rpx 42rpx rgba(40, 25, 7, 0.2);
+	z-index: 30;
+	box-sizing: border-box;
+
+	.dark-mode & {
+		background: rgba(245, 234, 216, 0.96);
+	}
+}
+
+.context-usage-tooltip-arrow {
+	position: absolute;
+	bottom: -10rpx;
+	width: 20rpx;
+	height: 20rpx;
+	transform: translateX(-50%) rotate(45deg);
+	background: rgba(47, 36, 24, 0.94);
+
+	.dark-mode & {
+		background: rgba(245, 234, 216, 0.96);
+	}
+}
+
+.context-tooltip-title {
+	font-size: 22rpx;
+	font-weight: 700;
+	line-height: 1.35;
+	color: #fff4df;
+
+	.dark-mode & {
+		color: #2f2418;
+	}
+}
+
+.context-tooltip-percent {
+	margin-top: 8rpx;
+	font-size: 30rpx;
+	font-weight: 800;
+	line-height: 1.2;
+	color: #ffd994;
+
+	.dark-mode & {
+		color: #9c6214;
+	}
+}
+
+.context-tooltip-note {
+	margin-top: 8rpx;
+	font-size: 21rpx;
+	line-height: 1.45;
+	color: rgba(255, 244, 223, 0.78);
+
+	.dark-mode & {
+		color: rgba(47, 36, 24, 0.72);
 	}
 }
 
@@ -1550,61 +4065,72 @@ export default {
 	box-shadow: none;
 }
 
-.history-mask {
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.32);
-	z-index: 18;
+.history-drawer {
+	&.open .history-drawer-mask {
+		opacity: 1;
+		pointer-events: auto;
+	}
+	&.open .history-drawer-panel {
+		transform: translateY(0);
+	}
 }
 
-.history-panel {
+.history-drawer-mask {
 	position: fixed;
-	left: 24rpx;
-	right: 24rpx;
-	top: 120rpx;
-	bottom: calc(36rpx + env(safe-area-inset-bottom));
-	border-radius: 30rpx;
-	background: rgba(255, 249, 239, 0.97);
-	box-shadow: 0 22rpx 80rpx rgba(40, 25, 7, 0.22);
-	z-index: 19;
+	inset: 0;
+	background: rgba(0, 0, 0, 0);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.3s ease, background 0.3s ease;
+	z-index: 90;
+}
+
+.history-drawer-panel {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	max-height: 75vh;
+	border-radius: 40rpx 40rpx 0 0;
+	background: linear-gradient(180deg, #fffcf5 0%, #fff8ee 100%);
+	transform: translateY(100%);
+	transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+	z-index: 91;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
 
 	.dark-mode & {
-		background: rgba(28, 22, 16, 0.98);
+		background: linear-gradient(180deg, #262018 0%, #1f1a14 100%);
 	}
 }
 
-.history-panel-header {
-	padding: 24rpx 26rpx 18rpx;
+.history-drawer-handle {
+	padding: 16rpx 0 0;
+	display: flex;
+	justify-content: center;
+}
+
+.history-drawer-handle-bar {
+	width: 64rpx;
+	height: 8rpx;
+	border-radius: 999rpx;
+	background: rgba(160, 120, 56, 0.24);
+
+	.dark-mode & {
+		background: rgba(255, 255, 255, 0.12);
+	}
+}
+
+.history-drawer-header {
+	padding: 20rpx 32rpx 16rpx;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	border-bottom: 1rpx solid rgba(120, 120, 120, 0.12);
 }
 
-.history-search {
-	padding: 18rpx 20rpx 0;
-}
-
-.history-search-input {
-	height: 74rpx;
-	padding: 0 22rpx;
-	border-radius: 18rpx;
-	font-size: 24rpx;
-	color: #2f2418;
-	background: rgba(255, 255, 255, 0.86);
-	box-sizing: border-box;
-
-	.dark-mode & {
-		color: #f4ead8;
-		background: rgba(255, 255, 255, 0.08);
-	}
-}
-
-.history-panel-title {
-	font-size: 30rpx;
+.history-drawer-title {
+	font-size: 32rpx;
 	font-weight: 700;
 	color: #2f2418;
 
@@ -1613,19 +4139,66 @@ export default {
 	}
 }
 
-.history-panel-close {
-	font-size: 24rpx;
-	color: #8a6c45;
+.history-drawer-close {
+	width: 56rpx;
+	height: 56rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.6);
+	box-shadow: 0 4rpx 12rpx rgba(145, 106, 33, 0.08);
 
 	.dark-mode & {
-		color: #cfbe9c;
+		background: rgba(255, 255, 255, 0.08);
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.18);
 	}
 }
 
-.history-panel-scroll {
+.history-drawer-search {
+	padding: 0 32rpx 12rpx;
+}
+
+.history-search-wrap {
+	display: flex;
+	align-items: center;
+	height: 72rpx;
+	padding: 0 20rpx;
+	border-radius: 20rpx;
+	background: rgba(255, 255, 255, 0.72);
+	box-shadow: inset 0 0 0 1rpx rgba(160, 120, 56, 0.1);
+
+	.dark-mode & {
+		background: rgba(255, 255, 255, 0.06);
+		box-shadow: inset 0 0 0 1rpx rgba(255, 255, 255, 0.08);
+	}
+}
+
+.search-icon {
+	margin-right: 12rpx;
+	flex-shrink: 0;
+}
+
+.history-search-input {
+	flex: 1;
+	height: 72rpx;
+	font-size: 26rpx;
+	color: #2f2418;
+	background: transparent;
+
+	.dark-mode & {
+		color: #f4ead8;
+	}
+}
+
+.history-search-placeholder {
+	color: #b8a58a;
+}
+
+.history-drawer-scroll {
 	flex: 1;
 	min-height: 0;
-	padding: 12rpx 20rpx 26rpx;
+	padding: 8rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
 	box-sizing: border-box;
 }
 
@@ -1645,14 +4218,40 @@ export default {
 }
 
 .history-session-card {
+	position: relative;
 	padding: 18rpx 18rpx 16rpx;
+	margin: 15rpx 0;
 	border-radius: 22rpx;
 	background: rgba(255, 255, 255, 0.82);
 	box-shadow: 0 10rpx 28rpx rgba(96, 67, 20, 0.06);
+	overflow: hidden;
 }
 
-.history-session-card + .history-session-card {
-	margin-top: 12rpx;
+.history-session-delete {
+	display: none;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 160rpx;
+	align-items: center;
+	justify-content: center;
+	font-size: 26rpx;
+	color: #fff;
+	background: #c0503a;
+	border-radius: 0 22rpx 22rpx 0;
+}
+
+.history-session-card.swiped .history-session-delete {
+	display: flex;
+}
+
+.history-session-content {
+	transition: transform 0.25s ease;
+}
+
+.history-session-card.swiped .history-session-content {
+	transform: translateX(-160rpx);
 }
 
 .history-session-card.active {

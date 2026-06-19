@@ -6,6 +6,11 @@ const READER_MEMORY_TABLE = 'agent_memory';
 const AUTHOR_MEMORY_TABLE = 'agent_writer_memory';
 const MANUAL_QUEUE_PRIORITY = 100;
 let ensureAgentMemorySchemaPromise = null;
+const WRITER_LEGACY_TIME_SQL_FORMAT = '%Y%m%d%H%i%s';
+
+function buildWriterUpdatedAtExpression(alias = 'aw') {
+	return `COALESCE(${alias}.updated_at, STR_TO_DATE(${alias}.create_time, '${WRITER_LEGACY_TIME_SQL_FORMAT}'))`;
+}
 
 const LATEST_WRITER_VERSION_SUBQUERY = `
 	SELECT
@@ -14,18 +19,16 @@ const LATEST_WRITER_VERSION_SUBQUERY = `
 		aw1.title,
 		aw1.content_hash,
 		aw1.create_time,
+		aw1.updated_at,
 		aw1.novel_id
 	FROM articles_writer aw1
-	INNER JOIN (
-		SELECT MAX(aw2.id) AS max_id
+	WHERE aw1.id = (
+		SELECT aw2.id
 		FROM articles_writer aw2
-		INNER JOIN (
-			SELECT article_id, MAX(create_time) AS max_create_time
-			FROM articles_writer
-			GROUP BY article_id
-		) latest ON aw2.article_id = latest.article_id AND aw2.create_time = latest.max_create_time
-		GROUP BY aw2.article_id
-	) latest_unique ON aw1.id = latest_unique.max_id
+		WHERE aw2.article_id = aw1.article_id
+		ORDER BY ${buildWriterUpdatedAtExpression('aw2')} DESC, aw2.id DESC
+		LIMIT 1
+	)
 `;
 
 const LATEST_DISTINCT_WRITER_SOURCE_SUBQUERY = `
@@ -314,6 +317,51 @@ async function getNovelIndexingStatus(novelId) {
 	return normalizeIndexQueueRow(row);
 }
 
+async function getNovelSummaryIndexStatus(novelId) {
+	await ensureAgentMemorySchema();
+	const results = await query(
+		`SELECT
+			COUNT(*) AS total_chapters,
+			SUM(CASE WHEN m.memory_id IS NOT NULL THEN 1 ELSE 0 END) AS indexed_chapters,
+			SUM(
+				CASE
+					WHEN m.memory_id IS NOT NULL
+						AND (
+							NULLIF(TRIM(COALESCE(m.short_summary, '')), '') IS NOT NULL
+							OR NULLIF(TRIM(COALESCE(m.long_summary, '')), '') IS NOT NULL
+						)
+					THEN 1
+					ELSE 0
+				END
+			) AS indexed_summary_chapters
+		FROM articles a
+		LEFT JOIN \`${memoryDatabase}\`.\`${READER_MEMORY_TABLE}\` m ON ${buildReaderMemoryValidityCondition('m', 'a')}
+		WHERE a.novel_id = ?
+			AND a.article_type = 'richtext'
+			AND a.is_draft = 0
+			AND a.deleted = 0`,
+		[novelId],
+	);
+	const row = results[0] || {};
+	const totalChapters = Number(row.total_chapters || 0);
+	const indexedChapters = Number(row.indexed_chapters || 0);
+	const indexedSummaryChapters = Number(row.indexed_summary_chapters || 0);
+	const queueStatus = await getNovelIndexingStatus(novelId);
+
+	return {
+		novel_id: Number(novelId),
+		total_chapters: totalChapters,
+		indexed_chapters: indexedChapters,
+		indexed_summary_chapters: indexedSummaryChapters,
+		pending_summary_chapters: Math.max(0, totalChapters - indexedSummaryChapters),
+		percent: totalChapters > 0
+			? Math.round((indexedSummaryChapters / totalChapters) * 100)
+			: 0,
+		queue_status: queueStatus.status,
+		queue: queueStatus.queue,
+	};
+}
+
 async function requestNovelIndexing(novelId, requestedByUserId = null) {
 	await ensureAgentMemorySchema();
 	const pendingChapters = await getPendingChapterCount(novelId);
@@ -360,5 +408,6 @@ module.exports = {
 	ensureAgentMemorySchema,
 	getMemoryDatabase,
 	getNovelIndexingStatus,
+	getNovelSummaryIndexStatus,
 	requestNovelIndexing,
 };

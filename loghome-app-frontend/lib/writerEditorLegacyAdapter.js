@@ -17,7 +17,49 @@ export function parseLegacyContent(content) {
 }
 
 export function stringifyLegacyContent(blocks) {
-  return JSON.stringify(normalizeLegacyBlocks(blocks));
+  return normalizeLegacyContentForStorage(
+    JSON.stringify(normalizeLegacyBlocks(blocks))
+  );
+}
+
+export function normalizeLegacyContentForStorage(content) {
+  const blocks = parseRawLegacyBlocks(content);
+  if (!blocks) {
+    return typeof content === "string"
+      ? content
+      : JSON.stringify(normalizeLegacyBlocks(content));
+  }
+
+  const repaired = repairLegacyBlockIdsForStorage(blocks);
+  if (repaired.changed || typeof content !== "string") {
+    return JSON.stringify(repaired.blocks);
+  }
+  return content;
+}
+
+export function getLegacyContentComparableSignature(content) {
+  return JSON.stringify(
+    parseLegacyContent(content).map((block) => {
+      if (block.type === "image") {
+        return {
+          type: "image",
+          img: block.img || "",
+        };
+      }
+
+      return {
+        type: "text",
+        value: block.value || "",
+      };
+    })
+  );
+}
+
+export function areLegacyContentsEquivalent(leftContent, rightContent) {
+  return (
+    getLegacyContentComparableSignature(leftContent) ===
+    getLegacyContentComparableSignature(rightContent)
+  );
 }
 
 export function normalizeLegacyBlocks(blocks) {
@@ -243,6 +285,150 @@ function normalizeBlockId(block) {
   return normalizedId;
 }
 
+function parsePositiveBlockId(rawId) {
+  if (rawId === null || rawId === undefined || rawId === "") {
+    return null;
+  }
+
+  const normalizedId = Number(rawId);
+  return Number.isInteger(normalizedId) && normalizedId > 0
+    ? normalizedId
+    : null;
+}
+
+function parseRawLegacyBlocks(content) {
+  if (Array.isArray(content)) {
+    return content;
+  }
+
+  if (!content || typeof content !== "string") {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function isTextStorageBlock(block) {
+  return (
+    block &&
+    typeof block === "object" &&
+    !Array.isArray(block) &&
+    block.type === "text"
+  );
+}
+
+function getEffectiveStorageBlockId(block) {
+  return (
+    parsePositiveBlockId(block && block.id) ||
+    parsePositiveBlockId(block && block.paragraph_id) ||
+    parsePositiveBlockId(block && block.legacyId) ||
+    parsePositiveBlockId(block && block.legacy_id)
+  );
+}
+
+function repairLegacyBlockIdsForStorage(blocks) {
+  if (!Array.isArray(blocks)) {
+    return {
+      blocks: [{ type: "text", value: "", id: 1 }],
+      changed: true,
+    };
+  }
+
+  if (blocks.length === 0) {
+    return {
+      blocks,
+      changed: false,
+    };
+  }
+
+  const idCounts = new Map();
+  blocks.forEach((block) => {
+    if (!isTextStorageBlock(block)) {
+      return;
+    }
+
+    const blockId = getEffectiveStorageBlockId(block);
+    if (blockId) {
+      idCounts.set(blockId, (idCounts.get(blockId) || 0) + 1);
+    }
+  });
+
+  const hasDuplicateIds = Array.from(idCounts.values()).some(
+    (count) => count > 1
+  );
+  if (hasDuplicateIds) {
+    let nextId = 1;
+    return {
+      changed: true,
+      blocks: blocks.map((block) => {
+        if (!isTextStorageBlock(block)) {
+          return block;
+        }
+
+        const fixedBlock = {
+          ...block,
+          id: nextId,
+        };
+        nextId += 1;
+        return fixedBlock;
+      }),
+    };
+  }
+
+  let maxId = 0;
+  blocks.forEach((block) => {
+    if (!isTextStorageBlock(block)) {
+      return;
+    }
+
+    const blockId = getEffectiveStorageBlockId(block);
+    if (blockId && blockId > maxId) {
+      maxId = blockId;
+    }
+  });
+
+  let changed = false;
+  const repairedBlocks = blocks.map((block) => {
+    if (!isTextStorageBlock(block)) {
+      return block;
+    }
+
+    const blockId = parsePositiveBlockId(block.id);
+    if (blockId) {
+      return block;
+    }
+
+    const fallbackId =
+      parsePositiveBlockId(block.paragraph_id) ||
+      parsePositiveBlockId(block.legacyId) ||
+      parsePositiveBlockId(block.legacy_id);
+    if (fallbackId) {
+      changed = true;
+      return {
+        ...block,
+        id: fallbackId,
+      };
+    }
+
+    maxId += 1;
+    changed = true;
+    return {
+      ...block,
+      id: maxId,
+    };
+  });
+
+  return {
+    blocks: repairedBlocks,
+    changed,
+  };
+}
+
 function buildParagraphAttrs(block) {
   const blockId = normalizeBlockId(block);
   if (blockId === null) {
@@ -259,36 +445,5 @@ function assignMissingLegacyIds(blocks) {
     return [{ type: "text", value: "", id: 1 }];
   }
 
-  const usedIds = new Set();
-  let nextId = 1;
-  blocks.forEach((block) => {
-    const blockId = normalizeBlockId(block);
-    if (blockId !== null) {
-      usedIds.add(blockId);
-      nextId = Math.max(nextId, blockId + 1);
-    }
-  });
-
-  return blocks.map((block) => {
-    if (!block || block.type !== "text") {
-      return block;
-    }
-
-    const blockId = normalizeBlockId(block);
-    if (blockId !== null) {
-      return {
-        ...block,
-        id: blockId,
-      };
-    }
-
-    const assignedId = nextId;
-    usedIds.add(assignedId);
-    nextId += 1;
-
-    return {
-      ...block,
-      id: assignedId,
-    };
-  });
+  return normalizeLegacyBlocks(repairLegacyBlockIdsForStorage(blocks).blocks);
 }

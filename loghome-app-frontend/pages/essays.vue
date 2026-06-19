@@ -37,7 +37,7 @@
 						:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
 						@close-book-detail="handleCloseBookDrawerManually"
 						@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
-						@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="bookSelectDrawer = true"
+						@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="openBookSelectDrawer"
 						@goto-statistics="gotoStatistics" @open-activity-form="openActivityForm"></book-detail-view>
 					<transition name='fade'>
 						<view style="text-align: center;position:relative;" v-if="curBook === -1">
@@ -87,38 +87,42 @@
 					:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
 					@close-book-detail="handleCloseBookDrawerManually"
 					@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
-					@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="bookSelectDrawer = true"
+					@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="openBookSelectDrawer"
 					@goto-statistics="gotoStatistics" @goto-world-novel="gotoWorldNovel" @open-activity-form="openActivityForm"></book-detail-view>
 			</div>
 		</el-drawer>
 
-		<el-drawer :visible.sync="bookSelectDrawer" :with-header="false" :direction="'btt'" size="80%"
-			class="book-select-drawer" custom-class="book-select-wrapper" modal-class="book-select-overlay">
-			<div class="searchBar" style="position:absolute; background-color: #ffe6b4; width:100%; z-index:100;">
-				<uni-search-bar bgColor="#ffffff" :radius="0" @input="searchLibrary" placeholder="搜索全站世界"
-					cancelButton="none">
-					<img src="../static/icons/icon_search.png" alt="" slot="searchIcon"
-						style="height:25px;width:25px;" />
-					<img src="../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;width:20px;" />
-				</uni-search-bar>
-			</div>
-			<div style="height:52px; width:100%;"></div>
-			<navigator v-for="item in [...searchBooks]" :key="item.novel_id" @click="selectWorldBook(item)">
-				<div class="books" style="margin:20rpx;">
-					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
-						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
-					<div class="bookInfo">
-						<div class="world-title">{{ item.name }}</div>
-						<view class="author">
-							<log-image :src="item.avatar_url" alt="" class="auther_avatar"
-								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-							<div class="auther_name">{{ item.user_name }}</div>
+		<view v-if="bookSelectDrawer" class="world-select-mask" :class="{ visible: bookSelectDrawerVisible }"
+			@click="closeBookSelectDrawer">
+			<view class="world-select-panel" @click.stop>
+				<view class="world-select-header">
+					<text class="world-select-title">添加作品世界</text>
+					<text class="world-select-close" @click="closeBookSelectDrawer">关闭</text>
+				</view>
+				<view class="world-search-row">
+					<input class="world-search-input" v-model="worldSearchKeyword" placeholder="搜索全站世界"
+						confirm-type="search" @input="handleWorldSearchInput" />
+				</view>
+				<scroll-view scroll-y class="world-select-list">
+					<view v-if="loadingWorlds" class="world-select-empty">正在加载世界...</view>
+					<view v-else-if="searchBooks.length === 0" class="world-select-empty">暂无可添加的世界</view>
+					<view v-for="item in [...searchBooks]" :key="item.world_id || item.novel_id"
+						class="world-select-item" @click="selectWorldBook(item)">
+						<log-image class="world-select-cover" :src="getWorldCover(item)" mode="aspectFill"
+							:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"></log-image>
+						<view class="world-select-info">
+							<text class="world-select-name">{{ item.name }}</text>
+							<view class="world-select-author">
+								<log-image class="world-select-avatar" :src="item.avatar_url || item.auther_avatar"
+									mode="aspectFill" onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"></log-image>
+								<text class="world-select-author-name">{{ getWorldAuthorName(item) }}</text>
+							</view>
+							<text class="world-select-desc">{{ getWorldDescription(item) }}</text>
 						</view>
-						<div class="description">{{ item.content }}</div>
-					</div>
-				</div>
-			</navigator>
-		</el-drawer>
+					</view>
+				</scroll-view>
+			</view>
+		</view>
 
 		<!-- 活动表单弹窗 -->
 		<el-drawer v-if="currentActivity && currentActivity.required_fields"
@@ -168,6 +172,9 @@ import worldPage from '@/components/worldsPage.vue'
 import BookDetailView from '@/components/book-detail-view.vue'
 import axios from 'axios'
 import darkModeMixin from '@/mixins/dark-mode.js'
+
+const WORLD_SELECT_ANIMATION_DURATION = 260;
+
 export default {
 	data() {
 		return {
@@ -181,9 +188,13 @@ export default {
 			novel_statistic: [],
 			worlds: [],
 			bookSelectDrawer: false, //是否打开书籍选择抽屉
+			bookSelectDrawerVisible: false,
+			bookSelectDrawerTimer: null,
 			bookSelectItemIndex: undefined, //即将需要选择书籍的书链item的index
 			timer: undefined,
 			searchBooks: [], //搜索到的书
+			worldSearchKeyword: '',
+			loadingWorlds: false,
 			showBookDetailModal: true, //是否打开书籍详情遮罩
 			// 活动表单相关数据
 			showActivityForm: false,
@@ -224,7 +235,7 @@ export default {
 	},
 	computed: {
 		topNavStyle() {
-			console.log(this.pageScrollTop);
+			// console.log(this.pageScrollTop);
 			let r = this.pageScrollTop / 100;
 			return {
 				"class": r >= 0.85 ? 'style2' : '',
@@ -237,6 +248,11 @@ export default {
 	},
 	onUnload() {
 		window.removeEventListener('popstate', this.browserBack);
+		clearTimeout(this.timer);
+		if (this.bookSelectDrawerTimer) {
+			clearTimeout(this.bookSelectDrawerTimer);
+			this.bookSelectDrawerTimer = null;
+		}
 	},
 	// 页面滚动监听
 	onPageScroll(e) {
@@ -484,6 +500,54 @@ export default {
 				url: './writers/novel_statistics?id=' + this.books[this.curBook].novel_id
 			})
 		},
+		openBookSelectDrawer() {
+			if (this.bookSelectDrawerTimer) {
+				clearTimeout(this.bookSelectDrawerTimer);
+				this.bookSelectDrawerTimer = null;
+			}
+			this.bookSelectDrawer = true;
+			this.bookSelectDrawerVisible = false;
+			this.worldSearchKeyword = '';
+			this.getMyWorlds();
+			this.$nextTick(() => {
+				this.bookSelectDrawerVisible = true;
+			});
+		},
+		closeBookSelectDrawer() {
+			if (!this.bookSelectDrawer) return;
+			this.bookSelectDrawerVisible = false;
+			if (this.bookSelectDrawerTimer) {
+				clearTimeout(this.bookSelectDrawerTimer);
+			}
+			this.bookSelectDrawerTimer = setTimeout(() => {
+				this.bookSelectDrawer = false;
+				this.bookSelectDrawerTimer = null;
+			}, WORLD_SELECT_ANIMATION_DURATION);
+		},
+		handleWorldSearchInput(e) {
+			const value = typeof e === 'string'
+				? e
+				: (e && e.detail && e.detail.value !== undefined)
+					? e.detail.value
+					: (e && e.target ? e.target.value : this.worldSearchKeyword);
+			this.worldSearchKeyword = value || '';
+			this.searchLibrary(this.worldSearchKeyword);
+		},
+		getWorldCover(item = {}) {
+			const cover = item.picUrl || (this.$backupResources && this.$backupResources.bookCover) || '../static/images/defaultBookCover.png';
+			if (!cover || cover.indexOf('?') !== -1 || cover.indexOf('data:') === 0 || cover.indexOf('http') !== 0) {
+				return cover;
+			}
+			return cover + '?thumbnail=1';
+		},
+		getWorldAuthorName(item = {}) {
+			return item.user_name || item.author_name || item.username || '未知作者';
+		},
+		getWorldDescription(item = {}) {
+			const desc = item.content || item.description || '暂无简介';
+			if (desc.length <= 58) return desc;
+			return desc.substr(0, 58) + '...';
+		},
 		//搜索书库，这个方法与library.vue的一致
 		searchLibrary(e) {
 			clearTimeout(this.timer);
@@ -492,6 +556,7 @@ export default {
 				if (e == "") {
 					this.getMyWorlds();
 				} else {
+					_this.loadingWorlds = true;
 					axios.get(_this.$baseUrl + '/world/get_worlds_search?keyword=' + e, {}).then((res) => {
 						_this.searchBooks = res.data;
 					}).catch(function (error) {
@@ -501,6 +566,7 @@ export default {
 							duration: 2000
 						});
 					}).then(function () {
+						_this.loadingWorlds = false;
 						uni.hideLoading();
 					})
 				}
@@ -548,6 +614,7 @@ export default {
 			let _this = this;
 			let tk = JSON.parse(window.localStorage.getItem('token'));
 			if (tk) tk = tk.tk;
+			_this.loadingWorlds = true;
 			axios.get(this.$baseUrl + '/world/get_my_worlds', {
 				headers: {
 					'Content-Type': 'application/json', //设置请求头请求格式为JSON
@@ -562,6 +629,7 @@ export default {
 					duration: 2000
 				});
 			}).then(function () {
+				_this.loadingWorlds = false;
 				uni.hideLoading();
 			})
 		},
@@ -590,7 +658,7 @@ export default {
 				uni.hideLoading();
 				this.refreshPage();
 			})
-			this.bookSelectDrawer = false;
+			this.closeBookSelectDrawer();
 		},
 		browserBack() {
 			if(this.showBookDetail) {
@@ -957,28 +1025,156 @@ view.outer {
 		}
 	}
 
-	.el-drawer {
-		&.book-select-drawer {
-			z-index: 3100 !important;
-		}
+	.world-select-mask {
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.45);
+		z-index: 3100;
+		display: flex;
+		align-items: flex-end;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.26s ease;
 	}
 
-	:deep(.el-drawer__wrapper) {
-		&.book-select-wrapper {
-			z-index: 3100 !important;
-		}
+	.world-select-mask.visible {
+		opacity: 1;
+		pointer-events: auto;
 	}
 
-	:deep(.el-overlay) {
-		&.book-select-overlay {
-			z-index: 3000 !important;
-		}
+	.world-select-panel {
+		width: 100%;
+		height: 75vh;
+		max-height: 75vh;
+		background: var(--card-background);
+		border-radius: 28rpx 28rpx 0 0;
+		padding-bottom: env(safe-area-inset-bottom);
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		box-shadow: 0 -12rpx 36rpx rgba(0, 0, 0, 0.16);
+		transform: translate3d(0, 100%, 0);
+		transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+		will-change: transform;
 	}
 
-	.el-drawer {
-		&.book-select-drawer {
-			z-index: 3100 !important;
-		}
+	.world-select-mask.visible .world-select-panel {
+		transform: translate3d(0, 0, 0);
+	}
+
+	.world-select-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 28rpx 30rpx 20rpx;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	.world-select-title {
+		font-size: 32rpx;
+		font-weight: bold;
+		color: var(--text-color-primary);
+	}
+
+	.world-select-close {
+		font-size: 26rpx;
+		color: var(--text-color-regular);
+	}
+
+	.world-search-row {
+		padding: 20rpx 30rpx;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	.world-search-input {
+		width: 100%;
+		height: 76rpx;
+		padding: 0 24rpx;
+		border-radius: 14rpx;
+		background: var(--background-color-secondary);
+		box-sizing: border-box;
+		color: var(--text-color-primary);
+	}
+
+	.world-select-list {
+		flex: 1;
+		height: calc(75vh - 180rpx - env(safe-area-inset-bottom));
+		min-height: 240rpx;
+	}
+
+	.world-select-empty {
+		padding: 60rpx 30rpx;
+		text-align: center;
+		color: var(--text-color-regular);
+		font-size: 26rpx;
+	}
+
+	.world-select-item {
+		display: flex;
+		padding: 24rpx 30rpx;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	.world-select-cover {
+		width: 140rpx;
+		height: 188rpx;
+		border-radius: 10rpx;
+		margin-right: 20rpx;
+		flex-shrink: 0;
+	}
+
+	.world-select-info {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.world-select-name {
+		font-size: 30rpx;
+		font-weight: bold;
+		color: var(--text-color-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.world-select-author {
+		display: flex;
+		align-items: center;
+		margin-top: 12rpx;
+		min-width: 0;
+	}
+
+	.world-select-avatar {
+		width: 34rpx;
+		height: 34rpx;
+		border-radius: 6rpx;
+		margin-right: 10rpx;
+		flex-shrink: 0;
+	}
+
+	.world-select-author-name {
+		font-size: 24rpx;
+		color: var(--text-color-regular);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.world-select-desc {
+		font-size: 24rpx;
+		color: var(--text-color-regular);
+		margin-top: 14rpx;
+		line-height: 1.5;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
 	}
 
 	// 活动表单样式

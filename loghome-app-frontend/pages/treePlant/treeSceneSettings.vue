@@ -20,6 +20,18 @@
                 </view>
                 <switch :checked="treePlantLowPerformance" color="#6aa84f" @change="handleTreePlantPerformanceChange" />
             </view>
+
+            <view class="setting-item switch-item">
+                <view class="setting-main">
+                    <text class="setting-title">关闭树场提醒</text>
+                    <text class="setting-desc">开启后不再推送树场相关消息通知</text>
+                </view>
+                <switch
+                    :checked="treePlantNotificationsDisabled"
+                    color="#6aa84f"
+                    @change="handleTreePlantNotificationChange"
+                />
+            </view>
         </view>
     </view>
 </template>
@@ -38,8 +50,10 @@ export default {
     data() {
         return {
             treePlantLowPerformance: false,
+            treePlantNotificationsDisabled: false,
             treeSceneTheme: DEFAULT_TREE_PLANT_SCENE_THEME,
             isUpdatingTheme: false,
+            isUpdatingNotificationSettings: false,
         }
     },
     computed: {
@@ -62,6 +76,7 @@ export default {
         },
         refreshSettings() {
             this.treePlantLowPerformance = isTreePlantLowPerformanceMode()
+            this.refreshTreeNotificationSettings()
             axios
                 .get(this.$baseUrl + '/treePlant/get_treePlant_of', { headers: this.getAuthHeaders() })
                 .then((res) => {
@@ -71,6 +86,17 @@ export default {
                 })
                 .catch((error) => {
                     this.treeSceneTheme = DEFAULT_TREE_PLANT_SCENE_THEME
+                    const msg = error.response ? error.response.data.msg : error.toString()
+                    uni.showToast({ title: msg, icon: 'none' })
+                })
+        },
+        refreshTreeNotificationSettings() {
+            axios
+                .get(this.$baseUrl + '/treePlant/notification_settings', { headers: this.getAuthHeaders() })
+                .then((res) => {
+                    this.treePlantNotificationsDisabled = !!(res.data && res.data.notifications_disabled)
+                })
+                .catch((error) => {
                     const msg = error.response ? error.response.data.msg : error.toString()
                     uni.showToast({ title: msg, icon: 'none' })
                 })
@@ -123,6 +149,38 @@ export default {
                 icon: 'none',
                 duration: 1800,
             })
+        },
+        handleTreePlantNotificationChange(e) {
+            if (this.isUpdatingNotificationSettings) return
+
+            const previousValue = this.treePlantNotificationsDisabled
+            const disabled = !!(e && e.detail && e.detail.value)
+            this.treePlantNotificationsDisabled = disabled
+            this.isUpdatingNotificationSettings = true
+
+            axios
+                .post(
+                    this.$baseUrl + '/treePlant/notification_settings',
+                    { notifications_disabled: disabled },
+                    { headers: this.getAuthHeaders() }
+                )
+                .then((res) => {
+                    const resolvedDisabled = !!(res.data && res.data.notifications_disabled)
+                    this.treePlantNotificationsDisabled = resolvedDisabled
+                    uni.showToast({
+                        title: resolvedDisabled ? '已关闭树场提醒' : '已开启树场提醒',
+                        icon: 'none',
+                        duration: 1800,
+                    })
+                })
+                .catch((error) => {
+                    this.treePlantNotificationsDisabled = previousValue
+                    const msg = error.response ? error.response.data.msg : error.toString()
+                    uni.showToast({ title: msg, icon: 'none' })
+                })
+                .finally(() => {
+                    this.isUpdatingNotificationSettings = false
+                })
         },
     },
 }
@@ -182,6 +240,14 @@ export default {
     font-size: 30rpx;
     line-height: 1.4;
     color: #666;
+}
+
+.setting-desc {
+    display: block;
+    margin-top: 6rpx;
+    font-size: 24rpx;
+    line-height: 1.4;
+    color: #999;
 }
 
 .limited-badge {

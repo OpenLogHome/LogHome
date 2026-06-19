@@ -55,6 +55,8 @@ let expSchemaReady = null;
 let expSchemaCheckAt = 0;
 let stealSchemaReady = null;
 let stealSchemaCheckAt = 0;
+let treeNotificationSettingsSchemaReady = null;
+let treeNotificationSettingsSchemaCheckAt = 0;
 let expTasksCache = { data: [], ts: 0 };
 let expSettingsCache = { data: DEFAULT_EXP_SETTINGS, ts: 0 };
 
@@ -84,6 +86,16 @@ function toNumber(value, fallback = 0) {
     const n = Number(value);
     if (!Number.isFinite(n)) return fallback;
     return n;
+}
+
+function toBoolean(value) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value === 1;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        return ['1', 'true', 'yes', 'on'].includes(normalized);
+    }
+    return false;
 }
 
 function randomIntInRange(min, max) {
@@ -246,6 +258,102 @@ async function loadExpTasks(force = false) {
         }
         throw err;
     }
+}
+
+async function ensureTreeNotificationSettingsSchemaReady() {
+    const now = Date.now();
+    if (treeNotificationSettingsSchemaReady === true) return true;
+    if (treeNotificationSettingsSchemaReady === false && now - treeNotificationSettingsSchemaCheckAt < 60 * 1000) return false;
+
+    try {
+        await query('SELECT user_id, notifications_disabled FROM user_tree_notification_settings LIMIT 1');
+        treeNotificationSettingsSchemaReady = true;
+    } catch (err) {
+        if (!isTableMissingError(err)) {
+            throw err;
+        }
+
+        try {
+            await query(
+                `CREATE TABLE IF NOT EXISTS user_tree_notification_settings (
+                    user_id bigint(20) NOT NULL,
+                    notifications_disabled tinyint(1) NOT NULL DEFAULT 0,
+                    created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (user_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
+            );
+            await query('SELECT user_id, notifications_disabled FROM user_tree_notification_settings LIMIT 1');
+            treeNotificationSettingsSchemaReady = true;
+        } catch (createErr) {
+            console.log(createErr);
+            treeNotificationSettingsSchemaReady = false;
+        }
+    }
+
+    treeNotificationSettingsSchemaCheckAt = now;
+    return treeNotificationSettingsSchemaReady;
+}
+
+async function getTreeNotificationSettings(userId) {
+    const isReady = await ensureTreeNotificationSettingsSchemaReady();
+    if (!isReady) {
+        return {
+            notifications_disabled: false,
+            settings_available: false,
+        };
+    }
+
+    const rows = await query(
+        `SELECT notifications_disabled
+         FROM user_tree_notification_settings
+         WHERE user_id = ?
+         LIMIT 1`,
+        [userId]
+    );
+
+    return {
+        notifications_disabled: rows.length > 0 ? toBoolean(rows[0].notifications_disabled) : false,
+        settings_available: true,
+    };
+}
+
+async function setTreeNotificationSettings(userId, disabled) {
+    const isReady = await ensureTreeNotificationSettingsSchemaReady();
+    if (!isReady) {
+        throw new Error('tree notification settings schema is not ready');
+    }
+
+    const nextValue = disabled ? 1 : 0;
+    await query(
+        `INSERT INTO user_tree_notification_settings
+         (user_id, notifications_disabled, created_at, updated_at)
+         VALUES (?, ?, NOW(), NOW())
+         ON DUPLICATE KEY UPDATE
+            notifications_disabled = VALUES(notifications_disabled),
+            updated_at = NOW()`,
+        [userId, nextValue]
+    );
+
+    return {
+        notifications_disabled: !!nextValue,
+        settings_available: true,
+    };
+}
+
+async function sendTreePlantNotification(fromUserId, toUserId, content, routerPath = 'treePlant/treeplant') {
+    const settings = await getTreeNotificationSettings(toUserId);
+    if (settings.notifications_disabled) return false;
+
+    await message.sendMsg(
+        fromUserId,
+        toUserId,
+        content,
+        routerPath,
+        'notification',
+        true
+    );
+    return true;
 }
 
 async function getActiveTree(userId) {
@@ -694,13 +802,10 @@ async function performStealAgainstFriend(user, targetUserId, options = {}) {
             [targetUserId, targetTree.plant_id, user.user_id, myTree.plant_id, actualReward, affectedOrbCount, dateKey]
         );
         try {
-            await message.sendMsg(
+            await sendTreePlantNotification(
                 user.user_id,
                 targetUserId,
-                `${user.name || '一位好友'} 来树场串门，顺走了你 ${actualReward} 点成长值。`,
-                'treePlant/treeplant',
-                'notification',
-                true
+                `${user.name || '一位好友'} 来树场串门，顺走了你 ${actualReward} 点成长值。`
             );
         } catch (notifyErr) {
             console.log(notifyErr);
@@ -1366,6 +1471,40 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
         }
 
         res.end(JSON.stringify([tree]));
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
+router.get('/notification_settings', auth, async (req, res) => {
+    let user = req.user;
+    user = JSON.parse(JSON.stringify(user))[0];
+
+    try {
+        const settings = await getTreeNotificationSettings(user.user_id);
+        res.json(200, settings);
+    } catch (e) {
+        console.log(e);
+        res.json(400, { msg: 'bad request' });
+    }
+});
+
+router.post('/notification_settings', auth, async (req, res) => {
+    let user = req.user;
+    user = JSON.parse(JSON.stringify(user))[0];
+
+    try {
+        const body = req.body || {};
+        const hasNotificationsDisabled = Object.prototype.hasOwnProperty.call(body, 'notifications_disabled');
+        const hasDisabled = Object.prototype.hasOwnProperty.call(body, 'disabled');
+        const rawDisabled = hasNotificationsDisabled
+            ? body.notifications_disabled
+            : hasDisabled
+                ? body.disabled
+                : req.query?.notifications_disabled;
+        const settings = await setTreeNotificationSettings(user.user_id, toBoolean(rawDisabled));
+        res.json(200, settings);
     } catch (e) {
         console.log(e);
         res.json(400, { msg: 'bad request' });

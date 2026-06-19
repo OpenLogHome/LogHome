@@ -40,6 +40,16 @@ function toNumber(value, fallback = 0) {
   return n;
 }
 
+function toBoolean(value) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return ['1', 'true', 'yes', 'on'].includes(normalized);
+  }
+  return false;
+}
+
 function pad2(value) {
   const str = String(value);
   return str.length >= 2 ? str : `0${str}`;
@@ -210,9 +220,30 @@ async function clearPendingLimitNotice(userId, plantId) {
   );
 }
 
+async function isTreePlantNotificationDisabled(userId) {
+  try {
+    const rows = await query(
+      `SELECT notifications_disabled
+       FROM user_tree_notification_settings
+       WHERE user_id = ?
+       LIMIT 1`,
+      [userId]
+    );
+    return rows.length > 0 && toBoolean(rows[0].notifications_disabled);
+  } catch (err) {
+    if (!isTableMissingError(err)) {
+      console.log(`Tree Plant Timer: failed to read notification settings for user=${userId}`, err);
+    }
+    return false;
+  }
+}
+
 async function notifyPendingLimitReached(userId, plantId, pendingLimit, pendingCount) {
   const notified = await hasPendingLimitNotice(userId, plantId);
   if (notified) return false;
+
+  const notificationDisabled = await isTreePlantNotificationDisabled(userId);
+  if (notificationDisabled) return false;
 
   const safePendingCount = toPositiveInt(pendingCount, pendingLimit);
   const content = `树场待收集经验球已经满啦！快来收集一下吧。`;

@@ -12,7 +12,15 @@ router.get('/get_likes_of', auth, async (req, res) => {
 	user = JSON.parse(JSON.stringify(user))[0];
 	try {
 		let results = await query(
-			'SELECT novels.* FROM bookcase,novels WHERE user_id = ? AND bookcase.`novel_id` = novels.`novel_id`',
+			`SELECT
+				n.*,
+				u.user_id auther_id,
+				u.name author_name,
+				u.avatar_url auther_avatar
+			FROM bookcase b
+			INNER JOIN novels n ON b.novel_id = n.novel_id
+			LEFT JOIN users u ON n.author_id = u.user_id
+			WHERE b.user_id = ?`,
 			[user.user_id],
 		);
 		res.end(JSON.stringify(results));

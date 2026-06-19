@@ -6,6 +6,7 @@ let moment = require('moment');
 let message = require('../bin/message.js');
 let bank = require('../bin/bank.js');
 let { handleReaderNovelChatStream } = require('../bin/readerNovelAiChat.js');
+let { getNovelSummaryIndexStatus } = require('../bin/agentIndexing.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -788,7 +789,12 @@ router.get('/reading_history', auth, async function (req, res) {
 			`SELECT 
 				n.novel_id,
 				n.name,
+				n.content,
 				n.picUrl,
+				n.author_id,
+				u.user_id auther_id,
+				u.name author_name,
+				u.avatar_url auther_avatar,
 				n.update_time,
 				rh.last_article_id,
 				rh.last_article_chapter,
@@ -796,6 +802,7 @@ router.get('/reading_history', auth, async function (req, res) {
 				rh.updated_at as last_read_time
 			FROM user_reading_history rh
 			INNER JOIN novels n ON n.novel_id = rh.novel_id
+			LEFT JOIN users u ON n.author_id = u.user_id
 			WHERE rh.user_id = ? AND n.deleted = 0
 			ORDER BY rh.updated_at DESC
 			LIMIT ?, ?`,
@@ -1029,6 +1036,37 @@ router.post('/parse_share_code', async function (req, res) {
 
 router.post('/reader_novel_ai_chat_stream', async function (req, res) {
 	return handleReaderNovelChatStream(req, res);
+});
+
+router.get('/reader_novel_summary_index_status', async function (req, res) {
+	const novelId = Number(req.query.novel_id || req.query.id || 0);
+	if (!novelId) {
+		return res.status(400).json({ msg: 'novel_id 不能为空' });
+	}
+
+	try {
+		const novels = await query(
+			`SELECT novel_id
+			FROM novels
+			WHERE novel_id = ?
+				AND deleted = 0
+				AND is_personal = 0
+			LIMIT 1`,
+			[novelId],
+		);
+		if (novels.length === 0) {
+			return res.status(404).json({ msg: '作品不存在或未公开' });
+		}
+
+		const status = await getNovelSummaryIndexStatus(novelId);
+		return res.json({
+			msg: 'ok',
+			data: status,
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ msg: '服务器错误' });
+	}
 });
 
 let recommendRouter = require('./library/recommand');

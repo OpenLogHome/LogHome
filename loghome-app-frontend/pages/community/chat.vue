@@ -56,14 +56,14 @@
                     <i class="el-icon-picture-outline tool-button-icon"></i>
                     <text>图片</text>
                 </view>
-                <view class="tool-button" :class="{ disabled: loadingMyNovels }" @click="openBookSelector">
+                <view class="tool-button" :class="{ disabled: isAnyBookTabLoading }" @click="openBookSelector">
                     <i class="el-icon-reading tool-button-icon"></i>
                     <text>作品</text>
                 </view>
                 <text v-if="imageUploadState.uploading" class="tool-tip">
                     图片上传中 {{ imageUploadState.progress }}%
                 </text>
-                <text v-else-if="loadingMyNovels" class="tool-tip">
+                <text v-else-if="isAnyBookTabLoading" class="tool-tip">
                     作品列表加载中...
                 </text>
             </view>
@@ -77,19 +77,26 @@
             </view>
         </view>
 
-        <view v-if="showBookSelector" class="book-selector-mask" @click="closeBookSelector">
+        <view v-if="showBookSelector" class="book-selector-mask" :class="{ visible: bookSelectorVisible }"
+            @click="closeBookSelector">
             <view class="book-selector-panel" @click.stop>
                 <view class="book-selector-header">
-                    <text class="book-selector-title">分享自己的作品</text>
+                    <text class="book-selector-title">分享作品</text>
                     <text class="book-selector-close" @click="closeBookSelector">关闭</text>
                 </view>
+                <view class="book-selector-tabs">
+                    <view v-for="tab in bookSelectorTabs" :key="tab.key" class="book-selector-tab"
+                        :class="{ active: activeBookTab === tab.key }" @click="switchBookSelectorTab(tab.key)">
+                        <text>{{ tab.label }}</text>
+                    </view>
+                </view>
                 <view class="book-search-row">
-                    <input class="book-search-input" v-model="bookKeyword" placeholder="搜索我的作品" />
+                    <input class="book-search-input" v-model="bookKeyword" :placeholder="currentBookSearchPlaceholder" />
                 </view>
                 <scroll-view scroll-y class="book-selector-list">
-                    <view v-if="loadingMyNovels" class="book-selector-empty">正在加载作品...</view>
-                    <view v-else-if="filteredBooks.length === 0" class="book-selector-empty">暂无可分享的作品</view>
-                    <view v-for="book in filteredBooks" :key="book.novel_id" class="book-item" @click="shareBook(book)">
+                    <view v-if="isCurrentBookTabLoading" class="book-selector-empty">{{ currentBookLoadingText }}</view>
+                    <view v-else-if="filteredBooks.length === 0" class="book-selector-empty">{{ currentBookEmptyText }}</view>
+                    <view v-for="book in filteredBooks" :key="activeBookTab + '_' + book.novel_id" class="book-item" @click="shareBook(book)">
                         <log-image class="book-item-cover" :src="getSharedNovelCover(book)" mode="aspectFill"
                             onerror="onerror=null;src='../../static/images/defaultBookCover.png'"></log-image>
                         <view class="book-item-info">
@@ -115,6 +122,7 @@ const PRIVATE_MESSAGE_TYPES = {
     IMAGE: 'image',
     NOVEL_SHARE: 'novel_share'
 };
+const BOOK_SELECTOR_ANIMATION_DURATION = 260;
 const IMAGE_UPLOAD_URL = 'https://storage.codesocean.top/api/resource/upload?container=172018735018984';
 const IMAGE_UPLOAD_SERVICE_KEY = 'a24785bedb466b9733dd317771d4b69c08da07fd';
 
@@ -137,9 +145,50 @@ export default {
             toastTimer: null,
             isAtBottom: true,
             showBookSelector: false,
-            loadingMyNovels: false,
+            bookSelectorVisible: false,
+            bookSelectorAnimationTimer: null,
+            activeBookTab: 'mine',
+            bookSelectorTabs: [
+                {
+                    key: 'mine',
+                    label: '我的作品',
+                    searchPlaceholder: '搜索我的作品',
+                    emptyText: '暂无可分享的作品',
+                    loadingText: '正在加载我的作品...'
+                },
+                {
+                    key: 'liked',
+                    label: '收藏作品',
+                    searchPlaceholder: '搜索收藏作品',
+                    emptyText: '暂无收藏作品',
+                    loadingText: '正在加载收藏作品...'
+                },
+                {
+                    key: 'history',
+                    label: '阅读历史',
+                    searchPlaceholder: '搜索阅读历史',
+                    emptyText: '暂无阅读历史',
+                    loadingText: '正在加载阅读历史...'
+                }
+            ],
+            loadingBookTabs: {
+                mine: false,
+                liked: false,
+                history: false
+            },
+            loadedBookTabs: {
+                mine: false,
+                liked: false,
+                history: false
+            },
+            sharedNovelGroups: {
+                mine: [],
+                liked: [],
+                history: []
+            },
             myNovels: [],
             bookKeyword: '',
+            novelDetailCache: {},
             imageUploadState: {
                 uploading: false,
                 progress: 0
@@ -156,10 +205,31 @@ export default {
                 .map(message => this.normalizeMessage(message))
                 .sort((a, b) => new Date(a.sent_at) - new Date(b.sent_at));
         },
+        currentBookTabConfig() {
+            return this.bookSelectorTabs.find(tab => tab.key === this.activeBookTab) || this.bookSelectorTabs[0];
+        },
+        currentBookSearchPlaceholder() {
+            return this.currentBookTabConfig.searchPlaceholder || '搜索作品';
+        },
+        currentBookEmptyText() {
+            return this.currentBookTabConfig.emptyText || '暂无可分享的作品';
+        },
+        currentBookLoadingText() {
+            return this.currentBookTabConfig.loadingText || '正在加载作品...';
+        },
+        currentBookList() {
+            return this.sharedNovelGroups[this.activeBookTab] || [];
+        },
+        isCurrentBookTabLoading() {
+            return !!(this.loadingBookTabs && this.loadingBookTabs[this.activeBookTab]);
+        },
+        isAnyBookTabLoading() {
+            return Object.keys(this.loadingBookTabs || {}).some(key => this.loadingBookTabs[key]);
+        },
         filteredBooks() {
             const keyword = (this.bookKeyword || '').trim().toLowerCase();
-            if (!keyword) return this.myNovels;
-            return this.myNovels.filter(book => {
+            if (!keyword) return this.currentBookList;
+            return this.currentBookList.filter(book => {
                 const targets = [
                     book.name,
                     book.author_name,
@@ -170,19 +240,95 @@ export default {
         }
     },
     methods: {
-        normalizeNovel(book = {}) {
+        isMeaningfulText(value) {
+            if (value === undefined || value === null) return false;
+            const text = String(value).trim();
+            return !!text && text !== '未知作者' && text !== '匿名作者';
+        },
+        pickMeaningfulText(values = []) {
+            const matched = values.find(value => this.isMeaningfulText(value));
+            return matched === undefined || matched === null ? '' : String(matched).trim();
+        },
+        getTokenPayload() {
+            try {
+                return JSON.parse(window.localStorage.getItem('token') || 'null');
+            } catch (error) {
+                return null;
+            }
+        },
+        getAuthToken() {
+            const token = this.getTokenPayload();
+            return token && token.tk ? token.tk : '';
+        },
+        getCurrentUserDisplayName() {
+            return this.pickMeaningfulText([
+                this.user && this.user.name,
+                this.user && this.user.user_name,
+                this.user && this.user.nickname
+            ]);
+        },
+        isBookFromCurrentUser(book = {}, source = '') {
+            if (source === 'mine') return true;
+            const authorId = Number(book.author_id || book.auther_id || book.author_user_id || 0);
+            return !!authorId && !!this.user_id && authorId === Number(this.user_id);
+        },
+        getNovelAuthorName(book = {}, source = '') {
+            const authorName = this.pickMeaningfulText([
+                book.author_name,
+                book.user_name,
+                book.username,
+                book.pen_name,
+                book.penName,
+                book.nickname,
+                book.creator_name,
+                book.author && book.author.name,
+                book.user && book.user.name
+            ]);
+            if (authorName) return authorName;
+
+            if (this.isBookFromCurrentUser(book, source)) {
+                return this.getCurrentUserDisplayName();
+            }
+
+            return '';
+        },
+        normalizeNovel(book = {}, source = '') {
+            const novelId = Number(book.novel_id || book.id) || 0;
+            const cachedDetail = novelId && this.novelDetailCache ? this.novelDetailCache[novelId] : null;
+            const rawBook = cachedDetail ? { ...book, ...cachedDetail } : book;
+            const authorName = this.getNovelAuthorName(rawBook, source);
+            const authorId = Number(rawBook.author_id || rawBook.auther_id || rawBook.author_user_id || 0) || 0;
             return {
-                novel_id: Number(book.novel_id) || 0,
-                name: book.name || '未命名作品',
-                author_name: book.author_name || book.user_name || '未知作者',
-                content: book.content || '',
-                picUrl: book.picUrl || '',
-                avatar_url: book.avatar_url || book.auther_avatar || ''
+                novel_id: novelId,
+                name: rawBook.name || '未命名作品',
+                author_id: authorId,
+                author_name: authorName || '未知作者',
+                content: rawBook.content || rawBook.description || rawBook.intro || '',
+                picUrl: rawBook.picUrl || '',
+                avatar_url: rawBook.avatar_url || rawBook.auther_avatar || rawBook.author_avatar || '',
+                source_type: source || rawBook.source_type || ''
             };
+        },
+        getStructuredMessagePayload(messageContent) {
+            if (typeof messageContent !== 'string' || !messageContent.startsWith(PRIVATE_MESSAGE_PREFIX)) {
+                return null;
+            }
+
+            try {
+                const payload = JSON.parse(messageContent.slice(PRIVATE_MESSAGE_PREFIX.length));
+                if (!payload || payload.version !== PRIVATE_MESSAGE_VERSION) {
+                    return null;
+                }
+                return payload;
+            } catch (error) {
+                console.error('解析私信内容失败', error);
+                return null;
+            }
         },
         parseMessageContent(messageContent) {
             const fallbackText = typeof messageContent === 'string' ? messageContent : '';
-            if (typeof messageContent !== 'string' || !messageContent.startsWith(PRIVATE_MESSAGE_PREFIX)) {
+            const payload = this.getStructuredMessagePayload(messageContent);
+            if (!payload) {
                 return {
                     type: 'text',
                     text: fallbackText,
@@ -190,32 +336,23 @@ export default {
                 };
             }
 
-            try {
-                const payload = JSON.parse(messageContent.slice(PRIVATE_MESSAGE_PREFIX.length));
-                if (!payload || payload.version !== PRIVATE_MESSAGE_VERSION) {
-                    throw new Error('Unsupported private message payload');
-                }
+            if (payload.type === PRIVATE_MESSAGE_TYPES.IMAGE && payload.url) {
+                return {
+                    type: PRIVATE_MESSAGE_TYPES.IMAGE,
+                    text: '',
+                    previewText: '[图片]',
+                    imageUrl: payload.url
+                };
+            }
 
-                if (payload.type === PRIVATE_MESSAGE_TYPES.IMAGE && payload.url) {
-                    return {
-                        type: PRIVATE_MESSAGE_TYPES.IMAGE,
-                        text: '',
-                        previewText: '[图片]',
-                        imageUrl: payload.url
-                    };
-                }
-
-                if (payload.type === PRIVATE_MESSAGE_TYPES.NOVEL_SHARE && payload.novel) {
-                    const novel = this.normalizeNovel(payload.novel);
-                    return {
-                        type: PRIVATE_MESSAGE_TYPES.NOVEL_SHARE,
-                        text: '',
-                        previewText: `分享了作品《${novel.name}》`,
-                        novel
-                    };
-                }
-            } catch (error) {
-                console.error('解析私信内容失败', error);
+            if (payload.type === PRIVATE_MESSAGE_TYPES.NOVEL_SHARE && payload.novel) {
+                const novel = this.normalizeNovel(payload.novel, payload.novel.source_type || '');
+                return {
+                    type: PRIVATE_MESSAGE_TYPES.NOVEL_SHARE,
+                    text: '',
+                    previewText: `分享了作品《${novel.name}》`,
+                    novel
+                };
             }
 
             return {
@@ -270,26 +407,235 @@ export default {
                 url: '/pages/readers/bookInfo?id=' + novel.novel_id
             });
         },
-        async loadMyNovels(force = false) {
-            if (this.loadingMyNovels || (!force && this.myNovels.length > 0)) return;
-            this.loadingMyNovels = true;
+        setBookTabLoading(tabKey, loading) {
+            this.$set(this.loadingBookTabs, tabKey, loading);
+        },
+        setBookTabBooks(tabKey, books = []) {
+            this.$set(this.sharedNovelGroups, tabKey, books);
+            this.$set(this.loadedBookTabs, tabKey, true);
+            if (tabKey === 'mine') {
+                this.myNovels = books;
+            }
+        },
+        readLocalBookCache(cacheKey) {
             try {
-                const token = JSON.parse(window.localStorage.getItem('token')).tk;
+                const value = JSON.parse(window.localStorage.getItem(cacheKey) || 'null');
+                return Array.isArray(value) ? value : [];
+            } catch (error) {
+                return [];
+            }
+        },
+        async ensureCurrentUserProfile() {
+            if (this.getCurrentUserDisplayName()) return;
+
+            const token = this.getAuthToken();
+            if (!token) return;
+
+            try {
+                const res = await axios.get(this.$baseUrl + '/users/userprofile', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                this.user = res.data || {};
+            } catch (error) {
+                console.error('加载当前用户信息失败', error);
+            }
+        },
+        needsNovelDetailHydration(book = {}, source = '') {
+            if (!book || !book.novel_id || source === 'mine') return false;
+            return !this.isMeaningfulText(book.author_name);
+        },
+        async getNovelDetailForShare(novelId) {
+            if (!novelId) return null;
+            if (Object.prototype.hasOwnProperty.call(this.novelDetailCache, novelId)) {
+                return this.novelDetailCache[novelId];
+            }
+
+            const res = await axios.get(this.$baseUrl + '/library/get_novel_by_id', {
+                params: {
+                    id: novelId
+                }
+            });
+            const detail = Array.isArray(res.data) ? res.data[0] : res.data;
+            this.$set(this.novelDetailCache, novelId, detail || null);
+            return detail || null;
+        },
+        async hydrateMissingNovelAuthors(books = [], source = '') {
+            const nextBooks = [...books];
+            await Promise.all(nextBooks.map(async (book, index) => {
+                if (!this.needsNovelDetailHydration(book, source)) return;
+
+                try {
+                    const detail = await this.getNovelDetailForShare(book.novel_id);
+                    if (detail) {
+                        nextBooks[index] = this.normalizeNovel({ ...book, ...detail }, source);
+                    }
+                } catch (error) {
+                    console.error('补齐作品作者失败', error);
+                }
+            }));
+            return nextBooks;
+        },
+        async normalizeAndHydrateNovels(books = [], source = '') {
+            const normalizedBooks = (Array.isArray(books) ? books : [])
+                .map(book => this.normalizeNovel(book, source))
+                .filter(book => book.novel_id > 0);
+            return this.hydrateMissingNovelAuthors(normalizedBooks, source);
+        },
+        async loadMyNovels(force = false) {
+            const tabKey = 'mine';
+            if (this.loadingBookTabs[tabKey] || (!force && this.loadedBookTabs[tabKey])) return;
+
+            this.setBookTabLoading(tabKey, true);
+            try {
+                const token = this.getAuthToken();
+                if (!token) {
+                    this.setBookTabBooks(tabKey, []);
+                    uni.showToast({
+                        title: '请先登录',
+                        icon: 'none'
+                    });
+                    return;
+                }
+
+                await this.ensureCurrentUserProfile();
                 const res = await axios.get(this.$baseUrl + '/essays/get_novels_of', {
                     headers: {
                         'Authorization': 'Bearer ' + token
                     }
                 });
-                this.myNovels = (res.data || []).map(book => this.normalizeNovel(book));
+                const books = await this.normalizeAndHydrateNovels(res.data || [], tabKey);
+                this.setBookTabBooks(tabKey, books);
             } catch (error) {
-                console.error('加载作品失败', error);
+                console.error('加载我的作品失败', error);
                 uni.showToast({
                     title: '加载作品失败',
                     icon: 'none'
                 });
             } finally {
-                this.loadingMyNovels = false;
+                this.setBookTabLoading(tabKey, false);
             }
+        },
+        async loadLikedNovels(force = false) {
+            const tabKey = 'liked';
+            if (this.loadingBookTabs[tabKey] || (!force && this.loadedBookTabs[tabKey])) return;
+
+            this.setBookTabLoading(tabKey, true);
+            try {
+                let rawBooks = [];
+                const token = this.getAuthToken();
+
+                if (token) {
+                    try {
+                        const res = await axios.get(this.$baseUrl + '/bookcase/get_likes_of', {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            }
+                        });
+                        rawBooks = Array.isArray(res.data) ? res.data : [];
+                        window.localStorage.setItem('LogHomeLikedBooks', JSON.stringify(rawBooks));
+                    } catch (error) {
+                        if (error && error.message === 'Request failed with status code 401') {
+                            window.localStorage.removeItem('token');
+                        }
+                        rawBooks = this.readLocalBookCache('LogHomeLikedBooks');
+                        if (rawBooks.length === 0) {
+                            throw error;
+                        }
+                    }
+                } else {
+                    rawBooks = this.readLocalBookCache('LogHomeLikedBooks');
+                }
+
+                const books = await this.normalizeAndHydrateNovels(rawBooks, tabKey);
+                this.setBookTabBooks(tabKey, books);
+            } catch (error) {
+                console.error('加载收藏作品失败', error);
+                uni.showToast({
+                    title: '加载收藏失败',
+                    icon: 'none'
+                });
+            } finally {
+                this.setBookTabLoading(tabKey, false);
+            }
+        },
+        async loadHistoryNovels(force = false) {
+            const tabKey = 'history';
+            if (this.loadingBookTabs[tabKey] || (!force && this.loadedBookTabs[tabKey])) return;
+
+            this.setBookTabLoading(tabKey, true);
+            try {
+                let rawBooks = [];
+                const token = this.getAuthToken();
+
+                if (token) {
+                    try {
+                        const res = await axios.get(this.$baseUrl + '/library/reading_history', {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            }
+                        });
+                        rawBooks = Array.isArray(res.data) ? res.data : [];
+                        window.localStorage.setItem('loghomeReaderHistory', JSON.stringify(rawBooks));
+                    } catch (error) {
+                        if (error && error.message === 'Request failed with status code 401') {
+                            window.localStorage.removeItem('token');
+                        }
+                        rawBooks = this.readLocalBookCache('loghomeReaderHistory').reverse();
+                        if (rawBooks.length === 0) {
+                            throw error;
+                        }
+                    }
+                } else {
+                    rawBooks = this.readLocalBookCache('loghomeReaderHistory').reverse();
+                }
+
+                const books = await this.normalizeAndHydrateNovels(rawBooks, tabKey);
+                this.setBookTabBooks(tabKey, books);
+            } catch (error) {
+                console.error('加载阅读历史失败', error);
+                uni.showToast({
+                    title: '加载历史失败',
+                    icon: 'none'
+                });
+            } finally {
+                this.setBookTabLoading(tabKey, false);
+            }
+        },
+        loadBooksForActiveTab(force = false) {
+            if (this.activeBookTab === 'liked') {
+                return this.loadLikedNovels(force);
+            }
+            if (this.activeBookTab === 'history') {
+                return this.loadHistoryNovels(force);
+            }
+            return this.loadMyNovels(force);
+        },
+        async hydrateSharedNovelMessages() {
+            const novelIds = new Set();
+            this.messages.forEach(message => {
+                const payload = this.getStructuredMessagePayload(message.message_content);
+                if (!payload || payload.type !== PRIVATE_MESSAGE_TYPES.NOVEL_SHARE || !payload.novel) return;
+
+                const novel = this.normalizeNovel(payload.novel, payload.novel.source_type || '');
+                if (this.needsNovelDetailHydration(novel, novel.source_type)) {
+                    novelIds.add(novel.novel_id);
+                }
+            });
+
+            if (novelIds.size === 0) return;
+
+            await Promise.all(Array.from(novelIds).map(async novelId => {
+                try {
+                    await this.getNovelDetailForShare(novelId);
+                } catch (error) {
+                    console.error('补齐分享消息作品作者失败', error);
+                }
+            }));
+            this.$forceUpdate();
         },
         async onEmojiSelect(data) {
             if (!data) return;
@@ -309,16 +655,44 @@ export default {
             }
         },
         openBookSelector() {
+            if (this.bookSelectorAnimationTimer) {
+                clearTimeout(this.bookSelectorAnimationTimer);
+                this.bookSelectorAnimationTimer = null;
+            }
             this.showBookSelector = true;
+            this.bookSelectorVisible = false;
+            this.activeBookTab = 'mine';
             this.bookKeyword = '';
-            this.loadMyNovels();
+            this.$nextTick(() => {
+                this.bookSelectorVisible = true;
+            });
+            this.loadBooksForActiveTab();
+        },
+        switchBookSelectorTab(tabKey) {
+            if (this.activeBookTab === tabKey) return;
+            this.activeBookTab = tabKey;
+            this.bookKeyword = '';
+            this.loadBooksForActiveTab();
         },
         closeBookSelector() {
-            this.showBookSelector = false;
+            if (!this.showBookSelector) return;
+
+            this.bookSelectorVisible = false;
+            if (this.bookSelectorAnimationTimer) {
+                clearTimeout(this.bookSelectorAnimationTimer);
+            }
+            this.bookSelectorAnimationTimer = setTimeout(() => {
+                this.showBookSelector = false;
+                this.bookSelectorAnimationTimer = null;
+            }, BOOK_SELECTOR_ANIMATION_DURATION);
         },
         async shareBook(book) {
-            const novel = this.normalizeNovel(book);
-            this.showBookSelector = false;
+            let novel = this.normalizeNovel(book, this.activeBookTab);
+            if (this.needsNovelDetailHydration(novel, this.activeBookTab)) {
+                const hydratedBooks = await this.hydrateMissingNovelAuthors([novel], this.activeBookTab);
+                novel = hydratedBooks[0] || novel;
+            }
+            this.closeBookSelector();
             try {
                 await this.sendMessageContent(this.buildStructuredMessage({
                     type: PRIVATE_MESSAGE_TYPES.NOVEL_SHARE,
@@ -475,6 +849,8 @@ export default {
                         this.latestMessageId = Math.max(...numericIds);
                     }
 
+                    this.hydrateSharedNovelMessages();
+
                     // 标记接收到的消息为已读
                     this.markReceivedMessagesAsRead();
                 }
@@ -608,6 +984,8 @@ export default {
 
                 // 如果有新消息
                 if (hasNewMessages) {
+                    this.hydrateSharedNovelMessages();
+
                     // 检查用户是否在底部
                     const messagesContainer = document.querySelector('.messages');
                     if (messagesContainer) {
@@ -843,6 +1221,11 @@ export default {
         if (this.toastTimer) {
             clearTimeout(this.toastTimer);
             this.toastTimer = null;
+        }
+
+        if (this.bookSelectorAnimationTimer) {
+            clearTimeout(this.bookSelectorAnimationTimer);
+            this.bookSelectorAnimationTimer = null;
         }
     }
 };
@@ -1132,6 +1515,14 @@ export default {
     z-index: 100001;
     display: flex;
     align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.26s ease;
+}
+
+.book-selector-mask.visible {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .book-selector-panel {
@@ -1145,6 +1536,14 @@ export default {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: 0 -12rpx 36rpx rgba(0, 0, 0, 0.16);
+    transform: translate3d(0, 100%, 0);
+    transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+.book-selector-mask.visible .book-selector-panel {
+    transform: translate3d(0, 0, 0);
 }
 
 .book-selector-header {
@@ -1166,6 +1565,30 @@ export default {
     color: var(--text-color-regular);
 }
 
+.book-selector-tabs {
+    display: flex;
+    gap: 12rpx;
+    padding: 18rpx 30rpx 0;
+}
+
+.book-selector-tab {
+    flex: 1;
+    height: 64rpx;
+    border-radius: 14rpx;
+    background: var(--background-color-secondary);
+    color: var(--text-color-regular);
+    font-size: 26rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.book-selector-tab.active {
+    background: #f56c6c;
+    color: #ffffff;
+    font-weight: bold;
+}
+
 .book-search-row {
     padding: 20rpx 30rpx;
     border-bottom: 1px solid var(--border-color);
@@ -1183,7 +1606,7 @@ export default {
 
 .book-selector-list {
     flex: 1;
-    height: calc(75vh - 180rpx - env(safe-area-inset-bottom));
+    height: calc(75vh - 250rpx - env(safe-area-inset-bottom));
     min-height: 240rpx;
 }
 

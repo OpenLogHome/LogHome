@@ -44,6 +44,10 @@ const {
 	correctArticleContent,
 	correctParagraphs,
 } = require('../bin/baiduTextCorrection.js');
+const {
+	calculateContentHash: calculateArticleContentHash,
+	ensureArticleParagraphIds: ensureArticleParagraphIdsForStorage,
+} = require('../bin/articleParagraphIds.js');
 const fs = require('fs'); // 引入文件系统模块
 const compressing = require('compressing');
 const path = require('path');
@@ -56,8 +60,7 @@ const memoryDatabase = config.memoryDatabase || 'loghome-agent-memory';
  * @returns {string} MD5哈希值
  */
 function calculateContentHash(content) {
-    if (!content) return '';
-    return crypto.createHash('md5').update(content).digest('hex');
+    return calculateArticleContentHash(content);
 }
 
 function parsePositiveParagraphId(rawId) {
@@ -72,71 +75,7 @@ function parsePositiveParagraphId(rawId) {
 }
 
 function ensureArticleParagraphIds(content) {
-	if (typeof content !== 'string' || !content) {
-		return content;
-	}
-
-	let blocks;
-	try {
-		blocks = JSON.parse(content);
-	} catch (error) {
-		return content;
-	}
-
-	if (!Array.isArray(blocks)) {
-		return content;
-	}
-
-	let maxId = 0;
-	for (const block of blocks) {
-		if (!block || typeof block !== 'object' || Array.isArray(block)) {
-			continue;
-		}
-
-		if (block.type !== 'text') {
-			continue;
-		}
-
-		const blockId =
-			parsePositiveParagraphId(block.id) ||
-			parsePositiveParagraphId(block.paragraph_id);
-		if (blockId && blockId > maxId) {
-			maxId = blockId;
-		}
-	}
-
-	let mutated = false;
-	const normalizedBlocks = blocks.map((block) => {
-		if (!block || typeof block !== 'object' || Array.isArray(block)) {
-			return block;
-		}
-
-		if (block.type !== 'text') {
-			return block;
-		}
-
-		if (parsePositiveParagraphId(block.id)) {
-			return block;
-		}
-
-		const paragraphId = parsePositiveParagraphId(block.paragraph_id);
-		if (paragraphId) {
-			mutated = true;
-			return {
-				...block,
-				id: paragraphId,
-			};
-		}
-
-		maxId += 1;
-		mutated = true;
-		return {
-			...block,
-			id: maxId,
-		};
-	});
-
-	return mutated ? JSON.stringify(normalizedBlocks) : content;
+	return ensureArticleParagraphIdsForStorage(content);
 }
 
 function currentTime()  
@@ -170,6 +109,218 @@ function currentTime()
   
     return(clock);   
 }  
+
+function currentCompactTime() {
+	const now = new Date();
+	const year = now.getFullYear();
+	const month = String(now.getMonth() + 1).padStart(2, '0');
+	const day = String(now.getDate()).padStart(2, '0');
+	const hours = String(now.getHours()).padStart(2, '0');
+	const minutes = String(now.getMinutes()).padStart(2, '0');
+	const seconds = String(now.getSeconds()).padStart(2, '0');
+	return `${year}${month}${day}${hours}${minutes}${seconds}`;
+}
+
+function normalizeWriterCreateTime(rawCreateTime) {
+	const normalized = String(rawCreateTime || '').replace(/\D/g, '').slice(0, 14);
+	return normalized || currentCompactTime();
+}
+
+const WRITER_LEGACY_TIME_SQL_FORMAT = '%Y%m%d%H%i%s';
+
+function buildWriterUpdatedAtExpression(alias = 'aw') {
+	return `COALESCE(${alias}.updated_at, STR_TO_DATE(${alias}.create_time, '${WRITER_LEGACY_TIME_SQL_FORMAT}'))`;
+}
+
+function buildLatestWriterIdSubquery(articleIdExpression, options = {}) {
+	const writerAlias = options.writerAlias || 'aw_latest';
+	const includeNovelCheck = options.includeNovelCheck === true;
+	const joinSql = includeNovelCheck
+		? `INNER JOIN novels n_${writerAlias} ON n_${writerAlias}.novel_id = ${writerAlias}.novel_id`
+		: '';
+	const novelWhereSql = includeNovelCheck ? `AND n_${writerAlias}.deleted = 0` : '';
+
+	return `(
+		SELECT ${writerAlias}.id
+		FROM articles_writer ${writerAlias}
+		${joinSql}
+		WHERE ${writerAlias}.article_id = ${articleIdExpression}
+			${novelWhereSql}
+		ORDER BY ${buildWriterUpdatedAtExpression(writerAlias)} DESC, ${writerAlias}.id DESC
+		LIMIT 1
+	)`;
+}
+
+function serializeWriterSnapshotMeta(row) {
+	if (!row) {
+		return null;
+	}
+
+	return {
+		id: Number(row.id),
+		article_id: Number(row.article_id),
+		create_time: row.create_time || '',
+		updated_at: row.updated_at || null,
+		content_hash: row.content_hash || null,
+		title: row.title || '',
+		editor_user_id: row.editor_user_id ? Number(row.editor_user_id) : null,
+		edit_session_id: row.edit_session_id || null,
+	};
+}
+
+async function getWriterSnapshotMetaById(writerId) {
+	if (!writerId) {
+		return null;
+	}
+
+	const rows = await query(
+		`SELECT
+			id,
+			article_id,
+			create_time,
+			updated_at,
+			content_hash,
+			title,
+			editor_user_id,
+			edit_session_id
+		FROM articles_writer
+		WHERE id = ?
+		LIMIT 1`,
+		[writerId],
+	);
+
+	return serializeWriterSnapshotMeta(rows[0] || null);
+}
+
+async function getLatestWriterSnapshotMeta(articleId) {
+	const rows = await query(
+		`SELECT
+			id,
+			article_id,
+			create_time,
+			updated_at,
+			content_hash,
+			title,
+			editor_user_id,
+			edit_session_id
+		FROM articles_writer
+		WHERE article_id = ?
+		ORDER BY ${buildWriterUpdatedAtExpression('articles_writer')} DESC, id DESC
+		LIMIT 1`,
+		[articleId],
+	);
+
+	return serializeWriterSnapshotMeta(rows[0] || null);
+}
+
+async function validateActiveEditSession({
+	articleId,
+	userId,
+	sessionId,
+	required = false,
+}) {
+	if (!sessionId) {
+		if (!required) {
+			return {
+				ok: true,
+				lock: null,
+			};
+		}
+
+		return {
+			ok: false,
+			status: 400,
+			body: {
+				msg: 'edit_session_id is required',
+				code: 'edit_session_required',
+			},
+		};
+	}
+
+	const activeLock = await getActiveArticleEditLock(articleId);
+	if (
+		!activeLock ||
+		Number(activeLock.user_id) !== Number(userId) ||
+		String(activeLock.session_id || '').trim() !== String(sessionId).trim()
+	) {
+		return {
+			ok: false,
+			status: 409,
+			body: {
+				msg: 'stale_session',
+				code: 'stale_session',
+				lock: serializeEditLock(activeLock),
+			},
+		};
+	}
+
+	return {
+		ok: true,
+		lock: activeLock,
+	};
+}
+
+async function mirrorWriterDraftSnapshot({
+	articleId,
+	novelId,
+	title,
+	content,
+	contentHash,
+	createTime,
+	editorUserId,
+	editSessionId,
+}) {
+	const normalizedCreateTime = normalizeWriterCreateTime(createTime);
+	const latestRows = await query(
+		`SELECT id, title, content
+		FROM articles_writer
+		WHERE article_id = ?
+		ORDER BY ${buildWriterUpdatedAtExpression('articles_writer')} DESC, id DESC
+		LIMIT 1`,
+		[articleId],
+	);
+
+	if (
+		latestRows.length > 0 &&
+		latestRows[0].title === title &&
+		latestRows[0].content === content
+	) {
+		return {
+			ok: true,
+			skipped: true,
+			writer_snapshot: await getWriterSnapshotMetaById(latestRows[0].id),
+		};
+	}
+
+	const insertResult = await query(
+		`INSERT INTO articles_writer(
+			article_id,
+			title,
+			content,
+			content_hash,
+			create_time,
+			novel_id,
+			editor_user_id,
+			edit_session_id
+		) VALUES(?,?,?,?,?,?,?,?)`,
+		[
+			articleId,
+			title,
+			content,
+			contentHash,
+			normalizedCreateTime,
+			novelId,
+			editorUserId || null,
+			editSessionId || null,
+		],
+	);
+
+	return {
+		ok: true,
+		skipped: false,
+		writer_snapshot: await getWriterSnapshotMetaById(insertResult.insertId),
+	};
+}
 
 function serializeEditLock(lock) {
 	if (!lock) return null;
@@ -263,6 +414,7 @@ function serializeArticleListRow(row) {
 			article_id: row.writer_article_id,
 			content_hash: row.writer_content_hash,
 			create_time: row.writer_create_time,
+			updated_at: row.writer_updated_at || null,
 			id: row.writer_id,
 			novel_id: row.writer_novel_id,
 			title: row.writer_title,
@@ -303,6 +455,7 @@ function serializeArticleHistoryRow(row) {
 		title: row.title,
 		content: row.content,
 		create_time: row.create_time,
+		updated_at: row.updated_at || null,
 		novel_id: Number(row.novel_id),
 		content_hash: row.content_hash || null,
 		editor_user_id: row.editor_user_id ? Number(row.editor_user_id) : null,
@@ -332,6 +485,7 @@ function serializeArticleSearchSnapshotRow(row) {
 				content: row.writer_content || '',
 				content_hash: row.writer_content_hash || null,
 				create_time: row.writer_create_time || '',
+				updated_at: row.writer_updated_at || null,
 				editor_user_id: row.writer_editor_user_id
 					? Number(row.writer_editor_user_id)
 					: null,
@@ -1312,6 +1466,7 @@ router.get('/get_articles', auth, async function (req, res) {
 				aw.article_id as writer_article_id,
 				aw.content_hash as writer_content_hash,
 				aw.create_time as writer_create_time,
+				aw.updated_at as writer_updated_at,
 				aw.id as writer_id,
 				aw.novel_id as writer_novel_id,
 				aw.title as writer_title,
@@ -1332,30 +1487,8 @@ router.get('/get_articles', auth, async function (req, res) {
 				al.avatar_url as active_lock_avatar_url
 			FROM articles a
 			INNER JOIN novels n ON a.novel_id = n.novel_id
-			LEFT JOIN (
-				SELECT 
-					aw1.article_id,
-					aw1.content_hash,
-					aw1.create_time,
-					aw1.id,
-					aw1.novel_id,
-					aw1.title,
-					aw1.editor_user_id,
-					aw1.edit_session_id
-				FROM articles_writer aw1
-				INNER JOIN (
-					SELECT MAX(aw2.id) as max_id
-					FROM articles_writer aw2
-					INNER JOIN (
-						SELECT article_id, MAX(aw3.create_time) as max_create_time
-						FROM articles_writer aw3
-						INNER JOIN novels n2 ON aw3.novel_id = n2.novel_id
-						WHERE n2.deleted = 0
-						GROUP BY article_id
-					) latest ON aw2.article_id = latest.article_id AND aw2.create_time = latest.max_create_time
-					GROUP BY aw2.article_id
-				) latest_unique ON aw1.id = latest_unique.max_id
-			) aw ON a.article_id = aw.article_id
+			LEFT JOIN articles_writer aw
+				ON aw.id = ${buildLatestWriterIdSubquery('a.article_id', { includeNovelCheck: true })}
 			LEFT JOIN users writer_user ON writer_user.user_id = aw.editor_user_id
 			LEFT JOIN \`${memoryDatabase}\`.agent_memory am_raw ON a.article_id = am_raw.article_id
 			LEFT JOIN \`${memoryDatabase}\`.agent_memory am
@@ -1433,37 +1566,15 @@ router.get('/get_articles_search_snapshot', auth, async function (req, res) {
 				aw.content AS writer_content,
 				aw.content_hash AS writer_content_hash,
 				aw.create_time AS writer_create_time,
+				aw.updated_at AS writer_updated_at,
 				aw.editor_user_id AS writer_editor_user_id,
 				aw.edit_session_id AS writer_edit_session_id,
 				writer_user.name AS writer_editor_name,
 				writer_user.avatar_url AS writer_editor_avatar_url
 			FROM articles a
 			INNER JOIN novels n ON a.novel_id = n.novel_id
-			LEFT JOIN (
-				SELECT
-					aw1.article_id,
-					aw1.id,
-					aw1.title,
-					aw1.content,
-					aw1.content_hash,
-					aw1.create_time,
-					aw1.editor_user_id,
-					aw1.edit_session_id
-				FROM articles_writer aw1
-				INNER JOIN (
-					SELECT MAX(aw2.id) AS max_id
-					FROM articles_writer aw2
-					INNER JOIN (
-						SELECT article_id, MAX(aw3.create_time) AS max_create_time
-						FROM articles_writer aw3
-						INNER JOIN novels n2 ON aw3.novel_id = n2.novel_id
-						WHERE n2.deleted = 0
-						GROUP BY article_id
-					) latest ON aw2.article_id = latest.article_id
-						AND aw2.create_time = latest.max_create_time
-					GROUP BY aw2.article_id
-				) latest_unique ON aw1.id = latest_unique.max_id
-			) aw ON a.article_id = aw.article_id
+			LEFT JOIN articles_writer aw
+				ON aw.id = ${buildLatestWriterIdSubquery('a.article_id', { includeNovelCheck: true })}
 			LEFT JOIN users writer_user ON writer_user.user_id = aw.editor_user_id
 			WHERE a.novel_id = ?
 				AND n.deleted = 0
@@ -1504,6 +1615,7 @@ router.get('/get_articles_deleted', auth, async function (req, res) {
 				aw.article_id as writer_article_id,
 				aw.content_hash as writer_content_hash,
 				aw.create_time as writer_create_time,
+				aw.updated_at as writer_updated_at,
 				aw.id as writer_id,
 				aw.novel_id as writer_novel_id,
 				aw.title as writer_title,
@@ -1513,30 +1625,8 @@ router.get('/get_articles_deleted', auth, async function (req, res) {
 				aw.edit_session_id as writer_edit_session_id
 			FROM articles a
 			INNER JOIN novels n ON a.novel_id = n.novel_id
-			LEFT JOIN (
-				SELECT 
-					aw1.article_id,
-					aw1.content_hash,
-					aw1.create_time,
-					aw1.id,
-					aw1.novel_id,
-					aw1.title,
-					aw1.editor_user_id,
-					aw1.edit_session_id
-				FROM articles_writer aw1
-				INNER JOIN (
-					SELECT MAX(aw2.id) as max_id
-					FROM articles_writer aw2
-					INNER JOIN (
-						SELECT article_id, MAX(aw3.create_time) as max_create_time
-						FROM articles_writer aw3
-						INNER JOIN novels n2 ON aw3.novel_id = n2.novel_id
-						WHERE n2.deleted = 0
-						GROUP BY article_id
-					) latest ON aw2.article_id = latest.article_id AND aw2.create_time = latest.max_create_time
-					GROUP BY aw2.article_id
-				) latest_unique ON aw1.id = latest_unique.max_id
-			) aw ON a.article_id = aw.article_id
+			LEFT JOIN articles_writer aw
+				ON aw.id = ${buildLatestWriterIdSubquery('a.article_id', { includeNovelCheck: true })}
 			LEFT JOIN users writer_user ON writer_user.user_id = aw.editor_user_id
 			WHERE a.novel_id = ? 
 				AND n.deleted = 0 
@@ -1639,7 +1729,7 @@ router.get('/get_article_writer', auth, async function (req, res) {
 			LEFT JOIN users u ON u.user_id = a.editor_user_id
 			WHERE article_id = ?
 				AND n.deleted = 0
-			ORDER BY create_time DESC, a.id DESC
+			ORDER BY ${buildWriterUpdatedAtExpression('a')} DESC, a.id DESC
 			LIMIT 1`,
 			[articleId],
 		); 
@@ -1683,7 +1773,7 @@ router.get('/get_article_writer_hash', auth, async function (req, res) {
                                WHERE n.novel_id = a.novel_id 
                                AND article_id = ? 
                                AND n.deleted = 0
-							   ORDER BY create_time DESC
+							   ORDER BY ${buildWriterUpdatedAtExpression('a')} DESC, a.id DESC
 							   LIMIT 1`,
 			[articleId],
 		); 
@@ -1744,7 +1834,12 @@ router.post('/sync_article_writer_from_reader', auth, async (req, res) => {
 				sessionId,
 			],
 		);
-		res.end(JSON.stringify(results));
+		res.end(
+			JSON.stringify({
+				...results,
+				writer_snapshot: await getWriterSnapshotMetaById(results.insertId),
+			}),
+		);
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -1762,6 +1857,16 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 			return res.status(403).json({ msg: 'access denied' });
 		}
 
+		const sessionValidation = await validateActiveEditSession({
+			articleId: access.article_id,
+			userId: user.user_id,
+			sessionId,
+			required: req.body.is_force !== true,
+		});
+		if (!sessionValidation.ok) {
+			return res.status(sessionValidation.status).json(sessionValidation.body);
+		}
+
 		const novelId = Number(access.novel_id);
 		req.body.content = ensureArticleParagraphIds(req.body.content);
 		const contentHash = calculateContentHash(req.body.content);
@@ -1775,7 +1880,7 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 					WHERE article_id = ?
 						AND editor_user_id = ?
 						AND edit_session_id = ?
-					ORDER BY create_time DESC, id DESC
+					ORDER BY ${buildWriterUpdatedAtExpression('articles_writer')} DESC, id DESC
 					LIMIT 1`,
 					[articleId, user.user_id, sessionId],
 				);
@@ -1787,7 +1892,7 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 					FROM articles_writer
 					WHERE article_id = ?
 						AND editor_user_id = ?
-					ORDER BY create_time DESC, id DESC
+					ORDER BY ${buildWriterUpdatedAtExpression('articles_writer')} DESC, id DESC
 					LIMIT 1`,
 					[articleId, user.user_id],
 				);
@@ -1816,7 +1921,12 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 						sessionId,
 					],
 				);
-				res.end(JSON.stringify(results));
+				res.end(
+					JSON.stringify({
+						...results,
+						writer_snapshot: await getWriterSnapshotMetaById(results.insertId),
+					}),
+				);
 				return;
 			}
 
@@ -1841,17 +1951,29 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 					article_writer[0].id,
 				],
 			);
-			res.end(JSON.stringify(results));
+			res.end(
+				JSON.stringify({
+					...results,
+					writer_snapshot: await getWriterSnapshotMetaById(article_writer[0].id),
+				}),
+			);
 		} else {
 
 			if(!req.body.is_force){
 				// 检查是否与上次记录不一样
 				let latestLocalArticle = await query(
-					'SELECT * FROM articles_writer WHERE article_id = ? ORDER BY create_time DESC, id DESC LIMIT 1',
+					`SELECT *
+					FROM articles_writer
+					WHERE article_id = ?
+					ORDER BY ${buildWriterUpdatedAtExpression('articles_writer')} DESC, id DESC
+					LIMIT 1`,
 					[articleId],
 				);
 				if(latestLocalArticle.length > 0 && latestLocalArticle[0].content == req.body.content && latestLocalArticle[0].title == req.body.title) {
-					res.json(200, { msg: 'content does not change' });
+					res.status(200).json({
+						msg: 'content does not change',
+						writer_snapshot: await getWriterSnapshotMetaById(latestLocalArticle[0].id),
+					});
 					return;
 				}
 			}
@@ -1878,7 +2000,12 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 					sessionId,
 				],
 			);
-			res.end(JSON.stringify(results));
+			res.end(
+				JSON.stringify({
+					...results,
+					writer_snapshot: await getWriterSnapshotMetaById(results.insertId),
+				}),
+			);
 		}
 	} catch (e) {
 		console.log(e);
@@ -1941,6 +2068,10 @@ router.post('/modify_article', auth, async (req, res) => {
 	const user = getCurrentUser(req);
 	try {
 		req.body.content = ensureArticleParagraphIds(req.body.content);
+		const sessionId = sanitizeSessionId(req.body.edit_session_id);
+		const writerCreateTime = normalizeWriterCreateTime(
+			req.body.writer_create_time || req.body.create_time,
+		);
 		const scheduleTime =
 			typeof req.body.schedule_time === 'string'
 				? req.body.schedule_time.trim()
@@ -1961,6 +2092,16 @@ router.post('/modify_article', auth, async (req, res) => {
 			}
 		} else if (!canEditDraft(access) || !canPublish(access)) {
 			return res.status(403).json({ msg: 'access denied' });
+		}
+
+		const sessionValidation = await validateActiveEditSession({
+			articleId: access.article_id,
+			userId: user.user_id,
+			sessionId,
+			required: false,
+		});
+		if (!sessionValidation.ok) {
+			return res.status(sessionValidation.status).json(sessionValidation.body);
 		}
 
 		// 如果是定时发布
@@ -2022,13 +2163,29 @@ router.post('/modify_article', auth, async (req, res) => {
     } else if(article.article_type == "worldVocabulary"){
       textCount += JSON.parse(article.content).desc.length;
     }
-    await query(
+		await query(
 			'UPDATE articles SET text_count = ? WHERE article_id = ? AND deleted = 0',
 			[
 				textCount,
 				req.body.article_id,
 			],
 		);
+		let writerSnapshot = null;
+		if (access.article_type === 'richtext') {
+			const mirrorResult = await mirrorWriterDraftSnapshot({
+				articleId: Number(req.body.article_id),
+				novelId: Number(access.novel_id),
+				title: req.body.title,
+				content: req.body.content,
+				contentHash,
+				createTime: writerCreateTime,
+				editorUserId: user.user_id,
+				editSessionId: sessionId,
+			});
+			writerSnapshot = mirrorResult && mirrorResult.writer_snapshot
+				? mirrorResult.writer_snapshot
+				: await getLatestWriterSnapshotMeta(req.body.article_id);
+		}
 		//如果不是草稿，则推送至更新记录，并向所有收藏该小说的人发布更新信息
 		if (shouldTriggerPublishEffects) {
 			// 审核状态设为未审核
@@ -2066,7 +2223,10 @@ router.post('/modify_article', auth, async (req, res) => {
 				);
 			}
 		}
-		res.end(JSON.stringify(results));
+		res.end(JSON.stringify({
+			...results,
+			writer_snapshot: writerSnapshot,
+		}));
         // 同时更新全本字数
         if (shouldTriggerPublishEffects) {
             let novel = (await query(
@@ -2150,6 +2310,7 @@ router.get('/get_article_history', auth, async function (req, res) {
 				aw.title,
 				aw.content,
 				aw.create_time,
+				aw.updated_at,
 				aw.novel_id,
 				aw.content_hash,
 				aw.editor_user_id,
@@ -2159,7 +2320,7 @@ router.get('/get_article_history', auth, async function (req, res) {
 			FROM articles_writer aw
 			LEFT JOIN users u ON u.user_id = aw.editor_user_id
 			WHERE aw.article_id = ?
-			ORDER BY aw.create_time DESC, aw.id DESC`,
+			ORDER BY ${buildWriterUpdatedAtExpression('aw')} DESC, aw.id DESC`,
 			[articleId],
 		);
 		
@@ -2185,6 +2346,7 @@ router.get('/get_article_history_meta', auth, async function (req, res) {
 				aw.article_id,
 				aw.title,
 				aw.create_time,
+				aw.updated_at,
 				aw.novel_id,
 				aw.content_hash,
 				aw.editor_user_id,
@@ -2194,7 +2356,7 @@ router.get('/get_article_history_meta', auth, async function (req, res) {
 			FROM articles_writer aw
 			LEFT JOIN users u ON u.user_id = aw.editor_user_id
 			WHERE aw.article_id = ?
-			ORDER BY aw.create_time DESC, aw.id DESC`,
+			ORDER BY ${buildWriterUpdatedAtExpression('aw')} DESC, aw.id DESC`,
 			[articleId],
 		);
 
@@ -2319,22 +2481,32 @@ router.post('/resort_article', auth, async (req, res) => {
 			return res.status(403).json({ msg: 'access denied' });
 		}
 
-		for (const element of sortlist) {
-			let elementAccess = await getArticleAccess(user.user_id, element.article_id);
-			if (
-				!canSortArticle(elementAccess) ||
-				Number(elementAccess.novel_id) !== Number(access.novel_id)
-			) {
+		// Batch verify all articles exist and belong to the same novel
+		const articleIds = sortlist.map(e => e.article_id);
+		const placeholders = articleIds.map(() => '?').join(',');
+		const articleCheckRows = await query(
+			`SELECT article_id, novel_id FROM articles WHERE article_id IN (${placeholders})`,
+			articleIds
+		);
+
+		if (articleCheckRows.length !== articleIds.length) {
+			return res.status(400).json({ msg: 'some articles not found' });
+		}
+
+		for (const row of articleCheckRows) {
+			if (Number(row.novel_id) !== Number(access.novel_id)) {
 				return res.status(403).json({ msg: 'access denied' });
 			}
 		}
 
-		for (const element of sortlist) {
-			await query(
-				'UPDATE articles SET `article_chapter`=? WHERE article_id=?',
-				[element.article_chapter, element.article_id],
-			);
-		}
+		// Batch update all article chapters in a single query
+		const updateParts = sortlist.map(() => 'WHEN ? THEN ?').join(' ');
+		const updateParams = sortlist.flatMap(e => [e.article_id, e.article_chapter]);
+		await query(
+			`UPDATE articles SET article_chapter = CASE article_id ${updateParts} END WHERE article_id IN (${placeholders})`,
+			[...updateParams, ...articleIds]
+		);
+
 		res.end(JSON.stringify({ msg: 'success' }));
 	} catch (e) {
 		console.log(e);

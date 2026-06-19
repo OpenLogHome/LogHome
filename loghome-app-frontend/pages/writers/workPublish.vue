@@ -278,11 +278,18 @@
 
 <script>
 import axios from "axios";
+import { getServerTime } from "../../lib/utils.js";
+import { writerArticleDB } from "../../lib/db.js";
 import {
   countLegacyContent,
   parseLegacyContent,
   stringifyLegacyContent,
 } from "../../lib/writerEditorLegacyAdapter.js";
+import {
+  buildClientSyncTime,
+  markWriterSyncInvalidated,
+  markWriterSyncSynced,
+} from "../../lib/writerSyncState.js";
 import {
   buildCorrectionParagraphs,
   buildParagraphRequestKey,
@@ -315,10 +322,16 @@ function createEmptyCorrectionResult() {
   };
 }
 
+const EDIT_LOCK_HEARTBEAT_MS = 30 * 1000;
+
 export default {
   data() {
     return {
       articleId: 0,
+      sourceSessionId: "",
+      publishSessionId: "",
+      currentEditLock: null,
+      lockHeartbeatTimer: null,
       publishMode: "now",
       scheduleTime: "",
       scheduleDate: "",
@@ -379,6 +392,150 @@ export default {
     getCurrentUserId() {
       const token = this.getTokenInfo();
       return token && token.id ? Number(token.id) : 0;
+    },
+    generatePublishSessionId() {
+      return `writer_publish_${this.articleId}_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 10)}`;
+    },
+    async getCurrentSyncTime() {
+      const serverTime = await getServerTime();
+      return serverTime || buildClientSyncTime();
+    },
+    async claimEditLock() {
+      const tk = this.getAuthToken();
+      if (!tk || !this.articleId || !this.publishSessionId) {
+        return false;
+      }
+
+      try {
+        const response = await axios.post(
+          this.$baseUrl + "/essays/claim_article_edit_lock",
+          {
+            article_id: this.articleId,
+            session_id: this.publishSessionId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + tk,
+            },
+          }
+        );
+        this.currentEditLock = response.data.lock || null;
+        this.startLockHeartbeat();
+        return true;
+      } catch (error) {
+        if (error.response && error.response.status === 409) {
+          this.currentEditLock = error.response.data.lock || null;
+          this.handleLockConflict(error.response.data.lock);
+          return false;
+        }
+        throw error;
+      }
+    },
+    startLockHeartbeat() {
+      this.stopLockHeartbeat();
+      this.lockHeartbeatTimer = setInterval(() => {
+        this.heartbeatEditLock();
+      }, EDIT_LOCK_HEARTBEAT_MS);
+    },
+    stopLockHeartbeat() {
+      if (this.lockHeartbeatTimer) {
+        clearInterval(this.lockHeartbeatTimer);
+        this.lockHeartbeatTimer = null;
+      }
+    },
+    async heartbeatEditLock() {
+      const tk = this.getAuthToken();
+      if (!tk || !this.articleId || !this.publishSessionId) {
+        return;
+      }
+
+      try {
+        const response = await axios.post(
+          this.$baseUrl + "/essays/heartbeat_article_edit_lock",
+          {
+            article_id: this.articleId,
+            session_id: this.publishSessionId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + tk,
+            },
+          }
+        );
+        this.currentEditLock = response.data.lock || null;
+      } catch (error) {
+        this.stopLockHeartbeat();
+        if (error.response && error.response.status === 409) {
+          this.currentEditLock = error.response.data.lock || null;
+          this.handleLockConflict(error.response.data.lock);
+        }
+      }
+    },
+    async releaseEditLock() {
+      const tk = this.getAuthToken();
+      if (!tk || !this.articleId || !this.publishSessionId) {
+        return;
+      }
+
+      try {
+        await axios.post(
+          this.$baseUrl + "/essays/release_article_edit_lock",
+          {
+            article_id: this.articleId,
+            session_id: this.publishSessionId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + tk,
+            },
+          }
+        );
+      } catch (error) {}
+    },
+    handleLockConflict(lockInfo) {
+      const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
+      uni.showModal({
+        title: "章节已被占用",
+        content: `${lockName} 正在编辑这个章节，请稍后再试。`,
+        showCancel: false,
+        success: () => {
+          uni.navigateBack({});
+        },
+      });
+    },
+    isStaleSessionError(error) {
+      return !!(
+        error &&
+        error.response &&
+        error.response.status === 409 &&
+        error.response.data &&
+        error.response.data.code === "stale_session"
+      );
+    },
+    handleStaleSessionInvalidation() {
+      const syncTime = buildClientSyncTime();
+      markWriterSyncInvalidated({
+        userId: this.getCurrentUserId(),
+        articleId: this.articleId,
+        content: this.article.content,
+        localCreateTime: syncTime,
+        sessionId: this.publishSessionId,
+        lastError: "stale_session",
+      });
+      this.stopLockHeartbeat();
+      uni.showModal({
+        title: "发布会话已失效",
+        content: "这个发布页面已经被新的操作接管，请重新进入后再试。",
+        showCancel: false,
+        success: () => {
+          uni.navigateBack({});
+        },
+      });
     },
     getPublishDraftStorageKey(articleId = this.articleId) {
       const token = this.getTokenInfo();
@@ -480,12 +637,31 @@ export default {
           name: this.article.novelName,
           is_personal: this.article.isPersonal ? 1 : 0,
         },
+        edit_session_id: this.publishSessionId || this.sourceSessionId || "",
         saved_at: Date.now(),
       };
       window.localStorage.setItem(
         this.getPublishDraftStorageKey(),
         JSON.stringify(draft)
       );
+    },
+    async syncLocalWriterSnapshot(currentServerTime, remoteUpdatedAt = "") {
+      await writerArticleDB.articles.add({
+        article_id: Number(this.articleId || 0),
+        user_id: Number(this.getCurrentUserId() || 0),
+        title: this.article.title,
+        content: this.article.content,
+        create_time: currentServerTime,
+        is_slow_save: true,
+      });
+      markWriterSyncSynced({
+        userId: this.getCurrentUserId(),
+        articleId: this.articleId,
+        content: this.article.content,
+        remoteCreateTime: currentServerTime,
+        remoteUpdatedAt: remoteUpdatedAt || "",
+        sessionId: this.publishSessionId,
+      });
     },
     buildAnnotatedSegments(item) {
       const fragments = Array.isArray(item?.fragments)
@@ -629,6 +805,10 @@ export default {
     async initializePage() {
       this.ignoredCorrectionStore = loadIgnoredCorrections(this.getCurrentUserId());
       this.initializeSchedulePicker();
+      const lockClaimed = await this.claimEditLock();
+      if (!lockClaimed) {
+        return;
+      }
       const draft = this.loadPublishDraft();
       if (draft) {
         this.article = this.buildArticleContext(draft);
@@ -992,7 +1172,8 @@ export default {
       this.submitLoading = true;
       try {
         const tk = this.getAuthToken();
-        await axios.post(
+        const currentServerTime = await this.getCurrentSyncTime();
+        const response = await axios.post(
           this.$baseUrl + "/essays/modify_article",
           {
             title: this.article.title,
@@ -1001,6 +1182,8 @@ export default {
             article_id: this.articleId,
             schedule_time: this.publishMode === "schedule" ? this.scheduleTime : null,
             clear_schedule: this.publishMode === "now" ? 1 : 0,
+            edit_session_id: this.publishSessionId,
+            writer_create_time: currentServerTime,
           },
           {
             headers: {
@@ -1010,6 +1193,17 @@ export default {
           }
         );
 
+        const writerSnapshot =
+          (response &&
+            response.data &&
+            response.data.writer_snapshot &&
+            typeof response.data.writer_snapshot === "object" &&
+            response.data.writer_snapshot) ||
+          {};
+        await this.syncLocalWriterSnapshot(
+          writerSnapshot.create_time || currentServerTime,
+          writerSnapshot.updated_at || ""
+        );
         this.clearPublishDraft();
         uni.showToast({
           title: this.publishMode === "schedule" ? "定时发布设置成功" : "发布成功",
@@ -1020,6 +1214,10 @@ export default {
           this.navigateAfterSubmit();
         }, 1200);
       } catch (error) {
+        if (this.isStaleSessionError(error)) {
+          this.handleStaleSessionInvalidation();
+          return;
+        }
         uni.showToast({
           title: "提交失败，请重试",
           icon: "none",
@@ -1041,7 +1239,8 @@ export default {
           this.submitLoading = true;
           try {
             const tk = this.getAuthToken();
-            await axios.post(
+            const currentServerTime = await this.getCurrentSyncTime();
+            const response = await axios.post(
               this.$baseUrl + "/essays/modify_article",
               {
                 title: this.article.title,
@@ -1049,6 +1248,8 @@ export default {
                 is_draft: 1,
                 article_id: this.articleId,
                 clear_schedule: 1,
+                edit_session_id: this.publishSessionId,
+                writer_create_time: currentServerTime,
               },
               {
                 headers: {
@@ -1058,6 +1259,17 @@ export default {
               }
             );
 
+            const writerSnapshot =
+              (response &&
+                response.data &&
+                response.data.writer_snapshot &&
+                typeof response.data.writer_snapshot === "object" &&
+                response.data.writer_snapshot) ||
+              {};
+            await this.syncLocalWriterSnapshot(
+              writerSnapshot.create_time || currentServerTime,
+              writerSnapshot.updated_at || ""
+            );
             this.clearPublishDraft();
             uni.showToast({
               title: "已退回草稿",
@@ -1068,6 +1280,10 @@ export default {
               this.navigateAfterSubmit();
             }, 1200);
           } catch (error) {
+            if (this.isStaleSessionError(error)) {
+              this.handleStaleSessionInvalidation();
+              return;
+            }
             uni.showToast({
               title: "操作失败，请重试",
               icon: "none",
@@ -1080,8 +1296,14 @@ export default {
       });
     },
   },
+  async beforeDestroy() {
+    this.stopLockHeartbeat();
+    await this.releaseEditLock();
+  },
   onLoad(params) {
     this.articleId = Number(params.id || 0);
+    this.sourceSessionId = String(params.sourceSessionId || "").trim();
+    this.publishSessionId = this.generatePublishSessionId();
     this.initializePage().catch(() => {
       uni.showToast({
         title: "加载发布页失败",
@@ -1089,6 +1311,18 @@ export default {
         duration: 2000,
       });
     });
+  },
+  async onUnload() {
+    this.stopLockHeartbeat();
+    await this.releaseEditLock();
+  },
+  onHide() {
+    this.stopLockHeartbeat();
+  },
+  onShow() {
+    if (this.publishSessionId) {
+      this.claimEditLock();
+    }
   },
 };
 </script>

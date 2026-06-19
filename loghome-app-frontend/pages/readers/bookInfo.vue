@@ -351,7 +351,7 @@
 
 		<view class="l-body-fixed" v-show="bookInfo.is_personal == 0">
 			<view class="l-handle-btn l-ai-btn clickable" @tap="gotoAskLogGirl">
-				<view class="ai-entry-icon">AI</view>
+				<image class="ai-entry-icon" src="https://storage.codesocean.top/api/resource/get/177882044429077" mode="aspectFit"></image>
 				<view class="ai-entry-text">问问原木娘</view>
 			</view>
 			<view class="l-handle-btn l-look-btn clickable" @tap="tip">
@@ -1649,23 +1649,13 @@ export default {
 }
 
 .ai-entry-icon {
-	min-width: 52rpx;
+	width: 52rpx;
 	height: 52rpx;
-	padding: 0 12rpx;
-	border-radius: 999rpx;
+	border-radius: 14rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 24rpx;
-	font-weight: 800;
-	letter-spacing: 2rpx;
-	background: rgba(255, 255, 255, 0.65);
-	box-shadow: inset 0 0 0 1rpx rgba(115, 78, 7, 0.08);
-
-	.dark-mode & {
-		background: rgba(255, 255, 255, 0.12);
-		box-shadow: inset 0 0 0 1rpx rgba(255, 255, 255, 0.08);
-	}
+	overflow: hidden;
 }
 
 .ai-entry-text {

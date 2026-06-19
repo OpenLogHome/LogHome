@@ -24,6 +24,9 @@ const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
 const BASE_URL_EMULATOR_DEV = "http://10.0.2.2:9000"
 const BASE_URL_SCF = "https://loghomeinnerservice.codesocean.top"
+const READER_AI_BASE_URL_PRODUCTION = "http://ai.loghome.codesocean.top:9101"
+const READER_AI_BASE_URL_DEV = "http://127.0.0.1:9101"
+const READER_AI_BASE_URL_EMULATOR_DEV = "http://10.0.2.2:9101"
 
 const STORE_BASE_URL_PRODUCTION = "http://store.codesocean.top"
 const STORE_BASE_URL_DEV = "http://localhost:5173"
@@ -38,7 +41,8 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_DEV;
+Vue.prototype.$baseUrl = BASE_URL_SCF;
+Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_PRODUCTION;
 Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {

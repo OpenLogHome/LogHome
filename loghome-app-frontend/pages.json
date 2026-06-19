@@ -87,7 +87,7 @@
 		{
 			"path": "pages/readers/askLogGirl",
 			"style": {
-				"navigationBarTitleText": "问问原木娘"
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -278,55 +278,20 @@
 				}
             }
         },
-		{
+        {
             "path" : "pages/writers/chapterEditorNew",
             "style" :                                                                                    
             {
                 "enablePullDownRefresh": false,
-				"titleNView": {
-					"titleSize": "40rpx",
-					"titleColor": "rgb(180, 111, 88)",
-					"buttons": [				
-						{
-						    "text": "发布 ",
-						    "fontSize": "36rpx",
-						    "float": "right"
-						},
-						{
-							"fontSrc": "/static/iconfont/iconfont.ttf",
-						    "text": "\ue625 ",
-						    "fontSize": "25px",
-						    "float": "right"
-						},
-				        {
-							"fontSrc": "/static/iconfont/iconfont.ttf",
-				            "text": "\ue624 ",
-				            "fontSize": "25px",
-				            "float": "right"
-				        },
-						{
-							"fontSrc": "/static/iconfont/iconfont.ttf",
-						    "text": "\ue70f ",
-						    "fontSize": "25px",
-						    "float": "right"
-						},{
-							"fontSrc": "/static/iconfont/iconfont.ttf",
-						    "text": "\ue629 ",
-						    "fontSize": "25px",
-						    "float": "right"
-						},{
-							"fontSrc": "/static/iconfont/iconfont.ttf",
-						    "text": "\ue61f ",
-						    "fontSize": "25px",
-						    "float": "right"
-						},{
-							"fontSrc": "/static/iconfont/iconfont.ttf",
-						    "text": "\ue60e ",
-						    "fontSize": "24px",
-						    "float": "right"
-						}
-				    ]
-				}
+				"navigationStyle": "custom"
+            }
+        },
+        {
+            "path" : "pages/writers/chapterToolbarSettings",
+            "style" :
+            {
+                "enablePullDownRefresh": false,
+				"navigationStyle": "custom"
             }
         },
 		{

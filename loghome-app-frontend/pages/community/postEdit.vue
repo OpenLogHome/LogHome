@@ -576,6 +576,10 @@
 					uni.showToast({ title: '请输入内容', icon: 'none' })
 					return
 				}
+				if (!this.postData.media_urls || this.postData.media_urls.length === 0) {
+					uni.showToast({ title: '请至少上传一张图片', icon: 'none' })
+					return
+				}
 				if (!this.postData.circle_id) {
 					uni.showToast({ title: '请选择圈子', icon: 'none' })
 					return
