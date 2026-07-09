@@ -17,4 +17,12 @@ writerArticleDB.version(6).stores({
   articles: `++id, article_id, user_id, [user_id+article_id], title, content, create_time, is_slow_save`
 })
 
-export { articleDB, imgDB, writerArticleDB };
+const textCorrectionDB = new Dexie('textCorrectionDatabase');
+textCorrectionDB.version(1).stores({
+  standardCache: 'id',
+  standardIgnored: 'id',
+  smartCache: 'id',
+  smartIgnored: 'id',
+});
+
+export { articleDB, imgDB, writerArticleDB, textCorrectionDB };

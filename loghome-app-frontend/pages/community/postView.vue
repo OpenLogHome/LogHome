@@ -45,24 +45,24 @@
 		padding:5vw;
 		overflow:hidden;
 		color: var(--text-color-primary);
-		/deep/ img{
+		::v-deep img{
 			max-width:90vw;
 		}
 	}
-	/deep/ .post{
+	::v-deep .post{
 		color: var(--text-color-primary);
 		line-height: 1.6;
 	}
-	/deep/ .post p,
-	/deep/ .post span,
-	/deep/ .post div,
-	/deep/ .post li,
-	/deep/ .post h1,
-	/deep/ .post h2,
-	/deep/ .post h3,
-	/deep/ .post h4,
-	/deep/ .post h5,
-	/deep/ .post h6{
+	::v-deep .post p,
+	::v-deep .post span,
+	::v-deep .post div,
+	::v-deep .post li,
+	::v-deep .post h1,
+	::v-deep .post h2,
+	::v-deep .post h3,
+	::v-deep .post h4,
+	::v-deep .post h5,
+	::v-deep .post h6{
 		color: inherit !important;
 	}
 </style>

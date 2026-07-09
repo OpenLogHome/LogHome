@@ -1,7 +1,7 @@
 <template>
   <view class="writer-ai-root" @touchstart.stop @touchend.stop>
     <view
-      v-if="selectionAddButton.visible"
+      v-if="selectionAddButton.visible && !selectionAddButtonSuppressed"
       class="selection-add-button"
       :class="theme"
       :style="selectionAddButtonStyle"
@@ -929,6 +929,7 @@ export default {
         left: 0,
         top: 0,
       },
+      selectionAddButtonSuppressed: false,
       selectionBlockTooltip: {
         visible: false,
         title: "",
@@ -969,6 +970,7 @@ export default {
       reasoningTypewriterTimers: {},
       isDragging: false,
       panelHeight: 0,
+      panelHeightRatio: 0.6,
       screenHeight: 0,
       startY: 0,
       startHeight: 0,
@@ -1098,8 +1100,11 @@ export default {
     this.refreshConversationSessions();
     this.resumeLatestPendingConversation();
     if (typeof window !== "undefined") {
-      window.addEventListener("resize", this.scheduleSelectionButtonUpdate);
+      window.addEventListener("resize", this.handleViewportResize);
       window.addEventListener("scroll", this.scheduleSelectionButtonUpdate, true);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", this.handleViewportResize);
+      }
     }
   },
   beforeDestroy() {
@@ -1110,9 +1115,13 @@ export default {
     this.stopAllReasoningTypewriters();
     this.unbindEditorSelectionListener();
     if (typeof window !== "undefined") {
-      window.removeEventListener("resize", this.scheduleSelectionButtonUpdate);
+      window.removeEventListener("resize", this.handleViewportResize);
       window.removeEventListener("scroll", this.scheduleSelectionButtonUpdate, true);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", this.handleViewportResize);
+      }
     }
+    this.clearPanelViewportTimers();
     if (this._selectionButtonFrame) {
       cancelAnimationFrame(this._selectionButtonFrame);
       this._selectionButtonFrame = null;
@@ -1131,19 +1140,112 @@ export default {
   methods: {
     noop() {},
     open() {
+      this.selectionAddButtonSuppressed = true;
+      this.hideSelectionAddButton();
       this.refreshConversationSessions();
       this.refreshSelectionInfo();
       this.updateSelectionAddButton();
       this.initPanelHeight();
       this.$refs.popup.open("bottom");
+      this.schedulePanelViewportRefresh();
       this.resumePendingAssistIfNeeded();
     },
     initPanelHeight() {
-      if (!this.screenHeight) {
-        const sysInfo = uni.getSystemInfoSync();
-        this.screenHeight = sysInfo.windowHeight;
+      this.panelHeightRatio = 0.6;
+      this.refreshPanelViewportHeight({ forceRatio: 0.6 });
+    },
+    handleViewportResize() {
+      this.scheduleSelectionButtonUpdate();
+      if (this.isPanelOpen()) {
+        this.schedulePanelViewportRefresh();
       }
-      this.panelHeight = this.screenHeight * 0.6;
+    },
+    isPanelOpen() {
+      const popup = this.$refs && this.$refs.popup;
+      return !!(
+        popup &&
+        (popup.showPopup || popup.showTrans)
+      );
+    },
+    getPanelViewportHeight() {
+      let sysInfo = {};
+      try {
+        sysInfo = uni.getSystemInfoSync() || {};
+      } catch (error) {
+        sysInfo = {};
+      }
+
+      const heights = [];
+      const windowHeight = Number(sysInfo.windowHeight || 0);
+      if (windowHeight > 0) {
+        heights.push(windowHeight);
+      }
+
+      if (typeof window !== "undefined") {
+        const innerHeight = Number(window.innerHeight || 0);
+        if (innerHeight > 0) {
+          heights.push(innerHeight);
+        }
+        if (window.visualViewport) {
+          const visualHeight = Number(window.visualViewport.height || 0);
+          if (visualHeight > 0) {
+            heights.push(visualHeight);
+          }
+        }
+      }
+
+      let viewportHeight = Math.max.apply(null, heights.length ? heights : [0]);
+      const platform = String(sysInfo.platform || "").toLowerCase();
+
+      if (platform === "android") {
+        const screenHeight = Number(sysInfo.screenHeight || 0);
+        const safeAreaHeight = sysInfo.safeArea ? Number(sysInfo.safeArea.height || 0) : 0;
+        const statusBarHeight = Number(sysInfo.statusBarHeight || 0);
+        const windowTop = Number(sysInfo.windowTop || 0);
+        const fullHeightCandidates = [
+          safeAreaHeight,
+          screenHeight - windowTop,
+          screenHeight - statusBarHeight,
+        ].filter((height) => Number.isFinite(height) && height > 0);
+        const fullHeight = Math.max.apply(null, fullHeightCandidates.length ? fullHeightCandidates : [0]);
+
+        if (fullHeight > 0 && (!viewportHeight || fullHeight > viewportHeight * 1.2)) {
+          viewportHeight = fullHeight;
+        }
+      }
+
+      return Math.round(viewportHeight || 640);
+    },
+    refreshPanelViewportHeight(options = {}) {
+      if (this.isDragging) return;
+
+      const nextScreenHeight = this.getPanelViewportHeight();
+      const previousScreenHeight = Number(this.screenHeight || 0);
+      const previousPanelHeight = Number(this.panelHeight || 0);
+      const forceRatio = Number(options.forceRatio);
+      const nextRatio = Number.isFinite(forceRatio) && forceRatio > 0
+        ? forceRatio
+        : previousScreenHeight && previousPanelHeight
+          ? previousPanelHeight / previousScreenHeight
+          : this.panelHeightRatio || 0.6;
+
+      this.screenHeight = nextScreenHeight;
+      this.panelHeightRatio = Math.max(0.4, Math.min(nextRatio, 0.95));
+      this.panelHeight = nextScreenHeight * this.panelHeightRatio;
+    },
+    schedulePanelViewportRefresh() {
+      this.clearPanelViewportTimers();
+      const delays = [0, 80, 260, 520];
+      this._panelViewportTimers = delays.map((delay) => {
+        return setTimeout(() => {
+          this.refreshPanelViewportHeight();
+        }, delay);
+      });
+    },
+    clearPanelViewportTimers() {
+      if (!this._panelViewportTimers) return;
+      this._panelViewportTimers.forEach((timer) => clearTimeout(timer));
+      this._panelViewportTimers = null;
     },
     handlePanelDragStart(e) {
       this.isDragging = true;
@@ -1159,6 +1261,7 @@ export default {
       if (newHeight < minH - 50) newHeight = minH - 50;
       if (newHeight > maxH + 50) newHeight = maxH + 50;
       this.panelHeight = newHeight;
+      this.panelHeightRatio = this.screenHeight ? newHeight / this.screenHeight : this.panelHeightRatio;
     },
     handlePanelDragEnd() {
       const current = this.panelHeight;
@@ -1172,15 +1275,20 @@ export default {
         }
       });
       this.panelHeight = closest;
+      this.panelHeightRatio = this.screenHeight ? closest / this.screenHeight : 0.6;
       this.isDragging = false;
     },
     close() {
       this.flushConversationPersist();
+      this.selectionAddButtonSuppressed = false;
       this.$refs.popup.close();
+      this.scheduleSelectionButtonUpdate();
       this.$emit('close');
     },
     handleMaskClick() {
       this.flushConversationPersist();
+      this.selectionAddButtonSuppressed = false;
+      this.scheduleSelectionButtonUpdate();
       this.$emit('close');
     },
     splitDiffLines(text) {
@@ -1780,6 +1888,8 @@ export default {
     },
     updateSelectionAddButton() {
       if (
+        this.selectionAddButtonSuppressed ||
+        this.isPanelOpen() ||
         !this.selectionText ||
         !this.selectionSnapshot ||
         !this.editor ||
@@ -1832,6 +1942,16 @@ export default {
         };
       }
     },
+    hideSelectionAddButton(clearSelection = false) {
+      this.selectionAddButton = {
+        ...this.selectionAddButton,
+        visible: false,
+      };
+      if (clearSelection) {
+        this.selectionText = "";
+        this.selectionSnapshot = null;
+      }
+    },
     addSelectionToPrompt() {
       this.refreshSelectionInfo();
       const selectedText = buildSelectionBlockText(this.selectionText);
@@ -1864,19 +1984,25 @@ export default {
         docSize: snapshot.docSize === undefined ? null : snapshot.docSize,
       };
       this.pendingSelectionBlocks = this.pendingSelectionBlocks.concat(nextBlock);
-      this.selectionAddButton = {
-        ...this.selectionAddButton,
-        visible: false,
-      };
-      if (this.$refs.popup && typeof this.$refs.popup.open === "function") {
-        this.$refs.popup.open("bottom");
+      this.selectionAddButtonSuppressed = true;
+      this.hideSelectionAddButton(true);
+      if (this.editor) {
+        this.editor.commands.blur();
       }
-      this.$nextTick(() => {
-        const promptInput = this.$refs.promptInput;
-        if (promptInput && typeof promptInput.focus === "function") {
-          promptInput.focus();
+      const wasOpen = this.isPanelOpen();
+      if (wasOpen) {
+        if (this.$refs.popup && typeof this.$refs.popup.open === "function") {
+          this.$refs.popup.open("bottom");
         }
-      });
+      } else {
+        this.$emit("open");
+        this.initPanelHeight();
+        if (this.$refs.popup && typeof this.$refs.popup.open === "function") {
+          this.$refs.popup.open("bottom");
+        }
+        this.schedulePanelViewportRefresh();
+        this.resumePendingAssistIfNeeded();
+      }
       uni.showToast({
         title: "已添加段落",
         icon: "none",
@@ -2387,6 +2513,9 @@ export default {
             const newHeight = Math.min(contentHeight + 200, maxPanelHeight);
             if (newHeight > this.panelHeight) {
               this.panelHeight = newHeight;
+              this.panelHeightRatio = this.screenHeight
+                ? newHeight / this.screenHeight
+                : this.panelHeightRatio;
             }
           }
         });
@@ -4041,7 +4170,7 @@ export default {
   z-index: 30000;
 }
 
-.writer-ai-root /deep/ .uni-popup {
+.writer-ai-root ::v-deep .uni-popup {
   z-index: 30000 !important;
 }
 
@@ -4778,56 +4907,56 @@ export default {
   white-space: normal;
 }
 
-.markdown-body /deep/ p {
+.markdown-body ::v-deep p {
   margin: 0 0 14rpx;
   white-space: pre-wrap;
 }
 
-.markdown-body /deep/ p:last-child,
-.markdown-body /deep/ ul:last-child,
-.markdown-body /deep/ ol:last-child,
-.markdown-body /deep/ blockquote:last-child,
-.markdown-body /deep/ pre:last-child {
+.markdown-body ::v-deep p:last-child,
+.markdown-body ::v-deep ul:last-child,
+.markdown-body ::v-deep ol:last-child,
+.markdown-body ::v-deep blockquote:last-child,
+.markdown-body ::v-deep pre:last-child {
   margin-bottom: 0;
 }
 
-.markdown-body /deep/ h1,
-.markdown-body /deep/ h2,
-.markdown-body /deep/ h3,
-.markdown-body /deep/ h4 {
+.markdown-body ::v-deep h1,
+.markdown-body ::v-deep h2,
+.markdown-body ::v-deep h3,
+.markdown-body ::v-deep h4 {
   margin: 18rpx 0 10rpx;
   font-weight: 800;
   line-height: 1.35;
 }
 
-.markdown-body /deep/ h1 {
+.markdown-body ::v-deep h1 {
   font-size: 34rpx;
 }
 
-.markdown-body /deep/ h2 {
+.markdown-body ::v-deep h2 {
   font-size: 31rpx;
 }
 
-.markdown-body /deep/ h3 {
+.markdown-body ::v-deep h3 {
   font-size: 28rpx;
 }
 
-.markdown-body /deep/ h4 {
+.markdown-body ::v-deep h4 {
   font-size: 26rpx;
 }
 
-.markdown-body /deep/ ul,
-.markdown-body /deep/ ol {
+.markdown-body ::v-deep ul,
+.markdown-body ::v-deep ol {
   margin: 8rpx 0 16rpx;
   padding-left: 34rpx;
 }
 
-.markdown-body /deep/ li {
+.markdown-body ::v-deep li {
   margin: 6rpx 0;
   line-height: 1.65;
 }
 
-.markdown-body /deep/ blockquote {
+.markdown-body ::v-deep blockquote {
   margin: 12rpx 0 16rpx;
   padding: 10rpx 16rpx;
   border-left: 6rpx solid #3f2a18;
@@ -4835,12 +4964,12 @@ export default {
   background: #f5ead7;
 }
 
-.black .markdown-body /deep/ blockquote {
+.black .markdown-body ::v-deep blockquote {
   border-left-color: #d8ccb9;
   background: rgba(255, 255, 255, 0.06);
 }
 
-.markdown-body /deep/ code {
+.markdown-body ::v-deep code {
   padding: 2rpx 8rpx;
   border-radius: 0;
   border: 1px solid rgba(63, 42, 24, 0.35);
@@ -4848,7 +4977,7 @@ export default {
   background: #fffaf0;
 }
 
-.markdown-body /deep/ pre {
+.markdown-body ::v-deep pre {
   margin: 12rpx 0 16rpx;
   padding: 16rpx;
   border-radius: 0;
@@ -4857,25 +4986,25 @@ export default {
   background: #fffaf0;
 }
 
-.markdown-body /deep/ pre code {
+.markdown-body ::v-deep pre code {
   display: block;
   padding: 0;
   white-space: pre;
   background: transparent;
 }
 
-.markdown-body /deep/ a {
+.markdown-body ::v-deep a {
   color: #8f5411;
   text-decoration: underline;
 }
 
-.black .markdown-body /deep/ code,
-.black .markdown-body /deep/ pre {
+.black .markdown-body ::v-deep code,
+.black .markdown-body ::v-deep pre {
   border-color: rgba(216, 204, 185, 0.45);
   background: rgba(255, 255, 255, 0.08);
 }
 
-.black .markdown-body /deep/ a {
+.black .markdown-body ::v-deep a {
   color: #f0d7a8;
 }
 

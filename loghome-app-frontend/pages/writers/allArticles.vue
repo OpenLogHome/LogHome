@@ -1972,7 +1972,7 @@ export default {
 		border-bottom-color: rgba(255, 255, 255, 0.08);
 	}
 
-	/deep/ .el-input__inner {
+	::v-deep .el-input__inner {
 		height: 88rpx;
 		padding: 0 88rpx 0 76rpx;
 		border-radius: 0;
@@ -1983,7 +1983,7 @@ export default {
 		font-size: 28rpx;
 	}
 
-	/deep/ .el-input__prefix {
+	::v-deep .el-input__prefix {
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -1992,24 +1992,24 @@ export default {
 		color: rgba(0, 0, 0, 0.48);
 	}
 
-	/deep/ .el-input__prefix-inner {
+	::v-deep .el-input__prefix-inner {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
-	/deep/ .el-input__suffix {
+	::v-deep .el-input__suffix {
 		right: 20rpx;
 	}
 
 	.dark-mode & {
-		/deep/ .el-input__inner {
+		::v-deep .el-input__inner {
 			background: transparent;
 			color: var(--text-color-primary);
 			border-bottom-color: var(--border-color);
 		}
 
-		/deep/ .el-input__prefix {
+		::v-deep .el-input__prefix {
 			color: rgba(255, 255, 255, 0.5);
 		}
 	}
@@ -2102,7 +2102,7 @@ export default {
 		color: var(--text-color-primary);
 	}
 
-	/deep/ mark {
+	::v-deep mark {
 		background: #ffe08a;
 		color: #5d2f14;
 		padding: 0 4rpx;
@@ -2143,7 +2143,7 @@ export default {
 		color: var(--text-color-regular);
 	}
 
-	/deep/ mark {
+	::v-deep mark {
 		background: #ffe08a;
 		color: #5d2f14;
 		padding: 0 4rpx;

@@ -415,10 +415,39 @@ async function heartbeatArticleEditLock({
 	);
 
 	if (!result || result.affectedRows === 0) {
+		const activeLock = await getActiveArticleEditLock(articleId);
+		if (!activeLock) {
+			const expiredRows = await query(
+				`SELECT lock_id
+				FROM article_edit_locks
+				WHERE article_id = ?
+					AND user_id = ?
+					AND session_id = ?
+					AND status = ?
+				ORDER BY updated_at DESC, lock_id DESC
+				LIMIT 1`,
+				[articleId, userId, sessionId, LOCK_STATUS.EXPIRED],
+			);
+
+			if (expiredRows && expiredRows.length > 0) {
+				await query(
+					`UPDATE article_edit_locks
+					SET expires_at = ?, status = ?
+					WHERE lock_id = ?`,
+					[expiresAt, LOCK_STATUS.ACTIVE, expiredRows[0].lock_id],
+				);
+
+				return {
+					ok: true,
+					lock: await getActiveArticleEditLock(articleId),
+				};
+			}
+		}
+
 		return {
 			ok: false,
 			reason: 'lock_not_found',
-			lock: await getActiveArticleEditLock(articleId),
+			lock: activeLock,
 		};
 	}
 

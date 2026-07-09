@@ -6,6 +6,16 @@ loghome-ai-backend/config.js
 loghome-backend/config.js
 *secret*.json
 .claude/
+**/key.properties
+**/local.properties
+**/*.jks
+
+# Local system, dependencies, and build outputs
+.DS_Store
+**/.DS_Store
+**/node_modules/
+**/.gradle/
+**/build/
 
 # Logs (may contain sensitive prompt data)
 **/logs/

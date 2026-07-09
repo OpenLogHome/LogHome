@@ -151,6 +151,11 @@ function buildLatestWriterIdSubquery(articleIdExpression, options = {}) {
 	)`;
 }
 
+function shouldMirrorWriterDraftForArticleType(articleType) {
+	const normalizedType = String(articleType || '').trim();
+	return !normalizedType || normalizedType === 'text' || normalizedType === 'richtext';
+}
+
 function serializeWriterSnapshotMeta(row) {
 	if (!row) {
 		return null;
@@ -272,7 +277,7 @@ async function mirrorWriterDraftSnapshot({
 }) {
 	const normalizedCreateTime = normalizeWriterCreateTime(createTime);
 	const latestRows = await query(
-		`SELECT id, title, content
+		`SELECT id, title, content, content_hash
 		FROM articles_writer
 		WHERE article_id = ?
 		ORDER BY ${buildWriterUpdatedAtExpression('articles_writer')} DESC, id DESC
@@ -283,11 +288,43 @@ async function mirrorWriterDraftSnapshot({
 	if (
 		latestRows.length > 0 &&
 		latestRows[0].title === title &&
-		latestRows[0].content === content
+		latestRows[0].content === content &&
+		latestRows[0].content_hash === contentHash
 	) {
 		return {
 			ok: true,
 			skipped: true,
+			writer_snapshot: await getWriterSnapshotMetaById(latestRows[0].id),
+		};
+	}
+
+	if (
+		latestRows.length > 0 &&
+		latestRows[0].title === title &&
+		latestRows[0].content === content
+	) {
+		await query(
+			`UPDATE articles_writer
+			SET content_hash = ?,
+				create_time = ?,
+				novel_id = ?,
+				editor_user_id = ?,
+				edit_session_id = ?
+			WHERE id = ?`,
+			[
+				contentHash,
+				normalizedCreateTime,
+				novelId,
+				editorUserId || null,
+				editSessionId || null,
+				latestRows[0].id,
+			],
+		);
+
+		return {
+			ok: true,
+			skipped: false,
+			updated_hash: true,
 			writer_snapshot: await getWriterSnapshotMetaById(latestRows[0].id),
 		};
 	}
@@ -2171,7 +2208,7 @@ router.post('/modify_article', auth, async (req, res) => {
 			],
 		);
 		let writerSnapshot = null;
-		if (access.article_type === 'richtext') {
+		if (shouldMirrorWriterDraftForArticleType(access.article_type)) {
 			const mirrorResult = await mirrorWriterDraftSnapshot({
 				articleId: Number(req.body.article_id),
 				novelId: Number(access.novel_id),

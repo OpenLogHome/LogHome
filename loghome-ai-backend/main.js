@@ -7,7 +7,9 @@ const {
 	handleWriterNovelAssistStream,
 	handleWriterNovelSmartReplace,
 } = require('./bin/writerNovelAiAssist');
+const { handleWriterTextCorrection } = require('./bin/writerTextCorrection');
 const { getNovelSummaryIndexStatus } = require('./bin/agentIndexing');
+const { requireAuth, requireUser } = require('./bin/auth');
 
 process.env.TZ = 'Asia/Shanghai';
 
@@ -90,6 +92,13 @@ app.use((req, res, next) => {
 	next();
 });
 
+app.use((req, res, next) => {
+	if (req.path === '/healthz' || req.method === 'OPTIONS') {
+		return next();
+	}
+	return requireAuth(req, res, next);
+});
+
 app.get('/healthz', (req, res) => {
 	res.json({
 		ok: true,
@@ -102,12 +111,16 @@ app.post('/library/reader_novel_ai_chat_stream', async (req, res) => {
 	return handleReaderNovelChatTaskStream(req, res);
 });
 
-app.post('/library/writer_novel_ai_assist_stream', async (req, res) => {
+app.post('/library/writer_novel_ai_assist_stream', requireUser, async (req, res) => {
 	return handleWriterNovelAssistStream(req, res);
 });
 
-app.post('/library/writer_novel_ai_smart_replace', async (req, res) => {
+app.post('/library/writer_novel_ai_smart_replace', requireUser, async (req, res) => {
 	return handleWriterNovelSmartReplace(req, res);
+});
+
+app.post('/library/writer_text_correction', requireUser, async (req, res) => {
+	return handleWriterTextCorrection(req, res);
 });
 
 app.get('/library/reader_novel_summary_index_status', async (req, res) => {

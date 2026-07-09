@@ -9,7 +9,7 @@
     "
     @touchend="documentOnPress = false"
   >
-    <div class="editorHeader">
+    <div ref="editorHeader" class="editorHeader">
       <div
         class="customNavBar"
         :style="customNavBarStyle"
@@ -58,28 +58,22 @@
       </div>
 
       <div class="topBar">
-        <input
-          class="input"
-          placeholder="章节标题"
-          v-model="article.title"
-          @input="handleTitleInput"
-          :style="titleInputStyle"
-        />
-        <div class="textCount">
+        <div class="statusCapsule textCount">
           {{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图
           <span class="editorRole" v-if="editorRoleText">{{ editorRoleText }}</span>
-          <div class="saveNotify">
-            <complete-icon
-              ref="completeIcon"
-              style="margin-right: 5rpx; transform: translateY(5rpx)"
-            ></complete-icon>
-            {{ saveNotifyText }}
-          </div>
+        </div>
+        <div class="statusCapsule saveNotify">
+          <complete-icon
+            ref="completeIcon"
+            style="margin-right: 5rpx; transform: translateY(5rpx)"
+          ></complete-icon>
+          {{ saveNotifyText }}
         </div>
       </div>
     </div>
 
     <div
+      ref="middleBar"
       class="middleBar"
       @touchstart="handleEditorAreaTouchStart"
       @touchmove="handleEditorAreaTouchMove"
@@ -94,19 +88,35 @@
         tabindex="-1"
         aria-hidden="true"
       />
-      <editor-content
-        v-if="editor"
-        :editor="editor"
-        class="textarea"
-        :style="editorContentStyle"
-        :class="{ symbolsShown: shouldShowQuickInputToolBar }"
-      ></editor-content>
       <div
-        v-else
         class="textarea"
         :style="editorContentStyle"
         :class="{ symbolsShown: shouldShowQuickInputToolBar }"
-      ></div>
+      >
+        <div class="chapterTitleBar">
+          <input
+            ref="titleInput"
+            class="input chapterTitleInput"
+            placeholder="章节标题"
+            v-model="article.title"
+            @input="handleTitleInput"
+            @focus="handleTitleInputFocus"
+            @blur="handleTitleInputBlur"
+            @click="scheduleTitleSelectionCapture"
+            @keyup="saveTitleInputSelection"
+            @mouseup="scheduleTitleSelectionCapture"
+            @touchend="scheduleTitleSelectionCapture"
+            @select="saveTitleInputSelection"
+            :style="titleInputStyle"
+          />
+        </div>
+        <editor-content
+          v-if="editor"
+          :editor="editor"
+          class="editorContent"
+        ></editor-content>
+        <div v-else class="editorContent"></div>
+      </div>
 
       <div
         class="quickInputToolBar"
@@ -280,185 +290,6 @@
       </view>
     </uni-popup>
 
-    <uni-popup ref="shortcutSettingsPopup" type="bottom">
-      <view class="shortcutSettingsPanel" @touchstart.stop @touchend.stop>
-        <div class="shortcutSettingsHeader">
-          <div>
-            <div class="shortcutSettingsTitle">快捷栏设置</div>
-          </div>
-          <button class="shortcutSettingsClose" @click.stop="closeShortcutSettingsPopup">
-            <i class="el-icon-close"></i>
-          </button>
-        </div>
-
-        <div class="shortcutSettingsTabs">
-          <button
-            class="shortcutSettingsTab"
-            :class="{ active: shortcutSettingsTab === 'input' }"
-            @click="shortcutSettingsTab = 'input'"
-          >
-            输入快捷栏
-          </button>
-          <button
-            class="shortcutSettingsTab"
-            :class="{ active: shortcutSettingsTab === 'toolbar' }"
-            @click="shortcutSettingsTab = 'toolbar'"
-          >
-            导航工具栏
-          </button>
-        </div>
-
-        <div v-if="shortcutSettingsTab === 'input'" class="shortcutSettingsBody">
-          <div class="shortcutForm">
-            <div class="shortcutTypeSwitch">
-              <button
-                :class="{ active: quickInputDraft.type === 'punctuation' }"
-                @click="quickInputDraft.type = 'punctuation'"
-              >
-                标点输入
-              </button>
-              <button
-                :class="{ active: quickInputDraft.type === 'word' }"
-                @click="quickInputDraft.type = 'word'"
-              >
-                词汇输入
-              </button>
-            </div>
-            <div class="shortcutFormFields">
-              <input
-                class="shortcutInputField"
-                v-model="quickInputDraft.label"
-                placeholder="显示名称，留空则使用内容"
-              />
-              <input
-                class="shortcutInputField"
-                v-model="quickInputDraft.value"
-                placeholder="点击后插入的内容"
-              />
-              <div
-                v-if="quickInputDraft.type === 'punctuation'"
-                class="shortcutPairToggle"
-              >
-                <span>成对标点</span>
-                <button
-                  class="shortcutSwitch"
-                  :class="{ active: quickInputDraft.isPair }"
-                  @click="quickInputDraft.isPair = !quickInputDraft.isPair"
-                >
-                  <span></span>
-                </button>
-              </div>
-            </div>
-            <div class="shortcutFormActions">
-              <button class="shortcutPrimaryButton" @click="saveQuickInputDraft">
-                {{ editingQuickInputId ? "保存快捷输入" : "添加快捷输入" }}
-              </button>
-              <button
-                v-if="editingQuickInputId"
-                class="shortcutGhostButton"
-                @click="cancelQuickInputEdit"
-              >
-                取消编辑
-              </button>
-              <button class="shortcutGhostButton" @click="resetQuickInputs">
-                恢复默认
-              </button>
-            </div>
-          </div>
-
-          <div class="shortcutList">
-            <div
-              v-for="(item, index) in quickInputSettingsItems"
-              :key="item.id"
-              class="shortcutListItem"
-            >
-              <div
-                class="shortcutItemPreview"
-                :class="{ paired: item.type === 'punctuation' && item.isPair }"
-              >
-                <span class="shortcutItemLabel">{{ item.label }}</span>
-                <span class="shortcutItemType">
-                  {{ item.type === "word" ? "词汇" : "标点" }}
-                </span>
-                <span
-                  v-if="item.type === 'punctuation' && item.isPair"
-                  class="shortcutItemType pair"
-                >
-                  成对
-                </span>
-                <span class="shortcutItemValue">{{ item.value }}</span>
-              </div>
-              <div class="shortcutItemActions">
-                <button @click="moveQuickInput(index, -1)" :disabled="index === 0">
-                  <i class="el-icon-arrow-up"></i>
-                </button>
-                <button
-                  @click="moveQuickInput(index, 1)"
-                  :disabled="index === quickInputSettingsItems.length - 1"
-                >
-                  <i class="el-icon-arrow-down"></i>
-                </button>
-                <button @click="editQuickInput(item)">
-                  <i class="el-icon-edit"></i>
-                </button>
-                <button @click="removeQuickInput(index)">
-                  <i class="el-icon-delete"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-else class="shortcutSettingsBody">
-          <div class="toolbarSettingsList">
-            <div
-              v-for="(tool, index) in toolbarSettingsItems"
-              :key="tool.id"
-              class="toolbarSettingsItem"
-            >
-              <div class="toolbarSettingsInfo">
-                <span v-if="tool.iconText" class="toolbarSettingsIcon iconfont">
-                  {{ tool.iconText }}
-                </span>
-                <img
-                  v-else-if="tool.iconImage"
-                  class="toolbarSettingsImage"
-                  :src="tool.iconImage"
-                  :alt="tool.label"
-                />
-                <i v-else class="toolbarSettingsIcon" :class="tool.iconClass"></i>
-                <span>{{ tool.label }}</span>
-              </div>
-              <div class="toolbarSettingsActions">
-                <button
-                  @click="moveToolbarTool(tool.id, -1)"
-                  :disabled="index === 0"
-                >
-                  <i class="el-icon-arrow-up"></i>
-                </button>
-                <button
-                  @click="moveToolbarTool(tool.id, 1)"
-                  :disabled="index === toolbarSettingsItems.length - 1"
-                >
-                  <i class="el-icon-arrow-down"></i>
-                </button>
-                <button
-                  class="toolbarVisibilityButton"
-                  :class="{ active: isNavShortcutToolVisible(tool.id) }"
-                  @click="toggleNavShortcutTool(tool.id)"
-                >
-                  {{ isNavShortcutToolVisible(tool.id) ? "导航中" : "固定" }}
-                </button>
-              </div>
-            </div>
-          </div>
-          <button class="shortcutPrimaryButton fullWidth" @click="resetToolbarTools">
-            恢复默认工具栏
-          </button>
-        </div>
-      </view>
-    </uni-popup>
-
     <el-drawer
       v-if="canSwitchFont"
       title="选择字体"
@@ -510,6 +341,7 @@
       :edit-session-id="editSessionId"
       :theme="writerSettings.theme"
       @smart-replace-kept="handleWriterAiSmartReplaceKept"
+      @open="handleAiAssistantOpen"
       @close="handleAiAssistantClose"
     ></writer-ai-assistant>
   </div>
@@ -767,7 +599,15 @@ const DEFAULT_SETTINGS = {
 const DEFAULT_CONTENT = stringifyLegacyContent([{ type: "text", value: "" }]);
 const INPUT_SYNC_DELAY_MS = 350;
 const EDIT_LOCK_HEARTBEAT_MS = 30 * 1000;
+const LOCK_RECONNECT_DELAYS_MS = [2000, 5000, 10000, 20000, 30000];
+const DEFINITE_LOCK_CONFLICT_CODES = [
+  "lock_taken",
+  "lock_conflict",
+  "edit_lock_taken",
+  "article_edit_lock_taken",
+];
 const SAVE_NOTIFY_REFRESH_MS = 5 * 1000;
+const DEBUG_TITLE_SELECTION = true;
 
 function toResponsivePx(value) {
   const numericValue = Number(value);
@@ -1058,7 +898,11 @@ export default {
       },
       editSessionId: "",
       currentEditLock: null,
+      lockState: "idle",
       lockHeartbeatTimer: null,
+      lockReconnectTimer: null,
+      lockReconnectAttempts: 0,
+      lockReconnectInFlight: false,
       textCount: 0,
       imageCount: 0,
       saveInterval: undefined,
@@ -1080,40 +924,38 @@ export default {
       fontDownloadState: {},
       runtimeLoadedFonts: {},
       showFontsSelectDrawer: false,
-      shortcutSettingsTab: "input",
-      editingQuickInputId: "",
-      quickInputDraft: {
-        type: "punctuation",
-        label: "",
-        value: "",
-        isPair: false,
-      },
       isAppEnv: false,
       isApplyingEditorDisplayFont: false,
       themes: {
         blue: {
           backColor: "#c4e8fe",
           color: "#115574",
+          pageBackColor: "#ddf3fe",
         },
         yellow: {
           backColor: "#FFEFD6",
           color: "#502727",
+          pageBackColor: "#fffaf0",
         },
         green: {
           backColor: "#b7f7c1",
           color: "#093811",
+          pageBackColor: "#c1e6c6",
         },
         purple: {
           backColor: "#fde0ff",
           color: "#310024",
+          pageBackColor: "#fde0ff",
         },
         black: {
           backColor: "#282C35",
           color: "#cecece",
+          pageBackColor: "#282c35",
         },
         white: {
           backColor: "#ffffff",
           color: "#000000",
+          pageBackColor: "#ffffff",
         },
       },
       imageEditInterval: undefined,
@@ -1124,6 +966,7 @@ export default {
       finalizeLeavePromise: null,
       leaveFinalized: false,
       publishHandoffActive: false,
+      publishCompletionApplied: false,
       aiAssistantOpen: false,
       isHandlingBrowserBack: false,
       statusBarHeight: 0,
@@ -1138,6 +981,16 @@ export default {
       headerGestureStartedFocused: false,
       headerGestureLastDeltaY: 0,
       editorBodyFocused: false,
+      titleInputFocused: false,
+      titleInputSelectionStart: 0,
+      titleInputSelectionEnd: 0,
+      titleInputHasSelection: false,
+      pendingTitleInsertion: false,
+      titleNeedsStatusCapsuleClearance: false,
+      titleSelectionCaptureTimer: undefined,
+      titleSelectionRestoreTimer: undefined,
+      titleSelectionRestoreUntil: 0,
+      quickInputInsertTimer: undefined,
       quickInputTouchHandledAt: 0,
       quickInputTouchHandledKey: "",
     };
@@ -1180,6 +1033,9 @@ export default {
         "--headerOffset": `${this.headerOffset}px`,
         "--headerVisualOffset": `${this.headerOffset}px`,
         "--headerLayoutOffset": `${this.headerOffset}px`,
+        "--statusCapsuleGap": `${this.statusCapsuleGap}px`,
+        "--statusCapsuleLift": `${this.statusCapsuleLift}px`,
+        "--statusCapsuleTopClearance": `${this.statusCapsuleTopClearance}px`,
       };
     },
     customNavBarStyle() {
@@ -1188,7 +1044,8 @@ export default {
         height: `${this.statusBarHeight + this.navBarHeight}px`,
         backgroundColor: this.currentTheme.backColor,
         color: this.currentTheme.color,
-        transition: "background-color .5s, color .5s",
+        transition: "background-color .5s, color .5s, box-shadow .5s",
+        boxShadow: this.isNavbarFullyHidden ? "none" : undefined,
       };
     },
     quickInputToolbarItems() {
@@ -1220,9 +1077,6 @@ export default {
         })
         .filter(Boolean);
     },
-    quickInputSettingsItems() {
-      return this.quickInputToolbarItems;
-    },
     toolbarSettingsItems() {
       return normalizeNavToolIds(this.writerSettings.navToolIds).map((id) => ({
         ...TOOL_DEFINITIONS[id],
@@ -1235,11 +1089,10 @@ export default {
       return calculateNavShortcutLimit(this.viewportWidth);
     },
     navShortcutTools() {
-      const shortcutToolIds = new Set(
-        normalizeNavShortcutToolIds(this.writerSettings.navShortcutToolIds)
-      );
-      return this.toolbarSettingsItems
-        .filter((tool) => shortcutToolIds.has(tool.id))
+      const allTools = new Map(this.toolbarSettingsItems.map((tool) => [tool.id, tool]));
+      return normalizeNavShortcutToolIds(this.writerSettings.navShortcutToolIds)
+        .map((id) => allTools.get(id))
+        .filter(Boolean)
         .slice(0, this.navShortcutLimit);
     },
     isActiveTitleBarEnabled() {
@@ -1255,17 +1108,32 @@ export default {
       if (!this.isAppEnv) {
         return true;
       }
-      return this.editorBodyFocused;
+      return this.editorBodyFocused || this.titleInputFocused;
     },
     titleBarHeight() {
       return toResponsivePixelNumber(100);
     },
+    statusCapsuleGap() {
+      return toResponsivePixelNumber(22);
+    },
+    statusCapsuleLift() {
+      return this.getStatusCapsuleLift(this.headerOffset);
+    },
+    statusCapsuleTopClearance() {
+      return this.titleNeedsStatusCapsuleClearance
+        ? toResponsivePixelNumber(72)
+        : 0;
+    },
     maxHeaderOffset() {
       return Math.max(
         0,
-        Number(this.statusBarHeight || 0) +
-          Number(this.navBarHeight || 0) +
-          Number(this.titleBarHeight || 0)
+        Number(this.statusBarHeight || 0) + Number(this.navBarHeight || 0)
+      );
+    },
+    isNavbarFullyHidden() {
+      return (
+        Number(this.maxHeaderOffset || 0) > 0 &&
+        this.headerOffset >= Number(this.maxHeaderOffset)
       );
     },
     fontSizeStyleValue() {
@@ -1302,6 +1170,7 @@ export default {
       handler() {
         this.$nextTick(() => {
           this.applyEditorFontSize();
+          this.scheduleTitleCapsuleClearanceUpdate();
         });
       },
     },
@@ -1310,13 +1179,59 @@ export default {
       handler() {
         this.$nextTick(() => {
           this.applyEditorFontSize();
+          this.scheduleTitleCapsuleClearanceUpdate();
         });
       },
+    },
+    "article.title": {
+      immediate: true,
+      handler() {
+        this.$nextTick(() => {
+          this.scheduleTitleCapsuleClearanceUpdate();
+        });
+      },
+    },
+    saveNotifyText() {
+      this.$nextTick(() => {
+        this.scheduleTitleCapsuleClearanceUpdate();
+      });
+    },
+    textCount() {
+      this.$nextTick(() => {
+        this.scheduleTitleCapsuleClearanceUpdate();
+      });
+    },
+    imageCount() {
+      this.$nextTick(() => {
+        this.scheduleTitleCapsuleClearanceUpdate();
+      });
+    },
+    "editorAccess.access_role"() {
+      this.$nextTick(() => {
+        this.scheduleTitleCapsuleClearanceUpdate();
+      });
+    },
+    isNavbarFullyHidden() {
+      this.applyNavigationBarTheme();
     },
   },
   async beforeDestroy() {
     await this.finalizeBeforeLeave();
     clearTimeout(this.inputSyncTimer);
+    clearTimeout(this.titleSelectionCaptureTimer);
+    clearTimeout(this.titleSelectionRestoreTimer);
+    clearTimeout(this.quickInputInsertTimer);
+    clearTimeout(this._centerCursorAfterBlurredTapTimer);
+    if (
+      this._titleCapsuleClearanceRaf &&
+      typeof window !== "undefined"
+    ) {
+      if (typeof window.cancelAnimationFrame === "function") {
+        window.cancelAnimationFrame(this._titleCapsuleClearanceRaf);
+      } else {
+        clearTimeout(this._titleCapsuleClearanceRaf);
+      }
+    }
     this.cancelHeaderOffsetFrame();
     clearInterval(this.imageEditInterval);
     this.stopSaveNotifyTimer();
@@ -1330,6 +1245,10 @@ export default {
     window.removeEventListener("pagehide", this.handlePageHide);
     window.removeEventListener("popstate", this.browserBack);
     window.removeEventListener("resize", this.updateCustomNavigationMetrics);
+    document.removeEventListener(
+      "selectionchange",
+      this.handleDocumentSelectionChange
+    );
     window.removeEventListener(
       "keyboardVisibilityChange",
       this.handleAppKeyboardVisibilityChange
@@ -1380,6 +1299,70 @@ export default {
     },
     getPublishDraftStorageKey(articleId = this.chapterId) {
       return `writer_publish_payload_${Number(this.currentUserId || 0)}_${Number(articleId || 0)}`;
+    },
+    getPublishCompletionStorageKey(
+      articleId = this.chapterId,
+      sourceSessionId = this.editSessionId
+    ) {
+      return `writer_publish_completed_${Number(this.currentUserId || 0)}_${Number(
+        articleId || 0
+      )}_${String(sourceSessionId || "")}`;
+    },
+    readPublishCompletionMarker() {
+      if (!this.chapterId || !this.editSessionId) {
+        return null;
+      }
+
+      const raw = window.localStorage.getItem(this.getPublishCompletionStorageKey());
+      if (!raw) {
+        return null;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (
+          Number(parsed.article_id || 0) !== Number(this.chapterId || 0) ||
+          String(parsed.source_session_id || "") !== String(this.editSessionId || "")
+        ) {
+          return null;
+        }
+        return parsed;
+      } catch (error) {
+        return null;
+      }
+    },
+    clearPendingEditorSyncTimers() {
+      clearInterval(this.saveInterval);
+      this.saveInterval = undefined;
+      clearTimeout(this.inputSyncTimer);
+      this.inputSyncTimer = undefined;
+    },
+    shouldSuppressEditorSyncForCompletedPublish() {
+      const marker = this.readPublishCompletionMarker();
+      if (!marker) {
+        return false;
+      }
+
+      this.publishHandoffActive = true;
+      this.clearPendingEditorSyncTimers();
+      this.hasNewInput = false;
+
+      if (!this.publishCompletionApplied) {
+        if (typeof marker.title === "string") {
+          this.article.title = marker.title;
+        }
+        if (typeof marker.content === "string") {
+          this.applyLegacyContentToEditor(marker.content, false);
+        }
+        this.markSyncSynced(
+          marker.writer_create_time || buildClientSyncTime(),
+          marker.remote_updated_at || ""
+        );
+        this.updateSaveNotify(false);
+        this.publishCompletionApplied = true;
+      }
+
+      return true;
     },
     validatePublishableArticle() {
       if (
@@ -1515,6 +1498,38 @@ export default {
 
       return declarations.map((item) => `${item};`).join("");
     },
+    getEditorDomEventHandlers() {
+      return {
+        mousedown: (view, event) => {
+          this.handleEditorActivationStart(event);
+          return false;
+        },
+        mousemove: (view, event) => {
+          this.handleEditorActivationMove(event);
+          return false;
+        },
+        touchstart: (view, event) => {
+          this.handleEditorActivationStart(event);
+          return false;
+        },
+        touchmove: (view, event) => {
+          this.handleEditorActivationMove(event);
+          return false;
+        },
+        touchcancel: () => {
+          this.cancelEditorActivation();
+          return false;
+        },
+        click: (view, event) => {
+          this.handleEditorActivationEnd(event);
+          return false;
+        },
+        touchend: (view, event) => {
+          this.handleEditorActivationEnd(event);
+          return false;
+        },
+      };
+    },
     getEditorRootAttributes() {
       return {
         class: "writer-prosemirror",
@@ -1529,6 +1544,7 @@ export default {
       activeEditor.setOptions({
         editorProps: {
           attributes: this.getEditorRootAttributes(),
+          handleDOMEvents: this.getEditorDomEventHandlers(),
         },
       });
     },
@@ -1869,13 +1885,128 @@ export default {
         this.captureWriterFontDebug("selectFont");
       });
     },
-    handleTitleInput() {
+    handleTitleInput(event) {
+      this.saveTitleInputSelection(event);
+      this.debugTitleSelection("title-input", {
+        eventType: event && event.type,
+      });
       this.markWritingActivity();
       this.hasNewInput = true;
       this.lastInputTime = new Date();
       this.contentVersion += 1;
       this.markSyncPending();
+      this.scheduleTitleCapsuleClearanceUpdate();
       this.scheduleInputSync();
+    },
+    handleTitleInputFocus(event) {
+      this.titleInputFocused = true;
+      this.pendingTitleInsertion = false;
+      this.debugTitleSelection("title-focus-before-capture", {
+        eventType: event && event.type,
+      });
+      this.scheduleTitleSelectionCapture(event);
+    },
+    handleTitleInputBlur() {
+      this.debugTitleSelection("title-blur-before-state-change");
+      this.titleInputFocused = false;
+      this.pendingTitleInsertion = true;
+      this.debugTitleSelection("title-blur-after-state-change");
+    },
+    scheduleTitleCapsuleClearanceUpdate() {
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      if (this._titleCapsuleClearanceRaf) {
+        if (typeof window.cancelAnimationFrame === "function") {
+          window.cancelAnimationFrame(this._titleCapsuleClearanceRaf);
+        } else {
+          clearTimeout(this._titleCapsuleClearanceRaf);
+        }
+      }
+
+      const schedule =
+        typeof window.requestAnimationFrame === "function"
+          ? window.requestAnimationFrame.bind(window)
+          : (callback) => setTimeout(callback, 16);
+
+      this._titleCapsuleClearanceRaf = schedule(() => {
+        this._titleCapsuleClearanceRaf = 0;
+        this.updateTitleCapsuleClearance();
+      });
+    },
+    measureTitleTextWidth(titleInput) {
+      const title = String(this.article.title || "");
+      if (!title) {
+        return 0;
+      }
+
+      if (typeof window === "undefined" || typeof document === "undefined") {
+        return title.length * Number(this.writerSettings.fontSize || 35);
+      }
+
+      const computedStyle = window.getComputedStyle
+        ? window.getComputedStyle(titleInput)
+        : null;
+      const canvas =
+        this._titleMeasureCanvas || document.createElement("canvas");
+      this._titleMeasureCanvas = canvas;
+      const context = canvas.getContext ? canvas.getContext("2d") : null;
+
+      if (context) {
+        const fallbackFontSize = toResponsivePixelNumber(
+          this.writerSettings.fontSize || DEFAULT_SETTINGS.fontSize
+        );
+        const font =
+          computedStyle && computedStyle.font
+            ? computedStyle.font
+            : `${fallbackFontSize}px sans-serif`;
+        context.font = font;
+        return context.measureText(title).width;
+      }
+
+      const fontSize =
+        computedStyle && computedStyle.fontSize
+          ? Number.parseFloat(computedStyle.fontSize)
+          : Number(this.writerSettings.fontSize || 35);
+      return title.length * (Number.isFinite(fontSize) ? fontSize : 35);
+    },
+    updateTitleCapsuleClearance() {
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      const pageRoot = this.$el;
+      if (!pageRoot || !pageRoot.querySelector) {
+        return;
+      }
+
+      const titleInput = pageRoot.querySelector(".chapterTitleInput");
+      const topBar = pageRoot.querySelector(".topBar");
+      if (
+        !titleInput ||
+        !topBar ||
+        typeof titleInput.getBoundingClientRect !== "function" ||
+        typeof topBar.getBoundingClientRect !== "function"
+      ) {
+        return;
+      }
+
+      const title = String(this.article.title || "").trim();
+      if (!title) {
+        this.titleNeedsStatusCapsuleClearance = false;
+        return;
+      }
+
+      const inputRect = titleInput.getBoundingClientRect();
+      const capsuleRect = topBar.getBoundingClientRect();
+      const safetyGap = toResponsivePixelNumber(16);
+      const availableWidth = capsuleRect.left - inputRect.left - safetyGap;
+      const titleWidth = this.measureTitleTextWidth(titleInput);
+
+      this.titleNeedsStatusCapsuleClearance =
+        Number.isFinite(availableWidth) &&
+        titleWidth > Math.max(0, availableWidth);
     },
     getSyncState(articleId = this.chapterId) {
       return readWriterSyncState(
@@ -1932,6 +2063,10 @@ export default {
       return serverTime || buildClientSyncTime();
     },
     scheduleInputSync() {
+      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+        return;
+      }
+
       clearTimeout(this.inputSyncTimer);
       this.inputSyncTimer = setTimeout(() => {
         this.flushDraftToCloud({
@@ -1947,6 +2082,10 @@ export default {
         return;
       }
 
+      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+        return;
+      }
+
       this.startSaveNotifyTimer();
       if (this.loadComplete) {
         this.startLocalSaveTimer();
@@ -1956,7 +2095,168 @@ export default {
     handlePageHide() {
       this.pauseForBackground();
     },
-    async claimEditLock() {
+    getErrorResponseData(error) {
+      return error && error.response && error.response.data
+        ? error.response.data
+        : {};
+    },
+    getErrorLockInfo(error) {
+      const data = this.getErrorResponseData(error);
+      if (data && data.lock && typeof data.lock === "object") {
+        return data.lock;
+      }
+      if (data && data.current_lock && typeof data.current_lock === "object") {
+        return data.current_lock;
+      }
+      return null;
+    },
+    getLockSessionId(lockInfo) {
+      if (!lockInfo) return "";
+      return String(
+        lockInfo.session_id ||
+          lockInfo.edit_session_id ||
+          lockInfo.sessionId ||
+          ""
+      ).trim();
+    },
+    getLockUserId(lockInfo) {
+      if (!lockInfo) return 0;
+      return Number(
+        lockInfo.user_id ||
+          lockInfo.editor_user_id ||
+          lockInfo.owner_user_id ||
+          lockInfo.uid ||
+          0
+      );
+    },
+    isCurrentSessionLock(lockInfo) {
+      const lockSessionId = this.getLockSessionId(lockInfo);
+      return (
+        !!lockSessionId && lockSessionId === String(this.editSessionId || "")
+      );
+    },
+    isLockOwnedByCurrentUser(lockInfo) {
+      const lockUserId = this.getLockUserId(lockInfo);
+      const currentUserId = Number(this.currentUserId || 0);
+      return !!(lockUserId && currentUserId && lockUserId === currentUserId);
+    },
+    isDefiniteLockConflictError(error) {
+      if (!error || !error.response || error.response.status !== 409) {
+        return false;
+      }
+      if (this.isStaleSessionError(error)) {
+        return false;
+      }
+
+      const data = this.getErrorResponseData(error);
+      const code = String(data.code || data.error_code || "").trim();
+      const lockInfo = this.getErrorLockInfo(error);
+      if (
+        this.isCurrentSessionLock(lockInfo) ||
+        this.isLockOwnedByCurrentUser(lockInfo)
+      ) {
+        return false;
+      }
+
+      if (DEFINITE_LOCK_CONFLICT_CODES.includes(code)) {
+        return true;
+      }
+
+      const lockSessionId = this.getLockSessionId(lockInfo);
+      const lockUserId = this.getLockUserId(lockInfo);
+      const currentUserId = Number(this.currentUserId || 0);
+      const lockHolderName = String(
+        (lockInfo && (lockInfo.name || lockInfo.editor_name)) || ""
+      ).trim();
+      return !!(
+        lockInfo &&
+        ((lockUserId && currentUserId && lockUserId !== currentUserId) ||
+          (!lockUserId &&
+            lockSessionId &&
+            lockSessionId !== String(this.editSessionId || "")) ||
+          lockHolderName)
+      );
+    },
+    isRecoverableLockError(error) {
+      if (
+        this.isStaleSessionError(error) ||
+        this.isDefiniteLockConflictError(error)
+      ) {
+        return false;
+      }
+      if (!error || !error.response) {
+        return true;
+      }
+
+      const status = Number(error.response.status || 0);
+      return status === 408 || status === 409 || status === 429 || status >= 500;
+    },
+    clearLockReconnectTimer() {
+      clearTimeout(this.lockReconnectTimer);
+      this.lockReconnectTimer = null;
+    },
+    markLockActive() {
+      const wasReconnecting = this.lockState === "reconnecting";
+      this.lockState = "active";
+      this.lockReconnectAttempts = 0;
+      this.lockReconnectInFlight = false;
+      this.clearLockReconnectTimer();
+      this.refreshSaveNotifyText();
+      if (wasReconnecting && this.loadComplete && this.hasPendingSync()) {
+        this.flushDraftToCloud({
+          isFastSave: false,
+          forceSlowSave: false,
+          waitForBusy: false,
+        });
+      }
+    },
+    markLockReconnecting(error) {
+      if (this.lockState === "lost") {
+        return;
+      }
+      this.currentEditLock = this.getErrorLockInfo(error) || this.currentEditLock;
+      this.lockState = "reconnecting";
+      this.stopLockHeartbeat();
+      this.refreshSaveNotifyText();
+      this.scheduleLockReconnect();
+    },
+    scheduleLockReconnect() {
+      if (this.leaveFinalized || document.visibilityState === "hidden") {
+        return;
+      }
+      if (this.lockReconnectTimer || this.lockReconnectInFlight) {
+        return;
+      }
+
+      const delay =
+        LOCK_RECONNECT_DELAYS_MS[
+          Math.min(this.lockReconnectAttempts, LOCK_RECONNECT_DELAYS_MS.length - 1)
+        ];
+      this.lockReconnectAttempts += 1;
+      this.lockReconnectTimer = setTimeout(() => {
+        this.lockReconnectTimer = null;
+        this.recoverEditLock();
+      }, delay);
+    },
+    async recoverEditLock() {
+      if (this.leaveFinalized || document.visibilityState === "hidden") {
+        return;
+      }
+      if (this.lockReconnectInFlight) {
+        return;
+      }
+
+      this.lockReconnectInFlight = true;
+      try {
+        await this.claimEditLock({ fromReconnect: true });
+      } finally {
+        this.lockReconnectInFlight = false;
+        if (this.lockState === "reconnecting") {
+          this.scheduleLockReconnect();
+        }
+      }
+    },
+    async claimEditLock(options = {}) {
       const tk = this.getAuthToken();
       if (!tk || !this.chapterId || !this.editSessionId) return false;
 
@@ -1975,13 +2275,22 @@ export default {
           }
         );
         this.currentEditLock = response.data.lock || null;
+        this.markLockActive();
         this.startLockHeartbeat();
         return true;
       } catch (error) {
-        if (error.response && error.response.status === 409) {
-          this.currentEditLock = error.response.data.lock || null;
-          this.handleLockConflict(error.response.data.lock);
+        if (this.isStaleSessionError(error)) {
+          const staleAction = this.handleStaleSessionError(error);
+          return staleAction === "reconnecting" && !options.fromReconnect;
+        }
+        if (this.isDefiniteLockConflictError(error)) {
+          this.currentEditLock = this.getErrorLockInfo(error);
+          this.handleLockConflict(this.currentEditLock);
           return false;
+        }
+        if (this.isRecoverableLockError(error)) {
+          this.markLockReconnecting(error);
+          return options.fromReconnect ? false : true;
         }
         throw error;
       }
@@ -2017,12 +2326,19 @@ export default {
           }
         );
         this.currentEditLock = response.data.lock || null;
+        this.markLockActive();
       } catch (error) {
-        this.stopLockHeartbeat();
-        if (error.response && error.response.status === 409) {
-          this.currentEditLock = error.response.data.lock || null;
-          this.handleLockConflict(error.response.data.lock);
+        if (this.isStaleSessionError(error)) {
+          this.handleStaleSessionError(error);
+          return;
         }
+        if (this.isDefiniteLockConflictError(error)) {
+          this.stopLockHeartbeat();
+          this.currentEditLock = this.getErrorLockInfo(error);
+          this.handleLockConflict(this.currentEditLock);
+          return;
+        }
+        this.markLockReconnecting(error);
       }
     },
     async releaseEditLock() {
@@ -2054,11 +2370,43 @@ export default {
         error.response.data.code === "stale_session"
       );
     },
+    isRecoverableStaleSessionError(error) {
+      if (!this.isStaleSessionError(error)) {
+        return false;
+      }
+
+      const lockInfo = this.getErrorLockInfo(error);
+      if (!lockInfo || this.isCurrentSessionLock(lockInfo)) {
+        return true;
+      }
+
+      return this.isLockOwnedByCurrentUser(lockInfo);
+    },
+    handleStaleSessionError(error) {
+      if (this.isRecoverableStaleSessionError(error)) {
+        const syncTime = buildClientSyncTime();
+        this.markSyncPending(syncTime, "stale_session_reconnecting");
+        this.markLockReconnecting(error);
+        return "reconnecting";
+      }
+
+      const lockInfo = this.getErrorLockInfo(error);
+      if (lockInfo) {
+        this.currentEditLock = lockInfo;
+        this.handleLockConflict(lockInfo);
+        return "conflict";
+      }
+
+      this.handleStaleSessionInvalidation(error);
+      return "invalidated";
+    },
     handleStaleSessionInvalidation(error) {
       if (!this.publishHandoffActive) {
         const syncTime = buildClientSyncTime();
         this.markSyncInvalidated(syncTime, "stale_session");
       }
+      this.lockState = "lost";
+      this.clearLockReconnectTimer();
       this.stopLockHeartbeat();
       clearInterval(this.saveInterval);
       this.saveInterval = undefined;
@@ -2083,6 +2431,10 @@ export default {
       });
     },
     async persistPauseSnapshot() {
+      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+        return;
+      }
+
       if (!this.loadComplete || (!this.hasNewInput && !this.hasPendingSync())) {
         return;
       }
@@ -2102,12 +2454,13 @@ export default {
 
       this.pauseSyncPromise = (async () => {
         await this.stopWritingTimer();
+        this.clearLockReconnectTimer();
         this.stopLockHeartbeat();
         this.stopSaveNotifyTimer();
-        clearInterval(this.saveInterval);
-        this.saveInterval = undefined;
-        clearTimeout(this.inputSyncTimer);
-        this.inputSyncTimer = undefined;
+        this.clearPendingEditorSyncTimers();
+        if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+          return;
+        }
         await this.persistPauseSnapshot();
       })();
 
@@ -2127,8 +2480,14 @@ export default {
 
       this.leaveFinalized = true;
       this.finalizeLeavePromise = (async () => {
+        const suppressPublishSync =
+          this.shouldSuppressEditorSyncForCompletedPublish();
         await this.pauseForBackground();
-        if (this.loadComplete) {
+        if (
+          this.loadComplete &&
+          !suppressPublishSync &&
+          !this.shouldSuppressEditorSyncForCompletedPublish()
+        ) {
           try {
             await this.flushDraftToCloud({
               isFastSave: false,
@@ -2147,6 +2506,14 @@ export default {
       }
     },
     handleLockConflict(lockInfo) {
+      if (this.lockState === "lost") {
+        return;
+      }
+      this.lockState = "lost";
+      this.clearLockReconnectTimer();
+      this.stopLockHeartbeat();
+      clearTimeout(this.inputSyncTimer);
+      this.inputSyncTimer = undefined;
       const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
       uni.showModal({
         title: "章节已被占用",
@@ -2186,6 +2553,9 @@ export default {
       forceSlowSave = false,
       waitForBusy = false,
     } = {}) {
+      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+        return;
+      }
       if (!this.loadComplete) return;
       if (!forceSlowSave && !this.hasNewInput && !this.hasPendingSync()) {
         return;
@@ -2199,6 +2569,26 @@ export default {
 
         const currentServerTime = await this.getCurrentSyncTime();
         if (!currentServerTime) {
+          return;
+        }
+
+        if (this.lockState === "lost") {
+          if (forceSlowSave) {
+            await this.slowSaveLocalArticle(currentServerTime, true);
+          } else {
+            await this.saveLocalArticle(currentServerTime);
+          }
+          this.markSyncInvalidated(currentServerTime, "lock_lost");
+          return;
+        }
+
+        if (this.lockState === "reconnecting") {
+          if (forceSlowSave) {
+            await this.slowSaveLocalArticle(currentServerTime, true);
+          } else {
+            await this.saveLocalArticle(currentServerTime);
+          }
+          this.markSyncPending(currentServerTime, "lock_reconnecting");
           return;
         }
 
@@ -2486,12 +2876,12 @@ export default {
       const pageRoot = this.$el || document;
       const titleInputElements = pageRoot.querySelectorAll(
         [
-          ".topBar .input",
-          ".topBar .input *",
-          ".topBar input",
-          ".topBar uni-input",
-          ".topBar .uni-input-wrapper",
-          ".topBar .uni-input-input",
+          ".chapterTitleBar .input",
+          ".chapterTitleBar .input *",
+          ".chapterTitleBar input",
+          ".chapterTitleBar uni-input",
+          ".chapterTitleBar .uni-input-wrapper",
+          ".chapterTitleBar .uni-input-input",
         ].join(",")
       );
       titleInputElements.forEach((titleInput) => {
@@ -2642,6 +3032,7 @@ export default {
         content: legacyBlocksToDoc(parseLegacyContent(this.article.content)),
         editorProps: {
           attributes: this.getEditorRootAttributes(),
+          handleDOMEvents: this.getEditorDomEventHandlers(),
         },
         onCreate: ({ editor }) => {
           const blocks = docToLegacyBlocks(editor.getJSON());
@@ -2668,6 +3059,7 @@ export default {
         },
         onFocus: () => {
           this.handleEditorFocusChange(true);
+          this.handleEditorActivationEnd();
         },
         onBlur: () => {
           this.handleEditorFocusChange(false);
@@ -2688,6 +3080,9 @@ export default {
         legacyBlocksToDoc(normalized),
         emitUpdate
       );
+      this.$nextTick(() => {
+        this.applyEditorFontSize();
+      });
     },
     async getArticleWriter() {
       let tk = this.getAuthToken();
@@ -2737,6 +3132,10 @@ export default {
       isForce = false,
       snapshotVersion = this.contentVersion
     ) {
+      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+        return null;
+      }
+
       this.normalizeCurrentArticleContentForStorage();
       this.lastUploadTime = new Date();
       let tk = this.getAuthToken();
@@ -2785,7 +3184,17 @@ export default {
         return response;
       } catch (error) {
         if (this.isStaleSessionError(error)) {
-          this.handleStaleSessionInvalidation(error);
+          this.handleStaleSessionError(error);
+          return null;
+        }
+        if (this.isDefiniteLockConflictError(error)) {
+          this.currentEditLock = this.getErrorLockInfo(error);
+          this.handleLockConflict(this.currentEditLock);
+          return null;
+        }
+        if (this.isRecoverableLockError(error)) {
+          this.markSyncPending(currentServerTime, "upload_reconnecting");
+          this.markLockReconnecting(error);
           return null;
         }
         this.markSyncPending(currentServerTime, "upload_failed");
@@ -3032,12 +3441,20 @@ export default {
         try {
           const currentServerTime = await this.getCurrentSyncTime();
           await this.slowSaveLocalArticle(currentServerTime, true);
-          await this.uploadArticleWriter(
+          const uploadResponse = await this.uploadArticleWriter(
             currentServerTime,
             false,
             true,
             this.contentVersion
           );
+          if (!uploadResponse) {
+            uni.showToast({
+              title: "网络不稳定，本地草稿已保存",
+              icon: "none",
+              duration: 2000,
+            });
+            return;
+          }
           uni.showToast({
             title: "协作草稿已保存",
             icon: "none",
@@ -3143,7 +3560,16 @@ export default {
       if (event && typeof event.stopPropagation === "function") {
         event.stopPropagation();
       }
+      this.debugTitleSelection("quick-toolbar-touchstart", {
+        itemId: item && item.id,
+        itemValue: item && item.value,
+        isTitleTarget: this.isTitleInputInsertionTarget(),
+      });
       this.recordQuickInputTouchHandled(item);
+      if (this.isTitleInputInsertionTarget()) {
+        this.scheduleQuickInputInsertion(item);
+        return;
+      }
       this.insertQuickInput(item);
     },
     handleQuickInputToolbarMouseDown(event) {
@@ -3153,6 +3579,9 @@ export default {
       if (event && typeof event.stopPropagation === "function") {
         event.stopPropagation();
       }
+      this.debugTitleSelection("quick-toolbar-mousedown", {
+        isTitleTarget: this.isTitleInputInsertionTarget(),
+      });
     },
     handleQuickInputToolbarClick(event, item) {
       if (event && typeof event.preventDefault === "function") {
@@ -3166,9 +3595,33 @@ export default {
         Date.now() - Number(this.quickInputTouchHandledAt || 0) < 500;
       if (wasHandledByTouch) {
         this.quickInputTouchHandledKey = "";
+        this.debugTitleSelection("quick-toolbar-click-skip-after-touch", {
+          itemId: item && item.id,
+          itemValue: item && item.value,
+        });
         return;
       }
+      this.debugTitleSelection("quick-toolbar-click-insert", {
+        itemId: item && item.id,
+        itemValue: item && item.value,
+        isTitleTarget: this.isTitleInputInsertionTarget(),
+      });
       this.insertQuickInput(item);
+    },
+    scheduleQuickInputInsertion(item) {
+      clearTimeout(this.quickInputInsertTimer);
+      this.debugTitleSelection("schedule-quick-input-insertion", {
+        itemId: item && item.id,
+        itemValue: item && item.value,
+      });
+      this.quickInputInsertTimer = setTimeout(() => {
+        this.quickInputInsertTimer = undefined;
+        this.debugTitleSelection("run-quick-input-insertion", {
+          itemId: item && item.id,
+          itemValue: item && item.value,
+        });
+        this.insertQuickInput(item);
+      }, 0);
     },
     insertQuickInput(item) {
       if (!item) {
@@ -3178,8 +3631,353 @@ export default {
         this.handleNavAction(item.action);
         return;
       }
+      if (this.isTitleInputInsertionTarget()) {
+        this.debugTitleSelection("insert-quick-input-title-target", {
+          itemId: item && item.id,
+          itemValue: item && item.value,
+        });
+        this.insertTextIntoTitleInput(item.value, item.isPair ? getPairCursorOffset(item.value) : 0);
+        return;
+      }
       const cursorOffset = item.isPair ? getPairCursorOffset(item.value) : 0;
       this.insertShortcutContent(item.value, cursorOffset, false);
+    },
+    isTitleInputInsertionTarget() {
+      return this.titleInputFocused || this.pendingTitleInsertion;
+    },
+    isNativeTextInputElement(element) {
+      const tagName = String((element && element.tagName) || "").toLowerCase();
+      return (
+        (tagName === "input" || tagName === "textarea") &&
+        typeof element.selectionStart === "number"
+      );
+    },
+    getTitleInputElement(source) {
+      const rawCandidate =
+        source && source.target ? source.target : source || this.$refs.titleInput;
+      const candidate = Array.isArray(rawCandidate) ? rawCandidate[0] : rawCandidate;
+      const fallback = candidate === this.$refs.titleInput ? null : this.$refs.titleInput;
+      const resolveInput = (element) => {
+        if (!element) return null;
+        if (Array.isArray(element)) {
+          return resolveInput(element[0]);
+        }
+        if (this.isNativeTextInputElement(element)) {
+          return element;
+        }
+        if (element.$el) {
+          return resolveInput(element.$el);
+        }
+        if (element.querySelector) {
+          const input = element.querySelector("input, textarea");
+          if (this.isNativeTextInputElement(input)) {
+            return input;
+          }
+        }
+        return null;
+      };
+      const input = resolveInput(candidate);
+      if (input) return input;
+      return resolveInput(fallback);
+    },
+    isTitleInputElement(element) {
+      const input = this.getTitleInputElement();
+      return !!(
+        input &&
+        element &&
+        (element === input ||
+          (element.closest &&
+            input.closest &&
+            element.closest(".chapterTitleBar") === input.closest(".chapterTitleBar")))
+      );
+    },
+    describeTitleElementForDebug(element) {
+      if (!element) return null;
+      const value =
+        element.value === undefined || element.value === null
+          ? ""
+          : String(element.value);
+      return {
+        tagName: element.tagName || "",
+        className: element.className || "",
+        id: element.id || "",
+        isNativeTextInput: this.isNativeTextInputElement(element),
+        valueLength: value.length,
+        valuePreview: value.slice(0, 20),
+        selectionStart:
+          typeof element.selectionStart === "number" ? element.selectionStart : null,
+        selectionEnd:
+          typeof element.selectionEnd === "number" ? element.selectionEnd : null,
+      };
+    },
+    debugTitleSelection(label, extra = {}) {
+      if (!DEBUG_TITLE_SELECTION || typeof console === "undefined") return;
+      const input = this.getTitleInputElement();
+      const rawTitleRef = Array.isArray(this.$refs.titleInput)
+        ? this.$refs.titleInput[0]
+        : this.$refs.titleInput;
+      const activeElement =
+        typeof document !== "undefined" ? document.activeElement : null;
+      const payload = {
+        label,
+        focused: this.titleInputFocused,
+        pendingTitleInsertion: this.pendingTitleInsertion,
+        cachedStart: this.titleInputSelectionStart,
+        cachedEnd: this.titleInputSelectionEnd,
+        hasCachedSelection: this.titleInputHasSelection,
+        articleTitleLength: String(this.article.title || "").length,
+        input: this.describeTitleElementForDebug(input),
+        titleRef: this.describeTitleElementForDebug(rawTitleRef),
+        titleRefEl: this.describeTitleElementForDebug(rawTitleRef && rawTitleRef.$el),
+        activeElement: this.describeTitleElementForDebug(activeElement),
+        ...extra,
+      };
+      if (typeof console.debug === "function") {
+        console.debug("[chapterEditor:titleSelection]", payload);
+      } else {
+        console.log("[chapterEditor:titleSelection]", payload);
+      }
+    },
+    clampTitleSelection(value, start, end) {
+      const length = String(value || "").length;
+      const normalizedStart = Number(start);
+      const normalizedEnd = Number(end);
+      const safeStart = Number.isFinite(normalizedStart)
+        ? Math.min(length, Math.max(0, normalizedStart))
+        : length;
+      const safeEnd = Number.isFinite(normalizedEnd)
+        ? Math.min(length, Math.max(0, normalizedEnd))
+        : safeStart;
+      return {
+        start: Math.min(safeStart, safeEnd),
+        end: Math.max(safeStart, safeEnd),
+      };
+    },
+    commitTitleInputSelection(input, start, end = start) {
+      const value = input && input.value !== undefined ? input.value : this.article.title;
+      const selection = this.clampTitleSelection(value, start, end);
+      this.titleInputSelectionStart = selection.start;
+      this.titleInputSelectionEnd = selection.end;
+      this.titleInputHasSelection = true;
+      this.debugTitleSelection("commit-selection", {
+        rawStart: start,
+        rawEnd: end,
+        committedStart: selection.start,
+        committedEnd: selection.end,
+        sourceInput: this.describeTitleElementForDebug(input),
+      });
+      return true;
+    },
+    saveTitleInputSelection(source) {
+      const input = this.getTitleInputElement(source);
+      if (!input) {
+        this.debugTitleSelection("save-selection-no-input", {
+          eventType: source && source.type,
+          sourceTarget: this.describeTitleElementForDebug(source && source.target),
+        });
+        return false;
+      }
+
+      if (typeof input.selectionStart === "number") {
+        this.debugTitleSelection("save-selection-read-input", {
+          eventType: source && source.type,
+          sourceTarget: this.describeTitleElementForDebug(source && source.target),
+          readInput: this.describeTitleElementForDebug(input),
+        });
+        return this.commitTitleInputSelection(
+          input,
+          input.selectionStart,
+          typeof input.selectionEnd === "number" ? input.selectionEnd : input.selectionStart
+        );
+      }
+
+      this.debugTitleSelection("save-selection-no-selection-api", {
+        eventType: source && source.type,
+        sourceTarget: this.describeTitleElementForDebug(source && source.target),
+        readInput: this.describeTitleElementForDebug(input),
+      });
+      return false;
+    },
+    scheduleTitleSelectionCapture(source) {
+      clearTimeout(this.titleSelectionCaptureTimer);
+      this.debugTitleSelection("schedule-selection-capture", {
+        eventType: source && source.type,
+        sourceTarget: this.describeTitleElementForDebug(source && source.target),
+      });
+      this.titleSelectionCaptureTimer = setTimeout(() => {
+        this.titleSelectionCaptureTimer = undefined;
+        this.debugTitleSelection("run-selection-capture", {
+          eventType: source && source.type,
+          sourceTarget: this.describeTitleElementForDebug(source && source.target),
+        });
+        this.saveTitleInputSelection(source);
+      }, 0);
+    },
+    setTitleInputSelectionRange(input, start, end = start, label = "set-selection") {
+      if (!input || typeof input.setSelectionRange !== "function") {
+        this.debugTitleSelection(`${label}-no-selection-range`, {
+          start,
+          end,
+          input: this.describeTitleElementForDebug(input),
+        });
+        return false;
+      }
+
+      try {
+        if (typeof input.focus === "function") {
+          try {
+            input.focus({ preventScroll: true });
+          } catch (error) {
+            input.focus();
+          }
+        }
+        input.setSelectionRange(start, end);
+        this.debugTitleSelection(label, {
+          start,
+          end,
+          input: this.describeTitleElementForDebug(input),
+        });
+        return true;
+      } catch (error) {
+        this.debugTitleSelection(`${label}-failed`, {
+          start,
+          end,
+          error: error && error.message ? error.message : String(error),
+          input: this.describeTitleElementForDebug(input),
+        });
+        return false;
+      }
+    },
+    restoreTitleInputSelectionAfterRender(start, end = start, reason = "") {
+      const selection = this.clampTitleSelection(this.article.title, start, end);
+      this.titleInputSelectionStart = selection.start;
+      this.titleInputSelectionEnd = selection.end;
+      this.titleInputHasSelection = true;
+      this.titleSelectionRestoreUntil = Date.now() + 250;
+
+      const restore = (phase) => {
+        const input = this.getTitleInputElement();
+        this.setTitleInputSelectionRange(
+          input,
+          selection.start,
+          selection.end,
+          `restore-selection-${phase}`
+        );
+      };
+
+      clearTimeout(this.titleSelectionRestoreTimer);
+      restore("immediate");
+      this.$nextTick(() => {
+        restore("next-tick");
+        clearTimeout(this.titleSelectionRestoreTimer);
+        this.titleSelectionRestoreTimer = setTimeout(() => {
+          restore("timeout");
+          this.titleSelectionRestoreTimer = undefined;
+          this.titleSelectionRestoreUntil = 0;
+          this.debugTitleSelection("restore-selection-complete", {
+            reason,
+            start: selection.start,
+            end: selection.end,
+          });
+        }, 120);
+      });
+    },
+    handleDocumentSelectionChange() {
+      const activeElement =
+        typeof document !== "undefined" ? document.activeElement : null;
+      if (!this.isTitleInputElement(activeElement)) {
+        return;
+      }
+      if (
+        Date.now() < Number(this.titleSelectionRestoreUntil || 0) &&
+        activeElement &&
+        (activeElement.selectionStart !== this.titleInputSelectionStart ||
+          activeElement.selectionEnd !== this.titleInputSelectionEnd)
+      ) {
+        this.debugTitleSelection("document-selectionchange-ignored-during-restore", {
+          activeElement: this.describeTitleElementForDebug(activeElement),
+        });
+        this.setTitleInputSelectionRange(
+          activeElement,
+          this.titleInputSelectionStart,
+          this.titleInputSelectionEnd,
+          "restore-selection-from-selectionchange"
+        );
+        return;
+      }
+      this.debugTitleSelection("document-selectionchange", {
+        activeElement: this.describeTitleElementForDebug(activeElement),
+      });
+      this.saveTitleInputSelection(activeElement);
+    },
+    insertTextIntoTitleInput(text, cursorOffset) {
+      const input = this.getTitleInputElement();
+      if (!input) {
+        this.debugTitleSelection("insert-title-no-input", {
+          text,
+          cursorOffset,
+        });
+        return;
+      }
+      const inputText = text === undefined || text === null ? "" : String(text);
+      if (!inputText) {
+        this.debugTitleSelection("insert-title-empty-text", {
+          text,
+          cursorOffset,
+        });
+        return;
+      }
+      const currentValue = String(input.value || this.article.title || "");
+      let selection;
+      if (this.titleInputHasSelection) {
+        selection = {
+          ...this.clampTitleSelection(
+            currentValue,
+            this.titleInputSelectionStart,
+            this.titleInputSelectionEnd
+          ),
+        };
+      } else if (this.titleInputFocused && this.saveTitleInputSelection(input)) {
+        selection = {
+          start: this.titleInputSelectionStart,
+          end: this.titleInputSelectionEnd,
+        };
+      } else {
+        selection = {
+          start: currentValue.length,
+          end: currentValue.length,
+        };
+      }
+      this.debugTitleSelection("insert-title-before", {
+        text: inputText,
+        cursorOffset,
+        currentValueLength: currentValue.length,
+        selectedStart: selection.start,
+        selectedEnd: selection.end,
+        inputBefore: this.describeTitleElementForDebug(input),
+      });
+      const start = selection.start;
+      const end = selection.end;
+      const before = currentValue.slice(0, start);
+      const after = currentValue.slice(end);
+      const newValue = before + inputText + after;
+      this.article.title = newValue;
+      if (this.isNativeTextInputElement(input)) {
+        input.value = newValue;
+      }
+      const newPos = start + (cursorOffset > 0 ? cursorOffset : inputText.length);
+      this.titleInputSelectionStart = newPos;
+      this.titleInputSelectionEnd = newPos;
+      this.titleInputHasSelection = true;
+      this.pendingTitleInsertion = false;
+      this.debugTitleSelection("insert-title-after", {
+        text: inputText,
+        newValueLength: newValue.length,
+        newPos,
+        inputAfter: this.describeTitleElementForDebug(input),
+      });
+      this.restoreTitleInputSelectionAfterRender(newPos, newPos, "insert-title");
+      this.handleTitleInput();
     },
     getQuickInputDisplayText(item) {
       const value = String((item && item.value) || "");
@@ -3280,6 +4078,10 @@ export default {
       });
     },
     async saveLocalArticle(currentServerTime) {
+      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+        return;
+      }
+
       this.lastSaveTime = new Date();
       this.normalizeCurrentArticleContentForStorage();
       this.markSyncPending(currentServerTime);
@@ -3477,6 +4279,10 @@ export default {
       }
     },
     startLocalSaveTimer() {
+      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+        return;
+      }
+
       clearInterval(this.saveInterval);
       this.saveInterval = setInterval(async () => {
         if (new Date() - this.lastInputTime > 1000 && this.hasNewInput) {
@@ -3501,11 +4307,11 @@ export default {
       }, 1000);
     },
     async endLocalSaveTimer() {
-      clearInterval(this.saveInterval);
-      this.saveInterval = undefined;
-      clearTimeout(this.inputSyncTimer);
-      this.inputSyncTimer = undefined;
-      if (this.loadComplete) {
+      this.clearPendingEditorSyncTimers();
+      if (
+        this.loadComplete &&
+        !this.shouldSuppressEditorSyncForCompletedPublish()
+      ) {
         await this.flushDraftToCloud({
           isFastSave: false,
           forceSlowSave: true,
@@ -3530,6 +4336,12 @@ export default {
         this.aiAssistantOpen = true;
         window.history.pushState({ aiAssistantOpen: true }, '', window.location.href);
         this.$refs.writerAiAssistant.open();
+      }
+    },
+    handleAiAssistantOpen() {
+      if (!this.aiAssistantOpen) {
+        this.aiAssistantOpen = true;
+        window.history.pushState({ aiAssistantOpen: true }, '', window.location.href);
       }
     },
     handleAiAssistantClose() {
@@ -3576,7 +4388,9 @@ export default {
       });
 
       if (pageHead) {
-        pageHead.style.backgroundColor = this.currentTheme.backColor;
+        pageHead.style.backgroundColor = this.isNavbarFullyHidden
+          ? this.currentTheme.pageBackColor || this.currentTheme.backColor
+          : this.currentTheme.backColor;
       }
 
       if (
@@ -3586,7 +4400,9 @@ export default {
         typeof window.jsBridge.setSystemUIStyle === "function"
       ) {
         window.jsBridge.setSystemUIStyle(
-          this.currentTheme.backColor,
+          this.isNavbarFullyHidden
+            ? this.currentTheme.pageBackColor || this.currentTheme.backColor
+            : this.currentTheme.backColor,
           this.currentTheme.color
         );
       }
@@ -3717,6 +4533,12 @@ export default {
       }, 500);
     },
     formatSaveNotifyText() {
+      if (this.lockState === "reconnecting") {
+        return "网络不稳定，本地已保存";
+      }
+      if (this.lockState === "lost") {
+        return "编辑会话已失效";
+      }
       if (!this.lastSaveNotifyTime) {
         return "尚未更改";
       }
@@ -3769,17 +4591,6 @@ export default {
         this.$refs.toolbarPopup.close();
       }
     },
-    openShortcutSettingsPopup(tab = "input") {
-      this.shortcutSettingsTab = tab;
-      if (this.$refs.shortcutSettingsPopup) {
-        this.$refs.shortcutSettingsPopup.open("bottom");
-      }
-    },
-    closeShortcutSettingsPopup() {
-      if (this.$refs.shortcutSettingsPopup) {
-        this.$refs.shortcutSettingsPopup.close();
-      }
-    },
     handleToolbarToolClick(tool) {
       if (!tool || !tool.action) {
         return;
@@ -3794,159 +4605,6 @@ export default {
       }
 
       this.handleNavAction(tool.action);
-    },
-    createQuickInputId() {
-      return `quick_input_${Date.now()}_${Math.random()
-        .toString(36)
-        .slice(2, 8)}`;
-    },
-    resetQuickInputDraft() {
-      this.quickInputDraft = {
-        type: "punctuation",
-        label: "",
-        value: "",
-        isPair: false,
-      };
-      this.editingQuickInputId = "";
-    },
-    saveQuickInputDraft() {
-      const value = this.quickInputDraft.value === undefined ||
-        this.quickInputDraft.value === null
-        ? ""
-        : String(this.quickInputDraft.value);
-      if (!value) {
-        uni.showToast({
-          title: "请输入快捷内容",
-          icon: "none",
-          duration: 1600,
-        });
-        return;
-      }
-
-      const labelSource = this.quickInputDraft.label === undefined ||
-        this.quickInputDraft.label === null
-        ? ""
-        : String(this.quickInputDraft.label);
-      const label = (labelSource.trim() || value).slice(0, 12);
-      const existingItem = this.quickInputSettingsItems.find(
-        (item) => item.id === this.editingQuickInputId
-      );
-      const nextItem = {
-        id: this.editingQuickInputId || this.createQuickInputId(),
-        type: this.quickInputDraft.type === "word" ? "word" : "punctuation",
-        label,
-        value,
-        icon: (existingItem && existingItem.icon) || "",
-        isPair:
-          this.quickInputDraft.type === "punctuation" &&
-          this.quickInputDraft.isPair === true,
-      };
-      const nextItems = this.quickInputSettingsItems.map(cloneQuickInput);
-      const existingIndex = nextItems.findIndex((item) => item.id === nextItem.id);
-      if (existingIndex >= 0) {
-        nextItems.splice(existingIndex, 1, nextItem);
-      } else {
-        nextItems.push(nextItem);
-      }
-
-      this.writerSettings.quickInputs = nextItems;
-      this.persistWriterSettings();
-      this.resetQuickInputDraft();
-    },
-    cancelQuickInputEdit() {
-      this.resetQuickInputDraft();
-    },
-    editQuickInput(item) {
-      if (!item) {
-        return;
-      }
-      this.editingQuickInputId = item.id;
-      this.quickInputDraft = {
-        type: item.type === "word" ? "word" : "punctuation",
-        label: item.label,
-        value: item.value,
-        isPair: item.type === "punctuation" && item.isPair === true,
-      };
-    },
-    removeQuickInput(index) {
-      const nextItems = this.quickInputSettingsItems.map(cloneQuickInput);
-      if (index < 0 || index >= nextItems.length) {
-        return;
-      }
-      const removed = nextItems.splice(index, 1)[0];
-      if (removed && removed.id === this.editingQuickInputId) {
-        this.resetQuickInputDraft();
-      }
-      this.writerSettings.quickInputs = nextItems;
-      this.persistWriterSettings();
-    },
-    moveQuickInput(index, direction) {
-      const nextItems = this.quickInputSettingsItems.map(cloneQuickInput);
-      const nextIndex = index + direction;
-      if (
-        index < 0 ||
-        index >= nextItems.length ||
-        nextIndex < 0 ||
-        nextIndex >= nextItems.length
-      ) {
-        return;
-      }
-      const [item] = nextItems.splice(index, 1);
-      nextItems.splice(nextIndex, 0, item);
-      this.writerSettings.quickInputs = nextItems;
-      this.persistWriterSettings();
-    },
-    resetQuickInputs() {
-      this.writerSettings.quickInputs = DEFAULT_QUICK_INPUTS.map(cloneQuickInput);
-      this.persistWriterSettings();
-      this.resetQuickInputDraft();
-    },
-    isNavShortcutToolVisible(toolId) {
-      const id = String(toolId || "");
-      return normalizeNavShortcutToolIds(
-        this.writerSettings.navShortcutToolIds
-      ).includes(id);
-    },
-    toggleNavShortcutTool(toolId) {
-      const id = String(toolId || "");
-      if (!TOOL_DEFINITIONS[id]) {
-        return;
-      }
-
-      const shortcutToolIds = normalizeNavShortcutToolIds(
-        this.writerSettings.navShortcutToolIds
-      );
-      const shortcutIndex = shortcutToolIds.indexOf(id);
-      if (shortcutIndex >= 0) {
-        shortcutToolIds.splice(shortcutIndex, 1);
-      } else {
-        shortcutToolIds.push(id);
-      }
-      this.writerSettings.navShortcutToolIds = shortcutToolIds;
-      this.persistWriterSettings();
-    },
-    moveToolbarTool(toolId, direction) {
-      const id = String(toolId || "");
-      const nextToolIds = normalizeNavToolIds(this.writerSettings.navToolIds);
-      const index = nextToolIds.indexOf(id);
-      const nextIndex = index + direction;
-      if (
-        index < 0 ||
-        nextIndex < 0 ||
-        nextIndex >= nextToolIds.length
-      ) {
-        return;
-      }
-
-      const [item] = nextToolIds.splice(index, 1);
-      nextToolIds.splice(nextIndex, 0, item);
-      this.writerSettings.navToolIds = nextToolIds;
-      this.persistWriterSettings();
-    },
-    resetToolbarTools() {
-      this.writerSettings.navToolIds = DEFAULT_NAV_TOOL_IDS.slice();
-      this.writerSettings.navShortcutToolIds = DEFAULT_NAV_SHORTCUT_TOOL_IDS.slice();
-      this.persistWriterSettings();
     },
     uploadImage() {
       if (!this.editor) return;
@@ -3998,23 +4656,126 @@ export default {
         )}`,
       });
     },
+    getDomRef(name) {
+      const ref = this.$refs ? this.$refs[name] : null;
+      return Array.isArray(ref) ? ref[0] : ref;
+    },
+    getHeaderOffsetTransform(offset) {
+      const normalizedOffset = this.clampHeaderOffset(offset);
+      return `translate(0, -${normalizedOffset}px)`;
+    },
+    getStatusCapsuleLift(offset) {
+      const normalizedOffset = this.clampHeaderOffset(offset);
+      const maxOffset = Number(this.maxHeaderOffset || 0);
+      const gap = Number(this.statusCapsuleGap || 0);
+      if (!maxOffset || !gap) {
+        return 0;
+      }
+      return Math.min(gap, (gap * normalizedOffset) / maxOffset);
+    },
+    setHeaderOffsetStyle(target, offset, includeLayout = false) {
+      if (!target || !target.style) {
+        return;
+      }
+
+      const normalizedOffset = this.clampHeaderOffset(offset);
+      const value = `${normalizedOffset}px`;
+      target.style.setProperty("--headerVisualOffset", value);
+      target.style.setProperty(
+        "--statusCapsuleLift",
+        `${this.getStatusCapsuleLift(normalizedOffset)}px`
+      );
+      if (includeLayout) {
+        target.style.setProperty("--headerLayoutOffset", value);
+      }
+    },
+    cacheHeaderDragMetrics() {
+      const middleBar = this.getDomRef("middleBar");
+      this._headerGestureLayoutStartOffset = this.clampHeaderOffset(this.headerOffset);
+      this._headerGestureMiddleBarStartHeight = 0;
+
+      if (
+        middleBar &&
+        typeof middleBar.getBoundingClientRect === "function"
+      ) {
+        const rect = middleBar.getBoundingClientRect();
+        this._headerGestureMiddleBarStartHeight = Number(rect.height) || 0;
+      }
+    },
     applyHeaderVisualOffsetStyle(offset) {
       const normalizedOffset = this.clampHeaderOffset(offset);
+      const editorHeader = this.getDomRef("editorHeader");
+      const middleBar = this.getDomRef("middleBar");
       const pageRoot = this.$el;
-      if (pageRoot && pageRoot.style) {
-        pageRoot.style.setProperty("--headerVisualOffset", `${normalizedOffset}px`);
+
+      if (editorHeader && editorHeader.style) {
+        editorHeader.style.transform = this.getHeaderOffsetTransform(normalizedOffset);
+        editorHeader.style.setProperty(
+          "--statusCapsuleLift",
+          `${this.getStatusCapsuleLift(normalizedOffset)}px`
+        );
+      }
+
+      if (middleBar && middleBar.style) {
+        const startHeight = Number(this._headerGestureMiddleBarStartHeight || 0);
+        const startOffset = Number(this._headerGestureLayoutStartOffset || 0);
+        const nextHeight = startHeight + normalizedOffset - startOffset;
+
+        middleBar.style.transform = this.getHeaderOffsetTransform(normalizedOffset);
+        if (startHeight > 0 && Number.isFinite(nextHeight)) {
+          middleBar.style.setProperty(
+            "height",
+            `${Math.max(0, nextHeight)}px`,
+            "important"
+          );
+        } else {
+          this.setHeaderOffsetStyle(middleBar, normalizedOffset, true);
+        }
+      }
+
+      if ((!editorHeader || !middleBar) && pageRoot && pageRoot.style) {
+        const value = `${normalizedOffset}px`;
+        pageRoot.style.setProperty("--headerVisualOffset", value);
+        pageRoot.style.setProperty("--headerLayoutOffset", value);
+        pageRoot.style.setProperty(
+          "--statusCapsuleLift",
+          `${this.getStatusCapsuleLift(normalizedOffset)}px`
+        );
       }
       return normalizedOffset;
     },
+    clearHeaderDragInlineStyles() {
+      const editorHeader = this.getDomRef("editorHeader");
+      const middleBar = this.getDomRef("middleBar");
+
+      if (editorHeader && editorHeader.style) {
+        editorHeader.style.removeProperty("transform");
+      }
+      if (middleBar && middleBar.style) {
+        middleBar.style.removeProperty("transform");
+        middleBar.style.removeProperty("height");
+      }
+    },
     applyCommittedHeaderOffsetStyle(offset) {
       const normalizedOffset = this.clampHeaderOffset(offset);
+      const editorHeader = this.getDomRef("editorHeader");
+      const middleBar = this.getDomRef("middleBar");
       const pageRoot = this.$el;
+
+      this.setHeaderOffsetStyle(editorHeader, normalizedOffset);
+      this.setHeaderOffsetStyle(middleBar, normalizedOffset, true);
+
       if (pageRoot && pageRoot.style) {
         const value = `${normalizedOffset}px`;
         pageRoot.style.setProperty("--headerOffset", value);
         pageRoot.style.setProperty("--headerVisualOffset", value);
         pageRoot.style.setProperty("--headerLayoutOffset", value);
+        pageRoot.style.setProperty(
+          "--statusCapsuleLift",
+          `${this.getStatusCapsuleLift(normalizedOffset)}px`
+        );
       }
+      this.clearHeaderDragInlineStyles();
       return normalizedOffset;
     },
     cancelHeaderOffsetFrame() {
@@ -4097,8 +4858,249 @@ export default {
         activeElement.closest(".writer-prosemirror")
       );
     },
+    getEditorActivationPoint(event) {
+      const touch =
+        event && event.touches && event.touches.length
+          ? event.touches[0]
+          : event && event.changedTouches && event.changedTouches.length
+            ? event.changedTouches[0]
+            : null;
+
+      if (touch) {
+        return {
+          x: Number(touch.clientX || 0),
+          y: Number(touch.clientY || 0),
+        };
+      }
+
+      if (
+        event &&
+        typeof event.clientX === "number" &&
+        typeof event.clientY === "number"
+      ) {
+        return {
+          x: Number(event.clientX || 0),
+          y: Number(event.clientY || 0),
+        };
+      }
+
+      return null;
+    },
+    cancelEditorActivation() {
+      this._editorActivation = null;
+      this._shouldCenterCursorAfterBlurredTap = false;
+      clearTimeout(this._centerCursorAfterBlurredTapTimer);
+    },
+    handleEditorActivationStart(event) {
+      const point = this.getEditorActivationPoint(event);
+      const startedBlurred = !this.isBodyEditorFocused();
+
+      if (!point || !startedBlurred) {
+        if (this._shouldCenterCursorAfterBlurredTap) {
+          return;
+        }
+        this.cancelEditorActivation();
+        return;
+      }
+
+      this._editorActivation = {
+        startedBlurred,
+        startX: point.x,
+        startY: point.y,
+        moved: false,
+      };
+      this._shouldCenterCursorAfterBlurredTap = true;
+    },
+    handleEditorActivationMove(event) {
+      const activation = this._editorActivation;
+      if (!activation || !activation.startedBlurred) {
+        return;
+      }
+
+      const point = this.getEditorActivationPoint(event);
+      if (!point) {
+        return;
+      }
+
+      const distance = Math.max(
+        Math.abs(point.x - activation.startX),
+        Math.abs(point.y - activation.startY)
+      );
+      if (distance > 8) {
+        activation.moved = true;
+        this.cancelEditorActivation();
+      }
+    },
+    handleEditorActivationEnd(event) {
+      const activation = this._editorActivation;
+      if (!this._shouldCenterCursorAfterBlurredTap || !activation) {
+        return;
+      }
+
+      const point = this.getEditorActivationPoint(event);
+      if (point) {
+        const distance = Math.max(
+          Math.abs(point.x - activation.startX),
+          Math.abs(point.y - activation.startY)
+        );
+        if (distance > 8) {
+          this.cancelEditorActivation();
+          return;
+        }
+      }
+
+      if (activation.moved) {
+        this.cancelEditorActivation();
+        return;
+      }
+      this.scheduleCenterCursorAfterBlurredTap();
+    },
+    scheduleCenterCursorAfterBlurredTap() {
+      clearTimeout(this._centerCursorAfterBlurredTapTimer);
+
+      const run = (isFinalAttempt = false) => {
+        this.centerEditorCursorInViewport(isFinalAttempt);
+      };
+
+      if (
+        typeof window !== "undefined" &&
+        typeof window.requestAnimationFrame === "function"
+      ) {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => run(false));
+        });
+      } else {
+        run(false);
+      }
+
+      this._centerCursorAfterBlurredTapTimer = setTimeout(() => run(true), 260);
+    },
+    getEditorScrollContainer() {
+      const editorDom =
+        this.editor && this.editor.view && this.editor.view.dom
+          ? this.editor.view.dom
+          : null;
+      if (editorDom && editorDom.closest) {
+        const container = editorDom.closest(".textarea");
+        if (container) {
+          return container;
+        }
+      }
+
+      const middleBar = this.getDomRef("middleBar");
+      return middleBar && middleBar.querySelector
+        ? middleBar.querySelector(".textarea")
+        : null;
+    },
+    getEditorVisibleVerticalRange(container) {
+      const rect = container.getBoundingClientRect();
+      let top = rect.top;
+      let bottom = rect.bottom;
+
+      if (typeof window !== "undefined" && window.visualViewport) {
+        const viewportTop = Number(window.visualViewport.offsetTop || 0);
+        const viewportBottom =
+          viewportTop + Number(window.visualViewport.height || window.innerHeight || 0);
+        top = Math.max(top, viewportTop);
+        bottom = Math.min(bottom, viewportBottom);
+      }
+
+      return {
+        top,
+        bottom: Math.max(top, bottom),
+      };
+    },
+    centerEditorCursorInViewport(isFinalAttempt = true) {
+      if (!this._shouldCenterCursorAfterBlurredTap) {
+        return true;
+      }
+
+      if (!this.editor || !this.editor.view || !this.editor.state) {
+        if (isFinalAttempt) {
+          this.cancelEditorActivation();
+        }
+        return false;
+      }
+
+      if (!this.isBodyEditorFocused()) {
+        if (isFinalAttempt) {
+          this.cancelEditorActivation();
+        }
+        return false;
+      }
+
+      const container = this.getEditorScrollContainer();
+      if (!container || typeof container.getBoundingClientRect !== "function") {
+        this.cancelEditorActivation();
+        return true;
+      }
+
+      const selection = this.editor.state.selection;
+      if (!selection || !selection.empty) {
+        if (isFinalAttempt) {
+          this.cancelEditorActivation();
+          return true;
+        }
+        return false;
+      }
+
+      const position =
+        typeof selection.head === "number" ? selection.head : selection.from;
+      let cursorCoords = null;
+
+      try {
+        cursorCoords = this.editor.view.coordsAtPos(position);
+      } catch (error) {
+        cursorCoords = null;
+      }
+
+      if (!cursorCoords) {
+        if (isFinalAttempt) {
+          this.cancelEditorActivation();
+        }
+        return false;
+      }
+
+      const visibleRange = this.getEditorVisibleVerticalRange(container);
+      const visibleHeight = visibleRange.bottom - visibleRange.top;
+      if (visibleHeight <= 0) {
+        this.cancelEditorActivation();
+        return true;
+      }
+
+      const cursorCenterY = (cursorCoords.top + cursorCoords.bottom) / 2;
+      const visibleCenterY = visibleRange.top + visibleHeight / 2;
+      const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+      const nextScrollTop = Math.min(
+        maxScrollTop,
+        Math.max(0, container.scrollTop + cursorCenterY - visibleCenterY)
+      );
+
+      if (Math.abs(nextScrollTop - container.scrollTop) > 1) {
+        if (typeof container.scrollTo === "function") {
+          try {
+            container.scrollTo({
+              top: nextScrollTop,
+              behavior: "smooth",
+            });
+          } catch (error) {
+            container.scrollTop = nextScrollTop;
+          }
+        } else {
+          container.scrollTop = nextScrollTop;
+        }
+      }
+
+      if (isFinalAttempt) {
+        this.cancelEditorActivation();
+      }
+      return true;
+    },
     handleEditorFocusChange(isFocused) {
       this.editorBodyFocused = !!isFocused;
+      if (isFocused) {
+        this.pendingTitleInsertion = false;
+      }
       if (
         isFocused &&
         (!this.isHeaderGestureActive || this.headerGestureStartedFocused)
@@ -4179,6 +5181,10 @@ export default {
         return false;
       }
 
+      if (target.closest(".chapterTitleBar")) {
+        return false;
+      }
+
       return !!target.closest(".textarea");
     },
     handleEditorAreaTouchStart(event) {
@@ -4198,6 +5204,7 @@ export default {
       this.isHeaderGestureActive = true;
       this._headerGestureLastDeltaY = 0;
       this._headerGestureVisualOffset = this.headerOffset;
+      this.cacheHeaderDragMetrics();
       this.applyHeaderVisualOffsetStyle(this._headerGestureVisualOffset);
     },
     handleEditorAreaTouchMove(event) {
@@ -4228,6 +5235,7 @@ export default {
         );
         const nextOffset = this.clampHeaderOffset(previousOffset - deltaY);
         this._headerGestureVisualOffset = nextOffset;
+        this.headerOffset = nextOffset;
         if (nextOffset !== previousOffset && event && event.cancelable) {
           event.preventDefault();
         }
@@ -4279,6 +5287,9 @@ export default {
 
       this.statusBarHeight = statusBarHeight;
       this.commitHeaderOffset(this.headerOffset);
+      this.$nextTick(() => {
+        this.scheduleTitleCapsuleClearanceUpdate();
+      });
     },
     handleNavBack() {
       uni.navigateBack({
@@ -4368,6 +5379,14 @@ export default {
     window.addEventListener("popstate", this.browserBack);
     window.removeEventListener("resize", this.updateCustomNavigationMetrics);
     window.addEventListener("resize", this.updateCustomNavigationMetrics);
+    document.removeEventListener(
+      "selectionchange",
+      this.handleDocumentSelectionChange
+    );
+    document.addEventListener(
+      "selectionchange",
+      this.handleDocumentSelectionChange
+    );
     this.$nextTick(() => {
       setTimeout(() => {
         this.applyNavigationBarTheme();
@@ -4382,6 +5401,12 @@ export default {
     if (typeof window !== "undefined") {
       window.removeEventListener("resize", this.updateCustomNavigationMetrics);
     }
+    if (typeof document !== "undefined") {
+      document.removeEventListener(
+        "selectionchange",
+        this.handleDocumentSelectionChange
+      );
+    }
     await this.finalizeBeforeLeave();
   },
   onResize() {
@@ -4394,6 +5419,9 @@ export default {
     this.syncAppEnvironment();
     this.setupAppKeyboardListener();
     this.initializeWriterSettings();
+    if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+      return;
+    }
     this.publishHandoffActive = false;
     this.startSaveNotifyTimer();
     this.startWritingTimer();
@@ -4420,12 +5448,13 @@ export default {
   overflow: hidden !important;
 
   .editorHeader {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 300;
-    transform: translate3d(0, calc(0px - var(--headerVisualOffset)), 0);
+    transform: translate(0, calc(0px - var(--headerVisualOffset)));
     transition: transform 0.18s ease-out;
-    backface-visibility: hidden;
-    contain: paint;
     will-change: transform;
   }
 
@@ -4435,6 +5464,10 @@ export default {
     width: 100%;
     box-sizing: border-box;
     flex-shrink: 0;
+    box-shadow: 0px 4px 1.5px rgba(0, 0, 0, 0.006),
+      0px 9.7px 3.5px rgba(0, 0, 0, 0.008), 0px 18.3px 6.6px rgba(0, 0, 0, 0.01),
+      0px 32.6px 11.8px rgba(0, 0, 0, 0.012),
+      0px 61px 22.1px rgba(0, 0, 0, 0.014), 0px 146px 53px rgba(0, 0, 0, 0.02);
   }
 
   .customNavContent {
@@ -4538,70 +5571,60 @@ export default {
   }
 
   .topBar {
-    height: var(--titleBarHeight);
-    border-bottom: #a6a6a6 1px solid;
-    position: relative;
-    box-shadow: 0px 4px 1.5px rgba(0, 0, 0, 0.006),
-      0px 9.7px 3.5px rgba(0, 0, 0, 0.008), 0px 18.3px 6.6px rgba(0, 0, 0, 0.01),
-      0px 32.6px 11.8px rgba(0, 0, 0, 0.012),
-      0px 61px 22.1px rgba(0, 0, 0, 0.014), 0px 146px 53px rgba(0, 0, 0, 0.02);
+    position: absolute;
+    right: 16rpx;
+    top: calc(var(--statusBarHeight) + var(--navBarHeight) + var(--statusCapsuleGap) - var(--statusCapsuleLift));
+    z-index: 320;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10rpx;
+    height: auto;
+    max-width: calc(100vw - 32rpx);
+    pointer-events: none;
 
-    .input,
-    :deep(.input),
-    :deep(.input *),
-    :deep(input),
-    :deep(.uni-input-wrapper),
-    :deep(.uni-input-input) {
-      font-family: var(--editor-font-family, inherit) !important;
-    }
-
-    input {
-      height: 100%;
-      padding-left: 20rpx;
-      font-family: var(--editor-font-family, inherit) !important;
-      font-weight: bold;
-      line-height: 150%;
-      color: inherit;
-      background: transparent;
-    }
-
-    div.textCount {
-      display: flex;
-      position: absolute;
-      right: 8rpx;
-      bottom: 0;
-      font-size: 28rpx;
-      color: rgb(175, 81, 38);
+    .statusCapsule {
+      display: inline-flex;
       align-items: center;
+      min-width: 0;
+      padding: 8rpx 16rpx;
+      border: 1rpx solid rgba(175, 81, 38, 0.12);
+      border-radius: 999rpx;
+      background-color: rgba(255, 250, 240, 0.92);
+      box-sizing: border-box;
+      font-size: 24rpx;
+      line-height: 1.35;
+      white-space: nowrap;
+      backdrop-filter: blur(8px);
+    }
 
-      div.saveNotify {
-        display: flex;
-        align-items: center;
-        margin-left: 10rpx;
-        color: rgb(156, 156, 156);
-      }
+    .textCount {
+      color: rgb(175, 81, 38);
+    }
 
-      .editorRole {
-        display: inline-flex;
-        align-items: center;
-        margin-left: 10rpx;
-        padding: 2rpx 10rpx;
-        border-radius: 999rpx;
-        font-size: 22rpx;
-        color: #9a4f1f;
-        background-color: rgba(255, 186, 120, 0.18);
-      }
+    .saveNotify {
+      color: rgb(156, 156, 156);
+    }
 
+    .editorRole {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 10rpx;
+      padding: 2rpx 10rpx;
+      border-radius: 999rpx;
+      font-size: 22rpx;
+      color: #9a4f1f;
+      background-color: rgba(255, 186, 120, 0.18);
     }
   }
 
   .middleBar {
     box-sizing: border-box;
-    height: calc(100vh - var(--navBarHeight) - var(--titleBarHeight) - var(--statusBarHeight) + var(--headerLayoutOffset)) !important;
+    height: calc(100vh - var(--navBarHeight) - var(--statusBarHeight) + var(--headerLayoutOffset)) !important;
+    margin-top: calc(var(--navBarHeight) + var(--statusBarHeight));
     overflow: hidden;
-    transform: translate3d(0, calc(0px - var(--headerVisualOffset)), 0);
+    transform: translate(0, calc(0px - var(--headerVisualOffset)));
     transition: height 0.18s ease-out, transform 0.18s ease-out;
-    backface-visibility: hidden;
     contain: layout paint;
     will-change: height, transform;
 
@@ -4620,7 +5643,7 @@ export default {
     .textarea {
       display: block;
       position: relative;
-      padding: 30rpx 30rpx;
+      padding: var(--statusCapsuleTopClearance) 30rpx 30rpx;
       width: calc(100vw);
       height: calc(100%);
       font-size: 35rpx;
@@ -4629,10 +5652,42 @@ export default {
       overflow-y: auto;
       overflow-x: hidden;
 
+      .chapterTitleBar {
+        display: flex;
+        align-items: center;
+        min-height: var(--titleBarHeight);
+        margin-bottom: 30rpx;
+        border-bottom: 1rpx solid rgba(166, 166, 166, 0.45);
+        box-sizing: border-box;
+      }
+
+      .chapterTitleInput,
+      :deep(.chapterTitleInput),
+      :deep(.chapterTitleInput *),
+      :deep(input),
+      :deep(.uni-input-wrapper),
+      :deep(.uni-input-input) {
+        font-family: var(--editor-font-family, inherit) !important;
+      }
+
+      .chapterTitleInput {
+        width: 100%;
+        height: var(--titleBarHeight);
+        padding: 0;
+        font-family: var(--editor-font-family, inherit) !important;
+        font-weight: bold;
+        line-height: 150%;
+        color: inherit;
+        background: transparent;
+        border: 0;
+        outline: none;
+        box-sizing: border-box;
+      }
+
       :deep(.writer-prosemirror) {
         scroll-behavior: smooth;
-        margin: 30rpx 0 !important;
-        min-height: calc(100% - 60rpx);
+        margin: 0 0 30rpx !important;
+        min-height: calc(100% - var(--statusCapsuleTopClearance) - var(--titleBarHeight) - 90rpx);
         font-size: var(--editor-font-size);
         font-family: var(--editor-font-family, inherit) !important;
         line-height: 60rpx;
@@ -4772,6 +5827,10 @@ export default {
     .middleBar {
       transition: none;
     }
+
+    .topBar .statusCapsule {
+      box-shadow: none;
+    }
   }
 }
 
@@ -4816,13 +5875,11 @@ export default {
 }
 
 .quickInputToolBar button::after,
-.toolbarPanel button::after,
-.shortcutSettingsPanel button::after {
+.toolbarPanel button::after {
   border: 0;
 }
 
-.toolbarPanelClose,
-.shortcutSettingsClose {
+.toolbarPanelClose {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4899,326 +5956,6 @@ export default {
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.shortcutSettingsPanel {
-  box-sizing: border-box;
-  width: 100vw;
-  max-height: 76vh;
-  padding: 24rpx;
-  overflow-y: auto;
-  color: #2f2f2f;
-  background: #ffffff;
-  border-top-left-radius: 8rpx;
-  border-top-right-radius: 8rpx;
-  box-shadow: 0 -12rpx 30rpx rgba(33, 24, 18, 0.16);
-}
-
-.shortcutSettingsHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22rpx;
-}
-
-.shortcutSettingsHeader > div {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.shortcutSettingsTitle {
-  font-size: 34rpx;
-  font-weight: bold;
-  line-height: 1.2;
-}
-
-.shortcutSettingsTabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10rpx;
-  padding: 6rpx;
-  margin-bottom: 22rpx;
-  background: #f0f2f5;
-  border-radius: 8rpx;
-}
-
-.shortcutSettingsTab {
-  height: 64rpx;
-  padding: 0;
-  color: #626973;
-  background: transparent;
-  border: 0;
-  border-radius: 6rpx;
-  font-size: 27rpx;
-  line-height: 64rpx;
-}
-
-.shortcutSettingsTab.active {
-  color: #1f2d3d;
-  background: #ffffff;
-  box-shadow: 0 3rpx 10rpx rgba(31, 45, 61, 0.08);
-}
-
-.shortcutSettingsBody {
-  min-height: 360rpx;
-}
-
-.shortcutForm {
-  padding-bottom: 20rpx;
-  border-bottom: 1rpx solid #edf0f2;
-}
-
-.shortcutTypeSwitch {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12rpx;
-  margin-bottom: 16rpx;
-}
-
-.shortcutTypeSwitch button {
-  height: 60rpx;
-  color: #5f6670;
-  background: #f5f7f9;
-  border: 1rpx solid #d8dde3;
-  border-radius: 8rpx;
-  font-size: 27rpx;
-}
-
-.shortcutTypeSwitch button.active {
-  color: #2f6f9f;
-  background: #e9f5ff;
-  border-color: #7db9e6;
-}
-
-.shortcutFormFields {
-  display: grid;
-  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-  gap: 12rpx;
-  margin-bottom: 16rpx;
-}
-
-.shortcutInputField {
-  width: 100%;
-  height: 68rpx;
-  min-width: 0;
-  padding: 0 18rpx;
-  color: #26313d;
-  background: #ffffff;
-  border: 1rpx solid #d8dde3;
-  border-radius: 8rpx;
-  box-sizing: border-box;
-  font-size: 27rpx;
-}
-
-.shortcutPairToggle {
-  display: flex;
-  grid-column: 1 / -1;
-  align-items: center;
-  justify-content: space-between;
-  height: 62rpx;
-  padding: 0 4rpx;
-  color: #4f5b68;
-  font-size: 27rpx;
-}
-
-.shortcutSwitch {
-  position: relative;
-  width: 78rpx;
-  height: 42rpx;
-  border-radius: 999rpx;
-  background: #d5dce4;
-  transition: background 0.16s ease;
-}
-
-.shortcutSwitch span {
-  position: absolute;
-  top: 5rpx;
-  left: 5rpx;
-  width: 32rpx;
-  height: 32rpx;
-  border-radius: 999rpx;
-  background: #ffffff;
-  box-shadow: 0 3rpx 8rpx rgba(37, 54, 71, 0.18);
-  transition: transform 0.16s ease;
-}
-
-.shortcutSwitch.active {
-  background: #2f6f9f;
-}
-
-.shortcutSwitch.active span {
-  transform: translateX(36rpx);
-}
-
-.shortcutFormActions {
-  display: flex;
-  gap: 12rpx;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.shortcutPrimaryButton,
-.shortcutGhostButton {
-  height: 64rpx;
-  padding: 0 22rpx;
-  border-radius: 8rpx;
-  box-sizing: border-box;
-  font-size: 27rpx;
-  line-height: 64rpx;
-}
-
-.shortcutPrimaryButton {
-  color: #ffffff;
-  background: #2f6f9f;
-  border: 1rpx solid #2f6f9f;
-}
-
-.shortcutPrimaryButton.fullWidth {
-  width: 100%;
-  margin-top: 20rpx;
-}
-
-.shortcutGhostButton {
-  color: #4e5968;
-  background: #ffffff;
-  border: 1rpx solid #ccd3dc;
-}
-
-.shortcutList,
-.toolbarSettingsList {
-  margin-top: 10rpx;
-}
-
-.shortcutListItem,
-.toolbarSettingsItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 88rpx;
-  padding: 12rpx 0;
-  border-bottom: 1rpx solid #edf0f2;
-  box-sizing: border-box;
-}
-
-.shortcutItemPreview {
-  display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
-  align-items: center;
-  min-width: 0;
-  gap: 10rpx;
-  padding-right: 12rpx;
-}
-
-.shortcutItemPreview.paired {
-  grid-template-columns: auto auto auto minmax(0, 1fr);
-}
-
-.shortcutItemLabel {
-  max-width: 130rpx;
-  overflow: hidden;
-  color: #1f2d3d;
-  font-size: 30rpx;
-  font-weight: bold;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.shortcutItemType {
-  padding: 4rpx 10rpx;
-  color: #607080;
-  background: #eef2f5;
-  border-radius: 6rpx;
-  font-size: 21rpx;
-  line-height: 1.2;
-}
-
-.shortcutItemType.pair {
-  color: #2f6f9f;
-  background: #e8f4ff;
-}
-
-.shortcutItemValue {
-  min-width: 0;
-  overflow: hidden;
-  color: #6c7480;
-  font-size: 25rpx;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.shortcutItemActions,
-.toolbarSettingsActions {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.shortcutItemActions button,
-.toolbarSettingsActions button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 50rpx;
-  height: 50rpx;
-  padding: 0;
-  color: #4e5968;
-  background: #f6f8fa;
-  border: 1rpx solid #d9dee5;
-  border-radius: 8rpx;
-  font-size: 26rpx;
-}
-
-.shortcutItemActions button:disabled,
-.toolbarSettingsActions button:disabled {
-  color: #b9c0c8;
-  background: #f4f5f6;
-  border-color: #eceff2;
-}
-
-.toolbarSettingsInfo {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  gap: 14rpx;
-  color: #26313d;
-  font-size: 29rpx;
-  font-weight: bold;
-}
-
-.toolbarSettingsIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44rpx;
-  height: 44rpx;
-  color: #2f6f9f;
-  font-size: 34rpx;
-  line-height: 1;
-}
-
-.toolbarSettingsImage {
-  width: 44rpx;
-  height: 44rpx;
-  object-fit: contain;
-}
-
-.toolbarSettingsActions .toolbarVisibilityButton {
-  width: 78rpx;
-  color: #7c8794;
-  font-size: 23rpx;
-}
-
-.toolbarSettingsActions .toolbarVisibilityButton.active {
-  color: #2f6f9f;
-  background: #e9f5ff;
-  border-color: #9cc9ea;
-}
-
-.toolbarSettingsActions .toolbarVisibilityButton.locked {
-  color: #8b6b3f;
-  background: #fff6e8;
-  border-color: #e7c994;
 }
 
 .settingBar {

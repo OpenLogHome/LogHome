@@ -293,18 +293,24 @@
           </button>
         </div>
         <div class="inputTypeSwitch">
-          <button
+          <div
+            class="inputTypeOption"
             :class="{ active: quickInputDraft.type === 'punctuation' }"
+            role="button"
+            tabindex="0"
             @click="quickInputDraft.type = 'punctuation'"
           >
             标点输入
-          </button>
-          <button
+          </div>
+          <div
+            class="inputTypeOption"
             :class="{ active: quickInputDraft.type === 'word' }"
+            role="button"
+            tabindex="0"
             @click="quickInputDraft.type = 'word'"
           >
             词汇输入
-          </button>
+          </div>
         </div>
         <input
           class="drawerInput"
@@ -329,9 +335,14 @@
             <span></span>
           </button>
         </div>
-        <button class="drawerPrimaryButton" @click="saveQuickInput">
+        <div
+          class="drawerPrimaryButton"
+          role="button"
+          tabindex="0"
+          @click="saveQuickInput"
+        >
           {{ editingQuickInputId ? "保存修改" : "保存到备选区" }}
-        </button>
+        </div>
       </view>
     </uni-popup>
   </div>
@@ -1728,14 +1739,19 @@ button {
   border-radius: 8rpx;
 }
 
-.inputTypeSwitch button {
+.inputTypeOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 64rpx;
   color: #68727f;
   border-radius: 6rpx;
   font-size: 28rpx;
+  line-height: normal;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.inputTypeSwitch button.active {
+.inputTypeOption.active {
   color: #26313d;
   background: #ffffff;
   box-shadow: 0 4rpx 12rpx rgba(45, 72, 103, 0.08);
@@ -1794,6 +1810,9 @@ button {
 }
 
 .drawerPrimaryButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 78rpx;
   margin-top: 24rpx;
@@ -1802,5 +1821,7 @@ button {
   border-radius: 8rpx;
   font-size: 30rpx;
   font-weight: 700;
+  line-height: normal;
+  -webkit-tap-highlight-color: transparent;
 }
 </style>

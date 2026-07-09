@@ -78,25 +78,57 @@
           <view class="section-title correction-title">文本纠错</view>
           <view class="inline-limit-badge">限免</view>
         </view>
-        <button
-          size="mini"
-          class="ghost-button"
-          :loading="correctionLoading"
-          @click="runTextCorrection"
-        >
-          重新检查
-        </button>
+        <view class="correction-actions-group">
+          <button
+            size="mini"
+            class="ghost-button"
+            :class="{ 'ghost-button-active': correctionMode === 'standard' }"
+            :loading="displayCorrectionLoading"
+            @click="rerunCurrentCorrection"
+          >
+            重新检查
+          </button>
+          <view
+            class="smart-toggle"
+            :class="{ 'smart-toggle-loading': smartCorrectionLoading }"
+            @click="toggleSmartCorrection"
+          >
+            <text class="smart-toggle-label">智能纠错</text>
+            <view class="smart-toggle-track" :class="{ active: correctionMode === 'smart' }">
+              <view class="smart-toggle-thumb"></view>
+            </view>
+          </view>
+        </view>
       </view>
 
-      <view v-if="correctionLoading" class="status-box">
+      <view v-if="smartThinkingText && smartThinkingVisible" class="thinking-panel">
+        <view class="thinking-head" @click="smartThinkingVisible = false">
+          <text class="thinking-head-text">模型思考过程</text>
+          <text class="thinking-head-close">收起</text>
+        </view>
+        <scroll-view scroll-y class="thinking-body" :scroll-top="thinkingScrollTop">
+          <view class="thinking-body-inner">
+            <text class="thinking-content">{{ smartThinkingText }}</text>
+          </view>
+        </scroll-view>
+      </view>
+      <view
+        v-else-if="smartCorrectionLoading && correctionMode === 'smart'"
+        class="thinking-collapsed"
+        @click="smartThinkingVisible = true"
+      >
+        <text class="thinking-collapsed-text">查看模型思考过程</text>
+      </view>
+
+      <view v-if="displayCorrectionLoading" class="status-box">
         正在检查正文，请稍候...
       </view>
-      <view v-else-if="correctionError" class="status-box error-box">
-        {{ correctionError }}
+      <view v-else-if="displayCorrectionError" class="status-box error-box">
+        {{ displayCorrectionError }}
       </view>
       <view v-else>
         <view
-          v-if="(correctionResult.summary.error_count || 0) > 0"
+          v-if="(displayCorrectionResult.summary.error_count || 0) > 0"
           class="status-box error-box correction-status"
         >
           部分内容暂时无法完成检查，请稍后重新检查。
@@ -104,23 +136,23 @@
 
         <view
           v-if="
-            !correctionResult.corrections.length &&
-            !(correctionResult.summary.error_count || 0) &&
-            (correctionResult.summary.paragraph_count || 0) > 0
+            !displayCorrectionResult.corrections.length &&
+            !(displayCorrectionResult.summary.error_count || 0) &&
+            (displayCorrectionResult.summary.paragraph_count || 0) > 0
           "
           class="status-box success-box correction-status"
         >
           未发现明显文本纠错问题。
         </view>
         <view
-          v-if="(correctionResult.summary.paragraph_count || 0) === 0"
+          v-if="(displayCorrectionResult.summary.paragraph_count || 0) === 0"
           class="status-box success-box correction-status"
         >
           暂无可检测的正文段落。
         </view>
-        <view v-if="correctionResult.corrections.length" class="correction-list">
+        <view v-if="displayCorrectionResult.corrections.length" class="correction-list">
           <view
-            v-for="item in correctionResult.corrections"
+            v-for="item in displayCorrectionResult.corrections"
             :key="item.id"
             class="correction-item"
             @click="openCorrectionDetail(item)"
@@ -302,7 +334,15 @@ import {
   normalizeCorrectionText,
   persistIgnoredCorrections,
   persistTextCorrectionCache,
-  writeParagraphResultsToCache,
+  writeStandardParagraphResultsToCache,
+  loadSmartCorrectionCache,
+  getCachedSmartParagraphResult,
+  writeSmartParagraphResultsToCache,
+  persistSmartCorrectionCache,
+  loadSmartIgnoredCorrections,
+  persistSmartIgnoredCorrections,
+  ignoreSmartCorrectionResult,
+  buildIgnoredCorrectionKey,
 } from "../../lib/writerTextCorrectionCache.js";
 
 function createEmptyCorrectionResult() {
@@ -340,9 +380,23 @@ export default {
       correctionLoading: false,
       correctionError: "",
       correctionResult: createEmptyCorrectionResult(),
+      correctionMode: "standard",
+      smartCorrectionLoading: false,
+      smartCorrectionError: "",
+      smartCorrectionResult: createEmptyCorrectionResult(),
+      smartThinkingText: "",
+      smartCorrectionContentText: "",
+      smartCorrectionOutputStarted: false,
+      smartThinkingVisible: false,
+      thinkingScrollTop: 0,
       activeCorrection: null,
       ignoredCorrectionStore: {
         version: 1,
+        updated_at: 0,
+        entries: {},
+      },
+      smartIgnoredCorrectionStore: {
+        version: 2,
         updated_at: 0,
         entries: {},
       },
@@ -352,6 +406,7 @@ export default {
         articleChapter: 0,
         isDraft: 1,
         isPersonal: false,
+        novelId: 0,
         novelName: "",
         textCount: 0,
         imageCount: 0,
@@ -371,6 +426,26 @@ export default {
         return "请选择具体的发布时间";
       }
       return `将于 ${this.scheduleDate} ${this.scheduleClock} 自动发布`;
+    },
+    displayCorrectionResult() {
+      return this.correctionMode === "smart"
+        ? this.smartCorrectionResult
+        : this.correctionResult;
+    },
+    displayCorrectionLoading() {
+      return this.correctionMode === "smart"
+        ? this.smartCorrectionLoading
+        : this.correctionLoading;
+    },
+    displayCorrectionError() {
+      return this.correctionMode === "smart"
+        ? this.smartCorrectionError
+        : this.correctionError;
+    },
+    displayIgnoredStore() {
+      return this.correctionMode === "smart"
+        ? this.smartIgnoredCorrectionStore
+        : this.ignoredCorrectionStore;
     },
   },
   watch: {
@@ -542,8 +617,37 @@ export default {
       const userId = token && token.id ? Number(token.id) : 0;
       return `writer_publish_payload_${userId}_${Number(articleId || 0)}`;
     },
+    getPublishCompletionStorageKey(
+      articleId = this.articleId,
+      sourceSessionId = this.sourceSessionId
+    ) {
+      const token = this.getTokenInfo();
+      const userId = token && token.id ? Number(token.id) : 0;
+      return `writer_publish_completed_${userId}_${Number(articleId || 0)}_${String(
+        sourceSessionId || ""
+      )}`;
+    },
     clearPublishDraft() {
       window.localStorage.removeItem(this.getPublishDraftStorageKey());
+    },
+    markPublishCompleted(writerSnapshot = {}) {
+      if (!this.sourceSessionId) {
+        return;
+      }
+
+      window.localStorage.setItem(
+        this.getPublishCompletionStorageKey(),
+        JSON.stringify({
+          article_id: this.articleId,
+          source_session_id: this.sourceSessionId,
+          publish_session_id: this.publishSessionId,
+          title: this.article.title,
+          content: this.article.content,
+          writer_create_time: writerSnapshot.create_time || "",
+          remote_updated_at: writerSnapshot.updated_at || "",
+          completed_at: Date.now(),
+        })
+      );
     },
     loadPublishDraft() {
       const raw = window.localStorage.getItem(this.getPublishDraftStorageKey());
@@ -573,6 +677,7 @@ export default {
         articleChapter: Number(article.article_chapter || 0),
         isDraft: Number(article.is_draft == null ? 1 : article.is_draft),
         isPersonal: Number(novelInfo.is_personal || 0) === 1,
+        novelId: Number(novelInfo.novel_id || article.novel_id || 0),
         novelName: novelInfo.name || article.novel_name || "",
         textCount: stats.textCount,
         imageCount: stats.imageCount,
@@ -634,6 +739,7 @@ export default {
         is_draft: this.article.isDraft,
         article_chapter: this.article.articleChapter,
         novel_info: {
+          novel_id: this.article.novelId || 0,
           name: this.article.novelName,
           is_personal: this.article.isPersonal ? 1 : 0,
         },
@@ -646,9 +752,17 @@ export default {
       );
     },
     async syncLocalWriterSnapshot(currentServerTime, remoteUpdatedAt = "") {
+      const articleId = Number(this.articleId || 0);
+      const userId = Number(this.getCurrentUserId() || 0);
+      if (articleId && userId) {
+        await writerArticleDB.articles
+          .where("[user_id+article_id]")
+          .equals([userId, articleId])
+          .delete();
+      }
       await writerArticleDB.articles.add({
-        article_id: Number(this.articleId || 0),
-        user_id: Number(this.getCurrentUserId() || 0),
+        article_id: articleId,
+        user_id: userId,
         title: this.article.title,
         content: this.article.content,
         create_time: currentServerTime,
@@ -662,6 +776,19 @@ export default {
         remoteUpdatedAt: remoteUpdatedAt || "",
         sessionId: this.publishSessionId,
       });
+    },
+    extractWriterSnapshot(response) {
+      return (
+        (response &&
+          response.data &&
+          response.data.writer_snapshot &&
+          typeof response.data.writer_snapshot === "object" &&
+          response.data.writer_snapshot) ||
+        (response && response.data && typeof response.data === "object"
+          ? response.data
+          : {}) ||
+        {}
+      );
     },
     buildAnnotatedSegments(item) {
       const fragments = Array.isArray(item?.fragments)
@@ -803,7 +930,8 @@ export default {
       this.article = this.buildArticleContext(article);
     },
     async initializePage() {
-      this.ignoredCorrectionStore = loadIgnoredCorrections(this.getCurrentUserId());
+      this.ignoredCorrectionStore = await loadIgnoredCorrections(this.getCurrentUserId());
+      this.smartIgnoredCorrectionStore = await loadSmartIgnoredCorrections(this.getCurrentUserId());
       this.initializeSchedulePicker();
       const lockClaimed = await this.claimEditLock();
       if (!lockClaimed) {
@@ -818,22 +946,245 @@ export default {
       await this.runTextCorrection();
     },
     async runTextCorrection() {
-      this.correctionLoading = true;
-      this.correctionError = "";
-      this.correctionResult = createEmptyCorrectionResult();
+      this.correctionMode = "standard";
+      return this.runCorrection("standard");
+    },
+    async rerunCurrentCorrection() {
+      if (this.correctionMode === "smart") {
+        return this.runSmartCorrection({ forceRefresh: true });
+      }
+      return this.runTextCorrection();
+    },
+    async toggleSmartCorrection() {
+      if (this.correctionMode === "smart") {
+        return this.runTextCorrection();
+      }
+      return this.runSmartCorrection();
+    },
+    async runSmartCorrection(options = {}) {
+      this.correctionMode = "smart";
+      return this.runSmartCorrectionStreaming(options);
+    },
+    removeSmartParagraphsFromCache(cache, paragraphs) {
+      const nextCache = cache && typeof cache === "object"
+        ? {
+            ...cache,
+            entries: {
+              ...(cache.entries || {}),
+            },
+          }
+        : cache;
+
+      if (!nextCache || !nextCache.entries) {
+        return nextCache;
+      }
+
+      paragraphs.forEach((paragraph) => {
+        if (paragraph.paragraph_hash) {
+          delete nextCache.entries[paragraph.paragraph_hash];
+        }
+      });
+      nextCache.updated_at = Date.now();
+      return nextCache;
+    },
+    async runSmartCorrectionStreaming(options = {}) {
+      const forceRefresh = Boolean(options.forceRefresh);
+      this.smartCorrectionLoading = true;
+      this.smartCorrectionError = "";
+      this.smartCorrectionResult = createEmptyCorrectionResult();
+      this.smartThinkingText = "";
+      this.smartCorrectionContentText = "";
+      this.smartCorrectionOutputStarted = false;
+      this.smartThinkingVisible = true;
 
       try {
         const paragraphs = buildCorrectionParagraphs(this.article.content);
         const baseResult = createEmptyCorrectionResult();
         baseResult.summary.paragraph_count = paragraphs.length;
-        this.correctionResult = baseResult;
+        this.smartCorrectionResult = baseResult;
 
         if (paragraphs.length === 0) {
           return;
         }
 
         const userId = this.getCurrentUserId();
-        let cache = loadTextCorrectionCache(userId);
+        let cache = await loadSmartCorrectionCache(userId);
+        if (forceRefresh) {
+          cache = this.removeSmartParagraphsFromCache(cache, paragraphs);
+          await persistSmartCorrectionCache(userId, cache);
+        }
+        const cachedResults = [];
+        const uncachedParagraphs = [];
+
+        paragraphs.forEach((paragraph) => {
+          const cachedResult = getCachedSmartParagraphResult(cache, paragraph);
+          if (cachedResult) {
+            cachedResults.push(cachedResult);
+            return;
+          }
+          uncachedParagraphs.push(paragraph);
+        });
+
+        const pendingParagraphMap = new Map();
+        uncachedParagraphs.forEach((paragraph) => {
+          const requestKey = buildParagraphRequestKey(paragraph);
+          if (!pendingParagraphMap.has(requestKey)) {
+            pendingParagraphMap.set(requestKey, paragraph);
+          }
+        });
+
+        const requestParagraphs = Array.from(pendingParagraphMap.values());
+
+        if (requestParagraphs.length === 0) {
+          const allParagraphResults = [];
+          paragraphs.forEach((paragraph) => {
+            const cachedResult = getCachedSmartParagraphResult(cache, paragraph);
+            allParagraphResults.push(
+              cachedResult ||
+                hydrateParagraphResult(paragraph, {
+                  corrected_text: paragraph.text,
+                  has_issue: false,
+                  fragments: [],
+                })
+            );
+          });
+
+          const rawCorrections = allParagraphResults.filter(
+            (item) => item.has_issue && !item.error
+          );
+          const corrections = rawCorrections.filter(
+            (item) => !isCorrectionIgnored(this.smartIgnoredCorrectionStore, item)
+          );
+          this.smartCorrectionResult = {
+            summary: {
+              paragraph_count: paragraphs.length,
+              cached_paragraph_count: cachedResults.length,
+              requested_paragraph_count: 0,
+              batch_count: 0,
+              corrected_paragraph_count: corrections.length,
+              issue_count: corrections.reduce(
+                (total, item) => total + item.fragments.length, 0
+              ),
+              error_count: 0,
+            },
+            paragraph_results: allParagraphResults,
+            corrections,
+            errors: [],
+          };
+          return;
+        }
+
+        const responseData = await this.fetchSmartCorrectionStream(
+          requestParagraphs
+        );
+
+        const freshParagraphResults = Array.isArray(responseData.paragraph_results)
+          ? responseData.paragraph_results
+          : [];
+        const freshResultMap = new Map();
+        freshParagraphResults.forEach((result) => {
+          const requestKey = buildParagraphRequestKey({
+            paragraph_hash: result.paragraph_hash,
+            text: result.original_text,
+          });
+          freshResultMap.set(requestKey, result);
+        });
+
+        const allParagraphResults = [];
+        paragraphs.forEach((paragraph) => {
+          const cachedResult = getCachedSmartParagraphResult(cache, paragraph);
+          if (cachedResult) {
+            allParagraphResults.push(cachedResult);
+            return;
+          }
+
+          const requestKey = buildParagraphRequestKey(paragraph);
+          const freshResult = freshResultMap.get(requestKey);
+          if (freshResult) {
+            allParagraphResults.push(hydrateParagraphResult(paragraph, freshResult));
+            return;
+          }
+
+          allParagraphResults.push(
+            hydrateParagraphResult(paragraph, {
+              corrected_text: paragraph.text,
+              has_issue: false,
+              fragments: [],
+              error: "未获取到该段落的纠错结果",
+            })
+          );
+        });
+
+        cache = writeSmartParagraphResultsToCache(cache, freshParagraphResults);
+        await persistSmartCorrectionCache(userId, cache);
+
+        const rawCorrections = allParagraphResults.filter(
+          (item) => item.has_issue && !item.error
+        );
+        const corrections = rawCorrections.filter(
+          (item) => !isCorrectionIgnored(this.smartIgnoredCorrectionStore, item)
+        );
+        const errors = allParagraphResults
+          .filter((item) => item.error)
+          .map((item) => ({
+            paragraph_index: item.paragraph_index,
+            paragraph_id: item.paragraph_id,
+            paragraph_hash: item.paragraph_hash,
+            message: item.error,
+          }));
+
+        this.smartCorrectionResult = {
+          summary: {
+            paragraph_count: paragraphs.length,
+            cached_paragraph_count: cachedResults.length,
+            requested_paragraph_count: requestParagraphs.length,
+            batch_count: Number(responseData.summary?.batch_count || 0),
+            corrected_paragraph_count: corrections.length,
+            issue_count: corrections.reduce(
+              (total, item) => total + item.fragments.length, 0
+            ),
+            error_count: errors.length,
+          },
+          paragraph_results: allParagraphResults,
+          corrections,
+          errors,
+        };
+      } catch (error) {
+        this.smartCorrectionError = error.message || "文本纠错结果整理失败，请稍后重试";
+      } finally {
+        this.smartCorrectionLoading = false;
+      }
+    },
+    async runCorrection(mode) {
+      const isSmart = mode === "smart";
+
+      if (isSmart) {
+        this.smartCorrectionLoading = true;
+        this.smartCorrectionError = "";
+        this.smartCorrectionResult = createEmptyCorrectionResult();
+      } else {
+        this.correctionLoading = true;
+        this.correctionError = "";
+        this.correctionResult = createEmptyCorrectionResult();
+      }
+
+      try {
+        const paragraphs = buildCorrectionParagraphs(this.article.content);
+        const baseResult = createEmptyCorrectionResult();
+        baseResult.summary.paragraph_count = paragraphs.length;
+
+        if (isSmart) {
+          this.smartCorrectionResult = baseResult;
+        } else {
+          this.correctionResult = baseResult;
+        }
+
+        if (paragraphs.length === 0) {
+          return;
+        }
+
+        const userId = this.getCurrentUserId();
+        let cache = await loadTextCorrectionCache(userId);
         const cachedResults = [];
         const uncachedParagraphs = [];
 
@@ -843,7 +1194,6 @@ export default {
             cachedResults.push(cachedResult);
             return;
           }
-
           uncachedParagraphs.push(paragraph);
         });
 
@@ -944,8 +1294,8 @@ export default {
           );
         });
 
-        cache = writeParagraphResultsToCache(cache, freshParagraphResults);
-        persistTextCorrectionCache(userId, cache);
+        cache = writeStandardParagraphResultsToCache(cache, freshParagraphResults);
+        await persistTextCorrectionCache(userId, cache);
 
         const rawCorrections = allParagraphResults.filter(
           (item) => item.has_issue && !item.error
@@ -989,13 +1339,23 @@ export default {
       this.activeCorrection = item;
       this.$refs.detailPopup.open();
     },
-    ignoreCorrection(item) {
+    async ignoreCorrection(item) {
       const userId = this.getCurrentUserId();
-      this.ignoredCorrectionStore = ignoreCorrectionResult(
-        this.ignoredCorrectionStore,
-        item
-      );
-      persistIgnoredCorrections(userId, this.ignoredCorrectionStore);
+      const isSmart = this.correctionMode === "smart";
+
+      if (isSmart) {
+        this.smartIgnoredCorrectionStore = ignoreSmartCorrectionResult(
+          this.smartIgnoredCorrectionStore,
+          item
+        );
+        await persistSmartIgnoredCorrections(userId, this.smartIgnoredCorrectionStore);
+      } else {
+        this.ignoredCorrectionStore = ignoreCorrectionResult(
+          this.ignoredCorrectionStore,
+          item
+        );
+        await persistIgnoredCorrections(userId, this.ignoredCorrectionStore);
+      }
 
       if (
         this.activeCorrection &&
@@ -1005,26 +1365,27 @@ export default {
         this.closeCorrectionDetail();
       }
 
-      this.correctionResult = {
-        ...this.correctionResult,
-        corrections: (this.correctionResult.corrections || []).filter(
+      const resultKey = isSmart ? "smartCorrectionResult" : "correctionResult";
+      this[resultKey] = {
+        ...this[resultKey],
+        corrections: (this[resultKey].corrections || []).filter(
           (current) => current.id !== item.id
         ),
         summary: {
-          ...this.correctionResult.summary,
+          ...this[resultKey].summary,
           corrected_paragraph_count: Math.max(
             0,
-            Number(this.correctionResult.summary.corrected_paragraph_count || 0) - 1
+            Number(this[resultKey].summary.corrected_paragraph_count || 0) - 1
           ),
           issue_count: Math.max(
             0,
-            Number(this.correctionResult.summary.issue_count || 0) -
+            Number(this[resultKey].summary.issue_count || 0) -
               Number((item.fragments || []).length || 0)
           ),
         },
       };
     },
-    applyCorrection(item) {
+    async applyCorrection(item) {
       const blocks = parseLegacyContent(this.article.content);
       let paragraphCursor = 0;
       let updated = false;
@@ -1071,7 +1432,9 @@ export default {
       };
       this.persistCurrentPublishDraft();
 
-      const nextParagraphResults = (this.correctionResult.paragraph_results || []).map(
+      const isSmart = this.correctionMode === "smart";
+      const resultKey = isSmart ? "smartCorrectionResult" : "correctionResult";
+      const nextParagraphResults = (this[resultKey].paragraph_results || []).map(
         (current) => {
           if (current.id !== item.id) {
             return current;
@@ -1086,10 +1449,10 @@ export default {
           };
         }
       );
-      const nextCorrections = (this.correctionResult.corrections || []).filter(
+      const nextCorrections = (this[resultKey].corrections || []).filter(
         (current) => current.id !== item.id
       );
-      const nextErrors = this.correctionResult.errors || [];
+      const nextErrors = this[resultKey].errors || [];
 
       const userId = this.getCurrentUserId();
       const nextParagraph = buildCorrectionParagraphs(nextContent).find(
@@ -1098,26 +1461,40 @@ export default {
           Number(item.paragraph_index || 0)
       );
       if (nextParagraph) {
-        const cache = loadTextCorrectionCache(userId);
-        const nextCache = writeParagraphResultsToCache(cache, [
-          {
-            paragraph_hash: nextParagraph.paragraph_hash,
-            original_text: nextParagraph.text,
-            corrected_text: nextParagraph.text,
-            has_issue: false,
-            fragments: [],
-          },
-        ]);
-        persistTextCorrectionCache(userId, nextCache);
+        if (isSmart) {
+          const cache = await loadSmartCorrectionCache(userId);
+          const nextCache = writeSmartParagraphResultsToCache(cache, [
+            {
+              paragraph_hash: nextParagraph.paragraph_hash,
+              original_text: nextParagraph.text,
+              corrected_text: nextParagraph.text,
+              has_issue: false,
+              fragments: [],
+            },
+          ]);
+          await persistSmartCorrectionCache(userId, nextCache);
+        } else {
+          const cache = await loadTextCorrectionCache(userId);
+          const nextCache = writeStandardParagraphResultsToCache(cache, [
+            {
+              paragraph_hash: nextParagraph.paragraph_hash,
+              original_text: nextParagraph.text,
+              corrected_text: nextParagraph.text,
+              has_issue: false,
+              fragments: [],
+            },
+          ]);
+          await persistTextCorrectionCache(userId, nextCache);
+        }
       }
 
-      this.correctionResult = {
-        ...this.correctionResult,
+      this[resultKey] = {
+        ...this[resultKey],
         paragraph_results: nextParagraphResults,
         corrections: nextCorrections,
         errors: nextErrors,
         summary: {
-          ...this.correctionResult.summary,
+          ...this[resultKey].summary,
           corrected_paragraph_count: nextCorrections.length,
           issue_count: nextCorrections.reduce(
             (total, current) =>
@@ -1193,17 +1570,12 @@ export default {
           }
         );
 
-        const writerSnapshot =
-          (response &&
-            response.data &&
-            response.data.writer_snapshot &&
-            typeof response.data.writer_snapshot === "object" &&
-            response.data.writer_snapshot) ||
-          {};
+        const writerSnapshot = this.extractWriterSnapshot(response);
         await this.syncLocalWriterSnapshot(
           writerSnapshot.create_time || currentServerTime,
           writerSnapshot.updated_at || ""
         );
+        this.markPublishCompleted(writerSnapshot);
         this.clearPublishDraft();
         uni.showToast({
           title: this.publishMode === "schedule" ? "定时发布设置成功" : "发布成功",
@@ -1259,17 +1631,12 @@ export default {
               }
             );
 
-            const writerSnapshot =
-              (response &&
-                response.data &&
-                response.data.writer_snapshot &&
-                typeof response.data.writer_snapshot === "object" &&
-                response.data.writer_snapshot) ||
-              {};
+            const writerSnapshot = this.extractWriterSnapshot(response);
             await this.syncLocalWriterSnapshot(
               writerSnapshot.create_time || currentServerTime,
               writerSnapshot.updated_at || ""
             );
+            this.markPublishCompleted(writerSnapshot);
             this.clearPublishDraft();
             uni.showToast({
               title: "已退回草稿",
@@ -1294,6 +1661,398 @@ export default {
           }
         },
       });
+    },
+    async fetchSmartCorrectionStream(paragraphs) {
+      const tk = this.getAuthToken();
+      const url = this.$readerAiBaseUrl + "/library/writer_text_correction";
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/x-ndjson",
+          Authorization: "Bearer " + tk,
+        },
+        body: JSON.stringify({
+          article_id: this.articleId,
+          paragraphs,
+          novel_id: this.article.novelId,
+        }),
+      });
+
+      if (!response.ok) {
+        let message = "智能纠错请求失败";
+        try {
+          const data = await response.json();
+          message = data.msg || data.message || message;
+        } catch (error) {}
+        throw new Error(message);
+      }
+
+      if (!response.body || !response.body.getReader) {
+        throw new Error("智能纠错服务未返回流式响应");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+      let finalResult = null;
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const consumed = this.consumeCorrectionStreamBuffer(buffer);
+          buffer = consumed.remaining;
+          if (consumed.result !== null) {
+            finalResult = consumed.result;
+            try { reader.cancel(); } catch (e) { /* ignore */ }
+            break;
+          }
+        }
+        if (finalResult === null) {
+          buffer += decoder.decode();
+          if (buffer.trim()) {
+            const consumed = this.consumeCorrectionStreamBuffer(`${buffer}\n`);
+            if (consumed.result !== null) {
+              finalResult = consumed.result;
+            }
+          }
+        }
+      } catch (streamError) {
+        if (finalResult !== null) {
+          return finalResult;
+        }
+        const message = String(streamError.message || "");
+        if (message.includes("Premature close") || message.includes("premature close")) {
+          throw new Error("智能纠错连接中断，请重试");
+        }
+        throw streamError;
+      }
+
+      if (finalResult === null) {
+        finalResult = this.buildSmartCorrectionResultFromModelText(
+          paragraphs,
+          this.smartCorrectionContentText
+        );
+      }
+
+      if (finalResult === null) {
+        throw new Error("模型未返回纠错结果");
+      }
+
+      return finalResult;
+    },
+    parseCorrectionJsonFromModelText(text) {
+      const source = String(text || "").trim();
+      if (!source) {
+        return null;
+      }
+
+      const unfenced = source
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+
+      try {
+        return JSON.parse(unfenced);
+      } catch (error) {}
+
+      const objectStart = unfenced.indexOf("{");
+      const objectEnd = unfenced.lastIndexOf("}");
+      if (objectStart !== -1 && objectEnd > objectStart) {
+        try {
+          return JSON.parse(unfenced.slice(objectStart, objectEnd + 1));
+        } catch (error) {}
+      }
+
+      return null;
+    },
+    findSmartFragmentPosition(text, originalFragment, correctedFragment) {
+      const source = String(text || "");
+      const original = String(originalFragment || "").trim();
+      if (!source || !original) {
+        return null;
+      }
+
+      const directIndex = source.indexOf(original);
+      if (directIndex !== -1) {
+        return {
+          begin_pos: directIndex,
+          end_pos: directIndex + original.length,
+          original_fragment: original,
+          corrected_fragment: String(correctedFragment || "").trim(),
+        };
+      }
+
+      const normalizedOriginal = original.replace(/\s+/g, "");
+      const normalizedSource = source.replace(/\s+/g, "");
+      const normalizedIndex = normalizedSource.indexOf(normalizedOriginal);
+      if (normalizedIndex === -1) {
+        return null;
+      }
+
+      let charCount = 0;
+      let beginPos = 0;
+      let endPos = source.length;
+      for (let index = 0; index < source.length; index += 1) {
+        if (/\s/.test(source[index])) {
+          continue;
+        }
+        if (charCount === normalizedIndex) {
+          beginPos = index;
+        }
+        if (charCount === normalizedIndex + normalizedOriginal.length) {
+          endPos = index;
+          break;
+        }
+        charCount += 1;
+      }
+
+      return {
+        begin_pos: beginPos,
+        end_pos: endPos,
+        original_fragment: source.slice(beginPos, endPos),
+        corrected_fragment: String(correctedFragment || "").trim(),
+      };
+    },
+    applySmartFragmentsToText(text, fragments) {
+      const sortedFragments = [...(fragments || [])].sort(
+        (left, right) => Number(left.begin_pos || 0) - Number(right.begin_pos || 0)
+      );
+      let cursor = 0;
+      let result = "";
+
+      sortedFragments.forEach((fragment) => {
+        const beginPos = Number(fragment.begin_pos || 0);
+        const endPos = Number(fragment.end_pos || beginPos);
+        if (beginPos > cursor) {
+          result += text.slice(cursor, beginPos);
+        }
+        result += String(fragment.corrected_fragment || "");
+        cursor = Math.max(cursor, endPos);
+      });
+
+      if (cursor < text.length) {
+        result += text.slice(cursor);
+      }
+
+      return result;
+    },
+    buildSmartCorrectionResultFromModelText(paragraphs, modelText) {
+      const modelJson = this.parseCorrectionJsonFromModelText(modelText);
+      const modelParagraphs = Array.isArray(modelJson?.paragraphs)
+        ? modelJson.paragraphs
+        : null;
+      if (!modelParagraphs) {
+        return null;
+      }
+
+      const modelParagraphMap = new Map();
+      modelParagraphs.forEach((item, index) => {
+        const paragraphIndex = Number(item?.paragraph_index || 0);
+        if (Number.isInteger(paragraphIndex) && paragraphIndex > 0) {
+          modelParagraphMap.set(paragraphIndex, item);
+          return;
+        }
+        if (modelParagraphs.length === paragraphs.length) {
+          modelParagraphMap.set(index + 1, item);
+        }
+      });
+
+      const paragraphResults = paragraphs.map((paragraph, index) => {
+        const modelParagraph =
+          modelParagraphMap.get(Number(paragraph.paragraph_index || index + 1)) || {};
+        const rawFragments = Array.isArray(modelParagraph.fragments)
+          ? modelParagraph.fragments
+          : [];
+        const fragments = [];
+
+        if ((modelParagraph.has_issue || rawFragments.length > 0) && rawFragments.length > 0) {
+          rawFragments.forEach((fragment) => {
+            const positioned = this.findSmartFragmentPosition(
+              paragraph.text,
+              fragment.original_fragment,
+              fragment.corrected_fragment
+            );
+            if (positioned) {
+              fragments.push(positioned);
+            }
+          });
+          fragments.sort(
+            (left, right) =>
+              Number(left.begin_pos || 0) - Number(right.begin_pos || 0)
+          );
+        }
+
+        return {
+          paragraph_index: paragraph.paragraph_index,
+          paragraph_id: paragraph.paragraph_id,
+          paragraph_hash: paragraph.paragraph_hash,
+          original_text: paragraph.text,
+          corrected_text:
+            fragments.length > 0
+              ? this.applySmartFragmentsToText(paragraph.text, fragments)
+              : paragraph.text,
+          has_issue: fragments.length > 0,
+          fragments,
+          error: null,
+        };
+      });
+
+      const corrections = paragraphResults.filter(
+        (item) => item.has_issue && !item.error
+      );
+
+      return {
+        summary: {
+          paragraph_count: paragraphs.length,
+          batch_count: 1,
+          corrected_paragraph_count: corrections.length,
+          issue_count: corrections.reduce(
+            (total, item) => total + item.fragments.length,
+            0
+          ),
+          error_count: 0,
+        },
+        paragraph_results: paragraphResults,
+        corrections,
+        errors: [],
+      };
+    },
+    consumeCorrectionStreamBuffer(buffer) {
+      let working = String(buffer || "");
+      let result = null;
+      let lineBreakIndex = working.indexOf("\n");
+      while (lineBreakIndex !== -1) {
+        const line = working.slice(0, lineBreakIndex).trim();
+        working = working.slice(lineBreakIndex + 1);
+        if (line) {
+          const lineResult = this.processCorrectionStreamLine(line, result);
+          if (lineResult !== result) {
+            result = lineResult;
+          }
+        }
+        lineBreakIndex = working.indexOf("\n");
+      }
+      return { remaining: working, result };
+    },
+    normalizeCorrectionStreamResult(value, fallbackResult) {
+      if (value === undefined || value === null || value === "") {
+        return fallbackResult;
+      }
+
+      let result = value;
+      if (typeof result === "string") {
+        try {
+          result = JSON.parse(result);
+        } catch (error) {
+          return fallbackResult;
+        }
+      }
+
+      if (!result || typeof result !== "object") {
+        return fallbackResult;
+      }
+
+      const nestedResult =
+        result.result ||
+        result.data ||
+        result.payload ||
+        result.output ||
+        null;
+      if (nestedResult && nestedResult !== result) {
+        const normalizedNested = this.normalizeCorrectionStreamResult(
+          nestedResult,
+          fallbackResult
+        );
+        if (normalizedNested !== fallbackResult) {
+          return normalizedNested;
+        }
+      }
+
+      if (
+        Array.isArray(result.paragraph_results) ||
+        Array.isArray(result.corrections) ||
+        result.summary
+      ) {
+        return result;
+      }
+
+      return fallbackResult;
+    },
+    getCorrectionStreamEventText(event) {
+      const candidates = [
+        event?.content,
+        event?.text,
+        event?.delta,
+        event?.message,
+      ];
+      const value = candidates.find(
+        (item) => item !== undefined && item !== null && item !== ""
+      );
+      return value === undefined || value === null ? "" : String(value);
+    },
+    processCorrectionStreamLine(rawLine, fallbackResult) {
+      const normalizedLine = String(rawLine || "")
+        .trim()
+        .replace(/^data:\s*/i, "");
+      let event;
+      try {
+        event = JSON.parse(normalizedLine);
+      } catch (error) {
+        return fallbackResult;
+      }
+
+      if (!event || typeof event !== "object") {
+        return fallbackResult;
+      }
+
+      const eventType = String(event.type || "").trim();
+      if (!eventType) {
+        return this.normalizeCorrectionStreamResult(event, fallbackResult);
+      }
+
+      if (eventType === "status") {
+        // Nothing needed, just for heartbeat
+      } else if (
+        eventType === "reasoning_delta" ||
+        eventType === "thinking_delta"
+      ) {
+        this.smartThinkingText += this.getCorrectionStreamEventText(event);
+        this.$nextTick(function () {
+          this.thinkingScrollTop = this.thinkingScrollTop + 99999;
+        });
+      } else if (
+        eventType === "delta" ||
+        eventType === "content_delta" ||
+        eventType === "message_delta"
+      ) {
+        const content = this.getCorrectionStreamEventText(event);
+        this.smartCorrectionContentText += content;
+        if (content) {
+          if (!this.smartCorrectionOutputStarted) {
+            this.smartCorrectionOutputStarted = true;
+            this.smartThinkingText += "\n\n模型输出：\n";
+          }
+          this.smartThinkingText += content;
+          this.$nextTick(function () {
+            this.thinkingScrollTop = this.thinkingScrollTop + 99999;
+          });
+        }
+      } else if (
+        eventType === "done" ||
+        eventType === "complete" ||
+        eventType === "completed" ||
+        eventType === "result"
+      ) {
+        return this.normalizeCorrectionStreamResult(event, fallbackResult);
+      } else if (eventType === "error") {
+        throw new Error(event.message || "智能纠错请求失败");
+      }
+
+      return fallbackResult;
     },
   },
   async beforeDestroy() {
@@ -1511,7 +2270,7 @@ export default {
 }
 
 .ghost-button {
-  margin-left: auto;
+  margin: 0;
   flex-shrink: 0;
   height: 64rpx;
   line-height: 64rpx;
@@ -1519,6 +2278,130 @@ export default {
   color: #374151 !important;
   border-color: #d1d5db !important;
   background: #ffffff !important;
+}
+
+.ghost-button-active {
+  color: #1f2937 !important;
+  border-color: #6b7280 !important;
+  background: #f3f4f6 !important;
+}
+
+.smart-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 6rpx 16rpx 6rpx 20rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #d1d5db;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.smart-toggle-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.smart-toggle-label {
+  font-size: 24rpx;
+  color: #4b5563;
+  white-space: nowrap;
+}
+
+.smart-toggle-track {
+  position: relative;
+  width: 64rpx;
+  height: 34rpx;
+  border-radius: 999rpx;
+  background: #d1d5db;
+  transition: background 0.2s;
+}
+
+.smart-toggle-track.active {
+  background: #25634a;
+}
+
+.smart-toggle-thumb {
+  position: absolute;
+  top: 3rpx;
+  left: 3rpx;
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s;
+}
+
+.smart-toggle-track.active .smart-toggle-thumb {
+  transform: translateX(30rpx);
+}
+
+.correction-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+
+.thinking-panel {
+  margin-bottom: 20rpx;
+  border-radius: 20rpx;
+  border: 1px solid #e5e7eb;
+  background: #fafbfc;
+  overflow: hidden;
+}
+
+.thinking-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18rpx 24rpx;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.thinking-head-text {
+  font-size: 24rpx;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.thinking-head-close {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+.thinking-body {
+  width: 100%;
+  max-height: 480rpx;
+}
+
+.thinking-body-inner {
+  padding: 20rpx 24rpx;
+  box-sizing: border-box;
+  min-height: 100%;
+}
+
+.thinking-content {
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: #6b7280;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.thinking-collapsed {
+  margin-bottom: 20rpx;
+  padding: 18rpx 24rpx;
+  border-radius: 20rpx;
+  border: 1px dashed #d1d5db;
+  background: #fafbfc;
+}
+
+.thinking-collapsed-text {
+  font-size: 24rpx;
+  color: #9ca3af;
 }
 
 .status-box {

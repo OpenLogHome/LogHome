@@ -1,10 +1,8 @@
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 const { query } = require('../sql.js');
 const config = require('../config.js');
-const secrets = require('../SECRET.js');
 const {
 	getNovelInfo,
 } = require('../utils/libraryHelper.js');
@@ -489,83 +487,6 @@ function getWriterImageGenerationInstruction(rawFeatures) {
 	].join('\n');
 }
 
-function base64UrlDecode(value) {
-	const source = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
-	const padded = source.padEnd(source.length + ((4 - (source.length % 4)) % 4), '=');
-	return Buffer.from(padded, 'base64').toString('utf8');
-}
-
-function base64UrlEncode(buffer) {
-	return Buffer.from(buffer)
-		.toString('base64')
-		.replace(/\+/g, '-')
-		.replace(/\//g, '_')
-		.replace(/=+$/g, '');
-}
-
-function verifyJwt(token) {
-	const rawToken = String(token || '').trim();
-	const parts = rawToken.split('.');
-	if (parts.length !== 3) {
-		return null;
-	}
-
-	let header;
-	let payload;
-	try {
-		header = JSON.parse(base64UrlDecode(parts[0]));
-		payload = JSON.parse(base64UrlDecode(parts[1]));
-	} catch (error) {
-		return null;
-	}
-
-	if (!header || header.alg !== 'HS256') {
-		return null;
-	}
-
-	const secret = String(secrets.SECRET || process.env.JWT_SECRET || '');
-	if (!secret) {
-		return null;
-	}
-
-	const expected = base64UrlEncode(
-		crypto
-			.createHmac('sha256', secret)
-			.update(`${parts[0]}.${parts[1]}`)
-			.digest()
-	);
-	const actual = parts[2];
-	const expectedBuffer = Buffer.from(expected);
-	const actualBuffer = Buffer.from(actual);
-	if (
-		expectedBuffer.length !== actualBuffer.length
-		|| !crypto.timingSafeEqual(expectedBuffer, actualBuffer)
-	) {
-		return null;
-	}
-
-	if (payload.exp && Number(payload.exp) * 1000 < Date.now()) {
-		return null;
-	}
-
-	return payload;
-}
-
-async function getAuthenticatedUser(req) {
-	const rawHeader = String(req.headers.authorization || '');
-	const token = rawHeader.split(' ').pop();
-	const decoded = verifyJwt(token);
-	if (!decoded || !decoded.id || !decoded.pwd) {
-		return null;
-	}
-
-	const rows = await query(
-		'SELECT * FROM users WHERE user_id = ? AND pwd = ? AND activated = 1 LIMIT 1',
-		[decoded.id, decoded.pwd]
-	);
-	return rows[0] || null;
-}
-
 function normalizePermissionFlag(value) {
 	return Number(value) === 1;
 }
@@ -1023,7 +944,7 @@ function buildSmartReplaceMessages(options) {
 				'任务是根据当前会话问题、AI 回答、候选正文、光标上下文和当前章节全文，判断候选正文应该插入为新内容，还是替换已有连续段落。',
 				'如果作者是在续写、补写、添加新情节、生成下一段，或候选正文不是已有段落的改写，请选择 action="insert"。',
 				'如果作者是在润色、改写、替换、精简、扩写或修正已有正文，请选择 action="replace"，并选择应被替换的连续段落。',
-				'replacement_text 只有在你对候选正文做了必要修正时才返回；如果可以直接使用候选正文，请省略该字段。',
+				'只有在有必要对正文进行修正时，才返回 replacement_text；若可以直接使用候选的正文，请省略该字段。',
 				'如果返回 replacement_text，它必须是完整自然的小说正文段落，保留必要的段落换行；不要包含 <draft> 标签、标题、编号、修改理由、JSON 外文字或 Markdown。',
 				'不要返回 reason、explanation 或其他解释性字段。',
 				'返回 JSON schema：{"action": "insert" | "replace", "start_paragraph_index": number | null, "end_paragraph_index": number | null, "insert_after_paragraph_index": number | null, "replacement_text"(Optional): string | null}',
@@ -1221,7 +1142,7 @@ async function callSmartReplaceModel(messages) {
 			messages,
 			stream: false,
 			temperature: 0.1,
-			max_completion_tokens: 1800,
+			max_completion_tokens: 32767,
 		}),
 		timeout: MODEL_REQUEST_TIMEOUT_MS,
 	});
@@ -1243,12 +1164,7 @@ async function callSmartReplaceModel(messages) {
 
 async function handleWriterNovelSmartReplace(req, res) {
 	try {
-		const user = await getAuthenticatedUser(req);
-		if (!user) {
-			return res.status(401).json({
-				msg: '登录已失效',
-			});
-		}
+		const user = req.user;
 
 		const articleId = Number(req.body?.article_id || 0);
 		if (!articleId) {
@@ -2295,12 +2211,7 @@ function ensureWriterAssistTask(options) {
 
 async function handleWriterNovelAssistStream(req, res) {
 	try {
-		const user = await getAuthenticatedUser(req);
-		if (!user) {
-			return res.status(401).json({
-				msg: '登录已失效',
-			});
-		}
+		const user = req.user;
 
 		const articleId = Number(req.body?.article_id || 0);
 		if (!articleId) {

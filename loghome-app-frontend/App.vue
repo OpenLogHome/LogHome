@@ -19,28 +19,34 @@ export default {
 		this.globalLoadingDom = document.getElementById("global-loading-box");
 		// 覆写uni.showLoading方法
 		uni.showLoading = (options) => {
-			// this.globalLoadingDom.classList.add("show");
-			// let callable = (func) => {
-			// 	if (typeof func == "function") {
-			// 		return func;
-			// 	}
-			// 	return () => { };
-			// }
-			// if (options.success && callable(options.success)) {
-			// 	options.success(callable(options.success));
-			// }
-			// if (options.title) {
-			// 	let titleDom = this.globalLoadingDom.querySelector(".title");
-			// 	titleDom.textContent = options.title;
-			// } else {
-			// 	let titleDom = this.globalLoadingDom.querySelector(".title");
-			// 	titleDom.textContent = "努力加载中";
-			// }
+			this.globalLoadingDom.style.visibility = "visible";
+			setTimeout(() => {
+				this.globalLoadingDom.classList.add("show");
+				let callable = (func) => {
+					if (typeof func == "function") {
+						return func;
+					}
+					return () => { };
+				}
+				if (options.success && callable(options.success)) {
+					options.success(callable(options.success));
+				}
+				if (options.title) {
+					let titleDom = this.globalLoadingDom.querySelector(".title");
+					titleDom.textContent = options.title;
+				} else {
+					let titleDom = this.globalLoadingDom.querySelector(".title");
+					titleDom.textContent = "努力加载中";
+				}
+			})
 		}
 		uni.hideLoading = () => {
-			// setTimeout(() => {
-			// 	this.globalLoadingDom.classList.remove("show");
-			// }, 300);
+			setTimeout(() => {
+				this.globalLoadingDom.classList.remove("show");
+				setTimeout(() => {
+					this.globalLoadingDom.style.visibility = "hidden";
+				})
+			}, 300);
 		}
 	},
 	data() {
@@ -726,6 +732,7 @@ uni-modal {
 	width: 200rpx;
 	padding-bottom: 10rpx;
 	border-radius: 40rpx;
+	transform: translate(-50%, -50%) scale(0.8);
 
 	.title {
 		color: white;

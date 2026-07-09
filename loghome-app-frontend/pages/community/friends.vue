@@ -2,9 +2,13 @@
 	<view class="outer" v-dark>
 		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab"
 		:textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'" ref="tabs"/>
+		<view class="search-bar">
+			<input class="search-input" v-model="searchKeyword" placeholder="搜索好友..." placeholder-style="color:#999" />
+			<text v-if="searchKeyword" class="search-clear" @click="searchKeyword = ''">×</text>
+		</view>
 		<view class="list fans" v-show="curTabIndex == 1">
-			<p class="fansNums">共有 {{fans.length}} 个粉丝</p>
-			<div class="users" v-for="item in fans">
+			<p class="fansNums">共有 {{filteredFans.length}} 个粉丝</p>
+			<div class="users" v-for="item in filteredFans">
 				<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
 					<log-image :src="item.avatar_url" alt=""
 					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
@@ -17,8 +21,8 @@
 			</div>
 		</view>
 		<view class="list fans" v-show="curTabIndex == 0">
-			
-				<div class="users" v-for="item in follows">
+
+				<div class="users" v-for="item in filteredFollows">
 					<navigator class="users" :url="'../users/personalPage?id='+item.follow_id">
 						<log-image :src="item.avatar_url" alt=""
 						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
@@ -29,7 +33,7 @@
 					</navigator>
 					<followBtn class="button" :targetId="item.follow_id"></followBtn>
 				</div>
-			
+
 		</view>
 	</view>
 </template>
@@ -43,7 +47,7 @@
 			followBtn
 		},
 		mixins: [darkModeMixin],
-		data(){
+			data(){
 			return{
 				tabValue:[
 					"我的关注","我的粉丝"
@@ -54,7 +58,20 @@
 				curTabIndex:0,
 				follows:[],
 				fans:[],
-				firstTab:0
+				firstTab:0,
+				searchKeyword:''
+			}
+		},
+		computed:{
+			filteredFans(){
+				if(!this.searchKeyword) return this.fans;
+				const kw = this.searchKeyword.toLowerCase();
+				return this.fans.filter(item => item.name && item.name.toLowerCase().includes(kw));
+			},
+			filteredFollows(){
+				if(!this.searchKeyword) return this.follows;
+				const kw = this.searchKeyword.toLowerCase();
+				return this.follows.filter(item => item.name && item.name.toLowerCase().includes(kw));
 			}
 		},
 		onLoad(params){
@@ -73,7 +90,7 @@
 					if(tk != null){
 						//验活
 						axios.get( _this.$baseUrl + '/users/userprofile', {
-							headers: { 
+							headers: {
 								 'Content-Type': 'application/json',//设置请求头请求格式为JSON
 								 'Authorization': tk //设置token 其中K名要和后端协调好
 							}
@@ -86,7 +103,7 @@
 								})
 								_this.isMe = true;
 							}
-							
+
 						}).catch(function(error) {
 							if(error.message == "Request failed with status code 401"){
 							}
@@ -105,7 +122,7 @@
 				if(tk != null){
 					//验活
 					axios.get( _this.$baseUrl + '/users/userprofile', {
-						headers: { 
+						headers: {
 							 'Content-Type': 'application/json',//设置请求头请求格式为JSON
 							 'Authorization': tk //设置token 其中K名要和后端协调好
 						}
@@ -119,16 +136,16 @@
 							_this.isMe = true;
 						}
 						_this.id = data.user_id;
-						
+
 					}).catch(function(error) {
 						if(error.message == "Request failed with status code 401"){
 						}
 					})
 				}else {
-					
+
 				}
 			}
-			
+
 			let _this = this;
 			let tempInterval = setInterval(function(){
 				// console.log(_this.id)
@@ -156,19 +173,19 @@
 					})
 				})
 			},200)
-			
-			
+
+
 			if(params.tab){
 				this.firstTab = params.tab
 			}
-			
-			
+
+
 		},
 		mounted(){
 			this.$refs.tabs.clickTab(this.firstTab);
 		},
 		methods:{
-			changeTab(index){ 
+			changeTab(index){
 				this.curTabIndex = index;
 				if(index == 1){
 					this.refreshFans();
@@ -210,13 +227,42 @@
 	.outer{
 		background-color: #ffffff;
 		padding-top: 4px;
-		
+
 		.dark-mode & {
 			background-color: #252525;
 		}
 		.tab{
 			height: 40px;
 			width: 100vw;
+		}
+		.search-bar{
+			display: flex;
+			align-items: center;
+			padding: 10rpx 20rpx;
+			border-bottom: #cacaca 1rpx solid;
+
+			.dark-mode & {
+				border-bottom: #3a3a3a 1rpx solid;
+			}
+			.search-input{
+				flex: 1;
+				height: 60rpx;
+				background-color: #f5f5f5;
+				border-radius: 10rpx;
+				padding: 0 20rpx;
+				font-size: 28rpx;
+
+				.dark-mode & {
+					background-color: #3a3a3a;
+					color: #e5e5e5;
+				}
+			}
+			.search-clear{
+				margin-left: 15rpx;
+				font-size: 36rpx;
+				color: #999;
+				padding: 0 10rpx;
+			}
 		}
 		.list.fans{
 			p.fansNums{
@@ -225,7 +271,6 @@
 				font-size: 30rpx;
 				color:rgb(48, 48, 48);
 				border-bottom: #cacaca 1rpx solid;
-				
 				.dark-mode & {
 					color: #e5e5e5;
 					border-bottom: #3a3a3a 1rpx solid;
@@ -233,24 +278,24 @@
 			}
 		}
 	}
-	
+
 	.users {
 		height: 130rpx;
 		width: 100vw;
 		border-bottom: #cacaca 1rpx solid;
 		display: flex;
 		position:relative;
-		
+
 		.dark-mode & {
 			border-bottom: #3a3a3a 1rpx solid;
 		}
-		
+
 		img {
 			height: 100rpx;
 			border:#cacaca 1rpx solid;
 			border-radius: 7rpx;
 			margin:15rpx;
-			
+
 			.dark-mode & {
 				border:#3a3a3a 1rpx solid;
 			}
@@ -264,7 +309,7 @@
 			-webkit-box-orient: vertical;
 			-webkit-line-clamp: 1;
 			color:rgb(180, 111, 88);
-			
+
 			.dark-mode & {
 				color: #d1a980;
 			}
@@ -278,7 +323,7 @@
 			-webkit-line-clamp: 1;
 			margin-top: 8rpx;
 			font-size: 28rpx;
-			
+
 			.dark-mode & {
 				color: #b8b8b8;
 			}
