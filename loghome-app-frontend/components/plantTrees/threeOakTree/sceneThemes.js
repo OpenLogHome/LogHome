@@ -10,6 +10,8 @@ const BASE_CAMERA = {
   phiPortrait: 0.95,
   fovLandscape: 36,
   fovPortrait: 40,
+  targetLandscape: 2.7,
+  targetPortrait: 2.95,
 };
 
 export const SCENE_THEMES = {
@@ -126,7 +128,7 @@ export const SCENE_THEMES = {
   snow_spruce: {
     key: "snow_spruce",
     treeKind: "spruce",
-    camera: { ...BASE_CAMERA, radiusLandscape: 19.8, radiusPortrait: 23, phiLandscape: 0.99, phiPortrait: 0.92, fovLandscape: 37, fovPortrait: 42 },
+    camera: { ...BASE_CAMERA, radiusLandscape: 19.8, radiusPortrait: 23, phiLandscape: 0.99, phiPortrait: 0.92, fovLandscape: 37, fovPortrait: 42, targetLandscape: 2.9, targetPortrait: 3.15 },
     backdrop: {
       haloCore: "rgba(243, 249, 255, 0.92)",
       haloMid: "rgba(192, 221, 255, 0.28)",
@@ -236,7 +238,7 @@ export const SCENE_THEMES = {
   savanna_acacia: {
     key: "savanna_acacia",
     treeKind: "acacia",
-    camera: { ...BASE_CAMERA, radiusLandscape: 19.4, radiusPortrait: 22.6, phiLandscape: 0.98, phiPortrait: 0.91, fovLandscape: 37, fovPortrait: 41 },
+    camera: { ...BASE_CAMERA, radiusLandscape: 19.4, radiusPortrait: 22.6, phiLandscape: 0.98, phiPortrait: 0.91, fovLandscape: 37, fovPortrait: 41, targetLandscape: 2.85, targetPortrait: 3.1 },
     backdrop: {
       haloCore: "rgba(255, 231, 174, 0.9)",
       haloMid: "rgba(255, 192, 92, 0.32)",
@@ -291,7 +293,7 @@ export const SCENE_THEMES = {
   swamp_redwood: {
     key: "swamp_redwood",
     treeKind: "redwood",
-    camera: { ...BASE_CAMERA, radiusLandscape: 20, radiusPortrait: 23.2, phiLandscape: 0.98, phiPortrait: 0.9, fovLandscape: 37, fovPortrait: 42 },
+    camera: { ...BASE_CAMERA, radiusLandscape: 20.8, radiusPortrait: 24.2, phiLandscape: 0.98, phiPortrait: 0.9, fovLandscape: 38, fovPortrait: 43, targetLandscape: 3.55, targetPortrait: 3.85 },
     backdrop: {
       haloCore: "rgba(214, 243, 220, 0.8)",
       haloMid: "rgba(142, 211, 171, 0.24)",
@@ -326,6 +328,7 @@ export const SCENE_THEMES = {
       soil: ["#433126", "#36251d", "#584035", "#291b15"],
       path: ["#836f53", "#6c5944", "#9e8969", "#564735"],
       stone: ["#6d7f78", "#566861", "#7e928b", "#44524e"],
+      water: ["#48766b", "#3d685f", "#5b897c", "#31554e"],
       trunkTop: ["#9c4f37", "#7a3726", "#562315", "#b76246"],
       trunkSide: ["#7a3826", "#9f5238", "#5d2619"],
       leaf: ["#365746", "#2d4738", "#4a6b57", "#20372c"],
@@ -345,24 +348,293 @@ export const SCENE_THEMES = {
   },
 };
 
-export function getSceneThemeDefinition(themeKey) {
-  const resolvedKey = normalizeTreePlantSceneTheme(themeKey || DEFAULT_TREE_PLANT_SCENE_THEME);
-  return SCENE_THEMES[resolvedKey] || SCENE_THEMES.oak_island;
+const NIGHT_THEME_OVERRIDES = {
+  oak_island: {
+    backdrop: {
+      haloCore: "rgba(222, 234, 255, 0.94)",
+      haloMid: "rgba(119, 151, 211, 0.28)",
+      skyTop: "#071329",
+      skyMid: "#10284b",
+      skyLow: "#1c3b58",
+      skyBottom: "#172f2b",
+      mistA: "rgba(126, 156, 194, 0.12)",
+      mistB: "rgba(93, 128, 168, 0.1)",
+      starColor: "#dce9ff",
+      moonShade: "#9baccc",
+    },
+    fog: { color: "#182d45", near: 14, far: 31 },
+    lights: {
+      hemisphereSky: "#7896c8",
+      hemisphereGround: "#15291f",
+      hemisphereIntensity: 0.66,
+      ambientColor: "#7085aa",
+      ambientIntensity: 0.2,
+      sunColor: "#c6dcff",
+      sunIntensity: 1.18,
+      sunPosition: [-9, 14, -7],
+      rimColor: "#7599df",
+      rimIntensity: 0.72,
+      rimPosition: [10, 8, 10],
+      toneExposure: 0.84,
+    },
+    palette: {
+      surfaceTop: ["#356b42", "#2d5c38", "#40794b", "#244d30"],
+      surfaceAccent: "#5b9463",
+      surfaceBand: "#315f3b",
+      surfaceEdge: "#254b2f",
+      leaf: ["#245433", "#1d452a", "#306640", "#173922"],
+      leafAccent: "#4b8156",
+      cloudColor: "#7d91ac",
+      cloudOpacity: 0.34,
+      glow: ["#ffeaa0", "#ffd45f", 2.2],
+      accentGlow: ["#f8c9e2", "#ff9fd1", 1.8],
+    },
+  },
+  birch_blossom: {
+    backdrop: {
+      haloCore: "rgba(231, 242, 255, 0.94)",
+      haloMid: "rgba(151, 177, 222, 0.26)",
+      skyTop: "#0a1830",
+      skyMid: "#173252",
+      skyLow: "#29495f",
+      skyBottom: "#233b34",
+      mistA: "rgba(171, 198, 218, 0.13)",
+      mistB: "rgba(136, 169, 191, 0.1)",
+      starColor: "#eef7ff",
+      moonShade: "#abb9d2",
+    },
+    fog: { color: "#21384e", near: 14, far: 31 },
+    lights: {
+      hemisphereSky: "#8ba5d0",
+      hemisphereGround: "#1c3228",
+      hemisphereIntensity: 0.7,
+      ambientColor: "#7c91b2",
+      ambientIntensity: 0.22,
+      sunColor: "#d6e6ff",
+      sunIntensity: 1.2,
+      sunPosition: [-8, 15, -7],
+      rimColor: "#91b7e6",
+      rimIntensity: 0.7,
+      rimPosition: [10, 8, 9],
+      toneExposure: 0.86,
+    },
+    palette: {
+      surfaceTop: ["#416d45", "#365d3c", "#527d53", "#2d4e33"],
+      surfaceAccent: "#789875",
+      surfaceBand: "#3d6843",
+      surfaceEdge: "#315438",
+      leaf: ["#3d6740", "#315535", "#4c784d", "#29462d"],
+      leafAccent: "#7b9b74",
+      cloudColor: "#91a4ba",
+      cloudOpacity: 0.36,
+      glow: ["#ffedb0", "#ffd675", 2.15],
+      accentGlow: ["#fff0cf", "#ffdca9", 1.75],
+    },
+  },
+  snow_spruce: {
+    backdrop: {
+      haloCore: "rgba(232, 243, 255, 0.96)",
+      haloMid: "rgba(129, 166, 226, 0.32)",
+      skyTop: "#050d24",
+      skyMid: "#132a55",
+      skyLow: "#274977",
+      skyBottom: "#29425f",
+      mistA: "rgba(190, 216, 244, 0.15)",
+      mistB: "rgba(146, 184, 224, 0.13)",
+      starColor: "#f4f9ff",
+      moonShade: "#a7b9d8",
+    },
+    fog: { color: "#233a5b", near: 13, far: 30 },
+    lights: {
+      hemisphereSky: "#8aa9dd",
+      hemisphereGround: "#26384f",
+      hemisphereIntensity: 0.78,
+      ambientColor: "#8da3c7",
+      ambientIntensity: 0.24,
+      sunColor: "#d9eaff",
+      sunIntensity: 1.38,
+      sunPosition: [-9, 16, -7],
+      rimColor: "#8ec7ff",
+      rimIntensity: 0.82,
+      rimPosition: [11, 8, 10],
+      toneExposure: 0.9,
+    },
+    palette: {
+      surfaceTop: ["#cbd8ea", "#b9c9df", "#dce6f3", "#a9bbd2"],
+      surfaceAccent: "#e7f0fa",
+      surfaceBand: "#b7c8db",
+      surfaceEdge: "#8fa5bd",
+      leaf: ["#193b32", "#142f29", "#245044", "#10261f"],
+      leafAccent: "#7eaaa1",
+      cloudColor: "#a8bad0",
+      cloudOpacity: 0.4,
+      glow: ["#c8f0ff", "#75d8ff", 2.35],
+      accentGlow: ["#eaf8ff", "#a7e7ff", 2.05],
+    },
+  },
+  sakura_grove: {
+    backdrop: {
+      haloCore: "rgba(247, 231, 255, 0.94)",
+      haloMid: "rgba(181, 127, 213, 0.28)",
+      skyTop: "#140d2d",
+      skyMid: "#30204e",
+      skyLow: "#54365d",
+      skyBottom: "#2e3b38",
+      mistA: "rgba(215, 166, 216, 0.14)",
+      mistB: "rgba(178, 134, 192, 0.11)",
+      starColor: "#ffeefe",
+      moonShade: "#b6a3c7",
+    },
+    fog: { color: "#382743", near: 14, far: 31 },
+    lights: {
+      hemisphereSky: "#a28bc7",
+      hemisphereGround: "#29332d",
+      hemisphereIntensity: 0.68,
+      ambientColor: "#977cae",
+      ambientIntensity: 0.22,
+      sunColor: "#eadbff",
+      sunIntensity: 1.2,
+      sunPosition: [-9, 15, -7],
+      rimColor: "#e09cd2",
+      rimIntensity: 0.76,
+      rimPosition: [10, 8, 10],
+      toneExposure: 0.86,
+    },
+    palette: {
+      surfaceTop: ["#3d6440", "#345538", "#4b744d", "#2b482f"],
+      surfaceAccent: "#9e7093",
+      surfaceBand: "#3a5f3e",
+      surfaceEdge: "#2d4c32",
+      leaf: ["#345a39", "#2b4b30", "#416b45", "#243f29"],
+      leafAccent: "#7f956b",
+      blossom: ["#b66f9b", "#995b82", "#cc86ac", "#7e486c"],
+      blossomAccent: "#efbad5",
+      cloudColor: "#a18ca9",
+      cloudOpacity: 0.34,
+      glow: ["#ffe1ad", "#ffc16c", 2.1],
+      accentGlow: ["#ffc8e9", "#ff82c4", 2.2],
+    },
+  },
+  savanna_acacia: {
+    backdrop: {
+      haloCore: "rgba(231, 230, 211, 0.92)",
+      haloMid: "rgba(144, 149, 181, 0.25)",
+      skyTop: "#090f25",
+      skyMid: "#1c2945",
+      skyLow: "#3c3d48",
+      skyBottom: "#403e2a",
+      mistA: "rgba(172, 166, 137, 0.1)",
+      mistB: "rgba(133, 141, 158, 0.09)",
+      starColor: "#f6edcf",
+      moonShade: "#aba995",
+    },
+    fog: { color: "#343641", near: 13, far: 30 },
+    lights: {
+      hemisphereSky: "#7d8caf",
+      hemisphereGround: "#37351e",
+      hemisphereIntensity: 0.64,
+      ambientColor: "#817f83",
+      ambientIntensity: 0.2,
+      sunColor: "#e6e3cf",
+      sunIntensity: 1.14,
+      sunPosition: [-10, 15, -6],
+      rimColor: "#b5a77b",
+      rimIntensity: 0.62,
+      rimPosition: [10, 8, 9],
+      toneExposure: 0.82,
+    },
+    palette: {
+      surfaceTop: ["#696a34", "#595b2c", "#77783d", "#4b4d25"],
+      surfaceAccent: "#999151",
+      surfaceBand: "#626130",
+      surfaceEdge: "#48471f",
+      leaf: ["#3b512a", "#314523", "#485f31", "#293a1d"],
+      leafAccent: "#77784b",
+      cloudColor: "#9b9a91",
+      cloudOpacity: 0.28,
+      glow: ["#ffd47d", "#ff9f3f", 2.3],
+      accentGlow: ["#ffe59a", "#ffc954", 1.85],
+    },
+  },
+  swamp_redwood: {
+    backdrop: {
+      haloCore: "rgba(211, 239, 226, 0.9)",
+      haloMid: "rgba(91, 151, 132, 0.26)",
+      skyTop: "#06191d",
+      skyMid: "#123035",
+      skyLow: "#21463f",
+      skyBottom: "#162a22",
+      mistA: "rgba(124, 178, 156, 0.15)",
+      mistB: "rgba(92, 147, 126, 0.13)",
+      starColor: "#d9f4e8",
+      moonShade: "#8eafa3",
+    },
+    fog: { color: "#1b3933", near: 12, far: 28 },
+    lights: {
+      hemisphereSky: "#6f9b94",
+      hemisphereGround: "#14251e",
+      hemisphereIntensity: 0.58,
+      ambientColor: "#6a8f82",
+      ambientIntensity: 0.18,
+      sunColor: "#c6eddd",
+      sunIntensity: 1.02,
+      sunPosition: [-8, 14, -7],
+      rimColor: "#62b395",
+      rimIntensity: 0.7,
+      rimPosition: [10, 8, 10],
+      toneExposure: 0.78,
+    },
+    palette: {
+      surfaceTop: ["#304d36", "#293f2e", "#3a5940", "#213427"],
+      surfaceAccent: "#59725d",
+      surfaceBand: "#2d4933",
+      surfaceEdge: "#203427",
+      leaf: ["#1c362b", "#172c24", "#284538", "#10241c"],
+      leafAccent: "#537766",
+      water: ["#244f4b", "#1e423f", "#2e5e58", "#183634"],
+      cloudColor: "#6d8d82",
+      cloudOpacity: 0.3,
+      glow: ["#bff59d", "#72dc63", 2.35],
+      accentGlow: ["#9ceac9", "#54d3a0", 2.25],
+    },
+  },
+};
+
+function mergeThemeDefinition(theme, nightOverride) {
+  if (!nightOverride) return theme;
+  return {
+    ...theme,
+    isNight: true,
+    backdrop: { ...theme.backdrop, ...nightOverride.backdrop },
+    fog: { ...theme.fog, ...nightOverride.fog },
+    lights: { ...theme.lights, ...nightOverride.lights },
+    palette: { ...theme.palette, ...nightOverride.palette },
+    clouds: nightOverride.clouds || theme.clouds,
+  };
 }
 
-export function getCameraFraming(aspect = 1, themeKey = DEFAULT_TREE_PLANT_SCENE_THEME) {
-  const camera = getSceneThemeDefinition(themeKey).camera;
+export function getSceneThemeDefinition(themeKey, nightMode = false) {
+  const resolvedKey = normalizeTreePlantSceneTheme(themeKey || DEFAULT_TREE_PLANT_SCENE_THEME);
+  const theme = SCENE_THEMES[resolvedKey] || SCENE_THEMES.oak_island;
+  return nightMode
+    ? mergeThemeDefinition(theme, NIGHT_THEME_OVERRIDES[theme.key])
+    : theme;
+}
+
+export function getCameraFraming(aspect = 1, themeKey = DEFAULT_TREE_PLANT_SCENE_THEME, nightMode = false) {
+  const camera = getSceneThemeDefinition(themeKey, nightMode).camera;
   const safeAspect = Math.max(aspect || 1, 0.55);
   const portraitBias = Math.min(1, Math.max(0, (1 - safeAspect) / 0.45));
   return {
     radius: camera.radiusLandscape + (camera.radiusPortrait - camera.radiusLandscape) * portraitBias,
     phi: camera.phiLandscape + (camera.phiPortrait - camera.phiLandscape) * portraitBias,
     fov: camera.fovLandscape + (camera.fovPortrait - camera.fovLandscape) * portraitBias,
+    targetY: camera.targetLandscape + (camera.targetPortrait - camera.targetLandscape) * portraitBias,
   };
 }
 
-export function getSceneThemeStyle(themeKey) {
-  const backdrop = getSceneThemeDefinition(themeKey).backdrop;
+export function getSceneThemeStyle(themeKey, nightMode = false) {
+  const backdrop = getSceneThemeDefinition(themeKey, nightMode).backdrop;
   return {
     "--scene-halo-core": backdrop.haloCore,
     "--scene-halo-mid": backdrop.haloMid,
@@ -372,5 +644,7 @@ export function getSceneThemeStyle(themeKey) {
     "--scene-sky-bottom": backdrop.skyBottom,
     "--scene-mist-a": backdrop.mistA,
     "--scene-mist-b": backdrop.mistB,
+    "--scene-star-color": backdrop.starColor || "#ffffff",
+    "--scene-moon-shade": backdrop.moonShade || "#aab7cf",
   };
 }

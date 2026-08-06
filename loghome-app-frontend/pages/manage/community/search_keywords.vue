@@ -1,5 +1,5 @@
 <template>
-  <view class="keyword-manage-container">
+  <view class="keyword-manage-container" v-dark>
     <view class="section-title">搜索关键词管理</view>
     
     <!-- 添加关键词表单 -->
@@ -318,7 +318,11 @@ export default {
 
 <style lang="scss" scoped>
 .keyword-manage-container {
+  min-height: 100vh;
   padding: 30rpx;
+  box-sizing: border-box;
+  background-color: var(--background-color-secondary);
+  color: var(--text-color-primary);
 }
 
 .section-title {
@@ -328,7 +332,7 @@ export default {
 }
 
 .add-keyword-form {
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 12rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
@@ -355,7 +359,9 @@ export default {
 .form-input {
   flex: 1;
   height: 72rpx;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
+  color: var(--text-color-primary);
+  background-color: var(--card-background);
   border-radius: 8rpx;
   padding: 0 20rpx;
   font-size: 28rpx;
@@ -364,7 +370,7 @@ export default {
 .form-picker {
   flex: 1;
   height: 72rpx;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 8rpx;
   padding: 0 20rpx;
   display: flex;
@@ -386,7 +392,7 @@ export default {
 }
 
 .keyword-list {
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 12rpx;
   overflow: hidden;
   box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
@@ -395,8 +401,8 @@ export default {
 .list-header {
   display: flex;
   padding: 20rpx;
-  background-color: #f8f8f8;
-  border-bottom: 1px solid #eee;
+  background-color: var(--background-color-tertiary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header-item {
@@ -413,7 +419,7 @@ export default {
 .list-row {
   display: flex;
   padding: 20rpx;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color-light);
 }
 
 .row-item {
@@ -442,8 +448,8 @@ export default {
 }
 
 .edit {
-  background-color: #f8f8f8;
-  color: #333;
+  background-color: var(--background-color-tertiary);
+  color: var(--text-color-primary);
 }
 
 .delete {
@@ -452,7 +458,7 @@ export default {
 }
 
 .edit-popup {
-  background-color: #fff;
+  background-color: var(--card-background);
   padding: 30rpx;
   border-radius: 12rpx;
   width: 600rpx;
@@ -481,12 +487,12 @@ export default {
 }
 
 .cancel-button {
-  background-color: #f8f8f8;
-  color: #333;
+  background-color: var(--background-color-tertiary);
+  color: var(--text-color-primary);
 }
 
 .confirm-button {
   background-color: #EA7034;
   color: #fff;
 }
-</style> 
+</style>

@@ -88,7 +88,7 @@
 	.top-swiper{
 		
 		.bg{
-			padding-top: calc(var(--status-bar-height) + var(--statusBarHeight));
+			padding-top: var(--loghome-safe-top, 0px);
 			box-sizing: content-box;
 			width: 100%;
 			position: relative;
@@ -152,7 +152,7 @@
 		}
 		
 		.box{
-			padding-top: var(--status-bar-height);
+			padding-top: var(--loghome-safe-top, 0px);
 			box-sizing: content-box;
 			position: absolute;
 			z-index: 5;
@@ -165,7 +165,7 @@
 		.swiper {
 			height: 590rpx;
 			margin: 0 0rpx;
-			padding-top: calc(10rpx + var(--statusBarHeight));
+			padding-top: 10rpx;
 			.le-img {
 				width: 100%;
 				height: 100%;

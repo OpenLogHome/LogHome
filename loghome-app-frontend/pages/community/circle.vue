@@ -1,5 +1,5 @@
 <template>
-  <view class="circle-container" v-dark :style="{'--statusBarHeight': 0 + 'px'}">
+  <view class="circle-container" v-dark>
     <!-- 添加后退导航栏 -->
     <zetank-backBar textcolor="#fff" :showLeft="true" :showHome="true" :showTitle="false" navTitle="圈子详情"></zetank-backBar>
     
@@ -68,7 +68,7 @@
         <view class="members-list" v-if="members.length > 0">
           <view class="member-item clickable" v-for="(member, index) in members" :key="index" @tap="navigateToUser(member.user_id)">
             <view class="member-avatar-wrapper">
-              <log-image class="member-avatar" :src="member.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <user-avatar class="member-avatar" :src="member.avatar_url" :frame="member.avatar_frame" :visual-scale="member.avatar_frame ? 1.2 : 1" />
               <view class="member-role" v-if="member.role === 2">圈主</view>
               <view class="member-role admin" v-else-if="member.role === 1">管理员</view>
             </view>
@@ -113,9 +113,12 @@
         <view class="post-item clickable" v-for="(post, index) in posts" :key="index" @tap="navigateToPost(post.post_id)">
           <view class="post-header">
             <view class="user-info clickable" @tap.stop="navigateToUser(post.user_id)">
-              <log-image class="user-avatar" :src="post.author_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <user-avatar class="user-avatar" :src="post.author_avatar" :frame="post.author_avatar_frame" :visual-scale="post.author_avatar_frame ? 1.2 : 1" />
               <view class="user-meta">
-                <text class="user-name">{{post.author_name}}</text>
+                <view class="user-name-line">
+                  <text class="user-name">{{post.author_name}}</text>
+                  <membership-badge :tier="post.author_membership_type" size="xs" />
+                </view>
                 <text class="post-time">{{formatTime(post.create_time)}}</text>
               </view>
             </view>
@@ -266,9 +269,11 @@
 <script>
 import axios from 'axios'
 import moment from 'moment'
+import MembershipBadge from '@/components/membership-badge.vue'
 
 export default {
   components: {
+	MembershipBadge
   },
   data() {
     return {
@@ -915,7 +920,7 @@ export default {
 .circle-header {
   position: relative;
   padding: 30rpx;
-  padding-top: calc(var(--statusBarHeight) + 120rpx);
+  padding-top: calc(var(--loghome-safe-top, 0px) + 120rpx);
   margin-bottom: 20rpx;
   height: calc(450rpx - 150rpx);
   z-index: 1;
@@ -924,8 +929,8 @@ export default {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 450rpx;
+    right: 0;
+    bottom: 0;
     background-size: cover;
     background-position: center;
     z-index: 0;
@@ -939,7 +944,6 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 450rpx;
   background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
   z-index: 2;
 }
@@ -1121,7 +1125,7 @@ export default {
 }
 
 .posts-list {
-  padding: 20rpx;
+  padding: 20rpx 20rpx calc(240rpx + var(--loghome-safe-bottom, 0px));
 }
 
 .skeleton-post {
@@ -1226,6 +1230,12 @@ export default {
   font-size: 28rpx;
   color: var(--text-color-primary);
   font-weight: bold;
+}
+
+.user-name-line {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
 }
 
 .post-time {
@@ -1337,7 +1347,7 @@ export default {
 .float-btn {
   position: fixed;
   right: 40rpx;
-  bottom: 120rpx;
+  bottom: calc(120rpx + var(--loghome-safe-bottom, 0px));
   width: 100rpx;
   height: 100rpx;
   background-color: #EA7034;

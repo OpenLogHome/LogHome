@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" v-dark>
     <view class="title">Audiobook Test Page</view>
 
     <view class="section">
@@ -114,7 +114,7 @@ export default {
                 progressData = result;
                 console.log('直接使用对象数据:', progressData);
               }
-              
+
               // 检查解析后的数据是否包含所需字段
               if (progressData && progressData.articleId && progressData.paragraphId) {
                 this.progress = `Article: ${progressData.articleId}, Paragraph: ${progressData.paragraphId}`;
@@ -162,7 +162,7 @@ export default {
   margin-bottom: 10px;
 }
 .input {
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   padding: 8px;
   width: 100%;
   margin-bottom: 10px;
@@ -185,7 +185,7 @@ export default {
 .progress-display {
   margin-top: 10px;
   padding: 10px;
-  background-color: #f0f0f0;
+  background-color: var(--background-color-secondary);
   border-radius: 5px;
 }
 </style>

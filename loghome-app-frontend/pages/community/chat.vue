@@ -5,10 +5,10 @@
         <view class="messages">
             <div v-for="message in sortedMessages" :key="message.id" class="message-wrapper"
                 :class="{ 'my-message-wrapper': message.sender_id === user_id }">
-                <log-image v-if="message.sender_id !== user_id" class="avatar" :src="friend.avatar_url"
-                    onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-                <log-image v-if="message.sender_id === user_id" class="avatar" :src="user.avatar_url"
-                    onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+                <user-avatar v-if="message.sender_id !== user_id" class="avatar" :src="friend.avatar_url"
+                    :frame="friend.avatar_frame" :visual-scale="friend.avatar_frame ? 1.2 : 1" />
+                <user-avatar v-if="message.sender_id === user_id" class="avatar" :src="user.avatar_url"
+                    :frame="user.avatar_frame" :visual-scale="user.avatar_frame ? 1.2 : 1" />
                 <div class="message-content" :class="[
                     { 'my-message': message.sender_id === user_id },
                     message.displayType !== 'text' ? 'media-message' : ''
@@ -1531,7 +1531,7 @@ export default {
     max-height: 75vh;
     background: var(--card-background);
     border-radius: 28rpx 28rpx 0 0;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--loghome-safe-bottom, 0px);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -1606,7 +1606,7 @@ export default {
 
 .book-selector-list {
     flex: 1;
-    height: calc(75vh - 250rpx - env(safe-area-inset-bottom));
+    height: calc(75vh - 250rpx - var(--loghome-safe-bottom, 0px));
     min-height: 240rpx;
 }
 

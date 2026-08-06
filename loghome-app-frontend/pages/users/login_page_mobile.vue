@@ -1,11 +1,11 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="step0" v-if="step == 0">
 			<p>仅支持已注册手机号登录</p>
 			<div class="longin-boder">
 				<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon" /></div>
 				<input class="input" type="text" placeholder="请输入中国大陆手机号" v-model="mobile"/>
-			</div> 
+			</div>
 			<div class="button" @click="nextStep()">下一步</div>
 		</div>
 		<transition name="slide-fade" mode="out-in">
@@ -29,7 +29,7 @@
 					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
 					<input class="input" type="text" placeholder="请输入验证码" v-model="verifyCode"/>
 				</div>
-				
+
 				<div class="button" @click="nextStep()">下一步</div>
 				<div class="button cancel nomargin" @click="step = 0">上一步</div>
 			</div>
@@ -46,7 +46,7 @@
 					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
 					<input class="input" type="password" placeholder="请输入密码" v-model="pwd"/>
 				</div>
-				
+
 				<div class="button" @click="nextStep()">下一步</div>
 				<div class="button cancel nomargin" @click="step = 0;">上一步</div>
 			</div>
@@ -64,7 +64,7 @@
 					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
 					<input class="input" type="password" placeholder="请输入密码" v-model="pwd"/>
 				</div>
-				
+
 				<div class="button" @click="nextStep()">登录</div>
 				<div class="button cancel nomargin" @click="step = 0">上一步</div>
 			</div>
@@ -131,7 +131,7 @@
 							return;
 						}
 						uni.showLoading({
-							
+
 						})
 						axios.get(this.$baseUrl + '/users/check_mobile?mobile=' + this.mobile, {}).then((res) => {
 							if(res.data.length > 0){
@@ -150,7 +150,7 @@
 						})
 						break;
 					case 2:
-						axios.get(this.$baseUrl + '/users/register_with_mobile?mobile=' + this.mobile + "&vcode=" + 
+						axios.get(this.$baseUrl + '/users/register_with_mobile?mobile=' + this.mobile + "&vcode=" +
 						this.verifyCode, {}).then((res) => {
 							if(res.data.msg == "登录成功")
 							{
@@ -192,13 +192,13 @@
 					return;
 				}
 				var axios = require('axios');
-				
+
 				var config = {
 				  method: 'get',
 				  url: this.$baseUrl + '/users/send_mobile_verify_code?mobile=' + _this.mobile,
 				  headers: { }
 				};
-				
+
 				axios(config)
 				.then(function (response) {
 				  uni.showToast({
@@ -219,7 +219,7 @@
 				.catch(function (error) {
 				  console.log(error);
 				});
-			
+
 			},
 			submit(){
 				uni.showLoading({
@@ -235,7 +235,7 @@
 					return;
 				}
 				axios.get( this.$baseUrl + '/users/verify_mobile?mobile=' + this.mobile + "&vcode=" + this.vcode, {
-					headers: { 
+					headers: {
 					     'Content-Type': 'application/json',//设置请求头请求格式为JSON
 					     'Authorization': tk //设置token 其中K名要和后端协调好
 					}
@@ -293,7 +293,7 @@
 						  });
 						  _this.pwd = "";
 					  }
-				    
+
 				  });
 			},
 			//校验密码：只能输入6-20个字母、数字、下划线
@@ -352,7 +352,7 @@
 							duration: 2000
 						  });
 					  }
-				    
+
 				  });
 			}
 		}
@@ -367,14 +367,14 @@
 			display:flex;
 			justify-content: space-between;
 			.btn{
-				color:rgb(180, 111, 88);
+				color:var(--brand-text-color);
 			}
 			.btn.wait{
 				color:rgb(154, 154, 154);
 			}
 		}
 		p{
-			color:#3a3a3a;
+			color:var(--text-color-primary);
 			margin:0 0 50rpx 0;
 		}
 		.warn{
@@ -388,9 +388,9 @@
 			margin-top: 20px;
 			line-height: 40px;
 			text-align: center;
-			border: 1px solid #dddddd;
-			border-radius: 5px;  
-			background-color: #efefef;
+			border: 1px solid var(--border-color);
+			border-radius: 5px;
+			background-color: var(--background-color-secondary);
 			img.icon{
 				width:70rpx;
 			}
@@ -406,9 +406,9 @@
 				height: 37px;
 				line-height: 37px;
 				border:0px;
-				color: #333333;
+				color: var(--text-color-primary);
 				font-size: 16px;
-				background-color: #efefef;
+				background-color: var(--background-color-secondary);
 			}
 
 		}
@@ -425,25 +425,25 @@
 			border:5rpx rgb(180, 111, 88) solid;
 			box-sizing: border-box;
 			background-color: rgb(180, 111, 88);
-			
+
 		}
-		
+
 		.button.cancel{
 			background-color: rgba(234,112,52,0);
-			color: rgb(180, 111, 88);
+			color: var(--brand-text-color);
 			border:5rpx rgb(180, 111, 88) solid;
 		}
-		
+
 		.button.nomargin{
 			margin-top: 25rpx;
 		}
-		 
-		.button:active {  
+
+		.button:active {
 			background-color:rgb(234, 171, 11);
 		}
 
 	}
-	
+
 	/* 可以设置不同的进入和离开动画 */
 	/* 设置持续时间和动画函数 */
 	.slide-fade-enter-active {
@@ -457,7 +457,7 @@
 	  transform: translateX(10px);
 	  opacity: 0;
 	}
-	
+
 	.step{
 		position:absolute;
 		width:calc(100% - 100rpx);

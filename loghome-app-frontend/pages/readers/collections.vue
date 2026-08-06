@@ -1,6 +1,21 @@
 <template>
 	<transition name="fade" class="transition">
-		<div class="outer" v-dark v-if="showList">
+		<div class="outer" v-dark v-if="showList || isLoading">
+			<div class="collectionsSkeleton" v-if="isLoading" aria-label="书籍列表加载中">
+				<div class="bookSkeleton" v-for="index in 5" :key="index">
+					<div class="skeletonBlock skeletonCover"></div>
+					<div class="skeletonInfo">
+						<div class="skeletonBlock skeletonTitle" :class="`skeletonWidth${index % 3}`"></div>
+						<div class="skeletonAuthor">
+							<div class="skeletonBlock skeletonAvatar"></div>
+							<div class="skeletonBlock skeletonAuthorName"></div>
+						</div>
+						<div class="skeletonBlock skeletonDescription"></div>
+						<div class="skeletonBlock skeletonDescription short"></div>
+					</div>
+				</div>
+			</div>
+			<div class="collectionList" v-else>
 				<div v-for="item in books" :key="item.novel_id">
 					<navigator :url="'./bookInfo?id=' +  item.novel_id"
 							   open-type="navigate">    
@@ -19,6 +34,7 @@
 						</div>
 					</navigator>
 				</div>
+			</div>
 		</div>
 	</transition>
 </template>
@@ -30,7 +46,9 @@
 			return{
 				title:"",
 				books:[],
-				showList:false
+				showList:false,
+				isLoading:true,
+				loadingRequestCount:0
 			}
 		},
 		onLoad(params){
@@ -42,8 +60,9 @@
 			
 			// 如果是原木力爆棚，直接跳转到新榜单页面
 			if (this.title === '原木力爆棚') {
+				this.isLoading = false;
 				uni.redirectTo({
-					url: './logPowerRank'
+					url: './logPowerRank?noneAnimation=1'
 				});
 				return;
 			}
@@ -54,14 +73,13 @@
 			this.refreshCollections();
 		},
 		onShow(){
-			uni.showLoading({
-				title: '努力加载中'
-			});
 			this.refreshCollections();
 		},
 		methods:{
 			refreshCollections(){
 				let _this = this;
+				this.loadingRequestCount += 1;
+				this.isLoading = true;
 				axios.get(_this.$baseUrl + '/library/recommand/get_library_recommend_titles?title='+this.title+"&page=1&amount=100", {}).then((res) => {
 					_this.books = res.data;
 					console.log(_this.books);
@@ -72,8 +90,9 @@
 						icon:'none',
 						duration: 2000
 					});
-				}).then(function(){
-					uni.hideLoading();
+				}).then(() => {
+					this.loadingRequestCount = Math.max(0, this.loadingRequestCount - 1);
+					this.isLoading = this.loadingRequestCount > 0;
 				})
 			}
 		}
@@ -86,6 +105,91 @@
 		
 		&.dark-mode {
 			background-color: #1E1E1E;
+		}
+
+		.collectionsSkeleton {
+			width: 100%;
+			padding: 1rpx 0;
+		}
+
+		.bookSkeleton {
+			height: 260rpx;
+			width: calc(100vw - 40rpx);
+			margin: 20rpx;
+			display: flex;
+			background-color: #ffffff;
+			border-radius: 10rpx;
+			overflow: hidden;
+			box-sizing: border-box;
+		}
+
+		.skeletonBlock {
+			position: relative;
+			overflow: hidden;
+			border-radius: 7rpx;
+			background-color: #e8e8e8;
+
+			&::after {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: -100%;
+				width: 100%;
+				height: 100%;
+				background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+				animation: collections-skeleton-shimmer 1.4s ease-in-out infinite;
+			}
+		}
+
+		.skeletonCover {
+			width: 200rpx;
+			height: 260rpx;
+			border-radius: 0;
+			flex-shrink: 0;
+		}
+
+		.skeletonInfo {
+			flex: 1;
+			padding: 27rpx 35rpx 20rpx 30rpx;
+			min-width: 0;
+		}
+
+		.skeletonTitle {
+			width: 65%;
+			height: 34rpx;
+		}
+
+		.skeletonWidth0 { width: 52%; }
+		.skeletonWidth1 { width: 78%; }
+
+		.skeletonAuthor {
+			display: flex;
+			align-items: center;
+			margin-top: 23rpx;
+			margin-bottom: 22rpx;
+		}
+
+		.skeletonAvatar {
+			width: 35rpx;
+			height: 35rpx;
+			border-radius: 5rpx;
+			flex-shrink: 0;
+		}
+
+		.skeletonAuthorName {
+			width: 145rpx;
+			height: 22rpx;
+			margin-left: 10rpx;
+		}
+
+		.skeletonDescription {
+			width: 92%;
+			height: 22rpx;
+			margin-top: 13rpx;
+
+			&.short {
+				width: 68%;
+			}
 		}
 		
 		.books {
@@ -157,8 +261,26 @@
 			}
 		}
 	}
+
+	@keyframes collections-skeleton-shimmer {
+		100% {
+			left: 100%;
+		}
+	}
 	
 	.dark-mode {
+		.bookSkeleton {
+			background-color: #2C2C2C;
+		}
+
+		.skeletonBlock {
+			background-color: #444444;
+
+			&::after {
+				background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+			}
+		}
+
 		.books {
 			background-color: #2C2C2C;
 			

@@ -63,7 +63,31 @@ function closePool() {
 	return poolClosePromise;
 }
 
+async function withTransaction(work) {
+	let connection;
+	try {
+		connection = await getConnection();
+		await new Promise((resolve, reject) => {
+			connection.beginTransaction((error) => (error ? reject(error) : resolve()));
+		});
+		const transactionalQuery = (sql, values) => runQuery(connection, sql, values);
+		const result = await work(transactionalQuery);
+		await new Promise((resolve, reject) => {
+			connection.commit((error) => (error ? reject(error) : resolve()));
+		});
+		return result;
+	} catch (error) {
+		if (connection) {
+			await new Promise((resolve) => connection.rollback(() => resolve()));
+		}
+		throw error;
+	} finally {
+		if (connection) connection.release();
+	}
+}
+
 module.exports = {
 	query,
+	withTransaction,
 	closePool,
 };

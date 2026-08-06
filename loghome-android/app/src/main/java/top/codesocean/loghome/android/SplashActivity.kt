@@ -1,7 +1,7 @@
 package top.codesocean.loghome.android
 
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -23,6 +23,8 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val initialBackgroundColor = SystemUiHelper.resolveInitialBackgroundColor(this)
+        window.setBackgroundDrawable(ColorDrawable(initialBackgroundColor))
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -32,7 +34,7 @@ class SplashActivity : AppCompatActivity() {
             binding.root.updatePadding(top = bars.top, bottom = bars.bottom)
             insets
         }
-        SystemUiHelper.applySystemBarStyle(window, binding.root, Color.WHITE, forceDarkIcons = true)
+        SystemUiHelper.applySystemBarStyle(window, binding.root, initialBackgroundColor)
         loadSplashImage()
 
         initializeApp()

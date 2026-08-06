@@ -1,5 +1,5 @@
 <template>
-	<div class="relations-page">
+	<div class="relations-page" v-dark>
 		<div
 			class="chart-container"
 			ref="chart"
@@ -36,6 +36,16 @@ export default {
 			]
 		};
 	},
+	computed: {
+		isDarkMode() {
+			return this.$store.state.isDarkMode;
+		}
+	},
+	watch: {
+		isDarkMode() {
+			if (this.chart) this.renderChart();
+		}
+	},
 	onLoad(options) {
 		this.novelId = options.novel_id;
 	},
@@ -68,7 +78,7 @@ export default {
                 let res = await axios.get(this.$baseUrl + '/library/get_articles?id=' + this.novelId);
                 let articles = res.data.filter(item => item.article_type == 'worldVocabulary');
                 this.totalCount = articles.length;
-                
+
                 if (this.totalCount === 0) {
                     this.loading = false;
                     uni.showToast({title: '暂无词条', icon: 'none'});
@@ -111,7 +121,7 @@ export default {
                     if (contentStr) {
                         try {
                             let content = JSON.parse(contentStr);
-                            
+
                             // 更新节点的图片
                             if (content.pic) {
                                 let node = this.nodes.find(n => n.id === articleId.toString());
@@ -159,14 +169,14 @@ export default {
             console.log("Initializing ECharts...");
             this.chart = echarts.init(this.$refs.chart, null, { renderer: 'canvas' });
             this.renderChart();
-            
+
             // 使用 'click' 事件监听
             this.chart.on('click', (params) => {
                 console.log("Chart clicked:", params.dataType, params);
                 if (params.dataType === 'node') {
                     console.log("Node clicked, navigating to:", params.data.value);
 					const readerProps = window.localStorage.getItem("readerProps");
-					const isPageReader = readerProps === "page";
+					const isPageReader = readerProps !== "text";
 					const url = isPageReader
 						? `/pages/readers/newReader/article?id=${params.data.value}&novelId=${this.novelId}`
 						: `/pages/readers/article_rich?id=${params.data.value}`;
@@ -175,7 +185,7 @@ export default {
                     });
                 }
             });
-            
+
 			if (typeof window !== 'undefined' && window.addEventListener) {
 				this.resizeHandler = () => {
 					if (this.chart) this.chart.resize();
@@ -194,14 +204,21 @@ export default {
                 });
             }
         },
-        renderChart() {
-            const option = {
-                title: {
-                    text: '世界词条关系图',
-                    left: 'center',
-                    top: 20
-                },
-                tooltip: {},
+		renderChart() {
+			const textColor = this.isDarkMode ? '#e5e5e5' : '#303133';
+			const tooltipBackground = this.isDarkMode ? 'rgba(37,37,37,.96)' : 'rgba(255,255,255,.96)';
+			const option = {
+				title: {
+					text: '世界词条关系图',
+					left: 'center',
+					top: 20,
+					textStyle: { color: textColor }
+				},
+				tooltip: {
+					backgroundColor: tooltipBackground,
+					borderColor: this.isDarkMode ? '#4b4b4b' : '#dfdfdf',
+					textStyle: { color: textColor }
+				},
                 animationDurationUpdate: 1500,
                 animationEasingUpdate: 'quinticInOut',
                 series: [
@@ -217,13 +234,14 @@ export default {
                         select: {
                             itemStyle: {
                                 borderWidth: 3,
-                                borderColor: '#000'
+								borderColor: this.isDarkMode ? '#e5e5e5' : '#303133'
                             }
                         },
-                        label: {
-                            show: true,
-                            position: 'bottom',
-                            formatter: '{b}'
+						label: {
+							show: true,
+							position: 'bottom',
+							formatter: '{b}',
+							color: textColor
                         },
                         force: {
                             repulsion: 300,
@@ -258,7 +276,7 @@ export default {
     width: 100vw;
     height: 100vh;
     position: relative;
-    background-color: #f5f5f5;
+    background-color: var(--background-color-secondary);
 }
 .chart-container {
     width: 100%;
@@ -272,7 +290,7 @@ export default {
 }
 .back-btn {
     position: absolute;
-    top: 40px;
+    top: calc(40px + var(--loghome-safe-top, 0px));
     left: 20px;
     padding: 8px 16px;
     background: rgba(0,0,0,0.6);
@@ -288,13 +306,13 @@ export default {
     left: 50%;
     height: fit-content;
     transform: translateX(-50%);
-    background: rgba(255,255,255,0.9);
+	    background: var(--card-background);
     padding: 10px 20px;
     border-radius: 20px;
     pointer-events: none;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     font-size: 12px;
-    color: #666;
+    color: var(--text-color-regular);
     z-index: 99;
 }
 </style>

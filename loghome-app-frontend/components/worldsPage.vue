@@ -1,8 +1,6 @@
 <template>
   <div class="worldWrapper" v-dark>
     <div class="outer">
-			<div class="title">
-			</div>
 			<div class="portal" @click="createNewWorld">
 				<div class="subtitle">共启创世之门</div>
 				<div class="newWorld">点击创建一个全新的世界 → </div>
@@ -155,29 +153,20 @@
 
 <style scoped lang="scss">
 	.worldWrapper {
-	background-image: linear-gradient(to top, #f7f7f7, #f7f7f7, #fff2d0);
-	min-height: calc(100vh - 44px);
+		background-image: linear-gradient(to top, #f7f7f7, #f7f7f7, #fff2d0);
+		box-sizing: border-box;
+		min-height: 100vh;
+		padding-top: calc(44px + var(--loghome-safe-top, 0px));
 	
-	&.dark-mode {
-		background-image: none;
-		background-color: var(--background-color-secondary);
-	}
-}
-
-	.outer {
-	padding: 20px;
-	padding-top: calc(10px);
-
-
-	.title {
-		font-size: 24px;
-		margin-top: 50px;
-		font-weight: bold;
-		
-		.dark-mode & {
-			color: var(--text-color-primary);
+		&.dark-mode {
+			background-image: none;
+			background-color: var(--background-color-secondary);
 		}
 	}
+
+	.outer {
+		padding: 20px;
+		padding-top: calc(10px);
 
 		.portal {
 			background-color: #bfa;

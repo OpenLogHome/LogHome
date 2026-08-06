@@ -8,7 +8,7 @@
 			<uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'"
 				class="messageIcon clickable" @click="gotoMessage"></uni-icons>
 		</div>
-		<mescroll-body ref="mescrollRef" @init="mescrollInit" style="margin-top: 105rpx;" @down="downCallback"
+		<mescroll-body ref="mescrollRef" @init="mescrollInit" style="margin-top: calc(105rpx + var(--loghome-safe-top, 0px));" @down="downCallback"
 			@up="upCallback" @scroll="onPageScroll" :fixed="false" :height="'100%'" :up="mescrollUpOption">
 			<div class="appRecommendInfo clickable" @click="gotoUpdate" v-show="showAppRecommendInfo == 'android'">
 				<div class="left">
@@ -20,7 +20,7 @@
 					</view>
 				</div>
 				<div class="right">
-					<img src="/static/apprecommend/android.png" alt="">
+					<img src="/static/apprecommend/android.png" alt="" />
 				</div>
 			</div>
 			<HorizontalTags ref="HorizontalTagsRef"></HorizontalTags>
@@ -256,12 +256,96 @@ export default {
 	onShow() {
 		this.reloadComponents();
 		this.checkSystem();
-		this.checkReaderSetting();
+		this.$nextTick(() => {
+			this.setupLibraryScrollTracking();
+		});
+	},
+	onHide() {
+		this.teardownLibraryScrollTracking();
 	},
 	beforeUnmount() {
 		this.clearDenseCardAnimation();
+		this.teardownLibraryScrollTracking();
+	},
+	beforeDestroy() {
+		this.clearDenseCardAnimation();
+		this.teardownLibraryScrollTracking();
+	},
+	onUnload() {
+		this.teardownLibraryScrollTracking();
 	},
 	methods: {
+		resolveLibraryScrollContainer() {
+			if (typeof document === 'undefined' || typeof window === 'undefined') {
+				return null;
+			}
+
+			const uniApp = document.querySelector('uni-app');
+			if (uniApp) {
+				const overflowY = window.getComputedStyle(uniApp).overflowY;
+				if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') {
+					return uniApp;
+				}
+			}
+
+			return window;
+		},
+		getLibraryScrollTop(container = this._libraryScrollContainer) {
+			if (!container || typeof window === 'undefined' || typeof document === 'undefined') {
+				return 0;
+			}
+			if (container === window) {
+				return Math.max(
+					0,
+					Number(window.pageYOffset || 0),
+					Number(document.documentElement.scrollTop || 0),
+					Number(document.body.scrollTop || 0)
+				);
+			}
+			return Math.max(0, Number(container.scrollTop || 0));
+		},
+		syncLibraryScrollPosition(scrollTop) {
+			const normalizedTop = Math.max(0, Number(scrollTop || 0));
+			this.scrollTop = normalizedTop;
+			if (this.mescroll && typeof this.mescroll.onPageScroll === 'function') {
+				this.mescroll.onPageScroll({ scrollTop: normalizedTop });
+			}
+		},
+		setupLibraryScrollTracking() {
+			const scrollContainer = this.resolveLibraryScrollContainer();
+			if (!scrollContainer) {
+				return;
+			}
+
+			if (this._libraryScrollContainer !== scrollContainer) {
+				this.teardownLibraryScrollTracking();
+				this._libraryScrollContainer = scrollContainer;
+				this._libraryScrollHandler = () => {
+					this.syncLibraryScrollPosition(
+						this.getLibraryScrollTop(this._libraryScrollContainer)
+					);
+				};
+				scrollContainer.addEventListener('scroll', this._libraryScrollHandler, {
+					passive: true
+				});
+			}
+
+			this.syncLibraryScrollPosition(this.getLibraryScrollTop(scrollContainer));
+		},
+		teardownLibraryScrollTracking() {
+			if (
+				this._libraryScrollContainer &&
+				this._libraryScrollHandler &&
+				typeof this._libraryScrollContainer.removeEventListener === 'function'
+			) {
+				this._libraryScrollContainer.removeEventListener(
+					'scroll',
+					this._libraryScrollHandler
+				);
+			}
+			this._libraryScrollContainer = null;
+			this._libraryScrollHandler = null;
+		},
 		restoreFirstScreenCache() {
 			try {
 				const cache = uni.getStorageSync(LIBRARY_FIRST_SCREEN_CACHE_KEY);
@@ -352,31 +436,23 @@ export default {
 				this.denseCardLoading = false;
 			}
 		},
-		checkReaderSetting() {
-			if (!window.localStorage.getItem("readerProps")) {
-				uni.showModal({
-					title: '提示',
-					content: '您尚未设置阅读器偏好，请前往设置',
-					showCancel: false,
-					success: function (res) {
-						if (res.confirm) {
-							uni.navigateTo({
-								url: '/pages/settings/readerSettings'
-							});
-						}
-					}
-				});
-			}
-		},
 		reloadComponents() {
 			if (this.$refs.bookshelfHorizontalRef) this.$refs.bookshelfHorizontalRef.loadBooks();
 			if (this.$refs.HorizontalTagsRef) this.$refs.HorizontalTagsRef.loadTags();
 		},
 		onPageScroll(ev) {
-			this.scrollTop = ev.scrollTop;
+			const scrollTop = ev && ev.scrollTop != null
+				? ev.scrollTop
+				: ev && ev.detail && ev.detail.scrollTop != null
+					? ev.detail.scrollTop
+					: this.getLibraryScrollTop();
+			this.syncLibraryScrollPosition(scrollTop);
 		},
 		mescrollInit(mescroll) {
 			this.mescroll = mescroll;
+			this.$nextTick(() => {
+				this.setupLibraryScrollTracking();
+			});
 		},
 		downCallback() {
 			this.refreshPage();
@@ -594,7 +670,7 @@ export default {
 		left: 0;
 		margin: 0 0rpx;
 		padding-right: 10rpx;
-		padding-top: calc(5rpx + var(--statusBarHeight));
+		padding-top: calc(5rpx + var(--loghome-safe-top, 0px));
 		padding-bottom: 5rpx;
 		background-color: rgb(255, 255, 255);
 		display: flex;

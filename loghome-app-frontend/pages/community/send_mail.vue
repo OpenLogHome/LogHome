@@ -4,7 +4,8 @@
 			<uni-drawer ref="receiver_select" :width="500">
 				<scroll-view class="drawer_inner" scroll-y="true" v-dark>
 					<button v-for="user in users" @click="getReceiver(user)" class="user_select_button">
-						<log-image class="user_avatar" :src="user.avatar_url"></log-image>
+						<user-avatar class="user_avatar" :src="user.avatar_url" :frame="user.avatar_frame"
+							:visual-scale="user.avatar_frame ? 1.2 : 1" />
 						<text style="margin-left:10rpx;">{{user.name}}</text>
 					</button>
 				</scroll-view>

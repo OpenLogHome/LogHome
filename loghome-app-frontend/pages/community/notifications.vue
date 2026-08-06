@@ -4,8 +4,8 @@
 		<view class="list">
 			<div class="users" v-for="item in notifications">
 				<navigator class="avators" :url="'../users/personalPage?id='+item.from_id">
-					<log-image :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+					<user-avatar class="message-avatar" :src="item.avatar_url" :frame="item.avatar_frame"
+						:visual-scale="item.avatar_frame ? 1.25 : 1" />
 				</navigator>
 				<navigator class="users" :url="item.router ? '../' + item.router : './'">
 					<div class="personInfo" style="display: flex; flex-direction: column; justify-content: center;">
@@ -144,10 +144,9 @@
 		.avators {
 			position: relative;
 			
-			img {
+			.message-avatar {
+				width: 100rpx;
 				height: 100rpx;
-				border: #cacaca 1rpx solid;
-				border-radius: 7rpx;
 				margin: 15rpx;
 			}
 		}

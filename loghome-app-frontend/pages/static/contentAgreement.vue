@@ -1,10 +1,10 @@
 <template>
-	<div style="background-color:#ffffff; padding:50rpx; font-size: 35rpx;">
+	<div style="background-color:var(--card-background); padding:50rpx; font-size: 35rpx;" v-dark>
 		<p style="text-indent:2em;">
 			原木社区为用户提供原创作品上传的平台，遵守中华人民共和国知识产权法律、法规和有约束力的规范性文件。<strong>支持并保护原创，杜绝并打击抄袭、非法转载、传播色情文字图片、虚假广告等行为。</strong>
 		</p>
 		<p style="text-indent:2em;">
-			<strong><br>
+			<strong><br />
 			</strong>
 		</p>
 		<p style="text-indent:2em;">
@@ -38,7 +38,7 @@
 			i.其它违法违规行为。
 		</p>
 		<p style="text-indent:2em;">
-			<br>
+			<br />
 		</p>
 		<p style="text-indent:2em;">
 			常见的违规情形：
@@ -62,7 +62,7 @@
 			f、其它不文明违规行为。
 		</p>
 		<p style="text-indent:2em;">
-			<br>
+			<br />
 		</p>
 		<p style="text-indent:2em;">
 			权益保护与处罚：

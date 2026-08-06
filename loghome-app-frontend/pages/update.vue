@@ -1,5 +1,5 @@
 <template>
-  <view class="update-container">
+  <view class="update-container" v-dark>
     <image :src="updateBg" mode="aspectFit"></image>
     <view class="update-card" v-if="isLoaded">
       
@@ -275,14 +275,21 @@ export default {
 
 .update-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 20rpx;
   margin-top: 40rpx;
   
   button {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    padding: 0 20rpx;
+    box-sizing: border-box;
     height: 80rpx;
     border-radius: 40rpx;
     font-size: 30rpx;
     font-weight: bold;
+    white-space: nowrap;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -302,6 +309,26 @@ export default {
   .btn-cancel {
     background-color: #f5f5f5;
     color: #666;
+  }
+}
+
+// 窄屏时改为两列，次要的取消操作独占一行
+@media screen and (max-width: 360px) {
+  .update-actions {
+    button {
+      flex-basis: calc(50% - 10rpx);
+    }
+
+    .btn-cancel {
+      flex-basis: 100%;
+    }
+  }
+}
+
+// 极窄屏下纵向排列，避免按钮文字被挤压
+@media screen and (max-width: 280px) {
+  .update-actions button {
+    flex-basis: 100%;
   }
 }
 
@@ -333,42 +360,44 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-  .update-container {
-    background-color: #121212;
-  }
-  
-  .update-card {
-    background-color: #1e1e1e;
-    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.3);
-  }
-  
-  .update-title, .version-number {
-    color: #eee;
-  }
-  
-  .version-label, .progress-text, .update-desc, .loading-text {
-    color: #aaa;
-  }
-  
-  .divider {
-    background-color: #333;
-  }
-  
-  .btn-secondary {
-    background-color: #2c2c2c;
-    border-color: #1B4B88;
-  }
-  
-  .btn-cancel {
-    background-color: #333;
-    color: #ccc;
-  }
-  
-  .loading-spinner {
-    border: 4rpx solid #333;
-    border-top: 4rpx solid #1B4B88;
-  }
+// 深色模式仅跟随项目根节点的 dark-mode 类
+.update-container.dark-mode {
+  background-color: #121212;
 }
-</style> 
+
+.update-container.dark-mode .update-card {
+  background-color: #1e1e1e;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.3);
+}
+
+.update-container.dark-mode .update-title,
+.update-container.dark-mode .version-number {
+  color: #eee;
+}
+
+.update-container.dark-mode .version-label,
+.update-container.dark-mode .progress-text,
+.update-container.dark-mode .update-desc,
+.update-container.dark-mode .loading-text {
+  color: #aaa;
+}
+
+.update-container.dark-mode .divider {
+  background-color: #333;
+}
+
+.update-container.dark-mode .btn-secondary {
+  background-color: #2c2c2c;
+  border-color: #1B4B88;
+}
+
+.update-container.dark-mode .btn-cancel {
+  background-color: #333;
+  color: #ccc;
+}
+
+.update-container.dark-mode .loading-spinner {
+  border: 4rpx solid #333;
+  border-top: 4rpx solid #1B4B88;
+}
+</style>

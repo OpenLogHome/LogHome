@@ -1,6 +1,7 @@
 <script>
 import axios from 'axios'
 import h5PageAnimation from './components/h5-page-animation/';
+import { getReaderMode } from './common/reader-mode.js';
 import '@/common/theme.scss';
 export default {
 	mixins: [h5PageAnimation],
@@ -12,11 +13,15 @@ export default {
 	},
 	onLaunch: function () {
 		console.log('App Launch');
+		getReaderMode();
 		// #ifdef H5
 		this.initTheme();
 		this.setupTabbarClickEffects();
 		// #endif
 		this.globalLoadingDom = document.getElementById("global-loading-box");
+		if (this.globalLoadingDom) {
+			this.globalLoadingDom.style.visibility = "hidden";
+		}
 		// 覆写uni.showLoading方法
 		uni.showLoading = (options) => {
 			this.globalLoadingDom.style.visibility = "visible";
@@ -211,52 +216,42 @@ export default {
 		},
 		// 初始化主题模式
 		initTheme() {
-			// 获取保存的主题模式
 			const savedTheme = window.localStorage.getItem('themeMode');
+			const themeMode = savedTheme === 'dark' ? 'dark' : 'light';
+			this.applyTheme(themeMode);
 
-			// 检查系统是否处于深色模式
-			const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+			// 将缺失或旧的 system 值迁移为明确的项目主题。
+			if (savedTheme !== themeMode) {
+				window.localStorage.setItem('themeMode', themeMode);
+			}
+		},
+		applyTheme(themeMode, persist = false) {
+			const normalizedTheme = themeMode === 'dark' ? 'dark' : 'light';
+			const isDarkMode = normalizedTheme === 'dark';
+			const nativeThemeBackground = isDarkMode ? '#252525' : '#ffffff';
 
-			// 优先使用保存的主题模式，如果没有保存过则使用系统主题模式
-			if (savedTheme === 'dark' || (savedTheme !== 'light' && prefersDarkMode)) {
+			if (isDarkMode) {
 				document.documentElement.classList.add('dark-mode');
-				this.$store.state.isDarkMode = true;
-				this.updatePageState();
 			} else {
 				document.documentElement.classList.remove('dark-mode');
-				this.$store.state.isDarkMode = false;
-				this.updatePageState();
 			}
 
-			// 监听系统主题变化，如果用户没有手动设置过主题模式
-			if (!savedTheme) {
-				window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-					if (e.matches) {
-						document.documentElement.classList.add('dark-mode');
-						this.$store.state.isDarkMode = true;
-						this.updatePageState();
-					} else {
-						document.documentElement.classList.remove('dark-mode');
-						this.$store.state.isDarkMode = false;
-						this.updatePageState();
-					}
+			this.$store.commit('updateThemeMode', normalizedTheme);
+			this.$store.commit('updateDarkMode', isDarkMode);
+			if (persist) {
+				window.localStorage.setItem('themeMode', normalizedTheme);
+			}
+			if (window.jsBridge && typeof window.jsBridge.rememberThemeBackground === 'function') {
+				window.jsBridge.ready(() => {
+					window.jsBridge.rememberThemeBackground(nativeThemeBackground).catch(() => {});
 				});
 			}
+			this.updatePageState();
 		},
 		// 切换主题模式
 		toggleTheme() {
-			const isDarkMode = document.documentElement.classList.contains('dark-mode');
-			if (isDarkMode) {
-				document.documentElement.classList.remove('dark-mode');
-				window.localStorage.setItem('themeMode', 'light');
-				this.$store.state.isDarkMode = false;
-				this.updatePageState();
-			} else {
-				document.documentElement.classList.add('dark-mode');
-				window.localStorage.setItem('themeMode', 'dark');
-				this.$store.state.isDarkMode = true;
-				this.updatePageState();
-			}
+			const nextTheme = this.$store.state.isDarkMode ? 'light' : 'dark';
+			this.applyTheme(nextTheme, true);
 		},
 		clipboardCheckInit() {
 			console.log(window.jsBridge)
@@ -580,6 +575,50 @@ export default {
 
 <style lang="scss">
 
+html {
+	--loghome-native-safe-top: 0px;
+	--loghome-native-safe-bottom: 0px;
+	--loghome-safe-top: max(
+		env(safe-area-inset-top, 0px),
+		var(--loghome-native-safe-top)
+	);
+	--loghome-safe-bottom: max(
+		env(safe-area-inset-bottom, 0px),
+		var(--loghome-native-safe-bottom)
+	);
+}
+
+/*
+ * Android edge-to-edge compatibility. Modern WebViews populate env(safe-area-*),
+ * while the native variables keep older WebViews and bundled engines correct.
+ */
+html.loghome-edge-to-edge {
+	uni-page-head .uni-page-head {
+		height: calc(44px + var(--loghome-safe-top)) !important;
+		padding-top: calc(7px + var(--loghome-safe-top)) !important;
+	}
+
+	uni-page-head .uni-page-head ~ .uni-placeholder {
+		height: calc(44px + var(--loghome-safe-top)) !important;
+	}
+
+	uni-page-head[uni-page-head-type="default"] ~ uni-page-wrapper {
+		height: calc(100% - 44px - var(--loghome-safe-top)) !important;
+	}
+}
+
+.loghome-safe-top {
+	padding-top: var(--loghome-safe-top) !important;
+}
+
+.loghome-safe-bottom {
+	padding-bottom: var(--loghome-safe-bottom) !important;
+}
+
+.loghome-fixed-safe-top {
+	top: var(--loghome-safe-top) !important;
+}
+
 * {
 	font-family: "Noto Sans SC", "思源黑体 CN", "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
 	-webkit-user-drag: none;
@@ -671,8 +710,13 @@ uni-page2 {
 }
 
 .uni-tabbar {
-	padding-bottom: 5px !important;
+	/* Keep controls above the gesture indicator while the background remains edge-to-edge. */
+	padding-bottom: max(5px, var(--loghome-safe-bottom, 0px)) !important;
 	// backdrop-filter: blur(100px) !important;
+}
+
+html.loghome-edge-to-edge uni-tabbar .uni-tabbar ~ .uni-placeholder {
+	margin-bottom: var(--loghome-safe-bottom, 0px) !important;
 }
 
 .uni-page-head {
@@ -732,6 +776,7 @@ uni-modal {
 	width: 200rpx;
 	padding-bottom: 10rpx;
 	border-radius: 40rpx;
+	pointer-events: none;
 	transform: translate(-50%, -50%) scale(0.8);
 
 	.title {
@@ -746,6 +791,7 @@ uni-modal {
 
 #global-loading-box.show {
 	opacity: 1;
+	pointer-events: auto;
 	transform: translate(-50%, -50%) scale(1);
 }
 </style>

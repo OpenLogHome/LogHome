@@ -8,6 +8,7 @@ let moment = require('moment');
 const SECRET = require('../SECRET.js').SECRET;
 let message = require('../bin/message.js');
 let achievements = require('../bin/achievements.js');
+let avatarFrames = require('../bin/avatarFrames.js');
 
 // 引入子路由
 const circlesRouter = require('./community/circles.js');
@@ -62,6 +63,9 @@ router.get('/get_follows_of', async function (req, res) {
 			'SELECT f.`follow_id`,u.`name`,u.`avatar_url`,u.`user_group`,u.motto FROM user_follow f,users u WHERE f.follow_id = u.`user_id` AND f.`user_id` = ?',
 			[req.query.id],
 		);
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'follow_id', targetField: 'avatar_frame' },
+		]);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
@@ -74,6 +78,9 @@ router.get('/get_fans_of', async function (req, res) {
 			'SELECT f.`user_id`,u.`name`,u.`avatar_url`,u.`user_group`,u.motto FROM user_follow f,users u WHERE f.user_id = u.`user_id` AND f.`follow_id` = ?',
 			[req.query.id],
 		);
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
+		]);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
@@ -100,6 +107,9 @@ router.get('/get_friends_of', async function (req, res) {
 			}
 		}
 		friends = [...map.values()];
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'id', targetField: 'avatar_frame' },
+		]);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
@@ -184,6 +194,9 @@ router.post('/comment_on_novel', auth, async (req, res) => {
 			`SELECT * FROM novel_comments n,users u WHERE n.user_id = u.user_id AND n.essay_comment_id = ?`,
 			[results.insertId],
 		);
+		await avatarFrames.decorateRows(comment, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
+		]);
 		await achievements.recordMetricProgress(user.user_id, 'comment_count', 1, {
 			reason: '书籍评论',
 			suppressNotification: true,
@@ -346,6 +359,9 @@ router.get('/novel_commonts_all', async function (req, res) {
                 item.media_urls = [];
             }
 		}
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
+		]);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);
@@ -366,6 +382,9 @@ router.get('/novel_comment_from_comment_id', async function (req, res) {
 							AND n.deleted = 0`,
 			[req.query.comment_id],
 		);
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
+		]);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);
@@ -512,6 +531,9 @@ router.get('/novel_commonts_all_fast', async function (req, res) {
 			params,
 		);
 		results = JSON.parse(JSON.stringify(results));
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
+		]);
 
 		const rootCommentIds = results.map((item) => item.essay_comment_id);
 		let replyRows = [];
@@ -938,6 +960,9 @@ router.get('/chat_friends', auth, async function (req, res) {
 			user_id, 
 			user_id, 
 			user_id, user_id
+		]);
+		await avatarFrames.decorateRows(friends, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
 		]);
 		
 		res.json(friends);

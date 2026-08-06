@@ -36,16 +36,16 @@ class TtsRequestRegistry {
 
 class TtsDataSourceFactory(
     private val registry: TtsRequestRegistry,
-    private val systemTtsEngine: SystemTtsEngine,
+    private val ttsEngine: TtsEngineRouter,
 ) : DataSource.Factory {
     override fun createDataSource(): DataSource {
-        return TtsDataSource(registry, systemTtsEngine)
+        return TtsDataSource(registry, ttsEngine)
     }
 }
 
 class TtsDataSource(
     private val registry: TtsRequestRegistry,
-    private val systemTtsEngine: SystemTtsEngine,
+    private val ttsEngine: TtsEngineRouter,
 ) : BaseDataSource(true) {
     private var currentUri: android.net.Uri? = null
     private var randomAccessFile: RandomAccessFile? = null
@@ -64,7 +64,7 @@ class TtsDataSource(
             TTS_TAG,
             "open: uri=$currentUri, articleId=${request.articleId}, cacheFile=${request.cacheFile.name}",
         )
-        ensureCachedAudio(request)
+        ensureCachedAudio(request, ttsEngine)
 
         val file = RandomAccessFile(request.cacheFile, "r")
         val fileLength = file.length()
@@ -115,51 +115,51 @@ class TtsDataSource(
         }
     }
 
-    @Throws(IOException::class)
-    private fun ensureCachedAudio(request: TtsRequest) {
-        if (request.cacheFile.exists()) {
-            Log.d(
-                TTS_TAG,
-                "cache hit: file=${request.cacheFile.name}, size=${request.cacheFile.length()}",
-            )
-            return
-        }
+    companion object {
+        private val cacheLocks = ConcurrentHashMap<String, Any>()
 
-        val lock = cacheLocks.getOrPut(request.cacheFile.absolutePath) { Any() }
-        synchronized(lock) {
+        @Throws(IOException::class)
+        internal fun ensureCachedAudio(request: TtsRequest, ttsEngine: TtsEngineRouter) {
             if (request.cacheFile.exists()) {
                 Log.d(
                     TTS_TAG,
-                    "cache filled by another request: file=${request.cacheFile.name}, size=${request.cacheFile.length()}",
+                    "cache hit: file=${request.cacheFile.name}, size=${request.cacheFile.length()}",
                 )
                 return
             }
 
-            request.cacheFile.parentFile?.mkdirs()
-            Log.d(
-                TTS_TAG,
-                "cache miss: synthesizing with system TTS articleId=${request.articleId}, voice=${request.voice}, textLength=${request.text.length}",
-            )
+            val lock = cacheLocks.getOrPut(request.cacheFile.absolutePath) { Any() }
+            synchronized(lock) {
+                if (request.cacheFile.exists()) {
+                    Log.d(
+                        TTS_TAG,
+                        "cache filled by another request: file=${request.cacheFile.name}, size=${request.cacheFile.length()}",
+                    )
+                    return
+                }
 
-            try {
-                systemTtsEngine.synthesizeToFile(
-                    text = request.text,
-                    requestedVoiceId = request.voice,
-                    outputFile = request.cacheFile,
-                )
+                request.cacheFile.parentFile?.mkdirs()
                 Log.d(
                     TTS_TAG,
-                    "system TTS cached: file=${request.cacheFile.name}, size=${request.cacheFile.length()}",
+                    "cache miss: synthesizing articleId=${request.articleId}, voice=${request.voice}, textLength=${request.text.length}",
                 )
-            } catch (error: Throwable) {
-                request.cacheFile.delete()
-                Log.e(TTS_TAG, "system TTS synthesis failed", error)
-                throw IOException("System TTS synthesis failed", error)
+
+                try {
+                    ttsEngine.synthesizeToFile(
+                        text = request.text,
+                        requestedVoiceId = request.voice,
+                        outputFile = request.cacheFile,
+                    )
+                    Log.d(
+                        TTS_TAG,
+                        "TTS audio cached: file=${request.cacheFile.name}, size=${request.cacheFile.length()}",
+                    )
+                } catch (error: Throwable) {
+                    request.cacheFile.delete()
+                    Log.e(TTS_TAG, "TTS synthesis failed", error)
+                    throw IOException("TTS synthesis failed", error)
+                }
             }
         }
-    }
-
-    companion object {
-        private val cacheLocks = ConcurrentHashMap<String, Any>()
     }
 }

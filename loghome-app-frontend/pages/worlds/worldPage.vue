@@ -1,11 +1,11 @@
 <template>
-	<div class="outer" :style="{'--statusBarHeight': 0 + 'px'}">
+	<div class="outer" v-dark>
 		<div class="gift_box" id="gift_box">
 			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
 		</div>
 		<div class="top">
-			<zetank-backBar textcolor="#000" :showLeft="true" :showHome="true" :showTitle="false"
+			<zetank-backBar :textcolor="isDarkMode ? '#ffffff' : '#000000'" :showLeft="true" :showHome="true" :showTitle="false"
 				navTitle='标题'></zetank-backBar>
 			<div class="title">
 				{{world.name}}
@@ -15,11 +15,11 @@
 					<log-image :src="world.avatar_url" alt="" class="auther_avatar"
 						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 					<div class="auther_name">{{world.user_name}}<uni-icons type="forward" size="18"
-							style="color:#666666"></uni-icons>
+							:color="isDarkMode ? '#b8b8b8' : '#666666'"></uni-icons>
 					</div>
 				</view>
 				<div class="recentUpdate"
-					style="font-size: 28rpx; height:50rpx; line-height: 50rpx; margin:10rpx;color: #666666;">
+					style="font-size: 28rpx; height:50rpx; line-height: 50rpx; margin:10rpx;">
 					最近更新：{{utc2beijing(world.update_time)}}
 				</div>
 			</div>
@@ -28,21 +28,21 @@
 			</div>
 			<div class="buttons">
 				<div class="button" @click="nice()">
-					<img v-if="niceStatus" src="../../static/icons/icon_niced.png" mode="widthFix">
-					<img v-else src="../../static/icons/icon_nice.png" mode="widthFix">
+					<img v-if="niceStatus" src="../../static/icons/icon_niced.png" mode="widthFix" />
+					<img v-else src="../../static/icons/icon_nice.png" mode="widthFix" />
 					<div class="text">{{nice_amount}} 赞</div>
 				</div>
 				<div class="button" @click="isInBookcase?removeFromBookcase():addToBookcase()">
-					<img v-if="isInBookcase" src="../../static/icons/icon_add.png" mode="widthFix">
-					<img v-else src="../../static/icons/icon_add.png" mode="widthFix">
+					<img v-if="isInBookcase" src="../../static/icons/icon_add.png" mode="widthFix" />
+					<img v-else src="../../static/icons/icon_add.png" mode="widthFix" />
 					<div class="text">{{isInBookcase?'已收藏':'收藏'}}</div>
 				</div>
 				<div class="button" @click="tip()">
-					<img src="../../static/icons/icon_sponsored.png" mode="widthFix">
+					<img src="../../static/icons/icon_sponsored.png" mode="widthFix" />
 					<div class="text">打赏</div>
 				</div>
 				<div class="button" @click="shareBook()">
-					<img src="../../static/icons/icon_share.png" mode="widthFix">
+					<img src="../../static/icons/icon_share.png" mode="widthFix" />
 					<div class="text">分享</div>
 				</div>
 			</div>
@@ -61,20 +61,20 @@
 						<el-collapse style="margin-top: 20rpx;" :accordion="true" :value="''"
 							v-show="worldOutlines.length != 0" class="collapse2list">
 							<el-collapse-item v-for="outline in worldOutlines" name="1" :key="outline.article_id" 
-								:title="outline.title" :name="outline.article_id" :disabled="true" style="color: black !important;" @click.native="gotoArticle(outline.article_id)">
+								:title="outline.title" :name="outline.article_id" :disabled="true" @click.native="gotoArticle(outline.article_id)">
 							</el-collapse-item>
 						</el-collapse>
 						<div class="nothing" v-show="worldOutlines.length == 0"
 							style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
 							<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
-							<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
+							<div class="emptyText" style="font-size: 25rpx;">这是一片什么都没有的荒原</div>
 						</div>
 						<div class="title" style="margin-top: 30rpx; display: flex; justify-content: space-between; align-items: center;">
 							<div style="display: flex; align-items: center;">
 								<div class="line"></div>
 								<span>世界词条</span>
 							</div>
-							<div @click="gotoRelations()" style="font-size: 26rpx; color: #6e3b24; margin-right: 20rpx; font-weight: bold;">
+							<div class="relationLink" @click="gotoRelations()" style="font-size: 26rpx; margin-right: 20rpx; font-weight: bold;">
 								查看关系网
 							</div>
 						</div>
@@ -85,7 +85,7 @@
 						<div class="nothing" v-show="worldVoabs.length == 0"
 							style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
 							<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
-							<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
+							<div class="emptyText" style="font-size: 25rpx;">这是一片什么都没有的荒原</div>
 						</div>
 					</div>
 				</el-tab-pane>
@@ -114,7 +114,7 @@
 					<div class="nothing" v-show="assoNovels.length == 0"
 						style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 30rpx 0;">
 						<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
-						<div style="color:#777777">这是一片什么都没有的荒原</div>
+						<div class="emptyText">这是一片什么都没有的荒原</div>
 					</div>
 				</el-tab-pane>
 			</el-tabs>
@@ -134,7 +134,8 @@
 				<div class="fans_rank">
 					<div class="second" v-if="fanInfo[1]">
 						<div class="rank-container">
-							<log-image :src="fanInfo[1].avatar_url" alt="" class="avatar" />
+							<user-avatar :src="fanInfo[1].avatar_url" :frame="fanInfo[1].avatar_frame" class="avatar"
+								:visual-scale="fanInfo[1].avatar_frame ? 1.15 : 1" />
 							<img src="../../static/rank/NO2.png" alt="" class="rank" />
 							<div class="crown-glow silver"></div>
 							<div class="description">
@@ -146,7 +147,8 @@
 					</div>
 					<div class="first" v-if="fanInfo[0]">
 						<div class="rank-container">
-							<log-image :src="fanInfo[0].avatar_url" alt="" class="avatar" />
+							<user-avatar :src="fanInfo[0].avatar_url" :frame="fanInfo[0].avatar_frame" class="avatar"
+								:visual-scale="fanInfo[0].avatar_frame ? 1.15 : 1" />
 							<img src="../../static/rank/NO1.png" alt="" class="rank" />
 							<div class="crown-glow gold"></div>
 							<div class="description">
@@ -157,7 +159,8 @@
 					</div>
 					<div class="third" v-if="fanInfo[2]">
 						<div class="rank-container">
-							<log-image :src="fanInfo[2].avatar_url" alt="" class="avatar" />
+							<user-avatar :src="fanInfo[2].avatar_url" :frame="fanInfo[2].avatar_frame" class="avatar"
+								:visual-scale="fanInfo[2].avatar_frame ? 1.15 : 1" />
 							<img src="../../static/rank/NO3.png" alt="" class="rank" />
 							<div class="crown-glow bronze"></div>
 							<div class="description">
@@ -194,7 +197,7 @@
 				<div class="nothing" v-show="commentInfo.length == 0"
 					style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 30rpx 0;">
 					<img src="../../static/nothing.png" alt="" style="width: 10vw; margin: 25rpx 0;" />
-					<div style="color:#777777; font-size: 25rpx;">还没有人评论哦</div>
+					<div class="emptyText" style="font-size: 25rpx;">还没有人评论哦</div>
 				</div>
 				<view class="l-comment-list" v-for="(item, index) in commentInfo" :key="index">
 					<view class="l-comment-list-header">
@@ -230,12 +233,14 @@
 	import tippingBar from "../../components/tipping/tippingBar.vue"
 	import nothing from '../../components/nothing.vue'
 	import TaskRewardModal from "../../components/TaskRewardModal.vue"
+	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default {
 		components: {
 			tippingBar,
 			nothing,
 			TaskRewardModal
 		},
+		mixins: [darkModeMixin],
 		data() {
 			return {
 				options: {},
@@ -416,7 +421,7 @@
 			},
 			gotoArticle(uid) {
 				const readerProps = window.localStorage.getItem("readerProps");
-				const isPageReader = readerProps === "page";
+				const isPageReader = readerProps !== "text";
 				const url = isPageReader
 					? `../readers/newReader/article?id=${uid}&novelId=${this.world.novel_id}`
 					: `../readers/article_rich?id=${uid}`;
@@ -893,12 +898,22 @@
 
 <style scoped lang="scss">
 	.outer {
+		min-height: 100vh;
+		background-color: var(--background-color-secondary);
+		color: var(--text-color-primary);
+
 		.top {
 			background-color: white;
 			border-bottom: 1rpx solid #e1e1e1;
 			padding: 10rpx 40rpx;
 			background-image: linear-gradient(to top, #ffffff, #fff2d0);
-			padding-top: calc(10rpx + var(--statusBarHeight));
+			padding-top: calc(10rpx + var(--loghome-safe-top, 0px));
+
+			.dark-mode & {
+				background-color: var(--card-background);
+				border-bottom-color: var(--border-color);
+				background-image: linear-gradient(to top, var(--card-background), #302921);
+			}
 
 			.title {
 				margin-top: 140rpx;
@@ -908,6 +923,10 @@
 				-webkit-background-clip: text;
 				color: transparent;
 				letter-spacing: -1px;
+
+				.dark-mode & {
+					background-image: linear-gradient(to right, #f2e8dc, var(--brand-text-color));
+				}
 			}
 
 			.info {
@@ -931,14 +950,18 @@
 
 				.author .auther_name {
 					font-size: 30rpx;
-					color: #666666;
+					color: var(--text-color-regular);
 					margin-left: 60rpx;
+				}
+
+				.recentUpdate {
+					color: var(--text-color-regular);
 				}
 			}
 
 			.desc {
 				font-size: 26rpx;
-				color: #333333;
+				color: var(--text-color-primary);
 				margin: 0 0 10rpx 0;
 			}
 
@@ -954,6 +977,11 @@
 				margin: 15rpx 0;
 				transition: all .3s;
 				font-size: 26rpx;
+
+				.dark-mode & {
+					border-color: var(--border-color);
+					color: var(--text-color-primary);
+				}
 			}
 
 			.enterButton:active {
@@ -967,6 +995,11 @@
 			margin-top: 15rpx;
 			padding: 15rpx 40rpx;
 			border-top: 1rpx solid #e1e1e1;
+
+			.dark-mode & {
+				background-color: var(--card-background);
+				border-top-color: var(--border-color);
+			}
 
 			.paneLabel {
 				font-size: 30rpx;
@@ -986,7 +1019,7 @@
 					span {
 						font-size: 32rpx;
 						margin-left: 13rpx;
-						color: #4f2b2a;
+						color: var(--accent-text-color);
 						font-weight: bold;
 					}
 				}
@@ -999,6 +1032,10 @@
 				background-color: rgb(255, 255, 255);
 				border-radius: 10rpx;
 				margin-left: -10rpx;
+
+				.dark-mode & {
+					background-color: var(--background-color-tertiary);
+				}
 			
 			
 				img {
@@ -1021,7 +1058,7 @@
 						font-weight: bold;
 						-webkit-box-orient: vertical;
 						-webkit-line-clamp: 1;
-						color: rgb(45, 45, 45);
+						color: var(--text-color-primary);
 						margin: 5rpx;
 					}
 
@@ -1043,7 +1080,7 @@
 						.auther_name {
 							font-size: 25rpx;
 							// font-weight: bold;
-							color: rgb(45, 45, 45);
+							color: var(--text-color-regular);
 							overflow: hidden;
 							margin-left: 45rpx;
 							display: -webkit-box;
@@ -1054,7 +1091,7 @@
 
 					.description {
 						font-size: 25rpx;
-						color: rgb(142, 130, 109);
+						color: var(--text-color-secondary);
 						margin: 5rpx 0;
 						overflow: hidden;
 						display: -webkit-box;
@@ -1088,11 +1125,23 @@
 			width: 60rpx;
 			height: 60rpx;
 			margin-bottom: 10rpx;
+
+			.dark-mode & {
+				filter: brightness(1.35) saturate(0.8);
+			}
 		}
 
 		.button .text {
 			font-size: 24rpx;
-			color: #666666;
+			color: var(--text-color-regular);
+		}
+
+		.emptyText {
+			color: var(--text-color-secondary);
+		}
+
+		.relationLink {
+			color: var(--accent-text-color);
 		}
 
 		.l-h3 {
@@ -1105,6 +1154,7 @@
 
 		.l-h3-title {
 			font: bold 36rpx normal;
+			color: var(--text-color-primary);
 		}
 
 		.l-h3-more {
@@ -1126,7 +1176,7 @@
 
 		.l-comment-list {
 			padding: 20rpx 0;
-			border-bottom: 1rpx solid #eeeeee;
+			border-bottom: 1rpx solid var(--border-color);
 		}
 
 		.l-comment-list-header {
@@ -1144,19 +1194,19 @@
 
 		.l-comment-list-header-name {
 			font-size: 28rpx;
-			color: #333333;
+			color: var(--text-color-primary);
 			font-weight: bold;
 			flex: 1;
 		}
 
 		.l-comment-list-header-time {
 			font-size: 24rpx;
-			color: #999999;
+			color: var(--text-color-secondary);
 		}
 
 		.l-comment-list-body {
 			font-size: 28rpx;
-			color: #666666;
+			color: var(--text-color-regular);
 			line-height: 1.6;
 		}
 
@@ -1326,6 +1376,10 @@
 
 				div.description {
 					background-color: rgba(255, 245, 214, 0.7);
+
+					.dark-mode & {
+						background-color: rgba(255, 193, 77, 0.12);
+					}
 				}
 
 				p.value {
@@ -1339,6 +1393,10 @@
 
 				div.description {
 					background-color: rgba(255, 255, 255, 0.6);
+
+					.dark-mode & {
+						background-color: var(--background-color-tertiary);
+					}
 				}
 			}
 		}
@@ -1362,6 +1420,10 @@
 				padding: 8rpx 0;
 				border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
 				position: relative;
+
+				.dark-mode & {
+					border-bottom-color: var(--border-color);
+				}
 
 				&:last-child {
 					border-bottom: none;
@@ -1447,6 +1509,45 @@
 			background-color: white;
 			width: 100vw;
 			box-shadow: -10px 0px 10px rgba(113, 52, 24, .3);
+
+			.dark-mode & {
+				background-color: var(--card-background);
+				box-shadow: -10px 0px 10px rgba(0, 0, 0, .35);
+			}
 		}
+	}
+
+	.outer.dark-mode ::v-deep .el-tabs__nav-wrap::after {
+		background-color: var(--border-color);
+	}
+
+	.outer.dark-mode ::v-deep .el-tabs__item {
+		color: var(--text-color-secondary);
+	}
+
+	.outer.dark-mode ::v-deep .el-tabs__item.is-active {
+		color: var(--main-color);
+	}
+
+	.outer.dark-mode ::v-deep .el-collapse {
+		border-top-color: var(--border-color);
+		border-bottom-color: var(--border-color);
+	}
+
+	.outer.dark-mode ::v-deep .el-collapse-item__header {
+		background-color: var(--card-background);
+		border-bottom-color: var(--border-color);
+		color: var(--text-color-primary);
+	}
+
+	.outer.dark-mode ::v-deep .el-collapse-item__wrap {
+		background-color: var(--card-background);
+		border-bottom-color: var(--border-color);
+	}
+
+	.outer.dark-mode ::v-deep .worldContent .el-tag {
+		background-color: rgba(225, 163, 143, 0.12);
+		border-color: rgba(225, 163, 143, 0.28);
+		color: var(--brand-text-color);
 	}
 </style>

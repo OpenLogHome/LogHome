@@ -21,7 +21,7 @@
 			</div> -->
 
 			<div class="message">
-				作者没跑路！只是鸽了！<br>
+				作者没跑路！只是鸽了！<br />
 				<!-- 当前收藏人数：<span id="subscribers">1</span> -->
 			</div>
 

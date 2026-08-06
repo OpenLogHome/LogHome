@@ -1,4 +1,5 @@
 const { runReaderNovelChat } = require('./readerNovelAiChat');
+const { consumeRedstone, sendBillingError } = require('./redstoneBilling');
 
 const STREAM_CHUNK_SIZE = 24;
 const STREAM_CHUNK_DELAY_MS = 8;
@@ -25,7 +26,7 @@ function normalizeEventCursor(value) {
 }
 
 function normalizeRetrieverMode(value) {
-	return String(value || '').trim() === 'fast' ? 'fast' : 'deep';
+	return String(value || '').trim() === 'deep' ? 'deep' : 'fast';
 }
 
 function buildTaskInputSignature(novelId, activeNovelId, retrieverMode, messages) {
@@ -286,7 +287,7 @@ function ensureTaskStarted(task) {
 	});
 }
 
-function ensureTask({ taskId, novelId, activeNovelId, retrieverMode, sessionId, messageId, messages }) {
+async function ensureTask({ taskId, userId, novelId, activeNovelId, retrieverMode, sessionId, messageId, messages }) {
 	const normalizedTaskId = normalizeTaskId(taskId, [novelId, sessionId, messageId]);
 	const normalizedActiveNovelId = Number(activeNovelId || novelId || 0);
 	const normalizedRetrieverMode = normalizeRetrieverMode(retrieverMode);
@@ -294,6 +295,12 @@ function ensureTask({ taskId, novelId, activeNovelId, retrieverMode, sessionId, 
 	const existingTask = taskStore.get(normalizedTaskId);
 
 	if (existingTask) {
+		if (Number(existingTask.userId || 0) !== Number(userId || 0)) {
+			const accessError = new Error('任务标识与当前用户不匹配');
+			accessError.code = 'TASK_ACCESS_CONFLICT';
+			throw accessError;
+		}
+		if (existingTask.billingPromise) await existingTask.billingPromise;
 		if (existingTask.inputSignature !== inputSignature) {
 			const conflictError = new Error('任务标识与请求内容不匹配');
 			conflictError.code = 'TASK_INPUT_CONFLICT';
@@ -316,7 +323,22 @@ function ensureTask({ taskId, novelId, activeNovelId, retrieverMode, sessionId, 
 		messages,
 		inputSignature,
 	});
+	task.userId = Number(userId);
 	taskStore.set(normalizedTaskId, task);
+	task.billingPromise = consumeRedstone({
+		userId,
+		amount: normalizedRetrieverMode === 'deep' ? 2 : 1,
+		feature: normalizedRetrieverMode === 'deep' ? 'reader_log_girl_deep' : 'reader_log_girl_fast',
+		requestId: normalizedTaskId,
+		description: `问问原木娘${normalizedRetrieverMode === 'deep' ? '深度思考' : '普通问答'}消耗${normalizedRetrieverMode === 'deep' ? 2 : 1}红石`,
+	});
+	try {
+		await task.billingPromise;
+		task.billingPromise = null;
+	} catch (error) {
+		if (taskStore.get(normalizedTaskId) === task) taskStore.delete(normalizedTaskId);
+		throw error;
+	}
 	ensureTaskStarted(task);
 	return {
 		task,
@@ -349,8 +371,9 @@ async function handleReaderNovelChatTaskStream(req, res) {
 	}
 
 	try {
-		const ensuredTask = ensureTask({
+		const ensuredTask = await ensureTask({
 			taskId,
+			userId: Number(req.user.user_id),
 			novelId,
 			activeNovelId,
 			retrieverMode,
@@ -402,7 +425,8 @@ async function handleReaderNovelChatTaskStream(req, res) {
 		}
 	} catch (error) {
 		console.log(error);
-		if (error && error.code === 'TASK_INPUT_CONFLICT') {
+		if (sendBillingError(res, error)) return;
+		if (error && (error.code === 'TASK_INPUT_CONFLICT' || error.code === 'TASK_ACCESS_CONFLICT')) {
 			return res.status(409).json({ msg: error.message || '任务冲突' });
 		}
 		return res.status(500).json({ msg: '服务器错误' });

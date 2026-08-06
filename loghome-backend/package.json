@@ -41,7 +41,13 @@
 		"lint:strict": "eslint .",
 		"dev": "nodemon main.js",
 		"start": "node main.js",
-		"migrate:articles-writer-updated-at": "node scripts/add_articles_writer_updated_at.js"
+		"migrate:articles-writer-updated-at": "node scripts/add_articles_writer_updated_at.js",
+		"migrate:writer-background-skins": "node sql/execute_writer_background_skins_table.js",
+		"migrate:membership-subscriptions": "node sql/execute_membership_subscriptions_table.js",
+		"migrate:avatar-frames": "node sql/execute_avatar_frames_tables.js",
+		"migrate:redstone": "node sql/execute_redstone_system.js",
+		"migrate:novel-writing-activity": "node sql/execute_novel_writing_activity_tables.js",
+		"membership:create-codes": "node scripts/create_membership_redeem_codes.js"
 	},
 	"repository": {
 		"type": "git",

@@ -1,10 +1,21 @@
 console.log('JS injection successful');
 
+function withCurrentThemeBackground(payload) {
+    const enrichedPayload = Object.assign({}, payload || {});
+    try {
+        enrichedPayload.themeBackgroundColor = window.localStorage.getItem('themeMode') === 'dark'
+            ? '#252525'
+            : '#ffffff';
+    } catch (error) {}
+    return enrichedPayload;
+}
+
 // 示例：向 Flutter 发送消息
 // window.flutter_inappwebview.callHandler('Flutter', 'Hello from JS');
 
 window.jsBridge = {
     inApp: true,
+    nativeRouterAvailable: true,
     appVersion: '250',
     statusBarHeight: 0, // 将被Flutter注入实际值
     ready(callback) {
@@ -20,6 +31,14 @@ window.jsBridge = {
      */
     setSystemUIStyle(backgroundColor) {
         return window.flutter_inappwebview.callHandler('setStatusBarStyle', backgroundColor);
+    },
+
+    /**
+     * 记录应用主题背景色，供新原生页面的首帧使用。
+     * 此颜色独立于状态栏颜色，避免浅色页面的深色导航栏污染页面背景。
+     */
+    rememberThemeBackground(backgroundColor) {
+        return window.flutter_inappwebview.callHandler('rememberThemeBackground', backgroundColor);
     },
     
     /**
@@ -65,6 +84,16 @@ window.jsBridge = {
     },
 
     /**
+     * 打开由 Android 原生层管理的听书播放器。
+     * H5 只需监听 loghome:audiobook-progress 事件进行段落高亮。
+     * @param {{articleIds: string[], articles?: Array<object>, playlistKey?: string, startArticleId?: string, startParagraphId?: string, bookTitle?: string, coverUrl?: string}} payload
+     * @returns {Promise<boolean>}
+     */
+    openNativeAudiobookPlayer(payload) {
+        return window.flutter_inappwebview.callHandler('openNativeAudiobookPlayer', payload || {});
+    },
+
+    /**
      * 替换播放列表
      * @param {Array<string>} articleIds - 文章ID列表
      * @param {string} [startArticleId] - 可选，指定从哪个文章开始播放，如果不指定则从第一个文章开始
@@ -75,8 +104,8 @@ window.jsBridge = {
     },
 
     /**
-     * 获取当前设备可用的离线语音
-     * @returns {Promise<Array<{id: string, name: string, description: string}>>}
+     * 获取系统语音及可按需下载的内嵌离线语音
+     * @returns {Promise<Array<{id: string, name: string, description: string, engine: string, installed: boolean, requiresDownload: boolean, downloadSizeBytes?: number}>>}
      */
     getAvailableVoices() {
         return window.flutter_inappwebview.callHandler('getAvailableVoices');
@@ -84,7 +113,8 @@ window.jsBridge = {
 
     /**
      * 设置TTS语音
-     * @param {string} voice - 语音标识符，例如 'system-default' 或具体系统 voice name
+     * 选择尚未安装的内嵌语音时会先下载并校验模型。
+     * @param {string} voice - 语音标识符，例如 'system-default'、系统 voice name 或 sherpa voice id
      * @returns {Promise<boolean>} - 设置是否成功
      */
     setVoice(voice) {
@@ -154,6 +184,26 @@ window.jsBridge = {
             fontFormat,
             fontVersion
         );
+    },
+
+    nativeNavigateTo(payload) {
+        return window.flutter_inappwebview.callHandler('nativeNavigateTo', withCurrentThemeBackground(payload));
+    },
+
+    nativeRedirectTo(payload) {
+        return window.flutter_inappwebview.callHandler('nativeRedirectTo', withCurrentThemeBackground(payload));
+    },
+
+    nativeReLaunch(payload) {
+        return window.flutter_inappwebview.callHandler('nativeReLaunch', withCurrentThemeBackground(payload));
+    },
+
+    nativeSwitchTab(payload) {
+        return window.flutter_inappwebview.callHandler('nativeSwitchTab', withCurrentThemeBackground(payload));
+    },
+
+    nativeNavigateBack(payload) {
+        return window.flutter_inappwebview.callHandler('nativeNavigateBack', payload || {});
     },
 };
 

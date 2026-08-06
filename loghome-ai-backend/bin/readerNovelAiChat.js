@@ -1,4 +1,9 @@
-const fetch = require('node-fetch');
+const nodeFetch = require('node-fetch');
+// node-fetch@2 在 Node 24 中会将已收到 [DONE] 的 chunked SSE 响应误判为
+// ERR_STREAM_PREMATURE_CLOSE。优先使用 Node 内置 fetch 读取模型流。
+const streamingFetch = typeof globalThis.fetch === 'function'
+	? globalThis.fetch.bind(globalThis)
+	: nodeFetch;
 const { query } = require('../sql.js');
 const config = require('../config.js');
 const { ensureAgentMemorySchema } = require('./agentIndexing.js');
@@ -2016,7 +2021,7 @@ function getWriterRuntimeConfig() {
 }
 
 function normalizeRetrieverMode(value) {
-	return String(value || '').trim() === 'fast' ? 'fast' : 'deep';
+	return String(value || '').trim() === 'deep' ? 'deep' : 'fast';
 }
 
 function getPlannerRuntimeConfig(retrieverMode = 'deep') {
@@ -2483,7 +2488,7 @@ async function callChatModel(runtimeConfig, messages, tools, options = {}) {
 		body.tools = openAiTools;
 	}
 
-	const response = await fetch(`${runtimeConfig.baseUrl}/chat/completions`, {
+	const response = await streamingFetch(`${runtimeConfig.baseUrl}/chat/completions`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

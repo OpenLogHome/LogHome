@@ -1,7 +1,5 @@
 <template>
-	<div class="readerOuter"
-		:style="{ 'backgroundColor': themesData[readerSettings.theme].isBlack ? '#262822' : '#F7F7F7', 
-				  '--statusBarHeight': 0 + 'px'}">
+	<div class="readerOuter" :class="{ 'block-epoch-skin': isBlockEpochSkin }" :style="readerOuterStyle">
 		<div class="tools" :class="{ opened: settingsOpened }"
 			@click.self="handleCloseTool" ref="tools">
 			<div class="settings" :class="{ opened: settingsOpened, showReaderSetting: showReaderSetting }"
@@ -9,7 +7,7 @@
 					'backgroundColor': themesData[readerSettings.theme].backgroundColor,
 					'color': themesData[readerSettings.theme].fontColor
 				}">
-				<div class="line">
+				<div v-if="!isPreviewMode" class="line">
 					<div class="btn" style="width: 110rpx; margin: 0 30rpx 0 20rpx; font-size: 34rpx;" 
 						 @click="sliderTooltip.lastIdx=currentArticleIdx; gotoArticleIdx(currentArticleIdx - 1)">上一章</div>
 					<el-slider v-model="currentArticleIdx" :min="0" :max="allArticles.length - 1" :step="1"
@@ -18,44 +16,50 @@
 					<div class="btn" style="width: 110rpx; margin: 0 20rpx 0 30rpx; font-size: 34rpx;"
 						 @click="sliderTooltip.lastIdx=currentArticleIdx; gotoArticleIdx(currentArticleIdx + 1)">下一章</div>
 				</div>
-				<div class="line" style="margin-top: 40rpx; justify-content: space-around;">
-					<div class="iconBtn" @click="gotoMenu">
-						<i class="el-icon-tickets" style="font-size: 50rpx;"></i>
-						<p style="font-size: 26rpx; margin-top: 6rpx;">目录</p>
+				<div class="line reader-shortcuts">
+					<div v-if="!isPreviewMode" class="iconBtn" role="button" aria-label="目录" @click="gotoMenu">
+						<i class="el-icon-tickets"></i>
+						<p>目录</p>
 					</div>
-					<div class="iconBtn" @click="openExcerpts">
-						<i class="el-icon-collection" style="font-size: 50rpx;"></i>
-						<p style="font-size: 26rpx; margin-top: 6rpx;">书摘</p>
+					<div v-if="!isPreviewMode" class="iconBtn" role="button" aria-label="书摘" @click="openExcerpts">
+						<i class="el-icon-collection"></i>
+						<p>书摘</p>
 					</div>
-					<div class="iconBtn" @click="toggleNightMode">
-						<i class="el-icon-moon" style="font-size: 50rpx;"
+					<div class="iconBtn" role="button" :aria-label="themesData[readerSettings.theme].isBlack ? '日间' : '夜间'"
+						@click="toggleNightMode">
+						<i class="el-icon-moon"
 							v-show="!themesData[readerSettings.theme].isBlack"></i>
-						<p style="font-size: 26rpx; margin-top: 6rpx;"
+						<p
 							v-show="!themesData[readerSettings.theme].isBlack">夜间</p>
-						<i class="el-icon-sunny" style="font-size: 50rpx;"
+						<i class="el-icon-sunny"
 							v-show="themesData[readerSettings.theme].isBlack"></i>
-						<p style="font-size: 26rpx; margin-top: 6rpx;"
+						<p
 							v-show="themesData[readerSettings.theme].isBlack">日间</p>
 					</div>
-					<div class="iconBtn" @click="showReaderSetting = !showReaderSetting;">
-						<i class="el-icon-setting" style="font-size: 50rpx;" v-show="!showReaderSetting"></i>
-						<i class="el-icon-s-tools" style="font-size: 50rpx;" v-show="showReaderSetting"></i>
-						<p style="font-size: 26rpx; margin-top: 6rpx;">设置</p>
+					<div class="iconBtn" :class="{ active: showReaderSetting }" role="button" aria-label="设置"
+						@click="showReaderSetting = !showReaderSetting;">
+						<i class="el-icon-setting" v-show="!showReaderSetting"></i>
+						<i class="el-icon-s-tools" v-show="showReaderSetting"></i>
+						<p>设置</p>
 					</div>
 				</div>
 				<div class="readerSettings">
 					<div class="line" style="margin-top: 40rpx;">
+						<span style="font-size: 30rpx;">阅读器</span>
+						<ReaderTypeSwitch class="reader-type-switch-setting" value="page"
+							@change="switchReaderType" />
+					</div>
+					<div class="line" style="margin-top: 40rpx;">
 						<span style="font-size: 30rpx;">背景</span>
-						<div class="backgrounds">
-							<div class="background" v-for="(item, key) in themesData" :style="{
-								'backgroundColor': themesData[key].backgroundColor,
-								'borderColor': key == readerSettings.theme ? (themesData[readerSettings.theme].isBlack ? 'white' : 'black') : 'transparent'
-							}" @click="readerSettings.theme = key">
-							</div>
-							<!-- 							<div class="btn">
-								更多 <i class="el-icon-arrow-right"></i>
-							</div> -->
-						</div>
+						<ReaderBackgroundPicker class="background-picker"
+							:theme-options="readerThemeOptions"
+							:skins="readerBackgroundSkins"
+							:theme-key="readerSettings.theme"
+							:skin-key="readerSettings.backgroundSkinKey || ''"
+							@select-theme="changeTheme"
+							@select-locked-theme="handleLockedBackgroundSkin"
+							@select-skin="changeBackgroundSkin"
+							@select-locked-skin="handleLockedBackgroundSkin" />
 					</div>
 					<div class="line" style="margin-top: 40rpx;">
 						<span style="font-size: 30rpx;">字号</span>
@@ -105,16 +109,16 @@
 				<i class="el-icon-arrow-left" style="font-size: 50rpx;" @click="navigateBack"></i>
 				<div class="right">
 					<div style="position: relative; display: inline-block;">
-						<i class="el-icon-headset" style="font-size: 50rpx;" @click="openListenDrawer"></i>
-						<span style="position: absolute; bottom: -15rpx; right: -15rpx; 
+						<i class="el-icon-headset" style="font-size: 50rpx;" @click="openNativeAudiobookPlayer()"></i>
+					<!-- <span style="position: absolute; bottom: -15rpx; right: -15rpx;
 							background-color: #ff4d4f; color: white; 
 							font-size: 20rpx; padding: 2rpx 6rpx;
-							border-radius: 6rpx;">限免</span>
+							border-radius: 6rpx;">限免</span> -->
 					</div>
 				</div>
 			</div>
 			<!-- 滚动滚动条时显示的ToolTip -->
-			<div class="sliderTooltip" :class="{'show': showSliderTooltip}" :style="{bottom: showReaderSetting ? '700rpx' : '330rpx'}">
+			<div class="sliderTooltip" :class="{'show': showSliderTooltip}" :style="{bottom: showReaderSetting ? '812rpx' : '330rpx'}">
 				<div class="backBtn" @click="handleUndoSlider">
 					<div class="icon">
 						<i class="el-icon-refresh-left"></i>
@@ -169,10 +173,11 @@
 				'zIndex': allPages.length - idx,
 				'transform': pageTransform(idx), 'transition': isAnimating ? 'all 0.3s' : 'background-color 0.3s', 'boxShadow': `0px 0px 25px rgba(0, 0, 0, 0.12)`,
 				'backgroundColor': themesData[readerSettings.theme].backgroundColor,
-				'fontFamily': fonts[readerSettings.font].family
+				'fontFamily': fonts[readerSettings.font].family,
+				...readerBackgroundStyle
 			}">
 				<div class="pageWrapper" :style="{'transform': `translateX(${pageWrapperOffset}px)`}">
-					<div class="topBar" :style="{'color': themesData[readerSettings.theme].isBlack ? '#fff8' : '#0008'}">
+					<div class="topBar" :style="{'color': themesData[readerSettings.theme].secondaryFontColor}">
 						<div class="left">
 							<i class="el-icon-arrow-left" style="margin-right: 5rpx;" @touchend.stop="navigateBack"></i>
 							{{ allPages[idx].idx == 0 ? novelInfo.name :
@@ -201,8 +206,7 @@
 						}" v-for="para in allArticleData[allPages[idx].articleId.toString()].content" v-show="para.type == 'text'"
 							:key="para.id" @longpress="handleParagraphLongpressed($event, para)">
 							<div v-show="para.value && para.value.startsWith('\u3000\u3000')" class="lineShelterBox"
-								 :style="{'backgroundColor': (para.selected) ? blendHexColors(themesData[readerSettings.theme].backgroundColor, '#7774')
-								  : (((paragraphId==para.id) || (listeningParagraphId==para.id)) ? blendHexColors(themesData[readerSettings.theme].backgroundColor, '#FADD0044') : themesData[readerSettings.theme].backgroundColor), 
+								 :style="{'backgroundColor': getLineShelterBackground(para),
 								 'width': readerSettings.fontSize * 2 + 'rpx',
 								 'height': '20rpx', 
 								 'top': readerSettings.fontSize * readerSettings.lineHeight - 20 + 'rpx'}">
@@ -242,7 +246,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="bottomBar" :style="{'color': themesData[readerSettings.theme].isBlack ? '#fff8' : '#0008'}">
+		<div class="bottomBar" :style="{'color': themesData[readerSettings.theme].secondaryFontColor}">
 			<div class="left">
 				{{ currentPageIdx + 1 }}/{{ allPages.length }}
 			</div>
@@ -283,7 +287,7 @@
 			</div>
 		</el-drawer>
 
-		<el-drawer :with-header="false" :visible.sync="menuDrawerVisible" direction="btt" :modal="true" size="60%"
+		<el-drawer v-if="!isPreviewMode" :with-header="false" :visible.sync="menuDrawerVisible" direction="btt" :modal="true" size="60%"
 			custom-class="bookMenu">
 			<bookMenu
 				:novel_id="novelId"
@@ -293,10 +297,10 @@
 			></bookMenu>
 		</el-drawer>
 		
-		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="calc(80% + 44px)"
+		<el-drawer v-if="!isPreviewMode" :with-header="false" :visible.sync="commentDrawerVisible" direction="btt" :modal="commentDrawerVisible" size="calc(80% + 44px)"
 			custom-class="commentDrawer" :destroy-on-close="true" :wrapperClosable="false">
-			<div class="bookCommentDrawer">
-				<div class="title">
+			<div class="bookCommentDrawer" :style="commentDrawerThemeStyle">
+				<div class="drawerTitle">
 					段落评论
 				</div>
 				<div class="closeBtn" @click="handleCloseCommentDraweraManually">
@@ -308,10 +312,10 @@
 			</div>
 		</el-drawer>
 
-		<el-drawer :with-header="false" :visible.sync="excerptDrawerVisible" direction="btt" :modal="excerptDrawerVisible" size="calc(80% + 44px)"
+		<el-drawer v-if="!isPreviewMode" :with-header="false" :visible.sync="excerptDrawerVisible" direction="btt" :modal="excerptDrawerVisible" size="calc(80% + 44px)"
 			custom-class="commentDrawer" :destroy-on-close="true" :wrapperClosable="false">
-			<div class="bookCommentDrawer">
-				<div class="title">
+			<div class="bookCommentDrawer" :style="commentDrawerThemeStyle">
+				<div class="drawerTitle">
 					划线书摘
 				</div>
 				<div class="closeBtn" @click="handleCloseExcerptDrawerManually">
@@ -321,19 +325,16 @@
 			</div>
 		</el-drawer>
 
-		<el-drawer :with-header="false" :visible.sync="listenDrawerVisible" direction="ttb" :modal="true" size="auto">
-			<div class="listen-drawer-container">
-				<AudiobookPlayer 
-					ref="audiobookPlayer"
-					:articleIds="currentArticleIds" 
-					:coverUrl="currentNovelCover"
-					:initialVoice="'system-default'"
-					:allArticleData="allArticleData"
-					:startArticleId="articleId"
-					@change="handleBookListenChange"
-				/>
-			</div>
-		</el-drawer>
+		<AudiobookPlayer
+			ref="audiobookPlayer"
+			:articleIds="currentArticleIds"
+			:articles="isPreviewMode && previewPayload ? [previewPayload.article] : []"
+			:playlistKey="isPreviewMode ? 'preview:' + previewKey : ''"
+			:coverUrl="currentNovelCover"
+			:bookTitle="novelInfo ? novelInfo.name : ''"
+			:startArticleId="articleId"
+			@change="handleBookListenChange"
+		/>
 
 		<div class="floating-panel" v-show="selectionMode"
 			:style="{ left: panelPosition.x + 'px', top: panelPosition.y + 'px' }">
@@ -341,16 +342,16 @@
 				<i class="el-icon-document-copy"></i>
 				<span>复制</span>
 			</div>
-			<div class="panel-button" v-show="selectedParagraph && !selectedParagraph.cento" @click="handleUnderline">
+			<div class="panel-button" v-show="!isPreviewMode && selectedParagraph && !selectedParagraph.cento" @click="handleUnderline">
 				<i class="el-icon-edit"></i>
 				<span>划线</span>
 			</div>
-			<div class="panel-button" v-show="selectedParagraph && selectedParagraph.cento"
+			<div class="panel-button" v-show="!isPreviewMode && selectedParagraph && selectedParagraph.cento"
 				@click="handleRemoveUnderline">
 				<i class="el-icon-remove-outline"></i>
 				<span>移除划线</span>
 			</div>
-			<div class="panel-button" @click="gotoParagraphComment(selectedParagraph.id)">
+			<div v-if="!isPreviewMode" class="panel-button" @click="gotoParagraphComment(selectedParagraph.id)">
 				<i class="el-icon-chat-line-round"></i>
 				<span>评论</span>
 			</div>
@@ -364,7 +365,7 @@
 			</div>
 		</div>
 		
-		<div class="commentBtn" v-for="item in shownCommentsBtn" :key="`comment-${item.paragraphId}`" @click="gotoParagraphComment(item.paragraphId)"
+		<div v-if="!isPreviewMode" class="commentBtn" v-for="item in shownCommentsBtn" :key="`comment-${item.paragraphId}`" @click="gotoParagraphComment(item.paragraphId)"
 			:style="{'fontSize': readerSettings.fontSize * 1.2 + 'rpx', 'left': item.x, 'top': item.y,
 			'color': themesData[readerSettings.theme].fontColor}" v-show="!settingsOpened">
 			<i class="el-icon-chat-square"></i>
@@ -427,10 +428,29 @@ import BookComment from "../bookComment.vue"
 import BookExcerpts from "../bookExcerpts.vue"
 import AudiobookPlayer from "../../../components/audiobook-player.vue"
 import worldVocabulary from "./worldVocabulary.vue"
+import ReaderBackgroundPicker from "../../../components/ReaderBackgroundPicker.vue"
+import ReaderTypeSwitch from "../../../components/ReaderTypeSwitch.vue"
+import { buildReaderUrl, setReaderMode } from "../../../common/reader-mode.js"
+import { readReaderPreview } from "../../../common/reader-preview.js"
 import { createTreeExpReporter } from "../../../lib/treeExpReporter.js"
+import { createBackgroundSkinStyle, normalizeBackgroundSkin } from "../../../common/background-skins.js"
+import { getMembershipStatus } from "../../../common/membership-api.js"
+import { getColorMode, getProjectThemeMode, readPageTheme, rememberPageTheme } from "../../../common/page-theme-memory.js"
+const MEMBERS_ONLY_THEME_KEYS = Object.freeze([
+	'wavechaser',
+	'powderblue',
+	'qingyun',
+	'sunburst',
+	'thorncrown',
+	'chocolate'
+]);
+const NEW_READER_THEME_MEMORY_KEY = 'pageThemeMemory:newReader'
 export default {
 	data() {
 		return {
+			isPreviewMode: false,
+			previewKey: '',
+			previewPayload: null,
 			blendHexColors,
 			novelInfo: undefined,
 			titleMarginBottomRatio: 0.2,
@@ -457,6 +477,9 @@ export default {
 			settingsOpened: false,
 			readerSettings: {},
 			themesData,
+			readerBackgroundSkins: [],
+			membershipTier: '',
+			backgroundSkinsLoaded: false,
 			fonts: JSON.parse(JSON.stringify(fontsConfig)),
 			isAppEnv: false,
 			fontDownloadState: {},
@@ -502,7 +525,6 @@ export default {
 			excerptDrawerVisible: false,
 			feedbackDialogVisible: false,
 			feedbackContent: '',
-			listenDrawerVisible: false,
 			listeningParagraphId: -1,
 			shownParaTitleListenBtns: [],
 			readExpReporter: null,
@@ -512,12 +534,28 @@ export default {
 			pendingReadingProgressSync: false
 		}
 	},
-	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer, worldVocabulary },
+	components: { bookMenu, BatteryIcon, BookComment, BookExcerpts, AudiobookPlayer, worldVocabulary, ReaderBackgroundPicker, ReaderTypeSwitch },
 	methods: {
 		markReadActivity() {
 			if (this.readExpReporter) {
 				this.readExpReporter.markActive();
 			}
+		},
+		switchReaderType(mode) {
+			if (mode === 'page') return;
+			const currentPage = this.allPages[this.currentPageIdx] || {};
+			const paragraphIds = Array.isArray(currentPage.inPagesParagraphIds)
+				? currentPage.inPagesParagraphIds
+				: [];
+			setReaderMode(mode);
+			uni.redirectTo({
+				url: buildReaderUrl(mode, {
+					articleId: currentPage.articleId || this.articleId,
+					novelId: this.novelId,
+					paragraphId: paragraphIds[0],
+					previewKey: this.previewKey
+				})
+			});
 		},
 		getCurrentReadingProgressPayload() {
 			let currentPage = this.allPages[this.currentPageIdx];
@@ -542,6 +580,7 @@ export default {
 			return `${payload.novel_id}|${payload.article_id}|${payload.article_chapter}|${payload.page_idx}`;
 		},
 		scheduleReadingProgressSync(delay = 800) {
+			if (this.isPreviewMode) return;
 			if (this.readingProgressSyncTimer) {
 				clearTimeout(this.readingProgressSyncTimer);
 			}
@@ -555,6 +594,7 @@ export default {
 			}, delay);
 		},
 		async syncReadingProgress(force = false) {
+			if (this.isPreviewMode) return;
 			if (this.readingProgressSyncTimer) {
 				clearTimeout(this.readingProgressSyncTimer);
 				this.readingProgressSyncTimer = null;
@@ -899,6 +939,12 @@ export default {
 			return new Promise(resolve => setTimeout(resolve, ms));
 		},
 		async getNovelInfo() {
+			if (this.isPreviewMode) {
+				return JSON.parse(JSON.stringify(this.previewPayload.novel || {
+					novel_id: this.novelId,
+					name: '作品预览'
+				}));
+			}
 			try {
 				let res = await axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.novelId, {});
 				if (res.status == 200) {
@@ -914,6 +960,9 @@ export default {
 			
 		},
 		async loadAllArticles() {
+			if (this.isPreviewMode) {
+				return [JSON.parse(JSON.stringify(this.previewPayload.article))];
+			}
 			try{
 				let res = await axios.get(this.$baseUrl + '/library/get_articles?id=' + this.novelId, {});
 				if (res.status == 200) {
@@ -949,6 +998,11 @@ export default {
 			return this.normalizeArticleParagraphIds(articleData);
 		},
 		async getArticleContentById(article_id, onlineTime, allowHistory) {
+			if (this.isPreviewMode) {
+				const previewArticle = JSON.parse(JSON.stringify(this.previewPayload.article));
+				if (String(previewArticle.article_id) !== String(article_id)) return undefined;
+				return this.parseReaderArticleContent(previewArticle);
+			}
 			if (allowHistory) {
 				let matchedArticles = await articleDB.articles.where("article_id").equals(article_id).toArray();
 				if (matchedArticles.length > 0 && utc2beijing(matchedArticles[0].update_time) >= utc2beijing(onlineTime)) {
@@ -1044,7 +1098,16 @@ export default {
 			if (articleData.article_type == "spliter") return [{ type: "spliter", idx: 0, articleId: articleData.article_id }];
 			if (articleData.article_type == "worldVocabulary") return [{ type: "worldVocabulary", idx: 0, articleId: articleData.article_id }];
 			let screenHeight = document.body.clientHeight;
-			let usableScreenHeight = screenHeight - rpxToPx(50) - rpxToPx(70);
+			const systemInfo = uni.getSystemInfoSync();
+			const bridge = typeof window !== "undefined" ? window.jsBridge : null;
+			const safeTop = Number(bridge && bridge.statusBarHeight)
+				|| Number(systemInfo.safeAreaInsets && systemInfo.safeAreaInsets.top)
+				|| Number(systemInfo.statusBarHeight)
+				|| 0;
+			const safeBottom = Number(bridge && bridge.navigationBarHeight)
+				|| Number(systemInfo.safeAreaInsets && systemInfo.safeAreaInsets.bottom)
+				|| 0;
+			let usableScreenHeight = screenHeight - safeTop - safeBottom - rpxToPx(50) - rpxToPx(70);
 			let lineHeight = this.actualLineHeight;
 			let actualLineAmount = Math.floor(usableScreenHeight / lineHeight);
 			let pageScrollHeight = actualLineAmount * lineHeight;
@@ -1168,6 +1231,10 @@ export default {
 					this.isAnimating = false;
 				}, 250);
 			} else {
+				if (this.isPreviewMode) {
+					this.isAnimating = false;
+					return;
+				}
 				if(window.jsBridge && window.jsBridge.inApp) {
 					jsBridge.setNavigationBarVisible(true);
 					jsBridge.disableVolumeKeyListener();
@@ -1223,8 +1290,174 @@ export default {
 			if (!this.readerSettings.font) {
 				this.readerSettings.font = "default";
 			}
+			if (!this.themesData[this.readerSettings.theme]) {
+				this.readerSettings.theme = "white";
+			}
+			this.$set(this.readerSettings, 'backgroundSkinKey', String(this.readerSettings.backgroundSkinKey || "").slice(0, 64));
+			this.initializeReaderThemeMemory();
+		},
+		getReaderThemeMode(themeKey) {
+			const theme = this.themesData[themeKey] || this.themesData.white;
+			return typeof theme.isBlack === 'boolean'
+				? (theme.isBlack ? 'dark' : 'light')
+				: getColorMode(theme.backgroundColor);
+		},
+		rememberCurrentReaderTheme() {
+			if (!this.readerSettings || !this.readerSettings.theme) return;
+			rememberPageTheme(
+				NEW_READER_THEME_MEMORY_KEY,
+				this.getReaderThemeMode(this.readerSettings.theme),
+				this.readerSettings
+			);
+		},
+		applyReaderThemeMode(mode) {
+			const fallback = {
+				theme: mode === 'dark' ? 'black' : 'white',
+				backgroundSkinKey: ''
+			};
+			const selection = readPageTheme(NEW_READER_THEME_MEMORY_KEY, mode, fallback);
+			if (!selection || !this.themesData[selection.theme]) return;
+			this.readerSettings.theme = selection.theme;
+			this.$set(this.readerSettings, 'backgroundSkinKey', selection.backgroundSkinKey || '');
+		},
+		initializeReaderThemeMemory() {
+			this.rememberCurrentReaderTheme();
+			this.applyReaderThemeMode(this.projectThemeMode);
+		},
+		async loadReaderBackgroundSkins() {
+			try {
+				const membershipPromise = this.hasStoredToken()
+					? getMembershipStatus(this.$baseUrl).catch(() => null)
+					: Promise.resolve(null);
+				const [res, membershipStatus] = await Promise.all([
+					axios.get(this.$baseUrl + '/app/get_writer_background_skins'),
+					membershipPromise
+				]);
+				this.membershipTier = membershipStatus && membershipStatus.active && membershipStatus.subscription
+					? String(membershipStatus.subscription.membership_type || '')
+					: '';
+				if (MEMBERS_ONLY_THEME_KEYS.includes(this.readerSettings.theme) &&
+					!this.canUseBackgroundSkin({ required_membership: 'standard' })) {
+					this.readerSettings.theme = this.projectThemeMode === 'dark' ? 'black' : 'white';
+					this.$set(this.readerSettings, 'backgroundSkinKey', "");
+					window.localStorage.setItem("newReaderSettings", JSON.stringify(this.readerSettings));
+					this.rememberCurrentReaderTheme();
+				}
+				if (res.status === 200 && Array.isArray(res.data)) {
+					this.readerBackgroundSkins = res.data
+						.map(item => normalizeBackgroundSkin({
+							...item,
+							is_locked: !this.canUseBackgroundSkin(item)
+						}, theme => !!this.themesData[theme]))
+						.filter(Boolean);
+					if (this.readerSettings.backgroundSkinKey && !this.currentBackgroundSkin) {
+						this.$set(this.readerSettings, 'backgroundSkinKey', "");
+						window.localStorage.setItem("newReaderSettings", JSON.stringify(this.readerSettings));
+						this.rememberCurrentReaderTheme();
+					}
+				}
+			} catch (error) {
+				console.warn('loadReaderBackgroundSkins failed', error);
+				this.readerBackgroundSkins = [];
+			} finally {
+				this.backgroundSkinsLoaded = true;
+			}
+		},
+		hasStoredToken() {
+			try {
+				const rawToken = window.localStorage.getItem('token');
+				if (!rawToken) return false;
+				let token = rawToken;
+				try {
+					token = JSON.parse(rawToken);
+				} catch (error) { }
+				return Boolean(token && (typeof token === 'string' ? token : token.tk));
+			} catch (error) {
+				return false;
+			}
+		},
+		canUseBackgroundSkin(skin) {
+			const requiredMembership = String(skin && skin.required_membership || 'none');
+			if (requiredMembership === 'none') return true;
+			if (requiredMembership === 'standard') {
+				return this.membershipTier === 'standard' || this.membershipTier === 'super';
+			}
+			return requiredMembership === 'super' && this.membershipTier === 'super';
+		},
+		handleLockedBackgroundSkin(skin) {
+			const superOnly = skin && skin.required_membership === 'super';
+			uni.showModal({
+				title: superOnly ? '超级典藏背景' : '原木典藏背景',
+				content: superOnly
+					? '这款背景仅限超级原木通行证用户使用。'
+					: '这款背景仅限原木通行证或超级原木通行证用户使用。',
+				cancelText: '暂不',
+				confirmText: '查看通行证',
+				success: ({ confirm }) => {
+					if (confirm) uni.navigateTo({ url: '/pages/membership/index' });
+				}
+			});
+		},
+		changeTheme(themeKey) {
+			if (!this.themesData[themeKey]) return;
+			if (MEMBERS_ONLY_THEME_KEYS.includes(themeKey) &&
+				!this.canUseBackgroundSkin({ required_membership: 'standard' })) {
+				this.handleLockedBackgroundSkin({ required_membership: 'standard' });
+				return;
+			}
+			this.readerSettings.theme = themeKey;
+			this.$set(this.readerSettings, 'backgroundSkinKey', "");
+			this.rememberCurrentReaderTheme();
+		},
+		changeBackgroundSkin(skinKey) {
+			const skin = this.readerBackgroundSkins.find(item => item.skin_key === skinKey);
+			if (skin && skin.is_locked) {
+				this.handleLockedBackgroundSkin(skin);
+				return;
+			}
+			this.$set(this.readerSettings, 'backgroundSkinKey', skin ? skin.skin_key : "");
+			if (skin) {
+				this.readerSettings.theme = skin.theme_key;
+			}
+			this.rememberCurrentReaderTheme();
+		},
+		getThemeName(themeKey) {
+			return {
+				white: '蛙鸣白',
+				yellow: '原木黄',
+				green: '草原绿',
+				blue: '晴空蓝',
+				purple: '末地紫',
+				pink: '桃花粉',
+				black: '虚空黑',
+				wavechaser: '追波',
+				powderblue: '粉蓝',
+				qingyun: '青云',
+				sunburst: '艳阳',
+				thorncrown: '荆棘冠',
+				chocolate: '巧克力'
+			}[themeKey] || themeKey;
+		},
+		getLineShelterBackground(para) {
+			if (this.currentBackgroundSkin) return 'transparent';
+			const backgroundColor = this.themesData[this.readerSettings.theme].backgroundColor;
+			if (para.selected) return blendHexColors(backgroundColor, '#7774');
+			if (this.paragraphId == para.id || this.listeningParagraphId == para.id) {
+				return blendHexColors(backgroundColor, '#FADD0044');
+			}
+			return backgroundColor;
+		},
+		shouldUseNativeBack() {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null;
+			return !!(bridge && bridge.inApp && bridge.nativeRouterAvailable);
 		},
 		navigateBack(ev) {
+			if (this.shouldUseNativeBack()) {
+				uni.navigateBack({
+					delta: 1
+				});
+				return;
+			}
 			if(getCurrentPages().length == 1) {
 				uni.reLaunch({
 					url: "../bookInfo?id=" + this.novelId
@@ -1243,11 +1476,8 @@ export default {
 			this.formatSliderTooltip(newArticleIdx);
 		},
 		toggleNightMode() {
-			if (this.themesData[this.readerSettings.theme].isBlack) {
-				this.readerSettings.theme = "white";
-			} else {
-				this.readerSettings.theme = "black";
-			}
+			const currentMode = this.getReaderThemeMode(this.readerSettings.theme);
+			this.applyReaderThemeMode(currentMode === 'dark' ? 'light' : 'dark');
 		},
 		changeFontSize(delta) {
 			if (this.onRendering) return;
@@ -1291,6 +1521,7 @@ export default {
 			})
 		},
 		gotoMenu() {
+			if (this.isPreviewMode) return;
 			this.menuDrawerVisible = true;
 		},
 		// 段落划线、段落评论相关功能
@@ -1308,6 +1539,7 @@ export default {
 			}
 		},
 		async showArticleCentos() {
+			if (this.isPreviewMode) return;
 			if(!this.allPages[this.currentPageIdx]) return;
 			let centos = await this.getArticleCento(this.allPages[this.currentPageIdx].articleId);
 			for (let item of centos) {
@@ -1352,6 +1584,7 @@ export default {
 			this.$forceUpdate();
 		},
 		async handleUnderline() {
+			if (this.isPreviewMode) return;
 			if (!this.selectedParagraph) return;
 
 			// 调用添加划线API
@@ -1377,6 +1610,7 @@ export default {
 			}
 		},
 		async handleRemoveUnderline() {
+			if (this.isPreviewMode) return;
 			if (!this.selectedParagraph?.cento) return;
 
 			let tk = JSON.parse(window.localStorage.getItem('token'));
@@ -1551,6 +1785,9 @@ export default {
 			}, []);
 		},
 		scheduleCommentDisplayUpdate(delay = 0) {
+			if (this.isPreviewMode) {
+				this.shownCommentsBtn = [];
+			}
 			this.commentDisplayTaskId += 1;
 			let taskId = this.commentDisplayTaskId;
 			if (this.commentDisplayTimer) {
@@ -1584,6 +1821,10 @@ export default {
 				return;
 			}
 			this.shownParaTitleListenBtns = snapshot.listenAnchors;
+			if (this.isPreviewMode) {
+				this.shownCommentsBtn = [];
+				return;
+			}
 			this.shownCommentsBtn = this.buildShownCommentButtons(snapshot);
 			let currentParagraphIds = snapshot.commentAnchors.map((item) => item.paragraphId);
 			if (currentParagraphIds.length) {
@@ -1771,6 +2012,7 @@ export default {
 			return Array.isArray(targetParagraph.value) ? targetParagraph.value.join('') : (targetParagraph.value || '');
 		},
 		gotoParagraphComment(paragraphId){
+			if (this.isPreviewMode) return;
 			const currentArticleId = this.allPages[this.currentPageIdx]?.articleId ?? this.articleId;
 			this.commentDrawerData = {
 				novelId: this.novelId,
@@ -1889,8 +2131,13 @@ export default {
 				this.closeCommentDrawer(false);
 			} else if(this.excerptDrawerVisible) {
 				this.excerptDrawerVisible = false;
-			} else if(this.listenDrawerVisible) {
-				this.listenDrawerVisible = false;
+			}
+		},
+		handleNativeBack(event) {
+			if(this.commentDrawerVisible || this.excerptDrawerVisible) {
+				event.preventDefault();
+				window.history.go(-1);
+				return;
 			}
 		},
 		handleCloseCommentDraweraManually() {
@@ -1903,10 +2150,11 @@ export default {
 			this.excerptDrawerVisible = false;
 		},
 		openExcerpts() {
+			if (this.isPreviewMode) return;
 			this.excerptDrawerVisible = true;
 			window.history.pushState({ isExcerptDrawerOpen: true }, '', window.location.href)
 		},
-		openListenDrawer() {
+		async openNativeAudiobookPlayer(startParagraphId = null) {
 			// 设置当前文章ID列表，从当前章节开始
 			this.currentArticleIds = [];
 			for (let i = 0; i < this.allArticles.length; i++) {
@@ -1918,8 +2166,8 @@ export default {
 			if (this.novelInfo && this.novelInfo.picUrl) {
 				this.currentNovelCover = this.novelInfo.picUrl;
 			}
-			// 打开抽屉
-			this.listenDrawerVisible = true;
+			await this.$nextTick();
+			return this.$refs.audiobookPlayer.openNativePlayer(startParagraphId);
 		},
 		handleBookListenChange(data){
 			console.log("handleBookListenChange", data.articleId, data.paragraphId);
@@ -1927,16 +2175,10 @@ export default {
 			this.listeningParagraphId = data.paragraphId;
 		},
 		playFromCurrentParagraph() {
-			this.openListenDrawer();
-			setTimeout(() => {
-				this.$refs.audiobookPlayer.navToArticleParagraph(this.articleId, -1);
-			}, 300);
+			this.openNativeAudiobookPlayer(-1);
 		},
 		listenFromParagraph(paragraphId) {
-			this.openListenDrawer();
-			setTimeout(() => {
-				this.$refs.audiobookPlayer.navToArticleParagraph(this.articleId, paragraphId);
-			}, 300);
+			this.openNativeAudiobookPlayer(paragraphId);
 		},
 		handleExcerptNavigation(data) {
 			// 关闭书摘抽屉
@@ -1983,13 +2225,16 @@ export default {
 		}
 	},
 	watch: {
+		projectThemeMode(newMode, oldMode) {
+			if (newMode !== oldMode) this.applyReaderThemeMode(newMode);
+		},
 		currentPageIdx(newValue, oldValue) {
 			let newPage = this.allPages[newValue];
 			let oldPage = this.allPages[oldValue];
 			if (!newPage) {
 				return;
 			}
-			if (!this.onRendering) {
+			if (!this.onRendering && !this.isPreviewMode) {
 				if(!oldPage || newPage.articleId != oldPage.articleId) {
 					axios.get(this.$baseUrl + '/articles/novel_clicked?id=' + newPage.articleId, {});
 				}
@@ -2035,6 +2280,52 @@ export default {
 		}
 	},
 	computed: {
+		projectThemeMode() {
+			return getProjectThemeMode(this.$store);
+		},
+		commentDrawerThemeStyle() {
+			const isDark = this.projectThemeMode === 'dark';
+			return {
+				'--comment-drawer-background': isDark ? '#252525' : '#ffffff',
+				'--comment-drawer-title-color': isDark ? '#e5e5e5' : '#292927',
+				'--comment-drawer-border-color': isDark ? '#3d3d3d' : '#efefef',
+				'--comment-drawer-close-color': isDark ? '#b5b5b5' : '#909399'
+			};
+		},
+		readerThemeOptions() {
+			return Object.keys(this.themesData).filter(key => key !== 'blockepoch').map(key => {
+				const requiredMembership = MEMBERS_ONLY_THEME_KEYS.includes(key) ? 'standard' : 'none';
+				return {
+					key,
+					name: this.getThemeName(key),
+					backgroundColor: this.themesData[key].backgroundColor,
+					required_membership: requiredMembership,
+					is_locked: !this.canUseBackgroundSkin({ required_membership: requiredMembership })
+				};
+			});
+		},
+		currentBackgroundSkin() {
+			const skinKey = String(this.readerSettings.backgroundSkinKey || "");
+			return this.readerBackgroundSkins.find(item => item.skin_key === skinKey && !item.is_locked) || null;
+		},
+		isBlockEpochSkin() {
+			return Boolean(this.currentBackgroundSkin && this.currentBackgroundSkin.skin_key === 'block_epoch');
+		},
+		readerBackgroundStyle() {
+			const backgroundStyle = createBackgroundSkinStyle(this.currentBackgroundSkin);
+			if (['obsidian_orbit', 'ember_library'].includes(
+				this.currentBackgroundSkin && this.currentBackgroundSkin.skin_key
+			)) {
+				backgroundStyle.backgroundSize = '100% 100%';
+			}
+			return backgroundStyle;
+		},
+		readerOuterStyle() {
+			return {
+				backgroundColor: this.themesData[this.readerSettings.theme].backgroundColor,
+				...this.readerBackgroundStyle
+			};
+		},
 		canSwitchFont() {
 			return this.isAppEnv && !!(window.jsBridge && window.jsBridge.downloadFont);
 		},
@@ -2046,14 +2337,24 @@ export default {
 		}
 	},
 	async onLoad(option) {
-		this.readExpReporter = createTreeExpReporter(this, 'read_seconds', { activeWindowMs: 180000 });
-		this.readExpReporter.start();
+		this.previewKey = String(option.previewKey || '');
+		this.previewPayload = readReaderPreview(this.previewKey);
+		this.isPreviewMode = !!this.previewPayload;
+		if (this.previewKey && !this.previewPayload) {
+			uni.showToast({ title: '预览内容已失效', icon: 'none' });
+			setTimeout(() => uni.navigateBack(), 300);
+			return;
+		}
+		if (!this.isPreviewMode) {
+			this.readExpReporter = createTreeExpReporter(this, 'read_seconds', { activeWindowMs: 180000 });
+			this.readExpReporter.start();
+		}
 		this.updateTimeAndBattery(); // 初始化时间
 		this.timeInterval = setInterval(() => {
 			this.updateTimeAndBattery();
 		}, 5000);
 		this.loadReaderSettings();
-		await this.initReaderFonts();
+		await Promise.all([this.initReaderFonts(), this.loadReaderBackgroundSkins()]);
 		uni.showLoading({
 			title: '努力加载中'
 		});
@@ -2072,11 +2373,11 @@ export default {
 		this.novelId = article.novel_id;
 		this.novelInfo = await this.getNovelInfo();
 		// 判断是否是打开与上次退出时一样的章节，如果是的话则为历史回溯模式
-		if (window.localStorage.getItem("ReaderHistory_" + this.novelInfo.novel_id) == article.article_chapter) {
+		if (!this.isPreviewMode && window.localStorage.getItem("ReaderHistory_" + this.novelInfo.novel_id) == article.article_chapter) {
 			this.historyMode = true;
 		}
 		await this.loadAllPages();
-		this.scheduleReadingProgressSync(0);
+		if (!this.isPreviewMode) this.scheduleReadingProgressSync(0);
 		window.onVolumnKeyPressCallback = (event) => {
 		    if (event.detail === 'up') {
 				this.isAnimating = true;
@@ -2090,6 +2391,7 @@ export default {
 		// #ifdef H5
 		window.addEventListener('popstate', this.browserBack)
 		// #endif
+		window.addEventListener('loghomeNativeBack', this.handleNativeBack)
 	},
 	async onUnload() {
 		if (this.readExpReporter) {
@@ -2106,6 +2408,7 @@ export default {
 		// #ifdef H5
 		window.removeEventListener("popstate", this.browserBack);
 		// #endif
+		window.removeEventListener('loghomeNativeBack', this.handleNativeBack)
 	},
 	async onHide() {
 		if (this.readExpReporter) {
@@ -2114,10 +2417,12 @@ export default {
 		await this.syncReadingProgress(true);
 	},
 	async onShow() {
+		this.applyReaderThemeMode(this.projectThemeMode);
 		if (this.readExpReporter) {
 			this.readExpReporter.start();
 			this.readExpReporter.markActive();
 		}
+		if (this.backgroundSkinsLoaded) await this.loadReaderBackgroundSkins();
 		if (this.canSwitchFont && this.readerSettings.font && this.readerSettings.font != "default") {
 			await this.ensureRuntimeFontReady(this.readerSettings.font);
 		}
@@ -2135,12 +2440,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.listen-drawer-container {
-	padding: 20px;
-	height: auto;
-	overflow: visible;
-}
-
 .drawer-header {
 	display: flex;
 	justify-content: space-between;
@@ -2162,14 +2461,15 @@ export default {
 	height: 100vh;
 	overflow: hidden !important;
 
-	.readerPages {
-		position: absolute;
-		z-index: 2;
+		.readerPages {
+			position: absolute;
+			z-index: 2;
 
-		.articlePage {
-			padding: 20rpx 51rpx 31rpx 50rpx;
-			width: calc(100vw - 100rpx);
-			height: calc(100vh - 50rpx);
+			.articlePage {
+				padding: calc(20rpx + var(--loghome-safe-top, 0px)) 51rpx
+					calc(31rpx + var(--loghome-safe-bottom, 0px)) 50rpx;
+				width: calc(100vw - 100rpx);
+				height: calc(100vh - 50rpx - var(--loghome-safe-top, 0px) - var(--loghome-safe-bottom, 0px));
 			overflow: hidden;
 			white-space: pre-wrap;
 			word-wrap: break-word;
@@ -2245,7 +2545,7 @@ export default {
 
 	.bottomBar {
 		position: fixed;
-		bottom: 10rpx;
+		bottom: calc(10rpx + var(--loghome-safe-bottom, 0px));
 		left: 0px;
 		width: 100%;
 		z-index: 994;
@@ -2313,7 +2613,7 @@ export default {
 			position: absolute;
 			background-color: #000000aa;
 			top: 0;
-			padding-top: calc(30rpx + var(--statusBarHeight));
+			padding-top: calc(30rpx + var(--loghome-safe-top, 0px));
 			padding-left: 30rpx;
 			padding-right: 30rpx;
 			width: calc(100vw - 60rpx);
@@ -2330,14 +2630,14 @@ export default {
 				0px 0px 54px rgba(0, 0, 0, 0.06);
 		}
 
-		div.settings {
+			div.settings {
 			position: absolute;
 			background-color: #000000aa;
 			bottom: 0;
 			padding-top: 20rpx;
 			padding-left: 30rpx;
 			padding-right: 30rpx;
-			padding-bottom: 30rpx;
+				padding-bottom: calc(30rpx + var(--loghome-safe-bottom, 0px));
 			width: calc(100vw - 60rpx);
 			// height: 260rpx;
 			transform: translateY(120%);
@@ -2350,17 +2650,12 @@ export default {
 				0px 0px 54px rgba(0, 0, 0, 0.06);
 
 			.readerSettings {
-				.backgrounds {
-					display: flex;
+				.reader-type-switch-setting {
 					width: 85%;
-					justify-content: space-around;
+				}
 
-					.background {
-						border-radius: 100%;
-						width: 65rpx;
-						height: 65rpx;
-						border: 3rpx solid;
-					}
+				.background-picker {
+					width: 85%;
 				}
 
 				.btn {
@@ -2425,6 +2720,43 @@ export default {
 					justify-content: center;
 				}
 
+				&.reader-shortcuts {
+					justify-content: space-between;
+					gap: 14rpx;
+					margin-top: 28rpx;
+
+					.iconBtn {
+						flex: 1 1 0;
+						min-width: 0;
+						height: 112rpx;
+						background: rgba(127, 127, 127, 0.1);
+						border: 2rpx solid rgba(127, 127, 127, 0.2);
+						border-radius: 18rpx;
+						box-sizing: border-box;
+						transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+
+						i {
+							font-size: 42rpx;
+							line-height: 46rpx;
+						}
+
+						p {
+							margin: 7rpx 0 0;
+							font-size: 23rpx;
+							line-height: 28rpx;
+						}
+
+						&:active {
+							transform: translateY(2rpx) scale(0.97);
+						}
+
+						&.active {
+							background: rgba(127, 127, 127, 0.2);
+							box-shadow: inset 0 0 0 2rpx currentColor;
+						}
+					}
+				}
+
 				.button {
 					border: 2px rgb(203, 203, 203) solid;
 					border-radius: 10rpx;
@@ -2451,7 +2783,7 @@ export default {
 		}
 
 		div.settings.opened {
-			transform: translateY(0rpx + 345rpx);
+			transform: translateY(0rpx + 457rpx);
 		}
 
 		div.settings.opened.showReaderSetting {
@@ -2627,26 +2959,96 @@ export default {
 		}
 	}
 	
-	.commentDrawer{
-		.bookCommentDrawer{
-			border-radius: 16px 16px 0 0;
-			.title{
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				height: 44px;
-				font-size: 18px;
-				font-weight: bold;
-			}
-			.closeBtn{
-				position: absolute;
-				right: 10px;
-				top: 10px;
-				font-size: 24px;
-			}
+	.bookCommentDrawer{
+		height: 100%;
+		border-radius: 16px 16px 0 0;
+		background-color: var(--comment-drawer-background, #fff);
+		.drawerTitle{
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 44px;
+			font-size: 18px;
+			font-weight: bold;
+			color: var(--comment-drawer-title-color, #292927);
+			background-color: var(--comment-drawer-background, #fff);
+			border-bottom: 1px solid var(--comment-drawer-border-color, #efefef);
+		}
+		.closeBtn{
+			position: absolute;
+			right: 10px;
+			top: 10px;
+			font-size: 24px;
+			color: var(--comment-drawer-close-color, #909399);
 		}
 	}
 	
+}
+
+.readerOuter.block-epoch-skin {
+	.readerPages .articlePage {
+		box-shadow: inset 0 0 0 4rpx rgba(39, 52, 33, 0.34), 0 0 25px rgba(0, 0, 0, 0.12) !important;
+	}
+
+	.readerPages .articlePage .title {
+		text-shadow: 2rpx 2rpx 0 rgba(255, 255, 255, 0.62);
+	}
+
+	.readerPages .articlePage .textRender .paragraph.cento {
+		text-decoration-style: dashed;
+		text-decoration-thickness: 3rpx;
+	}
+
+	.tools .settings .btn {
+		border: 3rpx solid currentColor;
+		border-radius: 0;
+		box-shadow: 5rpx 5rpx 0 rgba(39, 52, 33, 0.28);
+	}
+
+	.tools .settings .reader-shortcuts .iconBtn {
+		height: 116rpx;
+		padding: 10rpx 6rpx 9rpx;
+		background: rgba(239, 244, 216, 0.78);
+		border: 3rpx solid rgba(39, 52, 33, 0.76);
+		border-radius: 4rpx;
+		box-shadow: 5rpx 5rpx 0 rgba(39, 52, 33, 0.24);
+
+		i {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 54rpx;
+			height: 54rpx;
+			background: #273421;
+			box-shadow: inset -5rpx -5rpx 0 rgba(0, 0, 0, 0.22), inset 4rpx 4rpx 0 rgba(255, 255, 255, 0.12);
+			color: #e7edcf;
+			font-size: 36rpx;
+			line-height: 54rpx;
+		}
+
+		p {
+			margin-top: 7rpx;
+			color: #273421;
+			font-size: 22rpx;
+			font-weight: 700;
+		}
+
+		&.active {
+			background: #d7a928;
+			box-shadow: inset 0 0 0 3rpx #fff1a6, 5rpx 5rpx 0 rgba(39, 52, 33, 0.3);
+		}
+	}
+
+		.bottomBar {
+			bottom: var(--loghome-safe-bottom, 0px);
+		padding-top: 7rpx;
+		padding-bottom: 7rpx;
+		border-top: 5rpx solid rgba(39, 52, 33, 0.48);
+		background: linear-gradient(90deg, rgba(75, 81, 77, 0.24) 50%, rgba(54, 60, 57, 0.24) 50%);
+		background-size: 44rpx 44rpx;
+		font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+		font-weight: 700;
+	}
 }
 
 .feedback-container {

@@ -4,6 +4,7 @@ let { query } = require('../sql.js');
 let auth = require('../bin/auth.js');
 const {
 	COLLABORATOR_STATUS,
+	buildAccessPayload,
 	serializeAccess,
 } = require('../bin/novelCollaboration.js');
 
@@ -27,6 +28,23 @@ router.get('/get_my_worlds', auth, async function (req, res) {
 						AND nc_active.status = ?
 					LIMIT 1
 				) AS has_active_collaborators,
+				(
+					SELECT COUNT(*)
+					FROM novel_collaborators nc_count
+					WHERE nc_count.novel_id = n.novel_id
+						AND nc_count.status = '${COLLABORATOR_STATUS.ACTIVE}'
+				) AS active_collaborator_count,
+				(
+					SELECT ms.membership_type
+					FROM membership_subscriptions ms
+					WHERE ms.user_id = n.author_id
+						AND ms.status = 'active'
+						AND ms.starts_at <= NOW()
+						AND ms.expires_at > NOW()
+						AND ms.membership_type IN ('standard', 'super')
+					ORDER BY FIELD(ms.membership_type, 'super', 'standard'), ms.expires_at DESC
+					LIMIT 1
+				) AS owner_membership_type,
 				nc.role AS collaborator_role,
 				nc.status AS collaborator_status,
 				nc.can_edit_article,
@@ -55,46 +73,7 @@ router.get('/get_my_worlds', auth, async function (req, res) {
 			],
 		);
 		results = JSON.parse(JSON.stringify(results)).map((row) => {
-			const isOwner =
-				Number(row.author_id) === Number(user.user_id) ||
-				Number(row.creator_id) === Number(user.user_id);
-			const canEditArticleAccess =
-				isOwner || Number(row.can_edit_article) === 1;
-			const canAddArticleAccess =
-				isOwner || Number(row.can_add_article) === 1;
-			const canDeleteArticleAccess =
-				isOwner || Number(row.can_delete_article) === 1;
-			const canSortArticleAccess =
-				isOwner || Number(row.can_sort_article) === 1;
-			const canPublishArticleAccess =
-				isOwner || Number(row.can_publish_article) === 1;
-			const access = {
-				viewer_user_id: Number(user.user_id),
-				novel_id: Number(row.novel_id),
-				author_id: Number(row.author_id),
-				access_role: isOwner ? 'owner' : 'collaborator',
-				collaborator_role: row.collaborator_role || null,
-				collaborator_status: isOwner
-					? null
-					: row.collaborator_status || COLLABORATOR_STATUS.ACTIVE,
-				can_view_novel: true,
-				can_view_articles: true,
-				can_edit_article: canEditArticleAccess,
-				can_edit_draft: canEditArticleAccess,
-				can_add_article: canAddArticleAccess,
-				can_delete_article: canDeleteArticleAccess,
-				can_sort_article: canSortArticleAccess,
-				can_publish_article: canPublishArticleAccess,
-				can_publish: canPublishArticleAccess,
-				can_manage_structure:
-					canAddArticleAccess ||
-					canDeleteArticleAccess ||
-					canSortArticleAccess,
-				can_manage_collaborators: isOwner,
-				can_respond_invitation: false,
-				is_owner: isOwner,
-				is_collaborator: !isOwner,
-			};
+			const access = buildAccessPayload(row, user.user_id);
 			const serializedAccess = serializeAccess(access);
 
 			return {

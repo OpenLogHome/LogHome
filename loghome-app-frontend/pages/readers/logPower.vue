@@ -179,7 +179,8 @@ export default {
 <style scoped>
 .content {
     min-height: 100vh;
-    background-color: #f5f5f5;
+    background-color: var(--background-color-secondary);
+    color: var(--text-color-primary);
     padding-bottom: 40rpx;
 }
 .pagebody {
@@ -192,7 +193,7 @@ export default {
 .novel-name {
     font-size: 36rpx;
     font-weight: bold;
-    color: #333;
+    color: var(--text-color-primary);
     margin-bottom: 20rpx;
 }
 .total-score {
@@ -202,7 +203,7 @@ export default {
 }
 .label {
     font-size: 28rpx;
-    color: #666;
+    color: var(--text-color-regular);
 }
 .score-value {
     font-size: 60rpx;
@@ -210,7 +211,7 @@ export default {
     color: #EA7034;
 }
 .card {
-    background: #fff;
+    background: var(--card-background);
     border-radius: 20rpx;
     padding: 30rpx;
     margin-bottom: 30rpx;
@@ -224,7 +225,7 @@ export default {
     padding-left: 16rpx;
 }
 .formula-box {
-    background: #f9f9f9;
+    background: var(--background-color-tertiary);
     padding: 20rpx;
     border-radius: 10rpx;
 }
@@ -234,17 +235,17 @@ export default {
     align-items: center;
     margin-bottom: 12rpx;
     font-size: 28rpx;
-    color: #555;
+    color: var(--text-color-regular);
 }
 .row.total {
     font-weight: bold;
-    color: #333;
+    color: var(--text-color-primary);
     margin-top: 10rpx;
     font-size: 30rpx;
 }
 .divider {
     height: 1px;
-    background: #eee;
+    background: var(--border-color);
     margin: 10rpx 0;
 }
 .item {
@@ -252,7 +253,7 @@ export default {
 }
 .calc {
     margin: 0 20rpx;
-    color: #999;
+    color: var(--text-color-secondary);
 }
 .val {
     width: 120rpx;
@@ -263,12 +264,12 @@ export default {
     display: flex;
     justify-content: space-between;
     font-size: 28rpx;
-    color: #555;
+    color: var(--text-color-regular);
     margin-bottom: 10rpx;
 }
 .formula-desc {
     font-size: 24rpx;
-    color: #999;
+    color: var(--text-color-secondary);
     text-align: right;
 }
 .limit-tip {
@@ -283,7 +284,7 @@ export default {
 }
 .tips {
     font-size: 24rpx;
-    color: #999;
+    color: var(--text-color-secondary);
     margin-top: 20rpx;
 }
 </style>

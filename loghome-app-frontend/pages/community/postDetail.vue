@@ -10,10 +10,11 @@
       <view class="post-content">
         <view class="post-header">
           <view class="user-info clickable" @tap="navigateToUser(post.user_id)">
-            <log-image class="user-avatar" :src="post.author_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+            <user-avatar class="user-avatar" :src="post.author_avatar" :frame="post.author_avatar_frame" :animate="true" :visual-scale="post.author_avatar_frame ? 1.2 : 1" />
             <view class="user-meta">
               <view class="user-name-row">
                 <text class="user-name">{{post.author_name}}</text>
+				<membership-badge class="community-membership-badge" :tier="post.author_membership_type" size="sm" :show-label="true" />
                 <view
                   v-if="post.author_badge"
                   class="user-badge-tap"
@@ -121,11 +122,12 @@
           <view v-for="comment in comments" :key="comment.comment_id" class="comment-item">
             <!-- 主评论 -->
             <view class="comment-main">
-              <log-image class="comment-avatar clickable" :src="comment.user_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'" @tap="navigateToUser(comment.user_id)"></log-image>
+              <user-avatar class="comment-avatar clickable" :src="comment.user_avatar" @tap="navigateToUser(comment.user_id)" />
               <view class="comment-content">
                 <view class="comment-header">
                   <view class="comment-username-row">
                     <text class="comment-username">{{comment.user_name}}</text>
+					<membership-badge class="community-membership-badge" :tier="comment.user_membership_type" size="xs" />
                     <view
                       v-if="comment.user_badge"
                       class="comment-badge-tap"
@@ -166,11 +168,12 @@
             <!-- 子评论 -->
             <view class="replies-list" v-if="comment.replies && comment.replies.length > 0">
               <view v-for="reply in comment.replies" :key="reply.comment_id" class="reply-item">
-                <log-image class="reply-avatar clickable" :src="reply.user_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'" @tap="navigateToUser(reply.user_id)"></log-image>
+                <user-avatar class="reply-avatar clickable" :src="reply.user_avatar" @tap="navigateToUser(reply.user_id)" />
                 <view class="reply-content">
                   <view class="reply-header">
                     <view class="reply-username-row">
                       <text class="reply-username">{{reply.user_name}}</text>
+					  <membership-badge class="community-membership-badge" :tier="reply.user_membership_type" size="xs" />
                       <view
                         v-if="reply.user_badge"
                         class="reply-badge-tap"
@@ -233,15 +236,23 @@
     <!-- 评论输入框 -->
     <view class="comment-input" :class="{'with-image': selectedImages.length > 0}">
       <view class="input-wrapper">
-        <textarea 
-          v-model="commentText" 
-          :placeholder="replyTo ? `回复 ${replyTo.user_name}` : '写下你的评论...'" 
-          auto-height
-          :maxlength="1000"
-          :focus="inputFocus"
-          @blur="onInputBlur"
-          adjust-position="false"
-        ></textarea>
+        <view class="textarea-wrapper" :class="{'is-expanded': commentText.length > 0}">
+          <textarea
+            class="comment-textarea"
+            v-model="commentText"
+            :placeholder="replyTo ? `回复 ${replyTo.user_name}` : '写下你的评论...'"
+            :auto-height="false"
+            :maxlength="commentMaxLength"
+            :focus="inputFocus"
+            @input="onCommentInput"
+            @blur="onInputBlur"
+            adjust-position="false"
+          ></textarea>
+          <text v-if="commentText.length > 0" class="comment-length"
+            :class="{'is-near-limit': commentLength >= commentMaxLength * 0.9}">
+            {{commentLength}} / {{commentMaxLength}}
+          </text>
+        </view>
         <view class="input-actions">
           <emoji-picker @select="onEmojiSelect"></emoji-picker>
           <view class="image-upload clickable" @tap="chooseImage">
@@ -292,6 +303,7 @@ import moment from 'moment'
 import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
 import HonorBadge from '../../components/honor-badge.vue'
+import MembershipBadge from '../../components/membership-badge.vue'
 import { settleAndNotifyExpTaskCompletion } from '../../lib/treeExpTaskNotifier.js'
 import darkModeMixin from '@/mixins/dark-mode.js'
 
@@ -299,7 +311,8 @@ export default {
   components: {
     emojiPicker,
     TaskRewardModal,
-    HonorBadge
+    HonorBadge,
+    MembershipBadge
   },
   mixins: [darkModeMixin],
   data() {
@@ -317,6 +330,7 @@ export default {
       replyTo: null,
       parentComment: null,
       isSubmitting: false,
+      commentMaxLength: 500,
       isLoading: true,
       userRole: -1, // -1: 未知, 0: 普通成员, 1: 管理员, 2: 圈主
       currentImageUrl: '', // 当前长按选中的图片URL
@@ -668,6 +682,13 @@ export default {
     
     async submitComment() {
       if (this.isSubmitting || (!this.commentText && this.selectedImages.length === 0)) return
+      if (this.commentText.length > this.commentMaxLength) {
+        uni.showToast({
+          title: `回复不能超过${this.commentMaxLength}字`,
+          icon: 'none'
+        })
+        return
+      }
       this.isSubmitting = true
       uni.showLoading({
         title: '发送中...',
@@ -815,7 +836,7 @@ export default {
       } catch (error) {
         console.error('评论发送失败:', error);
         uni.showToast({
-          title: '发送失败',
+          title: (error.response && error.response.data && (error.response.data.msg || error.response.data.message)) || '发送失败',
           icon: 'none'
         })
       } finally {
@@ -1145,12 +1166,19 @@ export default {
         }
       }, 100)
     },
+
+    onCommentInput(event) {
+      const value = event && event.detail ? String(event.detail.value || '') : this.commentText;
+      if (value.length > this.commentMaxLength) {
+        this.commentText = value.slice(0, this.commentMaxLength);
+      }
+    },
     
     // 处理表情选择
     onEmojiSelect(data) {
       if (data.type === 'emoji') {
         // 直接插入Emoji表情
-        this.commentText += data.content;
+        this.commentText = (this.commentText + data.content).slice(0, this.commentMaxLength);
       } else if (data.type === 'sticker') {
         // 直接将表情包作为图片添加到 selectedImages 中
         this.selectedImages.push(data.content);
@@ -1252,6 +1280,11 @@ export default {
         }
       });
     }
+  },
+  computed: {
+    commentLength() {
+      return this.commentText.length
+    }
   }
 }
 </script>
@@ -1320,6 +1353,10 @@ export default {
 .user-name-row {
   display: inline-flex;
   align-items: center;
+}
+
+.community-membership-badge {
+  margin-left: 8rpx;
 }
 
 .user-name {
@@ -1644,7 +1681,7 @@ export default {
   background-color: var(--card-background);
   padding: 20rpx;
   min-height: 200rpx;
-  margin-bottom: 112rpx;
+  margin-bottom: calc(112rpx + var(--loghome-safe-bottom, 0px));
 }
 
 .section-title {
@@ -1931,7 +1968,7 @@ export default {
 .comment-input {
   background-color: var(--card-background);
   border-top: 1rpx solid var(--border-color);
-  padding: 20rpx;
+  padding: 20rpx 20rpx calc(20rpx + var(--loghome-safe-bottom, 0px));
   transition: all 0.3s;
   position: fixed;
   left: 0;
@@ -1940,26 +1977,58 @@ export default {
   z-index: 10;
 }
 
-.comment-input.with-image {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
 .input-wrapper {
   display: flex;
   align-items: flex-end;
 }
 
-textarea {
+.textarea-wrapper {
   flex: 1;
-  min-height: 72rpx;
-  max-height: 200rpx;
+  min-width: 0;
+  height: 72rpx;
+  position: relative;
+  margin-right: 20rpx;
+  transition: height 0.2s ease;
+}
+
+.textarea-wrapper.is-expanded {
+  height: 200rpx;
+}
+
+.comment-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
   font-size: 28rpx;
   line-height: 1.5;
   padding: 16rpx 20rpx;
   background-color: var(--background-color-secondary);
-  border-radius: 36rpx;
-  margin-right: 20rpx;
+  border-radius: 24rpx;
   color: var(--text-color-primary);
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.textarea-wrapper.is-expanded .comment-textarea {
+  padding-bottom: 42rpx;
+}
+
+.comment-length {
+  position: absolute;
+  right: 18rpx;
+  bottom: 10rpx;
+  font-size: 20rpx;
+  line-height: 1;
+  color: var(--text-color-regular);
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.comment-length.is-near-limit {
+  color: #EA7034;
+  opacity: 1;
 }
 
 .input-actions {

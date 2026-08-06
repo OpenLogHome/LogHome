@@ -1,5 +1,5 @@
 <template>
-    <view>
+    <view class="upload-page" v-dark>
         <okingtz-cropper @uploadSuccess="uploadSuccess" :fixedNumber="[300,300]"></okingtz-cropper>
     </view>
 </template>
@@ -59,3 +59,11 @@
         }
     }
 </script>
+
+<style scoped>
+.upload-page {
+    min-height: 100vh;
+    background: var(--background-color-secondary);
+    color: var(--text-color-primary);
+}
+</style>

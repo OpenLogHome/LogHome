@@ -19,7 +19,8 @@
 					</view>
 					<view class="ownPic">
 						<navigator :url="'../users/personalPage?id=' + fan.user_id">
-							<log-image :src="fan.avatar_url" class="avatar-image"></log-image>
+							<user-avatar :src="fan.avatar_url" :frame="fan.avatar_frame" class="avatar-image"
+								:visual-scale="fan.avatar_frame ? 1.25 : 1" />
 						</navigator>
 					</view>
 					<view class="rightMod">
@@ -49,7 +50,8 @@
 		</view>
 		<view class="myInfo">
 			<view class="ownPic">
-				<log-image :src="myInfo.avatar_url" class="avatar-image"></log-image>
+				<user-avatar :src="myInfo.avatar_url" :frame="myInfo.avatar_frame" class="avatar-image"
+					:visual-scale="myInfo.avatar_frame ? 1.25 : 1" />
 			</view>
 			<view class="rightTop my-info-right">
 				<text class="username">{{myInfo.name}}</text>

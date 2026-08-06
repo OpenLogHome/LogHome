@@ -1,11 +1,18 @@
 <template>
-	<view class="content" :class="readerSettings.theme" style="transition: all .5s;" @tap="contentTapped">
+	<view class="content" :class="[readerSettings.theme, { 'block-epoch-skin': isBlockEpochSkin }]"
+		:style="readerPageStyle" @tap="contentTapped">
+		<view v-if="currentBackgroundSkin" class="reader-background-layer" :style="readerBackgroundLayerStyle"></view>
 		<el-alert title="提示" type="info" close-text="知道了" :description="'经审核，本文' + article.warn_status + '，请酌情选读。'"
 			show-icon v-show="article.warn_status && article.warn_status != 'None'" style="margin-bottom: 50rpx;"
 			effect="dark">
 		</el-alert>
 		<div class="tools" :class="{ opened: settingsOpened }" @click.self="toolsOuterClicked" ref="tools">
-			<div class="settings" :class="{ opened: settingsOpened }" ref="settings">
+			<div class="settings" :class="{ opened: settingsOpened, preview: isPreviewMode }" ref="settings">
+				<div class="readerTypeSettingRow">
+					<span class="settingLabel">阅读器</span>
+					<ReaderTypeSwitch class="reader-type-switch-setting" value="text"
+						@change="switchReaderType" />
+				</div>
 				<div class="line">
 					<div class="button" @click="changeFontSize(+1)">A+</div>
 					<div class="button" @click="changeFontSize(-1)">A-</div>
@@ -15,21 +22,22 @@
 						@click="changeLineHeight(1)">中</div>
 					<div class="button" :class="{ 'selected': readerSettings.lineHeightMode == 2 }"
 						@click="changeLineHeight(2)">宽</div>
-					<div class="button" @click="gotoMenu">目录</div>
+					<div v-if="!isPreviewMode" class="button" @click="gotoMenu">目录</div>
+					<div class="button" @click.stop="openNativeAudiobookPlayer()">听书</div>
 				</div>
-				<div class="line">
-					<div class="button white theme" @click="changeTheme('white')"
-						:class="{ 'selected': readerSettings.theme == 'white' }">蛙鸣白</div>
-					<div class="button yellow theme" @click="changeTheme('yellow')"
-						:class="{ 'selected': readerSettings.theme == 'yellow' }">原木黄</div>
-					<div class="button green theme" @click="changeTheme('green')"
-						:class="{ 'selected': readerSettings.theme == 'green' }">草原绿</div>
-					<div class="button purple theme" @click="changeTheme('purple')"
-						:class="{ 'selected': readerSettings.theme == 'purple' }">末地紫</div>
-					<div class="button black theme" @click="changeTheme('black')"
-						:class="{ 'selected': readerSettings.theme == 'black' }">虚空黑</div>
+				<div class="backgroundSettingRow">
+					<span class="backgroundLabel">背景</span>
+					<ReaderBackgroundPicker class="background-picker"
+						:theme-options="readerThemeOptions"
+						:skins="readerBackgroundSkins"
+						:theme-key="readerSettings.theme"
+						:skin-key="readerSettings.backgroundSkinKey || ''"
+						@select-theme="changeTheme"
+						@select-locked-theme="handleLockedBackgroundSkin"
+						@select-skin="changeBackgroundSkin"
+						@select-locked-skin="handleLockedBackgroundSkin" />
 				</div>
-				<div class="line">
+				<div v-if="!isPreviewMode" class="line">
 					<button type="default" class="inTopBar"
 						:class="[{ enabled: article.article_chapter != firstArticleChapter }, readerSettings.theme]"
 						@click="changePage(-1)">
@@ -91,12 +99,18 @@
 				@tap="articleTapped" :class="readerSettings.theme" v-if="articleContent && articleContent.length">
 				<div v-for="item in articleContent" :key="item.id || item.img || item.novel_id">
 					<div v-if="item.type == 'text'" class="paragraph"
-						:class="{ selected: item.selected, cento: item.cento }"
+						:class="{
+							selected: item.selected,
+							cento: item.cento,
+							listening: listeningParagraphId != null &&
+								String(article.article_id || articleId) === String(listeningArticleId) &&
+								String(item.id) === String(listeningParagraphId)
+						}"
 						:data-paragraph-id="item.id"
 						@longpress="handleParagraphLongpressed($event, item)">
 						{{ item.value }}
 						<span class="commentCount"
-							v-if="commentAmounts[item.id] > 0"
+							v-if="!isPreviewMode && commentAmounts[item.id] > 0"
 							@click.stop="gotoParagraphComment(item.id)">
 							<i class="el-icon-chat-square"></i>
 							<span class="count">{{ commentAmounts[item.id] }}</span>
@@ -124,16 +138,16 @@
 				<i class="el-icon-document-copy"></i>
 				<span>复制</span>
 			</div>
-			<div class="panel-button" v-show="selectedParagraph && !selectedParagraph.cento" @click="handleUnderline">
+			<div class="panel-button" v-show="!isPreviewMode && selectedParagraph && !selectedParagraph.cento" @click="handleUnderline">
 				<i class="el-icon-edit"></i>
 				<span>划线</span>
 			</div>
-			<div class="panel-button" v-show="selectedParagraph && selectedParagraph.cento"
+			<div class="panel-button" v-show="!isPreviewMode && selectedParagraph && selectedParagraph.cento"
 				@click="handleRemoveUnderline">
 				<i class="el-icon-remove-outline"></i>
 				<span>移除划线</span>
 			</div>
-			<div class="panel-button" @click="gotoParagraphComment(selectedParagraph.id)">
+			<div v-if="!isPreviewMode" class="panel-button" @click="gotoParagraphComment(selectedParagraph.id)">
 				<i class="el-icon-chat-line-round"></i>
 				<span>评论</span>
 			</div>
@@ -144,10 +158,10 @@
 		</div>
 
 		<div class="underBar">
-			<img src="../../static/icons/end.png" alt="">
+			<img src="../../static/icons/end.png" alt="" />
 			<div>已经到底了哦</div>
 		</div>
-		<div class="row" style="display: flex;">
+		<div v-if="!isPreviewMode" class="row" style="display: flex;">
 			<button type="default"
 				:class="[{ enabled: article.article_chapter != firstArticleChapter }, readerSettings.theme]"
 				@click="changePage(-1)"
@@ -161,7 +175,7 @@
 			</button>
 		</div>
 
-		<el-drawer :with-header="false" :visible.sync="menuDrawer" direction="btt" :modal="false" size="50%"
+		<el-drawer v-if="!isPreviewMode" :with-header="false" :visible.sync="menuDrawer" direction="btt" :modal="false" size="50%"
 			custom-class="bookMenu">
 			<bookMenu
 				:novel_id="article.novel_id"
@@ -169,11 +183,11 @@
 				:visible="menuDrawer"
 			></bookMenu>
 		</el-drawer>
-		<el-drawer :with-header="false" :visible.sync="commentDrawerVisible" direction="btt"
+		<el-drawer v-if="!isPreviewMode" :with-header="false" :visible.sync="commentDrawerVisible" direction="btt"
 			:modal="commentDrawerVisible" size="calc(80% + 44px)" custom-class="commentDrawer" :destroy-on-close="true"
-			:wrapperClosable="false">
-			<div class="bookCommentDrawer">
-				<div class="title">
+			:wrapperClosable="false" :append-to-body="true">
+			<div class="bookCommentDrawer" :style="commentDrawerThemeStyle">
+				<div class="drawerTitle">
 					段落评论
 				</div>
 				<div class="closeBtn" @click="handleCloseCommentDraweraManually">
@@ -202,6 +216,16 @@
 				<el-button type="primary" @click="submitFeedback" :disabled="!feedbackContent">提交</el-button>
 			</span>
 		</el-dialog>
+		<AudiobookPlayer
+			ref="audiobookPlayer"
+			:articleIds="listeningArticleIds"
+			:articles="isPreviewMode && previewPayload ? [previewPayload.article] : []"
+			:playlistKey="isPreviewMode ? 'preview:' + previewKey : ''"
+			:coverUrl="audiobookNovelInfo.picUrl || ''"
+			:bookTitle="audiobookNovelInfo.name || ''"
+			:startArticleId="articleId"
+			@change="handleAudiobookProgress"
+		/>
 		<div class="lastProgress" v-show="showLastProgress">
 			已恢复上次阅读进度 <div class="textbutton" style="margin-left: 10px;"
 				@click="scrollToTop(true); showLastProgress = false">回到顶部</div>
@@ -214,25 +238,64 @@ import axios from 'axios'
 import bookMenu from '../../components/bookMenu.vue'
 import bookInCase from '../../components/book_in_case.vue'
 import BookComment from './bookComment.vue'
+import AudiobookPlayer from '../../components/audiobook-player.vue'
+import ReaderBackgroundPicker from '../../components/ReaderBackgroundPicker.vue'
+import ReaderTypeSwitch from '../../components/ReaderTypeSwitch.vue'
+import { buildReaderUrl, setReaderMode } from '../../common/reader-mode.js'
+import { readReaderPreview } from '../../common/reader-preview.js'
 import { createTreeExpReporter } from '../../lib/treeExpReporter.js'
+import { createBackgroundSkinStyle, normalizeBackgroundSkin } from '../../common/background-skins.js'
+import { getMembershipStatus } from '../../common/membership-api.js'
+import { getColorMode, getProjectThemeMode, readPageTheme, rememberPageTheme } from '../../common/page-theme-memory.js'
+
+const ARTICLE_RICH_THEME_MEMORY_KEY = 'pageThemeMemory:articleRich'
 export default {
 	components: {
 		bookMenu,
 		bookInCase,
-		BookComment
+		BookComment,
+		AudiobookPlayer,
+		ReaderBackgroundPicker,
+		ReaderTypeSwitch
 	},
 	data() {
 		return {
+			isPreviewMode: false,
+			previewKey: '',
+			previewPayload: null,
 			articleId: -1,
 			article: {},
 			articleContent: [],
 			articles: [],
+			listeningArticleIds: [],
+			listeningArticleId: null,
+			listeningParagraphId: null,
+			audiobookNovelInfo: {},
 			pageHeadBtn: [],
 			settingsOpened: false,
 			readerSettings: {},
-			pageHead: {},
+			readerBackgroundSkins: [],
+			membershipTier: '',
+			backgroundSkinsLoaded: false,
+			readerSolidThemes: [
+				{ key: 'white', name: '蛙鸣白', required_membership: 'none' },
+				{ key: 'yellow', name: '原木黄', required_membership: 'none' },
+				{ key: 'green', name: '草原绿', required_membership: 'none' },
+				{ key: 'blue', name: '晴空蓝', required_membership: 'none' },
+				{ key: 'purple', name: '末地紫', required_membership: 'none' },
+				{ key: 'pink', name: '桃花粉', required_membership: 'none' },
+				{ key: 'black', name: '虚空黑', required_membership: 'none' },
+				{ key: 'wavechaser', name: '追波', required_membership: 'standard' },
+				{ key: 'powderblue', name: '粉蓝', required_membership: 'standard' },
+				{ key: 'qingyun', name: '青云', required_membership: 'standard' },
+				{ key: 'sunburst', name: '艳阳', required_membership: 'standard' },
+				{ key: 'thorncrown', name: '荆棘冠', required_membership: 'standard' },
+				{ key: 'chocolate', name: '巧克力', required_membership: 'standard' }
+			],
+			pageHead: null,
+			nativeNavigationBarVisible: null,
+			nativeSystemUiBackgroundColor: null,
 			scrollTop: 0,
-			navigationBarController: {},
 			pageProgressInterval: undefined,
 			showLastProgress: false,
 			selectionMode: false,
@@ -253,25 +316,61 @@ export default {
 			commentAmounts: {},
 			readExpReporter: null,
 			themes: {
+				blue: {
+					backColor: "#f4fafc",
+					color: "#27566b",
+				},
 				white: {
-					color: "#001f41",
-					backColor: "#fefefe",
+					color: "#292927",
+					backColor: "#fefefc",
 				},
 				yellow: {
-					backColor: "#FFEFD6",
-					color: "#502727",
+					backColor: "#fcf8ef",
+					color: "#5c4b3b",
 				},
 				green: {
-					backColor: "#C1E6C6",
-					color: "#093811",
+					backColor: "#f5faf4",
+					color: "#395744",
 				},
 				purple: {
-					backColor: "#FDE0FF",
-					color: "#310024",
+					backColor: "#faf7fc",
+					color: "#57445f",
+				},
+				pink: {
+					backColor: "#fbf6f8",
+					color: "#664858",
 				},
 				black: {
-					backColor: "#282C35",
-					color: "#CECECE",
+					backColor: "#22272e",
+					color: "#d9dee7",
+				},
+				wavechaser: {
+					backColor: "#e84f89",
+					color: "#32101f",
+				},
+				powderblue: {
+					backColor: "#ace5e2",
+					color: "#244244",
+				},
+				qingyun: {
+					backColor: "#313b3e",
+					color: "#e7eeef",
+				},
+				sunburst: {
+					backColor: "#fcd23c",
+					color: "#493900",
+				},
+				thorncrown: {
+					backColor: "#7d2120",
+					color: "#f6e8e5",
+				},
+				chocolate: {
+					backColor: "#380001",
+					color: "#f4e7e1",
+				},
+				blockepoch: {
+					backColor: "#dce3c2",
+					color: "#273421",
 				}
 			},
 			menuDrawer: false,
@@ -282,6 +381,199 @@ export default {
 		this.settingsOpened = !this.settingsOpened;
 	},
 	methods: {
+		getReaderThemeMode(themeKey) {
+			const theme = this.themes[themeKey] || this.themes.yellow;
+			return getColorMode(theme.backColor);
+		},
+		rememberCurrentReaderTheme() {
+			if (!this.readerSettings || !this.readerSettings.theme) return;
+			rememberPageTheme(
+				ARTICLE_RICH_THEME_MEMORY_KEY,
+				this.getReaderThemeMode(this.readerSettings.theme),
+				this.readerSettings
+			);
+		},
+		applyReaderThemeMode(mode) {
+			const fallback = {
+				theme: mode === 'dark' ? 'black' : 'yellow',
+				backgroundSkinKey: ''
+			};
+			const selection = readPageTheme(ARTICLE_RICH_THEME_MEMORY_KEY, mode, fallback);
+			if (!selection || !this.themes[selection.theme]) return;
+			this.readerSettings.theme = selection.theme;
+			this.$set(this.readerSettings, 'backgroundSkinKey', selection.backgroundSkinKey || '');
+			window.localStorage.setItem('readerSettings', JSON.stringify(this.readerSettings));
+			this.$nextTick(this.updateNavigationBarVisibility);
+		},
+		initializeReaderThemeMemory() {
+			this.rememberCurrentReaderTheme();
+			this.applyReaderThemeMode(this.projectThemeMode);
+		},
+		switchReaderType(mode) {
+			if (mode === 'text') return;
+			const visibleParagraphId = this.getVisibleParagraphId();
+			setReaderMode(mode);
+			uni.redirectTo({
+				url: buildReaderUrl(mode, {
+					articleId: this.article.article_id || this.articleId,
+					novelId: this.article.novel_id,
+					paragraphId: visibleParagraphId,
+					previewKey: this.previewKey
+				})
+			});
+		},
+		getVisibleParagraphId() {
+			const visibleParagraph = Array.from(document.querySelectorAll('.paragraph[data-paragraph-id]'))
+				.map(element => ({ element, rect: element.getBoundingClientRect() }))
+				.filter(item => item.rect.bottom > 0 && item.rect.top < window.innerHeight)
+				.sort((a, b) => Math.abs(a.rect.top) - Math.abs(b.rect.top))[0];
+			return visibleParagraph ? visibleParagraph.element.dataset.paragraphId : null;
+		},
+		isAudiobookArticle(article) {
+			if (!article || (!this.isPreviewMode && Number(article.is_draft || 0) !== 0)) return false;
+			return ['richtext', 'worldOutline', 'spliter'].includes(String(article.article_type || ''));
+		},
+		async loadAudiobookNovelInfo(novelId) {
+			if (this.isPreviewMode) {
+				this.audiobookNovelInfo = JSON.parse(JSON.stringify(this.previewPayload.novel || {}));
+				return;
+			}
+			if (!novelId) return;
+			if (String(this.audiobookNovelInfo.novel_id || '') === String(novelId)) return;
+			try {
+				const res = await axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + novelId, {});
+				if (res.status === 200 && Array.isArray(res.data) && res.data[0]) {
+					this.audiobookNovelInfo = res.data[0];
+				}
+			} catch (error) {
+				console.warn('loadAudiobookNovelInfo failed', error);
+			}
+		},
+		async openNativeAudiobookPlayer(startParagraphId = null) {
+			if (!this.isAudiobookArticle(this.article)) {
+				uni.showToast({ title: '当前内容暂不支持听书', icon: 'none' });
+				return false;
+			}
+			if (!Array.isArray(this.articles) || this.articles.length === 0) {
+				await this.getArticles(this.article.novel_id);
+			}
+			this.listeningArticleIds = this.articles
+				.filter(item => this.isAudiobookArticle(item))
+				.map(item => String(item.article_id));
+			if (this.listeningArticleIds.length === 0) {
+				this.listeningArticleIds = [String(this.article.article_id || this.articleId)];
+			}
+			await this.loadAudiobookNovelInfo(this.article.novel_id);
+			const targetParagraphId = startParagraphId == null
+				? (this.getVisibleParagraphId() || -1)
+				: startParagraphId;
+			this.listeningArticleId = String(this.article.article_id || this.articleId);
+			this.listeningParagraphId = String(targetParagraphId);
+			this.settingsOpened = false;
+			await this.$nextTick();
+			return this.$refs.audiobookPlayer.openNativePlayer(targetParagraphId);
+		},
+		handleAudiobookProgress(data) {
+			if (!data || data.articleId == null || data.paragraphId == null) return;
+			const targetArticleId = String(data.articleId);
+			const targetParagraphId = String(data.paragraphId);
+			this.listeningArticleId = targetArticleId;
+			this.listeningParagraphId = targetParagraphId;
+			if (String(this.article.article_id || this.articleId) !== targetArticleId) {
+				this.pendingParagraphId = targetParagraphId;
+				this.refreshPage(targetArticleId);
+				return;
+			}
+			this.$nextTick(() => this.scrollToParagraph(targetParagraphId));
+		},
+		resolvePageHead() {
+			const currentPage = this.$el && typeof this.$el.closest === 'function'
+				? this.$el.closest('uni-page')
+				: null;
+			if (this.pageHead && this.pageHead.isConnected && (!currentPage || currentPage.contains(this.pageHead))) {
+				return this.pageHead;
+			}
+			this.pageHead = currentPage
+				? currentPage.querySelector('.uni-page-head')
+				: document.querySelector('uni-page:last-of-type .uni-page-head, .uni-page-head');
+			this.pageHeadBtn = this.pageHead
+				? this.pageHead.querySelectorAll('.uni-btn-icon')
+				: [];
+			if (this.pageHead) {
+				this.pageHead.style.transition = 'opacity .3s, transform .3s, background-color .3s';
+				this.pageHead.style.willChange = 'opacity, transform';
+				this.pageHeadBtn.forEach(element => {
+					element.style.transition = 'color .3s';
+				});
+			}
+			return this.pageHead;
+		},
+		updateNavigationBarVisibility() {
+			const theme = this.themes[this.readerSettings.theme] || this.themes.yellow;
+			const shouldShow = this.settingsOpened || this.scrollTop < 120;
+			const pageHead = this.resolvePageHead();
+			if (pageHead) {
+				pageHead.style.opacity = shouldShow ? '1' : '0';
+				pageHead.style.transform = shouldShow ? 'translateY(0)' : 'translateY(-100%)';
+				pageHead.style.pointerEvents = shouldShow ? 'auto' : 'none';
+				pageHead.style.backgroundColor = this.settingsOpened ? 'transparent' : theme.backColor;
+				this.pageHeadBtn.forEach(element => {
+					element.style.color = this.settingsOpened ? 'white' : theme.color;
+				});
+			}
+			this.setNativeNavigationBarVisible(shouldShow);
+			this.setNativeSystemUiStyle(this.settingsOpened ? '#000000' : theme.backColor);
+		},
+		setNativeNavigationBarVisible(visible, force = false) {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null;
+			if (!bridge || !bridge.inApp || typeof bridge.setNavigationBarVisible !== 'function') return;
+			if (!force && this.nativeNavigationBarVisible === visible) return;
+			this.nativeNavigationBarVisible = visible;
+			bridge.setNavigationBarVisible(visible);
+		},
+		setNativeSystemUiStyle(backgroundColor, force = false) {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null;
+			if (!bridge || !bridge.inApp || typeof bridge.setSystemUIStyle !== 'function') return;
+			if (!force && this.nativeSystemUiBackgroundColor === backgroundColor) return;
+			this.nativeSystemUiBackgroundColor = backgroundColor;
+			bridge.setSystemUIStyle(backgroundColor);
+		},
+		handleWindowScroll() {
+			this.updateScrollTopFromDocument();
+		},
+		getDocumentScrollTop(event) {
+			const pageWrapper = this.$el && typeof this.$el.closest === 'function'
+				? this.$el.closest('uni-page-wrapper')
+				: document.querySelector('uni-page-wrapper');
+			const eventTargetScrollTop = event && event.target && Number(event.target.scrollTop);
+			return Math.max(
+				window.pageYOffset || 0,
+				document.scrollingElement ? document.scrollingElement.scrollTop : 0,
+				document.documentElement ? document.documentElement.scrollTop : 0,
+				document.body ? document.body.scrollTop : 0,
+				pageWrapper ? pageWrapper.scrollTop : 0,
+				Number.isFinite(eventTargetScrollTop) ? eventTargetScrollTop : 0
+			);
+		},
+		updateScrollTopFromDocument(event) {
+			this.scrollTop = this.getDocumentScrollTop(event);
+			this.doUpdateCommentDisplay = true;
+			this.updateNavigationBarVisibility();
+		},
+		handleDocumentScroll(event) {
+			this.updateScrollTopFromDocument(event);
+		},
+		attachScrollListeners() {
+			document.removeEventListener('scroll', this.handleDocumentScroll, true);
+			document.addEventListener('scroll', this.handleDocumentScroll, true);
+			window.removeEventListener('scroll', this.handleWindowScroll);
+			window.addEventListener('scroll', this.handleWindowScroll, { passive: true });
+			this.updateScrollTopFromDocument();
+		},
+		detachScrollListeners() {
+			document.removeEventListener('scroll', this.handleDocumentScroll, true);
+			window.removeEventListener('scroll', this.handleWindowScroll);
+		},
 		markReadActivity() {
 			if (this.readExpReporter) {
 				this.readExpReporter.markActive();
@@ -360,8 +652,10 @@ export default {
 			}
 		},
 		updatePageProgress() {
+			if (this.isPreviewMode) return;
 			this.pageProgressInterval = setInterval(() => {
-				let scrollTop = window.pageYOffset || document.body.scrollTop || document.documentElement.scrollTop
+				let scrollTop = this.getDocumentScrollTop();
+				this.scrollTop = scrollTop;
 				localStorage.setItem(`articleProgress_${this.articleId}`, scrollTop);
 			}, 2000);
 		},
@@ -370,15 +664,17 @@ export default {
 				title: "努力加载中"
 			})
 			let _this = this;
-			axios.get(this.$baseUrl + '/articles/get_article?id=' + articleId).then((res) => {
+			const applyArticle = (loadedArticle) => {
 				this.articleId = articleId;
-				this.article = res.data[0];
+				this.article = loadedArticle;
 				if (this.article.article_type == "worldVocabulary") {
-					this.article.content = JSON.parse(this.article.content);
+					if (typeof this.article.content === 'string') {
+						this.article.content = JSON.parse(this.article.content);
+					}
 				}
 				if (this.article.article_type == "richtext" || this.article.article_type == "worldOutline") {
 					this.articleContent = this.normalizeArticleContent(this.article.content);
-					this.showArticleCentos();
+					if (!this.isPreviewMode) this.showArticleCentos();
 				} else {
 					this.articleContent = [];
 				}
@@ -390,11 +686,12 @@ export default {
 					if (_this.pendingParagraphId) {
 						_this.scrollToParagraph(_this.pendingParagraphId);
 						_this.pendingParagraphId = null;
-					} else {
+					} else if (!this.isPreviewMode) {
 						this.loadPageProgress();
 					}
 				})
 				this.getArticles(this.article.novel_id);
+				if (this.isPreviewMode) return;
 				window.localStorage.setItem("ReaderHistory_" + this.article.novel_id, this.article.article_chapter);
 
 				let tk = JSON.parse(window.localStorage.getItem('token'));
@@ -415,14 +712,116 @@ export default {
 						},
 					).catch(() => { });
 				}
+			};
+			if (this.isPreviewMode) {
+				applyArticle(JSON.parse(JSON.stringify(this.previewPayload.article)));
+				uni.hideLoading();
+				return;
+			}
+			axios.get(this.$baseUrl + '/articles/get_article?id=' + articleId).then((res) => {
+				applyArticle(res.data[0]);
 			}).catch(function (error) { }).then(function () {
 				uni.hideLoading();
 			})
 
 		},
 		changeTheme(themeName) {
+			const theme = this.readerSolidThemes.find(item => item.key === themeName);
+			if (!theme || !this.canUseBackgroundSkin(theme)) {
+				if (theme) this.handleLockedBackgroundSkin(theme);
+				return;
+			}
 			this.readerSettings.theme = themeName;
+			this.$set(this.readerSettings, 'backgroundSkinKey', "");
 			window.localStorage.setItem("readerSettings", JSON.stringify(this.readerSettings));
+			this.rememberCurrentReaderTheme();
+		},
+		async loadReaderBackgroundSkins() {
+			try {
+				const membershipPromise = this.hasStoredToken()
+					? getMembershipStatus(this.$baseUrl).catch(() => null)
+					: Promise.resolve(null);
+				const [res, membershipStatus] = await Promise.all([
+					axios.get(this.$baseUrl + '/app/get_writer_background_skins'),
+					membershipPromise
+				]);
+				this.membershipTier = membershipStatus && membershipStatus.active && membershipStatus.subscription
+					? String(membershipStatus.subscription.membership_type || '')
+					: '';
+				const currentTheme = this.readerSolidThemes.find(item => item.key === this.readerSettings.theme);
+				if (currentTheme && !this.canUseBackgroundSkin(currentTheme)) {
+					this.readerSettings.theme = this.projectThemeMode === 'dark' ? 'black' : 'yellow';
+					this.$set(this.readerSettings, 'backgroundSkinKey', "");
+					window.localStorage.setItem("readerSettings", JSON.stringify(this.readerSettings));
+					this.rememberCurrentReaderTheme();
+				}
+				if (res.status === 200 && Array.isArray(res.data)) {
+					this.readerBackgroundSkins = res.data
+						.map(item => normalizeBackgroundSkin({
+							...item,
+							is_locked: !this.canUseBackgroundSkin(item)
+						}, theme => !!this.themes[theme]))
+						.filter(Boolean);
+					if (this.readerSettings.backgroundSkinKey && !this.currentBackgroundSkin) {
+						this.$set(this.readerSettings, 'backgroundSkinKey', "");
+						window.localStorage.setItem("readerSettings", JSON.stringify(this.readerSettings));
+						this.rememberCurrentReaderTheme();
+					}
+				}
+			} catch (error) {
+				console.warn('loadReaderBackgroundSkins failed', error);
+				this.readerBackgroundSkins = [];
+			} finally {
+				this.backgroundSkinsLoaded = true;
+			}
+		},
+		hasStoredToken() {
+			try {
+				const rawToken = window.localStorage.getItem('token');
+				if (!rawToken) return false;
+				let token = rawToken;
+				try {
+					token = JSON.parse(rawToken);
+				} catch (error) { }
+				return Boolean(token && (typeof token === 'string' ? token : token.tk));
+			} catch (error) {
+				return false;
+			}
+		},
+		canUseBackgroundSkin(skin) {
+			const requiredMembership = String(skin && skin.required_membership || 'none');
+			if (requiredMembership === 'none') return true;
+			if (requiredMembership === 'standard') {
+				return this.membershipTier === 'standard' || this.membershipTier === 'super';
+			}
+			return requiredMembership === 'super' && this.membershipTier === 'super';
+		},
+		handleLockedBackgroundSkin(skin) {
+			const superOnly = skin && skin.required_membership === 'super';
+			uni.showModal({
+				title: superOnly ? '超级典藏背景' : '原木典藏背景',
+				content: superOnly
+					? '这款背景仅限超级原木通行证用户使用。'
+					: '这款背景仅限原木通行证或超级原木通行证用户使用。',
+				cancelText: '暂不',
+				confirmText: '查看通行证',
+				success: ({ confirm }) => {
+					if (confirm) uni.navigateTo({ url: '/pages/membership/index' });
+				}
+			});
+		},
+		changeBackgroundSkin(skinKey) {
+			const skin = this.readerBackgroundSkins.find(item => item.skin_key === skinKey);
+			if (skin && skin.is_locked) {
+				this.handleLockedBackgroundSkin(skin);
+				return;
+			}
+			this.$set(this.readerSettings, 'backgroundSkinKey', skin ? skin.skin_key : "");
+			if (skin) {
+				this.readerSettings.theme = skin.theme_key;
+			}
+			window.localStorage.setItem("readerSettings", JSON.stringify(this.readerSettings));
+			this.rememberCurrentReaderTheme();
 		},
 		changeFontSize(ds) {
 			if (ds == 1) {
@@ -451,16 +850,22 @@ export default {
 			if (mode == 1) return "175%";
 			if (mode == 2) return "225%";
 		},
-		getArticles(uid) {
-			let _this = this;
-			axios.get(this.$baseUrl + '/library/get_articles_all?id=' + uid, {}).then((res) => {
-				this.articles = res.data;
-				// console.log(this.articles.length)
-			}).catch(function (error) {
-				_this.articles.splice(0, 0);
-			}).then(function () { })
+		async getArticles(uid) {
+			if (this.isPreviewMode) {
+				this.articles = [this.previewPayload.article];
+				return this.articles;
+			}
+			try {
+				const res = await axios.get(this.$baseUrl + '/library/get_articles_all?id=' + uid, {});
+				this.articles = Array.isArray(res.data) ? res.data : [];
+				return this.articles;
+			} catch (error) {
+				console.warn('getArticles failed', error);
+				return this.articles;
+			}
 		},
 		changePage(dp) {
+			if (this.isPreviewMode) return;
 			this.markReadActivity();
 			let articles = this.articles;
 			let article = this.article;
@@ -529,6 +934,7 @@ export default {
 			return Array.isArray(targetParagraph.value) ? targetParagraph.value.join('') : (targetParagraph.value || '');
 		},
 		gotoMenu() {
+			if (this.isPreviewMode) return;
 			// uni.navigateTo({
 			// 	url:"./allArticles?id=" + this.article.novel_id
 			// })
@@ -588,6 +994,7 @@ export default {
 			}
 		},
 		async showArticleCentos() {
+			if (this.isPreviewMode) return;
 			if (!this.articleContent || !this.articleContent.length) return;
 			let centos = await this.getArticleCento(this.articleId);
 			for (let item of centos) {
@@ -625,6 +1032,7 @@ export default {
 			this.$forceUpdate();
 		},
 		async handleUnderline() {
+			if (this.isPreviewMode) return;
 			if (!this.selectedParagraph) return;
 			let tk = JSON.parse(window.localStorage.getItem('token'));
 			if (tk) tk = tk.tk;
@@ -645,6 +1053,7 @@ export default {
 			}
 		},
 		async handleRemoveUnderline() {
+			if (this.isPreviewMode) return;
 			const paragraph = this.selectedParagraph;
 			if (!paragraph?.cento) return;
 			let tk = JSON.parse(window.localStorage.getItem('token'));
@@ -716,6 +1125,7 @@ export default {
 			}
 		},
 		async updateArticleCommentDisplay() {
+			if (this.isPreviewMode) return;
 			if (!this.doUpdateCommentDisplay || !this.articleContent || !this.articleContent.length) return;
 			this.doUpdateCommentDisplay = false;
 			let paragraphDoms = document.querySelectorAll(".paragraph[data-paragraph-id]");
@@ -733,6 +1143,7 @@ export default {
 			}
 		},
 		gotoParagraphComment(paragraphId) {
+			if (this.isPreviewMode) return;
 			this.markReadActivity();
 			this.activeCommentParagraphId = Number(paragraphId);
 			this.commentDrawerData = {
@@ -761,6 +1172,13 @@ export default {
 				return;
 			}
 			await this.closeCommentDrawer(false);
+		},
+		handleNativeBack(event) {
+			if (!this.commentDrawerVisible) {
+				return;
+			}
+			event.preventDefault();
+			window.history.go(-1);
 		},
 		async handleCloseCommentDraweraManually() {
 			await this.closeCommentDrawer(true);
@@ -815,9 +1233,18 @@ export default {
 		},
 	},
 	onLoad(option) {
-		let _this = this;
-		this.readExpReporter = createTreeExpReporter(this, 'read_seconds', { activeWindowMs: 120000 });
-		this.readExpReporter.start();
+		this.previewKey = String(option.previewKey || '');
+		this.previewPayload = readReaderPreview(this.previewKey);
+		this.isPreviewMode = !!this.previewPayload;
+		if (this.previewKey && !this.previewPayload) {
+			uni.showToast({ title: '预览内容已失效', icon: 'none' });
+			setTimeout(() => uni.navigateBack(), 300);
+			return;
+		}
+		if (!this.isPreviewMode) {
+			this.readExpReporter = createTreeExpReporter(this, 'read_seconds', { activeWindowMs: 120000 });
+			this.readExpReporter.start();
+		}
 		let readerSettings = window.localStorage.getItem("readerSettings");
 		if (readerSettings && JSON.parse(readerSettings)["version"] == 211213) {
 			this.readerSettings = JSON.parse(readerSettings);
@@ -831,6 +1258,9 @@ export default {
 			};
 			window.localStorage.setItem("readerSettings", JSON.stringify(this.readerSettings));
 		}
+		this.$set(this.readerSettings, 'backgroundSkinKey', String(this.readerSettings.backgroundSkinKey || "").slice(0, 64));
+		this.initializeReaderThemeMemory();
+		this.loadReaderBackgroundSkins();
 		if (JSON.stringify(option) == "{}") {
 			uni.showToast({
 				title: "undefined",
@@ -843,48 +1273,13 @@ export default {
 			title: '努力加载中'
 		});
 
-		//设定导航栏显示效果
-		setTimeout(() => {
-			this.pageHead = document.getElementsByClassName('uni-page-head')[0];
-			this.pageHeadBtn = document.querySelectorAll('.uni-page-head .uni-btn-icon');
-			this.pageHeadBtn.forEach(element => {
-				element.style.transition = "all .5s"
-			})
-			this.pageHead.style.transition = "opacity .5s"
-		}, 0)
-
-		this.navigationBarController = setInterval(() => {
-			if (_this.settingsOpened) {
-				_this.pageHead.style.opacity = "1"
-				_this.pageHead.style.backgroundColor = "transparent"
-				this.pageHeadBtn.forEach(element => {
-					element.style.color = "white";
-				})
-				if (window.jsBridge && window.jsBridge.inApp) {
-					jsBridge.setSystemUIStyle("#000000", "#ffffff");
-				}
-
-			} else if (_this.scrollTop >= 120) {
-				_this.pageHead.style.opacity = "0"
-				// 状态栏颜色调整
-				if (window.jsBridge && window.jsBridge.inApp) {
-					jsBridge.setSystemUIStyle(_this.themes[_this.readerSettings.theme].backColor, _this.themes[_this.readerSettings.theme].color);
-				}
-			} else {
-				_this.pageHead.style.opacity = "1"
-				_this.pageHead.style.backgroundColor = _this.themes[_this.readerSettings.theme].backColor;
-				this.pageHeadBtn.forEach(element => {
-					element.style.color = _this.themes[_this.readerSettings.theme].color;
-				})
-				// 状态栏颜色调整
-				if (window.jsBridge && window.jsBridge.inApp) {
-					jsBridge.setSystemUIStyle(_this.themes[_this.readerSettings.theme].backColor, _this.themes[_this.readerSettings.theme].color);
-				}
-			}
-		}, 300)
-		this.updateCommentDisplayTimer = setInterval(() => {
-			this.updateArticleCommentDisplay();
-		}, 200);
+		// 导航栏在原生 WebView 中可能晚于页面组件挂载，滚动时会继续尝试解析。
+		this.$nextTick(this.attachScrollListeners);
+		if (!this.isPreviewMode) {
+			this.updateCommentDisplayTimer = setInterval(() => {
+				this.updateArticleCommentDisplay();
+			}, 200);
+		}
 		if (option.paragraphId) {
 			this.pendingParagraphId = option.paragraphId;
 		}
@@ -892,31 +1287,40 @@ export default {
 		// #ifdef H5
 		window.addEventListener('popstate', this.browserBack)
 		// #endif
+		window.addEventListener('loghomeNativeBack', this.handleNativeBack)
 
 		// 启动页面滚动日志记录
-		this.updatePageProgress();
+		if (!this.isPreviewMode) this.updatePageProgress();
 	},
 	beforeDestroy() {
 		if (this.readExpReporter) {
 			this.readExpReporter.stop();
 		}
-		clearInterval(this.navigationBarController);
 		clearInterval(this.pageProgressInterval);
 		clearInterval(this.updateCommentDisplayTimer);
 		// #ifdef H5
 		window.removeEventListener("popstate", this.browserBack);
 		// #endif
+		window.removeEventListener('loghomeNativeBack', this.handleNativeBack)
+		this.detachScrollListeners();
+		this.setNativeNavigationBarVisible(true, true);
 	},
 	onShow() {
+		// 其他页面可能在当前页面隐藏期间修改过原生系统栏颜色。
+		this.nativeSystemUiBackgroundColor = null;
+		this.applyReaderThemeMode(this.projectThemeMode);
 		if (this.readExpReporter) {
 			this.readExpReporter.start();
 			this.readExpReporter.markActive();
 		}
+		this.updateNavigationBarVisibility();
+		if (this.backgroundSkinsLoaded) this.loadReaderBackgroundSkins();
 	},
 	async onHide() {
 		if (this.readExpReporter) {
 			await this.readExpReporter.stop();
 		}
+		this.setNativeNavigationBarVisible(true, true);
 	},
 	async onUnload() {
 		if (this.readExpReporter) {
@@ -925,13 +1329,71 @@ export default {
 		// #ifdef H5
 		window.removeEventListener("popstate", this.browserBack);
 		// #endif
+		window.removeEventListener('loghomeNativeBack', this.handleNativeBack)
+		this.detachScrollListeners();
+		this.setNativeNavigationBarVisible(true, true);
 	},
 	onPageScroll(res) {
 		this.scrollTop = res.scrollTop; //距离页面顶部距离
 		this.doUpdateCommentDisplay = true;
 		this.markReadActivity();
+		this.updateNavigationBarVisibility();
+	},
+	watch: {
+		projectThemeMode(newMode, oldMode) {
+			if (newMode !== oldMode) this.applyReaderThemeMode(newMode);
+		},
+		settingsOpened() {
+			this.$nextTick(this.updateNavigationBarVisibility);
+		},
+		'readerSettings.theme'() {
+			this.$nextTick(this.updateNavigationBarVisibility);
+		}
 	},
 	computed: {
+		projectThemeMode() {
+			return getProjectThemeMode(this.$store);
+		},
+		commentDrawerThemeStyle() {
+			const isDark = this.projectThemeMode === 'dark';
+			return {
+				'--comment-drawer-background': isDark ? '#252525' : '#ffffff',
+				'--comment-drawer-title-color': isDark ? '#e5e5e5' : '#292927',
+				'--comment-drawer-border-color': isDark ? '#3d3d3d' : '#efefef',
+				'--comment-drawer-close-color': isDark ? '#b5b5b5' : '#909399'
+			};
+		},
+		readerThemeOptions() {
+			return this.readerSolidThemes.map(theme => ({
+				...theme,
+				backgroundColor: this.themes[theme.key].backColor,
+				is_locked: !this.canUseBackgroundSkin(theme)
+			}));
+		},
+		currentBackgroundSkin() {
+			const skinKey = String(this.readerSettings.backgroundSkinKey || "");
+			return this.readerBackgroundSkins.find(item => item.skin_key === skinKey && !item.is_locked) || null;
+		},
+		readerPageStyle() {
+			return {
+				transition: 'background-color .5s, color .5s'
+			};
+		},
+		readerBackgroundLayerStyle() {
+			const shouldStretch = ['obsidian_orbit', 'ember_library'].includes(
+				this.currentBackgroundSkin && this.currentBackgroundSkin.skin_key
+			);
+			return {
+				...createBackgroundSkinStyle(this.currentBackgroundSkin),
+				backgroundSize: shouldStretch ? '100% 100%' : 'cover',
+				backgroundPosition: 'center center',
+				backgroundRepeat: 'no-repeat',
+				backgroundAttachment: 'fixed'
+			};
+		},
+		isBlockEpochSkin() {
+			return Boolean(this.currentBackgroundSkin && this.currentBackgroundSkin.skin_key === 'block_epoch');
+		},
 		currentMenuIdx() {
 			const currentArticleId = Number(this.article.article_id || this.articleId || 0);
 			if (!currentArticleId || !Array.isArray(this.articles) || this.articles.length === 0) {
@@ -962,13 +1424,16 @@ export default {
 
 <style scoped lang="less">
 .content {
+	position: relative;
+	z-index: 0;
+	isolation: isolate;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	flex-wrap: wrap;
 	min-height: calc(100vh - 100rpx - 44px);
 
-	padding: 50rpx 0;
+	padding: 50rpx 0 calc(50rpx + var(--loghome-safe-bottom, 0px));
 
 	div.article {
 		font-size: 40rpx;
@@ -985,6 +1450,11 @@ export default {
 
 		.paragraph.selected {
 			background-color: #7774;
+		}
+
+		.paragraph.listening {
+			background-color: rgba(64, 158, 255, 0.14);
+			box-shadow: -10rpx 0 0 #409eff;
 		}
 
 		.paragraph.cento {
@@ -1035,12 +1505,12 @@ export default {
 
 		div.settings {
 			position: absolute;
-			background-color: #000000aa;
-			padding-top: 100rpx;
+			background-color: #202020;
+			padding-top: calc(44px + var(--loghome-safe-top, 0px));
 			padding-left: 30rpx;
 			padding-right: 30rpx;
 			width: calc(100vw - 60rpx);
-			height: 285rpx;
+			height: 414rpx;
 			transform: translateY(-80rpx);
 			color: rgb(203, 203, 203);
 			transition: all .3s;
@@ -1088,9 +1558,14 @@ export default {
 			transform: translateY(0rpx);
 		}
 
+		div.settings.preview {
+			height: auto;
+			padding-bottom: 30rpx;
+		}
+
 		div.underSettings {
 			position: absolute;
-			background-color: #FFF2D9;
+			background-color: #f8eedb;
 			padding-top: 160rpx;
 			padding-left: 50rpx;
 			bottom: -160rpx;
@@ -1171,6 +1646,26 @@ export default {
 		color: rgb(0, 0, 0);
 	}
 
+	button.enabled.wavechaser,
+	button.enabled.powderblue,
+	button.enabled.qingyun,
+	button.enabled.sunburst,
+	button.enabled.thorncrown,
+	button.enabled.chocolate {
+		background-color: rgba(255, 255, 255, 0.88);
+		color: #252525;
+	}
+
+	button.wavechaser,
+	button.powderblue,
+	button.qingyun,
+	button.sunburst,
+	button.thorncrown,
+	button.chocolate {
+		background-color: rgba(255, 255, 255, 0.36);
+		color: inherit;
+	}
+
 	img.pageChangeImg {
 		height: 50rpx;
 		margin-left: 10rpx;
@@ -1243,20 +1738,34 @@ export default {
 
 }
 
+.reader-background-layer {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: -1;
+	width: 100vw;
+	height: 100vh;
+	pointer-events: none;
+	transform: translateZ(0);
+	will-change: transform;
+}
+
 ::v-deep .commentDrawer .el-drawer__body {
 	padding: 0;
 	overflow: hidden;
 }
 
-::v-deep .commentDrawer .bookCommentDrawer {
+.bookCommentDrawer {
 	position: relative;
 	height: 100%;
 	overflow: hidden;
-	background-color: #fff;
+	background-color: var(--comment-drawer-background, #fff);
 	border-radius: 16px 16px 0 0;
 }
 
-::v-deep .commentDrawer .bookCommentDrawer .title {
+.bookCommentDrawer .drawerTitle {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -1268,12 +1777,13 @@ export default {
 	height: 44px;
 	font-size: 18px;
 	font-weight: bold;
-	background-color: #fff;
-	border-bottom: 1px solid #efefef;
+	color: var(--comment-drawer-title-color, #292927);
+	background-color: var(--comment-drawer-background, #fff);
+	border-bottom: 1px solid var(--comment-drawer-border-color, #efefef);
 	flex-shrink: 0;
 }
 
-::v-deep .commentDrawer .bookCommentDrawer .closeBtn {
+.bookCommentDrawer .closeBtn {
 	position: absolute;
 	right: 10px;
 	top: 10px;
@@ -1283,10 +1793,10 @@ export default {
 	line-height: 24px;
 	text-align: center;
 	z-index: 61;
-	color: #909399;
+	color: var(--comment-drawer-close-color, #909399);
 }
 
-::v-deep .commentDrawer .bookCommentDrawer .commentOuter {
+.bookCommentDrawer .commentOuter {
 	position: absolute;
 	top: 44px;
 	left: 0;
@@ -1311,64 +1821,160 @@ export default {
 	transform: scale(.9);
 }
 
+.readerTypeSettingRow,
+.backgroundSettingRow {
+	display: flex;
+	align-items: center;
+	width: calc(100% - 20rpx);
+	margin: 22rpx auto 0;
+	gap: 22rpx;
+
+	.settingLabel,
+	.backgroundLabel {
+		flex: 0 0 auto;
+		font-size: 30rpx;
+	}
+
+	.reader-type-switch-setting,
+	.background-picker {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+}
+
 .button.blue {
-	background-color: #25b2f846;
-	color: #24ACF2;
-	border: 2px #24ACF2 solid !important;
+	background-color: #d9eef6;
+	color: #4f7f94;
+	border: 2px #4f7f94 solid !important;
 }
 
 .button.yellow {
-	background-color: #FFB25544;
-	color: #E68D4D;
-	border: 2px #E68D4D solid !important;
+	background-color: #f5e7cc;
+	color: #a57843;
+	border: 2px #a57843 solid !important;
 }
 
 .button.green {
-	background-color: #1AA13444;
-	color: #1AA134;
-	border: 2px #1AA134 solid !important;
+	background-color: #dcebdd;
+	color: #5d8666;
+	border: 2px #5d8666 solid !important;
 }
 
 .button.purple {
-	background-color: #9660C344;
-	color: #9660C3;
-	border: 2px #9660C3 solid !important;
+	background-color: #eae1f0;
+	color: #856793;
+	border: 2px #856793 solid !important;
 }
 
 .button.black {
-	background-color: #282C3544;
-	color: #83878c;
-	border: 2px #83878c solid !important;
+	background-color: #2b3038;
+	color: #c2cad5;
+	border: 2px #c2cad5 solid !important;
+}
+
+.button.white {
+	background-color: #f6f6f4;
+	color: #4f4f4b;
+	border: 2px #4f4f4b solid !important;
 }
 
 view.content.white {
-	background-color: #F8F8FA;
-	color: #020104;
+	background-color: #fefefc;
+	color: #292927;
 }
 
 view.content.blue {
-	background-color: #DDF3FE;
-	color: #115574;
+	background-color: #f4fafc;
+	color: #27566b;
 }
 
 view.content.yellow {
-	background-color: #FFEFD6;
-	color: #502727;
+	background-color: #fcf8ef;
+	color: #5c4b3b;
 }
 
 view.content.green {
-	background-color: #C0EDC6;
-	color: #000B00;
+	background-color: #f5faf4;
+	color: #395744;
 }
 
 view.content.purple {
-	background-color: #fde0ffee;
-	color: #310024;
+	background-color: #faf7fc;
+	color: #57445f;
+}
+
+view.content.pink {
+	background-color: #fbf6f8;
+	color: #664858;
 }
 
 view.content.black {
-	background-color: #111111;
-	color: #cecece;
+	background-color: #22272e;
+	color: #d9dee7;
+}
+
+view.content.wavechaser {
+	background-color: #e84f89;
+	color: #32101f;
+}
+
+view.content.powderblue {
+	background-color: #ace5e2;
+	color: #244244;
+}
+
+view.content.qingyun {
+	background-color: #313b3e;
+	color: #e7eeef;
+}
+
+view.content.sunburst {
+	background-color: #fcd23c;
+	color: #493900;
+}
+
+view.content.thorncrown {
+	background-color: #7d2120;
+	color: #f6e8e5;
+}
+
+view.content.chocolate {
+	background-color: #380001;
+	color: #f4e7e1;
+}
+
+view.content.blockepoch {
+	background-color: #dce3c2;
+	color: #273421;
+}
+
+.content.block-epoch-skin {
+	font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+	div.title {
+		text-shadow: 2rpx 2rpx 0 rgba(255, 255, 255, 0.62);
+	}
+
+	div.article .paragraph.cento {
+		text-decoration-color: #a6382c;
+		text-decoration-style: dashed;
+		text-decoration-thickness: 3rpx;
+	}
+
+	button {
+		border: 3rpx solid #273421;
+		border-radius: 0;
+		box-shadow: 5rpx 5rpx 0 rgba(39, 52, 33, 0.3);
+	}
+
+	div.underBar {
+		border-top: 8rpx solid #59615a;
+		background: linear-gradient(90deg, rgba(75, 81, 77, 0.3) 50%, rgba(54, 60, 57, 0.3) 50%);
+		background-size: 48rpx 48rpx;
+		color: #273421;
+		font-weight: 700;
+		text-shadow: 2rpx 2rpx 0 rgba(255, 255, 255, 0.58);
+	}
 }
 
 .feedback-container {

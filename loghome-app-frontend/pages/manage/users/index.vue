@@ -1,5 +1,5 @@
 <template>
-	<view class="container">		
+	<view class="container" v-dark>
 		<view class="content">
 			<view class="header">
 				<view class="title">用户管理</view>
@@ -7,7 +7,7 @@
 					<text>总用户数：{{totalUsers}}</text>
 				</view>
 			</view>
-			
+
 			<view class="pagination" v-if="totalPages > 0">
 				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
@@ -45,18 +45,18 @@
 					</view>
 				</view>
 			</view>
-			
+
 			<view class="pagination" v-if="totalPages > 0">
 				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
 				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
 			</view>
-			
+
 			<view class="no-data" v-if="users.length === 0">
 				暂无用户数据
 			</view>
 		</view>
-		
+
 		<!-- 发送消息弹窗 -->
 		<view class="modal" v-if="showMessageModal">
 			<view class="modal-mask" @click="closeMessageModal"></view>
@@ -123,7 +123,7 @@ export default {
 				uni.showLoading({
 					title: '努力加载中'
 				})
-				
+
 				// 获取总数
 				const countRes = await axios.get(this.$baseUrl + '/manage/users/get_user_amount', {
 					headers: {
@@ -132,7 +132,7 @@ export default {
 				})
 				this.totalUsers = countRes.data[0].count
 				this.totalPages = Math.ceil(this.totalUsers / this.pageSize)
-				
+
 				// 获取列表
 				const res = await axios.get(this.$baseUrl + '/manage/users/get_users', {
 					params: {
@@ -142,7 +142,7 @@ export default {
 						'Authorization': tk
 					}
 				})
-				
+
 				this.users = res.data
 				uni.pageScrollTo({
 					scrollTop: 0,
@@ -160,7 +160,7 @@ export default {
 		async toggleUserStatus(user) {
 			try {
 				let tk = this.getToken()
-				
+
 				await axios.post(this.$baseUrl + '/manage/users/user_activating_set', {
 					user_id: user.user_id,
 					activate: user.activated ? 0 : 1
@@ -169,12 +169,12 @@ export default {
 						'Authorization': tk
 					}
 				})
-				
+
 				uni.showToast({
 					title: user.activated ? '已禁用' : '已启用',
 					icon: 'none'
 				})
-				
+
 				// 更新本地数据
 				user.activated = !user.activated
 			} catch (e) {
@@ -196,7 +196,7 @@ export default {
 		},
 		async submitMessage() {
 			if (this.submitting) return
-			
+
 			if (!this.messageContent.trim()) {
 				uni.showToast({
 					title: '请输入消息内容',
@@ -204,12 +204,12 @@ export default {
 				})
 				return
 			}
-			
+
 			try {
 				this.submitting = true
 				let tk = this.getToken()
 				let userInfo = JSON.parse(window.localStorage.getItem('LogHomeUserInfo'))
-				
+
 				await axios.post(this.$baseUrl + '/manage/users/send_message', {
 					from_id: userInfo.user_id,
 					to_id: this.currentUser.user_id,
@@ -220,11 +220,11 @@ export default {
 						'Authorization': tk
 					}
 				})
-				
+
 				uni.showToast({
 					title: '发送成功'
 				})
-				
+
 				this.closeMessageModal()
 			} catch (e) {
 				uni.showToast({
@@ -250,8 +250,8 @@ export default {
 		formatTime(time) {
 			if (!time) return '未知'
 			const date = new Date(time)
-			return date.getFullYear() + '-' + 
-				   (date.getMonth() + 1).toString().padStart(2, '0') + '-' + 
+			return date.getFullYear() + '-' +
+				   (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
 				   date.getDate().toString().padStart(2, '0') + ' ' +
 				   date.getHours().toString().padStart(2, '0') + ':' +
 				   date.getMinutes().toString().padStart(2, '0')
@@ -334,7 +334,7 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-	background-color: #f2f2f2;
+	background-color: var(--background-color-secondary);
 	min-height: 100vh;
 }
 
@@ -347,67 +347,67 @@ export default {
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 30rpx;
-	
+
 	.title {
 		font-size: 36rpx;
 		font-weight: bold;
-		color: #333;
+		color: var(--text-color-primary);
 	}
-	
+
 	.stats {
 		font-size: 28rpx;
-		color: #666;
+		color: var(--text-color-regular);
 	}
 }
 
 .user-list {
 	.user-item {
-		background: #fff;
+		background: var(--card-background);
 		padding: 20rpx;
 		margin-bottom: 20rpx;
 		border-radius: 10rpx;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		
+
 		.user-main {
 			flex: 1;
 			min-width: 0;
-			
+
 			.user-info {
 				margin-bottom: 10rpx;
-				
+
 				.user-name {
 					font-size: 32rpx;
 					font-weight: bold;
 					margin-bottom: 5rpx;
 				}
-				
+
 				.user-email {
 					font-size: 26rpx;
-					color: #666;
+					color: var(--text-color-regular);
 				}
 			}
-			
+
 			.user-meta {
 				font-size: 26rpx;
-				color: #666;
-				
+				color: var(--text-color-regular);
+
 				.meta-item {
 					margin-bottom: 5rpx;
-					
+
 					.label {
-						color: #999;
+						color: var(--text-color-secondary);
 					}
 				}
 			}
 		}
-		
+
 		.user-actions {
 			display: flex;
 			flex-direction: column;
 			margin-left: 20rpx;
-			
+
 			.action-btn {
 				padding: 6rpx 20rpx;
 				border-radius: 30rpx;
@@ -416,15 +416,15 @@ export default {
 				margin-bottom: 10rpx;
 				text-align: center;
 				min-width: 100rpx;
-				
+
 				&.disable {
 					background-color: #FF9800;
 				}
-				
+
 				&.enable {
 					background-color: #4CAF50;
 				}
-				
+
 				&.message {
 					background-color: #2196F3;
 				}
@@ -442,27 +442,27 @@ export default {
 	justify-content: center;
 	align-items: center;
 	margin: 30rpx 0;
-	
+
 	.page-btn {
 		padding: 10rpx 30rpx;
-		background: #fff;
+		background: var(--card-background);
 		border-radius: 30rpx;
 		margin: 0 20rpx;
-		
+
 		&.disabled {
-			color: #999;
+			color: var(--text-color-secondary);
 		}
 	}
-	
+
 	.page-num {
 		font-size: 28rpx;
-		color: #666;
+		color: var(--text-color-regular);
 	}
 }
 
 .no-data {
 	text-align: center;
-	color: #999;
+	color: var(--text-color-secondary);
 	margin-top: 100rpx;
 }
 
@@ -473,7 +473,7 @@ export default {
 	right: 0;
 	bottom: 0;
 	z-index: 1000;
-	
+
 	.modal-mask {
 		position: absolute;
 		top: 0;
@@ -482,7 +482,7 @@ export default {
 		bottom: 0;
 		background: rgba(0, 0, 0, 0.5);
 	}
-	
+
 	.modal-content {
 		position: absolute;
 		top: 50%;
@@ -490,100 +490,100 @@ export default {
 		transform: translate(-50%, -50%);
 		width: 90%;
 		max-width: 650rpx;
-		background: #fff;
+		background: var(--card-background);
 		border-radius: 10rpx;
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		
+
 		.modal-header {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
 			padding: 30rpx;
-			border-bottom: 1px solid #eee;
+			border-bottom: 1px solid var(--border-color);
 			width: 100%;
 			box-sizing: border-box;
-			
+
 			.modal-title {
 				font-size: 32rpx;
 				font-weight: bold;
 			}
-			
+
 			.modal-close {
 				font-size: 40rpx;
-				color: #999;
+				color: var(--text-color-secondary);
 				line-height: 1;
 			}
 		}
-		
+
 		.modal-body {
 			padding: 30rpx;
 			max-height: 60vh;
 			overflow-y: auto;
 			width: 100%;
 			box-sizing: border-box;
-			
+
 			.form-item {
 				margin-bottom: 20rpx;
 				width: 100%;
-				
+
 				.label {
 					font-size: 28rpx;
-					color: #333;
+					color: var(--text-color-primary);
 					margin-bottom: 10rpx;
 				}
-				
+
 				.input {
 					width: 100%;
-					
+
 					input {
 						width: 100%;
 						height: 80rpx;
-						background: #f5f5f5;
+						background: var(--background-color-secondary);
 						padding: 0 20rpx;
 						border-radius: 6rpx;
 						font-size: 28rpx;
 						box-sizing: border-box;
 					}
-					
+
 					textarea {
 						width: 100%;
 						height: 200rpx;
-						background: #f5f5f5;
+						background: var(--background-color-secondary);
 						padding: 20rpx;
 						border-radius: 6rpx;
 						font-size: 28rpx;
 						box-sizing: border-box;
 					}
-					
+
 					.word-count {
 						text-align: right;
 						font-size: 24rpx;
-						color: #999;
+						color: var(--text-color-secondary);
 						margin-top: 10rpx;
 					}
 				}
 			}
 		}
-		
+
 		.modal-footer {
 			display: flex;
-			border-top: 1px solid #eee;
+			border-top: 1px solid var(--border-color);
 			width: 100%;
-			
+
 			.btn {
 				flex: 1;
 				height: 90rpx;
 				line-height: 90rpx;
 				text-align: center;
 				font-size: 30rpx;
-				
+
 				&.cancel {
-					color: #666;
-					background: #f5f5f5;
+					color: var(--text-color-regular);
+					background: var(--background-color-secondary);
 				}
-				
+
 				&.confirm {
 					color: #fff;
 					background: #007AFF;
@@ -592,4 +592,4 @@ export default {
 		}
 	}
 }
-</style> 
+</style>

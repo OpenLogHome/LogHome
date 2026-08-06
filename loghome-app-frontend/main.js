@@ -6,7 +6,9 @@ import 'element-theme/index.css';
 import 'element-theme/dark-theme.css'; // 导入Element UI深色模式样式
 import SlideVerify from 'vue-monoplasty-slide-verify';
 import LogImage from "./components/LogImage";
+import UserAvatar from "./components/UserAvatar";
 import darkNavigationMixin from './mixins/dark-navigation.vue';
+import { installNativeRouter } from './common/native-router';
 
 // 导入自定义指令
 import './plugins/directives'
@@ -15,6 +17,7 @@ import './plugins/directives'
 import chunLeiModal from '@/components/chunLei-modal/chunLei-modal.vue'
 Vue.component('chunLei-modal',chunLeiModal);
 Vue.component('log-image', LogImage);
+Vue.component('user-avatar', UserAvatar);
 
 // 注册主题切换组件
 import ThemeSwitch from '@/components/theme-switch.vue';
@@ -41,8 +44,8 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_SCF;
-Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_PRODUCTION;
+Vue.prototype.$baseUrl = BASE_URL_EMULATOR_DEV;
+Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_EMULATOR_DEV;
 Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
@@ -294,15 +297,36 @@ if(inDev && !window.jsBridge) {
 			console.log("disableVolumeKeyListener")
 			// return window.flutter_inappwebview.callHandler('disableVolumeKeyListener');
 		},
-		hotUpdateAssets(url, version) {
-			console.log("hotUpdateAssets", url, version)
-		},
-		downloadFont(fontKey, fontUrl, fontFormat, fontVersion) {
-			console.log("downloadFont", fontKey, fontUrl, fontFormat, fontVersion)
-			return Promise.resolve(fontUrl);
-		},
+			hotUpdateAssets(url, version) {
+				console.log("hotUpdateAssets", url, version)
+			},
+			downloadFont(fontKey, fontUrl, fontFormat, fontVersion) {
+				console.log("downloadFont", fontKey, fontUrl, fontFormat, fontVersion)
+				return Promise.resolve(fontUrl);
+			},
+			nativeRouterAvailable: false,
+			nativeNavigateTo(payload) {
+				console.log("nativeNavigateTo", payload)
+				return Promise.resolve({ ok: false, reason: "dev mock" });
+			},
+			nativeRedirectTo(payload) {
+				console.log("nativeRedirectTo", payload)
+				return Promise.resolve({ ok: false, reason: "dev mock" });
+			},
+			nativeReLaunch(payload) {
+				console.log("nativeReLaunch", payload)
+				return Promise.resolve({ ok: false, reason: "dev mock" });
+			},
+			nativeSwitchTab(payload) {
+				console.log("nativeSwitchTab", payload)
+				return Promise.resolve({ ok: false, reason: "dev mock" });
+			},
+			nativeNavigateBack(payload) {
+				console.log("nativeNavigateBack", payload)
+				return Promise.resolve({ ok: false, reason: "dev mock" });
+			},
+		}
 	}
-}
 
 
 
@@ -321,6 +345,9 @@ if(window.jsBridge) {
 }
 
 Vue.prototype.jsBridge = window.jsBridge;
+if (typeof uni !== 'undefined') {
+	installNativeRouter(uni);
+}
 
 
 let clipBoardContent = "";

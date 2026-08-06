@@ -441,7 +441,7 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 20rpx;
-	padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+	padding: 20rpx 24rpx calc(20rpx + var(--loghome-safe-bottom, 0px));
 	background: rgba(255, 255, 255, 0.96);
 	backdrop-filter: blur(12rpx);
 	box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);

@@ -1,7 +1,6 @@
 package top.codesocean.loghome.android
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ClipData
@@ -13,7 +12,9 @@ import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.BitmapFactory
 import android.graphics.Rect
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
@@ -21,10 +22,13 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.KeyEvent
+import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.webkit.ConsoleMessage
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.view.animation.PathInterpolator
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -40,14 +44,20 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import top.codesocean.loghome.android.assets.AssetRepository
+import top.codesocean.loghome.android.audio.AudiobookPlaybackState
+import top.codesocean.loghome.android.audio.Article
 import top.codesocean.loghome.android.audio.AudioPlaybackService
+import top.codesocean.loghome.android.audio.NativeAudiobookPlayerView
 import top.codesocean.loghome.android.databinding.ActivityWebviewBinding
 import top.codesocean.loghome.android.databinding.DialogHotUpdateBinding
 import top.codesocean.loghome.android.ui.SystemUiHelper
@@ -55,6 +65,7 @@ import top.codesocean.loghome.android.ui.SplashImageLoader
 import top.codesocean.loghome.android.web.InjectedHtmlWebViewClient
 import top.codesocean.loghome.android.web.ImageUploadPreparation
 import top.codesocean.loghome.android.web.InjectedScriptBuilder
+import top.codesocean.loghome.android.web.LogHomeWebViewConfigurator
 import top.codesocean.loghome.android.web.WebViewImageSaver
 import top.codesocean.loghome.android.web.WebViewBridgeInterface
 import top.codesocean.loghome.android.web.WebViewFontCache
@@ -63,13 +74,25 @@ import kotlin.coroutines.resume
 
 class WebViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWebviewBinding
+    private lateinit var activeWebView: WebView
+    private var activeWebViewBridge: WebViewBridgeInterface? = null
+    private var activeWebViewFromPool = false
 
     private var localPath: String = ""
+    private var initialRouteUrl: String = ""
+    private var suppressLoadingOverlay = false
+    private var useWarmWebView = false
+    private var awaitingInitialPageReveal = false
+    private var initialBackgroundColor: Int = Color.WHITE
+    private var themeBackgroundColor: Int = Color.WHITE
     private var currentSystemBarColor: Int = Color.WHITE
+    private var systemBarsVisible = true
     private var volumeKeyEnabled = false
     private var topInsetCss = 0.0
     private var bottomInsetCss = 0.0
     private var lastKeyboardVisible: Boolean? = null
+    private var lastKeyboardHeightCss = 0.0
+    private var lastAppliedImeBottomInsetPx = -1
     private var lastBackPressedAt = 0L
     private var injectedScript: String? = null
     private var pendingRestart = false
@@ -78,12 +101,49 @@ class WebViewActivity : AppCompatActivity() {
     private var pendingMultipleImageUris: Array<Uri>? = null
     private var pendingChooserPrefersImages = false
     private var pendingChooserAllowsMultiple = false
+    private var nativeWebViewWarmupPosted = false
+    private var nativeBackDispatching = false
+    private val routeTransitionInterpolator by lazy {
+        PathInterpolator(0.22f, 0.61f, 0.36f, 1f)
+    }
 
     private var audioService: AudioPlaybackService? = null
     private var isAudioServiceBound = false
     private val serviceWaiters = mutableListOf<CancellableContinuation<AudioPlaybackService>>()
+    private var nativeAudiobookTitle = ""
+    private var nativeAudiobookCoverUrl = ""
+    private var audiobookCoverJob: Job? = null
+    private val audiobookCoverHttpClient = OkHttpClient()
+    private var lastDispatchedAudiobookParagraph = ""
+    private val audiobookVoiceNames = mutableMapOf<String, String>()
+    private val audioPlaybackStateListener: (AudiobookPlaybackState) -> Unit = { state ->
+        binding.root.post {
+            renderNativeAudiobookState(state)
+            dispatchAudiobookHighlightState(state)
+        }
+    }
     private val keyboardVisibleFrame = Rect()
     private val keyboardLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+        val density = resources.displayMetrics.density.toDouble()
+        val windowInsets = ViewCompat.getRootWindowInsets(binding.root)
+        val imeVisible = windowInsets?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        val imeBottomInset = windowInsets
+            ?.getInsets(WindowInsetsCompat.Type.ime())
+            ?.bottom
+            ?: 0
+
+        // In edge-to-edge mode getWindowVisibleDisplayFrame() may still contain the
+        // area behind the IME. Prefer the authoritative IME inset so this fallback
+        // cannot undo the result produced by setupWindowInsets().
+        if (imeVisible && imeBottomInset > 0) {
+            applyImeViewportInset(imeBottomInset)
+            updateKeyboardVisibility(
+                visible = true,
+                heightCss = imeBottomInset / density,
+            )
+            return@OnGlobalLayoutListener
+        }
+
         val rootView = binding.root.rootView ?: return@OnGlobalLayoutListener
         val rootHeight = rootView.height
         if (rootHeight <= 0) {
@@ -92,8 +152,9 @@ class WebViewActivity : AppCompatActivity() {
 
         binding.root.getWindowVisibleDisplayFrame(keyboardVisibleFrame)
         val heightDiff = (rootHeight - keyboardVisibleFrame.bottom).coerceAtLeast(0)
-        val density = resources.displayMetrics.density.toDouble()
         val keyboardVisible = heightDiff > (100 * density)
+
+        applyImeViewportInset(if (keyboardVisible) heightDiff else 0)
 
         updateKeyboardVisibility(
             visible = keyboardVisible,
@@ -208,6 +269,7 @@ class WebViewActivity : AppCompatActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as? AudioPlaybackService.LocalBinder ?: return
             audioService = binder.getService()
+            audioService?.addPlaybackStateListener(audioPlaybackStateListener)
             val pending = serviceWaiters.toList()
             serviceWaiters.clear()
             pending.forEach { continuation ->
@@ -218,27 +280,53 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            audioService?.removePlaybackStateListener(audioPlaybackStateListener)
             audioService = null
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initialBackgroundColor = if (intent.hasExtra(EXTRA_INITIAL_BACKGROUND_COLOR)) {
+            intent.getIntExtra(EXTRA_INITIAL_BACKGROUND_COLOR, Color.WHITE)
+        } else {
+            SystemUiHelper.resolveInitialBackgroundColor(this)
+        }
+        themeBackgroundColor = initialBackgroundColor
+        currentSystemBarColor = initialBackgroundColor
+        window.setBackgroundDrawable(ColorDrawable(initialBackgroundColor))
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityWebviewBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemUiHelper.applySystemBarStyle(window, binding.root, initialBackgroundColor)
+        binding.webView.setBackgroundColor(initialBackgroundColor)
+        binding.loadingContainer.setBackgroundColor(initialBackgroundColor)
+        binding.errorContainer.setBackgroundColor(initialBackgroundColor)
 
         localPath = intent.getStringExtra(EXTRA_LOCAL_PATH).orEmpty()
+        initialRouteUrl = intent.getStringExtra(EXTRA_ROUTE_URL).orEmpty()
+        suppressLoadingOverlay = intent.getBooleanExtra(
+            EXTRA_SUPPRESS_LOADING_OVERLAY,
+            initialRouteUrl.isNotBlank(),
+        )
+        useWarmWebView = intent.getBooleanExtra(EXTRA_USE_WARM_WEBVIEW, initialRouteUrl.isNotBlank())
+        NativeRouteStack.register(this)
+        prepareActiveWebView()
 
-        WindowCompat.setDecorFitsSystemWindows(window, true)
         setupWindowInsets()
         setupKeyboardVisibilityFallback()
         setupBackHandling()
         setupRetry()
+        setupNativeAudiobookPlayer()
         setupWebView()
-        loadSplashOverlayImage()
+        configureInitialLoadingOverlay()
+        prepareRouteTransitionVisuals()
+        if (!suppressLoadingOverlay) {
+            loadSplashOverlayImage()
+        }
         ensureNotificationPermission()
         bindAudioService()
-        applySystemBarStyle(Color.WHITE)
+        applySystemBarStyle(initialBackgroundColor)
 
         if (localPath.isBlank() && !isDevServerEnabled()) {
             restartToSplash()
@@ -247,16 +335,30 @@ class WebViewActivity : AppCompatActivity() {
 
         binding.root.post {
             lifecycleScope.launch {
+                if (activeWebViewFromPool && initialRouteUrl.isNotBlank()) {
+                    rebuildInjectedScript()
+                    loadLocalContent()
+                    scheduleNativeWebViewWarmup(300L)
+                    return@launch
+                }
                 rebuildInjectedScript()
                 loadLocalContent()
             }
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        fadeOutTransitionDimOverlay()
+    }
+
     override fun onDestroy() {
+        NativeRouteStack.unregister(this)
         fileChooserCallback?.onReceiveValue(null)
         fileChooserCallback = null
         pendingMultipleImageUris = null
+        audiobookCoverJob?.cancel()
+        audioService?.removePlaybackStateListener(audioPlaybackStateListener)
         if (isAudioServiceBound) {
             unbindService(audioServiceConnection)
             isAudioServiceBound = false
@@ -264,7 +366,10 @@ class WebViewActivity : AppCompatActivity() {
         audioService = null
         binding.root.viewTreeObserver.takeIf { it.isAlive }
             ?.removeOnGlobalLayoutListener(keyboardLayoutListener)
-        binding.webView.destroy()
+        activeWebViewBridge?.clearHandler()
+        if (::activeWebView.isInitialized) {
+            activeWebView.destroy()
+        }
         super.onDestroy()
     }
 
@@ -288,13 +393,29 @@ class WebViewActivity : AppCompatActivity() {
     private fun setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val safeTopInsets = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or
+                    WindowInsetsCompat.Type.displayCutout(),
+            )
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             val keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             val density = resources.displayMetrics.density.toDouble()
 
-            topInsetCss = minOf(bars.top / density, 29.0)
-            bottomInsetCss = bars.bottom / density
+            val newTopInsetCss = safeTopInsets.top / density
+            val newBottomInsetCss = bars.bottom / density
+            val safeAreaChanged =
+                newTopInsetCss != topInsetCss || newBottomInsetCss != bottomInsetCss
+            topInsetCss = newTopInsetCss
+            bottomInsetCss = newBottomInsetCss
             val keyboardHeightCss = ime.bottom / density
+
+            applyImeViewportInset(
+                if (keyboardVisible) ime.bottom else 0,
+            )
+
+            if (safeAreaChanged) {
+                syncWebSafeAreaInsets()
+            }
 
             updateKeyboardVisibility(
                 visible = keyboardVisible,
@@ -303,59 +424,153 @@ class WebViewActivity : AppCompatActivity() {
 
             insets
         }
+        ViewCompat.requestApplyInsets(binding.root)
+    }
+
+    private fun syncWebSafeAreaInsets() {
+        if (!::activeWebView.isInitialized) {
+            return
+        }
+        val script = """
+            (function() {
+                if (window.jsBridge) {
+                    window.jsBridge.statusBarHeight = $topInsetCss;
+                    window.jsBridge.navigationBarHeight = $bottomInsetCss;
+                }
+                var root = document.documentElement;
+                if (!root) return;
+                root.classList.add('loghome-edge-to-edge');
+                root.style.setProperty('--loghome-native-safe-top', '${topInsetCss}px');
+                root.style.setProperty('--loghome-native-safe-bottom', '${bottomInsetCss}px');
+            })();
+        """.trimIndent()
+        activeWebView.post {
+            if (!isFinishing && !isDestroyed) {
+                activeWebView.evaluateJavascript(script, null)
+            }
+        }
     }
 
     private fun setupKeyboardVisibilityFallback() {
         binding.root.viewTreeObserver.addOnGlobalLayoutListener(keyboardLayoutListener)
     }
 
+    private fun applyImeViewportInset(bottomInsetPx: Int) {
+        if (!::activeWebView.isInitialized) {
+            return
+        }
+
+        val normalizedInset = bottomInsetPx.coerceAtLeast(0)
+        if (lastAppliedImeBottomInsetPx == normalizedInset) {
+            return
+        }
+
+        val layoutParams = activeWebView.layoutParams as? ViewGroup.MarginLayoutParams ?: return
+        lastAppliedImeBottomInsetPx = normalizedInset
+        if (layoutParams.bottomMargin == normalizedInset) {
+            return
+        }
+
+        layoutParams.bottomMargin = normalizedInset
+        activeWebView.layoutParams = layoutParams
+    }
+
     private fun updateKeyboardVisibility(visible: Boolean, heightCss: Double) {
         val previousKeyboardVisible = lastKeyboardVisible
-        if (previousKeyboardVisible == visible) {
+        val normalizedHeightCss = if (visible) heightCss.coerceAtLeast(0.0) else 0.0
+        val heightChanged = kotlin.math.abs(lastKeyboardHeightCss - normalizedHeightCss) >= 0.5
+        if (previousKeyboardVisible == visible && !heightChanged) {
             return
         }
 
         lastKeyboardVisible = visible
+        lastKeyboardHeightCss = normalizedHeightCss
         if (previousKeyboardVisible != null || visible) {
             dispatchKeyboardVisibilityEvent(
                 visible = visible,
-                heightCss = heightCss,
+                heightCss = normalizedHeightCss,
             )
         }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
-    @Suppress("DEPRECATION")
+    private fun prepareActiveWebView() {
+        val warmWebView = if (shouldUseWarmWebView()) {
+            NativeWebViewPool.acquire(this, localPath)
+        } else {
+            null
+        }
+
+        if (warmWebView == null) {
+            activeWebView = binding.webView
+            activeWebViewBridge = WebViewBridgeInterface(::handleBridgeMessage)
+            activeWebViewFromPool = false
+            return
+        }
+
+        activeWebView = warmWebView.webView
+        activeWebViewBridge = warmWebView.bridgeInterface
+        // The target route may cause a document reload before this activity rebuilds its own script.
+        injectedScript = warmWebView.injectedScript
+        activeWebViewBridge?.updateHandler(::handleBridgeMessage)
+        activeWebViewFromPool = true
+        replaceBindingWebView(activeWebView)
+    }
+
+    private fun shouldUseWarmWebView(): Boolean {
+        return useWarmWebView && initialRouteUrl.isNotBlank()
+    }
+
+    private fun replaceBindingWebView(webView: WebView) {
+        if (webView === binding.webView) {
+            return
+        }
+
+        val originalWebView = binding.webView
+        val parent = originalWebView.parent as? ViewGroup ?: return
+        val index = parent.indexOfChild(originalWebView)
+        val layoutParams = originalWebView.layoutParams
+        parent.removeView(originalWebView)
+        originalWebView.destroy()
+        (webView.parent as? ViewGroup)?.removeView(webView)
+        parent.addView(webView, index, layoutParams)
+    }
+
     private fun setupWebView() {
-        binding.webView.apply {
+        activeWebView.apply {
+            setBackgroundColor(initialBackgroundColor)
             alpha = 0f
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.allowFileAccess = true
-            settings.allowContentAccess = true
-            settings.allowFileAccessFromFileURLs = true
-            settings.allowUniversalAccessFromFileURLs = true
-            settings.builtInZoomControls = false
-            settings.displayZoomControls = false
-            settings.setSupportZoom(false)
-            settings.mediaPlaybackRequiresUserGesture = false
-            isVerticalScrollBarEnabled = false
-            isHorizontalScrollBarEnabled = false
-            overScrollMode = android.view.View.OVER_SCROLL_NEVER
-            isLongClickable = true
-            addJavascriptInterface(WebViewBridgeInterface(::handleBridgeMessage), "LogHomeBridge")
+            LogHomeWebViewConfigurator.applyDefaultSettings(this)
+            val bridge = activeWebViewBridge ?: WebViewBridgeInterface(::handleBridgeMessage).also {
+                activeWebViewBridge = it
+            }
+            bridge.updateHandler(::handleBridgeMessage)
+            if (!activeWebViewFromPool) {
+                addJavascriptInterface(bridge, "LogHomeBridge")
+            }
             webViewClient = InjectedHtmlWebViewClient(
                 context = this@WebViewActivity,
                 injectedScriptProvider = { injectedScript.orEmpty() },
                 onPageLoadingChanged = { loading ->
                     binding.loadingContainer.post {
+                        if (suppressLoadingOverlay) {
+                            binding.errorContainer.isVisible = false
+                            if (!loading && awaitingInitialPageReveal) {
+                                awaitingInitialPageReveal = false
+                                revealWebViewContent()
+                                scheduleNativeWebViewWarmup(150L)
+                            }
+                            return@post
+                        }
                         if (loading) {
                             if (binding.loadingContainer.isVisible) {
-                                binding.webView.alpha = 0f
+                                activeWebView.alpha = 0f
                             }
                             binding.errorContainer.isVisible = false
                         } else if (binding.loadingContainer.isVisible) {
                             revealWebViewContent()
+                        }
+                        if (!loading) {
+                            scheduleNativeWebViewWarmup(150L)
                         }
                     }
                 },
@@ -535,8 +750,8 @@ class WebViewActivity : AppCompatActivity() {
                 WebViewImageSaver.saveWatermarkedImage(
                     context = this@WebViewActivity,
                     imageUrl = imageUrl,
-                    currentPageUrl = binding.webView.url,
-                    userAgent = binding.webView.settings.userAgentString,
+                    currentPageUrl = activeWebView.url,
+                    userAgent = activeWebView.settings.userAgentString,
                 )
             }.onSuccess {
                 progressSnackbar.dismiss()
@@ -561,6 +776,78 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
+    private fun configureInitialLoadingOverlay() {
+        if (suppressLoadingOverlay) {
+            binding.loadingContainer.animate().cancel()
+            activeWebView.animate().cancel()
+            binding.loadingSplashImage.isVisible = false
+            binding.loadingContainer.isVisible = true
+            binding.loadingContainer.alpha = 1f
+            activeWebView.alpha = 0f
+            return
+        }
+
+        binding.loadingContainer.isVisible = true
+        binding.loadingContainer.alpha = 1f
+        activeWebView.alpha = 0f
+    }
+
+    private fun prepareRouteTransitionVisuals() {
+        if (shouldUseWarmWebView()) {
+            showTransitionEdgeShadow(fadeOut = true)
+        }
+    }
+
+    private fun showTransitionDimOverlay() {
+        binding.transitionDimOverlay.animate().cancel()
+        binding.transitionDimOverlay.isVisible = true
+        binding.transitionDimOverlay.alpha = 0f
+        binding.transitionDimOverlay.animate()
+            .alpha(0.10f)
+            .setDuration(220L)
+            .setInterpolator(routeTransitionInterpolator)
+            .start()
+    }
+
+    private fun fadeOutTransitionDimOverlay() {
+        if (!::binding.isInitialized) {
+            return
+        }
+        if (!binding.transitionDimOverlay.isVisible && binding.transitionDimOverlay.alpha <= 0f) {
+            return
+        }
+
+        binding.transitionDimOverlay.animate().cancel()
+        binding.transitionDimOverlay.animate()
+            .alpha(0f)
+            .setDuration(220L)
+            .setInterpolator(routeTransitionInterpolator)
+            .withEndAction {
+                binding.transitionDimOverlay.isVisible = false
+            }
+            .start()
+    }
+
+    private fun showTransitionEdgeShadow(fadeOut: Boolean) {
+        binding.transitionEdgeShadow.animate().cancel()
+        binding.transitionEdgeShadow.isVisible = true
+        binding.transitionEdgeShadow.alpha = 0.24f
+
+        if (!fadeOut) {
+            return
+        }
+
+        binding.transitionEdgeShadow.animate()
+            .alpha(0f)
+            .setStartDelay(90L)
+            .setDuration(260L)
+            .setInterpolator(routeTransitionInterpolator)
+            .withEndAction {
+                binding.transitionEdgeShadow.isVisible = false
+            }
+            .start()
+    }
+
     private fun setupRetry() {
         binding.retryButton.setOnClickListener {
             lifecycleScope.launch {
@@ -576,22 +863,64 @@ class WebViewActivity : AppCompatActivity() {
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if (binding.webView.canGoBack()) {
-                        binding.webView.goBack()
+                    if (binding.nativeAudiobookPlayer.isVisible) {
+                        binding.nativeAudiobookPlayer.isVisible = false
                         return
                     }
-
-                    val now = System.currentTimeMillis()
-                    if (now - lastBackPressedAt > 2_000) {
-                        lastBackPressedAt = now
-                        Snackbar.make(binding.root, R.string.press_again_exit, Snackbar.LENGTH_SHORT)
-                            .show()
-                    } else {
-                        finish()
+                    if (nativeBackDispatching) {
+                        return
+                    }
+                    nativeBackDispatching = true
+                    dispatchNativeBackRequest { consumed ->
+                        nativeBackDispatching = false
+                        if (!consumed) {
+                            handleNativeBackFallback()
+                        }
                     }
                 }
             },
         )
+    }
+
+    private fun dispatchNativeBackRequest(onResult: (Boolean) -> Unit) {
+        val script = """
+            (function() {
+                try {
+                    var event = new CustomEvent("loghomeNativeBack", {
+                        cancelable: true,
+                        detail: { source: "android-system-back" }
+                    });
+                    return window.dispatchEvent(event) === false;
+                } catch (error) {
+                    return false;
+                }
+            })();
+        """.trimIndent()
+
+        activeWebView.evaluateJavascript(script) { result ->
+            onResult(result == "true")
+        }
+    }
+
+    private fun handleNativeBackFallback() {
+        if (NativeRouteStack.activeCount() > 1) {
+            finishForNativeRouteBack()
+            return
+        }
+
+        if (activeWebView.canGoBack()) {
+            activeWebView.goBack()
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        if (now - lastBackPressedAt > 2_000) {
+            lastBackPressedAt = now
+            Snackbar.make(binding.root, R.string.press_again_exit, Snackbar.LENGTH_SHORT)
+                .show()
+        } else {
+            finish()
+        }
     }
 
     private fun bindAudioService() {
@@ -618,10 +947,76 @@ class WebViewActivity : AppCompatActivity() {
             return
         }
 
-        showLoadingOverlay()
+        if (suppressLoadingOverlay) {
+            awaitingInitialPageReveal = true
+            binding.loadingSplashImage.isVisible = false
+            binding.loadingContainer.setBackgroundColor(initialBackgroundColor)
+            binding.loadingContainer.isVisible = true
+            binding.loadingContainer.alpha = 1f
+            activeWebView.alpha = 0f
+        } else {
+            showLoadingOverlay()
+        }
         binding.errorContainer.isVisible = false
-        binding.webView.loadUrl(resolveEntryUrl(localPath))
+        val targetUrl = resolveEntryUrl(localPath, initialRouteUrl)
+        if (activeWebViewFromPool && initialRouteUrl.isNotBlank()) {
+            routeWarmWebView(targetUrl)
+            scheduleWarmRouteRevealFallback()
+        } else {
+            activeWebView.loadUrl(targetUrl)
+        }
         applySystemBarStyle(currentSystemBarColor)
+        if (suppressLoadingOverlay) {
+            scheduleNativeWebViewWarmup(800L)
+        }
+    }
+
+    private fun routeWarmWebView(targetUrl: String) {
+        val script = """
+            (function() {
+                if (window.jsBridge) {
+                    window.jsBridge.statusBarHeight = $topInsetCss;
+                    window.jsBridge.navigationBarHeight = $bottomInsetCss;
+                }
+                window.location.replace(${JSONObject.quote(targetUrl)});
+            })();
+        """.trimIndent()
+        activeWebView.evaluateJavascript(script, null)
+    }
+
+    private fun scheduleWarmRouteRevealFallback() {
+        binding.root.postDelayed({
+            if (!isFinishing && !isDestroyed && awaitingInitialPageReveal) {
+                awaitingInitialPageReveal = false
+                revealWebViewContent()
+                scheduleNativeWebViewWarmup(150L)
+            }
+        }, 250L)
+    }
+
+    private fun scheduleNativeWebViewWarmup(delayMillis: Long) {
+        if (nativeWebViewWarmupPosted || injectedScript.isNullOrBlank()) {
+            return
+        }
+        if (localPath.isBlank() && !isDevServerEnabled()) {
+            return
+        }
+
+        nativeWebViewWarmupPosted = true
+        activeWebView.postDelayed(
+            {
+                nativeWebViewWarmupPosted = false
+                if (isFinishing || isDestroyed) {
+                    return@postDelayed
+                }
+                NativeWebViewPool.warm(
+                    context = applicationContext,
+                    localPath = localPath,
+                    injectedScript = injectedScript.orEmpty(),
+                )
+            },
+            delayMillis,
+        )
     }
 
     private fun verifyLocalResourcePath(showMessage: Boolean): Boolean {
@@ -674,8 +1069,8 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun showError(message: String) {
         binding.loadingContainer.animate().cancel()
-        binding.webView.animate().cancel()
-        binding.webView.alpha = 1f
+        activeWebView.animate().cancel()
+        activeWebView.alpha = 1f
         binding.loadingContainer.isVisible = false
         binding.errorContainer.isVisible = true
         binding.errorText.text = getString(R.string.load_failed) + ": " + message
@@ -683,16 +1078,16 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun showLoadingOverlay() {
         binding.loadingContainer.animate().cancel()
-        binding.webView.animate().cancel()
+        activeWebView.animate().cancel()
         binding.loadingContainer.alpha = 1f
         binding.loadingContainer.isVisible = true
-        binding.webView.alpha = 0f
+        activeWebView.alpha = 0f
     }
 
     private fun revealWebViewContent() {
         binding.loadingContainer.animate().cancel()
-        binding.webView.animate().cancel()
-        binding.webView.animate()
+        activeWebView.animate().cancel()
+        activeWebView.animate()
             .alpha(1f)
             .setDuration(180)
             .start()
@@ -734,7 +1129,22 @@ class WebViewActivity : AppCompatActivity() {
 
             "setStatusBarStyle" -> {
                 val colorValue = args.optString(0)
-                applySystemBarStyle(SystemUiHelper.parseColorOrFallback(colorValue))
+                val backgroundColor = SystemUiHelper.parseColorOrFallback(
+                    colorValue,
+                    currentSystemBarColor,
+                )
+                if (backgroundColor != currentSystemBarColor) {
+                    applySystemBarStyle(backgroundColor)
+                }
+                true
+            }
+
+            "rememberThemeBackground" -> {
+                val backgroundColor = SystemUiHelper.parseColorOrFallback(
+                    args.optString(0),
+                    themeBackgroundColor,
+                )
+                rememberThemeBackground(backgroundColor)
                 true
             }
 
@@ -757,6 +1167,11 @@ class WebViewActivity : AppCompatActivity() {
                 val url = args.optString(0)
                 val version = args.optString(1)
                 runHotUpdate(url, version)
+            }
+
+            "openNativeAudiobookPlayer" -> {
+                val payload = args.optJSONObject(0) ?: JSONObject()
+                openNativeAudiobookPlayer(payload)
             }
 
             "replacePlaylist" -> {
@@ -816,15 +1231,178 @@ class WebViewActivity : AppCompatActivity() {
                     fontVersion = args.optString(3),
                 )
             }
+            "nativeNavigateTo" -> {
+                syncThemeBackgroundFromRoute(args)
+                nativeNavigateTo(readNativeRouteUrl(args))
+            }
+            "nativeRedirectTo" -> {
+                syncThemeBackgroundFromRoute(args)
+                nativeRedirectTo(readNativeRouteUrl(args))
+            }
+            "nativeReLaunch" -> {
+                syncThemeBackgroundFromRoute(args)
+                nativeReLaunch(readNativeRouteUrl(args))
+            }
+            "nativeSwitchTab" -> {
+                syncThemeBackgroundFromRoute(args)
+                nativeSwitchTab(readNativeRouteUrl(args))
+            }
+            "nativeNavigateBack" -> nativeNavigateBack(readNativeRouteDelta(args))
             else -> throw IllegalArgumentException("Unknown bridge handler: $name")
         }
     }
 
+    private fun readNativeRouteUrl(args: JSONArray): String {
+        val firstArg = args.opt(0)
+        val rawUrl = when (firstArg) {
+            is JSONObject -> firstArg.optString("url")
+            null, JSONObject.NULL -> ""
+            else -> firstArg.toString()
+        }
+        return normalizeNativeRouteUrl(rawUrl).orEmpty()
+    }
+
+    private fun syncThemeBackgroundFromRoute(args: JSONArray) {
+        val payload = args.opt(0) as? JSONObject ?: return
+        val colorValue = payload.optString("themeBackgroundColor")
+        if (colorValue.isBlank()) {
+            return
+        }
+        rememberThemeBackground(
+            SystemUiHelper.parseColorOrFallback(colorValue, themeBackgroundColor),
+        )
+    }
+
+    private fun rememberThemeBackground(backgroundColor: Int) {
+        val themeChanged = themeBackgroundColor != backgroundColor
+        themeBackgroundColor = backgroundColor
+        SystemUiHelper.rememberBackgroundColor(applicationContext, backgroundColor)
+        if (themeChanged) {
+            NativeWebViewPool.invalidate("theme changed")
+        }
+    }
+
+    private fun readNativeRouteDelta(args: JSONArray): Int {
+        val firstArg = args.opt(0)
+        val rawDelta = when (firstArg) {
+            is JSONObject -> firstArg.optInt("delta", 1)
+            is Number -> firstArg.toInt()
+            else -> 1
+        }
+        return rawDelta.coerceAtLeast(1)
+    }
+
+    private fun nativeNavigateTo(routeUrl: String): JSONObject {
+        if (routeUrl.isBlank()) {
+            return nativeRouteResult(false, "invalid route url")
+        }
+        runAfterBridgeResolve {
+            showTransitionDimOverlay()
+            startActivity(createNativeRouteIntent(routeUrl))
+            @Suppress("DEPRECATION")
+            overridePendingTransition(R.anim.loghome_ios_push_enter, R.anim.loghome_ios_push_exit)
+        }
+        return nativeRouteResult(true).put("url", routeUrl)
+    }
+
+    private fun nativeRedirectTo(routeUrl: String): JSONObject {
+        if (routeUrl.isBlank()) {
+            return nativeRouteResult(false, "invalid route url")
+        }
+        runAfterBridgeResolve {
+            showTransitionDimOverlay()
+            startActivity(createNativeRouteIntent(routeUrl))
+            @Suppress("DEPRECATION")
+            overridePendingTransition(R.anim.loghome_ios_push_enter, R.anim.loghome_ios_push_exit)
+            finish()
+        }
+        return nativeRouteResult(true).put("url", routeUrl)
+    }
+
+    private fun nativeReLaunch(routeUrl: String): JSONObject {
+        if (routeUrl.isBlank()) {
+            return nativeRouteResult(false, "invalid route url")
+        }
+        runAfterBridgeResolve {
+            startActivity(
+                createNativeRouteIntent(routeUrl, useWarmWebView = false).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+                },
+            )
+            @Suppress("DEPRECATION")
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
+        return nativeRouteResult(true).put("url", routeUrl)
+    }
+
+    private fun nativeSwitchTab(routeUrl: String): JSONObject {
+        if (routeUrl.isBlank()) {
+            return nativeRouteResult(false, "invalid route url")
+        }
+        runAfterBridgeResolve {
+            startActivity(
+                createNativeRouteIntent(routeUrl, useWarmWebView = false).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+                },
+            )
+            @Suppress("DEPRECATION")
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
+        return nativeRouteResult(true).put("url", routeUrl)
+    }
+
+    private fun nativeNavigateBack(delta: Int): JSONObject {
+        if (NativeRouteStack.activeCount() <= 1) {
+            return nativeRouteResult(false, "native route stack has no previous page")
+        }
+        runAfterBridgeResolve {
+            NativeRouteStack.finishTop(delta)
+        }
+        return nativeRouteResult(true).put("delta", delta)
+    }
+
+    private fun createNativeRouteIntent(routeUrl: String, useWarmWebView: Boolean = true): Intent {
+        return Intent(this, WebViewActivity::class.java)
+            .putExtra(EXTRA_LOCAL_PATH, localPath)
+            .putExtra(EXTRA_ROUTE_URL, routeUrl)
+            .putExtra(EXTRA_SUPPRESS_LOADING_OVERLAY, true)
+            .putExtra(EXTRA_USE_WARM_WEBVIEW, useWarmWebView)
+            .putExtra(
+                EXTRA_INITIAL_BACKGROUND_COLOR,
+                themeBackgroundColor,
+            )
+    }
+
+    private fun runAfterBridgeResolve(action: () -> Unit) {
+        binding.root.postDelayed(action, 24L)
+    }
+
+    private fun nativeRouteResult(ok: Boolean, reason: String? = null): JSONObject {
+        return JSONObject()
+            .put("ok", ok)
+            .apply {
+                if (!reason.isNullOrBlank()) {
+                    put("reason", reason)
+                }
+            }
+    }
+
+    fun finishForNativeRouteBack() {
+        showTransitionEdgeShadow(fadeOut = false)
+        finish()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(R.anim.loghome_ios_pop_enter, R.anim.loghome_ios_pop_exit)
+    }
+
     private fun setNavigationBarVisible(visible: Boolean) {
+        systemBarsVisible = visible
         val controller = WindowInsetsControllerCompat(window, binding.root)
         controller.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        applySystemBarStyle(currentSystemBarColor)
         if (visible) {
             controller.show(WindowInsetsCompat.Type.systemBars())
         } else {
@@ -835,23 +1413,32 @@ class WebViewActivity : AppCompatActivity() {
     private fun applySystemBarStyle(color: Int) {
         currentSystemBarColor = color
         SystemUiHelper.applySystemBarStyle(window, binding.root, color)
-        binding.webView.setBackgroundColor(color)
+        // The WebView draws the status-bar background in edge-to-edge mode.
+        window.statusBarColor = Color.TRANSPARENT
+        activeWebView.setBackgroundColor(color)
         binding.loadingContainer.setBackgroundColor(color)
         binding.errorContainer.setBackgroundColor(color)
+        binding.errorText.setTextColor(if (SystemUiHelper.shouldUseDarkIcons(color)) Color.BLACK else Color.WHITE)
+        if (!systemBarsVisible) {
+            val controller = WindowInsetsControllerCompat(window, binding.root)
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        }
     }
 
     private fun resolveBridgeCall(callId: String, value: Any?) {
         val script = "window.__logHomeNativeBridge?.resolve(${JSONObject.quote(callId)}, ${toJavaScriptLiteral(value)});"
-        binding.webView.post {
-            binding.webView.evaluateJavascript(script, null)
+        activeWebView.post {
+            activeWebView.evaluateJavascript(script, null)
         }
     }
 
     private fun rejectBridgeCall(callId: String, errorMessage: String) {
         val script =
             "window.__logHomeNativeBridge?.reject(${JSONObject.quote(callId)}, ${JSONObject.quote(errorMessage)});"
-        binding.webView.post {
-            binding.webView.evaluateJavascript(script, null)
+        activeWebView.post {
+            activeWebView.evaluateJavascript(script, null)
         }
     }
 
@@ -868,17 +1455,26 @@ class WebViewActivity : AppCompatActivity() {
     private fun dispatchVolumeKeyEvent(direction: String) {
         val script =
             "window.dispatchEvent(new CustomEvent('volumeKeyPress', { detail: ${JSONObject.quote(direction)} }));"
-        binding.webView.evaluateJavascript(script, null)
+        activeWebView.evaluateJavascript(script, null)
     }
 
     private fun dispatchKeyboardVisibilityEvent(visible: Boolean, heightCss: Double) {
         val detail = JSONObject()
             .put("visible", visible)
             .put("height", heightCss)
-        val script =
-            "window.dispatchEvent(new CustomEvent('keyboardVisibilityChange', { detail: $detail }));"
-        binding.webView.post {
-            binding.webView.evaluateJavascript(script, null)
+        val script = """
+            (function() {
+                var detail = $detail;
+                var root = document.documentElement;
+                if (root) {
+                    root.style.setProperty('--loghome-keyboard-height', detail.height + 'px');
+                    root.classList.toggle('loghome-keyboard-visible', detail.visible === true);
+                }
+                window.dispatchEvent(new CustomEvent('keyboardVisibilityChange', { detail: detail }));
+            })();
+        """.trimIndent()
+        activeWebView.post {
+            activeWebView.evaluateJavascript(script, null)
         }
     }
 
@@ -1019,17 +1615,280 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupNativeAudiobookPlayer() {
+        binding.nativeAudiobookPlayer.setListener(
+            object : NativeAudiobookPlayerView.Listener {
+                override fun onPlayPause() {
+                    val service = audioService ?: return
+                    if (service.getPlaybackState().isPlaying) {
+                        service.pause()
+                    } else {
+                        service.play()
+                    }
+                }
+
+                override fun onPrevious() {
+                    audioService?.skipToPreviousParagraph()
+                }
+
+                override fun onNext() {
+                    audioService?.skipToNextParagraph()
+                }
+
+                override fun onSeekTo(positionMs: Long) {
+                    audioService?.seekTo(positionMs)
+                }
+
+                override fun onChooseVoice() {
+                    showAudiobookVoiceDialog()
+                }
+
+                override fun onChooseSpeed() {
+                    showAudiobookSpeedDialog()
+                }
+
+                override fun onChooseSleepTimer() {
+                    showAudiobookSleepTimerDialog()
+                }
+
+                override fun onCollapse() {
+                    binding.nativeAudiobookPlayer.isVisible = false
+                }
+            },
+        )
+    }
+
+    private suspend fun openNativeAudiobookPlayer(payload: JSONObject): Boolean {
+        val articleIdsJson = payload.optJSONArray("articleIds") ?: JSONArray()
+        val articleIds = buildList {
+            for (index in 0 until articleIdsJson.length()) {
+                articleIdsJson.optString(index).takeIf { it.isNotBlank() }?.let(::add)
+            }
+        }
+        if (articleIds.isEmpty()) {
+            throw IllegalArgumentException("听书章节列表不能为空")
+        }
+
+        nativeAudiobookTitle = payload.optString("bookTitle").ifBlank { "原木听书" }
+        loadNativeAudiobookCover(payload.optString("coverUrl"))
+        binding.nativeAudiobookPlayer.setBookTitle(nativeAudiobookTitle)
+        binding.nativeAudiobookPlayer.alpha = 0f
+        binding.nativeAudiobookPlayer.isVisible = true
+        binding.nativeAudiobookPlayer.animate().cancel()
+        binding.nativeAudiobookPlayer.animate()
+            .alpha(1f)
+            .setDuration(180L)
+            .start()
+
+        val service = requireAudioService()
+        val startArticleId = payload.optString("startArticleId").takeIf { it.isNotBlank() }
+        val playlistKey = payload.optString("playlistKey")
+        val inlineArticlesJson = payload.optJSONArray("articles") ?: JSONArray()
+        val inlineArticles = buildList {
+            for (index in 0 until inlineArticlesJson.length()) {
+                inlineArticlesJson.optJSONObject(index)?.let { articleJson ->
+                    add(Article.fromJson(articleJson))
+                }
+            }
+        }
+        if (!service.isCurrentPlaylist(articleIds, playlistKey)) {
+            lastDispatchedAudiobookParagraph = ""
+            service.replacePlaylist(articleIds, startArticleId, inlineArticles, playlistKey)
+        }
+
+        val startParagraphId = payload.opt("startParagraphId")
+            ?.takeUnless { it == JSONObject.NULL }
+            ?.toString()
+            ?.takeIf { it.isNotBlank() }
+        if (startArticleId != null && startParagraphId != null) {
+            service.jumpToArticleParagraph(startArticleId, startParagraphId)
+        }
+        return true
+    }
+
+    private fun loadNativeAudiobookCover(coverUrl: String) {
+        if (coverUrl == nativeAudiobookCoverUrl) {
+            return
+        }
+        nativeAudiobookCoverUrl = coverUrl
+        audiobookCoverJob?.cancel()
+        binding.nativeAudiobookPlayer.setCoverBitmap(null)
+        if (coverUrl.isBlank()) {
+            return
+        }
+
+        audiobookCoverJob = lifecycleScope.launch(Dispatchers.IO) {
+            val bitmap = runCatching {
+                val request = Request.Builder().url(coverUrl).build()
+                audiobookCoverHttpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) return@use null
+                    val body = response.body ?: return@use null
+                    if (body.contentLength() > 8L * 1024L * 1024L) return@use null
+                    body.byteStream().use(BitmapFactory::decodeStream)
+                }
+            }.getOrNull()
+            withContext(Dispatchers.Main) {
+                if (nativeAudiobookCoverUrl == coverUrl) {
+                    binding.nativeAudiobookPlayer.setCoverBitmap(bitmap)
+                }
+            }
+        }
+    }
+
+    private fun renderNativeAudiobookState(state: AudiobookPlaybackState) {
+        if (!binding.nativeAudiobookPlayer.isVisible && !state.hasContent) {
+            return
+        }
+        binding.nativeAudiobookPlayer.setBookTitle(nativeAudiobookTitle)
+        binding.nativeAudiobookPlayer.render(
+            state = state,
+            voiceName = audiobookVoiceNames[state.voiceId],
+        )
+    }
+
+    private fun dispatchAudiobookHighlightState(state: AudiobookPlaybackState) {
+        val articleId = state.articleId ?: return
+        val paragraphId = state.paragraphId ?: return
+        val paragraphKey = "$articleId:$paragraphId"
+        if (lastDispatchedAudiobookParagraph == paragraphKey) {
+            return
+        }
+        lastDispatchedAudiobookParagraph = paragraphKey
+        val detail = JSONObject()
+            .put("articleId", articleId)
+            .put("paragraphId", paragraphId)
+            .put("chapterTitle", state.chapterTitle)
+            .put("isPlaying", state.isPlaying)
+        activeWebView.evaluateJavascript(
+            "window.dispatchEvent(new CustomEvent('loghome:audiobook-progress',{detail:$detail}));",
+            null,
+        )
+    }
+
+    private fun showAudiobookVoiceDialog() {
+        val service = audioService ?: return
+        lifecycleScope.launch {
+            val voices = withContext(Dispatchers.IO) { service.getAvailableVoicesJson() }
+            val voiceIds = mutableListOf<String>()
+            val labels = mutableListOf<String>()
+            for (index in 0 until voices.length()) {
+                val voice = voices.optJSONObject(index) ?: continue
+                val id = voice.optString("id")
+                if (id.isBlank()) continue
+                val name = voice.optString("name", id)
+                val description = voice.optString("description")
+                voiceIds += id
+                labels += if (description.isBlank()) name else "$name\n$description"
+                audiobookVoiceNames[id] = name
+            }
+            if (voiceIds.isEmpty() || isFinishing) {
+                return@launch
+            }
+            MaterialAlertDialogBuilder(this@WebViewActivity)
+                .setTitle("选择听书音色")
+                .setItems(labels.toTypedArray()) { _, which ->
+                    val voiceId = voiceIds[which]
+                    val loading = Snackbar.make(
+                        binding.root,
+                        "正在准备 ${audiobookVoiceNames[voiceId] ?: "音色"}…",
+                        Snackbar.LENGTH_INDEFINITE,
+                    )
+                    loading.show()
+                    binding.nativeAudiobookPlayer.hideModelDownloadProgress()
+                    lifecycleScope.launch {
+                        runCatching {
+                            service.setVoice(voiceId) { downloadedBytes, totalBytes ->
+                                binding.root.post {
+                                    if (!isFinishing && !isDestroyed) {
+                                        binding.nativeAudiobookPlayer.showModelDownloadProgress(
+                                            downloadedBytes,
+                                            totalBytes,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                            .onSuccess {
+                                Snackbar.make(binding.root, "音色已切换", Snackbar.LENGTH_SHORT).show()
+                            }
+                            .onFailure { error ->
+                                Snackbar.make(
+                                    binding.root,
+                                    "音色加载失败：${error.message ?: "未知错误"}",
+                                    Snackbar.LENGTH_LONG,
+                                ).show()
+                            }
+                        binding.nativeAudiobookPlayer.hideModelDownloadProgress()
+                        loading.dismiss()
+                    }
+                }
+                .setNegativeButton("取消", null)
+                .show()
+        }
+    }
+
+    private fun showAudiobookSpeedDialog() {
+        val speeds = floatArrayOf(0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+        val labels = speeds.map { speed -> "${speed}×" }.toTypedArray()
+        MaterialAlertDialogBuilder(this)
+            .setTitle("播放倍速")
+            .setItems(labels) { _, which -> audioService?.setPlaybackSpeed(speeds[which]) }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun showAudiobookSleepTimerDialog() {
+        val labels = arrayOf("关闭定时", "15 分钟", "30 分钟", "60 分钟", "90 分钟")
+        val minutes = arrayOf<Int?>(null, 15, 30, 60, 90)
+        MaterialAlertDialogBuilder(this)
+            .setTitle("睡眠定时")
+            .setItems(labels) { _, which ->
+                audioService?.setSleepTimer(minutes[which])
+                Snackbar.make(
+                    binding.root,
+                    minutes[which]?.let { "将在 $it 分钟后暂停" } ?: "已关闭睡眠定时",
+                    Snackbar.LENGTH_SHORT,
+                ).show()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
     companion object {
         private const val TAG = "WebViewActivity"
         const val EXTRA_LOCAL_PATH = "extra_local_path"
+        const val EXTRA_ROUTE_URL = "extra_route_url"
+        const val EXTRA_SUPPRESS_LOADING_OVERLAY = "extra_suppress_loading_overlay"
+        const val EXTRA_USE_WARM_WEBVIEW = "extra_use_warm_webview"
+        const val EXTRA_INITIAL_BACKGROUND_COLOR = "extra_initial_background_color"
 
         fun isDevServerEnabled(): Boolean {
             return BuildConfig.WEBVIEW_ENTRY_URL.isNotBlank()
         }
 
-        fun resolveEntryUrl(localPath: String): String {
-            return BuildConfig.WEBVIEW_ENTRY_URL.takeIf { it.isNotBlank() }
+        fun resolveEntryUrl(localPath: String, routeUrl: String = ""): String {
+            val entryUrl = BuildConfig.WEBVIEW_ENTRY_URL.takeIf { it.isNotBlank() }
                 ?: File(localPath).toURI().toString()
+            val normalizedRoute = normalizeNativeRouteUrl(routeUrl) ?: return entryUrl
+            val baseUrl = entryUrl.substringBefore("#")
+            return "$baseUrl#$normalizedRoute"
+        }
+
+        fun normalizeNativeRouteUrl(routeUrl: String?): String? {
+            val trimmed = routeUrl?.trim().orEmpty()
+            if (trimmed.isBlank()) {
+                return null
+            }
+            if (trimmed.contains("://")) {
+                return null
+            }
+            val withoutHashPrefix = trimmed.removePrefix("#")
+            val route = if (withoutHashPrefix.startsWith("/")) {
+                withoutHashPrefix
+            } else {
+                "/$withoutHashPrefix"
+            }
+            return route.takeIf { it.startsWith("/pages/") && !it.contains("..") }
         }
     }
 }

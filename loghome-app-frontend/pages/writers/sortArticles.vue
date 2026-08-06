@@ -1,5 +1,5 @@
 <template>
-	<view class="content">
+	<view class="content" v-dark>
 			<div class="articles">
 				<HM-dragSorts :list="draglist" :isLongTouch="false" :rowHeight="45" @confirm="dragConfirmed">
 					<template slot="rowContent" slot-scope="{ row }">
@@ -10,14 +10,14 @@
                             </text>
 						</view>
 					</template>
-				</HM-dragSorts> 
+				</HM-dragSorts>
 			</div>
 	</view>
 </template>
 
 <script>
 	import axios from 'axios'
-	import dragSorts from '../.././uni_modules/HM-dragSorts/components/HM-dragSorts/HM-dragSorts.vue' 
+	import dragSorts from '../.././uni_modules/HM-dragSorts/components/HM-dragSorts/HM-dragSorts.vue'
     import { writerArticleDB } from "../../lib/db.js"
     import crypto from 'crypto'
 
@@ -62,7 +62,7 @@
 				const uid = this.uid;
 				let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
 				let _this = this;
-				axios.get(this.$baseUrl + '/essays/get_articles?id=' + uid, 
+				axios.get(this.$baseUrl + '/essays/get_articles?id=' + uid,
 				{
 					headers: {
 						'Content-Type': 'application/json', //设置请求头请求格式为JSON
@@ -187,7 +187,7 @@
                         if(writerArticle.content) {
                             article.hasWriterModify = true;
                             article.title = writerArticle.title;
-                            
+
                             // 更新 draglist 中的对应项
                             const dragItem = this.draglist.find(item => item.article_id === article.article_id);
                             if(dragItem) {
@@ -240,7 +240,7 @@
 			)
 			.then(function(response) {
 				uni.navigateBack({
-					
+
 				})
 			})
 			.catch(function(error) {
@@ -258,7 +258,7 @@
 			});
 		}
 	}
-	
+
 </script>
 
 <style scoped lang="less">
@@ -267,9 +267,9 @@
 		.subTitle{
 			width:50vw;
 			text-align:center;
-			background-color: rgb(255,248,234);
+			background-color: var(--card-background);
 			font-size: 35rpx;
-			color:rgb(113, 52, 24);
+			color:var(--accent-text-color);
 			line-height: 60rpx;
 			.draft{
 				font-size: 28rpx;
@@ -279,14 +279,14 @@
 		}
 	}
 	.titleOuter{
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 	}
 	.title{
 		padding-left:35rpx;
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 		font-size: 35rpx;
 		font-weight: bold;
-		color:rgb(113, 52, 24);
+		color:var(--accent-text-color);
 		line-height: 100rpx;
 		.draft{
 			font-size: 28rpx;
@@ -294,14 +294,14 @@
 			color:rgb(195, 0, 0);
 		}
 	}
-	
+
 	.content {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		flex-flow: wrap;
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 		width:100vw;
 		.articles{
 			width:100vw;

@@ -5,6 +5,8 @@ let auth = require('../../bin/auth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
 let achievements = require('../../bin/achievements.js');
+let avatarFrames = require('../../bin/avatarFrames.js');
+let membership = require('../../bin/membership.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -29,6 +31,12 @@ router.get('/list', async (req, res) => {
              LIMIT ?, ?`,
             [postId, (page - 1) * pageSize, pageSize]
         );
+        await avatarFrames.decorateRows(comments, [
+            { userIdField: 'user_id', targetField: 'user_avatar_frame' }
+        ]);
+        await membership.decorateRows(comments, [
+            { userIdField: 'user_id', targetField: 'user_membership_type' }
+        ]);
         
         // 获取每个评论用户的勋章
         for (let comment of comments) {
@@ -108,6 +116,12 @@ router.get('/replies', async (req, res) => {
              LIMIT ?, ?`,
             [commentId, (page - 1) * pageSize, pageSize]
         );
+        await avatarFrames.decorateRows(replies, [
+            { userIdField: 'user_id', targetField: 'user_avatar_frame' }
+        ]);
+        await membership.decorateRows(replies, [
+            { userIdField: 'user_id', targetField: 'user_membership_type' }
+        ]);
         
         // 获取每个回复用户的勋章
         for (let reply of replies) {
@@ -268,9 +282,19 @@ router.post('/create', auth, async (req, res) => {
             [commentId]
         );
         if (newComment && newComment[0]) {
-            newComment[0].user_badge = await achievements.getUserBadge(newComment[0].user_id);
-            newComment[0].user_title = await achievements.getUserTitleProfile(newComment[0].user_id);
+            const [avatarFrame, userBadge, userTitle, currentMembership] = await Promise.all([
+                avatarFrames.getEffectiveAvatarFrame(newComment[0].user_id),
+                achievements.getUserBadge(newComment[0].user_id),
+                achievements.getUserTitleProfile(newComment[0].user_id),
+                membership.getCurrentSubscription(newComment[0].user_id),
+            ]);
+            newComment[0].user_avatar_frame = avatarFrame;
+            newComment[0].user_badge = userBadge;
+            newComment[0].user_title = userTitle;
             newComment[0].user_title_text = newComment[0].user_title.display_text;
+            newComment[0].user_membership_type = currentMembership
+                ? currentMembership.membership_type
+                : '';
         }
         
         res.json({

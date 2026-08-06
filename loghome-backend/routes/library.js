@@ -5,6 +5,8 @@ let auth = require('../bin/auth.js');
 let moment = require('moment');
 let message = require('../bin/message.js');
 let bank = require('../bin/bank.js');
+let redstone = require('../bin/redstone.js');
+let avatarFrames = require('../bin/avatarFrames.js');
 let { handleReaderNovelChatStream } = require('../bin/readerNovelAiChat.js');
 let { getNovelSummaryIndexStatus } = require('../bin/agentIndexing.js');
 
@@ -420,6 +422,9 @@ router.get('/get_all_novel_fans', async function (req, res) {
 			let userMessage = messages.find(m => m.user_id === results[i].user_id);
 			results[i].message = userMessage ? userMessage.message : null;
 		}
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
+		]);
 		
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -1034,8 +1039,24 @@ router.post('/parse_share_code', async function (req, res) {
 	}
 });
 
-router.post('/reader_novel_ai_chat_stream', async function (req, res) {
-	return handleReaderNovelChatStream(req, res);
+router.post('/reader_novel_ai_chat_stream', auth, async function (req, res) {
+	try {
+		const user = req.user && req.user[0];
+		const retrieverMode = String(req.body.retriever_mode || req.body.search_mode || 'fast') === 'deep' ? 'deep' : 'fast';
+		const cost = retrieverMode === 'deep' ? 2 : 1;
+		await redstone.consumeRedstone(user.user_id, cost, {
+			feature: retrieverMode === 'deep' ? 'reader_log_girl_deep' : 'reader_log_girl_fast',
+			requestId: req.body.task_id || `${req.body.session_id || ''}:${req.body.message_id || Date.now()}`,
+			description: `问问原木娘${retrieverMode === 'deep' ? '深度思考' : '普通问答'}消耗${cost}红石`,
+		});
+		return handleReaderNovelChatStream(req, res);
+	} catch (error) {
+		if (error && error.isBusinessError) {
+			return res.status(error.statusCode || 400).json({ code: error.code, msg: error.message, message: error.message });
+		}
+		console.log(error);
+		return res.status(500).json({ msg: '红石计费失败' });
+	}
 });
 
 router.get('/reader_novel_summary_index_status', async function (req, res) {

@@ -14,6 +14,45 @@ const LOCK_STATUS = {
 };
 
 const DEFAULT_LOCK_TTL_SECONDS = 60;
+const FREE_COLLABORATION_PARTICIPANT_LIMIT = 2;
+
+function buildCollaborationPolicy(row = {}) {
+	const activeCollaboratorCount = Math.max(
+		0,
+		Number(row.active_collaborator_count || 0),
+	);
+	const participantCount = activeCollaboratorCount + 1;
+	const membershipType = ['standard', 'super'].includes(
+		String(row.owner_membership_type || '').toLowerCase(),
+	)
+		? String(row.owner_membership_type).toLowerCase()
+		: null;
+	const requiresMembership =
+		participantCount > FREE_COLLABORATION_PARTICIPANT_LIMIT;
+	const ownerHasRequiredMembership = Boolean(membershipType);
+
+	return {
+		free_participant_limit: FREE_COLLABORATION_PARTICIPANT_LIMIT,
+		active_collaborator_count: activeCollaboratorCount,
+		participant_count: participantCount,
+		requires_membership: requiresMembership,
+		required_membership_type: 'standard',
+		owner_membership_type: membershipType,
+		owner_has_required_membership: ownerHasRequiredMembership,
+		permissions_restricted:
+			requiresMembership && !ownerHasRequiredMembership,
+	};
+}
+
+function projectCollaborationPolicy(policy, additionalActiveCollaborators = 0) {
+	const basePolicy = policy || buildCollaborationPolicy();
+	return buildCollaborationPolicy({
+		active_collaborator_count:
+			Number(basePolicy.active_collaborator_count || 0) +
+			Math.max(0, Number(additionalActiveCollaborators || 0)),
+		owner_membership_type: basePolicy.owner_membership_type,
+	});
+}
 
 function normalizePermissionFlag(value) {
 	return Number(value) === 1;
@@ -38,17 +77,30 @@ function buildAccessPayload(row, userId) {
 		!isOwner && membershipStatus === COLLABORATOR_STATUS.ACTIVE;
 	const isPendingInvitee =
 		!isOwner && membershipStatus === COLLABORATOR_STATUS.PENDING;
+	const collaborationPolicy = buildCollaborationPolicy(row);
+	const collaboratorPermissionsAvailable =
+		!collaborationPolicy.permissions_restricted;
 	const collaboratorPermissions = {
 		can_edit_article:
-			isActiveCollaborator && normalizePermissionFlag(row.can_edit_article),
+			isActiveCollaborator &&
+			collaboratorPermissionsAvailable &&
+			normalizePermissionFlag(row.can_edit_article),
 		can_add_article:
-			isActiveCollaborator && normalizePermissionFlag(row.can_add_article),
+			isActiveCollaborator &&
+			collaboratorPermissionsAvailable &&
+			normalizePermissionFlag(row.can_add_article),
 		can_delete_article:
-			isActiveCollaborator && normalizePermissionFlag(row.can_delete_article),
+			isActiveCollaborator &&
+			collaboratorPermissionsAvailable &&
+			normalizePermissionFlag(row.can_delete_article),
 		can_sort_article:
-			isActiveCollaborator && normalizePermissionFlag(row.can_sort_article),
+			isActiveCollaborator &&
+			collaboratorPermissionsAvailable &&
+			normalizePermissionFlag(row.can_sort_article),
 		can_publish_article:
-			isActiveCollaborator && normalizePermissionFlag(row.can_publish_article),
+			isActiveCollaborator &&
+			collaboratorPermissionsAvailable &&
+			normalizePermissionFlag(row.can_publish_article),
 	};
 	const accessRole = isOwner
 		? 'owner'
@@ -84,6 +136,7 @@ function buildAccessPayload(row, userId) {
 		can_respond_invitation: isPendingInvitee,
 		is_owner: isOwner,
 		is_collaborator: isActiveCollaborator,
+		collaboration_policy: collaborationPolicy,
 	};
 }
 
@@ -94,6 +147,23 @@ async function getNovelAccess(userId, novelId) {
 			n.author_id,
 			n.deleted,
 			n.novel_type,
+			(
+				SELECT COUNT(*)
+				FROM novel_collaborators nc_count
+				WHERE nc_count.novel_id = n.novel_id
+					AND nc_count.status = '${COLLABORATOR_STATUS.ACTIVE}'
+			) AS active_collaborator_count,
+			(
+				SELECT ms.membership_type
+				FROM membership_subscriptions ms
+				WHERE ms.user_id = n.author_id
+					AND ms.status = 'active'
+					AND ms.starts_at <= NOW()
+					AND ms.expires_at > NOW()
+					AND ms.membership_type IN ('standard', 'super')
+				ORDER BY FIELD(ms.membership_type, 'super', 'standard'), ms.expires_at DESC
+				LIMIT 1
+			) AS owner_membership_type,
 			nc.role AS collaborator_role,
 			nc.status AS collaborator_status,
 			nc.can_edit_article,
@@ -128,6 +198,23 @@ async function getArticleAccess(userId, articleId) {
 			n.author_id,
 			n.deleted AS novel_deleted,
 			n.novel_type,
+			(
+				SELECT COUNT(*)
+				FROM novel_collaborators nc_count
+				WHERE nc_count.novel_id = n.novel_id
+					AND nc_count.status = '${COLLABORATOR_STATUS.ACTIVE}'
+			) AS active_collaborator_count,
+			(
+				SELECT ms.membership_type
+				FROM membership_subscriptions ms
+				WHERE ms.user_id = n.author_id
+					AND ms.status = 'active'
+					AND ms.starts_at <= NOW()
+					AND ms.expires_at > NOW()
+					AND ms.membership_type IN ('standard', 'super')
+				ORDER BY FIELD(ms.membership_type, 'super', 'standard'), ms.expires_at DESC
+				LIMIT 1
+			) AS owner_membership_type,
 			nc.role AS collaborator_role,
 			nc.status AS collaborator_status,
 			nc.can_edit_article,
@@ -228,6 +315,9 @@ function serializeAccess(access) {
 		can_respond_invitation: !!access.can_respond_invitation,
 		is_owner: !!access.is_owner,
 		is_collaborator: !!access.is_collaborator,
+		collaboration_policy: access.collaboration_policy
+			? { ...access.collaboration_policy }
+			: buildCollaborationPolicy(),
 	};
 }
 
@@ -485,7 +575,10 @@ async function releaseArticleEditLock({ articleId, userId, sessionId }) {
 module.exports = {
 	COLLABORATOR_STATUS,
 	DEFAULT_LOCK_TTL_SECONDS,
+	FREE_COLLABORATION_PARTICIPANT_LIMIT,
 	LOCK_STATUS,
+	buildAccessPayload,
+	buildCollaborationPolicy,
 	canAddArticle,
 	canDeleteArticle,
 	canEditDraft,
@@ -504,6 +597,7 @@ module.exports = {
 	heartbeatArticleEditLock,
 	listNovelCollaborators,
 	normalizeUser,
+	projectCollaborationPolicy,
 	releaseArticleEditLock,
 	serializeAccess,
 };

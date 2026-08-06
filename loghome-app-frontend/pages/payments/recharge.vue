@@ -58,7 +58,7 @@
 			</view>
 			<view>
 				<text>2、我们使用由 <span>
-					<img src="static/images/afdian_logo.png" alt="" style="width: 30rpx; height: 30rpx;"> 爱发电
+					<img src="static/images/afdian_logo.png" alt="" style="width: 30rpx; height: 30rpx;" /> 爱发电
 				</span> 提供的支付服务来收取捐赠，请</text>
 				<text>不要修改跳转后的链接和订单号</text>
 				<text>，否则我们将无法收到捐赠</text>

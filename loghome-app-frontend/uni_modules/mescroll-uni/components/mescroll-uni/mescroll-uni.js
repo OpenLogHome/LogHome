@@ -211,7 +211,9 @@ MeScroll.prototype.touchmoveEvent = function(e) {
 	// scroll-view在滚动时不会触发touchmove,当触顶/底/左/右时,才会触发touchmove
 	// scroll-view滚动到顶部时,scrollTop不一定为0,也有可能大于0; 在iOS的APP中scrollTop可能为负数,不一定和startTop相等
 	if (moveY > 0 && (
-			(me.isScrollBody && scrollTop <= 0)
+			// body滚动必须从顶部起手。若手势从列表中部开始，只是在移动
+			// 过程中回到顶部，剩余位移应继续归属于本次滚动，不能触发刷新。
+			(me.isScrollBody && scrollTop <= 0 && me.startTop <= 0)
 			||
 			(!me.isScrollBody && (scrollTop <= 0 || (scrollTop <= me.optDown.startTop && scrollTop === me.startTop)) )
 		)) {

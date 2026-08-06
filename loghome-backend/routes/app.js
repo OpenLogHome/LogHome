@@ -6,7 +6,11 @@ let sysLog = require('../bin/log.js');
 let statistics = require('../bin/statistics.js');
 let bank = require('../bin/bank.js');
 let message = require('../bin/message.js');
+let avatarFrames = require('../bin/avatarFrames.js');
 let { getEnabledReaderFonts } = require('../bin/reader-fonts.js');
+let {
+	getEnabledWriterBackgroundSkins,
+} = require('../bin/writer-background-skins.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -27,6 +31,16 @@ router.get('/get_reader_fonts', async function (req, res) {
 	try {
 		let fonts = await getEnabledReaderFonts();
 		res.json(fonts);
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+router.get('/get_writer_background_skins', async function (req, res) {
+	try {
+		let skins = await getEnabledWriterBackgroundSkins();
+		res.json(skins);
 	} catch (e) {
 		console.log(e);
 		res.status(400).json({ msg: 'bad request' });
@@ -85,6 +99,9 @@ router.get('/get_grand_users', async function (req, res) {
 			'SELECT * FROM users WHERE user_group != ?',
 			['用户'],
 		);
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
+		]);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);
@@ -97,6 +114,9 @@ router.get('/get_great_users', async function (req, res) {
 		let results = await query(
 			'SELECT u.*,g.great_info FROM users u,great_users g WHERE u.user_id = g.user_id'
 		);
+		await avatarFrames.decorateRows(results, [
+			{ userIdField: 'user_id', targetField: 'avatar_frame' },
+		]);
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		console.log(e);

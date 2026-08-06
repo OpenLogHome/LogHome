@@ -1,43 +1,60 @@
 :root {
+  color-scheme: light;
   /* 亮色模式变量 */
   --background-color: #ffffff;
   --background-color-secondary: #f9f9f9;
+  --background-color-tertiary: #f2f2f2;
+  --background-color-base: #f5f7fa;
   --text-color-primary: #303133;
   --text-color-regular: #606266;
   --text-color-secondary: #909399;
   --border-color: rgba(223,223,223,1);
+  --border-color-light: #ebeef5;
   --main-color: #59C65D;
   --hr-color: #f0f2f5;
   --card-background: #ffffff;
   --shadow-color: rgba(245,245,250,1);
+  --accent-text-color: #713418;
+  --brand-text-color: #b46f58;
+  --success-text-color: #25634a;
+  --warning-text-color: #c2410c;
+  --danger-text-color: #b4533c;
 }
 
-/* 暗色模式变量 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background-color: #121212;
-    --background-color-secondary: #1e1e1e;
-    --text-color-primary: #e5e5e5;
-    --text-color-regular: #b8b8b8;
-    --text-color-secondary: #909399;
-    --border-color: rgba(75,75,75,1);
-    --main-color: #59C65D;
-    --hr-color: #2c2c2c;
-    --card-background: #252525;
-    --shadow-color: rgba(0,0,0,0.3);
-  }
+html,
+body,
+#app,
+page {
+  background-color: var(--background-color);
+  color: var(--text-color-primary);
 }
 
-/* 手动切换的暗色模式类 */
+/* 项目暗色模式：仅由根节点的 dark-mode 类控制 */
 .dark-mode {
+  color: var(--text-color-primary);
+  color-scheme: dark;
   --background-color: #121212;
   --background-color-secondary: #1e1e1e;
+  --background-color-tertiary: #2a2a2a;
+  --background-color-base: #242424;
   --text-color-primary: #e5e5e5;
   --text-color-regular: #b8b8b8;
   --text-color-secondary: #909399;
   --border-color: rgba(75,75,75,1);
+  --border-color-light: #3a3a3a;
   --main-color: #59C65D;
   --hr-color: #2c2c2c;
   --card-background: #252525;
   --shadow-color: rgba(0,0,0,0.3);
-} 
+  --accent-text-color: #d9b08c;
+  --brand-text-color: #e1a38f;
+  --success-text-color: #75ce95;
+  --warning-text-color: #ffb86c;
+  --danger-text-color: #ff8f82;
+}
+
+.dark-mode input,
+.dark-mode textarea {
+  color: var(--text-color-primary);
+  caret-color: var(--text-color-primary);
+}

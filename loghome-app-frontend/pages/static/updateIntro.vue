@@ -1,5 +1,5 @@
 <template>
-	<div style=" background-color:#ffffff; padding:50rpx; font-size: 35rpx;" data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed=""><p style="text-indent:2em;">
+	<div style=" background-color:var(--card-background); padding:50rpx; font-size: 35rpx;" data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed="" v-dark><p style="text-indent:2em;">
 		原木社区采用跨端H5架构，目前支持浏览器端和安卓端双端同步更新。
 	</p>
 	<p style="text-indent:2em;">

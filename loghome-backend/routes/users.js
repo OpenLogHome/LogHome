@@ -10,6 +10,8 @@ const fetch = require('node-fetch');
 const { generateRandomUsername } = require('../bin/username-generator.js');
 const UniCloud = require('../bin/unicloud.js');
 const achievements = require('../bin/achievements.js');
+const membership = require('../bin/membership.js');
+const avatarFrames = require('../bin/avatarFrames.js');
 
 // 发送邮件的函数
 async function sendEmail(to, code) {
@@ -106,9 +108,19 @@ router.get('/user_profile_of', async function (req, res) {
 			[req.query.id],
 		);
 		if (results && results.length > 0) {
-			results[0].selected_badge = await achievements.getUserBadge(req.query.id);
-			results[0].title_profile = await achievements.getUserTitleProfile(req.query.id);
+			const [currentMembership, selectedBadge, titleProfile, avatarFrame] = await Promise.all([
+				membership.getCurrentSubscription(req.query.id),
+				achievements.getUserBadge(req.query.id),
+				achievements.getUserTitleProfile(req.query.id),
+				avatarFrames.getEffectiveAvatarFrame(req.query.id),
+			]);
+			results[0].selected_badge = selectedBadge;
+			results[0].title_profile = titleProfile;
 			results[0].display_title = results[0].title_profile.display_text;
+			results[0].avatar_frame = avatarFrame;
+			results[0].membership_type = currentMembership
+				? currentMembership.membership_type
+				: '';
 		}
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -246,6 +258,18 @@ router.get('/userprofile', auth, async (req, res) => {
 	user.selected_badge = await achievements.getUserBadge(user.user_id);
 	user.title_profile = await achievements.getUserTitleProfile(user.user_id);
 	user.display_title = user.title_profile.display_text;
+	user.selected_avatar_frame_id = await avatarFrames.getSelectedFrameId(user.user_id);
+	user.avatar_frame = await avatarFrames.getEffectiveAvatarFrame(user.user_id);
+	const currentMembership = await membership.getCurrentSubscription(user.user_id);
+	user.membership = currentMembership
+		? {
+			type: currentMembership.membership_type,
+			active: true,
+			billing_cycle: currentMembership.billing_cycle,
+			expires_at: currentMembership.expires_at,
+			auto_renew: Boolean(currentMembership.auto_renew),
+		  }
+		: { active: false };
 
 	res.end(JSON.stringify(user));
 });
@@ -837,6 +861,9 @@ router.get('/get_history_message', auth, async (req, res) => {
 			'SELECT m.*,u.name,u.avatar_url FROM user_message m,users u WHERE to_id = ? AND u.user_id = m.from_id ORDER BY time DESC LIMIT 0,100',
 			[user.user_id],
 		);
+		await avatarFrames.decorateRows(messages, [
+			{ userIdField: 'from_id', targetField: 'avatar_frame' },
+		]);
         await query(
             'UPDATE user_message SET is_read = 1 WHERE to_id = ? AND is_read = 0',
             [user.user_id],

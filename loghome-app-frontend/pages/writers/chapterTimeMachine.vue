@@ -1,5 +1,5 @@
 <template>
-  <view class="content">
+  <view class="content" v-dark>
     <view class="time-machine-container">
       <!-- 左侧列表区域 -->
       <view class="history-list">
@@ -500,7 +500,7 @@ export default {
 .content {
   width: 100%;
   height: calc(100vh - 44px);
-  background-color: #f8f8f8;
+  background-color: var(--background-color-secondary);
 }
 
 .time-machine-container {
@@ -513,15 +513,15 @@ export default {
 .history-list {
   width: 33%;
   height: 100%;
-  background-color: #fff;
-  border-right: 1px solid #eaeaea;
+  background-color: var(--card-background);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
 }
 
 .list-header {
   padding: 20rpx;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -530,12 +530,12 @@ export default {
 .header-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
 }
 
 .record-count {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-secondary);
 }
 
 .record-list {
@@ -545,19 +545,19 @@ export default {
 
 .record-item {
   padding: 20rpx;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-color);
   position: relative;
 }
 
 .record-item.selected {
-  background-color: #f0f7ff;
+  background-color: var(--background-color-tertiary);
   border-left: 4rpx solid #1875f0;
 }
 
 .record-title {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 10rpx;
   white-space: nowrap;
   overflow: hidden;
@@ -575,18 +575,18 @@ export default {
 .record-editor,
 .record-count {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-secondary);
 }
 
 .record-editor {
-  color: #7c532e;
+  color: var(--accent-text-color);
 }
 
 .record-tag {
   position: absolute;
   top: 20rpx;
   right: 20rpx;
-  background-color: #e6f7ff;
+	  background-color: rgba(24, 144, 255, 0.16);
   color: #1890ff;
   font-size: 20rpx;
   padding: 4rpx 10rpx;
@@ -596,27 +596,27 @@ export default {
 .no-records {
   padding: 40rpx;
   text-align: center;
-  color: #999;
+  color: var(--text-color-secondary);
 }
 
 /* 右侧预览样式 */
 .content-preview {
   width: 67%;
   height: 100%;
-  background-color: #fff;
+  background-color: var(--card-background);
   display: flex;
   flex-direction: column;
 }
 
 .preview-header {
   padding: 20rpx;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .preview-title {
   font-size: 36rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 10rpx;
 }
 
@@ -625,7 +625,7 @@ export default {
   flex-wrap: wrap;
   gap: 20rpx;
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-color-secondary);
   margin-bottom: 20rpx;
 }
 
@@ -641,8 +641,8 @@ export default {
 }
 
 .copy-btn {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: var(--background-color-secondary);
+  color: var(--text-color-primary);
 }
 
 .restore-btn {
@@ -658,13 +658,13 @@ export default {
 
 .rich-content {
   padding: 20rpx;
-  background-color: #fff;
+  background-color: var(--card-background);
 }
 
 .content-text {
   font-size: 30rpx;
   line-height: 1.6;
-  color: #333;
+  color: var(--text-color-primary);
   margin-bottom: 20rpx;
   display: block;
 }
@@ -680,7 +680,7 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100%;
-  color: #999;
+  color: var(--text-color-secondary);
   font-size: 28rpx;
 }
 </style>

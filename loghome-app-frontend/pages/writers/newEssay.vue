@@ -1,5 +1,5 @@
 <template>
-	<div class="outer">
+	<div class="outer" v-dark>
 		<el-input
 		  type="text"
 		  placeholder="小说名"
@@ -178,9 +178,9 @@
 			height: 37px;
 			line-height: 37px;
 			border: 0px;
-			color: #333333;
+			color: var(--text-color-primary);
 			font-size: 16px;
-			background-color: #ffffff;
+			background-color: var(--card-background);
 			margin-bottom: 20px;
 			border-radius: 5px;
 			padding-left:10px;
@@ -190,30 +190,30 @@
 			height: 150px;
 			line-height: 37px;
 			border: 0px;
-			color: #333333;
+			color: var(--text-color-primary);
 			font-size: 16px;
-			background-color: #ffffff;
+			background-color: var(--card-background);
 			padding-left:10px;
 		}
-		
+
 		.title_bar{
 			padding: 8px 30rpx;
 			font-size: 40rpx;
 			font-weight: bold;
-			background-color: #f2f2f2;
+			background-color: var(--background-color-secondary);
 			margin: 25rpx auto;
-			color: #934900;
+			color: var(--accent-text-color);
 		}
-		
+
 		.suggested_tags{
 			display:flex;
 			flex-wrap: wrap;
 			height:auto;
 			min-height:100rpx;
 			.tag{
-				background-color: #eeeeee;
+				background-color: var(--border-color);
 				font-size: 35rpx;
-				color:#666666;
+				color:var(--text-color-regular);
 				height:70rpx;
 				line-height: 70rpx;
 				padding:0 30rpx;
@@ -232,13 +232,13 @@
 			}
 		}
 	}
-	
+
 	.button {
 		height: 40px;
 		width: 80%;
 		margin-top: 30px;
 		font-size: 16px;
-		
+
 		font-weight: bold;
 		line-height: 38px;
 		border-radius: 5px;
@@ -246,7 +246,7 @@
 		background-color: rgb(234, 112, 52);
 		text-align: center;
 	}
-	
+
 	.button:active {
 		background-color: rgb(234, 171, 11);
 	}

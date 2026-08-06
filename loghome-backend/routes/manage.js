@@ -16,6 +16,10 @@ let achievementsRouter = require('./manage/achievements');
 let bannersRouter = require('./manage/banners');
 let dashboardRouter = require('./manage/dashboard');
 let popupPostersRouter = require('./manage/popupPosters');
+let membershipRouter = require('./manage/membership');
+let redstoneRouter = require('./manage/redstone');
+let appUpdateRouter = require('./manage/appUpdate');
+let libraryIndexTagsRouter = require('./manage/libraryIndexTags');
 
 router.use('/library', libraryRouter);
 router.use('/users', userRouter);
@@ -29,5 +33,9 @@ router.use('/achievements', achievementsRouter);
 router.use('/banners', bannersRouter);
 router.use('/popup-posters', popupPostersRouter);
 router.use('/dashboard', dashboardRouter);
+router.use('/membership', membershipRouter);
+router.use('/redstone', redstoneRouter);
+router.use('/app-updates', appUpdateRouter);
+router.use('/library-index-tags', libraryIndexTagsRouter);
 
 module.exports = router;

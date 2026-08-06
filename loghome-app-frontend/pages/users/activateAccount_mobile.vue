@@ -1,11 +1,11 @@
 <template>
-	<div class="content">
+	<div class="content" v-dark>
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"/></div>
 			<input class="input" type="text" placeholder="输入手机号" v-model="mobile"/>
 			<div class="btn" v-show="!isWaiting" @click="sendCode">发送验证码</div>
 			<div class="btn wait" v-show="isWaiting">等待{{waitTime}}秒</div>
-		</div> 
+		</div>
 		<div style="display:flex;width:100%;justify-content: center;">
 			<slide-verify :l="42"
 			            :r="10"
@@ -21,7 +21,7 @@
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
 			<input class="input" type="text" placeholder="验证码" v-model="vcode" />
 		</div>
-		
+
 		<!--End密码输入框-->
 		<div class="button" @click="submit">提交</div>
 	</div>
@@ -45,14 +45,14 @@
 			}
 		},
 		onLoad() {
-			
+
 		},
 		methods: {
 			verifyResult(res) {
 				//console.log(res);
 				this.resultData = true;
 			},
-			//校验密码：只能输入6-20个字母、数字、下划线  
+			//校验密码：只能输入6-20个字母、数字、下划线
 			isPasswd(s) {
 				var patrn = /^(\w){6,20}$/;
 				if (!patrn.exec(s)) return false
@@ -69,13 +69,13 @@
 					return;
 				}
 				var axios = require('axios');
-				
+
 				var config = {
 				  method: 'get',
 				  url: 'https://sapi.kuailezan.com/api/login/sendCode?mobile=' + _this.mobile,
 				  headers: { }
 				};
-				
+
 				axios(config)
 				.then(function (response) {
 				  uni.showToast({
@@ -111,7 +111,7 @@
 					return;
 				}
 				axios.get( this.$baseUrl + '/users/verify_mobile?mobile=' + this.mobile + "&vcode=" + this.vcode, {
-					headers: { 
+					headers: {
 					     'Content-Type': 'application/json',//设置请求头请求格式为JSON
 					     'Authorization': tk //设置token 其中K名要和后端协调好
 					}
@@ -156,7 +156,7 @@
 		height: 100%;
 		padding-top: 1%;
 		text-align: center;
-		background-color: #f2f2f2;
+		background-color: var(--background-color-secondary);
 	}
 
 	.longin-boder {
@@ -166,9 +166,9 @@
 		margin-left: 10%;
 		line-height: 40px;
 		text-align: center;
-		border: 1px solid #dddddd;
+		border: 1px solid var(--border-color);
 		border-radius: 5px;
-		background-color: #efefef;
+		background-color: var(--background-color-secondary);
 		position:relative;
 	}
 
@@ -189,15 +189,15 @@
 		height: 37px;
 		line-height: 37px;
 		border: 0px;
-		color: #333333;
+		color: var(--text-color-primary);
 		font-size: 16px;
-		background-color: #efefef;
+		background-color: var(--background-color-secondary);
 
 	}
 	.btn{
 		position:absolute;
 		right:15rpx;
-		color:rgb(180, 111, 88);
+		color:var(--brand-text-color);
 	}
 	.btn.wait{
 		color:rgb(154, 154, 154);
@@ -209,7 +209,7 @@
 		margin-top: 30px;
 		margin-left: 10%;
 		font-size: 16px;
-		
+
 		font-weight: bold;
 		line-height: 38px;
 		border-radius: 5px;

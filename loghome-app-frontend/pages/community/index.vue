@@ -12,7 +12,7 @@
     <!-- 内容区域 -->
     <view 
       class="content-scroll" 
-      style="margin-top: 105rpx;"
+      style="margin-top: calc(105rpx + var(--loghome-safe-top, 0px));"
     >
 
       <!-- 轮播图区域 -->
@@ -145,8 +145,9 @@
                   <text class="card-title">{{item.post.title}}</text>
                   <view class="card-footer">
                     <view class="card-user clickable" @tap.stop="navigateToUser(item.post.user_id)">
-                      <image class="card-avatar" :src="item.post.author_avatar" mode="aspectFill"></image>
+                      <user-avatar class="card-avatar" :src="item.post.author_avatar" />
                       <text class="card-username">{{item.post.author_name}}</text>
+					  <membership-badge class="card-membership-badge" :tier="item.post.author_membership_type" size="xs" />
                     </view>
                     <view class="card-likes clickable" @tap.stop="likePost(item.post)">
                       <uni-icons :type="item.post.is_liked ? 'heart-filled' : 'heart'" 
@@ -222,12 +223,14 @@ import axios from 'axios';
 import moment from 'moment';
 import banner from '@/components/banner.vue'
 import XsuuSwiper from "@/components/Xss-swiper/Xsuu-swiper.vue"
+import MembershipBadge from '@/components/membership-badge.vue'
 import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
   components: {
     banner,
-    XsuuSwiper
+    XsuuSwiper,
+    MembershipBadge
   },
   mixins: [darkModeMixin], // 使用暗黑模式mixin
   data() {
@@ -883,7 +886,7 @@ export default {
   left: 0;
   margin: 0 0rpx;
   padding: 10rpx;
-  padding-top: calc(5rpx + var(--statusBarHeight));
+  padding-top: calc(5rpx + var(--loghome-safe-top, 0px));
   padding-bottom: 5rpx;
   background-color: rgb(255, 255, 255);
   display: flex;
@@ -1456,7 +1459,7 @@ export default {
             flex-shrink: 0;
           }
 
-          .card-username {
+		  .card-username {
             font-size: 22rpx;
             color: #666;
             white-space: nowrap;
@@ -1465,8 +1468,12 @@ export default {
             
             .dark-mode & {
               color: var(--text-color-regular);
-            }
-          }
+		  }
+
+		  .card-membership-badge {
+			margin-left: 6rpx;
+		  }
+		}
         }
 
         .card-likes {

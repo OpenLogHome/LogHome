@@ -41,7 +41,7 @@ data class Article(
             val paragraphIds = mutableListOf<String>()
 
             when (json.optString("article_type")) {
-                "richtext" -> {
+                "richtext", "worldOutline" -> {
                     val parsedContent = parseContent(json.opt("content"))
                     paragraphs += "章节 $title"
                     paragraphIds += "-1"
@@ -99,6 +99,7 @@ private data class QueueEntry(
     val articleId: String,
     val paragraphId: String,
     val mediaItem: MediaItem,
+    val ttsRequest: TtsRequest,
 )
 
 class AudioEngine(
@@ -106,16 +107,21 @@ class AudioEngine(
     private val player: ExoPlayer,
     private val serviceScope: CoroutineScope,
     private val requestRegistry: TtsRequestRegistry,
+    private val ttsEngine: TtsEngineRouter,
     private val onStopService: () -> Unit,
 ) {
     private val httpClient = OkHttpClient()
     private val queueEntries = mutableListOf<QueueEntry>()
 
     private var voice = SYSTEM_DEFAULT_VOICE_ID
+    private var activePlaylistArticleIds = emptyList<String>()
+    private var activePlaylistKey = ""
+    private var inlineArticles = emptyMap<String, Article>()
     private var pendingArticleIds = mutableListOf<String>()
     private var isLoadingArticle = false
     private var currentArticleIndex = 0
     private var dismissJob: Job? = null
+    private var onlinePrefetchJob: Job? = null
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -149,6 +155,7 @@ class AudioEngine(
                 "onMediaItemTransition: reason=$reason, mediaId=${mediaItem?.mediaId}, title=${mediaItem?.mediaMetadata?.title}",
             )
             maybeLoadMoreArticles()
+            prefetchUpcomingOnlineAudio()
         }
 
         override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
@@ -160,7 +167,12 @@ class AudioEngine(
         player.addListener(playerListener)
     }
 
-    suspend fun replacePlaylist(articleIds: List<String>, startArticleId: String?) {
+    suspend fun replacePlaylist(
+        articleIds: List<String>,
+        startArticleId: String?,
+        inlineArticleList: List<Article> = emptyList(),
+        playlistKey: String = "",
+    ) {
         if (articleIds.isEmpty()) {
             Log.w(AUDIO_TAG, "replacePlaylist ignored because articleIds is empty")
             return
@@ -175,6 +187,11 @@ class AudioEngine(
         requestRegistry.clear()
         queueEntries.clear()
 
+        activePlaylistArticleIds = articleIds.toList()
+        activePlaylistKey = playlistKey
+        inlineArticles = inlineArticleList
+            .filter { it.id.isNotBlank() }
+            .associateBy { it.id }
         pendingArticleIds = articleIds.toMutableList()
         currentArticleIndex = 0
         isLoadingArticle = false
@@ -182,13 +199,15 @@ class AudioEngine(
         if (!startArticleId.isNullOrBlank()) {
             val index = pendingArticleIds.indexOf(startArticleId)
             if (index > 0) {
-                val articleId = pendingArticleIds.removeAt(index)
-                pendingArticleIds.add(0, articleId)
+                pendingArticleIds = pendingArticleIds.drop(index).toMutableList()
             }
         }
 
         loadNextArticle()
     }
+
+    fun isCurrentPlaylist(articleIds: List<String>, playlistKey: String = ""): Boolean =
+        activePlaylistArticleIds == articleIds && activePlaylistKey == playlistKey
 
     fun play() {
         Log.d(AUDIO_TAG, "play")
@@ -200,6 +219,74 @@ class AudioEngine(
         Log.d(AUDIO_TAG, "pause")
         player.pause()
         scheduleDismissTimer()
+    }
+
+    fun skipToPreviousParagraph() {
+        if (player.currentPosition > 5_000L) {
+            player.seekTo(0L)
+            return
+        }
+        if (player.hasPreviousMediaItem()) {
+            player.seekToPreviousMediaItem()
+            player.play()
+        } else {
+            player.seekTo(0L)
+        }
+    }
+
+    fun skipToNextParagraph() {
+        if (player.hasNextMediaItem()) {
+            player.seekToNextMediaItem()
+            player.play()
+            return
+        }
+
+        val previousItemCount = player.mediaItemCount
+        serviceScope.launch {
+            loadNextArticle()
+            if (player.mediaItemCount > previousItemCount) {
+                player.seekToDefaultPosition(previousItemCount)
+                player.play()
+            }
+        }
+    }
+
+    fun seekTo(positionMs: Long) {
+        val duration = player.duration.takeIf { it != C.TIME_UNSET && it > 0L }
+        player.seekTo(positionMs.coerceIn(0L, duration ?: positionMs.coerceAtLeast(0L)))
+    }
+
+    fun setPlaybackSpeed(speed: Float) {
+        player.setPlaybackSpeed(speed.coerceIn(0.5f, 2.0f))
+    }
+
+    fun getPlaybackState(
+        sleepTimerRemainingMs: Long = 0L,
+    ): AudiobookPlaybackState {
+        val currentMediaItem = player.currentMediaItem
+        val metadata = currentMediaItem?.mediaMetadata
+        val extras = metadata?.extras
+        val currentIndex = player.currentMediaItemIndex
+        val duration = player.duration.takeIf { it != C.TIME_UNSET && it > 0L } ?: 0L
+
+        return AudiobookPlaybackState(
+            articleId = extras?.getString(EXTRA_ARTICLE_ID),
+            paragraphId = extras?.getString(EXTRA_PARAGRAPH_ID),
+            chapterTitle = metadata?.title?.toString().orEmpty(),
+            paragraphText = metadata?.artist?.toString().orEmpty(),
+            positionMs = player.currentPosition.coerceAtLeast(0L),
+            durationMs = duration,
+            isPlaying = player.isPlaying,
+            isBuffering = player.playbackState == Player.STATE_BUFFERING,
+            currentParagraphIndex = currentIndex,
+            paragraphCount = player.mediaItemCount,
+            canSkipPrevious = currentIndex > 0 || player.currentPosition > 0L,
+            canSkipNext = currentIndex >= 0 &&
+                (currentIndex < player.mediaItemCount - 1 || currentArticleIndex < pendingArticleIds.size),
+            voiceId = voice,
+            playbackSpeed = player.playbackParameters.speed,
+            sleepTimerRemainingMs = sleepTimerRemainingMs,
+        )
     }
 
     fun getProgressJson(): String? {
@@ -225,6 +312,8 @@ class AudioEngine(
         }
 
         Log.d(AUDIO_TAG, "setVoice: $voice -> $newVoice")
+        onlinePrefetchJob?.cancel()
+        onlinePrefetchJob = null
         val oldVoice = voice
         voice = newVoice
         AudioCacheUtils.clearVoiceCache(context, oldVoice)
@@ -242,7 +331,12 @@ class AudioEngine(
         requestRegistry.clear()
         queueEntries.clear()
 
-        pendingArticleIds = mutableListOf(articleId)
+        val articleIndex = activePlaylistArticleIds.indexOf(articleId)
+        pendingArticleIds = if (articleIndex >= 0) {
+            activePlaylistArticleIds.drop(articleIndex).toMutableList()
+        } else {
+            mutableListOf(articleId)
+        }
         currentArticleIndex = 0
         isLoadingArticle = false
 
@@ -307,6 +401,7 @@ class AudioEngine(
 
     fun release() {
         cancelDismissTimer()
+        onlinePrefetchJob?.cancel()
         player.removeListener(playerListener)
     }
 
@@ -358,15 +453,13 @@ class AudioEngine(
             val itemUri = Uri.parse(
                 "loghome-tts://${Uri.encode(article.id)}/${Uri.encode(paragraphId)}?voice=${Uri.encode(voice)}&token=${UUID.randomUUID()}",
             )
-            requestRegistry.put(
-                itemUri.toString(),
-                TtsRequest(
-                    articleId = article.id,
-                    text = paragraph,
-                    voice = voice,
-                    cacheFile = cacheFile,
-                ),
+            val ttsRequest = TtsRequest(
+                articleId = article.id,
+                text = paragraph,
+                voice = voice,
+                cacheFile = cacheFile,
             )
+            requestRegistry.put(itemUri.toString(), ttsRequest)
 
             val metadata = MediaMetadata.Builder()
                 .setAlbumTitle("原木社区")
@@ -388,7 +481,7 @@ class AudioEngine(
                 .build()
 
             mediaItems += mediaItem
-            queueEntries += QueueEntry(article.id, paragraphId, mediaItem)
+            queueEntries += QueueEntry(article.id, paragraphId, mediaItem, ttsRequest)
         }
 
         if (mediaItems.isEmpty()) {
@@ -402,6 +495,7 @@ class AudioEngine(
         } else {
             player.addMediaItems(mediaItems)
         }
+        prefetchUpcomingOnlineAudio()
 
         if ((resumeIfNeeded || wasEnded) && oldItemCount < player.mediaItemCount) {
             player.seekToDefaultPosition(if (isFirstArticle) 0 else oldItemCount)
@@ -432,31 +526,59 @@ class AudioEngine(
         }
     }
 
-    private suspend fun fetchArticle(id: String): Article? = withContext(Dispatchers.IO) {
-        runCatching {
-            Log.d(AUDIO_TAG, "fetchArticle: id=$id")
-            val request = Request.Builder()
-                .url("https://loghomeservice.codesocean.top/articles/get_article?id=$id")
-                .build()
+    private fun prefetchUpcomingOnlineAudio() {
+        if (!EdgeTtsVoiceCatalog.isEdgeVoice(voice) || onlinePrefetchJob?.isActive == true) {
+            return
+        }
+        val startIndex = player.currentMediaItemIndex.takeIf { it != C.INDEX_UNSET } ?: 0
+        val requests = queueEntries
+            .drop(startIndex.coerceAtLeast(0))
+            .asSequence()
+            .map(QueueEntry::ttsRequest)
+            .filter { !it.cacheFile.exists() && EdgeTtsVoiceCatalog.isEdgeVoice(it.voice) }
+            .take(3)
+            .toList()
+        if (requests.isEmpty()) return
 
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    Log.w(AUDIO_TAG, "fetchArticle failed: id=$id, code=${response.code}")
-                    return@use null
-                }
-
-                val body = response.body?.string().orEmpty()
-                val data = JSONTokener(body).nextValue()
-                val firstObject = when (data) {
-                    is JSONArray -> data.optJSONObject(0)
-                    is JSONObject -> data
-                    else -> null
-                }
-                firstObject?.let { Article.fromJson(it) }
+        onlinePrefetchJob = serviceScope.launch(Dispatchers.IO) {
+            requests.forEach { request ->
+                runCatching { TtsDataSource.ensureCachedAudio(request, ttsEngine) }
+                    .onFailure { Log.w(AUDIO_TAG, "Online TTS prefetch failed", it) }
             }
-        }.onFailure { error ->
-            Log.e(AUDIO_TAG, "fetchArticle exception: id=$id", error)
-        }.getOrNull()
+        }
+    }
+
+    private suspend fun fetchArticle(id: String): Article? {
+        inlineArticles[id]?.let { article ->
+            Log.d(AUDIO_TAG, "fetchArticle: using inline content for id=$id")
+            return article
+        }
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                Log.d(AUDIO_TAG, "fetchArticle: id=$id")
+                val request = Request.Builder()
+                    .url("https://loghomeservice.codesocean.top/articles/get_article?id=$id")
+                    .build()
+
+                httpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        Log.w(AUDIO_TAG, "fetchArticle failed: id=$id, code=${response.code}")
+                        return@use null
+                    }
+
+                    val body = response.body?.string().orEmpty()
+                    val data = JSONTokener(body).nextValue()
+                    val firstObject = when (data) {
+                        is JSONArray -> data.optJSONObject(0)
+                        is JSONObject -> data
+                        else -> null
+                    }
+                    firstObject?.let { Article.fromJson(it) }
+                }
+            }.onFailure { error ->
+                Log.e(AUDIO_TAG, "fetchArticle exception: id=$id", error)
+            }.getOrNull()
+        }
     }
 
     private fun scheduleDismissTimer() {

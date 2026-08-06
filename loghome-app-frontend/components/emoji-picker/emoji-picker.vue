@@ -940,7 +940,7 @@
 	.upload-popup {
 		background-color: #fff;
 		border-radius: 20rpx 20rpx 0 0;
-		padding-bottom: env(safe-area-inset-bottom);
+		padding-bottom: var(--loghome-safe-bottom, 0px);
 	}
 	
 	.popup-header {

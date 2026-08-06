@@ -8,7 +8,7 @@ let messageController = require('../../bin/message.js');
 // 创建路由对象
 let router = express.Router();
 
-function generateGiftCardCode(length = 10) {
+function generateGiftCardCode(length = 16) {
 	const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 	let result = '';
 	for (let i = 0; i < length; i += 1) {

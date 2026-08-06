@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="info">
 			<p>亲爱的朋友，欢迎你加入原木社区大家庭！</p>
 			<p>我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持使用手机号作为验证方式，请尽快迁移至邮箱登录。</p>
@@ -74,7 +74,7 @@
 			}
 			//验活
 			axios.get( this.$baseUrl + '/users/userprofile', {
-				headers: { 
+				headers: {
 				     'Content-Type': 'application/json',//设置请求头请求格式为JSON
 				     'Authorization': tk //设置token 其中K名要和后端协调好
 				}
@@ -98,7 +98,7 @@
 			padding :30rpx;
 			font-size:30rpx;
 			line-height:60rpx;
-			color: #606063;
+			color: var(--text-color-regular);
 			div.bordered{
 				border: 2px solid #606063;;
 			}
@@ -118,24 +118,24 @@
 			margin-top: 30px;
 			margin-left: 10%;
 			font-size: 16px;
-			
+
 			font-weight: bold;
 			line-height: 38px;
 			border-radius: 5px;
 			text-align:center;
 			color: #ffffff;
 			background-color: rgb(180, 111, 88);
-			
+
 		}
-		 
-		.button:active {  
+
+		.button:active {
 			background-color:rgb(225, 139, 110);
 		}
 	}
 	.list{
 		width:100%;
-		border-bottom:15upx solid #f2f2f2;
-		background: #fff;
+		border-bottom:15upx solid var(--border-color);
+		background: var(--card-background);
 		&:last-child{
 			border: none;
 		}
@@ -144,7 +144,7 @@
 			height:100upx;
 			font-size:30rpx;
 			padding:0 4%;
-			border-bottom:1px solid #f2f2f2;
+			border-bottom:1px solid var(--border-color);
 			display:flex;
 			align-items:center;
 		&.noborder{
@@ -162,7 +162,7 @@
 			.text{
 				padding-left:20upx;
 				width:100%;
-				color:#666;
+				color:var(--text-color-regular);
 			}
 			.to{
 				flex-shrink:0;

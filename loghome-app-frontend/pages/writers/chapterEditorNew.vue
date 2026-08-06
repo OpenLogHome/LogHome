@@ -1,7 +1,13 @@
 <template>
   <div
     class="outer"
-    :class="[writerSettings.theme, { headerDragging: isHeaderGestureActive }]"
+    :class="[
+      writerSettings.theme,
+      {
+        headerDragging: isHeaderGestureActive,
+        headerSettling: isHeaderSettling,
+      },
+    ]"
     :style="pageStyle"
     @touchstart="
       documentOnPress = true;
@@ -58,16 +64,27 @@
       </div>
 
       <div class="topBar">
-        <div class="statusCapsule textCount">
-          {{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图
-          <span class="editorRole" v-if="editorRoleText">{{ editorRoleText }}</span>
-        </div>
-        <div class="statusCapsule saveNotify">
-          <complete-icon
-            ref="completeIcon"
-            style="margin-right: 5rpx; transform: translateY(5rpx)"
-          ></complete-icon>
-          {{ saveNotifyText }}
+        <div
+          v-for="capsule in visibleStatusCapsules"
+          :key="capsule.id"
+          class="statusCapsule"
+          :class="capsule.className"
+        >
+          <template v-if="capsule.id === 'wordCount'">
+            {{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图
+            <span class="editorRole" v-if="editorRoleText">{{ editorRoleText }}</span>
+          </template>
+          <template v-else-if="capsule.id === 'sync'">
+            <complete-icon
+              ref="completeIcon"
+              class="statusCapsuleIcon syncStatusIcon"
+            ></complete-icon>
+            {{ saveNotifyText }}
+          </template>
+          <template v-else-if="capsule.id === 'writingSpeed'">
+            <i class="el-icon-odometer statusCapsuleIcon"></i>
+            {{ writingSpeed }}&nbsp;字/分钟
+          </template>
         </div>
       </div>
     </div>
@@ -75,8 +92,9 @@
     <div
       ref="middleBar"
       class="middleBar"
+      :class="{ findReplaceOpen: findReplaceVisible }"
       @touchstart="handleEditorAreaTouchStart"
-      @touchmove="handleEditorAreaTouchMove"
+      @touchmove.passive="handleEditorAreaTouchMove"
       @touchend="handleEditorAreaTouchEnd"
       @touchcancel="handleEditorAreaTouchEnd"
     >
@@ -130,8 +148,13 @@
           :class="{ indentInputButton: item.id === 'indent' }"
           type="button"
           tabindex="-1"
-          @touchstart.stop.prevent="handleQuickInputToolbarTouchStart($event, item)"
-          @mousedown.stop.prevent="handleQuickInputToolbarMouseDown($event)"
+          @touchstart.stop="handleQuickInputToolbarTouchStart($event, item)"
+          @touchmove.stop="handleQuickInputToolbarTouchMove($event)"
+          @touchend.stop="handleQuickInputToolbarTouchEnd($event, item)"
+          @touchcancel.stop="handleQuickInputToolbarTouchCancel"
+          @mousedown.stop.prevent="handleQuickInputToolbarMouseDown($event, item)"
+          @mouseup.stop="scheduleQuickInputToolbarPreviewHide()"
+          @mouseleave="scheduleQuickInputToolbarPreviewHide()"
           @click.stop.prevent="handleQuickInputToolbarClick($event, item)"
         >
           <span
@@ -156,52 +179,40 @@
         </button>
       </div>
     </div>
+    <div
+      ref="quickInputToolbarPreview"
+      class="quickInputToolbarPreview"
+      :class="[
+        writerSettings.theme,
+        {
+          iconfont: quickInputPreviewIsIcon,
+          quickInputToolbarPreviewVisible: quickInputPreviewVisible,
+        },
+      ]"
+      :style="{
+        left: `${quickInputPreviewLeft}px`,
+        top: `${quickInputPreviewTop}px`,
+      }"
+      aria-hidden="true"
+    >
+      {{ quickInputPreviewText }}
+    </div>
 
     <uni-popup ref="setPopup" type="bottom">
       <view class="settingBar">
-        <div class="line">
-          <div
-            class="button blue theme"
-            @click="changeTheme('blue')"
-            :class="{ selected: writerSettings.theme === 'blue' }"
-          >
-            蓝
-          </div>
-          <div
-            class="button yellow theme"
-            @click="changeTheme('yellow')"
-            :class="{ selected: writerSettings.theme === 'yellow' }"
-          >
-            黄
-          </div>
-          <div
-            class="button green theme"
-            @click="changeTheme('green')"
-            :class="{ selected: writerSettings.theme === 'green' }"
-          >
-            绿
-          </div>
-          <div
-            class="button purple theme"
-            @click="changeTheme('purple')"
-            :class="{ selected: writerSettings.theme === 'purple' }"
-          >
-            紫
-          </div>
-          <div
-            class="button black theme"
-            @click="changeTheme('black')"
-            :class="{ selected: writerSettings.theme === 'black' }"
-          >
-            黑
-          </div>
-          <div
-            class="button white theme"
-            @click="changeTheme('white')"
-            :class="{ selected: writerSettings.theme === 'white' }"
-          >
-            白
-          </div>
+        <div class="backgroundSettingRow">
+          <div class="backgroundSettingLabel">背景</div>
+          <ReaderBackgroundPicker
+            class="backgroundPicker"
+            :theme-options="writerThemeOptions"
+            :skins="writerBackgroundSkins"
+            :theme-key="writerSettings.theme"
+            :skin-key="writerSettings.backgroundSkinKey || ''"
+            @select-theme="changeTheme"
+            @select-skin="changeBackgroundSkin"
+            @select-locked-theme="handleLockedBackgroundOption"
+            @select-locked-skin="handleLockedBackgroundOption"
+          />
         </div>
         <div class="normalLine">
           <div class="left">字体大小</div>
@@ -290,6 +301,90 @@
       </view>
     </uni-popup>
 
+    <view
+      v-if="findReplaceVisible"
+      class="findReplacePanel"
+      :class="writerSettings.theme"
+      @touchstart.stop
+      @touchend.stop
+      @click.stop
+    >
+        <div class="findReplaceCompactRow">
+          <div class="findReplaceField queryField">
+            <i class="el-icon-search findReplaceFieldIcon"></i>
+            <input
+              ref="findReplaceQueryInput"
+              v-model="findReplaceQuery"
+              class="findReplaceInput"
+              placeholder="查找"
+              confirm-type="next"
+              @input="handleFindReplaceQueryInput"
+              @keyup.enter="findNextMatch"
+            />
+            <button
+              v-if="findReplaceQuery"
+              class="findReplaceClear"
+              type="button"
+              title="清空查找内容"
+              @click="clearFindReplaceQuery"
+            >
+              <i class="el-icon-circle-close"></i>
+            </button>
+          </div>
+          <span class="findReplaceMatchStatus">{{ findReplaceStatusText }}</span>
+          <div class="findReplaceNavigation">
+            <button
+              class="findReplaceNavButton"
+              type="button"
+              title="上一个匹配项"
+              :disabled="!findReplaceMatches.length"
+              @click="findPreviousMatch"
+            >
+              <i class="el-icon-arrow-up"></i>
+            </button>
+            <button
+              class="findReplaceNavButton"
+              type="button"
+              title="下一个匹配项"
+              :disabled="!findReplaceMatches.length"
+              @click="findNextMatch"
+            >
+              <i class="el-icon-arrow-down"></i>
+            </button>
+          </div>
+          <button class="findReplaceClose" type="button" title="关闭" @click="closeFindReplace">
+            <i class="el-icon-close"></i>
+          </button>
+        </div>
+        <div class="findReplaceCompactRow">
+          <div class="findReplaceField replaceField">
+            <i class="el-icon-edit-outline findReplaceFieldIcon"></i>
+            <input
+              v-model="findReplaceValue"
+              class="findReplaceInput"
+              placeholder="替换为（可留空）"
+              @keyup.enter="replaceCurrentMatch"
+            />
+          </div>
+          <button
+            class="findReplaceActionButton"
+            type="button"
+            :disabled="!findReplaceMatches.length"
+            @click="replaceCurrentMatch"
+          >
+            替换当前
+          </button>
+          <button
+            class="findReplaceActionButton primary"
+            type="button"
+            :disabled="!findReplaceMatches.length"
+            @click="replaceAllMatches"
+          >
+            全部替换
+          </button>
+        </div>
+    </view>
+
     <el-drawer
       v-if="canSwitchFont"
       title="选择字体"
@@ -339,7 +434,7 @@
       :article="article"
       :chapter-id="chapterId"
       :edit-session-id="editSessionId"
-      :theme="writerSettings.theme"
+      :theme="writerAiTheme"
       @smart-replace-kept="handleWriterAiSmartReplaceKept"
       @open="handleAiAssistantOpen"
       @close="handleAiAssistantClose"
@@ -354,12 +449,23 @@ import Paragraph from "@tiptap/extension-paragraph";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { TextStyle } from "@tiptap/extension-text-style";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import conflictDialog from "../../components/conflictDialog.vue";
 import completeIcon from "../../components/completeIcon.vue";
 import WriterAiAssistant from "../../components/writer-ai/WriterAiAssistant.vue";
+import ReaderBackgroundPicker from "../../components/ReaderBackgroundPicker.vue";
+import { getMembershipStatus } from "../../common/membership-api.js";
+import { getColorMode, getProjectThemeMode, readPageTheme, rememberPageTheme } from "../../common/page-theme-memory.js";
+import { buildReaderUrl, getReaderMode } from "../../common/reader-mode.js";
+import { storeReaderPreview } from "../../common/reader-preview.js";
 import { getServerTime } from "../../lib/utils.js";
 import { writerArticleDB } from "../../lib/db.js";
 import { createTreeExpReporter } from "../../lib/treeExpReporter.js";
+import {
+  countInsertedCharacters,
+  createNovelWritingActivityReporter,
+} from "../../lib/writingActivityReporter.js";
 import fontsConfig from "../readers/newReader/fonts.json";
 import {
   buildClientSyncTime,
@@ -387,6 +493,23 @@ function resolveAssetUrl(assetModule) {
 }
 
 const BIPAO_AI_ICON = resolveAssetUrl(require("../../static/bipao_ai_icon.svg"));
+
+const WRITER_SOLID_THEMES = Object.freeze([
+  { key: "white", name: "蛙鸣白", required_membership: "none" },
+  { key: "yellow", name: "原木黄", required_membership: "none" },
+  { key: "green", name: "草原绿", required_membership: "none" },
+  { key: "blue", name: "晴空蓝", required_membership: "none" },
+  { key: "purple", name: "末地紫", required_membership: "none" },
+  { key: "pink", name: "桃花粉", required_membership: "none" },
+  { key: "black", name: "虚空黑", required_membership: "none" },
+  { key: "wavechaser", name: "追波", required_membership: "standard" },
+  { key: "powderblue", name: "粉蓝", required_membership: "standard" },
+  { key: "qingyun", name: "青云", required_membership: "standard" },
+  { key: "sunburst", name: "艳阳", required_membership: "standard" },
+  { key: "thorncrown", name: "荆棘冠", required_membership: "standard" },
+  { key: "chocolate", name: "巧克力", required_membership: "standard" },
+]);
+const CHAPTER_EDITOR_THEME_MEMORY_KEY = "pageThemeMemory:chapterEditorNew";
 
 const NewParagraphSpace = Extension.create({
   name: "newParagraphSpace",
@@ -440,6 +563,55 @@ const WriterFontFamily = Extension.create({
           },
         },
       },
+    ];
+  },
+});
+
+const FindReplaceHighlightPluginKey = new PluginKey("writerFindReplaceHighlight");
+
+const FindReplaceHighlight = Extension.create({
+  name: "writerFindReplaceHighlight",
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: FindReplaceHighlightPluginKey,
+        state: {
+          init: () => null,
+          apply(transaction, previousMatch) {
+            const meta = transaction.getMeta(FindReplaceHighlightPluginKey);
+            if (meta !== undefined) {
+              const from = Number(meta && meta.from);
+              const to = Number(meta && meta.to);
+              return Number.isFinite(from) && Number.isFinite(to) && from < to
+                ? { from, to }
+                : null;
+            }
+            if (!previousMatch) {
+              return null;
+            }
+            const from = transaction.mapping.map(previousMatch.from, 1);
+            const to = transaction.mapping.map(previousMatch.to, -1);
+            return from < to ? { from, to } : null;
+          },
+        },
+        props: {
+          decorations(state) {
+            const match = FindReplaceHighlightPluginKey.getState(state);
+            if (!match) {
+              return null;
+            }
+            return DecorationSet.create(state.doc, [
+              Decoration.inline(match.from, match.to, {
+                class: "writer-find-replace-match",
+                "data-find-replace-match": "true",
+                style:
+                  "background-color: rgba(248, 191, 62, 0.68) !important; box-shadow: inset 0 -2px 0 rgba(137, 87, 19, 0.88) !important; border-radius: 3px;",
+              }),
+            ]);
+          },
+        },
+      }),
     ];
   },
 });
@@ -505,6 +677,12 @@ const TOOL_DEFINITIONS = {
     label: "自动排版",
     iconClass: "el-icon-magic-stick",
   },
+  findReplace: {
+    id: "findReplace",
+    action: "findReplace",
+    label: "查找替换",
+    iconClass: "el-icon-search",
+  },
   undo: {
     id: "undo",
     action: "undo",
@@ -523,6 +701,12 @@ const TOOL_DEFINITIONS = {
     label: "发布作品",
     iconClass: "el-icon-s-promotion",
   },
+  preview: {
+    id: "preview",
+    action: "preview",
+    label: "阅读预览",
+    iconClass: "el-icon-view",
+  },
   writerAi: {
     id: "writerAi",
     action: "writerAi",
@@ -538,28 +722,42 @@ const TOOL_DEFINITIONS = {
   shortcutSettings: {
     id: "shortcutSettings",
     action: "shortcutSettings",
-    label: "快捷栏设置",
+    label: "快捷设置",
     iconClass: "el-icon-s-operation",
     alwaysVisible: true,
   },
 };
 
 const DEFAULT_NAV_TOOL_IDS = [
+  "publish",
+  "preview",
   "upload",
   "format",
+  "findReplace",
   "undo",
   "redo",
-  "publish",
   "writerAi",
   "settings",
   "shortcutSettings",
 ];
 
-const DEFAULT_NAV_SHORTCUT_TOOL_IDS = ["undo", "redo", "format", "writerAi"];
+const DEFAULT_NAV_SHORTCUT_TOOL_IDS = [
+  "publish",
+  "undo",
+  "redo",
+  "format",
+  "writerAi",
+];
 const DEFAULT_KEYBOARD_SHORTCUT_ITEMS = DEFAULT_QUICK_INPUTS.map((item) => ({
   type: "quickInput",
   id: item.id,
 }));
+const STATUS_CAPSULE_DEFINITIONS = {
+  wordCount: { id: "wordCount", className: "textCount" },
+  sync: { id: "sync", className: "saveNotify" },
+  writingSpeed: { id: "writingSpeed", className: "writingSpeed" },
+};
+const DEFAULT_STATUS_CAPSULE_IDS = ["wordCount", "sync"];
 const MAX_NAV_SHORTCUTS = DEFAULT_NAV_TOOL_IDS.length;
 const NAV_LEFT_RESERVED_WIDTH = 44;
 const NAV_TOOLBAR_TRIGGER_WIDTH = 48;
@@ -581,24 +779,30 @@ const DEFAULT_QUICK_INPUT_MAP = DEFAULT_QUICK_INPUTS.reduce((map, item) => {
   return map;
 }, {});
 
+const WRITER_SETTINGS_VERSION = 26080101;
 const DEFAULT_SETTINGS = {
-  version: 26060401,
+  version: WRITER_SETTINGS_VERSION,
   showSymbols: true,
   font: "default",
   fontSize: 35,
   openTypeSet: false,
   showFab: false,
   theme: "yellow",
+  backgroundSkinKey: "",
   codeMode: false,
   quickInputs: DEFAULT_QUICK_INPUTS,
   navToolIds: DEFAULT_NAV_TOOL_IDS,
   navShortcutToolIds: DEFAULT_NAV_SHORTCUT_TOOL_IDS,
   keyboardShortcutItems: DEFAULT_KEYBOARD_SHORTCUT_ITEMS,
+  statusCapsuleIds: DEFAULT_STATUS_CAPSULE_IDS,
 };
 
 const DEFAULT_CONTENT = stringifyLegacyContent([{ type: "text", value: "" }]);
 const INPUT_SYNC_DELAY_MS = 350;
 const EDIT_LOCK_HEARTBEAT_MS = 30 * 1000;
+const HEADER_GESTURE_MOVE_THRESHOLD_PX = 12;
+const HEADER_DRAG_FOLLOW_TIME_MS = 24;
+const HEADER_DRAG_OFFSET_EPSILON = 0.15;
 const LOCK_RECONNECT_DELAYS_MS = [2000, 5000, 10000, 20000, 30000];
 const DEFINITE_LOCK_CONFLICT_CODES = [
   "lock_taken",
@@ -607,6 +811,9 @@ const DEFINITE_LOCK_CONFLICT_CODES = [
   "article_edit_lock_taken",
 ];
 const SAVE_NOTIFY_REFRESH_MS = 5 * 1000;
+const WRITING_SPEED_REFRESH_MS = 1000;
+const WRITING_SPEED_WINDOW_MS = 60 * 1000;
+const WRITING_SPEED_MIN_ELAPSED_MS = 10 * 1000;
 const DEBUG_TITLE_SELECTION = true;
 
 function toResponsivePx(value) {
@@ -789,7 +996,7 @@ function normalizeNavToolIds(rawIds) {
   }
   DEFAULT_NAV_TOOL_IDS.forEach(pushIfValid);
 
-  return ids;
+  return ["publish", ...ids.filter((id) => id !== "publish")];
 }
 
 function normalizeNavShortcutToolIds(rawIds) {
@@ -838,6 +1045,17 @@ function normalizeKeyboardShortcutItems(rawItems, quickInputs) {
   return items;
 }
 
+function normalizeStatusCapsuleIds(rawIds) {
+  const sourceIds = Array.isArray(rawIds)
+    ? rawIds
+    : DEFAULT_STATUS_CAPSULE_IDS;
+  return sourceIds
+    .map((id) => String(id || ""))
+    .filter((id, index, ids) => {
+      return STATUS_CAPSULE_DEFINITIONS[id] && ids.indexOf(id) === index;
+    });
+}
+
 function createDefaultWriterSettings() {
   return {
     ...DEFAULT_SETTINGS,
@@ -845,12 +1063,17 @@ function createDefaultWriterSettings() {
     navToolIds: DEFAULT_NAV_TOOL_IDS.slice(),
     navShortcutToolIds: DEFAULT_NAV_SHORTCUT_TOOL_IDS.slice(),
     keyboardShortcutItems: DEFAULT_KEYBOARD_SHORTCUT_ITEMS.slice(),
+    statusCapsuleIds: DEFAULT_STATUS_CAPSULE_IDS.slice(),
   };
 }
 
 function normalizeWriterSettings(rawSettings) {
   const parsedSettings =
     rawSettings && typeof rawSettings === "object" ? rawSettings : {};
+  const shouldAddDefaultPublishShortcut =
+    Number(parsedSettings.version || 0) < WRITER_SETTINGS_VERSION &&
+    Array.isArray(parsedSettings.navShortcutToolIds) &&
+    !parsedSettings.navShortcutToolIds.includes("publish");
   const mergedSettings = {
     ...createDefaultWriterSettings(),
     ...parsedSettings,
@@ -862,10 +1085,19 @@ function normalizeWriterSettings(rawSettings) {
   mergedSettings.navShortcutToolIds = normalizeNavShortcutToolIds(
     mergedSettings.navShortcutToolIds
   );
+  if (shouldAddDefaultPublishShortcut) {
+    mergedSettings.navShortcutToolIds.unshift("publish");
+  }
   mergedSettings.keyboardShortcutItems = normalizeKeyboardShortcutItems(
     mergedSettings.keyboardShortcutItems,
     mergedSettings.quickInputs
   );
+  mergedSettings.statusCapsuleIds = normalizeStatusCapsuleIds(
+    mergedSettings.statusCapsuleIds
+  );
+  mergedSettings.backgroundSkinKey = String(
+    mergedSettings.backgroundSkinKey || ""
+  ).slice(0, 64);
   delete mergedSettings.hiddenNavToolIds;
   delete mergedSettings.keyboardToolIds;
 
@@ -878,6 +1110,7 @@ export default {
     conflictDialog,
     completeIcon,
     WriterAiAssistant,
+    ReaderBackgroundPicker,
   },
   data() {
     return {
@@ -903,8 +1136,16 @@ export default {
       lockReconnectTimer: null,
       lockReconnectAttempts: 0,
       lockReconnectInFlight: false,
+      writeExpReporter: null,
+      novelWritingActivityReporter: null,
+      writingActivityLastTitleLength: 0,
       textCount: 0,
       imageCount: 0,
+      writingSpeed: 0,
+      writingSpeedEvents: [],
+      writingSpeedStartedAt: 0,
+      writingSpeedLastCharacterTotal: null,
+      writingSpeedInterval: undefined,
       saveInterval: undefined,
       loadComplete: false,
       lastSaveTime: new Date(),
@@ -920,6 +1161,9 @@ export default {
         isEnabled: false,
       },
       writerSettings: createDefaultWriterSettings(),
+      writerBackgroundSkins: [],
+      membershipTier: "",
+      backgroundSkinsLoaded: false,
       fonts: JSON.parse(JSON.stringify(fontsConfig)),
       fontDownloadState: {},
       runtimeLoadedFonts: {},
@@ -928,34 +1172,158 @@ export default {
       isApplyingEditorDisplayFont: false,
       themes: {
         blue: {
-          backColor: "#c4e8fe",
-          color: "#115574",
-          pageBackColor: "#ddf3fe",
+          backColor: "#d9eef6",
+          color: "#27566b",
+          pageBackColor: "#f4fafc",
+          statusCapsuleBackground: "rgba(244, 250, 252, 0.94)",
+          statusCapsuleBorder: "rgba(39, 86, 107, 0.16)",
+          statusCapsulePrimaryColor: "#356f88",
+          statusCapsuleMutedColor: "#64808e",
+          statusCapsuleRoleColor: "#356f88",
+          statusCapsuleRoleBackground: "rgba(53, 111, 136, 0.1)",
         },
         yellow: {
-          backColor: "#FFEFD6",
-          color: "#502727",
-          pageBackColor: "#fffaf0",
+          backColor: "#f5e7cc",
+          color: "#5c4b3b",
+          pageBackColor: "#fcf8ef",
+          statusCapsuleBackground: "rgba(252, 248, 239, 0.94)",
+          statusCapsuleBorder: "rgba(92, 75, 59, 0.14)",
+          statusCapsulePrimaryColor: "#9b6e3b",
+          statusCapsuleMutedColor: "#867565",
+          statusCapsuleRoleColor: "#8a6034",
+          statusCapsuleRoleBackground: "rgba(155, 110, 59, 0.11)",
         },
         green: {
-          backColor: "#b7f7c1",
-          color: "#093811",
-          pageBackColor: "#c1e6c6",
+          backColor: "#dcebdd",
+          color: "#395744",
+          pageBackColor: "#f5faf4",
+          statusCapsuleBackground: "rgba(245, 250, 244, 0.94)",
+          statusCapsuleBorder: "rgba(57, 87, 68, 0.16)",
+          statusCapsulePrimaryColor: "#4f7c5b",
+          statusCapsuleMutedColor: "#708572",
+          statusCapsuleRoleColor: "#477553",
+          statusCapsuleRoleBackground: "rgba(71, 117, 83, 0.1)",
         },
         purple: {
-          backColor: "#fde0ff",
-          color: "#310024",
-          pageBackColor: "#fde0ff",
+          backColor: "#eae1f0",
+          color: "#57445f",
+          pageBackColor: "#faf7fc",
+          statusCapsuleBackground: "rgba(250, 247, 252, 0.94)",
+          statusCapsuleBorder: "rgba(87, 68, 95, 0.16)",
+          statusCapsulePrimaryColor: "#765983",
+          statusCapsuleMutedColor: "#827387",
+          statusCapsuleRoleColor: "#6c4f79",
+          statusCapsuleRoleBackground: "rgba(108, 79, 121, 0.1)",
         },
         black: {
-          backColor: "#282C35",
-          color: "#cecece",
-          pageBackColor: "#282c35",
+          backColor: "#2b3038",
+          color: "#d9dee7",
+          pageBackColor: "#22272e",
+          statusCapsuleBackground: "rgba(49, 56, 65, 0.95)",
+          statusCapsuleBorder: "rgba(217, 222, 231, 0.2)",
+          statusCapsulePrimaryColor: "#e6cda6",
+          statusCapsuleMutedColor: "#b5becb",
+          statusCapsuleRoleColor: "#efd6ad",
+          statusCapsuleRoleBackground: "rgba(239, 214, 173, 0.12)",
         },
         white: {
-          backColor: "#ffffff",
-          color: "#000000",
-          pageBackColor: "#ffffff",
+          backColor: "#f6f6f4",
+          color: "#292927",
+          pageBackColor: "#fefefc",
+          statusCapsuleBackground: "rgba(254, 254, 252, 0.94)",
+          statusCapsuleBorder: "rgba(41, 41, 39, 0.13)",
+          statusCapsulePrimaryColor: "#3c3c39",
+          statusCapsuleMutedColor: "#757571",
+          statusCapsuleRoleColor: "#4d4d49",
+          statusCapsuleRoleBackground: "rgba(41, 41, 39, 0.08)",
+        },
+        pink: {
+          backColor: "#f2e5ea",
+          color: "#664858",
+          pageBackColor: "#fbf6f8",
+          statusCapsuleBackground: "rgba(251, 246, 248, 0.94)",
+          statusCapsuleBorder: "rgba(102, 72, 88, 0.16)",
+          statusCapsulePrimaryColor: "#9d6578",
+          statusCapsuleMutedColor: "#8a707b",
+          statusCapsuleRoleColor: "#8a596b",
+          statusCapsuleRoleBackground: "rgba(157, 101, 120, 0.1)",
+        },
+        wavechaser: {
+          backColor: "#f277a5",
+          color: "#32101f",
+          pageBackColor: "#e84f89",
+          statusCapsuleBackground: "rgba(248, 139, 177, 0.94)",
+          statusCapsuleBorder: "rgba(50, 16, 31, 0.2)",
+          statusCapsulePrimaryColor: "#651b38",
+          statusCapsuleMutedColor: "#6b2844",
+          statusCapsuleRoleColor: "#651b38",
+          statusCapsuleRoleBackground: "rgba(50, 16, 31, 0.1)",
+        },
+        powderblue: {
+          backColor: "#c8eeec",
+          color: "#244244",
+          pageBackColor: "#ace5e2",
+          statusCapsuleBackground: "rgba(221, 247, 245, 0.94)",
+          statusCapsuleBorder: "rgba(36, 66, 68, 0.17)",
+          statusCapsulePrimaryColor: "#387a7b",
+          statusCapsuleMutedColor: "#547477",
+          statusCapsuleRoleColor: "#316b6c",
+          statusCapsuleRoleBackground: "rgba(49, 107, 108, 0.1)",
+        },
+        qingyun: {
+          backColor: "#3e4a4d",
+          color: "#e7eeef",
+          pageBackColor: "#313b3e",
+          statusCapsuleBackground: "rgba(63, 75, 78, 0.95)",
+          statusCapsuleBorder: "rgba(231, 238, 239, 0.2)",
+          statusCapsulePrimaryColor: "#d8e7e8",
+          statusCapsuleMutedColor: "#b7c6c8",
+          statusCapsuleRoleColor: "#e5eeee",
+          statusCapsuleRoleBackground: "rgba(231, 238, 239, 0.1)",
+        },
+        sunburst: {
+          backColor: "#ffe16c",
+          color: "#493900",
+          pageBackColor: "#fcd23c",
+          statusCapsuleBackground: "rgba(255, 229, 119, 0.95)",
+          statusCapsuleBorder: "rgba(73, 57, 0, 0.18)",
+          statusCapsulePrimaryColor: "#745700",
+          statusCapsuleMutedColor: "#796a35",
+          statusCapsuleRoleColor: "#674d00",
+          statusCapsuleRoleBackground: "rgba(73, 57, 0, 0.1)",
+        },
+        thorncrown: {
+          backColor: "#95302e",
+          color: "#f6e8e5",
+          pageBackColor: "#7d2120",
+          statusCapsuleBackground: "rgba(139, 42, 40, 0.96)",
+          statusCapsuleBorder: "rgba(246, 232, 229, 0.2)",
+          statusCapsulePrimaryColor: "#ffe2d9",
+          statusCapsuleMutedColor: "#e6bdb7",
+          statusCapsuleRoleColor: "#ffe6df",
+          statusCapsuleRoleBackground: "rgba(246, 232, 229, 0.11)",
+        },
+        chocolate: {
+          backColor: "#510b0c",
+          color: "#f4e7e1",
+          pageBackColor: "#380001",
+          statusCapsuleBackground: "rgba(78, 12, 13, 0.96)",
+          statusCapsuleBorder: "rgba(244, 231, 225, 0.2)",
+          statusCapsulePrimaryColor: "#f5d1bd",
+          statusCapsuleMutedColor: "#d7b6a9",
+          statusCapsuleRoleColor: "#f8d8c7",
+          statusCapsuleRoleBackground: "rgba(244, 231, 225, 0.1)",
+        },
+        blockepoch: {
+          backColor: "#cfd8af",
+          color: "#273421",
+          pageBackColor: "#dce3c2",
+          statusCapsuleBackground: "rgba(226, 233, 202, 0.95)",
+          statusCapsuleBorder: "rgba(39, 52, 33, 0.2)",
+          statusCapsulePrimaryColor: "#4e7d3c",
+          statusCapsuleMutedColor: "#58684d",
+          statusCapsuleRoleColor: "#446d35",
+          statusCapsuleRoleBackground: "rgba(78, 125, 60, 0.11)",
         },
       },
       imageEditInterval: undefined,
@@ -975,11 +1343,13 @@ export default {
       hideBackButton: false,
       headerOffset: 0,
       isHeaderGestureActive: false,
+      isHeaderSettling: false,
       headerGestureStartY: 0,
       headerGestureLastY: 0,
       headerGestureMoved: false,
       headerGestureStartedFocused: false,
       headerGestureLastDeltaY: 0,
+      appKeyboardVisible: null,
       editorBodyFocused: false,
       titleInputFocused: false,
       titleInputSelectionStart: 0,
@@ -993,11 +1363,61 @@ export default {
       quickInputInsertTimer: undefined,
       quickInputTouchHandledAt: 0,
       quickInputTouchHandledKey: "",
+      quickInputTouchStartX: 0,
+      quickInputTouchStartY: 0,
+      quickInputTouchMoved: false,
+      quickInputPreviewVisible: false,
+      quickInputPreviewText: "",
+      quickInputPreviewLeft: 0,
+      quickInputPreviewTop: 0,
+      quickInputPreviewIsIcon: false,
+      quickInputPreviewHideTimer: undefined,
+      findReplaceQuery: "",
+      findReplaceValue: "",
+      findReplaceMatches: [],
+      findReplaceIndex: -1,
+      findReplaceVisible: false,
     };
   },
   computed: {
+    projectThemeMode() {
+      return getProjectThemeMode(this.$store);
+    },
+    writerThemeOptions() {
+      return WRITER_SOLID_THEMES.map((theme) => ({
+        ...theme,
+        backgroundColor: this.themes[theme.key].pageBackColor,
+        is_locked: !this.canUseMembershipRequirement(
+          theme.required_membership
+        ),
+      }));
+    },
     currentTheme() {
       return this.themes[this.writerSettings.theme] || this.themes.yellow;
+    },
+    writerAiTheme() {
+      const compatibleThemes = {
+        pink: "purple",
+        wavechaser: "purple",
+        powderblue: "blue",
+        qingyun: "black",
+        sunburst: "yellow",
+        thorncrown: "black",
+        chocolate: "black",
+        blockepoch: "green",
+      };
+      return compatibleThemes[this.writerSettings.theme] || this.writerSettings.theme;
+    },
+    currentBackgroundSkin() {
+      const selectedKey = String(this.writerSettings.backgroundSkinKey || "");
+      if (!selectedKey) {
+        return null;
+      }
+      return (
+        this.writerBackgroundSkins.find(
+          (skin) => skin.skin_key === selectedKey && !skin.is_locked
+        ) || null
+      );
     },
     canSwitchFont() {
       return !!(
@@ -1024,6 +1444,20 @@ export default {
       }
       return "";
     },
+    visibleStatusCapsules() {
+      return normalizeStatusCapsuleIds(this.writerSettings.statusCapsuleIds)
+        .map((id) => STATUS_CAPSULE_DEFINITIONS[id])
+        .filter(Boolean);
+    },
+    findReplaceStatusText() {
+      if (!this.findReplaceQuery) {
+        return "...";
+      }
+      if (!this.findReplaceMatches.length) {
+        return "0/0";
+      }
+      return `${this.findReplaceIndex + 1} / ${this.findReplaceMatches.length}`;
+    },
     pageStyle() {
       return {
         transition: "background-color .5s, color .5s",
@@ -1035,7 +1469,18 @@ export default {
         "--headerLayoutOffset": `${this.headerOffset}px`,
         "--statusCapsuleGap": `${this.statusCapsuleGap}px`,
         "--statusCapsuleLift": `${this.statusCapsuleLift}px`,
+        "--statusCapsuleCounterOffset": `${this.statusCapsuleCounterOffset}px`,
         "--statusCapsuleTopClearance": `${this.statusCapsuleTopClearance}px`,
+        "--statusCapsuleBackground": this.currentTheme.statusCapsuleBackground,
+        "--statusCapsuleBorder": this.currentTheme.statusCapsuleBorder,
+        "--statusCapsulePrimaryColor": this.currentTheme.statusCapsulePrimaryColor,
+        "--statusCapsuleMutedColor": this.currentTheme.statusCapsuleMutedColor,
+        "--statusCapsuleRoleColor": this.currentTheme.statusCapsuleRoleColor,
+        "--statusCapsuleRoleBackground": this.currentTheme.statusCapsuleRoleBackground,
+        "--writerThemeBackColor": this.currentTheme.backColor,
+        "--writerThemePageColor": this.currentTheme.pageBackColor,
+        "--writerThemeTextColor": this.currentTheme.color,
+        "--writerThemeBorderColor": this.currentTheme.statusCapsuleBorder,
       };
     },
     customNavBarStyle() {
@@ -1119,6 +1564,9 @@ export default {
     statusCapsuleLift() {
       return this.getStatusCapsuleLift(this.headerOffset);
     },
+    statusCapsuleCounterOffset() {
+      return this.getStatusCapsuleCounterOffset(this.headerOffset);
+    },
     statusCapsuleTopClearance() {
       return this.titleNeedsStatusCapsuleClearance
         ? toResponsivePixelNumber(72)
@@ -1157,6 +1605,22 @@ export default {
         fontSize: this.fontSizeStyleValue,
         "--editor-font-size": this.fontSizeStyleValue,
       };
+      if (this.currentBackgroundSkin) {
+        const skin = this.currentBackgroundSkin;
+        const imageUrl = this.getSafeBackgroundImageUrl(skin.image_url);
+        if (imageUrl) {
+          const overlayColor = this.getBackgroundOverlayColor(skin.overlay_color);
+          style.backgroundImage = `linear-gradient(${overlayColor}, ${overlayColor}), url("${imageUrl}")`;
+          style.backgroundSize = ["obsidian_orbit", "ember_library"].includes(
+            skin.skin_key
+          )
+            ? "100% 100%"
+            : `${skin.background_size || "cover"}`;
+          style.backgroundPosition = `${skin.background_position || "center"}`;
+          style.backgroundRepeat = `${skin.background_repeat || "no-repeat"}`;
+          style.backgroundAttachment = "fixed";
+        }
+      }
       if (this.currentFontFamilyStyleValue) {
         style.fontFamily = this.currentFontFamilyStyleValue;
         style["--editor-font-family"] = this.currentFontFamilyStyleValue;
@@ -1165,6 +1629,12 @@ export default {
     },
   },
   watch: {
+    projectThemeMode(newMode, oldMode) {
+      if (newMode === oldMode) return;
+      this.applyWriterThemeMode(newMode);
+      this.persistWriterSettings();
+      this.applyNavigationBarTheme();
+    },
     "writerSettings.fontSize": {
       immediate: true,
       handler() {
@@ -1206,6 +1676,19 @@ export default {
         this.scheduleTitleCapsuleClearanceUpdate();
       });
     },
+    writingSpeed() {
+      this.$nextTick(() => {
+        this.scheduleTitleCapsuleClearanceUpdate();
+      });
+    },
+    "writerSettings.statusCapsuleIds": {
+      deep: true,
+      handler() {
+        this.$nextTick(() => {
+          this.scheduleTitleCapsuleClearanceUpdate();
+        });
+      },
+    },
     "editorAccess.access_role"() {
       this.$nextTick(() => {
         this.scheduleTitleCapsuleClearanceUpdate();
@@ -1216,11 +1699,14 @@ export default {
     },
   },
   async beforeDestroy() {
+    this.cancelHeaderOffsetFrame();
+    this.cancelHeaderSettleFrame();
     await this.finalizeBeforeLeave();
     clearTimeout(this.inputSyncTimer);
     clearTimeout(this.titleSelectionCaptureTimer);
     clearTimeout(this.titleSelectionRestoreTimer);
     clearTimeout(this.quickInputInsertTimer);
+    clearTimeout(this.quickInputPreviewHideTimer);
     clearTimeout(this._centerCursorAfterBlurredTapTimer);
     if (
       this._titleCapsuleClearanceRaf &&
@@ -1232,9 +1718,9 @@ export default {
         clearTimeout(this._titleCapsuleClearanceRaf);
       }
     }
-    this.cancelHeaderOffsetFrame();
     clearInterval(this.imageEditInterval);
     this.stopSaveNotifyTimer();
+    this.stopWritingSpeedTimer();
     this.clearEditorImagesEditButton();
     if (this.editor) {
       this.editor.destroy();
@@ -1244,6 +1730,7 @@ export default {
     document.removeEventListener("visibilitychange", this.handleVisibilityChange);
     window.removeEventListener("pagehide", this.handlePageHide);
     window.removeEventListener("popstate", this.browserBack);
+    window.removeEventListener("loghomeNativeBack", this.handleNativeBack);
     window.removeEventListener("resize", this.updateCustomNavigationMetrics);
     document.removeEventListener(
       "selectionchange",
@@ -1290,11 +1777,38 @@ export default {
       }
 
       const detail = event ? event.detail : null;
-      const isKeyboardHidden =
-        detail === false ||
-        (detail && typeof detail === "object" && detail.visible === false);
-      if (isKeyboardHidden) {
+      const keyboardVisible =
+        typeof detail === "boolean"
+          ? detail
+          : detail && typeof detail.visible === "boolean"
+            ? detail.visible
+            : null;
+      if (keyboardVisible === null) {
+        return;
+      }
+
+      const wasKeyboardVisible = this.appKeyboardVisible;
+      this.appKeyboardVisible = keyboardVisible;
+      if (keyboardVisible || wasKeyboardVisible !== true) {
+        return;
+      }
+
+      const activeElement =
+        typeof document !== "undefined" ? document.activeElement : null;
+      const titleElementActive = this.isTitleInputElement(activeElement);
+      const bodyEditorActive = this.isBodyEditorFocused();
+
+      if (titleElementActive) {
+        this.blurTitleInput();
+      } else if (bodyEditorActive) {
         this.blurBodyEditor();
+      } else if (this.titleInputFocused) {
+        this.blurTitleInput();
+      } else if (this.editorBodyFocused) {
+        this.blurBodyEditor();
+      } else {
+        this.titleInputFocused = false;
+        this.editorBodyFocused = false;
       }
     },
     getPublishDraftStorageKey(articleId = this.chapterId) {
@@ -1401,8 +1915,14 @@ export default {
       return true;
     },
     getTokenInfo() {
-      let token = JSON.parse(window.localStorage.getItem("token"));
-      return token || null;
+      const rawToken = window.localStorage.getItem("token");
+      if (!rawToken) return null;
+      try {
+        const token = JSON.parse(rawToken);
+        return typeof token === "string" ? { tk: token } : token || null;
+      } catch (error) {
+        return { tk: rawToken };
+      }
     },
     getAuthToken() {
       const token = this.getTokenInfo();
@@ -1427,18 +1947,44 @@ export default {
       const raw = window.localStorage.getItem("writerSettings");
       if (!raw) {
         this.writerSettings = createDefaultWriterSettings();
-        this.persistWriterSettings();
-        return;
+      } else {
+        try {
+          const parsed = JSON.parse(raw);
+          this.writerSettings = normalizeWriterSettings(parsed);
+        } catch (error) {
+          this.writerSettings = createDefaultWriterSettings();
+        }
       }
 
-      try {
-        const parsed = JSON.parse(raw);
-        this.writerSettings = normalizeWriterSettings(parsed);
-      } catch (error) {
-        this.writerSettings = createDefaultWriterSettings();
-      }
-
+      this.rememberCurrentWriterTheme();
+      this.applyWriterThemeMode(this.projectThemeMode);
       this.persistWriterSettings();
+    },
+    getWriterThemeMode(themeKey) {
+      const theme = this.themes[themeKey] || this.themes.yellow;
+      return getColorMode(theme.pageBackColor || theme.backColor);
+    },
+    rememberCurrentWriterTheme() {
+      if (!this.writerSettings || !this.writerSettings.theme) return;
+      rememberPageTheme(
+        CHAPTER_EDITOR_THEME_MEMORY_KEY,
+        this.getWriterThemeMode(this.writerSettings.theme),
+        this.writerSettings
+      );
+    },
+    applyWriterThemeMode(mode) {
+      const fallback = {
+        theme: mode === "dark" ? "black" : "yellow",
+        backgroundSkinKey: "",
+      };
+      const selection = readPageTheme(
+        CHAPTER_EDITOR_THEME_MEMORY_KEY,
+        mode,
+        fallback
+      );
+      if (!selection || !this.themes[selection.theme]) return;
+      this.writerSettings.theme = selection.theme;
+      this.writerSettings.backgroundSkinKey = selection.backgroundSkinKey || "";
     },
     persistWriterSettings() {
       this.writerSettings = normalizeWriterSettings(this.writerSettings);
@@ -1446,6 +1992,7 @@ export default {
         "writerSettings",
         JSON.stringify(this.writerSettings)
       );
+      this.rememberCurrentWriterTheme();
     },
     getDefaultFonts() {
       return JSON.parse(JSON.stringify(fontsConfig));
@@ -1501,6 +2048,7 @@ export default {
     getEditorDomEventHandlers() {
       return {
         mousedown: (view, event) => {
+          this.markWritingActivity();
           this.handleEditorActivationStart(event);
           return false;
         },
@@ -1509,6 +2057,7 @@ export default {
           return false;
         },
         touchstart: (view, event) => {
+          this.markWritingActivity();
           this.handleEditorActivationStart(event);
           return false;
         },
@@ -1526,6 +2075,10 @@ export default {
         },
         touchend: (view, event) => {
           this.handleEditorActivationEnd(event);
+          return false;
+        },
+        keydown: () => {
+          this.markWritingActivity();
           return false;
         },
       };
@@ -1670,6 +2223,175 @@ export default {
         console.warn("loadWriterFontsFromServer failed", error);
       }
       this.fonts = this.getDefaultFonts();
+    },
+    normalizeWriterBackgroundSkin(item) {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const skinKey = String(item.skin_key || "").trim();
+      const skinName = String(item.skin_name || "").trim();
+      const imageUrl = this.getSafeBackgroundImageUrl(item.image_url);
+      if (!skinKey || !skinName || !imageUrl) {
+        return null;
+      }
+      const requiredMembership = ["standard", "super"].includes(
+        String(item.required_membership || "")
+      )
+        ? String(item.required_membership)
+        : "none";
+
+      return {
+        skin_key: skinKey.slice(0, 64),
+        skin_name: skinName.slice(0, 64),
+        theme_key: this.getSkinThemeKey(item.theme_key),
+        image_url: imageUrl,
+        overlay_color: this.getBackgroundOverlayColor(item.overlay_color),
+        background_size: this.getBackgroundStyleValue(
+          item.background_size,
+          ["cover", "contain", "auto"],
+          "cover"
+        ),
+        background_position: this.getBackgroundStyleValue(
+          item.background_position,
+          ["center", "top", "bottom", "left", "right", "top center", "bottom center"],
+          "center"
+        ),
+        background_repeat: this.getBackgroundStyleValue(
+          item.background_repeat,
+          ["no-repeat", "repeat", "repeat-x", "repeat-y"],
+          "no-repeat"
+        ),
+        required_membership: requiredMembership,
+        is_locked: !this.canUseMembershipRequirement(requiredMembership),
+      };
+    },
+    getSkinThemeKey(value) {
+      const themeKey = String(value || "").trim();
+      return this.themes[themeKey] ? themeKey : "yellow";
+    },
+    getSafeBackgroundImageUrl(value) {
+      const imageUrl = String(value || "").trim();
+      if (!/^(https?:\/\/|\/static\/)/i.test(imageUrl)) {
+        return "";
+      }
+      return imageUrl.replace(/["\\\\\n\r\f]/g, (character) => {
+        return `\\${character.charCodeAt(0).toString(16)} `;
+      });
+    },
+    getBackgroundStyleValue(value, allowedValues, fallback) {
+      const normalized = String(value || "").trim().toLowerCase();
+      return allowedValues.includes(normalized) ? normalized : fallback;
+    },
+    getBackgroundOverlayColor(value) {
+      const color = String(value || "").trim();
+      return /^(#[0-9a-f]{3,8}|rgba?\([\d\s,.%]+\))$/i.test(color)
+        ? color
+        : "rgba(255, 255, 255, 0.62)";
+    },
+    async loadWriterBackgroundSkins() {
+      try {
+        const membershipPromise = this.hasStoredToken()
+          ? getMembershipStatus(this.$baseUrl).catch(() => null)
+          : Promise.resolve(null);
+        const [res, membershipStatus] = await Promise.all([
+          axios.get(this.$baseUrl + "/app/get_writer_background_skins"),
+          membershipPromise,
+        ]);
+        this.membershipTier =
+          membershipStatus &&
+          membershipStatus.active &&
+          membershipStatus.subscription
+            ? String(membershipStatus.subscription.membership_type || "")
+            : "";
+
+        const currentTheme = WRITER_SOLID_THEMES.find(
+          (theme) => theme.key === this.writerSettings.theme
+        );
+        if (
+          currentTheme &&
+          !this.canUseMembershipRequirement(currentTheme.required_membership)
+        ) {
+          this.writerSettings.theme =
+            this.projectThemeMode === "dark" ? "black" : "yellow";
+          this.writerSettings.backgroundSkinKey = "";
+          this.persistWriterSettings();
+        }
+
+        if (res.status === 200 && Array.isArray(res.data)) {
+          this.writerBackgroundSkins = res.data
+            .map((item) => this.normalizeWriterBackgroundSkin(item))
+            .filter(Boolean);
+          if (this.writerSettings.backgroundSkinKey) {
+            if (this.currentBackgroundSkin) {
+              this.changeBackgroundSkin(this.currentBackgroundSkin.skin_key);
+            } else {
+              this.changeBackgroundSkin("");
+            }
+          }
+          return;
+        }
+      } catch (error) {
+        console.warn("loadWriterBackgroundSkins failed", error);
+        this.writerBackgroundSkins = [];
+      } finally {
+        this.backgroundSkinsLoaded = true;
+      }
+    },
+    hasStoredToken() {
+      try {
+        const rawToken = window.localStorage.getItem("token");
+        if (!rawToken) return false;
+        let token = rawToken;
+        try {
+          token = JSON.parse(rawToken);
+        } catch (error) {}
+        return Boolean(
+          token && (typeof token === "string" ? token : token.tk)
+        );
+      } catch (error) {
+        return false;
+      }
+    },
+    canUseMembershipRequirement(requiredMembership = "none") {
+      const requirement = String(requiredMembership || "none");
+      if (requirement === "none") return true;
+      if (requirement === "standard") {
+        return (
+          this.membershipTier === "standard" || this.membershipTier === "super"
+        );
+      }
+      return requirement === "super" && this.membershipTier === "super";
+    },
+    handleLockedBackgroundOption(option) {
+      const superOnly = option && option.required_membership === "super";
+      uni.showModal({
+        title: superOnly ? "超级典藏背景" : "原木典藏背景",
+        content: superOnly
+          ? "这款背景仅限超级原木通行证用户使用。"
+          : "这款背景仅限原木通行证或超级原木通行证用户使用。",
+        cancelText: "暂不",
+        confirmText: "查看通行证",
+        success: ({ confirm }) => {
+          if (confirm) uni.navigateTo({ url: "/pages/membership/index" });
+        },
+      });
+    },
+    changeBackgroundSkin(skinKey) {
+      const selectedKey = String(skinKey || "");
+      const skin = this.writerBackgroundSkins.find(
+        (item) => item.skin_key === selectedKey
+      );
+      if (skin && skin.is_locked) {
+        this.handleLockedBackgroundOption(skin);
+        return;
+      }
+      this.writerSettings.backgroundSkinKey = skin ? skin.skin_key : "";
+      if (skin) {
+        this.writerSettings.theme = skin.theme_key;
+      }
+      this.persistWriterSettings();
+      this.applyNavigationBarTheme();
     },
     normalizeFontFormat(format) {
       const normalized = String(format || "").toLowerCase();
@@ -1891,16 +2613,20 @@ export default {
         eventType: event && event.type,
       });
       this.markWritingActivity();
+      this.recordTitleWritingActivity(event);
       this.hasNewInput = true;
       this.lastInputTime = new Date();
       this.contentVersion += 1;
       this.markSyncPending();
+      this.recordWritingSpeedSample();
       this.scheduleTitleCapsuleClearanceUpdate();
       this.scheduleInputSync();
     },
     handleTitleInputFocus(event) {
+      this.markWritingActivity();
       this.titleInputFocused = true;
       this.pendingTitleInsertion = false;
+      this.restoreDefaultHeaderLayout();
       this.debugTitleSelection("title-focus-before-capture", {
         eventType: event && event.type,
       });
@@ -1911,6 +2637,25 @@ export default {
       this.titleInputFocused = false;
       this.pendingTitleInsertion = true;
       this.debugTitleSelection("title-blur-after-state-change");
+    },
+    blurTitleInput() {
+      const input = this.getTitleInputElement();
+      if (input) {
+        this.saveTitleInputSelection(input);
+      }
+
+      clearTimeout(this.titleSelectionCaptureTimer);
+      this.titleSelectionCaptureTimer = undefined;
+      clearTimeout(this.titleSelectionRestoreTimer);
+      this.titleSelectionRestoreTimer = undefined;
+      this.titleSelectionRestoreUntil = 0;
+
+      if (input && typeof input.blur === "function") {
+        input.blur();
+      }
+
+      this.titleInputFocused = false;
+      this.pendingTitleInsertion = true;
     },
     scheduleTitleCapsuleClearanceUpdate() {
       if (typeof window === "undefined") {
@@ -2087,6 +2832,7 @@ export default {
       }
 
       this.startSaveNotifyTimer();
+      this.startWritingTimer();
       if (this.loadComplete) {
         this.startLocalSaveTimer();
         this.claimEditLock();
@@ -2616,6 +3362,9 @@ export default {
       if (this.writeExpReporter) {
         this.writeExpReporter.markActive();
       }
+      if (this.novelWritingActivityReporter) {
+        this.novelWritingActivityReporter.markActive();
+      }
     },
     startWritingTimer() {
       if (!this.writeExpReporter) {
@@ -2625,10 +3374,53 @@ export default {
       }
       this.writeExpReporter.start();
       this.writeExpReporter.markActive();
+      if (!this.novelWritingActivityReporter) {
+        this.novelWritingActivityReporter = createNovelWritingActivityReporter(
+          this,
+          {
+            getArticleId: () => Number(this.chapterId || 0),
+            getSessionId: () => String(this.editSessionId || ""),
+            getUserId: () => Number(this.currentUserId || 0),
+            activeWindowMs: 45000,
+          }
+        );
+      }
+      this.novelWritingActivityReporter.start();
     },
     async stopWritingTimer() {
-      if (this.writeExpReporter) {
-        await this.writeExpReporter.stop();
+      await Promise.all([
+        this.writeExpReporter ? this.writeExpReporter.stop() : null,
+        this.novelWritingActivityReporter
+          ? this.novelWritingActivityReporter.stop()
+          : null,
+      ]);
+    },
+    resetWritingActivityCharacterTracking() {
+      this.writingActivityLastTitleLength = String(
+        (this.article && this.article.title) || ""
+      ).length;
+    },
+    recordTitleWritingActivity(event) {
+      const eventValue =
+        event && event.target && event.target.value !== undefined
+          ? event.target.value
+          : this.article && this.article.title;
+      const currentLength = String(eventValue || "").length;
+      const previousLength = Number(this.writingActivityLastTitleLength || 0);
+      this.writingActivityLastTitleLength = currentLength;
+      const addedCharacters = Math.max(0, currentLength - previousLength);
+      if (addedCharacters && this.novelWritingActivityReporter) {
+        this.novelWritingActivityReporter.recordWrittenCharacters(
+          addedCharacters
+        );
+      }
+    },
+    recordEditorWritingActivity(transaction) {
+      const addedCharacters = countInsertedCharacters(transaction);
+      if (addedCharacters && this.novelWritingActivityReporter) {
+        this.novelWritingActivityReporter.recordWrittenCharacters(
+          addedCharacters
+        );
       }
     },
     checkFrameEnvironment() {
@@ -2857,6 +3649,78 @@ export default {
       this.textCount = stats.textCount;
       this.imageCount = stats.imageCount;
     },
+    getWritingCharacterTotal() {
+      return Math.max(0, Number(this.textCount || 0)) +
+        String((this.article && this.article.title) || "").length;
+    },
+    resetWritingSpeedTracking() {
+      this.writingSpeed = 0;
+      this.writingSpeedEvents = [];
+      this.writingSpeedStartedAt = 0;
+      this.writingSpeedLastCharacterTotal = this.getWritingCharacterTotal();
+    },
+    recordWritingSpeedSample() {
+      const currentTotal = this.getWritingCharacterTotal();
+      const previousTotal = Number(this.writingSpeedLastCharacterTotal);
+      this.writingSpeedLastCharacterTotal = currentTotal;
+      if (!Number.isFinite(previousTotal)) {
+        return;
+      }
+
+      const addedCharacters = Math.max(0, currentTotal - previousTotal);
+      if (!addedCharacters) {
+        this.refreshWritingSpeed();
+        return;
+      }
+
+      const now = Date.now();
+      if (!this.writingSpeedStartedAt) {
+        this.writingSpeedStartedAt = now;
+      }
+      this.writingSpeedEvents.push({
+        timestamp: now,
+        count: addedCharacters,
+      });
+      this.refreshWritingSpeed(now);
+    },
+    refreshWritingSpeed(now = Date.now()) {
+      const cutoff = now - WRITING_SPEED_WINDOW_MS;
+      this.writingSpeedEvents = this.writingSpeedEvents.filter(
+        (event) => event.timestamp >= cutoff
+      );
+      if (!this.writingSpeedEvents.length) {
+        this.writingSpeed = 0;
+        this.writingSpeedStartedAt = 0;
+        return;
+      }
+
+      const addedCharacters = this.writingSpeedEvents.reduce(
+        (total, event) => total + Number(event.count || 0),
+        0
+      );
+      const measurementStart = Math.max(
+        Number(this.writingSpeedStartedAt || now),
+        cutoff
+      );
+      const elapsed = Math.min(
+        WRITING_SPEED_WINDOW_MS,
+        Math.max(WRITING_SPEED_MIN_ELAPSED_MS, now - measurementStart)
+      );
+      this.writingSpeed = Math.max(
+        0,
+        Math.round((addedCharacters * 60 * 1000) / elapsed)
+      );
+    },
+    startWritingSpeedTimer() {
+      this.stopWritingSpeedTimer();
+      this.writingSpeedInterval = setInterval(() => {
+        this.refreshWritingSpeed();
+      }, WRITING_SPEED_REFRESH_MS);
+    },
+    stopWritingSpeedTimer() {
+      clearInterval(this.writingSpeedInterval);
+      this.writingSpeedInterval = undefined;
+    },
     applyEditorFontSize(editorInstance = null) {
       const fontSize = this.fontSizeStyleValue;
       const fontFamily = this.currentFontFamilyStyleValue;
@@ -3028,6 +3892,7 @@ export default {
             inline: false,
           }),
           NewParagraphSpace,
+          FindReplaceHighlight,
         ],
         content: legacyBlocksToDoc(parseLegacyContent(this.article.content)),
         editorProps: {
@@ -3042,7 +3907,7 @@ export default {
             this.applyEditorFontSize(editor);
           });
         },
-        onUpdate: ({ editor }) => {
+        onUpdate: ({ editor, transaction }) => {
           if (this.isApplyingEditorDisplayFont) {
             this.refreshCounts();
             return;
@@ -3055,7 +3920,9 @@ export default {
           this.markSyncPending();
           this.scheduleInputSync();
           this.markWritingActivity();
+          this.recordEditorWritingActivity(transaction);
           this.refreshCounts();
+          this.recordWritingSpeedSample();
         },
         onFocus: () => {
           this.handleEditorFocusChange(true);
@@ -3396,6 +4263,8 @@ export default {
         }
 
         this.refreshCounts();
+        this.resetWritingSpeedTracking();
+        this.resetWritingActivityCharacterTracking();
         this.createEditorFromArticle();
         this.startLocalSaveTimer();
         this.loadComplete = true;
@@ -3554,25 +4423,119 @@ export default {
       this.quickInputTouchHandledKey = this.getQuickInputItemKey(item);
     },
     handleQuickInputToolbarTouchStart(event, item) {
-      if (event && typeof event.preventDefault === "function") {
-        event.preventDefault();
-      }
       if (event && typeof event.stopPropagation === "function") {
         event.stopPropagation();
       }
+      const touch = event && event.touches && event.touches[0];
+      this.quickInputTouchStartX = touch ? touch.clientX : 0;
+      this.quickInputTouchStartY = touch ? touch.clientY : 0;
+      this.quickInputTouchMoved = false;
+      this.showQuickInputToolbarPreview(event, item);
       this.debugTitleSelection("quick-toolbar-touchstart", {
         itemId: item && item.id,
         itemValue: item && item.value,
         isTitleTarget: this.isTitleInputInsertionTarget(),
       });
+    },
+    handleQuickInputToolbarTouchMove(event) {
+      const touch = event && event.touches && event.touches[0];
+      if (!touch) return;
+      const deltaX = touch.clientX - this.quickInputTouchStartX;
+      const deltaY = touch.clientY - this.quickInputTouchStartY;
+      if (Math.hypot(deltaX, deltaY) > 14) {
+        this.quickInputTouchMoved = true;
+        this.hideQuickInputToolbarPreview();
+      }
+    },
+    handleQuickInputToolbarTouchEnd(event, item) {
+      if (this.quickInputTouchMoved) {
+        this.hideQuickInputToolbarPreview();
+        return;
+      }
+      if (event && typeof event.preventDefault === "function") {
+        event.preventDefault();
+      }
       this.recordQuickInputTouchHandled(item);
+      this.scheduleQuickInputToolbarPreviewHide(180);
       if (this.isTitleInputInsertionTarget()) {
         this.scheduleQuickInputInsertion(item);
         return;
       }
       this.insertQuickInput(item);
     },
-    handleQuickInputToolbarMouseDown(event) {
+    handleQuickInputToolbarTouchCancel() {
+      this.quickInputTouchMoved = true;
+      this.hideQuickInputToolbarPreview();
+    },
+    showQuickInputToolbarPreview(event, item) {
+      clearTimeout(this.quickInputPreviewHideTimer);
+      this.quickInputPreviewHideTimer = undefined;
+      const target = event && event.currentTarget;
+      const touch =
+        (event && event.touches && event.touches[0]) ||
+        (event && event.changedTouches && event.changedTouches[0]);
+      const viewportWidth =
+        (typeof window !== "undefined" && window.innerWidth) ||
+        Number(this.viewportWidth) ||
+        375;
+      const rpxScale = viewportWidth / 750;
+      let rawLeft = touch ? Number(touch.clientX) : Number(event && event.clientX);
+      let targetTop = touch
+        ? Number(touch.clientY) - 40 * rpxScale
+        : Number(event && event.clientY) - 40 * rpxScale;
+      if (target && typeof target.getBoundingClientRect === "function") {
+        const targetRect = target.getBoundingClientRect();
+        rawLeft = targetRect.left + targetRect.width / 2;
+        targetTop = targetRect.top;
+      }
+      if (!Number.isFinite(rawLeft)) {
+        rawLeft = viewportWidth / 2;
+      }
+      if (!Number.isFinite(targetTop)) {
+        targetTop = 100;
+      }
+      this.quickInputPreviewLeft = Math.max(46, Math.min(viewportWidth - 46, rawLeft));
+      this.quickInputPreviewTop = Math.max(8, targetTop - 82 * rpxScale);
+      this.quickInputPreviewText = String(
+        (item && (item.icon || item.iconText)) || this.getQuickInputDisplayText(item)
+      );
+      this.quickInputPreviewIsIcon = !!(item && (item.icon || item.iconText));
+      this.quickInputPreviewVisible = true;
+      const previewElement = this.$refs.quickInputToolbarPreview;
+      if (previewElement && typeof document !== "undefined" && document.body) {
+        if (previewElement.parentNode !== document.body) {
+          document.body.appendChild(previewElement);
+        }
+        previewElement.textContent = this.quickInputPreviewText;
+        previewElement.style.left = `${this.quickInputPreviewLeft}px`;
+        previewElement.style.top = `${this.quickInputPreviewTop}px`;
+        previewElement.style.backgroundColor = this.currentTheme.backColor;
+        previewElement.style.color = this.currentTheme.color;
+        previewElement.classList.toggle("iconfont", this.quickInputPreviewIsIcon);
+        previewElement.classList.add("quickInputToolbarPreviewVisible");
+      }
+    },
+    hideQuickInputToolbarPreview() {
+      clearTimeout(this.quickInputPreviewHideTimer);
+      this.quickInputPreviewHideTimer = undefined;
+      this.quickInputPreviewVisible = false;
+      const previewElement = this.$refs.quickInputToolbarPreview;
+      if (previewElement) {
+        previewElement.classList.remove("quickInputToolbarPreviewVisible");
+      }
+    },
+    scheduleQuickInputToolbarPreviewHide(delay = 140) {
+      clearTimeout(this.quickInputPreviewHideTimer);
+      this.quickInputPreviewHideTimer = setTimeout(() => {
+        this.quickInputPreviewHideTimer = undefined;
+        this.quickInputPreviewVisible = false;
+        const previewElement = this.$refs.quickInputToolbarPreview;
+        if (previewElement) {
+          previewElement.classList.remove("quickInputToolbarPreviewVisible");
+        }
+      }, delay);
+    },
+    handleQuickInputToolbarMouseDown(event, item) {
       if (event && typeof event.preventDefault === "function") {
         event.preventDefault();
       }
@@ -3582,6 +4545,7 @@ export default {
       this.debugTitleSelection("quick-toolbar-mousedown", {
         isTitleTarget: this.isTitleInputInsertionTarget(),
       });
+      this.showQuickInputToolbarPreview(event, item);
     },
     handleQuickInputToolbarClick(event, item) {
       if (event && typeof event.preventDefault === "function") {
@@ -3601,6 +4565,7 @@ export default {
         });
         return;
       }
+      this.scheduleQuickInputToolbarPreviewHide();
       this.debugTitleSelection("quick-toolbar-click-insert", {
         itemId: item && item.id,
         itemValue: item && item.value,
@@ -4324,11 +5289,21 @@ export default {
       this.persistWriterSettings();
     },
     changeTheme(themeName) {
+      const theme = WRITER_SOLID_THEMES.find(
+        (item) => item.key === themeName
+      );
+      if (!theme) return;
+      if (!this.canUseMembershipRequirement(theme.required_membership)) {
+        this.handleLockedBackgroundOption(theme);
+        return;
+      }
       this.writerSettings.theme = themeName;
+      this.writerSettings.backgroundSkinKey = "";
       this.persistWriterSettings();
       this.applyNavigationBarTheme();
     },
     openWriterAiAssistant() {
+      this.closeFindReplace();
       if (
         this.$refs.writerAiAssistant &&
         typeof this.$refs.writerAiAssistant.open === "function"
@@ -4362,6 +5337,13 @@ export default {
         }
         this.isHandlingBrowserBack = false;
       }
+    },
+    handleNativeBack(event) {
+      if (!this.aiAssistantOpen) {
+        return;
+      }
+      event.preventDefault();
+      window.history.go(-1);
     },
     handleWriterAiSmartReplaceKept(payload) {
       this.$nextTick(() => {
@@ -4577,11 +5559,204 @@ export default {
     updateSaveNotify(playAnimation) {
       this.lastSaveNotifyTime = new Date();
       this.refreshSaveNotifyText();
-      if (playAnimation && this.$refs.completeIcon) {
-        this.$refs.completeIcon.playAnimation();
+      const iconRef = Array.isArray(this.$refs.completeIcon)
+        ? this.$refs.completeIcon[0]
+        : this.$refs.completeIcon;
+      if (playAnimation && iconRef && typeof iconRef.playAnimation === "function") {
+        iconRef.playAnimation();
       }
     },
+    getFindReplaceMatches(query = this.findReplaceQuery) {
+      if (!this.editor) {
+        return [];
+      }
+
+      const keyword = String(query || "");
+      if (!keyword) {
+        return [];
+      }
+
+      const matches = [];
+      this.editor.state.doc.descendants((node, pos) => {
+        if (!node.isText || !node.text) {
+          return;
+        }
+
+        let searchStart = 0;
+        while (searchStart < node.text.length) {
+          const offset = node.text.indexOf(keyword, searchStart);
+          if (offset === -1) {
+            break;
+          }
+          matches.push({
+            from: pos + offset,
+            to: pos + offset + keyword.length,
+          });
+          searchStart = offset + keyword.length;
+        }
+      });
+      return matches;
+    },
+    refreshFindReplaceMatches(preferredFrom = null) {
+      const previousMatch = this.findReplaceMatches[this.findReplaceIndex];
+      const matches = this.getFindReplaceMatches();
+      this.findReplaceMatches = matches;
+
+      if (!matches.length) {
+        this.findReplaceIndex = -1;
+        this.setFindReplaceHighlight(null);
+        return;
+      }
+
+      let nextIndex = previousMatch
+        ? matches.findIndex(
+            (match) =>
+              match.from === previousMatch.from && match.to === previousMatch.to
+          )
+        : -1;
+      if (nextIndex === -1 && Number.isFinite(Number(preferredFrom))) {
+        nextIndex = matches.findIndex(
+          (match) => match.from >= Number(preferredFrom)
+        );
+      }
+      this.findReplaceIndex = nextIndex === -1 ? 0 : nextIndex;
+      this.selectFindReplaceMatch(matches[this.findReplaceIndex]);
+    },
+    setFindReplaceHighlight(match) {
+      if (!this.editor || !this.editor.view) {
+        return;
+      }
+      this.editor.view.dispatch(
+        this.editor.state.tr.setMeta(
+          FindReplaceHighlightPluginKey,
+          match ? { from: match.from, to: match.to } : null
+        )
+      );
+    },
+    selectFindReplaceMatch(match) {
+      if (!match || !this.editor) {
+        return;
+      }
+      this.setFindReplaceHighlight(match);
+      this.editor.commands.setTextSelection({ from: match.from, to: match.to });
+      this.$nextTick(() => {
+        if (!this.editor || !this.editor.view || !this.editor.view.domAtPos) {
+          return;
+        }
+        const domPosition = this.editor.view.domAtPos(match.from);
+        const domNode = domPosition && domPosition.node;
+        const element = domNode
+          ? domNode.nodeType === 1
+            ? domNode
+            : domNode.parentElement
+          : null;
+        const scrollTarget = element && element.closest
+          ? element.closest("p") || element
+          : element;
+        if (scrollTarget && typeof scrollTarget.scrollIntoView === "function") {
+          scrollTarget.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+      });
+    },
+    openFindReplace() {
+      if (!this.editor) {
+        return;
+      }
+      const selection = this.editor.state.selection;
+      const selectedText = selection.empty
+        ? ""
+        : this.editor.state.doc.textBetween(selection.from, selection.to, "");
+      if (!this.findReplaceQuery && selectedText) {
+        this.findReplaceQuery = selectedText;
+      }
+      this.refreshFindReplaceMatches();
+      this.findReplaceVisible = true;
+      this.$nextTick(() => {
+        const input = this.getDomRef("findReplaceQueryInput");
+        if (input && typeof input.focus === "function") {
+          input.focus();
+        }
+      });
+    },
+    closeFindReplace() {
+      this.setFindReplaceHighlight(null);
+      this.findReplaceVisible = false;
+    },
+    handleFindReplaceQueryInput() {
+      this.$nextTick(() => {
+        this.refreshFindReplaceMatches();
+      });
+    },
+    clearFindReplaceQuery() {
+      this.findReplaceQuery = "";
+      this.refreshFindReplaceMatches();
+      this.$nextTick(() => {
+        const input = this.getDomRef("findReplaceQueryInput");
+        if (input && typeof input.focus === "function") {
+          input.focus();
+        }
+      });
+    },
+    findPreviousMatch() {
+      if (!this.findReplaceMatches.length) {
+        return;
+      }
+      const length = this.findReplaceMatches.length;
+      this.findReplaceIndex =
+        (this.findReplaceIndex - 1 + length) % length;
+      this.selectFindReplaceMatch(this.findReplaceMatches[this.findReplaceIndex]);
+    },
+    findNextMatch() {
+      if (!this.findReplaceMatches.length) {
+        return;
+      }
+      const length = this.findReplaceMatches.length;
+      this.findReplaceIndex = (this.findReplaceIndex + 1) % length;
+      this.selectFindReplaceMatch(this.findReplaceMatches[this.findReplaceIndex]);
+    },
+    replaceCurrentMatch() {
+      const match = this.findReplaceMatches[this.findReplaceIndex];
+      if (!match || !this.editor) {
+        return;
+      }
+      const replacement = String(this.findReplaceValue || "");
+      const keyword = String(this.findReplaceQuery || "");
+      if (replacement === keyword) {
+        uni.showToast({ title: "替换内容相同", icon: "none" });
+        return;
+      }
+
+      this.editor.view.dispatch(
+        this.editor.state.tr.insertText(replacement, match.from, match.to)
+      );
+      this.refreshFindReplaceMatches(match.from + Math.max(replacement.length, 1));
+    },
+    replaceAllMatches() {
+      if (!this.editor || !this.findReplaceMatches.length) {
+        return;
+      }
+      const keyword = String(this.findReplaceQuery || "");
+      const replacement = String(this.findReplaceValue || "");
+      if (replacement === keyword) {
+        uni.showToast({ title: "替换内容相同", icon: "none" });
+        return;
+      }
+
+      const matches = this.findReplaceMatches.slice();
+      let transaction = this.editor.state.tr;
+      for (let index = matches.length - 1; index >= 0; index -= 1) {
+        const match = matches[index];
+        transaction = transaction.insertText(replacement, match.from, match.to);
+      }
+      this.editor.view.dispatch(transaction);
+      this.refreshFindReplaceMatches();
+      uni.showToast({
+        title: `已替换${matches.length}处`,
+        icon: "none",
+      });
+    },
     openToolbarPopup() {
+      this.closeFindReplace();
       if (this.$refs.toolbarPopup) {
         this.$refs.toolbarPopup.open("bottom");
       }
@@ -4656,13 +5831,66 @@ export default {
         )}`,
       });
     },
+    openReaderPreview() {
+      if (!this.editor) {
+        uni.showToast({
+          title: "编辑器尚未准备好",
+          icon: "none",
+        });
+        return;
+      }
+
+      const articleId = Number(this.article.article_id || this.chapterId || 0);
+      const novelInfo = this.article.novel_info || {};
+      const novelId = Number(novelInfo.novel_id || this.article.novel_id || 0);
+      const content = stringifyLegacyContent(
+        docToLegacyBlocks(this.editor.getJSON())
+      );
+      const previewArticle = {
+        ...this.article,
+        article_id: articleId,
+        novel_id: novelId,
+        title: String(this.article.title || "未命名章节"),
+        article_type: this.article.article_type || "richtext",
+        article_chapter: Number(this.article.article_chapter || 1),
+        is_draft: 1,
+        content,
+      };
+      const previewNovel = {
+        ...novelInfo,
+        novel_id: novelId,
+        name: novelInfo.name || novelInfo.title || "作品预览",
+      };
+
+      try {
+        const previewKey = storeReaderPreview({
+          article: previewArticle,
+          novel: previewNovel,
+        });
+        this.closeFindReplace();
+        this.closeToolbarPopup();
+        uni.navigateTo({
+          url: buildReaderUrl(getReaderMode(), {
+            articleId,
+            novelId,
+            previewKey,
+          }),
+        });
+      } catch (error) {
+        console.error("store reader preview failed", error);
+        uni.showToast({
+          title: "生成阅读预览失败",
+          icon: "none",
+        });
+      }
+    },
     getDomRef(name) {
       const ref = this.$refs ? this.$refs[name] : null;
       return Array.isArray(ref) ? ref[0] : ref;
     },
     getHeaderOffsetTransform(offset) {
       const normalizedOffset = this.clampHeaderOffset(offset);
-      return `translate(0, -${normalizedOffset}px)`;
+      return `translate3d(0, -${normalizedOffset}px, 0)`;
     },
     getStatusCapsuleLift(offset) {
       const normalizedOffset = this.clampHeaderOffset(offset);
@@ -4673,37 +5901,35 @@ export default {
       }
       return Math.min(gap, (gap * normalizedOffset) / maxOffset);
     },
+    getStatusCapsuleCounterOffset(offset) {
+      const normalizedOffset = this.clampHeaderOffset(offset);
+      return Math.max(
+        0,
+        normalizedOffset - Number(this.navBarHeight || 0)
+      );
+    },
     setHeaderOffsetStyle(target, offset, includeLayout = false) {
       if (!target || !target.style) {
         return;
       }
 
-      const normalizedOffset = this.clampHeaderOffset(offset);
+      const normalizedOffset = this.normalizeHeaderOffsetForFocus(offset);
       const value = `${normalizedOffset}px`;
       target.style.setProperty("--headerVisualOffset", value);
       target.style.setProperty(
         "--statusCapsuleLift",
         `${this.getStatusCapsuleLift(normalizedOffset)}px`
       );
+      target.style.setProperty(
+        "--statusCapsuleCounterOffset",
+        `${this.getStatusCapsuleCounterOffset(normalizedOffset)}px`
+      );
       if (includeLayout) {
         target.style.setProperty("--headerLayoutOffset", value);
       }
     },
-    cacheHeaderDragMetrics() {
-      const middleBar = this.getDomRef("middleBar");
-      this._headerGestureLayoutStartOffset = this.clampHeaderOffset(this.headerOffset);
-      this._headerGestureMiddleBarStartHeight = 0;
-
-      if (
-        middleBar &&
-        typeof middleBar.getBoundingClientRect === "function"
-      ) {
-        const rect = middleBar.getBoundingClientRect();
-        this._headerGestureMiddleBarStartHeight = Number(rect.height) || 0;
-      }
-    },
     applyHeaderVisualOffsetStyle(offset) {
-      const normalizedOffset = this.clampHeaderOffset(offset);
+      const normalizedOffset = this.normalizeHeaderOffsetForFocus(offset);
       const editorHeader = this.getDomRef("editorHeader");
       const middleBar = this.getDomRef("middleBar");
       const pageRoot = this.$el;
@@ -4714,34 +5940,47 @@ export default {
           "--statusCapsuleLift",
           `${this.getStatusCapsuleLift(normalizedOffset)}px`
         );
+        editorHeader.style.setProperty(
+          "--statusCapsuleCounterOffset",
+          `${this.getStatusCapsuleCounterOffset(normalizedOffset)}px`
+        );
       }
 
       if (middleBar && middleBar.style) {
-        const startHeight = Number(this._headerGestureMiddleBarStartHeight || 0);
-        const startOffset = Number(this._headerGestureLayoutStartOffset || 0);
-        const nextHeight = startHeight + normalizedOffset - startOffset;
-
         middleBar.style.transform = this.getHeaderOffsetTransform(normalizedOffset);
-        if (startHeight > 0 && Number.isFinite(nextHeight)) {
-          middleBar.style.setProperty(
-            "height",
-            `${Math.max(0, nextHeight)}px`,
-            "important"
-          );
-        } else {
-          this.setHeaderOffsetStyle(middleBar, normalizedOffset, true);
-        }
+        middleBar.style.setProperty(
+          "--statusCapsuleCounterOffset",
+          `${this.getStatusCapsuleCounterOffset(normalizedOffset)}px`
+        );
       }
 
       if ((!editorHeader || !middleBar) && pageRoot && pageRoot.style) {
         const value = `${normalizedOffset}px`;
         pageRoot.style.setProperty("--headerVisualOffset", value);
-        pageRoot.style.setProperty("--headerLayoutOffset", value);
         pageRoot.style.setProperty(
           "--statusCapsuleLift",
           `${this.getStatusCapsuleLift(normalizedOffset)}px`
         );
+        pageRoot.style.setProperty(
+          "--statusCapsuleCounterOffset",
+          `${this.getStatusCapsuleCounterOffset(normalizedOffset)}px`
+        );
       }
+      this._headerRenderedOffset = normalizedOffset;
+      return normalizedOffset;
+    },
+    stageHeaderVisualOffsetStyle(offset) {
+      this.cancelHeaderOffsetFrame();
+      const normalizedOffset = this.normalizeHeaderOffsetForFocus(offset);
+      const editorHeader = this.getDomRef("editorHeader");
+      const middleBar = this.getDomRef("middleBar");
+
+      // Preserve the exact dragged position while Vue removes headerDragging.
+      // Layout height intentionally stays at the last committed endpoint.
+      this.setHeaderOffsetStyle(editorHeader, normalizedOffset);
+      this.setHeaderOffsetStyle(middleBar, normalizedOffset);
+      this.clearHeaderDragInlineStyles();
+      this._headerRenderedOffset = normalizedOffset;
       return normalizedOffset;
     },
     clearHeaderDragInlineStyles() {
@@ -4757,7 +5996,7 @@ export default {
       }
     },
     applyCommittedHeaderOffsetStyle(offset) {
-      const normalizedOffset = this.clampHeaderOffset(offset);
+      const normalizedOffset = this.normalizeHeaderOffsetForFocus(offset);
       const editorHeader = this.getDomRef("editorHeader");
       const middleBar = this.getDomRef("middleBar");
       const pageRoot = this.$el;
@@ -4774,6 +6013,10 @@ export default {
           "--statusCapsuleLift",
           `${this.getStatusCapsuleLift(normalizedOffset)}px`
         );
+        pageRoot.style.setProperty(
+          "--statusCapsuleCounterOffset",
+          `${this.getStatusCapsuleCounterOffset(normalizedOffset)}px`
+        );
       }
       this.clearHeaderDragInlineStyles();
       return normalizedOffset;
@@ -4787,9 +6030,23 @@ export default {
         window.cancelAnimationFrame(this._headerOffsetRaf);
       }
       this._headerOffsetRaf = 0;
+      this._headerOffsetFrameTime = 0;
+    },
+    cancelHeaderSettleFrame() {
+      if (
+        this._headerSettleRaf &&
+        typeof window !== "undefined" &&
+        typeof window.cancelAnimationFrame === "function"
+      ) {
+        window.cancelAnimationFrame(this._headerSettleRaf);
+      }
+      clearTimeout(this._headerSettleEffectTimer);
+      this._headerSettleRaf = 0;
+      this._headerSettleToken = Number(this._headerSettleToken || 0) + 1;
+      this.isHeaderSettling = false;
     },
     scheduleHeaderOffsetStyle(offset) {
-      this._pendingHeaderOffset = this.clampHeaderOffset(offset);
+      this._pendingHeaderOffset = this.normalizeHeaderOffsetForFocus(offset);
       if (
         typeof window === "undefined" ||
         typeof window.requestAnimationFrame !== "function"
@@ -4800,16 +6057,54 @@ export default {
       if (this._headerOffsetRaf) {
         return;
       }
-      this._headerOffsetRaf = window.requestAnimationFrame(() => {
-        this._headerOffsetRaf = 0;
-        this.applyHeaderVisualOffsetStyle(this._pendingHeaderOffset);
+      this._headerOffsetRaf = window.requestAnimationFrame((timestamp) => {
+        this.runHeaderOffsetFrame(timestamp);
       });
+    },
+    runHeaderOffsetFrame(timestamp) {
+      this._headerOffsetRaf = 0;
+      const targetOffset = this.normalizeHeaderOffsetForFocus(
+        this._pendingHeaderOffset
+      );
+      const currentOffset = this.normalizeHeaderOffsetForFocus(
+        this._headerRenderedOffset === undefined
+          ? this.headerOffset
+          : this._headerRenderedOffset
+      );
+      const previousTimestamp = Number(this._headerOffsetFrameTime || 0);
+      const frameDuration = previousTimestamp
+        ? Math.min(50, Math.max(1, Number(timestamp || 0) - previousTimestamp))
+        : 1000 / 60;
+      this._headerOffsetFrameTime = Number(timestamp || 0);
+
+      const followRatio = 1 - Math.exp(
+        -frameDuration / HEADER_DRAG_FOLLOW_TIME_MS
+      );
+      let nextOffset =
+        currentOffset + (targetOffset - currentOffset) * followRatio;
+      if (Math.abs(targetOffset - nextOffset) <= HEADER_DRAG_OFFSET_EPSILON) {
+        nextOffset = targetOffset;
+      }
+      this.applyHeaderVisualOffsetStyle(nextOffset);
+
+      if (
+        this.isHeaderGestureActive &&
+        Math.abs(targetOffset - nextOffset) > HEADER_DRAG_OFFSET_EPSILON
+      ) {
+        this._headerOffsetRaf = window.requestAnimationFrame((nextTimestamp) => {
+          this.runHeaderOffsetFrame(nextTimestamp);
+        });
+      } else {
+        this._headerOffsetFrameTime = 0;
+      }
     },
     commitHeaderOffset(offset) {
       this.cancelHeaderOffsetFrame();
       const normalizedOffset = this.applyCommittedHeaderOffsetStyle(offset);
       this.headerOffset = normalizedOffset;
       this._headerGestureVisualOffset = normalizedOffset;
+      this._headerRenderedOffset = normalizedOffset;
+      this._pendingHeaderOffset = normalizedOffset;
       return normalizedOffset;
     },
     clampHeaderOffset(value = this.headerOffset) {
@@ -4822,25 +6117,85 @@ export default {
         Math.max(0, normalizedValue)
       );
     },
+    isEditorInputFocused() {
+      return !!(
+        this.editorBodyFocused ||
+        this.titleInputFocused ||
+        this.isBodyEditorFocused()
+      );
+    },
+    normalizeHeaderOffsetForFocus(value = this.headerOffset) {
+      if (this.isEditorInputFocused()) {
+        return 0;
+      }
+      return this.clampHeaderOffset(value);
+    },
     restoreDefaultHeaderLayout() {
+      this.cancelHeaderSettleFrame();
       this.isHeaderGestureActive = false;
       this.commitHeaderOffset(0);
     },
-    settleHeaderLayoutAfterGesture() {
-      const offset = this.clampHeaderOffset();
+    getSettledHeaderOffset(offset = this.headerOffset) {
+      const normalizedOffset = this.clampHeaderOffset(offset);
       const lastDeltaY = Number(this._headerGestureLastDeltaY || 0);
       const directionThreshold = 1;
 
       if (Math.abs(lastDeltaY) > directionThreshold) {
-        this.commitHeaderOffset(
-          lastDeltaY < 0 ? this.maxHeaderOffset : 0
-        );
-        return;
+        return lastDeltaY < 0 ? this.maxHeaderOffset : 0;
       }
 
-      this.commitHeaderOffset(
-        offset >= this.maxHeaderOffset / 2 ? this.maxHeaderOffset : 0
-      );
+      return normalizedOffset >= this.maxHeaderOffset / 2
+        ? this.maxHeaderOffset
+        : 0;
+    },
+    settleHeaderLayoutAfterGesture(offset = this.headerOffset) {
+      if (this.isEditorInputFocused()) {
+        this.restoreDefaultHeaderLayout();
+        return;
+      }
+      this.cancelHeaderSettleFrame();
+      const settleToken = this._headerSettleToken;
+      const currentOffset = this.stageHeaderVisualOffsetStyle(offset);
+      const targetOffset = this.getSettledHeaderOffset(currentOffset);
+
+      this.isHeaderGestureActive = false;
+      if (targetOffset === currentOffset) {
+        this.commitHeaderOffset(targetOffset);
+        return;
+      }
+      this.isHeaderSettling = true;
+
+      // Let Vue remove the drag-only `transition: none` class and paint the
+      // current position before changing the endpoint.
+      this.$nextTick(() => {
+        if (settleToken !== this._headerSettleToken) {
+          return;
+        }
+        if (
+          typeof window === "undefined" ||
+          typeof window.requestAnimationFrame !== "function"
+        ) {
+          this.commitHeaderOffset(targetOffset);
+          return;
+        }
+        this._headerSettleRaf = window.requestAnimationFrame(() => {
+          if (settleToken !== this._headerSettleToken) {
+            return;
+          }
+          this._headerSettleRaf = window.requestAnimationFrame(() => {
+            this._headerSettleRaf = 0;
+            if (settleToken !== this._headerSettleToken) {
+              return;
+            }
+            this.commitHeaderOffset(targetOffset);
+            this._headerSettleEffectTimer = setTimeout(() => {
+              if (settleToken === this._headerSettleToken) {
+                this.isHeaderSettling = false;
+              }
+            }, 220);
+          });
+        });
+      });
     },
     isBodyEditorFocused() {
       if (this.editor && this.editor.isFocused) {
@@ -5100,11 +6455,8 @@ export default {
       this.editorBodyFocused = !!isFocused;
       if (isFocused) {
         this.pendingTitleInsertion = false;
-      }
-      if (
-        isFocused &&
-        (!this.isHeaderGestureActive || this.headerGestureStartedFocused)
-      ) {
+        // A tap that focuses the editor must no longer be treated as a
+        // header-collapse gesture when the matching touchend arrives.
         this.restoreDefaultHeaderLayout();
       }
     },
@@ -5188,6 +6540,7 @@ export default {
       return !!target.closest(".textarea");
     },
     handleEditorAreaTouchStart(event) {
+      this.cancelHeaderSettleFrame();
       this.headerGestureStartedFocused = this.isBodyEditorFocused();
       if (!this.shouldHandleHeaderGesture(event)) {
         this.isHeaderGestureActive = false;
@@ -5204,7 +6557,9 @@ export default {
       this.isHeaderGestureActive = true;
       this._headerGestureLastDeltaY = 0;
       this._headerGestureVisualOffset = this.headerOffset;
-      this.cacheHeaderDragMetrics();
+      this._pendingHeaderOffset = this.headerOffset;
+      this._headerRenderedOffset = this.headerOffset;
+      this._headerOffsetFrameTime = 0;
       this.applyHeaderVisualOffsetStyle(this._headerGestureVisualOffset);
     },
     handleEditorAreaTouchMove(event) {
@@ -5223,7 +6578,10 @@ export default {
       }
 
       const deltaY = clientY - Number(this._headerGestureLastY || clientY);
-      if (Math.abs(clientY - Number(this._headerGestureStartY || clientY)) > 3) {
+      if (
+        Math.abs(clientY - Number(this._headerGestureStartY || clientY)) >
+        HEADER_GESTURE_MOVE_THRESHOLD_PX
+      ) {
         this._headerGestureMoved = true;
       }
 
@@ -5235,46 +6593,55 @@ export default {
         );
         const nextOffset = this.clampHeaderOffset(previousOffset - deltaY);
         this._headerGestureVisualOffset = nextOffset;
-        this.headerOffset = nextOffset;
-        if (nextOffset !== previousOffset && event && event.cancelable) {
-          event.preventDefault();
-        }
         this.scheduleHeaderOffsetStyle(nextOffset);
         this._headerGestureLastDeltaY = deltaY;
       }
       this._headerGestureLastY = clientY;
     },
     handleEditorAreaTouchEnd() {
+      if (!this.isHeaderGestureActive) {
+        this.headerGestureStartedFocused = false;
+        this._headerGestureLastDeltaY = 0;
+        this._headerGestureMoved = false;
+        return;
+      }
+
       const shouldKeepCollapsed =
         this._headerGestureMoved && !this.headerGestureStartedFocused;
-      this.isHeaderGestureActive = false;
-      this.commitHeaderOffset(
-        this._headerGestureVisualOffset === undefined
+      const currentOffset = this.clampHeaderOffset(
+        this._headerRenderedOffset === undefined
           ? this.headerOffset
-          : this._headerGestureVisualOffset
+          : this._headerRenderedOffset
       );
       if (this.isBodyEditorFocused()) {
         if (shouldKeepCollapsed) {
           this.blurBodyEditor();
-          this.settleHeaderLayoutAfterGesture();
+          this.settleHeaderLayoutAfterGesture(currentOffset);
         } else {
           this.restoreDefaultHeaderLayout();
         }
       } else if (this._headerGestureMoved) {
-        this.settleHeaderLayoutAfterGesture();
+        this.settleHeaderLayoutAfterGesture(currentOffset);
+      } else {
+        this.isHeaderGestureActive = false;
+        this.commitHeaderOffset(currentOffset);
       }
       this.headerGestureStartedFocused = false;
       this._headerGestureLastDeltaY = 0;
       this._headerGestureMoved = false;
     },
     updateCustomNavigationMetrics() {
-      let statusBarHeight = 0;
+      let statusBarHeight = Number(
+        typeof window !== "undefined" && window.jsBridge
+          ? window.jsBridge.statusBarHeight
+          : 0
+      ) || 0;
       this.viewportWidth = getViewportWidth();
       try {
-        if (typeof uni !== "undefined" && typeof uni.getSystemInfoSync === "function") {
+        if (!statusBarHeight && typeof uni !== "undefined" && typeof uni.getSystemInfoSync === "function") {
           const systemInfo = uni.getSystemInfoSync();
           statusBarHeight = Number(systemInfo.statusBarHeight) || 0;
-        } else if (
+        } else if (!statusBarHeight &&
           typeof plus !== "undefined" &&
           plus.navigator &&
           typeof plus.navigator.getStatusbarHeight === "function"
@@ -5303,9 +6670,15 @@ export default {
       }
 
       if (action === "settings") {
+        this.closeFindReplace();
         if (this.$refs.setPopup) {
           this.$refs.setPopup.open("bottom");
         }
+        return;
+      }
+
+      if (action === "findReplace") {
+        this.openFindReplace();
         return;
       }
 
@@ -5338,6 +6711,11 @@ export default {
 
       if (action === "publish") {
         this.handlePublishAction();
+        return;
+      }
+
+      if (action === "preview") {
+        this.openReaderPreview();
       }
     },
     getLegacyNavAction(text) {
@@ -5368,7 +6746,12 @@ export default {
     this.publishHandoffActive = false;
     this.leaveFinalized = false;
     this.initializeWriterSettings();
-    await this.initWriterFonts();
+    this.resetWritingSpeedTracking();
+    this.startWritingSpeedTimer();
+    await Promise.all([
+      this.initWriterFonts(),
+      this.loadWriterBackgroundSkins(),
+    ]);
     this.setupAppKeyboardListener();
     this.startSaveNotifyTimer();
     document.removeEventListener("visibilitychange", this.handleVisibilityChange);
@@ -5377,6 +6760,8 @@ export default {
     window.addEventListener("pagehide", this.handlePageHide);
     window.removeEventListener("popstate", this.browserBack);
     window.addEventListener("popstate", this.browserBack);
+    window.removeEventListener("loghomeNativeBack", this.handleNativeBack);
+    window.addEventListener("loghomeNativeBack", this.handleNativeBack);
     window.removeEventListener("resize", this.updateCustomNavigationMetrics);
     window.addEventListener("resize", this.updateCustomNavigationMetrics);
     document.removeEventListener(
@@ -5398,6 +6783,7 @@ export default {
     });
   },
   async onUnload() {
+    this.stopWritingSpeedTimer();
     if (typeof window !== "undefined") {
       window.removeEventListener("resize", this.updateCustomNavigationMetrics);
     }
@@ -5413,12 +6799,17 @@ export default {
     this.updateCustomNavigationMetrics();
   },
   async onHide() {
+    this.stopWritingSpeedTimer();
     await this.pauseForBackground();
   },
   async onShow() {
     this.syncAppEnvironment();
     this.setupAppKeyboardListener();
     this.initializeWriterSettings();
+    if (this.backgroundSkinsLoaded) {
+      await this.loadWriterBackgroundSkins();
+    }
+    this.startWritingSpeedTimer();
     if (this.shouldSuppressEditorSyncForCompletedPublish()) {
       return;
     }
@@ -5453,8 +6844,9 @@ export default {
     left: 0;
     right: 0;
     z-index: 300;
-    transform: translate(0, calc(0px - var(--headerVisualOffset)));
+    transform: translate3d(0, calc(0px - var(--headerVisualOffset)), 0);
     transition: transform 0.18s ease-out;
+    backface-visibility: hidden;
     will-change: transform;
   }
 
@@ -5558,6 +6950,14 @@ export default {
     object-fit: contain;
   }
 
+  &.black .customNavShortcutImage,
+  &.qingyun .customNavShortcutImage,
+  &.thorncrown .customNavShortcutImage,
+  &.chocolate .customNavShortcutImage {
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+  }
+
   .customToolbarTrigger {
     width: 44px;
     padding: 0;
@@ -5574,6 +6974,8 @@ export default {
     position: absolute;
     right: 16rpx;
     top: calc(var(--statusBarHeight) + var(--navBarHeight) + var(--statusCapsuleGap) - var(--statusCapsuleLift));
+    transform: translate3d(0, var(--statusCapsuleCounterOffset), 0);
+    transition: transform 0.18s ease-out;
     z-index: 320;
     display: flex;
     align-items: center;
@@ -5588,22 +6990,38 @@ export default {
       align-items: center;
       min-width: 0;
       padding: 8rpx 16rpx;
-      border: 1rpx solid rgba(175, 81, 38, 0.12);
+      border: 1rpx solid var(--statusCapsuleBorder);
       border-radius: 999rpx;
-      background-color: rgba(255, 250, 240, 0.92);
+      background-color: var(--statusCapsuleBackground);
       box-sizing: border-box;
       font-size: 24rpx;
       line-height: 1.35;
       white-space: nowrap;
       backdrop-filter: blur(8px);
+      transition: background-color 0.5s, border-color 0.5s, color 0.5s;
     }
 
     .textCount {
-      color: rgb(175, 81, 38);
+      color: var(--statusCapsulePrimaryColor);
     }
 
     .saveNotify {
-      color: rgb(156, 156, 156);
+      color: var(--statusCapsuleMutedColor);
+    }
+
+    .writingSpeed {
+      color: var(--statusCapsulePrimaryColor);
+    }
+
+    .statusCapsuleIcon {
+      flex: 0 0 auto;
+      margin-right: 7rpx;
+      font-size: 25rpx;
+    }
+
+    .syncStatusIcon {
+      display: inline-flex;
+      transform: translateY(2rpx);
     }
 
     .editorRole {
@@ -5613,20 +7031,26 @@ export default {
       padding: 2rpx 10rpx;
       border-radius: 999rpx;
       font-size: 22rpx;
-      color: #9a4f1f;
-      background-color: rgba(255, 186, 120, 0.18);
+      color: var(--statusCapsuleRoleColor);
+      background-color: var(--statusCapsuleRoleBackground);
     }
   }
 
   .middleBar {
+    position: relative;
     box-sizing: border-box;
     height: calc(100vh - var(--navBarHeight) - var(--statusBarHeight) + var(--headerLayoutOffset)) !important;
     margin-top: calc(var(--navBarHeight) + var(--statusBarHeight));
     overflow: hidden;
-    transform: translate(0, calc(0px - var(--headerVisualOffset)));
-    transition: height 0.18s ease-out, transform 0.18s ease-out;
+    transform: translate3d(0, calc(0px - var(--headerVisualOffset)), 0);
+    transition: transform 0.18s ease-out;
+    backface-visibility: hidden;
     contain: layout paint;
-    will-change: height, transform;
+    will-change: transform;
+
+    &.findReplaceOpen {
+      height: calc(100vh - var(--navBarHeight) - var(--statusBarHeight) + var(--headerLayoutOffset) - 180rpx) !important;
+    }
 
     .editorBlurSink {
       position: fixed;
@@ -5643,11 +7067,11 @@ export default {
     .textarea {
       display: block;
       position: relative;
-      padding: var(--statusCapsuleTopClearance) 30rpx 30rpx;
+      padding: calc(var(--statusCapsuleCounterOffset) + var(--statusCapsuleTopClearance)) 30rpx 30rpx;
       width: calc(100vw);
       height: calc(100%);
       font-size: 35rpx;
-      line-height: 60rpx;
+      line-height: 1.7;
       box-sizing: border-box;
       overflow-y: auto;
       overflow-x: hidden;
@@ -5690,7 +7114,7 @@ export default {
         min-height: calc(100% - var(--statusCapsuleTopClearance) - var(--titleBarHeight) - 90rpx);
         font-size: var(--editor-font-size);
         font-family: var(--editor-font-family, inherit) !important;
-        line-height: 60rpx;
+        line-height: 1.7;
         color: inherit;
         outline: none;
         box-shadow: none;
@@ -5705,7 +7129,7 @@ export default {
 
       :deep(.writer-prosemirror p) {
         margin: 0;
-        min-height: 60rpx;
+        min-height: 1.7em;
       }
 
       :deep(.writer-prosemirror img) {
@@ -5731,12 +7155,12 @@ export default {
     }
 
     .textarea.symbolsShown {
-      height: calc(100% - 80rpx);
+      height: calc(100% - 80rpx - var(--loghome-safe-bottom, 0px));
     }
 
     .quickInputToolBar {
       bottom: 0;
-      height: 80rpx;
+      height: calc(80rpx + var(--loghome-safe-bottom, 0px));
       width: 100%;
       z-index: 100;
       border-top: #b4b4b4 1rpx solid;
@@ -5746,8 +7170,15 @@ export default {
       box-sizing: border-box;
       overflow-x: auto;
       overflow-y: hidden;
-      padding: 0 8rpx;
+      padding: 0 8rpx var(--loghome-safe-bottom, 0px);
+      gap: 6rpx;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
       -webkit-overflow-scrolling: touch;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
 
       .quickInputToolbarButton {
         flex: 0 0 auto;
@@ -5769,7 +7200,7 @@ export default {
         white-space: nowrap;
         cursor: pointer;
         user-select: none;
-        touch-action: manipulation;
+        touch-action: pan-x;
         -webkit-tap-highlight-color: transparent;
       }
 
@@ -5804,11 +7235,20 @@ export default {
         margin: 19rpx auto;
         object-fit: contain;
       }
+
+      &.black .quickInputToolbarImage,
+      &.qingyun .quickInputToolbarImage,
+      &.thorncrown .quickInputToolbarImage,
+      &.chocolate .quickInputToolbarImage {
+        filter: brightness(0) invert(1);
+        opacity: 0.9;
+      }
     }
 
     @media screen and (max-width: 360px) {
       .quickInputToolBar {
         padding: 0 2rpx;
+        gap: 4rpx;
 
         .quickInputToolbarButton {
           padding: 0 1rpx;
@@ -5822,29 +7262,420 @@ export default {
     }
   }
 
+  .quickInputToolbarPreview {
+    position: fixed;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 76rpx;
+    max-width: 128rpx;
+    height: 92rpx;
+    padding: 0 12rpx 10rpx;
+    box-sizing: border-box;
+    border: 1rpx solid rgba(0, 0, 0, 0.12);
+    border-radius: 20rpx 20rpx 16rpx 16rpx;
+    box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2);
+    font-size: 46rpx;
+    font-weight: bold;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(10rpx) scale(0.82);
+    transform-origin: 50% 100%;
+    transition:
+      opacity 80ms ease-out,
+      transform 110ms ease-out,
+      visibility 0s linear 110ms;
+    will-change: opacity, transform;
+  }
+
+  .quickInputToolbarPreviewVisible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0) scale(1);
+    transition:
+      opacity 80ms ease-out,
+      transform 110ms ease-out,
+      visibility 0s;
+  }
+
+  .quickInputToolbarPreview::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -10rpx;
+    width: 22rpx;
+    height: 22rpx;
+    background: inherit;
+    border-right: 1rpx solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1rpx solid rgba(0, 0, 0, 0.1);
+    transform: translateX(-50%) rotate(45deg);
+  }
+
   &.headerDragging {
     .editorHeader,
-    .middleBar {
+    .middleBar,
+    .topBar {
       transition: none;
     }
+  }
 
+  &.headerDragging,
+  &.headerSettling {
     .topBar .statusCapsule {
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .customNavBar {
       box-shadow: none;
     }
   }
+}
+
+.findReplacePanel {
+  --findReplaceBackground: #fcf8ef;
+  --findReplaceColor: #5c4b3b;
+  --findReplaceBorder: rgba(92, 75, 59, 0.16);
+  --findReplaceInputBackground: rgba(255, 255, 255, 0.56);
+  --findReplacePrimaryBackground: #9b6e3b;
+  --findReplacePrimaryColor: #ffffff;
+  position: fixed;
+  bottom: calc(16rpx + var(--loghome-safe-bottom, 0px));
+  left: 20rpx;
+  right: 20rpx;
+  z-index: 340;
+  box-sizing: border-box;
+  width: auto;
+  max-width: 720rpx;
+  margin: 0 auto;
+  padding: 12rpx 16rpx 14rpx;
+  color: var(--findReplaceColor);
+  background: var(--findReplaceBackground);
+  border: 1rpx solid var(--findReplaceBorder);
+  border-radius: 16rpx;
+  box-shadow: 0 12rpx 30rpx rgba(55, 45, 34, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.findReplacePanel.blue {
+  --findReplaceBackground: #e7f4f8;
+  --findReplaceColor: #27566b;
+  --findReplaceBorder: rgba(39, 86, 107, 0.16);
+  --findReplacePrimaryBackground: #4f7f94;
+}
+
+.findReplacePanel.green {
+  --findReplaceBackground: #e8f2e7;
+  --findReplaceColor: #395744;
+  --findReplaceBorder: rgba(57, 87, 68, 0.16);
+  --findReplacePrimaryBackground: #5d8666;
+}
+
+.findReplacePanel.purple {
+  --findReplaceBackground: #f1eaf4;
+  --findReplaceColor: #57445f;
+  --findReplaceBorder: rgba(87, 68, 95, 0.16);
+  --findReplacePrimaryBackground: #856793;
+}
+
+.findReplacePanel.black {
+  --findReplaceBackground: #313841;
+  --findReplaceColor: #d9dee7;
+  --findReplaceBorder: rgba(217, 222, 231, 0.18);
+  --findReplaceInputBackground: rgba(255, 255, 255, 0.08);
+  --findReplacePrimaryBackground: #cda872;
+  --findReplacePrimaryColor: #22272e;
+  box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.28);
+}
+
+.findReplacePanel.white {
+  --findReplaceBackground: #f7f7f4;
+  --findReplaceColor: #292927;
+  --findReplaceBorder: rgba(41, 41, 39, 0.14);
+  --findReplacePrimaryBackground: #4f4f4b;
+}
+
+.findReplacePanel.pink,
+.findReplacePanel.wavechaser {
+  --findReplaceBackground: #f4e8ed;
+  --findReplaceColor: #5d3042;
+  --findReplaceBorder: rgba(93, 48, 66, 0.18);
+  --findReplacePrimaryBackground: #9d4e6d;
+}
+
+.findReplacePanel.powderblue {
+  --findReplaceBackground: #c8eeec;
+  --findReplaceColor: #244244;
+  --findReplaceBorder: rgba(36, 66, 68, 0.17);
+  --findReplacePrimaryBackground: #387a7b;
+}
+
+.findReplacePanel.sunburst {
+  --findReplaceBackground: #ffe16c;
+  --findReplaceColor: #493900;
+  --findReplaceBorder: rgba(73, 57, 0, 0.18);
+  --findReplacePrimaryBackground: #745700;
+}
+
+.findReplacePanel.blockepoch {
+  --findReplaceBackground: #cfd8af;
+  --findReplaceColor: #273421;
+  --findReplaceBorder: rgba(39, 52, 33, 0.2);
+  --findReplacePrimaryBackground: #4e7d3c;
+}
+
+.findReplacePanel.qingyun,
+.findReplacePanel.thorncrown,
+.findReplacePanel.chocolate {
+  --findReplaceBackground: #3e3536;
+  --findReplaceColor: #f4e7e1;
+  --findReplaceBorder: rgba(244, 231, 225, 0.2);
+  --findReplaceInputBackground: rgba(255, 255, 255, 0.08);
+  --findReplacePrimaryBackground: #d5a26a;
+  --findReplacePrimaryColor: #321412;
+  box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.28);
+}
+
+.findReplacePanel.qingyun {
+  --findReplaceBackground: #3e4a4d;
+  --findReplacePrimaryBackground: #86d2d1;
+  --findReplacePrimaryColor: #243235;
+}
+
+.findReplacePanel.thorncrown {
+  --findReplaceBackground: #95302e;
+}
+
+.findReplacePanel.chocolate {
+  --findReplaceBackground: #510b0c;
+}
+
+.findReplaceHeader,
+.findReplaceMatchRow,
+.findReplaceActions {
+  display: flex;
+  align-items: center;
+}
+
+.findReplaceCompactRow {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.findReplaceCompactRow + .findReplaceCompactRow {
+  margin-top: 8rpx;
+}
+
+.findReplaceCompactRow .findReplaceField {
+  min-width: 0;
+  margin-top: 0;
+}
+
+.findReplaceCompactRow .queryField,
+.findReplaceCompactRow .replaceField {
+  flex: 1 1 auto;
+}
+
+.findReplaceCompactRow .findReplaceMatchStatus {
+  flex: 0 0 72rpx;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.findReplaceCompactRow .findReplaceNavigation {
+  gap: 4rpx;
+}
+
+.findReplaceCompactRow .findReplaceNavButton {
+  width: 46rpx;
+  height: 60rpx;
+  border-radius: 8rpx;
+  font-size: 27rpx;
+}
+
+.findReplaceCompactRow .findReplaceClose {
+  flex: 0 0 48rpx;
+  width: 48rpx;
+  height: 60rpx;
+  font-size: 32rpx;
+}
+
+.findReplaceCompactRow .findReplaceActionButton {
+  min-width: 108rpx;
+}
+
+.findReplaceHeader {
+  justify-content: space-between;
+  min-height: 52rpx;
+  margin-bottom: 6rpx;
+}
+
+.findReplaceTitle {
+  font-size: 34rpx;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.findReplaceClose,
+.findReplaceClear,
+.findReplaceNavButton,
+.findReplaceActionButton {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.findReplaceClose::after,
+.findReplaceClear::after,
+.findReplaceNavButton::after,
+.findReplaceActionButton::after {
+  border: 0;
+}
+
+.findReplaceClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56rpx;
+  height: 52rpx;
+  background: transparent;
+  font-size: 38rpx;
+}
+
+.findReplaceField {
+  display: flex;
+  align-items: center;
+  min-height: 60rpx;
+  margin-top: 10rpx;
+  padding: 0 18rpx;
+  border: 1rpx solid var(--findReplaceBorder);
+  border-radius: 12rpx;
+  box-sizing: border-box;
+  background: var(--findReplaceInputBackground);
+}
+
+.findReplaceFieldIcon {
+  flex: 0 0 auto;
+  margin-right: 14rpx;
+  font-size: 31rpx;
+}
+
+.findReplaceInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 58rpx;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-size: 29rpx;
+  line-height: 58rpx;
+}
+
+.findReplaceInput::placeholder {
+  color: currentColor;
+  opacity: 0.52;
+}
+
+.findReplaceClear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 48rpx;
+  width: 48rpx;
+  height: 48rpx;
+  background: transparent;
+  font-size: 28rpx;
+  opacity: 0.68;
+}
+
+.findReplaceMatchRow {
+  justify-content: space-between;
+  min-height: 48rpx;
+  margin-top: 4rpx;
+}
+
+.findReplaceMatchStatus {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 24rpx;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.74;
+}
+
+.findReplaceNavigation {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8rpx;
+}
+
+.findReplaceNavButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54rpx;
+  height: 44rpx;
+  background: transparent;
+  border: 1rpx solid var(--findReplaceBorder);
+  border-radius: 10rpx;
+  font-size: 30rpx;
+}
+
+.findReplaceActions {
+  justify-content: flex-end;
+  gap: 14rpx;
+  margin-top: 14rpx;
+}
+
+.findReplaceActionButton {
+  flex: 0 0 auto;
+  min-width: 106rpx;
+  height: 60rpx;
+  padding: 0 16rpx;
+  color: inherit;
+  background: var(--findReplaceInputBackground);
+  border: 1rpx solid var(--findReplaceBorder);
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  line-height: 58rpx;
+}
+
+.findReplaceActionButton.primary {
+  color: var(--findReplacePrimaryColor);
+  background: var(--findReplacePrimaryBackground);
+  border-color: var(--findReplacePrimaryBackground);
+}
+
+.findReplaceNavButton:disabled,
+.findReplaceActionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 
 .toolbarPanel {
   position: relative;
   box-sizing: border-box;
   width: 100vw;
-  padding: 22rpx 24rpx calc(26rpx + env(safe-area-inset-bottom));
-  color: #3d3d3d;
-  background: #fffaf0;
-  border-top: 1rpx solid rgba(80, 39, 39, 0.12);
+  padding: 22rpx 24rpx calc(26rpx + var(--loghome-safe-bottom, 0px));
+  color: #5c4b3b;
+  background: #fcf8ef;
+  border-top: 1rpx solid rgba(92, 75, 59, 0.12);
   border-top-left-radius: 8rpx;
   border-top-right-radius: 8rpx;
-  box-shadow: 0 -14rpx 34rpx rgba(32, 24, 18, 0.16);
+  box-shadow: 0 -14rpx 34rpx rgba(55, 45, 34, 0.12);
 }
 
 .toolbarPanel::before {
@@ -5855,7 +7686,7 @@ export default {
   width: 72rpx;
   height: 6rpx;
   border-radius: 999rpx;
-  background: rgba(61, 61, 61, 0.22);
+  background: rgba(92, 75, 59, 0.22);
   transform: translateX(-50%);
 }
 
@@ -5915,7 +7746,7 @@ export default {
   padding: 14rpx 6rpx 12rpx;
   color: inherit;
   background: rgba(255, 255, 255, 0.64);
-  border: 1rpx solid rgba(80, 39, 39, 0.12);
+  border: 1rpx solid rgba(92, 75, 59, 0.12);
   border-radius: 8rpx;
   box-sizing: border-box;
   line-height: normal;
@@ -5942,6 +7773,14 @@ export default {
   width: 52rpx;
   height: 52rpx;
   object-fit: contain;
+}
+
+.toolbarPanel.black .toolbarGridImage,
+.toolbarPanel.qingyun .toolbarGridImage,
+.toolbarPanel.thorncrown .toolbarGridImage,
+.toolbarPanel.chocolate .toolbarGridImage {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
 }
 
 .toolbarGridLabel {
@@ -6030,6 +7869,24 @@ export default {
       transform: scale(0.9);
     }
   }
+
+  .backgroundSettingRow {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 24rpx;
+    margin-top: 30rpx;
+
+    .backgroundSettingLabel {
+      flex: 0 0 auto;
+      font-size: 30rpx;
+    }
+
+    .backgroundPicker {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
 }
 
 .fonts-container {
@@ -6106,112 +7963,204 @@ export default {
 }
 
 .button.blue {
-  background-color: #25b2f846;
-  color: #24acf2;
-  border: 2px #24acf2 solid !important;
+  background-color: #d9eef6;
+  color: #4f7f94;
+  border: 2px #4f7f94 solid !important;
 }
 
 .button.yellow {
-  background-color: #ffb25544;
-  color: #e68d4d;
-  border: 2px #e68d4d solid !important;
+  background-color: #f5e7cc;
+  color: #a57843;
+  border: 2px #a57843 solid !important;
 }
 
 .button.green {
-  background-color: #1aa13444;
-  color: #1aa134;
-  border: 2px #1aa134 solid !important;
+  background-color: #dcebdd;
+  color: #5d8666;
+  border: 2px #5d8666 solid !important;
 }
 
 .button.purple {
-  background-color: #9660c344;
-  color: #9660c3;
-  border: 2px #9660c3 solid !important;
+  background-color: #eae1f0;
+  color: #856793;
+  border: 2px #856793 solid !important;
 }
 
 .button.black {
-  background-color: #282c3544;
-  color: #83878c;
-  border: 2px #83878c solid !important;
+  background-color: #2b3038;
+  color: #c2cad5;
+  border: 2px #c2cad5 solid !important;
 }
 
 .button.white {
-  background-color: #ffffff44;
-  color: #ffffff;
-  border: 2px #ffffff solid !important;
+  background-color: #f6f6f4;
+  color: #4f4f4b;
+  border: 2px #4f4f4b solid !important;
 }
 
 div.outer.blue {
-  background-color: #ddf3fe;
-  color: #115574;
+  background-color: #f4fafc;
+  color: #27566b;
 }
 
 div.outer.yellow {
-  background-color: #fffaf0;
-  color: #3d3d3d;
+  background-color: #fcf8ef;
+  color: #5c4b3b;
 }
 
 div.outer.green {
-  background-color: #c1e6c6;
-  color: #093811;
+  background-color: #f5faf4;
+  color: #395744;
 }
 
 div.outer.purple {
-  background-color: #fde0ff;
-  color: #310024;
+  background-color: #faf7fc;
+  color: #57445f;
 }
 
 div.outer.black {
-  background-color: #282c35;
-  color: #cecece;
+  background-color: #22272e;
+  color: #d9dee7;
 }
 
 div.outer.white {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: #fefefc;
+  color: #292927;
+}
+
+div.outer.pink {
+  background-color: #fbf6f8;
+  color: #664858;
+}
+
+div.outer.wavechaser {
+  background-color: #e84f89;
+  color: #32101f;
+}
+
+div.outer.powderblue {
+  background-color: #ace5e2;
+  color: #244244;
+}
+
+div.outer.qingyun {
+  background-color: #313b3e;
+  color: #e7eeef;
+}
+
+div.outer.sunburst {
+  background-color: #fcd23c;
+  color: #493900;
+}
+
+div.outer.thorncrown {
+  background-color: #7d2120;
+  color: #f6e8e5;
+}
+
+div.outer.chocolate {
+  background-color: #380001;
+  color: #f4e7e1;
+}
+
+div.outer.blockepoch {
+  background-color: #dce3c2;
+  color: #273421;
 }
 
 .quickInputToolBar.blue,
+.quickInputToolbarPreview.blue,
 .toolbarPanel.blue {
-  background-color: #c4e8fe;
-  color: #115574;
+  background-color: #e7f4f8;
+  color: #27566b;
+}
+
+.quickInputToolBar.blue {
+  border-top-color: rgba(39, 86, 107, 0.2);
+}
+
+.toolbarPanel.blue .toolbarGridItem {
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(39, 86, 107, 0.14);
+}
+
+.toolbarPanel.blue .toolbarGridItem:active {
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .quickInputToolBar.yellow,
+.quickInputToolbarPreview.yellow,
 .toolbarPanel.yellow {
-  background-color: #fff2d9;
-  color: #3d3d3d;
+  background-color: #f8eedb;
+  color: #5c4b3b;
+}
+
+.quickInputToolBar.yellow {
+  border-top-color: rgba(92, 75, 59, 0.18);
 }
 
 .quickInputToolBar.green,
+.quickInputToolbarPreview.green,
 .toolbarPanel.green {
-  background-color: #88e695;
-  color: #093811;
+  background-color: #e8f2e7;
+  color: #395744;
+}
+
+.quickInputToolBar.green {
+  border-top-color: rgba(57, 87, 68, 0.2);
+}
+
+.toolbarPanel.green .toolbarGridItem {
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(57, 87, 68, 0.14);
+}
+
+.toolbarPanel.green .toolbarGridItem:active {
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .quickInputToolBar.purple,
+.quickInputToolbarPreview.purple,
 .toolbarPanel.purple {
-  background-color: #fcc4ff;
-  color: #310024;
+  background-color: #f1eaf4;
+  color: #57445f;
+}
+
+.quickInputToolBar.purple {
+  border-top-color: rgba(87, 68, 95, 0.2);
+}
+
+.toolbarPanel.purple .toolbarGridItem {
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(87, 68, 95, 0.14);
+}
+
+.toolbarPanel.purple .toolbarGridItem:active {
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .quickInputToolBar.black,
+.quickInputToolbarPreview.black,
 .toolbarPanel.black {
-  background-color: #000000;
-  color: #cecece;
+  background-color: #313841;
+  color: #d9dee7;
+}
+
+.quickInputToolBar.black {
+  border-top-color: rgba(217, 222, 231, 0.18);
 }
 
 .toolbarPanel.black {
-  border-top-color: rgba(216, 204, 185, 0.18);
+  border-top-color: rgba(217, 222, 231, 0.18);
 }
 
 .toolbarPanel.black::before {
-  background: rgba(216, 204, 185, 0.32);
+  background: rgba(217, 222, 231, 0.3);
 }
 
 .toolbarPanel.black .toolbarGridItem {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(216, 204, 185, 0.16);
+  border-color: rgba(217, 222, 231, 0.16);
 }
 
 .toolbarPanel.black .toolbarGridItem:active {
@@ -6219,9 +8168,112 @@ div.outer.white {
 }
 
 .quickInputToolBar.white,
+.quickInputToolbarPreview.white,
 .toolbarPanel.white {
-  background-color: #f5f5f5;
-  color: #000000;
+  background-color: #f7f7f4;
+  color: #292927;
+}
+
+.quickInputToolBar.white {
+  border-top-color: rgba(41, 41, 39, 0.16);
+}
+
+.toolbarPanel.white .toolbarGridItem {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(41, 41, 39, 0.12);
+}
+
+.toolbarPanel.white .toolbarGridItem:active {
+  background: #ffffff;
+}
+
+.quickInputToolBar.pink,
+.quickInputToolbarPreview.pink,
+.toolbarPanel.pink {
+  background-color: #f4e8ed;
+  color: #664858;
+}
+
+.quickInputToolBar.wavechaser,
+.quickInputToolbarPreview.wavechaser,
+.toolbarPanel.wavechaser {
+  background-color: #f277a5;
+  color: #32101f;
+}
+
+.quickInputToolBar.powderblue,
+.quickInputToolbarPreview.powderblue,
+.toolbarPanel.powderblue {
+  background-color: #c8eeec;
+  color: #244244;
+}
+
+.quickInputToolBar.qingyun,
+.quickInputToolbarPreview.qingyun,
+.toolbarPanel.qingyun {
+  background-color: #3e4a4d;
+  color: #e7eeef;
+}
+
+.quickInputToolBar.sunburst,
+.quickInputToolbarPreview.sunburst,
+.toolbarPanel.sunburst {
+  background-color: #ffe16c;
+  color: #493900;
+}
+
+.quickInputToolBar.thorncrown,
+.quickInputToolbarPreview.thorncrown,
+.toolbarPanel.thorncrown {
+  background-color: #95302e;
+  color: #f6e8e5;
+}
+
+.quickInputToolBar.chocolate,
+.quickInputToolbarPreview.chocolate,
+.toolbarPanel.chocolate {
+  background-color: #510b0c;
+  color: #f4e7e1;
+}
+
+.quickInputToolBar.blockepoch,
+.quickInputToolbarPreview.blockepoch,
+.toolbarPanel.blockepoch {
+  background-color: #cfd8af;
+  color: #273421;
+}
+
+.quickInputToolBar.pink,
+.quickInputToolBar.wavechaser,
+.quickInputToolBar.powderblue,
+.quickInputToolBar.qingyun,
+.quickInputToolBar.sunburst,
+.quickInputToolBar.thorncrown,
+.quickInputToolBar.chocolate,
+.quickInputToolBar.blockepoch {
+  border-top-color: var(--writerThemeBorderColor, rgba(41, 41, 39, 0.16));
+}
+
+.toolbarPanel.pink .toolbarGridItem,
+.toolbarPanel.wavechaser .toolbarGridItem,
+.toolbarPanel.powderblue .toolbarGridItem,
+.toolbarPanel.sunburst .toolbarGridItem,
+.toolbarPanel.blockepoch .toolbarGridItem {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(41, 41, 39, 0.14);
+}
+
+.toolbarPanel.qingyun .toolbarGridItem,
+.toolbarPanel.thorncrown .toolbarGridItem,
+.toolbarPanel.chocolate .toolbarGridItem {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.17);
+}
+
+.toolbarPanel.qingyun::before,
+.toolbarPanel.thorncrown::before,
+.toolbarPanel.chocolate::before {
+  background: rgba(255, 255, 255, 0.3);
 }
 </style>
 
@@ -6256,5 +8308,92 @@ div.outer.white {
   width: auto !important;
   max-width: calc(100vw - 80rpx) !important;
   height: auto !important;
+}
+
+.outer .writer-find-replace-match {
+  border-radius: 4rpx;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background-color: rgba(235, 201, 107, 0.5);
+  box-shadow: inset 0 -2rpx 0 rgba(139, 96, 28, 0.7);
+}
+
+.outer.blue .writer-find-replace-match {
+  background-color: rgba(116, 190, 215, 0.42);
+  box-shadow: inset 0 -2rpx 0 rgba(42, 112, 137, 0.76);
+}
+
+.outer.green .writer-find-replace-match {
+  background-color: rgba(144, 198, 151, 0.46);
+  box-shadow: inset 0 -2rpx 0 rgba(65, 112, 76, 0.76);
+}
+
+.outer.purple .writer-find-replace-match {
+  background-color: rgba(198, 163, 210, 0.44);
+  box-shadow: inset 0 -2rpx 0 rgba(108, 79, 121, 0.76);
+}
+
+.outer.black .writer-find-replace-match {
+  background-color: rgba(205, 168, 114, 0.52);
+  box-shadow: inset 0 -2rpx 0 rgba(255, 231, 187, 0.88);
+}
+
+.outer.white .writer-find-replace-match {
+  background-color: rgba(235, 201, 107, 0.48);
+  box-shadow: inset 0 -2rpx 0 rgba(120, 91, 40, 0.72);
+}
+
+body > .quickInputToolbarPreview {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 76rpx;
+  max-width: 128rpx;
+  height: 92rpx;
+  padding: 0 12rpx 10rpx;
+  box-sizing: border-box;
+  border: 1rpx solid rgba(0, 0, 0, 0.12);
+  border-radius: 20rpx 20rpx 16rpx 16rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2);
+  font-size: 46rpx;
+  font-weight: bold;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(10rpx) scale(0.82);
+  transform-origin: 50% 100%;
+  transition:
+    opacity 80ms ease-out,
+    transform 110ms ease-out,
+    visibility 0s linear 110ms;
+  will-change: opacity, transform;
+}
+
+body > .quickInputToolbarPreview.quickInputToolbarPreviewVisible {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(-50%) translateY(0) scale(1) !important;
+  transition:
+    opacity 80ms ease-out,
+    transform 110ms ease-out,
+    visibility 0s !important;
+}
+
+body > .quickInputToolbarPreview::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10rpx;
+  width: 22rpx;
+  height: 22rpx;
+  background: inherit;
+  border-right: 1rpx solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.1);
+  transform: translateX(-50%) rotate(45deg);
 }
 </style>

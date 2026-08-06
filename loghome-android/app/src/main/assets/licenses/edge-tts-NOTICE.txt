@@ -1,0 +1,12 @@
+The embedded Edge TTS protocol implementation was informed by edge-tts:
+
+  https://github.com/rany2/edge-tts
+
+edge-tts is Copyright (c) 2021-2026 rany and contributors and is distributed
+under the GNU Lesser General Public License v3.0. LogHome's Kotlin protocol
+implementation does not bundle the Python package.
+
+License text and source are available at:
+
+  https://github.com/rany2/edge-tts/blob/master/LICENSE
+  https://www.gnu.org/licenses/lgpl-3.0.txt

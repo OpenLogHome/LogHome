@@ -6,7 +6,7 @@
 		<log-image class="info-cover" @tap="change_top_pic" :src="user.top_pic_url"
 		onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
 		
-		<springBack :top="`calc(300rpx + ${0 + 'px'})`">
+		<springBack top="calc(300rpx + var(--loghome-safe-top, 0px))">
 			<!-- 右侧悬浮按钮 -->
 			<view class="rightBtnGroup">
 				<followBtn :targetId="Number(uid)" v-show="uid != myUserInfo.user_id"/>
@@ -19,16 +19,21 @@
 			<!-- 用户头像关注 -->
 			<view class="u-flex-wrap"
 				style="padding-top: 18rpx;padding-bottom: 18rpx;position: relative;align-items: center;display: flex;flex-direction: row;justify-content: flex-end;">
-				<view class="info-avatar" @click="$previewImg([user.avatar_url])">
-					<log-image :src="user.avatar_url" onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
+				<view
+					class="info-avatar"
+					:class="{ 'info-avatar--framed': user.avatar_frame }"
+					@click="$previewImg([user.avatar_url])"
+				>
+					<user-avatar :src="user.avatar_url" :frame="user.avatar_frame" :animate="true" :visual-scale="user.avatar_frame ? 1.5 : 1" />
 				</view>
 				<view style="margin-right: 50rpx;">
 					<view v-if='!showedit' style="height: 45rpx;"></view>
 				</view>
 			</view>
 			<!-- 用户名 -->
-			<view style="display: flex;align-items: center;margin-left: 50rpx;margin-top: 28rpx;">
+			<view class="profile-name-row">
 				<text :style="'font-size: 40rpx;color: ' + (isDarkMode ? '#e5e5e5' : '#111111') + ';font-weight: bold;margin-right: 10rpx;'">{{user.name}}</text>
+				<membership-badge :tier="user.membership_type" size="md" :show-label="true" />
 			</view>
 			
 			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx; display: flex;align-items: center;">
@@ -156,12 +161,13 @@
 	import followBtn from '../../components/follow.vue'
 	import springBack from '../../components/springBack.vue'
 	import HonorBadge from '../../components/honor-badge.vue'
+	import MembershipBadge from '../../components/membership-badge.vue'
 	import darkModeMixin from '@/mixins/dark-mode.js'
 	import axios from 'axios'
 	import moment from 'moment'
 	export default {
 		components:{
-			bookInCase,followBtn,springBack,HonorBadge
+			bookInCase,followBtn,springBack,HonorBadge,MembershipBadge
 		},
 		mixins: [darkModeMixin],
 		data() {
@@ -597,14 +603,22 @@
 		left: 0;
 		top: -120rpx;
 		margin-left: 50rpx;
-		width: 160upx;
-		height: 160upx;
+		width: 190upx;
+		height: 190upx;
 	}
 
-	.info-avatar img {
-		border-radius: 8rpx;
-		width: 100%;
-		height: 100%;
+	.info-avatar--framed {
+		top: -148rpx;
+	}
+
+	.profile-name-row {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8rpx;
+		margin-left: 50rpx;
+		margin-top: 28rpx;
+		padding-right: 36rpx;
 	}
 
 	.profile-badge {
@@ -802,16 +816,11 @@
 		}
 	}
 
-	.tabbar-fixed {
-		position: fixed;
-		left: 0;
-		right: 0;
-		/* #ifdef H5 */
-		top: 0rpx;
-		/* #endif */
-		/* #ifndef H5 */
-		top: 0;
-		/* #endif */
+		.tabbar-fixed {
+			position: fixed;
+			left: 0;
+			right: 0;
+			top: var(--loghome-safe-top, 0px);
 		z-index: 300;
 		background: #ffffff;
 		margin-bottom: 0;

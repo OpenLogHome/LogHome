@@ -8,7 +8,8 @@
 		<view class="card">
 			<view class="card-header">
 				<view class="user-info">
-					<log-image class="avatar" :src="userInfo.avatar_url || '../static/user/defaultAvatar.jpg'" mode="aspectFill"></log-image>
+					<user-avatar class="avatar" :src="userInfo.avatar_url" :frame="userInfo.avatar_frame"
+						:visual-scale="userInfo.avatar_frame ? 1.2 : 1" />
 					<view class="name">{{userInfo.name}}</view>
 				</view>
 				<view class="slogan">邀请你加入原木社区</view>
@@ -444,4 +445,4 @@ export default {
 		}
 	}
 }
-</style> 
+</style>

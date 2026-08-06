@@ -34,7 +34,6 @@
 			<view class="feature-card" v-if="champion" @click="goBook(champion.novel_id)">
 				<view class="feature-head">
 					<view class="feature-tag">当前冠军</view>
-					<image class="feature-badge" src="../../static/rank/NO1.png" mode="widthFix"></image>
 				</view>
 
 				<view class="feature-main">
@@ -46,8 +45,11 @@
 					<view class="feature-info">
 						<view class="feature-title">{{ champion.name }}</view>
 						<view class="feature-author">
-							<log-image :src="champion.avatar_url" class="author-avatar"
-								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+							<view class="rank-avatar rank-avatar-first">
+								<image class="rank-avatar-medal" src="../../static/rank/NO1.png" mode="aspectFit"></image>
+								<log-image :src="champion.avatar_url" class="rank-avatar-photo rank-avatar-photo-first"
+									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+							</view>
 							<text>{{ champion.user_name || '匿名作者' }}</text>
 						</view>
 						<view class="feature-desc">{{ champion.content || '这个作品还没有简介。' }}</view>
@@ -73,8 +75,13 @@
 					<view class="podium-card" v-for="(item, index) in runnerUps" :key="item.novel_id"
 						:class="['podium-' + (index + 2)]" @click="goBook(item.novel_id)">
 						<view class="podium-top">
-							<image v-if="index === 0" class="podium-badge" src="../../static/rank/NO2.png" mode="widthFix"></image>
-							<image v-else class="podium-badge" src="../../static/rank/NO3.png" mode="widthFix"></image>
+							<view class="rank-avatar rank-avatar-podium">
+								<image class="rank-avatar-medal"
+									:src="index === 0 ? '../../static/rank/NO2.png' : '../../static/rank/NO3.png'"
+									mode="aspectFit"></image>
+								<log-image :src="item.avatar_url" class="rank-avatar-photo rank-avatar-photo-podium"
+									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+							</view>
 							<view class="podium-rank">TOP {{ index + 2 }}</view>
 						</view>
 						<view class="podium-name">{{ item.name }}</view>
@@ -456,10 +463,6 @@
 		background: rgba(255, 255, 255, 0.68);
 	}
 
-	.feature-badge {
-		width: 74rpx;
-	}
-
 	.feature-main {
 		display: flex;
 		margin-top: 22rpx;
@@ -507,6 +510,56 @@
 		margin-top: 14rpx;
 		font-size: 24rpx;
 		color: var(--text-secondary);
+	}
+
+	.rank-avatar {
+		position: relative;
+		flex-shrink: 0;
+		margin-right: 10rpx;
+	}
+
+	.rank-avatar-first {
+		width: 84rpx;
+		height: 61rpx;
+	}
+
+	.rank-avatar-podium {
+		width: 76rpx;
+		height: 60rpx;
+	}
+
+	.rank-avatar-medal {
+		position: absolute;
+		z-index: 1;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.rank-avatar-photo {
+		position: absolute;
+		z-index: 2;
+		box-sizing: border-box;
+		border-radius: 50%;
+		object-fit: cover;
+		background: rgba(255, 255, 255, 0.9);
+	}
+
+	.rank-avatar-photo-first {
+		top: 6rpx;
+		left: 22rpx;
+		width: 40rpx;
+		height: 40rpx;
+		border: 2rpx solid #f6b51f;
+	}
+
+	.rank-avatar-photo-podium {
+		top: 5rpx;
+		left: 19rpx;
+		width: 38rpx;
+		height: 38rpx;
+		border: 2rpx solid rgba(255, 255, 255, 0.88);
 	}
 
 	.author-avatar {
@@ -622,10 +675,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-	}
-
-	.podium-badge {
-		width: 56rpx;
 	}
 
 	.podium-rank {

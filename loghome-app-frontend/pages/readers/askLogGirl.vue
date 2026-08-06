@@ -115,6 +115,9 @@
 					confirm-type="send"
 					@confirm="submitQuestion"
 				/>
+				<view class="redstone-cost-row">
+					<RedstoneCost :cost="retrieverMode === 'deep' ? 2 : 1" />
+				</view>
 				<view class="chat-action-row">
 					<view class="chat-action-left">
 						<view class="index-status-wrap" @tap.stop="toggleIndexStatusTooltip" v-if="novelId">
@@ -160,18 +163,21 @@
 							:class="{ active: retrieverMode === 'fast' }"
 							@tap="setRetrieverMode('fast')"
 						>
-							快速
+							普通
 						</view>
 						<view
 							class="chat-mode-option"
 							:class="{ active: retrieverMode === 'deep' }"
 							@tap="setRetrieverMode('deep')"
 						>
-							深度 <el-tag size="mini" type="danger" style="margin-left: 8rpx;">限免</el-tag>
+							深度思考
 						</view>
 					</view>
-					<view class="chat-send" :class="{ disabled: !canSend }" @tap="submitQuestion">
-						{{ loading ? '思考中' : '发送' }}
+					<view v-if="loading" class="chat-send stop" @tap="stopReply">
+						停止
+					</view>
+					<view v-else class="chat-send" :class="{ disabled: !canSend }" @tap="submitQuestion">
+						发送
 					</view>
 				</view>
 			</view>
@@ -243,11 +249,17 @@
 
 <script>
 import darkModeMixin from '@/mixins/dark-mode.js'
+import RedstoneCost from '@/components/redstone-cost/RedstoneCost.vue'
+import { showInsufficientRedstoneOptions } from '@/common/redstone-ui.js'
 
 const STREAM_ROUTE = '/library/reader_novel_ai_chat_stream'
 const INDEX_STATUS_ROUTE = '/library/reader_novel_summary_index_status'
 const HISTORY_STORAGE_KEY = 'reader_ask_log_girl_history_v2'
 const LEGACY_STORAGE_KEY_PREFIX = 'reader_ask_log_girl_'
+
+function createTaskInstanceId() {
+	return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+}
 const THINKING_HINT_TEXTS = [
 	'正在阅读中',
 	'正在整理中',
@@ -696,8 +708,8 @@ function normalizePendingReplyTask(rawTask) {
 	const lastEventId = Number(rawTask.lastEventId || rawTask.last_event_id || 0)
 	const novelId = Number(rawTask.novelId || rawTask.novel_id || 0)
 	const activeNovelId = Number(rawTask.activeNovelId || rawTask.active_novel_id || rawTask.currentNovelId || rawTask.current_novel_id || novelId || 0)
-	const rawRetrieverMode = String(rawTask.retrieverMode || rawTask.retriever_mode || rawTask.searchMode || rawTask.search_mode || 'deep')
-	const retrieverMode = rawRetrieverMode === 'fast' ? 'fast' : 'deep'
+	const rawRetrieverMode = String(rawTask.retrieverMode || rawTask.retriever_mode || rawTask.searchMode || rawTask.search_mode || 'fast')
+	const retrieverMode = rawRetrieverMode === 'deep' ? 'deep' : 'fast'
 	return {
 		taskId,
 		sessionId,
@@ -718,7 +730,7 @@ function createPendingReplyTask(options = {}) {
 		messageId: options.messageId || '',
 		novelId: options.novelId || 0,
 		activeNovelId: options.activeNovelId || options.active_novel_id || options.novelId || 0,
-		retrieverMode: options.retrieverMode || options.retriever_mode || 'deep',
+		retrieverMode: options.retrieverMode || options.retriever_mode || 'fast',
 		lastEventId: options.lastEventId || 0,
 		status: options.status || 'running',
 		createdAt: options.createdAt || Date.now(),
@@ -839,6 +851,7 @@ function normalizeNovelIndexStatus(rawStatus, fallbackStatus) {
 
 export default {
 	mixins: [darkModeMixin],
+	components: { RedstoneCost },
 	data() {
 		return {
 			statusBarHeight: 0,
@@ -847,7 +860,7 @@ export default {
 			activeNovel: null,
 			currentSessionId: '',
 			draft: '',
-			retrieverMode: 'deep',
+			retrieverMode: 'fast',
 			loading: false,
 			autoScrollTimer: null,
 			autoScrollPendingForce: false,
@@ -971,7 +984,12 @@ export default {
 	},
 	onLoad(option) {
 		const systemInfo = uni.getSystemInfoSync()
-		this.statusBarHeight = systemInfo.statusBarHeight || 20
+		const nativeStatusBarHeight = Number(
+			typeof window !== 'undefined' && window.jsBridge
+				? window.jsBridge.statusBarHeight
+				: 0
+		) || 0
+		this.statusBarHeight = nativeStatusBarHeight || systemInfo.statusBarHeight || 0
 		this.novelId = Number(option.novel_id || 0)
 		this.novelName = option.novel_name ? decodeURIComponent(option.novel_name) : ''
 		this.activeNovel = this.createDefaultActiveNovel()
@@ -1015,7 +1033,15 @@ export default {
 		this.stopThinkingHintRotation()
 	},
 	methods: {
+		shouldUseNativeBack() {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null
+			return !!(bridge && bridge.inApp && bridge.nativeRouterAvailable)
+		},
 		handleNavBack() {
+			if (this.shouldUseNativeBack()) {
+				uni.navigateBack({ delta: 1 })
+				return
+			}
 			const pages = getCurrentPages()
 			if (pages.length > 1) {
 				uni.navigateBack()
@@ -1587,7 +1613,7 @@ export default {
 			} else if (typeof window !== 'undefined' && window.localStorage) {
 				readerProps = window.localStorage.getItem('readerProps') || ''
 			}
-			const isPageReader = readerProps === 'page'
+			const isPageReader = readerProps !== 'text'
 			let url = isPageReader
 				? `/pages/readers/newReader/article?id=${articleId}`
 				: `/pages/readers/article_rich?id=${articleId}`
@@ -1987,7 +2013,7 @@ export default {
 			return this.messages.find((message) => message && message.id === messageId) || null
 		},
 		buildReplyTaskId(messageId) {
-			return ['reader-ai', this.novelId, this.currentSessionId, messageId].join(':')
+			return ['reader-ai', this.novelId, this.currentSessionId, messageId, createTaskInstanceId()].join(':')
 		},
 		createActiveReplyTask(messageId) {
 			return createPendingReplyTask({
@@ -2680,6 +2706,27 @@ export default {
 		getConversationPayload() {
 			return normalizeConversationPayloadMessages(this.messages)
 		},
+		getTokenInfo() {
+			let rawToken = null
+			try {
+				if (typeof uni !== 'undefined' && typeof uni.getStorageSync === 'function') {
+					rawToken = uni.getStorageSync('token')
+				}
+				if (!rawToken && typeof window !== 'undefined' && window.localStorage) {
+					rawToken = window.localStorage.getItem('token')
+				}
+				return typeof rawToken === 'string'
+					? JSON.parse(rawToken || 'null')
+					: rawToken || null
+			} catch (error) {
+				return null
+			}
+		},
+		getAuthHeaders() {
+			const token = this.getTokenInfo()
+			const authToken = token && token.tk ? String(token.tk).trim() : ''
+			return authToken ? { Authorization: 'Bearer ' + authToken } : {}
+		},
 		getReaderAiBaseUrl() {
 			let overrideBaseUrl = ''
 			try {
@@ -2700,6 +2747,24 @@ export default {
 				}
 				this.abortController = null
 			}
+		},
+		stopReply() {
+			const task = this.activeReplyTask
+			const messageId = task && task.messageId
+			if (!messageId) {
+				return
+			}
+			this.abortActiveRequest()
+			this.streamErrorMessage = ''
+			this.clearCurrentThinkingText(messageId, { commit: true })
+			const target = this.getTargetMessageForTask(messageId)
+			if (target) {
+				target.thinkingExpanded = false
+				if (target.role === 'assistant' && !String(target.content || '').trim()) {
+					this.updateMessageContent(messageId, '已停止回复')
+				}
+			}
+			this.completeReplyTask(messageId, 'stopped')
 		},
 		canUseXhrStreaming() {
 			return typeof XMLHttpRequest !== 'undefined'
@@ -2732,6 +2797,10 @@ export default {
 				xhr.open('POST', url, true)
 				xhr.setRequestHeader('Content-Type', 'application/json')
 				xhr.setRequestHeader('Accept', 'application/x-ndjson')
+				const authHeaders = this.getAuthHeaders()
+				if (authHeaders.Authorization) {
+					xhr.setRequestHeader('Authorization', authHeaders.Authorization)
+				}
 
 				xhr.onprogress = () => {
 					processIncomingText()
@@ -2764,12 +2833,17 @@ export default {
 
 					if (xhr.status < 200 || xhr.status >= 300) {
 						let message = '请求失败，请稍后再试'
+						let code = ''
 						try {
 							const data = JSON.parse(xhr.responseText || '{}')
 							message = data.msg || data.message || message
+							code = data.code || ''
 						} catch (error) {}
 						finish(() => {
-							reject(new Error(message))
+							const requestError = new Error(message)
+							requestError.code = code
+							requestError.statusCode = xhr.status
+							reject(requestError)
 						})
 						return
 					}
@@ -2825,6 +2899,7 @@ export default {
 						method: 'GET',
 						headers: {
 							'Accept': 'application/json',
+							...this.getAuthHeaders(),
 						},
 					}
 				)
@@ -2897,7 +2972,8 @@ export default {
 				if (error && error.name === 'AbortError') {
 					return
 				}
-				this.handleReplyFailure(assistantMessage.id, error)
+				const insufficient = showInsufficientRedstoneOptions(error)
+				this.handleReplyFailure(assistantMessage.id, error, { showToast: !insufficient })
 			} finally {
 				this.abortController = null
 				if (!this.activeReplyTask) {
@@ -2939,6 +3015,7 @@ export default {
 				headers: {
 					'Content-Type': 'application/json',
 					'Accept': 'application/x-ndjson',
+					...this.getAuthHeaders(),
 				},
 				body: JSON.stringify(requestPayload),
 				signal: controller ? controller.signal : undefined,
@@ -2946,11 +3023,16 @@ export default {
 
 			if (!response.ok) {
 				let message = '请求失败，请稍后再试'
+				let code = ''
 				try {
 					const data = await response.json()
 					message = data.msg || data.message || message
+					code = data.code || ''
 				} catch (error) {}
-				throw new Error(message)
+				const requestError = new Error(message)
+				requestError.code = code
+				requestError.statusCode = response.status
+				throw requestError
 			}
 
 			if (!response.body || !response.body.getReader) {
@@ -3352,7 +3434,7 @@ export default {
 	min-height: calc(100vh - 88rpx);
 	display: flex;
 	flex-direction: column;
-	padding: 32rpx 24rpx calc(280rpx + env(safe-area-inset-bottom));
+	padding: 32rpx 24rpx calc(280rpx + var(--loghome-safe-bottom, 0px));
 	box-sizing: border-box;
 }
 
@@ -3678,7 +3760,7 @@ export default {
 	position: fixed;
 	left: 24rpx;
 	right: 24rpx;
-	bottom: calc(20rpx + env(safe-area-inset-bottom));
+	bottom: calc(20rpx + var(--loghome-safe-bottom, 0px));
 	padding: 20rpx;
 	border-radius: 28rpx;
 	background: rgba(255, 255, 255, 0.82);
@@ -3735,6 +3817,13 @@ export default {
 
 .chat-textarea.with-clear-context {
 	padding-right: 72rpx;
+}
+
+.redstone-cost-row {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	margin-top: 8rpx;
 }
 
 .chat-action-row {
@@ -4065,6 +4154,11 @@ export default {
 	box-shadow: none;
 }
 
+.chat-send.stop {
+	color: #fff4ef;
+	background: linear-gradient(135deg, #b84934 0%, #8f2e24 100%);
+}
+
 .history-drawer {
 	&.open .history-drawer-mask {
 		opacity: 1;
@@ -4198,7 +4292,7 @@ export default {
 .history-drawer-scroll {
 	flex: 1;
 	min-height: 0;
-	padding: 8rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+	padding: 8rpx 32rpx calc(40rpx + var(--loghome-safe-bottom, 0px));
 	box-sizing: border-box;
 }
 

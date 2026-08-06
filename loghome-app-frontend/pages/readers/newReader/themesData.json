@@ -1,38 +1,100 @@
 {
 	"white": {
-		"backgroundColor": "#F6F6F6",
-		"fontColor": "#3D3D3D",
-		"lineColor": "#848484",
+		"backgroundColor": "#FEFEFC",
+		"fontColor": "#292927",
+		"secondaryFontColor": "#757571",
+		"lineColor": "#656560",
 		"isBlack": false
 	},
 	"green": {
-		"backgroundColor": "#E4F0D8",
-		"fontColor": "#3D3D3D",
-		"lineColor": "#28ab56",
+		"backgroundColor": "#F5FAF4",
+		"fontColor": "#395744",
+		"secondaryFontColor": "#708572",
+		"lineColor": "#4F7C5B",
 		"isBlack": false
 	},
 	"yellow": {
-		"backgroundColor": "#FFF9EB",
-		"fontColor": "#3D3D3D",
-		"lineColor": "#ff6e42",
+		"backgroundColor": "#FCF8EF",
+		"fontColor": "#5C4B3B",
+		"secondaryFontColor": "#867565",
+		"lineColor": "#9B6E3B",
 		"isBlack": false
 	},
 	"blue": {
-		"backgroundColor": "#f0fffe",
-		"fontColor": "#3D3D3D",
-		"lineColor": "#4795e7",
+		"backgroundColor": "#F4FAFC",
+		"fontColor": "#27566B",
+		"secondaryFontColor": "#64808E",
+		"lineColor": "#356F88",
+		"isBlack": false
+	},
+	"purple": {
+		"backgroundColor": "#FAF7FC",
+		"fontColor": "#57445F",
+		"secondaryFontColor": "#827387",
+		"lineColor": "#765983",
 		"isBlack": false
 	},
 	"pink": {
-		"backgroundColor": "#ffebfc",
-		"fontColor": "#3D3D3D",
-		"lineColor": "#e24d7a",
+		"backgroundColor": "#FBF6F8",
+		"fontColor": "#664858",
+		"secondaryFontColor": "#8A707B",
+		"lineColor": "#9D6578",
 		"isBlack": false
 	},
 	"black": {
-		"backgroundColor": "#100f0e",
-		"fontColor": "#c6c6c6",
-		"lineColor": "#e3e3e3",
+		"backgroundColor": "#22272E",
+		"fontColor": "#D9DEE7",
+		"secondaryFontColor": "#B5BECB",
+		"lineColor": "#E6CDA6",
 		"isBlack": true
+	},
+	"wavechaser": {
+		"backgroundColor": "#E84F89",
+		"fontColor": "#32101F",
+		"secondaryFontColor": "#6B2844",
+		"lineColor": "#7A1F48",
+		"isBlack": false
+	},
+	"powderblue": {
+		"backgroundColor": "#ACE5E2",
+		"fontColor": "#244244",
+		"secondaryFontColor": "#547477",
+		"lineColor": "#387A7B",
+		"isBlack": false
+	},
+	"qingyun": {
+		"backgroundColor": "#313B3E",
+		"fontColor": "#E7EEEF",
+		"secondaryFontColor": "#B8C4C6",
+		"lineColor": "#86D2D1",
+		"isBlack": true
+	},
+	"sunburst": {
+		"backgroundColor": "#FCD23C",
+		"fontColor": "#493900",
+		"secondaryFontColor": "#705A00",
+		"lineColor": "#8C6500",
+		"isBlack": false
+	},
+	"thorncrown": {
+		"backgroundColor": "#7D2120",
+		"fontColor": "#F6E8E5",
+		"secondaryFontColor": "#D8B7B2",
+		"lineColor": "#F1BA80",
+		"isBlack": true
+	},
+	"chocolate": {
+		"backgroundColor": "#380001",
+		"fontColor": "#F4E7E1",
+		"secondaryFontColor": "#CDB7AF",
+		"lineColor": "#D5A26A",
+		"isBlack": true
+	},
+	"blockepoch": {
+		"backgroundColor": "#DCE3C2",
+		"fontColor": "#273421",
+		"secondaryFontColor": "#58684D",
+		"lineColor": "#A6382C",
+		"isBlack": false
 	}
 }

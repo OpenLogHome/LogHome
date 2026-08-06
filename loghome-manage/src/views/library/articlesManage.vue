@@ -9,87 +9,202 @@
             </div>
         </div>
 
-        <el-table
-            :data="articlesList"
-            style="width: 100%"
-            border>
-            <el-table-column
-                prop="article_id"
-                label="ID"
-                width="80">
-            </el-table-column>
-            <el-table-column
-                prop="article_chapter"
-                label="章节"
-                width="80">
-            </el-table-column>
-            <el-table-column
-                prop="title"
-                label="标题"
-                width="250">
-            </el-table-column>
-            <el-table-column
-                prop="article_type"
-                label="类型"
-                width="120">
-                <template slot-scope="scope">
-                    <el-tag :type="getArticleTypeTag(scope.row.article_type)">
-                        {{ getArticleTypeLabel(scope.row.article_type) }}
+        <el-tabs v-model="activeTab" class="mode-tabs">
+            <!-- 发布版本标签页（articles 表） -->
+            <el-tab-pane label="发布版本" name="articles">
+                <el-table
+                    :data="articlesList"
+                    style="width: 100%"
+                    border>
+                    <el-table-column
+                        prop="article_id"
+                        label="ID"
+                        width="80">
+                    </el-table-column>
+                    <el-table-column
+                        prop="article_chapter"
+                        label="章节"
+                        width="80">
+                    </el-table-column>
+                    <el-table-column
+                        prop="title"
+                        label="标题"
+                        width="200">
+                    </el-table-column>
+                    <el-table-column
+                        prop="article_type"
+                        label="类型"
+                        width="100">
+                        <template slot-scope="scope">
+                            <el-tag :type="getArticleTypeTag(scope.row.article_type)">
+                                {{ getArticleTypeLabel(scope.row.article_type) }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="is_draft"
+                        label="状态"
+                        width="90">
+                        <template slot-scope="scope">
+                            <el-tag :type="scope.row.is_draft === 0 ? 'success' : 'warning'">
+                                {{ scope.row.is_draft === 0 ? '已发布' : '草稿' }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        label="更新时间"
+                        width="170">
+                        <template slot-scope="scope">
+                            <span>{{ formatDate(scope.row.update_time) }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        label="存稿"
+                        width="130">
+                        <template slot-scope="scope">
+                            <template v-if="Number(scope.row.draft_count) > 0">
+                                <el-link type="primary" @click="jumpToDrafts(scope.row)">
+                                    {{ scope.row.draft_count }} 份存稿
+                                </el-link>
+                                <div class="draft-time">{{ formatDate(scope.row.latest_draft_at) }}</div>
+                            </template>
+                            <span v-else class="muted">--</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        label="操作"
+                        width="240">
+                        <template slot-scope="scope">
+                            <el-button
+                                type="primary"
+                                size="small"
+                                @click="viewArticle(scope.row)">
+                                查看
+                            </el-button>
+                            <el-button
+                                type="success"
+                                size="small"
+                                @click="editArticle(scope.row)">
+                                编辑发布版本
+                            </el-button>
+                            <el-button
+                                type="warning"
+                                size="small"
+                                @click="jumpToDrafts(scope.row)">
+                                存稿
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                
+                <div class="pagination-container">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="pagination.page"
+                        :page-sizes="[10, 20, 50, 100]"
+                        :page-size="pagination.pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="pagination.total">
+                    </el-pagination>
+                </div>
+            </el-tab-pane>
+
+            <!-- 云端存稿标签页（articles_writer 表，全部版本） -->
+            <el-tab-pane :label="'云端存稿' + (draftFilterArticle ? '（文章 #' + draftFilterArticle + '）' : '')" name="drafts">
+                <div class="draft-filter-row">
+                    <el-input
+                        v-model="draftKeyword"
+                        clearable
+                        placeholder="搜索存稿标题 / 文章标题 / 编辑人"
+                        class="draft-keyword"
+                        @keyup.enter.native="handleDraftSearch">
+                        <el-button slot="append" icon="el-icon-search" @click="handleDraftSearch"></el-button>
+                    </el-input>
+                    <el-button type="primary" @click="handleDraftSearch">查询</el-button>
+                    <el-button @click="resetDraftFilter">重置</el-button>
+                    <el-tag v-if="draftFilterArticle" closable @close="clearDraftArticleFilter" type="warning">
+                        仅显示文章 #{{ draftFilterArticle }} 的存稿
                     </el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column
-                prop="is_draft"
-                label="状态"
-                width="120">
-                <template slot-scope="scope">
-                    <el-tag :type="scope.row.is_draft === 0 ? 'success' : 'warning'">
-                        {{ scope.row.is_draft === 0 ? '已发布' : '草稿' }}
-                    </el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column
-                prop="update_time"
-                label="更新时间"
-                width="180">
-                <template slot-scope="scope">
-                    <span>{{ formatDate(scope.row.update_time) }}</span>
-                </template>
-            </el-table-column>
-            <el-table-column
-                label="操作"
-                width="200">
-                <template slot-scope="scope">
-                    <el-button 
-                        type="primary" 
-                        size="small" 
-                        @click="viewArticle(scope.row)">
-                        查看
-                    </el-button>
-                    <el-button 
-                        type="success" 
-                        size="small" 
-                        @click="editArticle(scope.row)">
-                        编辑
-                    </el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-        
-        <div class="pagination-container">
-            <el-pagination
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page="pagination.page"
-                :page-sizes="[10, 20, 50, 100]"
-                :page-size="pagination.pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="pagination.total">
-            </el-pagination>
-        </div>
+                </div>
+
+                <el-table
+                    :data="draftsList"
+                    style="width: 100%"
+                    border
+                    v-loading="draftsLoading">
+                    <el-table-column
+                        prop="id"
+                        label="存稿ID"
+                        width="90">
+                    </el-table-column>
+                    <el-table-column
+                        prop="article_id"
+                        label="文章ID"
+                        width="90">
+                    </el-table-column>
+                    <el-table-column
+                        prop="article_chapter"
+                        label="章节"
+                        width="70">
+                    </el-table-column>
+                    <el-table-column
+                        prop="title"
+                        label="存稿标题"
+                        width="170">
+                    </el-table-column>
+                    <el-table-column
+                        prop="editor_name"
+                        label="编辑人"
+                        width="100">
+                        <template slot-scope="scope">
+                            {{ scope.row.editor_name || '--' }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        label="存稿时间"
+                        width="170">
+                        <template slot-scope="scope">
+                            {{ formatDate(scope.row.updated_at || formatCompactTime(scope.row.create_time)) }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        label="内容摘要"
+                        min-width="220">
+                        <template slot-scope="scope">
+                            <div class="draft-summary">{{ draftSummary(scope.row.content) }}</div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        label="操作"
+                        width="150">
+                        <template slot-scope="scope">
+                            <el-button
+                                type="success"
+                                size="small"
+                                @click="editDraft(scope.row)">
+                                编辑该存稿
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                
+                <div class="pagination-container">
+                    <el-pagination
+                        @size-change="handleDraftSizeChange"
+                        @current-change="handleDraftCurrentChange"
+                        :current-page="draftPagination.page"
+                        :page-sizes="[10, 20, 50, 100]"
+                        :page-size="draftPagination.pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="draftPagination.total">
+                    </el-pagination>
+                </div>
+            </el-tab-pane>
+        </el-tabs>
     </div>
 
-    <!-- 文章详情对话框 -->
+    <!-- 文章详情对话框（发布版本） -->
     <el-dialog
         :title="selectedArticle ? selectedArticle.title : '文章详情'"
         :visible.sync="detailDialogVisible"
@@ -141,18 +256,32 @@
         :title="editingArticle.article_id ? '编辑文章' : '新增文章'"
         :visible.sync="editDialogVisible"
         width="70%">
+        <div class="edit-target-bar">
+            <el-tag :type="editTarget.type === 'draft' ? 'warning' : 'success'" size="medium">
+                {{ editTarget.type === 'draft' ? '正在编辑存稿版本 #' + editTarget.id : '正在编辑发布版本' }}
+            </el-tag>
+            <span class="edit-target-desc">
+                {{ editTarget.type === 'draft'
+                    ? '保存后仅修改该条云端存稿，不影响读者看到的发布版本'
+                    : '保存后直接更新读者看到的发布版本' }}
+            </span>
+        </div>
         <el-form :model="editingArticle" label-width="100px">
             <el-form-item label="标题">
                 <el-input v-model="editingArticle.title"></el-input>
             </el-form-item>
-            <el-form-item label="章节">
+            <el-form-item label="章节" v-if="editTarget.type === 'articles'">
                 <el-input-number v-model="editingArticle.article_chapter" :min="1"></el-input-number>
             </el-form-item>
-            <el-form-item label="状态">
+            <el-form-item label="状态" v-if="editTarget.type === 'articles'">
                 <el-radio-group v-model="editingArticle.is_draft">
                     <el-radio :label="0">已发布</el-radio>
                     <el-radio :label="1">草稿</el-radio>
                 </el-radio-group>
+            </el-form-item>
+            <el-form-item label="类型" v-if="editTarget.type === 'draft'">
+                <el-tag>{{ getArticleTypeLabel(editingArticle.article_type) }}</el-tag>
+                <span class="edit-target-desc" style="margin-left: 10px;">存稿类型跟随文章的发布类型</span>
             </el-form-item>
             <!-- 纯文本编辑器 -->
             <el-form-item label="内容" v-if="editingArticle.article_type === 'text'">
@@ -335,8 +464,18 @@ export default {
     data() {
         return {
             novel: null,
+            activeTab: 'articles',
             articlesList: [],
             pagination: {
+                page: 1,
+                pageSize: 10,
+                total: 0
+            },
+            draftsList: [],
+            draftsLoading: false,
+            draftKeyword: '',
+            draftFilterArticle: null,
+            draftPagination: {
                 page: 1,
                 pageSize: 10,
                 total: 0
@@ -344,6 +483,10 @@ export default {
             detailDialogVisible: false,
             editDialogVisible: false,
             selectedArticle: null,
+            editTarget: {
+                type: 'articles',
+                id: null
+            },
             editingArticle: {
                 article_id: null,
                 title: '',
@@ -371,6 +514,7 @@ export default {
         this.novelId = this.$route.params.novelId;
         this.fetchNovelInfo();
         this.fetchArticles();
+        this.fetchDrafts();
     },
     methods: {
         goBack() {
@@ -421,16 +565,92 @@ export default {
             this.pagination.page = val;
             this.fetchArticles();
         },
-        formatDate(dateStr) {
-            if (!dateStr) return '-';
-            const date = new Date(dateStr);
-            return date.toLocaleString();
+        // ---------- 云端存稿 ----------
+        fetchDrafts() {
+            this.draftsLoading = true;
+            const params = {
+                novel_id: this.novelId,
+                page: this.draftPagination.page,
+                pageSize: this.draftPagination.pageSize,
+                keyword: this.draftKeyword || undefined
+            };
+            if (this.draftFilterArticle) {
+                params.article_id = this.draftFilterArticle;
+            }
+            
+            this.axios.get(this.$baseUrl + '/manage/library/get_writer_drafts', { params })
+                .then(res => {
+                    this.draftsList = res.data.data;
+                    this.draftPagination.total = res.data.pagination.total;
+                })
+                .catch(error => {
+                    this.$message({
+                        showClose: true,
+                        message: '获取云端存稿失败',
+                        type: 'error'
+                    });
+                    console.error(error);
+                })
+                .finally(() => {
+                    this.draftsLoading = false;
+                });
+        },
+        handleDraftSearch() {
+            this.draftPagination.page = 1;
+            this.fetchDrafts();
+        },
+        resetDraftFilter() {
+            this.draftKeyword = '';
+            this.draftFilterArticle = null;
+            this.handleDraftSearch();
+        },
+        handleDraftSizeChange(val) {
+            this.draftPagination.pageSize = val;
+            this.draftPagination.page = 1;
+            this.fetchDrafts();
+        },
+        handleDraftCurrentChange(val) {
+            this.draftPagination.page = val;
+            this.fetchDrafts();
+        },
+        jumpToDrafts(article) {
+            this.draftFilterArticle = article.article_id;
+            this.draftPagination.page = 1;
+            this.activeTab = 'drafts';
+            this.fetchDrafts();
+        },
+        clearDraftArticleFilter() {
+            this.draftFilterArticle = null;
+            this.handleDraftSearch();
+        },
+        // 编辑指定版本的存稿
+        editDraft(draft) {
+            this.editTarget = {
+                type: 'draft',
+                id: draft.id
+            };
+            this.editingArticle = {
+                article_id: draft.article_id,
+                title: draft.title,
+                article_chapter: draft.article_chapter || 1,
+                is_draft: draft.is_draft === 0 ? 0 : 1,
+                article_type: draft.article_type || 'richtext',
+                content: draft.content || ''
+            };
+            if (this.editingArticle.article_type === 'richtext') {
+                this.initRichTextEditor();
+            }
+            this.editDialogVisible = true;
         },
         viewArticle(article) {
             this.selectedArticle = article;
             this.detailDialogVisible = true;
         },
         editArticle(article) {
+            this.editTarget = {
+                type: 'articles',
+                id: article.article_id
+            };
             this.axios.get(this.$baseUrl + '/manage/library/get_article_detail', {
                 params: { article_id: article.article_id }
             })
@@ -455,20 +675,33 @@ export default {
                 this.editingArticle.content = JSON.stringify(this.richTextBlocks);
             }
             
-            this.axios.post(this.$baseUrl + '/manage/library/update_article', this.editingArticle)
+            const isDraftTarget = this.editTarget.type === 'draft';
+            const request = isDraftTarget
+                ? this.axios.post(this.$baseUrl + '/manage/library/update_writer_draft', {
+                    id: this.editTarget.id,
+                    title: this.editingArticle.title,
+                    content: this.editingArticle.content
+                })
+                : this.axios.post(this.$baseUrl + '/manage/library/update_article', this.editingArticle);
+            
+            request
                 .then(res => {
                     this.$message({
                         showClose: true,
-                        message: '更新文章成功',
+                        message: isDraftTarget ? '存稿更新成功' : '文章更新成功',
                         type: 'success'
                     });
                     this.editDialogVisible = false;
-                    this.fetchArticles();
+                    if (isDraftTarget) {
+                        this.fetchDrafts();
+                    } else {
+                        this.fetchArticles();
+                    }
                 })
                 .catch(error => {
                     this.$message({
                         showClose: true,
-                        message: '更新文章失败',
+                        message: isDraftTarget ? '存稿更新失败' : '文章更新失败',
                         type: 'error'
                     });
                     console.error(error);
@@ -499,6 +732,22 @@ export default {
                 console.error('富文本解析失败:', e);
                 return [];
             }
+        },
+        draftSummary(content) {
+            if (!content) return '--';
+            try {
+                const blocks = JSON.parse(content);
+                if (Array.isArray(blocks)) {
+                    const text = blocks
+                        .filter(item => item.type === 'text')
+                        .map(item => item.value || '')
+                        .join('');
+                    return this.truncateText(text || '[纯图片内容]', 60);
+                }
+            } catch (e) {
+                // 非JSON内容按纯文本处理
+            }
+            return this.truncateText(content, 60);
         },
         getArticleTypeLabel(type) {
             return this.articleTypes[type]?.label || type;
@@ -629,6 +878,20 @@ export default {
         truncateText(text, length) {
             if (!text) return '';
             return text.length > length ? text.substring(0, length) + '...' : text;
+        },
+        formatCompactTime(value) {
+            if (!value) return '';
+            const str = String(value);
+            if (!/^\d{14}$/.test(str)) return value;
+            return str.replace(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1-$2-$3 $4:$5:$6');
+        },
+        formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) {
+                return this.formatCompactTime(dateStr);
+            }
+            return date.toLocaleString();
         }
     }
 }
@@ -657,6 +920,9 @@ export default {
         color: #666;
         margin-top: 0;
     }
+}
+.mode-tabs {
+    margin-bottom: 20px;
 }
 .pagination-container {
     margin-top: 20px;
@@ -710,6 +976,43 @@ export default {
     background-color: #f5f7fa;
     color: #909399;
     font-size: 30px;
+}
+.draft-time {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 2px;
+}
+.draft-summary {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #606266;
+}
+.muted {
+    color: #c0c4cc;
+}
+.draft-filter-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.draft-keyword {
+    width: 320px;
+}
+.edit-target-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    background-color: #f5f7fa;
+    border-radius: 4px;
+}
+.edit-target-desc {
+    font-size: 12px;
+    color: #909399;
 }
 .richtext-editor {
     border: 1px solid #dcdfe6;

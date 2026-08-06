@@ -1,5 +1,5 @@
 <template>
-	<view class="container">
+	<view class="container" v-dark>
 		<zetank-backBar title="社区管理"></zetank-backBar>
 		
 		<view class="list-content">
@@ -78,7 +78,9 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-	background-color: #f2f2f2;
+	min-height: 100vh;
+	background-color: var(--background-color-secondary);
+	color: var(--text-color-primary);
 }
 
 .list-content {
@@ -86,13 +88,13 @@ export default {
 }
 
 .list {
-	background: #fff;
+	background: var(--card-background);
 	
 	.li {
 		width: 92%;
 		height: 100upx;
 		padding: 0 4%;
-		border-bottom: 1px solid #eee;
+		border-bottom: 1px solid var(--border-color);
 		display: flex;
 		align-items: center;
 		
@@ -114,7 +116,7 @@ export default {
 		.text {
 			padding-left: 20upx;
 			width: 100%;
-			color: #666;
+			color: var(--text-color-regular);
 			font-size: 30rpx;
 		}
 		
@@ -125,4 +127,4 @@ export default {
 		}
 	}
 }
-</style> 
+</style>

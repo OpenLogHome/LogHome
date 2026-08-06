@@ -14,7 +14,7 @@ object AudioCacheUtils {
         voice: String,
     ): File = withContext(Dispatchers.IO) {
         val cacheDir = File(context.cacheDir, "audio_cache").apply { mkdirs() }
-        File(cacheDir, "$articleId-${md5(text)}-${md5(voice)}.wav")
+        File(cacheDir, "$articleId-${md5(text)}-${md5(cacheIdentity(voice))}.wav")
     }
 
     suspend fun clearVoiceCache(context: Context, voice: String) = withContext(Dispatchers.IO) {
@@ -24,15 +24,24 @@ object AudioCacheUtils {
         }
 
         val legacySuffix = "-$voice.mp3"
-        val currentSuffix = "-${md5(voice)}.wav"
+        val currentSuffixes = setOf(
+            "-${md5(voice)}.wav",
+            "-${md5(cacheIdentity(voice))}.wav",
+        )
         cacheDir.listFiles()
             ?.filter {
                 it.isFile && (
                     it.name.endsWith(legacySuffix) ||
-                        it.name.endsWith(currentSuffix)
+                        currentSuffixes.any(it.name::endsWith)
                     )
             }
             ?.forEach { file -> file.delete() }
+    }
+
+    private fun cacheIdentity(voice: String): String = when {
+        voice.startsWith("sherpa:aishell3@") -> "$voice|punctuation-pauses-v1"
+        EdgeTtsVoiceCatalog.isEdgeVoice(voice) -> "$voice|$EDGE_TTS_PROTOCOL_VERSION"
+        else -> voice
     }
 
     private fun md5(input: String): String {

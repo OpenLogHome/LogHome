@@ -1,5 +1,5 @@
 <template>
-	<div class="content">
+	<div class="content" v-dark>
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
 			<input class="input" type="password" placeholder="输入原密码" v-model="pwd" />
@@ -51,7 +51,7 @@
 				//console.log(res);
 				this.resultData = true;
 			},
-			//校验密码：只能输入6-20个字母、数字、下划线  
+			//校验密码：只能输入6-20个字母、数字、下划线
 			isPasswd(s) {
 				var patrn = /^(\w){6,20}$/;
 				if (!patrn.exec(s)) return false
@@ -156,9 +156,9 @@
 		margin-bottom: 30px;
 		line-height: 40px;
 		text-align: center;
-		border: 1px solid #dddddd;
+		border: 1px solid var(--border-color);
 		border-radius: 5px;
-		background-color: #efefef;
+		background-color: var(--background-color-secondary);
 	}
 
 	img.icon {
@@ -178,9 +178,9 @@
 		height: 37px;
 		line-height: 37px;
 		border: 0px;
-		color: #333333;
+		color: var(--text-color-primary);
 		font-size: 16px;
-		background-color: #efefef;
+		background-color: var(--background-color-secondary);
 
 	}
 
@@ -190,7 +190,7 @@
 		margin-top: 30px;
 		margin-left: 10%;
 		font-size: 16px;
-		
+
 		font-weight: bold;
 		line-height: 38px;
 		border-radius: 5px;

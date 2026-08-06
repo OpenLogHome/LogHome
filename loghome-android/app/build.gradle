@@ -36,7 +36,18 @@ def webviewEntryUrl = ((project.findProperty("loghomeWebviewEntryUrl")
 def escapedWebviewEntryUrl = webviewEntryUrl
         .replace("\\", "\\\\")
         .replace("\"", "\\\"")
-
+def ttsChaowenModelUrl = ((project.findProperty("loghomeTtsChaowenModelUrl")
+        ?: System.getenv("LOGHOME_TTS_CHAOWEN_MODEL_URL")
+        ?: "https://storage.codesocean.top/api/resource/download/178564613831492") as String).trim()
+def escapedTtsChaowenModelUrl = ttsChaowenModelUrl
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+def ttsAishell3ModelUrl = ((project.findProperty("loghomeTtsAishell3ModelUrl")
+        ?: System.getenv("LOGHOME_TTS_AISHELL3_MODEL_URL")
+        ?: "https://storage.codesocean.top/api/resource/download/178598531385082") as String).trim()
+def escapedTtsAishell3ModelUrl = ttsAishell3ModelUrl
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
 android {
     namespace "top.codesocean.loghome.android"
     compileSdk 34
@@ -45,9 +56,11 @@ android {
         applicationId "top.codesocean.loghome"
         minSdk 24
         targetSdk 34
-        versionCode 307
-        versionName "2.9.16"
+        versionCode 311
+        versionName "3.1.1"
 
+        buildConfigField "String", "TTS_CHAOWEN_MODEL_URL", "\"${escapedTtsChaowenModelUrl}\""
+        buildConfigField "String", "TTS_AISHELL3_MODEL_URL", "\"${escapedTtsAishell3ModelUrl}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
@@ -112,4 +125,9 @@ dependencies {
     implementation "androidx.media3:media3-session:1.4.1"
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
+    implementation "org.apache.commons:commons-compress:1.28.0"
+
+    testImplementation "junit:junit:4.13.2"
+    androidTestImplementation "androidx.test.ext:junit:1.2.1"
+    androidTestImplementation "androidx.test:runner:1.6.2"
 }

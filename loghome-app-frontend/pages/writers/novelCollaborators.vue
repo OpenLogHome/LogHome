@@ -11,6 +11,17 @@
 			</view>
 		</view>
 
+		<view class="policyPanel" :class="policyPanelClass">
+			<view class="policyIcon">{{ collaborationPolicy.permissions_restricted ? '!' : '✓' }}</view>
+			<view class="policyContent">
+				<view class="policyTitle">{{ policyTitle }}</view>
+				<view class="policyDescription">{{ policyDescription }}</view>
+			</view>
+			<view class="membershipButton" v-if="showMembershipAction" @click="openMembership">
+				开通通行证
+			</view>
+		</view>
+
 		<view class="panel" v-if="isOwner">
 			<view class="sectionTitle">邀请协作者</view>
 			<uni-search-bar
@@ -54,6 +65,7 @@
 					<view class="dangerButton mini" v-if="isOwner" @click="removeCollaborator(item)">移除</view>
 				</view>
 				<view class="permissionSummary">
+					<view class="permissionChip enabled">预览作品</view>
 					<view
 						class="permissionChip"
 						v-for="permission in permissionOptions"
@@ -63,12 +75,15 @@
 						{{ permission.label }}
 					</view>
 				</view>
+				<view class="permissionLockedHint" v-if="item.permissions_locked">
+					三人及以上协作需主作者开通原木通行证，当前仅保留预览权限。
+				</view>
 				<view class="permissionEditor" v-if="isOwner">
 					<view class="permissionToggle" v-for="permission in permissionOptions" :key="permission.key">
 						<view class="toggleLabel">{{ permission.label }}</view>
 						<el-switch
 							:value="!!item[permission.key]"
-							:disabled="permissionSavingUserId === item.user_id"
+							:disabled="permissionSavingUserId === item.user_id || item.permissions_locked"
 							@change="updateCollaboratorPermission(item, permission.key, $event)"
 						/>
 					</view>
@@ -88,6 +103,7 @@
 					<view class="dangerButton mini" @click="removeCollaborator(item)">撤回</view>
 				</view>
 				<view class="permissionSummary">
+					<view class="permissionChip enabled">预览作品</view>
 					<view
 						class="permissionChip"
 						v-for="permission in permissionOptions"
@@ -97,12 +113,15 @@
 						{{ permission.label }}
 					</view>
 				</view>
+				<view class="permissionLockedHint" v-if="item.permissions_locked">
+					接受邀请后作品将达到三人，未开通通行证时该协作者只能预览。
+				</view>
 				<view class="permissionEditor">
 					<view class="permissionToggle" v-for="permission in permissionOptions" :key="permission.key">
 						<view class="toggleLabel">{{ permission.label }}</view>
 						<el-switch
 							:value="!!item[permission.key]"
-							:disabled="permissionSavingUserId === item.user_id"
+							:disabled="permissionSavingUserId === item.user_id || item.permissions_locked"
 							@change="updateCollaboratorPermission(item, permission.key, $event)"
 						/>
 					</view>
@@ -131,6 +150,12 @@ export default {
 					access_role: 'owner',
 					can_manage_collaborators: true,
 					can_respond_invitation: false,
+					collaboration_policy: {
+						active_collaborator_count: 0,
+						participant_count: 1,
+						owner_has_required_membership: false,
+						permissions_restricted: false,
+					},
 				},
 				collaborators: [],
 			},
@@ -160,6 +185,42 @@ export default {
 		},
 		canRespondInvitation() {
 			return this.collaborationInfo.access && this.collaborationInfo.access.can_respond_invitation === true;
+		},
+		collaborationPolicy() {
+			return (this.collaborationInfo.access && this.collaborationInfo.access.collaboration_policy) || {
+				active_collaborator_count: 0,
+				participant_count: 1,
+				owner_has_required_membership: false,
+				permissions_restricted: false,
+			};
+		},
+		policyPanelClass() {
+			if (this.collaborationPolicy.permissions_restricted) return 'restricted';
+			if (this.collaborationPolicy.owner_has_required_membership) return 'unlocked';
+			return 'free';
+		},
+		showMembershipAction() {
+			return this.isOwner &&
+				!this.collaborationPolicy.owner_has_required_membership &&
+				(
+					this.collaborationPolicy.permissions_restricted ||
+					(this.collaborationInfo.collaborators || []).some((item) => item.permissions_locked)
+				);
+		},
+		policyTitle() {
+			if (this.collaborationPolicy.permissions_restricted) return '协作者权限已限制为预览';
+			if (this.collaborationPolicy.owner_has_required_membership) return '多人协作权限已解锁';
+			return '双人协作免费';
+		},
+		policyDescription() {
+			const count = Number(this.collaborationPolicy.participant_count || 1);
+			if (this.collaborationPolicy.permissions_restricted) {
+				return `当前共 ${count} 人协作。开通标准或超级原木通行证后，可为协作者开启编辑、增删、排序与发布权限。`;
+			}
+			if (this.collaborationPolicy.owner_has_required_membership) {
+				return `主作者的通行证有效，当前 ${count} 人协作可正常配置全部权限。`;
+			}
+			return '主作者与一名协作者可免费使用全部协作权限；从第三人开始需要主作者开通原木通行证。';
 		},
 		activeCollaborators() {
 			return (this.collaborationInfo.collaborators || []).filter((item) => item.status === 'active');
@@ -230,6 +291,10 @@ export default {
 			}, 300);
 		},
 		async updateCollaboratorPermission(user, permissionKey, value) {
+			if (user.permissions_locked) {
+				this.showMembershipRequired();
+				return;
+			}
 			const tk = this.getAuthToken();
 			const previousState = this.permissionOptions.reduce((state, permission) => {
 				state[permission.key] = !!user[permission.key];
@@ -269,6 +334,24 @@ export default {
 			}
 		},
 		inviteUser(user) {
+			const willRequireMembership =
+				!this.collaborationPolicy.owner_has_required_membership &&
+				Number(this.collaborationPolicy.active_collaborator_count || 0) >= 1;
+			if (willRequireMembership) {
+				uni.showModal({
+					title: '三人协作权限提示',
+					content: '邀请可以正常发送，但对方加入后，在主作者开通原木通行证前，所有协作者都只能预览作品。是否继续邀请？',
+					confirmText: '继续邀请',
+					cancelText: '暂不邀请',
+					success: (result) => {
+						if (result.confirm) this.performInvite(user);
+					},
+				});
+				return;
+			}
+			this.performInvite(user);
+		},
+		performInvite(user) {
 			const tk = this.getAuthToken();
 			axios.post(this.$baseUrl + '/essays/invite_novel_collaborator',
 				{
@@ -296,6 +379,19 @@ export default {
 					duration: 2000
 				});
 			});
+		},
+		showMembershipRequired() {
+			uni.showModal({
+				title: '需要原木通行证',
+				content: '三人及以上协作时，主作者需要开通标准或超级原木通行证，才能开启预览之外的权限。',
+				confirmText: '查看通行证',
+				success: (result) => {
+					if (result.confirm) this.openMembership();
+				},
+			});
+		},
+		openMembership() {
+			uni.navigateTo({ url: '/pages/membership/index' });
 		},
 		removeCollaborator(user) {
 			const tk = this.getAuthToken();
@@ -434,6 +530,88 @@ export default {
 	}
 }
 
+.policyPanel{
+	display:flex;
+	align-items:center;
+	gap: 18rpx;
+	padding: 22rpx 24rpx;
+	margin-bottom: 20rpx;
+	border: 1rpx solid #efd8b9;
+	border-radius: 18rpx;
+	background: #fff7eb;
+
+	&.restricted{
+		border-color: #f0c4b6;
+		background: #fff1eb;
+	}
+
+	&.unlocked{
+		border-color: #c9e1c9;
+		background: #f2faf1;
+	}
+
+	.dark-mode & {
+		border-color: rgba(255, 221, 183, 0.2);
+		background: rgba(255, 221, 183, 0.07);
+	}
+}
+
+.policyIcon{
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	flex-shrink:0;
+	width: 48rpx;
+	height: 48rpx;
+	border-radius: 50%;
+	font-size: 26rpx;
+	font-weight: bold;
+	color: #9a592a;
+	background: #ffe0b8;
+
+	.restricted & {
+		color: #b64b36;
+		background: #ffd8cd;
+	}
+
+	.unlocked & {
+		color: #4e8751;
+		background: #d7ecd5;
+	}
+}
+
+.policyContent{
+	flex:1;
+	min-width:0;
+}
+
+.policyTitle{
+	font-size: 27rpx;
+	font-weight: 650;
+	color: #5d3c27;
+
+	.dark-mode & { color: var(--text-color-primary); }
+}
+
+.policyDescription{
+	margin-top: 7rpx;
+	font-size: 22rpx;
+	line-height: 1.55;
+	color: #8b705d;
+
+	.dark-mode & { color: var(--text-color-regular); }
+}
+
+.membershipButton{
+	flex-shrink:0;
+	padding: 10rpx 18rpx;
+	border-radius: 999rpx;
+	font-size: 22rpx;
+	font-weight: 600;
+	color: #754214;
+	background: #ffdda5;
+}
+
 .sectionTitle{
 	font-size: 30rpx;
 	font-weight: bold;
@@ -566,6 +744,21 @@ export default {
 
 	.dark-mode & {
 		background: rgba(255, 255, 255, 0.04);
+	}
+}
+
+.permissionLockedHint{
+	margin-top: 14rpx;
+	padding: 14rpx 16rpx;
+	border-radius: 12rpx;
+	font-size: 22rpx;
+	line-height: 1.5;
+	color: #a1583f;
+	background: #fff2ec;
+
+	.dark-mode & {
+		color: #f0b49f;
+		background: rgba(205, 100, 65, 0.12);
 	}
 }
 

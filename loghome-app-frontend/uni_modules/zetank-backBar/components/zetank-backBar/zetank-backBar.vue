@@ -1,5 +1,5 @@
 <template>
-	<view class="top_nav" :style="{background:bgColor, '--statusBarHeight': 0 + 'px'}">
+	<view class="top_nav" :style="{background:bgColor}">
 		<view class="toBar" :style="'height:'+toBarHeight">
 			<view>
 				<block v-if="showLeft == true">
@@ -37,9 +37,6 @@
 			};
 		},
 		computed: {
-			statusBarHeight() {
-				return '0px'
-			},
 			toBarHeight() {
 				return '0px'
 			}
@@ -76,7 +73,17 @@
 			}
 		},
 		methods: {
+			shouldUseNativeBack() {
+				const bridge = typeof window !== 'undefined' ? window.jsBridge : null
+				return !!(bridge && bridge.inApp && bridge.nativeRouterAvailable)
+			},
 			toback() {
+				if (this.shouldUseNativeBack()) {
+					uni.navigateBack({
+						delta: 1
+					});
+					return;
+				}
 				if(getCurrentPages().length == 1) {
 					uni.reLaunch({
 						url: "/pages/library"
@@ -154,7 +161,7 @@
 
 	.top_nav {
 		position: fixed;
-		top: calc(60upx + var(--statusBarHeight));
+		top: calc(60upx + var(--loghome-safe-top, 0px));
 		left: 15upx;
 		z-index: 80;
 	}

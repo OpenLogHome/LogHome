@@ -169,9 +169,13 @@
             >
               <view class="post-header">
                 <view class="user-info" @tap.stop="navigateToUser(post.user_id)">
-                  <image class="user-avatar" :src="post.author_avatar || '../../static/default-avatar.png'" mode="aspectFill"></image>
+                  <user-avatar class="user-avatar" :src="post.author_avatar" :frame="post.author_avatar_frame"
+                    :visual-scale="post.author_avatar_frame ? 1.2 : 1" />
                   <view class="user-meta">
-                    <text class="user-name">{{post.author_name || '匿名用户'}}</text>
+					<view class="search-user-name-row">
+					  <text class="user-name">{{post.author_name || '匿名用户'}}</text>
+					  <membership-badge :tier="post.author_membership_type" size="xs" />
+					</view>
                     <view class="post-time">{{formatTime(post.create_time)}}</view>
                   </view>
                 </view>
@@ -212,9 +216,12 @@
               :key="'user-' + index"
               @tap="navigateToUser(user.user_id)"
             >
-              <image class="user-avatar" :src="user.avatar_url || '../../static/default-avatar.png'" mode="aspectFill"></image>
+              <user-avatar class="user-avatar" :src="user.avatar_url" :frame="user.avatar_frame" :visual-scale="user.avatar_frame ? 1.2 : 1" />
               <view class="user-info">
-                <view class="user-name">{{user.name || '匿名用户'}}</view>
+				<view class="search-user-name-row">
+				  <view class="user-name">{{user.name || '匿名用户'}}</view>
+				  <membership-badge :tier="user.membership_type" size="xs" />
+				</view>
                 <view class="user-motto">{{user.motto || '这个人很懒，还没有设置个性签名'}}</view>
               </view>
             </view>
@@ -235,8 +242,10 @@
   <script>
   import axios from 'axios';
   import moment from 'moment';
+	import MembershipBadge from '@/components/membership-badge.vue';
   
   export default {
+	components: { MembershipBadge },
     data() {
       return {
         keyword: '', // 搜索关键词
@@ -631,7 +640,7 @@
   .search-header {
     display: flex;
     align-items: center;
-    padding: 20rpx 30rpx;
+    padding: calc(20rpx + var(--loghome-safe-top, 0px)) 30rpx 20rpx;
     background-color: var(--card-background);
     position: sticky;
     top: 0;
@@ -893,6 +902,13 @@
       margin-top: 4rpx;
     }
   }
+
+	.search-user-name-row {
+	  display: flex;
+	  align-items: center;
+	  gap: 8rpx;
+	  min-width: 0;
+	}
   
   .post-circle {
     font-size: 24rpx;

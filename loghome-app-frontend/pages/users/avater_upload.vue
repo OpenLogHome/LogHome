@@ -1,5 +1,5 @@
 <template>
-	<view class="body" :style="{'--statusBarHeight': 0 + 'px'}">
+	<view class="body" :style="{'--statusBarHeight': 0 + 'px'}" v-dark>
 		<!-- 	<el-alert
 		title="提示"
 		type="warning"
@@ -378,7 +378,7 @@
 				}
 				//截取
 				ctx.drawImage(this.url, dx, dy, width, width, 0, 0, 250, 250)
-				ctx.draw(false, (e) => { //绘制成功【绘制到 canvas 中】【false=清空canvas之前的内容】	return 
+				ctx.draw(false, (e) => { //绘制成功【绘制到 canvas 中】【false=清空canvas之前的内容】	return
 					this.bottomText_3 = '预览'
 					uni.canvasToTempFilePath({ //canvas保存为图片
 						destWidth: 250,
@@ -450,6 +450,19 @@
 				this.bottomText_3 = '预览'
 				this.yulanPicSrc = text
 			},
+			closePreviewOnBack: function() {
+				if (this.yulanPicSrc === '') {
+					return false
+				}
+				this.yulanPicSrc = '';
+				return true
+			},
+			handleNativeBack: function(event) {
+				if (!this.closePreviewOnBack()) {
+					return
+				}
+				event.preventDefault()
+			},
 			onLoad() {
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;;
@@ -480,6 +493,8 @@
 			}
 		},
 		onReady: function() {
+			window.removeEventListener("loghomeNativeBack", this.handleNativeBack);
+			window.addEventListener("loghomeNativeBack", this.handleNativeBack);
 			uni.getSystemInfo({
 				success: (res) => {
 					this.bodyLeftWidth = (res.windowWidth - uni.upx2px(750)) / 2, //body在pc端左边（空白区域）的宽度
@@ -513,9 +528,11 @@
 				});
 			}
 		},
+		onUnload: function() {
+			window.removeEventListener("loghomeNativeBack", this.handleNativeBack);
+		},
 		onBackPress: function(e) { //监听返回键
-			if (this.yulanPicSrc !== '') { //退出登录弹窗
-				this.yulanPicSrc = '';
+			if (this.closePreviewOnBack()) { //退出预览弹窗
 				return true
 			}
 		}
@@ -549,8 +566,8 @@
 
 	#img.show:before {
 		content: "旋转中";
-		background: #FFF;
-		color: #333;
+		background: var(--card-background);
+		color: var(--text-color-primary);
 		font-size: 34rpx;
 		text-align: center;
 		display: block;
@@ -566,7 +583,7 @@
 		left: 50%;
 		z-index: 1;
 		margin: -231rpx 0 0 -231rpx;
-		background: #FFF;
+		background: var(--card-background);
 		border: 1px solid #FFF;
 		background: RGBA(0, 0, 0, 0);
 	}
@@ -617,13 +634,13 @@
 		width: 750rpx;
 		height: 100rpx;
 		padding: 0 0 0 30rpx;
-		background: #FFF;
+		background: var(--card-background);
 	}
 
 	#bottom>view {
 		display: inline-block;
-		color: #444;
-		background: #FFF;
+		color: var(--text-color-primary);
+		background: var(--card-background);
 		width: 150rpx;
 		line-height: 66rpx;
 		text-align: center;
@@ -648,7 +665,7 @@
 	/* 一些全局的 */
 	.body {
 		overflow: hidden;
-		color: #333;
+		color: var(--text-color-primary);
 	}
 
 	::-webkit-scrollbar {
@@ -734,7 +751,7 @@
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		background: #FFF;
+		background: var(--card-background);
 		border-radius: 14rpx;
 		text-align: center;
 		overflow: hidden;
@@ -742,7 +759,7 @@
 	}
 
 	.tanchuang>.alert .title {
-		color: #000000;
+		color: var(--text-color-primary);
 		padding: 42rpx 11rpx 0 11rpx;
 		font-weight: bold;
 		font-size: 31rpx;
@@ -750,7 +767,7 @@
 
 	.tanchuang>.alert .content {
 		display: block;
-		color: #656565;
+		color: var(--text-color-regular);
 		padding: 24rpx 54rpx 41rpx 54rpx;
 		line-height: 38rpx;
 		font-size: 30rpx;
@@ -781,7 +798,7 @@
 		-webkit-box-flex: 1;
 		width: 100%;
 		display: block;
-		background: #FFF;
+		background: var(--card-background);
 		font-size: 30rpx;
 	}
 
@@ -790,11 +807,11 @@
 	}
 
 	.tanchuang>.alert .bottom view:nth-of-type(2) {
-		color: #333;
+		color: var(--text-color-primary);
 	}
 
 	.tanchuang>.alert .bottom view:active {
-		background: #E0E0E0;
+		background: var(--background-color-tertiary);
 	}
 
 	.tanchuang>.alert .bottom.line:before {

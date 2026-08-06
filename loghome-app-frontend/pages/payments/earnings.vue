@@ -1,5 +1,5 @@
 <template>
-	<view class="wp">
+	<view class="wp" v-dark>
 		<view class="header">
 			<div class="b">
 				<img src="../../static/resources/cropped_log.webp" alt=""/>
@@ -23,11 +23,11 @@
 				</view>
 				<view class="num">
 					<view class="desc">￥</view> <text @click="moneyAmount = moneyEarnings">全部提现</text>
-					<input class="inp" placeholder="请输入金额" type="number" v-model="moneyAmount">
+					<input class="inp" placeholder="请输入金额" type="number" v-model="moneyAmount" />
 				</view>
 				<view class="num">
 					<text></text>
-					<input class="inp" placeholder="请输入微信号，客服将通过您留的微信号联系您" v-model="wechat">
+					<input class="inp" placeholder="请输入微信号，客服将通过您留的微信号联系您" v-model="wechat" />
 				</view>
 				<view class="g-queding-kx">
 					<view class="txt">
@@ -324,7 +324,7 @@
 		margin: 0 40rpx;
 		padding: 20rpx 40rpx;
 		margin-top: -80rpx;
-		background-color: #fff;
+		background-color: var(--card-background);
 		border-radius: 10rpx;
 		position: relative;
 		z-index: 99;
@@ -339,7 +339,7 @@
 
 	.m-about .num {
 		margin-bottom: 35rpx;
-		border-bottom: 1px solid #f2f2f2;
+		border-bottom: 1px solid var(--border-color);
 	}
 
 	.m-about .num .desc {
@@ -358,7 +358,7 @@
 	.m-about .boe {
 		overflow: hidden;
 		margin-bottom: 100rpx;
-		color: #666666;
+		color: var(--text-color-regular);
 		font-size: 24rpx;
 	}
 
@@ -406,11 +406,11 @@
 	}
 
 	.txt-xh1 .info text {
-		color: #000;
+		color: var(--text-color-primary);
 	}
 
 	.txt-xh1 .info {
-		color: #666666;
+		color: var(--text-color-regular);
 
 	}
 

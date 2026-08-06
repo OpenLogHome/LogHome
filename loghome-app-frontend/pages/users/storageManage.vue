@@ -1,5 +1,5 @@
 <template>
-	<view class="container">
+	<view class="container" v-dark>
 		<view class="header">
 			<view class="title">空间占用管理</view>
 		</view>
@@ -141,14 +141,14 @@ export default {
 
 .header {
 	padding: 20rpx 0;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid var(--border-color);
 	margin-bottom: 30rpx;
 }
 
 .title {
 	font-size: 36rpx;
 	font-weight: bold;
-	color: #333;
+	color: var(--text-color-primary);
 }
 
 .storage-info {
@@ -156,7 +156,7 @@ export default {
 }
 
 .storage-item {
-	background-color: #fff;
+	background-color: var(--card-background);
 	border-radius: 10rpx;
 	padding: 20rpx;
 	margin-bottom: 20rpx;
@@ -173,7 +173,7 @@ export default {
 .item-title {
 	font-size: 32rpx;
 	font-weight: bold;
-	color: #333;
+	color: var(--text-color-primary);
 }
 
 .item-size {
@@ -184,7 +184,7 @@ export default {
 
 .item-desc {
 	font-size: 26rpx;
-	color: #666;
+	color: var(--text-color-regular);
 	margin-bottom: 20rpx;
 }
 

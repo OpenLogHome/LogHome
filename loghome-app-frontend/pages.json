@@ -2,12 +2,19 @@
 	"pages": [
 		{
 		    "path" : "pages/launch",
-		    "style" :                                                                                    
+		    "style" :
 		    {
 				"navigationStyle": "custom",
 		        "navigationBarTitleText": "原木社区",
 		        "enablePullDownRefresh": false
 		    }
+		},
+		{
+			"path": "pages/native/preload",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": ""
+			}
 		},
 		{
 			"path": "pages/bookcase/index",
@@ -51,6 +58,46 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path": "pages/membership/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "原木通行证",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/membership/redeem",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "会员兑换码",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/membership/gift",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "赠送好友",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/membership/rules",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "通行证与红石规则",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/redstone/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "红石中心",
+				"enablePullDownRefresh": false
 			}
 		},
 		{
@@ -313,6 +360,12 @@
 		    }
 		},
 		{
+		    "path": "pages/users/avatar_frames",
+		    "style": {
+		        "navigationBarTitleText": "头像挂件"
+		    }
+		},
+		{
 		    "path": "pages/users/achievements",
 		    "style": {
 		        "navigationBarTitleText": "我的成就"
@@ -407,12 +460,6 @@
 			"path": "pages/settings/autoSaveSettings",
 			"style": {
 				"navigationBarTitleText": "本地备份设置"
-			}
-		},
-		{
-			"path": "pages/settings/readerSettings",
-			"style": {
-				"navigationBarTitleText": "阅读器设置"
 			}
 		},
 		{
@@ -946,5 +993,3 @@
 		}
 	}
 }
-
-

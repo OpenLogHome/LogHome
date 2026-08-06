@@ -1,12 +1,12 @@
 <template>
-	<view class="container">		
+	<view class="container" v-dark>
 		<view class="content">
 			<view class="filter-bar">
 				<view class="filter-item" :class="{active: filterType === 'all'}" @click="setFilter('all')">全部</view>
 				<view class="filter-item" :class="{active: filterType === 'unsolved'}" @click="setFilter('unsolved')">未解决</view>
 				<view class="filter-item" :class="{active: filterType === 'typical'}" @click="setFilter('typical')">典型问题</view>
 			</view>
-			
+
 			<view class="pagination" v-if="totalPages > 0">
 				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
@@ -30,13 +30,13 @@
 					</view>
 				</view>
 			</view>
-			
+
 			<view class="pagination" v-if="totalPages > 0">
 				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
 				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
 			</view>
-			
+
 			<view class="no-data" v-if="faqs.length === 0">
 				暂无FAQ数据
 			</view>
@@ -68,7 +68,7 @@ export default {
 		async loadCounts() {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
-				
+
 				// 获取总数
 				const totalRes = await axios.get(this.$baseUrl + '/manage/faqs/get_faqs_amount', {
 					headers: {
@@ -76,7 +76,7 @@ export default {
 					}
 				})
 				this.totalFaqs = totalRes.data[0].count
-				
+
 				// 获取未解决数量
 				const unsolvedRes = await axios.get(this.$baseUrl + '/manage/faqs/get_faqs_amount_to_solve', {
 					headers: {
@@ -84,7 +84,7 @@ export default {
 					}
 				})
 				this.unsolvedFaqs = unsolvedRes.data[0].count
-				
+
 				// 获取典型问题数量
 				const typicalRes = await axios.get(this.$baseUrl + '/manage/faqs/get_faqs_amount_typical', {
 					headers: {
@@ -105,7 +105,7 @@ export default {
 				uni.showLoading({
 					title: '努力加载中'
 				})
-				
+
 				// 获取总数
 				let countUrl = '/manage/faqs/get_faqs_amount'
 				if (this.filterType === 'unsolved') {
@@ -113,25 +113,25 @@ export default {
 				} else if (this.filterType === 'typical') {
 					countUrl = '/manage/faqs/get_faqs_amount_typical'
 				}
-				
+
 				const countRes = await axios.get(this.$baseUrl + countUrl, {
 					headers: {
 						'Authorization': tk
 					}
 				})
 				this.totalPages = Math.ceil(countRes.data[0].count / this.pageSize)
-				
+
 				// 构建查询参数
 				let params = {
 					page: this.currentPage
 				}
-				
+
 				if (this.filterType === 'unsolved') {
 					params.filter = 'unsolved'
 				} else if (this.filterType === 'typical') {
 					params.filter = 'typical'
 				}
-				
+
 				// 获取列表
 				const res = await axios.get(this.$baseUrl + '/manage/faqs/get_all_faqs', {
 					params: params,
@@ -178,8 +178,8 @@ export default {
 		formatTime(time) {
 			if (!time) return ''
 			const date = new Date(time)
-			return date.getFullYear() + '-' + 
-				   (date.getMonth() + 1).toString().padStart(2, '0') + '-' + 
+			return date.getFullYear() + '-' +
+				   (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
 				   date.getDate().toString().padStart(2, '0')
 		}
 	}
@@ -188,7 +188,7 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-	background-color: #f2f2f2;
+	background-color: var(--background-color-secondary);
 	min-height: 100vh;
 }
 
@@ -198,19 +198,19 @@ export default {
 
 .filter-bar {
 	display: flex;
-	background: #fff;
+	background: var(--card-background);
 	padding: 20rpx;
 	border-radius: 10rpx;
 	margin-bottom: 20rpx;
-	
+
 	.filter-item {
 		padding: 10rpx 30rpx;
 		margin-right: 20rpx;
 		border-radius: 30rpx;
 		font-size: 28rpx;
-		color: #666;
-		background: #f5f5f5;
-		
+		color: var(--text-color-regular);
+		background: var(--background-color-secondary);
+
 		&.active {
 			background: #007AFF;
 			color: #fff;
@@ -220,18 +220,18 @@ export default {
 
 .faq-list {
 	.faq-item {
-		background: #fff;
+		background: var(--card-background);
 		padding: 20rpx;
 		margin-bottom: 20rpx;
 		border-radius: 10rpx;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		
+
 		.faq-main {
 			flex: 1;
 			min-width: 0;
-			
+
 			.faq-title {
 				font-size: 32rpx;
 				font-weight: bold;
@@ -240,39 +240,39 @@ export default {
 				overflow: hidden;
 				text-overflow: ellipsis;
 			}
-			
+
 			.faq-info {
 				font-size: 26rpx;
-				color: #666;
-				
+				color: var(--text-color-regular);
+
 				.user-name {
 					margin-right: 20rpx;
 				}
 			}
 		}
-		
+
 		.faq-status {
 			flex-shrink: 0;
 			display: flex;
 			flex-direction: column;
 			align-items: flex-end;
-			
+
 			.status {
 				padding: 4rpx 20rpx;
 				border-radius: 20rpx;
 				font-size: 24rpx;
 				color: #fff;
 				margin-bottom: 10rpx;
-				
+
 				&.solved {
 					background-color: #4CAF50;
 				}
-				
+
 				&.unsolved {
 					background-color: #FF9800;
 				}
 			}
-			
+
 			.typical {
 				padding: 4rpx 20rpx;
 				border-radius: 20rpx;
@@ -284,7 +284,7 @@ export default {
 	}
 
 	.faq-item:active {
-		background-color: #f2f2f2;
+		background-color: var(--background-color-secondary);
 	}
 }
 
@@ -293,27 +293,27 @@ export default {
 	justify-content: center;
 	align-items: center;
 	margin: 30rpx 0;
-	
+
 	.page-btn {
 		padding: 10rpx 30rpx;
-		background: #fff;
+		background: var(--card-background);
 		border-radius: 30rpx;
 		margin: 0 20rpx;
-		
+
 		&.disabled {
-			color: #999;
+			color: var(--text-color-secondary);
 		}
 	}
-	
+
 	.page-num {
 		font-size: 28rpx;
-		color: #666;
+		color: var(--text-color-regular);
 	}
 }
 
 .no-data {
 	text-align: center;
-	color: #999;
+	color: var(--text-color-secondary);
 	margin-top: 100rpx;
 }
-</style> 
+</style>

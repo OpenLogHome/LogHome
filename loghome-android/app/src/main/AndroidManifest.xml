@@ -48,8 +48,8 @@
             android:name=".WebViewActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
             android:exported="false"
-            android:launchMode="singleTop"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.LogHome.WebView"
             android:windowSoftInputMode="adjustResize" />
 
         <provider

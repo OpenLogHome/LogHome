@@ -3,17 +3,17 @@
 		<!-- 顶部导航按钮 -->
 		<view class="top-nav">
 			<div class="nav-button" @click="navigateToNotification">
-				<img src="../../static/user/bell.png" alt="" class="nav-button-icon">
+				<img src="../../static/user/bell.png" alt="" class="nav-button-icon" />
 				<text>系统通知</text>
 				<view v-if="unreadNotifications > 0" class="unread-badge">{{unreadNotifications}}</view>
 			</div>
 			<div class="nav-button" @click="navigateToPrivateMessage">
-				<img src="../../static/user/post.png" alt="" class="nav-button-icon">
+				<img src="../../static/user/post.png" alt="" class="nav-button-icon" />
 				<text>私信</text>
 				<view v-if="unreadPrivateMessages > 0" class="unread-badge">{{unreadPrivateMessages}}</view>
 			</div>
 			<div class="nav-button" @click="navigateToActivityMessage">
-				<img src="../../static/user/megaphone.png" alt="" class="nav-button-icon">
+				<img src="../../static/user/megaphone.png" alt="" class="nav-button-icon" />
 				<text>活动消息</text>
 				<view v-if="unreadActivityMessages > 0" class="unread-badge">{{unreadActivityMessages}}</view>
 			</div>
@@ -33,8 +33,8 @@
 		<view class="list">
 			<div class="users" v-for="item in filteredMessages">
 				<div class="avators" @click="navigateTo('../users/personalPage?id='+item.from_id)">
-					<log-image :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+					<user-avatar class="message-avatar" :src="item.avatar_url" :frame="item.avatar_frame"
+						:visual-scale="item.avatar_frame ? 1.25 : 1" />
 				</div>
 				<div class="users" @click="navigateTo(item.router ? '../' + item.router : './')">
 					<div class="personInfo">
@@ -363,10 +363,9 @@
 		.avators {
 			position: relative;
 			
-			img {
+			.message-avatar {
+				width: 100rpx;
 				height: 100rpx;
-				border: #cacaca 1rpx solid;
-				border-radius: 7rpx;
 				margin: 15rpx;
 			}
 		}

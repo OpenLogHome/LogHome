@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="info">
 			<p>亲爱的朋友，欢迎你加入原木社区大家庭！</p>
 			<p>你的账号尚待激活，为了保证不间断的使用，请按照以下步骤激活你的账号：</p>
@@ -14,8 +14,8 @@
 				<p v-show="false">原木社区公测小组：931304998</p>
 				<p>原木文社总群：464239748</p>
 			</div>
-			<p>3.将验证码<span style="font-weight:bold;color:rgb(180, 111, 88)">通过私聊</span>发送给群内我们的原木社区管理员“苦力怕君”</p>
-			<p><span style="font-weight:bold;color:rgb(180, 111, 88)">友情提示：切勿将验证码发送至公开群中，请务必通过私聊发送。</span></p>
+			<p>3.将验证码<span style="font-weight:bold;color:var(--brand-text-color)">通过私聊</span>发送给群内我们的原木社区管理员“苦力怕君”</p>
+			<p><span style="font-weight:bold;color:var(--brand-text-color)">友情提示：切勿将验证码发送至公开群中，请务必通过私聊发送。</span></p>
 			<p>此操作会将你与发送验证消息的QQ号绑定，一个QQ号可绑定多个社区账号。</p>
 		</div>
 		<!-- <div class="button" @click="goAnyWay">以游客身份继续使用</div> -->
@@ -57,7 +57,7 @@
 			}
 			//验活
 			axios.get( this.$baseUrl + '/users/get_verify_code', {
-				headers: { 
+				headers: {
 				     'Content-Type': 'application/json',//设置请求头请求格式为JSON
 				     'Authorization': tk //设置token 其中K名要和后端协调好
 				}
@@ -80,7 +80,7 @@
 		.info{
 			font-size:30rpx;
 			line-height:60rpx;
-			color: #606063;
+			color: var(--text-color-regular);
 			div.bordered{
 				border: 2px solid #606063;;
 			}
@@ -100,17 +100,17 @@
 			margin-top: 30px;
 			margin-left: 10%;
 			font-size: 16px;
-			
+
 			font-weight: bold;
 			line-height: 38px;
 			border-radius: 5px;
 			text-align:center;
 			color: #ffffff;
 			background-color: rgb(180, 111, 88);
-			
+
 		}
-		 
-		.button:active {  
+
+		.button:active {
 			background-color:rgb(225, 139, 110);
 		}
 	}

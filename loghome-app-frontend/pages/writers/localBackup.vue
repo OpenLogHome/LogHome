@@ -1,5 +1,5 @@
 <template>
-	<view class="content">
+	<view class="content" v-dark>
 			<div class="articles">
 				<uni-collapse accordion>
 				    <uni-collapse-item class="titleOuter" v-for="(item,index) in articles" :key="item.time"
@@ -11,7 +11,7 @@
 							</div>
 						</template>
 						<view class="menuContent">
-							<div class="subTitle" @click="restoreArticle(index)"> 
+							<div class="subTitle" @click="restoreArticle(index)">
 								<uni-icons type="compose" size="20" color="rgb(113, 52, 24)"/>
 								<span>复制到剪贴板</span>
 							</div>
@@ -69,43 +69,43 @@ export default{
 		    var year_month_day = utc_datetime.substr(0,T_pos);
 		    var hour_minute_second = utc_datetime.substr(T_pos+1,Z_pos-T_pos-1);
 		    var new_datetime = year_month_day+" "+hour_minute_second; // 2017-03-31 08:02:06
-		
+
 		    // 处理成为时间戳
 		    timestamp = new Date(Date.parse(new_datetime));
 		    timestamp = timestamp.getTime();
 		    timestamp = timestamp/1000;
-		
+
 		    // 增加8个小时，北京时间比utc时间多八个时区
 		    var timestamp = timestamp+8*60*60;
-		
+
 		    // 时间戳转为时间
 			var beijing_datetime = this.timeConvert(new Date(parseInt(timestamp) * 1000))
 		    return beijing_datetime; // 2017-03-31 16:02:06
 		},
 		refreshPage(){
 			let dbStatus = window.localStorage.getItem("IndexedDB");
-			
+
 			if(this.uid!=-1&& dbStatus == "enabled"){
-				
+
 				let version = this.$DBVersion
 				let _this = this;
 				let IDBOpenDBRequest = indexedDB.open('LogCommunity', version);
-				
+
 				var db;
-				
+
 				IDBOpenDBRequest.onsuccess=function(e){
-					
+
 					db = e.target.result
-					
+
 					// 创建一个事务，类型：IDBTransaction，文档地址： https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction
 					var transaction = db.transaction('articleBackup', 'readwrite');
-					
+
 					// 通过事务来获取IDBObjectStore
 					var store = transaction.objectStore('articleBackup');
-					
+
 					var index = store.index('article_id');
 					var request = index.openCursor(IDBKeyRange.only(_this.uid.toString()));
-					
+
 					request.onsuccess = function (e) {
 						uni.hideLoading();
 						var cursor=e.target.result;
@@ -116,9 +116,9 @@ export default{
 							cursor.continue();
 						}
 					}
-				
+
 				};
-					
+
 			}
 		},
 		restoreArticle(index){
@@ -131,35 +131,35 @@ export default{
 			})
 		},
 		deleteArticle(index){
-			
+
 			let _this = this;
-			
+
 			uni.showModal({
 				title: '提示',
 				content: '删除后将无法找回，确定继续吗？',
 				confirmColor:"#EA7034",
 				success: function (res) {
-					
+
 					if(!res.confirm) return;
-					
+
 					let version = this.$DBVersion
-					
+
 					let IDBOpenDBRequest = indexedDB.open('LogCommunity', version);
-					
+
 					var db;
-					
+
 					IDBOpenDBRequest.onsuccess=function(e){
-						
+
 						db = e.target.result
-							
+
 						// 创建一个事务，类型：IDBTransaction，文档地址： https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction
 						var transaction = db.transaction('articleBackup', 'readwrite');
-							
+
 						// 通过事务来获取IDBObjectStore
 						var store = transaction.objectStore('articleBackup');
-						
+
 						var request = store.delete(_this.articles[index].history_id);
-						
+
 						request.onsuccess = function (event) {
 							uni.showToast({
 								title: "删除成功",
@@ -170,7 +170,7 @@ export default{
 							_this.refreshPage();
 						};
 					}
-					
+
 				},
 			})
 		}
@@ -186,10 +186,10 @@ export default{
 			line-height: 80rpx;
 			height:80rpx;
 			text-align:center;
-			background-color: rgb(255, 242, 217);
+			background-color: var(--card-background);
 			border-bottom: #bec3ca 1px solid;
 			font-size: 35rpx;
-			color:rgb(113, 52, 24);
+			color:var(--accent-text-color);
 			span{
 				margin-left: 10rpx;
 			}
@@ -197,23 +197,23 @@ export default{
 		.content_view{
 			max-height:500rpx;
 			overflow:scroll;
-			background-color: rgb(255, 242, 217);
-			color:rgb(113, 52, 24);
+			background-color: var(--card-background);
+			color:var(--accent-text-color);
 			padding:30rpx;
 			text-wrap:break-all;
 		}
 	}
 	.titleOuter{
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 	}
-	
+
 	.title{
 		margin-top: 20rpx;
 		padding-left:35rpx;
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 		font-size: 35rpx;
 		font-weight: bold;
-		color:rgb(113, 52, 24);
+		color:var(--accent-text-color);
 		line-height: 35rpx;
 		.draft{
 			font-size: 28rpx;
@@ -221,33 +221,33 @@ export default{
 			color:rgb(195, 0, 0);
 		}
 	}
-	
+
 	.title.last{
 		margin-bottom: 20rpx;
 	}
-	
+
 	.miniTitle{
 		padding-left:35rpx;
 		font-size: 30rpx;
-		color:rgb(134, 133, 132);
+		color:var(--text-color-regular);
 		line-height: 50rpx;
 		margin-bottom: 10rpx;
 	}
-	
+
 	.content {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		flex-flow: wrap;
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 		width:100vw;
 		.articles{
 			width:100%;
 			.article{
-				border-bottom: #cacaca 1rpx solid;
+				border-bottom: var(--border-color) 1rpx solid;
 			}
-			
+
 		}
 		div.underBar{
 			height: 150rpx

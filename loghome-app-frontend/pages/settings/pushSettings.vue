@@ -1,7 +1,7 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="description">
-			<div style=" background-color:#ffffff; padding:50rpx; font-size: 35rpx;" data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed=""><p>
+			<div style=" background-color:var(--card-background); padding:50rpx; font-size: 35rpx;" data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed=""><p>
 				<strong>绑定QQ</strong>
 			</p>
 			<p style="">
@@ -9,8 +9,8 @@
 			</p>
 			<p style="margin-top: 20rpx;">
 				您的绑定码是：<text style="color:#EA7034;font-weight:bold;user-select:text" @click="copyCode">{{bindingCode}}</text>
-				<text style="color:#888; font-size: 24rpx; margin-left: 20rpx; border: 1px solid #ccc; padding: 2rpx 10rpx; border-radius: 6rpx;" @click="copyCode">复制</text>
-				<text style="color:#888; font-size: 24rpx; margin-left: 20rpx; border: 1px solid #ccc; padding: 2rpx 10rpx; border-radius: 6rpx;" @click="refreshCode">刷新</text>
+				<text style="color:var(--text-color-secondary); font-size: 24rpx; margin-left: 20rpx; border: 1px solid var(--border-color); padding: 2rpx 10rpx; border-radius: 6rpx;" @click="copyCode">复制</text>
+				<text style="color:var(--text-color-secondary); font-size: 24rpx; margin-left: 20rpx; border: 1px solid var(--border-color); padding: 2rpx 10rpx; border-radius: 6rpx;" @click="refreshCode">刷新</text>
 			</p>
 			<p style="">
 				请将此绑定码发送至原木社区用户交流群（701928273）的原木娘（2917117044），即可自动完成账号绑定。
@@ -229,29 +229,29 @@
 </script>
 
 <style scoped lang="scss">
-	
+
 	.text{
 		font-size: 30rpx;
 		width: 100%;
 	}
-	
+
 	.time-picker{
-		border: 1px solid #ccc;
+		border: 1px solid var(--border-color);
 		padding: 8rpx 16rpx;
 		border-radius: 8rpx;
-		background-color: #f8f8f8;
+		background-color: var(--background-color-secondary);
 		font-size: 28rpx;
-		color: #333;
+		color: var(--text-color-primary);
 	}
-		
+
 	.list-content{
-		background: #fff;
+		background: var(--card-background);
 		margin-top:20upx;
 	}
 	.list{
 		width:100%;
-		border-bottom:15upx solid  rgb(255, 248, 234);
-		background: #fff;
+		border-bottom:15upx solid  var(--border-color);
+		background: var(--card-background);
 		&:last-child{
 			border: none;
 		}
@@ -259,7 +259,7 @@
 			width:92%;
 			height:100upx;
 			padding:0 4%;
-			border-bottom:1px solid rgb(255, 248, 234);
+			border-bottom:1px solid var(--border-color);
 			display:flex;
 			align-items:center;
 		&.noborder{
@@ -277,7 +277,7 @@
 			.text{
 				padding-left:20upx;
 				width:100%;
-				color:#666;
+				color:var(--text-color-regular);
 			}
 			.to{
 				flex-shrink:0;

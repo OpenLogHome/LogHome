@@ -32,6 +32,11 @@ import ExchangeRecordsManage from '../views/payments/ExchangeRecordsManage.vue'
 import StoreProductsManage from "../views/store/ProductsManage.vue"
 import StoreOrdersManage from "../views/store/OrdersManage.vue"
 import PopupPosterManage from '../views/operations/PopupPosterManage.vue'
+import RedeemCodesManage from '../views/membership/RedeemCodesManage.vue'
+import PassStatusQuery from '../views/membership/PassStatusQuery.vue'
+import RedstoneManage from '../views/membership/RedstoneManage.vue'
+import AppUpdateManage from '../views/system/AppUpdateManage.vue'
+import IndexTagsManage from '../views/library/IndexTagsManage.vue'
 
 Vue.use(VueRouter)
 
@@ -65,6 +70,16 @@ const routes = [
         path: '/libraryRoulousChart',
         component: libraryRoulousChart,
         name: '书库轮播图管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '书库管理'
+        }
+      },
+      {
+        path: '/index-tags',
+        component: IndexTagsManage,
+        name: '书库快捷按钮',
         meta: {
           requireAuth: true,
           breadNumber: 1,
@@ -279,6 +294,46 @@ const routes = [
           requireAuth: true,
           breadNumber: 1,
           parentName: '运营配置'
+        }
+      },
+      {
+        path: '/redeem-codes',
+        component: RedeemCodesManage,
+        name: '通行证兑换码管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '支付管理'
+        }
+      },
+      {
+        path: '/pass-status',
+        component: PassStatusQuery,
+        name: '通行证状态查询',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '支付管理'
+        }
+      },
+      {
+        path: '/redstone-manage',
+        component: RedstoneManage,
+        name: '红石余额管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '支付管理'
+        }
+      },
+      {
+        path: '/app-updates',
+        component: AppUpdateManage,
+        name: '版本管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '系统管理'
         }
       }
     ]

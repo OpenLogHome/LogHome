@@ -1,7 +1,7 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="description">
-			<div style=" background-color:#ffffff; padding:50rpx; font-size: 35rpx;" data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed=""><p>
+			<div style=" background-color:var(--card-background); padding:50rpx; font-size: 35rpx;" data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed=""><p>
 				<strong>关于本地备份：</strong>
 			</p>
 			<p style="text-indent:2em;">
@@ -100,20 +100,20 @@
 </script>
 
 <style scoped lang="scss">
-	
+
 	.text{
 		font-size: 30rpx;
 		width: 100%;
-	}		
-	
+	}
+
 	.list-content{
-		background: #fff;
+		background: var(--card-background);
 		margin-top:20upx;
 	}
 	.list{
 		width:100%;
-		border-bottom:15upx solid  rgb(255, 248, 234);
-		background: #fff;
+		border-bottom:15upx solid  var(--border-color);
+		background: var(--card-background);
 		&:last-child{
 			border: none;
 		}
@@ -121,7 +121,7 @@
 			width:92%;
 			height:100upx;
 			padding:0 4%;
-			border-bottom:1px solid rgb(255, 248, 234);
+			border-bottom:1px solid var(--border-color);
 			display:flex;
 			align-items:center;
 		&.noborder{
@@ -139,7 +139,7 @@
 			.text{
 				padding-left:20upx;
 				width:100%;
-				color:#666;
+				color:var(--text-color-regular);
 			}
 			.to{
 				flex-shrink:0;

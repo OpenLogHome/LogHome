@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="content">
 			<div class="underBar"></div>
 			<img class="logo" src="@/static/logo.png" @click="gotoTestUrl"></img>
@@ -19,10 +19,10 @@
 
 			<div class="certification" style="margin-top: 200rpx; text-align: center;">
 				<a href="https://www.12377.cn/" target="_blank" style="
-				                        background: #fff;
+				                        background: var(--card-background);
 				                        display: inline-block;
 				                        padding: 5px 8px;
-				                        border: 1px solid #eee;
+				                        border: 1px solid var(--border-color);
 				                        border-radius: 5px;
 				                        margin: 5px 0;
 										text-decoration:none;
@@ -110,7 +110,7 @@ export default {
 .outer {
 	height: 100%;
 	overflow: hidden;
-	background-color: #FCF3E0;
+	background-color: var(--background-color-secondary);
 }
 
 .content {
@@ -177,7 +177,7 @@ span.name {
 	text-align: center;
 	line-height: 38px;
 	border-radius: 5px;
-	color: rgb(180, 111, 88);
+	color: var(--brand-text-color);
 
 }
 

@@ -25,11 +25,18 @@ function syncWrapperOffset(page2, scrollTop) {
     const wrapper = page2.querySelector('uni-page-wrapper');
     if (wrapper) wrapper.style.marginTop = '-' + scrollTop + 'px';
 }
+function isNativeRouterEnabled() {
+    return !!(window.jsBridge && window.jsBridge.inApp && window.jsBridge.nativeRouterAvailable);
+}
 // #endif
 import './index.css';
 export default {
     // #ifdef H5
     onLaunch: function() {
+        if (isNativeRouterEnabled()) {
+            document.documentElement.classList.add('loghome-native-router');
+            return;
+        }
         const page1 = getPage1();
 		if(page1 == undefined){
 			return;

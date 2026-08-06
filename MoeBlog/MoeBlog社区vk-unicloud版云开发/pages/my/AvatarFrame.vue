@@ -32,7 +32,7 @@ function EditInfo(){
 	apiUpUserInfo(obj).then(res=>{
 		if(res.code==0){
 			uni.showToast({
-				title:"修改头像框成功",
+				title:"修改头像挂件成功",
 				icon:"none"
 			})
 			vk.setVuex('$user.userInfo.frame', frameIndex.value);

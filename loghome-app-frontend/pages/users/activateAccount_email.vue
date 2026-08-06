@@ -1,11 +1,11 @@
 <template>
-	<div class="content">
+	<div class="content" v-dark>
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"/></div>
 			<input class="input" type="email" placeholder="输入邮箱地址" v-model="email"/>
 			<div class="btn" v-show="!isWaiting" @click="sendCode">发送验证码</div>
 			<div class="btn wait" v-show="isWaiting">等待{{waitTime}}秒</div>
-		</div> 
+		</div>
 		<div style="display:flex;width:100%;justify-content: center;">
 			<slide-verify :l="42"
 			            :r="10"
@@ -20,7 +20,7 @@
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
 			<input class="input" type="text" placeholder="验证码" v-model="vcode" />
 		</div>
-		
+
 		<!--End密码输入框-->
 		<div class="button" @click="submit">提交</div>
 	</div>
@@ -44,7 +44,7 @@
 			}
 		},
 		onLoad() {
-			
+
 		},
 		methods: {
 			verifyResult(res) {
@@ -60,7 +60,7 @@
 					});
 					return;
 				}
-				
+
 				// 验证邮箱格式
 				const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 				if(!emailPattern.test(this.email)){
@@ -71,10 +71,10 @@
 					});
 					return;
 				}
-				
+
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if(tk) tk = tk.tk;
-				
+
 				if(tk == null){
 					this.$isFromLogin = true;
 					uni.navigateTo({
@@ -82,13 +82,13 @@
 					});
 					return;
 				}
-				
+
 				uni.showLoading({
 					title: '发送中'
 				});
-				
+
 				axios.get(this.$baseUrl + '/users/send_bind_email_code?email=' + _this.email, {
-					headers: { 
+					headers: {
 					     'Content-Type': 'application/json',
 					     'Authorization': tk
 					}
@@ -139,7 +139,7 @@
 					});
 					return;
 				}
-				
+
 				if(this.vcode.length < 4) {
 					uni.showToast({
 						title: "请输入有效的验证码",
@@ -148,14 +148,14 @@
 					});
 					return;
 				}
-				
+
 				uni.showLoading({
 					title: '验证中'
 				});
-				
+
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if(tk) tk = tk.tk;
-				
+
 				let _this = this;
 				if(tk == null){
 					this.$isFromLogin = true;
@@ -164,12 +164,12 @@
 					});
 					return;
 				}
-				
+
 				axios.post(this.$baseUrl + '/users/verify_bind_email', {
 					email: this.email,
 					code: this.vcode
 				}, {
-					headers: { 
+					headers: {
 					     'Content-Type': 'application/json',
 					     'Authorization': tk
 					}
@@ -221,7 +221,7 @@
 		height: 100%;
 		padding-top: 1%;
 		text-align: center;
-		background-color: #f2f2f2;
+		background-color: var(--background-color-secondary);
 	}
 
 	.longin-boder {
@@ -231,9 +231,9 @@
 		margin-left: 10%;
 		line-height: 40px;
 		text-align: center;
-		border: 1px solid #dddddd;
+		border: 1px solid var(--border-color);
 		border-radius: 5px;
-		background-color: #efefef;
+		background-color: var(--background-color-secondary);
 		position:relative;
 	}
 
@@ -254,15 +254,15 @@
 		height: 37px;
 		line-height: 37px;
 		border: 0px;
-		color: #333333;
+		color: var(--text-color-primary);
 		font-size: 16px;
-		background-color: #efefef;
+		background-color: var(--background-color-secondary);
 
 	}
 	.btn{
 		position:absolute;
 		right:15rpx;
-		color:rgb(180, 111, 88);
+		color:var(--brand-text-color);
 	}
 	.btn.wait{
 		color:rgb(154, 154, 154);
@@ -274,7 +274,7 @@
 		margin-top: 30px;
 		margin-left: 10%;
 		font-size: 16px;
-		
+
 		font-weight: bold;
 		line-height: 38px;
 		border-radius: 5px;
@@ -292,4 +292,4 @@
 		margin-left: 10%;
 		margin-top: 30px;
 	}
-</style> 
+</style>

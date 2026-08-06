@@ -227,7 +227,7 @@
 			"path" : "pages/my/AvatarFrame",
 			"style" : 
 			{
-				"navigationBarTitleText" : "头像框",
+				"navigationBarTitleText" : "头像挂件",
 				"enablePullDownRefresh" : false
 			}
 		},

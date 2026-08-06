@@ -1392,15 +1392,16 @@ router.get('/activity-messages', auth, async function (req, res) {
         const offset = (page - 1) * pageSize;
         params.push(offset, pageSize);
         
-        // 获取活动消息列表
+        // 获取活动消息列表（按消息内容分组，避免全员消息每个用户显示一条）
         let results = await query(
-            `SELECT m.message_id, m.from_id, m.to_id, m.message_content, m.time, m.is_read, m.router, m.message_type, m.bg_url, 
-             (SELECT COUNT(*) FROM user_message WHERE message_content = m.message_content AND bg_url = m.bg_url AND message_type = 'activity') as total_count,
-             (SELECT COUNT(*) FROM user_message WHERE message_content = m.message_content AND bg_url = m.bg_url AND message_type = 'activity' AND is_read = 1) as read_count
+            `SELECT MIN(m.message_id) AS message_id, m.message_content, m.bg_url, m.router,
+             MAX(m.time) AS time,
+             COUNT(*) AS total_count,
+             SUM(CASE WHEN m.is_read = 1 THEN 1 ELSE 0 END) AS read_count
              FROM user_message m
              ${whereClause}
-             GROUP BY m.message_id, m.from_id, m.to_id, m.message_content, m.time, m.is_read, m.router, m.message_type, m.bg_url
-             ORDER BY m.time DESC LIMIT ?, ?`,
+             GROUP BY m.message_content, m.bg_url, m.router
+             ORDER BY MAX(m.time) DESC, MIN(m.message_id) DESC LIMIT ?, ?`,
             params
         );
         

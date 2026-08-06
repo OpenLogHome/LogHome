@@ -33,6 +33,10 @@
                 <i class="el-icon-picture-outline"></i>
                 轮播图管理
             </el-menu-item>
+            <el-menu-item index="/index-tags">
+                <i class="el-icon-collection-tag"></i>
+                快捷按钮管理
+            </el-menu-item>
             <el-menu-item index="/novelsManage">
                 <i class="el-icon-reading"></i>
                 小说管理
@@ -62,6 +66,10 @@
             <el-menu-item index="/achievementsManage">
                 <i class="el-icon-medal"></i>
                 勋章管理
+            </el-menu-item>
+            <el-menu-item index="/app-updates">
+                <i class="el-icon-upload2"></i>
+                版本管理
             </el-menu-item>
           </el-submenu>
           <el-submenu index="community">
@@ -118,6 +126,18 @@
             <el-menu-item index="/exchange-records">
                 <i class="el-icon-sort"></i>
                 原木兑换记录
+            </el-menu-item>
+            <el-menu-item index="/redeem-codes">
+                <i class="el-icon-tickets"></i>
+                通行证兑换码
+            </el-menu-item>
+            <el-menu-item index="/pass-status">
+                <i class="el-icon-user"></i>
+                通行证状态查询
+            </el-menu-item>
+            <el-menu-item index="/redstone-manage">
+                <i class="el-icon-coin"></i>
+                红石余额管理
             </el-menu-item>
           </el-submenu>
           <el-submenu index="store">

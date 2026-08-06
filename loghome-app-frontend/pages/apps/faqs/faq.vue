@@ -1,5 +1,5 @@
 <template>
-	<view style="background-color: #ffffff;">
+	<view style="background-color: var(--card-background);" v-dark>
 		<view v-for="qtype in faqs">
 			<view class="title">
 				<text>{{qtype.title}}</text>
@@ -55,7 +55,7 @@
 						duration: 2000
 					});
 				}).then(function(){
-					
+
 				})
 				axios.get(this.$baseUrl + '/app/get_newest_faqs', {}).then((res) => {
 					_this.faqs[1]['content']=res.data;
@@ -68,7 +68,7 @@
 						duration: 2000
 					});
 				}).then(function(){
-					
+
 				})
 			}
 		},
@@ -83,13 +83,13 @@
 		padding: 8px 30rpx;
 		font-size: 40rpx;
 		font-weight: bold;
-		background-color: #f2f2f2;
-		border-bottom: #e3e3e3 1rpx solid;
+		background-color: var(--background-color-secondary);
+		border-bottom: var(--border-color) 1rpx solid;
 		margin: 0 auto 25rpx;
-		color: #934900;
+		color: var(--accent-text-color);
 	}
 	.faq{
-		border-bottom: #cacaca 1px solid;
+		border-bottom: var(--border-color) 1px solid;
 		height: 70rpx;
 		padding: 0 30rpx;
 		line-height: 70rpx;
@@ -105,7 +105,7 @@
 		margin-top:10rpx;
 		padding-top:10rpx;
 		padding-bottom: 15px;
-		background-color: #f2f2f2;
+		background-color: var(--background-color-secondary);
 	}
 	button {
 		height: 40px;

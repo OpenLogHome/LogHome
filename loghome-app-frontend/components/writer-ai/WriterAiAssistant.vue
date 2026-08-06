@@ -325,9 +325,10 @@
                 <path d="M17 8.5c-.8 0-1.5.5-1.9 1.1" />
                 <path d="M18.8 15.1c-.7-.5-1.5-.7-2.3-.5" />
               </svg>
-              <text>深度思考 <el-tag size="mini" type="danger" style="margin-left: 8rpx;">限免</el-tag></text>
+              <text>深度思考</text>
             </button>
           </view>
+		  <RedstoneCost :cost="imageGenerationEnabled ? 5 : (thinkingMode === 'deep' ? 2 : 1)" />
           <view class="chat-compose-row">
             <view class="chat-editor-box">
               <view class="inline-selection-blocks" v-if="pendingSelectionBlocks.length">
@@ -385,13 +386,21 @@
                   </button>
                 </view>
                 <button
+                  v-if="loading"
+                  class="ghost-button chat-send-button chat-stop-button"
+                  size="mini"
+                  @click="stopAssist"
+                >
+                  停止
+                </button>
+                <button
+                  v-else
                   class="primary-button chat-send-button"
                   size="mini"
-                  :loading="loading"
-                  :disabled="loading || !canRun"
+                  :disabled="!canRun"
                   @click="submitChat"
                 >
-                  {{ loading ? "思考中" : "发送" }}
+                  发送
                 </button>
               </view>
             </view>
@@ -457,6 +466,9 @@
 </template>
 
 <script>
+import RedstoneCost from '@/components/redstone-cost/RedstoneCost.vue';
+import { showInsufficientRedstoneOptions } from '@/common/redstone-ui.js';
+
 const STREAM_ROUTE = "/library/writer_novel_ai_assist_stream";
 const SMART_REPLACE_ROUTE = "/library/writer_novel_ai_smart_replace";
 const MAX_CONTEXT_CHARS = 1400;
@@ -469,7 +481,12 @@ const REASONING_TYPEWRITER_INTERVAL_MS = 18;
 const MAX_CONVERSATION_SESSIONS = 30;
 const CONVERSATION_PERSIST_DELAY_MS = 450;
 const ASSIST_RECONNECT_DELAY_MS = 1600;
+const MAX_ASSIST_RECONNECT_ATTEMPTS = 3;
 const ASSIST_TASK_RESUME_WINDOW_MS = 30 * 60 * 1000;
+
+function createTaskInstanceId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
 const IMAGE_STYLE_OPTIONS = [
   { label: "风格", value: "" },
   { label: "写实", value: "写实细腻，电影感光影" },
@@ -758,6 +775,9 @@ function normalizePendingAssistTask(rawTask) {
     return null;
   }
   const lastEventId = Number(rawTask.lastEventId || rawTask.last_event_id || 0);
+  const reconnectAttempts = Number(
+    rawTask.reconnectAttempts || rawTask.reconnect_attempts || 0
+  );
   const articleId = Number(rawTask.articleId || rawTask.article_id || 0);
   const rawStatus = String(rawTask.status || "running");
   return {
@@ -768,6 +788,9 @@ function normalizePendingAssistTask(rawTask) {
     thinkingMode: normalizeThinkingMode(rawTask.thinkingMode || rawTask.thinking_mode),
     lastEventId: Number.isFinite(lastEventId) && lastEventId > 0
       ? Math.floor(lastEventId)
+      : 0,
+    reconnectAttempts: Number.isFinite(reconnectAttempts) && reconnectAttempts > 0
+      ? Math.floor(reconnectAttempts)
       : 0,
     status: rawStatus === "completed" || rawStatus === "error" ? rawStatus : "running",
     createdAt: Number(rawTask.createdAt || rawTask.created_at || Date.now()),
@@ -870,6 +893,7 @@ function parseDraftSegments(content) {
 
 export default {
   name: "WriterAiAssistant",
+  components: { RedstoneCost },
   props: {
     editor: {
       type: Object,
@@ -1775,14 +1799,27 @@ export default {
     },
     getTokenInfo() {
       try {
-        return JSON.parse(window.localStorage.getItem("token")) || null;
+        let rawToken = null;
+        if (typeof uni !== "undefined" && uni.getStorageSync) {
+          rawToken = uni.getStorageSync("token");
+        }
+        if (!rawToken && typeof window !== "undefined" && window.localStorage) {
+          rawToken = window.localStorage.getItem("token");
+        }
+        return typeof rawToken === "string"
+          ? JSON.parse(rawToken || "null")
+          : rawToken || null;
       } catch (error) {
         return null;
       }
     },
     getAuthToken() {
       const token = this.getTokenInfo();
-      return token ? token.tk : "";
+      return token && token.tk ? String(token.tk).trim() : "";
+    },
+    getAuthHeaders() {
+      const authToken = this.getAuthToken();
+      return authToken ? { Authorization: "Bearer " + authToken } : {};
     },
     getAiBaseUrl() {
       let overrideBaseUrl = "";
@@ -2310,6 +2347,31 @@ export default {
       }
       this.abortController = null;
     },
+    stopAssist() {
+      const messageId = this.activeAssistantMessageId
+        || (this.activeAssistTask && this.activeAssistTask.messageId);
+      if (!messageId) {
+        return;
+      }
+      this.abortRequest();
+      this.clearAssistReconnectTimer();
+      this.resumeTaskInProgress = false;
+      this.setActiveAssistantImageGenerationState(false);
+      const target = this.messages.find((message) => {
+        return message && String(message.id) === String(messageId);
+      });
+      if (
+        target
+        && target.role === "assistant"
+        && !String(target.content || "").trim()
+        && !String(target.reasoningOutput || "").trim()
+        && !this.getAssistantGeneratedImages(target).length
+      ) {
+        target.content = "已停止生成";
+      }
+      this.appendProcessStep("stopped", "已停止生成");
+      this.completeAssistTask(messageId, "stopped");
+    },
     hasRunningAssistTask() {
       return !!(
         this.activeAssistTask &&
@@ -2322,6 +2384,7 @@ export default {
         Number(this.chapterId || (this.article && this.article.article_id) || 0),
         this.ensureCurrentConversationId(),
         messageId,
+        createTaskInstanceId(),
       ].join(":");
     },
     createActiveAssistTask(messageId) {
@@ -2333,6 +2396,7 @@ export default {
         thinkingMode: this.thinkingMode,
         status: "running",
         lastEventId: 0,
+        reconnectAttempts: 0,
         createdAt: Date.now(),
       });
     },
@@ -2360,8 +2424,21 @@ export default {
       if (!this.hasRunningAssistTask() || this.assistReconnectTimer) {
         return;
       }
+      const task = this.activeAssistTask;
+      const reconnectAttempts = Number(task && task.reconnectAttempts || 0);
+      if (reconnectAttempts >= MAX_ASSIST_RECONNECT_ATTEMPTS) {
+        const message = "写作助手连接多次中断，请重新发送本次问题";
+        this.errorMessage = message;
+        this.appendProcessStep("reconnect_failed", message);
+        this.setActiveAssistantImageGenerationState(false);
+        this.completeAssistTask(task && task.messageId, "error");
+        return;
+      }
+      this.updateActiveAssistTask({
+        reconnectAttempts: reconnectAttempts + 1,
+      });
       this.loading = true;
-      this.statusText = "连接中断，正在尝试续接";
+      this.statusText = `连接中断，正在尝试续接（${reconnectAttempts + 1}/${MAX_ASSIST_RECONNECT_ATTEMPTS}）`;
       this.appendProcessStep("reconnect", this.statusText);
       this.assistReconnectTimer = setTimeout(() => {
         this.assistReconnectTimer = null;
@@ -2852,6 +2929,7 @@ export default {
           this.scheduleAssistReconnect();
           return;
         }
+		showInsufficientRedstoneOptions(error);
         this.errorMessage = error.message || "写作助手暂时没有响应";
         this.appendProcessStep("error", this.errorMessage);
         this.completeAssistTask(assistantMessage.id, "error");
@@ -2878,7 +2956,7 @@ export default {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/x-ndjson",
-          Authorization: "Bearer " + this.getAuthToken(),
+          ...this.getAuthHeaders(),
         },
         body: JSON.stringify(requestPayload),
         signal: controller ? controller.signal : undefined,
@@ -2886,12 +2964,15 @@ export default {
 
       if (!response.ok) {
         let message = "写作助手请求失败";
+		let code = "";
         try {
           const data = await response.json();
           message = data.msg || data.message || message;
+		  code = data.code || "";
         } catch (error) {}
         const requestError = new Error(message);
         requestError.statusCode = response.status;
+		requestError.code = code;
         throw requestError;
       }
 
@@ -2958,6 +3039,7 @@ export default {
           this.scheduleAssistReconnect();
           return;
         }
+		showInsufficientRedstoneOptions(error);
         this.errorMessage = error.message || "写作助手暂时没有响应";
         this.appendProcessStep("error", this.errorMessage);
         this.completeAssistTask(task.messageId, "error");
@@ -3092,6 +3174,7 @@ export default {
             }
           }
           this.reasoningOutput = nextReasoning;
+          this.updateActiveAssistTask({ reconnectAttempts: 0 });
           if (mergedReasoning.delta) {
             this.queueResultAutoScroll();
             this.scheduleConversationPersist();
@@ -3120,6 +3203,7 @@ export default {
           } else {
             this.output = mergedOutput.full;
           }
+          this.updateActiveAssistTask({ reconnectAttempts: 0 });
           if (mergedOutput.delta) {
             this.streamOutputChars += mergedOutput.delta.length;
             this.queueResultAutoScroll();
@@ -4025,7 +4109,7 @@ export default {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: "Bearer " + this.getAuthToken(),
+            ...this.getAuthHeaders(),
           },
           body: JSON.stringify(this.buildSmartReplacePayload(draftText, message)),
         });
@@ -4359,7 +4443,7 @@ export default {
   height: 60vh;
   max-height: 80vh;
   min-height: 0;
-  padding: 16rpx 28rpx calc(22rpx + env(safe-area-inset-bottom));
+  padding: 16rpx 28rpx calc(22rpx + var(--loghome-safe-bottom, 0px));
   border-radius: 30rpx 30rpx 0 0;
   border-top: 2rpx solid #3f2a18;
   box-sizing: border-box;
@@ -4479,6 +4563,11 @@ export default {
   height: 62rpx;
   object-fit: contain;
   filter: brightness(0);
+}
+
+.black .panel-brand-logo {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
 }
 
 .panel-subtitle {
@@ -5454,6 +5543,18 @@ export default {
   padding: 0 20rpx;
   font-size: 22rpx;
   line-height: 48rpx;
+}
+
+.chat-stop-button {
+  color: #8f2b20;
+  border-color: #8f2b20;
+  background: #fff7f3;
+}
+
+.black .chat-stop-button {
+  color: #f1b8ac;
+  border-color: #f1b8ac;
+  background: #3a2725;
 }
 
 @media screen and (max-width: 360px) {

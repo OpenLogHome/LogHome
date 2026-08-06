@@ -57,7 +57,7 @@
           <div class="text">{{ feedback.feedback_content }}</div>
         </div>
 
-        <div class="feedback-actions">
+        <div class="feedback-actions" v-if="canEditFeedback">
           <el-button
             size="mini"
             :type="feedback.status === 0 ? 'primary' : 'success'"
@@ -70,6 +70,8 @@
             编辑章节
           </el-button>
         </div>
+
+        <div v-else class="feedback-readonly-hint">当前账号只有查看反馈权限</div>
       </div>
     </div>
   </view>
@@ -91,6 +93,15 @@ export default {
       filteredFeedbacks: [],
       statusFilter: "all",
     };
+  },
+  computed: {
+    canEditFeedback() {
+      return !!(
+        this.articleInfo &&
+        this.articleInfo.current_access &&
+        this.articleInfo.current_access.can_edit_draft === true
+      );
+    },
   },
   onLoad(option) {
     if (option.id) {
@@ -348,6 +359,13 @@ export default {
         gap: 15rpx;
         margin-top: 20rpx;
       }
+
+      .feedback-readonly-hint {
+        margin-top: 20rpx;
+        color: #999;
+        font-size: 24rpx;
+        text-align: right;
+      }
     }
   }
 }
@@ -409,6 +427,10 @@ export default {
 
       .feedback-content .text {
         border-left-color: #d35400;
+      }
+
+      .feedback-readonly-hint {
+        color: #777;
       }
     }
   }

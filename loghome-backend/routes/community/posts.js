@@ -5,6 +5,8 @@ let auth = require('../../bin/auth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
 let achievements = require('../../bin/achievements.js');
+let avatarFrames = require('../../bin/avatarFrames.js');
+let membership = require('../../bin/membership.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -48,6 +50,12 @@ router.get('/list', async (req, res) => {
         params.push((page - 1) * pageSize, pageSize);
         
         const posts = await query(queryStr, params);
+        await avatarFrames.decorateRows(posts, [
+            { userIdField: 'user_id', targetField: 'author_avatar_frame' }
+        ]);
+        await membership.decorateRows(posts, [
+            { userIdField: 'user_id', targetField: 'author_membership_type' }
+        ]);
         
         // 处理媒体URL
         for (let post of posts) {
@@ -133,11 +141,17 @@ router.get('/detail/:id', async (req, res) => {
         }
         
         const post = posts[0];
-        
-        // 获取作者勋章
-        post.author_badge = await achievements.getUserBadge(post.user_id);
-        post.author_title = await achievements.getUserTitleProfile(post.user_id);
+        const [authorAvatarFrame, authorBadge, authorTitle, authorMembership] = await Promise.all([
+            avatarFrames.getEffectiveAvatarFrame(post.user_id),
+            achievements.getUserBadge(post.user_id),
+            achievements.getUserTitleProfile(post.user_id),
+            membership.getCurrentSubscription(post.user_id),
+        ]);
+        post.author_avatar_frame = authorAvatarFrame;
+        post.author_badge = authorBadge;
+        post.author_title = authorTitle;
         post.author_title_text = post.author_title.display_text;
+        post.author_membership_type = authorMembership ? authorMembership.membership_type : '';
         
         // 处理媒体URL
         if (post.media_urls) {
@@ -169,6 +183,9 @@ router.get('/detail/:id', async (req, res) => {
             [postId]
         );
         
+        await avatarFrames.decorateRows(mentions, [
+            { userIdField: 'user_id', targetField: 'avatar_frame' }
+        ]);
         post.mentions = mentions;
         
         // 如果帖子绑定了作品，获取作品信息
@@ -182,6 +199,7 @@ router.get('/detail/:id', async (req, res) => {
             );
             
             if (novel.length > 0) {
+                novel[0].author_avatar_frame = await avatarFrames.getEffectiveAvatarFrame(novel[0].author_id);
                 post.novel_info = novel[0];
             }
         }
@@ -781,6 +799,9 @@ router.get('/recommend', async (req, res) => {
         queryStr += ' LIMIT ?, ?';
         
         const posts = await query(queryStr, [(page - 1) * pageSize, pageSize]);
+        await membership.decorateRows(posts, [
+            { userIdField: 'user_id', targetField: 'author_membership_type' }
+        ]);
         
         // 处理媒体URL
         for (let post of posts) {
@@ -857,6 +878,9 @@ router.get('/following', auth, async (req, res) => {
         queryStr += ' LIMIT ?, ?';
         
         const posts = await query(queryStr, [user.user_id, (page - 1) * pageSize, pageSize]);
+        await membership.decorateRows(posts, [
+            { userIdField: 'user_id', targetField: 'author_membership_type' }
+        ]);
         
         // 处理媒体URL
         for (let post of posts) {

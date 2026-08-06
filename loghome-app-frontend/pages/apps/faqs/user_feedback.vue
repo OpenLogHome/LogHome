@@ -1,5 +1,5 @@
 <template>
-	<view style="background-color: #ffffff; padding-top: 8px;">
+	<view style="background-color: var(--card-background); padding-top: 8px;" v-dark>
 		<input class="feedback_title" placeholder="标题" maxlength="20" v-model="faq_title"/>
 		<textarea class="feedback_content" placeholder="在这里写下你遇到的问题"  v-model="faq_content" maxlength="500"></textarea>
 		<button @click="post_faq">提交反馈</button>
@@ -7,7 +7,7 @@
 			<view class="title_bar">
 				<text>反馈历史</text>
 			</view>
-			<navigator v-for="record in records" 
+			<navigator v-for="record in records"
 			:url="'./feedback?id=' +  record.faq_id"
 			open-type="navigate">
 				<view class="fb">
@@ -36,7 +36,7 @@
 		methods: {
 			get_my_faqs(){
 				let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;
-				axios.get(this.$baseUrl + '/app/get_my_faqs', 
+				axios.get(this.$baseUrl + '/app/get_my_faqs',
 				{
 					headers: {
 					     'Content-Type': 'application/json',//设置请求头请求格式为JSON
@@ -103,7 +103,7 @@
 	.feedback_title{
 		width: 696rpx;
 		margin: 20rpx auto;
-		border: #cacaca 1rpx solid;
+		border: var(--border-color) 1rpx solid;
 		padding: 0 12rpx;
 		font-size: 18px;
 		height: 30px;
@@ -112,24 +112,24 @@
 	.feedback_content{
 		width: 696rpx;
 		margin: 20rpx auto;
-		border: #CACACA 1rpx solid;
+		border: var(--border-color) 1rpx solid;
 		padding: 4px 12rpx;
 		font-size: 18px;
 		height: 36vh;
 	}
 	.feedback_history{
 		margin-top: 45rpx;
-		color: #713418;
+		color: var(--accent-text-color);
 		.title_bar{
 			padding: 8px 30rpx;
 			font-size: 40rpx;
 			font-weight: bold;
-			background-color: #f2f2f2;
+			background-color: var(--background-color-secondary);
 			margin: 25rpx auto;
-			color: #934900;
+			color: var(--accent-text-color);
 		}
 		.fb{
-			border-bottom: #cacaca 1px solid;
+			border-bottom: var(--border-color) 1px solid;
 			padding-bottom: 25rpx;
 			height: 90px;
 			padding: 0 30rpx;
@@ -151,9 +151,9 @@
 				bottom: 10px;
 			}
 		}
-		
+
 	}
-	
+
 	button {
 		height: 40px;
 		width: 80%;

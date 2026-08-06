@@ -2,6 +2,8 @@
 let express = require('express');
 let { query } = require('../../sql.js');
 let auth = require('../../bin/auth.js');
+let avatarFrames = require('../../bin/avatarFrames.js');
+let membership = require('../../bin/membership.js');
 // 引入中文分词工具
 // const nodejieba = require('nodejieba');
 // 替换为纯 JavaScript 实现的分词工具
@@ -116,6 +118,9 @@ async function performSearch(keyword, type, page, pageSize, isSegmentedKeyword =
              LIMIT ?, ?`,
             [searchKeyword, searchKeyword, `${keyword}%`, (page - 1) * pageSize, pageSize]
         );
+        await avatarFrames.decorateRows(circles, [
+            { userIdField: 'creator_id', targetField: 'creator_avatar_frame' }
+        ]);
         
         const circlesCount = await query(
             `SELECT COUNT(*) as total
@@ -152,6 +157,12 @@ async function performSearch(keyword, type, page, pageSize, isSegmentedKeyword =
              LIMIT ?, ?`,
             [searchKeyword, searchKeyword, searchKeyword, `${keyword}%`, (page - 1) * pageSize, pageSize]
         );
+        await avatarFrames.decorateRows(posts, [
+            { userIdField: 'user_id', targetField: 'author_avatar_frame' }
+        ]);
+        await membership.decorateRows(posts, [
+            { userIdField: 'user_id', targetField: 'author_membership_type' }
+        ]);
         
         // 处理媒体URL
         for (let post of posts) {
@@ -196,6 +207,12 @@ async function performSearch(keyword, type, page, pageSize, isSegmentedKeyword =
              LIMIT ?, ?`,
             [searchKeyword, searchKeyword, `${keyword}%`, (page - 1) * pageSize, pageSize]
         );
+        await avatarFrames.decorateRows(users, [
+            { userIdField: 'user_id', targetField: 'avatar_frame' }
+        ]);
+        await membership.decorateRows(users, [
+            { userIdField: 'user_id', targetField: 'membership_type' }
+        ]);
         
         const usersCount = await query(
             `SELECT COUNT(*) as total
@@ -263,6 +280,9 @@ async function performSearch(keyword, type, page, pageSize, isSegmentedKeyword =
         }
         
         const books = await query(booksQuery, booksParams);
+        await avatarFrames.decorateRows(books, [
+            { userIdField: 'author_id', targetField: 'author_avatar_frame' }
+        ]);
         
         // 获取总数量
         let countQuery, countParams;

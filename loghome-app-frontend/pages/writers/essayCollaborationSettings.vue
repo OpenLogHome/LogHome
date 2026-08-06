@@ -30,6 +30,11 @@
 				</view>
 			</view>
 			<view class="list" v-if="isCollaborator">
+				<view class="li collaboration-notice" v-if="collaborationPolicy.permissions_restricted">
+					<view class="text">
+						当前为三人及以上协作，主作者尚未开通原木通行证，你目前只能预览作品。
+					</view>
+				</view>
 				<view class="li noborder" @click="quitCollaboration">
 					<view class="text" style="color:#d9534f">退出协作</view>
 					<img class="to" src="../../static/user/to.png"></img>
@@ -68,6 +73,11 @@
 			},
 			activeCollaborators() {
 				return this.collaborators.filter((item) => item.status === 'active');
+			},
+			collaborationPolicy() {
+				return (this.access && this.access.collaboration_policy) || {
+					permissions_restricted: false,
+				};
 			},
 			roleText() {
 				if (this.isOwner) return '所有者';
@@ -220,6 +230,25 @@
 
 	.dark-mode & {
 		color: var(--text-color-primary);
+	}
+}
+
+.collaboration-notice{
+	height: auto !important;
+	padding-top: 22rpx !important;
+	padding-bottom: 22rpx !important;
+	background: #fff2ec;
+
+	.text{
+		font-size: 25rpx;
+		line-height: 1.55;
+		color: #a1583f;
+	}
+
+	.dark-mode &{
+		background: rgba(205, 100, 65, 0.12);
+
+		.text{ color: #f0b49f; }
 	}
 }
 

@@ -1,11 +1,11 @@
 <template>
-	<view class="container">		
+	<view class="container" v-dark>
 		<view class="content">
 			<view class="header">
 				<view class="title">帖子管理</view>
 				<view class="add-btn" @click="addPost">发布帖子</view>
 			</view>
-			
+
 			<view class="pagination" v-if="totalPages > 0">
 				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
@@ -26,18 +26,18 @@
 					</view>
 				</view>
 			</view>
-			
+
 			<view class="pagination" v-if="totalPages > 0">
 				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
 				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
 			</view>
-			
+
 			<view class="no-data" v-if="posts.length === 0">
 				暂无帖子数据
 			</view>
 		</view>
-		
+
 		<!-- 编辑弹窗 -->
 		<view class="modal" v-if="showModal">
 			<view class="modal-mask" @click="closeModal"></view>
@@ -57,7 +57,7 @@
 						<view class="label">内容</view>
 						<view class="input">
 							<view class="editor-container">
-								<editor id="editor-content" class="rich-editor" :read-only="false" 
+								<editor id="editor-content" class="rich-editor" :read-only="false"
 									show-img-size show-img-toolbar show-img-resize
 									@ready="onEditorReady" placeholder="请输入内容..."></editor>
 								<view class="editor-toolbar">
@@ -87,7 +87,7 @@
 				</view>
 			</view>
 		</view>
-		
+
 		<!-- 确认删除弹窗 -->
 		<view class="modal" v-if="showDeleteConfirm">
 			<view class="modal-mask" @click="closeDeleteConfirm"></view>
@@ -140,7 +140,7 @@ export default {
 				uni.showLoading({
 					title: '努力加载中'
 				})
-				
+
 				// 获取总数
 				const countRes = await axios.get(this.$baseUrl + '/manage/posts/get_posts_amount', {
 					headers: {
@@ -148,7 +148,7 @@ export default {
 					}
 				})
 				this.totalPages = Math.ceil(countRes.data[0].count / this.pageSize)
-				
+
 				// 获取列表
 				const res = await axios.get(this.$baseUrl + '/manage/posts/get_all_posts', {
 					params: {
@@ -158,7 +158,7 @@ export default {
 						'Authorization': tk
 					}
 				})
-				
+
 				this.posts = res.data
 				uni.pageScrollTo({
 					scrollTop: 0,
@@ -199,7 +199,7 @@ export default {
 				uni.showLoading({
 					title: '努力加载中'
 				})
-				
+
 				const res = await axios.get(this.$baseUrl + '/manage/posts/get_post_by_id', {
 					params: {
 						post_id: post.post_id
@@ -208,11 +208,11 @@ export default {
 						'Authorization': tk
 					}
 				})
-				
+
 				if (res.data && res.data.length > 0) {
 					this.currentPost = res.data[0]
 					this.showModal = true
-					
+
 					// 等待编辑器准备好后设置内容
 					setTimeout(() => {
 						if (this.editorCtx) {
@@ -220,7 +220,7 @@ export default {
 						}
 					}, 300)
 				}
-				
+
 				uni.hideLoading()
 			} catch (e) {
 				uni.hideLoading()
@@ -243,7 +243,7 @@ export default {
 		},
 		async savePost() {
 			if (this.submitting) return
-			
+
 			// 表单验证
 			if (!this.currentPost.title.trim()) {
 				uni.showToast({
@@ -252,7 +252,7 @@ export default {
 				})
 				return
 			}
-			
+
 			try {
 				// 获取编辑器内容
 				const html = await this.getEditorContent()
@@ -263,10 +263,10 @@ export default {
 					})
 					return
 				}
-				
+
 				this.submitting = true
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
-				
+
 				await axios.post(this.$baseUrl + '/manage/posts/edit_post', {
 					post_id: this.currentPost.post_id,
 					title: this.currentPost.title,
@@ -276,11 +276,11 @@ export default {
 						'Authorization': tk
 					}
 				})
-				
+
 				uni.showToast({
 					title: this.currentPost.post_id ? '编辑成功' : '发布成功'
 				})
-				
+
 				this.closeModal()
 				this.loadPosts()
 			} catch (e) {
@@ -294,10 +294,10 @@ export default {
 		},
 		async confirmDelete() {
 			if (!this.postToDelete) return
-			
+
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
-				
+
 				// 注意：后端需要添加删除帖子的接口
 				await axios.post(this.$baseUrl + '/manage/posts/delete_post', {
 					post_id: this.postToDelete.post_id
@@ -306,11 +306,11 @@ export default {
 						'Authorization': tk
 					}
 				})
-				
+
 				uni.showToast({
 					title: '删除成功'
 				})
-				
+
 				this.closeDeleteConfirm()
 				this.loadPosts()
 			} catch (e) {
@@ -394,7 +394,7 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-	background-color: #f2f2f2;
+	background-color: var(--background-color-secondary);
 	min-height: 100vh;
 }
 
@@ -407,13 +407,13 @@ export default {
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 30rpx;
-	
+
 	.title {
 		font-size: 36rpx;
 		font-weight: bold;
-		color: #333;
+		color: var(--text-color-primary);
 	}
-	
+
 	.add-btn {
 		padding: 10rpx 30rpx;
 		background: #007AFF;
@@ -425,18 +425,18 @@ export default {
 
 .post-list {
 	.post-item {
-		background: #fff;
+		background: var(--card-background);
 		padding: 20rpx;
 		margin-bottom: 20rpx;
 		border-radius: 10rpx;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		
+
 		.post-main {
 			flex: 1;
 			min-width: 0;
-			
+
 			.post-title {
 				font-size: 32rpx;
 				font-weight: bold;
@@ -445,28 +445,28 @@ export default {
 				overflow: hidden;
 				text-overflow: ellipsis;
 			}
-			
+
 			.post-info {
 				font-size: 26rpx;
-				color: #666;
+				color: var(--text-color-regular);
 			}
 		}
-		
+
 		.post-actions {
 			display: flex;
 			margin-left: 20rpx;
-			
+
 			.action-btn {
 				padding: 6rpx 20rpx;
 				border-radius: 30rpx;
 				font-size: 24rpx;
 				color: #fff;
 				margin-left: 10rpx;
-				
+
 				&.edit {
 					background-color: #2196F3;
 				}
-				
+
 				&.delete {
 					background-color: #F44336;
 				}
@@ -475,7 +475,7 @@ export default {
 	}
 
 	.post-item:active {
-		background-color: #f2f2f2;
+		background-color: var(--background-color-secondary);
 	}
 }
 
@@ -484,27 +484,27 @@ export default {
 	justify-content: center;
 	align-items: center;
 	margin: 30rpx 0;
-	
+
 	.page-btn {
 		padding: 10rpx 30rpx;
-		background: #fff;
+		background: var(--card-background);
 		border-radius: 30rpx;
 		margin: 0 20rpx;
-		
+
 		&.disabled {
-			color: #999;
+			color: var(--text-color-secondary);
 		}
 	}
-	
+
 	.page-num {
 		font-size: 28rpx;
-		color: #666;
+		color: var(--text-color-regular);
 	}
 }
 
 .no-data {
 	text-align: center;
-	color: #999;
+	color: var(--text-color-secondary);
 	margin-top: 100rpx;
 }
 
@@ -515,7 +515,7 @@ export default {
 	right: 0;
 	bottom: 0;
 	z-index: 1000;
-	
+
 	.modal-mask {
 		position: absolute;
 		top: 0;
@@ -524,7 +524,7 @@ export default {
 		bottom: 0;
 		background: rgba(0, 0, 0, 0.5);
 	}
-	
+
 	.modal-content {
 		position: absolute;
 		top: 50%;
@@ -532,116 +532,116 @@ export default {
 		transform: translate(-50%, -50%);
 		width: 90%;
 		max-width: 650rpx;
-		background: #fff;
+		background: var(--card-background);
 		border-radius: 10rpx;
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		
+
 		&.confirm-modal {
 			max-width: 500rpx;
 		}
-		
+
 		.modal-header {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
 			padding: 30rpx;
-			border-bottom: 1px solid #eee;
+			border-bottom: 1px solid var(--border-color);
 			width: 100%;
 			box-sizing: border-box;
-			
+
 			.modal-title {
 				font-size: 32rpx;
 				font-weight: bold;
 			}
-			
+
 			.modal-close {
 				font-size: 40rpx;
-				color: #999;
+				color: var(--text-color-secondary);
 				line-height: 1;
 			}
 		}
-		
+
 		.modal-body {
 			padding: 30rpx;
 			max-height: 60vh;
 			overflow-y: auto;
 			width: 100%;
 			box-sizing: border-box;
-			
+
 			.confirm-text {
 				font-size: 30rpx;
-				color: #333;
+				color: var(--text-color-primary);
 				text-align: center;
 				padding: 20rpx 0;
 			}
-			
+
 			.form-item {
 				margin-bottom: 20rpx;
 				width: 100%;
-				
+
 				.label {
 					font-size: 28rpx;
-					color: #333;
+					color: var(--text-color-primary);
 					margin-bottom: 10rpx;
 				}
-				
+
 				.input {
 					width: 100%;
-					
+
 					input {
 						width: 100%;
 						height: 80rpx;
-						background: #f5f5f5;
+						background: var(--background-color-secondary);
 						padding: 0 20rpx;
 						border-radius: 6rpx;
 						font-size: 28rpx;
 						box-sizing: border-box;
 					}
-					
+
 					textarea {
 						width: 100%;
 						height: 300rpx;
-						background: #f5f5f5;
+						background: var(--background-color-secondary);
 						padding: 20rpx;
 						border-radius: 6rpx;
 						font-size: 28rpx;
 						box-sizing: border-box;
 					}
-					
+
 					.word-count {
 						text-align: right;
 						font-size: 24rpx;
-						color: #999;
+						color: var(--text-color-secondary);
 						margin-top: 10rpx;
 					}
 				}
 			}
 		}
-		
+
 		.modal-footer {
 			display: flex;
-			border-top: 1px solid #eee;
+			border-top: 1px solid var(--border-color);
 			width: 100%;
-			
+
 			.btn {
 				flex: 1;
 				height: 90rpx;
 				line-height: 90rpx;
 				text-align: center;
 				font-size: 30rpx;
-				
+
 				&.cancel {
-					color: #666;
-					background: #f5f5f5;
+					color: var(--text-color-regular);
+					background: var(--background-color-secondary);
 				}
-				
+
 				&.confirm {
 					color: #fff;
 					background: #007AFF;
 				}
-				
+
 				&.delete {
 					color: #fff;
 					background: #F44336;
@@ -655,14 +655,14 @@ export default {
 	position: relative;
 	width: 100%;
 	height: 400rpx;
-	background: #f5f5f5;
+	background: var(--background-color-secondary);
 	border-radius: 6rpx;
 }
 
 .rich-editor {
 	width: 100%;
 	height: 350rpx;
-	background: #f5f5f5;
+	background: var(--background-color-secondary);
 	padding: 20rpx;
 	box-sizing: border-box;
 	font-size: 28rpx;
@@ -674,7 +674,7 @@ export default {
 	left: 0;
 	right: 0;
 	height: 50rpx;
-	background: #e0e0e0;
+	background: var(--background-color-tertiary);
 	display: flex;
 	padding: 0 10rpx;
 }
@@ -691,4 +691,4 @@ export default {
 .toolbar-item:active {
 	background: #d0d0d0;
 }
-</style> 
+</style>

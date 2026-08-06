@@ -1,20 +1,53 @@
 <template>
-	<view class="content" v-dark :style="{ '--statusBarHeight': 0 + 'px' }">
+	<view class="content" :class="{ 'is-page-loading': isPageLoading }" v-dark>
 		<div class="gift_box" id="gift_box">
 			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
 		</div>
-		<nothing :msg="'这本书还没有发布哦'" v-show="bookInfo.is_personal == undefined || bookInfo.is_personal == 1"></nothing>
+		<nothing :msg="'这本书还没有发布哦'" v-show="!isPageLoading && (bookInfo.is_personal == undefined || bookInfo.is_personal == 1)"></nothing>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :bgColor="currentTopColor" :textcolor="currentTopTextColor" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
 			navTitle='标题'></zetank-backBar>
-		<view class="l-body">
+		<view class="l-body" :class="{ 'is-loading': isPageLoading }">
+			<view v-if="isPageLoading" class="book-info-skeleton" aria-label="书籍信息加载中">
+				<view class="skeleton-hero">
+					<view class="skeleton-block skeleton-cover"></view>
+					<view class="skeleton-meta">
+						<view class="skeleton-block skeleton-title"></view>
+						<view class="skeleton-author">
+							<view class="skeleton-block skeleton-avatar"></view>
+							<view class="skeleton-block skeleton-author-name"></view>
+						</view>
+						<view class="skeleton-tags">
+							<view class="skeleton-block skeleton-tag"></view>
+							<view class="skeleton-block skeleton-tag short"></view>
+						</view>
+						<view class="skeleton-block skeleton-stat"></view>
+						<view class="skeleton-block skeleton-stat short"></view>
+					</view>
+				</view>
+				<view class="skeleton-sheet">
+					<view class="skeleton-block skeleton-line"></view>
+					<view class="skeleton-block skeleton-line"></view>
+					<view class="skeleton-block skeleton-line short"></view>
+					<view class="skeleton-actions">
+						<view class="skeleton-action" v-for="item in 4" :key="item">
+							<view class="skeleton-block skeleton-action-icon"></view>
+							<view class="skeleton-block skeleton-action-text"></view>
+						</view>
+					</view>
+					<view class="skeleton-card">
+						<view class="skeleton-block skeleton-card-title"></view>
+						<view class="skeleton-block skeleton-card-line"></view>
+						<view class="skeleton-block skeleton-card-line short"></view>
+					</view>
+				</view>
+			</view>
 			<view class="l-dl">
 				<div class="l-dt">
 					<log-image id="book-cover-image" class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
 						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
-						:style="{ opacity: (isCoverLoaded ? 1 : 0) + ' !important' }"
-						@click="$previewImg([bookInfo.picUrl])" @load="onCoverLoaded">
+						@click="$previewImg([bookInfo.picUrl])">
 					</log-image>
 					<div class="book-id-tag" v-show="bookInfo.novel_id">ID {{ bookInfo.novel_id }}</div>
 				</div>
@@ -46,12 +79,12 @@
 					</div>
 					<view class="l-dd-footer">
 						<span>共 {{ articleLength }} 章 总计 {{ bookInfo.text_count }} 字 </span>
-						<br>
+						<br />
 						<span>阅读：{{ bookInfo.clicks }}</span>
 
 						<span v-if="bookInfo.likes">收藏：{{ bookInfo.likes.length }}</span>
 						<span>{{ bookInfo.is_complete == 1 ? "已完结" : "连载中" }}</span>
-						<br>
+						<br />
 
 						<span v-if="bookInfo.is_complete == 0">最近更新 {{ utc2beijing(bookInfo.update_time) }}</span>
 					</view>
@@ -73,7 +106,7 @@
 
 			<div class="book-bg" :style="bookBackgroundStyle"></div>
 
-			<springBack :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + ${0 + 'px'})`">
+			<springBack class="book-content-sheet" :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + var(--loghome-safe-top, 0px))`">
 
 				<div class="b-content" style="padding:32rpx;" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
 					<p class="l-dd-content" @click="showDescription(bookInfo.content)">
@@ -93,9 +126,10 @@
 							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_niced.png" mode="">
 							</img>{{ nice_amount }} 赞
 						</view>
-						<view class="l-body-tab" @tap="shareBook">
-							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_share.png" mode="">
-							</img>分享
+						<view class="l-body-tab" :class="{ 'is-busy': isCreatingShareCode }" @tap="shareBook">
+							<view v-if="isCreatingShareCode" class="share-loading-dot"></view>
+							<img v-else class="l-icon-share l-icon-share-2" src="../../static/icons/icon_share.png" mode="">
+							</img>{{ isCreatingShareCode ? '生成中' : '分享' }}
 						</view>
 						<view class="l-body-tab" @tap="addToBookcase" v-show="isInBookcase == false">
 							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
@@ -264,7 +298,8 @@
 						<div class="fans_rank">
 							<div class="second" v-if="fanInfo[1]">
 								<div class="rank-container">
-									<log-image :src="fanInfo[1].avatar_url" alt="" class="avatar" />
+									<user-avatar :src="fanInfo[1].avatar_url" :frame="fanInfo[1].avatar_frame" class="avatar"
+										:visual-scale="fanInfo[1].avatar_frame ? 1.15 : 1" />
 									<img src="../../static/rank/NO2.png" alt="" class="rank" />
 									<div class="crown-glow silver"></div>
 									<div class="description">
@@ -276,7 +311,8 @@
 							</div>
 							<div class="first" v-if="fanInfo[0]">
 								<div class="rank-container">
-									<log-image :src="fanInfo[0].avatar_url" alt="" class="avatar" />
+									<user-avatar :src="fanInfo[0].avatar_url" :frame="fanInfo[0].avatar_frame" class="avatar"
+										:visual-scale="fanInfo[0].avatar_frame ? 1.15 : 1" />
 									<img src="../../static/rank/NO1.png" alt="" class="rank" />
 									<div class="crown-glow gold"></div>
 									<div class="description">
@@ -287,7 +323,8 @@
 							</div>
 							<div class="third" v-if="fanInfo[2]">
 								<div class="rank-container">
-									<log-image :src="fanInfo[2].avatar_url" alt="" class="avatar" />
+									<user-avatar :src="fanInfo[2].avatar_url" :frame="fanInfo[2].avatar_frame" class="avatar"
+										:visual-scale="fanInfo[2].avatar_frame ? 1.15 : 1" />
 									<img src="../../static/rank/NO3.png" alt="" class="rank" />
 									<div class="crown-glow bronze"></div>
 									<div class="description">
@@ -349,7 +386,7 @@
 
 		</view>
 
-		<view class="l-body-fixed" v-show="bookInfo.is_personal == 0">
+		<view class="l-body-fixed" v-if="!isPageLoading && bookInfo.is_personal == 0">
 			<view class="l-handle-btn l-ai-btn clickable" @tap="gotoAskLogGirl">
 				<image class="ai-entry-icon" src="https://storage.codesocean.top/api/resource/get/177882044429077" mode="aspectFit"></image>
 				<view class="ai-entry-text">问问原木娘</view>
@@ -510,7 +547,8 @@ export default {
 	mixins: [darkModeMixin],
 	data() {
 		return {
-			isCoverLoaded: false,
+			isPageLoading: true,
+			isCreatingShareCode: false,
 			uid: 0,
 			bookInfo: {},
 			articles: [],
@@ -536,10 +574,73 @@ export default {
 			worldLoadTime: 0,
 			worlds: [],
 			giftImage: "",
-			collaborationAuthors: []
+			collaborationAuthors: [],
+			lastSystemUiStyleKey: '',
+			systemUiStyleFrame: null
 		}
 	},
 	methods: {
+		updatePageScrollTop(scrollTop) {
+			const nextScrollTop = Math.max(0, Number(scrollTop) || 0)
+			if (this.scrollTop !== nextScrollTop) {
+				this.scrollTop = nextScrollTop
+			}
+		},
+		getDocumentScrollTop() {
+			if (typeof document === 'undefined') {
+				return 0
+			}
+
+			const pageWrapper = document.querySelector('uni-page-wrapper')
+			return Math.max(
+				window.pageYOffset || 0,
+				document.documentElement ? document.documentElement.scrollTop : 0,
+				document.body ? document.body.scrollTop : 0,
+				pageWrapper ? pageWrapper.scrollTop : 0
+			)
+		},
+		handleDocumentScroll() {
+			this.updatePageScrollTop(this.getDocumentScrollTop())
+		},
+		attachDocumentScrollListener() {
+			if (typeof document === 'undefined') {
+				return
+			}
+			document.removeEventListener('scroll', this.handleDocumentScroll, true)
+			document.addEventListener('scroll', this.handleDocumentScroll, true)
+			this.updatePageScrollTop(this.getDocumentScrollTop())
+		},
+		detachDocumentScrollListener() {
+			if (typeof document !== 'undefined') {
+				document.removeEventListener('scroll', this.handleDocumentScroll, true)
+			}
+		},
+		schedulePageSystemUiStyle() {
+			if (this.systemUiStyleFrame !== null) {
+				return
+			}
+
+			const apply = () => {
+				this.systemUiStyleFrame = null
+				this.applyPageSystemUiStyle()
+			}
+			if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+				this.systemUiStyleFrame = window.requestAnimationFrame(apply)
+				return
+			}
+			this.systemUiStyleFrame = setTimeout(apply, 16)
+		},
+		cancelPageSystemUiStyle() {
+			if (this.systemUiStyleFrame === null) {
+				return
+			}
+			if (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
+				window.cancelAnimationFrame(this.systemUiStyleFrame)
+			} else {
+				clearTimeout(this.systemUiStyleFrame)
+			}
+			this.systemUiStyleFrame = null
+		},
 		utc2beijing(utc_datetime) {
 			// 转为正常的时间格式 年-月-日 时:分:秒
 			var T_pos = utc_datetime.indexOf('T');
@@ -578,7 +679,12 @@ export default {
 		},
 		addToBookcase() {
 			let _this = this;
-			let tk = JSON.parse(window.localStorage.getItem('token'));
+			let tk = null;
+			try {
+				tk = JSON.parse(window.localStorage.getItem('token'));
+			} catch (error) {
+				window.localStorage.removeItem('token');
+			}
 			if (tk) tk = tk.tk;
 			axios.post(this.$baseUrl + '/bookcase/like_novel', {
 				novel_id: this.uid
@@ -786,7 +892,7 @@ export default {
 			if (_this.history == 1) {
 				console.log(articles);
 				const readerProps = window.localStorage.getItem("readerProps");
-				const isPageReader = readerProps === "page";
+				const isPageReader = readerProps !== "text";
 				const url = isPageReader
 					? `./newReader/article?id=${articles[0].article_id}&novelId=${this.uid}`
 					: `./article_rich?id=${articles[0].article_id}`;
@@ -803,7 +909,7 @@ export default {
 					}
 				})
 				const readerProps = window.localStorage.getItem("readerProps");
-				const isPageReader = readerProps === "page";
+				const isPageReader = readerProps !== "text";
 				const url = isPageReader
 					? `./newReader/article?id=${toId}&novelId=${this.uid}`
 					: `./article_rich?id=${toId}`;
@@ -830,9 +936,8 @@ export default {
 			return content;
 		},
 		createShareCode() {
-			uni.showLoading({
-				title: '创建口令中...'
-			});
+			if (this.isCreatingShareCode) return;
+			this.isCreatingShareCode = true;
 
 			const shareContent = `《${this.bookInfo.name}》- ${this.bookInfo.author_name}`;
 			const targetUrl = `/pages/readers/bookInfo?id=${this.uid}`;
@@ -840,7 +945,7 @@ export default {
 
 			let tk = JSON.parse(window.localStorage.getItem('token'));
 			if (!tk || !tk.tk) {
-				uni.hideLoading();
+				this.isCreatingShareCode = false;
 				uni.showToast({
 					title: '请先登录',
 					icon: 'none',
@@ -860,7 +965,7 @@ export default {
 					'Authorization': 'Bearer ' + tk.tk
 				}
 			}).then((res) => {
-				uni.hideLoading();
+				this.isCreatingShareCode = false;
 
 				if (res.data.success) {
 					// 复制口令到剪贴板
@@ -919,7 +1024,7 @@ export default {
 
 				
 			}).catch((error) => {
-				uni.hideLoading();
+				this.isCreatingShareCode = false;
 				console.error('创建口令失败:', error);
 				uni.showToast({
 					title: '网络错误，请稍后重试',
@@ -1081,8 +1186,6 @@ export default {
 						duration: 2000
 					});
 				}
-			}).then(function () {
-				uni.hideLoading();
 			})
 		},
 		runGiftAnimation(ev) {
@@ -1170,9 +1273,6 @@ export default {
 			})
 		},
 		async getBookInfo() {
-			uni.showLoading({
-				title: '努力加载中'
-			});
 			try {
 				let res = await axios.get(this.$baseUrl + '/library/get_novel_by_id?id=' + this.uid, {})
 				return res.data[0];
@@ -1182,8 +1282,6 @@ export default {
 					icon: 'none',
 					duration: 2000
 				});
-			} finally {
-				uni.hideLoading();
 			}
 		},
 		async getCollaborativeAuthors() {
@@ -1209,25 +1307,36 @@ export default {
 				url: "/pages/readers/tagCollections?tag_id=" + tag_id + "&title=" + title
 			})
 		},
-		applyPageSystemUiStyle(color = this.currentTopColor, textColor = this.currentTopTextColor) {
-			if (window.jsBridge && window.jsBridge.inApp && window.jsBridge.setSystemUIStyle) {
-				window.jsBridge.setSystemUIStyle(color, textColor)
+		applyPageSystemUiStyle(color = this.currentTopColor, textColor = this.currentTopTextColor, force = false) {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null
+			if (!(bridge && bridge.inApp && typeof bridge.setSystemUIStyle === 'function')) {
+				return
 			}
+
+			const styleKey = `${color}|${textColor}`
+			if (!force && this.lastSystemUiStyleKey === styleKey) {
+				return
+			}
+			this.lastSystemUiStyleKey = styleKey
+			Promise.resolve(bridge.setSystemUIStyle(color, textColor)).catch(() => {
+				if (this.lastSystemUiStyleKey === styleKey) {
+					this.lastSystemUiStyleKey = ''
+				}
+			})
 		},
 		resetPageSystemUiStyle() {
 			if (window.jsBridge && window.jsBridge.inApp && window.jsBridge.setSystemUIStyle) {
 				window.jsBridge.setSystemUIStyle('#FFFFFF', '#000000')
 			}
-		},
-		onCoverLoaded() {
-			this.isCoverLoaded = true;
+			this.lastSystemUiStyleKey = ''
 		}
 	},
 	onPageScroll(res) {
-		this.scrollTop = res.scrollTop;
+		this.updatePageScrollTop(res.scrollTop);
 	},
 	onLoad(option) {
 		this.options = option;
+		this.attachDocumentScrollListener();
 		let _this = this;
 		setTimeout(() => {
 			let newBee = document.querySelector('.newBee');
@@ -1237,38 +1346,43 @@ export default {
 		}, 100);
 	},
 	async onShow(option) {
-		uni.showLoading({
-			title: '努力加载中'
-		});
-
 		this.uid = this.options.id;
 
 		let bookInfo = await this.getBookInfo();
+		if (!bookInfo) {
+			this.isPageLoading = false;
+			return;
+		}
 		// 如果是设定书，则应当跳转到世界设定查看页面
 		if (bookInfo.novel_type == "world") {
 			if (this.worldLoadTime == 0) {
 				setTimeout(() => {
 					uni.redirectTo({
-						url: "/pages/worlds/worldPage?novel_id=" + this.uid
+						url: "/pages/worlds/worldPage?noneAnimation=1&novel_id=" + this.uid
 					})
 					this.worldLoadTime++;
 				}, 350)
 			} else {
 				uni.navigateBack();
 			}
+			this.isPageLoading = false;
 			return;
 		} else {
-			this.bookInfo = bookInfo;
-			this.applyPageSystemUiStyle();
-			await this.getCollaborativeAuthors();
-		}
+			try {
+				this.bookInfo = bookInfo;
+				this.applyPageSystemUiStyle(undefined, undefined, true);
+				await this.getCollaborativeAuthors();
 
-		uni.setNavigationBarTitle({
-			title: "书籍详情"
-		});
-		this.checkNovelRank();
-		this.addReaderHistory(bookInfo);
-		await this.loadCloudReadingProgress();
+				uni.setNavigationBarTitle({
+					title: "书籍详情"
+				});
+				this.checkNovelRank();
+				this.addReaderHistory(bookInfo);
+				await this.loadCloudReadingProgress();
+			} finally {
+				this.isPageLoading = false;
+			}
+		}
 
 		this.getNices();
 		this.getCommentNum();
@@ -1328,8 +1442,6 @@ export default {
 							icon: 'none',
 							duration: 2000
 						});
-					}).then(function () {
-						uni.hideLoading();
 					})
 			}
 		}).catch(function (error) {
@@ -1338,8 +1450,6 @@ export default {
 				icon: 'none',
 				duration: 2000
 			});
-		}).then(function () {
-			uni.hideLoading();
 		})
 		let tk = JSON.parse(window.localStorage.getItem('token'));
 		if (tk) tk = tk.tk;
@@ -1380,6 +1490,8 @@ export default {
 
 	},
 	onUnload() {
+		this.detachDocumentScrollListener();
+		this.cancelPageSystemUiStyle();
 		this.resetPageSystemUiStyle();
 	},
 	computed: {
@@ -1389,28 +1501,17 @@ export default {
 				normalizeHexColor(this.bookInfo.pic_dominant_color) || fallbackBase
 			return {
 				baseColor,
-				startColor: mixHexColor(
+				glassColor: mixHexColor(
 					baseColor,
-					this.isDarkMode ? '#161312' : '#FFF4EA',
-					this.isDarkMode ? 0.12 : 0.28
-				),
-				endColor: mixHexColor(
-					baseColor,
-					this.isDarkMode ? '#080808' : '#241812',
-					this.isDarkMode ? 0.72 : 0.46
+					this.isDarkMode ? '#171514' : '#241B18',
+					this.isDarkMode ? 0.42 : 0.28
 				),
 				pageTopColor: this.isDarkMode ? '#2C2C2C' : '#FFFCF2',
-				pageBaseColor: this.isDarkMode ? '#1C1C1C' : '#FFFFFF',
-				pageFadeColor: this.isDarkMode ? '#181818' : '#FFF8EA'
+				pageBaseColor: this.isDarkMode ? '#1C1C1C' : '#FFFFFF'
 			}
-		},
-		bookStatusBarColor() {
-			return this.bookColorPalette.startColor
 		},
 		currentTopColor() {
 			const springBackStartPx = rpxToPx(this.novelRank.onRank ? 675 : 550)
-			const bookBgHeightPx = rpxToPx(500 + 135 + 220)
-			const bookFadeHeightPx = rpxToPx(180)
 			const springFadeDistancePx = Math.max(rpxToPx(260), 1)
 
 			if (this.scrollTop >= springBackStartPx) {
@@ -1422,28 +1523,14 @@ export default {
 				)
 			}
 
-			const gradientProgress = clampUnit(
-				this.scrollTop / Math.max(bookBgHeightPx * 0.82, 1)
+			const glassProgress = clampUnit(
+				this.scrollTop / Math.max(springBackStartPx, 1)
 			)
-			let currentColor = mixHexColor(
-				this.bookColorPalette.startColor,
-				this.bookColorPalette.endColor,
-				gradientProgress
+			return mixHexColor(
+				this.bookColorPalette.glassColor,
+				this.bookColorPalette.pageTopColor,
+				glassProgress
 			)
-
-			const fadeStartPx = Math.max(bookBgHeightPx - bookFadeHeightPx, 0)
-			if (this.scrollTop > fadeStartPx) {
-				const fadeProgress = clampUnit(
-					(this.scrollTop - fadeStartPx) / Math.max(bookFadeHeightPx, 1)
-				)
-				currentColor = mixHexColor(
-					currentColor,
-					this.bookColorPalette.pageFadeColor,
-					fadeProgress
-				)
-			}
-
-			return currentColor
 		},
 		currentTopTextColor() {
 			return getReadableTextColor(this.currentTopColor)
@@ -1453,30 +1540,17 @@ export default {
 		},
 		bookBackgroundStyle() {
 			const baseColor = this.bookColorPalette.baseColor
-			const startColor = this.bookColorPalette.startColor
-			const endColor = this.bookColorPalette.endColor
-			const glowColor = mixHexColor(
-				baseColor,
-				this.isDarkMode ? '#FFFFFF' : '#FFE8C8',
-				this.isDarkMode ? 0.08 : 0.20
-			)
-			const sideGlowColor = mixHexColor(
-				baseColor,
-				'#FFFFFF',
-				this.isDarkMode ? 0.04 : 0.12
-			)
+			const coverUrl = String(this.bookInfo.picUrl || '').trim()
 
 			return {
-				'--book-bg-start': startColor,
-				'--book-bg-end': endColor,
-				'--book-bg-glow': toRgba(glowColor, this.isDarkMode ? 0.16 : 0.34),
-				'--book-bg-side-glow': toRgba(sideGlowColor, this.isDarkMode ? 0.10 : 0.20),
-				'--book-bg-bottom-shadow': this.isDarkMode
-					? 'rgba(0, 0, 0, 0.42)'
-					: 'rgba(36, 24, 18, 0.22)',
-				'--book-bg-page-fade': this.isDarkMode
-					? 'rgba(24, 24, 24, 0.96)'
-					: 'rgba(255, 248, 234, 0.96)'
+				'--book-glass-image': coverUrl ? `url(${JSON.stringify(coverUrl)})` : 'none',
+				'--book-glass-tint': toRgba(baseColor, this.isDarkMode ? 0.58 : 0.46),
+				'--book-glass-surface': this.isDarkMode
+					? 'rgba(18, 16, 15, 0.36)'
+					: 'rgba(24, 17, 15, 0.28)',
+				'--book-glass-border': this.isDarkMode
+					? 'rgba(255, 255, 255, 0.10)'
+					: 'rgba(255, 255, 255, 0.34)'
 			}
 		},
 		primaryAuthor() {
@@ -1519,7 +1593,7 @@ export default {
 	},
 	watch: {
 		currentSystemUiStyleKey() {
-			this.applyPageSystemUiStyle();
+			this.schedulePageSystemUiStyle();
 		}
 	}
 }
@@ -1539,6 +1613,214 @@ export default {
 
 .content {
 	padding-bottom: 500rpx;
+
+	&.is-page-loading {
+		height: 100vh;
+		height: 100dvh;
+		padding-bottom: 0;
+		overflow: hidden;
+	}
+}
+
+.l-body.is-loading > :not(.book-info-skeleton) {
+	visibility: hidden;
+}
+
+.book-info-skeleton {
+	position: relative;
+	z-index: 20;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	min-height: 100%;
+	padding-top: calc(180rpx + var(--loghome-safe-top, 0px));
+	box-sizing: border-box;
+	background-color: rgba(79, 63, 57, 0.58);
+	-webkit-backdrop-filter: blur(36rpx) saturate(1.18);
+	backdrop-filter: blur(36rpx) saturate(1.18);
+	overflow: hidden;
+
+	.dark-mode & {
+		background-color: rgba(27, 24, 23, 0.72);
+	}
+}
+
+.skeleton-hero {
+	display: flex;
+	flex-shrink: 0;
+	height: 320rpx;
+	padding: 0 32rpx;
+}
+
+.skeleton-block {
+	position: relative;
+	overflow: hidden;
+	background-color: rgba(255, 255, 255, 0.22);
+
+	&::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		transform: translateX(-100%);
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+		animation: book-skeleton-shimmer 1.45s ease-in-out infinite;
+	}
+}
+
+.skeleton-cover {
+	width: 230rpx;
+	height: 320rpx;
+	margin-right: 30rpx;
+	border-radius: 16rpx;
+	flex-shrink: 0;
+}
+
+.skeleton-meta {
+	flex: 1;
+	padding-top: 8rpx;
+}
+
+.skeleton-title {
+	width: 82%;
+	height: 46rpx;
+	border-radius: 10rpx;
+}
+
+.skeleton-author {
+	display: flex;
+	align-items: center;
+	margin-top: 28rpx;
+}
+
+.skeleton-avatar {
+	width: 50rpx;
+	height: 50rpx;
+	border-radius: 50%;
+}
+
+.skeleton-author-name {
+	width: 150rpx;
+	height: 28rpx;
+	margin-left: 14rpx;
+	border-radius: 8rpx;
+}
+
+.skeleton-tags {
+	display: flex;
+	margin-top: 28rpx;
+}
+
+.skeleton-tag {
+	width: 112rpx;
+	height: 44rpx;
+	margin-right: 14rpx;
+	border-radius: 22rpx;
+
+	&.short {
+		width: 82rpx;
+	}
+}
+
+.skeleton-stat {
+	width: 92%;
+	height: 24rpx;
+	margin-top: 22rpx;
+	border-radius: 8rpx;
+
+	&.short {
+		width: 62%;
+		margin-top: 14rpx;
+	}
+}
+
+.skeleton-sheet {
+	flex: 1;
+	width: 100%;
+	min-height: 600rpx;
+	margin-top: 50rpx;
+	padding: 54rpx 32rpx calc(80rpx + var(--loghome-safe-bottom, 0px));
+	box-sizing: border-box;
+	border-radius: 36rpx 36rpx 0 0;
+	background-color: rgba(255, 248, 234, 0.86);
+	border-top: 1rpx solid rgba(255, 255, 255, 0.5);
+	-webkit-backdrop-filter: blur(30rpx) saturate(1.12);
+	backdrop-filter: blur(30rpx) saturate(1.12);
+
+	.dark-mode & {
+		background-color: rgba(28, 28, 28, 0.84);
+		border-top-color: rgba(255, 255, 255, 0.08);
+	}
+
+	.skeleton-block {
+		background-color: rgba(130, 112, 102, 0.16);
+	}
+}
+
+.skeleton-line {
+	width: 100%;
+	height: 28rpx;
+	margin-bottom: 20rpx;
+	border-radius: 8rpx;
+
+	&.short {
+		width: 68%;
+	}
+}
+
+.skeleton-actions {
+	display: flex;
+	justify-content: space-around;
+	margin: 52rpx 0;
+}
+
+.skeleton-action {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.skeleton-action-icon {
+	width: 54rpx;
+	height: 54rpx;
+	border-radius: 50%;
+}
+
+.skeleton-action-text {
+	width: 72rpx;
+	height: 20rpx;
+	margin-top: 14rpx;
+	border-radius: 6rpx;
+}
+
+.skeleton-card {
+	padding: 30rpx;
+	border-radius: 18rpx;
+	background-color: rgba(130, 112, 102, 0.08);
+}
+
+.skeleton-card-title {
+	width: 34%;
+	height: 32rpx;
+	margin-bottom: 30rpx;
+	border-radius: 8rpx;
+}
+
+.skeleton-card-line {
+	width: 100%;
+	height: 24rpx;
+	margin-top: 16rpx;
+	border-radius: 8rpx;
+
+	&.short {
+		width: 58%;
+	}
+}
+
+@keyframes book-skeleton-shimmer {
+	100% {
+		transform: translateX(100%);
+	}
 }
 
 .dynamic-nav-bg {
@@ -1556,10 +1838,11 @@ export default {
 	position: fixed;
 	bottom: 0;
 	left: 0;
-	height: 100rpx;
+	height: calc(100rpx + var(--loghome-safe-bottom, 0px));
 	display: flex;
 	width: 100vw;
-	padding: 0 0;
+	padding: 0 0 var(--loghome-safe-bottom, 0px);
+	box-sizing: border-box;
 	z-index: 4;
 	align-items: center;
 	white-space: nowrap;
@@ -1665,8 +1948,8 @@ export default {
 }
 
 .l-dl {
-	margin-top: 180rpx;
-	padding: var(--statusBarHeight) 32rpx;
+	margin-top: calc(180rpx + var(--loghome-safe-top, 0px));
+	padding: 0 32rpx;
 	display: flex;
 	width: calc(100vw - 64rpx);
 	height: 320rpx;
@@ -1707,6 +1990,7 @@ export default {
 	color: #eeeeee;
 	max-height: 330rpx;
 	overflow-y: scroll;
+	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.34);
 
 	* {
 		margin: 5rpx 0;
@@ -1722,7 +2006,7 @@ export default {
 }
 
 .l-dd-sub {
-	color: #95A1A6;
+	color: rgba(255, 255, 255, 0.82);
 	font: 28rpx/38rpx normal;
 }
 
@@ -1855,7 +2139,7 @@ export default {
 
 .l-dd-footer {
 	font-size: 28rpx;
-	color: #dddddd;
+	color: rgba(255, 255, 255, 0.84);
 }
 
 
@@ -1934,6 +2218,27 @@ export default {
 
 .l-body-tab:active::before {
 	opacity: 1;
+}
+
+.l-body-tab.is-busy {
+	opacity: 0.72;
+	pointer-events: none;
+}
+
+.share-loading-dot {
+	width: 34rpx;
+	height: 34rpx;
+	margin-right: 10rpx;
+	border: 4rpx solid rgba(234, 112, 52, 0.24);
+	border-top-color: #EA7034;
+	border-radius: 50%;
+	animation: share-loading-spin 0.8s linear infinite;
+}
+
+@keyframes share-loading-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .l-list {
@@ -2312,31 +2617,36 @@ img {
 	.book-bg {
 		position: absolute;
 		width: 100vw;
-		height: calc(500rpx + var(--statusBarHeight) + 135rpx + 220rpx);
+		height: calc(500rpx + var(--loghome-safe-top, 0px) + 135rpx + 220rpx);
 		overflow: hidden;
-		background:
-			linear-gradient(180deg, var(--book-bg-start) 0%, var(--book-bg-end) 82%);
+		isolation: isolate;
+		background-color: var(--book-glass-tint);
+		border-bottom: 1rpx solid var(--book-glass-border);
 
 		&::before,
 		&::after {
 			content: '';
 			position: absolute;
-			inset: 0;
 		}
 
 		&::before {
-			background:
-				radial-gradient(circle at 50% 12%, var(--book-bg-glow) 0%, transparent 46%),
-				radial-gradient(circle at 12% 24%, var(--book-bg-side-glow) 0%, transparent 34%),
-				radial-gradient(circle at 88% 18%, var(--book-bg-side-glow) 0%, transparent 38%),
-				linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, var(--book-bg-bottom-shadow) 100%);
+			inset: -64rpx;
+			z-index: -2;
+			background-image: var(--book-glass-image);
+			background-position: center 24%;
+			background-repeat: no-repeat;
+			background-size: cover;
+			filter: blur(48rpx) saturate(1.24);
+			transform: scale(1.12);
+			opacity: 0.52;
 		}
 
 		&::after {
-			top: auto;
-			height: 180rpx;
-			background:
-				linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--book-bg-page-fade) 100%);
+			inset: 0;
+			z-index: -1;
+			background-color: var(--book-glass-surface);
+			-webkit-backdrop-filter: blur(34rpx) saturate(1.2);
+			backdrop-filter: blur(34rpx) saturate(1.2);
 		}
 	}
 
@@ -2349,7 +2659,7 @@ img {
 		margin: 35rpx 30rpx;
 		border-radius: 16rpx;
 		height: 100rpx;
-		top: calc(500rpx + var(--statusBarHeight));
+		top: calc(500rpx + var(--loghome-safe-top, 0px));
 		display: flex;
 		color: #dfdfdf;
 		font-size: 30rpx;
@@ -2362,6 +2672,20 @@ img {
 
 	.novel_Rank:active {
 		transform: scale(0.99);
+	}
+}
+
+.book-content-sheet {
+	background: rgba(255, 252, 242, 0.88);
+	border-top: 1rpx solid rgba(255, 255, 255, 0.62);
+	border-radius: 36rpx 36rpx 0 0;
+	overflow: hidden;
+	-webkit-backdrop-filter: blur(30rpx) saturate(1.12);
+	backdrop-filter: blur(30rpx) saturate(1.12);
+
+	.dark-mode & {
+		background: rgba(28, 28, 28, 0.88);
+		border-top-color: rgba(255, 255, 255, 0.08);
 	}
 }
 
@@ -2463,7 +2787,7 @@ view.tippingBar {
 			transform: translateY(-10rpx);
 		}
 
-		img.avatar {
+		.avatar {
 			height: 15vw;
 			width: 15vw;
 			position: relative;
@@ -2553,7 +2877,7 @@ view.tippingBar {
 			transform: scale(1.1);
 		}
 
-		img.avatar {
+		.avatar {
 			box-shadow: 0 6rpx 16rpx rgba(255, 180, 0, 0.3);
 			border: 4rpx solid #ffd700;
 		}

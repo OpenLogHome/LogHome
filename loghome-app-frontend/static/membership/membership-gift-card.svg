@@ -1,0 +1,41 @@
+<svg width="750" height="300" viewBox="0 0 750 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6f4027"/>
+      <stop offset="0.55" stop-color="#3c241b"/>
+      <stop offset="1" stop-color="#241713"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f4d28d"/>
+      <stop offset="0.5" stop-color="#fff0bd"/>
+      <stop offset="1" stop-color="#d99b4c"/>
+    </linearGradient>
+    <pattern id="pixels" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0v24" fill="none" stroke="#ffffff" stroke-opacity=".025"/>
+    </pattern>
+  </defs>
+  <rect width="750" height="300" rx="28" fill="url(#card)"/>
+  <rect width="750" height="300" rx="28" fill="url(#pixels)"/>
+  <path d="M0 222C160 184 274 257 425 217c108-29 208-90 325-66v149H0Z" fill="#130d0b" fill-opacity=".25"/>
+  <rect x="22" y="22" width="706" height="256" rx="19" fill="none" stroke="url(#gold)" stroke-width="2" stroke-opacity=".72"/>
+
+  <g transform="translate(72 67)" shape-rendering="crispEdges">
+    <path d="M52 0h56v12h24v24h20v92h-20v24h-24v12H52v-12H28v-24H8V36h20V12h24Z" fill="#e6a545"/>
+    <path d="M52 12h56v12h24v24h8v68h-20v24h-12v12H52v-12H40v-24H20V48h8V24h24Z" fill="#6b351c"/>
+    <circle cx="80" cy="82" r="47" fill="#f5d68f"/>
+    <circle cx="80" cy="82" r="34" fill="#b9702c"/>
+    <circle cx="80" cy="82" r="21" fill="#edc575"/>
+    <circle cx="80" cy="82" r="8" fill="#6b351c"/>
+    <path d="M76 35h8v94h-8zM33 78h94v8H33z" fill="#6b351c" fill-opacity=".62"/>
+  </g>
+
+  <g fill="url(#gold)" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+    <text x="260" y="99" font-size="23" font-weight="600" letter-spacing="5">LOGHOME GIFT PASS</text>
+    <text x="258" y="157" font-size="42" font-weight="700">一份成长，送给特别的你</text>
+    <text x="260" y="206" font-size="23" fill="#f6e2b2">原木通行证会员礼品卡</text>
+  </g>
+  <g fill="#f7d78f">
+    <path d="M687 55h8v8h-8zM679 63h24v8h-24zM687 71h8v8h-8z"/>
+    <path d="M633 226h6v6h-6zM627 232h18v6h-18zM633 238h6v6h-6z" fill-opacity=".75"/>
+  </g>
+</svg>

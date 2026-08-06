@@ -5,6 +5,7 @@ let auth = require('../../bin/auth.js');
 let adminAuth = require('../../bin/adminAuth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
+let avatarFrames = require('../../bin/avatarFrames.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -399,6 +400,9 @@ router.get('/:id/members', async (req, res) => {
         params.push((page - 1) * pageSize, pageSize);
         
         const members = await query(queryStr, params);
+        await avatarFrames.decorateRows(members, [
+            { userIdField: 'user_id', targetField: 'avatar_frame' }
+        ]);
         
         // 获取总数
         const countResult = await query(
@@ -1063,6 +1067,9 @@ router.get('/:id/join-requests', auth, async (req, res) => {
              LIMIT ?, ?`,
             [circleId, status, (page - 1) * pageSize, pageSize]
         );
+        await avatarFrames.decorateRows(requests, [
+            { userIdField: 'user_id', targetField: 'avatar_frame' }
+        ]);
         
         // 获取总数
         const countResult = await query(
@@ -1255,6 +1262,9 @@ router.get('/:id/banned-users', auth, async (req, res) => {
              ORDER BY b.create_time DESC`,
             [circleId]
         );
+        await avatarFrames.decorateRows(bannedUsers, [
+            { userIdField: 'user_id', targetField: 'avatar_frame' }
+        ]);
         
         res.json({
             list: bannedUsers

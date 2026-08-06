@@ -1,12 +1,13 @@
 // 引入依赖包
 let express = require('express');
-let { query } = require('../sql.js');
+let { query, withTransaction } = require('../sql.js');
 let auth = require('../bin/auth.js');
 let axios = require('axios');
 let config = require('../config');
 let message = require('../bin/message.js');
 let statistics = require('../bin/statistics');
 let bank = require('../bin/bank.js');
+const membership = require('../bin/membership.js');
 const {
 	ensureAgentMemorySchema,
 	getNovelIndexingStatus,
@@ -15,6 +16,7 @@ const {
 const {
 	COLLABORATOR_STATUS,
 	DEFAULT_LOCK_TTL_SECONDS,
+	buildAccessPayload,
 	canAddArticle,
 	canDeleteArticle,
 	canEditDraft,
@@ -33,6 +35,7 @@ const {
 	heartbeatArticleEditLock,
 	listNovelCollaborators,
 	normalizeUser,
+	projectCollaborationPolicy,
 	releaseArticleEditLock,
 	serializeAccess,
 } = require('../bin/novelCollaboration.js');
@@ -53,6 +56,84 @@ const compressing = require('compressing');
 const path = require('path');
 const crypto = require('crypto'); // 引入crypto模块用于md5
 const memoryDatabase = config.memoryDatabase || 'loghome-agent-memory';
+const WRITING_ACTIVITY_TIMEZONE = 'Asia/Shanghai';
+const WRITING_ACTIVITY_FULL_SECONDS = 30 * 60;
+const WRITING_ACTIVITY_FULL_CHARS = 3000;
+const WRITING_ACTIVITY_MID_SECONDS = 15 * 60;
+const WRITING_ACTIVITY_MID_CHARS = 1500;
+const WRITING_ACTIVITY_MAX_REPORT_SECONDS = 5 * 60;
+const WRITING_ACTIVITY_MAX_REPORT_CHARS = 100000;
+const WRITING_ACTIVITY_MAX_BACKFILL_DAYS = 370;
+const WRITING_ACTIVITY_TRACKING_STARTED_ON =
+	process.env.WRITING_ACTIVITY_TRACKING_STARTED_ON || '2026-08-02';
+
+function formatDateKeyInTimezone(date, timezone = WRITING_ACTIVITY_TIMEZONE) {
+	const parts = new Intl.DateTimeFormat('en-CA', {
+		timeZone: timezone,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+	}).formatToParts(date);
+	const values = {};
+	parts.forEach((part) => {
+		if (part.type !== 'literal') values[part.type] = part.value;
+	});
+	return `${values.year}-${values.month}-${values.day}`;
+}
+
+function parseDateKey(rawDate) {
+	const dateKey = String(rawDate || '').trim();
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null;
+	const date = new Date(`${dateKey}T00:00:00.000Z`);
+	if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== dateKey) {
+		return null;
+	}
+	return date;
+}
+
+function shiftDateKey(dateKey, amount) {
+	const date = parseDateKey(dateKey);
+	if (!date) return null;
+	date.setUTCDate(date.getUTCDate() + Number(amount || 0));
+	return date.toISOString().slice(0, 10);
+}
+
+function resolveWritingActivityDate(rawDate) {
+	const todayKey = formatDateKeyInTimezone(new Date());
+	const today = parseDateKey(todayKey);
+	const requested = parseDateKey(rawDate);
+	if (!requested) return todayKey;
+
+	const differenceDays = Math.round(
+		(requested.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
+	);
+	if (
+		differenceDays > 0 ||
+		differenceDays < -WRITING_ACTIVITY_MAX_BACKFILL_DAYS
+	) {
+		return todayKey;
+	}
+	return requested.toISOString().slice(0, 10);
+}
+
+function calculateWritingActivityLevel(activeSeconds, writtenChars) {
+	const seconds = Math.max(0, Number(activeSeconds || 0));
+	const chars = Math.max(0, Number(writtenChars || 0));
+	if (seconds <= 0 && chars <= 0) return 0;
+	if (
+		seconds >= WRITING_ACTIVITY_FULL_SECONDS ||
+		chars >= WRITING_ACTIVITY_FULL_CHARS
+	) {
+		return 3;
+	}
+	if (
+		seconds >= WRITING_ACTIVITY_MID_SECONDS ||
+		chars >= WRITING_ACTIVITY_MID_CHARS
+	) {
+		return 2;
+	}
+	return 1;
+}
 
 /**
  * 计算内容的MD5哈希值
@@ -407,18 +488,33 @@ function getCollaborationSettingsRoute(novelId) {
 	return `writers/essayCollaborationSettings?id=${novelId}`;
 }
 
-function serializeCollaborator(row) {
+
+function getCollaboratorPermissionPolicy(collaborationPolicy, collaboratorStatus) {
+	if (collaboratorStatus === COLLABORATOR_STATUS.ACTIVE) {
+		return collaborationPolicy;
+	}
+	return projectCollaborationPolicy(collaborationPolicy, 1);
+}
+
+function serializeCollaborator(row, collaborationPolicy = null) {
+	const permissionPolicy = getCollaboratorPermissionPolicy(
+		collaborationPolicy,
+		row.status,
+	);
+	const permissionsLocked = Boolean(permissionPolicy.permissions_restricted);
 	return {
 		id: Number(row.id),
 		novel_id: Number(row.novel_id),
 		user_id: Number(row.user_id),
 		role: row.role,
 		status: row.status,
-		can_edit_article: Number(row.can_edit_article) === 1,
-		can_add_article: Number(row.can_add_article) === 1,
-		can_delete_article: Number(row.can_delete_article) === 1,
-		can_sort_article: Number(row.can_sort_article) === 1,
-		can_publish_article: Number(row.can_publish_article) === 1,
+		can_edit_article: !permissionsLocked && Number(row.can_edit_article) === 1,
+		can_add_article: !permissionsLocked && Number(row.can_add_article) === 1,
+		can_delete_article: !permissionsLocked && Number(row.can_delete_article) === 1,
+		can_sort_article: !permissionsLocked && Number(row.can_sort_article) === 1,
+		can_publish_article: !permissionsLocked && Number(row.can_publish_article) === 1,
+		permissions_locked: permissionsLocked,
+		permission_policy: permissionPolicy,
 		invited_by: Number(row.invited_by),
 		invited_at: row.invited_at,
 		accepted_at: row.accepted_at,
@@ -543,14 +639,31 @@ router.get('/get_novels_of', auth, async (req, res) => {
 		let results = await query(
 			`SELECT
 				n.*,
-				EXISTS(
+					EXISTS(
 					SELECT 1
 					FROM novel_collaborators nc_active
 					WHERE nc_active.novel_id = n.novel_id
 						AND nc_active.status = ?
 					LIMIT 1
-				) AS has_active_collaborators,
-				nc.role AS collaborator_role,
+					) AS has_active_collaborators,
+					(
+						SELECT COUNT(*)
+						FROM novel_collaborators nc_count
+						WHERE nc_count.novel_id = n.novel_id
+							AND nc_count.status = '${COLLABORATOR_STATUS.ACTIVE}'
+					) AS active_collaborator_count,
+					(
+						SELECT ms.membership_type
+						FROM membership_subscriptions ms
+						WHERE ms.user_id = n.author_id
+							AND ms.status = 'active'
+							AND ms.starts_at <= NOW()
+							AND ms.expires_at > NOW()
+							AND ms.membership_type IN ('standard', 'super')
+						ORDER BY FIELD(ms.membership_type, 'super', 'standard'), ms.expires_at DESC
+						LIMIT 1
+					) AS owner_membership_type,
+					nc.role AS collaborator_role,
 				nc.status AS collaborator_status,
 				nc.can_edit_article,
 				nc.can_add_article,
@@ -576,45 +689,8 @@ router.get('/get_novels_of', auth, async (req, res) => {
 			],
 		);
 		results = JSON.parse(JSON.stringify(results)).map((row) => {
-			const isOwner = Number(row.author_id) === Number(user.user_id);
-			const canEditArticleAccess =
-				isOwner || Number(row.can_edit_article) === 1;
-			const canAddArticleAccess =
-				isOwner || Number(row.can_add_article) === 1;
-			const canDeleteArticleAccess =
-				isOwner || Number(row.can_delete_article) === 1;
-			const canSortArticleAccess =
-				isOwner || Number(row.can_sort_article) === 1;
-			const canPublishArticleAccess =
-				isOwner || Number(row.can_publish_article) === 1;
-			const access = {
-				viewer_user_id: Number(user.user_id),
-				novel_id: Number(row.novel_id),
-				author_id: Number(row.author_id),
-				access_role: isOwner ? 'owner' : 'collaborator',
-				collaborator_role: row.collaborator_role || null,
-				collaborator_status: isOwner
-					? null
-					: row.collaborator_status || COLLABORATOR_STATUS.ACTIVE,
-				can_view_novel: true,
-				can_view_articles: true,
-				can_edit_article: canEditArticleAccess,
-				can_edit_draft: canEditArticleAccess,
-				can_add_article: canAddArticleAccess,
-				can_delete_article: canDeleteArticleAccess,
-				can_sort_article: canSortArticleAccess,
-				can_publish_article: canPublishArticleAccess,
-				can_publish: canPublishArticleAccess,
-				can_manage_structure:
-					canAddArticleAccess ||
-					canDeleteArticleAccess ||
-					canSortArticleAccess,
-				can_manage_collaborators: isOwner,
-				can_respond_invitation: false,
-				is_owner: isOwner,
-				is_collaborator: !isOwner,
-			};
-			const serializedAccess = serializeAccess(access);
+				const access = buildAccessPayload(row, user.user_id);
+				const serializedAccess = serializeAccess(access);
 
 			return {
 				...row,
@@ -891,7 +967,9 @@ router.get('/get_novel_collaboration_info', auth, async (req, res) => {
 				owner_avatar_url: novelRows[0].owner_avatar_url,
 			},
 			access: serializeAccess(access),
-			collaborators: collaborators.map(serializeCollaborator),
+			collaborators: collaborators.map((row) =>
+				serializeCollaborator(row, access.collaboration_policy),
+			),
 		});
 	} catch (error) {
 		console.log(error);
@@ -918,6 +996,14 @@ router.post('/invite_novel_collaborator', auth, async (req, res) => {
 		if (Number(access.author_id) === targetUserId) {
 			return res.status(400).json({ msg: 'cannot invite the novel owner' });
 		}
+
+		const invitationPolicy = projectCollaborationPolicy(
+			access.collaboration_policy,
+			1,
+		);
+		const defaultPermissions = invitationPolicy.permissions_restricted
+			? [0, 0, 0, 0, 0]
+			: [1, 0, 0, 0, 0];
 
 		const [targetUser] = await query(
 			'SELECT user_id, name FROM users WHERE user_id = ? LIMIT 1',
@@ -949,6 +1035,11 @@ router.post('/invite_novel_collaborator', auth, async (req, res) => {
 				`UPDATE novel_collaborators
 				SET role = ?,
 					status = ?,
+					can_edit_article = ?,
+					can_add_article = ?,
+					can_delete_article = ?,
+					can_sort_article = ?,
+					can_publish_article = ?,
 					invited_by = ?,
 					invited_at = CURRENT_TIMESTAMP,
 					accepted_at = NULL
@@ -957,6 +1048,7 @@ router.post('/invite_novel_collaborator', auth, async (req, res) => {
 				[
 					role,
 					COLLABORATOR_STATUS.PENDING,
+					...defaultPermissions,
 					user.user_id,
 					novelId,
 					targetUserId,
@@ -969,15 +1061,21 @@ router.post('/invite_novel_collaborator', auth, async (req, res) => {
 					user_id,
 					role,
 					status,
+					can_edit_article,
+					can_add_article,
+					can_delete_article,
+					can_sort_article,
+					can_publish_article,
 					invited_by,
 					invited_at,
 					accepted_at
-				) VALUES(?,?,?,?,?,CURRENT_TIMESTAMP,NULL)`,
+				) VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,NULL)`,
 				[
 					novelId,
 					targetUserId,
 					role,
 					COLLABORATOR_STATUS.PENDING,
+					...defaultPermissions,
 					user.user_id,
 				],
 			);
@@ -992,7 +1090,11 @@ router.post('/invite_novel_collaborator', auth, async (req, res) => {
 			true,
 		);
 
-		return res.json({ msg: 'ok' });
+		return res.json({
+			msg: 'ok',
+			permissions_locked: invitationPolicy.permissions_restricted,
+			collaboration_policy: invitationPolicy,
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({ msg: 'bad request' });
@@ -1025,6 +1127,37 @@ router.post('/update_novel_collaborator_permissions', auth, async (req, res) => 
 			can_sort_article: parsePermissionFlag(req.body.can_sort_article),
 			can_publish_article: parsePermissionFlag(req.body.can_publish_article),
 		};
+		const collaboratorRows = await query(
+			`SELECT status
+			FROM novel_collaborators
+			WHERE novel_id = ?
+				AND user_id = ?
+				AND status IN (?, ?)
+			LIMIT 1`,
+			[
+				novelId,
+				targetUserId,
+				COLLABORATOR_STATUS.PENDING,
+				COLLABORATOR_STATUS.ACTIVE,
+			],
+		);
+		if (collaboratorRows.length === 0) {
+			return res.status(404).json({ msg: 'collaborator not found' });
+		}
+		const permissionPolicy = getCollaboratorPermissionPolicy(
+			access.collaboration_policy,
+			collaboratorRows[0].status,
+		);
+		const wantsAdditionalPermission = Object.values(permissions).some(
+			(value) => value === 1,
+		);
+		if (permissionPolicy.permissions_restricted && wantsAdditionalPermission) {
+			return res.status(403).json({
+				code: 'COLLABORATION_MEMBERSHIP_REQUIRED',
+				msg: '三人及以上协作需要主作者开通原木通行证，未开通时协作者仅可预览作品',
+				collaboration_policy: permissionPolicy,
+			});
+		}
 
 		const result = await query(
 			`UPDATE novel_collaborators
@@ -2146,6 +2279,13 @@ router.post('/modify_article', auth, async (req, res) => {
 			if (!canPublish(access)) {
 				return res.status(403).json({ msg: 'access denied' });
 			}
+			const activeMembership = await membership.getCurrentSubscription(user.user_id);
+			if (!activeMembership) {
+				return res.status(403).json({
+					code: 'MEMBERSHIP_REQUIRED',
+					msg: '定时发布仅限原木通行证或超级原木通行证会员使用',
+				});
+			}
 			const parsedScheduleTime = new Date(scheduleTime.replace(' ', 'T'));
 			if (Number.isNaN(parsedScheduleTime.getTime())) {
 				return res.status(400).json({ msg: 'invalid schedule_time' });
@@ -2568,16 +2708,16 @@ router.get('/master_work_of', auth, async (req, res) => {
 
 // 获取文章的错误反馈列表
 router.get('/get_article_feedbacks', auth, async (req, res) => {
-	let user = req.user;
-	user = JSON.parse(JSON.stringify(user))[0];
+	const user = getCurrentUser(req);
+	const articleId = Number(req.query.id || 0);
 	try {
-		// 确认作者权限
-		let isAuthor = await query(
-			'SELECT n.author_id FROM novels n JOIN articles a ON n.novel_id = a.novel_id WHERE a.article_id = ? AND n.author_id = ?',
-			[req.query.id, user.user_id]
-		);
-		
-		if (isAuthor.length === 0) {
+		if (!articleId) {
+			return res.status(400).json({ msg: 'article_id is required' });
+		}
+
+		// 协作者也可以查看自己有权访问的文章反馈。
+		const access = await getArticleAccess(user.user_id, articleId);
+		if (!canViewArticles(access) || access.article_deleted) {
 			return res.status(403).json({ msg: '没有权限查看此文章的反馈' });
 		}
 		
@@ -2588,7 +2728,7 @@ router.get('/get_article_feedbacks', auth, async (req, res) => {
 			 JOIN users u ON af.user_id = u.user_id
 			 WHERE af.article_id = ?
 			 ORDER BY af.status ASC, af.create_time DESC`,
-			[req.query.id]
+			[articleId]
 		);
 		
 		res.end(JSON.stringify(results));
@@ -2600,10 +2740,8 @@ router.get('/get_article_feedbacks', auth, async (req, res) => {
 
 // 更新错误反馈的状态
 router.post('/update_feedback_status', auth, async (req, res) => {
-	let user = req.user;
-	user = JSON.parse(JSON.stringify(user))[0];
+	const user = getCurrentUser(req);
 	try {
-		// 确认作者权限
 		let feedbackInfo = await query(
 			`SELECT af.*, a.novel_id 
 			 FROM article_feedback af
@@ -2616,12 +2754,9 @@ router.post('/update_feedback_status', auth, async (req, res) => {
 			return res.status(404).json({ msg: '未找到指定反馈' });
 		}
 		
-		let isAuthor = await query(
-			'SELECT * FROM novels WHERE novel_id = ? AND author_id = ?',
-			[feedbackInfo[0].novel_id, user.user_id]
-		);
-		
-		if (isAuthor.length === 0) {
+		// 修改反馈状态属于文章编辑操作，遵循协作者的章节编辑权限。
+		const access = await getArticleAccess(user.user_id, feedbackInfo[0].article_id);
+		if (!canEditDraft(access) || access.article_deleted) {
 			return res.status(403).json({ msg: '没有权限更新此反馈状态' });
 		}
 		
@@ -2648,6 +2783,202 @@ router.post('/update_feedback_status', auth, async (req, res) => {
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 上报作者在某篇章节中的创作活动。report_id 用于保证客户端重试不会重复累计。
+router.post('/report_novel_writing_activity', auth, async (req, res) => {
+	const user = getCurrentUser(req);
+	const articleId = Number(req.body.article_id || 0);
+	const reportId = String(req.body.report_id || '').trim().slice(0, 64);
+	const sessionId = sanitizeSessionId(req.body.session_id);
+	const activeSeconds = Math.min(
+		WRITING_ACTIVITY_MAX_REPORT_SECONDS,
+		Math.max(0, Math.floor(Number(req.body.active_seconds || 0))),
+	);
+	const writtenChars = Math.min(
+		WRITING_ACTIVITY_MAX_REPORT_CHARS,
+		Math.max(0, Math.floor(Number(req.body.written_chars || 0))),
+	);
+	const activityDate = resolveWritingActivityDate(req.body.activity_date);
+
+	if (!articleId || !reportId || !sessionId) {
+		return res.status(400).json({
+			msg: 'article_id, report_id and session_id are required',
+		});
+	}
+	if (!/^[A-Za-z0-9:_-]+$/.test(reportId)) {
+		return res.status(400).json({ msg: 'invalid report_id' });
+	}
+	if (activeSeconds <= 0 && writtenChars <= 0) {
+		return res.status(400).json({ msg: 'empty writing activity report' });
+	}
+
+	try {
+		const access = await getArticleAccess(user.user_id, articleId);
+		if (!canEditDraft(access) || access.article_deleted) {
+			return res.status(403).json({ msg: 'access denied' });
+		}
+
+		const novelId = Number(access.novel_id);
+		const transactionResult = await withTransaction(
+			async (transactionalQuery) => {
+				const inserted = await transactionalQuery(
+					`INSERT IGNORE INTO novel_writing_activity_reports(
+						report_id,
+						session_id,
+						novel_id,
+						article_id,
+						user_id,
+						activity_date,
+						active_seconds,
+						written_chars
+					) VALUES(?,?,?,?,?,?,?,?)`,
+					[
+						reportId,
+						sessionId,
+						novelId,
+						articleId,
+						user.user_id,
+						activityDate,
+						activeSeconds,
+						writtenChars,
+					],
+				);
+
+				if (!inserted || Number(inserted.affectedRows || 0) === 0) {
+					return { duplicate: true };
+				}
+
+				await transactionalQuery(
+					`INSERT INTO novel_writing_activity_daily(
+						novel_id,
+						user_id,
+						activity_date,
+						active_seconds,
+						written_chars
+					) VALUES(?,?,?,?,?)
+					ON DUPLICATE KEY UPDATE
+						active_seconds = active_seconds + VALUES(active_seconds),
+						written_chars = written_chars + VALUES(written_chars)`,
+					[
+						novelId,
+						user.user_id,
+						activityDate,
+						activeSeconds,
+						writtenChars,
+					],
+				);
+
+				return { duplicate: false };
+			},
+			'report novel writing activity',
+		);
+
+		return res.json({
+			msg: 'ok',
+			duplicate: transactionResult.duplicate,
+			novel_id: novelId,
+			activity_date: activityDate,
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 获取当前作者在某本作品中的过去一年创作活动。
+router.get('/get_novel_writing_calendar', auth, async (req, res) => {
+	const user = getCurrentUser(req);
+	const novelId = Number(req.query.novel_id || 0);
+	const todayKey = formatDateKeyInTimezone(new Date());
+	const toKey = req.query.to ? String(req.query.to) : todayKey;
+	const fromKey = req.query.from
+		? String(req.query.from)
+		: shiftDateKey(toKey, -364);
+	const fromDate = parseDateKey(fromKey);
+	const toDate = parseDateKey(toKey);
+
+	if (!novelId || !fromDate || !toDate || fromDate > toDate) {
+		return res.status(400).json({ msg: 'invalid calendar range' });
+	}
+	const rangeDays = Math.floor(
+		(toDate.getTime() - fromDate.getTime()) / (24 * 60 * 60 * 1000),
+	);
+	if (rangeDays > 370) {
+		return res.status(400).json({ msg: 'calendar range is too large' });
+	}
+
+	try {
+		const access = await getNovelAccess(user.user_id, novelId);
+		if (!canViewArticles(access)) {
+			return res.status(403).json({ msg: 'access denied' });
+		}
+
+		const rows = await query(
+			`SELECT
+				DATE_FORMAT(activity_date, '%Y-%m-%d') AS activity_date,
+				active_seconds,
+				written_chars
+			FROM novel_writing_activity_daily
+			WHERE novel_id = ?
+				AND user_id = ?
+				AND activity_date >= ?
+				AND activity_date <= ?
+			ORDER BY activity_date ASC`,
+			[novelId, user.user_id, fromKey, toKey],
+		);
+
+		const days = rows.map((row) => ({
+			date: row.activity_date,
+			active_seconds: Number(row.active_seconds || 0),
+			written_chars: Number(row.written_chars || 0),
+			level: calculateWritingActivityLevel(
+				row.active_seconds,
+				row.written_chars,
+			),
+		}));
+		const activeDateSet = new Set(days.map((day) => day.date));
+		let streakCursor = todayKey;
+		if (!activeDateSet.has(streakCursor)) {
+			streakCursor = shiftDateKey(streakCursor, -1);
+		}
+		let currentStreak = 0;
+		while (streakCursor && activeDateSet.has(streakCursor)) {
+			currentStreak += 1;
+			streakCursor = shiftDateKey(streakCursor, -1);
+		}
+
+		return res.json({
+			novel_id: novelId,
+			user_id: Number(user.user_id),
+			timezone: WRITING_ACTIVITY_TIMEZONE,
+			from: fromKey,
+			to: toKey,
+			tracking_started_on: WRITING_ACTIVITY_TRACKING_STARTED_ON,
+			thresholds: {
+				mid_active_seconds: WRITING_ACTIVITY_MID_SECONDS,
+				mid_written_chars: WRITING_ACTIVITY_MID_CHARS,
+				full_active_seconds: WRITING_ACTIVITY_FULL_SECONDS,
+				full_written_chars: WRITING_ACTIVITY_FULL_CHARS,
+			},
+			summary: {
+				active_days: days.length,
+				current_streak: currentStreak,
+				total_active_seconds: days.reduce(
+					(total, day) => total + day.active_seconds,
+					0,
+				),
+				total_written_chars: days.reduce(
+					(total, day) => total + day.written_chars,
+					0,
+				),
+			},
+			days,
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({ msg: 'bad request' });
 	}
 });
 
@@ -2776,10 +3107,27 @@ router.get('/get_scheduled_tasks', auth, async (req, res) => {
 			WHERE t.status = 'pending'
 				AND (
 					n.author_id = ?
-					OR (
-						nc.status = ?
-						AND nc.can_publish_article = 1
-					)
+						OR (
+							nc.status = ?
+							AND nc.can_publish_article = 1
+							AND (
+								(
+									SELECT COUNT(*)
+									FROM novel_collaborators nc_count
+									WHERE nc_count.novel_id = n.novel_id
+										AND nc_count.status = '${COLLABORATOR_STATUS.ACTIVE}'
+								) <= 1
+								OR EXISTS(
+									SELECT 1
+									FROM membership_subscriptions ms
+									WHERE ms.user_id = n.author_id
+										AND ms.status = 'active'
+										AND ms.starts_at <= NOW()
+										AND ms.expires_at > NOW()
+										AND ms.membership_type IN ('standard', 'super')
+								)
+							)
+						)
 				)
 			ORDER BY t.publish_time ASC`,
 			[user.user_id, user.user_id, COLLABORATOR_STATUS.ACTIVE]
@@ -2807,10 +3155,27 @@ router.post('/cancel_scheduled_task', auth, async (req, res) => {
 			 WHERE t.task_id = ?
 				AND (
 					n.author_id = ?
-					OR (
-						nc.status = ?
-						AND nc.can_publish_article = 1
-					)
+						OR (
+							nc.status = ?
+							AND nc.can_publish_article = 1
+							AND (
+								(
+									SELECT COUNT(*)
+									FROM novel_collaborators nc_count
+									WHERE nc_count.novel_id = n.novel_id
+										AND nc_count.status = '${COLLABORATOR_STATUS.ACTIVE}'
+								) <= 1
+								OR EXISTS(
+									SELECT 1
+									FROM membership_subscriptions ms
+									WHERE ms.user_id = n.author_id
+										AND ms.status = 'active'
+										AND ms.starts_at <= NOW()
+										AND ms.expires_at > NOW()
+										AND ms.membership_type IN ('standard', 'super')
+								)
+							)
+						)
 				)`,
 			[
 				user.user_id,

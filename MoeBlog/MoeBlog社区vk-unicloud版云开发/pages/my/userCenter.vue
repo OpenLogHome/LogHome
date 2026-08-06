@@ -14,10 +14,10 @@
 						<view class="info-I">
 							<view class="info-I-I">
 								<view class="text">
-									头像框
+									头像挂件
 								</view>
 								<view class="input">
-									<u-button @click="ToAvatar" size="mini" type="primary">去切换头像框</u-button>
+									<u-button @click="ToAvatar" size="mini" type="primary">去切换头像挂件</u-button>
 								</view>
 							</view>
 							<view class="hr"></view>

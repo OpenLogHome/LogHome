@@ -87,6 +87,9 @@ const paymentsRouter = require('./routes/payment');
 const worldRouter = require('./routes/world');
 const creditRouter = require('./routes/credit');
 const storeRouter = require('./routes/store');
+const membershipRouter = require('./routes/membership');
+const redstoneRouter = require('./routes/redstone');
+const avatarFramesRouter = require('./routes/avatarFrames');
 
 app.use('/library', libraryRouter);
 app.use('/users', usersRouter);
@@ -105,6 +108,9 @@ app.use('/credit', creditRouter);
 app.use('/payment', paymentsRouter);
 app.use('/world', worldRouter);
 app.use('/store', storeRouter);
+app.use('/membership', membershipRouter);
+app.use('/redstone', redstoneRouter);
+app.use('/avatar-frames', avatarFramesRouter);
 
 let server = app.listen(9000, function () {
 	let host = server.address().address;

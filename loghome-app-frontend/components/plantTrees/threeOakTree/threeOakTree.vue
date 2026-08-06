@@ -1,7 +1,20 @@
 <template>
-  <view class="oak-tree-3d" :style="sceneThemeStyle">
+  <view
+    class="oak-tree-3d"
+    :class="{ 'is-night': nightMode }"
+    :style="sceneThemeStyle"
+  >
     <view class="scene-backdrop">
       <view class="sun-halo"></view>
+      <view class="pixel-stars" v-if="nightMode">
+        <view
+          v-for="(star, index) in nightStars"
+          :key="'night-star-' + index"
+          class="pixel-star"
+          :class="'star-size-' + star.size"
+          :style="{ left: star.x + '%', top: star.y + '%', opacity: star.opacity }"
+        ></view>
+      </view>
       <view class="mist mist-a"></view>
       <view class="mist mist-b"></view>
     </view>
@@ -27,7 +40,6 @@ import {
   getSceneThemeStyle,
 } from "./sceneThemes";
 
-const CAMERA_TARGET = new THREE.Vector3(0, 2.6, 0);
 const PATH_CELLS = new Set([
   "0:4",
   "0:3",
@@ -38,6 +50,29 @@ const PATH_CELLS = new Set([
   "-1:3",
   "1:3",
 ]);
+const SWAMP_WATER_CELLS = new Set([
+  "-4:-1",
+  "-3:-2",
+  "-3:-1",
+  "-3:0",
+  "3:-2",
+  "3:-1",
+  "4:-1",
+]);
+const NIGHT_STAR_POSITIONS = [
+  { x: 7, y: 12, size: 1, opacity: 0.72 },
+  { x: 16, y: 24, size: 2, opacity: 0.9 },
+  { x: 24, y: 8, size: 1, opacity: 0.82 },
+  { x: 34, y: 19, size: 1, opacity: 0.68 },
+  { x: 43, y: 7, size: 2, opacity: 0.94 },
+  { x: 54, y: 27, size: 1, opacity: 0.76 },
+  { x: 63, y: 13, size: 1, opacity: 0.86 },
+  { x: 72, y: 31, size: 2, opacity: 0.72 },
+  { x: 83, y: 18, size: 1, opacity: 0.92 },
+  { x: 92, y: 8, size: 1, opacity: 0.7 },
+  { x: 12, y: 39, size: 1, opacity: 0.64 },
+  { x: 88, y: 42, size: 2, opacity: 0.74 },
+];
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -69,6 +104,15 @@ function createCanvasTexture(resources, painter) {
 
 function createPixelTexture(resources, fileName, painter) {
   return createCanvasTexture(resources, painter);
+}
+
+function cutPixelHoles(ctx, cells, cellSize = 4) {
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-out";
+  cells.forEach(([x, y]) => {
+    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+  });
+  ctx.restore();
 }
 
 function fillGrid(ctx, size, palette, cellSize = 4) {
@@ -120,6 +164,9 @@ function createTextureLibrary(resources, themeDefinition) {
     ctx.fillStyle = palette.stone[2];
     ctx.fillRect(8, 8, 4, 12);
     ctx.fillRect(18, 12, 8, 4);
+    ctx.fillStyle = palette.stone[3];
+    ctx.fillRect(4, 24, 8, 4);
+    ctx.fillRect(24, 4, 4, 8);
   });
 
   const trunkTop = createPixelTexture(resources, "oak_log_top", (ctx, size) => {
@@ -151,6 +198,7 @@ function createTextureLibrary(resources, themeDefinition) {
     ctx.fillStyle = palette.leafAccent;
     ctx.fillRect(4, 8, 4, 4);
     ctx.fillRect(20, 20, 4, 4);
+    cutPixelHoles(ctx, [[0, 1], [7, 2], [2, 5], [5, 7]]);
   });
 
   const blossom = createPixelTexture(resources, "blossom", (ctx, size) => {
@@ -158,6 +206,7 @@ function createTextureLibrary(resources, themeDefinition) {
     ctx.fillStyle = palette.blossomAccent;
     ctx.fillRect(8, 8, 4, 4);
     ctx.fillRect(20, 16, 4, 4);
+    cutPixelHoles(ctx, [[1, 0], [6, 2], [0, 6], [7, 7]]);
   });
 
   const apple = createPixelTexture(resources, "apple", (ctx, size) => {
@@ -180,6 +229,13 @@ function createTextureLibrary(resources, themeDefinition) {
     ctx.fillRect(22, 12, 2, 12);
   });
 
+  const water = createPixelTexture(resources, "water", (ctx, size) => {
+    fillGrid(ctx, size, palette.water || palette.stone, 8);
+    ctx.fillStyle = (palette.water || palette.stone)[0];
+    ctx.fillRect(0, 6, 20, 2);
+    ctx.fillRect(12, 22, 20, 2);
+  });
+
   return {
     grassTop,
     grassSide,
@@ -193,6 +249,7 @@ function createTextureLibrary(resources, themeDefinition) {
     blossom,
     apple,
     plank,
+    water,
   };
 }
 
@@ -208,8 +265,11 @@ function createVoxelMaterial(resources, options) {
     map: options.map,
     transparent: !!options.transparent,
     alphaTest: options.alphaTest || 0,
+    opacity: options.opacity == null ? 1 : options.opacity,
+    depthWrite: options.depthWrite !== false,
     emissive: options.emissive || "#000000",
     emissiveIntensity: options.emissiveIntensity || 0,
+    flatShading: true,
   });
 
   resources.materials.push(material);
@@ -217,7 +277,7 @@ function createVoxelMaterial(resources, options) {
   return material;
 }
 
-function createBoxMaterialSet(resources, options) {
+function createBoxMaterialSet(resources, options, axis = "y") {
   const common = {
     roughness: 0.96,
     metalness: 0.03,
@@ -231,6 +291,7 @@ function createBoxMaterialSet(resources, options) {
     alphaTest: options.alphaTest || 0,
     emissive: options.sideEmissive || "#000000",
     emissiveIntensity: options.emissiveIntensity || 0,
+    flatShading: true,
   });
   const topMaterial = new THREE.MeshStandardMaterial({
     ...common,
@@ -239,24 +300,25 @@ function createBoxMaterialSet(resources, options) {
     alphaTest: options.alphaTest || 0,
     emissive: options.topEmissive || options.sideEmissive || "#000000",
     emissiveIntensity: options.emissiveIntensity || 0,
+    flatShading: true,
   });
   const bottomMaterial = new THREE.MeshStandardMaterial({
     ...common,
     map: options.bottom || options.side,
     transparent: !!options.transparent,
     alphaTest: options.alphaTest || 0,
+    flatShading: true,
   });
 
   resources.materials.push(sideMaterial, topMaterial, bottomMaterial);
 
-  return [
-    sideMaterial,
-    sideMaterial,
-    topMaterial,
-    bottomMaterial,
-    sideMaterial,
-    sideMaterial,
-  ];
+  if (axis === "x") {
+    return [topMaterial, bottomMaterial, sideMaterial, sideMaterial, sideMaterial, sideMaterial];
+  }
+  if (axis === "z") {
+    return [sideMaterial, sideMaterial, sideMaterial, sideMaterial, topMaterial, bottomMaterial];
+  }
+  return [sideMaterial, sideMaterial, topMaterial, bottomMaterial, sideMaterial, sideMaterial];
 }
 
 function createMaterialLibrary(resources, themeDefinition) {
@@ -310,15 +372,27 @@ function createMaterialLibrary(resources, themeDefinition) {
       side: textures.trunkSide,
       bottom: textures.trunkTop,
     }),
+    trunkX: createBoxMaterialSet(resources, {
+      top: textures.trunkTop,
+      side: textures.trunkSide,
+      bottom: textures.trunkTop,
+    }, "x"),
+    trunkZ: createBoxMaterialSet(resources, {
+      top: textures.trunkTop,
+      side: textures.trunkSide,
+      bottom: textures.trunkTop,
+    }, "z"),
     leaf: createVoxelMaterial(resources, {
       map: textures.leaf,
+      alphaTest: 0.32,
       emissive: "#16351d",
-      emissiveIntensity: 0.12,
+      emissiveIntensity: 0.08,
     }),
     blossom: createVoxelMaterial(resources, {
       map: textures.blossom,
+      alphaTest: 0.3,
       emissive: "#5d1c38",
-      emissiveIntensity: 0.08,
+      emissiveIntensity: 0.06,
     }),
     apple: createVoxelMaterial(resources, {
       map: textures.apple,
@@ -328,6 +402,12 @@ function createMaterialLibrary(resources, themeDefinition) {
     plank: createVoxelMaterial(resources, {
       map: textures.plank,
     }),
+    water: createVoxelMaterial(resources, {
+      map: textures.water,
+      transparent: true,
+      opacity: 0.78,
+      depthWrite: false,
+    }),
     cloud: cloudMaterial,
     glow: glowMaterial,
     pinkGlow: pinkGlowMaterial,
@@ -336,13 +416,13 @@ function createMaterialLibrary(resources, themeDefinition) {
 
 function createGeometryLibrary(resources) {
   const unit = new THREE.BoxGeometry(1, 1, 1);
-  const smallOrb = new THREE.SphereGeometry(0.16, 8, 8);
+  const sparkCube = new THREE.BoxGeometry(0.18, 0.18, 0.18);
 
-  resources.geometries.push(unit, smallOrb);
+  resources.geometries.push(unit, sparkCube);
 
   return {
     unit,
-    smallOrb,
+    sparkCube,
   };
 }
 
@@ -351,6 +431,7 @@ function createRuntime(framing = getCameraFraming(1)) {
     renderer: null,
     scene: null,
     camera: null,
+    cameraTarget: new THREE.Vector3(0, framing.targetY || 2.6, 0),
     world: null,
     host: null,
     materials: null,
@@ -361,17 +442,21 @@ function createRuntime(framing = getCameraFraming(1)) {
       geometries: [],
     },
     clouds: [],
+    ambientLights: [],
+    isNight: false,
     stage: null,
     animationFrame: 0,
     resizeObserver: null,
+    contextLostHandler: null,
     isDragging: false,
     dragStartX: 0,
     dragStartY: 0,
-    baseTheta: 0,
+    cameraTheta: 0,
+    baseWorldRotationY: 0,
     basePhi: framing.phi,
-    targetTheta: 0,
+    targetWorldRotationY: 0,
     targetPhi: framing.phi,
-    currentTheta: 0,
+    currentWorldRotationY: 0,
     currentPhi: framing.phi,
     radius: framing.radius,
     lastTimestamp: 0,
@@ -400,7 +485,17 @@ function disposeRuntime(runtime) {
   }
 
   if (runtime.renderer) {
+    if (runtime.contextLostHandler && runtime.renderer.domElement) {
+      runtime.renderer.domElement.removeEventListener(
+        "webglcontextlost",
+        runtime.contextLostHandler
+      );
+    }
+    const loseContext = runtime.renderer.getContext
+      ? runtime.renderer.getContext().getExtension("WEBGL_lose_context")
+      : null;
     runtime.renderer.dispose();
+    if (loseContext) loseContext.loseContext();
     if (runtime.renderer.domElement && runtime.renderer.domElement.parentNode) {
       runtime.renderer.domElement.parentNode.removeChild(
         runtime.renderer.domElement
@@ -431,7 +526,7 @@ function addVoxel(runtime, group, materialKey, x, y, z, options = {}) {
 
 function addParticle(runtime, targetList, group, materialKey, config) {
   const mesh = new THREE.Mesh(
-    runtime.geometries.smallOrb,
+    runtime.geometries.sparkCube,
     runtime.materials[materialKey]
   );
   mesh.position.set(config.origin.x, config.origin.y, config.origin.z);
@@ -449,12 +544,33 @@ function addParticle(runtime, targetList, group, materialKey, config) {
   });
 }
 
+function animateParticleSet(items, timestamp, indexOffset = 0) {
+  if (!Array.isArray(items)) return;
+  items.forEach((item, index) => {
+    item.mesh.position.x =
+      item.origin.x +
+      Math.cos(timestamp * 0.001 * item.speed + item.phase) * item.radius;
+    item.mesh.position.z =
+      item.origin.z +
+      Math.sin(timestamp * 0.00115 * item.speed + item.phase) * item.radius;
+    item.mesh.position.y =
+      item.origin.y +
+      Math.sin(
+        timestamp * 0.0015 * item.speed + item.phase + index + indexOffset
+      ) *
+        item.lift;
+    item.mesh.rotation.y = timestamp * 0.0012 * item.speed + item.phase;
+    item.mesh.rotation.x = item.mesh.rotation.y * 0.65;
+  });
+}
+
 function addFlowerPatch(runtime, group, x, z, colorKey = "blossom") {
-  addVoxel(runtime, group, "leaf", x, 1, z, {
+  const baseY = getDecorationBaseY(x, z);
+  addVoxel(runtime, group, "leaf", x, baseY, z, {
     scale: [0.2, 0.28, 0.2],
     castShadow: false,
   });
-  addVoxel(runtime, group, colorKey, x, 1.32, z, {
+  addVoxel(runtime, group, colorKey, x, baseY + 0.32, z, {
     scale: [0.35, 0.2, 0.35],
     castShadow: false,
   });
@@ -524,11 +640,46 @@ function getIslandDepth(x, z, topY) {
   );
 }
 
-function getSurfaceMaterialKey(x, z) {
+function getSurfaceMaterialKey(runtime, x, z) {
   const key = `${x}:${z}`;
   if (Math.abs(x) <= 1 && Math.abs(z) <= 1) return "soil";
   if (PATH_CELLS.has(key)) return "path";
+  if (runtime.themeKey === "swamp_redwood" && SWAMP_WATER_CELLS.has(key)) {
+    return "water";
+  }
   return "grass";
+}
+
+function getGroundTopY(x, z) {
+  const cellX = Math.round(x);
+  const cellZ = Math.round(z);
+  return isIslandSurfaceCell(cellX, cellZ)
+    ? getIslandTopHeight(cellX, cellZ)
+    : 0;
+}
+
+function getDecorationBaseY(x, z) {
+  return getGroundTopY(x, z) + 1;
+}
+
+function addGroundedVoxel(
+  runtime,
+  group,
+  materialKey,
+  x,
+  z,
+  options = {},
+  lift = 0
+) {
+  return addVoxel(
+    runtime,
+    group,
+    materialKey,
+    x,
+    getDecorationBaseY(x, z) + lift,
+    z,
+    options
+  );
 }
 
 function buildFloatingShard(
@@ -548,7 +699,9 @@ function buildFloatingShard(
         castShadow: false,
       });
 
-      for (let iy = 1; iy <= height; iy += 1) {
+      const edgeDistance = Math.min(ix, iz, width - 1 - ix, depth - 1 - iz);
+      const localDepth = Math.max(1, height - (edgeDistance === 0 ? 1 : 0));
+      for (let iy = 1; iy <= localDepth; iy += 1) {
         addVoxel(runtime, runtime.world, "stone", offsetX, y - iy, offsetZ, {
           castShadow: false,
         });
@@ -558,21 +711,33 @@ function buildFloatingShard(
 }
 
 function addLanternPost(runtime, group, x, z, glowMaterialKey = "glow") {
-  addVoxel(runtime, group, "plank", x, 1, z, {
+  const baseY = getDecorationBaseY(x, z);
+  addVoxel(runtime, group, "plank", x, baseY, z, {
     scale: [0.5, 1.6, 0.5],
   });
-  addVoxel(runtime, group, glowMaterialKey, x, 2.25, z, {
+  addVoxel(runtime, group, glowMaterialKey, x, baseY + 1.6, z, {
     scale: [0.42, 0.42, 0.42],
     castShadow: false,
     receiveShadow: false,
   });
+  if (runtime.isNight) {
+    const glowPalette =
+      glowMaterialKey === "pinkGlow"
+        ? runtime.themeDefinition.palette.accentGlow
+        : runtime.themeDefinition.palette.glow;
+    const light = new THREE.PointLight(glowPalette[0], 3.4, 6.5, 2);
+    light.position.set(x, baseY + 0.82, z);
+    light.castShadow = false;
+    group.add(light);
+  }
 }
 
 function addGrassTuft(runtime, group, x, z, materialKey = "leaf") {
+  const baseY = getDecorationBaseY(x, z);
   [
-    [x - 0.14, 1.02, z, [0.18, 0.72, 0.18]],
-    [x + 0.14, 1.08, z + 0.08, [0.18, 0.58, 0.18]],
-    [x + 0.02, 1.12, z - 0.16, [0.18, 0.86, 0.18]],
+    [x - 0.14, baseY + 0.02, z, [0.18, 0.72, 0.18]],
+    [x + 0.14, baseY + 0.08, z + 0.08, [0.18, 0.58, 0.18]],
+    [x + 0.02, baseY + 0.12, z - 0.16, [0.18, 0.86, 0.18]],
   ].forEach((item) => {
     addVoxel(runtime, group, materialKey, item[0], item[1], item[2], {
       scale: item[3],
@@ -582,32 +747,34 @@ function addGrassTuft(runtime, group, x, z, materialKey = "leaf") {
 }
 
 function addMiniBirch(runtime, group, x, z) {
-  addVoxel(runtime, group, "trunk", x, 1, z, {
+  const baseY = getDecorationBaseY(x, z);
+  addVoxel(runtime, group, "trunk", x, baseY, z, {
     scale: [0.24, 1.26, 0.24],
     castShadow: false,
   });
-  addVoxel(runtime, group, "leaf", x, 1.92, z, {
-    scale: [0.58, 0.24, 0.58],
+  addVoxel(runtime, group, "leaf", x, baseY + 1.24, z, {
+    scale: [0.64, 0.56, 0.64],
     castShadow: false,
   });
-  addVoxel(runtime, group, "blossom", x, 2.14, z, {
+  addVoxel(runtime, group, "blossom", x, baseY + 1.76, z, {
     scale: [0.28, 0.18, 0.28],
     castShadow: false,
   });
 }
 
 function addCrystalCluster(runtime, group, x, z) {
+  const baseY = getDecorationBaseY(x, z);
   [
-    [x, 1, z, [0.32, 1.46, 0.32]],
-    [x + 0.28, 0.96, z - 0.2, [0.22, 1.02, 0.22]],
-    [x - 0.24, 0.94, z + 0.16, [0.2, 0.88, 0.2]],
+    [x, baseY, z, [0.32, 1.46, 0.32]],
+    [x + 0.28, baseY, z - 0.2, [0.22, 1.02, 0.22]],
+    [x - 0.24, baseY, z + 0.16, [0.2, 0.88, 0.2]],
   ].forEach((item) => {
     addVoxel(runtime, group, "stone", item[0], item[1], item[2], {
       scale: item[3],
       castShadow: false,
     });
   });
-  addVoxel(runtime, group, "pinkGlow", x, 1.88, z, {
+  addVoxel(runtime, group, "pinkGlow", x, baseY + 1.46, z, {
     scale: [0.16, 0.16, 0.16],
     castShadow: false,
     receiveShadow: false,
@@ -615,16 +782,45 @@ function addCrystalCluster(runtime, group, x, z) {
 }
 
 function addSwampStump(runtime, group, x, z) {
-  addVoxel(runtime, group, "trunk", x, 1, z, {
+  const baseY = getDecorationBaseY(x, z);
+  addVoxel(runtime, group, "trunk", x, baseY, z, {
     scale: [0.82, 0.92, 0.82],
   });
-  addVoxel(runtime, group, "trunk", x + 0.56, 1, z, {
+  addVoxel(runtime, group, "trunkZ", x + 0.56, baseY, z, {
     scale: [0.48, 0.44, 1.02],
   });
-  addVoxel(runtime, group, "pinkGlow", x, 1.62, z, {
+  addVoxel(runtime, group, "pinkGlow", x, baseY + 0.92, z, {
     scale: [0.2, 0.2, 0.2],
     castShadow: false,
     receiveShadow: false,
+  });
+}
+
+function buildNightAtmosphere(runtime, group) {
+  if (!runtime.isNight) return;
+  const materialKey =
+    runtime.themeKey === "sakura_grove" || runtime.themeKey === "swamp_redwood"
+      ? "pinkGlow"
+      : "glow";
+  [
+    [-3.2, -1.4, 1.15, 0.46, 0.72, 0.18, 0.2],
+    [3.1, -1.8, 1.35, 0.52, 0.64, 0.22, 1.4],
+    [-2.4, 2.8, 1.72, 0.4, 0.82, 0.2, 2.6],
+    [2.6, 2.4, 1.46, 0.44, 0.76, 0.18, 3.8],
+    [-0.9, 3.6, 1.28, 0.36, 0.9, 0.16, 4.7],
+    [1.2, -3.4, 1.58, 0.48, 0.68, 0.22, 5.5],
+  ].forEach((item, index) => {
+    addParticle(runtime, runtime.ambientLights, group, index % 3 === 0 ? "glow" : materialKey, {
+      origin: new THREE.Vector3(
+        item[0],
+        getGroundTopY(item[0], item[1]) + item[2],
+        item[1]
+      ),
+      radius: item[3],
+      speed: item[4],
+      lift: item[5],
+      phase: item[6],
+    });
   });
 }
 
@@ -647,18 +843,7 @@ function buildThemeTerrainDecorations(runtime, terrain) {
       [-4.1, -2.8],
       [4.1, -1.7],
     ].forEach((item) => {
-      addVoxel(runtime, terrain, "trunk", item[0], 1, item[1], {
-        scale: [0.24, 1.16, 0.24],
-        castShadow: false,
-      });
-      addVoxel(runtime, terrain, "leaf", item[0], 1.92, item[1], {
-        scale: [0.56, 0.24, 0.56],
-        castShadow: false,
-      });
-      addVoxel(runtime, terrain, "blossom", item[0], 2.16, item[1], {
-        scale: [0.28, 0.18, 0.28],
-        castShadow: false,
-      });
+      addMiniBirch(runtime, terrain, item[0], item[1]);
     });
     addMiniBirch(runtime, terrain, -1.25, -0.8);
     addMiniBirch(runtime, terrain, 1.35, -0.2);
@@ -676,15 +861,15 @@ function buildThemeTerrainDecorations(runtime, terrain) {
       [4.2, -2.3, [0.34, 1.5, 0.34]],
       [3.4, 2.6, [0.24, 0.96, 0.24]],
     ].forEach((item) => {
-      addVoxel(runtime, terrain, "stone", item[0], 1, item[1], {
+      addGroundedVoxel(runtime, terrain, "stone", item[0], item[1], {
         scale: item[2],
         castShadow: false,
       });
-      addVoxel(runtime, terrain, "pinkGlow", item[0], 1.9, item[1], {
+      addGroundedVoxel(runtime, terrain, "pinkGlow", item[0], item[1], {
         scale: [0.16, 0.16, 0.16],
         castShadow: false,
         receiveShadow: false,
-      });
+      }, item[2][1]);
     });
     addCrystalCluster(runtime, terrain, -0.5, -0.9);
     addCrystalCluster(runtime, terrain, 0.7, -0.4);
@@ -731,14 +916,14 @@ function buildThemeTerrainDecorations(runtime, terrain) {
       [4.2, -1.9, [0.74, 2.1, 0.74]],
       [2.2, 4.1, [0.52, 1.3, 0.52]],
     ].forEach((item) => {
-      addVoxel(runtime, terrain, "stone", item[0], 1, item[1], {
+      addGroundedVoxel(runtime, terrain, "stone", item[0], item[1], {
         scale: item[2],
         castShadow: false,
       });
     });
     addGrassTuft(runtime, terrain, -0.45, 0.88);
     addGrassTuft(runtime, terrain, 0.4, 0.62);
-    addVoxel(runtime, terrain, "stone", 1.15, 1, -0.35, {
+    addGroundedVoxel(runtime, terrain, "stone", 1.15, -0.35, {
       scale: [0.7, 0.9, 0.7],
       castShadow: false,
     });
@@ -763,14 +948,14 @@ function buildThemeTerrainDecorations(runtime, terrain) {
       [4, -1.8],
       [-1.6, 4],
     ].forEach((item) => {
-      addVoxel(runtime, terrain, "trunk", item[0], 1, item[1], {
+      addGroundedVoxel(runtime, terrain, "trunk", item[0], item[1], {
         scale: [0.46, 1.24, 0.46],
       });
-      addVoxel(runtime, terrain, "pinkGlow", item[0], 2.04, item[1], {
+      addGroundedVoxel(runtime, terrain, "pinkGlow", item[0], item[1], {
         scale: [0.18, 0.18, 0.18],
         castShadow: false,
         receiveShadow: false,
-      });
+      }, 1.24);
     });
     addSwampStump(runtime, terrain, -0.35, -0.55);
     addGrassTuft(runtime, terrain, 0.55, 0.82);
@@ -801,14 +986,14 @@ function buildThemeTerrainDecorations(runtime, terrain) {
     [-4.1, -2.8],
     [4.2, -1.6],
   ].forEach((item) => {
-    addVoxel(runtime, terrain, "leaf", item[0], 1, item[1], {
+    addGroundedVoxel(runtime, terrain, "leaf", item[0], item[1], {
       scale: [0.22, 0.75, 0.22],
       castShadow: false,
     });
-    addVoxel(runtime, terrain, "leaf", item[0], 1.42, item[1], {
+    addGroundedVoxel(runtime, terrain, "leaf", item[0], item[1], {
       scale: [0.46, 0.18, 0.46],
       castShadow: false,
-    });
+    }, 0.75);
   });
   addLanternPost(runtime, terrain, -2.2, 4.4, "glow");
   addLanternPost(runtime, terrain, 2.2, 4.4, "glow");
@@ -830,7 +1015,7 @@ function buildTerrain(runtime) {
       const topY = getIslandTopHeight(x, z);
       const depth = getIslandDepth(x, z, topY);
 
-      addVoxel(runtime, terrain, getSurfaceMaterialKey(x, z), x, topY, z, {
+      addVoxel(runtime, terrain, getSurfaceMaterialKey(runtime, x, z), x, topY, z, {
         castShadow: false,
       });
 
@@ -872,9 +1057,9 @@ function buildTerrain(runtime) {
     );
   });
   [
-    [-1.1, 0, 4.3, [1.15, 0.26, 1.1]],
-    [0, 0, 4.9, [1.25, 0.26, 1.25]],
-    [1.1, 0, 4.3, [1.15, 0.26, 1.1]],
+    [-1.1, 1.02, 4.3, [1.15, 0.22, 1.1]],
+    [0, 1.02, 4.9, [1.25, 0.22, 1.25]],
+    [1.1, 1.02, 4.3, [1.15, 0.22, 1.1]],
   ].forEach((item) => {
     addVoxel(runtime, terrain, "plank", item[0], item[1], item[2], {
       scale: item[3],
@@ -882,6 +1067,7 @@ function buildTerrain(runtime) {
     });
   });
   buildThemeTerrainDecorations(runtime, terrain);
+  buildNightAtmosphere(runtime, terrain);
 
   runtime.world.add(terrain);
 
@@ -1019,254 +1205,314 @@ function addRoundCanopyLayer(
   centerY,
   centerZ,
   radius,
-  scale = [0.9, 0.42, 0.9]
+  scale = [0.92, 0.82, 0.92]
 ) {
   for (let x = -radius; x <= radius; x += 1) {
     for (let z = -radius; z <= radius; z += 1) {
       if (Math.sqrt(x * x + z * z) > radius + 0.2) continue;
       addVoxel(runtime, group, materialKey, centerX + x, centerY, centerZ + z, {
         scale,
-        castShadow: false,
+        castShadow: true,
       });
     }
   }
 }
 
-function buildBirchBloomStage(runtime) {
-  const stage = createStageShell();
-  for (let y = 1; y <= 5; y += 1) {
-    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, { scale: [0.68, 1, 0.68] });
+function addHorizontalLog(runtime, group, axis, x, y, z, length, thickness = 0.5) {
+  const alongX = axis === "x";
+  const segmentCount = Math.max(1, Math.ceil(length));
+  const segmentLength = length / segmentCount;
+  for (let index = 0; index < segmentCount; index += 1) {
+    const offset = -length * 0.5 + segmentLength * (index + 0.5);
+    addVoxel(
+      runtime,
+      group,
+      alongX ? "trunkX" : "trunkZ",
+      alongX ? x + offset : x,
+      y,
+      alongX ? z : z + offset,
+      {
+        scale: alongX
+          ? [segmentLength + 0.02, thickness, thickness]
+          : [thickness, thickness, segmentLength + 0.02],
+      }
+    );
   }
-  addVoxel(runtime, stage.treePivot, "trunk", 0.7, 3.8, 0.12, { scale: [0.32, 0.32, 1.04] });
-  addVoxel(runtime, stage.treePivot, "trunk", -0.62, 4.18, -0.08, { scale: [0.28, 0.28, 0.96] });
-  addOakLeaves(runtime, stage.treePivot, getBirchLeafCells(), "leaf", { castShadow: false });
-  [[-1.1, 4.92, -0.86], [1.12, 5.08, -0.78], [-1.04, 5.12, 0.94], [1.04, 5.16, 0.98], [0, 6.16, -0.9]].forEach((cell) => {
-    addVoxel(runtime, stage.treePivot, "blossom", cell[0], cell[1], cell[2], { scale: [0.32, 0.32, 0.32], castShadow: false });
+}
+
+function addTreeRoots(runtime, group, spread = 1.3, thickness = 0.44) {
+  addHorizontalLog(runtime, group, "x", 0, 1, 0, spread, thickness);
+  addHorizontalLog(runtime, group, "z", 0, 1.02, 0, spread, thickness);
+}
+
+function addPlotSign(runtime, group, x = 1.18, z = -1.18) {
+  const baseY = getDecorationBaseY(x, z);
+  addVoxel(runtime, group, "trunk", x, baseY, z, {
+    scale: [0.26, 1.34, 0.26],
+  });
+  addVoxel(runtime, group, "plank", x, baseY + 1.18, z, {
+    scale: [1.46, 0.76, 0.2],
+    castShadow: true,
+  });
+}
+
+function buildBirchTreeStage(runtime, fruiting = false) {
+  const stage = createStageShell();
+  addTreeRoots(runtime, stage.treePivot, 1.18, 0.32);
+  for (let y = 1; y <= 5; y += 1) {
+    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, {
+      scale: [0.66, 1, 0.66],
+    });
+  }
+  addHorizontalLog(runtime, stage.treePivot, "x", 0.62, 4.34, 0, 1.56, 0.4);
+  addHorizontalLog(runtime, stage.treePivot, "z", -0.32, 4.78, -0.54, 1.28, 0.36);
+  addOakLeaves(runtime, stage.treePivot, getBirchLeafCells(), "leaf", {
+    castShadow: true,
+  });
+
+  const detailCells = fruiting
+    ? [[-1.02, 4.48, 0.84], [1.02, 4.46, 0.92], [-0.92, 5.08, -0.08], [0.94, 5.1, -0.12], [0.06, 5.28, 0.96], [0.04, 6.04, -0.88]]
+    : [[-1.1, 4.92, -0.86], [1.12, 5.08, -0.78], [-1.04, 5.12, 0.94], [1.04, 5.16, 0.98], [0, 6.16, -0.9]];
+  detailCells.forEach((cell) => {
+    addVoxel(runtime, stage.treePivot, fruiting ? "apple" : "blossom", cell[0], cell[1], cell[2], {
+      scale: fruiting ? [0.32, 0.4, 0.32] : [0.32, 0.32, 0.32],
+      castShadow: false,
+    });
   });
   [{ origin: new THREE.Vector3(-0.9, 5.08, 0.4), radius: 0.7, speed: 0.94, lift: 0.18, phase: 0.2 }, { origin: new THREE.Vector3(0.92, 5.72, -0.22), radius: 0.78, speed: 0.82, lift: 0.22, phase: 1.6 }].forEach((config) => {
-    addParticle(runtime, stage.floatingLights, stage.root, "pinkGlow", config);
+    addParticle(runtime, stage.floatingLights, stage.root, fruiting ? "glow" : "pinkGlow", config);
   });
   return stage;
 }
 
+function buildBirchBloomStage(runtime) {
+  return buildBirchTreeStage(runtime, false);
+}
+
 function buildBirchFruitStage(runtime) {
+  return buildBirchTreeStage(runtime, true);
+}
+
+function buildSpruceTreeStage(runtime, fruiting = false) {
   const stage = createStageShell();
-  for (let y = 1; y <= 5; y += 1) {
-    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, { scale: [0.68, 1, 0.68] });
+  addTreeRoots(runtime, stage.treePivot, 1.34, 0.38);
+  for (let y = 1; y <= 6; y += 1) {
+    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, {
+      scale: [0.68, 1, 0.68],
+    });
   }
-  addOakLeaves(runtime, stage.treePivot, getBirchLeafCells(), "leaf", { castShadow: false });
-  [[-1.02, 4.52, 0.84], [1.02, 4.48, 0.92], [-0.92, 5.08, -0.08], [0.94, 5.1, -0.12], [0.06, 5.28, 0.96], [0.04, 6.04, -0.88]].forEach((cell) => {
-    addVoxel(runtime, stage.treePivot, "apple", cell[0], cell[1], cell[2], { scale: [0.34, 0.34, 0.34], castShadow: false });
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 3.1, 0, 2, [0.96, 0.72, 0.96]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 4.25, 0, 2, [0.9, 0.68, 0.9]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 5.36, 0, 1, [0.84, 0.76, 0.84]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 6.42, 0, 1, [0.7, 0.76, 0.7]);
+  addVoxel(runtime, stage.treePivot, "leaf", 0, 7.3, 0, {
+    scale: [0.5, 0.84, 0.5],
+    castShadow: true,
   });
-  [{ origin: new THREE.Vector3(-0.8, 5.1, -0.8), radius: 0.82, speed: 0.84, lift: 0.2, phase: 0.2 }, { origin: new THREE.Vector3(0.94, 5.62, 0.4), radius: 0.92, speed: 0.74, lift: 0.22, phase: 1.7 }].forEach((config) => {
-    addParticle(runtime, stage.floatingLights, stage.root, "glow", config);
+
+  const detailCells = fruiting
+    ? [[-1.08, 3.08, 0.86], [1.08, 3.36, 0.72], [-0.9, 4.12, -0.7], [0.92, 4.24, -0.64], [0.08, 5.22, 0.82]]
+    : [[-1.14, 3.58, 0.84], [1.12, 4.7, -0.72], [0.88, 5.82, 0.12], [0.04, 6.76, 0.7]];
+  detailCells.forEach((cell) => {
+    addVoxel(runtime, stage.treePivot, fruiting ? "apple" : "blossom", cell[0], cell[1], cell[2], {
+      scale: fruiting ? [0.28, 0.42, 0.28] : [0.32, 0.2, 0.32],
+      castShadow: false,
+    });
+  });
+  [{ origin: new THREE.Vector3(-0.84, 4.12, 0.7), radius: 0.62, speed: 0.92, lift: 0.16, phase: 0.3 }, { origin: new THREE.Vector3(0.84, 5.18, -0.2), radius: 0.66, speed: 0.82, lift: 0.18, phase: 1.8 }].forEach((config) => {
+    addParticle(runtime, stage.floatingLights, stage.root, fruiting ? "glow" : "pinkGlow", config);
   });
   return stage;
 }
 
 function buildSpruceBloomStage(runtime) {
-  const stage = createStageShell();
-  for (let y = 1; y <= 6; y += 1) {
-    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, { scale: [0.68, 1, 0.68] });
-  }
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 3, 0, 2, [0.92, 0.38, 0.92]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 4, 0, 2, [0.88, 0.38, 0.88]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 5, 0, 1, [0.8, 0.38, 0.8]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 6, 0, 1, [0.7, 0.34, 0.7]);
-  addVoxel(runtime, stage.treePivot, "leaf", 0, 7, 0, { scale: [0.48, 0.72, 0.48], castShadow: false });
-  [[-1.04, 3.4, 0.78], [1.08, 4.06, -0.7], [0.88, 5.08, 0.1], [0.04, 6.16, 0.84]].forEach((cell) => {
-    addVoxel(runtime, stage.treePivot, "blossom", cell[0], cell[1], cell[2], { scale: [0.26, 0.26, 0.26], castShadow: false });
-  });
-  [{ origin: new THREE.Vector3(-0.84, 4.12, 0.7), radius: 0.62, speed: 0.92, lift: 0.16, phase: 0.3 }, { origin: new THREE.Vector3(0.84, 5.18, -0.2), radius: 0.66, speed: 0.82, lift: 0.18, phase: 1.8 }].forEach((config) => {
-    addParticle(runtime, stage.floatingLights, stage.root, "pinkGlow", config);
-  });
-  return stage;
+  return buildSpruceTreeStage(runtime, false);
 }
 
 function buildSpruceFruitStage(runtime) {
+  return buildSpruceTreeStage(runtime, true);
+}
+
+function buildSakuraTreeStage(runtime, fruiting = false) {
   const stage = createStageShell();
-  for (let y = 1; y <= 6; y += 1) {
-    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, { scale: [0.7, 1, 0.7] });
+  addTreeRoots(runtime, stage.treePivot, 1.46, 0.4);
+  for (let y = 1; y <= 4; y += 1) {
+    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, {
+      scale: [0.78, 1, 0.78],
+    });
   }
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 3, 0, 2, [0.92, 0.38, 0.92]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 4, 0, 2, [0.88, 0.38, 0.88]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 5, 0, 1, [0.8, 0.38, 0.8]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 6, 0, 1, [0.7, 0.34, 0.7]);
-  addVoxel(runtime, stage.treePivot, "leaf", 0, 7, 0, { scale: [0.48, 0.72, 0.48], castShadow: false });
-  [[-1.02, 3.08, 0.86], [1.04, 3.4, 0.7], [-0.88, 4.08, -0.68], [0.94, 4.22, -0.62], [0.06, 5.16, 0.08], [0.04, 6.04, -0.72]].forEach((cell) => {
-    addVoxel(runtime, stage.treePivot, "apple", cell[0], cell[1], cell[2], { scale: [0.3, 0.38, 0.3], castShadow: false });
+  addHorizontalLog(runtime, stage.treePivot, "x", 0.68, 4.32, 0, 1.72, 0.44);
+  addHorizontalLog(runtime, stage.treePivot, "z", -0.42, 4.62, -0.64, 1.5, 0.4);
+
+  addRoundCanopyLayer(runtime, stage.treePivot, "blossom", 0, 4.82, 0, 2, [0.96, 0.76, 0.96]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "blossom", 0.36, 5.72, -0.12, 2, [0.9, 0.72, 0.9]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "blossom", -0.5, 6.52, 0.18, 1, [0.84, 0.76, 0.84]);
+  [[-1.72, 4.26, 0], [1.72, 4.22, 0.12], [0.18, 4.18, 1.72], [-0.9, 4.42, -1.52]].forEach((cell) => {
+    addVoxel(runtime, stage.treePivot, "blossom", cell[0], cell[1], cell[2], {
+      scale: [0.4, 0.58, 0.4],
+      castShadow: true,
+    });
   });
-  [{ origin: new THREE.Vector3(-0.88, 4.08, -0.62), radius: 0.58, speed: 0.82, lift: 0.16, phase: 0.3 }, { origin: new THREE.Vector3(0.92, 4.88, 0.16), radius: 0.64, speed: 0.76, lift: 0.18, phase: 1.8 }].forEach((config) => {
-    addParticle(runtime, stage.floatingLights, stage.root, "glow", config);
+
+  if (fruiting) {
+    [[-1.12, 4.36, 0.86], [1.18, 4.52, 0.92], [-0.72, 5.12, -0.92], [0.9, 5.18, -0.76], [0.18, 5.62, 1.02]].forEach((cell) => {
+      addVoxel(runtime, stage.treePivot, "apple", cell[0], cell[1], cell[2], {
+        scale: [0.32, 0.4, 0.32],
+        castShadow: false,
+      });
+    });
+  }
+
+  [{ origin: new THREE.Vector3(-1.02, 5.06, 0.5), radius: 0.82, speed: 0.86, lift: 0.2, phase: 0.2 }, { origin: new THREE.Vector3(1.08, 5.76, -0.3), radius: 0.9, speed: 0.76, lift: 0.24, phase: 1.7 }].forEach((config) => {
+    addParticle(runtime, stage.floatingLights, stage.root, fruiting ? "glow" : "pinkGlow", config);
   });
   return stage;
 }
 
 function buildSakuraBloomStage(runtime) {
-  const stage = buildOakBloomStage(runtime);
-  addOakLeaves(runtime, stage.treePivot, getBloomOakLeafCells(), "blossom", { castShadow: false });
-  return stage;
+  return buildSakuraTreeStage(runtime, false);
 }
 
 function buildSakuraFruitStage(runtime) {
-  const stage = buildOakFruitStage(runtime);
-  addOakLeaves(runtime, stage.treePivot, getFruitOakLeafCells(), "blossom", { castShadow: false });
+  return buildSakuraTreeStage(runtime, true);
+}
+
+function buildAcaciaTreeStage(runtime, fruiting = false) {
+  const stage = createStageShell();
+  addTreeRoots(runtime, stage.treePivot, 1.58, 0.46);
+  for (let y = 1; y <= 3; y += 1) {
+    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, {
+      scale: [0.76, 1, 0.76],
+    });
+  }
+  addHorizontalLog(runtime, stage.treePivot, "x", 0.66, 3.4, 0.08, 1.76, 0.5);
+  addVoxel(runtime, stage.treePivot, "trunk", 1.3, 4.18, 0.08, {
+    scale: [0.58, 1.18, 0.58],
+  });
+  addHorizontalLog(runtime, stage.treePivot, "x", -0.62, 3.76, -0.34, 1.38, 0.42);
+
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 1.2, 4.82, 0.08, 2, [0.98, 0.7, 0.98]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", -0.9, 4.38, -0.42, 1, [0.92, 0.68, 0.92]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0.28, 5.54, 0.02, 1, [0.88, 0.64, 0.88]);
+
+  const detailCells = fruiting
+    ? [[1.62, 4.38, 0.72], [0.82, 4.36, -0.9], [1.2, 4.44, 1.02], [0.08, 5.04, -0.82], [-1.08, 3.98, -0.62]]
+    : [[1.62, 5.08, 0.18], [0.64, 5.12, -1.02], [1.18, 5.14, 1.1], [-1.12, 4.7, -0.7]];
+  detailCells.forEach((cell) => {
+    addVoxel(runtime, stage.treePivot, fruiting ? "apple" : "blossom", cell[0], cell[1], cell[2], {
+      scale: fruiting ? [0.28, 0.4, 0.28] : [0.32, 0.3, 0.32],
+      castShadow: false,
+    });
+  });
+  [{ origin: new THREE.Vector3(1.18, 5.62, 0.32), radius: 0.78, speed: 0.82, lift: 0.16, phase: 0.4 }, { origin: new THREE.Vector3(0.1, 5.9, -0.8), radius: 0.72, speed: 0.92, lift: 0.16, phase: 1.8 }].forEach((config) => {
+    addParticle(runtime, stage.floatingLights, stage.root, fruiting ? "glow" : "pinkGlow", config);
+  });
   return stage;
 }
 
 function buildAcaciaBloomStage(runtime) {
-  const stage = createStageShell();
-  for (let y = 1; y <= 3; y += 1) {
-    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, { scale: [0.76, 1, 0.76] });
-  }
-  addVoxel(runtime, stage.treePivot, "trunk", 0.58, 4, 0.12, { scale: [0.64, 0.92, 0.64] });
-  addVoxel(runtime, stage.treePivot, "trunk", 1.08, 4.9, 0.22, { scale: [0.54, 0.82, 0.54] });
-  addVoxel(runtime, stage.treePivot, "trunk", -0.82, 3.72, -0.42, { scale: [0.5, 0.72, 0.5] });
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 1.1, 5.2, 0.2, 2, [0.96, 0.24, 0.96]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0.12, 5.78, 0.18, 2, [0.92, 0.22, 0.92]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", -1.02, 4.8, -0.82, 1, [0.86, 0.22, 0.86]);
-  [[1.54, 5.68, 0.18], [0.62, 5.86, -1.02], [1.12, 5.84, 1.1], [-1.14, 5.08, -0.72]].forEach((cell) => {
-    addVoxel(runtime, stage.treePivot, "blossom", cell[0], cell[1], cell[2], { scale: [0.32, 0.32, 0.32], castShadow: false });
-  });
-  [{ origin: new THREE.Vector3(1.18, 5.62, 0.32), radius: 0.78, speed: 0.82, lift: 0.16, phase: 0.4 }, { origin: new THREE.Vector3(0.1, 5.9, -0.8), radius: 0.72, speed: 0.92, lift: 0.16, phase: 1.8 }].forEach((config) => {
-    addParticle(runtime, stage.floatingLights, stage.root, "pinkGlow", config);
-  });
-  return stage;
+  return buildAcaciaTreeStage(runtime, false);
 }
 
 function buildAcaciaFruitStage(runtime) {
+  return buildAcaciaTreeStage(runtime, true);
+}
+
+function buildRedwoodTreeStage(runtime, fruiting = false) {
   const stage = createStageShell();
-  for (let y = 1; y <= 3; y += 1) {
-    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, { scale: [0.78, 1, 0.78] });
+  addTreeRoots(runtime, stage.treePivot, 2.08, 0.58);
+  for (let y = 1; y <= 8; y += 1) {
+    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, {
+      scale: [1.02, 1, 1.02],
+    });
   }
-  addVoxel(runtime, stage.treePivot, "trunk", 0.62, 4, 0.12, { scale: [0.66, 0.94, 0.66] });
-  addVoxel(runtime, stage.treePivot, "trunk", 1.16, 4.92, 0.22, { scale: [0.58, 0.84, 0.58] });
-  addVoxel(runtime, stage.treePivot, "trunk", -0.86, 3.76, -0.42, { scale: [0.52, 0.74, 0.52] });
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 1.12, 5.2, 0.22, 2, [0.98, 0.24, 0.98]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0.12, 5.78, 0.18, 2, [0.94, 0.22, 0.94]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", -1.02, 4.8, -0.82, 1, [0.86, 0.22, 0.86]);
-  [[1.56, 4.88, 0.22], [0.84, 4.96, -0.96], [1.18, 4.98, 1.02], [0.08, 5.24, -1.12], [-1.08, 4.46, -0.68]].forEach((cell) => {
-    addVoxel(runtime, stage.treePivot, "apple", cell[0], cell[1], cell[2], { scale: [0.28, 0.4, 0.28], castShadow: false });
+  addHorizontalLog(runtime, stage.treePivot, "x", 0, 4.42, 0, 3.2, 0.44);
+  addHorizontalLog(runtime, stage.treePivot, "z", 0, 5.58, 0, 2.8, 0.4);
+  addHorizontalLog(runtime, stage.treePivot, "x", 0, 6.72, 0, 2.2, 0.36);
+
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 4.62, 0, 2, [0.98, 0.68, 0.98]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 5.76, 0, 2, [0.92, 0.66, 0.92]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 6.86, 0, 1, [0.86, 0.74, 0.86]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 7.92, 0, 1, [0.76, 0.76, 0.76]);
+  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 8.9, 0, 1, [0.62, 0.72, 0.62]);
+  addVoxel(runtime, stage.treePivot, "leaf", 0, 9.72, 0, {
+    scale: [0.44, 0.78, 0.44],
+    castShadow: true,
   });
-  [{ origin: new THREE.Vector3(1.18, 5.62, 0.32), radius: 0.82, speed: 0.78, lift: 0.18, phase: 0.3 }, { origin: new THREE.Vector3(0.02, 5.84, -0.9), radius: 0.7, speed: 0.88, lift: 0.14, phase: 1.8 }].forEach((config) => {
-    addParticle(runtime, stage.floatingLights, stage.root, "glow", config);
+
+  const detailCells = fruiting
+    ? [[-1.26, 4.34, 0.72], [1.24, 4.4, -0.66], [-0.92, 5.52, -0.72], [0.94, 5.58, 0.7], [0.08, 6.62, -0.82]]
+    : [[-1.2, 4.86, 0.76], [1.18, 5.02, -0.72], [-0.82, 6.02, -0.7], [0.82, 7.04, 0.68]];
+  detailCells.forEach((cell) => {
+    addVoxel(runtime, stage.treePivot, fruiting ? "apple" : "blossom", cell[0], cell[1], cell[2], {
+      scale: fruiting ? [0.24, 0.4, 0.24] : [0.26, 0.3, 0.26],
+      castShadow: false,
+    });
+  });
+  [{ origin: new THREE.Vector3(0.88, 6.62, 0.76), radius: 0.7, speed: 0.76, lift: 0.14, phase: 0.3 }, { origin: new THREE.Vector3(-0.68, 7.46, -0.16), radius: 0.64, speed: 0.88, lift: 0.12, phase: 1.7 }].forEach((config) => {
+    addParticle(runtime, stage.floatingLights, stage.root, fruiting ? "glow" : "pinkGlow", config);
   });
   return stage;
 }
 
 function buildRedwoodBloomStage(runtime) {
-  const stage = createStageShell();
-  for (let y = 1; y <= 7; y += 1) {
-    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, { scale: [1.02, 1, 1.02] });
-  }
-  [[0.72, 1, 0, [0.58, 0.52, 1.22]], [-0.72, 1, 0, [0.58, 0.52, 1.22]], [0, 1, 0.68, [1.22, 0.52, 0.58]], [0, 1, -0.68, [1.22, 0.52, 0.58]]].forEach((item) => {
-    addVoxel(runtime, stage.treePivot, "trunk", item[0], item[1], item[2], { scale: item[3] });
-  });
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 7, 0, 2, [0.84, 0.32, 0.84]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 8, 0, 1, [0.72, 0.28, 0.72]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0.62, 6.6, 0.18, 1, [0.68, 0.26, 0.68]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", -0.54, 6.2, -0.18, 1, [0.66, 0.26, 0.66]);
-  addVoxel(runtime, stage.treePivot, "leaf", 0, 9, 0, { scale: [0.44, 0.56, 0.44], castShadow: false });
-  [[0.9, 6.38, 0.72], [-0.86, 6.08, -0.62], [0.08, 7.28, -1.02], [0.08, 8.06, 0.76]].forEach((cell) => {
-    addVoxel(runtime, stage.treePivot, "blossom", cell[0], cell[1], cell[2], { scale: [0.26, 0.26, 0.26], castShadow: false });
-  });
-  [{ origin: new THREE.Vector3(0.88, 6.62, 0.76), radius: 0.7, speed: 0.76, lift: 0.14, phase: 0.3 }, { origin: new THREE.Vector3(-0.68, 7.46, -0.16), radius: 0.64, speed: 0.88, lift: 0.12, phase: 1.7 }].forEach((config) => {
-    addParticle(runtime, stage.floatingLights, stage.root, "pinkGlow", config);
-  });
-  return stage;
+  return buildRedwoodTreeStage(runtime, false);
 }
 
 function buildRedwoodFruitStage(runtime) {
-  const stage = createStageShell();
-  for (let y = 1; y <= 7; y += 1) {
-    addVoxel(runtime, stage.treePivot, "trunk", 0, y, 0, { scale: [1.04, 1, 1.04] });
-  }
-  [[0.72, 1, 0, [0.58, 0.52, 1.22]], [-0.72, 1, 0, [0.58, 0.52, 1.22]], [0, 1, 0.68, [1.22, 0.52, 0.58]], [0, 1, -0.68, [1.22, 0.52, 0.58]]].forEach((item) => {
-    addVoxel(runtime, stage.treePivot, "trunk", item[0], item[1], item[2], { scale: item[3] });
-  });
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 7, 0, 2, [0.86, 0.32, 0.86]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 8, 0, 1, [0.74, 0.28, 0.74]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0.62, 6.6, 0.18, 1, [0.7, 0.26, 0.7]);
-  addRoundCanopyLayer(runtime, stage.treePivot, "leaf", -0.54, 6.2, -0.18, 1, [0.68, 0.26, 0.68]);
-  addVoxel(runtime, stage.treePivot, "leaf", 0, 9, 0, { scale: [0.44, 0.56, 0.44], castShadow: false });
-  [[0.96, 6.34, 0.6], [-0.92, 6.1, -0.66], [0.08, 7.18, -0.98], [0.08, 8.04, 0.8], [-0.48, 7.38, 0.82]].forEach((cell) => {
-    addVoxel(runtime, stage.treePivot, "apple", cell[0], cell[1], cell[2], { scale: [0.22, 0.38, 0.22], castShadow: false });
-  });
-  [{ origin: new THREE.Vector3(0.9, 6.66, 0.7), radius: 0.68, speed: 0.74, lift: 0.12, phase: 0.2 }, { origin: new THREE.Vector3(-0.66, 7.4, -0.18), radius: 0.6, speed: 0.84, lift: 0.12, phase: 1.8 }].forEach((config) => {
-    addParticle(runtime, stage.floatingLights, stage.root, "glow", config);
-  });
-  return stage;
+  return buildRedwoodTreeStage(runtime, true);
 }
 
 function buildEmptyStage(runtime) {
   const root = new THREE.Group();
   const kind = runtime.themeDefinition.treeKind;
+  addPlotSign(runtime, root);
 
   if (kind === "birch") {
-    addMiniBirch(runtime, root, -0.28, 0.18);
-    addMiniBirch(runtime, root, 0.62, -0.26);
-    addVoxel(runtime, root, "plank", 1.05, 2.05, -1.1, {
-      scale: [1.45, 0.85, 0.22],
-      castShadow: false,
-    });
-    addVoxel(runtime, root, "trunk", 1.05, 1, -1.1, {
-      scale: [0.28, 1.3, 0.28],
-    });
     addFlowerPatch(runtime, root, -0.72, 0.94, "blossom");
     addFlowerPatch(runtime, root, 0.22, 0.82, "blossom");
-  } else if (kind === "spruce") {
-    addCrystalCluster(runtime, root, -0.22, 0.1);
-    addVoxel(runtime, root, "trunk", 0.62, 1, -0.12, {
-      scale: [0.34, 1.24, 0.34],
-    });
-    addRoundCanopyLayer(runtime, root, "leaf", 0.62, 1.92, -0.12, 1, [0.62, 0.28, 0.62]);
-    addVoxel(runtime, root, "leaf", 0.62, 2.6, -0.12, {
-      scale: [0.34, 0.52, 0.34],
+    addGroundedVoxel(runtime, root, "stone", -0.7, -0.42, {
+      scale: [0.62, 0.38, 0.54],
       castShadow: false,
     });
+  } else if (kind === "spruce") {
+    addCrystalCluster(runtime, root, -0.22, 0.1);
+    addGroundedVoxel(runtime, root, "stone", -0.88, 0.82, {
+      scale: [0.7, 0.46, 0.7],
+      castShadow: false,
+    });
+    addGroundedVoxel(runtime, root, "blossom", -0.88, 0.82, {
+      scale: [0.72, 0.18, 0.72],
+      castShadow: false,
+    }, 0.46);
   } else if (kind === "sakura") {
-    addVoxel(runtime, root, "plank", 0, 1, -0.1, {
-      scale: [1.28, 0.22, 1.28],
+    addVoxel(runtime, root, "plank", 0, 1, -0.88, {
+      scale: [2.18, 0.2, 0.2],
+      castShadow: false,
+    });
+    addVoxel(runtime, root, "plank", -0.88, 1.02, 0, {
+      scale: [0.2, 0.2, 1.96],
       castShadow: false,
     });
     addFlowerPatch(runtime, root, -0.52, 0.72, "blossom");
     addFlowerPatch(runtime, root, 0.24, 0.66, "blossom");
-    addMiniBirch(runtime, root, 0.78, -0.42);
   } else if (kind === "acacia") {
-    addVoxel(runtime, root, "trunk", -0.2, 1, 0, {
-      scale: [0.56, 1, 0.56],
-    });
-    addVoxel(runtime, root, "trunk", 0.3, 1.86, 0.12, {
-      scale: [0.36, 0.74, 0.36],
-    });
-    addRoundCanopyLayer(runtime, root, "leaf", 0.56, 2.48, 0.12, 1, [0.74, 0.2, 0.74]);
+    addHorizontalLog(runtime, root, "x", -0.32, 1, 0.14, 1.18, 0.48);
     addGrassTuft(runtime, root, -0.82, 0.82);
+    addGroundedVoxel(runtime, root, "stone", 0.58, 0.62, {
+      scale: [0.58, 0.42, 0.62],
+      castShadow: false,
+    });
   } else if (kind === "redwood") {
     addSwampStump(runtime, root, 0.08, -0.08);
-    addVoxel(runtime, root, "trunk", 0.86, 1, -0.92, {
-      scale: [0.3, 1.24, 0.3],
-    });
-    addVoxel(runtime, root, "plank", 0.86, 2.02, -0.92, {
-      scale: [1.24, 0.78, 0.22],
-      castShadow: false,
-    });
     addGrassTuft(runtime, root, -0.86, 0.86);
+    addFlowerPatch(runtime, root, 0.72, 0.68, "pinkGlow");
   } else {
-    const sign = new THREE.Group();
-    root.add(sign);
-
-    addVoxel(runtime, sign, "trunk", 0.9, 1, -1.2, {
-      scale: [0.28, 1.3, 0.28],
-    });
-    addVoxel(runtime, sign, "plank", 0.9, 2.05, -1.2, {
-      scale: [1.45, 0.85, 0.22],
-      castShadow: false,
-    });
-    addVoxel(runtime, sign, "leaf", -0.6, 1, 0.8, {
+    addVoxel(runtime, root, "leaf", -0.6, 1, 0.8, {
       scale: [0.36, 0.22, 0.36],
       castShadow: false,
     });
-    addVoxel(runtime, sign, "blossom", -0.2, 1.2, 0.4, {
+    addVoxel(runtime, root, "blossom", -0.2, 1.2, 0.4, {
       scale: [0.24, 0.24, 0.24],
       castShadow: false,
     });
@@ -1283,6 +1529,7 @@ function buildOakSaplingStage(runtime) {
   const root = new THREE.Group();
   const treePivot = new THREE.Group();
   root.add(treePivot);
+  addTreeRoots(runtime, treePivot, 0.86, 0.24);
 
   addVoxel(runtime, treePivot, "trunk", 0, 1, 0, {
     scale: [0.56, 0.82, 0.56],
@@ -1299,7 +1546,7 @@ function buildOakSaplingStage(runtime) {
   ].forEach((cell) => {
     addVoxel(runtime, treePivot, "leaf", cell[0], cell[1], cell[2], {
       scale: [0.72, 0.72, 0.72],
-      castShadow: false,
+      castShadow: true,
     });
   });
 
@@ -1315,6 +1562,7 @@ function buildOakBloomStage(runtime) {
   const treePivot = new THREE.Group();
   const floatingLights = [];
   root.add(treePivot);
+  addTreeRoots(runtime, treePivot, 1.52, 0.44);
 
   for (let y = 1; y <= 4; y += 1) {
     addVoxel(runtime, treePivot, "trunk", 0, y, 0, {
@@ -1322,8 +1570,11 @@ function buildOakBloomStage(runtime) {
     });
   }
 
+  addHorizontalLog(runtime, treePivot, "x", 0, 4.28, 0, 2.38, 0.46);
+  addHorizontalLog(runtime, treePivot, "z", 0, 4.56, 0, 2.08, 0.4);
+
   addOakLeaves(runtime, treePivot, getBloomOakLeafCells(), "leaf", {
-    castShadow: false,
+    castShadow: true,
   });
   [
     [-1.35, 5.1, -1.15],
@@ -1378,6 +1629,7 @@ function buildOakFruitStage(runtime) {
   const treePivot = new THREE.Group();
   const floatingLights = [];
   root.add(treePivot);
+  addTreeRoots(runtime, treePivot, 1.62, 0.46);
 
   for (let y = 1; y <= 4; y += 1) {
     addVoxel(runtime, treePivot, "trunk", 0, y, 0, {
@@ -1385,8 +1637,11 @@ function buildOakFruitStage(runtime) {
     });
   }
 
+  addHorizontalLog(runtime, treePivot, "x", 0, 4.3, 0, 2.46, 0.48);
+  addHorizontalLog(runtime, treePivot, "z", 0, 4.58, 0, 2.12, 0.42);
+
   addOakLeaves(runtime, treePivot, getFruitOakLeafCells(), "leaf", {
-    castShadow: false,
+    castShadow: true,
   });
   [
     [-1.1, 4.45, 1.08],
@@ -1458,30 +1713,22 @@ function buildHarvestStage(runtime) {
     addVoxel(runtime, root, "trunk", 0.2, 1, 0, {
       scale: [1.18, 0.82, 1.18],
     });
-    addVoxel(runtime, root, "trunk", 1.12, 1.18, 0.12, {
-      scale: [1.5, 0.44, 0.54],
-    });
+    addHorizontalLog(runtime, root, "x", 1.12, 1.18, 0.12, 1.5, 0.5);
     addGrassTuft(runtime, root, -0.9, 0.7);
   } else if (kind === "redwood") {
     addSwampStump(runtime, root, 0.1, 0);
-    addVoxel(runtime, root, "trunk", -1.26, 1.06, -0.74, {
-      scale: [1.46, 0.54, 0.62],
-    });
+    addHorizontalLog(runtime, root, "x", -1.26, 1.06, -0.74, 1.46, 0.56);
   } else if (kind === "birch") {
     addVoxel(runtime, root, "trunk", 0, 1, 0, {
       scale: [0.9, 0.88, 0.9],
     });
-    addVoxel(runtime, root, "trunk", 0.96, 1.02, 0.62, {
-      scale: [1.22, 0.42, 0.46],
-    });
+    addHorizontalLog(runtime, root, "x", 0.96, 1.02, 0.62, 1.22, 0.44);
     addFlowerPatch(runtime, root, -0.82, 0.72, "blossom");
   } else if (kind === "sakura") {
     addVoxel(runtime, root, "trunk", 0, 1, 0, {
       scale: [1.02, 0.92, 1.02],
     });
-    addVoxel(runtime, root, "trunk", 1.08, 1.02, 0.62, {
-      scale: [1.34, 0.46, 0.5],
-    });
+    addHorizontalLog(runtime, root, "x", 1.08, 1.02, 0.62, 1.34, 0.48);
     addFlowerPatch(runtime, root, -0.62, 0.76, "blossom");
     addFlowerPatch(runtime, root, 0.28, 0.52, "blossom");
   } else {
@@ -1494,14 +1741,12 @@ function buildHarvestStage(runtime) {
   }
 
   [
-    [1.3, 1, 0.7, [1.5, 0.7, 0.7]],
-    [2.45, 1.05, 0.72, [0.72, 0.72, 0.72]],
-    [-1.2, 1, -0.92, [1.28, 0.68, 0.68]],
-    [-2, 1.02, -0.92, [0.72, 0.72, 0.72]],
+    ["x", 1.3, 1, 0.7, 1.5, 0.68],
+    ["x", 2.42, 1.02, 0.72, 0.7, 0.68],
+    ["x", -1.2, 1, -0.92, 1.28, 0.66],
+    ["x", -2, 1.02, -0.92, 0.7, 0.66],
   ].forEach((item) => {
-    addVoxel(runtime, root, "trunk", item[0], item[1], item[2], {
-      scale: item[3],
-    });
+    addHorizontalLog(runtime, root, item[0], item[1], item[2], item[3], item[4], item[5]);
   });
 
   addVoxel(runtime, root, "plank", 1.8, 1, -1.5, {
@@ -1526,13 +1771,14 @@ function buildHarvestStage(runtime) {
 function buildSaplingStage(runtime) {
   if (runtime.themeDefinition.treeKind === "birch") {
     const stage = createStageShell();
+    addTreeRoots(runtime, stage.treePivot, 0.84, 0.22);
     addVoxel(runtime, stage.treePivot, "trunk", 0, 1, 0, {
       scale: [0.34, 1.04, 0.34],
     });
     addVoxel(runtime, stage.treePivot, "trunk", 0, 2.02, 0, {
       scale: [0.28, 0.86, 0.28],
     });
-    addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 2.84, 0, 1, [0.64, 0.24, 0.64]);
+    addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 2.84, 0, 1, [0.66, 0.68, 0.66]);
     addVoxel(runtime, stage.treePivot, "blossom", 0.1, 3.08, 0.08, {
       scale: [0.22, 0.22, 0.22],
       castShadow: false,
@@ -1542,42 +1788,55 @@ function buildSaplingStage(runtime) {
 
   if (runtime.themeDefinition.treeKind === "spruce") {
     const stage = createStageShell();
+    addTreeRoots(runtime, stage.treePivot, 0.9, 0.24);
     addVoxel(runtime, stage.treePivot, "trunk", 0, 1, 0, {
       scale: [0.42, 1, 0.42],
     });
     addVoxel(runtime, stage.treePivot, "trunk", 0, 2, 0, {
       scale: [0.34, 0.82, 0.34],
     });
-    addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 2.7, 0, 1, [0.72, 0.34, 0.72]);
+    addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 2.58, 0, 1, [0.74, 0.68, 0.74]);
+    addVoxel(runtime, stage.treePivot, "leaf", 0, 3.32, 0, {
+      scale: [0.4, 0.66, 0.4],
+      castShadow: true,
+    });
     return stage;
   }
 
   if (runtime.themeDefinition.treeKind === "acacia") {
     const stage = createStageShell();
+    addTreeRoots(runtime, stage.treePivot, 1.02, 0.28);
     addVoxel(runtime, stage.treePivot, "trunk", 0, 1, 0, {
       scale: [0.5, 0.96, 0.5],
     });
-    addVoxel(runtime, stage.treePivot, "trunk", 0.32, 1.94, 0.12, {
-      scale: [0.38, 0.8, 0.38],
+    addHorizontalLog(runtime, stage.treePivot, "x", 0.3, 1.92, 0.08, 0.86, 0.34);
+    addVoxel(runtime, stage.treePivot, "trunk", 0.58, 2.6, 0.08, {
+      scale: [0.34, 0.72, 0.34],
     });
-    addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0.32, 2.7, 0.12, 1, [0.76, 0.24, 0.76]);
+    addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0.58, 3.04, 0.08, 1, [0.78, 0.62, 0.78]);
     return stage;
   }
 
   if (runtime.themeDefinition.treeKind === "redwood") {
     const stage = createStageShell();
+    addTreeRoots(runtime, stage.treePivot, 1.18, 0.34);
     addVoxel(runtime, stage.treePivot, "trunk", 0, 1, 0, {
       scale: [0.58, 1.1, 0.58],
     });
     addVoxel(runtime, stage.treePivot, "trunk", 0, 2.08, 0, {
       scale: [0.48, 0.96, 0.48],
     });
-    addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 3.12, 0, 1, [0.64, 0.28, 0.64]);
+    addRoundCanopyLayer(runtime, stage.treePivot, "leaf", 0, 2.76, 0, 1, [0.72, 0.64, 0.72]);
+    addVoxel(runtime, stage.treePivot, "leaf", 0, 3.5, 0, {
+      scale: [0.42, 0.7, 0.42],
+      castShadow: true,
+    });
     return stage;
   }
 
   if (runtime.themeDefinition.treeKind === "sakura") {
     const stage = createStageShell();
+    addTreeRoots(runtime, stage.treePivot, 0.92, 0.24);
     addVoxel(runtime, stage.treePivot, "trunk", 0, 1, 0, {
       scale: [0.5, 0.92, 0.5],
     });
@@ -1593,7 +1852,7 @@ function buildSaplingStage(runtime) {
     ].forEach((cell) => {
       addVoxel(runtime, stage.treePivot, "blossom", cell[0], cell[1], cell[2], {
         scale: [0.7, 0.7, 0.7],
-        castShadow: false,
+        castShadow: true,
       });
     });
     addVoxel(runtime, stage.treePivot, "leaf", 0, 2.18, 0, {
@@ -1644,12 +1903,17 @@ export default {
       type: String,
       default: DEFAULT_TREE_PLANT_SCENE_THEME,
     },
+    nightMode: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       runtime: null,
       initFailed: false,
       hasInteracted: false,
+      nightStars: NIGHT_STAR_POSITIONS,
     };
   },
   computed: {
@@ -1659,10 +1923,10 @@ export default {
         : "未种植";
     },
     themeDefinition() {
-      return getSceneThemeDefinition(this.sceneTheme);
+      return getSceneThemeDefinition(this.sceneTheme, this.nightMode);
     },
     sceneThemeStyle() {
-      return getSceneThemeStyle(this.sceneTheme);
+      return getSceneThemeStyle(this.sceneTheme, this.nightMode);
     },
   },
   watch: {
@@ -1670,6 +1934,9 @@ export default {
       this.rebuildStage();
     },
     sceneTheme() {
+      this.refreshScene();
+    },
+    nightMode() {
       this.refreshScene();
     },
   },
@@ -1706,7 +1973,7 @@ export default {
       const host = this.getHostElement();
       if (!host) return;
 
-      if (!window.WebGLRenderingContext) {
+      if (!window.WebGLRenderingContext && !window.WebGL2RenderingContext) {
         this.handleSceneUnavailable("missing_webgl_rendering_context");
         return;
       }
@@ -1727,22 +1994,36 @@ export default {
         return;
       }
 
+      const releaseProbe = gl.getExtension && gl.getExtension("WEBGL_lose_context");
+      if (releaseProbe) releaseProbe.loseContext();
+
       const hostRect = host.getBoundingClientRect();
       const initialAspect =
         hostRect.height > 0 ? hostRect.width / hostRect.height : 1;
       const themeDefinition = this.themeDefinition;
-      const initialFraming = getCameraFraming(initialAspect, themeDefinition.key);
+      const initialFraming = getCameraFraming(
+        initialAspect,
+        themeDefinition.key,
+        this.nightMode
+      );
       const runtime = createRuntime(initialFraming);
       runtime.host = host;
       runtime.themeKey = themeDefinition.key;
       runtime.themeDefinition = themeDefinition;
+      runtime.isNight = this.nightMode;
 
-      const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        powerPreference: "high-performance",
-      });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+      let renderer = null;
+      try {
+        renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance",
+        });
+      } catch (error) {
+        this.handleSceneUnavailable("failed_to_initialize_renderer");
+        return;
+      }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.shadowMap.autoUpdate = false;
@@ -1756,6 +2037,17 @@ export default {
 
       host.innerHTML = "";
       host.appendChild(renderer.domElement);
+      runtime.contextLostHandler = (event) => {
+        event.preventDefault();
+        if (this.runtime === runtime) {
+          this.handleSceneUnavailable("webgl_context_lost");
+        }
+      };
+      renderer.domElement.addEventListener(
+        "webglcontextlost",
+        runtime.contextLostHandler,
+        false
+      );
 
       const scene = new THREE.Scene();
       scene.fog = new THREE.Fog(
@@ -1767,10 +2059,14 @@ export default {
       const camera = new THREE.PerspectiveCamera(initialFraming.fov, 1, 0.1, 60);
       camera.position
         .setFromSpherical(
-          new THREE.Spherical(runtime.radius, runtime.currentPhi, runtime.currentTheta)
+          new THREE.Spherical(
+            runtime.radius,
+            runtime.currentPhi,
+            runtime.cameraTheta
+          )
         )
-        .add(CAMERA_TARGET);
-      camera.lookAt(CAMERA_TARGET);
+        .add(runtime.cameraTarget);
+      camera.lookAt(runtime.cameraTarget);
 
       const ambient = new THREE.HemisphereLight(
         themeDefinition.lights.hemisphereSky,
@@ -1858,7 +2154,8 @@ export default {
         const deltaX = event.clientX - runtime.dragStartX;
         const deltaY = event.clientY - runtime.dragStartY;
 
-        runtime.targetTheta = runtime.baseTheta - deltaX * 0.012;
+        runtime.targetWorldRotationY =
+          runtime.baseWorldRotationY + deltaX * 0.012;
         runtime.targetPhi = clamp(runtime.basePhi + deltaY * 0.006, 0.82, 1.24);
       };
 
@@ -1866,7 +2163,7 @@ export default {
         if (!runtime.isDragging) return;
 
         runtime.isDragging = false;
-        runtime.baseTheta = runtime.targetTheta;
+        runtime.baseWorldRotationY = runtime.targetWorldRotationY;
         runtime.basePhi = runtime.targetPhi;
         host.releasePointerCapture &&
           host.releasePointerCapture(event.pointerId);
@@ -1896,9 +2193,14 @@ export default {
       const rect = runtime.host.getBoundingClientRect();
       const width = Math.max(rect.width, 1);
       const height = Math.max(rect.height, 1);
-      const framing = getCameraFraming(width / height, runtime.themeKey || this.themeDefinition.key);
+      const framing = getCameraFraming(
+        width / height,
+        runtime.themeKey || this.themeDefinition.key,
+        runtime.isNight
+      );
 
       runtime.radius = framing.radius;
+      runtime.cameraTarget.y = framing.targetY || 2.6;
       runtime.camera.fov = framing.fov;
 
       if (!this.hasInteracted) {
@@ -1919,20 +2221,31 @@ export default {
 
       runtime.lastTimestamp = timestamp;
 
-      runtime.currentTheta = lerp(
-        runtime.currentTheta,
-        runtime.targetTheta,
+      const previousWorldRotationY = runtime.currentWorldRotationY;
+      runtime.currentWorldRotationY = lerp(
+        runtime.currentWorldRotationY,
+        runtime.targetWorldRotationY,
         0.08
       );
       runtime.currentPhi = lerp(runtime.currentPhi, runtime.targetPhi, 0.08);
 
+      if (runtime.world) {
+        runtime.world.rotation.y = runtime.currentWorldRotationY;
+        if (
+          Math.abs(runtime.currentWorldRotationY - previousWorldRotationY) >
+          0.00001
+        ) {
+          runtime.renderer.shadowMap.needsUpdate = true;
+        }
+      }
+
       const offset = new THREE.Spherical(
         runtime.radius,
         runtime.currentPhi,
-        runtime.currentTheta
+        runtime.cameraTheta
       );
-      runtime.camera.position.setFromSpherical(offset).add(CAMERA_TARGET);
-      runtime.camera.lookAt(CAMERA_TARGET);
+      runtime.camera.position.setFromSpherical(offset).add(runtime.cameraTarget);
+      runtime.camera.lookAt(runtime.cameraTarget);
 
       runtime.clouds.forEach((cloud) => {
         cloud.group.position.x =
@@ -1946,34 +2259,10 @@ export default {
             0.55;
       });
 
-      if (runtime.stage && runtime.stage.treePivot) {
-        const swayScale =
-          this.themeDefinition.treeKind === "redwood"
-            ? 0.62
-            : this.themeDefinition.treeKind === "acacia"
-              ? 0.82
-              : 1;
-        runtime.stage.treePivot.rotation.z =
-          Math.sin(timestamp * 0.0011) * 0.028 * swayScale;
-        runtime.stage.treePivot.rotation.x =
-          Math.cos(timestamp * 0.0007) * 0.012 * swayScale;
-      }
-
       if (runtime.stage && Array.isArray(runtime.stage.floatingLights)) {
-        runtime.stage.floatingLights.forEach((item, index) => {
-          item.mesh.position.x =
-            item.origin.x +
-            Math.cos(timestamp * 0.001 * item.speed + item.phase) * item.radius;
-          item.mesh.position.z =
-            item.origin.z +
-            Math.sin(timestamp * 0.00115 * item.speed + item.phase) *
-              item.radius;
-          item.mesh.position.y =
-            item.origin.y +
-            Math.sin(timestamp * 0.0015 * item.speed + item.phase + index) *
-              item.lift;
-        });
+        animateParticleSet(runtime.stage.floatingLights, timestamp);
       }
+      animateParticleSet(runtime.ambientLights, timestamp, 7);
 
       runtime.renderer.render(runtime.scene, runtime.camera);
       runtime.animationFrame = requestAnimationFrame((nextTimestamp) =>
@@ -2029,6 +2318,7 @@ export default {
       var(--scene-sky-low) 72%,
       var(--scene-sky-bottom) 100%
     );
+  transition: background 0.45s ease;
 }
 
 .scene-backdrop {
@@ -2039,6 +2329,7 @@ export default {
 
 .sun-halo {
   position: absolute;
+  z-index: 2;
   top: 6%;
   right: 10%;
   width: 280rpx;
@@ -2050,7 +2341,71 @@ export default {
     var(--scene-halo-mid) 42%,
     rgba(255, 255, 255, 0) 72%
   );
-  filter: blur(8rpx);
+}
+
+.sun-halo::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 92rpx;
+  height: 92rpx;
+  transform: translate(-50%, -50%);
+  border-radius: 4rpx;
+  background: var(--scene-halo-core);
+  box-shadow:
+    -10rpx 0 0 var(--scene-halo-mid),
+    10rpx 0 0 var(--scene-halo-mid),
+    0 -10rpx 0 var(--scene-halo-mid),
+    0 10rpx 0 var(--scene-halo-mid);
+}
+
+.is-night .sun-halo {
+  top: 7%;
+  right: 11%;
+}
+
+.is-night .sun-halo::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 24rpx);
+  top: calc(50% - 18rpx);
+  width: 14rpx;
+  height: 14rpx;
+  background: var(--scene-moon-shade);
+  box-shadow:
+    34rpx 10rpx 0 var(--scene-moon-shade),
+    20rpx 40rpx 0 var(--scene-moon-shade),
+    54rpx 48rpx 0 var(--scene-moon-shade);
+}
+
+.pixel-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pixel-star {
+  position: absolute;
+  width: 4rpx;
+  height: 4rpx;
+  background: var(--scene-star-color);
+  box-shadow: 0 0 8rpx var(--scene-star-color);
+  animation: pixel-star-twinkle 3.2s steps(2, end) infinite;
+}
+
+.pixel-star.star-size-2 {
+  width: 7rpx;
+  height: 7rpx;
+}
+
+.pixel-star:nth-child(3n + 1) {
+  animation-delay: -0.9s;
+}
+
+.pixel-star:nth-child(3n + 2) {
+  animation-delay: -1.8s;
 }
 
 .mist {
@@ -2122,6 +2477,18 @@ export default {
   50% {
     opacity: 1;
     transform: translateX(-50%) translateY(-6rpx);
+  }
+}
+
+@keyframes pixel-star-twinkle {
+  0%,
+  100% {
+    filter: brightness(0.72);
+    transform: scale(0.85);
+  }
+  50% {
+    filter: brightness(1.28);
+    transform: scale(1.15);
   }
 }
 </style>

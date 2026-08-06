@@ -1,5 +1,5 @@
 <template>
-	<view class="statistics-container">
+	<view class="statistics-container" v-dark>
 		<!-- 核心数据展示 -->
 		<view class="core-metrics">
 			<view class="metrics-title">
@@ -123,6 +123,14 @@ export default {
 			}
 		}
 	},
+	computed: {
+		chartFontColor() {
+			return this.$store.state.isDarkMode ? '#b8b8b8' : '#666666'
+		},
+		chartGridColor() {
+			return this.$store.state.isDarkMode ? '#4b4b4b' : '#cccccc'
+		}
+	},
 	methods: {
 		async fetchStatistics() {
 			try {
@@ -202,7 +210,7 @@ export default {
 				xAxis: {
 					disableGrid: true,
 					// rotateLabel: true,
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					labelCount: 5,
 					boundaryGap: 'justify'
@@ -211,7 +219,7 @@ export default {
 					gridType: 'dash',
 					dashLength: 4,
 					data: [{ min: 0 }],
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					format: 'integer'
 				},
@@ -241,7 +249,7 @@ export default {
 						bgOpacity: 0.7,
 						gridType: 'dash',
 						dashLength: 4,
-						gridColor: '#cccccc',
+						gridColor: this.chartGridColor,
 						fontColor: '#FFFFFF',
 						splitLine: false,
 						horizentalLine: false,
@@ -249,7 +257,7 @@ export default {
 						yAxisLabel: false,
 						labelBgColor: 'transparent',
 						labelBgOpacity: 0.7,
-						labelFontColor: '#666666'
+						labelFontColor: this.chartFontColor
 					}
 				}
 			});
@@ -275,7 +283,7 @@ export default {
 				legend: { show: false },
 				xAxis: {
 					disableGrid: true,
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					labelCount: 5,
 					boundaryGap: 'justify'
@@ -284,7 +292,7 @@ export default {
 					gridType: 'dash',
 					dashLength: 4,
 					data: [{ min: 0 }],
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					format: 'integer'
 				},
@@ -318,7 +326,7 @@ export default {
 				legend: { show: false },
 				xAxis: {
 					disableGrid: true,
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					labelCount: 5,
 					boundaryGap: 'justify'
@@ -327,7 +335,7 @@ export default {
 					gridType: 'dash',
 					dashLength: 4,
 					data: [{ min: 0 }],
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					format: 'integer'
 				},
@@ -361,7 +369,7 @@ export default {
 				legend: { show: false },
 				xAxis: {
 					disableGrid: true,
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					labelCount: 5,
 					boundaryGap: 'justify'
@@ -370,7 +378,7 @@ export default {
 					gridType: 'dash',
 					dashLength: 4,
 					data: [{ min: 0 }],
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					format: 'integer'
 				},
@@ -404,7 +412,7 @@ export default {
 				legend: { show: false },
 				xAxis: {
 					disableGrid: true,
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					labelCount: 5,
 					boundaryGap: 'justify'
@@ -413,7 +421,7 @@ export default {
 					gridType: 'dash',
 					dashLength: 4,
 					data: [{ min: 0 }],
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					format: 'integer'
 				},
@@ -447,7 +455,7 @@ export default {
 				legend: { show: false },
 				xAxis: {
 					disableGrid: true,
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					labelCount: 5,
 					boundaryGap: 'justify'
@@ -456,7 +464,7 @@ export default {
 					gridType: 'dash',
 					dashLength: 4,
 					data: [{ min: 0 }],
-					fontColor: '#666666',
+					fontColor: this.chartFontColor,
 					fontSize: 12,
 					format: 'integer'
 				},
@@ -497,7 +505,7 @@ export default {
 <style lang="scss" scoped>
 .statistics-container {
 	padding: 20rpx;
-	background-color: #f8f9fa;
+	background-color: var(--background-color-secondary);
 	min-height: 100vh;
 
 	.overview-section {
@@ -508,7 +516,7 @@ export default {
 		.status-card,
 		.total-card,
 		.ratio-card {
-			background: #fff;
+			background: var(--card-background);
 			padding: 30rpx;
 			border-radius: 12rpx;
 			flex: 1;
@@ -519,7 +527,7 @@ export default {
 			.total-label,
 			.ratio-label {
 				font-size: 24rpx;
-				color: #666;
+				color: var(--text-color-regular);
 				display: block;
 				margin-bottom: 10rpx;
 			}
@@ -529,7 +537,7 @@ export default {
 			.ratio-value {
 				font-size: 40rpx;
 				font-weight: bold;
-				color: #333;
+				color: var(--text-color-primary);
 
 				&.normal {
 					color: #20bf6b;
@@ -539,7 +547,7 @@ export default {
 	}
 
 	.core-metrics {
-		background: #fff;
+		background: var(--card-background);
 		border-radius: 12rpx;
 		padding: 30rpx;
 		margin-bottom: 20rpx;
@@ -547,7 +555,7 @@ export default {
 
 		.metrics-title {
 			font-size: 32rpx;
-			color: #333;
+			color: var(--text-color-primary);
 			margin-bottom: 30rpx;
 			font-weight: bold;
 		}
@@ -560,27 +568,27 @@ export default {
 			.metric-item {
 				text-align: center;
 				padding: 20rpx;
-				background: #f8f9fa;
+				background: var(--background-color-secondary);
 				border-radius: 8rpx;
 
 				.metric-value {
 					font-size: 40rpx;
 					font-weight: bold;
-					color: #333;
+					color: var(--text-color-primary);
 					display: block;
 					margin-bottom: 10rpx;
 				}
 
 				.metric-label {
 					font-size: 24rpx;
-					color: #666;
+					color: var(--text-color-regular);
 				}
 			}
 		}
 	}
 
 	.trend-section {
-		background: #fff;
+		background: var(--card-background);
 		border-radius: 12rpx;
 		padding: 30rpx;
 		margin-bottom: 20rpx;
@@ -588,7 +596,7 @@ export default {
 
 		.trend-title {
 			font-size: 32rpx;
-			color: #333;
+			color: var(--text-color-primary);
 			margin-bottom: 20rpx;
 			display: flex;
 			justify-content: space-between;
@@ -597,7 +605,7 @@ export default {
 
 			.trend-subtitle {
 				font-size: 24rpx;
-				color: #999;
+				color: var(--text-color-secondary);
 				font-weight: normal;
 			}
 		}

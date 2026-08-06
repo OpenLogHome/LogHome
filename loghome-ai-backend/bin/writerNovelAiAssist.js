@@ -1,7 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
+// node-fetch@2 在 Node 24 中会将已收到 [DONE] 的 chunked SSE 响应误判为
+// ERR_STREAM_PREMATURE_CLOSE。模型流优先使用 Node 内置 fetch。
+const streamingFetch = typeof globalThis.fetch === 'function'
+	? globalThis.fetch.bind(globalThis)
+	: fetch;
 const { query } = require('../sql.js');
+const { consumeRedstone, sendBillingError } = require('./redstoneBilling');
 const config = require('../config.js');
 const {
 	getNovelInfo,
@@ -1802,7 +1808,7 @@ async function callWriterModelStreamOnce(messages, writer, model, options = {}) 
 			type: 'status',
 			message: '已连接模型，等待生成首段文字',
 		});
-		response = await fetch(`${apiConfig.baseUrl}/chat/completions`, {
+		response = await streamingFetch(`${apiConfig.baseUrl}/chat/completions`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -1862,7 +1868,12 @@ async function callWriterModelStreamOnce(messages, writer, model, options = {}) 
 		}
 	}
 
-	if (!response.body || typeof response.body.on !== 'function') {
+	const supportsStreamingBody = response.body && (
+		typeof response.body.on === 'function'
+		|| typeof response.body.getReader === 'function'
+		|| typeof response.body[Symbol.asyncIterator] === 'function'
+	);
+	if (!supportsStreamingBody) {
 		try {
 			const data = await response.json();
 			const assistantMessage = extractAssistantMessageFromChatData(data);
@@ -1885,8 +1896,11 @@ async function callWriterModelStreamOnce(messages, writer, model, options = {}) 
 
 	try {
 		let buffer = '';
+		const decoder = new TextDecoder('utf-8');
 		for await (const chunk of response.body) {
-			buffer += chunk.toString('utf8');
+			// 原生 fetch 的 Web Stream 产出 Uint8Array；直接调用 toString()
+			// 会得到逗号分隔的字节值，导致 SSE 的 data: 行无法被识别。
+			buffer += decoder.decode(chunk, { stream: true });
 			let newlineIndex = buffer.indexOf('\n');
 			while (newlineIndex !== -1) {
 				const line = buffer.slice(0, newlineIndex).trim();
@@ -1951,6 +1965,27 @@ async function callWriterModelStreamOnce(messages, writer, model, options = {}) 
 						});
 						nextOutputProgressMark += 200;
 					}
+				}
+			}
+		}
+		buffer += decoder.decode();
+		if (buffer.trim()) {
+			const line = buffer.trim();
+			if (line.startsWith('data:')) {
+				const rawData = line.slice(5).trim();
+				if (rawData && rawData !== '[DONE]') {
+					try {
+						const payload = JSON.parse(rawData);
+						const text = extractDeltaText(payload, contentState);
+						if (text) {
+							if (!hasDelta) {
+								emitProcess(writer, 'answer_start', '开始输出正文建议');
+							}
+							hasDelta = true;
+							outputCharCount += text.length;
+							writer.write({ type: 'delta', content: text, chars: outputCharCount });
+						}
+					} catch (error) {}
 				}
 			}
 		}
@@ -2160,7 +2195,7 @@ function ensureWriterAssistTaskStarted(task) {
 	});
 }
 
-function ensureWriterAssistTask(options) {
+async function ensureWriterAssistTask(options) {
 	const messageId = normalizeTaskMessageId(options.messageId);
 	const normalizedTaskId = normalizeTaskId(options.taskId, [
 		'writer-ai',
@@ -2182,6 +2217,7 @@ function ensureWriterAssistTask(options) {
 			conflictError.code = 'TASK_ACCESS_CONFLICT';
 			throw conflictError;
 		}
+		if (existingTask.billingPromise) await existingTask.billingPromise;
 		ensureWriterAssistTaskStarted(existingTask);
 		return {
 			task: existingTask,
@@ -2202,6 +2238,24 @@ function ensureWriterAssistTask(options) {
 		articleMeta: options.articleMeta,
 	});
 	writerAssistTaskStore.set(normalizedTaskId, task);
+	const features = normalizeWriterAssistFeatures(options.requestBody && options.requestBody.features);
+	const redstoneCost = features.image_generation ? 5 : (options.thinkingMode === 'deep' ? 2 : 1);
+	task.billingPromise = consumeRedstone({
+		userId: options.userId,
+		amount: redstoneCost,
+		feature: features.image_generation
+			? 'writer_bipao_image'
+			: options.thinkingMode === 'deep' ? 'writer_bipao_deep' : 'writer_bipao_fast',
+		requestId: normalizedTaskId,
+		description: `笔泡AI${features.image_generation ? '图像生成' : options.thinkingMode === 'deep' ? '深度思考' : '普通问答'}消耗${redstoneCost}红石`,
+	});
+	try {
+		await task.billingPromise;
+		task.billingPromise = null;
+	} catch (error) {
+		if (writerAssistTaskStore.get(normalizedTaskId) === task) writerAssistTaskStore.delete(normalizedTaskId);
+		throw error;
+	}
 	ensureWriterAssistTaskStarted(task);
 	return {
 		task,
@@ -2256,7 +2310,7 @@ async function handleWriterNovelAssistStream(req, res) {
 			cursor_context: cursorContext,
 			thinking_mode: thinkingMode,
 		};
-		const ensuredTask = ensureWriterAssistTask({
+		const ensuredTask = await ensureWriterAssistTask({
 			taskId,
 			userId: Number(user.user_id || 0),
 			articleId,
@@ -2308,6 +2362,7 @@ async function handleWriterNovelAssistStream(req, res) {
 		}
 	} catch (error) {
 		console.log(error);
+		if (sendBillingError(res, error)) return;
 		if (error && error.code === 'TASK_ACCESS_CONFLICT') {
 			return res.status(409).json({ msg: error.message || '任务冲突' });
 		}

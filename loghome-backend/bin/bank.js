@@ -3,7 +3,7 @@ let express = require('express');
 let { query } = require('../sql.js');
 let auth = require('../bin/auth.js');
 
-let item_names = ['log', 'apple', 'cropped_log'];
+let item_names = ['log', 'redstone', 'apple', 'cropped_log'];
 
 let checkAccount = async function (user) {
 	let results = await query('SELECT * FROM user_bank WHERE user_id = ?', [

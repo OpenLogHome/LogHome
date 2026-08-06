@@ -64,10 +64,14 @@ function buildReaderMemoryValidityCondition(memoryAlias = 'm', articleAlias = 'a
   ].join(' AND ');
 }
 
-function buildAuthorMemoryValidityCondition(memoryAlias = 'm', writerAlias = 'w') {
+function buildAuthorMemoryValidityCondition(
+  memoryAlias = 'm',
+  writerAlias = 'w',
+  writerIdColumn = 'writer_id'
+) {
   return [
     `${memoryAlias}.article_id = ${writerAlias}.article_id`,
-    `${memoryAlias}.writer_id = ${writerAlias}.writer_id`,
+    `${memoryAlias}.writer_id = ${writerAlias}.${writerIdColumn}`,
     `${memoryAlias}.source_content_hash <=> ${writerAlias}.content_hash`,
     `${memoryAlias}.source_title <=> ${writerAlias}.title`,
     `${memoryAlias}.source_updated_at <=> ${writerAlias}.create_time`,
@@ -447,7 +451,7 @@ async function getNovelBaseRows(novelId) {
         rm.short_summary AS reader_short_summary,
         rm.characters AS reader_characters,
         rm.updated_at AS reader_memory_updated_at,
-        w.writer_id,
+        w.id AS writer_id,
         w.title AS writer_title,
         w.create_time AS writer_update_time,
         wm.memory_id AS writer_memory_id,
@@ -456,20 +460,15 @@ async function getNovelBaseRows(novelId) {
         wm.characters AS writer_characters,
         wm.updated_at AS writer_memory_updated_at
       FROM articles a
-      LEFT JOIN (
-        SELECT DISTINCT article_id, id AS writer_id, title, content_hash, create_time
-        FROM articles_writer
-        WHERE (article_id, COALESCE(updated_at, STR_TO_DATE(create_time, '%Y%m%d%H%i%s'))  ) IN (
-          SELECT article_id, MAX(COALESCE(updated_at, STR_TO_DATE(create_time, '%Y%m%d%H%i%s'))) AS max_time
-          FROM articles_writer
-          GROUP BY article_id
-        )
-        AND article_id IN (
-          SELECT article_id FROM articles WHERE deleted = 0 AND is_draft = 0 AND article_type = 'richtext'
-        )
-      ) w ON w.article_id = a.article_id
+      LEFT JOIN articles_writer w ON w.id = (
+        SELECT aw2.id
+        FROM articles_writer aw2
+        WHERE aw2.article_id = a.article_id
+        ORDER BY ${buildWriterUpdatedAtExpression('aw2')} DESC, aw2.id DESC
+        LIMIT 1
+      )
       LEFT JOIN ${memDb()}.${READER_MEMORY_TABLE} rm ON ${buildReaderMemoryValidityCondition('rm', 'a')}
-      LEFT JOIN ${memDb()}.${AUTHOR_MEMORY_TABLE} wm ON ${buildAuthorMemoryValidityCondition('wm', 'w')}
+      LEFT JOIN ${memDb()}.${AUTHOR_MEMORY_TABLE} wm ON ${buildAuthorMemoryValidityCondition('wm', 'w', 'id')}
       WHERE a.novel_id = ?
         AND a.deleted = 0
         AND a.is_draft = 0

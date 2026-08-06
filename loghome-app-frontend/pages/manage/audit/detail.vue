@@ -1,5 +1,5 @@
 <template>
-	<view class="container">
+	<view class="container" v-dark>
 		<view class="content">
 			<view class="article-info">
 				<view class="title">{{article.title}}</view>
@@ -9,7 +9,7 @@
 					<text class="word-count">字数: {{article.text_count}}</text>
 				</view>
 			</view>
-			
+
 			<view class="article-content">
 				<template v-if="article.content">
 					<view v-for="(item, index) in parsedContent" :key="index">
@@ -23,7 +23,7 @@
 					<view class="text-content">{{article.content}}</view>
 				</template>
 			</view>
-			
+
 			<view class="audit-form">
 				<view class="form-item">
 					<view class="label">审核结果</view>
@@ -38,7 +38,7 @@
 						</radio-group>
 					</view>
 				</view>
-				
+
 				<view class="form-item" v-if="handleMethod === '通过'">
 					<view class="label">警告信息</view>
 					<view class="input">
@@ -49,7 +49,7 @@
 						</radio-group>
 					</view>
 				</view>
-				
+
 				<view class="submit">
 					<button @click="submitAudit" :disabled="submitting">提交审核</button>
 				</view>
@@ -114,7 +114,7 @@ export default {
 		async loadArticle(id) {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
-				
+
 				const res = await axios.get(this.$baseUrl + '/manage/audit/get_article_by_id', {
 					params: {
 						id: id
@@ -143,11 +143,11 @@ export default {
 		},
 		async submitAudit() {
 			if (this.submitting) return
-			
+
 			try {
 				this.submitting = true
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
-				
+
 				await axios.post(this.$baseUrl + '/manage/audit/submit_result', {
 					article_id: this.article.article_id,
 					handleMethod: this.handleMethod,
@@ -157,15 +157,15 @@ export default {
 						'Authorization': tk
 					}
 				})
-				
+
 				uni.showToast({
 					title: '审核成功'
 				})
-				
+
 				setTimeout(() => {
 					uni.navigateBack()
 				}, 500)
-				
+
 			} catch (e) {
 				uni.showToast({
 					title: '提交失败',
@@ -187,7 +187,7 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-	background-color: #f2f2f2;
+	background-color: var(--background-color-secondary);
 	min-height: 100vh;
 }
 
@@ -196,21 +196,21 @@ export default {
 }
 
 .article-info {
-	background: #fff;
+	background: var(--card-background);
 	padding: 30rpx;
 	border-radius: 10rpx;
 	margin-bottom: 20rpx;
-	
+
 	.title {
 		font-size: 36rpx;
 		font-weight: bold;
 		margin-bottom: 20rpx;
 	}
-	
+
 	.meta {
 		font-size: 26rpx;
-		color: #666;
-		
+		color: var(--text-color-regular);
+
 		text {
 			margin-right: 20rpx;
 		}
@@ -218,31 +218,31 @@ export default {
 }
 
 .article-content {
-	background: #fff;
+	background: var(--card-background);
 	padding: 30rpx;
 	border-radius: 10rpx;
 	margin-bottom: 20rpx;
-	
+
 	.text-content {
 		font-size: 30rpx;
 		line-height: 1.8;
 		margin-bottom: 20rpx;
 		white-space: pre-wrap;
-		color: #333;
+		color: var(--text-color-primary);
 	}
-	
+
 	.image-content {
 		margin: 20rpx 0;
 		display: flex;
 		justify-content: center;
-		
+
 		.content-image {
 			width: 80%;
 			max-height: 400rpx;
 			object-fit: contain;
 			border-radius: 8rpx;
 			cursor: pointer;
-			
+
 			&:hover {
 				opacity: 0.9;
 			}
@@ -251,30 +251,30 @@ export default {
 }
 
 .audit-form {
-	background: #fff;
+	background: var(--card-background);
 	padding: 30rpx;
 	border-radius: 10rpx;
-	
+
 	.form-item {
 		margin-bottom: 30rpx;
-		
+
 		.label {
 			font-size: 30rpx;
 			font-weight: bold;
 			margin-bottom: 20rpx;
 		}
-		
+
 		.input {
 			.radio {
 				margin-right: 30rpx;
 			}
-			
+
 			.radio-warn {
 				display: block;
 				margin-bottom: 20rpx;
 				font-size: 28rpx;
-				color: #333;
-				
+				color: var(--text-color-primary);
+
 				radio {
 					margin-right: 10rpx;
 					transform: scale(0.8);
@@ -282,7 +282,7 @@ export default {
 			}
 		}
 	}
-	
+
 	.submit {
 		button {
 			width: 100%;
@@ -292,11 +292,11 @@ export default {
 			color: #fff;
 			border-radius: 40rpx;
 			font-size: 30rpx;
-			
+
 			&:disabled {
 				background: #999;
 			}
 		}
 	}
 }
-</style> 
+</style>

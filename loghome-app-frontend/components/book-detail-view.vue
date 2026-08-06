@@ -48,6 +48,12 @@
       <!-- 添加Banner组件 -->
       <banner page="essays" class="section-banner"/>
 
+      <writing-activity-calendar
+        v-if="canViewWritingCalendar"
+        :calendar-data="writingCalendar"
+        :loading="writingCalendarLoading"
+      />
+
       <!-- 创作活动板块 -->
       <div class="statistic-box" v-if="isOwner && activityInfo && activityInfo.hasActivity">
         <div class="head">
@@ -198,6 +204,7 @@
 <script>
 import writerHelper from "./writer_helper"
 import banner from './banner.vue'
+import WritingActivityCalendar from './writing-activity-calendar.vue'
 import axios from 'axios'
 import darkModeMixin from '@/mixins/dark-mode.js'
 
@@ -205,7 +212,8 @@ export default {
   name: 'BookDetailView',
   components: {
     writerHelper,
-    banner
+    banner,
+    WritingActivityCalendar
   },
   mixins: [darkModeMixin],
   props: {
@@ -222,6 +230,14 @@ export default {
       default: () => []
     },
     isDrawerMode: {
+      type: Boolean,
+      default: false
+    },
+    writingCalendar: {
+      type: Object,
+      default: null
+    },
+    writingCalendarLoading: {
       type: Boolean,
       default: false
     }
@@ -243,6 +259,11 @@ export default {
         this.book.is_collaborator === true ||
         Number(this.book.has_active_collaborators || 0) === 1
       );
+    },
+    canViewWritingCalendar() {
+      if (!this.book) return false;
+      const access = this.book.current_access || this.book;
+      return this.isOwner || access.can_edit_draft === true || Number(access.can_edit_draft || 0) === 1;
     },
     hasDescription() {
       return !!(this.book && this.book.content && this.book.content.toString().trim());

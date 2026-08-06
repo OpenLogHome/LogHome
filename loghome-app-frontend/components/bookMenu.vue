@@ -218,7 +218,7 @@ export default {
 		},
 		getReaderUrl(articleId) {
 			const readerProps = window.localStorage.getItem("readerProps");
-			const isPageReader = readerProps === "page";
+			const isPageReader = readerProps !== "text";
 			let url = isPageReader
 				? `/pages/readers/newReader/article?id=${articleId}`
 				: `/pages/readers/article_rich?id=${articleId}`;

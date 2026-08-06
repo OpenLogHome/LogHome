@@ -1,7 +1,7 @@
 <template>
-	<view class="container">
+	<view class="container" v-dark>
 		<div class="loading" v-if="isLoading">
-			<img src="../../static/loading.gif" alt="loading" class="loading-image" v-if="false">
+			<img src="../../static/loading.gif" alt="loading" class="loading-image" v-if="false" />
 			<div class="spinner">
 				<div class="bounce1"></div>
 				<div class="bounce2"></div>
@@ -29,7 +29,7 @@
 
 <script>
 	import axios from 'axios'
-	
+
 	export default {
 		data() {
 			return {
@@ -47,19 +47,19 @@
 			// 从URL中获取token参数和redirectTo参数
 			if (option.token) {
 				this.token = option.token;
-				
+
 				// 获取跳转地址参数
 				if (option.redirectTo) {
 					this.redirectTo = decodeURIComponent(option.redirectTo);
 				}
-				
+
 				this.verifyToken();
 			} else {
 				this.isLoading = false;
 				this.loginError = true;
 				this.errorMessage = '未接收到有效的登录信息';
 			}
-			
+
 			if (option.hideback) {
 				console.log("hideback");
 				window.sessionStorage.setItem("hideBack", "true");
@@ -77,11 +77,11 @@
 					if (res.data && res.data.token) {
 						// 保存JWT token到localStorage
 						window.localStorage.setItem('token', JSON.stringify(res.data.token));
-						
+
 						// 显示成功信息
 						this.isLoading = false;
 						this.loginSuccess = true;
-						
+
 						// 开始倒计时
 						this.startCountDown();
 					} else {
@@ -91,8 +91,8 @@
 					console.log(error);
 					this.isLoading = false;
 					this.loginError = true;
-					this.errorMessage = error.response && error.response.data && error.response.data.msg 
-						? error.response.data.msg 
+					this.errorMessage = error.response && error.response.data && error.response.data.msg
+						? error.response.data.msg
 						: '登录令牌无效或已过期，请重新登录';
 				});
 			},
@@ -101,13 +101,13 @@
 					this.countDown--;
 					if (this.countDown <= 0) {
 						clearInterval(this.countDownTimer);
-						
+
 						// 根据redirectTo参数决定跳转位置
 						if (this.redirectTo) {
-							
+
 							// 判断跳转类型
-							if (this.redirectTo.startsWith('/pages/me') || 
-								this.redirectTo.startsWith('/pages/library') || this.redirectTo.startsWith('/pages/essays') || 
+							if (this.redirectTo.startsWith('/pages/me') ||
+								this.redirectTo.startsWith('/pages/library') || this.redirectTo.startsWith('/pages/essays') ||
 								this.redirectTo.startsWith('/pages/bookcase/index')) {
 								// tabBar页面使用switchTab
 								uni.switchTab({
@@ -160,7 +160,7 @@
 		padding: 0 40rpx;
 		text-align: center;
 	}
-	
+
 	.loading, .success, .error {
 		display: flex;
 		flex-direction: column;
@@ -168,35 +168,35 @@
 		width: 100%;
 		margin-top: 200rpx;
 	}
-	
+
 	.loading-image {
 		width: 120rpx;
 		height: 120rpx;
 		margin-bottom: 40rpx;
 	}
-	
+
 	.loading-text, .success-text, .error-text {
 		font-size: 36rpx;
 		margin-bottom: 20rpx;
-		color: #333;
+		color: var(--text-color-primary);
 		font-weight: bold;
 	}
-	
+
 	.redirect-text, .error-message {
 		font-size: 28rpx;
-		color: #666;
+		color: var(--text-color-regular);
 		margin-bottom: 40rpx;
 	}
-	
+
 	.icon {
 		margin-bottom: 40rpx;
 	}
-	
+
 	.icon img {
 		width: 120rpx;
 		height: 120rpx;
 	}
-	
+
 	.button {
 		height: 80rpx;
 		width: 60%;
@@ -211,11 +211,11 @@
 		box-sizing: border-box;
 		background-color: rgb(180, 111, 88);
 	}
-	
+
 	.button:active {
 		background-color: rgb(225, 139, 110);
 	}
-	
+
 	/* 加载动画 */
 	.spinner {
 		margin: 40rpx auto;
@@ -242,10 +242,10 @@
 	}
 
 	@keyframes sk-bouncedelay {
-		0%, 80%, 100% { 
+		0%, 80%, 100% {
 			transform: scale(0);
-		} 40% { 
+		} 40% {
 			transform: scale(1.0);
 		}
 	}
-</style> 
+</style>

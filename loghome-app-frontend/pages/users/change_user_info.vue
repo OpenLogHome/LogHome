@@ -1,8 +1,11 @@
 <template>
-	<div class="outer">
-		<view class="avator">
-			<log-image :src="user.avatar_url" @click="gotoAvater"
-			onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"/>
+	<div class="outer" v-dark>
+		<view class="avator" @click="gotoAvater">
+			<user-avatar :src="user.avatar_url" :frame="user.avatar_frame" :animate="true" />
+		</view>
+		<view class="avatar-actions">
+			<view class="avatar-action" @click="gotoAvater">更换头像</view>
+			<view class="avatar-action avatar-action--frame" @click="gotoAvatarFrames">选择头像挂件</view>
 		</view>
 		<el-input
 		  type="text"
@@ -50,9 +53,9 @@
 			}
 			//验活
 			axios.get( this.$baseUrl + '/users/userprofile', {
-				headers: { 
+				headers: {
 				     'Content-Type': 'application/json',
-				     'Authorization': tk 
+				     'Authorization': tk
 				}
 			}).then((res) => {
 				_this.user = JSON.parse(JSON.stringify(res.data));
@@ -73,8 +76,13 @@
 					url:"./avater_upload?noneAnimation=true&url=" + this.user.avatar_url
 				})
 			},
+			gotoAvatarFrames(){
+				uni.navigateTo({
+					url:"./avatar_frames"
+				})
+			},
 			submit(){
-				if(this.username.replace(/(^\s*)|(\s*$)/g, "") == "" || this.motto.replace(/(^\s*)|(\s*$)/g, "") == "") 
+				if(this.username.replace(/(^\s*)|(\s*$)/g, "") == "" || this.motto.replace(/(^\s*)|(\s*$)/g, "") == "")
 				{
 					uni.showToast({
 						title: "必填项未填",
@@ -94,8 +102,8 @@
 						},
 						{
 							headers: {
-								'Content-Type': 'application/json', 
-								'Authorization': 'Bearer ' + tk 
+								'Content-Type': 'application/json',
+								'Authorization': 'Bearer ' + tk
 							}
 						},
 					)
@@ -138,26 +146,36 @@
 		margin:30px;
 		.avator{
 			margin-top:10rpx;
-			margin-bottom:70rpx;
-			width: 160upx;
-			height: 160upx;
-			background: #fff;
-			border: 5upx solid #fff;
-			border-radius: 8rpx;
-			overflow: hidden;
-			img{
-				width: 100%;
-				height: 100%;
-			}
+			width: 210upx;
+			height: 210upx;
+			background: transparent;
+			overflow: visible;
+		}
+		.avatar-actions {
+			display: flex;
+			gap: 18rpx;
+			margin: 22rpx 0 52rpx;
+		}
+		.avatar-action {
+			padding: 13rpx 24rpx;
+			border: 1rpx solid rgba(180, 111, 88, .35);
+			border-radius: 999rpx;
+			font-size: 24rpx;
+			color: #9c5f4b;
+			background: var(--card-background);
+		}
+		.avatar-action--frame {
+			color: #fff;
+			background: rgb(180, 111, 88);
 		}
 		.input {
 			width: 100%;
 			height: 37px;
 			line-height: 37px;
 			border: 0px;
-			color: #333333;
+			color: var(--text-color-primary);
 			font-size: 16px;
-			background-color: #ffffff;
+			background-color: var(--card-background);
 			margin-bottom: 20px;
 			border-radius: 5px;
 			padding-left:10px;
@@ -167,19 +185,19 @@
 			height: 100px;
 			line-height: 37px;
 			border: 0px;
-			color: #333333;
+			color: var(--text-color-primary);
 			font-size: 16px;
-			background-color: #ffffff;
+			background-color: var(--card-background);
 			padding-left:10px;
 		}
 	}
-	
+
 	.button {
 		height: 40px;
 		width: 80%;
 		margin-top: 30px;
 		font-size: 16px;
-		
+
 		font-weight: bold;
 		line-height: 38px;
 		border-radius: 5px;
@@ -187,7 +205,7 @@
 		background-color: rgb(180, 111, 88);
 		text-align: center;
 	}
-	
+
 	.button:active {
 		background-color: rgb(225, 139, 110);
 	}

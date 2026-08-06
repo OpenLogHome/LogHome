@@ -3,7 +3,8 @@
 		<followBtn class="followButton" :targetId="reviewMsg.userId" v-show="componentMode == false"></followBtn>
 		<view class="cenHost">
 			<view class="cenHeadImgContent" @click="gotoPersonalPage(reviewMsg.userId)">
-				<log-image class="headImg" :src="reviewMsg.headImgSrc"></log-image>
+				<user-avatar class="headImg" :src="reviewMsg.headImgSrc" :frame="reviewMsg.avatarFrame"
+					:visual-scale="reviewMsg.avatarFrame ? 1.2 : 1" />
 			</view>
 			<view class="cenHostMsgContent">
 				<view class="viewMb viewMb-space-between">
@@ -397,7 +398,7 @@
 			navToChapter() {
 				console.log(this.reviewMsg.cento);
 				const readerProps = window.localStorage.getItem("readerProps");
-				const isPageReader = readerProps === "page";
+				const isPageReader = readerProps !== "text";
 				const paragraphId = this.reviewMsg?.cento?.paragraph_id;
 				let url = isPageReader
 					? `/pages/readers/newReader/article?id=${this.reviewMsg.article_id}`
@@ -703,9 +704,8 @@
 	}
 
 	.headImg {
-		width: 30px;
-		height: 30px;
-		border-radius: 8rpx;
+		width: 40px;
+		height: 40px;
 	}
 
 	.textSendMsg {
@@ -789,15 +789,18 @@
 	}
 
 	.cenHostMsgContent {
-		width: calc(100% - 30rpx);
+		flex: 1;
+		width: auto;
+		min-width: 0;
 		margin: 5px 10px 10px 10px;
 		/* height:30rpx; */
 	}
 
 	.cenHeadImgContent {
-		height: 100%;
+		flex-shrink: 0;
+		width: 40px;
+		height: 40px;
 		margin: 10px;
-		height: 30rpx;
 	}
 
 	.cenHostMsg1 {}

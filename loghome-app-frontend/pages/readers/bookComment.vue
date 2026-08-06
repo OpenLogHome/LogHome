@@ -270,14 +270,21 @@ export default {
 				});
 				let praiseStatusMap = {};
 				for (let item of (res.data || [])) {
-					praiseStatusMap[item.novel_comment_id] = item.type;
+					praiseStatusMap[item.novel_comment_id] = Number(item.type);
 				}
 				return praiseStatusMap;
 			} catch (e) {
-				return {};
+				return null;
 			}
 		},
 		buildCommentItem(item, praiseStatusMap = {}) {
+			const praiseStatusesLoaded = praiseStatusMap !== null;
+			praiseStatusMap = praiseStatusMap || {};
+			const hasPraiseStatus = Object.prototype.hasOwnProperty.call(
+				praiseStatusMap,
+				item.essay_comment_id
+			);
+			const praiseType = hasPraiseStatus ? praiseStatusMap[item.essay_comment_id] : 3;
 			const replies = Array.isArray(item.replies) ? item.replies : [];
 			let userNameMap = {
 				[item.essay_comment_id]: item.name
@@ -290,11 +297,15 @@ export default {
 				author_id: item.author_id,
 				comment_id: item.essay_comment_id,
 				headImgSrc: item.avatar_url,
+				avatarFrame: item.avatar_frame || null,
 				userName: item.name,
 				userId: item.user_id,
 				sendTime: this.utc2beijing(item.comment_time),
 				sendMsg: item.content,
-				likeNum: item.likeNum || 0,
+				likeNum: Math.max(
+					Number(item.likeNum) || 0,
+					praiseStatusesLoaded && Number(praiseType) === 0 ? 1 : 0
+				),
 				reviewLess: replies.map((reply) => ({
 					comment_id: reply.essay_comment_id,
 					userName: reply.name,
@@ -310,9 +321,9 @@ export default {
 				cento_id: item.cento_id,
 				cento: item.cento,
 				media_urls: item.media_urls || [],
-				praiseType: Object.prototype.hasOwnProperty.call(praiseStatusMap, item.essay_comment_id)
-					? praiseStatusMap[item.essay_comment_id]
-					: 3
+				...(praiseStatusesLoaded ? {
+					praiseType
+				} : {})
 			}
 		},
 		async loadComment(commentId) {
@@ -323,6 +334,7 @@ export default {
 					author_id: data[0].author_id,
 					comment_id: data[0].essay_comment_id,
 					headImgSrc: data[0].avatar_url,
+					avatarFrame: data[0].avatar_frame || null,
 					userName: data[0].name,
 					userId: data[0].user_id,
 					sendTime: this.utc2beijing(data[0].comment_time),
@@ -414,6 +426,7 @@ export default {
 						author_id: item.author_id,
 						comment_id: item.essay_comment_id,
 						headImgSrc: item.avatar_url,
+						avatarFrame: item.avatar_frame || null,
 						userName: item.name,
 						userId: item.user_id,
 						sendTime: _this.utc2beijing(item.comment_time),
@@ -443,6 +456,22 @@ export default {
 					reviews.push(commentItem);
 					// console.log("commentItem",commentItem);
 				}
+			}
+			const praiseStatusMap = await this.fetchPraiseStatusMap(
+				reviews.map((item) => item.comment_id)
+			);
+			for (let item of reviews) {
+				if (praiseStatusMap !== null) {
+					const hasPraiseStatus = Object.prototype.hasOwnProperty.call(
+						praiseStatusMap,
+						item.comment_id
+					);
+					item.praiseType = hasPraiseStatus ? praiseStatusMap[item.comment_id] : 3;
+				}
+				item.likeNum = Math.max(
+					Number(item.likeNum) || 0,
+					Number(item.praiseType) === 0 ? 1 : 0
+				);
 			}
 			this.$refs.paging.complete(reviews);
 			uni.hideLoading();
@@ -514,6 +543,7 @@ export default {
 						author_id: item.author_id,
 						comment_id: item.essay_comment_id,
 						headImgSrc: item.avatar_url,
+						avatarFrame: item.avatar_frame || null,
 						userName: item.name,
 						userId: item.user_id,
 						sendTime: this.utc2beijing(item.comment_time),
@@ -659,7 +689,10 @@ export default {
 		changePraise(ev) {
 			for (let item of this.reviews) {
 				if (item.comment_id == ev.id) {
-					item.likeNum = item.likeNum + ev.changeNum;
+					item.likeNum = Math.max(
+						0,
+						(Number(item.likeNum) || 0) + (Number(ev.changeNum) || 0)
+					);
 				}
 			}
 		},

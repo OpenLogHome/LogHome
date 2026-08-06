@@ -171,6 +171,7 @@
 	import uniFab from '../../uni_modules/uni-fab/components/uni-fab/uni-fab.vue'
 	import customlist from '../../components/custom-list/index.js'
 	import { createTreeExpReporter } from '../../lib/treeExpReporter.js'
+	import { createNovelWritingActivityReporter } from '../../lib/writingActivityReporter.js'
 
 	const DEFAULT_SETTINGS = {
 		version: 24031701,
@@ -230,6 +231,24 @@
 			relations: Array.isArray(parsed.relations) ? parsed.relations : []
 		}
 	}
+
+	function countVocabularyContentCharacters(content) {
+		const normalized = content && typeof content === 'object'
+			? content
+			: createEmptyVocabularyContent()
+		let count = String(normalized.desc || '').length
+		const attributes = Array.isArray(normalized.attributes) ? normalized.attributes : []
+		const relations = Array.isArray(normalized.relations) ? normalized.relations : []
+		attributes.forEach((item) => {
+			count += String((item && item.name) || '').length
+			count += String((item && item.content) || '').length
+		})
+		relations.forEach((item) => {
+			count += String((item && item.name) || '').length
+			count += String((item && item.relation) || '').length
+		})
+		return count
+	}
 	export default {
 		components: {
 			uniFab,
@@ -280,6 +299,8 @@
 				saveInterval: undefined,
 				firstLocalCheck: true,
 				writeExpReporter: null,
+				novelWritingActivityReporter: null,
+				writingActivityLastCharacterTotal: 0,
 				loadComplete: false,
 				suppressContentWatcher: false,
 				isSyncingEditorContent: false,
@@ -370,6 +391,13 @@
 				return false;
 			}
 			if (this.article_changed) {
+				this.confirmNavigateBack();
+				return true;
+			}
+			return false;
+		},
+		methods: {
+			confirmNavigateBack() {
 				this.$nextTick(function() {
 					uni.showModal({
 						title: '提示',
@@ -381,25 +409,57 @@
 						}
 					});
 				})
-				return true;
-			} else {}
-		},
-		methods: {
+			},
+			handleNativeBack(event) {
+				if (!this.article_changed) {
+					return;
+				}
+				event.preventDefault();
+				this.confirmNavigateBack();
+			},
 			startWritingExpTimer() {
 				if (!this.writeExpReporter) {
 					this.writeExpReporter = createTreeExpReporter(this, 'write_seconds', { activeWindowMs: 45000 });
 				}
 				this.writeExpReporter.start();
 				this.writeExpReporter.markActive();
+				if (!this.novelWritingActivityReporter) {
+					this.novelWritingActivityReporter = createNovelWritingActivityReporter(this, {
+						getArticleId: () => Number(this.chapterId || 0),
+						getSessionId: () => String(this.editSessionId || ''),
+						getUserId: () => Number(this.currentUserId || 0),
+						activeWindowMs: 45000
+					});
+				}
+				this.novelWritingActivityReporter.start();
 			},
 			async stopWritingExpTimer() {
-				if (this.writeExpReporter) {
-					await this.writeExpReporter.stop();
-				}
+				await Promise.all([
+					this.writeExpReporter ? this.writeExpReporter.stop() : null,
+					this.novelWritingActivityReporter ? this.novelWritingActivityReporter.stop() : null
+				]);
 			},
 			markWritingActivity() {
 				if (this.writeExpReporter) {
 					this.writeExpReporter.markActive();
+				}
+				if (this.novelWritingActivityReporter) {
+					this.novelWritingActivityReporter.markActive();
+				}
+			},
+			getVocabularyWritingCharacterTotal(content = this.content, title = this.article.title) {
+				return String(title || '').length + countVocabularyContentCharacters(content);
+			},
+			resetVocabularyWritingActivity() {
+				this.writingActivityLastCharacterTotal = this.getVocabularyWritingCharacterTotal();
+			},
+			recordVocabularyWritingActivity(content = this.content, title = this.article.title) {
+				const currentTotal = this.getVocabularyWritingCharacterTotal(content, title);
+				const previousTotal = Number(this.writingActivityLastCharacterTotal || 0);
+				this.writingActivityLastCharacterTotal = currentTotal;
+				const addedCharacters = Math.max(0, currentTotal - previousTotal);
+				if (addedCharacters && this.novelWritingActivityReporter) {
+					this.novelWritingActivityReporter.recordWrittenCharacters(addedCharacters);
 				}
 			},
 			getTokenInfo() {
@@ -449,20 +509,24 @@
 			},
 			handleTitleInput() {
 				this.markWritingActivity();
+				this.recordVocabularyWritingActivity(this.content, this.article.title);
 				this.article_changed = true;
 			},
 			handleVisibilityChange() {
 				if (document.visibilityState === "hidden") {
+					this.stopWritingExpTimer();
 					this.stopLockHeartbeat();
 					this.releaseEditLock();
 					return;
 				}
 
+				this.startWritingExpTimer();
 				if (this.loadComplete) {
 					this.claimEditLock();
 				}
 			},
 			handlePageHide() {
+				this.stopWritingExpTimer();
 				this.stopLockHeartbeat();
 				this.releaseEditLock();
 			},
@@ -685,6 +749,7 @@
 
 					this.suppressContentWatcher = true;
 					this.content = parseVocabularyContent(this.article.content);
+					this.resetVocabularyWritingActivity();
 					this.$nextTick(() => {
 						this.suppressContentWatcher = false;
 						this.syncCodeEditorContent(this.article.content);
@@ -792,6 +857,12 @@
 					return;
 				}
 				this.markWritingActivity();
+				try {
+					this.recordVocabularyWritingActivity(
+						parseVocabularyContentStrict(e.detail.text),
+						this.article.title
+					);
+				} catch (error) {}
 				this.article.content = e.detail.text;
 				this.article_changed = true;
 			},
@@ -988,6 +1059,7 @@
 					return;
 				}
 				this.markWritingActivity();
+				this.recordVocabularyWritingActivity(content, this.article.title);
 				this.article.content = JSON.stringify(parseVocabularyContent(JSON.stringify(content)));
 				this.article_changed = true;
 				this.syncCodeEditorContent(this.article.content);
@@ -1247,6 +1319,8 @@
 			document.addEventListener("visibilitychange", this.handleVisibilityChange);
 			window.removeEventListener("pagehide", this.handlePageHide);
 			window.addEventListener("pagehide", this.handlePageHide);
+			window.removeEventListener("loghomeNativeBack", this.handleNativeBack);
+			window.addEventListener("loghomeNativeBack", this.handleNativeBack);
 
 			setTimeout(() => {
 				this.applyNavigationBarTheme();
@@ -1260,6 +1334,7 @@
 			this.endLocalSaveTimer();
 			document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 			window.removeEventListener("pagehide", this.handlePageHide);
+			window.removeEventListener("loghomeNativeBack", this.handleNativeBack);
 		},
 		onShow() {
 			this.startWritingExpTimer();
@@ -1281,6 +1356,7 @@
 			this.endLocalSaveTimer();
 			this.saveLocalArticle();
 			await this.releaseEditLock();
+			window.removeEventListener("loghomeNativeBack", this.handleNativeBack);
 		},
 		watch: {
 			content: {

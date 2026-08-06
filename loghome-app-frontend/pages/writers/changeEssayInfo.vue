@@ -1,5 +1,5 @@
 <template>
-	<div class="outer">
+	<div class="outer" v-dark>
 		<log-image class="cover" :src="imgSrc" alt="" @click="changeCover"/>
 		<el-input
 		  type="text"
@@ -150,9 +150,9 @@
 			height: 37px;
 			line-height: 37px;
 			border: 0px;
-			color: #333333;
+			color: var(--text-color-primary);
 			font-size: 16px;
-			background-color: #ffffff;
+			background-color: var(--card-background);
 			margin-bottom: 20px;
 			border-radius: 5px;
 			padding-left:10px;
@@ -162,19 +162,19 @@
 			height: 300px;
 			line-height: 37px;
 			border: 0px;
-			color: #333333;
+			color: var(--text-color-primary);
 			font-size: 16px;
-			background-color: #ffffff;
+			background-color: var(--card-background);
 			padding-left:10px;
 		}
 	}
-	
+
 	.button {
 		height: 40px;
 		width: 80%;
 		margin-top: 30px;
 		font-size: 16px;
-		
+
 		font-weight: bold;
 		line-height: 38px;
 		border-radius: 5px;
@@ -182,7 +182,7 @@
 		background-color: #b46f58;
 		text-align: center;
 	}
-	
+
 	.button:active {
 		background-color: rgb(234, 171, 11);
 	}

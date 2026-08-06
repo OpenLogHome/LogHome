@@ -1,5 +1,5 @@
 <template>
-	<div class="outer">
+	<div class="outer" v-dark>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar textcolor="#000" :showLeft="true" :showTitle="false" navTitle='标题'></zetank-backBar>
 		<div class="content-container">
@@ -9,13 +9,13 @@
 					<div class="title typewriter">{{ currentText }}</div>
 				</div>
 			</div>
-			
+
 			<!-- 轮播图部分 -->
 			<div class="carousel-section">
-				<swiper class="carousel-swiper" 
-					:indicator-dots="true" 
-					:autoplay="false" 
-					:interval="3000" 
+				<swiper class="carousel-swiper"
+					:indicator-dots="true"
+					:autoplay="false"
+					:interval="3000"
 					:duration="500"
 					:circular="true"
 					@change="onSwiperChange">
@@ -27,7 +27,7 @@
 					</swiper-item>
 				</swiper>
 			</div>
-			
+
 			<div class="buttons-section">
 				<div class="loginBtn button" @click="gotoLoginEmail">
 					使用邮箱登录
@@ -106,12 +106,12 @@
 			// 打字机效果实现
 			typeText() {
 				const currentPhrase = this.textArray[this.currentIndex];
-				
+
 				// 如果正在删除文字
 				if (this.isDeleting) {
 					// 删除一个字符
 					this.currentText = currentPhrase.substring(0, this.currentText.length - 1);
-					
+
 					// 如果已经删除完毕，切换到下一个短语
 					if (this.currentText === '') {
 						this.isDeleting = false;
@@ -124,7 +124,7 @@
 				} else {
 					// 添加一个字符
 					this.currentText = currentPhrase.substring(0, this.currentText.length + 1);
-					
+
 					// 如果已经输入完毕，等待一段时间后开始删除
 					if (this.currentText === currentPhrase) {
 						setTimeout(() => {
@@ -134,7 +134,7 @@
 						return;
 					}
 				}
-				
+
 				// 继续打字或删除
 				setTimeout(() => {
 					this.typeText();
@@ -214,15 +214,21 @@
 		background: linear-gradient(135deg, #ffffff 0%, #f8dac6 50%, #ffe6dc 100%);
 		background-size: 200% 200%;
 		animation: gradientAnimation 15s ease infinite;
-		
+
+		&.dark-mode {
+			background: linear-gradient(135deg, #151515 0%, #2d211d 50%, #241a18 100%);
+		}
+
 		.content-container{
 			height:100vh;
+			box-sizing: border-box;
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
 			align-items: center;
-			padding-top: 50rpx;
-			
+			padding-top: calc(50rpx + var(--loghome-safe-top, 0px));
+			padding-bottom: var(--loghome-safe-bottom, 0px);
+
 			.welcome-section {
 				width: 100%;
 				display: flex;
@@ -230,62 +236,62 @@
 				margin-left: 15%;
 				margin-top: 5vh;
 				margin-bottom: 5vh;
-				
+
 				div.appTitle{
 					text-align: left;
 					.title{
 						font-size: 60rpx;
 						font-weight: bold;
-						color: #303030;
+						color: var(--text-color-primary);
 					}
 					.subtitle{
 						font-size: 42rpx;
-						color: #303030;
+						color: var(--text-color-primary);
 						margin-top: 20rpx;
 					}
 				}
 			}
-			
+
 			.carousel-section {
 				width: 100%;
 				height: 30vh;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
-				
+
 				.carousel-swiper {
 					width: 90%;
 					height: 100%;
 				}
-				
+
 				.carousel-item {
 					display: flex;
 					flex-direction: column;
 					align-items: center;
 					justify-content: center;
 					height: 100%;
-					
+
 					.carousel-image {
 						width: 300rpx;
 						height: 300rpx;
 					}
-					
+
 					.carousel-title {
 						margin-top: 20rpx;
 						font-size: 36rpx;
-						color: #303030;
+						color: var(--text-color-primary);
 						font-weight: bold;
 					}
 				}
 			}
-			
+
 			.buttons-section {
 				width: 100%;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
 				margin-bottom: 10vh;
-				
+
 				.loginBtn{
 					width: 80vw;
 					margin: 15rpx 0;
@@ -296,7 +302,7 @@
 					border: 0;
 					font-size: 32rpx;
 					box-sizing: border-box;
-					color: rgb(180, 111, 88);
+					color: var(--brand-text-color);
 				}
 				.checkBox{
 					margin-top: 30rpx;
@@ -317,17 +323,17 @@
 			background-color: rgb(180, 111, 88);
 			transition: all .1s;
 		}
-		
+
 		.button.long{
 			width: calc(80vw + 20px);
 		}
-		
+
 		.button:not(.login2):active{
 			background-color: rgb(255, 170, 127) !important;
 			border-color: rgb(255, 170, 127);
 			transform: scale(.9);
 		}
-		
+
 		.typewriter {
 			display: inline-block;
 			border-right: 3px solid #FF6000;
@@ -335,43 +341,43 @@
 			animation: blink 0.7s step-end infinite;
 			height: 90rpx;
 		}
-		
+
 		@keyframes blink {
 			from, to { border-color: transparent }
 			50% { border-color: #FF6000; }
 		}
 	}
-	
+
 	.shake {
 	  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 	  transform: translate3d(0, 0, 0);
 	  backface-visibility: hidden;
 	  perspective: 1000px;
 	}
-	
+
 	@keyframes shake {
 	  10%,
 	  90% {
 	    transform: translate3d(-1px, 0, 0);
 	  }
-	
+
 	  20%,
 	  80% {
 	    transform: translate3d(2px, 0, 0);
 	  }
-	
+
 	  30%,
 	  50%,
 	  70% {
 	    transform: translate3d(-4px, 0, 0);
 	  }
-	
+
 	  40%,
 	  60% {
 	    transform: translate3d(4px, 0, 0);
 	  }
 	}
-	
+
 	@keyframes gradientAnimation {
 	  0% {
 	    background-position: 0% 50%;

@@ -1,5 +1,5 @@
 <template>
-	<view class="content">
+	<view class="content" v-dark>
 			<div class="articles">
 				<uni-collapse accordion>
 				    <uni-collapse-item class="titleOuter" v-for="item in articles" :key="item.article_id"
@@ -10,7 +10,7 @@
                                 <el-tag type="danger" v-if="item.hasWriterModify == true"
                                     style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">有未发布的编辑</el-tag>
                                 <i class="el-icon-loading" v-if="item.isCheckingStatus"
-                                    style="margin-left:10rpx; color:#444444;"></i>
+                                    style="margin-left:10rpx; color:var(--text-color-primary);"></i>
 							</div>
 							<div class="miniTitle">
                                 <div v-if="item.hasWriterModify">
@@ -23,7 +23,7 @@
 							</div>
 						</template>
 						<view class="menuContent">
-							<div class="subTitle" @click="restoreArticle(item.article_id)"> 
+							<div class="subTitle" @click="restoreArticle(item.article_id)">
 								<uni-icons type="loop" size="20" color="rgb(113, 52, 24)"/>
 								<span>恢复</span>
 							</div>
@@ -89,15 +89,15 @@ export default{
 		    var year_month_day = utc_datetime.substr(0,T_pos);
 		    var hour_minute_second = utc_datetime.substr(T_pos+1,Z_pos-T_pos-1);
 		    var new_datetime = year_month_day+" "+hour_minute_second; // 2017-03-31 08:02:06
-		
+
 		    // 处理成为时间戳
 		    let timestamp = new Date(Date.parse(new_datetime));
 		    timestamp = timestamp.getTime();
 		    timestamp = timestamp/1000;
-		
+
 		    // 增加8个小时，北京时间比utc时间多八个时区
 		    timestamp = timestamp+8*60*60;
-		
+
 		    // 时间戳转为时间
 		    var beijing_datetime = new Date(parseInt(timestamp) * 1000).toLocaleString("chinese", { hour12: false }).replace(/年|月/g, "-").replace(/日/g, " ");
 		    return beijing_datetime; // 2017-03-31 16:02:06
@@ -106,7 +106,7 @@ export default{
 			this.resolveCurrentUserId();
 			const uid = this.uid;
 			let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
-			axios.get(this.$baseUrl + '/essays/get_articles_deleted?id=' + uid, 
+			axios.get(this.$baseUrl + '/essays/get_articles_deleted?id=' + uid,
 			{
 				headers: {
 					'Content-Type': 'application/json', //设置请求头请求格式为JSON
@@ -253,7 +253,7 @@ export default{
                         } catch(e) {
                             // ignore parse error
                         }
-                        
+
                         // Set sort time
                         const y = writerArticle.create_time.substring(0, 4);
                         const m = writerArticle.create_time.substring(4, 6);
@@ -265,7 +265,7 @@ export default{
                     }
 				}
 			}
-            
+
             // 如果没有writer记录或者内容一致，则使用update_time作为排序依据
             if(!article.sort_time) {
                 // utc2beijing returns string, we need raw timestamp
@@ -300,9 +300,9 @@ export default{
 								icon: 'none',
 								duration: 2000
 							});
-							
+
 							_this.refreshPage();
-			
+
 						})
 						.catch(function(error) {
 							console.log(error);
@@ -349,7 +349,7 @@ export default{
 								icon: 'none',
 								duration: 2000
 							});
-							
+
 							_this.refreshPage();
 
 						})
@@ -384,10 +384,10 @@ export default{
 			line-height: 80rpx;
 			height:80rpx;
 			text-align:center;
-			background-color: rgb(255, 242, 217);
+			background-color: var(--card-background);
 			border-bottom: #bec3ca 1px solid;
 			font-size: 35rpx;
-			color:rgb(113, 52, 24);
+			color:var(--accent-text-color);
 			span{
 				margin-left: 10rpx;
 			}
@@ -399,16 +399,16 @@ export default{
 		}
 	}
 	.titleOuter{
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 	}
-	
+
 	.title{
 		margin-top: 20rpx;
 		padding-left:35rpx;
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 		font-size: 35rpx;
 		font-weight: bold;
-		color:rgb(113, 52, 24);
+		color:var(--accent-text-color);
 		line-height: 35rpx;
 		.draft{
 			font-size: 28rpx;
@@ -416,33 +416,33 @@ export default{
 			color:rgb(195, 0, 0);
 		}
 	}
-	
+
 	.title.last{
 		margin-bottom: 20rpx;
 	}
-	
+
 	.miniTitle{
 		padding-left:35rpx;
 		font-size: 30rpx;
-		color:rgb(134, 133, 132);
+		color:var(--text-color-regular);
 		line-height: 50rpx;
 		margin-bottom: 10rpx;
 	}
-	
+
 	.content {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		flex-flow: wrap;
-		background-color: rgb(255,248,234);
+		background-color: var(--card-background);
 		width:100vw;
 		.articles{
 			width:100%;
 			.article{
-				border-bottom: #cacaca 1rpx solid;
+				border-bottom: var(--border-color) 1rpx solid;
 			}
-			
+
 		}
 		div.underBar{
 			height: 150rpx

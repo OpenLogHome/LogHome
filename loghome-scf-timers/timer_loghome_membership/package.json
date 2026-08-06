@@ -1,0 +1,11 @@
+{
+  "name": "timer_loghome_membership",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=12"
+  },
+  "dependencies": {
+    "mysql": "^2.18.1"
+  }
+}

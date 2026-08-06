@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<el-result title="啊哦，这个版本有些过于古老了..." subTitle="你可以继续使用，但是我们无法确保这个版本能跑">
 		  <template slot="icon">
 		    <img src="../../static/images/creeper.png" style="height:300rpx;"></img>
@@ -38,4 +38,23 @@
 </script>
 
 <style scoped lang="scss">
+	.outer {
+		min-height: 100vh;
+		background: var(--background-color-secondary);
+		color: var(--text-color-primary);
+	}
+
+	.outer.dark-mode ::v-deep .el-result__title p {
+		color: var(--text-color-primary);
+	}
+
+	.outer.dark-mode ::v-deep .el-result__subtitle p {
+		color: var(--text-color-regular);
+	}
+
+	.outer.dark-mode ::v-deep .el-button--default {
+		color: var(--text-color-primary);
+		background: var(--card-background);
+		border-color: var(--border-color);
+	}
 </style>

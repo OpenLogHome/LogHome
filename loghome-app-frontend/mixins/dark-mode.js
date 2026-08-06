@@ -8,7 +8,7 @@ export default {
   },
   methods: {
     toggleDarkMode() {
-      this.$store.commit('updateDarkMode', !this.isDarkMode)
+      getApp().toggleTheme()
     }
   }
-} 
+}

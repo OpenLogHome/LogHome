@@ -1,5 +1,5 @@
 <template>
-	<view class="page" v-dark :style="{ '--statusBarHeight': 0 + 'px' }">
+	<view class="page" v-dark>
 		<zetank-backBar
 			:bgColor="backBarBgColor"
 			:textcolor="backBarTextColor"
@@ -887,7 +887,7 @@ export default {
 
 .medal-hero {
 	position: relative;
-	padding: 120rpx 0 80rpx;
+	padding: calc(120rpx + var(--loghome-safe-top, 0px)) 0 80rpx;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;

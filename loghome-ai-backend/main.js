@@ -107,7 +107,7 @@ app.get('/healthz', (req, res) => {
 	});
 });
 
-app.post('/library/reader_novel_ai_chat_stream', async (req, res) => {
+app.post('/library/reader_novel_ai_chat_stream', requireUser, async (req, res) => {
 	return handleReaderNovelChatTaskStream(req, res);
 });
 

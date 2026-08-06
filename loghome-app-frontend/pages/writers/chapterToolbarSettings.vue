@@ -1,6 +1,7 @@
 <template>
   <div
     class="toolbarSettingsPage"
+    v-dark
     :class="{ sortingActive: isTouchDragging }"
     :style="{ '--settingsStatusBarHeight': statusBarHeight + 'px' }"
   >
@@ -9,7 +10,7 @@
         <button class="backButton" @click="goBack">
           <i class="el-icon-arrow-left"></i>
         </button>
-        <div class="pageTitle">自定义工具栏</div>
+        <div class="pageTitle">编辑器快捷设置</div>
         <div class="headerSpacer"></div>
       </div>
       <div class="tabRow">
@@ -27,6 +28,14 @@
           @click="activeTab = 'keyboard'"
         >
           <span class="tabLabel">键盘工具</span>
+          <span class="tabIndicator"></span>
+        </button>
+        <button
+          class="tabButton"
+          :class="{ active: activeTab === 'capsule' }"
+          @click="activeTab = 'capsule'"
+        >
+          <span class="tabLabel">悬浮胶囊</span>
           <span class="tabIndicator"></span>
         </button>
       </div>
@@ -60,7 +69,7 @@
         </div>
       </div>
 
-      <div class="previewCard" v-else>
+      <div class="previewCard" v-else-if="activeTab === 'keyboard'">
         <div class="keyboardPreviewBar">
           <button
               v-for="item in selectedKeyboardTools"
@@ -89,6 +98,23 @@
           </button>
           <div v-if="!selectedKeyboardTools.length" class="emptyKeyboardPreview">
             暂无键盘工具
+          </div>
+        </div>
+      </div>
+
+      <div class="previewCard" v-else>
+        <div class="capsulePreviewBar">
+          <div
+            v-for="capsule in selectedStatusCapsules"
+            :key="capsule.id"
+            class="capsulePreviewItem"
+          >
+            <i v-if="capsule.id === 'writingSpeed'" class="el-icon-odometer"></i>
+            <i v-else :class="capsule.iconClass"></i>
+            <span>{{ capsule.previewText }}</span>
+          </div>
+          <div v-if="!selectedStatusCapsules.length" class="emptyKeyboardPreview">
+            暂无悬浮胶囊
           </div>
         </div>
       </div>
@@ -188,7 +214,7 @@
         </div>
       </template>
 
-      <template v-else>
+      <template v-else-if="activeTab === 'keyboard'">
         <div class="sectionTitle">功能</div>
         <div class="allToolsGrid">
           <button
@@ -246,6 +272,27 @@
                 {{ getQuickInputDisplayText(tool) }}
               </span>
               <i v-else class="toolIcon" :class="tool.iconClass"></i>
+            </div>
+            <div class="toolLabel">{{ tool.label }}</div>
+          </button>
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="sectionTitle">点击添加悬浮胶囊</div>
+        <div class="allToolsGrid">
+          <button
+            v-for="tool in allStatusCapsules"
+            :key="tool.id"
+            class="allToolItem"
+            :class="{ added: isToolSelected(tool), disabled: isToolSelected(tool) }"
+            @click="handleAvailableToolClick(tool)"
+          >
+            <span class="addBadge">
+              <i :class="isToolSelected(tool) ? 'el-icon-check' : 'el-icon-plus'"></i>
+            </span>
+            <div class="toolIconBubble">
+              <i class="toolIcon" :class="tool.iconClass"></i>
             </div>
             <div class="toolLabel">{{ tool.label }}</div>
           </button>
@@ -386,6 +433,12 @@ const TOOL_DEFINITIONS = {
     label: "自动排版",
     iconClass: "el-icon-magic-stick",
   },
+  findReplace: {
+    id: "findReplace",
+    action: "findReplace",
+    label: "查找替换",
+    iconClass: "el-icon-search",
+  },
   undo: {
     id: "undo",
     action: "undo",
@@ -404,6 +457,12 @@ const TOOL_DEFINITIONS = {
     label: "发布作品",
     iconClass: "el-icon-s-promotion",
   },
+  preview: {
+    id: "preview",
+    action: "preview",
+    label: "阅读预览",
+    iconClass: "el-icon-view",
+  },
   writerAi: {
     id: "writerAi",
     action: "writerAi",
@@ -419,27 +478,57 @@ const TOOL_DEFINITIONS = {
   shortcutSettings: {
     id: "shortcutSettings",
     action: "shortcutSettings",
-    label: "快捷栏设置",
+    label: "快捷设置",
     iconClass: "el-icon-s-operation",
   },
 };
 
 const DEFAULT_NAV_TOOL_IDS = [
+  "publish",
+  "preview",
   "upload",
   "format",
+  "findReplace",
   "undo",
   "redo",
-  "publish",
   "writerAi",
   "settings",
   "shortcutSettings",
 ];
 
-const DEFAULT_NAV_SHORTCUT_TOOL_IDS = ["undo", "redo", "format", "writerAi"];
+const DEFAULT_NAV_SHORTCUT_TOOL_IDS = [
+  "publish",
+  "undo",
+  "redo",
+  "format",
+  "writerAi",
+];
 const DEFAULT_KEYBOARD_SHORTCUT_ITEMS = DEFAULT_QUICK_INPUTS.map((item) => ({
   type: "quickInput",
   id: item.id,
 }));
+const STATUS_CAPSULE_DEFINITIONS = {
+  wordCount: {
+    id: "wordCount",
+    label: "字数胶囊",
+    iconClass: "el-icon-document",
+    previewText: "1,268 字 | 2 图",
+  },
+  sync: {
+    id: "sync",
+    label: "同步胶囊",
+    iconClass: "el-icon-refresh",
+    previewText: "已同步",
+  },
+  writingSpeed: {
+    id: "writingSpeed",
+    label: "码字速度",
+    iconClass: "el-icon-odometer",
+    previewText: "36 字/分钟",
+  },
+};
+const DEFAULT_STATUS_CAPSULE_IDS = ["wordCount", "sync"];
+const MAX_STATUS_CAPSULES = Object.keys(STATUS_CAPSULE_DEFINITIONS).length;
 const MAX_NAV_SHORTCUTS = DEFAULT_NAV_TOOL_IDS.length;
 const MAX_KEYBOARD_TOOLS = 16;
 const NAV_LEFT_RESERVED_WIDTH = 44;
@@ -534,7 +623,7 @@ function normalizeToolIds(rawIds, defaults) {
 
   if (Array.isArray(rawIds)) rawIds.forEach(pushIfValid);
   defaults.forEach(pushIfValid);
-  return ids;
+  return ["publish", ...ids.filter((id) => id !== "publish")];
 }
 
 function normalizeSelectedToolIds(rawIds, defaults) {
@@ -553,6 +642,18 @@ function normalizeSelectedToolIds(rawIds, defaults) {
 
   defaults.forEach(pushIfValid);
   return ids;
+}
+
+function normalizeStatusCapsuleIds(rawIds) {
+  const sourceIds = Array.isArray(rawIds)
+    ? rawIds
+    : DEFAULT_STATUS_CAPSULE_IDS;
+  return sourceIds
+    .map((id) => String(id || ""))
+    .filter((id, index, ids) => {
+      return STATUS_CAPSULE_DEFINITIONS[id] && ids.indexOf(id) === index;
+    })
+    .slice(0, MAX_STATUS_CAPSULES);
 }
 
 function getViewportWidth() {
@@ -621,9 +722,11 @@ function normalizeKeyboardShortcutItems(rawItems, quickInputs) {
   return items.slice(0, MAX_KEYBOARD_TOOLS);
 }
 
+const WRITER_SETTINGS_VERSION = 26080101;
+
 function createDefaultWriterSettings() {
   return {
-    version: 26060401,
+    version: WRITER_SETTINGS_VERSION,
     showSymbols: true,
     font: "default",
     fontSize: 35,
@@ -635,15 +738,20 @@ function createDefaultWriterSettings() {
     navToolIds: DEFAULT_NAV_TOOL_IDS.slice(),
     navShortcutToolIds: DEFAULT_NAV_SHORTCUT_TOOL_IDS.slice(),
     keyboardShortcutItems: DEFAULT_KEYBOARD_SHORTCUT_ITEMS.slice(),
+    statusCapsuleIds: DEFAULT_STATUS_CAPSULE_IDS.slice(),
   };
 }
 
 function normalizeWriterSettings(rawSettings) {
   const parsed = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
+  const shouldAddDefaultPublishShortcut =
+    Number(parsed.version || 0) < WRITER_SETTINGS_VERSION &&
+    Array.isArray(parsed.navShortcutToolIds) &&
+    !parsed.navShortcutToolIds.includes("publish");
   const settings = {
     ...createDefaultWriterSettings(),
     ...parsed,
-    version: 26060401,
+    version: WRITER_SETTINGS_VERSION,
   };
 
   settings.quickInputs = normalizeQuickInputs(settings.quickInputs);
@@ -651,11 +759,19 @@ function normalizeWriterSettings(rawSettings) {
   settings.navShortcutToolIds = normalizeSelectedToolIds(
     settings.navShortcutToolIds,
     DEFAULT_NAV_SHORTCUT_TOOL_IDS
-  ).slice(0, MAX_NAV_SHORTCUTS);
+  );
+  if (shouldAddDefaultPublishShortcut) {
+    settings.navShortcutToolIds.unshift("publish");
+  }
+  settings.navShortcutToolIds = settings.navShortcutToolIds.slice(
+    0,
+    MAX_NAV_SHORTCUTS
+  );
   settings.keyboardShortcutItems = normalizeKeyboardShortcutItems(
     settings.keyboardShortcutItems,
     settings.quickInputs
   );
+  settings.statusCapsuleIds = normalizeStatusCapsuleIds(settings.statusCapsuleIds);
   delete settings.hiddenNavToolIds;
   delete settings.keyboardToolIds;
   return settings;
@@ -743,10 +859,22 @@ export default {
         })
         .filter(Boolean);
     },
+    allStatusCapsules() {
+      return Object.values(STATUS_CAPSULE_DEFINITIONS).map((item) => ({ ...item }));
+    },
+    selectedStatusCapsuleIds() {
+      return normalizeStatusCapsuleIds(this.writerSettings.statusCapsuleIds);
+    },
+    selectedStatusCapsules() {
+      return this.selectedStatusCapsuleIds
+        .map((id) => STATUS_CAPSULE_DEFINITIONS[id])
+        .filter(Boolean)
+        .map((item) => ({ ...item }));
+    },
     selectedTools() {
-      return this.activeTab === "nav"
-        ? this.selectedNavTools
-        : this.selectedKeyboardTools;
+      if (this.activeTab === "nav") return this.selectedNavTools;
+      if (this.activeTab === "keyboard") return this.selectedKeyboardTools;
+      return this.selectedStatusCapsules;
     },
     isSortingActive() {
       return this.isTouchDragging || this.draggingIndex >= 0;
@@ -758,10 +886,14 @@ export default {
       };
     },
     selectedLimit() {
-      return this.activeTab === "nav" ? this.navShortcutLimit : MAX_KEYBOARD_TOOLS;
+      if (this.activeTab === "nav") return this.navShortcutLimit;
+      if (this.activeTab === "keyboard") return MAX_KEYBOARD_TOOLS;
+      return MAX_STATUS_CAPSULES;
     },
     selectedLimitText() {
-      return this.activeTab === "nav" ? String(this.navShortcutLimit) : "不限";
+      if (this.activeTab === "nav") return String(this.navShortcutLimit);
+      if (this.activeTab === "keyboard") return "不限";
+      return String(MAX_STATUS_CAPSULES);
     },
     availableTools() {
       if (this.activeTab === "nav") {
@@ -780,7 +912,9 @@ export default {
     },
   },
   onLoad(params = {}) {
-    this.activeTab = params.tab === "keyboard" ? "keyboard" : "nav";
+    this.activeTab = ["nav", "keyboard", "capsule"].includes(params.tab)
+      ? params.tab
+      : "nav";
     this.updateStatusBarHeight();
     this.loadSettings();
     if (typeof window !== "undefined") {
@@ -809,11 +943,16 @@ export default {
     updateStatusBarHeight() {
       this.viewportWidth = getViewportWidth();
       try {
-        const info =
+        const nativeStatusBarHeight = Number(
+          typeof window !== "undefined" && window.jsBridge
+            ? window.jsBridge.statusBarHeight
+            : 0
+        ) || 0;
+        const info = !nativeStatusBarHeight &&
           typeof uni !== "undefined" && typeof uni.getSystemInfoSync === "function"
             ? uni.getSystemInfoSync()
             : {};
-        this.statusBarHeight = Number(info.statusBarHeight) || 0;
+        this.statusBarHeight = nativeStatusBarHeight || Number(info.statusBarHeight) || 0;
       } catch (error) {
         this.statusBarHeight = 0;
       }
@@ -857,6 +996,9 @@ export default {
       if (this.activeTab === "nav") {
         return this.selectedNavToolIds.includes(tool.id);
       }
+      if (this.activeTab === "capsule") {
+        return this.selectedStatusCapsuleIds.includes(tool.id);
+      }
       const key = this.getSelectableKey(tool);
       return this.selectedKeyboardTools.some((item) => item.itemKey === key);
     },
@@ -875,7 +1017,12 @@ export default {
       }
       if (this.selectedTools.length >= this.selectedLimit) {
         uni.showToast({
-          title: this.activeTab === "nav" ? "顶部导航最多添加4个" : "键盘工具已达上限",
+          title:
+            this.activeTab === "nav"
+              ? `顶部导航最多添加${this.navShortcutLimit}个`
+              : this.activeTab === "capsule"
+                ? `最多添加${MAX_STATUS_CAPSULES}个悬浮胶囊`
+                : "键盘工具已达上限",
           icon: "none",
           duration: 1600,
         });
@@ -884,6 +1031,11 @@ export default {
       if (this.activeTab === "nav") {
         this.writerSettings.navShortcutToolIds = [
           ...this.selectedNavToolIds,
+          tool.id,
+        ];
+      } else if (this.activeTab === "capsule") {
+        this.writerSettings.statusCapsuleIds = [
+          ...this.selectedStatusCapsuleIds,
           tool.id,
         ];
       } else {
@@ -964,6 +1116,10 @@ export default {
         const nextIds = this.selectedNavToolIds.slice();
         nextIds.splice(index, 1);
         this.writerSettings.navShortcutToolIds = nextIds;
+      } else if (this.activeTab === "capsule") {
+        const nextIds = this.selectedStatusCapsuleIds.slice();
+        nextIds.splice(index, 1);
+        this.writerSettings.statusCapsuleIds = nextIds;
       } else {
         const nextItems = normalizeKeyboardShortcutItems(
           this.writerSettings.keyboardShortcutItems,
@@ -989,6 +1145,11 @@ export default {
         const [item] = nextIds.splice(fromIndex, 1);
         nextIds.splice(toIndex, 0, item);
         this.writerSettings.navShortcutToolIds = nextIds;
+      } else if (this.activeTab === "capsule") {
+        const nextIds = this.selectedStatusCapsuleIds.slice();
+        const [item] = nextIds.splice(fromIndex, 1);
+        nextIds.splice(toIndex, 0, item);
+        this.writerSettings.statusCapsuleIds = nextIds;
       } else {
         const nextItems = normalizeKeyboardShortcutItems(
           this.writerSettings.keyboardShortcutItems,
@@ -1187,6 +1348,8 @@ export default {
     resetCurrentTab() {
       if (this.activeTab === "nav") {
         this.writerSettings.navShortcutToolIds = DEFAULT_NAV_SHORTCUT_TOOL_IDS.slice();
+      } else if (this.activeTab === "capsule") {
+        this.writerSettings.statusCapsuleIds = DEFAULT_STATUS_CAPSULE_IDS.slice();
       } else {
         this.writerSettings.keyboardShortcutItems = DEFAULT_KEYBOARD_SHORTCUT_ITEMS.slice();
       }
@@ -1276,9 +1439,29 @@ export default {
 
 <style scoped lang="less">
 .toolbarSettingsPage {
+  --settings-primary: #ea7034;
+  --settings-primary-soft: #fff1e8;
+  --settings-page-bg: #faf7f3;
+  --settings-surface: #ffffff;
+  --settings-icon-bg: #f7f1eb;
+  --settings-text: #332a25;
+  --settings-text-secondary: #74685f;
+  --settings-text-muted: #a3978d;
+  --settings-border: #e8ded5;
   min-height: 100vh;
-  color: #26313d;
-  background: #f4f7fb;
+  color: var(--settings-text);
+  background: var(--settings-page-bg);
+}
+
+.toolbarSettingsPage.dark-mode {
+  --settings-primary-soft: rgba(234, 112, 52, 0.16);
+  --settings-page-bg: var(--background-color-secondary);
+  --settings-surface: var(--card-background);
+  --settings-icon-bg: var(--background-color-tertiary);
+  --settings-text: var(--text-color-primary);
+  --settings-text-secondary: var(--text-color-regular);
+  --settings-text-muted: var(--text-color-secondary);
+  --settings-border: var(--border-color);
 }
 
 .toolbarSettingsPage.sortingActive {
@@ -1306,8 +1489,8 @@ button {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: #f4f7fb;
-  border-bottom: 1rpx solid #dce3eb;
+  background: var(--settings-page-bg);
+  border-bottom: 1rpx solid var(--settings-border);
 }
 
 .navRow {
@@ -1337,7 +1520,7 @@ button {
 
 .tabRow {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   height: 86rpx;
 }
 
@@ -1348,10 +1531,11 @@ button {
   justify-content: center;
   height: 86rpx;
   font-size: 31rpx;
-  color: #3b4652;
+  color: var(--settings-text-secondary);
 }
 
 .tabButton.active {
+  color: var(--settings-text);
   font-weight: 700;
 }
 
@@ -1368,7 +1552,7 @@ button {
   height: 7rpx;
   opacity: 0;
   border-radius: 999rpx;
-  background: #2d83dd;
+  background: var(--settings-primary);
   transform: translateX(-50%) scaleX(0.7);
   transform-origin: center;
   transition: opacity 0.16s ease, transform 0.16s ease;
@@ -1388,9 +1572,9 @@ button {
 .selectedGrid,
 .allToolsGrid {
   margin: 34rpx 32rpx 0;
-  background: #ffffff;
+  background: var(--settings-surface);
   border-radius: 8rpx;
-  box-shadow: 0 12rpx 30rpx rgba(45, 72, 103, 0.08);
+  box-shadow: 0 12rpx 30rpx rgba(112, 72, 45, 0.08);
 }
 
 .previewCard {
@@ -1407,7 +1591,7 @@ button {
 .previewBack {
   flex: 0 0 52rpx;
   font-size: 42rpx;
-  color: #c0c6ce;
+  color: #c9beb5;
 }
 
 .previewActions {
@@ -1427,7 +1611,7 @@ button {
   width: 58rpx;
   height: 58rpx;
   border-radius: 8rpx;
-  background: #f4f5f7;
+  background: var(--settings-icon-bg);
 }
 
 .previewIcon {
@@ -1440,12 +1624,52 @@ button {
   object-fit: contain;
 }
 
+.toolbarSettingsPage.dark-mode .previewImage {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
 .keyboardPreviewBar {
   display: flex;
   min-height: 76rpx;
   overflow-x: auto;
   gap: 8rpx;
   -webkit-overflow-scrolling: touch;
+}
+
+.capsulePreviewBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 76rpx;
+  overflow-x: auto;
+  gap: 10rpx;
+  -webkit-overflow-scrolling: touch;
+}
+
+.capsulePreviewItem {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8rpx;
+  padding: 9rpx 16rpx;
+  color: #8a6034;
+  background: #fcf8ef;
+  border: 1rpx solid rgba(92, 75, 59, 0.14);
+  border-radius: 999rpx;
+  font-size: 23rpx;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.toolbarSettingsPage.dark-mode .capsulePreviewItem {
+  color: var(--settings-text-secondary);
+  background: var(--settings-icon-bg);
+  border-color: var(--settings-border);
+}
+
+.capsulePreviewItem i {
+  font-size: 25rpx;
 }
 
 .keyboardPreviewButton {
@@ -1458,7 +1682,7 @@ button {
   height: 72rpx;
   padding: 0 14rpx;
   overflow: hidden;
-  color: #26313d;
+  color: var(--settings-text);
   font-size: 30rpx;
   font-weight: 700;
   text-overflow: ellipsis;
@@ -1485,10 +1709,15 @@ button {
   object-fit: contain;
 }
 
+.toolbarSettingsPage.dark-mode .keyboardPreviewImage {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
 .emptyKeyboardPreview {
   display: flex;
   align-items: center;
-  color: #9aa3ad;
+  color: var(--settings-text-muted);
   font-size: 28rpx;
 }
 
@@ -1497,13 +1726,13 @@ button {
   align-items: center;
   justify-content: space-between;
   margin: 32rpx 32rpx 16rpx;
-  color: #6d7682;
+  color: var(--settings-text-secondary);
   font-size: 28rpx;
 }
 
 .countText,
 .restoreButton {
-  color: #2d83dd;
+  color: var(--settings-primary);
   font-weight: 700;
 }
 
@@ -1529,7 +1758,7 @@ button {
 }
 
 .emptySelectedText {
-  color: #9aa3ad;
+  color: var(--settings-text-muted);
   font-size: 28rpx;
 }
 
@@ -1583,17 +1812,17 @@ button {
   height: 34rpx;
   border-radius: 999rpx;
   color: #ffffff;
-  background: #4f5d6b;
+  background: #655b54;
   font-size: 24rpx;
   overflow: visible;
 }
 
 .addBadge {
-  background: #2d83dd;
+  background: var(--settings-primary);
 }
 
 .allToolItem.added .addBadge {
-  background: #94a1ae;
+  background: #b5aaa1;
 }
 
 .allToolItem.disabled {
@@ -1601,12 +1830,12 @@ button {
 }
 
 .allToolItem.creator .toolIconBubble {
-  color: #2d83dd;
-  background: #eef6ff;
+  color: var(--settings-primary);
+  background: var(--settings-primary-soft);
 }
 
 .allToolItem.creator .toolIcon {
-  color: #2d83dd;
+  color: var(--settings-primary);
 }
 
 .toolIconBubble {
@@ -1618,12 +1847,12 @@ button {
   width: 104rpx;
   height: 104rpx;
   border-radius: 999rpx;
-  background: #f5f6f8;
+  background: var(--settings-icon-bg);
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .toolIcon {
-  color: #26313d;
+  color: var(--settings-text);
   font-size: 48rpx;
   line-height: 1;
 }
@@ -1632,7 +1861,7 @@ button {
   display: block;
   max-width: 82rpx;
   overflow: hidden;
-  color: #26313d;
+  color: var(--settings-text);
   font-size: 34rpx;
   font-weight: 700;
   line-height: 104rpx;
@@ -1652,11 +1881,16 @@ button {
   object-fit: contain;
 }
 
+.toolbarSettingsPage.dark-mode .toolImage {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
 .toolLabel {
   max-width: 160rpx;
   margin-top: 14rpx;
   overflow: hidden;
-  color: #68727f;
+  color: var(--settings-text-secondary);
   font-size: 28rpx;
   line-height: 34rpx;
   text-align: center;
@@ -1666,7 +1900,7 @@ button {
 
 .sectionTitle {
   margin: 42rpx 32rpx 16rpx;
-  color: #606b78;
+  color: var(--settings-text-secondary);
   font-size: 28rpx;
 }
 
@@ -1687,22 +1921,22 @@ button {
 }
 
 .dragGhost .toolIconBubble {
-  background: #ffffff;
-  box-shadow: 0 20rpx 48rpx rgba(29, 52, 77, 0.24);
+  background: var(--settings-surface);
+  box-shadow: 0 20rpx 48rpx rgba(89, 52, 29, 0.22);
   transform: scale(1.08);
 }
 
 .dragGhost .toolLabel {
-  color: #26313d;
+  color: var(--settings-text);
   font-weight: 700;
 }
 
 .quickInputDrawer {
   box-sizing: border-box;
   width: 100vw;
-  padding: 26rpx 28rpx calc(32rpx + env(safe-area-inset-bottom));
-  color: #26313d;
-  background: #ffffff;
+  padding: 26rpx 28rpx calc(32rpx + var(--loghome-safe-bottom, 0px));
+  color: var(--settings-text);
+  background: var(--settings-surface);
   border-top-left-radius: 8rpx;
   border-top-right-radius: 8rpx;
 }
@@ -1735,8 +1969,12 @@ button {
   gap: 12rpx;
   margin: 22rpx 0 18rpx;
   padding: 6rpx;
-  background: #f1f4f7;
+  background: #f3ece6;
   border-radius: 8rpx;
+}
+
+.toolbarSettingsPage.dark-mode .inputTypeSwitch {
+  background: var(--settings-icon-bg);
 }
 
 .inputTypeOption {
@@ -1744,7 +1982,7 @@ button {
   align-items: center;
   justify-content: center;
   height: 64rpx;
-  color: #68727f;
+  color: var(--settings-text-secondary);
   border-radius: 6rpx;
   font-size: 28rpx;
   line-height: normal;
@@ -1752,9 +1990,9 @@ button {
 }
 
 .inputTypeOption.active {
-  color: #26313d;
-  background: #ffffff;
-  box-shadow: 0 4rpx 12rpx rgba(45, 72, 103, 0.08);
+  color: var(--settings-text);
+  background: var(--settings-surface);
+  box-shadow: 0 4rpx 12rpx rgba(112, 72, 45, 0.08);
 }
 
 .drawerInput {
@@ -1762,12 +2000,16 @@ button {
   height: 76rpx;
   margin-top: 16rpx;
   padding: 0 20rpx;
-  color: #26313d;
-  background: #f8fafc;
-  border: 1rpx solid #dce3eb;
+  color: var(--settings-text);
+  background: #fcfaf8;
+  border: 1rpx solid var(--settings-border);
   border-radius: 8rpx;
   box-sizing: border-box;
   font-size: 28rpx;
+}
+
+.toolbarSettingsPage.dark-mode .drawerInput {
+  background: var(--settings-surface);
 }
 
 .drawerToggleRow {
@@ -1776,7 +2018,7 @@ button {
   justify-content: space-between;
   height: 72rpx;
   margin-top: 12rpx;
-  color: #4f5b68;
+  color: var(--settings-text-secondary);
   font-size: 28rpx;
 }
 
@@ -1785,8 +2027,12 @@ button {
   width: 84rpx;
   height: 46rpx;
   border-radius: 999rpx;
-  background: #d6dde5;
+  background: #ddd3ca;
   transition: background 0.16s ease;
+}
+
+.toolbarSettingsPage.dark-mode .drawerSwitch {
+  background: var(--settings-border);
 }
 
 .drawerSwitch span {
@@ -1796,13 +2042,13 @@ button {
   width: 36rpx;
   height: 36rpx;
   border-radius: 999rpx;
-  background: #ffffff;
-  box-shadow: 0 3rpx 8rpx rgba(37, 54, 71, 0.18);
+  background: var(--settings-surface);
+  box-shadow: 0 3rpx 8rpx rgba(83, 57, 38, 0.18);
   transition: transform 0.16s ease;
 }
 
 .drawerSwitch.active {
-  background: #2d83dd;
+  background: var(--settings-primary);
 }
 
 .drawerSwitch.active span {
@@ -1817,7 +2063,7 @@ button {
   height: 78rpx;
   margin-top: 24rpx;
   color: #ffffff;
-  background: #2d83dd;
+  background: var(--settings-primary);
   border-radius: 8rpx;
   font-size: 30rpx;
   font-weight: 700;

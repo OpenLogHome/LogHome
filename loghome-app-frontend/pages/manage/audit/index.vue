@@ -1,5 +1,5 @@
 <template>
-	<view class="container">		
+	<view class="container" v-dark>
 		<view class="content">
 			<view class="pagination" v-if="totalPages > 0">
 				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
@@ -21,13 +21,13 @@
 					</view>
 				</view>
 			</view>
-			
+
 			<view class="pagination" v-if="totalPages > 0">
 				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
 				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
 			</view>
-			
+
 			<view class="no-data" v-if="articles.length === 0">
 				暂无待审核文章
 			</view>
@@ -67,7 +67,7 @@ export default {
 					}
 				})
 				this.totalPages = Math.ceil(countRes.data[0].count / this.pageSize)
-				
+
 				// 获取列表
 				const res = await axios.get(this.$baseUrl + '/manage/audit/get_articles_to_audit', {
 					params: {
@@ -113,7 +113,7 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-	background-color: #f2f2f2;
+	background-color: var(--background-color-secondary);
 	min-height: 100vh;
 }
 
@@ -123,21 +123,21 @@ export default {
 
 .article-list {
 	.article-item {
-		background: #fff;
+		background: var(--card-background);
 		padding: 15rpx;
 		margin-bottom: 20rpx;
 		border-radius: 10rpx;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		
+
 		.article-main {
 			display: flex;
 			align-items: center;
 			margin-bottom: 10rpx;
 			flex: 1;
 			min-width: 0;
-			
+
 			.article-title {
 				font-size: 32rpx;
 				font-weight: bold;
@@ -146,23 +146,23 @@ export default {
 				text-overflow: ellipsis;
 				max-width: 70%;
 			}
-			
+
 			.article-info {
 				font-size: 26rpx;
-				color: #666;
+				color: var(--text-color-regular);
 				margin-left: 20rpx;
 				flex-shrink: 0;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				max-width: 40%;
-				
+
 				.novel-name {
 					margin-right: 20rpx;
 				}
 			}
 		}
-		
+
 		.article-status {
 			flex-shrink: 0;
 			padding: 4rpx 20rpx;
@@ -171,7 +171,7 @@ export default {
 			color: #fff;
 			background-color: #999;
 			margin-left: 15rpx;
-			
+
 			&.低质灌水 { background-color: #ff9800; }
 			&.暴恐违禁 { background-color: #f44336; }
 			&.文本色情 { background-color: #e91e63; }
@@ -182,7 +182,7 @@ export default {
 	}
 
 	.article-item:active {
-		background-color: #f2f2f2;
+		background-color: var(--background-color-secondary);
 	}
 }
 
@@ -191,27 +191,27 @@ export default {
 	justify-content: center;
 	align-items: center;
 	margin: 30rpx 0;
-	
+
 	.page-btn {
 		padding: 10rpx 30rpx;
-		background: #fff;
+		background: var(--card-background);
 		border-radius: 30rpx;
 		margin: 0 20rpx;
-		
+
 		&.disabled {
-			color: #999;
+			color: var(--text-color-secondary);
 		}
 	}
-	
+
 	.page-num {
 		font-size: 28rpx;
-		color: #666;
+		color: var(--text-color-regular);
 	}
 }
 
 .no-data {
 	text-align: center;
-	color: #999;
+	color: var(--text-color-secondary);
 	margin-top: 100rpx;
 }
-</style> 
+</style>

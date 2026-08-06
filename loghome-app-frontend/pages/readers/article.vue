@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="lost" v-show="lostArticle">
 			<img src="../../static/faces/sad.png" alt="" class="icon"/>
 			<p class="des">哎呀，章节走丢了...</p>
@@ -65,6 +65,10 @@
 
 <style lang="scss" scoped>
 	.outer {
+		min-height: 100vh;
+		background: var(--background-color-secondary);
+		color: var(--text-color-primary);
+
 		.lost {
 			height: calc(100vh - 44px);
 			display: flex;

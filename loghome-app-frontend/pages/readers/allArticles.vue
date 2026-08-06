@@ -1,7 +1,15 @@
 <template>
 	<view class="content" v-dark>
-		<nothing :msg="'这本书还没有章节哦\n快去评论区催更~'" v-show="articles.length == 0"></nothing>
-		<div class="articles" ref="articlesContainer">
+		<div class="articles-skeleton" v-if="isLoading" aria-label="章节加载中">
+			<div class="skeleton-volume-header">
+				<div class="skeleton-block skeleton-volume-title"></div>
+			</div>
+			<div class="skeleton-chapter" v-for="index in 8" :key="index">
+				<div class="skeleton-block skeleton-chapter-title" :class="`skeleton-width-${index % 3}`"></div>
+			</div>
+		</div>
+		<nothing :msg="'这本书还没有章节哦\n快去评论区催更~'" v-else-if="articles.length == 0"></nothing>
+		<div class="articles" ref="articlesContainer" v-else>
 			<div class="volume" v-for="(volume, vIndex) in volumeList" :key="vIndex">
 				<div class="volume-header" @click="toggleVolume(vIndex)" v-if="volumeList.length > 1 || volume.title !== '正文'">
 					<div class="volume-title">{{ volume.title }}</div>
@@ -42,14 +50,13 @@ export default{
 			articles:[],
 			volumeList: [],
 			lastReadChapter: null,
-			isLastReadVisible: true
+			isLastReadVisible: true,
+			isLoading: true
 		}
 	},
 	onLoad(option){
-		uni.showLoading({
-			title: '努力加载中'
-		});
 		if(JSON.stringify(option) == "{}"){
+			this.isLoading = false;
 			uni.showToast({
 				title: "undefined",
 				icon:'none',
@@ -75,8 +82,8 @@ export default{
 				icon:'none',
 				duration: 2000
 			});
-		}).then(function(){
-			uni.hideLoading();
+		}).then(() => {
+			this.isLoading = false;
 		})
 	},
 	onPageScroll(e) {
@@ -85,7 +92,7 @@ export default{
 	methods: {
 		getReaderUrl(articleId) {
 			const readerProps = window.localStorage.getItem("readerProps");
-			const isPageReader = readerProps === "page";
+			const isPageReader = readerProps !== "text";
 			let url = isPageReader
 				? `/pages/readers/newReader/article?id=${articleId}`
 				: `/pages/readers/article_rich?id=${articleId}`;
@@ -252,8 +259,89 @@ export default{
 				}
 			}
 		}
+
+		.articles-skeleton {
+			width: 100%;
+			background-color: #ffffff;
+
+			.skeleton-volume-header {
+				height: 80rpx;
+				padding: 0 35rpx;
+				display: flex;
+				align-items: center;
+				background-color: #f8f8f8;
+				border-bottom: 1rpx solid #eeeeee;
+			}
+
+			.skeleton-chapter {
+				height: 100rpx;
+				padding: 0 35rpx;
+				display: flex;
+				align-items: center;
+				border-bottom: 1rpx solid #eeeeee;
+				box-sizing: border-box;
+			}
+
+			.skeleton-block {
+				position: relative;
+				overflow: hidden;
+				border-radius: 8rpx;
+				background-color: #eeeeee;
+
+				&::after {
+					content: '';
+					position: absolute;
+					top: 0;
+					left: -100%;
+					width: 100%;
+					height: 100%;
+					background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+					animation: skeleton-shimmer 1.4s ease-in-out infinite;
+				}
+			}
+
+			.skeleton-volume-title {
+				width: 180rpx;
+				height: 28rpx;
+			}
+
+			.skeleton-chapter-title {
+				width: 62%;
+				height: 32rpx;
+			}
+
+			.skeleton-width-0 { width: 48%; }
+			.skeleton-width-1 { width: 72%; }
+
+			.dark-mode & {
+				background-color: var(--background-color-secondary);
+
+				.skeleton-volume-header,
+				.skeleton-chapter {
+					border-bottom-color: #444444;
+				}
+
+				.skeleton-volume-header {
+					background-color: #333333;
+				}
+
+				.skeleton-block {
+					background-color: #444444;
+
+					&::after {
+						background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+					}
+				}
+			}
+		}
 		div.underBar{
 			height: 150rpx
+		}
+	}
+
+	@keyframes skeleton-shimmer {
+		100% {
+			left: 100%;
 		}
 	}
 	.jump-button{

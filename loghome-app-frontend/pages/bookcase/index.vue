@@ -1,6 +1,5 @@
 <template>
-	<view class="content" v-dark
-		:style="{'--statusBarHeight': 0 + 'px'}">
+	<view class="content" v-dark>
 		<!-- <div class="tabBarUnder">
 			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"/>
 		</div> -->
@@ -94,7 +93,7 @@
 						let articles = await articleDB.articles.where("novel_id").equals(novel_id).toArray();
 						if(articles.length > 0){
 							const readerProps = window.localStorage.getItem("readerProps");
-							const isPageReader = readerProps === "page";
+							const isPageReader = readerProps !== "text";
 							const url = isPageReader
 								? `../readers/newReader/article?id=${articles[history].article_id}&novelId=${novel_id}`
 								: `../readers/article_rich?id=${articles[history].article_id}`;
@@ -443,7 +442,7 @@
 			left: 0;
 			margin: 0 0rpx;
 			padding: 10rpx 0;
-			padding-top: calc(10rpx + var(--statusBarHeight));
+			padding-top: calc(10rpx + var(--loghome-safe-top, 0px));
 			background-color: rgb(255, 255, 255);
 			display: flex;
 			align-items: center;
@@ -469,7 +468,7 @@
 			opacity: 0;
 			margin: 0 0rpx;
 			padding-top: 5rpx;
-			padding-top: calc(10rpx + var(--statusBarHeight));
+			padding-top: calc(10rpx + var(--loghome-safe-top, 0px));
 			padding-bottom: 5rpx;
 			background-color: rgb(255, 255, 255);
 			height: 75rpx;

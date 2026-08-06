@@ -1,5 +1,5 @@
 <template>
-    <view>
+    <view class="upload-page" v-dark>
 <!-- 		<el-alert
 			title="提示"
 			type="warning"
@@ -82,3 +82,11 @@
         }
     }
 </script>
+
+<style scoped>
+.upload-page {
+    min-height: 100vh;
+    background: var(--background-color-secondary);
+    color: var(--text-color-primary);
+}
+</style>

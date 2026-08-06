@@ -52,6 +52,49 @@ object InjectedScriptBuilder {
 })();
 """
 
+    private const val EARLY_THEME_BOOTSTRAP = """
+(function() {
+    try {
+        function rememberThemeBackground(isDarkMode) {
+            if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                window.flutter_inappwebview
+                    .callHandler("rememberThemeBackground", isDarkMode ? "#252525" : "#ffffff")
+                    .catch(function() {});
+            }
+        }
+
+        const themeMode = window.localStorage && window.localStorage.getItem("themeMode");
+        const isDarkMode = themeMode === "dark";
+        const root = document.documentElement;
+        root.classList.toggle("dark-mode", isDarkMode);
+        root.style.backgroundColor = isDarkMode ? "#121212" : "#ffffff";
+        root.style.colorScheme = isDarkMode ? "dark" : "light";
+
+        const style = document.createElement("style");
+        style.id = "loghome-early-theme";
+        style.textContent =
+            "html.dark-mode,html.dark-mode body,html.dark-mode #app{" +
+            "background-color:#121212!important;color:#e5e5e5;color-scheme:dark;}" +
+            "html.dark-mode .native-preload{background-color:#121212!important;}";
+        document.head.appendChild(style);
+
+        rememberThemeBackground(isDarkMode);
+
+        const storagePrototype = window.Storage && window.Storage.prototype;
+        if (storagePrototype && !storagePrototype.__logHomeThemePatched) {
+            const originalSetItem = storagePrototype.setItem;
+            storagePrototype.setItem = function(key, value) {
+                originalSetItem.apply(this, arguments);
+                if (this === window.localStorage && key === "themeMode") {
+                    rememberThemeBackground(value === "dark");
+                }
+            };
+            storagePrototype.__logHomeThemePatched = true;
+        }
+    } catch (error) {}
+})();
+"""
+
     private const val TREE_SCENE_DIAGNOSTICS = """
 (function() {
     function reportTreeSceneDiagnostics() {
@@ -106,10 +149,19 @@ object InjectedScriptBuilder {
             appendLine("window.jsBridge.statusBarHeight = $statusBarHeightDp;")
             appendLine("window.jsBridge.navigationBarHeight = $navigationBarHeightDp;")
             appendLine("window.jsBridge.appVersion = ${JSONObject.quote(assetVersion)};")
+            appendLine("document.documentElement.classList.add('loghome-edge-to-edge');")
+            appendLine("document.documentElement.style.setProperty('--loghome-native-safe-top', '${statusBarHeightDp}px');")
+            appendLine("document.documentElement.style.setProperty('--loghome-native-safe-bottom', '${navigationBarHeightDp}px');")
         }
 
         sanitizeForInlineScript(
-            listOf(BRIDGE_SHIM, jsBridgeSource, assignments, TREE_SCENE_DIAGNOSTICS).joinToString("\n"),
+            listOf(
+                BRIDGE_SHIM,
+                jsBridgeSource,
+                assignments,
+                EARLY_THEME_BOOTSTRAP,
+                TREE_SCENE_DIAGNOSTICS,
+            ).joinToString("\n"),
         )
     }
 

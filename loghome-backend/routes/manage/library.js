@@ -270,7 +270,11 @@ router.get('/get_novel_articles', auth, async function (req, res) {
 			return res.json(404, { msg: 'novel not found' });
 		}
 		
-		const sql = `SELECT a.* FROM articles a 
+		const sql = `SELECT a.*,
+					(SELECT COUNT(*) FROM articles_writer w WHERE w.article_id = a.article_id) AS draft_count,
+					(SELECT COALESCE(MAX(COALESCE(w.updated_at, STR_TO_DATE(w.create_time, '%Y%m%d%H%i%s'))), NULL)
+					 FROM articles_writer w WHERE w.article_id = a.article_id) AS latest_draft_at
+				   FROM articles a 
 				   WHERE a.novel_id = ? AND a.deleted = 0 
 				   ORDER BY a.article_chapter ASC 
 				   LIMIT ?, ?`;
@@ -310,6 +314,123 @@ router.get('/get_article_detail', auth, async function (req, res) {
 		}
 		
 		res.json(article[0]);
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取作者云端存稿列表（articles_writer，可指定小说/文章/关键词）
+router.get('/get_writer_drafts', auth, async function (req, res) {
+	try {
+		const novelId = Number(req.query.novel_id) || 0;
+		const articleId = Number(req.query.article_id) || 0;
+		const keyword = req.query.keyword ? `%${req.query.keyword}%` : null;
+		const page = parseInt(req.query.page) || 1;
+		const pageSize = parseInt(req.query.pageSize) || 10;
+		const offset = (page - 1) * pageSize;
+
+		let whereClause = 'WHERE 1 = 1';
+		let params = [];
+
+		if (novelId > 0) {
+			whereClause += ' AND w.novel_id = ?';
+			params.push(novelId);
+		}
+
+		if (articleId > 0) {
+			whereClause += ' AND w.article_id = ?';
+			params.push(articleId);
+		}
+
+		if (keyword) {
+			whereClause += ' AND (w.title LIKE ? OR a.title LIKE ? OR u.name LIKE ?)';
+			params.push(keyword, keyword, keyword);
+		}
+
+		const sql = `SELECT w.id, w.article_id, w.title, w.content, w.content_hash,
+					w.create_time, w.updated_at, w.editor_user_id, w.edit_session_id,
+					u.name AS editor_name,
+					a.article_chapter, a.title AS article_title, a.article_type, a.is_draft
+				   FROM articles_writer w
+				   LEFT JOIN users u ON u.user_id = w.editor_user_id
+				   LEFT JOIN articles a ON a.article_id = w.article_id
+				   ${whereClause}
+				   ORDER BY COALESCE(w.updated_at, STR_TO_DATE(w.create_time, '%Y%m%d%H%i%s')) DESC, w.id DESC
+				   LIMIT ?, ?`;
+		const countSql = `SELECT COUNT(*) as total
+						  FROM articles_writer w
+						  LEFT JOIN users u ON u.user_id = w.editor_user_id
+						  LEFT JOIN articles a ON a.article_id = w.article_id
+						  ${whereClause}`;
+
+		const drafts = await query(sql, [...params, offset, pageSize]);
+		const totalCount = await query(countSql, params);
+
+		res.json({
+			data: drafts,
+			pagination: {
+				total: totalCount[0].total,
+				page,
+				pageSize
+			}
+		});
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 编辑指定版本的云端存稿（articles_writer 中的某一行）
+router.post('/update_writer_draft', auth, async function (req, res) {
+	try {
+		const draftId = Number(req.body.id);
+		if (!Number.isInteger(draftId) || draftId <= 0) {
+			return res.json(400, { msg: 'missing id parameter' });
+		}
+
+		if (req.body.title === undefined && req.body.content === undefined) {
+			return res.json(400, { msg: 'no fields to update' });
+		}
+
+		const draft = await query('SELECT * FROM articles_writer WHERE id = ?', [draftId]);
+		if (draft.length === 0) {
+			return res.json(404, { msg: 'draft not found' });
+		}
+
+		const adminUser = req.user && req.user[0] ? req.user[0] : null;
+		const updateFields = [];
+		const params = [];
+
+		if (req.body.title !== undefined) {
+			updateFields.push('title = ?');
+			params.push(String(req.body.title).slice(0, 32));
+		}
+
+		if (req.body.content !== undefined) {
+			const fixedContent = ensureArticleParagraphIdsForStorage(req.body.content);
+			updateFields.push('content = ?');
+			params.push(fixedContent);
+			updateFields.push('content_hash = ?');
+			params.push(calculateContentHash(fixedContent));
+		}
+
+		updateFields.push('updated_at = CURRENT_TIMESTAMP(6)');
+		if (adminUser) {
+			updateFields.push('editor_user_id = ?');
+			params.push(adminUser.user_id);
+		}
+		params.push(draftId);
+
+		const sql = `UPDATE articles_writer SET ${updateFields.join(', ')} WHERE id = ?`;
+		await query(sql, params);
+
+		const updated = await query(
+			'SELECT id, article_id, title, content, content_hash, create_time, updated_at, editor_user_id FROM articles_writer WHERE id = ?',
+			[draftId],
+		);
+
+		res.json({ success: true, data: updated[0] });
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });

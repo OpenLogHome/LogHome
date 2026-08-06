@@ -1,12 +1,12 @@
 <template>
-	<view class="outer">
-		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab" 
+	<view class="outer" v-dark>
+		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab"
 		:textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'" ref="tabs"/>
 		<view class="list fans" v-show="curTabIndex == 1">
 			<div class="users" v-for="item in greatUsers">
 				<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
-					<log-image :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+					<user-avatar class="avatar-display" :src="item.avatar_url" :frame="item.avatar_frame"
+						:visual-scale="item.avatar_frame ? 1.25 : 1" />
 					<div class="personInfo">
 						<div class="name">{{item.name}}</div>
 						<div class="motto">{{item.great_info}}</div>
@@ -16,11 +16,11 @@
 			</div>
 		</view>
 		<view class="list fans" v-show="curTabIndex == 0">
-			
+
 				<div class="users" v-for="item in grandUsers">
 					<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
-						<log-image :src="item.avatar_url" alt=""
-						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+						<user-avatar class="avatar-display" :src="item.avatar_url" :frame="item.avatar_frame"
+							:visual-scale="item.avatar_frame ? 1.25 : 1" />
 						<div class="personInfo">
 							<div class="name">{{item.name}}</div>
 							<div class="motto">官方荣誉用户</div>
@@ -28,7 +28,7 @@
 					</navigator>
 					<followBtn class="button" :targetId="item.user_id"></followBtn>
 				</div>
-			
+
 		</view>
 	</view>
 </template>
@@ -75,19 +75,19 @@
 					duration: 2000
 				})
 			})
-			
-			
+
+
 			if(params.tab){
 				this.firstTab = params.tab
 			}
-			
-			
+
+
 		},
 		mounted(){
 			this.$refs.tabs.clickTab(this.firstTab);
 		},
 		methods:{
-			changeTab(index){ 
+			changeTab(index){
 				this.curTabIndex = index;
 			}
 		}
@@ -96,7 +96,7 @@
 
 <style scoped lang="less">
 	.outer{
-		background-color:#FFFFFF;
+		background-color:var(--card-background);
 		.tab{
 			height:80rpx;
 			width:100vw;
@@ -106,22 +106,21 @@
 				height:50rpx;
 				padding-left:20rpx;
 				font-size: 30rpx;
-				color:rgb(48, 48, 48);
-				border-bottom: #cacaca 1rpx solid;
+				color:var(--text-color-regular);
+				border-bottom: var(--border-color) 1rpx solid;
 			}
 		}
 	}
-	
+
 	.users {
 		height: 130rpx;
 		width: 100vw;
-		border-bottom: #cacaca 1rpx solid;
+		border-bottom: var(--border-color) 1rpx solid;
 		display: flex;
 		position:relative;
-		img {
+		.avatar-display {
+			width: 100rpx;
 			height: 100rpx;
-			border:#cacaca 1rpx solid;
-			border-radius: 7rpx;
 			margin:15rpx;
 		}
 		.name {
@@ -132,10 +131,10 @@
 			display: -webkit-box;
 			-webkit-box-orient: vertical;
 			-webkit-line-clamp: 1;
-			color:rgb(113, 52, 24);
+			color:var(--accent-text-color);
 		}
 		.motto{
-			color:rgb(97, 97, 97);
+			color:var(--text-color-regular);
 			width:58vw;
 			overflow: hidden;
 			display: -webkit-box;

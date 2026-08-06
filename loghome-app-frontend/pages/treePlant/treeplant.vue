@@ -1,6 +1,6 @@
 ﻿
 <template>
-	<view class="outer" :style="{'--statusBarHeight': 0 + 'px'}">
+	<view class="outer">
 		<view class="bg-gradient"></view>
 		<zetank-backBar textcolor="#fff" :showLeft="true" :showTitle="false" :navTitle="navTitleText"></zetank-backBar>
 
@@ -8,7 +8,7 @@
             <uni-icons type="gear-filled" size="18" color="rgba(231, 236, 242, 0.92)"></uni-icons>
         </button>
 
-		<view class="balance-bar" :style="{top: 'calc(20rpx + var(--statusBarHeight))'}">
+		<view class="balance-bar" :style="{top: 'calc(20rpx + var(--loghome-safe-top, 0px))'}">
 			<view class="res-item">
 				<image src="../../static/resources/log.png" mode="aspectFit"></image>
 				<text>{{resources.log}}</text>
@@ -29,6 +29,7 @@
                 v-bind:is="activeTreeComponent"
                 :state="state"
                 :scene-theme="treeSceneTheme"
+                :night-mode="isDarkTreeScene"
                 @scene-unavailable="handleThreeTreeUnavailable"
             ></view>
             <view v-else class="scene-loading">
@@ -64,7 +65,7 @@
             </view>
 		</view>
 
-        <view class="visit-entry-btn" :style="{top: 'calc(250rpx + var(--statusBarHeight))'}" @tap.stop.prevent="handleVisitEntryTap">
+		<view class="visit-entry-btn" :style="{top: 'calc(250rpx + var(--loghome-safe-top, 0px))'}" @tap.stop.prevent="handleVisitEntryTap">
             <text class="entry-emoji">🦝</text>
             <view class="entry-text">
                 <text>串</text>
@@ -119,12 +120,13 @@
                     <template v-if="isViewingFriendTree">
                         <view class="visit-scene-card">
                             <view class="visit-scene-head">
-                                <image
+                                <user-avatar
                                     v-if="visitScene.target_avatar_url"
                                     :src="visitScene.target_avatar_url"
-                                    mode="aspectFill"
+                                    :frame="visitScene.target_avatar_frame"
+                                    :visual-scale="visitScene.target_avatar_frame ? 1.2 : 1"
                                     class="visit-avatar"
-                                ></image>
+                                />
                                 <view v-else class="visit-avatar placeholder">{{getUserInitial(visitScene.target_name)}}</view>
                                 <view class="visit-copy">
                                     <text class="visit-name">{{visitScene.target_name || '好友'}}</text>
@@ -149,6 +151,20 @@
                     </template>
 
                     <template v-else>
+                    <view class="membership-boost-card" :class="{ active: hasTaskRewardBoost }">
+                        <image
+                            v-if="hasTaskRewardBoost"
+                            :src="rewardBenefits.membership_type === 'super' ? '/static/membership/loghome-super-pass.png' : '/static/membership/loghome-pass.png'"
+                            mode="aspectFit"
+                        ></image>
+                        <view class="membership-boost-icon" v-else>🌱</view>
+                        <view class="membership-boost-copy">
+                            <text class="membership-boost-title">{{rewardBenefits.membership_name || '普通用户'}}</text>
+                            <text class="membership-boost-desc" v-if="hasTaskRewardBoost">每日任务与经验任务成长值均享 {{taskRewardMultiplierText}} 加成</text>
+                            <text class="membership-boost-desc" v-else>开通通行证可享每日任务与经验任务 1.2× / 2× 加成</text>
+                        </view>
+                        <text class="membership-boost-rate" v-if="hasTaskRewardBoost">{{taskRewardMultiplierText}}</text>
+                    </view>
                     <view class="sheet-header">
                         <text class="title">📋 每日任务</text>
                         <view class="task-summary" v-if="tasks.length > 0">{{completedTaskCount}}/{{tasks.length}}</view>
@@ -165,6 +181,7 @@
                             </view>
                             <view class="task-action">
                                 <view class="reward-tag">+{{task.growth_reward}} XP</view>
+                                <view class="reward-boost-detail" v-if="Number(task.reward_multiplier || 1) > 1">基础 {{task.base_growth_reward}} × {{task.reward_multiplier}}</view>
                                 <button
                                     v-if="task.task_name.includes('签到')"
                                     class="do-btn"
@@ -197,6 +214,7 @@
                             </view>
                             <view class="task-action">
                                 <view class="reward-tag">成长值 +{{task.exp_reward}}</view>
+                                <view class="reward-boost-detail" v-if="Number(task.reward_multiplier || 1) > 1">基础 {{task.base_exp_reward}} × {{task.reward_multiplier}}</view>
                                 <view class="auto-status" :class="{ done: task.status === 'completed' }">{{getExpTaskStatusText(task)}}</view>
                             </view>
                         </view>
@@ -243,7 +261,8 @@
                         <view class="steal-list">
                             <view class="steal-item" v-for="friend in stealTargets" :key="friend.user_id">
                                 <view class="friend-avatar-wrap">
-                                    <image v-if="friend.avatar_url" :src="friend.avatar_url" mode="aspectFill" class="friend-avatar"></image>
+                                    <user-avatar v-if="friend.avatar_url" :src="friend.avatar_url" :frame="friend.avatar_frame"
+                                        :visual-scale="friend.avatar_frame ? 1.2 : 1" class="friend-avatar" />
                                     <view v-else class="friend-avatar placeholder">{{getUserInitial(friend.name)}}</view>
                                     <view class="friend-status" :class="friend.steal_status">{{friend.steal_status_text}}</view>
                                 </view>
@@ -330,6 +349,7 @@ const createDefaultVisitScene = () => ({
     target_user_id: 0,
     target_name: '',
     target_avatar_url: '',
+    target_avatar_frame: null,
     has_active_tree: false,
     need_own_tree: false,
     can_steal: false,
@@ -381,6 +401,12 @@ export default {
             orbBursts: [],
             growth_val: 0,
             max_growth: 100,
+            rewardBenefits: {
+                membership_type: '',
+                membership_name: '普通用户',
+                multiplier: 1,
+                active: false,
+            },
             showResultModal: false,
             harvestResult: {
                 log: 0,
@@ -412,6 +438,9 @@ export default {
         activeTreeComponent() {
             return this.useThreeTreeScene ? 'threeOakTree' : 'defaultTree'
         },
+        isDarkTreeScene() {
+            return !!(this.$store && this.$store.state && this.$store.state.isDarkMode)
+        },
         isViewingFriendTree() {
             return !!(this.visitScene && this.visitScene.active && Number(this.visitScene.target_user_id))
         },
@@ -432,6 +461,13 @@ export default {
         },
         completedExpTaskCount() {
             return this.expTasks.filter((t) => Number(t.completed_times || 0) >= Number(t.daily_limit || 0)).length
+        },
+        hasTaskRewardBoost() {
+            return Number(this.rewardBenefits && this.rewardBenefits.multiplier || 1) > 1
+        },
+        taskRewardMultiplierText() {
+            const multiplier = Number(this.rewardBenefits && this.rewardBenefits.multiplier || 1)
+            return `${Number.isInteger(multiplier) ? multiplier.toFixed(0) : multiplier.toFixed(1)}×`
         },
         heightLevels() {
             if (!this.screenHeight) return [0, 0, 0]
@@ -628,6 +664,9 @@ export default {
                 }
                 this.tasks = data.tasks || []
                 this.expTasks = data.exp_tasks || []
+                this.rewardBenefits = data.reward_benefits || {
+                    membership_type: '', membership_name: '普通用户', multiplier: 1, active: false,
+                }
                 this.syncExpOrbs(data.exp_orbs || [], { animateNew: false })
                 this.growth_val = data.growth_val || 0
                 this.max_growth = data.max_growth || 100
@@ -641,6 +680,9 @@ export default {
                 }
                 this.tasks = []
                 this.expTasks = []
+                this.rewardBenefits = {
+                    membership_type: '', membership_name: '普通用户', multiplier: 1, active: false,
+                }
                 this.syncExpOrbs([], { animateNew: false })
                 this.growth_val = 0
                 this.max_growth = 100
@@ -680,6 +722,9 @@ export default {
                 }
             this.tasks = []
             this.expTasks = []
+            this.rewardBenefits = {
+                membership_type: '', membership_name: '普通用户', multiplier: 1, active: false,
+            }
             this.syncExpOrbs(tree && Array.isArray(tree.exp_orbs) ? tree.exp_orbs : [], { animateNew: false })
             this.growth_val = tree && typeof tree.growth_val === 'number' ? tree.growth_val : 0
             this.max_growth = tree && tree.max_growth ? tree.max_growth : 100
@@ -1291,7 +1336,7 @@ export default {
 
     .tree-settings-entry {
         position: absolute;
-        top: calc(60upx + var(--statusBarHeight) - 26upx);
+        top: calc(60upx + var(--loghome-safe-top, 0px) - 26upx);
         left: 134upx;
         z-index: 82;
         width: 82upx;
@@ -2151,6 +2196,71 @@ export default {
                 }
             }
 
+            .membership-boost-card {
+                display: flex;
+                align-items: center;
+                gap: 16rpx;
+                margin-bottom: 22rpx;
+                padding: 18rpx 20rpx;
+                border: 3rpx solid #8d6e63;
+                border-radius: 20rpx;
+                color: #5d4037;
+                background: linear-gradient(135deg, #f7f0e7, #efe2d3);
+                box-shadow: 4rpx 4rpx 0 rgba(93, 64, 55, 0.16);
+
+                &.active {
+                    border-color: #b37a24;
+                    background: linear-gradient(135deg, #fff4d5, #f3d59a);
+                }
+
+                image,
+                .membership-boost-icon {
+                    flex-shrink: 0;
+                    width: 58rpx;
+                    height: 58rpx;
+                }
+
+                .membership-boost-icon {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 40rpx;
+                }
+
+                .membership-boost-copy {
+                    flex: 1;
+                    min-width: 0;
+                }
+
+                .membership-boost-title,
+                .membership-boost-desc {
+                    display: block;
+                }
+
+                .membership-boost-title {
+                    font-size: 26rpx;
+                    font-weight: 900;
+                }
+
+                .membership-boost-desc {
+                    margin-top: 5rpx;
+                    font-size: 20rpx;
+                    line-height: 1.35;
+                    color: #795548;
+                }
+
+                .membership-boost-rate {
+                    flex-shrink: 0;
+                    padding: 7rpx 13rpx;
+                    border: 2rpx solid #8d5d14;
+                    border-radius: 999rpx;
+                    font-size: 24rpx;
+                    font-weight: 900;
+                    color: #6d4308;
+                    background: rgba(255, 255, 255, 0.48);
+                }
+            }
+
             .sheet-header {
                 display: flex;
                 justify-content: space-between;
@@ -2234,6 +2344,13 @@ export default {
                             border: 2rpx solid #fbc02d;
                             border-radius: 8rpx;
                             font-weight: bold;
+                        }
+
+                        .reward-boost-detail {
+                            margin: -4rpx 0 9rpx;
+                            font-size: 18rpx;
+                            font-weight: 700;
+                            color: #a56b13;
                         }
 
                         .auto-status {
@@ -2382,7 +2499,7 @@ export default {
             box-shadow: -18rpx 0 42rpx rgba(62, 39, 35, 0.22);
             display: flex;
             flex-direction: column;
-            padding-top: calc(24rpx + var(--statusBarHeight));
+            padding-top: calc(24rpx + var(--loghome-safe-top, 0px));
             transform: translateX(100%);
             transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform;

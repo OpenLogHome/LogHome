@@ -1,5 +1,5 @@
 <template>
-	<view class="horizontal-tags-container">
+	<view class="horizontal-tags-container" v-dark>
 		<scroll-view scroll-x="true" class="tags-scroll" show-scrollbar="false">
 			<view class="tags-wrapper">
 				<view 
@@ -133,16 +133,14 @@ export default {
 	flex-shrink: 0;
 }
 
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-	.tag-item {
-		background-color: #2d3748;
-		border-color: #4a5568;
-		color: #a0aec0;
-	}
-	
-	.tag-item:active {
-		background-color: #4a5568;
-	}
+/* 深色模式仅跟随项目根节点的 dark-mode 类 */
+.horizontal-tags-container.dark-mode .tag-item {
+	background-color: #2d3748;
+	border-color: #4a5568;
+	color: #a0aec0;
+}
+
+.horizontal-tags-container.dark-mode .tag-item:active {
+	background-color: #4a5568;
 }
 </style>

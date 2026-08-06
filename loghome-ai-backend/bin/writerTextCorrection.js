@@ -6,6 +6,7 @@ const textCorrectionConfig = config.api?.writerAssist?.textCorrection || {};
 const TEXT_CORRECTION_BASE_URL = String(textCorrectionConfig.baseUrl || '').replace(/\/+$/, '');
 const TEXT_CORRECTION_API_KEY = textCorrectionConfig.apiKey || '';
 const TEXT_CORRECTION_MODEL = textCorrectionConfig.model || 'qwen3.6-chat';
+const { consumeRedstone, sendBillingError } = require('./redstoneBilling');
 const MODEL_REQUEST_TIMEOUT_MS = Math.max(15000, Number(
 	config.writerTextCorrectionRequestTimeoutMs
 		|| process.env.WRITER_TEXT_CORRECTION_REQUEST_TIMEOUT_MS
@@ -556,6 +557,14 @@ async function handleWriterTextCorrection(req, res) {
 			return res.status(400).json({ msg: '没有可检测的正文段落' });
 		}
 
+		await consumeRedstone({
+			userId: Number(user.user_id),
+			amount: 1,
+			feature: 'writer_smart_correction',
+			requestId: req.body?.request_id || `correction:${articleId}:${Date.now()}`,
+			description: '智能纠错消耗1红石',
+		});
+
 		res.on('error', () => {});
 
 		const writer = createNdjsonStreamWriter(res);
@@ -626,6 +635,7 @@ async function handleWriterTextCorrection(req, res) {
 			}
 		}
 	} catch (error) {
+		if (sendBillingError(res, error)) return;
 		if (
 			error
 			&& typeof error.message === 'string'

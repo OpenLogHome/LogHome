@@ -1,5 +1,5 @@
 <template>
-	<view style="background-color: #ffffff;">
+	<view style="background-color: var(--card-background);" v-dark>
 		<view class="credit_table">
 			<view class="score_ring_outer">
 				<view class="score_ring" :style="style.ring">
@@ -57,15 +57,15 @@
 			    var year_month_day = utc_datetime.substr(0,T_pos);
 			    var hour_minute_second = utc_datetime.substr(T_pos+1,Z_pos-T_pos-1);
 			    var new_datetime = year_month_day+" "+hour_minute_second; // 2017-03-31 08:02:06
-			
+
 			    // 处理成为时间戳
 			    timestamp = new Date(Date.parse(new_datetime));
 			    timestamp = timestamp.getTime();
 			    timestamp = timestamp/1000;
-			
+
 			    // 增加8个小时，北京时间比utc时间多八个时区
 			    var timestamp = timestamp+8*60*60;
-			
+
 			    // 时间戳转为时间
 				var beijing_datetime = this.timeConvert(new Date(parseInt(timestamp) * 1000))
 			    return beijing_datetime; // 2017-03-31 16:02:06
@@ -103,7 +103,7 @@
 				}
 			});
 			//this.tableChange();
-			
+
 		}
 	}
 </script>
@@ -113,12 +113,12 @@
 		padding: 8px 30rpx;
 		font-size: 40rpx;
 		font-weight: bold;
-		background-color: #f2f2f2;
+		background-color: var(--background-color-secondary);
 		margin: 25rpx auto;
-		color: #934900;
+		color: var(--accent-text-color);
 	}
 	.credit_records{
-		//border-top: solid 1px #e3e3e3;
+		//border-top: solid 1px var(--border-color);
 		padding-top: 12px;
 		margin-top: 12px;
 	}
@@ -187,7 +187,7 @@
 		padding: 0 15rpx;
 		border-bottom: solid 1px #C8C7CC;
 		position: relative;
-		background-color: #ffffff;
+		background-color: var(--card-background);
 		.credit_reason{
 			font-size: 18px;
 		}
@@ -202,7 +202,7 @@
 			color: #00f074;
 		}
 		.credit_change.adjust_remove{
-			color: #b40000;
+			color: var(--danger-text-color);
 		}
 	}
 </style>

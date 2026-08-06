@@ -6,6 +6,7 @@ let auth = require('../bin/auth.js');
 let bank = require('../bin/bank.js');
 let message = require('../bin/message.js');
 let achievements = require('../bin/achievements.js');
+let avatarFrames = require('../bin/avatarFrames.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -50,6 +51,11 @@ const DEFAULT_EXP_SETTINGS = {
 };
 
 const RANDOM_SPAWN_PROGRESS_CODE = '__exp_random_spawn__';
+const BASE_TREE_HARVEST_LOG_REWARD = 5;
+const TREE_MEMBERSHIP_MULTIPLIERS = Object.freeze({
+    standard: 1.2,
+    super: 2,
+});
 
 let expSchemaReady = null;
 let expSchemaCheckAt = 0;
@@ -102,6 +108,32 @@ function randomIntInRange(min, max) {
     const lo = Math.floor(Math.min(min, max));
     const hi = Math.floor(Math.max(min, max));
     return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+}
+
+function calculateMembershipReward(baseReward, multiplier) {
+    return Math.max(0, Math.round(toNumber(baseReward, 0) * toNumber(multiplier, 1)));
+}
+
+async function getTreeRewardBenefits(userId) {
+    const rows = await query(
+        `SELECT membership_type
+         FROM membership_subscriptions
+         WHERE user_id = ? AND status = 'active'
+           AND starts_at <= NOW() AND expires_at > NOW()
+         ORDER BY FIELD(membership_type, 'super', 'standard'), expires_at DESC
+         LIMIT 1`,
+        [Number(userId)]
+    );
+    const membershipType = rows[0]?.membership_type || '';
+    const multiplier = TREE_MEMBERSHIP_MULTIPLIERS[membershipType] || 1;
+    return {
+        membership_type: membershipType,
+        membership_name: membershipType === 'super'
+            ? '超级原木通行证'
+            : membershipType === 'standard' ? '原木通行证' : '普通用户',
+        multiplier,
+        active: multiplier > 1,
+    };
 }
 
 function getDateKeyByTimezone(timezone) {
@@ -591,12 +623,14 @@ async function buildVisitTreeScene(viewerUserId, targetUserId, options = {}) {
         ? options.targetTree
         : await getActiveTree(targetUserId);
     const targetUser = options.targetUser || await getUserBasicInfo(targetUserId);
+    const targetAvatarFrame = await avatarFrames.getEffectiveAvatarFrame(targetUserId);
 
     if (!targetTree) {
         return {
             target_user_id: Number(targetUser.user_id || targetUserId),
             target_name: targetUser.name || '好友',
             target_avatar_url: targetUser.avatar_url || '',
+            target_avatar_frame: targetAvatarFrame,
             has_active_tree: false,
             need_own_tree: !myTree,
             can_steal: false,
@@ -635,6 +669,7 @@ async function buildVisitTreeScene(viewerUserId, targetUserId, options = {}) {
         target_user_id: Number(targetUser.user_id || targetUserId),
         target_name: targetUser.name || '好友',
         target_avatar_url: targetUser.avatar_url || '',
+        target_avatar_frame: targetAvatarFrame,
         has_active_tree: true,
         need_own_tree: !myTree,
         can_steal: !!myTree && allowance.remaining_steal_reward > 0 && expOrbs.length > 0,
@@ -1034,6 +1069,9 @@ async function buildStealDashboard(userId) {
 
     const logLimit = toPositiveInt(settings.steal_log_limit, DEFAULT_EXP_SETTINGS.steal_log_limit);
     const recentStealLogs = await getRecentStealLogs(userId, logLimit);
+    await avatarFrames.decorateRows(stealTargets, [
+        { userIdField: 'user_id', targetField: 'avatar_frame' },
+    ]);
 
     return {
         steal_feature_enabled: true,
@@ -1113,9 +1151,10 @@ async function getDailyCounters(userId, dateKey, tasks) {
     return counter;
 }
 
-async function buildExpTaskStates(userId, settings) {
+async function buildExpTaskStates(userId, settings, rewardBenefits = null) {
     const tasks = await loadExpTasks();
     if (tasks.length === 0) return [];
+    const benefits = rewardBenefits || await getTreeRewardBenefits(userId);
 
     const dateKey = getDateKeyByTimezone(settings.timezone);
     const taskCodes = tasks.map((t) => t.task_code);
@@ -1152,7 +1191,9 @@ async function buildExpTaskStates(userId, settings) {
             source_code: task.source_code,
             required_value: task.required_value,
             daily_limit: task.daily_limit,
-            exp_reward: task.exp_reward,
+            base_exp_reward: task.exp_reward,
+            reward_multiplier: benefits.multiplier,
+            exp_reward: calculateMembershipReward(task.exp_reward, benefits.multiplier),
             progress_value: progressValue,
             completed_times: completedTimes,
             available_claim_times: availableClaimTimes,
@@ -1248,7 +1289,8 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
         max_growth: maxGrowth,
     };
 
-    const expTasksBefore = await buildExpTaskStates(userId, settings);
+    const rewardBenefits = options.rewardBenefits || await getTreeRewardBenefits(userId);
+    const expTasksBefore = await buildExpTaskStates(userId, settings, rewardBenefits);
     const matchedTasks = expTasksBefore.filter((task) => {
         const claimTimes = toNumber(task.available_claim_times, 0);
         if (claimTimes <= 0) return false;
@@ -1264,6 +1306,7 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
             total_reward: 0,
             settled_tasks: [],
             exp_tasks: expTasksBefore,
+            reward_benefits: rewardBenefits,
             ...defaultGrowth,
         };
     }
@@ -1292,6 +1335,7 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
             source_code: task.source_code,
             settled_times: settleTimes,
             reward,
+            reward_multiplier: rewardBenefits.multiplier,
         });
     }
 
@@ -1302,13 +1346,14 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
         tree.tree_status = growthResult.tree_status;
     }
 
-    const expTasks = await buildExpTaskStates(userId, settings);
+    const expTasks = await buildExpTaskStates(userId, settings, rewardBenefits);
     return {
         ok: true,
         has_active_tree: true,
         total_reward: totalReward,
         settled_tasks: settledTasks,
         exp_tasks: expTasks,
+        reward_benefits: rewardBenefits,
         ...growthResult,
     };
 }
@@ -1408,6 +1453,7 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
     let user = req.user;
     user = JSON.parse(JSON.stringify(user))[0];
     try {
+        const rewardBenefits = await getTreeRewardBenefits(user.user_id);
         let trees = await query(
             'SELECT * FROM treeplant WHERE user_id = ? AND is_gotten = 0',
             [user.user_id],
@@ -1415,7 +1461,10 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
 
         if (trees.length === 0) {
             const latestTree = await getLatestTree(user.user_id);
-            res.end(JSON.stringify([buildUnplantedTreePlaceholder(user.user_id, latestTree)]));
+            res.end(JSON.stringify([{
+                ...buildUnplantedTreePlaceholder(user.user_id, latestTree),
+                reward_benefits: rewardBenefits,
+            }]));
             return;
         }
 
@@ -1446,6 +1495,9 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
 
             return {
                 ...task,
+                base_growth_reward: toNumber(task.growth_reward, 0),
+                reward_multiplier: rewardBenefits.multiplier,
+                growth_reward: calculateMembershipReward(task.growth_reward, rewardBenefits.multiplier),
                 status: status
             };
         });
@@ -1456,7 +1508,7 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
         const expReady = await ensureExpSchemaReady();
         if (expReady) {
             const expSettings = await loadExpSettings();
-            const settleResult = await settleExpTaskRewards(user.user_id, tree, expSettings);
+            const settleResult = await settleExpTaskRewards(user.user_id, tree, expSettings, { rewardBenefits });
             tree.growth_val = settleResult.growth_val;
             tree.tree_status = settleResult.tree_status;
             tree.max_growth = settleResult.max_growth;
@@ -1469,6 +1521,8 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
             tree.exp_tasks = [];
             tree.exp_feature_enabled = false;
         }
+
+        tree.reward_benefits = rewardBenefits;
 
         res.end(JSON.stringify([tree]));
     } catch (e) {
@@ -1733,13 +1787,18 @@ router.post('/do_task', auth, async (req, res) => {
         }
 
         const expSettings = await loadExpSettings();
-        const growthResult = await applyGrowthReward(tree, task.growth_reward, toPositiveInt(expSettings.max_growth, 100));
+        const rewardBenefits = await getTreeRewardBenefits(user.user_id);
+        const actualReward = calculateMembershipReward(task.growth_reward, rewardBenefits.multiplier);
+        const growthResult = await applyGrowthReward(tree, actualReward, toPositiveInt(expSettings.max_growth, 100));
 
         res.json(200, {
             msg: 'Task completed',
             growth_val: growthResult.growth_val,
             tree_status: growthResult.tree_status,
-            reward: task.growth_reward,
+            reward: actualReward,
+            base_reward: toNumber(task.growth_reward, 0),
+            reward_multiplier: rewardBenefits.multiplier,
+            reward_benefits: rewardBenefits,
             task_icon: task.icon,
         });
 
@@ -2122,7 +2181,7 @@ router.get('/got_tree', auth, async (req, res) => {
             if (tree.tree_status === TREE_STATUS.GROWING) {
                 res.json(400, { msg: '树苗还在成长中，无法铲除或收获' });
             } else if (tree.tree_status === TREE_STATUS.BLOOMING) {
-                let logAmount = 10;
+                let logAmount = BASE_TREE_HARVEST_LOG_REWARD;
                 await query('UPDATE treeplant SET is_gotten = 1 WHERE user_id = ?', [user.user_id]);
                 bank.addAmount(user, 'log', logAmount);
 
@@ -2137,7 +2196,7 @@ router.get('/got_tree', auth, async (req, res) => {
 
                 res.end('已收获，获得原木 × ' + logAmount);
             } else {
-                let logAmount = 10;
+                let logAmount = BASE_TREE_HARVEST_LOG_REWARD;
                 let appleAmount = Math.floor(1 + Math.random() * 3);
                 await query('UPDATE treeplant SET is_gotten = 1 WHERE user_id = ?', [user.user_id]);
                 bank.addAmount(user, 'log', logAmount);
@@ -2164,4 +2223,3 @@ router.get('/got_tree', auth, async (req, res) => {
 });
 
 module.exports = router;
-

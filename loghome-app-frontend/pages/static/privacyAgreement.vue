@@ -1,5 +1,5 @@
 <template>
-	<div style="background-color:#ffffff; padding:50rpx; font-size: 35rpx;">
+	<div style="background-color:var(--card-background); padding:50rpx; font-size: 35rpx;" v-dark>
 		<p>
 		    <strong><span style="">原木社区用户隐私政策</span></strong>
 		</p>

@@ -1,5 +1,5 @@
 <template>
-	<view class="outer" v-dark :style="{ '--statusBarHeight': 0 + 'px' }">
+	<view class="outer" v-dark>
 		<view class="title" :class="topNavStyle.class" :style="topNavStyle.style">
 			<view class="flex_col">
 				<view class="box1"></view>
@@ -35,6 +35,7 @@
 					v-show="topNavArr[topNavIndex] == '小说'">
 					<book-detail-view v-if="curBook !== -1" :book="books[curBook]" :worlds="worlds"
 						:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
+						:writing-calendar="writingCalendar" :writing-calendar-loading="writingCalendarLoading"
 						@close-book-detail="handleCloseBookDrawerManually"
 						@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 						@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="openBookSelectDrawer"
@@ -83,8 +84,9 @@
 					<el-button icon="el-icon-close" circle size="medium" @click="handleCloseBookDrawerManually" type="text"
 						style="transform: scale(1.2);"></el-button>
 				</div>
-				<book-detail-view v-if="curBook !== -1" :book="books[curBook]" :worlds="worlds"
+				<book-detail-view v-if="viewMode === 'grid' && curBook !== -1" :book="books[curBook]" :worlds="worlds"
 					:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
+					:writing-calendar="writingCalendar" :writing-calendar-loading="writingCalendarLoading"
 					@close-book-detail="handleCloseBookDrawerManually"
 					@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 					@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="openBookSelectDrawer"
@@ -186,6 +188,13 @@ export default {
 			books: [],
 			curBook: 0,
 			novel_statistic: [],
+			writingCalendar: null,
+			writingCalendarLoading: false,
+			writingCalendarRequestId: 0,
+			writingCalendarCache: {},
+			writingCalendarRenderTimer: null,
+			writingCalendarIdleHandle: null,
+			writingCalendarTransitionUntil: 0,
 			worlds: [],
 			bookSelectDrawer: false, //是否打开书籍选择抽屉
 			bookSelectDrawerVisible: false,
@@ -235,24 +244,28 @@ export default {
 	},
 	computed: {
 		topNavStyle() {
-			// console.log(this.pageScrollTop);
-			let r = this.pageScrollTop / 100;
+			const scrollProgress = this.pageScrollTop / 100;
+			const opacity = Math.min(Math.max(scrollProgress, 0), 1);
+			const backgroundRgb = this.isDarkMode ? '30, 30, 30' : '255, 255, 255';
 			return {
-				"class": r >= 0.85 ? 'style2' : '',
-				"style": `background-color: rgba(255, 255, 255, ${r >= 1 ? 1 : r}); padding-top: 0}`
+				class: scrollProgress >= 0.85 ? 'style2' : '',
+				style: `background-color: rgba(${backgroundRgb}, ${opacity})`
 			}
 		}
 	},
 	onLoad() {
 		window.addEventListener('popstate', this.browserBack);
+		window.addEventListener('loghomeNativeBack', this.handleNativeBack);
 	},
 	onUnload() {
 		window.removeEventListener('popstate', this.browserBack);
+		window.removeEventListener('loghomeNativeBack', this.handleNativeBack);
 		clearTimeout(this.timer);
 		if (this.bookSelectDrawerTimer) {
 			clearTimeout(this.bookSelectDrawerTimer);
 			this.bookSelectDrawerTimer = null;
 		}
+		this.cancelWritingCalendarCommit();
 	},
 	// 页面滚动监听
 	onPageScroll(e) {
@@ -415,8 +428,17 @@ export default {
 			this.getMyWorlds();
 		},
 		swiperChange(e) {
-			// console.log("swiperChange");
+			if (!this.books[e]) {
+				this.writingCalendarRequestId += 1;
+				this.cancelWritingCalendarCommit();
+				this.writingCalendar = null;
+				this.writingCalendarLoading = false;
+				return;
+			}
 			this.curBook = e;
+			// 给轮换组件的缩放/位移动画留出时间，避免日历的大批量节点同时提交。
+			this.writingCalendarTransitionUntil = Date.now() + 350;
+			this.fetchWritingCalendar(this.books[e].novel_id);
 			axios.get(this.$baseUrl + '/articles/get_novel_statistics?novel_id=' + this.books[e].novel_id).then((
 				res) => {
 				this.novel_statistic = res.data;
@@ -459,6 +481,87 @@ export default {
 			}).then(function () {
 				uni.hideLoading();
 			})
+		},
+		async fetchWritingCalendar(novelId) {
+			const normalizedNovelId = Number(novelId || 0);
+			if (!normalizedNovelId) {
+				this.writingCalendarRequestId += 1;
+				this.cancelWritingCalendarCommit();
+				this.writingCalendar = null;
+				this.writingCalendarLoading = false;
+				return;
+			}
+
+			const requestId = this.writingCalendarRequestId + 1;
+			this.writingCalendarRequestId = requestId;
+			this.cancelWritingCalendarCommit();
+			const tokenInfo = JSON.parse(window.localStorage.getItem('token'));
+			const cacheKey = `${Number((tokenInfo && tokenInfo.id) || 0)}:${normalizedNovelId}`;
+			this.writingCalendarLoading = true;
+			const cachedCalendar = this.writingCalendarCache[cacheKey];
+			if (cachedCalendar) this.scheduleWritingCalendarCommit(cachedCalendar, requestId);
+
+			const tk = tokenInfo && tokenInfo.tk;
+			try {
+				const response = await axios.get(
+					this.$baseUrl + '/essays/get_novel_writing_calendar',
+					{
+						params: { novel_id: normalizedNovelId },
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': 'Bearer ' + tk
+						}
+					}
+				);
+				if (requestId !== this.writingCalendarRequestId) return;
+				const calendarData = this.freezeWritingCalendar(response.data);
+				// 缓存不参与界面渲染，无需使用 $set 触发额外的响应式遍历。
+				this.writingCalendarCache[cacheKey] = calendarData;
+				this.scheduleWritingCalendarCommit(calendarData, requestId);
+			} catch (error) {
+				if (requestId !== this.writingCalendarRequestId) return;
+				console.error('获取作品创作日历失败:', error);
+				const fallback = cachedCalendar || this.freezeWritingCalendar({ error: true });
+				this.scheduleWritingCalendarCommit(fallback, requestId);
+			}
+		},
+		freezeWritingCalendar(calendarData) {
+			if (!calendarData || typeof calendarData !== 'object' || !Object.freeze) {
+				return calendarData;
+			}
+			// 日历响应在本页只读。冻结顶层对象可避免 Vue 2 同步递归观测数百条日期数据。
+			return Object.isFrozen(calendarData) ? calendarData : Object.freeze(calendarData);
+		},
+		cancelWritingCalendarCommit() {
+			if (this.writingCalendarRenderTimer !== null) {
+				clearTimeout(this.writingCalendarRenderTimer);
+				this.writingCalendarRenderTimer = null;
+			}
+			if (this.writingCalendarIdleHandle !== null && typeof window.cancelIdleCallback === 'function') {
+				window.cancelIdleCallback(this.writingCalendarIdleHandle);
+			}
+			this.writingCalendarIdleHandle = null;
+		},
+		scheduleWritingCalendarCommit(calendarData, requestId) {
+			this.cancelWritingCalendarCommit();
+			const delay = Math.max(0, this.writingCalendarTransitionUntil - Date.now());
+			this.writingCalendarRenderTimer = setTimeout(() => {
+				this.writingCalendarRenderTimer = null;
+				if (requestId !== this.writingCalendarRequestId) return;
+
+				const commit = () => {
+					this.writingCalendarIdleHandle = null;
+					if (requestId !== this.writingCalendarRequestId) return;
+					this.writingCalendar = calendarData;
+					this.writingCalendarLoading = false;
+				};
+
+				if (typeof window.requestIdleCallback === 'function') {
+					this.writingCalendarIdleHandle = window.requestIdleCallback(commit, { timeout: 500 });
+				} else {
+					commit();
+				}
+			}, delay);
 		},
 		gotoNewEssay() {
 			uni.navigateTo({
@@ -665,6 +768,13 @@ export default {
 				this.showBookDetail = false;
 			}
 		},
+		handleNativeBack(event) {
+			if(!this.showBookDetail) {
+				return;
+			}
+			event.preventDefault();
+			window.history.go(-1);
+		},
 	}
 }
 </script>
@@ -688,7 +798,7 @@ view.outer {
 	left: 0;
 	width: 100%;
 	height: auto;
-	padding-top: var(--status-bar-height);
+	padding-top: var(--loghome-safe-top, 0px);
 	z-index: 10;
 	color: rgba(0, 0, 0, 0.8);
 
@@ -752,6 +862,10 @@ view.outer {
 				0px 0px 17.9px rgba(0, 0, 0, 0.17),
 				0px 0px 33.4px rgba(0, 0, 0, 0.2),
 				0px 0px 80px rgba(0, 0, 0, 0.3);
+
+			.tab>view.active {
+				color: var(--text-color-primary);
+			}
 		}
 
 		.tab {
@@ -928,7 +1042,7 @@ view.outer {
 	.bookshelf {
 		min-height: 100vh;
 		padding: 20rpx;
-		padding-top: calc(44px + var(--statusBarHeight) + 20rpx); // 标题栏高度 + 状态栏高度 + 额外间距
+		padding-top: calc(44px + var(--loghome-safe-top, 0px) + 20rpx); // 标题栏高度 + 状态栏高度 + 额外间距
 		// background-color: white;
 		background: linear-gradient(to bottom, rgb(255, 248, 234) 0%, rgb(255, 248, 234) 30%, rgb(255, 255, 255) 100%);
 
@@ -1051,7 +1165,7 @@ view.outer {
 		max-height: 75vh;
 		background: var(--card-background);
 		border-radius: 28rpx 28rpx 0 0;
-		padding-bottom: env(safe-area-inset-bottom);
+		padding-bottom: var(--loghome-safe-bottom, 0px);
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
@@ -1102,7 +1216,7 @@ view.outer {
 
 	.world-select-list {
 		flex: 1;
-		height: calc(75vh - 180rpx - env(safe-area-inset-bottom));
+		height: calc(75vh - 180rpx - var(--loghome-safe-bottom, 0px));
 		min-height: 240rpx;
 	}
 

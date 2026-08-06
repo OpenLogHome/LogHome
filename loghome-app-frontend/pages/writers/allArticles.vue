@@ -16,7 +16,13 @@
 					<span v-if="hasActiveSearch && !searchLoading && !searchError">{{ searchSummaryText }}</span>
 				</div>
 			</div>
-			<div v-if="hasActiveSearch" class="searchResults">
+			<div class="articlesSkeleton" v-if="isLoading" aria-label="章节加载中">
+				<div class="articleSkeleton" v-for="index in 7" :key="index">
+					<div class="skeletonBlock skeletonTitle" :class="`skeletonWidth${index % 3}`"></div>
+					<div class="skeletonBlock skeletonMeta"></div>
+				</div>
+			</div>
+			<div v-else-if="hasActiveSearch" class="searchResults">
 				<div class="searchStateCard" v-if="searchLoading">
 					<i class="el-icon-loading"></i>
 					<span>{{ searchStatusText }}</span>
@@ -56,9 +62,12 @@
 					@touchmove.native="touchmove">
 					<uni-collapse-item class="titleOuter" v-for="item in shownArticles" :key="item.article_id"
 					:mainClick="gotoEditor" :clickInfo="item"
-					:style="{ backgroundColor: item.article_type == 'spliter' ? '#dddddd' : (frameInfo.isEnabled && frameInfo.currentSelected == item.article_id ? '#FFFAF0' : '#ffffff') }">
+					:class="{
+						'splitterRow': item.article_type == 'spliter',
+						'selectedRow': frameInfo.isEnabled && frameInfo.currentSelected == item.article_id
+					}">
 						<template v-slot:title>
-							<div class="title" :style="{ 'color': item.article_type == 'spliter' ? '#444444' : (frameInfo.isEnabled && frameInfo.currentSelected == item.article_id ? '#0A0E16' : '#763a18') }">
+							<div class="title">
 								{{ item.title }}
 								<el-tag type="success" v-show="item.article_type == 'worldOutline'" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">大纲</el-tag>
@@ -99,8 +108,7 @@
 										{{ Number(item.active_editor.user_id) === Number(currentUserId) ? '你正在编辑' : item.active_editor.name + ' 正在编辑' }}
 									</span>
 								</div>
-								<i class="el-icon-loading" v-if="item.isCheckingStatus"
-									style="margin-left:10rpx; color:#444444;"></i>
+								<i class="el-icon-loading articleStatusLoading" v-if="item.isCheckingStatus"></i>
 
 							</div>
 							<div class="miniTitle">
@@ -118,40 +126,40 @@
 						<view class="menuContent">
 							<navigator @click="gotoEditor(item)">
 								<div class="subTitle">
-									<uni-icons type="compose" size="20" color="rgb(113, 52, 24)" />
+									<uni-icons type="compose" size="20" :color="actionIconColor" />
 									<span>编辑{{ item.article_type == 'spliter' ? "分卷信息" : "" }}</span>
 								</div>
 							</navigator>
 							<navigator :url="'../readers/article?id=' + item.article_id" open-type="navigate"
 								v-show="item.is_draft == false && !frameInfo.isEnabled">
 								<div class="subTitle">
-									<uni-icons type="eye" size="20" color="rgb(113, 52, 24)" />
+									<uni-icons type="eye" size="20" :color="actionIconColor" />
 									<span>阅读</span>
 								</div>
 							</navigator>
 							<navigator :url="'./chapterTimeMachine?id=' + item.article_id + '&novelId=' + item.novel_id"
 								open-type="navigate" v-show="item.article_type != 'spliter'">
 								<div class="subTitle">
-									<uni-icons type="loop" size="20" color="rgb(113, 52, 24)" />
+									<uni-icons type="loop" size="20" :color="actionIconColor" />
 									<span>章节时光机</span>
 								</div>
 							</navigator>
 							<navigator :url="'./articleFeedbacks?id=' + item.article_id" open-type="navigate"
 								v-show="item.article_type != 'spliter' && item.feedback_count > 0">
 								<div class="subTitle">
-									<uni-icons type="help" size="20" color="rgb(113, 52, 24)" />
+									<uni-icons type="help" size="20" :color="actionIconColor" />
 									<span>错误反馈 ({{ item.feedback_count }})</span>
 								</div>
 							</navigator>
 							<div class="subTitle" @click="deleteArticle(item.article_id)" v-show="canDeleteArticle">
-								<uni-icons type="trash" size="20" color="rgb(113, 52, 24)" />
+								<uni-icons type="trash" size="20" :color="actionIconColor" />
 								<span>删除{{ item.article_type == 'spliter' ? "分卷" : "" }}</span>
 							</div>
 						</view>
 					</uni-collapse-item>
 				</uni-collapse>
 				<div class="newArticle" v-show="novel.novel_type != 'world' && canAddArticle">
-					<div class="tit" style="background-color: #f2f2f2; padding: 5rpx 35rpx; color:#444444">新增普通章节</div>
+					<div class="tit">新增普通章节</div>
 					<div class="share">
 						<div class="add richArticle" @click="addArticle('richtext')">
 							+ 章节
@@ -164,7 +172,7 @@
 					</div>
 				</div>
 				<div class="newArticle" v-show="novel.novel_type == 'world' && canAddArticle">
-					<div class="tit" style="background-color: #f2f2f2; padding: 5rpx 35rpx; color:#444444">新增设定章节</div>
+					<div class="tit">新增设定章节</div>
 					<div class="share">
 						<div class="add commonArticle" @click="addArticle('worldOutline')">
 							+ 世界大纲
@@ -181,7 +189,12 @@
 				</div>
 			</template>
 		</div>
-		<uni-popup ref="setPopup" type="top" style="z-index:101" background-color="fff2d9">
+		<uni-popup
+			ref="setPopup"
+			type="top"
+			style="z-index:101"
+			:background-color="bookPartPopupBackground"
+		>
 			<div class="bookParts">
 				<navigator v-for="(item, index) in bookPart.parts" :key="index" @click="changeBookPart(item, true)">
 					<div class="part" :class="{ 'selected': item.id == bookPart.currentPart.id }">
@@ -190,7 +203,22 @@
 				</navigator>
 			</div>
 		</uni-popup>
-		<uni-popup ref="exportPopup" type="bottom" background-color="#FFFFFF">
+		<uni-popup ref="splitterRenamePopup" type="dialog">
+			<view class="splitterRenameDialog">
+				<uni-popup-dialog
+					mode="input"
+					title="修改分卷名"
+					placeholder="输入分卷名"
+					:value="splitterRenameValue"
+					cancel-text="取消"
+					confirm-text="确定"
+					:before-close="true"
+					@confirm="confirmSplitterRename"
+					@close="closeSplitterRename"
+				></uni-popup-dialog>
+			</view>
+		</uni-popup>
+		<uni-popup ref="exportPopup" type="bottom" :background-color="popupBackground">
 			<view class="share-popup">
 				<view class="share-title">导出作品</view>
 				<view class="share-content">
@@ -277,10 +305,22 @@ export default {
 			searchPreparedNovelId: 0,
 			searchMaterialsPromise: null,
 			searchRequestId: 0,
-			searchDebounceTimer: null
+			isLoading: true,
+			searchDebounceTimer: null,
+			splitterRenameTargetId: null,
+			splitterRenameValue: ""
 		}
 	},
 	computed: {
+		actionIconColor() {
+			return this.isDarkMode ? '#e7b37d' : 'rgb(113, 52, 24)';
+		},
+		bookPartPopupBackground() {
+			return this.isDarkMode ? '#1e1e1e' : '#fff2d9';
+		},
+		popupBackground() {
+			return this.isDarkMode ? '#252525' : '#ffffff';
+		},
 		canAddArticle() {
 			return this.novelAccess && this.novelAccess.can_add_article === true;
 		},
@@ -319,10 +359,8 @@ export default {
 		},
 	},
 	onLoad(option) {
-		uni.showLoading({
-			title: '努力加载中'
-		});
 		if (JSON.stringify(option) == "{}") {
+			this.isLoading = false;
 			uni.showToast({
 				title: "undefined",
 				icon: 'none',
@@ -987,9 +1025,7 @@ export default {
 			}
 		},
 		async refreshPage(changeToLastBookpart = false) {
-			uni.showLoading({
-				title: '努力加载中'
-			});
+			this.isLoading = true;
 			this.resolveCurrentUserId();
 			this.articleHistoryMetaCache = {};
 			this.resetSearchCache(true);
@@ -1044,7 +1080,7 @@ export default {
 					duration: 2000
 				});
 			} finally {
-				uni.hideLoading();
+				this.isLoading = false;
 			}
 		},
 		addArticle(type) {
@@ -1222,18 +1258,10 @@ export default {
 					this.showPermissionDenied("你没有章节排序权限");
 					return;
 				}
-				uni.showModal({
-					title: '修改分卷名',
-					content: item.title,
-					editable: true,
-					placeholderText: "输入分卷名",
-					success: (res) => {
-						if (res.confirm) {
-							this.changeSpliterName(item.article_id, res.content)
-						}
-						else if (res.cancel) {
-						}
-					}
+				this.splitterRenameTargetId = item.article_id;
+				this.splitterRenameValue = item.title || "";
+				this.$nextTick(() => {
+					this.$refs.splitterRenamePopup.open();
 				});
 			} else if (!this.canEditDraft) {
 				this.showPermissionDenied("你没有编辑章节权限");
@@ -1261,6 +1289,28 @@ export default {
 					url: './chapterEditor?id=' + item.article_id
 				})
 			}
+		},
+		confirmSplitterRename(value) {
+			const targetId = this.splitterRenameTargetId;
+			const nextName = String(value || "").trim();
+			if (targetId == null) return;
+			if (!nextName) {
+				uni.showToast({
+					title: "分卷名不能为空",
+					icon: "none",
+					duration: 2000
+				});
+				return;
+			}
+			this.changeSpliterName(targetId, nextName);
+			this.closeSplitterRename();
+		},
+		closeSplitterRename() {
+			if (this.$refs.splitterRenamePopup) {
+				this.$refs.splitterRenamePopup.close();
+			}
+			this.splitterRenameTargetId = null;
+			this.splitterRenameValue = "";
 		},
 		refreshBookPart() {
 			this.bookPart.parts = [{
@@ -2009,6 +2059,11 @@ export default {
 			border-bottom-color: var(--border-color);
 		}
 
+		::v-deep .el-input__inner::placeholder {
+			color: var(--text-color-secondary);
+			opacity: 1;
+		}
+
 		::v-deep .el-input__prefix {
 			color: rgba(255, 255, 255, 0.5);
 		}
@@ -2025,6 +2080,73 @@ export default {
 
 	.dark-mode & {
 		color: var(--text-color-secondary);
+	}
+}
+
+.articlesSkeleton {
+	width: 100%;
+	background-color: #ffffff;
+
+	.dark-mode & {
+		background-color: var(--card-background);
+	}
+}
+
+.articleSkeleton {
+	height: 110rpx;
+	padding: 20rpx 35rpx 16rpx;
+	border-bottom: 1rpx solid #f2f2f2;
+	box-sizing: border-box;
+
+	.dark-mode & {
+		background-color: var(--card-background);
+		border-bottom-color: var(--border-color);
+	}
+}
+
+.skeletonBlock {
+	position: relative;
+	overflow: hidden;
+	border-radius: 8rpx;
+	background-color: #e8e8e8;
+
+	&::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: -100%;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+		animation: writer-skeleton-shimmer 1.4s ease-in-out infinite;
+	}
+
+	.dark-mode & {
+		background-color: #444444;
+
+		&::after {
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+		}
+	}
+}
+
+.skeletonTitle {
+	width: 64%;
+	height: 32rpx;
+}
+
+.skeletonMeta {
+	width: 34%;
+	height: 22rpx;
+	margin-top: 16rpx;
+}
+
+.skeletonWidth0 { width: 48%; }
+.skeletonWidth1 { width: 76%; }
+
+@keyframes writer-skeleton-shimmer {
+	100% {
+		left: 100%;
 	}
 }
 
@@ -2167,6 +2289,7 @@ export default {
 		.dark-mode & {
 			background-color: var(--card-background);
 			color: var(--text-color-primary);
+			border-bottom-color: #41454b;
 		}
 
 		span {
@@ -2183,7 +2306,68 @@ export default {
 
 .titleOuter {
 	background-color: rgb(255, 255, 255);
-	cursor:pointer;
+	cursor: pointer;
+
+	::v-deep .uni-collapse-item__title.uni-collapse-item-border {
+		border-bottom-color: #e5e5e5;
+	}
+
+	&.splitterRow {
+		background-color: #dddddd;
+
+		::v-deep .uni-collapse-item__title {
+			background-color: #dddddd;
+		}
+
+		.title {
+			color: #444444;
+		}
+	}
+
+	&.selectedRow {
+		background-color: #fffaf0;
+
+		::v-deep .uni-collapse-item__title {
+			background-color: #fffaf0;
+		}
+
+		.title {
+			color: #0a0e16;
+		}
+	}
+
+	.dark-mode & {
+		background-color: var(--card-background);
+
+		::v-deep .uni-collapse-item__title.uni-collapse-item-border {
+			border-bottom-color: #41454b;
+		}
+
+		&.splitterRow {
+			background-color: #30343a;
+
+			::v-deep .uni-collapse-item__title {
+				background-color: #30343a;
+			}
+
+			.title {
+				color: #eef0f3;
+			}
+		}
+
+		&.selectedRow {
+			background-color: #343b45;
+			box-shadow: inset 6rpx 0 0 #e7a665;
+
+			::v-deep .uni-collapse-item__title {
+				background-color: #343b45;
+			}
+
+			.title {
+				color: #fff5e8;
+			}
+		}
+	}
 }
 
 .activeEditor {
@@ -2220,7 +2404,7 @@ export default {
 	line-height: 35rpx;
 
 	.dark-mode & {
-		color: var(--text-color-primary);
+		color: #e7b37d;
 	}
 
 	.draft {
@@ -2236,6 +2420,15 @@ export default {
 	}
 }
 
+.articleStatusLoading {
+	margin-left: 10rpx;
+	color: #444444;
+
+	.dark-mode & {
+		color: var(--text-color-secondary);
+	}
+}
+
 .title.last {
 	margin-top: 40rpx;
 	margin-bottom: 40rpx;
@@ -2247,6 +2440,17 @@ export default {
 
 	.dark-mode & {
 		background-color: var(--card-background);
+	}
+
+	.tit {
+		padding: 5rpx 35rpx;
+		background-color: #f2f2f2;
+		color: #444444;
+
+		.dark-mode & {
+			background-color: var(--background-color-tertiary);
+			color: var(--text-color-regular);
+		}
 	}
 
 	div.add {
@@ -2299,7 +2503,7 @@ export default {
 	margin-bottom: 10rpx;
 
 	.dark-mode & {
-		color: var(--text-color-regular);
+		color: #bdc2ca;
 	}
 
 	.openBtn {}
@@ -2345,6 +2549,11 @@ export default {
 		border-bottom: #cacaca 1rpx solid;
 		background-color: #dddddd !important;
 
+		.dark-mode & {
+			border-bottom-color: var(--border-color);
+			background-color: var(--background-color-tertiary) !important;
+		}
+
 		.partTitle {
 			font-size: 35rpx;
 			color: #444444;
@@ -2359,6 +2568,10 @@ export default {
 	.part.selected {
 		background-color: #ffffff !important;
 
+		.dark-mode & {
+			background-color: rgba(234, 112, 52, 0.16) !important;
+		}
+
 		.partTitle {
 			color: #222222;
 			font-weight: bold;
@@ -2369,6 +2582,77 @@ export default {
 		}
 	}
 
+}
+
+.splitterRenameDialog {
+	::v-deep .uni-popup-dialog {
+		background-color: #ffffff;
+	}
+
+	::v-deep .uni-dialog-title-text {
+		color: #303133;
+	}
+
+	::v-deep .uni-dialog-input {
+		background-color: #f5f5f5;
+		border-color: #dedede;
+		color: #303133;
+	}
+
+	::v-deep .uni-dialog-button-group {
+		border-top-color: #e5e5e5;
+	}
+
+	::v-deep .uni-border-left {
+		border-left-color: #e5e5e5;
+	}
+
+	::v-deep .uni-dialog-button-text {
+		color: #303133;
+	}
+
+	::v-deep .uni-button-color {
+		color: #ea7034;
+	}
+
+	.dark-mode & {
+		::v-deep .uni-popup-dialog {
+			background-color: #282c32;
+			box-shadow: 0 18rpx 60rpx rgba(0, 0, 0, 0.5);
+		}
+
+		::v-deep .uni-dialog-title-text {
+			color: #f1f3f5;
+		}
+
+		::v-deep .uni-dialog-input {
+			background-color: #1f2227;
+			border-color: #4a5058;
+			color: #f4f5f7;
+			caret-color: #e7a665;
+		}
+
+		::v-deep .uni-dialog-input::placeholder {
+			color: #8f959e;
+			opacity: 1;
+		}
+
+		::v-deep .uni-dialog-button-group {
+			border-top-color: #454a52;
+		}
+
+		::v-deep .uni-border-left {
+			border-left-color: #454a52;
+		}
+
+		::v-deep .uni-dialog-button-text {
+			color: #d9dde3;
+		}
+
+		::v-deep .uni-button-color {
+			color: #f0ad6d;
+		}
+	}
 }
 
 /* 导出作品弹出菜单样式 */

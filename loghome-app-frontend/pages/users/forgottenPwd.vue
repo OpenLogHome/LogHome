@@ -1,5 +1,5 @@
 <template>
-	<view class="outer">
+	<view class="outer" v-dark>
 		<div class="info">
 			<p>如果你忘记了密码，请通过以下渠道联系我们：</p>
 			<p>1.加入原木社区任意用户QQ群</p>
@@ -9,7 +9,7 @@
 				<p v-show="false">原木社区公测小组：931304998</p>
 				<p>原木文社总群：464239748</p>
 			</div>
-			<p>2.联系群内管理员<span style="font-weight:bold;color:rgb(180, 111, 88)">通过私聊</span>发送恢复账号的请求。</p>
+			<p>2.联系群内管理员<span style="font-weight:bold;color:var(--brand-text-color)">通过私聊</span>发送恢复账号的请求。</p>
 			<p>如果你的账号此前绑定过QQ号，请使用绑定的QQ号进行账号恢复，将更有可能成功恢复你的账号。</p>
 			<p>否则，我们需要你提供账号的其他信息，来证明你确实是账号的主人。</p>
 		</div>
@@ -42,7 +42,7 @@
 		.info{
 			font-size:30rpx;
 			line-height:60rpx;
-			color: #606063;
+			color: var(--text-color-regular);
 			div.bordered{
 				border: 2px solid #606063;;
 			}
@@ -62,17 +62,17 @@
 			margin-top: 30px;
 			margin-left: 10%;
 			font-size: 16px;
-			
+
 			font-weight: bold;
 			line-height: 38px;
 			border-radius: 5px;
 			text-align:center;
 			color: #ffffff;
 			background-color: rgb(180, 111, 88);
-			
+
 		}
-		 
-		.button:active {  
+
+		.button:active {
 			background-color:rgb(225, 139, 110);
 		}
 	}

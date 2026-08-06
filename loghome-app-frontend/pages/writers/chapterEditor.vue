@@ -5,11 +5,15 @@
 <script>
 export default {
   onLoad(params) {
-    const query = Object.keys(params || {})
+    const redirectParams = {
+      ...(params || {}),
+      noneAnimation: 1,
+    };
+    const query = Object.keys(redirectParams)
       .map(
         (key) =>
           `${encodeURIComponent(key)}=${encodeURIComponent(
-            params[key] == null ? "" : params[key]
+            redirectParams[key] == null ? "" : redirectParams[key]
           )}`
       )
       .join("&");

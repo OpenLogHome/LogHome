@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" v-dark>
     <view class="card article-card">
       <view class="eyebrow">当前章节</view>
       <view class="article-title">{{ article.title || "未命名章节" }}</view>
@@ -22,12 +22,12 @@
           <view class="mode-title">立即发布</view>
           <view class="mode-desc">当前内容立即上线</view>
         </view>
-        <view
-          class="mode-card"
-          :class="{ active: publishMode === 'schedule' }"
-          @click="publishMode = 'schedule'"
-        >
-          <view class="mode-badge">限免</view>
+		<view
+		  class="mode-card"
+		  :class="{ active: publishMode === 'schedule' }"
+		  @click="selectPublishMode('schedule')"
+		>
+		  <view class="mode-badge">通行证权益</view>
           <view class="mode-title">定时发布</view>
           <view class="mode-desc">按指定时间自动发布</view>
         </view>
@@ -76,7 +76,6 @@
       <view class="section-head">
         <view class="correction-title-group">
           <view class="section-title correction-title">文本纠错</view>
-          <view class="inline-limit-badge">限免</view>
         </view>
         <view class="correction-actions-group">
           <button
@@ -93,7 +92,8 @@
             :class="{ 'smart-toggle-loading': smartCorrectionLoading }"
             @click="toggleSmartCorrection"
           >
-            <text class="smart-toggle-label">智能纠错</text>
+			<RedstoneCost :cost="1" :icon-only="true" :hide-cost-detail="true" />
+			<text class="smart-toggle-label">智能纠错</text>
             <view class="smart-toggle-track" :class="{ active: correctionMode === 'smart' }">
               <view class="smart-toggle-thumb"></view>
             </view>
@@ -277,9 +277,26 @@
           </view>
 
           <view class="detail-section">
-            <view class="detail-label">建议改为</view>
-            <view class="detail-text corrected-text">
-              {{ activeCorrection.corrected_text }}
+            <view class="detail-label-row">
+              <view class="detail-label">修正后内容（可编辑）</view>
+              <view
+                v-if="isCorrectionDraftChanged"
+                class="detail-reset"
+                @click="resetCorrectionDraft"
+              >
+                恢复模型建议
+              </view>
+            </view>
+            <textarea
+              v-model="correctionDraftText"
+              class="correction-editor"
+              maxlength="-1"
+              placeholder="请输入修正后的段落内容"
+              :show-confirm-bar="false"
+            />
+            <view class="correction-editor-meta">
+              <text>可在应用前继续调整模型给出的内容</text>
+              <text>{{ correctionDraftText.length }} 字</text>
             </view>
           </view>
 
@@ -298,8 +315,12 @@
                 {{ fragment.corrected_fragment }}
               </view>
             </view>
-            <button class="detail-apply-button" @click="applyCorrection(activeCorrection)">
-              应用这条修改
+            <button
+              class="detail-apply-button"
+              :disabled="!isCorrectionDraftValid"
+              @click="applyEditedCorrection"
+            >
+              应用修正后内容
             </button>
           </view>
         </scroll-view>
@@ -310,6 +331,8 @@
 
 <script>
 import axios from "axios";
+import RedstoneCost from '@/components/redstone-cost/RedstoneCost.vue';
+import { showInsufficientRedstoneOptions } from '@/common/redstone-ui.js';
 import { getServerTime } from "../../lib/utils.js";
 import { writerArticleDB } from "../../lib/db.js";
 import {
@@ -365,6 +388,7 @@ function createEmptyCorrectionResult() {
 const EDIT_LOCK_HEARTBEAT_MS = 30 * 1000;
 
 export default {
+  components: { RedstoneCost },
   data() {
     return {
       articleId: 0,
@@ -373,6 +397,8 @@ export default {
       currentEditLock: null,
       lockHeartbeatTimer: null,
       publishMode: "now",
+	  membershipActive: false,
+	  membershipLoaded: false,
       scheduleTime: "",
       scheduleDate: "",
       scheduleClock: "",
@@ -390,6 +416,7 @@ export default {
       smartThinkingVisible: false,
       thinkingScrollTop: 0,
       activeCorrection: null,
+      correctionDraftText: "",
       ignoredCorrectionStore: {
         version: 1,
         updated_at: 0,
@@ -447,6 +474,18 @@ export default {
         ? this.smartIgnoredCorrectionStore
         : this.ignoredCorrectionStore;
     },
+    isCorrectionDraftChanged() {
+      if (!this.activeCorrection) {
+        return false;
+      }
+      return (
+        this.correctionDraftText !==
+        String(this.activeCorrection.corrected_text || "")
+      );
+    },
+    isCorrectionDraftValid() {
+      return Boolean(normalizeCorrectionText(this.correctionDraftText));
+    },
   },
   watch: {
     publishMode(value) {
@@ -456,6 +495,40 @@ export default {
     },
   },
   methods: {
+	async loadMembershipStatus() {
+	  try {
+		const response = await axios.get(this.$baseUrl + "/membership/subscription", {
+		  headers: { Authorization: "Bearer " + this.getAuthToken() },
+		});
+		this.membershipActive = Boolean(response.data && response.data.data && response.data.data.active);
+		this.membershipLoaded = true;
+	  } catch (error) {
+		this.membershipActive = false;
+		this.membershipLoaded = false;
+	  }
+	},
+	async selectPublishMode(mode) {
+	  if (mode !== "schedule") {
+		this.publishMode = "now";
+		return;
+	  }
+	  if (!this.membershipLoaded) await this.loadMembershipStatus();
+	  if (!this.membershipActive) {
+		uni.showModal({
+		  title: "通行证专属权益",
+		  content: "定时发布仅限原木通行证或超级原木通行证会员使用。",
+		  confirmText: "查看通行证",
+		  success: (result) => {
+			if (result.confirm) uni.navigateTo({ url: "/pages/membership/index" });
+		  },
+		});
+		return;
+	  }
+	  this.publishMode = "schedule";
+	},
+	generateRedstoneRequestId(prefix) {
+	  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+	},
     getTokenInfo() {
       const token = JSON.parse(window.localStorage.getItem("token"));
       return token || null;
@@ -933,6 +1006,7 @@ export default {
       this.ignoredCorrectionStore = await loadIgnoredCorrections(this.getCurrentUserId());
       this.smartIgnoredCorrectionStore = await loadSmartIgnoredCorrections(this.getCurrentUserId());
       this.initializeSchedulePicker();
+	  await this.loadMembershipStatus();
       const lockClaimed = await this.claimEditLock();
       if (!lockClaimed) {
         return;
@@ -1150,6 +1224,7 @@ export default {
           errors,
         };
       } catch (error) {
+		showInsufficientRedstoneOptions(error);
         this.smartCorrectionError = error.message || "文本纠错结果整理失败，请稍后重试";
       } finally {
         this.smartCorrectionLoading = false;
@@ -1337,7 +1412,25 @@ export default {
     },
     openCorrectionDetail(item) {
       this.activeCorrection = item;
+      this.correctionDraftText = String(item.corrected_text || "");
       this.$refs.detailPopup.open();
+    },
+    resetCorrectionDraft() {
+      if (!this.activeCorrection) {
+        return;
+      }
+      this.correctionDraftText = String(
+        this.activeCorrection.corrected_text || ""
+      );
+    },
+    applyEditedCorrection() {
+      if (!this.activeCorrection) {
+        return;
+      }
+      return this.applyCorrection(
+        this.activeCorrection,
+        this.correctionDraftText
+      );
     },
     async ignoreCorrection(item) {
       const userId = this.getCurrentUserId();
@@ -1385,7 +1478,21 @@ export default {
         },
       };
     },
-    async applyCorrection(item) {
+    async applyCorrection(item, customCorrectedText = null) {
+      const correctedText = normalizeCorrectionText(
+        customCorrectedText === null
+          ? item.corrected_text
+          : customCorrectedText
+      );
+      if (!correctedText) {
+        uni.showToast({
+          title: "修正后内容不能为空",
+          icon: "none",
+          duration: 2000,
+        });
+        return;
+      }
+
       const blocks = parseLegacyContent(this.article.content);
       let paragraphCursor = 0;
       let updated = false;
@@ -1409,7 +1516,7 @@ export default {
         updated = true;
         return {
           ...block,
-          value: `${leading}${item.corrected_text}${trailing}`,
+          value: `${leading}${correctedText}${trailing}`,
         };
       });
 
@@ -1441,8 +1548,8 @@ export default {
           }
           return {
             ...current,
-            original_text: item.corrected_text,
-            corrected_text: item.corrected_text,
+            original_text: correctedText,
+            corrected_text: correctedText,
             has_issue: false,
             fragments: [],
             error: null,
@@ -1518,6 +1625,7 @@ export default {
     closeCorrectionDetail() {
       this.$refs.detailPopup.close();
       this.activeCorrection = null;
+      this.correctionDraftText = "";
     },
     navigateAfterSubmit() {
       const pages = getCurrentPages();
@@ -1591,7 +1699,7 @@ export default {
           return;
         }
         uni.showToast({
-          title: "提交失败，请重试",
+		  title: (error.response && error.response.data && (error.response.data.msg || error.response.data.message)) || "提交失败，请重试",
           icon: "none",
           duration: 2000,
         });
@@ -1677,16 +1785,22 @@ export default {
           article_id: this.articleId,
           paragraphs,
           novel_id: this.article.novelId,
+		  request_id: this.generateRedstoneRequestId("smart-correction"),
         }),
       });
 
       if (!response.ok) {
         let message = "智能纠错请求失败";
+		let code = "";
         try {
           const data = await response.json();
           message = data.msg || data.message || message;
+		  code = data.code || "";
         } catch (error) {}
-        throw new Error(message);
+		const requestError = new Error(message);
+		requestError.code = code;
+		requestError.statusCode = response.status;
+		throw requestError;
       }
 
       if (!response.body || !response.body.getReader) {
@@ -2079,6 +2193,7 @@ export default {
     this.stopLockHeartbeat();
   },
   onShow() {
+	this.loadMembershipStatus();
     if (this.publishSessionId) {
       this.claimEditLock();
     }
@@ -2090,32 +2205,32 @@ export default {
 .page {
   min-height: 100vh;
   padding: 24rpx 24rpx 180rpx;
-  background: #f4f5f7;
+  background: var(--background-color-secondary);
   box-sizing: border-box;
 }
 
 .card {
-  background: #ffffff;
+  background: var(--card-background);
   border-radius: 24rpx;
   padding: 28rpx;
   margin-bottom: 24rpx;
-  border: 1px solid #e7e9ee;
+  border: 1px solid var(--border-color);
   box-shadow: 0 6rpx 18rpx rgba(15, 23, 42, 0.04);
 }
 
 .article-card {
-  background: #ffffff;
+  background: var(--card-background);
 }
 
 .eyebrow {
   font-size: 24rpx;
-  color: #8a8f98;
+  color: var(--text-color-secondary);
   margin-bottom: 12rpx;
 }
 
 .article-title {
   font-size: 40rpx;
-  color: #1f2937;
+  color: var(--text-color-primary);
   font-weight: 600;
   line-height: 1.4;
 }
@@ -2126,12 +2241,12 @@ export default {
   gap: 12rpx 20rpx;
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #6b7280;
+  color: var(--text-color-regular);
 }
 
 .section-title {
   font-size: 32rpx;
-  color: #1f2937;
+  color: var(--text-color-primary);
   font-weight: 600;
 }
 
@@ -2145,17 +2260,6 @@ export default {
   gap: 12rpx;
   flex: 1;
   min-width: 0;
-}
-
-.inline-limit-badge {
-  flex-shrink: 0;
-  padding: 4rpx 12rpx;
-  border-radius: 999rpx;
-  background: #dc2626;
-  color: #ffffff;
-  font-size: 20rpx;
-  line-height: 1.4;
-  font-weight: 600;
 }
 
 .section-head {
@@ -2179,20 +2283,20 @@ export default {
   min-width: 240rpx;
   padding: 24rpx;
   border-radius: 20rpx;
-  border: 2rpx solid #d9dee7;
-  background: #f8fafc;
+  border: 2rpx solid var(--border-color);
+  background: var(--background-color-tertiary);
   box-sizing: border-box;
 }
 
 .mode-card.active {
   border-color: #9ca3af;
-  background: #eef2f7;
+  background: var(--background-color-tertiary);
   box-shadow: none;
 }
 
 .mode-title {
   font-size: 30rpx;
-  color: #1f2937;
+  color: var(--text-color-primary);
   font-weight: 600;
 }
 
@@ -2212,7 +2316,7 @@ export default {
 .mode-desc {
   margin-top: 10rpx;
   font-size: 24rpx;
-  color: #6b7280;
+  color: var(--text-color-regular);
 }
 
 .schedule-box {
@@ -2222,7 +2326,7 @@ export default {
 .schedule-label {
   margin-bottom: 12rpx;
   font-size: 26rpx;
-  color: #4b5563;
+  color: var(--text-color-regular);
 }
 
 .schedule-picker-grid {
@@ -2235,8 +2339,8 @@ export default {
   min-height: 120rpx;
   padding: 20rpx 22rpx;
   border-radius: 20rpx;
-  background: #f8fafc;
-  border: 2rpx solid #d9dee7;
+  background: var(--background-color-tertiary);
+  border: 2rpx solid var(--border-color);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -2245,27 +2349,27 @@ export default {
 
 .schedule-picker-caption {
   font-size: 22rpx;
-  color: #9ca3af;
+  color: var(--text-color-secondary);
 }
 
 .schedule-picker-value {
   margin-top: 10rpx;
   font-size: 30rpx;
   line-height: 1.4;
-  color: #1f2937;
+  color: var(--text-color-primary);
   font-weight: 600;
 }
 
 .schedule-tip {
   margin-top: 14rpx;
   font-size: 24rpx;
-  color: #6b7280;
+  color: var(--text-color-regular);
 }
 
 .warning-text {
   margin-top: 18rpx;
   font-size: 24rpx;
-  color: #c2410c;
+  color: var(--warning-text-color);
   line-height: 1.6;
 }
 
@@ -2275,15 +2379,15 @@ export default {
   height: 64rpx;
   line-height: 64rpx;
   padding: 0 24rpx;
-  color: #374151 !important;
-  border-color: #d1d5db !important;
-  background: #ffffff !important;
+  color: var(--text-color-primary) !important;
+  border-color: var(--border-color) !important;
+  background: var(--card-background) !important;
 }
 
 .ghost-button-active {
-  color: #1f2937 !important;
+  color: var(--text-color-primary) !important;
   border-color: #6b7280 !important;
-  background: #f3f4f6 !important;
+  background: var(--background-color-secondary) !important;
 }
 
 .smart-toggle {
@@ -2292,8 +2396,8 @@ export default {
   gap: 10rpx;
   padding: 6rpx 16rpx 6rpx 20rpx;
   border-radius: 999rpx;
-  border: 2rpx solid #d1d5db;
-  background: #ffffff;
+  border: 2rpx solid var(--border-color);
+  background: var(--card-background);
   flex-shrink: 0;
 }
 
@@ -2304,7 +2408,7 @@ export default {
 
 .smart-toggle-label {
   font-size: 24rpx;
-  color: #4b5563;
+  color: var(--text-color-regular);
   white-space: nowrap;
 }
 
@@ -2313,7 +2417,7 @@ export default {
   width: 64rpx;
   height: 34rpx;
   border-radius: 999rpx;
-  background: #d1d5db;
+  background: var(--border-color);
   transition: background 0.2s;
 }
 
@@ -2328,7 +2432,7 @@ export default {
   width: 28rpx;
   height: 28rpx;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--card-background);
   box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.12);
   transition: transform 0.2s;
 }
@@ -2348,7 +2452,7 @@ export default {
   margin-bottom: 20rpx;
   border-radius: 20rpx;
   border: 1px solid #e5e7eb;
-  background: #fafbfc;
+  background: var(--background-color-tertiary);
   overflow: hidden;
 }
 
@@ -2362,13 +2466,13 @@ export default {
 
 .thinking-head-text {
   font-size: 24rpx;
-  color: #6b7280;
+  color: var(--text-color-regular);
   font-weight: 600;
 }
 
 .thinking-head-close {
   font-size: 22rpx;
-  color: #9ca3af;
+  color: var(--text-color-secondary);
 }
 
 .thinking-body {
@@ -2385,7 +2489,7 @@ export default {
 .thinking-content {
   font-size: 22rpx;
   line-height: 1.7;
-  color: #6b7280;
+  color: var(--text-color-regular);
   white-space: pre-wrap;
   word-break: break-all;
   overflow-wrap: break-word;
@@ -2395,13 +2499,13 @@ export default {
   margin-bottom: 20rpx;
   padding: 18rpx 24rpx;
   border-radius: 20rpx;
-  border: 1px dashed #d1d5db;
-  background: #fafbfc;
+  border: 1px dashed var(--border-color);
+  background: var(--background-color-tertiary);
 }
 
 .thinking-collapsed-text {
   font-size: 24rpx;
-  color: #9ca3af;
+  color: var(--text-color-secondary);
 }
 
 .status-box {
@@ -2409,20 +2513,20 @@ export default {
   border-radius: 20rpx;
   font-size: 26rpx;
   line-height: 1.7;
-  background: #f8fafc;
-  color: #4b5563;
+  background: var(--background-color-tertiary);
+  color: var(--text-color-regular);
   border: 1px solid #e5e7eb;
 }
 
 .success-box {
-  background: #f3f7f4;
-  color: #2f5d46;
+  background: var(--background-color-tertiary);
+  color: var(--success-text-color);
   border-color: #d6e6db;
 }
 
 .error-box {
-  background: #faf3f2;
-  color: #b4533c;
+  background: var(--background-color-tertiary);
+  color: var(--danger-text-color);
   border-color: #ecd4cf;
 }
 
@@ -2438,14 +2542,14 @@ export default {
   margin-top: 20rpx;
   font-size: 22rpx;
   line-height: 1.6;
-  color: #8a8f98;
+  color: var(--text-color-secondary);
 }
 
 .correction-item {
   padding: 24rpx;
   border-radius: 20rpx;
-  background: #fbfbfc;
-  border: 1px solid #e7e9ee;
+  background: var(--background-color-tertiary);
+  border: 1px solid var(--border-color);
   margin-bottom: 18rpx;
 }
 
@@ -2466,15 +2570,15 @@ export default {
 
 .paragraph-tag {
   font-size: 24rpx;
-  color: #4b5563;
-  background: #edf1f5;
+  color: var(--text-color-regular);
+  background: var(--background-color-tertiary);
   padding: 6rpx 14rpx;
   border-radius: 999rpx;
 }
 
 .issue-tag {
   font-size: 24rpx;
-  color: #b4533c;
+  color: var(--danger-text-color);
 }
 
 .ignore-button {
@@ -2485,9 +2589,9 @@ export default {
   height: 56rpx;
   line-height: 56rpx;
   padding: 0 22rpx;
-  color: #4b5563 !important;
-  border-color: #d1d5db !important;
-  background: #ffffff !important;
+  color: var(--text-color-regular) !important;
+  border-color: var(--border-color) !important;
+  background: var(--card-background) !important;
 }
 
 .correction-markup {
@@ -2498,7 +2602,7 @@ export default {
   gap: 10rpx 0;
   font-size: 26rpx;
   line-height: 1.8;
-  color: #374151;
+  color: var(--text-color-primary);
 }
 
 .detail-markup {
@@ -2506,7 +2610,7 @@ export default {
 }
 
 .markup-plain {
-  color: #374151;
+  color: var(--text-color-primary);
   white-space: pre-wrap;
 }
 
@@ -2517,7 +2621,7 @@ export default {
   margin: 0 8rpx;
   padding: 6rpx 14rpx;
   border-radius: 999rpx;
-  background: #f3f4f6;
+  background: var(--background-color-secondary);
   vertical-align: middle;
 }
 
@@ -2529,17 +2633,17 @@ export default {
 }
 
 .markup-original {
-  color: #b4533c;
+  color: var(--danger-text-color);
   text-decoration: line-through;
 }
 
 .markup-suggestion {
-  color: #25634a;
+  color: var(--success-text-color);
   font-weight: 600;
 }
 
 .markup-arrow {
-  color: #9ca3af;
+  color: var(--text-color-secondary);
 }
 
 .correction-actions {
@@ -2571,7 +2675,7 @@ export default {
 .detail-entry {
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #6b7280;
+  color: var(--text-color-regular);
 }
 
 .footer-bar {
@@ -2582,7 +2686,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 20rpx;
-  padding: 20rpx 24rpx calc(28rpx + env(safe-area-inset-bottom));
+  padding: 20rpx 24rpx calc(28rpx + var(--loghome-safe-bottom, 0px));
   background: rgba(244, 245, 247, 0.96);
   border-top: 1px solid #e5e7eb;
   box-shadow: none;
@@ -2609,13 +2713,13 @@ export default {
 }
 
 .secondary-button {
-  color: #374151;
-  background: #ffffff;
-  border: 2rpx solid #d1d5db;
+  color: var(--text-color-primary);
+  background: var(--card-background);
+  border: 2rpx solid var(--border-color);
 }
 
 .detail-panel {
-  background: #ffffff;
+  background: var(--card-background);
   border-radius: 32rpx 32rpx 0 0;
   padding: 28rpx 28rpx 40rpx;
   border-top: 1px solid #e5e7eb;
@@ -2630,7 +2734,7 @@ export default {
 
 .detail-title {
   font-size: 34rpx;
-  color: #1f2937;
+  color: var(--text-color-primary);
   font-weight: 600;
 }
 
@@ -2642,7 +2746,7 @@ export default {
 
 .detail-close {
   font-size: 26rpx;
-  color: #6b7280;
+  color: var(--text-color-regular);
 }
 
 .detail-scroll {
@@ -2657,24 +2761,64 @@ export default {
 .detail-label {
   margin-bottom: 12rpx;
   font-size: 24rpx;
-  color: #6b7280;
+  color: var(--text-color-regular);
+}
+
+.detail-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 12rpx;
+}
+
+.detail-label-row .detail-label {
+  margin-bottom: 0;
+}
+
+.detail-reset {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: var(--success-text-color);
 }
 
 .detail-text {
   padding: 20rpx;
   border-radius: 18rpx;
-  background: #f8fafc;
+  background: var(--background-color-tertiary);
   font-size: 28rpx;
   line-height: 1.8;
-  color: #374151;
+  color: var(--text-color-primary);
   white-space: pre-wrap;
   border: 1px solid #e5e7eb;
 }
 
-.corrected-text {
-  background: #f3f7f4;
-  color: #25634a;
-  border-color: #d6e6db;
+.correction-editor {
+  display: block;
+  width: 100%;
+  height: 260rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  background: var(--background-color-tertiary);
+  color: var(--success-text-color);
+  border: 1px solid #d6e6db;
+  font-size: 28rpx;
+  line-height: 1.8;
+}
+
+.correction-editor-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-top: 10rpx;
+  color: var(--text-color-secondary);
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.detail-apply-button[disabled] {
+  opacity: 0.45;
 }
 
 .fragment-row {
@@ -2683,7 +2827,7 @@ export default {
   gap: 14rpx;
   padding: 18rpx 20rpx;
   border-radius: 18rpx;
-  background: #f8fafc;
+  background: var(--background-color-tertiary);
   border: 1px solid #e5e7eb;
   margin-bottom: 14rpx;
 }
@@ -2696,15 +2840,15 @@ export default {
 }
 
 .fragment-original {
-  color: #b4533c;
+  color: var(--danger-text-color);
 }
 
 .fragment-corrected {
-  color: #25634a;
+  color: var(--success-text-color);
 }
 
 .fragment-arrow {
-  color: #9ca3af;
+  color: var(--text-color-secondary);
   font-size: 26rpx;
 }
 </style>

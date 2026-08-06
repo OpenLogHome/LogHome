@@ -1,5 +1,5 @@
 <template>
-  <div class="book-excerpts-container">
+  <div class="book-excerpts-container" v-dark>
     <div class="tabs">
       <div 
         class="tab" 
@@ -210,7 +210,7 @@ export default {
       } else {
         // 否则直接跳转到对应的文章和段落
         const readerProps = window.localStorage.getItem("readerProps");
-        const isPageReader = readerProps === "page";
+        const isPageReader = readerProps !== "text";
         const baseUrl = isPageReader ? '/pages/readers/newReader/article' : '/pages/readers/article_rich';
         uni.navigateTo({
           url: `${baseUrl}?id=${articleId}&paragraphId=${paragraphId}`
@@ -229,7 +229,7 @@ export default {
       } else {
         // 否则直接跳转到对应的文章和段落
         const readerProps = window.localStorage.getItem("readerProps");
-        const isPageReader = readerProps === "page";
+        const isPageReader = readerProps !== "text";
         const baseUrl = isPageReader ? '/pages/readers/newReader/article' : '/pages/readers/article_rich';
         uni.navigateTo({
           url: `${baseUrl}?id=${excerpt.article_id || ''}&paragraphId=${excerpt.paragraph_id}`
@@ -299,17 +299,19 @@ export default {
   height: calc(100% - 44px);
   display: flex;
   flex-direction: column;
+  background-color: var(--background-color-secondary);
+  color: var(--text-color-primary);
   
   .tabs {
     display: flex;
-    border-bottom: 1px solid #e4e7ed;
+    border-bottom: 1px solid var(--border-color);
     padding: 0 20rpx;
     
     .tab {
       padding: 20rpx 40rpx;
       font-size: 30rpx;
       position: relative;
-      color: #606266;
+      color: var(--text-color-regular);
       
       &.active {
         color: #FF5835;
@@ -339,7 +341,7 @@ export default {
       justify-content: center;
       align-items: center;
       height: 100rpx;
-      color: #909399;
+      color: var(--text-color-secondary);
     }
     
     .empty-state {
@@ -348,7 +350,7 @@ export default {
       justify-content: center;
       align-items: center;
       height: 300rpx;
-      color: #909399;
+      color: var(--text-color-secondary);
       
       i {
         font-size: 60rpx;
@@ -363,7 +365,7 @@ export default {
     
     .excerpts-list {
       .excerpt-item {
-        background-color: #fff;
+        background-color: var(--card-background);
         border-radius: 10rpx;
         padding: 30rpx;
         margin-bottom: 20rpx;
@@ -372,7 +374,7 @@ export default {
         .excerpt-content {
           font-size: 28rpx;
           line-height: 1.6;
-          color: #303133;
+          color: var(--text-color-primary);
           margin-bottom: 20rpx;
           text-indent: 2em;
           position: relative;
@@ -383,7 +385,7 @@ export default {
             left: -0.5em;
             top: -0.3em;
             font-size: 1.5em;
-            color: #DCDFE6;
+            color: var(--text-color-secondary);
           }
           
           &:after {
@@ -391,7 +393,7 @@ export default {
             position: absolute;
             margin-left: 0.1em;
             font-size: 1.5em;
-            color: #DCDFE6;
+            color: var(--text-color-secondary);
           }
         }
         
@@ -400,7 +402,7 @@ export default {
           justify-content: space-between;
           align-items: center;
           font-size: 24rpx;
-          color: #909399;
+          color: var(--text-color-secondary);
           
           .time, .article-info {
             flex: 1;

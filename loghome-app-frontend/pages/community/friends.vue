@@ -10,8 +10,7 @@
 			<p class="fansNums">共有 {{filteredFans.length}} 个粉丝</p>
 			<div class="users" v-for="item in filteredFans">
 				<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
-					<log-image :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+					<user-avatar class="friend-avatar" :src="item.avatar_url" :frame="item.avatar_frame" :visual-scale="item.avatar_frame ? 1.25 : 1" />
 					<div class="personInfo">
 						<div class="name">{{item.name}}</div>
 						<div class="motto">{{item.motto}}</div>
@@ -24,8 +23,7 @@
 
 				<div class="users" v-for="item in filteredFollows">
 					<navigator class="users" :url="'../users/personalPage?id='+item.follow_id">
-						<log-image :src="item.avatar_url" alt=""
-						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+						<user-avatar class="friend-avatar" :src="item.avatar_url" :frame="item.avatar_frame" :visual-scale="item.avatar_frame ? 1.25 : 1" />
 						<div class="personInfo">
 							<div class="name">{{item.name}}</div>
 							<div class="motto">{{item.motto}}</div>
@@ -290,15 +288,10 @@
 			border-bottom: #3a3a3a 1rpx solid;
 		}
 
-		img {
+		.friend-avatar {
+			width: 100rpx;
 			height: 100rpx;
-			border:#cacaca 1rpx solid;
-			border-radius: 7rpx;
 			margin:15rpx;
-
-			.dark-mode & {
-				border:#3a3a3a 1rpx solid;
-			}
 		}
 		.name {
 			margin-top: 20rpx;

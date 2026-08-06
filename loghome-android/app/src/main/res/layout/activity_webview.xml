@@ -3,19 +3,19 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="?android:attr/colorBackground">
 
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/white" />
+        android:background="?android:attr/colorBackground" />
 
     <LinearLayout
         android:id="@+id/loadingContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/white"
+        android:background="?android:attr/colorBackground"
         android:gravity="center"
         android:orientation="vertical">
 
@@ -32,6 +32,7 @@
         android:id="@+id/errorContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="?android:attr/colorBackground"
         android:gravity="center"
         android:orientation="vertical"
         android:visibility="gone">
@@ -51,4 +52,34 @@
             android:layout_marginTop="16dp"
             android:text="@string/retry" />
     </LinearLayout>
+
+    <View
+        android:id="@+id/transitionDimOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="#000000"
+        android:clickable="false"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/transitionEdgeShadow"
+        android:layout_width="28dp"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@drawable/loghome_transition_edge_shadow"
+        android:clickable="false"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+
+    <top.codesocean.loghome.android.audio.NativeAudiobookPlayerView
+        android:id="@+id/nativeAudiobookPlayer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone" />
 </FrameLayout>

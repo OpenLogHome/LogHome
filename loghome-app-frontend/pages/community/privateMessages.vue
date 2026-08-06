@@ -4,8 +4,8 @@
 		<view class="list">
 			<div class="users" v-for="item in chatFriends" @click="navigateToChat(item)">
 				<view class="avators">
-					<log-image :src="item.avatar_url" alt=""
-					onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+					<user-avatar class="message-avatar" :src="item.avatar_url" :frame="item.avatar_frame"
+						:visual-scale="item.avatar_frame ? 1.25 : 1" />
 					<view v-if="item.unread_count > 0" class="unread-badge">{{item.unread_count}}</view>
 				</view>
 				<div class="personInfo">
@@ -158,10 +158,9 @@
 		.avators {
 			position: relative;
 			
-			img {
+			.message-avatar {
+				width: 100rpx;
 				height: 100rpx;
-				border: var(--border-color) 1rpx solid;
-				border-radius: 7rpx;
 				margin: 15rpx;
 			}
 			

@@ -1,5 +1,5 @@
 <template>
-	<view class="container">		
+	<view class="container" v-dark>
 		<view class="list-content">
 			<view class="list">
 				<navigator url="./audit/index">
@@ -11,7 +11,7 @@
 						<img class="to" src="../../static/user/to.png"/>
 					</view>
 				</navigator>
-				
+
 				<navigator url="./faqs/index">
 					<view class="li">
 						<view class="icon">
@@ -41,7 +41,7 @@
 						<img class="to" src="../../static/user/to.png"/>
 					</view>
 				</navigator>
-				
+
 				<navigator url="./community/index">
 					<view class="li">
 						<view class="icon">
@@ -88,7 +88,7 @@ export default {
 			}, 1500);
 			return;
 		}
-		
+
 		// 检查是否是管理员
 		let userInfo = JSON.parse(window.localStorage.getItem('LogHomeUserInfo'));
 		if (!userInfo || userInfo.is_admin != 1) {
@@ -106,7 +106,7 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-	background-color: #f2f2f2;
+	background-color: var(--background-color-secondary);
 }
 
 .list-content {
@@ -114,38 +114,38 @@ export default {
 }
 
 .list {
-	background: #fff;
-	
+	background: var(--card-background);
+
 	.li {
 		width: 92%;
 		height: 100upx;
 		padding: 0 4%;
-		border-bottom: 1px solid #eee;
+		border-bottom: 1px solid var(--border-color);
 		display: flex;
 		align-items: center;
-		
+
 		&.noborder {
 			border-bottom: 0;
 		}
-		
+
 		.icon {
 			flex-shrink: 0;
 			width: 50upx;
 			height: 50upx;
-			
+
 			img {
 				width: 50upx;
 				height: 50upx;
 			}
 		}
-		
+
 		.text {
 			padding-left: 20upx;
 			width: 100%;
-			color: #666;
+			color: var(--text-color-regular);
 			font-size: 30rpx;
 		}
-		
+
 		.to {
 			flex-shrink: 0;
 			width: 40upx;
@@ -153,4 +153,4 @@ export default {
 		}
 	}
 }
-</style> 
+</style>

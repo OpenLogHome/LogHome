@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "engine": {
+    "name": "sherpa-onnx",
+    "version": "1.13.4",
+    "delivery": "embedded-in-apk",
+    "abi": "arm64-v8a"
+  },
+  "packages": [
+    {
+      "packageId": "chaowen-int8-v1",
+      "uploadFile": "../tts-server-assets-upload-v1.zip",
+      "sizeBytes": 14002560,
+      "sha256": "c3a538c8a22492397adb6630c9b92b23323e1e332dcdb743346e7a428fb8b776",
+      "archiveRootDirectory": "vits-piper-zh_CN-chaowen-medium-int8",
+      "speakers": 1
+    },
+    {
+      "packageId": "aishell3-v1",
+      "uploadFile": "vits-icefall-zh-aishell3.tar.bz2",
+      "downloadUrl": "https://storage.codesocean.top/api/resource/download/178598531385082",
+      "sizeBytes": 31559701,
+      "sha256": "ab468db3a3308cdd861495e0db2f25d79418a0c00639f74944c7cdf5dd8c6ec1",
+      "archiveRootDirectory": "vits-icefall-zh-aishell3",
+      "speakers": 174,
+      "selectedSpeakerIds": [10, 33, 66, 99, 103, 141],
+      "license": "Apache-2.0"
+    }
+  ]
+}

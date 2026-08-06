@@ -14,7 +14,8 @@
         <view class="member-list">
           <view class="member-item" v-for="(request, index) in joinRequests" :key="'req-'+index">
             <view class="member-info" @tap="navigateToUser(request.user_id)">
-              <log-image class="member-avatar" :src="request.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <user-avatar class="member-avatar" :src="request.avatar_url" :frame="request.avatar_frame"
+                :visual-scale="request.avatar_frame ? 1.2 : 1" />
               <view class="member-details">
                 <text class="member-name">{{request.name}}</text>
                 <text class="member-motto" v-if="request.verification_info">{{request.verification_info}}</text>
@@ -42,7 +43,8 @@
         <view class="member-list">
           <view class="member-item" v-for="(member, index) in managementMembers" :key="index" @tap="navigateToUser(member.user_id)">
             <view class="member-info">
-              <log-image class="member-avatar" :src="member.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <user-avatar class="member-avatar" :src="member.avatar_url" :frame="member.avatar_frame"
+                :visual-scale="member.avatar_frame ? 1.2 : 1" />
               <view class="member-details">
                 <text class="member-name">{{member.name}}</text>
                 <text class="member-motto" v-if="member.motto">{{member.motto}}</text>
@@ -65,7 +67,8 @@
         <view class="member-list">
           <view class="member-item" v-for="(member, index) in normalMembers" :key="index" @tap="navigateToUser(member.user_id)">
             <view class="member-info">
-              <log-image class="member-avatar" :src="member.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <user-avatar class="member-avatar" :src="member.avatar_url" :frame="member.avatar_frame"
+                :visual-scale="member.avatar_frame ? 1.2 : 1" />
               <view class="member-details">
                 <text class="member-name">{{member.name}}</text>
                 <text class="member-motto" v-if="member.motto">{{member.motto}}</text>
@@ -96,7 +99,8 @@
         <view class="member-list">
           <view class="member-item" v-for="(member, index) in bannedMembers.filter(m => m.ban_type === 0)" :key="'ban-'+index">
             <view class="member-info" @tap="navigateToUser(member.user_id)">
-              <log-image class="member-avatar" :src="member.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <user-avatar class="member-avatar" :src="member.avatar_url" :frame="member.avatar_frame"
+                :visual-scale="member.avatar_frame ? 1.2 : 1" />
               <view class="member-details">
                 <text class="member-name">{{member.name}}</text>
                 <text class="member-motto" v-if="member.motto">{{member.motto}}</text>
@@ -122,7 +126,8 @@
         <view class="member-list">
           <view class="member-item" v-for="(member, index) in bannedMembers.filter(m => m.ban_type === 1)" :key="'kick-'+index">
             <view class="member-info" @tap="navigateToUser(member.user_id)">
-              <log-image class="member-avatar" :src="member.avatar_url" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
+              <user-avatar class="member-avatar" :src="member.avatar_url" :frame="member.avatar_frame"
+                :visual-scale="member.avatar_frame ? 1.2 : 1" />
               <view class="member-details">
                 <text class="member-name">{{member.name}}</text>
                 <text class="member-motto" v-if="member.motto">{{member.motto}}</text>
