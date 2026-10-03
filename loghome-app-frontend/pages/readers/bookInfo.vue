@@ -245,6 +245,35 @@
 
 					</view>
 
+					<view class="l-list" v-if="activityNewsList.length > 0">
+						<view class="l-h3">
+							<text class="l-h3-title">创作活动</text>
+						</view>
+						<view class="activity-group" v-for="activity in activityNewsList" :key="activity.tag_id">
+							<view class="activity-group-head clickable" @click="gotoTag(activity.tag_id, activity.activity_name)">
+								<text class="activity-group-name">{{ activity.activity_name }}</text>
+								<text class="activity-group-status" :class="activity.is_active == 1 ? 'ongoing' : 'ended'">
+									{{ activity.is_active == 1 ? '进行中' : '已结束' }}
+								</text>
+							</view>
+							<view class="activity-news-item clickable" v-for="(news, newsIndex) in activity.news"
+								:key="newsIndex" @click="openActivityNews(news)">
+								<text class="activity-news-item-title">{{ news.title }}</text>
+								<text class="activity-news-item-arrow">›</text>
+							</view>
+							<view class="activity-popularity" v-if="activity.popularity && activity.popularity.enabled">
+								<view class="activity-popularity-info">
+									<text class="activity-popularity-count">人气票 {{ activity.popularity.votes }}</text>
+									<text class="activity-popularity-reason" v-if="popularityHint(activity)">{{ popularityHint(activity) }}</text>
+								</view>
+								<view class="activity-popularity-btn clickable" :class="{ disabled: popularityBtnDisabled(activity) }"
+									@click="voteActivity(activity)">
+									{{ popularityBtnText(activity) }}
+								</view>
+							</view>
+						</view>
+					</view>
+
 					<view class="l-list">
 						<view class="l-h3">
 							<text class="l-h3-title">评论</text>
@@ -564,6 +593,9 @@ export default {
 			commentAmount: 0,
 			novel_pics: [],
 			tags: [],
+			activityNews: [],
+			popularityStatus: {},
+			isVotingPopularity: false,
 			fanInfo: [],
 			scrollTop: 0,
 			novelRank: {
@@ -1077,6 +1109,133 @@ export default {
 				});
 			}).then(function () { })
 		},
+		getNovelActivityNews() {
+			axios.get(this.$baseUrl + '/library/get_novel_activity_news?novel_id=' + this.uid, {}).then((res) => {
+				this.activityNews = Array.isArray(res.data) ? res.data : [];
+			}).catch(() => {
+				this.activityNews = [];
+			})
+		},
+		openActivityNews(news) {
+			if (news.mobile_link) {
+				uni.navigateTo({
+					url: news.mobile_link
+				});
+			} else if (news.pc_link && typeof window !== 'undefined') {
+				window.open(news.pc_link, '_blank');
+			}
+		},
+		getPopularityToken() {
+			let tk = null;
+			try {
+				tk = JSON.parse(window.localStorage.getItem('token'));
+			} catch (error) {
+				window.localStorage.removeItem('token');
+			}
+			return tk && tk.tk ? tk.tk : null;
+		},
+		getPopularityStatus() {
+			const tk = this.getPopularityToken();
+			if (!tk) {
+				this.popularityStatus = {};
+				return;
+			}
+			axios.get(this.$baseUrl + '/popularity/novel_status?novel_id=' + this.uid, {
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + tk
+				}
+			}).then((res) => {
+				let map = {};
+				(Array.isArray(res.data) ? res.data : []).forEach(item => {
+					map[item.tag_id] = item;
+				});
+				this.popularityStatus = map;
+			}).catch(() => {
+				this.popularityStatus = {};
+			})
+		},
+		popularityStatusOf(activity) {
+			return this.popularityStatus[activity.tag_id] || null;
+		},
+		popularityBtnText(activity) {
+			const status = this.popularityStatusOf(activity);
+			return status && status.voted_this_novel ? '已投' : '投人气票';
+		},
+		popularityBtnDisabled(activity) {
+			const status = this.popularityStatusOf(activity);
+			// 未登录时按钮仍可点击（引导登录），登录后由服务端状态决定
+			return !!status && !status.can_vote;
+		},
+		popularityHint(activity) {
+			const status = this.popularityStatusOf(activity);
+			if (!status) {
+				return '';
+			}
+			if (status.voted_this_novel) {
+				return '';
+			}
+			if (!status.can_vote) {
+				return status.reason;
+			}
+			return '剩余 ' + status.remaining + ' 票';
+		},
+		voteActivity(activity) {
+			const tk = this.getPopularityToken();
+			if (!tk) {
+				uni.navigateTo({
+					url: '../users/login?msg=' + 'unAuthorized'
+				});
+				return;
+			}
+			const status = this.popularityStatusOf(activity);
+			if (status && !status.can_vote) {
+				uni.showToast({
+					title: status.reason || '暂时无法投票',
+					icon: 'none',
+					duration: 2000
+				});
+				return;
+			}
+			if (this.isVotingPopularity) {
+				return;
+			}
+			this.isVotingPopularity = true;
+			axios.post(this.$baseUrl + '/popularity/vote', {
+				tag_id: activity.tag_id,
+				novel_id: this.uid
+			}, {
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + tk
+				}
+			}).then((res) => {
+				uni.showToast({
+					title: '已为本书投出 1 票',
+					icon: 'none',
+					duration: 2000
+				});
+				this.getPopularityStatus();
+				this.getNovelActivityNews();
+			}).catch((error) => {
+				if (error.message == "Request failed with status code 401") {
+					window.localStorage.removeItem('token');
+					uni.navigateTo({
+						url: '../users/login?msg=' + 'unAuthorized'
+					});
+					return;
+				}
+				const msg = error && error.response && error.response.data && error.response.data.msg;
+				uni.showToast({
+					title: msg || '投票失败，请稍后重试',
+					icon: 'none',
+					duration: 2000
+				});
+				this.getPopularityStatus();
+			}).finally(() => {
+				this.isVotingPopularity = false;
+			})
+		},
 		getFansStatistics() {
 			axios.get(this.$baseUrl + "/library/get_all_novel_fans?novel_id=" + this.uid)
 				.then((res) => {
@@ -1388,6 +1547,8 @@ export default {
 		this.getCommentNum();
 		this.get_novel_pics();
 		this.getNovelTags();
+		this.getNovelActivityNews();
+		this.getPopularityStatus();
 		this.getFansStatistics();
 		this.getWorlds();
 
@@ -1578,6 +1739,9 @@ export default {
 		},
 		articleLength() {
 			return this.articles.length;
+		},
+		activityNewsList() {
+			return this.activityNews.filter(activity => activity.news && activity.news.length > 0);
 		},
 		//真正的阅读进度
 		historyShown() {
@@ -2556,6 +2720,155 @@ export default {
 
 			}
 
+		}
+	}
+}
+
+.activity-group {
+	margin-top: 32rpx;
+	padding: 24rpx 28rpx;
+	background-color: rgba(202, 202, 202, 0.1);
+	border-radius: 16rpx;
+	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+
+	.dark-mode & {
+		background-color: var(--card-background);
+	}
+
+	.activity-group-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 6rpx 0 14rpx;
+
+		.activity-group-name {
+			font-size: 30rpx;
+			font-weight: bold;
+			color: #ec8600;
+			flex: 1;
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+
+			.dark-mode & {
+				color: #ffb45e;
+			}
+		}
+
+		.activity-group-status {
+			flex-shrink: 0;
+			margin-left: 16rpx;
+			padding: 4rpx 16rpx;
+			border-radius: 999rpx;
+			font-size: 20rpx;
+			line-height: 1.4;
+
+			&.ongoing {
+				color: #ffffff;
+				background-color: #ea7034;
+			}
+
+			&.ended {
+				color: #95a1a6;
+				background-color: rgba(149, 161, 166, 0.15);
+			}
+		}
+	}
+
+	.activity-news-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 20rpx 8rpx;
+		border-top: 1rpx solid rgba(0, 0, 0, 0.05);
+
+		.dark-mode & {
+			border-top-color: rgba(255, 255, 255, 0.06);
+		}
+
+		.activity-news-item-title {
+			flex: 1;
+			min-width: 0;
+			font-size: 26rpx;
+			color: #4a2c18;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+
+			.dark-mode & {
+				color: var(--text-color-primary);
+			}
+		}
+
+		.activity-news-item-arrow {
+			flex-shrink: 0;
+			margin-left: 12rpx;
+			font-size: 32rpx;
+			line-height: 1;
+			color: #b5a894;
+		}
+	}
+
+	.activity-popularity {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 20rpx 8rpx 6rpx;
+		border-top: 1rpx solid rgba(0, 0, 0, 0.05);
+		margin-top: 4rpx;
+
+		.dark-mode & {
+			border-top-color: rgba(255, 255, 255, 0.06);
+		}
+
+		.activity-popularity-info {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+
+			.activity-popularity-count {
+				font-size: 26rpx;
+				font-weight: bold;
+				color: #ea7034;
+
+				.dark-mode & {
+					color: #ffb45e;
+				}
+			}
+
+			.activity-popularity-reason {
+				margin-top: 6rpx;
+				font-size: 22rpx;
+				color: #95a1a6;
+
+				.dark-mode & {
+					color: var(--text-color-secondary);
+				}
+			}
+		}
+
+		.activity-popularity-btn {
+			flex-shrink: 0;
+			padding: 12rpx 32rpx;
+			border-radius: 999rpx;
+			font-size: 26rpx;
+			font-weight: bold;
+			color: #ffffff;
+			background: linear-gradient(135deg, #ff8c42 0%, #EA7034 100%);
+			transition: all 0.2s ease;
+
+			&.disabled {
+				color: #b5a894;
+				background: rgba(202, 202, 202, 0.3);
+			}
+
+			.dark-mode & {
+				&.disabled {
+					color: #7a7a7a;
+					background: rgba(255, 255, 255, 0.08);
+				}
+			}
 		}
 	}
 }

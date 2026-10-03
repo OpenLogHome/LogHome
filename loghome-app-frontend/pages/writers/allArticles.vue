@@ -77,20 +77,54 @@
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">分卷</el-tag>
 								<el-tag type="danger" v-show="item.is_draft == true" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">草稿</el-tag>
+								<el-tag
+									type="success"
+									v-if="item.collaboration_mode === 'realtime_crdt'"
+									effect="dark"
+									disable-transitions
+									style="margin-left:10rpx; transform:translateY(-5rpx)"
+									size="mini"
+								>实时协作</el-tag>
+								<div
+									v-if="item.collaboration_mode === 'realtime_crdt' && item.realtime_collaborators && item.realtime_collaborators.length"
+									class="realtimeCollaborators"
+									:aria-label="`${item.realtime_collaborators.length} 位作者正在编辑`"
+									@click.stop="gotoEditor(item)"
+								>
+									<span
+										v-for="(participant, participantIndex) in getRealtimeCollaboratorStack(item)"
+										:key="participant.user_id"
+										class="realtimeCollaboratorAvatarWrap"
+										:style="{ borderColor: participant.color, zIndex: 20 - participantIndex }"
+										:title="participant.name + ' 正在编辑'"
+									>
+										<img
+											class="realtimeCollaboratorAvatar"
+											:src="participant.avatar_url"
+											onerror="this.onerror=null;this.src='/static/user/defaultAvatar.jpg'"
+										/>
+									</span>
+									<span
+										v-if="getRealtimeCollaboratorOverflow(item) > 0"
+										class="realtimeCollaboratorAvatarWrap realtimeCollaboratorOverflow"
+									>
+										+{{ getRealtimeCollaboratorOverflow(item) }}
+									</span>
+								</div>
 								<el-tag type="warning" v-if="item.feedback_count && item.feedback_count > 0" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)"
 									size="mini">{{ item.feedback_count }}处反馈</el-tag>
 								<el-tag type="danger" v-if="item.hasWriterModify == true && item.is_draft == false" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">发布后有编辑</el-tag>
-								<el-tag type="warning" v-if="item.isSyncing == true" disable-transitions
+								<el-tag type="warning" v-if="item.collaboration_mode !== 'realtime_crdt' && item.isSyncing == true" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark">Syncing</el-tag>
-								<el-tag type="info" v-if="item.hasCloudCollision == true" disable-transitions
+								<el-tag type="info" v-if="item.collaboration_mode !== 'realtime_crdt' && item.hasCloudCollision == true" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark" >
 									<i class="el-icon-warning-outline" style="margin-right: 5rpx;"></i>存在云冲突
 								</el-tag>
 								<el-tag
 									type="warning"
-									v-if="item.remoteEditSummary"
+									v-if="item.collaboration_mode !== 'realtime_crdt' && item.remoteEditSummary"
 									style="margin-left:10rpx; transform:translateY(-5rpx)"
 									size="mini"
 									effect="dark"
@@ -98,7 +132,7 @@
 								>
 									{{ item.remoteEditSummary }}
 								</el-tag>
-								<div class="activeEditor" v-if="item.active_editor">
+								<div class="activeEditor" v-if="item.collaboration_mode !== 'realtime_crdt' && item.active_editor">
 									<img
 										class="activeEditorAvatar"
 										:src="item.active_editor.avatar_url"
@@ -151,6 +185,27 @@
 									<span>错误反馈 ({{ item.feedback_count }})</span>
 								</div>
 							</navigator>
+							<div
+								v-if="isOwner && supportsRealtimeCollaboration(item)"
+								class="subTitle collaborationModeAction"
+								:class="{
+									disabled: isCollaborationModeSwitching(item),
+									realtime: item.collaboration_mode === 'realtime_crdt'
+								}"
+								@click.stop="confirmCollaborationModeSwitch(item)"
+							>
+								<i
+									v-if="isCollaborationModeSwitching(item)"
+									class="el-icon-loading"
+								></i>
+								<uni-icons
+									v-else
+									type="link"
+									size="20"
+									:color="actionIconColor"
+								/>
+								<span>{{ getCollaborationModeActionText(item) }}</span>
+							</div>
 							<div class="subTitle" @click="deleteArticle(item.article_id)" v-show="canDeleteArticle">
 								<uni-icons type="trash" size="20" :color="actionIconColor" />
 								<span>删除{{ item.article_type == 'spliter' ? "分卷" : "" }}</span>
@@ -254,6 +309,9 @@ import { areLegacyContentsEquivalent } from "../../lib/writerEditorLegacyAdapter
 
 const SYNC_RECHECK_DELAY_MS = 3000;
 const SEARCH_DEBOUNCE_MS = 250;
+const REALTIME_PRESENCE_POLL_MS = 10000;
+const REALTIME_PRESENCE_BATCH_SIZE = 100;
+const REALTIME_AVATAR_STACK_LIMIT = 4;
 const RECOVERABLE_SYNC_STATE_STATUSES = ["pending", "invalidated"];
 
 export default {
@@ -307,6 +365,9 @@ export default {
 			searchRequestId: 0,
 			isLoading: true,
 			searchDebounceTimer: null,
+			collaborationModeSwitchingArticleId: null,
+			realtimePresenceTimer: null,
+			realtimePresenceRequestId: 0,
 			splitterRenameTargetId: null,
 			splitterRenameValue: ""
 		}
@@ -374,6 +435,7 @@ export default {
 	},
 	onShow() {
 		this.refreshPage();
+		this.startRealtimePresencePolling();
 		setTimeout(() => {
 			this.titleBtn = document.getElementsByClassName("uni-page-head__title")[0];
 			this.titleBtn.addEventListener("click", this.toggleTitleBtn);
@@ -383,7 +445,11 @@ export default {
 		// 检测是否运行在iframe中并与父框架通信
 		this.checkFrameEnvironment();
 	},
+	onHide() {
+		this.stopRealtimePresencePolling();
+	},
 	beforeDestroy() {
+		this.stopRealtimePresencePolling();
 		if (this.titleBtn) {
 			this.titleBtn.removeEventListener("click", this.toggleTitleBtn);
 		}
@@ -406,6 +472,162 @@ export default {
 		getAuthToken() {
 			const token = this.getTokenInfo();
 			return token ? token.tk : null;
+		},
+		getCollaborationHttpBaseUrl() {
+			const override = window.localStorage.getItem("loghomeCollaborationHttpUrl");
+			return String(override || this.$readerAiBaseUrl || "").replace(/\/+$/, "");
+		},
+		getRealtimeCollaboratorStack(article) {
+			return Array.isArray(article && article.realtime_collaborators)
+				? article.realtime_collaborators.slice(0, REALTIME_AVATAR_STACK_LIMIT)
+				: [];
+		},
+		getRealtimeCollaboratorOverflow(article) {
+			const count = Array.isArray(article && article.realtime_collaborators)
+				? article.realtime_collaborators.length
+				: 0;
+			return Math.max(0, count - REALTIME_AVATAR_STACK_LIMIT);
+		},
+		async refreshRealtimePresence() {
+			const articleIds = (Array.isArray(this.articles) ? this.articles : [])
+				.filter((article) => article.collaboration_mode === "realtime_crdt")
+				.map((article) => Number(article.article_id || 0))
+				.filter((articleId) => articleId > 0);
+			const requestId = ++this.realtimePresenceRequestId;
+			if (articleIds.length === 0) return;
+
+			const batches = [];
+			for (let index = 0; index < articleIds.length; index += REALTIME_PRESENCE_BATCH_SIZE) {
+				batches.push(articleIds.slice(index, index + REALTIME_PRESENCE_BATCH_SIZE));
+			}
+
+			try {
+				const responses = await Promise.all(batches.map((batch) => axios.post(
+					`${this.getCollaborationHttpBaseUrl()}/collaboration/presence`,
+					{ article_ids: batch },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: "Bearer " + this.getAuthToken(),
+						},
+					}
+				)));
+				if (requestId !== this.realtimePresenceRequestId) return;
+
+				const presenceByArticleId = {};
+				responses.forEach((response) => {
+					Object.assign(
+						presenceByArticleId,
+						response.data && response.data.data ? response.data.data : {}
+					);
+				});
+				this.articles.forEach((article) => {
+					if (article.collaboration_mode !== "realtime_crdt") return;
+					const participants = presenceByArticleId[Number(article.article_id)] || [];
+					this.$set(article, "realtime_collaborators", participants);
+				});
+			} catch (error) {
+				// 在线状态只是辅助信息；临时失败时保留上一次成功结果。
+			}
+		},
+		startRealtimePresencePolling() {
+			this.stopRealtimePresencePolling();
+			this.refreshRealtimePresence();
+			this.realtimePresenceTimer = setInterval(
+				() => this.refreshRealtimePresence(),
+				REALTIME_PRESENCE_POLL_MS
+			);
+		},
+		stopRealtimePresencePolling() {
+			if (this.realtimePresenceTimer) {
+				clearInterval(this.realtimePresenceTimer);
+				this.realtimePresenceTimer = null;
+			}
+			this.realtimePresenceRequestId += 1;
+		},
+		supportsRealtimeCollaboration(article) {
+			return ["text", "richtext"].includes(
+				String((article && article.article_type) || "richtext")
+			);
+		},
+		isCollaborationModeSwitching(article) {
+			return Number(this.collaborationModeSwitchingArticleId || 0) ===
+				Number(article && article.article_id || 0);
+		},
+		getCollaborationModeActionText(article) {
+			if (this.isCollaborationModeSwitching(article)) {
+				return "正在切换协作模式...";
+			}
+			return article && article.collaboration_mode === "realtime_crdt"
+				? "关闭实时协作"
+				: "开启实时协作（公测）";
+		},
+		getCollaborationModeErrorMessage(error) {
+			const data = error && error.response && error.response.data
+				? error.response.data
+				: {};
+			const messages = {
+				legacy_editor_active: "该章节仍有旧编辑器会话，请让编辑者退出后再开启。",
+				collaboration_disabled: "实时协作服务尚未启动，请先检查长连接服务。",
+				unsupported_article_type: "该章节类型暂不支持实时协作。",
+			};
+			return messages[data.code] || data.msg || "协作模式切换失败，请稍后重试。";
+		},
+		confirmCollaborationModeSwitch(article) {
+			if (!this.isOwner || !this.supportsRealtimeCollaboration(article)) {
+				this.showPermissionDenied("只有文章所有者可以切换实时协作模式");
+				return;
+			}
+			if (this.collaborationModeSwitchingArticleId) return;
+
+			const enabling = article.collaboration_mode !== "realtime_crdt";
+			uni.showModal({
+				title: enabling ? "开启实时协作" : "关闭实时协作",
+				content: enabling
+					? "开启后，多位作者可以同时编辑本章；旧版整篇上传接口将停止写入。请先确认没有人仍在旧编辑器中编辑。该功能尚处于公测阶段，如出现问题请反馈。"
+					: "关闭前会自动创建协作检查点并断开在线协作连接，之后恢复为单人编辑锁。确定继续吗？",
+				confirmText: enabling ? "开启" : "关闭",
+				confirmColor: enabling ? "#409eff" : "#e6a23c",
+				success: (result) => {
+					if (result.confirm) this.switchArticleCollaborationMode(article, enabling);
+				},
+			});
+		},
+		async switchArticleCollaborationMode(article, enabling) {
+			const articleId = Number(article && article.article_id || 0);
+			if (!articleId) return;
+			this.collaborationModeSwitchingArticleId = articleId;
+			try {
+				const response = await axios.post(
+					`${this.getCollaborationHttpBaseUrl()}/collaboration/articles/${articleId}/mode`,
+					{ mode: enabling ? "realtime_crdt" : "legacy_lock" },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: "Bearer " + this.getAuthToken(),
+						},
+					}
+				);
+				const nextMode = response.data && response.data.data
+					? response.data.data.mode
+					: enabling ? "realtime_crdt" : "legacy_lock";
+				this.$set(article, "collaboration_mode", nextMode);
+				this.$set(article, "active_editor", null);
+				uni.showToast({
+					title: enabling ? "已开启实时协作" : "已恢复单人编辑锁",
+					icon: "none",
+					duration: 2000,
+				});
+				await this.refreshPage();
+			} catch (error) {
+				uni.showToast({
+					title: this.getCollaborationModeErrorMessage(error),
+					icon: "none",
+					duration: 3000,
+				});
+			} finally {
+				this.collaborationModeSwitchingArticleId = null;
+			}
 		},
 		resolveCurrentUserId() {
 			const token = this.getTokenInfo();
@@ -1056,6 +1278,7 @@ export default {
 					item.articleStatusChecked = false;
 				}
 				this.refreshBookPart();
+				this.refreshRealtimePresence();
 				if (changeToLastBookpart) {
 					let lastPartId = window.localStorage.getItem('lastPartId_' + this.uid);
 					if (lastPartId) {
@@ -1145,10 +1368,11 @@ export default {
 						})
 						.catch(function (error) {
 							if (error) {
+								const msg = error.response && error.response.data && error.response.data.msg;
 								uni.showToast({
-									title: typeInfo[type].name + "新增失败",
+									title: msg || typeInfo[type].name + "新增失败",
 									icon: 'none',
-									duration: 2000
+									duration: 2500
 								});
 							}
 						})
@@ -1738,6 +1962,13 @@ export default {
 			article.isSyncing = false;
 			article.hasWriterModify = false;
 			article.remoteEditSummary = "";
+			if (article.collaboration_mode === "realtime_crdt") {
+				// 实时协作章节以 CRDT 检查点为唯一同步状态，不参与旧版的
+				// IndexedDB 草稿与 article_writer 哈希冲突判断。
+				article.active_editor = null;
+				article.isCheckingStatus = false;
+				return;
+			}
 			// 查找最近保存的本地文章和云端文章
 			const localArticles = await writerArticleDB.articles
 				.where('[user_id+article_id]')
@@ -2301,6 +2532,27 @@ export default {
 			margin-left: 10rpx;
 			color: rgb(195, 0, 0);
 		}
+
+		&.collaborationModeAction {
+			color: #287c62;
+
+			&.realtime {
+				color: #b76b18;
+			}
+
+			&.disabled {
+				opacity: 0.55;
+				pointer-events: none;
+			}
+
+			.dark-mode & {
+				color: #79c9ae;
+
+				&.realtime {
+					color: #e7b37d;
+				}
+			}
+		}
 	}
 }
 
@@ -2393,6 +2645,60 @@ export default {
 	border-radius: 50%;
 	margin-right: 8rpx;
 	object-fit: cover;
+}
+
+.realtimeCollaborators {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 12rpx;
+	padding: 2rpx 6rpx;
+	border-radius: 999rpx;
+	background-color: rgba(124, 58, 237, 0.08);
+	vertical-align: middle;
+	cursor: pointer;
+
+	.dark-mode & {
+		background-color: rgba(167, 139, 250, 0.12);
+	}
+}
+
+.realtimeCollaboratorAvatarWrap {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 38rpx;
+	width: 38rpx;
+	height: 38rpx;
+	overflow: hidden;
+	border: 3rpx solid #7c3aed;
+	border-radius: 50%;
+	background-color: #f4efff;
+	box-sizing: border-box;
+	box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.16);
+
+	& + & {
+		margin-left: -12rpx;
+	}
+}
+
+.realtimeCollaboratorAvatar {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.realtimeCollaboratorOverflow {
+	color: #6d28d9;
+	font-size: 18rpx;
+	font-weight: 700;
+	line-height: 1;
+
+	.dark-mode & {
+		color: #ddd6fe;
+		background-color: #3b2d55;
+	}
 }
 
 .title {

@@ -147,7 +147,7 @@
                     <view class="card-user clickable" @tap.stop="navigateToUser(item.post.user_id)">
                       <user-avatar class="card-avatar" :src="item.post.author_avatar" />
                       <text class="card-username">{{item.post.author_name}}</text>
-					  <membership-badge class="card-membership-badge" :tier="item.post.author_membership_type" size="xs" />
+					  <membership-badge class="card-membership-badge" :tier="item.post.author_membership_type" size="xs" style="margin-left: 6rpx;" />
                     </view>
                     <view class="card-likes clickable" @tap.stop="likePost(item.post)">
                       <uni-icons :type="item.post.is_liked ? 'heart-filled' : 'heart'" 

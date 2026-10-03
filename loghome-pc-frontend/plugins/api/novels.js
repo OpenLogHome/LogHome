@@ -69,7 +69,7 @@ const novels = {
     // 获取标签信息
     getTagInfo: async (tagId) => {
         try {
-            const response = await fetch(`${process.env.baseUrl}/library/get_tag_info?tag_id=${tagId}`)
+            const response = await fetch(`${process.env.baseUrl}/library/get_tag_by_id?tag_id=${tagId}`)
             return await response.json()
         } catch (error) {
             console.error('获取标签信息失败:', error)

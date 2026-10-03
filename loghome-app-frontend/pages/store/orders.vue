@@ -1,5 +1,9 @@
 <template>
 	<view class="orders-page" v-dark>
+		<view class="page-intro">
+			<!-- <view class="page-title">我的订单</view>
+			<view class="page-caption">每一次热爱的兑换，都在这里。</view> -->
+		</view>
 		<view v-if="!isLoggedIn" class="page-state">
 			<text>登录后即可查看兑换记录与物流状态</text>
 			<view class="state-action" @tap="goLogin">去登录</view>
@@ -30,15 +34,31 @@
 				<view class="order-card" v-for="item in orders" :key="item.id">
 					<view class="order-header">
 						<text class="time">{{ formatTime(item.created_at) }}</text>
-						<text class="status" :class="statusClass(item.status)">{{ statusText(item.status) }}</text>
+						<view class="status" :class="statusClass(item.status)">
+							<store-icon
+								:name="
+									item.status === 'completed'
+										? 'check-circle'
+										: item.status === 'shipped'
+										? 'package'
+										: 'clock'
+								"
+								:size="28"
+							/>
+							<text>{{ statusText(item.status) }}</text>
+						</view>
 					</view>
 
 					<view class="order-body">
 						<image class="cover" :src="item.product_cover" mode="aspectFill"></image>
 						<view class="info">
 							<view class="title">{{ item.product_title }}</view>
+							<view v-if="item.variant_label" class="variant-label">{{ item.variant_label }}</view>
 							<view class="hint">{{ statusHint(item) }}</view>
-							<view class="code-preview" v-if="item.product_type === 'virtual' && item.tracking_number">
+							<view
+								class="code-preview"
+								v-if="item.product_type === 'virtual' && item.tracking_number"
+							>
 								兑换码：{{ item.tracking_number }}
 							</view>
 						</view>
@@ -53,12 +73,13 @@
 						<view class="amount">
 							<view class="price-row">
 								<text>合计</text>
-								<image src="../../static/resources/cropped_log.webp" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
-								<image src="../../static/resources/log.png" mode="aspectFit" style="width: 32rpx; height: 32rpx;"></image>
-								<text>{{ item.price }}</text>
+								<text class="order-price">
+									{{ item.price }}
+									<text class="currency-unit">原木</text>
+								</text>
 							</view>
 							<text class="detail" v-if="item.pay_log !== undefined">
-								原木 -{{ item.pay_log }} 去皮 -{{ item.pay_cropped_log }}
+								原木 {{ item.pay_log }} · 去皮原木 {{ item.pay_cropped_log }}
 							</text>
 						</view>
 
@@ -77,12 +98,14 @@
 								等待发货
 							</view>
 							<view
-								v-if="item.product_type === 'physical' && item.status === 'shipped'"
+								v-if="item.product_type === 'physical' && ['shipped', 'completed'].includes(item.status)"
 								class="shipping-actions"
 							>
-								<view class="tracking">单号：{{ item.tracking_number || '-' }}</view>
+								<view class="tracking">{{ item.shipping_company || '快递' }}：{{ item.tracking_number || '-' }}</view>
+								<view class="btn" @tap="viewLogistics(item)">查看物流</view>
 								<view class="btn" @tap="copyTracking(item)">复制单号</view>
 								<view
+									v-if="item.status === 'shipped'"
 									:class="['btn', 'primary', confirmingOrderId === item.id ? 'disabled' : '']"
 									@tap="confirmReceipt(item)"
 								>
@@ -101,6 +124,7 @@
 
 				<view class="empty" v-if="!loading && orders.length === 0">
 					<text>{{ emptyText }}</text>
+					<view class="state-action" @tap="goShopping">去商城逛逛</view>
 				</view>
 
 				<view class="list-status" v-if="orders.length > 0">
@@ -115,15 +139,18 @@
 <script>
 import axios from 'axios'
 import darkModeMixin from '@/mixins/dark-mode.js'
+import StoreIcon from '@/components/StoreIcon.vue'
 
 export default {
 	mixins: [darkModeMixin],
+	components: { StoreIcon },
 	data() {
 		return {
+			authToken: null,
 			tabs: [
-				{ label: '全部', value: 'all' },
-				{ label: '待发货/处理中', value: 'pending' },
-				{ label: '已发货/已完成', value: 'shipped' },
+				{ label: '全部订单', value: 'all' },
+				{ label: '待发货', value: 'pending' },
+				{ label: '发货 / 完成', value: 'shipped' },
 			],
 			activeTab: 0,
 			page: 1,
@@ -138,7 +165,7 @@ export default {
 	},
 	computed: {
 		isLoggedIn() {
-			return !!this.getToken()
+			return !!this.authToken
 		},
 		emptyText() {
 			if (this.activeTab === 1) return '当前没有待发货或处理中订单'
@@ -147,11 +174,13 @@ export default {
 		},
 	},
 	onLoad() {
+		this.authToken = this.getToken()
 		if (this.isLoggedIn) {
 			this.refreshOrders()
 		}
 	},
 	onShow() {
+		this.authToken = this.getToken()
 		if (this.isLoggedIn && this.orders.length === 0 && !this.loading) {
 			this.refreshOrders()
 		}
@@ -169,6 +198,9 @@ export default {
 		this.fetchOrders()
 	},
 	methods: {
+		goShopping() {
+			uni.navigateTo({ url: '/pages/store/index' })
+		},
 		getToken() {
 			let tk = JSON.parse(window.localStorage.getItem('token'))
 			if (tk) tk = tk.tk
@@ -195,32 +227,36 @@ export default {
 			const tk = this.getToken()
 			if (!tk || this.loading) return
 			this.loading = true
-			axios.get(this.$baseUrl + '/store/orders', {
-				params: {
-					status: this.tabs[this.activeTab].value,
-					page: this.page,
-					pageSize: this.pageSize,
-				},
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': 'Bearer ' + tk,
-				},
-			}).then((res) => {
-				if (res.data && res.data.code === 200) {
-					const list = res.data.data.list || []
-					this.total = res.data.data.total || 0
-					this.orders = this.orders.concat(list)
-					this.finished = this.orders.length >= this.total
-					this.fetchError = ''
-				} else {
-					this.fetchError = res.data.msg || '订单加载失败，请稍后重试'
-				}
-			}).catch((error) => {
-				this.fetchError = error.response?.data?.msg || '订单加载失败，请稍后重试'
-			}).finally(() => {
-				this.loading = false
-				uni.stopPullDownRefresh()
-			})
+			axios
+				.get(this.$baseUrl + '/store/orders', {
+					params: {
+						status: this.tabs[this.activeTab].value,
+						page: this.page,
+						pageSize: this.pageSize,
+					},
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: 'Bearer ' + tk,
+					},
+				})
+				.then((res) => {
+					if (res.data && res.data.code === 200) {
+						const list = res.data.data.list || []
+						this.total = res.data.data.total || 0
+						this.orders = this.orders.concat(list)
+						this.finished = this.orders.length >= this.total
+						this.fetchError = ''
+					} else {
+						this.fetchError = res.data.msg || '订单加载失败，请稍后重试'
+					}
+				})
+				.catch((error) => {
+					this.fetchError = error.response?.data?.msg || '订单加载失败，请稍后重试'
+				})
+				.finally(() => {
+					this.loading = false
+					uni.stopPullDownRefresh()
+				})
 		},
 		statusText(status) {
 			if (status === 'pending') return '待发货'
@@ -265,6 +301,9 @@ export default {
 				},
 			})
 		},
+		viewLogistics(item) {
+			uni.navigateTo({url: '/pages/store/logistics?order_id=' + item.id})
+		},
 		copyTracking(item) {
 			if (!item.tracking_number) {
 				uni.showToast({ title: '暂无单号', icon: 'none' })
@@ -290,23 +329,31 @@ export default {
 				success: (result) => {
 					if (!result.confirm) return
 					this.confirmingOrderId = item.id
-					axios.post(this.$baseUrl + `/store/orders/${item.id}/confirm`, {}, {
-						headers: {
-							'Content-Type': 'application/json',
-							'Authorization': 'Bearer ' + tk,
-						},
-					}).then((res) => {
-						if (res.data && res.data.code === 200) {
-							uni.showToast({ title: '已确认', icon: 'success' })
-							this.refreshOrders()
-						} else {
-							uni.showToast({ title: res.data.msg || '操作失败', icon: 'none' })
-						}
-					}).catch((error) => {
-						uni.showToast({ title: error.response?.data?.msg || '操作失败', icon: 'none' })
-					}).finally(() => {
-						this.confirmingOrderId = null
-					})
+					axios
+						.post(
+							this.$baseUrl + `/store/orders/${item.id}/confirm`,
+							{},
+							{
+								headers: {
+									'Content-Type': 'application/json',
+									Authorization: 'Bearer ' + tk,
+								},
+							}
+						)
+						.then((res) => {
+							if (res.data && res.data.code === 200) {
+								uni.showToast({ title: '已确认', icon: 'success' })
+								this.refreshOrders()
+							} else {
+								uni.showToast({ title: res.data.msg || '操作失败', icon: 'none' })
+							}
+						})
+						.catch((error) => {
+							uni.showToast({ title: error.response?.data?.msg || '操作失败', icon: 'none' })
+						})
+						.finally(() => {
+							this.confirmingOrderId = null
+						})
 				},
 			})
 		},
@@ -325,238 +372,161 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.orders-page {
-	min-height: 100vh;
-	background: linear-gradient(180deg, #fff8f4 0%, #f6f6f6 240rpx);
-	padding: 20rpx 20rpx 40rpx;
-	&.dark-mode {
-		background: #111111;
-	}
-}
-
-.page-state,
-.empty,
-.list-status {
-	text-align: center;
-	font-size: 26rpx;
-	color: #9a9a9a;
-}
-
-.page-state,
-.empty {
-	margin-top: 140rpx;
-}
-
-.state-action {
-	margin: 20rpx auto 0;
-	display: inline-flex;
-	padding: 12rpx 20rpx;
-	border-radius: 999rpx;
-	background: rgba(255, 106, 95, 0.1);
-	color: #ff6a5f;
-}
-
-.tab-bar {
-	display: flex;
-	gap: 12rpx;
-	margin-bottom: 20rpx;
-	.tab-item {
-		flex: 1;
-		text-align: center;
-		font-size: 28rpx;
-		color: #666666;
-		padding: 14rpx 20rpx;
-		border-radius: 18rpx;
-		background: rgba(255, 255, 255, 0.8);
-	}
-	.tab-item.active {
-		background: #ff6a5f;
-		color: #ffffff;
-	}
-	&.dark-mode {
-		.tab-item {
-			background: #1b1b1b;
-			color: #d2d2d2;
-		}
-	}
-}
-
+@import '../../styles/store.scss';
 .order-card {
-	background: #ffffff;
+	margin: 0 32rpx 24rpx;
+	padding: 28rpx;
+	background: var(--store-surface);
+	border: 1rpx solid var(--store-line);
 	border-radius: 22rpx;
-	padding: 20rpx;
-	margin-bottom: 20rpx;
-	box-shadow: 0 8rpx 26rpx rgba(0, 0, 0, 0.05);
-	&.dark-mode {
-		background: #000000;
-		box-shadow: none;
-	}
 }
-
 .order-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	font-size: 24rpx;
-	color: #999999;
-	margin-bottom: 14rpx;
-	.status {
-		padding: 6rpx 14rpx;
-		border-radius: 999rpx;
-		font-weight: 600;
-	}
-	.status.pending {
-		color: #ff8a00;
-		background: rgba(255, 138, 0, 0.12);
-	}
-	.status.shipped {
-		color: #2d8cf0;
-		background: rgba(45, 140, 240, 0.12);
-	}
-	.status.completed {
-		color: #3a8c34;
-		background: rgba(58, 140, 52, 0.12);
-	}
-	.status.canceled {
-		color: #9f9f9f;
-		background: rgba(160, 160, 160, 0.12);
-	}
+	padding-bottom: 20rpx;
+	border-bottom: 1rpx solid var(--store-line);
 }
-
+.time {
+	font-size: 23rpx;
+	color: var(--store-muted);
+}
+.status {
+	color: var(--store-accent);
+	font-size: 23rpx;
+	font-weight: 600;
+	background: var(--store-accent-soft);
+	padding: 6rpx 14rpx;
+	border-radius: 8rpx;
+}
+.status.completed {
+	color: var(--store-success);
+	background: var(--store-soft);
+}
+.status.canceled {
+	color: var(--store-muted);
+	background: var(--store-soft);
+}
 .order-body {
 	display: flex;
-	align-items: center;
-	.cover {
-		width: 110rpx;
-		height: 110rpx;
-		border-radius: 16rpx;
-		margin-right: 18rpx;
-		background: #f1f1f1;
-	}
-	.info {
-		flex: 1;
-		min-width: 0;
-	}
-	.title {
-		font-size: 28rpx;
-		color: #333333;
-		font-weight: 600;
-		line-height: 1.5;
-	}
-	.hint,
-	.code-preview {
-		margin-top: 8rpx;
-		font-size: 23rpx;
-		line-height: 1.6;
-	}
-	.hint {
-		color: #888888;
-	}
-	.code-preview {
-		color: #ff6a5f;
-		word-break: break-all;
-	}
-}
-
-.address {
-	margin-top: 14rpx;
-	padding: 16rpx;
-	border-radius: 16rpx;
-	background: #f8f8f8;
-	font-size: 24rpx;
-	color: #777777;
-	display: flex;
-	flex-direction: column;
-	gap: 6rpx;
-}
-
-.order-footer {
-	margin-top: 16rpx;
-	display: flex;
-	justify-content: space-between;
+	gap: 24rpx;
+	margin-top: 24rpx;
 	align-items: flex-start;
-	gap: 20rpx;
 }
-
-.amount {
-	font-size: 24rpx;
-	color: #555555;
+.cover {
+	width: 144rpx;
+	height: 144rpx;
+	border-radius: 14rpx;
+	background: #fff;
+	flex-shrink: 0;
+}
+.info {
+	flex: 1;
+	min-width: 0;
+}
+.title {
+	font-size: 28rpx;
+	font-weight: 600;
+	line-height: 1.5;
+}
+.variant-label {
+	display: inline-block;
+	margin-top: 10rpx;
+	font-size: 23rpx;
+	color: var(--store-muted);
+	padding: 4rpx 12rpx;
+	border-radius: 6rpx;
+	background: var(--store-soft);
+}
+.hint {
+	margin-top: 12rpx;
+	color: var(--store-muted);
+	font-size: 23rpx;
+}
+.code-preview {
+	font-size: 23rpx;
+	overflow-wrap: anywhere;
+	margin-top: 12rpx;
+	color: var(--store-accent);
+}
+.address {
 	display: flex;
 	flex-direction: column;
 	gap: 6rpx;
-	.price-row {
-		display: flex;
-		align-items: center;
-		gap: 6rpx;
-		text:last-child {
-			font-size: 26rpx;
-			color: #ff6a5f;
-			font-weight: 600;
-		}
-	}
-	.detail {
-		color: #999999;
-		font-size: 22rpx;
-	}
+	padding: 18rpx 20rpx;
+	margin-top: 24rpx;
+	background: var(--store-soft);
+	border-radius: 12rpx;
+	color: var(--store-muted);
+	font-size: 23rpx;
+	overflow-wrap: anywhere;
 }
-
+.order-footer {
+	margin-top: 24rpx;
+	padding-top: 20rpx;
+	border-top: 1rpx solid var(--store-line);
+}
+.price-row {
+	justify-content: flex-end;
+	font-size: 24rpx;
+}
+.order-price {
+	font-size: 33rpx;
+	font-weight: 650;
+}
+.detail {
+	display: block;
+	text-align: right;
+	margin-top: 6rpx;
+	color: var(--store-muted);
+	font-size: 22rpx;
+}
 .actions {
 	display: flex;
-	flex-direction: column;
-	gap: 10rpx;
-	align-items: flex-end;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 14rpx;
+	margin-top: 20rpx;
 }
-
 .btn {
-	padding: 8rpx 18rpx;
-	border-radius: 999rpx;
-	font-size: 24rpx;
-	color: #ff6a5f;
-	border: 1rpx solid #ff6a5f;
+	min-height: 80rpx;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 14rpx 24rpx;
+	border: 1rpx solid var(--store-line);
+	border-radius: 14rpx;
+	font-size: 25rpx;
+	color: var(--store-text);
 }
-
 .btn.primary {
-	background: #ff6a5f;
-	color: #ffffff;
+	background: var(--store-primary);
+	color: var(--store-on-primary);
+	border-color: var(--store-primary);
 }
-
 .btn.disabled {
-	color: #999999;
-	border-color: #d7d7d7;
-	background: transparent;
+	background: var(--store-soft);
+	color: var(--store-muted);
 }
-
 .shipping-actions {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	gap: 10rpx;
+	gap: 12rpx;
+	flex-wrap: wrap;
+	justify-content: flex-end;
 }
-
 .tracking {
-	font-size: 22rpx;
-	color: #777777;
-	word-break: break-all;
+	width: 100%;
+	color: var(--store-muted);
+	font-size: 23rpx;
+	overflow-wrap: anywhere;
 	text-align: right;
 }
-
-.list-status {
-	padding-bottom: 16rpx;
+.status {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
 }
-
-.orders-page.dark-mode {
-	.order-body .title,
-	.amount {
-		color: #ededed;
-	}
-	.order-body .hint,
-	.address,
-	.amount .detail,
-	.tracking {
-		color: #b9b9b9;
-	}
-	.address {
-		background: #151515;
-	}
+.order-card {
+	box-shadow: var(--store-shadow);
 }
 </style>

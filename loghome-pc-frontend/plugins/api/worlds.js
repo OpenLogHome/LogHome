@@ -1,5 +1,27 @@
 // 拆分自 api.js
 const worlds = {
+    // 根据世界ID获取世界设定
+    getWorldById: async (worldId) => {
+        try {
+            const response = await fetch(`${process.env.baseUrl}/world/get_world_by_id?world_id=${worldId}`)
+            return await response.json()
+        } catch (error) {
+            console.error('获取世界设定失败:', error)
+            return []
+        }
+    },
+
+    // 根据关联作品ID获取世界设定
+    getWorldByNovelId: async (novelId) => {
+        try {
+            const response = await fetch(`${process.env.baseUrl}/world/get_world_by_novel_id?novel_id=${novelId}`)
+            return await response.json()
+        } catch (error) {
+            console.error('获取世界设定失败:', error)
+            return []
+        }
+    },
+
     // 获取关联世界设定
     getAssoWorldByNovelId: async (novelId) => {
         try {

@@ -2,6 +2,7 @@
 import axios from 'axios'
 import h5PageAnimation from './components/h5-page-animation/';
 import { getReaderMode } from './common/reader-mode.js';
+import { initLanguage } from './common/lang.js';
 import '@/common/theme.scss';
 export default {
 	mixins: [h5PageAnimation],
@@ -14,6 +15,8 @@ export default {
 	onLaunch: function () {
 		console.log('App Launch');
 		getReaderMode();
+		// 初始化界面语言（本地/系统偏好先应用，再异步对齐账号偏好）
+		initLanguage();
 		// #ifdef H5
 		this.initTheme();
 		this.setupTabbarClickEffects();

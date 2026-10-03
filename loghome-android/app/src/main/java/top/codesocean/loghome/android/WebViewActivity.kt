@@ -60,7 +60,10 @@ import top.codesocean.loghome.android.audio.AudioPlaybackService
 import top.codesocean.loghome.android.audio.NativeAudiobookPlayerView
 import top.codesocean.loghome.android.databinding.ActivityWebviewBinding
 import top.codesocean.loghome.android.databinding.DialogHotUpdateBinding
+import top.codesocean.loghome.android.i18n.AppLanguage
+import top.codesocean.loghome.android.logistics.StoreLogisticsService
 import top.codesocean.loghome.android.ui.SystemUiHelper
+import top.codesocean.loghome.android.ui.WebViewBottomInsets
 import top.codesocean.loghome.android.ui.SplashImageLoader
 import top.codesocean.loghome.android.web.InjectedHtmlWebViewClient
 import top.codesocean.loghome.android.web.ImageUploadPreparation
@@ -89,10 +92,12 @@ class WebViewActivity : AppCompatActivity() {
     private var systemBarsVisible = true
     private var volumeKeyEnabled = false
     private var topInsetCss = 0.0
-    private var bottomInsetCss = 0.0
+    // The native viewport consumes the bottom inset; H5 must not reserve it again.
+    private val bottomInsetCss = 0.0
+    private var navigationBottomInsetPx = 0
     private var lastKeyboardVisible: Boolean? = null
     private var lastKeyboardHeightCss = 0.0
-    private var lastAppliedImeBottomInsetPx = -1
+    private var lastAppliedBottomInsetPx = -1
     private var lastBackPressedAt = 0L
     private var injectedScript: String? = null
     private var pendingRestart = false
@@ -136,7 +141,7 @@ class WebViewActivity : AppCompatActivity() {
         // area behind the IME. Prefer the authoritative IME inset so this fallback
         // cannot undo the result produced by setupWindowInsets().
         if (imeVisible && imeBottomInset > 0) {
-            applyImeViewportInset(imeBottomInset)
+            applyBottomViewportInset(imeBottomInset)
             updateKeyboardVisibility(
                 visible = true,
                 heightCss = imeBottomInset / density,
@@ -154,7 +159,7 @@ class WebViewActivity : AppCompatActivity() {
         val heightDiff = (rootHeight - keyboardVisibleFrame.bottom).coerceAtLeast(0)
         val keyboardVisible = heightDiff > (100 * density)
 
-        applyImeViewportInset(if (keyboardVisible) heightDiff else 0)
+        applyBottomViewportInset(if (keyboardVisible) heightDiff else 0)
 
         updateKeyboardVisibility(
             visible = keyboardVisible,
@@ -350,6 +355,8 @@ class WebViewActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         fadeOutTransitionDimOverlay()
+        ViewCompat.requestApplyInsets(binding.root)
+        syncWebSafeAreaInsets()
     }
 
     override fun onDestroy() {
@@ -392,7 +399,9 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            navigationBottomInsetPx = insets.getInsetsIgnoringVisibility(
+                WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout(),
+            ).bottom
             val safeTopInsets = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or
                     WindowInsetsCompat.Type.displayCutout(),
@@ -402,20 +411,15 @@ class WebViewActivity : AppCompatActivity() {
             val density = resources.displayMetrics.density.toDouble()
 
             val newTopInsetCss = safeTopInsets.top / density
-            val newBottomInsetCss = bars.bottom / density
-            val safeAreaChanged =
-                newTopInsetCss != topInsetCss || newBottomInsetCss != bottomInsetCss
             topInsetCss = newTopInsetCss
-            bottomInsetCss = newBottomInsetCss
             val keyboardHeightCss = ime.bottom / density
 
-            applyImeViewportInset(
+            applyBottomViewportInset(
                 if (keyboardVisible) ime.bottom else 0,
             )
 
-            if (safeAreaChanged) {
-                syncWebSafeAreaInsets()
-            }
+            // Also refresh unchanged values: a new document may have inherited stale insets.
+            syncWebSafeAreaInsets()
 
             updateKeyboardVisibility(
                 visible = keyboardVisible,
@@ -442,6 +446,7 @@ class WebViewActivity : AppCompatActivity() {
                 root.classList.add('loghome-edge-to-edge');
                 root.style.setProperty('--loghome-native-safe-top', '${topInsetCss}px');
                 root.style.setProperty('--loghome-native-safe-bottom', '${bottomInsetCss}px');
+                root.style.setProperty('--loghome-safe-bottom', '0px');
             })();
         """.trimIndent()
         activeWebView.post {
@@ -455,24 +460,33 @@ class WebViewActivity : AppCompatActivity() {
         binding.root.viewTreeObserver.addOnGlobalLayoutListener(keyboardLayoutListener)
     }
 
-    private fun applyImeViewportInset(bottomInsetPx: Int) {
+    private fun applyBottomViewportInset(bottomInsetPx: Int) {
         if (!::activeWebView.isInitialized) {
             return
         }
 
-        val normalizedInset = bottomInsetPx.coerceAtLeast(0)
-        if (lastAppliedImeBottomInsetPx == normalizedInset) {
+        val normalizedInset = WebViewBottomInsets.viewportBottom(
+            navigationBottom = navigationBottomInsetPx,
+            imeBottom = bottomInsetPx,
+            systemBarsVisible = systemBarsVisible,
+        )
+        if (lastAppliedBottomInsetPx == normalizedInset) {
             return
         }
 
         val layoutParams = activeWebView.layoutParams as? ViewGroup.MarginLayoutParams ?: return
-        lastAppliedImeBottomInsetPx = normalizedInset
+        lastAppliedBottomInsetPx = normalizedInset
         if (layoutParams.bottomMargin == normalizedInset) {
             return
         }
 
         layoutParams.bottomMargin = normalizedInset
         activeWebView.layoutParams = layoutParams
+        val playerParams = binding.nativeAudiobookPlayer.layoutParams as? ViewGroup.MarginLayoutParams
+        if (playerParams != null) {
+            playerParams.bottomMargin = normalizedInset + (12 * resources.displayMetrics.density).toInt()
+            binding.nativeAudiobookPlayer.layoutParams = playerParams
+        }
     }
 
     private fun updateKeyboardVisibility(visible: Boolean, heightCss: Double) {
@@ -552,6 +566,10 @@ class WebViewActivity : AppCompatActivity() {
                 injectedScriptProvider = { injectedScript.orEmpty() },
                 onPageLoadingChanged = { loading ->
                     binding.loadingContainer.post {
+                        if (!loading) {
+                            ViewCompat.requestApplyInsets(binding.root)
+                            syncWebSafeAreaInsets()
+                        }
                         if (suppressLoadingOverlay) {
                             binding.errorContainer.isVisible = false
                             if (!loading && awaitingInitialPageReveal) {
@@ -913,6 +931,13 @@ class WebViewActivity : AppCompatActivity() {
             return
         }
 
+        // 进程或下层 Activity 被系统回收后 NativeRouteStack 只剩当前页，
+        // 但 Task 返回栈里仍有下层页面记录，此时应 finish 让系统重建下层页面
+        if (!isTaskRoot) {
+            finishForNativeRouteBack()
+            return
+        }
+
         val now = System.currentTimeMillis()
         if (now - lastBackPressedAt > 2_000) {
             lastBackPressedAt = now
@@ -939,6 +964,8 @@ class WebViewActivity : AppCompatActivity() {
             statusBarHeightDp = topInsetCss,
             navigationBarHeightDp = bottomInsetCss,
             assetVersion = AssetRepository.getCurrentAssetVersion(this),
+            language = AppLanguage.currentLanguage(this),
+            savedLanguage = AppLanguage.savedLanguage(this),
         )
     }
 
@@ -982,6 +1009,7 @@ class WebViewActivity : AppCompatActivity() {
             })();
         """.trimIndent()
         activeWebView.evaluateJavascript(script, null)
+        syncWebSafeAreaInsets()
     }
 
     private fun scheduleWarmRouteRevealFallback() {
@@ -1163,6 +1191,11 @@ class WebViewActivity : AppCompatActivity() {
 
             "openInBrowser" -> openInBrowser(args.optString(0))
 
+            "queryStoreLogistics" -> StoreLogisticsService.query(
+                applicationContext,
+                args.optJSONObject(0) ?: JSONObject(),
+            )
+
             "hotUpdateAssets" -> {
                 val url = args.optString(0)
                 val version = args.optString(1)
@@ -1230,6 +1263,34 @@ class WebViewActivity : AppCompatActivity() {
                     fontFormat = args.optString(2),
                     fontVersion = args.optString(3),
                 )
+            }
+            "setAppLanguage" -> {
+                // i18n：H5 设置页同步应用语言。args[0] 为 'zh-CN' | 'en' | 'follow-system'
+                val preference = when (val firstArg = args.opt(0)) {
+                    is JSONObject -> firstArg.optString("language", firstArg.optString("lang"))
+                    null, JSONObject.NULL -> ""
+                    else -> firstArg.toString()
+                }.trim()
+                if (preference == AppLanguage.FOLLOW_SYSTEM) {
+                    if (AppLanguage.savedLanguage(this) != null) {
+                        AppLanguage.clearSaved(this)
+                        NativeWebViewPool.invalidate("language preference cleared")
+                        rebuildInjectedScript()
+                        AppLanguage.applyToFramework(null)
+                    }
+                    true
+                } else {
+                    val language = AppLanguage.normalize(preference)
+                        ?: throw IllegalArgumentException("Unsupported language: $preference")
+                    if (AppLanguage.savedLanguage(this) != language) {
+                        AppLanguage.save(this, language)
+                        // 预热 WebView 的注入脚本带旧语言，必须清池重建
+                        NativeWebViewPool.invalidate("language changed")
+                        rebuildInjectedScript()
+                        AppLanguage.applyToFramework(language)
+                    }
+                    true
+                }
             }
             "nativeNavigateTo" -> {
                 syncThemeBackgroundFromRoute(args)
@@ -1408,6 +1469,13 @@ class WebViewActivity : AppCompatActivity() {
         } else {
             controller.hide(WindowInsetsCompat.Type.systemBars())
         }
+        val insets = ViewCompat.getRootWindowInsets(binding.root)
+        val imeBottom = if (insets?.isVisible(WindowInsetsCompat.Type.ime()) == true) {
+            insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+        } else 0
+        applyBottomViewportInset(imeBottom)
+        ViewCompat.requestApplyInsets(binding.root)
+        syncWebSafeAreaInsets()
     }
 
     private fun applySystemBarStyle(color: Int) {

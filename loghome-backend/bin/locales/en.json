@@ -1,0 +1,10 @@
+{
+	"language.updated": "Language preference updated",
+	"language.invalid": "Unsupported language",
+	"language.server_error": "Server error",
+	"common.confirm": "OK",
+	"common.cancel": "Cancel",
+	"common.loading": "Loading",
+	"common.network_error": "Network error, please try again later",
+	"common.server_error": "Server error"
+}

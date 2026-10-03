@@ -16,13 +16,23 @@ function withCurrentThemeBackground(payload) {
 window.jsBridge = {
     inApp: true,
     nativeRouterAvailable: true,
+    nativeLogisticsAvailable: true,
     appVersion: '250',
+    language: 'zh-CN', // 将被原生注入实际生效语言
     statusBarHeight: 0, // 将被Flutter注入实际值
     ready(callback) {
         callback();
     },
     setNavigationBarVisible(visible) {
         window.flutter_inappwebview.callHandler('setNavigationBarVisible', visible);
+    },
+    /**
+     * 同步应用显示语言到原生壳，使原生界面（听书条、对话框等）与 H5 保持一致。
+     * @param {string} language - 'zh-CN' | 'en' | 'follow-system'
+     * @returns {Promise<boolean>}
+     */
+    setAppLanguage(language) {
+        return window.flutter_inappwebview.callHandler('setAppLanguage', language);
     },
     /**
      * 设置状态栏和导航栏样式
@@ -72,6 +82,9 @@ window.jsBridge = {
     },
     openInBrowser(url) {
         return window.flutter_inappwebview.callHandler('openInBrowser', url);
+    },
+    queryStoreLogistics(payload) {
+        return window.flutter_inappwebview.callHandler('queryStoreLogistics', payload || {});
     },
     /**
      * 执行热更新

@@ -527,7 +527,7 @@ const community = {
             const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
             if (!token) throw new Error('用户未登录')
 
-            const response = await fetch(`${process.env.baseUrl}/community/share/create`, {
+            const response = await fetch(`${process.env.baseUrl}/community/posts/create_share_code`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -553,13 +553,18 @@ const community = {
         }
     },
 
-    // 获取消息列表
-    getMessageList: async (targetUserId, page = 1, pageSize = 20) => {
+    // 获取与某位用户的私信记录（后端已按时间正序返回）
+    getMessageList: async (targetUserId, pageSize = 20, lastMessageId = null) => {
         try {
             const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
             if (!token) throw new Error('用户未登录')
 
-            const response = await fetch(`${process.env.baseUrl}/community/messages/list?target_user_id=${targetUserId}&page=${page}&pageSize=${pageSize}`, {
+            let url = `${process.env.baseUrl}/community/message_history?friend_id=${targetUserId}&pageSize=${pageSize}`
+            if (lastMessageId) {
+                url += `&lastMessageId=${lastMessageId}`
+            }
+
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': token
                 }
@@ -580,25 +585,25 @@ const community = {
         }
     },
 
-    // 发送消息
-    sendMessage: async (targetUserId, content, messageType = 'text') => {
+    // 发送私信
+    sendMessage: async (targetUserId, content) => {
         try {
             const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
             if (!token) throw new Error('用户未登录')
 
-            const response = await fetch(`${process.env.baseUrl}/community/messages/send`, {
+            const response = await fetch(`${process.env.baseUrl}/community/send_message`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': token
                 },
                 body: JSON.stringify({
-                    target_user_id: targetUserId,
-                    content: content,
-                    message_type: messageType
+                    to_id: targetUserId,
+                    message_content: content
                 })
             })
             const data = await response.json()
+            if (!response.ok) throw new Error(data.msg || '发送消息失败')
             return {
                 code: 0,
                 data: data,
@@ -614,13 +619,13 @@ const community = {
         }
     },
 
-    // 获取会话列表
-    getConversationList: async (page = 1, pageSize = 20) => {
+    // 会话列表：有过私信往来的用户及其最后一条消息
+    getConversationList: async () => {
         try {
             const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
             if (!token) throw new Error('用户未登录')
 
-            const response = await fetch(`${process.env.baseUrl}/community/conversations/list?page=${page}&pageSize=${pageSize}`, {
+            const response = await fetch(`${process.env.baseUrl}/community/chat_friends`, {
                 headers: {
                     'Authorization': token
                 }
@@ -641,20 +646,20 @@ const community = {
         }
     },
 
-    // 标记消息为已读
-    markMessageAsRead: async (targetUserId) => {
+    // 标记单条私信已读
+    markMessageAsRead: async (messageId) => {
         try {
             const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
             if (!token) throw new Error('用户未登录')
 
-            const response = await fetch(`${process.env.baseUrl}/community/messages/mark-read`, {
+            const response = await fetch(`${process.env.baseUrl}/community/mark_as_read`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': token
                 },
                 body: JSON.stringify({
-                    target_user_id: targetUserId
+                    message_id: messageId
                 })
             })
             const data = await response.json()
@@ -670,6 +675,25 @@ const community = {
                 data: null,
                 message: error.message || '标记消息已读失败'
             }
+        }
+    },
+
+    // 未读私信总数
+    getUnreadMessageCount: async () => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) return { count: 0 }
+
+            const response = await fetch(`${process.env.baseUrl}/community/unread_messages_count`, {
+                headers: {
+                    'Authorization': token
+                }
+            })
+            const data = await response.json()
+            return { count: Number(data.count) || 0 }
+        } catch (error) {
+            console.error('获取未读私信数失败:', error)
+            return { count: 0 }
         }
     },
 

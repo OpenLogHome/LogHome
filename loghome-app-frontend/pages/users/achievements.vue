@@ -2,7 +2,6 @@
 	<view class="page" v-dark>
 		<view class="hero-card">
 			<view class="hero-title">原木勋章墙</view>
-			<view class="hero-subtitle">荣誉分为每月限定、官方发放和成长任务三类，记录你在原木社区的每一步</view>
 
 			<view class="hero-stat-row">
 				<view class="stat-item">

@@ -8,13 +8,29 @@
     >
       <!-- 主帖内容 -->
       <view class="post-content">
+        <view
+          v-if="post.circle_id || post.circle_name"
+          class="post-circle clickable"
+          @tap="navigateToCircle(post.circle_id)"
+        >
+          <log-image
+            v-if="post.circle_icon"
+            class="post-circle-icon"
+            :src="post.circle_icon"
+            mode="aspectFill"
+          ></log-image>
+          <view v-else class="post-circle-icon post-circle-icon-fallback">
+            <uni-icons type="home-filled" size="18" color="#EA7034"></uni-icons>
+          </view>
+          <text class="post-circle-name">{{post.circle_name || '未知圈子'}}</text>
+        </view>
         <view class="post-header">
           <view class="user-info clickable" @tap="navigateToUser(post.user_id)">
             <user-avatar class="user-avatar" :src="post.author_avatar" :frame="post.author_avatar_frame" :animate="true" :visual-scale="post.author_avatar_frame ? 1.2 : 1" />
             <view class="user-meta">
               <view class="user-name-row">
                 <text class="user-name">{{post.author_name}}</text>
-				<membership-badge class="community-membership-badge" :tier="post.author_membership_type" size="sm" :show-label="true" />
+				<membership-badge class="community-membership-badge" :tier="post.author_membership_type" size="sm" :show-label="false" />
                 <view
                   v-if="post.author_badge"
                   class="user-badge-tap"
@@ -28,9 +44,6 @@
               </view>
               <text class="post-time">{{formatTime(post.create_time)}}</text>
             </view>
-          </view>
-          <view class="post-circle clickable" @tap="navigateToCircle(post.circle_id)">
-            {{post.circle_name}}
           </view>
         </view>
         
@@ -450,6 +463,7 @@ export default {
       try {
         const res = await axios.get(this.$baseUrl + '/community/posts/detail/' + this.postId)
         this.post = res.data
+        await this.loadCircleInfo(this.post.circle_id)
         
         // 获取帖子的点赞状态
         await this.getLikeStatus()
@@ -460,6 +474,18 @@ export default {
           title: '加载失败',
           icon: 'none'
         })
+      }
+    },
+
+    async loadCircleInfo(circleId) {
+      if (!circleId) return
+
+      try {
+        const res = await axios.get(this.$baseUrl + '/community/circles/detail/' + circleId)
+        this.$set(this.post, 'circle_icon', res.data.icon || '')
+      } catch (error) {
+        // 圈子信息加载失败时保留默认图标，不影响帖子内容展示
+        this.$set(this.post, 'circle_icon', '')
       }
     },
     
@@ -1328,7 +1354,6 @@ export default {
 
 .post-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-bottom: 20rpx;
 }
@@ -1402,11 +1427,39 @@ export default {
 }
 
 .post-circle {
-  font-size: 24rpx;
-  color: var(--text-color-regular);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4rpx 0 20rpx;
+  margin-bottom: 20rpx;
+  border-bottom: 1rpx solid var(--background-color-secondary);
+}
+
+.post-circle-icon {
+  width: 56rpx;
+  height: 56rpx;
+  flex-shrink: 0;
+  margin-right: 16rpx;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.post-circle-icon-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: var(--background-color-secondary);
-  padding: 8rpx 20rpx;
-  border-radius: 20rpx;
+}
+
+.post-circle-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-color-primary);
+  font-size: 28rpx;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .post-body {

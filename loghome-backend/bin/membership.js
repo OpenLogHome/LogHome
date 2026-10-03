@@ -523,7 +523,7 @@ async function redeemMembership(userIdValue, codeValue) {
 		message.sendMsg(
 			-1,
 			userId,
-			`${tierName}兑换成功，已增加${Number(result.redeem_code.duration_days)}天有效期，并赠送${Number(result.redstone_granted || 0)}红石，请前往会员中心查看。`,
+			`${tierName}兑换成功，已增加${Number(result.redeem_code.duration_days)}天有效期，并赠送${Number(result.redstone_granted || 0)}红石（到账后3个月内有效），请前往会员中心查看。`,
 			MEMBERSHIP_ROUTE,
 			'notification',
 			true,
@@ -738,7 +738,7 @@ async function purchaseMembership(options) {
 		message.sendMsg(
 			-1,
 			beneficiaryUserId,
-			`${tier.name}${action}，已扣除${Number(result.subscription.cost_log || 0)}原木，并赠送${Number(result.redstone_granted || 0)}红石。`,
+			`${tier.name}${action}，已扣除${Number(result.subscription.cost_log || 0)}原木，并赠送${Number(result.redstone_granted || 0)}红石（到账后3个月内有效）。`,
 			MEMBERSHIP_ROUTE,
 			'notification',
 			true,

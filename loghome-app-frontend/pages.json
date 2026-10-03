@@ -794,7 +794,7 @@
 		}, {
 			"path": "pages/store/index",
 			"style": {
-				"navigationBarTitleText": "积分商城"
+				"navigationBarTitleText": "原木商城"
 			}
 		}, {
 			"path": "pages/store/detail",
@@ -804,12 +804,18 @@
 		}, {
 			"path": "pages/store/checkout",
 			"style": {
-				"navigationBarTitleText": "确认订单"
+				"navigationBarTitleText": "确认兑换"
 			}
 		}, {
 			"path": "pages/store/orders",
 			"style": {
-				"navigationBarTitleText": "兑换记录"
+				"navigationBarTitleText": "我的订单"
+			}
+		}, {
+			"path": "pages/store/logistics",
+			"style": {
+				"navigationBarTitleText": "查看物流",
+				"enablePullDownRefresh": true
 			}
 		}, {
 			"path": "pages/store/address_list",

@@ -9,6 +9,7 @@
       },
     ]"
     :style="pageStyle"
+    @click="closeCollaborationParticipantsTooltip"
     @touchstart="
       documentOnPress = true;
       clearEditorImagesEditButton();
@@ -18,6 +19,9 @@
     <div ref="editorHeader" class="editorHeader">
       <div
         class="customNavBar"
+        :class="{
+          collaborationTooltipOpen: collaborationParticipantsTooltipVisible,
+        }"
         :style="customNavBarStyle"
         @touchstart.stop
         @touchend.stop
@@ -32,7 +36,210 @@
               <uni-icons type="left" size="20" :color="currentTheme.color"></uni-icons>
             </div>
           </div>
-          <div class="customNavTitle"></div>
+          <div class="customNavTitle" :style="customNavTitleStyle">
+            <div
+              v-if="isRealtimeCollaboration && collaborationParticipants.length"
+              class="collaborationPresence"
+              @click.stop
+            >
+              <button
+                type="button"
+                class="collaborationAvatarStack"
+                :class="{ active: collaborationParticipantsTooltipVisible }"
+                :aria-expanded="String(collaborationParticipantsTooltipVisible)"
+                :aria-label="`${collaborationParticipants.length} 位作者正在实时协作`"
+                title="查看实时协作作者"
+                @click.stop="toggleCollaborationParticipantsTooltip"
+              >
+                <span
+                  v-for="(item, index) in collaborationAvatarStackItems"
+                  :key="item.key"
+                  class="collaborationAvatarStackItem"
+                  :class="{
+                    overflow: item.isOverflow,
+                    unreadChat: item.hasUnreadChat,
+                  }"
+                  :style="{
+                    marginLeft: index === 0 ? '0' : '-9px',
+                    zIndex: item.hasUnreadChat ? 100 + index : index + 1,
+                    borderColor: currentTheme.backColor,
+                    backgroundColor: item.isOverflow
+                      ? currentTheme.statusCapsuleBackground
+                      : item.color,
+                  }"
+                >
+                  <UserAvatar
+                    v-if="!item.isOverflow"
+                    class="collaborationAvatar"
+                    :src="item.avatarUrl"
+                  />
+                  <span v-else class="collaborationAvatarOverflowText">
+                    +{{ item.overflowCount }}
+                  </span>
+                </span>
+              </button>
+
+              <transition name="collaborationParticipantsTooltip">
+                <div
+                  v-if="collaborationParticipantsTooltipVisible"
+                  class="collaborationParticipantsTooltip"
+                  role="tooltip"
+                  @click.stop
+                >
+                  <div class="collaborationParticipantsTooltipHeader">
+                    <span>正在实时协作</span>
+                    <span>{{ collaborationParticipants.length }} 人在线</span>
+                  </div>
+                  <div class="collaborationTooltipBody">
+                    <section class="collaborationParticipantsPane">
+                      <div class="collaborationPaneTitle">协作者</div>
+                      <div class="collaborationParticipantsList">
+                        <div
+                          v-for="participant in collaborationParticipants"
+                          :key="participant.key"
+                          class="collaborationParticipantItem"
+                        >
+                          <div class="collaborationParticipantRow">
+                            <span
+                              class="collaborationParticipantAvatarWrap"
+                              :class="{
+                                unreadChat: hasRealtimeChatAvatarAlert(participant.userId),
+                              }"
+                              :style="{ borderColor: participant.color }"
+                            >
+                              <UserAvatar
+                                class="collaborationParticipantAvatar"
+                                :src="participant.avatarUrl"
+                              />
+                            </span>
+                            <span class="collaborationParticipantIdentity">
+                              <span class="collaborationParticipantName">
+                                {{ participant.name }}
+                              </span>
+                              <span
+                                v-if="participant.isCurrentUser"
+                                class="collaborationParticipantSelf"
+                              >你</span>
+                            </span>
+                            <button
+                              v-if="participant.isCurrentUser"
+                              type="button"
+                              class="collaborationParticipantColorButton"
+                              :class="{
+                                active:
+                                  collaborationColorPickerParticipantKey === participant.key,
+                              }"
+                              :style="{ backgroundColor: participant.color }"
+                              aria-label="更改我的光标颜色"
+                              title="更改我的光标颜色"
+                              @click.stop="toggleCollaborationColorPicker(participant)"
+                            ></button>
+                            <button
+                              v-else
+                              type="button"
+                              class="collaborationParticipantColorButton collaborationParticipantCursorButton"
+                              :class="{ disabled: !participant.hasCursor }"
+                              :style="{ backgroundColor: participant.color }"
+                              :disabled="!participant.hasCursor"
+                              :aria-label="participant.hasCursor ? `定位到 ${participant.name} 的光标` : `${participant.name} 当前没有可定位的光标`"
+                              :title="participant.hasCursor ? '定位到协作者光标' : '协作者当前没有可定位的光标'"
+                              @click.stop="locateRealtimeParticipantCursor(participant)"
+                            ></button>
+                          </div>
+                          <transition name="collaborationColorPalette">
+                            <div
+                              v-if="collaborationColorPickerParticipantKey === participant.key"
+                              class="collaborationColorPalette"
+                            >
+                              <div class="collaborationColorPaletteOptions">
+                                <button
+                                  v-for="colorOption in collaborationColorOptions"
+                                  :key="colorOption"
+                                  type="button"
+                                  class="collaborationColorOption"
+                                  :class="{ selected: participant.color === colorOption }"
+                                  :style="{ backgroundColor: colorOption }"
+                                  :aria-label="`选择颜色 ${colorOption}`"
+                                  @click.stop="setCollaborationParticipantColor(
+                                    participant,
+                                    colorOption
+                                  )"
+                                >
+                                  <i
+                                    v-if="participant.color === colorOption"
+                                    class="el-icon-check"
+                                  ></i>
+                                </button>
+                              </div>
+                              <div class="collaborationColorPaletteHint">
+                                你的颜色会同步给所有在线作者
+                              </div>
+                            </div>
+                          </transition>
+                        </div>
+                      </div>
+                    </section>
+                    <section class="collaborationChatPane">
+                      <div class="collaborationPaneTitle collaborationChatTitle">
+                        <span>群聊</span>
+                        <span>{{ collaborationChatMessages.length }} 条</span>
+                      </div>
+                      <div
+                        ref="collaborationChatMessages"
+                        class="collaborationChatMessages"
+                        role="log"
+                        aria-live="polite"
+                        aria-relevant="additions"
+                      >
+                        <div
+                          v-if="collaborationChatMessages.length === 0"
+                          class="collaborationChatEmpty"
+                        >
+                          暂无消息，和协作者打个招呼吧
+                        </div>
+                        <div
+                          v-for="message in collaborationChatMessages"
+                          :key="message.id"
+                          class="collaborationChatMessage"
+                          :class="{
+                            self: isCurrentRealtimeChatMessage(message),
+                          }"
+                        >
+                          <div class="collaborationChatMessageMeta">
+                            <span>{{ message.name }}</span>
+                            <span>{{ formatRealtimeChatTime(message.sent_at) }}</span>
+                          </div>
+                          <div
+                            class="collaborationChatBubble"
+                            :style="{
+                              borderColor: message.color,
+                            }"
+                          >{{ message.content }}</div>
+                        </div>
+                      </div>
+                      <div class="collaborationChatComposer">
+                        <textarea
+                          v-model="collaborationChatDraft"
+                          class="collaborationChatInput"
+                          rows="2"
+                          maxlength="300"
+                          placeholder="发送消息…"
+                          aria-label="实时协作群聊消息"
+                          @keydown.enter.exact.prevent="sendRealtimeChatMessage"
+                        ></textarea>
+                        <button
+                          type="button"
+                          class="collaborationChatSendButton"
+                          :disabled="!canSendRealtimeChatMessage()"
+                          @click.stop="sendRealtimeChatMessage"
+                        >发送</button>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </transition>
+            </div>
+          </div>
           <div class="customNavActions">
             <button
               v-for="tool in navShortcutTools"
@@ -72,7 +279,7 @@
         >
           <template v-if="capsule.id === 'wordCount'">
             {{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图
-            <span class="editorRole" v-if="editorRoleText">{{ editorRoleText }}</span>
+            <!-- <span class="editorRole" v-if="editorRoleText">{{ editorRoleText }}</span> -->
           </template>
           <template v-else-if="capsule.id === 'sync'">
             <complete-icon
@@ -448,11 +655,22 @@ import { Editor, EditorContent, Extension } from "@tiptap/vue-2";
 import Paragraph from "@tiptap/extension-paragraph";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { HocuspocusProvider } from "@hocuspocus/provider";
+import { IndexeddbPersistence } from "y-indexeddb";
+import {
+  relativePositionToAbsolutePosition,
+  yCursorPluginKey,
+  ySyncPluginKey,
+} from "y-prosemirror";
+import * as Y from "yjs";
 import conflictDialog from "../../components/conflictDialog.vue";
 import completeIcon from "../../components/completeIcon.vue";
+import UserAvatar from "../../components/UserAvatar.vue";
 import WriterAiAssistant from "../../components/writer-ai/WriterAiAssistant.vue";
 import ReaderBackgroundPicker from "../../components/ReaderBackgroundPicker.vue";
 import { getMembershipStatus } from "../../common/membership-api.js";
@@ -493,6 +711,78 @@ function resolveAssetUrl(assetModule) {
 }
 
 const BIPAO_AI_ICON = resolveAssetUrl(require("../../static/bipao_ai_icon.svg"));
+const COLLABORATION_CURSOR_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const COLLABORATION_USER_COLORS = Object.freeze([
+  "#2563eb",
+  "#7c3aed",
+  "#db2777",
+  "#dc2626",
+  "#d97706",
+  "#059669",
+  "#0891b2",
+]);
+const COLLABORATION_CHAT_MESSAGE_MAX_LENGTH = 300;
+const COLLABORATION_CHAT_HISTORY_LIMIT = 100;
+const COLLABORATION_CHAT_AVATAR_PULSE_DURATION = 2800;
+
+function getCollaborationUserColor(userId) {
+  const normalizedId = Math.abs(Number(userId) || 0);
+  return COLLABORATION_USER_COLORS[normalizedId % COLLABORATION_USER_COLORS.length];
+}
+
+function renderRealtimeCollaborationCursor(user = {}) {
+  const color = COLLABORATION_CURSOR_COLOR_PATTERN.test(String(user.color || ""))
+    ? String(user.color)
+    : "#2563eb";
+  const name = String(user.name || "协作者").trim() || "协作者";
+  const caret = document.createElement("span");
+  caret.className = "collaboration-cursor__caret";
+  caret.setAttribute("data-collaborator", name);
+  Object.assign(caret.style, {
+    display: "inline-block",
+    position: "relative",
+    zIndex: "20",
+    width: "0",
+    height: "1.1em",
+    boxSizing: "border-box",
+    borderLeft: `2px solid ${color}`,
+    marginLeft: "-1px",
+    marginRight: "-1px",
+    verticalAlign: "text-bottom",
+    overflow: "visible",
+    pointerEvents: "none",
+  });
+
+  const label = document.createElement("span");
+  label.className = "collaboration-cursor__label";
+  label.textContent = name;
+  Object.assign(label.style, {
+    display: "block",
+    position: "absolute",
+    zIndex: "21",
+    left: "-2px",
+    bottom: "calc(100% + 2px)",
+    width: "max-content",
+    maxWidth: "160px",
+    padding: "2px 6px",
+    boxSizing: "border-box",
+    borderRadius: "5px 5px 5px 0",
+    backgroundColor: color,
+    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.16)",
+    color: "#fff",
+    fontSize: "12px",
+    fontStyle: "normal",
+    fontWeight: "600",
+    lineHeight: "1.2",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    userSelect: "none",
+    pointerEvents: "none",
+  });
+  caret.appendChild(label);
+  return caret;
+}
 
 const WRITER_SOLID_THEMES = Object.freeze([
   { key: "white", name: "蛙鸣白", required_membership: "none" },
@@ -646,6 +936,62 @@ const LegacyParagraph = Paragraph.extend({
   },
 });
 
+const ParagraphIdPluginKey = new PluginKey("writerRealtimeParagraphIds");
+
+function createRealtimeParagraphIdExtension(allocateId, requestMoreIds) {
+  return Extension.create({
+    name: "writerRealtimeParagraphIds",
+    priority: 1100,
+    addProseMirrorPlugins() {
+      return [
+        new Plugin({
+          key: ParagraphIdPluginKey,
+          appendTransaction(transactions, oldState, newState) {
+            const shouldInspect = transactions.some(
+              (transaction) =>
+                transaction.docChanged ||
+                transaction.getMeta(ParagraphIdPluginKey)
+            );
+            if (!shouldInspect) return null;
+
+            const usedIds = new Set();
+            const repairs = [];
+            newState.doc.descendants((node, pos) => {
+              if (node.type.name !== "paragraph") return true;
+              const id = Number(node.attrs && node.attrs.legacyId);
+              if (Number.isInteger(id) && id > 0 && !usedIds.has(id)) {
+                usedIds.add(id);
+                return false;
+              }
+
+              const replacementId = allocateId(usedIds);
+              if (!replacementId) {
+                requestMoreIds();
+                return false;
+              }
+              usedIds.add(replacementId);
+              repairs.push({ pos, node, id: replacementId });
+              return false;
+            });
+
+            if (!repairs.length) return null;
+            const transaction = newState.tr;
+            repairs.forEach(({ pos, node, id }) => {
+              transaction.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                legacyId: id,
+              });
+            });
+            transaction.setMeta(ParagraphIdPluginKey, "assigned");
+            transaction.setMeta("addToHistory", false);
+            return transaction;
+          },
+        }),
+      ];
+    },
+  });
+}
+
 const DEFAULT_QUICK_INPUTS = [
   {
     id: "indent",
@@ -763,6 +1109,7 @@ const NAV_LEFT_RESERVED_WIDTH = 44;
 const NAV_TOOLBAR_TRIGGER_WIDTH = 48;
 const NAV_SHORTCUT_BUTTON_WIDTH = 40;
 const NAV_ACTION_SAFE_GAP = 8;
+const COLLABORATION_PRESENCE_RESERVED_WIDTH = 64;
 const PAIR_INPUT_CURSOR_OFFSETS = {
   "“”": 1,
   "《》": 1,
@@ -888,13 +1235,14 @@ function getViewportWidth() {
   return 375;
 }
 
-function calculateNavShortcutLimit(viewportWidth) {
+function calculateNavShortcutLimit(viewportWidth, reservedWidth = 0) {
   const width = Number(viewportWidth) || 375;
   const availableWidth =
     width -
     NAV_LEFT_RESERVED_WIDTH -
     NAV_TOOLBAR_TRIGGER_WIDTH -
-    NAV_ACTION_SAFE_GAP;
+    NAV_ACTION_SAFE_GAP -
+    Math.max(0, Number(reservedWidth) || 0);
   const limit = Math.floor(availableWidth / NAV_SHORTCUT_BUTTON_WIDTH);
   return Math.max(1, Math.min(MAX_NAV_SHORTCUTS, limit));
 }
@@ -1109,6 +1457,7 @@ export default {
     EditorContent,
     conflictDialog,
     completeIcon,
+    UserAvatar,
     WriterAiAssistant,
     ReaderBackgroundPicker,
   },
@@ -1129,6 +1478,35 @@ export default {
         can_publish: true,
         can_edit_draft: true,
       },
+      collaborationMode: "legacy_lock",
+      collaborationRevision: 0,
+      collaborationDocumentName: "",
+      collaborationStatus: "disconnected",
+      collaborationUnsyncedChanges: 0,
+      collaborationProvider: null,
+      collaborationPersistence: null,
+      collaborationDocument: null,
+      collaborationTitle: null,
+      collaborationTitleObserver: null,
+      collaborationTitleApplying: false,
+      collaborationCurrentUser: null,
+      collaborationParticipants: [],
+      collaborationParticipantsSignature: "",
+      collaborationPresenceSnapshotReady: false,
+      collaborationPresenceUsersByKey: {},
+      collaborationPresenceToastQueue: [],
+      collaborationPresenceToastTimer: null,
+      collaborationParticipantsTooltipVisible: false,
+      collaborationColorPickerParticipantKey: "",
+      collaborationColorOverrides: {},
+      collaborationChatMessages: [],
+      collaborationChatDraft: "",
+      collaborationChatUnreadByUser: {},
+      collaborationChatPulseByUser: {},
+      collaborationChatPulseTimers: {},
+      collaborationChatHistoryRequested: false,
+      paragraphIdRanges: [],
+      paragraphIdRangePromise: null,
       editSessionId: "",
       currentEditLock: null,
       lockState: "idle",
@@ -1438,7 +1816,79 @@ export default {
     canPublishArticle() {
       return !!(this.editorAccess && this.editorAccess.can_publish === true);
     },
+    isRealtimeCollaboration() {
+      return this.collaborationMode === "realtime_crdt";
+    },
+    customNavTitleStyle() {
+      const actionWidth =
+        NAV_TOOLBAR_TRIGGER_WIDTH +
+        this.navShortcutTools.length * NAV_SHORTCUT_BUTTON_WIDTH +
+        NAV_ACTION_SAFE_GAP;
+      return {
+        right: `${actionWidth}px`,
+      };
+    },
+    collaborationAvatarDisplayLimit() {
+      const actionWidth =
+        NAV_TOOLBAR_TRIGGER_WIDTH +
+        this.navShortcutTools.length * NAV_SHORTCUT_BUTTON_WIDTH;
+      const availableWidth = Math.max(
+        28,
+        Number(this.viewportWidth || 375) -
+          NAV_LEFT_RESERVED_WIDTH -
+          actionWidth -
+          NAV_ACTION_SAFE_GAP * 2
+      );
+      const avatarSize = 28;
+      const visibleStep = 19;
+      return Math.max(
+        1,
+        Math.min(4, Math.floor((availableWidth - avatarSize) / visibleStep) + 1)
+      );
+    },
+    collaborationAvatarStackItems() {
+      const participants = this.collaborationParticipants;
+      const limit = this.collaborationAvatarDisplayLimit;
+      if (participants.length <= limit) {
+        return participants.map((participant) => ({
+          ...participant,
+          isOverflow: false,
+          hasUnreadChat: this.hasRealtimeChatAvatarAlert(participant.userId),
+        }));
+      }
+      if (limit <= 1) {
+        return [{
+          ...participants[0],
+          isOverflow: false,
+          hasUnreadChat: this.hasRealtimeChatAvatarAlert(participants[0].userId),
+        }];
+      }
+      const visibleParticipants = participants.slice(0, limit - 1).map(
+        (participant) => ({
+          ...participant,
+          isOverflow: false,
+          hasUnreadChat: this.hasRealtimeChatAvatarAlert(participant.userId),
+        })
+      );
+      const hiddenParticipants = participants.slice(limit - 1);
+      visibleParticipants.push({
+        key: `overflow:${participants.length - visibleParticipants.length}`,
+        isOverflow: true,
+        overflowCount: participants.length - visibleParticipants.length,
+        color: this.currentTheme.color,
+        hasUnreadChat: hiddenParticipants.some((participant) =>
+          this.hasRealtimeChatAvatarAlert(participant.userId)
+        ),
+      });
+      return visibleParticipants;
+    },
+    collaborationColorOptions() {
+      return COLLABORATION_USER_COLORS;
+    },
     editorRoleText() {
+      if (this.isRealtimeCollaboration) {
+        return "实时协作";
+      }
       if (this.editorAccess.access_role === "collaborator") {
         return "协作草稿";
       }
@@ -1481,6 +1931,10 @@ export default {
         "--writerThemePageColor": this.currentTheme.pageBackColor,
         "--writerThemeTextColor": this.currentTheme.color,
         "--writerThemeBorderColor": this.currentTheme.statusCapsuleBorder,
+        "--quickInputBottomInset":
+          this.isAppEnv && this.appKeyboardVisible === true
+            ? "0px"
+            : "var(--loghome-safe-bottom, 0px)",
       };
     },
     customNavBarStyle() {
@@ -1531,7 +1985,12 @@ export default {
       return this.toolbarSettingsItems;
     },
     navShortcutLimit() {
-      return calculateNavShortcutLimit(this.viewportWidth);
+      return calculateNavShortcutLimit(
+        this.viewportWidth,
+        this.isRealtimeCollaboration
+          ? COLLABORATION_PRESENCE_RESERVED_WIDTH
+          : 0
+      );
     },
     navShortcutTools() {
       const allTools = new Map(this.toolbarSettingsItems.map((tool) => [tool.id, tool]));
@@ -1908,6 +2367,8 @@ export default {
           article_chapter: this.article.article_chapter,
           novel_info: this.article.novel_info || {},
           edit_session_id: this.editSessionId,
+          collaboration_mode: this.collaborationMode,
+          collaboration_revision: this.collaborationRevision,
           saved_at: Date.now(),
         })
       );
@@ -2617,9 +3078,15 @@ export default {
       this.hasNewInput = true;
       this.lastInputTime = new Date();
       this.contentVersion += 1;
-      this.markSyncPending();
+      if (!this.isRealtimeCollaboration) {
+        this.markSyncPending();
+      }
       this.recordWritingSpeedSample();
       this.scheduleTitleCapsuleClearanceUpdate();
+      if (this.isRealtimeCollaboration) {
+        this.applyLocalTitleToRealtimeDocument();
+        return;
+      }
       this.scheduleInputSync();
     },
     handleTitleInputFocus(event) {
@@ -2808,6 +3275,9 @@ export default {
       return serverTime || buildClientSyncTime();
     },
     scheduleInputSync() {
+      if (this.isRealtimeCollaboration) {
+        return;
+      }
       if (this.shouldSuppressEditorSyncForCompletedPublish()) {
         return;
       }
@@ -2834,8 +3304,10 @@ export default {
       this.startSaveNotifyTimer();
       this.startWritingTimer();
       if (this.loadComplete) {
-        this.startLocalSaveTimer();
-        this.claimEditLock();
+        if (!this.isRealtimeCollaboration) {
+          this.startLocalSaveTimer();
+          this.claimEditLock();
+        }
       }
     },
     handlePageHide() {
@@ -3207,6 +3679,12 @@ export default {
         if (this.shouldSuppressEditorSyncForCompletedPublish()) {
           return;
         }
+        if (this.isRealtimeCollaboration) {
+          if (this.collaborationProvider) {
+            this.collaborationProvider.flushPendingUpdates();
+          }
+          return;
+        }
         await this.persistPauseSnapshot();
       })();
 
@@ -3231,6 +3709,7 @@ export default {
         await this.pauseForBackground();
         if (
           this.loadComplete &&
+          !this.isRealtimeCollaboration &&
           !suppressPublishSync &&
           !this.shouldSuppressEditorSyncForCompletedPublish()
         ) {
@@ -3242,7 +3721,11 @@ export default {
             });
           } catch (error) {}
         }
-        await this.releaseEditLock();
+        if (this.isRealtimeCollaboration) {
+          await this.destroyRealtimeCollaboration();
+        } else {
+          await this.releaseEditLock();
+        }
       })();
 
       try {
@@ -3726,7 +4209,9 @@ export default {
       const fontFamily = this.currentFontFamilyStyleValue;
       if (!fontSize && !fontFamily) return;
       this.syncEditorRootAttributes(editorInstance);
-      this.applyEditorDisplayFontMark(editorInstance);
+      if (!this.isRealtimeCollaboration) {
+        this.applyEditorDisplayFontMark(editorInstance);
+      }
 
       const applyFontFamily = (element) => {
         if (!element) return;
@@ -3863,6 +4348,1039 @@ export default {
       } finally {
         this.isApplyingEditorDisplayFont = false;
       }
+    },
+    getCollaborationHttpBaseUrl() {
+      const override = window.localStorage.getItem("loghomeCollaborationHttpUrl");
+      return String(override || this.$readerAiBaseUrl || "").replace(/\/+$/, "");
+    },
+    getCollaborationWebSocketUrl() {
+      const override = window.localStorage.getItem("loghomeCollaborationWsUrl");
+      if (override) return String(override).replace(/\/+$/, "");
+      if (this.$collaborationWsUrl) {
+        return String(this.$collaborationWsUrl).replace(/\/+$/, "");
+      }
+      return this.getCollaborationHttpBaseUrl()
+        .replace(/^http:/, "ws:")
+        .replace(/^https:/, "wss:")
+        .replace(/:9101$/, ":9102");
+    },
+    getCollaborationHeaders() {
+      return {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + this.getAuthToken(),
+      };
+    },
+    getCollaborationColorStorageKey() {
+      return `writerRealtimeColors:v1:${Number(this.currentUserId || 0)}:${Number(
+        this.chapterId || 0
+      )}`;
+    },
+    loadCollaborationColorPreferences() {
+      this.collaborationColorOverrides = {};
+      try {
+        const rawValue = window.localStorage.getItem(
+          this.getCollaborationColorStorageKey()
+        );
+        if (!rawValue) return;
+        const parsed = JSON.parse(rawValue);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
+        const colors = {};
+        const currentUserId = String(Number(this.currentUserId || 0));
+        const normalizedColor = String(parsed[currentUserId] || "");
+        if (
+          currentUserId !== "0" &&
+          COLLABORATION_USER_COLORS.includes(normalizedColor)
+        ) {
+          colors[currentUserId] = normalizedColor;
+        }
+        this.collaborationColorOverrides = colors;
+      } catch (error) {
+        this.collaborationColorOverrides = {};
+      }
+    },
+    persistCollaborationColorPreferences() {
+      try {
+        window.localStorage.setItem(
+          this.getCollaborationColorStorageKey(),
+          JSON.stringify(this.collaborationColorOverrides)
+        );
+      } catch (error) {}
+    },
+    getCollaborationColorOverride(userId) {
+      const normalizedUserId = Number(userId || 0);
+      if (
+        !normalizedUserId ||
+        normalizedUserId !== Number(this.currentUserId || 0)
+      ) {
+        return "";
+      }
+      const color = String(
+        this.collaborationColorOverrides[String(normalizedUserId)] || ""
+      );
+      return COLLABORATION_USER_COLORS.includes(color) ? color : "";
+    },
+    getCollaborationDisplayColor(user = {}, fallbackId = 0) {
+      const userId = Number(user.id || user.user_id || fallbackId || 0);
+      const override = this.getCollaborationColorOverride(userId);
+      if (override) return override;
+      const awarenessColor = String(user.color || "");
+      if (COLLABORATION_CURSOR_COLOR_PATTERN.test(awarenessColor)) {
+        return awarenessColor;
+      }
+      return getCollaborationUserColor(userId || fallbackId);
+    },
+    refreshCollaborationCursorDecorations() {
+      if (!this.editor || !this.editor.state || !this.editor.view) return;
+      const transaction = this.editor.state.tr.setMeta(yCursorPluginKey, {
+        awarenessUpdated: true,
+      });
+      this.editor.view.dispatch(transaction);
+    },
+    syncCurrentCollaborationColor(color) {
+      const currentUser = {
+        ...(this.collaborationCurrentUser || {}),
+        id: Number(this.currentUserId || 0),
+        color,
+      };
+      this.collaborationCurrentUser = currentUser;
+      if (
+        this.editor &&
+        this.editor.commands &&
+        typeof this.editor.commands.updateUser === "function"
+      ) {
+        this.editor.commands.updateUser(currentUser);
+        return;
+      }
+      const awareness = this.collaborationProvider
+        && this.collaborationProvider.awareness;
+      if (awareness) {
+        awareness.setLocalStateField("user", currentUser);
+      }
+    },
+    toggleCollaborationColorPicker(participant) {
+      if (!participant || participant.isCurrentUser !== true) return;
+      this.collaborationColorPickerParticipantKey =
+        this.collaborationColorPickerParticipantKey === participant.key
+          ? ""
+          : participant.key;
+    },
+    setCollaborationParticipantColor(participant, color) {
+      const userId = Number(participant && participant.userId || 0);
+      const normalizedColor = String(color || "");
+      if (
+        !userId ||
+        participant.isCurrentUser !== true ||
+        userId !== Number(this.currentUserId || 0) ||
+        !COLLABORATION_USER_COLORS.includes(normalizedColor)
+      ) {
+        return;
+      }
+      this.$set(
+        this.collaborationColorOverrides,
+        String(userId),
+        normalizedColor
+      );
+      this.persistCollaborationColorPreferences();
+      this.syncCurrentCollaborationColor(normalizedColor);
+      this.refreshRealtimeParticipants();
+      this.refreshCollaborationCursorDecorations();
+    },
+    async loadCurrentCollaborationUser() {
+      const fallback = {
+        id: Number(this.currentUserId || 0),
+        name: this.currentUserId ? `用户${this.currentUserId}` : "协作者",
+        avatarUrl: "",
+        color: this.getCollaborationDisplayColor({
+          id: this.currentUserId,
+          color: getCollaborationUserColor(this.currentUserId),
+        }),
+      };
+      try {
+        const response = await axios.get(`${this.$baseUrl}/users/userprofile`, {
+          headers: this.getCollaborationHeaders(),
+        });
+        const profile = response.data && typeof response.data === "object"
+          ? response.data
+          : {};
+        return {
+          id: Number(profile.user_id || fallback.id),
+          name: String(profile.name || fallback.name),
+          avatarUrl: String(profile.avatar_url || ""),
+          color: this.getCollaborationDisplayColor({
+            id: profile.user_id || fallback.id,
+            color: getCollaborationUserColor(profile.user_id || fallback.id),
+          }),
+        };
+      } catch (error) {
+        return fallback;
+      }
+    },
+    getRealtimeAwarenessStates() {
+      const awareness = this.collaborationProvider
+        && this.collaborationProvider.awareness;
+      if (!awareness || typeof awareness.getStates !== "function") {
+        return [];
+      }
+      return Array.from(awareness.getStates().entries()).map(
+        ([clientId, state]) => ({
+          clientId,
+          ...(state || {}),
+        })
+      );
+    },
+    normalizeRealtimeParticipant(state) {
+      if (!state || typeof state !== "object") return null;
+      const clientId = Number(state.clientId || 0);
+      const awareness = this.collaborationProvider
+        && this.collaborationProvider.awareness;
+      const isLocalClient = Boolean(
+        awareness && Number(awareness.clientID) === clientId
+      );
+      const rawUser = state.user && typeof state.user === "object"
+        ? state.user
+        : {};
+      const rawUserId = Number(rawUser.id || rawUser.user_id || 0);
+      const isCurrentUser = isLocalClient || Boolean(
+        rawUserId && rawUserId === Number(this.currentUserId || 0)
+      );
+      const currentUser = isCurrentUser && this.collaborationCurrentUser
+        ? this.collaborationCurrentUser
+        : {};
+      const userId = Number(rawUserId || currentUser.id || 0);
+      if (!userId && !isCurrentUser) return null;
+
+      const name = String(
+        currentUser.name || rawUser.name || (userId ? `用户${userId}` : "协作者")
+      ).trim() || "协作者";
+      const avatarUrl = String(
+        currentUser.avatarUrl ||
+        rawUser.avatarUrl ||
+        rawUser.avatar_url ||
+        ""
+      );
+      const rawColor = String(currentUser.color || rawUser.color || "");
+      const color = this.getCollaborationDisplayColor(
+        {
+          id: userId,
+          color: rawColor,
+        },
+        clientId
+      );
+      const hasCursor = Boolean(
+        state.cursor && state.cursor.anchor && state.cursor.head
+      );
+
+      return {
+        key: userId ? `user:${userId}` : `client:${clientId}`,
+        clientId,
+        userId,
+        name,
+        avatarUrl,
+        color,
+        isCurrentUser,
+        hasCursor,
+      };
+    },
+    formatRealtimePresenceParticipantNames(participants) {
+      const names = (Array.isArray(participants) ? participants : [])
+        .map((participant) => String(participant.name || "协作者").trim())
+        .filter(Boolean);
+      if (names.length <= 2) return names.join("、");
+      return `${names.slice(0, 2).join("、")}等${names.length}人`;
+    },
+    showNextRealtimePresenceToast() {
+      if (
+        this.collaborationPresenceToastTimer ||
+        !this.collaborationPresenceToastQueue.length
+      ) {
+        return;
+      }
+      const title = this.collaborationPresenceToastQueue.shift();
+      uni.showToast({
+        title,
+        icon: "none",
+        duration: 2000,
+      });
+      this.collaborationPresenceToastTimer = setTimeout(() => {
+        this.collaborationPresenceToastTimer = null;
+        this.showNextRealtimePresenceToast();
+      }, 2100);
+    },
+    enqueueRealtimePresenceToast(title) {
+      if (!title) return;
+      this.collaborationPresenceToastQueue.push(title);
+      this.showNextRealtimePresenceToast();
+    },
+    resetRealtimePresenceNotifications() {
+      if (this.collaborationPresenceToastTimer) {
+        clearTimeout(this.collaborationPresenceToastTimer);
+      }
+      this.collaborationPresenceSnapshotReady = false;
+      this.collaborationPresenceUsersByKey = {};
+      this.collaborationPresenceToastQueue = [];
+      this.collaborationPresenceToastTimer = null;
+    },
+    trackRealtimeParticipantChanges(participants) {
+      const nextUsersByKey = {};
+      participants.forEach((participant) => {
+        if (!participant || !participant.key) return;
+        nextUsersByKey[participant.key] = {
+          key: participant.key,
+          userId: participant.userId,
+          name: participant.name,
+          isCurrentUser: participant.isCurrentUser,
+        };
+      });
+
+      if (!this.collaborationPresenceSnapshotReady) {
+        this.collaborationPresenceUsersByKey = nextUsersByKey;
+        this.collaborationPresenceSnapshotReady = true;
+        return;
+      }
+
+      const previousUsersByKey = this.collaborationPresenceUsersByKey;
+      const joinedParticipants = Object.keys(nextUsersByKey)
+        .filter((key) => !previousUsersByKey[key])
+        .map((key) => nextUsersByKey[key])
+        .filter((participant) => !participant.isCurrentUser);
+      const leftParticipants = Object.keys(previousUsersByKey)
+        .filter((key) => !nextUsersByKey[key])
+        .map((key) => previousUsersByKey[key])
+        .filter((participant) => !participant.isCurrentUser);
+
+      this.collaborationPresenceUsersByKey = nextUsersByKey;
+      if (joinedParticipants.length) {
+        this.enqueueRealtimePresenceToast(
+          `${this.formatRealtimePresenceParticipantNames(joinedParticipants)}加入了实时协作`
+        );
+      }
+      if (leftParticipants.length) {
+        this.enqueueRealtimePresenceToast(
+          `${this.formatRealtimePresenceParticipantNames(leftParticipants)}退出了实时协作`
+        );
+      }
+    },
+    updateRealtimeParticipants(states = null, options = {}) {
+      if (
+        !this.isRealtimeCollaboration ||
+        this.collaborationStatus !== "connected"
+      ) {
+        this.collaborationParticipants = [];
+        this.collaborationParticipantsSignature = "";
+        this.collaborationParticipantsTooltipVisible = false;
+        this.collaborationColorPickerParticipantKey = "";
+        return;
+      }
+
+      const sourceStates = Array.isArray(states)
+        ? states
+        : this.getRealtimeAwarenessStates();
+      const participantsByUser = new Map();
+      sourceStates.forEach((state) => {
+        const participant = this.normalizeRealtimeParticipant(state);
+        if (!participant) return;
+        const existing = participantsByUser.get(participant.key);
+        if (
+          !existing ||
+          participant.isCurrentUser ||
+          (!existing.hasCursor && participant.hasCursor)
+        ) {
+          participantsByUser.set(participant.key, participant);
+        }
+      });
+      const participants = Array.from(participantsByUser.values()).sort(
+        (left, right) => {
+          if (left.isCurrentUser !== right.isCurrentUser) {
+            return left.isCurrentUser ? -1 : 1;
+          }
+          return left.name.localeCompare(right.name, "zh-CN");
+        }
+      );
+      if (options.notifyPresenceChanges) {
+        this.trackRealtimeParticipantChanges(participants);
+      }
+      const signature = JSON.stringify(
+        participants.map((participant) => [
+          participant.key,
+          participant.name,
+          participant.avatarUrl,
+          participant.color,
+          participant.isCurrentUser,
+          participant.hasCursor,
+        ])
+      );
+      if (signature === this.collaborationParticipantsSignature) return;
+      this.collaborationParticipantsSignature = signature;
+      this.collaborationParticipants = participants;
+      if (
+        this.collaborationColorPickerParticipantKey &&
+        !participants.some(
+          (participant) =>
+            participant.key === this.collaborationColorPickerParticipantKey
+        )
+      ) {
+        this.collaborationColorPickerParticipantKey = "";
+      }
+      if (!participants.length) {
+        this.collaborationParticipantsTooltipVisible = false;
+      }
+    },
+    refreshRealtimeParticipants() {
+      this.updateRealtimeParticipants(this.getRealtimeAwarenessStates());
+    },
+    normalizeRealtimeChatMessage(message) {
+      if (!message || typeof message !== "object") return null;
+      const id = String(message.id || "").trim();
+      const userId = Number(message.user_id || 0);
+      const content = String(message.content || "").trim();
+      if (!id || !userId || !content) return null;
+      return {
+        id,
+        user_id: userId,
+        name: String(message.name || `用户${userId}`).trim() || `用户${userId}`,
+        avatar_url: String(message.avatar_url || ""),
+        color: this.getCollaborationDisplayColor({
+          id: userId,
+          color: message.color,
+        }),
+        content: content.slice(0, COLLABORATION_CHAT_MESSAGE_MAX_LENGTH),
+        sent_at: String(message.sent_at || new Date().toISOString()),
+      };
+    },
+    mergeRealtimeChatMessages(messages) {
+      const messagesById = new Map(
+        this.collaborationChatMessages.map((message) => [message.id, message])
+      );
+      (Array.isArray(messages) ? messages : []).forEach((message) => {
+        const normalized = this.normalizeRealtimeChatMessage(message);
+        if (normalized) messagesById.set(normalized.id, normalized);
+      });
+      this.collaborationChatMessages = Array.from(messagesById.values())
+        .sort((left, right) => {
+          const timeDifference =
+            new Date(left.sent_at).getTime() - new Date(right.sent_at).getTime();
+          return timeDifference || left.id.localeCompare(right.id);
+        })
+        .slice(-COLLABORATION_CHAT_HISTORY_LIMIT);
+    },
+    handleRealtimeChatPayload(payload) {
+      let event = null;
+      try {
+        event = JSON.parse(String(payload || ""));
+      } catch (error) {
+        return;
+      }
+      if (!event || typeof event !== "object") return;
+
+      if (event.type === "collaboration_chat_history") {
+        this.mergeRealtimeChatMessages(event.messages);
+        if (this.collaborationParticipantsTooltipVisible) {
+          this.scrollRealtimeChatToBottom();
+        }
+        return;
+      }
+      if (event.type !== "collaboration_chat_message") return;
+
+      const message = this.normalizeRealtimeChatMessage(event.message);
+      if (!message) return;
+      const isNewMessage = !this.collaborationChatMessages.some(
+        (existing) => existing.id === message.id
+      );
+      this.mergeRealtimeChatMessages([message]);
+      if (isNewMessage) {
+        this.pulseRealtimeChatAvatar(message.user_id);
+      }
+      if (
+        isNewMessage &&
+        message.user_id !== Number(this.currentUserId || 0) &&
+        !this.collaborationParticipantsTooltipVisible
+      ) {
+        this.$set(
+          this.collaborationChatUnreadByUser,
+          String(message.user_id),
+          true
+        );
+      }
+      if (this.collaborationParticipantsTooltipVisible) {
+        this.scrollRealtimeChatToBottom();
+      }
+    },
+    requestRealtimeChatHistory() {
+      if (
+        this.collaborationChatHistoryRequested ||
+        !this.collaborationProvider ||
+        !this.collaborationProvider.synced
+      ) {
+        return;
+      }
+      this.collaborationChatHistoryRequested = true;
+      try {
+        this.collaborationProvider.sendStateless(JSON.stringify({
+          type: "collaboration_chat_history_request",
+        }));
+      } catch (error) {
+        this.collaborationChatHistoryRequested = false;
+      }
+    },
+    canSendRealtimeChatMessage() {
+      const content = String(this.collaborationChatDraft || "").trim();
+      return Boolean(
+        content &&
+        content.length <= COLLABORATION_CHAT_MESSAGE_MAX_LENGTH &&
+        this.collaborationProvider &&
+        this.collaborationProvider.synced
+      );
+    },
+    sendRealtimeChatMessage() {
+      if (!this.canSendRealtimeChatMessage()) return;
+      const content = String(this.collaborationChatDraft || "").trim();
+      try {
+        this.collaborationProvider.sendStateless(JSON.stringify({
+          type: "collaboration_chat_send",
+          content,
+        }));
+        this.collaborationChatDraft = "";
+      } catch (error) {}
+    },
+    isCurrentRealtimeChatMessage(message) {
+      return Number(message && message.user_id || 0) ===
+        Number(this.currentUserId || 0);
+    },
+    formatRealtimeChatTime(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleTimeString("zh-CN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    },
+    hasRealtimeChatAvatarAlert(userId) {
+      const key = String(Number(userId || 0));
+      return Boolean(
+        this.collaborationChatUnreadByUser[key] ||
+        this.collaborationChatPulseByUser[key]
+      );
+    },
+    pulseRealtimeChatAvatar(userId) {
+      const key = String(Number(userId || 0));
+      if (key === "0") return;
+      if (this.collaborationChatPulseTimers[key]) {
+        clearTimeout(this.collaborationChatPulseTimers[key]);
+      }
+      this.$set(this.collaborationChatPulseByUser, key, true);
+      this.$set(
+        this.collaborationChatPulseTimers,
+        key,
+        setTimeout(() => {
+          this.$delete(this.collaborationChatPulseByUser, key);
+          this.$delete(this.collaborationChatPulseTimers, key);
+        }, COLLABORATION_CHAT_AVATAR_PULSE_DURATION)
+      );
+    },
+    clearRealtimeChatUnread() {
+      this.collaborationChatUnreadByUser = {};
+    },
+    clearRealtimeChatAvatarPulses() {
+      Object.values(this.collaborationChatPulseTimers).forEach((timer) => {
+        clearTimeout(timer);
+      });
+      this.collaborationChatPulseByUser = {};
+      this.collaborationChatPulseTimers = {};
+    },
+    scrollRealtimeChatToBottom() {
+      this.$nextTick(() => {
+        const container = this.getDomRef("collaborationChatMessages");
+        if (container) container.scrollTop = container.scrollHeight;
+      });
+    },
+    getRealtimeParticipantCursorState(participant) {
+      if (!participant || participant.isCurrentUser) return null;
+      const participantUserId = Number(participant.userId || 0);
+      const participantClientId = Number(participant.clientId || 0);
+      return this.getRealtimeAwarenessStates().find((state) => {
+        if (!state.cursor || !state.cursor.anchor || !state.cursor.head) {
+          return false;
+        }
+        const rawUser = state.user && typeof state.user === "object"
+          ? state.user
+          : {};
+        const stateUserId = Number(rawUser.id || rawUser.user_id || 0);
+        return participantUserId
+          ? stateUserId === participantUserId
+          : Number(state.clientId || 0) === participantClientId;
+      }) || null;
+    },
+    resolveRealtimeCursorPosition(cursorState) {
+      if (!cursorState || !this.editor || !this.collaborationDocument) {
+        return null;
+      }
+      const syncState = ySyncPluginKey.getState(this.editor.state);
+      if (
+        !syncState ||
+        !syncState.type ||
+        !syncState.binding ||
+        !syncState.binding.mapping
+      ) {
+        return null;
+      }
+
+      try {
+        return relativePositionToAbsolutePosition(
+          this.collaborationDocument,
+          syncState.type,
+          Y.createRelativePositionFromJSON(cursorState.cursor.head),
+          syncState.binding.mapping
+        );
+      } catch (error) {
+        return null;
+      }
+    },
+    scrollToRealtimeCursorPosition(position) {
+      this.closeCollaborationParticipantsTooltip();
+      this.$nextTick(() => {
+        if (!this.editor || !this.editor.view || !this.editor.state) return;
+        const maximum = Math.max(0, this.editor.state.doc.content.size);
+        const safePosition = Math.min(maximum, Math.max(0, Number(position)));
+        const container = this.getEditorScrollContainer();
+        let cursorCoords = null;
+        try {
+          cursorCoords = this.editor.view.coordsAtPos(safePosition);
+        } catch (error) {
+          cursorCoords = null;
+        }
+
+        if (
+          container &&
+          cursorCoords &&
+          typeof container.getBoundingClientRect === "function"
+        ) {
+          const visibleRange = this.getEditorVisibleVerticalRange(container);
+          const visibleCenterY = (visibleRange.top + visibleRange.bottom) / 2;
+          const cursorCenterY = (cursorCoords.top + cursorCoords.bottom) / 2;
+          const maximumScrollTop = Math.max(
+            0,
+            container.scrollHeight - container.clientHeight
+          );
+          const nextScrollTop = Math.min(
+            maximumScrollTop,
+            Math.max(0, container.scrollTop + cursorCenterY - visibleCenterY)
+          );
+          if (typeof container.scrollTo === "function") {
+            try {
+              container.scrollTo({ top: nextScrollTop, behavior: "smooth" });
+            } catch (error) {
+              container.scrollTop = nextScrollTop;
+            }
+          } else {
+            container.scrollTop = nextScrollTop;
+          }
+          return;
+        }
+
+        let scrollTarget = null;
+
+        try {
+          const domPosition = this.editor.view.domAtPos(safePosition);
+          const domNode = domPosition && domPosition.node;
+          const element = domNode
+            ? domNode.nodeType === 1
+              ? domNode
+              : domNode.parentElement
+            : null;
+          scrollTarget = element && element.closest
+            ? element.closest("p, img") || element
+            : element;
+        } catch (error) {
+          scrollTarget = null;
+        }
+
+        if (scrollTarget && typeof scrollTarget.scrollIntoView === "function") {
+          scrollTarget.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+      });
+    },
+    locateRealtimeParticipantCursor(participant) {
+      const cursorState = this.getRealtimeParticipantCursorState(participant);
+      const position = this.resolveRealtimeCursorPosition(cursorState);
+      if (!Number.isFinite(position)) return;
+      this.scrollToRealtimeCursorPosition(position);
+    },
+    toggleCollaborationParticipantsTooltip() {
+      if (!this.collaborationParticipants.length) return;
+      const nextVisible = !this.collaborationParticipantsTooltipVisible;
+      this.collaborationParticipantsTooltipVisible = nextVisible;
+      if (nextVisible) {
+        this.clearRealtimeChatUnread();
+        this.clearRealtimeChatAvatarPulses();
+        this.requestRealtimeChatHistory();
+        this.scrollRealtimeChatToBottom();
+      }
+    },
+    closeCollaborationParticipantsTooltip() {
+      this.collaborationParticipantsTooltipVisible = false;
+      this.collaborationColorPickerParticipantKey = "";
+    },
+    async getRealtimeCollaborationStatus() {
+      const response = await axios.get(
+        `${this.getCollaborationHttpBaseUrl()}/collaboration/articles/${this.chapterId}/status`,
+        { headers: this.getCollaborationHeaders() }
+      );
+      return response.data && response.data.data ? response.data.data : null;
+    },
+    allocateRealtimeParagraphId(usedIds = new Set()) {
+      while (this.paragraphIdRanges.length > 0) {
+        const range = this.paragraphIdRanges[0];
+        while (range.next <= range.end && usedIds.has(range.next)) {
+          range.next += 1;
+        }
+        if (range.next <= range.end) {
+          const id = range.next;
+          range.next += 1;
+          return id;
+        }
+        this.paragraphIdRanges.shift();
+      }
+      this.reserveRealtimeParagraphIds();
+      return null;
+    },
+    async reserveRealtimeParagraphIds() {
+      if (!this.isRealtimeCollaboration) return null;
+      if (this.paragraphIdRangePromise) return this.paragraphIdRangePromise;
+
+      this.paragraphIdRangePromise = axios
+        .post(
+          `${this.getCollaborationHttpBaseUrl()}/collaboration/articles/${this.chapterId}/paragraph-id-range`,
+          { size: 256 },
+          { headers: this.getCollaborationHeaders() }
+        )
+        .then((response) => {
+          const range = response.data && response.data.data;
+          if (range && Number(range.start) > 0 && Number(range.end) >= Number(range.start)) {
+            this.paragraphIdRanges.push({
+              next: Number(range.start),
+              end: Number(range.end),
+            });
+            if (this.editor) {
+              this.editor.view.dispatch(
+                this.editor.state.tr.setMeta(ParagraphIdPluginKey, "range-ready")
+              );
+            }
+          }
+          return range || null;
+        })
+        .catch((error) => {
+          console.warn("Failed to reserve realtime paragraph ids", error);
+          return null;
+        })
+        .finally(() => {
+          this.paragraphIdRangePromise = null;
+        });
+      return this.paragraphIdRangePromise;
+    },
+    applyRealtimeTitleFromDocument() {
+      if (!this.collaborationTitle) return;
+      const nextTitle = this.collaborationTitle.toString();
+      if (nextTitle === this.article.title) return;
+      this.collaborationTitleApplying = true;
+      this.article.title = nextTitle;
+      this.$nextTick(() => {
+        this.collaborationTitleApplying = false;
+        this.scheduleTitleCapsuleClearanceUpdate();
+      });
+    },
+    applyLocalTitleToRealtimeDocument() {
+      if (
+        !this.collaborationTitle ||
+        !this.collaborationDocument ||
+        this.collaborationTitleApplying
+      ) {
+        return;
+      }
+      const current = this.collaborationTitle.toString();
+      const next = String(this.article.title || "");
+      if (current === next) return;
+
+      let prefix = 0;
+      while (
+        prefix < current.length &&
+        prefix < next.length &&
+        current[prefix] === next[prefix]
+      ) {
+        prefix += 1;
+      }
+      let suffix = 0;
+      while (
+        suffix < current.length - prefix &&
+        suffix < next.length - prefix &&
+        current[current.length - 1 - suffix] === next[next.length - 1 - suffix]
+      ) {
+        suffix += 1;
+      }
+
+      this.collaborationDocument.transact(() => {
+        const deleteLength = current.length - prefix - suffix;
+        if (deleteLength > 0) this.collaborationTitle.delete(prefix, deleteLength);
+        const inserted = next.slice(prefix, next.length - suffix);
+        if (inserted) this.collaborationTitle.insert(prefix, inserted);
+      }, "writer-title-input");
+    },
+    createRealtimeCollaborativeEditor() {
+      if (this.editor) this.editor.destroy();
+      const paragraphIds = createRealtimeParagraphIdExtension(
+        (usedIds) => this.allocateRealtimeParagraphId(usedIds),
+        () => this.reserveRealtimeParagraphIds()
+      );
+
+      this.editor = new Editor({
+        extensions: [
+          StarterKit.configure({
+            history: false,
+            blockquote: false,
+            bold: false,
+            bulletList: false,
+            code: false,
+            codeBlock: false,
+            heading: false,
+            horizontalRule: false,
+            italic: false,
+            listItem: false,
+            orderedList: false,
+            paragraph: false,
+            strike: false,
+          }),
+          LegacyParagraph,
+          TextStyle,
+          WriterFontFamily,
+          Image.configure({ inline: false }),
+          NewParagraphSpace,
+          paragraphIds,
+          FindReplaceHighlight,
+          Collaboration.configure({
+            document: this.collaborationDocument,
+            field: "body",
+          }),
+          CollaborationCursor.configure({
+            provider: this.collaborationProvider,
+            user: this.collaborationCurrentUser || {
+              id: Number(this.currentUserId || 0),
+              name: "协作者",
+              avatarUrl: "",
+              color: getCollaborationUserColor(this.currentUserId),
+            },
+            render: (user) => renderRealtimeCollaborationCursor({
+              ...user,
+              color: this.getCollaborationDisplayColor(user),
+            }),
+            selectionRender: (user) => {
+              const color = this.getCollaborationDisplayColor(user);
+              return {
+                class: "ProseMirror-yjs-selection collaboration-cursor__selection",
+                style: `background-color: ${color}38`,
+                "data-user-id": String(user.id || user.user_id || ""),
+              };
+            },
+          }),
+        ],
+        editorProps: {
+          attributes: this.getEditorRootAttributes(),
+          handleDOMEvents: this.getEditorDomEventHandlers(),
+        },
+        onCreate: ({ editor }) => {
+          const blocks = docToLegacyBlocks(editor.getJSON());
+          this.article.content = stringifyLegacyContent(blocks);
+          this.refreshCounts();
+          this.$nextTick(() => this.applyEditorFontSize(editor));
+        },
+        onUpdate: ({ editor, transaction }) => {
+          const blocks = docToLegacyBlocks(editor.getJSON());
+          this.article.content = stringifyLegacyContent(blocks);
+          const isRemoteUpdate = Boolean(transaction.getMeta("y-sync$"));
+          if (!isRemoteUpdate) {
+            this.hasNewInput = true;
+            this.lastInputTime = new Date();
+            this.contentVersion += 1;
+            this.markWritingActivity();
+            this.recordEditorWritingActivity(transaction);
+            this.recordWritingSpeedSample();
+          }
+          this.refreshCounts();
+        },
+        onFocus: () => {
+          this.handleEditorFocusChange(true);
+          this.handleEditorActivationEnd();
+        },
+        onBlur: () => this.handleEditorFocusChange(false),
+      });
+    },
+    async waitForRealtimeInitialSync(timeoutMs = 10000) {
+      const provider = this.collaborationProvider;
+      const persistence = this.collaborationPersistence;
+      const startedAt = Date.now();
+
+      while (
+        provider === this.collaborationProvider &&
+        persistence === this.collaborationPersistence &&
+        (!provider.synced || provider.hasUnsyncedChanges || !persistence.synced)
+      ) {
+        if (this.collaborationStatus === "authentication_failed") {
+          throw new Error("实时协作身份验证失败");
+        }
+        if (Date.now() - startedAt >= timeoutMs) {
+          throw new Error("实时协作文档初始同步超时");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+
+      if (
+        provider !== this.collaborationProvider ||
+        persistence !== this.collaborationPersistence
+      ) {
+        throw new Error("实时协作文档初始化已取消");
+      }
+    },
+    async setupRealtimeCollaboration(collaborationState = {}) {
+      await this.destroyRealtimeCollaboration();
+      this.collaborationMode = "realtime_crdt";
+      this.collaborationRevision = Number(collaborationState.revision || 0);
+      this.collaborationDocumentName =
+        collaborationState.document_name || `article:${this.chapterId}:v1`;
+      this.collaborationStatus = "connecting";
+      this.collaborationChatMessages = [];
+      this.collaborationChatDraft = "";
+      this.collaborationChatUnreadByUser = {};
+      this.clearRealtimeChatAvatarPulses();
+      this.collaborationChatHistoryRequested = false;
+      this.paragraphIdRanges = [];
+
+      const [, currentCollaborationUser] = await Promise.all([
+        this.reserveRealtimeParagraphIds(),
+        this.loadCurrentCollaborationUser(),
+      ]);
+      this.collaborationCurrentUser = currentCollaborationUser;
+      const document = new Y.Doc();
+      this.collaborationDocument = document;
+      this.collaborationPersistence = new IndexeddbPersistence(
+        `loghome-collaboration-${this.collaborationDocumentName}`,
+        document
+      );
+      this.collaborationProvider = new HocuspocusProvider({
+        url: this.getCollaborationWebSocketUrl(),
+        name: this.collaborationDocumentName,
+        document,
+        token: this.getAuthToken(),
+        onStatus: ({ status }) => {
+          this.collaborationStatus = status;
+          if (status !== "connected") {
+            this.collaborationChatHistoryRequested = false;
+            this.resetRealtimePresenceNotifications();
+          }
+          this.refreshRealtimeParticipants();
+          this.refreshSaveNotifyText();
+        },
+        onSynced: ({ state }) => {
+          if (state) {
+            this.collaborationStatus = "connected";
+            this.refreshRealtimeParticipants();
+            this.updateSaveNotify(true);
+            this.requestRealtimeChatHistory();
+          }
+        },
+        onAwarenessChange: ({ states }) => {
+          this.updateRealtimeParticipants(states, {
+            notifyPresenceChanges: true,
+          });
+        },
+        onStateless: ({ payload }) => {
+          this.handleRealtimeChatPayload(payload);
+        },
+        onUnsyncedChanges: ({ number }) => {
+          this.collaborationUnsyncedChanges = Number(number || 0);
+          this.refreshSaveNotifyText();
+        },
+        onAuthenticationFailed: () => {
+          this.collaborationStatus = "authentication_failed";
+          this.updateRealtimeParticipants([]);
+          this.refreshSaveNotifyText();
+        },
+      });
+
+      // Do not mount ProseMirror against an empty Y.Doc. The paragraph-id
+      // plugin would turn its required default paragraph into a real CRDT
+      // change before the server document arrives, accumulating an empty
+      // paragraph at either edge on every open.
+      try {
+        await this.waitForRealtimeInitialSync();
+      } catch (error) {
+        await this.destroyRealtimeCollaboration();
+        throw error;
+      }
+      this.collaborationTitle = document.getText("title");
+      this.collaborationTitleObserver = () => this.applyRealtimeTitleFromDocument();
+      this.collaborationTitle.observe(this.collaborationTitleObserver);
+      this.createRealtimeCollaborativeEditor();
+      this.refreshRealtimeParticipants();
+      this.requestRealtimeChatHistory();
+      this.applyRealtimeTitleFromDocument();
+    },
+    async waitForRealtimeProviderSync(timeoutMs = 4000) {
+      if (!this.collaborationProvider) return;
+      this.collaborationProvider.flushPendingUpdates();
+      const startedAt = Date.now();
+      while (
+        this.collaborationProvider.hasUnsyncedChanges &&
+        Date.now() - startedAt < timeoutMs
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      if (this.collaborationProvider.hasUnsyncedChanges) {
+        throw new Error("实时协作文档尚未完成同步");
+      }
+    },
+    async checkpointRealtimeArticle() {
+      await this.waitForRealtimeProviderSync();
+      const response = await axios.post(
+        `${this.getCollaborationHttpBaseUrl()}/collaboration/articles/${this.chapterId}/checkpoint`,
+        {},
+        { headers: this.getCollaborationHeaders() }
+      );
+      const checkpoint = response.data && response.data.data;
+      if (checkpoint) {
+        this.collaborationRevision = Number(checkpoint.revision || 0);
+        if (typeof checkpoint.title === "string") this.article.title = checkpoint.title;
+        if (typeof checkpoint.content === "string") this.article.content = checkpoint.content;
+        this.refreshCounts();
+      }
+      return checkpoint;
+    },
+    async destroyRealtimeCollaboration() {
+      if (this.collaborationTitle && this.collaborationTitleObserver) {
+        this.collaborationTitle.unobserve(this.collaborationTitleObserver);
+      }
+      this.collaborationTitleObserver = null;
+      this.collaborationTitle = null;
+      if (this.collaborationProvider) {
+        this.collaborationProvider.flushPendingUpdates();
+        this.collaborationProvider.destroy();
+      }
+      this.collaborationProvider = null;
+      if (this.collaborationPersistence) {
+        await this.collaborationPersistence.destroy();
+      }
+      this.collaborationPersistence = null;
+      this.collaborationDocument = null;
+      this.collaborationUnsyncedChanges = 0;
+      this.collaborationCurrentUser = null;
+      this.collaborationParticipants = [];
+      this.collaborationParticipantsSignature = "";
+      this.resetRealtimePresenceNotifications();
+      this.collaborationParticipantsTooltipVisible = false;
+      this.collaborationColorPickerParticipantKey = "";
+      this.collaborationChatMessages = [];
+      this.collaborationChatDraft = "";
+      this.collaborationChatUnreadByUser = {};
+      this.clearRealtimeChatAvatarPulses();
+      this.collaborationChatHistoryRequested = false;
     },
     createEditorFromArticle() {
       if (this.editor) {
@@ -4119,6 +5637,33 @@ export default {
           return;
         }
 
+        let collaborationState =
+          res.data && res.data !== "no data" ? res.data.collaboration : null;
+        if (!collaborationState || collaborationState.mode === "realtime_crdt") {
+          try {
+            collaborationState = await this.getRealtimeCollaborationStatus();
+          } catch (error) {
+            if (collaborationState && collaborationState.mode === "realtime_crdt") {
+              throw error;
+            }
+          }
+        }
+
+        if (collaborationState && collaborationState.mode === "realtime_crdt") {
+          this.article = this.buildArticle(
+            hasCloudContent ? res.data : fallbackReaderArticle || {}
+          );
+          this.clearSyncState();
+          await this.setupRealtimeCollaboration(collaborationState);
+          this.refreshCounts();
+          this.resetWritingSpeedTracking();
+          this.resetWritingActivityCharacterTracking();
+          this.loadComplete = true;
+          uni.hideLoading();
+          this.sendCurrentArticleInfo();
+          return;
+        }
+
         const lockClaimed = await this.claimEditLock();
         if (!lockClaimed) {
           uni.hideLoading();
@@ -4297,6 +5842,20 @@ export default {
         return;
       }
 
+      let realtimeCheckpoint = null;
+      if (this.isRealtimeCollaboration) {
+        try {
+          realtimeCheckpoint = await this.checkpointRealtimeArticle();
+        } catch (error) {
+          uni.showToast({
+            title: "实时协作内容尚未同步，请检查网络后重试",
+            icon: "none",
+            duration: 2500,
+          });
+          return;
+        }
+      }
+
       if (!this.canPublishArticle) {
         if (drafting === 0 || scheduleTime) {
           uni.showToast({
@@ -4304,6 +5863,16 @@ export default {
             icon: "none",
             duration: 2000,
           });
+          return;
+        }
+
+        if (this.isRealtimeCollaboration) {
+          uni.showToast({
+            title: "协作草稿已同步",
+            icon: "none",
+            duration: 2000,
+          });
+          setTimeout(() => uni.navigateBack({}), 800);
           return;
         }
 
@@ -4359,6 +5928,9 @@ export default {
             article_id: this.chapterId,
             schedule_time: scheduleTime,
             edit_session_id: this.editSessionId,
+            collab_revision: realtimeCheckpoint
+              ? realtimeCheckpoint.revision
+              : undefined,
           },
           {
             headers: {
@@ -4378,11 +5950,16 @@ export default {
             uni.navigateBack({});
           }, 2000);
         })
-        .catch(() => {
+        .catch((error) => {
+          const msg =
+            error &&
+            error.response &&
+            error.response.data &&
+            error.response.data.msg;
           uni.showToast({
-            title: "章节上传失败，请重试",
+            title: msg || "章节上传失败，请重试",
             icon: "none",
-            duration: 2000,
+            duration: 2500,
           });
         });
     },
@@ -5515,6 +7092,18 @@ export default {
       }, 500);
     },
     formatSaveNotifyText() {
+      if (this.isRealtimeCollaboration) {
+        if (this.collaborationStatus === "authentication_failed") {
+          return "协作登录已失效";
+        }
+        if (this.collaborationUnsyncedChanges > 0) {
+          return "正在实时同步";
+        }
+        if (this.collaborationStatus === "connected") {
+          return "已实时同步";
+        }
+        return "离线编辑，等待重连";
+      }
       if (this.lockState === "reconnecting") {
         return "网络不稳定，本地已保存";
       }
@@ -5814,10 +7403,23 @@ export default {
         },
       });
     },
-    handlePublishAction() {
+    async handlePublishAction() {
       if (!this.canPublishArticle) {
         this.save(1, "协作草稿已保存");
         return;
+      }
+
+      if (this.isRealtimeCollaboration) {
+        try {
+          await this.checkpointRealtimeArticle();
+        } catch (error) {
+          uni.showToast({
+            title: "实时协作内容尚未同步，请稍后重试",
+            icon: "none",
+            duration: 2500,
+          });
+          return;
+        }
       }
 
       if (!this.persistPublishDraft()) {
@@ -6742,6 +8344,7 @@ export default {
     this.syncAppEnvironment();
     this.updateCustomNavigationMetrics();
     this.resolveCurrentUserId();
+    this.loadCollaborationColorPreferences();
     this.editSessionId = this.generateEditSessionId();
     this.publishHandoffActive = false;
     this.leaveFinalized = false;
@@ -6816,9 +8419,15 @@ export default {
     this.publishHandoffActive = false;
     this.startSaveNotifyTimer();
     this.startWritingTimer();
-    this.startLocalSaveTimer();
+    if (this.isRealtimeCollaboration) {
+      if (this.collaborationProvider) {
+        this.collaborationProvider.connect();
+      }
+    } else {
+      this.startLocalSaveTimer();
+    }
     this.checkFrameEnvironment();
-    if (this.loadComplete) {
+    if (this.loadComplete && !this.isRealtimeCollaboration) {
       this.claimEditLock();
     }
     if (
@@ -6860,6 +8469,10 @@ export default {
       0px 9.7px 3.5px rgba(0, 0, 0, 0.008), 0px 18.3px 6.6px rgba(0, 0, 0, 0.01),
       0px 32.6px 11.8px rgba(0, 0, 0, 0.012),
       0px 61px 22.1px rgba(0, 0, 0, 0.014), 0px 146px 53px rgba(0, 0, 0, 0.02);
+
+    &.collaborationTooltipOpen {
+      z-index: 340;
+    }
   }
 
   .customNavContent {
@@ -6885,6 +8498,517 @@ export default {
     right: 56px;
     top: 0;
     height: 44px;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .collaborationPresence {
+    position: absolute;
+    left: 4px;
+    top: 0;
+    display: flex;
+    align-items: center;
+    height: 44px;
+    pointer-events: auto;
+  }
+
+  .collaborationAvatarStack {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    min-height: 0;
+    margin: 0;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    box-sizing: border-box;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.16s ease;
+    -webkit-tap-highlight-color: transparent;
+
+    &::after {
+      border: 0;
+    }
+
+    &.active,
+    &:active {
+      background-color: var(--statusCapsuleRoleBackground);
+    }
+  }
+
+  .collaborationAvatarStackItem {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    overflow: visible;
+    border: 2px solid;
+    border-radius: 50%;
+    box-sizing: border-box;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+
+    &.overflow {
+      color: var(--statusCapsulePrimaryColor);
+      backdrop-filter: blur(8px);
+    }
+  }
+
+  .collaborationAvatar,
+  .collaborationParticipantAvatar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 50%;
+  }
+
+  .collaborationAvatarOverflowText {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .collaborationParticipantsTooltip {
+    position: absolute;
+    left: -40px;
+    top: calc(100% + 6px);
+    display: flex;
+    flex-direction: column;
+    width: calc(100vw - 16px);
+    max-width: none;
+    height: 50vh;
+    max-height: 50vh;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--statusCapsuleBorder);
+    border-radius: 12px;
+    background: var(--statusCapsuleBackground);
+    box-sizing: border-box;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    color: var(--writerThemeTextColor);
+    backdrop-filter: blur(14px);
+    transform-origin: 40px 0;
+  }
+
+  .collaborationParticipantsTooltip::before {
+    content: "";
+    position: absolute;
+    left: 34px;
+    top: -6px;
+    width: 10px;
+    height: 10px;
+    border-top: 1px solid var(--statusCapsuleBorder);
+    border-left: 1px solid var(--statusCapsuleBorder);
+    background: var(--statusCapsuleBackground);
+    transform: rotate(45deg);
+  }
+
+  .collaborationParticipantsTooltipHeader {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex: 0 0 auto;
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--statusCapsuleBorder);
+    font-size: 12px;
+    font-weight: 600;
+
+    span:last-child {
+      color: var(--statusCapsuleMutedColor);
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+  }
+
+  .collaborationTooltipBody {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .collaborationParticipantsPane,
+  .collaborationChatPane {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 50%;
+    width: 50%;
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+  }
+
+  .collaborationParticipantsPane {
+    border-right: 1px solid var(--statusCapsuleBorder);
+  }
+
+  .collaborationPaneTitle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 31px;
+    min-height: 31px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--statusCapsuleBorder);
+    box-sizing: border-box;
+    color: var(--statusCapsuleMutedColor);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .collaborationChatTitle span:last-child {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .collaborationParticipantsList {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 4px 8px 8px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .collaborationParticipantItem {
+    border-radius: 8px;
+    transition: background-color 0.15s ease;
+  }
+
+  .collaborationParticipantRow {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 38px;
+    padding: 4px 2px;
+    box-sizing: border-box;
+  }
+
+  .collaborationParticipantAvatarWrap {
+    position: relative;
+    display: block;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    overflow: visible;
+    border: 2px solid;
+    border-radius: 50%;
+    box-sizing: border-box;
+  }
+
+  .collaborationParticipantIdentity {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 9px;
+  }
+
+  .collaborationParticipantName {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .collaborationParticipantSelf {
+    flex: 0 0 auto;
+    margin-left: 6px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    color: var(--statusCapsuleRoleColor);
+    background: var(--statusCapsuleRoleBackground);
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .collaborationParticipantColorButton {
+    position: relative;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    margin-left: auto;
+    padding: 0;
+    border: 3px solid var(--statusCapsuleBackground);
+    border-radius: 50%;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 1px var(--statusCapsuleBorder);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+
+    &::after {
+      border: 0;
+    }
+
+    &.active {
+      transform: scale(1.12);
+      box-shadow:
+        0 0 0 1px var(--statusCapsuleBorder),
+        0 0 0 4px var(--statusCapsuleRoleBackground);
+    }
+  }
+
+  .collaborationParticipantCursorButton {
+    &:active:not(:disabled) {
+      transform: scale(0.9);
+    }
+
+    &.disabled,
+    &:disabled {
+      opacity: 0.42;
+      cursor: default;
+      filter: saturate(0.65);
+    }
+  }
+
+  .collaborationAvatarStackItem.unreadChat,
+  .collaborationParticipantAvatarWrap.unreadChat {
+    &::after {
+      content: "";
+      position: absolute;
+      z-index: 4;
+      left: -5px;
+      top: -5px;
+      right: -5px;
+      bottom: -5px;
+      border: 3px solid #22c55e;
+      border-radius: 50%;
+      box-sizing: border-box;
+      pointer-events: none;
+      animation: collaborationUnreadAvatarPulse 0.9s ease-in-out infinite;
+    }
+  }
+
+  .collaborationChatMessages {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 8px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .collaborationChatEmpty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    color: var(--statusCapsuleMutedColor);
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .collaborationChatMessage {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 8px;
+
+    &.self {
+      align-items: flex-end;
+
+      .collaborationChatMessageMeta {
+        flex-direction: row-reverse;
+      }
+
+      .collaborationChatBubble {
+        background: var(--statusCapsuleRoleBackground);
+      }
+    }
+  }
+
+  .collaborationChatMessageMeta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 90%;
+    margin-bottom: 2px;
+    color: var(--statusCapsuleMutedColor);
+    font-size: 9px;
+    line-height: 1.3;
+
+    span:first-child {
+      overflow: hidden;
+      max-width: 80px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .collaborationChatBubble {
+    max-width: 90%;
+    padding: 5px 7px;
+    border: 1px solid;
+    border-radius: 8px;
+    background: var(--statusCapsuleBackground);
+    box-sizing: border-box;
+    color: var(--writerThemeTextColor);
+    font-size: 11px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .collaborationChatComposer {
+    display: flex;
+    align-items: flex-end;
+    flex: 0 0 auto;
+    gap: 5px;
+    padding: 7px;
+    border-top: 1px solid var(--statusCapsuleBorder);
+    box-sizing: border-box;
+  }
+
+  .collaborationChatInput {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 44px;
+    min-height: 44px;
+    max-height: 64px;
+    padding: 6px 7px;
+    border: 1px solid var(--statusCapsuleBorder);
+    border-radius: 7px;
+    outline: 0;
+    background: var(--statusCapsuleRoleBackground);
+    box-sizing: border-box;
+    color: var(--writerThemeTextColor);
+    font: inherit;
+    font-size: 11px;
+    line-height: 1.35;
+    resize: none;
+  }
+
+  .collaborationChatSendButton {
+    flex: 0 0 auto;
+    min-width: 38px;
+    min-height: 30px;
+    margin: 0;
+    padding: 0 7px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--statusCapsulePrimaryColor);
+    color: var(--statusCapsuleBackground);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 30px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+
+    &::after {
+      border: 0;
+    }
+
+    &:disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
+  }
+
+  .collaborationColorPalette {
+    width: calc(100% - 4px);
+    margin: 0 2px 8px;
+    padding: 8px 6px 9px;
+    border-radius: 8px;
+    background: var(--statusCapsuleRoleBackground);
+    box-sizing: border-box;
+    overflow: visible;
+    transform-origin: top right;
+  }
+
+  .collaborationColorPaletteOptions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 0;
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  .collaborationColorOption {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    box-sizing: border-box;
+    color: #fff;
+    font-size: 10px;
+    line-height: 1;
+    cursor: pointer;
+    justify-self: center;
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+    -webkit-tap-highlight-color: transparent;
+
+    &::after {
+      border: 0;
+    }
+
+    &.selected {
+      border-color: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 0 0 2px var(--statusCapsulePrimaryColor);
+      transform: scale(1.08);
+    }
+  }
+
+  .collaborationColorPaletteHint {
+    margin-top: 8px;
+    color: var(--statusCapsuleMutedColor);
+    font-size: 10px;
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  .collaborationColorPalette-enter-active,
+  .collaborationColorPalette-leave-active {
+    transition: opacity 0.14s ease, transform 0.14s ease;
+  }
+
+  .collaborationColorPalette-enter,
+  .collaborationColorPalette-leave-to {
+    opacity: 0;
+    transform: translateY(-3px) scaleY(0.92);
+  }
+
+  .collaborationParticipantsTooltip-enter-active,
+  .collaborationParticipantsTooltip-leave-active {
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  .collaborationParticipantsTooltip-enter,
+  .collaborationParticipantsTooltip-leave-to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
   }
 
   .customNavActions {
@@ -7155,12 +9279,12 @@ export default {
     }
 
     .textarea.symbolsShown {
-      height: calc(100% - 80rpx - var(--loghome-safe-bottom, 0px));
+      height: calc(100% - 80rpx - var(--quickInputBottomInset));
     }
 
     .quickInputToolBar {
       bottom: 0;
-      height: calc(80rpx + var(--loghome-safe-bottom, 0px));
+      height: calc(80rpx + var(--quickInputBottomInset));
       width: 100%;
       z-index: 100;
       border-top: #b4b4b4 1rpx solid;
@@ -7170,7 +9294,7 @@ export default {
       box-sizing: border-box;
       overflow-x: auto;
       overflow-y: hidden;
-      padding: 0 8rpx var(--loghome-safe-bottom, 0px);
+      padding: 0 8rpx var(--quickInputBottomInset);
       gap: 6rpx;
       scrollbar-width: none;
       overscroll-behavior-x: contain;
@@ -8275,9 +10399,34 @@ div.outer.blockepoch {
 .toolbarPanel.chocolate::before {
   background: rgba(255, 255, 255, 0.3);
 }
+
+@keyframes collaborationUnreadAvatarPulse {
+  0%,
+  100% {
+    border-color: rgba(34, 197, 94, 1);
+    box-shadow:
+      0 0 0 2px rgba(34, 197, 94, 0.42),
+      0 0 12px rgba(34, 197, 94, 0.72);
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    border-color: rgba(34, 197, 94, 0);
+    box-shadow:
+      0 0 0 2px rgba(34, 197, 94, 0),
+      0 0 12px rgba(34, 197, 94, 0);
+    opacity: 0.08;
+    transform: scale(1.08);
+  }
+}
 </style>
 
 <style lang="less">
+html.loghome-keyboard-visible .outer {
+  --quickInputBottomInset: 0px !important;
+}
+
 .writer-prosemirror,
 .writer-prosemirror:focus,
 .writer-prosemirror:focus-visible,
@@ -8395,5 +10544,37 @@ body > .quickInputToolbarPreview::after {
   border-right: 1rpx solid rgba(0, 0, 0, 0.1);
   border-bottom: 1rpx solid rgba(0, 0, 0, 0.1);
   transform: translateX(-50%) rotate(45deg);
+}
+
+.collaboration-cursor__caret {
+  display: inline-block;
+  position: relative;
+  z-index: 6;
+  width: 0;
+  height: 1.1em;
+  border-left: 2px solid;
+  border-right: 0;
+  margin-left: -1px;
+  margin-right: -1px;
+  vertical-align: text-bottom;
+  overflow: visible;
+  word-break: normal;
+  pointer-events: none;
+}
+
+.collaboration-cursor__label {
+  position: absolute;
+  z-index: 7;
+  left: -2px;
+  top: -1.45em;
+  padding: 2px 6px;
+  border-radius: 5px 5px 5px 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  user-select: none;
 }
 </style>

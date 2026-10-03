@@ -113,8 +113,13 @@ router.post('/adjust', auth, async function (req, res) {
 
 		const result = await withTransaction(async (transactionalQuery) => {
 			await transactionalQuery('INSERT IGNORE INTO user_bank(user_id) VALUES(?)', [userId]);
-			const bankRows = await transactionalQuery(
+			await transactionalQuery(
 				'SELECT redstone FROM user_bank WHERE user_id = ? LIMIT 1 FOR UPDATE',
+				[userId],
+			);
+			await redstone.expireRedstoneLots(transactionalQuery, userId);
+			const bankRows = await transactionalQuery(
+				'SELECT redstone FROM user_bank WHERE user_id = ? LIMIT 1',
 				[userId],
 			);
 			const currentBalance = Number(bankRows[0].redstone || 0);
@@ -125,11 +130,7 @@ router.post('/adjust', auth, async function (req, res) {
 				throw error;
 			}
 
-			await transactionalQuery(
-				'UPDATE user_bank SET redstone = redstone + ? WHERE user_id = ?',
-				[amount, userId],
-			);
-			await transactionalQuery(
+			const transactionResult = await transactionalQuery(
 				`INSERT INTO redstone_transactions
 				 (user_id, amount, log_cost, transaction_type, reference_id, period_key,
 				  request_key, description, created_at)
@@ -141,6 +142,25 @@ router.post('/adjust', auth, async function (req, res) {
 					requestKey,
 					`管理员(${adminId})${amount > 0 ? '发放' : '扣除'}${Math.abs(amount)}红石：${reason}`,
 				],
+			);
+			if (amount > 0) {
+				await redstone.createRedstoneLot(transactionalQuery, {
+					userId,
+					amount,
+					sourceTransactionId: transactionResult.insertId,
+					expires: false,
+				});
+			} else {
+				await redstone.consumeRedstoneLots(
+					transactionalQuery,
+					userId,
+					Math.abs(amount),
+					transactionResult.insertId,
+				);
+			}
+			await transactionalQuery(
+				'UPDATE user_bank SET redstone = redstone + ? WHERE user_id = ?',
+				[amount, userId],
 			);
 			return {
 				user_id: userId,

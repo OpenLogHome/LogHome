@@ -199,7 +199,7 @@
                     :key="'circle-' + index"
                     @click="navigateToCircle(circle.circle_id)"
                   >
-                    <img class="circle-icon" :src="circle.icon || '/default-circle.png'" :alt="circle.name">
+                    <img class="circle-icon" :src="circle.icon || '/default-avatar.png'" :alt="circle.name">
                     <div class="circle-info">
                       <div class="circle-name">{{circle.name}}</div>
                       <div class="circle-meta">{{circle.member_count || 0}}人 · {{circle.category_name || '未分类'}}</div>
@@ -288,7 +288,7 @@
                     :key="'circle-' + index"
                     @click="navigateToCircle(circle.circle_id)"
                   >
-                    <img class="circle-icon" :src="circle.icon || '/default-circle.png'" :alt="circle.name">
+                    <img class="circle-icon" :src="circle.icon || '/default-avatar.png'" :alt="circle.name">
                     <div class="circle-info">
                       <div class="circle-name">{{circle.name}}</div>
                       <div class="circle-meta">{{circle.member_count || 0}}人 · {{circle.category_name || '未分类'}}</div>

@@ -10,6 +10,11 @@ const {
 const { handleWriterTextCorrection } = require('./bin/writerTextCorrection');
 const { getNovelSummaryIndexStatus } = require('./bin/agentIndexing');
 const { requireAuth, requireUser } = require('./bin/auth');
+const collaborationRouter = require('./routes/collaboration');
+const {
+	startCollaborationServer,
+	stopCollaborationServer,
+} = require('./bin/collaborationService');
 
 process.env.TZ = 'Asia/Shanghai';
 
@@ -103,9 +108,12 @@ app.get('/healthz', (req, res) => {
 	res.json({
 		ok: true,
 		service: 'loghome-reader-ai-backend',
+		collaborationEnabled: config.collaboration.enabled,
 		time: new Date().toISOString(),
 	});
 });
+
+app.use('/collaboration', collaborationRouter);
 
 app.post('/library/reader_novel_ai_chat_stream', requireUser, async (req, res) => {
 	return handleReaderNovelChatTaskStream(req, res);
@@ -148,6 +156,10 @@ app.get('/library/reader_novel_summary_index_status', async (req, res) => {
 
 const server = app.listen(config.port, () => {
 	console.log(`loghome-reader-ai-backend listening on :${config.port}`);
+});
+const collaborationServerPromise = startCollaborationServer().catch((error) => {
+	console.error('Failed to start writer collaboration server:', error);
+	return null;
 });
 const sockets = new Set();
 let shuttingDown = false;
@@ -274,6 +286,13 @@ async function shutdownApplication(signal = 'unknown') {
 					'HTTP server close timed out. Proceeding with process exit.'
 				),
 			];
+			shutdownTasks.push(
+				waitForShutdownStep(
+					collaborationServerPromise.then(() => stopCollaborationServer()),
+					4_000,
+					'Collaboration server shutdown timed out. Proceeding with process exit.'
+				)
+			);
 			if (agentWorker) {
 				shutdownTasks.push(
 					waitForShutdownStep(

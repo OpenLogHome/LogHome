@@ -1,0 +1,22 @@
+{
+	"common": {
+		"confirm": "确定",
+		"cancel": "取消",
+		"loading": "努力加载中"
+	},
+	"nav": {
+		"tab": {
+			"library": "阅读",
+			"community": "社区",
+			"writer": "创作",
+			"me": "我的"
+		}
+	},
+	"settings": {
+		"language": {
+			"title": "语言",
+			"followSystem": "跟随系统",
+			"switched": "语言已切换"
+		}
+	}
+}

@@ -21,7 +21,7 @@
           <!-- 用户头像 -->
           <div class="avatar-container">
             <img 
-              :src="user.avatar_url || '/static/default-avatar.png'" 
+              :src="user.avatar_url || '/default-avatar.png'" 
               alt="用户头像" 
               class="user-avatar"
               @click="previewAvatar"
@@ -43,7 +43,6 @@
                   {{ group }}
                 </span>
                 <span class="admin-badge" v-if="user.is_admin">
-                  <img src="/static/icons/admin.gif" alt="管理员" class="admin-icon" />
                   社区管理员
                 </span>
               </div>
@@ -347,7 +346,7 @@ export default {
     // 检查关注状态
     async checkFollowStatus() {
       try {
-        const response = await this.$api.users.checkFollowStatus(this.uid)
+        const response = await this.$api.users.checkFollowStatus(this.uid, this.myUserInfo.user_id)
         if (response.code === 0) {
           this.isFollowing = response.data.isFollowing
         }
@@ -449,7 +448,7 @@ export default {
         return
       }
       
-      if (this.myUserInfo.user_id === this.uid) {
+      if (this.uid == this.myUserInfo.user_id) {
         this.$message.warning('不能关注自己')
         return
       }
@@ -519,7 +518,7 @@ export default {
     
     // 导航到好友页面
     navigateToFriends(tab) {
-      this.$router.push(`/community/friends?id=${this.uid}&tab=${tab}`)
+      this.$router.push(`/me/friends?id=${this.uid}&tab=${tab}`)
     },
     
     // 导航到作品
@@ -749,12 +748,6 @@ export default {
     font-size: 12px;
     display: flex;
     align-items: center;
-    
-    .admin-icon {
-      width: 16px;
-      height: 16px;
-      margin-right: 4px;
-    }
   }
 }
 

@@ -13,6 +13,7 @@ import treePlant from './api/treePlant.js';
 import resources from './api/resources.js';
 import users from './api/users.js';
 import essays from './api/essays.js';
+import popularity from './api/popularity.js';
 
 const apiService = {
   novels,
@@ -27,6 +28,7 @@ const apiService = {
   resources,
   users,
   essays,
+  popularity,
 };
 
 export default ({ app }, inject) => {

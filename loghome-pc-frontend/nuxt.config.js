@@ -82,6 +82,7 @@ export default {
     '~/plugins/api.js',
     '~/plugins/element-ui.js',
     '~/plugins/window-manager.js',
+    '~/plugins/mobile-window.js',
     '~/plugins/image-preview.js',
     '~/plugins/device-detect.js'
   ],

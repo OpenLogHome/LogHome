@@ -22,10 +22,17 @@
 					</view>
 				</view>
 				<view class="balance-card__amount">
-					<text>{{ account.redstone_balance }}</text>
-					<text class="balance-card__unit">红石</text>
+					<text v-if="accountLoading">--</text>
+					<text v-else-if="accountLoadFailed" class="balance-card__retry" @tap="loadAccount">重新加载</text>
+					<text v-else>{{ account.redstone_balance }}</text>
+					<text v-if="!accountLoadFailed" class="balance-card__unit">红石</text>
 				</view>
 				<text class="balance-card__description">用于 AI 阅读、AI 创作及其他智能功能</text>
+				<view v-if="!accountLoading && !accountLoadFailed" class="balance-card__breakdown">
+					<text>赠送 {{ account.expiring_balance || 0 }}</text>
+					<text>永久 {{ account.permanent_balance || 0 }}</text>
+					<text v-if="account.next_expiration_at">最近 {{ formatDate(account.next_expiration_at) }} 到期</text>
+				</view>
 			</view>
 
 			<view class="panel exchange-panel">
@@ -86,7 +93,7 @@
 				<view class="panel-heading">
 					<view>
 						<text class="panel-heading__title">通行证每月赠送</text>
-						<text class="panel-heading__subtitle">普通用户每月 6 红石；通行证月付开通或续费到账，年付按月到账</text>
+						<text class="panel-heading__subtitle">普通用户每月 6 红石；通行证月付开通或续费到账，年付按月到账；赠送红石有效期 3 个月</text>
 					</view>
 				</view>
 				<view class="membership-grants">
@@ -141,7 +148,7 @@
 					<view v-for="item in transactions" :key="item.transaction_id" class="record-item">
 						<view>
 							<text class="record-item__title">{{ transactionTitle(item) }}</text>
-							<text class="record-item__time">{{ formatTime(item.created_at) }}</text>
+							<text class="record-item__time">{{ transactionMeta(item) }}</text>
 						</view>
 						<text class="record-item__amount" :class="{ 'record-item__amount--spent': item.amount < 0 }">
 							{{ item.amount > 0 ? '+' : '' }}{{ item.amount }}
@@ -165,7 +172,9 @@ import {
 export default {
 	data() {
 		return {
-			account: { log_balance: 0, redstone_balance: 0 },
+			account: { log_balance: 0, redstone_balance: 0, permanent_balance: 0, expiring_balance: 0 },
+			accountLoading: true,
+			accountLoadFailed: false,
 			amount: '',
 			focused: false,
 			submitting: false,
@@ -174,7 +183,7 @@ export default {
 			aiUses: [
 				{ icon: '阅', title: '问问原木娘', description: '普通问答 1 红石，深度思考 2 红石' },
 				{ icon: '写', title: '笔泡 AI 助手', description: '普通 1 红石，深度思考 2 红石' },
-				{ icon: '像', title: '图像生成与智能纠错', description: '图像生成 5 红石，智能纠错 1 红石' }
+				{ icon: '像', title: '图像生成与智能纠错', description: '图像生成 5 红石，智能纠错通行证免费、普通用户 2 红石' }
 			]
 		};
 	},
@@ -211,15 +220,37 @@ export default {
 			return this.amount;
 		},
 		async loadData() {
+			await Promise.all([this.loadAccount(), this.loadTransactions()]);
+		},
+		async loadAccount() {
+			this.accountLoading = true;
+			this.accountLoadFailed = false;
 			try {
-				const [account, history] = await Promise.all([
-					getRedstoneAccount(this.$baseUrl),
-					getRedstoneTransactions(this.$baseUrl, 1, 8)
-				]);
-				this.account = account;
-				this.transactions = history.list || [];
+				const account = await getRedstoneAccount(this.$baseUrl);
+				if (!account || !Number.isFinite(Number(account.redstone_balance))) {
+					throw new Error('红石账户数据格式异常');
+				}
+				this.account = {
+					log_balance: Number(account.log_balance || 0),
+					redstone_balance: Number(account.redstone_balance || 0),
+					permanent_balance: Number(account.permanent_balance || 0),
+					expiring_balance: Number(account.expiring_balance || 0),
+					next_expiration_at: account.next_expiration_at || null
+				};
 			} catch (error) {
 				console.log('加载红石账户失败。', error);
+				this.accountLoadFailed = true;
+				uni.showToast({ title: getRedstoneErrorMessage(error, '红石余额加载失败'), icon: 'none' });
+			} finally {
+				this.accountLoading = false;
+			}
+		},
+		async loadTransactions() {
+			try {
+				const history = await getRedstoneTransactions(this.$baseUrl, 1, 8);
+				this.transactions = history && Array.isArray(history.list) ? history.list : [];
+			} catch (error) {
+				console.log('加载红石流水失败。', error);
 			}
 		},
 		async submitExchange() {
@@ -227,7 +258,7 @@ export default {
 			const confirmed = await new Promise((resolve) => {
 				uni.showModal({
 					title: '确认兑换红石',
-					content: `将消耗 ${this.logCost} 原木，兑换 ${Number(this.amount)} 红石。兑换后不可撤销。`,
+					content: `将消耗 ${this.logCost} 原木，兑换 ${Number(this.amount)} 红石。兑换所得红石永久有效，兑换后不可撤销。`,
 					confirmText: '确认兑换',
 					success: (result) => resolve(Boolean(result.confirm)),
 					fail: () => resolve(false)
@@ -263,9 +294,26 @@ export default {
 				log_exchange: '原木兑换',
 				ai_usage: 'AI 功能消耗',
 				admin_adjustment: '系统调整',
-				refund: '退款返还'
+				refund: '退款返还',
+				expiration: '赠送红石过期'
 			};
 			return labels[item.transaction_type] || item.description || '红石到账';
+		},
+		transactionMeta(item) {
+			const created = this.formatTime(item.created_at);
+			if (Number(item.amount) > 0 && item.expires_at) {
+				return `${created} · ${this.formatDate(item.expires_at)} 到期`;
+			}
+			if (Number(item.amount) > 0 && item.transaction_type === 'log_exchange') {
+				return `${created} · 永久有效`;
+			}
+			return created;
+		},
+		formatDate(value) {
+			const date = new Date(value);
+			if (Number.isNaN(date.getTime())) return '';
+			const pad = (number) => String(number).padStart(2, '0');
+			return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 		},
 		formatTime(value) {
 			const date = new Date(value);
@@ -345,7 +393,9 @@ page {
 	&__title { margin-top: 3rpx; font-size: 25rpx; font-weight: 650; }
 	&__amount { position: relative; display: flex; align-items: baseline; margin-top: 30rpx; font-size: 58rpx; font-weight: 750; }
 	&__unit { margin-left: 10rpx; font-size: 21rpx; font-weight: 500; color: #ffc1b6; }
+	&__retry { font-size: 25rpx; font-weight: 650; color: #ffd1c8; }
 	&__description { position: relative; margin-top: 8rpx; font-size: 19rpx; color: rgba(255,239,231,.68); }
+	&__breakdown { position: relative; display: flex; flex-wrap: wrap; gap: 8rpx 18rpx; margin-top: 12rpx; font-size: 16rpx; color: rgba(255,239,231,.62); }
 }
 
 .panel { margin-top: 24rpx; border: 1rpx solid var(--border); border-radius: 26rpx; background: linear-gradient(145deg, rgba(255,255,255,.075), var(--panel)); box-shadow: 0 16rpx 36rpx rgba(0,0,0,.12); }

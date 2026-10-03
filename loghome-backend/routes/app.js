@@ -73,7 +73,7 @@ router.get('/check_hot_update_compatibility', async function (req, res) {
 			`SELECT * FROM app_update_log 
 			WHERE version_number > ? 
 			ORDER BY app_update_id ASC`,
-			[currentVersion]
+			[currentVersion],
 		);
 
 		// 检查是否所有版本都支持热更新
@@ -85,7 +85,7 @@ router.get('/check_hot_update_compatibility', async function (req, res) {
 		res.json({
 			allow_hot: allVersionsSupportHotUpdate && latestVersion.allow_hot === 1,
 			latest_version: latestVersion,
-			versions_between: versions
+			versions_between: versions,
 		});
 	} catch (e) {
 		console.log(e);
@@ -112,7 +112,7 @@ router.get('/get_grand_users', async function (req, res) {
 router.get('/get_great_users', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT u.*,g.great_info FROM users u,great_users g WHERE u.user_id = g.user_id'
+			'SELECT u.*,g.great_info FROM users u,great_users g WHERE u.user_id = g.user_id',
 		);
 		await avatarFrames.decorateRows(results, [
 			{ userIdField: 'user_id', targetField: 'avatar_frame' },
@@ -200,361 +200,401 @@ router.get('/get_site_set', async function (req, res) {
 
 // 生成随机邀请码
 function generateInviteCode() {
-    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 排除容易混淆的字符
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-        code += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return code;
+	const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 排除容易混淆的字符
+	let code = '';
+	for (let i = 0; i < 6; i++) {
+		code += characters.charAt(Math.floor(Math.random() * characters.length));
+	}
+	return code;
+}
+
+const DEFAULT_INVITE_SETTINGS = {
+	new_user_reward: 1000,
+	return_user_reward: 500,
+	monthly_limit: 10,
+};
+let inviteSettingsCache = { ts: 0, data: null };
+
+// 读取邀请奖励配置（可在管理后台调整）
+async function loadInviteSettings(force = false) {
+	if (!force && inviteSettingsCache.data && Date.now() - inviteSettingsCache.ts < 30000) {
+		return inviteSettingsCache.data;
+	}
+	try {
+		const rows = await query('SELECT setting_key, setting_value FROM invite_settings');
+		const merged = { ...DEFAULT_INVITE_SETTINGS };
+		for (const row of rows) {
+			if (merged[row.setting_key] !== undefined) {
+				merged[row.setting_key] = Number(row.setting_value);
+			}
+		}
+		inviteSettingsCache = { ts: Date.now(), data: merged };
+		return merged;
+	} catch (e) {
+		return { ...DEFAULT_INVITE_SETTINGS };
+	}
 }
 
 // 检查月度重置
 async function checkMonthlyReset(userId) {
-    try {
-        const inviteCode = await query(
-            'SELECT * FROM invite_codes WHERE user_id = ?',
-            [userId]
-        );
+	try {
+		const inviteCode = await query(
+			'SELECT * FROM invite_codes WHERE user_id = ?',
+			[userId],
+		);
         
-        if (inviteCode.length === 0) {
-            return;
-        }
+		if (inviteCode.length === 0) {
+			return;
+		}
         
-        const lastResetTime = new Date(inviteCode[0].last_reset_time);
-        const currentTime = new Date();
+		const lastResetTime = new Date(inviteCode[0].last_reset_time);
+		const currentTime = new Date();
         
-        // 如果上次重置时间是上个月或更早
-        if (lastResetTime.getMonth() !== currentTime.getMonth() || 
+		// 如果上次重置时间是上个月或更早
+		if (lastResetTime.getMonth() !== currentTime.getMonth() || 
             lastResetTime.getFullYear() !== currentTime.getFullYear()) {
             
-            await query(
-                'UPDATE invite_codes SET last_month_new_count = 0, last_month_return_count = 0, last_reset_time = CURRENT_TIMESTAMP WHERE user_id = ?',
-                [userId]
-            );
-        }
-    } catch (e) {
-        console.log('Error checking monthly reset:', e);
-    }
+			await query(
+				'UPDATE invite_codes SET last_month_new_count = 0, last_month_return_count = 0, last_reset_time = CURRENT_TIMESTAMP WHERE user_id = ?',
+				[userId],
+			);
+		}
+	} catch (e) {
+		console.log('Error checking monthly reset:', e);
+	}
 }
 
 // 获取用户邀请码
 router.get('/get_invite_code', auth, async function (req, res) {
-    try {
-        const user = req.user[0];
+	try {
+		const user = req.user[0];
         
-        // 检查是否需要月度重置
-        await checkMonthlyReset(user.user_id);
+		// 检查是否需要月度重置
+		await checkMonthlyReset(user.user_id);
         
-        // 查询用户是否已有邀请码
-        let inviteCode = await query(
-            'SELECT * FROM invite_codes WHERE user_id = ?',
-            [user.user_id]
-        );
+		// 查询用户是否已有邀请码
+		let inviteCode = await query(
+			'SELECT * FROM invite_codes WHERE user_id = ?',
+			[user.user_id],
+		);
         
-        // 如果没有，生成新邀请码
-        if (inviteCode.length === 0) {
-            let newCode;
-            let codeExists = true;
+		// 如果没有，生成新邀请码
+		if (inviteCode.length === 0) {
+			let newCode;
+			let codeExists = true;
             
-            // 确保生成唯一的邀请码
-            while (codeExists) {
-                newCode = generateInviteCode();
-                const existingCode = await query(
-                    'SELECT * FROM invite_codes WHERE invite_code = ?',
-                    [newCode]
-                );
+			// 确保生成唯一的邀请码
+			while (codeExists) {
+				newCode = generateInviteCode();
+				const existingCode = await query(
+					'SELECT * FROM invite_codes WHERE invite_code = ?',
+					[newCode],
+				);
                 
-                codeExists = existingCode.length > 0;
-            }
+				codeExists = existingCode.length > 0;
+			}
             
-            // 插入新邀请码
-            await query(
-                'INSERT INTO invite_codes (user_id, invite_code) VALUES (?, ?)',
-                [user.user_id, newCode]
-            );
+			// 插入新邀请码
+			await query(
+				'INSERT INTO invite_codes (user_id, invite_code) VALUES (?, ?)',
+				[user.user_id, newCode],
+			);
             
-            // 获取新创建的邀请码记录
-            inviteCode = await query(
-                'SELECT * FROM invite_codes WHERE user_id = ?',
-                [user.user_id]
-            );
-        }
+			// 获取新创建的邀请码记录
+			inviteCode = await query(
+				'SELECT * FROM invite_codes WHERE user_id = ?',
+				[user.user_id],
+			);
+		}
         
-        res.json(inviteCode[0]);
-    } catch (e) {
-        console.log(e);
-        res.status(400).json({ msg: 'bad request' });
-    }
+		const inviteSettings = await loadInviteSettings();
+		res.json({
+			...inviteCode[0],
+			new_user_reward: inviteSettings.new_user_reward,
+			return_user_reward: inviteSettings.return_user_reward,
+			monthly_limit: inviteSettings.monthly_limit,
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
 });
 
 // 使用邀请码
 router.post('/use_invite_code', auth, async function (req, res) {
-    try {
-        const user = req.user[0];
-        const { invite_code, invite_type } = req.body;
+	try {
+		const user = req.user[0];
+		const { invite_code, invite_type } = req.body;
         
-        if (!invite_code || !invite_type) {
-            return res.status(400).json({ msg: '邀请码和邀请类型不能为空' });
-        }
+		if (!invite_code || !invite_type) {
+			return res.status(400).json({ msg: '邀请码和邀请类型不能为空' });
+		}
         
-        // 验证邀请类型
-        if (invite_type !== 'new' && invite_type !== 'return') {
-            return res.status(400).json({ msg: '无效的邀请类型' });
-        }
+		// 验证邀请类型
+		if (invite_type !== 'new' && invite_type !== 'return') {
+			return res.status(400).json({ msg: '无效的邀请类型' });
+		}
         
-        // 查找邀请码
-        const inviteCodeRecord = await query(
-            'SELECT * FROM invite_codes WHERE invite_code = ?',
-            [invite_code]
-        );
+		// 查找邀请码
+		const inviteCodeRecord = await query(
+			'SELECT * FROM invite_codes WHERE invite_code = ?',
+			[invite_code],
+		);
         
-        if (inviteCodeRecord.length === 0) {
-            return res.status(400).json({ msg: '邀请码不存在' });
-        }
+		if (inviteCodeRecord.length === 0) {
+			return res.status(400).json({ msg: '邀请码不存在' });
+		}
         
-        const inviter = inviteCodeRecord[0];
+		const inviter = inviteCodeRecord[0];
         
-        // 检查是否是自己的邀请码
-        if (inviter.user_id === user.user_id) {
-            return res.status(400).json({ msg: '不能使用自己的邀请码' });
-        }
+		// 检查是否是自己的邀请码
+		if (inviter.user_id === user.user_id) {
+			return res.status(400).json({ msg: '不能使用自己的邀请码' });
+		}
         
-        // 检查是否已经使用过该类型的邀请码
-        const existingRecord = await query(
-            'SELECT * FROM invite_records WHERE invitee_id = ? AND invite_type = ?',
-            [user.user_id, invite_type]
-        );
+		// 检查是否已经使用过该类型的邀请码
+		const existingRecord = await query(
+			'SELECT * FROM invite_records WHERE invitee_id = ? AND invite_type = ?',
+			[user.user_id, invite_type],
+		);
         
-        if (existingRecord.length > 0) {
-            return res.status(400).json({ msg: `您已经使用过${invite_type === 'new' ? '新用户' : '回归用户'}邀请码` });
-        }
+		if (existingRecord.length > 0) {
+			return res.status(400).json({ msg: `您已经使用过${invite_type === 'new' ? '新用户' : '回归用户'}邀请码` });
+		}
         
-        // 如果是新用户，检查注册时间是否在14天内
-        if (invite_type === 'new') {
-            const userInfo = await query(
-                'SELECT register_time FROM users WHERE user_id = ?',
-                [user.user_id]
-            );
+		// 如果是新用户，检查注册时间是否在14天内
+		if (invite_type === 'new') {
+			const userInfo = await query(
+				'SELECT register_time FROM users WHERE user_id = ?',
+				[user.user_id],
+			);
             
-            if (userInfo.length > 0) {
-                const registerTime = new Date(userInfo[0].register_time);
-                const currentTime = new Date();
-                const daysDiff = Math.floor((currentTime - registerTime) / (1000 * 60 * 60 * 24));
+			if (userInfo.length > 0) {
+				const registerTime = new Date(userInfo[0].register_time);
+				const currentTime = new Date();
+				const daysDiff = Math.floor((currentTime - registerTime) / (1000 * 60 * 60 * 24));
                 
-                if (daysDiff > 14) {
-                    return res.status(400).json({ msg: '新用户必须在注册后14天内填写邀请码' });
-                }
-            }
-        }
+				if (daysDiff > 14) {
+					return res.status(400).json({ msg: '新用户必须在注册后14天内填写邀请码' });
+				}
+			}
+		}
         
-        // 如果是回归用户，检查是否有回归资格
-        if (invite_type === 'return') {
-            // 检查用户是否在回归资格表中有有效记录
-            const eligibilityRecord = await query(
-                'SELECT * FROM return_user_eligibility WHERE user_id = ? AND is_used = 0 AND expiry_date > NOW()',
-                [user.user_id]
-            );
+		// 如果是回归用户，检查是否有回归资格
+		if (invite_type === 'return') {
+			// 检查用户是否在回归资格表中有有效记录
+			const eligibilityRecord = await query(
+				'SELECT * FROM return_user_eligibility WHERE user_id = ? AND is_used = 0 AND expiry_date > NOW()',
+				[user.user_id],
+			);
             
-            if (eligibilityRecord.length === 0) {
-                // 如果没有有效的回归资格记录，检查是否满足90天未登录条件
-                const loginRecord = await query(
-                    'SELECT online_time FROM users WHERE user_id = ?',
-                    [user.user_id]
-                );
+			if (eligibilityRecord.length === 0) {
+				// 如果没有有效的回归资格记录，检查是否满足90天未登录条件
+				const loginRecord = await query(
+					'SELECT online_time FROM users WHERE user_id = ?',
+					[user.user_id],
+				);
                 
-                if (loginRecord.length > 0 && loginRecord[0].online_time) {
-                    const lastLoginTime = new Date(loginRecord[0].online_time);
-                    const currentTime = new Date();
-                    const daysDiff = Math.floor((currentTime - lastLoginTime) / (1000 * 60 * 60 * 24));
+				if (loginRecord.length > 0 && loginRecord[0].online_time) {
+					const lastLoginTime = new Date(loginRecord[0].online_time);
+					const currentTime = new Date();
+					const daysDiff = Math.floor((currentTime - lastLoginTime) / (1000 * 60 * 60 * 24));
                     
-                    if (daysDiff < 90) {
-                        return res.status(400).json({ msg: '您不符合回归用户资格，需要90天以上未登录' });
-                    }
-                } else {
-                    return res.status(400).json({ msg: '无法确认您的登录记录，无法使用回归用户邀请码' });
-                }
-            }
-        }
+					if (daysDiff < 90) {
+						return res.status(400).json({ msg: '您不符合回归用户资格，需要90天以上未登录' });
+					}
+				} else {
+					return res.status(400).json({ msg: '无法确认您的登录记录，无法使用回归用户邀请码' });
+				}
+			}
+		}
         
-        // 检查邀请人本月邀请数量是否已达上限
-        const monthlyField = invite_type === 'new' ? 'last_month_new_count' : 'last_month_return_count';
-        if (inviter[monthlyField] >= 10) {
-            return res.status(400).json({ msg: '邀请人本月邀请数量已达上限' });
-        }
+		// 检查邀请人本月邀请数量是否已达上限
+		const inviteSettings = await loadInviteSettings();
+		const monthlyField = invite_type === 'new' ? 'last_month_new_count' : 'last_month_return_count';
+		if (inviter[monthlyField] >= inviteSettings.monthly_limit) {
+			return res.status(400).json({ msg: '邀请人本月邀请数量已达上限' });
+		}
         
-        // 开始事务
-        await query('START TRANSACTION');
+		// 开始事务
+		await query('START TRANSACTION');
         
-        try {
-            // 插入邀请记录
-            await query(
-                'INSERT INTO invite_records (inviter_id, invitee_id, invite_type) VALUES (?, ?, ?)',
-                [inviter.user_id, user.user_id, invite_type]
-            );
+		try {
+			// 插入邀请记录
+			await query(
+				'INSERT INTO invite_records (inviter_id, invitee_id, invite_type) VALUES (?, ?, ?)',
+				[inviter.user_id, user.user_id, invite_type],
+			);
             
-            // 更新邀请人的统计数据
-            const totalField = invite_type === 'new' ? 'new_user_count' : 'return_user_count';
-            await query(
-                `UPDATE invite_codes SET ${totalField} = ${totalField} + 1, ${monthlyField} = ${monthlyField} + 1 WHERE user_id = ?`,
-                [inviter.user_id]
-            );
+			// 更新邀请人的统计数据
+			const totalField = invite_type === 'new' ? 'new_user_count' : 'return_user_count';
+			await query(
+				`UPDATE invite_codes SET ${totalField} = ${totalField} + 1, ${monthlyField} = ${monthlyField} + 1 WHERE user_id = ?`,
+				[inviter.user_id],
+			);
             
-            // 发放奖励
-            const rewardAmount = invite_type === 'new' ? 1000 : 500;
+			// 发放奖励
+			const rewardAmount = invite_type === 'new' ? inviteSettings.new_user_reward : inviteSettings.return_user_reward;
             
-            // 给邀请人奖励
-            await bank.addAmount(inviter, 'log', rewardAmount);
+			// 给邀请人奖励
+			await bank.addAmount(inviter, 'log', rewardAmount);
             
-            // 给被邀请人奖励
-            await bank.addAmount(user, 'log', rewardAmount);
+			// 给被邀请人奖励
+			await bank.addAmount(user, 'log', rewardAmount);
             
-            // 发送消息通知
-            message.sendMsg(
-                -1,
-                inviter.user_id,
-                `您成功邀请了一位${invite_type === 'new' ? '新用户' : '回归用户'} ${user.name}，获得${rewardAmount}原木奖励！`,
-                '',
-                'notification',
-                true
-            );
+			// 发送消息通知
+			message.sendMsg(
+				-1,
+				inviter.user_id,
+				`您成功邀请了一位${invite_type === 'new' ? '新用户' : '回归用户'} ${user.name}，获得${rewardAmount}原木奖励！`,
+				'',
+				'notification',
+				true,
+			);
             
-            message.sendMsg(
-                -1,
-                user.user_id,
-                `您已成功使用邀请码${invite_code}，获得${rewardAmount}原木奖励！`,
-                '',
-                'notification',
-                true
-            );
+			message.sendMsg(
+				-1,
+				user.user_id,
+				`您已成功使用邀请码${invite_code}，获得${rewardAmount}原木奖励！`,
+				'',
+				'notification',
+				true,
+			);
             
-            // 如果是回归用户，标记回归资格已使用
-            if (invite_type === 'return') {
-                await query(
-                    'UPDATE return_user_eligibility SET is_used = 1, use_time = NOW() WHERE user_id = ? AND is_used = 0 ORDER BY eligibility_id DESC LIMIT 1',
-                    [user.user_id]
-                );
-            }
+			// 如果是回归用户，标记回归资格已使用
+			if (invite_type === 'return') {
+				await query(
+					'UPDATE return_user_eligibility SET is_used = 1, use_time = NOW() WHERE user_id = ? AND is_used = 0 ORDER BY eligibility_id DESC LIMIT 1',
+					[user.user_id],
+				);
+			}
             
-            // 提交事务
-            await query('COMMIT');
+			// 提交事务
+			await query('COMMIT');
             
-            res.json({ success: true, msg: '邀请码使用成功' });
-        } catch (error) {
-            // 回滚事务
-            await query('ROLLBACK');
-            throw error;
-        }
-    } catch (e) {
-        console.log(e);
-        res.status(400).json({ msg: '处理邀请码失败' });
-    }
+			res.json({ success: true, msg: '邀请码使用成功' });
+		} catch (error) {
+			// 回滚事务
+			await query('ROLLBACK');
+			throw error;
+		}
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: '处理邀请码失败' });
+	}
 });
 
 // 获取邀请记录
 router.get('/get_invite_records', auth, async function (req, res) {
-    try {
-        const user = req.user[0];
+	try {
+		const user = req.user[0];
         
-        // 获取邀请记录
-        const records = await query(
-            `SELECT ir.*, u.name, u.avatar_url, ir.create_time 
+		// 获取邀请记录
+		const records = await query(
+			`SELECT ir.*, u.name, u.avatar_url, ir.create_time 
              FROM invite_records ir
              JOIN users u ON ir.invitee_id = u.user_id
              WHERE ir.inviter_id = ?
              ORDER BY ir.create_time DESC`,
-            [user.user_id]
-        );
+			[user.user_id],
+		);
         
-        res.json(records);
-    } catch (e) {
-        console.log(e);
-        res.status(400).json({ msg: 'bad request' });
-    }
+		res.json(records);
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
 });
 
 // 检查用户的邀请资格状态
 router.get('/check_invite_eligibility', auth, async function (req, res) {
-    try {
-        const user = req.user[0];
-        const result = {
-            newUserEligible: false,
-            returnUserEligible: false
-        };
+	try {
+		const user = req.user[0];
+		const result = {
+			newUserEligible: false,
+			returnUserEligible: false,
+		};
         
-        // 检查是否已使用过邀请码
-        const newUserRecord = await query(
-            'SELECT * FROM invite_records WHERE invitee_id = ? AND invite_type = ?',
-            [user.user_id, 'new']
-        );
+		// 检查是否已使用过邀请码
+		const newUserRecord = await query(
+			'SELECT * FROM invite_records WHERE invitee_id = ? AND invite_type = ?',
+			[user.user_id, 'new'],
+		);
         
-        const returnUserRecord = await query(
-            'SELECT * FROM invite_records WHERE invitee_id = ? AND invite_type = ?',
-            [user.user_id, 'return']
-        );
+		const returnUserRecord = await query(
+			'SELECT * FROM invite_records WHERE invitee_id = ? AND invite_type = ?',
+			[user.user_id, 'return'],
+		);
         
-        // 检查新用户资格（注册时间在14天内且未使用过新用户邀请码）
-        if (newUserRecord.length === 0) {
-            const registerTime = new Date(user.register_time);
-            const currentTime = new Date();
-            const daysDiff = Math.floor((currentTime - registerTime) / (1000 * 60 * 60 * 24));
+		// 检查新用户资格（注册时间在14天内且未使用过新用户邀请码）
+		if (newUserRecord.length === 0) {
+			const registerTime = new Date(user.register_time);
+			const currentTime = new Date();
+			const daysDiff = Math.floor((currentTime - registerTime) / (1000 * 60 * 60 * 24));
             
-            if (daysDiff <= 14) {
-                result.newUserEligible = true;
-            }
-        }
+			if (daysDiff <= 14) {
+				result.newUserEligible = true;
+			}
+		}
         
-        // 检查回归用户资格
-        if (returnUserRecord.length === 0) {
-            // 检查用户是否在回归资格表中有有效记录
-            const eligibilityRecord = await query(
-                'SELECT * FROM return_user_eligibility WHERE user_id = ? AND is_used = 0 AND expiry_date > NOW()',
-                [user.user_id]
-            );
+		// 检查回归用户资格
+		if (returnUserRecord.length === 0) {
+			// 检查用户是否在回归资格表中有有效记录
+			const eligibilityRecord = await query(
+				'SELECT * FROM return_user_eligibility WHERE user_id = ? AND is_used = 0 AND expiry_date > NOW()',
+				[user.user_id],
+			);
             
-            if (eligibilityRecord.length > 0) {
-                result.returnUserEligible = true;
-            }
-        }
+			if (eligibilityRecord.length > 0) {
+				result.returnUserEligible = true;
+			}
+		}
         
-        res.json(result);
-    } catch (e) {
-        console.log(e);
-        res.status(400).json({ msg: '检查邀请资格失败' });
-    }
+		const inviteSettings = await loadInviteSettings();
+		res.json({
+			...result,
+			new_user_reward: inviteSettings.new_user_reward,
+			return_user_reward: inviteSettings.return_user_reward,
+			monthly_limit: inviteSettings.monthly_limit,
+		});
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: '检查邀请资格失败' });
+	}
 });
 
 // 获取服务器当前时间
 router.get('/get_server_time', async function (req, res) {
-    try {
-        const now = new Date();
+	try {
+		const now = new Date();
         
-        // 格式化为yyyymmddhhmmss
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
+		// 格式化为yyyymmddhhmmss
+		const year = now.getFullYear();
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const day = String(now.getDate()).padStart(2, '0');
+		const hours = String(now.getHours()).padStart(2, '0');
+		const minutes = String(now.getMinutes()).padStart(2, '0');
+		const seconds = String(now.getSeconds()).padStart(2, '0');
         
-        const formattedTime = `${year}${month}${day}${hours}${minutes}${seconds}`;
+		const formattedTime = `${year}${month}${day}${hours}${minutes}${seconds}`;
         
-        res.json({ server_time: formattedTime });
-    } catch (e) {
-        console.log(e);
-        res.status(400).json({ msg: '获取服务器时间失败' });
-    }
+		res.json({ server_time: formattedTime });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: '获取服务器时间失败' });
+	}
 });
 
 // 获取弹窗海报
 router.get('/get_popup_poster', async function (req, res) {
-    try {
-        const currentUrl = req.query.url;
-        if (!currentUrl) {
-            return res.json([]);
-        }
+	try {
+		const currentUrl = req.query.url;
+		if (!currentUrl) {
+			return res.json([]);
+		}
 
-        await query(
-            `CREATE TABLE IF NOT EXISTS popup_posters (
+		await query(
+			`CREATE TABLE IF NOT EXISTS popup_posters (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 page_url VARCHAR(255) NOT NULL,
                 image_url VARCHAR(500) NOT NULL,
@@ -562,24 +602,24 @@ router.get('/get_popup_poster', async function (req, res) {
                 start_time DATETIME NOT NULL,
                 end_time DATETIME NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
-        );
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		);
 
-        // 查询当前时间在有效期内，且匹配当前URL的海报
-        const results = await query(
-            `SELECT * FROM popup_posters 
+		// 查询当前时间在有效期内，且匹配当前URL的海报
+		const results = await query(
+			`SELECT * FROM popup_posters 
             WHERE page_url = ? 
             AND start_time <= NOW() 
             AND end_time >= NOW()
             ORDER BY start_time DESC, id DESC LIMIT 1`,
-            [currentUrl]
-        );
+			[currentUrl],
+		);
         
-        res.json(results);
-    } catch (e) {
-        console.log(e);
-        res.status(400).json({ msg: '获取弹窗海报失败' });
-    }
+		res.json(results);
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: '获取弹窗海报失败' });
+	}
 });
 
 module.exports = router;

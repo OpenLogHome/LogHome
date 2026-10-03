@@ -4,7 +4,7 @@
 		  type="text"
 		  placeholder="小说名"
 		  v-model="title"
-		  maxlength="15"
+		  maxlength="25"
 		  show-word-limit
 		>
 		</el-input>
@@ -114,12 +114,11 @@
 			},
 			addTag(novel_id,tag){
 				let _this = this;
-				if(tag.replace(/(^\s*)|(\s*$)/g, "") == "" || tag.replace(/(^\s*)|(\s*$)/g, "") == "") return;
-				var reg = new RegExp( '[ \n]' , "g" )
-				let tag_name = tag.replace(reg, "");
+				let tag_name = String(tag == null ? '' : tag).trim();
+				if (!tag_name) return;
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if(tk) tk = tk.tk;
-				axios.get(_this.$baseUrl + '/library/add_novel_tag?novel_id=' + novel_id + "&tag_name=" + tag_name,
+				axios.get(_this.$baseUrl + '/library/add_novel_tag?novel_id=' + novel_id + "&tag_name=" + encodeURIComponent(tag_name),
 				{
 					headers: {
 						'Content-Type': 'application/json', //设置请求头请求格式为JSON
@@ -136,7 +135,7 @@
 			},
 			getSuggestedTags(){
 				let _this = this;
-				axios.get(_this.$baseUrl + '/library/get_suggested_tags?novel_id=' + this.novel_id, {}).then((res) => {
+				axios.get(_this.$baseUrl + '/library/get_suggested_tags?novel_id=0', {}).then((res) => {
 					_this.suggested_tags = res.data;
 					for(let i = 0 ; i < _this.suggested_tags.length ; i ++){
 						if(!_this.suggested_tags[i].is_activity_tag) {

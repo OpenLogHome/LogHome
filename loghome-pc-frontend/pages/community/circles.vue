@@ -32,7 +32,7 @@
           <div class="circle-card" v-for="(circle, circleIndex) in categoryCircles[category.category_id]"
             :key="circleIndex" @click="navigateToCircle(circle.circle_id)">
             <div class="circle-header">
-              <img :src="circle.icon || '/static/default-circle.png'" :alt="circle.name" class="circle-icon"
+              <img :src="circle.icon || '/default-avatar.png'" :alt="circle.name" class="circle-icon"
                 @error="handleImageError" />
               <div class="circle-info">
                 <div class="circle-name-row">
@@ -226,28 +226,18 @@ export default {
 
     // 打开圈子创建窗口
     async openCreateCircle() {
-      try {
-        const tokenData = localStorage.getItem('token');
-        if (tokenData) {
-          let token = (await this.$api.users.generateCrossSiteToken()).crossSiteToken;
-
-          this.$windowManager.createWindow({
-            title: '创建圈子',
-            url: `${process.env.mobileUrl}/#/pages/users/external_login?token=${token}&redirectTo=${encodeURIComponent(`/pages/community/createCircle?id=${this.circleId}&hideback=true`)}`,
-            width: 500,
-            height: Math.min(800, window.screen.height - 200)
-          });
-        } else {
-          this.$router.push("/login");
-        }
-      } catch (error) {
-        console.error('打编辑圈子窗口失败', error);
-        this.$message.error('打开编辑圈子失败，请稍后重试');
+      if (!localStorage.getItem('token')) {
+        this.$router.push("/login")
+        return
       }
+      await this.$openMobileWindow(`/pages/community/createCircle?id=${this.circleId}`, {
+        title: '创建圈子',
+        width: 500
+      })
     },
 
     handleImageError(event) {
-      event.target.src = '/static/default-circle.png'
+      event.target.src = '/default-avatar.png'
     }
   }
 }

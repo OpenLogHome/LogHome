@@ -39,8 +39,8 @@
                    <nuxt-link class="book-card" v-for="novel in (item.novels || []).slice(0, 4)" :key="novel.novel_id"
                      :to="`/novel/${novel.novel_id}`">
                      <div class="book-cover">
-                       <img :src="novel.picUrl ? novel.picUrl + '?thumbnail=1' : '/static/user/defaultCover.jpg'"
-                         :alt="novel.name" :onerror="`this.onerror=null;this.src='/static/user/defaultCover.jpg'`">
+                       <img :src="novel.picUrl ? novel.picUrl + '?thumbnail=1' : '/default-book-cover.png'"
+                         :alt="novel.name" :onerror="`this.onerror=null;this.src='/default-book-cover.png'`">
                      </div>
                      <div class="book-info">
                        <h4 class="book-title">
@@ -48,8 +48,8 @@
                          <span class="book-tag" v-if="novel.novel_type === 'world'">世界设定</span>
                        </h4>
                        <div class="book-author">
-                         <img :src="novel.avatar_url || '/static/user/defaultAvatar.jpg'" alt="作者头像" class="author-avatar"
-                           :onerror="`this.onerror=null;this.src='/static/user/defaultAvatar.jpg'`">
+                         <img :src="novel.avatar_url || '/default-avatar.png'" alt="作者头像" class="author-avatar"
+                           :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
                          <span class="author-name">{{ novel.user_name || novel.author_name || '佚名' }}</span>
                        </div>
                        <p class="book-desc">{{ truncateText(novel.content, 80) }}</p>
@@ -87,8 +87,8 @@
               <div class="novel-info">
                 <h3 class="novel-title">{{ novel.name }}</h3>
                 <div class="novel-author-info">
-                  <img :src="novel.auther_avatar || '/static/user/defaultAvatar.jpg'" alt="作者头像" class="author-avatar"
-                    :onerror="`this.onerror=null;this.src='/static/user/defaultAvatar.jpg'`">
+                  <img :src="novel.auther_avatar || '/default-avatar.png'" alt="作者头像" class="author-avatar"
+                    :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
                   <span class="author-name">{{ novel.author_name || '佚名' }}</span>
                 </div>
                 <p class="novel-desc">{{ truncateText(novel.content, 80) }}</p>
@@ -140,8 +140,8 @@
                 <div class="ranking-info">
                   <h4 class="ranking-title">{{ novel.name }}</h4>
                   <div class="ranking-author-info">
-                    <img :src="novel.auther_avatar || '/static/user/defaultAvatar.jpg'" alt="作者头像" class="author-avatar"
-                      :onerror="`this.onerror=null;this.src='/static/user/defaultAvatar.jpg'`">
+                    <img :src="novel.auther_avatar || '/default-avatar.png'" alt="作者头像" class="author-avatar"
+                      :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
                     <span class="author-name">{{ novel.author_name || '佚名' }}</span>
                   </div>
                 </div>

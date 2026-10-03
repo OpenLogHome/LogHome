@@ -77,6 +77,23 @@ async function consumeRedstone(options) {
 		if (replayRows.length > 0) {
 			return { replayed: true, amount: Math.abs(Number(replayRows[0].amount)), redstone_balance: Number(bankRows[0].redstone || 0) };
 		}
+		if (options.freeForMembers) {
+			const memberRows = await transactionalQuery(
+				`SELECT subscription_id
+				 FROM membership_subscriptions
+				 WHERE user_id = ? AND status = 'active' AND starts_at <= NOW() AND expires_at > NOW()
+				 LIMIT 1`,
+				[userId],
+			);
+			if (memberRows.length > 0) {
+				return {
+					replayed: false,
+					amount: 0,
+					membership_free: true,
+					redstone_balance: Number(bankRows[0].redstone || 0),
+				};
+			}
+		}
 		const balance = Number(bankRows[0].redstone || 0);
 		if (balance < amount) {
 			throw createBillingError(`红石不足，本次需要${amount}红石，当前余额${balance}红石`, 402, 'INSUFFICIENT_REDSTONE');

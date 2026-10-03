@@ -1,0 +1,23 @@
+const assert=require('assert'),fs=require('fs'),vm=require('vm'),path=require('path');
+const Vue=require('../../loghome-manage/node_modules/vue');
+const root=path.resolve(__dirname,'..');
+const helper=fs.readFileSync(path.join(root,'common/store-tracking-links.js'),'utf8').replace('export function','function');
+const {getTrackingLinks}=vm.runInNewContext(helper+';({getTrackingLinks})');
+const parcel={id:1,product_type:'physical',tracking_number:'JT5529580581737',shipping_company_code:'jtexpress',receiver_phone:'13800000000'};
+const links=getTrackingLinks(parcel);assert.equal(new URL(links.queryUrl).searchParams.get('nu'),parcel.tracking_number);assert.equal(new URL(links.queryUrl).searchParams.get('com'),'jtexpress');assert.equal(new URL(links.officialUrl).searchParams.get('billcode'),parcel.tracking_number);assert(!JSON.stringify(links).includes(parcel.receiver_phone));assert(!links.queryUrl.includes('token'));
+assert.equal(new URL(getTrackingLinks({...parcel,shipping_company_code:null}).queryUrl).searchParams.get('com'),'jtexpress');assert.equal(getTrackingLinks({...parcel,product_type:'virtual'}).queryUrl,'');assert.equal(getTrackingLinks({}).queryUrl,'');
+const weird=getTrackingLinks({...parcel,tracking_number:'A&B=#? /'});assert.equal(new URL(weird.queryUrl).searchParams.get('nu'),'A&B=#? /');assert.equal(new URL(weird.queryUrl).host,'m.kuaidi100.com');
+const clientSource=fs.readFileSync(path.join(root,'common/store-logistics.js'),'utf8').replace('export async function','async function');
+const {loadStoreLogistics}=vm.runInNewContext(clientSource+';({loadStoreLogistics})',{setTimeout,clearTimeout});
+let response={order:parcel,logistics:{status:'ok',provider:'kuaidiwang',events:[{time:'2026-10-01 08:00:00',context:'派送中'}],message:''}};const opened=[];
+const window={localStorage:{getItem:()=>JSON.stringify({tk:'fixture-only'})},open:(...args)=>opened.push(args),jsBridge:null};
+const source=fs.readFileSync(path.join(root,'pages/store/logistics.vue'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1].replace(/^import[^\n]*\n/gm,'').replace('export default','const component =');
+const options=vm.runInNewContext(source+';component',{getTrackingLinks,loadStoreLogistics,axios:{get:async()=>({data:{code:200,data:response}})},darkModeMixin:{},StoreIcon:{},window,uni:{stopPullDownRefresh(){},navigateTo(){},setClipboardData(){throw Error('public query should not require clipboard')}}});
+(async()=>{
+ const page=new Vue(options);page.$baseUrl='fixture://backend';page.orderId=1;page.authToken='fixture-only';await page.loadLogistics();
+ assert.equal(page.logistics.events.length,1);page.openPublic();assert.equal(opened[0][0],links.queryUrl);assert.equal(opened[0][2],'noopener,noreferrer');
+ window.jsBridge={inApp:true,openInBrowser:url=>opened.push([url])};page.openPublic();assert.equal(opened[1][0],links.queryUrl);
+ page.refreshQuery();await Vue.nextTick();page.logistics={status:'no_records',events:[]};assert(page.emptyMessage.includes('未查到'));
+ page.logistics={status:'unavailable',events:[]};assert(page.emptyMessage.includes('浏览器'));page.$destroy();
+ console.log('PASS parcel-prefilled URLs, encoded parameters, no credential/phone leakage, browser opening on H5/native App and refresh');
+})().catch(e=>{console.error(e);process.exitCode=1});

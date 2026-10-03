@@ -895,29 +895,17 @@ export default {
 
     // 打开段落评论窗口
     async openParagraphCommentWindow(paragraphId) {
-      try {
-        const tokenData = localStorage.getItem('token');
-        if (tokenData) {
-          let token = (await this.$api.users.generateCrossSiteToken()).crossSiteToken;
-          
-          this.$windowManager.createWindow({
-            title: '段落评论',
-            url: `${process.env.mobileUrl}/#/pages/users/external_login?token=${
-                  token}&redirectTo=${encodeURIComponent(`/pages/readers/bookComment?id=${this.novel.novel_id}&articleId=${this.article.article_id}&paragraphId=${paragraphId}`)}&hideback=true`,
-            width: 400,
-            height: Math.min(800, window.screen.height - 200)
-          });
-          
-          // 如果是从选择面板调用的，清除选择状态
-          if (this.selectionMode) {
-            this.clearSelection();
-          }
-        } else {
-          this.$router.push("/login");
-        }
-      } catch (error) {
-        console.error('打开段落评论窗口失败', error);
-        this.$message.error('打开评论窗口失败，请稍后重试');
+      if (!localStorage.getItem('token')) {
+        this.$router.push("/login");
+        return;
+      }
+      await this.$openMobileWindow(
+        `/pages/readers/bookComment?id=${this.novel.novel_id}&articleId=${this.article.article_id}&paragraphId=${paragraphId}`,
+        { title: '段落评论', width: 400 }
+      );
+      // 如果是从选择面板调用的，清除选择状态
+      if (this.selectionMode) {
+        this.clearSelection();
       }
     },
 

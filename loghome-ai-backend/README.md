@@ -23,6 +23,8 @@ npm run dev
 
 默认监听端口是 `9101`，可以通过 `PORT` 或 `READER_AI_PORT` 覆盖。
 
+实时协作文档的 WebSocket 默认监听 `9102`。Hocuspocus 4 需要 Node.js 22 或更高版本；部署该服务时不要沿用云函数的 Node.js 20 运行时。
+
 ## 环境变量
 
 参考 [.env.example](/F:/LogHome/loghome-reader-ai-backend/.env.example:1)。
@@ -42,6 +44,11 @@ npm run dev
 
 - `LOGHOME_MEMORY_DB`
 - `READER_AI_ALLOWED_ORIGINS`
+- `COLLABORATION_ENABLED`
+- `COLLABORATION_ADDRESS`
+- `COLLABORATION_PORT`
+- `COLLABORATION_STORE_DEBOUNCE_MS`
+- `COLLABORATION_STORE_MAX_DEBOUNCE_MS`
 - `UNIFIED_API_BASE_URL`
 - `CHAPTER_SUMMARY_MODEL`
 - `IMAGE_UNDERSTANDING_MODEL`
@@ -54,6 +61,17 @@ npm run dev
 2. 反向代理层关闭响应缓冲，确保 NDJSON 流可以持续向前端推送。
 3. 域名和证书就绪后，把前端的 `$readerAiBaseUrl` 指向这个新服务。
 4. 如果要灰度切换，可以先用 `reader_ai_base_url_override` 本地存储覆盖前端地址做联调。
+5. WebSocket 端口需要经过支持 Upgrade 的反向代理暴露为 `wss://`；同一个协作服务只能运行一个实例，除非后续再接入 Redis 广播层。
+
+## 实时协作
+
+首次部署先执行数据库迁移：
+
+```bash
+npm run migrate:collaboration
+```
+
+文章默认仍使用旧编辑锁。主作者通过 `POST /collaboration/articles/:articleId/mode` 将 `mode` 设置为 `realtime_crdt` 后，该文章才会进入 Yjs 实时协作模式。实时内容会持续投影到原有 `articles_writer` JSON 格式，因此阅读器、评论锚点和已有历史接口可以继续工作。
 
 ## 代码来源
 

@@ -5,7 +5,7 @@
 		  type="text"
 		  placeholder="作品名"
 		  v-model="title"
-		  maxlength="15"
+		  maxlength="25"
 		  show-word-limit
 		>
 		</el-input>

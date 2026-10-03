@@ -429,6 +429,8 @@ export default {
 		},
 		swiperChange(e) {
 			if (!this.books[e]) {
+				// 轮播滑到"创建新作品"卡片时（e 为 -1），同步清空当前作品，避免信息栏停留在上一部作品
+				this.curBook = -1;
 				this.writingCalendarRequestId += 1;
 				this.cancelWritingCalendarCommit();
 				this.writingCalendar = null;

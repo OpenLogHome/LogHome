@@ -2,10 +2,10 @@
   <div class="circle-detail-container">
     <!-- 圈子头部信息 -->
     <div class="circle-header">
-      <div class="circle-bg" :style="{ backgroundImage: `url(${circle.bg_url || circle.icon || '/default-circle.png'})` }"></div>
+      <div class="circle-bg" :style="{ backgroundImage: `url(${circle.bg_url || circle.icon || '/default-avatar.png'})` }"></div>
       <div class="header-overlay"></div>
       <div class="circle-info">
-        <img class="circle-avatar" :src="circle.icon || '/default-circle.png'" :alt="circle.name" />
+        <img class="circle-avatar" :src="circle.icon || '/default-avatar.png'" :alt="circle.name" />
         <div class="circle-meta">
           <div class="circle-name">
             {{ circle.name }}
@@ -45,7 +45,7 @@
       <div class="members-list">
         <div class="member-item" v-for="(member, index) in members" :key="index" @click="navigateToUser(member.user_id)">
           <div class="member-avatar-wrapper">
-            <img class="member-avatar" :src="member.avatar_url || '/default-avatar.jpg'" :alt="member.name" />
+            <img class="member-avatar" :src="member.avatar_url || '/default-avatar.png'" :alt="member.name" />
             <span class="member-role" v-if="member.role === 2">圈主</span>
             <span class="member-role admin" v-else-if="member.role === 1">管理员</span>
           </div>
@@ -73,7 +73,7 @@
       <div class="post-card" v-for="(post, index) in posts" :key="index" @click="navigateToPost(post.post_id)">
         <div class="post-header">
           <div class="user-info" @click.stop="navigateToUser(post.user_id)">
-            <img :src="post.author_avatar || '/default-avatar.jpg'" alt="用户头像" class="user-avatar">
+            <img :src="post.author_avatar || '/default-avatar.png'" alt="用户头像" class="user-avatar">
             <div class="user-meta">
               <span class="user-name">{{ post.author_name }}</span>
               <span class="post-time">{{ formatTime(post.create_time) }}</span>
@@ -151,7 +151,7 @@
         <div class="info-section">
           <h4 class="info-title">圈主</h4>
           <div class="member-item" @click="navigateToUser(circle.creator_id)">
-            <img class="member-avatar" :src="circle.creator_avatar || '/default-avatar.jpg'" :alt="circle.creator_name" />
+            <img class="member-avatar" :src="circle.creator_avatar || '/default-avatar.png'" :alt="circle.creator_name" />
             <span class="member-name">{{ circle.creator_name }}</span>
           </div>
         </div>
@@ -329,7 +329,7 @@ export default {
     
     async toggleJoin() {
       if (!this.isLoggedIn) {
-        this.$router.push('/users/login')
+        this.$router.push('/login')
         return
       }
       
@@ -420,7 +420,7 @@ export default {
     
     async likePost(post) {
       if (!this.isLoggedIn) {
-        this.$router.push('/users/login')
+        this.$router.push('/login')
         return
       }
       
@@ -457,9 +457,13 @@ export default {
           expires_hours: 24 * 30
         })
         
-        if (res && res.share_code) {
-          this.$message.success('分享口令已生成')
-          // 这里可以添加复制到剪贴板的功能
+        if (res && res.code) {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(res.share_text)
+          }
+          this.$message.success('分享口令已生成并复制到剪贴板')
+        } else {
+          throw new Error((res && res.msg) || '创建分享口令失败')
         }
       } catch (error) {
         console.error('创建分享口令失败', error)
@@ -521,53 +525,31 @@ export default {
     },
     
     previewImage(images, index) {
-      // 这里可以实现图片预览功能
-      console.log('预览图片', images, index)
+      if (!images || !images.length) return
+      this.$preview(images, index || 0)
     },
 
     // 打开圈子编辑窗口
     async openEditCircle() {
-      try {
-        const tokenData = localStorage.getItem('token');
-        if (tokenData) {
-          let token = (await this.$api.users.generateCrossSiteToken()).crossSiteToken;
-          
-          this.$windowManager.createWindow({
-            title: '编辑圈子',
-            url: `${process.env.mobileUrl}/#/pages/users/external_login?token=${
-                  token}&redirectTo=${encodeURIComponent(`/pages/community/editCircle?id=${this.circleId}&hideback=true`)}`,
-            width: 500,
-            height: Math.min(800, window.screen.height - 200)
-          });
-        } else {
-          this.$router.push("/login");
-        }
-      } catch (error) {
-        console.error('打编辑圈子窗口失败', error);
-        this.$message.error('打开编辑圈子失败，请稍后重试');
+      if (!localStorage.getItem('token')) {
+        this.$router.push("/login")
+        return
       }
+      await this.$openMobileWindow(`/pages/community/editCircle?id=${this.circleId}`, {
+        title: '编辑圈子',
+        width: 500
+      })
     },
 
     async openCircleMembers() {
-      try {
-        const tokenData = localStorage.getItem('token');
-        if (tokenData) {
-          let token = (await this.$api.users.generateCrossSiteToken()).crossSiteToken;
-          
-          this.$windowManager.createWindow({
-            title: '圈子成员',
-            url: `${process.env.mobileUrl}/#/pages/users/external_login?token=${
-                  token}&redirectTo=${encodeURIComponent(`/pages/community/circleMembers?id=${this.circleId}&hideback=true`)}`,
-            width: 500,
-            height: Math.min(800, window.screen.height - 200)
-          });
-        } else {
-          this.$router.push("/login");
-        }
-      } catch (error) {
-        console.error('打开圈子成员失败', error);
-        this.$message.error('打开圈子成员失败，请稍后重试');
+      if (!localStorage.getItem('token')) {
+        this.$router.push("/login")
+        return
       }
+      await this.$openMobileWindow(`/pages/community/circleMembers?id=${this.circleId}`, {
+        title: '圈子成员',
+        width: 500
+      })
     },
   }
 }

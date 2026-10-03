@@ -78,26 +78,15 @@
           <view class="section-title correction-title">文本纠错</view>
         </view>
         <view class="correction-actions-group">
+          <RedstoneCost :cost="2" :icon-only="true" :hide-cost-detail="true" />
           <button
             size="mini"
             class="ghost-button"
-            :class="{ 'ghost-button-active': correctionMode === 'standard' }"
-            :loading="displayCorrectionLoading"
-            @click="rerunCurrentCorrection"
+            :loading="smartCorrectionLoading"
+            @click="rerunSmartCorrection"
           >
-            重新检查
+            {{ smartCorrectionStarted ? "重新分析" : "开始分析" }}
           </button>
-          <view
-            class="smart-toggle"
-            :class="{ 'smart-toggle-loading': smartCorrectionLoading }"
-            @click="toggleSmartCorrection"
-          >
-			<RedstoneCost :cost="1" :icon-only="true" :hide-cost-detail="true" />
-			<text class="smart-toggle-label">智能纠错</text>
-            <view class="smart-toggle-track" :class="{ active: correctionMode === 'smart' }">
-              <view class="smart-toggle-thumb"></view>
-            </view>
-          </view>
         </view>
       </view>
 
@@ -113,22 +102,36 @@
         </scroll-view>
       </view>
       <view
-        v-else-if="smartCorrectionLoading && correctionMode === 'smart'"
+        v-else-if="smartCorrectionLoading"
         class="thinking-collapsed"
         @click="smartThinkingVisible = true"
       >
         <text class="thinking-collapsed-text">查看模型思考过程</text>
       </view>
 
-      <view v-if="displayCorrectionLoading" class="status-box">
-        正在检查正文，请稍候...
+      <view v-if="smartCorrectionLoading" class="status-box">
+        <view class="correction-progress-head">
+          <text>正在检查正文，请稍候...</text>
+          <text v-if="smartCorrectionProgress.total > 0" class="correction-progress-count">
+            {{ smartCorrectionProgress.analyzed }}/{{ smartCorrectionProgress.total }} 段
+          </text>
+        </view>
+        <view
+          v-if="smartCorrectionProgress.total > 0"
+          class="correction-progress-track"
+        >
+          <view
+            class="correction-progress-fill"
+            :style="{ width: smartCorrectionProgressPercent + '%' }"
+          ></view>
+        </view>
       </view>
-      <view v-else-if="displayCorrectionError" class="status-box error-box">
-        {{ displayCorrectionError }}
+      <view v-else-if="smartCorrectionError" class="status-box error-box">
+        {{ smartCorrectionError }}
       </view>
       <view v-else>
         <view
-          v-if="(displayCorrectionResult.summary.error_count || 0) > 0"
+          v-if="(smartCorrectionResult.summary.error_count || 0) > 0"
           class="status-box error-box correction-status"
         >
           部分内容暂时无法完成检查，请稍后重新检查。
@@ -136,23 +139,23 @@
 
         <view
           v-if="
-            !displayCorrectionResult.corrections.length &&
-            !(displayCorrectionResult.summary.error_count || 0) &&
-            (displayCorrectionResult.summary.paragraph_count || 0) > 0
+            !smartCorrectionResult.corrections.length &&
+            !(smartCorrectionResult.summary.error_count || 0) &&
+            (smartCorrectionResult.summary.paragraph_count || 0) > 0
           "
           class="status-box success-box correction-status"
         >
           未发现明显文本纠错问题。
         </view>
         <view
-          v-if="(displayCorrectionResult.summary.paragraph_count || 0) === 0"
+          v-if="(smartCorrectionResult.summary.paragraph_count || 0) === 0"
           class="status-box success-box correction-status"
         >
           暂无可检测的正文段落。
         </view>
-        <view v-if="displayCorrectionResult.corrections.length" class="correction-list">
+        <view v-if="smartCorrectionResult.corrections.length" class="correction-list">
           <view
-            v-for="item in displayCorrectionResult.corrections"
+            v-for="item in smartCorrectionResult.corrections"
             :key="item.id"
             class="correction-item"
             @click="openCorrectionDetail(item)"
@@ -348,16 +351,9 @@ import {
 import {
   buildCorrectionParagraphs,
   buildParagraphRequestKey,
-  getCachedParagraphResult,
   hydrateParagraphResult,
-  ignoreCorrectionResult,
   isCorrectionIgnored,
-  loadIgnoredCorrections,
-  loadTextCorrectionCache,
   normalizeCorrectionText,
-  persistIgnoredCorrections,
-  persistTextCorrectionCache,
-  writeStandardParagraphResultsToCache,
   loadSmartCorrectionCache,
   getCachedSmartParagraphResult,
   writeSmartParagraphResultsToCache,
@@ -396,6 +392,10 @@ export default {
       publishSessionId: "",
       currentEditLock: null,
       lockHeartbeatTimer: null,
+      collaborationMode: "legacy_lock",
+      collaborationRevision: 0,
+      collaborationModeResolved: false,
+      pageInitializationInProgress: false,
       publishMode: "now",
 	  membershipActive: false,
 	  membershipLoaded: false,
@@ -403,25 +403,18 @@ export default {
       scheduleDate: "",
       scheduleClock: "",
       submitLoading: false,
-      correctionLoading: false,
-      correctionError: "",
-      correctionResult: createEmptyCorrectionResult(),
-      correctionMode: "standard",
       smartCorrectionLoading: false,
       smartCorrectionError: "",
       smartCorrectionResult: createEmptyCorrectionResult(),
+      smartCorrectionStarted: false,
       smartThinkingText: "",
       smartCorrectionContentText: "",
       smartCorrectionOutputStarted: false,
+      smartCorrectionProgress: { analyzed: 0, total: 0 },
       smartThinkingVisible: false,
       thinkingScrollTop: 0,
       activeCorrection: null,
       correctionDraftText: "",
-      ignoredCorrectionStore: {
-        version: 1,
-        updated_at: 0,
-        entries: {},
-      },
       smartIgnoredCorrectionStore: {
         version: 2,
         updated_at: 0,
@@ -441,6 +434,9 @@ export default {
     };
   },
   computed: {
+    isRealtimeCollaboration() {
+      return this.collaborationMode === "realtime_crdt";
+    },
     scheduleMinDate() {
       const now = new Date();
       const year = now.getFullYear();
@@ -454,25 +450,12 @@ export default {
       }
       return `将于 ${this.scheduleDate} ${this.scheduleClock} 自动发布`;
     },
-    displayCorrectionResult() {
-      return this.correctionMode === "smart"
-        ? this.smartCorrectionResult
-        : this.correctionResult;
-    },
-    displayCorrectionLoading() {
-      return this.correctionMode === "smart"
-        ? this.smartCorrectionLoading
-        : this.correctionLoading;
-    },
-    displayCorrectionError() {
-      return this.correctionMode === "smart"
-        ? this.smartCorrectionError
-        : this.correctionError;
-    },
-    displayIgnoredStore() {
-      return this.correctionMode === "smart"
-        ? this.smartIgnoredCorrectionStore
-        : this.ignoredCorrectionStore;
+    smartCorrectionProgressPercent() {
+      const { analyzed, total } = this.smartCorrectionProgress;
+      if (!total) {
+        return 0;
+      }
+      return Math.min(100, Math.round((analyzed / total) * 100));
     },
     isCorrectionDraftChanged() {
       if (!this.activeCorrection) {
@@ -537,6 +520,17 @@ export default {
       const token = this.getTokenInfo();
       return token ? token.tk : null;
     },
+    getCollaborationHttpBaseUrl() {
+      const override = window.localStorage.getItem("loghomeCollaborationHttpUrl");
+      return String(override || this.$readerAiBaseUrl || "").replace(/\/+$/, "");
+    },
+    async fetchCollaborationStatus() {
+      const response = await axios.get(
+        `${this.getCollaborationHttpBaseUrl()}/collaboration/articles/${this.articleId}/status`,
+        { headers: { Authorization: "Bearer " + this.getAuthToken() } }
+      );
+      return response.data && response.data.data ? response.data.data : null;
+    },
     getCurrentUserId() {
       const token = this.getTokenInfo();
       return token && token.id ? Number(token.id) : 0;
@@ -551,6 +545,7 @@ export default {
       return serverTime || buildClientSyncTime();
     },
     async claimEditLock() {
+      if (this.isRealtimeCollaboration) return true;
       const tk = this.getAuthToken();
       if (!tk || !this.articleId || !this.publishSessionId) {
         return false;
@@ -575,6 +570,10 @@ export default {
         return true;
       } catch (error) {
         if (error.response && error.response.status === 409) {
+          if (error.response.data.code === "realtime_collaboration_enabled") {
+            this.adoptRealtimeCollaboration(error.response.data.collaboration);
+            return true;
+          }
           this.currentEditLock = error.response.data.lock || null;
           this.handleLockConflict(error.response.data.lock);
           return false;
@@ -584,6 +583,7 @@ export default {
     },
     startLockHeartbeat() {
       this.stopLockHeartbeat();
+      if (this.isRealtimeCollaboration) return;
       this.lockHeartbeatTimer = setInterval(() => {
         this.heartbeatEditLock();
       }, EDIT_LOCK_HEARTBEAT_MS);
@@ -595,6 +595,7 @@ export default {
       }
     },
     async heartbeatEditLock() {
+      if (this.isRealtimeCollaboration) return;
       const tk = this.getAuthToken();
       if (!tk || !this.articleId || !this.publishSessionId) {
         return;
@@ -618,12 +619,17 @@ export default {
       } catch (error) {
         this.stopLockHeartbeat();
         if (error.response && error.response.status === 409) {
+          if (error.response.data.code === "realtime_collaboration_enabled") {
+            this.adoptRealtimeCollaboration(error.response.data.collaboration);
+            return;
+          }
           this.currentEditLock = error.response.data.lock || null;
           this.handleLockConflict(error.response.data.lock);
         }
       }
     },
     async releaseEditLock() {
+      if (this.isRealtimeCollaboration) return;
       const tk = this.getAuthToken();
       if (!tk || !this.articleId || !this.publishSessionId) {
         return;
@@ -644,6 +650,17 @@ export default {
           }
         );
       } catch (error) {}
+    },
+    adoptRealtimeCollaboration(collaboration) {
+      this.stopLockHeartbeat();
+      this.currentEditLock = null;
+      this.collaborationMode = "realtime_crdt";
+      this.collaborationRevision = Number(
+        (collaboration && collaboration.revision) ||
+          this.collaborationRevision ||
+          0
+      );
+      this.collaborationModeResolved = true;
     },
     handleLockConflict(lockInfo) {
       const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
@@ -817,6 +834,8 @@ export default {
           is_personal: this.article.isPersonal ? 1 : 0,
         },
         edit_session_id: this.publishSessionId || this.sourceSessionId || "",
+        collaboration_mode: this.collaborationMode,
+        collaboration_revision: this.collaborationRevision,
         saved_at: Date.now(),
       };
       window.localStorage.setItem(
@@ -1002,41 +1021,69 @@ export default {
         : response.data || {};
       this.article = this.buildArticleContext(article);
     },
+    async fetchWriterArticle() {
+      const response = await axios.get(
+        this.$baseUrl + "/essays/get_article_writer?id=" + this.articleId,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.getAuthToken(),
+          },
+        }
+      );
+      if (response.data && response.data !== "no data") {
+        this.article = this.buildArticleContext(response.data);
+      }
+    },
     async initializePage() {
-      this.ignoredCorrectionStore = await loadIgnoredCorrections(this.getCurrentUserId());
+      this.pageInitializationInProgress = true;
       this.smartIgnoredCorrectionStore = await loadSmartIgnoredCorrections(this.getCurrentUserId());
       this.initializeSchedulePicker();
 	  await this.loadMembershipStatus();
-      const lockClaimed = await this.claimEditLock();
-      if (!lockClaimed) {
-        return;
-      }
       const draft = this.loadPublishDraft();
+      let collaborationStatus = null;
+      try {
+        collaborationStatus = await this.fetchCollaborationStatus();
+      } catch (error) {}
       if (draft) {
+        this.collaborationMode =
+          (collaborationStatus && collaborationStatus.mode) ||
+          draft.collaboration_mode ||
+          "legacy_lock";
+        this.collaborationRevision = Number(
+          (collaborationStatus && collaborationStatus.revision) ||
+            draft.collaboration_revision ||
+            0
+        );
         this.article = this.buildArticleContext(draft);
       } else {
-        await this.fetchArticle();
+        this.collaborationMode =
+          (collaborationStatus && collaborationStatus.mode) || "legacy_lock";
+        this.collaborationRevision = Number(
+          (collaborationStatus && collaborationStatus.revision) || 0
+        );
+        if (this.isRealtimeCollaboration) {
+          await this.fetchWriterArticle();
+        } else {
+          await this.fetchArticle();
+        }
       }
-      await this.runTextCorrection();
-    },
-    async runTextCorrection() {
-      this.correctionMode = "standard";
-      return this.runCorrection("standard");
-    },
-    async rerunCurrentCorrection() {
-      if (this.correctionMode === "smart") {
-        return this.runSmartCorrection({ forceRefresh: true });
+      this.collaborationModeResolved = true;
+      const lockClaimed = await this.claimEditLock();
+      if (!lockClaimed) {
+        this.pageInitializationInProgress = false;
+        return;
       }
-      return this.runTextCorrection();
-    },
-    async toggleSmartCorrection() {
-      if (this.correctionMode === "smart") {
-        return this.runTextCorrection();
+      if (this.membershipActive) {
+        this.runSmartCorrection();
       }
-      return this.runSmartCorrection();
+      this.pageInitializationInProgress = false;
+    },
+    rerunSmartCorrection() {
+      return this.runSmartCorrection({ forceRefresh: true });
     },
     async runSmartCorrection(options = {}) {
-      this.correctionMode = "smart";
+      this.smartCorrectionStarted = true;
       return this.runSmartCorrectionStreaming(options);
     },
     removeSmartParagraphsFromCache(cache, paragraphs) {
@@ -1069,6 +1116,7 @@ export default {
       this.smartThinkingText = "";
       this.smartCorrectionContentText = "";
       this.smartCorrectionOutputStarted = false;
+      this.smartCorrectionProgress = { analyzed: 0, total: 0 };
       this.smartThinkingVisible = true;
 
       try {
@@ -1108,6 +1156,7 @@ export default {
         });
 
         const requestParagraphs = Array.from(pendingParagraphMap.values());
+        this.smartCorrectionProgress = { analyzed: 0, total: requestParagraphs.length };
 
         if (requestParagraphs.length === 0) {
           const allParagraphResults = [];
@@ -1230,186 +1279,6 @@ export default {
         this.smartCorrectionLoading = false;
       }
     },
-    async runCorrection(mode) {
-      const isSmart = mode === "smart";
-
-      if (isSmart) {
-        this.smartCorrectionLoading = true;
-        this.smartCorrectionError = "";
-        this.smartCorrectionResult = createEmptyCorrectionResult();
-      } else {
-        this.correctionLoading = true;
-        this.correctionError = "";
-        this.correctionResult = createEmptyCorrectionResult();
-      }
-
-      try {
-        const paragraphs = buildCorrectionParagraphs(this.article.content);
-        const baseResult = createEmptyCorrectionResult();
-        baseResult.summary.paragraph_count = paragraphs.length;
-
-        if (isSmart) {
-          this.smartCorrectionResult = baseResult;
-        } else {
-          this.correctionResult = baseResult;
-        }
-
-        if (paragraphs.length === 0) {
-          return;
-        }
-
-        const userId = this.getCurrentUserId();
-        let cache = await loadTextCorrectionCache(userId);
-        const cachedResults = [];
-        const uncachedParagraphs = [];
-
-        paragraphs.forEach((paragraph) => {
-          const cachedResult = getCachedParagraphResult(cache, paragraph);
-          if (cachedResult) {
-            cachedResults.push(cachedResult);
-            return;
-          }
-          uncachedParagraphs.push(paragraph);
-        });
-
-        const pendingParagraphMap = new Map();
-        uncachedParagraphs.forEach((paragraph) => {
-          const requestKey = buildParagraphRequestKey(paragraph);
-          if (!pendingParagraphMap.has(requestKey)) {
-            pendingParagraphMap.set(requestKey, paragraph);
-          }
-        });
-
-        const requestParagraphs = Array.from(pendingParagraphMap.values());
-        let responseData = createEmptyCorrectionResult();
-
-        if (requestParagraphs.length > 0) {
-          try {
-            const tk = this.getAuthToken();
-            const response = await axios.post(
-              this.$baseUrl + "/essays/get_article_text_correction",
-              {
-                article_id: this.articleId,
-                paragraphs: requestParagraphs,
-              },
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: "Bearer " + tk,
-                },
-              }
-            );
-            responseData = response.data || createEmptyCorrectionResult();
-          } catch (requestError) {
-            responseData = {
-              summary: {
-                paragraph_count: requestParagraphs.length,
-                cached_paragraph_count: 0,
-                requested_paragraph_count: requestParagraphs.length,
-                batch_count: 0,
-                corrected_paragraph_count: 0,
-                issue_count: 0,
-                error_count: requestParagraphs.length,
-              },
-              paragraph_results: requestParagraphs.map((paragraph) => ({
-                paragraph_index: paragraph.paragraph_index,
-                paragraph_id: paragraph.paragraph_id,
-                paragraph_hash: paragraph.paragraph_hash,
-                original_text: paragraph.text,
-                corrected_text: paragraph.text,
-                has_issue: false,
-                fragments: [],
-                error: "文本纠错请求失败，请稍后重试",
-              })),
-              corrections: [],
-              errors: requestParagraphs.map((paragraph) => ({
-                paragraph_index: paragraph.paragraph_index,
-                paragraph_id: paragraph.paragraph_id,
-                paragraph_hash: paragraph.paragraph_hash,
-                message: "文本纠错请求失败，请稍后重试",
-              })),
-            };
-          }
-        }
-
-        const freshParagraphResults = Array.isArray(responseData.paragraph_results)
-          ? responseData.paragraph_results
-          : [];
-        const freshResultMap = new Map();
-        freshParagraphResults.forEach((result) => {
-          const requestKey = buildParagraphRequestKey({
-            paragraph_hash: result.paragraph_hash,
-            text: result.original_text,
-          });
-          freshResultMap.set(requestKey, result);
-        });
-
-        const allParagraphResults = [];
-        paragraphs.forEach((paragraph) => {
-          const cachedResult = getCachedParagraphResult(cache, paragraph);
-          if (cachedResult) {
-            allParagraphResults.push(cachedResult);
-            return;
-          }
-
-          const requestKey = buildParagraphRequestKey(paragraph);
-          const freshResult = freshResultMap.get(requestKey);
-          if (freshResult) {
-            allParagraphResults.push(hydrateParagraphResult(paragraph, freshResult));
-            return;
-          }
-
-          allParagraphResults.push(
-            hydrateParagraphResult(paragraph, {
-              corrected_text: paragraph.text,
-              has_issue: false,
-              fragments: [],
-              error: "未获取到该段落的纠错结果",
-            })
-          );
-        });
-
-        cache = writeStandardParagraphResultsToCache(cache, freshParagraphResults);
-        await persistTextCorrectionCache(userId, cache);
-
-        const rawCorrections = allParagraphResults.filter(
-          (item) => item.has_issue && !item.error
-        );
-        const corrections = rawCorrections.filter(
-          (item) => !isCorrectionIgnored(this.ignoredCorrectionStore, item)
-        );
-        const errors = allParagraphResults
-          .filter((item) => item.error)
-          .map((item) => ({
-            paragraph_index: item.paragraph_index,
-            paragraph_id: item.paragraph_id,
-            paragraph_hash: item.paragraph_hash,
-            message: item.error,
-          }));
-
-        this.correctionResult = {
-          summary: {
-            paragraph_count: paragraphs.length,
-            cached_paragraph_count: cachedResults.length,
-            requested_paragraph_count: requestParagraphs.length,
-            batch_count: Number(responseData.summary?.batch_count || 0),
-            corrected_paragraph_count: corrections.length,
-            issue_count: corrections.reduce(
-              (total, item) => total + item.fragments.length,
-              0
-            ),
-            error_count: errors.length,
-          },
-          paragraph_results: allParagraphResults,
-          corrections,
-          errors,
-        };
-      } catch (error) {
-        this.correctionError = "文本纠错结果整理失败，请稍后重试";
-      } finally {
-        this.correctionLoading = false;
-      }
-    },
     openCorrectionDetail(item) {
       this.activeCorrection = item;
       this.correctionDraftText = String(item.corrected_text || "");
@@ -1434,21 +1303,11 @@ export default {
     },
     async ignoreCorrection(item) {
       const userId = this.getCurrentUserId();
-      const isSmart = this.correctionMode === "smart";
-
-      if (isSmart) {
-        this.smartIgnoredCorrectionStore = ignoreSmartCorrectionResult(
-          this.smartIgnoredCorrectionStore,
-          item
-        );
-        await persistSmartIgnoredCorrections(userId, this.smartIgnoredCorrectionStore);
-      } else {
-        this.ignoredCorrectionStore = ignoreCorrectionResult(
-          this.ignoredCorrectionStore,
-          item
-        );
-        await persistIgnoredCorrections(userId, this.ignoredCorrectionStore);
-      }
+      this.smartIgnoredCorrectionStore = ignoreSmartCorrectionResult(
+        this.smartIgnoredCorrectionStore,
+        item
+      );
+      await persistSmartIgnoredCorrections(userId, this.smartIgnoredCorrectionStore);
 
       if (
         this.activeCorrection &&
@@ -1458,27 +1317,34 @@ export default {
         this.closeCorrectionDetail();
       }
 
-      const resultKey = isSmart ? "smartCorrectionResult" : "correctionResult";
-      this[resultKey] = {
-        ...this[resultKey],
-        corrections: (this[resultKey].corrections || []).filter(
+      this.smartCorrectionResult = {
+        ...this.smartCorrectionResult,
+        corrections: (this.smartCorrectionResult.corrections || []).filter(
           (current) => current.id !== item.id
         ),
         summary: {
-          ...this[resultKey].summary,
+          ...this.smartCorrectionResult.summary,
           corrected_paragraph_count: Math.max(
             0,
-            Number(this[resultKey].summary.corrected_paragraph_count || 0) - 1
+            Number(this.smartCorrectionResult.summary.corrected_paragraph_count || 0) - 1
           ),
           issue_count: Math.max(
             0,
-            Number(this[resultKey].summary.issue_count || 0) -
+            Number(this.smartCorrectionResult.summary.issue_count || 0) -
               Number((item.fragments || []).length || 0)
           ),
         },
       };
     },
     async applyCorrection(item, customCorrectedText = null) {
+      if (this.isRealtimeCollaboration) {
+        uni.showToast({
+          title: "实时协作章节请返回编辑器应用修改",
+          icon: "none",
+          duration: 2200,
+        });
+        return;
+      }
       const correctedText = normalizeCorrectionText(
         customCorrectedText === null
           ? item.corrected_text
@@ -1539,8 +1405,7 @@ export default {
       };
       this.persistCurrentPublishDraft();
 
-      const isSmart = this.correctionMode === "smart";
-      const resultKey = isSmart ? "smartCorrectionResult" : "correctionResult";
+      const resultKey = "smartCorrectionResult";
       const nextParagraphResults = (this[resultKey].paragraph_results || []).map(
         (current) => {
           if (current.id !== item.id) {
@@ -1568,31 +1433,17 @@ export default {
           Number(item.paragraph_index || 0)
       );
       if (nextParagraph) {
-        if (isSmart) {
-          const cache = await loadSmartCorrectionCache(userId);
-          const nextCache = writeSmartParagraphResultsToCache(cache, [
-            {
-              paragraph_hash: nextParagraph.paragraph_hash,
-              original_text: nextParagraph.text,
-              corrected_text: nextParagraph.text,
-              has_issue: false,
-              fragments: [],
-            },
-          ]);
-          await persistSmartCorrectionCache(userId, nextCache);
-        } else {
-          const cache = await loadTextCorrectionCache(userId);
-          const nextCache = writeStandardParagraphResultsToCache(cache, [
-            {
-              paragraph_hash: nextParagraph.paragraph_hash,
-              original_text: nextParagraph.text,
-              corrected_text: nextParagraph.text,
-              has_issue: false,
-              fragments: [],
-            },
-          ]);
-          await persistTextCorrectionCache(userId, nextCache);
-        }
+        const cache = await loadSmartCorrectionCache(userId);
+        const nextCache = writeSmartParagraphResultsToCache(cache, [
+          {
+            paragraph_hash: nextParagraph.paragraph_hash,
+            original_text: nextParagraph.text,
+            corrected_text: nextParagraph.text,
+            has_issue: false,
+            fragments: [],
+          },
+        ]);
+        await persistSmartCorrectionCache(userId, nextCache);
       }
 
       this[resultKey] = {
@@ -1668,6 +1519,9 @@ export default {
             schedule_time: this.publishMode === "schedule" ? this.scheduleTime : null,
             clear_schedule: this.publishMode === "now" ? 1 : 0,
             edit_session_id: this.publishSessionId,
+            collab_revision: this.isRealtimeCollaboration
+              ? this.collaborationRevision
+              : undefined,
             writer_create_time: currentServerTime,
           },
           {
@@ -1729,6 +1583,9 @@ export default {
                 article_id: this.articleId,
                 clear_schedule: 1,
                 edit_session_id: this.publishSessionId,
+                collab_revision: this.isRealtimeCollaboration
+                  ? this.collaborationRevision
+                  : undefined,
                 writer_create_time: currentServerTime,
               },
               {
@@ -2130,6 +1987,15 @@ export default {
 
       if (eventType === "status") {
         // Nothing needed, just for heartbeat
+      } else if (eventType === "progress") {
+        const analyzed = Number(event.analyzed || 0);
+        const total = Number(event.total || this.smartCorrectionProgress.total || 0);
+        if (total > 0) {
+          this.smartCorrectionProgress = {
+            analyzed: Math.min(Math.max(analyzed, 0), total),
+            total,
+          };
+        }
       } else if (
         eventType === "reasoning_delta" ||
         eventType === "thinking_delta"
@@ -2161,6 +2027,12 @@ export default {
         eventType === "completed" ||
         eventType === "result"
       ) {
+        if (this.smartCorrectionProgress.total > 0) {
+          this.smartCorrectionProgress = {
+            analyzed: this.smartCorrectionProgress.total,
+            total: this.smartCorrectionProgress.total,
+          };
+        }
         return this.normalizeCorrectionStreamResult(event, fallbackResult);
       } else if (eventType === "error") {
         throw new Error(event.message || "智能纠错请求失败");
@@ -2178,6 +2050,7 @@ export default {
     this.sourceSessionId = String(params.sourceSessionId || "").trim();
     this.publishSessionId = this.generatePublishSessionId();
     this.initializePage().catch(() => {
+      this.pageInitializationInProgress = false;
       uni.showToast({
         title: "加载发布页失败",
         icon: "none",
@@ -2194,7 +2067,12 @@ export default {
   },
   onShow() {
 	this.loadMembershipStatus();
-    if (this.publishSessionId) {
+    if (
+      this.publishSessionId &&
+      this.collaborationModeResolved &&
+      !this.pageInitializationInProgress &&
+      !this.isRealtimeCollaboration
+    ) {
       this.claimEditLock();
     }
   },
@@ -2384,63 +2262,6 @@ export default {
   background: var(--card-background) !important;
 }
 
-.ghost-button-active {
-  color: var(--text-color-primary) !important;
-  border-color: #6b7280 !important;
-  background: var(--background-color-secondary) !important;
-}
-
-.smart-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  padding: 6rpx 16rpx 6rpx 20rpx;
-  border-radius: 999rpx;
-  border: 2rpx solid var(--border-color);
-  background: var(--card-background);
-  flex-shrink: 0;
-}
-
-.smart-toggle-loading {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.smart-toggle-label {
-  font-size: 24rpx;
-  color: var(--text-color-regular);
-  white-space: nowrap;
-}
-
-.smart-toggle-track {
-  position: relative;
-  width: 64rpx;
-  height: 34rpx;
-  border-radius: 999rpx;
-  background: var(--border-color);
-  transition: background 0.2s;
-}
-
-.smart-toggle-track.active {
-  background: #25634a;
-}
-
-.smart-toggle-thumb {
-  position: absolute;
-  top: 3rpx;
-  left: 3rpx;
-  width: 28rpx;
-  height: 28rpx;
-  border-radius: 50%;
-  background: var(--card-background);
-  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.12);
-  transition: transform 0.2s;
-}
-
-.smart-toggle-track.active .smart-toggle-thumb {
-  transform: translateX(30rpx);
-}
-
 .correction-actions-group {
   display: flex;
   align-items: center;
@@ -2532,6 +2353,34 @@ export default {
 
 .correction-status {
   margin-bottom: 20rpx;
+}
+
+.correction-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.correction-progress-count {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: var(--text-color-secondary);
+}
+
+.correction-progress-track {
+  margin-top: 16rpx;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: var(--border-color);
+  overflow: hidden;
+}
+
+.correction-progress-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: #25634a;
+  transition: width 0.3s ease;
 }
 
 .correction-list {

@@ -8,8 +8,8 @@
       <div class="chat-user-info">
         <img :src="targetUser.avatar_url || '/default-avatar.png'" alt="头像" class="user-avatar" />
         <div class="user-details">
-          <h3 class="username">{{ targetUser.nickname || targetUser.username }}</h3>
-          <span class="online-status" :class="{ online: targetUser.is_online }">{{ targetUser.is_online ? '在线' : '离线' }}</span>
+          <h3 class="username">{{ targetUser.name }}</h3>
+          <span class="user-id">ID: {{ targetUser.user_id }}</span>
         </div>
       </div>
     </div>
@@ -17,22 +17,50 @@
     <!-- 消息列表 -->
     <div class="messages-container" ref="messagesContainer">
       <div class="messages-list">
-        <div 
-          v-for="message in messages" 
-          :key="message.message_id"
+        <div v-if="hasMore && messages.length" class="load-more" @click="loadOlderMessages">
+          <span v-if="!loading">加载更早的消息</span>
+          <span v-else>加载中...</span>
+        </div>
+        <div
+          v-for="message in displayMessages"
+          :key="message.id"
           class="message-item"
-          :class="{ 'own-message': message.from_id === myUserId }"
+          :class="{ 'own-message': message.sender_id === myUserId }"
         >
           <div class="message-avatar">
-            <img 
-              :src="message.from_id === myUserId ? myUserInfo.avatar_url : targetUser.avatar_url" 
-              alt="头像" 
+            <img
+              :src="message.sender_id === myUserId ? myUserInfo.avatar_url : targetUser.avatar_url"
+              alt="头像"
             />
           </div>
           <div class="message-content">
             <div class="message-bubble">
-              <div class="message-text">{{ message.content }}</div>
-              <div class="message-time">{{ formatTime(message.created_at) }}</div>
+              <img
+                v-if="message.displayType === 'image'"
+                :src="message.imageUrl"
+                alt="图片消息"
+                class="message-image"
+                @click="previewImage(message.imageUrl)"
+              />
+              <div
+                v-else-if="message.displayType === 'novel_share'"
+                class="shared-book-card"
+                @click="openSharedNovel(message.novel)"
+              >
+                <img
+                  class="shared-book-cover"
+                  :src="message.novel.picUrl || '/default-book-cover.png'"
+                  :alt="message.novel.name"
+                  @error="$event.target.src = '/default-book-cover.png'"
+                />
+                <div class="shared-book-info">
+                  <span class="shared-book-tag">分享了作品</span>
+                  <span class="shared-book-title">{{ message.novel.name }}</span>
+                  <span class="shared-book-author">{{ message.novel.author_name }}</span>
+                </div>
+              </div>
+              <div v-else class="message-text">{{ message.displayText }}</div>
+              <div class="message-time">{{ formatTime(message.sent_at) }}</div>
             </div>
           </div>
         </div>
@@ -75,6 +103,7 @@
 
 <script>
 import moment from 'moment'
+import { normalizePrivateMessage } from '~/utils/private-message.js'
 
 export default {
   name: 'ChatPage',
@@ -88,8 +117,17 @@ export default {
       loading: false,
       myUserId: null,
       myUserInfo: {},
-      page: 1,
-      hasMore: true
+      loading: false,
+      hasMore: true,
+      oldestId: null,
+      newestId: null,
+      pollTimer: null
+    }
+  },
+  computed: {
+    // 图片、作品分享等结构化私信需要解析后才能渲染
+    displayMessages() {
+      return this.messages.map(normalizePrivateMessage)
     }
   },
   async mounted() {
@@ -114,15 +152,29 @@ export default {
     this.$nextTick(() => {
       this.scrollToBottom()
     })
+
+    // 轮询新消息，避免只有刷新才能看到对方回复
+    this.pollTimer = setInterval(this.pollNewMessages, 10000)
+  },
+  beforeDestroy() {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = null
+    }
   },
   methods: {
+    getToken() {
+      const token = localStorage.getItem('token')
+      return token ? JSON.parse(token).tk : null
+    },
+
     // 获取当前用户信息
     async getCurrentUserInfo() {
       try {
         const userInfo = localStorage.getItem('LogHomeUserInfo')
         if (userInfo) {
           this.myUserInfo = JSON.parse(userInfo)
-          this.myUserId = this.myUserInfo.user_id
+          this.myUserId = Number(this.myUserInfo.user_id)
         } else {
           this.$message.error('请先登录')
           this.$router.push('/login')
@@ -148,28 +200,23 @@ export default {
       }
     },
 
-    // 加载聊天记录
+    // 加载聊天记录（首屏）
     async loadMessages() {
-      if (this.loading || !this.hasMore) return
-      
+      if (this.loading) return
+
       this.loading = true
       try {
-        const response = await this.$api.community.getMessagesList({
-          target_id: this.targetUserId,
-          page: this.page,
-          limit: 20
-        })
-        
+        const response = await this.$api.community.getMessageList(this.targetUserId, 20)
+
         if (response.code === 0) {
-          const newMessages = response.data.list || []
-          if (this.page === 1) {
-            this.messages = newMessages
-          } else {
-            this.messages = [...newMessages, ...this.messages]
+          const list = Array.isArray(response.data) ? response.data : []
+          this.messages = list
+          this.hasMore = list.length === 20
+          if (list.length) {
+            this.oldestId = list[0].id
+            this.newestId = list[list.length - 1].id
           }
-          
-          this.hasMore = newMessages.length === 20
-          this.page++
+          this.markReceivedAsRead(list)
         } else {
           throw new Error(response.message || '加载消息失败')
         }
@@ -181,6 +228,72 @@ export default {
       }
     },
 
+    // 向上翻页：加载更早的消息
+    async loadOlderMessages() {
+      if (this.loading || !this.hasMore || !this.oldestId) return
+
+      this.loading = true
+      try {
+        const response = await this.$api.community.getMessageList(this.targetUserId, 20, this.oldestId)
+        if (response.code === 0) {
+          const list = Array.isArray(response.data) ? response.data : []
+          // 记录滚动位置，避免插入历史后视口跳动
+          const container = this.$refs.messagesContainer
+          const previousHeight = container ? container.scrollHeight : 0
+
+          this.messages = [...list, ...this.messages]
+          this.hasMore = list.length === 20
+          if (list.length) {
+            this.oldestId = list[0].id
+          }
+
+          this.$nextTick(() => {
+            if (container) {
+              container.scrollTop = container.scrollHeight - previousHeight
+            }
+          })
+        }
+      } catch (error) {
+        console.error('加载更早消息失败', error)
+        this.$message.error('加载更早消息失败')
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // 拉取对方新发来的消息
+    async pollNewMessages() {
+      if (this.sending || !this.targetUserId || this.newestId === null) return
+      try {
+        const token = this.getToken()
+        if (!token) return
+
+        const response = await fetch(
+          `${process.env.baseUrl}/community/new_messages?friend_id=${this.targetUserId}&since_id=${this.newestId}`,
+          { headers: { 'Authorization': token } }
+        )
+        const list = await response.json()
+        if (Array.isArray(list) && list.length) {
+          this.messages = [...this.messages, ...list]
+          this.newestId = list[list.length - 1].id
+          this.markReceivedAsRead(list)
+          this.$nextTick(this.scrollToBottom)
+        }
+      } catch (error) {
+        console.error('获取新消息失败', error)
+      }
+    },
+
+    // 把对方发来的未读消息标记为已读
+    markReceivedAsRead(list) {
+      const unread = list.filter(
+        (item) => Number(item.receiver_id) === this.myUserId && !item.is_read
+      )
+      unread.forEach((item) => {
+        this.$api.community.markMessageAsRead(item.id)
+      })
+    },
+
     // 发送消息
     async sendMessage() {
       if (!this.newMessage.trim() || this.sending) return
@@ -189,24 +302,21 @@ export default {
       this.sending = true
       
       try {
-        const response = await this.$api.community.sendMessage({
-          to_id: this.targetUserId,
-          content: messageContent,
-          type: 'text'
-        })
-        
+        const response = await this.$api.community.sendMessage(this.targetUserId, messageContent)
+
         if (response.code === 0) {
-          // 添加消息到列表
-          const newMessage = {
-            message_id: Date.now(), // 临时ID
-            from_id: this.myUserId,
-            to_id: this.targetUserId,
-            content: messageContent,
-            created_at: new Date().toISOString(),
-            is_read: 0
+          const created = response.data || {}
+          this.messages.push({
+            id: created.id,
+            sender_id: this.myUserId,
+            receiver_id: Number(this.targetUserId),
+            message_content: messageContent,
+            is_read: 0,
+            sent_at: new Date()
+          })
+          if (created.id) {
+            this.newestId = created.id
           }
-          
-          this.messages.push(newMessage)
           this.newMessage = ''
           
           // 滚动到底部
@@ -222,6 +332,16 @@ export default {
         this.$message.error('发送失败，请重试')
       } finally {
         this.sending = false
+      }
+    },
+
+    previewImage(url) {
+      if (url) this.$preview([url])
+    },
+
+    openSharedNovel(novel) {
+      if (novel && novel.novel_id) {
+        this.$router.push(`/novel/${novel.novel_id}`)
       }
     },
 
@@ -304,13 +424,9 @@ export default {
         color: #333;
       }
       
-      .online-status {
+      .user-id {
         font-size: 12px;
         color: #999;
-        
-        &.online {
-          color: #67c23a;
-        }
       }
     }
   }
@@ -325,6 +441,17 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 16px;
+
+    .load-more {
+      text-align: center;
+      font-size: 13px;
+      color: #947358;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
   
   .message-item {
@@ -372,6 +499,64 @@ export default {
           line-height: 1.5;
           white-space: pre-wrap;
           word-break: break-word;
+        }
+
+        .message-image {
+          display: block;
+          max-width: 260px;
+          max-height: 260px;
+          border-radius: 8px;
+          object-fit: cover;
+          cursor: zoom-in;
+        }
+
+        .shared-book-card {
+          display: flex;
+          gap: 10px;
+          width: 260px;
+          max-width: 100%;
+          padding: 8px;
+          border-radius: 8px;
+          background: #faf8f5;
+          border: 1px solid #f0e8dd;
+          cursor: pointer;
+
+          .shared-book-cover {
+            width: 48px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+            background: #eee;
+          }
+
+          .shared-book-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .shared-book-tag {
+            font-size: 11px;
+            color: #947358;
+          }
+
+          .shared-book-title {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .shared-book-author {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+          }
         }
         
         .message-time {

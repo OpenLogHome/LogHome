@@ -60,8 +60,9 @@
 				</view>
 				<view class="rule-list">
 					<view><text>•</text><text>普通用户每个自然月赠送 6 红石；当月存在有效通行证时不重复领取普通用户月赠。</text></view>
-					<view><text>•</text><text>月付通行证在开通及每次续费成功后赠送；年付通行证开通时先赠送一次，之后按月刷新。</text></view>
+					<view><text>•</text><text>月付通行证在开通及每次续费成功后赠送；年付通行证开通时先赠送一次，之后按月到账。</text></view>
 					<view><text>•</text><text>标准版升级超级版时，当期按两档赠送标准的差额补赠红石。</text></view>
+					<view><text>•</text><text>通行证赠送、升级补赠和普通用户月赠红石自到账日起 3 个月内有效。</text></view>
 				</view>
 			</view>
 
@@ -71,10 +72,11 @@
 				<view class="usage-list">
 					<view><text>问问原木娘</text><text>普通 1 · 深度 2</text></view>
 					<view><text>笔泡 AI 助手</text><text>普通 1 · 深度 2 · 图像 5</text></view>
-					<view><text>文本纠错</text><text>普通免费 · 智能 1</text></view>
+					<view><text>文本纠错</text><text>普通免费 · 通行证智能免费 · 普通 2</text></view>
 				</view>
 				<view class="rule-list">
 					<view><text>•</text><text>发起付费 AI 操作即按页面显示数量扣除红石；红石不足时不会创建付费任务。</text></view>
+					<view><text>•</text><text>消费时优先使用最早到期的赠送红石，再使用永久有效的兑换红石；原木兑换所得红石不会过期。</text></view>
 					<view><text>•</text><text>同一任务断线重连或重复提交不会重复扣费。兑换、赠送与消费记录均可在红石中心查询。</text></view>
 					<view><text>•</text><text>红石兑换比例和功能消耗如有调整，将以操作前页面展示为准。</text></view>
 				</view>

@@ -27,6 +27,26 @@ function authHeaders() {
 	};
 }
 
+function shouldRetryRedstoneRequest(error) {
+	if (!error || !error.response) return true;
+	const status = Number(error.response.status || 0);
+	return status === 408 || status === 429 || status >= 500;
+}
+
+async function requestRedstoneWithRetry(request) {
+	let lastError;
+	for (let attempt = 0; attempt < 2; attempt += 1) {
+		try {
+			return await request();
+		} catch (error) {
+			lastError = error;
+			if (!shouldRetryRedstoneRequest(error) || attempt === 1) throw error;
+			await new Promise((resolve) => setTimeout(resolve, 220));
+		}
+	}
+	throw lastError;
+}
+
 export function createRedstoneRequestId() {
 	return `redstone-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
 }
@@ -38,15 +58,15 @@ export function getRedstoneErrorMessage(error, fallback = '红石服务暂时不
 }
 
 export async function getRedstoneAccount(baseUrl) {
-	const response = await axios.get(`${baseUrl}/redstone/account`, { headers: authHeaders() });
+	const response = await requestRedstoneWithRetry(() => axios.get(`${baseUrl}/redstone/account`, { headers: authHeaders() }));
 	return response.data.data;
 }
 
 export async function getRedstoneTransactions(baseUrl, page = 1, pageSize = 10) {
-	const response = await axios.get(
+	const response = await requestRedstoneWithRetry(() => axios.get(
 		`${baseUrl}/redstone/transactions?page=${page}&pageSize=${pageSize}`,
 		{ headers: authHeaders() },
-	);
+	));
 	return response.data.data;
 }
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LogHome</string>
+    <string name="loading">Loading...</string>
+    <string name="retry">Retry</string>
+    <string name="init_failed">Failed to initialize the app. Please try again.</string>
+    <string name="resource_missing">Resource files are missing. Attempting recovery...</string>
+    <string name="press_again_exit">Press back again to exit</string>
+    <string name="download_updating">Downloading resource package</string>
+    <string name="extract_updating">Extracting resource package</string>
+    <string name="update_complete">Update complete</string>
+    <string name="hot_update_title">Quick update in progress</string>
+    <string name="hot_update_prepare">Preparing update...</string>
+    <string name="hot_update_failed">Quick update failed</string>
+    <string name="load_failed">Failed to load</string>
+    <string name="grant_notification_permission">Allow notifications to show background playback controls.</string>
+</resources>

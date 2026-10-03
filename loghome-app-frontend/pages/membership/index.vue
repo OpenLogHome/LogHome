@@ -247,7 +247,7 @@ export default {
 					benefits: [
 						{ title: '专属通行证标识', description: '点亮个人主页与社区身份，展示会员徽章' },
 						{ title: '原木成长加速', description: '签到、阅读和创作获得 1.2 倍成长进度', tag: '1.2×' },
-						{ title: '红石赠送', description: '月付购买和续费赠送 100 红石，年付每月到账 100 红石', tag: '100' },
+						{ title: '红石赠送', description: '月付购买和续费赠送 100 红石，年付每月到账 100 红石；到账后 3 个月内有效', tag: '100' },
 						{ title: '阅读与创作增强', description: '开放更多个性设置与便捷能力' }
 					],
 					plans: [
@@ -269,7 +269,7 @@ export default {
 					benefits: [
 						{ title: '超级会员限定身份', description: '升级蓝金徽章、主页氛围与专属昵称样式', tag: '限定' },
 						{ title: '双倍成长加速', description: '签到、阅读和创作获得 2 倍成长进度', tag: '2×' },
-						{ title: '更多红石赠送', description: '月付购买和续费赠送 200 红石，年付每月到账 200 红石', tag: '200' },
+						{ title: '更多红石赠送', description: '月付购买和续费赠送 200 红石，年付每月到账 200 红石；到账后 3 个月内有效', tag: '200' },
 						{ title: '包含全部标准权益', description: '原木通行证现有和后续权益全部生效' },
 						{ title: '新功能优先体验', description: '优先使用实验功能并参与产品共创' }
 					],

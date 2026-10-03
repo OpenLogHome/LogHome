@@ -33,7 +33,6 @@
 			<!-- 用户名 -->
 			<view class="profile-name-row">
 				<text :style="'font-size: 40rpx;color: ' + (isDarkMode ? '#e5e5e5' : '#111111') + ';font-weight: bold;margin-right: 10rpx;'">{{user.name}}</text>
-				<membership-badge :tier="user.membership_type" size="md" :show-label="true" />
 			</view>
 			
 			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx; display: flex;align-items: center;">
@@ -51,6 +50,7 @@
 				</view>
 				<span class="admin_title" v-show="user.is_admin">
 					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>社区管理员</span>
+				<membership-badge :tier="user.membership_type" size="md" :show-label="true" style="margin-left: 15rpx;"/>
 			</view>
 	
 			<!-- 简介-->

@@ -66,7 +66,7 @@
 		</view>
 
 		<view class="visit-entry-btn" :style="{top: 'calc(250rpx + var(--loghome-safe-top, 0px))'}" @tap.stop.prevent="handleVisitEntryTap">
-            <text class="entry-emoji">🦝</text>
+            <!-- <text class="entry-emoji">🦝</text> -->
             <view class="entry-text">
                 <text>串</text>
                 <text>门</text>
@@ -246,7 +246,7 @@
             <view class="visit-panel" :class="{ active: visitPanelActive }" @click.stop>
                 <view class="visit-panel-header">
                     <view class="visit-panel-title">
-                        <text class="emoji">🦝</text>
+                        <!-- <text class="emoji">🦝</text> -->
                         <text class="title">树场串门</text>
                     </view>
                     <button class="visit-close-btn" @click="closeVisitPanel">收起</button>
@@ -255,7 +255,7 @@
                 <view class="visit-panel-scroll">
                     <view class="visit-section">
                         <view class="sheet-header steal-header">
-                            <text class="title">👥 好友列表</text>
+                            <text class="title">好友列表</text>
                             <view class="task-summary" v-if="stealTargets.length > 0">{{stealTargets.length}} 位好友</view>
                         </view>
                         <view class="steal-list">

@@ -1,0 +1,222 @@
+// Shared storefront surface, typography and safe-area controls.
+.store-page,
+.detail-page,
+.checkout-page,
+.orders-page,
+.address-page,
+.address-form-page,
+.logistics-page {
+	--store-bg: #f6f7f4;
+	--store-surface: #ffffff;
+	--store-soft: #f2f4ef;
+	--store-text: #252e28;
+	--store-muted: #737b74;
+	--store-line: #e5e9e2;
+	--store-accent: #ac6038;
+	--store-accent-soft: #f8eee6;
+	--store-primary: #264d3c;
+	--store-primary-soft: #eaf0e8;
+	--store-on-primary: #fff;
+	--store-shadow: 0 4rpx 18rpx rgba(38, 49, 37, 0.035);
+	--store-success: #34785a;
+	--store-danger: #ac4541;
+	min-height: 100vh;
+	box-sizing: border-box;
+	background: var(--store-bg);
+	color: var(--store-text);
+	font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+	font-size: 28rpx;
+	line-height: 1.55;
+	max-width: 1080px;
+	margin: 0 auto;
+	padding-bottom: 48rpx;
+	&.dark-mode {
+		--store-bg: #161c18;
+		--store-surface: #202822;
+		--store-soft: #29342b;
+		--store-text: #e8eee6;
+		--store-muted: #aab7aa;
+		--store-line: #354037;
+		--store-accent: #deb38b;
+		--store-accent-soft: #3a3027;
+		--store-primary: #b8d1b4;
+		--store-primary-soft: #2c3b2d;
+		--store-on-primary: #203026;
+		--store-shadow: none;
+		--store-success: #8ac4a7;
+		--store-danger: #f29a94;
+	}
+	// Keep nested storefront controls on the same system font stack.
+	::v-deep * {
+		font-family: inherit;
+	}
+	view,
+	button,
+	input,
+	textarea {
+		box-sizing: border-box;
+	}
+	button::after {
+		border: 0;
+	}
+}
+.page-intro {
+	padding: 36rpx 32rpx 24rpx;
+}
+.page-title {
+	font-size: 40rpx;
+	font-weight: 700;
+	letter-spacing: 0;
+}
+.page-caption {
+	color: var(--store-muted);
+	font-size: 25rpx;
+	margin-top: 8rpx;
+}
+.section-title {
+	font-size: 29rpx;
+	font-weight: 650;
+	margin-bottom: 24rpx;
+	color: var(--store-text);
+}
+.page-state,
+.empty {
+	margin: 80rpx 32rpx;
+	padding: 64rpx 32rpx;
+	text-align: center;
+	color: var(--store-muted);
+	border: 1rpx solid var(--store-line);
+	border-radius: 24rpx;
+	line-height: 1.8;
+}
+.state-action,
+.empty-action,
+.balance-login,
+.notice-action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 88rpx;
+	padding: 16rpx 32rpx;
+	margin-top: 24rpx;
+	color: var(--store-primary);
+	background: var(--store-primary-soft);
+	border-radius: 16rpx;
+	font-size: 26rpx;
+	font-weight: 600;
+}
+.tab-bar {
+	display: flex;
+	gap: 12rpx;
+	padding: 0 32rpx 24rpx;
+}
+.tab-item {
+	flex: 1;
+	min-height: 88rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16rpx 8rpx;
+	border-radius: 16rpx;
+	color: var(--store-muted);
+	font-size: 26rpx;
+	white-space: nowrap;
+}
+.tab-item.active {
+	color: var(--store-primary);
+	background: var(--store-primary-soft);
+	font-weight: 650;
+}
+.list-status {
+	padding: 24rpx 32rpx 40rpx;
+	text-align: center;
+	font-size: 24rpx;
+	color: var(--store-muted);
+}
+.currency-unit {
+	font-size: 24rpx;
+	font-weight: 400;
+	color: var(--store-muted);
+	margin-left: 8rpx;
+}
+.price-row,
+.price-row-small {
+	display: flex;
+	align-items: baseline;
+	gap: 8rpx;
+}
+.price {
+	font-weight: 650;
+	font-size: 40rpx;
+	color: var(--store-accent);
+	font-variant-numeric: tabular-nums;
+}
+.bottom-bar {
+	position: fixed;
+	bottom: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 100%;
+	max-width: 1080px;
+	z-index: 40;
+	display: flex;
+	align-items: center;
+	gap: 24rpx;
+	padding: 20rpx 32rpx calc(20rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px)));
+	background: var(--store-surface);
+	border-top: 1rpx solid var(--store-line);
+	box-shadow: 0 -4rpx 24rpx rgba(28, 42, 31, 0.03);
+	box-sizing: border-box;
+}
+.exchange-btn,
+.confirm-btn,
+.save-btn,
+.add-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 88rpx;
+	margin: 0;
+	padding: 18rpx 28rpx;
+	border-radius: 18rpx;
+	background: var(--store-primary);
+	color: var(--store-on-primary);
+	font-size: 28rpx;
+	font-weight: 550;
+	line-height: 1.5;
+	border: 0;
+}
+.exchange-btn:disabled,
+.confirm-btn:disabled,
+.save-btn:disabled {
+	background: var(--store-soft);
+	color: var(--store-muted);
+}
+.bottom-copy {
+	flex: 1;
+	min-width: 0;
+}
+.bottom-price {
+	font-size: 38rpx;
+	font-weight: 650;
+	color: var(--store-accent);
+}
+.bottom-hint {
+	color: var(--store-muted);
+	font-size: 22rpx;
+	line-height: 1.5;
+	margin-top: 4rpx;
+}
+.bottom-label {
+	font-size: 22rpx;
+	color: var(--store-muted);
+}
+@media (min-width: 768px) {
+	.page-intro {
+		padding-top: 48rpx;
+	}
+}
+
+button:active {
+	opacity: 0.88;
+}

@@ -102,7 +102,7 @@
                 <div class="circle-results">
                   <div class="circle-item" v-for="(circle, index) in searchResults.circles.slice(0, 3)"
                     :key="'circle-' + index" @click="navigateToCircle(circle.circle_id)">
-                    <img class="circle-icon" :src="circle.icon || '/default-circle.png'" :alt="circle.name">
+                    <img class="circle-icon" :src="circle.icon || '/default-avatar.png'" :alt="circle.name">
                     <div class="circle-info">
                       <div class="circle-name">{{ circle.name }}</div>
                       <div class="circle-meta">{{ circle.member_count || 0 }}人</div>
@@ -160,6 +160,8 @@
               </div>
               <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item command="profile">个人中心</el-dropdown-item>
+                <el-dropdown-item command="myworks">创作中心</el-dropdown-item>
+                <el-dropdown-item command="bookcase">我的书架</el-dropdown-item>
                 <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
@@ -311,10 +313,10 @@ export default {
           this.$router.push('/me');
           break;
         case 'myworks':
-          this.$router.push('/users/works');
+          this.$router.push('/write');
           break;
         case 'bookcase':
-          this.$router.push('/users/bookcase');
+          this.$router.push('/me');
           break;
         case 'logout':
           this.logout();

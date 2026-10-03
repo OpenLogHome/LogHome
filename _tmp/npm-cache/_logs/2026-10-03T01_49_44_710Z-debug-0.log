@@ -1,0 +1,687 @@
+0 verbose cli /Users/ricepastem/.nvm/versions/node/v24.17.0/bin/node /Users/ricepastem/.nvm/versions/node/v24.17.0/bin/npm
+1 info using npm@11.13.0
+2 info using node@v24.17.0
+3 silly config load:file:/Users/ricepastem/.nvm/versions/node/v24.17.0/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/ricepastem/Projects/LogHome/loghome-app-frontend/.npmrc
+5 silly config load:file:/Users/ricepastem/.npmrc
+6 silly config load:file:/Users/ricepastem/.nvm/versions/node/v24.17.0/etc/npmrc
+7 verbose title npm install vue-i18n@8.28.2
+8 verbose argv "install" "--no-save" "--legacy-peer-deps" "--cache" "/Users/ricepastem/Projects/LogHome/_tmp/npm-cache" "vue-i18n@8.28.2"
+9 verbose logfile logs-max:10 dir:/Users/ricepastem/Projects/LogHome/_tmp/npm-cache/_logs/2026-10-03T01_49_44_710Z-
+10 verbose logfile /Users/ricepastem/Projects/LogHome/_tmp/npm-cache/_logs/2026-10-03T01_49_44_710Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 silly idealTree buildDeps
+14 silly fetch manifest vue-i18n@8.28.2
+15 silly packumentCache full:https://registry.npmjs.org/vue-i18n cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/vue-i18n 1195ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/vue-i18n set size:undefined disposed:false
+18 silly placeDep ROOT vue-i18n@8.28.2 OK for: Loghome@1.0.0 want: 8.28.2
+19 silly reify mark retired [
+19 silly reify   '/Users/ricepastem/Projects/LogHome/loghome-app-frontend/node_modules/y-protocols'
+19 silly reify ]
+20 silly reify moves {
+20 silly reify   '/Users/ricepastem/Projects/LogHome/loghome-app-frontend/node_modules/y-protocols': '/Users/ricepastem/Projects/LogHome/loghome-app-frontend/node_modules/.y-protocols-HEDxhchr'
+20 silly reify }
+21 silly audit bulk request {
+21 silly audit   '@babel/helper-string-parser': [ '7.27.1' ],
+21 silly audit   '@babel/helper-validator-identifier': [ '7.27.1' ],
+21 silly audit   '@babel/parser': [ '7.28.0' ],
+21 silly audit   '@babel/runtime': [ '7.27.1' ],
+21 silly audit   '@babel/types': [ '7.28.0' ],
+21 silly audit   '@hocuspocus/common': [ '4.5.0' ],
+21 silly audit   '@hocuspocus/provider': [ '4.5.0' ],
+21 silly audit   '@jridgewell/sourcemap-codec': [ '1.5.4' ],
+21 silly audit   '@lifeomic/attempt': [ '3.1.0' ],
+21 silly audit   '@popperjs/core': [ '2.11.8' ],
+21 silly audit   '@remirror/core-constants': [ '3.0.0' ],
+21 silly audit   '@tiptap/core': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-blockquote': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-bold': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-bubble-menu': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-bullet-list': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-code': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-code-block': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-collaboration': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-collaboration-cursor': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-document': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-dropcursor': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-floating-menu': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-gapcursor': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-hard-break': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-heading': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-history': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-horizontal-rule': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-image': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-italic': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-list-item': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-ordered-list': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-paragraph': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-placeholder': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-strike': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-text': [ '2.27.2' ],
+21 silly audit   '@tiptap/extension-text-style': [ '2.27.2' ],
+21 silly audit   '@tiptap/pm': [ '2.27.2' ],
+21 silly audit   '@tiptap/starter-kit': [ '2.27.2' ],
+21 silly audit   '@tiptap/vue-2': [ '2.27.2' ],
+21 silly audit   '@types/linkify-it': [ '5.0.0' ],
+21 silly audit   '@types/markdown-it': [ '14.1.2' ],
+21 silly audit   '@types/mdurl': [ '2.0.0' ],
+21 silly audit   '@types/web-bluetooth': [ '0.0.21' ],
+21 silly audit   '@vue/compiler-core': [ '3.5.17' ],
+21 silly audit   '@vue/compiler-dom': [ '3.5.17' ],
+21 silly audit   '@vue/compiler-sfc': [ '2.7.16', '3.5.17' ],
+21 silly audit   '@vue/compiler-ssr': [ '3.5.17' ],
+21 silly audit   '@vue/reactivity': [ '3.5.17' ],
+21 silly audit   '@vue/runtime-core': [ '3.5.17' ],
+21 silly audit   '@vue/runtime-dom': [ '3.5.17' ],
+21 silly audit   '@vue/shared': [ '3.5.17' ],
+21 silly audit   '@vueuse/core': [ '12.8.2' ],
+21 silly audit   '@vue/server-renderer': [ '3.5.17' ],
+21 silly audit   vue: [ '3.5.17', '2.7.16' ],
+21 silly audit   '@vueuse/metadata': [ '12.8.2' ],
+21 silly audit   '@vueuse/shared': [ '12.8.2' ],
+21 silly audit   argparse: [ '2.0.1' ],
+21 silly audit   'async-validator': [ '1.8.5' ],
+21 silly audit   asynckit: [ '0.4.0' ],
+21 silly audit   axios: [ '0.27.2' ],
+21 silly audit   'babel-helper-vue-jsx-merge-props': [ '2.0.3' ],
+21 silly audit   'babel-runtime': [ '6.26.0' ],
+21 silly audit   'base64-arraybuffer': [ '1.0.2' ],
+21 silly audit   'call-bind-apply-helpers': [ '1.0.2' ],
+21 silly audit   'combined-stream': [ '1.0.8' ],
+21 silly audit   'core-js': [ '2.6.12' ],
+21 silly audit   crelt: [ '1.0.6' ],
+21 silly audit   'css-line-break': [ '2.1.0' ],
+21 silly audit   csstype: [ '3.1.3' ],
+21 silly audit   deepmerge: [ '1.5.2' ],
+21 silly audit   'delayed-stream': [ '1.0.0' ],
+21 silly audit   dexie: [ '4.0.11' ],
+21 silly audit   'dunder-proto': [ '1.0.1' ],
+21 silly audit   echarts: [ '6.0.0' ],
+21 silly audit   'element-ui': [ '2.15.14' ],
+21 silly audit   entities: [ '4.5.0' ],
+21 silly audit   'es-define-property': [ '1.0.1' ],
+21 silly audit   'es-errors': [ '1.3.0' ],
+21 silly audit   'es-object-atoms': [ '1.1.1' ],
+21 silly audit   'es-set-tostringtag': [ '2.1.0' ],
+21 silly audit   'escape-string-regexp': [ '4.0.0' ],
+21 silly audit   'estree-walker': [ '2.0.2' ],
+21 silly audit   fastclick: [ '1.0.6' ],
+21 silly audit   'follow-redirects': [ '1.15.9' ],
+21 silly audit   'form-data': [ '4.0.2' ],
+21 silly audit   'function-bind': [ '1.1.2' ],
+21 silly audit   'get-intrinsic': [ '1.3.0' ],
+21 silly audit   'get-proto': [ '1.0.1' ],
+21 silly audit   gopd: [ '1.2.0' ],
+21 silly audit   'has-symbols': [ '1.1.0' ],
+21 silly audit   'has-tostringtag': [ '1.0.2' ],
+21 silly audit   hasown: [ '2.0.2' ],
+21 silly audit   html2canvas: [ '1.4.1' ],
+21 silly audit   'import-html-entry': [ '1.17.0' ],
+21 silly audit   'isomorphic.js': [ '0.2.5' ],
+21 silly audit   lib0: [ '0.2.117' ],
+21 silly audit   'linkify-it': [ '5.0.0' ],
+21 silly audit   lodash: [ '4.17.21' ],
+21 silly audit   'magic-string': [ '0.30.17' ],
+21 silly audit   'markdown-it': [ '14.1.1' ],
+21 silly audit   'math-intrinsics': [ '1.1.0' ],
+21 silly audit   mdurl: [ '2.0.0' ],
+21 silly audit   'mime-db': [ '1.52.0' ],
+21 silly audit   'mime-types': [ '2.1.35' ],
+21 silly audit   'mobile-detect': [ '1.4.5' ],
+21 silly audit   moment: [ '2.30.1' ],
+21 silly audit   nanoid: [ '3.3.11' ],
+21 silly audit   'normalize-wheel': [ '1.0.1' ],
+21 silly audit   orderedmap: [ '2.1.1' ],
+21 silly audit   picocolors: [ '1.1.1' ],
+21 silly audit   postcss: [ '8.5.6' ],
+21 silly audit   prettier: [ '2.8.8' ],
+21 silly audit   'prosemirror-changeset': [ '2.4.0' ],
+21 silly audit   'prosemirror-collab': [ '1.3.1' ],
+21 silly audit   'prosemirror-commands': [ '1.7.1' ],
+21 silly audit   'prosemirror-dropcursor': [ '1.8.2' ],
+21 silly audit   'prosemirror-gapcursor': [ '1.4.1' ],
+21 silly audit   'prosemirror-history': [ '1.5.0' ],
+21 silly audit   'prosemirror-inputrules': [ '1.5.1' ],
+21 silly audit   'prosemirror-keymap': [ '1.2.3' ],
+21 silly audit   'prosemirror-markdown': [ '1.13.4' ],
+21 silly audit   'prosemirror-menu': [ '1.3.0' ],
+21 silly audit   'prosemirror-model': [ '1.25.4' ],
+21 silly audit   'prosemirror-schema-basic': [ '1.2.4' ],
+21 silly audit   'prosemirror-schema-list': [ '1.5.1' ],
+21 silly audit   'prosemirror-state': [ '1.4.4' ],
+21 silly audit   'prosemirror-tables': [ '1.8.5' ],
+21 silly audit   'prosemirror-trailing-node': [ '3.0.0' ],
+21 silly audit   'prosemirror-transform': [ '1.11.0' ],
+21 silly audit   'prosemirror-view': [ '1.41.6' ],
+21 silly audit   'punycode.js': [ '2.3.1' ],
+21 silly audit   qiankun: [ '2.10.16' ],
+21 silly audit   'regenerator-runtime': [ '0.11.1' ],
+21 silly audit   'resize-observer-polyfill': [ '1.5.1' ],
+21 silly audit   'rope-sequence': [ '1.3.4' ],
+21 silly audit   'single-spa': [ '5.9.5' ],
+21 silly audit   'source-map': [ '0.6.1' ],
+21 silly audit   'source-map-js': [ '1.2.1' ],
+21 silly audit   'text-segmentation': [ '1.0.3' ],
+21 silly audit   three: [ '0.160.1' ],
+21 silly audit   'throttle-debounce': [ '1.1.0' ],
+21 silly audit   'tippy.js': [ '6.3.7' ],
+21 silly audit   tslib: [ '2.3.0' ],
+21 silly audit   'uc.micro': [ '2.1.0' ],
+21 silly audit   utrie: [ '1.0.2' ],
+21 silly audit   'uview-ui': [ '2.0.38' ],
+21 silly audit   'vue-count-to': [ '1.0.13' ],
+21 silly audit   'vue-flip-article': [ '0.1.0' ],
+21 silly audit   'vue-monoplasty-slide-verify': [ '1.3.1' ],
+21 silly audit   'vue-ts-types': [ '1.6.2' ],
+21 silly audit   'w3c-keyname': [ '2.2.8' ],
+21 silly audit   wujie: [ '1.0.28' ],
+21 silly audit   'wujie-vue2': [ '1.0.28' ],
+21 silly audit   'y-indexeddb': [ '9.0.12' ],
+21 silly audit   'y-prosemirror': [ '1.3.7' ],
+21 silly audit   yjs: [ '13.6.27' ],
+21 silly audit   zrender: [ '6.0.0' ],
+21 silly audit   'vue-i18n': [ '8.28.2' ]
+21 silly audit }
+22 http cache vue-i18n@https://registry.npmjs.org/vue-i18n/-/vue-i18n-8.28.2.tgz 0ms (cache hit)
+23 silly tarball no local data for vue-i18n@https://registry.npmjs.org/vue-i18n/-/vue-i18n-8.28.2.tgz. Extracting by manifest.
+24 http fetch GET 200 https://registry.npmjs.org/npm 1283ms
+25 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 225ms
+26 silly audit report {
+26 silly audit report   '@tiptap/core': [
+26 silly audit report     {
+26 silly audit report       id: 1158508,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-cp6q-959q-f8rh',
+26 silly audit report       title: 'Tiptap: mergeAttributes() turns an own __proto__ key into inherited executable DOM attributes',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '>=2.0.0-alpha.0 <3.30.4',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   vue: [
+26 silly audit report     {
+26 silly audit report       id: 1100238,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-5j4c-8p2g-v4jx',
+26 silly audit report       title: 'ReDoS vulnerability in vue package that is exploitable through inefficient regex evaluation in the parseHTML function',
+26 silly audit report       severity: 'low',
+26 silly audit report       vulnerable_versions: '>=2.0.0-alpha.1 <3.0.0-alpha.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   axios: [
+26 silly audit report     {
+26 silly audit report       id: 1111034,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-jr5f-v2jv-69x6',
+26 silly audit report       title: 'axios Requests Vulnerable To Possible SSRF and Credential Leakage via Absolute URL',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<0.30.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1119403,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-fvcv-3m26-pcqx',
+26 silly audit report       title: 'Axios has Unrestricted Cloud Metadata Exfiltration via Header Injection Chain',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1120124,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-62hf-57xw-28j9',
+26 silly audit report       title: 'Axios: unbounded recursion in toFormData causes DoS via deeply nested request data',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1120546,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-hfxv-24rg-xrqf',
+26 silly audit report       title: 'Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=0.31.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1120644,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-p92q-9vqr-4j8v',
+26 silly audit report       title: 'Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=0.31.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1120646,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-j5f8-grm9-p9fc',
+26 silly audit report       title: 'Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=0.31.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1120648,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-3g43-6gmg-66jw',
+26 silly audit report       title: 'axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '>=0.19.0 <0.31.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1120651,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-898c-q2cr-xwhg',
+26 silly audit report       title: 'axios has DoS & Header Injection via Prototype Pollution Read-Side Gadgets in axios merge functions',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=0.31.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1116672,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-3p68-rc4w-qgx5',
+26 silly audit report       title: 'Axios has a NO_PROXY Hostname Normalization Bypass that Leads to SSRF',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117573,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-w9j2-pvgh-6h63',
+26 silly audit report       title: 'Axios: Authentication Bypass via Prototype Pollution Gadget in `validateStatus` Merge Strategy',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117575,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-pmwg-cvhr-8vh7',
+26 silly audit report       title: 'Axios: Incomplete Fix for CVE-2025-62718 — NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in Axios 1.15.0',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117579,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-xhjh-pmcv-23jw',
+26 silly audit report       title: 'Axios: Null Byte Injection via Reverse-Encoding in AxiosURLSearchParams',
+26 silly audit report       severity: 'low',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117582,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-m7pr-hjqh-92cm',
+26 silly audit report       title: 'Axios: no_proxy bypass via IP alias allows SSRF',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117586,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-5c9x-8gcm-mpgx',
+26 silly audit report       title: "Axios' HTTP adapter-streamed uploads bypass maxBodyLength when maxRedirects: 0",
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117588,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-vf2m-468p-8v99',
+26 silly audit report       title: 'Axios: HTTP adapter streamed responses bypass maxContentLength',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117590,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-pf86-5x62-jrwf',
+26 silly audit report       title: 'Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117592,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-6chq-wfr3-2hj9',
+26 silly audit report       title: 'Axios: Header Injection via Prototype Pollution',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117594,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-xx6v-rp6x-q39c',
+26 silly audit report       title: 'Axios: XSRF Token Cross-Origin Leakage via Prototype Pollution Gadget in `withXSRFToken` Boolean Coercion',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=0.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117857,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-43fc-jf86-j433',
+26 silly audit report       title: 'Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=0.30.2',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1123825,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-pjwm-pj3p-43mv',
+26 silly audit report       title: "axios's shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass (incomplete fix for CVE-2025-62718)",
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=0.31.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1097679,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-wf5p-g6vw-rhxx',
+26 silly audit report       title: 'Axios Cross-Site Request Forgery Vulnerability',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '>=0.8.1 <0.28.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1147948,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-mmx7-hfxf-jppx',
+26 silly audit report       title: 'Axios: Prototype pollution gadgets can alter axios request construction',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<0.33.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1153181,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-7q8q-rj6j-mhjq',
+26 silly audit report       title: 'Axios: Nested axios option objects can consume polluted prototype values',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '>=0.8.0 <0.33.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1240602,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-9fr6-4gfg-395g',
+26 silly audit report       title: 'Axios: Prototype-Pollution Gadget in the Default Instance Allows Inherited Object.prototype.method to Override HTTP Method',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '>=0.27.2 <0.34.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   echarts: [
+26 silly audit report     {
+26 silly audit report       id: 1122144,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-fgmj-fm8m-jvvx',
+26 silly audit report       title: 'Apache ECharts has a cross-site scripting (XSS) vulnerability',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<6.1.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   'follow-redirects': [
+26 silly audit report     {
+26 silly audit report       id: 1116560,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-r4q5-vmmm-2653',
+26 silly audit report       title: 'follow-redirects leaks Custom Authentication Headers to Cross-Domain Redirect Targets',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=1.15.11',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   'form-data': [
+26 silly audit report     {
+26 silly audit report       id: 1109538,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-fjxv-7rqg-78g4',
+26 silly audit report       title: 'form-data uses unsafe random function in form-data for choosing boundary',
+26 silly audit report       severity: 'critical',
+26 silly audit report       vulnerable_versions: '>=4.0.0 <4.0.4',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1120743,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-hmw2-7cc7-3qxx',
+26 silly audit report       title: 'form-data: CRLF injection in form-data via unescaped multipart field names and filenames',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '>=4.0.0 <4.0.6',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   'linkify-it': [
+26 silly audit report     {
+26 silly audit report       id: 1121797,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-22p9-wv53-3rq4',
+26 silly audit report       title: 'LinkifyIt#match scan loop has quadratic algorithmic complexity',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=5.0.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1124012,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-v245-v573-v5vm',
+26 silly audit report       title: 'linkify-it: Quadratic-complexity DoS via the `mailto:` validator scan-loop on attacker text',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=5.0.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   lodash: [
+26 silly audit report     {
+26 silly audit report       id: 1120370,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-xxjr-mmjv-4gpg',
+26 silly audit report       title: 'Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '>=4.0.0 <=4.17.22',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1115806,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-r5fr-rjxr-66jc',
+26 silly audit report       title: 'lodash vulnerable to Code Injection via `_.template` imports key names',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '>=4.0.0 <=4.17.23',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1115810,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-f23m-r3pf-42rh',
+26 silly audit report       title: 'lodash vulnerable to Prototype Pollution via array path bypass in `_.unset` and `_.omit`',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=4.17.23',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   'markdown-it': [
+26 silly audit report     {
+26 silly audit report       id: 1120820,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-6v5v-wf23-fmfq',
+26 silly audit report       title: 'markdown-it: Quadratic complexity DoS in smartquotes rule via replaceAt string operations',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=14.1.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1239989,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-253c-mchw-3w2r',
+26 silly audit report       title: 'markdown-it linkify: true has two quadratic paths, so a few hundred KB of markdown blocks the event loop for tens of seconds',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<14.3.1',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   moment: [
+26 silly audit report     {
+26 silly audit report       id: 1240099,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-4p3w-j4w9-5jqw',
+26 silly audit report       title: 'moment vulnerable to Path Traversal via crafted non-string locale name',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '>=2.29.2 <2.31.0',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   nanoid: [
+26 silly audit report     {
+26 silly audit report       id: 1138811,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-28wg-ghj8-5hjv',
+26 silly audit report       title: 'nanoid: non-secure generators can loop indefinitely with negative size',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<3.3.16',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1139427,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-2v37-7h3g-55p8',
+26 silly audit report       title: 'nanoid: custom generators can loop indefinitely when size is zero',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<3.3.18',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1153189,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-xwg4-73v4-xw9w',
+26 silly audit report       title: 'nanoid: Integer Overflow or Wraparound',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<3.3.12',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ],
+26 silly audit report   postcss: [
+26 silly audit report     {
+26 silly audit report       id: 1130709,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-fxqj-rqcc-2cmp',
+26 silly audit report       title: 'PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<=8.5.22',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1117015,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-qx2v-qp2m-jg93',
+26 silly audit report       title: 'PostCSS has XSS via Unescaped </style> in its CSS Stringify Output',
+26 silly audit report       severity: 'moderate',
+26 silly audit report       vulnerable_versions: '<8.5.10',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1124252,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-6g55-p6wh-862q',
+26 silly audit report       title: 'PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=8.5.11',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     },
+26 silly audit report     {
+26 silly audit report       id: 1139510,
+26 silly audit report       url: 'https://github.com/advisories/GHSA-r28c-9q8g-f849',
+26 silly audit report       title: 'PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure',
+26 silly audit report       severity: 'high',
+26 silly audit report       vulnerable_versions: '<=8.5.17',
+26 silly audit report       cwe: [Array],
+26 silly audit report       cvss: [Object]
+26 silly audit report     }
+26 silly audit report   ]
+26 silly audit report }
+27 silly packumentCache corgi:https://registry.npmjs.org/@tiptap%2fcore cache-miss
+28 silly packumentCache corgi:https://registry.npmjs.org/vue cache-miss
+29 silly packumentCache corgi:https://registry.npmjs.org/axios cache-miss
+30 silly packumentCache corgi:https://registry.npmjs.org/echarts cache-miss
+31 silly packumentCache corgi:https://registry.npmjs.org/follow-redirects cache-miss
+32 silly packumentCache corgi:https://registry.npmjs.org/form-data cache-miss
+33 silly packumentCache corgi:https://registry.npmjs.org/linkify-it cache-miss
+34 silly packumentCache corgi:https://registry.npmjs.org/lodash cache-miss
+35 silly packumentCache corgi:https://registry.npmjs.org/markdown-it cache-miss
+36 silly packumentCache corgi:https://registry.npmjs.org/moment cache-miss
+37 silly packumentCache corgi:https://registry.npmjs.org/nanoid cache-miss
+38 silly packumentCache corgi:https://registry.npmjs.org/postcss cache-miss
+39 http fetch GET 200 https://registry.npmjs.org/vue 326ms (cache miss)
+40 silly packumentCache corgi:https://registry.npmjs.org/vue set size:undefined disposed:false
+41 http fetch GET 200 https://registry.npmjs.org/@tiptap%2fcore 560ms (cache miss)
+42 silly packumentCache corgi:https://registry.npmjs.org/@tiptap%2fcore set size:undefined disposed:false
+43 http fetch GET 200 https://registry.npmjs.org/vue-i18n/-/vue-i18n-8.28.2.tgz 890ms (cache miss)
+44 warn deprecated vue-i18n@8.28.2: v9 and v10 no longer supported. please migrate to v11. about maintenance status, see https://vue-i18n.intlify.dev/guide/maintenance.html
+45 http fetch GET 200 https://registry.npmjs.org/markdown-it 692ms (cache miss)
+46 silly packumentCache corgi:https://registry.npmjs.org/markdown-it set size:undefined disposed:false
+47 http fetch GET 200 https://registry.npmjs.org/form-data 703ms (cache miss)
+48 silly packumentCache corgi:https://registry.npmjs.org/form-data set size:undefined disposed:false
+49 http fetch GET 200 https://registry.npmjs.org/lodash 711ms (cache miss)
+50 silly packumentCache corgi:https://registry.npmjs.org/lodash set size:undefined disposed:false
+51 http fetch GET 200 https://registry.npmjs.org/linkify-it 883ms (cache miss)
+52 silly packumentCache corgi:https://registry.npmjs.org/linkify-it set size:undefined disposed:false
+53 http fetch GET 200 https://registry.npmjs.org/echarts 900ms (cache miss)
+54 silly packumentCache corgi:https://registry.npmjs.org/echarts set size:undefined disposed:false
+55 http fetch GET 200 https://registry.npmjs.org/moment 904ms (cache miss)
+56 silly packumentCache corgi:https://registry.npmjs.org/moment set size:undefined disposed:false
+57 http fetch GET 200 https://registry.npmjs.org/nanoid 909ms (cache miss)
+58 silly packumentCache corgi:https://registry.npmjs.org/nanoid set size:undefined disposed:false
+59 http fetch GET 200 https://registry.npmjs.org/follow-redirects 919ms (cache miss)
+60 silly packumentCache corgi:https://registry.npmjs.org/follow-redirects set size:undefined disposed:false
+61 http fetch GET 200 https://registry.npmjs.org/axios 925ms (cache miss)
+62 silly packumentCache corgi:https://registry.npmjs.org/axios set size:undefined disposed:false
+63 http fetch GET 200 https://registry.npmjs.org/postcss 1031ms (cache miss)
+64 silly packumentCache corgi:https://registry.npmjs.org/postcss set size:undefined disposed:false
+65 silly packumentCache corgi:https://registry.npmjs.org/@tiptap%2fstarter-kit cache-miss
+66 http fetch GET 200 https://registry.npmjs.org/@tiptap%2fstarter-kit 338ms (cache miss)
+67 silly packumentCache corgi:https://registry.npmjs.org/@tiptap%2fstarter-kit set size:undefined disposed:false
+68 silly packumentCache corgi:https://registry.npmjs.org/vue-monoplasty-slide-verify cache-miss
+69 http fetch GET 200 https://registry.npmjs.org/vue-monoplasty-slide-verify 287ms (cache miss)
+70 silly packumentCache corgi:https://registry.npmjs.org/vue-monoplasty-slide-verify set size:undefined disposed:false
+71 silly packumentCache corgi:https://registry.npmjs.org/qiankun cache-miss
+72 http fetch GET 200 https://registry.npmjs.org/qiankun 480ms (cache miss)
+73 silly packumentCache corgi:https://registry.npmjs.org/qiankun set size:undefined disposed:false
+74 silly packumentCache corgi:https://registry.npmjs.org/prosemirror-markdown cache-miss
+75 http fetch GET 200 https://registry.npmjs.org/prosemirror-markdown 201ms (cache miss)
+76 silly packumentCache corgi:https://registry.npmjs.org/prosemirror-markdown set size:undefined disposed:false
+77 silly packumentCache corgi:https://registry.npmjs.org/@vue%2fcompiler-sfc cache-miss
+78 http fetch GET 200 https://registry.npmjs.org/@vue%2fcompiler-sfc 414ms (cache miss)
+79 silly packumentCache corgi:https://registry.npmjs.org/@vue%2fcompiler-sfc set size:undefined disposed:false
+80 silly ADD node_modules/vue-i18n
+81 silly REMOVE node_modules/y-protocols
+82 verbose cwd /Users/ricepastem/Projects/LogHome/loghome-app-frontend
+83 verbose os Darwin 27.0.0
+84 verbose node v24.17.0
+85 verbose npm  v11.13.0
+86 notice
+86 notice New major version of npm available! 11.13.0 -> 12.2.0
+86 notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+86 notice To update run: npm install -g npm@12.2.0
+86 notice  { force: true, Symbol(proc-log.meta): true }
+87 verbose exit 0
+88 info ok

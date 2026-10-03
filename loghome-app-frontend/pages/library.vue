@@ -256,9 +256,7 @@ export default {
 	onShow() {
 		this.reloadComponents();
 		this.checkSystem();
-		this.$nextTick(() => {
-			this.setupLibraryScrollTracking();
-		});
+		this.syncLibraryScrollAfterShow();
 	},
 	onHide() {
 		this.teardownLibraryScrollTracking();
@@ -275,22 +273,18 @@ export default {
 		this.teardownLibraryScrollTracking();
 	},
 	methods: {
-		resolveLibraryScrollContainer() {
-			if (typeof document === 'undefined' || typeof window === 'undefined') {
-				return null;
-			}
-
-			const uniApp = document.querySelector('uni-app');
-			if (uniApp) {
-				const overflowY = window.getComputedStyle(uniApp).overflowY;
-				if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') {
-					return uniApp;
-				}
-			}
-
-			return window;
+		getLibraryDocumentScrollTop() {
+			if (typeof window === 'undefined' || typeof document === 'undefined') return 0;
+			const roots = [
+				window,
+				document.scrollingElement,
+				document.documentElement,
+				document.body,
+				document.querySelector('uni-app')
+			];
+			return roots.reduce((max, root) => Math.max(max, this.getLibraryScrollTop(root)), 0);
 		},
-		getLibraryScrollTop(container = this._libraryScrollContainer) {
+		getLibraryScrollTop(container) {
 			if (!container || typeof window === 'undefined' || typeof document === 'undefined') {
 				return 0;
 			}
@@ -312,38 +306,47 @@ export default {
 			}
 		},
 		setupLibraryScrollTracking() {
-			const scrollContainer = this.resolveLibraryScrollContainer();
-			if (!scrollContainer) {
+			if (typeof window === 'undefined' || typeof document === 'undefined') {
 				return;
 			}
-
-			if (this._libraryScrollContainer !== scrollContainer) {
+			const containers = [window, document.scrollingElement, document.documentElement, document.body, document.querySelector('uni-app')]
+				.filter((container, index, list) => container && list.indexOf(container) === index);
+			const trackedContainers = this._libraryScrollContainers || [];
+			const sameContainers = trackedContainers.length === containers.length &&
+				trackedContainers.every((container) => containers.indexOf(container) >= 0);
+			if (!sameContainers) {
 				this.teardownLibraryScrollTracking();
-				this._libraryScrollContainer = scrollContainer;
+				this._libraryScrollContainers = containers;
 				this._libraryScrollHandler = () => {
-					this.syncLibraryScrollPosition(
-						this.getLibraryScrollTop(this._libraryScrollContainer)
-					);
+					this.syncLibraryScrollPosition(this.getLibraryDocumentScrollTop());
 				};
-				scrollContainer.addEventListener('scroll', this._libraryScrollHandler, {
-					passive: true
-				});
+				containers.forEach((container) => container.addEventListener('scroll', this._libraryScrollHandler, { passive: true }));
 			}
 
-			this.syncLibraryScrollPosition(this.getLibraryScrollTop(scrollContainer));
+			this.syncLibraryScrollPosition(this.getLibraryDocumentScrollTop());
+		},
+		syncLibraryScrollAfterShow() {
+			this.clearLibraryScrollSyncTimers();
+			const sync = () => {
+				this.setupLibraryScrollTracking();
+				const currentTop = this.getLibraryDocumentScrollTop();
+				this.syncLibraryScrollPosition(currentTop);
+			};
+			this.$nextTick(sync);
+			this._libraryScrollSyncTimers = [80, 260].map((delay) => setTimeout(sync, delay));
+		},
+		clearLibraryScrollSyncTimers() {
+			(this._libraryScrollSyncTimers || []).forEach((timer) => clearTimeout(timer));
+			this._libraryScrollSyncTimers = [];
 		},
 		teardownLibraryScrollTracking() {
-			if (
-				this._libraryScrollContainer &&
-				this._libraryScrollHandler &&
-				typeof this._libraryScrollContainer.removeEventListener === 'function'
-			) {
-				this._libraryScrollContainer.removeEventListener(
-					'scroll',
-					this._libraryScrollHandler
-				);
-			}
-			this._libraryScrollContainer = null;
+			this.clearLibraryScrollSyncTimers();
+			(this._libraryScrollContainers || []).forEach((container) => {
+				if (this._libraryScrollHandler && typeof container.removeEventListener === 'function') {
+					container.removeEventListener('scroll', this._libraryScrollHandler);
+				}
+			});
+			this._libraryScrollContainers = [];
 			this._libraryScrollHandler = null;
 		},
 		restoreFirstScreenCache() {

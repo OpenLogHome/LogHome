@@ -87,12 +87,12 @@
 			},
 			addTag(tag){
 				let _this = this;
-				if(tag.replace(/(^\s*)|(\s*$)/g, "") == "" || tag.replace(/(^\s*)|(\s*$)/g, "") == "") return;
-				var reg = new RegExp( '[ \n]' , "g" )
-				let tag_name = tag.replace(reg, "");
+				let tag_name = String(tag == null ? '' : tag).trim();
+				// 保留标签名内部的空格：活动标签名（如“HayCraft 2026 中文短篇主题文会”）依赖空格精确匹配
+				if (!tag_name) return;
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if(tk) tk = tk.tk;
-				axios.get(_this.$baseUrl + '/library/add_novel_tag?novel_id=' + _this.novel_id + "&tag_name=" + tag_name,
+				axios.get(_this.$baseUrl + '/library/add_novel_tag?novel_id=' + _this.novel_id + "&tag_name=" + encodeURIComponent(tag_name),
 				{
 					headers: {
 						'Content-Type': 'application/json', //设置请求头请求格式为JSON

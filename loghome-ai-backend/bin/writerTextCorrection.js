@@ -168,7 +168,7 @@ function buildCorrectionSystemPrompt() {
 6. **不要**输出完整的修正后段落文本，只输出段落号和 fragments。
 7. 不要改变作者的文学风格、用词习惯和表达方式。
 8. 不要修正人名、地名、专有名词。
-9. 返回的 JSON 必须是一个对象，包含 paragraphs 数组；数组里只放需要修改的段落。
+9. 最后回答时返回的 JSON 必须是一个对象，包含 paragraphs 数组；数组里只放需要修改的段落。
 
 返回格式示例：
 {
@@ -263,6 +263,19 @@ function extractReasoningText(payload, reasoningState) {
 		return merged.delta;
 	}
 	return '';
+}
+
+function extractAnalyzedParagraphCount(text) {
+	const markerPattern = /段落\s*(\d+)(?:\s*[-—~至]\s*(\d+))?\s*/g;
+	let match;
+	let maxIndex = 0;
+	while ((match = markerPattern.exec(String(text || ''))) !== null) {
+		const endIndex = Number(match[2] || match[1]);
+		if (Number.isInteger(endIndex) && endIndex > maxIndex) {
+			maxIndex = endIndex;
+		}
+	}
+	return maxIndex;
 }
 
 function createNdjsonStreamWriter(res) {
@@ -383,6 +396,7 @@ async function streamCorrectionFromModel(paragraphs, writer) {
 	const reasoningState = { text: '' };
 	let hasReasoning = false;
 	let hasContent = false;
+	let reportedProgress = 0;
 
 	try {
 		let buffer = '';
@@ -412,6 +426,16 @@ async function streamCorrectionFromModel(paragraphs, writer) {
 					}
 					hasReasoning = true;
 					writer.write({ type: 'reasoning_delta', content: reasoning });
+
+					const analyzedCount = extractAnalyzedParagraphCount(reasoningState.text);
+					if (analyzedCount > reportedProgress) {
+						reportedProgress = Math.min(analyzedCount, paragraphs.length);
+						writer.write({
+							type: 'progress',
+							analyzed: reportedProgress,
+							total: paragraphs.length,
+						});
+					}
 				}
 
 				const delta = extractDeltaText(payload, contentState);
@@ -559,10 +583,11 @@ async function handleWriterTextCorrection(req, res) {
 
 		await consumeRedstone({
 			userId: Number(user.user_id),
-			amount: 1,
+			amount: 2,
+			freeForMembers: true,
 			feature: 'writer_smart_correction',
 			requestId: req.body?.request_id || `correction:${articleId}:${Date.now()}`,
-			description: '智能纠错消耗1红石',
+			description: '智能纠错消耗2红石',
 		});
 
 		res.on('error', () => {});

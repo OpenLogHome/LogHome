@@ -22,10 +22,10 @@
       <div class="form-section">
         <el-form :model="novelForm" label-position="top">
           <el-form-item label="作品名称" :rules="[{ required: true, message: '请输入作品名称', trigger: 'blur' }]">
-            <el-input 
-              v-model="novelForm.title" 
-              placeholder="请输入作品名称" 
-              maxlength="15"
+            <el-input
+              v-model="novelForm.title"
+              placeholder="请输入作品名称"
+              maxlength="25"
               show-word-limit
             ></el-input>
           </el-form-item>

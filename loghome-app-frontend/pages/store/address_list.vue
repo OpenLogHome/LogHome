@@ -1,5 +1,11 @@
 <template>
 	<view class="address-page" v-dark>
+		<view class="page-intro">
+			<!-- <view class="page-title">收货地址</view> -->
+			<!-- <view class="page-caption">
+				{{ selectMode ? '选择这次兑换的送达地址' : '管理常用地址，让喜欢的好物顺利抵达。' }}
+			</view> -->
+		</view>
 		<view v-if="!isLoggedIn" class="page-state">
 			<text>登录后才能管理收货地址</text>
 			<view class="state-action" @tap="goLogin">去登录</view>
@@ -36,7 +42,10 @@
 						<view class="action" @tap.stop="setDefault(item)" v-if="!item.is_default">
 							{{ processingAction === `default-${item.address_id}` ? '设置中...' : '设为默认' }}
 						</view>
-						<view class="action" @tap.stop="editAddress(item)">编辑</view>
+						<view class="action" @tap.stop="editAddress(item)">
+							<store-icon name="pen" :size="28" />
+							编辑
+						</view>
 						<view class="action danger" @tap.stop="deleteAddress(item)">
 							{{ processingAction === `delete-${item.address_id}` ? '删除中...' : '删除' }}
 						</view>
@@ -50,6 +59,7 @@
 
 			<view class="bottom-bar">
 				<button class="add-btn" @tap="addAddress">
+					<store-icon name="plus" :size="34" />
 					{{ selectMode ? '新增地址并继续' : '新增收货地址' }}
 				</button>
 			</view>
@@ -60,11 +70,14 @@
 <script>
 import axios from 'axios'
 import darkModeMixin from '@/mixins/dark-mode.js'
+import StoreIcon from '@/components/StoreIcon.vue'
 
 export default {
 	mixins: [darkModeMixin],
+	components: { StoreIcon },
 	data() {
 		return {
+			authToken: null,
 			addresses: [],
 			selectMode: false,
 			loading: false,
@@ -74,15 +87,17 @@ export default {
 	},
 	computed: {
 		isLoggedIn() {
-			return !!this.getToken()
+			return !!this.authToken
 		},
 	},
 	onLoad(options) {
+		this.authToken = this.getToken()
 		if (options && options.select === '1') {
 			this.selectMode = true
 		}
 	},
 	onShow() {
+		this.authToken = this.getToken()
 		if (this.isLoggedIn) {
 			this.fetchAddresses()
 		}
@@ -106,36 +121,35 @@ export default {
 			})
 		},
 		formatAddress(item) {
-			return [
-				item.province || '',
-				item.city || '',
-				item.district || '',
-				item.detail || '',
-			].join('')
+			return [item.province || '', item.city || '', item.district || '', item.detail || ''].join('')
 		},
 		fetchAddresses() {
 			const tk = this.getToken()
 			if (!tk) return
 			this.loading = true
 			this.loadError = ''
-			axios.get(this.$baseUrl + '/store/addresses', {
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': 'Bearer ' + tk,
-				},
-			}).then((res) => {
-				if (res.data && res.data.code === 200) {
-					this.addresses = res.data.data || []
-					this.loadError = ''
-				} else {
-					this.loadError = res.data.msg || '地址加载失败，请稍后重试'
-				}
-			}).catch((error) => {
-				this.loadError = error.response?.data?.msg || '地址加载失败，请稍后重试'
-			}).finally(() => {
-				this.loading = false
-				uni.stopPullDownRefresh()
-			})
+			axios
+				.get(this.$baseUrl + '/store/addresses', {
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: 'Bearer ' + tk,
+					},
+				})
+				.then((res) => {
+					if (res.data && res.data.code === 200) {
+						this.addresses = res.data.data || []
+						this.loadError = ''
+					} else {
+						this.loadError = res.data.msg || '地址加载失败，请稍后重试'
+					}
+				})
+				.catch((error) => {
+					this.loadError = error.response?.data?.msg || '地址加载失败，请稍后重试'
+				})
+				.finally(() => {
+					this.loading = false
+					uni.stopPullDownRefresh()
+				})
 		},
 		addAddress() {
 			uni.navigateTo({
@@ -151,23 +165,31 @@ export default {
 			const tk = this.getToken()
 			if (!tk || this.processingAction) return
 			this.processingAction = `default-${item.address_id}`
-			axios.post(this.$baseUrl + `/store/addresses/${item.address_id}/default`, {}, {
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': 'Bearer ' + tk,
-				},
-			}).then((res) => {
-				if (res.data && res.data.code === 200) {
-					uni.showToast({ title: '已设为默认地址', icon: 'success' })
-					this.fetchAddresses()
-				} else {
-					uni.showToast({ title: res.data.msg || '设置失败', icon: 'none' })
-				}
-			}).catch((error) => {
-				uni.showToast({ title: error.response?.data?.msg || '设置失败', icon: 'none' })
-			}).finally(() => {
-				this.processingAction = ''
-			})
+			axios
+				.post(
+					this.$baseUrl + `/store/addresses/${item.address_id}/default`,
+					{},
+					{
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: 'Bearer ' + tk,
+						},
+					}
+				)
+				.then((res) => {
+					if (res.data && res.data.code === 200) {
+						uni.showToast({ title: '已设为默认地址', icon: 'success' })
+						this.fetchAddresses()
+					} else {
+						uni.showToast({ title: res.data.msg || '设置失败', icon: 'none' })
+					}
+				})
+				.catch((error) => {
+					uni.showToast({ title: error.response?.data?.msg || '设置失败', icon: 'none' })
+				})
+				.finally(() => {
+					this.processingAction = ''
+				})
 		},
 		deleteAddress(item) {
 			uni.showModal({
@@ -178,23 +200,27 @@ export default {
 					const tk = this.getToken()
 					if (!tk || this.processingAction) return
 					this.processingAction = `delete-${item.address_id}`
-					axios.delete(this.$baseUrl + `/store/addresses/${item.address_id}`, {
-						headers: {
-							'Content-Type': 'application/json',
-							'Authorization': 'Bearer ' + tk,
-						},
-					}).then((res) => {
-						if (res.data && res.data.code === 200) {
-							uni.showToast({ title: '地址已删除', icon: 'success' })
-							this.fetchAddresses()
-						} else {
-							uni.showToast({ title: res.data.msg || '删除失败', icon: 'none' })
-						}
-					}).catch((error) => {
-						uni.showToast({ title: error.response?.data?.msg || '删除失败', icon: 'none' })
-					}).finally(() => {
-						this.processingAction = ''
-					})
+					axios
+						.delete(this.$baseUrl + `/store/addresses/${item.address_id}`, {
+							headers: {
+								'Content-Type': 'application/json',
+								Authorization: 'Bearer ' + tk,
+							},
+						})
+						.then((res) => {
+							if (res.data && res.data.code === 200) {
+								uni.showToast({ title: '地址已删除', icon: 'success' })
+								this.fetchAddresses()
+							} else {
+								uni.showToast({ title: res.data.msg || '删除失败', icon: 'none' })
+							}
+						})
+						.catch((error) => {
+							uni.showToast({ title: error.response?.data?.msg || '删除失败', icon: 'none' })
+						})
+						.finally(() => {
+							this.processingAction = ''
+						})
 				},
 			})
 		},
@@ -208,128 +234,77 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '../../styles/store.scss';
 .address-page {
-	min-height: 100vh;
-	background: linear-gradient(180deg, #fff8f4 0%, #f6f6f6 220rpx);
-	padding: 24rpx 30rpx 140rpx;
-	&.dark-mode {
-		background: #111111;
-	}
+	padding-bottom: calc(168rpx + var(--loghome-safe-bottom, 0px));
 }
-
-.page-state,
-.empty {
-	margin-top: 140rpx;
-	text-align: center;
-	color: #9a9a9a;
-	font-size: 26rpx;
-}
-
-.state-action {
-	margin: 20rpx auto 0;
-	display: inline-flex;
-	padding: 12rpx 20rpx;
-	border-radius: 999rpx;
-	background: rgba(255, 106, 95, 0.1);
-	color: #ff6a5f;
-}
-
 .select-banner {
-	margin-bottom: 18rpx;
-	padding: 16rpx 20rpx;
-	border-radius: 18rpx;
-	background: rgba(255, 106, 95, 0.08);
-	color: #ff6a5f;
+	padding: 20rpx 28rpx;
+	margin: 0 32rpx 24rpx;
+	border-radius: 14rpx;
+	background: var(--store-accent-soft);
+	color: var(--store-accent);
 	font-size: 24rpx;
 }
-
 .address-card {
-	background: #ffffff;
-	border-radius: 20rpx;
-	padding: 20rpx;
-	margin-bottom: 20rpx;
-	box-shadow: 0 8rpx 26rpx rgba(0, 0, 0, 0.05);
-	&.dark-mode {
-		background: #000000;
-		box-shadow: none;
-	}
+	margin: 0 32rpx 24rpx;
+	padding: 28rpx;
+	border: 1rpx solid var(--store-line);
+	border-radius: 22rpx;
+	background: var(--store-surface);
 }
-
 .row {
 	display: flex;
-	align-items: center;
+	gap: 18rpx;
+	align-items: baseline;
 	flex-wrap: wrap;
-	gap: 16rpx;
-	.name {
-		font-size: 28rpx;
-		font-weight: 600;
-		color: #333333;
-	}
-	.phone {
-		font-size: 26rpx;
-		color: #666666;
-	}
-	.default-tag {
-		font-size: 22rpx;
-		color: #ff6a5f;
-		background: rgba(255, 106, 95, 0.12);
-		padding: 4rpx 10rpx;
-		border-radius: 10rpx;
-	}
 }
-
+.name {
+	font-size: 31rpx;
+	font-weight: 650;
+}
+.phone {
+	color: var(--store-muted);
+	font-size: 26rpx;
+}
+.default-tag {
+	font-size: 21rpx;
+	padding: 4rpx 12rpx;
+	border-radius: 6rpx;
+	background: var(--store-accent-soft);
+	color: var(--store-accent);
+}
 .detail {
-	margin-top: 12rpx;
-	font-size: 24rpx;
-	line-height: 1.6;
-	color: #777777;
+	padding: 16rpx 0 20rpx;
+	font-size: 27rpx;
+	overflow-wrap: anywhere;
 }
-
 .actions {
-	margin-top: 16rpx;
+	border-top: 1rpx solid var(--store-line);
+	padding-top: 8rpx;
 	display: flex;
-	gap: 20rpx;
-	flex-wrap: wrap;
-	.action {
-		font-size: 24rpx;
-		color: #ff6a5f;
-	}
-	.action.danger {
-		color: #ff4d4f;
-	}
+	justify-content: flex-end;
+	gap: 28rpx;
 }
-
-.bottom-bar {
-	position: fixed;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	padding: 20rpx 30rpx calc(20rpx + var(--loghome-safe-bottom, 0px));
-	background: rgba(255, 255, 255, 0.96);
-	backdrop-filter: blur(12rpx);
-	box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);
-	&.dark-mode {
-		background: rgba(0, 0, 0, 0.95);
-	}
-	.add-btn {
-		width: 100%;
-		height: 88rpx;
-		line-height: 88rpx;
-		border-radius: 14rpx;
-		background: #ff6a5f;
-		color: #ffffff;
-		font-size: 30rpx;
-		font-weight: 600;
-	}
+.action {
+	min-height: 80rpx;
+	display: flex;
+	align-items: center;
+	font-size: 25rpx;
+	color: var(--store-accent);
 }
-
-.address-page.dark-mode {
-	.row .name {
-		color: #ededed;
-	}
-	.row .phone,
-	.detail {
-		color: #b9b9b9;
-	}
+.action.danger {
+	color: var(--store-danger);
+}
+.add-btn {
+	width: 100%;
+}
+.action,
+.add-btn {
+	gap: 10rpx;
+}
+.address-card {
+	border-radius: 22rpx;
+	box-shadow: var(--store-shadow);
 }
 </style>

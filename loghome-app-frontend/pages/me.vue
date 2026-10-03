@@ -717,6 +717,7 @@
 				.name-badge-tap {
 					display: inline-flex;
 					align-items: center;
+					margin-left: 12rpx;
 				}
 
 				.user-title-chip {

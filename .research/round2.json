@@ -1,0 +1,682 @@
+[
+ {
+  "full_name": "HnDK0/NoveLA",
+  "stars": 98,
+  "pushed_at": "2026-10-02",
+  "lang": "Kotlin",
+  "license": "GPL-3.0",
+  "archived": false,
+  "desc": "Free Android reader for web novels, light novels, ranobe, webtoons & EPUB, FB2. 25+ sources, built-in Google/Gemini translator, TTS, offline reading, Cloudflare bypass. Alternative",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "raindrop213/AnonTranslator",
+  "stars": 40,
+  "pushed_at": "2025-09-07",
+  "lang": "JavaScript",
+  "license": "MIT",
+  "archived": false,
+  "desc": "A chrome extension for light novel reading 日文轻小说-啃生肉Chrome插件/扩展",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "Snowad14/GPT-LN-Translator",
+  "stars": 18,
+  "pushed_at": "2023-06-30",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "Light novel translation optimized for the best possible quality",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "Snowad14/Raw-Novel-Translation",
+  "stars": 10,
+  "pushed_at": "2022-06-17",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "Turn Light Novel raws images into translated text (fork of manga-image-translator)",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "PaoloESAN/LN-Translator-Mobile",
+  "stars": 8,
+  "pushed_at": "2026-08-14",
+  "lang": "Kotlin",
+  "license": "MIT",
+  "archived": false,
+  "desc": "An Android app to translate Japanese Light Novels directly from your screen using Gemini AI. Overlay translation for BookWalker, Kindle, and more.",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "dear-clouds/united_subs",
+  "stars": 4,
+  "pushed_at": "2023-04-27",
+  "lang": null,
+  "license": null,
+  "archived": false,
+  "desc": "A community for French Translators of Asian medias: Animes, Mangas, Dramas, Movies, Light Novels, Visual Novels...",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "breakyuna/LightNovelTranslator",
+  "stars": 2,
+  "pushed_at": "2026-09-01",
+  "lang": "Kotlin",
+  "license": "Apache-2.0",
+  "archived": false,
+  "desc": "AI-powered light novel translate Android application",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "shahriar-ahmed-seam/ln-translator",
+  "stars": 2,
+  "pushed_at": "2026-06-29",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "Two-pass AI light novel translation pipeline (Spanish->English) with persistent cross-volume glossary, gender-aware pronoun handling, refinement guardrails, and PDF/EPUB output.",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "lousi8/acgnd",
+  "stars": 2,
+  "pushed_at": "2025-08-04",
+  "lang": "Visual Basic 6.0",
+  "license": "NOASSERTION",
+  "archived": false,
+  "desc": "日本轻小说聚合网站，计划使用百度翻译 Baidu translator for Japanese Comic and light novel",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "Aerdelan/aoba-translator",
+  "stars": 2,
+  "pushed_at": "2026-08-10",
+  "lang": "Python",
+  "license": "GPL-3.0",
+  "archived": false,
+  "desc": "青穗AI日文漫画/小说一键翻译程序，文本块识别、文字提取/翻译、文本重嵌，程序完全基于本地模型运行，数据不上传。Local-first Japanese → Chinese translator for light novels & manga — OCR, LLM translation, text erasure & re-typesetting, fu",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "Better-Rain/Light_Novel_Translator",
+  "stars": 1,
+  "pushed_at": "2026-04-27",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "Japanese to Chinese translation via `Helsinki-NLP/opus-mt-ja-zh` PDF paragraph extraction with paragraph IDs and heading preservation",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "69raccoon96/AI-Light-Novel-Translator",
+  "stars": 1,
+  "pushed_at": "2026-08-12",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "lai-sgjp/lightnovel-translator",
+  "stars": 1,
+  "pushed_at": "2026-09-10",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "A local Japanese light-novel translator powered by Ollama and Sakura models.",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "thang97-21/llm-LN-translator",
+  "stars": 1,
+  "pushed_at": "2026-09-29",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "Lightweight client for LLM Translation of Light Novels and utilities tool for rebuilding into EPUB",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "xup60521/cli-syosetsu-translator",
+  "stars": 1,
+  "pushed_at": "2026-01-16",
+  "lang": "TypeScript",
+  "license": null,
+  "archived": false,
+  "desc": "A simple Javascript/Typescript app that uses AI to translate light novels (e.g. syosetsu.com, pixiv).",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "imperfectionnovels/LN-Translator",
+  "stars": 1,
+  "pushed_at": "2026-08-10",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Local single-user app that translates foreign-language light novels into English via user-configured AI providers. Windows desktop EXE.",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "mwilmsm/translation-website",
+  "stars": 1,
+  "pushed_at": "2019-05-07",
+  "lang": "TypeScript",
+  "license": null,
+  "archived": false,
+  "desc": "A generic website layout built in PrimeNG for the purposes of serving up translated light novels with built-in support for translator's notes and original text.",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "Ryuujisan/LightNovelTranslator",
+  "stars": 0,
+  "pushed_at": "2026-07-29",
+  "lang": "C#",
+  "license": null,
+  "archived": false,
+  "desc": "",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "hjzj003/light-novel-translator",
+  "stars": 0,
+  "pushed_at": "2025-01-14",
+  "lang": null,
+  "license": null,
+  "archived": false,
+  "desc": "Translate",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "TobbyTravel/light-novel-translator",
+  "stars": 0,
+  "pushed_at": "2026-09-21",
+  "lang": "JavaScript",
+  "license": "MIT",
+  "archived": false,
+  "desc": "",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "asd89567/light-novel-translator",
+  "stars": 0,
+  "pushed_at": "2023-03-29",
+  "lang": "HTML",
+  "license": null,
+  "archived": false,
+  "desc": "",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "viettran3500/light-novel-translator",
+  "stars": 0,
+  "pushed_at": "2026-09-28",
+  "lang": "JavaScript",
+  "license": null,
+  "archived": false,
+  "desc": "",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "DangHM8/translator_light_novels",
+  "stars": 0,
+  "pushed_at": "2026-01-14",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "SilverFang13x9/light-novel-translator",
+  "stars": 0,
+  "pushed_at": "2026-09-21",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "andre-pullinen/light-novel-translator",
+  "stars": 0,
+  "pushed_at": "2026-08-30",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "",
+  "found_by": "light novel translator"
+ },
+ {
+  "full_name": "daanaagua/FolioLoom",
+  "stars": 202,
+  "pushed_at": "2026-09-29",
+  "lang": "TypeScript",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Lossless agentic long-form novel translation pipeline with evidence-backed terminology, narrative memory, recovery, and audit",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "hannsxpeter/scriveno",
+  "stars": 10,
+  "pushed_at": "2026-09-27",
+  "lang": "JavaScript",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Spec-driven creative writing, publishing, and translation pipeline for AI coding agents. From blank page to published book.",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "JiachenRen/sift-ocr",
+  "stars": 5,
+  "pushed_at": "2025-04-07",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "A novel unsupervised end-to-end manga translation & inpainting pipeline.",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "nhatanh2996/NovelTrans",
+  "stars": 2,
+  "pushed_at": "2026-05-09",
+  "lang": "JavaScript",
+  "license": null,
+  "archived": false,
+  "desc": "Description: Automated pipeline to scrape Chinese web novels from Qidian and translate them to Vietnamese using Claude AI (Playwright + Anthropic SDK)",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "trevorWieland/rentl",
+  "stars": 2,
+  "pushed_at": "2026-03-24",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "A multi-agent, context-aware translation pipeline for visual novels—turning raw scene text and metadata into high-quality, consistent JP→EN localizations.",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "marbledmythos/glossforge",
+  "stars": 1,
+  "pushed_at": "2026-06-09",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Glossary forward AI translation pipeline for chinese novels",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "lamphanqg/novel-trans-rb",
+  "stars": 1,
+  "pushed_at": "2026-09-22",
+  "lang": "Ruby",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Pipeline to translate novels in Qidian to Vietnamese language using AI agent as translator, and upload the translated result to CloudFlare R2",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "WaltPeter/VN-OCR",
+  "stars": 1,
+  "pushed_at": "2022-11-20",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "An Optical Character Recognizer and translate pipeline designated for Visual Novel readings. ",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "erlint1212/ai-transealtion-novel-to-anki-tts",
+  "stars": 1,
+  "pushed_at": "2026-04-08",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "An automated, locally-hosted AI pipeline that transforms Chinese web novels into rich, multimedia Anki flashcards and EPUB audiobooks. Uses Qwen2.5-14B for translation and Qwen3-TT",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "alalapi-0/jp-cn-novel-translation-pipeline",
+  "stars": 0,
+  "pushed_at": "2026-09-12",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "Governed pipeline for Japanese-Chinese bilingual novel translation workflows",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "zhaowu147/novel-translator",
+  "stars": 0,
+  "pushed_at": "2026-06-28",
+  "lang": "HTML",
+  "license": null,
+  "archived": false,
+  "desc": "Japanese to Arabic novel translation pipeline using MiMo API",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "xlu-omics/novelisoforms",
+  "stars": 0,
+  "pushed_at": "2026-05-24",
+  "lang": "Nextflow",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Novel transcript isoform discovery and proteome translation — nf-core style Nextflow pipeline.",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "FumoFumo1337/Delta-Route2-auto-translator",
+  "stars": 0,
+  "pushed_at": "2026-08-29",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Delta/Route2 visual-novel translation pipeline for Windows",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "phazei/dao-bridge-translator",
+  "stars": 0,
+  "pushed_at": "2026-07-14",
+  "lang": "Python",
+  "license": "Apache-2.0",
+  "archived": false,
+  "desc": "An AI translation pipeline for high quality light novel translations",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "agungtrimahmudi-dev/novel-translation-platform",
+  "stars": 0,
+  "pushed_at": "2026-08-06",
+  "lang": "Python",
+  "license": "NOASSERTION",
+  "archived": false,
+  "desc": "End-to-end translation pipeline: public-domain source discovery, chapter splitting, quota-aware LLM translation, QC gate, and publishing. Python + Supabase RLS + Next.js.",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "Ethanz0/novel-translate",
+  "stars": 0,
+  "pushed_at": "2026-07-28",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Automates the pipeline of novel translation, publishing to the web, sending chapter links to discord",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "thanhngo742004/novel-translator-studio",
+  "stars": 0,
+  "pushed_at": "2026-06-12",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "AI-assisted novel translation pipeline with NLP, dictionary, memory, validation, and production rollout tooling.",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "corliss5156/ai-novel-translation",
+  "stars": 0,
+  "pushed_at": "2026-06-15",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "An AI-orchestrated pipeline that translates wuxia novels from Chinese to English. The system combines LLM agents, human-in-the-loop review checkpoints, a persistent glossary databa",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "Abdullahhani69/AI-novel-scraper-translator",
+  "stars": 0,
+  "pushed_at": "2026-09-12",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "AI-powered Chinese web-novel scraping and translation pipeline using Python, Playwright, BeautifulSoup, Ollama, and Groq.",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "AscAed/Light-Novel-Translation-Workflow-System",
+  "stars": 0,
+  "pushed_at": "2026-08-18",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "This system handles Japanese-to-Chinese translation for light novels, using a RAG (Retrieval-Augmented Generation) pipeline, translation memory, glossary hybrid retrieval, guidelin",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "thomas8404/novel-crawler-translator",
+  "stars": 0,
+  "pushed_at": "2026-03-09",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "A Python pipeline to crawl novels and translate them with OpenAI API",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "MarkAntonyVIXI/ReMark-Rosetta",
+  "stars": 0,
+  "pushed_at": "2026-02-23",
+  "lang": null,
+  "license": null,
+  "archived": false,
+  "desc": "Automated AI translation pipeline for Ren'Py visual novels  EasyCLI  Gemini API  Google Translate",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "BlueBokChoy/qqbooks-translation-pipeline",
+  "stars": 0,
+  "pushed_at": "2026-07-17",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "This project extracts chapters from QQBooks web novels, splits the text into token-aware chunks, and translates them using a language model of your choice. Translation behavior is ",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "tuannguyen8531/novel-ai-trans",
+  "stars": 0,
+  "pushed_at": "2026-09-30",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "End-to-end pipeline for crawling, translating, and packaging public-domain novels with LLMs.",
+  "found_by": "novel translation pipeline"
+ },
+ {
+  "full_name": "jesselau76/ebook-GPT-translator",
+  "stars": 1734,
+  "pushed_at": "2026-03-15",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Enjoy reading with your favorite style.",
+  "found_by": "ebook translation GPT epub"
+ },
+ {
+  "full_name": "ShenSheiBot/ebook-gpt-translator",
+  "stars": 38,
+  "pushed_at": "2025-05-01",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Translate your English ebooks (epub/docx)  to Chinese and keep most of the format with GPT",
+  "found_by": "ebook translation GPT epub"
+ },
+ {
+  "full_name": "SpaceShaman/epub-translate",
+  "stars": 1,
+  "pushed_at": "2025-06-08",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Simple cli tool for translating ebooks in EPUB format into any language.",
+  "found_by": "ebook translation GPT epub"
+ },
+ {
+  "full_name": "LanceDance/translate_epub",
+  "stars": 1,
+  "pushed_at": "2026-03-10",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "A command-line tool that translates EPUB books into any language using Claude (Anthropic) or GPT-4.1 (OpenAI). It reads the whole book first to build a detailed translation style g",
+  "found_by": "ebook translation GPT epub"
+ },
+ {
+  "full_name": "al-nemirov/epub-translator",
+  "stars": 1,
+  "pushed_at": "2026-04-01",
+  "lang": "Python",
+  "license": "MIT",
+  "archived": false,
+  "desc": "Translate EPUB e-books to any language using OpenAI GPT — preserves HTML/XML structure, batch mode, 35+ languages",
+  "found_by": "ebook translation GPT epub"
+ },
+ {
+  "full_name": "Dean20030514/game-translator-releases",
+  "stars": 2,
+  "pushed_at": "2026-09-09",
+  "lang": null,
+  "license": null,
+  "archived": false,
+  "desc": "多引擎游戏翻译工具(v2)发布库 — Ren'Py/RPGM/Unity/CSV，LLM 自动汉化。源码私有，发布见 Releases。",
+  "found_by": "Ren'Py translator LLM"
+ },
+ {
+  "full_name": "peresew3734/RENPY-auto-llm_translator",
+  "stars": 0,
+  "pushed_at": "2026-05-10",
+  "lang": "Python",
+  "license": null,
+  "archived": false,
+  "desc": "This tool allows you to seamlessly translate any Ren'Py visual novel in real-time using local, uncensored AI models. Everything runs offline on your PC, ensuring total privacy and ",
+  "found_by": "Ren'Py translator LLM"
+ },
+ {
+  "full_name": "zhiqiangme/RenpyTranslator",
+  "stars": 0,
+  "pushed_at": "2026-09-27",
+  "lang": "C#",
+  "license": "NOASSERTION",
+  "archived": false,
+  "desc": "Ren'Py游戏实时翻译模组：后台调用LLM API进行逐行翻译，包含大量人工翻译的Camp Buddy内容，支持DPAPI加密和10多家服务提供商，开箱即用。",
+  "found_by": "Ren'Py translator LLM"
+ },
+ {
+  "full_name": "Dujltqzv/Some-Many-Books",
+  "stars": 24229,
+  "pushed_at": "2026-06-18",
+  "lang": null,
+  "license": null,
+  "archived": false,
+  "desc": "个人收藏书籍列表　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "cirosantilli/x86-bare-metal-examples",
+  "stars": 5378,
+  "pushed_at": "2022-07-18",
+  "lang": "Assembly",
+  "license": "NOASSERTION",
+  "archived": false,
+  "desc": "Dozens of minimal operating systems to learn x86 system programming. Tested on Ubuntu 17.10 host in QEMU 2.10 and real hardware. Userland cheat at: https://github.com/cirosantilli/",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "cirosantilli/china-dictatorship",
+  "stars": 3244,
+  "pushed_at": "2026-02-05",
+  "lang": "HTML",
+  "license": "CC-BY-SA-4.0",
+  "archived": false,
+  "desc": "反中共政治宣传库。Anti Chinese government propaganda. 住在中国真名用户的网友请别给星星，不然你要被警察请喝茶。常见问答集，新闻集和饭店和音乐建议。卐习万岁卐。冠状病毒审查郝海东新疆改造中心六四事件法轮功 996.ICU709大抓捕巴拿马文件邓家贵低端人口西藏骚乱。Friends who live in China and ",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "gege-circle/.github",
+  "stars": 2033,
+  "pushed_at": "2025-10-04",
+  "lang": null,
+  "license": null,
+  "archived": false,
+  "desc": "这里是GitHub的草场，也是戈戈圈爱好者的交流地，主要讨论动漫、游戏、科技、人文、生活等所有话题，欢迎各位小伙伴们在此讨论趣事。This is GitHub grassland, and the community place for Gege circle lovers, mainly discusses anime, games, technology",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "cirosantilli/china-dictatroship-7",
+  "stars": 368,
+  "pushed_at": "2026-02-05",
+  "lang": "HTML",
+  "license": "CC-BY-SA-4.0",
+  "archived": false,
+  "desc": "反中共政治宣传库。Anti Chinese government propaganda. https://github.com/cirosantilli/china-dictatorship 的备份backup. 住在中国真名用户的网友请别给星星，不然你要被警察请喝茶。常见问答集，新闻集和饭店和音乐建议。卐习万岁卐。冠状病毒审查郝海东新疆改造中心六四事件法轮",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "cirosantilli/cirosantilli",
+  "stars": 311,
+  "pushed_at": "2026-09-22",
+  "lang": "JavaScript",
+  "license": null,
+  "archived": false,
+  "desc": "小粉红小朋友们，新issue 在这儿开： https://github.com/cirosantilli/china-dictatorship/issues # 21世纪新政宣言（2020年4月5曰笫四次修改稿)（2020年6月19曰第七次修改，以下“【】”内文字为非正文内容的说明）20世纪苏联的消亡和东欧的大变革，使这21世纪初的现中国大陆成为世界关注的最",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "mRFWq7LwNPZjaVv5v6eo/cihna-dictattorshrip-8",
+  "stars": 210,
+  "pushed_at": "2026-02-05",
+  "lang": "HTML",
+  "license": "CC-BY-SA-4.0",
+  "archived": false,
+  "desc": "反中共政治宣传库。Anti Chinese government propaganda. https://github.com/cirosantilli/china-dictatorship 的备份backup. 住在中国真名用户的网友请别给星星，不然你要被警察请喝茶。常见问答集，新闻集和饭店和音乐建议。卐习万岁卐。冠状病毒审查郝海东新疆改造中心六四事件法轮",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "panbinibn/OpenPacketFix_",
+  "stars": 202,
+  "pushed_at": "2022-08-12",
+  "lang": null,
+  "license": "MIT",
+  "archived": false,
+  "desc": "大陆修宪香港恶法台湾武统朝鲜毁约美中冷战等都是王沪宁愚弄习思想极左命运共同体的大策划中共窃国这半个多世纪所犯下的滔天罪恶，前期是毛泽东策划的，中期6.4前后是邓小平策划的，黄牛数据分析后期是毛的极左追随者三朝罪恶元凶王沪宁策划的。王沪宁高小肆业因文革政治和情报需要保送“学院外语班“红色仕途翻身，所以王的本质是极左的。他是在上海底层弄堂长大的，因其本性也促成其",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "zpc1314521/PCL2",
+  "stars": 127,
+  "pushed_at": "2022-08-12",
+  "lang": null,
+  "license": "MIT",
+  "archived": false,
+  "desc": "[stays mad] 反PCL宣传库。Anti PCL propaganda. 大陆修宪香港恶法台湾武统朝鲜毁约美中冷战等都是王沪宁愚弄习思想极左命运共同体的大策划中共窃国这半个多世纪所犯下的滔天罪恶，前期是毛泽东策划的，中期6.4前后是邓小平策划的，黄牛数据分析后期是毛的极左追随者三朝罪恶元凶王沪宁策划的。王沪宁高小肆业因文革政治和情报需要保送“学院外语",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "html5syt/Rizline-SideLoader",
+  "stars": 4,
+  "pushed_at": "2026-03-06",
+  "lang": "GDScript",
+  "license": "GPL-3.0",
+  "archived": false,
+  "desc": "本工具用于为Rizline PC端的“Steam创意工坊”功能侧载本地谱面。该程序通过替换创意工坊的谱面文件实现加载本地的自定义谱面，适用于家庭共享等无法上传谱面到Steam的情况。",
+  "found_by": "文本替换工坊"
+ },
+ {
+  "full_name": "MmIiNnGgXx/file-workshop",
+  "stars": 0,
+  "pushed_at": "2026-09-22",
+  "lang": "JavaScript",
+  "license": "MIT",
+  "archived": false,
+  "desc": "文件工坊:批量重命名·归档·找重复·文本替换·文件清单。零依赖,默认只预览、确认后才动文件 | Zero-dependency batch file toolkit (rename/organize/dedupe/replace/inventory) with safe preview-first design",
+  "found_by": "文本替换工坊"
+ }
+]

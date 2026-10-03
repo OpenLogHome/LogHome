@@ -53,11 +53,11 @@
 				</view>
 				<view class="info-item">
 					<uni-icons type="checkmarkempty" size="16" color="#67C23A"></uni-icons>
-					<text>新用户填写邀请码：双方各获得1000原木</text>
+					<text>新用户填写邀请码：双方各获得{{newUserReward}}原木</text>
 				</view>
 				<view class="info-item">
 					<uni-icons type="checkmarkempty" size="16" color="#67C23A"></uni-icons>
-					<text>回归用户填写邀请码：双方各获得500原木</text>
+					<text>回归用户填写邀请码：双方各获得{{returnUserReward}}原木</text>
 				</view>
 			</view>
 		</view>
@@ -86,6 +86,8 @@ export default {
 				newUserEligible: false,
 				returnUserEligible: false
 			},
+			newUserReward: 1000,
+			returnUserReward: 500,
 			isLoading: true
 		}
 	},
@@ -111,6 +113,11 @@ export default {
 				});
 				
 				this.eligibility = res.data;
+				
+				if (res.data.new_user_reward !== undefined) {
+					this.newUserReward = res.data.new_user_reward
+					this.returnUserReward = res.data.return_user_reward
+				}
 				
 				// 自动选择第一个有资格的类型
 				if (this.eligibility.newUserEligible) {

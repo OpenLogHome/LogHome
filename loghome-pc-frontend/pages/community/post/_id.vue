@@ -41,7 +41,7 @@
           <!-- 绑定作品 -->
           <div class="linked-book" v-if="post.novel_id && post.novel">
             <div class="book-card" @click="navigateToNovel(post.novel_id)">
-              <img :src="post.novel.picUrl" alt="作品封面" class="book-cover" @error="$event.target.src = '/static/default-book-cover.png'">
+              <img :src="post.novel.picUrl" alt="作品封面" class="book-cover" @error="$event.target.src = '/default-book-cover.png'">
               <div class="book-info">
                 <h4 class="book-name">{{ post.novel.name }}</h4>
                 <p class="book-author">{{ post.novel.author_name }}</p>
@@ -404,12 +404,8 @@ export default {
     },
     
     previewImage(images, index) {
-      // 使用Element UI的图片预览功能
-      const h = this.$createElement
-      this.$imagePreview({
-        images,
-        index
-      })
+      if (!images || !images.length) return
+      this.$preview(images, index || 0)
     },
     
     async getPostLikeStatus() {
@@ -783,7 +779,7 @@ export default {
         const page = isInitial ? 1 : (comment.reply_page || 1) + 1
         const pageSize = isInitial ? 2 : 5 // 初始加载2条，后续加载5条
         
-        const res = await this.$api.community.getReplies({
+        const res = await this.$api.community.getCommentReplies({
           comment_id: comment.comment_id,
           page,
           pageSize
@@ -798,7 +794,7 @@ export default {
         }
         
         this.$set(comment, 'reply_page', page)
-        this.$set(comment, 'has_more_replies', res.has_more || false)
+        this.$set(comment, 'has_more_replies', page * pageSize < (res.total || 0))
         
         // 获取新加载回复的点赞状态
         this.getCommentsLikeStatus()

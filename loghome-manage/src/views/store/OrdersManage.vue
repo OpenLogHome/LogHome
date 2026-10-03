@@ -8,6 +8,8 @@
       <el-table-column prop="order_no" label="订单号" width="220"></el-table-column>
       <el-table-column prop="user_id" label="用户ID" width="100"></el-table-column>
       <el-table-column prop="product_title" label="商品名称" min-width="180"></el-table-column>
+      <el-table-column prop="variant_label" label="商品规格" min-width="180" />
+      <el-table-column label="采购来源" min-width="180"><template slot-scope="scope"><a v-if="source(scope.row)" :href="source(scope.row).source_url" target="_blank" rel="noopener noreferrer">拼多多 · {{ source(scope.row).sku_label }} · ¥{{ source(scope.row).cost_cny }}</a><span v-else>—</span></template></el-table-column>
       <el-table-column prop="product_type" label="类型" width="100">
         <template slot-scope="scope">
           <el-tag :type="scope.row.product_type === 'physical' ? 'warning' : 'success'">
@@ -23,6 +25,7 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column prop="shipping_company" label="快递公司" width="130" />
       <el-table-column prop="tracking_number" label="快递单号/兑换码" min-width="180"></el-table-column>
       <el-table-column label="收货信息" min-width="260">
         <template slot-scope="scope">
@@ -66,9 +69,19 @@
         <el-form-item label="订单号">
           <span>{{ shipForm.order_no }}</span>
         </el-form-item>
-        <el-form-item label="快递单号">
-          <el-input v-model="shipForm.tracking_number" placeholder="请输入快递单号" />
+        <el-form-item label="快递公司" required>
+          <el-select v-model="shipForm.shipping_company_code" filterable placeholder="请选择快递公司" :disabled="submitLoading">
+            <el-option v-for="item in carriers" :key="item.code" :value="item.code" :label="item.name" />
+            <el-option value="other" label="其他快递" />
+          </el-select>
         </el-form-item>
+        <el-form-item v-if="shipForm.shipping_company_code === 'other'" label="公司名称" required>
+          <el-input v-model.trim="shipForm.shipping_company" maxlength="60" :disabled="submitLoading" placeholder="请输入快递公司名称" />
+        </el-form-item>
+        <el-form-item label="快递单号" required>
+          <el-input v-model.trim="shipForm.tracking_number" maxlength="100" :disabled="submitLoading" placeholder="请输入快递单号" />
+        </el-form-item>
+      <el-alert title="确认发货后，将自动向用户发送站内消息，可点击消息查看物流。" type="info" :closable="false" />
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="shipDialogVisible = false">取 消</el-button>
@@ -86,6 +99,7 @@ export default {
   data() {
     return {
       list: [],
+      carriers: [],
       loading: false,
       page: 1,
       pageSize: 10,
@@ -95,14 +109,18 @@ export default {
       shipForm: {
         id: null,
         order_no: '',
-        tracking_number: ''
+        tracking_number: '', shipping_company_code: '', shipping_company: ''
       }
     }
   },
   mounted() {
     this.loadList()
+    axios.get(this.$baseUrl + '/manage/store/carriers', {headers:{Authorization:this.getToken()}})
+      .then(res => {this.carriers = res.data.data || []})
+      .catch(() => this.$message.error('快递公司加载失败，请刷新页面重试'))
   },
   methods: {
+    source(row) { try { return JSON.parse(row.source_snapshot || 'null') } catch (_) { return null } },
     getToken() {
       let tk = JSON.parse(window.localStorage.getItem('token'))
       if (tk) tk = tk.tk
@@ -159,27 +177,36 @@ export default {
       return `${y}-${m}-${dd} ${h}:${mm}`
     },
     openShip(row) {
-      this.shipForm = { id: row.id, order_no: row.order_no, tracking_number: '' }
+      this.shipForm = { id: row.id, order_no: row.order_no, tracking_number: '', shipping_company_code: '', shipping_company: '' }
       this.shipDialogVisible = true
     },
     submitShip() {
-      if (!this.shipForm.tracking_number) {
-        this.$message.error('请输入快递单号')
+      if (this.submitLoading) return
+      if (!this.shipForm.shipping_company_code || (this.shipForm.shipping_company_code === 'other' && !this.shipForm.shipping_company)) {
+        this.$message.error('请选择或填写快递公司')
+        return
+      }
+      if (!/^[A-Za-z0-9-]{5,100}$/.test(this.shipForm.tracking_number)) {
+        this.$message.error('请输入有效的快递单号')
         return
       }
       this.submitLoading = true
       axios.post(this.$baseUrl + `/manage/store/orders/${this.shipForm.id}/ship`, {
-        tracking_number: this.shipForm.tracking_number
+        tracking_number: this.shipForm.tracking_number,
+        shipping_company_code: this.shipForm.shipping_company_code === 'other' ? '' : this.shipForm.shipping_company_code,
+        shipping_company: this.shipForm.shipping_company
       }, {
         headers: { Authorization: this.getToken() }
       }).then(res => {
         if (res.data && res.data.code === 200) {
-          this.$message.success('已发货')
+          this.$message.success('已发货，用户通知已发送')
           this.shipDialogVisible = false
           this.loadList()
         } else {
           this.$message.error(res.data.msg || '发货失败')
         }
+      }).catch(error => {
+        this.$message.error(error.response?.data?.msg || '发货失败，请重试')
       }).finally(() => {
         this.submitLoading = false
       })

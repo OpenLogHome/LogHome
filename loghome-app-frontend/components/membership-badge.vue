@@ -42,7 +42,7 @@ export default {
 			return '';
 		},
 		label() {
-			return this.normalizedTier === 'super' ? '超级原木通行证' : '原木通行证';
+			return this.normalizedTier === 'super' ? '超级通行证会员' : '通行证会员';
 		},
 		icon() {
 			return this.normalizedTier === 'super'

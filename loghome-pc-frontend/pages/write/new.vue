@@ -12,10 +12,10 @@
             type="text" 
             class="form-input" 
             v-model="title" 
-            placeholder="请输入作品名称（不超过15个字符）" 
-            maxlength="15"
+            placeholder="请输入作品名称（不超过25个字符）"
+            maxlength="25"
           >
-          <div class="word-count">{{ title.length }}/15</div>
+          <div class="word-count">{{ title.length }}/25</div>
         </div>
 
         <div class="form-group">

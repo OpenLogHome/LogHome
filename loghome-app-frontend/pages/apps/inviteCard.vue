@@ -40,11 +40,11 @@
 					<view class="stats-label">累计邀请回归</view>
 				</view>
 				<view class="stats-item">
-					<view class="stats-value">{{inviteStats.monthNew || 0}}/10</view>
+					<view class="stats-value">{{inviteStats.monthNew || 0}}/{{monthlyLimit}}</view>
 					<view class="stats-label">本月新用户</view>
 				</view>
 				<view class="stats-item">
-					<view class="stats-value">{{inviteStats.monthReturn || 0}}/10</view>
+					<view class="stats-value">{{inviteStats.monthReturn || 0}}/{{monthlyLimit}}</view>
 					<view class="stats-label">本月回归用户</view>
 				</view>
 			</view>
@@ -55,11 +55,11 @@
 			<view class="rewards-content">
 				<view class="reward-item">
 					<uni-icons type="checkmarkempty" size="18" color="#67C23A"></uni-icons>
-					<text>邀请新用户：双方各获得1000原木</text>
+					<text>邀请新用户：双方各获得{{newUserReward}}原木</text>
 				</view>
 				<view class="reward-item">
 					<uni-icons type="checkmarkempty" size="18" color="#67C23A"></uni-icons>
-					<text>邀请老用户回归：双方各获得500原木</text>
+					<text>邀请老用户回归：双方各获得{{returnUserReward}}原木</text>
 				</view>
 				<view class="reward-item">
 					<uni-icons type="info" size="18" color="#E6A23C"></uni-icons>
@@ -67,7 +67,7 @@
 				</view>
 				<view class="reward-item">
 					<uni-icons type="info" size="18" color="#E6A23C"></uni-icons>
-					<text>每月邀请上限：10位新用户 + 10位回归用户</text>
+					<text>每月邀请上限：{{monthlyLimit}}位新用户 + {{monthlyLimit}}位回归用户</text>
 				</view>
 			</view>
 		</view>
@@ -94,6 +94,9 @@ export default {
 		return {
 			userInfo: {},
 			inviteCode: '',
+			newUserReward: 1000,
+			returnUserReward: 500,
+			monthlyLimit: 10,
 			inviteStats: {
 				totalNew: 0,
 				totalReturn: 0,
@@ -147,6 +150,11 @@ export default {
 						totalReturn: res.data.return_user_count,
 						monthNew: res.data.last_month_new_count,
 						monthReturn: res.data.last_month_return_count
+					}
+					if (res.data.new_user_reward !== undefined) {
+						this.newUserReward = res.data.new_user_reward
+						this.returnUserReward = res.data.return_user_reward
+						this.monthlyLimit = res.data.monthly_limit
 					}
 				}
 			} catch (error) {

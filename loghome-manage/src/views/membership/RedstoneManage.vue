@@ -107,6 +107,7 @@
           <el-option label="原木兑换" value="log_exchange" />
           <el-option label="AI消耗" value="ai_usage" />
           <el-option label="管理员调整" value="admin_adjustment" />
+          <el-option label="到期扣减" value="expiration" />
           <el-option label="退款" value="refund" />
         </el-select>
       </div>
@@ -318,6 +319,7 @@ export default {
         log_exchange: '原木兑换',
         ai_usage: 'AI消耗',
         admin_adjustment: '管理员调整',
+        expiration: '到期扣减',
         refund: '退款'
       }
       return map[type] || type || '--'

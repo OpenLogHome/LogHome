@@ -14,9 +14,9 @@
         <div class="world-info">
           <h1 class="world-title">{{ world.name }}</h1>
           <div class="world-meta">
-            <div class="author-info" @click="gotoUserProfile(world.author_id || world.creator_id)">
+            <div class="author-info" @click="gotoUserProfile(world.author_id)">
               <img v-if="world.avatar_url || world.auther_avatar" :src="world.avatar_url || world.auther_avatar" class="author-avatar" alt="作者头像" 
-                :onerror="`this.onerror=null;this.src='/static/default-avatar.png'`">
+                :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
               <div v-else class="author-avatar-placeholder">{{ world.user_name ? world.user_name.charAt(0) : '作' }}</div>
               <span class="author-name">{{ world.user_name || world.author_name || '佚名' }}</span>
             </div>
@@ -58,7 +58,7 @@
               </el-collapse>
               
               <div class="nothing" v-else>
-                <img src="/static/default-avatar.png" alt="暂无内容" class="nothing-img">
+                <img src="/default-avatar.png" alt="暂无内容" class="nothing-img">
                 <p class="nothing-text">这是一片什么都没有的荒原</p>
               </div>
 
@@ -78,7 +78,7 @@
               </div>
               
               <div class="nothing" v-else>
-                <img src="/static/default-avatar.png" alt="暂无内容" class="nothing-img">
+                <img src="/default-avatar.png" alt="暂无内容" class="nothing-img">
                 <p class="nothing-text">这是一片什么都没有的荒原</p>
               </div>
             </div>
@@ -93,9 +93,9 @@
                 class="novel-card">
                 <div class="novel-cover">
                   <img 
-                    :src="novel.picUrl ? novel.picUrl + '?thumbnail=1' : '/static/user/defaultCover.jpg'" 
+                    :src="novel.picUrl ? novel.picUrl + '?thumbnail=1' : '/default-book-cover.png'" 
                     :alt="novel.name"
-                    :onerror="`this.onerror=null;this.src='/static/user/defaultCover.jpg'`">
+                    :onerror="`this.onerror=null;this.src='/default-book-cover.png'`">
                 </div>
                 <div class="novel-info">
                   <h4 class="novel-title">
@@ -104,10 +104,10 @@
                   </h4>
                   <div class="novel-author">
                     <img 
-                      :src="novel.avatar_url || novel.auther_avatar || '/static/default-avatar.png'" 
+                      :src="novel.avatar_url || novel.auther_avatar || '/default-avatar.png'" 
                       alt="作者头像" 
                       class="author-avatar"
-                      :onerror="`this.onerror=null;this.src='/static/default-avatar.png'`">
+                      :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
                     <span class="author-name">{{ novel.user_name || novel.author_name || '佚名' }}</span>
                   </div>
                   <p class="novel-desc">{{ truncateText(novel.content, 100) }}</p>
@@ -116,7 +116,7 @@
             </div>
             
             <div class="nothing" v-else>
-              <img src="/static/default-avatar.png" alt="暂无内容" class="nothing-img">
+              <img src="/default-avatar.png" alt="暂无内容" class="nothing-img">
               <p class="nothing-text">这是一片什么都没有的荒原</p>
             </div>
           </el-tab-pane>
@@ -142,7 +142,11 @@ export default {
   async asyncData({ params, $api, error }) {
     try {
       const worldId = params.id
-      const world = await $api.novels.getNovelById(worldId)
+      // 站内多数入口传作品ID，个人中心传世界ID，两种都支持
+      let world = await $api.worlds.getWorldByNovelId(worldId)
+      if (!world || world.length === 0) {
+        world = await $api.worlds.getWorldById(worldId)
+      }
       
       if (!world || world.length === 0) {
         return { error: '未找到该世界设定' }
@@ -163,7 +167,7 @@ export default {
       const worldVocabs = articles.filter(item => item.article_type === 'worldVocabulary')
       
       // 获取关联作品 - 使用世界关联作品API
-      const assoNovels = await $api.worlds.getAssoWorldByWorldId(worldData.novel_id) || []
+      const assoNovels = await $api.worlds.getAssoWorldByWorldId(worldData.world_id) || []
       
       // 关联作品中已包含作者信息，确保使用正确的字段
       for (const novel of assoNovels) {
@@ -197,7 +201,9 @@ export default {
   
   computed: {
     isCreator() {
-      return this.userInfo && this.world && this.userInfo.user_id === this.world.creator_id
+      if (!this.userInfo || !this.world) return false
+      const ownerId = this.world.creator_id || this.world.author_id
+      return Number(this.userInfo.user_id) === Number(ownerId)
     }
   },
   
@@ -208,13 +214,11 @@ export default {
   methods: {
     async getUserInfo() {
       try {
-        const token = this.$store.state.auth.token
+        const token = localStorage.getItem('token')
         if (!token) return
         
         const userInfo = await this.$api.users.getUserProfile()
         this.userInfo = userInfo
-        // 确保用户信息加载后重新检查创建者权限
-        this.checkCreatorPermission()
       } catch (err) {
         console.error('获取用户信息失败:', err)
       }
@@ -250,13 +254,6 @@ export default {
     
     editWorld(novelId) {
       this.$router.push(`/write/edit/${novelId}?worldId=${this.world.world_id}`)
-    },
-    
-    checkCreatorPermission() {
-      if (this.userInfo && this.world) {
-        // 验证当前用户是否为创建者
-        this.isCreator = this.userInfo.user_id === this.world.creator_id
-      }
     }
   }
 }

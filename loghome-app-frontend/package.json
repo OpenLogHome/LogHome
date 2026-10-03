@@ -5,6 +5,9 @@
     "description": "原木社区前端代码",
     "keywords": [],
     "dependencies": {
+        "@hocuspocus/provider": "4.5.0",
+        "@tiptap/extension-collaboration": "2.27.2",
+        "@tiptap/extension-collaboration-cursor": "2.27.2",
         "@tiptap/extension-image": "^2.27.2",
         "@tiptap/extension-placeholder": "^2.27.2",
         "@tiptap/pm": "^2.27.2",
@@ -23,8 +26,12 @@
         "uview-ui": "^2.0.35",
         "vue-count-to": "^1.0.13",
         "vue-flip-article": "^0.1.0",
+        "vue-i18n": "^8.28.2",
         "vue-monoplasty-slide-verify": "^1.1.5",
-        "wujie-vue2": "^1.0.28"
+        "wujie-vue2": "^1.0.28",
+        "y-indexeddb": "9.0.12",
+        "y-prosemirror": "1.3.7",
+        "yjs": "13.6.27"
     },
     "devDependencies": {
         "babel-helper-vue-jsx-merge-props": "^2.0.3"

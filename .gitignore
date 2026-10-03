@@ -1,6 +1,8 @@
 # Sensitive files - API keys, secrets, credentials
 *.env
 .env.*
+!.env.example
+!**/.env.example
 SECRET.js
 loghome-ai-backend/config.js
 loghome-backend/config.js

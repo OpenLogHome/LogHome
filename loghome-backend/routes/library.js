@@ -501,6 +501,61 @@ router.get('/get_novel_tags', async function (req, res) {
 	}
 });
 
+// 获取小说关联活动标签的活动新闻（公开接口，供书籍详情页展示）
+router.get('/get_novel_activity_news', async function (req, res) {
+	try {
+		let results = await query(
+			`SELECT a.tag_id, a.activity_name, a.activity_news, a.is_active,
+			        a.popularity_enabled, a.popularity_quota, a.popularity_rules,
+			        COALESCE(v.vote_count, 0) AS popularity_votes
+			 FROM novel_tag nt
+			 JOIN tags t ON t.tag_id = nt.tag_id AND t.is_activity_tag = 1 AND t.is_deleted = 0
+			 JOIN activity a ON a.tag_id = t.tag_id
+			 JOIN novels n ON n.novel_id = nt.novel_id AND n.deleted = 0 AND n.is_personal = 0
+			 LEFT JOIN (
+			 	SELECT tag_id, novel_id, COUNT(*) AS vote_count
+			 	FROM activity_popularity_vote
+			 	GROUP BY tag_id, novel_id
+			 ) v ON v.tag_id = a.tag_id AND v.novel_id = nt.novel_id
+			 WHERE nt.novel_id = ?
+			 ORDER BY a.is_active DESC, a.tag_id ASC`,
+			[req.query.novel_id],
+		);
+		results = results.map((row) => {
+			let news = [];
+			try {
+				let parsed = JSON.parse(row.activity_news || '[]');
+				if (Array.isArray(parsed)) {
+					news = parsed;
+				}
+			} catch (e) {}
+			let rules = [];
+			try {
+				let parsed = JSON.parse(row.popularity_rules || '[]');
+				if (Array.isArray(parsed)) {
+					rules = parsed;
+				}
+			} catch (e) {}
+			return {
+				tag_id: row.tag_id,
+				activity_name: row.activity_name,
+				is_active: Number(row.is_active),
+				news,
+				popularity: {
+					enabled: Number(row.popularity_enabled) === 1,
+					quota: Number(row.popularity_quota) || 2,
+					votes: Number(row.popularity_votes || 0),
+					rules,
+				},
+			};
+		});
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.get('/get_tag_by_id', async function (req, res) {
 	try {
 		let results = (await query(
@@ -551,8 +606,12 @@ router.get('/get_tag_collections', async function (req, res) {
 
 router.get('/get_suggested_tags', async function (req, res) {
 	try {
+		// 官方标签 + 进行中的活动标签（活动标签未标记为 suggested，需单独纳入，否则创建作品/标签页的活动选择器会显示"无数据"）
 		let results = await query(
-			'SELECT * FROM tags WHERE is_suggested = 1 AND is_deleted = 0',
+			`SELECT t.* FROM tags t
+			LEFT JOIN activity a ON a.tag_id = t.tag_id
+			WHERE t.is_deleted = 0 AND (t.is_suggested = 1 OR (t.is_activity_tag = 1 AND a.is_active = 1))
+			ORDER BY t.is_activity_tag DESC, t.tag_id DESC`,
 		);
 		let novel_tag = await query(
 			'SELECT * FROM novel_tag nt WHERE nt.novel_id = ?',
@@ -582,11 +641,14 @@ router.get('/delete_novel_tag', auth, async function (req, res) {
 			req.query.novel_id,req.user[0].user_id,
 		]);
 		if (novel.length > 0 && novel[0].author_id == user.user_id) {
-			//检查是不是已结束的活动标签，如果是则不允许删除
-			let tags = await query('SELECT * FROM tags WHERE tag_id = ?', [
-				req.query.tag_id,
-			]);
-			if(tags.length > 0 && tags[0].is_activity_tag == 1 && tags[0].is_suggested == 0){
+			//检查是不是已结束的活动标签，如果是则不允许删除（活动不存在时视为可删除）
+			let tags = await query(
+				`SELECT t.tag_id, t.is_activity_tag, t.is_suggested, a.is_active
+				 FROM tags t LEFT JOIN activity a ON a.tag_id = t.tag_id
+				 WHERE t.tag_id = ?`,
+				[req.query.tag_id],
+			);
+			if(tags.length > 0 && tags[0].is_activity_tag == 1 && tags[0].is_suggested == 0 && Number(tags[0].is_active) === 0){
 				res.json(400, { msg: '该活动已结束，不得移除标签' });
 				return;
 			}
@@ -616,10 +678,15 @@ router.get('/add_novel_tag', auth, async function (req, res) {
 				req.query.tag_name,
 			]);
 			if (tags.length > 0) {
-				//检查是不是已结束的活动标签，如果是则不允许添加
+				//检查是不是已结束（或未开放）的活动标签，如果是则不允许添加
 				if(tags[0].is_activity_tag == 1 && tags[0].is_suggested == 0){
-					res.json(400, { msg: '该活动已结束，不得添加标签' });
-					return;
+					let activity = await query('SELECT is_active FROM activity WHERE tag_id = ?', [
+						tags[0].tag_id,
+					]);
+					if (activity.length === 0 || Number(activity[0].is_active) !== 1) {
+						res.json(400, { msg: '该活动未开放或已结束，不得添加标签' });
+						return;
+					}
 				}
 				let results = await query(
 					'INSERT INTO novel_tag(novel_id,tag_id) VALUES(?,?)',

@@ -51,6 +51,12 @@ const {
 	calculateContentHash: calculateArticleContentHash,
 	ensureArticleParagraphIds: ensureArticleParagraphIdsForStorage,
 } = require('../bin/articleParagraphIds.js');
+const {
+	REALTIME_CRDT_MODE,
+	getArticleCollaborationState,
+	getRealtimeProjection,
+	serializeArticleCollaborationState,
+} = require('../bin/articleCollaborationMode.js');
 const fs = require('fs'); // 引入文件系统模块
 const compressing = require('compressing');
 const path = require('path');
@@ -484,6 +490,31 @@ async function getNovelSummary(novelId) {
 	return rows && rows.length > 0 ? rows[0] : null;
 }
 
+// 查询作品绑定的、进行中且开启"限制完结后更新"的创作活动
+async function getRestrictingActivities(novelId) {
+	const rows = await query(`
+		SELECT a.tag_id, a.activity_name
+		FROM novel_tag nt
+		JOIN tags t ON nt.tag_id = t.tag_id AND t.is_activity_tag = 1 AND t.is_deleted = 0
+		JOIN activity a ON a.tag_id = t.tag_id AND a.is_active = 1 AND a.restrict_complete_update = 1
+		WHERE nt.novel_id = ?
+	`, [novelId]);
+	return rows || [];
+}
+
+// 若作品已完结且受活动限制，返回对应的错误提示，否则返回 null
+async function getRestrictingActivityError(novelId, action) {
+	const novelRows = await query(
+		'SELECT is_complete FROM novels WHERE novel_id = ? AND deleted = 0 LIMIT 1',
+		[novelId],
+	);
+	if (novelRows.length === 0 || Number(novelRows[0].is_complete) !== 1) return null;
+	const activities = await getRestrictingActivities(novelId);
+	if (activities.length === 0) return null;
+	const names = activities.map((a) => `「${a.activity_name}」`).join('、');
+	return `作品已完结并参与进行中的创作活动${names}，活动期间不可${action}`;
+}
+
 function getCollaborationSettingsRoute(novelId) {
 	return `writers/essayCollaborationSettings?id=${novelId}`;
 }
@@ -540,6 +571,8 @@ function serializeArticleListRow(row) {
 		article_type: row.article_type,
 		novel_name: row.novel_name,
 		feedback_count: row.feedback_count || 0,
+		collaboration_mode: row.collaboration_mode || 'legacy_lock',
+		collaboration_revision: Number(row.collaboration_revision || 0),
 	};
 
 	if (row.writer_article_id) {
@@ -562,7 +595,8 @@ function serializeArticleListRow(row) {
 		};
 	}
 
-	if (row.active_lock_id) {
+	// realtime_crdt 使用 awareness 展示在线成员，不应暴露遗留编辑锁。
+	if (article.collaboration_mode !== REALTIME_CRDT_MODE && row.active_lock_id) {
 		article.active_editor = serializeEditLock({
 			lock_id: row.active_lock_id,
 			article_id: row.article_id,
@@ -820,6 +854,13 @@ router.post('/set_novel_update_status', auth, async (req, res) => {
 		const access = await getNovelAccess(user.user_id, novelId);
 		if (!hasNovelOwnerAccess(access)) {
 			return res.status(403).json({ msg: 'access denied' });
+		}
+
+		if (Number(req.body.is_complete) !== 1) {
+			const restrictError = await getRestrictingActivityError(novelId, '退回连载状态');
+			if (restrictError) {
+				return res.status(400).json({ msg: restrictError });
+			}
 		}
 
 		let results = await query(
@@ -1423,6 +1464,14 @@ router.post('/claim_article_edit_lock', auth, async (req, res) => {
 		if (!canEditDraft(access) || access.article_deleted) {
 			return res.status(403).json({ msg: 'access denied' });
 		}
+		const collaborationState = await getArticleCollaborationState(articleId);
+		if (collaborationState && collaborationState.mode === REALTIME_CRDT_MODE) {
+			return res.status(409).json({
+				msg: 'realtime collaboration is enabled',
+				code: 'realtime_collaboration_enabled',
+				collaboration: serializeArticleCollaborationState(collaborationState),
+			});
+		}
 
 		const result = await claimArticleEditLock({
 			articleId: access.article_id,
@@ -1466,6 +1515,14 @@ router.post('/heartbeat_article_edit_lock', auth, async (req, res) => {
 		const access = await getArticleAccess(user.user_id, articleId);
 		if (!canEditDraft(access) || access.article_deleted) {
 			return res.status(403).json({ msg: 'access denied' });
+		}
+		const collaborationState = await getArticleCollaborationState(articleId);
+		if (collaborationState && collaborationState.mode === REALTIME_CRDT_MODE) {
+			return res.status(409).json({
+				msg: 'realtime collaboration is enabled',
+				code: 'realtime_collaboration_enabled',
+				collaboration: serializeArticleCollaborationState(collaborationState),
+			});
 		}
 
 		const result = await heartbeatArticleEditLock({
@@ -1631,6 +1688,8 @@ router.get('/get_articles', auth, async function (req, res) {
 				IF(am.memory_id IS NULL, 0, 1) as index_is_current,
 				a.text_count,
 				a.article_type,
+				COALESCE(acm.mode, 'legacy_lock') as collaboration_mode,
+				acd.revision as collaboration_revision,
 				n.name as novel_name,
 				(SELECT COUNT(*) FROM article_feedback WHERE article_id = a.article_id AND status = 0) as feedback_count,
 				aw.article_id as writer_article_id,
@@ -1657,6 +1716,8 @@ router.get('/get_articles', auth, async function (req, res) {
 				al.avatar_url as active_lock_avatar_url
 			FROM articles a
 			INNER JOIN novels n ON a.novel_id = n.novel_id
+			LEFT JOIN article_collaboration_modes acm ON acm.article_id = a.article_id
+			LEFT JOIN article_collab_documents acd ON acd.article_id = a.article_id
 			LEFT JOIN articles_writer aw
 				ON aw.id = ${buildLatestWriterIdSubquery('a.article_id', { includeNovelCheck: true })}
 			LEFT JOIN users writer_user ON writer_user.user_id = aw.editor_user_id
@@ -1910,6 +1971,9 @@ router.get('/get_article_writer', auth, async function (req, res) {
             );
             results[0].novel_info = novel_info[0];
 			results[0].current_access = serializeAccess(access);
+			results[0].collaboration = serializeArticleCollaborationState(
+				await getArticleCollaborationState(articleId),
+			);
         } else {
 			res.end("no data");
 			return;
@@ -1956,6 +2020,9 @@ router.get('/get_article_writer_hash', auth, async function (req, res) {
             results[0].novel_info = novel_info[0];
 			results[0].contentHash = crypto.createHash('md5').update(results[0].content).digest('hex');
 			results[0].current_access = serializeAccess(access);
+			results[0].collaboration = serializeArticleCollaborationState(
+				await getArticleCollaborationState(articleId),
+			);
 			// results[0].content = undefined;
         } else {
 			res.end("no data");
@@ -1977,6 +2044,10 @@ router.post('/sync_article_writer_from_reader', auth, async (req, res) => {
 		const access = await getArticleAccess(user.user_id, articleId);
 		if (!canEditDraft(access) || access.article_deleted) {
 			return res.status(403).json({ msg: 'access denied' });
+		}
+		const collaborationState = await getArticleCollaborationState(articleId);
+		if (collaborationState && collaborationState.mode === REALTIME_CRDT_MODE) {
+			return res.status(409).json({ msg: 'realtime collaboration is enabled', code: 'realtime_collaboration_enabled' });
 		}
 
 		let article_reader = await query(
@@ -2025,6 +2096,18 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 		const access = await getArticleAccess(user.user_id, articleId);
 		if (!canEditDraft(access) || access.article_deleted) {
 			return res.status(403).json({ msg: 'access denied' });
+		}
+		const restrictError = await getRestrictingActivityError(Number(access.novel_id), '编辑章节');
+		if (restrictError) {
+			return res.status(400).json({ msg: restrictError });
+		}
+		const collaborationState = await getArticleCollaborationState(articleId);
+		if (collaborationState && collaborationState.mode === REALTIME_CRDT_MODE) {
+			return res.status(409).json({
+				msg: 'realtime collaboration is enabled',
+				code: 'realtime_collaboration_enabled',
+				collaboration: serializeArticleCollaborationState(collaborationState),
+			});
 		}
 
 		const sessionValidation = await validateActiveEditSession({
@@ -2189,6 +2272,10 @@ router.post('/add_article', auth, async (req, res) => {
 	try {
 		const access = await getNovelAccess(user.user_id, novelId);
 		if (access && canAddArticle(access)) {
+			const restrictError = await getRestrictingActivityError(novelId, '新增章节');
+			if (restrictError) {
+				return res.status(400).json({ msg: restrictError });
+			}
 			if (!req.body.article_type) req.body.article_type = 'richtext';
             if (req.body.article_type == 'text') {
                 req.body.article_type = 'richtext';
@@ -2250,10 +2337,37 @@ router.post('/modify_article', auth, async (req, res) => {
 			req.body.clear_schedule === true ||
 			req.body.clear_schedule === 'true' ||
 			Number(req.body.clear_schedule) === 1;
-		const contentHash = calculateContentHash(req.body.content);
+		let contentHash = calculateContentHash(req.body.content);
 		const access = await getArticleAccess(user.user_id, req.body.article_id);
 		if (!access || access.article_deleted) {
 			return res.status(403).json({ msg: 'access denied' });
+		}
+		const restrictError = await getRestrictingActivityError(Number(access.novel_id), '编辑章节');
+		if (restrictError) {
+			return res.status(400).json({ msg: restrictError });
+		}
+		const collaborationState = await getArticleCollaborationState(req.body.article_id);
+		const isRealtimeCollaboration =
+			collaborationState && collaborationState.mode === REALTIME_CRDT_MODE;
+		if (isRealtimeCollaboration) {
+			const expectedRevision = Number(req.body.collab_revision || 0);
+			const projection = await getRealtimeProjection(req.body.article_id);
+			if (!projection) {
+				return res.status(409).json({
+					msg: 'collaboration projection is not ready',
+					code: 'collaboration_projection_not_ready',
+				});
+			}
+			if (!expectedRevision || expectedRevision !== projection.revision) {
+				return res.status(409).json({
+					msg: 'collaboration revision has changed',
+					code: 'collaboration_revision_conflict',
+					revision: projection.revision,
+				});
+			}
+			req.body.title = projection.title;
+			req.body.content = projection.content;
+			contentHash = projection.contentHash || calculateContentHash(projection.content);
 		}
 
 		if (access.article_type === 'spliter') {
@@ -2264,14 +2378,16 @@ router.post('/modify_article', auth, async (req, res) => {
 			return res.status(403).json({ msg: 'access denied' });
 		}
 
-		const sessionValidation = await validateActiveEditSession({
-			articleId: access.article_id,
-			userId: user.user_id,
-			sessionId,
-			required: false,
-		});
-		if (!sessionValidation.ok) {
-			return res.status(sessionValidation.status).json(sessionValidation.body);
+		if (!isRealtimeCollaboration) {
+			const sessionValidation = await validateActiveEditSession({
+				articleId: access.article_id,
+				userId: user.user_id,
+				sessionId,
+				required: false,
+			});
+			if (!sessionValidation.ok) {
+				return res.status(sessionValidation.status).json(sessionValidation.body);
+			}
 		}
 
 		// 如果是定时发布
@@ -2994,8 +3110,8 @@ router.get('/get_novel_activity', auth, async (req, res) => {
 
 		// 获取作品的标签，并检查是否有活动标签
 		let activityTags = await query(`
-			SELECT t.tag_id, t.tag_name, a.activity_name, a.activity_description, 
-				   a.activity_news, a.required_fields
+			SELECT t.tag_id, t.tag_name, a.activity_name, a.activity_description,
+				   a.activity_news, a.required_fields, a.is_active, a.restrict_complete_update
 			FROM novel_tag nt
 			JOIN tags t ON nt.tag_id = t.tag_id
 			JOIN activity a ON t.tag_id = a.tag_id

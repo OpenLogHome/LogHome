@@ -30,8 +30,8 @@
         <div class="novel-info">
           <h3 class="novel-title">{{ novel.name }}</h3>
           <div class="novel-author-info">
-            <img :src="novel.avatar_url || '/static/user/defaultAvatar.jpg'" alt="作者头像" class="author-avatar"
-              :onerror="`this.onerror=null;this.src='/static/user/defaultAvatar.jpg'`">
+            <img :src="novel.avatar_url || '/default-avatar.png'" alt="作者头像" class="author-avatar"
+              :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
             <span class="author-name">{{ novel.user_name || '佚名' }}</span>
           </div>
           <p class="novel-desc">{{ truncateText(novel.content, 100) }}</p>

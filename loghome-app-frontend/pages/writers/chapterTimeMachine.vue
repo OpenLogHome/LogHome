@@ -145,6 +145,7 @@ export default {
       targetRecord.editor_name = cloudRecord.editor_name || null;
       targetRecord.editor_avatar_url = cloudRecord.editor_avatar_url || null;
       targetRecord.edit_session_id = cloudRecord.edit_session_id || null;
+      targetRecord.cloud_writer_id = cloudRecord.cloud_writer_id || cloudRecord.id || null;
       return targetRecord;
     },
     getRecordSourceLabel(record) {
@@ -287,6 +288,7 @@ export default {
         // 添加来源标记
         return response.data.map((record) => ({
           ...record,
+          cloud_writer_id: record.id || null,
           source: "发布版本",
           create_time: this.utc2beijing(record.update_time),
           is_slow_save: true, // 云端备份视为完整备份
@@ -440,25 +442,43 @@ export default {
               let tk = JSON.parse(window.localStorage.getItem("token"));
               if (tk) tk = tk.tk;
 
-              // 发送请求
-              await axios.post(
-                this.$baseUrl + "/essays/upload_article_writer",
-                {
-                  article_id: this.articleId,
-                  title: this.selectedRecord.title,
-                  content: restoredContent,
-                  create_time: currentServerTime,
-                  novel_id: this.novelId,
-                  is_fast_save: false,
-                  is_force: true,
-                },
-                {
-                  headers: {
-                    "Content-Type": "application/json", //设置请求头请求格式为JSON
-                    Authorization: "Bearer " + tk, //设置token 其中K名要和后端协调好
+              const headers = {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + tk,
+              };
+              let collaborationStatus = null;
+              try {
+                const statusResponse = await axios.get(
+                  `${this.$readerAiBaseUrl}/collaboration/articles/${this.articleId}/status`,
+                  { headers }
+                );
+                collaborationStatus = statusResponse.data && statusResponse.data.data;
+              } catch (error) {}
+
+              if (collaborationStatus && collaborationStatus.mode === "realtime_crdt") {
+                await axios.post(
+                  `${this.$readerAiBaseUrl}/collaboration/articles/${this.articleId}/replace`,
+                  {
+                    title: this.selectedRecord.title,
+                    content: restoredContent,
                   },
-                }
-              );
+                  { headers }
+                );
+              } else {
+                await axios.post(
+                  this.$baseUrl + "/essays/upload_article_writer",
+                  {
+                    article_id: this.articleId,
+                    title: this.selectedRecord.title,
+                    content: restoredContent,
+                    create_time: currentServerTime,
+                    novel_id: this.novelId,
+                    is_fast_save: false,
+                    is_force: true,
+                  },
+                  { headers }
+                );
+              }
 
               await writerArticleDB.articles.add({
                 article_id: Number(this.articleId),

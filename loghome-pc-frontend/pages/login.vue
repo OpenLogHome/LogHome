@@ -62,13 +62,13 @@
       <transition name="fade">
         <div v-if="step == 3" class="login-step">
           <p class="step-tip">欢迎来到原木社区，请设置你的账号和密码。</p>
-          <div v-if="!forgetPwd" class="input-group">
+          <div class="input-group">
             <div class="input-icon">
               <img src="~/assets/images/icon_user.png" alt="用户" class="icon">
             </div>
             <input type="text" placeholder="请输入账号" v-model="account" @input="checkAccount" class="login-input">
           </div>
-          <div class="warning-text" v-show="accountUsed && !forgetPwd">该账号已被使用</div>
+          <div class="warning-text" v-show="accountUsed">该账号已被使用</div>
           
           <div class="input-group">
             <div class="input-icon">
@@ -89,9 +89,6 @@
             <div>
               <div>即将使用以下邮箱登录：</div>
               <div>{{email}}</div>
-            </div>
-            <div>
-              <span class="resend-btn" @click="forgetPwd=true;step = 1">忘记密码</span>
             </div>
           </div>
           
@@ -136,7 +133,6 @@ export default {
       waitTimer: undefined,
       accountUsed: false,
       registerVerify: "",
-      forgetPwd: false
     }
   },
   methods: {
@@ -155,7 +151,6 @@ export default {
     async nextStep() {
       switch (this.step) {
         case 0:
-          this.forgetPwd = false;
           // 验证邮箱格式
           const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
           if (!emailPattern.test(this.email)) {
@@ -244,7 +239,7 @@ export default {
       }
       //账号格式4-12位字母数字
       let accountPattern = /^[a-zA-Z0-9]{4,12}$/;
-      if (!accountPattern.test(this.account) && !this.forgetPwd) {
+      if (!accountPattern.test(this.account)) {
         this.$message.error("账号格式：4-12位字母、数字组合");
         return;
       }

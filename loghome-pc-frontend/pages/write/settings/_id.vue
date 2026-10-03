@@ -115,6 +115,7 @@ export default {
     return {
       novel: null,
       tags: [],
+      restrictingActivities: [],
       loading: true,
       error: null,
       dialogVisible: false,
@@ -141,6 +142,8 @@ export default {
           this.novel = response[0]
           // 获取作品标签
           await this.fetchNovelTags()
+          // 获取作品关联的活动限制信息
+          await this.fetchActivityRestrictions()
         } else {
           this.error = '未找到作品信息'
         }
@@ -165,6 +168,21 @@ export default {
       }
     },
     
+    // 获取进行中且开启"限制完结后更新"的活动
+    async fetchActivityRestrictions() {
+      this.restrictingActivities = []
+      try {
+        const res = await this.$api.essays.getNovelActivity(this.$route.params.id)
+        if (res && res.hasActivity && Array.isArray(res.activities)) {
+          this.restrictingActivities = res.activities.filter(
+            a => Number(a.is_active) === 1 && Number(a.restrict_complete_update) === 1
+          )
+        }
+      } catch (error) {
+        console.error('获取活动限制信息失败:', error)
+      }
+    },
+
     showStatusDialog(type) {
       this.dialogType = type
       
@@ -192,23 +210,21 @@ export default {
     async selectStatus(value) {
       try {
         const novelId = this.$route.params.id
-        
+
         if (this.dialogType === 'personal') {
           await this.$api.essays.setNovelStatus({
             is_personal: value,
             novel_id: novelId
           })
-          
+
           this.$message.success('作品状态修改成功')
+          await this.fetchNovelData()
         } else if (this.dialogType === 'update') {
-          await this.$api.essays.setNovelUpdateStatus({
-            is_complete: value,
-            novel_id: novelId
-          })
-          
-          this.$message.success('更新状态修改成功')
+          this.dialogVisible = false
+          await this.confirmUpdateStatus(value)
+          return
         }
-        
+
         // 刷新作品数据
         await this.fetchNovelData()
       } catch (error) {
@@ -218,7 +234,50 @@ export default {
         this.dialogVisible = false
       }
     },
-    
+
+    // 完结/连载切换：进行中的活动可能限制完结后的更新操作
+    async confirmUpdateStatus(value) {
+      const isComplete = Number(this.novel.is_complete) === 1
+      const restricted = this.restrictingActivities.length > 0
+      const restrictNames = this.restrictingActivities.map(a => `「${a.activity_name}」`).join('、')
+      const novelId = this.$route.params.id
+
+      if (value === 0 && isComplete && restricted) {
+        this.$alert(`作品已完结并参与进行中的创作活动${restrictNames}，活动期间不可退回连载状态。`, '无法退回连载', {
+          confirmButtonText: '知道了'
+        })
+        return
+      }
+
+      if (value === 1 && !isComplete && restricted) {
+        try {
+          await this.$confirm(`完结后，在活动${restrictNames}期间将无法新增或编辑章节，也无法退回连载状态。确定完结吗？`, '确认完结', {
+            confirmButtonText: '确定完结',
+            cancelButtonText: '再想想',
+            type: 'warning'
+          })
+        } catch (e) {
+          return
+        }
+      }
+
+      try {
+        const res = await this.$api.essays.setNovelUpdateStatus({
+          is_complete: value,
+          novel_id: novelId
+        })
+        if (res && res.msg) {
+          this.$message.error(res.msg)
+        } else {
+          this.$message.success('更新状态修改成功')
+        }
+        await this.fetchNovelData()
+      } catch (error) {
+        console.error('修改状态失败:', error)
+        this.$message.error('修改状态失败，请稍后重试')
+      }
+    },
+
     goToInfoEdit() {
       this.$router.push(`/write/settings/info/${this.$route.params.id}`)
     },

@@ -12,6 +12,7 @@ const REDSTONE_GRANTS = {
   super: 200,
 };
 const FREE_MONTHLY_REDSTONE_GRANT = 6;
+const GIFT_REDSTONE_VALIDITY_MONTHS = 3;
 
 function isSchemaMissingError(error) {
   if (!error) return false;
@@ -99,8 +100,52 @@ async function grantRedstone(transactionalQuery, options) {
     ],
   );
   if (insertResult.affectedRows === 0) return 0;
+  await transactionalQuery(
+    `INSERT INTO redstone_lots
+     (user_id, source_transaction_id, granted_amount, remaining_amount, expires_at, created_at, updated_at)
+     VALUES (?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ${GIFT_REDSTONE_VALIDITY_MONTHS} MONTH),
+             CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    [options.userId, insertResult.insertId, amount, amount],
+  );
   await transactionalQuery('UPDATE user_bank SET redstone = redstone + ? WHERE user_id = ?', [amount, options.userId]);
   return amount;
+}
+
+async function expireRedstoneLot(lotId) {
+  const ownerRows = await query('SELECT user_id FROM redstone_lots WHERE lot_id = ? LIMIT 1', [lotId]);
+  if (ownerRows.length === 0) return 0;
+  const userId = Number(ownerRows[0].user_id);
+  return withTransaction(async (transactionalQuery) => {
+    await transactionalQuery('SELECT redstone FROM user_bank WHERE user_id = ? LIMIT 1 FOR UPDATE', [userId]);
+    const lotRows = await transactionalQuery(
+      `SELECT lot_id, remaining_amount
+       FROM redstone_lots
+       WHERE lot_id = ? AND user_id = ? AND remaining_amount > 0
+         AND expires_at IS NOT NULL AND expires_at <= CURRENT_TIMESTAMP
+       LIMIT 1 FOR UPDATE`,
+      [lotId, userId],
+    );
+    if (lotRows.length === 0) return 0;
+    const amount = Number(lotRows[0].remaining_amount || 0);
+    const insertResult = await transactionalQuery(
+      `INSERT IGNORE INTO redstone_transactions
+       (user_id, amount, log_cost, transaction_type, reference_id, period_key,
+        request_key, description, created_at)
+       VALUES (?, ?, 0, 'expiration', ?, NULL, ?, ?, CURRENT_TIMESTAMP)`,
+      [userId, -amount, String(lotId), `redstone-expiration:${lotId}`, `赠送红石有效期届满，过期${amount}红石`],
+    );
+    if (insertResult.affectedRows === 0) return 0;
+    await transactionalQuery(
+      'UPDATE redstone_lots SET remaining_amount = 0, updated_at = CURRENT_TIMESTAMP WHERE lot_id = ?',
+      [lotId],
+    );
+    const updateResult = await transactionalQuery(
+      'UPDATE user_bank SET redstone = redstone - ? WHERE user_id = ? AND redstone >= ?',
+      [amount, userId, amount],
+    );
+    if (updateResult.affectedRows === 0) throw new Error('红石到期扣减时账户余额与批次余额不一致');
+    return amount;
+  });
 }
 
 async function ensureSchemaReady() {
@@ -111,6 +156,7 @@ async function ensureSchemaReady() {
        FROM membership_subscriptions LIMIT 1`,
     );
     await query('SELECT transaction_id FROM redstone_transactions LIMIT 1');
+    await query('SELECT lot_id, remaining_amount, expires_at FROM redstone_lots LIMIT 1');
     return true;
   } catch (error) {
     if (isSchemaMissingError(error)) return false;
@@ -273,7 +319,7 @@ async function notifyRenewalResult(result) {
       const tierName = TIER_NAMES[result.membership_type] || '会员通行证';
       await sendMsg(
         result.user_id,
-        `${tierName}已自动续费，扣除${result.cost_log}原木，并赠送${result.redstone_granted || 0}红石，新的有效期已生效。`,
+        `${tierName}已自动续费，扣除${result.cost_log}原木，并赠送${result.redstone_granted || 0}红石（到账后3个月内有效），新的有效期已生效。`,
         MEMBERSHIP_ROUTE,
       );
     } else if (result.status === 'failed' && result.reason === 'insufficient_balance') {
@@ -361,7 +407,7 @@ async function notifyAnnualRedstone(result) {
     const tierName = TIER_NAMES[result.membership_type] || '会员通行证';
     await sendMsg(
       result.user_id,
-      `${tierName}本月红石已到账：${result.redstone_granted}红石，可用于社区内的AI功能。`,
+      `${tierName}本月红石已到账：${result.redstone_granted}红石（到账后3个月内有效），可用于社区内的AI功能。`,
       MEMBERSHIP_ROUTE,
     );
   } catch (error) {
@@ -397,6 +443,8 @@ async function runMembershipRenewal() {
     redstone_refreshed: 0,
     ordinary_grant_scanned: 0,
     ordinary_granted: 0,
+    expiration_scanned: 0,
+    redstone_expired: 0,
   };
   for (const row of dueRows) {
     try {
@@ -467,6 +515,26 @@ async function runMembershipRenewal() {
     }
   }
 
+  const expiredLotRows = await query(
+    `SELECT lot_id
+     FROM redstone_lots
+     WHERE remaining_amount > 0
+       AND expires_at IS NOT NULL
+       AND expires_at <= CURRENT_TIMESTAMP
+     ORDER BY expires_at ASC, lot_id ASC
+     LIMIT ?`,
+    [BATCH_SIZE],
+  );
+  summary.expiration_scanned = expiredLotRows.length;
+  for (const row of expiredLotRows) {
+    try {
+      summary.redstone_expired += await expireRedstoneLot(row.lot_id);
+    } catch (error) {
+      summary.failed += 1;
+      console.log(`Membership Timer: redstone expiration failed for lot=${row.lot_id}`, error);
+    }
+  }
+
   await query(
     `UPDATE membership_subscriptions
      SET status = 'expired', updated_at = CURRENT_TIMESTAMP
@@ -477,7 +545,7 @@ async function runMembershipRenewal() {
   );
 
   console.log(
-    `Membership Timer: scanned=${summary.scanned}, renewed=${summary.renewed}, failed=${summary.failed}, skipped=${summary.skipped}, redstone_refreshed=${summary.redstone_refreshed}, ordinary_granted=${summary.ordinary_granted}`,
+    `Membership Timer: scanned=${summary.scanned}, renewed=${summary.renewed}, failed=${summary.failed}, skipped=${summary.skipped}, redstone_refreshed=${summary.redstone_refreshed}, ordinary_granted=${summary.ordinary_granted}, redstone_expired=${summary.redstone_expired}`,
   );
   return summary;
 }

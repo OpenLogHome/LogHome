@@ -1,6 +1,9 @@
 let express = require('express');
 let { query, withTransaction } = require('../sql.js');
 let auth = require('../bin/auth.js');
+const { attachVariants } = require('../bin/storeProducts');
+
+const { getLogistics, getLogisticsMetadata } = require('../bin/storeLogistics');
 
 let router = express.Router();
 
@@ -63,12 +66,16 @@ router.get('/products', async (req, res) => {
 			where += ' AND type = ?';
 			params.push(type);
 		}
+		if (req.query.category) {
+			where += ' AND category = ?';
+			params.push(String(req.query.category).slice(0, 80));
+		}
 		const countResult = await query(
 			`SELECT COUNT(*) as total FROM store_products ${where}`,
 			params,
 		);
 		const list = await query(
-			`SELECT id, title, summary, type, price, stock, cover_url, shipping_desc FROM store_products ${where} ORDER BY id DESC LIMIT ?, ?`,
+			`SELECT id, title, summary, type, price, stock, cover_url, shipping_desc, category, has_variants FROM store_products ${where} ORDER BY id DESC LIMIT ?, ?`,
 			[...params, offset, pageSize],
 		);
 		res.json({
@@ -90,13 +97,14 @@ router.get('/products/:id', async (req, res) => {
 	try {
 		const productId = Number(req.params.id);
 		const result = await query(
-			'SELECT id, title, summary, description, type, price, stock, cover_url, media_urls, shipping_desc, status FROM store_products WHERE id = ? AND status = ?',
+			'SELECT id, title, summary, description, type, price, stock, cover_url, media_urls, shipping_desc, status, category, has_variants FROM store_products WHERE id = ? AND status = ?',
 			[productId, 'on'],
 		);
 		if (result.length === 0) {
 			res.json(404, { msg: '商品不存在' });
 			return;
 		}
+		await attachVariants(result);
 		res.json({ code: 200, data: result[0] });
 	} catch (e) {
 		console.log(e);
@@ -307,7 +315,7 @@ router.delete('/addresses/:id', auth, async (req, res) => {
 router.post('/orders', auth, async (req, res) => {
 	try {
 		const user = getUser(req);
-		const { product_id, address_id, client_request_id } = req.body;
+		const { product_id, variant_id, address_id, client_request_id } = req.body;
 		if (!product_id) {
 			res.json(400, { msg: '商品参数缺失' });
 			return;
@@ -317,18 +325,19 @@ router.post('/orders', auth, async (req, res) => {
 			if (requestKey) {
 				try {
 					await transactionalQuery(
-						'INSERT INTO store_order_requests (request_key, user_id, product_id, address_id, status) VALUES (?, ?, ?, ?, ?)',
-						[requestKey, user.user_id, Number(product_id), address_id || null, 'processing'],
+						'INSERT INTO store_order_requests (request_key, user_id, product_id, variant_id, address_id, status) VALUES (?, ?, ?, ?, ?, ?)',
+						[requestKey, user.user_id, Number(product_id), variant_id || null, address_id || null, 'processing'],
 					);
 				} catch (error) {
 					if (!isDuplicateKeyError(error)) {
 						throw error;
 					}
 					const existingRequestList = await transactionalQuery(
-						'SELECT order_id, status FROM store_order_requests WHERE request_key = ? LIMIT 1',
+						'SELECT order_id, status, user_id, product_id, variant_id FROM store_order_requests WHERE request_key = ? LIMIT 1',
 						[requestKey],
 					);
 					const existingRequest = existingRequestList[0];
+					if (existingRequest && (Number(existingRequest.user_id) !== Number(user.user_id) || Number(existingRequest.product_id) !== Number(product_id) || Number(existingRequest.variant_id || 0) !== Number(variant_id || 0))) throw createBusinessError('请求标识已用于其他商品或规格', 409);
 					if (
 						existingRequest &&
 						existingRequest.status === 'succeeded' &&
@@ -351,7 +360,7 @@ router.post('/orders', auth, async (req, res) => {
 			]);
 
 			const productList = await transactionalQuery(
-				'SELECT id, title, type, price, stock, cover_url, shipping_desc, status FROM store_products WHERE id = ? LIMIT 1',
+				'SELECT id, title, type, price, stock, cover_url, shipping_desc, status, has_variants, source_metadata FROM store_products WHERE id = ? LIMIT 1 FOR UPDATE',
 				[product_id],
 			);
 			if (productList.length === 0 || productList[0].status !== 'on') {
@@ -359,6 +368,14 @@ router.post('/orders', auth, async (req, res) => {
 			}
 
 			const product = productList[0];
+			let variant = null;
+			if (product.has_variants) {
+				if (!Number.isSafeInteger(Number(variant_id)) || Number(variant_id) <= 0) throw createBusinessError('请选择商品规格');
+				const variants = await transactionalQuery('SELECT * FROM store_product_variants WHERE id = ? AND product_id = ? AND deleted = 0 FOR UPDATE', [variant_id, product.id]);
+				variant = variants[0];
+				if (!variant || variant.status !== 'on') throw createBusinessError('商品规格不存在或已停用');
+				if (Number(variant.stock) <= 0) throw createBusinessError('该规格库存不足');
+			} else if (variant_id) throw createBusinessError('该商品不支持此规格');
 			if (Number(product.stock) <= 0) {
 				throw createBusinessError('库存不足');
 			}
@@ -369,7 +386,7 @@ router.post('/orders', auth, async (req, res) => {
 			);
 			const logAmount = Number(bankRows[0].log || 0);
 			const croppedAmount = Number(bankRows[0].cropped_log || 0);
-			const price = Number(product.price || 0);
+			const price = Number(variant ? variant.price : product.price || 0);
 			if (logAmount + croppedAmount < price) {
 				throw createBusinessError('余额不足');
 			}
@@ -408,19 +425,27 @@ router.post('/orders', auth, async (req, res) => {
 				throw createBusinessError('库存不足');
 			}
 
+			if (variant) {
+				const result = await transactionalQuery('UPDATE store_product_variants SET stock = stock - 1 WHERE id = ? AND product_id = ? AND stock > 0 AND deleted = 0 AND status = ?', [variant.id, product.id, 'on']);
+				if (!result.affectedRows) throw createBusinessError('该规格库存不足');
+			}
+
 			const status = product.type === 'virtual' ? 'completed' : 'pending';
 			const trackingNumber = product.type === 'virtual' ? generateTrackingCode() : null;
 			const orderNo = generateOrderNo();
 			const now = new Date();
 			const result = await transactionalQuery(
-				'INSERT INTO store_orders (order_no, user_id, product_id, product_title, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, address_id, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+				'INSERT INTO store_orders (order_no, user_id, product_id, product_title, product_cover, product_type, variant_id, variant_label, source_snapshot, price, pay_log, pay_cropped_log, shipping_desc, status, address_id, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
 				[
 					orderNo,
 					user.user_id,
 					product.id,
 					product.title,
-					product.cover_url,
+					variant && variant.cover_url || product.cover_url,
 					product.type,
+					variant ? variant.id : null,
+					variant ? variant.label : null,
+					variant ? JSON.stringify({ ...JSON.parse(product.source_metadata || '{}'), ...JSON.parse(variant.source_metadata || '{}') }) : product.source_metadata,
 					price,
 					payLog,
 					payCropped,
@@ -494,7 +519,7 @@ router.get('/orders', auth, async (req, res) => {
 			params,
 		);
 		const list = await query(
-			`SELECT id, order_no, product_id, product_title, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, shipped_at, completed_at FROM store_orders ${where} ORDER BY created_at DESC LIMIT ?, ?`,
+			`SELECT id, order_no, product_id, product_title, variant_id, variant_label, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, shipping_company, shipping_company_code, created_at, updated_at, shipped_at, completed_at FROM store_orders ${where} ORDER BY created_at DESC LIMIT ?, ?`,
 			[...params, offset, pageSize],
 		);
 		res.json({
@@ -512,12 +537,26 @@ router.get('/orders', auth, async (req, res) => {
 	}
 });
 
+router.get('/orders/:id/logistics', auth, async (req, res) => {
+ try {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({msg:'订单ID无效'});
+  const rows = await query('SELECT id, order_no, user_id, product_title, product_cover, variant_label, product_type, status, tracking_number, shipping_company, shipping_company_code, receiver_phone, shipped_at FROM store_orders WHERE id = ? AND user_id = ?', [id, getUser(req).user_id]);
+  const order = rows[0];
+  if (!order) return res.status(404).json({msg:'订单不存在'});
+  const metadata = getLogisticsMetadata(order);
+  const logistics = req.query.query === 'metadata' ? metadata.logistics : await getLogistics(order);
+  const {receiver_phone, user_id, ...publicOrder} = order;
+  res.json({code:200, data:{order:publicOrder, logistics, ...(req.query.query === 'metadata' && metadata.native_query ? {native_query:metadata.native_query} : {})}});
+ } catch (_) { res.status(500).json({msg:'物流信息加载失败，请稍后重试'}); }
+});
+
 router.get('/orders/:id', auth, async (req, res) => {
 	try {
 		const user = getUser(req);
 		const orderId = Number(req.params.id);
 		const result = await query(
-			'SELECT id, order_no, product_id, product_title, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, created_at, updated_at, shipped_at, completed_at FROM store_orders WHERE id = ? AND user_id = ?',
+			'SELECT id, order_no, product_id, product_title, variant_id, variant_label, product_cover, product_type, price, pay_log, pay_cropped_log, shipping_desc, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_detail, tracking_number, shipping_company, shipping_company_code, created_at, updated_at, shipped_at, completed_at FROM store_orders WHERE id = ? AND user_id = ?',
 			[orderId, user.user_id],
 		);
 		if (result.length === 0) {

@@ -1021,7 +1021,7 @@ async function buildStealDashboard(userId) {
 
             if (!targetTree) {
                 stealStatus = 'no_tree';
-                stealStatusText = '未开种';
+                stealStatusText = '未种植';
                 stealTip = '对方还没种树，先去催他种下树苗';
             } else if (pendingOrbCount <= 0) {
                 stealStatus = 'not_ready';
@@ -1029,7 +1029,7 @@ async function buildStealDashboard(userId) {
                 stealTip = '这棵树上的经验球已经被收完了';
             } else if (availableStealReward > 0) {
                 stealStatus = 'ready';
-                stealStatusText = '串门';
+                stealStatusText = '可摘取';
                 stealTip = todayAlreadyStolen
                     ? `今天还可以继续顺走 ${availableStealReward} 点成长值`
                     : `当前可顺走约 ${availableStealReward} 点成长值`;

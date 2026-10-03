@@ -1,0 +1,12 @@
+{
+	"language.updated": "语言设置已更新",
+	"language.invalid": "不支持的语言",
+	"language.server_error": "服务器错误",
+	"common.confirm": "确定",
+	"common.cancel": "取消",
+	"common.loading": "正在加载",
+	"common.network_error": "网络异常，请稍后重试",
+	"common.server_error": "服务器错误",
+	"_fallback_probe": "回退探针",
+	"interp.probe": "你好 {{name}}，你收到 {{n}} 条"
+}

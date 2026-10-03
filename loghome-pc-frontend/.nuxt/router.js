@@ -4,33 +4,36 @@ import { normalizeURL, decode } from 'ufo'
 import { interopDefault } from './utils'
 import scrollBehavior from './router.scrollBehavior.js'
 
-const _073f485a = () => interopDefault(import('..\\pages\\community\\index.vue' /* webpackChunkName: "pages/community/index" */))
-const _62e64bb0 = () => interopDefault(import('..\\pages\\login.vue' /* webpackChunkName: "pages/login" */))
-const _35c3b8e9 = () => interopDefault(import('..\\pages\\me.vue' /* webpackChunkName: "pages/me" */))
-const _1f8baefb = () => interopDefault(import('..\\pages\\read\\index.vue' /* webpackChunkName: "pages/read/index" */))
-const _43808479 = () => interopDefault(import('..\\pages\\search.vue' /* webpackChunkName: "pages/search" */))
-const _56463498 = () => interopDefault(import('..\\pages\\tags\\index.vue' /* webpackChunkName: "pages/tags/index" */))
-const _76a00f24 = () => interopDefault(import('..\\pages\\write\\index.vue' /* webpackChunkName: "pages/write/index" */))
-const _0eb78800 = () => interopDefault(import('..\\pages\\agreement\\content.vue' /* webpackChunkName: "pages/agreement/content" */))
-const _15553600 = () => interopDefault(import('..\\pages\\community\\chat.vue' /* webpackChunkName: "pages/community/chat" */))
-const _208470ab = () => interopDefault(import('..\\pages\\community\\circles.vue' /* webpackChunkName: "pages/community/circles" */))
-const _1b63ac7b = () => interopDefault(import('..\\pages\\novel\\fans.vue' /* webpackChunkName: "pages/novel/fans" */))
-const _283d217e = () => interopDefault(import('..\\pages\\read\\collections.vue' /* webpackChunkName: "pages/read/collections" */))
-const _58f3fecc = () => interopDefault(import('..\\pages\\tag\\collections.vue' /* webpackChunkName: "pages/tag/collections" */))
-const _8fb5411c = () => interopDefault(import('..\\pages\\write\\new.vue' /* webpackChunkName: "pages/write/new" */))
-const _1152105c = () => interopDefault(import('..\\pages\\community\\post\\edit.vue' /* webpackChunkName: "pages/community/post/edit" */))
-const _5a21981b = () => interopDefault(import('..\\pages\\write\\settings\\info\\_id.vue' /* webpackChunkName: "pages/write/settings/info/_id" */))
-const _c8701de0 = () => interopDefault(import('..\\pages\\write\\settings\\tags\\_id.vue' /* webpackChunkName: "pages/write/settings/tags/_id" */))
-const _15354a1c = () => interopDefault(import('..\\pages\\community\\circle\\_id.vue' /* webpackChunkName: "pages/community/circle/_id" */))
-const _ffb8f5bc = () => interopDefault(import('..\\pages\\community\\post\\_id.vue' /* webpackChunkName: "pages/community/post/_id" */))
-const _68c50e7c = () => interopDefault(import('..\\pages\\write\\edit\\_id.vue' /* webpackChunkName: "pages/write/edit/_id" */))
-const _e318ec6e = () => interopDefault(import('..\\pages\\write\\settings\\_id.vue' /* webpackChunkName: "pages/write/settings/_id" */))
-const _6b9fb29d = () => interopDefault(import('..\\pages\\write\\activity-form\\_workId\\_tagId.vue' /* webpackChunkName: "pages/write/activity-form/_workId/_tagId" */))
-const _f33455d6 = () => interopDefault(import('..\\pages\\article\\_id.vue' /* webpackChunkName: "pages/article/_id" */))
-const _40bb64cf = () => interopDefault(import('..\\pages\\novel\\_id.vue' /* webpackChunkName: "pages/novel/_id" */))
-const _3aa99afa = () => interopDefault(import('..\\pages\\users\\_id.vue' /* webpackChunkName: "pages/users/_id" */))
-const _fa937f8e = () => interopDefault(import('..\\pages\\world\\_id.vue' /* webpackChunkName: "pages/world/_id" */))
-const _04e53711 = () => interopDefault(import('..\\pages\\index.vue' /* webpackChunkName: "pages/index" */))
+const _d1066372 = () => interopDefault(import('../pages/community/index.vue' /* webpackChunkName: "pages/community/index" */))
+const _3e9643c4 = () => interopDefault(import('../pages/login.vue' /* webpackChunkName: "pages/login" */))
+const _22cb0d90 = () => interopDefault(import('../pages/me/index.vue' /* webpackChunkName: "pages/me/index" */))
+const _47d5b0ce = () => interopDefault(import('../pages/read/index.vue' /* webpackChunkName: "pages/read/index" */))
+const _56b76346 = () => interopDefault(import('../pages/search.vue' /* webpackChunkName: "pages/search" */))
+const _39158391 = () => interopDefault(import('../pages/tags/index.vue' /* webpackChunkName: "pages/tags/index" */))
+const _79629786 = () => interopDefault(import('../pages/write/index.vue' /* webpackChunkName: "pages/write/index" */))
+const _7553b862 = () => interopDefault(import('../pages/agreement/content.vue' /* webpackChunkName: "pages/agreement/content" */))
+const _4b88be73 = () => interopDefault(import('../pages/community/chat.vue' /* webpackChunkName: "pages/community/chat" */))
+const _d10fa150 = () => interopDefault(import('../pages/community/circles.vue' /* webpackChunkName: "pages/community/circles" */))
+const _422e395a = () => interopDefault(import('../pages/me/friends.vue' /* webpackChunkName: "pages/me/friends" */))
+const _e1ccae04 = () => interopDefault(import('../pages/me/messages.vue' /* webpackChunkName: "pages/me/messages" */))
+const _0adfbf56 = () => interopDefault(import('../pages/me/settings.vue' /* webpackChunkName: "pages/me/settings" */))
+const _174bec68 = () => interopDefault(import('../pages/novel/fans.vue' /* webpackChunkName: "pages/novel/fans" */))
+const _1df58dde = () => interopDefault(import('../pages/read/collections.vue' /* webpackChunkName: "pages/read/collections" */))
+const _7afc588a = () => interopDefault(import('../pages/tag/collections.vue' /* webpackChunkName: "pages/tag/collections" */))
+const _2e3c76cb = () => interopDefault(import('../pages/write/new.vue' /* webpackChunkName: "pages/write/new" */))
+const _ad3404e4 = () => interopDefault(import('../pages/community/post/edit.vue' /* webpackChunkName: "pages/community/post/edit" */))
+const _6d7abeb0 = () => interopDefault(import('../pages/write/settings/info/_id.vue' /* webpackChunkName: "pages/write/settings/info/_id" */))
+const _77daf31b = () => interopDefault(import('../pages/write/settings/tags/_id.vue' /* webpackChunkName: "pages/write/settings/tags/_id" */))
+const _1c191756 = () => interopDefault(import('../pages/community/circle/_id.vue' /* webpackChunkName: "pages/community/circle/_id" */))
+const _0d025034 = () => interopDefault(import('../pages/community/post/_id.vue' /* webpackChunkName: "pages/community/post/_id" */))
+const _1342719a = () => interopDefault(import('../pages/write/edit/_id.vue' /* webpackChunkName: "pages/write/edit/_id" */))
+const _194f2833 = () => interopDefault(import('../pages/write/settings/_id.vue' /* webpackChunkName: "pages/write/settings/_id" */))
+const _37fe1b8c = () => interopDefault(import('../pages/write/activity-form/_workId/_tagId.vue' /* webpackChunkName: "pages/write/activity-form/_workId/_tagId" */))
+const _1ce7eb3c = () => interopDefault(import('../pages/article/_id.vue' /* webpackChunkName: "pages/article/_id" */))
+const _23f6197c = () => interopDefault(import('../pages/novel/_id.vue' /* webpackChunkName: "pages/novel/_id" */))
+const _24ca9f0e = () => interopDefault(import('../pages/users/_id.vue' /* webpackChunkName: "pages/users/_id" */))
+const _08ec0298 = () => interopDefault(import('../pages/world/_id.vue' /* webpackChunkName: "pages/world/_id" */))
+const _74eea0ad = () => interopDefault(import('../pages/index.vue' /* webpackChunkName: "pages/index" */))
 
 const emptyFn = () => {}
 
@@ -45,111 +48,123 @@ export const routerOptions = {
 
   routes: [{
     path: "/community",
-    component: _073f485a,
+    component: _d1066372,
     name: "community"
   }, {
     path: "/login",
-    component: _62e64bb0,
+    component: _3e9643c4,
     name: "login"
   }, {
     path: "/me",
-    component: _35c3b8e9,
+    component: _22cb0d90,
     name: "me"
   }, {
     path: "/read",
-    component: _1f8baefb,
+    component: _47d5b0ce,
     name: "read"
   }, {
     path: "/search",
-    component: _43808479,
+    component: _56b76346,
     name: "search"
   }, {
     path: "/tags",
-    component: _56463498,
+    component: _39158391,
     name: "tags"
   }, {
     path: "/write",
-    component: _76a00f24,
+    component: _79629786,
     name: "write"
   }, {
     path: "/agreement/content",
-    component: _0eb78800,
+    component: _7553b862,
     name: "agreement-content"
   }, {
     path: "/community/chat",
-    component: _15553600,
+    component: _4b88be73,
     name: "community-chat"
   }, {
     path: "/community/circles",
-    component: _208470ab,
+    component: _d10fa150,
     name: "community-circles"
   }, {
+    path: "/me/friends",
+    component: _422e395a,
+    name: "me-friends"
+  }, {
+    path: "/me/messages",
+    component: _e1ccae04,
+    name: "me-messages"
+  }, {
+    path: "/me/settings",
+    component: _0adfbf56,
+    name: "me-settings"
+  }, {
     path: "/novel/fans",
-    component: _1b63ac7b,
+    component: _174bec68,
     name: "novel-fans"
   }, {
     path: "/read/collections",
-    component: _283d217e,
+    component: _1df58dde,
     name: "read-collections"
   }, {
     path: "/tag/collections",
-    component: _58f3fecc,
+    component: _7afc588a,
     name: "tag-collections"
   }, {
     path: "/write/new",
-    component: _8fb5411c,
+    component: _2e3c76cb,
     name: "write-new"
   }, {
     path: "/community/post/edit",
-    component: _1152105c,
+    component: _ad3404e4,
     name: "community-post-edit"
   }, {
     path: "/write/settings/info/:id?",
-    component: _5a21981b,
+    component: _6d7abeb0,
     name: "write-settings-info-id"
   }, {
     path: "/write/settings/tags/:id?",
-    component: _c8701de0,
+    component: _77daf31b,
     name: "write-settings-tags-id"
   }, {
     path: "/community/circle/:id?",
-    component: _15354a1c,
+    component: _1c191756,
     name: "community-circle-id"
   }, {
     path: "/community/post/:id?",
-    component: _ffb8f5bc,
+    component: _0d025034,
     name: "community-post-id"
   }, {
     path: "/write/edit/:id?",
-    component: _68c50e7c,
+    component: _1342719a,
     name: "write-edit-id"
   }, {
     path: "/write/settings/:id?",
-    component: _e318ec6e,
+    component: _194f2833,
     name: "write-settings-id"
   }, {
     path: "/write/activity-form/:workId?/:tagId?",
-    component: _6b9fb29d,
+    component: _37fe1b8c,
     name: "write-activity-form-workId-tagId"
   }, {
     path: "/article/:id?",
-    component: _f33455d6,
+    component: _1ce7eb3c,
     name: "article-id"
   }, {
     path: "/novel/:id?",
-    component: _40bb64cf,
+    component: _23f6197c,
     name: "novel-id"
   }, {
     path: "/users/:id?",
-    component: _3aa99afa,
+    component: _24ca9f0e,
     name: "users-id"
   }, {
     path: "/world/:id?",
-    component: _fa937f8e,
+    component: _08ec0298,
     name: "world-id"
   }, {
     path: "/",
-    component: _04e53711,
+    component: _74eea0ad,
     name: "index"
   }],
 

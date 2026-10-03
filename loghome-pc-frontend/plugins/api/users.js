@@ -1,16 +1,5 @@
 // 拆分自 api.js
 const users = {
-    // 获取用户信息
-    getUserById: async (userId) => {
-        try {
-            const response = await fetch(`${process.env.baseUrl}/users/get_user_by_id?id=${userId}`)
-            return await response.json()
-        } catch (error) {
-            console.error('获取用户信息失败:', error)
-            return null
-        }
-    },
-
     // 获取当前登录用户信息
     getUserProfile: async () => {
         try {
@@ -174,6 +163,75 @@ const users = {
         }
     },
 
+    // 更新昵称和简介
+    updateUserInfo: async (name, motto) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/users/update_userinfo`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({ name, motto })
+            })
+            const data = await response.json()
+            if (!response.ok) throw new Error(data.msg || '保存失败')
+            return { code: 0, data, message: '保存成功' }
+        } catch (error) {
+            console.error('更新用户信息失败:', error)
+            return { code: -1, data: null, message: error.message || '更新用户信息失败' }
+        }
+    },
+
+    // 上传 base64 图片更换头像
+    changeAvatar: async (img) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/users/change_avater`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({ img })
+            })
+            const data = await response.json()
+            if (!response.ok || data.msg !== 'ok') throw new Error(data.msg || '头像上传失败')
+            return { code: 0, data, message: '头像已更新' }
+        } catch (error) {
+            console.error('更换头像失败:', error)
+            return { code: -1, data: null, message: error.message || '更换头像失败' }
+        }
+    },
+
+    // 上传 base64 图片更换封面
+    changeTopCover: async (img) => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/users/change_top_cover`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({ img })
+            })
+            const data = await response.json()
+            if (!response.ok || data.msg !== 'ok') throw new Error(data.msg || '封面上传失败')
+            return { code: 0, data, message: '封面已更新' }
+        } catch (error) {
+            console.error('更换封面失败:', error)
+            return { code: -1, data: null, message: error.message || '更换封面失败' }
+        }
+    },
+
     // 获取当前登录用户信息
     generateCrossSiteToken: async () => {
         try {
@@ -323,21 +381,60 @@ const users = {
         }
     },
 
+    // 获取系统消息（服务端会在返回后标记为已读）
+    getHistoryMessages: async () => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) throw new Error('用户未登录')
+
+            const response = await fetch(`${process.env.baseUrl}/users/get_history_message`, {
+                headers: {
+                    'Authorization': token
+                }
+            })
+            const data = await response.json()
+            return Array.isArray(data) ? data : []
+        } catch (error) {
+            console.error('获取系统消息失败:', error)
+            return []
+        }
+    },
+
+    // 获取未读系统消息数量
+    getUnreadSystemMessageCount: async () => {
+        try {
+            const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
+            if (!token) return { count: 0 }
+
+            const response = await fetch(`${process.env.baseUrl}/users/unread_message_count`, {
+                headers: {
+                    'Authorization': token
+                }
+            })
+            const data = await response.json()
+            return { count: Number(data.count) || 0 }
+        } catch (error) {
+            console.error('获取未读系统消息数失败:', error)
+            return { count: 0 }
+        }
+    },
+
     // 关注用户
     followUser: async (userId) => {
         try {
             const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
             if (!token) throw new Error('用户未登录')
 
-            const response = await fetch(`${process.env.baseUrl}/community/follow_user`, {
+            const response = await fetch(`${process.env.baseUrl}/community/follow`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': token
                 },
-                body: JSON.stringify({ target_id: userId })
+                body: JSON.stringify({ follow_id: userId })
             })
             const data = await response.json()
+            if (!response.ok) throw new Error(data.msg || '关注失败')
             return {
                 code: 0,
                 data: data,
@@ -359,15 +456,16 @@ const users = {
             const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
             if (!token) throw new Error('用户未登录')
 
-            const response = await fetch(`${process.env.baseUrl}/community/unfollow_user`, {
+            const response = await fetch(`${process.env.baseUrl}/community/unfollow`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': token
                 },
-                body: JSON.stringify({ target_id: userId })
+                body: JSON.stringify({ follow_id: userId })
             })
             const data = await response.json()
+            if (!response.ok) throw new Error(data.msg || '取消关注失败')
             return {
                 code: 0,
                 data: data,
@@ -384,12 +482,12 @@ const users = {
     },
 
     // 检查关注状态
-    checkFollowStatus: async (userId) => {
+    checkFollowStatus: async (userId, myUserId) => {
         try {
             const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).tk : null
-            if (!token) throw new Error('用户未登录')
+            if (!token || !myUserId) throw new Error('用户未登录')
 
-            const response = await fetch(`${process.env.baseUrl}/community/check_follow_status?target_id=${userId}`, {
+            const response = await fetch(`${process.env.baseUrl}/community/follow_status?user_id=${myUserId}&target_id=${userId}`, {
                 headers: {
                     'Authorization': token
                 }
@@ -397,7 +495,7 @@ const users = {
             const data = await response.json()
             return {
                 code: 0,
-                data: data,
+                data: { isFollowing: Number(data.status) > 0 },
                 message: 'success'
             }
         } catch (error) {

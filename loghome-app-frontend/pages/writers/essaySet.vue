@@ -57,6 +57,7 @@
 				id:-1,
 				novel:{},
 				tags:[],
+				restrictingActivities:[], // 进行中且开启"限制完结后更新"的活动
 				access: {
 					access_role: 'owner',
 					can_manage_collaborators: true,
@@ -98,8 +99,27 @@
 				this.access = res.data.access || this.access;
 				return res.data;
 			},
+			loadActivityRestrictions(){
+				let _this = this;
+				let tk = this.getAuthToken();
+				axios.get(this.$baseUrl + '/essays/get_novel_activity?novel_id=' + this.id, {
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tk
+					}
+				}).then((res) => {
+					const activities = res.data && res.data.hasActivity ? res.data.activities : [];
+					_this.restrictingActivities = activities.filter(
+						(a) => Number(a.is_active) === 1 && Number(a.restrict_complete_update) === 1
+					);
+				}).catch(function(){
+					// 获取活动信息失败不影响页面其余功能
+					_this.restrictingActivities = [];
+				}).then(function(){})
+			},
 			refreshPage(){
 				this.getNovelTags();
+				this.loadActivityRestrictions();
 				Promise.all([
 					axios.get(this.$baseUrl + '/essays/get_novel_by_id?id=' + this.id, {}),
 					this.loadCollaborationInfo(),
@@ -245,13 +265,12 @@
 					})
 					.catch(function(error) {
 						//console.log(error);
-						if (error) {
-							uni.showToast({
-								title: "小说状态修改失败",
-								icon: 'none',
-								duration: 2000
-							});
-						}
+						const msg = error.response && error.response.data && error.response.data.msg;
+						uni.showToast({
+							title: msg || "小说状态修改失败",
+							icon: 'none',
+							duration: 2000
+						});
 					})
 					.then(function(){
 						_this.buttonLock = true;
@@ -289,13 +308,34 @@
 			},
 			setUpdateBtn(){
 				let _this = this;
+				const isComplete = Number(this.novel.is_complete) === 1;
+				const restricted = this.restrictingActivities.length > 0;
+				const restrictNames = this.restrictingActivities.map((a) => `「${a.activity_name}」`).join('、');
 				uni.showActionSheet({
 				    itemList: ['连载',"完结"],
 				    success: function (res) {
 				        if(res.tapIndex == 0) {
+							if (isComplete && restricted) {
+								uni.showModal({
+									title: '无法退回连载',
+									content: `作品已完结并参与进行中的创作活动${restrictNames}，活动期间不可退回连载状态。`,
+									showCancel: false
+								});
+								return;
+							}
 							_this.setUpdate(0);
 						}
 						if(res.tapIndex == 1) {
+							if (restricted && !isComplete) {
+								uni.showModal({
+									title: '确认完结',
+									content: `完结后，在活动${restrictNames}期间将无法新增或编辑章节，也无法退回连载状态。确定完结吗？`,
+									success: function (m) {
+										if (m.confirm) _this.setUpdate(1);
+									}
+								});
+								return;
+							}
 							_this.setUpdate(1);
 						}
 				    },

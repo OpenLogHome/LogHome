@@ -18,6 +18,11 @@
 					<view class="text">空间占用管理</view>
 					<img class="to" src="../../static/user/to.png" />
 				</view>
+				<view class="li " @click="changeLanguage">
+					<view class="text" style="width:auto">语言 / Language</view>
+					<view class="lang-current">{{ currentLanguageLabel }}</view>
+					<img class="to" src="../../static/user/to.png" />
+				</view>
 			</view>
 			<view class="list">
 				<view class="li noborder" @click="logout">
@@ -29,13 +34,43 @@
 	</view>
 </template>
 <script>
+	import { FOLLOW_SYSTEM, getSavedLanguage } from '@/i18n/resolve.js';
+	import { applyLanguagePreference } from '@/common/lang.js';
 	export default {
 		data() {
 			return {
-				user:{}
+				user:{},
+				savedPreference: getSavedLanguage()
+			}
+		},
+		computed: {
+			currentLanguageLabel() {
+				if (this.savedPreference === 'zh-CN') return '简体中文';
+				if (this.savedPreference === 'en') return 'English';
+				return this.$t('settings.language.followSystem');
 			}
 		},
 		methods: {
+			changeLanguage(){
+				const options = [FOLLOW_SYSTEM, 'zh-CN', 'en'];
+				uni.showActionSheet({
+					itemList: [
+						this.$t('settings.language.followSystem') + ' / Follow system',
+						'简体中文',
+						'English'
+					],
+					success: (res) => {
+						const picked = options[res.tapIndex];
+						if (picked === undefined) return;
+						applyLanguagePreference(picked);
+						this.savedPreference = picked;
+						uni.showToast({
+							title: this.$t('settings.language.switched'),
+							icon: 'none'
+						});
+					}
+				});
+			},
 			logout(){
 				uni.showModal({
 				    title: '提示',
@@ -133,6 +168,12 @@ page{
 			flex-shrink:0;
 			width:40upx;
 			height:40upx;
+		}
+		.lang-current{
+			flex-shrink:0;
+			margin-left:auto;
+			color:#999;
+			font-size:26upx;
 		}
 	}
 }

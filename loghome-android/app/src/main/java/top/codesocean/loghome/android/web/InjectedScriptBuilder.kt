@@ -143,15 +143,28 @@ object InjectedScriptBuilder {
         statusBarHeightDp: Double,
         navigationBarHeightDp: Double,
         assetVersion: String,
+        language: String,
+        savedLanguage: String? = null,
     ): String = withContext(Dispatchers.IO) {
         val jsBridgeSource = context.assets.open("js/jsbridge.js").bufferedReader().use { it.readText() }
         val assignments = buildString {
             appendLine("window.jsBridge.statusBarHeight = $statusBarHeightDp;")
             appendLine("window.jsBridge.navigationBarHeight = $navigationBarHeightDp;")
             appendLine("window.jsBridge.appVersion = ${JSONObject.quote(assetVersion)};")
+            // i18n：H5 读取生效语言；原生存在显式设置而 H5 尚未落库时播种本地偏好
+            appendLine("window.jsBridge.language = ${JSONObject.quote(language)};")
+            if (!savedLanguage.isNullOrBlank()) {
+                appendLine(
+                    "try { if (!window.localStorage.getItem(\"loghome_language\")) {" +
+                        " window.localStorage.setItem(\"loghome_language\", ${JSONObject.quote(savedLanguage)});" +
+                        " } } catch (error) {}",
+                )
+            }
             appendLine("document.documentElement.classList.add('loghome-edge-to-edge');")
             appendLine("document.documentElement.style.setProperty('--loghome-native-safe-top', '${statusBarHeightDp}px');")
             appendLine("document.documentElement.style.setProperty('--loghome-native-safe-bottom', '${navigationBarHeightDp}px');")
+            // Android reserves navigation/IME space outside the WebView, including on old H5 bundles.
+            appendLine("document.documentElement.style.setProperty('--loghome-safe-bottom', '0px');")
         }
 
         sanitizeForInlineScript(

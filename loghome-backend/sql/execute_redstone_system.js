@@ -6,6 +6,7 @@ const config = require('../config.js');
 async function executeRedstoneSystem() {
 	const connection = mysql.createConnection({
 		...config.database,
+		multipleStatements: true,
 	});
 	const query = (sql, values = []) => new Promise((resolve, reject) => {
 		connection.query(sql, values, (error, results) => (error ? reject(error) : resolve(results)));
@@ -19,7 +20,7 @@ async function executeRedstoneSystem() {
 		const bankColumns = await query('SHOW COLUMNS FROM user_bank');
 		if (!bankColumns.some((column) => column.Field === 'redstone')) {
 			await query(
-				"ALTER TABLE user_bank ADD COLUMN redstone INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '用于AI功能的红石余额' AFTER log",
+				'ALTER TABLE user_bank ADD COLUMN redstone INT UNSIGNED NOT NULL DEFAULT 0 COMMENT \'用于AI功能的红石余额\' AFTER log',
 			);
 		}
 
@@ -28,12 +29,12 @@ async function executeRedstoneSystem() {
 
 		let columns = await query('SHOW COLUMNS FROM redstone_transactions');
 		const transactionTypeColumn = columns.find((column) => column.Field === 'transaction_type');
-		if (transactionTypeColumn && !String(transactionTypeColumn.Type).includes('monthly_free_grant')) {
+		if (transactionTypeColumn && !String(transactionTypeColumn.Type).includes('\'expiration\'')) {
 			await query(
 				`ALTER TABLE redstone_transactions
 				 MODIFY COLUMN transaction_type ENUM(
 				   'membership_grant', 'membership_upgrade_grant', 'annual_refresh', 'monthly_free_grant',
-				   'log_exchange', 'ai_usage', 'admin_adjustment', 'refund'
+				   'log_exchange', 'ai_usage', 'admin_adjustment', 'refund', 'expiration'
 				 ) NOT NULL COMMENT '流水类型'`,
 			);
 			columns = await query('SHOW COLUMNS FROM redstone_transactions');
@@ -62,7 +63,23 @@ async function executeRedstoneSystem() {
 			throw new Error('redstone_transactions 缺少用户外键');
 		}
 
-		console.log(`红石系统已创建并验证（余额字段、${columns.length} 个流水字段）。`);
+		// 上线批次账本前的存量余额无法可靠还原来源，迁移为永不过期的兼容批次，
+		// 避免部署时误删用户已经获得的红石。新产生的赠送红石将按三个月有效期入批次。
+		await query(
+			`INSERT INTO redstone_lots
+			 (user_id, source_transaction_id, granted_amount, remaining_amount, expires_at, created_at, updated_at)
+			 SELECT b.user_id, NULL, b.redstone, b.redstone, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+			 FROM user_bank b
+			 WHERE b.redstone > 0
+			   AND NOT EXISTS (SELECT 1 FROM redstone_lots rl WHERE rl.user_id = b.user_id)`,
+		);
+		const lotColumns = await query('SHOW COLUMNS FROM redstone_lots');
+		const consumptionColumns = await query('SHOW COLUMNS FROM redstone_lot_consumptions');
+		if (lotColumns.length < 7 || consumptionColumns.length < 5) {
+			throw new Error('红石批次表创建不完整');
+		}
+
+		console.log(`红石系统已创建并验证（余额字段、${columns.length} 个流水字段、批次与消费分摊表）。`);
 	} finally {
 		connection.end();
 	}

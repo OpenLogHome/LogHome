@@ -46,8 +46,8 @@
                 <span class="fan-name" @click="gotoUserProfile(fan.user_id)">{{ fan.user_name }}</span>
                 <span class="fan-value">{{ fan.fans_value }}</span>
               </div>
-              <div class="fan-message">
-                此书只应天上有，当赏当赏！
+              <div class="fan-message" v-if="fan.message">
+                {{ fan.message }}
               </div>
             </div>
           </div>
@@ -173,13 +173,12 @@ export default {
         this.myInfo = {
           ...this.myInfo,
           ...this.userInfo,
-          avatar_url: this.userInfo.avatar,
           name: this.userInfo.name || this.userInfo.username
         }
         
         // 查找用户在粉丝榜中的排名
         for (let i = 0; i < this.fansList.length; i++) {
-          if (this.fansList[i].user_id == this.userInfo.id) {
+          if (this.fansList[i].user_id == this.userInfo.user_id) {
             this.myInfo.rank = `第 ${i + 1} 名`
             this.myInfo.fans_value = this.fansList[i].fans_value
             break

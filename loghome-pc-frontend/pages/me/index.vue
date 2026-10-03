@@ -15,7 +15,7 @@
       <div class="user-info-box">
         <div class="avatar-box">
           <img 
-            :src="user.avatar_url || '../static/user/defaultAvatar.jpg'" 
+            :src="user.avatar_url || '/default-avatar.png'" 
             alt="用户头像" 
             class="avatar-image"
           />
@@ -143,7 +143,7 @@
               @click="navigateToWork(work.novel_id)"
               v-show="!work.is_personal"
             >
-              <img :src="work.picUrl" alt="作品封面" class="work-cover" />
+              <img :src="work.picUrl || '/default-book-cover.png'" alt="作品封面" class="work-cover" />
               <div class="work-info">
                 <h3 class="work-title">{{ work.name }}</h3>
                 <p class="work-desc">{{ work.content || '暂无简介' }}</p>
@@ -160,7 +160,23 @@
             <el-button type="primary" @click="gotoLibrary">去看书</el-button>
           </div>
           <div class="bookcase-list" v-else>
-            <!-- 这里显示用户书架内容 -->
+            <div
+              class="bookcase-item"
+              v-for="book in userBookcase"
+              :key="book.novel_id"
+              @click="navigateToWork(book.novel_id)"
+            >
+              <img
+                :src="book.picUrl || '/default-book-cover.png'"
+                :alt="book.name"
+                class="bookcase-cover"
+                @error="$event.target.src = '/default-book-cover.png'"
+              />
+              <div class="bookcase-info">
+                <h4 class="bookcase-title">{{ book.name }}</h4>
+                <p class="bookcase-author">{{ book.author_name || '佚名' }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -169,8 +185,6 @@
 </template>
 
 <script>
-import axios from 'axios'
-
 export default {
   layout: 'default',
   data() {
@@ -187,16 +201,18 @@ export default {
       bookcaseLoading: false
     }
   },
-  mounted() {
-    this.loadUserInfo()
+  async mounted() {
+    await this.loadUserInfo()
+    if (!this.user.user_id) return
     this.checkMessages()
     this.checkTreePlant()
     this.refreshResources()
     this.loadUserWorks()
+    this.loadUserBookcase()
   },
   methods: {
-    loadUserInfo() {
-      // 先尝试从localStorage获取用户信息
+    async loadUserInfo() {
+      // 先用本地缓存渲染，再向服务器取最新资料
       const cachedUserInfo = localStorage.getItem('LogHomeUserInfo')
       
       if (cachedUserInfo) {
@@ -204,11 +220,9 @@ export default {
         if (this.user.user_group) {
           this.userGroups = this.user.user_group.split(",")
         }
-        return
       }
       
-      // 如果没有缓存，从服务器获取
-      this.fetchUserInfo()
+      await this.fetchUserInfo()
     },
     
     async fetchUserInfo() {
@@ -234,23 +248,13 @@ export default {
       return tk ? tk.tk : null
     },
     
-    checkMessages() {
-      // 检查系统消息
-      if (localStorage.getItem('messages') === "") {
-        localStorage.setItem('messages', "[]")
-      }
-      
-      const curMessage = JSON.parse(localStorage.getItem('messages') || "[]")
-      for (let item of curMessage) {
-        if (item.is_read === 0 && item.to_id === this.user.user_id) {
-          this.hasNewMessage = true
-          break
-        }
-      }
-      
-      // 检查私信
-      const unreadPrivateMessages = localStorage.getItem('unreadPrivateMessages')
-      this.hasNewPrivateMessage = unreadPrivateMessages && parseInt(unreadPrivateMessages) > 0
+    async checkMessages() {
+      const [notifications, privateMessages] = await Promise.all([
+        this.$api.users.getUnreadSystemMessageCount(),
+        this.$api.community.getUnreadMessageCount()
+      ])
+      this.hasNewMessage = notifications.count > 0
+      this.hasNewPrivateMessage = privateMessages.count > 0
     },
     
     async checkTreePlant() {
@@ -298,66 +302,84 @@ export default {
       }
     },
     
+    // 加载用户书架
+    async loadUserBookcase() {
+      this.bookcaseLoading = true
+      try {
+        const books = await this.$api.bookcase.getLikesOf()
+        this.userBookcase = Array.isArray(books) ? books : []
+      } catch (error) {
+        console.error('加载书架失败', error)
+      } finally {
+        this.bookcaseLoading = false
+      }
+    },
+    
+    // 低频功能页仍由移动端提供，用浮窗内嵌打开而不是整页跳转
+    openMobilePage(pagePath, title) {
+      return this.$openMobileWindow(pagePath, { title })
+    },
+    
     changeCoverImage() {
-      this.$router.push("/users/top_pic_upload?noneAnimation=1")
+      this.$router.push("/me/settings")
     },
     
     changeUserInfo() {
-      this.$router.push("/users/change_user_info")
+      this.$router.push("/me/settings")
     },
     
     viewUserProfile() {
-      this.$router.push("/users/personalPage?id=" + this.user.user_id)
+      this.$router.push(`/users/${this.user.user_id}`)
     },
     
     gotoMessages() {
-      this.$router.push("/community/message")
+      this.$router.push("/me/messages")
       this.hasNewMessage = false
       this.hasNewPrivateMessage = false
     },
     
     gotoFriends() {
-      this.$router.push("/community/friends")
+      this.$router.push("/me/friends")
     },
     
     gotoSettings() {
-      this.$router.push("/users/clientSet")
+      this.$router.push("/me/settings")
     },
     
     activate() {
-      this.$router.push("/users/activateAccount")
+      this.openMobilePage("/pages/users/activateAccount", "绑定邮箱")
     },
     
     gotoTreePlant() {
-      this.$router.push("/treePlant/treeplant")
+      this.openMobilePage("/pages/treePlant/treeplant", "原木树场")
     },
     
     gotoEarnings() {
-      this.$router.push("/payments/earnings")
+      this.openMobilePage("/pages/payments/earnings", "余额提现")
     },
     
     gotoCredits() {
-      this.$router.push("/users/user_credit")
+      this.openMobilePage("/pages/users/user_credit", "我的信誉")
     },
     
     gotoRecharge() {
-      this.$router.push("/payments/recharge")
+      this.openMobilePage("/pages/payments/recharge", "支持社区")
     },
     
     gotoAbout() {
-      this.$router.push("/apps/about")
+      this.openMobilePage("/pages/apps/about", "关于社区")
     },
     
     gotoFeedback() {
-      this.$router.push("/apps/faqs/faq")
+      this.openMobilePage("/pages/apps/faqs/faq", "意见反馈")
     },
     
     gotoClientSet() {
-      this.$router.push("/users/clientSet")
+      this.$router.push("/me/settings")
     },
     
     gotoAdmin() {
-      this.$router.push("/manage/index")
+      this.openMobilePage("/pages/manage/index", "平台管理")
     },
     
     gotoWrite() {
@@ -679,6 +701,48 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   margin-top: 15px;
+}
+
+.bookcase-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+  margin-top: 15px;
+}
+
+.bookcase-item {
+  cursor: pointer;
+
+  .bookcase-cover {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 6px;
+    background-color: #f5f5f5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .bookcase-info {
+    padding-top: 8px;
+
+    .bookcase-title {
+      font-size: 14px;
+      color: #333;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bookcase-author {
+      font-size: 12px;
+      color: #999;
+      margin: 4px 0 0 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
 }
 
 .work-item {

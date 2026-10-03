@@ -1,5 +1,4 @@
 let express = require('express');
-let schedule = require('node-schedule');
 require('./bin/objectFilter');
 
 process.env.TZ = 'Asia/Shanghai';
@@ -30,9 +29,12 @@ app.use(express.urlencoded({ extended: false, limit: '5mb' }));
 //设置允许跨域访问该服务.
 app.all('*', function (req, res, next) {
 	res.header('Access-Control-Allow-Origin', '*');
-	res.header('Access-Control-Allow-Headers', '*');
-	res.header('Access-Control-Allow-Methods', '*');
+	res.header('Access-Control-Allow-Headers', req.get('Access-Control-Request-Headers') || 'Authorization, Content-Type');
+	res.vary('Access-Control-Request-Headers');
+	res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS');
 	res.header('Content-Type', 'application/json;charset=utf-8');
+	// Browser preflights have no login token; authenticate only the actual request.
+	if (req.method === 'OPTIONS') return res.sendStatus(204);
 	next();
 });
 
@@ -90,6 +92,7 @@ const storeRouter = require('./routes/store');
 const membershipRouter = require('./routes/membership');
 const redstoneRouter = require('./routes/redstone');
 const avatarFramesRouter = require('./routes/avatarFrames');
+const popularityRouter = require('./routes/popularity');
 
 app.use('/library', libraryRouter);
 app.use('/users', usersRouter);
@@ -111,9 +114,13 @@ app.use('/store', storeRouter);
 app.use('/membership', membershipRouter);
 app.use('/redstone', redstoneRouter);
 app.use('/avatar-frames', avatarFramesRouter);
+app.use('/popularity', popularityRouter);
 
 let server = app.listen(9000, function () {
 	let host = server.address().address;
 	let port = server.address().port;
 	console.log('服务器已在' + host + ':' + port + '上启动。');
 });
+
+// 进程内定时任务（原 SCF 定时云函数移植），cron 运行周期统一在 timers/config.js 配置
+require('./timers').start();

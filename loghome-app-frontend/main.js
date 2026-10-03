@@ -9,6 +9,8 @@ import LogImage from "./components/LogImage";
 import UserAvatar from "./components/UserAvatar";
 import darkNavigationMixin from './mixins/dark-navigation.vue';
 import { installNativeRouter } from './common/native-router';
+import i18n from './i18n';
+import { resolveEffectiveLanguage } from './i18n/resolve.js';
 
 // 导入自定义指令
 import './plugins/directives'
@@ -30,6 +32,9 @@ const BASE_URL_SCF = "https://loghomeinnerservice.codesocean.top"
 const READER_AI_BASE_URL_PRODUCTION = "http://ai.loghome.codesocean.top:9101"
 const READER_AI_BASE_URL_DEV = "http://127.0.0.1:9101"
 const READER_AI_BASE_URL_EMULATOR_DEV = "http://10.0.2.2:9101"
+const COLLABORATION_WS_URL_PRODUCTION = "ws://ai.loghome.codesocean.top:9102"
+const COLLABORATION_WS_URL_DEV = "ws://127.0.0.1:9102"
+const COLLABORATION_WS_URL_EMULATOR_DEV = "ws://10.0.2.2:9102"
 
 const STORE_BASE_URL_PRODUCTION = "http://store.codesocean.top"
 const STORE_BASE_URL_DEV = "http://localhost:5173"
@@ -45,7 +50,8 @@ import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
 Vue.prototype.$baseUrl = BASE_URL_EMULATOR_DEV;
-Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_EMULATOR_DEV;
+Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_PRODUCTION;
+Vue.prototype.$collaborationWsUrl = COLLABORATION_WS_URL_PRODUCTION;
 Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
@@ -95,6 +101,8 @@ axios.interceptors.request.use(function (config) {
 	if(deviceFingerprint != undefined){
 		config.headers.deviceFingerprint = deviceFingerprint;
 	}
+	// 界面语言包含在请求头（i18n，后端按此返回本地化文案）
+	config.headers['X-Lang'] = resolveEffectiveLanguage();
     return config;
 }, function (error) { 
     // 对请求错误做些什么
@@ -369,6 +377,7 @@ App.mpType = 'app'
 const app = new Vue({
     ...App,
 	store,
+	i18n,
 	beforeCreate(){
 		Vue.prototype.$bus = this;
 	}

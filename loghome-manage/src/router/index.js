@@ -37,6 +37,20 @@ import PassStatusQuery from '../views/membership/PassStatusQuery.vue'
 import RedstoneManage from '../views/membership/RedstoneManage.vue'
 import AppUpdateManage from '../views/system/AppUpdateManage.vue'
 import IndexTagsManage from '../views/library/IndexTagsManage.vue'
+import SiteSettingsManage from '../views/system/SiteSettingsManage.vue'
+import LibraryRecommendsManage from '../views/library/LibraryRecommendsManage.vue'
+import TagsManage from '../views/library/TagsManage.vue'
+import TreeConfigManage from '../views/operations/TreeConfigManage.vue'
+import InvitesManage from '../views/operations/InvitesManage.vue'
+import GreatUsersManage from '../views/operations/GreatUsersManage.vue'
+import StickersManage from '../views/operations/StickersManage.vue'
+import AvatarFramesManage from '../views/operations/AvatarFramesManage.vue'
+import WritingActivitiesManage from '../views/operations/WritingActivitiesManage.vue'
+import NovelCommentsManage from '../views/library/NovelCommentsManage.vue'
+import TippingManage from '../views/library/TippingManage.vue'
+import WorldsManage from '../views/library/WorldsManage.vue'
+import ArticleFeedbacksManage from '../views/library/ArticleFeedbacksManage.vue'
+import UserContentsManage from '../views/community/UserContentsManage.vue'
 
 Vue.use(VueRouter)
 
@@ -80,6 +94,66 @@ const routes = [
         path: '/index-tags',
         component: IndexTagsManage,
         name: '书库快捷按钮',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '书库管理'
+        }
+      },
+      {
+        path: '/library-recommends',
+        component: LibraryRecommendsManage,
+        name: '榜单推荐管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '书库管理'
+        }
+      },
+      {
+        path: '/library-tags',
+        component: TagsManage,
+        name: '标签库管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '书库管理'
+        }
+      },
+      {
+        path: '/novel-comments',
+        component: NovelCommentsManage,
+        name: '章评与划线管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '书库管理'
+        }
+      },
+      {
+        path: '/tipping',
+        component: TippingManage,
+        name: '打赏与粉丝团',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '书库管理'
+        }
+      },
+      {
+        path: '/worlds',
+        component: WorldsManage,
+        name: '世界观管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '书库管理'
+        }
+      },
+      {
+        path: '/article-feedbacks',
+        component: ArticleFeedbacksManage,
+        name: '章节反馈管理',
         meta: {
           requireAuth: true,
           breadNumber: 1,
@@ -200,6 +274,16 @@ const routes = [
         path: '/community-audit-tools',
         component: SensitiveWordsManage,
         name: '敏感词与审核日志',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '社区管理'
+        }
+      },
+      {
+        path: '/user-contents',
+        component: UserContentsManage,
+        name: '用户内容管理',
         meta: {
           requireAuth: true,
           breadNumber: 1,
@@ -334,6 +418,76 @@ const routes = [
           requireAuth: true,
           breadNumber: 1,
           parentName: '系统管理'
+        }
+      },
+      {
+        path: '/site-settings',
+        component: SiteSettingsManage,
+        name: '站点设置',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '系统管理'
+        }
+      },
+      {
+        path: '/tree-config',
+        component: TreeConfigManage,
+        name: '树场玩法配置',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '运营配置'
+        }
+      },
+      {
+        path: '/invites',
+        component: InvitesManage,
+        name: '邀请码体系',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '运营配置'
+        }
+      },
+      {
+        path: '/great-users',
+        component: GreatUsersManage,
+        name: '荣誉用户管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '运营配置'
+        }
+      },
+      {
+        path: '/stickers',
+        component: StickersManage,
+        name: '表情包管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '运营配置'
+        }
+      },
+      {
+        path: '/avatar-frames',
+        component: AvatarFramesManage,
+        name: '头像挂件管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '运营配置'
+        }
+      },
+      {
+        path: '/writing-activities',
+        component: WritingActivitiesManage,
+        name: '写作活动管理',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '运营配置'
         }
       }
     ]

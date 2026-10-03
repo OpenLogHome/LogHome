@@ -167,7 +167,7 @@ export default {
       link: [
         {
           rel: 'canonical',
-          href: 'https://loghome.cn/community'
+          href: 'https://loghome.ink/community'
         }
       ]
     }
@@ -368,7 +368,7 @@ export default {
     },
 
     navigateToSearch() {
-      this.$router.push('/community/search?origin=community')
+      this.$router.push('/search')
     },
 
     navigateToCircles() {
@@ -403,13 +403,13 @@ export default {
     },
 
     previewImage(images, index) {
-      // PC端图片预览逻辑
-      console.log('预览图片:', images, index)
+      if (!images || !images.length) return
+      this.$preview(images, index || 0)
     },
 
     async likePost(post) {
       try {
-        const token = this.$auth.getToken()
+        const token = localStorage.getItem('token')
         if (!token) {
           this.$message.warning('请先登录')
           return
@@ -444,7 +444,7 @@ export default {
     },
 
     gotoMessage() {
-      this.$router.push('/community/message')
+      this.$router.push('/me/messages')
     },
 
     // 圈子相关辅助方法
@@ -454,11 +454,11 @@ export default {
 
     getCircleImage(index) {
       const circle = this.recommendCircles?.[index]
-      return circle?.bg_url || circle?.icon || '/static/default-circle.png'
+      return circle?.bg_url || circle?.icon || '/default-avatar.png'
     },
 
     getCircleIcon(index) {
-      return this.recommendCircles?.[index]?.icon || '/static/default-circle.png'
+      return this.recommendCircles?.[index]?.icon || '/default-avatar.png'
     },
 
     getCircleName(index) {

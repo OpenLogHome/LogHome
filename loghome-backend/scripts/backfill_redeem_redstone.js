@@ -24,6 +24,12 @@ async function grantRedstone(transactionalQuery, options) {
 		],
 	);
 	if (insertResult.affectedRows === 0) return 0;
+	await transactionalQuery(
+		`INSERT INTO redstone_lots
+		 (user_id, source_transaction_id, granted_amount, remaining_amount, expires_at, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 3 MONTH), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+		[options.userId, insertResult.insertId, amount, amount],
+	);
 	await transactionalQuery('UPDATE user_bank SET redstone = redstone + ? WHERE user_id = ?', [amount, options.userId]);
 	return amount;
 }

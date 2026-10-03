@@ -1,0 +1,22 @@
+{
+	"common": {
+		"confirm": "OK",
+		"cancel": "Cancel",
+		"loading": "Loading..."
+	},
+	"nav": {
+		"tab": {
+			"library": "Reading",
+			"community": "Community",
+			"writer": "Create",
+			"me": "Me"
+		}
+	},
+	"settings": {
+		"language": {
+			"title": "Language",
+			"followSystem": "Follow system",
+			"switched": "Language updated"
+		}
+	}
+}

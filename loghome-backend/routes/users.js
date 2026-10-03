@@ -12,6 +12,7 @@ const UniCloud = require('../bin/unicloud.js');
 const achievements = require('../bin/achievements.js');
 const membership = require('../bin/membership.js');
 const avatarFrames = require('../bin/avatarFrames.js');
+const { normalizeLang, t: tLang } = require('../bin/lang.js');
 
 // 发送邮件的函数
 async function sendEmail(to, code) {
@@ -781,6 +782,45 @@ router.get('/push_set', auth, async (req, res) => {
 	}
 });
 
+// 获取账号语言偏好（i18n）：null 表示未设置，跟随设备
+router.get('/language', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		let result = await query('SELECT language FROM users WHERE user_id = ?', [
+			user.user_id,
+		]);
+		res.json(200, { language: (result[0] && result[0].language) || null });
+	} catch (e) {
+		console.log(e);
+		res.json(500, { msg: tLang(req, 'language.server_error') });
+	}
+});
+
+// 设置账号语言偏好（i18n）：language 传 null/空 表示恢复跟随设备
+router.post('/language', auth, async (req, res) => {
+	try {
+		let user = req.user;
+		user = JSON.parse(JSON.stringify(user))[0];
+		const { language } = req.body || {};
+		let normalized = null;
+		if (language !== null && language !== undefined && language !== '') {
+			normalized = normalizeLang(language);
+			if (!normalized) {
+				return res.json(400, { msg: tLang(req, 'language.invalid') });
+			}
+		}
+		await query('UPDATE users SET language = ? WHERE user_id = ?', [
+			normalized,
+			user.user_id,
+		]);
+		res.json(200, { msg: tLang(req, 'language.updated'), language: normalized });
+	} catch (e) {
+		console.log(e);
+		res.json(500, { msg: tLang(req, 'language.server_error') });
+	}
+});
+
 // 获取/生成用户绑定码
 router.get('/get_binding_code', auth, async (req, res) => {
     try {
@@ -870,6 +910,22 @@ router.get('/get_history_message', auth, async (req, res) => {
         );
 		res.end(JSON.stringify(messages));
 	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 获取未读系统消息数量，不清除未读状态
+router.get('/unread_message_count', auth, async (req, res) => {
+	let user = req.user;
+	user = JSON.parse(JSON.stringify(user))[0];
+	try {
+		let results = await query(
+			'SELECT COUNT(*) AS count FROM user_message WHERE to_id = ? AND is_read = 0',
+			[user.user_id],
+		);
+		res.json({ count: Number(results[0].count) || 0 });
+	} catch (e) {
+		console.log(e);
 		res.json(400, { msg: 'bad request' });
 	}
 });

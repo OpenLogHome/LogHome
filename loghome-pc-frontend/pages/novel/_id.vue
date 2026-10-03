@@ -107,6 +107,9 @@
           <button class="tab-button" :class="{ active: activeTab === 'fans' }" @click="activeTab = 'fans'" v-if="fanInfo.length > 0">
             粉丝榜
           </button>
+          <button class="tab-button" :class="{ active: activeTab === 'activities' }" @click="activeTab = 'activities'" v-if="activityNewsList.length > 0">
+            创作活动 ({{ activityNewsList.length }})
+          </button>
         </div>
         
         <div class="tab-content">
@@ -178,7 +181,34 @@
           
           <!-- 粉丝榜标签页 -->
           <div v-show="activeTab === 'fans'" class="fans-content">
-            <NovelFansList :novelId="novel.novel_id" :limit="3" />
+            <NovelFansList ref="fansList" :novelId="novel.novel_id" :limit="3" />
+          </div>
+
+          <!-- 创作活动标签页 -->
+          <div v-show="activeTab === 'activities'" class="activities-content">
+            <div class="activity-group" v-for="activity in activityNewsList" :key="activity.tag_id">
+              <div class="activity-group-head">
+                <span class="activity-group-name">{{ activity.activity_name }}</span>
+                <span class="activity-group-status" :class="activity.is_active == 1 ? 'ongoing' : 'ended'">
+                  {{ activity.is_active == 1 ? '进行中' : '已结束' }}
+                </span>
+              </div>
+              <div class="activity-news-item" v-for="(news, newsIndex) in activity.news" :key="newsIndex"
+                @click="openActivityNews(news)">
+                <span class="activity-news-item-title">{{ news.title }}</span>
+                <span class="activity-news-item-arrow">›</span>
+              </div>
+              <div class="activity-popularity" v-if="activity.popularity && activity.popularity.enabled">
+                <div class="activity-popularity-info">
+                  <span class="activity-popularity-count">人气票 {{ activity.popularity.votes }}</span>
+                  <span class="activity-popularity-reason" v-if="popularityHint(activity)">{{ popularityHint(activity) }}</span>
+                </div>
+                <button class="activity-popularity-btn" :class="{ disabled: popularityBtnDisabled(activity) }"
+                  @click="voteActivity(activity)">
+                  {{ popularityBtnText(activity) }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -201,15 +231,67 @@
     </div>
 
     <!-- 打赏弹窗 -->
-    <div class="tipping-popup" v-if="showTippingPopup">
+    <div class="tipping-popup" v-if="showTippingPopup" @click.self="closeTipping">
       <div class="tipping-content">
         <h3>打赏作者</h3>
-        <div class="tipping-options">
-          <!-- 打赏选项会在这里显示 -->
+
+        <div class="tipping-balance">
+          <span class="balance-item"><i class="res-icon res-log"></i>原木 {{ resources.log }}</span>
+          <span class="balance-item"><i class="res-icon res-apple"></i>苹果 {{ resources.apple }}</span>
         </div>
+
+        <div class="tipping-options">
+          <div
+            class="tipping-item"
+            v-for="item in tippingList"
+            :key="item.item_name"
+            :class="{ selected: selectedTippingItem && selectedTippingItem.item_name === item.item_name }"
+            @click="selectedTippingItem = item"
+          >
+            <span class="item-name">{{ item.item_name }}</span>
+            <img class="item-image" :src="item.img_url" :alt="item.item_name">
+            <span class="item-cost">
+              <i class="res-icon" :class="item.is_log_free ? 'res-apple' : 'res-log'"></i>
+              {{ item.item_cost }}
+            </span>
+          </div>
+        </div>
+
+        <div class="tipping-amount">
+          <span class="amount-label">数量</span>
+          <button class="amount-btn" @click="decreaseTipAmount">-</button>
+          <input class="amount-input" type="number" v-model.number="tippingAmount" min="1" max="9999">
+          <button class="amount-btn" @click="increaseTipAmount">+</button>
+          <span
+            class="amount-quick"
+            v-for="quick in quickAmounts"
+            :key="quick.value"
+            @click="tippingAmount = quick.value"
+          >{{ quick.label }}</span>
+        </div>
+
+        <div class="tipping-message">
+          <textarea
+            v-model="tippingMessage"
+            maxlength="50"
+            rows="2"
+            placeholder="添加留言..."
+          ></textarea>
+          <span class="message-counter">{{ tippingMessage.length }}/50</span>
+        </div>
+
+        <div class="tipping-total">
+          总计
+          <i class="res-icon" :class="isAppleTipping ? 'res-apple' : 'res-log'"></i>
+          <strong>{{ totalTipCost }}</strong>
+          <span class="tip-hint" v-if="selectedTippingItem && !isAppleTipping">作者可得 {{ Math.floor(totalTipCost / 2) }} 原木收益</span>
+        </div>
+
         <div class="tipping-buttons">
-          <button @click="showTippingPopup = false">取消</button>
-          <button @click="confirmTip">确认打赏</button>
+          <button @click="closeTipping">取消</button>
+          <button :disabled="tipping || !selectedTippingItem" @click="confirmTip">
+            {{ tipping ? '打赏中...' : '确认打赏' }}
+          </button>
         </div>
       </div>
     </div>
@@ -277,8 +359,24 @@ export default {
       worlds: [],
       showTippingPopup: false,
       giftImage: "",
+      tippingList: [],
+      selectedTippingItem: null,
+      tippingAmount: 1,
+      tippingMessage: "",
+      tipping: false,
+      resources: { log: 0, apple: 0 },
+      quickAmounts: [
+        { label: '一心一意', value: 1 },
+        { label: '十全十美', value: 10 },
+        { label: '六六大顺', value: 66 },
+        { label: '天长地久', value: 99 },
+        { label: '爱的告白', value: 520 }
+      ],
       userInfo: null,
-      isLogin: false
+      isLogin: false,
+      activityNews: [],
+      popularityStatus: {},
+      isVotingPopularity: false
     }
   },
   head() {
@@ -294,6 +392,12 @@ export default {
     articleLength() {
       return this.chapters.length;
     },
+    activityNewsList() {
+      return this.activityNews.filter(activity =>
+        (activity.news && activity.news.length > 0) ||
+        (activity.popularity && activity.popularity.enabled)
+      );
+    },
     historyShown() {
       let his = 0;
       for (let item of this.chapters) {
@@ -303,6 +407,22 @@ export default {
         }
       }
       return this.history;
+    },
+    // is_log_free 的礼物用苹果支付，其余用原木
+    isAppleTipping() {
+      return !!(this.selectedTippingItem && this.selectedTippingItem.is_log_free)
+    },
+    safeTipAmount() {
+      const amount = Math.floor(Number(this.tippingAmount))
+      if (!amount || amount < 1) return 1
+      return Math.min(amount, 9999)
+    },
+    totalTipCost() {
+      if (!this.selectedTippingItem) return 0
+      return this.selectedTippingItem.item_cost * this.safeTipAmount
+    },
+    payableBalance() {
+      return this.isAppleTipping ? this.resources.apple : this.resources.log
     }
   },
   async mounted() {
@@ -345,6 +465,10 @@ export default {
 
         // 检查收藏状态
         this.checkBookcaseStatus()
+
+        // 获取创作活动新闻与人气票状态
+        this.getNovelActivityNews()
+        this.getPopularityStatus()
 
         // 获取阅读进度
         this.getReadingProgress()
@@ -445,6 +569,88 @@ export default {
         this.worlds = worlds || []
       } catch (error) {
         console.error('获取关联世界失败', error)
+      }
+    },
+
+    // 获取创作活动新闻
+    async getNovelActivityNews() {
+      try {
+        const list = await this.$api.library.getNovelActivityNews(this.novel.novel_id)
+        this.activityNews = Array.isArray(list) ? list : []
+      } catch (error) {
+        console.error('获取创作活动新闻失败', error)
+        this.activityNews = []
+      }
+    },
+
+    // 打开活动新闻链接
+    openActivityNews(news) {
+      if (news.pc_link && process.client) {
+        window.open(news.pc_link, '_blank')
+      }
+    },
+
+    // 获取当前用户在各活动中的人气票状态
+    async getPopularityStatus() {
+      try {
+        const list = await this.$api.popularity.getNovelStatus(this.novel.novel_id)
+        const map = {}
+        ;(Array.isArray(list) ? list : []).forEach(item => {
+          map[item.tag_id] = item
+        })
+        this.popularityStatus = map
+      } catch (error) {
+        console.error('获取人气票状态失败', error)
+        this.popularityStatus = {}
+      }
+    },
+
+    popularityStatusOf(activity) {
+      return this.popularityStatus[activity.tag_id] || null
+    },
+
+    popularityBtnText(activity) {
+      const status = this.popularityStatusOf(activity)
+      return status && status.voted_this_novel ? '已投' : '投人气票'
+    },
+
+    popularityBtnDisabled(activity) {
+      const status = this.popularityStatusOf(activity)
+      // 未登录时按钮仍可点击（引导登录），登录后由服务端状态决定
+      return !!status && !status.can_vote
+    },
+
+    popularityHint(activity) {
+      const status = this.popularityStatusOf(activity)
+      if (!status) return ''
+      if (status.voted_this_novel) return ''
+      if (!status.can_vote) return status.reason
+      return `剩余 ${status.remaining} 票`
+    },
+
+    // 投人气票
+    async voteActivity(activity) {
+      if (!localStorage.getItem('token')) {
+        this.$router.push('/login')
+        return
+      }
+      const status = this.popularityStatusOf(activity)
+      if (status && !status.can_vote) {
+        this.$message.info(status.reason || '暂时无法投票')
+        return
+      }
+      if (this.isVotingPopularity) return
+      this.isVotingPopularity = true
+      try {
+        await this.$api.popularity.vote(this.novel.novel_id, activity.tag_id)
+        this.$message.success('已为本书投出 1 票')
+        this.getPopularityStatus()
+        this.getNovelActivityNews()
+      } catch (error) {
+        this.$message.error(error.message || '投票失败，请稍后重试')
+        this.getPopularityStatus()
+      } finally {
+        this.isVotingPopularity = false
       }
     },
 
@@ -623,27 +829,93 @@ export default {
         return
       }
 
-      // 获取用户信息，替换原来的$auth.fetchUser()
       const userInfo = await this.getUserInfo()
-      console.log(userInfo);
+      if (!userInfo) {
+        this.$router.push('/login')
+        return
+      }
 
-      if (userInfo.user_id === this.novel.auther_id) {
+      if (Number(userInfo.user_id) === Number(this.novel.auther_id)) {
         this.$message.info("不能给自己的书打赏哦")
         return
       }
 
       this.showTippingPopup = true
+
+      if (this.tippingList.length === 0) {
+        this.tippingList = await this.$api.library.getTippingList()
+        if (this.tippingList.length === 0) {
+          this.$message.error('打赏列表加载失败')
+          this.showTippingPopup = false
+          return
+        }
+        this.selectedTippingItem = this.tippingList[0]
+      }
+      this.resources = await this.$api.resources.getResourceBalances()
+      if (!this.tippingMessage) {
+        this.tippingMessage = await this.$api.library.getFanMessage(this.novel.novel_id)
+      }
+    },
+
+    closeTipping() {
+      this.showTippingPopup = false
+    },
+
+    decreaseTipAmount() {
+      if (this.safeTipAmount > 1) this.tippingAmount = this.safeTipAmount - 1
+    },
+
+    increaseTipAmount() {
+      if (this.safeTipAmount >= 9999) {
+        this.$message.info('数量不能超过9999')
+        return
+      }
+      this.tippingAmount = this.safeTipAmount + 1
     },
 
     // 确认打赏
     async confirmTip() {
-      // 这里实现打赏逻辑
-      this.runGiftAnimation()
-      this.showTippingPopup = false
+      if (this.tipping || !this.selectedTippingItem) return
+
+      if (this.payableBalance < this.totalTipCost) {
+        this.$message.error(`${this.isAppleTipping ? '苹果' : '原木'}余额不足`)
+        return
+      }
+
+      this.tipping = true
+      const item = this.selectedTippingItem
+      const message = this.tippingMessage.trim()
+      try {
+        await this.$api.library.tipNovel({
+          from_id: Number(this.userInfo.user_id),
+          novel_id: this.novel.novel_id,
+          item_name: item.item_name,
+          item_amount: this.safeTipAmount,
+          item_cost: item.item_cost,
+          resource_name: this.isAppleTipping ? 'apple' : 'log'
+        })
+
+        this.$message.success(`成功打赏 ${this.safeTipAmount} 个${item.item_name}`)
+        this.showTippingPopup = false
+        if (message) {
+          this.$api.library.updateFanMessage(this.novel.novel_id, message)
+        }
+        this.runGiftAnimation(item.img_url)
+        this.resources = await this.$api.resources.getResourceBalances()
+        this.getFansStatistics()
+        if (this.$refs.fansList) {
+          this.$refs.fansList.getFansList()
+        }
+      } catch (error) {
+        console.error('打赏失败', error)
+        this.$message.error(error.message || '打赏失败，请稍后重试')
+      } finally {
+        this.tipping = false
+      }
     },
 
     // 打赏动画
-    runGiftAnimation(imgUrl = "/images/gift.png") {
+    runGiftAnimation(imgUrl = "/gift.png") {
       this.giftImage = imgUrl
 
       setTimeout(() => {
@@ -688,7 +960,7 @@ export default {
 
     // 分享小说
     shareBook() {
-      const content = `我正在原木社区读《${this.novel.name}》，你也一起来看看吧！\nhttps://loghome.com/novel/${this.novel.novel_id}`
+      const content = `我正在原木社区读《${this.novel.name}》，你也一起来看看吧！\nhttps://loghome.ink/novel/${this.novel.novel_id}`
 
       if (navigator.clipboard) {
         navigator.clipboard.writeText(content)
@@ -782,20 +1054,15 @@ export default {
     },
 
     async showAllComments() {
-      const tokenData = localStorage.getItem('token');
-      if (tokenData) {
-        let token = (await this.$api.users.generateCrossSiteToken()).crossSiteToken;
-        console.log(token)
-        this.$windowManager.createWindow({
-          title: '小说评论',
-          url: `${process.env.mobileUrl}/#/pages/users/external_login?token=${
-                token}&redirectTo=${encodeURIComponent(`/pages/readers/bookComment?id=${this.novel.novel_id}`)}&hideback=true`,
-          width: 500,
-          height: 800
-        })
-      } else {
+      if (!localStorage.getItem('token')) {
         this.$router.push("/login")
+        return
       }
+      await this.$openMobileWindow(`/pages/readers/bookComment?id=${this.novel.novel_id}`, {
+        title: '小说评论',
+        width: 500,
+        height: 800
+      })
     }
   }
 }
@@ -1299,7 +1566,124 @@ $heart-color: #FF6B6B;
         
         .fans-content {
           margin: 15px 0;
-}
+        }
+
+        .activities-content {
+          margin: 15px 0;
+
+          .activity-group {
+            @include card;
+            padding: 15px;
+            margin-bottom: 15px;
+
+            .activity-group-head {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding-bottom: 10px;
+              border-bottom: 1px solid $border-light;
+
+              .activity-group-name {
+                font-size: 15px;
+                font-weight: bold;
+                color: $text-color;
+              }
+
+              .activity-group-status {
+                font-size: 12px;
+                padding: 2px 10px;
+                border-radius: 999px;
+
+                &.ongoing {
+                  color: #fff;
+                  background-color: #ea7034;
+                }
+
+                &.ended {
+                  color: $text-light;
+                  background-color: $border-light;
+                }
+              }
+            }
+
+            .activity-news-item {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 10px 4px;
+              border-bottom: 1px solid $border-light;
+              cursor: pointer;
+              transition: background-color 0.2s;
+
+              &:hover {
+                background-color: $border-light;
+              }
+
+              .activity-news-item-title {
+                font-size: 14px;
+                color: $text-color;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+
+              .activity-news-item-arrow {
+                flex-shrink: 0;
+                margin-left: 12px;
+                color: $text-lighter;
+              }
+            }
+
+            .activity-popularity {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding-top: 12px;
+              margin-top: 4px;
+
+              .activity-popularity-info {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+
+                .activity-popularity-count {
+                  font-size: 14px;
+                  font-weight: bold;
+                  color: #ea7034;
+                }
+
+                .activity-popularity-reason {
+                  margin-top: 4px;
+                  font-size: 12px;
+                  color: $text-light;
+                }
+              }
+
+              .activity-popularity-btn {
+                flex-shrink: 0;
+                padding: 6px 20px;
+                border-radius: 999px;
+                border: none;
+                font-size: 13px;
+                font-weight: bold;
+                color: #ffffff;
+                background: linear-gradient(135deg, #ff8c42 0%, #ea7034 100%);
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:hover {
+                  opacity: 0.9;
+                }
+
+                &.disabled {
+                  color: $text-light;
+                  background: $border-light;
+                  cursor: not-allowed;
+                }
+              }
+            }
+          }
+        }
 
 .chapters-content {
   .chapter-list {
@@ -1502,23 +1886,191 @@ $heart-color: #FF6B6B;
     background-color: white;
     border-radius: 8px;
     width: 90%;
-    max-width: 400px;
+    max-width: 520px;
+    max-height: 86vh;
+    overflow-y: auto;
     padding: 20px;
-    
+
     h3 {
       font-size: 18px;
       margin: 0 0 20px 0;
       text-align: center;
       color: $accent-color;
     }
-    
-    .tipping-options {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 20px;
+
+    .res-icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      vertical-align: -3px;
+
+      &.res-log {
+        background: #a1662f;
+      }
+
+      &.res-apple {
+        background: #d94a3d;
+        border-radius: 50%;
+      }
     }
-    
+
+    .tipping-balance {
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: $text-color;
+
+      .balance-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+    }
+
+    .tipping-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+
+      .tipping-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 4px;
+        border: 2px solid rgba(200, 200, 200, 0.5);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          border-color: rgba(255, 112, 67, 0.5);
+        }
+
+        &.selected {
+          border-color: #ff7043;
+          background-color: #fff8ea;
+        }
+
+        .item-name {
+          font-size: 12px;
+          color: #795548;
+          margin-bottom: 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+        }
+
+        .item-image {
+          width: 44px;
+          height: 44px;
+          object-fit: contain;
+        }
+
+        .item-cost {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          margin-top: 4px;
+          font-size: 12px;
+          font-weight: bold;
+          color: #ea7034;
+        }
+      }
+    }
+
+    .tipping-amount {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+
+      .amount-label {
+        font-size: 14px;
+        color: #795548;
+      }
+
+      .amount-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 50%;
+        background-color: rgba(234, 112, 52, 0.85);
+        color: #fff;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .amount-input {
+        width: 64px;
+        height: 28px;
+        text-align: center;
+        border: 1px dashed rgba(200, 200, 200, 0.8);
+        border-radius: 14px;
+        font-size: 14px;
+      }
+
+      .amount-quick {
+        margin-left: auto;
+        font-size: 12px;
+        color: #947358;
+        cursor: pointer;
+
+        &:hover {
+          color: #ea7034;
+        }
+      }
+    }
+
+    .tipping-message {
+      position: relative;
+      margin-bottom: 16px;
+
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border: 1px solid rgba(200, 200, 200, 0.6);
+        border-radius: 8px;
+        font-size: 13px;
+        resize: vertical;
+      }
+
+      .message-counter {
+        position: absolute;
+        right: 8px;
+        bottom: 6px;
+        font-size: 11px;
+        color: #999;
+      }
+    }
+
+    .tipping-total {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #795548;
+
+      strong {
+        color: #ea7034;
+        font-size: 18px;
+      }
+
+      .tip-hint {
+        margin-left: auto;
+        font-size: 12px;
+        color: #999;
+      }
+    }
+
     .tipping-buttons {
       display: flex;
       justify-content: space-between;
@@ -1535,6 +2087,11 @@ $heart-color: #FF6B6B;
         &:last-child {
           background-color: $accent-color;
           color: white;
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
         }
       }
     }
