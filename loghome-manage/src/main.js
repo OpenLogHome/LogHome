@@ -13,7 +13,7 @@ Vue.prototype.axios = axios;
 const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
 const BASE_URL_SCF = "https://loghomeinnerservice.codesocean.top"
-Vue.prototype.$baseUrl = process.env.VUE_APP_BASE_URL || BASE_URL_DEV;
+Vue.prototype.$baseUrl = process.env.VUE_APP_BASE_URL || BASE_URL_PRODUCTION;
 Vue.prototype.$imgBaseUrl = "http://img.codesocean.top"
 
 // 管理端弹窗统一禁止点击遮罩关闭，避免误触丢失正在编辑的内容。
