@@ -7,6 +7,15 @@ let message = require('../../bin/message.js');
 let bank = require('../../bin/bank.js');
 let statistics = require('../../bin/statistics');
 
+const HAYCRAFT_TAG_FLAG_SQL = `EXISTS (
+	SELECT 1
+	FROM novel_tag haycraft_nt
+	JOIN tags haycraft_t ON haycraft_t.tag_id = haycraft_nt.tag_id
+	WHERE haycraft_nt.novel_id = n.novel_id
+		AND haycraft_t.is_deleted = 0
+		AND LOWER(TRIM(haycraft_t.tag_name)) LIKE '%haycraft%'
+)`;
+
 // 创建路由对象
 let router = express.Router();
 
@@ -15,14 +24,18 @@ router.get('/get_library_recommend_titles', async function (req, res) {
 	try {
 		if (req.query.title == '原木力爆棚') {
 			const results = await query(
-				`SELECT n.*,users.name user_name,users.avatar_url,novel_type FROM novels n,users WHERE n.author_id = users.user_id AND n.deleted = 0
+				`SELECT n.*,users.name user_name,users.avatar_url,novel_type,
+					${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
+				 FROM novels n,users WHERE n.author_id = users.user_id AND n.deleted = 0
 				AND n.is_personal = 0 ORDER BY n.ranking DESC LIMIT 100`,
 			);
 			res.json(results);
 		}
 		else if(req.query.title === '最近更新') {
 			const results = await query(
-				`SELECT n.*, u.name user_name, u.avatar_url FROM novel_updates nu
+				`SELECT n.*, u.name user_name, u.avatar_url,
+					${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
+				 FROM novel_updates nu
 				LEFT JOIN novel_updates nu0 ON nu.novel_id = nu0.novel_id AND nu.time < nu0.time 
 				INNER JOIN novels n ON nu.novel_id = n.novel_id AND n.deleted = 0 AND n.is_personal = 0
 				LEFT JOIN users u ON n.author_id = u.user_id WHERE nu0.novel_id IS NULL ORDER BY nu.record_id DESC`
@@ -31,7 +44,9 @@ router.get('/get_library_recommend_titles', async function (req, res) {
 		}
 		else {
 			const results = await query(
-				`SELECT DISTINCT n.*,u.name user_name,u.avatar_url,n.novel_type,c.recommend_id FROM novels n,library_recommend c,users u
+				`SELECT DISTINCT n.*,u.name user_name,u.avatar_url,n.novel_type,c.recommend_id,
+					${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
+				 FROM novels n,library_recommend c,users u
 								WHERE c.novel_id = n.novel_id AND c.title = ? 
                                 AND u.user_id = n.author_id
 								AND n.deleted = 0

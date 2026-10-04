@@ -121,7 +121,7 @@
         <el-form-item label="背景图片" prop="bgUrl">
           <el-upload
             class="upload-demo"
-            action="http://img.codesocean.top/upload/img"
+            action="https://img.codesocean.top/upload/img"
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
             :before-upload="beforeUpload"

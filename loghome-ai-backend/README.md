@@ -5,6 +5,7 @@
 ## 当前承接的接口
 
 - `POST /library/reader_novel_ai_chat_stream`
+- `POST /library/writer_text_correction`
 - `GET /library/reader_novel_summary_index_status`
 - `GET /healthz`
 
@@ -62,6 +63,18 @@ npm run dev
 3. 域名和证书就绪后，把前端的 `$readerAiBaseUrl` 指向这个新服务。
 4. 如果要灰度切换，可以先用 `reader_ai_base_url_override` 本地存储覆盖前端地址做联调。
 5. WebSocket 端口需要经过支持 Upgrade 的反向代理暴露为 `wss://`；同一个协作服务只能运行一个实例，除非后续再接入 Redis 广播层。
+
+## 文本纠错
+
+智能纠错按字数和段落数分批（默认每批不超过 2800 字 / 12 个切片），每次分析最多两批并行。超过 1400 字的段落按句末切片，保留边界重叠并将纠错位置映射回完整原文，不截断章节内容。默认关闭 DeepSeek / Qwen 的深度思考，限制输出为 4096 tokens；可通过 `.env.example` 中的 `WRITER_TEXT_CORRECTION_*` 环境变量调整。
+
+120 秒超时按每个模型请求计算。超时、无效 JSON、输出截断或临时服务错误只重试失败批次，并尝试缩小批次；401 等不可重试错误不会反复调用。内部批次和重试共用一次红石扣费。流连接每 10 秒发送心跳，客户端离开页面时取消剩余模型请求。
+
+NDJSON 在最终 `done` 前逐段发送 `paragraph_result`，`progress.analyzed` 仅统计已经得到有效结果的段落。前端遇到断流保留已收到的成功结果，未完成段落显示失败；“重试未完成”使用成功结果缓存。旧前端仍可读取最终 `done`，但断流保留和定向重试需要更新前端代码。
+
+反向代理需关闭响应缓冲，并允许持续响应的长连接；心跳可防止空闲断开，不能绕过代理平台的请求总时长硬限制。
+
+验证：`node --test test/writerTextCorrection.test.js`，以及在前端目录运行 `node --test test/writer_text_correction_stream_test.cjs`。测试使用模拟模型流，不访问真实模型或数据库。
 
 ## 实时协作
 

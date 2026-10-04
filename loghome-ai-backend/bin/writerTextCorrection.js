@@ -1,4 +1,6 @@
 const fetch = require('node-fetch');
+const { StringDecoder } = require('node:string_decoder');
+const { runCorrectionPlan } = require('./writerTextCorrectionPipeline');
 const { query } = require('../sql.js');
 const config = require('../config.js');
 
@@ -7,12 +9,22 @@ const TEXT_CORRECTION_BASE_URL = String(textCorrectionConfig.baseUrl || '').repl
 const TEXT_CORRECTION_API_KEY = textCorrectionConfig.apiKey || '';
 const TEXT_CORRECTION_MODEL = textCorrectionConfig.model || 'qwen3.6-chat';
 const { consumeRedstone, sendBillingError } = require('./redstoneBilling');
-const MODEL_REQUEST_TIMEOUT_MS = Math.max(15000, Number(
-	config.writerTextCorrectionRequestTimeoutMs
-		|| process.env.WRITER_TEXT_CORRECTION_REQUEST_TIMEOUT_MS
-		|| 120000
-));
-const MAX_PARAGRAPH_CHARS = 2000;
+function numericSetting(value, fallback, minimum, maximum) {
+	const number = Number(value);
+	return Number.isFinite(number) && number > 0
+		? Math.min(maximum, Math.max(minimum, Math.floor(number)))
+		: fallback;
+}
+const MODEL_REQUEST_TIMEOUT_MS = numericSetting(
+	process.env.WRITER_TEXT_CORRECTION_REQUEST_TIMEOUT_MS || config.writerTextCorrectionRequestTimeoutMs,
+	120000, 15000, 600000
+);
+const MODEL_MAX_TOKENS = numericSetting(process.env.WRITER_TEXT_CORRECTION_MAX_TOKENS, 4096, 1024, 16384);
+const BATCH_CHARS = numericSetting(process.env.WRITER_TEXT_CORRECTION_BATCH_CHARS, 2800, 1400, 12000);
+const BATCH_PARAGRAPHS = numericSetting(process.env.WRITER_TEXT_CORRECTION_BATCH_PARAGRAPHS, 12, 1, 32);
+const CONCURRENCY = numericSetting(process.env.WRITER_TEXT_CORRECTION_CONCURRENCY, 2, 1, 4);
+const HEARTBEAT_MS = numericSetting(process.env.WRITER_TEXT_CORRECTION_HEARTBEAT_MS, 10000, 1000, 30000);
+const MODEL_THINKING_ENABLED = String(process.env.WRITER_TEXT_CORRECTION_ENABLE_THINKING || 'false').toLowerCase() === 'true';
 
 function normalizeSegmentText(text) {
 	return String(text || '')
@@ -54,7 +66,7 @@ function normalizeProvidedParagraphs(paragraphs) {
 				paragraph && paragraph.paragraph_hash != null
 					? String(paragraph.paragraph_hash)
 					: null,
-			text: text.length > MAX_PARAGRAPH_CHARS ? text.slice(0, MAX_PARAGRAPH_CHARS) : text,
+			text,
 		});
 	}
 	return normalized;
@@ -219,65 +231,6 @@ function mergeStreamingText(previousText, nextText) {
 	return { full: `${previous}${next}`, delta: next };
 }
 
-function extractDeltaText(payload, contentState) {
-	const choice = payload && Array.isArray(payload.choices) ? payload.choices[0] : null;
-	const delta = choice && choice.delta ? choice.delta : {};
-	if (delta.content !== undefined && delta.content !== null) {
-		const text = String(delta.content);
-		const merged = mergeStreamingText(contentState.text || '', text);
-		contentState.text = merged.full;
-		return merged.delta;
-	}
-	if (delta.reasoning_content !== undefined && delta.reasoning_content !== null) {
-		return '';
-	}
-	if (choice && choice.message && choice.message.content) {
-		const text = String(choice.message.content);
-		const merged = mergeStreamingText(contentState.text || '', text);
-		contentState.text = merged.full;
-		return merged.delta;
-	}
-	return '';
-}
-
-function extractReasoningText(payload, reasoningState) {
-	const choice = payload && Array.isArray(payload.choices) ? payload.choices[0] : null;
-	const delta = choice && choice.delta ? choice.delta : {};
-	const message = choice && choice.message ? choice.message : {};
-	const candidates = [
-		delta.reasoning_content,
-		delta.reasoning,
-		delta.thinking,
-		message.reasoning_content,
-		message.reasoning,
-		message.thinking,
-	];
-
-	for (const value of candidates) {
-		if (value === undefined || value === null || value === '') {
-			continue;
-		}
-		const text = String(value);
-		const merged = mergeStreamingText(reasoningState.text, text);
-		reasoningState.text = merged.full;
-		return merged.delta;
-	}
-	return '';
-}
-
-function extractAnalyzedParagraphCount(text) {
-	const markerPattern = /段落\s*(\d+)(?:\s*[-—~至]\s*(\d+))?\s*/g;
-	let match;
-	let maxIndex = 0;
-	while ((match = markerPattern.exec(String(text || ''))) !== null) {
-		const endIndex = Number(match[2] || match[1]);
-		if (Number.isInteger(endIndex) && endIndex > maxIndex) {
-			maxIndex = endIndex;
-		}
-	}
-	return maxIndex;
-}
-
 function createNdjsonStreamWriter(res) {
 	let closed = false;
 	const markClosed = () => { closed = true; };
@@ -321,145 +274,167 @@ function createNdjsonStreamWriter(res) {
 	};
 }
 
-async function streamCorrectionFromModel(paragraphs, writer) {
+async function streamCorrectionFromModel(paragraphs, writer, { signal, batchIndex, batchCount } = {}) {
 	if (!TEXT_CORRECTION_API_KEY) {
 		const error = new Error('AI 配置尚未完成');
 		error.code = 'UNIFIED_API_KEY_MISSING';
+		error.retryable = false;
 		throw error;
 	}
-
-	const messages = [
-		{ role: 'system', content: buildCorrectionSystemPrompt() },
-		{ role: 'user', content: buildCorrectionUserMessage(paragraphs) },
-	];
-
 	const requestBody = {
 		model: TEXT_CORRECTION_MODEL,
-		messages,
+		messages: [
+			{ role: 'system', content: buildCorrectionSystemPrompt() },
+			{ role: 'user', content: buildCorrectionUserMessage(paragraphs) },
+		],
 		stream: true,
 		temperature: 0.1,
-		max_completion_tokens: 16384,
 	};
-
+	if (isDeepSeekModel(TEXT_CORRECTION_MODEL) || /^qwen/i.test(TEXT_CORRECTION_MODEL)) {
+		requestBody.max_tokens = MODEL_MAX_TOKENS;
+	} else {
+		requestBody.max_completion_tokens = MODEL_MAX_TOKENS;
+	}
 	if (isDeepSeekModel(TEXT_CORRECTION_MODEL)) {
-		requestBody.thinking = { type: 'enabled' };
+		requestBody.thinking = { type: MODEL_THINKING_ENABLED ? 'enabled' : 'disabled' };
+	} else if (/^qwen/i.test(TEXT_CORRECTION_MODEL)) {
+		requestBody.enable_thinking = MODEL_THINKING_ENABLED;
 	}
 
-	const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+	const controller = new AbortController();
+	const abortOnDisconnect = () => controller.abort();
+	if (signal) {
+		signal.addEventListener('abort', abortOnDisconnect, { once: true });
+		if (signal.aborted) controller.abort();
+	}
+	let timedOut = false;
 	const timeoutTimer = setTimeout(() => {
-		if (controller) controller.abort();
+		timedOut = true;
+		controller.abort();
 	}, MODEL_REQUEST_TIMEOUT_MS);
-	if (timeoutTimer && typeof timeoutTimer.unref === 'function') {
-		timeoutTimer.unref();
-	}
-
-	writer.write({ type: 'status', message: '正在连接智能纠错模型...' });
-
+	timeoutTimer.unref?.();
+	const contentState = { text: '' };
+	const reasoningState = { text: '' };
+	const startedAt = Date.now();
+	let outcome = 'success';
+	const emit = payload => writer.write({ ...payload, batch_index: batchIndex, batch_count: batchCount });
 	let response;
+
 	try {
-		response = await fetch(`${TEXT_CORRECTION_BASE_URL}/chat/completions`, {
+		if (controller.signal.aborted || writer.closed) throw new Error('纠错请求已取消');
+		emit({ type: 'status', message: '正在检查第 ' + batchIndex + '/' + batchCount + ' 批正文...' });
+		response = await fetch(TEXT_CORRECTION_BASE_URL + '/chat/completions', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${TEXT_CORRECTION_API_KEY}`,
+				'Authorization': 'Bearer ' + TEXT_CORRECTION_API_KEY,
 			},
 			body: JSON.stringify(requestBody),
-			signal: controller ? controller.signal : undefined,
+			signal: controller.signal,
 			timeout: MODEL_REQUEST_TIMEOUT_MS,
 		});
-	} catch (error) {
-		clearTimeout(timeoutTimer);
-		if (error && (error.name === 'AbortError' || error.type === 'request-timeout')) {
-			throw new Error('模型响应超时，请稍后重试');
-		}
-		throw error;
-	}
-
-	if (!response.ok) {
-		let message = `AI 请求失败：${response.status}`;
-		try {
-			const data = await response.json();
-			message = data.error?.message || data.message || message;
-		} catch (error) { /* ignore */ }
-		clearTimeout(timeoutTimer);
-		throw new Error(message);
-	}
-
-	writer.write({ type: 'status', message: '模型已连接，正在分析文本...' });
-
-	if (!response.body || typeof response.body.on !== 'function') {
-		clearTimeout(timeoutTimer);
-		throw new Error('模型未返回流式响应');
-	}
-
-	const contentState = { text: '' };
-	const reasoningState = { text: '' };
-	let hasReasoning = false;
-	let hasContent = false;
-	let reportedProgress = 0;
-
-	try {
-		let buffer = '';
-		for await (const chunk of response.body) {
-			if (writer.closed) break;
-			buffer += chunk.toString('utf8');
-			let newlineIndex = buffer.indexOf('\n');
-			while (newlineIndex !== -1 && !writer.closed) {
-				const line = buffer.slice(0, newlineIndex).trim();
-				buffer = buffer.slice(newlineIndex + 1);
-				newlineIndex = buffer.indexOf('\n');
-
-				if (!line || !line.startsWith('data:')) continue;
-				const rawData = line.slice(5).trim();
-				if (!rawData || rawData === '[DONE]') continue;
-
-				let payload;
-				try { payload = JSON.parse(rawData); } catch (error) { continue; }
-				if (payload && payload.error) {
-					throw new Error(payload.error.message || payload.error.type || 'AI 请求失败');
-				}
-
-				const reasoning = extractReasoningText(payload, reasoningState);
-				if (reasoning && !writer.closed) {
-					if (!hasReasoning) {
-						writer.write({ type: 'status', message: '模型正在深度思考中...' });
-					}
-					hasReasoning = true;
-					writer.write({ type: 'reasoning_delta', content: reasoning });
-
-					const analyzedCount = extractAnalyzedParagraphCount(reasoningState.text);
-					if (analyzedCount > reportedProgress) {
-						reportedProgress = Math.min(analyzedCount, paragraphs.length);
-						writer.write({
-							type: 'progress',
-							analyzed: reportedProgress,
-							total: paragraphs.length,
-						});
-					}
-				}
-
-				const delta = extractDeltaText(payload, contentState);
-				if (delta && !writer.closed) {
-					if (!hasContent) {
-						writer.write({ type: 'status', message: '正在输出纠错结果' });
-					}
-					hasContent = true;
-					writer.write({ type: 'delta', content: delta });
-				}
-			}
-		}
-	} catch (error) {
-		if (error && (error.name === 'AbortError' || error.type === 'request-timeout')) {
-			throw new Error('模型响应超时，请稍后重试');
-		}
-		if (!writer.closed) {
+		if (!response.ok) {
+			let message = 'AI 请求失败：' + response.status;
+			try {
+				const data = await response.json();
+				message = data.error?.message || data.message || message;
+			} catch (error) { /* ignore malformed error body */ }
+			const error = new Error(message);
+			error.code = 'MODEL_HTTP_ERROR';
+			error.retryable = response.status === 408 || response.status === 429 || response.status >= 500;
 			throw error;
 		}
+		if (!response.body || typeof response.body.on !== 'function') {
+			throw new Error('模型未返回流式响应');
+		}
+
+		let streamEnded = false;
+		const processLine = line => {
+			if (!line.trim().startsWith('data:')) return;
+			const raw = line.trim().slice(5).trim();
+			if (!raw) return;
+			if (raw === '[DONE]') { streamEnded = true; return; }
+			let payload;
+			try { payload = JSON.parse(raw); } catch (error) { return; }
+			if (payload.error) throw new Error(payload.error.message || payload.error.type || 'AI 请求失败');
+			const choice = payload.choices?.[0];
+			if (!choice) return;
+			// 标准 delta 是增量，不做重叠去重，否则连续相同字符会丢失。
+			const reasoning = choice.delta?.reasoning_content ?? choice.delta?.reasoning ?? choice.delta?.thinking;
+			if (reasoning) {
+				reasoningState.text += String(reasoning);
+				emit({ type: 'reasoning_delta', content: String(reasoning) });
+			}
+			const delta = choice.delta?.content;
+			if (delta !== undefined && delta !== null) {
+				contentState.text += String(delta);
+				emit({ type: 'delta', content: String(delta) });
+			} else if (choice.message?.content) {
+				const merged = mergeStreamingText(contentState.text, String(choice.message.content));
+				contentState.text = merged.full;
+				if (merged.delta) emit({ type: 'delta', content: merged.delta });
+			}
+			if (choice.finish_reason === 'length') {
+				const error = new Error('模型输出达到长度限制，正在缩小检查范围');
+				error.code = 'MODEL_OUTPUT_LIMIT';
+				throw error;
+			}
+			if (choice.finish_reason && choice.finish_reason !== 'stop') {
+				throw new Error('模型未完成本批次检查：' + choice.finish_reason);
+			}
+			if (choice.finish_reason === 'stop') streamEnded = true;
+		};
+		const decoder = new StringDecoder('utf8');
+		let buffer = '';
+		for await (const chunk of response.body) {
+			if (writer.closed || controller.signal.aborted) throw new Error('纠错请求已取消');
+			buffer += decoder.write(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+			let newline;
+			while ((newline = buffer.indexOf('\n')) !== -1) {
+				const line = buffer.slice(0, newline);
+				buffer = buffer.slice(newline + 1);
+				processLine(line);
+				if (streamEnded) break;
+			}
+			if (streamEnded) break;
+		}
+		if (!streamEnded) {
+			buffer += decoder.end();
+			if (buffer.trim()) processLine(buffer);
+		}
+		if (controller.signal.aborted) throw new Error('纠错请求已取消');
+		const modelJson = parseJsonObjectFromModel(contentState.text);
+		if (!modelJson || !Array.isArray(modelJson.paragraphs)) {
+			const error = new Error('模型未返回有效纠错结果');
+			error.code = 'MODEL_INVALID_JSON';
+			throw error;
+		}
+		const indices = new Set(paragraphs.map(item => item.paragraph_index));
+		if (modelJson.paragraphs.some(item =>
+			!indices.has(Number(item?.paragraph_index)) || !Array.isArray(item?.fragments)
+		)) {
+			throw new Error('模型返回的段落编号或纠错片段不完整');
+		}
+		return processParagraphResults(paragraphs, modelJson);
+	} catch (error) {
+		outcome = timedOut ? 'MODEL_TIMEOUT' : (error.code || error.name || 'MODEL_ERROR');
+		if (timedOut || error.type === 'request-timeout' || error.type === 'body-timeout') {
+			const timeoutError = new Error('本批正文检查超时，请重试未完成的内容');
+			timeoutError.code = 'MODEL_TIMEOUT';
+			throw timeoutError;
+		}
+		throw error;
 	} finally {
 		clearTimeout(timeoutTimer);
+		if (signal) signal.removeEventListener('abort', abortOnDisconnect);
+		if (controller.signal.aborted) response?.body?.destroy?.();
+		console.info('[writer-text-correction] batch', {
+			batch: batchIndex, paragraphs: paragraphs.length,
+			chars: paragraphs.reduce((total, item) => total + item.text.length, 0),
+			elapsed_ms: Date.now() - startedAt,
+			outcome,
+		});
 	}
-
-	return contentState.text || '';
 }
 
 function processParagraphResults(paragraphs, modelJson) {
@@ -581,6 +556,10 @@ async function handleWriterTextCorrection(req, res) {
 			return res.status(400).json({ msg: '没有可检测的正文段落' });
 		}
 
+		if (!TEXT_CORRECTION_API_KEY) {
+			return res.status(503).json({ msg: 'AI 配置尚未完成' });
+		}
+
 		await consumeRedstone({
 			userId: Number(user.user_id),
 			amount: 2,
@@ -590,74 +569,42 @@ async function handleWriterTextCorrection(req, res) {
 			description: '智能纠错消耗2红石',
 		});
 
-		res.on('error', () => {});
-
 		const writer = createNdjsonStreamWriter(res);
-		const handleDisconnect = () => {};
-		if (typeof res.once === 'function') res.once('close', handleDisconnect);
-		if (typeof req.once === 'function') req.once('aborted', handleDisconnect);
-
+		const controller = new AbortController();
+		const handleDisconnect = () => controller.abort();
+		res.once?.('close', handleDisconnect);
+		req.once?.('aborted', handleDisconnect);
+		const heartbeat = setInterval(() => {
+			if (writer.closed) controller.abort();
+			else writer.write({ type: 'heartbeat' });
+		}, HEARTBEAT_MS);
+		heartbeat.unref?.();
 		try {
-			const modelText = await streamCorrectionFromModel(paragraphs, writer);
-			if (writer.closed) return;
-
-			const modelJson = parseJsonObjectFromModel(modelText);
-
-			if (!modelJson) {
-				if (!writer.closed) {
-					writer.write({ type: 'error', message: '模型未返回有效纠错结果' });
-				}
-				return;
-			}
-
-			const paragraphResults = processParagraphResults(paragraphs, modelJson);
-			const errors = paragraphResults
-				.filter((item) => item.error)
-				.map((item) => ({
-					paragraph_index: item.paragraph_index,
-					paragraph_id: item.paragraph_id,
-					paragraph_hash: item.paragraph_hash,
-					message: item.error,
-				}));
-			const corrections = paragraphResults.filter((item) => item.has_issue && !item.error);
-
-			const result = {
-				summary: {
-					paragraph_count: paragraphs.length,
-					batch_count: 1,
-					corrected_paragraph_count: corrections.length,
-					issue_count: corrections.reduce(
-						(total, item) => total + item.fragments.length, 0
-					),
-					error_count: errors.length,
-				},
-				paragraph_results: paragraphResults,
-				corrections,
-				errors,
-			};
-
-			if (!writer.closed) {
-				writer.write({ type: 'done', result });
-			}
+			writer.write({ type: 'meta', batched: true, total: paragraphs.length });
+			const result = await runCorrectionPlan(paragraphs, {
+				batchChars: BATCH_CHARS,
+				batchParagraphs: BATCH_PARAGRAPHS,
+				concurrency: CONCURRENCY,
+				retries: 1,
+				shouldStop: () => writer.closed || controller.signal.aborted,
+				analyzeBatch: (batch, context) => streamCorrectionFromModel(batch, writer, {
+					...context, signal: controller.signal,
+				}),
+				onParagraphResult: result => writer.write({ type: 'paragraph_result', result }),
+				onProgress: progress => writer.write({ type: 'progress', ...progress }),
+			});
+			if (!writer.closed) writer.write({ type: 'done', result });
 		} catch (error) {
 			if (!writer.closed) {
-				const message = error.message || '';
-				if (message.includes('Premature close') || message.includes('premature close')) {
-					// Client disconnected, nothing to do
-				} else {
-					console.log(error);
-					writer.write({
-						type: 'error',
-						message: error.code === 'UNIFIED_API_KEY_MISSING'
-							? 'AI 配置尚未完成'
-							: message || '智能纠错暂时没有响应，请稍后再试',
-					});
-				}
+				console.warn('[writer-text-correction] failed', { article_id: articleId, code: error.code || error.name });
+				writer.write({ type: 'error', message: error.message || '智能纠错暂时没有响应，请稍后再试' });
 			}
 		} finally {
-			if (!writer.closed) {
-				writer.end();
-			}
+			clearInterval(heartbeat);
+			controller.abort();
+			res.removeListener?.('close', handleDisconnect);
+			req.removeListener?.('aborted', handleDisconnect);
+			if (!writer.closed) writer.end();
 		}
 	} catch (error) {
 		if (sendBillingError(res, error)) return;

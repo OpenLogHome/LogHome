@@ -1,3 +1,4 @@
+const { createMangaImageAssets } = require('../bin/mangaImageAssets');
 // 引入依赖包
 let express = require('express');
 let { query, withTransaction } = require('../sql.js');
@@ -58,9 +59,12 @@ const {
 	serializeArticleCollaborationState,
 } = require('../bin/articleCollaborationMode.js');
 const fs = require('fs'); // 引入文件系统模块
+const sharp = require('sharp');
+const SECRET = require('../SECRET.js');
 const compressing = require('compressing');
 const path = require('path');
 const crypto = require('crypto'); // 引入crypto模块用于md5
+const { mangaRevision, MANGA_REVISION_CONDITION, mangaRevisionValues } = require('../bin/mangaRevision.js');
 const memoryDatabase = config.memoryDatabase || 'loghome-agent-memory';
 const WRITING_ACTIVITY_TIMEZONE = 'Asia/Shanghai';
 const WRITING_ACTIVITY_FULL_SECONDS = 30 * 60;
@@ -163,6 +167,93 @@ function parsePositiveParagraphId(rawId) {
 
 function ensureArticleParagraphIds(content) {
 	return ensureArticleParagraphIdsForStorage(content);
+}
+
+// ===== 漫画类型支持 =====
+// 作品级：novels.novel_type = 'manga'
+// 章节级：articles.article_type = 'mangaStrip'（条漫）| 'mangaPage'（页漫）
+// 章节 content 结构：{"pages":[{"id":1,"url":"...","thumb":"...","width":800,"height":1200}, ...]}
+const MANGA_NOVEL_TYPE = 'manga';
+const MANGA_ARTICLE_TYPES = ['mangaStrip', 'mangaPage'];
+const MANGA_MAX_PAGES = 300;
+const MANGA_PAGE_URL_MAX_LENGTH = 512;
+// 全局 express.json limit 为 5mb，base64 相对原图约膨胀 4/3，留余量取 3.5MB
+const MANGA_PAGE_MAX_BYTES = 3.5 * 1024 * 1024;
+const MANGA_IMAGE_ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+function normalizeNovelType(rawType) {
+	const novelType = String(rawType || '').trim();
+	return novelType === MANGA_NOVEL_TYPE ? MANGA_NOVEL_TYPE : null;
+}
+
+function isMangaArticleType(articleType) {
+	return MANGA_ARTICLE_TYPES.includes(String(articleType || '').trim());
+}
+
+function normalizeMangaPage(rawPage, index) {
+	if (!rawPage || typeof rawPage !== 'object' || Array.isArray(rawPage)) {
+		return null;
+	}
+	const url = String(rawPage.url || '').trim();
+	if (!/^https?:\/\/.+/i.test(url) || url.length > MANGA_PAGE_URL_MAX_LENGTH) {
+		return null;
+	}
+	const page = {
+		id: Number.isInteger(Number(rawPage.id)) && Number(rawPage.id) > 0 ? Number(rawPage.id) : index + 1,
+		url,
+	};
+	for (const key of ['thumb', 'readingUrl']) {
+		const value = String(rawPage[key] || '').trim();
+		if (/^https?:\/\/.+/i.test(value) && value.length <= MANGA_PAGE_URL_MAX_LENGTH) page[key] = value;
+	}
+	for (const key of ['width', 'height']) {
+		const value = Number(rawPage[key]);
+		if (Number.isFinite(value) && value > 0 && value <= 20000) {
+			page[key] = Math.round(value);
+		}
+	}
+	return page;
+}
+
+/**
+ * 校验并规范化漫画章节内容。
+ * @param {string|object} rawContent - JSON 字符串或 {pages:[...]} 对象
+ * @param {{requirePages?: boolean}} options - 发布态（非草稿）要求至少一页
+ * @returns {{ok: true, content: string, pageCount: number}|{ok: false, error: string}}
+ */
+function normalizeMangaContent(rawContent, options = {}) {
+	const { requirePages = true } = options;
+	let parsed = rawContent;
+	if (typeof rawContent === 'string') {
+		try {
+			parsed = JSON.parse(rawContent);
+		} catch (e) {
+			return { ok: false, error: '漫画章节内容必须是合法的 JSON' };
+		}
+	}
+	if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.pages)) {
+		return { ok: false, error: '漫画章节内容必须包含 pages 数组' };
+	}
+	if (parsed.pages.length > MANGA_MAX_PAGES) {
+		return { ok: false, error: `漫画章节页数超出上限（最多 ${MANGA_MAX_PAGES} 页）` };
+	}
+	if (parsed.pages.length === 0 && requirePages) {
+		return { ok: false, error: '发布前请至少上传一页漫画' };
+	}
+	const pages = [];
+	for (let i = 0; i < parsed.pages.length; i++) {
+		const page = normalizeMangaPage(parsed.pages[i], i);
+		if (!page) {
+			return { ok: false, error: `第 ${i + 1} 页内容不合法（url 必须为 http(s) 链接）` };
+		}
+		pages.push(page);
+	}
+	const mode = parsed.mode === 'paged' || parsed.mode === 'strip' ? parsed.mode : null;
+	const normalized = { pages };
+	if (mode) {
+		normalized.mode = mode;
+	}
+	return { ok: true, content: JSON.stringify(normalized), pageCount: pages.length };
 }
 
 function currentTime()  
@@ -760,14 +851,38 @@ router.get('/get_novel_by_id', async function (req, res) {
 	}
 });
 
+router.get('/get_manga', auth, async (req, res) => {
+	try {
+		const access = await getNovelAccess(getCurrentUser(req).user_id, Number(req.query.id));
+		if (!canViewArticles(access)) return res.status(403).json({ msg: 'access denied' });
+		const rows = await query(
+			`SELECT n.*,u.name author_name,u.avatar_url auther_avatar FROM novels n JOIN users u ON n.author_id = u.user_id WHERE n.novel_id = ? AND n.novel_type = 'manga' AND n.deleted = 0`,
+			[req.query.id],
+		);
+		if (!rows.length) return res.status(404).json({ msg: '漫画不存在' });
+		res.json([{ ...rows[0], current_access: serializeAccess(access) }]);
+	} catch (error) {
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
 router.post('/add_novel', auth, async (req, res) => {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
 	try {
-		let results = await query(
-			'INSERT INTO novels(name,content,author_id,update_time) VALUES(?,?,?,CURRENT_TIMESTAMP)',
-			[req.body.name, req.body.content, user.user_id],
-		);
+		const novelType = normalizeNovelType(req.body.novel_type);
+		let results;
+		if (novelType === MANGA_NOVEL_TYPE) {
+			results = await query(
+				'INSERT INTO novels(name,content,author_id,update_time,novel_type) VALUES(?,?,?,CURRENT_TIMESTAMP,?)',
+				[req.body.name, req.body.content, user.user_id, MANGA_NOVEL_TYPE],
+			);
+		} else {
+			results = await query(
+				'INSERT INTO novels(name,content,author_id,update_time) VALUES(?,?,?,CURRENT_TIMESTAMP)',
+				[req.body.name, req.body.content, user.user_id],
+			);
+		}
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
@@ -885,7 +1000,7 @@ router.post('/change_cover', auth, async (req, res) => {
 
 		const coverBuffer = decodeBase64Image(req.body.img);
 		const uploadResponse = await axios.post(
-			'http://img.codesocean.top/upload/imgbase64',
+			'https://img.codesocean.top/upload/imgbase64',
 			{
 				img: req.body.img,
 				apikey: '45qEQfILCQ3tAXxmUJF8O562bJU2D0',
@@ -916,6 +1031,74 @@ router.post('/change_cover', auth, async (req, res) => {
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
+	}
+});
+
+function getMangaImageUploadConfig() {
+	return {
+		url:
+			config.mangaImageUploadUrl ||
+			SECRET.MangaImageUploadUrl ||
+			'https://img.codesocean.top/upload/imgbase64',
+		apikey:
+			config.mangaImageApiKey ||
+			SECRET.MangaImageApiKey ||
+			'45qEQfILCQ3tAXxmUJF8O562bJU2D0',
+	};
+}
+
+// 漫画页图上传：接收 base64，生成缩略图/阅读图，条漫长图按 6000px 分段
+// 单页原图上限 3.5MB（受全局 express.json 5mb 请求体限制约束）
+router.post('/upload_manga_page', auth, async (req, res) => {
+	let cancelled = false;
+	const cancelSource = axios.CancelToken.source();
+	res.once('close', () => { if (!res.writableEnded) { cancelled = true; cancelSource.cancel('client closed upload'); } });
+	try {
+		const imgBase64 = typeof req.body.img === 'string' ? req.body.img.trim() : '';
+		if (!imgBase64) {
+			return res.status(400).json({ msg: '缺少 img 参数（base64 图片）' });
+		}
+		const buffer = decodeBase64Image(imgBase64);
+		if (!buffer || buffer.length === 0) {
+			return res.status(400).json({ msg: '图片内容无效' });
+		}
+		if (buffer.length > MANGA_PAGE_MAX_BYTES) {
+			return res.status(400).json({
+				msg: '单页图片过大（原图上限 3.5MB），请先压缩后再上传',
+			});
+		}
+		let metadata = null;
+		try {
+			metadata = await sharp(buffer, { failOn: 'none' }).metadata();
+		} catch (e) {
+			metadata = null;
+		}
+		if (!metadata || !metadata.width || !metadata.height) {
+			return res.status(400).json({ msg: '无法识别的图片格式' });
+		}
+		const format = String(metadata.format || '').toLowerCase();
+		if (!MANGA_IMAGE_ALLOWED_FORMATS.includes(format)) {
+			return res.status(400).json({
+				msg: `不支持的图片格式：${format || '未知'}（支持 jpg/png/webp/gif）`,
+			});
+		}
+		const uploadConfig = getMangaImageUploadConfig();
+		const pages = await createMangaImageAssets(buffer, {
+			strip: req.body.article_type === 'mangaStrip',
+			isCancelled: () => cancelled,
+			upload: async (asset, assetFormat) => {
+				const mime = assetFormat === 'jpeg' ? 'image/jpeg' : 'image/' + assetFormat;
+				const response = await axios.post(uploadConfig.url, {
+					img: 'data:' + mime + ';base64,' + asset.toString('base64'), apikey: uploadConfig.apikey,
+				}, { headers: { 'Content-Type': 'application/json' }, timeout: 60000, cancelToken: cancelSource.token });
+				const url = response.data && response.data.url;
+				if (!url || !/^https?:\/\//i.test(url)) throw new Error('图片存储服务暂时不可用');
+				return url;
+			},
+		});
+		res.status(200).json({ ...pages[0], pages, size: buffer.length });
+	} catch (e) {
+		if (!cancelled) res.status(400).json({ msg: '图片处理或上传失败，请检查格式和尺寸后重试' });
 	}
 });
 
@@ -1897,6 +2080,9 @@ router.get('/get_article', auth, async function (req, res) {
             );
             results[0].novel_info = novel_info[0];
 			results[0].current_access = serializeAccess(access);
+            if (isMangaArticleType(results[0].article_type)) {
+                results[0].manga_revision = mangaRevision(results[0]);
+            }
         }
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -2272,6 +2458,9 @@ router.post('/add_article', auth, async (req, res) => {
 	try {
 		const access = await getNovelAccess(user.user_id, novelId);
 		if (access && canAddArticle(access)) {
+			if (Number(req.body.is_draft) !== 1 && !canPublish(access)) {
+				return res.status(403).json({ msg: 'access denied' });
+			}
 			const restrictError = await getRestrictingActivityError(novelId, '新增章节');
 			if (restrictError) {
 				return res.status(400).json({ msg: restrictError });
@@ -2281,7 +2470,24 @@ router.post('/add_article', auth, async (req, res) => {
                 req.body.article_type = 'richtext';
                 req.body.content = "[]"
             }
-			req.body.content = ensureArticleParagraphIds(req.body.content);
+			if (isMangaArticleType(req.body.article_type)) {
+				const novelRows = await query(
+					'SELECT novel_type FROM novels WHERE novel_id = ? AND deleted = 0',
+					[novelId],
+				);
+				if (!novelRows.length || novelRows[0].novel_type !== MANGA_NOVEL_TYPE) {
+					return res.status(400).json({ msg: '漫画章节只能添加到漫画作品下' });
+				}
+				const manga = normalizeMangaContent(req.body.content, {
+					requirePages: !req.body.is_draft,
+				});
+				if (!manga.ok) {
+					return res.status(400).json({ msg: manga.error });
+				}
+				req.body.content = manga.content;
+			} else {
+				req.body.content = ensureArticleParagraphIds(req.body.content);
+			}
 			let insertChapter = Number(req.body.article_chapter || 1);
 			if (!Number.isFinite(insertChapter) || insertChapter < 1) {
 				insertChapter = 1;
@@ -2324,7 +2530,39 @@ router.post('/add_article', auth, async (req, res) => {
 router.post('/modify_article', auth, async (req, res) => {
 	const user = getCurrentUser(req);
 	try {
-		req.body.content = ensureArticleParagraphIds(req.body.content);
+		const access = await getArticleAccess(user.user_id, req.body.article_id);
+		if (!access || access.article_deleted) {
+			return res.status(403).json({ msg: 'access denied' });
+		}
+		const isMangaArticle = isMangaArticleType(access.article_type);
+		let mangaSnapshot = null;
+		if (isMangaArticle) {
+			if (!canEditDraft(access) || !canPublish(access)) return res.status(403).json({ msg: 'access denied' });
+			if (!req.body.expected_manga_revision) return res.status(428).json({ msg: '请重新加载话数后保存', code: 'manga_revision_required' });
+			const rows = await query('SELECT * FROM articles WHERE article_id = ? AND deleted = 0', [req.body.article_id]);
+			mangaSnapshot = rows[0];
+			if (!mangaSnapshot || mangaRevision(mangaSnapshot) !== req.body.expected_manga_revision) {
+				return res.status(409).json({ msg: '话数已被其他编辑修改，请保留本地草稿并重新加载', code: 'manga_revision_conflict' });
+			}
+		}
+		let nextArticleType = null;
+		if (isMangaArticle) {
+			nextArticleType = access.article_type;
+			const manga = normalizeMangaContent(req.body.content, {
+				requirePages: Number(req.body.is_draft) !== 1,
+			});
+			if (!manga.ok) {
+				return res.status(400).json({ msg: manga.error });
+			}
+			req.body.content = manga.content;
+			const requestedType = String(req.body.article_type || '').trim();
+			if (MANGA_ARTICLE_TYPES.includes(requestedType)) {
+				// 允许条漫 <-> 页漫 互切
+				nextArticleType = requestedType;
+			}
+		} else {
+			req.body.content = ensureArticleParagraphIds(req.body.content);
+		}
 		const sessionId = sanitizeSessionId(req.body.edit_session_id);
 		const writerCreateTime = normalizeWriterCreateTime(
 			req.body.writer_create_time || req.body.create_time,
@@ -2338,10 +2576,6 @@ router.post('/modify_article', auth, async (req, res) => {
 			req.body.clear_schedule === 'true' ||
 			Number(req.body.clear_schedule) === 1;
 		let contentHash = calculateContentHash(req.body.content);
-		const access = await getArticleAccess(user.user_id, req.body.article_id);
-		if (!access || access.article_deleted) {
-			return res.status(403).json({ msg: 'access denied' });
-		}
 		const restrictError = await getRestrictingActivityError(Number(access.novel_id), '编辑章节');
 		if (restrictError) {
 			return res.status(400).json({ msg: restrictError });
@@ -2430,16 +2664,35 @@ router.post('/modify_article', auth, async (req, res) => {
 			);
 		}
 
-		let results = await query(
-			'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0',
-			[
-				req.body.title,
-				req.body.content,
-				contentHash,
-				req.body.is_draft,
-				req.body.article_id,
-			],
-		);
+		let results;
+		if (nextArticleType) {
+			results = await query(
+				'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,`article_type`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0' + (isMangaArticle ? MANGA_REVISION_CONDITION : ''),
+				[
+					req.body.title,
+					req.body.content,
+					contentHash,
+					req.body.is_draft,
+					nextArticleType,
+					req.body.article_id,
+					...(isMangaArticle ? mangaRevisionValues(mangaSnapshot) : []),
+				],
+			);
+		} else {
+			results = await query(
+				'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0',
+				[
+					req.body.title,
+					req.body.content,
+					contentHash,
+					req.body.is_draft,
+					req.body.article_id,
+				],
+			);
+		}
+		if (isMangaArticle && results.affectedRows === 0) {
+			return res.status(409).json({ msg: '话数已被其他编辑修改，请保留本地草稿并重新加载', code: 'manga_revision_conflict' });
+		}
 		const shouldTriggerPublishEffects =
 			canPublish(access) &&
 			Number(req.body.is_draft) === 0 &&

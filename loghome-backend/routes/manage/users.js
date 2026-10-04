@@ -47,6 +47,56 @@ router.get('/get_users', auth, async function (req, res) {
 	}
 });
 
+// 用户列表（搜索 + 过滤 + 分页），返回 { list, total, page, pageSize }
+// keyword: 数字时精确匹配 user_id，同时模糊匹配昵称/账号；非数字时模糊匹配昵称/账号
+// activated / isAdmin: '0' 或 '1'，其余值视为不过滤
+router.get('/get_users_page', auth, async function (req, res) {
+	try {
+		const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+		const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 20));
+		const keyword = String(req.query.keyword || '').trim();
+		const activated = String(req.query.activated === undefined ? '' : req.query.activated).trim();
+		const isAdmin = String(req.query.isAdmin === undefined ? '' : req.query.isAdmin).trim();
+
+		const where = [];
+		const params = [];
+		if (keyword) {
+			const like = `%${keyword}%`;
+			if (/^-?\d+$/.test(keyword)) {
+				where.push('(user_id = ? OR `name` LIKE ? OR account LIKE ?)');
+				params.push(Number(keyword), like, like);
+			} else {
+				where.push('(`name` LIKE ? OR account LIKE ?)');
+				params.push(like, like);
+			}
+		}
+		if (activated === '0' || activated === '1') {
+			where.push('activated = ?');
+			params.push(Number(activated));
+		}
+		if (isAdmin === '0' || isAdmin === '1') {
+			where.push('is_admin = ?');
+			params.push(Number(isAdmin));
+		}
+		const whereSql = where.length ? ' WHERE ' + where.join(' AND ') : '';
+
+		const countRows = await query(
+			'SELECT COUNT(*) AS count FROM users' + whereSql,
+			params,
+		);
+		const total = Number(countRows[0].count);
+		const list = await query(
+			'SELECT user_id, `name`, avatar_url, account, user_group, activated, register_time, online_time, is_admin ' +
+				'FROM users' + whereSql + ' ORDER BY user_id DESC LIMIT ? OFFSET ?',
+			params.concat([pageSize, (page - 1) * pageSize]),
+		);
+		res.json({ list: list, total: total, page: page, pageSize: pageSize });
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.get('/get_user_by_id', auth, async function (req, res) {
 	try {
 		let result = await query('SELECT * FROM users WHERE user_id = ?', [

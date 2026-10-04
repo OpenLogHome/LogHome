@@ -64,6 +64,28 @@
       <p class="tip">图片会被压缩后上传，建议 JPG/PNG，单张不超过 5MB。</p>
     </div>
 
+    <div class="settings-card" v-loading="loadingPrivacy">
+      <h2 class="section-title">隐私设置</h2>
+      <p class="tip">账户级设置，保存后立即生效，并同步到所有设备。</p>
+      <el-form v-if="privacyReady" label-position="top" size="small">
+        <el-form-item label="关注与粉丝列表">
+          <el-select v-model="privacy.follow_list_visibility" :disabled="savingPrivacy" style="width:100%">
+            <el-option v-for="item in listOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <p class="tip">本人始终可查看自己的列表，关注和粉丝数量仍公开。</p>
+        </el-form-item>
+        <el-form-item label="谁可以私信我">
+          <el-select v-model="privacy.direct_message_policy" :disabled="savingPrivacy" style="width:100%">
+            <el-option v-for="item in messageOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <p class="tip">默认允许所有已登录用户私信；“我关注的人”指你已关注的发件人。历史消息不受影响。</p>
+        </el-form-item>
+        <el-button type="primary" :loading="savingPrivacy" :disabled="!privacyChanged" @click="savePrivacy">保存隐私设置</el-button>
+      </el-form>
+      <el-alert v-else-if="!loadingPrivacy" title="隐私设置加载失败，请重试" type="error" :closable="false" />
+      <el-button v-if="!loadingPrivacy && !privacyReady" size="small" @click="loadPrivacy">重新加载</el-button>
+    </div>
+
     <div class="settings-card">
       <h2 class="section-title">账号信息</h2>
       <div class="info-row">
@@ -104,10 +126,21 @@ export default {
       },
       defaultCover: 'https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg',
       savingProfile: false,
+      privacy: { follow_list_visibility: 'public', direct_message_policy: 'default' },
+      privacyOriginal: '', privacyReady: false, loadingPrivacy: true, savingPrivacy: false,
+      listOptions: [
+        { value: 'public', label: '全部公开' }, { value: 'following_only', label: '仅公开关注列表' },
+        { value: 'fans_only', label: '仅公开粉丝列表' }, { value: 'private', label: '全部私密' }
+      ],
+      messageOptions: [
+        { value: 'default', label: '默认' }, { value: 'following', label: '我关注的人' },
+        { value: 'mutual', label: '互相关注的人' }, { value: 'none', label: '禁止私信' }
+      ],
       uploading: null
     }
   },
   computed: {
+    privacyChanged() { return JSON.stringify(this.privacy) !== this.privacyOriginal },
     emailBound() {
       return !!this.user.email && this.user.email !== 'unbind'
     }
@@ -121,6 +154,7 @@ export default {
 
     try {
       await this.refreshUser()
+      this.loadPrivacy()
     } catch (error) {
       console.error('获取用户信息失败', error)
       localStorage.removeItem('token')
@@ -128,6 +162,26 @@ export default {
     }
   },
   methods: {
+    async loadPrivacy() {
+      this.loadingPrivacy = true
+      this.privacyReady = false
+      try {
+        this.privacy = await this.$api.users.getPrivacySettings()
+        this.privacyOriginal = JSON.stringify(this.privacy)
+        this.privacyReady = true
+      } catch (error) { this.$message.error(error.message || '隐私设置加载失败') }
+      finally { this.loadingPrivacy = false }
+    },
+    async savePrivacy() {
+      if (!this.privacyReady || this.savingPrivacy || !this.privacyChanged) return
+      this.savingPrivacy = true
+      try {
+        this.privacy = await this.$api.users.savePrivacySettings(this.privacy)
+        this.privacyOriginal = JSON.stringify(this.privacy)
+        this.$message.success('隐私设置已保存')
+      } catch (error) { this.$message.error(error.message || '保存失败，请稍后重试') }
+      finally { this.savingPrivacy = false }
+    },
     async refreshUser() {
       const user = await this.$api.users.getUserProfile()
       this.user = user

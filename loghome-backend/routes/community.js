@@ -9,6 +9,7 @@ const SECRET = require('../SECRET.js').SECRET;
 let message = require('../bin/message.js');
 let achievements = require('../bin/achievements.js');
 let avatarFrames = require('../bin/avatarFrames.js');
+const privacy = require('../bin/userPrivacy.js');
 
 // 引入子路由
 const circlesRouter = require('./community/circles.js');
@@ -57,7 +58,7 @@ function attachCentoData(item) {
 	return item;
 }
 
-router.get('/get_follows_of', async function (req, res) {
+router.get('/get_follows_of', privacy.listGuard('following'), async function (req, res) {
 	try {
 		let results = await query(
 			'SELECT f.`follow_id`,u.`name`,u.`avatar_url`,u.`user_group`,u.motto FROM user_follow f,users u WHERE f.follow_id = u.`user_id` AND f.`user_id` = ?',
@@ -72,7 +73,7 @@ router.get('/get_follows_of', async function (req, res) {
 	}
 });
 
-router.get('/get_fans_of', async function (req, res) {
+router.get('/get_fans_of', privacy.listGuard('fans'), async function (req, res) {
 	try {
 		let results = await query(
 			'SELECT f.`user_id`,u.`name`,u.`avatar_url`,u.`user_group`,u.motto FROM user_follow f,users u WHERE f.user_id = u.`user_id` AND f.`follow_id` = ?',
@@ -87,7 +88,11 @@ router.get('/get_fans_of', async function (req, res) {
 	}
 });
 
-router.get('/get_friends_of', async function (req, res) {
+// 合并关系只供本人使用，避免从旧接口绕过列表隐私。
+router.get('/get_friends_of', auth, async function (req, res) {
+	if (Number(req.query.id) !== Number(req.user[0].user_id)) {
+		return res.status(403).json({ code: 'PRIVATE_LIST', msg: '只能查看自己的好友列表' });
+	}
 	try {
 		let results = await query(
 			'SELECT f.`user_id` id,u.`name`,u.`avatar_url`,u.`user_group`,u.motto FROM user_follow f,users u WHERE f.user_id = u.`user_id` AND f.`follow_id` = ?',
@@ -107,16 +112,27 @@ router.get('/get_friends_of', async function (req, res) {
 			}
 		}
 		friends = [...map.values()];
-		await avatarFrames.decorateRows(results, [
+		await avatarFrames.decorateRows(friends, [
 			{ userIdField: 'id', targetField: 'avatar_frame' },
 		]);
-		res.end(JSON.stringify(results));
+		res.end(JSON.stringify(friends));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
 	}
 });
 
-router.get('/follow_status', async function (req, res) {
+// 数量仍公开，不通过下载完整私密列表计算主页统计。
+router.get('/social_counts', async (req, res, next) => {
+	if (!privacy.validUserId(req.query.id)) return res.status(400).json({ msg: '用户 ID 无效' });
+	try {
+		const [row] = await query(`SELECT
+			(SELECT COUNT(*) FROM user_follow WHERE user_id = ?) AS follows,
+			(SELECT COUNT(*) FROM user_follow WHERE follow_id = ?) AS fans`, [req.query.id, req.query.id]);
+		res.json(row);
+	} catch (error) { next(error); }
+});
+
+router.get('/follow_status', privacy.relationGuard, async function (req, res) {
 	try {
 		let results = await query(
 			'SELECT * FROM user_follow WHERE user_id = ? AND follow_id = ?',
@@ -750,7 +766,7 @@ router.post('/praise_on_comment', auth, async (req, res) => {
 	}
 });
 
-router.post('/send_mail', auth, async function (req, res) {
+router.post('/send_mail', auth, privacy.messageGuard, async function (req, res) {
 	let user = req.user;
 	user = JSON.parse(JSON.stringify(user))[0];
 	try {
@@ -782,11 +798,10 @@ router.get('/get_mail', auth, async (req, res) => {
 	}
 });
 
-router.post('/send_message', auth, async function (req, res) {
+router.post('/send_message', auth, privacy.messageGuard, async function (req, res) {
 	try {
 		const { to_id, message_content } = req.body;
 		const from_id = req.user[0].user_id;
-		console.log(from_id);
 
 		const result = await query(
 			'INSERT INTO private_messages (sender_id, receiver_id, message_content) VALUES (?, ?, ?)',

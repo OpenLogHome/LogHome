@@ -322,17 +322,9 @@ export default {
     // 加载用户统计数据
     async loadUserStats() {
       try {
-        // 加载粉丝数
-        const fansResponse = await this.$api.users.getUserFans(this.uid)
-        if (fansResponse.code === 0) {
-          this.fans = fansResponse.data.length
-        }
-        
-        // 加载关注数
-        const followsResponse = await this.$api.users.getUserFollows(this.uid)
-        if (followsResponse.code === 0) {
-          this.follows = followsResponse.data.length
-        }
+        const counts = await this.$api.users.getSocialCounts(this.uid)
+        this.fans = Number(counts.fans)
+        this.follows = Number(counts.follows)
         
         // 检查是否已关注
         if (this.myUserInfo.user_id && !this.isCurrentUser) {

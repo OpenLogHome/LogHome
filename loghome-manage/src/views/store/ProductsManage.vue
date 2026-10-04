@@ -200,7 +200,7 @@ export default {
           'redo'
         ]
         this.editor.config.uploadFileName = 'img'
-        this.editor.config.uploadImgServer = 'http://img.codesocean.top/upload/img'
+        this.editor.config.uploadImgServer = 'https://img.codesocean.top/upload/img'
         this.editor.config.uploadImgHooks = {
           customInsert: function (insertImg, result, editor) {
             console.log('富文本图片上传成功:', result)
