@@ -1,5 +1,25 @@
 // 拆分自 api.js
+async function privacyRequest(method, settings) {
+    const token = JSON.parse(localStorage.getItem('token') || 'null')
+    if (!token || !token.tk) throw new Error('请先登录')
+    const response = await fetch(`${process.env.baseUrl}/users/privacy_settings`, {
+        method,
+        headers: { Authorization: 'Bearer ' + token.tk, 'Content-Type': 'application/json' },
+        ...(method === 'POST' ? { body: JSON.stringify(settings) } : {})
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.msg || '隐私设置请求失败')
+    return data
+}
+
 const users = {
+    getPrivacySettings: () => privacyRequest('GET'),
+    savePrivacySettings: (settings) => privacyRequest('POST', settings),
+    getSocialCounts: async (userId) => {
+        const response = await fetch(`${process.env.baseUrl}/community/social_counts?id=${userId}`)
+        if (!response.ok) throw new Error('获取关注统计失败')
+        return response.json()
+    },
     // 获取当前登录用户信息
     getUserProfile: async () => {
         try {
@@ -344,8 +364,12 @@ const users = {
     // 获取用户粉丝数
     getUserFans: async (userId) => {
         try {
-            const response = await fetch(`${process.env.baseUrl}/community/get_fans_of?id=${userId}`)
+            const token = JSON.parse(localStorage.getItem('token') || 'null')
+            const response = await fetch(`${process.env.baseUrl}/community/get_fans_of?id=${userId}`, {
+                headers: { Authorization: token ? 'Bearer ' + token.tk : '' }
+            })
             const data = await response.json()
+            if (!response.ok) return { code: data.code || -1, data: [], message: data.msg || '列表加载失败' }
             return {
                 code: 0,
                 data: data || [],
@@ -364,8 +388,12 @@ const users = {
     // 获取用户关注数
     getUserFollows: async (userId) => {
         try {
-            const response = await fetch(`${process.env.baseUrl}/community/get_follows_of?id=${userId}`)
+            const token = JSON.parse(localStorage.getItem('token') || 'null')
+            const response = await fetch(`${process.env.baseUrl}/community/get_follows_of?id=${userId}`, {
+                headers: { Authorization: token ? 'Bearer ' + token.tk : '' }
+            })
             const data = await response.json()
+            if (!response.ok) return { code: data.code || -1, data: [], message: data.msg || '列表加载失败' }
             return {
                 code: 0,
                 data: data || [],

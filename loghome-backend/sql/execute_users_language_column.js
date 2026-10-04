@@ -28,6 +28,17 @@ async function executeUsersLanguageColumn() {
 		});
 		const columns = await query('SHOW COLUMNS FROM users');
 		if (!columns.some((column) => column.Field === 'language')) {
+			// 生产库 users 表存在遗留列 online_time TIMESTAMP DEFAULT '0000-00-00'，
+			// 严格模式（NO_ZERO_DATE）下任何 ALTER 都会因整表定义校验而失败。
+			// 仅在本会话摘除 NO_ZERO_IN_DATE/NO_ZERO_DATE（其余 sql_mode 保留，不影响全局），
+			// 本脚本只加新列，不改动任何既有列的定义与数据。
+			const [modeRow] = await query('SELECT @@SESSION.sql_mode AS m');
+			const relaxed = String(modeRow.m)
+				.split(',')
+				.map((item) => item.trim())
+				.filter((item) => item !== 'NO_ZERO_IN_DATE' && item !== 'NO_ZERO_DATE')
+				.join(',');
+			await query(`SET SESSION sql_mode = '${relaxed}'`);
 			await query(
 				"ALTER TABLE users ADD COLUMN language VARCHAR(10) NULL COMMENT 'UI language preference (zh-CN/en), NULL = follow device' AFTER push_set_status",
 			);

@@ -16,6 +16,13 @@ const BASE_URL_SCF = "https://loghomeinnerservice.codesocean.top"
 Vue.prototype.$baseUrl = BASE_URL_DEV;
 Vue.prototype.$imgBaseUrl = "http://img.codesocean.top"
 
+// 管理端弹窗统一禁止点击遮罩关闭，避免误触丢失正在编辑的内容。
+ElementUI.Dialog.props.closeOnClickModal.default = false;
+ElementUI.Drawer.props.wrapperClosable.default = false;
+ElementUI.MessageBox.setDefaults({
+    ...ElementUI.MessageBox.defaults,
+    closeOnClickModal: false
+});
 Vue.use(ElementUI);
 
 Vue.config.productionTip = false
@@ -41,5 +48,4 @@ new Vue({
   store,
   render: h => h(App)
 }).$mount('#app')
-
 

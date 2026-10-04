@@ -154,3 +154,72 @@ UGC 内容翻译与检索、审核逻辑；历史中文通知追溯翻译；小�
 | 原生硬编码集中区 | `WebViewActivity.kt:182/681-702/1533-1537/1825-1890`、`NativeAudiobookPlayerView.kt:78-140`、`StoreLogisticsService.kt:45-122`（输出部分） |
 | 语言注入管线 | `loghome-android/app/src/main/java/.../web/InjectedScriptBuilder.kt:141-161` |
 | 桥分发 | `WebViewActivity.kt:1147-1283`（dispatchBridgeCall） |
+
+## 附录 B：P0（协议骨架）实施记录
+
+P0 目标：三端语言协议接通，UI 全部保持中文（en 目录稀疏，后端 `t()` 缺失回退 zh，zh 用户零回归）。
+
+### 后端 loghome-backend
+- 新增 `bin/lang.js`：零依赖解析器，优先级 `X-Lang` header > `users.language` > `Accept-Language`(q 排序) > `zh-CN`；`t(req,key,params)` 支持 `{{param}}` 插值，缺失回退 zh。
+- 新增 `bin/locales/{zh-CN,en}.json`：共用 key 骨架（`common.*`、`language.*`）。
+- `routes/users.js`：新增 `GET/POST /users/language`（读写 `users.language`；`null`/空=跟随设备，非法值 400）。auth 中间件已 `SELECT *`，语言列随 `req.user` 可得。
+- 新增 `sql/execute_users_language_column.js`（幂等 `ADD COLUMN language VARCHAR(10) NULL`）+ npm 脚本 `migrate:users-language`。
+- 新增 `test/i18n_lang_test.js` + npm 脚本 `test:i18n-lang`，通过。
+- ⚠️ 迁移需由你在目标库执行：`npm run migrate:users-language`（config.js 指向生产库，未代为运行）。
+
+### 前端 loghome-app-frontend
+- 引入 `vue-i18n@^8.28.2`（Vue 2.7，运行时冒烟通过）。
+- 新增 `i18n/resolve.js`（纯解析：`normalizeLang/resolveEffectiveLanguage/getSavedLanguage/readStoredToken`，无循环依赖）、`i18n/index.js`（VueI18n 实例，`fallbackLocale:'zh-CN'`）、`i18n/messages/{zh-CN,en}.json`。
+- 新增 `common/lang.js`：编排 locale 应用、tabBar 刷新、原生壳 `setAppLanguage` 通知、账号偏好 GET/POST 同步（账号优先覆盖本地；先落库再通知原生，避免原生重建打断请求）。
+- `main.js`：axios 请求拦截器注入 `X-Lang`（单一注入点）；根实例挂载 `i18n`。
+- `App.vue`：`onLaunch` 调 `initLanguage()`。
+- `pages/users/clientSet.vue`：新增「语言 / Language」行 + `showActionSheet`（跟随系统/简体中文/English），回显当前偏好。
+- `moment.locale` 随语言切换（现有 6 处 moment 用法均为数值比较+固定格式，locale 无关，安全）。
+
+### 原生 loghome-android（compileDebugKotlin 通过）
+- 新增 `i18n/AppLanguage.kt`：`normalize/systemLanguage/currentLanguage/save/clearSaved/applyToFramework`（`AppCompatDelegate.setApplicationLocales`，appcompat 1.7 覆盖 API 24+，33+ 联动系统设置）。
+- `LogHomeApplication.onCreate`：Activity 创建前回放已存语言。
+- `web/InjectedScriptBuilder.kt`：新增 `language`/`savedLanguage` 参数 → 注入 `window.jsBridge.language`，并在 H5 未落库时播种 `localStorage.loghome_language`。
+- `WebViewActivity`：`rebuildInjectedScript` 传入语言；`dispatchBridgeCall` 新增 `setAppLanguage` 分支（存偏好 → `NativeWebViewPool.invalidate` 清预热池 → 重建注入脚本 → `applyToFramework`）。
+- `assets/js/jsbridge.js`：新增 `language` 字段与 `setAppLanguage()`。
+- `AndroidManifest.xml`：`android:localeConfig="@xml/locales_config"` + `AppLocalesMetadataHolderService`(autoStoreLocales)。新增 `res/xml/locales_config.xml`、`res/values-en/strings.xml`（14 条英译）。
+
+### 已知遗留（非 P0 阻塞）
+- `native*` 路由桥的 `withCurrentThemeBackground` 类比：预热池失效依赖既有 `NativeWebViewPool.invalidate`，冷启动首帧一致性由注入播种保证。
+- 页面文案、后端各域 `msg`、站内通知/邮件/短信模板化、成就标签、`timeConvert` 相对时间均为 P1+。
+
+## 附录 C：P1（文案迁移）实施记录 · 第一批
+
+范围：通用词 + 登录注册域 + 设置域 +「我的」首批 + 页面标题 + 相对时间格式化 + 工具链。
+
+### 架构约定（本批新增）
+- **词条分域**：`i18n/messages/` 按域拆文件（core=common+nav、auth、settings、me、titles，zh/en 成对），`i18n/index.js` `mergeMessages()` 深合并；约定每文件顶层 key=域名，同语言零重复（脚本已验收）。
+- **插值协议**：词条一律写 `{{var}}`（与后端 `bin/locales` 同构）；vue-i18n v8 运行时要单括号 `{name}`，由 `normalizeInterpolation()` 在合并时统一转换。**词条文本禁止裸花括号**（`check-sfc.js`/扫描脚本把守，孤立的 `{` 会被 v8 解析器当语法起始）。
+- **页面标题**：`scripts/gen-title-map.js` 解析 pages.json → `i18n/title-map.js`（route→`titles.*`）+ `titles` 域词条；`mixins/localized-navigation.js` 页面 `onShow` 覆盖标题（`te()` 守卫），换语言即时生效；**115 路由、113 唯一标题已全部英译**（品牌词表：原木社区→LogHome、红石中心→RedStone Center、原木通行证→LogHome Pass 等）。
+- **相对时间**：`common/datetime.js`：`relativeTime()` 接管 `main.js:timeConvert`（zh 输出与旧实现逐字一致）；`postTimeText()` 供时间线页复用（分钟→小时→天→`YYYY-MM-DD`，personalPage 已接入，社区批直接复用）。
+
+### 批次内容（24 页迁移，$t 使用 8 → 349）
+| 域 | 页面 | 新 key |
+|---|---|---|
+| common/nav | core 词典 | 25+4 |
+| auth | login / login_page / _email / _mobile / external_login / forgottenPwd / register / changePwd | 93 |
+| settings | clientSet(其余行) / storageManage / activateAccount×4 / change_user_info / donate / user_credit / top_pic_upload / avater_upload / pushSettings / autoSaveSettings | 104 |
+| me(首批) | me.vue(会员卡/服务/安全提示) / personalPage / avatar_frames | ~60 |
+| titles | 115 路由 | 113 |
+
+- 三处行为等价改造（复验 diff 一致，zh 视觉零回归）：`avater_upload` 按钮文案兼状态机标记 → 数字状态码 + computed；`storageManage` data 列表 name/description → nameKey/descKey；`pushSettings` `bindingCode:'加载中...'` → `''`+模板占位、回调改箭头函数。
+- 保留清单（验收规则）：注释、逻辑比较（`indexOf('超级')`、`treeState=='未种植'`、`msg=='登录成功'`）、URL 参数、法规备案号（苏ICP/皖公网）、QQ 昵称专名（苦力怕君/原木娘，检索用途）、语言行双语显示（「语言 / Language」，语言名用自称）。
+
+### 验收工具与结果
+- `npm run i18n:check-sfc`（SFC parse+script 语法+mustache 配对）、`i18n:extract`（覆盖率）、`i18n:titles`（标题映射+en 缺口报告）。
+- 验收标准：zh 值与原文逐字节一致（对照备份/git HEAD）；en 无中文残留（专名除外）；域词典 key 双向零差集；页面 `$t` 引用全命中；五域合并双 locale 运行时冒烟+插值+回退 ✓；后端 `test:i18n-lang` ✓；`check-sfc` 24/24 ✓。
+- 覆盖率基线 4333 → 3994 行（余量大头为有意保留的注释/逻辑/UGC 相邻内容）。
+
+### 后续批次
+- P1 二批：community/writer/bookcase/world/store 等域 + me 批二（achievements/badgeDetail 长描述，与后端 `bin/achievements.js` 标签一并对齐）。
+- element-ui 内置文案 i18n（当前约 8 处用法，低优先）。
+- 后端各域 `msg` 目录化、站内信/邮件/短信模板化（P2）。
+
+### 生产库迁移记录
+- ✅ 已执行 `npm run migrate:users-language`（`sql.ricepastem.cafe:20345/loghome`）：`users.language VARCHAR(10) NULL` 已添加，216 名存量用户全部 NULL（= 跟随设备，零影响）；脚本幂等复跑验证通过。
+- 首跑遇生产库遗留列 `online_time TIMESTAMP DEFAULT '0000-00-00'` 触发严格模式整表校验失败；迁移脚本已加固为**会话级**摘除 `NO_ZERO_IN_DATE/NO_ZERO_DATE`（其余 sql_mode 保留、不改全局、不动任何既有列），后续环境可复用。

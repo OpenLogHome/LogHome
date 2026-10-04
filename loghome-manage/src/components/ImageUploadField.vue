@@ -31,7 +31,7 @@
 </template>
 
 <script>
-const DEFAULT_UPLOAD_ACTION = 'http://img.codesocean.top/upload/img'
+const DEFAULT_UPLOAD_ACTION = 'https://img.codesocean.top/upload/img'
 const DEFAULT_UPLOAD_HEADERS = {
   apikey: 'iSnMUQ9OLZpCVY3p7E3T5b2YwC39TS'
 }

@@ -107,7 +107,7 @@ export default {
         'redo'  // 重复
       ]
       this.editor.config.uploadFileName = 'img'
-      this.editor.config.uploadImgServer = 'http://img.codesocean.top/upload/img'  // 你的服务器上传地址
+      this.editor.config.uploadImgServer = 'https://img.codesocean.top/upload/img'  // 你的服务器上传地址
       this.editor.config.uploadImgHooks = {
         before: function (xhr, editor, files) {
         },

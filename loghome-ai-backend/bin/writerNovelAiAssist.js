@@ -63,7 +63,7 @@ const IMAGE_UPLOAD_TIMEOUT_MS = Math.max(10000, Number(
 const IMAGE_UPLOAD_BASE64_URL = String(
 	config.imageBase64UploadUrl
 		|| process.env.LOGHOME_IMAGE_BASE64_UPLOAD_URL
-		|| 'http://img.codesocean.top/upload/imgbase64'
+		|| 'https://img.codesocean.top/upload/imgbase64'
 ).trim();
 const IMAGE_UPLOAD_API_KEY = String(
 	config.imageUploadApiKey

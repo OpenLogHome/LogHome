@@ -4,6 +4,7 @@ let { query } = require('../sql.js');
 let auth = require('../bin/auth.js');
 let sysLog = require('../bin/log.js');
 let statistics = require('../bin/statistics.js');
+const { PUBLIC_ARTICLE } = require('../bin/readingVisibility.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -87,7 +88,7 @@ async function attachNovelShareCounts(statRows, novelId) {
 router.get('/get_article_novel_id', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT novel_id FROM articles WHERE article_id = ?',
+			`SELECT a.novel_id FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.article_id = ? AND ${PUBLIC_ARTICLE}`,
 			[req.query.id],
 		);
 		if (results.length > 0) res.end(JSON.stringify(results));
@@ -100,7 +101,7 @@ router.get('/get_article_novel_id', async function (req, res) {
 router.get('/get_article_info', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT article_id, article_type, title, novel_id, article_chapter, is_draft, deleted, update_time, text_count FROM articles WHERE article_id = ? AND is_draft = 0 AND deleted = 0',
+			`SELECT a.article_id, a.article_type, a.title, a.novel_id, a.article_chapter, a.is_draft, a.deleted, a.update_time, a.text_count FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.article_id = ? AND ${PUBLIC_ARTICLE}`,
 			[req.query.id],
 		);
 		if (results.length > 0) res.end(JSON.stringify(results));
@@ -113,9 +114,10 @@ router.get('/get_article_info', async function (req, res) {
 router.get('/get_article', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT * FROM articles WHERE article_id = ? AND is_draft = 0 AND deleted = 0',
+			`SELECT a.* FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.article_id = ? AND ${PUBLIC_ARTICLE}`,
 			[req.query.id],
 		);
+		if (!results.length) return res.status(404).json({ msg: '作品或章节不可阅读' });
 		if (req.query.isCaching == undefined || req.query.isCaching == 'false') {
 			await statistics.novel_clicked(
 				JSON.parse(JSON.stringify(results))[0].novel_id,
@@ -133,9 +135,10 @@ router.get('/get_article', async function (req, res) {
 router.get('/novel_clicked', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT novel_id FROM articles WHERE article_id = ? AND is_draft = 0 AND deleted = 0',
+			`SELECT a.novel_id FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.article_id = ? AND ${PUBLIC_ARTICLE}`,
 			[req.query.id],
 		);
+		if (!results.length) return res.status(404).json({ msg: '作品或章节不可阅读' });
 		await statistics.novel_clicked(
 			JSON.parse(JSON.stringify(results))[0].novel_id,
 			req.query.id,
@@ -407,7 +410,12 @@ router.post('/submit_feedback', auth, async function (req, res) {
         
 		let article = articleInfo[0];
 		let paragraphText = '';
-        
+
+		// 漫画章节（条漫/页漫）没有段落结构，不支持段评反馈
+		if (article.article_type === 'mangaStrip' || article.article_type === 'mangaPage') {
+			return res.status(400).json({ msg: '漫画章节暂不支持段落反馈' });
+		}
+
 		// 根据文章类型获取段落内容
 		if (article.article_type === 'richtext' || article.article_type === 'worldOutline') {
 			let content = JSON.parse(article.content);

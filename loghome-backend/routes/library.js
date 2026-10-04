@@ -9,6 +9,16 @@ let redstone = require('../bin/redstone.js');
 let avatarFrames = require('../bin/avatarFrames.js');
 let { handleReaderNovelChatStream } = require('../bin/readerNovelAiChat.js');
 let { getNovelSummaryIndexStatus } = require('../bin/agentIndexing.js');
+const { PUBLIC_ARTICLE, PUBLIC_NOVEL } = require('../bin/readingVisibility.js');
+
+const HAYCRAFT_TAG_FLAG_SQL = `EXISTS (
+	SELECT 1
+	FROM novel_tag haycraft_nt
+	JOIN tags haycraft_t ON haycraft_t.tag_id = haycraft_nt.tag_id
+	WHERE haycraft_nt.novel_id = n.novel_id
+		AND haycraft_t.is_deleted = 0
+		AND LOWER(TRIM(haycraft_t.tag_name)) LIKE '%haycraft%'
+)`;
 
 // 创建路由对象
 let router = express.Router();
@@ -27,7 +37,8 @@ router.get('/get_library_roulous_chart', async function (req, res) {
 router.get('/get_novels_all', async function (req, res) {
 	try {
 		let results =
-			await query(`SELECT n.*,u.name author_name,u.avatar_url auther_avatar 
+			await query(`SELECT n.*,u.name author_name,u.avatar_url auther_avatar,
+							${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
                                FROM novels n,users u 
                                WHERE u.user_id = n.author_id 
                                AND n.deleted = 0
@@ -51,7 +62,8 @@ router.get('/get_novels_search', async function (req, res) {
 		let keyWordToId = parseInt(req.query.keyword);
 		if(!isNaN(keyWordToId)){
 			let results = await query(
-				`SELECT n.*,u.name author_name,u.avatar_url auther_avatar 
+				`SELECT n.*,u.name author_name,u.avatar_url auther_avatar,
+						${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
                                    FROM novels n,users u 
                                    WHERE u.user_id = n.author_id 
                                    AND n.deleted = 0
@@ -64,7 +76,8 @@ router.get('/get_novels_search', async function (req, res) {
 		} else {
 			let keyword = '%' + req.query.keyword + '%';
 			let results = await query(
-				`SELECT n.*,u.name author_name,u.avatar_url auther_avatar 
+				`SELECT n.*,u.name author_name,u.avatar_url auther_avatar,
+						${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
                                 FROM novels n,users u 
                                 WHERE u.user_id = n.author_id 
                                 AND n.deleted = 0
@@ -94,7 +107,7 @@ router.get('/get_novel_by_id', async function (req, res) {
 			`SELECT n.*,u.user_id auther_id,u.name author_name,u.avatar_url auther_avatar,n.text_count,ic.dominant_color pic_dominant_color FROM novels n
                                    JOIN users u ON n.author_id = u.user_id
                                    LEFT JOIN image_dominant_colors ic ON ic.image_url = n.picUrl AND ic.extract_status = 'success'
-                                   WHERE novel_id = ? AND n.deleted = 0 AND n.is_personal = 0`,
+                                   WHERE novel_id = ? AND ${PUBLIC_NOVEL}`,
 			[req.query.id],
 		);
 		let likes = await query('SELECT * FROM bookcase WHERE novel_id = ?', [
@@ -213,7 +226,7 @@ router.get('/get_latest_articles', async function (req, res) {
 router.get('/get_articles', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT article_id,title,novel_id,article_chapter,update_time, article_type FROM articles WHERE novel_id = ? AND is_draft = 0 AND deleted = 0 ORDER BY article_chapter ASC',
+			`SELECT a.article_id,a.title,a.novel_id,a.article_chapter,a.update_time,a.article_type FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.novel_id = ? AND ${PUBLIC_ARTICLE} ORDER BY a.article_chapter ASC`,
 			[req.query.id],
 		);
 		res.end(JSON.stringify(results));
@@ -225,7 +238,7 @@ router.get('/get_articles', async function (req, res) {
 router.get('/get_articles_all', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT article_id,title,novel_id,article_chapter,is_draft,update_time,article_type FROM articles WHERE novel_id = ? AND deleted = 0 ORDER BY article_chapter ASC',
+			`SELECT a.article_id,a.title,a.novel_id,a.article_chapter,a.is_draft,a.update_time,a.article_type FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.novel_id = ? AND ${PUBLIC_ARTICLE} ORDER BY a.article_chapter ASC`,
 			[req.query.id],
 		);
 		res.end(JSON.stringify(results));
@@ -237,7 +250,7 @@ router.get('/get_articles_all', async function (req, res) {
 router.get('/get_novel_by_user_id', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT n.* FROM novels n,users u WHERE n.author_id = u.user_id AND user_id = ? AND deleted = 0 AND novel_type != "world"',
+			'SELECT n.* FROM novels n,users u WHERE n.author_id = u.user_id AND u.user_id = ? AND n.deleted = 0 AND n.is_personal = 0 AND novel_type != "world"',
 			[req.query.id],
 		);
 		res.end(JSON.stringify(results));
@@ -867,6 +880,7 @@ router.get('/reading_history', auth, async function (req, res) {
 				u.user_id auther_id,
 				u.name author_name,
 				u.avatar_url auther_avatar,
+				${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft,
 				n.update_time,
 				rh.last_article_id,
 				rh.last_article_chapter,
@@ -937,14 +951,28 @@ router.post('/update_reading_progress', auth, async function (req, res) {
 			req.body.article_id === undefined || req.body.article_id === null || req.body.article_id === ''
 				? null
 				: parseInt(req.body.article_id);
-		const article_chapter =
-			req.body.article_chapter === undefined || req.body.article_chapter === null || req.body.article_chapter === ''
-				? null
-				: parseInt(req.body.article_chapter);
 		const page_idx =
 			req.body.page_idx === undefined || req.body.page_idx === null || req.body.page_idx === ''
 				? null
 				: parseInt(req.body.page_idx);
+
+		if (!Number.isInteger(article_id) || article_id <= 0 || !Number.isInteger(Number(req.body.article_id)) ||
+			(page_idx !== null && (!Number.isInteger(Number(req.body.page_idx)) || page_idx < 0))) {
+			return res.status(400).json({ msg: 'invalid reading progress' });
+		}
+		const readable = await query(
+			`SELECT a.article_chapter,a.article_type,a.content FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.article_id = ? AND a.novel_id = ? AND ${PUBLIC_ARTICLE}`,
+			[article_id, novel_id],
+		);
+		if (!readable.length) return res.status(403).json({ msg: '作品或章节不可阅读' });
+		const chapter = readable[0];
+		if (chapter.article_type === 'mangaStrip' || chapter.article_type === 'mangaPage') {
+			let content;
+			try { content = JSON.parse(chapter.content); } catch (_) { content = null; }
+			if (!content || !Array.isArray(content.pages) || page_idx === null || page_idx >= content.pages.length) {
+				return res.status(400).json({ msg: 'invalid manga page index' });
+			}
+		}
 		
 		const existing = await query(
 			'SELECT last_article_id, last_article_chapter, last_page_idx FROM user_reading_history WHERE user_id = ? AND novel_id = ? LIMIT 1',
@@ -955,7 +983,7 @@ router.post('/update_reading_progress', auth, async function (req, res) {
 			await query(
 				`INSERT INTO user_reading_history (user_id, novel_id, last_article_id, last_article_chapter, last_page_idx)
 				 VALUES (?, ?, ?, ?, ?)`,
-				[user_id, novel_id, article_id, article_chapter, page_idx],
+				[user_id, novel_id, article_id, chapter.article_chapter, page_idx],
 			);
 			res.json(200, { msg: 'ok' });
 			return;
@@ -971,8 +999,8 @@ router.post('/update_reading_progress', auth, async function (req, res) {
 			 WHERE user_id = ? AND novel_id = ?`,
 			[
 				article_id === null ? prev.last_article_id : article_id,
-				article_chapter === null ? prev.last_article_chapter : article_chapter,
-				page_idx === null ? prev.last_page_idx : page_idx,
+				chapter.article_chapter,
+				page_idx === null ? (Number(prev.last_article_id) === article_id ? prev.last_page_idx : null) : page_idx,
 				user_id,
 				novel_id,
 			],

@@ -84,7 +84,7 @@ export default {
           trigger: 'blur'
         }],
       },
-      imageAction: 'http://img.codesocean.top/upload/img',
+      imageAction: 'https://img.codesocean.top/upload/img',
       imagefileList: [],
     }
   },

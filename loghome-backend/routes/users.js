@@ -53,6 +53,7 @@ async function sendEmail(to, code) {
 
 // 创建路由对象
 let router = express.Router();
+router.use('/privacy_settings', auth, require('./userPrivacy.js'));
 
 let userValidates = {}
 setInterval(() => {
@@ -675,7 +676,7 @@ router.post('/change_avater', auth, async (req, res) => {
 	try {
 		axios
 			.post(
-				'http://img.codesocean.top/upload/imgbase64',
+				'https://img.codesocean.top/upload/imgbase64',
 				{
 					img: req.body.img,
 					apikey: '45qEQfILCQ3tAXxmUJF8O562bJU2D0',
@@ -707,7 +708,7 @@ router.post('/change_top_cover', auth, async (req, res) => {
 	try {
 		axios
 			.post(
-				'http://img.codesocean.top/upload/imgbase64',
+				'https://img.codesocean.top/upload/imgbase64',
 				{
 					img: req.body.img,
 					apikey: '45qEQfILCQ3tAXxmUJF8O562bJU2D0',

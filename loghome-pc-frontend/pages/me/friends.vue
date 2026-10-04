@@ -13,7 +13,7 @@
           <div class="tab-body" v-loading="loading">
             <div class="empty-state" v-if="!loading && friendsList.length === 0">
               <img src="/nothing.png" alt="暂无内容" class="empty-image">
-              <p>{{ isSelf ? '还没有互相关注的好友，去关注别人吧' : 'TA还没有互相关注的好友' }}</p>
+              <p>{{ fansError || followsError || (isSelf ? '还没有互相关注的好友，去关注别人吧' : 'TA还没有互相关注的好友') }}</p>
             </div>
             <div class="user-grid">
               <div class="user-card" v-for="item in friendsList" :key="item.user_id">
@@ -37,11 +37,11 @@
           </div>
         </el-tab-pane>
 
-        <el-tab-pane :label="`粉丝 (${fansList.length})`" name="fans">
+        <el-tab-pane :label="fansError ? '粉丝' : `粉丝 (${fansList.length})`" name="fans">
           <div class="tab-body" v-loading="loading">
             <div class="empty-state" v-if="!loading && fansList.length === 0">
               <img src="/nothing.png" alt="暂无内容" class="empty-image">
-              <p>{{ isSelf ? '还没有人关注你' : '还没有人关注TA' }}</p>
+              <p>{{ fansError || (isSelf ? '还没有人关注你' : '还没有人关注TA') }}</p>
             </div>
             <div class="user-grid">
               <div class="user-card" v-for="item in fansList" :key="item.user_id">
@@ -74,11 +74,11 @@
           </div>
         </el-tab-pane>
 
-        <el-tab-pane :label="`关注 (${followsList.length})`" name="follows">
+        <el-tab-pane :label="followsError ? '关注' : `关注 (${followsList.length})`" name="follows">
           <div class="tab-body" v-loading="loading">
             <div class="empty-state" v-if="!loading && followsList.length === 0">
               <img src="/nothing.png" alt="暂无内容" class="empty-image">
-              <p>{{ isSelf ? '你还没有关注任何人' : 'TA还没有关注任何人' }}</p>
+              <p>{{ followsError || (isSelf ? '你还没有关注任何人' : 'TA还没有关注任何人') }}</p>
             </div>
             <div class="user-grid">
               <div class="user-card" v-for="item in followsList" :key="item.user_id">
@@ -124,6 +124,7 @@ export default {
       isSelf: true,
       fansList: [],
       followsList: [],
+      fansError: '', followsError: '',
       loading: false,
       followLoadingId: null
     }
@@ -167,11 +168,15 @@ export default {
   methods: {
     async loadRelations() {
       this.loading = true
+      this.fansList = []
+      this.followsList = []
       try {
         const [fansResponse, followsResponse] = await Promise.all([
           this.$api.users.getUserFans(this.userId),
           this.$api.users.getUserFollows(this.userId)
         ])
+        this.fansError = fansResponse.code === 0 ? '' : fansResponse.message
+        this.followsError = followsResponse.code === 0 ? '' : followsResponse.message
         this.fansList = (fansResponse.data || []).map(item => ({
           ...item,
           user_id: Number(item.user_id)
