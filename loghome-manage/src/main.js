@@ -10,7 +10,7 @@ import VueClipboard from 'vue-clipboard2'
 Vue.use(VueClipboard)
 // 挂载到vue原型链上
 Vue.prototype.axios = axios;
-const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
+const BASE_URL_PRODUCTION = "https://api.loghome.ink"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
 const BASE_URL_SCF = "https://loghomeinnerservice.codesocean.top"
 Vue.prototype.$baseUrl = process.env.VUE_APP_BASE_URL || BASE_URL_PRODUCTION;
