@@ -13,7 +13,7 @@ Vue.prototype.axios = axios;
 const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
 const BASE_URL_SCF = "https://loghomeinnerservice.codesocean.top"
-Vue.prototype.$baseUrl = BASE_URL_DEV;
+Vue.prototype.$baseUrl = process.env.VUE_APP_BASE_URL || BASE_URL_DEV;
 Vue.prototype.$imgBaseUrl = "http://img.codesocean.top"
 
 Vue.use(ElementUI);
