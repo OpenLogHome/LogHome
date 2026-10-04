@@ -3,19 +3,23 @@
 		<view class="list-content">
 			<view class="list">
 				<view class="li " @click="pushSet">
-					<view class="text">消息推送与QQ绑定</view>
+					<view class="text">{{ $t('settings.clientSet.pushQq') }}</view>
 					<log-image class="to" src="../../static/user/to.png"></log-image>
 				</view>
 				<view class="li " @click="changePwd">
-					<view class="text">修改密码</view>
+					<view class="text">{{ $t('settings.clientSet.changePassword') }}</view>
 					<img class="to" src="../../static/user/to.png" />
 				</view>
 				<view class="li " @click="activateAccount">
-					<view class="text">账号绑定</view>
+					<view class="text">{{ $t('settings.clientSet.accountBinding') }}</view>
 					<img class="to" src="../../static/user/to.png" />
 				</view>
+				<view class="li" @click="privacySet">
+					<view class="text">{{ $t('settings.privacy.title') }}</view>
+					<log-image class="to" src="../../static/user/to.png"></log-image>
+				</view>
 				<view class="li " @click="storageManage">
-					<view class="text">空间占用管理</view>
+					<view class="text">{{ $t('settings.clientSet.storageManage') }}</view>
 					<img class="to" src="../../static/user/to.png" />
 				</view>
 				<view class="li " @click="changeLanguage">
@@ -25,8 +29,15 @@
 				</view>
 			</view>
 			<view class="list">
+				<view class="li ai-setting">
+					<view class="text ai-setting-copy">
+						<view>{{ $t('settings.ai.disable') }}</view>
+						<view class="ai-setting-hint">{{ $t('settings.ai.hint') }}</view>
+					</view>
+					<switch class="ai-setting-switch" :key="'ai-switch-' + aiSwitchRevision" :checked="!aiAssistanceEnabled" :disabled="savingAiPreference" :aria-label="$t('settings.ai.disable')" color="#EA7034" @change="changeAiPreference" />
+				</view>
 				<view class="li noborder" @click="logout">
-					<view class="text" style="color:red">登出</view>
+					<view class="text" style="color:red">{{ $t('settings.clientSet.logout') }}</view>
 					<img class="to" src="../../static/user/to.png" />
 				</view>
 			</view>
@@ -40,6 +51,8 @@
 		data() {
 			return {
 				user:{},
+				savingAiPreference: false,
+				aiSwitchRevision: 0,
 				savedPreference: getSavedLanguage()
 			}
 		},
@@ -51,6 +64,21 @@
 			}
 		},
 		methods: {
+			async changeAiPreference(event) {
+				if (this.savingAiPreference) return;
+				this.savingAiPreference = true;
+				try {
+					await this.$store.dispatch('setAiAssistanceDisabled', event.detail.value);
+				} catch (error) {
+					uni.showToast({ title: this.$t('settings.ai.saveFailed'), icon: 'none' });
+				} finally {
+					this.savingAiPreference = false;
+					this.aiSwitchRevision++;
+				}
+			},
+			privacySet() {
+				uni.navigateTo({ url: '../settings/privacySettings' });
+			},
 			changeLanguage(){
 				const options = [FOLLOW_SYSTEM, 'zh-CN', 'en'];
 				uni.showActionSheet({
@@ -73,8 +101,8 @@
 			},
 			logout(){
 				uni.showModal({
-				    title: '提示',
-				    content: '确定要登出吗？',
+				    title: this.$t('common.prompt'),
+				    content: this.$t('settings.clientSet.logoutConfirm'),
 					confirmColor:"#EA7034",
 				    success: function (res) {
 				        if (res.confirm) {
@@ -124,6 +152,10 @@
 	font-size: 30rpx;
 	width: 100%;
 }
+.list .li.ai-setting { width: 100%; height: auto; min-height: 120rpx; padding-top: 16rpx; padding-bottom: 16rpx; box-sizing: border-box; }
+.ai-setting-switch { flex-shrink: 0; }
+.ai-setting-copy { margin-right: 20rpx; }
+.ai-setting-hint { margin-top: 10rpx; font-size: 24rpx; line-height: 1.5; color: var(--text-color-secondary); }
 
 page{
 	background-color: var(--background-color-secondary);

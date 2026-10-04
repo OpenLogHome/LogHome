@@ -480,6 +480,7 @@ export default {
 			readerBackgroundSkins: [],
 			membershipTier: '',
 			backgroundSkinsLoaded: false,
+			mangaRedirectGuard: false,
 			fonts: JSON.parse(JSON.stringify(fontsConfig)),
 			isAppEnv: false,
 			fontDownloadState: {},
@@ -989,6 +990,16 @@ export default {
 		},
 		parseReaderArticleContent(articleData) {
 			if (!articleData) {
+				return articleData;
+			}
+			// 漫画章节由专用漫画阅读器渲染
+			if (articleData.article_type == "mangaStrip" || articleData.article_type == "mangaPage") {
+				if (!this.mangaRedirectGuard) {
+					this.mangaRedirectGuard = true;
+					uni.redirectTo({
+						url: "/pages/readers/mangaReader?id=" + articleData.article_id + "&novelId=" + (this.novelId || articleData.novel_id)
+					});
+				}
 				return articleData;
 			}
 			if ((articleData.article_type == "richtext" || articleData.article_type == "worldOutline") &&

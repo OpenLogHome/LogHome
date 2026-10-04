@@ -1,38 +1,80 @@
 <template>
 	<view class="outer" v-dark>
-		<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex ="changeTab"
-		:textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'" ref="tabs"/>
+		<view class="friends-tabs">
+			<view
+				class="friends-tab"
+				v-for="(tab, index) in tabValue"
+				:key="index"
+				:class="{ active: curTabIndex === index }"
+				@tap="changeTab(index)"
+			>
+				<text>{{ tab }}</text>
+			</view>
+			<view
+				class="tab-indicator"
+				:class="{ dragging: isSwiperDragging }"
+				:style="tabIndicatorStyle"
+			></view>
+		</view>
 		<view class="search-bar">
 			<input class="search-input" v-model="searchKeyword" placeholder="搜索好友..." placeholder-style="color:#999" />
-			<text v-if="searchKeyword" class="search-clear" @click="searchKeyword = ''">×</text>
+			<text v-if="searchKeyword" class="search-clear" @tap="searchKeyword = ''">×</text>
 		</view>
-		<view class="list fans" v-show="curTabIndex == 1">
-			<p class="fansNums">共有 {{filteredFans.length}} 个粉丝</p>
-			<div class="users" v-for="item in filteredFans">
-				<navigator class="users" :url="'../users/personalPage?id='+item.user_id">
-					<user-avatar class="friend-avatar" :src="item.avatar_url" :frame="item.avatar_frame" :visual-scale="item.avatar_frame ? 1.25 : 1" />
-					<div class="personInfo">
-						<div class="name">{{item.name}}</div>
-						<div class="motto">{{item.motto}}</div>
-					</div>
-				</navigator>
-				<followBtn class="button" :targetId="item.user_id"></followBtn>
-			</div>
-		</view>
-		<view class="list fans" v-show="curTabIndex == 0">
 
-				<div class="users" v-for="item in filteredFollows">
-					<navigator class="users" :url="'../users/personalPage?id='+item.follow_id">
-						<user-avatar class="friend-avatar" :src="item.avatar_url" :frame="item.avatar_frame" :visual-scale="item.avatar_frame ? 1.25 : 1" />
-						<div class="personInfo">
-							<div class="name">{{item.name}}</div>
-							<div class="motto">{{item.motto}}</div>
-						</div>
-					</navigator>
-					<followBtn class="button" :targetId="item.follow_id"></followBtn>
-				</div>
+		<!-- 两个页面始终保留在同一横向轨道中，原生 swiper 负责跟手位移。 -->
+		<swiper
+			class="friends-swiper"
+			:current="curTabIndex"
+			:duration="280"
+			:circular="false"
+			@transition="handleSwiperTransition"
+			@change="handleSwiperChange"
+			@animationfinish="handleSwiperAnimationFinish"
+		>
+			<swiper-item>
+				<scroll-view class="friend-page" scroll-y :show-scrollbar="false">
+					<view class="list">
+						<view v-if="followsError" class="privacy-status">{{ followsError }}</view>
+						<view v-else class="friend-count">共有 {{ filteredFollows.length }} 个关注</view>
+						<view v-if="!followsError" class="friend-row" v-for="item in filteredFollows" :key="item.follow_id">
+							<navigator class="user-link" :url="'../users/personalPage?id=' + item.follow_id">
+								<user-avatar class="friend-avatar" :src="item.avatar_url" :frame="item.avatar_frame" :visual-scale="item.avatar_frame ? 1.25 : 1" />
+								<view class="person-info">
+									<view class="name">{{ item.name }}</view>
+									<view class="motto">{{ item.motto }}</view>
+								</view>
+							</navigator>
+							<followBtn class="follow-button" :targetId="item.follow_id"></followBtn>
+						</view>
+						<view class="empty-state" v-if="!followsError && filteredFollows.length === 0">
+							{{ searchKeyword ? '没有匹配的用户' : '暂无关注' }}
+						</view>
+					</view>
+				</scroll-view>
+			</swiper-item>
 
-		</view>
+			<swiper-item>
+				<scroll-view class="friend-page" scroll-y :show-scrollbar="false">
+					<view class="list">
+						<view v-if="fansError" class="privacy-status">{{ fansError }}</view>
+						<view v-else class="friend-count">共有 {{ filteredFans.length }} 个粉丝</view>
+						<view v-if="!fansError" class="friend-row" v-for="item in filteredFans" :key="item.user_id">
+							<navigator class="user-link" :url="'../users/personalPage?id=' + item.user_id">
+								<user-avatar class="friend-avatar" :src="item.avatar_url" :frame="item.avatar_frame" :visual-scale="item.avatar_frame ? 1.25 : 1" />
+								<view class="person-info">
+									<view class="name">{{ item.name }}</view>
+									<view class="motto">{{ item.motto }}</view>
+								</view>
+							</navigator>
+							<followBtn class="follow-button" :targetId="item.user_id"></followBtn>
+						</view>
+						<view class="empty-state" v-if="!fansError && filteredFans.length === 0">
+							{{ searchKeyword ? '没有匹配的用户' : '暂无粉丝' }}
+						</view>
+					</view>
+				</scroll-view>
+			</swiper-item>
+		</swiper>
 	</view>
 </template>
 
@@ -56,11 +98,29 @@
 				curTabIndex:0,
 				follows:[],
 				fans:[],
-				firstTab:0,
-				searchKeyword:''
+				searchKeyword:'',
+				fansError:'',
+				followsError:'',
+				swiperWidth: 375,
+				tabIndicatorPosition: 0,
+				isSwiperDragging: false,
+				isTabClickAnimating: false
 			}
 		},
+		watch: {
+			id(value) {
+				if (Number(value) > 0) { this.refreshFans(); this.refreshFollows(); }
+			}
+		},
+		onShow() {
+			if (Number(this.id) > 0) { this.refreshFans(); this.refreshFollows(); }
+		},
 		computed:{
+			tabIndicatorStyle() {
+				return {
+					transform: `translate3d(${this.tabIndicatorPosition * 100}%, 0, 0)`
+				};
+			},
 			filteredFans(){
 				if(!this.searchKeyword) return this.fans;
 				const kw = this.searchKeyword.toLowerCase();
@@ -144,188 +204,310 @@
 				}
 			}
 
-			let _this = this;
-			let tempInterval = setInterval(function(){
-				// console.log(_this.id)
-				if(_this.id == -1) return;
-				axios.get(_this.$baseUrl + '/community/get_fans_of?id=' + _this.id, {}).then((res) => {
-					_this.fans = JSON.parse(JSON.stringify(res.data));
-					clearInterval(tempInterval)
-					// console.log(_this.fans);
-				}).catch(function(error) {
-					uni.showToast({
-						title: "用户信息加载失败",
-						icon: 'none',
-						duration: 2000
-					})
-				})
-				axios.get(_this.$baseUrl + '/community/get_follows_of?id=' + _this.id, {}).then((res) => {
-					_this.follows = JSON.parse(JSON.stringify(res.data));
-					clearInterval(tempInterval)
-					// console.log(_this.follows);
-				}).catch(function(error) {
-					uni.showToast({
-						title: "用户信息加载失败",
-						icon: 'none',
-						duration: 2000
-					})
-				})
-			},200)
 
 
-			if(params.tab){
-				this.firstTab = params.tab
+			if(params.tab !== undefined){
+				const requestedTab = Number(params.tab);
+				const initialTab = requestedTab === 1 ? 1 : 0;
+				this.curTabIndex = initialTab;
+				this.tabIndicatorPosition = initialTab;
 			}
 
 
 		},
 		mounted(){
-			this.$refs.tabs.clickTab(this.firstTab);
+			const systemInfo = uni.getSystemInfoSync ? uni.getSystemInfoSync() : {};
+			const browserWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+			this.swiperWidth = Number(systemInfo.windowWidth) || browserWidth || 375;
 		},
 		methods:{
 			changeTab(index){
-				this.curTabIndex = index;
-				if(index == 1){
+				const nextIndex = Number(index) === 1 ? 1 : 0;
+				this.isSwiperDragging = false;
+				this.isTabClickAnimating = nextIndex !== this.curTabIndex;
+				this.tabIndicatorPosition = nextIndex;
+				this.curTabIndex = nextIndex;
+				this.refreshTab(nextIndex);
+			},
+			handleSwiperTransition(event) {
+				if (this.isTabClickAnimating) return;
+				const dx = Number(event && event.detail && event.detail.dx);
+				if (!Number.isFinite(dx) || !this.swiperWidth) return;
+
+				// dx 与内容移动方向相反，因此用 current - dx / width 得到分页进度。
+				const position = this.curTabIndex - dx / this.swiperWidth;
+				this.isSwiperDragging = true;
+				this.tabIndicatorPosition = Math.max(0, Math.min(1, position));
+			},
+			handleSwiperChange(event) {
+				const nextIndex = Number(event && event.detail && event.detail.current) === 1 ? 1 : 0;
+				const changed = nextIndex !== this.curTabIndex;
+				this.curTabIndex = nextIndex;
+				this.tabIndicatorPosition = nextIndex;
+				if (changed) this.refreshTab(nextIndex);
+			},
+			handleSwiperAnimationFinish(event) {
+				const nextIndex = Number(event && event.detail && event.detail.current) === 1 ? 1 : 0;
+				this.curTabIndex = nextIndex;
+				this.tabIndicatorPosition = nextIndex;
+				this.isSwiperDragging = false;
+				this.isTabClickAnimating = false;
+			},
+			refreshTab(index) {
+				if(index === 1){
 					this.refreshFans();
 				} else {
 					this.refreshFollows();
 				}
 			},
-			refreshFans(){
-				let _this = this;
-				if(this.id == -1) return;
-				axios.get(_this.$baseUrl + '/community/get_fans_of?id=' + _this.id, {}).then((res) => {
-					_this.fans = JSON.parse(JSON.stringify(res.data));
-				}).catch(function(error) {
-					uni.showToast({
-						title: "用户信息加载失败",
-						icon: 'none',
-						duration: 2000
-					})
-				})
-			},
-			refreshFollows(){
-				let _this = this;
-				if(this.id == -1) return;
-				axios.get(_this.$baseUrl + '/community/get_follows_of?id=' + _this.id, {}).then((res) => {
-					_this.follows = JSON.parse(JSON.stringify(res.data));
-				}).catch(function(error) {
-					uni.showToast({
-						title: "用户信息加载失败",
-						icon: 'none',
-						duration: 2000
-					})
-				})
+			refreshFans(){ return this.loadList('fans'); },
+			refreshFollows(){ return this.loadList('follows'); },
+			async loadList(kind) {
+				if (Number(this.id) <= 0) return;
+				this[kind + 'Error'] = '';
+				try {
+					const token = JSON.parse(window.localStorage.getItem('token') || 'null');
+					const res = await axios.get(this.$baseUrl + '/community/get_' + kind + '_of?id=' + this.id, {
+						headers: { Authorization: token ? 'Bearer ' + token.tk : '' }, timeout: 15000
+					});
+					this[kind] = res.data;
+				} catch (error) {
+					this[kind] = [];
+					this[kind + 'Error'] = this.$t('settings.privacy.' +
+						(error.response && error.response.data.code === 'PRIVATE_LIST' ? 'privateList' : 'listLoadFailed'));
+				}
 			}
 		}
 	}
 </script>
 
 <style scoped lang="less">
-	.outer{
+	.outer {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		height: 100dvh;
+		box-sizing: border-box;
+		overflow: hidden;
 		background-color: #ffffff;
-		padding-top: 4px;
 
-		.dark-mode & {
+		&.dark-mode {
 			background-color: #252525;
-		}
-		.tab{
-			height: 40px;
-			width: 100vw;
-		}
-		.search-bar{
-			display: flex;
-			align-items: center;
-			padding: 10rpx 20rpx;
-			border-bottom: #cacaca 1rpx solid;
-
-			.dark-mode & {
-				border-bottom: #3a3a3a 1rpx solid;
-			}
-			.search-input{
-				flex: 1;
-				height: 60rpx;
-				background-color: #f5f5f5;
-				border-radius: 10rpx;
-				padding: 0 20rpx;
-				font-size: 28rpx;
-
-				.dark-mode & {
-					background-color: #3a3a3a;
-					color: #e5e5e5;
-				}
-			}
-			.search-clear{
-				margin-left: 15rpx;
-				font-size: 36rpx;
-				color: #999;
-				padding: 0 10rpx;
-			}
-		}
-		.list.fans{
-			p.fansNums{
-				height:50rpx;
-				padding-left:20rpx;
-				font-size: 30rpx;
-				color:rgb(48, 48, 48);
-				border-bottom: #cacaca 1rpx solid;
-				.dark-mode & {
-					color: #e5e5e5;
-					border-bottom: #3a3a3a 1rpx solid;
-				}
-			}
 		}
 	}
 
-	.users {
-		height: 130rpx;
-		width: 100vw;
-		border-bottom: #cacaca 1rpx solid;
+	.friends-tabs {
+		position: relative;
 		display: flex;
-		position:relative;
+		flex: 0 0 80rpx;
+		width: 100%;
+		border-bottom: 1rpx solid #ececec;
+		box-sizing: border-box;
 
 		.dark-mode & {
-			border-bottom: #3a3a3a 1rpx solid;
+			border-bottom-color: #3a3a3a;
+		}
+	}
+
+	.friends-tab {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 50%;
+		font-size: 30rpx;
+		color: #777;
+		transition: color .2s ease, font-size .2s ease;
+
+		&.active {
+			font-size: 34rpx;
+			font-weight: 600;
+			color: #2d2d2d;
 		}
 
-		.friend-avatar {
-			width: 100rpx;
-			height: 100rpx;
-			margin:15rpx;
+		.dark-mode & {
+			color: #a8a8a8;
 		}
-		.name {
-			margin-top: 20rpx;
-			font-size: 32rpx;
-			height:40rpx;
-			overflow: hidden;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 1;
-			color:rgb(180, 111, 88);
 
-			.dark-mode & {
-				color: #d1a980;
-			}
+		.dark-mode &.active {
+			color: #ffffff;
 		}
-		.motto{
-			color:rgb(97, 97, 97);
-			width:58vw;
-			overflow: hidden;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 1;
-			margin-top: 8rpx;
-			font-size: 28rpx;
+	}
 
-			.dark-mode & {
-				color: #b8b8b8;
-			}
+	.tab-indicator {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		width: 50%;
+		height: 6rpx;
+		transition: transform 280ms cubic-bezier(.22, .61, .36, 1);
+		will-change: transform;
+
+		&::after {
+			content: '';
+			display: block;
+			width: 88rpx;
+			height: 100%;
+			margin: 0 auto;
+			border-radius: 999rpx;
+			background-color: rgb(125, 218, 91);
 		}
-		.button{
-			position:absolute;
-			right:30rpx;
-			top:50%;
-			transform: translateY(-50%);
+
+		&.dragging {
+			transition: none;
 		}
+
+		.dark-mode &::after {
+			background-color: #5f9550;
+		}
+	}
+
+	.search-bar {
+		display: flex;
+		align-items: center;
+		flex: 0 0 auto;
+		padding: 10rpx 20rpx;
+		border-bottom: #cacaca 1rpx solid;
+		box-sizing: border-box;
+
+		.dark-mode & {
+			border-bottom-color: #3a3a3a;
+		}
+	}
+
+	.search-input {
+		flex: 1;
+		height: 60rpx;
+		background-color: #f5f5f5;
+		border-radius: 10rpx;
+		padding: 0 20rpx;
+		font-size: 28rpx;
+		box-sizing: border-box;
+
+		.dark-mode & {
+			background-color: #3a3a3a;
+			color: #e5e5e5;
+		}
+	}
+
+	.search-clear {
+		margin-left: 15rpx;
+		font-size: 36rpx;
+		color: #999;
+		padding: 0 10rpx;
+	}
+
+	.friends-swiper {
+		flex: 1 1 auto;
+		min-height: 0;
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.friend-page {
+		display: block;
+		width: 100%;
+		height: 100%;
+		box-sizing: border-box;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.list {
+		width: 100%;
+		padding-bottom: calc(24rpx + var(--loghome-safe-bottom, 0px));
+		box-sizing: border-box;
+	}
+
+	.friend-count {
+		display: flex;
+		align-items: center;
+		height: 58rpx;
+		padding: 0 20rpx;
+		font-size: 26rpx;
+		color: #666;
+		border-bottom: #e5e5e5 1rpx solid;
+		box-sizing: border-box;
+
+		.dark-mode & {
+			color: #b8b8b8;
+			border-bottom-color: #3a3a3a;
+		}
+	}
+
+	.friend-row {
+		display: flex;
+		align-items: center;
+		position: relative;
+		height: 130rpx;
+		width: 100%;
+		border-bottom: #cacaca 1rpx solid;
+		box-sizing: border-box;
+
+		.dark-mode & {
+			border-bottom-color: #3a3a3a;
+		}
+	}
+
+	.user-link {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+		flex: 1;
+		height: 100%;
+		padding-right: 18rpx;
+		box-sizing: border-box;
+	}
+
+	.friend-avatar {
+		flex: 0 0 100rpx;
+		width: 100rpx;
+		height: 100rpx;
+		margin: 15rpx;
+	}
+
+	.person-info {
+		min-width: 0;
+		flex: 1;
+	}
+
+	.name {
+		font-size: 32rpx;
+		line-height: 42rpx;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		color: rgb(180, 111, 88);
+
+		.dark-mode & {
+			color: #d1a980;
+		}
+	}
+
+	.motto {
+		margin-top: 8rpx;
+		font-size: 28rpx;
+		line-height: 36rpx;
+		color: rgb(97, 97, 97);
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+
+		.dark-mode & {
+			color: #b8b8b8;
+		}
+	}
+
+	.follow-button {
+		position: static;
+		flex: 0 0 150rpx;
+		margin-right: 30rpx;
+		transform: none;
+	}
+
+	.empty-state,
+	.privacy-status {
+		padding: 100rpx 30rpx;
+		text-align: center;
+		font-size: 28rpx;
+		color: #999;
 	}
 </style>

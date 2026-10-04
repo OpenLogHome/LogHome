@@ -1,22 +1,22 @@
 <template>
 	<view class="outer" v-dark>
 		<div class="info">
-			<p>亲爱的朋友，欢迎你加入原木社区大家庭！</p>
-			<p>你的账号尚待激活，为了保证不间断的使用，请按照以下步骤激活你的账号：</p>
-			<p>1.点击下方验证框复制验证码</p>
+			<p>{{ $t('settings.activate.welcome') }}</p>
+			<p>{{ $t('settings.activate.oicqIntro') }}</p>
+			<p>{{ $t('settings.activate.oicqStep1') }}</p>
 			<div class="bordered verifyCode" @mousedown="copyCode" @longtap="copyCode">
 				{{code}}
 			</div>
-			<p>2.加入原木社区任意用户QQ群</p>
+			<p>{{ $t('settings.activate.oicqStep2') }}</p>
 			<div class="bordered groups">
-				<p>原木社区用户群列表：</p>
-				<p>原木社区用户交流群：644467605</p>
-				<p v-show="false">原木社区公测小组：931304998</p>
-				<p>原木文社总群：464239748</p>
+				<p>{{ $t('settings.activate.oicqGroupList') }}</p>
+				<p>{{ $t('settings.activate.oicqGroupMain') }}</p>
+				<p v-show="false">{{ $t('settings.activate.oicqGroupBeta') }}</p>
+				<p>{{ $t('settings.activate.oicqGroupWriter') }}</p>
 			</div>
-			<p>3.将验证码<span style="font-weight:bold;color:var(--brand-text-color)">通过私聊</span>发送给群内我们的原木社区管理员“苦力怕君”</p>
-			<p><span style="font-weight:bold;color:var(--brand-text-color)">友情提示：切勿将验证码发送至公开群中，请务必通过私聊发送。</span></p>
-			<p>此操作会将你与发送验证消息的QQ号绑定，一个QQ号可绑定多个社区账号。</p>
+			<p>{{ $t('settings.activate.oicqStep3Prefix') }}<span style="font-weight:bold;color:var(--brand-text-color)">{{ $t('settings.activate.oicqStep3Via') }}</span>{{ $t('settings.activate.oicqStep3Suffix') }}</p>
+			<p><span style="font-weight:bold;color:var(--brand-text-color)">{{ $t('settings.activate.oicqTip') }}</span></p>
+			<p>{{ $t('settings.activate.oicqBindNote') }}</p>
 		</div>
 		<!-- <div class="button" @click="goAnyWay">以游客身份继续使用</div> -->
 	</view>
@@ -65,7 +65,7 @@
 				_this.code = res.data;
 			}).catch(function(error) {
 				uni.showToast({
-					title: "获取验证码失败",
+					title: _this.$t('settings.activate.getCodeFailed'),
 					icon: 'none',
 					duration: 2000
 				});

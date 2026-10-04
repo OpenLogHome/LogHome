@@ -259,7 +259,7 @@
 							<view class="activity-news-item clickable" v-for="(news, newsIndex) in activity.news"
 								:key="newsIndex" @click="openActivityNews(news)">
 								<text class="activity-news-item-title">{{ news.title }}</text>
-								<text class="activity-news-item-arrow">›</text>
+								<text class="activity-news-item-arrow ui-chevron" aria-hidden="true"></text>
 							</view>
 							<view class="activity-popularity" v-if="activity.popularity && activity.popularity.enabled">
 								<view class="activity-popularity-info">
@@ -416,7 +416,7 @@
 		</view>
 
 		<view class="l-body-fixed" v-if="!isPageLoading && bookInfo.is_personal == 0">
-			<view class="l-handle-btn l-ai-btn clickable" @tap="gotoAskLogGirl">
+			<view v-if="aiAssistanceEnabled" class="l-handle-btn l-ai-btn clickable" @tap="gotoAskLogGirl">
 				<image class="ai-entry-icon" src="https://storage.codesocean.top/api/resource/get/177882044429077" mode="aspectFit"></image>
 				<view class="ai-entry-text">问问原木娘</view>
 			</view>
@@ -604,6 +604,7 @@ export default {
 				ranking: 999
 			},
 			worldLoadTime: 0,
+			mangaLoadTime: 0,
 			worlds: [],
 			giftImage: "",
 			collaborationAuthors: [],
@@ -705,6 +706,7 @@ export default {
 			})
 		},
 		gotoAskLogGirl() {
+			if (!this.aiAssistanceEnabled) return;
 			uni.navigateTo({
 				url: '/pages/readers/askLogGirl?novel_id=' + this.uid + '&novel_name=' + encodeURIComponent(this.bookInfo.name || '')
 			})
@@ -1526,6 +1528,20 @@ export default {
 			}
 			this.isPageLoading = false;
 			return;
+		} else if (bookInfo.novel_type == "manga") {
+			// 漫画作品跳转到漫画详情页
+			if (this.mangaLoadTime == 0) {
+				setTimeout(() => {
+					uni.redirectTo({
+						url: "/pages/readers/mangaInfo?id=" + this.uid
+					})
+					this.mangaLoadTime++;
+				}, 350)
+			} else {
+				uni.navigateBack();
+			}
+			this.isPageLoading = false;
+			return;
 		} else {
 			try {
 				this.bookInfo = bookInfo;
@@ -1932,32 +1948,54 @@ export default {
 	}
 }
 
+// 与实际 .l-body-select / .l-body-tab 布局保持一致：
+// flex wrap、每项 flex: 1 0 50%（两列两行），图标在左、文字在右
 .skeleton-actions {
 	display: flex;
-	justify-content: space-around;
-	margin: 52rpx 0;
+	flex-flow: wrap;
+	width: 100%;
+	margin-top: 20rpx;
 }
 
 .skeleton-action {
 	display: flex;
-	flex-direction: column;
+	flex: 1 0 50%;
 	align-items: center;
+	padding: 20rpx 0;
 }
 
 .skeleton-action-icon {
-	width: 54rpx;
-	height: 54rpx;
-	border-radius: 50%;
+	width: 60rpx;
+	height: 60rpx;
+	margin-right: 18rpx;
+	border-radius: 12rpx;
+	flex-shrink: 0;
 }
 
 .skeleton-action-text {
-	width: 72rpx;
-	height: 20rpx;
-	margin-top: 14rpx;
+	height: 26rpx;
 	border-radius: 6rpx;
 }
 
+// 文字占位条宽度贴近真实文案：赞 / 分享 / 加入书架 / 目录
+.skeleton-action:nth-child(1) .skeleton-action-text {
+	width: 64rpx;
+}
+
+.skeleton-action:nth-child(2) .skeleton-action-text {
+	width: 72rpx;
+}
+
+.skeleton-action:nth-child(3) .skeleton-action-text {
+	width: 140rpx;
+}
+
+.skeleton-action:nth-child(4) .skeleton-action-text {
+	width: 72rpx;
+}
+
 .skeleton-card {
+	margin-top: 40rpx;
 	padding: 30rpx;
 	border-radius: 18rpx;
 	background-color: rgba(130, 112, 102, 0.08);
@@ -2011,7 +2049,7 @@ export default {
 	align-items: center;
 	white-space: nowrap;
 	background-color: rgb(255, 248, 234);
-	justify-content: space-between;
+	justify-content: flex-start;
 	box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
 
 	.dark-mode & {
@@ -2020,7 +2058,7 @@ export default {
 }
 
 .l-look-btn {
-	width: 24%;
+	flex: 0 0 24%;
 	color: white;
 	background: linear-gradient(135deg, #ff3d7f 0%, #ff0080 100%);
 	border-radius: 0;
@@ -2048,7 +2086,8 @@ export default {
 
 .l-buy-btn {
 	color: white;
-	width: 52%;
+	// AI 入口隐藏后，阅读按钮自动填满剩余空间。
+	flex: 1 1 0;
 	background: linear-gradient(135deg, #ff8c42 0%, #EA7034 100%);
 	border-radius: 0;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2074,6 +2113,7 @@ export default {
 }
 
 .l-handle-btn {
+	min-width: 0;
 	font-size: 35rpx;
 	font-weight: bold;
 	display: flex;
@@ -2083,7 +2123,7 @@ export default {
 }
 
 .l-ai-btn {
-	width: 24%;
+	flex: 0 0 24%;
 	color: #3d2d1e;
 	background: linear-gradient(135deg, #ffeab8 0%, #ffd36f 100%);
 	flex-direction: column;
@@ -3369,4 +3409,5 @@ view.tippingBar {
 	background-color: rgba(0, 0, 0, 0.05);
 	transform: scale(0.98);
 }
+.ui-chevron { display: inline-block; flex: none; width: 10rpx; height: 10rpx; border-top: 2rpx solid currentColor; border-right: 2rpx solid currentColor; transform: rotate(45deg); }
 </style>

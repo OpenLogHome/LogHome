@@ -2,7 +2,30 @@
 	"common": {
 		"confirm": "OK",
 		"cancel": "Cancel",
-		"loading": "Loading..."
+		"submit": "Submit",
+		"save": "Save",
+		"delete": "Delete",
+		"retry": "Retry",
+		"close": "Close",
+		"loading": "Loading...",
+		"processing": "Processing...",
+		"prompt": "Notice",
+		"loadFailed": "Failed to load",
+		"needLogin": "Please sign in first",
+		"operationFailed": "Operation failed",
+		"networkError": "Network error, please try again later",
+		"paramError": "Invalid parameters",
+		"deleteSuccess": "Deleted",
+		"deleteFailed": "Failed to delete",
+		"confirmDelete": "Confirm deletion",
+		"saveFailed": "Failed to save",
+		"settingSuccess": "Saved",
+		"uploading": "Uploading",
+		"uploadSuccess": "Uploaded",
+		"verifying": "Verifying",
+		"copied": "Copied",
+		"inputTitle": "Please enter a title",
+		"inputContent": "Please enter content"
 	},
 	"nav": {
 		"tab": {
@@ -10,13 +33,6 @@
 			"community": "Community",
 			"writer": "Create",
 			"me": "Me"
-		}
-	},
-	"settings": {
-		"language": {
-			"title": "Language",
-			"followSystem": "Follow system",
-			"switched": "Language updated"
 		}
 	}
 }

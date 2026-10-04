@@ -16,7 +16,14 @@
 			</view>
 		</view>
 
-		<view class="noEssay" v-if="books.length == 0" v-show="topNavArr[topNavIndex] == '小说'">
+		<!-- 三栏横向滑动区域（跟手切换） -->
+		<view class="tabs-viewport" @touchstart="onSwipeStart" @touchmove="onSwipeMove"
+			@touchend="onSwipeEnd" @touchcancel="onSwipeEnd" @scroll="onViewportScroll">
+			<view class="tabs-track" :style="trackStyle">
+				<!-- 小说栏目 -->
+				<view class="tab-pane" :class="{ 'pane-active': topNavIndex === 0 }" :style="paneStyle(0)"
+					v-show="topNavIndex === 0 || swipePeek === 0 || paneHiding === 0">
+		<view class="noEssay" v-if="books.length == 0">
 			<img src="../static/images/icon_my_uplotolib.png" alt="" />
 			<p>方块跃然纸上，故事在此生长</p>
 			<navigator url="./writers/newEssay">
@@ -28,11 +35,10 @@
 		<template v-if="viewMode === 'scroll'">
 			<transition name="fade">
 				<card-swiper class="swiper" v-if="books.length > 0" :list="books" @swiperChange="swiperChange"
-					ref="cardSwiper" v-show="topNavArr[topNavIndex] == '小说'"></card-swiper>
+					ref="cardSwiper"></card-swiper>
 			</transition>
 			<transition name="fade">
-				<view style="padding-top: 20rpx;height: 300px;" class="pageBody" v-if="books.length > 0"
-					v-show="topNavArr[topNavIndex] == '小说'">
+				<view class="pageBody" v-if="books.length > 0">
 					<book-detail-view v-if="curBook !== -1" :book="books[curBook]" :worlds="worlds"
 						:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
 						:writing-calendar="writingCalendar" :writing-calendar-loading="writingCalendarLoading"
@@ -58,7 +64,7 @@
 
 		<!-- 书架视图模式 -->
 		<template v-else>
-			<view class="bookshelf" v-if="books.length > 0" v-show="topNavArr[topNavIndex] == '小说'">
+			<view class="bookshelf" v-if="books.length > 0">
 				<div class="book-grid">
 					<div v-for="(book, index) in books" :key="book.novel_id" class="book-item"
 						@click="selectBook(index)">
@@ -73,9 +79,21 @@
 			</view>
 		</template>
 
-		<transition name="fade">
-			<worldPage v-show="topNavArr[topNavIndex] == '世界'" ref="worldPage"></worldPage>
-		</transition>
+				</view>
+
+				<!-- 漫画栏目 -->
+				<view class="tab-pane" :class="{ 'pane-active': topNavIndex === 1 }" :style="paneStyle(1)"
+					v-show="topNavIndex === 1 || swipePeek === 1 || paneHiding === 1">
+					<mangaPage ref="mangaPage" :active-index="topNavIndex" @refreshed="refreshPage"></mangaPage>
+				</view>
+
+				<!-- 世界栏目 -->
+				<view class="tab-pane" :class="{ 'pane-active': topNavIndex === 2 }" :style="paneStyle(2)"
+					v-show="topNavIndex === 2 || swipePeek === 2 || paneHiding === 2">
+					<worldPage ref="worldPage"></worldPage>
+				</view>
+			</view>
+		</view>
 		<!-- 书籍详情抽屉 -->
 		<el-drawer :visible.sync="showBookDetail" :with-header="false" size="90%" :direction="'btt'"
 			custom-class="book-detail-wrapper" :modal-append-to-body="true">
@@ -171,6 +189,7 @@
 import cardSwiper from "@/components/helang-cardSwiper/helang-cardSwiper"
 import writerHelper from "@/components/writer_helper"
 import worldPage from '@/components/worldsPage.vue'
+import mangaPage from '@/components/mangaPage.vue'
 import BookDetailView from '@/components/book-detail-view.vue'
 import axios from 'axios'
 import darkModeMixin from '@/mixins/dark-mode.js'
@@ -183,7 +202,13 @@ export default {
 			viewMode: localStorage.getItem('loghome_essay_view_mode') || 'scroll', // 从本地存储获取上次的视图模式
 			showBookDetail: false,
 			topNavIndex: 0,
-			topNavArr: ['小说', '世界'],
+			topNavArr: ['小说', '漫画', '世界'],
+			swipeTrace: null, // 横向滑动手势追踪 {x, y, locked}
+			swipePeek: -1, // 滑动中临时预览的相邻栏目
+			paneHiding: -1, // 切换动画期间仍需保持显示的离场栏
+			hidePaneTimer: null,
+			dragPx: 0, // 手势跟随的实时位移
+			dragging: false,
 			pageScrollTop: 0, // 页面滚动距离
 			books: [],
 			curBook: 0,
@@ -215,6 +240,7 @@ export default {
 		cardSwiper,
 		writerHelper,
 		worldPage,
+		mangaPage,
 		BookDetailView,
 	},
 	mixins: [darkModeMixin],
@@ -239,7 +265,8 @@ export default {
 			title: '努力加载中'
 		});
 		this.refreshPage();
-		this.$refs.worldPage.refreshPage();
+		if (this.$refs.worldPage) this.$refs.worldPage.refreshPage();
+		if (this.$refs.mangaPage) this.$refs.mangaPage.refreshPage();
 		//console.log(this.$store.state.user_id);
 	},
 	computed: {
@@ -251,6 +278,13 @@ export default {
 				class: scrollProgress >= 0.85 ? 'style2' : '',
 				style: `background-color: rgba(${backgroundRgb}, ${opacity})`
 			}
+		},
+		trackStyle() {
+			const step = 100 / this.topNavArr.length;
+			return {
+				transform: 'translate3d(calc(' + (-this.topNavIndex * step) + '% + ' + this.dragPx + 'px), 0, 0)',
+				transition: this.dragging ? 'none' : 'transform 0.32s cubic-bezier(0.25, 0.8, 0.4, 1)',
+			};
 		}
 	},
 	onLoad() {
@@ -261,6 +295,7 @@ export default {
 		window.removeEventListener('popstate', this.browserBack);
 		window.removeEventListener('loghomeNativeBack', this.handleNativeBack);
 		clearTimeout(this.timer);
+		clearTimeout(this.hidePaneTimer);
 		if (this.bookSelectDrawerTimer) {
 			clearTimeout(this.bookSelectDrawerTimer);
 			this.bookSelectDrawerTimer = null;
@@ -385,7 +420,102 @@ export default {
 		},
 		// 顶部导航改变 
 		changeTopNav(e) {
-			this.topNavIndex = e.currentTarget.dataset.index
+			this.switchTo(Number(e.currentTarget.dataset.index))
+		},
+		switchTo(idx) {
+			if (idx === this.topNavIndex) return;
+			// 离场栏在滑动动画（0.32s）期间保持显示，否则轨道滑过时露出白底
+			this.paneHiding = this.topNavIndex;
+			clearTimeout(this.hidePaneTimer);
+			this.hidePaneTimer = setTimeout(() => {
+				this.paneHiding = -1;
+				this.swipePeek = -1;
+				this.hidePaneTimer = null;
+			}, 360);
+			const lo = Math.min(this.topNavIndex, idx);
+			const hi = Math.max(this.topNavIndex, idx);
+			// 点击 tab 跨栏跳转时，让中间栏在动画期间可见，避免镜头扫过空槽
+			this.swipePeek = (hi - lo > 1) ? lo + 1 : -1;
+			this.topNavIndex = idx;
+		},
+		paneStyle(i) {
+			// 激活栏是唯一的文档流内 flex 子项，会被排在轨道 x=0 处；
+			// 用 relative + left 把它摆回自己的槽位（left 不影响文档流高度）
+			if (this.topNavIndex === i) {
+				return { left: (i * 100 / 3) + '%' };
+			}
+			return {};
+		},
+		// ===== 三栏横向滑动手势 =====
+		// 视口内滚时同步标题栏透明度（文档不滚时 onPageScroll 不触发）
+		onViewportScroll(e) {
+			const top = (e && e.detail && typeof e.detail.scrollTop === 'number')
+				? e.detail.scrollTop
+				: (e && e.target ? e.target.scrollTop : 0);
+			this.pageScrollTop = Math.floor(top || 0);
+		},
+		onSwipeStart(e) {
+			// 卡片轮播区内部自有横滑手势，不劫持
+			const target = e && e.target;
+			if (target && typeof target.closest === 'function' && target.closest('.swiper')) {
+				this.swipeTrace = null;
+				return;
+			}
+			const t = e.touches && e.touches[0];
+			if (!t) return;
+			this.swipeTrace = { x: t.clientX, y: t.clientY, locked: null };
+		},
+		onSwipeMove(e) {
+			const s = this.swipeTrace;
+			if (!s) return;
+			const t = e.touches && e.touches[0];
+			if (!t) return;
+			const dx = t.clientX - s.x;
+			const dy = t.clientY - s.y;
+			if (!s.locked) {
+				if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+				// 方向锁：横向为主才接管
+				s.locked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+				if (s.locked !== 'x') {
+					this.swipeTrace = null;
+					return;
+				}
+				this.dragging = true;
+			}
+			if (e.preventDefault) {
+				try { e.preventDefault(); } catch (err) { /* ignore */ }
+			}
+			let offset = dx;
+			const atEdge = (this.topNavIndex === 0 && dx > 0)
+				|| (this.topNavIndex === this.topNavArr.length - 1 && dx < 0);
+			if (atEdge) offset = dx * 0.3; // 边缘阻尼
+			this.dragPx = offset;
+			const peek = offset < 0 ? this.topNavIndex + 1 : (offset > 0 ? this.topNavIndex - 1 : -1);
+			this.swipePeek = (peek >= 0 && peek < this.topNavArr.length) ? peek : -1;
+		},
+		onSwipeEnd() {
+			const s = this.swipeTrace;
+			this.swipeTrace = null;
+			this.dragging = false;
+			if (!s || s.locked !== 'x') {
+				this.dragPx = 0;
+				return;
+			}
+			const width = (typeof window !== 'undefined' && window.innerWidth) || 375;
+			let idx = this.topNavIndex;
+			if (this.dragPx < -width / 5) idx = Math.min(this.topNavIndex + 1, this.topNavArr.length - 1);
+			else if (this.dragPx > width / 5) idx = Math.max(this.topNavIndex - 1, 0);
+			this.dragPx = 0;
+			if (idx === this.topNavIndex) {
+				// 回弹：预览栏在回弹动画期间保持显示，避免中途露白
+				clearTimeout(this.hidePaneTimer);
+				this.hidePaneTimer = setTimeout(() => {
+					this.swipePeek = -1;
+					this.hidePaneTimer = null;
+				}, 360);
+				return;
+			}
+			this.switchTo(idx);
 		},
 		refreshPage() {
 			let _this = this;
@@ -397,12 +527,14 @@ export default {
 					'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 				}
 			}).then((res) => {
-				this.books = res.data;
+				// 缓存保持全量（其他页面依赖），小说工作区过滤掉漫画，漫画由「漫画」Tab 管理
+				let allWorks = res.data || [];
+				window.localStorage.setItem("LogHomeUserEaasy", JSON.stringify(allWorks));
+				this.books = allWorks.filter((n) => n.novel_type !== 'manga');
 				this.$forceUpdate();
 				this.$nextTick(() => {
-					this.$refs.cardSwiper.reload(this.books);
+					if (this.$refs.cardSwiper) this.$refs.cardSwiper.reload(this.books);
 				})
-				window.localStorage.setItem("LogHomeUserEaasy", JSON.stringify(res.data));
 				_this.swiperChange(this.curBook);
 			}).catch(function (error) {
 				console.log(error);
@@ -417,7 +549,7 @@ export default {
 					let localData = window.localStorage.getItem("LogHomeUserEaasy");
 					if (localData) {
 						localData = JSON.parse(localData);
-						_this.books = localData;
+						_this.books = localData.filter((n) => n.novel_type !== 'manga');
 						_this.$forceUpdate();
 					}
 				}
@@ -794,6 +926,51 @@ view.outer {
 }
 
 /* 标题栏 */
+.tabs-viewport {
+	/* .outer 根节点是 height:100%，页面滚动依赖内容溢出或本容器内滚；
+	   overflow:hidden 会切断溢出传播导致整页不可滚，因此纵向用 auto。
+	   横向裁剪防止绝对定位的邻栏把页面撑出横向滚动条 */
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.tabs-track {
+	position: relative;
+	display: flex;
+	width: 300%;
+}
+
+.tab-pane {
+	position: absolute;
+	top: 0;
+	width: 33.3333%;
+	min-width: 0;
+	/* 盒子固定为轨道高度（=激活栏高度）并在栏内裁剪：
+	   防止非激活栏内容向下扩展页面可滚动高度（出现空白可滚区域） */
+	height: 100%;
+	overflow: hidden;
+
+	/* 非激活栏绝对定位脱离文档流：不撑高页面，也不影响 translate 定位换算 */
+	&:nth-child(1) {
+		left: 0;
+	}
+
+	&:nth-child(2) {
+		left: 33.3333%;
+	}
+
+	&:nth-child(3) {
+		left: 66.6666%;
+	}
+
+	&.pane-active {
+		position: relative;
+		left: auto;
+		height: auto;
+		overflow: visible;
+	}
+}
+
 .title {
 	position: fixed;
 	top: 0;
@@ -910,6 +1087,9 @@ view.outer {
 }
 
 .pageBody {
+	// 详情包含日历、活动和统计，必须由内容撑高，避免被横滑视口裁剪。
+	height: auto;
+	padding-top: 20rpx;
 	padding-bottom: 120rpx;
 }
 

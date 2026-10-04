@@ -2,37 +2,37 @@
 	<view class="outer" v-dark>
 		<div class="description">
 			<div style=" background-color:var(--card-background); padding:50rpx; font-size: 35rpx;" data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed=""><p>
-				<strong>绑定QQ</strong>
+				<strong>{{ $t('settings.push.bindQqTitle') }}</strong>
 			</p>
 			<p style="">
-				您可以绑定QQ，从而接收系统消息推送。
+				{{ $t('settings.push.bindQqDesc') }}
 			</p>
 			<p style="margin-top: 20rpx;">
-				您的绑定码是：<text style="color:#EA7034;font-weight:bold;user-select:text" @click="copyCode">{{bindingCode}}</text>
-				<text style="color:var(--text-color-secondary); font-size: 24rpx; margin-left: 20rpx; border: 1px solid var(--border-color); padding: 2rpx 10rpx; border-radius: 6rpx;" @click="copyCode">复制</text>
-				<text style="color:var(--text-color-secondary); font-size: 24rpx; margin-left: 20rpx; border: 1px solid var(--border-color); padding: 2rpx 10rpx; border-radius: 6rpx;" @click="refreshCode">刷新</text>
+				{{ $t('settings.push.bindingCodeLabel') }}<text style="color:#EA7034;font-weight:bold;user-select:text" @click="copyCode">{{bindingCode || $t('settings.push.loadingCode')}}</text>
+				<text style="color:var(--text-color-secondary); font-size: 24rpx; margin-left: 20rpx; border: 1px solid var(--border-color); padding: 2rpx 10rpx; border-radius: 6rpx;" @click="copyCode">{{ $t('settings.push.copy') }}</text>
+				<text style="color:var(--text-color-secondary); font-size: 24rpx; margin-left: 20rpx; border: 1px solid var(--border-color); padding: 2rpx 10rpx; border-radius: 6rpx;" @click="refreshCode">{{ $t('settings.push.refresh') }}</text>
 			</p>
 			<p style="">
-				请将此绑定码发送至原木社区用户交流群（701928273）的原木娘（2917117044），即可自动完成账号绑定。
+				{{ $t('settings.push.bindHowto') }}
 			</p>
 			</div>
 		</div>
 				<div class="list-content">
 			<view class="list">
 				<view class="li " @click="autoSaveSet">
-					<view class="text">状态：{{pushStatus == 1 ? "启用" : "停用"}}</view>
+					<view class="text">{{ $t('settings.push.statusPrefix') }}{{ pushStatus == 1 ? $t('settings.push.statusEnabled') : $t('settings.push.statusDisabled') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 				<view class="li" v-if="pushStatus == 1">
 					<view class="text" style="display: flex; justify-content: space-between; align-items: center;">
-						<text>接收时间段</text>
+						<text>{{ $t('settings.push.receiveWindow') }}</text>
 						<view style="display: flex; align-items: center;">
 							<picker mode="time" :value="pushStartTime" @change="bindStartTimeChange">
 								<view class="time-picker">{{pushStartTime}}</view>
 							</picker>
 							<text style="margin: 0 10rpx;">-</text>
 							<picker mode="time" :value="pushEndTime" @change="bindEndTimeChange">
-								<view class="time-picker">{{pushEndTime}}{{isNextDay ? ' (次日)' : ''}}</view>
+								<view class="time-picker">{{pushEndTime}}{{isNextDay ? ' ' + $t('settings.push.nextDay') : ''}}</view>
 							</picker>
 						</view>
 					</view>
@@ -49,7 +49,7 @@
 			return{
 				pushStatus:0,
 				EditorAutoSaveProps:{},
-				bindingCode: '加载中...',
+				bindingCode: '', //绑定码，为空时模板显示 loadingCode 占位文案
 				pushStartTime: '00:00',
 				pushEndTime: '23:59'
 			}
@@ -67,9 +67,9 @@
 			copyCode(){
 				uni.setClipboardData({
 					data: this.bindingCode,
-					success: function () {
+					success: () => {
 						uni.showToast({
-							title: '复制成功',
+							title: this.$t('settings.push.copySuccess'),
 							icon: 'none'
 						});
 					}
@@ -95,13 +95,13 @@
 					this.pushEndTime = res.data.push_end_time || '23:59';
 					if(refresh) {
 						uni.showToast({
-							title: '刷新成功',
+							title: this.$t('settings.push.refreshSuccess'),
 							icon: 'none'
 						});
 					}
-				}).catch(function (error) {
+				}).catch(() => {
 					uni.showToast({
-						title: '获取绑定码失败',
+						title: this.$t('settings.push.getCodeFailed'),
 						icon:'none',
 						duration: 2000
 					});
@@ -110,8 +110,8 @@
 			refreshCode() {
 				let _this = this;
 				uni.showModal({
-					title: '提示',
-					content: '确定要刷新绑定码吗？',
+					title: this.$t('common.prompt'),
+					content: this.$t('settings.push.refreshConfirm'),
 					success: function (res) {
 						if (res.confirm) {
 							_this.getBindingCode(true);
@@ -143,12 +143,12 @@
 					}
 				).then((res) => {
 					uni.showToast({
-						title: '设置成功',
+						title: this.$t('common.settingSuccess'),
 						icon: 'none'
 					});
 				}).catch((error) => {
 					uni.showToast({
-						title: '设置失败',
+						title: this.$t('settings.push.settingFailed'),
 						icon:'none',
 						duration: 2000
 					});
@@ -180,7 +180,7 @@
 			autoSaveSet(){
 				let _this = this;
 				uni.showActionSheet({
-				    itemList: ['启用',"禁用"],
+				    itemList: [this.$t('settings.push.enable'), this.$t('settings.push.disable')],
 				    success: function (res) {
 				        if(res.tapIndex == 0) {
 							// 启用
@@ -188,8 +188,8 @@
 						} else if(res.tapIndex == 1) {
 							// 禁用 - 弹窗确认
 							uni.showModal({
-								title: '提示',
-								content: '关闭后将无法及时收到重要消息通知，确定要关闭吗？',
+								title: _this.$t('common.prompt'),
+								content: _this.$t('settings.push.disableConfirm'),
 								success: function (res) {
 									if (res.confirm) {
 										_this.updatePushStatus(0);

@@ -26,7 +26,7 @@
 			<view class="right"></view>
 		</view>
 		<view id="bottom">
-			<view @click="jiazaiImg">{{!url ? '选择图片' : '重新选择'}}</view>
+			<view @click="jiazaiImg">{{ !url ? $t('settings.upload.chooseImage') : $t('settings.upload.reselect') }}</view>
 			<view @click="xvanzhuan">{{bottomText_2}}</view>
 			<view @click="yulan">{{bottomText_3}}</view>
 			<view @click="jieqv">{{bottomText_4}}</view>
@@ -39,7 +39,7 @@
 					<view :style="{backgroundImage: 'url(\''+yulanPicSrc+'\')'}" class="img yuan"></view>
 				</view>
 				<view class="bottom line">
-					<view class="vertical_line" @click="yulanPicSrc = ''">确定</view>
+					<view class="vertical_line" @click="yulanPicSrc = ''">{{ $t('common.confirm') }}</view>
 				</view>
 			</view>
 		</view>
@@ -69,13 +69,26 @@
 				imgOrigin: '', //旋转中心点
 				imgRotate: 0, //图片的旋转角度【0,90,180,270,n】css只要不断的叠加才能实现同一个方向的旋转
 
-				bottomText_2: '旋转',
-				bottomText_3: '预览',
-				bottomText_4: '上传',
+				rotateState: 0, //旋转按钮状态【0=旋转 1=旋转中】
+				previewState: 0, //预览按钮状态【0=预览 1=截取中】
+				uploadState: 0, //上传按钮状态【0=上传 1=截取中 2=上传中】
 				url: '../../static/i/touxiang/212.jpg',
 				yulanPicSrc: '', //预览图
 				pixelRatio: 1,
 				bodyLeftWidth: 0
+			}
+		},
+		computed: {
+			bottomText_2() {
+				return this.rotateState === 1 ? this.$t('settings.upload.rotating') : this.$t('settings.upload.rotate');
+			},
+			bottomText_3() {
+				return this.previewState === 1 ? this.$t('settings.upload.cropping') : this.$t('settings.upload.preview');
+			},
+			bottomText_4() {
+				if (this.uploadState === 1) return this.$t('settings.upload.cropping');
+				if (this.uploadState === 2) return this.$t('settings.upload.uploading');
+				return this.$t('settings.upload.upload');
 			}
 		},
 		methods: {
@@ -122,7 +135,7 @@
 				}
 			},
 			touchstart: function(e) { //手指按下
-				if (this.bottomText_2 === '旋转') {
+				if (this.rotateState === 0) {
 					this.imgTransition = '50ms';
 					this.upData(e);
 				}
@@ -264,33 +277,33 @@
 			jieqv: function() {
 				if (this.url === '') {
 					this.jiazaiImg()
-				} else if (this.bottomText_4 === '截取中...') {
+				} else if (this.uploadState === 1) {
 					uni.showToast({
-						title: '截取中，请稍等',
+						title: this.$t('settings.upload.croppingWait'),
 						icon: 'none',
 						duration: 1500
 					})
-				} else if (this.bottomText_4 === '上传中...') {
+				} else if (this.uploadState === 2) {
 					uni.showToast({
-						title: '上传中，请稍等',
+						title: this.$t('settings.upload.uploadingWait'),
 						icon: 'none',
 						duration: 1500
 					})
-				} else if (this.bottomText_2 === '旋转中...') {
+				} else if (this.rotateState === 1) {
 					uni.showToast({
-						title: '旋转中，请稍等',
+						title: this.$t('settings.upload.rotatingWait'),
 						icon: 'none',
 						duration: 1000
 					})
 				} else {
-					this.bottomText_4 = '截取中...'
+					this.uploadState = 1
 					this.jieqvTobase64('base64UP');
 				}
 			},
 			base64UP: function(text) {
-				this.bottomText_4 = '上传中...';
+				this.uploadState = 2;
 				uni.showLoading({
-					title: '上传中'
+					title: this.$t('common.uploading')
 				});
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;;
@@ -311,9 +324,9 @@
 					}, )
 					.then(function(response) {
 						uni.hideLoading();
-						_this.bottomText_4 = '上传';
+						_this.uploadState = 0;
 						uni.showToast({
-							title: '上传成功',
+							title: _this.$t('common.uploadSuccess'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -325,7 +338,7 @@
 						//console.log(error);
 						if (error) {
 							uni.showToast({
-								title: "上传失败",
+								title: _this.$t('settings.upload.uploadFailed'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -379,7 +392,7 @@
 				//截取
 				ctx.drawImage(this.url, dx, dy, width, width, 0, 0, 250, 250)
 				ctx.draw(false, (e) => { //绘制成功【绘制到 canvas 中】【false=清空canvas之前的内容】	return
-					this.bottomText_3 = '预览'
+					this.previewState = 0
 					uni.canvasToTempFilePath({ //canvas保存为图片
 						destWidth: 250,
 						destHeight: 250,
@@ -412,8 +425,8 @@
 			xvanzhuan: function() {
 				if (this.url === '') {
 					this.jiazaiImg()
-				} else if (this.bottomText_2 === '旋转') {
-					this.bottomText_2 = '旋转中...', //旋转中
+				} else if (this.rotateState === 0) {
+					this.rotateState = 1, //旋转中
 						this.imgTransition = '400ms';
 					[this.imgX, this.imgY] = this.X_AND_Y(); //默认定位
 					this.imgScale = 1, //缩放比例
@@ -422,32 +435,32 @@
 					imageRotate = this.imgRotate - (parseInt(this.imgRotate / 360) * 360); //【0-360】//旋转的中心点
 					//关于旋转完成
 					setTimeout(() => {
-						this.bottomText_2 = '旋转';
+						this.rotateState = 0;
 					}, 400);
 				}
 			},
 			yulan: function() {
 				if (this.url === '') {
 					this.jiazaiImg()
-				} else if (this.bottomText_3 === '截取中...') {
+				} else if (this.previewState === 1) {
 					uni.showToast({
-						title: '截取中，请稍等',
+						title: this.$t('settings.upload.croppingWait'),
 						icon: 'none',
 						duration: 1500
 					})
-				} else if (this.bottomText_2 === '旋转中...') {
+				} else if (this.rotateState === 1) {
 					uni.showToast({
-						title: '旋转中，请稍等',
+						title: this.$t('settings.upload.rotatingWait'),
 						icon: 'none',
 						duration: 1000
 					})
 				} else {
-					this.bottomText_3 = '截取中...'
+					this.previewState = 1
 					this.jieqvTobase64('yulanAlert');
 				}
 			},
 			yulanAlert: function(text) {
-				this.bottomText_3 = '预览'
+				this.previewState = 0
 				this.yulanPicSrc = text
 			},
 			closePreviewOnBack: function() {

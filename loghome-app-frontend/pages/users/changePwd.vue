@@ -2,29 +2,29 @@
 	<div class="content" v-dark>
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
-			<input class="input" type="password" placeholder="输入原密码" v-model="pwd" />
+			<input class="input" type="password" :placeholder="$t('auth.changePwd.oldPwdPlaceholder')" v-model="pwd" />
 		</div>
 		<!--End用户名输入框-->
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
-			<input class="input" type="password" placeholder="输入新密码" v-model="newPwd1" />
+			<input class="input" type="password" :placeholder="$t('auth.changePwd.newPwdPlaceholder')" v-model="newPwd1" />
 		</div>
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
-			<input class="input" type="password" placeholder="重复新密码" v-model="newPwd2" />
+			<input class="input" type="password" :placeholder="$t('auth.changePwd.confirmPwdPlaceholder')" v-model="newPwd2" />
 		</div>
 		<div style="display:flex;width:100%;justify-content: center;">
 			<slide-verify :l="42"
 			            :r="10"
 			            :h="155"
-			            slider-text="向右滑动"
+			            :slider-text="$t('auth.changePwd.sliderText')"
 			            @success="verifyResult"
 						:imgs="$moveVerifyImgs"
 			            ></slide-verify>
 		</div>
 <!-- 		<move-verify @result='verifyResult' class="moveVerify"></move-verify> -->
 		<!--End密码输入框-->
-		<div class="button" @click="submit">提交</div>
+		<div class="button" @click="submit">{{ $t('common.submit') }}</div>
 	</div>
 </template>
 
@@ -60,7 +60,7 @@
 			submit() {
 				if (this.pwd == "") {
 					uni.showToast({
-						title: "请输入原密码",
+						title: this.$t('auth.changePwd.oldPwdRequired'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -68,7 +68,7 @@
 				}
 				if (this.newPwd1 != this.newPwd2) {
 					uni.showToast({
-						title: "两次输入密码不同",
+						title: this.$t('auth.changePwd.passwordMismatch'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -76,7 +76,7 @@
 				}
 				if (this.newPwd1 == this.pwd) {
 					uni.showToast({
-						title: "原密码不能与新密码相同",
+						title: this.$t('auth.changePwd.sameAsOldPwd'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -84,7 +84,7 @@
 				}
 				if (this.isPasswd(this.newPwd1) != true) {
 					uni.showToast({
-						title: "密码格式：6-20位字母、数字、下划线组合",
+						title: this.$t('auth.changePwd.passwordRule'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -92,7 +92,7 @@
 				}
 				if (this.resultData == false) {
 					uni.showToast({
-						title: "请滑动验证滑块",
+						title: this.$t('auth.changePwd.sliderFirst'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -115,7 +115,7 @@
 					.then(function(response) {
 						window.localStorage.removeItem('token');
 						uni.showToast({
-							title: "密码修改成功",
+							title: this.$t('auth.changePwd.changeSuccess'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -129,7 +129,7 @@
 						//console.log(error);
 						if (error) {
 							uni.showToast({
-								title: "原密码错误",
+								title: this.$t('auth.changePwd.wrongOldPwd'),
 								icon: 'none',
 								duration: 2000
 							});

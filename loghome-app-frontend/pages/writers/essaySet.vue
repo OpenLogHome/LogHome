@@ -1,7 +1,7 @@
 <template>
 	<view v-dark>
 			<view class="list-content">
-			<view class="list">
+			<view class="list" v-if="aiAssistanceEnabled && novel.novel_type !== 'manga'">
 				<view class="li noborder" @click="gotoIndexing">
 					<view class="text">全文智能索引</view>
 					<img class="to" src="../../static/user/to.png"></img>
@@ -135,6 +135,7 @@
 				}).then(function() {})
 			},
 			gotoIndexing(){
+				if (!this.aiAssistanceEnabled) return;
 				uni.navigateTo({
 					url:"./essayIndexing?id=" + this.id
 				})

@@ -1,0 +1,115 @@
+{
+	"auth": {
+		"brand": {
+			"name": "原木社区"
+		},
+		"login": {
+			"welcomePrefix": "在",
+			"welcomeSuffix": "，",
+			"typeCreate": "创作无限可能",
+			"typeStory": "书写方块故事",
+			"typeTalk": "与创作者对话",
+			"typeExplore": "探索方块世界",
+			"carouselLibrary": "海量故事任你挑选",
+			"carouselReading": "自由舒适的阅读体验",
+			"carouselCreate": "多端同步故事创作",
+			"carouselInteract": "与其他创作者互动",
+			"withEmail": "使用邮箱登录",
+			"withAccount": "使用账号密码登录",
+			"agreePrefix": "我已经阅读并同意",
+			"agreeAccept": "我已经阅读并接受",
+			"privacyPolicy": "原木社区用户隐私政策",
+			"agreeRequired": "请先阅读并同意《原木社区用户隐私政策》",
+			"accountPlaceholder": "请输入账号",
+			"passwordPlaceholder": "请输入密码",
+			"codePlaceholder": "请输入验证码",
+			"signIn": "登录",
+			"next": "下一步",
+			"previous": "上一步",
+			"resend": "重新发送",
+			"waitSeconds": "等待{{seconds}}秒",
+			"codeSentTo": "验证码已发送至：",
+			"welcomeSetup": "欢迎来到原木社区，请设置你的账号和密码。",
+			"accountUsed": "该账号已被使用",
+			"forgotPassword": "忘记密码",
+			"invalidCredential": "账号或密码错误",
+			"sliderFirst": "请滑动验证滑块",
+			"bindSuccess": "绑定成功",
+			"passwordRequired": "请输入密码",
+			"passwordRule": "密码格式：6-20位字母、数字、下划线组合",
+			"accountRule": "账号格式：4-12位字母、数字、下划线组合",
+			"accountTaken": "账号已被注册",
+			"account": {
+				"title": "原木通信证登录",
+				"appVersion": "APP版本：",
+				"accountPlaceholder": "请输入账号/手机号/QQ",
+				"agreeRequired": "请先阅读并接受《原木社区用户隐私政策》",
+				"signUp": "注册账号",
+				"reportZone": "网上有害信息举报专区"
+			},
+			"email": {
+				"unregisteredTip": "未注册邮箱将自动创建账号",
+				"emailPlaceholder": "请输入电子邮箱",
+				"signInWith": "即将使用以下邮箱登录：",
+				"invalidEmail": "请输入有效的电子邮箱地址",
+				"accountRule": "账号格式：4-12位字母、数字组合"
+			},
+			"mobile": {
+				"registeredOnlyTip": "仅支持已注册手机号登录",
+				"mobilePlaceholder": "请输入中国大陆手机号",
+				"policyNotice": "我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持新手机号注册，请尽快迁移至邮箱登录。",
+				"recoverContact": "如果您需要找回账号，请通过原木社区开源计划交流群联系我们：",
+				"signInWith": "即将使用以下手机号登录：",
+				"invalidMobile": "请输入11位数字的中国大陆手机号"
+			}
+		},
+		"register": {
+			"accountPlaceholder": "请输入账号",
+			"passwordPlaceholder": "请输入密码",
+			"confirmPwdPlaceholder": "请重复密码",
+			"passwordRequired": "请输入原密码",
+			"passwordMismatch": "两次输入密码不同",
+			"passwordRule": "密码格式：6-20位字母、数字、下划线组合",
+			"accountRule": "账号格式：4-12位字母、数字、下划线组合",
+			"sliderFirst": "请滑动验证滑块",
+			"accountTaken": "账号已被注册"
+		},
+		"changePwd": {
+			"oldPwdPlaceholder": "输入原密码",
+			"newPwdPlaceholder": "输入新密码",
+			"confirmPwdPlaceholder": "重复新密码",
+			"sliderText": "向右滑动",
+			"oldPwdRequired": "请输入原密码",
+			"passwordMismatch": "两次输入密码不同",
+			"sameAsOldPwd": "原密码不能与新密码相同",
+			"passwordRule": "密码格式：6-20位字母、数字、下划线组合",
+			"sliderFirst": "请滑动验证滑块",
+			"changeSuccess": "密码修改成功",
+			"wrongOldPwd": "原密码错误"
+		},
+		"external": {
+			"loading": "登录中，请稍候...",
+			"success": "登录成功",
+			"failed": "登录失败",
+			"secondsLater": "{{seconds}}秒后",
+			"toTarget": "跳转到指定页面",
+			"toProfile": "返回个人中心",
+			"backToLogin": "返回登录页",
+			"noLoginInfo": "未接收到有效的登录信息",
+			"invalidToken": "登录令牌无效或已过期，请重新登录"
+		},
+		"forgot": {
+			"contactUs": "如果你忘记了密码，请通过以下渠道联系我们：",
+			"joinAnyGroup": "1.加入原木社区任意用户QQ群",
+			"groupListTitle": "原木社区用户群列表：",
+			"groupExchange": "原木社区用户交流群：",
+			"groupBeta": "原木社区公测小组：",
+			"groupWriters": "原木文社总群：",
+			"contactAdminPrefix": "2.联系群内管理员",
+			"contactAdminVia": "通过私聊",
+			"contactAdminSuffix": "发送恢复账号的请求。",
+			"qqBoundTip": "如果你的账号此前绑定过QQ号，请使用绑定的QQ号进行账号恢复，将更有可能成功恢复你的账号。",
+			"needProof": "否则，我们需要你提供账号的其他信息，来证明你确实是账号的主人。"
+		}
+	}
+}

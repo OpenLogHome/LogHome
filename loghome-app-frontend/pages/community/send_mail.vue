@@ -20,6 +20,7 @@
 
 <script>
 	import axios from 'axios'
+	import i18n from '@/i18n'
 	export default {
 		data() {
 			return {
@@ -52,7 +53,9 @@
 					tk = tk.tk;
 				}
 				let _this = this;
-				axios.get(_this.$baseUrl + '/community/get_friends_of?id=' + id, {}).then((res) => {
+				axios.get(_this.$baseUrl + '/community/get_friends_of?id=' + id, {
+					headers: { Authorization: 'Bearer ' + tk }
+				}).then((res) => {
 					_this.users = res.data;
 				}).catch(function(error) {
 					uni.showToast({
@@ -94,7 +97,8 @@
 				.catch(function(error) {
 					if (error) {
 						uni.showToast({
-							title: "发送失败",
+							title: error.response && error.response.data.code === 'PRIVATE_MESSAGE_FORBIDDEN'
+								? i18n.t('settings.privacy.messageForbidden') : "发送失败",
 							icon: 'none',
 							duration: 2000
 						});

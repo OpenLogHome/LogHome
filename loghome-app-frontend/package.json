@@ -3,6 +3,12 @@
     "name": "Loghome",
     "version": "1.0.0",
     "description": "原木社区前端代码",
+    "scripts": {
+        "i18n:extract": "node scripts/i18n-extract.js",
+        "i18n:titles": "node scripts/gen-title-map.js",
+        "i18n:check-sfc": "node scripts/check-sfc.js",
+        "test:manga": "node --test test/manga_phase1_test.cjs test/manga_phase2_test.cjs"
+    },
     "keywords": [],
     "dependencies": {
         "@hocuspocus/provider": "4.5.0",

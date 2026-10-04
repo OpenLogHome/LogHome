@@ -2,20 +2,20 @@
 	<div class="content" v-dark>
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"/></div>
-			<input class="input" type="text" placeholder="请输入账号" v-model="account"/>
+			<input class="input" type="text" :placeholder="$t('auth.register.accountPlaceholder')" v-model="account"/>
 		</div>
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
-			<input class="input" type="password" placeholder="请输入密码" v-model="pwd1" />
+			<input class="input" type="password" :placeholder="$t('auth.register.passwordPlaceholder')" v-model="pwd1" />
 		</div>
 		<!--End用户名输入框-->
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
-			<input class="input" type="password" placeholder="请重复密码" v-model="pwd2" />
+			<input class="input" type="password" :placeholder="$t('auth.register.confirmPwdPlaceholder')" v-model="pwd2" />
 		</div>
 		<move-verify @result='verifyResult' class="moveVerify"></move-verify>
 		<!--End密码输入框-->
-		<div class="button" @click="submit">提交</div>
+		<div class="button" @click="submit">{{ $t('common.submit') }}</div>
 	</div>
 </template>
 
@@ -51,7 +51,7 @@
 			submit() {
 				if (this.pwd1 == "") {
 					uni.showToast({
-						title: "请输入原密码",
+						title: this.$t('auth.register.passwordRequired'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -59,7 +59,7 @@
 				}
 				if (this.pwd1 != this.pwd2) {
 					uni.showToast({
-						title: "两次输入密码不同",
+						title: this.$t('auth.register.passwordMismatch'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -67,7 +67,7 @@
 				}
 				if (this.isPasswd(this.pwd1) != true) {
 					uni.showToast({
-						title: "密码格式：6-20位字母、数字、下划线组合",
+						title: this.$t('auth.register.passwordRule'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -75,7 +75,7 @@
 				}
 				if (this.resultData == false) {
 					uni.showToast({
-						title: "请滑动验证滑块",
+						title: this.$t('auth.register.sliderFirst'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -87,7 +87,7 @@
 				let passwordPattern = /^[a-zA-Z0-9]{6,22}$/;
 				if(!accountPattern.test(this.account)){
 					uni.showToast({
-						title: "账号格式：4-12位字母、数字、下划线组合",
+						title: this.$t('auth.register.accountRule'),
 						icon:'none',
 						duration: 2000
 					});
@@ -107,7 +107,7 @@
 					  //console.log(error);
 					  if(error) {
 						  uni.showToast({
-							title: "账号已被注册",
+							title: this.$t('auth.register.accountTaken'),
 							icon:'none',
 							duration: 2000
 						  });

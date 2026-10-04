@@ -1,5 +1,5 @@
 <template>
-	<view class="redstone-page">
+	<view v-if="aiAssistanceEnabled" class="redstone-page">
 		<view class="page-glow page-glow--one"></view>
 		<view class="page-glow page-glow--two"></view>
 
@@ -114,7 +114,7 @@
 				</view>
 				<view class="membership-link" @tap="gotoMembership">
 					<text>查看原木通行证</text>
-					<text>›</text>
+					<text class="ui-chevron" aria-hidden="true"></text>
 				</view>
 			</view>
 
@@ -135,6 +135,33 @@
 					</view>
 				</view>
 				<text class="ai-panel__note">各项功能的具体消耗以使用页面提示为准。</text>
+			</view>
+
+			<view class="panel ai-declaration">
+				<view class="panel-heading">
+					<view>
+						<text class="panel-heading__title ai-declaration__title">{{ $t('redstone.aiDeclaration.title') }}</text>
+						<text class="panel-heading__subtitle">{{ $t('redstone.aiDeclaration.subtitle') }}</text>
+					</view>
+				</view>
+				<view class="ai-declaration__content">
+					<text class="ai-declaration__body">{{ $t('redstone.aiDeclaration.models') }}</text>
+					<view class="ai-declaration__promise">
+						<text class="ai-declaration__promise-title">{{ $t('redstone.aiDeclaration.promiseTitle') }}</text>
+						<text class="ai-declaration__body">{{ $t('redstone.aiDeclaration.promise') }}</text>
+					</view>
+					<view v-if="aiDeclarationExpanded" id="ai-declaration-details" class="ai-declaration__details">
+						<view v-for="section in aiDeclarationSections" :key="section.id" class="ai-declaration__section">
+							<text class="ai-declaration__section-title">{{ section.title }}</text>
+							<text class="ai-declaration__body">{{ section.body }}</text>
+						</view>
+						<button class="ai-declaration__settings" @click="gotoAiSettings">{{ $t('redstone.aiDeclaration.settings') }}</button>
+					</view>
+					<button class="ai-declaration__toggle" :aria-expanded="String(aiDeclarationExpanded)" aria-controls="ai-declaration-details" @click="aiDeclarationExpanded = !aiDeclarationExpanded">
+						<text>{{ $t(aiDeclarationExpanded ? 'redstone.aiDeclaration.collapse' : 'redstone.aiDeclaration.expand') }}</text>
+						<view class="ai-declaration__chevron" :class="{ 'ai-declaration__chevron--expanded': aiDeclarationExpanded }" aria-hidden="true"></view>
+					</button>
+				</view>
 			</view>
 
 			<view v-if="transactions.length" class="panel records-panel">
@@ -180,6 +207,7 @@ export default {
 			submitting: false,
 			quickAmounts: [10, 50, 100, 300],
 			transactions: [],
+			aiDeclarationExpanded: false,
 			aiUses: [
 				{ icon: '阅', title: '问问原木娘', description: '普通问答 1 红石，深度思考 2 红石' },
 				{ icon: '写', title: '笔泡 AI 助手', description: '普通 1 红石，深度思考 2 红石' },
@@ -188,6 +216,13 @@ export default {
 		};
 	},
 	computed: {
+		aiDeclarationSections() {
+			return ['data', 'providers', 'rights', 'reliability', 'safety', 'choice'].map(id => ({
+				id,
+				title: this.$t('redstone.aiDeclaration.sections.' + id + '.title'),
+				body: this.$t('redstone.aiDeclaration.sections.' + id + '.body')
+			}));
+		},
 		validAmount() {
 			const value = Number(this.amount);
 			return Number.isInteger(value) && value > 0;
@@ -203,9 +238,13 @@ export default {
 		}
 	},
 	onShow() {
+		if (!this.ensureAiPageAllowed()) return;
 		this.loadData();
 	},
 	methods: {
+		gotoAiSettings() {
+			uni.navigateTo({ url: '/pages/users/clientSet' });
+		},
 		goBack() {
 			uni.navigateBack({ delta: 1 });
 		},
@@ -220,6 +259,7 @@ export default {
 			return this.amount;
 		},
 		async loadData() {
+			if (!this.aiAssistanceEnabled) return;
 			await Promise.all([this.loadAccount(), this.loadTransactions()]);
 		},
 		async loadAccount() {
@@ -440,6 +480,20 @@ page {
 .ai-item__description { margin-top: 4rpx; font-size: 17rpx; color: var(--muted); }
 .ai-panel__note { display: block; padding: 13rpx 22rpx 22rpx; font-size: 16rpx; color: var(--muted); }
 
+.ai-declaration__title { font-size: 25rpx; line-height: 1.5; }
+.ai-declaration__content { padding: 0 25rpx 22rpx; }
+.ai-declaration__body { display: block; font-size: 22rpx; line-height: 1.85; color: var(--secondary); overflow-wrap: anywhere; }
+.ai-declaration__promise { margin-top: 20rpx; padding: 20rpx; border: 1rpx solid rgba(255,155,145,.2); border-radius: 16rpx; background: rgba(240,106,110,.07); }
+.ai-declaration__promise-title { display: block; margin-bottom: 10rpx; font-size: 23rpx; line-height: 1.5; font-weight: 650; color: var(--accent-light); }
+.ai-declaration__section { margin-top: 24rpx; padding-top: 20rpx; border-top: 1rpx solid var(--border); }
+.ai-declaration__section-title { display: block; margin-bottom: 10rpx; font-size: 23rpx; line-height: 1.6; font-weight: 600; color: var(--text); }
+.ai-declaration__toggle, .ai-declaration__settings { box-sizing: border-box; font-size: 22rpx; line-height: 1.5; border-radius: 14rpx; background: transparent; }
+.ai-declaration__toggle::after, .ai-declaration__settings::after { border: none; }
+.ai-declaration__toggle { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; width: 100%; min-height: 80rpx; margin-top: 16rpx; padding: 16rpx 0; border: 0; color: var(--accent-light); text-align: left; }
+.ai-declaration__settings { display: block; width: 100%; min-height: 80rpx; margin-top: 24rpx; padding: 18rpx; border: 1rpx solid var(--border); color: var(--secondary); }
+.ai-declaration__chevron { flex: none; width: 12rpx; height: 12rpx; margin-right: 4rpx; border-right: 2rpx solid currentColor; border-bottom: 2rpx solid currentColor; transform: rotate(45deg); transition: transform .2s; }
+.ai-declaration__chevron--expanded { transform: rotate(225deg); }
+
 .record-list { padding: 0 22rpx 12rpx; }
 .record-item { display: flex; align-items: center; justify-content: space-between; min-height: 86rpx; border-top: 1rpx solid var(--border); }
 .record-item__title, .record-item__time { display: block; }
@@ -447,4 +501,5 @@ page {
 .record-item__time { margin-top: 4rpx; font-size: 16rpx; color: var(--muted); }
 .record-item__amount { font-size: 24rpx; font-weight: 700; color: #ff8c87; }
 .record-item__amount--spent { color: var(--secondary); }
+.ui-chevron { display: inline-block; flex: none; width: 10rpx; height: 10rpx; border-top: 2rpx solid currentColor; border-right: 2rpx solid currentColor; transform: rotate(45deg); }
 </style>

@@ -4,12 +4,12 @@
 			<user-avatar :src="user.avatar_url" :frame="user.avatar_frame" :animate="true" />
 		</view>
 		<view class="avatar-actions">
-			<view class="avatar-action" @click="gotoAvater">更换头像</view>
-			<view class="avatar-action avatar-action--frame" @click="gotoAvatarFrames">选择头像挂件</view>
+			<view class="avatar-action" @click="gotoAvater">{{ $t('settings.userInfo.changeAvatar') }}</view>
+			<view class="avatar-action avatar-action--frame" @click="gotoAvatarFrames">{{ $t('settings.userInfo.chooseFrame') }}</view>
 		</view>
 		<el-input
 		  type="text"
-		  placeholder="笔名"
+		  :placeholder="$t('settings.userInfo.penNamePlaceholder')"
 		  v-model="username"
 		  maxlength="20"
 		  show-word-limit
@@ -18,7 +18,7 @@
 		<div style="margin: 20rpx 0;"></div>
 		<el-input
 		  type="textarea"
-		  placeholder="个性签名"
+		  :placeholder="$t('settings.userInfo.mottoPlaceholder')"
 		  v-model="motto"
 		  :rows="4"
 		  :autosize="{ minRows: 4}"
@@ -26,7 +26,7 @@
 		  show-word-limit
 		>
 		</el-input>
-		<div class="button" @click="submit">提交</div>
+		<div class="button" @click="submit">{{ $t('common.submit') }}</div>
 	</div>
 </template>
 
@@ -85,7 +85,7 @@
 				if(this.username.replace(/(^\s*)|(\s*$)/g, "") == "" || this.motto.replace(/(^\s*)|(\s*$)/g, "") == "")
 				{
 					uni.showToast({
-						title: "必填项未填",
+						title: this.$t('settings.userInfo.requiredMissing'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -109,7 +109,7 @@
 					)
 					.then(function(response) {
 						uni.showToast({
-							title: "修改成功",
+							title: _this.$t('settings.userInfo.updateSuccess'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -123,7 +123,7 @@
 						//console.log(error);
 						if (error) {
 							uni.showToast({
-								title: "修改失败",
+								title: _this.$t('settings.userInfo.updateFailed'),
 								icon: 'none',
 								duration: 2000
 							});

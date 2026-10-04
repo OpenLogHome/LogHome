@@ -1,18 +1,18 @@
 <template>
 	<view class="container" v-dark>
 		<view class="header">
-			<view class="title">空间占用管理</view>
+			<view class="title">{{ $t('settings.storageManage.title') }}</view>
 		</view>
 
 		<view class="storage-info">
 			<view class="storage-item" v-for="(item, index) in storageItems" :key="index">
 				<view class="item-header">
-					<view class="item-title">{{ item.name }}</view>
+					<view class="item-title">{{ $t(item.nameKey) }}</view>
 					<view class="item-size">{{ formatSize(item.size) }}</view>
 				</view>
-				<view class="item-desc">{{ item.description }}</view>
+				<view class="item-desc">{{ $t(item.descKey) }}</view>
 				<view class="item-actions">
-					<button class="action-btn" @click="clearAll(item.id)">清空全部</button>
+					<button class="action-btn" @click="clearAll(item.id)">{{ $t('settings.storageManage.clearAll') }}</button>
 				</view>
 			</view>
 		</view>
@@ -28,22 +28,22 @@ export default {
 			storageItems: [
 				{
 					id: 'article',
-					name: '阅读器数据库',
-					description: '存储已下载的小说和章节内容',
+					nameKey: 'settings.storageManage.articleName',
+					descKey: 'settings.storageManage.articleDesc',
 					size: 0,
 					db: articleDB
 				},
 				{
 					id: 'img',
-					name: '图片缓存数据库',
-					description: '存储已缓存的图片数据',
+					nameKey: 'settings.storageManage.imgName',
+					descKey: 'settings.storageManage.imgDesc',
 					size: 0,
 					db: imgDB
 				},
 				{
 					id: 'writer',
-					name: '写作备份数据库',
-					description: '存储本地备份的章节历史记录',
+					nameKey: 'settings.storageManage.writerName',
+					descKey: 'settings.storageManage.writerDesc',
 					size: 0,
 					db: writerArticleDB
 				}
@@ -97,8 +97,8 @@ export default {
 		},
 		async clearAll(dbId) {
 			uni.showModal({
-				title: '警告',
-				content: '确定要清空所有数据吗？此操作不可恢复！',
+				title: this.$t('settings.storageManage.warning'),
+				content: this.$t('settings.storageManage.clearConfirm'),
 				confirmColor: '#EA7034',
 				success: async (res) => {
 					if (res.confirm) {
@@ -114,13 +114,13 @@ export default {
 								item.size = 0;
 
 								uni.showToast({
-									title: '清理完成',
+									title: this.$t('settings.storageManage.clearDone'),
 									icon: 'success'
 								});
 							} catch (error) {
 								console.error('清理数据库出错:', error);
 								uni.showToast({
-									title: '清理失败',
+									title: this.$t('settings.storageManage.clearFailed'),
 									icon: 'none'
 								});
 							}

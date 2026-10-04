@@ -1,0 +1,40 @@
+{
+	"redstone": {
+		"aiDeclaration": {
+			"title": "Statement on the use of generative AI",
+			"subtitle": "Transparency · Creative rights · User choice",
+			"models": "All AI assistance features in LogHome use models already available on the market. AI supports reading and writing; it does not replace a creator's expression, judgment, or responsibility.",
+			"promiseTitle": "User assets are never used for model training",
+			"promise": "Our commitment: users' works, drafts, settings, images, prompts, conversations, and other related assets will never be used for any form of model training, fine-tuning, distillation, or training dataset creation. They will not be sold, shared, or licensed to third parties for model training.",
+			"expand": "Read the full statement and principles",
+			"collapse": "Collapse the full statement",
+			"settings": "Manage AI preferences",
+			"sections": {
+				"data": {
+					"title": "Necessary inference transfers and data minimization",
+					"body": "To provide answers, corrections, image generation, or content retrieval, the system may send necessary content and context to model service providers. This processing supports inference or retrieval and does not authorize any party to use the content for model training. Do not submit passwords, others' sensitive information, or content you are not entitled to provide."
+				},
+				"providers": {
+					"title": "Third-party model services share the no-training commitment",
+					"body": "The no-training commitment also applies to third-party model services. Integration and use must be conditional on data terms and usage settings that prohibit training models on user assets. Model improvement or algorithm optimization must not be used to circumvent this commitment."
+				},
+				"rights": {
+					"title": "Respect for originality and content rights",
+					"body": "Using AI assistance does not change your existing rights in your works and related assets. AI output is not guaranteed to be original or exclusive. Check for excessive reproduction of others' works, and do not present plagiarism, impersonation, or content that violates others' rights as original work."
+				},
+				"reliability": {
+					"title": "Transparency and human review",
+					"body": "AI can produce factual errors, bias, or inappropriate language. Its output is assistance, not verified fact or professional advice. Important content should be reviewed by a person. When publishing substantially AI-generated content, disclose AI's involvement to avoid misleading readers."
+				},
+				"safety": {
+					"title": "Safety, fairness, and responsible use",
+					"body": "Follow community rules. Do not use generative AI to create deceptive, harassing, hateful, discriminatory, privacy-invading, or otherwise harmful content, impersonate others, or spread false information. Respect diverse groups and viewpoints, and remain alert to potential model bias."
+				},
+				"choice": {
+					"title": "Choice and feedback",
+					"body": "AI assistance is not required to use LogHome. In Settings, you can turn on Disable AI assistance to hide Redstone Center and AI entry points without affecting ordinary reading, writing, or publishing. Report output errors, safety risks, or rights concerns through the in-app feedback center."
+				}
+			}
+		}
+	}
+}

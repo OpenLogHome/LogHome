@@ -48,6 +48,7 @@
           <div class="previewActions">
             <div
               v-for="tool in selectedNavTools"
+              v-show="aiAssistanceEnabled || tool.id !== 'writerAi'"
               :key="tool.id"
               class="previewActionButton"
             >
@@ -73,6 +74,7 @@
         <div class="keyboardPreviewBar">
           <button
               v-for="item in selectedKeyboardTools"
+              v-show="aiAssistanceEnabled || item.id !== 'writerAi'"
               :key="item.itemKey"
               class="keyboardPreviewButton"
             >
@@ -122,7 +124,7 @@
       <div class="sectionMeta">
         <div>
           已添加
-          <span class="countText">{{ selectedTools.length }}/{{ selectedLimitText }}</span>
+          <span class="countText">{{ visibleSelectedTools.length }}/{{ selectedLimitText }}</span>
           ，拖动排序
         </div>
         <button class="restoreButton" @click="resetCurrentTab">恢复默认</button>
@@ -131,10 +133,11 @@
       <div
         ref="selectedGrid"
         class="selectedGrid"
-        :class="{ empty: !selectedTools.length, sorting: isSortingActive }"
+        :class="{ empty: !visibleSelectedTools.length, sorting: isSortingActive }"
       >
         <div
           v-for="(tool, index) in selectedTools"
+          v-show="aiAssistanceEnabled || tool.id !== 'writerAi'"
           :key="getToolKey(tool)"
           class="selectedToolItem"
           :class="{ dragging: isDraggingTool(tool, index) }"
@@ -179,7 +182,7 @@
           </div>
           <div class="toolLabel">{{ getToolLabel(tool) }}</div>
         </div>
-        <div v-if="!selectedTools.length" class="emptySelectedText">
+        <div v-if="!visibleSelectedTools.length" class="emptySelectedText">
           点击下方工具添加到快捷栏
         </div>
       </div>
@@ -809,6 +812,9 @@ export default {
     };
   },
   computed: {
+    visibleSelectedTools() {
+      return this.selectedTools.filter(tool => this.aiAssistanceEnabled || tool.id !== 'writerAi');
+    },
     allNavTools() {
       return normalizeToolIds(this.writerSettings.navToolIds, DEFAULT_NAV_TOOL_IDS)
         .map((id) => ({ ...TOOL_DEFINITIONS[id] }));
@@ -897,12 +903,12 @@ export default {
     },
     availableTools() {
       if (this.activeTab === "nav") {
-        return this.allNavTools;
+        return this.allNavTools.filter(tool => this.aiAssistanceEnabled || tool.id !== 'writerAi');
       }
       return this.keyboardFunctionTools;
     },
     keyboardFunctionTools() {
-      return this.allNavTools;
+      return this.allNavTools.filter(tool => this.aiAssistanceEnabled || tool.id !== 'writerAi');
     },
     keyboardQuickInputTools() {
       return [

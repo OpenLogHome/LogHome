@@ -1,5 +1,5 @@
 <template>
-	<view class="ask-log-girl-page" v-dark>
+	<view v-if="aiAssistanceEnabled" class="ask-log-girl-page" v-dark>
 		<!-- 自定义导航栏 -->
 		<view class="custom-nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
 			<view class="custom-nav-content">
@@ -978,11 +978,22 @@ export default {
 		}
 	},
 	watch: {
+		aiAssistanceEnabled(enabled) {
+			if (!enabled) {
+				this.abortActiveRequest()
+				this.clearAutoScrollTimer()
+				this.unregisterWindowScrollListener()
+				this.stopAllTypewriters()
+				this.stopAllThinkingTypewriters()
+				this.stopThinkingHintRotation()
+			}
+		},
 		draft() {
 			this.persistCurrentDraft()
 		},
 	},
 	onLoad(option) {
+		if (!this.aiAssistanceEnabled) return;
 		const systemInfo = uni.getSystemInfoSync()
 		const nativeStatusBarHeight = Number(
 			typeof window !== 'undefined' && window.jsBridge
@@ -999,10 +1010,12 @@ export default {
 		this.resumePendingReplyIfNeeded()
 	},
 	onShow() {
+		if (!this.ensureAiPageAllowed()) return;
 		this.registerWindowScrollListener()
 		this.resumePendingReplyIfNeeded()
 	},
 	mounted() {
+		if (!this.aiAssistanceEnabled) return;
 		this.registerWindowScrollListener()
 		this.$nextTick(() => {
 			this.updateAutoScrollState()
@@ -2104,6 +2117,7 @@ export default {
 			this.persistConversation()
 		},
 		async resumePendingReplyIfNeeded() {
+			if (!this.aiAssistanceEnabled) return;
 			if (this.resumeTaskInProgress || this.abortController) {
 				return
 			}
@@ -2878,6 +2892,7 @@ export default {
 			})
 		},
 		async loadNovelIndexStatus() {
+			if (!this.aiAssistanceEnabled) return;
 			const targetNovelId = Number(this.effectiveNovelId || this.novelId || 0)
 			if (!targetNovelId) {
 				this.novelIndexStatus = createDefaultNovelIndexStatus()
@@ -2932,6 +2947,7 @@ export default {
 			}
 		},
 		async submitQuestion() {
+			if (!this.aiAssistanceEnabled) return;
 			const content = String(this.draft || '').trim()
 			if (!content || this.loading) {
 				return
@@ -2984,6 +3000,7 @@ export default {
 			}
 		},
 		async streamChat(messageId, options = {}) {
+			if (!this.aiAssistanceEnabled) return;
 			this.abortActiveRequest()
 			const readerAiBaseUrl = this.getReaderAiBaseUrl()
 			const taskState = normalizePendingReplyTask(options.taskState || this.activeReplyTask || this.createActiveReplyTask(messageId))

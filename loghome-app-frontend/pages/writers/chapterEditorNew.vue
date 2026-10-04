@@ -636,7 +636,7 @@
     <conflict-dialog ref="conflictDialog"></conflict-dialog>
     <writer-ai-assistant
       ref="writerAiAssistant"
-      v-if="editor"
+      v-if="editor && aiAssistanceEnabled"
       :editor="editor"
       :article="article"
       :chapter-id="chapterId"
@@ -1974,10 +1974,11 @@ export default {
               }
             : null;
         })
-        .filter(Boolean);
+        .filter(item => item && (this.aiAssistanceEnabled || item.action !== 'writerAi'));
     },
     toolbarSettingsItems() {
-      return normalizeNavToolIds(this.writerSettings.navToolIds).map((id) => ({
+      return normalizeNavToolIds(this.writerSettings.navToolIds)
+        .filter(id => this.aiAssistanceEnabled || id !== 'writerAi').map((id) => ({
         ...TOOL_DEFINITIONS[id],
       }));
     },
@@ -2088,6 +2089,9 @@ export default {
     },
   },
   watch: {
+    aiAssistanceEnabled(enabled) {
+      if (!enabled) this.aiAssistantOpen = false;
+    },
     projectThemeMode(newMode, oldMode) {
       if (newMode === oldMode) return;
       this.applyWriterThemeMode(newMode);
@@ -6880,6 +6884,7 @@ export default {
       this.applyNavigationBarTheme();
     },
     openWriterAiAssistant() {
+      if (!this.aiAssistanceEnabled) return;
       this.closeFindReplace();
       if (
         this.$refs.writerAiAssistant &&

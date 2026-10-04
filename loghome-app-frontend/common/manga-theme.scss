@@ -1,0 +1,46 @@
+@mixin manga-theme {
+  --manga-bg: #f4f5f6;
+  --manga-card: #fff;
+  --manga-text: #252b30;
+  --manga-muted: #656c74;
+  --manga-line: #e5e8eb;
+  --manga-accent: #c14a16;
+  --manga-action: #c14a16;
+  --manga-tint: #fff1e8;
+  --manga-shadow: 0 8rpx 30rpx rgba(36, 43, 49, .055);
+  color: var(--manga-text);
+  background: var(--manga-bg);
+  line-height: 1.5;
+  &.dark-mode {
+    --manga-bg: #16191c;
+    --manga-card: #24282c;
+    --manga-text: #f4f5f6;
+    --manga-muted: #b6bdc3;
+    --manga-line: #41474c;
+    --manga-accent: #ffae77;
+    --manga-action: #b94a1d;
+    --manga-tint: #392a22;
+    --manga-shadow: 0 8rpx 30rpx rgba(0, 0, 0, .2);
+  }
+  :where(button) {
+    margin: 0; padding: 0; border: 0; background: transparent;
+    color: inherit; font: inherit; line-height: inherit; border-radius: 0;
+    &::after { display: none; }
+  }
+  :where(button, [role="button"]) {
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    transition: background-color .18s ease, color .18s ease, border-color .18s ease,
+      transform .18s ease, box-shadow .18s ease;
+    &:active { transform: scale(.985); }
+    &:focus-visible { outline: 3px solid var(--manga-accent); outline-offset: 3px; }
+    &:disabled, &[disabled], &[aria-disabled="true"] { cursor: not-allowed; opacity: .48; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &, & * {
+      animation-duration: .01ms !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 <template>
-	<view class="outer" v-show="id != targetId">
+	<view class="follow-control" v-show="id != targetId">
 		<div class="btn not" v-show="status == -1" @click.prevent="follow($event)">
 			<uni-icons color="#ffffff" :type="'spinner-cycle'" size="15"></uni-icons>
 		</div>
@@ -53,7 +53,10 @@
 			refreshStatus(){
 				let _this = this;
 				if(this.id == -1) return;
-				axios.get(_this.$baseUrl + '/community/follow_status?user_id=' + _this.id + '&target_id=' + _this.targetId, {}).then((res) => {
+				const token = JSON.parse(window.localStorage.getItem('token') || 'null');
+				axios.get(_this.$baseUrl + '/community/follow_status?user_id=' + _this.id + '&target_id=' + _this.targetId, {
+					headers: { Authorization: token ? 'Bearer ' + token.tk : '' }
+				}).then((res) => {
 					_this.status = res.data.status;
 				}).catch(function(error) {
 				})
@@ -143,28 +146,35 @@
 </script>
 
 <style scoped>
-	.btn {
-		height: 60rpx;
+	.follow-control {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
 		width: 150rpx;
-		padding-top: 2px;
-		padding-bottom: 2px;
+		height: 60rpx;
+		flex: 0 0 150rpx;
+	}
+
+	.btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 4rpx;
+		box-sizing: border-box;
+		height: 100%;
+		width: 100%;
+		padding: 0 10rpx;
 		font-size: 14px;
 		text-align: center;
-		line-height: 30px;
+		line-height: 1;
 		border-radius: 5px;
 		color: #929292;
 		background-color: #f2f2f2;
+		white-space: nowrap;
 	}
 	
 	.btn.not{
-		height: 60rpx;
-		width: 150rpx;
-		padding-top: 2px;
-		padding-bottom: 2px;
-		font-size: 14px;
-		text-align: center;
-		line-height: 30px;
-		border-radius: 5px;
 		color: #ffffff;
 		background-color: #929292;
 	}

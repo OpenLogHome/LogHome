@@ -22,6 +22,11 @@
 						>
 							<text class="update-text">更新{{ book.updateInfo.new_chapters_count }}章</text>
 						</view>
+						<haycraft-mark
+							v-if="isHayCraftWork(book)"
+							class="bookshelf-haycraft-mark"
+							size="small"
+						/>
 					</view>
 					<!-- <text class="book-title">{{ book.name }}</text> -->
 				</view>
@@ -41,11 +46,15 @@
 <script>
 import axios from 'axios'
 import { articleDB } from '../lib/db.js'
+import HaycraftMark from './haycraft-mark.vue'
 
 const BOOKSHELF_HORIZONTAL_CACHE_KEY = 'LogHomeBookshelfHorizontal'
 
 export default {
 	name: 'BookshelfHorizontal',
+	components: {
+		HaycraftMark
+	},
 	data() {
 		return {
 			likedBooks: [], // 收藏的书籍
@@ -60,6 +69,9 @@ export default {
 		this.loadBooks()
 	},
 	methods: {
+		isHayCraftWork(book) {
+			return Boolean(book && (book.is_haycraft === true || Number(book.is_haycraft) === 1))
+		},
 		restoreCachedBookshelf() {
 			let restored = false
 			try {
@@ -450,6 +462,14 @@ export default {
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	overflow: hidden;
+}
+
+.bookshelf-haycraft-mark {
+	position: absolute;
+	right: 8rpx;
+	bottom: 8rpx;
+	margin-left: 0;
+	z-index: 2;
 }
 
 .more-cover {

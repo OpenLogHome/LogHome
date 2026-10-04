@@ -84,7 +84,7 @@
 								{{ selectedFriend ? `ID:${selectedFriend.user_id} · ${relationLabel(selectedFriend)}` : '关注与粉丝共 ' + friends.length + ' 人' }}
 							</text>
 						</view>
-						<text class="friend-control__arrow">›</text>
+						<text class="friend-control__arrow ui-chevron" aria-hidden="true"></text>
 					</view>
 				</view>
 
@@ -768,4 +768,5 @@ export default {
 	text-align: center;
 	color: var(--text-muted);
 }
+.ui-chevron { display: inline-block; flex: none; width: 10rpx; height: 10rpx; border-top: 2rpx solid currentColor; border-right: 2rpx solid currentColor; transform: rotate(45deg); }
 </style>

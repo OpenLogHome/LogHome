@@ -1,5 +1,5 @@
 <template>
-	<view v-dark>
+	<view v-if="aiAssistanceEnabled" v-dark>
 		<view class="list-content">
 			<view class="list">
 				<view class="li high noborder">
@@ -65,6 +65,9 @@
 			}
 		},
 		mixins: [darkModeMixin],
+		watch: {
+			aiAssistanceEnabled(enabled) { if (!enabled) this.stopIndexStatusPolling(); }
+		},
 		computed: {
 			indexableArticles() {
 				return (this.articles || []).filter((article) => {
@@ -227,10 +230,12 @@
 			},
 		},
 		onLoad(params) {
+			if (!this.aiAssistanceEnabled) return;
 			this.id = params.id;
 			this.refreshPage();
 		},
 		onShow() {
+			if (!this.ensureAiPageAllowed()) return;
 			this.refreshPage();
 			this.startIndexStatusPolling();
 		},
@@ -333,6 +338,7 @@
 				return this.getArticleDisplayTitle(article, index);
 			},
 			async refreshIndexingStatus(silent = false) {
+				if (!this.aiAssistanceEnabled) return;
 				try {
 					this.indexingStatus = await this.loadIndexingStatus();
 				} catch (error) {
@@ -347,6 +353,7 @@
 			},
 			startIndexStatusPolling() {
 				this.stopIndexStatusPolling();
+				if (!this.aiAssistanceEnabled) return;
 				this.indexStatusPollTimer = setInterval(() => {
 					this.refreshIndexingStatus(true);
 				}, 10000);
@@ -358,6 +365,7 @@
 				}
 			},
 			async requestNovelIndexingNow() {
+				if (!this.aiAssistanceEnabled) return;
 				if (this.indexingActionLoading) {
 					return;
 				}

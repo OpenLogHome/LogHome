@@ -1,3 +1,5 @@
+import store from '@/store'
+
 export function getRedstoneErrorCode(error) {
 	return String(
 		(error && error.code)
@@ -20,6 +22,7 @@ export function navigateToMembership() {
 }
 
 export function showInsufficientRedstoneOptions(error) {
+	if (store.state.aiAssistanceDisabled) return false;
 	if (!isInsufficientRedstoneError(error)) return false;
 	uni.showModal({
 		title: '红石不足',

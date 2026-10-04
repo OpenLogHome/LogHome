@@ -5,6 +5,7 @@ import axios from 'axios'
 import moment from 'moment'
 import Vue from 'vue'
 import i18n from '@/i18n/index.js'
+import { applyLocalizedTitle } from '@/common/nav-title.js'
 import {
 	DEFAULT_LANG,
 	FOLLOW_SYSTEM,
@@ -31,6 +32,8 @@ function refreshChrome() {
 			uni.setTabBarItem({ index, text })
 		} catch (error) {}
 	})
+	// 当前页导航标题随语言刷新（页面 onShow 时由全局 mixin 再次覆盖）
+	applyLocalizedTitle()
 }
 
 // 通知原生壳切换应用语言；value 可为 'zh-CN' | 'en' | 'follow-system'

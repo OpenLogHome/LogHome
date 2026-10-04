@@ -1,0 +1,164 @@
+{
+	"titles": {
+		"pages": {
+			"launch": "LogHome Community",
+			"bookcase": {
+				"index": "My Shelf",
+				"manage": "My Shelf"
+			},
+			"library": "Library",
+			"essays": "Create",
+			"me": "Me",
+			"membership": {
+				"index": "LogHome Pass",
+				"redeem": "Membership Code",
+				"gift": "Gift to Friend",
+				"rules": "Pass & RedStone Rules"
+			},
+			"redstone": {
+				"index": "RedStone Center"
+			},
+			"users": {
+				"login_page": "Sign In",
+				"login_page_mobile": "Sign in with Phone",
+				"login_page_email": "Sign in with Email",
+				"login": "Sign In",
+				"changePwd": "Change Password",
+				"clientSet": "Settings",
+				"donate": "Donate",
+				"avater_upload": "Upload Avatar",
+				"change_user_info": "Edit Profile",
+				"avatar_frames": "Avatar Frame",
+				"achievements": "My Achievements",
+				"badgeDetail": "Badge Details",
+				"personalPage": "Profile",
+				"top_pic_upload": "Upload Cover",
+				"storageManage": "Storage Manager",
+				"activateAccount": "Link Account",
+				"activateAccount_oicq": "Link QQ",
+				"activateAccount_mobile": "Link Phone",
+				"activateAccount_email": "Link Email",
+				"register": "Sign Up",
+				"forgottenPwd": "Forgot Account",
+				"user_credit": "My Credit",
+				"external_login": "External Login"
+			},
+			"readers": {
+				"logPower": "LogPower Details",
+				"logPowerRank": "LogPower Rank",
+				"allArticles": "All Chapters",
+				"novel_fans": "Support This Book",
+				"bookComment": "Comments",
+				"collections": "Collections",
+				"tags": "Tags",
+				"tagCollections": "Tag Collections",
+				"newReader": {
+					"article": "New Reader"
+				},
+				"bookEnd": "End of Book"
+			},
+			"apps": {
+				"about": "About Us",
+				"audio_test": "Audiobook Test",
+				"faqs": {
+					"faq": "Help Center",
+					"feedback": "Feedback Details",
+					"user_feedback": "Send Feedback"
+				},
+				"openInBrowser": "External Page",
+				"badVersion": "Version Notice",
+				"inviteCard": "Invite Friends",
+				"enterInviteCode": "Enter Invite Code"
+			},
+			"writers": {
+				"newEssay": "New Novel",
+				"changeEssayInfo": "Edit Novel",
+				"sortArticles": "Reorder Chapters",
+				"chapterTimeMachine": "Chapter History",
+				"cover_upload": "Upload Cover",
+				"localBackup": "Local Backup",
+				"essaySet": "Work Settings",
+				"essayCollaborationSettings": "Collaboration",
+				"essayIndexing": "Smart Index",
+				"novelCollaborators": "Collaborators",
+				"changeNovelTags": "Edit Tags",
+				"novel_statistics": "Analytics",
+				"articleFeedbacks": "Report Issue",
+				"scheduledTasks": "Scheduled Posts",
+				"workPublish": "Publish"
+			},
+			"static": {
+				"contentAgreement": "Content Upload Terms",
+				"privacyAgreement": "Privacy Policy",
+				"updateIntro": "Update Policy",
+				"grandUsers": "Honored Users"
+			},
+			"community": {
+				"friends": "Friends",
+				"read_mail": "View Message",
+				"send_mail": "Compose Message",
+				"message": "My Messages",
+				"postEdit": "Edit Post",
+				"postView": "Post Content",
+				"privateMessages": "Direct Messages",
+				"notifications": "Notifications",
+				"chat": "Chat",
+				"index": "Community",
+				"circles": "Circles",
+				"createCircle": "Create Circle",
+				"circle": "Circle",
+				"postDetail": "Post",
+				"editCircle": "Circle Settings",
+				"circleMembers": "Members",
+				"search": "Search",
+				"activityMessages": "Activity"
+			},
+			"settings": {
+				"privacySettings": "Privacy Settings",
+				"autoSaveSettings": "Backup Settings",
+				"pushSettings": "Push Settings"
+			},
+			"treePlant": {
+				"treeplant": "Tree Scene",
+				"treeSceneSettings": "Scene Settings"
+			},
+			"payments": {
+				"recharge": "Support Us",
+				"earnings": "Withdraw",
+				"jump_to_pay": "Payment",
+				"order_history": "Order History",
+				"gift_code": "Redeem Gift Card",
+				"exchange": "Redeem Logs"
+			},
+			"worlds": {
+				"worldPage": "Worldbuilding",
+				"worldRelations": "World Relations"
+			},
+			"manage": {
+				"index": "Admin",
+				"audit": {
+					"index": "Review Articles"
+				},
+				"library": {
+					"roulous": "Manage Carousel"
+				},
+				"posts": {
+					"index": "Manage Posts"
+				},
+				"users": {
+					"index": "Manage Users"
+				}
+			},
+			"store": {
+				"index": "Store",
+				"detail": "Product",
+				"checkout": "Confirm Exchange",
+				"orders": "My Orders",
+				"logistics": "Logistics",
+				"address_list": "Addresses",
+				"address_form": "Edit Address"
+			},
+			"update": "App Update"
+		}
+	}
+}

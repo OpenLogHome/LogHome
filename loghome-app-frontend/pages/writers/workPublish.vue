@@ -72,7 +72,7 @@
       </view>
     </view>
 
-    <view class="card">
+    <view v-if="aiAssistanceEnabled" class="card">
       <view class="section-head">
         <view class="correction-title-group">
           <view class="section-title correction-title">文本纠错</view>
@@ -83,9 +83,10 @@
             size="mini"
             class="ghost-button"
             :loading="smartCorrectionLoading"
+            :disabled="smartCorrectionLoading"
             @click="rerunSmartCorrection"
           >
-            {{ smartCorrectionStarted ? "重新分析" : "开始分析" }}
+            {{ smartCorrectionResult.summary.error_count > 0 ? "重试未完成" : (smartCorrectionStarted ? "重新分析" : "开始分析") }}
           </button>
         </view>
       </view>
@@ -102,7 +103,7 @@
         </scroll-view>
       </view>
       <view
-        v-else-if="smartCorrectionLoading"
+        v-else-if="smartCorrectionLoading && smartThinkingText"
         class="thinking-collapsed"
         @click="smartThinkingVisible = true"
       >
@@ -111,7 +112,7 @@
 
       <view v-if="smartCorrectionLoading" class="status-box">
         <view class="correction-progress-head">
-          <text>正在检查正文，请稍候...</text>
+          <text>{{ smartCorrectionStatusText }}</text>
           <text v-if="smartCorrectionProgress.total > 0" class="correction-progress-count">
             {{ smartCorrectionProgress.analyzed }}/{{ smartCorrectionProgress.total }} 段
           </text>
@@ -134,7 +135,7 @@
           v-if="(smartCorrectionResult.summary.error_count || 0) > 0"
           class="status-box error-box correction-status"
         >
-          部分内容暂时无法完成检查，请稍后重新检查。
+          部分内容尚未完成检查，已保留成功结果，可点击“重试未完成”继续。
         </view>
 
         <view
@@ -229,7 +230,7 @@
       </button>
     </view>
 
-    <uni-popup ref="detailPopup" type="bottom">
+    <uni-popup v-if="aiAssistanceEnabled" ref="detailPopup" type="bottom">
       <view v-if="activeCorrection" class="detail-panel">
         <view class="detail-head">
           <view class="detail-title">纠错详情</view>
@@ -348,6 +349,7 @@ import {
   markWriterSyncInvalidated,
   markWriterSyncSynced,
 } from "../../lib/writerSyncState.js";
+import { readWriterCorrectionStream } from "../../lib/writerTextCorrectionStream.js";
 import {
   buildCorrectionParagraphs,
   buildParagraphRequestKey,
@@ -409,6 +411,8 @@ export default {
       smartCorrectionStarted: false,
       smartThinkingText: "",
       smartCorrectionContentText: "",
+      smartCorrectionBatchMode: false,
+      smartCorrectionStatusText: "正在检查正文，请稍候...",
       smartCorrectionOutputStarted: false,
       smartCorrectionProgress: { analyzed: 0, total: 0 },
       smartThinkingVisible: false,
@@ -471,6 +475,13 @@ export default {
     },
   },
   watch: {
+    aiAssistanceEnabled(enabled) {
+      if (!enabled) {
+        this._smartCorrectionAbortController?.abort();
+        this.activeCorrection = null;
+        this.smartThinkingVisible = false;
+      }
+    },
     publishMode(value) {
       if (value === "schedule" && (!this.scheduleDate || !this.scheduleClock)) {
         this.initializeSchedulePicker();
@@ -1074,15 +1085,17 @@ export default {
         this.pageInitializationInProgress = false;
         return;
       }
-      if (this.membershipActive) {
+      if (this.membershipActive && this.aiAssistanceEnabled) {
         this.runSmartCorrection();
       }
       this.pageInitializationInProgress = false;
     },
     rerunSmartCorrection() {
-      return this.runSmartCorrection({ forceRefresh: true });
+      return this.runSmartCorrection({ forceRefresh: !(this.smartCorrectionResult.summary.error_count > 0) });
     },
     async runSmartCorrection(options = {}) {
+      if (!this.aiAssistanceEnabled) return;
+      if (this.smartCorrectionLoading) return;
       this.smartCorrectionStarted = true;
       return this.runSmartCorrectionStreaming(options);
     },
@@ -1109,12 +1122,15 @@ export default {
       return nextCache;
     },
     async runSmartCorrectionStreaming(options = {}) {
+      if (!this.aiAssistanceEnabled) return;
       const forceRefresh = Boolean(options.forceRefresh);
       this.smartCorrectionLoading = true;
       this.smartCorrectionError = "";
       this.smartCorrectionResult = createEmptyCorrectionResult();
       this.smartThinkingText = "";
       this.smartCorrectionContentText = "";
+      this.smartCorrectionBatchMode = false;
+      this.smartCorrectionStatusText = "正在检查正文，请稍候...";
       this.smartCorrectionOutputStarted = false;
       this.smartCorrectionProgress = { analyzed: 0, total: 0 };
       this.smartThinkingVisible = true;
@@ -1628,92 +1644,61 @@ export default {
       });
     },
     async fetchSmartCorrectionStream(paragraphs) {
-      const tk = this.getAuthToken();
-      const url = this.$readerAiBaseUrl + "/library/writer_text_correction";
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/x-ndjson",
-          Authorization: "Bearer " + tk,
-        },
-        body: JSON.stringify({
-          article_id: this.articleId,
-          paragraphs,
-          novel_id: this.article.novelId,
-		  request_id: this.generateRedstoneRequestId("smart-correction"),
-        }),
-      });
-
-      if (!response.ok) {
-        let message = "智能纠错请求失败";
-		let code = "";
-        try {
-          const data = await response.json();
-          message = data.msg || data.message || message;
-		  code = data.code || "";
-        } catch (error) {}
-		const requestError = new Error(message);
-		requestError.code = code;
-		requestError.statusCode = response.status;
-		throw requestError;
-      }
-
-      if (!response.body || !response.body.getReader) {
-        throw new Error("智能纠错服务未返回流式响应");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-      let finalResult = null;
-
+      if (!this.aiAssistanceEnabled) return null;
+      const controller = new AbortController();
+      this._smartCorrectionAbortController = controller;
+      let headerTimedOut = false;
+      const headerTimer = setTimeout(() => {
+        headerTimedOut = true;
+        controller.abort();
+      }, 30000);
       try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const consumed = this.consumeCorrectionStreamBuffer(buffer);
-          buffer = consumed.remaining;
-          if (consumed.result !== null) {
-            finalResult = consumed.result;
-            try { reader.cancel(); } catch (e) { /* ignore */ }
-            break;
-          }
+        let response;
+        try {
+          response = await fetch(this.$readerAiBaseUrl + "/library/writer_text_correction", {
+            method: "POST",
+            signal: controller.signal,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/x-ndjson",
+              Authorization: "Bearer " + this.getAuthToken(),
+            },
+            body: JSON.stringify({
+              article_id: this.articleId,
+              paragraphs,
+              novel_id: this.article.novelId,
+              request_id: this.generateRedstoneRequestId("smart-correction"),
+            }),
+          });
+        } catch (error) {
+          if (headerTimedOut) throw new Error("纠错服务连接超时，请稍后重试");
+          throw error;
+        } finally {
+          clearTimeout(headerTimer);
         }
-        if (finalResult === null) {
-          buffer += decoder.decode();
-          if (buffer.trim()) {
-            const consumed = this.consumeCorrectionStreamBuffer(`${buffer}\n`);
-            if (consumed.result !== null) {
-              finalResult = consumed.result;
-            }
-          }
+        if (!response.ok) {
+          let data = {};
+          try { data = await response.json(); } catch (error) {}
+          const error = new Error(data.msg || data.message || "智能纠错请求失败");
+          error.code = data.code || "";
+          error.statusCode = response.status;
+          throw error;
         }
-      } catch (streamError) {
-        if (finalResult !== null) {
-          return finalResult;
+        if (!response.body || !response.body.getReader) {
+          throw new Error("智能纠错服务未返回流式响应");
         }
-        const message = String(streamError.message || "");
-        if (message.includes("Premature close") || message.includes("premature close")) {
-          throw new Error("智能纠错连接中断，请重试");
-        }
-        throw streamError;
-      }
-
-      if (finalResult === null) {
-        finalResult = this.buildSmartCorrectionResultFromModelText(
+        return await readWriterCorrectionStream(response, {
           paragraphs,
-          this.smartCorrectionContentText
-        );
+          onEvent: event => this.processCorrectionStreamLine(JSON.stringify(event), null),
+          buildFallbackResult: () => this.buildSmartCorrectionResultFromModelText(
+            paragraphs, this.smartCorrectionContentText
+          ),
+        });
+      } finally {
+        clearTimeout(headerTimer);
+        controller.abort();
+        if (this._smartCorrectionAbortController === controller) this._smartCorrectionAbortController = null;
       }
-
-      if (finalResult === null) {
-        throw new Error("模型未返回纠错结果");
-      }
-
-      return finalResult;
     },
     parseCorrectionJsonFromModelText(text) {
       const source = String(text || "").trim();
@@ -1985,8 +1970,10 @@ export default {
         return this.normalizeCorrectionStreamResult(event, fallbackResult);
       }
 
-      if (eventType === "status") {
-        // Nothing needed, just for heartbeat
+      if (eventType === "meta") {
+        this.smartCorrectionBatchMode = Boolean(event.batched);
+      } else if (eventType === "status") {
+        if (event.message) this.smartCorrectionStatusText = String(event.message);
       } else if (eventType === "progress") {
         const analyzed = Number(event.analyzed || 0);
         const total = Number(event.total || this.smartCorrectionProgress.total || 0);
@@ -2010,6 +1997,7 @@ export default {
         eventType === "message_delta"
       ) {
         const content = this.getCorrectionStreamEventText(event);
+        if (this.smartCorrectionBatchMode) return fallbackResult;
         this.smartCorrectionContentText += content;
         if (content) {
           if (!this.smartCorrectionOutputStarted) {
@@ -2027,13 +2015,14 @@ export default {
         eventType === "completed" ||
         eventType === "result"
       ) {
-        if (this.smartCorrectionProgress.total > 0) {
+        const completed = this.normalizeCorrectionStreamResult(event, fallbackResult);
+        if (completed && this.smartCorrectionProgress.total > 0) {
           this.smartCorrectionProgress = {
-            analyzed: this.smartCorrectionProgress.total,
+            analyzed: Math.max(0, Number(completed.summary?.paragraph_count || 0) - Number(completed.summary?.error_count || 0)),
             total: this.smartCorrectionProgress.total,
           };
         }
-        return this.normalizeCorrectionStreamResult(event, fallbackResult);
+        return completed;
       } else if (eventType === "error") {
         throw new Error(event.message || "智能纠错请求失败");
       }
@@ -2042,6 +2031,7 @@ export default {
     },
   },
   async beforeDestroy() {
+    this._smartCorrectionAbortController?.abort();
     this.stopLockHeartbeat();
     await this.releaseEditLock();
   },
@@ -2059,6 +2049,7 @@ export default {
     });
   },
   async onUnload() {
+    this._smartCorrectionAbortController?.abort();
     this.stopLockHeartbeat();
     await this.releaseEditLock();
   },

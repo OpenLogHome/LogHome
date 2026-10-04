@@ -1,0 +1,152 @@
+{
+	"settings": {
+		"ai": {
+			"disable": "禁用人工智能辅助功能",
+			"hint": "开启后隐藏红石中心及所有 AI 功能入口",
+			"disabledNotice": "人工智能辅助已禁用，可在设置中重新开启",
+			"saveFailed": "设置保存失败，请稍后重试"
+		},
+		"privacy": {
+			"title": "隐私设置",
+			"intro": "管理你的账户隐私，设置会同步到所有设备。",
+			"listsTitle": "关注与粉丝列表",
+			"listsHint": "控制他人能否查看列表。本人始终可查看，关注和粉丝数量仍公开。",
+			"lists": { "public": "全部公开", "following_only": "仅公开关注列表", "fans_only": "仅公开粉丝列表", "private": "全部私密" },
+			"messagesTitle": "谁可以私信我",
+			"messagesHint": "默认允许所有已登录用户私信；“我关注的人”指你已关注的发件人。修改不影响历史消息。",
+			"messages": { "default": "默认", "following": "我关注的人", "mutual": "互相关注的人", "none": "禁止私信" },
+			"save": "保存设置", "saved": "隐私设置已保存", "savedHint": "保存后立即生效。",
+			"loading": "正在加载隐私设置…", "loadFailed": "隐私设置加载失败，请重试", "saveFailed": "保存失败，请稍后重试",
+			"retry": "重新加载", "loginRequired": "请先登录后设置账户隐私",
+			"privateList": "该列表已设为私密", "listLoadFailed": "列表加载失败，请稍后重试",
+			"messageForbidden": "对方的隐私设置不允许你发送私信"
+		},
+		"language": {
+			"title": "语言",
+			"followSystem": "跟随系统",
+			"switched": "语言已切换"
+		},
+		"clientSet": {
+			"pushQq": "消息推送与QQ绑定",
+			"changePassword": "修改密码",
+			"accountBinding": "账号绑定",
+			"storageManage": "空间占用管理",
+			"logout": "登出",
+			"logoutConfirm": "确定要登出吗？"
+		},
+		"storageManage": {
+			"title": "空间占用管理",
+			"articleName": "阅读器数据库",
+			"articleDesc": "存储已下载的小说和章节内容",
+			"imgName": "图片缓存数据库",
+			"imgDesc": "存储已缓存的图片数据",
+			"writerName": "写作备份数据库",
+			"writerDesc": "存储本地备份的章节历史记录",
+			"clearAll": "清空全部",
+			"warning": "警告",
+			"clearConfirm": "确定要清空所有数据吗？此操作不可恢复！",
+			"clearDone": "清理完成",
+			"clearFailed": "清理失败"
+		},
+		"activate": {
+			"welcome": "亲爱的朋友，欢迎你加入原木社区大家庭！",
+			"mobilePolicyNotice": "我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持使用手机号作为验证方式，请尽快迁移至邮箱登录。",
+			"activateIntro": "为了保证不间断的使用，请通过以下激活方式激活账号：",
+			"bindByMobile": "通过手机号绑定",
+			"bindByQq": "通过QQ号绑定",
+			"bindByEmail": "通过邮箱绑定",
+			"unbindNotice": "我们暂时不支持解绑账号，如有相关诉求请至反馈中心反馈，我们的客服将协助你解决相关问题。",
+			"mobilePlaceholder": "输入手机号",
+			"emailPlaceholder": "输入邮箱地址",
+			"sendCode": "发送验证码",
+			"waitSeconds": "等待{seconds}秒",
+			"slideRight": "向右滑动",
+			"codePlaceholder": "验证码",
+			"slideVerifyRequired": "请滑动验证滑块",
+			"invalidEmail": "请输入有效的电子邮箱地址",
+			"sending": "发送中",
+			"sendFailed": "发送失败，请稍后重试",
+			"invalidCode": "请输入有效的验证码",
+			"bindSuccess": "绑定成功",
+			"emailBindSuccess": "邮箱绑定成功",
+			"verifyCodeFailed": "验证失败，请检查验证码",
+			"verifyFailed": "验证失败，请稍后重试",
+			"oicqIntro": "你的账号尚待激活，为了保证不间断的使用，请按照以下步骤激活你的账号：",
+			"oicqStep1": "1.点击下方验证框复制验证码",
+			"oicqStep2": "2.加入原木社区任意用户QQ群",
+			"oicqGroupList": "原木社区用户群列表：",
+			"oicqGroupMain": "原木社区用户交流群：644467605",
+			"oicqGroupBeta": "原木社区公测小组：931304998",
+			"oicqGroupWriter": "原木文社总群：464239748",
+			"oicqStep3Prefix": "3.将验证码",
+			"oicqStep3Via": "通过私聊",
+			"oicqStep3Suffix": "发送给群内我们的原木社区管理员“苦力怕君”",
+			"oicqTip": "友情提示：切勿将验证码发送至公开群中，请务必通过私聊发送。",
+			"oicqBindNote": "此操作会将你与发送验证消息的QQ号绑定，一个QQ号可绑定多个社区账号。",
+			"getCodeFailed": "获取验证码失败"
+		},
+		"userInfo": {
+			"changeAvatar": "更换头像",
+			"chooseFrame": "选择头像挂件",
+			"penNamePlaceholder": "笔名",
+			"mottoPlaceholder": "个性签名",
+			"requiredMissing": "必填项未填",
+			"updateSuccess": "修改成功",
+			"updateFailed": "修改失败"
+		},
+		"donate": {
+			"intro": "原木巨树承载着一本又一本的书籍，快去给他浇点水、施点肥",
+			"button": "捐助"
+		},
+		"credit": {
+			"recordsTitle": "变更记录",
+			"noRecords": "信誉良好，没有留下记录",
+			"historyError": "历史信息出错"
+		},
+		"upload": {
+			"chooseImage": "选择图片",
+			"reselect": "重新选择",
+			"rotate": "旋转",
+			"preview": "预览",
+			"upload": "上传",
+			"rotating": "旋转中...",
+			"cropping": "截取中...",
+			"uploading": "上传中...",
+			"rotatingWait": "旋转中，请稍等",
+			"croppingWait": "截取中，请稍等",
+			"uploadingWait": "上传中，请稍等",
+			"uploadFailed": "上传失败"
+		},
+		"push": {
+			"bindQqTitle": "绑定QQ",
+			"bindQqDesc": "您可以绑定QQ，从而接收系统消息推送。",
+			"bindingCodeLabel": "您的绑定码是：",
+			"copy": "复制",
+			"refresh": "刷新",
+			"bindHowto": "请将此绑定码发送至原木社区用户交流群（701928273）的原木娘（2917117044），即可自动完成账号绑定。",
+			"statusPrefix": "状态：",
+			"statusEnabled": "启用",
+			"statusDisabled": "停用",
+			"receiveWindow": "接收时间段",
+			"nextDay": "(次日)",
+			"copySuccess": "复制成功",
+			"refreshSuccess": "刷新成功",
+			"getCodeFailed": "获取绑定码失败",
+			"refreshConfirm": "确定要刷新绑定码吗？",
+			"settingFailed": "设置失败",
+			"enable": "启用",
+			"disable": "禁用",
+			"disableConfirm": "关闭后将无法及时收到重要消息通知，确定要关闭吗？",
+			"loadingCode": "加载中..."
+		},
+		"autoSave": {
+			"aboutTitle": "关于本地备份：",
+			"aboutDesc": "原木社区为您提供了强大的本地备份功能。在文章编辑器中进行文章撰写时，我们会以您设置的自动备份频率进行备份。",
+			"interval": "自动备份间隔：{minutes} 分钟",
+			"minutesOption": "{count} 分钟",
+			"enable": "启用",
+			"disable": "禁用",
+			"restartNote": "新设置重启应用后生效。"
+		}
+	}
+}

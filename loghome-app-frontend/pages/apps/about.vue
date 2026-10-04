@@ -1,8 +1,7 @@
 <template>
 	<view class="outer" v-dark>
 		<div class="content">
-			<div class="underBar"></div>
-			<img class="logo" src="@/static/logo.png" @click="gotoTestUrl"></img>
+			<img class="logo" src="@/static/logo.png" @click="gotoTestUrl" />
 			<view class="text-area">
 				<div class="title">{{ title }}</div>
 				<!-- <div class="version">公测版本，不提供长期支持</div> -->
@@ -17,7 +16,7 @@
 			<div class="button" @click="gotoGrandUsers">社区荣誉用户</div>
 			<div class="button" @click="showDevInfo">显示调试信息</div>
 
-			<div class="certification" style="margin-top: 200rpx; text-align: center;">
+			<div class="certification">
 				<a href="https://www.12377.cn/" target="_blank" style="
 				                        background: var(--card-background);
 				                        display: inline-block;
@@ -108,39 +107,49 @@ export default {
 
 <style lang="scss" scoped>
 .outer {
+	position: relative;
 	height: 100%;
 	overflow: hidden;
 	background-color: var(--background-color-secondary);
+	isolation: isolate;
 }
 
 .content {
 	display: flex;
-	position: absolute;
-	width: 100vw;
+	position: relative;
+	box-sizing: border-box;
+	width: 100%;
 	height: 100%;
 	z-index: 1;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
+	padding: clamp(72rpx, 8vh, 120rpx) 40rpx calc(28rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px)));
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .logo {
-	width: 200rpx !important;
-	height: 200rpx !important;
+	flex: 0 0 auto;
+	width: 176rpx !important;
+	height: 176rpx !important;
+	border-radius: 36rpx;
+	box-shadow: 0 16rpx 44rpx rgba(255, 92, 54, 0.16);
 }
 
 .text-area {
 	display: flex;
-	margin-top: 50rpx;
+	margin-top: 28rpx;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+	gap: 8rpx;
 }
 
 .title {
-	font-size: 50rpx;
+	font-size: 46rpx;
 	font-weight: bold;
 	color: #8f8f94;
+	line-height: 1.25;
 }
 
 .subtitle {
@@ -150,18 +159,13 @@ export default {
 }
 
 .version {
-	font-size: 35rpx;
+	font-size: 28rpx;
 	color: #8f8f94;
-}
-
-div.underBar {
-	height: 150rpx
+	line-height: 1.4;
 }
 
 div.team {
-	font-size: 35rpx;
-	color: #8f8f94;
-	margin: 60rpx;
+	flex: 0 0 clamp(36rpx, 5vh, 72rpx);
 }
 
 span.name {
@@ -169,21 +173,40 @@ span.name {
 }
 
 .button {
-	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	min-height: 60rpx;
 	width: 70%;
-	margin-top: 15px;
-	font-size: 16px;
+	margin-top: 8rpx;
+	padding: 8rpx 18rpx;
+	font-size: 30rpx;
 	font-weight: bold;
 	text-align: center;
-	line-height: 38px;
-	border-radius: 5px;
+	line-height: 1.35;
+	border-radius: 12rpx;
 	color: var(--brand-text-color);
+}
 
+.certification {
+	flex: 0 0 auto;
+	margin-top: auto;
+	padding-top: clamp(48rpx, 8vh, 120rpx);
+	text-align: center;
 }
 
 div.back {
 	position: absolute;
+	inset: 0;
 	z-index: 0;
-	bottom: 0;
+	overflow: hidden;
+
+	img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+	}
 }
 </style>

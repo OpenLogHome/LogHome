@@ -5,7 +5,7 @@
 		<div class="content-container">
 			<div class="welcome-section">
 				<div class="appTitle">
-					<div class="title">在<span style="color: #FF6000;">原木社区</span>，</div>
+					<div class="title">{{ $t('auth.login.welcomePrefix') }}<span style="color: #FF6000;">{{ $t('auth.brand.name') }}</span>{{ $t('auth.login.welcomeSuffix') }}</div>
 					<div class="title typewriter">{{ currentText }}</div>
 				</div>
 			</div>
@@ -22,7 +22,7 @@
 					<swiper-item v-for="(item, index) in carouselItems" :key="index">
 						<view class="carousel-item">
 							<image class="carousel-image" :src="item.image" mode="aspectFit"></image>
-							<text class="carousel-title">{{item.title}}</text>
+							<text class="carousel-title">{{ $t(item.titleKey) }}</text>
 						</view>
 					</swiper-item>
 				</swiper>
@@ -30,13 +30,13 @@
 
 			<div class="buttons-section">
 				<div class="loginBtn button" @click="gotoLoginEmail">
-					使用邮箱登录
+					{{ $t('auth.login.withEmail') }}
 				</div>
 				<!-- <div class="loginBtn login2 button" @click="gotoLoginMobile">
 					使用手机号登录（旧）
 				</div> -->
 				<div class="loginBtn login2 button" @click="gotoLoginAccount">
-					使用账号密码登录
+					{{ $t('auth.login.withAccount') }}
 				</div>
 				<div class="checkBox" :class="{ shake: noActivated }">
 					<label style="display: flex;flex-direction: row;font-size: 22rpx; margin-top: 50rpx;
@@ -44,8 +44,8 @@
 						<checkbox-group  @change="selectCk">
 							<checkbox value="yes" color="rgb(180, 111, 88)"/>
 						</checkbox-group>
-						<span style="display: flex;flex-direction: row; ">我已经阅读并同意
-							<navigator url="../static/privacyAgreement" open-type="navigate" style="color: #FF6000;border-bottom: 1px solid  #FF6000;">原木社区用户隐私政策
+						<span style="display: flex;flex-direction: row; ">{{ $t('auth.login.agreePrefix') }}
+							<navigator url="../static/privacyAgreement" open-type="navigate" style="color: #FF6000;border-bottom: 1px solid  #FF6000;">{{ $t('auth.login.privacyPolicy') }}
 							</navigator>
 						</span>
 					</label>
@@ -61,7 +61,6 @@
 			return {
 				checked:false,
 				noActivated:false,
-				textArray: ['创作无限可能', '书写方块故事', '与创作者对话', '探索方块世界'],
 				currentText: '',
 				currentIndex: 0,
 				isDeleting: false,
@@ -72,28 +71,39 @@
 				carouselItems: [
 					{
 						image: '/static/carousel/lib.png',
-						title: '海量故事任你挑选'
+						titleKey: 'auth.login.carouselLibrary'
 					},
 					{
 						image: '/static/carousel/read.png',
-						title: '自由舒适的阅读体验'
+						titleKey: 'auth.login.carouselReading'
 					},
 					{
 						image: '/static/carousel/write.png',
-						title: '多端同步故事创作'
+						titleKey: 'auth.login.carouselCreate'
 					},
 					{
 						image: '/static/carousel/comm.png',
-						title: '与其他创作者互动'
+						titleKey: 'auth.login.carouselInteract'
 					}
 				],
 				currentCarouselIndex: 0
 			}
 		},
+		computed:{
+			// 打字机文案移到 computed，切换语言时才能即时生效
+			textArray(){
+				return [
+					this.$t('auth.login.typeCreate'),
+					this.$t('auth.login.typeStory'),
+					this.$t('auth.login.typeTalk'),
+					this.$t('auth.login.typeExplore')
+				]
+			}
+		},
 		onLoad(params){
 			if(params.msg != undefined) {
 				uni.showToast({
-					title: "请先登录",
+					title: this.$t('common.needLogin'),
 					icon:'none',
 					duration: 2000
 				});
@@ -151,7 +161,7 @@
 					})
 				} else {
 					uni.showToast({
-						title: "请先阅读并同意《原木社区用户隐私政策》",
+						title: this.$t('auth.login.agreeRequired'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -168,7 +178,7 @@
 					})
 				} else {
 					uni.showToast({
-						title: "请先阅读并同意《原木社区用户隐私政策》",
+						title: this.$t('auth.login.agreeRequired'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -185,7 +195,7 @@
 					})
 				} else {
 					uni.showToast({
-						title: "请先阅读并同意《原木社区用户隐私政策》",
+						title: this.$t('auth.login.agreeRequired'),
 						icon: 'none',
 						duration: 2000
 					});

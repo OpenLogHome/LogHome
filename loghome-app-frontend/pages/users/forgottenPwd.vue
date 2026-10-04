@@ -1,17 +1,17 @@
 <template>
 	<view class="outer" v-dark>
 		<div class="info">
-			<p>如果你忘记了密码，请通过以下渠道联系我们：</p>
-			<p>1.加入原木社区任意用户QQ群</p>
+			<p>{{ $t('auth.forgot.contactUs') }}</p>
+			<p>{{ $t('auth.forgot.joinAnyGroup') }}</p>
 			<div class="bordered groups">
-				<p>原木社区用户群列表：</p>
-				<p>原木社区用户交流群：644467605</p>
-				<p v-show="false">原木社区公测小组：931304998</p>
-				<p>原木文社总群：464239748</p>
+				<p>{{ $t('auth.forgot.groupListTitle') }}</p>
+				<p>{{ $t('auth.forgot.groupExchange') }}644467605</p>
+				<p v-show="false">{{ $t('auth.forgot.groupBeta') }}931304998</p>
+				<p>{{ $t('auth.forgot.groupWriters') }}464239748</p>
 			</div>
-			<p>2.联系群内管理员<span style="font-weight:bold;color:var(--brand-text-color)">通过私聊</span>发送恢复账号的请求。</p>
-			<p>如果你的账号此前绑定过QQ号，请使用绑定的QQ号进行账号恢复，将更有可能成功恢复你的账号。</p>
-			<p>否则，我们需要你提供账号的其他信息，来证明你确实是账号的主人。</p>
+			<p>{{ $t('auth.forgot.contactAdminPrefix') }}<span style="font-weight:bold;color:var(--brand-text-color)">{{ $t('auth.forgot.contactAdminVia') }}</span>{{ $t('auth.forgot.contactAdminSuffix') }}</p>
+			<p>{{ $t('auth.forgot.qqBoundTip') }}</p>
+			<p>{{ $t('auth.forgot.needProof') }}</p>
 		</div>
 		<!-- <div class="button" @click="goAnyWay">以游客身份继续使用</div> -->
 	</view>

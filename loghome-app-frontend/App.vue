@@ -357,7 +357,7 @@ export default {
 		});
 		},
 		showShareContentDialog(shareData) {
-			let shareTypeText = shareData.share_type === 'book' ? '书籍' : shareData.share_type === 'post' ? '帖子' : shareData.share_type;
+			let shareTypeText = shareData.target_url && shareData.target_url.startsWith('/pages/readers/mangaInfo') ? '漫画' : shareData.share_type === 'book' ? '书籍' : shareData.share_type === 'post' ? '帖子' : shareData.share_type;
 		let content = `分享类型：${shareTypeText}\n分享内容：${shareData.share_content}\n分享者：${shareData.share_user_name || '匿名用户'}\n使用次数：${shareData.use_count}`;
 			
 			// 如果有share_message，添加到内容中

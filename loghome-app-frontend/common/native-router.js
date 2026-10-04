@@ -59,7 +59,7 @@ function normalizePathSegments(path) {
 	return '/' + segments.join('/')
 }
 
-function resolveRouteUrl(rawUrl) {
+export function resolveRouteUrl(rawUrl) {
 	if (!rawUrl || typeof rawUrl !== 'string') return ''
 	if (/^[a-z][a-z0-9+.-]*:\/\//i.test(rawUrl)) return ''
 

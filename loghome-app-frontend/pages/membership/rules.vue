@@ -80,7 +80,7 @@
 					<view><text>•</text><text>同一任务断线重连或重复提交不会重复扣费。兑换、赠送与消费记录均可在红石中心查询。</text></view>
 					<view><text>•</text><text>红石兑换比例和功能消耗如有调整，将以操作前页面展示为准。</text></view>
 				</view>
-				<view class="section-link" @tap="gotoRedstone"><text>前往红石中心</text><text>›</text></view>
+				<view v-if="aiAssistanceEnabled" class="section-link" @tap="gotoRedstone"><text>前往红石中心</text><text class="ui-chevron" aria-hidden="true"></text></view>
 			</view>
 
 			<view class="rules-section">
@@ -165,4 +165,5 @@ page { background: #120d0b; }
 .section-link { display: flex; align-items: center; justify-content: space-between; margin-top: 18rpx; padding: 16rpx 2rpx 2rpx; border-top: 1rpx solid var(--border); font-size: 20rpx; color: var(--accent); }
 .section-link text:last-child { font-size: 31rpx; }
 .rules-note { margin-top: 20rpx; padding: 0 12rpx; font-size: 17rpx; line-height: 1.65; text-align: center; color: var(--muted); }
+.ui-chevron { display: inline-block; flex: none; width: 10rpx; height: 10rpx; border-top: 2rpx solid currentColor; border-right: 2rpx solid currentColor; transform: rotate(45deg); }
 </style>

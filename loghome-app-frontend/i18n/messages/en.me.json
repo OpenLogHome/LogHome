@@ -1,0 +1,99 @@
+{
+	"me": {
+		"mottoDefault": "Record life and imagination in words",
+		"storeWebTitle": "LogHome Store",
+		"security": {
+			"title": "Link your email to keep the account secure",
+			"desc": "Link it now to recover your account in time",
+			"action": "Link ›"
+		},
+		"quick": {
+			"card": "Card",
+			"cardSub": "Profile & info",
+			"message": "Messages",
+			"messageSub": "DMs & notifications",
+			"friend": "Friends",
+			"friendSub": "Friends & follows",
+			"settings": "Settings",
+			"settingsSub": "Preferences & account"
+		},
+		"service": {
+			"treeScene": "Tree Scene",
+			"checkin": "Check in",
+			"badges": "Medal Wall",
+			"invite": "Invite Friends",
+			"recharge": "Recharge",
+			"redstone": "RedStone Center",
+			"withdraw": "Withdraw",
+			"store": "Store",
+			"about": "About",
+			"manage": "Moderation"
+		},
+		"unit": {
+			"redstone": "RS",
+			"yuan": "CNY"
+		},
+		"profile": {
+			"editProfile": "Edit profile",
+			"sendDm": "Message",
+			"admin": "Admin",
+			"noMotto": "No bio yet",
+			"followers": "Followers",
+			"following": "Following",
+			"tabWorks": "Works",
+			"tabPosts": "Posts",
+			"tabWorlds": "Worlds",
+			"noPosts": "No posts yet",
+			"userLoadFailed": "Failed to load profile",
+			"worksLoadFailed": "Failed to load works",
+			"worldsLoadFailed": "Failed to load worlds",
+			"postsLoadFailed": "Failed to load posts",
+			"circleGone": "Circle not found"
+		},
+		"frames": {
+			"noneSelected": "No frame",
+			"hint": "Pick a decoration to make your avatar stand out",
+			"loading": "Loading frames...",
+			"none": "None",
+			"saving": "Saving...",
+			"useThis": "Use this frame",
+			"inUse": "In use",
+			"filter": {
+				"all": "All",
+				"free": "Free",
+				"standard": "LogHome Pass",
+				"super": "Super Pass"
+			},
+			"lockedSuper": "Super Pass exclusive frame",
+			"locked": "Pass exclusive frame",
+			"lockedContent": "{{name}} requires {{tier}}.",
+			"needSuper": "Super LogHome Pass",
+			"needAny": "a LogHome Pass or Super Pass",
+			"viewPass": "View plans",
+			"removed": "Frame removed",
+			"applied": "Frame applied",
+			"saveFailed": "Failed to save frame"
+		},
+		"pass": {
+			"inactiveTitle": "LogHome Pass",
+			"notActivated": "Not activated",
+			"inactiveMeta": "Two membership tiers",
+			"inactiveDesc": "Exclusive badge, faster growth",
+			"activate": "Activate now",
+			"inactivePromo": "Upgrade to Super Pass for all benefits",
+			"learnMore": "Learn more",
+			"permanent": "No expiration",
+			"expires": "Valid until {{date}}",
+			"superTitle": "Super LogHome Pass",
+			"standardTitle": "LogHome Pass",
+			"activated": "Active",
+			"superDesc": "Double growth, all benefits",
+			"standardDesc": "Faster growth, member perks",
+			"viewBenefits": "View benefits",
+			"superPromo": "All super member benefits are active",
+			"standardPromo": "Upgrade to Super Pass to unlock more",
+			"benefitDetails": "Benefits",
+			"upgradeNow": "Upgrade now"
+		}
+	}
+}

@@ -113,6 +113,7 @@
 
 <script>
 import axios from 'axios';
+import i18n from '@/i18n';
 import followBtn from '../../components/follow.vue'
 import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 
@@ -1108,7 +1109,8 @@ export default {
                 error.__privateMessageHandled = true;
                 this.messages = this.messages.filter(m => m.id !== tempId);
                 uni.showToast({
-                    title: '发送失败',
+                    title: error.response && error.response.data.code === 'PRIVATE_MESSAGE_FORBIDDEN'
+                        ? i18n.t('settings.privacy.messageForbidden') : '发送失败',
                     icon: 'none',
                     duration: 2000
                 });

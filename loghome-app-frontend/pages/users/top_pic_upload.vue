@@ -17,7 +17,7 @@
             // 3.定义自己的回调函数
             uploadSuccess(tempFilePath){
 				uni.showLoading({
-					title: '上传中'
+					title: this.$t('common.uploading')
 				});
 				let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
 				let _this = this;
@@ -40,7 +40,7 @@
 					)
 					.then(function(response) {
 						uni.hideLoading();
-						uni.showToast({title: '上传成功',icon: 'none',duration: 2000});
+						uni.showToast({title: _this.$t('common.uploadSuccess'),icon: 'none',duration: 2000});
 						setTimeout(() => {
 							uni.navigateBack({});
 						}, 1000);
@@ -49,7 +49,7 @@
 						//console.log(error);
 						if (error) {
 							uni.showToast({
-									title: "上传失败",
+									title: _this.$t('settings.upload.uploadFailed'),
 									icon:'none',
 									duration: 2000
 							});

@@ -2,7 +2,30 @@
 	"common": {
 		"confirm": "确定",
 		"cancel": "取消",
-		"loading": "努力加载中"
+		"submit": "提交",
+		"save": "保存",
+		"delete": "删除",
+		"retry": "重试",
+		"close": "关闭",
+		"loading": "努力加载中",
+		"processing": "处理中...",
+		"prompt": "提示",
+		"loadFailed": "加载失败",
+		"needLogin": "请先登录",
+		"operationFailed": "操作失败",
+		"networkError": "网络错误，请稍后重试",
+		"paramError": "参数错误",
+		"deleteSuccess": "删除成功",
+		"deleteFailed": "删除失败",
+		"confirmDelete": "确认删除",
+		"saveFailed": "保存失败",
+		"settingSuccess": "设置成功",
+		"uploading": "上传中",
+		"uploadSuccess": "上传成功",
+		"verifying": "验证中",
+		"copied": "已复制",
+		"inputTitle": "请输入标题",
+		"inputContent": "请输入内容"
 	},
 	"nav": {
 		"tab": {
@@ -10,13 +33,6 @@
 			"community": "社区",
 			"writer": "创作",
 			"me": "我的"
-		}
-	},
-	"settings": {
-		"language": {
-			"title": "语言",
-			"followSystem": "跟随系统",
-			"switched": "语言已切换"
 		}
 	}
 }

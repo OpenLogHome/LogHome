@@ -18,22 +18,24 @@
 						<view class="profile-copy">
 							<view class="user-name">
 								<view class="user-name-row">
-									<span>{{user.name}}</span>
+									<span class="user-name-text">{{user.name}}</span>
 									<span class="user_id">ID:{{user.user_id}}</span>
+								</view>
+								<view v-if="user.selected_badge || user.display_title" class="user-accolades">
 									<view
 										v-if="user.selected_badge"
 										class="name-badge-tap"
 										@tap="goToBadgeDetail(user.selected_badge)"
 										@click="goToBadgeDetail(user.selected_badge)"
 									>
-										<honor-badge class="name-badge" :badge="user.selected_badge" size="name" scale="1.5"/>
+										<honor-badge class="name-badge" :badge="user.selected_badge" size="name" scale="1.2"/>
 									</view>
 									<view v-if="user.display_title" class="user-title-chip">
 										{{user.display_title}}
 									</view>
 								</view>
 							</view>
-							<view class="motto">{{user.motto || '用文字记录生活与想象'}}</view>
+							<view class="motto">{{user.motto || $t('me.mottoDefault')}}</view>
 						</view>
 					</view>
 					<view
@@ -71,24 +73,24 @@
 							</view>
 							<view class="membership-card__promo-link">
 								<text>{{ membershipInfo.promoAction }}</text>
-								<text class="membership-card__arrow">›</text>
+								<text class="membership-card__arrow ui-chevron" aria-hidden="true"></text>
 							</view>
 						</view>
 					</view>
 					<view class="security-banner" v-if="user.email == 'unbind'" @tap="gotoActivate">
 						<view class="security-banner__icon">!</view>
 						<view class="security-banner__content">
-							<text class="security-banner__title">绑定邮箱，保护账号安全</text>
-							<text class="security-banner__description">完成绑定后可及时找回账号</text>
+							<text class="security-banner__title">{{ $t('me.security.title') }}</text>
+							<text class="security-banner__description">{{ $t('me.security.desc') }}</text>
 						</view>
-						<text class="security-banner__action">去绑定 ›</text>
+						<text class="security-banner__action">{{ $t('me.security.action') }}</text>
 					</view>
 					<view class="box-bd">
 						<view class="item" @tap="user_profile">
 							<view class="icon"><img src="../static/icons/icon_my_name_tag.png"/></view>
 							<view class="item-copy">
-								<view class="text">名片</view>
-								<view class="subtext">个人主页与资料</view>
+								<view class="text">{{ $t('me.quick.card') }}</view>
+								<view class="subtext">{{ $t('me.quick.cardSub') }}</view>
 							</view>
 						</view>
 						<view class="item" @tap="gotoMessages">
@@ -96,23 +98,23 @@
 								<img src="../static/icons/icon_info.png"/>
 							</view>
 							<view class="item-copy">
-								<view class="text">消息</view>
-								<view class="subtext">私信与系统通知</view>
+								<view class="text">{{ $t('me.quick.message') }}</view>
+								<view class="subtext">{{ $t('me.quick.messageSub') }}</view>
 							</view>
 						</view>
 						<view class="item" @tap="gotoFriends">
 							<view class="icon"><img src="../static/icons/icon_friends.png"/></view>
 							<view class="item-copy">
-								<view class="text">好友</view>
-								<view class="subtext">好友与关注动态</view>
+								<view class="text">{{ $t('me.quick.friend') }}</view>
+								<view class="subtext">{{ $t('me.quick.friendSub') }}</view>
 							</view>
 						</view>
 						<view class="item" @tap="gotoSettings">
 							<view class="icon"><img
 									src="../static/icons/icon_setting.png"/></view>
 							<view class="item-copy">
-								<view class="text">设置</view>
-								<view class="subtext">偏好与账号管理</view>
+								<view class="text">{{ $t('me.quick.settings') }}</view>
+								<view class="subtext">{{ $t('me.quick.settingsSub') }}</view>
 							</view>
 						</view>
 					</view>
@@ -131,8 +133,8 @@
 						</el-badge>
 						<view class="text tree-growth-text">
 							<view class="title-row">
-								<text>原木树场</text>
-								<text v-if="!isSignedToday" style="font-size: 24rpx; color: #ff6a5f; margin-left: 10rpx; font-weight: normal;">可签到</text>
+								<text>{{ $t('me.service.treeScene') }}</text>
+								<text v-if="!isSignedToday" style="font-size: 24rpx; color: #ff6a5f; margin-left: 10rpx; font-weight: normal;">{{ $t('me.service.checkin') }}</text>
 							</view>
 							<view
 								class="growth-bar-wrapper"
@@ -157,7 +159,7 @@
 						<view class="icon">
 							<img src="../static/icons/cridit_sys_icon.png"></img>
 						</view>
-						<view class="text">原木勋章墙</view>
+						<view class="text">{{ $t('me.service.badges') }}</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -166,7 +168,7 @@
 						<view class="icon">
 							<img src="../static/icons/icon_share.png"></img>
 						</view>
-						<view class="text">邀请好友</view>
+						<view class="text">{{ $t('me.service.invite') }}</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -175,18 +177,18 @@
 						<view class="icon">
 							<img src="../static/icons/cridit_icon.png"></img>
 						</view>
-						<view class="text">原木充值</view>
+						<view class="text">{{ $t('me.service.recharge') }}</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
-				<navigator url="./redstone/index">
+				<navigator v-if="aiAssistanceEnabled" url="./redstone/index">
 					<view class="li">
 						<view class="icon">
 							<img src="../static/icons/redstone-muted.svg"></img>
 						</view>
-						<view class="text">红石中心</view>
+						<view class="text">{{ $t('me.service.redstone') }}</view>
 						<text class="service-balance service-balance--redstone">
-							{{ redstoneBalance === null ? '--' : redstoneBalance }} 红石
+							{{ redstoneBalance === null ? '--' : redstoneBalance }} {{ $t('me.unit.redstone') }}
 						</text>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
@@ -196,8 +198,8 @@
 						<view class="icon">
 							<img src="../static/icons/icon_sponsored.png"></img>
 						</view>
-						<view class="text">余额提现</view>
-						<text class="service-balance service-balance--earnings">{{earningsMoney}} 元</text>
+						<view class="text">{{ $t('me.service.withdraw') }}</view>
+						<text class="service-balance service-balance--earnings">{{earningsMoney}} {{ $t('me.unit.yuan') }}</text>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -206,7 +208,7 @@
 						<view class="icon">
 							<img src="../static/icons/store.png"></img>
 						</view>
-						<view class="text">原木商城</view>
+						<view class="text">{{ $t('me.service.store') }}</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -227,7 +229,7 @@
 						<view class="icon">
 							<img src="../static/icons/icon_about_us.png"></img>
 						</view>
-						<view class="text">关于社区</view>
+						<view class="text">{{ $t('me.service.about') }}</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -245,7 +247,7 @@
 						<view class="icon">
 							<img src="../static/icons/icon_treecut3.png"></img>
 						</view>
-						<view class="text">平台管理</view>
+						<view class="text">{{ $t('me.service.manage') }}</view>
 						<img class="to" src="../static/user/to.png"></img>
 					</view>
 				</navigator>
@@ -300,35 +302,37 @@
 				if (!isActive) {
 					return {
 						theme: 'inactive',
-						title: '原木通行证',
-						status: '未开通',
+						title: this.$t('me.pass.inactiveTitle'),
+						status: this.$t('me.pass.notActivated'),
 						logo: '/static/membership/loghome-pass.png',
-						meta: '两档会员可选',
-						description: '专属标识、成长加速',
-						action: '立即开通',
-						promo: '升级超级原木通行证，尊享全部权益',
-						promoAction: '了解更多'
+						meta: this.$t('me.pass.inactiveMeta'),
+						description: this.$t('me.pass.inactiveDesc'),
+						action: this.$t('me.pass.activate'),
+						promo: this.$t('me.pass.inactivePromo'),
+						promoAction: this.$t('me.pass.learnMore')
 					};
 				}
 
-				let expiryText = '长期有效';
+				let expiryText = this.$t('me.pass.permanent');
 				if (expiryTime) {
 					const expiryDate = new Date(expiryTime);
-					expiryText = '有效期至 ' + expiryDate.getFullYear() + '.' +
-						('0' + (expiryDate.getMonth() + 1)).slice(-2) + '.' +
-						('0' + expiryDate.getDate()).slice(-2);
+					expiryText = this.$t('me.pass.expires', {
+						date: expiryDate.getFullYear() + '.' +
+							('0' + (expiryDate.getMonth() + 1)).slice(-2) + '.' +
+							('0' + expiryDate.getDate()).slice(-2)
+					});
 				}
 
 				return {
 					theme: isSuper ? 'super' : 'standard',
-					title: isSuper ? '超级原木通行证' : '原木通行证',
-					status: '已开通',
+					title: isSuper ? this.$t('me.pass.superTitle') : this.$t('me.pass.standardTitle'),
+					status: this.$t('me.pass.activated'),
 					logo: isSuper ? '/static/membership/loghome-super-pass.png' : '/static/membership/loghome-pass.png',
 					meta: expiryText,
-					description: isSuper ? '双倍成长、全部权益' : '成长加速、会员权益',
-					action: '查看权益',
-					promo: isSuper ? '超级会员专属权益已全部生效' : '升级超级原木通行证，解锁更多权益',
-					promoAction: isSuper ? '权益详情' : '立即升级'
+					description: isSuper ? this.$t('me.pass.superDesc') : this.$t('me.pass.standardDesc'),
+					action: this.$t('me.pass.viewBenefits'),
+					promo: isSuper ? this.$t('me.pass.superPromo') : this.$t('me.pass.standardPromo'),
+					promoAction: isSuper ? this.$t('me.pass.benefitDetails') : this.$t('me.pass.upgradeNow')
 				};
 			},
 			treeGrowthPercent() {
@@ -342,7 +346,7 @@
 		mixins: [darkModeMixin],
 		onShow() {
 			uni.showLoading({
-				title: '努力加载中'
+				title: this.$t('common.loading')
 			});
 			// 用于判断是否从登录页返回，是的话则直接退回首页。
 			if (this.$isFromLogin) {
@@ -464,7 +468,7 @@
 			gotoStore() {
 				const storeUrl = this.$storeBaseUrl + '/cross_site_login?redirect=/products';
 				uni.navigateTo({
-					url: './apps/h5webview?url=' + encodeURIComponent(storeUrl) + '&title=原木购'
+					url: './apps/h5webview?url=' + encodeURIComponent(storeUrl) + '&title=' + encodeURIComponent(this.$t('me.storeWebTitle'))
 				})
 			},
 			goToBadgeDetail(badge) {
@@ -572,6 +576,7 @@
 				})
 			},
 			async refreshRedstoneBalance() {
+				if (!this.aiAssistanceEnabled) { this.redstoneBalance = null; return; }
 				try {
 					const account = await getRedstoneAccount(this.$baseUrl);
 					this.redstoneBalance = Number(account.redstone_balance || 0);
@@ -624,11 +629,11 @@
 		}
 
 			.bg {
-				--profile-cover-height: 585rpx;
+				--profile-cover-height: 505rpx;
 				position: relative;
 				width: 100%;
 				height: auto;
-				padding-top: calc(250rpx + var(--loghome-safe-top, 0px));
+				padding-top: calc(170rpx + var(--loghome-safe-top, 0px));
 
 			.info-cover {
 				position: absolute;
@@ -676,7 +681,7 @@
 			.profile-copy {
 				flex: 1;
 				min-width: 0;
-				margin-left: 20rpx;
+				margin-left: 28rpx;
 			}
 
 			.avator {
@@ -699,31 +704,45 @@
 				.user-name-row {
 					display: flex;
 					align-items: center;
-					flex-wrap: wrap;
+					min-width: 0;
+					gap: 12rpx;
 				}
 
-				.user-name-row > span:first-child {
-					max-width: 260rpx;
+				.user-name-text {
+					min-width: 0;
+					max-width: 300rpx;
 					overflow: hidden;
 					text-overflow: ellipsis;
 					white-space: nowrap;
 				}
 
-				.name-badge {
-					margin-left: 12rpx;
-					transform: translateY(0);
+				.user-accolades {
+					display: flex;
+					align-items: center;
+					min-width: 0;
+					height: 54rpx;
+					margin-top: 8rpx;
+					gap: 10rpx;
 				}
 
 				.name-badge-tap {
-					display: inline-flex;
+					display: flex;
 					align-items: center;
-					margin-left: 12rpx;
+					justify-content: center;
+					flex: 0 0 54rpx;
+					width: 54rpx;
+					height: 54rpx;
+				}
+
+				.name-badge {
+					display: flex;
+					transform-origin: center;
 				}
 
 				.user-title-chip {
-					max-width: 220rpx;
-					margin: 8rpx 0 0 12rpx;
-					padding: 5rpx 12rpx;
+					min-width: 0;
+					max-width: 280rpx;
+					padding: 7rpx 14rpx;
 					border-radius: 999rpx;
 					overflow: hidden;
 					text-overflow: ellipsis;
@@ -737,7 +756,7 @@
 			}
 
 			.user_id {
-				margin-left: 12rpx;
+				flex-shrink: 0;
 				padding: 5rpx 10rpx;
 				border-radius: 999rpx;
 				font-size: 20rpx;
@@ -754,7 +773,7 @@
 
 			.motto {
 				max-width: 470rpx;
-				margin-top: 10rpx;
+				margin-top: 8rpx;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;
@@ -1032,7 +1051,7 @@
 		}
 
 		&__title {
-			flex: 1;
+			flex: 0 1 auto;
 			min-width: 0;
 			max-width: 300rpx;
 			overflow: hidden;
@@ -1045,7 +1064,7 @@
 
 		&__status {
 			flex-shrink: 0;
-			margin-left: 11rpx;
+			margin-left: 8rpx;
 			padding: 3rpx 9rpx;
 			border: 1rpx solid rgba(255, 235, 197, 0.5);
 			border-radius: 7rpx;
@@ -1329,4 +1348,5 @@
 			transform: translateY(-0%);
 		}
 	}
+.ui-chevron { display: inline-block; flex: none; width: 10rpx; height: 10rpx; border-top: 2rpx solid currentColor; border-right: 2rpx solid currentColor; transform: rotate(45deg); }
 </style>

@@ -1,0 +1,168 @@
+{
+	"titles": {
+		"pages": {
+			"launch": "原木社区",
+			"bookcase": {
+				"index": "我的书架",
+				"manage": "我的书架"
+			},
+			"library": "书库",
+			"essays": "创作",
+			"me": "我的",
+			"membership": {
+				"index": "原木通行证",
+				"redeem": "会员兑换码",
+				"gift": "赠送好友",
+				"rules": "通行证与红石规则"
+			},
+			"redstone": {
+				"index": "红石中心"
+			},
+			"users": {
+				"login_page": "登录",
+				"login_page_mobile": "手机号登录",
+				"login_page_email": "电子邮箱登录",
+				"login": "登录",
+				"changePwd": "修改密码",
+				"clientSet": "设置",
+				"donate": "捐助",
+				"avater_upload": "上传头像",
+				"change_user_info": "修改个人信息",
+				"avatar_frames": "头像挂件",
+				"achievements": "我的成就",
+				"badgeDetail": "勋章详情",
+				"personalPage": "个人主页",
+				"top_pic_upload": "上传个人主页背景",
+				"storageManage": "空间占用管理",
+				"activateAccount": "绑定账号",
+				"activateAccount_oicq": "绑定QQ",
+				"activateAccount_mobile": "绑定手机",
+				"activateAccount_email": "绑定邮箱",
+				"register": "注册账户",
+				"forgottenPwd": "忘记账号或密码",
+				"user_credit": "我的信誉",
+				"external_login": "外部登录"
+			},
+			"readers": {
+				"mangaInfo": "漫画详情",
+				"mangaReader": "漫画阅读",
+				"logPower": "原木力详情",
+				"logPowerRank": "原木力榜",
+				"allArticles": "所有章节",
+				"novel_fans": "书籍打赏",
+				"bookComment": "书籍评论",
+				"collections": "作品集合",
+				"tags": "标签广场",
+				"tagCollections": "标签合集",
+				"newReader": {
+					"article": "新版阅读器"
+				},
+				"bookEnd": "书末"
+			},
+			"writers": {
+				"mangaEditor": "漫画话数管理",
+				"mangaSettings": "漫画作品设置",
+				"newEssay": "创建小说",
+				"changeEssayInfo": "修改小说信息",
+				"sortArticles": "章节排序",
+				"chapterTimeMachine": "章节时光机",
+				"cover_upload": "上传封面",
+				"localBackup": "本地备份",
+				"essaySet": "作品设置",
+				"essayCollaborationSettings": "多人协作",
+				"essayIndexing": "全文智能索引",
+				"novelCollaborators": "协作作者",
+				"changeNovelTags": "修改作品标签",
+				"novel_statistics": "作品数据",
+				"articleFeedbacks": "错误反馈",
+				"scheduledTasks": "定时发布任务",
+				"workPublish": "作品发布"
+			},
+			"apps": {
+				"about": "关于我们",
+				"audio_test": "有声书测试",
+				"faqs": {
+					"faq": "帮助中心",
+					"feedback": "反馈详情",
+					"user_feedback": "我要反馈"
+				},
+				"openInBrowser": "外部网页",
+				"badVersion": "版本提示",
+				"inviteCard": "邀请好友",
+				"enterInviteCode": "填写邀请码"
+			},
+			"static": {
+				"contentAgreement": "用户内容上传协议",
+				"privacyAgreement": "用户隐私政策",
+				"updateIntro": "社区更新机制",
+				"grandUsers": "社区荣誉用户"
+			},
+			"community": {
+				"friends": "我的好友",
+				"read_mail": "查看站内信",
+				"send_mail": "写站内信",
+				"message": "我的消息",
+				"postEdit": "帖子编辑",
+				"postView": "帖子内容",
+				"privateMessages": "私信列表",
+				"notifications": "通知消息",
+				"chat": "聊天",
+				"index": "社区",
+				"circles": "圈子广场",
+				"createCircle": "创建圈子",
+				"circle": "圈子详情",
+				"postDetail": "帖子详情",
+				"editCircle": "圈子设置",
+				"circleMembers": "圈子成员",
+				"search": "搜索",
+				"activityMessages": "活动消息"
+			},
+			"settings": {
+				"autoSaveSettings": "本地备份设置",
+				"pushSettings": "消息推送设置",
+				"privacySettings": "隐私设置"
+			},
+			"treePlant": {
+				"treeplant": "原木树场",
+				"treeSceneSettings": "树场设置"
+			},
+			"payments": {
+				"recharge": "支持社区",
+				"earnings": "余额提现",
+				"jump_to_pay": "支付",
+				"order_history": "历史订单",
+				"gift_code": "礼品卡兑换",
+				"exchange": "去皮原木兑换"
+			},
+			"worlds": {
+				"worldPage": "世界设定",
+				"worldRelations": "世界关系树"
+			},
+			"manage": {
+				"index": "平台管理",
+				"audit": {
+					"index": "文章审核"
+				},
+				"library": {
+					"roulous": "图书馆轮播管理"
+				},
+				"posts": {
+					"index": "帖子管理"
+				},
+				"users": {
+					"index": "用户管理"
+				}
+			},
+			"store": {
+				"index": "原木商城",
+				"detail": "商品详情",
+				"checkout": "确认兑换",
+				"orders": "我的订单",
+				"logistics": "查看物流",
+				"address_list": "收货地址",
+				"address_form": "编辑地址"
+			},
+			"update": "应用更新"
+		}
+	}
+}

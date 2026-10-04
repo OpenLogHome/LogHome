@@ -11,9 +11,9 @@
 			<view class="rightBtnGroup">
 				<followBtn :targetId="Number(uid)" v-show="uid != myUserInfo.user_id"/>
 				<navigator url="./change_user_info" v-show="uid == myUserInfo.user_id">
-					<div class="button">编辑资料</div>
+					<div class="button">{{ $t('me.profile.editProfile') }}</div>
 				</navigator>
-				<div class="button" v-show="uid != myUserInfo.user_id" @click="gotoPrivateMessage">私信</div>
+				<div class="button" v-show="uid != myUserInfo.user_id" @click="gotoPrivateMessage">{{ $t('me.profile.sendDm') }}</div>
 			</view>
 			
 			<!-- 用户头像关注 -->
@@ -49,24 +49,24 @@
 					{{user.display_title}}
 				</view>
 				<span class="admin_title" v-show="user.is_admin">
-					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>社区管理员</span>
+					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>{{ $t('me.profile.admin') }}</span>
 				<membership-badge :tier="user.membership_type" size="md" :show-label="true" style="margin-left: 15rpx;"/>
 			</view>
 	
 			<!-- 简介-->
 			<view :style="'font-size: 28rpx;color: ' + (isDarkMode ? '#b8b8b8' : '#555555') + ';margin:20rpx 50rpx;'">
-				<text style="margin-right: 20rpx;">{{user.motto==''?'暂无简介':user.motto}}</text>
+				<text style="margin-right: 20rpx;">{{user.motto==''?$t('me.profile.noMotto'):user.motto}}</text>
 			</view>
 			<view style="display: flex;align-items: center;margin-left: 50rpx;margin-top: 20rpx;margin-bottom: 20rpx;">
 				<navigator :url="'../community/friends?id=' + uid + '&tab=1'">
 					<text
 						:style="'font-size: 40rpx;font-weight: bold;color: ' + (isDarkMode ? '#e5e5e5' : '#555555') + ';margin-right: 18rpx;'">{{fans}}</text><text
-						:style="'font-size: 28rpx;color: ' + (isDarkMode ? '#999' : 'gray') + ';margin-right: 28rpx;'">粉丝</text>
+						:style="'font-size: 28rpx;color: ' + (isDarkMode ? '#999' : 'gray') + ';margin-right: 28rpx;'">{{ $t('me.profile.followers') }}</text>
 				</navigator>
 				<navigator :url="'../community/friends?id=' + uid + '&tab=0'">
 					<text
 						:style="'font-size: 40rpx;font-weight: bold;color: ' + (isDarkMode ? '#e5e5e5' : '#555555') + ';margin-right: 18rpx;'">{{follows}}</text><text
-						:style="'font-size: 28rpx;color: ' + (isDarkMode ? '#999' : 'gray') + ';margin-right: 28rpx;'">关注</text>
+						:style="'font-size: 28rpx;color: ' + (isDarkMode ? '#999' : 'gray') + ';margin-right: 28rpx;'">{{ $t('me.profile.following') }}</text>
 				</navigator>
 			
 	<!-- 			<text
@@ -79,11 +79,11 @@
 				style="align-items: stretch;height: 90rpx;line-height: 90rpx; display: flex;
 				flex-direction: row;justify-content: space-around; margin:0 80rpx;">
 				<view style="font-size: 32rpx;font-weight: bold;text-align: center;width: 128rpx;"
-					:class="current == 0?'tabbarsh':'notabbarsh'" @tap="fnBarClick(0)">作品</view>
+					:class="current == 0?'tabbarsh':'notabbarsh'" @tap="fnBarClick(0)">{{ $t('me.profile.tabWorks') }}</view>
 				<view style="font-size: 32rpx;font-weight: bold;text-align: center;width: 128rpx;"
-					:class="current == 1?'tabbarsh':'notabbarsh'" @tap="fnBarClick(1)">动态</view>
+					:class="current == 1?'tabbarsh':'notabbarsh'" @tap="fnBarClick(1)">{{ $t('me.profile.tabPosts') }}</view>
 				<view style="font-size: 32rpx;font-weight: bold;text-align: center;width: 128rpx;"
-					:class="current == 2?'tabbarsh':'notabbarsh'" @tap="fnBarClick(2)">世界</view>
+					:class="current == 2?'tabbarsh':'notabbarsh'" @tap="fnBarClick(2)">{{ $t('me.profile.tabWorlds') }}</view>
 			</view>
 	
 			<!-- 导航显示内容 -->
@@ -102,7 +102,7 @@
 					</div>
 				</swiper-item>
 				<swiper-item>
-					<div class="post-list tabpage" @scrolltolower="loadMorePosts">
+					<div class="post-list tabpage">
 						<view class="post-item" v-for="(post, index) in userPosts" :key="index" @tap="navigateToPost(post.post_id)">
 							<view class="post-header">
 								<view class="post-circle" @tap.stop="navigateToCircle(post.circle_id)">
@@ -140,7 +140,7 @@
 							</view>
 						</view>
 						<view class="no-data" v-if="userPosts.length === 0">
-							<text>暂无动态</text>
+							<text>{{ $t('me.profile.noPosts') }}</text>
 						</view>
 						<uni-load-more :status="postsLoadingStatus"></uni-load-more>
 					</div>
@@ -164,7 +164,8 @@
 	import MembershipBadge from '../../components/membership-badge.vue'
 	import darkModeMixin from '@/mixins/dark-mode.js'
 	import axios from 'axios'
-	import moment from 'moment'
+	import { postTimeText } from '@/common/datetime.js'
+	import i18n from '@/i18n/index.js'
 	export default {
 		components:{
 			bookInCase,followBtn,springBack,HonorBadge,MembershipBadge
@@ -236,6 +237,12 @@
 			setTimeout(() => {
 				this.updateSwiperHeight();
 			}, 500);
+		},
+		onReachBottom() {
+			// 动态列表跟随页面滚动，普通 div 不会触发 scrolltolower。
+			if (this.current === 1) {
+				this.loadMorePosts();
+			}
 		},
 		methods: {
 				/// 顶部导航选项点击
@@ -394,7 +401,7 @@
 					_this.user = JSON.parse(JSON.stringify(res.data))[0];
 				}).catch(function(error) {
 					uni.showToast({
-						title: "用户信息加载失败",
+						title: i18n.t('me.profile.userLoadFailed'),
 						icon: 'none',
 						duration: 2000
 					})
@@ -410,7 +417,7 @@
 					});
 				}).catch(function(error) {
 					uni.showToast({
-						title: "作品信息加载失败",
+						title: i18n.t('me.profile.worksLoadFailed'),
 						icon: 'none',
 						duration: 2000
 					})
@@ -438,24 +445,11 @@
 				})
 				
 				
-				axios.get(_this.$baseUrl + '/community/get_fans_of?id=' + _this.uid, {}).then((res) => {
-					_this.fans = JSON.parse(JSON.stringify(res.data)).length;
+				axios.get(_this.$baseUrl + '/community/social_counts?id=' + _this.uid).then((res) => {
+					_this.fans = Number(res.data.fans);
+					_this.follows = Number(res.data.follows);
 				}).catch(function(error) {
-					uni.showToast({
-						title: "用户信息加载失败",
-						icon: 'none',
-						duration: 2000
-					})
-				})
-				
-				axios.get(_this.$baseUrl + '/community/get_follows_of?id=' + _this.uid, {}).then((res) => {
-					_this.follows = JSON.parse(JSON.stringify(res.data)).length;
-				}).catch(function(error) {
-					uni.showToast({
-						title: "用户信息加载失败",
-						icon: 'none',
-						duration: 2000
-					})
+					uni.showToast({ title: i18n.t('me.profile.userLoadFailed'), icon: 'none' });
 				})
 				
 				axios.get(this.$baseUrl + '/world/get_worlds_by_author?user_id=' + _this.uid, {
@@ -467,7 +461,7 @@
 					});
 				}).catch(function(error) {
 					uni.showToast({
-						title: "世界信息加载失败",
+						title: i18n.t('me.profile.worldsLoadFailed'),
 						icon: 'none',
 						duration: 2000
 					})
@@ -525,7 +519,7 @@
 					console.error('加载用户帖子失败', error);
 					this.postsLoadingStatus = 'more';
 					uni.showToast({
-						title: "加载用户动态失败",
+						title: i18n.t('me.profile.postsLoadFailed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -539,22 +533,9 @@
 				}
 			},
 			
-			// 格式化时间
+			// 格式化时间（i18n：统一走 common/datetime.js，zh 输出与原实现一致）
 			formatTime(time) {
-				const now = moment();
-				const postTime = moment(time);
-				const diff = now.diff(postTime, 'minutes');
-				
-				if (diff < 1) return '刚刚';
-				if (diff < 60) return `${diff}分钟前`;
-				
-				const hourDiff = now.diff(postTime, 'hours');
-				if (hourDiff < 24) return `${hourDiff}小时前`;
-				
-				const dayDiff = now.diff(postTime, 'days');
-				if (dayDiff < 30) return `${dayDiff}天前`;
-				
-				return postTime.format('YYYY-MM-DD');
+				return postTimeText(time);
 			},
 			
 			// 导航到帖子详情
@@ -566,7 +547,7 @@
 			navigateToCircle(circleId) {
 				if (!circleId || circleId === 0) {
 					uni.showToast({
-						title: '圈子不存在',
+						title: this.$t('me.profile.circleGone'),
 						icon: 'none'
 					});
 					return;

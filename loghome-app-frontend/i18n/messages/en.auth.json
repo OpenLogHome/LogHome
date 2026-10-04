@@ -1,0 +1,115 @@
+{
+	"auth": {
+		"brand": {
+			"name": "LogHome"
+		},
+		"login": {
+			"welcomePrefix": "At\u00A0",
+			"welcomeSuffix": ",",
+			"typeCreate": "Create without limits",
+			"typeStory": "Write block-world stories",
+			"typeTalk": "Talk with creators",
+			"typeExplore": "Explore the block world",
+			"carouselLibrary": "Endless stories to browse",
+			"carouselReading": "Free, comfortable reading",
+			"carouselCreate": "Create in sync on every device",
+			"carouselInteract": "Connect with other creators",
+			"withEmail": "Sign in with email",
+			"withAccount": "Sign in with account and password",
+			"agreePrefix": "I have read and agree to\u00A0the\u00A0",
+			"agreeAccept": "I have read and accept\u00A0the\u00A0",
+			"privacyPolicy": "LogHome Privacy Policy",
+			"agreeRequired": "Please read and agree to the LogHome Privacy Policy first",
+			"accountPlaceholder": "Enter an account name",
+			"passwordPlaceholder": "Enter your password",
+			"codePlaceholder": "Enter the verification code",
+			"signIn": "Sign in",
+			"next": "Next",
+			"previous": "Back",
+			"resend": "Resend",
+			"waitSeconds": "Wait {{seconds}}s",
+			"codeSentTo": "Verification code sent to:",
+			"welcomeSetup": "Welcome to LogHome! Please set up your account and password.",
+			"accountUsed": "This account name is already taken",
+			"forgotPassword": "Forgot password?",
+			"invalidCredential": "Incorrect account or password",
+			"sliderFirst": "Please complete the slider verification",
+			"bindSuccess": "Linked successfully",
+			"passwordRequired": "Please enter a password",
+			"passwordRule": "Password format: 6-20 letters, digits or underscores",
+			"accountRule": "Account format: 4-12 letters, digits or underscores",
+			"accountTaken": "This account name is already registered",
+			"account": {
+				"title": "LogHome Pass Sign In",
+				"appVersion": "App version: ",
+				"accountPlaceholder": "Account / mobile number / QQ",
+				"agreeRequired": "Please read and accept the LogHome Privacy Policy first",
+				"signUp": "Create an account",
+				"reportZone": "Online harmful information reporting"
+			},
+			"email": {
+				"unregisteredTip": "An unregistered email will create an account automatically",
+				"emailPlaceholder": "Enter your email address",
+				"signInWith": "You are about to sign in with this email:",
+				"invalidEmail": "Please enter a valid email address",
+				"accountRule": "Account format: 4-12 letters or digits"
+			},
+			"mobile": {
+				"registeredOnlyTip": "Only registered mobile numbers can sign in",
+				"mobilePlaceholder": "Enter your mainland China mobile number",
+				"policyNotice": "We're sorry: due to regulatory policy changes, LogHome no longer supports registering new mobile numbers. Please switch to email sign in as soon as possible.",
+				"recoverContact": "To recover an account, contact us in the LogHome open-source plan QQ group: ",
+				"signInWith": "You are about to sign in with this mobile number:",
+				"invalidMobile": "Please enter an 11-digit mainland China mobile number"
+			}
+		},
+		"register": {
+			"accountPlaceholder": "Enter an account name",
+			"passwordPlaceholder": "Enter your password",
+			"confirmPwdPlaceholder": "Repeat your password",
+			"passwordRequired": "Please enter a password",
+			"passwordMismatch": "The two passwords don't match",
+			"passwordRule": "Password format: 6-20 letters, digits or underscores",
+			"accountRule": "Account format: 4-12 letters, digits or underscores",
+			"sliderFirst": "Please complete the slider verification",
+			"accountTaken": "This account name is already registered"
+		},
+		"changePwd": {
+			"oldPwdPlaceholder": "Enter your current password",
+			"newPwdPlaceholder": "Enter a new password",
+			"confirmPwdPlaceholder": "Repeat the new password",
+			"sliderText": "Slide right",
+			"oldPwdRequired": "Please enter your current password",
+			"passwordMismatch": "The two passwords don't match",
+			"sameAsOldPwd": "The new password cannot be the same as your current one",
+			"passwordRule": "Password format: 6-20 letters, digits or underscores",
+			"sliderFirst": "Please complete the slider verification",
+			"changeSuccess": "Password changed",
+			"wrongOldPwd": "Your current password is incorrect"
+		},
+		"external": {
+			"loading": "Signing in, please wait...",
+			"success": "Signed in",
+			"failed": "Sign-in failed",
+			"secondsLater": "{{seconds}}s until you\u00A0",
+			"toTarget": "are redirected",
+			"toProfile": "return to your profile",
+			"backToLogin": "Back to sign in",
+			"noLoginInfo": "No valid sign-in information received",
+			"invalidToken": "Sign-in token is invalid or expired, please sign in again"
+		},
+		"forgot": {
+			"contactUs": "If you forgot your password, contact us through the channels below:",
+			"joinAnyGroup": "1. Join any LogHome user QQ group",
+			"groupListTitle": "List of LogHome user groups:",
+			"groupExchange": "LogHome user exchange group: ",
+			"groupBeta": "LogHome public beta team: ",
+			"groupWriters": "LogHome writers' main group: ",
+			"contactAdminPrefix": "2. Contact a group admin\u00A0",
+			"contactAdminVia": "by private message",
+			"contactAdminSuffix": " to send an account recovery request.",
+			"qqBoundTip": "If your account was previously bound to a QQ number, use that QQ number to recover it — you'll have a much better chance of success.",
+			"needProof": "Otherwise, we'll need other information about the account to confirm that it really belongs to you."
+		}
+	}
+}

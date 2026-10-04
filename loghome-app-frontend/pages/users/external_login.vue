@@ -7,22 +7,22 @@
 				<div class="bounce2"></div>
 				<div class="bounce3"></div>
 			</div>
-			<div class="loading-text">登录中，请稍候...</div>
+			<div class="loading-text">{{ $t('auth.external.loading') }}</div>
 		</div>
 		<div class="success" v-if="loginSuccess">
 			<div class="icon">
 				<i class="el-icon-check"></i>
 			</div>
-			<div class="success-text">登录成功</div>
-			<div class="redirect-text">{{ countDown/1000 }}秒后{{ redirectTo ? '跳转到指定页面' : '返回个人中心' }}</div>
+			<div class="success-text">{{ $t('auth.external.success') }}</div>
+			<div class="redirect-text">{{ $t('auth.external.secondsLater', { seconds: countDown/1000 }) }}{{ redirectTo ? $t('auth.external.toTarget') : $t('auth.external.toProfile') }}</div>
 		</div>
 		<div class="error" v-if="loginError">
 			<div class="icon">
 				<i class="el-icon-close"></i>
 			</div>
-			<div class="error-text">登录失败</div>
+			<div class="error-text">{{ $t('auth.external.failed') }}</div>
 			<div class="error-message">{{ errorMessage }}</div>
-			<div class="button" @click="toLoginPage">返回登录页</div>
+			<div class="button" @click="toLoginPage">{{ $t('auth.external.backToLogin') }}</div>
 		</div>
 	</view>
 </template>
@@ -57,7 +57,7 @@
 			} else {
 				this.isLoading = false;
 				this.loginError = true;
-				this.errorMessage = '未接收到有效的登录信息';
+				this.errorMessage = this.$t('auth.external.noLoginInfo');
 			}
 
 			if (option.hideback) {
@@ -93,7 +93,7 @@
 					this.loginError = true;
 					this.errorMessage = error.response && error.response.data && error.response.data.msg
 						? error.response.data.msg
-						: '登录令牌无效或已过期，请重新登录';
+						: this.$t('auth.external.invalidToken');
 				});
 			},
 			startCountDown() {

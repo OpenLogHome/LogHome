@@ -2,15 +2,15 @@
 	<div class="content" v-dark>
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon"/></div>
-			<input class="input" type="email" placeholder="输入邮箱地址" v-model="email"/>
-			<div class="btn" v-show="!isWaiting" @click="sendCode">发送验证码</div>
-			<div class="btn wait" v-show="isWaiting">等待{{waitTime}}秒</div>
+			<input class="input" type="email" :placeholder="$t('settings.activate.emailPlaceholder')" v-model="email"/>
+			<div class="btn" v-show="!isWaiting" @click="sendCode">{{ $t('settings.activate.sendCode') }}</div>
+			<div class="btn wait" v-show="isWaiting">{{ $t('settings.activate.waitSeconds', { seconds: waitTime }) }}</div>
 		</div>
 		<div style="display:flex;width:100%;justify-content: center;">
 			<slide-verify :l="42"
 			            :r="10"
 			            :h="155"
-			            slider-text="向右滑动"
+			            :slider-text="$t('settings.activate.slideRight')"
 			            @success="verifyResult"
 						:imgs="$moveVerifyImgs"
 			            ></slide-verify>
@@ -18,11 +18,11 @@
 		<!--End用户名输入框-->
 		<div class="longin-boder">
 			<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon"/></div>
-			<input class="input" type="text" placeholder="验证码" v-model="vcode" />
+			<input class="input" type="text" :placeholder="$t('settings.activate.codePlaceholder')" v-model="vcode" />
 		</div>
 
 		<!--End密码输入框-->
-		<div class="button" @click="submit">提交</div>
+		<div class="button" @click="submit">{{ $t('common.submit') }}</div>
 	</div>
 </template>
 
@@ -54,7 +54,7 @@
 				let _this = this;
 				if (this.resultData == false) {
 					uni.showToast({
-						title: "请滑动验证滑块",
+						title: this.$t('settings.activate.slideVerifyRequired'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -65,7 +65,7 @@
 				const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 				if(!emailPattern.test(this.email)){
 					uni.showToast({
-						title: "请输入有效的电子邮箱地址",
+						title: this.$t('settings.activate.invalidEmail'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -84,7 +84,7 @@
 				}
 
 				uni.showLoading({
-					title: '发送中'
+					title: this.$t('settings.activate.sending')
 				});
 
 				axios.get(this.$baseUrl + '/users/send_bind_email_code?email=' + _this.email, {
@@ -120,7 +120,7 @@
 					  });
 				  } else {
 					  uni.showToast({
-						title: "发送失败，请稍后重试",
+						title: _this.$t('settings.activate.sendFailed'),
 						icon: 'none',
 						duration: 2000
 					  });
@@ -133,7 +133,7 @@
 				const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 				if(!emailPattern.test(this.email)){
 					uni.showToast({
-						title: "请输入有效的电子邮箱地址",
+						title: this.$t('settings.activate.invalidEmail'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -142,7 +142,7 @@
 
 				if(this.vcode.length < 4) {
 					uni.showToast({
-						title: "请输入有效的验证码",
+						title: this.$t('settings.activate.invalidCode'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -150,7 +150,7 @@
 				}
 
 				uni.showLoading({
-					title: '验证中'
+					title: this.$t('common.verifying')
 				});
 
 				let tk = JSON.parse(window.localStorage.getItem('token'));
@@ -177,7 +177,7 @@
 					uni.hideLoading();
 					if(res.data.success) {
 						uni.showToast({
-							title: "邮箱绑定成功",
+							title: this.$t('settings.activate.emailBindSuccess'),
 							icon: 'success',
 							duration: 2000
 						});
@@ -188,7 +188,7 @@
 						}, 2000)
 					} else {
 						uni.showToast({
-							title: res.data.msg || "验证失败，请检查验证码",
+							title: res.data.msg || this.$t('settings.activate.verifyCodeFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -204,7 +204,7 @@
 						});
 					} else {
 						uni.showToast({
-							title: "验证失败，请稍后重试",
+							title: _this.$t('settings.activate.verifyFailed'),
 							icon: 'none',
 							duration: 2000
 						});

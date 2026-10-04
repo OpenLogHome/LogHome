@@ -1,0 +1,99 @@
+{
+	"me": {
+		"mottoDefault": "用文字记录生活与想象",
+		"storeWebTitle": "原木购",
+		"security": {
+			"title": "绑定邮箱，保护账号安全",
+			"desc": "完成绑定后可及时找回账号",
+			"action": "去绑定 ›"
+		},
+		"quick": {
+			"card": "名片",
+			"cardSub": "个人主页与资料",
+			"message": "消息",
+			"messageSub": "私信与系统通知",
+			"friend": "好友",
+			"friendSub": "好友与关注动态",
+			"settings": "设置",
+			"settingsSub": "偏好与账号管理"
+		},
+		"service": {
+			"treeScene": "原木树场",
+			"checkin": "可签到",
+			"badges": "原木勋章墙",
+			"invite": "邀请好友",
+			"recharge": "原木充值",
+			"redstone": "红石中心",
+			"withdraw": "余额提现",
+			"store": "原木商城",
+			"about": "关于社区",
+			"manage": "平台管理"
+		},
+		"unit": {
+			"redstone": "红石",
+			"yuan": "元"
+		},
+		"profile": {
+			"editProfile": "编辑资料",
+			"sendDm": "私信",
+			"admin": "社区管理员",
+			"noMotto": "暂无简介",
+			"followers": "粉丝",
+			"following": "关注",
+			"tabWorks": "作品",
+			"tabPosts": "动态",
+			"tabWorlds": "世界",
+			"noPosts": "暂无动态",
+			"userLoadFailed": "用户信息加载失败",
+			"worksLoadFailed": "作品信息加载失败",
+			"worldsLoadFailed": "世界信息加载失败",
+			"postsLoadFailed": "加载用户动态失败",
+			"circleGone": "圈子不存在"
+		},
+		"frames": {
+			"noneSelected": "不使用头像挂件",
+			"hint": "选择喜欢的装饰，让头像更有辨识度",
+			"loading": "头像挂件加载中…",
+			"none": "不使用",
+			"saving": "保存中…",
+			"useThis": "使用这个头像挂件",
+			"inUse": "正在使用",
+			"filter": {
+				"all": "全部",
+				"free": "免费",
+				"standard": "原木通行证",
+				"super": "超级通行证"
+			},
+			"lockedSuper": "超级通行证专属头像挂件",
+			"locked": "通行证专属头像挂件",
+			"lockedContent": "{{name}}需要{{tier}}才能使用。",
+			"needSuper": "超级原木通行证",
+			"needAny": "原木通行证或超级原木通行证",
+			"viewPass": "查看通行证",
+			"removed": "已取消头像挂件",
+			"applied": "头像挂件已生效",
+			"saveFailed": "头像挂件保存失败"
+		},
+		"pass": {
+			"inactiveTitle": "原木通行证",
+			"notActivated": "未开通",
+			"inactiveMeta": "两档会员可选",
+			"inactiveDesc": "专属标识、成长加速",
+			"activate": "立即开通",
+			"inactivePromo": "升级超级原木通行证，尊享全部权益",
+			"learnMore": "了解更多",
+			"permanent": "长期有效",
+			"expires": "有效期至 {{date}}",
+			"superTitle": "超级原木通行证",
+			"standardTitle": "原木通行证",
+			"activated": "已开通",
+			"superDesc": "双倍成长、全部权益",
+			"standardDesc": "成长加速、会员权益",
+			"viewBenefits": "查看权益",
+			"superPromo": "超级会员专属权益已全部生效",
+			"standardPromo": "升级超级原木通行证，解锁更多权益",
+			"benefitDetails": "权益详情",
+			"upgradeNow": "立即升级"
+		}
+	}
+}

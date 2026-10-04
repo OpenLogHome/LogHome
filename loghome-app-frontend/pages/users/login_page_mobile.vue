@@ -1,72 +1,72 @@
 <template>
 	<view class="outer" v-dark>
 		<div class="step0" v-if="step == 0">
-			<p>仅支持已注册手机号登录</p>
+			<p>{{ $t('auth.login.mobile.registeredOnlyTip') }}</p>
 			<div class="longin-boder">
 				<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon" /></div>
-				<input class="input" type="text" placeholder="请输入中国大陆手机号" v-model="mobile"/>
+				<input class="input" type="text" :placeholder="$t('auth.login.mobile.mobilePlaceholder')" v-model="mobile"/>
 			</div>
-			<div class="button" @click="nextStep()">下一步</div>
+			<div class="button" @click="nextStep()">{{ $t('auth.login.next') }}</div>
 		</div>
 		<transition name="slide-fade" mode="out-in">
 			<div class="step step1" v-if="step == 1">
-				<p>我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持新手机号注册，请尽快迁移至邮箱登录。</p>
-				<p>如果您需要找回账号，请通过原木社区开源计划交流群联系我们：701928273。</p>
-				<div class="button cancel" @click="step = 0">上一步</div>
+				<p>{{ $t('auth.login.mobile.policyNotice') }}</p>
+				<p>{{ $t('auth.login.mobile.recoverContact') }}701928273。</p>
+				<div class="button cancel" @click="step = 0">{{ $t('auth.login.previous') }}</div>
 			</div>
 		</transition>
 		<transition name="slide-fade" mode="out-in">
 			<div class="step step2" v-if="step == 2">
 				<div class="lr">
 					<div>
-						<div>验证码已发送至：</div>
+						<div>{{ $t('auth.login.codeSentTo') }}</div>
 						<div>{{mobile}}</div>
 					</div>
-					<div class="btn" v-show="!isWaiting" @click="sendCode">重新发送</div>
-					<div class="btn wait" v-show="isWaiting">等待{{waitTime}}秒</div>
+					<div class="btn" v-show="!isWaiting" @click="sendCode">{{ $t('auth.login.resend') }}</div>
+					<div class="btn wait" v-show="isWaiting">{{ $t('auth.login.waitSeconds', { seconds: waitTime }) }}</div>
 				</div>
 				<div class="longin-boder">
 					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
-					<input class="input" type="text" placeholder="请输入验证码" v-model="verifyCode"/>
+					<input class="input" type="text" :placeholder="$t('auth.login.codePlaceholder')" v-model="verifyCode"/>
 				</div>
 
-				<div class="button" @click="nextStep()">下一步</div>
-				<div class="button cancel nomargin" @click="step = 0">上一步</div>
+				<div class="button" @click="nextStep()">{{ $t('auth.login.next') }}</div>
+				<div class="button cancel nomargin" @click="step = 0">{{ $t('auth.login.previous') }}</div>
 			</div>
 		</transition>
 		<transition name="slide-fade" mode="out-in">
 			<div class="step step3" v-if="step == 3">
-				<p>欢迎来到原木社区，请设置你的账号和密码。</p>
+				<p>{{ $t('auth.login.welcomeSetup') }}</p>
 				<div class="longin-boder" v-if="!forgetPwd">
 					<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon" /></div>
-					<input class="input" type="text" placeholder="请输入账号" v-model="account" @input="checkAccount"/>
+					<input class="input" type="text" :placeholder="$t('auth.login.accountPlaceholder')" v-model="account" @input="checkAccount"/>
 				</div>
-				<div class="warn" v-show="accountUsed && !forgetPwd">该账号已被使用</div>
+				<div class="warn" v-show="accountUsed && !forgetPwd">{{ $t('auth.login.accountUsed') }}</div>
 				<div class="longin-boder">
 					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
-					<input class="input" type="password" placeholder="请输入密码" v-model="pwd"/>
+					<input class="input" type="password" :placeholder="$t('auth.login.passwordPlaceholder')" v-model="pwd"/>
 				</div>
 
-				<div class="button" @click="nextStep()">下一步</div>
-				<div class="button cancel nomargin" @click="step = 0;">上一步</div>
+				<div class="button" @click="nextStep()">{{ $t('auth.login.next') }}</div>
+				<div class="button cancel nomargin" @click="step = 0;">{{ $t('auth.login.previous') }}</div>
 			</div>
 		</transition>
 		<transition name="slide-fade" mode="out-in">
 			<div class="step step5" v-if="step == 5">
 				<div class="lr">
 					<div>
-						<div>即将使用以下手机号登录：</div>
+						<div>{{ $t('auth.login.mobile.signInWith') }}</div>
 						<div>{{mobile}}</div>
 					</div>
-					<div class="btn" @click="forgetPwd=true;step = 1">忘记密码</div>
+					<div class="btn" @click="forgetPwd=true;step = 1">{{ $t('auth.login.forgotPassword') }}</div>
 				</div>
 				<div class="longin-boder">
 					<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
-					<input class="input" type="password" placeholder="请输入密码" v-model="pwd"/>
+					<input class="input" type="password" :placeholder="$t('auth.login.passwordPlaceholder')" v-model="pwd"/>
 				</div>
 
-				<div class="button" @click="nextStep()">登录</div>
-				<div class="button cancel nomargin" @click="step = 0">上一步</div>
+				<div class="button" @click="nextStep()">{{ $t('auth.login.signIn') }}</div>
+				<div class="button cancel nomargin" @click="step = 0">{{ $t('auth.login.previous') }}</div>
 			</div>
 		</transition>
 	</view>
@@ -124,7 +124,7 @@
 						this.forgetPwd = false;
 						if(!/^1[3-9]\d{9}$/.test(this.mobile)){
 							uni.showToast({
-								title: "请输入11位数字的中国大陆手机号",
+								title: this.$t('auth.login.mobile.invalidMobile'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -185,7 +185,7 @@
 				let _this = this;
 				if (this.resultData == false) {
 					uni.showToast({
-						title: "请滑动验证滑块",
+						title: this.$t('auth.login.sliderFirst'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -223,7 +223,7 @@
 			},
 			submit(){
 				uni.showLoading({
-					title: '验证中'
+					title: this.$t('common.verifying')
 				});
 				let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
 				let _this = this;
@@ -243,7 +243,7 @@
 					if(res.data.msg == "登录成功")
 					{
 						uni.showToast({
-							title: "绑定成功",
+							title: this.$t('auth.login.bindSuccess'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -287,7 +287,7 @@
 					  //console.log(error);
 					  if(error) {
 						  uni.showToast({
-							title: "账号或密码错误",
+							title: this.$t('auth.login.invalidCredential'),
 							icon:'none',
 							duration: 2000
 						  });
@@ -305,7 +305,7 @@
 			register() {
 				if (this.pwd == "") {
 					uni.showToast({
-						title: "请输入密码",
+						title: this.$t('auth.login.passwordRequired'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -313,7 +313,7 @@
 				}
 				if (this.isPasswd(this.pwd) != true) {
 					uni.showToast({
-						title: "密码格式：6-20位字母、数字、下划线组合",
+						title: this.$t('auth.login.passwordRule'),
 						icon: 'error',
 						duration: 2000
 					});
@@ -325,7 +325,7 @@
 				let passwordPattern = /^[a-zA-Z0-9]{6,22}$/;
 				if(!accountPattern.test(this.account) && !this.forgetPwd){
 					uni.showToast({
-						title: "账号格式：4-12位字母、数字、下划线组合",
+						title: this.$t('auth.login.accountRule'),
 						icon:'none',
 						duration: 2000
 					});
@@ -347,7 +347,7 @@
 					  //console.log(error);
 					  if(error) {
 						  uni.showToast({
-							title: "账号已被注册",
+							title: this.$t('auth.login.accountTaken'),
 							icon:'none',
 							duration: 2000
 						  });

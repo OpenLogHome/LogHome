@@ -154,7 +154,7 @@
 
 		<el-drawer :title="'上传图像'" :visible.sync="imgUploadVisible" direction="btt" size="50%">
 			<div class="drawerOuter" style="margin: 0 30rpx">
-				<el-upload class="avatar-uploader" action="http://img.codesocean.top/upload/img"
+				<el-upload class="avatar-uploader" action="https://img.codesocean.top/upload/img"
 					name="img" :headers="{apikey: '45qEQfILCQ3tAXxmUJF8O562bJU2D0'}"
 					:show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
 					<log-image v-if="content.pic" :src="content.pic" class="avatar" />

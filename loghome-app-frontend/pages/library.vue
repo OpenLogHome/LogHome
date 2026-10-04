@@ -44,6 +44,7 @@
 				<div class="novels-slide" v-if="item.collection_type == 'slide'" style="min-height: 200rpx;">
 					<transition-group name="fade" class="transition" type="in-out">
 						<bookInCase v-for="novel in item['novels']" :bookName="novel.name" :picUrl="novel.picUrl"
+							:haycraft="isHayCraftWork(novel)"
 							:key="novel.novel_id" @click.native="readBook(novel, novel.novel_id, $event)"
 							:id="'book-cover-' + novel.novel_id"></bookInCase>
 					</transition-group>
@@ -57,8 +58,9 @@
 									:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"
 									style="border-radius: 10rpx; transform:scale(.90)" />
 								<div class="bookInfo" style="margin-left:10rpx;">
-									<div class="title">
-										{{ novel.name }}
+									<div class="title title-with-haycraft">
+										<text class="book-title-text">{{ novel.name }}</text>
+										<haycraft-mark v-if="isHayCraftWork(novel)" />
 										<el-tag type="warning" v-show="novel.novel_type == 'world'" effect="dark"
 											style="margin-left:10rpx; transform:translateY(-5rpx)"
 											size="mini">世界设定</el-tag>
@@ -150,8 +152,9 @@
 										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 											:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
 										<div class="dense-card-info">
-											<div class="dense-card-title">
-												{{ novel.name }}
+											<div class="dense-card-title title-with-haycraft">
+												<text class="dense-title-text">{{ novel.name }}</text>
+												<haycraft-mark v-if="isHayCraftWork(novel)" class="dense-haycraft-mark" size="small" />
 											</div>
 											<div class="dense-card-author">{{ novel.user_name }}</div>
 										</div>
@@ -167,8 +170,9 @@
 										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 											:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
 										<div class="dense-card-info">
-											<div class="dense-card-title">
-												{{ novel.name }}
+											<div class="dense-card-title title-with-haycraft">
+												<text class="dense-title-text">{{ novel.name }}</text>
+												<haycraft-mark v-if="isHayCraftWork(novel)" class="dense-haycraft-mark" size="small" />
 											</div>
 											<div class="dense-card-author">{{ novel.user_name }}</div>
 										</div>
@@ -188,8 +192,9 @@
 					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
 						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
 					<div class="bookInfo">
-						<div class="title">
-							{{ item.name }}
+					<div class="title title-with-haycraft">
+						<text class="book-title-text">{{ item.name }}</text>
+						<haycraft-mark v-if="isHayCraftWork(item)" />
 						</div>
 						<view class="author">
 							<log-image :src="item.auther_avatar" alt="" class="auther_avatar"
@@ -215,13 +220,14 @@ import MescrollMixin from "@/uni_modules/mescroll-uni/components/mescroll-uni/me
 import darkModeMixin from '@/mixins/dark-mode.js'
 import banner from '@/components/banner.vue'
 import HorizontalTags from '../components/horizontal-tags.vue';
+import HaycraftMark from '@/components/haycraft-mark.vue'
 
 const LIBRARY_FIRST_SCREEN_CACHE_KEY = 'loghome_library_first_screen_cache';
-const LIBRARY_FIRST_SCREEN_CACHE_VERSION = 1;
+const LIBRARY_FIRST_SCREEN_CACHE_VERSION = 2;
 
 export default {
 	components: {
-		bookInCase, popup, banner, bookshelfHorizontal, HorizontalTags
+		bookInCase, popup, banner, bookshelfHorizontal, HorizontalTags, HaycraftMark
 	},
 	mixins: [MescrollMixin, darkModeMixin], // 使用mixin
 	data() {
@@ -273,6 +279,18 @@ export default {
 		this.teardownLibraryScrollTracking();
 	},
 	methods: {
+		isHayCraftWork(novel) {
+			if (!novel || typeof novel !== 'object') return false;
+			if (novel.is_haycraft === true || Number(novel.is_haycraft) === 1) return true;
+
+			// 兼容带完整标签数据的缓存或其他接口响应。
+			const rawTags = novel.tags || novel.tag_names || novel.tagNames || novel.tag_name || [];
+			const tags = Array.isArray(rawTags) ? rawTags : [rawTags];
+			return tags.some((tag) => {
+				const name = tag && typeof tag === 'object' ? tag.tag_name || tag.name : tag;
+				return String(name || '').toLowerCase().includes('haycraft');
+			});
+		},
 		getLibraryDocumentScrollTop() {
 			if (typeof window === 'undefined' || typeof document === 'undefined') return 0;
 			const roots = [
@@ -1258,6 +1276,44 @@ export default {
 
 .dense-card-container::-webkit-scrollbar {
 	display: none;
+}
+
+.title-with-haycraft {
+	display: flex !important;
+	align-items: center;
+	min-width: 0;
+	-webkit-line-clamp: unset !important;
+}
+
+.book-title-text {
+	min-width: 0;
+	flex: 0 1 auto;
+	max-width: calc(100% - 44rpx);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.dense-card-title.title-with-haycraft {
+	align-items: flex-start;
+}
+
+.dense-title-text {
+	min-width: 0;
+	flex: 0 1 auto;
+	width: fit-content;
+	max-width: calc(100% - 36rpx);
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	text-overflow: ellipsis;
+	line-height: 42rpx;
+}
+
+.dense-haycraft-mark {
+	align-self: flex-start;
+	margin-top: 5rpx;
 }
 
 .appRecommendInfo{

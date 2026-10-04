@@ -9,16 +9,16 @@
 			<view class="score"><countTo :startVal="0" :endVal="credit.credit" :duration="1500"></countTo></view>
 		</view>
 		<view class="credit_records">
-			<view class="title_bar">变更记录</view>
+			<view class="title_bar">{{ $t('settings.credit.recordsTitle') }}</view>
 			<view class="credit_history" v-if="credit.history==[]">
-				<text>信誉良好，没有留下记录</text>
+				<text>{{ $t('settings.credit.noRecords') }}</text>
 			</view>
 			<view class="credit_history" v-else v-for="history in credit.history">
 				<view class="credit_reason">{{history.reason}}</view>
 				<view class="credit_change" :class="{'fix': (history.type===2)}" v-if="history.type===2">{{history.delta}}</view>
 				<view class="credit_change" :class='{"adjust_add": (history.type===1&&history.delta>0)}' v-else-if="history.type===1&&history.delta>0">+{{history.delta}}</view>
 				<view class="credit_change" :class='{"adjust_remove": (history.type===1&&history.delta<=0)}' v-else-if="history.type===1&&history.delta<=0">{{history.delta}}</view>
-				<view class="credit_change" v-else>历史信息出错</view>
+				<view class="credit_change" v-else>{{ $t('settings.credit.historyError') }}</view>
 				<view class="credit_date">{{utc2beijing(history.time)}}</view>
 			</view>
 		</view>

@@ -8,7 +8,11 @@ import SlideVerify from 'vue-monoplasty-slide-verify';
 import LogImage from "./components/LogImage";
 import UserAvatar from "./components/UserAvatar";
 import darkNavigationMixin from './mixins/dark-navigation.vue';
+import localizedNavigationMixin from './mixins/localized-navigation.js';
 import { installNativeRouter } from './common/native-router';
+import { installAiNavigationGuard, syncAiPreference, AI_DISABLED_STORAGE_KEY } from './common/ai-preference.js';
+import aiAssistanceMixin from './mixins/ai-assistance.js';
+import { relativeTime } from './common/datetime.js';
 import i18n from './i18n';
 import { resolveEffectiveLanguage } from './i18n/resolve.js';
 
@@ -25,19 +29,18 @@ Vue.component('user-avatar', UserAvatar);
 import ThemeSwitch from '@/components/theme-switch.vue';
 Vue.component('theme-switch', ThemeSwitch);
 
-const BASE_URL_PRODUCTION = "https://loghomeservice.codesocean.top"
+const BASE_URL_PRODUCTION = "https://api.loghome.ink"
 const BASE_URL_DEV = "http://127.0.0.1:9000"
 const BASE_URL_EMULATOR_DEV = "http://10.0.2.2:9000"
-const BASE_URL_SCF = "https://loghomeinnerservice.codesocean.top"
-const READER_AI_BASE_URL_PRODUCTION = "http://ai.loghome.codesocean.top:9101"
+const READER_AI_BASE_URL_PRODUCTION = "https://ai.loghome.ink"
 const READER_AI_BASE_URL_DEV = "http://127.0.0.1:9101"
 const READER_AI_BASE_URL_EMULATOR_DEV = "http://10.0.2.2:9101"
-const COLLABORATION_WS_URL_PRODUCTION = "ws://ai.loghome.codesocean.top:9102"
+const COLLABORATION_WS_URL_PRODUCTION = "wss://ai.loghome.ink"
 const COLLABORATION_WS_URL_DEV = "ws://127.0.0.1:9102"
 const COLLABORATION_WS_URL_EMULATOR_DEV = "ws://10.0.2.2:9102"
 
-const STORE_BASE_URL_PRODUCTION = "http://store.codesocean.top"
-const STORE_BASE_URL_DEV = "http://localhost:5173"
+// const STORE_BASE_URL_PRODUCTION = "http://store.codesocean.top"
+// const STORE_BASE_URL_DEV = "http://localhost:5173"
 
 Vue.use(SlideVerify);
 Vue.use(ElementUI);
@@ -49,10 +52,10 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_EMULATOR_DEV;
+Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;
 Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_PRODUCTION;
 Vue.prototype.$collaborationWsUrl = COLLABORATION_WS_URL_PRODUCTION;
-Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;
+// Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
 	bookCover:"https://s4.ax1x.com/2022/01/13/7lYAlq.png"
@@ -231,43 +234,9 @@ if(!dbStatus || (dbStatus && dbStatus == "enabled")){
 	
 }
 
-Vue.prototype.timeConvert = function getDateDiff(dateTimeStamp) {
-    // 时间字符串转时间戳
-    var timestamp = new Date(dateTimeStamp).getTime();
-    
-    var minute = 1000 * 60;
-    var hour = minute * 60;
-    var day = hour * 24;
-    var halfamonth = day * 15;
-    var month = day * 30;
-    var year = day * 365;
-    var now = new Date().getTime();
-    var diffValue = now - timestamp;
-    var result;
-    if (diffValue < 0) {
-        return "刚刚";
-    }
-    var yearC = diffValue / year;
-    var monthC = diffValue / month;
-    var weekC = diffValue / (7 * day);
-    var dayC = diffValue / day;
-    var hourC = diffValue / hour;
-    var minC = diffValue / minute;
-    if (yearC >= 1) {
-        result = "" + parseInt(yearC) + "年前";
-    } else if (monthC >= 1) {
-        result = "" + parseInt(monthC) + "个月前";
-    } else if (weekC >= 1) {
-        result = "" + parseInt(weekC) + "周前";
-    } else if (dayC >= 1) {
-        result = "" + parseInt(dayC) + "天前";
-    } else if (hourC >= 1) {
-        result = "" + parseInt(hourC) + "小时前";
-    } else if (minC >= 1) {
-        result = "" + parseInt(minC) + "分钟前";
-    } else
-        result = "刚刚";
-    return result;
+Vue.prototype.timeConvert = function timeConvert(dateTimeStamp) {
+	// i18n：相对时间格式化迁移至 common/datetime.js（zh 输出与旧实现一致）
+	return relativeTime(dateTimeStamp);
 }
 
 
@@ -355,7 +324,12 @@ if(window.jsBridge) {
 Vue.prototype.jsBridge = window.jsBridge;
 if (typeof uni !== 'undefined') {
 	installNativeRouter(uni);
+	installAiNavigationGuard(uni, store, () => uni.showToast({ title: i18n.t('settings.ai.disabledNotice'), icon: 'none' }));
 }
+
+window.addEventListener('storage', (event) => {
+	if (event.key === AI_DISABLED_STORAGE_KEY || event.key === null) syncAiPreference(store);
+});
 
 
 let clipBoardContent = "";
@@ -370,6 +344,8 @@ let clipBoardContent = "";
 // },3000)
 
 Vue.mixin(darkNavigationMixin);
+Vue.mixin(localizedNavigationMixin);
+Vue.mixin(aiAssistanceMixin);
 
 Vue.config.productionTip = false;
 App.mpType = 'app'

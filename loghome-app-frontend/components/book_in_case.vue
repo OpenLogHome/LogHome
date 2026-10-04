@@ -12,14 +12,20 @@
 			</div>
 		</div>
 		<div :class="{nameTag:true, empty:bookName==''}" v-dark>
-			{{bookName}}
+			<text>{{bookName}}</text>
+			<haycraft-mark v-if="haycraft" size="small" />
 		</div>
 	</div>
 
 </template>
 
 <script>
+	import HaycraftMark from './haycraft-mark.vue'
+
 	export default{
+		components: {
+			HaycraftMark
+		},
 		props:{
 			bookName:{
 				type: String,
@@ -32,6 +38,10 @@
 			updateInfo:{
 				type: Object,
 				default: null
+			},
+			haycraft: {
+				type: Boolean,
+				default: false
 			}
 		}
 	}
@@ -77,9 +87,6 @@
 		div.nameTag{
 			width:180rpx;
 			height:60rpx;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 2;
 			overflow:hidden;
 			text-align: center;
 			color:#535353;

@@ -1,33 +1,33 @@
 <template>
 	<view class="outer" v-dark>
 		<div class="info">
-			<p>亲爱的朋友，欢迎你加入原木社区大家庭！</p>
-			<p>我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持使用手机号作为验证方式，请尽快迁移至邮箱登录。</p>
-			<p>为了保证不间断的使用，请通过以下激活方式激活账号：</p>
+			<p>{{ $t('settings.activate.welcome') }}</p>
+			<p>{{ $t('settings.activate.mobilePolicyNotice') }}</p>
+			<p>{{ $t('settings.activate.activateIntro') }}</p>
 		</div>
 		<view class="list">
 			<view class="li ">
-				<view class="text">通过手机号绑定</view>
+				<view class="text">{{ $t('settings.activate.bindByMobile') }}</view>
 				<view  v-show="user.mobile != 'unbind'">{{user.mobile}}</view>
 				<!-- <img class="to" src="../../static/user/to.png"  v-show="user.mobile == 'unbind'"></img> -->
 			</view>
 		</view>
 		<view class="list">
 			<view class="li">
-				<view class="text">通过QQ号绑定</view>
+				<view class="text">{{ $t('settings.activate.bindByQq') }}</view>
 				<view  v-show="user.oicq_account != 'unbind'">{{user.oicq_account}}</view>
 				<!-- <img class="to" src="../../static/user/to.png" v-show="user.oicq_account == 'unbind'"></img> -->
 			</view>
 		</view>
 		<view class="list">
 			<view class="li noborder" @click="gotoEmailActivate">
-				<view class="text">通过邮箱绑定</view>
+				<view class="text">{{ $t('settings.activate.bindByEmail') }}</view>
 				<view v-show="user.email && user.email != 'unbind'">{{user.email}}</view>
 				<img class="to" src="../../static/user/to.png" v-show="!user.email || user.email == 'unbind'"></img>
 			</view>
 		</view>
 		<div class="info">
-			<p>我们暂时不支持解绑账号，如有相关诉求请至反馈中心反馈，我们的客服将协助你解决相关问题。</p>
+			<p>{{ $t('settings.activate.unbindNotice') }}</p>
 		</div>
 		<!-- <div class="button" @click="goAnyWay">以游客身份继续使用</div> -->
 	</view>

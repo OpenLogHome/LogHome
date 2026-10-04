@@ -3,34 +3,34 @@
 		<div class="content">
 			<img class="logo" src="/static/logo.png"></img>
 			<view class="text-area">
-				<div class="title">原木通信证登录</div>
-				<div class="version" v-show="$store.state.appVersion">APP版本：{{this.$store.state.appVersion}}</div>
+				<div class="title">{{ $t('auth.login.account.title') }}</div>
+				<div class="version" v-show="$store.state.appVersion">{{ $t('auth.login.account.appVersion') }}{{this.$store.state.appVersion}}</div>
 			</view>
 			<div class="longin-boder">
 				<div class="image"><img src="../../static/icons/icon_my_user.png" class="icon" /></div>
-				<input class="input" type="text" placeholder="请输入账号/手机号/QQ" v-model="account"/>
+				<input class="input" type="text" :placeholder="$t('auth.login.account.accountPlaceholder')" v-model="account"/>
 			</div>
 			<!--End用户名输入框-->
 			<div class="longin-boder">
 				<div class="image"><img src="../../static/icons/icon_my_password.png" class="icon" /></div>
-				<input class="input" type="password" placeholder="请输入密码" v-model="pwd"/>
+				<input class="input" type="password" :placeholder="$t('auth.login.passwordPlaceholder')" v-model="pwd"/>
 			</div>
 			<!--End密码输入框-->
-			<div class="button" @click="login">登录</div>
+			<div class="button" @click="login">{{ $t('auth.login.signIn') }}</div>
 			<label style="margin-left:50vw; transform:translateX(-50%);
 			display: flex;flex-direction: row;font-size: 28upx; margin-top: 50rpx;
 			width:80vw">
 				<checkbox-group  @change="selectCk">
 					<checkbox value="yes" color="rgb(180, 111, 88)"/>
 				</checkbox-group>
-				<span style="display: flex;flex-direction: row;">我已经阅读并接受
-					<navigator url="../static/privacyAgreement" open-type="navigate" style="color: #FF6000;border-bottom: 1px solid  #FF6000;">原木社区用户隐私政策
+				<span style="display: flex;flex-direction: row;">{{ $t('auth.login.agreeAccept') }}
+					<navigator url="../static/privacyAgreement" open-type="navigate" style="color: #FF6000;border-bottom: 1px solid  #FF6000;">{{ $t('auth.login.privacyPolicy') }}
 					</navigator>
 				</span>
 			</label>
 
-			<div class="button-small" @click="forgotten">忘记密码</div>
-			<div class="button-small" @click="register">注册账号</div>
+			<div class="button-small" @click="forgotten">{{ $t('auth.login.forgotPassword') }}</div>
+			<div class="button-small" @click="register">{{ $t('auth.login.account.signUp') }}</div>
 
 
 			<div class="certification" style="padding-top: 200rpx;">
@@ -48,7 +48,7 @@
 				                    "><log-image src="https://dn-tystatic.qbox.me/img/buliang.png" style="
 				                        margin-right: 5px;
 				                        width: 35rpx;
-				                        height: 35rpx;" />网上有害信息举报专区</a>
+				                        height: 35rpx;" />{{ $t('auth.login.account.reportZone') }}</a>
 
 				<div style="font-size:30rpx;text-decoration:none;height:20px;line-height:20px;color:#939393;
 				margin-bottom:10rpx;">
@@ -85,7 +85,7 @@
 		onLoad(params) {
 			if(params.msg != undefined) {
 				uni.showToast({
-					title: "请先登录",
+					title: this.$t('common.needLogin'),
 					icon:'none',
 					duration: 2000
 				});
@@ -102,7 +102,7 @@
 			login(){
 				if(!this.checked){
 					uni.showToast({
-						title: "请先阅读并接受《原木社区用户隐私政策》",
+						title: this.$t('auth.login.account.agreeRequired'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -123,7 +123,7 @@
 					  //console.log(error);
 					  if(error) {
 						  uni.showToast({
-							title: "账号或密码错误",
+							title: this.$t('auth.login.invalidCredential'),
 							icon:'none',
 							duration: 2000
 						  });

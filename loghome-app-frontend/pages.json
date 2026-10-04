@@ -132,6 +132,35 @@
 			}
 		},
 		{
+			"path": "pages/readers/mangaInfo",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "漫画详情",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/readers/mangaReader",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "漫画阅读",
+				"enablePullDownRefresh": false,
+				"backgroundColor": "#111111"
+			}
+		},
+		{
+			"path": "pages/writers/mangaEditor",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "漫画话数管理",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/writers/mangaSettings",
+			"style": { "navigationStyle": "custom", "navigationBarTitleText": "漫画作品设置" }
+		},
+		{
 			"path": "pages/readers/askLogGirl",
 			"style": {
 				"navigationStyle": "custom"
@@ -596,6 +625,12 @@
 			"path": "pages/settings/pushSettings",
 			"style": {
 				"navigationBarTitleText": "消息推送设置"
+			}
+		},
+		{
+			"path": "pages/settings/privacySettings",
+			"style": {
+				"navigationBarTitleText": "隐私设置"
 			}
 		},
 		{

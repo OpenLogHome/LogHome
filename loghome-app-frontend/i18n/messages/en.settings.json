@@ -1,0 +1,152 @@
+{
+	"settings": {
+		"ai": {
+			"disable": "Disable AI assistance",
+			"hint": "Hide Redstone Center and all AI feature entry points. Saved on this device, effective immediately, and reversible.",
+			"disabledNotice": "AI assistance is disabled. You can enable it again in Settings.",
+			"saveFailed": "Could not save this setting. Please retry."
+		},
+		"privacy": {
+			"title": "Privacy settings",
+			"intro": "Manage your account privacy. These settings sync across devices.",
+			"listsTitle": "Following and followers",
+			"listsHint": "Choose which lists others can see. You can always view your own lists. Counts remain public.",
+			"lists": { "public": "Both public", "following_only": "Following list only", "fans_only": "Followers list only", "private": "Both private" },
+			"messagesTitle": "Who can message me",
+			"messagesHint": "Default allows all signed-in users. “People I follow” means senders you follow. Existing messages are not affected.",
+			"messages": { "default": "Default", "following": "People I follow", "mutual": "Mutual follows", "none": "No one" },
+			"save": "Save settings", "saved": "Privacy settings saved", "savedHint": "Changes take effect immediately after saving.",
+			"loading": "Loading privacy settings…", "loadFailed": "Could not load privacy settings. Please retry.", "saveFailed": "Could not save settings. Please retry.",
+			"retry": "Reload", "loginRequired": "Sign in to manage account privacy",
+			"privateList": "This list is private", "listLoadFailed": "Could not load this list. Please retry.",
+			"messageForbidden": "This user's privacy settings do not allow you to send messages"
+		},
+		"language": {
+			"title": "Language",
+			"followSystem": "Follow system",
+			"switched": "Language updated"
+		},
+		"clientSet": {
+			"pushQq": "Push notifications & QQ binding",
+			"changePassword": "Change password",
+			"accountBinding": "Account binding",
+			"storageManage": "Storage usage",
+			"logout": "Log out",
+			"logoutConfirm": "Log out now?"
+		},
+		"storageManage": {
+			"title": "Storage Usage",
+			"articleName": "Reader database",
+			"articleDesc": "Downloaded novels and chapter content",
+			"imgName": "Image cache database",
+			"imgDesc": "Cached image data",
+			"writerName": "Writing backup database",
+			"writerDesc": "Locally backed-up chapter history",
+			"clearAll": "Clear all",
+			"warning": "Warning",
+			"clearConfirm": "Clear all data? This cannot be undone!",
+			"clearDone": "Cleared",
+			"clearFailed": "Failed to clear"
+		},
+		"activate": {
+			"welcome": "Dear friend, welcome to the LogHome family!",
+			"mobilePolicyNotice": "We're sorry to inform you that, due to MIIT policy changes, LogHome no longer supports phone-number verification. Please switch to email sign-in as soon as possible.",
+			"activateIntro": "To keep using the app without interruption, please activate your account with one of the methods below:",
+			"bindByMobile": "Bind with phone number",
+			"bindByQq": "Bind with QQ number",
+			"bindByEmail": "Bind with email",
+			"unbindNotice": "Account unbinding is not supported for now. If you need help with this, please post in the feedback center and our support team will assist you.",
+			"mobilePlaceholder": "Enter phone number",
+			"emailPlaceholder": "Enter email address",
+			"sendCode": "Send code",
+			"waitSeconds": "Wait {seconds}s",
+			"slideRight": "Slide to verify",
+			"codePlaceholder": "Verification code",
+			"slideVerifyRequired": "Please complete the slider verification first",
+			"invalidEmail": "Please enter a valid email address",
+			"sending": "Sending",
+			"sendFailed": "Failed to send, please try again later",
+			"invalidCode": "Please enter a valid verification code",
+			"bindSuccess": "Bound successfully",
+			"emailBindSuccess": "Email bound successfully",
+			"verifyCodeFailed": "Verification failed, please check the code",
+			"verifyFailed": "Verification failed, please try again later",
+			"oicqIntro": "Your account still needs to be activated. To keep using the app without interruption, please follow the steps below:",
+			"oicqStep1": "1. Tap the box below to copy your verification code",
+			"oicqStep2": "2. Join any LogHome community QQ group",
+			"oicqGroupList": "LogHome community QQ group list:",
+			"oicqGroupMain": "LogHome user group: 644467605",
+			"oicqGroupBeta": "LogHome beta group: 931304998",
+			"oicqGroupWriter": "LogHome Writers main group: 464239748",
+			"oicqStep3Prefix": "3. Send the verification code ",
+			"oicqStep3Via": "via private message",
+			"oicqStep3Suffix": " to our LogHome community admin \"苦力怕君\" in the group",
+			"oicqTip": "Friendly reminder: never send the code in a public group chat — it must be sent via private message.",
+			"oicqBindNote": "This will bind your account to the QQ number that sends the code. One QQ number can bind multiple community accounts.",
+			"getCodeFailed": "Failed to get the verification code"
+		},
+		"userInfo": {
+			"changeAvatar": "Change avatar",
+			"chooseFrame": "Choose avatar frame",
+			"penNamePlaceholder": "Pen name",
+			"mottoPlaceholder": "Bio",
+			"requiredMissing": "Please fill in all required fields",
+			"updateSuccess": "Updated",
+			"updateFailed": "Failed to update"
+		},
+		"donate": {
+			"intro": "The great LogHome tree carries book after book — go water it and give it some fertilizer!",
+			"button": "Donate"
+		},
+		"credit": {
+			"recordsTitle": "Change log",
+			"noRecords": "Good standing — no records yet",
+			"historyError": "Error in history entry"
+		},
+		"upload": {
+			"chooseImage": "Choose image",
+			"reselect": "Reselect",
+			"rotate": "Rotate",
+			"preview": "Preview",
+			"upload": "Upload",
+			"rotating": "Rotating...",
+			"cropping": "Cropping...",
+			"uploading": "Uploading...",
+			"rotatingWait": "Rotating, please wait a moment",
+			"croppingWait": "Cropping, please wait a moment",
+			"uploadingWait": "Uploading, please wait a moment",
+			"uploadFailed": "Upload failed"
+		},
+		"push": {
+			"bindQqTitle": "Link QQ",
+			"bindQqDesc": "You can link your QQ account to receive system push notifications.",
+			"bindingCodeLabel": "Your binding code: ",
+			"copy": "Copy",
+			"refresh": "Refresh",
+			"bindHowto": "Send this binding code to 原木娘 (2917117044) in the LogHome user QQ group (701928273), and the binding will complete automatically.",
+			"statusPrefix": "Status: ",
+			"statusEnabled": "Enabled",
+			"statusDisabled": "Disabled",
+			"receiveWindow": "Receiving window",
+			"nextDay": "(next day)",
+			"copySuccess": "Copied",
+			"refreshSuccess": "Code refreshed",
+			"getCodeFailed": "Failed to get the binding code",
+			"refreshConfirm": "Refresh the binding code?",
+			"settingFailed": "Failed to update setting",
+			"enable": "Enable",
+			"disable": "Disable",
+			"disableConfirm": "Once turned off, you won't receive important message notifications in time. Turn it off?",
+			"loadingCode": "Loading..."
+		},
+		"autoSave": {
+			"aboutTitle": "About local backup:",
+			"aboutDesc": "LogHome provides powerful local backups. While you write in the article editor, your work is backed up automatically at the auto-backup interval you set.",
+			"interval": "Auto-backup interval: {minutes} min",
+			"minutesOption": "{count} min",
+			"enable": "Enable",
+			"disable": "Disable",
+			"restartNote": "The new setting takes effect after you restart the app."
+		}
+	}
+}

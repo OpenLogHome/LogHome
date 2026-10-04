@@ -1,7 +1,7 @@
 <template>
 	<view class="outer" v-dark>
-		<div class="intro">原木巨树承载着一本又一本的书籍，快去给他浇点水、施点肥</div>
-		<div class="button" @click="gotoDonate">捐助</div>
+		<div class="intro">{{ $t('settings.donate.intro') }}</div>
+		<div class="button" @click="gotoDonate">{{ $t('settings.donate.button') }}</div>
 		</view>
 </template>
 <script>

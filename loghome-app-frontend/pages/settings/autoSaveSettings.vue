@@ -2,10 +2,10 @@
 	<view class="outer" v-dark>
 		<div class="description">
 			<div style=" background-color:var(--card-background); padding:50rpx; font-size: 35rpx;" data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed=""><p>
-				<strong>关于本地备份：</strong>
+				<strong>{{ $t('settings.autoSave.aboutTitle') }}</strong>
 			</p>
 			<p style="text-indent:2em;">
-				原木社区为您提供了强大的本地备份功能。在文章编辑器中进行文章撰写时，我们会以您设置的自动备份频率进行备份。
+				{{ $t('settings.autoSave.aboutDesc') }}
 			</p>
 			</div>
 		</div>
@@ -16,7 +16,7 @@
 					<img class="to" src="../../static/user/to.png"></img>
 				</view> -->
 				<view class="li " @click="saveTimeSet" v-show="dbStatus == 'enabled'">
-					<view class="text">自动备份间隔：{{EditorAutoSaveProps.timeSpan}} 分钟</view>
+					<view class="text">{{ $t('settings.autoSave.interval', { minutes: EditorAutoSaveProps.timeSpan }) }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
@@ -42,7 +42,7 @@
 			autoSaveSet(){
 				let _this = this;
 				uni.showActionSheet({
-				    itemList: ['启用',"禁用"],
+				    itemList: [this.$t('settings.autoSave.enable'), this.$t('settings.autoSave.disable')],
 				    success: function (res) {
 				        if(res.tapIndex == 0) {
 							window.localStorage.setItem("IndexedDB","enabled");
@@ -51,8 +51,8 @@
 							window.localStorage.setItem("IndexedDB","disabled");
 						}
 						uni.showModal({
-							title: '设置成功',
-							content: '新设置重启应用后生效。',
+							title: _this.$t('common.settingSuccess'),
+							content: _this.$t('settings.autoSave.restartNote'),
 							confirmColor:"#EA7034",
 							showCancel: false,
 							success: function (res) {
@@ -71,7 +71,7 @@
 				let _this = this;
 				let selectors = [];
 				for(let i = 1;i < 11 ; i ++){
-					selectors.push(i + " 分钟");
+					selectors.push(_this.$t('settings.autoSave.minutesOption', { count: i }));
 				}
 				uni.showActionSheet({
 				    itemList: selectors,
@@ -79,8 +79,8 @@
 						_this.EditorAutoSaveProps.timeSpan = res.tapIndex + 1;
 						window.localStorage.setItem("EditorAutoSave",JSON.stringify(_this.EditorAutoSaveProps));
 						uni.showModal({
-							title: '设置成功',
-							content: '新设置重启应用后生效。',
+							title: _this.$t('common.settingSuccess'),
+							content: _this.$t('settings.autoSave.restartNote'),
 							confirmColor:"#EA7034",
 							showCancel: false,
 							success: function (res) {

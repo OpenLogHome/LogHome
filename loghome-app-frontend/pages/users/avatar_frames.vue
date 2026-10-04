@@ -4,8 +4,8 @@
 			<view class="preview-card__avatar">
 				<user-avatar :src="user.avatar_url" :frame="previewFrame" :animate="true" />
 			</view>
-			<text class="preview-card__name">{{ previewFrame ? previewFrame.name : '不使用头像挂件' }}</text>
-			<text class="preview-card__hint">选择喜欢的装饰，让头像更有辨识度</text>
+			<text class="preview-card__name">{{ previewFrame ? previewFrame.name : $t('me.frames.noneSelected') }}</text>
+			<text class="preview-card__hint">{{ $t('me.frames.hint') }}</text>
 		</view>
 
 		<scroll-view class="filter-bar" scroll-x :show-scrollbar="false">
@@ -16,14 +16,14 @@
 					class="filter-chip"
 					:class="{ active: filter === item.key }"
 					@tap="filter = item.key"
-				>{{ item.label }}</view>
+				>{{ $t('me.frames.filter.' + item.key) }}</view>
 			</view>
 		</scroll-view>
 
-		<view v-if="loading" class="state-text">头像挂件加载中…</view>
+		<view v-if="loading" class="state-text">{{ $t('me.frames.loading') }}</view>
 		<view v-else-if="loadError" class="load-error">
 			<text class="load-error__text">{{ loadError }}</text>
-			<button class="load-error__retry" @tap="loadPage">重新加载</button>
+			<button class="load-error__retry" @tap="loadPage">{{ $t('common.retry') }}</button>
 		</view>
 		<view v-else class="frame-grid">
 			<view
@@ -35,8 +35,8 @@
 				<view class="frame-card__avatar frame-card__none">
 					<user-avatar :src="user.avatar_url" />
 				</view>
-				<text class="frame-card__name">不使用</text>
-				<text class="frame-card__tier">免费</text>
+				<text class="frame-card__name">{{ $t('me.frames.none') }}</text>
+				<text class="frame-card__tier">{{ $t('me.frames.filter.free') }}</text>
 			</view>
 
 			<view
@@ -57,7 +57,7 @@
 
 		<view class="save-area">
 			<button class="save-button" :disabled="saving || loading || !hasChanged" @tap="saveSelection">
-				{{ saving ? '保存中…' : hasChanged ? '使用这个头像挂件' : '正在使用' }}
+				{{ saving ? $t('me.frames.saving') : hasChanged ? $t('me.frames.useThis') : $t('me.frames.inUse') }}
 			</button>
 		</view>
 	</view>
@@ -86,10 +86,10 @@
 				saving: false,
 				loadError: '',
 				filters: [
-					{ key: 'all', label: '全部' },
-					{ key: 'free', label: '免费' },
-					{ key: 'standard', label: '原木通行证' },
-					{ key: 'super', label: '超级通行证' },
+					{ key: 'all' },
+					{ key: 'free' },
+					{ key: 'standard' },
+					{ key: 'super' },
 				],
 			};
 		},
@@ -148,9 +148,12 @@
 				}
 				const isSuper = frame.required_tier === 'super';
 				uni.showModal({
-					title: isSuper ? '超级通行证专属头像挂件' : '通行证专属头像挂件',
-					content: `${frame.name}需要${isSuper ? '超级原木通行证' : '原木通行证或超级原木通行证'}才能使用。`,
-					confirmText: '查看通行证',
+					title: this.$t(isSuper ? 'me.frames.lockedSuper' : 'me.frames.locked'),
+					content: this.$t('me.frames.lockedContent', {
+						name: frame.name,
+						tier: isSuper ? this.$t('me.frames.needSuper') : this.$t('me.frames.needAny'),
+					}),
+					confirmText: this.$t('me.frames.viewPass'),
 					success: (result) => {
 						if (result.confirm) uni.navigateTo({ url: `/pages/membership/index?tier=${isSuper ? 'super' : 'standard'}` });
 					},
@@ -165,17 +168,15 @@
 					this.user.selected_avatar_frame_id = this.selectedFrameId;
 					this.user.avatar_frame = result.avatar_frame || null;
 					window.localStorage.setItem('LogHomeUserInfo', JSON.stringify(this.user));
-					uni.showToast({ title: this.selectedFrameId == null ? '已取消头像挂件' : '头像挂件已生效', icon: 'none' });
+					uni.showToast({ title: this.selectedFrameId == null ? this.$t('me.frames.removed') : this.$t('me.frames.applied'), icon: 'none' });
 				} catch (error) {
-					uni.showToast({ title: getAvatarFrameErrorMessage(error, '头像挂件保存失败'), icon: 'none' });
+					uni.showToast({ title: getAvatarFrameErrorMessage(error, this.$t('me.frames.saveFailed')), icon: 'none' });
 				} finally {
 					this.saving = false;
 				}
 			},
 			tierLabel(tier) {
-				if (tier === 'super') return '超级通行证';
-				if (tier === 'standard') return '原木通行证';
-				return '免费';
+				return this.$t('me.frames.filter.' + (tier === 'super' || tier === 'standard' ? tier : 'free'));
 			},
 		},
 	};

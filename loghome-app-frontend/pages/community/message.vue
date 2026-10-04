@@ -29,46 +29,50 @@
 			:badgeIndexes="badgeIndexes"
 			ref="tabs"/>
 		
-		<!-- 消息列表 -->
-		<view class="list">
-			<div class="users" v-for="item in filteredMessages">
-				<div class="avators" @click="navigateTo('../users/personalPage?id='+item.from_id)">
-					<user-avatar class="message-avatar" :src="item.avatar_url" :frame="item.avatar_frame"
-						:visual-scale="item.avatar_frame ? 1.25 : 1" />
-				</div>
-				<div class="users" @click="navigateTo(item.router ? '../' + item.router : './')">
-					<div class="personInfo">
-						<div class="name_time">
-							<div class="name">{{item.name}}</div>
-							<div class="time">{{utc2beijing(item.time)}}</div>
-						</div>
-						<div class="motto">{{item.message_content}}</div>
-					</div>
-				</div>
-			</div>
-		</view>
-
-		<div class="nouser" v-if="filteredMessages.length == 0" :style="{
-			display: 'flex', 
-			justifyContent: 'center', 
-			alignItems: 'center', 
-			height: '300rpx', 
-			backgroundColor: $store.state.isDarkMode ? 'var(--background-color)' : '#F2F2F2', 
-			color: $store.state.isDarkMode ? 'var(--text-color-regular)' : '#333'
-		}">
-			暂无消息
-		</div>
+		<!-- 三个分类始终保留在横向分页轨道中，手势拖动时由原生 swiper 跟手。 -->
+		<swiper
+			class="message-swiper"
+			:current="curTabIndex"
+			:duration="280"
+			:circular="false"
+			@change="handleSwiperChange"
+		>
+			<swiper-item v-for="(group, pageIndex) in messageGroups" :key="messageTypes[pageIndex]">
+				<scroll-view class="message-page" scroll-y :show-scrollbar="false">
+					<view v-if="group.length" class="message-list">
+						<view
+							class="message-item"
+							v-for="(item, itemIndex) in group"
+							:key="item.message_id || item.id || `${messageTypes[pageIndex]}-${itemIndex}`"
+						>
+							<view class="avatar-wrap" @click.stop="navigateTo('../users/personalPage?id=' + item.from_id)">
+								<user-avatar class="message-avatar" :src="item.avatar_url" :frame="item.avatar_frame"
+									:visual-scale="item.avatar_frame ? 1.25 : 1" />
+							</view>
+							<view class="message-main" @click="navigateTo(item.router ? '../' + item.router : './')">
+								<view class="name-time">
+									<text class="name">{{item.name}}</text>
+									<text class="time">{{utc2beijing(item.time)}}</text>
+								</view>
+								<text class="message-content">{{item.message_content}}</text>
+							</view>
+						</view>
+					</view>
+					<view v-else class="empty-state">
+						<view class="empty-state-icon">◎</view>
+						<text class="empty-state-title">暂无消息</text>
+						<text class="empty-state-subtitle">新的互动消息会显示在这里</text>
+					</view>
+				</scroll-view>
+			</swiper-item>
+		</swiper>
 	</view>
 </template>
 
 <script>
-	import followBtn from '../../components/follow.vue'
 	import axios from 'axios'
 	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default{
-		components:{
-			followBtn
-		},
 		mixins: [darkModeMixin],
 		data(){
 			return{
@@ -87,14 +91,14 @@
 					0: 'comment',
 					1: 'followed',
 					2: 'like_collect'
-				}
+		}
 			}
 		},
 		computed: {
-			filteredMessages() {
-				return this.messages.filter(msg => 
-					msg.message_type === this.messageTypes[this.curTabIndex]
-				);
+			messageGroups() {
+				return this.tabValue.map((item, index) => this.messages.filter(msg =>
+					msg.message_type === this.messageTypes[index]
+				));
 			}
 		},
 		onShow(){
@@ -160,10 +164,9 @@
 					_this.unreadNotifications = unreadNotifications;
 					_this.unreadActivityMessages = unreadActivityMessages; // 新增：设置未读活动消息数量
 					
-					// 更新小红点显示
-					_this.updateBadgeIndexes();
-					
 					window.localStorage.setItem("messages",JSON.stringify(_this.messages));
+					// 当前分页已经呈现在用户眼前，加载完成后直接按已读处理。
+					_this.markTabAsRead(_this.curTabIndex);
 					window.localStorage.setItem('unreadActivityMessages', unreadActivityMessages.toString()); // 新增：保存未读活动消息数量
 					uni.hideTabBarRedDot({
 						index: 4
@@ -184,9 +187,6 @@
 					});
 				}
 			})
-		},
-		mounted() {
-			this.$refs.tabs.clickTab(this.firstTab);
 		},
 		methods:{
 			// 更新小红点显示
@@ -215,17 +215,42 @@
 				this.unreadPrivateMessages = parseInt(unreadPrivateMessages) || 0;
 			},
 			
-			changeTab(index){ 
-				this.curTabIndex = index;
-				let messages = window.localStorage.getItem("messages");
-				for(let i = 0 ; i < messages.length ; i ++){
-					if(messages[i].message_type === this.messageTypes[index]){
-						messages[i].is_read = 1;
+			changeTab(index){
+				const nextIndex = Math.max(0, Math.min(this.tabValue.length - 1, Number(index) || 0));
+				this.curTabIndex = nextIndex;
+				this.markTabAsRead(nextIndex);
+			},
+
+			handleSwiperChange(event) {
+				const detail = event && event.detail ? event.detail : {};
+				const nextIndex = Math.max(0, Math.min(
+					this.tabValue.length - 1,
+					Number(detail.current) || 0
+				));
+				this.curTabIndex = nextIndex;
+				this.markTabAsRead(nextIndex);
+
+				// 手势切页后同步上方标签和下划线；点击标签触发的切页无需重复调用。
+				this.$nextTick(() => {
+					const tabs = this.$refs.tabs;
+					if (tabs && tabs.tIndex !== nextIndex) {
+						tabs.clickTab(nextIndex);
 					}
-				}
-				window.localStorage.setItem("messages",JSON.stringify(messages));
-				// 更新本地未读计数
-				this.unreadCounts[index] = 0;
+				});
+			},
+
+			markTabAsRead(index) {
+				const messageType = this.messageTypes[index];
+				if (!messageType) return;
+
+				this.messages = this.messages.map((message) =>
+					message.message_type === messageType
+						? { ...message, is_read: 1 }
+						: message
+				);
+				window.localStorage.setItem("messages", JSON.stringify(this.messages));
+
+				this.$set(this.unreadCounts, index, 0);
 				this.updateBadgeIndexes();
 			},
 			
@@ -287,6 +312,12 @@
 
 <style scoped lang="less">
 	.outer{
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		height: 100dvh;
+		box-sizing: border-box;
+		overflow: hidden;
 		background-color: #ffffff;
 		padding-top: 4px;
 		
@@ -296,9 +327,11 @@
 	}
 	
 	.top-nav {
-		padding: 0rpx 0;
+		flex: 0 0 auto;
+		padding: 0;
 		border-bottom: 1px solid #eee;
-		width: 100vw;
+		width: 100%;
+		box-sizing: border-box;
 		
 		.dark-mode & {
 			border-bottom: 1px solid #333;
@@ -309,10 +342,11 @@
 			padding: 30rpx 40rpx;
 			font-size: 28rpx;
 			color: #000000;
-			width: calc(100% - 80rpx);
+			width: 100%;
 			display: flex;
 			align-items: center;
-			transition: all .3s;
+			box-sizing: border-box;
+			transition: background-color .18s ease, transform .18s ease;
 			
 			.dark-mode & {
 				color: var(--text-color-primary);
@@ -323,7 +357,7 @@
 				margin-right: 24rpx;
 			}
 
-			text{
+			text {
 				font-size: 30rpx;
 				
 				.dark-mode & {
@@ -332,8 +366,7 @@
 			}
 			
 			.unread-badge {
-				position: relative;
-				right: -25rpx;
+				margin-left: 18rpx;
 				background-color: #ff4d4f;
 				color: white;
 				font-size: 24rpx;
@@ -347,95 +380,176 @@
 		}
 
 		.nav-button:active{
-			transform: scale(0.98);
+			transform: scale(0.99);
+			background-color: rgba(0, 0, 0, 0.035);
+
+			.dark-mode & {
+				background-color: rgba(255, 255, 255, 0.05);
+			}
 		}
 	}
-	
-	.users {
-		width: 100vw;
+
+	.tab {
+		flex: 0 0 40px;
+		height: 40px;
+		width: 100%;
+		margin: 15rpx 0;
+	}
+
+	.message-swiper {
+		flex: 1 1 auto;
+		min-height: 0;
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.message-page {
+		display: block;
+		width: 100%;
+		height: 100%;
+		box-sizing: border-box;
+		background-color: #fff;
+		overflow-anchor: none;
+		-webkit-overflow-scrolling: touch;
+
+		.dark-mode & {
+			background-color: var(--background-color);
+		}
+	}
+
+	.message-list {
+		width: 100%;
+		padding-bottom: calc(24rpx + var(--loghome-safe-bottom, 0px));
+		box-sizing: border-box;
+	}
+
+	.message-item {
+		width: 100%;
 		display: flex;
+		align-items: stretch;
 		position: relative;
+		padding-left: 14rpx;
+		box-sizing: border-box;
+		background-color: #fff;
+		transition: background-color .16s ease;
 		
 		.dark-mode & {
 			background-color: var(--background-color-secondary);
 		}
-		
-		.avators {
-			position: relative;
-			
-			.message-avatar {
-				width: 100rpx;
-				height: 100rpx;
-				margin: 15rpx;
-			}
-		}
-		
-		.personInfo{
-			position: relative;
-			border-bottom: #cacaca solid 1px;
-			flex: 1;
-			
-			.dark-mode & {
-				border-bottom: #444 solid 1px;
-			}
-
-			.name_time{
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				margin-top: 15rpx;
-				padding-right: 15rpx;
-			}
-			
-			.time{
-				font-size: 30rpx;
-				color: #999;
-				
-				.dark-mode & {
-					color: #777;
-				}
-			}
-		}
-		
-		.name {
-			font-size: 32rpx;
-			height: 40rpx;
-			overflow: hidden;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 1;
-			color: rgb(180, 111, 88);
-			
-			.dark-mode & {
-				color: rgb(220, 151, 128);
-			}
-		}
-		
-		.motto{
-			color: rgb(97, 97, 97);
-			width: 80vw;
-			margin-top: 8rpx;
-			font-size: 28rpx;
-			margin-bottom: 10rpx;
-			
-			.dark-mode & {
-				color: var(--text-color-regular);
-			}
-		}
 	}
 
-	.users:active{
-		background-color: #e3e3e3;
-		
+	.message-item:active {
+		background-color: #f1efec;
+
 		.dark-mode & {
-			background-color: #444;
+			background-color: #343434;
 		}
 	}
-	
-	.tab {
-		margin-top: 15rpx;
-		margin-bottom: 15rpx;
-		height: 40px;
-		width: 100vw;
+
+	.avatar-wrap {
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		flex: 0 0 126rpx;
+		padding: 15rpx 10rpx 15rpx 0;
+		box-sizing: border-box;
+
+		.message-avatar {
+			width: 100rpx;
+			height: 100rpx;
+		}
+	}
+
+	.message-main {
+		flex: 1;
+		min-width: 0;
+		padding: 15rpx 22rpx 18rpx 0;
+		box-sizing: border-box;
+		border-bottom: 1px solid #e0ddd9;
+
+		.dark-mode & {
+			border-bottom-color: #444;
+		}
+	}
+
+	.name-time {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		min-width: 0;
+		gap: 20rpx;
+	}
+
+	.name {
+		min-width: 0;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 32rpx;
+		font-weight: 600;
+		line-height: 42rpx;
+		color: rgb(180, 111, 88);
+
+		.dark-mode & {
+			color: rgb(220, 151, 128);
+		}
+	}
+
+	.time {
+		flex-shrink: 0;
+		font-size: 24rpx;
+		line-height: 36rpx;
+		color: #999;
+
+		.dark-mode & {
+			color: #858585;
+		}
+	}
+
+	.message-content {
+		display: -webkit-box;
+		margin-top: 8rpx;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		font-size: 28rpx;
+		line-height: 40rpx;
+		color: #616161;
+
+		.dark-mode & {
+			color: var(--text-color-regular);
+		}
+	}
+
+	.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 360rpx;
+		color: #777;
+
+		.dark-mode & {
+			color: var(--text-color-regular);
+		}
+	}
+
+	.empty-state-icon {
+		font-size: 72rpx;
+		line-height: 1;
+		opacity: .34;
+	}
+
+	.empty-state-title {
+		margin-top: 24rpx;
+		font-size: 30rpx;
+		font-weight: 600;
+	}
+
+	.empty-state-subtitle {
+		margin-top: 10rpx;
+		font-size: 24rpx;
+		opacity: .68;
 	}
 </style>

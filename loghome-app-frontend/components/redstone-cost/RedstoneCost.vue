@@ -1,5 +1,5 @@
 <template>
-	<view class="redstone-cost" :class="{ 'redstone-cost--icon-only': iconOnly }">
+	<view v-if="aiAssistanceEnabled" class="redstone-cost" :class="{ 'redstone-cost--icon-only': iconOnly }">
 		<view class="redstone-cost__trigger" :class="{ 'redstone-cost__trigger--icon-only': iconOnly }" @tap.stop="toggleTooltip">
 			<image class="redstone-cost__icon" src="/static/icons/redstone.svg" mode="aspectFit"></image>
 			<text v-if="!iconOnly">{{ prefix }} {{ cost }} 红石</text>
@@ -49,6 +49,7 @@ export default {
 	},
 	methods: {
 		async toggleTooltip() {
+			if (!this.aiAssistanceEnabled) return;
 			this.visible = !this.visible;
 			if (!this.visible) return;
 			this.loading = true;
