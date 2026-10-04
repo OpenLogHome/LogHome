@@ -1,5 +1,6 @@
 const { runReaderNovelChat } = require('./readerNovelAiChat');
 const { consumeRedstone, sendBillingError } = require('./redstoneBilling');
+const { assertNovelReaderAiAllowed } = require('./novelReaderAiSettings');
 
 const STREAM_CHUNK_SIZE = 24;
 const STREAM_CHUNK_DELAY_MS = 8;
@@ -371,6 +372,9 @@ async function handleReaderNovelChatTaskStream(req, res) {
 	}
 
 	try {
+		// Check both the conversation's work and the currently selected work before billing.
+		await assertNovelReaderAiAllowed(novelId);
+		if (activeNovelId !== novelId) await assertNovelReaderAiAllowed(activeNovelId);
 		const ensuredTask = await ensureTask({
 			taskId,
 			userId: Number(req.user.user_id),
@@ -424,6 +428,12 @@ async function handleReaderNovelChatTaskStream(req, res) {
 			req.once('aborted', handleDisconnect);
 		}
 	} catch (error) {
+		if (error && error.code === 'READER_AI_DISABLED') {
+			return res.status(403).json({ code: error.code, msg: error.message, message: error.message });
+		}
+		if (error && (error.statusCode === 400 || error.statusCode === 404)) {
+			return res.status(error.statusCode).json({ msg: error.message });
+		}
 		console.log(error);
 		if (sendBillingError(res, error)) return;
 		if (error && (error.code === 'TASK_INPUT_CONFLICT' || error.code === 'TASK_ACCESS_CONFLICT')) {

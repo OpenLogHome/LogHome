@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const config = require('./config');
-const { query, closePool } = require('./sql');
+const { closePool } = require('./sql');
 const { handleReaderNovelChatTaskStream } = require('./bin/chatTaskService');
 const {
 	handleWriterNovelAssistStream,
@@ -9,6 +9,7 @@ const {
 } = require('./bin/writerNovelAiAssist');
 const { handleWriterTextCorrection } = require('./bin/writerTextCorrection');
 const { getNovelSummaryIndexStatus } = require('./bin/agentIndexing');
+const { assertNovelReaderAiAllowed } = require('./bin/novelReaderAiSettings');
 const { requireAuth, requireUser } = require('./bin/auth');
 const collaborationRouter = require('./routes/collaboration');
 const {
@@ -60,19 +61,6 @@ function applyCors(req, res) {
 	res.header('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, appVersion, deviceFingerprint');
 	res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
 	res.header('Access-Control-Allow-Private-Network', 'true');
-}
-
-async function ensurePublicNovelExists(novelId) {
-	const rows = await query(
-		`SELECT novel_id
-		FROM novels
-		WHERE novel_id = ?
-			AND deleted = 0
-			AND is_personal = 0
-		LIMIT 1`,
-		[novelId]
-	);
-	return rows.length > 0;
 }
 
 const app = express();
@@ -138,17 +126,19 @@ app.get('/library/reader_novel_summary_index_status', async (req, res) => {
 	}
 
 	try {
-		const exists = await ensurePublicNovelExists(novelId);
-		if (!exists) {
-			return res.status(404).json({ msg: '作品不存在或未公开' });
-		}
-
+		await assertNovelReaderAiAllowed(novelId);
 		const status = await getNovelSummaryIndexStatus(novelId);
 		return res.json({
 			msg: 'ok',
 			data: status,
 		});
 	} catch (error) {
+		if (error && error.code === 'READER_AI_DISABLED') {
+			return res.status(403).json({ code: error.code, msg: error.message });
+		}
+		if (error && (error.statusCode === 400 || error.statusCode === 404)) {
+			return res.status(error.statusCode).json({ msg: error.message });
+		}
 		console.log(error);
 		return res.status(500).json({ msg: '服务器错误' });
 	}

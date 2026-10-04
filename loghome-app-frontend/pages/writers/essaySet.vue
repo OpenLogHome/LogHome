@@ -22,6 +22,10 @@
 					<view class="text">更新状态：{{novel.is_complete==0?"连载":"完结"}}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
+				<view class="li" v-if="novel.novel_id && novel.novel_type !== 'manga' && novel.novel_type !== 'world'" @click="setReaderAiBtn">
+					<view class="text">原木娘提问：{{ Number(novel.disable_reader_ai) === 1 ? '已禁用' : '允许' }}</view>
+					<img class="to" src="../../static/user/to.png"></img>
+				</view>
 				<view class="li high" @click="gotoChangeNovelTags">
 					<view class="text">作品标签：
 						<div class="tag" v-for="(item,index) in tags" :key="item.tag_id" :class="{'activity':item.is_activity_tag}">
@@ -64,6 +68,7 @@
 					can_manage_structure: true,
 					can_respond_invitation: false,
 				},
+				readerAiSaving: false,
 			}
 		},
 		mixins: [darkModeMixin],
@@ -293,6 +298,37 @@
 				        console.log(res.errMsg);
 				    }
 				});
+			},
+			setReaderAiBtn() {
+				if (this.readerAiSaving) return;
+				uni.showActionSheet({
+					itemList: ['允许读者向原木娘提问', '禁用读者向原木娘提问'],
+					success: ({ tapIndex }) => {
+						const disabled = tapIndex === 1 ? 1 : 0;
+						if (Number(this.novel.disable_reader_ai) === disabled) return;
+						this.saveReaderAiSetting(disabled);
+					},
+				});
+			},
+			async saveReaderAiSetting(disabled) {
+				this.readerAiSaving = true;
+				try {
+					const res = await axios.post(this.$baseUrl + '/essays/set_novel_reader_ai_setting', {
+						novel_id: this.id,
+						disable_reader_ai: disabled,
+					}, {
+						headers: { 'Authorization': 'Bearer ' + this.getAuthToken() },
+					});
+					this.$set(this.novel, 'disable_reader_ai', Number(res.data.disable_reader_ai));
+					uni.showToast({ title: disabled ? '已禁用原木娘提问' : '已允许原木娘提问', icon: 'none' });
+				} catch (error) {
+					uni.showToast({
+						title: (error.response && error.response.data && error.response.data.msg) || '设置保存失败，请重试',
+						icon: 'none',
+					});
+				} finally {
+					this.readerAiSaving = false;
+				}
 			},
 			getNovelTags(){
 				let _this = this;

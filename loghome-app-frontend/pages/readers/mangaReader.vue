@@ -574,21 +574,21 @@ export default {
 .end-next-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8rpx; min-height: 88rpx; padding: 0 36rpx !important; border-radius: 100rpx !important; background: var(--manga-action) !important; color: #fff !important; font-size: 27rpx; font-weight: 700; }
 .end-tip { color: var(--manga-muted); font-size: 25rpx; }
 .top-bar,.bottom-bar { position: fixed; left: 0; right: 0; z-index: 50; background: var(--manga-card); color: var(--manga-text); box-shadow: var(--manga-shadow); }
-.top-bar { top: 0; display: flex; align-items: center; min-height: 90rpx; padding: calc(10rpx + var(--status-bar-height, 0px)) 12rpx 10rpx; }
+.top-bar { top: 0; display: flex; align-items: center; min-height: 90rpx; padding: calc(10rpx + var(--manga-safe-top)) 12rpx 10rpx; }
 .bar-icon { display: grid; place-items: center; width: 88rpx; height: 88rpx; flex: none; font-size: 30rpx; }
 .bar-title { flex: 1; min-width: 0; display: flex; flex-direction: column; text-align: center; }
 .bar-novel { font-size: 27rpx; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .bar-episode { margin-top: 4rpx; color: var(--manga-muted); font-size: 21rpx; }
-.bottom-bar { bottom: 0; padding: 12rpx 20rpx calc(12rpx + env(safe-area-inset-bottom)); border-top: 1rpx solid var(--manga-line); }
+.bottom-bar { bottom: 0; padding: 12rpx 20rpx calc(12rpx + var(--manga-safe-bottom)); border-top: 1rpx solid var(--manga-line); }
 .progress-row { display: flex; align-items: center; gap: 10rpx; padding: 0 8rpx; color: var(--manga-muted); font-size: 22rpx; font-variant-numeric: tabular-nums; }
 .progress-row slider { flex: 1; min-width: 0; }
 .reader-actions { display: grid; grid-template-columns: repeat(4,1fr); gap: 6rpx; }
 .bar-btn { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4rpx; min-height: 88rpx; border-radius: 12rpx !important; font-size: 20rpx; }
 .bar-btn .manga-icon { font-size: 28rpx; }
 .floating-page,.floating-reset { position: fixed; z-index: 51; border-radius: 100rpx; background: rgba(19,22,25,.82); color: #fff !important; padding: 12rpx 24rpx !important; font-size: 22rpx; font-variant-numeric: tabular-nums; }
-.floating-page { right: 24rpx; bottom: calc(24rpx + env(safe-area-inset-bottom)); }.floating-reset { left: 50%; bottom: calc(190rpx + env(safe-area-inset-bottom)); transform: translateX(-50%); white-space: nowrap; }
+.floating-page { right: 24rpx; bottom: calc(24rpx + var(--manga-safe-bottom)); }.floating-reset { left: 50%; bottom: calc(190rpx + var(--manga-safe-bottom)); transform: translateX(-50%); white-space: nowrap; }
 .settings-mask,.catalog-mask { position: fixed; inset: 0; z-index: 60; background: rgba(8,11,14,.55); }
-.settings-sheet { position: absolute; inset: auto 0 0; padding: 30rpx 32rpx calc(34rpx + env(safe-area-inset-bottom)); border-radius: 32rpx 32rpx 0 0; background: var(--manga-card); box-shadow: 0 -10rpx 44rpx rgba(0,0,0,.12); animation: sheet-in .22s ease-out both; }
+.settings-sheet { position: absolute; inset: auto 0 0; padding: 30rpx 32rpx calc(34rpx + var(--manga-safe-bottom)); border-radius: 32rpx 32rpx 0 0; background: var(--manga-card); box-shadow: 0 -10rpx 44rpx rgba(0,0,0,.12); animation: sheet-in .22s ease-out both; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; min-height: 64rpx; margin-bottom: 12rpx; font-size: 32rpx; font-weight: 700; }
 .sheet-done { min-width: 88rpx; min-height: 72rpx; color: var(--manga-accent) !important; font-size: 25rpx; font-weight: 600; }
 .setting-label { display: block; margin: 24rpx 0 10rpx; color: var(--manga-muted); font-size: 23rpx; font-weight: 600; }
@@ -596,7 +596,7 @@ export default {
 .setting-options button { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 82rpx; padding: 8rpx !important; border: 2rpx solid var(--manga-line) !important; border-radius: 14rpx !important; background: var(--manga-bg) !important; font-size: 24rpx; line-height: 1.3; text-align: center; }
 .setting-options button.chosen { border-color: var(--manga-accent) !important; background: var(--manga-tint) !important; color: var(--manga-accent) !important; font-weight: 700; }
 .gesture-tip { display: block; padding: 26rpx 0 0; text-align: center; color: var(--manga-muted); font-size: 21rpx; }
-.catalog-drawer { position: fixed; inset: 0 0 0 auto; width: min(84%, 620rpx); z-index: 61; display: flex; flex-direction: column; padding-top: var(--status-bar-height, 0px); background: var(--manga-card); transform: translateX(100%); transition: transform .22s ease; box-shadow: -10rpx 0 44rpx rgba(0,0,0,.10); }
+.catalog-drawer { position: fixed; inset: 0 0 0 auto; width: min(84%, 620rpx); z-index: 61; display: flex; flex-direction: column; padding-top: var(--manga-safe-top); background: var(--manga-card); transform: translateX(100%); transition: transform .22s ease; box-shadow: -10rpx 0 44rpx rgba(0,0,0,.10); }
 .catalog-drawer.open { transform: translateX(0); }
 .catalog-header { display: flex; align-items: center; min-height: 90rpx; padding-left: 24rpx; border-bottom: 1rpx solid var(--manga-line); }
 .catalog-title { flex: 1; min-width: 0; font-size: 27rpx; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

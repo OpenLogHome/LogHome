@@ -1,5 +1,5 @@
 <template>
-	<view class="body" :style="{'--statusBarHeight': 0 + 'px'}" v-dark>
+	<view class="body" v-dark>
 		<!-- 	<el-alert
 		title="提示"
 		type="warning"
@@ -562,18 +562,20 @@
 	}
 
 	.body {
-		Position: relative;
+		position: relative;
 		width: 750rpx;
-		height: calc(100vh - 44px - var(--statusBarHeight));
+		// The native page header already occupies 44px plus the status-bar inset.
+		// Keep the crop controls inside the remaining WebView viewport.
+		height: calc(100vh - 44px - var(--loghome-safe-top, 0px));
 	}
 
 	#touch {
-		Position: absolute;
+		position: absolute;
 		top: 0;
 		left: 0;
 		z-index: 2;
-		min-width: 750rpx;
-		min-height: 100vh;
+		width: 100%;
+		height: 100%;
 		opacity: 0;
 	}
 

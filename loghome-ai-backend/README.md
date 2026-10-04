@@ -64,6 +64,12 @@ npm run dev
 4. 如果要灰度切换，可以先用 `reader_ai_base_url_override` 本地存储覆盖前端地址做联调。
 5. WebSocket 端口需要经过支持 Upgrade 的反向代理暴露为 `wss://`；同一个协作服务只能运行一个实例，除非后续再接入 Redis 广播层。
 
+## 作品级提问开关
+
+作者可在 App 的作品设置中禁用“问问原木娘”。主后端和独立 AI 服务共用 `novel_reader_ai_settings` 表；旧作品未设置时默认允许。部署前需执行主后端的 `loghome-backend/sql/novel_reader_ai_settings.sql` 建表脚本，服务运行时不会自动调整数据库结构。AI 服务会在扣除红石及创建任务前检查当前作品和会话作品的设置。
+
+验证：`node --test test/novelReaderAiSettings.test.js`。
+
 ## 文本纠错
 
 智能纠错按字数和段落数分批（默认每批不超过 2800 字 / 12 个切片），每次分析最多两批并行。超过 1400 字的段落按句末切片，保留边界重叠并将纠错位置映射回完整原文，不截断章节内容。默认关闭 DeepSeek / Qwen 的深度思考，限制输出为 4096 tokens；可通过 `.env.example` 中的 `WRITER_TEXT_CORRECTION_*` 环境变量调整。

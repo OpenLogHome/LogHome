@@ -95,9 +95,9 @@ export default {
 <style scoped lang="scss">
 @import '@/common/manga-theme.scss';
 .manga-settings { @include manga-theme; min-height: 100vh; }
-.nav-bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; min-height: 96rpx; padding-top: var(--status-bar-height, 0px); background: var(--manga-card); border-bottom: 1rpx solid var(--manga-line); font-size: 30rpx; font-weight: 700; }
+.nav-bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; min-height: 96rpx; padding-top: var(--manga-safe-top); background: var(--manga-card); border-bottom: 1rpx solid var(--manga-line); font-size: 30rpx; font-weight: 700; }
 .nav-back { display: grid; place-items: center; width: 96rpx; height: 88rpx; font-size: 32rpx; }
-.content { height: calc(100vh - 96rpx - var(--status-bar-height, 0px)); box-sizing: border-box; padding: 24rpx; }
+.content { height: calc(100vh - 96rpx - var(--manga-safe-top)); box-sizing: border-box; padding: 24rpx; }
 .cover-card,.card { margin-bottom: 24rpx; padding: 30rpx; border-radius: 24rpx; background: var(--manga-card); box-shadow: var(--manga-shadow); }
 .cover-card { display: flex; align-items: center; gap: 26rpx; }
 .cover { width: 156rpx; height: 212rpx; border-radius: 14rpx; flex: none; object-fit: cover; }
@@ -127,7 +127,7 @@ input:focus,textarea:focus { border-color: var(--manga-accent); outline: 2px sol
 .danger-action .hint { color: var(--manga-muted); }
 .manga-settings.dark-mode .danger-card { border-color: rgba(255, 155, 131, .3); }
 .manga-settings.dark-mode .danger-action,.manga-settings.dark-mode .danger-action .manga-icon { color: #ff9b83; }
-.bottom-space { height: calc(24rpx + env(safe-area-inset-bottom)); }
+.bottom-space { height: calc(24rpx + var(--manga-safe-bottom)); }
 .empty { display: flex; align-items: center; flex-direction: column; gap: 24rpx; padding: 120rpx 30rpx; color: var(--manga-muted); text-align: center; font-size: 26rpx; }
 .empty button { display: inline-flex; align-items: center; gap: 8rpx; min-height: 88rpx; color: var(--manga-accent); }
 @media (min-width: 800px) { .content { max-width: 820px; margin: 0 auto; } }

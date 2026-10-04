@@ -9,6 +9,7 @@ let redstone = require('../bin/redstone.js');
 let avatarFrames = require('../bin/avatarFrames.js');
 let { handleReaderNovelChatStream } = require('../bin/readerNovelAiChat.js');
 let { getNovelSummaryIndexStatus } = require('../bin/agentIndexing.js');
+const novelReaderAiSettings = require('../bin/novelReaderAiSettings.js');
 const { PUBLIC_ARTICLE, PUBLIC_NOVEL } = require('../bin/readingVisibility.js');
 
 const HAYCRAFT_TAG_FLAG_SQL = `EXISTS (
@@ -114,6 +115,8 @@ router.get('/get_novel_by_id', async function (req, res) {
 			req.query.id,
 		]);
 		results = JSON.parse(JSON.stringify(results));
+		if (!results.length) return res.status(404).json({ msg: '作品不存在或未公开' });
+		results[0].disable_reader_ai = Number(await novelReaderAiSettings.isDisabled(req.query.id));
 		results[0]['likes'] = likes;
 		res.end(JSON.stringify(results));
 	} catch (e) {
@@ -1137,6 +1140,8 @@ router.post('/parse_share_code', async function (req, res) {
 router.post('/reader_novel_ai_chat_stream', auth, async function (req, res) {
 	try {
 		const user = req.user && req.user[0];
+		// Check the author's choice before deducting redstone or opening the stream.
+		await novelReaderAiSettings.assertAllowed(req.body && req.body.novel_id);
 		const retrieverMode = String(req.body.retriever_mode || req.body.search_mode || 'fast') === 'deep' ? 'deep' : 'fast';
 		const cost = retrieverMode === 'deep' ? 2 : 1;
 		await redstone.consumeRedstone(user.user_id, cost, {
@@ -1146,11 +1151,17 @@ router.post('/reader_novel_ai_chat_stream', auth, async function (req, res) {
 		});
 		return handleReaderNovelChatStream(req, res);
 	} catch (error) {
+		if (error && error.code === 'READER_AI_DISABLED') {
+			return res.status(403).json({ code: error.code, msg: error.message, message: error.message });
+		}
+		if (error && (error.statusCode === 400 || error.statusCode === 404)) {
+			return res.status(error.statusCode).json({ msg: error.message });
+		}
 		if (error && error.isBusinessError) {
 			return res.status(error.statusCode || 400).json({ code: error.code, msg: error.message, message: error.message });
 		}
 		console.log(error);
-		return res.status(500).json({ msg: '红石计费失败' });
+		return res.status(500).json({ msg: '提问服务暂不可用' });
 	}
 });
 
@@ -1161,25 +1172,19 @@ router.get('/reader_novel_summary_index_status', async function (req, res) {
 	}
 
 	try {
-		const novels = await query(
-			`SELECT novel_id
-			FROM novels
-			WHERE novel_id = ?
-				AND deleted = 0
-				AND is_personal = 0
-			LIMIT 1`,
-			[novelId],
-		);
-		if (novels.length === 0) {
-			return res.status(404).json({ msg: '作品不存在或未公开' });
-		}
-
+		await novelReaderAiSettings.assertAllowed(novelId);
 		const status = await getNovelSummaryIndexStatus(novelId);
 		return res.json({
 			msg: 'ok',
 			data: status,
 		});
 	} catch (error) {
+		if (error && error.code === 'READER_AI_DISABLED') {
+			return res.status(403).json({ code: error.code, msg: error.message });
+		}
+		if (error && (error.statusCode === 400 || error.statusCode === 404)) {
+			return res.status(error.statusCode).json({ msg: error.message });
+		}
 		console.log(error);
 		return res.status(500).json({ msg: '服务器错误' });
 	}

@@ -582,7 +582,7 @@
 	.info-avatar {
 		position: absolute;
 		left: 0;
-		top: -120rpx;
+		top: -144rpx;
 		margin-left: 50rpx;
 		width: 190upx;
 		height: 190upx;

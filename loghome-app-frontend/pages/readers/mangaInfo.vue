@@ -347,10 +347,10 @@ export default {
 <style scoped lang="scss">
 @import '@/common/manga-theme.scss';
 .manga-page { @include manga-theme; height: 100vh; }
-.nav-bar { position: fixed; inset: 0 0 auto; z-index: 30; height: 96rpx; padding-top: var(--status-bar-height, 0px); display: flex; align-items: center; background: var(--manga-card); border-bottom: 1rpx solid var(--manga-line); }
+.nav-bar { position: fixed; inset: 0 0 auto; z-index: 30; height: 96rpx; padding-top: var(--manga-safe-top); display: flex; align-items: center; background: var(--manga-card); border-bottom: 1rpx solid var(--manga-line); }
 .icon-button { display: grid; place-items: center; width: 96rpx; height: 88rpx; flex: none; font-size: 34rpx; }
 .nav-title { flex: 1; min-width: 0; padding-right: 28rpx; font-size: 30rpx; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.body-scroll { height: 100vh; box-sizing: border-box; padding-top: calc(96rpx + var(--status-bar-height, 0px)); }
+.body-scroll { height: 100vh; box-sizing: border-box; padding-top: calc(96rpx + var(--manga-safe-top)); }
 .hero { height: 680rpx; position: relative; background: var(--manga-line); }
 .poster { display: block; width: 100%; height: 100%; }
 .poster-shade { position: absolute; inset: auto 0 0; height: 240rpx; background: linear-gradient(transparent, rgba(20, 20, 20, .20)); pointer-events: none; }
@@ -396,8 +396,8 @@ export default {
 .other-cover { display: block; width: 100%; height: 238rpx; border-radius: 12rpx; object-fit: cover; }
 .work-item text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 8rpx; font-size: 23rpx; font-weight: 600; }
 .work-item .work-status { color: var(--manga-muted); font-size: 21rpx; font-weight: 400; }
-.bottom-space { height: calc(150rpx + env(safe-area-inset-bottom)); }
-.action-bar { position: fixed; inset: auto 0 0; z-index: 30; display: flex; align-items: center; gap: 18rpx; padding: 16rpx 28rpx calc(16rpx + env(safe-area-inset-bottom)); background: var(--manga-card); border-top: 1rpx solid var(--manga-line); box-shadow: 0 -8rpx 28rpx rgba(20,20,20,.05); }
+.bottom-space { height: calc(150rpx + var(--manga-safe-bottom)); }
+.action-bar { position: fixed; inset: auto 0 0; z-index: 30; display: flex; align-items: center; gap: 18rpx; padding: 16rpx 28rpx calc(16rpx + var(--manga-safe-bottom)); background: var(--manga-card); border-top: 1rpx solid var(--manga-line); box-shadow: 0 -8rpx 28rpx rgba(20,20,20,.05); }
 .read-btn { flex: 1; min-height: 88rpx; display: flex; align-items: center; justify-content: center; gap: 12rpx; border-radius: 100rpx; background: var(--manga-action); color: #fff !important; font-size: 29rpx; font-weight: 700; }
 .load-state { display: flex; align-items: center; flex-direction: column; gap: 24rpx; padding: 160rpx 28rpx; font-size: 27rpx; text-align: center; }
 .outline-button { display: inline-flex; align-items: center; justify-content: center; gap: 8rpx; min-height: 88rpx; padding: 0 32rpx !important; border: 1rpx solid var(--manga-line) !important; border-radius: 100rpx !important; color: var(--manga-accent) !important; }

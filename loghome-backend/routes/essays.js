@@ -9,6 +9,7 @@ let message = require('../bin/message.js');
 let statistics = require('../bin/statistics');
 let bank = require('../bin/bank.js');
 const membership = require('../bin/membership.js');
+const novelReaderAiSettings = require('../bin/novelReaderAiSettings.js');
 const {
 	ensureAgentMemorySchema,
 	getNovelIndexingStatus,
@@ -843,6 +844,8 @@ router.get('/get_novel_by_id', async function (req, res) {
 			req.query.id,
 		]);
 		results = JSON.parse(JSON.stringify(results));
+		if (!results.length) return res.status(404).json({ msg: '作品不存在' });
+		results[0].disable_reader_ai = Number(await novelReaderAiSettings.isDisabled(req.query.id));
 		results[0]['likes'] = likes;
         
 		res.end(JSON.stringify(results));
@@ -959,6 +962,26 @@ router.post('/set_novel_status', auth, async (req, res) => {
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.post('/set_novel_reader_ai_setting', auth, async (req, res) => {
+	const user = getCurrentUser(req);
+	const body = req.body || {};
+	const novelId = body.novel_id;
+	if (!novelReaderAiSettings.validNovelId(novelId)) {
+		return res.status(400).json({ msg: '作品 ID 无效' });
+	}
+	try {
+		const access = await getNovelAccess(user.user_id, Number(novelId));
+		if (!hasNovelOwnerAccess(access)) {
+			return res.status(403).json({ msg: '仅作品作者可以修改此设置' });
+		}
+		return res.json(await novelReaderAiSettings.setDisabled(novelId, body.disable_reader_ai));
+	} catch (error) {
+		if (error.statusCode === 422) return res.status(422).json({ msg: error.message });
+		console.log(error);
+		return res.status(500).json({ msg: '作品设置保存失败' });
 	}
 });
 

@@ -1,4 +1,6 @@
 @mixin manga-theme {
+  --manga-safe-top: var(--loghome-safe-top, env(safe-area-inset-top, 0px));
+  --manga-safe-bottom: var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px));
   --manga-bg: #f4f5f6;
   --manga-card: #fff;
   --manga-text: #252b30;

@@ -1,6 +1,5 @@
 <template>
-    <view class="chat-container" v-dark
-        :style="{ '--statusBarHeight': 0 + 'px' }">
+    <view class="chat-container" v-dark>
         <followBtn class="follow-btn" :targetId="Number(friend_id)"/>
         <view class="messages">
             <div v-for="message in sortedMessages" :key="message.id" class="message-wrapper"
@@ -1237,14 +1236,15 @@ export default {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 44px - var(--statusBarHeight));
+    /* The native header uses 44px plus the Android status-bar inset. */
+    height: calc(100vh - 44px - var(--loghome-safe-top, 0px));
     background-color: var(--background-color-secondary);
     position: relative;
 }
 
 .chat-container .follow-btn {
     position: fixed;
-    top: calc(var(--statusBarHeight) + 10rpx);
+    top: calc(var(--loghome-safe-top, 0px) + 10rpx);
     right: -6rpx;
     z-index: 99999;
     transform: scale(0.8);
@@ -1252,6 +1252,7 @@ export default {
 
 .messages {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 20rpx;
 }

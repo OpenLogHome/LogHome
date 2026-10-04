@@ -416,7 +416,7 @@
 		</view>
 
 		<view class="l-body-fixed" v-if="!isPageLoading && bookInfo.is_personal == 0">
-			<view v-if="aiAssistanceEnabled" class="l-handle-btn l-ai-btn clickable" @tap="gotoAskLogGirl">
+			<view v-if="aiAssistanceEnabled && Number(bookInfo.disable_reader_ai) !== 1" class="l-handle-btn l-ai-btn clickable" @tap="gotoAskLogGirl">
 				<image class="ai-entry-icon" src="https://storage.codesocean.top/api/resource/get/177882044429077" mode="aspectFit"></image>
 				<view class="ai-entry-text">问问原木娘</view>
 			</view>
@@ -706,7 +706,7 @@ export default {
 			})
 		},
 		gotoAskLogGirl() {
-			if (!this.aiAssistanceEnabled) return;
+			if (!this.aiAssistanceEnabled || Number(this.bookInfo.disable_reader_ai) === 1) return;
 			uni.navigateTo({
 				url: '/pages/readers/askLogGirl?novel_id=' + this.uid + '&novel_name=' + encodeURIComponent(this.bookInfo.name || '')
 			})
