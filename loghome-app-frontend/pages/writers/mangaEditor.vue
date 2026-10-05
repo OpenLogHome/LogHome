@@ -76,7 +76,7 @@
 				</view>
 
 				<view v-if="pages.length === 0 && !uploading" class="empty-tip">
-					<text>支持 jpg / png / webp / gif，单页不超过 3.5MB，一次最多选 9 张</text>
+					<text>支持 jpg / png / webp / gif，一次最多选 9 张；高清图片上传可能较慢</text>
 				</view>
 
 				<view class="page-toolbar"><button v-manga-a11y="!pages.length" type="button" :disabled="!pages.length" @click="sortMode = !sortMode"><manga-icon name="sort" />{{ sortMode ? '完成排序' : '调整顺序' }}</button><button v-manga-a11y="!pages.length" type="button" :disabled="!pages.length" @click="previewEpisode"><manga-icon name="preview" />整话预览</button></view>
@@ -121,8 +121,6 @@ import MangaA11y from '@/common/manga-a11y.js';
 import axios from 'axios';
 import MangaPageSorter from '@/components/manga-page-sorter.vue';
 import MangaIcon from '@/components/manga-icon.vue';
-
-const PAGE_MAX_BYTES = 3.5 * 1024 * 1024;
 
 export default {
   directives: { mangaA11y: MangaA11y },
@@ -382,12 +380,13 @@ export default {
 				while ((task = this.uploadQueue.find(item => item.status === 'queued'))) {
 					task.status = 'uploading'; task.progress = 0; task.error = '';
 					try {
-						if (task.meta.size > PAGE_MAX_BYTES) throw new Error('图片超过 3.5MB，请先压缩');
-						const dataUrl = await this.pathToDataUrl(task.path, task.meta);
+						const upload = await this.prepareUpload(task.path, task.meta);
 						if (task.status === 'cancelled' || epoch !== this.editRequestId) continue;
 						const source = axios.CancelToken.source(); task.cancel = source.cancel;
-						const res = await axios.post(this.$baseUrl + '/essays/upload_manga_page', { img: dataUrl, article_type: this.editorType }, {
-							headers: this.authHeaders(), cancelToken: source.token, timeout: 240000,
+						const url = this.$baseUrl + '/essays/upload_manga_page' + (upload.binary ? '?article_type=' + encodeURIComponent(this.editorType) : '');
+						const body = upload.binary ? upload.blob : { img: upload.dataUrl, article_type: this.editorType };
+						const res = await axios.post(url, body, {
+							headers: { ...this.authHeaders(), 'Content-Type': upload.binary ? 'application/octet-stream' : 'application/json' }, cancelToken: source.token, timeout: 0,
 							onUploadProgress: e => { if (e.total) task.progress = Math.min(95, Math.round(e.loaded / e.total * 95)); },
 						});
 						if (task.status === 'cancelled' || epoch !== this.editRequestId) continue;
@@ -430,6 +429,24 @@ export default {
 				window.localStorage.setItem(key, this.editorSnapshot);
 				uni.navigateTo({ url: '/pages/readers/mangaReader?previewKey=' + key });
 			} catch (_) { uni.showToast({ title: '预览空间不足，请保存草稿后预览', icon: 'none' }); }
+		},
+		async prepareUpload(path, meta) {
+			// 浏览器 File/Blob 可直接作为请求体，避免 base64 膨胀和额外拷贝。
+			if (typeof Blob !== 'undefined') {
+				if (meta && meta.file instanceof Blob) return { binary: true, blob: meta.file };
+				if (meta instanceof Blob) return { binary: true, blob: meta };
+			}
+			try {
+				const response = await fetch(path);
+				if (!response.ok) throw new Error('读取图片文件失败');
+				return { binary: true, blob: await response.blob() };
+			} catch (error) {
+				// 旧版 App-Plus 的 plus.io.FileReader 只支持 Data URL，保留兼容路径。
+				// #ifdef APP-PLUS
+				if (typeof plus !== 'undefined') return { binary: false, dataUrl: await this.pathToDataUrl(path, meta) };
+				// #endif
+				throw error;
+			}
 		},
 		pathToDataUrl(path, meta) {
 			// H5 下 tempFilePath 为 blob: URL；App 下为本地文件路径

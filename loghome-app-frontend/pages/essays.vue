@@ -90,7 +90,7 @@
 				<!-- 世界栏目 -->
 				<view class="tab-pane" :class="{ 'pane-active': topNavIndex === 2 }" :style="paneStyle(2)"
 					v-show="topNavIndex === 2 || swipePeek === 2 || paneHiding === 2">
-					<worldPage ref="worldPage"></worldPage>
+					<worldPage ref="worldPage" :active-index="topNavIndex"></worldPage>
 				</view>
 			</view>
 		</view>

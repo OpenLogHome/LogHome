@@ -7,7 +7,7 @@
         "i18n:extract": "node scripts/i18n-extract.js",
         "i18n:titles": "node scripts/gen-title-map.js",
         "i18n:check-sfc": "node scripts/check-sfc.js",
-        "test:manga": "node --test test/manga_phase1_test.cjs test/manga_phase2_test.cjs"
+        "test:manga": "node --test test/manga_phase1_test.cjs test/manga_phase2_test.cjs test/library_manga_badge_test.cjs"
     },
     "keywords": [],
     "dependencies": {

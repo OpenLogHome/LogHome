@@ -41,7 +41,13 @@
       </template>
       <view class="bottom-space"></view>
     </scroll-view>
-    <view class="action-bar"><button v-manga-a11y="loading || !!loadError || !articles.length" class="read-btn" type="button" :disabled="loading || !!loadError || !articles.length" @click="startReading">{{ readButtonText }}<manga-icon name="next" /></button></view>
+    <view class="action-bar">
+      <button v-manga-a11y="loading || !!loadError" v-if="!isPreview" class="tip-btn" type="button" :disabled="loading || !!loadError" @click="openTipping">打赏</button>
+      <button v-manga-a11y="loading || !!loadError || !articles.length" class="read-btn" type="button" :disabled="loading || !!loadError || !articles.length" @click="startReading">{{ readButtonText }}<manga-icon name="next" /></button>
+    </view>
+    <uni-popup v-if="!isPreview" ref="tippingPopup" type="bottom">
+      <view class="tipping-sheet"><tipping-bar v-if="showTipping" :novel_id="uid" @tip="handleTippingSuccess" /></view>
+    </uni-popup>
     <task-reward-modal v-if="!isPreview" ref="taskRewardModal" @harvest="openTreePlant" />
   </view>
 </template>
@@ -50,15 +56,16 @@ import MangaA11y from '@/common/manga-a11y.js';
 import axios from 'axios';
 import MangaIcon from '@/components/manga-icon.vue';
 import TaskRewardModal from '@/components/TaskRewardModal.vue';
+import TippingBar from '@/components/tipping/tippingBar.vue';
 
 export default {
   directives: { mangaA11y: MangaA11y },
-	components: { MangaIcon, TaskRewardModal },
+	components: { MangaIcon, TaskRewardModal, TippingBar },
 	data() {
 		return {
 			uid: null,
 			loading: true, loadError: '', catalogExpanded: false, catalogReversed: false, catalogTarget: '', authorWorks: [], favoriteBusy: false, niceBusy: false, shareBusy: false,
-			isPreview: false,
+			isPreview: false, showTipping: false,
 			niceCount: 0, niceStatus: false,
 			bookInfo: {},
 			articles: [],
@@ -109,10 +116,11 @@ export default {
 			}
 		},
 		getToken() {
-			let tk;
-			try { tk = JSON.parse(window.localStorage.getItem('token')); } catch (_) { return null; }
-			if (tk) tk = tk.tk;
-			return tk;
+			const token = this.getTokenInfo();
+			return token && token.tk;
+		},
+		getTokenInfo() {
+			try { return JSON.parse(window.localStorage.getItem('token')); } catch (_) { return null; }
 		},
 		authHeaders() {
 			const tk = this.getToken();
@@ -209,6 +217,21 @@ export default {
 			this.catalogExpanded = true;
 			this.catalogTarget = '';
 			this.$nextTick(() => { this.catalogTarget = 'manga-catalog'; });
+		},
+		openTipping() {
+			if (this.isPreview || this.loading || this.loadError) return;
+			const token = this.getTokenInfo();
+			if (!token || !token.tk) { uni.showToast({ title: '请先登录', icon: 'none' }); return; }
+			const authorId = this.bookInfo.auther_id || this.bookInfo.author_id;
+			if (authorId && String(token.id) === String(authorId)) {
+				uni.showToast({ title: '不能给自己的漫画打赏哦', icon: 'none' });
+				return;
+			}
+			this.showTipping = true;
+			this.$nextTick(() => { if (this.$refs.tippingPopup) this.$refs.tippingPopup.open('bottom'); });
+		},
+		handleTippingSuccess() {
+			if (this.$refs.tippingPopup) this.$refs.tippingPopup.close();
 		},
 		async completeDailyTask(code, name) {
 			const headers = this.authHeaders();
@@ -398,7 +421,9 @@ export default {
 .work-item .work-status { color: var(--manga-muted); font-size: 21rpx; font-weight: 400; }
 .bottom-space { height: calc(150rpx + var(--manga-safe-bottom)); }
 .action-bar { position: fixed; inset: auto 0 0; z-index: 30; display: flex; align-items: center; gap: 18rpx; padding: 16rpx 28rpx calc(16rpx + var(--manga-safe-bottom)); background: var(--manga-card); border-top: 1rpx solid var(--manga-line); box-shadow: 0 -8rpx 28rpx rgba(20,20,20,.05); }
+.tip-btn { flex: none; min-width: 154rpx; min-height: 88rpx; padding: 0 22rpx; border: 1rpx solid var(--manga-accent); border-radius: 100rpx; background: var(--manga-card); color: var(--manga-accent); font-size: 27rpx; font-weight: 700; }
 .read-btn { flex: 1; min-height: 88rpx; display: flex; align-items: center; justify-content: center; gap: 12rpx; border-radius: 100rpx; background: var(--manga-action); color: #fff !important; font-size: 29rpx; font-weight: 700; }
+.tipping-sheet { max-height: calc(100vh - 130rpx - var(--manga-safe-top)); max-height: calc(100dvh - 130rpx - var(--manga-safe-top)); overflow-y: auto; padding-bottom: var(--manga-safe-bottom); box-sizing: border-box; background: var(--manga-card); border-radius: 20rpx 20rpx 0 0; }
 .load-state { display: flex; align-items: center; flex-direction: column; gap: 24rpx; padding: 160rpx 28rpx; font-size: 27rpx; text-align: center; }
 .outline-button { display: inline-flex; align-items: center; justify-content: center; gap: 8rpx; min-height: 88rpx; padding: 0 32rpx !important; border: 1rpx solid var(--manga-line) !important; border-radius: 100rpx !important; color: var(--manga-accent) !important; }
 @media (min-width: 800px) { .hero { height: 620rpx; } .info-card,.section { max-width: 760px; margin-left: auto; margin-right: auto; } }

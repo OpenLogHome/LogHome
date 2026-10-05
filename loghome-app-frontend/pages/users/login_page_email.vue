@@ -26,9 +26,9 @@
 		<transition name="slide-fade" mode="out-in">
 			<div class="step step2" v-if="step == 2">
 				<div class="lr">
-					<div>
-						<div>{{ $t('auth.login.codeSentTo') }}</div>
-						<div>{{email}}</div>
+					<div class="identity-copy">
+						<div class="identity-label">{{ $t('auth.login.codeSentTo') }}</div>
+						<div class="identity-value">{{email}}</div>
 					</div>
 					<div class="btn" v-show="!isWaiting" @click="sendCode">{{ $t('auth.login.resend') }}</div>
 					<div class="btn wait" v-show="isWaiting">{{ $t('auth.login.waitSeconds', { seconds: waitTime }) }}</div>
@@ -62,9 +62,9 @@
 		<transition name="slide-fade" mode="out-in">
 			<div class="step step5" v-if="step == 5">
 				<div class="lr">
-					<div>
-						<div>{{ $t('auth.login.email.signInWith') }}</div>
-						<div>{{email}}</div>
+					<div class="identity-copy">
+						<div class="identity-label">{{ $t('auth.login.email.signInWith') }}</div>
+						<div class="identity-value">{{email}}</div>
 					</div>
 					<div class="btn" @click="forgetPwd=true;step = 2">{{ $t('auth.login.forgotPassword') }}</div>
 				</div>
@@ -371,12 +371,48 @@
 
 <style scoped lang="scss">
 	.outer{
-		padding:80rpx 50rpx;
+		padding:56rpx 50rpx calc(80rpx + var(--loghome-safe-bottom, 0px));
+		box-sizing: border-box;
 		font-size: 35rpx;
 		div.lr{
-			display:flex;
-			justify-content: space-between;
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 12rpx 20rpx;
+			padding: 24rpx;
+			border: 1px solid var(--border-color);
+			border-radius: 16rpx;
+			background-color: var(--card-background, var(--background-color-secondary));
+			color: var(--text-color-primary);
+			.identity-copy{
+				display: contents;
+			}
+			.identity-label{
+				grid-column: 1;
+				grid-row: 1;
+				align-self: center;
+				font-size: 26rpx;
+				line-height: 1.5;
+				color: var(--text-color-secondary, var(--text-color-primary));
+			}
+			.identity-value{
+				grid-column: 1 / -1;
+				grid-row: 2;
+				min-width: 0;
+				font-size: 32rpx;
+				font-weight: 500;
+				line-height: 1.5;
+				overflow-wrap: anywhere;
+				word-break: break-word;
+			}
 			.btn{
+				grid-column: 2;
+				grid-row: 1;
+				align-self: center;
+				padding: 8rpx 0 8rpx 12rpx;
+				font-size: 26rpx;
+				line-height: 1.5;
+				white-space: nowrap;
+				cursor: pointer;
 				color:var(--brand-text-color);
 			}
 			.btn.wait{
@@ -469,7 +505,8 @@
 	}
 
 	.step{
-		position:absolute;
-		width:calc(100% - 100rpx);
+		position: relative;
+		width: 100%;
+		min-width: 0;
 	}
 </style>

@@ -45,6 +45,26 @@
 		<div class="bottom" style="height: 80px">
 			
 		</div>
+		<view v-if="showCreateDialog" class="create-mask" :class="{ 'dark-mode': isDarkMode }" :style="maskStyle"
+			@click.self="closeCreateDialog" @keydown.esc.stop.prevent="closeCreateDialog"
+			@touchstart.stop @touchmove.stop @touchend.stop>
+			<view class="create-panel" role="dialog" aria-modal="true" aria-labelledby="create-world-title" :aria-busy="String(creating)">
+				<view class="create-header">
+					<text id="create-world-title" class="create-title">创建世界</text>
+					<button v-manga-a11y="creating" class="create-close" type="button" aria-label="关闭创建窗口" :disabled="creating" @click="closeCreateDialog"><manga-icon name="close" /></button>
+				</view>
+				<view class="create-field">
+					<label class="field-label" for="new-world-name">世界名称</label>
+					<input id="new-world-name" class="field-input" v-model="createForm.name" maxlength="50" :disabled="creating"
+						placeholder="给你的世界起个名字" confirm-type="done" @confirm="createWorld" />
+				</view>
+				<view class="create-tip">创建后即可编辑世界简介、角色与其他设定。</view>
+				<view class="create-actions">
+					<button v-manga-a11y="creating" class="create-cancel" type="button" :disabled="creating" @click="closeCreateDialog">取消</button>
+					<button v-manga-a11y="creating || !createForm.name.trim()" class="create-confirm" type="button" :disabled="creating || !createForm.name.trim()" @click="createWorld">{{ creating ? '创建中…' : '创建世界' }}</button>
+				</view>
+			</view>
+		</view>
 	</div>
 
 </template>
@@ -52,12 +72,28 @@
 <script>
 	import axios from "axios";
 	import darkModeMixin from '@/mixins/dark-mode.js';
+	import MangaIcon from '@/components/manga-icon.vue';
+	import MangaA11y from '@/common/manga-a11y.js';
 	export default {
+		components: { MangaIcon },
+		directives: { mangaA11y: MangaA11y },
 		mixins: [darkModeMixin],
+		props: {
+			activeIndex: { type: Number, default: 0 },
+		},
 		data() {
 			return {
 				worlds: [],
+				showCreateDialog: false,
+				creating: false,
+				createForm: { name: '' },
 			}
+		},
+		computed: {
+			maskStyle() {
+				// 滑动轨道的 transform 会成为 fixed 定位的包含块，与漫画弹窗保持一致。
+				return { left: (this.activeIndex * 100) + 'vw', width: '100vw' };
+			},
 		},
 		methods: {
 			isWorldOwner(world) {
@@ -75,42 +111,36 @@
 				return this.isWorldOwner(world) ? '编辑设定' : '协作设定';
 			},
 			createNewWorld() {
-				let _this = this;
-				uni.showModal({
-					title: '创建世界',
-					content: '',
-					editable: true,
-					placeholderText: "输入世界名称",
-					success: (res) => {
-						if (res.confirm) {
-							if(res.content.trim() != ""){
-								let tk = JSON.parse(window.localStorage.getItem('token'));
-								if (tk) tk = tk.tk;
-								axios.get(this.$baseUrl + '/world/create_world?world_name=' +  res.content, {
-									headers: {
-										'Content-Type': 'application/json', //设置请求头请求格式为JSON
-										'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
-									}
-								}).then((res) => {
-									uni.showToast({
-										title: "创建成功",
-										icon: 'none',
-										duration: 2000
-									});
-									_this.refreshPage();
-								}).catch(function(error) {
-									uni.showToast({
-										title: error.toString(),
-										icon: 'none',
-										duration: 2000
-									});
-								}).then(function() {
-									uni.hideLoading();
-								})
-							}
-						} else if (res.cancel) {}
+				if (this.creating) return;
+				this.createForm = { name: '' };
+				this.showCreateDialog = true;
+			},
+			closeCreateDialog() {
+				if (this.creating) return;
+				this.showCreateDialog = false;
+			},
+			async createWorld() {
+				const name = (this.createForm.name || '').trim();
+				if (!name || this.creating) return;
+				this.creating = true;
+				try {
+					const token = JSON.parse(window.localStorage.getItem('token'));
+					if (!token || !token.tk) {
+						uni.showToast({ title: '请先登录后再创建世界', icon: 'none' });
+						return;
 					}
-				});
+					await axios.get(this.$baseUrl + '/world/create_world', {
+						params: { world_name: name },
+						headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token.tk },
+					});
+					this.showCreateDialog = false;
+					uni.showToast({ title: '创建成功', icon: 'none', duration: 2000 });
+					this.refreshPage();
+				} catch (error) {
+					uni.showToast({ title: '创建失败，请稍后重试', icon: 'none', duration: 2000 });
+				} finally {
+					this.creating = false;
+				}
 			},
 			refreshPage(){
 				let _this = this;
@@ -152,6 +182,36 @@
 </script>
 
 <style scoped lang="scss">
+	@import '@/common/manga-theme.scss';
+
+	.create-mask {
+		@include manga-theme;
+		position: fixed;
+		top: 0;
+		height: 100vh;
+		z-index: 300;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+		padding: calc(24rpx + var(--manga-safe-top)) 0 calc(24rpx + var(--manga-safe-bottom));
+		background: rgba(7, 10, 12, .55);
+	}
+	.create-panel { width: min(86%, 640rpx); max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 32rpx; border-radius: 24rpx; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 30rpx 90rpx rgba(0,0,0,.18); animation: world-panel-in .2s ease both; }
+	.create-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
+	.create-title { font-size: 31rpx; font-weight: 700; }
+	.create-close { display: grid; place-items: center; width: 76rpx; height: 76rpx; flex: none; font-size: 26rpx; }
+	.create-field { margin-bottom: 20rpx; }
+	.field-label { display: block; margin-bottom: 9rpx; font-size: 23rpx; font-weight: 600; }
+	.field-input { width: 100%; height: 84rpx; box-sizing: border-box; padding: 14rpx 18rpx; border: 1rpx solid var(--manga-line); border-radius: 12rpx; background: var(--manga-bg); color: var(--manga-text); font-size: 25rpx; }
+	.field-input:focus { border-color: var(--manga-accent); outline: 2px solid var(--manga-accent); outline-offset: 2px; }
+	.create-tip { margin: 2rpx 0 22rpx; color: var(--manga-muted); font-size: 21rpx; }
+	.create-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16rpx; }
+	.create-actions button { box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; min-height: 88rpx; margin: 0; padding: 0 12rpx; border-radius: 14rpx; font-size: 25rpx; font-weight: 600; line-height: 1.2; text-align: center; white-space: nowrap; }
+	.create-cancel { border: 1rpx solid var(--manga-line); background: var(--manga-card); color: var(--manga-text); }
+	.create-confirm { border: 1rpx solid transparent; background: var(--manga-action); color: #fff; }
+	@keyframes world-panel-in { from { opacity: .5; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+
 	.worldWrapper {
 		background-image: linear-gradient(to top, #f7f7f7, #f7f7f7, #fff2d0);
 		box-sizing: border-box;

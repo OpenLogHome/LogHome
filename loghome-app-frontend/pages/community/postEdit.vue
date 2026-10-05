@@ -100,11 +100,31 @@
 						<uni-icons type="closeempty" size="24" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 					</view>
 				</view>
-				<scroll-view scroll-y class="circle-list">
+				<view v-if="circlesLoading" class="circle-state" role="status">
+					<uni-icons type="spinner-cycle" size="30" :color="isDarkMode ? '#b8b8b8' : '#999'" class="circle-loading-icon"></uni-icons>
+					<text class="circle-state-title">正在加载圈子</text>
+					<text class="circle-state-description">请稍等片刻</text>
+				</view>
+				<view v-else-if="circlesError" class="circle-state" role="status">
+					<uni-icons type="info" size="36" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
+					<text class="circle-state-title">暂时无法加载圈子</text>
+					<text class="circle-state-description">请检查网络连接，然后重试。</text>
+					<button class="circle-state-action" @tap="loadCircles">重新加载</button>
+				</view>
+				<view v-else-if="circles.length === 0" class="circle-state">
+					<view class="circle-empty-icon">
+						<uni-icons type="personadd" size="32" color="#b46f58"></uni-icons>
+					</view>
+					<text class="circle-state-title">你还没有加入圈子</text>
+					<text class="circle-state-description">加入感兴趣的圈子后，就可以在这里发布帖子。</text>
+					<button class="circle-state-action" @tap="discoverCircles">去发现圈子</button>
+					<text class="circle-draft-hint">已填写的帖子内容会保留，加入后返回即可选择。</text>
+				</view>
+				<scroll-view v-else scroll-y class="circle-list">
 					<view 
 						class="circle-item"
 						v-for="(circle, index) in circles"
-						:key="index"
+						:key="circle.circle_id"
 						@tap="selectCircle(circle)"
 					>
 						<log-image class="circle-icon" :src="circle.icon" mode="aspectFill"></log-image>
@@ -187,6 +207,9 @@
 				titleCount: 0,
 				contentCount: 0,
 				circles: [],
+				circlesLoading: false,
+				circlesError: false,
+				returningFromCircleDiscovery: false,
 				selectedCircle: null,
 				selectedBook: null, // 添加selectedBook用于保存选中的作品
 				isSubmitting: false,
@@ -238,11 +261,21 @@
 			this.loadCircles();
 			this.loadMyNovels(); // 加载用户的作品
 		},
+		onShow() {
+			if (this.returningFromCircleDiscovery) {
+				this.returningFromCircleDiscovery = false;
+				this.loadCircles();
+				this.$nextTick(() => this.$refs.circlePopup.open());
+			}
+		},
 		onNavigationBarButtonTap() {
 			this.submitPost()
 		},
 		methods: {
 			async loadCircles() {
+				if (this.circlesLoading) return;
+				this.circlesLoading = true;
+				this.circlesError = false;
 				try {
 					const token = JSON.parse(window.localStorage.getItem('token')).tk
 					const res = await axios.get(this.$baseUrl + '/community/circles/my-circles', {
@@ -250,20 +283,20 @@
 							'Authorization': 'Bearer ' + token
 						}
 					})
+					if (!Array.isArray(res.data)) throw new Error('Invalid circle list');
 					this.circles = res.data
 					if(this.postData.circle_id != "") {
 						for(let circle of this.circles) {
 							if(circle.circle_id == this.postData.circle_id) {
-								this.selectCircle(circle);
+								this.selectedCircle = circle;
 							}
 						}
 					}
 				} catch (error) {
 					console.error('加载圈子失败', error)
-					uni.showToast({
-						title: '加载圈子失败',
-						icon: 'none'
-					})
+					this.circlesError = true;
+				} finally {
+					this.circlesLoading = false;
 				}
 			},
 			// 加载用户的作品
@@ -474,7 +507,20 @@
 				});
 			},
 			showCirclePopup() {
+				this.loadCircles();
 				this.$refs.circlePopup.open()
+			},
+			discoverCircles() {
+				this.returningFromCircleDiscovery = true;
+				this.hideCirclePopup();
+				uni.navigateTo({
+					url: '/pages/community/circles',
+					fail: () => {
+						this.returningFromCircleDiscovery = false;
+						this.$refs.circlePopup.open();
+						uni.showToast({ title: '暂时无法打开圈子页面，请重试', icon: 'none' });
+					}
+				});
 			},
 			hideCirclePopup() {
 				this.$refs.circlePopup.close()
@@ -804,6 +850,8 @@
 	.popup-content {
 		background-color: var(--card-background);
 		border-radius: 20rpx 20rpx 0 0;
+		max-height: 85vh;
+		overflow-y: auto;
 		padding-bottom: var(--loghome-safe-bottom, 0px);
 	}
 
@@ -827,6 +875,70 @@
 
 	.circle-list {
 		max-height: 60vh;
+	}
+
+	.circle-state {
+		min-height: 340rpx;
+		padding: 40rpx 44rpx 48rpx;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+	}
+
+	.circle-empty-icon {
+		width: 104rpx;
+		height: 104rpx;
+		border-radius: 50%;
+		background: var(--background-color-secondary);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.circle-state-title {
+		margin-top: 24rpx;
+		font-size: 32rpx;
+		font-weight: 600;
+		color: var(--text-color-primary);
+	}
+
+	.circle-state-description {
+		margin-top: 12rpx;
+		font-size: 27rpx;
+		line-height: 1.6;
+		color: var(--text-color-regular);
+	}
+
+	.circle-state-action {
+		margin: 32rpx 0 0;
+		padding: 0 48rpx;
+		min-height: 80rpx;
+		line-height: 80rpx;
+		font-size: 28rpx;
+		font-weight: 500;
+		border: 0;
+		border-radius: 12rpx;
+		background: #b46f58;
+		color: #fff;
+		&::after { border: 0; }
+	}
+
+	.circle-draft-hint {
+		margin-top: 22rpx;
+		font-size: 24rpx;
+		line-height: 1.6;
+		color: var(--text-color-regular);
+	}
+
+	.circle-loading-icon {
+		animation: circle-loading 1s linear infinite;
+	}
+
+	@keyframes circle-loading {
+		to { transform: rotate(360deg); }
 	}
 
 	.circle-item {

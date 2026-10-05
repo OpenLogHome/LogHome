@@ -21,12 +21,14 @@
 
 ## 图片接口
 
-继续使用鉴权接口 `POST /essays/upload_manga_page`，请求为 `{ img: dataUrl, article_type: "mangaStrip" | "mangaPage" }`。
+继续使用鉴权接口 `POST /essays/upload_manga_page`。新客户端以 `Content-Type: application/octet-stream` 直接发送图片字节，通过 `?article_type=mangaStrip|mangaPage` 指定类型；旧客户端的 `{ img: dataUrl, article_type }` JSON 请求仍可使用。
+
+后端生成原图、缩略图和阅读图后，以 `multipart/form-data` 文件字段 `img` 上传到图床 `/upload/img`，`apikey` 放在请求头中；不再将图片转为 Base64。与前端现有 `uni.uploadFile` / `el-upload` 协议一致。可通过后端 `mangaImageFileUploadUrl` 配置覆盖上传地址。
 
 返回兼容原字段，并新增 `pages` 数组，每项含 `url, thumb, readingUrl, width, height`。编辑器按返回数组插入页面。服务端保存话数时保留这三个图片 URL。
 
-- 单张输入图片仍限制 3.5MB；支持 JPEG、PNG、WebP、GIF。
-- 静态条漫超过 6000px 高度自动分段，逐段生成原尺寸图、最长 320×480 的缩略图及宽度不超过 1600px 的阅读图。
+- 漫画接口不再限制单张原图为 3.5 MiB，二进制及兼容 JSON 请求体上限均为 96 MiB；支持 JPEG、PNG、WebP、GIF。为避免解压炸弹，解码仍保留 3 亿像素的安全上限。反向代理及图床自身的容量限制需另行核对。
+- 静态条漫超过 6000px 高度自动分段，逐段生成原尺寸图、最长 320×480 的缩略图及宽度不超过 1600px、高度不超过 16000px 的阅读图。
 - 原尺寸资产和阅读图分离；GIF 保留动画，避免分段破坏动画。
 - 处理 EXIF 方向。非分段原图保留上传字节，阅读图与缩略图使用正确方向。
 - 客户端取消上传后，服务端中止未完成的存储请求及后续图片生成。

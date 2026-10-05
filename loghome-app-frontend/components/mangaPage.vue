@@ -4,7 +4,7 @@
     <div class="workspace-head"><span>我的漫画</span><span>{{ mangas.length }} 部作品</span></div>
     <div v-if="loading" class="workspace-status" role="status">正在加载作品…</div>
     <div v-else-if="loadError" class="workspace-status" role="alert">加载失败 <button v-manga-a11y type="button" @click="loadMangas"><manga-icon name="retry" />重试</button></div>
-    <div v-else-if="!mangas.length" class="empty-state"><manga-icon name="book" /><strong>漫画架还是空的</strong><span>从一个想法开始，创建你的第一部作品。</span><button v-manga-a11y type="button" @click="openCreateDialog"><manga-icon name="add" />创建漫画</button></div>
+    <div v-else-if="!mangas.length" class="empty-state"><manga-icon name="book" /><strong>漫画架还是空的</strong><span>创建你的第一部作品</span><button v-manga-a11y type="button" @click="openCreateDialog"><manga-icon name="add" />创建漫画</button></div>
     <div class="mangaCard" v-for="manga in mangas" :key="manga.novel_id" v-dark>
       <button v-manga-a11y class="card-body" type="button" :aria-label="'查看《' + manga.name + '》的读者详情'" @click="viewDetail(manga)">
         <image lazy-load class="manga-cover" :src="manga.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="manga.name + '封面'" />

@@ -13,7 +13,7 @@ function component(file, axios = {}, t) {
   const storage = new Map(), navigation = [], messages = [];
   const window = { localStorage: { getItem: k => storage.get(k) || null, setItem: (k,v) => storage.set(k,v), removeItem: k => storage.delete(k) }, addEventListener() {}, removeEventListener() {} };
   const uni = { getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 800 }), showToast: m => messages.push(m), navigateTo: m => navigation.push(m), showModal() {}, previewImage() {} };
-  const sandbox = { module: {}, axios, window, uni, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, TaskRewardModal: {}, darkModeMixin: {}, setTimeout, clearTimeout, console: { error() {} } };
+  const sandbox = { module: {}, axios, window, uni, Blob, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, TaskRewardModal: {}, TippingBar: {}, darkModeMixin: {}, setTimeout, clearTimeout, console: { error() {} } };
   vm.runInNewContext(script, sandbox, { filename: file });
   const options = sandbox.module.exports;
   const instance = new Vue({ ...options, beforeCreate() { this.$baseUrl = ''; this.$store = { state: { user_id: 1 } }; } });
@@ -23,7 +23,7 @@ function component(file, axios = {}, t) {
 function editor(axios, t) {
   const ctx = component('pages/writers/mangaEditor.vue', axios, t);
   Object.assign(ctx.instance, { view: 'edit', editorReady: true, editorTitle: '测试', novelId: 398, pages: clone(pages.slice(0,2)), novel: { current_access: { can_publish_article: true } } });
-  ctx.instance.pathToDataUrl = async path => path; return ctx;
+  ctx.instance.prepareUpload = async path => ({ binary: true, blob: path }); return ctx;
 }
 const cancelToken = { source: () => ({ token: {}, cancel() {} }) };
 test('Uni-app button keyboard bridge handles focus, activation and disabled state', () => {
@@ -135,7 +135,7 @@ test('local episode preview consumes handoff and never requests or records histo
   assert.equal(ctx.storage.has('preview'),false); assert.equal(requests,0); assert.equal(ctx.storage.size,0);
 });
 test('queue sorts filenames, records progress and replaces in place with stable IDs', async t => {
-  const uploaded=[]; const ctx=editor({ CancelToken:cancelToken,async post(url,body,config) { uploaded.push(body.img); config.onUploadProgress({loaded:50,total:100}); return {data:{pages:[{url:'https://test.invalid/new'+body.img,width:100,height:200,thumb:'https://test.invalid/thumb',readingUrl:'https://test.invalid/read'}]}};} },t);
+  const uploaded=[]; const ctx=editor({ CancelToken:cancelToken,async post(url,body,config) { uploaded.push(body); assert.equal(config.headers['Content-Type'],'application/octet-stream'); assert.match(url,/article_type=mangaStrip/); config.onUploadProgress({loaded:50,total:100}); return {data:{pages:[{url:'https://test.invalid/new'+body,width:100,height:200,thumb:'https://test.invalid/thumb',readingUrl:'https://test.invalid/read'}]}};} },t);
   await ctx.instance.uploadFiles([{name:'10.png'},{name:'2.png'}],['10','2']);
   assert.deepEqual(uploaded,['2','10']); assert.equal(ctx.instance.pages.length,4); assert(ctx.instance.uploadQueue.every(q=>q.status==='success'&&q.progress===100));
   await ctx.instance.uploadFiles([{name:'replacement'}],['replace'],1);
@@ -172,16 +172,51 @@ test('long strips split without losing height; thumbnails and reading variants s
   assert.equal(result.length,3); assert.deepEqual(result.map(p=>p.height),[6000,6000,500]); assert.equal(result.reduce((sum,p)=>sum+p.height,0),12500);
   for(let i=0;i<assets.length;i+=3){const thumb=await sharp(assets[i+1].buffer).metadata(),reading=await sharp(assets[i+2].buffer).metadata();assert(thumb.width<=320&&thumb.height<=480);assert(reading.width<=1600);}
 });
-test('paged upload retains original bytes and rejects excessive height', async () => {
+test('paged upload retains original bytes and creates WebP variants for tall pages', async () => {
   const input=await sharp({create:{width:160,height:300,channels:3,background:'#abc'}}).png().toBuffer();
   const assets=[]; const result=await createMangaImageAssets(input,{upload:async b=>{assets.push(b);return 'https://test.invalid/'+assets.length;}});
   assert.equal(result.length,1); assert.deepEqual(assets[0],input);
   const tall=await sharp({create:{width:10,height:20001,channels:3,background:'#abc'}}).png().toBuffer();
-  await assert.rejects(()=>createMangaImageAssets(tall,{upload:async()=>''}),/高度/);
+  const tallAssets=[];
+  const tallPages=await createMangaImageAssets(tall,{upload:async b=>{tallAssets.push(b);return 'https://test.invalid/'+tallAssets.length;}});
+  assert.equal(tallPages[0].height,20001);
+  assert.deepEqual(tallAssets[0],tall);
+  assert((await sharp(tallAssets[2]).metadata()).height<=16000);
+  const wide=await sharp({create:{width:20001,height:10,channels:3,background:'#abc'}}).png().toBuffer();
+  const widePages=await createMangaImageAssets(wide,{upload:async()=> 'https://test.invalid/wide'});
+  assert.equal(widePages[0].width,20001);
+});
+
+test('editor allows a large selected image to reach the backend', async t => {
+  let uploads=0;
+  const ctx=editor({CancelToken:cancelToken,async post(){uploads++;return {data:{url:'https://test.invalid/large'}};}},t);
+  await ctx.instance.uploadFiles([{name:'large.png',size:8*1024*1024}],['large-image']);
+  assert.equal(uploads,1);
+  assert.equal(ctx.instance.uploadQueue[0].status,'success');
+});
+
+test('browser File/Blob is sent directly without base64 encoding', async t => {
+  const ctx=component('pages/writers/mangaEditor.vue',{},t);
+  const file=new Blob([Buffer.from('test image bytes')],{type:'image/png'});
+  const upload=await ctx.instance.prepareUpload('unused',{file});
+  assert.equal(upload.binary,true);
+  assert.equal(upload.blob,file);
+});
+
+test('saving manga content preserves dimensions above the old 20000-pixel cap', () => {
+  const source=fs.readFileSync(path.join(backend,'routes/essays.js'),'utf8');
+  const code=source.slice(source.indexOf('function normalizeMangaPage('),source.indexOf('function currentTime()'));
+  const normalized=vm.runInNewContext(code+'\nnormalizeMangaContent(content)',{
+    MANGA_PAGE_URL_MAX_LENGTH:512,MANGA_MAX_PAGES:300,
+    content:{pages:[{id:1,url:'https://test.invalid/large.png',width:20001,height:30001}]},
+  });
+  assert.equal(normalized.ok,true);
+  assert.deepEqual(JSON.parse(normalized.content).pages[0].width,20001);
+  assert.deepEqual(JSON.parse(normalized.content).pages[0].height,30001);
 });
 test('retry inserts a failed earlier upload before later successful pages', async t => {
   let failed=true;
-  const ctx=editor({CancelToken:cancelToken,async post(url,body){if(body.img==='2'&&failed)throw new Error('offline');return {data:{url:'https://test.invalid/new'+body.img}};}},t);
+  const ctx=editor({CancelToken:cancelToken,async post(url,body){if(body==='2'&&failed)throw new Error('offline');return {data:{url:'https://test.invalid/new'+body}};}},t);
   await ctx.instance.uploadFiles([{name:'2.png'},{name:'10.png'}],['2','10']);
   assert.equal(ctx.instance.pages[2].url,'https://test.invalid/new10');
   failed=false; ctx.instance.retryUpload(ctx.instance.uploadQueue[0]); await new Promise(r=>setImmediate(r));
@@ -288,6 +323,26 @@ test('manga sharing creates a reader-detail code and copies it', async t => {
   assert.equal(requests[0].body.target_url,'/pages/readers/mangaInfo?id=398');
   assert.match(copied,/ABCDEFGH/);assert.match(modal.content,/已复制/);
   assert.equal(m.shareBusy,false);
+});
+test('manga tipping reuses the book gift sheet but blocks guests, owners and previews', async t => {
+  const {instance:m,storage,messages}=component('pages/readers/mangaInfo.vue',{},t);
+  m.uid=398;m.loading=false;m.bookInfo={auther_id:7};
+  let opened=0,closed=0;
+  m.$refs.tippingPopup={open:position=>{assert.equal(position,'bottom');opened++;},close:()=>{closed++;}};
+  m.openTipping();
+  assert.equal(messages.at(-1).title,'请先登录');
+  storage.set('token',JSON.stringify({tk:'test-token',id:7}));
+  m.openTipping();
+  assert.match(messages.at(-1).title,/自己的漫画/);
+  storage.set('token',JSON.stringify({tk:'test-token',id:8}));
+  m.isPreview=true;m.openTipping();
+  assert.equal(opened,0);
+  m.isPreview=false;m.openTipping();await m.$nextTick();
+  assert.equal(m.showTipping,true);assert.equal(opened,1);
+  m.handleTippingSuccess();assert.equal(closed,1);
+  const source=fs.readFileSync(path.resolve(__dirname,'../pages/readers/mangaInfo.vue'),'utf8');
+  assert.match(source,/<tipping-bar v-if="showTipping" :novel_id="uid"/);
+  assert.match(source,/<button[^>]*v-if="!isPreview"[^>]*class="tip-btn"/);
 });
 test('camera EXIF orientation is respected by variants while original bytes are retained', async () => {
   const input=await sharp({create:{width:160,height:300,channels:3,background:'#abc'}}).jpeg().withMetadata({orientation:6}).toBuffer();

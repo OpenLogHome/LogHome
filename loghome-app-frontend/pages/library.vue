@@ -45,6 +45,7 @@
 					<transition-group name="fade" class="transition" type="in-out">
 						<bookInCase v-for="novel in item['novels']" :bookName="novel.name" :picUrl="novel.picUrl"
 							:haycraft="isHayCraftWork(novel)"
+							:manga="novel.novel_type === 'manga'"
 							:key="novel.novel_id" @click.native="readBook(novel, novel.novel_id, $event)"
 							:id="'book-cover-' + novel.novel_id"></bookInCase>
 					</transition-group>
@@ -57,6 +58,7 @@
 								<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
 									:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"
 									style="border-radius: 10rpx; transform:scale(.90)" />
+								<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
 								<div class="bookInfo" style="margin-left:10rpx;">
 									<div class="title title-with-haycraft">
 										<text class="book-title-text">{{ novel.name }}</text>
@@ -151,6 +153,7 @@
 											{{ (page - 1) * 6 + index + 1 }}</div>
 										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 											:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
+										<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
 										<div class="dense-card-info">
 											<div class="dense-card-title title-with-haycraft">
 												<text class="dense-title-text">{{ novel.name }}</text>
@@ -169,6 +172,7 @@
 											{{ (page - 1) * 6 + 3 + index + 1 }}</div>
 										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 											:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
+										<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
 										<div class="dense-card-info">
 											<div class="dense-card-title title-with-haycraft">
 												<text class="dense-title-text">{{ novel.name }}</text>
@@ -191,6 +195,7 @@
 				<div @click="readBook(item, item.novel_id, $event)" class="books clickable" v-dark :id="'book-cover-' + item.novel_id">
 					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
 						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
+					<text v-if="item.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
 					<div class="bookInfo">
 					<div class="title title-with-haycraft">
 						<text class="book-title-text">{{ item.name }}</text>
@@ -872,6 +877,7 @@ export default {
 	}
 
 	.books {
+		position: relative;
 		height: 260rpx;
 		width: calc(100vw - 40rpx);
 		margin: 20rpx;
@@ -1276,6 +1282,28 @@ export default {
 
 .dense-card-container::-webkit-scrollbar {
 	display: none;
+}
+
+.manga-cover-badge {
+	position: absolute;
+	left: 14rpx;
+	bottom: 5rpx;
+	z-index: 1;
+	padding: 2rpx 9rpx;
+	border-radius: 6rpx;
+	background: rgba(178, 64, 18, 0.94);
+	color: #fff;
+	font-size: 19rpx;
+	font-weight: 600;
+	line-height: 30rpx;
+	pointer-events: none;
+}
+
+.books > .manga-cover-badge {
+	left: 18rpx;
+	bottom: 16rpx;
+	font-size: 21rpx;
+	line-height: 34rpx;
 }
 
 .title-with-haycraft {

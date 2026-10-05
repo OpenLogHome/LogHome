@@ -11,6 +11,30 @@
       </view>
     </view>
 
+    <view v-if="article.isPersonal" class="card visibility-card">
+      <view class="visibility-label">发布前准备</view>
+      <view class="visibility-title">作品尚未公开</view>
+      <view class="visibility-desc">
+        {{ canMakeNovelPublic ? "先将作品设为公开，才能发布章节。" : article.novelOwnerId ? "请联系作品作者将作品设为公开，之后才能发布章节。" : "暂时无法确认作品权限，请重新检查。" }}
+      </view>
+      <button
+        v-if="canMakeNovelPublic"
+        class="visibility-button"
+        :loading="visibilityChanging"
+        :disabled="visibilityChanging || submitLoading"
+        @click="makeNovelPublic"
+      >
+        {{ visibilityChanging ? "正在公开…" : "设为公开" }}
+      </button>
+      <button
+        v-else-if="!article.novelOwnerId"
+        class="visibility-button visibility-retry-button"
+        :loading="visibilityChecking"
+        :disabled="visibilityChecking"
+        @click="retryNovelPublishState"
+      >重新检查</button>
+    </view>
+
     <view class="card">
       <view class="section-title">发布方式</view>
       <view class="mode-grid">
@@ -67,9 +91,6 @@
         <view class="schedule-tip">{{ scheduleTimeDisplay }}</view>
       </view>
 
-      <view v-if="article.isPersonal" class="warning-text">
-        作品当前为未公开状态，暂时不能发布章节。
-      </view>
     </view>
 
     <view v-if="aiAssistanceEnabled" class="card">
@@ -215,7 +236,7 @@
       <button
         v-if="article.isDraft === 0"
         class="secondary-button"
-        :disabled="submitLoading"
+        :disabled="submitLoading || visibilityChanging"
         @click="saveAsDraft"
       >
         退回草稿
@@ -223,7 +244,7 @@
       <button
         class="primary-button"
         :loading="submitLoading"
-        :disabled="article.isPersonal"
+        :disabled="article.isPersonal || submitLoading || visibilityChanging"
         @click="submitPublish"
       >
         {{ publishMode === "now" ? "立即发布" : "确认定时发布" }}
@@ -405,6 +426,8 @@ export default {
       scheduleDate: "",
       scheduleClock: "",
       submitLoading: false,
+      visibilityChanging: false,
+      visibilityChecking: false,
       smartCorrectionLoading: false,
       smartCorrectionError: "",
       smartCorrectionResult: createEmptyCorrectionResult(),
@@ -431,6 +454,7 @@ export default {
         isDraft: 1,
         isPersonal: false,
         novelId: 0,
+        novelOwnerId: 0,
         novelName: "",
         textCount: 0,
         imageCount: 0,
@@ -438,6 +462,9 @@ export default {
     };
   },
   computed: {
+    canMakeNovelPublic() {
+      return this.article.novelOwnerId > 0 && this.article.novelOwnerId === this.getCurrentUserId();
+    },
     isRealtimeCollaboration() {
       return this.collaborationMode === "realtime_crdt";
     },
@@ -545,6 +572,81 @@ export default {
     getCurrentUserId() {
       const token = this.getTokenInfo();
       return token && token.id ? Number(token.id) : 0;
+    },
+    async refreshNovelPublishState() {
+      const novelId = Number(this.article.novelId || 0);
+      if (!novelId) throw new Error("作品信息尚未加载");
+      const response = await axios.get(
+        this.$baseUrl + "/essays/get_novel_collaboration_info?novel_id=" + novelId,
+        { headers: { Authorization: "Bearer " + this.getAuthToken() } }
+      );
+      let novel = response.data && response.data.novel;
+      if (!novel || Number(novel.novel_id) !== novelId) throw new Error("无法获取作品状态");
+      if (novel.is_personal == null) {
+        // 兼容尚未重启的旧版后端；新版协作信息接口会直接返回此字段。
+        const legacyResponse = await axios.get(this.$baseUrl + "/essays/get_novel_by_id?id=" + novelId);
+        const legacyNovel = Array.isArray(legacyResponse.data) ? legacyResponse.data[0] : null;
+        if (!legacyNovel || Number(legacyNovel.novel_id) !== novelId) throw new Error("无法获取作品状态");
+        novel = { ...novel, is_personal: legacyNovel.is_personal };
+      }
+      if (![0, 1].includes(Number(novel.is_personal))) throw new Error("无法获取作品状态");
+      this.article = {
+        ...this.article,
+        isPersonal: Number(novel.is_personal) === 1,
+        novelOwnerId: Number(novel.author_id || 0),
+        novelName: novel.name || this.article.novelName,
+      };
+    },
+    async retryNovelPublishState() {
+      if (this.visibilityChecking) return;
+      this.visibilityChecking = true;
+      try {
+        await this.refreshNovelPublishState();
+      } catch (_) {
+        uni.showToast({ title: "作品状态获取失败，请稍后重试", icon: "none", duration: 2000 });
+      } finally {
+        this.visibilityChecking = false;
+      }
+    },
+    makeNovelPublic() {
+      if (!this.article.isPersonal || !this.canMakeNovelPublic || this.visibilityChanging || this.submitLoading) return;
+      uni.showModal({
+        title: "公开作品",
+        content: "公开后，作品及已发布章节将对所有读者可见。确定设为公开吗？",
+        confirmText: "设为公开",
+        success: (result) => {
+          if (result.confirm) this.confirmMakeNovelPublic();
+        },
+      });
+    },
+    async confirmMakeNovelPublic() {
+      if (!this.article.isPersonal || !this.canMakeNovelPublic || this.visibilityChanging || this.submitLoading) return;
+      this.visibilityChanging = true;
+      try {
+        const response = await axios.post(
+          this.$baseUrl + "/essays/set_novel_status",
+          { novel_id: this.article.novelId, is_personal: 0 },
+          { headers: { "Content-Type": "application/json", Authorization: "Bearer " + this.getAuthToken() } }
+        );
+        if (Number(response.data && response.data.affectedRows) > 0) {
+          this.article = { ...this.article, isPersonal: false };
+        } else {
+          await this.refreshNovelPublishState();
+          if (this.article.isPersonal) throw new Error("状态未更新");
+        }
+        try { this.persistCurrentPublishDraft(); } catch (_) {
+          // 本地缓存失败不应掩盖服务端已公开的事实。
+        }
+        uni.showToast({ title: "作品已公开，现在可以发布章节", icon: "none", duration: 2000 });
+      } catch (error) {
+        uni.showToast({
+          title: (error.response && error.response.data && error.response.data.msg) || "公开失败，请重试",
+          icon: "none",
+          duration: 2000,
+        });
+      } finally {
+        this.visibilityChanging = false;
+      }
     },
     generatePublishSessionId() {
       return `writer_publish_${this.articleId}_${Date.now()}_${Math.random()
@@ -779,6 +881,7 @@ export default {
         isDraft: Number(article.is_draft == null ? 1 : article.is_draft),
         isPersonal: Number(novelInfo.is_personal || 0) === 1,
         novelId: Number(novelInfo.novel_id || article.novel_id || 0),
+        novelOwnerId: Number(novelInfo.author_id || 0),
         novelName: novelInfo.name || article.novel_name || "",
         textCount: stats.textCount,
         imageCount: stats.imageCount,
@@ -843,6 +946,7 @@ export default {
           novel_id: this.article.novelId || 0,
           name: this.article.novelName,
           is_personal: this.article.isPersonal ? 1 : 0,
+          author_id: this.article.novelOwnerId || 0,
         },
         edit_session_id: this.publishSessionId || this.sourceSessionId || "",
         collaboration_mode: this.collaborationMode,
@@ -1078,6 +1182,11 @@ export default {
         } else {
           await this.fetchArticle();
         }
+      }
+      try {
+        await this.refreshNovelPublishState();
+      } catch (error) {
+        // 保留章节携带的状态；真正发布时仍需重新向服务端核实。
       }
       this.collaborationModeResolved = true;
       const lockClaimed = await this.claimEditLock();
@@ -1508,21 +1617,22 @@ export default {
       });
     },
     async submitPublish() {
+      if (this.submitLoading || this.visibilityChanging) return;
       if (!this.validateArticle() || !this.validateScheduleTime()) {
         return;
       }
-
-      if (this.article.isPersonal) {
-        uni.showToast({
-          title: "作品尚未公开，暂时无法发布",
-          icon: "none",
-          duration: 2000,
-        });
-        return;
-      }
-
       this.submitLoading = true;
       try {
+        try {
+          await this.refreshNovelPublishState();
+        } catch (error) {
+          uni.showToast({ title: "无法确认作品公开状态，请稍后重试", icon: "none", duration: 2000 });
+          return;
+        }
+        if (this.article.isPersonal) {
+          uni.showToast({ title: "作品尚未公开，请先设为公开", icon: "none", duration: 2000 });
+          return;
+        }
         const tk = this.getAuthToken();
         const currentServerTime = await this.getCurrentSyncTime();
         const response = await axios.post(
@@ -2058,6 +2168,9 @@ export default {
   },
   onShow() {
 	this.loadMembershipStatus();
+    if (this.article.novelId && !this.pageInitializationInProgress) {
+      this.refreshNovelPublishState().catch(() => {});
+    }
     if (
       this.publishSessionId &&
       this.collaborationModeResolved &&
@@ -2089,6 +2202,66 @@ export default {
 
 .article-card {
   background: var(--card-background);
+}
+
+.visibility-card {
+  border-color: rgba(194, 79, 28, 0.28);
+  background: var(--card-background);
+}
+
+.visibility-label {
+  display: inline-block;
+  padding: 5rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(194, 79, 28, 0.1);
+  color: #a8441b;
+  font-size: 21rpx;
+  font-weight: 700;
+}
+
+.visibility-title {
+  margin-top: 16rpx;
+  color: var(--text-color-primary);
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.visibility-desc {
+  margin-top: 10rpx;
+  color: var(--text-color-regular);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.visibility-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 78rpx;
+  margin: 22rpx 0 0;
+  border: 0;
+  border-radius: 16rpx;
+  background: #ae471c;
+  color: #fff;
+  font-size: 27rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.visibility-button[disabled] {
+  opacity: 0.6;
+}
+
+.visibility-retry-button {
+  background: var(--background-color-tertiary);
+  color: var(--text-color-primary);
+  border: 1px solid var(--border-color);
+}
+
+.page.dark-mode .visibility-label {
+  color: #ffb38a;
+  background: rgba(255, 179, 138, 0.12);
 }
 
 .eyebrow {
@@ -2233,13 +2406,6 @@ export default {
   margin-top: 14rpx;
   font-size: 24rpx;
   color: var(--text-color-regular);
-}
-
-.warning-text {
-  margin-top: 18rpx;
-  font-size: 24rpx;
-  color: var(--warning-text-color);
-  line-height: 1.6;
 }
 
 .ghost-button {

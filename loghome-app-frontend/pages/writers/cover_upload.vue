@@ -85,8 +85,15 @@
 
 <style scoped>
 .upload-page {
-    min-height: 100vh;
+    height: calc(100vh - 44px - var(--loghome-safe-top, 0px));
+    height: calc(100dvh - 44px - var(--loghome-safe-top, 0px));
+    overflow: hidden;
+    box-sizing: border-box;
     background: var(--background-color-secondary);
     color: var(--text-color-primary);
+}
+
+.upload-page ::v-deep .cropper-content {
+    touch-action: none;
 }
 </style>
