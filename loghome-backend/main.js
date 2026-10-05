@@ -6,8 +6,6 @@ process.env.TZ = 'Asia/Shanghai';
 let app = express();
 
 app.use('/public', express.static('public'));
-app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ extended: false, limit: '5mb' }));
 // const pino = require('pino');
 // const expressPino = require('express-pino-logger');
 // const logger = pino({
@@ -37,6 +35,18 @@ app.all('*', function (req, res, next) {
 	if (req.method === 'OPTIONS') return res.sendStatus(204);
 	next();
 });
+
+// 漫画优先直接上传文件字节；保留 JSON 解析以兼容旧版本客户端。
+app.use('/essays/upload_manga_page', express.raw({ type: 'application/octet-stream', limit: '96mb' }));
+app.use('/essays/upload_manga_page', express.json({ limit: '96mb' }));
+app.use('/essays/upload_manga_page', (error, req, res, next) => {
+	if (error.type === 'entity.too.large') {
+		return res.status(413).json({ msg: '图片超过单次上传容量，请压缩图片或拆分后重试' });
+	}
+	next(error);
+});
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: false, limit: '5mb' }));
 
 //活跃用户与QPS统计中间件
 let QpsStatistic = new Array();

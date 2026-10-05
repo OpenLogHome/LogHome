@@ -368,16 +368,17 @@ router.post('/tipping', auth, async (req, res) => {
 				[req.body.novel_id],
 			);
 			novel = JSON.parse(JSON.stringify(novel));
+			const isManga = novel[0].novel_type === 'manga';
 			message.sendMsg(
 				user.user_id,
 				novel[0].author_id,
-				'打赏了你的小说《' +
+				'打赏了你的' + (isManga ? '漫画' : '小说') + '《' +
 					novel[0].name +
 					'》' +
 					req.body.item_amount +
 					'个' +
 					req.body.item_name,
-				'readers/bookInfo?id=' + novel[0].novel_id,
+				(isManga ? 'readers/mangaInfo?id=' : 'readers/bookInfo?id=') + novel[0].novel_id,
 				'like_collect',
 				true,
 			);

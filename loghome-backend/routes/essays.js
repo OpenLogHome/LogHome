@@ -1,4 +1,5 @@
-const { createMangaImageAssets } = require('../bin/mangaImageAssets');
+const { createMangaImageAssets, MAX_PIXELS } = require('../bin/mangaImageAssets');
+const { DEFAULT_UPLOAD_URL, uploadMangaImageFile } = require('../bin/mangaImageStorage');
 // 引入依赖包
 let express = require('express');
 let { query, withTransaction } = require('../sql.js');
@@ -178,8 +179,6 @@ const MANGA_NOVEL_TYPE = 'manga';
 const MANGA_ARTICLE_TYPES = ['mangaStrip', 'mangaPage'];
 const MANGA_MAX_PAGES = 300;
 const MANGA_PAGE_URL_MAX_LENGTH = 512;
-// 全局 express.json limit 为 5mb，base64 相对原图约膨胀 4/3，留余量取 3.5MB
-const MANGA_PAGE_MAX_BYTES = 3.5 * 1024 * 1024;
 const MANGA_IMAGE_ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
 function normalizeNovelType(rawType) {
@@ -209,7 +208,7 @@ function normalizeMangaPage(rawPage, index) {
 	}
 	for (const key of ['width', 'height']) {
 		const value = Number(rawPage[key]);
-		if (Number.isFinite(value) && value > 0 && value <= 20000) {
+		if (Number.isSafeInteger(value) && value > 0) {
 			page[key] = Math.round(value);
 		}
 	}
@@ -1060,9 +1059,9 @@ router.post('/change_cover', auth, async (req, res) => {
 function getMangaImageUploadConfig() {
 	return {
 		url:
-			config.mangaImageUploadUrl ||
-			SECRET.MangaImageUploadUrl ||
-			'https://img.codesocean.top/upload/imgbase64',
+			config.mangaImageFileUploadUrl ||
+			SECRET.MangaImageFileUploadUrl ||
+			DEFAULT_UPLOAD_URL,
 		apikey:
 			config.mangaImageApiKey ||
 			SECRET.MangaImageApiKey ||
@@ -1070,29 +1069,25 @@ function getMangaImageUploadConfig() {
 	};
 }
 
-// 漫画页图上传：接收 base64，生成缩略图/阅读图，条漫长图按 6000px 分段
-// 单页原图上限 3.5MB（受全局 express.json 5mb 请求体限制约束）
+// 漫画页图上传：优先接收原始文件字节，旧版客户端仍可传 base64 JSON。
+// 生成缩略图/阅读图，条漫长图按 6000px 分段。
 router.post('/upload_manga_page', auth, async (req, res) => {
 	let cancelled = false;
 	const cancelSource = axios.CancelToken.source();
 	res.once('close', () => { if (!res.writableEnded) { cancelled = true; cancelSource.cancel('client closed upload'); } });
 	try {
-		const imgBase64 = typeof req.body.img === 'string' ? req.body.img.trim() : '';
-		if (!imgBase64) {
-			return res.status(400).json({ msg: '缺少 img 参数（base64 图片）' });
+		const binaryUpload = Buffer.isBuffer(req.body);
+		const imgBase64 = !binaryUpload && req.body && typeof req.body.img === 'string' ? req.body.img.trim() : '';
+		if (!binaryUpload && !imgBase64) {
+			return res.status(400).json({ msg: '缺少图片数据' });
 		}
-		const buffer = decodeBase64Image(imgBase64);
+		const buffer = binaryUpload ? req.body : decodeBase64Image(imgBase64);
 		if (!buffer || buffer.length === 0) {
 			return res.status(400).json({ msg: '图片内容无效' });
 		}
-		if (buffer.length > MANGA_PAGE_MAX_BYTES) {
-			return res.status(400).json({
-				msg: '单页图片过大（原图上限 3.5MB），请先压缩后再上传',
-			});
-		}
 		let metadata = null;
 		try {
-			metadata = await sharp(buffer, { failOn: 'none' }).metadata();
+			metadata = await sharp(buffer, { failOn: 'none', limitInputPixels: MAX_PIXELS }).metadata();
 		} catch (e) {
 			metadata = null;
 		}
@@ -1107,21 +1102,27 @@ router.post('/upload_manga_page', auth, async (req, res) => {
 		}
 		const uploadConfig = getMangaImageUploadConfig();
 		const pages = await createMangaImageAssets(buffer, {
-			strip: req.body.article_type === 'mangaStrip',
+			strip: (binaryUpload ? req.query.article_type : req.body.article_type) === 'mangaStrip',
 			isCancelled: () => cancelled,
-			upload: async (asset, assetFormat) => {
-				const mime = assetFormat === 'jpeg' ? 'image/jpeg' : 'image/' + assetFormat;
-				const response = await axios.post(uploadConfig.url, {
-					img: 'data:' + mime + ';base64,' + asset.toString('base64'), apikey: uploadConfig.apikey,
-				}, { headers: { 'Content-Type': 'application/json' }, timeout: 60000, cancelToken: cancelSource.token });
-				const url = response.data && response.data.url;
-				if (!url || !/^https?:\/\//i.test(url)) throw new Error('图片存储服务暂时不可用');
-				return url;
-			},
+			upload: (asset, assetFormat) => uploadMangaImageFile(asset, assetFormat, {
+				...uploadConfig,
+				cancelToken: cancelSource.token,
+			}),
 		});
 		res.status(200).json({ ...pages[0], pages, size: buffer.length });
 	} catch (e) {
-		if (!cancelled) res.status(400).json({ msg: '图片处理或上传失败，请检查格式和尺寸后重试' });
+		if (!cancelled) {
+			// 不打印 Axios 错误对象：其中可能包含原图请求体和图床密钥。
+			console.error('upload_manga_page failed:', {
+				message: e.message,
+				code: e.code,
+				upstreamStatus: e.response && e.response.status,
+			});
+			const tooManyPixels = /exceeds pixel limit|图片像素超过安全上限/i.test(e.message || '');
+			res.status(tooManyPixels ? 413 : 400).json({
+				msg: tooManyPixels ? '图片像素超过服务可处理范围，请拆分后上传' : '图片处理或上传失败，请稍后重试',
+			});
+		}
 	}
 });
 
@@ -1187,6 +1188,7 @@ router.get('/get_novel_collaboration_info', auth, async (req, res) => {
 				n.novel_id,
 				n.name,
 				n.author_id,
+				n.is_personal,
 				u.name AS owner_name,
 				u.avatar_url AS owner_avatar_url
 			FROM novels n
@@ -1210,6 +1212,7 @@ router.get('/get_novel_collaboration_info', auth, async (req, res) => {
 				novel_id: Number(novelRows[0].novel_id),
 				name: novelRows[0].name,
 				author_id: Number(novelRows[0].author_id),
+				is_personal: Number(novelRows[0].is_personal),
 				owner_name: novelRows[0].owner_name,
 				owner_avatar_url: novelRows[0].owner_avatar_url,
 			},
