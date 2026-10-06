@@ -1,5 +1,10 @@
 <template>
   <view class="manga-page" v-dark>
+    <transition name="manga-loading-fade">
+      <view class="loading-cover" v-if="loadingCover">
+        <image class="loading-cover-gif" src="/static/loading.gif" mode="aspectFit" />
+      </view>
+    </transition>
     <view class="nav-bar">
       <button v-manga-a11y class="nav-back icon-button" type="button" aria-label="返回" @click="goBack"><manga-icon name="back" /></button>
       <text class="nav-title">{{ isPreview ? '作者预览 · ' : '' }}{{ bookInfo.name || '漫画详情' }}</text>
@@ -89,6 +94,7 @@ export default {
 		return {
 			uid: null,
 			loading: true, loadError: '', catalogExpanded: false, catalogReversed: false, catalogTarget: '', authorWorks: [], favoriteBusy: false, niceBusy: false, shareBusy: false,
+			loadingCover: true, loadingCoverShownAt: 0,
 			isPreview: false, showTipping: false,
 			niceCount: 0, niceStatus: false,
 			bookInfo: {},
@@ -175,6 +181,8 @@ export default {
 		},
 		async loadAll() {
 			this.loading = true; this.loadError = '';
+			this.loadingCover = true;
+			this.loadingCoverShownAt = Date.now();
 			await Promise.all([
 				this.getBookInfo(),
 				this.getArticles(),
@@ -187,7 +195,15 @@ export default {
 				this.loadArticleCommentAmounts(),
 			]);
 			this.loading = false;
+			this.hideLoadingCover();
 			if (!this.isPreview) this.focusHighlightedComment();
+		},
+		hideLoadingCover() {
+			const minDuration = 600;
+			const elapsed = Date.now() - (this.loadingCoverShownAt || Date.now());
+			setTimeout(() => {
+				this.loadingCover = false;
+			}, Math.max(0, minDuration - elapsed));
 		},
 		async loadArticleCommentAmounts() {
 			if (this.isPreview) return;
@@ -566,6 +582,35 @@ export default {
 <style scoped lang="scss">
 @import '@/common/manga-theme.scss';
 .manga-page { @include manga-theme; height: 100vh; }
+
+.loading-cover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--manga-bg);
+}
+
+.loading-cover-gif {
+  width: 320rpx;
+  height: 320rpx;
+  object-fit: contain;
+}
+
+.manga-loading-fade-enter-active,
+.manga-loading-fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+
+.manga-loading-fade-enter,
+.manga-loading-fade-leave-to {
+  opacity: 0;
+}
 .nav-bar { position: fixed; inset: 0 0 auto; z-index: 30; height: 96rpx; padding-top: var(--manga-safe-top); display: flex; align-items: center; background: var(--manga-card); border-bottom: 1rpx solid var(--manga-line); }
 .icon-button { display: grid; place-items: center; width: 96rpx; height: 88rpx; flex: none; font-size: 34rpx; }
 .nav-title { flex: 1; min-width: 0; padding-right: 28rpx; font-size: 30rpx; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

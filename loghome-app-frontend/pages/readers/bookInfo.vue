@@ -4,12 +4,17 @@
 			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
 		</div>
+		<transition name="dispatch-fade">
+			<view class="dispatch-loading" v-if="showDispatchLoading">
+				<img class="dispatch-loading-gif" src="../../static/loading.gif" alt="" />
+			</view>
+		</transition>
 		<nothing :msg="'这本书还没有发布哦'" v-show="!isPageLoading && (bookInfo.is_personal == undefined || bookInfo.is_personal == 1)"></nothing>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :bgColor="currentTopColor" :textcolor="currentTopTextColor" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
 			navTitle='标题'></zetank-backBar>
 		<view class="l-body" :class="{ 'is-loading': isPageLoading }">
-			<view v-if="isPageLoading" class="book-info-skeleton" aria-label="书籍信息加载中">
+			<view v-if="isPageLoading && !isDispatching" class="book-info-skeleton" aria-label="书籍信息加载中">
 				<view class="skeleton-hero">
 					<view class="skeleton-block skeleton-cover"></view>
 					<view class="skeleton-meta">
@@ -578,6 +583,8 @@ export default {
 		return {
 			isPageLoading: true,
 			isCreatingShareCode: false,
+			isDispatching: false,
+			showDispatchLoading: false,
 			uid: 0,
 			bookInfo: {},
 			articles: [],
@@ -1445,6 +1452,26 @@ export default {
 				});
 			}
 		},
+		// 调度重定向：保证加载动画至少播放一段时间后直接跳转，遮罩保持到页面被替换，由目标页同色加载层无缝衔接
+		dispatchRedirect(url) {
+			const minDuration = 600;
+			const elapsed = Date.now() - (this.dispatchShownAt || Date.now());
+			const wait = Math.max(0, minDuration - elapsed);
+			setTimeout(() => {
+				uni.redirectTo({ url });
+			}, wait);
+		},
+		// 页面数据就绪后结束加载动画：保证动画至少播放一段时间，淡出后直接呈现内容
+		finishDispatchLoading() {
+			const minDuration = 600;
+			const elapsed = Date.now() - (this.dispatchShownAt || Date.now());
+			const wait = Math.max(0, minDuration - elapsed);
+			setTimeout(() => {
+				this.isPageLoading = false;
+				this.isDispatching = false;
+				this.showDispatchLoading = false;
+			}, wait);
+		},
 		async getCollaborativeAuthors() {
 			try {
 				const res = await axios.get(
@@ -1497,6 +1524,9 @@ export default {
 	},
 	onLoad(option) {
 		this.options = option;
+		this.isDispatching = true;
+		this.showDispatchLoading = true;
+		this.dispatchShownAt = Date.now();
 		this.attachDocumentScrollListener();
 		let _this = this;
 		setTimeout(() => {
@@ -1511,36 +1541,26 @@ export default {
 
 		let bookInfo = await this.getBookInfo();
 		if (!bookInfo) {
-			this.isPageLoading = false;
+			this.finishDispatchLoading();
 			return;
 		}
 		// 如果是设定书，则应当跳转到世界设定查看页面
 		if (bookInfo.novel_type == "world") {
 			if (this.worldLoadTime == 0) {
-				setTimeout(() => {
-					uni.redirectTo({
-						url: "/pages/worlds/worldPage?noneAnimation=1&novel_id=" + this.uid
-					})
-					this.worldLoadTime++;
-				}, 350)
+				this.worldLoadTime++;
+				this.dispatchRedirect("/pages/worlds/worldPage?noneAnimation=1&novel_id=" + this.uid)
 			} else {
 				uni.navigateBack();
 			}
-			this.isPageLoading = false;
 			return;
 		} else if (bookInfo.novel_type == "manga") {
 			// 漫画作品跳转到漫画详情页
 			if (this.mangaLoadTime == 0) {
-				setTimeout(() => {
-					uni.redirectTo({
-						url: "/pages/readers/mangaInfo?id=" + this.uid
-					})
-					this.mangaLoadTime++;
-				}, 350)
+				this.mangaLoadTime++;
+				this.dispatchRedirect("/pages/readers/mangaInfo?id=" + this.uid)
 			} else {
 				uni.navigateBack();
 			}
-			this.isPageLoading = false;
 			return;
 		} else {
 			try {
@@ -1555,7 +1575,7 @@ export default {
 				this.addReaderHistory(bookInfo);
 				await this.loadCloudReadingProgress();
 			} finally {
-				this.isPageLoading = false;
+				this.finishDispatchLoading();
 			}
 		}
 
@@ -1800,6 +1820,39 @@ export default {
 		padding-bottom: 0;
 		overflow: hidden;
 	}
+}
+
+.dispatch-loading {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #f4f5f6;
+
+	.dark-mode & {
+		background-color: #16191c;
+	}
+}
+
+.dispatch-fade-enter-active,
+.dispatch-fade-leave-active {
+	transition: opacity 0.4s ease;
+}
+
+.dispatch-fade-enter,
+.dispatch-fade-leave-to {
+	opacity: 0;
+}
+
+.dispatch-loading-gif {
+	width: 320rpx;
+	height: 320rpx;
+	object-fit: contain;
 }
 
 .l-body.is-loading > :not(.book-info-skeleton) {

@@ -30,6 +30,7 @@
       <view v-if="!isPreview && !localPreview" class="danmu-row">
         <button v-manga-a11y class="danmu-toggle" :class="{ off: !danmuEnabled }" type="button" :aria-label="danmuEnabled ? '关闭弹幕' : '开启弹幕'" @click="toggleDanmu"><manga-icon name="danmu" /></button>
         <input v-model="danmuInput" class="danmu-input" type="text" maxlength="100" placeholder="发条弹幕见证此刻..." confirm-type="send" :disabled="danmuSending" @confirm="submitDanmu" />
+        <button v-manga-a11y class="danmu-sync" :class="{ on: danmuSyncComment }" type="button" :aria-pressed="danmuSyncComment ? 'true' : 'false'" aria-label="同时发送为本话评论" @click="danmuSyncComment = !danmuSyncComment">同步评论</button>
         <button v-manga-a11y class="danmu-send" type="button" :disabled="danmuSending || !danmuInput.trim()" @click="submitDanmu">发送</button>
       </view>
       <view class="progress-row"><text>{{ progressLabel }}</text><slider aria-label="阅读进度" :min="1" :max="Math.max(2, pages.length)" :value="currentPage + 1" :disabled="pages.length < 2" activeColor="#c14a16" backgroundColor="#cfd3d6" :block-size="18" @change="onPageSlider" /></view>
@@ -141,6 +142,7 @@ export default {
 			danmuList: [],
 			danmuInput: '',
 			danmuSending: false,
+			danmuSyncComment: false,
 			danmuReplayTick: 0,
 		};
 	},
@@ -694,6 +696,20 @@ export default {
 				this.danmuInput = '';
 				// 立即在本页重放，自己刚发的弹幕带高亮边框
 				this.danmuReplayTick += 1;
+				if (this.danmuSyncComment) {
+					try {
+						await publishMangaComment(this.$baseUrl, {
+							novelId: this.novelId,
+							articleId: this.articleId,
+							content,
+							images: [],
+						});
+						this.loadCommentAmount();
+						uni.showToast({ title: '已同步至本话评论', icon: 'none' });
+					} catch (e) {
+						uni.showToast({ title: getMangaCommentErrorMessage(e, '同步评论失败，请稍后重试'), icon: 'none' });
+					}
+				}
 			} catch (e) {
 				uni.showToast({ title: getMangaDanmuErrorMessage(e), icon: 'none' });
 			} finally {
@@ -830,6 +846,8 @@ export default {
 .danmu-input { flex: 1; min-width: 0; height: 72rpx; padding: 0 26rpx !important; border-radius: 100rpx !important; background: var(--manga-bg) !important; color: var(--manga-text) !important; font-size: 25rpx; }
 .danmu-send { display: grid; place-items: center; min-width: 104rpx; height: 72rpx; flex: none; border-radius: 100rpx !important; background: var(--manga-action) !important; color: #fff !important; font-size: 24rpx; font-weight: 600; }
 .danmu-send[disabled] { opacity: .5; }
+.danmu-sync { display: grid; place-items: center; height: 72rpx; padding: 0 22rpx !important; flex: none; border-radius: 100rpx !important; background: var(--manga-bg) !important; color: var(--manga-muted) !important; font-size: 22rpx; white-space: nowrap; }
+.danmu-sync.on { background: var(--manga-tint) !important; color: var(--manga-accent) !important; font-weight: 600; }
 .progress-row { display: flex; align-items: center; gap: 10rpx; padding: 0 8rpx; color: var(--manga-muted); font-size: 22rpx; font-variant-numeric: tabular-nums; }
 .progress-row slider { flex: 1; min-width: 0; }
 .reader-actions { display: grid; grid-template-columns: repeat(5,1fr); gap: 6rpx; }
