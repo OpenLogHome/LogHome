@@ -18,12 +18,20 @@
         </view>
       </swiper-item>
     </swiper>
+    <manga-danmu-layer v-if="danmuEnabled && !isPreview && !localPreview && zoomIndex < 0 && currentPageDanmus.length"
+      :key="'danmu-' + articleId + '-' + currentPage + '-' + danmuReplayTick" :danmus="currentPageDanmus"
+      :current-user-id="currentUserId" :work-author-id="workAuthorId" @remove="removeDanmu" />
     <view class="top-bar" v-show="showMenu">
       <button v-manga-a11y class="bar-icon" type="button" aria-label="返回" @click="goBack"><manga-icon name="back" /></button>
       <view class="bar-title"><text class="bar-novel">{{ isPreview ? '预览 · ' : '' }}{{ novelName }}</text><text class="bar-episode">{{ localPreview ? '未发布的整话预览' : '第 ' + currentEpisodeNo + ' 话 / 共 ' + articles.length + ' 话' }}</text></view>
       <button v-manga-a11y class="bar-icon" type="button" aria-label="阅读设置" @click="openSettings = true"><manga-icon name="settings" /></button>
     </view>
     <view class="bottom-bar" v-show="showMenu">
+      <view v-if="!isPreview && !localPreview" class="danmu-row">
+        <button v-manga-a11y class="danmu-toggle" :class="{ off: !danmuEnabled }" type="button" :aria-label="danmuEnabled ? '关闭弹幕' : '开启弹幕'" @click="toggleDanmu"><manga-icon name="danmu" /></button>
+        <input v-model="danmuInput" class="danmu-input" type="text" maxlength="100" placeholder="发条弹幕见证此刻..." confirm-type="send" :disabled="danmuSending" @confirm="submitDanmu" />
+        <button v-manga-a11y class="danmu-send" type="button" :disabled="danmuSending || !danmuInput.trim()" @click="submitDanmu">发送</button>
+      </view>
       <view class="progress-row"><text>{{ progressLabel }}</text><slider aria-label="阅读进度" :min="1" :max="Math.max(2, pages.length)" :value="currentPage + 1" :disabled="pages.length < 2" activeColor="#c14a16" backgroundColor="#cfd3d6" :block-size="18" @change="onPageSlider" /></view>
       <view class="reader-actions"><button v-manga-a11y class="bar-btn" type="button" @click="openCatalog = true"><manga-icon name="list" /><text>目录</text></button><button v-manga-a11y v-if="!isPreview && !localPreview" class="bar-btn" type="button" @click="openCommentSheet"><manga-icon name="comment" /><text>{{ commentAmount ? '评论 ' + commentAmount : '评论' }}</text></button><button v-manga-a11y="!hasPrevEpisode" class="bar-btn" type="button" :disabled="!hasPrevEpisode" @click="prevEpisode"><manga-icon name="previous" /><text>上一话</text></button><button v-manga-a11y="!hasNextEpisode" class="bar-btn" type="button" :disabled="!hasNextEpisode" @click="nextEpisode"><manga-icon name="next" /><text>下一话</text></button><button v-manga-a11y class="bar-btn" type="button" @click="resetZoom"><manga-icon name="zoom" /><text>复位</text></button></view>
     </view>
@@ -71,19 +79,22 @@ import MangaZoomImage from '@/components/manga-zoom-image.vue';
 import MangaIcon from '@/components/manga-icon.vue';
 import MangaCommentItem from '@/components/manga-comment-item.vue';
 import MangaCommentComposer from '@/components/manga-comment-composer.vue';
+import MangaDanmuLayer from '@/components/manga-danmu-layer.vue';
 import { deleteMangaComment, fetchMangaCommentAmount, fetchMangaComments, getMangaCommentErrorMessage, praiseMangaComment, publishMangaComment, replyMangaComment } from '@/common/manga-comment-api.js';
+import { currentDanmuUserId, deleteMangaDanmu, fetchMangaDanmus, getMangaDanmuErrorMessage, sendMangaDanmu } from '@/common/manga-danmu-api.js';
 
 const STRIP_PAGE_FALLBACK_RATIO = 1.4; // 页图缺少尺寸信息时的兜底高宽比
 const COMMENT_PAGE_SIZE = 10;
 
 export default {
   directives: { mangaA11y: MangaA11y },
-	components: { MangaZoomImage, MangaIcon, MangaCommentItem, MangaCommentComposer },
+	components: { MangaZoomImage, MangaIcon, MangaCommentItem, MangaCommentComposer, MangaDanmuLayer },
 	data() {
 		return {
 			articleId: null,
 			novelId: null,
 			novelName: '漫画',
+			workAuthorId: null,
 			articles: [],
 			currentIdx: -1,
 			articleData: null,
@@ -126,6 +137,11 @@ export default {
 			commentLoading: false,
 			commentSubmitting: false,
 			replyTarget: null,
+			danmuEnabled: true,
+			danmuList: [],
+			danmuInput: '',
+			danmuSending: false,
+			danmuReplayTick: 0,
 		};
 	},
 	computed: {
@@ -155,6 +171,12 @@ export default {
 				return 'cat-' + this.articles[this.currentIdx].article_id;
 			}
 			return '';
+		},
+		currentPageDanmus() {
+			return this.danmuList.filter((item) => item.pageIdx === this.currentPage);
+		},
+		currentUserId() {
+			return currentDanmuUserId();
 		},
 	},
 	onLoad(option) {
@@ -201,10 +223,11 @@ export default {
 				if (settings.direction === 'rtl') this.readingDirection = 'rtl';
 				if (['white', 'warm', 'black'].includes(settings.background)) this.readerBackground = settings.background;
 				if (settings.quality === 'original') this.imageQuality = 'original';
+				this.danmuEnabled = settings.danmu !== false;
 			} catch (_) {}
 		},
 		savePreferences() {
-			try { window.localStorage.setItem('MangaReaderSettings', JSON.stringify({ mode: this.mode, direction: this.readingDirection, background: this.readerBackground, quality: this.imageQuality })); } catch (_) {}
+			try { window.localStorage.setItem('MangaReaderSettings', JSON.stringify({ mode: this.mode, direction: this.readingDirection, background: this.readerBackground, quality: this.imageQuality, danmu: this.danmuEnabled })); } catch (_) {}
 		},
 		resetZoom() { this.zoomIndex = -1; this.zoomResetKey += 1; },
 		onZoomInteraction(index, active) { if (active) this.zoomIndex = index; else if (this.zoomIndex === index) this.zoomIndex = -1; },
@@ -273,6 +296,8 @@ export default {
 		},
 		handleKeydown(e) {
 			// #ifdef H5
+			const tag = e.target && e.target.tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 			if (e.key === 'Escape') {
 				if (this.openSettings) this.openSettings = false; else if (this.openComments) this.closeComments(); else if (this.openCatalog) this.openCatalog = false; else if (this.zoomIndex >= 0) this.resetZoom(); else this.goBack();
 			} else if (e.key === 'ArrowRight' && this.mode === 'paged' && this.zoomIndex < 0 && !this.openSettings && !this.openCatalog && !this.openComments) {
@@ -300,6 +325,7 @@ export default {
 				const res = await axios.get(this.$baseUrl + route + '?id=' + this.novelId, { headers: this.previewHeaders() });
 				if (res.status == 200 && res.data && res.data.length > 0) {
 					this.novelName = res.data[0].name || '漫画';
+					this.workAuthorId = res.data[0].author_id;
 				}
 			} catch (e) {
 				console.error('loadNovelName failed', e);
@@ -357,6 +383,7 @@ export default {
 				this.articleId = article.article_id;
 				this.articleData = article;
 				this.resetChapterComments();
+				this.resetChapterDanmus();
 				this.pages = pages;
 				this.retryCount = {};
 				this.pageErrors = {};
@@ -634,6 +661,64 @@ export default {
 				},
 			});
 		},
+		// ===== 弹幕 =====
+		toggleDanmu() {
+			this.danmuEnabled = !this.danmuEnabled;
+			this.savePreferences();
+		},
+		resetChapterDanmus() {
+			this.danmuList = [];
+			this.danmuInput = '';
+			if (!this.isPreview && !this.localPreview) this.loadDanmus();
+		},
+		async loadDanmus() {
+			try {
+				this.danmuList = await fetchMangaDanmus(this.$baseUrl, this.novelId, this.articleId);
+			} catch (e) {
+				console.error('loadDanmus failed', e);
+			}
+		},
+		async submitDanmu() {
+			if (!this.requireLogin() || this.danmuSending) return;
+			const content = this.danmuInput.trim();
+			if (!content) return;
+			this.danmuSending = true;
+			try {
+				const danmu = await sendMangaDanmu(this.$baseUrl, {
+					novelId: this.novelId,
+					articleId: this.articleId,
+					pageIdx: this.currentPage,
+					content,
+				});
+				this.danmuList = this.danmuList.concat(danmu);
+				this.danmuInput = '';
+				// 立即在本页重放，自己刚发的弹幕带高亮边框
+				this.danmuReplayTick += 1;
+			} catch (e) {
+				uni.showToast({ title: getMangaDanmuErrorMessage(e), icon: 'none' });
+			} finally {
+				this.danmuSending = false;
+			}
+		},
+		removeDanmu(danmuId) {
+			const target = this.danmuList.find((item) => item.danmuId === danmuId);
+			if (!target) return;
+			uni.showModal({
+				title: '删除弹幕',
+				content: '确定删除这条弹幕吗？',
+				success: async (result) => {
+					if (!result.confirm) return;
+					try {
+						await deleteMangaDanmu(this.$baseUrl, danmuId);
+						this.danmuList = this.danmuList.filter((item) => item.danmuId !== danmuId);
+						this.danmuReplayTick += 1;
+						uni.showToast({ title: '已删除', icon: 'none' });
+					} catch (e) {
+						uni.showToast({ title: getMangaDanmuErrorMessage(e, '删除失败，请稍后重试'), icon: 'none' });
+					}
+				},
+			});
+		},
 		// ===== 话数切换 =====
 		prevEpisode() {
 			if (!this.hasPrevEpisode) {
@@ -739,6 +824,12 @@ export default {
 .bar-novel { font-size: 27rpx; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .bar-episode { margin-top: 4rpx; color: var(--manga-muted); font-size: 21rpx; }
 .bottom-bar { bottom: 0; padding: 12rpx 20rpx calc(12rpx + var(--manga-safe-bottom)); border-top: 1rpx solid var(--manga-line); }
+.danmu-row { display: flex; align-items: center; gap: 14rpx; padding: 2rpx 4rpx 14rpx; }
+.danmu-toggle { display: grid; place-items: center; width: 72rpx; height: 72rpx; flex: none; border-radius: 100rpx !important; background: var(--manga-bg) !important; color: var(--manga-accent) !important; font-size: 34rpx; }
+.danmu-toggle.off { color: var(--manga-muted) !important; opacity: .55; }
+.danmu-input { flex: 1; min-width: 0; height: 72rpx; padding: 0 26rpx !important; border-radius: 100rpx !important; background: var(--manga-bg) !important; color: var(--manga-text) !important; font-size: 25rpx; }
+.danmu-send { display: grid; place-items: center; min-width: 104rpx; height: 72rpx; flex: none; border-radius: 100rpx !important; background: var(--manga-action) !important; color: #fff !important; font-size: 24rpx; font-weight: 600; }
+.danmu-send[disabled] { opacity: .5; }
 .progress-row { display: flex; align-items: center; gap: 10rpx; padding: 0 8rpx; color: var(--manga-muted); font-size: 22rpx; font-variant-numeric: tabular-nums; }
 .progress-row slider { flex: 1; min-width: 0; }
 .reader-actions { display: grid; grid-template-columns: repeat(5,1fr); gap: 6rpx; }
