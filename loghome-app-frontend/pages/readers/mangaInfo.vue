@@ -37,6 +37,12 @@
           </button>
           <button v-manga-a11y v-if="articles.length > 5" class="catalog-more" type="button" :aria-expanded="catalogExpanded ? 'true' : 'false'" @click="catalogExpanded = !catalogExpanded">{{ catalogExpanded ? '收起目录' : '查看全部 ' + articles.length + ' 话' }}</button>
         </view>
+        <view v-if="!isPreview" id="manga-comments" class="section comment-section">
+          <view class="section-title"><text>作品评论 <text class="catalog-count">{{ commentAmount }} 条</text></text><button v-manga-a11y v-if="previewComments.length" type="button" class="text-action" @click="openCommentSheet()"><manga-icon name="next" />全部</button></view>
+          <view v-if="!previewComments.length" class="comment-empty">还没有评论，来抢第一个沙发</view>
+          <manga-comment-item v-for="item in previewComments" :key="item.commentId" :comment="item" @reply="openCommentSheet($event)" @praise="toggleCommentPraise" @remove="removeComment" @remove-reply="removeReply" />
+          <button v-manga-a11y class="comment-write" type="button" @click="writeComment"><manga-icon name="comment" />写评论</button>
+        </view>
         <view v-if="authorWorks.length" class="section works-section"><view class="section-title">作者的其他漫画</view><view class="works-grid"><button v-manga-a11y v-for="work in authorWorks" :key="work.novel_id" class="work-item" type="button" @click="openWork(work)"><image lazy-load class="other-cover" :src="work.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="work.name + '封面'" /><text>{{ work.name }}</text><text class="work-status">{{ Number(work.is_complete) === 1 ? '已完结' : '连载中' }}</text></button></view></view>
       </template>
       <view class="bottom-space"></view>
@@ -48,6 +54,19 @@
     <uni-popup v-if="!isPreview" ref="tippingPopup" type="bottom">
       <view class="tipping-sheet"><tipping-bar v-if="showTipping" :novel_id="uid" @tip="handleTippingSuccess" /></view>
     </uni-popup>
+    <uni-popup v-if="!isPreview" ref="commentPopup" type="bottom" @change="handleCommentSheetChange">
+      <view class="comment-sheet">
+        <view class="sheet-head"><text class="sheet-title">作品评论 <text class="catalog-count">{{ commentAmount }} 条</text></text><button v-manga-a11y class="sheet-close" type="button" aria-label="关闭评论列表" @click="closeCommentSheet"><manga-icon name="close" /></button></view>
+        <scroll-view class="sheet-scroll" scroll-y :scroll-into-view="commentAnchor" :scroll-with-animation="scrollWithAnimation">
+          <view v-if="!comments.length && !commentLoading" class="comment-empty">还没有评论，来抢第一个沙发</view>
+          <view v-for="item in comments" :id="'comment_' + item.commentId" :key="item.commentId">
+            <manga-comment-item :comment="item" :highlight="String(highlightCommentId) === String(item.commentId)" @reply="setReplyTarget($event)" @praise="toggleCommentPraise" @remove="removeComment" @remove-reply="removeReply" />
+          </view>
+          <button v-manga-a11y v-if="commentHasMore" class="comment-more" type="button" :disabled="commentLoading" @click="loadMoreComments">{{ commentLoading ? '加载中…' : '加载更多评论' }}</button>
+        </scroll-view>
+        <manga-comment-composer ref="commentComposer" :reply-to="replyTarget" :submitting="commentSubmitting" @submit="submitComment" @cancel-reply="replyTarget = null" />
+      </view>
+    </uni-popup>
     <task-reward-modal v-if="!isPreview" ref="taskRewardModal" @harvest="openTreePlant" />
   </view>
 </template>
@@ -57,10 +76,15 @@ import axios from 'axios';
 import MangaIcon from '@/components/manga-icon.vue';
 import TaskRewardModal from '@/components/TaskRewardModal.vue';
 import TippingBar from '@/components/tipping/tippingBar.vue';
+import MangaCommentItem from '@/components/manga-comment-item.vue';
+import MangaCommentComposer from '@/components/manga-comment-composer.vue';
+import { deleteMangaComment, fetchMangaCommentAmount, fetchMangaCommentById, fetchMangaComments, getMangaCommentErrorMessage, praiseMangaComment, publishMangaComment, replyMangaComment } from '@/common/manga-comment-api.js';
+
+const COMMENT_PAGE_SIZE = 10;
 
 export default {
   directives: { mangaA11y: MangaA11y },
-	components: { MangaIcon, TaskRewardModal, TippingBar },
+	components: { MangaIcon, TaskRewardModal, TippingBar, MangaCommentItem, MangaCommentComposer },
 	data() {
 		return {
 			uid: null,
@@ -73,11 +97,21 @@ export default {
 			isInBookcase: false,
 			introExpanded: false,
 			progress: null, // { last_article_id, last_article_chapter, last_page_idx }
+			comments: [],
+			commentAmount: 0,
+			commentPage: 1,
+			commentHasMore: false,
+			commentLoading: false,
+			commentSubmitting: false,
+			replyTarget: null,
+			highlightCommentId: '',
+			commentAnchor: '',
 		};
 	},
 	computed: {
 		visibleArticles() { const list = this.catalogReversed ? this.articles.slice().reverse() : this.articles; return this.catalogExpanded ? list : list.slice(0, 5); },
 		latestEpisode() { return this.articles.filter(a => Number(a.is_draft) !== 1).slice().sort((a, b) => Number(b.article_chapter) - Number(a.article_chapter))[0]; },
+		previewComments() { return this.comments.slice(0, 3); },
 		scrollWithAnimation() { return !(typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); },
 		readButtonText() {
 			if (this.articles.length === 0) return '暂未发布';
@@ -94,6 +128,7 @@ export default {
 	onLoad(option) {
 		this.uid = option.id;
 		this.isPreview = option.preview === '1';
+		this.highlightCommentId = option.comment_id || '';
 		this.loadAll();
 	},
 	onShow() {
@@ -146,8 +181,11 @@ export default {
 				this.loadBookcaseStatus(),
 				this.loadNiceState(),
 				this.loadProgress(),
+				this.loadComments(),
+				this.loadCommentAmount(),
 			]);
 			this.loading = false;
+			if (!this.isPreview) this.focusHighlightedComment();
 		},
 		async getBookInfo() {
 			try {
@@ -185,6 +223,155 @@ export default {
 			} catch (e) {
 				console.error('getTags failed', e);
 			}
+		},
+		requireLogin() {
+			if (this.authHeaders()) return true;
+			uni.showToast({ title: '请先登录', icon: 'none' });
+			return false;
+		},
+		async loadComments(page = 1) {
+			this.commentLoading = true;
+			try {
+				const list = await fetchMangaComments(this.$baseUrl, { novelId: this.uid, page, pageSize: COMMENT_PAGE_SIZE });
+				this.comments = page === 1 ? list : this.comments.concat(list);
+				this.commentHasMore = list.length === COMMENT_PAGE_SIZE;
+				this.commentPage = page;
+			} catch (e) {
+				console.error('loadComments failed', e);
+			} finally {
+				this.commentLoading = false;
+			}
+		},
+		async loadCommentAmount() {
+			try {
+				this.commentAmount = await fetchMangaCommentAmount(this.$baseUrl, this.uid);
+			} catch (e) {
+				console.error('loadCommentAmount failed', e);
+			}
+		},
+		async loadMoreComments() {
+			if (this.commentLoading) return;
+			await this.loadComments(this.commentPage + 1);
+		},
+		anchorComment(commentId) {
+			this.highlightCommentId = commentId;
+			this.commentAnchor = '';
+			this.$nextTick(() => { this.commentAnchor = 'comment_' + commentId; });
+		},
+		// 通知里带的是根评论 id，可能不在首页，取回整条后展开评论列表并定位
+		async focusHighlightedComment() {
+			const targetId = this.highlightCommentId;
+			if (!targetId) return;
+			if (!this.comments.some((item) => String(item.commentId) === String(targetId))) {
+				const target = await fetchMangaCommentById(this.$baseUrl, targetId).catch(() => null);
+				if (target) this.comments = [target].concat(this.comments);
+			}
+			this.$nextTick(() => { if (this.$refs.commentPopup) this.$refs.commentPopup.open('bottom'); });
+			this.anchorComment(targetId);
+		},
+		openCommentSheet(target) {
+			if (target && !this.requireLogin()) return;
+			if (target) this.replyTarget = target;
+			if (this.$refs.commentPopup) this.$refs.commentPopup.open('bottom');
+		},
+		writeComment() {
+			if (!this.requireLogin()) return;
+			this.replyTarget = null;
+			if (this.$refs.commentPopup) this.$refs.commentPopup.open('bottom');
+		},
+		closeCommentSheet() {
+			if (this.$refs.commentPopup) this.$refs.commentPopup.close();
+		},
+		// 点击遮罩关闭时不会走 closeCommentSheet，回复状态统一在 change 事件里清理
+		handleCommentSheetChange(state) {
+			if (state && state.show) return;
+			this.replyTarget = null;
+			this.commentAnchor = '';
+		},
+		setReplyTarget(target) {
+			if (!this.requireLogin()) return;
+			this.replyTarget = target;
+		},
+		async submitComment(payload) {
+			if (!this.requireLogin() || this.commentSubmitting) return;
+			this.commentSubmitting = true;
+			try {
+				let anchoredId = null;
+				if (this.replyTarget) {
+					await replyMangaComment(this.$baseUrl, {
+						novelId: this.uid,
+						articleId: 0,
+						rootCommentId: this.replyTarget.rootCommentId,
+						replyToCommentId: this.replyTarget.replyToCommentId,
+						content: payload.content,
+						images: payload.images,
+					});
+					anchoredId = this.replyTarget.rootCommentId;
+				} else {
+					const created = await publishMangaComment(this.$baseUrl, {
+						novelId: this.uid,
+						content: payload.content,
+						images: payload.images,
+					});
+					anchoredId = created.commentId;
+				}
+				this.$refs.commentComposer.reset();
+				this.replyTarget = null;
+				uni.showToast({ title: '发表成功', icon: 'none' });
+				await Promise.all([this.loadComments(1), this.loadCommentAmount()]);
+				if (anchoredId) this.anchorComment(anchoredId);
+			} catch (e) {
+				uni.showToast({ title: getMangaCommentErrorMessage(e, '评论发送失败，请稍后重试'), icon: 'none' });
+			} finally {
+				this.commentSubmitting = false;
+			}
+		},
+		async toggleCommentPraise(comment) {
+			if (!this.requireLogin()) return;
+			const type = comment.praiseType === 0 ? 3 : 0;
+			const previousType = comment.praiseType;
+			try {
+				await praiseMangaComment(this.$baseUrl, comment.commentId, type);
+				comment.praiseType = type;
+				comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previousType === 0 ? -1 : 1));
+			} catch (e) {
+				uni.showToast({ title: getMangaCommentErrorMessage(e, '操作失败，请稍后重试'), icon: 'none' });
+			}
+		},
+		removeComment(comment) {
+			uni.showModal({
+				title: '删除评论',
+				content: '确定删除这条评论吗？',
+				success: async (result) => {
+					if (!result.confirm) return;
+					try {
+						await deleteMangaComment(this.$baseUrl, comment.commentId);
+						this.comments = this.comments.filter((item) => item.commentId !== comment.commentId);
+						this.commentAmount = Math.max(0, this.commentAmount - 1);
+						uni.showToast({ title: '已删除', icon: 'none' });
+					} catch (e) {
+						uni.showToast({ title: getMangaCommentErrorMessage(e, '删除失败，请稍后重试'), icon: 'none' });
+					}
+				},
+			});
+		},
+		removeReply({ rootCommentId, reply }) {
+			uni.showModal({
+				title: '删除回复',
+				content: '确定删除这条回复吗？',
+				success: async (result) => {
+					if (!result.confirm) return;
+					try {
+						await deleteMangaComment(this.$baseUrl, reply.commentId);
+						const root = this.comments.find((item) => item.commentId === rootCommentId);
+						if (root) root.replies = root.replies.filter((item) => item.commentId !== reply.commentId);
+						this.commentAmount = Math.max(0, this.commentAmount - 1);
+						uni.showToast({ title: '已删除', icon: 'none' });
+					} catch (e) {
+						uni.showToast({ title: getMangaCommentErrorMessage(e, '删除失败，请稍后重试'), icon: 'none' });
+					}
+				},
+			});
 		},
 		async loadBookcaseStatus() {
 			if (this.isPreview) return;
@@ -414,6 +601,14 @@ export default {
 .chapter-date { display: block; margin-top: 4rpx; color: var(--manga-muted); font-size: 21rpx; }
 .catalog-more { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 88rpx; padding: 0; color: var(--manga-accent); font-size: 25rpx; font-weight: 600; text-align: center; }
 .catalog-empty { padding: 38rpx 0; color: var(--manga-muted); text-align: center; font-size: 25rpx; }
+.comment-empty { padding: 38rpx 0; color: var(--manga-muted); text-align: center; font-size: 25rpx; }
+.comment-write { display: flex; align-items: center; justify-content: center; gap: 10rpx; width: 100%; min-height: 88rpx; margin-top: 20rpx; border: 1rpx dashed var(--manga-line); border-radius: 16rpx; color: var(--manga-muted); font-size: 25rpx; font-weight: 600; }
+.comment-write .manga-icon { font-size: 26rpx; }
+.comment-sheet { box-sizing: border-box; display: flex; flex-direction: column; max-height: calc(82vh - var(--manga-safe-top)); padding: 0 28rpx calc(20rpx + var(--manga-safe-bottom)); background: var(--manga-card); border-radius: 20rpx 20rpx 0 0; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; flex: none; min-height: 96rpx; font-size: 30rpx; font-weight: 700; }
+.sheet-close { display: grid; place-items: center; width: 76rpx; height: 76rpx; color: var(--manga-muted); font-size: 30rpx; }
+.sheet-scroll { flex: 1; min-height: 240rpx; }
+.comment-more { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 88rpx; color: var(--manga-accent); font-size: 25rpx; font-weight: 600; }
 .works-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18rpx; }
 .work-item { min-width: 0; text-align: left; }
 .other-cover { display: block; width: 100%; height: 238rpx; border-radius: 12rpx; object-fit: cover; }

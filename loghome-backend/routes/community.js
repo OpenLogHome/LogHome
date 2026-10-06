@@ -58,6 +58,19 @@ function attachCentoData(item) {
 	return item;
 }
 
+function isMangaWork(novel) {
+	return Boolean(novel) && novel.novel_type === 'manga';
+}
+
+function workLabel(novel) {
+	return isMangaWork(novel) ? '漫画' : '小说';
+}
+
+function commentPageRoute(novel, novelId, commentId) {
+	let page = isMangaWork(novel) ? 'readers/mangaInfo' : 'readers/bookComment';
+	return page + '?id=' + novelId + '&comment_id=' + commentId;
+}
+
 router.get('/get_follows_of', privacy.listGuard('following'), async function (req, res) {
 	try {
 		let results = await query(
@@ -227,17 +240,20 @@ router.post('/comment_on_novel', auth, async (req, res) => {
 		message.sendMsg(
 			user.user_id,
 			novel.author_id,
-			'评论了你的小说《' + novel.name + '》：' + req.body.content,
-			'readers/bookComment?id=' + req.body.novel_id + '&comment_id=' + results.insertId,
+			'评论了你的' + workLabel(novel) + '《' + novel.name + '》：' + req.body.content,
+			commentPageRoute(novel, req.body.novel_id, results.insertId),
 			'comment',
 		);
-        // 判断一下是不是章节评论，如果是的话就操作一下cento
-        if(req.body.paragraph_id != -1){
-            let article = JSON.parse((await query(`SELECT * FROM articles WHERE article_id = ?`, [req.body.article_id]))[0].content);
+		// 划线段评只对文本作品有效，漫画的话数内容是分页数据、article_id 为 0 的作品级评论没有段落，
+		// 这里必须同时要求合法的段落与篇章 id，否则会在解析 content 时抛错并让已入库的评论返回 400。
+		let paragraphId = Number(req.body.paragraph_id);
+		let centoArticleId = Number(req.body.article_id);
+		if (paragraphId > 0 && centoArticleId > 0) {
+            let article = JSON.parse((await query(`SELECT * FROM articles WHERE article_id = ?`, [centoArticleId]))[0].content);
             for(let paragraph of article){
-                if(paragraph.id == req.body.paragraph_id){
+                if(paragraph.id == paragraphId){
                     let cento = await query(`SELECT * FROM article_cento WHERE article_id = ? AND paragraph = ? AND user_id = ? AND is_delete = 0`,
-                    [req.body.article_id, paragraph.value, req.user[0].user_id])
+                    [centoArticleId, paragraph.value, req.user[0].user_id])
                     let centoId = -1;
                     if(cento.length > 0) centoId = cento[0].article_cento_id;
                     else {
@@ -293,11 +309,12 @@ router.post('/reply_to_novel_comment', auth, async (req, res) => {
 			reason: '书籍评论回复',
 			suppressNotification: true,
 		});
+		let parentNovel = (await query('SELECT novel_type FROM novels WHERE novel_id = ?', [novel_id]))[0];
 		message.sendMsg(
 			user.user_id,
 			comment.user_id,
 			'回复了你的评论：' + req.body.content,
-			'readers/bookComment?id=' + req.body.novel_id + '&comment_id=' + req.body.fatherId,
+			commentPageRoute(parentNovel, novel_id, req.body.fatherId),
 			'comment',
 		);
 		res.end(JSON.stringify(newComment[0]));

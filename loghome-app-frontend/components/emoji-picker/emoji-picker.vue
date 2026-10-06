@@ -316,43 +316,67 @@
 			updateEmojiPanelPosition() {
 				const triggerEl = this.$el.querySelector('.emoji-trigger');
 				const panelEl = this.$el.querySelector('.emoji-panel');
-				
+
 				if (!triggerEl || !panelEl) return;
-				
-				// 获取触发按钮的位置信息
+
+				// transform/perspective/filter 祖先（如 uni-popup 过渡层）会成为 fixed 定位的包含块，
+				// 此时必须以该祖先的坐标为基准计算，否则面板位置会整体偏移
+				const container = this.getFixedContainingBlock(panelEl);
+				const containerRect = container ? container.getBoundingClientRect() : null;
+				const baseTop = containerRect ? containerRect.top : 0;
+				const baseHeight = containerRect ? containerRect.height
+					: (window.innerHeight || document.documentElement.clientHeight);
+
+				// 获取触发按钮的位置信息（转为相对包含块的坐标）
 				const triggerRect = triggerEl.getBoundingClientRect();
-				const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-				
+				const triggerTop = triggerRect.top - baseTop;
+				const triggerBottom = triggerRect.bottom - baseTop;
+
 				// 获取面板的尺寸
 				const panelRect = panelEl.getBoundingClientRect();
 				const panelHeight = panelRect.height || 500;
 				const safeDistance = 25; // 安全距离（px）
-				
+				const minTop = -baseTop; // 视口顶部对应的包含块坐标，面板可超出包含块但不超出视口
+
 				// 默认将面板放在触发按钮上方
-				let topPosition = triggerRect.top - panelHeight - safeDistance;
-				
-				// 如果上方空间不足，则将面板放在触发按钮下方
-				if (topPosition < 0) {
-					topPosition = triggerRect.bottom + safeDistance;
+				let topPosition = triggerTop - panelHeight - safeDistance;
+
+				// 上方（到视口顶部为止）放不下，则将面板放在触发按钮下方
+				if (topPosition < minTop) {
+					topPosition = triggerBottom + safeDistance;
 				}
-				
-				// 确保面板不会超出屏幕底部
-				if (topPosition + panelHeight > windowHeight) {
+
+				// 确保面板不会超出包含块底部
+				if (topPosition + panelHeight > baseHeight) {
 					// 如果下方空间也不足，则选择空间较大的一侧
-					if (triggerRect.top > (windowHeight - triggerRect.bottom)) {
-						// 上方空间更大，放在上方并调整高度
-						topPosition = 0;
-						panelEl.style.height = `${triggerRect.top - safeDistance}px`;
+					if (triggerTop > (baseHeight - triggerBottom)) {
+						// 上方空间更大，顶到视口顶部并调整高度
+						topPosition = minTop;
+						panelEl.style.height = `${triggerTop + baseTop - safeDistance}px`;
 					} else {
 						// 下方空间更大，放在下方并调整高度
-						topPosition = triggerRect.bottom + safeDistance;
-						panelEl.style.height = `${windowHeight - topPosition - safeDistance}px`;
+						topPosition = triggerBottom + safeDistance;
+						panelEl.style.height = `${baseHeight - topPosition - safeDistance}px`;
 					}
 				}
-				
+
 				// 设置面板位置
 				panelEl.style.bottom = 'auto'; // 清除之前可能设置的 bottom 值
 				panelEl.style.top = `${topPosition}px`;
+			},
+			// 查找会改变 fixed 定位基准的祖先（有 transform/perspective/filter/will-change 的元素）
+			getFixedContainingBlock(el) {
+				let node = el.parentElement;
+				while (node && node !== document.documentElement) {
+					const style = window.getComputedStyle(node);
+					if (style.transform !== 'none' || style.perspective !== 'none'
+						|| (style.filter && style.filter !== 'none')
+						|| (style.willChange && style.willChange.indexOf('transform') !== -1)) {
+						return node;
+					}
+					node = node.parentElement;
+				}
+				return null;
 			},
 			// 选择Emoji表情
 			selectEmoji(emoji) {
@@ -743,10 +767,11 @@
 		/* bottom 值将通过 JS 动态设置 */
 		left: 50%;
 		transform: translateX(-50%);
+		z-index: 100;
 		width: 100vw;
 		max-width: 750rpx; /* 限制最大宽度 */
-		height: 500rpx;
-		max-height: 70vh; /* 限制最大高度 */
+		height: 650rpx;
+		max-height: 80vh; /* 限制最大高度 */
 		background-color: #fff;
 		border: 1rpx solid #eee;
 		border-radius: 20rpx;

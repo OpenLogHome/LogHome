@@ -1,6 +1,6 @@
 <template>
   <svg class="manga-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-    :fill="name === 'starFilled' ? 'currentColor' : 'none'" stroke="currentColor"
+    :fill="isFilled ? 'currentColor' : 'none'" stroke="currentColor"
     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
     aria-hidden="true" focusable="false">
     <path v-for="(path, index) in iconPaths" :key="index" :d="path" />
@@ -29,11 +29,17 @@ const icons = {
   check: ['m4 12 5 5L20 6'], lock: ['M5 11h14v10H5z', 'M8 11V7a4 4 0 1 1 8 0v4'],
   users: ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M4 21v-2a8 8 0 0 1 16 0v2', 'M18 5a3 3 0 0 1 0 6'],
   palette: ['M12 2a10 10 0 1 0 0 20h2a2 2 0 0 0 1-3.7 2 2 0 0 1 .9-3.8H18A4 4 0 0 0 22 10 9 9 0 0 0 12 2z', 'M6 11h.01', 'M9 6h.01', 'M15 6h.01'],
+  comment: ['M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'],
+  heart: ['M20.8 5.6a5.4 5.4 0 0 0-7.7 0L12 6.7l-1.1-1.1a5.4 5.4 0 0 0-7.7 7.7L12 21l8.8-7.7a5.4 5.4 0 0 0 0-7.7z'],
+  heartFilled: ['M20.8 5.6a5.4 5.4 0 0 0-7.7 0L12 6.7l-1.1-1.1a5.4 5.4 0 0 0-7.7 7.7L12 21l8.8-7.7a5.4 5.4 0 0 0 0-7.7z'],
 };
 export default {
   name: 'MangaIcon',
   props: { name: { type: String, required: true } },
-  computed: { iconPaths() { return icons[this.name] || icons.image; } },
+  computed: {
+    iconPaths() { return icons[this.name] || icons.image; },
+    isFilled() { return this.name === 'starFilled' || this.name === 'heartFilled'; },
+  },
 };
 </script>
 <style scoped>
