@@ -17,7 +17,7 @@ function setup(request = async () => ({ data: { insertId: 1 } })) {
 		axios: { get: async (...args) => { calls.push(args); return request(...args); } },
 		uni: { showToast: options => toasts.push(options) },
 		window: { localStorage: { getItem: () => token } },
-		MangaIcon: {}, MangaA11y: {}, darkModeMixin: {},
+		MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, darkModeMixin: {},
 	});
 	const instance = { ...options.data(), ...options.methods, $baseUrl: 'https://example.invalid', refreshPage: () => { refreshes++; } };
 	return { instance, options, calls, toasts, setToken: value => { token = value; }, refreshes: () => refreshes };
@@ -87,12 +87,32 @@ test('未登录或凭据损坏时不发送创建请求，不会卡在创建中',
 	}
 });
 
-test('世界栏传入当前栏索引，修正 transformed 轨道中的 fixed 弹窗定位', () => {
+test('创建世界弹窗挂到 body，遮罩以视口为基准压住 tabBar', () => {
+	const appended = [];
+	const body = { appendChild: el => appended.push(el) };
+	const portal = fs.readFileSync(path.join(root, 'common/manga-portal.js'), 'utf8');
+	const sandbox = { module: {}, document: { body } };
+	vm.runInNewContext(portal.replace('export default', 'module.exports ='), sandbox);
+	sandbox.module.exports.inserted({ parentNode: body });
+	sandbox.module.exports.inserted({ parentNode: null });
+	sandbox.module.exports.inserted({ parentNode: {} });
+	assert.equal(appended.length, 2);
+
 	const ctx = setup();
-	assert.equal(ctx.options.props.activeIndex.default, 0);
-	assert.equal(ctx.options.computed.maskStyle.call({ activeIndex: 2 }).left, '200vw');
-	assert.equal(ctx.options.computed.maskStyle.call({ activeIndex: 2 }).width, '100vw');
+	assert.equal(ctx.options.props, undefined);
+	assert.match(source, /v-manga-portal/);
+	assert.doesNotMatch(source, /maskStyle|activeIndex/);
+	assert.match(source, /@touchstart\.stop @touchmove\.self\.prevent @touchend\.stop/);
+	const style = source.slice(source.indexOf('<style'));
+	assert.match(style, /\.create-mask\s*\{[^}]*left: 0;\s*right: 0;\s*top: 0;\s*bottom: 0;/);
+	assert.match(style, /\.create-mask\s*\{[^}]*z-index: 3100;/);
+
+	const manga = fs.readFileSync(path.join(root, 'components/mangaPage.vue'), 'utf8');
+	assert.match(manga, /v-manga-portal/);
+	assert.doesNotMatch(manga, /maskStyle|activeIndex/);
+	// 脱离 .mangaWrapper 后弹窗需要自己声明主题变量，否则暗色模式失效
+	assert.match(manga.slice(manga.indexOf('<style')), /\.create-mask\s*\{\s*@include manga-theme;/);
+
 	const essays = fs.readFileSync(path.join(root, 'pages/essays.vue'), 'utf8');
-	assert.match(essays, /<worldPage ref="worldPage" :active-index="topNavIndex"/);
-	assert.match(source, /@touchstart\.stop @touchmove\.stop @touchend\.stop/);
+	assert.doesNotMatch(essays, /:active-index="topNavIndex"/);
 });

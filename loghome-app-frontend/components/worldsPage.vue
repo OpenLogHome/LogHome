@@ -45,9 +45,9 @@
 		<div class="bottom" style="height: 80px">
 			
 		</div>
-		<view v-if="showCreateDialog" class="create-mask" :class="{ 'dark-mode': isDarkMode }" :style="maskStyle"
+		<view v-if="showCreateDialog" v-manga-portal class="create-mask" :class="{ 'dark-mode': isDarkMode }"
 			@click.self="closeCreateDialog" @keydown.esc.stop.prevent="closeCreateDialog"
-			@touchstart.stop @touchmove.stop @touchend.stop>
+			@touchstart.stop @touchmove.self.prevent @touchend.stop>
 			<view class="create-panel" role="dialog" aria-modal="true" aria-labelledby="create-world-title" :aria-busy="String(creating)">
 				<view class="create-header">
 					<text id="create-world-title" class="create-title">创建世界</text>
@@ -74,13 +74,11 @@
 	import darkModeMixin from '@/mixins/dark-mode.js';
 	import MangaIcon from '@/components/manga-icon.vue';
 	import MangaA11y from '@/common/manga-a11y.js';
+	import MangaPortal from '@/common/manga-portal.js';
 	export default {
 		components: { MangaIcon },
-		directives: { mangaA11y: MangaA11y },
+		directives: { mangaA11y: MangaA11y, mangaPortal: MangaPortal },
 		mixins: [darkModeMixin],
-		props: {
-			activeIndex: { type: Number, default: 0 },
-		},
 		data() {
 			return {
 				worlds: [],
@@ -88,12 +86,6 @@
 				creating: false,
 				createForm: { name: '' },
 			}
-		},
-		computed: {
-			maskStyle() {
-				// 滑动轨道的 transform 会成为 fixed 定位的包含块，与漫画弹窗保持一致。
-				return { left: (this.activeIndex * 100) + 'vw', width: '100vw' };
-			},
 		},
 		methods: {
 			isWorldOwner(world) {
@@ -187,9 +179,11 @@
 	.create-mask {
 		@include manga-theme;
 		position: fixed;
+		left: 0;
+		right: 0;
 		top: 0;
-		height: 100vh;
-		z-index: 300;
+		bottom: 0;
+		z-index: 3100;
 		display: flex;
 		align-items: center;
 		justify-content: center;

@@ -13,7 +13,7 @@ function component(file, axios = {}, t) {
   const storage = new Map(), navigation = [], messages = [];
   const window = { localStorage: { getItem: k => storage.get(k) || null, setItem: (k,v) => storage.set(k,v), removeItem: k => storage.delete(k) }, addEventListener() {}, removeEventListener() {} };
   const uni = { getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 800 }), showToast: m => messages.push(m), navigateTo: m => navigation.push(m), showModal() {}, previewImage() {} };
-  const sandbox = { module: {}, axios, window, uni, Blob, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, TaskRewardModal: {}, TippingBar: {}, darkModeMixin: {}, setTimeout, clearTimeout, console: { error() {} } };
+  const sandbox = { module: {}, axios, window, uni, Blob, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, TaskRewardModal: {}, TippingBar: {}, darkModeMixin: {}, setTimeout, clearTimeout, console: { error() {} } };
   vm.runInNewContext(script, sandbox, { filename: file });
   const options = sandbox.module.exports;
   const instance = new Vue({ ...options, beforeCreate() { this.$baseUrl = ''; this.$store = { state: { user_id: 1 } }; } });

@@ -84,13 +84,13 @@
 				<!-- 漫画栏目 -->
 				<view class="tab-pane" :class="{ 'pane-active': topNavIndex === 1 }" :style="paneStyle(1)"
 					v-show="topNavIndex === 1 || swipePeek === 1 || paneHiding === 1">
-					<mangaPage ref="mangaPage" :active-index="topNavIndex" @refreshed="refreshPage"></mangaPage>
+					<mangaPage ref="mangaPage" @refreshed="refreshPage"></mangaPage>
 				</view>
 
 				<!-- 世界栏目 -->
 				<view class="tab-pane" :class="{ 'pane-active': topNavIndex === 2 }" :style="paneStyle(2)"
 					v-show="topNavIndex === 2 || swipePeek === 2 || paneHiding === 2">
-					<worldPage ref="worldPage" :active-index="topNavIndex"></worldPage>
+					<worldPage ref="worldPage"></worldPage>
 				</view>
 			</view>
 		</view>

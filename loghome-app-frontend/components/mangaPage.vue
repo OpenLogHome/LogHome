@@ -21,7 +21,8 @@
         <button v-manga-a11y type="button" @click="previewManga(manga)"><manga-icon name="preview" /><text>预览</text></button>
       </div>
     </div>
-    <view class="create-mask" v-if="showCreateDialog" :style="maskStyle" @click.self="closeCreateDialog">
+    <view class="create-mask" v-if="showCreateDialog" v-manga-portal :class="{ 'dark-mode': isDarkMode }"
+      @click.self="closeCreateDialog" @touchmove.self.prevent>
       <view class="create-panel" role="dialog" aria-modal="true" aria-label="创建漫画">
         <view class="create-header"><text class="create-title">创建漫画</text><button v-manga-a11y class="create-close" type="button" aria-label="关闭创建窗口" @click="closeCreateDialog"><manga-icon name="close" /></button></view>
         <view class="create-field"><label class="field-label" for="new-manga-name">作品名称</label><input id="new-manga-name" class="field-input" v-model="createForm.name" maxlength="50" placeholder="给你的漫画起个名字" /></view>
@@ -35,22 +36,16 @@
 </template>
 <script>
 import MangaA11y from '@/common/manga-a11y.js';
+import MangaPortal from '@/common/manga-portal.js';
 import axios from 'axios';
 import darkModeMixin from '@/mixins/dark-mode.js';
 import MangaIcon from '@/components/manga-icon.vue';
 
 export default {
-  directives: { mangaA11y: MangaA11y },
+  directives: { mangaA11y: MangaA11y, mangaPortal: MangaPortal },
 	name: 'mangaPage',
 	components: { MangaIcon },
 	mixins: [darkModeMixin],
-	props: {
-		// 所在滑动轨道的当前激活栏索引（轨道 transform 会成为 fixed 元素的包含块，需要补偿）
-		activeIndex: {
-			type: Number,
-			default: 0,
-		},
-	},
 	data() {
 		return {
 			mangas: [],
@@ -63,15 +58,6 @@ export default {
 				content: '',
 			},
 		};
-	},
-	computed: {
-		maskStyle() {
-			// 包含块是滑动轨道（宽 300%），把弹窗平移回当前可视栏
-			return {
-				left: (this.activeIndex * 100) + 'vw',
-				width: '100vw',
-			};
-		},
 	},
 	methods: {
 		isOwner(manga) {
@@ -198,8 +184,8 @@ button.card-body:active { background: var(--manga-tint); transform: scale(.985);
 .card-actions button.primary-action { border-color: transparent; background: var(--manga-action); color: #fff; }
 .card-actions .manga-icon { font-size: 26rpx; }
 .card-actions text { display: block; line-height: 1.2; white-space: nowrap; }
-.create-mask { position: fixed; top: 0; height: 100vh; z-index: 300; display: flex; align-items: center; justify-content: center; background: rgba(7,10,12,.55); }
-.create-panel { width: min(86%, 640rpx); box-sizing: border-box; padding: 32rpx; border-radius: 24rpx; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 30rpx 90rpx rgba(0,0,0,.18); animation: panel-in .2s ease both; }
+.create-mask { @include manga-theme; position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 3100; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: calc(24rpx + var(--manga-safe-top)) 0 calc(24rpx + var(--manga-safe-bottom)); background: rgba(7,10,12,.55); }
+.create-panel { width: min(86%, 640rpx); max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 32rpx; border-radius: 24rpx; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 30rpx 90rpx rgba(0,0,0,.18); animation: panel-in .2s ease both; }
 .create-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
 .create-title { font-size: 31rpx; font-weight: 700; }
 .create-close { display: grid; place-items: center; width: 76rpx; height: 76rpx; font-size: 26rpx; }

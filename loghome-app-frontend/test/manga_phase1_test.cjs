@@ -37,7 +37,7 @@ function component(file, axios = {}, t) {
 	const dialogs = [], navigations = [];
 	const uni = { showToast() {}, showModal: (dialog) => dialogs.push(dialog), getSystemInfoSync: () => ({ windowWidth: 375 }), navigateTo: (target) => navigations.push(target), navigateBack() {}, switchTab() {}, reLaunch() {} };
 	const window = { localStorage: { getItem: (key) => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: (key) => storage.delete(key) }, addEventListener() {}, removeEventListener() {} };
-	const sandbox = { module: {}, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, axios, uni, window, getCurrentPages: () => [{}], setTimeout, clearTimeout, console: quiet };
+	const sandbox = { module: {}, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, axios, uni, window, getCurrentPages: () => [{}], setTimeout, clearTimeout, console: quiet };
 	vm.runInNewContext(script, sandbox, { filename: file });
 	const options = sandbox.module.exports;
 	const instance = new Vue({ ...options, beforeCreate() { this.$store = { state: { user_id: 7 } }; this.$baseUrl = ''; } });
