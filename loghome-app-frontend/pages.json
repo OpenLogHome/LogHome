@@ -796,6 +796,16 @@
 				"navigationBarTitleText": "用户管理"
 			}
 		}, {
+			"path": "pages/manage/community/index",
+			"style": {
+				"navigationBarTitleText": "社区管理"
+			}
+		}, {
+			"path": "pages/manage/community/reports",
+			"style": {
+				"navigationBarTitleText": "举报处理"
+			}
+		}, {
 			"path": "pages/users/external_login",
 			"style": {
 				"navigationBarTitleText": "外部登录",

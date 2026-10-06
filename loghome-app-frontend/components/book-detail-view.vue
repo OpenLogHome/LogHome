@@ -45,6 +45,16 @@
         <div class="button long" @click="$emit('goto-essay-set')">{{ isOwner ? '作品设置' : '协作设置' }}</div>
       </div>
 
+      <div class="ban-alert" v-if="Number(book.is_banned) >= 1">
+        <div class="ban-title">{{ Number(book.is_banned) === 2 ? '重新审核中' : '作品异常' }}</div>
+        <div class="ban-reason" v-if="book.ban_reason || book.ban_review_comment">
+          异常原因：{{ book.ban_reason || '违反社区规则' }}{{ book.ban_review_comment ? '（' + book.ban_review_comment + '）' : '' }}
+        </div>
+        <div class="ban-reason" v-else>该作品因违反社区规则已被下架，读者端暂不可见。</div>
+        <div class="ban-tip" v-if="Number(book.is_banned) === 2">管理员正在重新审核，请耐心等待。</div>
+        <div class="ban-action" v-if="Number(book.is_banned) === 1" @click="$emit('resubmit-novel')">重新提交审核</div>
+      </div>
+
       <!-- 添加Banner组件 -->
       <banner page="essays" class="section-banner"/>
 
@@ -585,6 +595,49 @@ export default {
 
       .button.long {
         grid-column: 1 / -1;
+      }
+    }
+
+    .ban-alert {
+      margin: 24rpx var(--page-x) 0;
+      padding: 24rpx;
+      border: 1rpx solid rgba(244, 67, 54, 0.35);
+      border-radius: 12rpx;
+      background-color: rgba(244, 67, 54, 0.06);
+
+      .ban-title {
+        font-size: 30rpx;
+        font-weight: bold;
+        color: #d32f2f;
+      }
+
+      .ban-reason {
+        margin-top: 12rpx;
+        font-size: 26rpx;
+        line-height: 1.6;
+        color: var(--text-color-regular, #666);
+      }
+
+      .ban-tip {
+        margin-top: 8rpx;
+        font-size: 24rpx;
+        color: var(--text-color-secondary, #999);
+      }
+
+      .ban-action {
+        margin-top: 20rpx;
+        min-height: 76rpx;
+        line-height: 76rpx;
+        text-align: center;
+        border-radius: 12rpx;
+        font-size: 28rpx;
+        font-weight: bold;
+        color: #ffffff;
+        background-color: #d32f2f;
+
+        &:active {
+          opacity: 0.85;
+        }
       }
     }
 

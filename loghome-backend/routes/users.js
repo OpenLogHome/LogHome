@@ -915,6 +915,52 @@ router.get('/get_history_message', auth, async (req, res) => {
 	}
 });
 
+// 隐藏（软删除）单条消息，移入历史消息
+router.post('/hide_message', auth, async (req, res) => {
+	try {
+		const user = JSON.parse(JSON.stringify(req.user))[0];
+		const messageId = Number(req.body.message_id || 0);
+		if (!messageId) {
+			return res.status(400).json({ msg: 'missing message_id' });
+		}
+		await query(
+			'UPDATE user_message SET is_read = 2 WHERE message_id = ? AND to_id = ?',
+			[messageId, user.user_id],
+		);
+		res.json({ msg: 'success' });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 内容完全相同的重复系统通知只保留最新一条，其余隐藏
+router.post('/hide_duplicate_messages', auth, async (req, res) => {
+	try {
+		const user = JSON.parse(JSON.stringify(req.user))[0];
+		const result = await query(
+			`UPDATE user_message um
+			 JOIN (
+				SELECT m.message_id
+				FROM user_message m
+				JOIN (
+					SELECT from_id, message_content, MAX(message_id) AS keep_id
+					FROM user_message
+					WHERE to_id = ? AND message_type = 'notification'
+					GROUP BY from_id, message_content
+				) k ON m.from_id = k.from_id AND m.message_content = k.message_content
+				WHERE m.to_id = ? AND m.message_type = 'notification' AND m.message_id != k.keep_id
+			 ) dup ON um.message_id = dup.message_id
+			 SET um.is_read = 2`,
+			[user.user_id, user.user_id],
+		);
+		res.json({ msg: 'success', hidden: result.affectedRows || 0 });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
 // 获取未读系统消息数量，不清除未读状态
 router.get('/unread_message_count', auth, async (req, res) => {
 	let user = req.user;
