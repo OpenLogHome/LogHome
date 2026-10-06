@@ -13,7 +13,7 @@
           <div class="slide-content">
             <img :src="item.img" :alt="item.title">
             <div class="slide-info">
-              <h3>{{ item.title }}</h3>
+              <h3><template v-if="(item.title || '').startsWith('原木力')"><LogPowerWordmark />{{ item.title.slice(3) }}</template><template v-else>{{ item.title }}</template></h3>
               <p>{{ item.Subtitle }}</p>
             </div>
           </div>
@@ -65,7 +65,9 @@
 </template>
 
 <script>
+import LogPowerWordmark from '~/components/LogPowerWordmark.vue'
 export default {
+  components: { LogPowerWordmark },
   name: 'BannerSwiper',
   
   props: {

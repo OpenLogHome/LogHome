@@ -93,7 +93,7 @@
 
 			<div class="novel_Rank clickable" v-show="novelRank.onRank">
 				<navigator url="./logPowerRank">
-					实时原木力榜第
+					实时<LogPowerWordmark />榜第
 					<span style="font-size: 40rpx; line-height: 100%; padding:0 10rpx;">
 						<countTo :startVal="999" :endVal="novelRank.rank" :duration="1500"></countTo>
 					</span>
@@ -284,37 +284,28 @@
 							</navigator>
 						</view>
 
-						<view class="l-list-content noprocess" v-show="commentInfo.length == 0">
-							<view class="l-list-sub-content" @tap="navtoComment"
-								style="display:flex;justify-content: center;">
-								<view class="l-list-d-body" style="font-size: 30rpx;">
-									<!-- <img src="../../static/icons/enderman.png" alt=""
-									style="width:100rpx; height:100rpx;margin-right: 20rpx;"> -->
-									这本书还没有评论哦，快去抢沙发
-								</view>
-							</view>
-						</view>
-
-						<view class="l-list-content noprocess" v-for="item in commentInfo" :key="item.essay_comment_id">
-							<view class="l-list-sub-content" @tap="navtoComment">
-								<view class="l-list-c-body" style="font-size: 30rpx;">
-									{{ item.content }}
-								</view>
-								<view class="l-list-c-foot" style="font-size: 30rpx;">
-									<view class="l-list-c-foot-l">
-										<text class="l-list-c-foot-l-name">{{ item.name }}</text>
-									</view>
-									<view class="l-list-c-foot-r">
-										<img class="l-icon-like" src="../../static/detail/l-icon-like.png" mode="">
-										</img>
-										{{ item.likeNum }}
-									</view>
-								</view>
-							</view>
-						</view>
-
+					<view class="comment-empty" v-show="commentInfo.length == 0" @tap="navtoComment">
+						这本书还没有评论哦，快去抢沙发
 					</view>
-					<view class="l-list">
+
+					<view class="comment-preview" v-for="item in commentInfo" :key="item.essay_comment_id" @tap="navtoComment">
+						<user-avatar class="comment-avatar" :src="item.avatar_url" :frame="item.avatar_frame"
+							:visual-scale="item.avatar_frame ? 1.2 : 1" />
+						<view class="comment-main">
+							<view class="comment-head">
+								<text class="comment-name">{{ item.name }}</text>
+								<text class="comment-time">{{ utc2beijing(item.comment_time).slice(0, 10) }}</text>
+							</view>
+							<text class="comment-body">{{ item.content }}</text>
+							<view class="comment-meta">
+								<img class="l-icon-like" src="../../static/detail/l-icon-like.png" mode=""></img>
+								<text>{{ item.likeNum }}</text>
+							</view>
+						</view>
+					</view>
+
+				</view>
+<view class="l-list">
 						<view class="l-h3">
 							<text class="l-h3-title">粉丝榜</text>
 							<navigator :url="'./novel_fans?id=' + uid">
@@ -443,6 +434,7 @@
 </template>
 
 <script>
+import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 import nothing from '../../components/nothing.vue'
 import axios from 'axios'
 import tippingBar from "../../components/tipping/tippingBar.vue"
@@ -567,6 +559,7 @@ function getReadableTextColor(backgroundColor) {
 
 export default {
 	components: {
+		LogPowerWordmark,
 		nothing,
 		tippingBar,
 		springBack,
@@ -1517,26 +1510,22 @@ export default {
 		// 如果是设定书，则应当跳转到世界设定查看页面
 		if (bookInfo.novel_type == "world") {
 			if (this.worldLoadTime == 0) {
-				setTimeout(() => {
-					uni.redirectTo({
-						url: "/pages/worlds/worldPage?noneAnimation=1&novel_id=" + this.uid
-					})
-					this.worldLoadTime++;
-				}, 350)
+				uni.redirectTo({
+					url: "/pages/worlds/worldPage?noneAnimation=1&novel_id=" + this.uid
+				})
+				this.worldLoadTime++;
 			} else {
 				uni.navigateBack();
 			}
 			this.isPageLoading = false;
 			return;
 		} else if (bookInfo.novel_type == "manga") {
-			// 漫画作品跳转到漫画详情页
+			// 漫画作品跳转到漫画详情页；立即跳转，避免停留在本页加载界面
 			if (this.mangaLoadTime == 0) {
-				setTimeout(() => {
-					uni.redirectTo({
-						url: "/pages/readers/mangaInfo?id=" + this.uid
-					})
-					this.mangaLoadTime++;
-				}, 350)
+				uni.redirectTo({
+					url: "/pages/readers/mangaInfo?id=" + this.uid
+				})
+				this.mangaLoadTime++;
 			} else {
 				uni.navigateBack();
 			}
@@ -1652,11 +1641,9 @@ export default {
 			}
 		})
 
-		axios.get(this.$baseUrl + "/community/novel_commonts_all?id=" + this.uid)
+		axios.get(this.$baseUrl + "/community/novel_commonts_all_fast?id=" + this.uid + "&page=1&pageSize=3")
 			.then((res) => {
-				let data = res.data;
-				data = data.slice(0, 3);
-				this.commentInfo = data;
+				this.commentInfo = res.data || [];
 			}).catch(err => {
 				uni.showToast({
 					title: error.toString(),
@@ -2613,6 +2600,98 @@ export default {
 .l-list-content.noprocess:active {
 	transform: scale(0.99);
 	box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+// 评论预览：对齐漫画评论区的行式布局
+.comment-empty {
+	padding: 40rpx 0;
+	text-align: center;
+	color: #656c74;
+	font-size: 26rpx;
+
+	.dark-mode & {
+		color: #b6bdc3;
+	}
+}
+
+.comment-preview {
+	display: flex;
+	align-items: flex-start;
+	gap: 18rpx;
+	padding: 26rpx 8rpx;
+
+	& + .comment-preview {
+		border-top: 1rpx solid rgba(0, 0, 0, 0.06);
+
+		.dark-mode & {
+			border-top-color: rgba(255, 255, 255, 0.08);
+		}
+	}
+}
+
+.comment-avatar {
+	flex: none;
+	width: 64rpx;
+	height: 64rpx;
+	border-radius: 50%;
+}
+
+.comment-main {
+	flex: 1;
+	min-width: 0;
+}
+
+.comment-head {
+	display: flex;
+	align-items: baseline;
+	gap: 12rpx;
+}
+
+.comment-name {
+	font-size: 25rpx;
+	font-weight: 700;
+	color: #252b30;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	.dark-mode & {
+		color: #f4f5f6;
+	}
+}
+
+.comment-time {
+	flex: none;
+	font-size: 21rpx;
+	color: #9aa1a9;
+}
+
+.comment-body {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	margin-top: 8rpx;
+	font-size: 26rpx;
+	line-height: 1.6;
+	color: #4a5157;
+	word-break: break-word;
+
+	.dark-mode & {
+		color: #d5dade;
+	}
+}
+
+.comment-meta {
+	display: flex;
+	align-items: center;
+	margin-top: 12rpx;
+	font-size: 22rpx;
+	color: #9aa1a9;
+
+	.l-icon-like {
+		margin-right: 8rpx;
+	}
 }
 
 .l-list-c-foot-l-name {

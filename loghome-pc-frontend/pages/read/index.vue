@@ -11,7 +11,7 @@
              <div class="collection-card" v-if="index != 1" :key="'collection-' + index">
                <div class="collection-header" @click="gotoCollections(item.collection_title)">
                  <div class="collection-title">
-                   <h3>{{ item.collection_title }}</h3>
+                   <h3><template v-if="(item.collection_title || '').startsWith('原木力')"><LogPowerWordmark />{{ item.collection_title.slice(3) }}</template><template v-else>{{ item.collection_title }}</template></h3>
                    <div class="light-line"></div>
                    <img v-if="item.icon" :src="item.icon" :alt="item.collection_title" class="collection-icon">
                  </div>
@@ -168,11 +168,13 @@
   </template>
   
   <script>
+import LogPowerWordmark from '~/components/LogPowerWordmark.vue'
   import BannerSwiper from '~/components/read/BannerSwiper.vue'
   import Banner from '~/components/Banner.vue'
   
   export default {
     components: {
+    LogPowerWordmark,
       BannerSwiper,
       Banner
     },

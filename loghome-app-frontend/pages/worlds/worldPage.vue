@@ -847,11 +847,9 @@
 				})
 			},
 			getComments() {
-				axios.get(this.$baseUrl + "/community/novel_commonts_all?id=" + this.world.novel_id)
+				axios.get(this.$baseUrl + "/community/novel_commonts_all_fast?id=" + this.world.novel_id + "&page=1&pageSize=3")
 					.then((res) => {
-						let data = res.data;
-						data = data.slice(0, 3);
-						this.commentInfo = data;
+						this.commentInfo = res.data || [];
 					}).catch(err => {
 						// uni.showToast({
 						// 	title: err.toString(),

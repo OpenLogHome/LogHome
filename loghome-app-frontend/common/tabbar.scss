@@ -24,6 +24,8 @@ body.pages-me .uni-tabbar__item:nth-child(5) {
 		}
 	}
 }
+/* 路由切换会重写 body.className 并丢掉 dark-mode 类，因此暗色选择器同时挂靠 html.dark-mode */
+html.dark-mode body,
 body.dark-mode {
 	uni-tabbar .uni-tabbar { box-shadow: 0 -6rpx 26rpx rgba(0, 0, 0, .12); }
 	&.pages-library .uni-tabbar__item:nth-child(2),

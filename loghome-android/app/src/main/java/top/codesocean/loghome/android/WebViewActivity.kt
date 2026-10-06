@@ -671,6 +671,11 @@ class WebViewActivity : AppCompatActivity() {
                     return@setOnLongClickListener false
                 }
 
+                // 漫画阅读器内禁止长按保存，其他页面不受影响
+                if (url?.contains("pages/readers/mangaReader") == true) {
+                    return@setOnLongClickListener true
+                }
+
                 showImageLongPressMenu(imageUrl)
                 true
             }

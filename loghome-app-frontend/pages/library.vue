@@ -30,7 +30,7 @@
 				<div class="head clickable" @click="gotoCollections(item.collection_title)">
 					<div class="title">
 						<p>
-							{{ item.collection_title }}
+							<template v-if="(item.collection_title || '').startsWith('原木力')"><LogPowerWordmark />{{ item.collection_title.slice(3) }}</template><template v-else>{{ item.collection_title }}</template>
 						</p>
 						<div class="lightLine" v-dark></div>
 						<log-image :src="item.icon" alt="" class="icon" v-show="item.icon != ''" />
@@ -217,6 +217,7 @@
 </template>
 
 <script>
+import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 import axios from 'axios'
 import bookInCase from '../components/book_in_case.vue'
 import popup from "@/components/ge-popup.vue"
@@ -232,6 +233,7 @@ const LIBRARY_FIRST_SCREEN_CACHE_VERSION = 2;
 
 export default {
 	components: {
+    LogPowerWordmark,
 		bookInCase, popup, banner, bookshelfHorizontal, HorizontalTags, HaycraftMark
 	},
 	mixins: [MescrollMixin, darkModeMixin], // 使用mixin
@@ -529,8 +531,12 @@ export default {
 		readBook(novel,novel_id, event) {
 
 			if (novel_id > 0) {
+				// 漫画直接进漫画详情，避免先经小说详情页再重定向
+				const url = novel && novel.novel_type === 'manga'
+					? '/pages/readers/mangaInfo?id=' + novel_id
+					: './readers/bookInfo?id=' + novel_id;
 				uni.navigateTo({
-					url: './readers/bookInfo?id=' + novel_id
+					url
 				})
 			}
 		},

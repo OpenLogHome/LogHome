@@ -25,6 +25,12 @@ const BATCH_PARAGRAPHS = numericSetting(process.env.WRITER_TEXT_CORRECTION_BATCH
 const CONCURRENCY = numericSetting(process.env.WRITER_TEXT_CORRECTION_CONCURRENCY, 2, 1, 4);
 const HEARTBEAT_MS = numericSetting(process.env.WRITER_TEXT_CORRECTION_HEARTBEAT_MS, 10000, 1000, 30000);
 const MODEL_THINKING_ENABLED = String(process.env.WRITER_TEXT_CORRECTION_ENABLE_THINKING || 'false').toLowerCase() === 'true';
+// qwen3.8 默认以 xhigh 档思考；网关忽略 enable_thinking，思考强度只能用 reasoning_effort 调档（支持 xhigh/medium/low）
+function normalizeReasoningEffort(value) {
+	const normalized = String(value || '').trim().toLowerCase();
+	return ['low', 'medium', 'xhigh'].includes(normalized) ? normalized : 'medium';
+}
+const MODEL_REASONING_EFFORT = normalizeReasoningEffort(process.env.WRITER_TEXT_CORRECTION_REASONING_EFFORT);
 
 function normalizeSegmentText(text) {
 	return String(text || '')
@@ -169,10 +175,10 @@ function parseJsonObjectFromModel(text) {
 }
 
 function buildCorrectionSystemPrompt() {
-	return `你是一位专业的中文文本校对专家。你的任务是检查给定的小说段落文本，找出其中的潜在错别字、用词不当、语法错误、标点、笔误和病句问题。
+	return `你是一位专业的中文文本校对专家。你的任务是快速检查给定的小说段落文本，找出其中的潜在错别字、用词不当、语法错误、标点、笔误和病句问题。
 
 要求：
-1. 逐段仔细阅读文本，找出所有需要潜在修正的地方。
+1. 逐段阅读文本，找出需要潜在修正的地方。
 2. 只输出需要修改的段落；没有问题的段落不要输出。
 3. 每个需要修改的段落必须包含 paragraph_index 和 fragments。
 4. paragraph_index 必须使用输入中的段落编号，例如 [段落3] 对应 paragraph_index: 3。
@@ -298,7 +304,7 @@ async function streamCorrectionFromModel(paragraphs, writer, { signal, batchInde
 	if (isDeepSeekModel(TEXT_CORRECTION_MODEL)) {
 		requestBody.thinking = { type: MODEL_THINKING_ENABLED ? 'enabled' : 'disabled' };
 	} else if (/^qwen/i.test(TEXT_CORRECTION_MODEL)) {
-		requestBody.enable_thinking = MODEL_THINKING_ENABLED;
+		requestBody.reasoning_effort = MODEL_REASONING_EFFORT;
 	}
 
 	const controller = new AbortController();

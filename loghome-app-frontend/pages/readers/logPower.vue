@@ -4,7 +4,7 @@
             <view class="header">
                 <view class="novel-name">{{name}}</view>
                 <view class="total-score">
-                    <text class="label">当前原木力</text>
+                    <view class="label">当前<LogPowerWordmark /></view>
                     <countTo :startVal="0" :endVal="ranking" :duration="1500" class="score-value"></countTo>
                 </view>
             </view>
@@ -83,7 +83,7 @@
                     {{baseScore}} × {{factorA.toFixed(4)}} × {{factorB.toFixed(4)}} ≈ {{ranking}}
                 </view>
                 <view class="tips">
-                    注：原木力根据作品数据和更新频率实时计算，是衡量作品热度的重要指标。
+                    注：<LogPowerWordmark />根据作品数据和更新频率实时计算，是衡量作品热度的重要指标。
                 </view>
             </view>
 
@@ -92,11 +92,12 @@
 </template>
 
 <script>
+import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 import countTo from "vue-count-to"
 import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
-    components: { countTo },
+    components: { countTo, LogPowerWordmark },
     mixins: [darkModeMixin],
     data() {
         return {

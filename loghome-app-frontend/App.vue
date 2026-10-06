@@ -193,7 +193,7 @@ export default {
 					color: "#7A7E83",
 					selectedColor: "#91c49d",
 					borderStyle: "white",
-					backgroundColor: "#222b24",
+					backgroundColor: "#252525",
 				})
 				uni.setNavigationBarColor({
 					backgroundColor: "#000000",

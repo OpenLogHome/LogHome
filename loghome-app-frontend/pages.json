@@ -236,11 +236,6 @@
 				"navigationBarTitleText": "关于我们"
 			}
 		},{
-			"path": "pages/apps/audio_test",
-			"style": {
-				"navigationBarTitleText": "有声书测试"
-			}
-		},{
             "path" : "pages/writers/newEssay",
             "style" :                                                                                    
             {

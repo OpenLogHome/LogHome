@@ -1,62 +1,52 @@
 <template>
 	<view class="outer" v-dark>
 		<div class="content">
-			<img class="logo" src="@/static/logo.png" @click="gotoTestUrl" />
-			<view class="text-area">
-				<div class="title">{{ title }}</div>
-				<!-- <div class="version">公测版本，不提供长期支持</div> -->
-				<div class="version" v-show="$store.state.appVersion">APP版本：{{ this.$store.state.appVersion }}</div>
-			</view>
-			<div class="team">
-
-			</div>
-			<!-- 			<div class="button" @click="gotoUpdateIntro">社区更新机制</div> -->
-			<div class="button" @click="gotoContentAgreement">用户内容上传协议</div>
-			<div class="button" @click="gotoPrivacyAgreement">用户隐私政策</div>
-			<div class="button" @click="gotoGrandUsers">社区荣誉用户</div>
-			<div class="button" @click="showDevInfo">显示调试信息</div>
-
-			<div class="certification">
-				<a href="https://www.12377.cn/" target="_blank" style="
-				                        background: var(--card-background);
-				                        display: inline-block;
-				                        padding: 5px 8px;
-				                        border: 1px solid var(--border-color);
-				                        border-radius: 5px;
-				                        margin: 5px 0;
-										text-decoration:none;
-										color:#939393;
-										vertical-align: middle;
-										font-size: 30rpx;
-				                    "><log-image src="https://dn-tystatic.qbox.me/img/buliang.png" style="
-				                        margin-right: 5px;
-				                        width: 35rpx;
-				                        height: 35rpx;" />网上有害信息举报专区</a>
-
-				<div style="font-size:30rpx;text-decoration:none;height:20px;line-height:20px;color:#939393;
-				margin-bottom:10rpx;">
-					<a target="_blank" href="https://beian.miit.gov.cn/#/Integrated/index" style="font-size:30rpx;text-decoration:none;height:20px;line-height:20px;color:#939393;
-					margin-bottom:10rpx;">
-						<p>苏ICP备2021006745号-1</p>
-					</a>
+			<div class="main">
+				<img class="logo" src="@/static/logo.png" />
+				<view class="text-area">
+					<div class="title">{{ title }}</div>
+					<!-- <div class="version">公测版本，不提供长期支持</div> -->
+					<div class="version" v-show="$store.state.appVersion">APP版本：{{ this.$store.state.appVersion }}</div>
+				</view>
+				<div class="team">
 
 				</div>
-				<img src="../../static/batb.png" alt="" />
-				<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34010402703554"
-					style="font-size:30rpx;display:inline-block;text-decoration:none;height:20px;line-height:20px;">
-					<p style="float:left;height:20px;line-height:20px;margin: 0px 0px 0px 5px; color:#939393;">皖公网安备
-						34010402703554号</p>
+				<!-- 			<div class="button" @click="gotoUpdateIntro">社区更新机制</div> -->
+				<div class="button" @click="gotoContentAgreement">用户内容上传协议</div>
+				<div class="button" @click="gotoPrivacyAgreement">用户隐私政策</div>
+				<div class="button" @click="gotoGrandUsers">社区荣誉用户</div>
+				<div class="button" @click="showDevInfo">显示调试信息</div>
+			</div>
+
+			<div class="certification">
+				<a class="certification-link" target="_blank" href="https://beian.miit.gov.cn/#/Integrated/index">苏ICP备2021006745号-1</a>
+				<a class="certification-link" target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34010402703554">
+					<img src="../../static/batb.png" alt="" />
+					<span>皖公网安备 34010402703554号</span>
 				</a>
 			</div>
 		</div>
 		<div class="back">
-			<img src="../../static/about_bg.jpg" alt="" />
+			<img :src="aboutBackground" alt="" />
 		</div>
 	</view>
 </template>
 
 <script>
+import darkModeMixin from '@/mixins/dark-mode.js'
+
 export default {
+	mixins: [darkModeMixin],
+	computed: {
+		aboutBackground() {
+			return this.isDarkMode ? '/static/about_bg-night.png' : '/static/about_bg.jpg'
+		}
+	},
+	watch: {
+		isDarkMode() { this.$nextTick(this.updateAboutNavigation) }
+	},
+	onShow() { this.updateAboutNavigation() },
+	onReady() { this.updateAboutNavigation() },
 	data() {
 		return {
 			title: '原木社区',
@@ -66,6 +56,12 @@ export default {
 
 	},
 	methods: {
+		updateAboutNavigation() {
+			uni.setNavigationBarColor({
+				frontColor: this.isDarkMode ? '#ffffff' : '#000000',
+				backgroundColor: this.isDarkMode ? '#171e19' : '#fcf4e1'
+			})
+		},
 		gotoUpdateIntro() {
 			uni.navigateTo({
 				url: "../static/updateIntro"
@@ -74,11 +70,6 @@ export default {
 		gotoContentAgreement() {
 			uni.navigateTo({
 				url: "../static/contentAgreement"
-			})
-		},
-		gotoTestUrl() {
-			uni.navigateTo({
-				url: "./audio_test"
 			})
 		},
 		gotoPrivacyAgreement() {
@@ -110,8 +101,14 @@ export default {
 	position: relative;
 	height: 100%;
 	overflow: hidden;
-	background-color: var(--background-color-secondary);
+	/* 上部背景色与 about_bg.jpg 顶边均色(#fcf4e1)完全一致，与贴底图片无缝衔接 */
+	background-color: #fcf4e1;
 	isolation: isolate;
+
+	&.dark-mode {
+		background-color: #171e19;
+		color: #eeeae0;
+	}
 }
 
 .content {
@@ -148,8 +145,9 @@ export default {
 .title {
 	font-size: 46rpx;
 	font-weight: bold;
-	color: #8f8f94;
+	color: #393d33;
 	line-height: 1.25;
+	.dark-mode & { color: #eeeae0; }
 }
 
 .subtitle {
@@ -160,8 +158,9 @@ export default {
 
 .version {
 	font-size: 28rpx;
-	color: #8f8f94;
+	color: #6d7267;
 	line-height: 1.4;
+	.dark-mode & { color: #acb7a9; }
 }
 
 div.team {
@@ -187,13 +186,46 @@ span.name {
 	line-height: 1.35;
 	border-radius: 12rpx;
 	color: var(--brand-text-color);
+	.dark-mode & { color: #b9d3bd; }
+	&:active { background: rgba(98, 136, 99, .12); }
+}
+
+/* 主内容组（logo/标题/按钮）在备案信息上方的剩余空间内垂直居中 */
+.main {
+	flex: 1 1 auto;
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
 }
 
 .certification {
 	flex: 0 0 auto;
-	margin-top: auto;
-	padding-top: clamp(48rpx, 8vh, 120rpx);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8rpx;
+	max-width: 100%;
+	padding: 12rpx 18rpx;
+	border-radius: 16rpx;
 	text-align: center;
+	background: rgba(252, 244, 225, .8);
+	.dark-mode & { background: rgba(23, 30, 25, .85); }
+}
+.certification-link {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8rpx;
+	max-width: 100%;
+	font-size: 23rpx;
+	line-height: 1.5;
+	text-decoration: none;
+	color: #626959;
+	.dark-mode & { color: #b7c0b1; }
+	img { flex-shrink: 0; width: 28rpx; height: 28rpx; object-fit: contain; }
+	span { min-width: 0; overflow-wrap: anywhere; }
 }
 
 div.back {
@@ -201,12 +233,22 @@ div.back {
 	inset: 0;
 	z-index: 0;
 	overflow: hidden;
+	display: flex;
+	align-items: flex-end;
 
+	/* 贴底展示，保持原始宽高比，不拉伸 */
 	img {
 		display: block;
 		width: 100%;
-		height: 100%;
-		object-fit: fill;
+		height: auto;
+		max-height: 100%;
+		object-fit: contain;
+		object-position: bottom;
 	}
+
+}
+.outer.dark-mode .back img {
+	-webkit-mask-image: linear-gradient(to bottom, transparent, #000 15%);
+	mask-image: linear-gradient(to bottom, transparent, #000 15%);
 }
 </style>

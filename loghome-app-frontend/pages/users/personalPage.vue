@@ -1,10 +1,12 @@
 <template>
-	<view style="background-color: #FFFFFF" v-dark>
+	<view class="page-root" v-dark>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :textcolor="isDarkMode ? '#e5e5e5' : '#000'" :showLeft="topNum == 0" :showTitle="false" navTitle='标题'></zetank-backBar>
-		<!-- 用户背景封面 -->
-		<log-image class="info-cover" @tap="change_top_pic" :src="user.top_pic_url"
-		onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
+		<!-- 用户背景封面（只保留内容面板上方的可见区域，避免面板内容较短时封面从下方露出） -->
+		<view class="info-cover-wrap" @tap="change_top_pic">
+			<log-image class="info-cover" :src="user.top_pic_url"
+			onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
+		</view>
 		
 		<springBack top="calc(300rpx + var(--loghome-safe-top, 0px))">
 			<!-- 右侧悬浮按钮 -->
@@ -97,6 +99,10 @@
 				:style="swiperStyle">
 				<swiper-item>
 					<div class="bookcase tabpage">
+						<view class="empty-hint" v-if="booksOnShow.filter(function(b) { return !b.is_personal; }).length === 0">
+							<img class="empty-hint-img" src="../../static/loggirl-404-empty-chest.png" alt="" />
+							<text class="empty-hint-text">{{ $t('me.profile.noWorks') }}</text>
+						</view>
 						<bookInCase v-for="item in booksOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.novel_id"
 									@click.native="readBook(item.novel_id)" v-show="!item.is_personal"></bookInCase>
 					</div>
@@ -139,14 +145,19 @@
 								</view>
 							</view>
 						</view>
-						<view class="no-data" v-if="userPosts.length === 0">
-							<text>{{ $t('me.profile.noPosts') }}</text>
+						<view class="empty-hint" v-if="userPosts.length === 0">
+							<img class="empty-hint-img" src="../../static/loggirl-404-empty-chest.png" alt="" />
+							<text class="empty-hint-text">{{ $t('me.profile.noPosts') }}</text>
 						</view>
-						<uni-load-more :status="postsLoadingStatus"></uni-load-more>
+						<uni-load-more v-if="userPosts.length > 0" :status="postsLoadingStatus"></uni-load-more>
 					</div>
 				</swiper-item>
 				<swiper-item>
 					<div class="bookcase tabpage">
+						<view class="empty-hint" v-if="worldsOnShow.length === 0">
+							<img class="empty-hint-img" src="../../static/loggirl-404-empty-chest.png" alt="" />
+							<text class="empty-hint-text">{{ $t('me.profile.noWorlds') }}</text>
+						</view>
 						<bookInCase v-for="item in worldsOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.world_id"
 									@click.native="readBook(item.novel_id)"></bookInCase>
 					</div>
@@ -567,13 +578,32 @@
 </script>
 
 <style lang="scss" scoped>
+	/* 页面子元素均为绝对定位脱流，根容器需自身撑满视口涂底色，
+	   否则内容面板下方会露出 WebView 底层背景色 */
+	.page-root {
+		min-height: 100vh;
+		background-color: #FFFFFF;
+
+		&.dark-mode {
+			background-color: var(--background-color-secondary);
+		}
+	}
+
+	.info-cover-wrap {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: calc(300rpx + var(--loghome-safe-top, 0px));
+		overflow: hidden;
+	}
+
 	.info-cover {
-		position:absolute;
 		display: block;
 		width: 100vw;
 		height:100vw;
 		background-color: #FFFFFF;
-		
+
 		.dark-mode & {
 			background-color: #252525;
 		}
@@ -777,14 +807,28 @@
 			}
 		}
 		
-		.no-data {
-			text-align: center;
-			padding: 40rpx 0;
-			color: #999;
-			font-size: 28rpx;
-			
+	}
+
+	.empty-hint {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		padding: 60rpx 0;
+
+		.empty-hint-img {
+			width: 220rpx;
+			max-width: 50%;
+			margin: 25rpx 0;
+		}
+
+		.empty-hint-text {
+			color: #777777;
+			font-size: 25rpx;
+
 			.dark-mode & {
-				color: #777;
+				color: var(--text-color-regular);
 			}
 		}
 	}
@@ -854,10 +898,11 @@
 		right:35rpx;
 		margin-top: 10px;
 		display: flex;
+		align-items: center;
 	}
-	
+
 	.button {
-		height: 68rpx;
+		height: 60rpx;
 		width: 150rpx;
 		font-size: 14px;
 		text-align: center;

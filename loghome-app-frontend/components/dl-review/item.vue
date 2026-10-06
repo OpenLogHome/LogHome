@@ -20,7 +20,7 @@
 				<view class="cenHostReview viewMb">
 					<xzj-readMore class="textSendMsg" hideLineNum="3" showHeight="100"
 					:showMenu="false" @active="openFatherReview">
-						<span :style="{color: $store.state.isDarkMode && praiseType != 1 ? '#e5e5e5' : 'inherit'}">
+						<span class="msg-text">
 							{{praiseType == 1 ? '该评论被折叠' : reviewMsg.sendMsg}}
 						</span>
 					</xzj-readMore>
@@ -38,27 +38,17 @@
 						</view>
 					</view>
 					
-					<div v-if="reviewMsg.article_id != 0 && (!paragraphMode) && praiseType != 1"
-			:style="{
-				backgroundColor: $store.state.isDarkMode ? '#333' : '#e6e6e6',
-				padding: '10px',
-				margin: '5px 0',
-				fontSize: '14px'
-			}"
-			@click="navToChapter">
+					<div class="comment-source" v-if="reviewMsg.article_id != 0 && (!paragraphMode) && praiseType != 1" @click="navToChapter">
 						<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1"
 							xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14"
 							style="margin: 0 5px 0 0;">
 							<path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z"
-								:fill="$store.state.isDarkMode ? '#b8b8b8' : '#8a8a8a'" p-id="2307"></path>
+								fill="currentColor" p-id="2307"></path>
 							<path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z"
-								:fill="$store.state.isDarkMode ? '#b8b8b8' : '#8a8a8a'" p-id="2308"></path>
+								fill="currentColor" p-id="2308"></path>
 						</svg>
-						<span :style="{color: $store.state.isDarkMode ? '#e5e5e5' : 'inherit'}">来自章节 {{article.title}}</span>
-						<div class="cento" v-if="reviewMsg.cento" :style="{
-					marginTop: '10rpx',
-					color: $store.state.isDarkMode ? '#b8b8b8' : '#4b4b4b'
-				}">
+						<span class="comment-source-title">来自章节 {{ reviewMsg.article_title || article.title }}</span>
+						<div class="cento" v-if="reviewMsg.cento">
 							{{reviewMsg.cento.paragraph}}
 						</div>
 					</div>
@@ -66,14 +56,11 @@
 				<view class="iconRow">
 					<div class="left">
 						<view @click.prevent="praise(0)">
-							<dnIcon type="haoping" :color="praiseType == 0?'#ff6d00':'#C0C0C0'"></dnIcon>
-							<text :style="{
-								paddingLeft: '5px',
-								color: $store.state.isDarkMode ? '#e5e5e5' : 'inherit'
-							}">{{reviewMsg.likeNum}}</text>
+							<dnIcon type="haoping" :color="praiseType == 0 ? 'var(--manga-accent, #c14a16)' : 'var(--manga-muted, #9aa1a9)'"></dnIcon>
+							<text class="like-count" :class="{ liked: praiseType == 0 }">{{reviewMsg.likeNum}}</text>
 						</view>
 						<view @click.prevent="praise(1)" style="transform: scaleY(-1);">
-							<dnIcon type="haoping" :color="praiseType == 1?'#ff6d00':'#C0C0C0'"></dnIcon>
+							<dnIcon type="haoping" :color="praiseType == 1 ? 'var(--manga-accent, #c14a16)' : 'var(--manga-muted, #9aa1a9)'"></dnIcon>
 						</view>
 					</div>
 					<div class="right" v-show="!(praiseType == 1)">
@@ -87,10 +74,10 @@
 						<xzj-readMore class="textSendMsg" hideLineNum="2" showHeight="100" 
 							:showMenu="true" @active="openChildReview(key)"
 							@menu="openSubMenu($event, reKey.comment_id, reKey.userId, key)">
-							<span :style="{color: $store.state.isDarkMode ? '#b8b8b8' : '#929292'}">{{reKey.userName}}</span>
-							<text class="defaultBlack">回复</text>
-							<span :style="{color: $store.state.isDarkMode ? '#b8b8b8' : '#929292'}">{{reKey.targetUserName}}</span>
-							<span :style="{color: $store.state.isDarkMode ? '#e5e5e5' : 'inherit'}">:{{reKey.sendMsg}}</span>
+							<span class="reply-name">{{reKey.userName}}</span>
+							<text class="reply-arrow">回复</text>
+							<span class="reply-name">{{reKey.targetUserName}}</span>
+							<span class="reply-body">:{{reKey.sendMsg}}</span>
 						</xzj-readMore>
 						
 						<!-- 显示回复中的图片 -->
@@ -214,44 +201,6 @@
 					indicator: 'number'
 				});
 			},
-			refresh() {
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;
-				let _this = this;
-				axios.get(this.$baseUrl + '/community/get_comment_praise_status?essay_comment_id=' + this.reviewMsg
-					.comment_id, {
-						headers: {
-								'Content-Type': 'application/json', //设置请求头请求格式为JSON
-								'Authorization': "Bearer " + tk //设置token 其中K名要和后端配置好
-							}
-					}).then((res) => {
-					if (res.data.length > 0) {
-						_this.praiseType = res.data[0].type;
-					} else {
-						_this.praiseType = 3;
-					}
-				}).catch(function(error) {
-
-				})
-				// 加载章节信息
-			console.log(this.reviewMsg);
-			if (this.reviewMsg.article_id != 0) {
-				axios.get(this.$baseUrl + '/articles/get_article_info?id=' + this.reviewMsg.article_id).then((res) => {
-					this.article = res.data[0];
-				}).catch(function(error) {
-					console.log(error);
-					if (error) {
-						// uni.showToast({
-						// 	title: "获取文章信息失败",
-						// 	icon: 'none',
-						// 	duration: 2000
-						// });
-					}
-				}).then(function() {
-					uni.hideLoading();
-				})
-				}
-			},
 			openFatherReview() {
 				let event = {
 					review: this.reviewMsg,
@@ -265,53 +214,6 @@
 					father: this.reviewMsg.comment_id
 				}
 				this.$emit('childReview', event);
-			},
-			praise(type) {
-				let submitType = 0;
-				if (type == this.praiseType) {
-					submitType = 3;
-				} else {
-					submitType = type;
-				}
-				let _this = this;
-				let tk = JSON.parse(window.localStorage.getItem('token'));
-				if (tk) tk = tk.tk;;
-				axios.post(this.$baseUrl + '/community/praise_on_comment', {
-						essay_comment_id: _this.reviewMsg.comment_id,
-						type: submitType
-
-					}, {
-						headers: {
-							'Content-Type': 'application/json', //璁剧疆璇锋眰澶磋姹傛牸寮忎负JSON
-							'Authorization': 'Bearer ' + tk //璁剧疆token 鍏朵腑K鍚嶈鍜屽悗绔崗璋冨ソ
-						}
-					}, )
-					.then(function(response) {
-						let changeNum = 0;
-						if(_this.praiseType == 0){ // 原本处于点赞状态
-				changeNum = -1;
-			} else if(_this.praiseType == 1){ // 原本处于点踩状态
-				if(submitType == 3) {
-					changeNum = 0;
-				} else {
-					changeNum = (submitType == 0 ? 1 : -1);
-				}
-			} else { // 原本处于未点赞未点踩状态
-				changeNum = (submitType == 0 ? 1 : 0);
-			}
-						_this.refresh();
-						_this.$emit('changePraise', {id: _this.reviewMsg.comment_id, changeNum: changeNum});
-					})
-					.catch(function(error) {
-						console.log(error);
-						if (error) {
-							uni.showToast({
-							title: "操作失败",
-							icon: 'none',
-							duration: 2000
-						});
-						}
-					});
 			},
 			// 为评论回复设计的subMenu
 			openSubMenu(e, id, userId, idx) {
@@ -664,250 +566,183 @@
 	}
 </script>
 
-<style scoped>
-	.content {
-		width: 100%;
+<style scoped lang="scss">
+// 书评样式对齐漫画评论区设计语言（common/manga-theme.scss 的 --manga-* 变量），
+// 变量在本组件兜底定义，保证脱离 bookComment 页面时配色依然正确
+.content {
+	--manga-bg: #f4f5f6;
+	--manga-card: #fff;
+	--manga-text: #252b30;
+	--manga-muted: #656c74;
+	--manga-line: #e5e8eb;
+	--manga-accent: #c14a16;
+	--manga-tint: #fff1e8;
+
+	width: 100%;
+	box-sizing: border-box;
+	padding: 26rpx 24rpx 0;
+	background-color: var(--manga-card);
+	color: var(--manga-text);
+
+	&.dark-mode {
+		--manga-bg: #16191c;
+		--manga-card: #24282c;
+		--manga-text: #f4f5f6;
+		--manga-muted: #b6bdc3;
+		--manga-line: #41474c;
+		--manga-accent: #ffae77;
+		--manga-tint: #392a22;
+	}
+}
+
+.cenHost {
+	display: flex;
+	gap: 18rpx;
+	padding-bottom: 26rpx;
+	border-bottom: 1rpx solid var(--manga-line);
+}
+
+.cenHeadImgContent {
+	flex: none;
+	width: 72rpx;
+	height: 72rpx;
+}
+
+.headImg {
+	width: 72rpx;
+	height: 72rpx;
+	border-radius: 50%;
+}
+
+.cenHostMsgContent {
+	flex: 1;
+	min-width: 0;
+}
+
+.viewMb {
+	margin-bottom: 0;
+}
+
+.viewMb-space-between {
+	display: flex;
+	justify-content: space-between;
+}
+
+.textSize {
+	font-size: 26rpx;
+	font-weight: 700;
+	color: var(--manga-text);
+	margin-right: 10rpx;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+// 粉丝排名标签：与漫画评论徽标一致，tint 底 + accent 字的胶囊
+.fan-rank-badge {
+	display: inline-block;
+	flex: none;
+	padding: 3rpx 12rpx;
+	border-radius: 100rpx;
+	background: var(--manga-tint);
+	color: var(--manga-accent);
+	font-size: 20rpx;
+	font-weight: 600;
+	margin-left: 8rpx;
+	vertical-align: middle;
+}
+
+.textCenMsg {
+	display: block;
+	margin-top: 2rpx;
+	color: var(--manga-muted);
+	font-size: 21rpx;
+}
+
+.cenHostReview {
+	margin-top: 12rpx;
+}
+
+.textSendMsg {
+	font-size: 27rpx;
+	position: relative;
+	width: 100%;
+	color: var(--manga-text);
+}
+
+.msg-text {
+	font-size: 27rpx;
+	line-height: 1.65;
+	color: var(--manga-text);
+	white-space: pre-line;
+	word-break: break-word;
+
+	.dark-mode & {
+		color: var(--manga-text);
+	}
+}
+
+.comment-images {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12rpx;
+	margin: 16rpx 0 0;
+
+	&.small {
+		margin-top: 12rpx;
+	}
+
+	.comment-image-item {
+		width: 168rpx;
+		height: 168rpx;
+		border-radius: 12rpx;
 		overflow: hidden;
-		position: relative;
-		
-		&.dark-mode {
-			background-color: #1c1c1c;
+		background: var(--manga-bg);
+
+		log-image {
+			width: 100%;
+			height: 100%;
 		}
 	}
 
-	.cenHost-Content {
-		position: relative;
+	&.small .comment-image-item {
+		width: 140rpx;
+		height: 140rpx;
+	}
+}
+
+// 来自章节：漫画评论的"来源"条样式
+.comment-source {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8rpx;
+	margin: 14rpx 0 0;
+	padding: 10rpx 16rpx;
+	border-radius: 12rpx;
+	background: var(--manga-bg);
+	color: var(--manga-muted);
+	font-size: 22rpx;
+	line-height: 1.5;
+
+	&:active {
+		color: var(--manga-accent);
+	}
+
+	.icon {
+		flex: none;
+		color: inherit;
+	}
+
+	.cento {
 		width: 100%;
+		margin-top: 4rpx;
+		color: var(--manga-muted);
+		font-size: 22rpx;
 	}
+}
 
-	.cr-title {
-		width: 100%;
-		height: 30px;
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		align-items: center;
-		padding: 0 10px 0 10px;
-		box-sizing: border-box;
-		background-color: #ffffff;
-	}
-
-	.childReview {
-		position: absolute;
-		margin: auto;
-		width: 100%;
-		height: 100%;
-		top: 0px;
-		background-color: #F9F9F9;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.headImg {
-		width: 40px;
-		height: 40px;
-	}
-
-	.textSendMsg {
-		font-size: 14px;
-		position: relative;
-		width: 100%;
-		
-		.dark-mode & {
-			color: #e5e5e5;
-		}
-	}
-
-	.textSize {
-		font-size: 13px;
-		color: #808080;
-		margin-right: 10px;
-		
-		.dark-mode & {
-			color: #b8b8b8;
-		}
-	}
-
-	.textCenMsg {
-		color: #999999;
-		font-size: 12px;
-		
-		.dark-mode & {
-			color: #777;
-		}
-	}
-
-	.defaultBlack {
-		color: #000000;
-		
-		.dark-mode & {
-			color: #e5e5e5;
-		}
-	}
-
-
-	.viewMb-space-between {
-		display: flex;
-		justify-content: space-between;
-	}
-
-	.viewMb {
-		margin-bottom: 5px;
-	}
-
-	.followText {
-		font-size: 14px;
-		margin-right: 8px;
-	}
-
-	.content {
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		background-color: #ffffff;
-		
-		&.dark-mode {
-			background-color: #252525;
-		}
-	}
-
-	.cenHost {
-		position: relative;
-		width: 100%;
-		display: flex;
-		flex-direction: row;
-		justify-content: flex-start;
-		border-bottom: 1px solid #e1e1e1;
-		margin-top: 5px;
-		overflow: hidden;
-		/* max-height:600rpx; */
-		
-		.dark-mode & {
-			border-bottom: 1px solid #333;
-		}
-	}
-
-	.cenHostMsgContent {
-		flex: 1;
-		width: auto;
-		min-width: 0;
-		margin: 5px 10px 10px 10px;
-		/* height:30rpx; */
-	}
-
-	.cenHeadImgContent {
-		flex-shrink: 0;
-		width: 40px;
-		height: 40px;
-		margin: 10px;
-	}
-
-	.cenHostMsg1 {}
-
-	.cenHostMsg2 {
-		background-color: #ff6d00;
-		color: #FFFFFF;
-		font-size: 10px;
-	}
-
-	.cenHostMsg3 {
-		color: #999999;
-		margin-right: 10px;
-		
-		.dark-mode & {
-			color: #b8b8b8;
-		}
-	}
-
-	.cenHostMsg4 {
-		color: #999999;
-		
-		.dark-mode & {
-			color: #b8b8b8;
-		}
-	}
-
-	.iconRow {
-		width: 100%;
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		margin-top: 10px;
-		color: #999999;
-		font-size: 12px;
-		.left{
-			display: flex;
-			view{
-				margin-right: 40rpx;
-				
-				.dark-mode & {
-					color: #b8b8b8;
-				}
-			}
-		}
-		.right {
-			display: flex;
-			view{
-				margin-left: 40rpx;
-				
-				.dark-mode & {
-					color: #b8b8b8;
-				}
-			}
-		}
-		
-		.dark-mode & {
-			color: #b8b8b8;
-		}
-	}
-
-	.threeReviewContent {
-		background-color: #f2f2f2;
-		margin-top: 10px;
-		margin-bottom: 10px;
-		padding: 8px;
-		
-		.dark-mode & {
-			background-color: #333;
-		}
-	}
-
-	.threeReviewVueText {
-		font-size: 14px;
-		color: #ff6d00;
-		margin: 8px;
-		overflow: hidden;
-		position: relative;
-		width: calc(100% - 16px);
-		
-		.dark-mode & {
-			color: #ff8533; /* 更亮的橙色，在深色背景下更醒目 */
-		}
-	}
-
-	.reviewNumContent {
-		color: #ff6d00;
-		font-size: 12px;
-		margin-left: 8px;
-		
-		.dark-mode & {
-		color: #ff8533; /* 更亮的橙色，在深色背景下更醒目 */
-		
-		text {
-			color: #e5e5e5;
-		}
-	}
-	}
-
-	.followButton {
-		position: absolute;
-		right: 25rpx;
-		top: 25rpx;
-		z-index: 50;
-	}
-	
-	.cento{
+.cento {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	display: -webkit-box;
@@ -915,96 +750,127 @@
 	-webkit-line-clamp: 3;
 }
 
-.comment-images {
+.iconRow {
 	display: flex;
-	flex-wrap: wrap;
-	margin: 10rpx 0;
-	
-	&.small {
-		margin: 5rpx 0;
-	}
-	
-	.comment-image-item {
-		width: 180rpx;
-		height: 180rpx;
-		margin-right: 10rpx;
-		margin-bottom: 10rpx;
-		border-radius: 8rpx;
-		overflow: hidden;
-		
-		log-image {
-			width: 100%;
-			height: 100%;
-		}
-		
-		&:nth-child(3n) {
-			margin-right: 0;
+	align-items: center;
+	margin-top: 14rpx;
+	color: var(--manga-muted);
+	font-size: 23rpx;
+
+	.left {
+		display: flex;
+		align-items: center;
+		gap: 28rpx;
+
+		view {
+			display: flex;
+			align-items: center;
 		}
 	}
-	
-	&.small .comment-image-item {
-		width: 140rpx;
-		height: 140rpx;
+
+	.like-count {
+		padding-left: 8rpx;
+		color: var(--manga-muted);
+
+		&.liked {
+			color: var(--manga-accent);
+			font-weight: 600;
+		}
+	}
+
+	.right {
+		display: flex;
+		align-items: center;
+		margin-left: auto;
+		gap: 28rpx;
+
+		view {
+			padding: 8rpx 0;
+		}
 	}
 }
 
-/* 粉丝排名标签样式 */
-	.fan-rank-badge {
-		display: inline-block;
-		background: linear-gradient(135deg, #ff9800, #ff5722);
-		color: #fff;
-		font-size: 10px;
-		padding: 2px 6px;
-		border-radius: 10px;
-		margin-left: 5px;
-		vertical-align: middle;
-		font-weight: bold;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-	}
-	
-	/* 图片长按菜单样式 */
-	.popup-content {
-		background-color: #fff;
-		border-radius: 20rpx;
-		padding: 40rpx 0;
-		width: calc(100vw - 100rpx);
-		
-		.dark-mode & {
-			background-color: #333;
-		}
-	}
-	
-	.popup-item {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 30rpx 0;
-		font-size: 32rpx;
-		color: #333;
-		border-bottom: 1rpx solid #f0f0f0;
-		
-		.dark-mode & {
-			color: #e5e5e5;
-			border-bottom: 1rpx solid #444;
-		}
-	}
-	
-	.popup-item:last-child {
+// 回复列表：漫画评论的灰底圆角容器
+.threeReviewContent {
+	margin-top: 14rpx;
+	padding: 14rpx 18rpx;
+	border-radius: 14rpx;
+	background: var(--manga-bg);
+}
+
+.threeReviewVueText {
+	font-size: 24rpx;
+	line-height: 1.6;
+	color: var(--manga-text);
+	padding: 8rpx 0;
+	word-break: break-word;
+}
+
+.reply-name {
+	color: var(--manga-accent);
+	font-weight: 600;
+}
+
+.reply-arrow {
+	margin: 0 6rpx;
+	color: var(--manga-muted);
+}
+
+.reply-body {
+	color: var(--manga-text);
+}
+
+.reviewNumContent {
+	color: var(--manga-accent);
+	font-size: 23rpx;
+	font-weight: 600;
+	padding: 10rpx 0 2rpx;
+}
+
+.followButton {
+	position: absolute;
+	right: 25rpx;
+	top: 25rpx;
+	z-index: 50;
+}
+
+.comment_item {
+	transition: filter 0.3s ease;
+}
+
+.highlight_comment {
+	filter: brightness(0.9);
+}
+
+// 图片长按菜单
+.popup-content {
+	background-color: var(--manga-card);
+	border-radius: 20rpx;
+	padding: 40rpx 0;
+	width: calc(100vw - 100rpx);
+}
+
+.popup-item {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 30rpx 0;
+	font-size: 32rpx;
+	color: var(--manga-text);
+	border-bottom: 1rpx solid var(--manga-line);
+
+	&:last-child {
 		border-bottom: none;
 	}
-	
-	.popup-item.cancel {
-		color: #999;
+
+	&.cancel {
+		color: var(--manga-muted);
 		margin-top: 20rpx;
-		border-top: 20rpx solid #f8f8f8;
-		
-		.dark-mode & {
-			color: #777;
-			border-top: 20rpx solid #222;
-		}
+		border-top: 20rpx solid var(--manga-bg);
 	}
-	
-	.popup-item text {
+
+	text {
 		margin-left: 20rpx;
 	}
+}
 </style>

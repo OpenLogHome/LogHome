@@ -1,7 +1,7 @@
 <template>
   <div class="collections-page">
     <div class="page-header">
-      <h1 class="page-title">{{ title }}</h1>
+      <h1 class="page-title"><template v-if="title.startsWith('原木力')"><LogPowerWordmark />{{ title.slice(3) }}</template><template v-else>{{ title }}</template></h1>
       <nuxt-link to="/read" class="back-button">返回书库</nuxt-link>
     </div>
 
@@ -51,7 +51,9 @@
 </template>
 
 <script>
+import LogPowerWordmark from '~/components/LogPowerWordmark.vue'
 export default {
+  components: { LogPowerWordmark },
   head() {
     return {
       title: `${this.title || '小说集合'} - 原木社区`,
