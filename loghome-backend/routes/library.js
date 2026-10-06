@@ -40,10 +40,11 @@ router.get('/get_novels_all', async function (req, res) {
 		let results =
 			await query(`SELECT n.*,u.name author_name,u.avatar_url auther_avatar,
 							${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
-                               FROM novels n,users u 
-                               WHERE u.user_id = n.author_id 
+                               FROM novels n,users u
+                               WHERE u.user_id = n.author_id
                                AND n.deleted = 0
-                               AND n.is_personal = 0`);
+                               AND n.is_personal = 0
+                               AND n.is_banned = 0`);
 
 		for (let i = 0; i < results.length; i++) {
 			let r = Math.floor(Math.random() * results.length);
@@ -65,10 +66,11 @@ router.get('/get_novels_search', async function (req, res) {
 			let results = await query(
 				`SELECT n.*,u.name author_name,u.avatar_url auther_avatar,
 						${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
-                                   FROM novels n,users u 
-                                   WHERE u.user_id = n.author_id 
+                                   FROM novels n,users u
+                                   WHERE u.user_id = n.author_id
                                    AND n.deleted = 0
                                    AND n.is_personal = 0
+                                   AND n.is_banned = 0
                                    AND novel_id = ?`,
 				[keyWordToId],
 			);
@@ -79,10 +81,11 @@ router.get('/get_novels_search', async function (req, res) {
 			let results = await query(
 				`SELECT n.*,u.name author_name,u.avatar_url auther_avatar,
 						${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
-                                FROM novels n,users u 
-                                WHERE u.user_id = n.author_id 
+                                FROM novels n,users u
+                                WHERE u.user_id = n.author_id
                                 AND n.deleted = 0
                                 AND n.is_personal = 0
+                                AND n.is_banned = 0
                                 AND (n.name LIKE ? OR n.content LIKE ?)`,
 				[keyword, keyword],
 			);
@@ -253,7 +256,7 @@ router.get('/get_articles_all', async function (req, res) {
 router.get('/get_novel_by_user_id', async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT n.* FROM novels n,users u WHERE n.author_id = u.user_id AND u.user_id = ? AND n.deleted = 0 AND n.is_personal = 0 AND novel_type != "world"',
+			'SELECT n.* FROM novels n,users u WHERE n.author_id = u.user_id AND u.user_id = ? AND n.deleted = 0 AND n.is_personal = 0 AND n.is_banned = 0 AND novel_type != "world"',
 			[req.query.id],
 		);
 		res.end(JSON.stringify(results));

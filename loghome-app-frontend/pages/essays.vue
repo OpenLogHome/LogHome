@@ -45,7 +45,8 @@
 						@close-book-detail="handleCloseBookDrawerManually"
 						@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 						@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="openBookSelectDrawer"
-						@goto-statistics="gotoStatistics" @open-activity-form="openActivityForm"></book-detail-view>
+						@goto-statistics="gotoStatistics" @open-activity-form="openActivityForm"
+						@resubmit-novel="onResubmitNovel"></book-detail-view>
 					<transition name='fade'>
 						<view style="text-align: center;position:relative;" v-if="curBook === -1">
 							<img src="../static/dig.png" alt=""
@@ -71,6 +72,10 @@
 						<img :src="book.picUrl" :alt="book.name" class="book-cover"
 							:onerror="`this.src='${$backupResources.bookCover}'`" />
 						<div class="book-title">{{ book.name }}</div>
+						<div class="book-ban-badge" v-if="Number(book.is_banned) === 1"
+							@click.stop="openBanDetail(index)">作品异常</div>
+						<div class="book-ban-badge reviewing" v-else-if="Number(book.is_banned) === 2"
+							@click.stop="openBanDetail(index)">重新审核中</div>
 					</div>
 					<div class="book-item new-book" @click="gotoNewEssay">
 						+
@@ -108,7 +113,8 @@
 					@close-book-detail="handleCloseBookDrawerManually"
 					@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 					@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="openBookSelectDrawer"
-					@goto-statistics="gotoStatistics" @goto-world-novel="gotoWorldNovel" @open-activity-form="openActivityForm"></book-detail-view>
+					@goto-statistics="gotoStatistics" @goto-world-novel="gotoWorldNovel" @open-activity-form="openActivityForm"
+					@resubmit-novel="onResubmitNovel"></book-detail-view>
 			</div>
 		</el-drawer>
 
@@ -558,6 +564,35 @@ export default {
 			})
 
 			this.getMyWorlds();
+		},
+		openBanDetail(index) {
+			this.selectBook(index);
+		},
+		onResubmitNovel() {
+			const book = this.books[this.curBook];
+			if (!book) return;
+			uni.showModal({
+				title: '重新提交审核',
+				content: '确定要将该作品重新提交给管理员审核吗？通过后将恢复上架。',
+				success: (res) => {
+					if (!res.confirm) return;
+					let tk = JSON.parse(window.localStorage.getItem('token'));
+					axios.post(this.$baseUrl + '/essays/resubmit_novel', {
+						novel_id: book.novel_id
+					}, {
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': 'Bearer ' + tk.tk
+						}
+					}).then(() => {
+						uni.showToast({ title: '已提交审核，请等待管理员处理', icon: 'none' });
+						this.refreshPage();
+					}).catch((e) => {
+						const msg = (e.response && e.response.data && e.response.data.msg) || '提交失败，请稍后重试';
+						uni.showToast({ title: msg, icon: 'none' });
+					});
+				}
+			});
 		},
 		swiperChange(e) {
 			if (!this.books[e]) {
@@ -1241,6 +1276,7 @@ view.outer {
 			padding: 10rpx;
 
 			.book-item {
+				position: relative;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
@@ -1264,6 +1300,25 @@ view.outer {
 
 					.dark-mode & {
 						color: var(--text-color-primary);
+					}
+				}
+
+				.book-ban-badge {
+					position: absolute;
+					top: 8rpx;
+					left: 50%;
+					transform: translateX(-50%);
+					padding: 4rpx 16rpx;
+					border-radius: 100rpx;
+					background: rgba(244, 67, 54, 0.9);
+					color: #ffffff;
+					font-size: 20rpx;
+					font-weight: 600;
+					white-space: nowrap;
+					z-index: 2;
+
+					&.reviewing {
+						background: rgba(255, 152, 0, 0.9);
 					}
 				}
 

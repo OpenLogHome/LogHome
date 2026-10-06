@@ -602,6 +602,17 @@ router.get('/reports/list', auth, async function (req, res) {
                 if (comment.length > 0) {
                     results[i].target_info = comment[0];
                 }
+            } else if (results[i].target_type === 'novel' || results[i].target_type === 'manga') {
+                const novel = await query(
+                    `SELECT n.name, n.picUrl, n.is_banned, u.name as author_name
+                     FROM novels n
+                     LEFT JOIN users u ON n.author_id = u.user_id
+                     WHERE n.novel_id = ?`,
+                    [results[i].target_id]
+                );
+                if (novel.length > 0) {
+                    results[i].target_info = novel[0];
+                }
             }
         }
         
@@ -716,9 +727,148 @@ router.post('/reports/handle', auth, async function (req, res) {
                         'notification'
                     );
                 }
+            } else if (report[0].target_type === 'novel' || report[0].target_type === 'manga') {
+                // 下架作品
+                await query(
+                    'UPDATE novels SET is_banned = 1 WHERE novel_id = ?',
+                    [report[0].target_id]
+                );
+
+                // 记录审核日志（5-作品 6-漫画）
+                await query(
+                    `INSERT INTO comm_audit_logs (user_id, target_id, target_type, action, reason)
+                     VALUES (?, ?, ?, 4, ?)`,
+                    [req.user[0].user_id, report[0].target_id, report[0].target_type === 'manga' ? 6 : 5, reason || '违反社区规则']
+                );
+
+                // 通知作者
+                const novel = await query(
+                    'SELECT name, author_id FROM novels WHERE novel_id = ?',
+                    [report[0].target_id]
+                );
+                if (novel.length > 0) {
+                    message.sendMsg(
+                        req.user[0].user_id,
+                        novel[0].author_id,
+                        `您的作品「${novel[0].name}」因被举报已被下架，原因：${reason || '违反社区规则'}。如有异议，您可在“创作”页面重新提交审核。`,
+                        '',
+                        'notification'
+                    );
+                }
             }
         }
         
+        res.json({ msg: 'success' });
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({ msg: 'bad request' });
+    }
+});
+
+// 获取重新审核列表（作者提交重新上架申请的作品）
+router.get('/resubmits/list', auth, async function (req, res) {
+    try {
+        const results = await query(
+            `SELECT n.novel_id, n.name, n.picUrl, n.novel_type, n.is_banned, n.update_time,
+                    u.name as author_name, u.avatar_url as author_avatar
+             FROM novels n
+             LEFT JOIN users u ON n.author_id = u.user_id
+             WHERE n.is_banned = 2 AND n.deleted = 0
+             ORDER BY n.update_time DESC`
+        );
+
+        for (let i = 0; i < results.length; i++) {
+            const report = await query(
+                `SELECT reason, review_comment, review_time
+                 FROM comm_reports
+                 WHERE target_id = ? AND target_type IN ('novel', 'manga') AND status = 1
+                 ORDER BY report_id DESC LIMIT 1`,
+                [results[i].novel_id]
+            );
+            results[i].ban_info = report.length > 0 ? report[0] : null;
+        }
+
+        res.json({ list: results, total: results.length });
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({ msg: 'bad request' });
+    }
+});
+
+// 重新审核通过：恢复上架
+router.post('/resubmits/approve', auth, async function (req, res) {
+    try {
+        if (!req.body.novel_id) {
+            return res.status(400).json({ msg: 'missing required parameters' });
+        }
+        const novelId = req.body.novel_id;
+
+        const novel = await query(
+            'SELECT novel_id, name, author_id, novel_type, is_banned FROM novels WHERE novel_id = ? AND deleted = 0',
+            [novelId]
+        );
+        if (novel.length === 0) {
+            return res.status(404).json({ msg: 'novel not found' });
+        }
+        if (Number(novel[0].is_banned) !== 2) {
+            return res.status(400).json({ msg: '该作品不在重新审核中' });
+        }
+
+        await query('UPDATE novels SET is_banned = 0 WHERE novel_id = ?', [novelId]);
+        await query(
+            `INSERT INTO comm_audit_logs (user_id, target_id, target_type, action, reason)
+             VALUES (?, ?, ?, 1, '重新审核通过，恢复上架')`,
+            [req.user[0].user_id, novelId, novel[0].novel_type === 'manga' ? 6 : 5]
+        );
+        message.sendMsg(
+            req.user[0].user_id,
+            novel[0].author_id,
+            `您的作品「${novel[0].name}」已通过重新审核，恢复上架。`,
+            '',
+            'notification'
+        );
+
+        res.json({ msg: 'success' });
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({ msg: 'bad request' });
+    }
+});
+
+// 重新审核驳回：保持下架
+router.post('/resubmits/reject', auth, async function (req, res) {
+    try {
+        if (!req.body.novel_id) {
+            return res.status(400).json({ msg: 'missing required parameters' });
+        }
+        const novelId = req.body.novel_id;
+        const reason = String(req.body.reason || '').trim();
+
+        const novel = await query(
+            'SELECT novel_id, name, author_id, novel_type, is_banned FROM novels WHERE novel_id = ? AND deleted = 0',
+            [novelId]
+        );
+        if (novel.length === 0) {
+            return res.status(404).json({ msg: 'novel not found' });
+        }
+        if (Number(novel[0].is_banned) !== 2) {
+            return res.status(400).json({ msg: '该作品不在重新审核中' });
+        }
+
+        await query('UPDATE novels SET is_banned = 1 WHERE novel_id = ?', [novelId]);
+        await query(
+            `INSERT INTO comm_audit_logs (user_id, target_id, target_type, action, reason)
+             VALUES (?, ?, ?, 2, ?)`,
+            [req.user[0].user_id, novelId, novel[0].novel_type === 'manga' ? 6 : 5, reason || '重新审核未通过']
+        );
+        message.sendMsg(
+            req.user[0].user_id,
+            novel[0].author_id,
+            `您的作品「${novel[0].name}」重新审核未通过，将保持下架状态。原因：${reason || '内容仍存在违反社区规则的问题'}`,
+            '',
+            'notification'
+        );
+
         res.json({ msg: 'success' });
     } catch (e) {
         console.log(e);

@@ -10,8 +10,9 @@
         <image lazy-load class="manga-cover" :src="manga.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="manga.name + '封面'" />
         <div class="manga-info">
           <div class="manga-title">{{ manga.name }}</div>
-          <div class="manga-tags"><span class="status-chip">漫画</span><span class="status-chip" :class="{ private: Number(manga.is_personal) === 1 }">{{ Number(manga.is_personal) === 1 ? '私密' : '公开' }}</span><span class="status-chip" v-if="Number(manga.is_complete) === 1">已完结</span><span class="status-chip" v-if="hasActiveCollaborators(manga)">协作作品</span><span class="status-chip" v-if="manga.collaborator_role">协作成员</span></div>
+          <div class="manga-tags"><span class="status-chip">漫画</span><span class="status-chip" :class="{ private: Number(manga.is_personal) === 1 }">{{ Number(manga.is_personal) === 1 ? '私密' : '公开' }}</span><span class="status-chip" v-if="Number(manga.is_complete) === 1">已完结</span><span class="status-chip" v-if="hasActiveCollaborators(manga)">协作作品</span><span class="status-chip" v-if="manga.collaborator_role">协作成员</span><span class="status-chip banned" v-if="Number(manga.is_banned) === 1">作品异常</span><span class="status-chip reviewing" v-else-if="Number(manga.is_banned) === 2">重新审核中</span></div>
           <div class="manga-intro">{{ manga.content || '还没有填写简介' }}</div>
+          <div class="manga-ban-reason" v-if="Number(manga.is_banned) >= 1 && (manga.ban_reason || manga.ban_review_comment)"><text class="ban-label">异常原因：</text><text>{{ manga.ban_reason || '违反社区规则' }}{{ manga.ban_review_comment ? '（' + manga.ban_review_comment + '）' : '' }}</text></div>
           <div class="manga-date">更新于 {{ formatDate(manga.update_time) }}</div>
         </div>
       </button>
@@ -19,6 +20,7 @@
         <button v-manga-a11y class="primary-action" type="button" @click="manageEpisodes(manga)"><manga-icon name="book" /><text>话数管理</text></button>
         <button v-manga-a11y type="button" @click="openSettings(manga)"><manga-icon name="settings" /><text>{{ isOwner(manga) ? '作品设置' : '协作设置' }}</text></button>
         <button v-manga-a11y type="button" @click="previewManga(manga)"><manga-icon name="preview" /><text>预览</text></button>
+        <button v-manga-a11y class="ban-action" v-if="Number(manga.is_banned) === 1" type="button" @click="resubmitReview(manga)"><manga-icon name="retry" /><text>重新提交审核</text></button>
       </div>
     </div>
     <view class="create-mask" v-if="showCreateDialog" v-manga-portal :class="{ 'dark-mode': isDarkMode }"
@@ -68,6 +70,25 @@ export default {
 		},
 		previewManga(manga) {
 			uni.navigateTo({ url: '/pages/readers/mangaInfo?id=' + manga.novel_id + '&preview=1' });
+		},
+		resubmitReview(manga) {
+			uni.showModal({
+				title: '重新提交审核',
+				content: '确定要将该漫画重新提交给管理员审核吗？通过后将恢复上架。',
+				success: (res) => {
+					if (!res.confirm) return;
+					const headers = this.authHeaders();
+					axios.post(this.$baseUrl + '/essays/resubmit_novel', {
+						novel_id: manga.novel_id
+					}, { headers: { ...headers, 'Content-Type': 'application/json' } }).then(() => {
+						uni.showToast({ title: '已提交审核，请等待管理员处理', icon: 'none' });
+						this.loadMangas();
+					}).catch((e) => {
+						const msg = (e.response && e.response.data && e.response.data.msg) || '提交失败，请稍后重试';
+						uni.showToast({ title: msg, icon: 'none' });
+					});
+				}
+			});
 		},
 		viewDetail(manga) {
 			uni.navigateTo({ url: '/pages/readers/mangaInfo?id=' + manga.novel_id + (Number(manga.is_personal) === 1 ? '&preview=1' : '') });
@@ -177,9 +198,14 @@ button.card-body:active { background: var(--manga-tint); transform: scale(.985);
 .manga-tags { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 12rpx; }
 .status-chip { padding: 4rpx 12rpx; border-radius: 100rpx; background: var(--manga-tint); color: var(--manga-accent); font-size: 18rpx; font-weight: 600; }
 .status-chip.private { background: var(--manga-bg); color: var(--manga-muted); }
+.status-chip.banned { background: rgba(244, 67, 54, 0.12); color: #d32f2f; }
+.status-chip.reviewing { background: rgba(255, 152, 0, 0.15); color: #ef6c00; }
+.manga-ban-reason { margin-top: 10rpx; padding: 12rpx 16rpx; border-radius: 12rpx; background: rgba(244, 67, 54, 0.08); color: #c62828; font-size: 22rpx; line-height: 1.5; }
+.manga-ban-reason .ban-label { font-weight: 700; }
 .manga-intro { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 12rpx; color: var(--manga-muted); font-size: 22rpx; line-height: 1.5; }
 .manga-date { margin-top: 10rpx; color: var(--manga-muted); font-size: 20rpx; }
 .card-actions { display: grid; grid-template-columns: 1.25fr 1fr .75fr; gap: 10rpx; margin-top: 24rpx; padding-top: 20rpx; border-top: 1rpx solid var(--manga-line); }
+.card-actions button.ban-action { grid-column: 1 / -1; border-color: #ef9a9a; color: #c62828; }
 .card-actions button { box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 8rpx; min-height: 88rpx; padding: 0 8rpx; border: 1rpx solid var(--manga-line); border-radius: 12rpx; color: var(--manga-text); font-size: 26rpx; font-weight: 600; line-height: 1.2; text-align: center; white-space: nowrap; }
 .card-actions button.primary-action { border-color: transparent; background: var(--manga-action); color: #fff; }
 .card-actions .manga-icon { font-size: 26rpx; }

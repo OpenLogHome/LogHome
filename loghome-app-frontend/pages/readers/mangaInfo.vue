@@ -3,6 +3,7 @@
     <view class="nav-bar">
       <button v-manga-a11y class="nav-back icon-button" type="button" aria-label="返回" @click="goBack"><manga-icon name="back" /></button>
       <text class="nav-title">{{ isPreview ? '作者预览 · ' : '' }}{{ bookInfo.name || '漫画详情' }}</text>
+      <button v-manga-a11y v-if="!isPreview && !loading && !loadError" class="nav-report" type="button" @click="openReport"><image src="/static/icons/icon_report.png" mode="aspectFit" /><text>举报</text></button>
     </view>
     <scroll-view class="body-scroll" scroll-y :scroll-into-view="catalogTarget" :scroll-with-animation="scrollWithAnimation">
       <view v-if="loading || loadError" class="load-state" role="status">
@@ -48,6 +49,7 @@
     <uni-popup v-if="!isPreview" ref="tippingPopup" type="bottom">
       <view class="tipping-sheet"><tipping-bar v-if="showTipping" :novel_id="uid" @tip="handleTippingSuccess" /></view>
     </uni-popup>
+    <report-novel-popup v-if="!isPreview" ref="reportPopup"></report-novel-popup>
     <task-reward-modal v-if="!isPreview" ref="taskRewardModal" @harvest="openTreePlant" />
   </view>
 </template>
@@ -57,10 +59,11 @@ import axios from 'axios';
 import MangaIcon from '@/components/manga-icon.vue';
 import TaskRewardModal from '@/components/TaskRewardModal.vue';
 import TippingBar from '@/components/tipping/tippingBar.vue';
+import ReportNovelPopup from '@/components/reportNovelPopup.vue';
 
 export default {
   directives: { mangaA11y: MangaA11y },
-	components: { MangaIcon, TaskRewardModal, TippingBar },
+	components: { MangaIcon, TaskRewardModal, TippingBar, ReportNovelPopup },
 	data() {
 		return {
 			uid: null,
@@ -233,6 +236,11 @@ export default {
 		handleTippingSuccess() {
 			if (this.$refs.tippingPopup) this.$refs.tippingPopup.close();
 		},
+		openReport() {
+			if (this.isPreview || this.loading || this.loadError) return;
+			if (!this.getToken()) { uni.showToast({ title: '请先登录', icon: 'none' }); return; }
+			this.$refs.reportPopup.open(this.uid);
+		},
 		async completeDailyTask(code, name) {
 			const headers = this.authHeaders();
 			if (!headers) return;
@@ -372,6 +380,9 @@ export default {
 .manga-page { @include manga-theme; height: 100vh; }
 .nav-bar { position: fixed; inset: 0 0 auto; z-index: 30; height: 96rpx; padding-top: var(--manga-safe-top); display: flex; align-items: center; background: var(--manga-card); border-bottom: 1rpx solid var(--manga-line); }
 .icon-button { display: grid; place-items: center; width: 96rpx; height: 88rpx; flex: none; font-size: 34rpx; }
+.nav-report { display: flex; align-items: center; gap: 6rpx; flex: none; min-height: 60rpx; margin-right: 20rpx; padding: 0 20rpx; border: 1rpx solid var(--manga-line); border-radius: 100rpx; background: var(--manga-card); color: var(--manga-muted); font-size: 23rpx; }
+.nav-report image { width: 30rpx; height: 30rpx; }
+.nav-report::after { display: none; }
 .nav-title { flex: 1; min-width: 0; padding-right: 28rpx; font-size: 30rpx; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .body-scroll { height: 100vh; box-sizing: border-box; padding-top: calc(96rpx + var(--manga-safe-top)); }
 .hero { height: 680rpx; position: relative; background: var(--manga-line); }

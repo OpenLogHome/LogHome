@@ -8,6 +8,10 @@
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :bgColor="currentTopColor" :textcolor="currentTopTextColor" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
 			navTitle='标题'></zetank-backBar>
+		<view class="report-entry clickable" v-if="!isPageLoading && bookInfo.is_personal == 0" @click="openReport">
+			<image src="../../static/icons/icon_report.png" mode="aspectFit"></image>
+			<text>举报</text>
+		</view>
 		<view class="l-body" :class="{ 'is-loading': isPageLoading }">
 			<view v-if="isPageLoading" class="book-info-skeleton" aria-label="书籍信息加载中">
 				<view class="skeleton-hero">
@@ -435,6 +439,7 @@
 				<tippingBar :novel_id="uid" @tip="runGiftAnimation($event)"></tippingBar>
 			</view>
 		</uni-popup>
+		<reportNovelPopup ref="reportPopup"></reportNovelPopup>
 		<task-reward-modal 
 			ref="taskRewardModal"
 			@harvest="handleHarvestFromModal">
@@ -451,6 +456,7 @@ import html2canvas from 'html2canvas'
 import countTo from "vue-count-to"
 import darkModeMixin from '@/mixins/dark-mode.js'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
+import reportNovelPopup from "../../components/reportNovelPopup.vue"
 
 function normalizeHexColor(color) {
 	if (typeof color !== 'string') {
@@ -571,7 +577,8 @@ export default {
 		tippingBar,
 		springBack,
 		countTo,
-		TaskRewardModal
+		TaskRewardModal,
+		reportNovelPopup
 	},
 	mixins: [darkModeMixin],
 	data() {
@@ -1444,6 +1451,9 @@ export default {
 					duration: 2000
 				});
 			}
+		},
+		openReport() {
+			this.$refs.reportPopup.open(this.uid)
 		},
 		async getCollaborativeAuthors() {
 			try {
@@ -2349,6 +2359,28 @@ export default {
 
 .l-dd-footer span {
 	margin-right: 20rpx;
+}
+
+.report-entry {
+	position: fixed;
+	top: calc(60upx + var(--loghome-safe-top, 0px));
+	right: 25upx;
+	z-index: 110;
+	display: flex;
+	align-items: center;
+	gap: 6rpx;
+	padding: 14rpx 20rpx;
+	border-radius: 10rpx;
+	background-color: rgba(0, 0, 0, 0.4);
+	color: #ffffff;
+	font-size: 24rpx;
+	/* 与 backBar 内 .left_img 相同的对齐方式：中心线位于导航栏顶部下方 15upx */
+	transform: translateY(calc(15upx - 50%));
+
+	image {
+		width: 30rpx;
+		height: 30rpx;
+	}
 }
 
 .l-dd-view-footer {
