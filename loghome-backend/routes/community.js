@@ -464,6 +464,22 @@ router.get('/novel_commonts_amount', async function (req, res) {
 	}
 });
 
+// 批量获取一部作品各话（article）的评论数，供漫画目录角标使用
+router.get('/novel_articles_comment_amounts', async function (req, res) {
+	try {
+		let results = await query(
+			`SELECT article_id, COUNT(*) AS amount FROM novel_comments
+			 WHERE novel_id = ? AND deleted = 0 AND reply_to_id = -1 AND article_id > 0
+			 GROUP BY article_id`,
+			[req.query.id],
+		);
+		res.end(JSON.stringify(results));
+	} catch (e) {
+		console.log(e);
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.get('/novel_commonts_reply_to', async function (req, res) {
 	try {
 		let results = await query(

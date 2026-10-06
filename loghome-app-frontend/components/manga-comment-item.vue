@@ -21,9 +21,10 @@
           <log-image :src="image" mode="aspectFill" style="width: 100%; height: 100%;" />
         </button>
       </view>
-      <view v-if="comment.articleTitle && !isFolded" class="comment-source">
+      <button v-manga-a11y v-if="comment.articleTitle && !isFolded" class="comment-source" type="button"
+        :aria-label="'跳转到章节：' + comment.articleTitle" @click="openSourceChapter">
         <manga-icon name="book" />来自 {{ comment.articleTitle }}
-      </view>
+      </button>
       <view class="comment-actions" v-if="!isFolded">
         <button v-manga-a11y class="action-button" :class="{ liked: comment.praiseType === 0 }" type="button"
           :aria-pressed="comment.praiseType === 0 ? 'true' : 'false'" @click="$emit('praise', comment)">
@@ -87,6 +88,11 @@ export default {
   methods: {
     openAuthor() { uni.navigateTo({ url: '/pages/users/personalPage?id=' + this.comment.userId }); },
     previewImage(current, urls) { uni.previewImage({ current, urls, indicator: 'number' }); },
+    // 话评的"来自 xx"直达该话阅读页；作品级评论没有 articleId，不会渲染该按钮
+    openSourceChapter() {
+      if (!this.comment.articleId || !this.comment.novelId) return;
+      uni.navigateTo({ url: '/pages/readers/mangaReader?id=' + this.comment.articleId + '&novelId=' + this.comment.novelId });
+    },
     onReplyClick(reply) {
       // 长按松手后浏览器仍会补发 click，用时间戳挡掉，避免误打开回复框
       if (Date.now() - this.lastLongpressAt < 500) return;
@@ -126,7 +132,8 @@ export default {
 .comment-images { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 16rpx; }
 .manga-comment .comment-image { width: 168rpx; height: 168rpx; overflow: hidden; border-radius: 12rpx; background: var(--manga-bg); }
 .comment-image ::v-deep img { width: 100%; height: 100%; display: block; }
-.comment-source { display: flex; align-items: center; gap: 8rpx; margin-top: 14rpx; padding: 10rpx 16rpx; border-radius: 12rpx; background: var(--manga-bg); color: var(--manga-muted); font-size: 22rpx; }
+.manga-comment .comment-source { display: flex; align-items: center; gap: 8rpx; width: 100%; margin-top: 14rpx; padding: 10rpx 16rpx; border-radius: 12rpx; background: var(--manga-bg); color: var(--manga-muted); font-size: 22rpx; text-align: left; }
+.manga-comment .comment-source:active { color: var(--manga-accent); }
 .comment-actions { display: flex; align-items: center; gap: 28rpx; margin-top: 14rpx; }
 .manga-comment .action-button { display: inline-flex; align-items: center; gap: 8rpx; min-height: 60rpx; padding: 0 4rpx; color: var(--manga-muted); font-size: 23rpx; }
 .action-button .manga-icon { font-size: 26rpx; }

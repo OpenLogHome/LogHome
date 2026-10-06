@@ -96,6 +96,7 @@ function toCommentViewModel(item, praiseTypeMap) {
 	return {
 		commentId: item.essay_comment_id,
 		userId: item.user_id,
+		novelId: item.novel_id,
 		userName: item.name,
 		avatarUrl: item.avatar_url,
 		avatarFrame: item.avatar_frame || null,
@@ -164,6 +165,16 @@ export async function fetchMangaCommentAmount(baseUrl, novelId, articleId) {	con
 	const response = await axios.get(`${baseUrl}/community/novel_commonts_amount`, { params });
 	const row = (response.data || [])[0] || {};
 	return Number(row['COUNT(*)']) || 0;
+}
+
+// 目录角标用：一次取回各话评论数，返回 { [article_id]: amount }
+export async function fetchMangaArticleCommentAmounts(baseUrl, novelId) {
+	const response = await axios.get(`${baseUrl}/community/novel_articles_comment_amounts`, {
+		params: { id: novelId },
+	});
+	const amounts = {};
+	for (const row of response.data || []) amounts[row.article_id] = Number(row.amount) || 0;
+	return amounts;
 }
 
 export async function publishMangaComment(baseUrl, options) {

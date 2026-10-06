@@ -33,7 +33,7 @@
           <view class="section-title"><text>目录 <text class="catalog-count">{{ articles.length }} 话</text></text><button v-manga-a11y type="button" class="text-action sort-action" @click="catalogReversed = !catalogReversed"><manga-icon name="sort" />{{ catalogReversed ? '倒序' : '正序' }}</button></view>
           <view v-if="!articles.length" class="catalog-empty">还没有{{ isPreview ? '' : '已发布的' }}话数</view>
           <button v-manga-a11y class="chapter-row" type="button" v-for="item in visibleArticles" :key="item.article_id" @click="openChapter(item)">
-            <text class="chapter-index">{{ item.article_chapter }}</text><view class="chapter-main"><text class="chapter-title">{{ item.title }}</text><text class="chapter-date">{{ formatDate(item.update_time) }} · {{ item.article_type === 'mangaPage' ? '页漫' : '条漫' }}</text></view><text v-if="Number(item.is_draft) === 1" class="chapter-badge">草稿</text><text v-else-if="isCurrentChapter(item)" class="chapter-badge">读至</text><manga-icon name="next" />
+            <text class="chapter-index">{{ item.article_chapter }}</text><view class="chapter-main"><text class="chapter-title">{{ item.title }}</text><view class="chapter-meta"><text class="chapter-date">{{ formatDate(item.update_time) }} · {{ item.article_type === 'mangaPage' ? '页漫' : '条漫' }}</text><view v-if="articleCommentAmounts[item.article_id]" class="chapter-comments"><manga-icon name="comment" /><text>{{ articleCommentAmounts[item.article_id] }}</text></view></view></view><text v-if="Number(item.is_draft) === 1" class="chapter-badge">草稿</text><text v-else-if="isCurrentChapter(item)" class="chapter-badge">读至</text><manga-icon name="next" />
           </button>
           <button v-manga-a11y v-if="articles.length > 5" class="catalog-more" type="button" :aria-expanded="catalogExpanded ? 'true' : 'false'" @click="catalogExpanded = !catalogExpanded">{{ catalogExpanded ? '收起目录' : '查看全部 ' + articles.length + ' 话' }}</button>
         </view>
@@ -78,7 +78,7 @@ import TaskRewardModal from '@/components/TaskRewardModal.vue';
 import TippingBar from '@/components/tipping/tippingBar.vue';
 import MangaCommentItem from '@/components/manga-comment-item.vue';
 import MangaCommentComposer from '@/components/manga-comment-composer.vue';
-import { deleteMangaComment, fetchMangaCommentAmount, fetchMangaCommentById, fetchMangaComments, getMangaCommentErrorMessage, praiseMangaComment, publishMangaComment, replyMangaComment } from '@/common/manga-comment-api.js';
+import { deleteMangaComment, fetchMangaArticleCommentAmounts, fetchMangaCommentAmount, fetchMangaCommentById, fetchMangaComments, getMangaCommentErrorMessage, praiseMangaComment, publishMangaComment, replyMangaComment } from '@/common/manga-comment-api.js';
 
 const COMMENT_PAGE_SIZE = 10;
 
@@ -104,6 +104,7 @@ export default {
 			commentLoading: false,
 			commentSubmitting: false,
 			replyTarget: null,
+			articleCommentAmounts: {},
 			highlightCommentId: '',
 			commentAnchor: '',
 		};
@@ -183,9 +184,18 @@ export default {
 				this.loadProgress(),
 				this.loadComments(),
 				this.loadCommentAmount(),
+				this.loadArticleCommentAmounts(),
 			]);
 			this.loading = false;
 			if (!this.isPreview) this.focusHighlightedComment();
+		},
+		async loadArticleCommentAmounts() {
+			if (this.isPreview) return;
+			try {
+				this.articleCommentAmounts = await fetchMangaArticleCommentAmounts(this.$baseUrl, this.uid);
+			} catch (e) {
+				console.error('loadArticleCommentAmounts failed', e);
+			}
 		},
 		async getBookInfo() {
 			try {
@@ -365,7 +375,6 @@ export default {
 						await deleteMangaComment(this.$baseUrl, reply.commentId);
 						const root = this.comments.find((item) => item.commentId === rootCommentId);
 						if (root) root.replies = root.replies.filter((item) => item.commentId !== reply.commentId);
-						this.commentAmount = Math.max(0, this.commentAmount - 1);
 						uni.showToast({ title: '已删除', icon: 'none' });
 					} catch (e) {
 						uni.showToast({ title: getMangaCommentErrorMessage(e, '删除失败，请稍后重试'), icon: 'none' });
@@ -599,6 +608,8 @@ export default {
 .chapter-main { flex: 1; min-width: 0; }
 .chapter-title { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 27rpx; font-weight: 600; }
 .chapter-date { display: block; margin-top: 4rpx; color: var(--manga-muted); font-size: 21rpx; }
+.chapter-meta { display: flex; align-items: center; gap: 16rpx; margin-top: 4rpx; }
+.chapter-comments { display: inline-flex; align-items: center; gap: 6rpx; color: var(--manga-muted); font-size: 21rpx; }
 .catalog-more { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 88rpx; padding: 0; color: var(--manga-accent); font-size: 25rpx; font-weight: 600; text-align: center; }
 .catalog-empty { padding: 38rpx 0; color: var(--manga-muted); text-align: center; font-size: 25rpx; }
 .comment-empty { padding: 38rpx 0; color: var(--manga-muted); text-align: center; font-size: 25rpx; }
