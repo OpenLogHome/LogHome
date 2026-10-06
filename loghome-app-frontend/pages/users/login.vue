@@ -35,9 +35,6 @@
 				<!-- <div class="loginBtn login2 button" @click="gotoLoginMobile">
 					使用手机号登录（旧）
 				</div> -->
-				<div class="loginBtn login2 button" @click="gotoLoginAccount">
-					{{ $t('auth.login.withAccount') }}
-				</div>
 				<div class="checkBox" :class="{ shake: noActivated }">
 					<label style="display: flex;flex-direction: row;font-size: 22rpx; margin-top: 50rpx;
 					width:100%; justify-content: center;">
@@ -175,23 +172,6 @@
 				if(this.checked){
 					uni.navigateTo({
 						url:"./login_page_email"
-					})
-				} else {
-					uni.showToast({
-						title: this.$t('auth.login.agreeRequired'),
-						icon: 'none',
-						duration: 2000
-					});
-					this.noActivated = true;
-					setTimeout(()=>{
-						this.noActivated = false;
-					},820)
-				}
-			},
-			gotoLoginAccount(){
-				if(this.checked){
-					uni.navigateTo({
-						url:"./login_page"
 					})
 				} else {
 					uni.showToast({

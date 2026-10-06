@@ -539,6 +539,7 @@
   color: var(--text-muted);
 } 
 
+
 .log-power-wordmark {
   display: inline-flex;
   align-items: center;
@@ -550,27 +551,28 @@
   line-height: 1;
   letter-spacing: normal;
   position: relative;
-  overflow: hidden;
+  /* Let the rising arrow extend above the text line without clipping. */
+  overflow: visible;
 }
 .log-power-wordmark img {
   display: block;
   width: 100%;
-  /* Center the visible strokes, excluding the PNG's transparent padding.
-       Canvas: 2050 × 767; visible vertical center: 361.5px. */
-    height: 142.2%;
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-47.13%);
+  /* Align the letter bodies with adjacent text; the arrow rises above them.
+     Canvas: 2051 × 767; letter-body vertical center: 364px. */
+  height: 142.1%;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-47.46%);
   object-fit: contain;
 }
 .log-power-wordmark.is-fallback {
-    width: auto;
-    height: auto;
-    position: static;
-    overflow: visible;
-    vertical-align: baseline;
-    line-height: inherit;
+  width: auto;
+  height: auto;
+  position: static;
+  overflow: visible;
+  vertical-align: baseline;
+  line-height: inherit;
 }
 .fixture-rank{display:flex;align-items:center;justify-content:space-between;padding:18px 12px;color:#dfdfdf;background:#353535;font-size:15px;border-radius:8px}.fixture-rank a{color:inherit;text-decoration:none}.fixture-rank .score{font-size:20px}</style><div id="app"><section class="screen" v-for="dark in [false,true]"><div class="fixture-rank"><a href="#">实时<log-power-wordmark></log-power-wordmark>榜第 <b>29</b> 位</a><a href="#" class="score">39,566</a></div><rank-page :class="{'dark-mode':dark}"></rank-page></section></div><script src="vue.js"></script><script>Vue.directive('dark',{});Vue.prototype.$backupResources={bookCover:'cover.svg'};Vue.component('LogPowerWordmark',{template:"\n  <span class=\"log-power-wordmark\" role=\"img\" aria-label=\"原木力\">\n    <img v-if=\"!failed\" src=\"asset.png\" alt=\"\" aria-hidden=\"true\"\n      @error=\"failed = true\" />\n    <span v-else>原木力</span>\n  </span>\n",data(){return {failed:false}}});Vue.component('rank-page',{template:"\n\t<div class=\"rank-container\" v-dark>\n\t\t<div class=\"hero-section\">\n\t\t\t<div class=\"hero-panel\">\n\t\t\t\t<!-- <img class=\"hero-background\" src=\"../../static/bg.png\" mode=\"aspectFill\"> -->\n\t\t\t\t<div class=\"hero-mask\"></div>\n\t\t\t\t<div class=\"hero-content\">\n\t\t\t\t\t<div class=\"hero-pill\">实时热度榜</div>\n\t\t\t\t\t<div class=\"hero-title\"><LogPowerWordmark />爆棚榜</div>\n\t\t\t\t\t<div class=\"hero-subtitle\">按<LogPowerWordmark />实时排序，越靠前说明作品越热。</div>\n\n\t\t\t\t\t<div class=\"hero-meta\">\n\t\t\t\t\t\t<div class=\"meta-chip\">\n\t\t\t\t\t\t\t<span class=\"meta-label\">更新时间</span>\n\t\t\t\t\t\t\t<span class=\"meta-value\">{{ currentTime }}</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"meta-chip\">\n\t\t\t\t\t\t\t<span class=\"meta-label\">收录</span>\n\t\t\t\t\t\t\t<span class=\"meta-value\">{{ books.length }} 本</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class=\"summary-row\" v-if=\"books.length\">\n\t\t\t\t\t\t<div class=\"summary-card\" v-for=\"item in summaryCards\" :key=\"item.label\">\n\t\t\t\t\t\t\t<div class=\"summary-label\"><template v-if=\"item.label === '榜首原木力'\">榜首<LogPowerWordmark /></template><template v-else>{{ item.label }}</template></div>\n\t\t\t\t\t\t\t<span class=\"summary-value\">{{ item.value }}</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"page-body\">\n\t\t\t<div class=\"feature-card\" v-if=\"champion\" @click=\"goBook(champion.novel_id)\">\n\t\t\t\t<div class=\"feature-head\">\n\t\t\t\t\t<div class=\"feature-tag\">当前冠军</div>\n\t\t\t\t</div>\n\n\t\t\t\t<div class=\"feature-main\">\n\t\t\t\t\t<div class=\"feature-cover-box\">\n\t\t\t\t\t\t<img :src=\"champion.picUrl\" class=\"feature-cover\"\n\t\t\t\t\t\t\t:onerror=\"`onerror=null;src='` + $backupResources.bookCover + `'`\" />\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class=\"feature-info\">\n\t\t\t\t\t\t<div class=\"feature-title\">{{ champion.name }}</div>\n\t\t\t\t\t\t<div class=\"feature-author\">\n\t\t\t\t\t\t\t<div class=\"rank-avatar rank-avatar-first\">\n\t\t\t\t\t\t\t\t<img class=\"rank-avatar-medal\" src=\"cover.svg\" mode=\"aspectFit\">\n\t\t\t\t\t\t\t\t<img :src=\"champion.avatar_url\" class=\"rank-avatar-photo rank-avatar-photo-first\"\n\t\t\t\t\t\t\t\t\tonerror=\"onerror=null;src='../static/user/defaultAvatar.jpg'\" />\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>{{ champion.user_name || '匿名作者' }}</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"feature-desc\">{{ champion.content || '这个作品还没有简介。' }}</div>\n\n\t\t\t\t\t\t<div class=\"feature-footer\">\n\t\t\t\t\t\t\t<div class=\"feature-score\">\n\t\t\t\t\t\t\t\t<LogPowerWordmark class=\"feature-score-label\" />\n\t\t\t\t\t\t\t\t<span class=\"feature-score-value\">{{ formatScore(champion.ranking) }}</span>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"feature-action\">点击查看详情</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\n\t\t\t<div class=\"section-card\" v-if=\"runnerUps.length\">\n\t\t\t\t<div class=\"section-head\">\n\t\t\t\t\t<span class=\"section-title\">头部梯队</span>\n\t\t\t\t\t<span class=\"section-tip\">Top 2 - 3</span>\n\t\t\t\t</div>\n\n\t\t\t\t<div class=\"podium-list\">\n\t\t\t\t\t<div class=\"podium-card\" v-for=\"(item, index) in runnerUps\" :key=\"item.novel_id\"\n\t\t\t\t\t\t:class=\"['podium-' + (index + 2)]\" @click=\"goBook(item.novel_id)\">\n\t\t\t\t\t\t<div class=\"podium-top\">\n\t\t\t\t\t\t\t<div class=\"rank-avatar rank-avatar-podium\">\n\t\t\t\t\t\t\t\t<img class=\"rank-avatar-medal\"\n\t\t\t\t\t\t\t\t\t:src=\"index === 0 ? 'cover.svg' : 'cover.svg'\"\n\t\t\t\t\t\t\t\t\tmode=\"aspectFit\">\n\t\t\t\t\t\t\t\t<img :src=\"item.avatar_url\" class=\"rank-avatar-photo rank-avatar-photo-podium\"\n\t\t\t\t\t\t\t\t\tonerror=\"onerror=null;src='../static/user/defaultAvatar.jpg'\" />\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"podium-rank\">TOP {{ index + 2 }}</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class=\"podium-name\">{{ item.name }}</div>\n\t\t\t\t\t\t<div class=\"podium-author\">{{ item.user_name || '匿名作者' }}</div>\n\t\t\t\t\t\t<div class=\"podium-score\">{{ formatScore(item.ranking) }}</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\n\t\t\t<div class=\"section-card\" v-if=\"remainingBooks.length\">\n\t\t\t\t<div class=\"section-head\">\n\t\t\t\t\t<span class=\"section-title\">其余上榜作品</span>\n\t\t\t\t\t<span class=\"section-tip\">点击卡片进入详情页</span>\n\t\t\t\t</div>\n\n\t\t\t\t<div class=\"rank-list\">\n\t\t\t\t\t<div class=\"rank-item\" v-for=\"(item, index) in remainingBooks\" :key=\"item.novel_id\"\n\t\t\t\t\t\t@click=\"goBook(item.novel_id)\">\n\t\t\t\t\t\t<div class=\"rank-index\">{{ index + 4 }}</div>\n\n\t\t\t\t\t\t<div class=\"book-cover-box\">\n\t\t\t\t\t\t\t<img :src=\"item.picUrl\" class=\"book-cover\"\n\t\t\t\t\t\t\t\t:onerror=\"`onerror=null;src='` + $backupResources.bookCover + `'`\" />\n\t\t\t\t\t\t</div>\n\n\t\t\t\t\t\t<div class=\"book-info\">\n\t\t\t\t\t\t\t<div class=\"book-name\">{{ item.name }}</div>\n\t\t\t\t\t\t\t<div class=\"book-author\">\n\t\t\t\t\t\t\t\t<img :src=\"item.avatar_url\" class=\"author-avatar\"\n\t\t\t\t\t\t\t\t\tonerror=\"onerror=null;src='../static/user/defaultAvatar.jpg'\" />\n\t\t\t\t\t\t\t\t<span>{{ item.user_name || '匿名作者' }}</span>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<div class=\"book-desc\">{{ item.content || '这个作品还没有简介。' }}</div>\n\t\t\t\t\t\t</div>\n\n\t\t\t\t\t\t<div class=\"score-pill\">\n\t\t\t\t\t\t\t<LogPowerWordmark class=\"score-pill-label\" />\n\t\t\t\t\t\t\t<span class=\"score-pill-value\">{{ formatScore(item.ranking) }}</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\n\t\t\t<div class=\"loading-state\" v-if=\"showLoadingState\">\n\t\t\t\t<img class=\"state-icon\" src=\"../../static/loading.gif\" mode=\"aspectFit\">\n\t\t\t\t<span class=\"state-title\">正在生成榜单</span>\n\t\t\t\t<div class=\"state-desc\">正在通过<LogPowerWordmark />探测器搜索...</div>\n\t\t\t</div>\n\n\t\t\t<div class=\"empty-state\" v-else-if=\"showEmptyState\">\n\t\t\t\t<span class=\"empty-icon\">🌲</span>\n\t\t\t\t<span class=\"state-title\">榜单暂时还没有数据</span>\n\t\t\t\t<span class=\"state-desc\">下拉刷新后再试一次</span>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n",data(){return {books:[{"novel_id":1,"name":"示例作品 1","ranking":39566,"picUrl":"cover.svg","avatar_url":"cover.svg","user_name":"示例作者","content":"用于检查艺术字大小与榜单排版。"},{"novel_id":2,"name":"示例作品 2","ranking":38366,"picUrl":"cover.svg","avatar_url":"cover.svg","user_name":"示例作者","content":"用于检查艺术字大小与榜单排版。"},{"novel_id":3,"name":"示例作品 3","ranking":37166,"picUrl":"cover.svg","avatar_url":"cover.svg","user_name":"示例作者","content":"用于检查艺术字大小与榜单排版。"},{"novel_id":4,"name":"示例作品 4","ranking":35966,"picUrl":"cover.svg","avatar_url":"cover.svg","user_name":"示例作者","content":"用于检查艺术字大小与榜单排版。"},{"novel_id":5,"name":"示例作品 5","ranking":34766,"picUrl":"cover.svg","avatar_url":"cover.svg","user_name":"示例作者","content":"用于检查艺术字大小与榜单排版。"}],currentTime:'2026-10-06',loading:false,hasLoaded:true}},computed:{champion:function() {
 				return this.books[0] || null;

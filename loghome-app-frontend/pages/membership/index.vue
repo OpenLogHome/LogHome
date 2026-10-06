@@ -572,22 +572,24 @@ export default {
 
 <style lang="scss">
 page {
-	background: #251a14;
+	background: #16281c;
 }
 
+/* 原木通行证（standard）：绿色系 */
 .pass-page {
-	--page-bg: #251a14;
-	--page-bg-deep: #17100d;
-	--text-primary: #fff3df;
-	--text-secondary: #cbb8a0;
-	--text-muted: #94816e;
-	--accent: #f1c67f;
-	--accent-strong: #d99643;
-	--accent-soft: rgba(241, 198, 127, 0.14);
+	--page-bg: #16281c;
+	--page-bg-deep: #0d1a13;
+	--text-primary: #e6f5ea;
+	--text-secondary: #b7cebd;
+	--text-muted: #7e9487;
+	--accent: #8fd6a2;
+	--accent-strong: #4fa96b;
+	--accent-soft: rgba(126, 198, 143, 0.14);
+	--accent-bright: #c4ead0;
 	--panel: rgba(255, 255, 255, 0.065);
 	--panel-strong: rgba(255, 255, 255, 0.1);
-	--border: rgba(255, 226, 184, 0.14);
-	--dock: rgba(29, 20, 16, 0.93);
+	--border: rgba(190, 225, 204, 0.14);
+	--dock: rgba(13, 26, 19, 0.93);
 
 	position: relative;
 	box-sizing: border-box;
@@ -596,19 +598,21 @@ page {
 	overflow: hidden;
 	color: var(--text-primary);
 	background:
-		radial-gradient(circle at 82% 7%, rgba(181, 112, 55, 0.2), transparent 28%),
+		radial-gradient(circle at 82% 7%, rgba(83, 158, 102, 0.2), transparent 28%),
 		linear-gradient(155deg, var(--page-bg), var(--page-bg-deep) 72%);
 	transition: color 0.35s ease, background 0.35s ease;
 
+	/* 超级原木通行证：深蓝色系 */
 	&--super {
 		--page-bg: #14243a;
 		--page-bg-deep: #09121f;
-		--text-primary: #fff0ca;
+		--text-primary: #dcebf8;
 		--text-secondary: #b9c5d5;
 		--text-muted: #7e8da2;
-		--accent: #f6cc76;
-		--accent-strong: #e5a83e;
-		--accent-soft: rgba(246, 204, 118, 0.13);
+		--accent: #8fc2f0;
+		--accent-strong: #4f92cf;
+		--accent-soft: rgba(126, 178, 226, 0.14);
+		--accent-bright: #a8cdf0;
 		--panel: rgba(119, 156, 199, 0.09);
 		--panel-strong: rgba(119, 156, 199, 0.14);
 		--border: rgba(187, 211, 239, 0.14);
@@ -631,7 +635,7 @@ page {
 		top: 430rpx;
 		width: 430rpx;
 		height: 430rpx;
-		background: rgba(255, 205, 127, 0.05);
+		background: rgba(126, 198, 143, 0.05);
 	}
 
 	&--two {
@@ -641,6 +645,10 @@ page {
 		height: 500rpx;
 		background: rgba(105, 158, 216, 0.05);
 	}
+}
+
+.pass-page--super .page-orb--one {
+	background: rgba(90, 150, 210, 0.06);
 }
 
 .top-bar {
@@ -751,11 +759,11 @@ page {
 	box-sizing: border-box;
 	height: 100%;
 	padding: 26rpx 28rpx 0rpx 28rpx;
-	border: 1rpx solid rgba(255, 227, 184, 0.24);
+	border: 1rpx solid rgba(199, 235, 212, 0.24);
 	border-radius: 30rpx;
 	overflow: hidden;
-	color: #ffefd8;
-	background: linear-gradient(138deg, #875733 0%, #5c3827 52%, #34231d 100%);
+	color: #e6f7ec;
+	background: linear-gradient(138deg, #3d6b4a 0%, #2a4d38 52%, #1a2f24 100%);
 	box-shadow: 0 24rpx 50rpx rgba(0, 0, 0, 0.22);
 	transform: scale(0.94);
 	opacity: 0.76;
@@ -767,8 +775,8 @@ page {
 	}
 
 	&--super {
-		border-color: rgba(249, 211, 130, 0.3);
-		color: #fff0c5;
+		border-color: rgba(158, 199, 240, 0.32);
+		color: #dcebf8;
 		background: linear-gradient(138deg, #294a70 0%, #172f4b 52%, #0c1b2d 100%);
 	}
 
@@ -779,7 +787,7 @@ page {
 		width: 360rpx;
 		height: 360rpx;
 		border-radius: 50%;
-		background: radial-gradient(circle, rgba(255, 229, 172, 0.2), transparent 66%);
+		background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 66%);
 	}
 
 	&__rings {
@@ -788,9 +796,9 @@ page {
 		bottom: -150rpx;
 		width: 330rpx;
 		height: 330rpx;
-		border: 1rpx solid rgba(255, 239, 208, 0.12);
+		border: 1rpx solid rgba(255, 255, 255, 0.12);
 		border-radius: 50%;
-		box-shadow: 0 0 0 28rpx rgba(255, 239, 208, 0.025), 0 0 0 62rpx rgba(255, 239, 208, 0.025);
+		box-shadow: 0 0 0 28rpx rgba(255, 255, 255, 0.025), 0 0 0 62rpx rgba(255, 255, 255, 0.025);
 	}
 
 	&__top,
@@ -843,7 +851,7 @@ page {
 		flex-shrink: 0;
 		margin-left: 12rpx;
 		padding: 7rpx 13rpx;
-		border: 1rpx solid rgba(255, 235, 196, 0.28);
+		border: 1rpx solid rgba(255, 255, 255, 0.2);
 		border-radius: 999rpx;
 		font-size: 18rpx;
 		background: rgba(255, 255, 255, 0.07);
@@ -1122,7 +1130,7 @@ page {
 		font-weight: 800;
 		letter-spacing: 1rpx;
 		color: var(--page-bg-deep);
-		background: linear-gradient(135deg, #ffe3a4, var(--accent-strong));
+		background: linear-gradient(135deg, var(--accent-bright), var(--accent-strong));
 	}
 
 	&__copy {
@@ -1433,7 +1441,7 @@ page {
 		font-weight: 700;
 		letter-spacing: 1rpx;
 		color: var(--page-bg-deep);
-		background: linear-gradient(100deg, #f7d99e, var(--accent-strong));
+		background: linear-gradient(100deg, var(--accent-bright), var(--accent-strong));
 		box-shadow: 0 12rpx 26rpx rgba(0, 0, 0, 0.18);
 
 		&--disabled {

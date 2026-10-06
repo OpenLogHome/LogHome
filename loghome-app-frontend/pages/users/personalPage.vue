@@ -3,12 +3,12 @@
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :textcolor="isDarkMode ? '#e5e5e5' : '#000'" :showLeft="topNum == 0" :showTitle="false" navTitle='标题'></zetank-backBar>
 		<!-- 用户背景封面（只保留内容面板上方的可见区域，避免面板内容较短时封面从下方露出） -->
-		<view class="info-cover-wrap" @tap="change_top_pic">
+		<view class="info-cover-wrap" :style="coverWrapStyle" @tap="change_top_pic">
 			<log-image class="info-cover" :src="user.top_pic_url"
 			onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
 		</view>
 		
-		<springBack top="calc(300rpx + var(--loghome-safe-top, 0px))">
+		<springBack top="calc(300rpx + var(--loghome-safe-top, 0px))" @cover-move="onCoverMove">
 			<!-- 右侧悬浮按钮 -->
 			<view class="rightBtnGroup">
 				<followBtn :targetId="Number(uid)" v-show="uid != myUserInfo.user_id"/>
@@ -35,8 +35,19 @@
 			<!-- 用户名 -->
 			<view class="profile-name-row">
 				<text :style="'font-size: 40rpx;color: ' + (isDarkMode ? '#e5e5e5' : '#111111') + ';font-weight: bold;margin-right: 10rpx;'">{{user.name}}</text>
+				<view
+					v-if="user.is_admin"
+					class="admin-badge-tap"
+					@tap="toggleAdminTip"
+					@click="toggleAdminTip"
+				>
+					<img class="admin-badge-icon" src="../../static/icons/admin.gif" alt="" />
+					<view v-if="showAdminTip" class="admin-badge-tip" @tap.stop @click.stop>
+						<text>{{ $t('me.profile.admin') }}</text>
+					</view>
+				</view>
 			</view>
-			
+
 			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx; display: flex;align-items: center;">
 				<span class="user_id">ID:{{uid}}</span>
 				<view
@@ -50,8 +61,6 @@
 				<view v-if="user.display_title" class="profile-title-chip">
 					{{user.display_title}}
 				</view>
-				<span class="admin_title" v-show="user.is_admin">
-					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>{{ $t('me.profile.admin') }}</span>
 				<membership-badge :tier="user.membership_type" size="md" :show-label="true" style="margin-left: 15rpx;"/>
 			</view>
 	
@@ -187,6 +196,10 @@
 				uid: -1,
 				membertype: '',
 				showedit: true, //信息编辑按钮
+				showAdminTip: false, //管理员徽标 tooltip
+				adminTipTimer: null,
+				coverDy: 0, // springBack 下拉位移，背景图跟随拉伸
+				coverDyAnimated: false, // 回弹时高度是否用过渡动画
 				// 是否固定导航
 				isFixed: false,
 				// 距离顶部达到导航距离
@@ -255,7 +268,45 @@
 				this.loadMorePosts();
 			}
 		},
+		computed: {
+			coverWrapStyle() {
+				// 拖动中高度跟手（无过渡）；松手后用与面板一致的 0.2s ease-out 回弹，
+				// 避免封面瞬间弹回而面板还在回滑，中途露出白缝
+				return {
+					height: 'calc(300rpx + var(--loghome-safe-top, 0px) + ' + this.coverDy + 'px)',
+					transition: this.coverDyAnimated ? 'height 0.2s ease-out' : 'none',
+				};
+			},
+		},
 		methods: {
+			// springBack 下拉时背景图跟随拉伸：露出被遮住的图片下半段，与面板底边无缝衔接
+			onCoverMove(dy) {
+				const value = Number(dy) || 0;
+				if (value > 0) {
+					// 拖动中：跟手，无过渡
+					this.coverDyAnimated = false;
+					this.coverDy = value;
+				} else {
+					// 松手回弹：高度用过渡动画归零，与面板回滑同步
+					this.coverDyAnimated = true;
+					this.coverDy = 0;
+				}
+			},
+			// 管理员徽标 tooltip：点击显示"社区管理员"，3 秒后自动消失
+			toggleAdminTip() {
+				if (this.showAdminTip) {
+					this.showAdminTip = false;
+					clearTimeout(this.adminTipTimer);
+					this.adminTipTimer = null;
+					return;
+				}
+				this.showAdminTip = true;
+				clearTimeout(this.adminTipTimer);
+				this.adminTipTimer = setTimeout(() => {
+					this.showAdminTip = false;
+					this.adminTipTimer = null;
+				}, 3000);
+			},
 				/// 顶部导航选项点击
 				fnBarClick(current) {
 					// console.log(current);
@@ -933,26 +984,58 @@
 			background-color: #505050;
 		}
 	}
-	.admin_title{
-		font-size:20rpx;
-		padding:5rpx;
-		line-height: 40rpx; 
-		margin-left:10rpx;
-		border-radius: 10rpx;
-		background: #55aaff;
-		color:white;
-		margin-left: 25rpx;
-		padding: 5rpx 7.5rpx 5rpx 30rpx;
-		text-align: right;
-		position:relative;
-		img{
-			position:absolute;
-			left:-25rpx;
-			top:-7.5rpx;
+	.admin-badge-tap {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		margin-right: 4rpx;
+
+		.admin-badge-icon {
+			width: 48rpx;
+			height: 48rpx;
 		}
-		
-		.dark-mode & {
-			background: #3a7ab8;
+
+		/* 点击徽标弹出的 tooltip 气泡 */
+		.admin-badge-tip {
+			position: absolute;
+			left: 50%;
+			bottom: calc(100% + 14rpx);
+			transform: translateX(-50%);
+			background: rgba(30, 34, 40, 0.92);
+			color: #fff;
+			font-size: 22rpx;
+			line-height: 32rpx;
+			padding: 8rpx 20rpx;
+			border-radius: 10rpx;
+			white-space: nowrap;
+			z-index: 50;
+			box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.2);
+			animation: admin-tip-in 0.18s ease-out;
+
+			/* 气泡小三角 */
+			&::after {
+				content: '';
+				position: absolute;
+				left: 50%;
+				bottom: -10rpx;
+				transform: translateX(-50%);
+				border: 10rpx solid transparent;
+				border-top-color: rgba(30, 34, 40, 0.92);
+				border-bottom: none;
+			}
+		}
+	}
+
+	@keyframes admin-tip-in {
+		0% {
+			opacity: 0;
+			transform: translateX(-50%) translateY(8rpx);
+		}
+
+		100% {
+			opacity: 1;
+			transform: translateX(-50%) translateY(0);
 		}
 	}
 	

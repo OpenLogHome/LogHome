@@ -4,11 +4,12 @@
 			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
 		</div>
-		<transition name="dispatch-fade">
-			<view class="dispatch-loading" v-if="showDispatchLoading">
+		<view class="dispatch-loading" v-if="showDispatchLoading">
+			<view class="dispatch-loading-inner">
 				<img class="dispatch-loading-gif" src="../../static/loading.gif" alt="" />
+				<text class="dispatch-loading-text">加载中</text>
 			</view>
-		</transition>
+		</view>
 		<nothing :msg="'这本书还没有发布哦'" v-show="!isPageLoading && (bookInfo.is_personal == undefined || bookInfo.is_personal == 1)"></nothing>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :bgColor="currentTopColor" :textcolor="currentTopTextColor" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
@@ -1570,6 +1571,9 @@ export default {
 			}
 			return;
 		} else {
+			// 小说：退回原骨架屏加载设计——类型确定后立即结束调度遮罩，由骨架屏接管
+			this.isDispatching = false;
+			this.showDispatchLoading = false;
 			try {
 				this.bookInfo = bookInfo;
 				this.applyPageSystemUiStyle(undefined, undefined, true);
@@ -1582,7 +1586,8 @@ export default {
 				this.addReaderHistory(bookInfo);
 				await this.loadCloudReadingProgress();
 			} finally {
-				this.finishDispatchLoading();
+				// 数据就绪，骨架屏淡出、呈现内容
+				this.isPageLoading = false;
 			}
 		}
 
@@ -1844,20 +1849,27 @@ export default {
 	}
 }
 
-.dispatch-fade-enter-active,
-.dispatch-fade-leave-active {
-	transition: opacity 0.4s ease;
-}
-
-.dispatch-fade-enter,
-.dispatch-fade-leave-to {
-	opacity: 0;
-}
-
 .dispatch-loading-gif {
 	width: 320rpx;
 	height: 320rpx;
 	object-fit: contain;
+}
+
+.dispatch-loading-inner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.dispatch-loading-text {
+	margin-top: 20rpx;
+	font-size: 26rpx;
+	letter-spacing: 2rpx;
+	color: #8a8f98;
+
+	.dark-mode & {
+		color: #6b7280;
+	}
 }
 
 .l-body.is-loading > :not(.book-info-skeleton) {
@@ -1980,7 +1992,7 @@ export default {
 	padding: 54rpx 32rpx calc(80rpx + var(--loghome-safe-bottom, 0px));
 	box-sizing: border-box;
 	border-radius: 36rpx 36rpx 0 0;
-	background-color: rgba(255, 248, 234, 0.86);
+	background-color: rgba(255, 255, 255, 0.86);
 	border-top: 1rpx solid rgba(255, 255, 255, 0.5);
 	-webkit-backdrop-filter: blur(30rpx) saturate(1.12);
 	backdrop-filter: blur(30rpx) saturate(1.12);
@@ -2106,7 +2118,7 @@ export default {
 	z-index: 4;
 	align-items: center;
 	white-space: nowrap;
-	background-color: rgb(255, 248, 234);
+	background-color: #FFFFFF;
 	justify-content: flex-start;
 	box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
 
@@ -3087,7 +3099,7 @@ export default {
 
 page,
 uni-page {
-	background-color: rgb(255, 248, 234);
+	background-color: #FFFFFF;
 	color: rgb(113, 52, 24);
 	font-size: 28rpx;
 	padding-top: 0;
@@ -3201,7 +3213,7 @@ img {
 }
 
 .book-content-sheet {
-	background: rgba(255, 252, 242, 0.88);
+	background: rgba(255, 255, 255, 0.88);
 	border-top: 1rpx solid rgba(255, 255, 255, 0.62);
 	border-radius: 36rpx 36rpx 0 0;
 	overflow: hidden;
@@ -3281,7 +3293,7 @@ view.tippingBar {
 	margin-top: 32rpx;
 	position: relative;
 	overflow: hidden;
-	background: linear-gradient(180deg, rgba(255, 245, 235, 0.6) 0%, rgba(255, 248, 240, 0.3) 100%);
+	background: linear-gradient(180deg, rgba(245, 246, 247, 0.6) 0%, rgba(250, 250, 250, 0.3) 100%);
 	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
 
 	.dark-mode & {

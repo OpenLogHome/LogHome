@@ -654,8 +654,24 @@
 	background: #fff8e9; box-shadow: var(--me-shadow);
 	.dark-mode & { background: #342f24; }
 	&__main { position: relative; padding: 26rpx 22rpx; color: #fff0cb; background: linear-gradient(120deg, #5f6f4b, #344936); }
-	&--standard &__main { background: linear-gradient(120deg, #586d41, #314932); }
-	&--super &__main { color: #ffe3a0; background: linear-gradient(120deg, #23603d, #12452d 65%, #1c5435); }
+	/* 原木通行证：绿色系 */
+	&--standard &__main { background: linear-gradient(120deg, #3d7a4f, #24523a); }
+	/* 超级原木通行证：深蓝色系 */
+	&--super &__main { color: #d9e8f7; background: linear-gradient(120deg, #2a4a70, #14304e 65%, #1e4263); }
+	&--standard &__status { border-color: rgba(214, 240, 222, .6); }
+	&--super &__status { border-color: rgba(168, 205, 240, .6); }
+	&--standard &__action { color: #1d4a2c; background: linear-gradient(120deg, #c4ead0, #9dd8b0); }
+	&--super &__action { color: #10304e; background: linear-gradient(120deg, #a8cdf0, #7fb2e0); }
+	&--standard &__glow { background: rgba(150, 220, 172, .09); }
+	&--super &__glow { background: rgba(126, 178, 226, .09); }
+	&--standard &__lines { background: repeating-linear-gradient(115deg, transparent 0, transparent 15rpx, #bfe3ca 16rpx, transparent 17rpx); }
+	&--super &__lines { background: repeating-linear-gradient(115deg, transparent 0, transparent 15rpx, #a8cdf0 16rpx, transparent 17rpx); }
+	&--standard &__promo { color: #46694f; .dark-mode & { color: #cfe4d8; } }
+	&--super &__promo { color: #3e5d7e; .dark-mode & { color: #c5d9ec; } }
+	&--standard &__promo-icon { background: #4fa96b; }
+	&--super &__promo-icon { background: #4f92cf; }
+	&--standard { background: #f2faf4; .dark-mode & { background: #243128; } }
+	&--super { background: #f0f6fb; .dark-mode & { background: #22303f; } }
 	&__glow { position: absolute; right: -30rpx; top: -100rpx; width: 250rpx; height: 250rpx; border-radius: 50%; background: rgba(230,219,144,.07); }
 	&__lines { position: absolute; right: 0; top: 0; width: 190rpx; height: 100%; opacity: .07; background: repeating-linear-gradient(115deg, transparent 0, transparent 15rpx, #ecdda9 16rpx, transparent 17rpx); }
 	&__content, &__brand { position: relative; display: flex; align-items: center; }

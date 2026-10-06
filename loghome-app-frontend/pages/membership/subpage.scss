@@ -1,19 +1,21 @@
 page {
-	background: #17100d;
+	background: #0d1a13;
 }
 
+/* 原木通行证（standard）：绿色系 */
 .membership-subpage {
-	--page-bg: #251a14;
-	--page-bg-deep: #17100d;
-	--text-primary: #fff3df;
-	--text-secondary: #cbb8a0;
-	--text-muted: #94816e;
-	--accent: #f3cb86;
-	--accent-strong: #d99643;
-	--accent-soft: rgba(243, 203, 134, 0.13);
+	--page-bg: #16281c;
+	--page-bg-deep: #0d1a13;
+	--text-primary: #e6f5ea;
+	--text-secondary: #b7cebd;
+	--text-muted: #7e9487;
+	--accent: #8fd6a2;
+	--accent-strong: #4fa96b;
+	--accent-soft: rgba(126, 198, 143, 0.13);
+	--accent-bright: #c4ead0;
 	--panel: rgba(255, 255, 255, 0.065);
 	--panel-strong: rgba(255, 255, 255, 0.095);
-	--border: rgba(255, 226, 184, 0.14);
+	--border: rgba(190, 225, 204, 0.14);
 
 	position: relative;
 	box-sizing: border-box;
@@ -22,18 +24,20 @@ page {
 	overflow: hidden;
 	color: var(--text-primary);
 	background:
-		radial-gradient(circle at 85% 4%, rgba(181, 112, 55, 0.18), transparent 28%),
+		radial-gradient(circle at 85% 4%, rgba(83, 158, 102, 0.18), transparent 28%),
 		linear-gradient(155deg, var(--page-bg), var(--page-bg-deep) 72%);
 
+	/* 超级原木通行证：深蓝色系 */
 	&--super {
 		--page-bg: #14243a;
 		--page-bg-deep: #09121f;
-		--text-primary: #fff0ca;
+		--text-primary: #dcebf8;
 		--text-secondary: #b9c5d5;
 		--text-muted: #7e8da2;
-		--accent: #f6cc76;
-		--accent-strong: #e5a83e;
-		--accent-soft: rgba(246, 204, 118, 0.13);
+		--accent: #8fc2f0;
+		--accent-strong: #4f92cf;
+		--accent-soft: rgba(126, 178, 226, 0.13);
+		--accent-bright: #a8cdf0;
 		--panel: rgba(119, 156, 199, 0.09);
 		--panel-strong: rgba(119, 156, 199, 0.14);
 		--border: rgba(187, 211, 239, 0.14);
@@ -241,7 +245,7 @@ page {
 	font-weight: 700;
 	letter-spacing: 1rpx;
 	color: var(--page-bg-deep);
-	background: linear-gradient(100deg, #f7d99e, var(--accent-strong));
+	background: linear-gradient(100deg, var(--accent-bright), var(--accent-strong));
 	box-shadow: 0 12rpx 26rpx rgba(0, 0, 0, 0.18);
 
 	&--disabled {

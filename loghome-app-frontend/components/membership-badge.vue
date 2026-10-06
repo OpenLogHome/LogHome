@@ -60,23 +60,25 @@ export default {
 	flex-shrink: 0;
 	box-sizing: border-box;
 	max-width: 100%;
-	border: 1rpx solid rgba(145, 91, 40, .18);
+	border: 1rpx solid rgba(46, 125, 67, .22);
 	border-radius: 999rpx;
 	white-space: nowrap;
 	vertical-align: middle;
-	background: linear-gradient(135deg, rgba(255, 244, 219, .96), rgba(239, 211, 158, .82));
+	background: linear-gradient(135deg, rgba(228, 247, 233, .96), rgba(186, 224, 196, .85));
 	box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, .66);
 }
 
+/* 超级原木通行证：深蓝色系 */
 .membership-badge--super {
-	border-color: rgba(226, 176, 78, .32);
-	color: #ffe3a1;
+	border-color: rgba(126, 178, 226, .35);
+	color: #cfe4f7;
 	background: linear-gradient(135deg, #203c58, #10283e);
-	box-shadow: inset 0 1rpx 0 rgba(255, 232, 178, .2), 0 3rpx 8rpx rgba(15, 35, 53, .14);
+	box-shadow: inset 0 1rpx 0 rgba(214, 232, 247, .2), 0 3rpx 8rpx rgba(15, 35, 53, .14);
 }
 
+/* 原木通行证：绿色系 */
 .membership-badge--standard {
-	color: #89501f;
+	color: #2e6b3f;
 }
 
 .membership-badge__icon {

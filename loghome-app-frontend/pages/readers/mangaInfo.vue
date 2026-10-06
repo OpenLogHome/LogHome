@@ -2,7 +2,7 @@
   <view class="manga-page" v-dark>
     <transition name="manga-loading-fade">
       <view class="loading-cover" v-if="loadingCover">
-        <image class="loading-cover-gif" src="/static/loading.gif" mode="aspectFit" />
+        <manga-comic-loader />
       </view>
     </transition>
     <view class="nav-bar">
@@ -78,6 +78,7 @@
   </view>
 </template>
 <script>
+import MangaComicLoader from '@/components/MangaComicLoader.vue';
 import MangaA11y from '@/common/manga-a11y.js';
 import axios from 'axios';
 import MangaIcon from '@/components/manga-icon.vue';
@@ -92,12 +93,12 @@ const COMMENT_PAGE_SIZE = 10;
 
 export default {
   directives: { mangaA11y: MangaA11y },
-	components: { MangaIcon, TaskRewardModal, TippingBar, MangaCommentItem, MangaCommentComposer, ReportNovelPopup },
+	components: { MangaComicLoader, MangaIcon, TaskRewardModal, TippingBar, MangaCommentItem, MangaCommentComposer, ReportNovelPopup },
 	data() {
 		return {
 			uid: null,
 			loading: true, loadError: '', catalogExpanded: false, catalogReversed: false, catalogTarget: '', authorWorks: [], favoriteBusy: false, niceBusy: false, shareBusy: false,
-			loadingCover: true, loadingCoverShownAt: 0,
+			loadingCover: true,
 			isPreview: false, showTipping: false,
 			niceCount: 0, niceStatus: false,
 			bookInfo: {},
@@ -185,7 +186,6 @@ export default {
 		async loadAll() {
 			this.loading = true; this.loadError = '';
 			this.loadingCover = true;
-			this.loadingCoverShownAt = Date.now();
 			await Promise.all([
 				this.getBookInfo(),
 				this.getArticles(),
@@ -202,11 +202,7 @@ export default {
 			if (!this.isPreview) this.focusHighlightedComment();
 		},
 		hideLoadingCover() {
-			const minDuration = 600;
-			const elapsed = Date.now() - (this.loadingCoverShownAt || Date.now());
-			setTimeout(() => {
-				this.loadingCover = false;
-			}, Math.max(0, minDuration - elapsed));
+			this.loadingCover = false;
 		},
 		async loadArticleCommentAmounts() {
 			if (this.isPreview) return;
@@ -604,15 +600,9 @@ export default {
   background-color: var(--manga-bg);
 }
 
-.loading-cover-gif {
-  width: 320rpx;
-  height: 320rpx;
-  object-fit: contain;
-}
-
 .manga-loading-fade-enter-active,
 .manga-loading-fade-leave-active {
-  transition: opacity 0.4s ease;
+  transition: opacity 0.2s ease;
 }
 
 .manga-loading-fade-enter,

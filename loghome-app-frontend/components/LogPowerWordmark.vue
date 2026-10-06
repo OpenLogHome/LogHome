@@ -27,18 +27,19 @@ export default {
     line-height: 1;
     letter-spacing: normal;
     position: relative;
-    overflow: hidden;
+    /* Let the rising arrow extend above the text line without clipping. */
+    overflow: visible;
 }
 .wordmark-image {
     display: block;
     width: 100%;
-    /* Center the visible strokes, excluding the PNG's transparent padding.
-       Canvas: 2050 × 767; visible vertical center: 361.5px. */
-    height: 142.2%;
+    /* Align the letter bodies with adjacent text; the arrow rises above them.
+       Canvas: 2051 × 767; letter-body vertical center: 364px. */
+    height: 142.1%;
     position: absolute;
     left: 0;
     top: 50%;
-    transform: translateY(-47.13%);
+    transform: translateY(-47.46%);
 }
 .log-power-wordmark.is-fallback {
     width: auto;

@@ -1,0 +1,353 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#ddd;font-family:system-ui,sans-serif}#app{display:flex;gap:20px;padding:20px}.screen{width:375px;height:700px;display:flex;justify-content:center;align-items:center;overflow:hidden;background:#f4f5f6;--manga-text:#252b30}.night{background:#16191c;--manga-text:#f4f5f6} .comic-loader {
+  --comic-paper: #fffaf0;
+  --comic-ink: #342f2a;
+  --comic-green: #88a76b;
+  --comic-dot: #dce1d7;
+  width: 280px;
+  max-width: calc(100vw - 32px);
+  color: var(--manga-text, #252b30);
+  text-align: center;
+}
+
+.comic-board {
+  display: grid;
+  grid-template-columns: 1fr 1.08fr;
+  gap: 7px;
+}
+
+.comic-panel {
+  position: relative;
+  height: 113px;
+  border: 2px solid var(--comic-ink);
+  background-color: var(--comic-paper);
+  background-image: radial-gradient(rgba(179, 178, 156, 0.3333333333) 0.5px, transparent 0.5px);
+  background-size: 3.5px 3.5px;
+  box-shadow: 1.5px 2px 0 rgba(52, 47, 42, 0.0862745098);
+  text-align: left;
+}
+
+.panel-start {
+  transform: rotate(-1deg);
+}
+
+.panel-run {
+  transform: rotate(0.6deg);
+}
+
+.panel-deliver {
+  grid-column: 1/-1;
+  height: 122px;
+  margin-top: 3px;
+}
+
+.panel-ink {
+  position: absolute;
+  inset: 0;
+  animation: start-focus 1.8s linear infinite;
+}
+
+.panel-run .panel-ink {
+  animation-name: run-focus;
+}
+
+.panel-deliver .panel-ink {
+  animation-name: deliver-focus;
+}
+
+.pose {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  overflow: hidden;
+}
+
+.pose-atlas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300%;
+  height: 100%;
+  max-width: none;
+}
+
+.pose-start {
+  bottom: -3.5px;
+  right: -2.5px;
+}
+
+.pose-run {
+  top: 0;
+  right: -2px;
+  transform: scaleX(-1);
+}
+
+.pose-run .pose-atlas {
+  left: -100%;
+}
+
+.pose-deliver {
+  width: 154px;
+  height: 154px;
+  right: 5px;
+  top: -28px;
+}
+
+.pose-deliver .pose-atlas {
+  left: -200%;
+}
+
+.speech {
+  position: absolute;
+  z-index: 2;
+  padding: 5px 7px;
+  background: #fffdf7;
+  color: var(--comic-ink);
+  border: 1.5px solid var(--comic-ink);
+  font-size: 13.5px;
+  line-height: 1.25;
+  font-weight: 800;
+  box-shadow: 1.5px 1.5px 0 rgba(52, 47, 42, 0.1098039216);
+}
+
+.speech-start {
+  left: -5px;
+  top: 7px;
+  transform: rotate(-9deg);
+}
+
+.speech-deliver {
+  left: 10px;
+  top: 23px;
+  transform: rotate(-6deg);
+  font-size: 15px;
+}
+
+.speech::after {
+  content: "";
+  position: absolute;
+  bottom: -5.5px;
+  right: 7px;
+  width: 7.5px;
+  height: 7.5px;
+  background: #fffdf7;
+  border-right: 1.5px solid var(--comic-ink);
+  border-bottom: 1.5px solid var(--comic-ink);
+  transform: skewY(22deg);
+}
+
+.ground {
+  position: absolute;
+  left: 5px;
+  right: 4px;
+  bottom: 7.5px;
+  border-bottom: 1px solid rgba(52, 47, 42, 0.3333333333);
+  z-index: -1;
+  transform: rotate(-4deg);
+}
+
+.speed-lines {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.speed-lines::before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(rgba(52, 47, 42, 0.5019607843), rgba(52, 47, 42, 0.5019607843)) 0 18%/28% 1px no-repeat, linear-gradient(rgba(52, 47, 42, 0.5019607843), rgba(52, 47, 42, 0.5019607843)) 15% 42%/34% 1px no-repeat, linear-gradient(rgba(52, 47, 42, 0.5019607843), rgba(52, 47, 42, 0.5019607843)) 0 72%/24% 1px no-repeat;
+  opacity: 0.4;
+  animation: speed-drift 0.4s linear infinite;
+}
+
+.run-bounce {
+  position: absolute;
+  inset: 0;
+  animation: running-bounce 0.22s ease-in-out infinite alternate;
+}
+
+.footsteps {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  color: var(--comic-ink);
+  font-size: 10.5px;
+  font-weight: 700;
+  transform: rotate(-8deg);
+}
+
+.delivery-rays {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: repeating-conic-gradient(from 25deg at 70% 60%, transparent 0deg 23deg, rgba(136, 167, 107, 0.1882352941) 24deg 25deg, transparent 26deg 43deg);
+}
+
+.delivery-flight {
+  position: absolute;
+  inset: 0;
+  animation: delivery-hop 1.8s ease-in-out infinite;
+}
+
+.spark {
+  position: absolute;
+  color: #71914f;
+  font-size: 18px;
+}
+
+.spark-one {
+  top: 12px;
+  right: 9px;
+}
+
+.spark-two {
+  bottom: 11px;
+  left: 80px;
+  font-size: 12.5px;
+}
+
+.loading-caption {
+  display: block;
+  margin-top: 21px;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--comic-dot);
+  animation: start-dot 1.8s linear infinite;
+}
+
+.dot-run {
+  animation-name: run-dot;
+}
+
+.dot-deliver {
+  animation-name: deliver-dot;
+}
+
+.fallback-runner {
+  width: 120px;
+  height: 120px;
+}
+
+@keyframes start-focus {
+  0%, 22.2% {
+    opacity: 1;
+    filter: grayscale(0);
+  }
+  24%, 98% {
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+  100% {
+    opacity: 1;
+    filter: grayscale(0);
+  }
+}
+@keyframes run-focus {
+  0%, 21% {
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+  22.2%, 66.6% {
+    opacity: 1;
+    filter: grayscale(0);
+  }
+  68%, 100% {
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+}
+@keyframes deliver-focus {
+  0%, 65% {
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+  66.6%, 98% {
+    opacity: 1;
+    filter: grayscale(0);
+  }
+  100% {
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+}
+@keyframes start-dot {
+  0%, 22.2%, 100% {
+    background: var(--comic-green);
+  }
+  24%, 98% {
+    background: var(--comic-dot);
+  }
+}
+@keyframes run-dot {
+  0%, 21%, 68%, 100% {
+    background: var(--comic-dot);
+  }
+  22.2%, 66.6% {
+    background: var(--comic-green);
+  }
+}
+@keyframes deliver-dot {
+  0%, 65%, 100% {
+    background: var(--comic-dot);
+  }
+  66.6%, 98% {
+    background: var(--comic-green);
+  }
+}
+@keyframes speed-drift {
+  to {
+    transform: translateX(-25%);
+  }
+}
+@keyframes running-bounce {
+  to {
+    transform: translateY(-3px);
+  }
+}
+@keyframes delivery-hop {
+  0%, 64%, 100% {
+    transform: translate(-4px, 2.5px);
+  }
+  82% {
+    transform: translate(4px, -3.5px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel-ink, .run-bounce, .delivery-flight, .speed-lines::before, .dot {
+    animation: none;
+  }
+  .panel-ink {
+    opacity: 1;
+    filter: none;
+  }
+  .dot-start {
+    background: var(--comic-green);
+  }
+}
+@media (max-height: 520px) {
+  .comic-loader {
+    width: 200px;
+  }
+  .comic-board {
+    transform: scale(0.7);
+    margin: -35px -20px;
+  }
+  .loading-caption {
+    margin-top: 12px;
+  }
+}</style><div id="app"><div class="screen"><comic-loader></comic-loader></div><div class="screen night"><comic-loader></comic-loader></div></div><script src="vue.js"></script><script>Vue.component('comic-loader',{template:"\n  <div class=\"comic-loader\" role=\"status\" aria-live=\"polite\" aria-label=\"正在加载漫画\">\n    <div v-if=\"!assetFailed\" class=\"comic-board\" aria-hidden=\"true\">\n      <div class=\"comic-panel panel-start\">\n        <div class=\"panel-ink\">\n          <span class=\"speech speech-start\">出发！</span>\n          <div class=\"pose pose-start\"><img class=\"pose-atlas\" src=\"missing-poses.png\" @error=\"assetFailed = true\" /></div>\n          <div class=\"ground\"></div>\n        </div>\n      </div>\n      <div class=\"comic-panel panel-run\">\n        <div class=\"panel-ink\">\n          <div class=\"speed-lines\"></div>\n          <div class=\"run-bounce\"><div class=\"pose pose-run\"><img class=\"pose-atlas\" src=\"missing-poses.png\" @error=\"assetFailed = true\" /></div></div>\n          <span class=\"footsteps\">哒哒哒…</span>\n        </div>\n      </div>\n      <div class=\"comic-panel panel-deliver\">\n        <div class=\"panel-ink\">\n          <div class=\"delivery-rays\"></div>\n          <span class=\"speech speech-deliver\">漫画<br />送达！</span>\n          <div class=\"delivery-flight\"><div class=\"pose pose-deliver\"><img class=\"pose-atlas\" src=\"missing-poses.png\" @error=\"assetFailed = true\" /></div></div>\n          <span class=\"spark spark-one\">✦</span><span class=\"spark spark-two\">✦</span>\n        </div>\n      </div>\n    </div>\n    <img v-else class=\"fallback-runner\" src=\"loading.gif\" mode=\"aspectFit\" aria-hidden=\"true\" />\n    <span class=\"loading-caption\">原木娘正在搬运漫画…</span>\n    <div class=\"loading-dots\" aria-hidden=\"true\"><div class=\"dot dot-start\"></div><div class=\"dot dot-run\"></div><div class=\"dot dot-deliver\"></div></div>\n  </div>\n",data(){return {assetFailed:false}}});new Vue({el:'#app'})</script>
