@@ -56,8 +56,8 @@ android {
         applicationId "top.codesocean.loghome"
         minSdk 24
         targetSdk 34
-        versionCode 316
-        versionName "3.1.6"
+        versionCode 317
+        versionName "3.1.7"
 
         buildConfigField "String", "TTS_CHAOWEN_MODEL_URL", "\"${escapedTtsChaowenModelUrl}\""
         buildConfigField "String", "TTS_AISHELL3_MODEL_URL", "\"${escapedTtsAishell3ModelUrl}\""

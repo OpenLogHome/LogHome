@@ -147,14 +147,14 @@
       
       <!-- 空状态 -->
       <view class="empty-state" v-if="bannedMembers.length === 0">
-        <image src="../../static/nothing.png" mode="aspectFit" class="empty-image"></image>
+        <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit" class="empty-image"></image>
         <text class="empty-text">暂无禁言或踢出成员</text>
       </view>
     </view>
     
     <!-- 空状态 -->
     <view class="empty-state" v-if="allMembers.length === 0 && joinRequests.length === 0 && !isLoading && currentTab === 'members'">
-      <image src="../../static/nothing.png" mode="aspectFit" class="empty-image"></image>
+      <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit" class="empty-image"></image>
       <text class="empty-text">暂无成员</text>
     </view>
   </view>

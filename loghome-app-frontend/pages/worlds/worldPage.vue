@@ -66,8 +66,8 @@
 						</el-collapse>
 						<div class="nothing" v-show="worldOutlines.length == 0"
 							style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
-							<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
-							<div class="emptyText" style="font-size: 25rpx;">这是一片什么都没有的荒原</div>
+							<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
+							<div class="emptyText" style="font-size: 25rpx;">这里还什么都没有喔</div>
 						</div>
 						<div class="title" style="margin-top: 30rpx; display: flex; justify-content: space-between; align-items: center;">
 							<div style="display: flex; align-items: center;">
@@ -84,8 +84,8 @@
 						</div>
 						<div class="nothing" v-show="worldVoabs.length == 0"
 							style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
-							<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
-							<div class="emptyText" style="font-size: 25rpx;">这是一片什么都没有的荒原</div>
+							<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
+							<div class="emptyText" style="font-size: 25rpx;">这里还什么都没有喔</div>
 						</div>
 					</div>
 				</el-tab-pane>
@@ -113,8 +113,8 @@
 					</div>
 					<div class="nothing" v-show="assoNovels.length == 0"
 						style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 30rpx 0;">
-						<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
-						<div class="emptyText">这是一片什么都没有的荒原</div>
+						<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
+						<div class="emptyText">这里还什么都没有喔</div>
 					</div>
 				</el-tab-pane>
 			</el-tabs>
@@ -196,7 +196,7 @@
 			<view class="l-comments">
 				<div class="nothing" v-show="commentInfo.length == 0"
 					style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 30rpx 0;">
-					<img src="../../static/nothing.png" alt="" style="width: 10vw; margin: 25rpx 0;" />
+					<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 160rpx; max-width: 50%; margin: 25rpx 0;" />
 					<div class="emptyText" style="font-size: 25rpx;">还没有人评论哦</div>
 				</div>
 				<view class="l-comment-list" v-for="(item, index) in commentInfo" :key="index">

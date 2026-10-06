@@ -421,7 +421,7 @@ export default {
 .work-item .work-status { color: var(--manga-muted); font-size: 21rpx; font-weight: 400; }
 .bottom-space { height: calc(150rpx + var(--manga-safe-bottom)); }
 .action-bar { position: fixed; inset: auto 0 0; z-index: 30; display: flex; align-items: center; gap: 18rpx; padding: 16rpx 28rpx calc(16rpx + var(--manga-safe-bottom)); background: var(--manga-card); border-top: 1rpx solid var(--manga-line); box-shadow: 0 -8rpx 28rpx rgba(20,20,20,.05); }
-.tip-btn { flex: none; min-width: 154rpx; min-height: 88rpx; padding: 0 22rpx; border: 1rpx solid var(--manga-accent); border-radius: 100rpx; background: var(--manga-card); color: var(--manga-accent); font-size: 27rpx; font-weight: 700; }
+.tip-btn { flex: none; display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 154rpx; min-height: 88rpx; padding: 0 22rpx; border: 1rpx solid var(--manga-accent); border-radius: 100rpx; background: var(--manga-card); color: var(--manga-accent); font-size: 27rpx; font-weight: 700; }
 .read-btn { flex: 1; min-height: 88rpx; display: flex; align-items: center; justify-content: center; gap: 12rpx; border-radius: 100rpx; background: var(--manga-action); color: #fff !important; font-size: 29rpx; font-weight: 700; }
 .tipping-sheet { max-height: calc(100vh - 130rpx - var(--manga-safe-top)); max-height: calc(100dvh - 130rpx - var(--manga-safe-top)); overflow-y: auto; padding-bottom: var(--manga-safe-bottom); box-sizing: border-box; background: var(--manga-card); border-radius: 20rpx 20rpx 0 0; }
 .load-state { display: flex; align-items: center; flex-direction: column; gap: 24rpx; padding: 160rpx 28rpx; font-size: 27rpx; text-align: center; }

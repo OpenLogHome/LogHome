@@ -4,6 +4,7 @@ import h5PageAnimation from './components/h5-page-animation/';
 import { getReaderMode } from './common/reader-mode.js';
 import { initLanguage } from './common/lang.js';
 import '@/common/theme.scss';
+import '@/common/tabbar.scss';
 export default {
 	mixins: [h5PageAnimation],
 	onShow: function () {
@@ -190,9 +191,9 @@ export default {
 			if (this.$store.state.isDarkMode) {
 				uni.setTabBarStyle({
 					color: "#7A7E83",
-					selectedColor: "#d3442b",
+					selectedColor: "#91c49d",
 					borderStyle: "white",
-					backgroundColor: "#000000",
+					backgroundColor: "#222b24",
 				})
 				uni.setNavigationBarColor({
 					backgroundColor: "#000000",
@@ -200,7 +201,7 @@ export default {
 			} else {
 				uni.setTabBarStyle({
 					color: "#7A7E83",
-					selectedColor: "#d3442b",
+					selectedColor: "#276442",
 					borderStyle: "white",
 					backgroundColor: "#ffffff",
 				})

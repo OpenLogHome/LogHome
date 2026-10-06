@@ -217,8 +217,8 @@
 						<div class="worlds">
 							<div class="nothing" v-show="worlds.length == 0"
 								style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 70rpx 0;">
-								<img src="../../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;" />
-								<div style="color:#777777; font-size: 25rpx;">这是一片什么都没有的荒原</div>
+								<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
+								<div style="color:#777777; font-size: 25rpx;">这里还什么都没有喔</div>
 							</div>
 							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
 								<navigator :url="'./bookInfo?id=' + novel.novel_id" open-type="navigate" class="books">

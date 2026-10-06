@@ -58,7 +58,7 @@
       
       <!-- 空状态 -->
       <view class="empty-state" v-if="Object.keys(categoryCircles).length === 0 && loadingStatus !== 'loading'">
-        <image src="../../static/nothing.png" mode="aspectFit" class="empty-image"></image>
+        <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit" class="empty-image"></image>
         <text class="empty-text">暂无圈子</text>
       </view>
     </scroll-view>

@@ -102,3 +102,10 @@ dist
 
 # TernJS port file
 .tern-port
+
+# The bare "dist" rule above also hides uni-app build output, tracked on purpose
+# (H5 bundle for web.zip). Negations must stay last to outrank root "**/build/".
+!unpackage/dist/
+!unpackage/dist/**
+unpackage/dist/.DS_Store
+unpackage/dist/**/.DS_Store

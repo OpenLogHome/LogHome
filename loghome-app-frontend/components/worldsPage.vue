@@ -8,8 +8,8 @@
 		</div>
 		<div class="nothing" v-show="worlds.length == 0"
 			style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
-			<img src="../static/nothing.png" alt="" style="width: 15vw; margin: 25rpx 0;"/>
-			<div style="color:#777777; font-size: 25rpx;" :class="{'dark-mode': isDarkMode}">这是一片什么都没有的荒原</div>
+			<img src="../static/loggirl-404-empty-chest.png" alt="" style="width: 220rpx; max-width: 50%; margin: 25rpx 0;"/>
+			<div style="color:#777777; font-size: 25rpx;" :class="{'dark-mode': isDarkMode}">这里还什么都没有喔</div>
 		</div>
 		<div class="jiemian2" v-for="world in worlds" :key="world.world_id || world.novel_id" v-dark>
 			<div class="hang1">

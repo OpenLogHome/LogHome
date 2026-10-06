@@ -1,0 +1,35 @@
+/* Shared H5 tab bar skin. Preserve the framework's icon, badge and safe-area layout. */
+uni-tabbar .uni-tabbar {
+	border-radius: 28rpx 28rpx 0 0;
+	box-shadow: 0 -6rpx 26rpx rgba(69, 55, 34, .04);
+	.uni-tabbar-border { display: none; }
+	.uni-tabbar__label { position: relative; }
+}
+/* The route classes are maintained by UniApp, including direct entry and back navigation. */
+body.pages-library .uni-tabbar__item:nth-child(2),
+body.pages-community-index .uni-tabbar__item:nth-child(3),
+body.pages-essays .uni-tabbar__item:nth-child(4),
+body.pages-me .uni-tabbar__item:nth-child(5) {
+	.uni-tabbar__label {
+		color: #276442 !important;
+		font-weight: 600;
+		&::after {
+			content: '';
+			position: absolute;
+			left: 50%; bottom: -8rpx;
+			width: 32rpx; height: 4rpx;
+			border-radius: 999rpx;
+			background: currentColor;
+			transform: translateX(-50%);
+		}
+	}
+}
+body.dark-mode {
+	uni-tabbar .uni-tabbar { box-shadow: 0 -6rpx 26rpx rgba(0, 0, 0, .12); }
+	&.pages-library .uni-tabbar__item:nth-child(2),
+	&.pages-community-index .uni-tabbar__item:nth-child(3),
+	&.pages-essays .uni-tabbar__item:nth-child(4),
+	&.pages-me .uni-tabbar__item:nth-child(5) {
+		.uni-tabbar__label { color: #91c49d !important; }
+	}
+}

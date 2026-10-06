@@ -102,7 +102,7 @@ var render = function render() {
     }
   }), _vm._v(" "), _c('p', {
     staticClass: "nothing-text"
-  }, [_vm._v("这是一片什么都没有的荒原")])]), _vm._v(" "), _c('div', {
+  }, [_vm._v("这里还什么都没有喔")])]), _vm._v(" "), _c('div', {
     staticClass: "section-header"
   }, [_c('div', {
     staticClass: "section-line"
@@ -128,7 +128,7 @@ var render = function render() {
     }
   }), _vm._v(" "), _c('p', {
     staticClass: "nothing-text"
-  }, [_vm._v("这是一片什么都没有的荒原")])])], 1)]), _vm._v(" "), _c('el-tab-pane', {
+  }, [_vm._v("这里还什么都没有喔")])])], 1)]), _vm._v(" "), _c('el-tab-pane', {
     attrs: {
       "label": "关联作品"
     }
@@ -179,7 +179,7 @@ var render = function render() {
     }
   }), _vm._v(" "), _c('p', {
     staticClass: "nothing-text"
-  }, [_vm._v("这是一片什么都没有的荒原")])])])], 1)], 1)], 2) : _vm._e()], 2);
+  }, [_vm._v("这里还什么都没有喔")])])])], 1)], 1)], 2) : _vm._e()], 2);
 };
 var staticRenderFns = [];
 

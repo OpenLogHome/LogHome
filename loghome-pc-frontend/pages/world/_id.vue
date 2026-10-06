@@ -59,7 +59,7 @@
               
               <div class="nothing" v-else>
                 <img src="/default-avatar.png" alt="暂无内容" class="nothing-img">
-                <p class="nothing-text">这是一片什么都没有的荒原</p>
+                <p class="nothing-text">这里还什么都没有喔</p>
               </div>
 
               <div class="section-header">
@@ -79,7 +79,7 @@
               
               <div class="nothing" v-else>
                 <img src="/default-avatar.png" alt="暂无内容" class="nothing-img">
-                <p class="nothing-text">这是一片什么都没有的荒原</p>
+                <p class="nothing-text">这里还什么都没有喔</p>
               </div>
             </div>
           </el-tab-pane>
@@ -117,7 +117,7 @@
             
             <div class="nothing" v-else>
               <img src="/default-avatar.png" alt="暂无内容" class="nothing-img">
-              <p class="nothing-text">这是一片什么都没有的荒原</p>
+              <p class="nothing-text">这里还什么都没有喔</p>
             </div>
           </el-tab-pane>
         </el-tabs>

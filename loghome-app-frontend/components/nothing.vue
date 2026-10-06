@@ -1,6 +1,6 @@
 <template>
 	<view class="outer" :style="{'height': height}">
-		<img src="../static/images/icon_nothing.png" alt=""/>
+		<img src="../static/loggirl-404-empty-chest.png" alt=""/>
 		<p class="text">{{msg}}</p>
 	</view>
 </template>
@@ -26,7 +26,10 @@
 		align-items: center;
 		height:calc(100vh - 88rpx);
 		img{
-			width:50%;
+			width:320rpx;
+			max-width:50%;
+			height:auto;
+			object-fit:contain;
 		}
 		p{
 			margin:50rpx;

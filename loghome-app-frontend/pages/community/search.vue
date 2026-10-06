@@ -231,7 +231,7 @@
   
           <!-- 无搜索结果 -->
           <view class="no-results" v-if="noResults">
-            <image src="../../static/nothing.png" mode="aspectFit"></image>
+            <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit"></image>
             <text>没有找到相关内容</text>
           </view>
         </scroll-view>
