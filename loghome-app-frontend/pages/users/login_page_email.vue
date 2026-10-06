@@ -281,8 +281,7 @@
 				})
 			},
 			login(){
-				let _this = this;
-				axios.post(this.$baseUrl + '/users/login', {
+				return axios.post(this.$baseUrl + '/users/login', {
 				    username: this.email,
 				    password: this.pwd,
 					is_hypernotion: this.$store.state.hypernotion
@@ -293,7 +292,7 @@
 						url:'../me'
 					})
 				  })
-				  .catch(function (error) {
+				  .catch((error) => {
 					  //console.log(error);
 					  if(error) {
 						  uni.showToast({
@@ -301,7 +300,7 @@
 							icon:'none',
 							duration: 2000
 						  });
-						  _this.pwd = "";
+						  this.pwd = "";
 					  }
 
 				  });

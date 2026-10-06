@@ -1,50 +1,25 @@
 <template>
   <div class="worldWrapper" v-dark>
-    <div class="outer">
-			<div class="portal" @click="createNewWorld">
-				<div class="subtitle">共启创世之门</div>
-				<div class="newWorld">点击创建一个全新的世界 → </div>
-			</div>
-		</div>
-		<div class="nothing" v-show="worlds.length == 0"
-			style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
-			<img src="../static/loggirl-404-empty-chest.png" alt="" style="width: 220rpx; max-width: 50%; margin: 25rpx 0;"/>
-			<div style="color:#777777; font-size: 25rpx;" :class="{'dark-mode': isDarkMode}">这里还什么都没有喔</div>
-		</div>
-		<div class="jiemian2" v-for="world in worlds" :key="world.world_id || world.novel_id" v-dark>
-			<div class="hang1">
-				<div class="biaoti">
-					{{world.name}}
-				</div>
-			</div>
-			<div class="hang2" style="margin: 5px 0;">
-				<el-tag style="margin-right: 10px;" v-show="!world.is_personal">公开</el-tag>
-				<el-tag type= "info" style="margin-right: 10px;" v-show="world.is_personal">私密</el-tag>
-				<el-tag type="success" style="margin-right: 10px;" v-show="!world.is_personal && world.allow_fork">允许二创</el-tag>
-				<el-tag type= "info" style="margin-right: 10px;" v-show="!world.allow_fork">不允许二创</el-tag>
-				<el-tag type="warning" style="margin-right: 10px;" v-if="showCollaborativeTag(world)">协作作品</el-tag>
-			</div>
-			<div class="h2">
-				{{world.content}}
-			</div>
-			<!-- <div class="articles" style="margin-top: 15px;">
-				<div class="bn" v-for="i in [1,2,3,4]">
-					<div class="y1">人物</div>
-					<div class="z2">
-						<div class="zh1">美食家AI</div>
-						<div class="zh2">2030年，AI已经在多个领域大放异彩，无所不能，受到了人类的一致好评。在人类世界分为喜欢运aaaaaa</div>
-					</div>
-				</div>
-			</div> -->
-			<div class="enterButtons" style="display:flex; margin-top: 15rpx;">
-				<div class="enterButton" @click="editWorld(world.novel_id, world.world_id)" style="margin-right: 15rpx;">{{ getEditButtonText(world) }}</div>
-				<div class="enterButton" @click="enterWorld(world.world_id)" v-show="!world.is_personal">进入设定</div>
-			</div>
-
-		</div>
-		<div class="bottom" style="height: 80px">
-			
-		</div>
+    <div class="outer"><button v-manga-a11y class="portal" type="button" @click="createNewWorld"><span class="portal-kicker">世界设定</span><span class="subtitle">共启创世之门</span><span class="newWorld">点击创建一个全新的世界 <manga-icon name="next" /></span></button></div>
+    <div class="workspace-head"><span>我的世界</span><span>{{ worlds.length }} 个世界</span></div>
+    <div v-if="loading" class="workspace-status" role="status">正在加载世界…</div>
+    <div v-else-if="loadError" class="workspace-status" role="alert">加载失败 <button v-manga-a11y type="button" @click="refreshPage"><manga-icon name="retry" />重试</button></div>
+    <div v-else-if="!worlds.length" class="empty-state"><manga-icon name="book" /><strong>这里还什么都没有喔</strong><span>创建你的第一个世界</span><button v-manga-a11y type="button" @click="createNewWorld"><manga-icon name="add" />创建世界</button></div>
+    <div class="worldCard" v-for="world in worlds" :key="world.world_id || world.novel_id" v-dark>
+      <button v-manga-a11y class="card-body" type="button" :aria-label="(world.is_personal ? '编辑《' + world.name + '》的设定' : '进入《' + world.name + '》')" @click="openWorld(world)">
+        <image lazy-load class="world-cover" :src="world.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="world.name" />
+        <div class="world-info">
+          <div class="world-title">{{ world.name }}</div>
+          <div class="world-tags"><span class="status-chip" :class="{ private: world.is_personal }">{{ world.is_personal ? '私密' : '公开' }}</span><span class="status-chip" v-if="!world.is_personal && world.allow_fork">允许二创</span><span class="status-chip" v-if="showCollaborativeTag(world)">协作作品</span></div>
+          <div class="world-intro">{{ world.content || '还没有填写简介' }}</div>
+        </div>
+      </button>
+      <div class="card-actions">
+        <button v-manga-a11y class="primary-action" type="button" @click="editWorld(world.novel_id, world.world_id)"><manga-icon name="book" /><text>{{ getEditButtonText(world) }}</text></button>
+        <button v-manga-a11y v-if="!world.is_personal" type="button" @click="enterWorld(world.world_id)"><manga-icon name="preview" /><text>进入设定</text></button>
+      </div>
+    </div>
+    <div class="bottom"></div>
 		<view v-if="showCreateDialog" v-manga-portal class="create-mask" :class="{ 'dark-mode': isDarkMode }"
 			@click.self="closeCreateDialog" @keydown.esc.stop.prevent="closeCreateDialog"
 			@touchstart.stop @touchmove.self.prevent @touchend.stop>
@@ -82,6 +57,8 @@
 		data() {
 			return {
 				worlds: [],
+				loading: true,
+				loadError: false,
 				showCreateDialog: false,
 				creating: false,
 				createForm: { name: '' },
@@ -101,6 +78,13 @@
 			},
 			getEditButtonText(world) {
 				return this.isWorldOwner(world) ? '编辑设定' : '协作设定';
+			},
+			openWorld(world) {
+				if (world.is_personal) {
+					this.editWorld(world.novel_id, world.world_id);
+				} else {
+					this.enterWorld(world.world_id);
+				}
 			},
 			createNewWorld() {
 				if (this.creating) return;
@@ -135,25 +119,22 @@
 				}
 			},
 			refreshPage(){
+				this.loading = true;
+				this.loadError = false;
 				let _this = this;
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;
 				axios.get(this.$baseUrl + '/world/get_my_worlds', {
 					headers: {
-						'Content-Type': 'application/json', //设置请求头请求格式为JSON
-						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + tk
 					}
 				}).then((res) => {
 					_this.worlds = res.data;
-					console.log(_this.worlds);
+					_this.loading = false;
 				}).catch(function(error) {
-					uni.showToast({
-						title: error.toString(),
-						icon: 'none',
-						duration: 2000
-					});
-				}).then(function() {
-					uni.hideLoading();
+					_this.loadError = true;
+					_this.loading = false;
 				})
 			},
 			enterWorld(world_id){
@@ -175,6 +156,40 @@
 
 <style scoped lang="scss">
 	@import '@/common/manga-theme.scss';
+
+	.worldWrapper { @include manga-theme; min-height: 100vh; box-sizing: border-box; padding-top: calc(44px + var(--loghome-safe-top, 0px)); }
+	.outer { padding: 0 24rpx; }
+	button.portal { display: flex; align-items: flex-start; flex-direction: column; justify-content: center; width: 100%; min-height: 174rpx; margin: 20rpx 0 34rpx; padding: 28rpx 38rpx; border-radius: 22rpx; background-color: #3a2b26; background-image: url("@/static/worldPage/portalBackground.jpg"); background-position: right center; background-size: cover; background-repeat: no-repeat; color: #fff; text-align: left; box-shadow: var(--manga-shadow); }
+	.portal-kicker { font-size: 19rpx; letter-spacing: .12em; font-weight: 700; opacity: .84; text-shadow: 0 1rpx 6rpx rgba(0, 0, 0, .35); }
+	.subtitle { margin-top: 8rpx; font-size: 32rpx; font-weight: 750; letter-spacing: .02em; text-shadow: 0 1rpx 6rpx rgba(0, 0, 0, .35); }
+	.newWorld { display: inline-flex; align-items: center; gap: 8rpx; margin-top: 12rpx; font-size: 23rpx; opacity: .96; }
+	.workspace-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 30rpx 20rpx; font-size: 32rpx; font-weight: 700; }
+	.workspace-head span:last-child { color: var(--manga-muted); font-size: 23rpx; font-weight: 400; }
+	.workspace-status { display: flex; align-items: center; justify-content: center; gap: 20rpx; padding: 50rpx 24rpx; color: var(--manga-muted); font-size: 25rpx; }
+	.workspace-status button { display: inline-flex; align-items: center; gap: 6rpx; min-height: 76rpx; color: var(--manga-accent); }
+	.empty-state { display: flex; align-items: center; flex-direction: column; gap: 14rpx; margin: 0 24rpx; padding: 70rpx 30rpx; border-radius: 24rpx; background: var(--manga-card); color: var(--manga-muted); text-align: center; font-size: 23rpx; }
+	.empty-state > .manga-icon { font-size: 72rpx; color: var(--manga-accent); }
+	.empty-state strong { color: var(--manga-text); font-size: 28rpx; }
+	.empty-state button { display: inline-flex; align-items: center; gap: 8rpx; min-height: 80rpx; margin-top: 12rpx; padding: 0 28rpx; border-radius: 100rpx; background: var(--manga-action); color: #fff; font-weight: 700; }
+	.worldCard { margin: 0 24rpx 24rpx; padding: 28rpx; border-radius: 24rpx; background: var(--manga-card); box-shadow: var(--manga-shadow); animation: card-in .22s ease both; }
+	button.card-body { box-sizing: border-box; display: flex; gap: 22rpx; width: 100%; margin: 0; padding: 0; border: 0; border-radius: 14rpx; background: transparent; text-align: left; white-space: normal; line-height: normal; transition: background-color .18s ease, transform .18s ease; }
+	button.card-body::after { display: none; }
+	button.card-body:active { background: var(--manga-tint); transform: scale(.985); }
+	@media (hover: hover) { button.card-body:hover { background: var(--manga-bg); } }
+	@media (prefers-reduced-motion: reduce) { button.card-body { transition: none; } }
+	.world-cover { width: 150rpx; height: 210rpx; flex: none; border-radius: 12rpx; object-fit: cover; background: var(--manga-bg); }
+	.world-info { flex: 1; min-width: 0; }
+	.world-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--manga-text); font-size: 31rpx; font-weight: 700; line-height: 1.3; }
+	.world-tags { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 12rpx; }
+	.status-chip { padding: 4rpx 12rpx; border-radius: 100rpx; background: var(--manga-tint); color: var(--manga-accent); font-size: 18rpx; font-weight: 600; }
+	.status-chip.private { background: var(--manga-bg); color: var(--manga-muted); }
+	.world-intro { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 12rpx; color: var(--manga-muted); font-size: 22rpx; line-height: 1.5; }
+	.card-actions { display: flex; gap: 10rpx; margin-top: 24rpx; padding-top: 20rpx; border-top: 1rpx solid var(--manga-line); }
+	.card-actions button { box-sizing: border-box; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8rpx; min-height: 88rpx; padding: 0 8rpx; border: 1rpx solid var(--manga-line); border-radius: 12rpx; color: var(--manga-text); font-size: 26rpx; font-weight: 600; line-height: 1.2; text-align: center; white-space: nowrap; }
+	.card-actions button.primary-action { border-color: transparent; background: var(--manga-action); color: #fff; }
+	.card-actions .manga-icon { font-size: 26rpx; }
+	.card-actions text { display: block; line-height: 1.2; white-space: nowrap; }
+	.bottom { height: 80px; }
 
 	.create-mask {
 		@include manga-theme;
@@ -204,228 +219,8 @@
 	.create-actions button { box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; min-height: 88rpx; margin: 0; padding: 0 12rpx; border-radius: 14rpx; font-size: 25rpx; font-weight: 600; line-height: 1.2; text-align: center; white-space: nowrap; }
 	.create-cancel { border: 1rpx solid var(--manga-line); background: var(--manga-card); color: var(--manga-text); }
 	.create-confirm { border: 1rpx solid transparent; background: var(--manga-action); color: #fff; }
+	@keyframes card-in { from { opacity: .5; transform: translateY(8rpx); } to { opacity: 1; transform: translateY(0); } }
 	@keyframes world-panel-in { from { opacity: .5; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
-
-	.worldWrapper {
-		background-image: linear-gradient(to top, #f7f7f7, #f7f7f7, #fff2d0);
-		box-sizing: border-box;
-		min-height: 100vh;
-		padding-top: calc(44px + var(--loghome-safe-top, 0px));
-	
-		&.dark-mode {
-			background-image: none;
-			background-color: var(--background-color-secondary);
-		}
-	}
-
-	.outer {
-		padding: 20px;
-		padding-top: calc(10px);
-
-		.portal {
-			background-color: #bfa;
-			height: 100px;
-			margin-top: 15px;
-			border-radius: 8px;
-			background: url("@/static/worldPage/portalBackground.jpg");
-			background-size: cover;
-			background-position: right;
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-
-			.subtitle {
-				margin-left: 25px;
-				font-size: 20px;
-				font-weight: bold;
-				color: white;
-				margin-bottom: 5px;
-			}
-
-			div.newWorld {
-				margin-left: 25px;
-				font-size: 14px;
-				color: #ffffffee;
-			}
-
-		}
-	}
-
-	.tab {
-		height: 70px;
-		width: 100vw;
-		background-color: #bfa;
-		position: absolute;
-		left: 0;
-		bottom: 0;
-		display: flex;
-		justify-content: space-around;
-		align-items: center;
-
-		.btn {
-			width: 50px;
-			height: 50px;
-			border: 1px solid black;
-			background-color: aqua;
-		}
-	}
-
-	.jiemian2 {
-		padding: 20px 20px 10px 20px;
-		background-color: rgb(254, 254, 254);
-		margin: 0 auto;
-		border-radius: 14px;
-		width: calc(100vw - 140rpx);
-		margin-bottom: 20px;
-		
-		.dark-mode & {
-			background-color: var(--background-color-tertiary);
-		}
-
-		.hang1 {
-			display: flex;
-			justify-content: space-between;
-
-			.biaoti {
-				font-size: 24px;
-				font-weight: bold;
-				background-image: linear-gradient(to right, black, rgb(142, 78, 76));
-				-webkit-background-clip: text;
-				color: transparent;
-				letter-spacing: -1px;
-				
-				.dark-mode & {
-					background-image: linear-gradient(to right, #e5e5e5, rgb(192, 128, 126));
-				}
-			}
-
-			.jinru {
-				width: 85px;
-				height: 28px;
-				font-size: 14px;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				border-radius: 20px;
-				border: 1.4px solid #4c4c4c55;
-				margin-left: 30px;
-				color: #575757;
-				
-				.dark-mode & {
-					color: var(--text-color-regular);
-					border-color: var(--border-color-lighter);
-				}
-			}
-
-		}
-
-		.h2 {
-			letter-spacing: -1px;
-			height: 40px;
-			font-size: 15px;
-			margin-top: 5px;
-			color: #575757;
-			//省略号
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 2;
-			overflow: hidden;
-			
-			.dark-mode & {
-				color: var(--text-color-regular);
-			}
-		}
-
-
-		.bn {
-			width: 88vw;
-			height: 60px;
-			display: flex;
-			margin-top: 0px;
-
-			.y1 {
-				background-color: rgb(91, 129, 252);
-				width: 25px;
-				height: 50px;
-				font-size: 10px;
-				color: white;
-				display: flex;
-				justify-content: center;
-				line-height: 25px;
-				writing-mode: vertical-lr;
-			}
-
-			.z2 {
-				padding-left: 10px;
-			}
-
-			.zh1 {
-				font-size: 32rpx;
-				
-				.dark-mode & {
-					color: var(--text-color-primary);
-				}
-			}
-
-			.zh2 {
-				width: calc(100% - 20px);
-				font-size: 28rpx;
-				color: #575757;
-				overflow: hidden;
-				height: 35rpx;
-				display: -webkit-box;
-				-webkit-box-orient: vertical;
-				-webkit-line-clamp: 1;
-				margin-top: 3rpx;
-				
-				.dark-mode & {
-					color: var(--text-color-regular);
-				}
-			}
-
-			.t3 {
-				height: 35px;
-				width: 35px;
-				background-color: rgb(237, 111, 114);
-				border-radius: 100px;
-				background-image: url("@/static/worldPage/info.png");
-				background-size: cover;
-				margin: 5px 0px 0px 30px;
-			}
-		}
-		
-		.enterButton{
-			width: 100%;
-			border: 1rpx solid #4c4c4c55;
-			border-radius: 30rpx;
-			height: 60rpx;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: #4c4c4cee;
-			margin: 10rpx 0;
-			transition: all .3s;
-			font-size: 26rpx;
-			
-			.dark-mode & {
-				color: var(--text-color-regular);
-				border-color: var(--border-color-lighter);
-			}
-		}
-		
-		.enterButton:active{
-			transform: scale(0.95);
-			background-color: #4c4c4c22;
-			
-			.dark-mode & {
-				background-color: #6c6c6c22;
-			}
-		}
-
-
-	}
-
-	.jiemian2.dark-mode{
-		background-color: #333333;
-	}
+	@media (prefers-reduced-motion: reduce) { .worldCard,.create-panel { animation: none; } }
+	@media (min-width: 900px) { .outer,.workspace-head,.worldCard { max-width: 820px; margin-left: auto; margin-right: auto; } }
 </style>

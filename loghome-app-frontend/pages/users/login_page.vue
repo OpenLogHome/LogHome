@@ -108,7 +108,7 @@
 					});
 					return;
 				}
-				axios.post(this.$baseUrl + '/users/login', {
+				return axios.post(this.$baseUrl + '/users/login', {
 				    username: this.account,
 				    password: this.pwd,
 					is_hypernotion: this.$store.state.hypernotion
@@ -119,7 +119,7 @@
 						url:'../me'
 					})
 				  })
-				  .catch(function (error) {
+				  .catch((error) => {
 					  //console.log(error);
 					  if(error) {
 						  uni.showToast({
