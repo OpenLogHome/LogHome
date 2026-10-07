@@ -170,12 +170,7 @@ export default {
 			try { const res = await axios.get(this.$baseUrl + '/library/get_novel_by_user_id?id=' + id); this.authorWorks = (res.data || []).filter(work => work.novel_type === 'manga' && Number(work.is_personal) === 0 && String(work.novel_id) !== String(this.uid)).slice(0, 3); } catch (_) {}
 		},
 		goBack() {
-			const pages = getCurrentPages();
-			if (pages.length > 1) {
-				uni.navigateBack();
-			} else {
-				uni.reLaunch({ url: '/pages/library' });
-			}
+			uni.reLaunch({ url: '/pages/library' });
 		},
 		getToken() {
 			const token = this.getTokenInfo();

@@ -90,8 +90,9 @@ test('切换榜单时旧请求不能覆盖新榜单；后续分页固定批次',
 	assert.equal(r.batchId, 22);
 	assert.equal(r.items[0].novel_id, 1);
 	const more = r.loadMore();
-	assert.match(requests[2].url, /page=2&amount=20&batch_id=22/);
-	requests[2].resolve({ data: { batch_id: 22, items: [{ novel_id: 21 }] } });
+	const pagination = requests.find(request => /page=2&amount=20&batch_id=22/.test(request.url));
+	assert.ok(pagination);
+	pagination.resolve({ data: { batch_id: 22, items: [{ novel_id: 21 }] } });
 	await more;
 	assert.equal(r.items.length, 21);
 	assert.equal(r.page, 2);
@@ -141,4 +142,38 @@ test('标签及榜单组件的模板和样式均可编译', () => {
 		for (const style of d.styles)
 			assert.ok(sass.renderSync({ data: style.content }).css.length);
 	}
+});
+
+test('横滑和点击共用分类切换，预加载分类独立且不会覆盖当前批次', async () => {
+	const requests = [];
+	const { instance: r, options } = load('pages/readers/rankBoard.vue', {
+		axios: { get: url => new Promise(resolve => requests.push({ url, resolve })) },
+		uni: { stopPullDownRefresh() {}, showToast() {} }, $baseUrl: 'http://test',
+	});
+	const first = r.loadFirstPage();
+	requests[0].resolve({ data: { batch_id: 10, items: [{ novel_id: 1 }] } });
+	await first;
+	assert.equal(requests.length, 4);
+	const novel = requests.find(request => request.url.includes('zone=novel'));
+	novel.resolve({ data: { batch_id: 11, items: [{ novel_id: 2 }] } });
+	await Promise.resolve();
+	assert.equal(r.zoneItems('novel')[0].novel_id, 2);
+	assert.equal(r.items[0].novel_id, 1);
+	assert.equal(r.batchId, 10);
+	r.onZoneSwipe({ detail: { current: 1 } });
+	assert.equal(r.currentZone, 'novel');
+	assert.equal(options.computed.currentZoneIndex.call(r), 1);
+	assert.equal(r.items[0].novel_id, 2);
+	assert.equal(r.zoneItems('all')[0].novel_id, 1);
+	const before = requests.length;
+	r.onZoneSwipe({ detail: { current: 1 } });
+	assert.equal(requests.length, before);
+	const active = requests[requests.length - 1];
+	active.resolve({ data: { batch_id: 12, items: [{ novel_id: 3 }] } });
+	await new Promise(resolve => setTimeout(resolve, 0));
+	assert.equal(r.items[0].novel_id, 3);
+	assert.equal(r.batchId, 12);
+	assert.equal(r.zoneItems('all')[0].novel_id, 1);
+	r.switchBoard('new');
+	assert.equal(r.zoneItems('all').length, 0);
 });

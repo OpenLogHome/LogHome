@@ -435,6 +435,17 @@ export default {
     background-color: var(--surface-base) !important;
     text-align: left;
     box-sizing: border-box;
+
+    .bookDescription .el-tag,
+    .activity-header .el-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      line-height: 1;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
     
     &.dark-mode {
       --surface-base: var(--background-color-secondary);

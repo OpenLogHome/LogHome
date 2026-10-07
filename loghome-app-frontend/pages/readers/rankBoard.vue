@@ -20,39 +20,43 @@
 				</view>
 			</view>
 
-			<scroll-view class="rank-content" scroll-y :scroll-top="listScrollTop" :refresher-enabled="true" :refresher-triggered="refreshing" @refresherrefresh="refreshRank" @scrolltolower="loadMore">
-				<view class="meta-line" v-if="snapshotTimeText && items.length">更新于 {{ snapshotTimeText }} · 已上{{ items.length }}部</view>
-				<view class="rank-list">
-					<view class="rank-item" v-for="item in items" :key="item.novel_id" @click="goBook(item)">
-						<view class="rank-index" :class="{ 'rank-top': item.position <= 3 }">{{ item.position <= 3 ? item.position : String(item.position).padStart(2, '0') }}</view>
-						<view class="book-cover-box">
-							<log-image :src="item.picUrl + '?thumbnail=1'" class="book-cover" :onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
-							<text v-if="item.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
-							<text v-if="item.novel_type === 'world'" class="world-cover-badge">世界</text>
-						</view>
-						<view class="book-info">
-							<rank-work-title class="book-name" :title="item.name" :badges="item.badges || []" :max-badges="2" />
-							<view class="book-details">
-								<view class="book-author">作者：{{ item.user_name || '匿名作者' }}</view>
-								<view class="book-category">{{ item.novel_type === 'manga' ? '漫画' : item.novel_type === 'world' ? '世界设定' : '小说' }} · {{ Number(item.is_complete) === 1 ? '已完结' : '连载中' }}</view>
-								<view v-if="currentBoard === 'logpower'" class="book-score">原木力 {{ formatScore(item.score) }}</view>
-								<view v-else class="book-update">更新于 {{ formatUpdateDate(item.update_time) }}</view>
+			<swiper class="rank-swiper" :current="currentZoneIndex" :duration="240" @change="onZoneSwipe" :circular="false">
+				<swiper-item v-for="zone in zones" :key="zone.key">
+					<scroll-view class="rank-content" scroll-y :scroll-top="zone.key === currentZone ? listScrollTop : 0" :refresher-enabled="zone.key === currentZone" :refresher-triggered="zone.key === currentZone && refreshing" @refresherrefresh="zone.key === currentZone && refreshRank()" @scrolltolower="zone.key === currentZone && loadMore()">
+						<view class="meta-line" v-if="zone.key === currentZone && snapshotTimeText && items.length">更新于 {{ snapshotTimeText }} · 已上{{ items.length }}部</view>
+						<view class="rank-list">
+							<view class="rank-item" v-for="item in zoneItems(zone.key)" :key="item.novel_id" @click="goBook(item)">
+								<view class="rank-index" :class="{ 'rank-top': item.position <= 3 }">{{ item.position <= 3 ? item.position : String(item.position).padStart(2, '0') }}</view>
+								<view class="book-cover-box">
+									<log-image :src="item.picUrl + '?thumbnail=1'" class="book-cover" :onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
+									<text v-if="item.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
+									<text v-if="item.novel_type === 'world'" class="world-cover-badge">世界</text>
+								</view>
+								<view class="book-info">
+									<rank-work-title class="book-name" :title="item.name" :badges="item.badges || []" :max-badges="2" />
+									<view class="book-details">
+										<view class="book-author">作者：{{ item.user_name || '匿名作者' }}</view>
+										<view class="book-category">{{ item.novel_type === 'manga' ? '漫画' : item.novel_type === 'world' ? '世界设定' : '小说' }} · {{ Number(item.is_complete) === 1 ? '已完结' : '连载中' }}</view>
+										<view v-if="currentBoard === 'logpower'" class="book-score">原木力 {{ formatScore(item.score) }}</view>
+										<view v-else class="book-update">更新于 {{ formatUpdateDate(item.update_time) }}</view>
+									</view>
+								</view>
 							</view>
 						</view>
-					</view>
-				</view>
 
-				<view class="loading-state" v-if="loading && !items.length">
-					<image class="state-icon" src="../../static/loading.gif" mode="aspectFit" />
-					<text class="state-title">正在加载榜单…</text>
-				</view>
-				<view class="empty-state" v-else-if="!loading && !items.length">
-					<text class="state-title">暂时还没有上榜作品</text>
-					<text class="state-desc">换一个分类或榜单看看吧</text>
-				</view>
-				<view class="more-button" v-if="hasMore" @click="loadMore">{{ loading ? '加载中…' : '加载更多' }}</view>
-				<view class="list-end" v-else-if="items.length && !loading">已经到底啦</view>
-			</scroll-view>
+						<view class="loading-state" v-if="zoneLoading(zone.key) && !zoneItems(zone.key).length">
+							<image class="state-icon" src="../../static/loading.gif" mode="aspectFit" />
+							<text class="state-title">正在加载榜单…</text>
+						</view>
+						<view class="empty-state" v-else-if="!zoneLoading(zone.key) && !zoneItems(zone.key).length">
+							<text class="state-title">暂时还没有上榜作品</text>
+							<text class="state-desc">换一个分类或榜单看看吧</text>
+						</view>
+						<view class="more-button" v-if="zone.key === currentZone && hasMore" @click="loadMore">{{ loading ? '加载中…' : '加载更多' }}</view>
+						<view class="list-end" v-else-if="zone.key === currentZone && items.length && !loading">已经到底啦</view>
+					</scroll-view>
+				</swiper-item>
+			</swiper>
 		</view>
 	</view>
 </template>
@@ -93,9 +97,12 @@ export default {
 			requestVersion: 0,
 			refreshing: false,
 			listScrollTop: 0,
+			zonePreviews: {},
+			previewRequests: {},
 		};
 	},
 	computed: {
+		currentZoneIndex() { return this.zones.findIndex(zone => zone.key === this.currentZone); },
 		currentBoardLabel() { return this.boards.find(board => board.key === this.currentBoard).label; },
 		boardDescription() {
 			return {
@@ -122,13 +129,40 @@ export default {
 		}
 		this.loadFirstPage();
 	},
-	onPullDownRefresh() {
-		this.loadFirstPage();
-	},
 	methods: {
+		onZoneSwipe(event) {
+			const zone = this.zones[Number(event.detail.current)];
+			if (zone) this.switchZone(zone.key);
+		},
+		zoneItems(zone) {
+			if (zone === this.currentZone) return this.items;
+			return this.zonePreviews[`${this.currentBoard}:${zone}`] || [];
+		},
+		zoneLoading(zone) {
+			return zone === this.currentZone ? this.loading : !this.zonePreviews[`${this.currentBoard}:${zone}`];
+		},
+		cacheCurrentZone() {
+			this.zonePreviews = { ...this.zonePreviews, [`${this.currentBoard}:${this.currentZone}`]: this.items };
+		},
+		preloadZones() {
+			const board = this.currentBoard;
+			for (const zone of this.zones) {
+				const key = `${board}:${zone.key}`;
+				if (zone.key === this.currentZone || this.zonePreviews[key] || this.previewRequests[key]) continue;
+				this.previewRequests[key] = true;
+				axios.get(this.$baseUrl + '/library/rank/get_rank_board?board=' + board
+					+ '&zone=' + zone.key + '&page=1&amount=' + PAGE_AMOUNT, {})
+					.then(res => {
+						// A preview never changes the active list, pagination, or selected batch.
+						if ((board === this.currentBoard && zone.key === this.currentZone) || this.zonePreviews[key]) return;
+						this.zonePreviews = { ...this.zonePreviews, [key]: Array.isArray(res.data.items) ? res.data.items : [] };
+					})
+					.catch(() => {})
+					.finally(() => { delete this.previewRequests[key]; });
+			}
+		},
 		goBack() {
-			if (getCurrentPages().length > 1) uni.navigateBack();
-			else uni.reLaunch({ url: '/pages/library' });
+			uni.navigateBack();
 		},
 		formatUpdateDate(value) { return value ? String(value).slice(0, 10) : '暂无更新'; },
 		refreshRank() { this.refreshing = true; this.loadFirstPage(); },
@@ -163,13 +197,14 @@ export default {
 				this.items = items;
 				this.page = 1;
 				this.hasMore = items.length >= PAGE_AMOUNT;
+				this.cacheCurrentZone();
+				this.preloadZones();
 			} catch (error) {
 				if (version !== this.requestVersion) return;
 				console.error('rankBoard loadFirstPage failed:', error);
 				uni.showToast({ title: '获取榜单失败', icon: 'none', duration: 2000 });
 			} finally {
 				if (version === this.requestVersion) { this.loading = false; this.refreshing = false; }
-				uni.stopPullDownRefresh();
 			}
 		},
 		async loadMore() {
@@ -184,6 +219,7 @@ export default {
 				this.items = [...this.items, ...fresh];
 				this.page += 1;
 				this.hasMore = items.length >= PAGE_AMOUNT;
+				this.cacheCurrentZone();
 			} catch (error) {
 				if (version !== this.requestVersion) return;
 				if (error.response && error.response.status === 410) { this.loading = false; this.resetListScroll(); return this.loadFirstPage(); }
@@ -195,15 +231,17 @@ export default {
 		},
 		switchBoard(key) {
 			if (this.currentBoard === key) return;
+			this.cacheCurrentZone();
 			this.currentBoard = key;
-			this.items = [];
+			this.items = this.zonePreviews[`${key}:${this.currentZone}`] || [];
 			this.resetListScroll();
 			this.loadFirstPage();
 		},
 		switchZone(key) {
 			if (this.currentZone === key) return;
+			this.cacheCurrentZone();
 			this.currentZone = key;
-			this.items = [];
+			this.items = this.zonePreviews[`${this.currentBoard}:${key}`] || [];
 			this.resetListScroll();
 			this.loadFirstPage();
 		},
@@ -307,7 +345,8 @@ export default {
 	}
 }
 .rank-wordmark { width: 3.2em; }
-.rank-content { flex: 1; min-width: 0; height: 100%; }
+.rank-swiper { flex: 1; min-width: 0; height: 100%; }
+.rank-content { width: 100%; height: 100%; }
 .meta-line { padding: 6rpx 20rpx 24rpx; font-size: 20rpx; line-height: 30rpx; color: var(--text-muted); }
 .rank-list { padding: 0 20rpx; }
 .rank-item {

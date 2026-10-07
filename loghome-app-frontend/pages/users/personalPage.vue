@@ -8,7 +8,7 @@
 			onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
 		</view>
 		
-		<springBack top="calc(300rpx + var(--loghome-safe-top, 0px))" @cover-move="onCoverMove">
+		<springBack class="profile-content-sheet" top="calc(300rpx + var(--loghome-safe-top, 0px))" @cover-move="onCoverMove">
 			<!-- 右侧悬浮按钮 -->
 			<view class="rightBtnGroup">
 				<followBtn :targetId="Number(uid)" v-show="uid != myUserInfo.user_id"/>
@@ -629,6 +629,9 @@
 </script>
 
 <style lang="scss" scoped>
+	.profile-content-sheet:not(.dark-mode) {
+		background: #ffffff;
+	}
 	/* 页面子元素均为绝对定位脱流，根容器需自身撑满视口涂底色，
 	   否则内容面板下方会露出 WebView 底层背景色 */
 	.page-root {
@@ -999,6 +1002,7 @@
 		/* 点击徽标弹出的 tooltip 气泡 */
 		.admin-badge-tip {
 			position: absolute;
+			width: max-content;
 			left: 50%;
 			bottom: calc(100% + 14rpx);
 			transform: translateX(-50%);
@@ -1012,6 +1016,11 @@
 			z-index: 50;
 			box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.2);
 			animation: admin-tip-in 0.18s ease-out;
+
+			text {
+				white-space: nowrap;
+				word-break: normal;
+			}
 
 			/* 气泡小三角 */
 			&::after {

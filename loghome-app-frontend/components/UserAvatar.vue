@@ -19,13 +19,15 @@
 </template>
 
 <script>
-	const DEFAULT_AVATAR = '/static/user/defaultAvatar.jpg';
-	const AVATAR_FRAME_ASSET_VERSION = '20260801-2';
+	import avatarFrameAssets from '../common/avatar-frame-assets.json';
 
-	function versionedFrameSource(source) {
-		if (!source || !source.startsWith('/static/avatar-frames/')) return source || '';
-		const separator = source.includes('?') ? '&' : '?';
-		return `${source}${separator}v=${AVATAR_FRAME_ASSET_VERSION}`;
+	const DEFAULT_AVATAR = '/static/user/defaultAvatar.jpg';
+
+	function publicFrameSource(source) {
+		if (!source) return '';
+		// Existing stored user profiles may still contain the old local asset URLs.
+		const entry = avatarFrameAssets[source.split('?')[0]];
+		return entry ? entry.url : source;
 	}
 
 	export default {
@@ -48,7 +50,7 @@
 				const source = !this.animate
 					? this.frame.thumbnail_url || this.frame.asset_url || ''
 					: this.frame.asset_url || this.frame.thumbnail_url || '';
-				return versionedFrameSource(source);
+				return publicFrameSource(source);
 			},
 			photoStyle() {
 				if (!this.frame) {

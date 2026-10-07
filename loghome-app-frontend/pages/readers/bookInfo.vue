@@ -232,27 +232,20 @@
 								<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
 								<div style="color:#777777; font-size: 25rpx;">这里还什么都没有喔</div>
 							</div>
-							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
-								<navigator :url="'./bookInfo?id=' + novel.novel_id" open-type="navigate" class="books">
-									<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
-										:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"
-										style="border-radius: 16rpx 0 0 16rpx;" />
-									<div class="bookInfo" style="margin-left:10rpx;">
-										<div class="world-title">
-											{{ novel.name }}
-											<el-tag type="warning" v-show="novel.novel_type == 'world'" effect="dark"
-												style="margin-left:10rpx; transform:translateY(-5rpx)"
-												size="mini">世界设定</el-tag>
-										</div>
-										<view class="author">
-											<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
-												onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-											<div class="auther_name">{{ novel.user_name }}</div>
-										</view>
-										<div class="description">{{ novel.content }}</div>
-									</div>
-								</navigator>
-							</div>
+							<navigator v-for="novel in worlds" :key="novel.novel_id" :url="'./bookInfo?id=' + novel.novel_id" open-type="navigate" class="world-card">
+								<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="world-cover" :onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
+								<view class="world-info">
+									<view class="world-heading">
+										<text class="world-title">{{ novel.name }}</text>
+										<text class="world-type" v-if="novel.novel_type == 'world'">世界设定</text>
+									</view>
+									<view class="world-author">
+										<log-image :src="novel.avatar_url" alt="" class="world-author-avatar" onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+										<text class="world-author-name">{{ novel.user_name }}</text>
+									</view>
+									<text class="world-description">{{ novel.content }}</text>
+								</view>
+							</navigator>
 						</div>
 
 					</view>
@@ -1196,12 +1189,12 @@ export default {
 			})
 		},
 		getFansStatistics() {
-			axios.get(this.$baseUrl + "/library/get_all_novel_fans?novel_id=" + this.uid)
+			return axios.get(this.$baseUrl + "/library/get_all_novel_fans?novel_id=" + this.uid)
 				.then((res) => {
 					this.fanInfo = res.data;
 				}).catch(err => {
 					uni.showToast({
-						title: error.toString(),
+						title: err.toString(),
 						icon: 'none',
 						duration: 2000
 					});
@@ -1307,6 +1300,7 @@ export default {
 			})
 		},
 		runGiftAnimation(ev) {
+			this.getFansStatistics();
 			this.giftImage = ev.img_url;
 			setTimeout(() => {
 				let giftAnimation = [{
@@ -2509,12 +2503,15 @@ export default {
 
 .collaborator-scroll {
 	margin-top: 20rpx;
+	// scroll-view defaults to 100% height on H5; reserve only the author row.
+	height: 212rpx;
 	white-space: nowrap;
 }
 
 .collaborator-row {
 	display: inline-flex;
 	align-items: stretch;
+	vertical-align: top;
 }
 
 .collaborator-card {
@@ -2805,107 +2802,112 @@ export default {
 	justify-content: space-between;
 }
 
-.l-list {
-	.worlds {
-		.books {
-			height: 260rpx;
-			width: calc(100vw - 70rpx);
-			margin: 10rpx 0;
-			display: flex;
-			background-color: rgb(255, 255, 255);
-			border-radius: 16rpx;
-			transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-			overflow: hidden;
+.worlds { margin-top: 20rpx; }
 
-			.dark-mode & {
-				background-color: var(--card-background);
-			}
+.world-card {
+	display: flex;
+	align-items: stretch;
+	gap: 20rpx;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 16rpx;
+	margin-bottom: 16rpx;
+	border: 1rpx solid rgba(128, 128, 128, 0.1);
+	border-radius: 20rpx;
+	background: rgba(245, 246, 247, 0.7);
+	transition: transform 0.2s ease, background-color 0.2s ease;
+	&:last-child { margin-bottom: 0; }
+	&:active { transform: scale(0.99); }
+	.dark-mode & { background: var(--card-background); }
+}
 
-			.books:active {
-				transform: scale(0.99);
-			}
+.world-cover {
+	flex: 0 0 176rpx;
+	width: 176rpx;
+	height: 240rpx;
+	object-fit: cover;
+	border-radius: 12rpx;
+}
 
+.world-info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	padding: 4rpx 0;
+}
 
-			img {
-				height: 260rpx;
-				width: 200rpx;
-				border-radius: 16rpx 0 0 16rpx;
-				margin: 0rpx;
-				flex-shrink: 0;
-			}
+.world-heading {
+	display: flex;
+	align-items: flex-start;
+	gap: 10rpx;
+}
 
-			.bookInfo {
-				margin-left: 30rpx;
-				margin-top: 22rpx;
+.world-title {
+	flex: 1;
+	min-width: 0;
+	font-size: 32rpx;
+	font-weight: bold;
+	line-height: 42rpx;
+	color: #2d2d2d;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	word-break: break-word;
+	.dark-mode & { color: var(--text-color-primary); }
+}
 
-				.world-title {
-					font-size: 34rpx;
-					height: 42rpx;
-					margin-bottom: 10rpx;
-					overflow: hidden;
-					display: -webkit-box;
-					font-weight: bold;
-					-webkit-box-orient: vertical;
-					-webkit-line-clamp: 1;
-					color: rgb(45, 45, 45);
-					margin: 5rpx;
+.world-type {
+	flex: none;
+	margin-top: 5rpx;
+	padding: 2rpx 8rpx;
+	border-radius: 6rpx;
+	font-size: 20rpx;
+	line-height: 28rpx;
+	color: #966220;
+	background: #fff0d8;
+	.dark-mode & { color: #ffd59a; background: rgba(218, 161, 68, 0.16); }
+}
 
-					.dark-mode & {
-						color: var(--text-color-primary);
-					}
-				}
+.world-author {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	margin-top: 12rpx;
+	min-width: 0;
+}
 
-				.author {
-					position: relative;
-					margin-top: 15rpx;
-					margin-bottom: 10rpx;
-					display: flex;
-					align-items: center;
+.world-author-avatar {
+	width: 32rpx;
+	height: 32rpx;
+	flex: none;
+	border-radius: 50%;
+	object-fit: cover;
+}
 
-					.auther_avatar {
-						position: absolute;
-						top: 0rpx;
-						left: 5rpx;
-						height: 35rpx;
-						width: 35rpx;
-						border-radius: 5rpx;
-					}
+.world-author-name {
+	min-width: 0;
+	font-size: 24rpx;
+	line-height: 32rpx;
+	color: #777;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	.dark-mode & { color: var(--text-color-regular); }
+}
 
-					.auther_name {
-						font-size: 25rpx;
-						// font-weight: bold;
-						color: rgb(45, 45, 45);
-						overflow: hidden;
-						margin-left: 45rpx;
-						display: -webkit-box;
-						-webkit-box-orient: vertical;
-						-webkit-line-clamp: 1;
-
-						.dark-mode & {
-							color: var(--text-color-regular);
-						}
-					}
-				}
-
-				.description {
-					font-size: 25rpx;
-					color: rgb(142, 130, 109);
-					margin: 5rpx 0;
-					overflow: hidden;
-					display: -webkit-box;
-					-webkit-box-orient: vertical;
-					-webkit-line-clamp: 3;
-
-					.dark-mode & {
-						color: var(--text-color-regular);
-					}
-				}
-
-
-			}
-
-		}
-	}
+.world-description {
+	margin-top: 16rpx;
+	font-size: 25rpx;
+	line-height: 36rpx;
+	color: #8b867d;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	word-break: break-word;
+	.dark-mode & { color: var(--text-color-regular); }
 }
 
 .activity-group {
@@ -3115,7 +3117,8 @@ img {
 		position: absolute;
 		width: 100vw;
 		top: 0;
-		height: calc(100% + 36rpx);
+		// Cover the sheet's 110px pull range and its spring overshoot.
+		height: calc(100% + 440rpx);
 		overflow: hidden;
 		isolation: isolate;
 		background-color: var(--book-glass-tint);

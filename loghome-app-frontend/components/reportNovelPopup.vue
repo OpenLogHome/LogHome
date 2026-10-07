@@ -1,5 +1,5 @@
 <template>
-	<uni-popup ref="popup" type="bottom">
+	<uni-popup ref="popup" type="bottom" :safe-area="false">
 		<view class="report-sheet" v-dark>
 			<view class="report-title">举报作品</view>
 			<view class="report-sub">请选择举报原因，管理员核实后将进行处理</view>
@@ -100,7 +100,12 @@ export default {
 
 <style lang="scss" scoped>
 .report-sheet {
-	padding: 40rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+	box-sizing: border-box;
+	height: auto;
+	max-height: 85vh;
+	max-height: 85dvh;
+	overflow-y: auto;
+	padding: 40rpx 32rpx calc(40rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px)));
 	border-radius: 24rpx 24rpx 0 0;
 	background: var(--card-background, #ffffff);
 	color: var(--text-color-primary, #333333);
@@ -160,7 +165,13 @@ export default {
 	color: var(--text-color-secondary, #999999);
 }
 
-.report-submit {
+.report-sheet .report-submit {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	padding: 0;
+	border: 0;
 	margin-top: 24rpx;
 	height: 88rpx;
 	line-height: 88rpx;

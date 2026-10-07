@@ -484,7 +484,7 @@ class WebViewActivity : AppCompatActivity() {
         activeWebView.layoutParams = layoutParams
         val playerParams = binding.nativeAudiobookPlayer.layoutParams as? ViewGroup.MarginLayoutParams
         if (playerParams != null) {
-            playerParams.bottomMargin = normalizedInset + (12 * resources.displayMetrics.density).toInt()
+            playerParams.bottomMargin = 0 // The full-screen player applies its own system/IME insets.
             binding.nativeAudiobookPlayer.layoutParams = playerParams
         }
     }
@@ -887,7 +887,7 @@ class WebViewActivity : AppCompatActivity() {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     if (binding.nativeAudiobookPlayer.isVisible) {
-                        binding.nativeAudiobookPlayer.isVisible = false
+                        binding.nativeAudiobookPlayer.hidePlayer()
                         return
                     }
                     if (nativeBackDispatching) {
@@ -1725,7 +1725,7 @@ class WebViewActivity : AppCompatActivity() {
                 }
 
                 override fun onCollapse() {
-                    binding.nativeAudiobookPlayer.isVisible = false
+                    binding.nativeAudiobookPlayer.hidePlayer()
                 }
             },
         )
@@ -1745,13 +1745,7 @@ class WebViewActivity : AppCompatActivity() {
         nativeAudiobookTitle = payload.optString("bookTitle").ifBlank { "原木听书" }
         loadNativeAudiobookCover(payload.optString("coverUrl"))
         binding.nativeAudiobookPlayer.setBookTitle(nativeAudiobookTitle)
-        binding.nativeAudiobookPlayer.alpha = 0f
-        binding.nativeAudiobookPlayer.isVisible = true
-        binding.nativeAudiobookPlayer.animate().cancel()
-        binding.nativeAudiobookPlayer.animate()
-            .alpha(1f)
-            .setDuration(180L)
-            .start()
+        binding.nativeAudiobookPlayer.showPlayer()
 
         val service = requireAudioService()
         val startArticleId = payload.optString("startArticleId").takeIf { it.isNotBlank() }

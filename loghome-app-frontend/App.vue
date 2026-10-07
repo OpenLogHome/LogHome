@@ -772,7 +772,7 @@ uni-modal {
 
 .el-collapse.collapse2list {
 	.el-collapse-item__header {
-		color: #333333 !important;
+		color: var(--text-color-primary, #333333) !important;
 	}
 }
 

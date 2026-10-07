@@ -183,7 +183,7 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "排行榜",
-				"enablePullDownRefresh": true
+				"enablePullDownRefresh": false
 			}
 		},
 		{
@@ -195,7 +195,7 @@
 		{
 			"path": "pages/readers/novel_fans",
 			"style": {
-				"navigationBarTitleText": "书籍打赏"
+				"navigationBarTitleText": "粉丝贡献榜"
 			}
 		},
 		{

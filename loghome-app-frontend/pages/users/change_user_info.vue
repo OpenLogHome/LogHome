@@ -140,10 +140,13 @@
 <style scoped lang="less">
 	.outer{
 		display:flex;
-		justify-content: center;
+		justify-content: flex-start;
 		flex-direction: column;
 		align-items: center;
-		margin:30px;
+		min-height: calc(100vh - var(--window-top, 0px) - var(--window-bottom, 0px));
+		box-sizing: border-box;
+		padding: 30px;
+		background-color: #ffffff;
 		.avator{
 			margin-top:10rpx;
 			width: 210upx;

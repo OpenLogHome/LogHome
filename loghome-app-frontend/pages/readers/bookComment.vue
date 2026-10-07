@@ -19,7 +19,7 @@
 				</div>
 			</div>
 			<view class="comments">
-				<commentItem v-for="item in reviews" :reviewMsg="item" :key="item.essay_comment_id"
+				<commentItem v-for="item in reviews" :reviewMsg="item" :key="item.comment_id"
 					:componentMode="componentMode" @childReview="childReview($event)" :id="'comment_' + item.comment_id"
 					@changePraise="changePraise($event)" @deleteComment="deleteComment($event)" class="comment_item" :class="{highlight_comment: preLoadCommentId == item.comment_id}"
 					:paragraphMode="paragraphId != undefined" @navigate="$emit('navigate')" :fanRanks="fanRanks" :novelId="novelId"></commentItem>
@@ -77,6 +77,20 @@ import axios from 'axios'
 import commentItem from "../../components/dl-review/item.vue"
 import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 import darkModeMixin from '@/mixins/dark-mode.js'
+
+function normalizeCommentMediaUrls(value) {
+	if (typeof value === 'string') {
+		try {
+			value = JSON.parse(value);
+		} catch (error) {
+			return [];
+		}
+	}
+	return Array.isArray(value)
+		? value.filter(url => typeof url === 'string' && url.trim().length > 0)
+		: [];
+}
+
 export default {
 	components: {
 		commentItem, nothing, emojiPicker
@@ -299,14 +313,14 @@ export default {
 					targetUserName: userNameMap[reply.reply_to_id] || item.name,
 					sendMsg: reply.content,
 					article_id: reply.article_id,
-					media_urls: reply.media_urls || []
+					media_urls: normalizeCommentMediaUrls(reply.media_urls)
 				})),
 				reviewNum: replies.length,
 				article_id: item.article_id,
 				article_title: item.article_title || '',
 				cento_id: item.cento_id,
 				cento: item.cento,
-				media_urls: item.media_urls || [],
+				media_urls: normalizeCommentMediaUrls(item.media_urls),
 				...(praiseStatusesLoaded ? {
 					praiseType
 				} : {})

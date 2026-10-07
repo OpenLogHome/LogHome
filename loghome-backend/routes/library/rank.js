@@ -13,6 +13,7 @@ const {
 
 // 创建路由对象
 let router = express.Router();
+const { withHaycraftBadge } = require('../../bin/rankBadges');
 
 router.get('/get_rank_board', async function (req, res) {
 	try {
@@ -91,6 +92,9 @@ router.get('/get_rank_board', async function (req, res) {
 			}
 			items = items.map(item => ({ ...item, badges: [] }));
 		}
+
+		// Apply participation labels immediately, including existing batches and fallback ranks.
+		items = items.map(item => ({ ...item, badges: withHaycraftBadge(item, item.badges) }));
 
 		res.end(
 			JSON.stringify({

@@ -8,6 +8,7 @@
 			{ 'membership-badge--icon-only': !showLabel }
 		]"
 		:title="label"
+		@tap.stop="openMembership"
 	>
 		<image class="membership-badge__icon" :src="icon" mode="aspectFit"></image>
 		<text v-if="showLabel" class="membership-badge__label">{{ label }}</text>
@@ -50,11 +51,20 @@ export default {
 				: '/static/membership/loghome-pass.png';
 		},
 	},
+	methods: {
+		openMembership() {
+			if (!this.normalizedTier) return;
+			uni.navigateTo({
+				url: '/pages/membership/index?tier=' + this.normalizedTier,
+			});
+		},
+	},
 };
 </script>
 
 <style scoped lang="scss">
 .membership-badge {
+	cursor: pointer;
 	display: inline-flex;
 	align-items: center;
 	flex-shrink: 0;

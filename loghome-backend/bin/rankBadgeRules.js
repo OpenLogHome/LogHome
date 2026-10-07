@@ -1,5 +1,5 @@
 module.exports = {
-	version: 3,
+	version: 4,
 	newWorkDays: 30,
 	oldWorkMinimumYears: 1,
 	riseMinimum: 5,

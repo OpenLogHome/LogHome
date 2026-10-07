@@ -39,6 +39,21 @@ function completedWorkYears(createdAt, nowMs) {
 	return Math.max(0, years);
 }
 
+// Participation is identified by the existing HayCraft tag flag, never by the title.
+function withHaycraftBadge(item, badges = [], now = new Date()) {
+	const result = badges.filter(badge => badge.code !== 'haycraft_work');
+	if (item.is_haycraft === true || Number(item.is_haycraft) === 1)
+		result.push({
+			code: 'haycraft_work',
+			text: '干草块文会作品',
+			tone: 'gold',
+			priority: 110,
+			evidence: { is_haycraft: true },
+			expires_at: new Date(now.getTime() + HOUR).toISOString(),
+		});
+	return result.sort((a, b) => (Number(b.priority) || 0) - (Number(a.priority) || 0));
+}
+
 function buildBadges(item, features = {}, history = {}, now = new Date()) {
 	const badges = [],
 		nowMs = now.getTime();
@@ -111,7 +126,7 @@ function buildBadges(item, features = {}, history = {}, now = new Date()) {
 	const days = Number(history.appearanceDays || 0);
 	if (days >= rules.appearanceMilestones[0])
 		add('appearance', `上榜${days}天`, 'gold', 30, { days });
-	return badges.sort((a, b) => b.priority - a.priority);
+	return withHaycraftBadge(item, badges, now);
 }
 async function collectFeatures(ids, date) {
 	const features = new Map(
@@ -215,6 +230,7 @@ async function collectHistory(ids, date) {
 	return history;
 }
 module.exports = {
+	withHaycraftBadge,
 	buildBadges,
 	collectFeatures,
 	collectHistory,

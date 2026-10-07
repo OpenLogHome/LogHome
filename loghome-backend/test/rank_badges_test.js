@@ -302,6 +302,7 @@ function route(query) {
 	load('routes/library/rank.js', {
 		express: { Router: () => ({ get: (p, h) => (handler = h) }) },
 		'../../sql.js': { query },
+		'../../bin/rankBadges': engine,
 		'../../bin/rankBoards.js': {
 			BOARDS: ['update', 'logpower', 'complete', 'new'],
 			ZONES: { all: 1, novel: 1, manga: 1, world: 1 },
@@ -523,4 +524,27 @@ test('闰日创建作品的非闰年周年按2月28日计算', () => {
 			.find(b => b.code === 'old_work');
 		assert.equal(badge?.evidence.completed_years || 0, years);
 	}
+});
+
+test('HayCraft 文会标签优先于榜首、新作和全部其他标签，兼容布尔与数据库标志', () => {
+	for (const flag of [true, 1, '1']) {
+		const badges = engine.buildBadges({ ...item, is_haycraft: flag, create_time: '2026-10-06 12:00:00' }, { nices: 1000 }, { championDays: 3 }, now);
+		assert.equal(badges[0].code, 'haycraft_work');
+		assert.equal(badges[0].text, '干草块文会作品');
+		assert.ok(badges.slice(1).every(badge => badge.priority < badges[0].priority));
+	}
+	for (const flag of [false, 0, '0', undefined]) {
+		assert.ok(!codes(engine.buildBadges({ ...item, is_haycraft: flag, name: 'HayCraft' }, {}, {}, now)).includes('haycraft_work'));
+	}
+});
+test('已有批次和无标签兜底也立即获得文会标签，重复应用不重复显示', async () => {
+	const handler = route(async sql => sql.includes('FROM rank_batch')
+		? [{ batch_id: 8, generated_at: now }]
+		: [{ item_json: JSON.stringify({ novel_id: 1, is_haycraft: 1 }), badges_json: JSON.stringify([{ code: 'champion', priority: 100 }]) }]);
+	const res = response();
+	await handler({ query: { board: 'update', zone: 'all' } }, res);
+	assert.equal(res.body.items[0].badges[0].text, '干草块文会作品');
+	const badges = engine.withHaycraftBadge({ is_haycraft: 1 }, res.body.items[0].badges, now);
+	assert.equal(badges.filter(badge => badge.code === 'haycraft_work').length, 1);
+	assert.equal(engine.withHaycraftBadge({ is_haycraft: 1 }, [], now)[0].text, '干草块文会作品');
 });

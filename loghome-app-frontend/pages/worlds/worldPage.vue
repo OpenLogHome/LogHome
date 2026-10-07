@@ -14,12 +14,11 @@
 				<view class="author" @click="gotoUserProfile(world.creator_id)">
 					<log-image :src="world.avatar_url" alt="" class="auther_avatar"
 						onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-					<div class="auther_name">{{world.user_name}}<uni-icons type="forward" size="18"
-							:color="isDarkMode ? '#b8b8b8' : '#666666'"></uni-icons>
-					</div>
+					<text class="auther_name">{{world.user_name}}</text>
+					<uni-icons class="author-arrow" type="forward" size="16"
+						:color="isDarkMode ? '#b8b8b8' : '#888888'"></uni-icons>
 				</view>
-				<div class="recentUpdate"
-					style="font-size: 28rpx; height:50rpx; line-height: 50rpx; margin:10rpx;">
+				<div class="recentUpdate">
 					最近更新：{{utc2beijing(world.update_time)}}
 				</div>
 			</div>
@@ -232,7 +231,7 @@
 				return beijing_datetime;
 			},
 			getFansStatistics() {
-				axios.get(this.$baseUrl + "/library/get_all_novel_fans?novel_id=" + this.world.novel_id)
+				return axios.get(this.$baseUrl + "/library/get_all_novel_fans?novel_id=" + this.world.novel_id)
 					.then((res) => {
 						this.fanInfo = res.data;
 					}).catch(err => {
@@ -689,6 +688,7 @@
 				}
 			},
 			runGiftAnimation(ev) {
+				this.getFansStatistics();
 				this.giftImage = ev.img_url;
 				setTimeout(() => {
 					let giftAnimation = [{
@@ -881,31 +881,44 @@
 
 			.info {
 				display: flex;
+				align-items: center;
+				gap: 24rpx;
+				margin: 16rpx 0 20rpx;
 
 				.author {
-					position: relative;
-					margin-top: 10rpx;
-					margin-bottom: 10rpx;
-					transform: scale(.95);
-					transform-origin: left;
+					flex: 1;
+					min-width: 0;
+					display: flex;
+					align-items: center;
+					gap: 10rpx;
 				}
 
-				.author .auther_avatar {
-					position: absolute;
-					left: 0rpx;
-					height: 50rpx;
-					width: 50rpx;
-					border-radius: 0rpx;
+				.auther_avatar {
+					flex: none;
+					height: 48rpx;
+					width: 48rpx;
+					border-radius: 50%;
+					object-fit: cover;
 				}
 
-				.author .auther_name {
-					font-size: 30rpx;
+				.auther_name {
+					min-width: 0;
+					font-size: 28rpx;
+					line-height: 40rpx;
 					color: var(--text-color-regular);
-					margin-left: 60rpx;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
 				}
+
+				.author-arrow { flex: none; }
 
 				.recentUpdate {
-					color: var(--text-color-regular);
+					flex: none;
+					font-size: 24rpx;
+					line-height: 36rpx;
+					white-space: nowrap;
+					color: var(--text-color-secondary, #888888);
 				}
 			}
 
@@ -1227,6 +1240,10 @@
 		background-color: var(--card-background);
 		border-bottom-color: var(--border-color);
 		color: var(--text-color-primary);
+	}
+
+	.world-page.dark-mode ::v-deep .el-collapse-item__arrow {
+		color: var(--text-color-regular, #c8c8c8);
 	}
 
 	.world-page.dark-mode ::v-deep .el-collapse-item__wrap {

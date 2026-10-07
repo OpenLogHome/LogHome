@@ -300,8 +300,16 @@ export default {
 		previewHeaders() {
 			return this.isPreview ? { Authorization: 'Bearer ' + this.getToken() } : {};
 		},
+		shouldUseNativeBack() {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null
+			return !!(bridge && bridge.inApp && bridge.nativeRouterAvailable)
+		},
 		goBack() {
 			const pages = getCurrentPages();
+			if (this.shouldUseNativeBack()) {
+				uni.navigateBack({ delta: 1 })
+				return
+			}
 			if (pages.length > 1) {
 				uni.navigateBack();
 			} else {
@@ -886,8 +894,8 @@ export default {
 .setting-options button { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 82rpx; padding: 8rpx !important; border: 2rpx solid var(--manga-line) !important; border-radius: 14rpx !important; background: var(--manga-bg) !important; font-size: 24rpx; line-height: 1.3; text-align: center; }
 .setting-options button.chosen { border-color: var(--manga-accent) !important; background: var(--manga-tint) !important; color: var(--manga-accent) !important; font-weight: 700; }
 .gesture-tip { display: block; padding: 26rpx 0 0; text-align: center; color: var(--manga-muted); font-size: 21rpx; }
-.catalog-drawer { position: fixed; inset: 0 0 0 auto; width: min(84%, 620rpx); z-index: 61; display: flex; flex-direction: column; padding-top: var(--manga-safe-top); background: var(--manga-card); transform: translateX(100%); transition: transform .22s ease; box-shadow: -10rpx 0 44rpx rgba(0,0,0,.10); }
-.catalog-drawer.open { transform: translateX(0); }
+.catalog-drawer { position: fixed; inset: 0 0 0 auto; width: min(84%, 620rpx); z-index: 61; display: flex; flex-direction: column; padding-top: var(--manga-safe-top); background: var(--manga-card); transform: translateX(100%); visibility: hidden; pointer-events: none; transition: transform .22s ease, visibility 0s linear .22s; }
+.catalog-drawer.open { transform: translateX(0); visibility: visible; pointer-events: auto; transition-delay: 0s; box-shadow: -10rpx 0 44rpx rgba(0,0,0,.10); }
 .catalog-header { display: flex; align-items: center; min-height: 90rpx; padding-left: 24rpx; border-bottom: 1rpx solid var(--manga-line); }
 .catalog-title { flex: 1; min-width: 0; font-size: 27rpx; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .catalog-list { flex: 1; min-height: 0; }

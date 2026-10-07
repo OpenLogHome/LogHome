@@ -251,6 +251,10 @@ export default {
 			if (!value) return '';
 			return String(value).slice(0, 16).replace('T', ' ');
 		},
+		shouldUseNativeBack() {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null
+			return !!(bridge && bridge.inApp && bridge.nativeRouterAvailable)
+		},
 		handleBack() {
 			if (this.view === 'edit') {
 				this.backToList();
@@ -258,6 +262,10 @@ export default {
 			}
 			const pages = getCurrentPages();
 			this.navigationAllowed = true;
+			if (this.shouldUseNativeBack()) {
+				uni.navigateBack({ delta: 1 })
+				return
+			}
 			if (pages.length > 1) {
 				uni.navigateBack();
 			} else {

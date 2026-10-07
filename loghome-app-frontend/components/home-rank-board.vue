@@ -302,7 +302,7 @@ export default {
 
 <style scoped lang="scss">
 .home-rank-board {
-	--rank-accent: #a1ff7f;
+	--rank-accent: #8fdf70;
 	--rank-text: #202020;
 	--rank-muted: #999;
 	--rank-chip: #f5f5f5;

@@ -1,10 +1,28 @@
 <template>
-	<div class="fans_rank" :class="{ 'fans_rank--empty': fanInfo.length === 0 }" v-dark>
+	<div class="fans_rank" :class="{ 'fans_rank--empty': fanInfo.length === 0, 'fans_rank--compact': fanInfo.length > 0 && fanInfo.length < 3 }" v-dark>
 		<view v-if="fanInfo.length === 0" class="fans-empty" role="status">
 			<text class="fans-empty-title">暂无贡献记录</text>
 			<text class="fans-empty-hint">成为第一位支持这部作品的读者吧</text>
 		</view>
-		<div v-else class="fans-podium" :class="{ 'fans-podium--single': fanInfo.length === 1 }">
+		<view v-else-if="fanInfo.length < 3" class="fans-compact-list">
+			<view v-for="(fan, index) in fanInfo" :key="fan.user_id || index" class="fans-compact-row" :class="'compact-medal-' + index">
+				<text class="compact-rank">{{ index + 1 }}</text>
+				<view class="compact-avatar-wrap">
+					<user-avatar :src="fan.avatar_url" :frame="fan.avatar_frame" class="compact-avatar"
+						:visual-scale="fan.avatar_frame ? 1.15 : 1" />
+					<image class="compact-medal" :src="'/static/fans/medal-' + index + '.svg'" mode="aspectFit" />
+				</view>
+				<view class="compact-info">
+					<text class="compact-name">{{ fan.user_name }}</text>
+					<text class="compact-message" v-if="fan.message">{{ fan.message }}</text>
+				</view>
+				<view class="compact-score">
+					<text class="compact-value">{{ fan.fans_value }}</text>
+					<text class="compact-unit">贡献值</text>
+				</view>
+			</view>
+		</view>
+		<div v-else class="fans-podium">
 			<div class="podium-card podium-2" v-if="fanInfo[1]">
 				<view class="podium-badge"><text class="podium-badge-top">TOP</text><text class="podium-badge-no">2</text></view>
 				<view class="podium-avatar-wrap">
@@ -82,6 +100,95 @@ export default {
 .fans_rank--empty {
 	margin-top: 0;
 	padding: 32rpx 24rpx;
+}
+
+.fans_rank--compact {
+	margin-top: 20rpx;
+	padding: 0 0 16rpx;
+}
+
+.fans-compact-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8rpx;
+}
+
+.fans-compact-row {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 18rpx;
+	min-height: 128rpx;
+	padding: 16rpx 18rpx 16rpx 58rpx;
+	box-sizing: border-box;
+	border-radius: 16rpx;
+	background: linear-gradient(100deg, #fff2c1, rgba(255, 255, 255, 0));
+}
+
+.compact-rank {
+	position: absolute;
+	left: 12rpx;
+	bottom: 4rpx;
+	font-size: 88rpx;
+	line-height: 1;
+	font-style: italic;
+	font-weight: 900;
+	color: #e8ad47;
+	opacity: .32;
+}
+
+.compact-avatar-wrap {
+	position: relative;
+	flex: none;
+	width: 80rpx;
+	height: 80rpx;
+}
+
+.compact-avatar { width: 100%; height: 100%; }
+
+.compact-medal {
+	position: absolute;
+	width: 116rpx;
+	height: 116rpx;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.compact-info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6rpx;
+}
+
+.compact-name, .compact-message {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.compact-name { font-size: 28rpx; line-height: 38rpx; color: #aa792f; }
+.compact-message { font-size: 22rpx; line-height: 32rpx; color: #a38351; }
+.compact-score { flex: none; display: flex; align-items: baseline; gap: 4rpx; white-space: nowrap; }
+.compact-value { font-size: 30rpx; line-height: 38rpx; font-weight: 800; font-style: italic; color: #555; }
+.compact-unit { font-size: 19rpx; color: #999; }
+
+.compact-medal-1 {
+	background: linear-gradient(100deg, #edf2ff, rgba(255, 255, 255, 0));
+	.compact-rank { color: #a6bbe6; }
+	.compact-name { color: #333; }
+	.compact-message { color: #9297a0; }
+}
+
+.dark-mode {
+	.fans-compact-row { background: linear-gradient(100deg, rgba(143, 108, 39, .26), transparent); }
+	.compact-medal-1 { background: linear-gradient(100deg, rgba(86, 113, 158, .26), transparent); }
+	.compact-name { color: #efd09d; }
+	.compact-medal-1 .compact-name, .compact-value { color: #e0e5ed; }
+	.compact-message, .compact-unit { color: #aab0ba; }
 }
 
 .fans-empty {
