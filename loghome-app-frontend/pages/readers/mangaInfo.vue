@@ -660,10 +660,10 @@ export default {
 .comment-empty { padding: 38rpx 0; color: var(--manga-muted); text-align: center; font-size: 25rpx; }
 .comment-write { display: flex; align-items: center; justify-content: center; gap: 10rpx; width: 100%; min-height: 88rpx; margin-top: 20rpx; border: 1rpx dashed var(--manga-line); border-radius: 16rpx; color: var(--manga-muted); font-size: 25rpx; font-weight: 600; }
 .comment-write .manga-icon { font-size: 26rpx; }
-.comment-sheet { box-sizing: border-box; display: flex; flex-direction: column; max-height: calc(82vh - var(--manga-safe-top)); padding: 0 28rpx calc(20rpx + var(--manga-safe-bottom)); background: var(--manga-card); border-radius: 20rpx 20rpx 0 0; }
+.comment-sheet { box-sizing: border-box; display: flex; flex-direction: column; height: calc(82vh - var(--manga-safe-top)); padding: 0 28rpx calc(20rpx + var(--manga-safe-bottom)); background: var(--manga-card); border-radius: 20rpx 20rpx 0 0; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; flex: none; min-height: 96rpx; font-size: 30rpx; font-weight: 700; }
 .sheet-close { display: grid; place-items: center; width: 76rpx; height: 76rpx; color: var(--manga-muted); font-size: 30rpx; }
-.sheet-scroll { flex: 1; min-height: 240rpx; }
+.sheet-scroll { flex: 1; min-height: 0; }
 .comment-more { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 88rpx; color: var(--manga-accent); font-size: 25rpx; font-weight: 600; }
 .works-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18rpx; }
 .work-item { min-width: 0; text-align: left; }

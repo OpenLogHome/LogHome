@@ -45,7 +45,7 @@
 										color:#939393;
 										vertical-align: middle;
 										font-size: 30rpx;
-				                    "><log-image src="https://dn-tystatic.qbox.me/img/buliang.png" style="
+				                    "><img src="../../static/buliang.svg" alt="网上有害信息举报专区" style="
 				                        margin-right: 5px;
 				                        width: 35rpx;
 				                        height: 35rpx;" />{{ $t('auth.login.account.reportZone') }}</a>
