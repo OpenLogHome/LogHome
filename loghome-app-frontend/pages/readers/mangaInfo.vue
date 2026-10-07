@@ -170,7 +170,7 @@ export default {
 			try { const res = await axios.get(this.$baseUrl + '/library/get_novel_by_user_id?id=' + id); this.authorWorks = (res.data || []).filter(work => work.novel_type === 'manga' && Number(work.is_personal) === 0 && String(work.novel_id) !== String(this.uid)).slice(0, 3); } catch (_) {}
 		},
 		goBack() {
-			uni.reLaunch({ url: '/pages/library' });
+			uni.navigateBack();
 		},
 		getToken() {
 			const token = this.getTokenInfo();
