@@ -1,0 +1,127 @@
+[
+  {
+    "frame_id": 1,
+    "asset_url": "/static/avatar-frames/01.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/01.webp"
+  },
+  {
+    "frame_id": 2,
+    "asset_url": "/static/avatar-frames/02.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/02.webp"
+  },
+  {
+    "frame_id": 3,
+    "asset_url": "/static/avatar-frames/03.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/03.webp"
+  },
+  {
+    "frame_id": 5,
+    "asset_url": "/static/avatar-frames/05.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/05.webp"
+  },
+  {
+    "frame_id": 7,
+    "asset_url": "/static/avatar-frames/07.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/07.webp"
+  },
+  {
+    "frame_id": 8,
+    "asset_url": "/static/avatar-frames/08.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/08.webp"
+  },
+  {
+    "frame_id": 9,
+    "asset_url": "/static/avatar-frames/09.gif",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/09.webp"
+  },
+  {
+    "frame_id": 10,
+    "asset_url": "/static/avatar-frames/10.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/10.webp"
+  },
+  {
+    "frame_id": 11,
+    "asset_url": "/static/avatar-frames/11.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/11.webp"
+  },
+  {
+    "frame_id": 12,
+    "asset_url": "/static/avatar-frames/12.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/12.webp"
+  },
+  {
+    "frame_id": 13,
+    "asset_url": "/static/avatar-frames/13.gif",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/13.webp"
+  },
+  {
+    "frame_id": 14,
+    "asset_url": "/static/avatar-frames/14.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/14.webp"
+  },
+  {
+    "frame_id": 15,
+    "asset_url": "/static/avatar-frames/15.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/15.webp"
+  },
+  {
+    "frame_id": 16,
+    "asset_url": "/static/avatar-frames/16.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/16.webp"
+  },
+  {
+    "frame_id": 17,
+    "asset_url": "/static/avatar-frames/17.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/17.webp"
+  },
+  {
+    "frame_id": 18,
+    "asset_url": "/static/avatar-frames/18.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/18.webp"
+  },
+  {
+    "frame_id": 19,
+    "asset_url": "/static/avatar-frames/19.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/19.webp"
+  },
+  {
+    "frame_id": 20,
+    "asset_url": "/static/avatar-frames/20.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/20.webp"
+  },
+  {
+    "frame_id": 21,
+    "asset_url": "/static/avatar-frames/21.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/21.webp"
+  },
+  {
+    "frame_id": 22,
+    "asset_url": "/static/avatar-frames/22.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/22.webp"
+  },
+  {
+    "frame_id": 23,
+    "asset_url": "/static/avatar-frames/23.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/23.webp"
+  },
+  {
+    "frame_id": 24,
+    "asset_url": "/static/avatar-frames/24.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/24.webp"
+  },
+  {
+    "frame_id": 25,
+    "asset_url": "/static/avatar-frames/25.gif",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/25.webp"
+  },
+  {
+    "frame_id": 26,
+    "asset_url": "/static/avatar-frames/26.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/26.webp"
+  },
+  {
+    "frame_id": 28,
+    "asset_url": "/static/avatar-frames/28.png",
+    "thumbnail_url": "/static/avatar-frames/thumbnails/28.webp"
+  }
+]

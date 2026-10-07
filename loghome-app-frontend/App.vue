@@ -193,7 +193,7 @@ export default {
 					color: "#7A7E83",
 					selectedColor: "#91c49d",
 					borderStyle: "white",
-					backgroundColor: "#222b24",
+					backgroundColor: "#252525",
 				})
 				uni.setNavigationBarColor({
 					backgroundColor: "#000000",
@@ -389,7 +389,7 @@ export default {
 				} else {
 					// 外部链接，在webview中打开
 					uni.navigateTo({
-						url: `/pages/apps/webview?url=${encodeURIComponent(targetUrl)}`
+						url: `/pages/apps/h5webview?url=${encodeURIComponent(targetUrl)}`
 					});
 				}
 			} catch (error) {
@@ -772,7 +772,7 @@ uni-modal {
 
 .el-collapse.collapse2list {
 	.el-collapse-item__header {
-		color: #333333 !important;
+		color: var(--text-color-primary, #333333) !important;
 	}
 }
 

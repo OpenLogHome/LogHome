@@ -44,6 +44,8 @@
 			"tabPosts": "动态",
 			"tabWorlds": "世界",
 			"noPosts": "暂无动态",
+			"noWorks": "这里还什么都没有喔",
+			"noWorlds": "这里还什么都没有喔",
 			"userLoadFailed": "用户信息加载失败",
 			"worksLoadFailed": "作品信息加载失败",
 			"worldsLoadFailed": "世界信息加载失败",

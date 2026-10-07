@@ -316,6 +316,12 @@ function isDeepSeekModel(model) {
 	return normalized.startsWith('deepseek-');
 }
 
+// qwen3 系混合推理模型默认开思考，网关会忽略 thinking/enable_thinking 参数，
+// 只有 chat_template_kwargs.enable_thinking 能真正开关思考（llm.codesocean.top 实测）
+function isQwenHybridThinkingModel(model) {
+	return /qwen/i.test(String(model || ''));
+}
+
 function supportsReasoningSplit(model) {
 	const normalized = String(model || '').trim().toLowerCase();
 	if (!normalized) {
@@ -390,6 +396,9 @@ function buildWriterModelRequest(messages, model, options = {}) {
 	} else {
 		// Non-DeepSeek models: use temperature and reasoning_split
 		request.temperature = 0.7;
+		if (isQwenHybridThinkingModel(selectedModel)) {
+			request.chat_template_kwargs = { enable_thinking: options.thinkingMode === 'deep' };
+		}
 		if (options.thinkingMode === 'deep' && supportsReasoningSplit(selectedModel)) {
 			request.reasoning_split = true;
 		}
@@ -1149,6 +1158,10 @@ async function callSmartReplaceModel(messages) {
 			stream: false,
 			temperature: 0.1,
 			max_completion_tokens: 32767,
+			// 智能替换是机械性判断，qwen3 混合模型默认的思考只会拖慢响应
+			...(isQwenHybridThinkingModel(WRITER_ASSIST_SMART_REPLACE_MODEL)
+				? { chat_template_kwargs: { enable_thinking: false } }
+				: {}),
 		}),
 		timeout: MODEL_REQUEST_TIMEOUT_MS,
 	});
@@ -2129,6 +2142,7 @@ async function runWriterAssistTask(task) {
 		});
 		const modelRequest = buildWriterModelRequest(messages, writerAssistModel, {
 			tools: getWriterAssistImageTools(features.image_generation),
+			thinkingMode,
 		});
 		try {
 			await saveWriterPromptLog({
@@ -2373,4 +2387,5 @@ async function handleWriterNovelAssistStream(req, res) {
 module.exports = {
 	handleWriterNovelAssistStream,
 	handleWriterNovelSmartReplace,
+	buildWriterModelRequest,
 };

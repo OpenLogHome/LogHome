@@ -4,15 +4,20 @@
 			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
 		</div>
-		<transition name="dispatch-fade">
-			<view class="dispatch-loading" v-if="showDispatchLoading">
+		<view class="dispatch-loading" v-if="showDispatchLoading">
+			<view class="dispatch-loading-inner">
 				<img class="dispatch-loading-gif" src="../../static/loading.gif" alt="" />
+				<text class="dispatch-loading-text">加载中</text>
 			</view>
-		</transition>
+		</view>
 		<nothing :msg="'这本书还没有发布哦'" v-show="!isPageLoading && (bookInfo.is_personal == undefined || bookInfo.is_personal == 1)"></nothing>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :bgColor="currentTopColor" :textcolor="currentTopTextColor" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
 			navTitle='标题'></zetank-backBar>
+		<view class="report-entry" v-if="!isPageLoading && bookInfo.is_personal == 0" @click="openReport">
+			<image src="../../static/icons/icon_report.png" mode="aspectFit"></image>
+			<text>举报</text>
+		</view>
 		<view class="l-body" :class="{ 'is-loading': isPageLoading }">
 			<view v-if="isPageLoading && !isDispatching" class="book-info-skeleton" aria-label="书籍信息加载中">
 				<view class="skeleton-hero">
@@ -48,70 +53,72 @@
 					</view>
 				</view>
 			</view>
-			<view class="l-dl">
-				<div class="l-dt">
-					<log-image id="book-cover-image" class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
-						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
-						@click="$previewImg([bookInfo.picUrl])">
-					</log-image>
-					<div class="book-id-tag" v-show="bookInfo.novel_id">ID {{ bookInfo.novel_id }}</div>
-				</div>
-				<view class="l-dd" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
-					<view class="l-dd-title">
-						{{ bookInfo.name }}
-					</view>
-					<view class="l-dd-sub">
-						<view class="author clickable" @click="gotoUserProfile(primaryAuthor.user_id || bookInfo.auther_id)">
-							<log-image :src="primaryAuthor.avatar_url || bookInfo.auther_avatar" alt="" class="auther_avatar"
-								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-							<div class="auther_name">
-								<view class="auther_name_text">{{ authorSummaryText }}</view>
-								<uni-icons class="auther_name_icon" type="forward" size="18"
-									style="color:#dddddd"></uni-icons>
+			<view class="book-hero">
+				<view class="l-dl">
+					<div class="l-dt">
+						<log-image id="book-cover-image" class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
+							onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
+							@click="$previewImg([bookInfo.picUrl])">
+						</log-image>
+						<div class="book-id-tag" v-show="bookInfo.novel_id">ID {{ bookInfo.novel_id }}</div>
+					</div>
+					<view class="l-dd" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
+						<view class="l-dd-title">
+							{{ bookInfo.name }}
+						</view>
+						<view class="l-dd-sub">
+							<view class="author clickable" @click="gotoUserProfile(primaryAuthor.user_id || bookInfo.auther_id)">
+								<log-image :src="primaryAuthor.avatar_url || bookInfo.auther_avatar" alt="" class="auther_avatar"
+									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+								<div class="auther_name">
+									<view class="auther_name_text">{{ authorSummaryText }}</view>
+									<uni-icons class="auther_name_icon" type="forward" size="18"
+										style="color:#dddddd"></uni-icons>
+								</div>
+							</view>
+						</view>
+						<view class="tags" v-if="tags.length > 0">
+							<div class="tag clickable" v-for="(item, index) in tags" :key="item.tag_id"
+								:class="{ 'activity': item.is_activity_tag }" @click="gotoTag(item.tag_id, item.tag_name)">
+								{{ item.tag_name }}
 							</div>
 						</view>
-					</view>
-					<view class="tags" v-if="tags.length > 0">
-						<div class="tag clickable" v-for="(item, index) in tags" :key="item.tag_id"
-							:class="{ 'activity': item.is_activity_tag }" @click="gotoTag(item.tag_id, item.tag_name)">
-							{{ item.tag_name }}
+						<div class="notag" v-else>
+							<div class="tag">
+								作品未添加标签
+							</div>
 						</div>
-					</view>
-					<div class="notag" v-else>
-						<div class="tag">
-							作品未添加标签
-						</div>
-					</div>
-					<view class="l-dd-footer">
-						<span>共 {{ articleLength }} 章 总计 {{ bookInfo.text_count }} 字 </span>
-						<br />
-						<span>阅读：{{ bookInfo.clicks }}</span>
+						<view class="l-dd-footer">
+							<span>共 {{ articleLength }} 章 总计 {{ bookInfo.text_count }} 字 </span>
+							<br />
+							<span>阅读：{{ bookInfo.clicks }}</span>
 
-						<span v-if="bookInfo.likes">收藏：{{ bookInfo.likes.length }}</span>
-						<span>{{ bookInfo.is_complete == 1 ? "已完结" : "连载中" }}</span>
-						<br />
+							<span v-if="bookInfo.likes">收藏：{{ bookInfo.likes.length }}</span>
+							<span>{{ bookInfo.is_complete == 1 ? "已完结" : "连载中" }}</span>
+							<br />
 
-						<span v-if="bookInfo.is_complete == 0">最近更新 {{ utc2beijing(bookInfo.update_time) }}</span>
+							<span v-if="bookInfo.is_complete == 0">最近更新 {{ utc2beijing(bookInfo.update_time) }}</span>
+						</view>
 					</view>
 				</view>
+
+				<div class="novel_Rank clickable" v-show="novelRank.onRank">
+					<navigator url="/pages/readers/rankBoard?board=logpower&zone=all">
+						实时<LogPowerWordmark />榜第
+						<span style="font-size: 40rpx; line-height: 100%; padding:0 10rpx;">
+							<countTo :startVal="999" :endVal="novelRank.rank" :duration="1500"></countTo>
+						</span>
+						位
+					</navigator>
+					<navigator :url="`./logPower?name=${bookInfo.name}&clicks=${bookInfo.clicks}&nices=${nice_amount}&bookmarks=${bookInfo.likes ? bookInfo.likes.length : 0}&comments=${commentAmount}&update_time=${bookInfo.update_time}&ranking=${novelRank.ranking}`" style="font-size: 40rpx; transform: translateY(-5rpx);">
+						<countTo :startVal="0" :endVal="novelRank.ranking" :duration="1500"></countTo>
+					</navigator>
+				</div>
+
+				<div class="book-bg" :style="bookBackgroundStyle"></div>
 			</view>
 
-			<div class="novel_Rank clickable" v-show="novelRank.onRank">
-				<navigator url="./logPowerRank">
-					实时原木力榜第
-					<span style="font-size: 40rpx; line-height: 100%; padding:0 10rpx;">
-						<countTo :startVal="999" :endVal="novelRank.rank" :duration="1500"></countTo>
-					</span>
-					位
-				</navigator>
-				<navigator :url="`./logPower?name=${bookInfo.name}&clicks=${bookInfo.clicks}&nices=${nice_amount}&bookmarks=${bookInfo.likes ? bookInfo.likes.length : 0}&comments=${commentAmount}&update_time=${bookInfo.update_time}&ranking=${novelRank.ranking}`" style="font-size: 40rpx; transform: translateY(-5rpx);">
-					<countTo :startVal="0" :endVal="novelRank.ranking" :duration="1500"></countTo>
-				</navigator>
-			</div>
-
-			<div class="book-bg" :style="bookBackgroundStyle"></div>
-
-			<springBack class="book-content-sheet" :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + var(--loghome-safe-top, 0px))`">
+			<springBack class="book-content-sheet" top="0px">
 
 				<div class="b-content" style="padding:32rpx;" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
 					<p class="l-dd-content" @click="showDescription(bookInfo.content)">
@@ -225,27 +232,20 @@
 								<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
 								<div style="color:#777777; font-size: 25rpx;">这里还什么都没有喔</div>
 							</div>
-							<div v-for="novel in worlds" :key="novel.novel_id" style="position:relative;">
-								<navigator :url="'./bookInfo?id=' + novel.novel_id" open-type="navigate" class="books">
-									<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
-										:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"
-										style="border-radius: 10rpx; transform:scale(.90)" />
-									<div class="bookInfo" style="margin-left:10rpx;">
-										<div class="world-title">
-											{{ novel.name }}
-											<el-tag type="warning" v-show="novel.novel_type == 'world'" effect="dark"
-												style="margin-left:10rpx; transform:translateY(-5rpx)"
-												size="mini">世界设定</el-tag>
-										</div>
-										<view class="author">
-											<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
-												onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-											<div class="auther_name">{{ novel.user_name }}</div>
-										</view>
-										<div class="description">{{ novel.content }}</div>
-									</div>
-								</navigator>
-							</div>
+							<navigator v-for="novel in worlds" :key="novel.novel_id" :url="'./bookInfo?id=' + novel.novel_id" open-type="navigate" class="world-card">
+								<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="world-cover" :onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
+								<view class="world-info">
+									<view class="world-heading">
+										<text class="world-title">{{ novel.name }}</text>
+										<text class="world-type" v-if="novel.novel_type == 'world'">世界设定</text>
+									</view>
+									<view class="world-author">
+										<log-image :src="novel.avatar_url" alt="" class="world-author-avatar" onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+										<text class="world-author-name">{{ novel.user_name }}</text>
+									</view>
+									<text class="world-description">{{ novel.content }}</text>
+								</view>
+							</navigator>
 						</div>
 
 					</view>
@@ -289,99 +289,40 @@
 							</navigator>
 						</view>
 
-						<view class="l-list-content noprocess" v-show="commentInfo.length == 0">
-							<view class="l-list-sub-content" @tap="navtoComment"
-								style="display:flex;justify-content: center;">
-								<view class="l-list-d-body" style="font-size: 30rpx;">
-									<!-- <img src="../../static/icons/enderman.png" alt=""
-									style="width:100rpx; height:100rpx;margin-right: 20rpx;"> -->
-									这本书还没有评论哦，快去抢沙发
-								</view>
-							</view>
-						</view>
-
-						<view class="l-list-content noprocess" v-for="item in commentInfo" :key="item.essay_comment_id">
-							<view class="l-list-sub-content" @tap="navtoComment">
-								<view class="l-list-c-body" style="font-size: 30rpx;">
-									{{ item.content }}
-								</view>
-								<view class="l-list-c-foot" style="font-size: 30rpx;">
-									<view class="l-list-c-foot-l">
-										<text class="l-list-c-foot-l-name">{{ item.name }}</text>
-									</view>
-									<view class="l-list-c-foot-r">
-										<img class="l-icon-like" src="../../static/detail/l-icon-like.png" mode="">
-										</img>
-										{{ item.likeNum }}
-									</view>
-								</view>
-							</view>
-						</view>
-
+					<view class="comment-empty" v-show="commentInfo.length == 0" @tap="navtoComment">
+						这本书还没有评论哦，快去抢沙发
 					</view>
-					<view class="l-list">
+
+					<view class="comment-preview" v-for="item in commentInfo" :key="item.essay_comment_id" @tap="navtoComment">
+						<user-avatar class="comment-avatar" :src="item.avatar_url" :frame="item.avatar_frame"
+							:visual-scale="item.avatar_frame ? 1.2 : 1" />
+						<view class="comment-main">
+							<view class="comment-head">
+								<text class="comment-name">{{ item.name }}</text>
+								<text class="comment-time">{{ utc2beijing(item.comment_time).slice(0, 10) }}</text>
+							</view>
+							<text class="comment-body">{{ item.content }}</text>
+							<view class="comment-meta">
+								<img class="l-icon-like" src="../../static/detail/l-icon-like.png" mode=""></img>
+								<text>{{ item.likeNum }}</text>
+							</view>
+						</view>
+					</view>
+
+				</view>
+<view class="l-list">
 						<view class="l-h3">
-							<text class="l-h3-title">粉丝榜</text>
+							<text class="l-h3-title">粉丝贡献榜</text>
 							<navigator :url="'./novel_fans?id=' + uid">
-								<view class="l-h3-more">查看粉丝榜<img class="l-icon-more" src="../../static/l-icon-more.png"
+								<view class="l-h3-more">完整榜单<img class="l-icon-more" src="../../static/l-icon-more.png"
 										mode="widthFix"></img>
 								</view>
 							</navigator>
 						</view>
 
-						<div class="fans_rank">
-							<div class="second" v-if="fanInfo[1]">
-								<div class="rank-container">
-									<user-avatar :src="fanInfo[1].avatar_url" :frame="fanInfo[1].avatar_frame" class="avatar"
-										:visual-scale="fanInfo[1].avatar_frame ? 1.15 : 1" />
-									<img src="../../static/rank/NO2.png" alt="" class="rank" />
-									<div class="crown-glow silver"></div>
-									<div class="description">
-										<p class="name">{{ fanInfo[1].user_name }}</p>
-										<p class="value">{{ fanInfo[1].fans_value }}
-										</p>
-									</div>
-								</div>
-							</div>
-							<div class="first" v-if="fanInfo[0]">
-								<div class="rank-container">
-									<user-avatar :src="fanInfo[0].avatar_url" :frame="fanInfo[0].avatar_frame" class="avatar"
-										:visual-scale="fanInfo[0].avatar_frame ? 1.15 : 1" />
-									<img src="../../static/rank/NO1.png" alt="" class="rank" />
-									<div class="crown-glow gold"></div>
-									<div class="description">
-										<p class="name">{{ fanInfo[0].user_name }}</p>
-										<p class="value">{{ fanInfo[0].fans_value }}</p>
-									</div>
-								</div>
-							</div>
-							<div class="third" v-if="fanInfo[2]">
-								<div class="rank-container">
-									<user-avatar :src="fanInfo[2].avatar_url" :frame="fanInfo[2].avatar_frame" class="avatar"
-										:visual-scale="fanInfo[2].avatar_frame ? 1.15 : 1" />
-									<img src="../../static/rank/NO3.png" alt="" class="rank" />
-									<div class="crown-glow bronze"></div>
-									<div class="description">
-										<p class="name">{{ fanInfo[2].user_name }}</p>
-										<p class="value">{{ fanInfo[2].fans_value }}</p>
-									</div>
-								</div>
-							</div>
-						</div>
+						<!-- 粉丝榜：TOP3 渐变卡片 + 编号列表 -->
+						<fans-contribution-board :fan-info="fanInfo" />
 					</view>
-
-					<!-- 4-10名粉丝列表 -->
-					<div class="fans-list-container" v-if="fanInfo.length > 3">
-						<div class="fans-list-item" v-for="(fan, index) in fanInfo.slice(3, 10)" :key="index">
-							<div class="fans-rank">{{ index + 4 }}</div>
-							<log-image :src="fan.avatar_url" alt="" class="fans-avatar" />
-							<div class="fans-info">
-								<div class="fans-name">{{ fan.user_name }}</div>
-								<div class="fans-message" v-if="fan.message">{{ fan.message }}</div>
-							</div>
-							<div class="fans-value">{{ fan.fans_value }}</div>
-						</div>
-					</div>
 					<!-- <view class="l-list">
 						<view class="l-h3">
 							<text class="l-h3-title">作品图册</text>
@@ -440,6 +381,7 @@
 				<tippingBar :novel_id="uid" @tip="runGiftAnimation($event)"></tippingBar>
 			</view>
 		</uni-popup>
+		<reportNovelPopup ref="reportPopup"></reportNovelPopup>
 		<task-reward-modal 
 			ref="taskRewardModal"
 			@harvest="handleHarvestFromModal">
@@ -448,6 +390,8 @@
 </template>
 
 <script>
+import FansContributionBoard from '@/components/FansContributionBoard.vue'
+import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 import nothing from '../../components/nothing.vue'
 import axios from 'axios'
 import tippingBar from "../../components/tipping/tippingBar.vue"
@@ -455,7 +399,9 @@ import springBack from '../../components/springBack.vue'
 import html2canvas from 'html2canvas'
 import countTo from "vue-count-to"
 import darkModeMixin from '@/mixins/dark-mode.js'
+import { openActivityNewsLink } from '@/common/activity-news-navigation.js'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
+import reportNovelPopup from "../../components/reportNovelPopup.vue"
 
 function normalizeHexColor(color) {
 	if (typeof color !== 'string') {
@@ -572,11 +518,14 @@ function getReadableTextColor(backgroundColor) {
 
 export default {
 	components: {
+		FansContributionBoard,
+		LogPowerWordmark,
 		nothing,
 		tippingBar,
 		springBack,
 		countTo,
-		TaskRewardModal
+		TaskRewardModal,
+		reportNovelPopup
 	},
 	mixins: [darkModeMixin],
 	data() {
@@ -1126,13 +1075,7 @@ export default {
 			})
 		},
 		openActivityNews(news) {
-			if (news.mobile_link) {
-				uni.navigateTo({
-					url: news.mobile_link
-				});
-			} else if (news.pc_link && typeof window !== 'undefined') {
-				window.open(news.pc_link, '_blank');
-			}
+			openActivityNewsLink(news);
 		},
 		getPopularityToken() {
 			let tk = null;
@@ -1246,12 +1189,12 @@ export default {
 			})
 		},
 		getFansStatistics() {
-			axios.get(this.$baseUrl + "/library/get_all_novel_fans?novel_id=" + this.uid)
+			return axios.get(this.$baseUrl + "/library/get_all_novel_fans?novel_id=" + this.uid)
 				.then((res) => {
 					this.fanInfo = res.data;
 				}).catch(err => {
 					uni.showToast({
-						title: error.toString(),
+						title: err.toString(),
 						icon: 'none',
 						duration: 2000
 					});
@@ -1357,6 +1300,7 @@ export default {
 			})
 		},
 		runGiftAnimation(ev) {
+			this.getFansStatistics();
 			this.giftImage = ev.img_url;
 			setTimeout(() => {
 				let giftAnimation = [{
@@ -1472,6 +1416,9 @@ export default {
 				this.showDispatchLoading = false;
 			}, wait);
 		},
+		openReport() {
+			this.$refs.reportPopup.open(this.uid)
+		},
 		async getCollaborativeAuthors() {
 			try {
 				const res = await axios.get(
@@ -1547,22 +1494,29 @@ export default {
 		// 如果是设定书，则应当跳转到世界设定查看页面
 		if (bookInfo.novel_type == "world") {
 			if (this.worldLoadTime == 0) {
+				uni.redirectTo({
+					url: "/pages/worlds/worldPage?noneAnimation=1&novel_id=" + this.uid
+				})
 				this.worldLoadTime++;
-				this.dispatchRedirect("/pages/worlds/worldPage?noneAnimation=1&novel_id=" + this.uid)
 			} else {
 				uni.navigateBack();
 			}
 			return;
 		} else if (bookInfo.novel_type == "manga") {
-			// 漫画作品跳转到漫画详情页
+			// 漫画作品跳转到漫画详情页；立即跳转，避免停留在本页加载界面
 			if (this.mangaLoadTime == 0) {
+				uni.redirectTo({
+					url: "/pages/readers/mangaInfo?id=" + this.uid
+				})
 				this.mangaLoadTime++;
-				this.dispatchRedirect("/pages/readers/mangaInfo?id=" + this.uid)
 			} else {
 				uni.navigateBack();
 			}
 			return;
 		} else {
+			// 小说：退回原骨架屏加载设计——类型确定后立即结束调度遮罩，由骨架屏接管
+			this.isDispatching = false;
+			this.showDispatchLoading = false;
 			try {
 				this.bookInfo = bookInfo;
 				this.applyPageSystemUiStyle(undefined, undefined, true);
@@ -1575,7 +1529,8 @@ export default {
 				this.addReaderHistory(bookInfo);
 				await this.loadCloudReadingProgress();
 			} finally {
-				this.finishDispatchLoading();
+				// 数据就绪，骨架屏淡出、呈现内容
+				this.isPageLoading = false;
 			}
 		}
 
@@ -1672,11 +1627,9 @@ export default {
 			}
 		})
 
-		axios.get(this.$baseUrl + "/community/novel_commonts_all?id=" + this.uid)
+		axios.get(this.$baseUrl + "/community/novel_commonts_all_fast?id=" + this.uid + "&page=1&pageSize=3")
 			.then((res) => {
-				let data = res.data;
-				data = data.slice(0, 3);
-				this.commentInfo = data;
+				this.commentInfo = res.data || [];
 			}).catch(err => {
 				uni.showToast({
 					title: error.toString(),
@@ -1839,20 +1792,27 @@ export default {
 	}
 }
 
-.dispatch-fade-enter-active,
-.dispatch-fade-leave-active {
-	transition: opacity 0.4s ease;
-}
-
-.dispatch-fade-enter,
-.dispatch-fade-leave-to {
-	opacity: 0;
-}
-
 .dispatch-loading-gif {
 	width: 320rpx;
 	height: 320rpx;
 	object-fit: contain;
+}
+
+.dispatch-loading-inner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.dispatch-loading-text {
+	margin-top: 20rpx;
+	font-size: 26rpx;
+	letter-spacing: 2rpx;
+	color: #8a8f98;
+
+	.dark-mode & {
+		color: #6b7280;
+	}
 }
 
 .l-body.is-loading > :not(.book-info-skeleton) {
@@ -1975,7 +1935,7 @@ export default {
 	padding: 54rpx 32rpx calc(80rpx + var(--loghome-safe-bottom, 0px));
 	box-sizing: border-box;
 	border-radius: 36rpx 36rpx 0 0;
-	background-color: rgba(255, 248, 234, 0.86);
+	background-color: rgba(255, 255, 255, 0.86);
 	border-top: 1rpx solid rgba(255, 255, 255, 0.5);
 	-webkit-backdrop-filter: blur(30rpx) saturate(1.12);
 	backdrop-filter: blur(30rpx) saturate(1.12);
@@ -2101,7 +2061,7 @@ export default {
 	z-index: 4;
 	align-items: center;
 	white-space: nowrap;
-	background-color: rgb(255, 248, 234);
+	background-color: #FFFFFF;
 	justify-content: flex-start;
 	box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
 
@@ -2204,19 +2164,26 @@ export default {
 	line-height: 1.1;
 }
 
+.book-hero {
+	position: relative;
+	padding-top: calc(180rpx + var(--loghome-safe-top, 0px));
+	padding-bottom: 44rpx;
+}
+
 .l-dl {
-	margin-top: calc(180rpx + var(--loghome-safe-top, 0px));
+	margin-top: 0;
 	padding: 0 32rpx;
 	display: flex;
+	align-items: center;
 	width: calc(100vw - 64rpx);
-	height: 320rpx;
-	position: absolute;
+	height: auto;
+	position: relative;
 	z-index: 2;
 }
 
 .l-dt {
 	width: 230rpx;
-	height: 100%;
+	height: 320rpx;
 	border-radius: 16rpx;
 	margin-right: 30rpx;
 	position: relative;
@@ -2242,11 +2209,11 @@ export default {
 
 .l-dd {
 	display: flex;
-	padding-bottom: 12rpx;
+	flex: 1;
+	min-width: 0;
 	flex-direction: column;
+	justify-content: center;
 	color: #eeeeee;
-	max-height: 330rpx;
-	overflow-y: scroll;
 	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.34);
 
 	* {
@@ -2404,6 +2371,34 @@ export default {
 	margin-right: 20rpx;
 }
 
+.report-entry {
+	position: fixed;
+	top: calc(60upx + var(--loghome-safe-top, 0px));
+	right: 25upx;
+	z-index: 110;
+	display: flex;
+	align-items: center;
+	gap: 6rpx;
+	padding: 14rpx 20rpx;
+	border-radius: 10rpx;
+	background-color: rgba(0, 0, 0, 0.4);
+	color: #ffffff;
+	font-size: 24rpx;
+	/* 与 backBar 内 .left_img 相同的对齐方式：中心线位于导航栏顶部下方 15upx */
+	transform: translateY(calc(15upx - 50%));
+
+	image {
+		width: 30rpx;
+		height: 30rpx;
+	}
+
+	/* 按下反馈保留定位 transform（clickable:active 的 scale 会覆盖它导致按钮下坠） */
+	&:active {
+		opacity: 0.7;
+		transform: translateY(calc(15upx - 50%)) scale(0.98);
+	}
+}
+
 .l-dd-view-footer {
 	width: 100%;
 	display: -webkit-box;
@@ -2508,12 +2503,15 @@ export default {
 
 .collaborator-scroll {
 	margin-top: 20rpx;
+	// scroll-view defaults to 100% height on H5; reserve only the author row.
+	height: 212rpx;
 	white-space: nowrap;
 }
 
 .collaborator-row {
 	display: inline-flex;
 	align-items: stretch;
+	vertical-align: top;
 }
 
 .collaborator-card {
@@ -2668,6 +2666,98 @@ export default {
 	box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
 }
 
+// 评论预览：对齐漫画评论区的行式布局
+.comment-empty {
+	padding: 40rpx 0;
+	text-align: center;
+	color: #656c74;
+	font-size: 26rpx;
+
+	.dark-mode & {
+		color: #b6bdc3;
+	}
+}
+
+.comment-preview {
+	display: flex;
+	align-items: flex-start;
+	gap: 18rpx;
+	padding: 26rpx 8rpx;
+
+	& + .comment-preview {
+		border-top: 1rpx solid rgba(0, 0, 0, 0.06);
+
+		.dark-mode & {
+			border-top-color: rgba(255, 255, 255, 0.08);
+		}
+	}
+}
+
+.comment-avatar {
+	flex: none;
+	width: 64rpx;
+	height: 64rpx;
+	border-radius: 50%;
+}
+
+.comment-main {
+	flex: 1;
+	min-width: 0;
+}
+
+.comment-head {
+	display: flex;
+	align-items: baseline;
+	gap: 12rpx;
+}
+
+.comment-name {
+	font-size: 25rpx;
+	font-weight: 700;
+	color: #252b30;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	.dark-mode & {
+		color: #f4f5f6;
+	}
+}
+
+.comment-time {
+	flex: none;
+	font-size: 21rpx;
+	color: #9aa1a9;
+}
+
+.comment-body {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	margin-top: 8rpx;
+	font-size: 26rpx;
+	line-height: 1.6;
+	color: #4a5157;
+	word-break: break-word;
+
+	.dark-mode & {
+		color: #d5dade;
+	}
+}
+
+.comment-meta {
+	display: flex;
+	align-items: center;
+	margin-top: 12rpx;
+	font-size: 22rpx;
+	color: #9aa1a9;
+
+	.l-icon-like {
+		margin-right: 8rpx;
+	}
+}
+
 .l-list-c-foot-l-name {
 	margin-right: 20rpx;
 }
@@ -2712,109 +2802,112 @@ export default {
 	justify-content: space-between;
 }
 
-.l-list {
-	.worlds {
-		.books {
-			height: 260rpx;
-			width: calc(100vw - 70rpx);
-			margin: 10rpx 0;
-			display: flex;
-			background-color: rgb(255, 255, 255);
-			border-radius: 16rpx;
-			transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-			box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-			overflow: hidden;
+.worlds { margin-top: 20rpx; }
 
-			.dark-mode & {
-				background-color: var(--card-background);
-			}
+.world-card {
+	display: flex;
+	align-items: stretch;
+	gap: 20rpx;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 16rpx;
+	margin-bottom: 16rpx;
+	border: 1rpx solid rgba(128, 128, 128, 0.1);
+	border-radius: 20rpx;
+	background: rgba(245, 246, 247, 0.7);
+	transition: transform 0.2s ease, background-color 0.2s ease;
+	&:last-child { margin-bottom: 0; }
+	&:active { transform: scale(0.99); }
+	.dark-mode & { background: var(--card-background); }
+}
 
-			.books:active {
-				transform: scale(0.99);
-				box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
-			}
+.world-cover {
+	flex: 0 0 176rpx;
+	width: 176rpx;
+	height: 240rpx;
+	object-fit: cover;
+	border-radius: 12rpx;
+}
 
+.world-info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	padding: 4rpx 0;
+}
 
-			img {
-				height: 260rpx;
-				width: 200rpx;
-				border-radius: 16rpx 0 0 16rpx;
-				margin: 0rpx;
-				flex-shrink: 0;
-			}
+.world-heading {
+	display: flex;
+	align-items: flex-start;
+	gap: 10rpx;
+}
 
-			.bookInfo {
-				margin-left: 30rpx;
-				margin-top: 22rpx;
+.world-title {
+	flex: 1;
+	min-width: 0;
+	font-size: 32rpx;
+	font-weight: bold;
+	line-height: 42rpx;
+	color: #2d2d2d;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	word-break: break-word;
+	.dark-mode & { color: var(--text-color-primary); }
+}
 
-				.world-title {
-					font-size: 34rpx;
-					height: 42rpx;
-					margin-bottom: 10rpx;
-					overflow: hidden;
-					display: -webkit-box;
-					font-weight: bold;
-					-webkit-box-orient: vertical;
-					-webkit-line-clamp: 1;
-					color: rgb(45, 45, 45);
-					margin: 5rpx;
+.world-type {
+	flex: none;
+	margin-top: 5rpx;
+	padding: 2rpx 8rpx;
+	border-radius: 6rpx;
+	font-size: 20rpx;
+	line-height: 28rpx;
+	color: #966220;
+	background: #fff0d8;
+	.dark-mode & { color: #ffd59a; background: rgba(218, 161, 68, 0.16); }
+}
 
-					.dark-mode & {
-						color: var(--text-color-primary);
-					}
-				}
+.world-author {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	margin-top: 12rpx;
+	min-width: 0;
+}
 
-				.author {
-					position: relative;
-					margin-top: 15rpx;
-					margin-bottom: 10rpx;
-					display: flex;
-					align-items: center;
+.world-author-avatar {
+	width: 32rpx;
+	height: 32rpx;
+	flex: none;
+	border-radius: 50%;
+	object-fit: cover;
+}
 
-					.auther_avatar {
-						position: absolute;
-						top: 0rpx;
-						left: 5rpx;
-						height: 35rpx;
-						width: 35rpx;
-						border-radius: 5rpx;
-					}
+.world-author-name {
+	min-width: 0;
+	font-size: 24rpx;
+	line-height: 32rpx;
+	color: #777;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	.dark-mode & { color: var(--text-color-regular); }
+}
 
-					.auther_name {
-						font-size: 25rpx;
-						// font-weight: bold;
-						color: rgb(45, 45, 45);
-						overflow: hidden;
-						margin-left: 45rpx;
-						display: -webkit-box;
-						-webkit-box-orient: vertical;
-						-webkit-line-clamp: 1;
-
-						.dark-mode & {
-							color: var(--text-color-regular);
-						}
-					}
-				}
-
-				.description {
-					font-size: 25rpx;
-					color: rgb(142, 130, 109);
-					margin: 5rpx 0;
-					overflow: hidden;
-					display: -webkit-box;
-					-webkit-box-orient: vertical;
-					-webkit-line-clamp: 3;
-
-					.dark-mode & {
-						color: var(--text-color-regular);
-					}
-				}
-
-
-			}
-
-		}
-	}
+.world-description {
+	margin-top: 16rpx;
+	font-size: 25rpx;
+	line-height: 36rpx;
+	color: #8b867d;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	word-break: break-word;
+	.dark-mode & { color: var(--text-color-regular); }
 }
 
 .activity-group {
@@ -2968,7 +3061,7 @@ export default {
 
 page,
 uni-page {
-	background-color: rgb(255, 248, 234);
+	background-color: #FFFFFF;
 	color: rgb(113, 52, 24);
 	font-size: 28rpx;
 	padding-top: 0;
@@ -3023,7 +3116,9 @@ img {
 	.book-bg {
 		position: absolute;
 		width: 100vw;
-		height: calc(500rpx + var(--loghome-safe-top, 0px) + 135rpx + 220rpx);
+		top: 0;
+		// Cover the sheet's 110px pull range and its spring overshoot.
+		height: calc(100% + 440rpx);
 		overflow: hidden;
 		isolation: isolate;
 		background-color: var(--book-glass-tint);
@@ -3057,15 +3152,14 @@ img {
 	}
 
 	.novel_Rank {
-		position: absolute;
+		position: relative;
 		z-index: 5;
 		background-color: #00000077;
 		padding: 0 30rpx;
 		width: calc(100vw - 120rpx);
-		margin: 35rpx 30rpx;
+		margin: 24rpx 30rpx 0;
 		border-radius: 16rpx;
 		height: 100rpx;
-		top: calc(500rpx + var(--loghome-safe-top, 0px));
 		display: flex;
 		color: #dfdfdf;
 		font-size: 30rpx;
@@ -3082,7 +3176,8 @@ img {
 }
 
 .book-content-sheet {
-	background: rgba(255, 252, 242, 0.88);
+	position: relative;
+	background: rgba(255, 255, 255, 0.88);
 	border-top: 1rpx solid rgba(255, 255, 255, 0.62);
 	border-radius: 36rpx 36rpx 0 0;
 	overflow: hidden;
@@ -3147,269 +3242,15 @@ view.tippingBar {
 	background-color: white;
 	width: 100vw;
 	box-shadow: -10px 0px 10px rgba(113, 52, 24, .3);
+	/* 弹层面板限高兜底：uni-popup 内部定位链可能把面板撑到整屏，
+	   约束在视口内并允许内部滚动（正常内容高度 < 76vh，不受影响） */
+	box-sizing: border-box;
+	max-height: 76vh;
+	overflow-y: auto;
 
 	.dark-mode & {
 		background-color: var(--card-background);
 		box-shadow: -10px 0px 10px rgba(0, 0, 0, .3);
-	}
-}
-
-.fans_rank {
-	display: flex;
-	justify-content: center;
-	padding: 40rpx 20rpx 0 20rpx;
-	border-radius: 20rpx;
-	margin-top: 32rpx;
-	position: relative;
-	overflow: hidden;
-	background: linear-gradient(180deg, rgba(255, 245, 235, 0.6) 0%, rgba(255, 248, 240, 0.3) 100%);
-	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
-
-	.dark-mode & {
-		background-color: var(--card-background);
-	}
-
-	div {
-		position: relative;
-		width: 30%;
-		margin: 0 10rpx;
-		display: flex;
-		justify-content: center;
-
-		.rank-container {
-			position: relative;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			width: 100%;
-			min-height: 300rpx;
-			padding: 20rpx 0;
-		}
-
-		img.rank {
-			position: absolute;
-			height: 20vw;
-			z-index: 1;
-			transform: translateY(-10rpx);
-		}
-
-		.avatar {
-			height: 15vw;
-			width: 15vw;
-			position: relative;
-			z-index: 2;
-			border-radius: 50%;
-			border: 4rpx solid #ffffff;
-			box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
-			object-fit: cover;
-		}
-
-		.crown-glow {
-			position: absolute;
-			width: 16vw;
-			height: 16vw;
-			border-radius: 50%;
-			z-index: 0;
-			opacity: 0.6;
-			filter: blur(10rpx);
-			transform: translateY(3rpx);
-		}
-
-		.crown-glow.gold {
-			background: radial-gradient(circle, #ffd700 10%, transparent 70%);
-		}
-
-		.crown-glow.silver {
-			background: radial-gradient(circle, #c0c0c0 10%, transparent 70%);
-		}
-
-		.crown-glow.bronze {
-			background: radial-gradient(circle, #cd7f32 10%, transparent 70%);
-		}
-
-		div.description {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			position: relative;
-			margin-top: 20rpx;
-			padding: 15rpx 10rpx;
-			width: 100%;
-			background-color: rgba(255, 255, 255, 0.1);
-			border-radius: 12rpx;
-			z-index: 3;
-			box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-
-			.dark-mode & {
-				background-color: var(--card-background);
-				box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
-			}
-
-			p.name {
-				font-size: 28rpx;
-				font-weight: 600;
-				margin-bottom: 10rpx;
-				color: #333;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				max-width: 100%;
-
-				.dark-mode & {
-					color: var(--text-color-primary);
-				}
-			}
-
-			p.value {
-				font-size: 30rpx;
-				color: #EA7034;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-
-				.value-icon {
-					margin-right: 6rpx;
-					font-size: 32rpx;
-				}
-			}
-		}
-	}
-
-	.first {
-		transform: translateY(-20rpx);
-		z-index: 3;
-
-		.rank-container {
-			transform: scale(1.1);
-		}
-
-		.avatar {
-			box-shadow: 0 6rpx 16rpx rgba(255, 180, 0, 0.3);
-			border: 4rpx solid #ffd700;
-		}
-
-		div.description {
-			background-color: rgba(255, 245, 214, 0.7);
-		}
-
-		p.value {
-			font-weight: bold;
-		}
-	}
-
-	.second,
-	.third {
-		z-index: 2;
-
-		div.description {
-			background-color: rgba(255, 255, 255, 0.6);
-		}
-	}
-}
-
-.fans-list-container {
-	display: flex;
-	flex-direction: column;
-	margin-top: -30rpx;
-	padding: 10rpx 20rpx;
-	background-color: rgba(202, 202, 202, 0.1);
-	border-radius: 20rpx;
-	overflow: hidden;
-	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-
-	.dark-mode & {
-		background-color: var(--card-background);
-	}
-
-	.fans-list-item {
-		display: flex;
-		align-items: center;
-		padding: 12rpx 0;
-		border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
-		position: relative;
-		transition: all 0.2s ease;
-
-		&:last-child {
-			border-bottom: none;
-		}
-
-		&:active {
-			background-color: rgba(0, 0, 0, 0.02);
-		}
-
-		.fans-rank {
-			font-size: 22rpx;
-			font-weight: bold;
-			color: #EA7034;
-			width: 34rpx;
-			height: 34rpx;
-			line-height: 34rpx;
-			text-align: center;
-			margin-right: 10rpx;
-			background-color: rgba(234, 112, 52, 0.1);
-			border-radius: 50%;
-			flex-shrink: 0;
-		}
-
-		.fans-avatar {
-			height: 30rpx;
-			width: 30rpx;
-			border-radius: 50%;
-			border: 1rpx solid #ffffff;
-			box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
-			margin-right: 10rpx;
-			flex-shrink: 0;
-		}
-
-		.fans-info {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			flex-grow: 1;
-			overflow: hidden;
-
-			.fans-name {
-				font-size: 24rpx;
-				color: #333;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				max-width: 150rpx;
-
-				.dark-mode & {
-					color: var(--text-color-primary);
-				}
-			}
-
-			.fans-message {
-				font-size: 20rpx;
-				color: #795548;
-				max-width: 180rpx;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				margin-top: 2rpx;
-
-				.dark-mode & {
-					color: var(--text-color-secondary);
-				}
-			}
-		}
-
-		.fans-value {
-			font-size: 24rpx;
-			color: #EA7034;
-			display: flex;
-			align-items: center;
-			margin-left: auto;
-			font-weight: bold;
-			padding-left: 10rpx;
-
-			.fans-value-icon {
-				margin-right: 4rpx;
-				font-size: 22rpx;
-			}
-		}
 	}
 }
 

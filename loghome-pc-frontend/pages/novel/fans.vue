@@ -32,7 +32,7 @@
       </div>
 
       <div class="fans-list-container">
-        <h3 class="section-title">原木力榜 - 粉丝贡献排行</h3>
+        <h3 class="section-title"><LogPowerWordmark />榜 - 粉丝贡献排行</h3>
         <div class="fans-list">
           <div class="fan-item" v-for="(fan, index) in fansList" :key="fan.user_id">
             <div class="fan-rank">
@@ -74,7 +74,9 @@
 </template>
 
 <script>
+import LogPowerWordmark from '~/components/LogPowerWordmark.vue'
 export default {
+  components: { LogPowerWordmark },
   async asyncData({ params, query, $api, error }) {
     const novelId = query.id || params.id
     if (!novelId) {

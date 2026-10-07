@@ -1,3 +1,5 @@
+const { ensureRankBadgeSchema } = require('../bin/rankBadgeSchema');
+const { recordFirstPublication } = require('../bin/novelPublication');
 const { createMangaImageAssets, MAX_PIXELS } = require('../bin/mangaImageAssets');
 const { DEFAULT_UPLOAD_URL, uploadMangaImageFile } = require('../bin/mangaImageStorage');
 // 引入依赖包
@@ -788,6 +790,24 @@ router.get('/get_novels_of', auth, async (req, res) => {
 						ORDER BY FIELD(ms.membership_type, 'super', 'standard'), ms.expires_at DESC
 						LIMIT 1
 					) AS owner_membership_type,
+					(
+						SELECT r.reason
+						FROM comm_reports r
+						WHERE r.target_id = n.novel_id
+							AND r.target_type IN ('novel', 'manga')
+							AND r.status = 1
+						ORDER BY r.report_id DESC
+						LIMIT 1
+					) AS ban_reason,
+					(
+						SELECT r.review_comment
+						FROM comm_reports r
+						WHERE r.target_id = n.novel_id
+							AND r.target_type IN ('novel', 'manga')
+							AND r.status = 1
+						ORDER BY r.report_id DESC
+						LIMIT 1
+					) AS ban_review_comment,
 					nc.role AS collaborator_role,
 				nc.status AS collaborator_status,
 				nc.can_edit_article,
@@ -2482,6 +2502,7 @@ router.post('/add_article', auth, async (req, res) => {
 	const user = getCurrentUser(req);
 	const novelId = Number(req.body.id || 0);
 	try {
+		await ensureRankBadgeSchema();
 		const access = await getNovelAccess(user.user_id, novelId);
 		if (access && canAddArticle(access)) {
 			if (Number(req.body.is_draft) !== 1 && !canPublish(access)) {
@@ -2526,23 +2547,27 @@ router.post('/add_article', auth, async (req, res) => {
 			if (insertChapter > maxChapter + 1) {
 				insertChapter = maxChapter + 1;
 			}
-			await query(
-				'UPDATE articles SET article_chapter = article_chapter + 1 WHERE novel_id = ? AND deleted = 0 AND article_chapter >= ?',
-				[novelId, insertChapter],
-			);
-			const contentHash = calculateContentHash(req.body.content);
-			let results = await query(
-				'INSERT INTO articles(title,content,content_hash,novel_id,article_chapter,article_type,is_draft) VALUES(?,?,?,?,?,?,?)',
-				[
-					req.body.title,
-					req.body.content,
-					contentHash,
-					novelId,
-					insertChapter,
-					req.body.article_type,
-					req.body.is_draft ? 1 : 0
-				],
-			);
+			const results = await withTransaction(async trx => {
+				await trx(
+					'UPDATE articles SET article_chapter = article_chapter + 1 WHERE novel_id = ? AND deleted = 0 AND article_chapter >= ?',
+					[novelId, insertChapter],
+				);
+				const contentHash = calculateContentHash(req.body.content);
+				const results = await trx(
+					'INSERT INTO articles(title,content,content_hash,novel_id,article_chapter,article_type,is_draft) VALUES(?,?,?,?,?,?,?)',
+					[
+						req.body.title,
+						req.body.content,
+						contentHash,
+						novelId,
+						insertChapter,
+						req.body.article_type,
+						req.body.is_draft ? 1 : 0
+					],
+				);
+				await recordFirstPublication(results.insertId, trx);
+				return results;
+			}, 'publish-article');
 			res.end(JSON.stringify(results));
 		} else {
 			res.status(403).json({ msg: 'access denied' });
@@ -2556,6 +2581,7 @@ router.post('/add_article', auth, async (req, res) => {
 router.post('/modify_article', auth, async (req, res) => {
 	const user = getCurrentUser(req);
 	try {
+		await ensureRankBadgeSchema();
 		const access = await getArticleAccess(user.user_id, req.body.article_id);
 		if (!access || access.article_deleted) {
 			return res.status(403).json({ msg: 'access denied' });
@@ -2690,32 +2716,36 @@ router.post('/modify_article', auth, async (req, res) => {
 			);
 		}
 
-		let results;
-		if (nextArticleType) {
-			results = await query(
-				'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,`article_type`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0' + (isMangaArticle ? MANGA_REVISION_CONDITION : ''),
-				[
-					req.body.title,
-					req.body.content,
-					contentHash,
-					req.body.is_draft,
-					nextArticleType,
-					req.body.article_id,
-					...(isMangaArticle ? mangaRevisionValues(mangaSnapshot) : []),
-				],
-			);
-		} else {
-			results = await query(
-				'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0',
-				[
-					req.body.title,
-					req.body.content,
-					contentHash,
-					req.body.is_draft,
-					req.body.article_id,
-				],
-			);
-		}
+		const results = await withTransaction(async trx => {
+			let results;
+			if (nextArticleType) {
+				results = await trx(
+					'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,`article_type`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0' + (isMangaArticle ? MANGA_REVISION_CONDITION : ''),
+					[
+						req.body.title,
+						req.body.content,
+						contentHash,
+						req.body.is_draft,
+						nextArticleType,
+						req.body.article_id,
+						...(isMangaArticle ? mangaRevisionValues(mangaSnapshot) : []),
+					],
+				);
+			} else {
+				results = await trx(
+					'UPDATE articles SET `title`=?,`content`=?,`content_hash`=?,`is_draft`=?,update_time = CURRENT_TIMESTAMP WHERE article_id=? AND deleted = 0',
+					[
+						req.body.title,
+						req.body.content,
+						contentHash,
+						req.body.is_draft,
+						req.body.article_id,
+					],
+				);
+			}
+			if (results.affectedRows !== 0) await recordFirstPublication(req.body.article_id, trx);
+			return results;
+		}, 'publish-article');
 		if (isMangaArticle && results.affectedRows === 0) {
 			return res.status(409).json({ msg: '话数已被其他编辑修改，请保留本地草稿并重新加载', code: 'manga_revision_conflict' });
 		}
@@ -3594,6 +3624,91 @@ router.post('/cancel_scheduled_task', auth, async (req, res) => {
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
+	}
+});
+
+// 举报作品
+router.post('/report_novel', auth, async (req, res) => {
+	const user = getCurrentUser(req);
+	const novelId = Number(req.body.novel_id || 0);
+	const reason = String(req.body.reason || '').trim();
+	const detail = String(req.body.detail || '').trim();
+
+	if (!novelId || !reason) {
+		return res.status(400).json({ msg: '缺少必要参数' });
+	}
+	if (reason.length > 50 || detail.length > 200) {
+		return res.status(400).json({ msg: '举报内容过长' });
+	}
+
+	try {
+		const novels = await query(
+			'SELECT novel_id, author_id, novel_type FROM novels WHERE novel_id = ? AND deleted = 0 LIMIT 1',
+			[novelId],
+		);
+		if (novels.length === 0) {
+			return res.status(404).json({ msg: '作品不存在' });
+		}
+		if (Number(novels[0].author_id) === Number(user.user_id)) {
+			return res.status(400).json({ msg: '不能举报自己的作品' });
+		}
+
+		const targetType = novels[0].novel_type === 'manga' ? 'manga' : 'novel';
+		const fullReason = detail ? `${reason}：${detail}` : reason;
+		try {
+			await query(
+				'INSERT INTO comm_reports (user_id, target_id, target_type, reason) VALUES (?, ?, ?, ?)',
+				[user.user_id, novelId, targetType, fullReason],
+			);
+		} catch (e) {
+			if (e && e.code === 'ER_DUP_ENTRY') {
+				return res.status(400).json({ msg: '您已举报过该作品，请等待管理员处理' });
+			}
+			throw e;
+		}
+		res.json({ msg: 'success' });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
+	}
+});
+
+// 作者对被下架作品重新提交审核（is_banned: 1-已下架 2-重新审核中）
+router.post('/resubmit_novel', auth, async (req, res) => {
+	const user = getCurrentUser(req);
+	const novelId = Number(req.body.novel_id || 0);
+	if (!novelId) {
+		return res.status(400).json({ msg: '缺少必要参数' });
+	}
+	try {
+		const access = await getNovelAccess(user.user_id, novelId);
+		if (!hasNovelOwnerAccess(access)) {
+			return res.status(403).json({ msg: 'access denied' });
+		}
+		const novels = await query(
+			'SELECT novel_id, name, is_banned FROM novels WHERE novel_id = ? AND deleted = 0 LIMIT 1',
+			[novelId],
+		);
+		if (novels.length === 0) {
+			return res.status(404).json({ msg: '作品不存在' });
+		}
+		const banned = Number(novels[0].is_banned);
+		if (banned === 2) {
+			return res.status(400).json({ msg: '已提交重新审核，请等待管理员处理' });
+		}
+		if (banned !== 1) {
+			return res.status(400).json({ msg: '该作品未被下架，无需重新提交' });
+		}
+		await query('UPDATE novels SET is_banned = 2 WHERE novel_id = ?', [novelId]);
+		await query(
+			`INSERT INTO comm_audit_logs (user_id, target_id, target_type, action, reason)
+			 VALUES (?, ?, ?, 9, '作者重新提交审核')`,
+			[user.user_id, novelId, novels[0].novel_type === 'manga' ? 6 : 5],
+		);
+		res.json({ msg: 'success' });
+	} catch (e) {
+		console.log(e);
+		res.status(400).json({ msg: 'bad request' });
 	}
 });
 

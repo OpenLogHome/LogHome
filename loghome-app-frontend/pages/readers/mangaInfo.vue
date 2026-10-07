@@ -2,12 +2,13 @@
   <view class="manga-page" v-dark>
     <transition name="manga-loading-fade">
       <view class="loading-cover" v-if="loadingCover">
-        <image class="loading-cover-gif" src="/static/loading.gif" mode="aspectFit" />
+        <manga-comic-loader />
       </view>
     </transition>
     <view class="nav-bar">
       <button v-manga-a11y class="nav-back icon-button" type="button" aria-label="返回" @click="goBack"><manga-icon name="back" /></button>
       <text class="nav-title">{{ isPreview ? '作者预览 · ' : '' }}{{ bookInfo.name || '漫画详情' }}</text>
+      <button v-manga-a11y v-if="!isPreview && !loading && !loadError" class="nav-report" type="button" @click="openReport"><image src="/static/icons/icon_report.png" mode="aspectFit" /><text>举报</text></button>
     </view>
     <scroll-view class="body-scroll" scroll-y :scroll-into-view="catalogTarget" :scroll-with-animation="scrollWithAnimation">
       <view v-if="loading || loadError" class="load-state" role="status">
@@ -48,6 +49,10 @@
           <manga-comment-item v-for="item in previewComments" :key="item.commentId" :comment="item" @reply="openCommentSheet($event)" @praise="toggleCommentPraise" @remove="removeComment" @remove-reply="removeReply" />
           <button v-manga-a11y class="comment-write" type="button" @click="writeComment"><manga-icon name="comment" />写评论</button>
         </view>
+        <view v-if="!isPreview" class="section fans-section">
+          <view class="section-title"><text>粉丝贡献榜</text><button v-manga-a11y type="button" class="text-action" @click="openFansBoard">完整榜单<manga-icon name="next" /></button></view>
+          <fans-contribution-board :fan-info="fanInfo" />
+        </view>
         <view v-if="authorWorks.length" class="section works-section"><view class="section-title">作者的其他漫画</view><view class="works-grid"><button v-manga-a11y v-for="work in authorWorks" :key="work.novel_id" class="work-item" type="button" @click="openWork(work)"><image lazy-load class="other-cover" :src="work.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="work.name + '封面'" /><text>{{ work.name }}</text><text class="work-status">{{ Number(work.is_complete) === 1 ? '已完结' : '连载中' }}</text></button></view></view>
       </template>
       <view class="bottom-space"></view>
@@ -72,10 +77,13 @@
         <manga-comment-composer ref="commentComposer" :reply-to="replyTarget" :submitting="commentSubmitting" @submit="submitComment" @cancel-reply="replyTarget = null" />
       </view>
     </uni-popup>
+    <report-novel-popup v-if="!isPreview" ref="reportPopup"></report-novel-popup>
     <task-reward-modal v-if="!isPreview" ref="taskRewardModal" @harvest="openTreePlant" />
   </view>
 </template>
 <script>
+import FansContributionBoard from '@/components/FansContributionBoard.vue';
+import MangaComicLoader from '@/components/MangaComicLoader.vue';
 import MangaA11y from '@/common/manga-a11y.js';
 import axios from 'axios';
 import MangaIcon from '@/components/manga-icon.vue';
@@ -83,18 +91,19 @@ import TaskRewardModal from '@/components/TaskRewardModal.vue';
 import TippingBar from '@/components/tipping/tippingBar.vue';
 import MangaCommentItem from '@/components/manga-comment-item.vue';
 import MangaCommentComposer from '@/components/manga-comment-composer.vue';
+import ReportNovelPopup from '@/components/reportNovelPopup.vue';
 import { deleteMangaComment, fetchMangaArticleCommentAmounts, fetchMangaCommentAmount, fetchMangaCommentById, fetchMangaComments, getMangaCommentErrorMessage, praiseMangaComment, publishMangaComment, replyMangaComment } from '@/common/manga-comment-api.js';
 
 const COMMENT_PAGE_SIZE = 10;
 
 export default {
   directives: { mangaA11y: MangaA11y },
-	components: { MangaIcon, TaskRewardModal, TippingBar, MangaCommentItem, MangaCommentComposer },
+	components: { FansContributionBoard, MangaComicLoader, MangaIcon, TaskRewardModal, TippingBar, MangaCommentItem, MangaCommentComposer, ReportNovelPopup },
 	data() {
 		return {
 			uid: null,
 			loading: true, loadError: '', catalogExpanded: false, catalogReversed: false, catalogTarget: '', authorWorks: [], favoriteBusy: false, niceBusy: false, shareBusy: false,
-			loadingCover: true, loadingCoverShownAt: 0,
+			loadingCover: true,
 			isPreview: false, showTipping: false,
 			niceCount: 0, niceStatus: false,
 			bookInfo: {},
@@ -103,6 +112,7 @@ export default {
 			isInBookcase: false,
 			introExpanded: false,
 			progress: null, // { last_article_id, last_article_chapter, last_page_idx }
+			fanInfo: [],
 			comments: [],
 			commentAmount: 0,
 			commentPage: 1,
@@ -142,6 +152,16 @@ export default {
 		if (this.uid && !this.isPreview) this.loadProgress();
 	},
 	methods: {
+		openFansBoard() { uni.navigateTo({ url: '/pages/readers/novel_fans?id=' + this.uid }); },
+		async loadFansStatistics() {
+			if (this.isPreview) return;
+			try {
+				const res = await axios.get(this.$baseUrl + '/library/get_all_novel_fans?novel_id=' + this.uid);
+				this.fanInfo = Array.isArray(res.data) ? res.data : [];
+			} catch (e) {
+				console.error('loadFansStatistics failed', e);
+			}
+		},
 		openAuthor() { const id = this.bookInfo.auther_id || this.bookInfo.author_id; if (id) uni.navigateTo({ url: '/pages/users/personalPage?id=' + id }); },
 		openWork(work) { uni.navigateTo({ url: '/pages/readers/mangaInfo?id=' + work.novel_id }); },
 		async loadAuthorWorks() {
@@ -150,12 +170,7 @@ export default {
 			try { const res = await axios.get(this.$baseUrl + '/library/get_novel_by_user_id?id=' + id); this.authorWorks = (res.data || []).filter(work => work.novel_type === 'manga' && Number(work.is_personal) === 0 && String(work.novel_id) !== String(this.uid)).slice(0, 3); } catch (_) {}
 		},
 		goBack() {
-			const pages = getCurrentPages();
-			if (pages.length > 1) {
-				uni.navigateBack();
-			} else {
-				uni.reLaunch({ url: '/pages/library' });
-			}
+			uni.navigateBack();
 		},
 		getToken() {
 			const token = this.getTokenInfo();
@@ -182,7 +197,6 @@ export default {
 		async loadAll() {
 			this.loading = true; this.loadError = '';
 			this.loadingCover = true;
-			this.loadingCoverShownAt = Date.now();
 			await Promise.all([
 				this.getBookInfo(),
 				this.getArticles(),
@@ -193,17 +207,14 @@ export default {
 				this.loadComments(),
 				this.loadCommentAmount(),
 				this.loadArticleCommentAmounts(),
+				this.loadFansStatistics(),
 			]);
 			this.loading = false;
 			this.hideLoadingCover();
 			if (!this.isPreview) this.focusHighlightedComment();
 		},
 		hideLoadingCover() {
-			const minDuration = 600;
-			const elapsed = Date.now() - (this.loadingCoverShownAt || Date.now());
-			setTimeout(() => {
-				this.loadingCover = false;
-			}, Math.max(0, minDuration - elapsed));
+			this.loadingCover = false;
 		},
 		async loadArticleCommentAmounts() {
 			if (this.isPreview) return;
@@ -443,7 +454,13 @@ export default {
 			this.$nextTick(() => { if (this.$refs.tippingPopup) this.$refs.tippingPopup.open('bottom'); });
 		},
 		handleTippingSuccess() {
+			this.loadFansStatistics();
 			if (this.$refs.tippingPopup) this.$refs.tippingPopup.close();
+		},
+		openReport() {
+			if (this.isPreview || this.loading || this.loadError) return;
+			if (!this.getToken()) { uni.showToast({ title: '请先登录', icon: 'none' }); return; }
+			this.$refs.reportPopup.open(this.uid);
 		},
 		async completeDailyTask(code, name) {
 			const headers = this.authHeaders();
@@ -596,15 +613,9 @@ export default {
   background-color: var(--manga-bg);
 }
 
-.loading-cover-gif {
-  width: 320rpx;
-  height: 320rpx;
-  object-fit: contain;
-}
-
 .manga-loading-fade-enter-active,
 .manga-loading-fade-leave-active {
-  transition: opacity 0.4s ease;
+  transition: opacity 0.2s ease;
 }
 
 .manga-loading-fade-enter,
@@ -613,12 +624,15 @@ export default {
 }
 .nav-bar { position: fixed; inset: 0 0 auto; z-index: 30; height: 96rpx; padding-top: var(--manga-safe-top); display: flex; align-items: center; background: var(--manga-card); border-bottom: 1rpx solid var(--manga-line); }
 .icon-button { display: grid; place-items: center; width: 96rpx; height: 88rpx; flex: none; font-size: 34rpx; }
+.nav-report { display: flex; align-items: center; gap: 6rpx; flex: none; min-height: 60rpx; margin-right: 20rpx; padding: 0 20rpx; border: 1rpx solid var(--manga-line); border-radius: 100rpx; background: var(--manga-card); color: var(--manga-muted); font-size: 23rpx; }
+.nav-report image { width: 30rpx; height: 30rpx; }
+.nav-report::after { display: none; }
 .nav-title { flex: 1; min-width: 0; padding-right: 28rpx; font-size: 30rpx; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .body-scroll { height: 100vh; box-sizing: border-box; padding-top: calc(96rpx + var(--manga-safe-top)); }
 .hero { height: 680rpx; position: relative; background: var(--manga-line); }
 .poster { display: block; width: 100%; height: 100%; }
 .poster-shade { position: absolute; inset: auto 0 0; height: 240rpx; background: linear-gradient(transparent, rgba(20, 20, 20, .20)); pointer-events: none; }
-.info-card,.section { margin: 24rpx 24rpx 0; padding: 30rpx; border-radius: 24rpx; background: var(--manga-card); box-shadow: var(--manga-shadow); }
+.info-card,.section { margin: 24rpx 24rpx 0; padding: 24rpx 30rpx 30rpx 30rpx; border-radius: 24rpx; background: var(--manga-card); box-shadow: var(--manga-shadow); }
 .info-card { position: relative; margin-top: -76rpx; }
 .novel-name { display: block; font-size: 40rpx; line-height: 1.3; font-weight: 750; letter-spacing: .01em; }
 .meta-line { display: flex; align-items: center; flex-wrap: wrap; gap: 12rpx; margin: 20rpx 0 8rpx; color: var(--manga-muted); font-size: 24rpx; }

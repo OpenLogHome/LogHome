@@ -81,7 +81,7 @@
       <!-- 原木力榜 -->
       <div class="novel-rank" v-show="novelRank.onRank">
         <nuxt-link to="/read/collections?title=原木力爆棚" class="rank-info">
-          实时原木力榜第
+          实时<LogPowerWordmark />榜第
           <span class="rank-number">{{ novelRank.rank }}</span>
           位
         </nuxt-link>
@@ -299,10 +299,12 @@
 </template>
 
 <script>
+import LogPowerWordmark from '~/components/LogPowerWordmark.vue'
 import NovelFansList from '~/components/NovelFansList.vue'
 
 export default {
   components: {
+    LogPowerWordmark,
     NovelFansList
   },
   async asyncData({ params, $api, error, redirect }) {

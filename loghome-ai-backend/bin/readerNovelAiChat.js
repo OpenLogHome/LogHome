@@ -2024,6 +2024,12 @@ function normalizeRetrieverMode(value) {
 	return String(value || '').trim() === 'deep' ? 'deep' : 'fast';
 }
 
+// 与笔泡一致：qwen3 系混合模型默认开思考，网关会忽略 thinking/enable_thinking 参数，
+// 只有 chat_template_kwargs.enable_thinking 能真正开关思考（llm.codesocean.top 实测）
+function isQwenHybridThinkingModel(model) {
+	return /qwen/i.test(String(model || ''));
+}
+
 function getPlannerRuntimeConfig(retrieverMode = 'deep') {
 	const normalizedRetrieverMode = normalizeRetrieverMode(retrieverMode);
 	if (normalizedRetrieverMode === 'fast') {
@@ -2483,6 +2489,9 @@ async function callChatModel(runtimeConfig, messages, tools, options = {}) {
 		reasoning_split: true,
 		stream: options.stream === true,
 	};
+	if (isQwenHybridThinkingModel(runtimeConfig.model)) {
+		body.chat_template_kwargs = { enable_thinking: options.thinkingMode === 'deep' };
+	}
 	const openAiTools = normalizeOpenAiToolDefinitions(tools);
 	if (openAiTools.length > 0) {
 		body.tools = openAiTools;
@@ -3238,6 +3247,7 @@ async function runReaderNovelChat(novelId, messages, onEvent, options = {}) {
 			tools,
 			{
 				stream: true,
+				thinkingMode: isFastRetrieverMode ? 'fast' : 'deep',
 				onTextDelta: (text) => {
 					if (reasoningEmitter) {
 						reasoningEmitter.push(text);
@@ -3418,6 +3428,7 @@ async function runReaderNovelChat(novelId, messages, onEvent, options = {}) {
 		);
 		const writerCompletion = await callChatModel(writerRuntime, writerMessages, null, {
 			stream: true,
+			thinkingMode: 'deep',
 			onTextDelta: (text) => {
 				const deltaText = String(text || '');
 				if (!deltaText) {

@@ -44,6 +44,8 @@
 			"tabPosts": "Posts",
 			"tabWorlds": "Worlds",
 			"noPosts": "No posts yet",
+			"noWorks": "Nothing here yet",
+			"noWorlds": "Nothing here yet",
 			"userLoadFailed": "Failed to load profile",
 			"worksLoadFailed": "Failed to load works",
 			"worldsLoadFailed": "Failed to load worlds",

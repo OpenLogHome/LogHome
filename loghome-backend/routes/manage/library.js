@@ -1,6 +1,8 @@
+const { ensureRankBadgeSchema } = require('../../bin/rankBadgeSchema');
+const { recordFirstPublication } = require('../../bin/novelPublication');
 // 引入依赖包
 let express = require('express');
-let { query } = require('../../sql.js');
+let { query, withTransaction } = require('../../sql.js');
 let auth = require('../../bin/adminAuth.js');
 let moment = require('moment');
 let message = require('../../bin/message.js');
@@ -440,6 +442,7 @@ router.post('/update_writer_draft', auth, async function (req, res) {
 // 添加更新文章接口
 router.post('/update_article', auth, async function (req, res) {
 	try {
+		await ensureRankBadgeSchema();
 		if (!req.body.article_id) {
 			return res.json(400, { msg: 'missing article_id parameter' });
 		}
@@ -490,7 +493,10 @@ router.post('/update_article', auth, async function (req, res) {
 		params.push(req.body.article_id);
 		
 		const sql = `UPDATE articles SET ${updateFields.join(', ')} WHERE article_id = ?`;
-		await query(sql, params);
+		await withTransaction(async trx => {
+			await trx(sql, params);
+			await recordFirstPublication(req.body.article_id, trx);
+		}, 'admin-publish-article');
 		
 		res.json({ success: true });
 	} catch (e) {

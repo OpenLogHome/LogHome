@@ -6,8 +6,8 @@
 				<view class="hero-mask"></view>
 				<view class="hero-content">
 					<view class="hero-pill">实时热度榜</view>
-					<view class="hero-title">原木力爆棚榜</view>
-					<view class="hero-subtitle">按原木力实时排序，越靠前说明作品越热。</view>
+					<view class="hero-title"><LogPowerWordmark />爆棚榜</view>
+					<view class="hero-subtitle">按<LogPowerWordmark />实时排序，越靠前说明作品越热。</view>
 
 					<view class="hero-meta">
 						<view class="meta-chip">
@@ -22,7 +22,7 @@
 
 					<view class="summary-row" v-if="books.length">
 						<view class="summary-card" v-for="item in summaryCards" :key="item.label">
-							<text class="summary-label">{{ item.label }}</text>
+							<view class="summary-label"><template v-if="item.label === '榜首原木力'">榜首<LogPowerWordmark /></template><template v-else>{{ item.label }}</template></view>
 							<text class="summary-value">{{ item.value }}</text>
 						</view>
 					</view>
@@ -56,7 +56,7 @@
 
 						<view class="feature-footer">
 							<view class="feature-score">
-								<text class="feature-score-label">原木力</text>
+								<LogPowerWordmark class="feature-score-label" />
 								<text class="feature-score-value">{{ formatScore(champion.ranking) }}</text>
 							</view>
 							<view class="feature-action">点击查看详情</view>
@@ -118,7 +118,7 @@
 						</view>
 
 						<view class="score-pill">
-							<text class="score-pill-label">原木力</text>
+							<LogPowerWordmark class="score-pill-label" />
 							<text class="score-pill-value">{{ formatScore(item.ranking) }}</text>
 						</view>
 					</view>
@@ -128,7 +128,7 @@
 			<view class="loading-state" v-if="showLoadingState">
 				<image class="state-icon" src="../../static/loading.gif" mode="aspectFit"></image>
 				<text class="state-title">正在生成榜单</text>
-				<text class="state-desc">正在通过原木力探测器搜索...</text>
+				<view class="state-desc">正在通过<LogPowerWordmark />探测器搜索...</view>
 			</view>
 
 			<view class="empty-state" v-else-if="showEmptyState">
@@ -141,10 +141,12 @@
 </template>
 
 <script>
+import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 	import axios from 'axios'
 	import darkModeMixin from '@/mixins/dark-mode.js'
 
 	export default {
+		components: { LogPowerWordmark },
 		mixins: [darkModeMixin],
 		data() {
 			return {
@@ -192,8 +194,8 @@
 			}
 		},
 		onLoad() {
-			this.updateTime();
-			this.refreshCollections();
+			// Preserve old shared/configured URLs while opening the unified ranking page.
+			uni.redirectTo({ url: '/pages/readers/rankBoard?board=logpower&zone=all' });
 		},
 		onPullDownRefresh() {
 			this.updateTime();

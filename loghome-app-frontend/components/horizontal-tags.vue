@@ -17,7 +17,7 @@
 					></image>
 					<text class="tag-name">{{ tag.tag_name }}</text>
 					<text class="tag-arrow">
-						<uni-icons type="right" size="14px" :color="tag.tag_color"></uni-icons>
+						<uni-icons type="right" size="26rpx" :color="tag.tag_color"></uni-icons>
 					</text>
 				</view>
 				<div class="none" style="width: 25rpx; height: 25rpx; color: transparent">.</div>
@@ -77,7 +77,7 @@ export default {
 <style scoped>
 .horizontal-tags-container {
 	width: 100%;
-	padding: 10px 0 0 0;
+	padding: 17rpx 0 0 0;
 }
 
 .tags-scroll {
@@ -88,24 +88,24 @@ export default {
 .tags-wrapper {
 	display: flex;
 	flex-direction: row;
-	padding: 0rpx 25rpx 0 25rpx;
-	gap: 12px;
+	padding: 10.2rpx 25rpx 0 25rpx;
+	gap: 20.4rpx;
+	font-weight: bold;
 }
 
 .tag-item {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	padding: 8px 16px;
+	padding: 13.6rpx 27.2rpx;
 	background-color: #f8f9fa;
-	border-radius: 20px;
-	border: 1px solid #e9ecef;
+	border-radius: 34rpx;
+	border: 2rpx solid #e9ecef;
 	white-space: nowrap;
 	flex-shrink: 0;
 	transition: all 0.3s ease;
 	color: #999999;
-	font-size: 14px;
-	font-weight: bold;
+	font-size: 26rpx;
 }
 
 .tag-item:active {
@@ -114,20 +114,20 @@ export default {
 }
 
 .tag-icon {
-	width: 16px;
-	height: 16px;
-	margin-right: 6px;
+	width: 27.2rpx;
+	height: 27.2rpx;
+	margin-right: 10.2rpx;
 	flex-shrink: 0;
 }
 
 .tag-name {
-	font-size: 14px;
-	margin-right: 4px;
+	font-size: 26rpx;
+	margin-right: 6.8rpx;
 	flex-shrink: 0;
 }
 
 .tag-arrow {
-	font-size: 14px;
+	font-size: 26rpx;
 	font-weight: bold;
 	opacity: 0.7;
 	flex-shrink: 0;

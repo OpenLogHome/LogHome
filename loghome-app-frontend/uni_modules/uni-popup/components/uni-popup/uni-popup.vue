@@ -349,6 +349,14 @@
 					paddingBottom: this.safeAreaInsets + 'px',
 					backgroundColor: this.bg
 				}
+				// #ifdef H5
+				// The native shell already reserves navigation-bar space. Use the shared
+				// viewport inset rather than reserving the screen-based inset twice.
+				this.transClass.paddingBottom = this.safeArea
+					? 'var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px))'
+					: '0px'
+				// #endif
+
 				// TODO 兼容 type 属性 ，后续会废弃
 				if (type) return
 				this.showPopup = true

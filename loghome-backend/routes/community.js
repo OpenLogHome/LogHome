@@ -415,6 +415,7 @@ router.get('/novel_comment_from_comment_id', async function (req, res) {
 							AND n.deleted = 0`,
 			[req.query.comment_id],
 		);
+		results.forEach(parseCommentMediaUrls);
 		await avatarFrames.decorateRows(results, [
 			{ userIdField: 'user_id', targetField: 'avatar_frame' },
 		]);

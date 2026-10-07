@@ -1,12 +1,14 @@
 <template>
-	<view style="background-color: #FFFFFF" v-dark>
+	<view class="page-root" v-dark>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :textcolor="isDarkMode ? '#e5e5e5' : '#000'" :showLeft="topNum == 0" :showTitle="false" navTitle='标题'></zetank-backBar>
-		<!-- 用户背景封面 -->
-		<log-image class="info-cover" @tap="change_top_pic" :src="user.top_pic_url"
-		onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
+		<!-- 用户背景封面（只保留内容面板上方的可见区域，避免面板内容较短时封面从下方露出） -->
+		<view class="info-cover-wrap" :style="coverWrapStyle" @tap="change_top_pic">
+			<log-image class="info-cover" :src="user.top_pic_url"
+			onerror="onerror=null;src='https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'"></log-image>
+		</view>
 		
-		<springBack top="calc(300rpx + var(--loghome-safe-top, 0px))">
+		<springBack class="profile-content-sheet" top="calc(300rpx + var(--loghome-safe-top, 0px))" @cover-move="onCoverMove">
 			<!-- 右侧悬浮按钮 -->
 			<view class="rightBtnGroup">
 				<followBtn :targetId="Number(uid)" v-show="uid != myUserInfo.user_id"/>
@@ -33,8 +35,19 @@
 			<!-- 用户名 -->
 			<view class="profile-name-row">
 				<text :style="'font-size: 40rpx;color: ' + (isDarkMode ? '#e5e5e5' : '#111111') + ';font-weight: bold;margin-right: 10rpx;'">{{user.name}}</text>
+				<view
+					v-if="user.is_admin"
+					class="admin-badge-tap"
+					@tap="toggleAdminTip"
+					@click="toggleAdminTip"
+				>
+					<img class="admin-badge-icon" src="../../static/icons/admin.gif" alt="" />
+					<view v-if="showAdminTip" class="admin-badge-tip" @tap.stop @click.stop>
+						<text>{{ $t('me.profile.admin') }}</text>
+					</view>
+				</view>
 			</view>
-			
+
 			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx; display: flex;align-items: center;">
 				<span class="user_id">ID:{{uid}}</span>
 				<view
@@ -48,8 +61,6 @@
 				<view v-if="user.display_title" class="profile-title-chip">
 					{{user.display_title}}
 				</view>
-				<span class="admin_title" v-show="user.is_admin">
-					<img src="../../static/icons/admin.gif" alt="" style="width:45rpx;margin-left: 10rpx;"/>{{ $t('me.profile.admin') }}</span>
 				<membership-badge :tier="user.membership_type" size="md" :show-label="true" style="margin-left: 15rpx;"/>
 			</view>
 	
@@ -97,6 +108,10 @@
 				:style="swiperStyle">
 				<swiper-item>
 					<div class="bookcase tabpage">
+						<view class="empty-hint" v-if="booksOnShow.filter(function(b) { return !b.is_personal; }).length === 0">
+							<img class="empty-hint-img" src="../../static/loggirl-404-empty-chest.png" alt="" />
+							<text class="empty-hint-text">{{ $t('me.profile.noWorks') }}</text>
+						</view>
 						<bookInCase v-for="item in booksOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.novel_id"
 									@click.native="readBook(item.novel_id)" v-show="!item.is_personal"></bookInCase>
 					</div>
@@ -139,14 +154,19 @@
 								</view>
 							</view>
 						</view>
-						<view class="no-data" v-if="userPosts.length === 0">
-							<text>{{ $t('me.profile.noPosts') }}</text>
+						<view class="empty-hint" v-if="userPosts.length === 0">
+							<img class="empty-hint-img" src="../../static/loggirl-404-empty-chest.png" alt="" />
+							<text class="empty-hint-text">{{ $t('me.profile.noPosts') }}</text>
 						</view>
-						<uni-load-more :status="postsLoadingStatus"></uni-load-more>
+						<uni-load-more v-if="userPosts.length > 0" :status="postsLoadingStatus"></uni-load-more>
 					</div>
 				</swiper-item>
 				<swiper-item>
 					<div class="bookcase tabpage">
+						<view class="empty-hint" v-if="worldsOnShow.length === 0">
+							<img class="empty-hint-img" src="../../static/loggirl-404-empty-chest.png" alt="" />
+							<text class="empty-hint-text">{{ $t('me.profile.noWorlds') }}</text>
+						</view>
 						<bookInCase v-for="item in worldsOnShow" :bookName="item.name" :picUrl="item.picUrl" :key="item.world_id"
 									@click.native="readBook(item.novel_id)"></bookInCase>
 					</div>
@@ -176,6 +196,10 @@
 				uid: -1,
 				membertype: '',
 				showedit: true, //信息编辑按钮
+				showAdminTip: false, //管理员徽标 tooltip
+				adminTipTimer: null,
+				coverDy: 0, // springBack 下拉位移，背景图跟随拉伸
+				coverDyAnimated: false, // 回弹时高度是否用过渡动画
 				// 是否固定导航
 				isFixed: false,
 				// 距离顶部达到导航距离
@@ -244,7 +268,45 @@
 				this.loadMorePosts();
 			}
 		},
+		computed: {
+			coverWrapStyle() {
+				// 拖动中高度跟手（无过渡）；松手后用与面板一致的 0.2s ease-out 回弹，
+				// 避免封面瞬间弹回而面板还在回滑，中途露出白缝
+				return {
+					height: 'calc(300rpx + var(--loghome-safe-top, 0px) + ' + this.coverDy + 'px)',
+					transition: this.coverDyAnimated ? 'height 0.2s ease-out' : 'none',
+				};
+			},
+		},
 		methods: {
+			// springBack 下拉时背景图跟随拉伸：露出被遮住的图片下半段，与面板底边无缝衔接
+			onCoverMove(dy) {
+				const value = Number(dy) || 0;
+				if (value > 0) {
+					// 拖动中：跟手，无过渡
+					this.coverDyAnimated = false;
+					this.coverDy = value;
+				} else {
+					// 松手回弹：高度用过渡动画归零，与面板回滑同步
+					this.coverDyAnimated = true;
+					this.coverDy = 0;
+				}
+			},
+			// 管理员徽标 tooltip：点击显示"社区管理员"，3 秒后自动消失
+			toggleAdminTip() {
+				if (this.showAdminTip) {
+					this.showAdminTip = false;
+					clearTimeout(this.adminTipTimer);
+					this.adminTipTimer = null;
+					return;
+				}
+				this.showAdminTip = true;
+				clearTimeout(this.adminTipTimer);
+				this.adminTipTimer = setTimeout(() => {
+					this.showAdminTip = false;
+					this.adminTipTimer = null;
+				}, 3000);
+			},
 				/// 顶部导航选项点击
 				fnBarClick(current) {
 					// console.log(current);
@@ -567,13 +629,35 @@
 </script>
 
 <style lang="scss" scoped>
+	.profile-content-sheet:not(.dark-mode) {
+		background: #ffffff;
+	}
+	/* 页面子元素均为绝对定位脱流，根容器需自身撑满视口涂底色，
+	   否则内容面板下方会露出 WebView 底层背景色 */
+	.page-root {
+		min-height: 100vh;
+		background-color: #FFFFFF;
+
+		&.dark-mode {
+			background-color: var(--background-color-secondary);
+		}
+	}
+
+	.info-cover-wrap {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: calc(300rpx + var(--loghome-safe-top, 0px));
+		overflow: hidden;
+	}
+
 	.info-cover {
-		position:absolute;
 		display: block;
 		width: 100vw;
 		height:100vw;
 		background-color: #FFFFFF;
-		
+
 		.dark-mode & {
 			background-color: #252525;
 		}
@@ -777,14 +861,28 @@
 			}
 		}
 		
-		.no-data {
-			text-align: center;
-			padding: 40rpx 0;
-			color: #999;
-			font-size: 28rpx;
-			
+	}
+
+	.empty-hint {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		padding: 60rpx 0;
+
+		.empty-hint-img {
+			width: 220rpx;
+			max-width: 50%;
+			margin: 25rpx 0;
+		}
+
+		.empty-hint-text {
+			color: #777777;
+			font-size: 25rpx;
+
 			.dark-mode & {
-				color: #777;
+				color: var(--text-color-regular);
 			}
 		}
 	}
@@ -854,10 +952,11 @@
 		right:35rpx;
 		margin-top: 10px;
 		display: flex;
+		align-items: center;
 	}
-	
+
 	.button {
-		height: 68rpx;
+		height: 60rpx;
 		width: 150rpx;
 		font-size: 14px;
 		text-align: center;
@@ -888,26 +987,64 @@
 			background-color: #505050;
 		}
 	}
-	.admin_title{
-		font-size:20rpx;
-		padding:5rpx;
-		line-height: 40rpx; 
-		margin-left:10rpx;
-		border-radius: 10rpx;
-		background: #55aaff;
-		color:white;
-		margin-left: 25rpx;
-		padding: 5rpx 7.5rpx 5rpx 30rpx;
-		text-align: right;
-		position:relative;
-		img{
-			position:absolute;
-			left:-25rpx;
-			top:-7.5rpx;
+	.admin-badge-tap {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		margin-right: 4rpx;
+
+		.admin-badge-icon {
+			width: 48rpx;
+			height: 48rpx;
 		}
-		
-		.dark-mode & {
-			background: #3a7ab8;
+
+		/* 点击徽标弹出的 tooltip 气泡 */
+		.admin-badge-tip {
+			position: absolute;
+			width: max-content;
+			left: 50%;
+			bottom: calc(100% + 14rpx);
+			transform: translateX(-50%);
+			background: rgba(30, 34, 40, 0.92);
+			color: #fff;
+			font-size: 22rpx;
+			line-height: 32rpx;
+			padding: 8rpx 20rpx;
+			border-radius: 10rpx;
+			white-space: nowrap;
+			z-index: 50;
+			box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.2);
+			animation: admin-tip-in 0.18s ease-out;
+
+			text {
+				white-space: nowrap;
+				word-break: normal;
+			}
+
+			/* 气泡小三角 */
+			&::after {
+				content: '';
+				position: absolute;
+				left: 50%;
+				bottom: -10rpx;
+				transform: translateX(-50%);
+				border: 10rpx solid transparent;
+				border-top-color: rgba(30, 34, 40, 0.92);
+				border-bottom: none;
+			}
+		}
+	}
+
+	@keyframes admin-tip-in {
+		0% {
+			opacity: 0;
+			transform: translateX(-50%) translateY(8rpx);
+		}
+
+		100% {
+			opacity: 1;
+			transform: translateX(-50%) translateY(0);
 		}
 	}
 	

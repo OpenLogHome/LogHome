@@ -251,6 +251,10 @@ export default {
 			if (!value) return '';
 			return String(value).slice(0, 16).replace('T', ' ');
 		},
+		shouldUseNativeBack() {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null
+			return !!(bridge && bridge.inApp && bridge.nativeRouterAvailable)
+		},
 		handleBack() {
 			if (this.view === 'edit') {
 				this.backToList();
@@ -258,6 +262,10 @@ export default {
 			}
 			const pages = getCurrentPages();
 			this.navigationAllowed = true;
+			if (this.shouldUseNativeBack()) {
+				uni.navigateBack({ delta: 1 })
+				return
+			}
 			if (pages.length > 1) {
 				uni.navigateBack();
 			} else {
@@ -639,7 +647,10 @@ button.queue-action { min-width: 68rpx; min-height: 68rpx; color: var(--manga-ac
 .page-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .page-cell { height: 320rpx; }
 .page-preview { display: block; width: 100%; height: 100%; }
-button.page-del { display: grid; place-items: center; width: 88rpx; height: 88rpx; top: 4rpx; right: 4rpx; padding: 0; background: rgba(0,0,0,.78); color: #fff; font-size: 26rpx; }
+button.page-del { display: grid; place-items: center; width: 88rpx; height: 88rpx; top: -12rpx; right: -12rpx; padding: 0; background: transparent; color: #fff; font-size: 24rpx; }
+// 保留 88rpx 触控热区，可见圆圈缩小，避免遮挡缩略图
+button.page-del::before { content: ""; position: absolute; inset: 20rpx; border-radius: 50%; background: rgba(0,0,0,.62); }
+button.page-del .manga-icon { position: relative; }
 .page-moves { min-height: 88rpx; }
 button.move-btn { display: grid; place-items: center; flex: 1; min-height: 88rpx; padding: 0; color: #fff; font-size: 24rpx; }
 button.add-cell { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10rpx; width: 100%; height: 320rpx; border: 2rpx dashed var(--manga-line); border-radius: 14rpx; color: var(--manga-accent); font-size: 24rpx; }

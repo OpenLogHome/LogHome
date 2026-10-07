@@ -180,7 +180,7 @@
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (!tk) return;
 				
-				axios.post(this.$baseUrl + '/library/update_fan_message', 
+				return axios.post(this.$baseUrl + '/library/update_fan_message',
 					{
 						novel_id: this.novel_id,
 						message: this.tippingMessage.trim()
@@ -280,7 +280,7 @@
 				let _this = this;
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if(!tk) return;
-				axios.post(this.$baseUrl + '/library/tipping',
+				return axios.post(this.$baseUrl + '/library/tipping',
 					{
 						from_id:tk.id,
 						novel_id: this.novel_id,
@@ -297,7 +297,7 @@
 						}
 					},
 				)
-				.then(function(response) {
+				.then(async function(response) {
 					uni.showToast({
 						title: "打赏成功",
 						icon: 'none',
@@ -306,7 +306,7 @@
 					
 					// 如果有留言，则更新粉丝留言
 					if (_this.tippingMessage.trim()) {
-						_this.updateFanMessage();
+						await _this.updateFanMessage();
 					}
 					
 					_this.$emit("tip", {

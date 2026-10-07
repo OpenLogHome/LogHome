@@ -179,6 +179,14 @@
 			}
 		},
 		{
+			"path": "pages/readers/rankBoard",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "排行榜",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
 			"path": "pages/readers/allArticles",
 			"style": {
 				"navigationBarTitleText": "所有章节"
@@ -187,7 +195,7 @@
 		{
 			"path": "pages/readers/novel_fans",
 			"style": {
-				"navigationBarTitleText": "书籍打赏"
+				"navigationBarTitleText": "粉丝贡献榜"
 			}
 		},
 		{
@@ -234,11 +242,6 @@
 			"path": "pages/apps/about",
 			"style": {
 				"navigationBarTitleText": "关于我们"
-			}
-		},{
-			"path": "pages/apps/audio_test",
-			"style": {
-				"navigationBarTitleText": "有声书测试"
 			}
 		},{
             "path" : "pages/writers/newEssay",
@@ -799,6 +802,16 @@
 			"path": "pages/manage/users/index",
 			"style": {
 				"navigationBarTitleText": "用户管理"
+			}
+		}, {
+			"path": "pages/manage/community/index",
+			"style": {
+				"navigationBarTitleText": "社区管理"
+			}
+		}, {
+			"path": "pages/manage/community/reports",
+			"style": {
+				"navigationBarTitleText": "举报处理"
 			}
 		}, {
 			"path": "pages/users/external_login",

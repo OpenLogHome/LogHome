@@ -6,31 +6,20 @@
 			:style="{ 'marginTop': '0px', 'height': componentMode ? '100%' : 'auto' }"
 			:default-page-size="componentMode ? 10 : 10">
 			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
-			<div v-if="paragraphId !== undefined"
-			:style="{
-				backgroundColor: $store.state.isDarkMode ? '#333' : '#e6e6e6',
-				padding: '10px',
-				margin: '0 0 5px 0',
-				fontSize: '14px'
-			}"
-			@click="navToChapter">
+			<div v-if="paragraphId !== undefined" class="cento-banner" @click="navToChapter">
 				<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1"
 					xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;">
 					<path d="M128 472.896h341.344v341.344H128zM128 472.896L272.096 192h110.08l-144.128 280.896z"
-						fill="#8a8a8a" p-id="2307"></path>
+						fill="currentColor" p-id="2307"></path>
 					<path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z"
-						fill="#8a8a8a" p-id="2308"></path>
+						fill="currentColor" p-id="2308"></path>
 				</svg>
-				<div class="cento" :style="{
-					marginTop: '10rpx',
-					color: $store.state.isDarkMode ? '#b8b8b8' : '#4b4b4b',
-					padding: '0 30rpx'
-				}">
+				<div class="cento">
 					{{ paragraph }}
 				</div>
 			</div>
 			<view class="comments">
-				<commentItem v-for="item in reviews" :reviewMsg="item" :key="item.essay_comment_id"
+				<commentItem v-for="item in reviews" :reviewMsg="item" :key="item.comment_id"
 					:componentMode="componentMode" @childReview="childReview($event)" :id="'comment_' + item.comment_id"
 					@changePraise="changePraise($event)" @deleteComment="deleteComment($event)" class="comment_item" :class="{highlight_comment: preLoadCommentId == item.comment_id}"
 					:paragraphMode="paragraphId != undefined" @navigate="$emit('navigate')" :fanRanks="fanRanks" :novelId="novelId"></commentItem>
@@ -43,12 +32,12 @@
 			<view class="reply-status" v-if="replyToId !== -1">
 				<text class="reply-status-text">回复 {{replyToUserName}}</text>
 				<view class="cancel-reply-btn" @tap="cancelReply">
-					<uni-icons type="closeempty" size="20" color="#999"></uni-icons>
+					<uni-icons type="closeempty" size="20" color="var(--manga-muted, #656c74)"></uni-icons>
 				</view>
 			</view>
 			
 			<div class="reply-row">
-				<textarea type="text" auto-height :placeholder="commentPlaceholder" maxlength="300"
+				<textarea class="reply-input" type="text" auto-height :placeholder="commentPlaceholder" maxlength="300"
 					v-model="commentText" @focus="textFocus" @blur="textBlur"></textarea>
 
 				<view class="icon-row">
@@ -56,12 +45,9 @@
 						<emoji-picker @select="onEmojiSelect"></emoji-picker>
 					</view>
 					<view class="image-icon" @tap="toggleImageUpload">
-						<uni-icons type="image" size="30" color="#666666"></uni-icons>
+						<uni-icons type="image" size="30" color="var(--manga-muted, #656c74)"></uni-icons>
 					</view>
-					<view class="send-icon">
-						<uni-icons :type="isSubmitting ? 'spinner-cycle' : 'redo-filled'" size="30" :color="isSubmitting ? '#BDBDBD' : '#EA7034'" @click="submitComment"
-							:focus="isFocus"></uni-icons>
-					</view>
+					<button class="send-btn" type="button" :disabled="isSubmitting || !commentText" @click="submitComment">{{ isSubmitting ? '发布中' : '发布' }}</button>
 				</view>
 			</div>
 
@@ -91,6 +77,20 @@ import axios from 'axios'
 import commentItem from "../../components/dl-review/item.vue"
 import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 import darkModeMixin from '@/mixins/dark-mode.js'
+
+function normalizeCommentMediaUrls(value) {
+	if (typeof value === 'string') {
+		try {
+			value = JSON.parse(value);
+		} catch (error) {
+			return [];
+		}
+	}
+	return Array.isArray(value)
+		? value.filter(url => typeof url === 'string' && url.trim().length > 0)
+		: [];
+}
+
 export default {
 	components: {
 		commentItem, nothing, emojiPicker
@@ -313,57 +313,17 @@ export default {
 					targetUserName: userNameMap[reply.reply_to_id] || item.name,
 					sendMsg: reply.content,
 					article_id: reply.article_id,
-					media_urls: reply.media_urls || []
+					media_urls: normalizeCommentMediaUrls(reply.media_urls)
 				})),
 				reviewNum: replies.length,
 				article_id: item.article_id,
 				article_title: item.article_title || '',
 				cento_id: item.cento_id,
 				cento: item.cento,
-				media_urls: item.media_urls || [],
+				media_urls: normalizeCommentMediaUrls(item.media_urls),
 				...(praiseStatusesLoaded ? {
 					praiseType
 				} : {})
-			}
-		},
-		async loadComment(commentId) {
-			let res = await axios.get(this.$baseUrl + "/community/novel_comment_from_comment_id?comment_id=" + commentId);
-			let data = res.data;
-			if (data.length > 0) {
-				let commentItem = {
-					author_id: data[0].author_id,
-					comment_id: data[0].essay_comment_id,
-					headImgSrc: data[0].avatar_url,
-					avatarFrame: data[0].avatar_frame || null,
-					userName: data[0].name,
-					userId: data[0].user_id,
-					sendTime: this.utc2beijing(data[0].comment_time),
-					sendMsg: data[0].content,
-					likeNum: data[0].likeNum,
-					reviewLess: [],
-					reviewNum: 0,
-					article_id: data[0].article_id,
-					cento_id: data[0].cento_id,
-					cento: data[0].cento,
-					media_urls: data[0].media_urls || []
-				}
-				// 加载回复
-				await axios.get(this.$baseUrl + "/community/novel_commonts_reply_to?id=" + commentId)
-					.then((res) => {
-						let data = res.data;
-						for (let item of data) {
-							commentItem.reviewLess.push({
-								comment_id: item.essay_comment_id,
-								userName: item.name,
-								userId: item.user_id,
-								targetUserName: data[0].name,
-								sendMsg: item.content,
-								article_id: item.article_id,
-								media_urls: item.media_urls || []
-							});
-						}
-					})
-				this.$refs.paging.addDataFromTop([commentItem], true, true);
 			}
 		},
 		async refreshPage(pageNo, pageSize) {
@@ -372,35 +332,15 @@ export default {
 			uni.showLoading({
 				title: '努力加载中'
 			});
-			let reviewDatas = [];
-			let _this = this;
-			await axios.get(this.$baseUrl + "/community/novel_commonts_all?id=" + this.novelId
+			let data = [];
+			// fast 接口单请求返回根评论 + 内嵌回复 + 点赞数 + 引文，避免逐条拉回复的瀑布
+			await axios.get(this.$baseUrl + "/community/novel_commonts_all_fast?id=" + this.novelId
 				+ "&page=" + pageNo + "&pageSize=" + pageSize + ((this.articleId != undefined) ? `&articleId=${this.articleId}` : '')
 				+ ((this.paragraphId != undefined) ? `&paragraphId=${this.paragraphId}` : ''))
-				.then(async (res) => {
-					let data = res.data;
-					console.log(data)
-					if (_this.paragraphId !== undefined) {
-						data = data.filter((item) => {
-							return item.cento && item.cento.paragraph_id == _this.paragraphId
-						})
-					}
-					for (let item of data) {
-						reviewDatas.push(item)
-						await axios.get(this.$baseUrl + "/community/novel_commonts_reply_to?id=" + item.essay_comment_id)
-							.then((res) => {
-								let data = res.data;
-								for (let subItem of data) {
-									reviewDatas.push(subItem)
-								}
-
-							}).catch((err) => {
-								uni.showToast({
-					title: "评论信息获取失败",
-					icon: 'none',
-					duration: 2000
-				});
-							})
+				.then((res) => {
+					data = res.data || [];
+					if (this.paragraphId !== undefined) {
+						data = data.filter((item) => item.cento && item.cento.paragraph_id == this.paragraphId);
 					}
 				}).catch((err) => {
 					uni.showToast({
@@ -409,70 +349,10 @@ export default {
 						duration: 2000
 					});
 				})
-
-			function findTargetUserName(reply_to_id) {
-				for (let item of reviewDatas) {
-					if (item.essay_comment_id == reply_to_id) {
-						return item.name;
-					}
-				}
-			}
-			let reviews = [];
-			for (let item of reviewDatas) {
-				// console.log(item);
-				if (item.father_comment_id == -1) {
-					console.log(item);
-					let commentItem = {
-						author_id: item.author_id,
-						comment_id: item.essay_comment_id,
-						headImgSrc: item.avatar_url,
-						avatarFrame: item.avatar_frame || null,
-						userName: item.name,
-						userId: item.user_id,
-						sendTime: _this.utc2beijing(item.comment_time),
-						sendMsg: item.content,
-						likeNum: item.likeNum,
-						reviewLess: [],
-						reviewNum: 0,
-						article_id: item.article_id,
-						cento_id: item.cento_id,
-						cento: item.cento,
-						media_urls: item.media_urls || []
-					}
-
-					for (let subItem of reviewDatas) {
-						if (subItem.father_comment_id == item.essay_comment_id) {
-							commentItem.reviewLess.push({
-								comment_id: subItem.essay_comment_id,
-								userName: subItem.name,
-								userId: subItem.user_id,
-								targetUserName: findTargetUserName(subItem.reply_to_id),
-								sendMsg: subItem.content,
-								article_id: item.article_id,
-								media_urls: subItem.media_urls || []
-							})
-						}
-					}
-					reviews.push(commentItem);
-					// console.log("commentItem",commentItem);
-				}
-			}
 			const praiseStatusMap = await this.fetchPraiseStatusMap(
-				reviews.map((item) => item.comment_id)
+				data.map((item) => item.essay_comment_id)
 			);
-			for (let item of reviews) {
-				if (praiseStatusMap !== null) {
-					const hasPraiseStatus = Object.prototype.hasOwnProperty.call(
-						praiseStatusMap,
-						item.comment_id
-					);
-					item.praiseType = hasPraiseStatus ? praiseStatusMap[item.comment_id] : 3;
-				}
-				item.likeNum = Math.max(
-					Number(item.likeNum) || 0,
-					Number(item.praiseType) === 0 ? 1 : 0
-				);
-			}
+			const reviews = data.map((item) => this.buildCommentItem(item, praiseStatusMap));
 			this.$refs.paging.complete(reviews);
 			uni.hideLoading();
 
@@ -797,16 +677,42 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/common/manga-theme.scss';
+
 .commentOuter {
-	background-color: rgb(255, 248, 234);
+	@include manga-theme;
+
 	height: 100%;
-	
-	&.dark-mode {
-		background-color: #1c1c1c;
-	}
 
 	&.component-mode {
 		min-height: 0;
+	}
+
+	// 段落评论顶部的原文引用条
+	.cento-banner {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8rpx;
+		margin: 20rpx 24rpx 10rpx;
+		padding: 10rpx 16rpx;
+		border-radius: 12rpx;
+		background: var(--manga-card);
+		border: 1rpx solid var(--manga-line);
+		color: var(--manga-muted);
+		font-size: 22rpx;
+
+		.icon {
+			flex: none;
+			color: inherit;
+		}
+
+		.cento {
+			width: 100%;
+			margin-top: 4rpx;
+			color: var(--manga-muted);
+			font-size: 22rpx;
+		}
 	}
 
 	.cento {
@@ -819,42 +725,36 @@ export default {
 
 	.reply {
 		position: fixed;
-		background-color: #f2f2f2;
-		border-top: 1rpx rgb(195, 195, 195) solid;
 		bottom: 0;
 		width: 100vw;
+		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		z-index: 50;
-		
-		.dark-mode & {
-			background-color: #252525;
-			border-top: 1rpx #444 solid;
-		}
+		background: var(--manga-card);
+		border-top: 1rpx solid var(--manga-line);
 
 		.reply-status {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			padding: 10rpx 20rpx;
-			background-color: #e8f4fd;
-			border-bottom: 1rpx solid #d0d0d0;
-			
-			.dark-mode & {
-				background-color: #333;
-				border-bottom: 1rpx solid #444;
-			}
-			
+			gap: 16rpx;
+			margin: 14rpx 20rpx 0;
+			padding: 12rpx 18rpx;
+			border-radius: 12rpx;
+			background: var(--manga-bg);
+
 			.reply-status-text {
-				font-size: 28rpx;
-				color: #666;
-				
-				.dark-mode & {
-					color: #b8b8b8;
-				}
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				color: var(--manga-muted);
+				font-size: 23rpx;
 			}
-			
+
 			.cancel-reply-btn {
+				flex: none;
 				padding: 5rpx;
 				display: flex;
 				align-items: center;
@@ -864,24 +764,59 @@ export default {
 
 		.reply-row {
 			display: flex;
-			flex-direction: row;
-			justify-content: space-between;
-			align-items: center;
+			align-items: flex-end;
+			gap: 12rpx;
+			padding: 20rpx 20rpx 0;
 		}
 
-		textarea {
-			margin: 20rpx;
-			padding: 20rpx;
-			border-radius: 15rpx;
-			background-color: rgba(127, 127, 127, 0.2);
-			font-size: 35rpx;
-			line-height: 35rpx;
-			color: rgb(113, 113, 113);
-			
-			.dark-mode & {
-				background-color: rgba(80, 80, 80, 0.3);
-				color: #e5e5e5;
+		.reply-input {
+			box-sizing: border-box;
+			flex: 1;
+			min-width: 0;
+			min-height: 88rpx;
+			max-height: 240rpx;
+			padding: 18rpx 22rpx;
+			border: 1rpx solid var(--manga-line);
+			border-radius: 16rpx;
+			background: var(--manga-bg);
+			color: var(--manga-text);
+			font-size: 26rpx;
+			line-height: 1.6;
+		}
+
+		.icon-row {
+			display: flex;
+			align-items: center;
+			gap: 12rpx;
+			padding: 10rpx 20rpx 20rpx;
+
+			.emoji-icon,
+			.image-icon {
+				width: 76rpx;
+				height: 76rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				color: var(--manga-muted);
 			}
+
+			.image-icon {
+				margin-left: auto;
+			}
+		}
+
+		.send-btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 108rpx;
+			height: 76rpx;
+			padding: 0 22rpx;
+			border-radius: 100rpx;
+			background: var(--manga-action);
+			color: #fff;
+			font-size: 25rpx;
+			font-weight: 700;
 		}
 
 		.image-upload-area {
@@ -899,7 +834,7 @@ export default {
 			width: calc(33.33% - 10rpx);
 			height: 150rpx;
 			margin: 5rpx;
-			border-radius: 8rpx;
+			border-radius: 12rpx;
 			overflow: hidden;
 			position: relative;
 		}
@@ -923,57 +858,26 @@ export default {
 		}
 
 		.upload-btn {
-			background-color: #f8f8f8;
+			background-color: var(--manga-bg);
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			border: 2rpx dashed #ddd;
-			
-			.dark-mode & {
-				background-color: #333;
-				border: 2rpx dashed #555;
-			}
+			border: 2rpx dashed var(--manga-line);
 		}
+	}
 
-		.icon-row {
-			display: flex;
-			flex-direction: row;
-			justify-content: space-between;
-			align-items: center;
-			padding: 0 20rpx 20rpx 20rpx;
-			margin-top: 10rpx;
-
-			.emoji-icon {
-				width: 40rpx;
-				height: 40rpx;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				margin-right: 20rpx;
-			}
-
-			.image-icon {
-				width: 40rpx;
-				height: 40rpx;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				margin-right: 20rpx;
-			}
-
-			.send-icon {
-				height: 100%;
-				padding-top: 5rpx;
-			}
-		}
+	.comments {
+		padding-bottom: 20rpx;
 	}
 
 	.comment_item {
 		transition: filter 0.3s ease;
 	}
 
-	.highlight_comment {
-		filter: brightness(0.9);
+	// 命中的评论：漫画评论的高亮为 tint 底圆角
+	.comments .comment_item.highlight_comment {
+		background: var(--manga-tint);
+		border-radius: 16rpx;
 	}
 
 	.blank_box {

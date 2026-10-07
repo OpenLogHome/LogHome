@@ -183,7 +183,7 @@
 	.world-tags { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 12rpx; }
 	.status-chip { padding: 4rpx 12rpx; border-radius: 100rpx; background: var(--manga-tint); color: var(--manga-accent); font-size: 18rpx; font-weight: 600; }
 	.status-chip.private { background: var(--manga-bg); color: var(--manga-muted); }
-	.world-intro { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 12rpx; color: var(--manga-muted); font-size: 22rpx; line-height: 1.5; }
+	.world-intro { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin-top: 12rpx; color: var(--manga-muted); font-size: 22rpx; line-height: 1.5; }
 	.card-actions { display: flex; gap: 10rpx; margin-top: 24rpx; padding-top: 20rpx; border-top: 1rpx solid var(--manga-line); }
 	.card-actions button { box-sizing: border-box; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8rpx; min-height: 88rpx; padding: 0 8rpx; border: 1rpx solid var(--manga-line); border-radius: 12rpx; color: var(--manga-text); font-size: 26rpx; font-weight: 600; line-height: 1.2; text-align: center; white-space: nowrap; }
 	.card-actions button.primary-action { border-color: transparent; background: var(--manga-action); color: #fff; }

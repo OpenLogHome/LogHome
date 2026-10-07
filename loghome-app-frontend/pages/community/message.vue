@@ -312,10 +312,13 @@
 
 <style scoped lang="less">
 	.outer{
+		position: fixed;
+		top: var(--window-top, 0px);
+		right: 0;
+		bottom: var(--window-bottom, 0px);
+		left: 0;
 		display: flex;
 		flex-direction: column;
-		height: 100vh;
-		height: 100dvh;
 		box-sizing: border-box;
 		overflow: hidden;
 		background-color: #ffffff;
@@ -397,7 +400,8 @@
 	}
 
 	.message-swiper {
-		flex: 1 1 auto;
+		flex: 1 1 0;
+		height: 0;
 		min-height: 0;
 		width: 100%;
 		overflow: hidden;

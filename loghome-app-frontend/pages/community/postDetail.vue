@@ -1637,9 +1637,13 @@ export default {
   position: absolute;
   width: 4rpx;
   height: 4rpx;
-  background: #ff7a59;
+  background: transparent;
+  // 5x5 像素心：顶行两个凸起（0,1 和 3,4），旧版缺右上凸起导致心形残缺
   box-shadow:
-    8rpx 0 #ff7a59,
+    0 0 #ff7a59,
+    4rpx 0 #ff7a59,
+    12rpx 0 #ff7a59,
+    16rpx 0 #ff7a59,
     0 4rpx #ff7a59,
     4rpx 4rpx #ff7a59,
     8rpx 4rpx #ff7a59,

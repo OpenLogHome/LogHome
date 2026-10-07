@@ -25,12 +25,13 @@
 			</div>
 			<HorizontalTags ref="HorizontalTagsRef"></HorizontalTags>
 			<bookshelfHorizontal ref="bookshelfHorizontalRef"></bookshelfHorizontal>
-			<div class="card" v-for="(item, index) in collections" v-show="keyword.length == 0" v-dark v-if="index != 1"
+			<home-rank-board ref="homeRankBoardRef" v-show="keyword.length == 0" />
+			<div class="card" v-for="item in collections" v-show="keyword.length == 0" v-dark
 				:class="{ 'is-refreshing': denseCardRefreshAnimating }">
 				<div class="head clickable" @click="gotoCollections(item.collection_title)">
 					<div class="title">
 						<p>
-							{{ item.collection_title }}
+							<template v-if="(item.collection_title || '').startsWith('原木力')"><LogPowerWordmark />{{ item.collection_title.slice(3) }}</template><template v-else>{{ item.collection_title }}</template>
 						</p>
 						<div class="lightLine" v-dark></div>
 						<log-image :src="item.icon" alt="" class="icon" v-show="item.icon != ''" />
@@ -46,6 +47,7 @@
 						<bookInCase v-for="novel in item['novels']" :bookName="novel.name" :picUrl="novel.picUrl"
 							:haycraft="isHayCraftWork(novel)"
 							:manga="novel.novel_type === 'manga'"
+							:world="novel.novel_type === 'world'"
 							:key="novel.novel_id" @click.native="readBook(novel, novel.novel_id, $event)"
 							:id="'book-cover-' + novel.novel_id"></bookInCase>
 					</transition-group>
@@ -59,13 +61,11 @@
 									:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"
 									style="border-radius: 10rpx; transform:scale(.90)" />
 								<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
+								<text v-if="novel.novel_type === 'world'" class="world-cover-badge">世界</text>
 								<div class="bookInfo" style="margin-left:10rpx;">
 									<div class="title title-with-haycraft">
 										<text class="book-title-text">{{ novel.name }}</text>
 										<haycraft-mark v-if="isHayCraftWork(novel)" />
-										<el-tag type="warning" v-show="novel.novel_type == 'world'" effect="dark"
-											style="margin-left:10rpx; transform:translateY(-5rpx)"
-											size="mini">世界设定</el-tag>
 									</div>
 									<view class="author">
 										<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
@@ -154,6 +154,7 @@
 										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 											:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
 										<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
+										<text v-else-if="novel.novel_type === 'world'" class="world-cover-badge">世界</text>
 										<div class="dense-card-info">
 											<div class="dense-card-title title-with-haycraft">
 												<text class="dense-title-text">{{ novel.name }}</text>
@@ -173,6 +174,7 @@
 										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 											:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
 										<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
+										<text v-else-if="novel.novel_type === 'world'" class="world-cover-badge">世界</text>
 										<div class="dense-card-info">
 											<div class="dense-card-title title-with-haycraft">
 												<text class="dense-title-text">{{ novel.name }}</text>
@@ -189,13 +191,14 @@
 
 			</div>
 			<!-- 使用Banner组件 -->
-			<banner page="library" v-else v-show="keyword.length == 0" />
+			<banner page="library" v-show="keyword.length == 0" />
 
 			<div v-for="item in [...searchBooks, ...books]" :key="item.book_id">
 				<div @click="readBook(item, item.novel_id, $event)" class="books clickable" v-dark :id="'book-cover-' + item.novel_id">
 					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
 						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
 					<text v-if="item.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
+					<text v-else-if="item.novel_type === 'world'" class="world-cover-badge">世界</text>
 					<div class="bookInfo">
 					<div class="title title-with-haycraft">
 						<text class="book-title-text">{{ item.name }}</text>
@@ -217,6 +220,7 @@
 </template>
 
 <script>
+import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 import axios from 'axios'
 import bookInCase from '../components/book_in_case.vue'
 import popup from "@/components/ge-popup.vue"
@@ -226,13 +230,15 @@ import darkModeMixin from '@/mixins/dark-mode.js'
 import banner from '@/components/banner.vue'
 import HorizontalTags from '../components/horizontal-tags.vue';
 import HaycraftMark from '@/components/haycraft-mark.vue'
+import HomeRankBoard from '@/components/home-rank-board.vue'
 
 const LIBRARY_FIRST_SCREEN_CACHE_KEY = 'loghome_library_first_screen_cache';
-const LIBRARY_FIRST_SCREEN_CACHE_VERSION = 2;
+const LIBRARY_FIRST_SCREEN_CACHE_VERSION = 3;
 
 export default {
 	components: {
-		bookInCase, popup, banner, bookshelfHorizontal, HorizontalTags, HaycraftMark
+    LogPowerWordmark,
+		bookInCase, popup, banner, bookshelfHorizontal, HorizontalTags, HaycraftMark, HomeRankBoard
 	},
 	mixins: [MescrollMixin, darkModeMixin], // 使用mixin
 	data() {
@@ -378,7 +384,8 @@ export default {
 				if (!cache || cache.version !== LIBRARY_FIRST_SCREEN_CACHE_VERSION) {
 					return;
 				}
-				const cachedCollections = Array.isArray(cache.collections) ? cache.collections : [];
+				const cachedCollections = (Array.isArray(cache.collections) ? cache.collections : [])
+					.filter((item) => item.collection_title !== '最近更新' && item.collection_title !== 'banner');
 				const cachedBooks = Array.isArray(cache.books) ? cache.books : [];
 				if (!cachedCollections.length && !cachedBooks.length) {
 					return;
@@ -425,7 +432,9 @@ export default {
 			this.denseCardLoading = true;
 			try {
 				const res = await axios.get(this.$baseUrl + '/library/recommand/get_library_collections', {});
-				const collections = Array.isArray(res.data) ? res.data : [];
+				// 「最近更新」已由 home-rank-board 替代；banner 集合由下方 <banner> 组件渲染
+				const collections = (Array.isArray(res.data) ? res.data : [])
+					.filter((item) => item.collection_title !== '最近更新' && item.collection_title !== 'banner');
 				const collectionWithNovels = await Promise.all(collections.map(async (item) => {
 					try {
 						const novelsRes = await axios.get(this.$baseUrl
@@ -465,6 +474,7 @@ export default {
 		reloadComponents() {
 			if (this.$refs.bookshelfHorizontalRef) this.$refs.bookshelfHorizontalRef.loadBooks();
 			if (this.$refs.HorizontalTagsRef) this.$refs.HorizontalTagsRef.loadTags();
+			if (this.$refs.homeRankBoardRef) this.$refs.homeRankBoardRef.reload();
 		},
 		onPageScroll(ev) {
 			const scrollTop = ev && ev.scrollTop != null
@@ -529,8 +539,12 @@ export default {
 		readBook(novel,novel_id, event) {
 
 			if (novel_id > 0) {
+				// 漫画直接进漫画详情，避免先经小说详情页再重定向
+				const url = novel && novel.novel_type === 'manga'
+					? '/pages/readers/mangaInfo?id=' + novel_id
+					: './readers/bookInfo?id=' + novel_id;
 				uni.navigateTo({
-					url: './readers/bookInfo?id=' + novel_id
+					url
 				})
 			}
 		},
@@ -777,7 +791,7 @@ export default {
 
 		.head {
 			margin: 0rpx 25rpx;
-			padding: 20rpx 0 20rpx 0;
+			padding: 10rpx 0 10rpx 0;
 			height: 45rpx;
 
 			div.title {
@@ -1300,6 +1314,29 @@ export default {
 }
 
 .books > .manga-cover-badge {
+	left: 18rpx;
+	bottom: 16rpx;
+	font-size: 21rpx;
+	line-height: 34rpx;
+}
+
+/* 世界书籍角标：与漫画角标同款布局，金棕配色区分 */
+.world-cover-badge {
+	position: absolute;
+	left: 14rpx;
+	bottom: 5rpx;
+	z-index: 1;
+	padding: 2rpx 9rpx;
+	border-radius: 6rpx;
+	background: rgba(184, 134, 11, 0.94);
+	color: #fff;
+	font-size: 19rpx;
+	font-weight: 600;
+	line-height: 30rpx;
+	pointer-events: none;
+}
+
+.books > .world-cover-badge {
 	left: 18rpx;
 	bottom: 16rpx;
 	font-size: 21rpx;

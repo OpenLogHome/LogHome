@@ -37,7 +37,7 @@ function component(file, axios = {}, t) {
 	const dialogs = [], navigations = [];
 	const uni = { showToast() {}, showModal: (dialog) => dialogs.push(dialog), getSystemInfoSync: () => ({ windowWidth: 375 }), navigateTo: (target) => navigations.push(target), navigateBack() {}, switchTab() {}, reLaunch() {} };
 	const window = { localStorage: { getItem: (key) => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: (key) => storage.delete(key) }, addEventListener() {}, removeEventListener() {} };
-	const sandbox = { module: {}, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, MangaCommentItem: {}, MangaCommentComposer: {}, axios, uni, window, getCurrentPages: () => [{}], setTimeout, clearTimeout, console: quiet };
+	const sandbox = { module: {}, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, MangaDanmuLayer: {}, ReportNovelPopup: {}, MangaCommentItem: {}, MangaCommentComposer: {}, axios, uni, window, getCurrentPages: () => [{}], setTimeout, clearTimeout, console: quiet };
 	vm.runInNewContext(script, sandbox, { filename: file });
 	const options = sandbox.module.exports;
 	const instance = new Vue({ ...options, beforeCreate() { this.$store = { state: { user_id: 7 } }; this.$baseUrl = ''; } });
@@ -54,7 +54,7 @@ function route(file, method, name, globals = {}) {
 	const next = source.indexOf('\nrouter.', start + marker.length);
 	let handler;
 	const router = { [method]: (...args) => { handler = args.at(-1); } };
-	vm.runInNewContext(source.slice(start, next < 0 ? undefined : next), { router, auth() {}, console: quiet, ...visibility, ...revisions, ...globals });
+	vm.runInNewContext(source.slice(start, next < 0 ? undefined : next), { router, auth() {}, console: quiet, ensureRankBadgeSchema:async()=>{}, recordFirstPublication:async()=>{}, withTransaction:async work=>work(globals.query), ...visibility, ...revisions, ...globals });
 	return handler;
 }
 function response() {

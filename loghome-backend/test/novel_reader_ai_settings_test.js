@@ -86,6 +86,7 @@ test('读者提问路由先检查作者开关，禁用时不扣除红石', async
 		'../bin/novelReaderAiSettings.js': settings,
 		'../bin/readingVisibility.js': { PUBLIC_ARTICLE: '1=1', PUBLIC_NOVEL: '1=1' },
 		'./library/recommand': express.Router(),
+		'./library/rank': express.Router(),
 	};
 	vm.runInNewContext(fs.readFileSync(filename, 'utf8'), {
 		module, exports: module.exports, console,
