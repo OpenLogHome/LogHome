@@ -57,6 +57,8 @@
 		"migrate:store-logistics": "node scripts/add_store_logistics.js",
 		"test:store-logistics": "node test/store_logistics_test.js",
 		"migrate:users-language": "node sql/execute_users_language_column.js",
+		"migrate:rank-badges": "node sql/execute_rank_badges.js",
+		"migrate:rank-snapshot": "node sql/execute_rank_snapshot_table.js",
 		"migrate:novels-is-banned": "node sql/execute_novels_is_banned_column.js",
 		"test:i18n-lang": "node test/i18n_lang_test.js",
 		"timer:run": "node scripts/run_timer.js"

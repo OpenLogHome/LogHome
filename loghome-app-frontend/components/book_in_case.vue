@@ -4,6 +4,7 @@
 			<log-image :src="picUrl  + '?thumbnail=1' " alt="" :style="{display: picUrl=='' ? 'none' : 'block'}"
 			onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"/>
 			<text v-if="manga" class="manga-badge">漫画</text>
+			<text v-if="world" class="world-badge">世界</text>
 			<!-- 更新标签 -->
 			<div 
 				v-if="updateInfo && updateInfo.has_updates" 
@@ -47,6 +48,10 @@
 			manga: {
 				type: Boolean,
 				default: false
+			},
+			world: {
+				type: Boolean,
+				default: false
 			}
 		}
 	}
@@ -77,6 +82,22 @@
 				padding: 2rpx 10rpx;
 				border-radius: 7rpx;
 				background: rgba(178, 64, 18, 0.94);
+				color: #fff;
+				font-size: 20rpx;
+				font-weight: 600;
+				line-height: 32rpx;
+				pointer-events: none;
+			}
+
+			/* 世界书籍角标：与漫画角标同款布局，配色区分 */
+			.world-badge {
+				position: absolute;
+				left: 8rpx;
+				bottom: 8rpx;
+				z-index: 1;
+				padding: 2rpx 10rpx;
+				border-radius: 7rpx;
+				background: rgba(184, 134, 11, 0.94);
 				color: #fff;
 				font-size: 20rpx;
 				font-weight: 600;

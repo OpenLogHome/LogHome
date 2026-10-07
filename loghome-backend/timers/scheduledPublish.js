@@ -1,3 +1,5 @@
+const { ensureRankBadgeSchema } = require('../bin/rankBadgeSchema');
+const { recordFirstPublication } = require('../bin/novelPublication');
 /**
  * 定时发布任务
  * 移植自独立 SCF 定时函数 timer_loghome_scheduled_publish
@@ -5,6 +7,7 @@
 const { query, transition } = require('../sql.js');
 
 async function run() {
+	await ensureRankBadgeSchema();
 	console.log('开始检查定时发布任务...');
 
 	// 1. 获取所有待执行且时间已到的任务
@@ -25,6 +28,8 @@ async function run() {
 					'UPDATE articles SET is_draft = 0, audit_status = "Uncheck", update_time = CURRENT_TIMESTAMP WHERE article_id = ?',
 					[task.article_id],
 				);
+
+				await recordFirstPublication(task.article_id, trx);
 
 				// 2. 更新小说更新时间
 				await trx(

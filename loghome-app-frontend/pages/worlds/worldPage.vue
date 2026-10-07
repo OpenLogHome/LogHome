@@ -1,5 +1,5 @@
 <template>
-	<div class="outer" v-dark>
+	<div class="world-page" v-dark>
 		<div class="gift_box" id="gift_box">
 			<img class="gift_background" id="gift_background" src="../../static/bg.png"></img>
 			<log-image class="gift" id="gift" :src="giftImage"></log-image>
@@ -123,67 +123,16 @@
 		<div class="content" style="padding-bottom: 50rpx;">
 			<view class="l-list" style="margin-bottom: 30rpx;">
 				<view class="l-h3">
-					<text class="l-h3-title">粉丝榜</text>
+					<text class="l-h3-title">粉丝贡献榜</text>
 					<navigator :url="'../readers/novel_fans?id=' + world.novel_id">
-						<view class="l-h3-more">查看粉丝榜<img class="l-icon-more" src="../../static/l-icon-more.png"
+						<view class="l-h3-more">完整榜单<img class="l-icon-more" src="../../static/l-icon-more.png"
 								mode="widthFix"></img>
 						</view>
 					</navigator>
 				</view>
 
-				<div class="fans_rank">
-					<div class="second" v-if="fanInfo[1]">
-						<div class="rank-container">
-							<user-avatar :src="fanInfo[1].avatar_url" :frame="fanInfo[1].avatar_frame" class="avatar"
-								:visual-scale="fanInfo[1].avatar_frame ? 1.15 : 1" />
-							<img src="../../static/rank/NO2.png" alt="" class="rank" />
-							<div class="crown-glow silver"></div>
-							<div class="description">
-								<p class="name">{{ fanInfo[1].user_name }}</p>
-								<p class="value"><span class="value-icon">💫</span> {{ fanInfo[1].fans_value }}
-								</p>
-							</div>
-						</div>
-					</div>
-					<div class="first" v-if="fanInfo[0]">
-						<div class="rank-container">
-							<user-avatar :src="fanInfo[0].avatar_url" :frame="fanInfo[0].avatar_frame" class="avatar"
-								:visual-scale="fanInfo[0].avatar_frame ? 1.15 : 1" />
-							<img src="../../static/rank/NO1.png" alt="" class="rank" />
-							<div class="crown-glow gold"></div>
-							<div class="description">
-								<p class="name">{{ fanInfo[0].user_name }}</p>
-								<p class="value"><span class="value-icon">✨</span> {{ fanInfo[0].fans_value }}</p>
-							</div>
-						</div>
-					</div>
-					<div class="third" v-if="fanInfo[2]">
-						<div class="rank-container">
-							<user-avatar :src="fanInfo[2].avatar_url" :frame="fanInfo[2].avatar_frame" class="avatar"
-								:visual-scale="fanInfo[2].avatar_frame ? 1.15 : 1" />
-							<img src="../../static/rank/NO3.png" alt="" class="rank" />
-							<div class="crown-glow bronze"></div>
-							<div class="description">
-								<p class="name">{{ fanInfo[2].user_name }}</p>
-								<p class="value"><span class="value-icon">⭐</span> {{ fanInfo[2].fans_value }}</p>
-							</div>
-						</div>
-					</div>
-				</div>
+				<fans-contribution-board :fan-info="fanInfo" />
 			</view>
-
-			<!-- 4-10名粉丝列表 -->
-			<div class="fans-list-container" v-if="fanInfo.length > 3" style="margin-bottom: 30rpx;">
-				<div class="fans-list-item" v-for="(fan, index) in fanInfo.slice(3, 10)" :key="index">
-					<div class="fans-rank">{{ index + 4 }}</div>
-					<log-image :src="fan.avatar_url" alt="" class="fans-avatar" />
-					<div class="fans-info">
-						<div class="fans-name">{{ fan.user_name }}</div>
-						<div class="fans-message" v-if="fan.message">{{ fan.message }}</div>
-					</div>
-					<div class="fans-value"><span class="fans-value-icon">🔸</span>{{ fan.fans_value }}</div>
-				</div>
-			</div>
 
 			<view class="l-h3">
 				<text class="l-h3-title">评论</text>
@@ -229,6 +178,7 @@
 </template>
 
 <script>
+	import FansContributionBoard from '@/components/FansContributionBoard.vue'
 	import axios from "axios";
 	import tippingBar from "../../components/tipping/tippingBar.vue"
 	import nothing from '../../components/nothing.vue'
@@ -236,6 +186,7 @@
 	import darkModeMixin from '@/mixins/dark-mode.js'
 	export default {
 		components: {
+			FansContributionBoard,
 			tippingBar,
 			nothing,
 			TaskRewardModal
@@ -895,7 +846,8 @@
 </script>
 
 <style scoped lang="scss">
-	.outer {
+	// 使用页面专属类名，避免 scoped 样式命中打赏组件的同名根容器。
+	.world-page {
 		min-height: 100vh;
 		background-color: var(--background-color-secondary);
 		color: var(--text-color-primary);
@@ -1239,273 +1191,12 @@
 			top: 110vh;
 		}
 
-		.fans_rank {
-			display: flex;
-			justify-content: center;
-			padding: 40rpx 20rpx 0 20rpx;
-			// background-color: rgba(202, 202, 202, 0.1);
-			border-radius: 16rpx;
-			margin-top: 32rpx;
-			position: relative;
-			overflow: hidden;
-
-			.dark-mode & {
-				background-color: var(--card-background);
-			}
-
-			div {
-				position: relative;
-				width: 30%;
-				margin: 0 10rpx;
-				display: flex;
-				justify-content: center;
-
-				.rank-container {
-					position: relative;
-					display: flex;
-					flex-direction: column;
-					align-items: center;
-					width: 100%;
-					min-height: 300rpx;
-					padding: 20rpx 0;
-				}
-
-				.rank {
-					position: absolute;
-					height: 20vw;
-					z-index: 1;
-					transform: translateY(-10rpx);
-				}
-
-				.avatar {
-					height: 15vw;
-					width: 15vw;
-					position: relative;
-					z-index: 2;
-					border-radius: 50%;
-					border: 4rpx solid #ffffff;
-					box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
-					object-fit: cover;
-				}
-
-				.crown-glow {
-					position: absolute;
-					width: 16vw;
-					height: 16vw;
-					border-radius: 50%;
-					z-index: 0;
-					opacity: 0.6;
-					filter: blur(10rpx);
-					transform: translateY(3rpx);
-				}
-
-				.crown-glow.gold {
-					background: radial-gradient(circle, #ffd700 10%, transparent 70%);
-				}
-
-				.crown-glow.silver {
-					background: radial-gradient(circle, #c0c0c0 10%, transparent 70%);
-				}
-
-				.crown-glow.bronze {
-					background: radial-gradient(circle, #cd7f32 10%, transparent 70%);
-				}
-
-				div.description {
-					display: flex;
-					flex-direction: column;
-					align-items: center;
-					position: relative;
-					margin-top: 20rpx;
-					padding: 15rpx 10rpx;
-					width: 100%;
-					background-color: rgba(255, 255, 255, 0.1);
-					border-radius: 12rpx;
-					z-index: 3;
-					box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-
-					.dark-mode & {
-						background-color: var(--card-background);
-						box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
-					}
-
-					p.name {
-						font-size: 28rpx;
-						font-weight: 600;
-						margin-bottom: 10rpx;
-						color: #333;
-						white-space: nowrap;
-						overflow: hidden;
-						text-overflow: ellipsis;
-						max-width: 100%;
-
-						.dark-mode & {
-							color: var(--text-color-primary);
-						}
-					}
-
-					p.value {
-						font-size: 30rpx;
-						color: #EA7034;
-						display: flex;
-						align-items: center;
-						justify-content: center;
-
-						.value-icon {
-							margin-right: 6rpx;
-							font-size: 32rpx;
-						}
-					}
-				}
-			}
-
-			.first {
-				transform: translateY(-20rpx);
-				z-index: 3;
-
-				.rank-container {
-					transform: scale(1.1);
-				}
-
-				.avatar {
-					box-shadow: 0 6rpx 16rpx rgba(255, 180, 0, 0.3);
-					border: 4rpx solid #ffd700;
-				}
-
-				div.description {
-					background-color: rgba(255, 245, 214, 0.7);
-
-					.dark-mode & {
-						background-color: rgba(255, 193, 77, 0.12);
-					}
-				}
-
-				p.value {
-					font-weight: bold;
-				}
-			}
-
-			.second,
-			.third {
-				z-index: 2;
-
-				div.description {
-					background-color: rgba(255, 255, 255, 0.6);
-
-					.dark-mode & {
-						background-color: var(--background-color-tertiary);
-					}
-				}
-			}
-		}
-
-		.fans-list-container {
-			display: flex;
-			flex-direction: column;
-			margin-top: -30rpx;
-			padding: 10rpx 20rpx;
-			background-color: rgba(202, 202, 202, 0.1);
-			border-radius: 16rpx;
-			overflow: hidden;
-
-			.dark-mode & {
-				background-color: var(--card-background);
-			}
-
-			.fans-list-item {
-				display: flex;
-				align-items: center;
-				padding: 8rpx 0;
-				border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
-				position: relative;
-
-				.dark-mode & {
-					border-bottom-color: var(--border-color);
-				}
-
-				&:last-child {
-					border-bottom: none;
-				}
-
-				.fans-rank {
-					font-size: 22rpx;
-					font-weight: bold;
-					color: #EA7034;
-					width: 34rpx;
-					height: 34rpx;
-					line-height: 34rpx;
-					text-align: center;
-					margin-right: 10rpx;
-					background-color: rgba(234, 112, 52, 0.1);
-					border-radius: 50%;
-					flex-shrink: 0;
-				}
-
-				.fans-avatar {
-					height: 30rpx;
-					width: 30rpx;
-					border-radius: 50%;
-					border: 1rpx solid #ffffff;
-					box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
-					margin-right: 10rpx;
-					flex-shrink: 0;
-				}
-
-				.fans-info {
-					display: flex;
-					flex-direction: column;
-					justify-content: center;
-					flex-grow: 1;
-					overflow: hidden;
-
-					.fans-name {
-						font-size: 24rpx;
-						color: #333;
-						overflow: hidden;
-						text-overflow: ellipsis;
-						white-space: nowrap;
-						max-width: 150rpx;
-
-						.dark-mode & {
-							color: var(--text-color-primary);
-						}
-					}
-
-					.fans-message {
-						font-size: 20rpx;
-						color: #795548;
-						max-width: 180rpx;
-						overflow: hidden;
-						text-overflow: ellipsis;
-						white-space: nowrap;
-						margin-top: 2rpx;
-
-						.dark-mode & {
-							color: var(--text-color-secondary);
-						}
-					}
-				}
-
-				.fans-value {
-					font-size: 24rpx;
-					color: #EA7034;
-					display: flex;
-					align-items: center;
-					margin-left: auto;
-					font-weight: bold;
-					padding-left: 10rpx;
-
-					.fans-value-icon {
-						margin-right: 4rpx;
-						font-size: 22rpx;
-					}
-				}
-			}
-		}
-
 		view.tippingBar {
 			background-color: white;
 			width: 100vw;
+			box-sizing: border-box;
+			max-height: 76vh;
+			overflow-y: auto;
 			box-shadow: -10px 0px 10px rgba(113, 52, 24, .3);
 
 			.dark-mode & {
@@ -1515,35 +1206,35 @@
 		}
 	}
 
-	.outer.dark-mode ::v-deep .el-tabs__nav-wrap::after {
+	.world-page.dark-mode ::v-deep .el-tabs__nav-wrap::after {
 		background-color: var(--border-color);
 	}
 
-	.outer.dark-mode ::v-deep .el-tabs__item {
+	.world-page.dark-mode ::v-deep .el-tabs__item {
 		color: var(--text-color-secondary);
 	}
 
-	.outer.dark-mode ::v-deep .el-tabs__item.is-active {
+	.world-page.dark-mode ::v-deep .el-tabs__item.is-active {
 		color: var(--main-color);
 	}
 
-	.outer.dark-mode ::v-deep .el-collapse {
+	.world-page.dark-mode ::v-deep .el-collapse {
 		border-top-color: var(--border-color);
 		border-bottom-color: var(--border-color);
 	}
 
-	.outer.dark-mode ::v-deep .el-collapse-item__header {
+	.world-page.dark-mode ::v-deep .el-collapse-item__header {
 		background-color: var(--card-background);
 		border-bottom-color: var(--border-color);
 		color: var(--text-color-primary);
 	}
 
-	.outer.dark-mode ::v-deep .el-collapse-item__wrap {
+	.world-page.dark-mode ::v-deep .el-collapse-item__wrap {
 		background-color: var(--card-background);
 		border-bottom-color: var(--border-color);
 	}
 
-	.outer.dark-mode ::v-deep .worldContent .el-tag {
+	.world-page.dark-mode ::v-deep .worldContent .el-tag {
 		background-color: rgba(225, 163, 143, 0.12);
 		border-color: rgba(225, 163, 143, 0.28);
 		color: var(--brand-text-color);

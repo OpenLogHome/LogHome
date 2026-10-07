@@ -9,7 +9,7 @@
       <view class="episode-end"><button v-manga-a11y v-if="hasNextEpisode" class="end-next-btn" type="button" @click="nextEpisode">阅读下一话<manga-icon name="next" /></button><text v-else class="end-tip">本话完 · 感谢阅读</text></view>
       <view class="tap-block" @click="onCenterTap"></view>
     </scroll-view>
-    <swiper v-else class="paged-swiper" :current="swiperPage" :disable-touch="zoomIndex >= 0" :duration="180" @change="onSwiperChange">
+    <swiper v-else class="paged-swiper" :key="swiperKey" :current="swiperPage" :disable-touch="zoomIndex >= 0" :duration="swiperDuration" @change="onSwiperChange">
       <swiper-item v-for="entry in displayPages" :key="articleId + '-' + entry.index">
         <view class="paged-item">
           <manga-zoom-image :src="shouldLoadPage(entry.index) ? pageSrc(entry.page, entry.index) : ''" :reset-key="zoomResetKey"
@@ -42,7 +42,7 @@
       <view class="settings-sheet" role="dialog" aria-modal="true" aria-label="阅读设置">
         <view class="sheet-head"><text>阅读设置</text><button v-manga-a11y class="sheet-done" type="button" @click="openSettings = false">完成</button></view>
         <text class="setting-label">阅读方式</text><view class="setting-options" role="radiogroup" aria-label="阅读方式"><button v-manga-a11y type="button" role="radio" :aria-checked="mode === 'strip' ? 'true' : 'false'" :class="{ chosen: mode === 'strip' }" @click="setReadingMode('strip')">上下滚动</button><button v-manga-a11y type="button" role="radio" :aria-checked="mode === 'paged' ? 'true' : 'false'" :class="{ chosen: mode === 'paged' }" @click="setReadingMode('paged')">左右翻页</button></view>
-        <text class="setting-label">翻页方向</text><view class="setting-options" role="radiogroup" aria-label="翻页方向"><button v-manga-a11y type="button" role="radio" :aria-checked="readingDirection === 'ltr' ? 'true' : 'false'" :class="{ chosen: readingDirection === 'ltr' }" @click="setReadingDirection('ltr')">从左到右</button><button v-manga-a11y type="button" role="radio" :aria-checked="readingDirection === 'rtl' ? 'true' : 'false'" :class="{ chosen: readingDirection === 'rtl' }" @click="setReadingDirection('rtl')">从右到左</button></view>
+        <template v-if="mode === 'paged'"><text class="setting-label">翻页方向</text><view class="setting-options" role="radiogroup" aria-label="翻页方向"><button v-manga-a11y type="button" role="radio" :aria-checked="readingDirection === 'ltr' ? 'true' : 'false'" :class="{ chosen: readingDirection === 'ltr' }" @click="setReadingDirection('ltr')">从左到右</button><button v-manga-a11y type="button" role="radio" :aria-checked="readingDirection === 'rtl' ? 'true' : 'false'" :class="{ chosen: readingDirection === 'rtl' }" @click="setReadingDirection('rtl')">从右到左</button></view></template>
         <text class="setting-label">阅读背景</text><view class="setting-options" role="radiogroup" aria-label="阅读背景"><button v-manga-a11y type="button" role="radio" v-for="item in backgroundOptions" :key="item.value" :aria-checked="readerBackground === item.value ? 'true' : 'false'" :class="{ chosen: readerBackground === item.value }" @click="setReaderBackground(item.value)">{{ item.label }}</button></view>
         <text class="setting-label">图片清晰度</text><view class="setting-options" role="radiogroup" aria-label="图片清晰度"><button v-manga-a11y type="button" role="radio" :aria-checked="imageQuality === 'standard' ? 'true' : 'false'" :class="{ chosen: imageQuality === 'standard' }" @click="setImageQuality('standard')">流畅</button><button v-manga-a11y type="button" role="radio" :aria-checked="imageQuality === 'original' ? 'true' : 'false'" :class="{ chosen: imageQuality === 'original' }" @click="setImageQuality('original')">原图</button></view>
       </view>
@@ -109,6 +109,7 @@ export default {
 			scrollAnimated: false,
 			retryCount: {}, // idx -> 重试次数
 			pageErrors: {},
+			swiperDuration: 180, // 页漫翻页动画时长（方向切换重建期间临时置 0）
 			isPreview: false,
 			loadRequestId: 0,
 			requestedIdx: -1,
@@ -152,6 +153,8 @@ export default {
 			return this.readingDirection === 'rtl' ? entries.reverse() : entries;
 		},
 		swiperPage() { return this.readingDirection === 'rtl' ? Math.max(0, this.pages.length - 1 - this.currentPage) : this.currentPage; },
+		// 方向切换时整体重建 swiper：避免 uni swiper 在子项重排同时跳 current 时内部索引与可见页错位
+		swiperKey() { return this.articleId + '-' + this.pages.length + '-' + this.readingDirection; },
 		currentEpisodeNo() {
 			if (this.currentIdx >= 0 && this.articles[this.currentIdx]) {
 				return this.articles[this.currentIdx].article_chapter;
@@ -233,7 +236,17 @@ export default {
 		},
 		resetZoom() { this.zoomIndex = -1; this.zoomResetKey += 1; },
 		onZoomInteraction(index, active) { if (active) this.zoomIndex = index; else if (this.zoomIndex === index) this.zoomIndex = -1; },
-		setReadingDirection(value) { this.resetZoom(); this.readingDirection = value; this.savePreferences(); },
+		setReadingDirection(value) {
+			this.resetZoom();
+			if (this.readingDirection === value) return;
+			// 重建期间关掉过渡动画：current 直接落位，不会滑过中间页（那几页未加载，会闪"图片加载中"）
+			this.swiperDuration = 0;
+			this.readingDirection = value;
+			this.savePreferences();
+			this.$nextTick(() => {
+				setTimeout(() => { this.swiperDuration = 180; }, 60);
+			});
+		},
 		setReaderBackground(value) { this.readerBackground = value; this.savePreferences(); },
 		setImageQuality(value) { this.imageQuality = value; this.savePreferences(); },
 		setReadingMode(value) { if (this.mode !== value) this.toggleMode(); },

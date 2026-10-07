@@ -62,7 +62,7 @@
 			if (this.title === '原木力爆棚') {
 				this.isLoading = false;
 				uni.redirectTo({
-					url: './logPowerRank?noneAnimation=1'
+					url: '/pages/readers/rankBoard?board=logpower&zone=all&noneAnimation=1'
 				});
 				return;
 			}
@@ -73,6 +73,7 @@
 			this.refreshCollections();
 		},
 		onShow(){
+			if (this.title === '原木力爆棚') return;
 			this.refreshCollections();
 		},
 		methods:{

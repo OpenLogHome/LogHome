@@ -619,12 +619,18 @@
 	.content {
 		background-color: #f2f2f2;
 		font-size: 30rpx;
+		/* 顶部固定 + 独立滚动区：tabBar/searchBar 常驻，书格列表在 viewport 内滚动 */
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		box-sizing: border-box;
+		overflow: hidden;
 		&.dark-mode{
 			background-color: #1E1E1E;
 		}
 
 		div.tabBar {
-			// position: fixed;
+			position: relative;
 			z-index: 10;
 			top: 0;
 			left: 0;
@@ -663,10 +669,13 @@
 		}
 	}
 
-	/* 书架滑动容器：纵向滚动交给页面，横向手势完全由本页接管 */
+	/* 书架滑动容器：flex:1 占满剩余高度，纵向独立滚动，横向手势完全由本页接管 */
 	.bookcase-viewport {
 		width: 100%;
-		overflow: hidden;
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		overflow-x: hidden;
 		touch-action: pan-y;
 		-webkit-user-select: none;
 		user-select: none;
@@ -682,7 +691,6 @@
 		display: flex;
 		align-items: flex-start;
 		width: 100%;
-		will-change: transform;
 		-webkit-backface-visibility: hidden;
 		backface-visibility: hidden;
 	}
@@ -690,6 +698,7 @@
 	.bookcase-pane {
 		flex: 0 0 100%;
 		min-width: 100%;
+		align-self: flex-start;
 	}
 
 	.bookcase {

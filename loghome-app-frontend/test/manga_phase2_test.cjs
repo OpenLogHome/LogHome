@@ -13,7 +13,7 @@ function component(file, axios = {}, t) {
   const storage = new Map(), navigation = [], messages = [];
   const window = { localStorage: { getItem: k => storage.get(k) || null, setItem: (k,v) => storage.set(k,v), removeItem: k => storage.delete(k) }, addEventListener() {}, removeEventListener() {} };
   const uni = { getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 800 }), showToast: m => messages.push(m), navigateTo: m => navigation.push(m), showModal() {}, previewImage() {} };
-  const sandbox = { module: {}, axios, window, uni, Blob, MangaZoomImage: {}, MangaPageSorter: {}, MangaComicLoader: {}, MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, MangaDanmuLayer: {}, TaskRewardModal: {}, TippingBar: {}, MangaCommentItem: {}, MangaCommentComposer: {}, ReportNovelPopup: {}, darkModeMixin: {}, setTimeout, clearTimeout, console: { error() {} } };
+  const sandbox = { module: {}, axios, window, uni, Blob, MangaZoomImage: {}, MangaPageSorter: {}, MangaComicLoader: {}, FansContributionBoard: {}, MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, MangaDanmuLayer: {}, TaskRewardModal: {}, TippingBar: {}, MangaCommentItem: {}, MangaCommentComposer: {}, ReportNovelPopup: {}, darkModeMixin: {}, setTimeout, clearTimeout, console: { error() {} } };
   vm.runInNewContext(script, sandbox, { filename: file });
   const options = sandbox.module.exports;
   const instance = new Vue({ ...options, beforeCreate() { this.$baseUrl = ''; this.$store = { state: { user_id: 1 } }; } });
@@ -398,4 +398,35 @@ test('漫画详情加载失败退出分镜，露出错误和重试入口', async
   await instance.loadAll();
   assert.equal(instance.loadingCover, false);
   assert.equal(instance.loadError, '加载失败，请重试');
+});
+
+
+test('漫画粉丝贡献榜加载公开数据，预览不请求，打赏后刷新', async t => {
+  const requests = [];
+  const fans = [{ user_id: 8, user_name: '读者', fans_value: 120 }];
+  const { instance, navigation } = component('pages/readers/mangaInfo.vue', {
+    get: async url => { requests.push(url); return { data: fans }; },
+  }, t);
+  instance.uid = 668;
+  await instance.loadFansStatistics();
+  assert.equal(requests[0], '/library/get_all_novel_fans?novel_id=668');
+  assert.deepEqual(clone(instance.fanInfo), fans);
+  instance.openFansBoard();
+  assert.equal(navigation[0].url, '/pages/readers/novel_fans?id=668');
+  instance.isPreview = true;
+  await instance.loadFansStatistics();
+  assert.equal(requests.length, 1);
+  instance.isPreview = false;
+  instance.handleTippingSuccess();
+  assert.equal(requests.length, 2);
+});
+
+test('粉丝贡献榜请求失败不阻止漫画详情显示', async t => {
+  const { instance } = component('pages/readers/mangaInfo.vue', {
+    get: async () => { throw new Error('网络错误'); },
+  }, t);
+  instance.uid = 668;
+  await assert.doesNotReject(instance.loadFansStatistics());
+  assert.equal(instance.fanInfo.length, 0);
+  assert.equal(instance.loadError, '');
 });

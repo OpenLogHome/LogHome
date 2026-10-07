@@ -16,12 +16,15 @@
 							@error="handleImageError"
 						/>
 						<!-- 更新标签 -->
-						<view 
-							v-if="book.updateInfo && book.updateInfo.has_updates" 
+						<view
+							v-if="book.updateInfo && book.updateInfo.has_updates"
 							class="update-badge"
 						>
 							<text class="update-text">更新{{ book.updateInfo.new_chapters_count }}章</text>
 						</view>
+						<!-- 类型角标：漫画 / 世界 -->
+						<text v-if="isMangaWork(book)" class="type-badge manga-badge">漫画</text>
+						<text v-else-if="isWorldWork(book)" class="type-badge world-badge">世界</text>
 						<haycraft-mark
 							v-if="isHayCraftWork(book)"
 							class="bookshelf-haycraft-mark"
@@ -71,6 +74,12 @@ export default {
 	methods: {
 		isHayCraftWork(book) {
 			return Boolean(book && (book.is_haycraft === true || Number(book.is_haycraft) === 1))
+		},
+		isMangaWork(book) {
+			return Boolean(book && book.novel_type === 'manga')
+		},
+		isWorldWork(book) {
+			return Boolean(book && book.novel_type === 'world')
 		},
 		restoreCachedBookshelf() {
 			let restored = false
@@ -387,16 +396,16 @@ export default {
 
 <style scoped lang="scss">
 .bookshelf-horizontal {
-	padding: 30rpx 0 0 25rpx;
-	border-radius: 16rpx;
+	padding: 25.5rpx 0 0 25rpx;
+	border-radius: 13.6rpx;
 }
 
 .section-header {
-	margin-bottom: 20rpx;
+	margin-bottom: 17rpx;
 }
 
 .section-title {
-	font-size: 32rpx;
+	font-size: 27.2rpx;
 	font-weight: 600;
 	color: #333333;
 	
@@ -407,15 +416,15 @@ export default {
 
 .book-scroll {
 	width: 100%;
-	height: 210rpx;
+	height: 178.5rpx;
 }
 
 .book-list {
 	display: flex;
 	flex-direction: row;
 	align-items: flex-start;
-	gap: 20rpx;
-	padding-right: 20rpx;
+	gap: 17rpx;
+	padding-right: 17rpx;
 }
 
 .book-item, .more-item {
@@ -423,13 +432,13 @@ export default {
 	flex-direction: column;
 	align-items: center;
 	flex-shrink: 0;
-	width: 144rpx;
+	width: 122.4rpx;
 }
 
 .book-cover-container {
 	position: relative;
-	width: 144rpx;
-	height: 192rpx;
+	width: 122.4rpx;
+	height: 163.2rpx;
     transition: transform .5s;
 }
 
@@ -440,7 +449,7 @@ export default {
 .book-cover {
 	width: 100%;
 	height: 100%;
-	border-radius: 8rpx;
+	border-radius: 6.8rpx;
 	background-color: #f5f5f5;
 }
 
@@ -449,15 +458,15 @@ export default {
 	top: 0rpx;
 	right: 0rpx;
 	background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-	// border-radius: 12rpx;
-	padding: 4rpx 8rpx;
-	max-width: 144rpx;
+	// border-radius: 10.2rpx;
+	padding: 3.4rpx 6.8rpx;
+	max-width: 122.4rpx;
 	overflow: hidden;
 }
 
 .update-text {
 	color: white;
-	font-size: 20rpx;
+	font-size: 17rpx;
 	font-weight: 600;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -466,38 +475,63 @@ export default {
 
 .bookshelf-haycraft-mark {
 	position: absolute;
-	right: 8rpx;
-	bottom: 8rpx;
+	right: 6.8rpx;
+	bottom: 6.8rpx;
 	margin-left: 0;
 	z-index: 2;
+	transform: scale(0.85);
+	transform-origin: right bottom;
+}
+
+/* 类型角标：漫画 / 世界（与 book_in_case 的角标样式对齐） */
+.type-badge {
+	position: absolute;
+	left: 6.8rpx;
+	bottom: 6.8rpx;
+	z-index: 2;
+	padding: 1.7rpx 8.5rpx;
+	border-radius: 5.95rpx;
+	color: #fff;
+	font-size: 17rpx;
+	font-weight: 600;
+	line-height: 27.2rpx;
+	pointer-events: none;
+}
+
+.type-badge.manga-badge {
+	background: rgba(178, 64, 18, 0.94);
+}
+
+.type-badge.world-badge {
+	background: rgba(184, 134, 11, 0.94);
 }
 
 .more-cover {
-	width: 144rpx;
-	height: 192rpx;
-	border-radius: 8rpx;
+	width: 122.4rpx;
+	height: 163.2rpx;
+	border-radius: 6.8rpx;
 	// background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     background-color: #b2b2b2;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+	box-shadow: 0 1.7rpx 6.8rpx rgba(0, 0, 0, 0.15);
 }
 
 .more-text {
 	color: #ffffff;
-	font-size: 28rpx;
+	font-size: 23.8rpx;
 	font-weight: 600;
 	text-align: center;
 	line-height: 1.4;
 }
 
 .book-title {
-	font-size: 24rpx;
+	font-size: 20.4rpx;
 	color: #666666;
 	text-align: center;
-	margin-top: 8rpx;
-	max-width: 144rpx;
+	margin-top: 6.8rpx;
+	max-width: 122.4rpx;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

@@ -179,6 +179,14 @@
 			}
 		},
 		{
+			"path": "pages/readers/rankBoard",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "排行榜",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
 			"path": "pages/readers/allArticles",
 			"style": {
 				"navigationBarTitleText": "所有章节"

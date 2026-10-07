@@ -54,7 +54,7 @@ function route(file, method, name, globals = {}) {
 	const next = source.indexOf('\nrouter.', start + marker.length);
 	let handler;
 	const router = { [method]: (...args) => { handler = args.at(-1); } };
-	vm.runInNewContext(source.slice(start, next < 0 ? undefined : next), { router, auth() {}, console: quiet, ...visibility, ...revisions, ...globals });
+	vm.runInNewContext(source.slice(start, next < 0 ? undefined : next), { router, auth() {}, console: quiet, ensureRankBadgeSchema:async()=>{}, recordFirstPublication:async()=>{}, withTransaction:async work=>work(globals.query), ...visibility, ...revisions, ...globals });
 	return handler;
 }
 function response() {

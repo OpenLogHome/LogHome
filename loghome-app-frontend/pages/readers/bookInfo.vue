@@ -14,7 +14,7 @@
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :bgColor="currentTopColor" :textcolor="currentTopTextColor" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
 			navTitle='标题'></zetank-backBar>
-		<view class="report-entry clickable" v-if="!isPageLoading && bookInfo.is_personal == 0" @click="openReport">
+		<view class="report-entry" v-if="!isPageLoading && bookInfo.is_personal == 0" @click="openReport">
 			<image src="../../static/icons/icon_report.png" mode="aspectFit"></image>
 			<text>举报</text>
 		</view>
@@ -53,70 +53,72 @@
 					</view>
 				</view>
 			</view>
-			<view class="l-dl">
-				<div class="l-dt">
-					<log-image id="book-cover-image" class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
-						onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
-						@click="$previewImg([bookInfo.picUrl])">
-					</log-image>
-					<div class="book-id-tag" v-show="bookInfo.novel_id">ID {{ bookInfo.novel_id }}</div>
-				</div>
-				<view class="l-dd" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
-					<view class="l-dd-title">
-						{{ bookInfo.name }}
-					</view>
-					<view class="l-dd-sub">
-						<view class="author clickable" @click="gotoUserProfile(primaryAuthor.user_id || bookInfo.auther_id)">
-							<log-image :src="primaryAuthor.avatar_url || bookInfo.auther_avatar" alt="" class="auther_avatar"
-								onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-							<div class="auther_name">
-								<view class="auther_name_text">{{ authorSummaryText }}</view>
-								<uni-icons class="auther_name_icon" type="forward" size="18"
-									style="color:#dddddd"></uni-icons>
+			<view class="book-hero">
+				<view class="l-dl">
+					<div class="l-dt">
+						<log-image id="book-cover-image" class="l-dt" :src="bookInfo.picUrl" mode="aspectFill"
+							onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"
+							@click="$previewImg([bookInfo.picUrl])">
+						</log-image>
+						<div class="book-id-tag" v-show="bookInfo.novel_id">ID {{ bookInfo.novel_id }}</div>
+					</div>
+					<view class="l-dd" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
+						<view class="l-dd-title">
+							{{ bookInfo.name }}
+						</view>
+						<view class="l-dd-sub">
+							<view class="author clickable" @click="gotoUserProfile(primaryAuthor.user_id || bookInfo.auther_id)">
+								<log-image :src="primaryAuthor.avatar_url || bookInfo.auther_avatar" alt="" class="auther_avatar"
+									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
+								<div class="auther_name">
+									<view class="auther_name_text">{{ authorSummaryText }}</view>
+									<uni-icons class="auther_name_icon" type="forward" size="18"
+										style="color:#dddddd"></uni-icons>
+								</div>
+							</view>
+						</view>
+						<view class="tags" v-if="tags.length > 0">
+							<div class="tag clickable" v-for="(item, index) in tags" :key="item.tag_id"
+								:class="{ 'activity': item.is_activity_tag }" @click="gotoTag(item.tag_id, item.tag_name)">
+								{{ item.tag_name }}
 							</div>
 						</view>
-					</view>
-					<view class="tags" v-if="tags.length > 0">
-						<div class="tag clickable" v-for="(item, index) in tags" :key="item.tag_id"
-							:class="{ 'activity': item.is_activity_tag }" @click="gotoTag(item.tag_id, item.tag_name)">
-							{{ item.tag_name }}
+						<div class="notag" v-else>
+							<div class="tag">
+								作品未添加标签
+							</div>
 						</div>
-					</view>
-					<div class="notag" v-else>
-						<div class="tag">
-							作品未添加标签
-						</div>
-					</div>
-					<view class="l-dd-footer">
-						<span>共 {{ articleLength }} 章 总计 {{ bookInfo.text_count }} 字 </span>
-						<br />
-						<span>阅读：{{ bookInfo.clicks }}</span>
+						<view class="l-dd-footer">
+							<span>共 {{ articleLength }} 章 总计 {{ bookInfo.text_count }} 字 </span>
+							<br />
+							<span>阅读：{{ bookInfo.clicks }}</span>
 
-						<span v-if="bookInfo.likes">收藏：{{ bookInfo.likes.length }}</span>
-						<span>{{ bookInfo.is_complete == 1 ? "已完结" : "连载中" }}</span>
-						<br />
+							<span v-if="bookInfo.likes">收藏：{{ bookInfo.likes.length }}</span>
+							<span>{{ bookInfo.is_complete == 1 ? "已完结" : "连载中" }}</span>
+							<br />
 
-						<span v-if="bookInfo.is_complete == 0">最近更新 {{ utc2beijing(bookInfo.update_time) }}</span>
+							<span v-if="bookInfo.is_complete == 0">最近更新 {{ utc2beijing(bookInfo.update_time) }}</span>
+						</view>
 					</view>
 				</view>
+
+				<div class="novel_Rank clickable" v-show="novelRank.onRank">
+					<navigator url="/pages/readers/rankBoard?board=logpower&zone=all">
+						实时<LogPowerWordmark />榜第
+						<span style="font-size: 40rpx; line-height: 100%; padding:0 10rpx;">
+							<countTo :startVal="999" :endVal="novelRank.rank" :duration="1500"></countTo>
+						</span>
+						位
+					</navigator>
+					<navigator :url="`./logPower?name=${bookInfo.name}&clicks=${bookInfo.clicks}&nices=${nice_amount}&bookmarks=${bookInfo.likes ? bookInfo.likes.length : 0}&comments=${commentAmount}&update_time=${bookInfo.update_time}&ranking=${novelRank.ranking}`" style="font-size: 40rpx; transform: translateY(-5rpx);">
+						<countTo :startVal="0" :endVal="novelRank.ranking" :duration="1500"></countTo>
+					</navigator>
+				</div>
+
+				<div class="book-bg" :style="bookBackgroundStyle"></div>
 			</view>
 
-			<div class="novel_Rank clickable" v-show="novelRank.onRank">
-				<navigator url="./logPowerRank">
-					实时<LogPowerWordmark />榜第
-					<span style="font-size: 40rpx; line-height: 100%; padding:0 10rpx;">
-						<countTo :startVal="999" :endVal="novelRank.rank" :duration="1500"></countTo>
-					</span>
-					位
-				</navigator>
-				<navigator :url="`./logPower?name=${bookInfo.name}&clicks=${bookInfo.clicks}&nices=${nice_amount}&bookmarks=${bookInfo.likes ? bookInfo.likes.length : 0}&comments=${commentAmount}&update_time=${bookInfo.update_time}&ranking=${novelRank.ranking}`" style="font-size: 40rpx; transform: translateY(-5rpx);">
-					<countTo :startVal="0" :endVal="novelRank.ranking" :duration="1500"></countTo>
-				</navigator>
-			</div>
-
-			<div class="book-bg" :style="bookBackgroundStyle"></div>
-
-			<springBack class="book-content-sheet" :top="`calc(${novelRank.onRank ? '675rpx' : '550rpx'} + var(--loghome-safe-top, 0px))`">
+			<springBack class="book-content-sheet" top="0px">
 
 				<div class="b-content" style="padding:32rpx;" v-show="bookInfo.is_personal != undefined || bookInfo.is_personal == 0">
 					<p class="l-dd-content" @click="showDescription(bookInfo.content)">
@@ -234,7 +236,7 @@
 								<navigator :url="'./bookInfo?id=' + novel.novel_id" open-type="navigate" class="books">
 									<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
 										:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"
-										style="border-radius: 10rpx; transform:scale(.90)" />
+										style="border-radius: 16rpx 0 0 16rpx;" />
 									<div class="bookInfo" style="margin-left:10rpx;">
 										<div class="world-title">
 											{{ novel.name }}
@@ -317,67 +319,17 @@
 				</view>
 <view class="l-list">
 						<view class="l-h3">
-							<text class="l-h3-title">粉丝榜</text>
+							<text class="l-h3-title">粉丝贡献榜</text>
 							<navigator :url="'./novel_fans?id=' + uid">
-								<view class="l-h3-more">查看粉丝榜<img class="l-icon-more" src="../../static/l-icon-more.png"
+								<view class="l-h3-more">完整榜单<img class="l-icon-more" src="../../static/l-icon-more.png"
 										mode="widthFix"></img>
 								</view>
 							</navigator>
 						</view>
 
-						<div class="fans_rank">
-							<div class="second" v-if="fanInfo[1]">
-								<div class="rank-container">
-									<user-avatar :src="fanInfo[1].avatar_url" :frame="fanInfo[1].avatar_frame" class="avatar"
-										:visual-scale="fanInfo[1].avatar_frame ? 1.15 : 1" />
-									<img src="../../static/rank/NO2.png" alt="" class="rank" />
-									<div class="crown-glow silver"></div>
-									<div class="description">
-										<p class="name">{{ fanInfo[1].user_name }}</p>
-										<p class="value">{{ fanInfo[1].fans_value }}
-										</p>
-									</div>
-								</div>
-							</div>
-							<div class="first" v-if="fanInfo[0]">
-								<div class="rank-container">
-									<user-avatar :src="fanInfo[0].avatar_url" :frame="fanInfo[0].avatar_frame" class="avatar"
-										:visual-scale="fanInfo[0].avatar_frame ? 1.15 : 1" />
-									<img src="../../static/rank/NO1.png" alt="" class="rank" />
-									<div class="crown-glow gold"></div>
-									<div class="description">
-										<p class="name">{{ fanInfo[0].user_name }}</p>
-										<p class="value">{{ fanInfo[0].fans_value }}</p>
-									</div>
-								</div>
-							</div>
-							<div class="third" v-if="fanInfo[2]">
-								<div class="rank-container">
-									<user-avatar :src="fanInfo[2].avatar_url" :frame="fanInfo[2].avatar_frame" class="avatar"
-										:visual-scale="fanInfo[2].avatar_frame ? 1.15 : 1" />
-									<img src="../../static/rank/NO3.png" alt="" class="rank" />
-									<div class="crown-glow bronze"></div>
-									<div class="description">
-										<p class="name">{{ fanInfo[2].user_name }}</p>
-										<p class="value">{{ fanInfo[2].fans_value }}</p>
-									</div>
-								</div>
-							</div>
-						</div>
+						<!-- 粉丝榜：TOP3 渐变卡片 + 编号列表 -->
+						<fans-contribution-board :fan-info="fanInfo" />
 					</view>
-
-					<!-- 4-10名粉丝列表 -->
-					<div class="fans-list-container" v-if="fanInfo.length > 3">
-						<div class="fans-list-item" v-for="(fan, index) in fanInfo.slice(3, 10)" :key="index">
-							<div class="fans-rank">{{ index + 4 }}</div>
-							<log-image :src="fan.avatar_url" alt="" class="fans-avatar" />
-							<div class="fans-info">
-								<div class="fans-name">{{ fan.user_name }}</div>
-								<div class="fans-message" v-if="fan.message">{{ fan.message }}</div>
-							</div>
-							<div class="fans-value">{{ fan.fans_value }}</div>
-						</div>
-					</div>
 					<!-- <view class="l-list">
 						<view class="l-h3">
 							<text class="l-h3-title">作品图册</text>
@@ -445,6 +397,7 @@
 </template>
 
 <script>
+import FansContributionBoard from '@/components/FansContributionBoard.vue'
 import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 import nothing from '../../components/nothing.vue'
 import axios from 'axios'
@@ -453,6 +406,7 @@ import springBack from '../../components/springBack.vue'
 import html2canvas from 'html2canvas'
 import countTo from "vue-count-to"
 import darkModeMixin from '@/mixins/dark-mode.js'
+import { openActivityNewsLink } from '@/common/activity-news-navigation.js'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
 import reportNovelPopup from "../../components/reportNovelPopup.vue"
 
@@ -571,6 +525,7 @@ function getReadableTextColor(backgroundColor) {
 
 export default {
 	components: {
+		FansContributionBoard,
 		LogPowerWordmark,
 		nothing,
 		tippingBar,
@@ -1127,13 +1082,7 @@ export default {
 			})
 		},
 		openActivityNews(news) {
-			if (news.mobile_link) {
-				uni.navigateTo({
-					url: news.mobile_link
-				});
-			} else if (news.pc_link && typeof window !== 'undefined') {
-				window.open(news.pc_link, '_blank');
-			}
+			openActivityNewsLink(news);
 		},
 		getPopularityToken() {
 			let tk = null;
@@ -2221,19 +2170,26 @@ export default {
 	line-height: 1.1;
 }
 
+.book-hero {
+	position: relative;
+	padding-top: calc(180rpx + var(--loghome-safe-top, 0px));
+	padding-bottom: 44rpx;
+}
+
 .l-dl {
-	margin-top: calc(180rpx + var(--loghome-safe-top, 0px));
+	margin-top: 0;
 	padding: 0 32rpx;
 	display: flex;
+	align-items: center;
 	width: calc(100vw - 64rpx);
-	height: 320rpx;
-	position: absolute;
+	height: auto;
+	position: relative;
 	z-index: 2;
 }
 
 .l-dt {
 	width: 230rpx;
-	height: 100%;
+	height: 320rpx;
 	border-radius: 16rpx;
 	margin-right: 30rpx;
 	position: relative;
@@ -2259,11 +2215,11 @@ export default {
 
 .l-dd {
 	display: flex;
-	padding-bottom: 12rpx;
+	flex: 1;
+	min-width: 0;
 	flex-direction: column;
+	justify-content: center;
 	color: #eeeeee;
-	max-height: 330rpx;
-	overflow-y: scroll;
 	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.34);
 
 	* {
@@ -2440,6 +2396,12 @@ export default {
 	image {
 		width: 30rpx;
 		height: 30rpx;
+	}
+
+	/* 按下反馈保留定位 transform（clickable:active 的 scale 会覆盖它导致按钮下坠） */
+	&:active {
+		opacity: 0.7;
+		transform: translateY(calc(15upx - 50%)) scale(0.98);
 	}
 }
 
@@ -2853,7 +2815,6 @@ export default {
 			background-color: rgb(255, 255, 255);
 			border-radius: 16rpx;
 			transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-			box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 			overflow: hidden;
 
 			.dark-mode & {
@@ -2862,7 +2823,6 @@ export default {
 
 			.books:active {
 				transform: scale(0.99);
-				box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
 			}
 
 
@@ -3154,7 +3114,8 @@ img {
 	.book-bg {
 		position: absolute;
 		width: 100vw;
-		height: calc(500rpx + var(--loghome-safe-top, 0px) + 135rpx + 220rpx);
+		top: 0;
+		height: calc(100% + 36rpx);
 		overflow: hidden;
 		isolation: isolate;
 		background-color: var(--book-glass-tint);
@@ -3188,15 +3149,14 @@ img {
 	}
 
 	.novel_Rank {
-		position: absolute;
+		position: relative;
 		z-index: 5;
 		background-color: #00000077;
 		padding: 0 30rpx;
 		width: calc(100vw - 120rpx);
-		margin: 35rpx 30rpx;
+		margin: 24rpx 30rpx 0;
 		border-radius: 16rpx;
 		height: 100rpx;
-		top: calc(500rpx + var(--loghome-safe-top, 0px));
 		display: flex;
 		color: #dfdfdf;
 		font-size: 30rpx;
@@ -3213,6 +3173,7 @@ img {
 }
 
 .book-content-sheet {
+	position: relative;
 	background: rgba(255, 255, 255, 0.88);
 	border-top: 1rpx solid rgba(255, 255, 255, 0.62);
 	border-radius: 36rpx 36rpx 0 0;
@@ -3278,269 +3239,15 @@ view.tippingBar {
 	background-color: white;
 	width: 100vw;
 	box-shadow: -10px 0px 10px rgba(113, 52, 24, .3);
+	/* 弹层面板限高兜底：uni-popup 内部定位链可能把面板撑到整屏，
+	   约束在视口内并允许内部滚动（正常内容高度 < 76vh，不受影响） */
+	box-sizing: border-box;
+	max-height: 76vh;
+	overflow-y: auto;
 
 	.dark-mode & {
 		background-color: var(--card-background);
 		box-shadow: -10px 0px 10px rgba(0, 0, 0, .3);
-	}
-}
-
-.fans_rank {
-	display: flex;
-	justify-content: center;
-	padding: 40rpx 20rpx 0 20rpx;
-	border-radius: 20rpx;
-	margin-top: 32rpx;
-	position: relative;
-	overflow: hidden;
-	background: linear-gradient(180deg, rgba(245, 246, 247, 0.6) 0%, rgba(250, 250, 250, 0.3) 100%);
-	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
-
-	.dark-mode & {
-		background-color: var(--card-background);
-	}
-
-	div {
-		position: relative;
-		width: 30%;
-		margin: 0 10rpx;
-		display: flex;
-		justify-content: center;
-
-		.rank-container {
-			position: relative;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			width: 100%;
-			min-height: 300rpx;
-			padding: 20rpx 0;
-		}
-
-		img.rank {
-			position: absolute;
-			height: 20vw;
-			z-index: 1;
-			transform: translateY(-10rpx);
-		}
-
-		.avatar {
-			height: 15vw;
-			width: 15vw;
-			position: relative;
-			z-index: 2;
-			border-radius: 50%;
-			border: 4rpx solid #ffffff;
-			box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
-			object-fit: cover;
-		}
-
-		.crown-glow {
-			position: absolute;
-			width: 16vw;
-			height: 16vw;
-			border-radius: 50%;
-			z-index: 0;
-			opacity: 0.6;
-			filter: blur(10rpx);
-			transform: translateY(3rpx);
-		}
-
-		.crown-glow.gold {
-			background: radial-gradient(circle, #ffd700 10%, transparent 70%);
-		}
-
-		.crown-glow.silver {
-			background: radial-gradient(circle, #c0c0c0 10%, transparent 70%);
-		}
-
-		.crown-glow.bronze {
-			background: radial-gradient(circle, #cd7f32 10%, transparent 70%);
-		}
-
-		div.description {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			position: relative;
-			margin-top: 20rpx;
-			padding: 15rpx 10rpx;
-			width: 100%;
-			background-color: rgba(255, 255, 255, 0.1);
-			border-radius: 12rpx;
-			z-index: 3;
-			box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-
-			.dark-mode & {
-				background-color: var(--card-background);
-				box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
-			}
-
-			p.name {
-				font-size: 28rpx;
-				font-weight: 600;
-				margin-bottom: 10rpx;
-				color: #333;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				max-width: 100%;
-
-				.dark-mode & {
-					color: var(--text-color-primary);
-				}
-			}
-
-			p.value {
-				font-size: 30rpx;
-				color: #EA7034;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-
-				.value-icon {
-					margin-right: 6rpx;
-					font-size: 32rpx;
-				}
-			}
-		}
-	}
-
-	.first {
-		transform: translateY(-20rpx);
-		z-index: 3;
-
-		.rank-container {
-			transform: scale(1.1);
-		}
-
-		.avatar {
-			box-shadow: 0 6rpx 16rpx rgba(255, 180, 0, 0.3);
-			border: 4rpx solid #ffd700;
-		}
-
-		div.description {
-			background-color: rgba(255, 245, 214, 0.7);
-		}
-
-		p.value {
-			font-weight: bold;
-		}
-	}
-
-	.second,
-	.third {
-		z-index: 2;
-
-		div.description {
-			background-color: rgba(255, 255, 255, 0.6);
-		}
-	}
-}
-
-.fans-list-container {
-	display: flex;
-	flex-direction: column;
-	margin-top: -30rpx;
-	padding: 10rpx 20rpx;
-	background-color: rgba(202, 202, 202, 0.1);
-	border-radius: 20rpx;
-	overflow: hidden;
-	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-
-	.dark-mode & {
-		background-color: var(--card-background);
-	}
-
-	.fans-list-item {
-		display: flex;
-		align-items: center;
-		padding: 12rpx 0;
-		border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
-		position: relative;
-		transition: all 0.2s ease;
-
-		&:last-child {
-			border-bottom: none;
-		}
-
-		&:active {
-			background-color: rgba(0, 0, 0, 0.02);
-		}
-
-		.fans-rank {
-			font-size: 22rpx;
-			font-weight: bold;
-			color: #EA7034;
-			width: 34rpx;
-			height: 34rpx;
-			line-height: 34rpx;
-			text-align: center;
-			margin-right: 10rpx;
-			background-color: rgba(234, 112, 52, 0.1);
-			border-radius: 50%;
-			flex-shrink: 0;
-		}
-
-		.fans-avatar {
-			height: 30rpx;
-			width: 30rpx;
-			border-radius: 50%;
-			border: 1rpx solid #ffffff;
-			box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
-			margin-right: 10rpx;
-			flex-shrink: 0;
-		}
-
-		.fans-info {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			flex-grow: 1;
-			overflow: hidden;
-
-			.fans-name {
-				font-size: 24rpx;
-				color: #333;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				max-width: 150rpx;
-
-				.dark-mode & {
-					color: var(--text-color-primary);
-				}
-			}
-
-			.fans-message {
-				font-size: 20rpx;
-				color: #795548;
-				max-width: 180rpx;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				margin-top: 2rpx;
-
-				.dark-mode & {
-					color: var(--text-color-secondary);
-				}
-			}
-		}
-
-		.fans-value {
-			font-size: 24rpx;
-			color: #EA7034;
-			display: flex;
-			align-items: center;
-			margin-left: auto;
-			font-weight: bold;
-			padding-left: 10rpx;
-
-			.fans-value-icon {
-				margin-right: 4rpx;
-				font-size: 22rpx;
-			}
-		}
 	}
 }
 

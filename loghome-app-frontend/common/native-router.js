@@ -61,7 +61,8 @@ function normalizePathSegments(path) {
 
 export function resolveRouteUrl(rawUrl) {
 	if (!rawUrl || typeof rawUrl !== 'string') return ''
-	if (/^[a-z][a-z0-9+.-]*:\/\//i.test(rawUrl)) return ''
+	rawUrl = rawUrl.trim()
+	if (/^[a-z][a-z0-9+.-]*:/i.test(rawUrl) || rawUrl.startsWith('//')) return ''
 
 	const parts = splitUrl(rawUrl.trim())
 	if (!parts.path) return ''
@@ -77,6 +78,31 @@ export function resolveRouteUrl(rawUrl) {
 
 	if (!path.startsWith('/pages/')) return ''
 	return path + parts.query + parts.hash
+}
+
+// 原生路由直接加载 H5 地址，会绕过 uni-app 的 encodeQueryString。
+// 保持同样的编码层数，避免 url 参数中的 +、#、% 在页面 onLoad 前被改变。
+export function encodeNativeRouteUrl(url) {
+	const queryIndex = url.indexOf('?')
+	if (queryIndex < 0) return url
+	const query = url.slice(queryIndex + 1).trim().replace(/^(\?|#|&)/, '')
+	if (!query) return url
+	return url.slice(0, queryIndex) + '?' + query.split('&').map((pair) => {
+		const parts = pair.replace(/\+/g, ' ').split('=')
+		const key = parts.shift()
+		return key + '=' + encodeURIComponent(parts.join('='))
+	}).join('&')
+}
+
+function canUseNativeRoute(method, routeUrl) {
+	// 使用 uni-app 生成的注册表；不存在的页面交回 uni，让 fail 正常触发，
+	// 不创建一个最终被 H5 通配路由重定向到首页的原生 WebView。
+	const routes = typeof window !== 'undefined' && window.__uniRoutes
+	if (!Array.isArray(routes)) return true
+	const path = splitUrl(routeUrl).path
+	const route = routes.find((item) => item.path === path || item.alias === path)
+	if (!route) return false
+	return !((method === 'navigateTo' || method === 'redirectTo') && route.meta && route.meta.isTabBar)
 }
 
 function hasQueryFlag(url, key, expectedValue) {
@@ -103,6 +129,7 @@ function hasQueryFlag(url, key, expectedValue) {
 function shouldUseOriginal(method, options, routeUrl) {
 	if (typeof window !== 'undefined' && window.__LOGHOME_DISABLE_NATIVE_ROUTER__) return true
 	if (method !== 'navigateBack' && !routeUrl) return true
+	if (method !== 'navigateBack' && !canUseNativeRoute(method, routeUrl)) return true
 	if (options && options.events) return true
 	if (method !== 'navigateBack') {
 		if (UNSUPPORTED_QUERY_KEYS.some((key) => hasQueryFlag(routeUrl, key, key === 'nativeRouter' ? '0' : undefined))) {
@@ -166,14 +193,16 @@ function runNativeRouter(original, method, options) {
 	const nativeMethod = ROUTER_METHODS[method]
 	const normalizedOptions = options || {}
 	const routeUrl = method === 'navigateBack' ? '' : resolveRouteUrl(normalizedOptions.url)
+	// bridge 返回前当前页可能变化；回退时仍使用点击那一刻解析出的目标。
+	const fallbackOptions = routeUrl ? { ...normalizedOptions, url: routeUrl } : options
 
 	if (!isNativeRouterAvailable(method) || shouldUseOriginal(method, normalizedOptions, routeUrl)) {
-		return callOriginal(original, method, options)
+		return callOriginal(original, method, fallbackOptions)
 	}
 
 	const payload = method === 'navigateBack'
 		? { delta: Number(normalizedOptions.delta || 1) || 1 }
-		: { url: routeUrl }
+		: { url: encodeNativeRouteUrl(routeUrl) }
 
 	const promise = Promise.resolve()
 		.then(() => bridge[nativeMethod](payload))
@@ -187,7 +216,7 @@ function runNativeRouter(original, method, options) {
 		})
 		.catch((error) => {
 			console.warn('[native-router] fallback to uni router:', method, error)
-			const fallbackResult = callOriginal(original, method, options)
+			const fallbackResult = callOriginal(original, method, fallbackOptions)
 			if (fallbackResult === undefined && typeof original[method] !== 'function') {
 				callCallback(normalizedOptions.fail, error)
 				callCallback(normalizedOptions.complete, error)

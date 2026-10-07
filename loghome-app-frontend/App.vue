@@ -389,7 +389,7 @@ export default {
 				} else {
 					// 外部链接，在webview中打开
 					uni.navigateTo({
-						url: `/pages/apps/webview?url=${encodeURIComponent(targetUrl)}`
+						url: `/pages/apps/h5webview?url=${encodeURIComponent(targetUrl)}`
 					});
 				}
 			} catch (error) {

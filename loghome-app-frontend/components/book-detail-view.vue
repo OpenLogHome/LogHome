@@ -217,6 +217,7 @@ import banner from './banner.vue'
 import WritingActivityCalendar from './writing-activity-calendar.vue'
 import axios from 'axios'
 import darkModeMixin from '@/mixins/dark-mode.js'
+import { openActivityNewsLink } from '@/common/activity-news-navigation.js'
 
 export default {
   name: 'BookDetailView',
@@ -332,12 +333,7 @@ export default {
     },
     // 打开资讯链接
     openNewsLink(news) {
-      if (news.mobile_link) {
-        this.$emit('close-book-detail');
-        uni.navigateTo({
-          url: news.mobile_link
-        });
-      }
+      openActivityNewsLink(news, () => this.$emit('close-book-detail'));
     },
     // 打开活动表单
     async openActivityForm(activity) {

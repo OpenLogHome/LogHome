@@ -49,6 +49,10 @@
           <manga-comment-item v-for="item in previewComments" :key="item.commentId" :comment="item" @reply="openCommentSheet($event)" @praise="toggleCommentPraise" @remove="removeComment" @remove-reply="removeReply" />
           <button v-manga-a11y class="comment-write" type="button" @click="writeComment"><manga-icon name="comment" />写评论</button>
         </view>
+        <view v-if="!isPreview" class="section fans-section">
+          <view class="section-title"><text>粉丝贡献榜</text><button v-manga-a11y type="button" class="text-action" @click="openFansBoard">完整榜单<manga-icon name="next" /></button></view>
+          <fans-contribution-board :fan-info="fanInfo" />
+        </view>
         <view v-if="authorWorks.length" class="section works-section"><view class="section-title">作者的其他漫画</view><view class="works-grid"><button v-manga-a11y v-for="work in authorWorks" :key="work.novel_id" class="work-item" type="button" @click="openWork(work)"><image lazy-load class="other-cover" :src="work.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="work.name + '封面'" /><text>{{ work.name }}</text><text class="work-status">{{ Number(work.is_complete) === 1 ? '已完结' : '连载中' }}</text></button></view></view>
       </template>
       <view class="bottom-space"></view>
@@ -78,6 +82,7 @@
   </view>
 </template>
 <script>
+import FansContributionBoard from '@/components/FansContributionBoard.vue';
 import MangaComicLoader from '@/components/MangaComicLoader.vue';
 import MangaA11y from '@/common/manga-a11y.js';
 import axios from 'axios';
@@ -93,7 +98,7 @@ const COMMENT_PAGE_SIZE = 10;
 
 export default {
   directives: { mangaA11y: MangaA11y },
-	components: { MangaComicLoader, MangaIcon, TaskRewardModal, TippingBar, MangaCommentItem, MangaCommentComposer, ReportNovelPopup },
+	components: { FansContributionBoard, MangaComicLoader, MangaIcon, TaskRewardModal, TippingBar, MangaCommentItem, MangaCommentComposer, ReportNovelPopup },
 	data() {
 		return {
 			uid: null,
@@ -107,6 +112,7 @@ export default {
 			isInBookcase: false,
 			introExpanded: false,
 			progress: null, // { last_article_id, last_article_chapter, last_page_idx }
+			fanInfo: [],
 			comments: [],
 			commentAmount: 0,
 			commentPage: 1,
@@ -146,6 +152,16 @@ export default {
 		if (this.uid && !this.isPreview) this.loadProgress();
 	},
 	methods: {
+		openFansBoard() { uni.navigateTo({ url: '/pages/readers/novel_fans?id=' + this.uid }); },
+		async loadFansStatistics() {
+			if (this.isPreview) return;
+			try {
+				const res = await axios.get(this.$baseUrl + '/library/get_all_novel_fans?novel_id=' + this.uid);
+				this.fanInfo = Array.isArray(res.data) ? res.data : [];
+			} catch (e) {
+				console.error('loadFansStatistics failed', e);
+			}
+		},
 		openAuthor() { const id = this.bookInfo.auther_id || this.bookInfo.author_id; if (id) uni.navigateTo({ url: '/pages/users/personalPage?id=' + id }); },
 		openWork(work) { uni.navigateTo({ url: '/pages/readers/mangaInfo?id=' + work.novel_id }); },
 		async loadAuthorWorks() {
@@ -196,6 +212,7 @@ export default {
 				this.loadComments(),
 				this.loadCommentAmount(),
 				this.loadArticleCommentAmounts(),
+				this.loadFansStatistics(),
 			]);
 			this.loading = false;
 			this.hideLoadingCover();
@@ -442,6 +459,7 @@ export default {
 			this.$nextTick(() => { if (this.$refs.tippingPopup) this.$refs.tippingPopup.open('bottom'); });
 		},
 		handleTippingSuccess() {
+			this.loadFansStatistics();
 			if (this.$refs.tippingPopup) this.$refs.tippingPopup.close();
 		},
 		openReport() {
@@ -619,7 +637,7 @@ export default {
 .hero { height: 680rpx; position: relative; background: var(--manga-line); }
 .poster { display: block; width: 100%; height: 100%; }
 .poster-shade { position: absolute; inset: auto 0 0; height: 240rpx; background: linear-gradient(transparent, rgba(20, 20, 20, .20)); pointer-events: none; }
-.info-card,.section { margin: 24rpx 24rpx 0; padding: 30rpx; border-radius: 24rpx; background: var(--manga-card); box-shadow: var(--manga-shadow); }
+.info-card,.section { margin: 24rpx 24rpx 0; padding: 24rpx 30rpx 30rpx 30rpx; border-radius: 24rpx; background: var(--manga-card); box-shadow: var(--manga-shadow); }
 .info-card { position: relative; margin-top: -76rpx; }
 .novel-name { display: block; font-size: 40rpx; line-height: 1.3; font-weight: 750; letter-spacing: .01em; }
 .meta-line { display: flex; align-items: center; flex-wrap: wrap; gap: 12rpx; margin: 20rpx 0 8rpx; color: var(--manga-muted); font-size: 24rpx; }

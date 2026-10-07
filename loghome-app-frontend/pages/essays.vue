@@ -42,7 +42,7 @@
 					<book-detail-view v-if="curBook !== -1" :book="books[curBook]" :worlds="worlds"
 						:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
 						:writing-calendar="writingCalendar" :writing-calendar-loading="writingCalendarLoading"
-						@close-book-detail="handleCloseBookDrawerManually"
+						@close-book-detail="handleCloseBookDrawerForNavigation"
 						@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 						@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="openBookSelectDrawer"
 						@goto-statistics="gotoStatistics" @open-activity-form="openActivityForm"
@@ -110,7 +110,7 @@
 				<book-detail-view v-if="viewMode === 'grid' && curBook !== -1" :book="books[curBook]" :worlds="worlds"
 					:statistics="novel_statistic" :isDrawerMode="viewMode === 'grid'"
 					:writing-calendar="writingCalendar" :writing-calendar-loading="writingCalendarLoading"
-					@close-book-detail="handleCloseBookDrawerManually"
+					@close-book-detail="handleCloseBookDrawerForNavigation"
 					@goto-all-articles="gotoAllArticles" @read-novel="readNovel" @goto-essay-set="gotoEssaySet"
 					@delete-world-novel-asso="deleteWorldNovelAsso" @show-book-select="openBookSelectDrawer"
 					@goto-statistics="gotoStatistics" @goto-world-novel="gotoWorldNovel" @open-activity-form="openActivityForm"
@@ -414,14 +414,21 @@ export default {
 			if (this.viewMode === 'grid') {
 				this.curBook = index
 				this.showBookDetail = true;
-				window.history.pushState({ isBookDetailDrawerOpen: true }, '', window.location.href);
+				window.history.pushState({ ...window.history.state, isBookDetailDrawerOpen: true }, '', window.location.href);
 				this.swiperChange(index)
 			}
 		},
 		handleCloseBookDrawerManually() {
+			const wasOpen = this.showBookDetail;
+			this.showBookDetail = false;
 			// #ifdef H5
-			window.history.go(-1)
+			if (wasOpen && window.history.state && window.history.state.isBookDetailDrawerOpen) {
+				window.history.go(-1);
+			}
 			// #endif
+		},
+		handleCloseBookDrawerForNavigation() {
+			// 新页面的跳转负责路由，只关闭 UI；不能再发起异步 history.go(-1)。
 			this.showBookDetail = false;
 		},
 		// 顶部导航改变 
@@ -942,7 +949,7 @@ export default {
 				return;
 			}
 			event.preventDefault();
-			window.history.go(-1);
+			this.handleCloseBookDrawerManually();
 		},
 	}
 }

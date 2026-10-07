@@ -194,8 +194,8 @@ import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 			}
 		},
 		onLoad() {
-			this.updateTime();
-			this.refreshCollections();
+			// Preserve old shared/configured URLs while opening the unified ranking page.
+			uni.redirectTo({ url: '/pages/readers/rankBoard?board=logpower&zone=all' });
 		},
 		onPullDownRefresh() {
 			this.updateTime();

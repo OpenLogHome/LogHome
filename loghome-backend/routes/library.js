@@ -1198,4 +1198,8 @@ let recommendRouter = require('./library/recommand');
 
 router.use('/recommand', recommendRouter);
 
+let rankRouter = require('./library/rank');
+
+router.use('/rank', rankRouter);
+
 module.exports = router;

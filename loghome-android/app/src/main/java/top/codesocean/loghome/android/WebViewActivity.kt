@@ -1948,20 +1948,7 @@ class WebViewActivity : AppCompatActivity() {
         }
 
         fun normalizeNativeRouteUrl(routeUrl: String?): String? {
-            val trimmed = routeUrl?.trim().orEmpty()
-            if (trimmed.isBlank()) {
-                return null
-            }
-            if (trimmed.contains("://")) {
-                return null
-            }
-            val withoutHashPrefix = trimmed.removePrefix("#")
-            val route = if (withoutHashPrefix.startsWith("/")) {
-                withoutHashPrefix
-            } else {
-                "/$withoutHashPrefix"
-            }
-            return route.takeIf { it.startsWith("/pages/") && !it.contains("..") }
+            return NativeRouteUrl.normalize(routeUrl)
         }
     }
 }

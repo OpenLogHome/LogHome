@@ -15,6 +15,7 @@ const registry = {
 	treeplant: { module: () => require('./treeplant.js'), label: '树场经验球' },
 	membershipRenewal: { module: () => require('./membershipRenewal.js'), label: '会员自动续费' },
 	homepageUpdate: { module: () => require('./homepageUpdate.js'), label: '首页榜单更新' },
+	rankSnapshot: { module: () => require('./rankSnapshot.js'), label: '首页四榜快照' },
 	searchKeywords: { module: () => require('./searchKeywords.js'), label: '搜索关键词维护' },
 };
 
@@ -60,7 +61,12 @@ function start() {
 		return;
 	}
 
-	const jobs = timerConfig.jobs || {};
+	// Older deployment configs may not yet include the new ranking job.
+	// Explicit per-job/global switches still take precedence.
+	const jobs = {
+		rankSnapshot: { enabled: true, cron: '0 5 * * * *' },
+		...(timerConfig.jobs || {}),
+	};
 	for (const name of Object.keys(registry)) {
 		const jobConfig = jobs[name];
 		if (!jobConfig || jobConfig.enabled === false) {
