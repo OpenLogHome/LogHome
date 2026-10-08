@@ -9,9 +9,7 @@
 				<img src="../../static/resources/apple.png" alt="">
 				<span>{{resources.apple}}</span>
 			</div>
-			<div class="refresh-btn" @click="refreshResources">
-				<uni-icons type="reload" size="18" color="#795548"></uni-icons>
-			</div>
+			<button class="get-logs-btn" @click="openLogGuide">? 如何获取原木</button>
 		</div>
 		<div class="gifts">
 			<div class="gift" v-for="item in tippingList"
@@ -94,6 +92,12 @@
 			}
 		},
 		methods:{
+			openLogGuide() {
+				uni.navigateTo({
+					url: '/pages/payments/get_logs',
+					events: { 'log-guide-return': () => this.refreshResources() }
+				});
+			},
 			decreaseAmount() {
 				if (this.tippingAmount > 1) {
 					this.tippingAmount--;
@@ -354,6 +358,8 @@
 			display: flex;
 			align-items: center;
 			justify-content: flex-end;
+			flex-wrap: wrap;
+			gap: 12rpx;
 			padding: 15rpx;
 			margin-bottom: 20rpx;
 			border-radius: 10rpx;
@@ -387,17 +393,22 @@
 				}
 			}
 			
-			.refresh-btn {
-				margin-left: auto;
-				width: 36rpx;
-				height: 36rpx;
-				display: flex;
+			.get-logs-btn {
+				margin: 0 0 0 auto;
+				padding: 6rpx 12rpx;
+				min-height: 52rpx;
+				display: inline-flex;
 				align-items: center;
 				justify-content: center;
-				border-radius: 50%;
-				background-color: rgba(121, 85, 72, 0.1);
-				
+				flex-shrink: 0;
+				font-size: 26rpx;
+				line-height: 1.4;
+				color: #795548;
+				border-radius: 8rpx;
+				background-color: rgba(121, 85, 72, 0.08);
+				&::after { border: 0; }
 				.dark-mode & {
+					color: #d4b8a8;
 					background-color: rgba(200, 170, 160, 0.15);
 				}
 			}

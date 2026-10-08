@@ -1765,7 +1765,7 @@ export default {
 
 
 .content {
-	padding-bottom: 500rpx;
+	padding-bottom: 0;
 
 	&.is-page-loading {
 		height: 100vh;
@@ -3255,7 +3255,8 @@ view.tippingBar {
 }
 
 .blank_box {
-	height: calc(125rpx + 400rpx);
+	// Reserve only the fixed action bar; b-content already supplies 32rpx spacing.
+	height: calc(100rpx + var(--loghome-safe-bottom, 0px));
 }
 
 .gift_box {

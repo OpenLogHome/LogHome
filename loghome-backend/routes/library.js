@@ -35,27 +35,23 @@ router.get('/get_library_roulous_chart', async function (req, res) {
 	}
 });
 
+// Stable pagination prevents repeated random recommendations and unbounded table reads.
 router.get('/get_novels_all', async function (req, res) {
 	try {
-		let results =
-			await query(`SELECT n.*,u.name author_name,u.avatar_url auther_avatar,
-							${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
-                               FROM novels n,users u
-                               WHERE u.user_id = n.author_id
-                               AND n.deleted = 0
-                               AND n.is_personal = 0
-                               AND n.is_banned = 0`);
-
-		for (let i = 0; i < results.length; i++) {
-			let r = Math.floor(Math.random() * results.length);
-			let t = results[i];
-			results[i] = results[r];
-			results[r] = t;
+		const page = Number(req.query.page || 1);
+		const amount = Number(req.query.amount || 6);
+		if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(amount) || amount < 1 || amount > 100 || !Number.isSafeInteger((page - 1) * amount)) {
+			return res.status(400).json({ msg: 'invalid pagination' });
 		}
-		res.end(JSON.stringify(results.slice(0,6)));
+		const results = await query(`SELECT n.*,u.name author_name,u.avatar_url auther_avatar,
+			${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
+			FROM novels n JOIN users u ON u.user_id = n.author_id
+			WHERE n.deleted = 0 AND n.is_personal = 0 AND n.is_banned = 0
+			ORDER BY n.novel_id DESC LIMIT ?, ?`, [(page - 1) * amount, amount]);
+		res.json(results);
 	} catch (e) {
 		console.log(e);
-		res.json(400, { msg: 'bad request' });
+		res.status(400).json({ msg: 'bad request' });
 	}
 });
 

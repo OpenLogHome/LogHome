@@ -683,6 +683,12 @@
                 "enablePullDownRefresh": false
             }
         },{
+            "path": "pages/payments/get_logs",
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "如何获取原木"
+            }
+        }, {
             "path" : "pages/payments/recharge",
             "style" :                                                                                    
             {

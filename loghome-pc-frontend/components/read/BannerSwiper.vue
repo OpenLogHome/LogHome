@@ -108,7 +108,7 @@ export default {
           this.gotoCollections("原木力飙升")
           break
         case "完结":
-          this.gotoCollections("完本经典")
+          this.gotoCollections("入站必读")
           break
       }
     },
