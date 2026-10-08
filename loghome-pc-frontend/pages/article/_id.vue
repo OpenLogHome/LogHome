@@ -543,7 +543,7 @@ export default {
           this.commentTotal = countResponse[0]['COUNT(*)']
         }
         
-        // 获取当前页评论列表
+        // 获取当前页评论列表（fast 接口已自带 replies）
         const commentsResponse = await this.$api.community.getArticleComments(
           this.novel.novel_id, 
           this.article.article_id,
@@ -552,8 +552,18 @@ export default {
         )
         
         if (commentsResponse && commentsResponse.length > 0) {
-          // 处理评论数据
-          this.comments = await this.processComments(commentsResponse)
+          // fast 接口返回的回复字段是 replies，统一映射为 reviewLess 供模板使用
+          this.comments = commentsResponse.map(comment => ({
+            ...comment,
+            reviewLess: (comment.replies || []).map(reply => ({
+              comment_id: reply.essay_comment_id,
+              userName: reply.name,
+              userId: reply.user_id,
+              targetUserName: this.findTargetUserName(reply.reply_to_id, commentsResponse, comment.replies || []),
+              sendMsg: reply.content,
+              article_id: reply.article_id
+            }))
+          }))
         } else {
           this.comments = []
         }
@@ -564,42 +574,6 @@ export default {
       } finally {
         this.commentsLoading = false
       }
-    },
-    
-    // 处理评论数据，获取回复和点赞状态
-    async processComments(comments) {
-      const processedComments = []
-      
-      for (const comment of comments) {
-        // 获取评论的回复
-        const replies = await this.$api.community.novel_commonts_reply_to(comment.essay_comment_id)
-        
-        // 检查当前用户是否已点赞
-        let isLiked = false
-        if (localStorage.getItem("token")) {
-          const likeStatus = await this.$api.community.getCommentPraiseStatus(comment.essay_comment_id)
-          isLiked = likeStatus && likeStatus.length > 0 && likeStatus[0].type === 0
-        }
-        
-        // 格式化评论的回复
-        const reviewLess = replies ? replies.map(reply => ({
-          comment_id: reply.essay_comment_id,
-          userName: reply.name,
-          userId: reply.user_id,
-          targetUserName: this.findTargetUserName(reply.reply_to_id, comments, replies),
-          sendMsg: reply.content,
-          article_id: reply.article_id
-        })) : []
-        
-        // 添加处理后的评论
-        processedComments.push({
-          ...comment,
-          isLiked,
-          reviewLess
-        })
-      }
-      
-      return processedComments
     },
     
     // 通过回复ID查找目标用户名

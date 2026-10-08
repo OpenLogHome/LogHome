@@ -878,14 +878,14 @@ export default {
 .floating-page { right: 24rpx; bottom: calc(24rpx + var(--manga-safe-bottom)); }.floating-reset { left: 50%; bottom: calc(190rpx + var(--manga-safe-bottom)); transform: translateX(-50%); white-space: nowrap; }
 .settings-mask,.catalog-mask { position: fixed; inset: 0; z-index: 60; background: rgba(8,11,14,.55); }
 .comments-mask { position: fixed; inset: 0; z-index: 62; background: rgba(8,11,14,.55); }
-.comments-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 63; display: flex; flex-direction: column; height: 72vh; border-radius: 32rpx 32rpx 0 0; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 -10rpx 44rpx rgba(0,0,0,.12); animation: sheet-in .22s ease-out both; }
-.comments-sheet .sheet-head { min-height: 88rpx; padding-left: 28rpx; margin-bottom: 0; border-bottom: 1rpx solid var(--manga-line); }
+.comments-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 63; display: flex; flex-direction: column; height: 72vh; border-radius: 32rpx 32rpx 0 0; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 -10rpx 44rpx rgba(0,0,0,.12); animation: sheet-in .22s ease-out both; overflow: hidden; }
+.comments-sheet .sheet-head { min-height: 88rpx; padding-left: 28rpx; margin-bottom: 0; border-bottom: 1rpx solid var(--manga-line); flex-shrink: 0; }
 .comments-count { color: var(--manga-muted); font-size: 23rpx; font-weight: 400; }
-.comments-scroll { flex: 1; min-height: 0; }
+.comments-scroll { flex: 1; min-height: 0; height: 0; }
 .comments-list { padding: 0 28rpx; }
 .comments-empty { padding: 70rpx 0; text-align: center; color: var(--manga-muted); font-size: 25rpx; }
 .comments-more { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 88rpx; color: var(--manga-accent); font-size: 25rpx; font-weight: 600; }
-.comments-composer { flex: none; padding: 0 28rpx calc(16rpx + var(--manga-safe-bottom)); }
+.comments-composer { flex: none; z-index: 1; padding: 0 28rpx calc(16rpx + var(--manga-safe-bottom)); background: var(--manga-card); border-top: 1rpx solid var(--manga-line); }
 .settings-sheet { position: absolute; inset: auto 0 0; padding: 30rpx 32rpx calc(34rpx + var(--manga-safe-bottom)); border-radius: 32rpx 32rpx 0 0; background: var(--manga-card); box-shadow: 0 -10rpx 44rpx rgba(0,0,0,.12); animation: sheet-in .22s ease-out both; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; min-height: 64rpx; margin-bottom: 12rpx; font-size: 32rpx; font-weight: 700; }
 .sheet-done { min-width: 88rpx; min-height: 72rpx; color: var(--manga-accent) !important; font-size: 25rpx; font-weight: 600; }

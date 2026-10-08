@@ -202,10 +202,14 @@ const community = {
         }
     },
 
-    // 获取章节评论
+    // 获取章节评论（复用 APP 端 fast 接口，一次返回根评论+回复）
     getArticleComments: async (novelId, articleId, page = 1, pageSize = 10) => {
         try {
-            const response = await fetch(`${process.env.baseUrl}/community/novel_commonts_all?id=${novelId}&articleId=${articleId}&page=${page}&pageSize=${pageSize}`)
+            const params = new URLSearchParams({ id: novelId, page, pageSize });
+            if (articleId !== undefined && articleId !== null && articleId !== 0) {
+                params.append('articleId', articleId);
+            }
+            const response = await fetch(`${process.env.baseUrl}/community/novel_commonts_all_fast?${params}`)
             return await response.json()
         } catch (error) {
             console.error('获取章节评论失败:', error)
