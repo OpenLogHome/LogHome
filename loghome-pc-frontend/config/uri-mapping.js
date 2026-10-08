@@ -31,6 +31,14 @@ export default {
       replacement: '/pages/readers/bookInfo?id=$1'
     },
     {
+      pattern: /^\/manga\/read\/(\d+)$/,
+      replacement: '/pages/readers/mangaReader?id=$1'
+    },
+    {
+      pattern: /^\/manga\/(\d+)$/,
+      replacement: '/pages/readers/mangaInfo?id=$1'
+    },
+    {
       pattern: /^\/write\/edit\/(\d+)$/,
       replacement: '/pages/writers/allArticles?id=$1'
     },

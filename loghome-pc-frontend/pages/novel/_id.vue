@@ -322,6 +322,11 @@ export default {
         return redirect(`/world/${novelData.novel_id}`)
       }
 
+      // 如果是漫画，跳转到漫画详情页
+      if (novelData.novel_type === "manga") {
+        return redirect(`/manga/${novelData.novel_id}`)
+      }
+
       // 获取章节列表 - 用于SEO的服务端渲染
       const chapters = await $api.articles.getArticles(novelData.novel_id)
       
