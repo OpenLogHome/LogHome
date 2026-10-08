@@ -65,8 +65,11 @@
 							class="sticker-item" 
 							v-for="(sticker, index) in stickerList" 
 							:key="sticker.sticker_id"
-							@tap="selectSticker(sticker)"
-							@longpress="showStickerOptions(sticker)"
+							@tap="onStickerTap(sticker)"
+							@touchstart="onStickerTouchStart($event, sticker, false)"
+							@touchmove="onStickerTouchMove($event)"
+							@touchend="onStickerTouchEnd"
+							@touchcancel="onStickerTouchEnd"
 						>
 							<log-image :src="sticker.url" mode="aspectFill" style="width: 100%; height: 100%;"></log-image>
 						</view>
@@ -143,8 +146,11 @@
 						class="sticker-item" 
 						v-for="(sticker, index) in favoriteList" 
 						:key="sticker.sticker_id"
-						@tap="selectSticker(sticker)"
-						@longpress="showStickerOptions(sticker, true)"
+						@tap="onStickerTap(sticker)"
+						@touchstart="onStickerTouchStart($event, sticker, true)"
+						@touchmove="onStickerTouchMove($event)"
+						@touchend="onStickerTouchEnd"
+						@touchcancel="onStickerTouchEnd"
 					>
 						<log-image :src="sticker.url" mode="aspectFill" style="width: 100%; height: 100%;"></log-image>
 					</view>
@@ -168,8 +174,8 @@
 			</scroll-view>
 		</view>
 		
-		<!-- 表情包操作菜单 -->
-		<uni-popup ref="stickerOptionsPopup" type="bottom" :z-index="2000">
+		<!-- 表情包操作菜单：uni-popup 不接受 z-index 属性，层级只能靠内联样式抬高到表情面板之上 -->
+		<uni-popup ref="stickerOptionsPopup" type="bottom" style="z-index: 2000;">
 			<view class="sticker-options">
 				<view class="option-item" @tap="toggleFavorite">
 					<text>{{ currentSticker.is_favorite ? '取消收藏' : '收藏' }}</text>
@@ -187,7 +193,7 @@
 		</uni-popup>
 		
 		<!-- 上传表情包弹窗 -->
-		<uni-popup ref="uploadPopup" type="bottom" :z-index="1000">
+		<uni-popup ref="uploadPopup" type="bottom" style="z-index: 2000;">
 			<view class="upload-popup">
 				<view class="popup-header">
 					<text class="popup-title">上传表情包</text>
@@ -269,7 +275,11 @@
 				isLoading: false,
 				// 收藏分页
 				favoriteCurrentPage: 1,
-				favoriteTotalPages: 1
+				favoriteTotalPages: 1,
+				// 自定义长按（uni 的 longpress 在缓慢拖动时也会触发，改为带移动阈值的计时器）
+				longPressTimer: null,
+				longPressOrigin: null,
+				longPressFired: false
 			}
 		},
 		created() {
@@ -290,6 +300,7 @@
 		beforeDestroy() {
 			// 移除窗口大小变化的监听器
 			window.removeEventListener('resize', this.handleResize);
+			this.clearLongPressTimer();
 		},
 		methods: {
 			toggleEmojiPicker() {
@@ -509,6 +520,46 @@
 				this.currentSticker = sticker;
 				this.isFromFavorite = fromFavorite;
 				this.$refs.stickerOptionsPopup.open();
+			},
+			// 长按开始：记录起点并启动计时器，手指移动超过阈值则视为滚动并取消
+			onStickerTouchStart(event, sticker, fromFavorite) {
+				this.clearLongPressTimer();
+				this.longPressFired = false;
+				const touch = event.touches && event.touches[0];
+				this.longPressOrigin = touch ? { x: touch.clientX, y: touch.clientY } : null;
+				this.longPressTimer = setTimeout(() => {
+					this.longPressTimer = null;
+					this.longPressFired = true;
+					this.showStickerOptions(sticker, fromFavorite);
+				}, 450);
+			},
+			onStickerTouchMove(event) {
+				if (!this.longPressOrigin) return;
+				const touch = event.touches && event.touches[0];
+				if (!touch) return;
+				const dx = touch.clientX - this.longPressOrigin.x;
+				const dy = touch.clientY - this.longPressOrigin.y;
+				if (dx * dx + dy * dy > 100) {
+					this.clearLongPressTimer();
+				}
+			},
+			onStickerTouchEnd() {
+				this.clearLongPressTimer();
+			},
+			clearLongPressTimer() {
+				if (this.longPressTimer) {
+					clearTimeout(this.longPressTimer);
+					this.longPressTimer = null;
+				}
+				this.longPressOrigin = null;
+			},
+			// 长按弹出菜单后紧随的 tap 需要吞掉，避免误发送表情
+			onStickerTap(sticker) {
+				if (this.longPressFired) {
+					this.longPressFired = false;
+					return;
+				}
+				this.selectSticker(sticker);
 			},
 			// 处理窗口大小变化
 			handleResize() {
