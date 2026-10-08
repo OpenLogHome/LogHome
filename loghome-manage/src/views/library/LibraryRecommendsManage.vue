@@ -64,8 +64,8 @@
           </el-table-column>
           <el-table-column label="状态" width="90" align="center">
             <template slot-scope="scope">
-              <el-tag :type="scope.row.isValid === 1 ? 'success' : 'info'" size="small">
-                {{ scope.row.isValid === 1 ? '启用' : '停用' }}
+              <el-tag :type="Number(scope.row.isValid) === 1 ? 'success' : 'info'" size="small">
+                {{ Number(scope.row.isValid) === 1 ? '启用' : '停用' }}
               </el-tag>
             </template>
           </el-table-column>
@@ -317,7 +317,7 @@ export default {
           collection_title: row.collection_title || '',
           collection_type: row.collection_type || 'slide',
           icon: row.icon || '',
-          isValid: row.isValid === 1
+          isValid: Number(row.isValid) === 1
         }
       } else {
         this.collectionDialogTitle = '新增合集'
@@ -353,6 +353,8 @@ export default {
           icon: this.collectionForm.icon || '',
           isValid: this.collectionForm.isValid ? 1 : 0
         }
+        const original = this.collections.find(row => row.collection_id === this.collectionForm.collection_id)
+        const originalTitle = original && original.collection_title
         let request
         if (this.collectionForm.collection_id) {
           request = this.axios.put(this.$baseUrl + '/manage/library-recommends/collections/' + this.collectionForm.collection_id, payload)
@@ -362,7 +364,9 @@ export default {
         request.then(() => {
           this.$message.success(this.collectionForm.collection_id ? '合集已更新' : '合集已创建')
           this.collectionDialogVisible = false
+          if (this.selectedTitle === originalTitle) this.selectedTitle = payload.collection_title
           this.fetchCollections()
+          this.refreshTitles()
         }).catch(error => {
           this.$message.error((error.response && error.response.data && error.response.data.msg) || '保存失败')
         }).finally(() => {

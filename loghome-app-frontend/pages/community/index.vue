@@ -45,64 +45,15 @@
         </div> -->
       </div>
 
-      <!-- 推荐圈子 -->
-      <view
-        class="section recommend-circles-section"
-        :class="{ 'is-refreshing': circleRefreshAnimating }"
-        v-if="recommendCirclesLoading || hasRecommendCircles"
-      >
-        <view class="section-header">
-          <text class="section-title">推圈</text>
-          <text class="section-more clickable" @tap="navigateToCircles">更多</text>
-        </view>
-        <view class="square-grid square-grid-skeleton" v-if="recommendCirclesLoading">
-          <view class="square-grid-row">
-            <view class="skeleton-block skeleton-main"></view>
-            <view class="skeleton-side">
-              <view class="skeleton-block skeleton-side-item"></view>
-              <view class="skeleton-block skeleton-side-item"></view>
-            </view>
-          </view>
-          <view class="square-grid-bottom">
-            <view class="skeleton-block skeleton-bottom-item"></view>
-          </view>
-        </view>
-        <view class="square-grid" v-else>
-          <view class="square-grid-content">
-            <!-- 第一行：大图 + 两个小图 -->
-            <view class="square-grid-row">
-              <!-- 左侧大图 -->
-              <view class="square-grid-main clickable" @tap="navigateToCircle(mainRecommendCircle.circle_id)" v-if="mainRecommendCircle">
-                <image mode="aspectFill" :src="mainRecommendCircle.bg_url"></image>
-                <view class="circle-info">
-                  <image :src="mainRecommendCircle.icon" mode="aspectFill"></image>
-                  <view>{{ mainRecommendCircle.name }}</view>
-                  <text>{{ mainRecommendCircle.member_count }}人</text>
-                </view>
-              </view>
-              <!-- 右侧两个小图 -->
-              <view class="square-grid-side">
-                <view class="side-item clickable" @tap="navigateToCircle(recommendCircleSlots[1].circle_id)" v-if="recommendCircleSlots[1]">
-                  <image mode="aspectFill" :src="recommendCircleSlots[1].icon" lazy-load></image>
-                  <view>{{ recommendCircleSlots[1].name }}</view>
-                  <text>{{ recommendCircleSlots[1].member_count }}人</text>
-                </view>
-                <view class="side-item clickable" @tap="navigateToCircle(recommendCircleSlots[2].circle_id)" v-if="recommendCircleSlots[2]">
-                  <image mode="aspectFill" :src="recommendCircleSlots[2].icon" lazy-load></image>
-                  <view>{{ recommendCircleSlots[2].name }}</view>
-                  <text>{{ recommendCircleSlots[2].member_count }}人</text>
-                </view>
-              </view>
-            </view>
-            <!-- 第二行：一个小图 + 全部圈子按钮 -->
-            <view class="square-grid-bottom">
-              <view class="bottom-item all-circles clickable" @tap="navigateToCircles">
-                <view>全部圈子</view>
-                <uni-icons type="arrow-right" size="16"></uni-icons>
-              </view>
-            </view>
-          </view>
-        </view>
+      <view class="community-shortcuts">
+        <button class="shortcut-button shortcut-post" @tap="navigateToCreatePost">
+          <uni-icons type="compose" size="36rpx" color="#ffffff" />
+          <text>发布帖子</text>
+        </button>
+        <button class="shortcut-button shortcut-circles" @tap="navigateToCircles">
+          <uni-icons type="staff-filled" size="36rpx" color="#ffffff" />
+          <text>圈子广场</text>
+        </button>
       </view>
 
       <!-- 添加Banner组件 -->
@@ -241,10 +192,6 @@ export default {
       page: 1,
       pageSize: 10,
       posts: [],
-      recommendCircles: [],
-      recommendCirclesLoading: false,
-      circleRefreshAnimating: false,
-      circleRefreshTimer: null,
       unreadCount: 0,
       hasMore: true,
       chartList: [],
@@ -269,9 +216,6 @@ export default {
       });
       return;
     }
-    // 初始化推荐圈子数组，避免渲染错误
-    this.recommendCircles = [];
-    this.loadRecommendCircles();
     this.loadPosts();
     this.refreshSwiperData();
     
@@ -283,17 +227,12 @@ export default {
     this.posts = [];
     this.hasMore = true;
     Promise.all([
-      this.loadRecommendCircles(),
       this.loadPosts(),
       this.refreshSwiperData()
     ]).finally(() => {
       // 刷新后重新获取点赞状态
       uni.stopPullDownRefresh();
     });
-  },
-
-  beforeUnmount() {
-    this.clearRecommendCirclesAnimation();
   },
 
   onReachBottom() {
@@ -322,31 +261,6 @@ export default {
   },
 
   computed: {
-    recommendCircleSlots() {
-      if (!Array.isArray(this.recommendCircles)) {
-        return [];
-      }
-
-      return this.recommendCircles
-        .filter(circle => circle && circle.circle_id)
-        .slice(0, 3)
-        .map(circle => ({
-          ...circle,
-          bg_url: circle.bg_url || circle.icon || '../../static/default-circle.png',
-          icon: circle.icon || '../../static/default-circle.png',
-          name: circle.name || '未知圈子',
-          member_count: circle.member_count || 0
-        }));
-    },
-
-    mainRecommendCircle() {
-      return this.recommendCircleSlots[0] || null;
-    },
-
-    hasRecommendCircles() {
-      return this.recommendCircleSlots.length > 0;
-    },
-
     waterfallPostColumns() {
       const columns = [[], []];
       const heights = [0, 0];
@@ -398,95 +312,6 @@ export default {
       return 160 + imageWeight + textWeight;
     },
 
-    clearRecommendCirclesAnimation() {
-      if (this.circleRefreshTimer) {
-        clearTimeout(this.circleRefreshTimer);
-        this.circleRefreshTimer = null;
-      }
-      this.circleRefreshAnimating = false;
-    },
-
-    triggerRecommendCirclesAnimation() {
-      this.clearRecommendCirclesAnimation();
-      this.$nextTick(() => {
-        this.circleRefreshAnimating = true;
-        this.circleRefreshTimer = setTimeout(() => {
-          this.circleRefreshAnimating = false;
-          this.circleRefreshTimer = null;
-        }, 650);
-      });
-    },
-
-    preloadRecommendCircleImage(src) {
-      if (!src) {
-        return Promise.resolve();
-      }
-
-      return new Promise((resolve) => {
-        uni.getImageInfo({
-          src,
-          success: () => resolve(),
-          fail: () => resolve()
-        });
-      });
-    },
-
-    preloadRecommendCircleAssets(circles) {
-      if (!Array.isArray(circles) || circles.length === 0) {
-        return Promise.resolve();
-      }
-
-      const imageUrls = [...new Set(
-        circles.reduce((urls, circle) => {
-          if (circle && circle.bg_url) {
-            urls.push(circle.bg_url);
-          }
-          if (circle && circle.icon) {
-            urls.push(circle.icon);
-          }
-          return urls;
-        }, []).filter(Boolean)
-      )];
-
-      return Promise.all(imageUrls.map(url => this.preloadRecommendCircleImage(url)));
-    },
-
-    async loadRecommendCircles() {
-      this.recommendCirclesLoading = true;
-      try {
-        const res = await axios.get(this.$baseUrl + '/community/circles/list', {
-          params: {
-            page: 1,
-            pageSize: 4,
-            sort: 'random'
-          }
-        });
-        
-        // 确保有数据
-        if (res.data && res.data.list && Array.isArray(res.data.list)) {
-          const circles = res.data.list;
-          this.recommendCircles = circles;
-          this.recommendCirclesLoading = false;
-          if (circles.length > 0) {
-            this.triggerRecommendCirclesAnimation();
-            this.preloadRecommendCircleAssets(circles).catch(() => {});
-          } else {
-            this.clearRecommendCirclesAnimation();
-          }
-        } else {
-          // 如果没有数据，设置为空数组
-          this.recommendCircles = [];
-          this.recommendCirclesLoading = false;
-          this.clearRecommendCirclesAnimation();
-        }
-      } catch (error) {
-        console.error('加载推荐圈子失败', error);
-        // 出错时设置为空数组
-        this.recommendCircles = [];
-        this.recommendCirclesLoading = false;
-        this.clearRecommendCirclesAnimation();
-      }
-    },
 
     async loadPosts() {
       if (!this.hasMore || this.loadingStatus === 'loading') return;
@@ -750,38 +575,6 @@ export default {
       });
     },
 
-    getCircleId(index) {
-      if (!this.recommendCircles || !this.recommendCircles[index]) return 0;
-      return this.recommendCircles[index].circle_id || 0;
-    },
-
-    getCircleImage(index) {
-      if (!this.recommendCircles || !this.recommendCircles[index]) return '../../static/default-circle.png';
-      return this.recommendCircles[index].bg_url || this.recommendCircles[index].icon || '../../static/default-circle.png';
-    },
-
-    getCircleIcon(index) {
-      if (!this.recommendCircles || !this.recommendCircles[index]) return '../../static/default-circle.png';
-      return this.recommendCircles[index].icon || '../../static/default-circle.png';
-    },
-
-    getCircleName(index) {
-      if (!this.recommendCircles || !this.recommendCircles[index]) return '未知圈子';
-      return this.recommendCircles[index].name || '未知圈子';
-    },
-
-    getCircleMemberCount(index) {
-      if (!this.recommendCircles || !this.recommendCircles[index]) return 0;
-      return this.recommendCircles[index].member_count || 0;
-    },
-
-    hasCircle(index) {
-      return this.recommendCircles && 
-             this.recommendCircles[index] && 
-             this.recommendCircles[index].circle_id && 
-             this.recommendCircles[index].circle_id !== 0;
-    },
-
     gotoMessage() {
       uni.navigateTo({
         url: "./message"
@@ -1030,105 +823,6 @@ export default {
   }
 }
 
-.recommend-circles-section {
-  .square-grid-main,
-  .side-item,
-  .bottom-item {
-    will-change: transform, opacity;
-  }
-
-  &.is-refreshing {
-    .square-grid-main,
-    .side-item,
-    .bottom-item {
-      animation: recommend-circle-refresh 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-
-    .square-grid-main {
-      animation-delay: 0s;
-    }
-
-    .side-item:nth-child(1) {
-      animation-delay: 0.08s;
-    }
-
-    .side-item:nth-child(2) {
-      animation-delay: 0.14s;
-    }
-
-    .bottom-item {
-      animation-delay: 0.2s;
-    }
-  }
-
-  .square-grid-skeleton {
-    .square-grid-row {
-      display: flex;
-      margin-bottom: 20rpx;
-    }
-
-    .skeleton-side {
-      width: 48%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .skeleton-block {
-      position: relative;
-      overflow: hidden;
-      border-radius: 12rpx;
-      background: #f1f2f4;
-
-      .dark-mode & {
-        background: rgba(255, 255, 255, 0.08);
-      }
-
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        transform: translateX(-100%);
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
-        animation: recommend-circle-skeleton 1.1s ease-in-out infinite;
-      }
-    }
-
-    .skeleton-main {
-      width: 48%;
-      height: 300rpx;
-      margin-right: 20rpx;
-    }
-
-    .skeleton-side-item {
-      height: 140rpx;
-    }
-
-    .skeleton-bottom-item {
-      width: calc(100% - 50rpx);
-      height: 80rpx;
-    }
-  }
-}
-
-@keyframes recommend-circle-refresh {
-  from {
-    opacity: 0.55;
-    transform: translateY(18rpx) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes recommend-circle-skeleton {
-  to {
-    transform: translateX(100%);
-  }
-}
-
 @keyframes skeleton-loading {
   0% {
     background-position: 100% 0;
@@ -1198,147 +892,6 @@ export default {
 .sort-btn.active {
   color: #EA7034;
   background-color: rgba(234, 112, 52, 0.1);
-}
-
-.square-grid {
-  .square-grid-content {
-    .square-grid-row {
-      display: flex;
-      margin-bottom: 20rpx;
-
-      .square-grid-main {
-        width: 48%;
-        height: 300rpx;
-        position: relative;
-        margin-right: 20rpx;
-        border-radius: 12rpx;
-        overflow: hidden;
-
-        image {
-          width: 100%;
-          height: 100%;
-        }
-
-        .circle-info {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 80rpx;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          padding: 0 20rpx;
-
-          image {
-            width: 50rpx;
-            height: 50rpx;
-            border-radius: 50%;
-          }
-
-          view {
-            color: #fff;
-            font-size: 26rpx;
-            margin: 0 20rpx;
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-
-          text {
-            color: #fff;
-            font-size: 24rpx;
-          }
-        }
-      }
-
-      .square-grid-side {
-        width: 48%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-
-        .side-item {
-          height: 140rpx;
-          background: #333;
-          border-radius: 12rpx;
-          display: flex;
-          align-items: center;
-          padding: 0 20rpx;
-          color: #fff;
-          
-          .dark-mode & {
-            background: #444;
-            box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.3);
-          }
-
-          image {
-            width: 50rpx;
-            height: 50rpx;
-            border-radius: 50%;
-          }
-
-          view {
-            font-size: 26rpx;
-            margin: 0 20rpx;
-            flex: 1;
-          }
-
-          text {
-            font-size: 24rpx;
-          }
-        }
-      }
-    }
-
-    .square-grid-bottom {
-      display: flex;
-
-      .bottom-item {
-        width: calc(100% - 50rpx);
-        height: 80rpx;
-        background: #333;
-        border-radius: 12rpx;
-        display: flex;
-        align-items: center;
-        padding: 0 20rpx;
-        color: #fff;
-
-        image {
-          width: 50rpx;
-          height: 50rpx;
-          border-radius: 50%;
-        }
-
-        view {
-          font-size: 26rpx;
-          margin: 0 20rpx;
-          flex: 1;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        text {
-          font-size: 24rpx;
-        }
-
-        &.all-circles {
-            background: #fff;
-            border: 2rpx solid #333;
-            color: #333;
-            justify-content: space-between;
-            
-            .dark-mode & {
-              background: var(--card-background);
-              border: 2rpx solid #666;
-              color: var(--text-color-primary);
-            }
-          }
-      }
-    }
-  }
 }
 
 .post-list {
@@ -1799,15 +1352,6 @@ export default {
   }
 }
 
-.square-grid-main,
-.side-item,
-.bottom-item {
-  &.clickable:active {
-    transform: scale(0.98);
-    opacity: 0.9;
-  }
-}
-
 .post-card {
   &.clickable:active {
     transform: scale(0.98);
@@ -1835,5 +1379,39 @@ export default {
       box-shadow: 0 2rpx 8rpx rgba(234, 112, 52, 0.6);
     }
   }
+}
+</style>
+
+<style scoped lang="scss">
+.community-shortcuts {
+  display: flex;
+  gap: 20rpx;
+  padding: 16rpx 30rpx 24rpx;
+}
+.shortcut-button {
+  flex: 1;
+  min-width: 0;
+  min-height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  margin: 0;
+  padding: 20rpx 12rpx;
+  border-radius: 20rpx;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  &::after { border: 0; }
+  &:active { opacity: 0.85; transform: translateY(2rpx); }
+}
+.shortcut-post {
+  background: #b66f52;
+  .dark-mode & { background: #90553e; }
+}
+.shortcut-circles {
+  background: #627f54;
+  .dark-mode & { background: #475f3b; }
 }
 </style>
