@@ -7,6 +7,13 @@
     "_name": "_cfcd54d2"
   },
   {
+    "name": "forgot-password",
+    "path": "/forgot-password",
+    "component": "D:\\\\Code-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\forgot-password.vue",
+    "chunkName": "pages/forgot-password",
+    "_name": "_455fe127"
+  },
+  {
     "name": "login",
     "path": "/login",
     "component": "D:\\\\Code-LogHome\\\\LogHome\\\\loghome-pc-frontend\\\\pages\\\\login.vue",

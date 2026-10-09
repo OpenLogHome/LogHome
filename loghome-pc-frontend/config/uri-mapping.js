@@ -14,6 +14,7 @@ export default {
     '/community/post/edit': '/pages/community/postEdit',
     '/me': '/pages/me',
     '/write/new': '/pages/writers/newEssay',
+    '/forgot-password': '/pages/users/forgottenPwd',
   },
 
   // 参数匹配规则 - 支持动态参数

@@ -17,8 +17,9 @@
           <input type="email" placeholder="请输入电子邮箱" v-model="email" class="login-input">
         </div>
         <button class="login-btn" @click="nextStep()">下一步</button>
+        <nuxt-link to="/forgot-password" class="forgot-link">忘记密码？</nuxt-link>
       </div>
-      
+
       <!-- 步骤1：滑动验证 -->
       <transition name="fade">
         <div v-if="step == 1" class="login-step">
@@ -100,6 +101,7 @@
           </div>
           
           <button class="login-btn" @click="nextStep()">登录</button>
+          <nuxt-link to="/forgot-password" class="forgot-link">忘记密码？</nuxt-link>
           <button class="login-btn cancel-btn" @click="step = 0">上一步</button>
         </div>
       </transition>
@@ -379,6 +381,19 @@ export default {
 
 .cancel-btn:hover {
   background-color: #f9f9f9;
+}
+
+.forgot-link {
+  display: block;
+  text-align: right;
+  color: #947358;
+  font-size: 14px;
+  margin: -6px 0 12px;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
 }
 
 .verify-container {

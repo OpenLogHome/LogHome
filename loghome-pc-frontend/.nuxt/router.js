@@ -5,6 +5,7 @@ import { interopDefault } from './utils'
 import scrollBehavior from './router.scrollBehavior.js'
 
 const _cfcd54d2 = () => interopDefault(import('..\\pages\\community\\index.vue' /* webpackChunkName: "pages/community/index" */))
+const _455fe127 = () => interopDefault(import('..\\pages\\forgot-password.vue' /* webpackChunkName: "pages/forgot-password" */))
 const _78d6b10b = () => interopDefault(import('..\\pages\\login.vue' /* webpackChunkName: "pages/login" */))
 const _1d61be48 = () => interopDefault(import('..\\pages\\me\\index.vue' /* webpackChunkName: "pages/me/index" */))
 const _e678e0c4 = () => interopDefault(import('..\\pages\\read\\index.vue' /* webpackChunkName: "pages/read/index" */))
@@ -52,6 +53,10 @@ export const routerOptions = {
     path: "/community",
     component: _cfcd54d2,
     name: "community"
+  }, {
+    path: "/forgot-password",
+    component: _455fe127,
+    name: "forgot-password"
   }, {
     path: "/login",
     component: _78d6b10b,
