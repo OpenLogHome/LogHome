@@ -302,31 +302,40 @@ export default {
     formattedContent() {
       if (!this.article.content) return ''
 
+      const escapeHtml = s =>
+        String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+      const paragraphHtml = (value, id) => {
+        const text = Array.isArray(value) ? value.join('') : String(value || '')
+        return `<p class="article-paragraph" id="paragraph-${id}" data-paragraph-id="${id}" data-paragraph-text="${encodeURIComponent(text)}">${escapeHtml(text)}</p>`
+      }
+
       // 检查内容是否为JSON格式的混合内容
       try {
-        const content = JSON.parse(this.article.content)
+        let content = JSON.parse(this.article.content)
+        // 兼容 {content:[...]} 包装结构
+        if (content && !Array.isArray(content) && Array.isArray(content.content)) {
+          content = content.content
+        }
         // 如果能成功解析为JSON格式，则处理混合内容
-        return content.map(item => {
-          if (item.type === 'text') {
-            // 处理文本段落，添加id和长按事件
-            const id = item.id;
-            return `<p class="article-paragraph" id="paragraph-${id}" data-paragraph-id="${id}" data-paragraph-text="${encodeURIComponent(item.value)}">${item.value}</p>`;
+        return content.map((item, index) => {
+          if (!item || item.type === 'text' || item.type === undefined) {
+            // 段落 id 回退：无 id/paragraph_id 时用序号（对齐 APP 的 normalizeArticleContent）
+            const id = (item && (item.id ?? item.paragraph_id)) ?? `auto-${index}`
+            return paragraphHtml(item ? item.value : '', id)
           } else if (item.type === 'image' && item.img) {
             // 处理图片
-            return `<div class="article-image"><img src="${item.img}" alt="文章插图" /></div>`;
+            return `<div class="article-image"><img src="${item.img}" alt="文章插图" /></div>`
           }
-          return '';
-        }).join('');
+          return ''
+        }).join('')
       } catch (e) {
         // 如果不是JSON格式，则按原来的方式处理纯文本内容
         return this.article.content
           .split('\n')
           .filter(para => para.trim().length > 0)
-          .map(para => {
-            const id = para.id;
-            return `<p class="article-paragraph" id="paragraph-${id}" data-paragraph-id="${id}" data-paragraph-text="${encodeURIComponent(para)}">${para}</p>`;
-          })
-          .join('');
+          .map((para, index) => paragraphHtml(para, `plain-${index}`))
+          .join('')
       }
     },
     getFontFamily() {
