@@ -75,13 +75,17 @@
         <div class="catalog-heading">
           <strong>作品目录</strong
           ><button
-            :disabled="!access.can_add_article || loadingArticle"
+            :disabled="!access.can_add_article || loadingArticle || sortSaving"
             title="新建章节"
             aria-label="新建章节"
             @click="createOpen = true"
           >
             <i aria-hidden="true" class="el-icon-plus" /></button
-          ><button aria-label="刷新目录" @click="refreshArticles">
+          ><button
+            :disabled="sortSaving"
+            aria-label="刷新目录"
+            @click="refreshArticles"
+          >
             <i aria-hidden="true" class="el-icon-refresh" />
           </button>
         </div>
@@ -108,16 +112,64 @@
         <div v-else-if="!visibleArticles.length" class="catalog-empty">
           {{ query ? "没有匹配章节" : "还没有章节，点击 ＋ 开始创作" }}
         </div>
-        <nav class="catalog-list">
+        <div
+          v-if="sortSaving || catalogDrag"
+          class="catalog-sort-status"
+          role="status"
+        >
+          {{
+            sortSaving ? "正在保存目录顺序…" : "拖至目标位置后松开 · Esc 取消"
+          }}
+        </div>
+        <nav
+          ref="catalogList"
+          class="catalog-list"
+          :class="{ 'is-dragging': catalogDrag }"
+        >
           <div
-            v-for="item in visibleArticles"
+            v-for="{ item, parent, count } in visibleCatalog"
             :key="item.article_id"
             class="catalog-item"
+            :data-article-id="item.article_id"
             :class="{
               selected: article && article.article_id === item.article_id,
               volume: item.article_type === 'spliter',
+              'in-volume': parent,
+              'drag-source':
+                catalogDrag && dragSourceIds.includes(item.article_id),
+              'drop-before':
+                catalogDrop &&
+                catalogDrop.markerId === item.article_id &&
+                catalogDrop.edge === 'before',
+              'drop-after':
+                catalogDrop &&
+                catalogDrop.markerId === item.article_id &&
+                catalogDrop.edge === 'after',
             }"
           >
+            <button
+              v-if="item.article_type === 'spliter'"
+              class="catalog-fold"
+              :aria-label="
+                (volumeCollapsed(item.article_id) ? '展开 ' : '折叠 ') +
+                item.title
+              "
+              :aria-expanded="String(!volumeCollapsed(item.article_id))"
+              :disabled="catalogFiltered || sortSaving || Boolean(catalogDrag)"
+              :title="
+                catalogFiltered ? '搜索或筛选时自动展开分卷' : '折叠 / 展开分卷'
+              "
+              @click="toggleVolume(item.article_id)"
+            >
+              <i
+                aria-hidden="true"
+                :class="
+                  volumeCollapsed(item.article_id)
+                    ? 'el-icon-arrow-right'
+                    : 'el-icon-arrow-down'
+                "
+              />
+            </button>
             <button
               class="catalog-entry"
               :aria-current="
@@ -141,7 +193,22 @@
                   }}<template v-if="item.active_lock_user_name">
                     · {{ item.active_lock_user_name }} 编辑中</template
                   ><template v-else>
-                    · {{ (item.text_count || 0).toLocaleString() }} 字</template
+                    ·
+                    <template v-if="item.article_type === 'spliter'"
+                      >{{ count }} 篇<span
+                        v-if="
+                          volumeContainsCurrent(item.article_id) &&
+                          volumeCollapsed(item.article_id)
+                        "
+                      >
+                        · 正在编辑</span
+                      ></template
+                    ><template v-else
+                      >{{
+                        (item.text_count || 0).toLocaleString()
+                      }}
+                      字</template
+                    ></template
                   ></small
                 ></span
               ><span
@@ -154,7 +221,20 @@
               />
             </button>
             <el-dropdown trigger="click" @command="catalogAction($event, item)"
-              ><button class="catalog-menu" :aria-label="'管理 ' + item.title">
+              ><button
+                class="catalog-menu"
+                :class="{ draggable: catalogSortEnabled }"
+                :aria-label="'管理 ' + item.title"
+                :title="
+                  catalogSortEnabled
+                    ? '点击管理；按住拖动排序（Alt + 空格可用键盘排序）'
+                    : '点击管理'
+                "
+                :disabled="sortSaving"
+                @pointerdown="startCatalogDrag($event, item)"
+                @click.capture="catalogHandleClick"
+                @keydown="catalogHandleKey($event, item)"
+              >
                 <i aria-hidden="true" class="el-icon-more" /></button
               ><el-dropdown-menu
                 slot="dropdown"
@@ -164,14 +244,6 @@
                   command="rename"
                   :disabled="!access.can_sort_article"
                   >重命名分卷</el-dropdown-item
-                ><el-dropdown-item
-                  command="up"
-                  :disabled="!access.can_sort_article"
-                  >上移</el-dropdown-item
-                ><el-dropdown-item
-                  command="down"
-                  :disabled="!access.can_sort_article"
-                  >下移</el-dropdown-item
                 ><el-dropdown-item
                   command="realtime"
                   :disabled="
@@ -201,6 +273,23 @@
             <i aria-hidden="true" class="el-icon-setting" /> 作品设置
           </button>
         </footer>
+        <div
+          v-if="catalogDrag"
+          class="catalog-drag-label"
+          :style="{
+            left: catalogDrag.x + 14 + 'px',
+            top: catalogDrag.y + 14 + 'px',
+          }"
+          aria-hidden="true"
+        >
+          <i class="el-icon-rank" /> {{ catalogDrag.title
+          }}<small v-if="dragSourceIds.length > 1"
+            >含 {{ dragSourceIds.length - 1 }} 篇章节</small
+          >
+        </div>
+        <span class="writer-sr-only" aria-live="polite">{{
+          catalogAnnouncement
+        }}</span>
       </aside>
       <main class="workspace-editor">
         <div v-if="loadingArticle" class="workspace-empty" role="status">
@@ -447,25 +536,28 @@
       :visible.sync="conflictOpen"
       :close-on-click-modal="false"
       :show-close="false"
-      width="760px"
-      :custom-class="writerDialogClass"
+      width="960px"
+      top="6vh"
+      :custom-class="writerDialogClass + ' writer-conflict-dialog'"
       append-to-body
-      ><p>本机稿件与云端不同。请先比较内容；所有版本均可导出。</p>
+      ><p class="conflict-intro">
+        本机稿件与云端不同。请比较内容后选择要继续使用的版本；选择前可先导出备份。
+      </p>
       <div class="conflict-comparison">
         <section>
           <h3>本机稿件</h3>
-          <strong>{{ conflictLocal.title }}</strong>
-          <pre>{{ conflictLocal.content }}</pre>
+          <writer-version-preview :article="conflictLocal" label="本机稿件" />
         </section>
         <section>
           <h3>云端稿件</h3>
-          <strong>{{ conflictRemote.title }}</strong>
-          <pre>{{ conflictRemote.content }}</pre>
+          <writer-version-preview :article="conflictRemote" label="云端稿件" />
         </section>
       </div>
-      <span slot="footer"
-        ><el-button @click="exportConflict">导出本机版本</el-button
-        ><el-button @click="chooseRemote">使用云端版本</el-button
+      <span slot="footer" class="conflict-actions"
+        ><el-button @click="exportConflict('local')">导出本机版本</el-button
+        ><el-button @click="exportConflict('remote')">导出云端版本</el-button
+        ><span class="conflict-action-spacer" />
+        <el-button @click="chooseRemote">使用云端版本</el-button
         ><el-button
           type="primary"
           :disabled="!session || !session.writable"
@@ -501,9 +593,15 @@
   </div>
 </template>
 <script>
+import {
+  catalogGroups,
+  catalogRows,
+  moveCatalog,
+} from "~/utils/writer/catalog";
 import writerDialogTheme from "~/mixins/writer-dialog-theme";
 import ChapterEditor from "./ChapterEditor.vue";
 import WriterPanel from "./WriterPanel.vue";
+import WriterVersionPreview from "./WriterVersionPreview.vue";
 import WriterEmptyState from "./WriterEmptyState.vue";
 import VocabularyEditor from "./VocabularyEditor.vue";
 import WriterTools from "./WriterTools.vue";
@@ -555,6 +653,7 @@ export default {
   name: "WriterWorkspace",
   components: {
     WriterPanel,
+    WriterVersionPreview,
     WriterEmptyState,
     ChapterEditor,
     VocabularyEditor,
@@ -569,6 +668,11 @@ export default {
     novel: {},
     access: {},
     articles: [],
+    collapsedVolumes: [],
+    sortSaving: false,
+    catalogDrag: null,
+    catalogDrop: null,
+    catalogAnnouncement: "",
     article: null,
     session: null,
     realtime: null,
@@ -647,28 +751,61 @@ export default {
           (!this.article || item.article_id !== this.article.article_id)
       );
     },
-    visibleArticles() {
-      const query = this.query.trim().toLowerCase();
-      return this.articles.filter(
-        (item) =>
-          (this.filter === "all" ||
-            Number(item.is_draft) === (this.filter === "draft" ? 1 : 0)) &&
-          (!query ||
-            `${item.title} ${item.writer_title || ""}`
-              .toLowerCase()
-              .includes(query) ||
-            this.searchRows.some(
-              (row) =>
-                row.article_id === item.article_id &&
-                String(
-                  (row.latest_writer && row.latest_writer.content) ||
-                    (row.published && row.published.content) ||
-                    ""
-                )
-                  .toLowerCase()
-                  .includes(query)
-            ))
+    catalogFiltered() {
+      return Boolean(this.query.trim() || this.filter !== "all");
+    },
+    catalogSortEnabled() {
+      return Boolean(
+        this.access.can_sort_article &&
+          !this.catalogFiltered &&
+          !this.sortSaving &&
+          !this.loading &&
+          !this.loadingArticle
       );
+    },
+    catalogGroups() {
+      return catalogGroups(this.articles);
+    },
+    dragSourceIds() {
+      if (!this.catalogDrag) return [];
+      const group = this.catalogGroups.find(
+        (group) => group.id === this.catalogDrag.id
+      );
+      return group ? [group.id, ...group.children] : [this.catalogDrag.id];
+    },
+    visibleCatalog() {
+      const query = this.query.trim().toLowerCase();
+      const matches = this.catalogFiltered
+        ? new Set(
+            this.articles
+              .filter(
+                (item) =>
+                  (this.filter === "all" ||
+                    Number(item.is_draft) ===
+                      (this.filter === "draft" ? 1 : 0)) &&
+                  (!query ||
+                    `${item.title} ${item.writer_title || ""}`
+                      .toLowerCase()
+                      .includes(query) ||
+                    this.searchRows.some(
+                      (row) =>
+                        row.article_id === item.article_id &&
+                        String(
+                          (row.latest_writer && row.latest_writer.content) ||
+                            (row.published && row.published.content) ||
+                            ""
+                        )
+                          .toLowerCase()
+                          .includes(query)
+                    ))
+              )
+              .map((item) => item.article_id)
+          )
+        : null;
+      return catalogRows(this.articles, this.collapsedVolumes, matches);
+    },
+    visibleArticles() {
+      return this.visibleCatalog.map((row) => row.item);
     },
   },
   watch: {
@@ -686,6 +823,14 @@ export default {
       );
       if (value) this.preferences = { ...this.preferences, ...value };
     } catch (_) {}
+    try {
+      this.collapsedVolumes = JSON.parse(
+        localStorage.getItem(this.catalogStorageKey()) || "[]"
+      );
+      if (!Array.isArray(this.collapsedVolumes)) this.collapsedVolumes = [];
+    } catch (_) {
+      this.collapsedVolumes = [];
+    }
     this.loadAppearance();
     window.addEventListener("keydown", this.keydown);
     window.addEventListener("beforeunload", this.beforeUnload);
@@ -704,6 +849,7 @@ export default {
     }
   },
   beforeDestroy() {
+    this.cancelCatalogDrag();
     clearTimeout(this.saveTimer);
     clearTimeout(this.searchTimer);
     clearInterval(this.snapshotTimer);
@@ -716,6 +862,293 @@ export default {
     if (this.realtime) this.realtime.destroy();
   },
   methods: {
+    catalogStorageKey() {
+      return `loghome:writer:catalog:${writerIdentity().id}:${this.workId}`;
+    },
+    volumeCollapsed(id) {
+      return !this.catalogFiltered && this.collapsedVolumes.includes(id);
+    },
+    volumeContainsCurrent(id) {
+      const group = this.catalogGroups.find((group) => group.id === id);
+      return Boolean(
+        this.article &&
+          group &&
+          group.children.includes(this.article.article_id)
+      );
+    },
+    toggleVolume(id) {
+      this.collapsedVolumes = this.collapsedVolumes.includes(id)
+        ? this.collapsedVolumes.filter((value) => value !== id)
+        : [...this.collapsedVolumes, id];
+      try {
+        localStorage.setItem(
+          this.catalogStorageKey(),
+          JSON.stringify(this.collapsedVolumes)
+        );
+      } catch (_) {}
+    },
+    catalogHandleClick(event) {
+      if (Date.now() < (this._catalogIgnoreClickUntil || 0)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    },
+    startCatalogDrag(event, item) {
+      if (event.button !== 0 || !this.catalogSortEnabled) return;
+      this.cancelCatalogDrag();
+      this._catalogPointer = {
+        id: item.article_id,
+        title: item.writer_title || item.title,
+        x: event.clientX,
+        y: event.clientY,
+        pointerId: event.pointerId,
+        handle: event.currentTarget,
+      };
+      document.addEventListener("pointermove", this.moveCatalogPointer, {
+        passive: false,
+      });
+      document.addEventListener("pointerup", this.finishCatalogPointer);
+      document.addEventListener("pointercancel", this.cancelCatalogDrag);
+      window.addEventListener("blur", this.cancelCatalogDrag);
+    },
+    moveCatalogPointer(event) {
+      const pointer = this._catalogPointer;
+      if (!pointer || event.pointerId !== pointer.pointerId) return;
+      if (!this.catalogSortEnabled) {
+        this.cancelCatalogDrag();
+        return;
+      }
+      if (
+        !this.catalogDrag &&
+        Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) < 5
+      )
+        return;
+      event.preventDefault();
+      if (!this.catalogDrag) {
+        // Pointer capture keeps the gesture alive while the list scrolls.
+        try {
+          pointer.handle.setPointerCapture(pointer.pointerId);
+        } catch (_) {}
+        this.catalogAnnouncement = `正在移动 ${pointer.title}，松开保存，Esc 取消`;
+        this._catalogScrollTime = 0;
+        this._catalogScrollFrame = requestAnimationFrame(
+          this.scrollCatalogDrag
+        );
+      }
+      this.catalogDrag = {
+        ...pointer,
+        handle: undefined,
+        x: event.clientX,
+        y: event.clientY,
+      };
+      this.updateCatalogDrop();
+    },
+    updateCatalogDrop() {
+      if (!this.catalogDrag || this.catalogDrag.keyboard) return;
+      const { x, y, id } = this.catalogDrag;
+      const list = this.$refs.catalogList;
+      const bounds = list.getBoundingClientRect();
+      if (
+        x < bounds.left ||
+        x > bounds.right ||
+        y < bounds.top ||
+        y > bounds.bottom
+      ) {
+        this.catalogDrop = null;
+        return;
+      }
+      const node = document.elementFromPoint(x, y);
+      let row = node && node.closest(".catalog-item");
+      if (!row || !list.contains(row)) {
+        const rows = list.querySelectorAll(".catalog-item");
+        if (!rows.length) {
+          this.catalogDrop = null;
+          return;
+        }
+        row =
+          y > rows[rows.length - 1].getBoundingClientRect().bottom
+            ? rows[rows.length - 1]
+            : rows[0];
+      }
+      const rect = row.getBoundingClientRect();
+      const result = moveCatalog(
+        this.articles,
+        id,
+        Number(row.dataset.articleId),
+        y < rect.top + rect.height / 2 ? "before" : "after"
+      );
+      this.setCatalogDrop(result);
+    },
+    setCatalogDrop(result) {
+      if (result) {
+        const parent = this.catalogGroups.find((group) =>
+          group.children.includes(result.markerId)
+        );
+        if (parent && this.volumeCollapsed(parent.id))
+          result.markerId = parent.id;
+      }
+      this.catalogDrop = result;
+    },
+    scrollCatalogDrag(time) {
+      if (!this.catalogDrag || this.catalogDrag.keyboard) return;
+      const list = this.$refs.catalogList;
+      const bounds = list.getBoundingClientRect();
+      const { x, y } = this.catalogDrag;
+      if (
+        x >= bounds.left &&
+        x <= bounds.right &&
+        y >= bounds.top &&
+        y <= bounds.bottom
+      ) {
+        const delta =
+          y < bounds.top + 44
+            ? -Math.min(1, (bounds.top + 44 - y) / 44)
+            : y > bounds.bottom - 44
+            ? Math.min(1, (y - bounds.bottom + 44) / 44)
+            : 0;
+        list.scrollTop +=
+          delta * Math.min(32, time - (this._catalogScrollTime || time)) * 0.5;
+        this.updateCatalogDrop();
+      }
+      this._catalogScrollTime = time;
+      this._catalogScrollFrame = requestAnimationFrame(this.scrollCatalogDrag);
+    },
+    finishCatalogPointer(event) {
+      if (
+        !this._catalogPointer ||
+        event.pointerId !== this._catalogPointer.pointerId
+      )
+        return;
+      if (this.catalogDrag) this.updateCatalogDrop();
+      const result = this.catalogDrop;
+      this.cancelCatalogDrag();
+      if (result) this.saveCatalogOrder(result.rows);
+    },
+    cancelCatalogDrag() {
+      if (this.catalogDrag) this._catalogIgnoreClickUntil = Date.now() + 400;
+      const pointer = this._catalogPointer;
+      if (pointer) {
+        try {
+          pointer.handle.releasePointerCapture(pointer.pointerId);
+        } catch (_) {}
+      }
+      document.removeEventListener("pointermove", this.moveCatalogPointer);
+      document.removeEventListener("pointerup", this.finishCatalogPointer);
+      document.removeEventListener("pointercancel", this.cancelCatalogDrag);
+      window.removeEventListener("blur", this.cancelCatalogDrag);
+      cancelAnimationFrame(this._catalogScrollFrame);
+      this._catalogPointer = null;
+      this.catalogDrag = null;
+      this.catalogDrop = null;
+    },
+    catalogHandleKey(event, item) {
+      if (!event.altKey || event.code !== "Space" || !this.catalogSortEnabled)
+        return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this.cancelCatalogDrag();
+      const rect = event.currentTarget.getBoundingClientRect();
+      this.catalogDrag = {
+        id: item.article_id,
+        title: item.title,
+        keyboard: true,
+        x: rect.right,
+        y: rect.top,
+      };
+      this._catalogKeyboardRows = this.articles;
+      this.catalogAnnouncement = `正在移动 ${item.title}，方向键调整位置，Enter 保存，Esc 取消`;
+    },
+    catalogDragKey(event) {
+      if (!this.catalogDrag) return false;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.cancelCatalogDrag();
+        this.catalogAnnouncement = "已取消目录排序";
+        return true;
+      }
+      if (!this.catalogDrag.keyboard) return false;
+      if (!["ArrowUp", "ArrowDown", "Enter", " "].includes(event.key))
+        return false;
+      event.preventDefault();
+      if (event.key === "Enter" || event.key === " ") {
+        const result = this.catalogDrop;
+        this.cancelCatalogDrag();
+        if (result) this.saveCatalogOrder(result.rows);
+        return true;
+      }
+      const rows = this._catalogKeyboardRows;
+      const index = rows.findIndex(
+        (row) => row.article_id === this.catalogDrag.id
+      );
+      const group = catalogGroups(rows).find(
+        (value) => value.id === this.catalogDrag.id
+      );
+      const target =
+        event.key === "ArrowUp" ? index - 1 : (group ? group.end : index) + 1;
+      if (target < 0 || target >= rows.length) return true;
+      const result = moveCatalog(
+        rows,
+        this.catalogDrag.id,
+        rows[target].article_id,
+        event.key === "ArrowUp" ? "before" : "after"
+      );
+      if (result) {
+        this._catalogKeyboardRows = result.rows;
+        this.setCatalogDrop(result);
+        const marker = this.$refs.catalogList.querySelector(
+          `[data-article-id="${this.catalogDrop.markerId}"]`
+        );
+        if (marker) marker.scrollIntoView({ block: "nearest" });
+        this.catalogAnnouncement = `新位置：第 ${
+          result.rows.findIndex(
+            (row) => row.article_id === this.catalogDrag.id
+          ) + 1
+        } 项，Enter 保存`;
+      }
+      return true;
+    },
+    async saveCatalogOrder(rows) {
+      if (
+        !this.catalogSortEnabled ||
+        rows.every(
+          (row, index) => row.article_id === this.articles[index].article_id
+        )
+      )
+        return;
+      const ids = new Set(this.articles.map((row) => row.article_id));
+      if (
+        rows.length !== ids.size ||
+        new Set(rows.map((row) => row.article_id)).size !== ids.size ||
+        rows.some((row) => !ids.has(row.article_id))
+      )
+        return;
+      const original = this.articles;
+      this._catalogRevision = (this._catalogRevision || 0) + 1;
+      this.sortSaving = true;
+      this.articles = rows.map((row, index) => ({
+        ...row,
+        article_chapter: index + 1,
+      }));
+      try {
+        await writerPost("resort_article", {
+          sortlist: JSON.stringify(
+            this.articles.map(({ article_id, article_chapter }) => ({
+              article_id,
+              article_chapter,
+            }))
+          ),
+        });
+        this.catalogAnnouncement = "目录顺序已保存";
+        this.writerMessage("success", "目录顺序已保存");
+      } catch (error) {
+        this.articles = original;
+        this.catalogAnnouncement = "排序保存失败，已恢复原顺序";
+        this.writerMessage("error", `${error.message}，已恢复原顺序`);
+      } finally {
+        this.sortSaving = false;
+      }
+    },
+
     typeLabel(type) {
       return (
         {
@@ -764,8 +1197,16 @@ export default {
       }
     },
     async refreshArticles() {
+      if (this.sortSaving) return;
+      this.cancelCatalogDrag();
+      const revision = (this._catalogRevision || 0) + 1;
+      this._catalogRevision = revision;
       try {
-        this.articles = await writerGet("get_articles", { id: this.workId });
+        const rows = await writerGet("get_articles", { id: this.workId });
+        if (revision !== this._catalogRevision || this.sortSaving) return;
+        this.articles = rows.sort(
+          (a, b) => a.article_chapter - b.article_chapter
+        );
         this.insertPosition = this.articles.length + 1;
       } catch (error) {
         this.error = error.message;
@@ -853,6 +1294,11 @@ export default {
       return true;
     },
     async openArticle(item) {
+      const group = this.catalogGroups.find((group) =>
+        group.children.includes(item.article_id)
+      );
+      if (group && this.collapsedVolumes.includes(group.id))
+        this.toggleVolume(group.id);
       if (this.loadingArticle || this.saving) return;
       if (this.article && this.article.article_id === item.article_id) return;
       if (!(await this.leaveChapter())) return;
@@ -1014,10 +1460,12 @@ export default {
       this.status = "pending";
       this.save(true);
     },
-    exportConflict() {
+    exportConflict(source = "local") {
+      const remote = source === "remote",
+        article = remote ? this.conflictRemote : this.conflictLocal;
       downloadWriterFile(
-        `${this.conflictLocal.title}-本机版本.json`,
-        JSON.stringify(this.conflictLocal, null, 2)
+        `${article.title || "章节"}-${remote ? "云端" : "本机"}版本.json`,
+        JSON.stringify(article, null, 2)
       );
     },
     async createArticle() {
@@ -1052,6 +1500,7 @@ export default {
       }
     },
     async catalogAction(action, item) {
+      if (this.sortSaving || this.catalogDrag) return;
       try {
         if (action === "rename" && item.article_type === "spliter") {
           const { value } = await this.writerPrompt("分卷名称", "重命名分卷", {
@@ -1093,23 +1542,7 @@ export default {
                 ? "legacy_lock"
                 : "realtime_crdt",
           });
-        } else {
-          const index = this.articles.findIndex(
-              (row) => row.article_id === item.article_id
-            ),
-            target = index + (action === "up" ? -1 : 1);
-          if (target < 0 || target >= this.articles.length) return;
-          const rows = [...this.articles];
-          [rows[index], rows[target]] = [rows[target], rows[index]];
-          await writerPost("resort_article", {
-            sortlist: JSON.stringify(
-              rows.map((row, index) => ({
-                article_id: row.article_id,
-                article_chapter: index + 1,
-              }))
-            ),
-          });
-        }
+        } else return;
         await this.refreshArticles();
       } catch (error) {
         if (error instanceof Error) this.writerMessage("error", error.message);
@@ -1321,6 +1754,7 @@ export default {
       }
     },
     keydown(event) {
+      if (this.catalogDragKey(event)) return;
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         if (this.$refs.manga) this.$refs.manga.save(true);

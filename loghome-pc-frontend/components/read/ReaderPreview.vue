@@ -46,7 +46,7 @@ export default {
       if (!this.player) {
         // A separate queue prevents draft narration from writing real book progress.
         if (this.$readerAudio) this.$readerAudio.pause()
-        this.player = new ReaderAudio(this.audioState,{synthesis:window.speechSynthesis,Utterance:window.SpeechSynthesisUtterance,article:async()=>[],token:readingToken,privatePlayback:true,now:Date.now,setTimeout,clearTimeout})
+        this.player = new ReaderAudio(this.audioState,{synthesis:window.speechSynthesis,Utterance:window.SpeechSynthesisUtterance,article:async()=>[],token:readingToken,privatePlayback:true,now:Date.now,setTimeout:(fn,ms)=>window.setTimeout(fn,ms),clearTimeout:id=>window.clearTimeout(id)})
         this.player.saveSettings = () => {}
         this.player.subscribe(state => { if (state.follow && state.paragraphId && this.$refs.pager) this.$refs.pager.jump(state.paragraphId) })
       }

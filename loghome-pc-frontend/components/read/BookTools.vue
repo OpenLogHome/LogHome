@@ -2,7 +2,7 @@
   <div class="book-tools">
     <button @click="openShare">分享作品</button><nuxt-link class="power-link" :to="`/read/power/${book.novel_id}`">原木力说明</nuxt-link><button @click="reportVisible = true">举报</button>
     <el-dialog title="分享作品" :visible.sync="shareVisible" width="min(520px, 94vw)" append-to-body>
-      <p class="hint">分享链接可以直接用浏览器打开；口令也可在原木社区 APP 中识别，有效期为 30 天。</p><textarea readonly :value="shareText" rows="5" aria-label="分享内容"></textarea><p v-if="shareError" class="error" role="alert">{{ shareError }}</p><p v-if="rewardMessage" class="reward">{{ rewardMessage }}</p>
+      <p class="hint">分享链接可以直接用浏览器打开；口令也可在原木社区 APP 中识别，有效期为 30 天。</p><textarea readonly :value="shareText" rows="5" aria-label="分享内容"></textarea><p v-if="shareError" class="error" role="alert">{{ shareError }}</p><p v-if="rewardMessage" class="reward">{{ rewardMessage }} <nuxt-link to="/read/rewards">查看阅读奖励 →</nuxt-link></p>
       <span slot="footer"><el-button @click="copyShare">复制{{ code ? '口令与链接' : '链接' }}</el-button><el-button type="primary" :loading="creating" :disabled="!!code" @click="createCode">{{ code ? `口令 ${code}` : '生成分享口令' }}</el-button></span>
     </el-dialog>
     <el-dialog title="举报作品" :visible.sync="reportVisible" width="min(520px, 94vw)" append-to-body>

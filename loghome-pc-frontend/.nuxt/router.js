@@ -19,9 +19,13 @@ const _422e395a = () => interopDefault(import('../pages/me/friends.vue' /* webpa
 const _e1ccae04 = () => interopDefault(import('../pages/me/messages.vue' /* webpackChunkName: "pages/me/messages" */))
 const _0adfbf56 = () => interopDefault(import('../pages/me/settings.vue' /* webpackChunkName: "pages/me/settings" */))
 const _174bec68 = () => interopDefault(import('../pages/novel/fans.vue' /* webpackChunkName: "pages/novel/fans" */))
+const _ee25ffbe = () => interopDefault(import('../pages/read/activities.vue' /* webpackChunkName: "pages/read/activities" */))
 const _5af90266 = () => interopDefault(import('../pages/read/bookcase.vue' /* webpackChunkName: "pages/read/bookcase" */))
 const _1df58dde = () => interopDefault(import('../pages/read/collections.vue' /* webpackChunkName: "pages/read/collections" */))
 const _7e6c1de0 = () => interopDefault(import('../pages/read/rank.vue' /* webpackChunkName: "pages/read/rank" */))
+const _61ad7228 = () => interopDefault(import('../pages/read/redstone.vue' /* webpackChunkName: "pages/read/redstone" */))
+const _45f092a1 = () => interopDefault(import('../pages/read/resources.vue' /* webpackChunkName: "pages/read/resources" */))
+const _62b0c5c0 = () => interopDefault(import('../pages/read/rewards.vue' /* webpackChunkName: "pages/read/rewards" */))
 const _7afc588a = () => interopDefault(import('../pages/tag/collections.vue' /* webpackChunkName: "pages/tag/collections" */))
 const _2e3c76cb = () => interopDefault(import('../pages/write/new.vue' /* webpackChunkName: "pages/write/new" */))
 const _ad3404e4 = () => interopDefault(import('../pages/community/post/edit.vue' /* webpackChunkName: "pages/community/post/edit" */))
@@ -118,6 +122,10 @@ export const routerOptions = {
     component: _174bec68,
     name: "novel-fans"
   }, {
+    path: "/read/activities",
+    component: _ee25ffbe,
+    name: "read-activities"
+  }, {
     path: "/read/bookcase",
     component: _5af90266,
     name: "read-bookcase"
@@ -129,6 +137,18 @@ export const routerOptions = {
     path: "/read/rank",
     component: _7e6c1de0,
     name: "read-rank"
+  }, {
+    path: "/read/redstone",
+    component: _61ad7228,
+    name: "read-redstone"
+  }, {
+    path: "/read/resources",
+    component: _45f092a1,
+    name: "read-resources"
+  }, {
+    path: "/read/rewards",
+    component: _62b0c5c0,
+    name: "read-rewards"
   }, {
     path: "/tag/collections",
     component: _7afc588a,

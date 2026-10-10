@@ -14,7 +14,7 @@ function createLogPowerReader({ query }) {
         (SELECT COUNT(*) FROM novel_comments WHERE novel_id=n.novel_id AND deleted=0) AS comments,
         (SELECT IFNULL(SUM(item_amount*item_cost),0) FROM tipping WHERE novel_id=n.novel_id) AS tips,
         ${LOGPOWER_FORMULA} AS score,
-        DATE_FORMAT(CURRENT_TIMESTAMP,'%Y-%m-%dT%H:%i:%s+08:00') AS generated_at
+        UNIX_TIMESTAMP(CURRENT_TIMESTAMP)*1000 AS generated_at
         FROM novels n WHERE n.novel_id=? AND ${PUBLIC_NOVEL}
         AND n.novel_type IN ('novel','manga','world')`, [id]);
       if (!rows.length) return res.status(404).json({ msg: '作品不存在或未公开' });

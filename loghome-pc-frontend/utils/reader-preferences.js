@@ -5,6 +5,7 @@ export { themes }
 export const MEMBER_THEMES = ['wavechaser', 'powderblue', 'qingyun', 'sunburst', 'thorncrown', 'chocolate']
 export const THEME_NAMES = { white: '蛙鸣白', yellow: '原木黄', green: '草原绿', blue: '晴空蓝', purple: '末地紫', pink: '桃花粉', black: '虚空黑', wavechaser: '追波', powderblue: '粉蓝', qingyun: '青云', sunburst: '艳阳', thorncrown: '荆棘冠', chocolate: '巧克力', blockepoch: '方块纪元' }
 export const PREFERENCE_KEY = 'loghome:reader:preferences:v1'
+export const THEME_MEMORY_KEY = 'loghome:reader:theme-memory:v1'
 export const DEFAULT_PREFERENCES = Object.freeze({ mode: 'page', theme: 'white', font: 'default', fontSize: 22, lineHeight: 1.8, backgroundSkinKey: '', width: 860 })
 const THEME_ALIASES = { light: 'white', sepia: 'yellow', dark: 'black' }
 export function normalizePreferences(value = {}) {
@@ -32,6 +33,41 @@ export function readPreferences(storage) {
 }
 export function savePreferences(storage, value) {
   try { storage.setItem(PREFERENCE_KEY, JSON.stringify(normalizePreferences(value))); return true } catch (_) { return false }
+}
+export function readerThemeMode(selection) {
+  const theme = themes[selection && selection.theme] || themes.white
+  if (typeof theme.isBlack === 'boolean') return theme.isBlack ? 'dark' : 'light'
+  const value = String(theme.backgroundColor || '').replace(/^#/, '')
+  const hex = value.length === 3 ? value.split('').map(char => char + char).join('') : value.slice(0, 6)
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return 'light'
+  const channels = [0,2,4].map(index => parseInt(hex.slice(index,index+2),16)/255).map(channel => channel <= .04045 ? channel/12.92 : Math.pow((channel+.055)/1.055,2.4))
+  return .2126*channels[0]+.7152*channels[1]+.0722*channels[2] < .35 ? 'dark' : 'light'
+}
+function themeSelection(value) {
+  if (!value || typeof value !== 'object' || !Object.prototype.hasOwnProperty.call(themes,value.theme)) return null
+  return { theme:value.theme, backgroundSkinKey:typeof value.backgroundSkinKey === 'string' ? value.backgroundSkinKey.slice(0,64) : '' }
+}
+export function readReaderTheme(storage, mode) {
+  const fallback = { theme:mode === 'dark' ? 'black' : 'white', backgroundSkinKey:'' }
+  try {
+    const memory = JSON.parse(storage.getItem(THEME_MEMORY_KEY) || '{}')
+    const selected = themeSelection(memory && memory[mode])
+    return selected && readerThemeMode(selected) === mode ? selected : fallback
+  } catch (_) { return fallback }
+}
+export function rememberReaderTheme(storage, selection) {
+  const selected = themeSelection(selection)
+  if (!selected) return false
+  try {
+    let memory
+    try { memory = JSON.parse(storage.getItem(THEME_MEMORY_KEY) || '{}') } catch (_) {}
+    const light = themeSelection(memory && memory.light), dark = themeSelection(memory && memory.dark)
+    memory = {}
+    if (light && readerThemeMode(light) === 'light') memory.light = light
+    if (dark && readerThemeMode(dark) === 'dark') memory.dark = dark
+    memory[readerThemeMode(selected)] = selected
+    storage.setItem(THEME_MEMORY_KEY,JSON.stringify(memory)); return true
+  } catch (_) { return false }
 }
 export function membershipTier(response) {
   const status = response && response.data ? response.data : response

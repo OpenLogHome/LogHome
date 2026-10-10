@@ -527,16 +527,73 @@
   border: 1px solid var(--writer-border);
   border-radius: 4px;
 }
+.writer-conflict-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+}
+.writer-conflict-dialog > .el-dialog__header,
+.writer-conflict-dialog > .el-dialog__footer {
+  flex: none;
+}
+.writer-conflict-dialog > .el-dialog__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.conflict-intro {
+  flex: none;
+  margin: 0 0 20px;
+  color: var(--writer-muted);
+}
 .conflict-comparison {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 20px;
 }
-.conflict-comparison pre {
-  max-height: 280px;
-  overflow: auto;
-  white-space: pre-wrap;
-  font-size: 12px;
+.conflict-comparison > section {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.conflict-comparison .version-preview {
+  flex: 1;
+  min-height: 0;
+}
+.conflict-comparison h3 {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.conflict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.writer-dialog .conflict-actions .el-button {
+  margin: 0;
+}
+.conflict-action-spacer {
+  flex: 1;
+}
+@media (max-width: 680px) {
+  .writer-conflict-dialog > .el-dialog__body {
+    overflow: auto;
+  }
+  .conflict-comparison {
+    flex: none;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .conflict-action-spacer {
+    display: none;
+  }
 }
 .collaboration-panel {
   font-size: 13px;
@@ -1006,4 +1063,104 @@
   .el-message-box__wrapper:has(> .writer-dialog) {
     animation: none !important;
   }
+}
+
+/* Catalog hierarchy and handle-driven ordering share the existing neutral theme. */
+.catalog-item {
+  position: relative;
+}
+.catalog-item.in-volume .catalog-entry {
+  padding-left: 22px !important;
+}
+.catalog-item.volume .catalog-entry {
+  padding-left: 2px !important;
+}
+.catalog-item.volume .catalog-number {
+  display: none;
+}
+.catalog-fold {
+  flex: none;
+  width: 24px;
+  height: 28px;
+  min-height: 28px !important;
+  padding: 0 !important;
+  margin-left: 4px;
+  color: var(--writer-muted);
+}
+.catalog-fold:disabled {
+  opacity: 0.65;
+}
+.catalog-menu {
+  touch-action: none;
+}
+.catalog-menu.draggable {
+  cursor: grab;
+}
+.catalog-list.is-dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+.catalog-list.is-dragging .catalog-menu {
+  cursor: grabbing;
+}
+.catalog-item.drag-source {
+  opacity: 0.4;
+}
+.catalog-item.drop-before::before,
+.catalog-item.drop-after::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: var(--writer-text);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 2;
+}
+.catalog-item.drop-before::before {
+  top: -2px;
+}
+.catalog-item.drop-after::after {
+  bottom: -2px;
+}
+.catalog-sort-status {
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--writer-muted);
+  border-bottom: 1px solid var(--writer-border);
+  flex: none;
+}
+.catalog-drag-label {
+  position: fixed;
+  z-index: 3000;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--writer-border);
+  background: var(--writer-panel);
+  color: var(--writer-text);
+  box-shadow: 0 4px 16px #0002;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.catalog-drag-label small {
+  color: var(--writer-muted);
+}
+.writer-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

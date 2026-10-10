@@ -10,12 +10,13 @@ from urllib.parse import quote
 
 class Document(HTMLParser):
     def __init__(self, html):
-        super().__init__(); self.images = []; self.image_attrs = []; self.inputs = []; self.links = []; self.meta = {}; self.canonical = []; self.title = ''; self.schema = []; self.script = False; self.json_script = False; self.script_text = ''; self.in_title = False; self.text = ''; self.feed(html)
+        super().__init__(); self.images = []; self.image_attrs = []; self.inputs = []; self.buttons = []; self.links = []; self.meta = {}; self.canonical = []; self.title = ''; self.schema = []; self.script = False; self.json_script = False; self.script_text = ''; self.in_title = False; self.text = ''; self.feed(html)
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag == 'a': self.links.append(attrs.get('href', ''))
         if tag == 'img': self.images.append(attrs.get('src', '')); self.image_attrs.append(attrs)
         if tag == 'input': self.inputs.append(attrs)
+        if tag == 'button': self.buttons.append(attrs)
         if tag == 'link' and attrs.get('rel') == 'canonical': self.canonical.append(attrs.get('href'))
         if tag == 'meta': self.meta[attrs.get('name') or attrs.get('property')] = attrs.get('content')
         if tag == 'title': self.in_title = True
@@ -58,6 +59,13 @@ for path, prefix in [('/novel/43', '/article/'), ('/manga/686', '/manga/read/'),
     assert any(link.startswith(prefix) for link in doc.links), 'Public catalog must use links'
     assert len(doc.canonical) == 1
     print('PASS SSR detail and public chapter/word links:', path)
+for work_id, other_id, name in [(682, 669, '败家战队'), (669, 682, '香蕉')]:
+    for ua in ['LogHome SSR regression', 'Mozilla/5.0 (iPhone) Mobile Safari/604.1']:
+        doc = read('/manga/' + str(work_id), ua)
+        assert '/manga/' + str(other_id) in doc.links and name in doc.text, 'Author manga recommendations must exist before JavaScript'
+        assert '/users/566' in doc.links, 'Author profile must be a crawlable link'
+        assert doc.canonical == ['https://loghome.ink/manga/' + str(work_id)]
+print('PASS author manga recommendations and profile links are SSR, with consistent smartphone response')
 comic_path = next(link for link in read('/manga/686').links if link.startswith('/manga/read/'))
 comic = read(comic_path)
 assert comic.images and any(link.startswith('/manga/read/') for link in comic.links)
@@ -76,6 +84,9 @@ for path in ['/manga/read/9354?novelId=43', '/manga/read/invalid', '/manga/read/
 print('PASS comic explicit/last-page SSR image and accessible page value, mobile parity, canonical and real HTTP 404')
 article = read('/article/156?paragraphId=2&mode=text')
 assert '方之古元历' in article.text and article.canonical == ['https://loghome.ink/article/156']
+assert '书摘' in article.text and any(button.get('aria-label') == '切换到夜间阅读' and button.get('aria-pressed') == 'false' for button in article.buttons)
+assert '我的书摘' not in article.text, 'Closed drawer and local theme history must not server-load private excerpts'
+print('PASS reader shortcuts SSR with canonical public text and no account excerpts or browser theme state')
 assert read('/read/bookcase').meta['robots'] == 'noindex,follow'
 for ua in ['Mozilla/5.0 (Linux; Android 6.0.1) Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', 'Mozilla/5.0 (iPhone) Mobile Safari/604.1']:
     assert '阅读，打开另一个世界' in read('/read', ua).text
@@ -167,3 +178,47 @@ for path in ['/read/power/invalid', '/read/power/999999999']:
 print('PASS all public work-type power explanations are server-loaded, ignore untrusted scores, canonical/mobile-safe and missing works are HTTP 404')
 assert all('/read/power/' + str(work_id) in read(path).links for work_id,path in [(43,'/novel/43'),(686,'/manga/686'),(524,'/world/524')])
 print('PASS public work details expose crawler-accessible power explanation links')
+
+for ua in ['LogHome SSR regression', 'Mozilla/5.0 (iPhone) Mobile Safari/604.1']:
+    doc = read('/read/redstone?log_balance=999&redstone_balance=999', ua)
+    assert '红石中心' in doc.title and '关于使用生成式人工智能的声明' in doc.text
+    assert doc.meta.get('robots') == 'noindex,follow'
+    assert doc.canonical == ['https://loghome.ink/read/redstone']
+    assert '用户资产绝不用于模型训练' in doc.text and '兑换处理中' not in doc.text
+    assert not any(field.get('id') == 'redstone-amount' for field in doc.inputs)
+print('PASS redstone center is noindex, serves mobile SSR, ignores query balances and never server-loads private resources')
+
+for ua in ['LogHome SSR regression', 'Mozilla/5.0 (iPhone) Mobile Safari/604.1']:
+    doc = read('/read/resources', ua)
+    assert all(text in doc.text for text in ['原木树场种树', '原木充值', '参与社区活动'])
+    assert '/read/rewards' in doc.links and '/read' in doc.links
+    assert any('/pages/payments/recharge' in link for link in doc.links)
+    assert '/read/activities' in doc.links
+    assert '/reading/get-logs-guide.png' in doc.images
+    assert doc.canonical == ['https://loghome.ink/read/resources']
+    assert 'noindex' not in doc.meta.get('robots', '')
+print('PASS public resource guide renders all channels, native tree/activity links, recharge destination and illustration in mobile/desktop SSR')
+
+for ua in ['LogHome SSR regression', 'Mozilla/5.0 (iPhone) Mobile Safari/604.1']:
+    doc = read('/read/activities?user_id=999&message_content=private-query-marker', ua)
+    assert '活动消息' in doc.text
+    assert 'private-query-marker' not in doc.text
+    assert doc.canonical == ['https://loghome.ink/read/activities']
+    assert 'noindex' in doc.meta.get('robots', '')
+print('PASS private activity inbox SSR excludes messages, is noindex and ignores forged query data on desktop/mobile')
+
+for ua in ['LogHome SSR regression', 'Mozilla/5.0 (iPhone) Mobile Safari/604.1']:
+    doc = read('/novel/176', ua)
+    assert 'HayCraft2025中文短篇主题文会' in doc.text
+    assert all(link in doc.links for link in ['/tag/collections?tag_id=236', '/community/post/33', '/community/post/34', '/novel/602'])
+    assert any(link.startswith('https://haycraft.loghome.ink') for link in doc.links)
+    assert doc.canonical == ['https://loghome.ink/novel/176']
+print('PASS public activity groups, native announcements/guide and external official site are crawlable without JavaScript')
+for ua in ['LogHome SSR regression', 'Mozilla/5.0 (iPhone) Mobile Safari/604.1']:
+    doc = read('/read/rewards?plant_id=999&log=999', ua)
+    assert '阅读奖励与树场' in doc.title and '正在确认账户' in doc.text
+    assert doc.meta.get('robots') == 'noindex,follow'
+    assert doc.canonical == ['https://loghome.ink/read/rewards']
+    assert '收获成功' not in doc.text and '我的原木' not in doc.text
+assert '/read/rewards' in read('/read').links
+print('PASS rewards private SSR excludes balances and receipts, canonical/noindex, mobile response and crawlable library entry')

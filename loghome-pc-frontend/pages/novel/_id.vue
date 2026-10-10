@@ -102,7 +102,7 @@
           <button class="tab-button" :class="{ active: activeTab === 'fans' }" @click="activeTab = 'fans'" v-if="fanInfo.length > 0">
             粉丝榜
           </button>
-          <button class="tab-button" :class="{ active: activeTab === 'activities' }" @click="activeTab = 'activities'" v-if="activityNewsList.length > 0">
+          <button class="tab-button" :class="{ active: activeTab === 'activities' }" @click="activeTab = 'activities'" v-if="activityNewsList.length > 0 || activityNewsError">
             创作活动 ({{ activityNewsList.length }})
           </button>
         </div>
@@ -151,24 +151,25 @@
 
           <!-- 创作活动标签页 -->
           <div v-show="activeTab === 'activities'" class="activities-content">
+            <p v-if="activityNewsError" role="alert">{{ activityNewsError }} <button :disabled="activityNewsLoading" @click="getNovelActivityNews">重试</button></p>
             <div class="activity-group" v-for="activity in activityNewsList" :key="activity.tag_id">
               <div class="activity-group-head">
-                <span class="activity-group-name">{{ activity.activity_name }}</span>
+                <nuxt-link class="activity-group-name" :to="`/tag/collections?tag_id=${activity.tag_id}`">{{ activity.activity_name }}</nuxt-link>
                 <span class="activity-group-status" :class="activity.is_active == 1 ? 'ongoing' : 'ended'">
                   {{ activity.is_active == 1 ? '进行中' : '已结束' }}
                 </span>
               </div>
-              <div class="activity-news-item" v-for="(news, newsIndex) in activity.news" :key="newsIndex"
-                @click="openActivityNews(news)">
-                <span class="activity-news-item-title">{{ news.title }}</span>
-                <span class="activity-news-item-arrow">›</span>
-              </div>
+              <template v-for="(news, newsIndex) in activity.news">
+                <nuxt-link v-if="news.link && !news.link.external" :key="newsIndex" class="activity-news-item" :to="news.link.href"><span class="activity-news-item-title">{{ news.title }}</span><span class="activity-news-item-arrow">›</span></nuxt-link>
+                <a v-else-if="news.link" :key="newsIndex" class="activity-news-item" :href="news.link.href" target="_blank" rel="noopener noreferrer"><span class="activity-news-item-title">{{ news.title }}</span><span class="activity-news-item-arrow">↗</span></a>
+                <span v-else :key="newsIndex" class="activity-news-item">{{ news.title }} · 暂未开放</span>
+              </template>
               <div class="activity-popularity" v-if="activity.popularity && activity.popularity.enabled">
                 <div class="activity-popularity-info">
                   <span class="activity-popularity-count">人气票 {{ activity.popularity.votes }}</span>
                   <span class="activity-popularity-reason" v-if="popularityHint(activity)">{{ popularityHint(activity) }}</span>
                 </div>
-                <button class="activity-popularity-btn" :class="{ disabled: popularityBtnDisabled(activity) }"
+                <button class="activity-popularity-btn" :disabled="isVotingPopularity || popularityBtnDisabled(activity)" :class="{ disabled: popularityBtnDisabled(activity) }"
                   @click="voteActivity(activity)">
                   {{ popularityBtnText(activity) }}
                 </button>
@@ -213,6 +214,7 @@ import BookSupport from '~/components/read/BookSupport.vue'
 import ReaderAiEntry from '~/components/read/ReaderAiEntry.vue'
 import MangaCommentPanel from '~/components/manga/MangaCommentPanel.vue'
 import { workUrl } from '~/utils/reading-discovery'
+import { normalizeActivities } from '~/utils/reader-activities'
 import { readingHead, bookSchema } from '~/utils/reading-seo'
 
 export default {
@@ -242,18 +244,22 @@ export default {
         return redirect(`/manga/${novelData.novel_id}${commentQuery}`)
       }
 
-      // 获取章节列表 - 用于SEO的服务端渲染
-      const chapters = await $api.reader.chapters(novelData.novel_id)
-      
-      // 获取小说标签 - 用于SEO的服务端渲染
-      const tags = await $api.novels.getNovelTags(novelData.novel_id)
+      // Independent public data loads in parallel; optional activity failure
+      // must not turn an otherwise readable book into an error page.
+      const loadActivities = async () => {
+        try { return { activityNews: normalizeActivities(await $api.reader.activities(novelData.novel_id), process.env.mobileUrl), activityNewsError: '' } }
+        catch (_) { return { activityNews: [], activityNewsError: '活动资讯暂时无法加载，请重试。' } }
+      }
+      const [chapters, tags, { activityNews, activityNewsError }] = await Promise.all([
+        $api.reader.chapters(novelData.novel_id), $api.novels.getNovelTags(novelData.novel_id), loadActivities()
+      ])
 
       // 返回服务端渲染所需的数据
       return {
         error: null,
         novel: novelData,
         chapters: chapters || [],
-        tags: tags || []
+        tags: tags || [], activityNews, activityNewsError
       }
     } catch (err) {
       console.error('服务端获取小说数据失败', err)
@@ -283,6 +289,8 @@ export default {
       userInfo: null,
       isLogin: false,
       activityNews: [],
+      activityNewsError: '', activityNewsLoading: false, activityNewsVersion: 0,
+      activityAccountEpoch: 0, popularityVersion: 0, votingVersion: 0,
       popularityStatus: {},
       isVotingPopularity: false
     }
@@ -322,7 +330,7 @@ export default {
     workUrl,
     previewCover() { if (this.novel.picUrl && this.$preview) this.$preview([this.novel.picUrl], 0) },
     async fetchClientData() {
-      await Promise.allSettled([this.loadRecommendations(), this.getNices(), this.getCommentNum(), this.getFansStatistics(), this.getWorlds(), this.checkNovelRank(), this.checkBookcaseStatus(), this.getNovelActivityNews(), this.getPopularityStatus(), this.getReadingProgress()])
+      await Promise.allSettled([this.loadRecommendations(), this.getNices(), this.getCommentNum(), this.getFansStatistics(), this.getWorlds(), this.checkNovelRank(), this.checkBookcaseStatus(), this.getPopularityStatus(), this.getReadingProgress()])
       this.addReaderHistory(this.novel)
     },
     async loadRecommendations() {
@@ -382,36 +390,31 @@ export default {
 
     // 获取创作活动新闻
     async getNovelActivityNews() {
+      const id = this.novel.novel_id, version = ++this.activityNewsVersion
+      this.activityNewsLoading = true
       try {
-        const list = await this.$api.library.getNovelActivityNews(this.novel.novel_id)
-        this.activityNews = Array.isArray(list) ? list : []
+        const list = normalizeActivities(await this.$api.reader.activities(id), process.env.mobileUrl)
+        if (id !== this.novel.novel_id || version !== this.activityNewsVersion) return
+        this.activityNews = list; this.activityNewsError = ''
       } catch (error) {
-        console.error('获取创作活动新闻失败', error)
-        this.activityNews = []
-      }
-    },
-
-    // 打开活动新闻链接
-    openActivityNews(news) {
-      if (news.pc_link && process.client) {
-        window.open(news.pc_link, '_blank')
-      }
+        if (id === this.novel.novel_id && version === this.activityNewsVersion) this.activityNewsError = error.message || '活动资讯暂时无法加载，请重试。'
+      } finally { if (id === this.novel.novel_id && version === this.activityNewsVersion) this.activityNewsLoading = false }
     },
 
     // 获取当前用户在各活动中的人气票状态
     async getPopularityStatus() {
-      const token = readingToken(), id = this.novel.novel_id
+      const token = readingToken(), id = this.novel.novel_id, epoch = this.activityAccountEpoch, version = ++this.popularityVersion
       if (!token) { this.popularityStatus = {}; return }
       try {
         const list = await this.$api.popularity.getNovelStatus(id)
-        if (token !== readingToken() || id !== this.novel.novel_id) return
+        if (token !== readingToken() || id !== this.novel.novel_id || epoch !== this.activityAccountEpoch || version !== this.popularityVersion) return
         const map = {}
         ;(Array.isArray(list) ? list : []).forEach(item => {
           map[item.tag_id] = item
         })
         this.popularityStatus = map
       } catch (error) {
-        if (token === readingToken() && id === this.novel.novel_id) this.popularityStatus = {}
+        if (token === readingToken() && id === this.novel.novel_id && epoch === this.activityAccountEpoch && version === this.popularityVersion) this.popularityStatus = {}
       }
     },
 
@@ -450,17 +453,21 @@ export default {
         return
       }
       if (this.isVotingPopularity) return
+      const token = readingToken(), id = this.novel.novel_id, epoch = this.activityAccountEpoch, version = ++this.votingVersion
+      const current = () => token === readingToken() && id === this.novel.novel_id && epoch === this.activityAccountEpoch && version === this.votingVersion
       this.isVotingPopularity = true
       try {
-        await this.$api.popularity.vote(this.novel.novel_id, activity.tag_id)
+        await this.$api.popularity.vote(id, activity.tag_id)
+        if (!current()) return
         this.$message.success('已为本书投出 1 票')
         this.getPopularityStatus()
         this.getNovelActivityNews()
       } catch (error) {
+        if (!current()) return
         this.$message.error(error.message || '投票失败，请稍后重试')
         this.getPopularityStatus()
       } finally {
-        this.isVotingPopularity = false
+        if (current()) this.isVotingPopularity = false
       }
     },
 
@@ -600,7 +607,7 @@ export default {
     },
 
     // 打赏功能
-    onSupportAccount() { this.userInfo = null; this.popularityStatus = {}; this.checkLoginStatus(); this.getUserInfo(); this.getPopularityStatus(); this.getReadingProgress() },
+    onSupportAccount() { this.activityAccountEpoch++; this.votingVersion++; this.isVotingPopularity = false; this.userInfo = null; this.popularityStatus = {}; this.checkLoginStatus(); this.getUserInfo(); this.getPopularityStatus(); this.getReadingProgress() },
     onSupportLike(state) { this.nice_amount = state.count; this.niceStatus = state.liked },
     onSupportTip(result) { this.runGiftAnimation(result.gift.img_url); this.getFansStatistics(); if (this.$refs.fansList) this.$refs.fansList.getFansList() },
 

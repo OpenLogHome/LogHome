@@ -69,7 +69,8 @@ export function discoveryLink(raw, mobileBase = 'https://m.loghome.ink') {
     '/pages/readers/rankBoard': '/read/rank', '/pages/readers/logPowerRank': '/read/rank?board=logpower',
     '/pages/readers/collections': '/read/collections', '/pages/readers/tagCollections': '/tag/collections',
     '/pages/community/search': '/search', '/pages/community/message': '/me/messages',
-    '/pages/community/index': '/community'
+    '/pages/community/index': '/community', '/pages/community/activityMessages': '/read/activities', '/pages/redstone/index': '/read/redstone',
+    '/pages/payments/get_logs': '/read/resources', '/pages/treePlant/treeplant': '/read/rewards'
   }
   let target = exact[path]
   if (id > 0) {
@@ -77,6 +78,7 @@ export function discoveryLink(raw, mobileBase = 'https://m.loghome.ink') {
     if (path === '/pages/readers/mangaInfo') target = `/manga/${id}`
     if (path === '/pages/worlds/worldPage') target = `/world/${id}`
     if (path === '/pages/users/personalPage') target = `/users/${id}`
+    if (path === '/pages/community/postDetail') target = `/community/post/${id}`
   }
   if (target) {
     params.delete('id'); params.delete('novel_id'); params.delete('noneAnimation')

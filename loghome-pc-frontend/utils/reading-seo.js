@@ -10,7 +10,7 @@ export function readingResponseStatus(component, status) {
   if (process.server && context && context.res) context.res.statusCode = status
 }
 export function publicReadingPath(path) {
-  return /^\/(read(?:\/rank|\/collections|\/(?:end|ask|comment|power)\/\d+)?|tags|tag\/collections|novel\/\d+|article\/\d+|manga\/\d+|manga\/read\/\d+|world\/(?:relations\/)?\d+)\/?$/.test(path)
+  return /^\/(read(?:\/rank|\/collections|\/resources|\/(?:end|ask|comment|power)\/\d+)?|tags|tag\/collections|novel\/\d+|article\/\d+|manga\/\d+|manga\/read\/\d+|world\/(?:relations\/)?\d+)\/?$/.test(path)
 }
 export function canonicalReadingUrl(path, query = {}) {
   const pairs = []

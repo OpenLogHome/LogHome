@@ -1,5 +1,5 @@
 import { readingToken } from '~/plugins/api/reading'
-import { themes, DEFAULT_PREFERENCES, MEMBER_THEMES, normalizePreferences, readPreferences, savePreferences, readerFonts, membershipTier, canUseBackground } from '~/utils/reader-preferences'
+import { themes, DEFAULT_PREFERENCES, MEMBER_THEMES, normalizePreferences, readPreferences, savePreferences, readerFonts, membershipTier, canUseBackground, readerThemeMode, readReaderTheme, rememberReaderTheme } from '~/utils/reader-preferences'
 import { normalizeBackgroundSkin, createBackgroundSkinStyle } from '~/utils/reader-backgrounds'
 import { loadReaderFont } from '~/utils/reader-font-loader'
 
@@ -9,6 +9,7 @@ export default {
   },
   computed: {
     readerTheme() { return themes[this.readerPreferences.theme] || themes.white },
+    readerNightMode() { return readerThemeMode(this.readerPreferences) === 'dark' },
     currentReaderSkin() { return this.readerSkins.find(skin => skin.skin_key === this.readerPreferences.backgroundSkinKey && !skin.is_locked) || null },
     readerAppearance() {
       const skinStyle = createBackgroundSkinStyle(this.currentReaderSkin)
@@ -28,11 +29,13 @@ export default {
     this.refreshReaderResources(restored)
     window.addEventListener('focus', this.onReaderAccountFocus)
     window.addEventListener('storage', this.onReaderStorage)
+    window.addEventListener('auth-state-changed', this.onReaderAccountFocus)
   },
   beforeDestroy() {
     this.readerResourceVersion++; this.readerFontVersion++
     window.removeEventListener('focus', this.onReaderAccountFocus)
     window.removeEventListener('storage', this.onReaderStorage)
+    window.removeEventListener('auth-state-changed', this.onReaderAccountFocus)
   },
   methods: {
     onReaderStorage(event) { if (event.key === 'token') this.refreshReaderResources() },
@@ -68,7 +71,23 @@ export default {
       if (!failures.length) this.persistReaderPreferences()
       await this.selectReaderFont(next.font, false)
     },
-    persistReaderPreferences() { this.readerStorageError = !savePreferences({ setItem: (key, value) => window.localStorage.setItem(key, value) }, this.readerPreferences) },
+    persistReaderPreferences() {
+      const storage = { getItem:key => window.localStorage.getItem(key), setItem:(key,value) => window.localStorage.setItem(key,value) }
+      const saved = savePreferences(storage,this.readerPreferences), remembered = rememberReaderTheme(storage,this.readerPreferences)
+      this.readerStorageError = !saved || !remembered
+    },
+    toggleReaderNightMode() {
+      const storage = { getItem:key => window.localStorage.getItem(key), setItem:(key,value) => window.localStorage.setItem(key,value) }
+      rememberReaderTheme(storage,this.readerPreferences)
+      const mode = this.readerNightMode ? 'light' : 'dark', selection = readReaderTheme(storage,mode)
+      let skin = selection.backgroundSkinKey && this.readerSkins.find(item => item.skin_key === selection.backgroundSkinKey && !item.is_locked && canUseBackground(item.required_membership,this.readerTier))
+      if (skin && readerThemeMode({theme:skin.theme_key}) !== mode) skin = null
+      if (skin) selection.theme = skin.theme_key
+      else selection.backgroundSkinKey = ''
+      if ((selection.theme === 'blockepoch' && !skin) || (MEMBER_THEMES.includes(selection.theme) && !canUseBackground('standard',this.readerTier))) selection.theme = mode === 'dark' ? 'black' : 'white'
+      this.readerLockedMessage = ''
+      this.changeReaderPreferences({...this.readerPreferences,...selection})
+    },
     changeReaderPreferences(value) {
       this.readerPreferenceRevision++
       this.readerPreferences = normalizePreferences(value); this.persistReaderPreferences()

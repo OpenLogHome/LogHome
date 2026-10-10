@@ -4,7 +4,7 @@ import { publicReadingPath } from '~/utils/reading-seo'
 export default function ({ req, redirect, route, $config, app }) {
   // Public reading URLs serve the same SSR document to every user agent.
   // Smartphone crawlers must not be redirected to the mobile SPA shell.
-  if (publicReadingPath(route.path)) return
+  if (publicReadingPath(route.path) || ['/read/redstone','/read/rewards','/read/activities'].includes(route.path)) return
   // 只在服务端执行设备检测
   if (process.server && req) {
     const userAgent = req.headers['user-agent'] || ''

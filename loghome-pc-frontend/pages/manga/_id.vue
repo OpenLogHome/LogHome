@@ -14,11 +14,11 @@
         <div class="manga-info">
           <h1 class="manga-title">{{ novel.name }}</h1>
           <div class="manga-meta">
-            <div class="author-info" @click="gotoUserProfile(novel.auther_id)">
+            <nuxt-link class="author-info" :to="`/users/${novel.auther_id || novel.author_id}`">
               <img v-if="novel.auther_avatar" :src="novel.auther_avatar" class="author-avatar" alt="作者头像">
               <div v-else class="author-avatar-placeholder">{{ novel.author_name ? novel.author_name.charAt(0) : '作' }}</div>
               <span class="author-name">{{ novel.author_name || '佚名' }}</span>
-            </div>
+            </nuxt-link>
             <span class="type-pill">漫画</span>
           </div>
 
@@ -65,7 +65,7 @@
           <button class="tab-button" :class="{ active: activeTab === 'chapters' }" @click="activeTab = 'chapters'">目录 ({{ chapters.length }})</button>
           <button class="tab-button" :class="{ active: activeTab === 'comments' }" @click="activeTab = 'comments'">读者评论 ({{ commentAmount }})</button>
           <button class="tab-button" :class="{ active: activeTab === 'fans' }" @click="activeTab = 'fans'">粉丝榜</button>
-          <button class="tab-button" :class="{ active: activeTab === 'author' }" @click="activeTab = 'author'" v-if="authorWorks.length">作者的其他漫画 ({{ authorWorks.length }})</button>
+          <button class="tab-button" :class="{ active: activeTab === 'author' }" @click="activeTab = 'author'" v-if="authorWorks.length || authorWorksError">作者的其他漫画<template v-if="authorWorks.length"> ({{ authorWorks.length }})</template></button>
         </div>
 
         <div class="tab-content">
@@ -108,15 +108,16 @@
 
           <!-- 作者的其他漫画 -->
           <div v-show="activeTab === 'author'" class="author-content">
+            <p v-if="authorWorksError" class="author-works-notice" role="alert">作者作品暂时未能加载。<button :disabled="authorWorksLoading" @click="loadAuthorWorks">{{ authorWorksLoading ? '加载中…' : '重试' }}</button></p>
             <div class="works-grid">
-              <div class="mini-work-card" v-for="work in authorWorks" :key="work.novel_id" @click="gotoManga(work.novel_id)">
+              <nuxt-link class="mini-work-card" v-for="work in authorWorks" :key="work.novel_id" :to="`/manga/${work.novel_id}`">
                 <div class="mini-work-cover" v-if="work.picUrl" :style="`background-image: url(${work.picUrl})`"></div>
                 <div class="mini-work-cover" v-else :style="`background-color: hsl(${work.novel_id * 30 % 360}, 70%, 80%)`"></div>
                 <div class="mini-work-info">
                   <h3 class="mini-work-title">{{ work.name }}</h3>
                   <p class="mini-work-status">{{ Number(work.is_complete) === 1 ? '已完结' : '连载中' }}</p>
                 </div>
-              </div>
+              </nuxt-link>
             </div>
           </div>
         </div>
@@ -137,6 +138,14 @@ import BookSupport from '~/components/read/BookSupport.vue'
 import { readingHead, bookSchema } from '~/utils/reading-seo'
 import { fetchMangaCommentAmount, fetchMangaArticleCommentAmounts } from '~/common/manga-comment-api.js'
 
+function otherAuthorMangas(works, novelId) {
+  if (!Array.isArray(works)) throw new Error('作者作品数据暂不可用')
+  const seen = new Set()
+  return works.filter(work => {
+    if (!work || work.novel_type !== 'manga' || Number(work.is_personal) !== 0 || !Number.isSafeInteger(Number(work.novel_id)) || Number(work.novel_id) <= 0 || String(work.novel_id) === String(novelId) || seen.has(Number(work.novel_id))) return false
+    seen.add(Number(work.novel_id)); return true
+  }).slice(0, 6)
+}
 
 export default {
   name: 'MangaDetail',
@@ -152,11 +161,16 @@ export default {
       if (novelData.novel_type === 'world') return redirect(`/world/${novelData.novel_id}`)
       if (novelData.novel_type !== 'manga') return redirect(`/novel/${novelData.novel_id}`)
 
-      const articles = await $api.reader.chapters(novelData.novel_id)
+      const loadAuthorWorks = async () => {
+        const authorId = novelData.auther_id || novelData.author_id
+        if (!authorId) return { authorWorks: [], authorWorksError: false }
+        try { return { authorWorks: otherAuthorMangas(await $api.reader.authorWorks(authorId), novelData.novel_id), authorWorksError: false } }
+        catch (_) { return { authorWorks: [], authorWorksError: true } }
+      }
+      const [articles, tags, authorResult] = await Promise.all([$api.reader.chapters(novelData.novel_id), $api.novels.getNovelTags(novelData.novel_id), loadAuthorWorks()])
       const chapters = (articles || []).filter(a => a.article_type === 'mangaStrip' || a.article_type === 'mangaPage')
-      const tags = await $api.novels.getNovelTags(novelData.novel_id)
 
-      return { error: null, novel: novelData, chapters, tags: tags || [] }
+      return { error: null, novel: novelData, chapters, tags: tags || [], ...authorResult }
     } catch (err) {
       console.error('服务端获取漫画数据失败', err)
       return error({ statusCode: err.status || 503, message: err.status === 404 ? '作品不存在或不可阅读' : '加载漫画数据失败，请稍后重试' })
@@ -173,6 +187,9 @@ export default {
       hasFans: false,
       progress: null,
       authorWorks: [],
+      authorWorksError: false,
+      authorWorksLoading: false,
+      authorWorksVersion: 0,
       commentAmount: 0,
       articleCommentAmounts: {},
     }
@@ -199,6 +216,7 @@ export default {
     if (this.commentAnchor) this.activeTab = 'comments'
     this.fetchClientData()
   },
+  beforeDestroy() { this.authorWorksVersion++ },
   methods: {
     onSupportLike(state) { this.nice_amount = state.count; this.niceStatus = state.liked },
     refreshFans() { this.loadFans(); if (this.$refs.fansList) this.$refs.fansList.getFansList() },
@@ -207,7 +225,6 @@ export default {
       this.checkBookcaseStatus()
       this.loadProgress()
       this.loadFans()
-      this.loadAuthorWorks()
       this.loadCommentAmount()
       this.loadArticleCommentAmounts()
       this.addReaderHistory(this.novel)
@@ -248,14 +265,14 @@ export default {
     async loadAuthorWorks() {
       const authorId = this.novel.auther_id || this.novel.author_id
       if (!authorId) return
+      const novelId = this.novel.novel_id, version = ++this.authorWorksVersion
+      const current = () => version === this.authorWorksVersion && String(novelId) === String(this.novel.novel_id)
+      this.authorWorksLoading = true; this.authorWorksError = false
       try {
-        const works = await this.$api.manga.getNovelsByUser(authorId)
-        this.authorWorks = works
-          .filter(w => w.novel_type === 'manga' && Number(w.is_personal) === 0 && String(w.novel_id) !== String(this.novel.novel_id))
-          .slice(0, 6)
-      } catch (e) {
-        this.authorWorks = []
-      }
+        const works = otherAuthorMangas(await this.$api.reader.authorWorks(authorId), novelId)
+        if (current()) this.authorWorks = works
+      } catch (_) { if (current()) this.authorWorksError = true }
+      finally { if (current()) this.authorWorksLoading = false }
     },
     async loadCommentAmount() {
       try {
@@ -388,7 +405,7 @@ export default {
 .manga-info { flex: 1; min-width: 0; }
 .manga-title { font-size: 28px; font-weight: 700; color: #2c2c2c; margin: 0 0 14px; }
 .manga-meta { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-.author-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.author-info { display: flex; align-items: center; gap: 8px; cursor: pointer; color: inherit; text-decoration: none; }
 .author-avatar, .author-avatar-placeholder { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
 .author-avatar-placeholder { display: grid; place-items: center; background: #947358; color: #fff; font-size: 14px; }
 .author-name { color: #666; font-size: 14px; }
@@ -448,7 +465,10 @@ export default {
 .view-all-comments:hover { text-decoration: underline; }
 
 .works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 18px; }
-.mini-work-card { cursor: pointer; }
+.mini-work-card { cursor: pointer; color: inherit; text-decoration: none; }
+.mini-work-card:focus-visible,.author-info:focus-visible { outline: 2px solid #947358; outline-offset: 4px; }
+.author-works-notice { margin-bottom: 16px; color: #947358; font-size: 13px; }
+.author-works-notice button { margin-left: 8px; color: inherit; background: white; border: 1px solid #d9cbbb; padding: 4px 12px; border-radius: 4px; cursor: pointer; }
 .mini-work-cover { width: 100%; height: 190px; border-radius: 8px; background-size: cover; background-position: center; background-color: #eee; }
 .mini-work-info { margin-top: 8px; }
 .mini-work-title { font-size: 14px; font-weight: 600; color: #333; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

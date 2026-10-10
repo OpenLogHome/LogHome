@@ -23,6 +23,8 @@
             </div>
           </div>
           <div class="reading-controls">
+            <button class="reader-control-btn" @click="openReaderExcerpts"><i class="el-icon-collection" aria-hidden="true" /> 书摘</button>
+            <button class="reader-control-btn" :aria-label="readerNightMode ? '切换到日间阅读' : '切换到夜间阅读'" :aria-pressed="readerNightMode ? 'true' : 'false'" @click="toggleReaderNightMode"><i :class="readerNightMode ? 'el-icon-sunny' : 'el-icon-moon'" aria-hidden="true" /> {{ readerNightMode ? '日间' : '夜间' }}</button>
             <button class="reader-control-btn" @click="openReaderAudio()"><i class="el-icon-headset" aria-hidden="true" /> 听书</button>
             <button class="reader-control-btn" @click="readerSettingsVisible = true"><i class="el-icon-setting" aria-hidden="true" /> 阅读设置</button>
             <button class="reader-control-btn" @click="openParagraphCommentWindow(0)"><i class="el-icon-chat-line-round" aria-hidden="true" /> 章节评论</button>
@@ -42,7 +44,13 @@
           </div>
         </div>
 
-        <ReaderPager ref="pager" :article="article" :typography="readerTypography" :paged="readerReady && readerPreferences.mode === 'page'" :counts="paragraphCommentsCount" :highlights="highlights" :speaking-id="audioSpeakingId" :initial-position="readerInitialPosition" :has-previous="hasPrevious" :has-next="hasNext" :can-finish="canFinish" :chapter-percent="chapterPercent" :navigation-blocked="readerSettingsVisible || readerNavigationVisible || showCommentDrawer || feedbackVisible || selectionMode" @paragraph-menu="handleParagraphRightClick($event.event, $event.element)" @comment="openParagraphCommentWindow" @position="onReaderPosition" @boundary="navigatePageBoundary" @finish="finishReading" />
+        <ReaderPager ref="pager" :article="article" :typography="readerTypography" :paged="readerReady && readerPreferences.mode === 'page'" :counts="paragraphCommentsCount" :highlights="highlights" :speaking-id="audioSpeakingId" :initial-position="readerInitialPosition" :has-previous="hasPrevious" :has-next="hasNext" :can-finish="canFinish" :chapter-percent="chapterPercent" :navigation-blocked="readerSettingsVisible || readerNavigationVisible || readerExcerptsVisible || showCommentDrawer || feedbackVisible || selectionMode" @paragraph-menu="handleParagraphRightClick($event.event, $event.element)" @comment="openParagraphCommentWindow" @position="onReaderPosition" @boundary="navigatePageBoundary" @finish="finishReading" />
+
+        <div v-if="highlightError" class="reader-highlight-status" role="status">
+          <span>{{ highlightError }}</span>
+          <nuxt-link v-if="highlightAuthExpired" :to="{ path: '/login', query: { redirect: $route.fullPath } }">重新登录</nuxt-link>
+          <button v-else class="reader-control-btn" @click="loadHighlights">重试划线</button>
+        </div>
 
         <!-- 文章底部导航 -->
         <div class="article-footer">
@@ -79,6 +87,7 @@
       </div>
       <MangaCommentPanel v-if="showCommentDrawer" :visible.sync="showCommentDrawer" :novel-id="novel.novel_id" :article-id="article.article_id" :paragraph-id="currentParagraphId || 0" :paragraph-text="paragraphCommentText" :work-author-id="novel.author_id || novel.auther_id" :anchor-id="commentAnchor" @changed="onCommentsChanged('drawer')" />
       <ReaderNavigation v-if="readerNavigationVisible" :visible.sync="readerNavigationVisible" :chapters="chapterEntries || chapters" :current="article" :novel-id="novel.novel_id" :can-undo="!!readerJumpUndo" @jump="jumpReaderChapter" @catalog-navigate="recordReaderChapterJump" @undo="undoReaderChapterJump" />
+      <el-drawer v-if="readerExcerptsVisible" title="划线书摘" :visible.sync="readerExcerptsVisible" size="min(860px, 100%)" append-to-body destroy-on-close><div class="reader-excerpts"><BookExcerpts :novel-id="novel.novel_id" @navigate="readerExcerptsVisible = false" @changed="loadHighlights" /></div></el-drawer>
       <ReaderSettings v-if="readerSettingsVisible" :visible.sync="readerSettingsVisible" :value="readerPreferences" :fonts="readerFonts" :skins="readerSkins" :tier="readerTier" :font-states="readerFontStates" :font-error="readerFontError" :resource-error="readerResourceError" :locked-message="readerLockedMessage" :resources-loading="readerResourcesLoading" :storage-error="readerStorageError" @input="changeReaderPreferences" @font="selectReaderFont" @theme="selectReaderTheme" @skin="selectReaderSkin" @refresh="refreshReaderResources" @membership="openReaderMembership" @reset="resetReaderPreferences" />
       <ReaderFeedback v-if="feedbackParagraph" :key="feedbackParagraph.id" :visible.sync="feedbackVisible" :article-id="article.article_id" :paragraph-id="feedbackParagraph.id" :paragraph-text="feedbackParagraph.text" />
     </div>
@@ -97,10 +106,11 @@ import ReaderPager from '~/components/read/ReaderPager.vue'
 import ReaderNavigation from '~/components/read/ReaderNavigation.vue'
 import readerPreferencesMixin from '~/mixins/reader-preferences'
 import ReaderSettings from '~/components/read/ReaderSettings.vue'
+import BookExcerpts from '~/components/read/BookExcerpts.vue'
 import ReaderFeedback from '~/components/read/ReaderFeedback.vue'
 import MangaCommentPanel from '~/components/manga/MangaCommentPanel.vue'
 export default {
-  components: { ReaderPager, ReaderNavigation, ReaderFeedback, MangaCommentPanel, ReaderSettings },
+  components: { ReaderPager, ReaderNavigation, ReaderFeedback, MangaCommentPanel, ReaderSettings, BookExcerpts },
   mixins: [readerPreferencesMixin],
   async asyncData({ params, $api, error }) {
     try {
@@ -144,10 +154,11 @@ export default {
     return {
       loading: false,
       error: null,
-      highlights: [], highlightBusy: false, feedbackVisible: false, feedbackParagraph: null, paragraphVersion: 0,
+      highlights: [], highlightBusy: false, highlightError: '', highlightAuthExpired: false, highlightVersion: 0, highlightOperationVersion: 0, readerIdentityVersion: 0,
+      feedbackVisible: false, feedbackParagraph: null, paragraphVersion: 0,
       isLiked: false,
       readerReady: false, readerInitialPosition: {}, readerPosition: {}, readerNavigationVisible: false, readerJumpUndo: null, readerProgressAccount: null,
-      readerSettingsVisible: false, audioSpeakingId: 0, audioProgressKey: '', audioRouteRequested: 0,
+      readerSettingsVisible: false, readerExcerptsVisible: false, audioSpeakingId: 0, audioProgressKey: '', audioRouteRequested: 0,
       showHeader: true,
       lastScrollPosition: 0,
       // 段落评论相关
@@ -184,6 +195,7 @@ export default {
     this.initializeReaderPosition()
     window.addEventListener('focus', this.checkReaderProgressAccount)
     window.addEventListener('storage', this.checkReaderProgressAccount)
+    window.addEventListener('auth-state-changed', this.checkReaderProgressAccount)
     if (this.$readerAudio) { this.unsubscribeAudio = this.$readerAudio.subscribe(this.onReaderAudioProgress); this.onReaderAudioProgress(this.$readerAudio.state) }
     this.recordRead()
     // 保存阅读历史
@@ -223,6 +235,8 @@ export default {
     this.saveReaderHistory(true); clearTimeout(this.readerSaveTimer)
     window.removeEventListener('focus', this.checkReaderProgressAccount)
     window.removeEventListener('storage', this.checkReaderProgressAccount)
+    window.removeEventListener('auth-state-changed', this.checkReaderProgressAccount)
+    this.resetReaderHighlightScope()
     if (this.unsubscribeAudio) this.unsubscribeAudio()
     this.paragraphVersion++
     // 移除滚动事件监听
@@ -231,6 +245,7 @@ export default {
     document.removeEventListener('click', this.handleDocumentClick)
   },
   methods: {
+    openReaderExcerpts() { this.clearSelection(); this.readerSettingsVisible = false; this.readerNavigationVisible = false; this.showCommentDrawer = false; this.readerExcerptsVisible = true },
     openNotificationComment() {
       if (!this.commentAnchor) return
       const id = Number(this.$route.query.paragraphId), paragraph = this.paragraphs.find(item => item.id === id)
@@ -246,8 +261,8 @@ export default {
       this.clearSelection()
     },
     onReaderAudioProgress(state) {
-      this.audioSpeakingId = state.visible && Number(state.chapterId) === Number(this.article.article_id) ? state.paragraphId : 0
-      if (!state.visible || !state.follow || Number(state.bookId) !== Number(this.novel.novel_id)) return
+      this.audioSpeakingId = state.visible && state.speechStarted && Number(state.chapterId) === Number(this.article.article_id) ? state.paragraphId : 0
+      if (!state.visible || !state.speechStarted || !state.follow || Number(state.bookId) !== Number(this.novel.novel_id)) return
       if (Number(state.chapterId) !== Number(this.article.article_id)) {
         if (state.status === 'playing' && this.audioRouteRequested !== state.chapterId) {
           this.audioRouteRequested = state.chapterId
@@ -287,15 +302,17 @@ export default {
 
     initializeReaderPosition() {
       clearTimeout(this.readerSaveTimer); this.readerProgressAccount = readingToken(); this.lastReaderCloudSave = 0
+      this.resetReaderHighlightScope()
       this.readerInitialPosition = initialReaderPosition(this.$route.query, localReadingProgress(this.novel.novel_id), this.article.article_id)
-      this.readerPosition = this.readerInitialPosition; this.readerReady = true; this.readerNavigationVisible = false
+      this.readerPosition = this.readerInitialPosition; this.readerReady = true; this.readerNavigationVisible = false; this.readerExcerptsVisible = false
       try { this.readerJumpUndo = JSON.parse(sessionStorage.getItem(this.readerUndoKey()) || 'null') } catch (_) { this.readerJumpUndo = null }
     },
     checkReaderProgressAccount() {
-      if (this.readerProgressAccount === readingToken()) return
+      if (this.readerProgressAccount === readingToken()) return false
       this.initializeReaderPosition()
       this.highlights = []; this.clearSelection(); this.showCommentDrawer = false; this.feedbackVisible = false
       this.loadHighlights()
+      return true
     },
     onReaderPosition(position) {
       this.readerPosition = position
@@ -410,22 +427,51 @@ export default {
       this.currentParagraphId = id || 0; this.paragraphCommentText = paragraph ? paragraph.value : ''; this.showCommentDrawer = true
       if (this.selectionMode) this.clearSelection()
     },
+    resetReaderHighlightScope() {
+      this.readerIdentityVersion++; this.highlightVersion++; this.highlightOperationVersion++
+      this.highlights = []; this.highlightBusy = false; this.highlightError = ''; this.highlightAuthExpired = false
+    },
+    readerHighlightScope() { return { identity: this.readerIdentityVersion, token: readingToken(), articleId: this.article.article_id } },
+    currentReaderHighlightScope(scope) { return scope.identity === this.readerIdentityVersion && scope.token === readingToken() && scope.token === this.readerProgressAccount && scope.articleId === this.article.article_id },
     async loadHighlights() {
-      const token = readingToken(), articleId = this.article.article_id
-      if (!token) { this.highlights = []; return }
-      try { const rows = await this.$api.reader.highlights(articleId); if (articleId === this.article.article_id && token === readingToken()) this.highlights = Array.isArray(rows) ? rows : [] } catch (_) {}
+      if (this.checkReaderProgressAccount()) return
+      const scope = this.readerHighlightScope(), version = ++this.highlightVersion
+      this.highlightError = ''; this.highlightAuthExpired = false
+      if (!scope.token) { this.highlights = []; return }
+      try {
+        const rows = await this.$api.reader.highlights(scope.articleId)
+        if (!this.currentReaderHighlightScope(scope) || version !== this.highlightVersion) return
+        if (!Array.isArray(rows)) throw new Error('划线书摘数据暂不可用')
+        this.highlights = rows
+      } catch (error) {
+        if (!this.currentReaderHighlightScope(scope) || version !== this.highlightVersion) return
+        this.highlightAuthExpired = [401, 403].includes(Number(error.status || error.response && error.response.status))
+        if (this.highlightAuthExpired) this.highlights = []
+        this.highlightError = this.highlightAuthExpired ? '登录状态已过期，请重新登录后查看或收藏划线书摘。' : '划线书摘加载失败，本页仍可阅读。'
+      }
     },
     async toggleHighlight() {
+      if (this.checkReaderProgressAccount()) return
       if (!this.selectedParagraph || this.highlightBusy) return
       if (!readingToken()) { this.$message.info('登录后可以收藏划线书摘'); return }
+      if (this.highlightAuthExpired) { this.$message.info('登录状态已过期，请重新登录后收藏划线书摘'); return }
       const paragraph = this.selectedParagraph, existing = this.selectedHighlight
-      this.highlightBusy = true
+      const scope = this.readerHighlightScope(), operation = ++this.highlightOperationVersion
+      const current = () => this.currentReaderHighlightScope(scope) && operation === this.highlightOperationVersion
+      this.highlightVersion++; this.highlightBusy = true; this.highlightError = ''
       try {
         if (existing) await this.$api.reader.unhighlight(existing.article_cento_id)
-        else await this.$api.reader.highlight({ article_id: this.article.article_id, paragraph_id: Number(paragraph.id), paragraph: paragraph.text })
-        this.clearSelection(); await this.loadHighlights()
-      } catch (error) { this.$message.error(error.message || '划线操作失败') }
-      finally { this.highlightBusy = false }
+        else await this.$api.reader.highlight({ article_id: scope.articleId, paragraph_id: Number(paragraph.id), paragraph: paragraph.text })
+        if (!current()) return
+        if (this.selectedParagraph === paragraph) this.clearSelection()
+        await this.loadHighlights()
+      } catch (error) {
+        if (!current()) return
+        this.highlightAuthExpired = [401, 403].includes(Number(error.status || error.response && error.response.status))
+        if (this.highlightAuthExpired) { this.highlights = []; this.highlightError = '登录状态已过期，请重新登录后查看或收藏划线书摘。' }
+        this.$message.error(this.highlightAuthExpired ? this.highlightError : error.message || '划线操作失败')
+      }
+      finally { if (current()) this.highlightBusy = false }
     },
     openFeedback() { if (!this.selectedParagraph) return; this.feedbackParagraph = { id: Number(this.selectedParagraph.id), text: this.selectedParagraph.text }; this.feedbackVisible = true; this.clearSelection() },
 
@@ -1136,7 +1182,10 @@ $heart-color: #FF6B6B;
 <style scoped>
 .reader-control-btn { border: 1px solid #ded4c5; background: #fff; color: #806649; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 13px; white-space: nowrap; }
 .article-page .chapter-nav a { text-decoration: none; color: #806649; }
-.article-page .header-content { flex-wrap: wrap; gap: 12px; }.article-page .novel-info { flex-wrap: wrap; gap: 8px; }.reading-controls { gap: 8px; }
+.article-page .header-content { flex-wrap: wrap; gap: 12px; }.article-page .novel-info { flex-wrap: wrap; gap: 8px; }.reading-controls { gap: 8px; flex-wrap: wrap; margin-left: 0; }
+.reader-excerpts { padding: 0 22px 28px; height: 100%; overflow-y: auto; }
+.reader-highlight-status { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; padding: 12px 20px; font-size: 13px; }
+.reader-highlight-status a { color: inherit; text-decoration: underline; }
 .article-page .article-content { margin: 0 auto; overflow-wrap: anywhere; }.article-meta { color: var(--reader-secondary); }.article-content-wrapper /deep/ .reader-highlight { text-decoration-color: var(--reader-line); }
 .article-content-wrapper /deep/ .article-paragraph { margin-bottom: 1.2em; white-space: pre-wrap; }.article-content-wrapper /deep/ .reader-speaking { background: rgba(170,160,90,.22); }
 .block-epoch-skin .article-title-container { margin: 18px; border: 3px solid #6b7551; background: rgba(239,244,216,.78); box-shadow: 5px 5px 0 #273421; }.block-epoch-skin .article-title { font-family: ui-monospace, Consolas, monospace; }

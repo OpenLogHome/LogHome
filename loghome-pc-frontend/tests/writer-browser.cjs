@@ -512,7 +512,23 @@ async function run() {
     await page.waitForFunction(() =>
       document.querySelector(".save-indicator").textContent.includes("已同步")
     );
-    writers.set(10, { ...writers.get(10), title: "云端的新标题" });
+    writers.set(10, {
+      ...writers.get(10),
+      title: "云端的新标题",
+      content: JSON.stringify([
+        {
+          type: "text",
+          id: 42,
+          value: "云端稿件里的新段落。\n第二行保留原有换行。",
+        },
+        { type: "image", img: "https://fixture.test/conflict.png" },
+        ...Array.from({ length: 20 }, (_, i) => ({
+          type: "text",
+          id: i + 43,
+          value: `第 ${i + 1} 段：旅人沿着山路走向远方，林间透过温暖的晨光。`,
+        })),
+      ]),
+    });
     await page.locator(".chapter-title").fill("不同的本机标题");
     await page
       .locator(".workspace-header")
@@ -521,10 +537,49 @@ async function run() {
     await page
       .getByRole("button", { name: "使用云端版本", exact: true })
       .waitFor();
+    const comparison = page.locator(
+      ".writer-conflict-dialog .conflict-comparison"
+    );
+    assert.equal(await comparison.locator(".version-preview").count(), 2);
+    assert.equal(await comparison.locator("pre").count(), 0);
+    assert.ok(!(await comparison.innerText()).includes('"type":'));
+    assert.ok(
+      (
+        await comparison.locator(".version-preview").nth(1).innerText()
+      ).includes("云端稿件里的新段落。")
+    );
+    assert.equal(await comparison.locator(".version-image img").count(), 1);
+    assert.equal(
+      await comparison
+        .locator(".version-preview")
+        .nth(1)
+        .locator(".version-paragraph")
+        .first()
+        .textContent(),
+      "云端稿件里的新段落。\n第二行保留原有换行。"
+    );
+    const downloadEvent = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "导出云端版本", exact: true })
+      .click();
+    const download = await downloadEvent;
+    const exported = JSON.parse(fs.readFileSync(await download.path(), "utf8"));
+    assert.equal(exported.content, writers.get(10).content);
+    assert.equal(exported.title, "云端的新标题");
     await page.screenshot({
       animations: "disabled",
       path: path.join(out, "writer-conflict.png"),
     });
+    await page.setViewportSize({ width: 1024, height: 600 });
+    const conflictBox = await page
+      .locator(".writer-conflict-dialog")
+      .boundingBox();
+    assert.ok(conflictBox.y + conflictBox.height <= 600);
+    await page.screenshot({
+      path: path.join(out, "conflict-1024.png"),
+      animations: "disabled",
+    });
+    await page.setViewportSize({ width: 1440, height: 960 });
     await page
       .getByRole("button", { name: "使用云端版本", exact: true })
       .click();

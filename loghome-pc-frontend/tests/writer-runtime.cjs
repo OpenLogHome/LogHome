@@ -347,3 +347,87 @@ test("writer route renders on a server without crypto and defers editor imports 
   assert.match(html, /正在准备写作工作台/);
   assert.equal(typeof evaluate(true).components.WriterWorkspace, "function");
 });
+
+test("version previews render stored prose and vocabulary without mutating snapshots or exposing malformed JSON", () => {
+  const { writerVersionPreview, versionImageSource } = load(
+    "utils/writer/version-preview.js"
+  );
+  const article = {
+    article_type: "richtext",
+    content: JSON.stringify([
+      { type: "text", id: 42, value: "第一段。\n第二行😀" },
+      { type: "image", img: "https://fixture.test/image.png" },
+    ]),
+  };
+  const original = JSON.stringify(article),
+    preview = writerVersionPreview(article);
+  assert.equal(preview.blocks[0].value, "第一段。\n第二行😀");
+  assert.equal(preview.imageCount, 1);
+  assert.equal(preview.textCount, Array.from(preview.blocks[0].value).length);
+  assert.equal(JSON.stringify(article), original);
+  const vocabulary = writerVersionPreview({
+    article_type: "worldVocabulary",
+    content: JSON.stringify({
+      desc: "简介",
+      attributes: [null, { name: "职业", content: "制图师" }],
+      relations: [{ id: 8, name: "森林", relation: "故乡" }],
+    }),
+  });
+  assert.equal(vocabulary.blocks[0].value, "简介");
+  assert.equal(vocabulary.vocabulary.attributes.length, 1);
+  assert.equal(vocabulary.vocabulary.relations[0].name, "森林");
+  for (const content of ['[{"type":', '{"unsupported": true}']) {
+    const invalid = writerVersionPreview({ article_type: "richtext", content });
+    assert.ok(invalid.error);
+    assert.equal(invalid.blocks.length, 0);
+  }
+  assert.equal(versionImageSource("javascript:alert(1)"), "");
+});
+
+const catalog = load("utils/writer/catalog.js");
+const catalogFixture = [
+  { article_id: 1, article_type: "text" },
+  { article_id: 2, article_type: "spliter" },
+  { article_id: 3, article_type: "text" },
+  { article_id: 4, article_type: "text" },
+  { article_id: 5, article_type: "spliter" },
+  { article_id: 6, article_type: "text" },
+  { article_id: 7, article_type: "spliter" },
+];
+const catalogIds = (rows) => plain(rows.map((row) => row.article_id));
+test("folded volumes hide only their children; filtered matches retain volume context", () => {
+  assert.deepEqual(
+    catalogIds(
+      catalog.catalogRows(catalogFixture, [2, 5]).map((row) => row.item)
+    ),
+    [1, 2, 5, 7]
+  );
+  const rows = catalog.catalogRows(catalogFixture, [2], new Set([4]));
+  assert.deepEqual(catalogIds(rows.map((row) => row.item)), [2, 4]);
+  assert.equal(rows[0].count, 2);
+  assert.equal(rows[1].parent, 2);
+  assert.deepEqual(
+    catalogIds(
+      catalog.catalogRows(catalogFixture, [], new Set()).map((row) => row.item)
+    ),
+    []
+  );
+});
+test("catalog moves are complete permutations; chapters cross volumes and volumes retain children", () => {
+  const before = JSON.stringify(catalogFixture);
+  assert.deepEqual(
+    catalogIds(catalog.moveCatalog(catalogFixture, 3, 5, "after").rows),
+    [1, 2, 4, 5, 3, 6, 7]
+  );
+  const volume = catalog.moveCatalog(catalogFixture, 2, 6, "after");
+  assert.deepEqual(catalogIds(volume.rows), [1, 5, 6, 2, 3, 4, 7]);
+  assert.equal(volume.markerId, 6);
+  assert.deepEqual(
+    catalogIds(catalog.moveCatalog(catalogFixture, 5, 3, "before").rows),
+    [1, 5, 6, 2, 3, 4, 7]
+  );
+  assert.equal(catalog.moveCatalog(catalogFixture, 2, 4, "after"), null);
+  assert.equal(catalog.moveCatalog(catalogFixture, 3, 4, "before"), null);
+  assert.equal(catalog.moveCatalog(catalogFixture, 99, 4, "after"), null);
+  assert.equal(JSON.stringify(catalogFixture), before);
+});

@@ -1,7 +1,9 @@
 ﻿
 // 引入依赖包
 let express = require('express');
-let { query } = require('../sql.js');
+let { query, withTransaction } = require('../sql.js');
+const { createReaderTreeOperations } = require('../bin/readerTreeOperations');
+const { createHash } = require('node:crypto');
 let auth = require('../bin/auth.js');
 let bank = require('../bin/bank.js');
 let message = require('../bin/message.js');
@@ -114,8 +116,8 @@ function calculateMembershipReward(baseReward, multiplier) {
     return Math.max(0, Math.round(toNumber(baseReward, 0) * toNumber(multiplier, 1)));
 }
 
-async function getTreeRewardBenefits(userId) {
-    const rows = await query(
+async function getTreeRewardBenefits(userId, q = query) {
+    const rows = await q(
         `SELECT membership_type
          FROM membership_subscriptions
          WHERE user_id = ? AND status = 'active'
@@ -418,22 +420,29 @@ function buildUnplantedTreePlaceholder(userId, latestTree = null) {
     };
 }
 
-async function applyGrowthReward(tree, reward, maxGrowth) {
-    const currentGrowth = toNumber(tree.growth_val, 0);
-    const rewardVal = toNumber(reward, 0);
-    const newGrowth = currentGrowth + rewardVal;
+// All reading rewards use the same bank -> owned tree lock order as harvest.
+async function withReadingTree(userId, expectedTree, work) {
+    return withTransaction(async q => {
+        await q('INSERT IGNORE INTO user_bank(user_id) VALUES(?)', [userId]);
+        const banks = await q('SELECT log, apple FROM user_bank WHERE user_id = ? FOR UPDATE', [userId]);
+        if (!banks.length) throw Object.assign(new Error('资源账户不可用'), { status:503 });
+        const rows = await q(expectedTree
+            ? 'SELECT * FROM treeplant WHERE user_id = ? AND plant_id = ? AND is_gotten = 0 FOR UPDATE'
+            : 'SELECT * FROM treeplant WHERE user_id = ? AND is_gotten = 0 ORDER BY plant_id DESC LIMIT 1 FOR UPDATE',
+            expectedTree ? [userId,expectedTree.plant_id] : [userId]);
+        return work(q, rows[0] || null);
+    }, 'reading automatic tree rewards');
+}
+async function applyGrowthReward(tree, reward, maxGrowth, q = null) {
+    if (!q) return withReadingTree(tree.user_id,tree,async (tx,current) => {
+        if (!current) throw Object.assign(new Error('树木已收获，请刷新树场'), { status:409 });
+        return applyGrowthReward(current,reward,maxGrowth,tx);
+    });
+    const newGrowth = toNumber(tree.growth_val,0) + toNumber(reward,0);
     const newStatus = calcTreeStatusByGrowth(newGrowth);
-
-    await query(
-        'UPDATE treeplant SET growth_val = ?, tree_status = ? WHERE plant_id = ?',
-        [newGrowth, newStatus, tree.plant_id]
-    );
-
-    return {
-        growth_val: newGrowth,
-        tree_status: newStatus,
-        max_growth: maxGrowth,
-    };
+    const changed = await q('UPDATE treeplant SET growth_val = ?, tree_status = ? WHERE plant_id = ? AND user_id = ? AND is_gotten = 0', [newGrowth,newStatus,tree.plant_id,tree.user_id]);
+    if (changed.affectedRows !== 1) throw Object.assign(new Error('树木状态已变化，请刷新后重试'), { status:409 });
+    return { growth_val:newGrowth, tree_status:newStatus, max_growth:maxGrowth };
 }
 
 async function expireOverdueOrbs(userId) {
@@ -1100,9 +1109,9 @@ function buildExpProgressText(task, progressValue) {
     return `${progressValue}/${task.required_value}`;
 }
 
-async function getExpProgressRows(userId, dateKey, taskCodes) {
+async function getExpProgressRows(userId, dateKey, taskCodes, q = query) {
     if (!taskCodes || taskCodes.length === 0) return [];
-    return await query(
+    return await q(
         `SELECT task_code, progress_value, completed_times
          FROM user_tree_exp_task_daily
          WHERE user_id = ? AND date_key = ? AND task_code IN (?)`,
@@ -1110,7 +1119,7 @@ async function getExpProgressRows(userId, dateKey, taskCodes) {
     );
 }
 
-async function getDailyCounters(userId, dateKey, tasks) {
+async function getDailyCounters(userId, dateKey, tasks, q = query) {
     const counter = {};
     const needPost = tasks.some((t) => t.source_code === 'community_post');
     const needReply = tasks.some((t) => t.source_code === 'community_reply');
@@ -1123,7 +1132,7 @@ async function getDailyCounters(userId, dateKey, tasks) {
     const dayEnd = `${getNextDateKey(dateKey)} 00:00:00`;
 
     if (needPost) {
-        const rows = await query(
+        const rows = await q(
             `SELECT COUNT(*) AS count
              FROM comm_posts
              WHERE user_id = ?
@@ -1136,7 +1145,7 @@ async function getDailyCounters(userId, dateKey, tasks) {
     }
 
     if (needReply) {
-        const rows = await query(
+        const rows = await q(
             `SELECT COUNT(*) AS count
              FROM comm_comments
              WHERE user_id = ?
@@ -1151,16 +1160,17 @@ async function getDailyCounters(userId, dateKey, tasks) {
     return counter;
 }
 
-async function buildExpTaskStates(userId, settings, rewardBenefits = null) {
-    const tasks = await loadExpTasks();
+async function buildExpTaskStates(userId, settings, rewardBenefits = null, context = {}) {
+    const tasks = context.tasks || await loadExpTasks();
+    const q = context.query || query;
     if (tasks.length === 0) return [];
-    const benefits = rewardBenefits || await getTreeRewardBenefits(userId);
+    const benefits = rewardBenefits || await getTreeRewardBenefits(userId,q);
 
-    const dateKey = getDateKeyByTimezone(settings.timezone);
+    const dateKey = context.dateKey || getDateKeyByTimezone(settings.timezone);
     const taskCodes = tasks.map((t) => t.task_code);
-    const progressRows = await getExpProgressRows(userId, dateKey, taskCodes);
+    const progressRows = await getExpProgressRows(userId, dateKey, taskCodes,q);
     const progressMap = new Map(progressRows.map((r) => [r.task_code, r]));
-    const counters = await getDailyCounters(userId, dateKey, tasks);
+    const counters = await getDailyCounters(userId, dateKey, tasks,q);
 
     const states = [];
 
@@ -1239,8 +1249,8 @@ async function createExpOrb(userId, plantId, reward, sourceTaskCode, spawnType, 
     };
 }
 
-async function upsertExpTaskDailyProgress(userId, taskCode, dateKey, progressValue, completedTimesDelta = 0) {
-    const rows = await query(
+async function upsertExpTaskDailyProgress(userId, taskCode, dateKey, progressValue, completedTimesDelta = 0, q = query) {
+    const rows = await q(
         `SELECT id
          FROM user_tree_exp_task_daily
          WHERE user_id = ? AND task_code = ? AND date_key = ?
@@ -1250,7 +1260,7 @@ async function upsertExpTaskDailyProgress(userId, taskCode, dateKey, progressVal
 
     if (rows.length > 0) {
         if (completedTimesDelta > 0) {
-            await query(
+            await q(
                 `UPDATE user_tree_exp_task_daily
                  SET completed_times = completed_times + ?,
                      progress_value = ?,
@@ -1259,7 +1269,7 @@ async function upsertExpTaskDailyProgress(userId, taskCode, dateKey, progressVal
                 [completedTimesDelta, progressValue, rows[0].id]
             );
         } else {
-            await query(
+            await q(
                 `UPDATE user_tree_exp_task_daily
                  SET progress_value = ?,
                      updated_at = NOW()
@@ -1268,7 +1278,7 @@ async function upsertExpTaskDailyProgress(userId, taskCode, dateKey, progressVal
             );
         }
     } else {
-        await query(
+        await q(
             `INSERT INTO user_tree_exp_task_daily
              (user_id, task_code, date_key, progress_value, completed_times, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -1278,6 +1288,36 @@ async function upsertExpTaskDailyProgress(userId, taskCode, dateKey, progressVal
 }
 
 async function settleExpTaskRewards(userId, tree, settings, options = {}) {
+    const tasks = await loadExpTasks();
+    const dateKey = getDateKeyByTimezone(settings.timezone);
+    return withReadingTree(userId,tree,async (q,current) => {
+        // Like __exp_random_spawn__, receipt rows use a reserved internal task
+        // code. They are never part of configured tasks or shown to a reader.
+        const requestId = options.clientRequestId;
+        const receiptCode = requestId ? '__read_receipt_' + createHash('sha256').update(requestId).digest('hex').slice(0,48) : null;
+        const activityCode = options.activityType === 'read_seconds' ? 1 : 2;
+        if (receiptCode) {
+            const prior = await q('SELECT progress_value, completed_times FROM user_tree_exp_task_daily WHERE user_id = ? AND task_code = ? LIMIT 1 FOR UPDATE',[userId,receiptCode]);
+            if (prior.length) {
+                if (Number(prior[0].progress_value) !== options.activitySeconds || Number(prior[0].completed_times) !== activityCode) throw Object.assign(new Error('上报编号已用于不同的时长或类型'),{status:409});
+                const state = await settleExpTaskRewardsOnConnection(userId,current,settings,{...options,skipSettlement:true},q,tasks,dateKey);
+                return {...state,client_request_id:requestId,accepted_seconds:options.activitySeconds,replayed:true};
+            }
+        }
+        if (options.activitySeconds > 0) {
+            for (const task of tasks.filter(task => task.source_code === options.activityType)) {
+                await incrementDurationProgress(userId,task.task_code,options.activitySeconds,settings,q,dateKey);
+            }
+            // Counter and tree task progress commit together. Badge evaluation
+            // runs after commit and cannot turn an accepted report into a retry.
+            await achievements.recordMetricProgress(userId,options.activityType,options.activitySeconds,{query:q,triggerEvaluation:false,dateKey});
+        }
+        const state = await settleExpTaskRewardsOnConnection(userId,current,settings,options,q,tasks,dateKey);
+        if (receiptCode) await q('INSERT INTO user_tree_exp_task_daily (user_id, task_code, date_key, progress_value, completed_times, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',[userId,receiptCode,dateKey,options.activitySeconds,activityCode]);
+        return {...state,...(requestId?{client_request_id:requestId,accepted_seconds:options.activitySeconds,replayed:false}:{})};
+    });
+}
+async function settleExpTaskRewardsOnConnection(userId, tree, settings, options, q, tasks, dateKey) {
     const sourceCodes = Array.isArray(options.sourceCodes) ? options.sourceCodes.filter(Boolean) : [];
     const taskCodes = Array.isArray(options.taskCodes) ? options.taskCodes.filter(Boolean) : [];
     const sourceCodeSet = sourceCodes.length > 0 ? new Set(sourceCodes) : null;
@@ -1289,8 +1329,8 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
         max_growth: maxGrowth,
     };
 
-    const rewardBenefits = options.rewardBenefits || await getTreeRewardBenefits(userId);
-    const expTasksBefore = await buildExpTaskStates(userId, settings, rewardBenefits);
+    const rewardBenefits = options.rewardBenefits || await getTreeRewardBenefits(userId,q);
+    const expTasksBefore = await buildExpTaskStates(userId, settings, rewardBenefits,{query:q,tasks,dateKey});
     const matchedTasks = expTasksBefore.filter((task) => {
         const claimTimes = toNumber(task.available_claim_times, 0);
         if (claimTimes <= 0) return false;
@@ -1299,7 +1339,7 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
             (taskCodeSet && taskCodeSet.has(task.task_code));
     });
 
-    if (!tree || matchedTasks.length === 0) {
+    if (!tree || matchedTasks.length === 0 || options.skipSettlement) {
         return {
             ok: true,
             has_active_tree: !!tree,
@@ -1311,7 +1351,6 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
         };
     }
 
-    const dateKey = getDateKeyByTimezone(settings.timezone);
     let totalReward = 0;
     const settledTasks = [];
 
@@ -1324,7 +1363,7 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
             task.task_code,
             dateKey,
             toNumber(task.progress_value, 0),
-            settleTimes
+            settleTimes,q
         );
 
         const reward = toPositiveInt(task.exp_reward, 0) * settleTimes;
@@ -1341,12 +1380,12 @@ async function settleExpTaskRewards(userId, tree, settings, options = {}) {
 
     let growthResult = defaultGrowth;
     if (totalReward > 0) {
-        growthResult = await applyGrowthReward(tree, totalReward, maxGrowth);
+        growthResult = await applyGrowthReward(tree, totalReward, maxGrowth,q);
         tree.growth_val = growthResult.growth_val;
         tree.tree_status = growthResult.tree_status;
     }
 
-    const expTasks = await buildExpTaskStates(userId, settings, rewardBenefits);
+    const expTasks = await buildExpTaskStates(userId, settings, rewardBenefits,{query:q,tasks,dateKey});
     return {
         ok: true,
         has_active_tree: true,
@@ -1418,11 +1457,11 @@ async function claimExpTask(userId, tree, taskCode, settings) {
     };
 }
 
-async function incrementDurationProgress(userId, taskCode, deltaValue, settings) {
+async function incrementDurationProgress(userId, taskCode, deltaValue, settings, q = query, currentDateKey = null) {
     if (deltaValue <= 0) return;
 
-    const dateKey = getDateKeyByTimezone(settings.timezone);
-    const rows = await query(
+    const dateKey = currentDateKey || getDateKeyByTimezone(settings.timezone);
+    const rows = await q(
         `SELECT id
          FROM user_tree_exp_task_daily
          WHERE user_id = ? AND task_code = ? AND date_key = ?
@@ -1431,7 +1470,7 @@ async function incrementDurationProgress(userId, taskCode, deltaValue, settings)
     );
 
     if (rows.length > 0) {
-        await query(
+        await q(
             `UPDATE user_tree_exp_task_daily
              SET progress_value = progress_value + ?,
                  updated_at = NOW()
@@ -1439,7 +1478,7 @@ async function incrementDurationProgress(userId, taskCode, deltaValue, settings)
             [deltaValue, rows[0].id]
         );
     } else {
-        await query(
+        await q(
             `INSERT INTO user_tree_exp_task_daily
              (user_id, task_code, date_key, progress_value, completed_times, created_at, updated_at)
              VALUES (?, ?, ?, ?, 0, NOW(), NOW())`,
@@ -1509,6 +1548,7 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
         if (expReady) {
             const expSettings = await loadExpSettings();
             const settleResult = await settleExpTaskRewards(user.user_id, tree, expSettings, { rewardBenefits });
+            if (!settleResult.has_active_tree) return res.json([{...buildUnplantedTreePlaceholder(user.user_id,tree),reward_benefits:rewardBenefits}]);
             tree.growth_val = settleResult.growth_val;
             tree.tree_status = settleResult.tree_status;
             tree.max_growth = settleResult.max_growth;
@@ -1527,7 +1567,7 @@ router.get('/get_treePlant_of', auth, async (req, res) => {
         res.end(JSON.stringify([tree]));
     } catch (e) {
         console.log(e);
-        res.json(400, { msg: 'bad request' });
+        return res.status(503).json({ msg: '树场服务暂不可用，请稍后刷新' });
     }
 });
 
@@ -1696,119 +1736,27 @@ router.post('/steal_friend_energy', auth, async (req, res) => {
 });
 
 // 种树
-router.get('/plant_tree', auth, async (req, res) => {
-    let user = req.user;
-    user = JSON.parse(JSON.stringify(user))[0];
-    try {
-        let results = await query(
-            'SELECT * FROM treeplant WHERE user_id = ? AND is_gotten = 0',
-            [user.user_id],
-        );
-        if (results.length > 0) {
-            res.json(400, { msg: 'bad request' });
-        } else {
-            let initialGrowth = 0;
-            let initialStatus = TREE_STATUS.GROWING;
-            let nextTreeTheme = DEFAULT_TREE_SCENE_THEME;
+const readerTree = createReaderTreeOperations({ withTransaction, expReady: ensureExpSchemaReady, settings: loadExpSettings, normalizeTheme: normalizeTreeSceneTheme, benefits: getTreeRewardBenefits, sameDay: isSameDay, rewardFor: calculateMembershipReward });
+function treeUser(req) { return Number(JSON.parse(JSON.stringify(req.user))[0].user_id); }
+function treeMutation(operation, { legacyHarvest = false, requirePlant = false } = {}) {
+    return async (req, res) => {
+        try {
+            const body = req.body || {}, plantId = legacyHarvest ? undefined : body.plant_id;
+            if (requirePlant && (!Number.isSafeInteger(Number(plantId)) || Number(plantId) <= 0)) return res.status(400).json({ msg: '请指定当前树木编号' });
+            const result = await readerTree[operation]({ userId:treeUser(req), treeType:body.tree_type || req.query.tree_type, plantId, orbId:operation === 'collect' ? body.orb_id : undefined, collectPending:operation === 'harvest' && !legacyHarvest, taskCode:body.task_code });
+            if (legacyHarvest) return res.end('已收获，获得原木 × ' + result.rewards.log + (result.rewards.apple ? ' 苹果 × ' + result.rewards.apple : ''));
+            res.json(result);
+        } catch (error) { res.status(error.status || 503).json({ msg:error.status ? error.message : '树场服务暂不可用，请刷新状态后重试' }); }
+    };
+}
+router.get('/plant_tree', auth, treeMutation('plant'));
+router.post('/reader_plant', auth, treeMutation('plant'));
+router.post('/reader_harvest', auth, treeMutation('harvest', { requirePlant:true }));
+router.post('/reader_collect_orbs', auth, treeMutation('collect', { requirePlant:true }));
 
-            let lastTrees = await query(
-                'SELECT * FROM treeplant WHERE user_id = ? ORDER BY plant_id DESC LIMIT 1',
-                [user.user_id]
-            );
+// Completion checks and growth reward commit together; mobile response stays compatible.
+router.post('/do_task', auth, treeMutation('task'));
 
-            if (lastTrees.length > 0) {
-                let lastTree = lastTrees[0];
-                nextTreeTheme = normalizeTreeSceneTheme(lastTree.treeType);
-                if (lastTree.growth_val > 100) {
-                    initialGrowth = lastTree.growth_val - 100;
-                    initialStatus = calcTreeStatusByGrowth(initialGrowth);
-                }
-            }
-
-            if (req.query.tree_type) {
-                nextTreeTheme = normalizeTreeSceneTheme(req.query.tree_type);
-            }
-
-            let insertRes = await query(
-                'INSERT INTO treeplant(treeType, user_id, tree_status, growth_val) VALUES(?, ?, ?, ?)',
-                [nextTreeTheme, user.user_id, initialStatus, initialGrowth],
-            );
-            res.end(JSON.stringify(insertRes));
-        }
-    } catch (e) {
-        console.log(e);
-        res.json(400, { msg: 'bad request' });
-    }
-});
-
-// 完成旧任务接口（保持兼容）
-router.post('/do_task', auth, async (req, res) => {
-    let user = req.user;
-    user = JSON.parse(JSON.stringify(user))[0];
-    let { task_code } = req.body;
-
-    if (!task_code) {
-        return res.json(400, { msg: 'Missing task_code' });
-    }
-
-    try {
-        let trees = await query('SELECT * FROM treeplant WHERE user_id = ? AND is_gotten = 0', [user.user_id]);
-        if (trees.length === 0) {
-            return res.json(400, { msg: 'No active tree' });
-        }
-        let tree = trees[0];
-
-        let tasks = await query('SELECT * FROM tree_tasks WHERE task_code = ?', [task_code]);
-        if (tasks.length === 0) {
-            return res.json(400, { msg: 'Task not found' });
-        }
-        let task = tasks[0];
-
-        let userTasks = await query('SELECT * FROM user_tree_tasks WHERE user_id = ? AND task_code = ?', [user.user_id, task_code]);
-        let userTask = userTasks.length > 0 ? userTasks[0] : null;
-
-        if (userTask) {
-            if (task.task_type === 'daily') {
-                if (isSameDay(userTask.last_completed_at, new Date())) {
-                    return res.json(400, { msg: 'Task already completed today' });
-                }
-            } else if (task.task_type === 'fixed') {
-                if (userTask.is_completed) {
-                    return res.json(400, { msg: 'Task already completed' });
-                }
-            }
-        }
-
-        let now = new Date();
-        if (userTask) {
-            await query('UPDATE user_tree_tasks SET last_completed_at = ?, is_completed = 1 WHERE id = ?', [now, userTask.id]);
-        } else {
-            await query('INSERT INTO user_tree_tasks (user_id, task_code, last_completed_at, is_completed) VALUES (?, ?, ?, 1)', [user.user_id, task_code, now]);
-        }
-
-        const expSettings = await loadExpSettings();
-        const rewardBenefits = await getTreeRewardBenefits(user.user_id);
-        const actualReward = calculateMembershipReward(task.growth_reward, rewardBenefits.multiplier);
-        const growthResult = await applyGrowthReward(tree, actualReward, toPositiveInt(expSettings.max_growth, 100));
-
-        res.json(200, {
-            msg: 'Task completed',
-            growth_val: growthResult.growth_val,
-            tree_status: growthResult.tree_status,
-            reward: actualReward,
-            base_reward: toNumber(task.growth_reward, 0),
-            reward_multiplier: rewardBenefits.multiplier,
-            reward_benefits: rewardBenefits,
-            task_icon: task.icon,
-        });
-
-    } catch (e) {
-        console.log(e);
-        res.json(400, { msg: 'System error' });
-    }
-});
-
-// 上报阅读/写作时长（供阅读器/写作器调用）
 router.get('/exp_task_status', auth, async (req, res) => {
     let user = req.user;
     user = JSON.parse(JSON.stringify(user))[0];
@@ -1830,74 +1778,29 @@ router.get('/exp_task_status', auth, async (req, res) => {
 
 // 上报阅读/写作时长（供阅读器/写作器调用）
 router.post('/report_exp_activity', auth, async (req, res) => {
-    let user = req.user;
-    user = JSON.parse(JSON.stringify(user))[0];
-
-    const { activity_type, seconds } = req.body || {};
-    const deltaSeconds = toPositiveInt(seconds, 0);
-
-    if (!activity_type || deltaSeconds <= 0) {
-        return res.json(400, { msg: '缺少有效参数' });
-    }
-
+    const userId = treeUser(req), {activity_type,seconds,client_request_id} = req.body || {};
+    const delta = Number(seconds);
+    if (!['read_seconds','write_seconds'].includes(activity_type) || !Number.isSafeInteger(delta) || delta < 1 || delta > 300 || !(typeof seconds === 'number' || (typeof seconds === 'string' && /^[0-9]+$/.test(seconds)))) return res.status(400).json({msg:'请上报 1–300 秒的阅读或写作时长'});
+    if (client_request_id != null && (typeof client_request_id !== 'string' || !/^[a-zA-Z0-9_-]{16,100}$/.test(client_request_id))) return res.status(400).json({msg:'上报编号无效'});
     try {
-        const shouldRecordAchievementMetric = activity_type === 'read_seconds' || activity_type === 'write_seconds';
-        if (shouldRecordAchievementMetric) {
-            await achievements.recordMetricProgress(user.user_id, activity_type, deltaSeconds, {
-                reason: '阅读/写作时长上报',
-                suppressNotification: true,
-            });
-        }
-
         const ready = await ensureExpSchemaReady();
         if (!ready) {
-            return res.json(200, {
-                msg: shouldRecordAchievementMetric ? 'ok' : '经验球功能未初始化，请先执行数据库升级脚本',
-                exp_tasks: [],
-                settled_tasks: [],
-                total_reward: 0,
-                growth_val: 0,
-                tree_status: null,
-                has_active_tree: false,
-            });
+            // Native retries require a durable receipt. Legacy clients retain
+            // their existing achievement-only path when tree tables are absent.
+            if (client_request_id) return res.status(503).json({msg:'阅读任务暂不可用，请稍后重试'});
+            await achievements.recordMetricProgress(userId,activity_type,delta,{reason:'阅读/写作时长上报',suppressNotification:true});
+            return res.json({msg:'ok',exp_tasks:[],settled_tasks:[],total_reward:0,growth_val:0,tree_status:null,has_active_tree:false});
         }
-
         const settings = await loadExpSettings();
-        const tasks = await loadExpTasks();
-
-        const matchedTasks = tasks.filter((task) => task.source_code === activity_type);
-        if (matchedTasks.length === 0) {
-            return res.json(200, {
-                msg: 'ok',
-                exp_tasks: [],
-                settled_tasks: [],
-                total_reward: 0,
-                growth_val: 0,
-                tree_status: null,
-                has_active_tree: false,
-            });
+        const result = await settleExpTaskRewards(userId,null,settings,{sourceCodes:[activity_type],activityType:activity_type,activitySeconds:delta,clientRequestId:client_request_id});
+        if (!result.replayed) {
+            try { await achievements.recordMetricProgress(userId,activity_type,0,{reason:'阅读/写作时长上报',suppressNotification:true}); }
+            catch (error) { console.log('阅读时长已提交，徽章评估暂未完成'); }
         }
-
-        for (const task of matchedTasks) {
-            await incrementDurationProgress(user.user_id, task.task_code, deltaSeconds, settings);
-        }
-        const tree = await getActiveTree(user.user_id);
-        const settleResult = await settleExpTaskRewards(user.user_id, tree, settings, {
-            sourceCodes: [activity_type],
-        });
-
-        res.json(200, {
-            msg: 'ok',
-            exp_tasks: settleResult.exp_tasks,
-            settled_tasks: settleResult.settled_tasks,
-            total_reward: settleResult.total_reward,
-            growth_val: settleResult.growth_val,
-            tree_status: settleResult.tree_status,
-            has_active_tree: settleResult.has_active_tree,
-        });
-    } catch (e) {
-        console.log(e);
-        res.json(400, { msg: 'System error' });
+        return res.json({msg:'ok',exp_tasks:result.exp_tasks,settled_tasks:result.settled_tasks,total_reward:result.total_reward,growth_val:result.growth_val,tree_status:result.tree_status,has_active_tree:result.has_active_tree,...(client_request_id?{client_request_id:result.client_request_id,accepted_seconds:result.accepted_seconds,replayed:result.replayed}:{})});
+    } catch (error) {
+        console.log(error);
+        return res.status(error.status || 503).json({msg:error.status ? error.message : '阅读任务暂不可用，请稍后重试'});
     }
 });
 
@@ -2046,180 +1949,11 @@ router.post('/refresh_exp_orb', auth, async (req, res) => {
 });
 
 // 点击收集单个经验球
-router.post('/collect_exp_orb', auth, async (req, res) => {
-    let user = req.user;
-    user = JSON.parse(JSON.stringify(user))[0];
-
-    const { orb_id } = req.body || {};
-    if (!orb_id) {
-        return res.json(400, { msg: '缺少 orb_id' });
-    }
-
-    try {
-        const ready = await ensureExpSchemaReady();
-        if (!ready) {
-            return res.json(400, { msg: '经验球功能未初始化，请先执行数据库升级脚本' });
-        }
-
-        const tree = await getActiveTree(user.user_id);
-        if (!tree) {
-            return res.json(400, { msg: 'No active tree' });
-        }
-
-        await expireOverdueOrbs(user.user_id);
-
-        const rows = await query(
-            `SELECT orb_id, reward
-             FROM tree_exp_orbs
-             WHERE orb_id = ? AND user_id = ? AND plant_id = ? AND status = 'pending'
-             LIMIT 1`,
-            [orb_id, user.user_id, tree.plant_id]
-        );
-
-        if (rows.length === 0) {
-            return res.json(400, { msg: '经验球不存在或已被收集' });
-        }
-
-        const orb = rows[0];
-        await query(
-            `UPDATE tree_exp_orbs
-             SET status = 'collected', collected_at = NOW()
-             WHERE orb_id = ? AND user_id = ?`,
-            [orb.orb_id, user.user_id]
-        );
-
-        const settings = await loadExpSettings();
-        const growthResult = await applyGrowthReward(tree, orb.reward, toPositiveInt(settings.max_growth, 100));
-        const expOrbs = await getPendingOrbs(user.user_id, tree.plant_id);
-
-        res.json(200, {
-            msg: '收集成功',
-            reward: toPositiveInt(orb.reward, 1),
-            growth_val: growthResult.growth_val,
-            tree_status: growthResult.tree_status,
-            exp_orbs: expOrbs,
-        });
-    } catch (e) {
-        console.log(e);
-        res.json(400, { msg: 'System error' });
-    }
+router.post('/collect_exp_orb', auth, (req, res) => {
+    if (!req.body || !req.body.orb_id) return res.status(400).json({ msg:'缺少 orb_id' });
+    return treeMutation('collect')(req,res);
 });
-
-// 一键收集所有经验球
-router.post('/collect_all_exp_orbs', auth, async (req, res) => {
-    let user = req.user;
-    user = JSON.parse(JSON.stringify(user))[0];
-
-    try {
-        const ready = await ensureExpSchemaReady();
-        if (!ready) {
-            return res.json(400, { msg: '经验球功能未初始化，请先执行数据库升级脚本' });
-        }
-
-        const tree = await getActiveTree(user.user_id);
-        if (!tree) {
-            return res.json(400, { msg: 'No active tree' });
-        }
-
-        await expireOverdueOrbs(user.user_id);
-
-        const settings = await loadExpSettings();
-        const collectLimit = toPositiveInt(settings.collect_all_limit, 50);
-
-        const pending = await query(
-            `SELECT orb_id, reward
-             FROM tree_exp_orbs
-             WHERE user_id = ? AND plant_id = ? AND status = 'pending'
-             ORDER BY orb_id ASC
-             LIMIT ?`,
-            [user.user_id, tree.plant_id, collectLimit]
-        );
-
-        if (pending.length === 0) {
-            return res.json(400, { msg: '暂无可收集经验球' });
-        }
-
-        const orbIds = pending.map((item) => item.orb_id);
-        const totalReward = pending.reduce((sum, item) => sum + toPositiveInt(item.reward, 0), 0);
-
-        const placeholders = orbIds.map(() => '?').join(',');
-        await query(
-            `UPDATE tree_exp_orbs
-             SET status = 'collected', collected_at = NOW()
-             WHERE user_id = ? AND orb_id IN (${placeholders})`,
-            [user.user_id, ...orbIds]
-        );
-
-        const growthResult = await applyGrowthReward(tree, totalReward, toPositiveInt(settings.max_growth, 100));
-        const expOrbs = await getPendingOrbs(user.user_id, tree.plant_id);
-
-        res.json(200, {
-            msg: '一键收集成功',
-            collect_count: orbIds.length,
-            total_reward: totalReward,
-            growth_val: growthResult.growth_val,
-            tree_status: growthResult.tree_status,
-            exp_orbs: expOrbs,
-        });
-    } catch (e) {
-        console.log(e);
-        res.json(400, { msg: 'System error' });
-    }
-});
-
-// 收获/铲除
-router.get('/got_tree', auth, async (req, res) => {
-    let user = req.user;
-    user = JSON.parse(JSON.stringify(user))[0];
-    try {
-        let results = await query(
-            'SELECT * FROM treeplant WHERE user_id = ? AND is_gotten = 0',
-            [user.user_id],
-        );
-        if (results.length > 0) {
-            let tree = results[0];
-            if (tree.tree_status === TREE_STATUS.GROWING) {
-                res.json(400, { msg: '树苗还在成长中，无法铲除或收获' });
-            } else if (tree.tree_status === TREE_STATUS.BLOOMING) {
-                let logAmount = BASE_TREE_HARVEST_LOG_REWARD;
-                await query('UPDATE treeplant SET is_gotten = 1 WHERE user_id = ?', [user.user_id]);
-                bank.addAmount(user, 'log', logAmount);
-
-                if (await ensureExpSchemaReady()) {
-                    await query(
-                        `UPDATE tree_exp_orbs
-                         SET status = 'expired', collected_at = NOW()
-                         WHERE user_id = ? AND plant_id = ? AND status = 'pending'`,
-                        [user.user_id, tree.plant_id]
-                    );
-                }
-
-                res.end('已收获，获得原木 × ' + logAmount);
-            } else {
-                let logAmount = BASE_TREE_HARVEST_LOG_REWARD;
-                let appleAmount = Math.floor(1 + Math.random() * 3);
-                await query('UPDATE treeplant SET is_gotten = 1 WHERE user_id = ?', [user.user_id]);
-                bank.addAmount(user, 'log', logAmount);
-                bank.addAmount(user, 'apple', appleAmount);
-
-                if (await ensureExpSchemaReady()) {
-                    await query(
-                        `UPDATE tree_exp_orbs
-                         SET status = 'expired', collected_at = NOW()
-                         WHERE user_id = ? AND plant_id = ? AND status = 'pending'`,
-                        [user.user_id, tree.plant_id]
-                    );
-                }
-
-                res.end('已收获，获得原木 × ' + logAmount + ' 苹果 × ' + appleAmount);
-            }
-        } else {
-            res.json(400, { msg: 'bad request' });
-        }
-    } catch (e) {
-        console.log(e);
-        res.json(400, { msg: 'bad request' });
-    }
-});
+router.post('/collect_all_exp_orbs', auth, treeMutation('collect'));
+router.get('/got_tree', auth, treeMutation('harvest', { legacyHarvest:true }));
 
 module.exports = router;

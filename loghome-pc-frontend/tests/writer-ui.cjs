@@ -31,6 +31,13 @@ for (let i = 4; i <= 116; i++) {
 }
 let empty = false,
   fail = false;
+const settingsWrites = [];
+let failSetting = false;
+const settingEndpoints = [
+  "set_novel_status",
+  "set_novel_update_status",
+  "set_novel_reader_ai_setting",
+];
 const holds = new Map();
 function holdRequest(name) {
   let entered, release;
@@ -47,6 +54,27 @@ function holdRequest(name) {
 async function routeApi(route) {
   const url = new URL(route.request().url()),
     name = url.pathname.split("/").pop();
+  if (settingEndpoints.includes(name) && route.request().method() === "POST") {
+    const body = route.request().postDataJSON();
+    settingsWrites.push({ name, body });
+    if (!failSetting) Object.assign(novel, body);
+    return route.fulfill({
+      status: failSetting ? 503 : 200,
+      contentType: "application/json",
+      body: JSON.stringify({ msg: failSetting ? "状态保存失败" : "ok" }),
+      headers: { "access-control-allow-origin": "*" },
+    });
+  }
+  if (name === "modify_novel" && route.request().method() === "POST") {
+    const { name: workName, content } = route.request().postDataJSON();
+    Object.assign(novel, { name: workName, content });
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ msg: "ok" }),
+      headers: { "access-control-allow-origin": "*" },
+    });
+  }
   if (url.origin === new URL(base).origin || route.request().method() !== "GET")
     return api(route);
   const shouldFail = name === "get_novel_specific_statistics" && fail;
@@ -227,6 +255,12 @@ async function run() {
       return;
     }
     await contained();
+    assert.equal(
+      await page.evaluate(
+        () => getComputedStyle(document.documentElement).overflowY
+      ),
+      "hidden"
+    );
     const volume = page.locator(".catalog-item.volume");
     await volume.hover();
     const button = volume.locator(".catalog-menu");
@@ -268,6 +302,22 @@ async function run() {
         assert.equal(first.y, second.y);
         assert.ok(second.x > first.x);
       }
+      if (label === "云端时间机器") {
+        const header = page.locator(".writer-tools .writer-panel-header");
+        const initial = await header.boundingBox();
+        await page
+          .locator(".writer-tools .writer-panel-body")
+          .evaluate((el) => {
+            el.scrollTop = el.scrollHeight;
+          });
+        assert.deepEqual(await header.boundingBox(), initial);
+        await contained();
+        await page
+          .locator(".writer-tools .writer-panel-body")
+          .evaluate((el) => {
+            el.scrollTop = 0;
+          });
+      }
       if (label === "读者纠错") await page.locator(".feedback-quote").waitFor();
       await snapshot(label);
       await page
@@ -293,6 +343,155 @@ async function run() {
     await page.locator(".writer-tools").getByLabel("作品名").waitFor();
     await snapshot("作品设置");
     await contained();
+    const workName = page.locator(".writer-tools").getByLabel("作品名");
+    const saveSettings = page.getByRole("button", {
+      name: "保存资料",
+      exact: true,
+    });
+    assert.equal(await saveSettings.isDisabled(), true);
+    await workName.fill("方块世界的旅人 · 修订");
+    assert.equal(await saveSettings.isEnabled(), true);
+    await page
+      .getByRole("button", { name: "刷新工具数据", exact: true })
+      .click();
+    await page
+      .locator(".el-message-box")
+      .getByRole("button", { name: "取消", exact: true })
+      .click();
+    assert.equal(await workName.inputValue(), "方块世界的旅人 · 修订");
+    await saveSettings.click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector(".workspace-identity strong")
+        .textContent.includes("修订")
+    );
+    assert.equal(await workName.inputValue(), "方块世界的旅人 · 修订");
+    assert.equal(await saveSettings.isDisabled(), true);
+    const statusDialog = page.locator(".el-message-box:visible");
+    const settingSwitch = (label) =>
+      page
+        .locator(".setting-row")
+        .filter({ hasText: label })
+        .locator('input[type="checkbox"]');
+    for (const label of ["已经完结", "作品公开"]) {
+      const control = settingSwitch(label);
+      const original = await control.isChecked();
+      for (const dismissal of ["cancel", "close", "escape"]) {
+        const before = settingsWrites.length;
+        await control.click();
+        await statusDialog.waitFor();
+        assert.equal(
+          await control.isChecked(),
+          original,
+          "Confirmation must keep the saved state visible"
+        );
+        assert.equal(await control.isDisabled(), true);
+        if (dismissal === "cancel")
+          await statusDialog
+            .getByRole("button", { name: "取消", exact: true })
+            .click();
+        else if (dismissal === "close")
+          await statusDialog.locator(".el-message-box__headerbtn").click();
+        else await page.keyboard.press("Escape");
+        await statusDialog.waitFor({ state: "hidden" });
+        assert.equal(
+          await control.isChecked(),
+          original,
+          `${label}: ${dismissal} must restore the saved state`
+        );
+        assert.equal(
+          settingsWrites.length,
+          before,
+          "Dismissal must not submit settings"
+        );
+      }
+    }
+    async function waitSetting(label, checked) {
+      await page.waitForFunction(
+        ({ label, checked }) => {
+          const row = [...document.querySelectorAll(".setting-row")].find(
+            (row) => row.querySelector("strong").textContent === label
+          );
+          const input = row && row.querySelector("input");
+          return input && !input.disabled && input.checked === checked;
+        },
+        { label, checked }
+      );
+    }
+    async function saveSwitch(
+      label,
+      endpoint,
+      expected,
+      failure = false,
+      confirm = true
+    ) {
+      failSetting = failure;
+      const response = page.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname.endsWith("/" + endpoint) &&
+          response.status() === (failure ? 503 : 200)
+      );
+      await settingSwitch(label).click();
+      if (confirm) {
+        await statusDialog.waitFor();
+        await statusDialog
+          .getByRole("button", { name: "确定", exact: true })
+          .click();
+      }
+      await response;
+      await waitSetting(label, expected);
+      failSetting = false;
+    }
+    for (const [label, endpoint, key] of [
+      ["已经完结", "set_novel_update_status", "is_complete"],
+      ["作品公开", "set_novel_status", "is_personal"],
+    ]) {
+      await saveSwitch(label, endpoint, true);
+      assert.equal(
+        settingsWrites.at(-1).body[key],
+        key === "is_complete" ? 1 : 0
+      );
+      await saveSwitch(label, endpoint, true, true);
+      await settingSwitch(label).click();
+      await statusDialog.waitFor();
+      await statusDialog
+        .getByRole("button", { name: "取消", exact: true })
+        .click();
+      await statusDialog.waitFor({ state: "hidden" });
+      assert.equal(
+        await settingSwitch(label).isChecked(),
+        true,
+        "Cancellation must also preserve an enabled state"
+      );
+      await saveSwitch(label, endpoint, false);
+      assert.equal(
+        settingsWrites.at(-1).body[key],
+        key === "is_complete" ? 0 : 1
+      );
+    }
+    await saveSwitch(
+      "读者 AI 助手",
+      "set_novel_reader_ai_setting",
+      true,
+      true,
+      false
+    );
+    await saveSwitch(
+      "读者 AI 助手",
+      "set_novel_reader_ai_setting",
+      false,
+      false,
+      false
+    );
+    assert.equal(settingsWrites.at(-1).body.disable_reader_ai, 1);
+    await saveSwitch(
+      "读者 AI 助手",
+      "set_novel_reader_ai_setting",
+      true,
+      false,
+      false
+    );
+    assert.equal(settingsWrites.at(-1).body.disable_reader_ai, 0);
     await page.getByRole("button", { name: "AI 助手", exact: true }).click();
     await page.locator(".writer-ai").waitFor();
     await page.getByRole("button", { name: "续写情节", exact: true }).click();
@@ -305,13 +504,14 @@ async function run() {
     await page.getByRole("button", { name: "实时协作", exact: true }).click();
     await snapshot("协作空状态");
     await contained();
-    // An older failing request must not clear a newer panel's loader or set its error.
+    // Two loads in the same panel: a chapter change starts a newer request.
     fail = true;
-    const old = holdRequest("get_novel_specific_statistics"),
-      current = holdRequest("get_novel_writing_calendar");
+    const old = holdRequest("get_novel_specific_statistics");
     await page.getByRole("button", { name: "阅读统计", exact: true }).click();
     await old.started;
-    await page.getByRole("button", { name: "写作日历", exact: true }).click();
+    fail = false;
+    const current = holdRequest("get_novel_specific_statistics");
+    await page.locator(".catalog-entry").nth(1).click();
     await current.started;
     const oldResponse = page.waitForResponse(
       (r) =>
@@ -331,7 +531,7 @@ async function run() {
     );
     assert.equal(await page.locator(".writer-tools .panel-error").count(), 0);
     current.release();
-    await page.locator(".writing-calendar").waitFor();
+    await page.locator(".tool-metrics").waitFor();
     fail = false;
     empty = true;
     await tool("读者纠错");
@@ -355,7 +555,9 @@ async function run() {
     await page.getByRole("link", { name: "返回创作中心", exact: true }).click();
     await page.waitForURL(base + "/write");
     await page.waitForFunction(
-      () => !document.body.classList.contains("writer-route-active")
+      () =>
+        !document.body.classList.contains("writer-route-active") &&
+        !document.documentElement.classList.contains("writer-route-active")
     );
     assert.notEqual(
       await page.evaluate(() => getComputedStyle(document.body).overflowY),
@@ -369,6 +571,7 @@ async function run() {
           longCatalog: 116,
           panels: 13,
           staleRequests: "passed",
+          settingsSwitches: "passed",
           routeScrollRestored: true,
           viewports: 4,
           pageErrors: errors,

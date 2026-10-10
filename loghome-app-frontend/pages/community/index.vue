@@ -47,11 +47,11 @@
 
       <view class="community-shortcuts">
         <button class="shortcut-button shortcut-post" @tap="navigateToCreatePost">
-          <uni-icons type="compose" size="36rpx" color="#ffffff" />
+          <image class="shortcut-icon" src="/static/icons/community-publish-pixel.png" mode="aspectFit" aria-hidden="true" />
           <text>发布帖子</text>
         </button>
         <button class="shortcut-button shortcut-circles" @tap="navigateToCircles">
-          <uni-icons type="staff-filled" size="36rpx" color="#ffffff" />
+          <image class="shortcut-icon" src="/static/icons/community-circles-pixel.png" mode="aspectFit" aria-hidden="true" />
           <text>圈子广场</text>
         </button>
       </view>
@@ -1391,27 +1391,43 @@ export default {
 .shortcut-button {
   flex: 1;
   min-width: 0;
-  min-height: 100rpx;
+  min-height: 108rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16rpx;
   margin: 0;
-  padding: 20rpx 12rpx;
-  border-radius: 20rpx;
-  color: #fff;
+  padding: 18rpx 12rpx;
+  border-radius: 22rpx;
   font-size: 26rpx;
   font-weight: 600;
   line-height: 1.5;
+  box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.65);
   &::after { border: 0; }
   &:active { opacity: 0.85; transform: translateY(2rpx); }
 }
+.shortcut-icon {
+  width: 56rpx;
+  height: 56rpx;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
 .shortcut-post {
-  background: #b66f52;
-  .dark-mode & { background: #90553e; }
+  color: #805238;
+  background: linear-gradient(120deg, #fff4e6 0%, #f5dfca 100%);
+  .dark-mode & {
+    color: #edd0af;
+    background: linear-gradient(120deg, #42362c 0%, #56402f 100%);
+    box-shadow: inset 0 2rpx 0 rgba(255, 231, 204, 0.08);
+  }
 }
 .shortcut-circles {
-  background: #627f54;
-  .dark-mode & { background: #475f3b; }
+  color: #4f6743;
+  background: linear-gradient(120deg, #f1f7e9 0%, #dbe9c9 100%);
+  .dark-mode & {
+    color: #cfdfb7;
+    background: linear-gradient(120deg, #303b29 0%, #405034 100%);
+    box-shadow: inset 0 2rpx 0 rgba(230, 248, 205, 0.08);
+  }
 }
 </style>

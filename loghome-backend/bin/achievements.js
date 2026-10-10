@@ -1257,13 +1257,13 @@ async function getUserAchievementSummary(userId) {
 	};
 }
 
-async function upsertUserMetricDaily(userId, dateKey, metricCode, deltaValue) {
+async function upsertUserMetricDaily(userId, dateKey, metricCode, deltaValue, q = query) {
 	const metricColumn = METRIC_COLUMN_MAP[metricCode];
 	if (!metricColumn) throw new Error('UNSUPPORTED_METRIC_CODE');
 	const safeDelta = Math.max(0, toInt(deltaValue, 0));
 	if (!safeDelta) return;
 
-	await query(
+	await q(
 		`INSERT INTO user_metric_daily (user_id, date_key, ${metricColumn})
 		 VALUES (?, ?, ?)
 		 ON DUPLICATE KEY UPDATE
@@ -1432,7 +1432,7 @@ async function getAchievementsByMetric(metricCode) {
 async function recordMetricProgress(userId, metricCode, deltaValue, options = {}) {
 	const occurredDate = options.occurredAt ? getValidDate(options.occurredAt) : new Date();
 	const dateKey = options.dateKey || formatDateKey(occurredDate);
-	await upsertUserMetricDaily(userId, dateKey, metricCode, deltaValue);
+	await upsertUserMetricDaily(userId, dateKey, metricCode, deltaValue, options.query || query);
 	const evaluationBaseDate = occurredDate;
 
 	if (options.triggerEvaluation === false) {

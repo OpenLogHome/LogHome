@@ -14,7 +14,7 @@
     <p v-if="state.storageError" class="audio-error" role="alert">{{ state.storageError }}</p>
     <div v-if="expanded" class="audio-settings">
       <label>章节 <select aria-label="听书章节" :value="state.chapterIndex" :disabled="loading" @change="player.chapter(Number($event.target.value))"><option v-for="(chapter,index) in state.chapters" :key="chapter.article_id" :value="index">{{ chapter.title }}</option></select></label>
-      <label>音色 <select aria-label="听书音色" :value="state.voiceURI" @change="configure({ voiceURI: $event.target.value })"><option v-if="!state.voices.length" value="">系统默认</option><option v-for="voice in sortedVoices" :key="voice.voiceURI" :value="voice.voiceURI">{{ voice.name }} · {{ voice.lang }}{{ voice.local ? ' · 本机' : '' }}</option></select></label>
+      <label>音色 <select aria-label="听书音色" :value="state.voiceURI" @change="configure({ voiceURI: $event.target.value })"><option value="">系统默认</option><option v-for="voice in sortedVoices" :key="voice.voiceURI" :value="voice.voiceURI">{{ voice.name }} · {{ voice.lang }}{{ voice.local ? ' · 本机' : '' }}</option></select></label>
       <label>语速 <select aria-label="听书语速" :value="state.rate" @change="configure({ rate: Number($event.target.value) })"><option v-for="rate in [.5,.75,1,1.25,1.5,1.75,2]" :key="rate" :value="rate">{{ rate }}×</option></select></label>
       <label>定时停止 <select aria-label="听书定时停止" :value="sleepSelection" @change="sleepSelection = $event.target.value; player.setSleep(sleepSelection)"><option value="0">关闭</option><option value="chapter">本章结束</option><option v-for="minutes in [5,10,15,30,60]" :key="minutes" :value="String(minutes)">{{ minutes }} 分钟</option></select></label>
       <label class="follow"><input v-model="state.follow" type="checkbox" @change="player.saveSettings()"> 跟随正文</label>
@@ -32,7 +32,7 @@ export default {
   computed: {
     paragraphControlId() { return this.privatePlayback ? 'preview-audio-paragraph' : 'audio-paragraph' },
     loading() { return this.state.status === 'loading' },
-    statusText() { return { idle: '已停止', ready: '待播放', playing: '播放中', paused: '已暂停', loading: '加载章节…', ended: '已播完', error: '播放失败' }[this.state.status] },
+    statusText() { return this.state.status === 'playing' && !this.state.speechStarted ? '准备播放…' : { idle: '已停止', ready: '待播放', playing: '播放中', paused: '已暂停', loading: '加载章节…', ended: '已播完', error: '播放失败' }[this.state.status] },
     sortedVoices() { return [...this.state.voices].sort((a,b) => Number(/^zh/i.test(b.lang)) - Number(/^zh/i.test(a.lang))) },
     sleepTime() { return new Date(this.state.sleepUntil).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) }
   },

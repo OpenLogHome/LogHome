@@ -105,6 +105,13 @@
     "_name": "_174bec68"
   },
   {
+    "name": "read-activities",
+    "path": "/read/activities",
+    "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/activities.vue",
+    "chunkName": "pages/read/activities",
+    "_name": "_ee25ffbe"
+  },
+  {
     "name": "read-bookcase",
     "path": "/read/bookcase",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/bookcase.vue",
@@ -124,6 +131,27 @@
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/rank.vue",
     "chunkName": "pages/read/rank",
     "_name": "_7e6c1de0"
+  },
+  {
+    "name": "read-redstone",
+    "path": "/read/redstone",
+    "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/redstone.vue",
+    "chunkName": "pages/read/redstone",
+    "_name": "_61ad7228"
+  },
+  {
+    "name": "read-resources",
+    "path": "/read/resources",
+    "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/resources.vue",
+    "chunkName": "pages/read/resources",
+    "_name": "_45f092a1"
+  },
+  {
+    "name": "read-rewards",
+    "path": "/read/rewards",
+    "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/rewards.vue",
+    "chunkName": "pages/read/rewards",
+    "_name": "_62b0c5c0"
   },
   {
     "name": "tag-collections",

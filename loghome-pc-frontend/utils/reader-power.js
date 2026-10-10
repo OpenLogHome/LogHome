@@ -6,6 +6,8 @@ export function normalizePower(source, id) {
     data[key] = Number(source[key])
   }
   data.novel_id = Number(id)
+  if (typeof source.generated_at === 'number' || /^\d+$/.test(String(source.generated_at))) data.generated_at = Number(source.generated_at)
+  if (data.generated_at === null || !Number.isFinite(new Date(data.generated_at).getTime())) throw new Error('原木力计算时间无效')
   data.days_diff = source.days_diff === null ? null : Number(source.days_diff)
   if (data.days_diff !== null && !Number.isSafeInteger(data.days_diff)) throw new Error('原木力日期格式无效')
   return data

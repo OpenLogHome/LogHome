@@ -186,7 +186,7 @@
 
     <!-- 添加窗口管理器 -->
     <WindowManager />
-    <ReaderAudioPlayer />
+    <client-only><ReaderAudioPlayer /></client-only>
   </div>
 </template>
 

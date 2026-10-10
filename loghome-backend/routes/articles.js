@@ -6,6 +6,7 @@ let sysLog = require('../bin/log.js');
 let statistics = require('../bin/statistics.js');
 const { PUBLIC_ARTICLE } = require('../bin/readingVisibility.js');
 const { findReaderParagraph } = require('../bin/readerParagraphs.js');
+const { registerReaderExcerpts } = require('../bin/readerExcerpts.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -152,31 +153,7 @@ router.get('/novel_clicked', async function (req, res) {
 	}
 });
 
-router.get('/get_my_article_cento', auth, async function (req, res) {
-	try {
-		let results = await query(
-			'SELECT * FROM article_cento WHERE article_id = ? AND user_id = ? AND is_delete = 0',
-			[req.query.article_id, req.user[0].user_id],
-		);
-		res.end(JSON.stringify(results));
-	} catch (e) {
-		res.json(400, { msg: 'bad request' });
-	}
-});
-
-
-router.post('/add_article_cento', auth, async function (req, res) {
-	try {
-		await query(
-			'INSERT INTO article_cento(user_id, article_id, paragraph_id, paragraph) VALUES(?, ?, ?, ?)',
-			[req.user[0].user_id, req.body.article_id, req.body.paragraph_id, req.body.paragraph],
-		);
-		res.end('success');
-	} catch (e) {
-		console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
-});
+registerReaderExcerpts(router, { auth, query });
 
 router.post('/remove_article_cento', auth, async function (req, res) {
 	try {
@@ -353,48 +330,6 @@ async function novelStatistics() {
 
 //每晚凌晨三点的小说数据统计功能,记录全站小说数据情况
 schedule.scheduleJob('0 0 3 * * *', novelStatistics);
-
-// 获取用户对某本小说的全部划线段落
-router.get('/get_my_novel_centos', auth, async function (req, res) {
-	try {
-		let results = await query(
-			`SELECT ac.*, a.title, a.article_chapter FROM article_cento ac 
-            JOIN articles a ON ac.article_id = a.article_id 
-            WHERE a.novel_id = ? AND ac.user_id = ? AND ac.is_delete = 0
-			ORDER BY article_chapter ASC`,
-			[req.query.novel_id, req.user[0].user_id],
-		);
-		res.end(JSON.stringify(results));
-	} catch (e) {
-		console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
-});
-
-// 获取某本小说的热门划线段落
-router.get('/get_hot_novel_centos', async function (req, res) {
-	try {
-		// 热门划线段落，按划线次数和评论数降序排序
-		let results = await query(
-			`SELECT ac.paragraph_id, ac.paragraph, 
-            COUNT(DISTINCT ac.article_cento_id) AS highlight_count, 
-            COUNT(DISTINCT nc.essay_comment_id) AS comment_count,
-            a.title AS article_title, a.article_chapter, a.article_id
-            FROM article_cento ac
-            JOIN articles a ON ac.article_id = a.article_id
-            LEFT JOIN novel_comments nc ON nc.cento_id = ac.article_cento_id AND nc.deleted = 0
-            WHERE a.novel_id = ? AND ac.is_delete = 0
-            GROUP BY ac.paragraph_id, ac.paragraph, a.title, a.article_chapter, a.article_id
-            ORDER BY highlight_count DESC, comment_count DESC
-            LIMIT ?`,
-			[req.query.novel_id, Number(req.query.limit) || 10],
-		);
-		res.end(JSON.stringify(results));
-	} catch (e) {
-		console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
-});
 
 // 提交文本错误反馈
 router.post('/submit_feedback', auth, async function (req, res) {

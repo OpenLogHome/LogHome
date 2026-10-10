@@ -11,12 +11,6 @@
     @close="$emit('close')"
   >
     <template v-if="tab === 'history' || tab === 'backups'">
-      <p class="tool-callout">
-        <i
-          aria-hidden="true"
-          class="el-icon-info"
-        />恢复只更新写作稿；发布后读者才会看到修改。
-      </p>
       <button
         v-if="tab === 'backups' && article"
         class="secondary full-width"
@@ -511,22 +505,18 @@
           ><input
             class="writer-switch"
             type="checkbox"
-            :disabled="!access.is_owner || busy"
-            :checked="Number(novel.is_personal) === 0"
-            @change="
-              setStatus('is_personal', $event.target.checked ? 0 : 1)
-            " /></label
+            :disabled="!access.is_owner || busy || settingPending"
+            :checked="settingChecked('is_personal')"
+            @change="setStatus('is_personal', $event)" /></label
         ><label class="setting-row"
           ><span
             ><strong>已经完结</strong><small>在作品页显示完结状态</small></span
           ><input
             class="writer-switch"
             type="checkbox"
-            :disabled="!access.is_owner || busy"
-            :checked="Number(novel.is_complete) === 1"
-            @change="
-              setStatus('is_complete', $event.target.checked ? 1 : 0)
-            " /></label
+            :disabled="!access.is_owner || busy || settingPending"
+            :checked="settingChecked('is_complete')"
+            @change="setStatus('is_complete', $event)" /></label
         ><label class="setting-row"
           ><span
             ><strong>读者 AI 助手</strong
@@ -534,14 +524,9 @@
           ><input
             class="writer-switch"
             type="checkbox"
-            :disabled="!access.is_owner || busy"
-            :checked="Number(novel.disable_reader_ai) !== 1"
-            @change="
-              mutate('set_novel_reader_ai_setting', {
-                novel_id: novel.novel_id,
-                disable_reader_ai: $event.target.checked ? 0 : 1,
-              })
-            "
+            :disabled="!access.is_owner || busy || settingPending"
+            :checked="settingChecked('disable_reader_ai')"
+            @change="setStatus('disable_reader_ai', $event)"
         /></label>
       </section>
       <section class="tool-section">
@@ -727,19 +712,13 @@
       :custom-class="writerDialogClass"
       append-to-body
       width="760px"
-      ><h3>{{ previewItem.title }}</h3>
-      <div v-for="(block, index) in previewBlocks" :key="index">
-        <p v-if="block.type === 'text'" style="white-space: pre-wrap">
-          {{ block.value }}
-        </p>
-        <img v-else :src="block.img" style="max-width: 100%" />
-      </div>
-      <pre v-if="!previewBlocks.length">{{ previewItem.content }}</pre>
+      ><writer-version-preview :article="previewArticle" label="历史版本" />
     </el-dialog>
   </writer-panel>
 </template>
 <script>
 import WriterPanel from "./WriterPanel.vue";
+import WriterVersionPreview from "./WriterVersionPreview.vue";
 import WriterEmptyState from "./WriterEmptyState.vue";
 import writerDialogTheme from "~/mixins/writer-dialog-theme";
 import {
@@ -750,10 +729,9 @@ import {
   downloadWriterFile,
 } from "~/utils/writer/api";
 import { listWriterBackups } from "~/utils/writer/drafts";
-import { parseLegacyContent } from "~/utils/writer/legacy-adapter";
 export default {
   mixins: [writerDialogTheme],
-  components: { WriterPanel, WriterEmptyState },
+  components: { WriterPanel, WriterEmptyState, WriterVersionPreview },
   props: {
     tab: String,
     novel: Object,
@@ -768,6 +746,7 @@ export default {
     loadVersion: 0,
     loading: false,
     busy: false,
+    settingPending: false,
     error: "",
     data: {},
     rows: [],
@@ -777,6 +756,7 @@ export default {
     inviteUser: "",
     settings: {},
     calendarDay: null,
+    settingsInitialized: false,
     descriptions: {
       history: "记录每次保存，让修改可以回溯",
       backups: "保存在当前浏览器中的版本",
@@ -826,14 +806,13 @@ export default {
     latest() {
       return this.rows[this.rows.length - 1] || {};
     },
-    previewBlocks() {
-      try {
-        return Array.isArray(JSON.parse(this.previewItem.content))
-          ? parseLegacyContent(this.previewItem.content)
-          : [];
-      } catch (_) {
-        return [];
-      }
+    previewArticle() {
+      return {
+        ...this.previewItem,
+        article_type:
+          this.previewItem.article_type ||
+          (this.article && this.article.article_type),
+      };
     },
     settingsDirty() {
       return (
@@ -909,9 +888,22 @@ export default {
         this.load();
       },
     },
+    novel(value, previous) {
+      if (
+        this.tab === "settings" &&
+        previous &&
+        this.settings.name === previous.name &&
+        this.settings.content === previous.content
+      ) {
+        this.settings = { name: value.name, content: value.content };
+      }
+    },
     "article.article_id"() {
       this.load();
     },
+  },
+  beforeDestroy() {
+    this.loadVersion++;
   },
   methods: {
     async refresh() {
@@ -925,7 +917,7 @@ export default {
           return;
         }
       }
-      return this.load();
+      return this.load({ discardSettings: true });
     },
     formatNumber(value) {
       return Number(value || 0).toLocaleString("zh-CN");
@@ -945,7 +937,7 @@ export default {
         }[status] || status
       );
     },
-    async load() {
+    async load({ discardSettings = false } = {}) {
       const version = ++this.loadVersion,
         tab = this.tab,
         articleId = this.article && this.article.article_id;
@@ -1006,10 +998,17 @@ export default {
           return;
         this.indexRows = indexRows;
         if (tab === "settings") {
-          this.settings = {
-            name: this.novel.name,
-            content: this.novel.content,
-          };
+          if (
+            discardSettings ||
+            !this.settingsInitialized ||
+            !this.settingsDirty
+          ) {
+            this.settings = {
+              name: this.novel.name,
+              content: this.novel.content,
+            };
+            this.settingsInitialized = true;
+          }
           this.tags = tags;
         }
         if (Array.isArray(data)) this.rows = data;
@@ -1116,23 +1115,44 @@ export default {
         ...this.settings,
       });
     },
-    async setStatus(key, value) {
+    settingChecked(key) {
+      if (key === "is_personal") return Number(this.novel[key]) === 0;
+      if (key === "disable_reader_ai") return Number(this.novel[key]) !== 1;
+      return Number(this.novel[key]) === 1;
+    },
+    async setStatus(key, event) {
+      const checked = event.target.checked;
+      // Native checkboxes toggle before change. Keep them controlled by saved data:
+      // a cancelled confirmation does not change the Vue prop, so it cannot patch DOM.
+      event.target.checked = this.settingChecked(key);
+      if (this.busy || this.settingPending) return;
+      const value = key === "is_complete" ? Number(checked) : Number(!checked);
+      this.settingPending = true;
       try {
-        await this.writerConfirm(
-          key === "is_personal"
-            ? value === 0
-              ? "公开作品后，已发布章节将对读者可见。"
-              : "将作品设为私密？"
-            : "更新作品完结状态？",
-          "作品状态"
-        );
-        await this.mutate(
-          key === "is_personal"
-            ? "set_novel_status"
-            : "set_novel_update_status",
-          { novel_id: this.novel.novel_id, [key]: value }
-        );
-      } catch (_) {}
+        if (key !== "disable_reader_ai") {
+          await this.writerConfirm(
+            key === "is_personal"
+              ? value === 0
+                ? "公开作品后，已发布章节将对读者可见。"
+                : "将作品设为私密？"
+              : "更新作品完结状态？",
+            "作品状态"
+          );
+        }
+        const endpoint = {
+          is_personal: "set_novel_status",
+          is_complete: "set_novel_update_status",
+          disable_reader_ai: "set_novel_reader_ai_setting",
+        }[key];
+        await this.mutate(endpoint, {
+          novel_id: this.novel.novel_id,
+          [key]: value,
+        });
+      } catch (_) {
+        // Cancel, close and Escape leave the saved state intact.
+      } finally {
+        this.settingPending = false;
+      }
     },
     async changeCover(event) {
       const file = event.target.files[0];

@@ -3,7 +3,7 @@
     <header class="discovery-header">
       <div><span class="discovery-eyebrow">LOGHOME LIBRARY</span><h1>{{ requestedPage > 1 ? `公开作品 · 第 ${requestedPage} 页` : '阅读，打开另一个世界' }}</h1></div>
       <nav class="discovery-tools" aria-label="阅读快捷导航">
-        <nuxt-link to="/search">综合搜索</nuxt-link><nuxt-link to="/read/rank">排行榜</nuxt-link><nuxt-link to="/tags">分类标签</nuxt-link><nuxt-link to="/me/messages">消息</nuxt-link>
+        <nuxt-link to="/search">综合搜索</nuxt-link><nuxt-link to="/read/rank">排行榜</nuxt-link><nuxt-link to="/tags">分类标签</nuxt-link><nuxt-link to="/read/rewards">阅读奖励</nuxt-link><nuxt-link to="/me/messages">消息</nuxt-link>
         <button :disabled="refreshing" @click="refreshAll">{{ refreshing ? '刷新中…' : '刷新书库' }}</button>
       </nav>
     </header>

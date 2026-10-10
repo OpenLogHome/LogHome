@@ -23,6 +23,7 @@ export default {
   },
   head: () => ({
     title: "写作工作台 - 原木社区",
+    htmlAttrs: { class: "writer-route-active" },
     bodyAttrs: { class: "writer-route-active" },
   }),
   async beforeRouteUpdate(to, from, next) {
@@ -64,6 +65,7 @@ export default {
 </style>
 <style>
 /* Vue Meta removes this route-specific class when leaving the workbench. */
+html.writer-route-active,
 body.writer-route-active {
   overflow: hidden;
 }

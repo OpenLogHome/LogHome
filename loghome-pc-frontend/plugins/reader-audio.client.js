@@ -6,7 +6,7 @@ import { audioResumeKey, readAudioResume, saveAudioResume, restoreAudioOffset } 
 
 export default ({ app }, inject) => {
   const state = Vue.observable(createAudioState())
-  const player = new ReaderAudio(state, { synthesis:window.speechSynthesis, Utterance:window.SpeechSynthesisUtterance, article:id=>app.$api.reader.article(id), token:readingToken, now:Date.now, setTimeout, clearTimeout })
+  const player = new ReaderAudio(state, { synthesis:window.speechSynthesis, Utterance:window.SpeechSynthesisUtterance, article:id=>app.$api.reader.article(id), token:readingToken, now:Date.now, setTimeout:(fn,ms)=>window.setTimeout(fn,ms), clearTimeout:id=>window.clearTimeout(id) })
   let account = readingToken(), lastProgress = '', lastSaved = 0, lastSnapshot = 0, resumeVersion = 0, disposing = false
   const originalOpen = player.open.bind(player), originalClose = player.close.bind(player)
   const loadResume = () => {
@@ -14,7 +14,7 @@ export default ({ app }, inject) => {
     catch (_) { state.resumeCandidate = null; state.storageError = '本机听书位置暂时无法读取。' }
   }
   const snapshot = (force = false) => {
-    if (account !== readingToken() || player.account !== account || !state.visible || (!force && Date.now()-lastSnapshot<3000)) return
+    if (account !== readingToken() || player.account !== account || !state.visible || state.status==='ended' || (!force && Date.now()-lastSnapshot<3000)) return
     try { saveAudioResume(localStorage,account,player); lastSnapshot = Date.now(); state.storageError = '' }
     catch (_) { state.storageError = '本机听书位置未能保存，刷新后可能无法恢复。' }
   }
@@ -28,7 +28,7 @@ export default ({ app }, inject) => {
     if (current.status === 'ended') removeResume()
     else snapshot(current.status !== 'playing')
     const key = `${current.chapterId}:${current.paragraphId}`
-    if (!current.visible || current.status !== 'playing' || key === lastProgress || account !== readingToken()) return
+    if (!current.visible || current.status !== 'playing' || !current.speechStarted || key === lastProgress || account !== readingToken()) return
     lastProgress = key
     const article = player.currentArticle
     if (article && player.book) {
@@ -69,7 +69,7 @@ export default ({ app }, inject) => {
     try { localStorage.setItem('loghome:reader:audio',JSON.stringify({rate:state.rate,voiceURI:state.voiceURI,follow:state.follow})); state.storageError='' }
     catch (_) { state.storageError='听书偏好未能保存。' }
   }
-  try { const saved=JSON.parse(localStorage.getItem('loghome:reader:audio')||'{}'); player.configure({rate:saved.rate,voiceURI:saved.voiceURI||state.voiceURI}); state.follow=saved.follow!==false } catch (_) {}
+  try { const saved=JSON.parse(localStorage.getItem('loghome:reader:audio')||'{}'); player.configure({rate:saved.rate,voiceURI:saved.voiceURI == null ? state.voiceURI : saved.voiceURI}); state.follow=saved.follow!==false } catch (_) {}
   const checkAccount = () => {
     const token=readingToken()
     if(token!==account){resumeVersion++;state.resumeLoading=false;originalClose();account=token;lastProgress='';lastSaved=0;lastSnapshot=0;loadResume()}

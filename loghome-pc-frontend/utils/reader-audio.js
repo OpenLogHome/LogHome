@@ -13,7 +13,7 @@ export function speechChunk(text, offset = 0) {
   return chunk
 }
 export function createAudioState() {
-  return { visible: false, status: 'idle', error: '', notice: '', bookId: 0, bookTitle: '', cover: '', chapterId: 0, chapterTitle: '', chapters: [], chapterIndex: -1, paragraphs: [], paragraphIndex: 0, paragraphId: 0, charOffset: 0, rate: 1, voiceURI: '', voices: [], sleepUntil: 0, sleepAtChapterEnd: false, follow: true, supported: false, charactersPerSecond: 5, timingMeasured: false, resumeCandidate: null, resumeLoading: false, storageError: '' }
+  return { visible: false, status: 'idle', speechStarted: false, error: '', notice: '', bookId: 0, bookTitle: '', cover: '', chapterId: 0, chapterTitle: '', chapters: [], chapterIndex: -1, paragraphs: [], paragraphIndex: 0, paragraphId: 0, charOffset: 0, rate: 1, voiceURI: '', voices: [], sleepUntil: 0, sleepAtChapterEnd: false, follow: true, supported: false, charactersPerSecond: 5, timingMeasured: false, resumeCandidate: null, resumeLoading: false, storageError: '' }
 }
 
 // Playback owns its queue independently of Nuxt page instances, like the mobile native player.
@@ -27,7 +27,8 @@ export class ReaderAudio {
   updateVoices() {
     const voices = this.env.synthesis.getVoices()
     this.state.voices = voices.map(voice => ({ name: voice.name, lang: voice.lang, voiceURI: voice.voiceURI, local: voice.localService }))
-    if (!voices.some(voice => voice.voiceURI === this.state.voiceURI)) {
+    // An empty URI deliberately delegates voice selection to the system.
+    if (this.state.voiceURI && !voices.some(voice => voice.voiceURI === this.state.voiceURI)) {
       const selected = voices.find(voice => /^zh[-_]CN$/i.test(voice.lang)) || voices.find(voice => /^zh/i.test(voice.lang)) || voices.find(voice => voice.default) || voices[0]
       this.state.voiceURI = selected ? selected.voiceURI : ''
     }
@@ -36,7 +37,8 @@ export class ReaderAudio {
   }
   subscribe(listener) { this.listeners.add(listener); return () => this.listeners.delete(listener) }
   progress() { this.listeners.forEach(listener => listener(this.state)) }
-  interrupt() { this.generation++; if (this.state.supported) this.env.synthesis.cancel() }
+  clearStartTimer() { if (this.startTimer != null) this.env.clearTimeout(this.startTimer); this.startTimer = null }
+  interrupt() { this.generation++; this.clearStartTimer(); this.state.speechStarted = false; if (this.state.supported) this.env.synthesis.cancel() }
   async open(book, chapters, article, paragraphId) {
     const ordered = chapters.filter(row => row.article_type !== 'spliter').map(row => ({ article_id: Number(row.article_id), title: row.title }))
     const sameQueue = this.state.visible && this.account === this.env.token() && Number(book.novel_id) === this.state.bookId && ordered.length === this.state.chapters.length && ordered.every((row,index) => row.article_id === this.state.chapters[index].article_id)
@@ -105,7 +107,7 @@ export class ReaderAudio {
     if (this.checkSleep()) return
     const paragraph = this.state.paragraphs[this.state.paragraphIndex]
     if (!paragraph) return this.finishChapter()
-    this.state.paragraphId = paragraph.id; this.progress()
+    this.state.speechStarted = false; this.state.paragraphId = paragraph.id; this.progress()
     const offset = Math.max(0, Math.min(Math.floor(this.state.charOffset), paragraph.value.length)), text = speechChunk(paragraph.value, offset)
     if (!text) { this.advance(); return }
     const utterance = new this.env.Utterance(text)
@@ -115,18 +117,31 @@ export class ReaderAudio {
     this.utterance = utterance // Retain it for browsers that otherwise collect active utterances.
     let completed = false
     const active = () => !completed && generation===this.generation && this.utterance===utterance && this.state.status==='playing'
-    const startedAt = this.env.now()
-    utterance.onboundary = event => { if(!active())return; if(this.account!==this.env.token()){this.close();return} if(Number.isFinite(event.charIndex)) { this.state.charOffset = offset + Math.min(text.length, Math.max(0, Math.floor(event.charIndex))); this.progress() } }
+    let startedAt = null
+    const fail = message => { completed = true; this.interrupt(); this.state.charOffset = offset; this.state.status = 'error'; this.state.error = message; this.progress() }
+    const started = () => {
+      if (!active()) return false
+      if (this.account !== this.env.token()) { this.close(); return false }
+      if (startedAt == null) { startedAt = this.env.now(); this.clearStartTimer(); this.state.speechStarted = true; this.progress() }
+      return true
+    }
+    utterance.onstart = started
+    utterance.onboundary = event => { if(!started())return; if(Number.isFinite(event.charIndex)) { this.state.charOffset = offset + Math.min(text.length, Math.max(0, Math.floor(event.charIndex))); this.progress() } }
     utterance.onend = event => {
       if (!active()) return
       if (this.account !== this.env.token()) { this.close(); return }
-      completed = true
-      // Some engines report an immediate end without speaking. Never mark a long
-      // passage as read or cascade through the entire book on that callback.
-      if (text.replace(/[^A-Za-z0-9\u3400-\u9fff]/g,'').length >= 20 && event && Number.isFinite(event.elapsedTime) && event.elapsedTime < .05 && this.env.now()-startedAt < 100) {
-        this.state.status='error'; this.state.error='语音引擎未正常播放，请更换音色后重试。'; this.progress(); return
+      this.clearStartTimer()
+      // Measure from actual start, not queue submission. Some engines report
+      // elapsedTime in milliseconds, others in seconds, or omit it altogether.
+      // Even unusually fast speech needs time to read a substantial passage.
+      const spokenCharacters = text.replace(/[^A-Za-z0-9\u3400-\u9fff]/g,'').length
+      const minimumDuration = spokenCharacters / (40 * utterance.rate) * 1000
+      const seconds = startedAt == null ? 0 : (this.env.now() - startedAt) / 1000
+      if ((spokenCharacters && startedAt == null) || (spokenCharacters >= 20 && seconds * 1000 < minimumDuration)) {
+        fail('语音引擎未正常播放，请更换音色后重试。'); return
       }
-      this.measureTiming(text.length, event && event.elapsedTime, utterance.rate)
+      completed = true; this.state.speechStarted = false
+      this.measureTiming(text.length, seconds, utterance.rate)
       this.state.charOffset = offset + text.length
       if (this.state.charOffset >= paragraph.value.length) this.advance()
       else this.speak(generation)
@@ -134,12 +149,14 @@ export class ReaderAudio {
     utterance.onerror = event => {
       if (!active()) return
       if (this.account !== this.env.token()) { this.close(); return }
-      completed = true
+      completed = true; this.clearStartTimer(); this.state.speechStarted = false
       if (['canceled', 'interrupted'].includes(event.error)) { this.suspend('语音播放被中断，点击播放继续。'); return }
       this.state.status = 'error'; this.state.error = event.error === 'not-allowed' ? '浏览器阻止了自动播放，请点击播放继续。' : '语音播放失败，请更换音色或重试。'
       this.progress()
     }
-    this.env.synthesis.speak(utterance)
+    this.startTimer = this.env.setTimeout(() => { if (!active()) return; if(this.account!==this.env.token()){this.close();return} fail('语音长时间未开始，请选择系统默认或其他音色后重试。') }, 15000)
+    try { this.env.synthesis.speak(utterance) }
+    catch (_) { if (active()) fail('语音播放失败，请更换音色或重试。') }
   }
   advance() {
     this.state.paragraphIndex++; this.state.charOffset = 0
@@ -197,7 +214,7 @@ export class ReaderAudio {
   }
   configure(patch) {
     if (patch.rate != null) this.state.rate = Math.max(.5, Math.min(2, Number(patch.rate) || 1))
-    if (patch.voiceURI != null && (!this.state.voices.length || this.state.voices.some(voice=>voice.voiceURI===String(patch.voiceURI)))) this.state.voiceURI = String(patch.voiceURI)
+    if (patch.voiceURI != null && (String(patch.voiceURI)==='' || !this.state.voices.length || this.state.voices.some(voice=>voice.voiceURI===String(patch.voiceURI)))) this.state.voiceURI = String(patch.voiceURI)
     const speed = this.timings.get(this.state.voiceURI)
     this.state.charactersPerSecond = speed || 5; this.state.timingMeasured = Boolean(speed)
     if (this.state.status === 'playing') this.play()

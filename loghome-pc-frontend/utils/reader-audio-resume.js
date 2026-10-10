@@ -27,7 +27,7 @@ export function readAudioResume(storage, token, now = Date.now()) {
 }
 export function saveAudioResume(storage, token, player, now = Date.now()) {
   const state = player.state, paragraph = state.paragraphs[state.paragraphIndex]
-  if (!state.visible || !paragraph || player.env.privatePlayback) return null
+  if (!state.visible || state.status === 'ended' || !paragraph || player.env.privatePlayback) return null
   const item = { version:1, bookId:state.bookId, chapterId:state.chapterId, paragraphId:Number(paragraph.id), charOffset:Math.max(0,Math.floor(state.charOffset)), signature:audioTextSignature(paragraph.value), bookTitle:state.bookTitle, chapterTitle:state.chapterTitle, savedAt:now }
   storage.setItem(audioResumeKey(token),JSON.stringify(item))
   return item
