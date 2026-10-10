@@ -59,6 +59,8 @@
 			},
 			"apps": {
 				"about": "About Us",
+				"lab": "LogHome Lab",
+				"logDefense": "Log Defense",
 				"audio_test": "Audiobook Test",
 				"faqs": {
 					"faq": "Help Center",

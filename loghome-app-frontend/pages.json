@@ -243,6 +243,18 @@
 			"style": {
 				"navigationBarTitleText": "关于我们"
 			}
+		},
+		{
+			"path": "pages/apps/lab",
+			"style": {
+				"navigationBarTitleText": "原木实验室"
+			}
+		},
+		{
+			"path": "pages/apps/logDefense",
+			"style": {
+				"navigationBarTitleText": "原木保卫战"
+			}
 		},{
             "path" : "pages/writers/newEssay",
             "style" :                                                                                    
