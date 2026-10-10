@@ -2,9 +2,11 @@
 	<view class="outer" v-dark>
 		<view class="content">
 			<view class="header">
-				<img class="icon" src="../../static/icons/lab.svg" mode="aspectFit"></img>
-				<view class="title">{{ $t('me.service.lab') }}</view>
-				<view class="desc">{{ $t('me.service.labPage.desc') }}</view>
+				<view class="icon-wrap"><image class="icon" src="/static/icons/lab.svg" mode="aspectFit" /></view>
+				<view class="header-copy">
+					<view class="title">{{ $t('me.service.labPage.title') }}</view>
+					<view class="desc">{{ $t('me.service.labPage.desc') }}</view>
+				</view>
 			</view>
 			<view class="list">
 				<navigator url="./logDefense">
@@ -39,128 +41,82 @@ export default {
 
 <style lang="scss" scoped>
 .outer {
-	min-height: 100%;
-	background-color: #fcf4e1;
-
-	&.dark-mode {
-		background-color: #171e19;
-	}
+	min-height: 100vh;
+	background: #ffffff;
+	font-size: 26rpx;
+	&.dark-mode { background: #1c211c; }
 }
-
 .content {
-	display: flex;
 	box-sizing: border-box;
 	width: 100%;
-	padding: 40rpx 32rpx calc(28rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px)));
-	flex-direction: column;
-	align-items: center;
+	max-width: 750rpx;
+	margin: 0 auto;
+	padding: 32rpx 28rpx calc(40rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0rpx)));
 }
-
 .header {
 	display: flex;
-	flex-direction: column;
 	align-items: center;
-	gap: 12rpx;
-	margin-bottom: 32rpx;
-	text-align: center;
+	gap: 24rpx;
+	padding: 28rpx 24rpx;
+	margin-bottom: 28rpx;
+	border-radius: 24rpx;
+	background: linear-gradient(125deg, #faf6ec, #f0f6e9);
+	.dark-mode & { background: linear-gradient(125deg, #363126, #293729); }
 }
-
-.icon {
-	width: 104rpx;
-	height: 104rpx;
-	image-rendering: pixelated;
+.icon-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100rpx;
+	height: 100rpx;
+	flex-shrink: 0;
+	background: rgba(255, 255, 255, 0.65);
+	border-radius: 20rpx;
+	.dark-mode & { background: rgba(255, 255, 255, 0.06); }
 }
-
-.title {
-	font-size: 40rpx;
-	font-weight: bold;
+.icon { width: 76rpx; height: 76rpx; image-rendering: pixelated; }
+.header-copy { flex: 1; min-width: 0; }
+.title, .li-title {
+	font-size: 26rpx;
+	font-weight: 700;
 	color: #393d33;
-	line-height: 1.3;
-
+	line-height: 1.5;
 	.dark-mode & { color: #eeeae0; }
 }
-
-.desc {
+.desc, .li-sub {
+	margin-top: 10rpx;
 	font-size: 26rpx;
 	color: #6d7267;
-	line-height: 1.6;
-	max-width: 560rpx;
-
-	.dark-mode & { color: #acb7a9; }
+	line-height: 1.65;
+	.dark-mode & { color: #b4c0b1; }
 }
-
 .list {
-	display: flex;
-	width: 100%;
-	max-width: 640rpx;
-	flex-direction: column;
-	border-radius: 24rpx;
+	border: 1rpx solid #e6eadd;
+	border-radius: 22rpx;
 	overflow: hidden;
-	background: rgba(255, 255, 255, 0.6);
-	box-shadow: 0 8rpx 32rpx rgba(98, 105, 89, 0.10);
-
-	.dark-mode & {
-		background: rgba(35, 44, 37, 0.9);
-		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.25);
-	}
-
-	navigator + navigator .li {
-		border-top: 1rpx solid rgba(98, 105, 89, 0.15);
-	}
+	background: #fcfdfa;
+	.dark-mode & { background: #263026; border-color: #3b4837; }
+	navigator + navigator .li { border-top: 1rpx solid rgba(98, 105, 89, 0.15); }
 }
-
-.li {
-	display: flex;
-	align-items: center;
-	gap: 20rpx;
-	padding: 28rpx 28rpx;
-}
-
+.li { display: flex; align-items: center; gap: 22rpx; padding: 28rpx 24rpx; }
+.li:active { background: rgba(110, 135, 88, 0.08); }
 .li-icon {
-	flex: 0 0 auto;
-
-	img {
-		display: block;
-		width: 76rpx;
-		height: 76rpx;
-		border-radius: 12rpx;
-	}
+	flex-shrink: 0;
+	padding: 12rpx;
+	border-radius: 16rpx;
+	background: #eef2e7;
+	.dark-mode & { background: #344030; }
+	img { display: block; width: 60rpx; height: 60rpx; border-radius: 8rpx; image-rendering: pixelated; }
 }
-
-.li-main {
-	flex: 1 1 auto;
-	min-width: 0;
-}
-
-.li-title {
-	font-size: 30rpx;
-	font-weight: bold;
-	color: #393d33;
-	line-height: 1.35;
-
-	.dark-mode & { color: #eeeae0; }
-}
-
-.li-sub {
-	margin-top: 6rpx;
-	font-size: 24rpx;
-	color: #6d7267;
-	line-height: 1.5;
-
-	.dark-mode & { color: #acb7a9; }
-}
-
-.to {
-	flex: 0 0 auto;
-}
-
+.li-main { flex: 1; min-width: 0; }
+.to { flex-shrink: 0; padding: 8rpx; }
+.ui-chevron { display: block; width: 12rpx; height: 12rpx; border-top: 3rpx solid #929b87; border-right: 3rpx solid #929b87; transform: rotate(45deg); }
 .hint {
 	margin-top: 24rpx;
-	font-size: 22rpx;
-	color: #a09a89;
-	line-height: 1.6;
-	text-align: center;
-
-	.dark-mode & { color: #7d887e; }
+	padding: 0 12rpx;
+	font-size: 26rpx;
+	color: #818775;
+	line-height: 1.7;
+	.dark-mode & { color: #a1ae9b; }
 }
 </style>

@@ -155,7 +155,7 @@
 						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
 					</view>
 				</navigator>
-				<navigator v-if="user.is_admin == 1" url="./apps/lab">
+				<navigator url="./apps/lab">
 					<view class="li">
 						<view class="icon">
 							<img src="../static/icons/lab.svg"></img>

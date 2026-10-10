@@ -29,8 +29,9 @@
 			"lab": "LogHome Lab",
 			"labGame": "Log Defense",
 			"labPage": {
-				"desc": "New community features are incubating here. They may change, ship, or vanish at any time.",
-				"hint": "Open to admins only. Actual behavior may vary."
+				"title": "Explore something new",
+				"desc": "Discover fresh community ideas and new ways to play.",
+				"hint": "Experimental features evolve over time. Try them and share your feedback."
 			},
 			"about": "About",
 			"manage": "Moderation"
