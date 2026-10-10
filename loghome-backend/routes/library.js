@@ -1,6 +1,7 @@
 // 引入依赖包
 let express = require('express');
-let { query } = require('../sql.js');
+let { query, withTransaction } = require('../sql.js');
+const { createReadingTip } = require('../bin/createReadingTip.js');
 let auth = require('../bin/auth.js');
 let moment = require('moment');
 let message = require('../bin/message.js');
@@ -23,6 +24,7 @@ const HAYCRAFT_TAG_FLAG_SQL = `EXISTS (
 
 // 创建路由对象
 let router = express.Router();
+router.get('/get_logpower_details', require('../bin/readingLogPower').createLogPowerReader({ query }));
 
 router.get('/get_library_roulous_chart', async function (req, res) {
 	try {
@@ -341,61 +343,15 @@ router.get('/get_tipping_list', async function (req, res) {
 });
 
 router.post('/tipping', auth, async (req, res) => {
-	let user = req.user;
-	user = JSON.parse(JSON.stringify(user))[0];
-	try {
-		if (
-			await bank.useAmount(
-				user,
-				req.body.resource_name,
-				req.body.item_amount * req.body.item_cost,
-				false,
-			)
-		) {
-			await query(
-				'INSERT INTO tipping(from_id,novel_id,item_name,item_amount,item_cost) VALUES(?,?,?,?,?)',
-				[
-					req.body.from_id,
-					req.body.novel_id,
-					req.body.item_name,
-					req.body.item_amount,
-					req.body.item_cost,
-				],
-			);
-			let novel = await query(
-				'SELECT n.*,u.user_id auther_id,u.name author_name,u.avatar_url auther_avatar FROM novels n,users u WHERE n.author_id = u.user_id AND novel_id = ?',
-				[req.body.novel_id],
-			);
-			novel = JSON.parse(JSON.stringify(novel));
-			const isManga = novel[0].novel_type === 'manga';
-			message.sendMsg(
-				user.user_id,
-				novel[0].author_id,
-				'打赏了你的' + (isManga ? '漫画' : '小说') + '《' +
-					novel[0].name +
-					'》' +
-					req.body.item_amount +
-					'个' +
-					req.body.item_name,
-				(isManga ? 'readers/mangaInfo?id=' : 'readers/bookInfo?id=') + novel[0].novel_id,
-				'like_collect',
-				true,
-			);
-			if (req.body.resource_name == 'log') {
-				await bank.addAmount(
-					{ user_id: novel[0].auther_id },
-					'cropped_log',
-					Math.floor((req.body.item_amount * req.body.item_cost) / 2),
-				);
-			}
-			res.end('success');
-		} else {
-			res.json(400, { msg: 'bad request' });
-		}
-	} catch (e) {
-		console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
+ try {
+  const user = req.user[0], result = await createReadingTip(req.body, user.user_id, withTransaction);
+  const kind = result.book.novel_type === 'manga' ? '\u6f2b\u753b' : result.book.novel_type === 'world' ? '\u4e16\u754c\u8bbe\u5b9a' : '\u5c0f\u8bf4';
+  try {
+   await message.sendMsg(user.user_id, result.book.author_id, '\u6253\u8d4f\u4e86\u4f60\u7684' + kind + '\u300a' + result.book.name + '\u300b' + result.amount + '\u4e2a' + result.gift.item_name,
+    (result.book.novel_type === 'manga' ? 'readers/mangaInfo?id=' : 'readers/bookInfo?id=') + result.book.novel_id, 'like_collect', true);
+  } catch (_) { /* A notification failure cannot undo or misreport the committed tip. */ }
+  res.json({ success: true, amount: result.amount, cost: result.total, resource_name: result.resource, balance: result.balance, author_income: result.authorIncome });
+ } catch (failure) { res.status(failure.status || 500).json({ msg: failure.status ? failure.message : '\u6253\u8d4f\u672a\u5b8c\u6210\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5' }); }
 });
 
 router.get('/get_tipping_amount_by_id', async function (req, res) {
@@ -609,7 +565,7 @@ router.get('/get_all_tags', async function (req, res) {
 router.get('/get_tag_collections', async function (req, res) {
 	try {
 		let results = await query(
-			`SELECT n.*, u.name username, u.avatar_url from tags t, novel_tag nt, novels n, users u where nt.tag_id = t.tag_id and u.user_id = n.author_id
+			`SELECT n.*, u.name username, u.avatar_url, ${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft from tags t, novel_tag nt, novels n, users u where nt.tag_id = t.tag_id and u.user_id = n.author_id
             and nt.novel_id = n.novel_id and n.deleted = 0 and n.is_personal = 0 and t.tag_id = ?`,
 			[req.query.tag_id],
 		);
@@ -877,6 +833,9 @@ router.get('/reading_history', auth, async function (req, res) {
 			`SELECT 
 				n.novel_id,
 				n.name,
+				n.novel_type,
+				n.is_complete,
+				n.text_count,
 				n.content,
 				n.picUrl,
 				n.author_id,

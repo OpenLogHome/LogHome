@@ -83,6 +83,7 @@
 
 <script>
 import { formatMessagePreview } from '~/utils/private-message.js'
+import { readingMessageTarget } from '~/utils/reader-comment-links'
 
 export default {
   layout: 'default',
@@ -170,8 +171,8 @@ export default {
     // 系统消息里的 router 是移动端页面路径，能映射到网页端的跳转，其余走移动端
     resolveTarget(router) {
       if (!router) return null
-      const novelMatch = router.match(/^readers\/book(?:Info|Comment)\?id=(\d+)/)
-      if (novelMatch) return { path: `/novel/${novelMatch[1]}` }
+      const reading = readingMessageTarget(router)
+      if (reading) return reading
       const postMatch = router.match(/^community\/postDetail\?id=(\d+)/)
       if (postMatch) return { path: `/community/post/${postMatch[1]}` }
       const userMatch = router.match(/^users\/personalPage\?id=(\d+)/)

@@ -200,7 +200,7 @@ export async function setContext (app, context) {
       payload: context.payload,
       error: context.error,
       base: app.router.options.base,
-      env: {"STATIC_URL":"","baseUrl":"http://127.0.0.1:9000","mobileUrl":"https://m.loghome.ink"}
+      env: {"readerAiUrl":"http://127.0.0.1:9101","writerAiUrl":"http://127.0.0.1:9101","writerWsUrl":"ws://127.0.0.1:9102","STATIC_URL":"","baseUrl":"http://127.0.0.1:9000","mobileUrl":"https://m.loghome.ink"}
     }
     // Only set once
 

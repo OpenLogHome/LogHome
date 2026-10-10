@@ -29,6 +29,8 @@
       </el-form>
     </div>
 
+    <div class="settings-card"><ReaderAiPreference /></div>
+
     <div class="settings-card">
       <h2 class="section-title">头像与封面</h2>
       <div class="image-settings">
@@ -113,7 +115,9 @@
 </template>
 
 <script>
+import ReaderAiPreference from '~/components/read/ReaderAiPreference.vue'
 export default {
+  components: { ReaderAiPreference },
   layout: 'default',
   data() {
     return {

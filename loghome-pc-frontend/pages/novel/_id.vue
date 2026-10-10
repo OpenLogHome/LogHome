@@ -14,9 +14,7 @@
       </div>
 
       <div class="novel-header">
-        <div class="novel-cover" v-if="novel.picUrl" :style="`background-image: url(${novel.picUrl})`"></div>
-        <div class="novel-cover" v-else :style="`background-color: hsl(${novel.novel_id * 30 % 360}, 70%, 80%)`"></div>
-        <div class="book-id-tag">ID {{ novel.novel_id }}</div>
+        <button class="novel-cover" :disabled="!novel.picUrl" aria-label="预览作品封面" :style="novel.picUrl ? { backgroundImage: `url(${novel.picUrl})` } : { backgroundColor: `hsl(${novel.novel_id * 30 % 360}, 70%, 80%)` }" @click="previewCover"><span class="book-id-tag">ID {{ novel.novel_id }}</span></button>
         
         <div class="novel-info">
           <h1 class="novel-title">{{ novel.name }}</h1>
@@ -54,39 +52,35 @@
           </div>
           
           <div class="novel-tags">
-            <span class="tag" v-for="tag in tags" :key="tag.tag_id" :class="{ 'activity': tag.is_activity_tag }">{{
-              tag.tag_name }}</span>
+            <nuxt-link class="tag" v-for="tag in tags" :key="tag.tag_id" :to="`/tag/collections?tag_id=${tag.tag_id}`" :class="{ activity: Number(tag.is_activity_tag) === 1 }">{{ tag.tag_name }}</nuxt-link>
           </div>
           
           <div class="novel-actions">
-            <button class="action-button primary reading-button" @click="startReading" v-if="chapters.length > 0">
+            <button class="action-button primary reading-button" @click="startReading" v-if="readableChapters.length > 0">
               <div class="reading-info">
                 <span>{{ historyShown > 1 ? '继续阅读' : '开始阅读' }}</span>
-                <small v-if="historyShown > 1">已读 {{ Math.min((historyShown / chapters.length * 100), 100).toFixed(0) }}%</small>
+                <small v-if="historyShown > 1">已读 {{ Math.min((historyShown / readableChapters.length * 100), 100).toFixed(0) }}%</small>
               </div>
               <div class="progress-indicator" v-if="historyShown > 1">
-                <div class="progress-bar" :style="{ width: `${Math.min((historyShown / chapters.length * 100), 100)}%` }"></div>
+                <div class="progress-bar" :style="{ width: `${Math.min((historyShown / readableChapters.length * 100), 100)}%` }"></div>
               </div>
             </button>
-            <button class="action-button" @click="toggleLike">
-              <span v-if="isInBookcase">已收藏</span>
-              <span v-else>收藏</span>
-            </button>
-            <button class="action-button" @click="tip">打赏</button>
-            <button class="action-button" @click="shareBook">分享</button>
+            <BookSupport class="inline-support" :book="novel" @liked="onSupportLike" @tipped="onSupportTip" @account-change="onSupportAccount" />
+            <ReaderAiEntry :book="novel" />
           </div>
         </div>
       </div>
 
+      <CollaborativeAuthors :novel-id="novel.novel_id" />
       <!-- 原木力榜 -->
       <div class="novel-rank" v-show="novelRank.onRank">
-        <nuxt-link to="/read/collections?title=原木力爆棚" class="rank-info">
+        <nuxt-link to="/read/rank?board=logpower" class="rank-info">
           实时<LogPowerWordmark />榜第
           <span class="rank-number">{{ novelRank.rank }}</span>
           位
         </nuxt-link>
-        <nuxt-link to="/read/collections?title=原木力爆棚" class="rank-value">
-          {{ novelRank.ranking }}
+        <nuxt-link :to="`/read/power/${novel.novel_id}`" class="rank-value" aria-label="查看原木力分项说明">
+          {{ novelRank.ranking }} <span aria-hidden="true">ⓘ</span>
         </nuxt-link>
       </div>
       
@@ -96,11 +90,12 @@
             作品简介
           </button>
           <button class="tab-button" :class="{ active: activeTab === 'chapters' }" @click="activeTab = 'chapters'">
-            章节目录 ({{ chapters.length }})
+            章节目录 ({{ readableChapters.length }})
           </button>
           <button class="tab-button" :class="{ active: activeTab === 'comments' }" @click="activeTab = 'comments'">
             读者评论 ({{ commentAmount }})
           </button>
+          <button class="tab-button" :class="{ active: activeTab === 'excerpts' }" @click="activeTab = 'excerpts'">书摘</button>
           <button class="tab-button" :class="{ active: activeTab === 'worlds' }" @click="activeTab = 'worlds'" v-if="worlds.length > 0">
             世界设定 ({{ worlds.length }})
           </button>
@@ -119,43 +114,13 @@
             <p v-else class="empty-content">暂无简介</p>
           </div>
           
-          <!-- 章节目录 -->
-          <div v-show="activeTab === 'chapters'" class="chapters-content">
-            <div v-if="chapters.length === 0" class="empty-content">
-              暂无章节
-            </div>
-            <div v-else class="chapter-list">
-              <nuxt-link v-for="chapter in chapters" :key="chapter.article_id" :to="`/article/${chapter.article_id}`"
-                class="chapter-item">
-                <span class="chapter-number">{{ chapter.article_chapter }}</span>
-                <span class="chapter-title">{{ chapter.title }}</span>
-                <span class="chapter-date">{{ formatDate(chapter.update_time) }}</span>
-              </nuxt-link>
-            </div>
-          </div>
-          
+          <!-- The public catalog is rendered on the server even when another tab is selected. -->
+          <div v-show="activeTab === 'chapters'" class="chapters-content"><ChapterCatalog :chapters="chapters" :current-chapter="history" :novel-id="novel.novel_id" /></div>
+          <div v-if="activeTab === 'excerpts'" class="excerpts-content"><BookExcerpts :novel-id="novel.novel_id" /></div>
+
           <!-- 读者评论 -->
-          <div v-show="activeTab === 'comments'" class="comments-content">
-            <div v-if="commentInfo.length === 0" class="empty-content">
-              <p>这本书还没有评论哦，快去抢沙发</p>
-          </div>
-            <div v-else class="comment-list">
-              <div class="comment-item" v-for="comment in commentInfo" :key="comment.essay_comment_id">
-                <div class="comment-content">{{ comment.content }}</div>
-                <div class="comment-footer">
-                  <span class="comment-author">{{ comment.name }}</span>
-                  <span class="comment-likes">
-                    <span class="like-icon">❤️</span>
-                    {{ comment.likeNum }}
-                  </span>
-        </div>
-      </div>
-            </div>
-            <div @click="showAllComments" class="view-all-comments">
-              查看全部评论 ({{ commentAmount }})
-            </div>
-    </div>
-    
+          <div v-if="activeTab === 'comments'" class="comments-content"><MangaCommentPanel ref="bookReviews" inline :visible="true" :novel-id="novel.novel_id" :work-author-id="novel.author_id || novel.auther_id" :anchor-id="commentAnchor" @changed="getCommentNum" /></div>
+
           <!-- 世界设定标签页 -->
           <div v-show="activeTab === 'worlds'" class="worlds-content">
             <div class="worlds-grid">
@@ -174,7 +139,7 @@
                   </div>
                   <p class="world-description">{{ world.content }}</p>
                 </div>
-                <nuxt-link :to="`/novel/${world.novel_id}`" class="world-link"></nuxt-link>
+                <nuxt-link :to="workUrl(world)" class="world-link"></nuxt-link>
               </div>
             </div>
           </div>
@@ -225,110 +190,60 @@
             <h3 class="mini-novel-title">{{ novel.name }}</h3>
             <p class="mini-novel-author">{{ novel.author_name || '佚名' }}</p>
           </div>
-          <nuxt-link :to="`/novel/${novel.novel_id}`" class="mini-novel-link"></nuxt-link>
+          <nuxt-link :to="workUrl(novel)" class="mini-novel-link"></nuxt-link>
         </div>
       </div>
     </div>
 
-    <!-- 打赏弹窗 -->
-    <div class="tipping-popup" v-if="showTippingPopup" @click.self="closeTipping">
-      <div class="tipping-content">
-        <h3>打赏作者</h3>
 
-        <div class="tipping-balance">
-          <span class="balance-item"><i class="res-icon res-log"></i>原木 {{ resources.log }}</span>
-          <span class="balance-item"><i class="res-icon res-apple"></i>苹果 {{ resources.apple }}</span>
-        </div>
-
-        <div class="tipping-options">
-          <div
-            class="tipping-item"
-            v-for="item in tippingList"
-            :key="item.item_name"
-            :class="{ selected: selectedTippingItem && selectedTippingItem.item_name === item.item_name }"
-            @click="selectedTippingItem = item"
-          >
-            <span class="item-name">{{ item.item_name }}</span>
-            <img class="item-image" :src="item.img_url" :alt="item.item_name">
-            <span class="item-cost">
-              <i class="res-icon" :class="item.is_log_free ? 'res-apple' : 'res-log'"></i>
-              {{ item.item_cost }}
-            </span>
-          </div>
-        </div>
-
-        <div class="tipping-amount">
-          <span class="amount-label">数量</span>
-          <button class="amount-btn" @click="decreaseTipAmount">-</button>
-          <input class="amount-input" type="number" v-model.number="tippingAmount" min="1" max="9999">
-          <button class="amount-btn" @click="increaseTipAmount">+</button>
-          <span
-            class="amount-quick"
-            v-for="quick in quickAmounts"
-            :key="quick.value"
-            @click="tippingAmount = quick.value"
-          >{{ quick.label }}</span>
-        </div>
-
-        <div class="tipping-message">
-          <textarea
-            v-model="tippingMessage"
-            maxlength="50"
-            rows="2"
-            placeholder="添加留言..."
-          ></textarea>
-          <span class="message-counter">{{ tippingMessage.length }}/50</span>
-        </div>
-
-        <div class="tipping-total">
-          总计
-          <i class="res-icon" :class="isAppleTipping ? 'res-apple' : 'res-log'"></i>
-          <strong>{{ totalTipCost }}</strong>
-          <span class="tip-hint" v-if="selectedTippingItem && !isAppleTipping">作者可得 {{ Math.floor(totalTipCost / 2) }} 原木收益</span>
-        </div>
-
-        <div class="tipping-buttons">
-          <button @click="closeTipping">取消</button>
-          <button :disabled="tipping || !selectedTippingItem" @click="confirmTip">
-            {{ tipping ? '打赏中...' : '确认打赏' }}
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script>
+import { readingToken } from '~/plugins/api/reading'
+import { readingCommentId } from '~/utils/reader-comment-links'
+import { textReaderResumeUrl } from '~/utils/reader-position'
+import { localReadingProgress, recordLocalReading } from '~/utils/reading-history'
 import LogPowerWordmark from '~/components/LogPowerWordmark.vue'
 import NovelFansList from '~/components/NovelFansList.vue'
+import CollaborativeAuthors from '~/components/read/CollaborativeAuthors.vue'
+import ChapterCatalog from '~/components/read/ChapterCatalog.vue'
+import BookExcerpts from '~/components/read/BookExcerpts.vue'
+import BookSupport from '~/components/read/BookSupport.vue'
+import ReaderAiEntry from '~/components/read/ReaderAiEntry.vue'
+import MangaCommentPanel from '~/components/manga/MangaCommentPanel.vue'
+import { workUrl } from '~/utils/reading-discovery'
+import { readingHead, bookSchema } from '~/utils/reading-seo'
 
 export default {
   components: {
     LogPowerWordmark,
-    NovelFansList
+    NovelFansList, CollaborativeAuthors, ChapterCatalog, BookExcerpts, BookSupport, ReaderAiEntry, MangaCommentPanel
   },
-  async asyncData({ params, $api, error, redirect }) {
+  async asyncData({ params, query = {}, $api, error, redirect }) {
     try {
       // 获取小说详情 - 用于SEO的服务端渲染
-      const novel = await $api.novels.getNovelById(params.id)
+      const novel = await $api.reader.book(params.id)
       if (!novel || novel.length === 0) {
         return error({ statusCode: 404, message: '找不到该小说' })
       }
 
       const novelData = novel[0]
+      const anchor = readingCommentId(query)
+      const commentQuery = anchor ? `?preLoadCommentId=${anchor}` : ''
 
       // 如果是设定书，则应当跳转到世界设定查看页面
       if (novelData.novel_type === "world") {
-        return redirect(`/world/${novelData.novel_id}`)
+        return redirect(`/world/${novelData.novel_id}${commentQuery}`)
       }
 
       // 如果是漫画，跳转到漫画详情页
       if (novelData.novel_type === "manga") {
-        return redirect(`/manga/${novelData.novel_id}`)
+        return redirect(`/manga/${novelData.novel_id}${commentQuery}`)
       }
 
       // 获取章节列表 - 用于SEO的服务端渲染
-      const chapters = await $api.articles.getArticles(novelData.novel_id)
+      const chapters = await $api.reader.chapters(novelData.novel_id)
       
       // 获取小说标签 - 用于SEO的服务端渲染
       const tags = await $api.novels.getNovelTags(novelData.novel_id)
@@ -342,18 +257,18 @@ export default {
       }
     } catch (err) {
       console.error('服务端获取小说数据失败', err)
-      return error({ statusCode: 500, message: '加载小说数据失败，请稍后重试' })
+      return error({ statusCode: err.status || 503, message: err.status === 404 ? '作品不存在或不可阅读' : '加载小说数据失败，请稍后重试' })
     }
   },
   data() {
     return {
       error: null,
-      activeTab: 'intro',
+      activeTab: 'intro', liking: false,
       isInBookcase: false,
       recommendedNovels: [],
+      continueProgress: null,
       history: 1,
       progressArticle: {},
-      commentInfo: [],
       commentAmount: 0,
       niceStatus: false,
       nice_amount: 0,
@@ -364,21 +279,7 @@ export default {
         ranking: 0
       },
       worlds: [],
-      showTippingPopup: false,
       giftImage: "",
-      tippingList: [],
-      selectedTippingItem: null,
-      tippingAmount: 1,
-      tippingMessage: "",
-      tipping: false,
-      resources: { log: 0, apple: 0 },
-      quickAmounts: [
-        { label: '一心一意', value: 1 },
-        { label: '十全十美', value: 10 },
-        { label: '六六大顺', value: 66 },
-        { label: '天长地久', value: 99 },
-        { label: '爱的告白', value: 520 }
-      ],
       userInfo: null,
       isLogin: false,
       activityNews: [],
@@ -386,16 +287,10 @@ export default {
       isVotingPopularity: false
     }
   },
-  head() {
-    return {
-      title: this.novel?.name ? `${this.novel.name} - 原木社区` : '小说详情 - 原木社区',
-      meta: [
-        { hid: 'description', name: 'description', content: this.novel?.content ? this.novel.content.substring(0, 150) : '原木社区小说详情页' },
-        { hid: 'keywords', name: 'keywords', content: this.tags.map(tag => tag.tag_name).join(',') || '小说,原木社区,阅读' }
-      ]
-    }
-  },
+  head() { return readingHead({ title: this.novel?.name ? `${this.novel.name} - 原木社区` : '小说详情 - 原木社区', description: this.novel?.content, path: `/novel/${this.novel.novel_id}`, image: this.novel.picUrl, type: 'book', schema: bookSchema(this.novel, `/novel/${this.novel.novel_id}`) }) },
   computed: {
+    commentAnchor() { return readingCommentId(this.$route.query) },
+    readableChapters() { return this.chapters.filter(chapter => chapter.article_type !== 'spliter') },
     articleLength() {
       return this.chapters.length;
     },
@@ -406,33 +301,14 @@ export default {
       );
     },
     historyShown() {
-      let his = 0;
-      for (let item of this.chapters) {
-        his++;
-        if (item.article_chapter == this.history) {
-          return his;
-        }
-      }
-      return this.history;
-    },
-    // is_log_free 的礼物用苹果支付，其余用原木
-    isAppleTipping() {
-      return !!(this.selectedTippingItem && this.selectedTippingItem.is_log_free)
-    },
-    safeTipAmount() {
-      const amount = Math.floor(Number(this.tippingAmount))
-      if (!amount || amount < 1) return 1
-      return Math.min(amount, 9999)
-    },
-    totalTipCost() {
-      if (!this.selectedTippingItem) return 0
-      return this.selectedTippingItem.item_cost * this.safeTipAmount
-    },
-    payableBalance() {
-      return this.isAppleTipping ? this.resources.apple : this.resources.log
+      const index = this.readableChapters.findIndex(item => String(item.article_chapter) === String(this.history))
+      return index >= 0 ? index + 1 : 1
     }
+
   },
+  watch: { commentAnchor(id) { if (id) this.activeTab = 'comments' } },
   async mounted() {
+    if (this.commentAnchor) this.activeTab = 'comments'
     // 检查登录状态
     this.checkLoginStatus()
     // 如果已登录，获取用户信息
@@ -443,104 +319,29 @@ export default {
     await this.fetchClientData()
   },
   methods: {
+    workUrl,
+    previewCover() { if (this.novel.picUrl && this.$preview) this.$preview([this.novel.picUrl], 0) },
     async fetchClientData() {
-      try {
-        // 获取推荐小说
-        const allNovels = await this.$api.novels.getAllNovels()
-        this.recommendedNovels = allNovels
-          .filter(n => n.novel_id !== this.novel.novel_id)
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 6)
-
-        // 获取喜欢数和状态
-        this.getNices()
-
-        // 获取评论数量
-        this.getCommentNum()
-
-        // 获取评论列表
-        this.getNovelComments()
-
-        // 获取粉丝统计
-        this.getFansStatistics()
-
-        // 获取关联世界
-        this.getWorlds()
-
-        // 检查排行榜
-        this.checkNovelRank()
-
-        // 检查收藏状态
-        this.checkBookcaseStatus()
-
-        // 获取创作活动新闻与人气票状态
-        this.getNovelActivityNews()
-        this.getPopularityStatus()
-
-        // 获取阅读进度
-        this.getReadingProgress()
-
-        // 添加到阅读历史
-        this.addReaderHistory(this.novel)
-
-      } catch (error) {
-        console.error('获取客户端数据失败', error)
-      } finally {
-
-      }
+      await Promise.allSettled([this.loadRecommendations(), this.getNices(), this.getCommentNum(), this.getFansStatistics(), this.getWorlds(), this.checkNovelRank(), this.checkBookcaseStatus(), this.getNovelActivityNews(), this.getPopularityStatus(), this.getReadingProgress()])
+      this.addReaderHistory(this.novel)
     },
-        
-    // 获取小说标签
+    async loadRecommendations() {
+      const allNovels = await this.$api.novels.getAllNovels()
+      this.recommendedNovels = (Array.isArray(allNovels) ? allNovels : []).filter(n => String(n.novel_id) !== String(this.novel.novel_id)).sort(() => 0.5 - Math.random()).slice(0, 6)
+    },
     async getNovelTags() {
-      try {
-        const tags = await this.$api.novels.getNovelTags(this.novel.novel_id)
-        this.tags = tags || []
-      } catch (error) {
-        console.error('获取标签失败', error)
-      }
+      try { this.tags = await this.$api.novels.getNovelTags(this.novel.novel_id) || [] } catch (_) {}
     },
-
-    // 获取评论数量
     async getCommentNum() {
-      try {
-        const res = await this.$api.community.getNovelCommentsAmount(this.novel.novel_id)
-        if (res && res.length > 0) {
-          this.commentAmount = res[0]['COUNT(*)']
-        }
-      } catch (error) {
-        console.error('获取评论数量失败', error)
-      }
+      try { const res = await this.$api.community.getNovelCommentsAmount(this.novel.novel_id); if (res && res.length) this.commentAmount = Number(res[0]['COUNT(*)']) || 0 } catch (_) {}
     },
-
-    // 获取评论列表
-    async getNovelComments() {
-      try {
-        const comments = await this.$api.community.getNovelComments(this.novel.novel_id)
-        this.commentInfo = comments.slice(0, 3)
-      } catch (error) {
-        console.error('获取评论失败', error)
-      }
-    },
-
-    // 获取喜欢数和状态
     async getNices() {
+      const token = readingToken(), novelId = this.novel.novel_id
       try {
-        // 获取喜欢数
-        const nices = await this.$api.novels.getNicesById(this.novel.novel_id)
-        if (nices && nices.length > 0) {
-          this.nice_amount = nices[0].nices
-        }
-
-        // 获取当前用户喜欢状态
-        if (localStorage.getItem("token")) {
-          const status = await this.$api.novels.getNiceStatus(this.novel.novel_id)
-          if (status && status.length > 0 && status[0].nices === 1) {
-            this.niceStatus = true
-          }
-        }
-      } catch (error) {
-        console.error('获取喜欢状态失败', error)
-      }
+        const [amount, status] = await Promise.all([this.$api.reader.niceAmount(novelId), token ? this.$api.reader.niceStatus(novelId) : Promise.resolve([])])
+        if (novelId !== this.novel.novel_id || token !== readingToken()) return
+        this.nice_amount = Number((amount[0] || {}).nices) || 0; this.niceStatus = Number((status[0] || {}).nices) === 1
+      } catch (_) { /* Keep the last successful state; mutations show failures. */ }
     },
 
     // 检查小说排行
@@ -599,16 +400,18 @@ export default {
 
     // 获取当前用户在各活动中的人气票状态
     async getPopularityStatus() {
+      const token = readingToken(), id = this.novel.novel_id
+      if (!token) { this.popularityStatus = {}; return }
       try {
-        const list = await this.$api.popularity.getNovelStatus(this.novel.novel_id)
+        const list = await this.$api.popularity.getNovelStatus(id)
+        if (token !== readingToken() || id !== this.novel.novel_id) return
         const map = {}
         ;(Array.isArray(list) ? list : []).forEach(item => {
           map[item.tag_id] = item
         })
         this.popularityStatus = map
       } catch (error) {
-        console.error('获取人气票状态失败', error)
-        this.popularityStatus = {}
+        if (token === readingToken() && id === this.novel.novel_id) this.popularityStatus = {}
       }
     },
 
@@ -676,12 +479,17 @@ export default {
     },
 
     // 获取阅读进度
-    getReadingProgress() {
-      // 从本地存储获取阅读进度
-      const readingHistory = localStorage.getItem(`ReaderHistory_${this.novel.novel_id}`)
-      if (readingHistory) {
-        this.history = parseInt(readingHistory)
-      }
+    async getReadingProgress() {
+      const token = readingToken(), novelId = this.novel.novel_id
+      const local = localReadingProgress(novelId, token)
+      this.continueProgress = local
+      if (local && local.last_article_chapter) this.history = Number(local.last_article_chapter)
+      try {
+        const response = await this.$api.reading.getProgress(novelId)
+        if (token !== readingToken() || novelId !== this.novel.novel_id) return
+        const cloud = Array.isArray(response) ? response[0] : response
+        if (cloud && cloud.last_article_chapter && (!local || !local.last_read_time || new Date(cloud.last_read_time) >= new Date(local.last_read_time))) { this.history = Number(cloud.last_article_chapter); this.continueProgress = cloud }
+      } catch (_) { /* Resume from local progress when offline. */ }
 
       // 获取当前阅读章节的内容
       if (this.chapters.length > 0) {
@@ -717,27 +525,8 @@ export default {
     },
 
     // 添加阅读历史
-    addReaderHistory(book) {
-      try {
-        let readerHistory = JSON.parse(localStorage.getItem("loghomeReaderHistory")) || []
+    addReaderHistory(book) { recordLocalReading(book) },
 
-        // 移除已有的相同书籍记录
-        readerHistory = readerHistory.filter(item => item.novel_id !== book.novel_id)
-
-        // 添加到历史记录
-        readerHistory.push(book)
-
-        // 只保留最近的10本书
-        if (readerHistory.length > 10) {
-          readerHistory = readerHistory.slice(-10)
-        }
-
-        localStorage.setItem("loghomeReaderHistory", JSON.stringify(readerHistory))
-      } catch (error) {
-        console.error('保存阅读历史失败', error)
-      }
-    },
-    
     // 检查登录状态
     checkLoginStatus() {
       const token = localStorage.getItem('token')
@@ -747,12 +536,12 @@ export default {
     
     // 获取用户信息
     async getUserInfo() {
-      if (!this.isLogin) return null
-      
+      const token = readingToken()
+      if (!token) return null
       try {
         if (!this.userInfo) {
           const userInfoResponse = await this.$api.users.getUserProfile()
-          if (userInfoResponse) {
+          if (userInfoResponse && token === readingToken()) {
             this.userInfo = userInfoResponse
           }
         }
@@ -765,27 +554,15 @@ export default {
     
     // 开始阅读
     startReading() {
-      if (this.chapters.length === 0) {
+      if (this.readableChapters.length === 0) {
         this.$message.info("本书还没有章节")
         return
       }
 
-      if (this.history === 1) {
-        // 从第一章开始
-        this.$router.push(`/article/${this.chapters[0].article_id}`)
-      } else {
-        // 从历史章节继续
-        let targetArticleId = this.chapters[0].article_id
-
-        for (const chapter of this.chapters) {
-          if (chapter.article_chapter == this.history) {
-            targetArticleId = chapter.article_id
-            break
-          }
-        }
-
-        this.$router.push(`/article/${targetArticleId}`)
-      }
+      const stored = this.continueProgress || localReadingProgress(this.novel.novel_id)
+      const target = this.readableChapters.find(chapter => stored && Number(chapter.article_id) === Number(stored.last_article_id)) || this.readableChapters.find(chapter => String(chapter.article_chapter) === String(this.history)) || this.readableChapters[0]
+      const href = stored && Number(stored.last_article_id) === Number(target.article_id) ? textReaderResumeUrl(stored) : `/article/${target.article_id}?start=1`
+      this.$router.push(href)
     },
     
     // 切换收藏状态
@@ -813,113 +590,19 @@ export default {
       }
     },
 
-    // 点赞小说
     async nice() {
-      if (!localStorage.getItem("token")) {
-        this.$router.push('/login')
-        return
-      }
-
-      try {
-        await this.$api.novels.niceNovel(this.novel.novel_id)
-        this.getNices()
-      } catch (error) {
-        console.error('点赞失败', error)
-        this.$message.error("操作失败，请稍后重试")
-      }
+      if (!readingToken()) { this.$router.push('/login'); return }
+      if (this.liking) return
+      this.liking = true
+      try { await this.$api.reader.nice(this.novel.novel_id); await this.getNices() }
+      catch (error) { this.$message.error(error.message || '操作失败，请稍后重试') }
+      finally { this.liking = false }
     },
 
     // 打赏功能
-    async tip() {
-      if (!localStorage.getItem("token")) {
-        this.$router.push('/login')
-        return
-      }
-
-      const userInfo = await this.getUserInfo()
-      if (!userInfo) {
-        this.$router.push('/login')
-        return
-      }
-
-      if (Number(userInfo.user_id) === Number(this.novel.auther_id)) {
-        this.$message.info("不能给自己的书打赏哦")
-        return
-      }
-
-      this.showTippingPopup = true
-
-      if (this.tippingList.length === 0) {
-        this.tippingList = await this.$api.library.getTippingList()
-        if (this.tippingList.length === 0) {
-          this.$message.error('打赏列表加载失败')
-          this.showTippingPopup = false
-          return
-        }
-        this.selectedTippingItem = this.tippingList[0]
-      }
-      this.resources = await this.$api.resources.getResourceBalances()
-      if (!this.tippingMessage) {
-        this.tippingMessage = await this.$api.library.getFanMessage(this.novel.novel_id)
-      }
-    },
-
-    closeTipping() {
-      this.showTippingPopup = false
-    },
-
-    decreaseTipAmount() {
-      if (this.safeTipAmount > 1) this.tippingAmount = this.safeTipAmount - 1
-    },
-
-    increaseTipAmount() {
-      if (this.safeTipAmount >= 9999) {
-        this.$message.info('数量不能超过9999')
-        return
-      }
-      this.tippingAmount = this.safeTipAmount + 1
-    },
-
-    // 确认打赏
-    async confirmTip() {
-      if (this.tipping || !this.selectedTippingItem) return
-
-      if (this.payableBalance < this.totalTipCost) {
-        this.$message.error(`${this.isAppleTipping ? '苹果' : '原木'}余额不足`)
-        return
-      }
-
-      this.tipping = true
-      const item = this.selectedTippingItem
-      const message = this.tippingMessage.trim()
-      try {
-        await this.$api.library.tipNovel({
-          from_id: Number(this.userInfo.user_id),
-          novel_id: this.novel.novel_id,
-          item_name: item.item_name,
-          item_amount: this.safeTipAmount,
-          item_cost: item.item_cost,
-          resource_name: this.isAppleTipping ? 'apple' : 'log'
-        })
-
-        this.$message.success(`成功打赏 ${this.safeTipAmount} 个${item.item_name}`)
-        this.showTippingPopup = false
-        if (message) {
-          this.$api.library.updateFanMessage(this.novel.novel_id, message)
-        }
-        this.runGiftAnimation(item.img_url)
-        this.resources = await this.$api.resources.getResourceBalances()
-        this.getFansStatistics()
-        if (this.$refs.fansList) {
-          this.$refs.fansList.getFansList()
-        }
-      } catch (error) {
-        console.error('打赏失败', error)
-        this.$message.error(error.message || '打赏失败，请稍后重试')
-      } finally {
-        this.tipping = false
-      }
-    },
+    onSupportAccount() { this.userInfo = null; this.popularityStatus = {}; this.checkLoginStatus(); this.getUserInfo(); this.getPopularityStatus(); this.getReadingProgress() },
+    onSupportLike(state) { this.nice_amount = state.count; this.niceStatus = state.liked },
+    onSupportTip(result) { this.runGiftAnimation(result.gift.img_url); this.getFansStatistics(); if (this.$refs.fansList) this.$refs.fansList.getFansList() },
 
     // 打赏动画
     runGiftAnimation(imgUrl = "/gift.png") {
@@ -1060,17 +743,7 @@ export default {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     },
 
-    async showAllComments() {
-      if (!localStorage.getItem('token')) {
-        this.$router.push("/login")
-        return
-      }
-      await this.$openMobileWindow(`/pages/readers/bookComment?id=${this.novel.novel_id}`, {
-        title: '小说评论',
-        width: 500,
-        height: 800
-      })
-    }
+
   }
 }
 </script>
@@ -1197,6 +870,9 @@ $heart-color: #FF6B6B;
 }
 
 .novel-cover {
+  border: 0;
+  padding: 0;
+  cursor: zoom-in;
   width: 200px;
   height: 280px;
   background-size: cover;
@@ -1315,6 +991,7 @@ $heart-color: #FF6B6B;
 }
 
 .novel-tags {
+  a { text-decoration: none; }
           margin-bottom: 16px;
   
   .tag {

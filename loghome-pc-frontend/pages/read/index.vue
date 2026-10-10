@@ -1,1247 +1,201 @@
 <template>
-    <div class="read-page">
-  
-      <div class="banner-container">
-        <BannerSwiper :chartList="chartList" />
-      </div>
-  
-      <div class="collections-container">
-        <div class="collection-cards">
-          <template v-for="(item, index) in safeCollections">
-             <div class="collection-card" v-if="index != 1" :key="'collection-' + index">
-               <div class="collection-header" @click="gotoCollections(item.collection_title)">
-                 <div class="collection-title">
-                   <h3><template v-if="(item.collection_title || '').startsWith('原木力')"><LogPowerWordmark />{{ item.collection_title.slice(3) }}</template><template v-else>{{ item.collection_title }}</template></h3>
-                   <div class="light-line"></div>
-                   <img v-if="item.icon" :src="item.icon" :alt="item.collection_title" class="collection-icon">
-                 </div>
-                 <div class="more-button">
-                   <span>更多</span>
-                   <i class="right-icon">❯</i>
-                 </div>
-               </div>
-     
-               <div class="novel-slide" v-if="item.collection_type === 'slide'">
-                 <div class="slide-wrapper">
-                   <div class="book-cover" v-for="novel in item.novels || []" :key="novel.novel_id"
-                     @click="readBook(novel.novel_id, novel.novel_type)">
-                     <div class="cover-image"
-                       :style="novel.picUrl ? `background-image: url(${novel.picUrl})` : `background-color: hsl(${novel.novel_id * 30 % 360}, 70%, 80%)`">
-                       <span class="novel-type" v-if="novel.novel_type === 'world'">世界设定</span>
-                     </div>
-                     <div class="book-title">{{ novel.name }}</div>
-                   </div>
-                 </div>
-               </div>
-     
-               <div class="novel-list" v-else>
-                 <div class="list-wrapper">
-                   <nuxt-link class="book-card" v-for="novel in (item.novels || []).slice(0, 4)" :key="novel.novel_id"
-                     :to="`/novel/${novel.novel_id}`">
-                     <div class="book-cover">
-                       <img :src="novel.picUrl ? novel.picUrl + '?thumbnail=1' : '/default-book-cover.png'"
-                         :alt="novel.name" :onerror="`this.onerror=null;this.src='/default-book-cover.png'`">
-                     </div>
-                     <div class="book-info">
-                       <h4 class="book-title">
-                         {{ novel.name }}
-                         <span class="book-tag" v-if="novel.novel_type === 'world'">世界设定</span>
-                       </h4>
-                       <div class="book-author">
-                         <img :src="novel.avatar_url || '/default-avatar.png'" alt="作者头像" class="author-avatar"
-                           :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
-                         <span class="author-name">{{ novel.user_name || novel.author_name || '佚名' }}</span>
-                       </div>
-                       <p class="book-desc">{{ truncateText(novel.content, 80) }}</p>
-                     </div>
-                   </nuxt-link>
-                 </div>
-               </div>
-             </div>
-             
-             <!-- 使用Banner组件 -->
-             <Banner page="library" v-if="index === 1" :key="'banner-' + index" />
-           </template>
-        </div>
-      </div>
-  
-      <div class="novels-container">
-        <div v-if="loading" class="loading-container">
-          <div class="loading-spinner"></div>
-          <p>正在加载小说列表...</p>
-        </div>
-  
-        <div v-else-if="displayedNovels.length === 0" class="empty-state">
-          <p>没有找到符合条件的小说</p>
-        </div>
-  
-        <div v-else>
-          <div class="novels-grid">
-            <div class="novel-card" v-for="novel in displayedNovels" :key="novel.novel_id">
-              <div class="novel-cover" v-if="novel.picUrl" :style="`background-image: url(${novel.picUrl})`">
-                <span class="novel-category" v-if="novel.novel_type === 'world'">世界设定</span>
-              </div>
-              <div class="novel-cover" v-else :style="`background-color: hsl(${novel.novel_id * 30 % 360}, 70%, 80%)`">
-                <span class="novel-category" v-if="novel.novel_type === 'world'">世界设定</span>
-              </div>
-              <div class="novel-info">
-                <h3 class="novel-title">{{ novel.name }}</h3>
-                <div class="novel-author-info">
-                  <img :src="novel.auther_avatar || '/default-avatar.png'" alt="作者头像" class="author-avatar"
-                    :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
-                  <span class="author-name">{{ novel.author_name || '佚名' }}</span>
-                </div>
-                <p class="novel-desc">{{ truncateText(novel.content, 80) }}</p>
-                <div class="novel-stats">
-                  <span title="阅读量">👁️ {{ formatNumber(novel.clicks || 0) }}</span>
-                  <span title="字数">📃 {{ formatNumber(novel.text_count || 0) }}字</span>
-                  <span title="连载状态">{{ novel.is_complete === 1 ? '已完结' : '连载中' }}</span>
-                </div>
-                <div class="novel-update-time">
-                  <span title="更新时间">🕒 {{ formatDateTime(novel.update_time) }}</span>
-                </div>
-                <nuxt-link :to="`/novel/${novel.novel_id}`" class="read-button">开始阅读</nuxt-link>
-              </div>
+  <div class="reading-discovery">
+    <header class="discovery-header">
+      <div><span class="discovery-eyebrow">LOGHOME LIBRARY</span><h1>{{ requestedPage > 1 ? `公开作品 · 第 ${requestedPage} 页` : '阅读，打开另一个世界' }}</h1></div>
+      <nav class="discovery-tools" aria-label="阅读快捷导航">
+        <nuxt-link to="/search">综合搜索</nuxt-link><nuxt-link to="/read/rank">排行榜</nuxt-link><nuxt-link to="/tags">分类标签</nuxt-link><nuxt-link to="/me/messages">消息</nuxt-link>
+        <button :disabled="refreshing" @click="refreshAll">{{ refreshing ? '刷新中…' : '刷新书库' }}</button>
+      </nav>
+    </header>
+    <nav v-if="requestedPage === 1 && configuredTags.length" class="discovery-tags" aria-label="精选分类">
+      <template v-for="tag in configuredTags">
+        <a v-if="tag.link.external" :key="tag.tag_id" :href="tag.link.href" target="_blank" rel="noopener noreferrer" :style="{ color: tag.tag_color }"><img v-if="tag.tag_icon" :src="tag.tag_icon" alt="">{{ tag.tag_name }} ↗</a>
+        <nuxt-link v-else :key="tag.tag_id" :to="tag.link.href" :style="{ color: tag.tag_color }"><img v-if="tag.tag_icon" :src="tag.tag_icon" alt="">{{ tag.tag_name }} →</nuxt-link>
+      </template>
+    </nav>
+    <p v-if="errors.tags" class="discovery-notice" role="alert">分类入口暂时未能加载。<button @click="loadDiscovery">重试</button></p>
+    <div class="discovery-layout">
+      <div class="discovery-main">
+        <BannerSwiper v-if="requestedPage === 1 && chartList.length" class="discovery-carousel" :chart-list="chartList" :show-navigation="false" />
+        <p v-if="errors.collections" class="discovery-notice" role="alert">推荐内容暂时未能更新，已保留可用内容。<button @click="loadDiscovery">重试</button></p>
+        <div v-if="refreshing && !collections.length" class="discovery-loading">正在寻找好作品…</div>
+        <template v-for="block in requestedPage === 1 ? collections : []">
+          <RankPanel v-if="block.collection_title === '最近更新'" :key="block.collection_id" ref="rankPanels" />
+          <Banner v-else-if="block.collection_title === 'banner'" :key="block.collection_id" page="library" />
+          <section v-else-if="block.novels.length || block.error" :key="block.collection_id" class="discovery-block">
+            <header class="block-header">
+              <h2><img v-if="block.icon" :src="block.icon" alt=""><template v-if="block.collection_title.startsWith('原木力')"><LogPowerWordmark />{{ block.collection_title.slice(3) }}</template><template v-else>{{ block.collection_title }}</template></h2>
+              <nuxt-link :to="collectionUrl(block.collection_title)">查看全部 →</nuxt-link>
+            </header>
+            <p v-if="block.error" class="discovery-notice">这个专题未能加载。<button @click="retryCollection(block)">重试</button></p>
+            <div class="discovery-works">
+              <WorkCard v-for="(work, index) in block.novels" :key="work.novel_id" :work="work" :compact="block.collection_type !== 'cards'" :rank="block.collection_type === 'dense_card' ? index + 1 : 0" />
             </div>
-          </div>
-  
-          <!-- 加载更多按钮 -->
-          <div class="load-more-container">
-            <button v-if="!loading && !allLoaded && !isLoadingMore" class="load-more-button" @click="loadMoreNovels">
-              加载更多
-            </button>
-  
-            <div v-if="isLoadingMore" class="loading-state">
-              <div class="loading-spinner-small"></div>
-              <p>正在加载更多小说...</p>
-            </div>
-  
-            <div v-if="allLoaded" class="all-loaded-message">
-              <p>已加载全部小说</p>
-            </div>
-  
-            <div v-if="hasError" class="error-message">
-              <p>{{ errorMessage }}</p>
-              <button class="retry-button" @click="loadMoreNovels">重试</button>
-            </div>
-          </div>
-        </div>
+          </section>
+        </template>
+        <section class="discovery-block" aria-label="更多作品">
+          <header class="block-header"><h2>更多作品</h2><span>小说 · 漫画 · 世界设定</span></header>
+          <div v-if="feedLoading && !books.length" class="discovery-loading">正在加载作品…</div>
+          <div v-else-if="books.length" class="discovery-works"><WorkCard v-for="work in books" :key="work.novel_id" :work="work" /></div>
+          <p v-else-if="!errors.feed" class="discovery-loading">暂时还没有公开作品。</p>
+          <p v-if="errors.feed" class="discovery-notice" role="alert">{{ errors.feed }} <button @click="retryFeed">重试</button></p>
+          <div v-if="books.length" class="discovery-pagination"><button v-if="hasMore" :disabled="feedLoading" @click="loadMore">{{ feedLoading ? '加载中…' : '加载更多作品' }}</button><span v-else>已显示全部作品</span></div>
+          <nav class="discovery-page-links" aria-label="作品分页"><nuxt-link v-if="requestedPage > 1" :to="{ path: '/read', query: requestedPage > 2 ? { page: requestedPage - 1 } : {} }" rel="prev">上一页</nuxt-link><nuxt-link v-if="hasMore" :to="{ path: '/read', query: { page: page + 1 } }" rel="next">第 {{ page + 1 }} 页 →</nuxt-link></nav>
+        </section>
       </div>
-  
-      <div class="sidebar">
-  
-        <div class="sidebar-section">
-          <h3 class="sidebar-title">随机推书</h3>
-          <ul class="ranking-list">
-            <nuxt-link v-for="(novel, index) in randomNovels || []" :key="novel.novel_id" :to="`/novel/${novel.novel_id}`"
-              class="ranking-item-link">
-              <li class="ranking-item" :class="`rank-${index + 1}`">
-                <span class="ranking-number">{{ index + 1 }}</span>
-                <div class="ranking-info">
-                  <h4 class="ranking-title">{{ novel.name }}</h4>
-                  <div class="ranking-author-info">
-                    <img :src="novel.auther_avatar || '/default-avatar.png'" alt="作者头像" class="author-avatar"
-                      :onerror="`this.onerror=null;this.src='/default-avatar.png'`">
-                    <span class="author-name">{{ novel.author_name || '佚名' }}</span>
-                  </div>
-                </div>
-                <div class="ranking-stats">
-                  <span class="ranking-stat">{{ formatNumber(novel.clicks || 0) }}浏览</span>
-                  <span class="novel-status">{{ novel.is_complete === 1 ? '完结' : '连载' }}</span>
-                </div>
-              </li>
-            </nuxt-link>
-          </ul>
-        </div>
-  
-        <div class="sidebar-section">
-          <h3 class="sidebar-title">热门标签</h3>
-          <div class="tag-cloud">
-            <nuxt-link v-for="tag in (popularTags || []).slice(0, 12)" :key="tag.tag_id" :to="`/tag/collections?tag_id=${tag.tag_id}`"
-              class="tag-link" :style="`font-size: ${12 + Math.min(tag.count / 5, 8)}px`">
-              {{ tag.tag_name }}
-            </nuxt-link>
-          </div>
-        </div>
-      </div>
+      <aside class="discovery-sidebar" aria-label="阅读侧栏">
+        <ReadingShelf ref="shelf" />
+        <section class="discovery-block">
+          <header class="block-header"><h2>热门标签</h2><nuxt-link to="/tags">全部 →</nuxt-link></header>
+          <div class="popular-tag-list"><nuxt-link v-for="tag in popularTags" :key="tag.tag_id" :to="`/tag/collections?tag_id=${tag.tag_id}`">{{ tag.tag_name }} <small>{{ tag.count }}</small></nuxt-link></div>
+          <p v-if="!popularTags.length" class="sidebar-hint">{{ errors.tags ? '标签暂时不可用' : '暂时没有标签' }}</p>
+        </section>
+        <section v-if="recommendationLinks.length" class="discovery-block">
+          <header class="block-header"><h2>推荐专题</h2></header>
+          <nav class="topic-links"><nuxt-link v-for="block in recommendationLinks" :key="block.collection_id" :to="collectionUrl(block.collection_title)">{{ block.collection_title }} <span>→</span></nuxt-link></nav>
+        </section>
+      </aside>
     </div>
-  </template>
-  
-  <script>
+  </div>
+</template>
+
+<script>
+import BannerSwiper from '~/components/read/BannerSwiper.vue'
+import Banner from '~/components/Banner.vue'
 import LogPowerWordmark from '~/components/LogPowerWordmark.vue'
-  import BannerSwiper from '~/components/read/BannerSwiper.vue'
-  import Banner from '~/components/Banner.vue'
-  
-  export default {
-    components: {
-    LogPowerWordmark,
-      BannerSwiper,
-      Banner
-    },
-    head() {
-      return {
-        title: '书库 - 原木社区',
-        link: [
-          { rel: 'stylesheet', href: '//at.alicdn.com/t/font_1234567_abcdefg.css' }
-        ]
+import WorkCard from '~/components/read/WorkCard.vue'
+import RankPanel from '~/components/read/RankPanel.vue'
+import ReadingShelf from '~/components/read/ReadingShelf.vue'
+import { asList, activeCollections, uniqueWorks, collectionUrl, discoveryLink } from '~/utils/reading-discovery'
+import { readingHead, readingPage, workListSchema, readingResponseStatus } from '~/utils/reading-seo'
+const CACHE_KEY = 'loghome_pc_library_v1'
+export default {
+  components: { BannerSwiper, Banner, LogPowerWordmark, WorkCard, RankPanel, ReadingShelf },
+  head() { return readingHead({ title: `${this.requestedPage > 1 ? `公开作品 第 ${this.requestedPage} 页` : '阅读书库'} - 原木社区`, description: '浏览原木社区最新小说、漫画与世界设定，查看推荐专题和作品排行榜。', path: '/read', query: this.$route.query, schema: workListSchema(this.books, '原木社区公开作品', (this.requestedPage - 1) * this.pageSize), noindex: (this.requestedPage > 1 && !this.books.length) || (!!this.errors.feed && !this.books.length) }) },
+  data: () => ({ indexTags: [], tags: [], chartList: [], collections: [], books: [], page: 1, pageSize: 24,
+    refreshing: false, feedLoading: false, hasMore: false, version: 0, feedVersion: 0,
+    failedFeedPage: 1, errors: { tags: false, collections: false, feed: '' } }),
+  async fetch() { await this.loadDiscovery() },
+  computed: {
+    requestedPage() { return readingPage(this.$route.query.page) },
+    configuredTags() { return this.indexTags.map(tag => ({ ...tag, link: discoveryLink(tag.jump_url_pc && tag.jump_url_pc !== 'None' ? tag.jump_url_pc : tag.jump_url, process.env.mobileUrl) })).filter(tag => tag.link) },
+    popularTags() { return [...this.tags].sort((a, b) => Number(b.count) - Number(a.count)).slice(0, 16) },
+    recommendationLinks() { return this.collections.filter(block => !['banner', '最近更新'].includes(block.collection_title)) }
+  },
+  watch: { requestedPage() { this.books = []; this.loadDiscovery() } },
+  mounted() { if (this.errors.collections || this.errors.feed || this.errors.tags) this.restoreCache(); else this.persistCache() },
+  beforeDestroy() { this.version++; this.feedVersion++ },
+  methods: {
+    collectionUrl,
+    async loadDiscovery() {
+      const version = ++this.version
+      ++this.feedVersion
+      const firstPage = this.requestedPage
+      this.refreshing = true; this.feedLoading = true; this.failedFeedPage = firstPage
+      const results = await Promise.allSettled([this.$api.reading.getIndexTags(), this.$api.reading.getTags(),
+        this.$api.reading.getCollections(), this.$api.reading.getBooks(firstPage, this.pageSize), this.$api.novels.getLibraryRoulousChart()])
+      if (version !== this.version) return
+      this.errors.tags = results[0].status === 'rejected' || results[1].status === 'rejected'
+      if (results[0].status === 'fulfilled') this.indexTags = asList(results[0].value)
+      if (results[1].status === 'fulfilled') this.tags = asList(results[1].value)
+      if (results[4].status === 'fulfilled') this.chartList = asList(results[4].value).filter(item => Number(item.isValid) === 1).map(item => ({ img: item.image, title: item.title || '', Subtitle: item.name, navigate_to: item.navigate_to_pc && item.navigate_to_pc !== 'None' ? item.navigate_to_pc : item.navigate_to }))
+      if (results[3].status === 'fulfilled') {
+        const rawBooks = asList(results[3].value)
+        this.books = uniqueWorks(rawBooks); this.page = firstPage; this.hasMore = rawBooks.length >= this.pageSize; this.errors.feed = ''
+        if (firstPage > 1 && !rawBooks.length) readingResponseStatus(this, 404)
+      } else { this.errors.feed = '作品列表加载失败，请重试。'; if (firstPage > 1) readingResponseStatus(this, 503) }
+      this.feedLoading = false; this.errors.collections = results[2].status === 'rejected'
+      if (firstPage === 1 && results[2].status === 'fulfilled') {
+        const previous = this.collections
+        const blocks = await Promise.all(activeCollections(results[2].value).map(async block => {
+          if (['banner', '最近更新'].includes(block.collection_title)) return { ...block, novels: [], error: false }
+          try { return { ...block, novels: uniqueWorks(await this.$api.reading.getCollectionBooks(block.collection_title, 1, 12)), error: false } }
+          catch (_) { return { ...block, novels: (previous.find(item => item.collection_id === block.collection_id) || {}).novels || [], error: true } }
+        }))
+        if (version !== this.version) return
+        this.collections = blocks
       }
+      this.refreshing = false
+      if (!this.errors.collections && !this.errors.feed) this.persistCache()
     },
-    async asyncData({ $api }) {
+    async refreshAll() {
+      await Promise.allSettled([this.loadDiscovery(), this.$refs.shelf && this.$refs.shelf.load(), ...asList(this.$refs.rankPanels).map(panel => panel.loadFirst(true))])
+    },
+    async retryCollection(block) {
+      const version = this.version
       try {
-        const [tags, chartData, collections] = await Promise.all([
-          $api.novels.getAllTags(),
-          $api.novels.getLibraryRoulousChart(),
-          $api.novels.getLibraryCollections()
-        ])
-  
-        // 处理轮播图数据
-        const chartList = []
-        if (chartData && Array.isArray(chartData)) {
-          for (const item of chartData) {
-            if (item.isValid === 1) {
-              chartList.push({
-                img: item.image,
-                title: item.title,
-                Subtitle: item.name,
-                navigate_to: item.navigate_to_pc
-              })
-            }
-          }
-        }
-  
-        // 处理集合数据
-        const processedCollections = collections || []
-        const collectionNovelsPromises = processedCollections.map(collection =>
-          $api.novels.getCollectionNovels(collection.collection_title, 1, 10)
-            .then(novels => ({ collection_title: collection.collection_title, novels: novels || [] }))
-            .catch(error => {
-              console.error(`获取集合 ${collection.collection_title} 的小说失败`, error)
-              return { collection_title: collection.collection_title, novels: [] }
-            })
-        )
-  
-        const collectionResults = await Promise.all(collectionNovelsPromises)
-  
-        // 将获取到的小说数组分配给对应的集合
-        collectionResults.forEach(result => {
-          const collection = processedCollections.find(c => c.collection_title === result.collection_title)
-          if (collection) {
-            collection.novels = result.novels
-          }
-        })
-  
-        return {
-          tags: tags || [],
-          chartList,
-          collections: processedCollections,
-          loading: false
-        }
-      } catch (error) {
-        console.error('获取数据失败', error)
-        return {
-          tags: [],
-          chartList: [],
-          collections: [],
-          loading: false
-        }
-      }
+        const books = await this.$api.reading.getCollectionBooks(block.collection_title, 1, 12)
+        if (version !== this.version) return
+        this.$set(block, 'novels', uniqueWorks(books)); this.$set(block, 'error', false); this.persistCache()
+      } catch (_) { if (version === this.version) this.$set(block, 'error', true) }
     },
-    data() {
-      return {
-        // 小说列表数据
-        novels: [],
-        displayedNovels: [],
-  
-        // 分页和加载状态
-        pageSize: 12,
-        loading: false,
-        isLoadingMore: false,
-        allLoaded: false,
-  
-        // 数据
-        tags: [],
-        chartList: [],
-        collections: [],
-  
-        // 错误状态
-        hasError: false,
-        errorMessage: '',
-  
-      }
+    async loadMore() {
+      if (this.feedLoading || !this.hasMore || this.refreshing) return
+      const version = this.feedVersion, next = this.page + 1
+      this.feedLoading = true; this.errors.feed = ''; this.failedFeedPage = next
+      try {
+        const books = asList(await this.$api.reading.getBooks(next, this.pageSize))
+        if (version !== this.feedVersion) return
+        this.books = uniqueWorks([...this.books, ...books]); this.page = next; this.hasMore = books.length >= this.pageSize
+      } catch (_) { if (version === this.feedVersion) this.errors.feed = '下一页加载失败，已有作品已保留。' }
+      finally { if (version === this.feedVersion) this.feedLoading = false }
     },
-    computed: {
-      // 热门小说（点击量排序前5）
-      randomNovels() {
-        if (!this.novels || !this.novels.length) return []
-        console.log('计算随机小说列表', this.novels.length)
-        return [...this.novels]
-          .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
-          .slice(0, 5)
-      },
-  
-      // 热门标签（按关联小说数量排序）
-      popularTags() {
-        if (!this.tags || !this.tags.length) return []
-        return [...this.tags].sort((a, b) => (b.count || 0) - (a.count || 0))
-      },
-  
-      // collections数组
-      safeCollections() {
-        return this.collections || []
-      }
+    retryFeed() { return this.failedFeedPage > this.requestedPage ? this.loadMore() : this.loadDiscovery() },
+    persistCache() {
+      if (!process.client || this.requestedPage !== 1) return
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ version: 1, savedAt: Date.now(), indexTags: this.indexTags, tags: this.tags, chartList: this.chartList, collections: this.collections, books: this.books.slice(0, this.pageSize), hasMore: this.books.length >= this.pageSize })) } catch (_) {}
     },
-    methods: {
-      // 获取随机小说
-      async fetchRandomNovels() {
-        this.loading = true
-        try {
-          const novels = await this.$api.novels.getAllNovels()
-          this.novels = novels || []
-          this.displayedNovels = this.novels.slice(0, this.pageSize)
-  
-        } catch (error) {
-          console.error('获取随机小说列表失败', error)
-          this.hasError = true
-          this.errorMessage = '获取小说列表失败，请稍后再试'
-        } finally {
-          this.loading = false
-        }
-      },
-  
-      // 加载更多小说（获取新的随机小说）
-      async loadMoreNovels() {
-        if (this.isLoadingMore || this.loading) return
-        console.log('开始加载更多小说')
-  
-        this.isLoadingMore = true
-  
-        try {
-          // 获取新的随机小说，而不是加载现有数组的更多项
-          const newNovels = await this.$api.novels.getAllNovels()
-  
-          if (newNovels && newNovels.length) {
-            // 过滤掉已经显示的小说（根据novel_id去重）
-            const existingIds = new Set(this.displayedNovels.map(novel => novel.novel_id))
-            const uniqueNewNovels = newNovels.filter(novel => !existingIds.has(novel.novel_id))
-  
-            if (uniqueNewNovels.length > 0) {
-              this.displayedNovels = [...this.displayedNovels, ...uniqueNewNovels.slice(0, this.pageSize)]
-              console.log('加载了新小说', uniqueNewNovels.length)
-            } else {
-              // 如果没有新的唯一小说，标记为已全部加载
-              console.log('没有新的唯一小说')
-              this.allLoaded = true
-            }
-          } else {
-            console.log('API没有返回小说')
-            this.allLoaded = true
-          }
-        } catch (error) {
-          console.error('加载更多随机小说失败', error)
-          this.hasError = true
-          this.errorMessage = '加载更多小说失败，请稍后再试'
-        } finally {
-          this.isLoadingMore = false
-        }
-      },
-  
-      // 格式化数字（大于1000显示为1k）
-      formatNumber(num) {
-        if (num >= 10000) {
-          return (num / 10000).toFixed(1) + '万'
-        } else if (num >= 1000) {
-          return (num / 1000).toFixed(1) + 'k'
-        }
-        return num
-      },
-  
-      // 截断文本
-      truncateText(text, length) {
-        if (!text) return '暂无简介'
-        return text.length > length ? text.substring(0, length) + '...' : text
-      },
-  
-      // 格式化日期时间
-      formatDateTime(dateTimeStr) {
-        if (!dateTimeStr) return '暂无更新';
-  
-        try {
-          const date = new Date(dateTimeStr);
-          if (isNaN(date.getTime())) return '日期格式错误';
-  
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-  
-          return `${year}-${month}-${day}`;
-        } catch (error) {
-          console.error('日期格式化错误', error);
-          return '日期格式错误';
-        }
-      },
-  
-      // 前往专题集合页面
-      gotoCollections(collectionTitle) {
-        console.log('准备跳转到集合页面:', collectionTitle)
-        // 确保标题是字符串并且不为空
-        if (!collectionTitle || typeof collectionTitle !== 'string') {
-          console.error('无效的集合标题:', collectionTitle)
-          return
-        }
-        
-        try {
-          const encodedTitle = encodeURIComponent(collectionTitle.trim())
-          const url = `/read/collections?title=${encodedTitle}`
-          console.log('跳转URL:', url)
-          this.$router.push(url)
-        } catch (error) {
-          console.error('跳转集合页面失败:', error)
-        }
-      },
-  
-      // 阅读小说或世界设定
-      readBook(novelId, novelType) {
-        if (novelId) {
-          // 如果是世界设定类型，跳转到world页面，否则跳转到novel页面
-          if (novelType === 'world') {
-            this.$router.push(`/world/${novelId}`)
-          } else {
-            this.$router.push(`/novel/${novelId}`)
-          }
-        }
-      },
-    },
-    mounted() {
-      // 仅在客户端执行
-      if (process.client) {
-        console.log('组件挂载，开始获取随机小说')
-        // 获取随机小说
-        this.fetchRandomNovels()
-      }
-    },
-    async fetch() {
-      // fetch钩子在客户端导航时被调用，用于处理错误或数据刷新
-      if (this.$fetchState.pending || this.$fetchState.error) {
-        this.loading = true
-      } else {
-        this.loading = false
-      }
-    },
-    watch: {
-      // 监听小说数据变化，更新显示状态
-      novels: {
-        handler(newNovels) {
-          if (Array.isArray(newNovels) && newNovels.length && this.displayedNovels.length === 0) {
-            this.displayedNovels = newNovels.slice(0, this.pageSize)
-          }
-        },
-        immediate: true
-      }
+    restoreCache() {
+      if (this.requestedPage !== 1) return
+      try {
+        const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
+        if (!cache || cache.version !== 1 || Date.now() - cache.savedAt > 86400000) return
+        if (this.errors.collections) this.collections = activeCollections(cache.collections).map(block => ({ ...block, novels: uniqueWorks(block.novels) }))
+        if (this.errors.feed) { this.books = uniqueWorks(cache.books); this.page = 1; this.hasMore = !!cache.hasMore }
+        if (this.errors.tags) { this.tags = asList(cache.tags); this.indexTags = asList(cache.indexTags) }
+        if (!this.chartList.length) this.chartList = asList(cache.chartList)
+      } catch (_) {}
     }
   }
-  </script>
-  
-  <style lang="scss">
-  @use "sass:color";
-  
-  // 变量定义
-  $primary-color: #947358;
-  $secondary-color: #704C35;
-  $text-color: #333;
-  $text-light: #666;
-  $text-lighter: #888;
-  $border-color: #eee;
-  $border-light: #f5f5f5;
-  $background-color: #fff;
-  $error-color: #ff4d4f;
-  $success-color: #52c41a;
-  $warning-color: #faad14;
-  
-  // 全局样式
-  * {
-    box-sizing: border-box;
-  }
-  
-  img {
-    max-width: 100%;
-  }
-  
-  // 混合器
-  @mixin flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  @mixin flex-between {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  @mixin button-base {
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 14px;
-  }
-  
-  @mixin card-hover {
-    transform: translateY(-5px);
-  }
-  
-  @mixin loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid rgba($primary-color, 0.2);
-    border-top-color: $primary-color;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
-  }
-  
-  // 动画
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  .read-page {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px 30px;
-    display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr);
-    grid-column-gap: 30px;
-    grid-row-gap: 30px;
-    grid-template-areas:
-      "header header"
-      "banner sidebar"
-      "collections sidebar"
-      "content sidebar";
-    box-sizing: border-box;
-  
-    .full-width {
-      grid-column: 1 / -1;
-    }
-  
-    .page-header {
-      grid-area: header;
-  
-      .page-title {
-        font-size: 24px;
-        color: $secondary-color;
-      }
-    }
-  
-    /* 轮播图容器 */
-    .banner-container {
-      grid-area: banner;
-      width: 100%;
-      overflow: hidden;
-    }
-  
-    .collections-container {
-      grid-area: collections;
-      width: 100%;
-    }
-  
-    .collection-cards {
-      width: 100%;
-      max-width: 100%;
-      overflow: hidden;
-  
-      .collection-card {
-        background-color: $background-color;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 20px;
-        width: 100%;
-        max-width: 100%;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  
-        .collection-header {
-          @include flex-between;
-          padding: 15px;
-          border-bottom: 1px solid $border-light;
-          cursor: pointer;
-          transition: background-color 0.2s;
-  
-          &:hover {
-            background-color: $border-light;
-          }
-  
-          .collection-title {
-            display: flex;
-            align-items: center;
-            position: relative;
-  
-            h3 {
-              font-size: 18px;
-              margin: 0;
-              color: $text-color;
-              position: relative;
-              z-index: 1;
-            }
-  
-            .light-line {
-              position: absolute;
-              bottom: 0;
-              left: 0;
-              height: 8px;
-              width: 100%;
-              background-color: rgba($success-color, 0.3);
-              z-index: 0;
-            }
-  
-            .collection-icon {
-              width: 24px;
-              height: 24px;
-              margin-left: 10px;
-              border-radius: 4px;
-            }
-          }
-  
-          .more-button {
-            display: flex;
-            align-items: center;
-            color: $primary-color;
-            font-size: 14px;
-  
-            .right-icon {
-              font-style: normal;
-              margin-left: 5px;
-            }
-          }
-        }
-  
-        .novel-slide {
-          padding: 15px;
-          width: 100%;
-          max-width: 100%;
-          overflow: hidden;
-  
-          .slide-wrapper {
-            display: flex;
-            overflow-x: auto;
-            gap: 15px;
-            padding-bottom: 10px;
-            width: 100%;
-            max-width: 100%;
-  
-            &::-webkit-scrollbar {
-              height: 6px;
-            }
-  
-            &::-webkit-scrollbar-track {
-              background: $border-light;
-              border-radius: 10px;
-            }
-  
-            &::-webkit-scrollbar-thumb {
-              background: $primary-color;
-              border-radius: 10px;
-            }
-  
-            .book-cover {
-              flex: 0 0 auto;
-              width: 120px;
-              min-width: 120px;
-              max-width: 120px;
-              cursor: pointer;
-              transition: transform 0.3s;
-  
-              &:hover {
-                transform: translateY(-5px);
-              }
-  
-              .cover-image {
-                height: 160px;
-                border-radius: 6px;
-                background-size: cover;
-                background-position: center;
-                position: relative;
-                margin-bottom: 8px;
-  
-                .novel-type {
-                  position: absolute;
-                  top: 5px;
-                  right: 5px;
-                  background-color: rgba($primary-color, 0.8);
-                  color: white;
-                  padding: 2px 6px;
-                  border-radius: 10px;
-                  font-size: 12px;
-                }
-              }
-  
-              .book-title {
-                font-size: 14px;
-                color: $text-color;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                text-align: center;
-              }
-            }
-          }
-        }
-  
-        .novel-list {
-          padding: 15px;
-  
-          .list-wrapper {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            max-width: 100%;
-  
-            .book-card {
-              display: flex;
-              padding: 10px;
-              border-radius: 6px;
-              text-decoration: none;
-              color: inherit;
-              transition: all 0.3s;
-              max-width: 100%;
-              overflow: hidden;
-  
-              &:hover {
-                background-color: $border-light;
-              }
-  
-              .book-cover {
-                width: 80px;
-                min-width: 80px;
-                height: 120px;
-                flex-shrink: 0;
-                margin-right: 15px;
-  
-                img {
-                  width: 100%;
-                  height: 100%;
-                  object-fit: cover;
-                  border-radius: 4px;
-                }
-              }
-  
-              .book-info {
-                flex: 1;
-                overflow: hidden;
-                min-width: 0;
-  
-                .book-title {
-                  font-size: 16px;
-                  font-weight: bold;
-                  margin: 0 0 8px;
-                  color: $text-color;
-                  display: flex;
-                  align-items: center;
-                  overflow: hidden;
-  
-                  // 文本溢出时显示省略号
-                  white-space: nowrap;
-                  text-overflow: ellipsis;
-  
-                  .book-tag {
-                    font-size: 12px;
-                    background-color: $warning-color;
-                    color: white;
-                    padding: 2px 6px;
-                    border-radius: 10px;
-                    margin-left: 8px;
-                    font-weight: normal;
-                    flex-shrink: 0;
-                  }
-                }
-  
-                .book-author {
-                  display: flex;
-                  align-items: center;
-                  margin-bottom: 8px;
-  
-                  .author-avatar {
-                    width: 20px;
-                    height: 20px;
-                    border-radius: 50%;
-                    margin-right: 6px;
-                    flex-shrink: 0;
-                  }
-  
-                  .author-name {
-                    font-size: 14px;
-                    color: $primary-color;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                  }
-                }
-  
-                .book-desc {
-                  font-size: 13px;
-                  color: $text-light;
-                  margin: 0;
-                  display: -webkit-box;
-                  -webkit-line-clamp: 3;
-                  -webkit-box-orient: vertical;
-                  overflow: hidden;
-                  line-height: 1.5;
-                  max-width: 100%;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  
-    .novels-container {
-      grid-area: content;
-      width: 100%;
-  
-      .loading-container {
-        @include flex-center;
-        flex-direction: column;
-        min-height: 300px;
-  
-        .loading-spinner {
-          @include loading-spinner;
-        }
-      }
-  
-      .empty-state {
-        @include flex-center;
-        min-height: 300px;
-        color: $text-lighter;
-        font-style: italic;
-      }
-  
-      .novels-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        grid-gap: 20px;
-  
-        .novel-card {
-          background-color: $background-color;
-          border-radius: 8px;
-          overflow: hidden;
-          transition: transform 0.3s, box-shadow 0.3s;
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  
-          &:hover {
-            @include card-hover;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-          }
-  
-          .novel-cover {
-            width: 100%;
-            height: 160px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-  
-            .novel-category {
-              position: absolute;
-              top: 10px;
-              right: 10px;
-              background-color: rgba($primary-color, 0.8);
-              color: white;
-              padding: 2px 8px;
-              border-radius: 20px;
-              font-size: 12px;
-            }
-          }
-  
-          .novel-info {
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-  
-            .novel-title {
-              font-size: 18px;
-              font-weight: bold;
-              margin-bottom: 5px;
-              color: $text-color;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-  
-            .novel-author-info {
-              display: flex;
-              align-items: center;
-              margin-bottom: 5px;
-  
-              .author-avatar {
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                margin-right: 8px;
-                flex-shrink: 0;
-                object-fit: cover;
-              }
-  
-              .author-name {
-                font-size: 14px;
-                color: $primary-color;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-              }
-            }
-  
-            .novel-desc {
-              color: $text-light;
-              font-size: 14px;
-              line-height: 1.5;
-              margin-bottom: 15px;
-              height: 60px;
-              overflow: hidden;
-              display: -webkit-box;
-              -webkit-line-clamp: 3;
-              -webkit-box-orient: vertical;
-              flex: 1;
-            }
-  
-            .novel-stats {
-              @include flex-between;
-              margin-bottom: 15px;
-              font-size: 12px;
-              color: $text-lighter;
-  
-              span {
-                display: inline-flex;
-                align-items: center;
-                margin-right: 8px;
-  
-                &:last-child {
-                  margin-right: 0;
-                }
-              }
-            }
-  
-            .novel-update-time {
-              @include flex-between;
-              margin-bottom: 15px;
-              font-size: 12px;
-              color: $text-lighter;
-  
-              span {
-                display: inline-flex;
-                align-items: center;
-                margin-right: 8px;
-  
-                &:last-child {
-                  margin-right: 0;
-                }
-              }
-            }
-  
-            .read-button {
-              @include button-base;
-              display: block;
-              text-align: center;
-              background-color: $primary-color;
-              color: white;
-              text-decoration: none;
-              width: 100%;
-              margin-top: auto;
-  
-              &:hover {
-                background-color: color.adjust($primary-color, $lightness: -10%);
-              }
-            }
-          }
-        }
-      }
-    }
-  
-    .sidebar {
-      grid-area: sidebar;
-      position: sticky;
-      top: 30px;
-      height: fit-content;
-      align-self: start;
-      width: 100%;
-      max-width: 300px;
-  
-      .sidebar-section {
-        background-color: $background-color;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  
-        .sidebar-title {
-          padding: 15px;
-          margin: 0;
-          background-color: $primary-color;
-          color: white;
-          font-size: 16px;
-        }
-  
-        .history-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-  
-          .history-item {
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid $border-light;
-            transition: background-color 0.2s ease;
-  
-            &:hover {
-              background-color: rgba($primary-color, 0.1);
-            }
-  
-            .history-cover {
-              width: 50px;
-              height: 75px;
-              flex-shrink: 0;
-              background-size: cover;
-              background-position: center;
-              border-radius: 4px;
-              margin-right: 15px;
-            }
-  
-            .history-info {
-              flex: 1;
-              overflow: hidden;
-  
-              .history-title {
-                margin: 0 0 3px;
-                font-size: 14px;
-                font-weight: bold;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-              }
-  
-              .history-author {
-                font-size: 12px;
-                color: $text-light;
-                margin: 0;
-              }
-            }
-          }
-        }
-  
-        .ranking-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-  
-          .ranking-item-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-  
-            &:hover .ranking-item {
-              background-color: rgba($primary-color, 0.1);
-            }
-          }
-  
-          .ranking-item {
-            @include flex-between;
-            padding: 12px 15px;
-            border-bottom: 1px solid $border-light;
-            transition: background-color 0.2s ease;
-  
-            &:last-child {
-              border-bottom: none;
-            }
-  
-            .ranking-number {
-              width: 24px;
-              height: 24px;
-              @include flex-center;
-              background-color: $primary-color;
-              color: white;
-              border-radius: 50%;
-              font-size: 12px;
-              margin-right: 10px;
-              flex-shrink: 0;
-            }
-  
-            &.rank-1 .ranking-number {
-              background-color: #FF7043;
-            }
-  
-            &.rank-2 .ranking-number {
-              background-color: #FF9800;
-            }
-  
-            &.rank-3 .ranking-number {
-              background-color: #FFC107;
-            }
-  
-            .ranking-info {
-              flex: 1;
-              overflow: hidden;
-  
-              .ranking-title {
-                margin: 0 0 3px;
-                font-size: 14px;
-                font-weight: bold;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-              }
-  
-              .ranking-author-info {
-                display: flex;
-                align-items: center;
-                margin-bottom: 3px;
-  
-                .author-avatar {
-                  width: 20px;
-                  height: 20px;
-                  border-radius: 50%;
-                  margin-right: 8px;
-                  flex-shrink: 0;
-                }
-  
-                .author-name {
-                  font-size: 12px;
-                  color: $text-light;
-                }
-              }
-            }
-  
-            .ranking-stats {
-              font-size: 12px;
-              color: $text-lighter;
-              white-space: nowrap;
-              display: flex;
-              flex-direction: column;
-              align-items: flex-end;
-  
-              .ranking-stat,
-              .novel-status {
-                margin-bottom: 3px;
-  
-                &:last-child {
-                  margin-bottom: 0;
-                }
-              }
-  
-              .novel-status {
-                background-color: rgba($primary-color, 0.1);
-                color: $primary-color;
-                padding: 2px 6px;
-                border-radius: 10px;
-                font-size: 10px;
-              }
-            }
-          }
-        }
-  
-        .tag-cloud {
-          padding: 15px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-  
-          .tag-link {
-            display: inline-block;
-            padding: 4px 10px;
-            background-color: rgba($primary-color, 0.1);
-            color: $primary-color;
-            border-radius: 20px;
-            text-decoration: none;
-            transition: all 0.2s;
-  
-            &:hover {
-              background-color: $primary-color;
-              color: white;
-            }
-          }
-        }
-      }
-    }
-  
-    // 淡入淡出动画
-    .fade-enter-active,
-    .fade-leave-active {
-      transition: opacity 0.5s;
-    }
-  
-    .fade-enter,
-    .fade-leave-to {
-      opacity: 0;
-    }
-  
-    // 加载更多按钮样式
-    .load-more-container {
-      padding: 40px 0;
-      text-align: center;
-      margin-top: 30px;
-  
-      .load-more-button {
-        @include button-base;
-        background-color: $primary-color;
-        color: white;
-        padding: 12px 40px;
-        font-size: 16px;
-        border: none;
-        box-shadow: 0 2px 8px rgba($primary-color, 0.3);
-  
-        &:hover {
-          background-color: color.adjust($primary-color, $lightness: -10%);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba($primary-color, 0.4);
-        }
-      }
-  
-      .loading-state {
-        @include flex-center;
-        flex-direction: column;
-  
-        .loading-spinner-small {
-          width: 30px;
-          height: 30px;
-          border: 3px solid rgba($primary-color, 0.2);
-          border-top-color: $primary-color;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 10px;
-        }
-  
-        p {
-          color: $text-lighter;
-        }
-      }
-  
-      .all-loaded-message {
-        color: $text-lighter;
-        font-style: italic;
-      }
-  
-      .error-message {
-        color: $error-color;
-  
-        .retry-button {
-          @include button-base;
-          background-color: $error-color;
-          color: white;
-          border: none;
-          margin-top: 10px;
-  
-          &:hover {
-            background-color: color.adjust($error-color, $lightness: -10%);
-          }
-        }
-      }
-    }
-  }
-  </style>
+}
+</script>
+
+<style scoped>
+.discovery-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 23px; }
+.discovery-eyebrow { font-size: 9px; letter-spacing: 2px; color: #b6a38c; }
+.discovery-header h1 { font-size: 25px; font-weight: 600; color: #514436; margin-top: 8px; }
+.discovery-tools { display: flex; align-items: center; gap: 15px; font-size: 11px; flex-wrap: wrap; }
+.discovery-tools a { color: #807263; text-decoration: none; }
+button { cursor: pointer; font: inherit; }
+.discovery-tools button { padding: 7px 11px; border: 1px solid #d9cbbd; border-radius: 6px; color: #947358; background: #fff; }
+.discovery-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+.discovery-tags a { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e7e1d9; border-radius: 6px; padding: 9px 16px; background: #fff; font-size: 12px; text-decoration: none; color: #947358; }
+.discovery-tags img { width: 17px; height: 17px; object-fit: contain; }
+.discovery-layout { display: grid; grid-template-columns: minmax(0, 1fr) 278px; gap: 22px; align-items: start; }
+.discovery-main, .discovery-sidebar { min-width: 0; display: grid; gap: 22px; }
+.discovery-sidebar { position: sticky; top: 82px; }
+.discovery-block { padding: 20px; border: 1px solid #e9e5e0; background: #fff; border-radius: 12px; }
+.block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
+.block-header h2 { display: flex; align-items: center; gap: 5px; color: #544331; font-size: 17px; }
+.block-header h2 img { width: 19px; height: 19px; object-fit: contain; margin-right: 4px; }
+.block-header a, .block-header > span { font-size: 11px; color: #9d8a75; text-decoration: none; }
+.discovery-works { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.discovery-loading { padding: 30px 10px; text-align: center; color: #aaa; font-size: 12px; }
+.discovery-notice { font-size: 12px; color: #b58063; padding: 12px 0; line-height: 1.8; }
+.discovery-notice button { color: #947358; background: none; border: none; text-decoration: underline; }
+.discovery-pagination { display: flex; justify-content: center; margin-top: 22px; color: #aaa; font-size: 12px; }
+.discovery-pagination button { padding: 9px 28px; border: 1px solid #d9c7b1; background: white; color: #947358; border-radius: 6px; }
+.discovery-page-links { display: flex; justify-content: center; gap: 20px; margin-top: 16px; font-size: 12px; }.discovery-page-links a { color: #947358; text-decoration: none; }
+.popular-tag-list { display: flex; flex-wrap: wrap; gap: 7px; }
+.popular-tag-list a { padding: 6px 9px; border-radius: 5px; background: #f6f3ee; color: #87755f; font-size: 11px; text-decoration: none; }
+.popular-tag-list small { color: #b8a996; margin-left: 3px; }
+.topic-links { display: grid; gap: 13px; }
+.topic-links a { display: flex; justify-content: space-between; font-size: 12px; color: #92806b; text-decoration: none; }
+.sidebar-hint { font-size: 11px; color: #aaa; }
+.discovery-carousel ::v-deep .swiper-container { height: 195px; }
+button:disabled { opacity: .5; cursor: wait; }
+a:focus-visible, button:focus-visible { outline: 2px solid #947358; outline-offset: 3px; }
+@media (max-width: 1150px) { .discovery-works { grid-template-columns: repeat(2, minmax(0, 1fr)); } .discovery-header { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 950px) { .discovery-layout { grid-template-columns: minmax(0, 1fr); } .discovery-sidebar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .discovery-works, .discovery-sidebar { grid-template-columns: 1fr; } .discovery-block { padding: 14px; } }
+</style>

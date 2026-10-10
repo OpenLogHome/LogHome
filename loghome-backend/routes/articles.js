@@ -5,6 +5,7 @@ let auth = require('../bin/auth.js');
 let sysLog = require('../bin/log.js');
 let statistics = require('../bin/statistics.js');
 const { PUBLIC_ARTICLE } = require('../bin/readingVisibility.js');
+const { findReaderParagraph } = require('../bin/readerParagraphs.js');
 
 // 创建路由对象
 let router = express.Router();
@@ -400,7 +401,7 @@ router.post('/submit_feedback', auth, async function (req, res) {
 	try {
 		// 首先获取段落内容
 		let articleInfo = await query(
-			'SELECT * FROM articles WHERE article_id = ? AND deleted = 0',
+			`SELECT a.* FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.article_id = ? AND ${PUBLIC_ARTICLE}`,
 			[req.body.article_id],
 		);
         
@@ -416,19 +417,8 @@ router.post('/submit_feedback', auth, async function (req, res) {
 			return res.status(400).json({ msg: '漫画章节暂不支持段落反馈' });
 		}
 
-		// 根据文章类型获取段落内容
-		if (article.article_type === 'richtext' || article.article_type === 'worldOutline') {
-			let content = JSON.parse(article.content);
-			for (let item of content) {
-				if (item.id === req.body.paragraph_id) {
-					paragraphText = item.value;
-					break;
-				}
-			}
-		} else if (article.article_type === 'worldVocabulary') {
-			let content = JSON.parse(article.content);
-			paragraphText = content.desc || '';
-		}
+		const paragraph = findReaderParagraph(article, req.body.paragraph_id);
+		paragraphText = paragraph ? paragraph.value : '';
         
 		if (!paragraphText) {
 			return res.status(404).json({ msg: '未找到指定段落' });

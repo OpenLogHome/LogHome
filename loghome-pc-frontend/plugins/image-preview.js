@@ -5,7 +5,10 @@ const ImagePreview = {
   install(Vue) {
     Vue.prototype.$preview = function(images, index = 0) {
       // 确保images是数组
-      const imageList = Array.isArray(images) ? images : [images]
+      const imageList = (Array.isArray(images) ? images : [images]).filter(url => typeof url === 'string' && /^(https?:\/\/|blob:|\/(?!\/)|data:image\/(?:png|jpe?g|gif|webp|avif);)/i.test(url))
+      if (!imageList.length) return
+      index = Math.max(0, Math.min(imageList.length - 1, Number.isSafeInteger(index) ? index : 0))
+      const previousFocus = document.activeElement
       
       // 创建预览容器
       const previewContainer = document.createElement('div')
@@ -19,7 +22,7 @@ const ImagePreview = {
             </div>
             <div class="image-preview-content">
               <button class="image-preview-prev" ${imageList.length <= 1 ? 'style="display:none"' : ''}>&lt;</button>
-              <img class="image-preview-img" src="${imageList[index]}" alt="预览图片" />
+              <img class="image-preview-img" alt="预览图片" />
               <button class="image-preview-next" ${imageList.length <= 1 ? 'style="display:none"' : ''}>&gt;</button>
             </div>
           </div>
@@ -161,9 +164,14 @@ const ImagePreview = {
       }
       
       // 事件处理
+      let closed = false
       const closePreview = () => {
+        if (closed) return
+        closed = true
+        document.removeEventListener('keydown', handleKeydown)
         document.body.removeChild(previewContainer)
         document.head.removeChild(style)
+        if (previousFocus && previousFocus.isConnected) previousFocus.focus()
       }
       
       const prevImage = () => {
@@ -210,21 +218,9 @@ const ImagePreview = {
       }
       
       document.addEventListener('keydown', handleKeydown)
-      
-      // 清理函数
-      const originalClose = closePreview
-      previewContainer.closePreview = () => {
-        document.removeEventListener('keydown', handleKeydown)
-        originalClose()
-      }
-      
-      // 重新绑定关闭事件
-      previewContainer.querySelector('.image-preview-close').addEventListener('click', previewContainer.closePreview)
-      previewContainer.querySelector('.image-preview-overlay').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) {
-          previewContainer.closePreview()
-        }
-      })
+      previewContainer.closePreview = closePreview
+      updateImage()
+      previewContainer.querySelector('.image-preview-close').focus()
     }
   }
 }

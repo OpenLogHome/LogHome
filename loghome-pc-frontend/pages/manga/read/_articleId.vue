@@ -6,10 +6,10 @@
         <manga-icon name="back" />
       </button>
       <div class="bar-title">
-        <span class="bar-novel">{{ novelName }}</span>
+        <h1 class="bar-novel">{{ novelName }} · {{ articleData ? articleData.title : '漫画阅读' }}</h1>
         <span class="bar-episode">第 {{ currentEpisodeNo }} 话 / 共 {{ articles.length }} 话</span>
       </div>
-      <el-popover placement="bottom-end" width="280" trigger="click" popper-class="reader-settings-pop">
+      <el-popover v-model="settingsVisible" placement="bottom-end" width="280" trigger="click" popper-class="reader-settings-pop">
         <div class="settings-panel">
           <div class="setting-head">阅读设置</div>
           <div class="setting-label">阅读方式</div>
@@ -31,10 +31,11 @@
             <el-radio-button label="black">黑色</el-radio-button>
           </el-radio-group>
           <div class="setting-label">图片清晰度</div>
-          <el-radio-group v-model="imageQuality" size="mini" @change="savePreferences">
+          <el-radio-group v-model="imageQuality" size="mini" @change="onQualityChange">
             <el-radio-button label="standard">流畅</el-radio-button>
             <el-radio-button label="original">原图</el-radio-button>
           </el-radio-group>
+          <p v-if="preferenceError" class="reader-error" role="alert">偏好未能保存，当前设置仍可使用。</p>
         </div>
         <button slot="reference" class="bar-icon" type="button" title="阅读设置">
           <manga-icon name="settings" />
@@ -43,21 +44,22 @@
     </div>
 
     <!-- 阅读区 -->
-    <div class="reader-stage">
+    <div ref="stage" class="reader-stage" tabindex="0" aria-label="漫画阅读区，左右键翻页">
       <!-- 条漫：原生滚动 + 懒加载 -->
       <div v-if="mode === 'strip'" ref="stripScroll" class="strip-scroll" @scroll.passive="onStripScroll">
-        <div v-for="(page, idx) in pages" :key="articleId + '-' + idx" class="strip-page">
+        <div v-for="(page, idx) in pages" :key="articleId + '-' + idx" class="strip-page" :style="pageStyle(page)">
           <img
             v-if="!pageErrors[idx]"
-            class="strip-img"
+            class="strip-img" @dblclick="openStripPreview(idx)"
             :src="pageSrc(page, idx)"
             loading="lazy"
             draggable="false"
-            alt=""
+            :alt="`${novelName} · ${articleData ? articleData.title : ''} · 第 ${idx + 1} 页`"
             @error="onPageError(idx)" />
           <button v-else class="page-retry" type="button" @click="retryPage(idx)">
             <manga-icon name="retry" /> 第 {{ idx + 1 }} 页加载失败，重试
           </button>
+          <button v-if="pageSrc(page,idx)" class="strip-zoom" :aria-label="`放大第 ${idx+1} 页`" @click="openStripPreview(idx)"><manga-icon name="zoom" /></button>
         </div>
         <div class="episode-end">
           <button v-if="hasNextEpisode" class="end-next" type="button" @click="nextEpisode">
@@ -72,16 +74,17 @@
         <button
           class="page-arrow left"
           type="button"
-          :disabled="!canGoPrev"
-          title="上一页"
+          :disabled="readingDirection==='rtl'?!canGoNext:!canGoPrev"
+          :aria-label="readingDirection==='rtl'?'下一页':'上一页'"
           @click="stepPage(-1)">
           <manga-icon name="previous" />
         </button>
         <div class="paged-frame">
           <manga-reader-image
             v-if="currentPageObj"
-            :key="articleId + '-' + currentPage"
+            :key="articleId + '-' + currentPage + '-' + (retryCount[currentPage]||0)"
             :src="pageSrc(currentPageObj, currentPage)"
+            :alt="`${novelName} · ${articleData ? articleData.title : ''} · 第 ${currentPage + 1} 页`"
             :reset-key="zoomResetKey"
             @interaction="zoomed = $event"
             @error="onPageError(currentPage)" />
@@ -92,8 +95,8 @@
         <button
           class="page-arrow right"
           type="button"
-          :disabled="!canGoNext"
-          title="下一页"
+          :disabled="readingDirection==='rtl'?!canGoPrev:!canGoNext"
+          :aria-label="readingDirection==='rtl'?'上一页':'下一页'"
           @click="stepPage(1)">
           <manga-icon name="next" />
         </button>
@@ -101,7 +104,7 @@
 
       <!-- 弹幕层 -->
       <manga-danmu-layer
-        v-if="danmuEnabled && !zoomed && currentPageDanmus.length"
+        v-if="danmuEnabled && stripPreview===null && !zoomed && currentPageDanmus.length"
         :key="'danmu-' + articleId + '-' + currentPage + '-' + danmuReplayTick"
         :danmus="currentPageDanmus"
         :current-user-id="currentUserId"
@@ -118,7 +121,7 @@
           class="danmu-toggle"
           :class="{ off: !danmuEnabled }"
           type="button"
-          :title="danmuEnabled ? '关闭弹幕' : '开启弹幕'"
+          :aria-label="danmuEnabled ? '关闭弹幕' : '开启弹幕'"
           @click="toggleDanmu">
           <manga-icon name="danmu" />
         </button>
@@ -134,51 +137,48 @@
           class="danmu-sync"
           :class="{ on: danmuSyncComment }"
           type="button"
-          title="同时发送为本话评论"
+          :aria-pressed="danmuSyncComment" aria-label="同时发送为本话评论"
           @click="danmuSyncComment = !danmuSyncComment">
           同步评论
         </button>
         <button class="danmu-send" type="button" :disabled="danmuSending || !danmuInput.trim()" @click="submitDanmu">发送</button>
       </div>
 
+      <p v-if="danmuError" class="reader-error" role="alert">{{ danmuError }} <button :disabled="danmuLoading" @click="loadDanmus">刷新弹幕</button></p>
+      <p v-if="progressError" class="reader-error" role="alert">{{ progressError }} <button :disabled="progressWrites>0" @click="syncProgress(true)">重试保存</button></p>
       <div class="progress-row">
         <span class="progress-label">{{ progressLabel }}</span>
-        <el-slider
-          class="progress-slider"
-          :min="1"
-          :max="Math.max(2, pages.length)"
-          :value="currentPage + 1"
-          :disabled="pages.length < 2"
-          :show-tooltip="false"
-          @change="onPageSlider" />
+        <input class="progress-slider" type="range" aria-label="漫画页码" min="1" :max="Math.max(1,pages.length)" :value="currentPage+1" :aria-valuetext="progressLabel" :disabled="pages.length<2" @input="onPageSlider($event.target.value)" />
       </div>
 
       <div class="reader-actions">
         <button class="act-btn" type="button" @click="openCatalog = true"><manga-icon name="list" /><span>目录</span></button>
         <button class="act-btn" type="button" @click="openCommentPanel"><manga-icon name="comment" /><span>{{ commentAmount ? '评论 ' + commentAmount : '评论' }}</span></button>
-        <button class="act-btn" type="button" :disabled="!hasPrevEpisode" @click="prevEpisode"><manga-icon name="previous" /><span>上一话</span></button>
-        <button class="act-btn" type="button" :disabled="!hasNextEpisode" @click="nextEpisode"><manga-icon name="next" /><span>下一话</span></button>
+        <nuxt-link v-if="hasPrevEpisode" class="act-btn" :to="`/manga/read/${articles[currentIdx - 1].article_id}?novelId=${novelId}`" rel="prev" @click.native.prevent="prevEpisode"><manga-icon name="previous" /><span>上一话</span></nuxt-link><button v-else class="act-btn" disabled><manga-icon name="previous" /><span>上一话</span></button>
+        <nuxt-link class="act-btn" :to="`/manga/${novelId}`"><manga-icon name="list" /><span>作品详情</span></nuxt-link>
+        <nuxt-link v-if="hasNextEpisode" class="act-btn" :to="`/manga/read/${articles[currentIdx + 1].article_id}?novelId=${novelId}`" rel="next" @click.native.prevent="nextEpisode"><manga-icon name="next" /><span>下一话</span></nuxt-link><button v-else class="act-btn" disabled><manga-icon name="next" /><span>下一话</span></button>
         <button class="act-btn" type="button" @click="resetZoom"><manga-icon name="zoom" /><span>复位</span></button>
       </div>
     </div>
 
     <!-- 目录抽屉 -->
-    <el-drawer title="漫画目录" :visible.sync="openCatalog" direction="rtl" size="420px" custom-class="catalog-drawer">
+    <el-drawer title="漫画目录" :visible.sync="openCatalog" direction="rtl" size="min(420px, 94vw)" custom-class="catalog-drawer">
       <div class="catalog-list">
-        <button
+        <nuxt-link
           v-for="(item, idx) in articles"
           :key="item.article_id"
           class="catalog-row"
           :class="{ current: idx === currentIdx }"
-          type="button"
-          @click="jumpToEpisode(idx)">
+          :to="`/manga/read/${item.article_id}?novelId=${novelId}`"
+          @click.native.prevent="jumpToEpisode(idx)">
           <span class="catalog-no">{{ item.article_chapter }}</span>
           <span class="catalog-name">{{ item.title }}</span>
           <manga-icon v-if="idx === currentIdx" name="check" />
-        </button>
+        </nuxt-link>
       </div>
     </el-drawer>
 
+    <el-dialog :visible="stripPreview!==null" title="漫画页面 · 滚轮缩放，拖动查看" width="94vw" top="3vh" append-to-body @update:visible="closeStripPreview"><div class="strip-zoom-surface"><MangaReaderImage v-if="stripPreview!==null && pages[stripPreview]" :src="pageSrc(pages[stripPreview],stripPreview)" :alt="`第 ${stripPreview+1} 页`" /></div></el-dialog>
     <!-- 本话评论 -->
     <manga-comment-panel
       :key="'cmt-' + articleId"
@@ -186,6 +186,7 @@
       :novel-id="novelId"
       :article-id="articleId"
       :work-author-id="workAuthorId"
+      :anchor-id="initialCommentId"
       @changed="loadCommentAmount" />
 
     <!-- 加载 / 错误遮罩 -->
@@ -201,6 +202,12 @@
 </template>
 
 <script>
+import { readingToken } from '~/plugins/api/reading'
+import { loginReturnPath } from '~/utils/login-return'
+import { recordLocalReading } from '~/utils/reading-history'
+import { readingCommentId } from '~/utils/reader-comment-links'
+import { readingHead } from '~/utils/reading-seo'
+import { mangaPages, mangaPageSource, readMangaPreferences, saveMangaPreferences, loadPublicManga } from '~/utils/manga-content'
 import MangaIcon from '~/components/manga/MangaIcon.vue'
 import MangaDanmuLayer from '~/components/manga/MangaDanmuLayer.vue'
 import MangaReaderImage from '~/components/manga/MangaReaderImage.vue'
@@ -220,11 +227,17 @@ export default {
   name: 'MangaReaderPage',
   components: { MangaIcon, MangaDanmuLayer, MangaReaderImage, MangaCommentPanel },
   layout: 'empty',
+  async asyncData(context) { const result = await loadPublicManga(context); if (result && result.articleData) result.initialCommentId = readingCommentId(context.query); return result },
+  head() { return readingHead({ title: `${this.articleData ? this.articleData.title : '漫画阅读'} - ${this.novelName} - 原木社区`, description: this.workInfo && this.workInfo.content, path: `/manga/read/${this.articleId || this.$route.params.articleId}`, image: this.workInfo && this.workInfo.picUrl, type: 'article' }) },
   data() {
     return {
       articleId: null,
+      ssrReady: false,
+      lastCountedArticleId: null,
+      initialCommentId: 0,
       novelId: null,
       novelName: '漫画',
+      workInfo: null,
       workAuthorId: null,
       articles: [],
       currentIdx: -1,
@@ -247,9 +260,6 @@ export default {
       preloadedChapter: null,
       // 进度
       progressTimer: null,
-      pendingProgress: false,
-      syncingProgress: false,
-      queuedProgress: null,
       // 评论
       commentVisible: false,
       commentAmount: 0,
@@ -261,7 +271,7 @@ export default {
       danmuSyncComment: false,
       danmuReplayTick: 0,
       // 目录
-      openCatalog: false
+      openCatalog: false, settingsVisible: false, preferenceError: false, progressDirty: true, progressError: '', progressWrites: 0, account: null, identityVersion: 0, danmuVersion: 0, commentVersion: 0, danmuLoading: false, danmuError: '', sessionUserId: null, navigating: false, stripPreview: null
     }
   },
   computed: {
@@ -292,66 +302,43 @@ export default {
       return this.danmuList.filter(item => item.pageIdx === this.currentPage)
     },
     currentUserId() {
-      return currentDanmuUserId()
+      return this.sessionUserId
     }
   },
   mounted() {
-    this.loadPreferences()
-    const q = this.$route.query
-    this.articleId = this.$route.params.articleId
-    this.novelId = q.novelId
-    this.initPageIdx = Math.max(0, parseInt(q.pageIdx) || 0)
-    window.addEventListener('keydown', this.handleKeydown)
-    window.addEventListener('beforeunload', this.onBeforeUnload)
-    this.bootstrap()
+    this.account = readingToken(); this.sessionUserId = currentDanmuUserId(); this.loadPreferences(); this.activateEpisode()
+    window.addEventListener('keydown', this.handleKeydown); window.addEventListener('pagehide', this.onBeforeUnload); window.addEventListener('focus', this.checkAccount); window.addEventListener('storage', this.checkAccount)
+  },
+  beforeRouteUpdate(to,from,next) { this.syncProgress(true); next() },
+  watch: {
+    '$route.query'(query) { this.initialCommentId = readingCommentId(query); if (this.initialCommentId) this.commentVisible = true; if (query.pageIdx !== undefined && this.pages.length) { this.currentPage = Math.min(this.pages.length-1,Math.max(0,Math.floor(Number(query.pageIdx)||0))); if(this.mode==='strip')this.$nextTick(()=>this.seekStripPage(this.currentPage)) } },
+    'articleData.article_id'(id,previous) { if (id && String(id)!==String(previous)) this.activateEpisode() }
   },
   beforeDestroy() {
-    this.loadRequestId += 1
-    clearTimeout(this.progressTimer)
-    this.progressTimer = null
-    this.syncProgress(true)
-    window.removeEventListener('keydown', this.handleKeydown)
-    window.removeEventListener('beforeunload', this.onBeforeUnload)
+    clearTimeout(this.progressTimer); this.progressTimer = null; this.syncProgress(true); this.loadRequestId++; this.danmuVersion++; this.commentVersion++; this.identityVersion++
+    window.removeEventListener('keydown',this.handleKeydown); window.removeEventListener('pagehide',this.onBeforeUnload); window.removeEventListener('focus',this.checkAccount); window.removeEventListener('storage',this.checkAccount)
   },
   methods: {
     onBeforeUnload() {
       this.syncProgress(true)
     },
-    getToken() {
-      try {
-        const parsed = JSON.parse(localStorage.getItem('token'))
-        return parsed ? parsed.tk : null
-      } catch (e) {
-        return null
-      }
+    getToken: readingToken,
+    checkAccount() {
+      const token=readingToken(); if(token===this.account)return false
+      this.account=token; this.identityVersion++; this.sessionUserId=currentDanmuUserId(); clearTimeout(this.progressTimer); this.progressTimer=null; this.progressDirty=false; this.progressError=''; this.progressWrites=0; this.danmuVersion++; this.danmuInput=''; this.danmuSending=false; this.danmuSyncComment=false; this.danmuError=''; this.commentVisible=false; this.loadDanmus(); return true
+    },
+    currentScope(version,token,id) {return version===this.identityVersion && token===readingToken() && Number(id)===Number(this.articleId)},
+    activateEpisode() {
+      clearTimeout(this.progressTimer);this.progressTimer=null;this.loadRequestId++;this.danmuVersion++;this.commentVersion++;this.navigating=false;this.pageErrors={};this.retryCount={};this.preloadedChapter=null;this.stripPreview=null;this.resetZoom();this.danmuInput='';this.danmuSending=false;this.danmuError='';this.commentAmount=0;this.danmuList=[]
+      if(!this.userModeChosen)this.mode=this.articleData.article_type==='mangaPage'?'paged':'strip'
+      if(this.articleId!==this.lastCountedArticleId){this.lastCountedArticleId=this.articleId;this.$api.statistics.novelClicked(this.articleId).catch(()=>{})}
+      this.loadDanmus();this.loadCommentAmount();this.progressDirty=true;this.syncProgress(true);if(this.mode==='strip')this.$nextTick(()=>this.seekStripPage(this.currentPage));if(this.initialCommentId)this.commentVisible=true
     },
     loadPreferences() {
-      try {
-        const s = JSON.parse(localStorage.getItem('MangaReaderSettings')) || {}
-        if (s.mode === 'strip' || s.mode === 'paged') {
-          this.mode = s.mode
-          this.userModeChosen = true
-        }
-        if (s.direction === 'rtl') this.readingDirection = 'rtl'
-        if (['white', 'warm', 'black'].includes(s.background)) this.readerBackground = s.background
-        if (s.quality === 'original') this.imageQuality = 'original'
-        this.danmuEnabled = s.danmu !== false
-      } catch (e) {}
+      const value=readMangaPreferences(localStorage);if(value.mode){this.mode=value.mode;this.userModeChosen=true}this.readingDirection=value.direction;this.readerBackground=value.background;this.imageQuality=value.quality;this.danmuEnabled=value.danmu
     },
-    savePreferences() {
-      try {
-        localStorage.setItem(
-          'MangaReaderSettings',
-          JSON.stringify({
-            mode: this.mode,
-            direction: this.readingDirection,
-            background: this.readerBackground,
-            quality: this.imageQuality,
-            danmu: this.danmuEnabled
-          })
-        )
-      } catch (e) {}
-    },
+    savePreferences() { this.preferenceError=!saveMangaPreferences(localStorage,{mode:this.mode,direction:this.readingDirection,background:this.readerBackground,quality:this.imageQuality,danmu:this.danmuEnabled}) },
+    onQualityChange() {this.pageErrors={};this.retryCount={};this.preloadedChapter=null;this.resetZoom();this.savePreferences();if(this.mode==='strip')this.$nextTick(()=>this.seekStripPage(this.currentPage))},
     onModeChange() {
       this.resetZoom()
       this.userModeChosen = true
@@ -362,118 +349,20 @@ export default {
       this.zoomed = false
       this.zoomResetKey += 1
     },
-    // ===== 加载 =====
-    async bootstrap() {
-      await Promise.all([this.loadNovelName(), this.loadChapters()])
-      if (!this.articles.length) {
-        this.loading = false
-        this.loadError = this.loadError || '还没有可阅读的话数'
-        return
-      }
-      let idx = this.articles.findIndex(a => String(a.article_id) === String(this.articleId))
-      if (idx < 0) idx = 0
-      await this.openArticle(this.articles[idx].article_id, this.initPageIdx || 0, idx)
+    // Episode changes use Nuxt's public SSR loader; client and server enforce the same scope.
+    async openArticle(articleId,pageIdx,episodeIdx,edge) {
+      if(this.navigating)return
+      if(Number(articleId)===Number(this.articleId)){this.goToPage(pageIdx);return}
+      const target=this.articles[episodeIdx];if(!target||Number(target.article_id)!==Number(articleId))return
+      this.syncProgress(true);this.navigating=true
+      try{await this.$router.push({path:`/manga/read/${articleId}`,query:{novelId:this.novelId,...(edge?{edge}:{pageIdx})}})}catch(error){if(error.name!=='NavigationDuplicated')this.$message.error(error.message||'话数切换失败')}finally{this.navigating=false}
     },
-    async loadNovelName() {
-      try {
-        const res = await fetch(`${baseUrl}/library/get_novel_by_id?id=${this.novelId}`)
-        const data = await res.json()
-        if (Array.isArray(data) && data.length) {
-          this.novelName = data[0].name || '漫画'
-          this.workAuthorId = data[0].auther_id || data[0].author_id
-        }
-      } catch (e) {
-        console.error('loadNovelName failed', e)
-      }
-    },
-    async loadChapters() {
-      try {
-        const res = await fetch(`${baseUrl}/library/get_articles?id=${this.novelId}`)
-        const data = await res.json()
-        if (Array.isArray(data)) {
-          this.articles = data.filter(a => a.article_type === 'mangaStrip' || a.article_type === 'mangaPage')
-        }
-      } catch (e) {
-        console.error('loadChapters failed', e)
-        this.loadError = '目录加载失败'
-      }
-    },
-    parseMangaContent(content) {
-      let parsed = content
-      if (typeof content === 'string') {
-        try {
-          parsed = JSON.parse(content)
-        } catch (e) {
-          parsed = null
-        }
-      }
-      if (parsed && Array.isArray(parsed.pages)) return parsed.pages
-      return []
-    },
-    async openArticle(articleId, pageIdx, episodeIdx) {
-      this.syncProgress(true)
-      clearTimeout(this.progressTimer)
-      this.progressTimer = null
-      this.pendingProgress = false
-      const requestId = ++this.loadRequestId
-      this.requestedIdx = episodeIdx
-      this.loading = true
-      this.loadError = ''
-      try {
-        const res = await fetch(`${baseUrl}/articles/get_article?id=${articleId}&isCaching=false`)
-        if (requestId !== this.loadRequestId) return
-        const data = await res.json()
-        if (!Array.isArray(data) || !data.length) throw new Error('话数加载失败')
-        const article = data[0]
-        if (this.novelId && String(article.novel_id) !== String(this.novelId)) throw new Error('话数不属于当前作品')
-        const pages = this.parseMangaContent(article.content)
-        if (!pages.length) throw new Error('本话暂无可阅读页面')
-        this.resetZoom()
-        this.currentIdx = episodeIdx
-        this.articleId = article.article_id
-        this.articleData = article
-        if (!this.novelId) this.novelId = article.novel_id
-        this.pages = pages
-        this.pageErrors = {}
-        this.retryCount = {}
-        this.preloadedChapter = null
-        this.currentPage = Math.min(Math.max(0, Number(pageIdx) || 0), pages.length - 1)
-        if (!this.userModeChosen) this.mode = article.article_type === 'mangaPage' ? 'paged' : 'strip'
-        this.resetChapterDanmus()
-        this.loadCommentAmount()
-        // 更新地址栏，便于刷新/分享保持位置
-        this.$router.replace({ path: `/manga/read/${this.articleId}`, query: { novelId: this.novelId, pageIdx: this.currentPage } }).catch(() => {})
-        if (this.mode === 'strip') {
-          this.$nextTick(() => {
-            if (requestId === this.loadRequestId) this.seekStripPage(this.currentPage)
-          })
-        }
-        this.syncProgress(true)
-      } catch (e) {
-        if (requestId !== this.loadRequestId) return
-        console.error('openArticle failed', e)
-        this.loadError = e.message || '话数加载失败'
-      } finally {
-        if (requestId === this.loadRequestId) this.loading = false
-      }
-    },
-    retryEpisode() {
-      if (!this.articles.length) {
-        this.loadError = ''
-        this.loading = true
-        this.bootstrap()
-        return
-      }
-      const idx = this.requestedIdx >= 0 ? this.requestedIdx : this.currentIdx
-      this.openArticle(this.articles[idx].article_id, 0, idx)
-    },
-    pageSrc(page, idx) {
-      if (!page || !page.url) return ''
-      const url = this.imageQuality === 'original' ? page.url : page.readingUrl || page.url
-      const retry = this.retryCount[idx]
-      if (!retry) return url
-      return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'mret=' + retry
-    },
+    retryEpisode() {this.$nuxt.refresh()},
+    parseMangaContent:mangaPages,
+    pageSrc(page,idx) {return mangaPageSource(page,this.imageQuality,this.retryCount[idx])},
+    pageStyle(page) {return {aspectRatio:page.width&&page.height?`${page.width}/${page.height}`:undefined,minHeight:page.width&&page.height?'0':'240px'}},
+    openStripPreview(idx) {this.currentPage=idx;this.stripPreview=idx;this.scheduleSync()},
+    closeStripPreview() {const idx=this.stripPreview;this.stripPreview=null;if(idx!==null){this.currentPage=idx;this.$nextTick(()=>this.seekStripPage(idx))}},
     onPageError(idx) {
       this.$set(this.pageErrors, idx, true)
     },
@@ -483,7 +372,7 @@ export default {
     },
     // ===== 条漫滚动 =====
     onStripScroll() {
-      if (this.loading) return
+      if (this.loading || this.mode!=='strip' || this.stripPreview!==null) return
       const el = this.$refs.stripScroll
       if (!el) return
       const focus = el.scrollTop + el.clientHeight * 0.4
@@ -493,8 +382,7 @@ export default {
         if (els[i].offsetTop <= focus) idx = i
         else break
       }
-      if (idx !== this.currentPage) this.currentPage = idx
-      this.scheduleSync()
+      if (idx !== this.currentPage) { this.currentPage = idx; this.scheduleSync() }
     },
     seekStripPage(idx) {
       const el = this.$refs.stripScroll
@@ -509,9 +397,10 @@ export default {
     },
     goToPage(idx) {
       this.resetZoom()
-      if (!this.pages.length) return
+      if (!Number.isFinite(Number(idx)) || !this.pages.length) return
+      idx=Math.floor(Number(idx))
       if (idx < 0) {
-        if (this.hasPrevEpisode) this.prevEpisode()
+        if (this.hasPrevEpisode) this.prevEpisode(true)
         return
       }
       if (idx >= this.pages.length) {
@@ -520,23 +409,24 @@ export default {
         return
       }
       this.currentPage = idx
+      this.$nextTick(()=>this.$refs.stage?.focus())
       this.scheduleSync()
     },
     onPageSlider(value) {
       this.resetZoom()
-      const idx = Math.min(this.pages.length - 1, Math.max(0, Number(value) - 1))
+      const idx = Math.min(this.pages.length - 1, Math.max(0, Math.floor(Number(value)||1) - 1))
       this.currentPage = idx
       if (this.mode === 'strip') this.seekStripPage(idx)
       this.scheduleSync()
     },
     // ===== 话数切换 =====
-    prevEpisode() {
+    prevEpisode(fromEnd=false) {
       if (!this.hasPrevEpisode) {
         this.$message.info('已经是第一话了')
         return
       }
       const idx = this.currentIdx - 1
-      this.openArticle(this.articles[idx].article_id, 0, idx)
+      this.openArticle(this.articles[idx].article_id, 0, idx, fromEnd===true?'end':null)
     },
     nextEpisode() {
       if (!this.hasNextEpisode) {
@@ -552,181 +442,64 @@ export default {
       this.openArticle(this.articles[idx].article_id, 0, idx)
     },
     async preloadNextEpisode() {
-      if (!this.hasNextEpisode) return
-      const id = this.articles[this.currentIdx + 1].article_id
-      if (this.preloadedChapter === id) return
-      this.preloadedChapter = id
-      try {
-        const res = await fetch(`${baseUrl}/articles/get_article?id=${id}&isCaching=true`)
-        const data = await res.json()
-        const article = Array.isArray(data) && data[0]
-        const page = article && this.parseMangaContent(article.content)[0]
-        if (!page) return
-        const url = this.imageQuality === 'original' ? page.url : page.readingUrl || page.url
-        const img = new Image()
-        img.src = url
-      } catch (e) {
-        this.preloadedChapter = null
-      }
+      if(!this.hasNextEpisode)return;const id=this.articles[this.currentIdx+1].article_id,version=this.loadRequestId,quality=this.imageQuality
+      if(this.preloadedChapter===id)return;this.preloadedChapter=id
+      try{const rows=await this.$api.reader.article(id),article=rows&&rows[0];if(version!==this.loadRequestId||quality!==this.imageQuality)return;if(!article||Number(article.article_id)!==Number(id)||Number(article.novel_id)!==Number(this.novelId)||Number(article.is_draft)===1)throw Error('Unavailable');const first=mangaPages(article.content)[0];if(first){const image=new Image();image.src=mangaPageSource(first,quality)}}catch(_){if(version===this.loadRequestId)this.preloadedChapter=null}
     },
-    // ===== 进度上报 =====
     scheduleSync() {
-      if (this.currentPage >= this.pages.length - 2) this.preloadNextEpisode()
-      if (this.progressTimer) {
-        this.pendingProgress = true
-        return
-      }
-      this.progressTimer = setTimeout(() => {
-        this.progressTimer = null
-        this.syncProgress(true)
-        if (this.pendingProgress) {
-          this.pendingProgress = false
-          this.scheduleSync()
-        }
-      }, 3000)
+      this.checkAccount();this.progressDirty=true;this.syncProgress(false)
+      if(this.currentPage>=this.pages.length-2)this.preloadNextEpisode()
+      clearTimeout(this.progressTimer);this.progressTimer=setTimeout(()=>{this.progressTimer=null;this.progressDirty=true;this.syncProgress(true)},1500)
     },
     async syncProgress(force) {
-      if (!this.articleData || !this.novelId || !this.pages.length) return
-      const payload = {
-        novel_id: Number(this.novelId),
-        article_id: Number(this.articleId),
-        article_chapter: Number(this.articles[this.currentIdx] ? this.articles[this.currentIdx].article_chapter : 0) || null,
-        page_idx: Math.min(Math.max(0, this.currentPage), this.pages.length - 1)
-      }
-      try {
-        localStorage.setItem(
-          'MangaHistory_' + this.novelId,
-          JSON.stringify({
-            last_article_id: payload.article_id,
-            last_article_chapter: payload.article_chapter,
-            last_page_idx: payload.page_idx
-          })
-        )
-      } catch (e) {}
-      if (!force) return
-      if (!this.getToken()) return
-      this.queuedProgress = payload
-      await this.flushProgress()
-    },
-    async flushProgress() {
-      if (this.syncingProgress || !this.queuedProgress) return
-      const payload = this.queuedProgress
-      this.queuedProgress = null
-      const tk = this.getToken()
-      if (!tk) return
-      this.syncingProgress = true
-      try {
-        await fetch(`${baseUrl}/library/update_reading_progress`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` },
-          body: JSON.stringify(payload)
-        })
-      } catch (e) {
-        console.error('syncProgress failed', e)
-      } finally {
-        this.syncingProgress = false
-        if (this.queuedProgress) this.flushProgress()
-      }
+      if(this.checkAccount()||!this.progressDirty||!this.articleData||!this.novelId||!this.pages.length)return
+      const token=readingToken(),version=this.identityVersion,id=this.articleId,payload={novel_id:Number(this.novelId),article_id:Number(id),article_chapter:Number(this.articles[this.currentIdx]?.article_chapter)||null,page_idx:Math.min(Math.max(0,Math.floor(this.currentPage)),this.pages.length-1)}
+      recordLocalReading(this.workInfo||{novel_id:Number(this.novelId),name:this.novelName,novel_type:'manga'},{last_article_id:payload.article_id,last_article_chapter:payload.article_chapter,last_page_idx:payload.page_idx})
+      if(!force)return;this.progressDirty=false;if(!token)return;this.progressWrites++
+      try{await this.$api.reading.saveProgress(payload);if(this.currentScope(version,token,id))this.progressError=''}catch(_){if(this.currentScope(version,token,id)){this.progressDirty=true;this.progressError='云端进度保存失败，本机进度已保留。'}}finally{if(version===this.identityVersion)this.progressWrites=Math.max(0,this.progressWrites-1)}
     },
     // ===== 评论 =====
     openCommentPanel() {
       this.commentVisible = true
     },
     async loadCommentAmount() {
-      try {
-        this.commentAmount = await fetchMangaCommentAmount(baseUrl, this.novelId, this.articleId)
-      } catch (e) {
-        console.error('loadCommentAmount failed', e)
-      }
+      const version=++this.commentVersion,id=this.articleId
+      try{const count=await fetchMangaCommentAmount(baseUrl,this.novelId,id);if(version===this.commentVersion&&Number(id)===Number(this.articleId))this.commentAmount=count}catch(_){}
     },
-    // ===== 弹幕 =====
-    toggleDanmu() {
-      this.danmuEnabled = !this.danmuEnabled
-      this.savePreferences()
-    },
-    resetChapterDanmus() {
-      this.danmuList = []
-      this.danmuInput = ''
-      this.loadDanmus()
-    },
+    toggleDanmu() {this.danmuEnabled=!this.danmuEnabled;this.savePreferences()},
     async loadDanmus() {
-      try {
-        this.danmuList = await fetchMangaDanmus(baseUrl, this.novelId, this.articleId)
-      } catch (e) {
-        console.error('loadDanmus failed', e)
-      }
+      const version=++this.danmuVersion,id=this.articleId;this.danmuLoading=true;this.danmuError=''
+      try{const list=await fetchMangaDanmus(baseUrl,this.novelId,id);if(version===this.danmuVersion&&Number(id)===Number(this.articleId))this.danmuList=list}catch(error){if(version===this.danmuVersion)this.danmuError=getMangaDanmuErrorMessage(error,'弹幕加载失败')}finally{if(version===this.danmuVersion)this.danmuLoading=false}
     },
-    requireLogin() {
-      if (this.getToken()) return true
-      this.$message.info('请先登录')
-      return false
-    },
+    requireLogin() {this.checkAccount();if(readingToken())return true;this.$router.push({path:'/login',query:{redirect:loginReturnPath(this.$route.fullPath)}});return false},
     async submitDanmu() {
-      if (!this.requireLogin() || this.danmuSending) return
-      const content = this.danmuInput.trim()
-      if (!content) return
-      this.danmuSending = true
-      try {
-        const danmu = await sendMangaDanmu(baseUrl, {
-          novelId: this.novelId,
-          articleId: this.articleId,
-          pageIdx: this.currentPage,
-          content
-        })
-        this.danmuList = this.danmuList.concat(danmu)
-        this.danmuInput = ''
-        this.danmuReplayTick += 1
-        if (this.danmuSyncComment) {
-          try {
-            await publishMangaComment(baseUrl, { novelId: this.novelId, articleId: this.articleId, content, images: [] })
-            this.loadCommentAmount()
-            this.$message.success('已同步至本话评论')
-          } catch (e) {
-            this.$message.error(getMangaCommentErrorMessage(e, '同步评论失败，请稍后重试'))
-          }
-        }
-      } catch (e) {
-        this.$message.error(getMangaDanmuErrorMessage(e))
-      } finally {
-        this.danmuSending = false
-      }
+      if(!this.requireLogin()||this.danmuSending)return;const content=this.danmuInput.trim();if(!content||content.length>100)return
+      const token=readingToken(),version=this.identityVersion,id=this.articleId,novelId=this.novelId,pageIdx=this.currentPage,epoch=this.loadRequestId,sync=this.danmuSyncComment;this.danmuSending=true;this.danmuError=''
+      const current=()=>this.currentScope(version,token,id)&&epoch===this.loadRequestId
+      try{const danmu=await sendMangaDanmu(baseUrl,{novelId,articleId:id,pageIdx,content},token);if(!current())return;this.danmuList=this.danmuList.filter(item=>item.danmuId!==danmu.danmuId).concat(danmu);this.danmuInput='';this.danmuReplayTick++
+        if(sync){try{if(!current())return;await publishMangaComment(baseUrl,{novelId,articleId:id,content,images:[]});if(!current())return;this.loadCommentAmount();this.$message.success('弹幕已发送，并同步为本话评论')}catch(error){if(current())this.danmuError='弹幕已发送；'+getMangaCommentErrorMessage(error,'同步评论失败')}}
+      }catch(error){if(current())this.danmuError=getMangaDanmuErrorMessage(error)}finally{if(current())this.danmuSending=false}
     },
-    removeDanmu(danmuId) {
-      const target = this.danmuList.find(item => item.danmuId === danmuId)
-      if (!target) return
-      this.$confirm('确定删除这条弹幕吗？', '删除弹幕', { type: 'warning' })
-        .then(async () => {
-          try {
-            await deleteMangaDanmu(baseUrl, danmuId)
-            this.danmuList = this.danmuList.filter(item => item.danmuId !== danmuId)
-            this.danmuReplayTick += 1
-            this.$message.success('已删除')
-          } catch (e) {
-            this.$message.error(getMangaDanmuErrorMessage(e, '删除失败，请稍后重试'))
-          }
-        })
-        .catch(() => {})
+    async removeDanmu(danmuId) {
+      if(!this.requireLogin())return;const target=this.danmuList.find(item=>Number(item.danmuId)===Number(danmuId));if(!target||![target.userId,this.workAuthorId].some(id=>id!=null&&String(id)===String(this.currentUserId)))return
+      const token=readingToken(),version=this.identityVersion,id=this.articleId,epoch=this.loadRequestId
+      try{await this.$confirm('确定删除这条弹幕吗？','删除弹幕',{type:'warning'});if(!this.currentScope(version,token,id)||epoch!==this.loadRequestId)return;await deleteMangaDanmu(baseUrl,danmuId,token);if(!this.currentScope(version,token,id)||epoch!==this.loadRequestId)return;this.danmuList=this.danmuList.filter(item=>item.danmuId!==danmuId);this.danmuReplayTick++;this.$message.success('已删除')}catch(error){if(error!=='cancel'&&error!=='close'&&this.currentScope(version,token,id))this.danmuError=getMangaDanmuErrorMessage(error,'删除失败')}
     },
     // ===== 交互 =====
     handleKeydown(e) {
-      const tag = e.target && e.target.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
-      if (e.key === 'Escape') {
-        if (this.commentVisible) this.commentVisible = false
-        else if (this.openCatalog) this.openCatalog = false
-        else if (this.zoomed) this.resetZoom()
+      const modal=()=>document.querySelector('.el-dialog__wrapper:not([style*="display: none"]),.el-message-box__wrapper:not([style*="display: none"]),.image-preview-container')
+      if(e.key==='Escape') {
+        if(this.stripPreview!==null)this.closeStripPreview()
+        else if(modal())return
+        else if(this.settingsVisible)this.settingsVisible=false
+        else if(this.commentVisible)this.commentVisible=false
+        else if(this.openCatalog)this.openCatalog=false
+        else if(this.zoomed)this.resetZoom()
         return
       }
-      if (this.zoomed) return
-      if (this.mode !== 'paged') return
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        this.stepPage(1)
-      } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        this.stepPage(-1)
-      } else if (e.key === ' ') {
-        e.preventDefault()
-        this.stepPage(1)
-      }
+      const tag=e.target&&e.target.tagName
+      if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(tag)||e.target?.isContentEditable||e.ctrlKey||e.metaKey||e.altKey||this.zoomed||this.commentVisible||this.openCatalog||this.settingsVisible||this.stripPreview!==null||modal()||this.mode!=='paged')return
+      if(['ArrowRight','d','D'].includes(e.key)){e.preventDefault();this.stepPage(1)}else if(['ArrowLeft','a','A'].includes(e.key)){e.preventDefault();this.stepPage(-1)}else if(e.key===' '){e.preventDefault();this.goToPage(this.currentPage+1)}
     },
     goBack() {
       if (this.novelId) {
@@ -788,8 +561,8 @@ export default {
 /* 阅读区 */
 .reader-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .strip-scroll { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; position: relative; }
-.strip-page { width: 100%; display: flex; justify-content: center; }
-.strip-img { width: 100%; max-width: 900px; display: block; }
+.strip-page { position:relative; width: 100%; max-width:900px; margin:auto; display: flex; justify-content: center; }
+.strip-img { width: 100%; height:auto; object-fit:contain; max-width:900px; display:block; }
 .episode-end { padding: 40px 20px 60px; text-align: center; }
 .end-next {
   display: inline-flex;
@@ -923,10 +696,11 @@ export default {
 .progress-row { display: flex; align-items: center; gap: 14px; padding: 0 4px; }
 .progress-label { flex: none; font-size: 13px; color: #947358; font-variant-numeric: tabular-nums; min-width: 84px; }
 .reader-black .progress-label { color: #9a938b; }
-.progress-slider { flex: 1; min-width: 0; }
+.progress-slider { flex:1; min-width:0; width:100%; height:28px; accent-color:#947358; cursor:pointer; }
 
 .reader-actions { display: flex; align-items: center; justify-content: space-around; margin-top: 6px; }
 .act-btn {
+  text-decoration:none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -999,4 +773,5 @@ export default {
   cursor: pointer;
 }
 .state-btn:hover { background: #fff1e8; }
+.strip-zoom{position:absolute;right:10px;top:10px;padding:8px;border:0;border-radius:6px;background:#2229;color:#fff;cursor:pointer}.strip-zoom-surface{height:76vh}.reader-error{font-size:12px;color:#b65f46;line-height:1.6;margin:4px 0 8px}.reader-error button{border:0;background:none;color:inherit;text-decoration:underline;cursor:pointer}.bottom-bar{display:grid;grid-template-columns:minmax(240px,1fr) auto;gap:0 24px}.danmu-row,.reader-error{grid-column:1/-1}.reader-actions{gap:8px;margin-top:0}.act-btn{flex-direction:row;white-space:nowrap;padding:8px}.reader-actions .act-btn .manga-icon{font-size:18px}.bar-icon:focus-visible,.act-btn:focus-visible,.page-arrow:focus-visible{outline:2px solid #947358;outline-offset:-2px}@media(max-width:950px){.bottom-bar{display:block}.reader-actions{margin-top:6px}.act-btn{flex-direction:column}.page-arrow{width:42px}}@media(max-width:600px){.bottom-bar{padding:8px 10px}.danmu-row{gap:6px}.danmu-sync{padding:0 10px}.danmu-send{padding:0 14px}.act-btn{font-size:11px;padding:6px}.bar-novel{max-width:68vw}}
 </style>

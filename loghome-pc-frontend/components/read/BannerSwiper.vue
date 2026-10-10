@@ -9,7 +9,7 @@
         <div class="swiper-slide" 
           v-for="(item, index) in chartList" 
           :key="index"
-          @click="roulousChartClicked(item)">
+          role="link" tabindex="0" @keydown.enter="roulousChartClicked(item)" @click="roulousChartClicked(item)">
           <div class="slide-content">
             <img :src="item.img" :alt="item.title">
             <div class="slide-info">
@@ -39,7 +39,7 @@
       </div>
     </div>
     
-    <div class="nav-section">
+    <div class="nav-section" v-if="showNavigation">
       <div class="nav-button" @click="navBarJump('标签')">
         <img src="~/assets/swiperNavIcons/category.png" alt="标签">
         <span>标签</span>
@@ -65,12 +65,14 @@
 </template>
 
 <script>
+import { discoveryLink } from '~/utils/reading-discovery'
 import LogPowerWordmark from '~/components/LogPowerWordmark.vue'
 export default {
   components: { LogPowerWordmark },
   name: 'BannerSwiper',
   
   props: {
+    showNavigation: { type: Boolean, default: true },
     chartList: {
       type: Array,
       default: () => []
@@ -87,9 +89,10 @@ export default {
   methods: {
     // 轮播图点击事件处理
     roulousChartClicked(item) {
-      if (item.navigate_to && item.navigate_to !== "None") {
-        this.$router.push(item.navigate_to)
-      }
+      const link = discoveryLink(item.navigate_to, process.env.mobileUrl)
+      if (!link) return
+      if (link.external) window.open(link.href, '_blank', 'noopener,noreferrer')
+      else this.$router.push(link.href)
     },
     
     // 导航栏点击事件处理
@@ -377,4 +380,4 @@ $background-color: #fff;
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-</style> 
+</style>

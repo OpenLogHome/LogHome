@@ -1,5 +1,5 @@
 <template>
-  <div class="article-page">
+  <div class="article-page" :class="{ 'reading-page-mode': readerReady && readerPreferences.mode === 'page' }">
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
       <p>正在加载内容...</p>
@@ -15,52 +15,22 @@
       <div class="article-header sticky">
         <div class="header-content">
           <div class="novel-info">
-            <div class="novel-title" @click="goToNovelDetail">{{ novel.name }}</div>
+            <nuxt-link class="novel-title" :to="workUrl(novel)">{{ novel.name }}</nuxt-link>
             <div class="chapter-nav">
-              <button @click="navigateChapter('prev')" class="nav-btn" :disabled="!hasPrevious">
-                <span class="nav-icon">←</span> 上一章
-              </button>
-              <button @click="goToNovelDetail" class="chapter-btn">
-                <span class="nav-icon">≡</span> 目录
-              </button>
-              <button @click="navigateChapter('next')" class="nav-btn" :disabled="!hasNext">
-                下一章 <span class="nav-icon">→</span>
-              </button>
+              <nuxt-link v-if="hasPrevious" :to="`/article/${chapters[currentChapterIndex - 1].article_id}`" class="nav-btn" rel="prev"><span class="nav-icon">←</span> 上一章</nuxt-link><button v-else class="nav-btn" disabled>← 上一章</button>
+              <button class="chapter-btn" @click="readerNavigationVisible = true"><span class="nav-icon">≡</span> 目录</button>
+              <nuxt-link v-if="hasNext" :to="`/article/${chapters[currentChapterIndex + 1].article_id}`" class="nav-btn" rel="next">下一章 <span class="nav-icon">→</span></nuxt-link><nuxt-link v-else-if="canFinish" :to="`/read/end/${novel.novel_id}`" class="nav-btn">已读至最后 →</nuxt-link><button v-else class="nav-btn" disabled>下一章 →</button>
             </div>
           </div>
           <div class="reading-controls">
-            <div class="control-item">
-              <span class="control-label">字体：</span>
-              <div class="control-buttons">
-                <button @click="setFont('default')" :class="{ active: fontFamily === 'default' }">默认</button>
-                <button @click="setFont('serif')" :class="{ active: fontFamily === 'serif' }">宋体</button>
-                <button @click="setFont('sans-serif')" :class="{ active: fontFamily === 'sans-serif' }">黑体</button>
-              </div>
-            </div>
-            <div class="control-item">
-              <span class="control-label">字号：</span>
-              <div class="control-buttons">
-                <button @click="changeFontSize(-2)">A-</button>
-                <button @click="resetFontSize">A</button>
-                <button @click="changeFontSize(2)">A+</button>
-              </div>
-            </div>
-            <div class="control-item">
-              <span class="control-label">主题：</span>
-              <div class="theme-controls">
-                <button class="theme-btn light" :class="{ active: theme === 'light' }" @click="setTheme('light')"
-                  title="浅色模式"></button>
-                <button class="theme-btn sepia" :class="{ active: theme === 'sepia' }" @click="setTheme('sepia')"
-                  title="护眼模式"></button>
-                <button class="theme-btn dark" :class="{ active: theme === 'dark' }" @click="setTheme('dark')"
-                  title="暗黑模式"></button>
-              </div>
-            </div>
+            <button class="reader-control-btn" @click="openReaderAudio()"><i class="el-icon-headset" aria-hidden="true" /> 听书</button>
+            <button class="reader-control-btn" @click="readerSettingsVisible = true"><i class="el-icon-setting" aria-hidden="true" /> 阅读设置</button>
+            <button class="reader-control-btn" @click="openParagraphCommentWindow(0)"><i class="el-icon-chat-line-round" aria-hidden="true" /> 章节评论</button>
           </div>
         </div>
       </div>
 
-      <div class="article-content-wrapper" :class="theme">
+      <div class="article-content-wrapper" :class="{ 'reader-dark': readerTheme.isBlack, 'block-epoch-skin': currentReaderSkin && currentReaderSkin.skin_key === 'block_epoch' }" :style="readerAppearance">
 
         <!-- 文章标题 -->
         <div class="article-title-container">
@@ -72,15 +42,7 @@
           </div>
         </div>
 
-        <div class="article-content" :style="{
-          fontSize: fontSize + 'px',
-          fontFamily: getFontFamily
-        }">
-          <div v-if="article.content" v-html="formattedContent"></div>
-          <div v-else class="empty-content">
-            暂无内容
-          </div>
-        </div>
+        <ReaderPager ref="pager" :article="article" :typography="readerTypography" :paged="readerReady && readerPreferences.mode === 'page'" :counts="paragraphCommentsCount" :highlights="highlights" :speaking-id="audioSpeakingId" :initial-position="readerInitialPosition" :has-previous="hasPrevious" :has-next="hasNext" :can-finish="canFinish" :chapter-percent="chapterPercent" :navigation-blocked="readerSettingsVisible || readerNavigationVisible || showCommentDrawer || feedbackVisible || selectionMode" @paragraph-menu="handleParagraphRightClick($event.event, $event.element)" @comment="openParagraphCommentWindow" @position="onReaderPosition" @boundary="navigatePageBoundary" @finish="finishReading" />
 
         <!-- 文章底部导航 -->
         <div class="article-footer">
@@ -91,110 +53,17 @@
             </button> -->
           </div>
           <div class="chapter-nav">
-            <button @click="navigateChapter('prev')" class="nav-btn" :disabled="!hasPrevious">
-              <span class="nav-icon">←</span> 上一章
-            </button>
-            <button @click="goToNovelDetail" class="chapter-btn">
-              <span class="nav-icon">≡</span> 目录
-            </button>
-            <button @click="navigateChapter('next')" class="nav-btn" :disabled="!hasNext">
-              下一章 <span class="nav-icon">→</span>
-            </button>
+            <nuxt-link v-if="hasPrevious" :to="`/article/${chapters[currentChapterIndex - 1].article_id}`" class="nav-btn" rel="prev"><span class="nav-icon">←</span> 上一章</nuxt-link><button v-else class="nav-btn" disabled>← 上一章</button>
+            <nuxt-link :to="workUrl(novel)" class="chapter-btn"><span class="nav-icon">≡</span> 目录</nuxt-link>
+            <nuxt-link v-if="hasNext" :to="`/article/${chapters[currentChapterIndex + 1].article_id}`" class="nav-btn" rel="next">下一章 <span class="nav-icon">→</span></nuxt-link><nuxt-link v-else-if="canFinish" :to="`/read/end/${novel.novel_id}`" class="nav-btn">已读至最后 →</nuxt-link><button v-else class="nav-btn" disabled>下一章 →</button>
           </div>
         </div>
       </div>
 
-      <!-- 评论区 -->
-      <div class="comment-section">
-        <h3>读者评论 <span v-if="commentTotal > 0">({{ commentTotal }})</span></h3>
-        <div class="comment-input">
-          <textarea v-model="commentText" placeholder="分享你的想法..." rows="3" class="comment-textarea"></textarea>
-          <button @click="submitComment" class="submit-comment-btn">发表评论</button>
-        </div>
-
-        <div class="comments-list">
-          <div class="comment-loading" v-if="commentsLoading">
-            <div class="loading-spinner"></div>
-            <p>正在加载评论...</p>
-          </div>
-          <div class="comment-empty" v-else-if="comments.length === 0">
-            还没有评论，快来发表第一条评论吧！
-          </div>
-          <div v-else class="comment-item" v-for="(comment, index) in comments" :key="comment.essay_comment_id">
-            <div class="comment-avatar" @click="goToUserPage(comment.user_id)">
-              <img v-if="comment.avatar_url" :src="comment.avatar_url" :alt="comment.name" />
-              <span v-else>{{ comment.name ? comment.name.charAt(0) : '读' }}</span>
-            </div>
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-username" @click="goToUserPage(comment.user_id)">{{ comment.name || '匿名读者' }}</span>
-                <span class="comment-time">{{ formatDate(comment.comment_time) }}</span>
-              </div>
-              <div class="comment-text">{{ comment.content }}</div>
-              
-              <!-- 评论操作区 -->
-              <div class="comment-actions">
-                <div class="action-item" @click="handleLikeComment(comment)">
-                  <i class="el-icon-thumb" :class="{ active: comment.isLiked }"></i>
-                  <span>{{ comment.likeNum || 0 }}</span>
-                </div>
-                <div class="action-item" @click="showReplyInput(comment)">
-                  <i class="el-icon-chat-line-round"></i>
-                  <span>回复</span>
-                </div>
-                <div class="action-item" v-if="canDeleteComment(comment)" @click="deleteComment(comment)">
-                  <i class="el-icon-delete"></i>
-                  <span>删除</span>
-                </div>
-              </div>
-              
-              <!-- 回复列表 -->
-              <div class="replies-list" v-if="comment.reviewLess && comment.reviewLess.length > 0">
-                <div class="reply-item" v-for="(reply, replyIndex) in comment.reviewLess" :key="reply.comment_id">
-                  <div class="reply-content">
-                    <span class="reply-username" @click="goToUserPage(reply.userId)">{{ reply.userName || '匿名读者' }}</span>
-                    <span v-if="reply.targetUserName" class="reply-target"> 回复 </span>
-                    <span v-if="reply.targetUserName" class="reply-target-username" @click="goToUserPage(findUserIdByName(reply.targetUserName))">{{ reply.targetUserName }}</span>:
-                    <span class="reply-text">{{ reply.sendMsg }}</span>
-                  </div>
-                  <div class="reply-actions">
-                    <span class="reply-action" @click="showReplyInput(comment, reply)">回复</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- 回复输入框 -->
-              <div class="reply-input" v-if="replyingTo && replyingTo.comment_id === comment.essay_comment_id">
-                <textarea 
-                  v-model="replyText" 
-                  :placeholder="replyingTo.replyToReply ? `回复 ${replyingTo.targetName}` : '写下你的回复...'" 
-                  rows="2" 
-                  class="reply-textarea"
-                ></textarea>
-                <div class="reply-buttons">
-                  <button @click="cancelReply" class="cancel-reply-btn">取消</button>
-                  <button @click="submitReply(comment)" class="submit-reply-btn">回复</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 分页 -->
-          <div class="pagination" v-if="commentTotal > pageSize">
-            <button 
-              v-for="pageNum in totalPages" 
-              :key="pageNum" 
-              @click="changePage(pageNum)" 
-              :class="{ active: currentPage === pageNum }"
-            >
-              {{ pageNum }}
-            </button>
-          </div>
-        </div>
-      </div>
+      <MangaCommentPanel ref="chapterReviews" class="chapter-reviews" inline :visible="true" :novel-id="novel.novel_id" :article-id="article.article_id" :work-author-id="novel.author_id || novel.auther_id" scope-title="章节评论" @changed="onCommentsChanged('inline')" />
 
       <!-- 段落操作浮动面板 -->
-      <div class="paragraph-floating-panel" v-show="selectionMode"
+      <div class="paragraph-floating-panel" v-if="selectionMode && selectedParagraph"
         :style="{ left: panelPosition.x + 'px', top: panelPosition.y + 'px' }">
         <div class="panel-button" @click="handleCopy">
           <i class="el-icon-document-copy"></i>
@@ -204,18 +73,39 @@
           <i class="el-icon-chat-line-round"></i>
           <span>评论</span>
         </div>
+        <div class="panel-button" @click="toggleHighlight"><i class="el-icon-collection-tag"></i><span>{{ selectedHighlight ? '取消划线' : '划线书摘' }}</span></div>
+        <div class="panel-button" @click="openFeedback"><i class="el-icon-edit-outline"></i><span>反馈错误</span></div>
+        <div class="panel-button" @click="openReaderAudio(selectedParagraph.id)"><i class="el-icon-headset"></i><span>从此处听书</span></div>
       </div>
-
+      <MangaCommentPanel v-if="showCommentDrawer" :visible.sync="showCommentDrawer" :novel-id="novel.novel_id" :article-id="article.article_id" :paragraph-id="currentParagraphId || 0" :paragraph-text="paragraphCommentText" :work-author-id="novel.author_id || novel.auther_id" :anchor-id="commentAnchor" @changed="onCommentsChanged('drawer')" />
+      <ReaderNavigation v-if="readerNavigationVisible" :visible.sync="readerNavigationVisible" :chapters="chapterEntries || chapters" :current="article" :novel-id="novel.novel_id" :can-undo="!!readerJumpUndo" @jump="jumpReaderChapter" @catalog-navigate="recordReaderChapterJump" @undo="undoReaderChapterJump" />
+      <ReaderSettings v-if="readerSettingsVisible" :visible.sync="readerSettingsVisible" :value="readerPreferences" :fonts="readerFonts" :skins="readerSkins" :tier="readerTier" :font-states="readerFontStates" :font-error="readerFontError" :resource-error="readerResourceError" :locked-message="readerLockedMessage" :resources-loading="readerResourcesLoading" :storage-error="readerStorageError" @input="changeReaderPreferences" @font="selectReaderFont" @theme="selectReaderTheme" @skin="selectReaderSkin" @refresh="refreshReaderResources" @membership="openReaderMembership" @reset="resetReaderPreferences" />
+      <ReaderFeedback v-if="feedbackParagraph" :key="feedbackParagraph.id" :visible.sync="feedbackVisible" :article-id="article.article_id" :paragraph-id="feedbackParagraph.id" :paragraph-text="feedbackParagraph.text" />
     </div>
   </div>
 </template>
 
 <script>
+import { recordLocalReading, localReadingProgress, readingAccountKey } from '~/utils/reading-history'
+import { initialReaderPosition, normalizeReaderPosition } from '~/utils/reader-position'
+import { readingToken } from '~/plugins/api/reading'
+import { readingCommentId } from '~/utils/reader-comment-links'
+import { readerParagraphs } from '~/utils/reader-paragraphs'
+import { readingHead } from '~/utils/reading-seo'
+import { workUrl } from '~/utils/reading-discovery'
+import ReaderPager from '~/components/read/ReaderPager.vue'
+import ReaderNavigation from '~/components/read/ReaderNavigation.vue'
+import readerPreferencesMixin from '~/mixins/reader-preferences'
+import ReaderSettings from '~/components/read/ReaderSettings.vue'
+import ReaderFeedback from '~/components/read/ReaderFeedback.vue'
+import MangaCommentPanel from '~/components/manga/MangaCommentPanel.vue'
 export default {
+  components: { ReaderPager, ReaderNavigation, ReaderFeedback, MangaCommentPanel, ReaderSettings },
+  mixins: [readerPreferencesMixin],
   async asyncData({ params, $api, error }) {
     try {
       // 获取章节内容
-      const article = await $api.articles.getArticle(params.id)
+      const article = await $api.reader.article(params.id)
       if (!article || article.length === 0) {
         return error({ statusCode: 404, message: '找不到该章节' })
       }
@@ -223,50 +113,41 @@ export default {
       const articleData = article[0]
 
       // 获取小说信息
-      const novel = await $api.novels.getNovelById(articleData.novel_id)
+      const novel = await $api.reader.book(articleData.novel_id)
       if (!novel || novel.length === 0) {
         return error({ statusCode: 404, message: '找不到该小说' })
       }
 
       // 获取章节列表
-      const chapters = await $api.articles.getArticles(articleData.novel_id)
+      const chapterEntries = await $api.reader.chapters(articleData.novel_id)
+      const chapters = chapterEntries.filter(chapter => chapter.article_type !== 'spliter')
 
       // 找到当前章节的索引
       const currentChapterIndex = chapters.findIndex(
-        chapter => chapter.article_id === articleData.article_id
+        chapter => Number(chapter.article_id) === Number(articleData.article_id)
       )
 
       return {
         article: articleData,
         novel: novel[0],
-        chapters: chapters || [],
+        chapterEntries, chapters: chapters || [],
         currentChapterIndex,
         loading: false,
         error: null
       }
     } catch (err) {
       console.error('加载章节内容失败', err)
-      return {
-        loading: false,
-        error: '加载章节内容失败，请稍后重试',
-        article: {},
-        novel: {},
-        chapters: [],
-        currentChapterIndex: -1
-      }
+      return error({ statusCode: err.status || 503, message: err.status === 404 ? '章节不存在或不可阅读' : '加载章节内容失败，请稍后重试' })
     }
   },
   data() {
     return {
       loading: false,
       error: null,
+      highlights: [], highlightBusy: false, feedbackVisible: false, feedbackParagraph: null, paragraphVersion: 0,
       isLiked: false,
-      theme: 'light',
-      fontFamily: 'default',
-      fontSize: 18,
-      defaultFontSize: 18,
-      commentText: '',
-      comments: [],
+      readerReady: false, readerInitialPosition: {}, readerPosition: {}, readerNavigationVisible: false, readerJumpUndo: null, readerProgressAccount: null,
+      readerSettingsVisible: false, audioSpeakingId: 0, audioProgressKey: '', audioRouteRequested: 0,
       showHeader: true,
       lastScrollPosition: 0,
       // 段落评论相关
@@ -282,93 +163,34 @@ export default {
       paragraphCommentText: '',
       // 段落评论数量
       paragraphCommentsCount: {},
-      // 评论相关
-      commentTotal: 0,
-      commentsLoading: true,
-      pageSize: 10,
-      currentPage: 1,
-      replyingTo: null,
-      replyText: '',
-      userInfo: null
+
     }
   },
   computed: {
+    commentAnchor() { return readingCommentId(this.$route.query) },
+    chapterPercent() { return this.chapters.length ? ((this.currentChapterIndex + 1) / this.chapters.length * 100).toFixed(1) : '0' },
+    canFinish() { return this.currentChapterIndex >= 0 && this.currentChapterIndex === this.chapters.length - 1 },
     hasPrevious() {
       return this.currentChapterIndex > 0
     },
     hasNext() {
-      return this.currentChapterIndex < this.chapters.length - 1
+      return this.currentChapterIndex >= 0 && this.currentChapterIndex < this.chapters.length - 1
     },
-    formattedContent() {
-      if (!this.article.content) return ''
-
-      const escapeHtml = s =>
-        String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-
-      const paragraphHtml = (value, id) => {
-        const text = Array.isArray(value) ? value.join('') : String(value || '')
-        return `<p class="article-paragraph" id="paragraph-${id}" data-paragraph-id="${id}" data-paragraph-text="${encodeURIComponent(text)}">${escapeHtml(text)}</p>`
-      }
-
-      // 检查内容是否为JSON格式的混合内容
-      try {
-        let content = JSON.parse(this.article.content)
-        // 兼容 {content:[...]} 包装结构
-        if (content && !Array.isArray(content) && Array.isArray(content.content)) {
-          content = content.content
-        }
-        // 如果能成功解析为JSON格式，则处理混合内容
-        return content.map((item, index) => {
-          if (!item || item.type === 'text' || item.type === undefined) {
-            // 段落 id 回退：无 id/paragraph_id 时用序号（对齐 APP 的 normalizeArticleContent）
-            const id = (item && (item.id ?? item.paragraph_id)) ?? `auto-${index}`
-            return paragraphHtml(item ? item.value : '', id)
-          } else if (item.type === 'image' && item.img) {
-            // 处理图片
-            return `<div class="article-image"><img src="${item.img}" alt="文章插图" /></div>`
-          }
-          return ''
-        }).join('')
-      } catch (e) {
-        // 如果不是JSON格式，则按原来的方式处理纯文本内容
-        return this.article.content
-          .split('\n')
-          .filter(para => para.trim().length > 0)
-          .map((para, index) => paragraphHtml(para, `plain-${index}`))
-          .join('')
-      }
-    },
-    getFontFamily() {
-      switch (this.fontFamily) {
-        case 'serif':
-          return '"Noto Serif SC", "Songti SC", SimSun, serif';
-        case 'sans-serif':
-          return '"Noto Sans SC", "Heiti SC", "Microsoft YaHei", sans-serif';
-        default:
-          return '"PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif';
-      }
-    },
-    totalPages() {
-      return Math.ceil(this.commentTotal / this.pageSize)
-    }
+    paragraphs() { return readerParagraphs(this.article.content, this.article.article_type) },
+    selectedHighlight() { return this.selectedParagraph && this.highlights.find(item => Number(item.paragraph_id) === Number(this.selectedParagraph.id)) },
   },
-  head() {
-    return {
-      title: this.article?.title ? `${this.article.title} - ${this.novel.name || '阅读'} - 原木社区` : '阅读章节 - 原木社区',
-      meta: [
-        { hid: 'description', name: 'description', content: this.article?.text ? this.article.text.substring(0, 150) + '...' : '原木社区小说阅读' }
-      ]
-    }
-  },
+  head() { return readingHead({ title: `${this.article.title || '章节'} - ${this.novel.name || '阅读'} - 原木社区`, description: this.paragraphs.filter(item => item.type === 'text').map(item => item.value).join(' ').slice(0, 150), path: `/article/${this.article.article_id}`, image: this.novel.picUrl, type: 'article' }) },
   mounted() {
-    this.loadPreferences()
+    this.initializeReaderPosition()
+    window.addEventListener('focus', this.checkReaderProgressAccount)
+    window.addEventListener('storage', this.checkReaderProgressAccount)
+    if (this.$readerAudio) { this.unsubscribeAudio = this.$readerAudio.subscribe(this.onReaderAudioProgress); this.onReaderAudioProgress(this.$readerAudio.state) }
     this.recordRead()
-    this.fetchComments()
     // 保存阅读历史
-    this.saveReaderHistory()
 
     // 添加段落长按事件监听
-    this.setupParagraphInteractions()
+    this.loadHighlights()
+    this.openNotificationComment()
 
     // 添加点击空白区域关闭菜单的监听器
     document.addEventListener('click', this.handleDocumentClick)
@@ -379,16 +201,66 @@ export default {
     // 获取段落评论数量
     this.fetchParagraphCommentsCount()
     
-    // 获取当前用户信息
-    this.getUserInfo()
+  },
+  beforeRouteUpdate(to, from, next) { this.saveReaderHistory(true); next() },
+  beforeRouteLeave(to, from, next) { this.saveReaderHistory(true); next() },
+  watch: {
+    '$route.query'(query, previous) {
+      if (this.$route.params.id && Number(this.$route.params.id) !== Number(this.article.article_id)) return
+      if (['paragraphId', 'charOffset', 'edge', 'start', 'pageIdx'].some(key => query[key] !== previous[key])) this.initializeReaderPosition()
+      if (readingCommentId(query) !== readingCommentId(previous)) this.openNotificationComment()
+    },
+    'article.article_id'(id, previous) {
+      if (!id || String(id) === String(previous)) return
+      this.audioProgressKey = ''; this.audioSpeakingId = 0; this.clearSelection(); this.highlights = []; this.paragraphCommentsCount = {}; this.showCommentDrawer = false; this.feedbackVisible = false; this.feedbackParagraph = null
+      this.initializeReaderPosition(); this.recordRead(); this.loadHighlights(); this.fetchParagraphCommentsCount()
+      this.openNotificationComment()
+      if (this.$readerAudio) this.onReaderAudioProgress(this.$readerAudio.state)
+
+    }
   },
   beforeDestroy() {
+    this.saveReaderHistory(true); clearTimeout(this.readerSaveTimer)
+    window.removeEventListener('focus', this.checkReaderProgressAccount)
+    window.removeEventListener('storage', this.checkReaderProgressAccount)
+    if (this.unsubscribeAudio) this.unsubscribeAudio()
+    this.paragraphVersion++
     // 移除滚动事件监听
     window.removeEventListener('scroll', this.handleScroll)
     // 移除点击监听
     document.removeEventListener('click', this.handleDocumentClick)
   },
   methods: {
+    openNotificationComment() {
+      if (!this.commentAnchor) return
+      const id = Number(this.$route.query.paragraphId), paragraph = this.paragraphs.find(item => item.id === id)
+      this.currentParagraphId = paragraph ? id : 0; this.paragraphCommentText = paragraph ? paragraph.value : ''; this.showCommentDrawer = true
+    },
+    workUrl,
+    openReaderAudio(paragraphId) {
+      if (!this.$readerAudio) return
+      const paragraphs = [...document.querySelectorAll('[data-paragraph-id]')]
+      const visible = paragraphs.find(element => element.getBoundingClientRect().bottom > 120 && element.getBoundingClientRect().top < window.innerHeight)
+      const start = paragraphId == null ? Number(visible && visible.dataset.paragraphId) || this.paragraphs.find(row => row.type === 'text' && row.value.trim())?.id : paragraphId
+      this.$readerAudio.open(this.novel, this.chapters, this.article, start)
+      this.clearSelection()
+    },
+    onReaderAudioProgress(state) {
+      this.audioSpeakingId = state.visible && Number(state.chapterId) === Number(this.article.article_id) ? state.paragraphId : 0
+      if (!state.visible || !state.follow || Number(state.bookId) !== Number(this.novel.novel_id)) return
+      if (Number(state.chapterId) !== Number(this.article.article_id)) {
+        if (state.status === 'playing' && this.audioRouteRequested !== state.chapterId) {
+          this.audioRouteRequested = state.chapterId
+          Promise.resolve().then(() => this.$router.push(`/article/${state.chapterId}`)).catch(() => { this.audioRouteRequested = 0 })
+        }
+        return
+      }
+      this.audioRouteRequested = 0
+      const key = `${state.chapterId}:${state.paragraphId}`
+      if (key === this.audioProgressKey) return
+      this.audioProgressKey = key
+      this.$nextTick(() => { const paragraph = document.getElementById(`paragraph-${state.paragraphId}`); if (paragraph && this.$refs.pager) this.$refs.pager.jump(state.paragraphId) })
+    },
     // 记录阅读行为
     async recordRead() {
       if (this.article.article_id) {
@@ -400,35 +272,67 @@ export default {
       }
     },
 
-    // 保存阅读历史到本地存储
-    saveReaderHistory() {
-      if (!this.novel || !this.novel.novel_id) return
-
-      try {
-        let readerHistory = JSON.parse(localStorage.getItem("loghomeReaderHistory")) || []
-
-        // 移除已有的相同书籍记录
-        readerHistory = readerHistory.filter(item => item.novel_id !== this.novel.novel_id)
-
-        // 添加到历史记录
-        readerHistory.push(this.novel)
-
-        // 只保留最近的10本书
-        if (readerHistory.length > 10) {
-          readerHistory = readerHistory.slice(-10)
-        }
-
-        localStorage.setItem("loghomeReaderHistory", JSON.stringify(readerHistory))
-
-        // 保存当前章节阅读进度
-        if (this.article.article_chapter) {
-          localStorage.setItem(`ReaderHistory_${this.novel.novel_id}`, this.article.article_chapter)
-        }
-      } catch (error) {
-        console.error('保存阅读历史失败', error)
+    // Save stable local anchors alongside the existing cloud chapter/page protocol.
+    saveReaderHistory(forceCloud = false) {
+      if (readingToken() !== this.readerProgressAccount) return
+      if (!this.novel || !this.novel.novel_id || !this.article.article_id) return
+      const position = normalizeReaderPosition(this.readerPosition)
+      const progress = { last_article_id: Number(this.article.article_id), last_article_chapter: Number(this.article.article_chapter) || 0, last_page_idx: position.pageIndex, last_paragraph_id: position.paragraphId, last_char_offset: position.charOffset }
+      recordLocalReading(this.novel, progress)
+      if (forceCloud || Date.now() - (this.lastReaderCloudSave || 0) > 10000) {
+        this.lastReaderCloudSave = Date.now()
+        this.$api.reading.saveProgress({ novel_id: Number(this.novel.novel_id), article_id: progress.last_article_id, page_idx: position.pageIndex }).catch(() => {})
       }
     },
 
+    initializeReaderPosition() {
+      clearTimeout(this.readerSaveTimer); this.readerProgressAccount = readingToken(); this.lastReaderCloudSave = 0
+      this.readerInitialPosition = initialReaderPosition(this.$route.query, localReadingProgress(this.novel.novel_id), this.article.article_id)
+      this.readerPosition = this.readerInitialPosition; this.readerReady = true; this.readerNavigationVisible = false
+      try { this.readerJumpUndo = JSON.parse(sessionStorage.getItem(this.readerUndoKey()) || 'null') } catch (_) { this.readerJumpUndo = null }
+    },
+    checkReaderProgressAccount() {
+      if (this.readerProgressAccount === readingToken()) return
+      this.initializeReaderPosition()
+      this.highlights = []; this.clearSelection(); this.showCommentDrawer = false; this.feedbackVisible = false
+      this.loadHighlights()
+    },
+    onReaderPosition(position) {
+      this.readerPosition = position
+      clearTimeout(this.readerSaveTimer)
+      this.readerSaveTimer = setTimeout(() => this.saveReaderHistory(), 500)
+    },
+    readerUndoKey() { return `loghome:reader:undo:${readingAccountKey()}:${this.novel.novel_id}` },
+    recordReaderChapterJump() {
+      const position = this.$refs.pager ? this.$refs.pager.capture() : this.readerPosition
+      this.readerJumpUndo = { articleId: Number(this.article.article_id), ...position }
+      try { sessionStorage.setItem(this.readerUndoKey(), JSON.stringify(this.readerJumpUndo)) } catch (_) {}
+      this.readerNavigationVisible = false
+      this.saveReaderHistory(true)
+    },
+    jumpReaderChapter(chapter) {
+      if (!chapter) return
+      this.recordReaderChapterJump()
+      this.$router.push(`/article/${chapter.article_id}?start=1`)
+    },
+    undoReaderChapterJump() {
+      const previous = this.readerJumpUndo
+      if (!previous) return
+      this.readerJumpUndo = null; this.readerNavigationVisible = false
+      try { sessionStorage.removeItem(this.readerUndoKey()) } catch (_) {}
+      this.$router.push(`/article/${previous.articleId}?paragraphId=${previous.paragraphId || 0}&charOffset=${previous.charOffset || 0}&pageIdx=${previous.pageIndex || 0}`)
+    },
+    finishReading() {
+      if (!this.canFinish) return
+      this.saveReaderHistory(true)
+      this.$router.push(`/read/end/${this.novel.novel_id}`)
+    },
+    navigatePageBoundary(direction) {
+      const chapter = this.chapters[this.currentChapterIndex + (direction === 'prev' ? -1 : 1)]
+      if (!chapter) return
+      this.saveReaderHistory(true)
+      this.$router.push(`/article/${chapter.article_id}?${direction === 'prev' ? 'edge=end' : 'start=1'}`)
+    },
     // 滚动事件处理
     handleScroll() {
       const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop
@@ -447,60 +351,6 @@ export default {
     toggleLike() {
       this.isLiked = !this.isLiked
       // 这里应该调用API保存点赞状态
-    },
-
-    // 加载阅读偏好
-    loadPreferences() {
-      if (process.client) {
-        const savedTheme = localStorage.getItem('reading_theme')
-        const savedFontSize = localStorage.getItem('reading_font_size')
-        const savedFontFamily = localStorage.getItem('reading_font_family')
-
-        if (savedTheme) {
-          this.theme = savedTheme
-        }
-
-        if (savedFontSize) {
-          this.fontSize = parseInt(savedFontSize)
-        }
-
-        if (savedFontFamily) {
-          this.fontFamily = savedFontFamily
-        }
-      }
-    },
-
-    // 保存阅读偏好
-    savePreferences() {
-      if (process.client) {
-        localStorage.setItem('reading_theme', this.theme)
-        localStorage.setItem('reading_font_size', this.fontSize)
-        localStorage.setItem('reading_font_family', this.fontFamily)
-      }
-    },
-
-    // 设置主题
-    setTheme(theme) {
-      this.theme = theme
-      this.savePreferences()
-    },
-
-    // 设置字体
-    setFont(fontFamily) {
-      this.fontFamily = fontFamily
-      this.savePreferences()
-    },
-
-    // 更改字体大小
-    changeFontSize(delta) {
-      this.fontSize = Math.max(14, Math.min(32, this.fontSize + delta))
-      this.savePreferences()
-    },
-
-    // 重置字体大小
-    resetFontSize() {
-      this.fontSize = this.defaultFontSize
-      this.savePreferences()
     },
 
     // 章节导航
@@ -541,404 +391,43 @@ export default {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     },
 
-    // 获取评论
-    async fetchComments() {
-      try {
-        this.commentsLoading = true
-        
-        // 获取评论总数
-        const countResponse = await this.$api.community.getNovelCommentsAmount(this.novel.novel_id, this.article.article_id)
-        if (countResponse && countResponse.length > 0) {
-          this.commentTotal = countResponse[0]['COUNT(*)']
-        }
-        
-        // 获取当前页评论列表（fast 接口已自带 replies）
-        const commentsResponse = await this.$api.community.getArticleComments(
-          this.novel.novel_id, 
-          this.article.article_id,
-          this.currentPage,
-          this.pageSize
-        )
-        
-        if (commentsResponse && commentsResponse.length > 0) {
-          // fast 接口返回的回复字段是 replies，统一映射为 reviewLess 供模板使用
-          this.comments = commentsResponse.map(comment => ({
-            ...comment,
-            reviewLess: (comment.replies || []).map(reply => ({
-              comment_id: reply.essay_comment_id,
-              userName: reply.name,
-              userId: reply.user_id,
-              targetUserName: this.findTargetUserName(reply.reply_to_id, commentsResponse, comment.replies || []),
-              sendMsg: reply.content,
-              article_id: reply.article_id
-            }))
-          }))
-        } else {
-          this.comments = []
-        }
-      } catch (error) {
-        console.error('获取评论失败:', error)
-        this.$message.error('获取评论失败，请稍后重试')
-        this.comments = []
-      } finally {
-        this.commentsLoading = false
-      }
-    },
-    
-    // 通过回复ID查找目标用户名
-    findTargetUserName(replyToId, comments, replies) {
-      // 先在主评论中查找
-      for (const comment of comments) {
-        if (comment.essay_comment_id === replyToId) {
-          return comment.name
-        }
-      }
-      
-      // 再在回复中查找
-      for (const reply of replies) {
-        if (reply.essay_comment_id === replyToId) {
-          return reply.name
-        }
-      }
-      
-      return null
-    },
-    
-    // 获取当前用户信息
-    async getUserInfo() {
-      if (!localStorage.getItem("token")) return
-      
-      try {
-        // 先尝试从本地缓存获取用户信息
-        const cachedUserInfo = localStorage.getItem('LogHomeUserInfo');
-        if (cachedUserInfo) {
-          this.userInfo = JSON.parse(cachedUserInfo);
-        } else {
-          // 使用API服务获取用户信息
-          this.userInfo = await this.$api.users.getUserProfile();
-        }
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
-      }
-    },
-    
-    // 提交评论
-    async submitComment() {
-      if (!this.commentText.trim()) {
-        this.$message.info('评论内容不能为空')
-        return
-      }
-
-      if (!localStorage.getItem("token")) {
-        this.$message.info('请先登录后再评论')
-        this.$router.push(`/login?redirect=${encodeURIComponent(this.$route.path)}`)
-        return
-      }
-
-      try {
-        await this.$api.community.commentOnArticle(
-          this.novel.novel_id,
-          this.article.article_id,
-          this.commentText
-        )
-        
-        this.commentText = ''
-        this.$message.success('评论发表成功')
-        
-        // 重新加载评论
-        this.currentPage = 1
-        this.fetchComments()
-      } catch (error) {
-        console.error('提交评论失败:', error)
-        this.$message.error('评论发表失败，请稍后重试')
-      }
-    },
-    
-    // 处理评论点赞
-    async handleLikeComment(comment) {
-      if (!localStorage.getItem("token")) {
-        this.$message.info('请先登录后再点赞')
-        this.$router.push(`/login?redirect=${encodeURIComponent(this.$route.path)}`)
-        return
-      }
-      
-      try {
-        // 点赞状态切换
-        const type = comment.isLiked ? 3 : 0 // 0 点赞，3 取消点赞
-        
-        await this.$api.community.praiseComment(comment.essay_comment_id, type)
-        
-        // 更新评论的点赞状态和数量
-        comment.isLiked = !comment.isLiked
-        comment.likeNum = comment.isLiked 
-          ? (comment.likeNum || 0) + 1 
-          : Math.max(0, (comment.likeNum || 0) - 1)
-          
-        this.$message.success(comment.isLiked ? '点赞成功' : '已取消点赞')
-      } catch (error) {
-        console.error('点赞操作失败:', error)
-        this.$message.error('操作失败，请稍后重试')
-      }
-    },
-    
-    // 显示回复输入框
-    showReplyInput(comment, reply) {
-      if (!localStorage.getItem("token")) {
-        this.$message.info('请先登录后再回复')
-        this.$router.push(`/login?redirect=${encodeURIComponent(this.$route.path)}`)
-        return
-      }
-      
-      this.replyText = ''
-      
-      if (reply) {
-        // 回复某个回复
-        this.replyingTo = {
-          comment_id: comment.essay_comment_id,
-          reply_id: reply.comment_id,
-          replyToReply: true,
-          targetId: reply.userId,
-          targetName: reply.userName
-        }
-      } else {
-        // 回复主评论
-        this.replyingTo = {
-          comment_id: comment.essay_comment_id,
-          replyToReply: false,
-          targetId: comment.user_id,
-          targetName: comment.name
-        }
-      }
-    },
-    
-    // 取消回复
-    cancelReply() {
-      this.replyingTo = null
-      this.replyText = ''
-    },
-    
-    // 提交回复
-    async submitReply(comment) {
-      if (!this.replyText.trim()) {
-        this.$message.info('回复内容不能为空')
-        return
-      }
-      
-      if (!localStorage.getItem("token")) {
-        this.$message.info('请先登录后再回复')
-        this.$router.push(`/login?redirect=${encodeURIComponent(this.$route.path)}`)
-        return
-      }
-      
-      try {
-        const replyToId = this.replyingTo.replyToReply 
-          ? this.replyingTo.reply_id
-          : comment.essay_comment_id
-          
-        await this.$api.community.replyToComment(
-          replyToId,
-          this.replyText,
-          comment.essay_comment_id,
-          this.article.article_id
-        )
-        
-        this.$message.success('回复发表成功')
-        this.replyText = ''
-        this.replyingTo = null
-        
-        // 重新加载评论
-        this.fetchComments()
-      } catch (error) {
-        console.error('回复评论失败:', error)
-        this.$message.error('回复发表失败，请稍后重试')
-      }
-    },
-    
-    // 删除评论
-    async deleteComment(comment) {
-      if (!localStorage.getItem("token")) return
-      
-      try {
-        if (confirm('确定要删除这条评论吗？')) {
-          await this.$api.community.deleteComment(comment.essay_comment_id)
-          this.$message.success('评论已删除')
-          
-          // 重新加载评论
-          this.fetchComments()
-        }
-      } catch (error) {
-        console.error('删除评论失败:', error)
-        this.$message.error('删除失败，请稍后重试')
-      }
-    },
-    
-    // 判断是否可以删除评论
-    canDeleteComment(comment) {
-      if (!localStorage.getItem("token") || !this.userInfo) return false
-      
-      // 判断是否是自己的评论或者是小说作者
-      return this.userInfo.user_id === comment.user_id || 
-          this.userInfo.user_id === this.novel.author_id
-    },
-    
-    // 查找用户ID (简单实现，实际应该调用API)
-    findUserIdByName(userName) {
-      if (!userName) return null
-      
-      // 遍历评论和回复查找匹配的用户名
-      for (const comment of this.comments) {
-        if (comment.name === userName) {
-          return comment.user_id
-        }
-        
-        if (comment.reviewLess) {
-          for (const reply of comment.reviewLess) {
-            if (reply.userName === userName) {
-              return reply.userId
-            }
-          }
-        }
-      }
-      
-      return null
-    },
-    
-    // 更改页面
-    async changePage(pageNum) {
-      if (this.currentPage === pageNum) return
-      
-      this.currentPage = pageNum
-      await this.fetchComments()
-      
-      // 滚动到评论区顶部
-      const commentSection = document.querySelector('.comment-section')
-      if (commentSection) {
-        commentSection.scrollIntoView({ behavior: 'smooth' })
-      }
+    onCommentsChanged(source) {
+      this.fetchParagraphCommentsCount(); this.loadHighlights()
+      if (source === 'drawer' && this.$refs.chapterReviews) this.$refs.chapterReviews.onOpen()
     },
 
-    // 获取段落评论数量
     async fetchParagraphCommentsCount() {
+      const version = ++this.paragraphVersion, articleId = this.article.article_id
       try {
-        if (!this.article || !this.article.content) return;
-        
-        // 检查内容是否为JSON格式的混合内容
-        let paragraphs = [];
-        try {
-          const content = JSON.parse(this.article.content);
-          // 筛选出文本段落
-          paragraphs = content.filter(item => item.type === 'text').map(item => item.id);
-        } catch (e) {
-          console.log("not JSON format")
-        }
-        
-        // 为每个段落ID获取评论数量
-        for (const paragraphId of paragraphs) {
-          const response = await this.$api.community.getNovelCommentsAmount(this.novel.novel_id, this.article.article_id, paragraphId);
-          if (response && response.length > 0) {
-            const count = response[0]['COUNT(*)'];
-            if (count > 0) {
-              this.$set(this.paragraphCommentsCount, paragraphId, count);
-              
-              // 添加评论图标到段落
-              this.$nextTick(() => {
-                this.addCommentIconToParagraph(paragraphId, count);
-              });
-            }
-          }
-        }
-      } catch (error) {
-        console.error('获取段落评论数量失败', error);
-      }
+        const rows = await this.$api.reader.paragraphAmounts(articleId, this.paragraphs.filter(item => item.type === 'text').map(item => item.id))
+        if (version !== this.paragraphVersion || articleId !== this.article.article_id) return
+        const counts = {}; for (const row of rows || []) counts[row.paragraph_id] = Number(row.count) || 0
+        this.paragraphCommentsCount = counts
+      } catch (_) { /* Existing counts remain available. */ }
     },
-    
-    // 为段落添加评论图标
-    addCommentIconToParagraph(paragraphId, count) {
-      const paragraph = document.getElementById(`paragraph-${paragraphId}`);
-      if (!paragraph) return;
-      
-      // 检查是否已经添加了评论图标
-      if (paragraph.querySelector('.paragraph-comment-icon')) return;
-      
-      // 创建评论图标容器
-      const iconContainer = document.createElement('span');
-      iconContainer.className = 'paragraph-comment-icon';
-      iconContainer.innerHTML = `<i class="el-icon-chat-line-round"></i> ${count}`;
-      iconContainer.title = `${count}条评论`;
-      
-      // 添加点击事件
-      iconContainer.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.openParagraphCommentWindow(paragraphId);
-      });
-      
-      // 添加到段落末尾
-      paragraph.appendChild(iconContainer);
+    openParagraphCommentWindow(paragraphId) {
+      const id = Number(paragraphId), paragraph = this.paragraphs.find(item => item.id === id)
+      this.currentParagraphId = id || 0; this.paragraphCommentText = paragraph ? paragraph.value : ''; this.showCommentDrawer = true
+      if (this.selectionMode) this.clearSelection()
     },
-
-    // 打开段落评论窗口
-    async openParagraphCommentWindow(paragraphId) {
-      if (!localStorage.getItem('token')) {
-        this.$router.push("/login");
-        return;
-      }
-      await this.$openMobileWindow(
-        `/pages/readers/bookComment?id=${this.novel.novel_id}&articleId=${this.article.article_id}&paragraphId=${paragraphId}`,
-        { title: '段落评论', width: 400 }
-      );
-      // 如果是从选择面板调用的，清除选择状态
-      if (this.selectionMode) {
-        this.clearSelection();
-      }
+    async loadHighlights() {
+      const token = readingToken(), articleId = this.article.article_id
+      if (!token) { this.highlights = []; return }
+      try { const rows = await this.$api.reader.highlights(articleId); if (articleId === this.article.article_id && token === readingToken()) this.highlights = Array.isArray(rows) ? rows : [] } catch (_) {}
     },
-
-    // 设置段落交互
-    setupParagraphInteractions() {
-      setTimeout(() => {
-        const paragraphs = document.querySelectorAll('.article-paragraph');
-        paragraphs.forEach(paragraph => {
-          // 添加右键菜单事件
-          paragraph.addEventListener('contextmenu', (e) => {
-            e.preventDefault(); // 阻止默认右键菜单
-            this.handleParagraphRightClick(e, paragraph);
-          });
-
-          // 触摸设备长按支持
-          let pressTimer;
-          let touchStarted = false;
-
-          paragraph.addEventListener('touchstart', (e) => {
-            touchStarted = true;
-            pressTimer = setTimeout(() => {
-              if (touchStarted) {
-                this.handleParagraphLongPress(e, paragraph);
-              }
-            }, 500);
-          });
-
-          paragraph.addEventListener('touchend', () => {
-            touchStarted = false;
-            clearTimeout(pressTimer);
-          });
-
-          paragraph.addEventListener('touchcancel', () => {
-            touchStarted = false;
-            clearTimeout(pressTimer);
-          });
-
-          paragraph.addEventListener('touchmove', () => {
-            touchStarted = false;
-            clearTimeout(pressTimer);
-          });
-          
-          // 如果段落有评论，添加评论图标
-          const paragraphId = paragraph.dataset.paragraphId;
-          if (this.paragraphCommentsCount[paragraphId]) {
-            this.addCommentIconToParagraph(paragraphId, this.paragraphCommentsCount[paragraphId]);
-          }
-        });
-      }, 500);
+    async toggleHighlight() {
+      if (!this.selectedParagraph || this.highlightBusy) return
+      if (!readingToken()) { this.$message.info('登录后可以收藏划线书摘'); return }
+      const paragraph = this.selectedParagraph, existing = this.selectedHighlight
+      this.highlightBusy = true
+      try {
+        if (existing) await this.$api.reader.unhighlight(existing.article_cento_id)
+        else await this.$api.reader.highlight({ article_id: this.article.article_id, paragraph_id: Number(paragraph.id), paragraph: paragraph.text })
+        this.clearSelection(); await this.loadHighlights()
+      } catch (error) { this.$message.error(error.message || '划线操作失败') }
+      finally { this.highlightBusy = false }
     },
+    openFeedback() { if (!this.selectedParagraph) return; this.feedbackParagraph = { id: Number(this.selectedParagraph.id), text: this.selectedParagraph.text }; this.feedbackVisible = true; this.clearSelection() },
 
     // 处理段落右键点击
     handleParagraphRightClick(event, paragraph) {
@@ -961,7 +450,7 @@ export default {
       // 计算菜单位置 - 在鼠标右键位置显示
       this.panelPosition = {
         x: Math.max(20, Math.min(event.clientX, window.innerWidth - 300)),
-        y: Math.min(event.clientY, window.innerHeight - 100)
+        y: Math.max(8, Math.min(event.clientY, window.innerHeight - 230))
       };
 
       this.selectionMode = true;
@@ -1037,10 +526,6 @@ export default {
       }
     },
 
-    // 获取用户页面
-    goToUserPage(userId) {
-      this.$router.push(`/users/${userId}`)
-    },
   }
 }
 </script>
@@ -1440,340 +925,7 @@ $heart-color: #FF6B6B;
     font-size: 16px;
   }
 
-  .comment-section {
-    margin: 0 auto;
-    padding: 30px 40px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-    margin-top: 20px;
-    border-radius: 8px;
-
-    h3 {
-      font-size: 18px;
-      font-weight: bold;
-      color: $secondary-color;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid $border-light;
-      
-      span {
-        font-size: 14px;
-        color: $text-lighter;
-        font-weight: normal;
-      }
-    }
-  }
-
-  .comment-input {
-    margin-bottom: 30px;
-
-    .comment-textarea {
-      width: 100%;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      resize: vertical;
-      margin-bottom: 10px;
-      font-size: 14px;
-
-      &:focus {
-        border-color: $primary-color;
-        outline: none;
-      }
-    }
-
-    .submit-comment-btn {
-      @include button-base;
-      background-color: $primary-color;
-      color: white;
-      float: right;
-
-      &:hover {
-        background-color: color.adjust($primary-color, $lightness: -10%);
-      }
-    }
-  }
-
-  .comment-loading {
-    @include flex-center;
-    flex-direction: column;
-    padding: 40px 0;
-    
-    .loading-spinner {
-      @include loading-spinner;
-      width: 30px;
-      height: 30px;
-      border-width: 3px;
-      margin-bottom: 15px;
-    }
-    
-    p {
-      color: $text-lighter;
-      font-size: 14px;
-    }
-  }
-
-  .comment-empty {
-    text-align: center;
-    color: $text-lighter;
-    padding: 30px 0;
-    font-style: italic;
-  }
-
-  .comments-list {
-    clear: both;
-  }
-
-  .comment-item {
-    display: flex;
-    padding: 20px 0;
-    border-bottom: 1px solid $border-light;
-
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-
-  .comment-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: $primary-color;
-    color: white;
-    @include flex-center;
-    font-weight: bold;
-    margin-right: 15px;
-    flex-shrink: 0;
-    cursor: pointer;
-    overflow: hidden;
-    
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    
-    span {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      font-size: 16px;
-      text-transform: uppercase;
-    }
-  }
-
-  .comment-content {
-    flex-grow: 1;
-
-    .comment-header {
-      margin-bottom: 8px;
-
-      .comment-username {
-        font-weight: bold;
-        color: $text-color;
-        margin-right: 10px;
-        cursor: pointer;
-        
-        &:hover {
-          color: $primary-color;
-        }
-      }
-
-      .comment-time {
-        font-size: 12px;
-        color: $text-lighter;
-      }
-    }
-
-    .comment-text {
-      line-height: 1.6;
-      color: $text-color;
-      word-break: break-word;
-      margin-bottom: 10px;
-    }
-  }
-  
-  .comment-actions {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-    
-    .action-item {
-      display: flex;
-      align-items: center;
-      margin-right: 20px;
-      cursor: pointer;
-      color: $text-lighter;
-      font-size: 13px;
-      
-      i {
-        margin-right: 5px;
-        font-size: 16px;
-        
-        &.active {
-          color: $accent-color;
-        }
-      }
-      
-      &:hover {
-        color: $primary-color;
-      }
-    }
-  }
-  
-  .replies-list {
-    margin-top: 10px;
-    background-color: #f8f8f8;
-    border-radius: 4px;
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    
-    .reply-item {
-      padding: 8px 0;
-      border-bottom: 1px dashed rgba(0,0,0,0.05);
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .reply-content {
-        font-size: 13px;
-        line-height: 1.5;
-        margin-bottom: 5px;
-        
-        .reply-username {
-          color: $primary-color;
-          font-weight: bold;
-          cursor: pointer;
-          
-          &:hover {
-            text-decoration: underline;
-          }
-        }
-        
-        .reply-target {
-          color: $text-lighter;
-        }
-        
-        .reply-target-username {
-          color: $primary-color;
-          cursor: pointer;
-          
-          &:hover {
-            text-decoration: underline;
-          }
-        }
-        
-        .reply-text {
-          color: $text-color;
-          word-break: break-word;
-        }
-      }
-      
-      .reply-actions {
-        text-align: right;
-        
-        .reply-action {
-          color: $text-lighter;
-          font-size: 12px;
-          cursor: pointer;
-          
-          &:hover {
-            color: $primary-color;
-          }
-        }
-      }
-    }
-  }
-  
-  .reply-input {
-    margin-top: 10px;
-    background-color: #f8f8f8;
-    border-radius: 4px;
-    padding: 10px;
-    
-    .reply-textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      resize: vertical;
-      margin-bottom: 10px;
-      font-size: 13px;
-      background-color: white;
-      
-      &:focus {
-        border-color: $primary-color;
-        outline: none;
-      }
-    }
-    
-    .reply-buttons {
-      text-align: right;
-      
-      button {
-        padding: 6px 12px;
-        border-radius: 4px;
-        font-size: 13px;
-        cursor: pointer;
-        border: none;
-        margin-left: 10px;
-        
-        &.cancel-reply-btn {
-          background-color: #f0f0f0;
-          color: $text-color;
-          
-          &:hover {
-            background-color: #e0e0e0;
-          }
-        }
-        
-        &.submit-reply-btn {
-          background-color: $primary-color;
-          color: white;
-          
-          &:hover {
-            background-color: color.adjust($primary-color, $lightness: -10%);
-          }
-        }
-      }
-    }
-  }
-  
-  .pagination {
-    margin-top: 30px;
-    text-align: center;
-    
-    button {
-      display: inline-block;
-      min-width: 32px;
-      height: 32px;
-      margin: 0 5px;
-      padding: 0 10px;
-      text-align: center;
-      line-height: 32px;
-      background: none;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      color: $text-color;
-      
-      &:hover {
-        border-color: $primary-color;
-        color: $primary-color;
-      }
-      
-      &.active {
-        background-color: $primary-color;
-        border-color: $primary-color;
-        color: white;
-      }
-    }
-  }
-
+  .chapter-nav a { text-decoration: none; display: inline-flex; align-items: center; }
   .paragraph-floating-panel {
     position: fixed;
     background-color: rgba(255, 255, 255, 0.95);
@@ -1979,4 +1131,22 @@ $heart-color: #FF6B6B;
     }
   }
 }
+</style>
+
+<style scoped>
+.reader-control-btn { border: 1px solid #ded4c5; background: #fff; color: #806649; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.article-page .chapter-nav a { text-decoration: none; color: #806649; }
+.article-page .header-content { flex-wrap: wrap; gap: 12px; }.article-page .novel-info { flex-wrap: wrap; gap: 8px; }.reading-controls { gap: 8px; }
+.article-page .article-content { margin: 0 auto; overflow-wrap: anywhere; }.article-meta { color: var(--reader-secondary); }.article-content-wrapper /deep/ .reader-highlight { text-decoration-color: var(--reader-line); }
+.article-content-wrapper /deep/ .article-paragraph { margin-bottom: 1.2em; white-space: pre-wrap; }.article-content-wrapper /deep/ .reader-speaking { background: rgba(170,160,90,.22); }
+.block-epoch-skin .article-title-container { margin: 18px; border: 3px solid #6b7551; background: rgba(239,244,216,.78); box-shadow: 5px 5px 0 #273421; }.block-epoch-skin .article-title { font-family: ui-monospace, Consolas, monospace; }
+@media(max-width:700px) { .article-page .article-content { padding: 22px 20px 40px; }.reader-control-btn { padding: 8px; }.article-page .novel-info { width: 100%; }.article-page .novel-title { font-size: 16px; } }
+</style>
+
+<style scoped>
+.reading-page-mode .article-footer { display: none; }.chapter-reviews { margin-top: 28px; }
+</style>
+
+<style scoped>
+.article-page .article-header { top: 60px; }
 </style>

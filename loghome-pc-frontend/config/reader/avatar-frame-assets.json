@@ -1,0 +1,202 @@
+{
+  "/static/avatar-frames/01.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135800369649",
+    "sha256": "ce59220f4debd13c08bf5fcb29484f21a4f85ac0844c41f38e23d8108ed504ca"
+  },
+  "/static/avatar-frames/thumbnails/01.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135800483750",
+    "sha256": "eead1d8d88321ff861e09bc7f1d114574a87f18d9915d12ae88523d28fb152b6"
+  },
+  "/static/avatar-frames/02.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135800558341",
+    "sha256": "edefcf69c2b1fdf40de7f229017f5e70c49d058109a52174730cbcbf69fbb2e5"
+  },
+  "/static/avatar-frames/thumbnails/02.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135800650582",
+    "sha256": "11d901b50ebd4bb8f79daa992b90eba780b78fc88b283c009c081aa63bdd3387"
+  },
+  "/static/avatar-frames/03.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135800736493",
+    "sha256": "c6837726690eb409a4152f647f72e2fca966c2b3168c11503c0f15d35ec99f1c"
+  },
+  "/static/avatar-frames/thumbnails/03.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135800813294",
+    "sha256": "ada3a8d02e6737d9aea25f941db84e058be890a0b7ed463bd45acb5a3a9e83a4"
+  },
+  "/static/avatar-frames/05.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135800890855",
+    "sha256": "04670e3f3d808c573ee501deb23e0cad453b1a8341669fc9ed2d48ac29c1a335"
+  },
+  "/static/avatar-frames/thumbnails/05.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135800974676",
+    "sha256": "db259e2cd0275cbae3449e8295ebba1d2fb8161c987058ed7954d0ea681ea454"
+  },
+  "/static/avatar-frames/07.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801045407",
+    "sha256": "4261daa030658b80254383431e976875acc7c26b4e2a3d85bc9a9142d07252ef"
+  },
+  "/static/avatar-frames/thumbnails/07.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801125278",
+    "sha256": "d287c540d44e961db5fbb1adc21a67f42f663062b0728938defafcf7c2b544dd"
+  },
+  "/static/avatar-frames/08.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801195919",
+    "sha256": "e7b7c658d58aa7e722d402308d78d2c62c8a6ee0d25770cd61ec164acdbb7d99"
+  },
+  "/static/avatar-frames/thumbnails/08.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801273850",
+    "sha256": "ba7e816e430b0ebe79c7ecc3480574cc62549e4f1df21feb3520c3725bdbea67"
+  },
+  "/static/avatar-frames/09.gif": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801342821",
+    "sha256": "bff230fd73b4ba3cb9a885feb4bd7ad9921a330ff6aafd631b6f9fa9a2c8d8b1"
+  },
+  "/static/avatar-frames/thumbnails/09.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801689572",
+    "sha256": "dde24e974b0db48571aaf6169da80f58723ecddf49ca813941de0b2b2e145878"
+  },
+  "/static/avatar-frames/10.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801760083",
+    "sha256": "57fc88b0ea94d5bc911dafdc15d0dfecdbcc3e8f155128ce7e4423e2f8ed6ad0"
+  },
+  "/static/avatar-frames/thumbnails/10.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801843074",
+    "sha256": "96162b1c531adbb5b14166da265841a82449190fd99df08f98829a2d507314fa"
+  },
+  "/static/avatar-frames/11.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801917835",
+    "sha256": "43aed01404240f52c64aa9f396d87077a157800ef77eb29a57ff6c3c75edc33d"
+  },
+  "/static/avatar-frames/thumbnails/11.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135801994086",
+    "sha256": "0a460abb68075d1d40f4d1fe3e5cab219cf8b7a65ff6393048d689a4e5ec5971"
+  },
+  "/static/avatar-frames/12.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135802065877",
+    "sha256": "b3752dbc232a81a41b94f7d61dbca6ee00c54a1b0dcf8d0d21570c0141dc55ff"
+  },
+  "/static/avatar-frames/thumbnails/12.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135802154688",
+    "sha256": "b16c7497dd09c78ef135677a936fb1d2f46047694665245e4c73b673f2adc5f2"
+  },
+  "/static/avatar-frames/13.gif": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135802227339",
+    "sha256": "3a80ea21f9ab575c36cacde4d3497b69da6ded402c723c28dce3fe7d5d9df82f"
+  },
+  "/static/avatar-frames/thumbnails/13.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135802816390",
+    "sha256": "3f10ddc3641a933a4d7ad8017bc0f4734c1893d465e218c62741cc7e9f5a1844"
+  },
+  "/static/avatar-frames/14.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135802958281",
+    "sha256": "d5f49e1f4190b90d5c378808d182c600b63b2c6f325dc461773a08c011fd1344"
+  },
+  "/static/avatar-frames/thumbnails/14.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803065782",
+    "sha256": "a723ff95174b5ecc70cfe8b1c761c41d97052622aa469023df5946f7ec42d6e4"
+  },
+  "/static/avatar-frames/15.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803153573",
+    "sha256": "0e139149eec4905d116837a5c6501b6ff0fef549d5afc7778f05c68bf295df06"
+  },
+  "/static/avatar-frames/thumbnails/15.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803248864",
+    "sha256": "705036da8a756e2b345a406a9f91a96df640dc0811a5a68ad186cbfa69ef26c7"
+  },
+  "/static/avatar-frames/16.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803321275",
+    "sha256": "937ca6efd3303aad5a8463e637d1761e73f908e49b0093efab8c5879cb56626f"
+  },
+  "/static/avatar-frames/thumbnails/16.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803395216",
+    "sha256": "0e6b2b46eacbd14a0c1c55e5280379ee693b265b371616942c4430de90953583"
+  },
+  "/static/avatar-frames/17.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803475767",
+    "sha256": "164e15866f44d50b5a488c5c98ebb4387c314044263a36f2897a90bbc98b4f13"
+  },
+  "/static/avatar-frames/thumbnails/17.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803549098",
+    "sha256": "e57078f04ec6bde991a265858cb7cf8c004fe57fbbc3d3addebfda5a3dcbdb21"
+  },
+  "/static/avatar-frames/18.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803620139",
+    "sha256": "035bf7f5d6fbf8bfde7b1428ad8d50c4742db4b1b1f488692df870512c3b99b9"
+  },
+  "/static/avatar-frames/thumbnails/18.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803701720",
+    "sha256": "eda4633bce44e9b4d796767e8f4fbc6de8757d8201dbe6404d18fac0a7ee8886"
+  },
+  "/static/avatar-frames/19.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803770011",
+    "sha256": "95ff8306f2543e346b6766f96c025b73905a38d7f695c7115babf6dab31f134f"
+  },
+  "/static/avatar-frames/thumbnails/19.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803853632",
+    "sha256": "0ca3bc3e9bef6fa1a804913930e1c971f648bfecf4e6502774d84f26d1791c96"
+  },
+  "/static/avatar-frames/20.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803926573",
+    "sha256": "1835d65a5196a8faf04bddcd5a34ca88afb816900b9b3431467560c7f78e5ce9"
+  },
+  "/static/avatar-frames/thumbnails/20.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135803999254",
+    "sha256": "65c8d8e10e9314999357c9005178a1e95447a207a327e39289f225e8642e9eab"
+  },
+  "/static/avatar-frames/21.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804069495",
+    "sha256": "3c0517040d5d0f84f59b8c02806245578e1e49d6da40ecd159bf435d0d64eeaf"
+  },
+  "/static/avatar-frames/thumbnails/21.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804145966",
+    "sha256": "1ebd42a6894db3ccb507e0f564202167aa8598d25db96ca18491faad78e5005a"
+  },
+  "/static/avatar-frames/22.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804215297",
+    "sha256": "ac9a53a0bb2bd441dce582b4c2fffedb73758f4e5c77fb1f59d100c63c6e4a1b"
+  },
+  "/static/avatar-frames/thumbnails/22.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804352118",
+    "sha256": "afac522db0bc6461a77c1688a4bdacbd01a8192d57a123efe0f57afc18f87cc9"
+  },
+  "/static/avatar-frames/23.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804427609",
+    "sha256": "341945ec5d00c2ecfb13e90be18d5fcd724707ab683683551d5e2e0ac9445313"
+  },
+  "/static/avatar-frames/thumbnails/23.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804498530",
+    "sha256": "68ce2759f34de87dc2e83f82f0547937509867069f54904927b5317a2445adca"
+  },
+  "/static/avatar-frames/24.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804568651",
+    "sha256": "863fb9046ad64c1405fd2d7a62fa90ecfa323a6fe6a2c791c08f76232c6d5f62"
+  },
+  "/static/avatar-frames/thumbnails/24.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804642472",
+    "sha256": "4eeaf6dd92715b3362c516876089661e8c6b7f81feb9011062e3a13ab292e815"
+  },
+  "/static/avatar-frames/25.gif": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135804711343",
+    "sha256": "c32bd21af603206e394569b4f44b9b5c9e0051a820032352aff1bf02cc4b7054"
+  },
+  "/static/avatar-frames/thumbnails/25.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135805709654",
+    "sha256": "bde48d523eb95c573dfbae88014ffeb56d3826667c502a34d3a7281b976a7362"
+  },
+  "/static/avatar-frames/26.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135805785385",
+    "sha256": "5da0d5e5a9debe7b336c211560c35abb9b165b5b89d17f290fb6fd25522550ca"
+  },
+  "/static/avatar-frames/thumbnails/26.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135805862856",
+    "sha256": "d57c2561d013293c736d576657c51d6cb0100f7f993b7c2a1014a7cadd58ae95"
+  },
+  "/static/avatar-frames/28.png": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135805932527",
+    "sha256": "437b179375cad3b47ef1d35446330e3241ca9c1d5b135f66ffe45eed0dda107b"
+  },
+  "/static/avatar-frames/thumbnails/28.webp": {
+    "url": "https://storage.codesocean.top/api/resource/get/179135806015188",
+    "sha256": "7ee8c37eca2a8157c035096e4aea2fecadc68bc4f2dd8702cae903b74baf0038"
+  }
+}

@@ -1,15 +1,15 @@
 <template>
-  <div class="danmu-layer" aria-hidden="true">
+  <div class="danmu-layer" aria-label="本页弹幕">
     <span
       v-for="item in items"
       :key="item.key"
       class="danmu-item"
-      :class="{ self: item.self, moderatable: item.moderatable, paused: item.key === hoverId }"
+      :class="{ self: item.self, moderatable: item.moderatable, paused: item.key === hoverId || item.key === focusId }"
       :style="{ top: item.top + '%', animationDuration: item.duration + 's', animationDelay: item.delay + 's' }"
       @mouseenter="hoverId = item.key"
-      @mouseleave="hoverId = null">
+      @mouseleave="hoverId = null" @focusin="focusId=item.key" @focusout="focusId=null">
       {{ item.content }}
-      <button v-if="item.moderatable && item.key === hoverId" class="danmu-del" title="删除弹幕" @click.stop="$emit('remove', item.danmuId)">&times;</button>
+      <button v-if="item.moderatable" class="danmu-del" :aria-label="`删除弹幕：${item.content}`" @click.stop="$emit('remove', item.danmuId)">&times;</button>
     </span>
   </div>
 </template>
@@ -28,14 +28,14 @@ export default {
     workAuthorId: { type: [String, Number], default: null }
   },
   data() {
-    return { hoverId: null }
+    return { hoverId: null, focusId:null }
   },
   computed: {
     items() {
       return this.danmus.map((danmu, index) => {
         const lane = index % LANE_COUNT
         const self = this.currentUserId != null && String(danmu.userId) === String(this.currentUserId)
-        const moderatable = self || (this.workAuthorId != null && String(danmu.userId) === String(this.workAuthorId))
+        const moderatable = self || (this.currentUserId != null && this.workAuthorId != null && String(this.currentUserId) === String(this.workAuthorId))
         return {
           key: danmu.danmuId,
           danmuId: danmu.danmuId,
@@ -43,8 +43,8 @@ export default {
           self,
           moderatable,
           top: 4 + lane * (86 / (LANE_COUNT - 1)),
-          duration: 9 + Math.random() * 4,
-          delay: Math.floor(index / LANE_COUNT) * 2.4 + Math.random() * 0.8
+          duration: 10 + (Number(danmu.danmuId)%4),
+          delay: Math.floor(index / LANE_COUNT) * 2.4 + (Number(danmu.danmuId)%8)*.1
         }
       })
     }
@@ -58,8 +58,8 @@ export default {
 .danmu-item.self { color: #5fc3f3; border: 1px solid rgba(95, 195, 243, 0.65); background: rgba(0, 0, 0, 0.3); }
 .danmu-item.moderatable { pointer-events: auto; cursor: default; }
 .danmu-item.paused { animation-play-state: paused; }
-.danmu-del { margin-left: 8px; width: 18px; height: 18px; padding: 0; border: none; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 14px; line-height: 1; cursor: pointer; vertical-align: middle; }
-.danmu-del:hover { background: #e0524d; }
+.danmu-del { opacity:0; margin-left: 8px; width: 18px; height: 18px; padding: 0; border: none; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 14px; line-height: 1; cursor: pointer; vertical-align: middle; }
+.danmu-item:hover .danmu-del,.danmu-item:focus-within .danmu-del{opacity:1}.danmu-del:focus-visible{outline:2px solid #fff}.danmu-del:hover { background: #e0524d; }
 @keyframes danmu-roll { from { transform: translateX(0); } to { transform: translateX(calc(-100vw - 100%)); } }
 @media (prefers-reduced-motion: reduce) { .danmu-item { animation-duration: 0.01s !important; animation-delay: 0s !important; opacity: 0; } }
 </style>

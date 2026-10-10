@@ -1,0 +1,16 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{EventEmitter}=require('node:events')
+test('真实任务流按游标重放、只计费一次，并保护请求和账号身份',{timeout:2000},async()=>{
+ const charges=[],runs=[],module={exports:{}};let emit,resolve,disabled=0;const modelResult=new Promise(done=>resolve=done)
+ const deps={'./readerNovelAiChat':{runReaderNovelChat:async(...args)=>{runs.push(args);emit=args[2];return modelResult}},'./redstoneBilling':{consumeRedstone:async input=>charges.push(input),sendBillingError:()=>false},'./novelReaderAiSettings':{assertNovelReaderAiAllowed:async id=>{if(id===disabled)throw Object.assign(Error('作者禁用'),{code:'READER_AI_DISABLED',statusCode:403})}}}
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../bin/chatTaskService.js'),'utf8'),{module,exports:module.exports,console:{log(){}},Date,setTimeout,clearTimeout,setInterval:fn=>{const t=setInterval(fn,300000);t.unref();return t},require:name=>deps[name]})
+ class Response extends EventEmitter{constructor(){super();this.events=[];this.writableEnded=false}status(code){this.statusCode=code;return this}json(body){this.body=body;return this}setHeader(){}flushHeaders(){}write(chunk){this.events.push(JSON.parse(chunk));return true}end(){this.writableEnded=true;this.emit('finish')}}
+ async function request(body,user=7){const req=new EventEmitter();req.body=body;req.query={};req.user={user_id:user};const res=new Response();await module.exports.handleReaderNovelChatTaskStream(req,res);return res}
+ const body={novel_id:11,active_novel_id:12,retriever_mode:'deep',session_id:'session',message_id:'message',task_id:'isolated-pc-reader-task',resume_from_event_id:0,messages:[{role:'user',content:'问题'}]}
+ const first=await request(body);assert.equal(first.events[0].created,true);assert.equal(charges.length,1);assert.equal(charges[0].amount,2);assert.equal(runs.length,1)
+ emit('delta',{content:'哈'});const cursor=first.events.at(-1).event_id;first.emit('close');emit('delta',{content:'哈'})
+ const resumed=await request({...body,resume_from_event_id:cursor});assert.equal(resumed.events[0].created,false);assert.equal(resumed.events.filter(x=>x.type==='delta').map(x=>x.content).join(''),'哈');assert.ok(resumed.events.filter(x=>x.event_id).every(x=>x.event_id>cursor));assert.equal(charges.length,1);assert.equal(runs.length,1)
+ assert.equal((await request({...body,active_novel_id:19})).statusCode,409);assert.equal((await request(body,8)).statusCode,409);assert.equal(charges.length,1)
+ const finished=new Promise(done=>resumed.once('finish',done));resolve({streamed:true,message:'done',active_novel:{novel_id:19,novel_name:'临时作品'}});await finished;assert.ok(resumed.events.some(x=>x.type==='active_novel'&&x.novel_id===19));assert.equal(resumed.events.at(-1).type,'done');assert.equal(resumed.writableEnded,true)
+ const complete=await request({...body,resume_from_event_id:cursor});assert.equal(complete.events[0].status,'completed');assert.equal(complete.events.at(-1).type,'done');assert.equal(charges.length,1)
+ disabled=12;assert.equal((await request({...body,task_id:'new-disabled-task'})).statusCode,403);assert.equal(charges.length,1)
+})

@@ -115,6 +115,7 @@
 
 <script>
 import SlideVerify from '~/components/SlideVerify.vue'
+import { loginReturnPath } from '~/utils/login-return'
 
 export default {
   layout: 'default',
@@ -217,7 +218,7 @@ export default {
       try {
         await this.$api.users.login(this.email, this.pwd);
         this.$message.success('登录成功');
-        this.$router.push('/');
+        this.$router.push(loginReturnPath(this.$route.query.redirect));
       } catch (error) {
         console.log(error);
         this.$message.error("账号或密码错误");
@@ -452,4 +453,4 @@ export default {
   transform: translateX(-20px);
   opacity: 0;
 }
-</style> 
+</style>

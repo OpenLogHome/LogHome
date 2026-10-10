@@ -10,7 +10,7 @@
         class="composer-input"
         v-model="content"
         :placeholder="replyTo ? '写下你的回复…' : '发条友善的评论…'"
-        maxlength="500"
+        maxlength="300"
         rows="3"></textarea>
     </div>
     <div class="composer-images" v-if="images.length">
@@ -20,11 +20,12 @@
       </div>
     </div>
     <div class="composer-actions">
+      <ReaderEmojiPicker :disabled="submitting || uploading" @select="appendEmoji" />
       <label class="upload-btn" :class="{ disabled: uploading }">
-        <input type="file" accept="image/*" multiple hidden @change="onPickFiles" :disabled="uploading || images.length >= 9">
+        <input type="file" accept="image/*" multiple hidden @change="onPickFiles" :disabled="uploading || images.length >= 3">
         {{ uploading ? '上传中…' : '📷 图片' }}
       </label>
-      <span class="counter">{{ content.length }}/500</span>
+      <span class="counter">{{ content.length }}/300</span>
       <button class="submit-btn" :disabled="submitting || !content.trim() || uploading" @click="submit">
         {{ submitting ? '发送中…' : '发送' }}
       </button>
@@ -34,42 +35,66 @@
 
 <script>
 import { uploadMangaCommentImage } from '~/common/manga-comment-api.js'
+import { readingToken } from '~/plugins/api/reading'
+import ReaderEmojiPicker from '~/components/read/ReaderEmojiPicker.vue'
+import { stickerUrl } from '~/utils/reader-stickers'
 
 export default {
   name: 'MangaCommentComposer',
+  components: { ReaderEmojiPicker },
   props: {
     replyTo: { type: Object, default: null },
     submitting: { type: Boolean, default: false }
   },
   data() {
-    return { content: '', images: [], uploading: false }
+    return { content: '', images: [], uploading: false, uploadVersion: 0 }
   },
+  beforeDestroy() { this.uploadVersion++ },
   methods: {
+    appendEmoji(data) {
+      if (this.submitting || this.uploading || !data) return
+      if (data.type === 'sticker') {
+        const url = stickerUrl(data.content)
+        if (!readingToken()) { this.$message.info('请先登录后使用表情包'); return }
+        if (this.images.length >= 3) { this.$message.info('最多添加 3 张配图或表情包'); return }
+        if (url) this.images.push(url)
+        return
+      }
+      const input = this.$refs.input, start = input ? input.selectionStart : this.content.length, end = input ? input.selectionEnd : start
+      const text = String(data.content || ''), value = this.content.slice(0,start) + text + this.content.slice(end)
+      if (value.length > 300) { this.$message.info('评论最多 300 字'); return }
+      this.content = value
+      this.$nextTick(() => { if (input) { input.focus(); input.setSelectionRange(start + text.length,start + text.length) } })
+    },
     async onPickFiles(e) {
       const files = Array.from(e.target.files || [])
       e.target.value = ''
-      if (!files.length) return
+      if (!files.length || this.uploading || this.submitting) return
+      if (!readingToken()) { this.$message.info('请先登录后再上传评论配图'); return }
+      const version = ++this.uploadVersion, account = readingToken()
       this.uploading = true
       try {
         for (const file of files) {
-          if (this.images.length >= 9) break
+          if (this.images.length >= 3 || version !== this.uploadVersion || account !== readingToken()) break
           const url = await uploadMangaCommentImage(file)
+          if (version !== this.uploadVersion || account !== readingToken()) return
           this.images.push(url)
         }
       } catch (err) {
-        this.$message.error('图片上传失败，请稍后重试')
+        if (version === this.uploadVersion && account === readingToken()) this.$message.error('图片上传失败，请稍后重试')
       } finally {
-        this.uploading = false
+        if (version === this.uploadVersion) this.uploading = false
       }
     },
     removeImage(i) {
       this.images.splice(i, 1)
     },
     submit() {
-      if (!this.content.trim() || this.submitting || this.uploading) return
+      if (!this.content.trim() || this.content.length > 300 || this.submitting || this.uploading) return
       this.$emit('submit', { content: this.content.trim(), images: this.images.slice() })
     },
     reset() {
+      this.uploadVersion++; this.uploading = false
       this.content = ''
       this.images = []
     },

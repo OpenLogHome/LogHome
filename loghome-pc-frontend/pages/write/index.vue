@@ -8,6 +8,7 @@
       <div class="works-section">
         <div class="section-header">
           <h2 class="section-title">我的作品</h2>
+          <input v-model="workQuery" class="work-search" aria-label="搜索作品" placeholder="搜索作品名或简介" />
           <button class="new-button" @click="createNewWork">+ 创建新作品</button>
         </div>
 
@@ -57,7 +58,7 @@
               <p class="work-update">最近更新: {{work.lastUpdate}}</p>
               <div class="work-actions">
                 <button class="work-action primary" @click="openEditPage(work.id)">开始写作</button>
-                <button class="work-action" @click="$router.push(`/write/settings/${work.id}`)">编辑信息</button>
+                <button class="work-action" @click="$router.push(`/write/edit/${work.id}?tool=settings`)">作品设置</button>
               </div>
               
               <!-- 创作活动板块 -->
@@ -132,6 +133,7 @@ export default {
   data() {
     return {
       activeTab: 'all',
+      workQuery: '',
       works: [],
       stats: {
         totalWorks: 0,
@@ -155,14 +157,15 @@ export default {
   },
   computed: {
     filteredWorks() {
+      const works = this.works.filter(work => `${work.title} ${work.description}`.toLowerCase().includes(this.workQuery.trim().toLowerCase()))
       if (this.activeTab === 'all') {
-        return this.works
+        return works
       } else if (this.activeTab === 'ongoing') {
-        return this.works.filter(work => work.status === '连载中')
+        return works.filter(work => work.status === '连载中')
       } else if (this.activeTab === 'completed') {
-        return this.works.filter(work => work.status === '已完结')
+        return works.filter(work => work.status === '已完结')
       } else if (this.activeTab === 'draft') {
-        return this.works.filter(work => work.status === '草稿')
+        return works.filter(work => work.status === '草稿')
       }
       return this.works
     }
@@ -186,7 +189,7 @@ export default {
           // 转换API返回的数据格式为组件所需的格式
           this.works = response.map(novel => {
             // 根据novel_type确定分类
-            let category = '小说'
+            let category = novel.novel_type === 'manga' ? '漫画' : '小说'
             if (novel.novel_type === 'fiction') {
               category = '小说'
             } else if (novel.novel_type === 'nonfiction') {
@@ -256,7 +259,7 @@ export default {
     transformWorks(novels) {
       return novels.map(novel => {
         // 根据novel_type确定分类
-        let category = '小说'
+        let category = novel.novel_type === 'manga' ? '漫画' : '小说'
         if (novel.novel_type === 'fiction') {
           category = '小说'
         } else if (novel.novel_type === 'nonfiction') {
@@ -1095,4 +1098,8 @@ $orange-dark: #fa6c2e;
     }
   }
 }
+</style>
+
+<style scoped>
+.work-search{margin-left:auto;border:1px solid #e8e5df;border-radius:7px;padding:10px 12px;width:240px;font-size:13px;background:white}.work-search:focus-visible{outline:2px solid #947358}.work-item{padding:20px!important;gap:20px!important}.work-cover{width:92px!important;height:124px!important;flex:0 0 92px!important;border-radius:7px!important}.work-title{font-size:18px!important;margin-bottom:8px!important}.work-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px!important}.work-actions{margin-top:12px!important}.work-action{font-size:12px!important;padding:8px 13px!important}.work-update{font-size:11px!important}.work-info{padding:0!important}.work-stats{font-size:12px!important}.section-header{gap:16px}.activity-section{margin-top:16px!important;padding-top:12px!important}@media(max-width:900px){.work-search{width:180px}}
 </style>

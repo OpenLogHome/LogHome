@@ -677,6 +677,7 @@ import { getMembershipStatus } from "../../common/membership-api.js";
 import { getColorMode, getProjectThemeMode, readPageTheme, rememberPageTheme } from "../../common/page-theme-memory.js";
 import { buildReaderUrl, getReaderMode } from "../../common/reader-mode.js";
 import { storeReaderPreview } from "../../common/reader-preview.js";
+import { readerPreviewParentOrigin, sendReaderPreview } from "../../common/reader-preview-bridge.js";
 import { getServerTime } from "../../lib/utils.js";
 import { writerArticleDB } from "../../lib/db.js";
 import { createTreeExpReporter } from "../../lib/treeExpReporter.js";
@@ -1537,6 +1538,7 @@ export default {
       notIncrementalChangeCount: 0,
       frameInfo: {
         isEnabled: false,
+        parentOrigin: "",
       },
       writerSettings: createDefaultWriterSettings(),
       writerBackgroundSkins: [],
@@ -3923,12 +3925,14 @@ export default {
       }
     },
     handleParentMessage(event) {
+      if (event.source !== window.parent || !readerPreviewParentOrigin(event.origin)) return;
       if (
         event.data.type === "frame_confirmed" &&
         (event.data.target === "chapterEditorNew" ||
           event.data.target === "chapterEditor")
       ) {
         this.frameInfo.isEnabled = true;
+        this.frameInfo.parentOrigin = event.origin;
         if (this.chapterId) {
           this.sendCurrentArticleInfo();
         }
@@ -7470,6 +7474,11 @@ export default {
       };
 
       try {
+        if (this.frameInfo.isEnabled && sendReaderPreview(window.parent, window, this.frameInfo.parentOrigin, { article: previewArticle, novel: previewNovel })) {
+          this.closeFindReplace();
+          this.closeToolbarPopup();
+          return;
+        }
         const previewKey = storeReaderPreview({
           article: previewArticle,
           novel: previewNovel,

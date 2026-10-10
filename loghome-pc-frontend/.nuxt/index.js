@@ -13,13 +13,15 @@ import { createStore } from './store.js'
 
 /* Plugins */
 
-import nuxt_plugin_axios_0943baa8 from 'nuxt_plugin_axios_0943baa8' // Source: .\\axios.js (mode: 'all')
-import nuxt_plugin_api_785206da from 'nuxt_plugin_api_785206da' // Source: ..\\plugins\\api.js (mode: 'all')
-import nuxt_plugin_elementui_72a9ed1c from 'nuxt_plugin_elementui_72a9ed1c' // Source: ..\\plugins\\element-ui.js (mode: 'all')
-import nuxt_plugin_windowmanager_d3b7af1e from 'nuxt_plugin_windowmanager_d3b7af1e' // Source: ..\\plugins\\window-manager.js (mode: 'all')
-import nuxt_plugin_mobilewindow_3ad3cfdc from 'nuxt_plugin_mobilewindow_3ad3cfdc' // Source: ..\\plugins\\mobile-window.js (mode: 'all')
-import nuxt_plugin_imagepreview_3b5c3c57 from 'nuxt_plugin_imagepreview_3b5c3c57' // Source: ..\\plugins\\image-preview.js (mode: 'all')
-import nuxt_plugin_devicedetect_6fcee933 from 'nuxt_plugin_devicedetect_6fcee933' // Source: ..\\plugins\\device-detect.js (mode: 'all')
+import nuxt_plugin_axios_77931951 from 'nuxt_plugin_axios_77931951' // Source: ./axios.js (mode: 'all')
+import nuxt_plugin_api_785206da from 'nuxt_plugin_api_785206da' // Source: ../plugins/api.js (mode: 'all')
+import nuxt_plugin_elementui_72a9ed1c from 'nuxt_plugin_elementui_72a9ed1c' // Source: ../plugins/element-ui.js (mode: 'all')
+import nuxt_plugin_windowmanager_d3b7af1e from 'nuxt_plugin_windowmanager_d3b7af1e' // Source: ../plugins/window-manager.js (mode: 'all')
+import nuxt_plugin_mobilewindow_3ad3cfdc from 'nuxt_plugin_mobilewindow_3ad3cfdc' // Source: ../plugins/mobile-window.js (mode: 'all')
+import nuxt_plugin_imagepreview_3b5c3c57 from 'nuxt_plugin_imagepreview_3b5c3c57' // Source: ../plugins/image-preview.js (mode: 'all')
+import nuxt_plugin_readeraudioclient_f6b887c0 from 'nuxt_plugin_readeraudioclient_f6b887c0' // Source: ../plugins/reader-audio.client.js (mode: 'client')
+import nuxt_plugin_readingactivityclient_13fb1f04 from 'nuxt_plugin_readingactivityclient_13fb1f04' // Source: ../plugins/reading-activity.client.js (mode: 'client')
+import nuxt_plugin_devicedetect_6fcee933 from 'nuxt_plugin_devicedetect_6fcee933' // Source: ../plugins/device-detect.js (mode: 'all')
 
 // Component: <ClientOnly>
 Vue.component(ClientOnly.name, ClientOnly)
@@ -216,8 +218,8 @@ async function createApp(ssrContext, config = {}) {
   }
   // Plugin execution
 
-  if (typeof nuxt_plugin_axios_0943baa8 === 'function') {
-    await nuxt_plugin_axios_0943baa8(app.context, inject)
+  if (typeof nuxt_plugin_axios_77931951 === 'function') {
+    await nuxt_plugin_axios_77931951(app.context, inject)
   }
 
   if (typeof nuxt_plugin_api_785206da === 'function') {
@@ -238,6 +240,14 @@ async function createApp(ssrContext, config = {}) {
 
   if (typeof nuxt_plugin_imagepreview_3b5c3c57 === 'function') {
     await nuxt_plugin_imagepreview_3b5c3c57(app.context, inject)
+  }
+
+  if (process.client && typeof nuxt_plugin_readeraudioclient_f6b887c0 === 'function') {
+    await nuxt_plugin_readeraudioclient_f6b887c0(app.context, inject)
+  }
+
+  if (process.client && typeof nuxt_plugin_readingactivityclient_13fb1f04 === 'function') {
+    await nuxt_plugin_readingactivityclient_13fb1f04(app.context, inject)
   }
 
   if (typeof nuxt_plugin_devicedetect_6fcee933 === 'function') {

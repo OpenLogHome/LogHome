@@ -10,6 +10,10 @@ export default {
     '/write': '/pages/essays',             // 写作页面
     '/community': '/pages/community/index',             // 写作页面
     '/read': '/pages/library',               // 个人中心
+    '/read/rank': '/pages/readers/rankBoard',
+    '/read/bookcase': '/pages/bookcase/index',
+    '/tags': '/pages/readers/tags',
+    '/tag/collections': '/pages/readers/tagCollections',
     '/read/collections': '/pages/readers/collections',  // 标签页面
     '/community/post/edit': '/pages/community/postEdit',
     '/me': '/pages/me',
@@ -19,6 +23,8 @@ export default {
 
   // 参数匹配规则 - 支持动态参数
   params: [
+    { pattern: /^\/read\/end\/(\d+)$/, replacement: '/pages/readers/bookEnd?novelId=$1' },
+    { pattern: /^\/world\/(\d+)$/, replacement: '/pages/worlds/worldPage?id=$1' },
     {
       pattern: /^\/users\/(\d+)$/,
       replacement: '/pages/users/personalPage?id=$1'

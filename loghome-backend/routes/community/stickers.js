@@ -42,6 +42,10 @@ router.get('/', auth, async (req, res) => {
             countSql += ' AND s.url = ?';
             params.push(url);
             countParams.push(url);
+            sql += ' AND (s.user_id = ? OR s.is_private = 0)';
+            countSql += ' AND (s.user_id = ? OR s.is_private = 0)';
+            params.push(userId);
+            countParams.push(userId);
         } else {
             // 根据分类筛选
             if (category === 'logwood') {
@@ -243,22 +247,22 @@ router.get('/favorites', auth, async (req, res) => {
             SELECT COUNT(*) as total
             FROM stickers s
             JOIN sticker_favorites sf ON s.sticker_id = sf.sticker_id
-            WHERE sf.user_id = ?
+            WHERE sf.user_id = ? AND (s.is_private = 0 OR s.user_id = ?)
         `;
         
-        const totalResult = await query(countSql, [userId]);
+        const totalResult = await query(countSql, [userId, userId]);
         const total = totalResult[0].total;
         
         const sql = `
             SELECT s.*, 1 as is_favorite
             FROM stickers s
             JOIN sticker_favorites sf ON s.sticker_id = sf.sticker_id
-            WHERE sf.user_id = ?
+            WHERE sf.user_id = ? AND (s.is_private = 0 OR s.user_id = ?)
             ORDER BY sf.created_at DESC
             LIMIT ?, ?
         `;
         
-        const stickers = await query(sql, [userId, offset, pageLimit]);
+        const stickers = await query(sql, [userId, userId, offset, pageLimit]);
         
         // 将布尔值转换为 0/1
         stickers.forEach(sticker => {
@@ -301,6 +305,10 @@ router.post('/favorites', auth, async (req, res) => {
         
         if (sticker.length === 0) {
             return res.status(404).json({ message: '表情包不存在' });
+        }
+
+        if (Number(sticker[0].is_private) === 1 && Number(sticker[0].user_id) !== Number(userId)) {
+            return res.status(403).json({ message: '这个表情包仅上传者可见' });
         }
         
         // 检查是否已收藏

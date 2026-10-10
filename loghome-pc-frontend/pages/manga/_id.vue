@@ -46,31 +46,25 @@
           </div>
 
           <div class="manga-tags" v-if="tags.length">
-            <span class="tag" v-for="tag in tags" :key="tag.tag_id" :class="{ 'activity': tag.is_activity_tag }">{{ tag.tag_name }}</span>
+            <nuxt-link class="tag" v-for="tag in tags" :key="tag.tag_id" :to="`/tag/collections?tag_id=${tag.tag_id}`" :class="{ activity: Number(tag.is_activity_tag) === 1 }">{{ tag.tag_name }}</nuxt-link>
           </div>
 
           <div class="manga-actions">
             <button class="action-button primary" @click="startReading" :disabled="!chapters.length">
               {{ readButtonText }}
             </button>
-            <button class="action-button" @click="toggleNice">
-              <span v-if="niceStatus">已赞</span><span v-else>点赞</span>
-            </button>
-            <button class="action-button" @click="toggleLike">
-              <span v-if="isInBookcase">已收藏</span><span v-else>收藏</span>
-            </button>
-            <button class="action-button" @click="shareBook">分享</button>
-            <button class="action-button" @click="report">举报</button>
+            <BookSupport class="inline-support" :book="novel" @liked="onSupportLike" @tipped="refreshFans" @account-change="loadProgress" />
           </div>
         </div>
       </div>
 
+      <CollaborativeAuthors :novel-id="novel.novel_id" />
       <div class="manga-content">
         <div class="content-tabs">
           <button class="tab-button" :class="{ active: activeTab === 'intro' }" @click="activeTab = 'intro'">作品简介</button>
           <button class="tab-button" :class="{ active: activeTab === 'chapters' }" @click="activeTab = 'chapters'">目录 ({{ chapters.length }})</button>
           <button class="tab-button" :class="{ active: activeTab === 'comments' }" @click="activeTab = 'comments'">读者评论 ({{ commentAmount }})</button>
-          <button class="tab-button" :class="{ active: activeTab === 'fans' }" @click="activeTab = 'fans'" v-if="hasFans">粉丝榜</button>
+          <button class="tab-button" :class="{ active: activeTab === 'fans' }" @click="activeTab = 'fans'">粉丝榜</button>
           <button class="tab-button" :class="{ active: activeTab === 'author' }" @click="activeTab = 'author'" v-if="authorWorks.length">作者的其他漫画 ({{ authorWorks.length }})</button>
         </div>
 
@@ -91,7 +85,7 @@
             </div>
             <div v-if="!chapters.length" class="empty-content">还没有已发布的话数</div>
             <div v-else class="chapter-list">
-              <div v-for="chapter in orderedChapters" :key="chapter.article_id" class="chapter-item" @click="openChapter(chapter)">
+              <nuxt-link v-for="chapter in orderedChapters" :key="chapter.article_id" :to="`/manga/read/${chapter.article_id}?novelId=${novel.novel_id}`" class="chapter-item" @click.native.prevent="openChapter(chapter)">
                 <span class="chapter-number">{{ chapter.article_chapter }}</span>
                 <span class="chapter-title">{{ chapter.title }}</span>
                 <span class="chapter-type">{{ chapter.article_type === 'mangaPage' ? '页漫' : '条漫' }}</span>
@@ -100,34 +94,12 @@
                 </span>
                 <span class="chapter-badge" v-if="isCurrentChapter(chapter)">读至</span>
                 <span class="chapter-date">{{ formatDate(chapter.update_time) }}</span>
-              </div>
+              </nuxt-link>
             </div>
           </div>
 
           <!-- 读者评论 -->
-          <div v-show="activeTab === 'comments'" class="comments-content">
-            <div v-if="!previewComments.length" class="empty-content">
-              <p>这部漫画还没有评论哦，快去抢沙发</p>
-            </div>
-            <div v-else class="comment-list">
-              <div class="comment-item" v-for="comment in previewComments" :key="comment.commentId">
-                <div class="comment-head">
-                  <img class="comment-avatar" :src="comment.avatarUrl || '/default-avatar.png'" alt="">
-                  <span class="comment-author">{{ comment.userName || '匿名' }}</span>
-                  <span class="comment-time">{{ comment.time }}</span>
-                </div>
-                <div class="comment-content">{{ comment.content }}</div>
-                <div class="comment-images" v-if="comment.images && comment.images.length">
-                  <img v-for="(img, i) in comment.images" :key="i" :src="img" class="comment-image" @click="previewImage(img)">
-                </div>
-                <div class="comment-footer">
-                  <span class="comment-likes">❤️ {{ comment.likeNum }}</span>
-                  <span class="comment-replies" v-if="comment.replies && comment.replies.length">{{ comment.replies.length }} 条回复</span>
-                </div>
-              </div>
-            </div>
-            <div class="view-all-comments" @click="openFullComments">查看全部评论 ({{ commentAmount }})</div>
-          </div>
+          <div v-if="activeTab === 'comments'" class="comments-content"><MangaCommentPanel ref="bookReviews" inline :visible="true" :novel-id="novel.novel_id" :work-author-id="novel.auther_id || novel.author_id" :anchor-id="commentAnchor" @changed="loadCommentAmount" /></div>
 
           <!-- 粉丝榜 -->
           <div v-show="activeTab === 'fans'" class="fans-content">
@@ -151,28 +123,27 @@
       </div>
     </div>
 
-    <manga-comment-panel
-      :visible.sync="commentPanelVisible"
-      :novel-id="novel.novel_id"
-      :article-id="0"
-      :work-author-id="novel.auther_id"
-      @changed="onCommentChanged" />
   </div>
 </template>
 
 <script>
+import { readingCommentId } from '~/utils/reader-comment-links'
+import { localReadingProgress, recordLocalReading } from '~/utils/reading-history'
 import NovelFansList from '~/components/NovelFansList.vue'
 import MangaCommentPanel from '~/components/manga/MangaCommentPanel.vue'
-import { fetchMangaComments, fetchMangaCommentAmount, fetchMangaArticleCommentAmounts } from '~/common/manga-comment-api.js'
+import CollaborativeAuthors from '~/components/read/CollaborativeAuthors.vue'
+import { readingToken } from '~/plugins/api/reading'
+import BookSupport from '~/components/read/BookSupport.vue'
+import { readingHead, bookSchema } from '~/utils/reading-seo'
+import { fetchMangaCommentAmount, fetchMangaArticleCommentAmounts } from '~/common/manga-comment-api.js'
 
-const COMMENT_PREVIEW_SIZE = 3
 
 export default {
   name: 'MangaDetail',
-  components: { NovelFansList, MangaCommentPanel },
+  components: { NovelFansList, MangaCommentPanel, CollaborativeAuthors, BookSupport },
   async asyncData({ params, $api, error, redirect }) {
     try {
-      const novel = await $api.novels.getNovelById(params.id)
+      const novel = await $api.reader.book(params.id)
       if (!novel || novel.length === 0) {
         return error({ statusCode: 404, message: '找不到该漫画' })
       }
@@ -181,14 +152,14 @@ export default {
       if (novelData.novel_type === 'world') return redirect(`/world/${novelData.novel_id}`)
       if (novelData.novel_type !== 'manga') return redirect(`/novel/${novelData.novel_id}`)
 
-      const articles = await $api.articles.getArticles(novelData.novel_id)
+      const articles = await $api.reader.chapters(novelData.novel_id)
       const chapters = (articles || []).filter(a => a.article_type === 'mangaStrip' || a.article_type === 'mangaPage')
       const tags = await $api.novels.getNovelTags(novelData.novel_id)
 
       return { error: null, novel: novelData, chapters, tags: tags || [] }
     } catch (err) {
       console.error('服务端获取漫画数据失败', err)
-      return error({ statusCode: 500, message: '加载漫画数据失败，请稍后重试' })
+      return error({ statusCode: err.status || 503, message: err.status === 404 ? '作品不存在或不可阅读' : '加载漫画数据失败，请稍后重试' })
     }
   },
   data() {
@@ -203,15 +174,14 @@ export default {
       progress: null,
       authorWorks: [],
       commentAmount: 0,
-      previewComments: [],
       articleCommentAmounts: {},
-      commentPanelVisible: false
     }
   },
   head() {
-    return { title: this.novel && this.novel.name ? `${this.novel.name} - 原木社区` : '漫画 - 原木社区' }
+    return readingHead({ title: `${this.novel.name} - 漫画 - 原木社区`, description: this.novel.content, path: `/manga/${this.novel.novel_id}`, image: this.novel.picUrl, type: 'book', schema: bookSchema(this.novel, `/manga/${this.novel.novel_id}`) })
   },
   computed: {
+    commentAnchor() { return readingCommentId(this.$route.query) },
     orderedChapters() {
       return this.catalogReversed ? this.chapters.slice().reverse() : this.chapters
     },
@@ -224,17 +194,20 @@ export default {
       return '开始阅读'
     }
   },
+  watch: { commentAnchor(id) { if (id) this.activeTab = 'comments' } },
   mounted() {
+    if (this.commentAnchor) this.activeTab = 'comments'
     this.fetchClientData()
   },
   methods: {
+    onSupportLike(state) { this.nice_amount = state.count; this.niceStatus = state.liked },
+    refreshFans() { this.loadFans(); if (this.$refs.fansList) this.$refs.fansList.getFansList() },
     async fetchClientData() {
       this.getNices()
       this.checkBookcaseStatus()
       this.loadProgress()
       this.loadFans()
       this.loadAuthorWorks()
-      this.loadComments()
       this.loadCommentAmount()
       this.loadArticleCommentAmounts()
       this.addReaderHistory(this.novel)
@@ -261,13 +234,8 @@ export default {
       }
     },
     async loadProgress() {
-      // 本地兜底（未登录也可续读）
-      try {
-        const local = localStorage.getItem('MangaHistory_' + this.novel.novel_id)
-        if (local) this.progress = JSON.parse(local)
-      } catch (e) {}
-      const remote = await this.$api.manga.getReadingProgress(this.novel.novel_id)
-      if (remote) this.progress = remote
+      const token=readingToken(),id=this.novel.novel_id;this.progress=localReadingProgress(id,token)||null
+      try{const rows=await this.$api.reading.getProgress(id),remote=Array.isArray(rows)?rows[0]:null;if(token!==readingToken()||Number(id)!==Number(this.novel.novel_id))return;if(remote&&Number(remote.novel_id)===Number(id)&&(!this.progress||!this.progress.last_read_time||new Date(remote.last_read_time)>=new Date(this.progress.last_read_time)))this.progress=remote}catch(_){}
     },
     async loadFans() {
       try {
@@ -289,14 +257,6 @@ export default {
         this.authorWorks = []
       }
     },
-    async loadComments() {
-      try {
-        const list = await fetchMangaComments(process.env.baseUrl, { novelId: this.novel.novel_id, page: 1, pageSize: COMMENT_PREVIEW_SIZE })
-        this.previewComments = list
-      } catch (e) {
-        console.error('加载评论失败', e)
-      }
-    },
     async loadCommentAmount() {
       try {
         this.commentAmount = await fetchMangaCommentAmount(process.env.baseUrl, this.novel.novel_id)
@@ -310,10 +270,6 @@ export default {
       } catch (e) {
         this.articleCommentAmounts = {}
       }
-    },
-    onCommentChanged() {
-      this.loadCommentAmount()
-      this.loadComments()
     },
     isCurrentChapter(chapter) {
       return this.progress && String(this.progress.last_article_id) === String(chapter.article_id)
@@ -393,9 +349,6 @@ export default {
       // Phase 1：举报复用移动端浮窗（移动端漫画详情页内含举报入口）
       this.$openMobileWindow(`/pages/readers/mangaInfo?id=${this.novel.novel_id}`, { title: '举报作品' })
     },
-    openFullComments() {
-      this.commentPanelVisible = true
-    },
     previewImage(url) {
       if (this.$preview) this.$preview([url], 0)
       else window.open(url, '_blank')
@@ -406,17 +359,7 @@ export default {
     gotoUserProfile(userId) {
       if (userId) this.$router.push(`/users/${userId}`)
     },
-    addReaderHistory(book) {
-      try {
-        let readerHistory = JSON.parse(localStorage.getItem('loghomeReaderHistory')) || []
-        readerHistory = readerHistory.filter(item => item.novel_id !== book.novel_id)
-        readerHistory.push(book)
-        if (readerHistory.length > 10) readerHistory = readerHistory.slice(-10)
-        localStorage.setItem('loghomeReaderHistory', JSON.stringify(readerHistory))
-      } catch (e) {
-        console.error('保存阅读历史失败', e)
-      }
-    },
+    addReaderHistory(book) { recordLocalReading(book) },
     formatNumber(num) {
       if (num >= 10000) return (num / 10000).toFixed(1) + '万'
       if (num >= 1000) return (num / 1000).toFixed(1) + 'k'

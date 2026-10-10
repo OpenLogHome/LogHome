@@ -1,5 +1,9 @@
 export default {
+  buildDir: process.env.WRITER_BUILD_DIR || '.nuxt',
   env: {
+    readerAiUrl: process.env.READER_AI_URL || (process.env.NODE_ENV === 'production' ? 'https://ai.loghome.ink' : 'http://127.0.0.1:9101'),
+    writerAiUrl: process.env.WRITER_AI_URL || (process.env.NODE_ENV === 'production' ? 'https://ai.loghome.ink' : 'http://127.0.0.1:9101'),
+    writerWsUrl: process.env.WRITER_WS_URL || (process.env.NODE_ENV === 'production' ? 'wss://ai.loghome.ink' : 'ws://127.0.0.1:9102'),
     STATIC_URL: process.env.STATIC_URL || '',
     baseUrl: process.env.NODE_ENV === 'production'
       ? 'https://loghomeservice.codesocean.top' // 生产环境API地址
@@ -15,11 +19,18 @@ export default {
   build: {
     publicPath: process.env.STATIC_URL,
     extend(config, { isDev, isClient }) {
+      // Modern collaboration packages ship .cjs too; Nuxt 2's loader only matches .js/.mjs.
+      const javascriptRule = config.module.rules.find(rule => rule.test && rule.test.test('writer.js') && rule.use)
+      if (javascriptRule) javascriptRule.test = /\.[cm]?jsx?$/i
       if (!isDev && process.env.STATIC_URL) {
         config.output.publicPath = process.env.STATIC_URL
       }
     },
-    transpile: [/^element-ui/],
+    // Nuxt tests the complete path here, so dependency patterns cannot start with ^.
+    transpile: ['element-ui', '@tiptap', '@hocuspocus', 'yjs', 'y-indexeddb', 'y-prosemirror', 'y-protocols', 'lib0', /prosemirror-/],
+    babel: {
+      plugins: ['@babel/plugin-transform-class-static-block', '@babel/plugin-transform-class-properties', '@babel/plugin-transform-private-methods', '@babel/plugin-transform-private-property-in-object'],
+    },
     loaders: {
       scss: {
         implementation: require('sass'),
@@ -84,6 +95,8 @@ export default {
     '~/plugins/window-manager.js',
     '~/plugins/mobile-window.js',
     '~/plugins/image-preview.js',
+    { src: '~/plugins/reader-audio.client.js', mode: 'client' },
+    { src: '~/plugins/reading-activity.client.js', mode: 'client' },
     '~/plugins/device-detect.js'
   ],
   /*

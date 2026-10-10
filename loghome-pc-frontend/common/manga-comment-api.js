@@ -52,11 +52,10 @@ export function getMangaCommentErrorMessage(error, fallback = '评论暂时不�
 }
 
 function parseMediaUrls(value) {
-	if (Array.isArray(value)) return value;
-	if (!value) return [];
+	let parsed = value;
 	try {
-		const parsed = JSON.parse(value);
-		return Array.isArray(parsed) ? parsed : [];
+		if (typeof value === 'string') parsed = JSON.parse(value);
+		return Array.isArray(parsed) ? parsed.filter(url => typeof url === 'string' && /^https?:\/\//i.test(url)) : [];
 	} catch (error) {
 		return [];
 	}
@@ -106,6 +105,7 @@ function toCommentViewModel(item, praiseTypeMap) {
 		likeNum: Math.max(Number(item.likeNum) || 0, praiseType === 0 ? 1 : 0),
 		praiseType,
 		articleId: Number(item.article_id) || 0,
+		paragraphId: item.cento ? Number(item.cento.paragraph_id) || 0 : 0,
 		articleTitle: item.article_title || '',
 		excerpt: item.cento && item.cento.paragraph ? item.cento.paragraph : '',
 		replies: replies.map((reply) => toReplyViewModel(reply, namesByCommentId, item.author_id)),
@@ -134,16 +134,17 @@ async function fetchPraiseTypeMap(baseUrl, commentIds) {
 }
 
 export async function fetchMangaComments(baseUrl, options) {
-	const { novelId, articleId, page = 1, pageSize = 10 } = options;
+	const { novelId, articleId, paragraphId, page = 1, pageSize = 10 } = options;
 	const params = { id: novelId, page, pageSize };
 	if (articleId !== undefined && articleId !== null && articleId !== 0) params.articleId = articleId;
+	if (Number(articleId) > 0 && Number(paragraphId) > 0) params.paragraphId = Number(paragraphId);
 	const response = await axios.get(`${baseUrl}/community/novel_commonts_all_fast`, { params });
 	const rows = Array.isArray(response.data) ? response.data : [];
 	const praiseTypeMap = await fetchPraiseTypeMap(baseUrl, rows.map((item) => item.essay_comment_id));
 	return rows.map((item) => toCommentViewModel(item, praiseTypeMap));
 }
 
-// 通知消息里带的是根评论 id，分页列表可能不含它，按 id 单独取回后再插入列表
+// A notification may target a root or reply. The server resolves its root and scope.
 export async function fetchMangaCommentById(baseUrl, commentId) {
 	const response = await axios.get(`${baseUrl}/community/novel_comment_from_comment_id`, {
 		params: { comment_id: commentId },
@@ -151,17 +152,17 @@ export async function fetchMangaCommentById(baseUrl, commentId) {
 	const item = (response.data || [])[0];
 	if (!item) return null;
 	const replies = await axios
-		.get(`${baseUrl}/community/novel_commonts_reply_to`, { params: { id: commentId } })
-		.then((replyResponse) => (Array.isArray(replyResponse.data) ? replyResponse.data : []))
-		.catch(() => []);
+		.get(`${baseUrl}/community/novel_commonts_reply_to`, { params: { id: item.essay_comment_id } })
+		.then((replyResponse) => (Array.isArray(replyResponse.data) ? replyResponse.data : []));
 	item.replies = replies;
 	const praiseTypeMap = await fetchPraiseTypeMap(baseUrl, [item.essay_comment_id]);
 	return toCommentViewModel(item, praiseTypeMap);
 }
 
-export async function fetchMangaCommentAmount(baseUrl, novelId, articleId) {
+export async function fetchMangaCommentAmount(baseUrl, novelId, articleId, paragraphId) {
 	const params = { id: novelId };
 	if (articleId !== undefined && articleId !== null && articleId !== 0) params.articleId = articleId;
+	if (Number(articleId) > 0 && Number(paragraphId) > 0) params.paragraphId = Number(paragraphId);
 	const response = await axios.get(`${baseUrl}/community/novel_commonts_amount`, { params });
 	const row = (response.data || [])[0] || {};
 	return Number(row['COUNT(*)']) || 0;
@@ -178,14 +179,14 @@ export async function fetchMangaArticleCommentAmounts(baseUrl, novelId) {
 }
 
 export async function publishMangaComment(baseUrl, options) {
-	const { novelId, articleId, content, images = [] } = options;
+	const { novelId, articleId, paragraphId, content, images = [] } = options;
 	const response = await axios.post(
 		`${baseUrl}/community/comment_on_novel`,
 		{
 			novel_id: novelId,
 			content,
 			media_urls: images,
-			...(articleId ? { article_id: articleId } : ROOT_COMMENT),
+			...(articleId ? { article_id: articleId, paragraph_id: Number(paragraphId) > 0 ? Number(paragraphId) : -1 } : ROOT_COMMENT),
 		},
 		{ headers: authHeaders() },
 	);
@@ -236,6 +237,9 @@ export async function uploadMangaCommentImage(file) {
 		headers: { ServiceKey: IMAGE_SERVICE_KEY },
 		body: form,
 	});
+	if (!response.ok) throw new Error('图片上传失败，请稍后重试');
 	const data = await response.json();
-	return IMAGE_RESOURCE_URL + data.data.resource_id;
+	const id = data && data.data && data.data.resource_id;
+	if (!id || !/^[a-zA-Z0-9_-]{1,100}$/.test(String(id))) throw new Error('图片上传结果无效，请重试');
+	return IMAGE_RESOURCE_URL + id;
 }

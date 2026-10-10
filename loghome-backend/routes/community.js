@@ -1,6 +1,7 @@
 // 引入依赖包
 let express = require('express');
-let { query } = require('../sql.js');
+let { query, withTransaction } = require('../sql.js');
+const { createReadingComment } = require('../bin/createReadingComment.js');
 let auth = require('../bin/auth.js');
 const jwt = require('jsonwebtoken');
 let axios = require('axios');
@@ -210,71 +211,21 @@ router.post('/unfollow', auth, async (req, res) => {
 });
 
 router.post('/comment_on_novel', auth, async (req, res) => {
-	let user = req.user;
-	user = JSON.parse(JSON.stringify(user))[0];
+	const user = req.user[0];
 	try {
-		let results = await query(
-			`INSERT INTO novel_comments(user_id,novel_id,content, article_id, media_urls) 
-                                VALUES(?,?,?,?,?)`,
-			[user.user_id, req.body.novel_id, req.body.content, req.body.article_id, 
-			 req.body.media_urls ? JSON.stringify(req.body.media_urls) : null],
-		);
-		let comment = await query(
-			`SELECT * FROM novel_comments n,users u WHERE n.user_id = u.user_id AND n.essay_comment_id = ?`,
-			[results.insertId],
-		);
-		await avatarFrames.decorateRows(comment, [
-			{ userIdField: 'user_id', targetField: 'avatar_frame' },
-		]);
-		await achievements.recordMetricProgress(user.user_id, 'comment_count', 1, {
-			reason: '书籍评论',
-			suppressNotification: true,
-		});
-		let novel = JSON.parse(
-			JSON.stringify(
-				await query('SELECT * FROM novels WHERE novel_id = ?', [
-					req.body.novel_id,
-				]),
-			),
-		)[0];
-		message.sendMsg(
-			user.user_id,
-			novel.author_id,
-			'评论了你的' + workLabel(novel) + '《' + novel.name + '》：' + req.body.content,
-			commentPageRoute(novel, req.body.novel_id, results.insertId),
-			'comment',
-		);
-		// 划线段评只对文本作品有效，漫画的话数内容是分页数据、article_id 为 0 的作品级评论没有段落，
-		// 这里必须同时要求合法的段落与篇章 id，否则会在解析 content 时抛错并让已入库的评论返回 400。
-		let paragraphId = Number(req.body.paragraph_id);
-		let centoArticleId = Number(req.body.article_id);
-		if (paragraphId > 0 && centoArticleId > 0) {
-            let article = JSON.parse((await query(`SELECT * FROM articles WHERE article_id = ?`, [centoArticleId]))[0].content);
-            for(let paragraph of article){
-                if(paragraph.id == paragraphId){
-                    let cento = await query(`SELECT * FROM article_cento WHERE article_id = ? AND paragraph = ? AND user_id = ? AND is_delete = 0`,
-                    [centoArticleId, paragraph.value, req.user[0].user_id])
-                    let centoId = -1;
-                    if(cento.length > 0) centoId = cento[0].article_cento_id;
-                    else {
-                        let newCento = await query(
-                            'INSERT INTO article_cento(user_id, article_id, paragraph_id, paragraph) VALUES(?, ?, ?, ?)',
-                            [req.user[0].user_id, req.body.article_id, paragraph.id, paragraph.value],
-                        );
-                        centoId = newCento.insertId;
-                    }
-                    await query(
-                        'UPDATE novel_comments SET cento_id = ? WHERE essay_comment_id = ?',
-                        [centoId, results.insertId],
-                    );
-                }
-            }
-        }
-		res.end(JSON.stringify(comment[0]));
-	} catch (e) {
-        console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
+		// Validate scope and persist the paragraph association in one transaction.
+		// Invalid legacy content must never create a comment and then report failure.
+		const { novel, comment } = await createReadingComment(req.body, user.user_id, withTransaction);
+		try { await avatarFrames.decorateRows([comment], [{ userIdField: 'user_id', targetField: 'avatar_frame' }]); }
+		catch (_) { /* Decoration failure does not invalidate a committed comment. */ }
+		try {
+			await achievements.recordMetricProgress(user.user_id, 'comment_count', 1, { reason: '书籍评论', suppressNotification: true });
+			await message.sendMsg(user.user_id, novel.author_id,
+				'评论了你的' + workLabel(novel) + '《' + novel.name + '》：' + req.body.content,
+				commentPageRoute(novel, req.body.novel_id, comment.essay_comment_id), 'comment');
+		} catch (_) { console.warn('Reading comment saved; notification or achievement update failed'); }
+		res.json(comment);
+	} catch (error) { res.status(error.status || 500).json({ msg: error.status ? error.message : '评论发送失败，请稍后重试' }); }
 });
 
 router.post('/reply_to_novel_comment', auth, async (req, res) => {
@@ -405,17 +356,19 @@ router.get('/novel_commonts_all', async function (req, res) {
 router.get('/novel_comment_from_comment_id', async function (req, res) {
 	try {
 		let results = await query(
-			`SELECT l.author_id,n.*,u.name,u.avatar_url,u.user_group 
-							FROM novel_comments n,users u,novels l
-							WHERE reply_to_id = -1 
-							AND u.user_id = n.user_id
-							AND l.novel_id = n.novel_id
-							AND n.deleted = 0 
-							AND n.essay_comment_id = ? 
-							AND n.deleted = 0`,
+			`SELECT l.author_id,n.*,u.name,u.avatar_url,u.user_group,a.title AS article_title,
+			        c.article_cento_id AS cento_item_id,c.article_id AS cento_article_id,
+			        c.paragraph_id AS cento_paragraph_id,c.paragraph AS cento_paragraph,c.user_id AS cento_user_id
+			 FROM novel_comments requested
+			 JOIN novel_comments n ON n.essay_comment_id = CASE WHEN requested.reply_to_id = -1 THEN requested.essay_comment_id ELSE requested.father_comment_id END
+			 JOIN users u ON u.user_id = n.user_id
+			 JOIN novels l ON l.novel_id = n.novel_id
+			 LEFT JOIN articles a ON a.article_id = n.article_id
+			 LEFT JOIN article_cento c ON c.article_cento_id = n.cento_id
+			 WHERE requested.essay_comment_id = ? AND requested.deleted = 0 AND n.deleted = 0 AND n.reply_to_id = -1`,
 			[req.query.comment_id],
 		);
-		results.forEach(parseCommentMediaUrls);
+		results.forEach(item => { parseCommentMediaUrls(item); attachCentoData(item); });
 		await avatarFrames.decorateRows(results, [
 			{ userIdField: 'user_id', targetField: 'avatar_frame' },
 		]);

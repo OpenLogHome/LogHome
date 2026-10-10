@@ -7,6 +7,13 @@
     <div class="form-container">
       <div class="form-section">
         <div class="form-group">
+          <label class="form-label" for="work-type">作品类型</label>
+          <select id="work-type" v-model="novelType" class="form-input">
+            <option value="fiction">文字作品</option>
+            <option value="manga">漫画作品（条漫 / 页漫）</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label class="form-label">作品名称</label>
           <input 
             type="text" 
@@ -79,6 +86,7 @@
 </template>
 
 <script>
+import { writerPost } from '~/utils/writer/api'
 export default {
   head() {
     return {
@@ -88,6 +96,7 @@ export default {
   data() {
     return {
       title: '',
+      novelType: 'fiction',
       content: '',
       checked: false,
       isSubmitting: false,
@@ -174,7 +183,7 @@ export default {
       
       try {
         // 创建新作品
-        const response = await this.$api.essays.addNovel(this.title.trim(), this.content.trim())
+        const response = await writerPost('add_novel', { name: this.title.trim(), content: this.content.trim(), novel_type: this.novelType })
         
         // 添加标签
         if (this.selectedTags.length > 0 && response && response.insertId) {

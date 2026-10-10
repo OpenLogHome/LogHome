@@ -1,0 +1,165 @@
+
+> nuxt-demo@1.0.0 build
+> nuxt build
+
+ℹ Production build
+ℹ Bundling for server and client side
+ℹ Target: server
+✔ Builder initialized
+✔ Nuxt files generated
+ℹ Compiling Client
+
+ ERROR  [BABEL] Note: The code generator has deoptimised the styling of /Users/ricepastem/Projects/LogHome/loghome-pc-frontend/node_modules/element-ui/lib/element-ui.common.js as it exceeds the max of 500KB.
+
+
+ ERROR  [BABEL] Note: The code generator has deoptimised the styling of /Users/ricepastem/Projects/LogHome/loghome-pc-frontend/node_modules/element-ui/lib/utils/lodash.js as it exceeds the max of 500KB.
+
+✔ Client: Compiled successfully in 12.06s
+ℹ Compiling Server
+
+ ERROR  [BABEL] Note: The code generator has deoptimised the styling of /Users/ricepastem/Projects/LogHome/loghome-pc-frontend/node_modules/element-ui/lib/element-ui.common.js as it exceeds the max of 500KB.
+
+
+ ERROR  [BABEL] Note: The code generator has deoptimised the styling of /Users/ricepastem/Projects/LogHome/loghome-pc-frontend/node_modules/element-ui/lib/utils/lodash.js as it exceeds the max of 500KB.
+
+✔ Server: Compiled successfully in 3.80s
+
+Hash: [1mfeb8a376955119e802c2[39m[22m
+Version: webpack [1m4.47.0[39m[22m
+Time: [1m12063[39m[22mms
+Built at: 10/10/2026 [1m1:01:35 PM[39m[22m
+                           [1mAsset[39m[22m       [1mSize[39m[22m  [1mChunks[39m[22m  [1m[39m[22m                       [1m[39m[22m       [1mChunk Names[39m[22m
+  [1m[32m../server/client.manifest.json[39m[22m   60.2 KiB        [1m[39m[22m  [1m[32m[emitted][39m[22m                     
+                      [1m[32m038d24b.js[39m[22m   10.3 KiB      [1m35[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/tags/index
+                      [1m[32m066b8a5.js[39m[22m   77.8 KiB      [1m24[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/novel/_id
+                      [1m[32m0cf29f0.js[39m[22m   16.2 KiB      [1m25[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/novel/fans
+                      [1m[32m107bc80.js[39m[22m   29.4 KiB      [1m36[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/users/_id
+                      [1m[32m11a3ecc.js[39m[22m   15.6 KiB      [1m34[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/tag/collections
+                      [1m[33m275340a.js[39m[22m    [1m[33m251 KiB[39m[22m       [1m6[39m[22m  [1m[32m[emitted] [immutable][39m[22m  [1m[33m[big][39m[22m  commons/app
+                      [1m[32m2888f84.js[39m[22m   50.1 KiB       [1m2[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/article/_id/pages/read/preview/_key/pages/write/edit/_id
+                      [1m[32m2a40d99.js[39m[22m   11.5 KiB      [1m20[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/me/friends
+                      [1m[33m2c40f2c.js[39m[22m    [1m[33m293 KiB[39m[22m       [1m1[39m[22m  [1m[32m[emitted] [immutable][39m[22m  [1m[33m[big][39m[22m  vendors/pages/community/chat/pages/community/circle/_id/pages/community/index/pages/community/post/_/f811cb4c
+                      [1m[33m32175d5.js[39m[22m    [1m[33m275 KiB[39m[22m       [1m5[39m[22m  [1m[32m[emitted] [immutable][39m[22m  [1m[33m[big][39m[22m  app
+                      [1m[33m32f2bdc.js[39m[22m    [1m[33m480 KiB[39m[22m      [1m48[39m[22m  [1m[32m[emitted] [immutable][39m[22m  [1m[33m[big][39m[22m  
+                      [1m[32m36f6d63.js[39m[22m   27.6 KiB      [1m16[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/index
+                      [1m[32m3ca9886.js[39m[22m   18.7 KiB      [1m21[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/me/index
+                      [1m[32m3df9a83.js[39m[22m   50.2 KiB      [1m19[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/manga/read/_articleId
+                      [1m[32m3e49265.js[39m[22m   3.45 KiB      [1m15[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/forgot-password
+                      [1m[32m4165a7e.js[39m[22m   23.1 KiB       [1m3[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/manga/_id/pages/novel/_id
+                      [1m[32m4d3e3b5.js[39m[22m   51.1 KiB       [1m8[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/article/_id
+                      [1m[32m4e0d4b4.js[39m[22m   21.1 KiB      [1m29[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/read/end/_id
+                      [1m[32m5208e49.js[39m[22m   7.76 KiB       [1m7[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/agreement/content
+                      [1m[32m5a56d51.js[39m[22m   14.2 KiB      [1m42[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/write/settings/_id
+                      [1m[33m5be0008.js[39m[22m    [1m[33m705 KiB[39m[22m      [1m47[39m[22m  [1m[32m[emitted] [immutable][39m[22m  [1m[33m[big][39m[22m  vendors/pages/write/edit/_id
+                      [1m[32m5e87b24.js[39m[22m   18.3 KiB      [1m27[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/read/bookcase
+                      [1m[32m671afb8.js[39m[22m   41.7 KiB      [1m26[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/read/ask/_id
+                      [1m[32m79cb29a.js[39m[22m     16 KiB      [1m23[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/me/settings
+                      [1m[32m7fe21e7.js[39m[22m   7.79 KiB      [1m44[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/write/settings/tags/_id
+                      [1m[32m807377a.js[39m[22m   2.86 KiB      [1m45[39m[22m  [1m[32m[emitted] [immutable][39m[22m         runtime
+                      [1m[32m814bbb2.js[39m[22m   21.2 KiB       [1m4[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/read/index/pages/read/rank
+                      [1m[32m84932d8.js[39m[22m   17.4 KiB      [1m41[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/write/new
+                      [1m[32m8b15b15.js[39m[22m   11.2 KiB      [1m22[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/me/messages
+                      [1m[32m987bf9e.js[39m[22m   11.6 KiB      [1m43[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/write/settings/info/_id
+                        [1m[32mLICENSES[39m[22m   3.58 KiB        [1m[39m[22m  [1m[32m[emitted][39m[22m                     
+                      [1m[32ma1d7ea2.js[39m[22m   40.8 KiB      [1m12[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/community/index
+                      [1m[32mac76500.js[39m[22m   37.8 KiB      [1m13[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/community/post/_id
+                      [1m[32mad010c3.js[39m[22m    201 KiB      [1m39[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/write/edit/_id
+                      [1m[32maf5af0a.js[39m[22m   44.1 KiB      [1m30[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/read/index
+                      [1m[32mb82f42a.js[39m[22m   9.16 KiB      [1m14[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/community/post/edit
+                      [1m[32mbab6e0f.js[39m[22m   16.9 KiB      [1m17[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/login
+                      [1m[32mc2841ad.js[39m[22m     33 KiB      [1m33[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/search
+                      [1m[32mced7e64.js[39m[22m   27.8 KiB      [1m18[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/manga/_id
+                      [1m[32mcfd2192.js[39m[22m   22.1 KiB       [1m9[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/community/chat
+                      [1m[32md6af24f.js[39m[22m     16 KiB      [1m49[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+                      [1m[32me297767.js[39m[22m  381 bytes      [1m32[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/read/rank
+                      [1m[32me63c39c.js[39m[22m   26.1 KiB      [1m40[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/write/index
+                      [1m[32me7c8e4f.js[39m[22m   15.8 KiB      [1m28[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/read/collections
+                      [1m[32mea83ae5.js[39m[22m   36.1 KiB      [1m10[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/community/circle/_id
+                      [1m[32med40820.js[39m[22m   47.6 KiB       [1m0[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/article/_id/pages/manga/_id/pages/manga/read/_articleId/pages/novel/_id/pages/read/end/_id
+                      [1m[32mf051522.js[39m[22m   10.3 KiB      [1m38[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/write/activity-form/_workId/_tagId
+                      [1m[32mf0f80ed.js[39m[22m    9.7 KiB      [1m31[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/read/preview/_key
+                      [1m[33mf20aa68.js[39m[22m   [1m[33m1.02 MiB[39m[22m      [1m46[39m[22m  [1m[32m[emitted] [immutable][39m[22m  [1m[33m[big][39m[22m  vendors/app
+                      [1m[32mfe7ac63.js[39m[22m   16.9 KiB      [1m37[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/world/_id
+                      [1m[32mfffa731.js[39m[22m   13.4 KiB      [1m11[39m[22m  [1m[32m[emitted] [immutable][39m[22m         pages/community/circles
+[1m[32mfonts/element-icons.313f7da.woff[39m[22m   27.5 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+ [1m[32mfonts/element-icons.4520188.ttf[39m[22m   54.6 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+        [1m[32mimg/activity.cc8c077.png[39m[22m   40.7 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+              [1m[33mimg/bg.a726195.png[39m[22m   [1m[33m2.67 MiB[39m[22m        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m  [1m[33m[big][39m[22m  
+        [1m[32mimg/category.5de7f60.png[39m[22m   28.8 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+          [1m[32mimg/finish.3700fe7.png[39m[22m    148 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+            [1m[32mimg/logo.578df2f.png[39m[22m   48.6 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+        [1m[32mimg/logo_new.d1ca1b4.png[39m[22m   14.2 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+           [1m[32mimg/ranks.fc09bfc.png[39m[22m    174 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+      [1m[32mimg/recommands.20e9088.png[39m[22m    164 KiB        [1m[39m[22m  [1m[32m[emitted] [immutable][39m[22m         
+ + 2 hidden assets
+Entrypoint [1mapp[39m[22m [1m[33m[big][39m[22m = [1m[32m807377a.js[39m[22m [1m[32m275340a.js[39m[22m [1m[32mf20aa68.js[39m[22m [1m[32m32175d5.js[39m[22m
+
+[1m[33mWARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).
+This can impact web performance.
+Assets: 
+  img/bg.a726195.png (2.67 MiB)
+  2c40f2c.js (293 KiB)
+  32175d5.js (275 KiB)
+  275340a.js (251 KiB)
+  f20aa68.js (1.02 MiB)
+  5be0008.js (705 KiB)
+  32f2bdc.js (480 KiB)[39m[22m
+
+[1m[33mWARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (1000 KiB). This can impact web performance.
+Entrypoints:
+  app (1.53 MiB)
+      807377a.js
+      275340a.js
+      f20aa68.js
+      32175d5.js
+[39m[22m
+
+Hash: [1m50a33988b92e8629b8c6[39m[22m
+Version: webpack [1m4.47.0[39m[22m
+Time: [1m3798[39m[22mms
+Built at: 10/10/2026 [1m1:01:39 PM[39m[22m
+                                      [1mAsset[39m[22m      [1mSize[39m[22m  [1mChunks[39m[22m  [1m[39m[22m           [1m[39m[22m[1mChunk Names[39m[22m
+                                      [1m[32m39.js[39m[22m  29.2 KiB      [1m39[39m[22m  [1m[32m[emitted][39m[22m  
+                 [1m[32mpages/agreement/content.js[39m[22m  11.9 KiB       [1m1[39m[22m  [1m[32m[emitted][39m[22m  pages/agreement/content
+                       [1m[32mpages/article/_id.js[39m[22m   233 KiB       [1m2[39m[22m  [1m[32m[emitted][39m[22m  pages/article/_id
+                    [1m[32mpages/community/chat.js[39m[22m  25.2 KiB       [1m3[39m[22m  [1m[32m[emitted][39m[22m  pages/community/chat
+              [1m[32mpages/community/circle/_id.js[39m[22m  38.3 KiB       [1m4[39m[22m  [1m[32m[emitted][39m[22m  pages/community/circle/_id
+                 [1m[32mpages/community/circles.js[39m[22m  17.4 KiB       [1m5[39m[22m  [1m[32m[emitted][39m[22m  pages/community/circles
+                   [1m[32mpages/community/index.js[39m[22m  48.5 KiB       [1m6[39m[22m  [1m[32m[emitted][39m[22m  pages/community/index
+                [1m[32mpages/community/post/_id.js[39m[22m  42.1 KiB       [1m7[39m[22m  [1m[32m[emitted][39m[22m  pages/community/post/_id
+               [1m[32mpages/community/post/edit.js[39m[22m  13.9 KiB       [1m8[39m[22m  [1m[32m[emitted][39m[22m  pages/community/post/edit
+                   [1m[32mpages/forgot-password.js[39m[22m  7.61 KiB       [1m9[39m[22m  [1m[32m[emitted][39m[22m  pages/forgot-password
+                             [1m[32mpages/index.js[39m[22m  37.4 KiB      [1m10[39m[22m  [1m[32m[emitted][39m[22m  pages/index
+                             [1m[32mpages/login.js[39m[22m  28.6 KiB      [1m11[39m[22m  [1m[32m[emitted][39m[22m  pages/login
+                         [1m[32mpages/manga/_id.js[39m[22m   141 KiB      [1m12[39m[22m  [1m[32m[emitted][39m[22m  pages/manga/_id
+             [1m[32mpages/manga/read/_articleId.js[39m[22m   145 KiB      [1m13[39m[22m  [1m[32m[emitted][39m[22m  pages/manga/read/_articleId
+                        [1m[32mpages/me/friends.js[39m[22m    18 KiB      [1m14[39m[22m  [1m[32m[emitted][39m[22m  pages/me/friends
+                          [1m[32mpages/me/index.js[39m[22m  23.3 KiB      [1m15[39m[22m  [1m[32m[emitted][39m[22m  pages/me/index
+                       [1m[32mpages/me/messages.js[39m[22m  18.2 KiB      [1m16[39m[22m  [1m[32m[emitted][39m[22m  pages/me/messages
+                       [1m[32mpages/me/settings.js[39m[22m  27.1 KiB      [1m17[39m[22m  [1m[32m[emitted][39m[22m  pages/me/settings
+                         [1m[32mpages/novel/_id.js[39m[22m   211 KiB      [1m18[39m[22m  [1m[32m[emitted][39m[22m  pages/novel/_id
+                        [1m[32mpages/novel/fans.js[39m[22m  25.1 KiB      [1m19[39m[22m  [1m[32m[emitted][39m[22m  pages/novel/fans
+                      [1m[32mpages/read/ask/_id.js[39m[22m  55.3 KiB      [1m20[39m[22m  [1m[32m[emitted][39m[22m  pages/read/ask/_id
+                     [1m[32mpages/read/bookcase.js[39m[22m  32.6 KiB      [1m21[39m[22m  [1m[32m[emitted][39m[22m  pages/read/bookcase
+                  [1m[32mpages/read/collections.js[39m[22m  27.7 KiB      [1m22[39m[22m  [1m[32m[emitted][39m[22m  pages/read/collections
+                      [1m[32mpages/read/end/_id.js[39m[22m   102 KiB      [1m23[39m[22m  [1m[32m[emitted][39m[22m  pages/read/end/_id
+                        [1m[32mpages/read/index.js[39m[22m   108 KiB      [1m24[39m[22m  [1m[32m[emitted][39m[22m  pages/read/index
+                 [1m[32mpages/read/preview/_key.js[39m[22m  98.7 KiB      [1m25[39m[22m  [1m[32m[emitted][39m[22m  pages/read/preview/_key
+                         [1m[32mpages/read/rank.js[39m[22m    39 KiB      [1m26[39m[22m  [1m[32m[emitted][39m[22m  pages/read/rank
+                            [1m[32mpages/search.js[39m[22m  40.6 KiB      [1m27[39m[22m  [1m[32m[emitted][39m[22m  pages/search
+                   [1m[32mpages/tag/collections.js[39m[22m  27.5 KiB      [1m28[39m[22m  [1m[32m[emitted][39m[22m  pages/tag/collections
+                        [1m[32mpages/tags/index.js[39m[22m  14.9 KiB      [1m29[39m[22m  [1m[32m[emitted][39m[22m  pages/tags/index
+                         [1m[32mpages/users/_id.js[39m[22m  31.8 KiB      [1m30[39m[22m  [1m[32m[emitted][39m[22m  pages/users/_id
+                         [1m[32mpages/world/_id.js[39m[22m  22.5 KiB      [1m31[39m[22m  [1m[32m[emitted][39m[22m  pages/world/_id
+[1m[32mpages/write/activity-form/_workId/_tagId.js[39m[22m    14 KiB      [1m32[39m[22m  [1m[32m[emitted][39m[22m  pages/write/activity-form/_workId/_tagId
+                    [1m[32mpages/write/edit/_id.js[39m[22m  1.74 MiB      [1m33[39m[22m  [1m[32m[emitted][39m[22m  pages/write/edit/_id
+                       [1m[32mpages/write/index.js[39m[22m    36 KiB      [1m34[39m[22m  [1m[32m[emitted][39m[22m  pages/write/index
+                         [1m[32mpages/write/new.js[39m[22m  21.4 KiB      [1m35[39m[22m  [1m[32m[emitted][39m[22m  pages/write/new
+                [1m[32mpages/write/settings/_id.js[39m[22m  19.1 KiB      [1m36[39m[22m  [1m[32m[emitted][39m[22m  pages/write/settings/_id
+           [1m[32mpages/write/settings/info/_id.js[39m[22m  17.6 KiB      [1m37[39m[22m  [1m[32m[emitted][39m[22m  pages/write/settings/info/_id
+           [1m[32mpages/write/settings/tags/_id.js[39m[22m  13.2 KiB      [1m38[39m[22m  [1m[32m[emitted][39m[22m  pages/write/settings/tags/_id
+                                  [1m[32mserver.js[39m[22m  2.33 MiB       [1m0[39m[22m  [1m[32m[emitted][39m[22m  app
+                       [1m[32mserver.manifest.json[39m[22m  4.55 KiB        [1m[39m[22m  [1m[32m[emitted][39m[22m  
+ + 40 hidden assets
+Entrypoint [1mapp[39m[22m = [1m[32mserver.js[39m[22m [1m[32mserver.js.map[39m[22m
+ℹ Ready to run nuxt start

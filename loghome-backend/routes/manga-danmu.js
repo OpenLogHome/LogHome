@@ -1,100 +1,42 @@
-// 漫画弹幕路由：弹幕与作品（novel_id）、话数（article_id）及阅读页码（page_idx，0 基）绑定。
-// 挂载在 /community 前缀下，与漫画评论接口同级。
-let express = require('express');
-let { query } = require('../sql.js');
-let auth = require('../bin/auth.js');
-
-let router = express.Router();
-
-const MAX_CONTENT_LENGTH = 100;
-
-router.post('/manga_danmu', auth, async (req, res) => {
-	let user = req.user;
-	user = JSON.parse(JSON.stringify(user))[0];
-	const content = String(req.body.content || '').trim();
-	if (!content) {
-		res.json(400, { msg: '弹幕内容不能为空' });
-		return;
-	}
-	if (content.length > MAX_CONTENT_LENGTH) {
-		res.json(400, { msg: '弹幕最多' + MAX_CONTENT_LENGTH + '个字' });
-		return;
-	}
-	try {
-		let results = await query(
-			'INSERT INTO manga_danmus(user_id, novel_id, article_id, page_idx, content) VALUES(?,?,?,?,?)',
-			[user.user_id, req.body.novel_id, req.body.article_id, Number(req.body.page_idx) || 0, content],
-		);
-		let rows = await query(
-			`SELECT d.danmu_id, d.user_id, d.novel_id, d.article_id, d.page_idx, d.content, d.danmu_time, u.name
-			 FROM manga_danmus d, users u
-			 WHERE d.user_id = u.user_id AND d.danmu_id = ?`,
-			[results.insertId],
-		);
-		res.end(JSON.stringify(rows[0]));
-	} catch (e) {
-		console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
+// Public manga scope uses the same book/chapter visibility as SSR readers.
+const express=require('express'),{query}=require('../sql.js'),auth=require('../bin/auth.js'),{PUBLIC_ARTICLE}=require('../bin/readingVisibility');
+const router=express.Router(),positive=v=>Number.isSafeInteger(Number(v))&&Number(v)>0;
+const failure=(message,status=400)=>Object.assign(Error(message),{status});
+async function scope(novelId,articleId,pageIdx){
+ if(!positive(novelId)||!positive(articleId))throw failure('漫画或话数不存在',404);
+ const rows=await query(`SELECT a.article_id,a.content FROM articles a JOIN novels n ON n.novel_id=a.novel_id WHERE a.article_id=? AND a.novel_id=? AND n.novel_type='manga' AND a.article_type IN ('mangaPage','mangaStrip') AND ${PUBLIC_ARTICLE}`,[Number(articleId),Number(novelId)]);
+ if(!rows.length)throw failure('漫画或话数不存在或未公开',404);
+ let content=rows[0].content;try{if(typeof content==='string')content=JSON.parse(content)}catch(_){content=null}
+ const count=content&&Array.isArray(content.pages)?content.pages.length:0;
+ if(pageIdx!==undefined&&(!Number.isSafeInteger(Number(pageIdx))||Number(pageIdx)<0||Number(pageIdx)>=count))throw failure('弹幕页码无效');return count;
+}
+const respond=(res,error)=>res.status(error.status||503).json({msg:error.status?error.message:'弹幕服务暂时不可用'});
+router.post('/manga_danmu',auth,async(req,res)=>{
+ const content=typeof req.body.content==='string'?req.body.content.trim():'';
+ if(!content||content.length>100)return res.status(400).json({msg:'弹幕须为 1–100 字'});
+ try{
+  await scope(req.body.novel_id,req.body.article_id,req.body.page_idx);
+  if(req.body.page_idx===undefined)throw failure('弹幕页码无效');
+  const user=req.user[0],result=await query('INSERT INTO manga_danmus(user_id,novel_id,article_id,page_idx,content) VALUES(?,?,?,?,?)',[Number(user.user_id),Number(req.body.novel_id),Number(req.body.article_id),Number(req.body.page_idx),content]);
+  // No second read after commit: a lookup outage must not misreport an inserted danmu.
+  res.json({danmu_id:result.insertId,user_id:Number(user.user_id),novel_id:Number(req.body.novel_id),article_id:Number(req.body.article_id),page_idx:Number(req.body.page_idx),content,danmu_time:new Date().toISOString()});
+ }catch(error){respond(res,error)}
 });
-
-// 拉取某话弹幕（默认整话返回，前端按 page_idx 分组；也可用 pageIdx 只取一页）
-router.get('/manga_danmus', async function (req, res) {
-	try {
-		let condition = 'd.novel_id = ? AND d.article_id = ? AND d.deleted = 0';
-		let params = [req.query.id, req.query.articleId];
-		if (req.query.pageIdx !== undefined) {
-			condition += ' AND d.page_idx = ?';
-			params.push(Number(req.query.pageIdx) || 0);
-		}
-		let results = await query(
-			`SELECT d.danmu_id, d.user_id, d.novel_id, d.article_id, d.page_idx, d.content, d.danmu_time, u.name
-			 FROM manga_danmus d, users u
-			 WHERE d.user_id = u.user_id AND ${condition}
-			 ORDER BY d.danmu_id`,
-			params,
-		);
-		res.end(JSON.stringify(results));
-	} catch (e) {
-		console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
+router.get('/manga_danmus',async(req,res)=>{
+ try{
+  const count=await scope(req.query.id,req.query.articleId,req.query.pageIdx),params=[Number(req.query.id),Number(req.query.articleId),count];let condition='d.novel_id=? AND d.article_id=? AND d.deleted=0 AND d.page_idx>=0 AND d.page_idx<?';
+  if(req.query.pageIdx!==undefined){condition+=' AND d.page_idx=?';params.push(Number(req.query.pageIdx))}
+  const rows=await query(`SELECT d.danmu_id,d.user_id,d.novel_id,d.article_id,d.page_idx,d.content,d.danmu_time,u.name FROM manga_danmus d JOIN users u ON u.user_id=d.user_id WHERE ${condition} ORDER BY d.danmu_id`,params);res.json(rows);
+ }catch(error){respond(res,error)}
 });
-
-// 删除弹幕（软删）：发送者本人或作品作者均可删除
-router.get('/delete_manga_danmu', auth, async (req, res) => {
-	let user = req.user;
-	user = JSON.parse(JSON.stringify(user))[0];
-	try {
-		let rows = await query(
-			`SELECT d.user_id, n.author_id
-			 FROM manga_danmus d, novels n
-			 WHERE d.danmu_id = ? AND d.deleted = 0 AND n.novel_id = d.novel_id`,
-			[req.query.id],
-		);
-		rows = JSON.parse(JSON.stringify(rows));
-		if (rows.length == 0) {
-			res.json(400, { msg: 'bad request' });
-			return;
-		}
-		const canDelete = rows[0].user_id == Number(user.user_id) || rows[0].author_id == Number(user.user_id);
-		if (!canDelete) {
-			res.json(400, { msg: '没有权限删除这条弹幕' });
-			return;
-		}
-		let results = await query(
-			'UPDATE manga_danmus SET deleted = 1 WHERE danmu_id = ?',
-			[req.query.id],
-		);
-		if (results.affectedRows > 0) {
-			res.json(200, { msg: 'success' });
-		} else {
-			res.json(400, { msg: 'bad request' });
-		}
-	} catch (e) {
-		console.log(e);
-		res.json(400, { msg: 'bad request' });
-	}
+// Keep author/owner deletion available even after publication changes; soft deletion only.
+router.get('/delete_manga_danmu',auth,async(req,res)=>{
+ if(!positive(req.query.id))return res.status(404).json({msg:'弹幕不存在'});
+ try{
+  const rows=await query('SELECT d.user_id,n.author_id FROM manga_danmus d JOIN novels n ON n.novel_id=d.novel_id WHERE d.danmu_id=? AND d.deleted=0',[Number(req.query.id)]),row=rows[0],user=req.user[0];
+  if(!row)return res.status(404).json({msg:'弹幕不存在'});
+  if(![row.user_id,row.author_id].some(id=>Number(id)===Number(user.user_id)))return res.status(403).json({msg:'没有权限删除这条弹幕'});
+  const result=await query('UPDATE manga_danmus SET deleted=1 WHERE danmu_id=? AND deleted=0',[Number(req.query.id)]);if(result.affectedRows!==1)return res.status(404).json({msg:'弹幕已删除'});res.json({msg:'success'});
+ }catch(error){respond(res,error)}
 });
-
-module.exports = router;
+module.exports=router;
