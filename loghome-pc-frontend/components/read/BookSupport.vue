@@ -1,4 +1,31 @@
-<template><div class="book-support"><div class="support-actions"><button :disabled="loading||savingShelf" :class="{active:favorite}" @click="toggleFavorite">{{ savingShelf?'处理中…':favorite?'已收藏':'收藏' }}</button><button :disabled="loading||savingLike" :class="{active:liked}" @click="toggleLike">{{ savingLike?'处理中…':liked?'已赞':'点赞' }} · {{ likes }}</button><ReaderTipDialog :book="book" @tipped="$emit('tipped',$event)" /><BookTools :book="book" /></div><p v-if="error" class="support-error" role="alert">{{ error }} <nuxt-link v-if="authExpired" :to="loginUrl">重新登录</nuxt-link><button v-else :disabled="loading" @click="load">重试</button></p><div v-if="task" class="task-reward" role="status"><span>每日点赞任务已完成<span v-if="typeof task.reward === 'number'"> · 获得 {{ task.reward }} 点成长值</span></span><nuxt-link v-if="task.tree_status === '结果'" :to="harvestLink">前往收获 →</nuxt-link><button aria-label="关闭任务奖励提示" @click="task=null">×</button></div></div></template>
+<template>
+  <div class="book-support">
+    <div class="support-actions">
+      <slot name="primary" />
+      <button :disabled="loading || savingShelf" :class="{ active: favorite }" :aria-pressed="favorite" @click="toggleFavorite">
+        {{ savingShelf ? '处理中…' : favorite ? '已收藏' : '收藏' }}
+      </button>
+      <button :disabled="loading || savingLike" :class="{ active: liked }" :aria-pressed="liked" @click="toggleLike">
+        {{ savingLike ? '处理中…' : liked ? '已赞' : '点赞' }} · {{ likes }}
+      </button>
+      <ReaderTipDialog :book="book" @tipped="$emit('tipped', $event)" />
+    </div>
+    <div class="support-utilities">
+      <BookTools :book="book" />
+      <slot name="secondary" />
+    </div>
+    <p v-if="error" class="support-error" role="alert">
+      {{ error }}
+      <nuxt-link v-if="authExpired" :to="loginUrl">重新登录</nuxt-link>
+      <button v-else :disabled="loading" @click="load">重试</button>
+    </p>
+    <div v-if="task" class="task-reward" role="status">
+      <span>每日点赞任务已完成<span v-if="typeof task.reward === 'number'"> · 获得 {{ task.reward }} 点成长值</span></span>
+      <nuxt-link v-if="task.tree_status === '结果'" :to="harvestLink">前往收获 →</nuxt-link>
+      <button aria-label="关闭任务奖励提示" @click="task=null">×</button>
+    </div>
+  </div>
+</template>
 <script>
 import BookTools from './BookTools.vue'
 import ReaderTipDialog from './ReaderTipDialog.vue'
@@ -33,4 +60,4 @@ export default {
  }
 }
 </script>
-<style scoped>.book-support{margin-top:22px}.support-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.support-actions>button{padding:9px 16px;background:#fff;color:#947358;border:1px solid #e3d7c7;border-radius:6px;cursor:pointer;font:inherit;font-size:13px}.support-actions>button.active{background:#edf1e2;border-color:#d5dfc2;color:#7c9053}button:disabled{opacity:.5;cursor:default}.support-error{font-size:12px;line-height:1.8;color:#b4614e;margin-top:12px}.support-error a{color:inherit;margin-left:8px}.support-error button{border:0;background:none;color:inherit;text-decoration:underline;cursor:pointer}.task-reward{margin-top:14px;display:flex;gap:10px;align-items:center;background:#eff4e3;border:1px solid #dae5c8;border-radius:7px;padding:10px 14px;font-size:12px;color:#7d9150}.task-reward>a{margin-left:auto;color:inherit;text-decoration:none}.task-reward>button{border:0;background:none;color:#a1af7d;cursor:pointer;font-size:18px}button:focus-visible,a:focus-visible{outline:2px solid #809455;outline-offset:3px}</style>
+<style scoped>.book-support{margin-top:22px}.support-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.support-utilities{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}.support-actions>button{padding:9px 16px;background:#fff;color:#947358;border:1px solid #e3d7c7;border-radius:6px;cursor:pointer;font:inherit;font-size:13px}.support-actions>button.active{background:#edf1e2;border-color:#d5dfc2;color:#7c9053}button:disabled{opacity:.5;cursor:default}.support-error{font-size:12px;line-height:1.8;color:#b4614e;margin-top:12px}.support-error a{color:inherit;margin-left:8px}.support-error button{border:0;background:none;color:inherit;text-decoration:underline;cursor:pointer}.task-reward{margin-top:14px;display:flex;gap:10px;align-items:center;background:#eff4e3;border:1px solid #dae5c8;border-radius:7px;padding:10px 14px;font-size:12px;color:#7d9150}.task-reward>a{margin-left:auto;color:inherit;text-decoration:none}.task-reward>button{border:0;background:none;color:#a1af7d;cursor:pointer;font-size:18px}button:focus-visible,a:focus-visible{outline:2px solid #809455;outline-offset:3px}</style>

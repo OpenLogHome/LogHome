@@ -4,6 +4,7 @@
     :class="{ 'inline-comments': inline }"
     :title="title"
     :visible="visible"
+    custom-class="reading-drawer"
     direction="rtl"
     size="min(540px, 100%)"
     :wrapper-closable="true"

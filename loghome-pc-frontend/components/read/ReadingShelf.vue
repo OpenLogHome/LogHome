@@ -127,28 +127,34 @@ export default {
 </script>
 
 <style scoped>
-.reading-shelf { padding: 18px; border-radius: 12px; background: white; border: 1px solid #e9e5e0; }
-.shelf-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 15px; }
-.shelf-header h2 { font-size: 17px; color: #4f4033; }
-.shelf-header a, .shelf-hint a, .shelf-item-actions a { font-size: 11px; color: #947358; text-decoration: none; }
-.shelf-toolbar { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-.shelf-tabs { display: flex; gap: 4px; }
+.reading-shelf { padding: 22px; border-radius: 12px; background: var(--reading-surface, #fff); border: 1px solid var(--reading-line, #e4e3de); }
+.shelf-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.shelf-header h2 { font-size: 18px; font-weight: 600; color: var(--reading-ink, #302f2a); letter-spacing: -.3px; }
+.shelf-header a, .shelf-hint a, .shelf-item-actions a { font-size: 13px; color: var(--reading-accent, #79573c); text-decoration: none; }
+.shelf-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.shelf-tabs { display: flex; gap: 2px; }
 button { cursor: pointer; font: inherit; }
-.shelf-tabs button { padding: 5px 7px; font-size: 11px; color: #999; background: none; border: 0; border-radius: 5px; }
-.shelf-tabs .active { color: #82623f; background: #f4ede3; }
-.shelf-refresh { padding: 3px; font-size: 10px; background: none; border: 0; color: #999; white-space: nowrap; }
-.shelf-grid { display: grid; gap: 9px; }
-.full .shelf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.shelf-empty { padding: 23px 2px; color: #aaa; font-size: 12px; line-height: 1.8; text-align: center; }
-.shelf-hint, .shelf-count { font-size: 11px; color: #aaa; margin: 12px 0; line-height: 1.7; }
-.shelf-error { font-size: 11px; color: #b57b62; line-height: 1.8; margin-bottom: 10px; }
-.shelf-error button { color: #947358; border: 0; background: none; text-decoration: underline; }
-.shelf-search { display: flex; gap: 15px; align-items: center; font-size: 12px; color: #888; margin: 15px 0 20px; }
-.shelf-search input { border: 1px solid #e3dbd0; border-radius: 5px; padding: 8px 12px; max-width: 300px; font: inherit; }
-.shelf-item-actions { display: flex; justify-content: space-between; padding: 7px 5px; }
-.shelf-item-actions button { font-size: 11px; color: #a99b8a; background: none; border: 0; }
-button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid #947358; outline-offset: 3px; }
+.shelf-tabs button { padding: 7px 8px; font-size: 12px; color: var(--reading-muted, #73716a); background: none; border: 0; border-radius: 5px; white-space: nowrap; }
+.shelf-tabs .active { color: var(--reading-accent, #79573c); background: var(--reading-tint, #eee7de); font-weight: 600; }
+.shelf-refresh { padding: 6px 0 6px 6px; font-size: 12px; background: none; border: 0; color: var(--reading-muted, #73716a); white-space: nowrap; }
+.shelf-grid { display: grid; gap: 4px; }
+.shelf-item { min-width: 0; }
+.full { padding: 32px; min-height: 60vh; }
+.full .shelf-header { padding-bottom: 20px; border-bottom: 1px solid var(--reading-line, #e4e3de); }
+.full .shelf-header h2 { font-size: 28px; }
+.full .shelf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 28px; }
+.full .shelf-tabs button { font-size: 14px; padding: 9px 14px; }
+.shelf-empty { padding: 40px 12px; color: var(--reading-muted, #73716a); font-size: 14px; line-height: 1.8; text-align: center; }
+.shelf-hint, .shelf-count { font-size: 12px; color: var(--reading-muted, #73716a); margin: 16px 0 0; line-height: 1.8; }
+.shelf-error { font-size: 13px; color: #9d503b; line-height: 1.8; margin-bottom: 12px; }
+.shelf-error button { color: var(--reading-accent, #79573c); border: 0; background: none; text-decoration: underline; }
+.shelf-search { display: flex; gap: 14px; align-items: center; font-size: 13px; color: var(--reading-secondary, #615e57); margin: 20px 0 24px; flex-wrap: wrap; }
+.shelf-search input { border: 1px solid var(--reading-line, #e4e3de); background: var(--reading-hover, #f5f4f0); border-radius: 6px; padding: 11px 14px; width: min(320px, 100%); font: inherit; color: var(--reading-ink, #302f2a); }
+.shelf-item-actions { display: flex; justify-content: space-between; gap: 10px; padding: 8px 10px; }
+.shelf-item-actions button { font-size: 12px; color: var(--reading-muted, #73716a); background: none; border: 0; }
+.shelf-item-actions button:hover { color: #9d503b; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--reading-accent, #79573c); outline-offset: 3px; }
 button:disabled { opacity: .5; }
-@media (max-width: 1000px) { .full .shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 650px) { .full .shelf-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { .full .shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .full .shelf-grid { grid-template-columns: 1fr; gap: 16px; } .full { padding: 20px 16px; } .full .shelf-header h2 { font-size: 24px; } }
 </style>

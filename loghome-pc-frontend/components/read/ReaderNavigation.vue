@@ -1,5 +1,5 @@
 <template>
-  <el-drawer title="目录与进度" :visible="visible" @update:visible="$emit('update:visible', $event)" size="min(720px, 100%)" append-to-body>
+  <el-drawer custom-class="reading-drawer" title="目录与进度" :visible="visible" @update:visible="$emit('update:visible', $event)" size="min(720px, 100%)" append-to-body>
     <div class="reader-navigation">
       <section class="chapter-seek"><h3>{{ current.title }}</h3><label>全书进度 <input aria-label="全书章节进度" type="range" min="0" :max="readable.length - 1" :value="target" @input="target = Number($event.target.value)" @change="$emit('jump', readable[target])"><output>{{ percentage }}%</output></label><p>第 {{ target + 1 }} / {{ readable.length }} 章 · {{ readable[target] && readable[target].title }}</p><button v-if="canUndo" @click="$emit('undo')">撤销上次章节跳转</button></section>
       <ChapterCatalog :chapters="chapters" :novel-id="novelId" :current-chapter="current.article_chapter" @navigate="$emit('catalog-navigate', $event)" />

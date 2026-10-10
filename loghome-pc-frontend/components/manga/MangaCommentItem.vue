@@ -15,8 +15,8 @@
           <div v-for="(img, i) in comment.images" :key="i" class="image-entry"><button class="image-button" :aria-label="`查看配图 ${i + 1}`" @click="preview(comment.images, i)"><img :src="img" class="comment-image" alt="评论配图" loading="lazy"></button><button class="image-save" :disabled="!!savingSticker[img]" @click="saveSticker(img)">{{ savingSticker[img] ? '收藏中…' : '收藏为表情包' }}</button></div>
         </div>
         <div class="comment-actions">
-          <button class="act" :class="{ liked: comment.praiseType === 0 }" @click="$emit('praise', comment)">
-            ❤️ {{ comment.likeNum || 0 }}
+          <button class="act" :class="{ liked: comment.praiseType === 0 }" :aria-pressed="comment.praiseType === 0" :aria-label="`${comment.praiseType === 0 ? '取消点赞评论' : '点赞评论'}，${comment.likeNum || 0} 个赞`" @click="$emit('praise', comment)">
+            <SiteIcon name="heart" :filled="comment.praiseType === 0" /> <span>{{ comment.likeNum || 0 }}</span>
           </button>
           <button class="act" @click="$emit('reply', { rootCommentId: comment.commentId, replyToCommentId: comment.commentId, targetUserName: comment.userName })">
             回复
@@ -47,12 +47,13 @@
 </template>
 
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 import ReaderAvatar from '~/components/read/ReaderAvatar.vue'
 import { saveImageAsReaderSticker } from '~/utils/reader-stickers'
 import { readingToken } from '~/plugins/api/reading'
 export default {
   name: 'MangaCommentItem',
-  components: { ReaderAvatar },
+  components: { SiteIcon, ReaderAvatar },
   props: {
     comment: { type: Object, required: true },
     highlight: { type: Boolean, default: false },
@@ -104,7 +105,7 @@ export default {
 .comment-image { width: 96px; height: 96px; object-fit: cover; border-radius: 6px; cursor: pointer; }
 .comment-image.small { width: 72px; height: 72px; }
 .comment-actions { display: flex; gap: 18px; margin-top: 10px; }
-.act { background: none; border: none; color: #999; font-size: 13px; cursor: pointer; padding: 0; }
+.act { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: #999; font-size: 13px; cursor: pointer; padding: 0; }
 .act:hover { color: #947358; }
 .act.liked { color: #e0524d; }
 .act.danger:hover { color: #e0524d; }

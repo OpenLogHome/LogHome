@@ -84,7 +84,8 @@ export default {
    */
   css: [
     'element-ui/lib/theme-chalk/index.css',
-    '~/assets/css/global.css'
+    '~/assets/css/global.css',
+    '~/assets/css/reading-theme.css'
   ],
   /*
    ** Plugins to load before mounting the App

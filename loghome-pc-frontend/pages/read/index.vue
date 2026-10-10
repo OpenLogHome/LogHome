@@ -1,12 +1,5 @@
 <template>
   <div class="reading-discovery">
-    <header class="discovery-header">
-      <div><span class="discovery-eyebrow">LOGHOME LIBRARY</span><h1>{{ requestedPage > 1 ? `公开作品 · 第 ${requestedPage} 页` : '阅读，打开另一个世界' }}</h1></div>
-      <nav class="discovery-tools" aria-label="阅读快捷导航">
-        <nuxt-link to="/search">综合搜索</nuxt-link><nuxt-link to="/read/rank">排行榜</nuxt-link><nuxt-link to="/tags">分类标签</nuxt-link><nuxt-link to="/read/rewards">阅读奖励</nuxt-link><nuxt-link to="/me/messages">消息</nuxt-link>
-        <button :disabled="refreshing" @click="refreshAll">{{ refreshing ? '刷新中…' : '刷新书库' }}</button>
-      </nav>
-    </header>
     <nav v-if="requestedPage === 1 && configuredTags.length" class="discovery-tags" aria-label="精选分类">
       <template v-for="tag in configuredTags">
         <a v-if="tag.link.external" :key="tag.tag_id" :href="tag.link.href" target="_blank" rel="noopener noreferrer" :style="{ color: tag.tag_color }"><img v-if="tag.tag_icon" :src="tag.tag_icon" alt="">{{ tag.tag_name }} ↗</a>
@@ -118,9 +111,6 @@ export default {
       this.refreshing = false
       if (!this.errors.collections && !this.errors.feed) this.persistCache()
     },
-    async refreshAll() {
-      await Promise.allSettled([this.loadDiscovery(), this.$refs.shelf && this.$refs.shelf.load(), ...asList(this.$refs.rankPanels).map(panel => panel.loadFirst(true))])
-    },
     async retryCollection(block) {
       const version = this.version
       try {
@@ -161,41 +151,41 @@ export default {
 </script>
 
 <style scoped>
-.discovery-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 23px; }
-.discovery-eyebrow { font-size: 9px; letter-spacing: 2px; color: #b6a38c; }
-.discovery-header h1 { font-size: 25px; font-weight: 600; color: #514436; margin-top: 8px; }
-.discovery-tools { display: flex; align-items: center; gap: 15px; font-size: 11px; flex-wrap: wrap; }
-.discovery-tools a { color: #807263; text-decoration: none; }
 button { cursor: pointer; font: inherit; }
-.discovery-tools button { padding: 7px 11px; border: 1px solid #d9cbbd; border-radius: 6px; color: #947358; background: #fff; }
-.discovery-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
-.discovery-tags a { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e7e1d9; border-radius: 6px; padding: 9px 16px; background: #fff; font-size: 12px; text-decoration: none; color: #947358; }
-.discovery-tags img { width: 17px; height: 17px; object-fit: contain; }
-.discovery-layout { display: grid; grid-template-columns: minmax(0, 1fr) 278px; gap: 22px; align-items: start; }
-.discovery-main, .discovery-sidebar { min-width: 0; display: grid; gap: 22px; }
-.discovery-sidebar { position: sticky; top: 82px; }
-.discovery-block { padding: 20px; border: 1px solid #e9e5e0; background: #fff; border-radius: 12px; }
-.block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
-.block-header h2 { display: flex; align-items: center; gap: 5px; color: #544331; font-size: 17px; }
-.block-header h2 img { width: 19px; height: 19px; object-fit: contain; margin-right: 4px; }
-.block-header a, .block-header > span { font-size: 11px; color: #9d8a75; text-decoration: none; }
-.discovery-works { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.discovery-loading { padding: 30px 10px; text-align: center; color: #aaa; font-size: 12px; }
-.discovery-notice { font-size: 12px; color: #b58063; padding: 12px 0; line-height: 1.8; }
-.discovery-notice button { color: #947358; background: none; border: none; text-decoration: underline; }
-.discovery-pagination { display: flex; justify-content: center; margin-top: 22px; color: #aaa; font-size: 12px; }
-.discovery-pagination button { padding: 9px 28px; border: 1px solid #d9c7b1; background: white; color: #947358; border-radius: 6px; }
-.discovery-page-links { display: flex; justify-content: center; gap: 20px; margin-top: 16px; font-size: 12px; }.discovery-page-links a { color: #947358; text-decoration: none; }
-.popular-tag-list { display: flex; flex-wrap: wrap; gap: 7px; }
-.popular-tag-list a { padding: 6px 9px; border-radius: 5px; background: #f6f3ee; color: #87755f; font-size: 11px; text-decoration: none; }
-.popular-tag-list small { color: #b8a996; margin-left: 3px; }
-.topic-links { display: grid; gap: 13px; }
-.topic-links a { display: flex; justify-content: space-between; font-size: 12px; color: #92806b; text-decoration: none; }
-.sidebar-hint { font-size: 11px; color: #aaa; }
-.discovery-carousel ::v-deep .swiper-container { height: 195px; }
+.discovery-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 24px; }
+.discovery-tags a { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--reading-line, #e4e3de); border-radius: 6px; padding: 10px 16px; background: var(--reading-surface, #fff); font-size: 13px; font-weight: 500; text-decoration: none; color: var(--reading-accent, #79573c); transition: background .18s ease; }
+.discovery-tags a:hover { background: var(--reading-tint, #eee7de); }
+.discovery-tags img { width: 18px; height: 18px; object-fit: contain; }
+.discovery-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
+.discovery-main, .discovery-sidebar { min-width: 0; display: grid; gap: 28px; }
+.discovery-sidebar { align-self: start; }
+.discovery-block { padding: 26px; border: 1px solid var(--reading-line, #e4e3de); background: var(--reading-surface, #fff); border-radius: 12px; }
+.block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; gap: 14px; }
+.block-header h2 { display: flex; align-items: center; gap: 6px; color: var(--reading-ink, #302f2a); font-size: 21px; font-weight: 600; letter-spacing: -.4px; }
+.block-header h2 img { width: 20px; height: 20px; object-fit: contain; margin-right: 4px; }
+.block-header a, .block-header > span { font-size: 13px; color: var(--reading-accent, #79573c); text-decoration: none; }
+.block-header > span { color: var(--reading-muted, #73716a); }
+.discovery-works { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
+.discovery-loading { padding: 40px 16px; text-align: center; color: var(--reading-muted, #73716a); font-size: 14px; line-height: 1.8; }
+.discovery-notice { font-size: 13px; color: #9d503b; padding: 14px 0; line-height: 1.8; }
+.discovery-notice button { color: var(--reading-accent, #79573c); background: none; border: none; text-decoration: underline; }
+.discovery-pagination { display: flex; justify-content: center; margin-top: 26px; color: var(--reading-muted, #73716a); font-size: 13px; }
+.discovery-pagination button { padding: 11px 28px; border: 1px solid var(--reading-line, #e4e3de); background: var(--reading-surface, #fff); color: var(--reading-accent, #79573c); border-radius: 6px; }
+.discovery-page-links { display: flex; justify-content: center; gap: 24px; margin-top: 18px; font-size: 13px; }.discovery-page-links a { color: var(--reading-accent, #79573c); text-decoration: none; }
+.discovery-sidebar .discovery-block { padding: 22px; }
+.discovery-sidebar .block-header h2 { font-size: 18px; }
+.popular-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.popular-tag-list a { padding: 7px 10px; border-radius: 5px; background: var(--reading-hover, #f5f4f0); color: var(--reading-secondary, #615e57); font-size: 12px; text-decoration: none; }
+.popular-tag-list a:hover { background: var(--reading-tint, #eee7de); color: var(--reading-accent, #79573c); }
+.popular-tag-list small { color: var(--reading-muted, #73716a); margin-left: 4px; font-variant-numeric: tabular-nums; }
+.topic-links { display: grid; gap: 16px; }
+.topic-links a { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.7; color: var(--reading-secondary, #615e57); text-decoration: none; }
+.sidebar-hint { font-size: 13px; color: var(--reading-muted, #73716a); }
+.discovery-carousel ::v-deep .swiper-container { height: clamp(190px, 17vw, 250px); border-radius: 12px; box-shadow: none; }
 button:disabled { opacity: .5; cursor: wait; }
-a:focus-visible, button:focus-visible { outline: 2px solid #947358; outline-offset: 3px; }
-@media (max-width: 1150px) { .discovery-works { grid-template-columns: repeat(2, minmax(0, 1fr)); } .discovery-header { align-items: flex-start; flex-direction: column; } }
-@media (max-width: 950px) { .discovery-layout { grid-template-columns: minmax(0, 1fr); } .discovery-sidebar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 620px) { .discovery-works, .discovery-sidebar { grid-template-columns: 1fr; } .discovery-block { padding: 14px; } }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--reading-accent, #79573c); outline-offset: 3px; }
+@media (min-width: 1440px) { .discovery-works { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1024px) { .discovery-layout { grid-template-columns: minmax(0, 1fr); } .discovery-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .discovery-works, .discovery-sidebar { grid-template-columns: 1fr; } .discovery-block { padding: 20px 16px; } .discovery-tags { gap: 6px; margin-bottom: 18px; } .discovery-tags a { padding: 9px 12px; } .block-header { align-items: flex-start; flex-wrap: wrap; } .block-header h2 { font-size: 19px; } .discovery-main, .discovery-sidebar, .discovery-layout { gap: 20px; } }
+@media (prefers-reduced-motion: reduce) { .discovery-tags a { transition: none; } }
 </style>

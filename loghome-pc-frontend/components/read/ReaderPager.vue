@@ -10,7 +10,7 @@
       <div class="page-progress"><span aria-live="polite">{{ index + 1 }} / {{ total }} 页</span><input aria-label="本章阅读进度" type="range" min="0" :max="total - 1" :value="index" @change="goPage(Number($event.target.value))"></div>
       <button :disabled="index >= total - 1 && !hasNext && !canFinish" @click="turn(1)">{{ index >= total - 1 && !hasNext && canFinish ? '已读至最后 →' : '下一页 →' }}</button>
     </nav>
-    <p v-if="paged" class="page-hint">左右方向键 / Page Up、Page Down 翻页 · 共 {{ chapterPercent }}% 书籍进度</p>
+    <p v-if="paged" class="page-hint"></p>
   </section>
 </template>
 <script>

@@ -39,7 +39,7 @@
     </div>
 
     <div class="error-state" v-else-if="error">
-      <div class="error-icon">❌</div>
+      <div class="error-icon" aria-hidden="true"><SiteIcon name="warning" /></div>
       <h3>加载失败</h3>
       <p>{{error}}</p>
       <button @click="loadActivityInfo">重试</button>
@@ -48,7 +48,9 @@
 </template>
 
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 export default {
+  components: { SiteIcon },
   name: 'ActivityForm',
   data() {
     return {

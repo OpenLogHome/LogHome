@@ -28,7 +28,7 @@
           
           <!-- 错误提示 -->
           <div class="error-state" v-else-if="error">
-            <div class="error-icon">❌</div>
+            <div class="error-icon" aria-hidden="true"><SiteIcon name="warning" /></div>
             <h3 class="error-title">加载失败</h3>
             <p class="error-desc">{{error}}</p>
             <button class="error-button" @click="fetchWorks">重试</button>
@@ -36,7 +36,7 @@
           
           <!-- 空状态 -->
           <div class="work-empty" v-else-if="!filteredWorks.length">
-            <div class="empty-icon">📝</div>
+            <div class="empty-icon" aria-hidden="true"><SiteIcon name="edit" /></div>
             <h3 class="empty-title">{{activeTab === 'all' ? '您还没有创建任何作品' : '没有符合条件的作品'}}</h3>
             <p class="empty-desc" v-if="activeTab === 'all'">点击"创建新作品"按钮开始您的创作之旅</p>
             <button class="empty-button" @click="createNewWork" v-if="activeTab === 'all'">+ 立即创建</button>
@@ -124,7 +124,9 @@
 </template>
 
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 export default {
+  components: { SiteIcon },
   head() {
     return {
       title: '创作中心 - 原木社区'
@@ -671,7 +673,8 @@ $orange-dark: #fa6c2e;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     
     .empty-icon {
-      font-size: 64px;
+      color: $primary-color;
+      font-size: 48px;
       margin-bottom: 20px;
     }
     

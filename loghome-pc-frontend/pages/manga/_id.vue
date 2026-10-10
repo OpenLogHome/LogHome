@@ -24,22 +24,18 @@
 
           <div class="manga-stats">
             <div class="stat-item">
-              <span class="stat-icon">👁️</span>
               <span class="stat-value">{{ formatNumber(novel.clicks || 0) }}</span>
               <span class="stat-label">阅读量</span>
             </div>
             <div class="stat-item">
-              <span class="stat-icon">❤️</span>
               <span class="stat-value">{{ formatNumber(nice_amount || 0) }}</span>
               <span class="stat-label">喜欢</span>
             </div>
             <div class="stat-item">
-              <span class="stat-icon">📖</span>
               <span class="stat-value">{{ chapters.length }}</span>
               <span class="stat-label">话数</span>
             </div>
             <div class="stat-item">
-              <span class="stat-icon">📚</span>
               <span class="stat-value">{{ novel.is_complete == 1 ? '已完结' : '连载中' }}</span>
               <span class="stat-label">状态</span>
             </div>
@@ -50,10 +46,11 @@
           </div>
 
           <div class="manga-actions">
-            <button class="action-button primary" @click="startReading" :disabled="!chapters.length">
-              {{ readButtonText }}
-            </button>
-            <BookSupport class="inline-support" :book="novel" @liked="onSupportLike" @tipped="refreshFans" @account-change="loadProgress" />
+            <BookSupport class="inline-support" :book="novel" @liked="onSupportLike" @tipped="refreshFans" @account-change="loadProgress">
+              <button slot="primary" class="action-button primary" @click="startReading" :disabled="!chapters.length">
+                {{ readButtonText }}
+              </button>
+            </BookSupport>
           </div>
         </div>
       </div>
@@ -89,8 +86,8 @@
                 <span class="chapter-number">{{ chapter.article_chapter }}</span>
                 <span class="chapter-title">{{ chapter.title }}</span>
                 <span class="chapter-type">{{ chapter.article_type === 'mangaPage' ? '页漫' : '条漫' }}</span>
-                <span class="chapter-comments" v-if="articleCommentAmounts[chapter.article_id]">
-                  💬 {{ articleCommentAmounts[chapter.article_id] }}
+                <span class="chapter-comments" v-if="articleCommentAmounts[chapter.article_id]" :aria-label="`${articleCommentAmounts[chapter.article_id]} 条评论`">
+                  <SiteIcon name="comment" /> {{ articleCommentAmounts[chapter.article_id] }}
                 </span>
                 <span class="chapter-badge" v-if="isCurrentChapter(chapter)">读至</span>
                 <span class="chapter-date">{{ formatDate(chapter.update_time) }}</span>
@@ -128,6 +125,7 @@
 </template>
 
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 import { readingCommentId } from '~/utils/reader-comment-links'
 import { localReadingProgress, recordLocalReading } from '~/utils/reading-history'
 import NovelFansList from '~/components/NovelFansList.vue'
@@ -149,7 +147,7 @@ function otherAuthorMangas(works, novelId) {
 
 export default {
   name: 'MangaDetail',
-  components: { NovelFansList, MangaCommentPanel, CollaborativeAuthors, BookSupport },
+  components: { SiteIcon, NovelFansList, MangaCommentPanel, CollaborativeAuthors, BookSupport },
   async asyncData({ params, $api, error, redirect }) {
     try {
       const novel = await $api.reader.book(params.id)

@@ -61,7 +61,7 @@
     
     <!-- 错误提示 -->
     <div class="error-state" v-else-if="error">
-      <div class="error-icon">❌</div>
+      <div class="error-icon" aria-hidden="true"><SiteIcon name="warning" /></div>
       <h3 class="error-title">加载失败</h3>
       <p class="error-desc">{{error}}</p>
       <button class="error-button" @click="fetchNovelData">重试</button>
@@ -105,7 +105,9 @@
 </template>
 
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 export default {
+  components: { SiteIcon },
   head() {
     return {
       title: '作品设置 - 原木社区'

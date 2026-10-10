@@ -30,22 +30,18 @@
           
           <div class="novel-stats">
             <div class="stat-item">
-              <span class="stat-icon">👁️</span>
               <span class="stat-value">{{ formatNumber(novel.clicks || 0) }}</span>
               <span class="stat-label">阅读量</span>
             </div>
             <div class="stat-item">
-              <span class="stat-icon">❤️</span>
               <span class="stat-value">{{ formatNumber(nice_amount || 0) }}</span>
               <span class="stat-label">喜欢</span>
             </div>
             <div class="stat-item">
-              <span class="stat-icon">📃</span>
               <span class="stat-value">{{ formatNumber(novel.text_count || 0) }}</span>
               <span class="stat-label">字数</span>
             </div>
             <div class="stat-item">
-              <span class="stat-icon">📚</span>
               <span class="stat-value">{{ novel.is_complete == 1 ? "已完结" : "连载中" }}</span>
               <span class="stat-label">状态</span>
             </div>
@@ -56,17 +52,18 @@
           </div>
           
           <div class="novel-actions">
-            <button class="action-button primary reading-button" @click="startReading" v-if="readableChapters.length > 0">
-              <div class="reading-info">
-                <span>{{ historyShown > 1 ? '继续阅读' : '开始阅读' }}</span>
-                <small v-if="historyShown > 1">已读 {{ Math.min((historyShown / readableChapters.length * 100), 100).toFixed(0) }}%</small>
-              </div>
-              <div class="progress-indicator" v-if="historyShown > 1">
-                <div class="progress-bar" :style="{ width: `${Math.min((historyShown / readableChapters.length * 100), 100)}%` }"></div>
-              </div>
-            </button>
-            <BookSupport class="inline-support" :book="novel" @liked="onSupportLike" @tipped="onSupportTip" @account-change="onSupportAccount" />
-            <ReaderAiEntry :book="novel" />
+            <BookSupport class="inline-support" :book="novel" @liked="onSupportLike" @tipped="onSupportTip" @account-change="onSupportAccount">
+              <button slot="primary" class="action-button primary reading-button" @click="startReading" v-if="readableChapters.length > 0">
+                <div class="reading-info">
+                  <span>{{ historyShown > 1 ? '继续阅读' : '开始阅读' }}</span>
+                  <small v-if="historyShown > 1">已读 {{ Math.min((historyShown / readableChapters.length * 100), 100).toFixed(0) }}%</small>
+                </div>
+                <div class="progress-indicator" v-if="historyShown > 1">
+                  <div class="progress-bar" :style="{ width: `${Math.min((historyShown / readableChapters.length * 100), 100)}%` }"></div>
+                </div>
+              </button>
+              <ReaderAiEntry slot="secondary" :book="novel" />
+            </BookSupport>
           </div>
         </div>
       </div>
@@ -770,7 +767,7 @@ $background-color: #fff;
 $error-color: #ff4d4f;
 $success-color: #52c41a;
 $warning-color: #faad14;
-$accent-color: #EA7034;
+$accent-color: #79573c;
 $heart-color: #FF6B6B;
 
 // 混合器

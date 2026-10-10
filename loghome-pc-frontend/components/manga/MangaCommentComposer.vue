@@ -23,7 +23,7 @@
       <ReaderEmojiPicker :disabled="submitting || uploading" @select="appendEmoji" />
       <label class="upload-btn" :class="{ disabled: uploading }">
         <input type="file" accept="image/*" multiple hidden @change="onPickFiles" :disabled="uploading || images.length >= 3">
-        {{ uploading ? '上传中…' : '📷 图片' }}
+        <SiteIcon name="image" /> <span>{{ uploading ? '上传中…' : '图片' }}</span>
       </label>
       <span class="counter">{{ content.length }}/300</span>
       <button class="submit-btn" :disabled="submitting || !content.trim() || uploading" @click="submit">
@@ -34,6 +34,7 @@
 </template>
 
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 import { uploadMangaCommentImage } from '~/common/manga-comment-api.js'
 import { readingToken } from '~/plugins/api/reading'
 import ReaderEmojiPicker from '~/components/read/ReaderEmojiPicker.vue'
@@ -41,7 +42,7 @@ import { stickerUrl } from '~/utils/reader-stickers'
 
 export default {
   name: 'MangaCommentComposer',
-  components: { ReaderEmojiPicker },
+  components: { SiteIcon, ReaderEmojiPicker },
   props: {
     replyTo: { type: Object, default: null },
     submitting: { type: Boolean, default: false }
@@ -117,7 +118,7 @@ export default {
 .upload-preview { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; }
 .remove-image { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border: none; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #fff; cursor: pointer; line-height: 1; }
 .composer-actions { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
-.upload-btn { font-size: 13px; color: #947358; cursor: pointer; user-select: none; }
+.upload-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #947358; cursor: pointer; user-select: none; }
 .upload-btn.disabled { color: #ccc; cursor: not-allowed; }
 .counter { font-size: 12px; color: #bbb; margin-left: auto; }
 .submit-btn { background: #947358; border: none; color: #fff; border-radius: 18px; padding: 8px 24px; font-size: 14px; cursor: pointer; }

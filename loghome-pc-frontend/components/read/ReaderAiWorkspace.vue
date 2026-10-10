@@ -7,7 +7,7 @@
     <div v-if="!ready" class="ai-gate">正在加载会话…</div>
     <div v-else-if="disabled" class="ai-gate"><h2>AI 辅助已关闭</h2><p>在账号设置中开启后，可以使用原木娘助读。</p><nuxt-link to="/me/settings">前往设置</nuxt-link></div>
     <div v-else-if="authorDisabled" class="ai-gate"><h2>作者已关闭本作品的 AI 助读</h2><p>你仍然可以阅读正文、查看书摘和参与评论。</p><nuxt-link :to="bookUrl">返回作品</nuxt-link></div>
-    <div v-else-if="!accountToken || authExpired" class="ai-gate"><h2>{{ authExpired ? '登录已失效，请重新登录' : '登录后与原木娘聊聊这本书' }}</h2><p>会话和输入草稿保存在当前浏览器，按登录账号分别保存。</p><nuxt-link :to="loginUrl">登录后提问</nuxt-link></div>
+    <div v-else-if="!accountToken || authExpired" class="ai-gate"><h2>{{ authExpired ? '登录已失效，请重新登录' : '登录后与原木娘聊聊这本书' }}</h2><nuxt-link :to="loginUrl">登录后提问</nuxt-link></div>
     <div v-else class="ai-workspace">
       <aside class="ai-sidebar" aria-label="历史会话">
         <div class="sidebar-head"><h2>会话</h2><button @click="newSession">＋ 新会话</button></div>
@@ -35,7 +35,7 @@
           <span class="quiet">{{ busy ? '正在接收回复' : session.pendingTask ? '接收已暂停' : '可以提问' }}</span>
         </div>
         <div ref="messages" class="ai-messages" tabindex="0" aria-label="问答内容" @scroll="onScroll">
-          <div v-if="!session.messages.length" class="chat-welcome"><span class="welcome-mark" aria-hidden="true">✦</span><h2>从一个问题开始</h2><p>可以讨论情节、人物和世界设定。原木娘会检索作品，并附上可回到正文的引用。</p><p class="quiet">回答可能涉及后续情节；AI 内容仅供参考。</p><div class="question-chips"><button v-for="question in suggestions" :key="question" @click="chooseQuestion(question)">{{ question }}</button></div></div>
+          <div v-if="!session.messages.length" class="chat-welcome"><SiteIcon class="welcome-mark" name="sparkle" /><h2>从一个问题开始</h2><p>可以讨论情节、人物和世界设定。原木娘会检索作品，并附上可回到正文的引用。</p><p class="quiet">回答可能涉及后续情节；AI 内容仅供参考。</p><div class="question-chips"><button v-for="question in suggestions" :key="question" @click="chooseQuestion(question)">{{ question }}</button></div></div>
           <article v-for="message in session.messages" :key="message.id" class="ai-message" :class="message.role">
             <div class="message-label"><strong>{{ message.role === 'user' ? '你' : '原木娘' }}</strong><div class="message-actions"><button :disabled="!message.content" @click="copyMessage(message)">复制</button><button :disabled="busy || !!session.pendingTask" @click="deleteMessage(message)">删除</button><button v-if="message.role === 'user'" :disabled="busy || !!session.pendingTask" @click="rollback(message)">回滚</button></div></div>
             <details v-if="message.thinkingSteps.length || message.currentThinkingText" class="thinking"><summary>思考与检索过程</summary><ol><li v-for="(step, i) in message.thinkingSteps" :key="i">{{ step }}</li><li v-if="message.currentThinkingText">{{ message.currentThinkingText }}</li></ol></details>
@@ -61,11 +61,13 @@
 </template>
 
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 import { readingToken } from '~/plugins/api/reading'
 import { workUrl } from '~/utils/reading-discovery'
 import { readerAiDisabled, AI_PREFERENCE_EVENT, aiSession, aiNovel, aiMessage, createAiTask, aiPayload, applyAiEvent, loadAiHistory, saveAiHistory, streamReaderAi, fetchAiIndex, aiCitationUrl, stripAiCitations } from '~/utils/reader-ai'
 import { renderAiMarkdown } from '~/utils/reader-ai-markdown'
 export default {
+  components: { SiteIcon },
   props: { book: { type: Object, required: true } },
   data: () => ({ ready: false, disabled: false, accountToken: null, authExpired: false, authorDisabled: false, sessions: [], selectedId: '', keyword: '', busy: false, error: '', storageError: '', redstoneError: false, index: null, indexError: '', indexLoading: false, runVersion: 0, indexVersion: 0, atBottom: true }),
   computed: {

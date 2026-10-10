@@ -54,12 +54,6 @@
 
         <!-- 文章底部导航 -->
         <div class="article-footer">
-          <div class="like-action">
-            <!-- <button @click="toggleLike" class="like-btn" :class="{ active: isLiked }">
-              <span class="like-icon">❤️</span>
-              <span>{{ isLiked ? '已喜欢' : '喜欢' }}</span>
-            </button> -->
-          </div>
           <div class="chapter-nav">
             <nuxt-link v-if="hasPrevious" :to="`/article/${chapters[currentChapterIndex - 1].article_id}`" class="nav-btn" rel="prev"><span class="nav-icon">←</span> 上一章</nuxt-link><button v-else class="nav-btn" disabled>← 上一章</button>
             <nuxt-link :to="workUrl(novel)" class="chapter-btn"><span class="nav-icon">≡</span> 目录</nuxt-link>
@@ -87,7 +81,7 @@
       </div>
       <MangaCommentPanel v-if="showCommentDrawer" :visible.sync="showCommentDrawer" :novel-id="novel.novel_id" :article-id="article.article_id" :paragraph-id="currentParagraphId || 0" :paragraph-text="paragraphCommentText" :work-author-id="novel.author_id || novel.auther_id" :anchor-id="commentAnchor" @changed="onCommentsChanged('drawer')" />
       <ReaderNavigation v-if="readerNavigationVisible" :visible.sync="readerNavigationVisible" :chapters="chapterEntries || chapters" :current="article" :novel-id="novel.novel_id" :can-undo="!!readerJumpUndo" @jump="jumpReaderChapter" @catalog-navigate="recordReaderChapterJump" @undo="undoReaderChapterJump" />
-      <el-drawer v-if="readerExcerptsVisible" title="划线书摘" :visible.sync="readerExcerptsVisible" size="min(860px, 100%)" append-to-body destroy-on-close><div class="reader-excerpts"><BookExcerpts :novel-id="novel.novel_id" @navigate="readerExcerptsVisible = false" @changed="loadHighlights" /></div></el-drawer>
+      <el-drawer custom-class="reading-drawer" v-if="readerExcerptsVisible" title="划线书摘" :visible.sync="readerExcerptsVisible" size="min(860px, 100%)" append-to-body destroy-on-close><div class="reader-excerpts"><BookExcerpts :novel-id="novel.novel_id" @navigate="readerExcerptsVisible = false" @changed="loadHighlights" /></div></el-drawer>
       <ReaderSettings v-if="readerSettingsVisible" :visible.sync="readerSettingsVisible" :value="readerPreferences" :fonts="readerFonts" :skins="readerSkins" :tier="readerTier" :font-states="readerFontStates" :font-error="readerFontError" :resource-error="readerResourceError" :locked-message="readerLockedMessage" :resources-loading="readerResourcesLoading" :storage-error="readerStorageError" @input="changeReaderPreferences" @font="selectReaderFont" @theme="selectReaderTheme" @skin="selectReaderSkin" @refresh="refreshReaderResources" @membership="openReaderMembership" @reset="resetReaderPreferences" />
       <ReaderFeedback v-if="feedbackParagraph" :key="feedbackParagraph.id" :visible.sync="feedbackVisible" :article-id="article.article_id" :paragraph-id="feedbackParagraph.id" :paragraph-text="feedbackParagraph.text" />
     </div>
@@ -868,32 +862,6 @@ $heart-color: #FF6B6B;
         background-color: rgba($primary-color, 0.05);
       }
       
-      // 段落评论图标样式
-      .paragraph-comment-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 8px;
-        padding: 3px 6px;
-        border-radius: 10px;
-        background-color: rgba($primary-color, 0.1);
-        color: $primary-color;
-        font-size: 12px;
-        cursor: pointer;
-        white-space: nowrap;
-        vertical-align: middle;
-        transition: all 0.2s ease;
-        
-        i {
-          margin-right: 3px;
-          font-size: 14px;
-        }
-        
-        &:hover {
-          background-color: $primary-color;
-          color: white;
-        }
-      }
     }
   }
 

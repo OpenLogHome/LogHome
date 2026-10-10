@@ -38,5 +38,22 @@ export default {
 }
 </script>
 <style scoped>
-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; font-size: 12px; color: #998c7d; flex-wrap: wrap; }header label,header div { display: flex; align-items: center; gap: 10px; }input { font: inherit; border: 1px solid #e1d7cb; padding: 8px 12px; border-radius: 5px; width: 210px; }button { font: inherit; border: 1px solid #e1d7cb; padding: 7px 12px; border-radius: 5px; background: #fff; color: #947358; cursor: pointer; }.volume { margin-bottom: 18px; }.volume-title { border: none; background: #f7f4ef; width: 100%; text-align: left; margin-bottom: 10px; font-size: 14px; padding: 12px; }.volume-title small { float: right; font-size: 11px; color: #aa9780; }.chapter-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px 20px; }.chapter-grid a { padding: 12px; color: #6b5945; text-decoration: none; border-bottom: 1px solid #f0eae2; }.chapter-grid a:hover,.chapter-grid a.current { background: #faf4e9; }.chapter-label { font-size: 14px; overflow-wrap: anywhere; }.chapter-detail { display: flex; gap: 10px; margin-top: 7px; font-size: 10px; color: #aa9780; }.empty { padding: 35px; text-align: center; color: #aaa; }button:focus-visible,a:focus-visible,input:focus-visible { outline: 2px solid #947358; outline-offset: 3px; }@media(max-width:700px){.chapter-grid{grid-template-columns:1fr;}}
+header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; font-size: 13px; color: var(--reading-muted, #73716a); flex-wrap: wrap; }
+header label, header div { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+input { font: inherit; color: var(--reading-ink, #302f2a); background: var(--reading-surface, #fff); border: 1px solid var(--reading-line, #e4e3de); padding: 10px 12px; border-radius: 6px; width: 220px; max-width: 100%; }
+button { font: inherit; border: 1px solid var(--reading-line, #e4e3de); padding: 9px 12px; border-radius: 6px; background: var(--reading-surface, #fff); color: var(--reading-accent, #79573c); cursor: pointer; }
+.volume { margin-bottom: 28px; }
+.volume-title { border: none; background: var(--reading-hover, #f5f4f0); width: 100%; text-align: left; margin-bottom: 10px; font-size: 14px; font-weight: 600; padding: 14px 16px; }
+.volume-title small { float: right; font-size: 12px; color: var(--reading-muted, #73716a); font-weight: 400; }
+.chapter-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px 24px; }
+.chapter-grid a { min-width: 0; padding: 14px 16px; color: var(--reading-ink, #302f2a); text-decoration: none; border-radius: 6px; transition: background .18s ease; }
+.chapter-grid a:hover { background: var(--reading-hover, #f5f4f0); }
+.chapter-grid a.current { background: var(--reading-tint, #eee7de); color: var(--reading-accent, #79573c); }
+.chapter-label { font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.chapter-detail { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 7px; font-size: 12px; color: var(--reading-muted, #73716a); font-variant-numeric: tabular-nums; }
+.chapter-detail small { font-size: 11px; }
+.empty { padding: 40px 16px; text-align: center; color: var(--reading-muted, #73716a); font-size: 14px; }
+button:focus-visible,a:focus-visible,input:focus-visible { outline: 2px solid var(--reading-accent, #79573c); outline-offset: 3px; }
+@media(max-width:700px) { .chapter-grid { grid-template-columns: 1fr; } }
+@media(prefers-reduced-motion:reduce) { .chapter-grid a { transition: none; } }
 </style>

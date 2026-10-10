@@ -1,7 +1,9 @@
-<template><nuxt-link v-if="enabled && Number(book.disable_reader_ai) !== 1" class="reader-ai-entry" :to="`/read/ask/${book.novel_id}`">✦ 向原木娘提问</nuxt-link></template>
+<template><nuxt-link v-if="enabled && Number(book.disable_reader_ai) !== 1" class="reader-ai-entry" :to="`/read/ask/${book.novel_id}`"><SiteIcon name="sparkle" /><span>向原木娘提问</span></nuxt-link></template>
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 import { readerAiDisabled, AI_PREFERENCE_EVENT } from '~/utils/reader-ai'
 export default {
+  components: { SiteIcon },
   props: { book: { type: Object, required: true } },
   data: () => ({ enabled: false }),
   mounted() { this.sync(); window.addEventListener('storage', this.sync); window.addEventListener('focus', this.sync); window.addEventListener(AI_PREFERENCE_EVENT, this.sync) },

@@ -13,7 +13,7 @@
 						<text v-if="quickCollectCount > 0" class="wh-badge">{{ quickCollectCount }}</text>
 					</view>
 					<view class="wh-btn" @click="warehouseOpen = true">
-						<img class="wh-icon" src="../../static/icons/base-house.svg"></img>
+						<image class="wh-icon" :src="gameIcon('warehouse')" mode="aspectFit"  />
 						<text class="wh-text">{{ $t('me.labGamePage.warehouseBtn') }}</text>
 					</view>
 				</view>
@@ -22,15 +22,15 @@
 			<!-- 顶部状态栏第二行：饱食 / 村民 / 绿宝石 -->
 			<view class="statbar">
 				<view class="stat" @click="foodOpen = true">
-					<text class="stat-char" style="background:#C5814C">食</text>
+					<image class="stat-icon" :src="gameIcon('food')" mode="aspectFit"  />
 					<text class="stat-val">{{ fmtStat(foodStat.count) }}<text class="stat-cap">/+{{ fmtStat(foodStat.sat) }}</text></text>
 				</view>
 				<view class="stat" @click="villOpen = true">
-					<img class="stat-icon" src="../../static/icons/villager.svg"></img>
+					<image class="stat-icon" :src="gameIcon('villager')" mode="aspectFit"  />
 					<text class="stat-val">{{ fmtStat(villagers.length) }}<text class="stat-cap">/{{ fmtStat(capacity) }}</text></text>
 				</view>
 				<view class="stat">
-					<img class="stat-icon" src="../../static/icons/emerald.svg"></img>
+					<image class="stat-icon" :src="gameIcon('emerald')" mode="aspectFit"  />
 					<text class="stat-val">{{ fmtStat(floorRes('emerald')) }}</text>
 				</view>
 			</view>
@@ -38,10 +38,10 @@
 			<!-- 楼层切换：地上 / 地下层 -->
 			<view class="layer-row">
 				<view class="layer-btn" :class="{ 'layer-btn--on': layer === 'ground' }" @click="switchLayer('ground')">
-					<text>{{ $t('me.labGamePage.layerGround') }}</text>
+					<image class="layer-icon" :src="gameIcon('ground')" mode="aspectFit"  /><text>{{ $t('me.labGamePage.layerGround') }}</text>
 				</view>
 				<view class="layer-btn" :class="{ 'layer-btn--on': layer === 'ug' }" @click="switchLayer('ug')">
-					<text>{{ $t('me.labGamePage.layerUnder') }}</text>
+					<image class="layer-icon" :src="gameIcon('ug')" mode="aspectFit"  /><text>{{ $t('me.labGamePage.layerUnder') }}</text>
 				</view>
 			</view>
 
@@ -51,7 +51,7 @@
 				<view v-if="layer === 'ground'" class="wall-strip">
 					<view class="wall-cell" @click="tapWall(0)">
 						<view v-if="walls[0]" class="wall wall--c-t" :class="{ 'wall--hurt': wallDurPct(0) < 100 }" :style="{ background: wallMatColor(walls[0].level) }">
-							<text class="wall-char">{{ wallMatChar(walls[0].level) }}</text>
+							<image class="wall-char" :src="gameIcon('wall')" mode="aspectFit"  />
 							<view class="wall-lv">Lv.{{ walls[0].level }}</view>
 						</view>
 						<view v-else class="wall-cell--empty"><text class="wall-cell-plus">＋</text></view>
@@ -62,7 +62,7 @@
 					<view v-if="layer === 'ground'" class="wall-strip wall-strip--v">
 						<view class="wall-cell" @click="tapWall(3)">
 							<view v-if="walls[3]" class="wall" :class="{ 'wall--hurt': wallDurPct(3) < 100 }" :style="{ background: wallMatColor(walls[3].level) }">
-								<text class="wall-char">{{ wallMatChar(walls[3].level) }}</text>
+								<image class="wall-char" :src="gameIcon('wall')" mode="aspectFit"  />
 								<view class="wall-lv">Lv.{{ walls[3].level }}</view>
 							</view>
 							<view v-else class="wall-cell--empty"><text class="wall-cell-plus">＋</text></view>
@@ -84,30 +84,30 @@
 					<!-- 中间格：大本营（仅地上，底色随大本营等级主题色变动） -->
 					<template v-if="layer === 'ground' && idx === CENTER_IDX">
 						<view class="base" :style="{ background: thColor }">
-							<text class="base-char">基</text>
+							<image class="base-char" :src="gameIcon('base')" mode="aspectFit"  />
 							<view class="building-lv">Lv.{{ baseLevel }}</view>
 						</view>
 						<view v-if="thBusy" class="busy-flag">
-							<text class="busy-icon">🔨</text>
+							<image class="busy-icon" :src="gameIcon('hammer')" mode="aspectFit"  />
 							<text class="busy-time">{{ thBusyText }}</text>
 						</view>
 						<view v-if="thCanUpgrade" class="up-arrow" @click.stop="tapPlot(idx)">
-							<text class="up-arrow-icon">⬆</text>
+							<image class="up-arrow-icon" :src="gameIcon('upgrade')" mode="aspectFit"  />
 						</view>
 					</template>
 					<!-- 已建造建筑 -->
 					<template v-else-if="plot">
 						<view class="building" :style="{ background: buildingDef(plot.type).color }">
-							<text class="building-char">{{ buildingDef(plot.type).char }}</text>
+							<image class="building-char" :src="gameIcon(plot.type)" mode="aspectFit"  />
 							<view class="building-lv">Lv.{{ plot.level }}</view>
-							<view v-if="totalSlots(plot) > 0 && !plot.busy" class="building-worker">{{ isHeroIdx(layer, idx) ? '⭐' : plot.workers + '/' + totalSlots(plot) }}</view>
+							<view v-if="totalSlots(plot) > 0 && !plot.busy" class="building-worker"><image class="worker-hero" :src="gameIcon('star')" mode="aspectFit" v-if="isHeroIdx(layer, idx)" /><text v-else>{{ plot.workers }}/{{ totalSlots(plot) }}</text></view>
 						</view>
 						<view v-if="plot.busy" class="busy-flag">
-							<text class="busy-icon">🔨</text>
+							<image class="busy-icon" :src="gameIcon('hammer')" mode="aspectFit"  />
 							<text class="busy-time">{{ busyRemain(plot) }}</text>
 						</view>
 						<view v-if="canUpgradePlot(plot)" class="up-arrow" @click.stop="tapPlot(idx)">
-							<text class="up-arrow-icon">⬆</text>
+							<image class="up-arrow-icon" :src="gameIcon('upgrade')" mode="aspectFit"  />
 						</view>
 						<!-- 产出囤积读条（部落冲突式：囤积 > 0 时显示） -->
 						<view v-if="bufRatio(plot) > 0" class="collect-bar">
@@ -115,13 +115,13 @@
 						</view>
 						<!-- 收集角标（有整数量可收时显示，点击收集） -->
 						<view v-if="bufCount(plot) >= 1" class="collect-badge" @click.stop="collectPlot(idx)">
-							<text class="collect-badge-icon" :style="{ background: bufMainColor(plot) }">{{ bufMainChar(plot) }}</text>
+							<image class="collect-badge-icon" :src="gameIcon(bufMain(plot) ? bufMain(plot).id : 'collect')" mode="aspectFit"  />
 						</view>
 					</template>
 					<!-- 地下待清理 / 清理中 -->
 					<template v-else-if="layer === 'ug' && !ugCleared[idx]">
 						<view class="locked-plot">
-							<text class="locked-icon">{{ ugClearing[idx] > 0 ? '⛏' : '🪨' }}</text>
+							<image class="locked-icon" :src="gameIcon(ugClearing[idx] > 0 ? 'pickaxe' : 'rock')" mode="aspectFit"  />
 							<text class="locked-text">{{ ugClearing[idx] > 0 ? $t('me.labGamePage.ugClearing', { n: ugClearLeftMin(idx) }) : $t('me.labGamePage.ugLocked') }}</text>
 							<view v-if="ugClearing[idx] > 0" class="locked-bar">
 								<view class="locked-bar-fill" :style="{ width: ((1 - (ugClearing[idx] - nowTs) / (ugClearMin * 60000)) * 100) + '%' }"></view>
@@ -141,7 +141,7 @@
 					<view v-if="layer === 'ground'" class="wall-strip wall-strip--v">
 						<view class="wall-cell" @click="tapWall(1)">
 							<view v-if="walls[1]" class="wall" :class="{ 'wall--hurt': wallDurPct(1) < 100 }" :style="{ background: wallMatColor(walls[1].level) }">
-								<text class="wall-char">{{ wallMatChar(walls[1].level) }}</text>
+								<image class="wall-char" :src="gameIcon('wall')" mode="aspectFit"  />
 								<view class="wall-lv">Lv.{{ walls[1].level }}</view>
 							</view>
 							<view v-else class="wall-cell--empty"><text class="wall-cell-plus">＋</text></view>
@@ -152,7 +152,7 @@
 				<view v-if="layer === 'ground'" class="wall-strip">
 					<view class="wall-cell" @click="tapWall(2)">
 						<view v-if="walls[2]" class="wall wall--c-b" :class="{ 'wall--hurt': wallDurPct(2) < 100 }" :style="{ background: wallMatColor(walls[2].level) }">
-							<text class="wall-char">{{ wallMatChar(walls[2].level) }}</text>
+							<image class="wall-char" :src="gameIcon('wall')" mode="aspectFit"  />
 							<view class="wall-lv">Lv.{{ walls[2].level }}</view>
 						</view>
 						<view v-else class="wall-cell--empty"><text class="wall-cell-plus">＋</text></view>
@@ -163,11 +163,11 @@
 			<!-- 功能入口（占位） -->
 			<view class="feature-row">
 				<view class="feature-btn" @click="openMarket">
-					<text class="feature-icon" style="background:#D0A35C">市</text>
+					<image class="feature-icon" :src="gameIcon('market')" mode="aspectFit"  />
 					<text class="feature-name">{{ $t('me.labGamePage.market') }}</text>
 				</view>
 				<view class="feature-btn" @click="openExp">
-					<text class="feature-icon" style="background:#8B3A62">远</text>
+					<image class="feature-icon" :src="gameIcon('expedition')" mode="aspectFit"  />
 					<text class="feature-name">{{ $t('me.labGamePage.expedition') }}</text>
 					<view v-if="expedition" class="exp-badge">{{ expRemainText }}</view>
 				</view>
@@ -175,7 +175,7 @@
 
 			<!-- 僵尸夜袭（独立一行，含倒计时与临时仓库入口） -->
 			<view class="raid-row" @click="raidOpen = true">
-				<text class="feature-icon" style="background:#6B4BB8">夜</text>
+				<image class="feature-icon" :src="gameIcon('raid')" mode="aspectFit"  />
 				<view class="raid-main">
 					<text class="raid-name">{{ $t('me.labGamePage.raid') }}</text>
 					<text class="raid-sub">{{ $t('me.labGamePage.raidStr') }} {{ zombiePower }} · {{ $t('me.labGamePage.power') }} {{ Math.floor(raidPower) }}</text>
@@ -249,38 +249,41 @@
 				</template>
 			</view>
 
-			<!-- 英雄雇佣入口（左下角悬浮，村民列表上方；雇佣中显示剩余时间） -->
-			<view class="vill-btn hero-btn" @click="heroOpen = true">
-				<text class="hero-avatar" :class="{ 'hero-avatar--on': heroActive }">原</text>
-				<text class="vill-btn-text">{{ heroBtnLabel }}</text>
-			</view>
-
-			<!-- 村民列表入口（左下角悬浮，建筑图鉴上方） -->
-			<view class="vill-btn" @click="villOpen = true">
-				<img class="vill-btn-icon" src="../../static/icons/villager.svg"></img>
-				<text class="vill-btn-text">{{ $t('me.labGamePage.villListTitle') }}</text>
-			</view>
-
-			<!-- 建筑图鉴入口（左下角悬浮） -->
-			<view class="bl-btn" @click="blOpen = true">
-				<text class="bl-btn-icon">📖</text>
-				<text class="bl-btn-text">{{ $t('me.labGamePage.buildList') }}</text>
-			</view>
-
-			<!-- 好友村庄消息日志（收纳为图标按钮，点开查看） -->
 			<view v-if="flogOpen" class="fr-logbox">
 				<view v-for="(lg, li) in friendLogs" :key="li" class="fr-log">
 					<text class="fr-log-tag" :class="'fr-log-tag--' + lg.type">{{ $t('me.labGamePage.' + lg.tkey) }}</text>
 					<text class="fr-log-text">{{ lg.text }}</text>
 				</view>
 			</view>
+			<view class="game-toolbar">
+			<!-- 英雄雇佣入口（左下角悬浮，村民列表上方；雇佣中显示剩余时间） -->
+			<view class="vill-btn hero-btn" @click="heroOpen = true">
+				<image class="hero-avatar" :src="gameIcon('hero')" mode="aspectFit" :class="{ 'hero-avatar--on': heroActive }" />
+				<text class="vill-btn-text">{{ heroBtnLabel }}</text>
+			</view>
+
+			<!-- 村民列表入口（左下角悬浮，建筑图鉴上方） -->
+			<view class="vill-btn" @click="villOpen = true">
+				<image class="vill-btn-icon" :src="gameIcon('villager')" mode="aspectFit"  />
+				<text class="vill-btn-text">{{ $t('me.labGamePage.villListTitle') }}</text>
+			</view>
+
+			<!-- 建筑图鉴入口（左下角悬浮） -->
+			<view class="bl-btn" @click="blOpen = true">
+				<image class="bl-btn-icon" :src="gameIcon('book')" mode="aspectFit"  />
+				<text class="bl-btn-text">{{ $t('me.labGamePage.buildList') }}</text>
+			</view>
+
+			<!-- 好友村庄消息日志（收纳为图标按钮，点开查看） -->
 			<view class="fr-btn fr-btn--log" @click="flogOpen = !flogOpen">
-				<text class="fr-btn-icon">📜</text>
+				<image class="fr-btn-icon" :src="gameIcon('journal')" mode="aspectFit"  />
 				<text class="fr-btn-text">{{ $t('me.labGamePage.logTitle') }}</text>
 			</view>
 			<view class="fr-btn" @click="frOpen = true">
-				<text class="fr-btn-icon">🏘</text>
+				<image class="fr-btn-icon" :src="gameIcon('friends')" mode="aspectFit"  />
 				<text class="fr-btn-text">{{ $t('me.labGamePage.friendVillage') }}</text>
+			</view>
+
 			</view>
 
 			<!-- 建造选单 -->
@@ -294,7 +297,7 @@
 						class="build-item"
 						@click="buildAt(buildIdx, item)"
 					>
-						<text class="build-char" :style="{ background: item.b.color }">{{ item.b.char }}</text>
+						<image class="build-char" :src="gameIcon(item.b.key)" mode="aspectFit"  />
 						<view class="build-main">
 							<view class="build-name-row">
 								<text class="build-name">{{ langName(item.b) }}</text>
@@ -310,7 +313,7 @@
 										:class="{ 'cost-item--lack': !c.ok }"
 									>{{ c.text }}</text>
 								</template>
-								<text class="cost-item cost-item--time">⏱ {{ buildTimeText(1) }}</text>
+								<text class="cost-item cost-item--time"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ buildTimeText(1) }}</text>
 							</view>
 						</view>
 					</view>
@@ -322,7 +325,7 @@
 			<view v-if="wallSel !== null" class="overlay" @click.self="wallSel = null">
 				<view class="modal">
 					<view class="modal-title">
-						<text class="modal-title-char" :style="{ background: wallMatColor(wallCur ? wallCur.level : 1) }">{{ wallCur ? wallMatChar(wallCur.level) : '墙' }}</text>
+						<image class="modal-title-char" :src="gameIcon('wall')" mode="aspectFit"  />
 						{{ wallTitle }}
 					</view>
 					<view class="desc-box">{{ $t('me.labGamePage.wallDesc') }}</view>
@@ -364,7 +367,7 @@
 			<view v-if="selIdx !== null && selPlot" class="overlay" @click.self="selIdx = null">
 				<view class="modal">
 					<view class="modal-title">
-						<text class="modal-title-char" :style="{ background: selDef.color }">{{ selDef.char }}</text>
+						<image class="modal-title-char" :src="gameIcon(selDef.key)" mode="aspectFit"  />
 						{{ langName(selDef) }} Lv.{{ selPlot.level }}
 					</view>
 
@@ -436,7 +439,7 @@
 					<view v-if="selSlots > 0" class="worker-box">
 						<view class="worker-info">
 							<text class="worker-title">{{ $t('me.labGamePage.workers') }}（{{ langWorker(selDef) }}）</text>
-							<text class="worker-sub">{{ isHeroIdx(selLayer, selIdx) ? '⭐ ' + $t('me.labGamePage.heroFull') : selPlot.workers + '/' + selSlots }} · {{ $t('me.labGamePage.unassigned') }} {{ unassigned }}</text>
+							<text class="worker-sub">{{ isHeroIdx(selLayer, selIdx) ? $t('me.labGamePage.heroFull') : selPlot.workers + '/' + selSlots }} · {{ $t('me.labGamePage.unassigned') }} {{ unassigned }}</text>
 						</view>
 						<view class="worker-btns">
 							<view class="worker-btn" @click="assignWorker(-1)">−</view>
@@ -456,7 +459,7 @@
 					<view v-if="selNext" class="upgrade-box">
 						<view class="upgrade-info">
 							<text class="upgrade-title">{{ $t('me.labGamePage.upgrade') }} Lv.{{ selPlot.level + 1 }}</text>
-							<text v-if="selPlot.busy" class="upgrade-sub upgrade-sub--warn">🔨 {{ $t('me.labGamePage.buildingBusy') }} · {{ busyRemain(selPlot) }}</text>
+							<text v-if="selPlot.busy" class="upgrade-sub upgrade-sub--warn"><image class="inline-icon" :src="gameIcon('hammer')" mode="aspectFit"  /> {{ $t('me.labGamePage.buildingBusy') }} · {{ busyRemain(selPlot) }}</text>
 							<text v-else-if="baseLevel < selNext.th" class="upgrade-sub upgrade-sub--warn">{{ $t('me.labGamePage.thReq', { n: selNext.th }) }}</text>
 							<view v-else class="cost-row">
 								<text
@@ -465,7 +468,7 @@
 									class="cost-item"
 									:class="{ 'cost-item--lack': !c.ok }"
 								>{{ c.text }}</text>
-								<text class="cost-item cost-item--time">⏱ {{ buildTimeText(selPlot.level + 1) }}</text>
+								<text class="cost-item cost-item--time"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ buildTimeText(selPlot.level + 1) }}</text>
 							</view>
 						</view>
 						<view v-if="!selPlot.busy" class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !canUpgradeSel }" @click="upgradeSel">
@@ -504,7 +507,7 @@
 							<text class="upgrade-title">{{ $t('me.labGamePage.thUpgrade') }}</text>
 							<text class="th-lv">Lv.{{ baseLevel }}<template v-if="thNext"> → Lv.{{ baseLevel + 1 }}</template></text>
 						</view>
-						<view v-if="thBusy" class="th-unlock">🔨 {{ $t('me.labGamePage.buildingBusy') }} · {{ thBusyText }}</view>
+						<view v-if="thBusy" class="th-unlock"><image class="inline-icon" :src="gameIcon('hammer')" mode="aspectFit"  /> {{ $t('me.labGamePage.buildingBusy') }} · {{ thBusyText }}</view>
 						<template v-else-if="thNext">
 							<view class="req-row">
 								<text class="req-label">{{ $t('me.labGamePage.prereq') }}</text>
@@ -522,7 +525,7 @@
 									class="cost-item"
 									:class="{ 'cost-item--lack': !c.ok }"
 								>{{ c.text }}</text>
-								<text class="cost-item cost-item--time">⏱ {{ thTimeText }}</text>
+								<text class="cost-item cost-item--time"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ thTimeText }}</text>
 							</view>
 							<view class="th-unlock">{{ $t('me.labGamePage.unlockHint', { s: isEn ? thNext.unlockEn : thNext.unlockZh }) }}</view>
 							<view class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !thCanUpgrade }" @click="upgradeTH">
@@ -558,7 +561,7 @@
 					<view class="wh-title">{{ $t('me.labGamePage.warehouse') }}<text class="wh-slots">{{ $t('me.labGamePage.whSlots') }} {{ whUsed }}/{{ whSlotsTotal }}</text></view>
 					<view v-if="ownedList.length === 0" class="empty-tip">{{ $t('me.labGamePage.emptyWarehouse') }}</view>
 					<view v-for="r in ownedList" :key="r" class="res-row">
-						<text class="res-dot" :style="{ background: resColor(r) }">{{ resChar(r) }}</text>
+						<image class="res-dot" :src="gameIcon(r)" mode="aspectFit"  />
 						<text class="res-name">{{ resName(r) }}</text>
 						<text class="res-th" :style="{ background: resThColor(r) }">TH{{ resTh(r) }}</text>
 						<text class="res-val">{{ floorRes(r) }}<text class="res-slot" v-if="resSlotCount(r) > 1"> · {{ $t('me.labGamePage.whNSlots', { n: resSlotCount(r) }) }}</text></text>
@@ -606,7 +609,7 @@
 									:class="{ 'vill-equip-slot--filled': !!v.equip[si - 1] }"
 									@click="tapEquipSlot(v, si - 1)"
 								>
-									<text v-if="v.equip[si - 1]" class="vill-equip-char" :style="{ background: resColor(v.equip[si - 1]) }">{{ resChar(v.equip[si - 1]) }}</text>
+									<image v-if="v.equip[si - 1]" class="vill-equip-char" :src="gameIcon(v.equip[si - 1])" mode="aspectFit" />
 									<text class="vill-equip-name">{{ v.equip[si - 1] ? resName(v.equip[si - 1]) : $t('me.labGamePage.' + equipSlotKey(si - 1)) }}</text>
 								</view>
 							</view>
@@ -624,7 +627,7 @@
 				<view class="modal">
 					<view class="modal-title">{{ $t('me.labGamePage.feedPickTitle') }}<text v-if="feedVill" class="feed-vill-name">{{ feedVill.name }}</text></view>
 					<view v-for="f in feedOptions" :key="f.id" class="res-row" :class="{ 'res-row--off': f.stock < 1 || (f.id !== 'potion' && feedVill && feedVill.satiety >= 99.5) }" @click="doFeed(f)">
-						<text class="res-dot" :style="{ background: resColor(f.id) }">{{ resChar(f.id) }}</text>
+						<image class="res-dot" :src="gameIcon(f.id)" mode="aspectFit"  />
 						<view class="fr-main">
 							<view class="res-name">{{ resName(f.id) }} ×{{ f.stock }}</view>
 							<view class="food-sat">{{ f.effect }}</view>
@@ -639,7 +642,7 @@
 				<view class="modal">
 					<view class="modal-title">{{ $t('me.labGamePage.heroTitle') }}</view>
 					<view class="hero-card">
-						<text class="hero-avatar hero-avatar--lg" :class="{ 'hero-avatar--on': heroActive }">原</text>
+						<image class="hero-avatar hero-avatar--lg" :src="gameIcon('hero')" mode="aspectFit" :class="{ 'hero-avatar--on': heroActive }" />
 						<view class="build-main">
 							<view class="build-name-row">
 								<text class="build-name">{{ $t('me.labGamePage.heroName') }}</text>
@@ -727,13 +730,13 @@
 					<view class="modal-title">{{ $t('me.labGamePage.expResultTitle') }}<text v-if="expResultRouteName" class="feed-vill-name">{{ expResultRouteName }}</text></view>
 					<view v-if="!expResult.complete" class="bl-hint">{{ $t('me.labGamePage.expResultRecall') }}</view>
 					<view v-for="(g, gid) in expResult.gains" :key="gid" class="res-row">
-						<text class="res-dot" :style="{ background: resColor(gid) }">{{ resChar(gid) }}</text>
+						<image class="res-dot" :src="gameIcon(gid)" mode="aspectFit"  />
 						<view class="fr-main"><view class="res-name">{{ resName(gid) }}</view></view>
 						<text class="res-val">+{{ g }}</text>
 					</view>
 					<view v-if="expResult.lootLost" class="bl-hint">{{ $t('me.labGamePage.expLootLost') }}</view>
 					<view v-if="expResult.broken.length" class="exp-sec">{{ $t('me.labGamePage.expBroken') }}</view>
-					<view v-for="(b, bi) in expResult.broken" :key="'b' + bi" class="exp-line">⚔ {{ b }}</view>
+					<view v-for="(b, bi) in expResult.broken" :key="'b' + bi" class="exp-line"><image class="inline-icon" :src="gameIcon('sword')" mode="aspectFit"  /> {{ b }}</view>
 					<view v-if="expResult.usedRestore.length" class="exp-sec">{{ $t('me.labGamePage.expRestoreUsed') }}</view>
 					<view v-for="(u, ui) in expResult.usedRestore" :key="'u' + ui" class="exp-line">🧪 {{ u }}</view>
 					<view v-if="expResult.fallen.length" class="exp-sec exp-sec--bad">{{ $t('me.labGamePage.expFallen') }}</view>
@@ -755,7 +758,7 @@
 						</view>
 					</view>
 					<view v-for="it in equipOptions" :key="it.key" class="res-row" @click="doEquip(it.key)">
-						<text class="res-dot" :style="{ background: resColor(it.key) }">{{ resChar(it.key) }}</text>
+						<image class="res-dot" :src="gameIcon(it.key)" mode="aspectFit"  />
 						<view class="fr-main">
 							<view class="res-name">{{ resName(it.key) }} ×{{ it.stock }}</view>
 							<view class="food-sat">{{ equipEffectText(it.def) }}</view>
@@ -772,7 +775,7 @@
 					<view class="modal-title">{{ $t('me.labGamePage.foodTitle') }}</view>
 					<view class="bl-hint">{{ $t('me.labGamePage.foodHint') }}</view>
 					<view v-for="(f, fi) in foodPrioList" :key="f.id" class="res-row">
-						<text class="res-dot" :style="{ background: resColor(f.id) }">{{ resChar(f.id) }}</text>
+						<image class="res-dot" :src="gameIcon(f.id)" mode="aspectFit"  />
 						<view class="fr-main">
 							<view class="res-name">{{ resName(f.id) }} ×{{ f.count }}</view>
 							<view class="food-sat">{{ $t('me.labGamePage.satiety') }} +{{ f.sat }} · {{ $t('me.labGamePage.foodMood') }} {{ f.mood >= 0 ? '+' : '' }}{{ f.mood }}</view>
@@ -793,7 +796,7 @@
 					<view class="bl-hint">{{ $t('me.labGamePage.blHint') }}</view>
 					<view v-for="b in blList" :key="b.key" class="bl-item">
 						<view class="bl-head">
-							<text class="bl-char" :style="{ background: b.color }">{{ b.char }}</text>
+							<image class="bl-char" :src="gameIcon(b.key)" mode="aspectFit"  />
 							<text class="bl-name">{{ langName(b) }}</text>
 							<text class="bl-th">TH{{ b.levels[0].th }}{{ $t('me.labGamePage.blUnlock') }}</text>
 						</view>
@@ -836,7 +839,7 @@
 					<view class="wh-title">{{ $t('me.labGamePage.raidTemp') }}</view>
 					<view v-if="raidTempTotal <= 0" class="empty-tip">{{ $t('me.labGamePage.raidEmpty') }}</view>
 					<view v-for="r in raidTempList" :key="r.id" class="res-row">
-						<text class="res-dot" :style="{ background: resColor(r.id) }">{{ resChar(r.id) }}</text>
+						<image class="res-dot" :src="gameIcon(r.id)" mode="aspectFit"  />
 						<text class="res-name">{{ resName(r.id) }}</text>
 						<text class="res-val">{{ r.val }}</text>
 					</view>
@@ -869,11 +872,11 @@
 				<view class="modal modal--tall">
 					<view class="modal-title">{{ $t('me.labGamePage.fvMarket', { name: fvVillage.name }) }}</view>
 					<view v-for="(s, si) in fmListings" :key="si" class="fr-item">
-						<text class="fr-char" :style="{ background: resColor(s.id) }">{{ resChar(s.id) }}</text>
+						<image class="fr-char" :src="gameIcon(s.id)" mode="aspectFit"  />
 						<view class="fr-main">
 							<view class="fr-name">{{ resName(s.id) }} ×{{ s.qty }}</view>
 							<view class="fr-sub">
-								{{ $t('me.labGamePage.mktPrice') }} <img class="mkt-em" src="../../static/icons/emerald.svg"></img>{{ s.price }} · {{ $t('me.labGamePage.mktTotal') }} <img class="mkt-em" src="../../static/icons/emerald.svg"></img>{{ s.qty * s.price }}
+								{{ $t('me.labGamePage.mktPrice') }} <image class="mkt-em" :src="gameIcon('emerald')" mode="aspectFit"  />{{ s.price }} · {{ $t('me.labGamePage.mktTotal') }} <image class="mkt-em" :src="gameIcon('emerald')" mode="aspectFit"  />{{ s.qty * s.price }}
 							</view>
 						</view>
 						<view class="fr-visit" @click="mktBuySoon">{{ $t('me.labGamePage.mktBuyAction') }}</view>
@@ -897,10 +900,10 @@
 							<template v-if="mktSlotAt(n - 1)">
 								<view class="mkt-tile" :style="{ background: resColor(mktSlotAt(n - 1).id) }">
 									<text class="mkt-tile-tag">{{ n > 6 ? $t('me.labGamePage.mktTagBuy') : $t('me.labGamePage.mktTagSell') }}</text>
-									<text class="mkt-tile-char">{{ resChar(mktSlotAt(n - 1).id) }}</text>
+									<image class="mkt-tile-char" :src="gameIcon(mktSlotAt(n - 1).id)" mode="aspectFit"  />
 									<text class="mkt-tile-qty">×{{ mktSlotAt(n - 1).qty }}</text>
 									<view class="mkt-tile-price">
-										<img class="mkt-em" src="../../static/icons/emerald.svg"></img>
+										<image class="mkt-em" :src="gameIcon('emerald')" mode="aspectFit"  />
 										<text>{{ mktSlotAt(n - 1).price }}</text>
 									</view>
 								</view>
@@ -942,6 +945,7 @@
 </template>
 
 <script>
+import { defenseIcon } from '@/common/game/defense-icons.js'
 import darkModeMixin from '@/mixins/dark-mode.js'
 import {
 	RESOURCES, BUILDINGS, BUILDING_MAP, TH_LEVELS, TH_QUOTA,
@@ -1089,7 +1093,7 @@ export default {
 			saveTimer: null,
 			secTimer: null,
 			// 开发者控制台
-			devOpen: true,
+			devOpen: false,
 			devResId: 'log',
 			devResVal: 1000,
 			devBaseVal: 1,
@@ -1618,6 +1622,7 @@ export default {
 	onHide() { this.teardown() },
 	onUnload() { this.teardown() },
 	methods: {
+		gameIcon: defenseIcon,
 		teardown() {
 			if (this.saveTimer) { clearInterval(this.saveTimer); this.saveTimer = null }
 			if (this.secTimer) { clearInterval(this.secTimer); this.secTimer = null }
@@ -5432,4 +5437,6 @@ const CAT_COLORS = {
 
 	&:active { opacity: 0.85; }
 }
+
+@import "./logDefense-cel.scss";
 </style>

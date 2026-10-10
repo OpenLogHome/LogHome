@@ -1,5 +1,6 @@
 <template>
-  <div class="outer" :class="{ 'home-layout': $route.path === '/' }">
+  <div class="outer" :class="{ 'home-layout': $route.path === '/', 'reading-layout': isReadingRoute }">
+    <a v-if="isReadingRoute" class="reading-skip-link" href="#reading-main">跳到阅读内容</a>
     <nav class="navbar">
       <div class="navbar-container">
         <div class="navbar-left">
@@ -10,7 +11,7 @@
           </nuxt-link>
         </div>
         <div class="navbar-center">
-          <nuxt-link to="/read" class="nav-link" exact-active-class="nav-link-active">阅读</nuxt-link>
+          <nuxt-link to="/read" class="nav-link" :class="{ 'nav-link-active': isReadingRoute }" exact-active-class="nav-link-active">阅读</nuxt-link>
           <nuxt-link to="/write" class="nav-link" exact-active-class="nav-link-active">写作</nuxt-link>
           <nuxt-link to="/community" class="nav-link" exact-active-class="nav-link-active">社区</nuxt-link>
         </div>
@@ -169,15 +170,15 @@
         </div>
       </div>
     </nav>
-    <main class="main-content">
+    <main class="main-content" :id="isReadingRoute ? 'reading-main' : undefined" :tabindex="isReadingRoute ? -1 : undefined">
       <nuxt />
     </main>
     <footer class="site-footer">
       <div class="footer-container">
         <p style="display: flex; justify-content: center; margin-bottom: 5px;">
-          <a href="https://beian.miit.gov.cn/" target="_blank" style="color:#FFEFD6; margin-right: 30px;">苏ICP备2021006745号</a><br>
-          <a href="https://beian.mps.gov.cn/" target="_blank" style="color:#FFEFD6; margin-right: 30px;">皖公安网备34010402703554号</a><br>
-          <a href="OpenSourcePlan.html" style="color:#FFEFD6">原木社区开源计划</a>
+          <a href="https://beian.miit.gov.cn/" target="_blank" style="color:var(--site-footer-link, #FFEFD6); margin-right: 30px;">苏ICP备2021006745号</a><br>
+          <a href="https://beian.mps.gov.cn/" target="_blank" style="color:var(--site-footer-link, #FFEFD6); margin-right: 30px;">皖公安网备34010402703554号</a><br>
+          <a href="OpenSourcePlan.html" style="color:var(--site-footer-link, #FFEFD6)">原木社区开源计划</a>
         </p>
         <p style="margin-bottom: 5px;">非 Minecraft 官方产品。未获 Mojang 许可，亦与 Mojang 无任何关联。</p>
         <p>© {{(new Date()).getFullYear()}} 原木社区 版权所有</p>
@@ -222,6 +223,9 @@ export default {
     }
   },
   computed: {
+    isReadingRoute() {
+      return /^\/(read|novel|article|manga|world|tags|tag)(\/|$)/.test(this.$route.path)
+    },
     noResults() {
       if (!this.searchKeyword) return false
       const { circles, posts, users, books } = this.searchResults

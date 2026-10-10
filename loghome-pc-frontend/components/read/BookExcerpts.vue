@@ -70,5 +70,22 @@ export default {
 }
 </script>
 <style scoped>
-.book-excerpts { padding: 20px; background: #fff; border: 1px solid #ede6dd; border-radius: 10px; }header { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; }h2 { color: #66513d; font-size: 17px; }header div { display: flex; gap: 7px; }button { padding: 6px 10px; border: 1px solid #e7ddd0; border-radius: 5px; background: none; color: #947358; cursor: pointer; font: inherit; font-size: 12px; }button.active { background: #947358; color: white; }button:disabled { opacity: .5; }.empty { padding: 30px 10px; text-align: center; color: #999; font-size: 13px; }.notice { color: #ab7654; font-size: 12px; margin-bottom: 12px; }.excerpts-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }article { padding: 18px; background: #fcfaf7; border: 1px solid #ede6dd; border-radius: 8px; }a { color: inherit; text-decoration: none; }blockquote { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.9; color: #61513f; border-left: 3px solid #c7aa80; padding-left: 14px; }article p,.excerpt-actions { color: #a08d75; font-size: 11px; margin-top: 16px; }.excerpt-actions { display: flex; justify-content: flex-end; }button:focus-visible,a:focus-visible { outline: 2px solid #947358; outline-offset: 3px; }@media(max-width:700px){.excerpts-grid{grid-template-columns:1fr;}}
+.book-excerpts { padding: 24px; background: var(--reading-surface, #fff); border: 1px solid var(--reading-line, #e4e3de); border-radius: 12px; }
+header { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+h2 { color: var(--reading-ink, #302f2a); font-size: 20px; font-weight: 600; }
+header div { display: flex; gap: 6px; flex-wrap: wrap; }
+button { padding: 9px 12px; border: 1px solid var(--reading-line, #e4e3de); border-radius: 6px; background: none; color: var(--reading-accent, #79573c); cursor: pointer; font: inherit; font-size: 13px; }
+button.active { background: var(--reading-accent, #79573c); border-color: var(--reading-accent, #79573c); color: white; }
+button:disabled { opacity: .5; }
+.empty { padding: 40px 16px; text-align: center; color: var(--reading-muted, #73716a); font-size: 14px; line-height: 1.8; }
+.notice { color: #9d503b; font-size: 13px; margin-bottom: 16px; line-height: 1.8; }
+.excerpts-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+article { padding: 24px; background: var(--reading-hover, #f5f4f0); border: 0; border-radius: 8px; min-width: 0; }
+a { color: inherit; text-decoration: none; }
+blockquote { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.95; color: var(--reading-ink, #302f2a); border-left: 2px solid var(--reading-accent, #79573c); padding-left: 18px; }
+article p, .excerpt-actions { color: var(--reading-muted, #73716a); font-size: 12px; line-height: 1.8; margin-top: 20px; }
+.excerpt-actions { display: flex; justify-content: flex-end; }
+.excerpt-actions button { border: 0; font-size: 12px; padding: 4px 0; }
+button:focus-visible,a:focus-visible { outline: 2px solid var(--reading-accent, #79573c); outline-offset: 3px; }
+@media(max-width:700px) { .excerpts-grid { grid-template-columns: 1fr; } .book-excerpts { padding: 20px 16px; } article { padding: 20px; } }
 </style>

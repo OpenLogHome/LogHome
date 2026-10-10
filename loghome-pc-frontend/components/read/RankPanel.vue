@@ -122,31 +122,37 @@ export default {
 </script>
 
 <style scoped>
-.rank-panel { padding: 20px; background: white; border: 1px solid #e9e5e0; border-radius: 12px; }
-.rank-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
-.rank-heading h1, .rank-heading h2 { font-size: 18px; color: #4f4033; }
-.rank-heading p { font-size: 12px; color: #999; margin-top: 8px; }
-.rank-actions { display: flex; gap: 14px; align-items: center; font-size: 11px; flex-shrink: 0; }
-.rank-actions a { color: #947358; text-decoration: none; }
+.rank-panel { padding: 26px; background: var(--reading-surface, #fff); border: 1px solid var(--reading-line, #e4e3de); border-radius: 12px; }
+.rank-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 22px; }
+.rank-heading h1, .rank-heading h2 { font-size: 21px; font-weight: 600; letter-spacing: -.4px; color: var(--reading-ink, #302f2a); }
+.rank-heading h1 { font-size: 28px; line-height: 1.4; }
+.rank-heading p { font-size: 14px; line-height: 1.7; color: var(--reading-muted, #73716a); margin-top: 8px; }
+.rank-actions { display: flex; gap: 16px; align-items: center; font-size: 13px; flex-shrink: 0; }
+.rank-actions a { color: var(--reading-accent, #79573c); text-decoration: none; }
 button { font: inherit; cursor: pointer; }
-.rank-actions button { color: #888; border: 0; background: none; padding: 4px; }
-.rank-controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding-bottom: 15px; border-bottom: 1px solid #f0ede9; }
-.board-buttons, .zone-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
-.board-buttons a, .zone-buttons a { padding: 7px 11px; font-size: 12px; border: 0; border-radius: 6px; background: #f7f5f2; color: #8d857c; text-decoration: none; }
-.board-buttons a.active { color: #fff; background: #947358; }
-.zone-buttons a { font-size: 11px; padding: 7px 9px; background: none; }
-.zone-buttons a.active { color: #82603f; background: #f4ede3; }
-.rank-grid, .rank-skeleton { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
-.full .rank-grid, .full .rank-skeleton { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.rank-skeleton div { height: 91px; border-radius: 8px; background: linear-gradient(90deg, #f4f2ef, #faf9f7, #f4f2ef); }
-.rank-snapshot { font-size: 10px; color: #aaa; margin-top: 12px; }
-.rank-state { padding: 25px 0; font-size: 12px; text-align: center; color: #9a8b79; }
-.rank-error { color: #b4715f; }
-.rank-state button, .rank-bottom button { border: 1px solid #d9c7b1; background: #fff; color: #947358; padding: 6px 15px; border-radius: 5px; }
-.rank-bottom { text-align: center; font-size: 12px; color: #aaa; margin-top: 25px; }
-.rank-page-links { display: flex; justify-content: center; gap: 20px; margin-top: 16px; }.rank-page-links a { color: #947358; text-decoration: none; }
+.rank-actions button { color: var(--reading-muted, #73716a); border: 0; background: none; padding: 8px 4px; }
+.rank-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--reading-line, #e4e3de); }
+.board-buttons, .zone-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
+.board-buttons { background: var(--reading-hover, #f5f4f0); padding: 4px; border-radius: 8px; }
+.board-buttons a, .zone-buttons a { padding: 8px 12px; font-size: 13px; border: 0; border-radius: 5px; color: var(--reading-secondary, #615e57); text-decoration: none; white-space: nowrap; transition: background .18s ease, color .18s ease; }
+.board-buttons a:hover, .zone-buttons a:hover { color: var(--reading-accent, #79573c); background: var(--reading-tint, #eee7de); }
+.board-buttons a.active { color: #fff; background: var(--reading-accent, #79573c); }
+.zone-buttons a { padding: 8px 10px; background: none; }
+.zone-buttons a.active { color: var(--reading-accent, #79573c); background: var(--reading-tint, #eee7de); font-weight: 600; }
+.rank-grid, .rank-skeleton { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 22px; margin-top: 12px; }
+.full .rank-grid, .full .rank-skeleton { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 24px; }
+.rank-skeleton div { height: 110px; border-radius: 8px; background: var(--reading-hover, #f5f4f0); }
+.rank-snapshot { font-size: 12px; color: var(--reading-muted, #73716a); margin-top: 16px; font-variant-numeric: tabular-nums; }
+.rank-state { padding: 40px 16px; font-size: 14px; line-height: 1.8; text-align: center; color: var(--reading-muted, #73716a); }
+.rank-error { color: #9d503b; }
+.rank-state button, .rank-bottom button { border: 1px solid var(--reading-line, #e4e3de); background: var(--reading-surface, #fff); color: var(--reading-accent, #79573c); padding: 10px 20px; border-radius: 6px; }
+.rank-bottom { text-align: center; font-size: 13px; color: var(--reading-muted, #73716a); margin-top: 28px; }
+.rank-page-links { display: flex; justify-content: center; gap: 24px; margin-top: 18px; font-size: 13px; }.rank-page-links a { color: var(--reading-accent, #79573c); text-decoration: none; }
 button:disabled { opacity: .5; cursor: wait; }
-button:focus-visible, a:focus-visible { outline: 2px solid #947358; outline-offset: 3px; }
-@media (max-width: 1100px) { .rank-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 620px) { .rank-grid, .full .rank-grid, .rank-skeleton, .full .rank-skeleton { grid-template-columns: 1fr; } .rank-panel { padding: 14px; } }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--reading-accent, #79573c); outline-offset: 3px; }
+.full { padding: 32px; }
+@media (min-width: 1440px) { .rank-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1100px) { .full .rank-grid, .full .rank-skeleton { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .rank-grid, .full .rank-grid, .rank-skeleton, .full .rank-skeleton { grid-template-columns: 1fr; } .rank-panel, .full { padding: 20px 16px; } .rank-heading { align-items: flex-start; flex-wrap: wrap; } .rank-heading h1 { font-size: 24px; } .rank-actions { gap: 14px; } .rank-controls { gap: 12px; } .board-buttons a { padding: 8px 10px; } }
+@media (prefers-reduced-motion: reduce) { .board-buttons a, .zone-buttons a { transition: none; } }
 </style>

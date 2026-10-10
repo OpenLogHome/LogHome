@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="反馈文本错误" :visible="visible" @update:visible="$emit('update:visible', $event)" width="min(520px, 94vw)" append-to-body>
+  <el-dialog custom-class="reading-dialog" title="反馈文本错误" :visible="visible" @update:visible="$emit('update:visible', $event)" width="min(520px, 94vw)" append-to-body>
     <blockquote>{{ paragraphText }}</blockquote><el-input v-model="content" type="textarea" :rows="4" maxlength="500" show-word-limit placeholder="请说明错别字、标点或其他问题，以及建议修改的内容" /><p v-if="error" class="error" role="alert">{{ error }}</p>
     <span slot="footer"><el-button @click="$emit('update:visible', false)">取消</el-button><el-button type="primary" :loading="sending" :disabled="!content.trim()" @click="submit">提交反馈</el-button></span>
   </el-dialog>
