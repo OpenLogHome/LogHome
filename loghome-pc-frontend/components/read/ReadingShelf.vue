@@ -13,13 +13,13 @@
     </div>
     <label v-if="full" class="shelf-search">查找书架作品 <input v-model="keyword" type="search" placeholder="书名或作者"></label>
     <p v-if="!loggedIn" class="shelf-hint"><nuxt-link to="/login">登录</nuxt-link>后同步收藏与阅读进度。</p>
-    <p v-if="error" class="shelf-error" role="alert">{{ error }} <button @click="load">重试</button></p>
+    <p v-if="error" class="shelf-error" role="alert">{{ error }} <nuxt-link v-if="authExpired" :to="loginUrl">重新登录</nuxt-link><button v-else @click="load">重试</button></p>
     <div v-if="visibleBooks.length" class="shelf-grid">
       <div v-for="book in visibleBooks" :key="book.novel_id" class="shelf-item">
         <WorkCard :work="book" :compact="!full" :destination="resumeUrl(book)" />
         <div v-if="full" class="shelf-item-actions">
           <nuxt-link :to="workUrl(book)">作品详情</nuxt-link>
-          <button v-if="book.inShelf && loggedIn" :disabled="removing === book.novel_id" @click="remove(book)">{{ removing === book.novel_id ? '处理中…' : '移出书架' }}</button>
+          <button v-if="book.inShelf && loggedIn" :disabled="loading || !!removing || authExpired" @click="remove(book)">{{ removing === book.novel_id ? '处理中…' : '移出书架' }}</button>
         </div>
       </div>
     </div>
@@ -34,6 +34,7 @@ import WorkCard from './WorkCard.vue'
 import { readingToken } from '~/plugins/api/reading'
 import { readingAccountKey, localReadingHistory, localReadingProgress } from '~/utils/reading-history'
 import { asList, mergeShelf, mergeReadingHistory, uniqueWorks, workUrl } from '~/utils/reading-discovery'
+import { loginReturnPath } from '~/utils/login-return'
 
 function storageRead(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || 'null') || fallback } catch (_) { return fallback }
@@ -43,7 +44,7 @@ export default {
   data: () => ({
     tabs: [{ key: 'all', label: '全部' }, { key: 'favorites', label: '收藏' }, { key: 'history', label: '最近阅读' }],
     tab: 'all', books: [], keyword: '', loading: true, error: '', loggedIn: false,
-    version: 0, removing: null
+    version: 0, removing: null, account: null, identityVersion: 0, removeVersion: 0, authExpired: false
   }),
   computed: {
     filteredBooks() {
@@ -52,12 +53,19 @@ export default {
         (this.tab !== 'history' || book.historyIndex != null) &&
         (!keyword || `${book.name} ${book.author_name}`.toLowerCase().includes(keyword)))
     },
-    visibleBooks() { return this.full ? this.filteredBooks : this.filteredBooks.slice(0, 4) }
+    visibleBooks() { return this.full ? this.filteredBooks : this.filteredBooks.slice(0, 4) },
+    loginUrl() { return { path: '/login', query: { redirect: loginReturnPath(this.$route.fullPath) } } }
   },
-  mounted() { this.load(); window.addEventListener('storage', this.onStorage) },
-  beforeDestroy() { this.version++; window.removeEventListener('storage', this.onStorage) },
+  mounted() { this.load(); window.addEventListener('storage', this.onStorage); window.addEventListener('focus', this.checkAccount); window.addEventListener('auth-state-changed', this.checkAccount) },
+  beforeDestroy() { this.version++; this.identityVersion++; this.removeVersion++; this.books = []; window.removeEventListener('storage', this.onStorage); window.removeEventListener('focus', this.checkAccount); window.removeEventListener('auth-state-changed', this.checkAccount) },
   methods: {
     workUrl,
+    checkAccount() { if (this.account === readingToken()) return false; this.load(); return true },
+    expired(error) { return [401, 403].includes(Number(error && (error.status || error.response && error.response.status))) },
+    clearExpiredShelf(token) {
+      this.authExpired = true; this.books = []; this.error = '登录状态已过期，请重新登录后同步书架。'
+      try { localStorage.removeItem(`loghome_pc_shelf_${readingAccountKey(token)}`) } catch (_) {}
+    },
     onStorage(event) { if (event.key === 'token' || event.key === 'loghomeReaderHistory' || (event.key || '').startsWith('loghome_pc_history_')) this.load() },
     resumeUrl(book) {
       if (Number(book.last_article_id) > 0 && book.novel_type !== 'world') {
@@ -66,16 +74,20 @@ export default {
       return workUrl(book)
     },
     async load() {
-      const version = ++this.version, token = readingToken()
-      this.loggedIn = !!token; this.loading = true; this.error = ''; this.books = []
+      const token = readingToken()
+      if (token !== this.account) { this.account = token; this.identityVersion++; this.removeVersion++; this.removing = null; this.keyword = '' }
+      const version = ++this.version
+      this.loggedIn = !!token; this.loading = true; this.error = ''; this.authExpired = false; this.books = []
       const localHistory = localReadingHistory(token)
       if (!token) { this.books = mergeShelf([], localHistory); this.loading = false; return }
       const key = `loghome_pc_shelf_${readingAccountKey(token)}`, cache = storageRead(key, null)
       this.books = cache && cache.version === 1 ? uniqueWorks(cache.books) : mergeShelf([], localHistory)
       const results = await Promise.allSettled([this.$api.reading.getShelf(), this.$api.reading.getHistory()])
       if (version !== this.version || token !== readingToken()) return
-      const likes = results[0].status === 'fulfilled' ? asList(results[0].value) : this.books.filter(book => book.inShelf)
-      const cloudHistory = results[1].status === 'fulfilled' ? asList(results[1].value) : this.books.filter(book => book.historyIndex != null)
+      if (results.some(result => result.status === 'rejected' && this.expired(result.reason))) { this.clearExpiredShelf(token); this.loading = false; return }
+      if (results.some(result => result.status === 'fulfilled' && !Array.isArray(result.value))) { this.error = '部分书架数据暂不可用，请重试。' }
+      const likes = results[0].status === 'fulfilled' && Array.isArray(results[0].value) ? results[0].value : this.books.filter(book => book.inShelf)
+      const cloudHistory = results[1].status === 'fulfilled' && Array.isArray(results[1].value) ? results[1].value : this.books.filter(book => book.historyIndex != null)
       const history = mergeReadingHistory(cloudHistory, localHistory)
       this.books = mergeShelf(likes, history)
       if (results.some(result => result.status === 'rejected')) this.error = '部分书架数据未能同步，已保留可用记录。'
@@ -94,11 +106,21 @@ export default {
       finally { if (version === this.version) this.loading = false }
     },
     async remove(book) {
-      if (this.removing) return
-      this.removing = book.novel_id
-      try { await this.$api.reading.removeFavorite(book.novel_id); await this.load() }
-      catch (_) { this.error = '未能移出书架，请重试。' }
-      finally { this.removing = null }
+      if (this.checkAccount()) return
+      if (!this.loggedIn || this.authExpired) { this.$router.push(this.loginUrl); return }
+      const id = Number(book && book.novel_id)
+      if (!Number.isSafeInteger(id) || id < 1 || !this.books.some(row => Number(row.novel_id) === id && row.inShelf) || this.removing || this.loading) return
+      const token = this.account, identity = this.identityVersion, operation = ++this.removeVersion
+      const current = () => identity === this.identityVersion && operation === this.removeVersion && token === this.account && token === readingToken()
+      this.removing = id
+      try {
+        await this.$confirm('确定将这部作品移出书架？', '取消收藏', { type: 'warning' })
+        if (!current() || !this.books.some(row => Number(row.novel_id) === id && row.inShelf)) return
+        await this.$api.reading.removeFavorite(id)
+        if (current()) await this.load()
+      }
+      catch (error) { if (current() && error !== 'cancel' && error !== 'close') { if (this.expired(error)) this.clearExpiredShelf(token); else this.error = '未能移出书架，请重试。' } }
+      finally { if (current()) this.removing = null }
     }
   }
 }

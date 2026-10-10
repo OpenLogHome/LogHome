@@ -7,8 +7,8 @@ const vm = require('node:vm')
 const babel = require('@babel/core')
 const compiler = require('vue-template-compiler/build.js')
 const root = path.resolve(__dirname, '..')
-const modules = new Map(), storage = new Map()
-const localStorage = { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, String(value)) }
+const modules = new Map(), storage = new Map(), listeners = new Map()
+const localStorage = { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, String(value)), removeItem: key => storage.delete(key) }
 let httpRequest
 function load(relative) {
   if (modules.has(relative)) return modules.get(relative)
@@ -21,7 +21,8 @@ function load(relative) {
   const code = babel.transformSync(source, { configFile: false, babelrc: false, plugins: [require('@babel/plugin-transform-modules-commonjs')] }).code
   const exports = {}, context = {
     exports, process: { server: false, client: true, env: { baseUrl: 'http://test.invalid' } },
-    URLSearchParams, Date, console, setTimeout, clearTimeout, localStorage,
+    URL, URLSearchParams, Date, console, setTimeout, clearTimeout, localStorage,
+    window: { addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: (name, fn) => { if (listeners.get(name) === fn) listeners.delete(name) } },
     require(specifier) {
       if (specifier.endsWith('.vue')) return {}
       if (specifier === 'axios') return { request: options => httpRequest(options) }
@@ -43,7 +44,7 @@ function instance(file, props, api) {
 }
 const book = id => ({ novel_id: id, name: `作品${id}`, novel_type: 'novel' })
 const plain = value => JSON.parse(JSON.stringify(value))
-const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r }); return { promise, resolve } }
+const deferred = () => { let resolve, reject; const promise = new Promise((a,b) => { resolve = a; reject = b }); return { promise, resolve, reject } }
 async function main() {
   const utils = load('utils/reading-discovery.js')
   assert.deepEqual(plain(utils.activeCollections([{ collection_id: 3, isValid: '1' }, { collection_id: 1, isValid: 1 }, { collection_id: 2, isValid: '0' }]).map(c => c.collection_id)), [1, 3])
@@ -115,6 +116,46 @@ async function main() {
   assert.ok(shelf.books.some(book => book.novel_id === 20 && book.inShelf)); assert.ok(!shelf.books.some(book => book.novel_id === 19))
   assert.equal(shelf.resumeUrl({ novel_id: 20, novel_type: 'manga', last_article_id: 400, last_page_idx: 7 }), '/manga/read/400?novelId=20&pageIdx=7')
   console.log('PASS stale account response ignored and manga resumes correct page')
+
+  const shelfDefinition = load('components/read/ReadingShelf.vue').default
+  const events = instance('components/read/ReadingShelf.vue', { full: true }, {
+    getShelf: async () => [book(21)], getHistory: async () => [], getUpdates: async () => ({ updates: [] })
+  })
+  shelfDefinition.mounted.call(events); await new Promise(setImmediate)
+  assert.deepEqual([...listeners.keys()].sort(), ['auth-state-changed','focus','storage'])
+  assert(events.books.some(row=>row.novel_id===21&&row.inShelf))
+  storage.delete('token'); listeners.get('auth-state-changed')()
+  assert.equal(events.loggedIn,false); assert(!events.books.some(row=>row.inShelf)); assert.equal(events.keyword,'')
+  storage.set('token',JSON.stringify({tk:'account-b'})); events.checkAccount(); await new Promise(setImmediate)
+  const cacheKey = `loghome_pc_shelf_${history.readingAccountKey('account-b')}`
+  assert(storage.has(cacheKey))
+  events.$api.reading.getShelf=async()=>{throw Object.assign(Error('raw unauthorized'),{status:401})}
+  await events.load(); assert.equal(events.books.length,0); assert.equal(events.authExpired,true); assert.equal(events.loading,false); assert.equal(storage.has(cacheKey),false)
+  assert.match(events.error,/重新登录/)
+  events.$api.reading.getShelf=async()=>[book(21)]; await events.load()
+  events.$api.reading.getShelf=async()=>({msg:'unavailable'}); await events.load()
+  assert.match(events.error,/暂不可用/); assert(events.books.some(row=>row.novel_id===21&&row.inShelf))
+  events.$api.reading.getShelf=async()=>[book(21)]; await events.load()
+  console.log('PASS shelf lifecycle immediately clears logout state; expired auth clears private cache; malformed responses preserve valid records')
+
+  let removes = 0
+  const confirmation = deferred(); events.$confirm=()=>confirmation.promise
+  events.$api.reading.removeFavorite=async()=>{removes++}
+  const removal=events.remove(book(21)); assert.equal(events.removing,21)
+  storage.set('token',JSON.stringify({tk:'account-a'})); events.checkAccount()
+  confirmation.resolve(); await removal; await new Promise(setImmediate)
+  assert.equal(removes,0); assert.equal(events.removing,null)
+  const oldRemoval=deferred();events.$confirm=async()=>{};events.$api.reading.removeFavorite=()=>{removes++;return oldRemoval.promise}
+  const pendingRemoval=events.remove(book(21));await new Promise(setImmediate);assert.equal(removes,1)
+  storage.set('token',JSON.stringify({tk:'account-b'}));events.checkAccount();await new Promise(setImmediate)
+  const currentRemoval=deferred();events.$api.reading.removeFavorite=()=>{removes++;return currentRemoval.promise}
+  const latestRemoval=events.remove(book(21));await new Promise(setImmediate);assert.equal(events.removing,21)
+  oldRemoval.reject(Error('previous account failure'));await pendingRemoval;assert.equal(events.removing,21);assert.equal(events.error,'')
+  events.$api.reading.getShelf=async()=>[];currentRemoval.resolve();await latestRemoval
+  assert.equal(events.removing,null);assert(!events.books.some(row=>row.novel_id===21&&row.inShelf))
+  shelfDefinition.beforeDestroy.call(events);assert.equal(listeners.size,0);assert.equal(events.books.length,0)
+  storage.set('token',JSON.stringify({tk:'account-b'}))
+  console.log('PASS shelf confirmation cannot cross accounts; old remove callbacks cannot alter new operations; teardown clears listeners and private rows')
 
   const card = instance('components/read/WorkCard.vue', { work: { ...book(1), badges: [{ code: 'expired', text: '旧', expires_at: '2020-01-01' }, { code: 'active', text: '新', expires_at: '2099-01-01' }] }, compact: true }, {})
   assert.deepEqual(plain(card.visibleBadges.map(b => b.code)), ['active'])
