@@ -4,7 +4,7 @@ const aliases = {
   base: 'castle', dorm: 'house', warehouse: 'house', food: 'food', ground: 'farm', ug: 'basement',
   expedition: 'sword', raid: 'zombie', collect: 'log', upgrade: 'arrow', hammer: 'pickaxe',
   friends: 'house', journal: 'book', clock: 'clock', wall: 'wall',
-  plank: 'log', cobble: 'stonegen', stone: 'stonegen', blackstone: 'coal', charcoal: 'coal',
+  sand: 'quartz', plank: 'log', cobble: 'stonegen', stone: 'stonegen', blackstone: 'coal', charcoal: 'coal',
   rawIron: 'ingot', iron: 'ingot', steel: 'ingot', lapis: 'diamond', obsidian: 'coal',
   glass: 'quartz', bed: 'house', pumpkin: 'carrot', flint: 'flame', blazePowder: 'flame',
   netherite: 'coal', netherStar: 'star', wheat: 'wheat', potato: 'food', beetroot: 'carrot',
