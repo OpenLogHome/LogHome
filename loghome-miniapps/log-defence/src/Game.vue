@@ -1,77 +1,77 @@
 <template>
-	<view class="outer" v-dark>
-		<view class="content">
+	<div class="outer" v-dark>
+		<div class="content">
 			<!-- 顶部状态栏第一行：基地名 + 大本营等级 | 一键收集 / 仓库 -->
-			<view class="topbar">
-				<view class="stat base-stat">
-					<text class="stat-val base-stat-name">{{ displayName }}</text>
-					<text class="stat-cap">Lv.{{ baseLevel }}</text>
-				</view>
-				<view class="topbar-right">
-					<view v-if="quickCollectOpen" class="wh-btn wh-btn--green" @click="collectAll">
-						<text class="wh-text">{{ $t('me.labGamePage.quickCollect') }}</text>
-						<text v-if="quickCollectCount > 0" class="wh-badge">{{ quickCollectCount }}</text>
-					</view>
-					<view class="wh-btn" @click="warehouseOpen = true">
-						<image class="wh-icon" :src="gameIcon('warehouse')" mode="aspectFit" />
-						<text class="wh-text">{{ $t('me.labGamePage.warehouseBtn') }}</text>
-					</view>
-				</view>
-			</view>
+			<div class="topbar">
+				<div class="stat base-stat">
+					<span class="stat-val base-stat-name">{{ displayName }}</span>
+					<span class="stat-cap">Lv.{{ baseLevel }}</span>
+				</div>
+				<div class="topbar-right">
+					<div v-if="quickCollectOpen" class="wh-btn wh-btn--green" @click="collectAll">
+						<span class="wh-text">{{ $t('me.labGamePage.quickCollect') }}</span>
+						<span v-if="quickCollectCount > 0" class="wh-badge">{{ quickCollectCount }}</span>
+					</div>
+					<div class="wh-btn" @click="warehouseOpen = true">
+						<img class="wh-icon" :src="gameIcon('warehouse')"  >
+						<span class="wh-text">{{ $t('me.labGamePage.warehouseBtn') }}</span>
+					</div>
+				</div>
+			</div>
 
 			<!-- 顶部状态栏第二行：饱食 / 村民 / 绿宝石 -->
-			<view class="statbar">
-				<view class="stat" @click="foodOpen = true">
-					<image class="stat-icon" :src="gameIcon('food')" mode="aspectFit" />
-					<text class="stat-val">{{ fmtStat(foodStat.count) }}<text class="stat-cap">/+{{ fmtStat(foodStat.sat) }}</text></text>
-				</view>
-				<view class="stat" @click="villOpen = true">
-					<image class="stat-icon" :src="gameIcon('villager')" mode="aspectFit" />
-					<text class="stat-val">{{ fmtStat(villagers.length) }}<text class="stat-cap">/{{ fmtStat(capacity) }}</text></text>
-				</view>
-				<view class="stat">
-					<image class="stat-icon" :src="gameIcon('emerald')" mode="aspectFit" />
-					<text class="stat-val">{{ fmtStat(floorRes('emerald')) }}</text>
-				</view>
-			</view>
+			<div class="statbar">
+				<div class="stat" @click="foodOpen = true">
+					<img class="stat-icon" :src="gameIcon('food')"  >
+					<span class="stat-val">{{ fmtStat(foodStat.count) }}<span class="stat-cap">/+{{ fmtStat(foodStat.sat) }}</span></span>
+				</div>
+				<div class="stat" @click="villOpen = true">
+					<img class="stat-icon" :src="gameIcon('villager')"  >
+					<span class="stat-val">{{ fmtStat(villagers.length) }}<span class="stat-cap">/{{ fmtStat(capacity) }}</span></span>
+				</div>
+				<div class="stat">
+					<img class="stat-icon" :src="gameIcon('emerald')"  >
+					<span class="stat-val">{{ fmtStat(floorRes('emerald')) }}</span>
+				</div>
+			</div>
 
 			<!-- 楼层切换：地上 / 地下层 -->
-			<view class="layer-row">
-				<view class="layer-btn" :class="{ 'layer-btn--on': layer === 'ground' }" @click="switchLayer('ground')">
-					<image class="layer-icon" :src="gameIcon('ground')" mode="aspectFit"  /><text>{{ $t('me.labGamePage.layerGround') }}</text>
-				</view>
-				<view class="layer-btn" :class="{ 'layer-btn--on': layer === 'ug' }" @click="switchLayer('ug')">
-					<image class="layer-icon" :src="gameIcon('ug')" mode="aspectFit"  /><text>{{ $t('me.labGamePage.layerUnder') }}</text>
-				</view>
-			</view>
+			<div class="layer-row">
+				<div class="layer-btn" :class="{ 'layer-btn--on': layer === 'ground' }" @click="switchLayer('ground')">
+					<img class="layer-icon" :src="gameIcon('ground')"   ><span>{{ $t('me.labGamePage.layerGround') }}</span>
+				</div>
+				<div class="layer-btn" :class="{ 'layer-btn--on': layer === 'ug' }" @click="switchLayer('ug')">
+					<img class="layer-icon" :src="gameIcon('ug')"   ><span>{{ $t('me.labGamePage.layerUnder') }}</span>
+				</div>
+			</div>
 
 			<!-- 村庄（地上层外围一圈城墙，共 4 段整边：0上 / 1右 / 2下 / 3左，四角由上下两段包边融合） -->
-			<view class="village">
+			<div class="village">
 				<!-- 顶边城墙（walls 0） -->
-				<view v-if="layer === 'ground'" class="wall-strip">
-					<view class="wall-cell" @click="tapWall(0)">
-						<view v-if="walls[0]" class="wall wall--c-t" :class="{ 'wall--hurt': wallDurPct(0) < 100 }" :style="{ background: wallMatColor(walls[0].level) }">
-							<image class="wall-char" :src="gameIcon('wall')" mode="aspectFit"  />
-							<view class="wall-lv">Lv.{{ walls[0].level }}</view>
-						</view>
-						<view v-else class="wall-cell--empty"><text class="wall-cell-plus">＋</text></view>
-					</view>
-				</view>
-				<view class="wall-mid">
+				<div v-if="layer === 'ground'" class="wall-strip">
+					<div class="wall-cell" @click="tapWall(0)">
+						<div v-if="walls[0]" class="wall wall--c-t" :class="{ 'wall--hurt': wallDurPct(0) < 100 }" :style="{ background: wallMatColor(walls[0].level) }">
+							<img class="wall-char" :src="gameIcon('wall')"   >
+							<div class="wall-lv">Lv.{{ walls[0].level }}</div>
+						</div>
+						<div v-else class="wall-cell--empty"><span class="wall-cell-plus">＋</span></div>
+					</div>
+				</div>
+				<div class="wall-mid">
 					<!-- 左边城墙（walls 3） -->
-					<view v-if="layer === 'ground'" class="wall-strip wall-strip--v">
-						<view class="wall-cell" @click="tapWall(3)">
-							<view v-if="walls[3]" class="wall" :class="{ 'wall--hurt': wallDurPct(3) < 100 }" :style="{ background: wallMatColor(walls[3].level) }">
-								<image class="wall-char" :src="gameIcon('wall')" mode="aspectFit"  />
-								<view class="wall-lv">Lv.{{ walls[3].level }}</view>
-							</view>
-							<view v-else class="wall-cell--empty"><text class="wall-cell-plus">＋</text></view>
-						</view>
-					</view>
+					<div v-if="layer === 'ground'" class="wall-strip wall-strip--v">
+						<div class="wall-cell" @click="tapWall(3)">
+							<div v-if="walls[3]" class="wall" :class="{ 'wall--hurt': wallDurPct(3) < 100 }" :style="{ background: wallMatColor(walls[3].level) }">
+								<img class="wall-char" :src="gameIcon('wall')"   >
+								<div class="wall-lv">Lv.{{ walls[3].level }}</div>
+							</div>
+							<div v-else class="wall-cell--empty"><span class="wall-cell-plus">＋</span></div>
+						</div>
+					</div>
 
 					<!-- 九宫格村庄 -->
-					<view class="grid" :class="{ 'grid--under': layer === 'ug' }">
-				<view
+					<div class="grid" :class="{ 'grid--under': layer === 'ug' }">
+				<div
 					v-for="(plot, idx) in activePlots"
 					:key="layer + '-' + idx"
 					class="plot"
@@ -83,465 +83,465 @@
 				>
 					<!-- 中间格：大本营（仅地上，底色随大本营等级主题色变动） -->
 					<template v-if="layer === 'ground' && idx === CENTER_IDX">
-						<view class="base" :style="{ background: thColor }">
-							<image class="base-char" :src="gameIcon('base')" mode="aspectFit" />
-							<view class="building-lv">Lv.{{ baseLevel }}</view>
-						</view>
-						<view v-if="thBusy" class="busy-flag">
-							<image class="busy-icon" :src="gameIcon('hammer')" mode="aspectFit" />
-							<text class="busy-time">{{ thBusyText }}</text>
-						</view>
-						<view v-if="thCanUpgrade" class="up-arrow" @click.stop="tapPlot(idx)">
-							<image class="up-arrow-icon" :src="gameIcon('upgrade')" mode="aspectFit" />
-						</view>
+						<div class="base" :style="{ background: thColor }">
+							<img class="base-char" :src="gameIcon('base')"  >
+							<div class="building-lv">Lv.{{ baseLevel }}</div>
+						</div>
+						<div v-if="thBusy" class="busy-flag">
+							<img class="busy-icon" :src="gameIcon('hammer')"  >
+							<span class="busy-time">{{ thBusyText }}</span>
+						</div>
+						<div v-if="thCanUpgrade" class="up-arrow" @click.stop="tapPlot(idx)">
+							<img class="up-arrow-icon" :src="gameIcon('upgrade')"  >
+						</div>
 					</template>
 					<!-- 扩占地块：多格建筑的延伸部分，点击打开主建筑面板 -->
 					<template v-else-if="plot && plot.extOf !== undefined">
-						<view class="building building--ext" :style="{ background: buildingDef(plot.extType).color }">
-							<image class="building-char building-char--ext" :src="gameIcon(plot.extType)" mode="aspectFit" />
-						</view>
+						<div class="building building--ext" :style="{ background: buildingDef(plot.extType).color }">
+							<img class="building-char building-char--ext" :src="gameIcon(plot.extType)"  >
+						</div>
 					</template>
 					<!-- 已建造建筑 -->
 					<template v-else-if="plot">
-						<view class="building" :style="{ background: buildingDef(plot.type).color }">
-							<image class="building-char" :src="gameIcon(plot.type)" mode="aspectFit" />
-							<view class="building-lv">Lv.{{ plot.level }}</view>
-							<view v-if="totalSlots(plot) > 0 && !plot.busy" class="building-worker">
-								<image v-if="isHeroIdx(layer, idx)" class="worker-hero" :src="gameIcon('star')" mode="aspectFit" />
-								<text v-else>{{ plot.workers + '/' + totalSlots(plot) }}</text>
-							</view>
-						</view>
-						<view v-if="plot.busy" class="busy-flag">
-							<image class="busy-icon" :src="gameIcon('hammer')" mode="aspectFit" />
-							<text class="busy-time">{{ busyRemain(plot) }}</text>
-						</view>
-						<view v-if="canUpgradePlot(plot)" class="up-arrow" @click.stop="tapPlot(idx)">
-							<image class="up-arrow-icon" :src="gameIcon('upgrade')" mode="aspectFit" />
-						</view>
+						<div class="building" :style="{ background: buildingDef(plot.type).color }">
+							<img class="building-char" :src="gameIcon(plot.type)"  >
+							<div class="building-lv">Lv.{{ plot.level }}</div>
+							<div v-if="totalSlots(plot) > 0 && !plot.busy" class="building-worker">
+								<img v-if="isHeroIdx(layer, idx)" class="worker-hero" :src="gameIcon('star')"  >
+								<span v-else>{{ plot.workers + '/' + totalSlots(plot) }}</span>
+							</div>
+						</div>
+						<div v-if="plot.busy" class="busy-flag">
+							<img class="busy-icon" :src="gameIcon('hammer')"  >
+							<span class="busy-time">{{ busyRemain(plot) }}</span>
+						</div>
+						<div v-if="canUpgradePlot(plot)" class="up-arrow" @click.stop="tapPlot(idx)">
+							<img class="up-arrow-icon" :src="gameIcon('upgrade')"  >
+						</div>
 						<!-- 产出囤积读条（部落冲突式：囤积 > 0 时显示） -->
-						<view v-if="bufRatio(plot) > 0" class="collect-bar">
-							<view class="collect-bar-fill" :style="{ width: Math.min(100, bufRatio(plot) * 100) + '%' }"></view>
-						</view>
+						<div v-if="bufRatio(plot) > 0" class="collect-bar">
+							<div class="collect-bar-fill" :style="{ width: Math.min(100, bufRatio(plot) * 100) + '%' }"></div>
+						</div>
 						<!-- 收集角标（有整数量可收时显示，点击收集） -->
-						<view v-if="bufCount(plot) >= 1" class="collect-badge" @click.stop="collectPlot(idx)">
-							<image class="collect-badge-icon" :src="gameIcon(bufMain(plot) ? bufMain(plot).id : 'collect')" mode="aspectFit"  />
-						</view>
+						<div v-if="bufCount(plot) >= 1" class="collect-badge" @click.stop="collectPlot(idx)">
+							<img class="collect-badge-icon" :src="gameIcon(bufMain(plot) ? bufMain(plot).id : 'collect')"   >
+						</div>
 					</template>
 					<!-- 地下待清理 / 清理中 -->
 					<template v-else-if="layer === 'ug' && !ugCleared[idx]">
-						<view class="locked-plot">
+						<div class="locked-plot">
 							<img v-if="ugClearing[idx] > 0" class="locked-icon" :src="gameIcon('pickaxe')"></img>
-							<image v-else class="locked-icon" :src="gameIcon('rock')" mode="aspectFit" />
-							<text class="locked-text">{{ ugClearing[idx] > 0 ? $t('me.labGamePage.ugClearing', { n: ugClearLeftMin(idx) }) : $t('me.labGamePage.ugLocked') }}</text>
-							<view v-if="ugClearing[idx] > 0" class="locked-bar">
-								<view class="locked-bar-fill" :style="{ width: ((1 - (ugClearing[idx] - nowTs) / (ugClearMin * 60000)) * 100) + '%' }"></view>
-							</view>
-						</view>
+							<img v-else class="locked-icon" :src="gameIcon('rock')"  >
+							<span class="locked-text">{{ ugClearing[idx] > 0 ? $t('me.labGamePage.ugClearing', { n: ugClearLeftMin(idx) }) : $t('me.labGamePage.ugLocked') }}</span>
+							<div v-if="ugClearing[idx] > 0" class="locked-bar">
+								<div class="locked-bar-fill" :style="{ width: ((1 - (ugClearing[idx] - nowTs) / (ugClearMin * 60000)) * 100) + '%' }"></div>
+							</div>
+						</div>
 					</template>
 					<!-- 空地 -->
 					<template v-else>
-						<view class="empty-plot">
-							<view class="empty-mark">+</view>
-						</view>
+						<div class="empty-plot">
+							<div class="empty-mark">+</div>
+						</div>
 					</template>
-				</view>
-				</view>
+				</div>
+				</div>
 
 					<!-- 右边城墙（walls 1） -->
-					<view v-if="layer === 'ground'" class="wall-strip wall-strip--v">
-						<view class="wall-cell" @click="tapWall(1)">
-							<view v-if="walls[1]" class="wall" :class="{ 'wall--hurt': wallDurPct(1) < 100 }" :style="{ background: wallMatColor(walls[1].level) }">
-								<image class="wall-char" :src="gameIcon('wall')" mode="aspectFit"  />
-								<view class="wall-lv">Lv.{{ walls[1].level }}</view>
-							</view>
-							<view v-else class="wall-cell--empty"><text class="wall-cell-plus">＋</text></view>
-						</view>
-					</view>
-				</view>
+					<div v-if="layer === 'ground'" class="wall-strip wall-strip--v">
+						<div class="wall-cell" @click="tapWall(1)">
+							<div v-if="walls[1]" class="wall" :class="{ 'wall--hurt': wallDurPct(1) < 100 }" :style="{ background: wallMatColor(walls[1].level) }">
+								<img class="wall-char" :src="gameIcon('wall')"   >
+								<div class="wall-lv">Lv.{{ walls[1].level }}</div>
+							</div>
+							<div v-else class="wall-cell--empty"><span class="wall-cell-plus">＋</span></div>
+						</div>
+					</div>
+				</div>
 				<!-- 底边城墙（walls 2） -->
-				<view v-if="layer === 'ground'" class="wall-strip">
-					<view class="wall-cell" @click="tapWall(2)">
-						<view v-if="walls[2]" class="wall wall--c-b" :class="{ 'wall--hurt': wallDurPct(2) < 100 }" :style="{ background: wallMatColor(walls[2].level) }">
-							<image class="wall-char" :src="gameIcon('wall')" mode="aspectFit"  />
-							<view class="wall-lv">Lv.{{ walls[2].level }}</view>
-						</view>
-						<view v-else class="wall-cell--empty"><text class="wall-cell-plus">＋</text></view>
-					</view>
-				</view>
-			</view>
+				<div v-if="layer === 'ground'" class="wall-strip">
+					<div class="wall-cell" @click="tapWall(2)">
+						<div v-if="walls[2]" class="wall wall--c-b" :class="{ 'wall--hurt': wallDurPct(2) < 100 }" :style="{ background: wallMatColor(walls[2].level) }">
+							<img class="wall-char" :src="gameIcon('wall')"   >
+							<div class="wall-lv">Lv.{{ walls[2].level }}</div>
+						</div>
+						<div v-else class="wall-cell--empty"><span class="wall-cell-plus">＋</span></div>
+					</div>
+				</div>
+			</div>
 
 			<!-- 放置模式横幅：点击空地放置收纳中的建筑 -->
-			<view v-if="placeSel !== null" class="place-banner">
-				<text class="place-banner-text">{{ $t('me.labGamePage.placeHint', { n: placeName() }) }}</text>
-				<view class="place-banner-cancel" @click="cancelPlace">{{ $t('me.labGamePage.placeCancel') }}</view>
-			</view>
+			<div v-if="placeSel !== null" class="place-banner">
+				<span class="place-banner-text">{{ $t('me.labGamePage.placeHint', { n: placeName() }) }}</span>
+				<div class="place-banner-cancel" @click="cancelPlace">{{ $t('me.labGamePage.placeCancel') }}</div>
+			</div>
 
 			<!-- 功能入口（占位） -->
-			<view class="feature-row">
-				<view class="feature-btn" @click="openMarket">
-					<image class="feature-icon" :src="gameIcon('market')" mode="aspectFit" />
-					<text class="feature-name">{{ $t('me.labGamePage.market') }}</text>
-					<view v-if="traderHere" class="mkt-badge"><image class="mkt-badge-icon" :src="gameIcon('hero')" mode="aspectFit" /></view>
-				</view>
-				<view class="feature-btn" @click="openExp">
-					<image class="feature-icon" :src="gameIcon('expedition')" mode="aspectFit" />
-					<text class="feature-name">{{ $t('me.labGamePage.expedition') }}</text>
-					<view v-if="expedition" class="exp-badge">{{ expRemainText }}</view>
-				</view>
-			</view>
+			<div class="feature-row">
+				<div class="feature-btn" @click="openMarket">
+					<img class="feature-icon" :src="gameIcon('market')"  >
+					<span class="feature-name">{{ $t('me.labGamePage.market') }}</span>
+					<div v-if="traderHere" class="mkt-badge"><img class="mkt-badge-icon" :src="gameIcon('hero')"  ></div>
+				</div>
+				<div class="feature-btn" @click="openExp">
+					<img class="feature-icon" :src="gameIcon('expedition')"  >
+					<span class="feature-name">{{ $t('me.labGamePage.expedition') }}</span>
+					<div v-if="expedition" class="exp-badge">{{ expRemainText }}</div>
+				</div>
+			</div>
 
-			<view class="feature-row feature-row--craft">
-				<view class="feature-btn" @click="openCraft">
-					<image class="feature-icon" :src="gameIcon('smith')" mode="aspectFit" />
-					<text class="feature-name">{{ $t('me.labGamePage.craftTitle') }}</text>
-				</view>
-			</view>
+			<div class="feature-row feature-row--craft">
+				<div class="feature-btn" @click="openCraft">
+					<img class="feature-icon" :src="gameIcon('smith')"  >
+					<span class="feature-name">{{ $t('me.labGamePage.craftTitle') }}</span>
+				</div>
+			</div>
 
 			<!-- 僵尸夜袭（独立一行，含倒计时与临时仓库入口） -->
-			<view class="raid-row" @click="raidOpen = true">
-				<image class="feature-icon" :src="gameIcon('raid')" mode="aspectFit" />
-				<view class="raid-main">
-					<text class="raid-name">{{ $t('me.labGamePage.raid') }}</text>
-					<text class="raid-sub">{{ $t('me.labGamePage.raidStr') }} {{ zombiePower }} · {{ $t('me.labGamePage.power') }} {{ Math.floor(raidPower) }}</text>
-					<text v-if="hordeText" class="raid-horde"><image class="inline-icon" :src="gameIcon('journal')" mode="aspectFit"  /> {{ hordeText }}</text>
-					<text v-if="tiredText" class="raid-horde raid-horde--tired"><image class="inline-icon" :src="gameIcon('villager')" mode="aspectFit"  /> {{ tiredText }}</text>
-					<text class="raid-count" :class="{ 'raid-count--on': raidStatus.active }">{{ raidStatus.text }}</text>
-				</view>
-				<view v-if="raidTempTotal > 0" class="raid-badge">{{ raidTempTotal }}</view>
-			</view>
+			<div class="raid-row" @click="raidOpen = true">
+				<img class="feature-icon" :src="gameIcon('raid')"  >
+				<div class="raid-main">
+					<span class="raid-name">{{ $t('me.labGamePage.raid') }}</span>
+					<span class="raid-sub">{{ $t('me.labGamePage.raidStr') }} {{ zombiePower }} · {{ $t('me.labGamePage.power') }} {{ Math.floor(raidPower) }}</span>
+					<span v-if="hordeText" class="raid-horde"><img class="inline-icon" :src="gameIcon('journal')"   > {{ hordeText }}</span>
+					<span v-if="tiredText" class="raid-horde raid-horde--tired"><img class="inline-icon" :src="gameIcon('villager')"   > {{ tiredText }}</span>
+					<span class="raid-count" :class="{ 'raid-count--on': raidStatus.active }">{{ raidStatus.text }}</span>
+				</div>
+				<div v-if="raidTempTotal > 0" class="raid-badge">{{ raidTempTotal }}</div>
+			</div>
 
 			<!-- 开发者控制台（测试阶段专用） -->
-			<view class="dev-box">
-				<view class="dev-head" @click="devOpen = !devOpen">
-					<text class="dev-title">{{ $t('me.labGamePage.devTitle') }}</text>
-					<text class="dev-toggle">{{ devOpen ? '−' : '+' }}</text>
-				</view>
+			<div v-if="$root.allowDev" class="dev-box">
+				<div class="dev-head" @click="devOpen = !devOpen">
+					<span class="dev-title">{{ $t('me.labGamePage.devTitle') }}</span>
+					<span class="dev-toggle">{{ devOpen ? '−' : '+' }}</span>
+				</div>
 				<template v-if="devOpen">
 					<!-- 修改资源 -->
-					<view class="dev-row">
+					<div class="dev-row">
 						<picker class="dev-picker" :range="devResNames" @change="onDevResPick">
-							<view class="dev-picker-val">{{ devResLabel }}</view>
+							<div class="dev-picker-val">{{ devResLabel }}</div>
 						</picker>
 						<input class="dev-input" v-model="devResVal" type="number" />
-						<view class="dev-btn" @click="devSetRes">{{ $t('me.labGamePage.devSet') }}</view>
-					</view>
+						<div class="dev-btn" @click="devSetRes">{{ $t('me.labGamePage.devSet') }}</div>
+					</div>
 					<!-- 等级 / 村民 / 一键资源 -->
-					<view class="dev-row">
+					<div class="dev-row">
 						<input class="dev-input dev-input--sm" v-model="devBaseVal" type="number" />
-						<view class="dev-btn" @click="devSetBase">TH</view>
+						<div class="dev-btn" @click="devSetBase">TH</div>
 						<input class="dev-input dev-input--sm" v-model="devVillVal" type="number" />
-						<view class="dev-btn" @click="devSetVillagers">{{ $t('me.labGamePage.villagers') }}</view>
-						<view class="dev-btn dev-btn--gold" @click="devFillRes">{{ $t('me.labGamePage.devFill') }}</view>
-					</view>
+						<div class="dev-btn" @click="devSetVillagers">{{ $t('me.labGamePage.villagers') }}</div>
+						<div class="dev-btn dev-btn--gold" @click="devFillRes">{{ $t('me.labGamePage.devFill') }}</div>
+					</div>
 					<!-- 时间倍速（仅加速在线产出） -->
-					<view class="dev-row">
-						<text class="dev-speed-label">{{ $t('me.labGamePage.devSpeed') }}</text>
-						<view
+					<div class="dev-row">
+						<span class="dev-speed-label">{{ $t('me.labGamePage.devSpeed') }}</span>
+						<div
 							v-for="s in speedOptions"
 							:key="s"
 							class="dev-speed-btn"
 							:class="{ 'dev-speed-btn--on': speed === s }"
 							@click="devSetSpeed(s)"
-						>×{{ s }}</view>
-					</view>
+						>×{{ s }}</div>
+					</div>
 					<!-- 模拟夜袭（直接结算 N 小时的掉落与耐久损耗，受临时仓库 8 小时上限约束） -->
-					<view class="dev-row">
-						<text class="dev-speed-label">{{ $t('me.labGamePage.devRaid') }} · {{ $t('me.labGamePage.raidDef') }} {{ raidPower }}</text>
-						<view
+					<div class="dev-row">
+						<span class="dev-speed-label">{{ $t('me.labGamePage.devRaid') }} · {{ $t('me.labGamePage.raidDef') }} {{ raidPower }}</span>
+						<div
 							v-for="h in raidSimOptions"
 							:key="h"
 							class="dev-speed-btn"
 							:class="{ 'dev-speed-btn--on': devRaidH === h }"
 							@click="devSimRaid(h)"
-						>{{ h }}h</view>
-					</view>
+						>{{ h }}h</div>
+					</div>
 					<!-- 跳过施工：全部建筑建造/升级与大本营升级立即完工 -->
-					<view class="dev-row">
-						<view class="dev-btn dev-btn--gold dev-btn--wide" @click="devSkipBuilds">{{ $t('me.labGamePage.devSkipBuilds') }}</view>
-					</view>
+					<div class="dev-row">
+						<div class="dev-btn dev-btn--gold dev-btn--wide" @click="devSkipBuilds">{{ $t('me.labGamePage.devSkipBuilds') }}</div>
+					</div>
 					<!-- 一键建筑满级：已建建筑+大本营+城墙全部满级满耐久 -->
-					<view class="dev-row">
-						<view class="dev-btn dev-btn--gold dev-btn--wide" @click="devMaxAll">{{ $t('me.labGamePage.devMaxAll') }}</view>
-					</view>
+					<div class="dev-row">
+						<div class="dev-btn dev-btn--gold dev-btn--wide" @click="devMaxAll">{{ $t('me.labGamePage.devMaxAll') }}</div>
+					</div>
 					<!-- 立即完工（测试用：跳过全部建造/升级计时） -->
-					<view class="dev-row">
-						<text class="dev-speed-label">{{ $t('me.labGamePage.devFinish') }}</text>
-						<view class="dev-btn dev-btn--gold" @click="devFinishAll">{{ $t('me.labGamePage.devFinishBtn') }}</view>
-					</view>
+					<div class="dev-row">
+						<span class="dev-speed-label">{{ $t('me.labGamePage.devFinish') }}</span>
+						<div class="dev-btn dev-btn--gold" @click="devFinishAll">{{ $t('me.labGamePage.devFinishBtn') }}</div>
+					</div>
 					<!-- 挑战快进（测试用：立即结算下一波；血潮阶段则立即击杀 Boss） -->
-					<view class="dev-row">
-						<text class="dev-speed-label">{{ $t('me.labGamePage.devWaveNext') }}</text>
-						<view class="dev-btn dev-btn--gold" @click="devWaveStep">{{ $t('me.labGamePage.devWaveNextBtn') }}</view>
-					</view>
+					<div class="dev-row">
+						<span class="dev-speed-label">{{ $t('me.labGamePage.devWaveNext') }}</span>
+						<div class="dev-btn dev-btn--gold" @click="devWaveStep">{{ $t('me.labGamePage.devWaveNextBtn') }}</div>
+					</div>
 					<!-- 一键资源不消耗（全部资源直接拉到 9999，测试消耗链路） -->
-					<view class="dev-row">
-						<view class="dev-btn dev-btn--gold dev-btn--wide" @click="devNoConsume">{{ $t('me.labGamePage.devNoConsume') }}</view>
-					</view>
+					<div class="dev-row">
+						<div class="dev-btn dev-btn--gold dev-btn--wide" @click="devNoConsume">{{ $t('me.labGamePage.devNoConsume') }}</div>
+					</div>
 					<!-- 刷新流浪商人（立即到访并补满库存） -->
-					<view class="dev-row">
-						<view class="dev-btn dev-btn--gold dev-btn--wide" @click="devRefreshTrader">{{ $t('me.labGamePage.devTraderRefresh') }}</view>
-					</view>
+					<div class="dev-row">
+						<div class="dev-btn dev-btn--gold dev-btn--wide" @click="devRefreshTrader">{{ $t('me.labGamePage.devTraderRefresh') }}</div>
+					</div>
 					<!-- 重置 -->
-					<view class="dev-row">
-						<view class="dev-btn dev-btn--danger dev-btn--wide" @click="devReset">{{ $t('me.labGamePage.devReset') }}</view>
-					</view>
+					<div class="dev-row">
+						<div class="dev-btn dev-btn--danger dev-btn--wide" @click="devReset">{{ $t('me.labGamePage.devReset') }}</div>
+					</div>
 				</template>
-			</view>
+			</div>
 
 			<!-- 好友村庄消息日志（面板悬浮于功能坞上方，点「消息日志」开合） -->
-			<view v-if="flogOpen" class="fr-logbox">
-				<view v-for="(lg, li) in friendLogs" :key="li" class="fr-log">
-					<text class="fr-log-tag" :class="'fr-log-tag--' + lg.type">{{ $t('me.labGamePage.' + lg.tkey) }}</text>
-					<text class="fr-log-text">{{ lg.text }}</text>
-				</view>
-			</view>
+			<div v-if="flogOpen" class="fr-logbox">
+				<div v-for="(lg, li) in friendLogs" :key="li" class="fr-log">
+					<span class="fr-log-tag" :class="'fr-log-tag--' + lg.type">{{ $t('me.labGamePage.' + lg.tkey) }}</span>
+					<span class="fr-log-text">{{ lg.text }}</span>
+				</div>
+			</div>
 
-			<view class="game-toolbar">
+			<div class="game-toolbar">
 			<!-- 英雄雇佣入口（左下角悬浮，村民列表上方；雇佣中显示剩余时间） -->
-			<view class="vill-btn hero-btn" @click="heroOpen = true">
-				<image class="hero-avatar" :src="gameIcon('hero')" mode="aspectFit" :class="{ 'hero-avatar--on': heroActive }" />
-				<text class="vill-btn-text">{{ heroBtnLabel }}</text>
-			</view>
+			<div class="vill-btn hero-btn" @click="heroOpen = true">
+				<img class="hero-avatar" :src="gameIcon('hero')"  :class="{ 'hero-avatar--on': heroActive }" >
+				<span class="vill-btn-text">{{ heroBtnLabel }}</span>
+			</div>
 
 			<!-- 村民列表入口（左下角悬浮，建筑图鉴上方） -->
-			<view class="vill-btn" @click="villOpen = true">
-				<image class="vill-btn-icon" :src="gameIcon('villager')" mode="aspectFit"  />
-				<text class="vill-btn-text">{{ $t('me.labGamePage.villListTitle') }}</text>
-			</view>
+			<div class="vill-btn" @click="villOpen = true">
+				<img class="vill-btn-icon" :src="gameIcon('villager')"   >
+				<span class="vill-btn-text">{{ $t('me.labGamePage.villListTitle') }}</span>
+			</div>
 
 			<!-- 建筑图鉴入口（左下角悬浮） -->
-			<view class="bl-btn" @click="blOpen = true">
-				<image class="bl-btn-icon" :src="gameIcon('book')" mode="aspectFit"  />
-				<text class="bl-btn-text">{{ $t('me.labGamePage.buildList') }}</text>
-			</view>
+			<div class="bl-btn" @click="blOpen = true">
+				<img class="bl-btn-icon" :src="gameIcon('book')"   >
+				<span class="bl-btn-text">{{ $t('me.labGamePage.buildList') }}</span>
+			</div>
 
 			<!-- 好友村庄消息日志（收纳为图标按钮，点开查看） -->
-			<view class="fr-btn fr-btn--log" @click="flogOpen = !flogOpen">
-				<image class="fr-btn-icon" :src="gameIcon('journal')" mode="aspectFit"  />
-				<text class="fr-btn-text">{{ $t('me.labGamePage.logTitle') }}</text>
-			</view>
-			<view class="fr-btn" @click="frOpen = true">
-				<image class="fr-btn-icon" :src="gameIcon('friends')" mode="aspectFit"  />
-				<text class="fr-btn-text">{{ $t('me.labGamePage.friendVillage') }}</text>
-			</view>
+			<div class="fr-btn fr-btn--log" @click="flogOpen = !flogOpen">
+				<img class="fr-btn-icon" :src="gameIcon('journal')"   >
+				<span class="fr-btn-text">{{ $t('me.labGamePage.logTitle') }}</span>
+			</div>
+			<div class="fr-btn" @click="frOpen = true">
+				<img class="fr-btn-icon" :src="gameIcon('friends')"   >
+				<span class="fr-btn-text">{{ $t('me.labGamePage.friendVillage') }}</span>
+			</div>
 
-			</view>
+			</div>
 
 			<!-- 建造选单 -->
-			<view v-if="buildIdx !== null" class="overlay" @click.self="buildIdx = null">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.build') }}</view>
-					<view v-if="buildableActive.length === 0" class="empty-tip">{{ $t('me.labGamePage.noBuildable') }}</view>
-					<view
+			<div v-if="buildIdx !== null" class="overlay" @click.self="buildIdx = null">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.build') }}</div>
+					<div v-if="buildableActive.length === 0" class="empty-tip">{{ $t('me.labGamePage.noBuildable') }}</div>
+					<div
 						v-for="item in buildableActive"
 						:key="item.b.key"
 						class="build-item"
 						@click="buildAt(buildIdx, item)"
 					>
-						<image class="build-char" :src="gameIcon(item.b.key)" mode="aspectFit"  />
-						<view class="build-main">
-							<view class="build-name-row">
-								<text class="build-name">{{ langName(item.b) }}</text>
-								<text class="build-quota">{{ item.count }}/{{ item.quota }}</text>
-							</view>
-							<view class="cost-row">
-								<text v-if="item.free" class="cost-item cost-item--free">{{ $t('me.labGamePage.firstFree') }}</text>
+						<img class="build-char" :src="gameIcon(item.b.key)"   >
+						<div class="build-main">
+							<div class="build-name-row">
+								<span class="build-name">{{ langName(item.b) }}</span>
+								<span class="build-quota">{{ item.count }}/{{ item.quota }}</span>
+							</div>
+							<div class="cost-row">
+								<span v-if="item.free" class="cost-item cost-item--free">{{ $t('me.labGamePage.firstFree') }}</span>
 								<template v-else>
-									<text
+									<span
 										v-for="(c, ci) in costList(item.cost)"
 										:key="ci"
 										class="cost-item"
 										:class="{ 'cost-item--lack': !c.ok }"
-									>{{ c.text }}</text>
+									>{{ c.text }}</span>
 								</template>
-								<text class="cost-item cost-item--time"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ buildTimeText(1) }}</text>
-							</view>
-						</view>
-					</view>
-					<view class="modal-close" @click="buildIdx = null">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+								<span class="cost-item cost-item--time"><img class="inline-icon" :src="gameIcon('clock')"   > {{ buildTimeText(1) }}</span>
+							</div>
+						</div>
+					</div>
+					<div class="modal-close" @click="buildIdx = null">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 城墙详情：建造 / 升级 / 修补 -->
-			<view v-if="wallSel !== null" class="overlay" @click.self="wallSel = null">
-				<view class="modal">
-					<view class="modal-title">
-						<image class="modal-title-char" :src="gameIcon('wall')" mode="aspectFit"  />
+			<div v-if="wallSel !== null" class="overlay" @click.self="wallSel = null">
+				<div class="modal">
+					<div class="modal-title">
+						<img class="modal-title-char" :src="gameIcon('wall')"   >
 						{{ wallTitle }}
-					</view>
-					<view class="desc-box">{{ $t('me.labGamePage.wallDesc') }}</view>
-					<view v-if="wallCur" class="def-box">
-						<view class="def-stats">
-							<text class="def-stat" :class="{ 'def-stat--low': wallDur < MAX_DUR }">{{ $t('me.labGamePage.defLabel') }} {{ Math.floor(wallCurDef) }}<text class="def-stat-sub">/{{ wallMaxDef }}</text></text>
-						</view>
-						<view class="vill-bar-row">
-							<text class="vill-bar-label">{{ $t('me.labGamePage.durability') }}</text>
-							<view class="vill-bar"><view class="vill-bar-fill vill-bar-fill--dur" :style="{ width: wallDur + '%' }"></view></view>
-							<text class="vill-bar-val">{{ Math.floor(wallDur) }}</text>
-						</view>
-						<view v-if="wallDur < MAX_DUR" class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !canRepairWall }" @click="repairWall">
+					</div>
+					<div class="desc-box">{{ $t('me.labGamePage.wallDesc') }}</div>
+					<div v-if="wallCur" class="def-box">
+						<div class="def-stats">
+							<span class="def-stat" :class="{ 'def-stat--low': wallDur < MAX_DUR }">{{ $t('me.labGamePage.defLabel') }} {{ Math.floor(wallCurDef) }}<span class="def-stat-sub">/{{ wallMaxDef }}</span></span>
+						</div>
+						<div class="vill-bar-row">
+							<span class="vill-bar-label">{{ $t('me.labGamePage.durability') }}</span>
+							<div class="vill-bar"><div class="vill-bar-fill vill-bar-fill--dur" :style="{ width: wallDur + '%' }"></div></div>
+							<span class="vill-bar-val">{{ Math.floor(wallDur) }}</span>
+						</div>
+						<div v-if="wallDur < MAX_DUR" class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !canRepairWall }" @click="repairWall">
 							{{ $t('me.labGamePage.repair') }}（{{ wallRepairCostText }}）
-						</view>
-					</view>
-					<view v-if="wallNext" class="upgrade-box">
-						<view class="upgrade-info">
-							<text class="upgrade-title">{{ wallCur ? $t('me.labGamePage.upgrade') + ' · ' + wallMatName(wallCur.level + 1) : $t('me.labGamePage.wallBuild') + ' · ' + wallMatName(1) }}</text>
-							<text v-if="baseLevel < wallNext.th" class="upgrade-sub upgrade-sub--warn">{{ $t('me.labGamePage.thReq', { n: wallNext.th }) }}</text>
-							<view v-else class="cost-row">
-								<text
+						</div>
+					</div>
+					<div v-if="wallNext" class="upgrade-box">
+						<div class="upgrade-info">
+							<span class="upgrade-title">{{ wallCur ? $t('me.labGamePage.upgrade') + ' · ' + wallMatName(wallCur.level + 1) : $t('me.labGamePage.wallBuild') + ' · ' + wallMatName(1) }}</span>
+							<span v-if="baseLevel < wallNext.th" class="upgrade-sub upgrade-sub--warn">{{ $t('me.labGamePage.thReq', { n: wallNext.th }) }}</span>
+							<div v-else class="cost-row">
+								<span
 									v-for="(c, ci) in costList(wallNext.cost)"
 									:key="ci"
 									class="cost-item"
 									:class="{ 'cost-item--lack': !c.ok }"
-								>{{ c.text }}</text>
-							</view>
-						</view>
-						<view class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !wallCanUp }" @click="wallCur ? upgradeWall() : buildWall()">
+								>{{ c.text }}</span>
+							</div>
+						</div>
+						<div class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !wallCanUp }" @click="wallCur ? upgradeWall() : buildWall()">
 							{{ wallCur ? $t('me.labGamePage.upgrade') : $t('me.labGamePage.wallBuild') }}
-						</view>
-					</view>
-					<view class="modal-close" @click="wallSel = null">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+						</div>
+					</div>
+					<div class="modal-close" @click="wallSel = null">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 建筑详情 -->
-			<view v-if="selIdx !== null && selPlot" class="overlay" @click.self="selIdx = null">
-				<view class="modal">
-					<view class="modal-title">
-						<image class="modal-title-char" :src="gameIcon(selDef.key)" mode="aspectFit"  />
+			<div v-if="selIdx !== null && selPlot" class="overlay" @click.self="selIdx = null">
+				<div class="modal">
+					<div class="modal-title">
+						<img class="modal-title-char" :src="gameIcon(selDef.key)"   >
 						{{ langName(selDef) }} Lv.{{ selPlot.level }}
-					</view>
+					</div>
 
 					<!-- 功能/产出说明 -->
-					<view class="desc-box">{{ selDesc }}</view>
-					<view v-if="selProdList.length" class="prod-row">
-						<text class="prod-label">{{ $t('me.labGamePage.perHour') }}</text>
-						<text
+					<div class="desc-box">{{ selDesc }}</div>
+					<div v-if="selProdList.length" class="prod-row">
+						<span class="prod-label">{{ $t('me.labGamePage.perHour') }}</span>
+						<span
 							v-for="(p, pi) in selProdList"
 							:key="pi"
 							class="prod-item"
 							:class="{ 'prod-item--neg': p.neg, 'prod-item--lack': p.lack }"
-						>{{ p.text }}</text>
-					</view>
+						>{{ p.text }}</span>
+					</div>
 
 					<!-- 下界传送门：危险工位提示（驻守扣血磨装备） -->
-					<view v-if="selDef.key === 'portal'" class="mkt-hint portal-danger"><image class="inline-icon" :src="gameIcon('star')" mode="aspectFit"  /> {{ $t('me.labGamePage.portalDanger', { h: portalWork.hpPerH, w: portalWork.wearPerH }) }}</view>
+					<div v-if="selDef.key === 'portal'" class="mkt-hint portal-danger"><img class="inline-icon" :src="gameIcon('star')"   > {{ $t('me.labGamePage.portalDanger', { h: portalWork.hpPerH, w: portalWork.wearPerH }) }}</div>
 
 					<!-- 铁匠铺燃料：燃料值池 + 来源选择（默认木炭）+ 手动补充 -->
-					<view v-if="selDef.key === 'smith'" class="fuel-box">
-						<view class="worker-info">
-							<text class="worker-title">{{ $t('me.labGamePage.fuelValue') }} {{ Math.floor(fuel) }}</text>
-							<text class="worker-sub">{{ $t('me.labGamePage.fuelHint', { c: FUEL_VALUE.charcoal, l: FUEL_VALUE.log }) }}</text>
-						</view>
-						<view class="fuel-picker">
-							<view class="fuel-opt" :class="{ 'fuel-opt--on': fuelType === 'charcoal' }" @click="setFuelType('charcoal')">
+					<div v-if="selDef.key === 'smith'" class="fuel-box">
+						<div class="worker-info">
+							<span class="worker-title">{{ $t('me.labGamePage.fuelValue') }} {{ Math.floor(fuel) }}</span>
+							<span class="worker-sub">{{ $t('me.labGamePage.fuelHint', { c: FUEL_VALUE.charcoal, l: FUEL_VALUE.log }) }}</span>
+						</div>
+						<div class="fuel-picker">
+							<div class="fuel-opt" :class="{ 'fuel-opt--on': fuelType === 'charcoal' }" @click="setFuelType('charcoal')">
 								{{ $t('me.labGamePage.fuelCharcoal') }} +{{ FUEL_VALUE.charcoal }}
-							</view>
-							<view class="fuel-opt" :class="{ 'fuel-opt--on': fuelType === 'log' }" @click="setFuelType('log')">
+							</div>
+							<div class="fuel-opt" :class="{ 'fuel-opt--on': fuelType === 'log' }" @click="setFuelType('log')">
 								{{ $t('me.labGamePage.fuelLog') }} +{{ FUEL_VALUE.log }}
-							</view>
-						</view>
-						<view class="upgrade-btn upgrade-btn--wide" @click="convertFuel">
+							</div>
+						</div>
+						<div class="upgrade-btn upgrade-btn--wide" @click="convertFuel">
 							{{ $t('me.labGamePage.fuelAdd', { n: FUEL_ADD_NUM }) }}
-						</view>
-					</view>
+						</div>
+					</div>
 
 					<!-- 产出囤积（部落冲突式：收集后才入库） -->
-					<view v-if="selCapTotal > 0" class="collect-box">
-						<view class="worker-info">
-							<text class="worker-title">{{ $t('me.labGamePage.collectStored') }}</text>
-							<text class="worker-sub">{{ $t('me.labGamePage.collectHint') }}</text>
-						</view>
-						<view v-for="(b, bi) in selBufList" :key="bi" class="vill-bar-row">
-							<text class="vill-bar-label">{{ resName(b.id) }}</text>
-							<view class="vill-bar"><view class="vill-bar-fill vill-bar-fill--sat" :style="{ width: (b.ratio * 100) + '%' }"></view></view>
-							<text class="vill-bar-val">{{ Math.floor(b.val) }}/{{ b.cap }}</text>
-						</view>
-						<view class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': selBufCount < 1 }" @click="collectSel">
+					<div v-if="selCapTotal > 0" class="collect-box">
+						<div class="worker-info">
+							<span class="worker-title">{{ $t('me.labGamePage.collectStored') }}</span>
+							<span class="worker-sub">{{ $t('me.labGamePage.collectHint') }}</span>
+						</div>
+						<div v-for="(b, bi) in selBufList" :key="bi" class="vill-bar-row">
+							<span class="vill-bar-label">{{ resName(b.id) }}</span>
+							<div class="vill-bar"><div class="vill-bar-fill vill-bar-fill--sat" :style="{ width: (b.ratio * 100) + '%' }"></div></div>
+							<span class="vill-bar-val">{{ Math.floor(b.val) }}/{{ b.cap }}</span>
+						</div>
+						<div class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': selBufCount < 1 }" @click="collectSel">
 							{{ $t('me.labGamePage.collectBtn') }}
-						</view>
-					</view>
+						</div>
+					</div>
 
 					<!-- 攻防与耐久（瞭望塔等防御建筑） -->
-					<view v-if="selAtk > 0 || selDefVal > 0" class="def-box">
-						<view class="def-stats">
-							<text v-if="selAtk > 0" class="def-stat" :class="{ 'def-stat--low': selStaffRatio < 1 }">{{ $t('me.labGamePage.atk') }} {{ Math.floor(selAtk * selStaffRatio * selDur / MAX_DUR) }}<text class="def-stat-sub">/{{ selAtk }}</text></text>
-							<text v-if="selDefVal > 0" class="def-stat" :class="{ 'def-stat--low': selStaffRatio < 1 }">{{ $t('me.labGamePage.defLabel') }} {{ Math.floor(selDefVal * selStaffRatio * selDur / MAX_DUR) }}<text class="def-stat-sub">/{{ selDefVal }}</text></text>
-						</view>
-						<text v-if="selStaffRatio < 1" class="def-hint">{{ $t('me.labGamePage.staffHint', { n: selSlots - (selPlot.workers || 0) }) }}</text>
-						<view class="vill-bar-row">
-							<text class="vill-bar-label">{{ $t('me.labGamePage.durability') }}</text>
-							<view class="vill-bar"><view class="vill-bar-fill vill-bar-fill--dur" :style="{ width: selDur + '%' }"></view></view>
-							<text class="vill-bar-val">{{ Math.floor(selDur) }}</text>
-						</view>
-						<view v-if="selDur < MAX_DUR" class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !canRepairSel }" @click="repairSel">
+					<div v-if="selAtk > 0 || selDefVal > 0" class="def-box">
+						<div class="def-stats">
+							<span v-if="selAtk > 0" class="def-stat" :class="{ 'def-stat--low': selStaffRatio < 1 }">{{ $t('me.labGamePage.atk') }} {{ Math.floor(selAtk * selStaffRatio * selDur / MAX_DUR) }}<span class="def-stat-sub">/{{ selAtk }}</span></span>
+							<span v-if="selDefVal > 0" class="def-stat" :class="{ 'def-stat--low': selStaffRatio < 1 }">{{ $t('me.labGamePage.defLabel') }} {{ Math.floor(selDefVal * selStaffRatio * selDur / MAX_DUR) }}<span class="def-stat-sub">/{{ selDefVal }}</span></span>
+						</div>
+						<span v-if="selStaffRatio < 1" class="def-hint">{{ $t('me.labGamePage.staffHint', { n: selSlots - (selPlot.workers || 0) }) }}</span>
+						<div class="vill-bar-row">
+							<span class="vill-bar-label">{{ $t('me.labGamePage.durability') }}</span>
+							<div class="vill-bar"><div class="vill-bar-fill vill-bar-fill--dur" :style="{ width: selDur + '%' }"></div></div>
+							<span class="vill-bar-val">{{ Math.floor(selDur) }}</span>
+						</div>
+						<div v-if="selDur < MAX_DUR" class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !canRepairSel }" @click="repairSel">
 							{{ $t('me.labGamePage.repair') }}（{{ repairSelCostText }}）
-						</view>
-					</view>
+						</div>
+					</div>
 
 					<!-- 工位 -->
-					<view v-if="selSlots > 0" class="worker-box">
-						<view class="worker-info">
-							<text class="worker-title">{{ $t('me.labGamePage.workers') }}（{{ langWorker(selDef) }}）</text>
-							<text class="worker-sub">{{ isHeroIdx(selLayer, selIdx) ? $t('me.labGamePage.heroFull') : selPlot.workers + '/' + selSlots }} · {{ $t('me.labGamePage.unassigned') }} {{ unassigned }}</text>
-							<text v-if="selCrewNames" class="worker-sub"><image class="inline-icon" :src="gameIcon('villager')" mode="aspectFit"  /> {{ selCrewNames }}</text>
-						</view>
-						<view class="worker-btns">
-							<view class="worker-btn" @click="assignWorker(-1)">−</view>
-							<view class="worker-btn worker-btn--add" @click="assignWorker(1)">＋</view>
-						</view>
-					</view>
+					<div v-if="selSlots > 0" class="worker-box">
+						<div class="worker-info">
+							<span class="worker-title">{{ $t('me.labGamePage.workers') }}（{{ langWorker(selDef) }}）</span>
+							<span class="worker-sub">{{ isHeroIdx(selLayer, selIdx) ? $t('me.labGamePage.heroFull') : selPlot.workers + '/' + selSlots }} · {{ $t('me.labGamePage.unassigned') }} {{ unassigned }}</span>
+							<span v-if="selCrewNames" class="worker-sub"><img class="inline-icon" :src="gameIcon('villager')"   > {{ selCrewNames }}</span>
+						</div>
+						<div class="worker-btns">
+							<div class="worker-btn" @click="assignWorker(-1)">−</div>
+							<div class="worker-btn worker-btn--add" @click="assignWorker(1)">＋</div>
+						</div>
+					</div>
 
 					<!-- 原木娘指派 / 召回（雇佣中可用） -->
-					<view v-if="heroActive && !hero.plot && selSlots > 0" class="upgrade-btn upgrade-btn--wide" @click="assignHeroSel">
+					<div v-if="heroActive && !hero.plot && selSlots > 0" class="upgrade-btn upgrade-btn--wide" @click="assignHeroSel">
 						{{ $t('me.labGamePage.heroAssignBtn') }}
-					</view>
-					<view v-else-if="isHeroIdx(selLayer, selIdx)" class="upgrade-btn upgrade-btn--wide" @click="recallHero">
+					</div>
+					<div v-else-if="isHeroIdx(selLayer, selIdx)" class="upgrade-btn upgrade-btn--wide" @click="recallHero">
 						{{ $t('me.labGamePage.heroRecallBtn') }}
-					</view>
+					</div>
 
 					<!-- 升级 -->
-					<view v-if="selNext" class="upgrade-box">
-						<view class="upgrade-info">
-							<text class="upgrade-title">{{ $t('me.labGamePage.upgrade') }} Lv.{{ selPlot.level + 1 }}</text>
-							<text v-if="selPlot.busy" class="upgrade-sub upgrade-sub--warn"><image class="inline-icon" :src="gameIcon('hammer')" mode="aspectFit"  /> {{ $t('me.labGamePage.buildingBusy') }} · {{ busyRemain(selPlot) }}</text>
-							<text v-else-if="baseLevel < selNext.th" class="upgrade-sub upgrade-sub--warn">{{ $t('me.labGamePage.thReq', { n: selNext.th }) }}</text>
-							<view v-else class="cost-row">
-								<text
+					<div v-if="selNext" class="upgrade-box">
+						<div class="upgrade-info">
+							<span class="upgrade-title">{{ $t('me.labGamePage.upgrade') }} Lv.{{ selPlot.level + 1 }}</span>
+							<span v-if="selPlot.busy" class="upgrade-sub upgrade-sub--warn"><img class="inline-icon" :src="gameIcon('hammer')"   > {{ $t('me.labGamePage.buildingBusy') }} · {{ busyRemain(selPlot) }}</span>
+							<span v-else-if="baseLevel < selNext.th" class="upgrade-sub upgrade-sub--warn">{{ $t('me.labGamePage.thReq', { n: selNext.th }) }}</span>
+							<div v-else class="cost-row">
+								<span
 									v-for="(c, ci) in costList(selNext.cost)"
 									:key="ci"
 									class="cost-item"
 									:class="{ 'cost-item--lack': !c.ok }"
-								>{{ c.text }}</text>
-								<text class="cost-item cost-item--time"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ buildTimeText(selPlot.level + 1) }}</text>
-							</view>
-						</view>
-						<view v-if="!selPlot.busy" class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !canUpgradeSel }" @click="upgradeSel">
+								>{{ c.text }}</span>
+								<span class="cost-item cost-item--time"><img class="inline-icon" :src="gameIcon('clock')"   > {{ buildTimeText(selPlot.level + 1) }}</span>
+							</div>
+						</div>
+						<div v-if="!selPlot.busy" class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !canUpgradeSel }" @click="upgradeSel">
 							{{ $t('me.labGamePage.upgradeBtn') }}
-						</view>
-					</view>
-					<view v-else class="maxlv-tip">{{ $t('me.labGamePage.maxLv') }}</view>
+						</div>
+					</div>
+					<div v-else class="maxlv-tip">{{ $t('me.labGamePage.maxLv') }}</div>
 
 					<!-- 收纳（首次免费，后续绿宝石；等级/耐久/囤积保留，可在建筑列表重新放置） -->
-					<view class="demolish-btn store-btn" @click="storeSel">
+					<div class="demolish-btn store-btn" @click="storeSel">
 						{{ $t('me.labGamePage.storeBtn') }}
-						<text class="store-cost">（{{ storeCostText() }}）</text>
-					</view>
+						<span class="store-cost">（{{ storeCostText() }}）</span>
+					</div>
 
 					<!-- 拆除 -->
-					<view class="demolish-btn" @click="demolishSel">{{ $t('me.labGamePage.demolish') }}</view>
-					<view class="modal-close" @click="selIdx = null">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+					<div class="demolish-btn" @click="demolishSel">{{ $t('me.labGamePage.demolish') }}</div>
+					<div class="modal-close" @click="selIdx = null">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 大本营面板：升级 / 村民 / 仓库 / 改名 -->
-			<view v-if="warehouseOpen" class="overlay" @click.self="warehouseOpen = false">
-				<view class="modal modal--tall">
-					<view class="modal-title">{{ displayName }}</view>
+			<div v-if="warehouseOpen" class="overlay" @click.self="warehouseOpen = false">
+				<div class="modal modal--tall">
+					<div class="modal-title">{{ displayName }}</div>
 
 					<!-- 改名 -->
-					<view class="rename-box">
-						<text class="rename-label">{{ $t('me.labGamePage.renameLabel') }}</text>
+					<div class="rename-box">
+						<span class="rename-label">{{ $t('me.labGamePage.renameLabel') }}</span>
 						<input
 							class="rename-input"
 							v-model="nameInput"
@@ -549,473 +549,473 @@
 							:maxlength="12"
 							:placeholder="$t('me.labGamePage.renamePlaceholder')"
 						/>
-						<view class="rename-save" @click="saveName">{{ $t('me.labGamePage.renameSave') }}</view>
-					</view>
+						<div class="rename-save" @click="saveName">{{ $t('me.labGamePage.renameSave') }}</div>
+					</div>
 
 					<!-- 大本营升级 -->
-					<view class="th-box">
-						<view class="th-head">
-							<text class="upgrade-title">{{ $t('me.labGamePage.thUpgrade') }}</text>
-							<text class="th-lv">Lv.{{ baseLevel }}<template v-if="thNext"> → Lv.{{ baseLevel + 1 }}</template></text>
-						</view>
-						<view class="th-unlock"><image class="inline-icon" :src="gameIcon('hammer')" mode="aspectFit"  /> {{ $t('me.labGamePage.builderSlots') }} {{ activeBuilds }}/{{ builderSlotsTotal }}</view>
-						<view v-if="thBusy" class="th-unlock"><image class="inline-icon" :src="gameIcon('hammer')" mode="aspectFit"  /> {{ $t('me.labGamePage.buildingBusy') }} · {{ thBusyText }}</view>
-						<view v-if="buildQueueItems.length" class="queue-box">
-							<view v-for="q in buildQueueItems" :key="q.i" class="queue-row">
-								<text class="queue-name"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ q.name }} · {{ $t('me.labGamePage.queueWait') }}</text>
-								<text class="queue-cancel" @click="cancelQueue(q.i)">{{ $t('me.labGamePage.queueCancelBtn') }}</text>
-							</view>
-						</view>
+					<div class="th-box">
+						<div class="th-head">
+							<span class="upgrade-title">{{ $t('me.labGamePage.thUpgrade') }}</span>
+							<span class="th-lv">Lv.{{ baseLevel }}<template v-if="thNext"> → Lv.{{ baseLevel + 1 }}</template></span>
+						</div>
+						<div class="th-unlock"><img class="inline-icon" :src="gameIcon('hammer')"   > {{ $t('me.labGamePage.builderSlots') }} {{ activeBuilds }}/{{ builderSlotsTotal }}</div>
+						<div v-if="thBusy" class="th-unlock"><img class="inline-icon" :src="gameIcon('hammer')"   > {{ $t('me.labGamePage.buildingBusy') }} · {{ thBusyText }}</div>
+						<div v-if="buildQueueItems.length" class="queue-box">
+							<div v-for="q in buildQueueItems" :key="q.i" class="queue-row">
+								<span class="queue-name"><img class="inline-icon" :src="gameIcon('clock')"   > {{ q.name }} · {{ $t('me.labGamePage.queueWait') }}</span>
+								<span class="queue-cancel" @click="cancelQueue(q.i)">{{ $t('me.labGamePage.queueCancelBtn') }}</span>
+							</div>
+						</div>
 						<template v-if="thNext && !thBusy">
-							<view class="req-row">
-								<text class="req-label">{{ $t('me.labGamePage.prereq') }}</text>
-								<text
+							<div class="req-row">
+								<span class="req-label">{{ $t('me.labGamePage.prereq') }}</span>
+								<span
 									v-for="(r, ri) in thReqList"
 									:key="ri"
 									class="req-item"
 									:class="r.ok ? 'req-item--ok' : 'req-item--bad'"
-								>{{ r.text }}</text>
-							</view>
-							<view class="cost-row">
-								<text
+								>{{ r.text }}</span>
+							</div>
+							<div class="cost-row">
+								<span
 									v-for="(c, ci) in costList(thNext.cost)"
 									:key="ci"
 									class="cost-item"
 									:class="{ 'cost-item--lack': !c.ok }"
-								>{{ c.text }}</text>
-								<text class="cost-item cost-item--time"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ thTimeText }}</text>
-							</view>
-							<view class="th-unlock">{{ $t('me.labGamePage.unlockHint', { s: isEn ? thNext.unlockEn : thNext.unlockZh }) }}</view>
-							<view class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !thCanUpgrade }" @click="upgradeTH">
+								>{{ c.text }}</span>
+								<span class="cost-item cost-item--time"><img class="inline-icon" :src="gameIcon('clock')"   > {{ thTimeText }}</span>
+							</div>
+							<div class="th-unlock">{{ $t('me.labGamePage.unlockHint', { s: isEn ? thNext.unlockEn : thNext.unlockZh }) }}</div>
+							<div class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !thCanUpgrade }" @click="upgradeTH">
 								{{ $t('me.labGamePage.upgradeBtn') }}
-							</view>
+							</div>
 						</template>
-						<view v-if="!thNext && !thBusy" class="maxlv-tip">{{ $t('me.labGamePage.thMax') }}</view>
-					</view>
+						<div v-if="!thNext && !thBusy" class="maxlv-tip">{{ $t('me.labGamePage.thMax') }}</div>
+					</div>
 
 					<!-- 大本营防御（夜袭损耗，可修补） -->
-					<view class="worker-box">
-						<view class="worker-info">
-							<text class="worker-title">{{ $t('me.labGamePage.defLabel') }} {{ Math.floor(baseDef) }}<text class="def-stat-sub">/{{ BASE_DEF[baseLevel] || 0 }}</text></text>
-							<text class="worker-sub">{{ $t('me.labGamePage.durability') }} {{ Math.floor(baseDur) }}/{{ MAX_DUR }}</text>
-						</view>
-						<view class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !canRepairBase }" @click="repairBase">
+					<div class="worker-box">
+						<div class="worker-info">
+							<span class="worker-title">{{ $t('me.labGamePage.defLabel') }} {{ Math.floor(baseDef) }}<span class="def-stat-sub">/{{ BASE_DEF[baseLevel] || 0 }}</span></span>
+							<span class="worker-sub">{{ $t('me.labGamePage.durability') }} {{ Math.floor(baseDur) }}/{{ MAX_DUR }}</span>
+						</div>
+						<div class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !canRepairBase }" @click="repairBase">
 							{{ $t('me.labGamePage.repair') }}
-						</view>
-					</view>
+						</div>
+					</div>
 
 					<!-- 村民 -->
-					<view class="worker-box">
-						<view class="worker-info" @click="villOpen = true">
-							<text class="worker-title">{{ $t('me.labGamePage.villagers') }} {{ villagers.length }}/{{ capacity }}<text v-if="moodEffText" class="def-stat-sub"> · {{ $t('me.labGamePage.moodEff') }} {{ moodEffText }}</text></text>
-							<text class="worker-sub">{{ $t('me.labGamePage.unassigned') }} {{ unassigned }} · {{ $t('me.labGamePage.villViewList') }}</text>
-						</view>
-						<view class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !canTrain }" @click="trainVillager">
+					<div class="worker-box">
+						<div class="worker-info" @click="villOpen = true">
+							<span class="worker-title">{{ $t('me.labGamePage.villagers') }} {{ villagers.length }}/{{ capacity }}<span v-if="moodEffText" class="def-stat-sub"> · {{ $t('me.labGamePage.moodEff') }} {{ moodEffText }}</span></span>
+							<span class="worker-sub">{{ $t('me.labGamePage.unassigned') }} {{ unassigned }} · {{ $t('me.labGamePage.villViewList') }}</span>
+						</div>
+						<div class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !canTrain }" @click="trainVillager">
 							{{ $t('me.labGamePage.train') }}
-						</view>
-					</view>
+						</div>
+					</div>
 
 					<!-- 仓库 -->
-					<view class="wh-title">{{ $t('me.labGamePage.warehouse') }}<text class="wh-slots">{{ $t('me.labGamePage.whSlots') }} {{ whUsed }}/{{ whSlotsTotal }}</text></view>
-					<view v-if="ownedList.length === 0" class="empty-tip">{{ $t('me.labGamePage.emptyWarehouse') }}</view>
-					<view v-for="r in ownedList" :key="r" class="res-row">
-						<image class="res-dot" :src="gameIcon(r)" mode="aspectFit" />
-						<text class="res-name">{{ resName(r) }}</text>
-						<text class="res-th" :style="{ background: resThColor(r) }">TH{{ resTh(r) }}</text>
-						<text class="res-val">{{ floorRes(r) }}<text class="res-slot" v-if="resSlotCount(r) > 1"> · {{ $t('me.labGamePage.whNSlots', { n: resSlotCount(r) }) }}</text></text>
-					</view>
+					<div class="wh-title">{{ $t('me.labGamePage.warehouse') }}<span class="wh-slots">{{ $t('me.labGamePage.whSlots') }} {{ whUsed }}/{{ whSlotsTotal }}</span></div>
+					<div v-if="ownedList.length === 0" class="empty-tip">{{ $t('me.labGamePage.emptyWarehouse') }}</div>
+					<div v-for="r in ownedList" :key="r" class="res-row">
+						<img class="res-dot" :src="gameIcon(r)"  >
+						<span class="res-name">{{ resName(r) }}</span>
+						<span class="res-th" :style="{ background: resThColor(r) }">TH{{ resTh(r) }}</span>
+						<span class="res-val">{{ floorRes(r) }}<span class="res-slot" v-if="resSlotCount(r) > 1"> · {{ $t('me.labGamePage.whNSlots', { n: resSlotCount(r) }) }}</span></span>
+					</div>
 
-					<view class="modal-close" @click="warehouseOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+					<div class="modal-close" @click="warehouseOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 村民列表：名字/改名、血量/饱食、心情、装备 -->
-			<view v-if="villOpen" class="overlay" @click.self="villOpen = false">
-				<view class="modal modal--tall">
-					<view class="modal-title">{{ $t('me.labGamePage.villListTitle') }}（{{ villagers.length }}/{{ capacity }}）</view>
-					<view class="vill-toolbar">
-						<view class="bl-hint">{{ $t('me.labGamePage.autoEatHint') }}</view>
-						<view class="vill-feed" :class="{ 'vill-feed--disabled': !feedAllReady }" @click="feedAll">{{ $t('me.labGamePage.feedAll') }}</view>
-					</view>
-					<view v-if="villagers.length === 0" class="empty-tip">{{ $t('me.labGamePage.villEmpty') }}</view>
-					<view v-for="v in villagers" :key="v.id" class="vill-card">
-						<view class="vill-head">
-							<text class="vill-avatar">{{ v.name.slice(0, 1) }}</text>
-							<text class="vill-name">{{ v.name }}</text>
-							<text v-if="villJobs[v.id]" class="vill-job">{{ villJobs[v.id] }}</text>
-							<text v-if="v.onExp" class="vill-hunger vill-hunger--exp">{{ $t('me.labGamePage.expOnExp') }}</text>
-							<text v-if="v.hunger > 0" class="vill-hunger">{{ $t('me.labGamePage.hungerTag') }}</text>
-							<text class="vill-mood" :style="{ color: moodInfo(v).color }">{{ $t('me.labGamePage.' + moodInfo(v).key) }}</text>
-							<text class="vill-rename" @click="renameVillager(v)">{{ $t('me.labGamePage.renameVillagerBtn') }}</text>
-						</view>
-						<view class="vill-tracks">
-							<view v-for="t in trackList(v)" :key="t.key" class="vill-track">
-								<text class="vill-track-name">{{ t.name }}<text class="vill-track-lv">Lv{{ t.lv }}</text></text>
-								<view class="vill-track-bar"><view class="vill-track-fill" :style="{ width: t.pct + '%' }"></view></view>
-							</view>
-						</view>
-						<view class="vill-bar-row">
-							<text class="vill-bar-label">{{ $t('me.labGamePage.hp') }}</text>
-							<view class="vill-bar"><view class="vill-bar-fill vill-bar-fill--hp" :style="{ width: v.hp + '%' }"></view></view>
-							<text class="vill-bar-val">{{ Math.floor(v.hp) }}</text>
-						</view>
-						<view class="vill-bar-row">
-							<text class="vill-bar-label">{{ $t('me.labGamePage.satiety') }}</text>
-							<view class="vill-bar"><view class="vill-bar-fill vill-bar-fill--sat" :style="{ width: v.satiety + '%' }"></view></view>
-							<text class="vill-bar-val">{{ Math.floor(v.satiety) }}</text>
-						</view>
-						<view class="vill-foot">
-							<view class="vill-equip">
-								<text class="vill-equip-label">{{ $t('me.labGamePage.equipment') }}</text>
-								<view
+			<div v-if="villOpen" class="overlay" @click.self="villOpen = false">
+				<div class="modal modal--tall">
+					<div class="modal-title">{{ $t('me.labGamePage.villListTitle') }}（{{ villagers.length }}/{{ capacity }}）</div>
+					<div class="vill-toolbar">
+						<div class="bl-hint">{{ $t('me.labGamePage.autoEatHint') }}</div>
+						<div class="vill-feed" :class="{ 'vill-feed--disabled': !feedAllReady }" @click="feedAll">{{ $t('me.labGamePage.feedAll') }}</div>
+					</div>
+					<div v-if="villagers.length === 0" class="empty-tip">{{ $t('me.labGamePage.villEmpty') }}</div>
+					<div v-for="v in villagers" :key="v.id" class="vill-card">
+						<div class="vill-head">
+							<span class="vill-avatar">{{ v.name.slice(0, 1) }}</span>
+							<span class="vill-name">{{ v.name }}</span>
+							<span v-if="villJobs[v.id]" class="vill-job">{{ villJobs[v.id] }}</span>
+							<span v-if="v.onExp" class="vill-hunger vill-hunger--exp">{{ $t('me.labGamePage.expOnExp') }}</span>
+							<span v-if="v.hunger > 0" class="vill-hunger">{{ $t('me.labGamePage.hungerTag') }}</span>
+							<span class="vill-mood" :style="{ color: moodInfo(v).color }">{{ $t('me.labGamePage.' + moodInfo(v).key) }}</span>
+							<span class="vill-rename" @click="renameVillager(v)">{{ $t('me.labGamePage.renameVillagerBtn') }}</span>
+						</div>
+						<div class="vill-tracks">
+							<div v-for="t in trackList(v)" :key="t.key" class="vill-track">
+								<span class="vill-track-name">{{ t.name }}<span class="vill-track-lv">Lv{{ t.lv }}</span></span>
+								<div class="vill-track-bar"><div class="vill-track-fill" :style="{ width: t.pct + '%' }"></div></div>
+							</div>
+						</div>
+						<div class="vill-bar-row">
+							<span class="vill-bar-label">{{ $t('me.labGamePage.hp') }}</span>
+							<div class="vill-bar"><div class="vill-bar-fill vill-bar-fill--hp" :style="{ width: v.hp + '%' }"></div></div>
+							<span class="vill-bar-val">{{ Math.floor(v.hp) }}</span>
+						</div>
+						<div class="vill-bar-row">
+							<span class="vill-bar-label">{{ $t('me.labGamePage.satiety') }}</span>
+							<div class="vill-bar"><div class="vill-bar-fill vill-bar-fill--sat" :style="{ width: v.satiety + '%' }"></div></div>
+							<span class="vill-bar-val">{{ Math.floor(v.satiety) }}</span>
+						</div>
+						<div class="vill-foot">
+							<div class="vill-equip">
+								<span class="vill-equip-label">{{ $t('me.labGamePage.equipment') }}</span>
+								<div
 									v-for="si in 3"
 									:key="si"
 									class="vill-equip-slot"
 									:class="{ 'vill-equip-slot--filled': !!v.equip[si - 1] }"
 									@click="tapEquipSlot(v, si - 1)"
 								>
-									<image class="vill-equip-char" :src="gameIcon(v.equip[si - 1])" mode="aspectFit" v-if="v.equip[si - 1]" />
-									<text class="vill-equip-name">{{ v.equip[si - 1] ? resName(v.equip[si - 1]) : $t('me.labGamePage.' + equipSlotKey(si - 1)) }}<text v-if="equipDurText(v, si - 1)" class="vill-equip-dur" :class="{ 'vill-equip-dur--low': equipDurLow(v, si - 1) }"> {{ equipDurText(v, si - 1) }}</text></text>
-								</view>
-							</view>
-							<view class="vill-feed" :class="{ 'vill-feed--disabled': !canFeed(v) }" @click="feedVillager(v)">
+									<img class="vill-equip-char" :src="gameIcon(v.equip[si - 1])"  v-if="v.equip[si - 1]" >
+									<span class="vill-equip-name">{{ v.equip[si - 1] ? resName(v.equip[si - 1]) : $t('me.labGamePage.' + equipSlotKey(si - 1)) }}<span v-if="equipDurText(v, si - 1)" class="vill-equip-dur" :class="{ 'vill-equip-dur--low': equipDurLow(v, si - 1) }"> {{ equipDurText(v, si - 1) }}</span></span>
+								</div>
+							</div>
+							<div class="vill-feed" :class="{ 'vill-feed--disabled': !canFeed(v) }" @click="feedVillager(v)">
 								{{ $t('me.labGamePage.feed') }}
-							</view>
-						</view>
-					</view>
-					<view class="modal-close" @click="villOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+							</div>
+						</div>
+					</div>
+					<div class="modal-close" @click="villOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 喂食选择：食物 / 药水 -->
-			<view v-if="feedOpen" class="overlay" @click.self="feedOpen = false">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.feedPickTitle') }}<text v-if="feedVill" class="feed-vill-name">{{ feedVill.name }}</text></view>
-					<view v-for="f in feedOptions" :key="f.id" class="res-row" :class="{ 'res-row--off': f.stock < 1 || (f.id !== 'potion' && feedVill && feedVill.satiety >= 99.5) }" @click="doFeed(f)">
-						<image class="res-dot" :src="gameIcon(f.id)" mode="aspectFit"  />
-						<view class="fr-main">
-							<view class="res-name">{{ resName(f.id) }} ×{{ f.stock }}</view>
-							<view class="food-sat">{{ f.effect }}</view>
-						</view>
-					</view>
-					<view class="modal-close" @click="feedOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+			<div v-if="feedOpen" class="overlay" @click.self="feedOpen = false">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.feedPickTitle') }}<span v-if="feedVill" class="feed-vill-name">{{ feedVill.name }}</span></div>
+					<div v-for="f in feedOptions" :key="f.id" class="res-row" :class="{ 'res-row--off': f.stock < 1 || (f.id !== 'potion' && feedVill && feedVill.satiety >= 99.5) }" @click="doFeed(f)">
+						<img class="res-dot" :src="gameIcon(f.id)"   >
+						<div class="fr-main">
+							<div class="res-name">{{ resName(f.id) }} ×{{ f.stock }}</div>
+							<div class="food-sat">{{ f.effect }}</div>
+						</div>
+					</div>
+					<div class="modal-close" @click="feedOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 英雄雇佣：原木娘（24h，按食物饱食度付费，指派工位满功率） -->
-			<view v-if="heroOpen" class="overlay" @click.self="heroOpen = false">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.heroTitle') }}</view>
-					<view class="hero-card">
-						<image class="hero-avatar hero-avatar--lg" :src="gameIcon('hero')" mode="aspectFit" :class="{ 'hero-avatar--on': heroActive }" />
-						<view class="build-main">
-							<view class="build-name-row">
-								<text class="build-name">{{ $t('me.labGamePage.heroName') }}</text>
-								<text class="build-quota">24h</text>
-							</view>
-							<view class="hero-desc">{{ $t('me.labGamePage.heroDesc') }}</view>
-						</view>
-					</view>
+			<div v-if="heroOpen" class="overlay" @click.self="heroOpen = false">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.heroTitle') }}</div>
+					<div class="hero-card">
+						<img class="hero-avatar hero-avatar--lg" :src="gameIcon('hero')"  :class="{ 'hero-avatar--on': heroActive }" >
+						<div class="build-main">
+							<div class="build-name-row">
+								<span class="build-name">{{ $t('me.labGamePage.heroName') }}</span>
+								<span class="build-quota">24h</span>
+							</div>
+							<div class="hero-desc">{{ $t('me.labGamePage.heroDesc') }}</div>
+						</div>
+					</div>
 					<template v-if="!heroActive">
-						<view class="bl-hint">{{ $t('me.labGamePage.heroCostHint', { n: heroCostSat, have: foodStat.sat }) }}</view>
-						<view class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': foodStat.sat < heroCostSat }" @click="hireHero">
+						<div class="bl-hint">{{ $t('me.labGamePage.heroCostHint', { n: heroCostSat, have: foodStat.sat }) }}</div>
+						<div class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': foodStat.sat < heroCostSat }" @click="hireHero">
 							{{ $t('me.labGamePage.heroHireBtn') }}
-						</view>
+						</div>
 					</template>
 					<template v-else>
-						<view class="bl-hint"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ $t('me.labGamePage.heroRemainHint', { t: heroRemainText }) }}</view>
-						<view class="bl-hint">{{ heroPlotInfo ? $t('me.labGamePage.heroAtHint', { s: heroPlotInfo }) : $t('me.labGamePage.heroIdleHint') }}</view>
-						<view v-if="heroPlotInfo" class="upgrade-btn upgrade-btn--wide" @click="recallHero">{{ $t('me.labGamePage.heroRecallBtn') }}</view>
+						<div class="bl-hint"><img class="inline-icon" :src="gameIcon('clock')"   > {{ $t('me.labGamePage.heroRemainHint', { t: heroRemainText }) }}</div>
+						<div class="bl-hint">{{ heroPlotInfo ? $t('me.labGamePage.heroAtHint', { s: heroPlotInfo }) : $t('me.labGamePage.heroIdleHint') }}</div>
+						<div v-if="heroPlotInfo" class="upgrade-btn upgrade-btn--wide" @click="recallHero">{{ $t('me.labGamePage.heroRecallBtn') }}</div>
 					</template>
-					<view class="modal-close" @click="heroOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+					<div class="modal-close" @click="heroOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 下界远征：选路线/时长/队员出发，扣一次性口粮；远征中可提前召回（部分奖励） -->
-			<view v-if="expOpen" class="overlay" @click.self="expOpen = false">
-				<view class="modal modal--tall">
-					<view class="modal-title">{{ $t('me.labGamePage.expTitle') }}</view>
+			<div v-if="expOpen" class="overlay" @click.self="expOpen = false">
+				<div class="modal modal--tall">
+					<div class="modal-title">{{ $t('me.labGamePage.expTitle') }}</div>
 					<template v-if="!expedition">
-						<view class="bl-hint">{{ $t('me.labGamePage.expHint') }}</view>
-						<view v-for="r in expRoutes" :key="r.key" class="exp-route" :class="{ 'exp-route--on': r.key === expSelKey, 'exp-route--lock': baseLevel < r.th }" @click="expSelRouteTap(r.key)">
-							<view class="exp-route-head">
-								<text class="exp-route-name">{{ isEn ? r.en : r.zh }}</text>
-								<text class="exp-danger">{{ expDangerStr(r.danger) }}</text>
-							</view>
-							<view class="exp-route-sub">
-								<text v-if="baseLevel < r.th" class="exp-lock">{{ $t('me.labGamePage.thReq', { n: r.th }) }}</text>
-								<text v-else>{{ $t('me.labGamePage.expPartyCap', { min: r.partyMin, max: r.partyMax }) }} · {{ $t('me.labGamePage.expWearRate', { n: Math.round(r.wear * 100) }) }}</text>
-							</view>
-						</view>
-						<view class="exp-sec">{{ $t('me.labGamePage.expDuration') }}</view>
-						<view class="exp-hours">
-							<view v-for="(h, hi) in expPanelRoute.hours" :key="hi" class="exp-hour" :class="{ 'exp-hour--on': hi === expSelHoursIdx }" @click="expSelHoursTap(hi)">
-								<text class="exp-hour-t">{{ h }}h</text>
-								<text class="exp-hour-s">{{ $t('me.labGamePage.expRation', { n: expPanelRoute.satPerHour * h }) }}</text>
-							</view>
-						</view>
-						<view class="exp-sec">{{ $t('me.labGamePage.expParty') }} {{ expPartyIds.length }}/{{ expPanelRoute.partyMax }}</view>
-						<view class="exp-vills">
-							<view v-for="v in villagers" :key="v.id" class="exp-vill" :class="{ 'exp-vill--on': expPartyIds.indexOf(v.id) >= 0 }" @click="expToggleVill(v.id)">
-								<text class="exp-vill-avatar" :style="{ background: resColor(v.equip[0] || 'log') }">{{ v.name.slice(0, 1) }}</text>
-								<text class="exp-vill-name">{{ v.name }}</text>
-								<text class="exp-vill-glv" :class="{ 'exp-vill-glv--on': trackLv(v, 'guard') > 1 }"><image class="inline-icon" :src="gameIcon('ironArmor')" mode="aspectFit"  />{{ trackLv(v, 'guard') }}</text>
-							</view>
-						</view>
-						<view class="bl-hint">{{ $t('me.labGamePage.expCostHint', { n: fmtStat(expFoodNeed) }) }}</view>
-						<view class="bl-hint">{{ $t('me.labGamePage.expWearHint') }}</view>
-						<view class="bl-hint"><image class="inline-icon" :src="gameIcon('flame')" mode="aspectFit"  /> {{ $t('me.labGamePage.expFlint', { n: Math.floor(flintUses || 0) }) }}</view>
-						<view class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !expCanDepart }" @click="expDepart">
+						<div class="bl-hint">{{ $t('me.labGamePage.expHint') }}</div>
+						<div v-for="r in expRoutes" :key="r.key" class="exp-route" :class="{ 'exp-route--on': r.key === expSelKey, 'exp-route--lock': baseLevel < r.th }" @click="expSelRouteTap(r.key)">
+							<div class="exp-route-head">
+								<span class="exp-route-name">{{ isEn ? r.en : r.zh }}</span>
+								<span class="exp-danger">{{ expDangerStr(r.danger) }}</span>
+							</div>
+							<div class="exp-route-sub">
+								<span v-if="baseLevel < r.th" class="exp-lock">{{ $t('me.labGamePage.thReq', { n: r.th }) }}</span>
+								<span v-else>{{ $t('me.labGamePage.expPartyCap', { min: r.partyMin, max: r.partyMax }) }} · {{ $t('me.labGamePage.expWearRate', { n: Math.round(r.wear * 100) }) }}</span>
+							</div>
+						</div>
+						<div class="exp-sec">{{ $t('me.labGamePage.expDuration') }}</div>
+						<div class="exp-hours">
+							<div v-for="(h, hi) in expPanelRoute.hours" :key="hi" class="exp-hour" :class="{ 'exp-hour--on': hi === expSelHoursIdx }" @click="expSelHoursTap(hi)">
+								<span class="exp-hour-t">{{ h }}h</span>
+								<span class="exp-hour-s">{{ $t('me.labGamePage.expRation', { n: expPanelRoute.satPerHour * h }) }}</span>
+							</div>
+						</div>
+						<div class="exp-sec">{{ $t('me.labGamePage.expParty') }} {{ expPartyIds.length }}/{{ expPanelRoute.partyMax }}</div>
+						<div class="exp-vills">
+							<div v-for="v in villagers" :key="v.id" class="exp-vill" :class="{ 'exp-vill--on': expPartyIds.indexOf(v.id) >= 0 }" @click="expToggleVill(v.id)">
+								<span class="exp-vill-avatar" :style="{ background: resColor(v.equip[0] || 'log') }">{{ v.name.slice(0, 1) }}</span>
+								<span class="exp-vill-name">{{ v.name }}</span>
+								<span class="exp-vill-glv" :class="{ 'exp-vill-glv--on': trackLv(v, 'guard') > 1 }"><img class="inline-icon" :src="gameIcon('ironArmor')"   >{{ trackLv(v, 'guard') }}</span>
+							</div>
+						</div>
+						<div class="bl-hint">{{ $t('me.labGamePage.expCostHint', { n: fmtStat(expFoodNeed) }) }}</div>
+						<div class="bl-hint">{{ $t('me.labGamePage.expWearHint') }}</div>
+						<div class="bl-hint"><img class="inline-icon" :src="gameIcon('flame')"   > {{ $t('me.labGamePage.expFlint', { n: Math.floor(flintUses || 0) }) }}</div>
+						<div class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !expCanDepart }" @click="expDepart">
 							{{ $t('me.labGamePage.expDepart') }}
-						</view>
+						</div>
 					</template>
 					<template v-else>
-						<view class="exp-route exp-route--on">
-							<view class="exp-route-head">
-								<text class="exp-route-name">{{ expActiveRoute ? (isEn ? expActiveRoute.en : expActiveRoute.zh) : '' }}</text>
-								<text class="exp-danger">{{ expActiveRoute ? expDangerStr(expActiveRoute.danger) : '' }}</text>
-							</view>
-							<view class="exp-route-sub">{{ $t('me.labGamePage.expOnCount', { n: expedition.party.length }) }}</view>
-						</view>
-						<view class="exp-remain"><image class="inline-icon" :src="gameIcon('clock')" mode="aspectFit"  /> {{ expRemainText }}</view>
-						<view class="exp-vills">
-							<view v-for="v in villagers" :key="v.id" class="exp-vill" :class="{ 'exp-vill--on': expedition.party.indexOf(v.id) >= 0, 'exp-vill--exp': v.onExp }">
-								<text class="exp-vill-avatar" :style="{ background: resColor(v.equip[0] || 'log') }">{{ v.name.slice(0, 1) }}</text>
-								<text class="exp-vill-name">{{ v.name }}</text>
-							</view>
-						</view>
-						<view class="bl-hint">{{ $t('me.labGamePage.expRecallHint') }}</view>
-						<view class="upgrade-btn upgrade-btn--wide" @click="expRecallTap">{{ $t('me.labGamePage.expRecallBtn') }}</view>
+						<div class="exp-route exp-route--on">
+							<div class="exp-route-head">
+								<span class="exp-route-name">{{ expActiveRoute ? (isEn ? expActiveRoute.en : expActiveRoute.zh) : '' }}</span>
+								<span class="exp-danger">{{ expActiveRoute ? expDangerStr(expActiveRoute.danger) : '' }}</span>
+							</div>
+							<div class="exp-route-sub">{{ $t('me.labGamePage.expOnCount', { n: expedition.party.length }) }}</div>
+						</div>
+						<div class="exp-remain"><img class="inline-icon" :src="gameIcon('clock')"   > {{ expRemainText }}</div>
+						<div class="exp-vills">
+							<div v-for="v in villagers" :key="v.id" class="exp-vill" :class="{ 'exp-vill--on': expedition.party.indexOf(v.id) >= 0, 'exp-vill--exp': v.onExp }">
+								<span class="exp-vill-avatar" :style="{ background: resColor(v.equip[0] || 'log') }">{{ v.name.slice(0, 1) }}</span>
+								<span class="exp-vill-name">{{ v.name }}</span>
+							</div>
+						</div>
+						<div class="bl-hint">{{ $t('me.labGamePage.expRecallHint') }}</div>
+						<div class="upgrade-btn upgrade-btn--wide" @click="expRecallTap">{{ $t('me.labGamePage.expRecallBtn') }}</div>
 					</template>
-					<view class="modal-close" @click="expOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+					<div class="modal-close" @click="expOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 远征归来：收获 / 装备损耗 / 殉难 -->
-			<view v-if="expResultOpen && expResult" class="overlay" @click.self="expResultOpen = false">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.expResultTitle') }}<text v-if="expResultRouteName" class="feed-vill-name">{{ expResultRouteName }}</text></view>
-					<view v-if="!expResult.complete" class="bl-hint">{{ $t('me.labGamePage.expResultRecall') }}</view>
-					<view v-for="(g, gid) in expResult.gains" :key="gid" class="res-row">
-						<image class="res-dot" :src="gameIcon(gid)" mode="aspectFit"  />
-						<view class="fr-main"><view class="res-name">{{ resName(gid) }}</view></view>
-						<text class="res-val">+{{ g }}</text>
-					</view>
-					<view v-if="expResult.lootLost" class="bl-hint">{{ $t('me.labGamePage.expLootLost') }}</view>
-				<view v-if="expResult.guardExp" class="exp-sec"><image class="inline-icon" :src="gameIcon('ironArmor')" mode="aspectFit"  /> {{ $t('me.labGamePage.expGuardGain', { n: expResult.guardExp }) }}</view>
-				<view v-for="(g, gi) in expResult.guardUps" :key="'gu' + gi" class="exp-line"><image class="inline-icon" :src="gameIcon('ironArmor')" mode="aspectFit"  /> {{ g }}</view>
-					<view v-if="expResult.broken.length" class="exp-sec">{{ $t('me.labGamePage.expBroken') }}</view>
-					<view v-for="(b, bi) in expResult.broken" :key="'b' + bi" class="exp-line"><image class="inline-icon" :src="gameIcon('sword')" mode="aspectFit"  /> {{ b }}</view>
-					<view v-if="expResult.usedRestore.length" class="exp-sec">{{ $t('me.labGamePage.expRestoreUsed') }}</view>
-					<view v-for="(u, ui) in expResult.usedRestore" :key="'u' + ui" class="exp-line">🧪 {{ u }}</view>
-					<view v-if="expResult.fallen.length" class="exp-sec exp-sec--bad">{{ $t('me.labGamePage.expFallen') }}</view>
-					<view v-for="(f, fi) in expResult.fallen" :key="'f' + fi" class="exp-line exp-line--bad">✝ {{ f }}</view>
-					<view class="modal-close" @click="expResultOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+			<div v-if="expResultOpen && expResult" class="overlay" @click.self="expResultOpen = false">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.expResultTitle') }}<span v-if="expResultRouteName" class="feed-vill-name">{{ expResultRouteName }}</span></div>
+					<div v-if="!expResult.complete" class="bl-hint">{{ $t('me.labGamePage.expResultRecall') }}</div>
+					<div v-for="(g, gid) in expResult.gains" :key="gid" class="res-row">
+						<img class="res-dot" :src="gameIcon(gid)"   >
+						<div class="fr-main"><div class="res-name">{{ resName(gid) }}</div></div>
+						<span class="res-val">+{{ g }}</span>
+					</div>
+					<div v-if="expResult.lootLost" class="bl-hint">{{ $t('me.labGamePage.expLootLost') }}</div>
+				<div v-if="expResult.guardExp" class="exp-sec"><img class="inline-icon" :src="gameIcon('ironArmor')"   > {{ $t('me.labGamePage.expGuardGain', { n: expResult.guardExp }) }}</div>
+				<div v-for="(g, gi) in expResult.guardUps" :key="'gu' + gi" class="exp-line"><img class="inline-icon" :src="gameIcon('ironArmor')"   > {{ g }}</div>
+					<div v-if="expResult.broken.length" class="exp-sec">{{ $t('me.labGamePage.expBroken') }}</div>
+					<div v-for="(b, bi) in expResult.broken" :key="'b' + bi" class="exp-line"><img class="inline-icon" :src="gameIcon('sword')"   > {{ b }}</div>
+					<div v-if="expResult.usedRestore.length" class="exp-sec">{{ $t('me.labGamePage.expRestoreUsed') }}</div>
+					<div v-for="(u, ui) in expResult.usedRestore" :key="'u' + ui" class="exp-line">🧪 {{ u }}</div>
+					<div v-if="expResult.fallen.length" class="exp-sec exp-sec--bad">{{ $t('me.labGamePage.expFallen') }}</div>
+					<div v-for="(f, fi) in expResult.fallen" :key="'f' + fi" class="exp-line exp-line--bad">✝ {{ f }}</div>
+					<div class="modal-close" @click="expResultOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 合成台（MC 工作台配方） -->
-			<view v-if="craftOpen" class="overlay" @click.self="craftOpen = false">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.craftTitle') }}</view>
-					<view class="raid-hint">{{ $t('me.labGamePage.craftHint') }}</view>
-					<view v-for="r in craftList" :key="r.id" class="craft-row">
-						<image class="res-dot" :src="gameIcon(r.outId)" mode="aspectFit"  />
-						<view class="craft-main">
-							<view class="craft-name">{{ resName(r.outId) }} ×{{ r.outN }}</view>
-							<view class="craft-need" :class="{ 'craft-need--lack': !r.afford }">{{ r.inText }}</view>
-						</view>
-						<view class="craft-btn" :class="{ 'craft-btn--off': !r.ok }" @click="doCraft(r)">{{ $t('me.labGamePage.craftBtn') }}</view>
-					</view>
-					<view class="modal-close" @click="craftOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+			<div v-if="craftOpen" class="overlay" @click.self="craftOpen = false">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.craftTitle') }}</div>
+					<div class="raid-hint">{{ $t('me.labGamePage.craftHint') }}</div>
+					<div v-for="r in craftList" :key="r.id" class="craft-row">
+						<img class="res-dot" :src="gameIcon(r.outId)"   >
+						<div class="craft-main">
+							<div class="craft-name">{{ resName(r.outId) }} ×{{ r.outN }}</div>
+							<div class="craft-need" :class="{ 'craft-need--lack': !r.afford }">{{ r.inText }}</div>
+						</div>
+						<div class="craft-btn" :class="{ 'craft-btn--off': !r.ok }" @click="doCraft(r)">{{ $t('me.labGamePage.craftBtn') }}</div>
+					</div>
+					<div class="modal-close" @click="craftOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 村民装备选择（武器 / 盔甲 / 回复） -->
-			<view v-if="equipOpen" class="overlay" @click.self="equipOpen = false">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.equipPickTitle', { slot: $t('me.labGamePage.' + equipSlotKey(equipSlotIdx)) }) }}<text v-if="equipTarget" class="feed-vill-name">{{ equipTarget.name }}</text></view>
-					<view v-if="equipSlotIdx === 2" class="mkt-hint">{{ $t('me.labGamePage.equipRestoreHint') }}</view>
-					<view v-if="equipTarget && equipTarget.equip[equipSlotIdx]" class="res-row" @click="unequipCur">
-						<text class="res-dot" style="background:#b04a3a">−</text>
-						<view class="fr-main">
-							<view class="res-name">{{ $t('me.labGamePage.equipTakeOff') }}</view>
-							<view class="food-sat">{{ $t('me.labGamePage.equipTakeOffHint') }}</view>
-						</view>
-					</view>
-					<view v-for="it in equipOptions" :key="it.key" class="res-row" @click="doEquip(it.key)">
-						<image class="res-dot" :src="gameIcon(it.key)" mode="aspectFit"  />
-						<view class="fr-main">
-							<view class="res-name">{{ resName(it.key) }} ×{{ it.stock }}</view>
-							<view class="food-sat">{{ equipEffectText(it.def) }}</view>
-						</view>
-					</view>
-					<view v-if="equipOptions.length === 0" class="empty-tip">{{ $t('me.labGamePage.equipEmptyTip') }}</view>
-					<view class="modal-close" @click="equipOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+			<div v-if="equipOpen" class="overlay" @click.self="equipOpen = false">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.equipPickTitle', { slot: $t('me.labGamePage.' + equipSlotKey(equipSlotIdx)) }) }}<span v-if="equipTarget" class="feed-vill-name">{{ equipTarget.name }}</span></div>
+					<div v-if="equipSlotIdx === 2" class="mkt-hint">{{ $t('me.labGamePage.equipRestoreHint') }}</div>
+					<div v-if="equipTarget && equipTarget.equip[equipSlotIdx]" class="res-row" @click="unequipCur">
+						<span class="res-dot" style="background:#b04a3a">−</span>
+						<div class="fr-main">
+							<div class="res-name">{{ $t('me.labGamePage.equipTakeOff') }}</div>
+							<div class="food-sat">{{ $t('me.labGamePage.equipTakeOffHint') }}</div>
+						</div>
+					</div>
+					<div v-for="it in equipOptions" :key="it.key" class="res-row" @click="doEquip(it.key)">
+						<img class="res-dot" :src="gameIcon(it.key)"   >
+						<div class="fr-main">
+							<div class="res-name">{{ resName(it.key) }} ×{{ it.stock }}</div>
+							<div class="food-sat">{{ equipEffectText(it.def) }}</div>
+						</div>
+					</div>
+					<div v-if="equipOptions.length === 0" class="empty-tip">{{ $t('me.labGamePage.equipEmptyTip') }}</div>
+					<div class="modal-close" @click="equipOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 食物优先级设置 -->
-			<view v-if="foodOpen" class="overlay" @click.self="foodOpen = false">
-				<view class="modal modal--tall">
-					<view class="modal-title">{{ $t('me.labGamePage.foodTitle') }}</view>
-					<view class="bl-hint">{{ $t('me.labGamePage.foodHint') }}</view>
-					<view v-for="(f, fi) in foodSortList" :key="f.id" class="res-row">
-						<image class="res-dot" :src="gameIcon(f.id)" mode="aspectFit"  />
-						<view class="fr-main">
-							<view class="res-name">{{ resName(f.id) }} ×{{ f.count }}</view>
-							<view class="food-sat">{{ $t('me.labGamePage.satiety') }} +{{ f.sat }} · {{ $t('me.labGamePage.foodMood') }} {{ f.mood >= 0 ? '+' : '' }}{{ f.mood }}</view>
-							<view v-if="f.hunger" class="food-sat food-hunger">{{ $t('me.labGamePage.foodHunger', { h: f.hunger, extra: hungerExtra }) }}</view>
-						</view>
-						<view class="food-mv" :class="{ 'food-mv--off': fi === 0 }" @click="foodMove(f.id, -1)">↑</view>
-						<view class="food-mv" :class="{ 'food-mv--off': fi === foodSortList.length - 1 }" @click="foodMove(f.id, 1)">↓</view>
-					</view>
-					<view class="food-reset" @click="foodPrioReset">{{ $t('me.labGamePage.foodReset') }}</view>
-					<view class="modal-close" @click="foodOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+			<div v-if="foodOpen" class="overlay" @click.self="foodOpen = false">
+				<div class="modal modal--tall">
+					<div class="modal-title">{{ $t('me.labGamePage.foodTitle') }}</div>
+					<div class="bl-hint">{{ $t('me.labGamePage.foodHint') }}</div>
+					<div v-for="(f, fi) in foodSortList" :key="f.id" class="res-row">
+						<img class="res-dot" :src="gameIcon(f.id)"   >
+						<div class="fr-main">
+							<div class="res-name">{{ resName(f.id) }} ×{{ f.count }}</div>
+							<div class="food-sat">{{ $t('me.labGamePage.satiety') }} +{{ f.sat }} · {{ $t('me.labGamePage.foodMood') }} {{ f.mood >= 0 ? '+' : '' }}{{ f.mood }}</div>
+							<div v-if="f.hunger" class="food-sat food-hunger">{{ $t('me.labGamePage.foodHunger', { h: f.hunger, extra: hungerExtra }) }}</div>
+						</div>
+						<div class="food-mv" :class="{ 'food-mv--off': fi === 0 }" @click="foodMove(f.id, -1)">↑</div>
+						<div class="food-mv" :class="{ 'food-mv--off': fi === foodSortList.length - 1 }" @click="foodMove(f.id, 1)">↓</div>
+					</div>
+					<div class="food-reset" @click="foodPrioReset">{{ $t('me.labGamePage.foodReset') }}</div>
+					<div class="modal-close" @click="foodOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 建筑图鉴 -->
-			<view v-if="blOpen" class="overlay" @click.self="blOpen = false">
-				<view class="modal modal--tall">
-					<view class="modal-title">{{ $t('me.labGamePage.buildList') }}</view>
-					<view class="bl-hint">{{ $t('me.labGamePage.blHint') }}</view>
-					<view v-for="b in blList" :key="b.key" class="bl-item">
-						<view class="bl-head">
-							<image class="bl-char" :src="gameIcon(b.key)" mode="aspectFit"  />
-							<text class="bl-name">{{ langName(b) }}</text>
-							<text v-if="occText(b)" class="bl-occ">{{ occText(b) }}</text>
-							<text class="bl-th">TH{{ b.levels[0].th }}{{ $t('me.labGamePage.blUnlock') }}</text>
-						</view>
-						<view v-if="builtLoc(b.key) || storedIdxs(b.key).length" class="bl-status">
-							<text v-if="builtLoc(b.key)" class="bl-tag bl-tag--built">{{ builtLoc(b.key) }}</text>
-							<view v-for="si in storedIdxs(b.key)" :key="'st' + si" class="bl-tag bl-tag--stored">
-								<text>{{ $t('me.labGamePage.storedTag') }} Lv{{ stored[si].level }}</text>
-								<text class="bl-place-btn" @click="startPlace(si)">{{ $t('me.labGamePage.placeBtn') }}</text>
-							</view>
-						</view>
+			<div v-if="blOpen" class="overlay" @click.self="blOpen = false">
+				<div class="modal modal--tall">
+					<div class="modal-title">{{ $t('me.labGamePage.buildList') }}</div>
+					<div class="bl-hint">{{ $t('me.labGamePage.blHint') }}</div>
+					<div v-for="b in blList" :key="b.key" class="bl-item">
+						<div class="bl-head">
+							<img class="bl-char" :src="gameIcon(b.key)"   >
+							<span class="bl-name">{{ langName(b) }}</span>
+							<span v-if="occText(b)" class="bl-occ">{{ occText(b) }}</span>
+							<span class="bl-th">TH{{ b.levels[0].th }}{{ $t('me.labGamePage.blUnlock') }}</span>
+						</div>
+						<div v-if="builtLoc(b.key) || storedIdxs(b.key).length" class="bl-status">
+							<span v-if="builtLoc(b.key)" class="bl-tag bl-tag--built">{{ builtLoc(b.key) }}</span>
+							<div v-for="si in storedIdxs(b.key)" :key="'st' + si" class="bl-tag bl-tag--stored">
+								<span>{{ $t('me.labGamePage.storedTag') }} Lv{{ stored[si].level }}</span>
+								<span class="bl-place-btn" @click="startPlace(si)">{{ $t('me.labGamePage.placeBtn') }}</span>
+							</div>
+						</div>
 						<template v-for="(l, li) in blLines(b)">
-							<view v-if="l.desc" :key="'d' + li" class="bl-desc">{{ l.desc }}</view>
-							<view v-if="l.text" :key="'p' + li" class="bl-prod">
-								<text class="bl-lv">Lv{{ l.lv }}</text>
-								<text class="bl-prod-text">{{ l.text }}</text>
-							</view>
+							<div v-if="l.desc" :key="'d' + li" class="bl-desc">{{ l.desc }}</div>
+							<div v-if="l.text" :key="'p' + li" class="bl-prod">
+								<span class="bl-lv">Lv{{ l.lv }}</span>
+								<span class="bl-prod-text">{{ l.text }}</span>
+							</div>
 						</template>
-					</view>
-					<view class="modal-close" @click="blOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+					</div>
+					<div class="modal-close" @click="blOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 好友的村庄 -->
-			<view v-if="frOpen" class="overlay" @click.self="frOpen = false">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.friendVillage') }}</view>
-					<view v-for="(f, fi) in friendVillages" :key="fi" class="fr-item" @click="openFriendVillage(fi)">
-						<text class="fr-char" :style="{ background: f.color }">{{ f.char }}</text>
-						<view class="fr-main">
-							<view class="fr-name">{{ f.name }}</view>
-							<view class="fr-sub">{{ f.owner }} · Lv.{{ f.lv }}</view>
-						</view>
-						<view class="fr-visit" @click.stop="openFriendVillage(fi)">{{ $t('me.labGamePage.fvVisit') }}</view>
-					</view>
-					<view class="modal-close" @click="frOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+			<div v-if="frOpen" class="overlay" @click.self="frOpen = false">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.friendVillage') }}</div>
+					<div v-for="(f, fi) in friendVillages" :key="fi" class="fr-item" @click="openFriendVillage(fi)">
+						<span class="fr-char" :style="{ background: f.color }">{{ f.char }}</span>
+						<div class="fr-main">
+							<div class="fr-name">{{ f.name }}</div>
+							<div class="fr-sub">{{ f.owner }} · Lv.{{ f.lv }}</div>
+						</div>
+						<div class="fr-visit" @click.stop="openFriendVillage(fi)">{{ $t('me.labGamePage.fvVisit') }}</div>
+					</div>
+					<div class="modal-close" @click="frOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 僵尸夜袭面板 -->
-			<view v-if="raidOpen" class="overlay" @click.self="raidOpen = false">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.raid') }}</view>
-					<view class="raid-status" :class="{ 'raid-status--on': raidStatus.active }">
+			<div v-if="raidOpen" class="overlay" @click.self="raidOpen = false">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.raid') }}</div>
+					<div class="raid-status" :class="{ 'raid-status--on': raidStatus.active }">
 						{{ raidStatus.active ? $t('me.labGamePage.raidOngoing') : $t('me.labGamePage.raidPeace') }} · {{ raidStatus.text }}
-					</view>
-					<view class="raid-def">{{ $t('me.labGamePage.raidStr') }} {{ zombiePower }} · {{ $t('me.labGamePage.power') }} {{ raidPower.toFixed(1) }} · {{ $t('me.labGamePage.defLabel') }} {{ Math.floor(villageDef) }}</view>
-					<view v-if="hordeText" class="raid-status raid-status--horde"><image class="inline-icon" :src="gameIcon('journal')" mode="aspectFit"  /> {{ hordeText }}</view>
-					<view v-if="tiredText" class="raid-status raid-status--tired"><image class="inline-icon" :src="gameIcon('villager')" mode="aspectFit"  /> {{ tiredText }}</view>
+					</div>
+					<div class="raid-def">{{ $t('me.labGamePage.raidStr') }} {{ zombiePower }} · {{ $t('me.labGamePage.power') }} {{ raidPower.toFixed(1) }} · {{ $t('me.labGamePage.defLabel') }} {{ Math.floor(villageDef) }}</div>
+					<div v-if="hordeText" class="raid-status raid-status--horde"><img class="inline-icon" :src="gameIcon('journal')"   > {{ hordeText }}</div>
+					<div v-if="tiredText" class="raid-status raid-status--tired"><img class="inline-icon" :src="gameIcon('villager')"   > {{ tiredText }}</div>
 					<!-- 夜袭挑战模式：七波防守 + 血潮 Boss -->
-					<view class="wave-box">
-						<view class="wh-title"><image class="inline-icon" :src="gameIcon('sword')" mode="aspectFit"  /> {{ $t('me.labGamePage.waveTitle') }}</view>
-						<view class="raid-hint">{{ $t('me.labGamePage.waveDesc') }}</view>
-						<view v-if="waveCanOptIn || waveCanResume" class="upgrade-btn upgrade-btn--wide" @click="optInWave">
+					<div class="wave-box">
+						<div class="wh-title"><img class="inline-icon" :src="gameIcon('sword')"   > {{ $t('me.labGamePage.waveTitle') }}</div>
+						<div class="raid-hint">{{ $t('me.labGamePage.waveDesc') }}</div>
+						<div v-if="waveCanOptIn || waveCanResume" class="upgrade-btn upgrade-btn--wide" @click="optInWave">
 							{{ $t('me.labGamePage.waveEnable') }}
-						</view>
-						<view v-if="waveOn" class="upgrade-btn upgrade-btn--wide wave-close-btn" @click="closeWave">
+						</div>
+						<div v-if="waveOn" class="upgrade-btn upgrade-btn--wide wave-close-btn" @click="closeWave">
 							{{ $t('me.labGamePage.waveClose') }}
-						</view>
-						<view v-if="waveShowPanel" class="wave-live">
-							<view class="wave-progress">{{ $t('me.labGamePage.waveProgress', { n: raidWave.done, m: waveCount }) }}</view>
-							<view v-if="waveNextText" class="wave-progress wave-progress--dim">{{ waveNextText }}</view>
-							<view v-if="bossState" class="boss-box">
-								<view class="boss-head">
-									<text class="boss-name"><image class="inline-icon" :src="gameIcon('raid')" mode="aspectFit"  /> {{ $t('me.labGamePage.bossTitle', { n: bossState.name }) }}</text>
-									<text class="boss-hp-num">{{ bossState.hp }}/{{ bossState.max }}</text>
-								</view>
-								<view class="boss-bar"><view class="boss-bar-fill" :style="{ width: bossState.pct + '%' }"></view></view>
-							</view>
-							<view v-else-if="raidWave.bossDead" class="wave-progress"><image class="inline-icon" :src="gameIcon('raid')" mode="aspectFit"  /> {{ $t('me.labGamePage.bossKilled', { n: raidWave.bossName }) }}</view>
-							<view v-else-if="raidWave.bossEscaped" class="wave-progress"><image class="inline-icon" :src="gameIcon('raid')" mode="aspectFit"  /> {{ $t('me.labGamePage.bossEscaped', { n: raidWave.bossName }) }}</view>
-							<view v-for="(l, li) in raidWave.log" :key="li" class="wave-log">
-								<text class="wave-log-text">{{ l.text }}</text>
-								<text v-if="l.gains" class="wave-log-gains">{{ l.gains }}</text>
-								<text v-if="l.extra" class="wave-log-extra">{{ l.extra }}</text>
-							</view>
-						</view>
-					</view>
-					<view class="wh-title">{{ $t('me.labGamePage.raidTemp') }}</view>
-					<view v-if="raidTempTotal <= 0" class="empty-tip">{{ $t('me.labGamePage.raidEmpty') }}</view>
-					<view v-for="r in raidTempList" :key="r.id" class="res-row">
-						<image class="res-dot" :src="gameIcon(r.id)" mode="aspectFit"  />
-						<text class="res-name">{{ resName(r.id) }}</text>
-						<text class="res-val">{{ r.val }}</text>
-					</view>
-					<view class="raid-hint">{{ $t('me.labGamePage.raidHint') }}</view>
-					<view class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': raidTempTotal <= 0 }" @click="claimRaid">
+						</div>
+						<div v-if="waveShowPanel" class="wave-live">
+							<div class="wave-progress">{{ $t('me.labGamePage.waveProgress', { n: raidWave.done, m: waveCount }) }}</div>
+							<div v-if="waveNextText" class="wave-progress wave-progress--dim">{{ waveNextText }}</div>
+							<div v-if="bossState" class="boss-box">
+								<div class="boss-head">
+									<span class="boss-name"><img class="inline-icon" :src="gameIcon('raid')"   > {{ $t('me.labGamePage.bossTitle', { n: bossState.name }) }}</span>
+									<span class="boss-hp-num">{{ bossState.hp }}/{{ bossState.max }}</span>
+								</div>
+								<div class="boss-bar"><div class="boss-bar-fill" :style="{ width: bossState.pct + '%' }"></div></div>
+							</div>
+							<div v-else-if="raidWave.bossDead" class="wave-progress"><img class="inline-icon" :src="gameIcon('raid')"   > {{ $t('me.labGamePage.bossKilled', { n: raidWave.bossName }) }}</div>
+							<div v-else-if="raidWave.bossEscaped" class="wave-progress"><img class="inline-icon" :src="gameIcon('raid')"   > {{ $t('me.labGamePage.bossEscaped', { n: raidWave.bossName }) }}</div>
+							<div v-for="(l, li) in raidWave.log" :key="li" class="wave-log">
+								<span class="wave-log-text">{{ l.text }}</span>
+								<span v-if="l.gains" class="wave-log-gains">{{ l.gains }}</span>
+								<span v-if="l.extra" class="wave-log-extra">{{ l.extra }}</span>
+							</div>
+						</div>
+					</div>
+					<div class="wh-title">{{ $t('me.labGamePage.raidTemp') }}</div>
+					<div v-if="raidTempTotal <= 0" class="empty-tip">{{ $t('me.labGamePage.raidEmpty') }}</div>
+					<div v-for="r in raidTempList" :key="r.id" class="res-row">
+						<img class="res-dot" :src="gameIcon(r.id)"   >
+						<span class="res-name">{{ resName(r.id) }}</span>
+						<span class="res-val">{{ r.val }}</span>
+					</div>
+					<div class="raid-hint">{{ $t('me.labGamePage.raidHint') }}</div>
+					<div class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': raidTempTotal <= 0 }" @click="claimRaid">
 						{{ $t('me.labGamePage.raidClaim') }}
-					</view>
-					<view class="modal-close" @click="raidOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+					</div>
+					<div class="modal-close" @click="raidOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 好友的村庄（进入后的村庄面板） -->
-			<view v-if="fvOpen" class="overlay" @click.self="fvOpen = false">
-				<view class="modal modal--tall">
-					<view class="modal-title">{{ fvVillage.name }}</view>
-					<view class="fr-item">
-						<text class="fr-char" :style="{ background: fvVillage.color }">{{ fvVillage.char }}</text>
-						<view class="fr-main">
-							<view class="fr-name">{{ fvVillage.owner }}</view>
-							<view class="fr-sub">{{ $t('me.labGamePage.baseLevel') }} Lv.{{ fvVillage.lv }}</view>
-						</view>
-					</view>
-					<view class="upgrade-btn upgrade-btn--wide" @click="openFriendMarket">{{ $t('me.labGamePage.market') }}</view>
-					<view class="modal-close" @click="fvOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+			<div v-if="fvOpen" class="overlay" @click.self="fvOpen = false">
+				<div class="modal modal--tall">
+					<div class="modal-title">{{ fvVillage.name }}</div>
+					<div class="fr-item">
+						<span class="fr-char" :style="{ background: fvVillage.color }">{{ fvVillage.char }}</span>
+						<div class="fr-main">
+							<div class="fr-name">{{ fvVillage.owner }}</div>
+							<div class="fr-sub">{{ $t('me.labGamePage.baseLevel') }} Lv.{{ fvVillage.lv }}</div>
+						</div>
+					</div>
+					<div class="upgrade-btn upgrade-btn--wide" @click="openFriendMarket">{{ $t('me.labGamePage.market') }}</div>
+					<div class="modal-close" @click="fvOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 好友的市场（浏览演示数据） -->
-			<view v-if="fmOpen" class="overlay" @click.self="fmOpen = false">
-				<view class="modal modal--tall">
-					<view class="modal-title">{{ $t('me.labGamePage.fvMarket', { name: fvVillage.name }) }}</view>
-					<view v-for="(s, si) in fmListings" :key="si" class="fr-item">
-						<image class="fr-char" :src="gameIcon(s.id)" mode="aspectFit"  />
-						<view class="fr-main">
-							<view class="fr-name">{{ resName(s.id) }} ×{{ s.qty }}</view>
-							<view class="fr-sub">
-								{{ $t('me.labGamePage.mktPrice') }} <image class="mkt-em" :src="gameIcon('emerald')" mode="aspectFit" />{{ s.price }} · {{ $t('me.labGamePage.mktTotal') }} <image class="mkt-em" :src="gameIcon('emerald')" mode="aspectFit" />{{ s.qty * s.price }}
-							</view>
-						</view>
-						<view class="fr-visit" @click="mktBuySoon">{{ $t('me.labGamePage.mktBuyAction') }}</view>
-					</view>
-					<view class="modal-close" @click="fmOpen = false">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+			<div v-if="fmOpen" class="overlay" @click.self="fmOpen = false">
+				<div class="modal modal--tall">
+					<div class="modal-title">{{ $t('me.labGamePage.fvMarket', { name: fvVillage.name }) }}</div>
+					<div v-for="(s, si) in fmListings" :key="si" class="fr-item">
+						<img class="fr-char" :src="gameIcon(s.id)"   >
+						<div class="fr-main">
+							<div class="fr-name">{{ resName(s.id) }} ×{{ s.qty }}</div>
+							<div class="fr-sub">
+								{{ $t('me.labGamePage.mktPrice') }} <img class="mkt-em" :src="gameIcon('emerald')"  >{{ s.price }} · {{ $t('me.labGamePage.mktTotal') }} <img class="mkt-em" :src="gameIcon('emerald')"  >{{ s.qty * s.price }}
+							</div>
+						</div>
+						<div class="fr-visit" @click="mktBuySoon">{{ $t('me.labGamePage.mktBuyAction') }}</div>
+					</div>
+					<div class="modal-close" @click="fmOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 市场管理（自己的市场：九宫格，前 6 格出售 + 末 3 格收购） -->
-			<view v-if="mktOpen" class="overlay" @click.self="closeMarket">
-				<view class="modal">
-					<view class="modal-title">{{ $t('me.labGamePage.mktManage') }}</view>
-					<view class="mkt-grid">
-						<view
+			<div v-if="mktOpen" class="overlay" @click.self="closeMarket">
+				<div class="modal">
+					<div class="modal-title">{{ $t('me.labGamePage.mktManage') }}</div>
+					<div class="mkt-grid">
+						<div
 							v-for="n in 9"
 							:key="'mkt' + n"
 							class="mkt-cell"
@@ -1023,73 +1023,74 @@
 							@click="tapMktCell(n - 1)"
 						>
 							<template v-if="mktSlotAt(n - 1)">
-								<view class="mkt-tile" :style="{ background: resColor(mktSlotAt(n - 1).id) }">
-									<text class="mkt-tile-tag">{{ n > 6 ? $t('me.labGamePage.mktTagBuy') : $t('me.labGamePage.mktTagSell') }}</text>
-									<image class="mkt-tile-char" :src="gameIcon(mktSlotAt(n - 1).id)" mode="aspectFit"  />
-									<text class="mkt-tile-qty">×{{ mktSlotAt(n - 1).qty }}</text>
-									<view class="mkt-tile-price">
-										<image class="mkt-em" :src="gameIcon('emerald')" mode="aspectFit" />
-										<text>{{ mktSlotAt(n - 1).price }}</text>
-									</view>
-								</view>
+								<div class="mkt-tile" :style="{ background: resColor(mktSlotAt(n - 1).id) }">
+									<span class="mkt-tile-tag">{{ n > 6 ? $t('me.labGamePage.mktTagBuy') : $t('me.labGamePage.mktTagSell') }}</span>
+									<img class="mkt-tile-char" :src="gameIcon(mktSlotAt(n - 1).id)"   >
+									<span class="mkt-tile-qty">×{{ mktSlotAt(n - 1).qty }}</span>
+									<div class="mkt-tile-price">
+										<img class="mkt-em" :src="gameIcon('emerald')"  >
+										<span>{{ mktSlotAt(n - 1).price }}</span>
+									</div>
+								</div>
 							</template>
 							<template v-else>
-								<view class="mkt-cell-empty">
-									<text class="mkt-tile-tag">{{ n > 6 ? $t('me.labGamePage.mktTagBuy') : $t('me.labGamePage.mktTagSell') }}</text>
-									<text class="mkt-cell-plus">＋</text>
-								</view>
+								<div class="mkt-cell-empty">
+									<span class="mkt-tile-tag">{{ n > 6 ? $t('me.labGamePage.mktTagBuy') : $t('me.labGamePage.mktTagSell') }}</span>
+									<span class="mkt-cell-plus">＋</span>
+								</div>
 							</template>
-						</view>
-					</view>
-					<view class="mkt-hint">{{ $t('me.labGamePage.mktGridHint') }}</view>
+						</div>
+					</div>
+					<div class="mkt-hint">{{ $t('me.labGamePage.mktGridHint') }}</div>
 					<!-- 流浪商人：每天随机到访（停留 6 小时），售卖列表按木炭等资源结算 -->
-					<view class="trader-box" @click="ensureTrader">
-						<view class="trader-head">
-							<text class="trader-name"><image class="inline-icon" :src="gameIcon('hero')" mode="aspectFit"  /> {{ $t('me.labGamePage.traderTitle') }}</text>
-							<text v-if="traderHere" class="trader-stock">{{ $t('me.labGamePage.traderStay', { n: traderLeftH }) }}</text>
-						</view>
+					<div class="trader-box" @click="ensureTrader">
+						<div class="trader-head">
+							<span class="trader-name"><img class="inline-icon" :src="gameIcon('hero')"   > {{ $t('me.labGamePage.traderTitle') }}</span>
+							<span v-if="traderHere" class="trader-stock">{{ $t('me.labGamePage.traderStay', { n: traderLeftH }) }}</span>
+						</div>
 						<template v-if="traderHere">
-							<view v-for="g in TRADER.goods" :key="g.id" class="trader-row" :class="{ 'trader-row--off': (trader.stock[g.id] || 0) < 1 || !canAfford(g.cost) }" @click.stop="buyTraderGood(g)">
-								<image class="res-dot" :src="gameIcon(g.id)" mode="aspectFit"  />
-								<text class="trader-good">{{ resName(g.id) }} ×{{ trader.stock[g.id] || 0 }}</text>
-								<text class="trader-buy">{{ costText(g.cost) }}</text>
-							</view>
+							<div v-for="g in TRADER.goods" :key="g.id" class="trader-row" :class="{ 'trader-row--off': (trader.stock[g.id] || 0) < 1 || !canAfford(g.cost) }" @click.stop="buyTraderGood(g)">
+								<img class="res-dot" :src="gameIcon(g.id)"   >
+								<span class="trader-good">{{ resName(g.id) }} ×{{ trader.stock[g.id] || 0 }}</span>
+								<span class="trader-buy">{{ costText(g.cost) }}</span>
+							</div>
 						</template>
-						<view v-else class="trader-row trader-row--off">
-							<text class="trader-good">{{ $t('me.labGamePage.traderAway') }}</text>
-						</view>
-						<view class="mkt-hint">{{ $t('me.labGamePage.traderHint', { n: TRADER.hours }) }}</view>
-					</view>
-					<view class="modal-close" @click="closeMarket">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
+						<div v-else class="trader-row trader-row--off">
+							<span class="trader-good">{{ $t('me.labGamePage.traderAway') }}</span>
+						</div>
+						<div class="mkt-hint">{{ $t('me.labGamePage.traderHint', { n: TRADER.hours }) }}</div>
+					</div>
+					<div class="modal-close" @click="closeMarket">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
 
 			<!-- 上架 / 收购编辑弹窗（货币：绿宝石） -->
-			<view v-if="mktEdit" class="overlay" @click.self="mktCancelEdit">
-				<view class="modal">
-					<view class="modal-title">{{ mktEdit.type === 'sell' ? $t('me.labGamePage.mktList') : $t('me.labGamePage.mktBuy') }}</view>
+			<div v-if="mktEdit" class="overlay" @click.self="mktCancelEdit">
+				<div class="modal">
+					<div class="modal-title">{{ mktEdit.type === 'sell' ? $t('me.labGamePage.mktList') : $t('me.labGamePage.mktBuy') }}</div>
 					<picker class="dev-picker" :range="devResNames" @change="onMktResPick">
-						<view class="dev-picker-val">{{ resName(mktResId) }}</view>
+						<div class="dev-picker-val">{{ resName(mktResId) }}</div>
 					</picker>
-					<view class="mkt-form-row">
+					<div class="mkt-form-row">
 						<input class="dev-input" v-model="mktQty" type="number" :placeholder="$t('me.labGamePage.mktQty')" />
 						<input class="dev-input" v-model="mktPrice" type="number" :placeholder="$t('me.labGamePage.mktPriceEm')" />
-					</view>
-					<view class="mkt-hint">{{ $t('me.labGamePage.mktStackCapHint', { n: stackOfRes(mktResId) }) }}</view>
-					<view v-if="mktEditExisting" class="demolish-btn" @click="mktRemoveCurrent">
+					</div>
+					<div class="mkt-hint">{{ $t('me.labGamePage.mktStackCapHint', { n: stackOfRes(mktResId) }) }}</div>
+					<div v-if="mktEditExisting" class="demolish-btn" @click="mktRemoveCurrent">
 						{{ mktEdit.type === 'sell' ? $t('me.labGamePage.mktOff') : $t('me.labGamePage.mktCancelOrder') }}
-					</view>
-					<view class="upgrade-btn upgrade-btn--wide" @click="mktSave">{{ $t('me.labGamePage.mktConfirm') }}</view>
-					<view class="modal-close" @click="mktCancelEdit">{{ $t('me.labGamePage.close') }}</view>
-				</view>
-			</view>
-		</view>
-	</view>
+					</div>
+					<div class="upgrade-btn upgrade-btn--wide" @click="mktSave">{{ $t('me.labGamePage.mktConfirm') }}</div>
+					<div class="modal-close" @click="mktCancelEdit">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
-import { defenseIcon } from '@/common/game/defense-icons.js'
-import darkModeMixin from '@/mixins/dark-mode.js'
+import { defenseIcon } from './game/defense-icons.js'
+import { gameStorage } from './storage.js'
+const darkModeMixin = { computed: { isDarkMode() { return this.$root.dark } } }
 import {
 	RESOURCES, BUILDINGS, BUILDING_MAP, TH_LEVELS, TH_QUOTA,
 	GROUND_ONLY, UG_CLEAR_COST, UG_CLEAR_MIN, RAID, BASE_DEF, ZOMBIE_POWER,
@@ -1100,7 +1101,7 @@ import {
 	efficiency, collectCap, stackOf, whSlots, START_RESOURCES, QUICK_COLLECT_TH, TH_COLORS, RES_TH,
 	buildTimeSec, thBuildTimeSec, builderSlots,
 	FUEL_VALUE, FUEL_COST, FUEL_ADD_NUM, WALL, WALL_RING_NUM, STORAGE_COST
-} from '@/common/game/village-data.js'
+} from './game/village-data.js'
 
 const CENTER_IDX = 4
 const STORE_KEY = 'LogHomeVillage'
@@ -1964,20 +1965,25 @@ export default {
 				: this.marketOrders[this.mktEdit.idx]
 		}
 	},
-	onLoad() {
+	created() {
 		this.loadState()
-		const saved = window.localStorage.getItem(NAME_KEY)
+		const saved = gameStorage.getItem(NAME_KEY)
 		if (saved) this.baseName = saved
 	},
-	onShow() {
-		this.nowTs = Date.now()
-		this.settleProduction(false)
-		this.saveTimer = setInterval(() => { this.settleProduction(true) }, 30000)
-		this.secTimer = setInterval(() => { this.nowTs = Date.now(); this.checkBuilds() }, 1000)
+	mounted() {
+		this.resumeGame()
 	},
-	onHide() { this.teardown() },
-	onUnload() { this.teardown() },
+	beforeDestroy() {
+		this.teardown()
+	},
 	methods: {
+		resumeGame() {
+			if (this.saveTimer || this.secTimer) return
+			this.nowTs = Date.now()
+			this.settleProduction(false)
+			this.saveTimer = setInterval(() => this.settleProduction(true), 30000)
+			this.secTimer = setInterval(() => { this.nowTs = Date.now(); this.checkBuilds() }, 1000)
+		},
 		gameIcon: defenseIcon,
 		teardown() {
 			if (this.saveTimer) { clearInterval(this.saveTimer); this.saveTimer = null }
@@ -1987,7 +1993,7 @@ export default {
 		// ---------- 状态持久化 ----------
 		loadState() {
 			try {
-				const raw = window.localStorage.getItem(STORE_KEY)
+				const raw = gameStorage.getItem(STORE_KEY)
 				if (!raw) {
 					// 新档：默认带 1 名村民
 					this.villagers = [this.makeVillager()]
@@ -2171,7 +2177,7 @@ export default {
 		},
 		persist() {
 			try {
-				window.localStorage.setItem(STORE_KEY, JSON.stringify({
+				gameStorage.setItem(STORE_KEY, JSON.stringify({
 					baseLevel: this.baseLevel,
 					thBusy: this.thBusy,
 					buildQueue: this.buildQueue,
@@ -2213,7 +2219,7 @@ export default {
 		// applySpeed=true 时套用开发者倍速（仅在线 30s 心跳调用；离线补算不加速）
 		settleProduction(applySpeed) {
 			try {
-				const raw = window.localStorage.getItem(STORE_KEY)
+				const raw = gameStorage.getItem(STORE_KEY)
 				const last = raw ? (JSON.parse(raw).lastTick || 0) : 0
 				let hours = last ? Math.min(MAX_OFFLINE_HOURS, (Date.now() - last) / 3600000) : 0
 				if (applySpeed && this.speed > 1) hours = Math.min(MAX_OFFLINE_HOURS, hours * this.speed)
@@ -3332,7 +3338,7 @@ export default {
 		},
 		currentUserName() {
 			try {
-				const cached = JSON.parse(window.localStorage.getItem('LogHomeUserInfo') || 'null')
+				const cached = JSON.parse(gameStorage.getItem('LogHomeUserInfo') || 'null')
 				return (cached && (cached.name || cached.username)) || ''
 			} catch (e) { return '' }
 		},
@@ -4329,7 +4335,7 @@ export default {
 				return
 			}
 			this.baseName = val
-			window.localStorage.setItem(NAME_KEY, val)
+			gameStorage.setItem(NAME_KEY, val)
 			this.nameInput = ''
 			uni.showToast({ title: this.$t('me.labGamePage.renameSaved'), icon: 'none' })
 		},
@@ -4480,7 +4486,7 @@ export default {
 				content: this.$t('me.labGamePage.devResetConfirm'),
 				success: (res) => {
 					if (!res.confirm) return
-					try { window.localStorage.removeItem(STORE_KEY) } catch (e) {}
+					try { gameStorage.removeItem(STORE_KEY) } catch (e) {}
 					this.baseLevel = 0
 					this.plots = emptyPlots()
 					this.ugPlots = emptyPlots()

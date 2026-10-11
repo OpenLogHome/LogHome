@@ -38,6 +38,7 @@ import RedstoneManage from '../views/membership/RedstoneManage.vue'
 import AppUpdateManage from '../views/system/AppUpdateManage.vue'
 import IndexTagsManage from '../views/library/IndexTagsManage.vue'
 import SiteSettingsManage from '../views/system/SiteSettingsManage.vue'
+import MiniappsManage from '../views/system/MiniappsManage.vue'
 import LibraryRecommendsManage from '../views/library/LibraryRecommendsManage.vue'
 import TagsManage from '../views/library/TagsManage.vue'
 import TreeConfigManage from '../views/operations/TreeConfigManage.vue'
@@ -419,6 +420,12 @@ const routes = [
           breadNumber: 1,
           parentName: '系统管理'
         }
+      },
+      {
+        path: '/miniapps',
+        component: MiniappsManage,
+        name: '小程序管理',
+        meta: { requireAuth: true, breadNumber: 1, parentName: '系统管理' }
       },
       {
         path: '/site-settings',

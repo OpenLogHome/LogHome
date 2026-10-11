@@ -80,7 +80,7 @@
         <div class="panel-button" @click="openReaderAudio(selectedParagraph.id)"><i class="el-icon-headset"></i><span>从此处听书</span></div>
       </div>
       <MangaCommentPanel v-if="showCommentDrawer" :visible.sync="showCommentDrawer" :novel-id="novel.novel_id" :article-id="article.article_id" :paragraph-id="currentParagraphId || 0" :paragraph-text="paragraphCommentText" :work-author-id="novel.author_id || novel.auther_id" :anchor-id="commentAnchor" @changed="onCommentsChanged('drawer')" />
-      <ReaderNavigation v-if="readerNavigationVisible" :visible.sync="readerNavigationVisible" :chapters="chapterEntries || chapters" :current="article" :novel-id="novel.novel_id" :can-undo="!!readerJumpUndo" @jump="jumpReaderChapter" @catalog-navigate="recordReaderChapterJump" @undo="undoReaderChapterJump" />
+      <ReaderNavigation v-if="readerNavigationVisible" :visible.sync="readerNavigationVisible" :chapters="chapterEntries || chapters" :current="article" :novel-id="novel.novel_id" :can-undo="!!readerJumpUndo" @catalog-navigate="recordReaderChapterJump" @undo="undoReaderChapterJump" />
       <el-drawer custom-class="reading-drawer" v-if="readerExcerptsVisible" title="划线书摘" :visible.sync="readerExcerptsVisible" size="min(860px, 100%)" append-to-body destroy-on-close><div class="reader-excerpts"><BookExcerpts :novel-id="novel.novel_id" @navigate="readerExcerptsVisible = false" @changed="loadHighlights" /></div></el-drawer>
       <ReaderSettings v-if="readerSettingsVisible" :visible.sync="readerSettingsVisible" :value="readerPreferences" :fonts="readerFonts" :skins="readerSkins" :tier="readerTier" :font-states="readerFontStates" :font-error="readerFontError" :resource-error="readerResourceError" :locked-message="readerLockedMessage" :resources-loading="readerResourcesLoading" :storage-error="readerStorageError" @input="changeReaderPreferences" @font="selectReaderFont" @theme="selectReaderTheme" @skin="selectReaderSkin" @refresh="refreshReaderResources" @membership="openReaderMembership" @reset="resetReaderPreferences" />
       <ReaderFeedback v-if="feedbackParagraph" :key="feedbackParagraph.id" :visible.sync="feedbackVisible" :article-id="article.article_id" :paragraph-id="feedbackParagraph.id" :paragraph-text="feedbackParagraph.text" />
@@ -320,11 +320,6 @@ export default {
       try { sessionStorage.setItem(this.readerUndoKey(), JSON.stringify(this.readerJumpUndo)) } catch (_) {}
       this.readerNavigationVisible = false
       this.saveReaderHistory(true)
-    },
-    jumpReaderChapter(chapter) {
-      if (!chapter) return
-      this.recordReaderChapterJump()
-      this.$router.push(`/article/${chapter.article_id}?start=1`)
     },
     undoReaderChapterJump() {
       const previous = this.readerJumpUndo

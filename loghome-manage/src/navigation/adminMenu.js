@@ -25,6 +25,7 @@ export const adminMenuGroups = [
       { path: '/postsManage', label: '帖子管理', icon: 'el-icon-document-copy' },
       { path: '/achievementsManage', label: '勋章管理', icon: 'el-icon-medal' },
       { path: '/app-updates', label: '版本管理', icon: 'el-icon-upload2' },
+      { path: '/miniapps', label: '小程序管理', icon: 'el-icon-mobile-phone' },
       { path: '/site-settings', label: '站点设置', icon: 'el-icon-set-up' }
     ]
   },

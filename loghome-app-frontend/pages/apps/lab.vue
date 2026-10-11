@@ -9,7 +9,7 @@
 				</view>
 			</view>
 			<view class="list">
-				<navigator url="./logDefense">
+				<navigator url="./miniapp?id=log-defence">
 					<view class="li">
 						<view class="li-icon">
 							<img src="../../static/icons/enderman.png"></img>
@@ -32,9 +32,7 @@ import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
 	mixins: [darkModeMixin],
-	data() {
-		return {}
-	},
+	data() { return {} },
 	methods: {}
 }
 </script>

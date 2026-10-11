@@ -13,5 +13,5 @@ const aliases = {
   cake: 'food', goldenApple: 'gold', rotten: 'meat'
 }
 export function defenseIcon(name) {
-  return '/static/icons/log-defense/' + (aliases[name] || name || 'rock') + '.svg'
+  return './static/icons/log-defense/' + (aliases[name] || name || 'rock') + '.svg'
 }

@@ -127,6 +127,7 @@ app.use('/membership', membershipRouter);
 app.use('/redstone', redstoneRouter);
 app.use('/avatar-frames', avatarFramesRouter);
 app.use('/popularity', popularityRouter);
+app.use('/miniapps', require('./routes/miniapps'));
 
 let server = app.listen(9000, function () {
 	let host = server.address().address;

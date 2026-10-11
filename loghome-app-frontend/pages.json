@@ -251,9 +251,11 @@
 			}
 		},
 		{
-			"path": "pages/apps/logDefense",
+			"path": "pages/apps/miniapp",
 			"style": {
-				"navigationBarTitleText": "原木保卫战"
+				"navigationBarTitleText": "小程序",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
 			}
 		},{
             "path" : "pages/writers/newEssay",

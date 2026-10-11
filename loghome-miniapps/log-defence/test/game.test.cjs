@@ -5,12 +5,12 @@ const path = require('node:path');
 const vm = require('node:vm');
 const Vue = require('vue');
 const root = path.join(__dirname, '..');
-const source = fs.readFileSync(path.join(root, 'pages/apps/logDefense.vue'), 'utf8');
+const source = fs.readFileSync(path.join(root, 'src/Game.vue'), 'utf8');
 const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
   .replace(/import[\s\S]*?from ['"][^'"]+['"]\s*/g, '')
   .replace('export default', 'this.component =');
-const config = fs.readFileSync(path.join(root, 'common/game/village-data.js'), 'utf8').replace(/export /g, '');
-const icons = fs.readFileSync(path.join(root, 'common/game/defense-icons.js'), 'utf8').replace(/export /g, '');
+const config = fs.readFileSync(path.join(root, 'src/game/village-data.js'), 'utf8').replace(/export /g, '');
+const icons = fs.readFileSync(path.join(root, 'src/game/defense-icons.js'), 'utf8').replace(/export /g, '');
 const fixedNow = new Date(2026, 9, 11, 12).getTime();
 class TestDate extends Date {
   constructor(...args) { super(...(args.length ? args : [fixedNow])); }
@@ -19,7 +19,7 @@ class TestDate extends Date {
 function fixture(saved) {
   const storage = new Map(saved ? [['LogHomeVillage', JSON.stringify(saved)]] : []);
   const sandbox = {
-    darkModeMixin: {}, Date: TestDate, console,
+    gameStorage: { getItem: k => storage.get(k) || null, setItem: (k,v) => storage.set(k,v), removeItem: k => storage.delete(k) }, Date: TestDate, console,
     window: { localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v) } },
     uni: { showToast() {}, showModal(o) { o.success?.({ confirm: true }); } }
   };
@@ -110,7 +110,7 @@ test('challenge mode opens, closes and resumes the same progress', () => {
 test('new resources and buildings use existing pixel assets', () => {
   const { game, config } = fixture();
   for (const key of [...Object.keys(config.RESOURCES), ...config.BUILDINGS.map(b => b.key)]) {
-    assert.ok(fs.existsSync(path.join(root, game.gameIcon(key))), key);
+    assert.ok(fs.existsSync(path.join(root, 'public', game.gameIcon(key))), key);
   }
 });
 
@@ -129,10 +129,10 @@ test('preserved toolbar and all feature panels render against the integrated gam
   const parsed = compiler.parse({ source, filename: 'logDefense.vue' });
   const compiled = compiler.compileTemplate({ source: parsed.template.content, filename: 'logDefense.vue' });
   assert.equal(compiled.errors.length, 0);
-  const render = new Function(compiled.code + ';return render;')();
+  const rendered = new Function(compiled.code + ';return { render, staticRenderFns };')();
   const { game } = fixture(); game.baseLevel = 5; game.villagers = [villager(1)];
   game.plots[0] = plot('lumber'); game.resources = { log: 100, plank: 100, wheat: 10, emerald: 10 };
-  game.$options.render = render; game.$options.staticRenderFns = [];
+  game.$options.render = rendered.render; game.$options.staticRenderFns = rendered.staticRenderFns;
   const errors = []; const previousHandler = Vue.config.warnHandler;
   Vue.config.warnHandler = message => errors.push(message);
   try {

@@ -4,6 +4,7 @@ import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import top.codesocean.loghome.android.BuildConfig
 
 object InjectedScriptBuilder {
     private const val BRIDGE_SHIM = """
@@ -150,6 +151,7 @@ object InjectedScriptBuilder {
         val assignments = buildString {
             appendLine("window.jsBridge.statusBarHeight = $statusBarHeightDp;")
             appendLine("window.jsBridge.navigationBarHeight = $navigationBarHeightDp;")
+            appendLine("window.jsBridge.isDebugBuild = ${BuildConfig.DEBUG};")
             appendLine("window.jsBridge.appVersion = ${JSONObject.quote(assetVersion)};")
             // i18n：H5 读取生效语言；原生存在显式设置而 H5 尚未落库时播种本地偏好
             appendLine("window.jsBridge.language = ${JSONObject.quote(language)};")

@@ -1,0 +1,22 @@
+{
+  "name": "loghome-log-defence",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "start": "node server/index.cjs",
+    "test": "node --test test/*.test.cjs",
+    "dev": "npm run build && node --watch --env-file-if-exists=.env.development scripts/dev.cjs"
+  },
+  "dependencies": {
+    "vue": "2.7.16",
+    "vue-i18n": "8.28.2"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "sass": "1.93.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
