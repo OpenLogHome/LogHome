@@ -6,7 +6,7 @@
    <view class="capsule-divider"></view>
    <button class="capsule-button" aria-label="关闭小程序" @tap="requestClose('close')"><view class="capsule-close-icon" aria-hidden="true"></view></button>
   </view>
-  <view v-if="loading || error" class="miniapp-status"><text>{{ error || ('正在连接' + miniapp.name + '…') }}</text><button v-if="error" @tap="reload">重新加载</button></view>
+  <view v-if="loading || error" class="miniapp-status"><text>{{ error || ('正在启动' + miniapp.name + '…') }}</text><button v-if="error" @tap="reload">重新加载</button></view>
  </view>
 </template>
 <script>
