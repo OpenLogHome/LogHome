@@ -1,0 +1,27 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <!--
+    Muted service-list variant of the vanilla Minecraft Java Edition 1.21.6
+    item texture: textures/item/redstone.png (16 x 16).
+  -->
+  <defs>
+    <filter id="muted-brown" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feColorMatrix
+        type="matrix"
+        values="0.42 0.18 0.08 0 0.34
+                0.30 0.14 0.06 0 0.29
+                0.22 0.10 0.04 0 0.24
+                0    0    0    1 0"
+      />
+    </filter>
+  </defs>
+  <image
+    x="0"
+    y="0"
+    width="64"
+    height="64"
+    preserveAspectRatio="xMidYMid meet"
+    image-rendering="pixelated"
+    filter="url(#muted-brown)"
+    href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEUAAAD/AACqDwFyAABcBwBBBQA0BgUtAAChZ6iRAAAAAXRSTlMAQObYZgAAAElJREFUeNpjwA9YHKAMZxWogKJqAZjhJGQYDhZQUlR1BQk5C5kKB6WDZIyETENAcqWKykGhIBH2IFPXMLC28tSwcgYwKC/HaiEAtf4MFvnbFVwAAAAASUVORK5CYII="
+  />
+</svg>
