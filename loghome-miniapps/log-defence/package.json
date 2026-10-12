@@ -2,6 +2,7 @@
   "name": "loghome-log-defence",
   "version": "0.1.0",
   "private": true,
+  "miniapp": {"port": 8787, "basePath": "/log-defence", "healthPath": "/api/config"},
   "scripts": {
     "build": "node scripts/build.cjs",
     "start": "node --env-file-if-exists=.env server/index.cjs",
