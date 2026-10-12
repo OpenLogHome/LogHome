@@ -130,21 +130,31 @@ export const PORTAL_WORK = { hpPerH: 2, wearPerH: 2 }
 // ---------------- 合成台（参照 Minecraft 工作台配方） ----------------
 // 只收「仓库可存材料」的配方：无工作台配方的材料搁置（圆石→石头走窑炉燃料、沙→玻璃/粗铁→铁锭
 // 走铁匠铺熔炼、下界材料走远征产出、药水走酿造室，均不入合成台）。
-// 武器在 MC 中为 2 材料 + 1 木棍，本游戏无木棍 → 用木板替代（木剑整体简化为 4 木板）。
+// 剑类/床配方已移除（原配方依赖木板，木板已退出经济体系）；床改由流浪商人/其他来源补充时再回收。
 export const CRAFT_RECIPES = [
-	{ id: 'plank', in: { log: 1 }, out: { plank: 4 } },
-	{ id: 'woodSword', in: { plank: 4 }, out: { woodSword: 1 } },
-	{ id: 'stoneSword', in: { cobble: 2, plank: 1 }, out: { stoneSword: 1 } },
-	{ id: 'ironSword', in: { iron: 2, plank: 1 }, out: { ironSword: 1 } },
-	{ id: 'diamondSword', in: { diamond: 2, plank: 1 }, out: { diamondSword: 1 } },
 	{ id: 'leatherArmor', in: { leather: 8 }, out: { leatherArmor: 1 } },
 	{ id: 'ironArmor', in: { iron: 8 }, out: { ironArmor: 1 } },
 	{ id: 'diamondArmor', in: { diamond: 8 }, out: { diamondArmor: 1 } },
-	{ id: 'bed', in: { wool: 3, plank: 3 }, out: { bed: 1 } },
 	{ id: 'book', in: { leather: 1, sugarcane: 3 }, out: { book: 1 } },
 	{ id: 'goldenApple', in: { gold: 8, apple: 1 }, out: { goldenApple: 1 } },
-	{ id: 'cake', in: { milk: 3, egg: 1, wheat: 3, sugarcane: 2 }, out: { cake: 1 } }
+	{ id: 'cake', in: { milk: 3, egg: 1, wheat: 3, sugarcane: 2 }, out: { cake: 1 } },
+	{ id: 'bread', in: { wheat: 3 }, out: { bread: 1 } }
 ]
+
+// ---------------- 产线配方（按材料逐步生产） ----------------
+// 厨房/酿造室的 prod 是满材料时的产量上限；produce() 每小时按配方逐产物扣材料，
+// 材料不够该产物就停产该产物（其余产物照常），做到「有多少材料出多少货」。
+export const PROD_RECIPES = {
+	bread: { wheat: 3 },
+	cake: { milk: 3, egg: 1, wheat: 3, sugarcane: 2 },
+	goldenApple: { gold: 8, apple: 1 },
+	potion: { glass: 1, blazePowder: 0.2, sugarcane: 2 }
+}
+
+// ---------------- 附魔增益 ----------------
+// 附魔台驻守且青金石供给充足（consumes lapis/h）时持续生效；
+// index = 附魔台等级，对已装备武器攻击/盔甲防御的乘数加成
+export const ENCHANT_BONUS = [0, 0.10, 0.15, 0.20, 0.25, 0.30]
 
 // ---------------- 建筑 ----------------
 // levels[i] 为第 i+1 级：th = 大本营需求，cost = 建造/升级材料
@@ -156,8 +166,8 @@ export const BUILDINGS = [
 		key: 'dorm', zh: '村民住所', en: 'Villager House', char: '住', color: '#C59A67', isDorm: true,
 		slots: [0, 0, 0, 0, 0, 0],
 		levels: [
-			{ th: 1, cost: { log: 30, plank: 20 }, cap: 1 },
-			{ th: 2, cost: { plank: 60, cobble: 50 }, cap: 2 },
+			{ th: 1, cost: { log: 10, cobble: 20 }, cap: 1 },
+			{ th: 2, cost: { log: 15, cobble: 50 }, cap: 2 },
 			{ th: 3, cost: { stone: 80, iron: 30, glass: 20 }, cap: 4 },
 			{ th: 5, cost: { stone: 150, iron: 80, bed: 10 }, cap: 8 },
 			{ th: 7, cost: {gold: 35, emerald: 50}, cap: 16 },
@@ -168,30 +178,30 @@ export const BUILDINGS = [
 		key: 'lumber', zh: '伐木场', en: 'Lumber Mill', char: '木', color: '#8B5E34',
 		slots: [1, 2, 2, 3, 4], occ: [1, 1, 1, 1, 2], workerZh: '伐木工', workerEn: 'Lumberjack',
 		levels: [
-			{ th: 1, cost: { log: 50, plank: 30 }, prod: { log: 60, apple: 10 } },
-			{ th: 1, cost: { plank: 100, iron: 20 }, prod: { log: 120, apple: 20 } },
-			{ th: 3, cost: { stone: 150, iron: 60 }, prod: { log: 220, apple: 40 } },
-			{ th: 5, cost: {iron: 180, gold: 20}, prod: { log: 400, apple: 70 } },
-			{ th: 6, cost: {gold: 40, diamond: 9}, prod: { log: 700, apple: 120 } }
+			{ th: 1, cost: { log: 15, cobble: 30 }, prod: { log: 15, apple: 10 } },
+			{ th: 1, cost: { log: 85 }, prod: { log: 26, apple: 20 } },
+			{ th: 3, cost: { stone: 150, iron: 60 }, prod: { log: 45, apple: 40 } },
+			{ th: 5, cost: {iron: 180, gold: 20}, prod: { log: 64, apple: 70 } },
+			{ th: 6, cost: {gold: 40, diamond: 9}, prod: { log: 84, apple: 120 } }
 		]
 	},
 	{
 		key: 'stonegen', zh: '刷石机', en: 'Cobble Generator', char: '石', color: '#7D7D7D',
 		slots: [1, 2, 2, 3, 4], occ: [1, 1, 1, 1, 2], workerZh: '采石工', workerEn: 'Miner',
 		levels: [
-			{ th: 1, cost: { cobble: 60, log: 30 }, prod: { cobble: 80 } },
-			{ th: 1, cost: { cobble: 120, iron: 25 }, prod: { cobble: 160, stone: 20 } },
-			{ th: 4, cost: { stone: 250, iron: 90 }, prod: { cobble: 300, stone: 60 } },
-			{ th: 5, cost: {iron: 200, gold: 20}, prod: { cobble: 550, stone: 120, rawIron: 8 } },
-			{ th: 7, cost: {gold: 45, diamond: 10}, prod: { cobble: 900, stone: 240, blackstone: 30, rawIron: 15 } }
+			{ th: 1, cost: { cobble: 80, log: 10 }, prod: { cobble: 80 } },
+			{ th: 1, cost: { cobble: 120, log: 40 }, prod: { cobble: 160, stone: 20 } },
+			{ th: 4, cost: { stone: 250, iron: 90 }, prod: { cobble: 300, stone: 60, sand: 20 } },
+			{ th: 5, cost: {iron: 200, gold: 20}, prod: { cobble: 550, stone: 120, rawIron: 8, sand: 30 } },
+			{ th: 7, cost: {gold: 45, diamond: 10}, prod: { cobble: 900, stone: 240, blackstone: 30, rawIron: 15, sand: 50 } }
 		]
 	},
 	{
 		key: 'farm', zh: '农田', en: 'Farm', char: '农', color: '#7CBD56',
 		slots: [1, 2, 3, 3, 4], occ: [1, 1, 1, 2, 2], workerZh: '农夫', workerEn: 'Farmer',
 		levels: [
-			{ th: 1, cost: { plank: 40, cobble: 30 }, prod: { wheat: 100 } },
-			{ th: 2, cost: { plank: 80, iron: 20 }, prod: { wheat: 140, carrot: 80 } },
+			{ th: 1, cost: { log: 10, cobble: 30 }, prod: { wheat: 100 } },
+			{ th: 2, cost: { log: 20, iron: 20 }, prod: { wheat: 140, carrot: 80 } },
 			{ th: 3, cost: { stone: 140, iron: 50, sand: 30 }, prod: { wheat: 200, carrot: 110, potato: 80, sugarcane: 20 } },
 			{ th: 4, cost: { stone: 250, iron: 100 }, prod: { wheat: 260, carrot: 150, potato: 110, beetroot: 60, melon: 40 } },
 			{ th: 6, cost: {gold: 40, diamond: 7}, prod: { wheat: 520, carrot: 300, potato: 220, beetroot: 120, melon: 80, sugarcane: 40, pumpkin: 40 } }
@@ -201,7 +211,7 @@ export const BUILDINGS = [
 		key: 'ranch', zh: '牧场', en: 'Ranch', char: '牧', color: '#D0A35C',
 		slots: [1, 1, 2, 2, 3], occ: [1, 1, 1, 2, 2], workerZh: '牧民', workerEn: 'Herder',
 		levels: [
-			{ th: 2, cost: { plank: 100, cobble: 80, wheat: 100 }, prod: { rawMeat: 60, leather: 15 } },
+			{ th: 2, cost: { log: 25, cobble: 80, wheat: 100 }, prod: { rawMeat: 60, leather: 15 } },
 			{ th: 2, cost: { cobble: 150, iron: 30 }, prod: { rawMeat: 80, leather: 20, wool: 30 } },
 			{ th: 3, cost: { stone: 180, iron: 70 }, prod: { rawMeat: 100, leather: 25, wool: 40, chicken: 40, egg: 25 } },
 			{ th: 5, cost: { stone: 300, iron: 150 }, prod: { rawMeat: 150, leather: 38, wool: 60, chicken: 60, egg: 38, milk: 30 } },
@@ -212,7 +222,7 @@ export const BUILDINGS = [
 		key: 'smith', zh: '铁匠铺', en: 'Smithy', char: '铁', color: '#B06239',
 		slots: [1, 2, 2, 3, 3], workerZh: '铁匠', workerEn: 'Blacksmith',
 		levels: [
-			{ th: 2, cost: { cobble: 100, log: 60, charcoal: 20 }, prod: { charcoal: 20, iron: 10, glass: 5 }, consumes: { log: 20 }, desc: '原木→木炭，熔炼粗铁→铁锭；沙子→玻璃' },
+			{ th: 2, cost: { cobble: 120, log: 20, charcoal: 20 }, prod: { charcoal: 20, iron: 10, glass: 5 }, consumes: { log: 20 }, desc: '原木→木炭，熔炼粗铁→铁锭；沙子→玻璃' },
 			{ th: 2, cost: { stone: 120, iron: 40 }, prod: { charcoal: 30, iron: 15, glass: 8 }, consumes: { log: 30 }, desc: '效率+50%' },
 			{ th: 3, cost: { stone: 220, iron: 120 }, prod: { charcoal: 50, iron: 25, glass: 12 }, consumes: { log: 50 }, desc: '效率+66%' },
 			{ th: 5, cost: {iron: 250, gold: 30, diamond: 5}, prod: { charcoal: 70, iron: 35, glass: 18 }, consumes: { log: 70 }, desc: '解锁砂轮：返还附魔经验' },
@@ -223,7 +233,7 @@ export const BUILDINGS = [
 		key: 'watchtower', zh: '瞭望塔', en: 'Watchtower', char: '塔', color: '#8F8F94',
 		slots: [1, 2, 2, 3, 3], workerZh: '弓箭手', workerEn: 'Archer',
 		levels: [
-			{ th: 2, cost: { cobble: 80, log: 40 }, atk: 10, def: 20, desc: '驻守弓箭村民，抵御僵尸夜袭' },
+			{ th: 2, cost: { cobble: 100, log: 15 }, atk: 10, def: 20, desc: '驻守弓箭村民，抵御僵尸夜袭' },
 			{ th: 2, cost: { stone: 100, iron: 30 }, atk: 18, def: 35, desc: '射程+1格，伤害提升' },
 			{ th: 4, cost: { stone: 200, iron: 100 }, atk: 30, def: 55, desc: '解锁铁傀儡组装台（铁锭×36+南瓜×1）' },
 			{ th: 5, cost: {iron: 250, gold: 30}, atk: 50, def: 85, desc: '可组装2尊铁傀儡，塔顶伤害×2' },
@@ -234,22 +244,22 @@ export const BUILDINGS = [
 		key: 'kitchen', zh: '厨房', en: 'Kitchen', char: '厨', color: '#D08A5C',
 		slots: [1, 1, 2, 2, 3], workerZh: '厨师', workerEn: 'Cook',
 		levels: [
-			{ th: 3, cost: { plank: 120, cobble: 100, iron: 30 }, prod: { bread: 10 }, consumes: { wheat: 30 }, desc: '制作面包（小麦×3→面包）' },
-			{ th: 3, cost: { stone: 150, iron: 60 }, prod: { bread: 15 }, consumes: { wheat: 45 }, desc: '制作汤类，村民效率+10%' },
-			{ th: 4, cost: { stone: 250, iron: 100 }, prod: { bread: 25, cake: 3 }, consumes: { wheat: 85 }, desc: '制作蛋糕、派，村民心情解锁' },
-			{ th: 5, cost: {iron: 200, gold: 25}, prod: { bread: 35, cake: 5, goldenApple: 0.5 }, consumes: { wheat: 120 }, desc: '制作金苹果（金锭×8+苹果）' },
-			{ th: 7, cost: {gold: 55, emerald: 80}, prod: { bread: 50, cake: 8, goldenApple: 1 }, consumes: { wheat: 170 }, desc: '制作附魔金苹果（需下界材料）' }
+			{ th: 3, cost: { log: 30, cobble: 100, iron: 30 }, prod: { bread: 10 }, desc: '制作面包（每条耗小麦×3，按材料逐步制作）' },
+			{ th: 3, cost: { stone: 150, iron: 60 }, prod: { bread: 15 }, desc: '面包效率+50%（每条耗小麦×3）' },
+			{ th: 4, cost: { stone: 250, iron: 100 }, prod: { bread: 25, cake: 3 }, desc: '解锁蛋糕（牛奶×3+鸡蛋×1+小麦×3+甘蔗×2/个）' },
+			{ th: 5, cost: {iron: 200, gold: 25}, prod: { bread: 35, cake: 5, goldenApple: 0.5 }, desc: '解锁金苹果（金锭×8+苹果×1/个）' },
+			{ th: 7, cost: {gold: 55, emerald: 80}, prod: { bread: 50, cake: 8, goldenApple: 1 }, desc: '产量提升，材料齐备才出品' }
 		]
 	},
 	{
-		key: 'heal', zh: '治疗站', en: 'Healing Station', char: '医', color: '#E08E8E',
-		slots: [1, 1, 2, 2, 2], workerZh: '医师', workerEn: 'Healer',
+		key: 'heal', zh: '药房', en: 'Apothecary', char: '药', color: '#E08E8E',
+		slots: [1, 1, 2, 2, 2], workerZh: '药剂师', workerEn: 'Apothecary',
 		levels: [
-			{ th: 4, cost: { stone: 200, iron: 80, wool: 30 }, desc: '治疗1名受伤村民/小时' },
-			{ th: 4, cost: { stone: 300, iron: 120 }, desc: '治疗2人/小时，恢复腐化村民' },
-			{ th: 5, cost: { iron: 250, gold: 80, goldenApple: 5 }, desc: '治疗铁傀儡，解除中毒/凋零' },
-			{ th: 6, cost: {gold: 45, diamond: 10}, desc: '治疗速度×2，村民最大生命+20%' },
-			{ th: 7, cost: {diamond: 20, emerald: 100}, desc: '复活阵亡村民（绿宝石×20/人）' }
+			{ th: 4, cost: { stone: 200, iron: 80, wool: 30 }, heal: 1, desc: '消耗药水为受伤村民回血（1人/小时）' },
+			{ th: 4, cost: { stone: 300, iron: 120 }, heal: 2, desc: '治疗速度提升（2人/小时）' },
+			{ th: 5, cost: { iron: 250, gold: 80, goldenApple: 5 }, heal: 2, desc: '解锁金苹果治疗（回复量更高，优先用普通药水）' },
+			{ th: 6, cost: {gold: 45, diamond: 10}, heal: 4, desc: '治疗速度×2（4人/小时）' },
+			{ th: 7, cost: {diamond: 20, emerald: 100}, heal: 6, desc: '治疗速度×3（6人/小时）' }
 		]
 	},
 	{
@@ -267,27 +277,27 @@ export const BUILDINGS = [
 		key: 'enchant', zh: '附魔台', en: 'Enchanting Table', char: '附', color: '#5C6BD0',
 		slots: [1, 1, 1, 2, 2], workerZh: '附魔师', workerEn: 'Enchanter',
 		levels: [
-			{ th: 6, cost: { diamond: 10, obsidian: 20, book: 15 }, desc: '附魔 I 级：工具/武器/护甲' },
-			{ th: 6, cost: { diamond: 30, emerald: 60 }, desc: '附魔 II 级，解锁书架增益' },
-			{ th: 7, cost: { diamond: 60, lapis: 100 }, desc: '附魔 III 级，村民可穿戴附魔装备' },
-			{ th: 7, cost: { emerald: 150, netherite: 10 }, desc: '附魔 IV 级，铁傀儡附魔（荆棘）' },
-			{ th: 8, cost: { emerald: 250, netherStar: 1 }, desc: '附魔 V 级，解锁经验修补' }
+			{ th: 6, cost: { diamond: 10, obsidian: 20, book: 15 }, consumes: { lapis: 0.2 }, desc: '驻守+供青金石时开启附魔 I：已装备武器/盔甲效果 +10%' },
+			{ th: 6, cost: { diamond: 30, emerald: 60 }, consumes: { lapis: 0.2 }, desc: '附魔 II 级：装备效果 +15%' },
+			{ th: 7, cost: { diamond: 60, lapis: 100 }, consumes: { lapis: 0.25 }, desc: '附魔 III 级：装备效果 +20%' },
+			{ th: 7, cost: { emerald: 150, netherite: 10 }, consumes: { lapis: 0.3 }, desc: '附魔 IV 级：装备效果 +25%' },
+			{ th: 8, cost: { emerald: 250, netherStar: 1 }, consumes: { lapis: 0.4 }, desc: '附魔 V 级：装备效果 +30%' }
 		]
 	},
 	{
 		key: 'portal', zh: '下界传送门', en: 'Nether Portal', char: '门', color: '#6B4BB8',
 		slots: [2, 2, 3, 3, 4], workerZh: '远征队员', workerEn: 'Expeditioner',
 		levels: [
-			{ th: 4, cost: { obsidian: 14, flint: 1, emerald: 200 }, prod: { quartz: 2, blazePowder: 0.5 }, desc: '开启下界远征（每次消耗打火石耐久）；队员驻守缓慢产出下界材料，每小时 -2 生命、装备磨损 2 点' },
-			{ th: 7, cost: { obsidian: 28, diamond: 80 }, prod: { quartz: 4, blazePowder: 1, obsidian: 0.3 }, desc: '远征次数×3，解锁下界要塞探索；驻守产出提升' },
-			{ th: 8, cost: { netherite: 20, netherStar: 1 }, prod: { quartz: 6, blazePowder: 2, obsidian: 0.6, netherite: 0.1 }, desc: '远征次数×5；驻守产下界合金碎片' }
+			{ th: 4, cost: { obsidian: 14, flint: 1, emerald: 200 }, prod: { quartz: 2, blazePowder: 0.5 }, desc: '开启下界远征（每次消耗打火石耐久）；队员驻守随机产出石英/烈焰粉（数量随下界波动），每小时 -2 生命、装备磨损 2 点' },
+			{ th: 7, cost: { obsidian: 28, diamond: 80 }, prod: { quartz: 4, blazePowder: 1 }, desc: '远征次数×3，解锁下界要塞探索；驻守产出提升（仍随波动）' },
+			{ th: 8, cost: { netherite: 20, netherStar: 1 }, prod: { quartz: 6, blazePowder: 2 }, desc: '远征次数×5；驻守产出进一步提升' }
 		]
 	},
 	{
 		key: 'basement', zh: '地下室入口', en: 'Basement Entrance', char: '地', color: '#6B4B36',
 		slots: [0, 0, 0, 0, 0], workerZh: '', workerEn: '',
 		levels: [
-			{ th: 3, cost: { log: 100, cobble: 100 }, desc: '开启地下层，可清理碎石扩展地下空间', descEn: 'Opens the underground level. Clear rubble to expand it' }
+			{ th: 3, cost: { log: 30, cobble: 100 }, desc: '开启地下层，可清理碎石扩展地下空间', descEn: 'Opens the underground level. Clear rubble to expand it' }
 		]
 	}
 ]
@@ -298,9 +308,9 @@ export const BUILDING_MAP = BUILDINGS.reduce((m, b) => { m[b.key] = b; return m 
 export const TH_LEVELS = [
 	// TH0：初始状态，什么都不解锁；升至 TH1 时发放初始物资
 	{ cost: {}, req: [], unlockZh: '发放初始物资，开放建造', unlockEn: 'Starting supplies granted, building unlocked' },
-	{ cost: { log: 150, cobble: 150 }, req: [['lumber', 2], ['stonegen', 2]], unlockZh: '铁匠铺、瞭望塔、牧场', unlockEn: 'Smithy, Watchtower, Ranch' },
-	{ cost: { plank: 250, stone: 200, iron: 50 }, req: [['smith', 2], ['watchtower', 2]], unlockZh: '厨房', unlockEn: 'Kitchen' },
-	{ cost: { stone: 350, iron: 150, charcoal: 100 }, req: [['kitchen', 2], ['dorm', 3]], unlockZh: '治疗站、下界传送门', unlockEn: 'Healing Station, Nether Portal' },
+	{ cost: { log: 40, cobble: 150 }, req: [['lumber', 2], ['stonegen', 2]], unlockZh: '铁匠铺、瞭望塔、牧场', unlockEn: 'Smithy, Watchtower, Ranch' },
+	{ cost: { log: 60, stone: 200, iron: 50 }, req: [['smith', 2], ['watchtower', 2]], unlockZh: '厨房', unlockEn: 'Kitchen' },
+	{ cost: { stone: 350, iron: 150, charcoal: 100 }, req: [['kitchen', 2], ['dorm', 3]], unlockZh: '药房、下界传送门', unlockEn: 'Apothecary, Nether Portal' },
 	{ cost: { iron: 300, gold: 100, diamond: 20 }, req: [['heal', 2], ['ranch', 3]], unlockZh: '酿造室', unlockEn: 'Brewing Room' },
 	{ cost: { gold: 250, diamond: 50, emerald: 100 }, req: [['brew', 2], ['watchtower', 4]], unlockZh: '附魔台', unlockEn: 'Enchanting Table' },
 	{ cost: { diamond: 100, emerald: 200, netherite: 10 }, req: [['enchant', 2], ['kitchen', 4]], unlockZh: '下界要塞探索', unlockEn: 'Nether Fortress route' },
@@ -348,7 +358,7 @@ export const WALL = {
 	zh: '城墙', en: 'Wall', char: '墙',
 	// 三档材质：木 → 石 → 铁（name/char/color 随材质展示）
 	levels: [
-		{ name: '木墙', nameEn: 'Wooden Wall', char: '木', th: 1, cost: { log: 60 }, def: 8, color: '#9A6B3F' },
+		{ name: '木墙', nameEn: 'Wooden Wall', char: '木', th: 1, cost: { log: 20 }, def: 8, color: '#9A6B3F' },
 		{ name: '石墙', nameEn: 'Stone Wall', char: '石', th: 2, cost: { stone: 80, cobble: 40 }, def: 20, color: '#8A8A8A' },
 		{ name: '铁墙', nameEn: 'Iron Wall', char: '铁', th: 4, cost: { iron: 60, stone: 120 }, def: 40, color: '#AEB6C2' }
 	]
@@ -372,7 +382,7 @@ export const RAID = {
 	ironPerPower: 0.005,
 	bookBase: 0.1,       // 书本小概率掉落期望 / 小时
 	flintBase: 0.04,     // 打火石小概率掉落期望 / 小时（1 个 = 8 次远征耐久）
-	lapisBase: 0.02,     // 青金石小概率掉落期望 / 小时
+	lapisBase: 0.08,     // 青金石小概率掉落期望 / 小时（附魔消耗来源）
 	wearTower: 2,        // 瞭望塔耐久损耗 / 小时（夜袭期间）
 	wearBase: 1.5,       // 大本营耐久损耗 / 小时（夜袭期间）
 	wearWall: 2,         // 每段城墙耐久损耗 / 小时（夜袭期间，仅已建段）
@@ -451,7 +461,7 @@ export const EXPEDITION_ROUTES = [
 		hours: [8, 12, 24],
 		satPerHour: 6, risk: 3.5, wear: 0.03,
 		guardExp: 12,
-		loot: { blazePowder: 0.5, quartz: 1.2, diamond: 0.25, netherite: 0.07, netherStar: 0.004 }
+		loot: { blazePowder: 0.5, quartz: 1.2, diamond: 0.25, lapis: 0.25, netherite: 0.07, netherStar: 0.004 }
 	}
 ]
 export function expRoute(key) {
@@ -459,12 +469,12 @@ export function expRoute(key) {
 }
 
 // ---------------- 村民职业轨道（经验/等级） ----------------
-// 劳作 = 伐木场/采石场，技工 = 厨房/铁匠铺/附魔台：在岗工作每小时涨经验；
-// 护卫 = 瞭望塔驻军：经验只在下界远征中获取（route.guardExp × 小时）
+// 劳作 = 伐木场/采石场/农田/牧场，技工 = 厨房/铁匠铺/附魔台/酿造室/药房，护卫 = 瞭望塔/下界传送门驻守：
+// 在岗工作每小时涨对应轨道经验（囤积满也算出工）；护卫经验另在下界远征中追加（route.guardExp × 小时）
 export const VILL_TRACKS = {
-	labor: { zh: '劳作', en: 'Labor', builds: ['lumber', 'stonegen'], expH: 10 },
-	tech: { zh: '技工', en: 'Artisan', builds: ['kitchen', 'smith', 'enchant'], expH: 10 },
-	guard: { zh: '护卫', en: 'Guard', builds: ['watchtower'], expH: 0 }
+	labor: { zh: '劳作', en: 'Labor', builds: ['lumber', 'stonegen', 'farm', 'ranch'], expH: 10 },
+	tech: { zh: '技工', en: 'Artisan', builds: ['kitchen', 'smith', 'enchant', 'brew', 'heal'], expH: 10 },
+	guard: { zh: '护卫', en: 'Guard', builds: ['watchtower', 'portal'], expH: 10 }
 }
 // 建筑类型 → 所属轨道（无所属返回 null）
 export function trackOfBuild(type) {
@@ -538,7 +548,7 @@ export const SMITH_CRAFT = {
 	iron: { rawIron: 1 }
 }
 // 流浪商人：每天随机时刻到访、停留 hours 小时；售卖列表 goods（stock 每日库存、cost 单价结算）
-export const TRADER = { hours: 6, goods: [{ id: 'sand', stock: 24, cost: { charcoal: 5 } }] }
+export const TRADER = { hours: 6, goods: [{ id: 'sand', stock: 24, cost: { charcoal: 5 } }, { id: 'bed', stock: 2, cost: { emerald: 50 } }] }
 // 打火石耐久：1 个打火石 = 8 次远征
 export const FLINT_DUR = 8
 
@@ -562,16 +572,17 @@ export function stackOf(id) {
 // ---------------- 仓库格子容量 ----------------
 // 仓库按格计容：每格存放同一物品的一组（stack）；同种物品可占多格；
 // 绿宝石为货币不占格。格子数随大本营等级提升。
-export const WH_SLOTS_BASE = 10
-export const WH_SLOTS_PER_TH = 6
+export const WH_SLOTS_BASE = 12
+export const WH_SLOTS_PER_TH = 8
 
 export function whSlots(th) {
 	return WH_SLOTS_BASE + WH_SLOTS_PER_TH * (th || 1)
 }
 
-// 初始资源（升至 TH1 时一次性发放：足够盖满 TH1 四件套并培养 2 名村民）
+// 初始资源（升至 TH1 时一次性发放：只给起步材料，后续靠建造伐木场后逐步积累）
+// 够盖伐木场（原木15+圆石30）+ 刷石机（原木10+圆石80），后续升级/城墙材料逐步攒
 export const START_RESOURCES = {
-	log: 200, plank: 100, cobble: 100, wheat: 50, emerald: 100
+	log: 25, cobble: 120, wheat: 20, emerald: 30
 }
 
 // ---------------- 大本营等级主题色（index = 等级，基地底色随升级变动） ----------------

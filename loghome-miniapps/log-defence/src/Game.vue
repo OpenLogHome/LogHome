@@ -210,13 +210,11 @@
 				<div v-if="raidTempTotal > 0" class="raid-badge">{{ raidTempTotal }}</div>
 			</div>
 
-			<!-- 开发者控制台（测试阶段专用） -->
-			<div v-if="$root.allowDev" class="dev-box">
-				<div class="dev-head" @click="devOpen = !devOpen">
-					<span class="dev-title">{{ $t('me.labGamePage.devTitle') }}</span>
-					<span class="dev-toggle">{{ devOpen ? '−' : '+' }}</span>
-				</div>
-				<template v-if="devOpen">
+			<!-- 开发者控制台（测试阶段专用）：浮动按钮，点击呼出弹窗 -->
+			<div v-if="$root.allowDev" class="dev-fab" @click="devOpen = true">DEV</div>
+			<div v-if="$root.allowDev && devOpen" class="overlay" @click.self="devOpen = false">
+				<div class="modal modal--tall">
+					<div class="modal-title">{{ $t('me.labGamePage.devTitle') }}</div>
 					<!-- 修改资源 -->
 					<div class="dev-row">
 						<picker class="dev-picker" :range="devResNames" @change="onDevResPick">
@@ -277,6 +275,10 @@
 					<div class="dev-row">
 						<div class="dev-btn dev-btn--gold dev-btn--wide" @click="devNoConsume">{{ $t('me.labGamePage.devNoConsume') }}</div>
 					</div>
+					<!-- 资源清零（全部资源归 0，测试从零起步） -->
+					<div class="dev-row">
+						<div class="dev-btn dev-btn--gold dev-btn--wide" @click="devClearRes">{{ $t('me.labGamePage.devClearRes') }}</div>
+					</div>
 					<!-- 刷新流浪商人（立即到访并补满库存） -->
 					<div class="dev-row">
 						<div class="dev-btn dev-btn--gold dev-btn--wide" @click="devRefreshTrader">{{ $t('me.labGamePage.devTraderRefresh') }}</div>
@@ -285,7 +287,8 @@
 					<div class="dev-row">
 						<div class="dev-btn dev-btn--danger dev-btn--wide" @click="devReset">{{ $t('me.labGamePage.devReset') }}</div>
 					</div>
-				</template>
+					<div class="modal-close" @click="devOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
 			</div>
 
 			<!-- 好友村庄消息日志（面板悬浮于功能坞上方，点「消息日志」开合） -->
@@ -320,7 +323,7 @@
 				<img class="fr-btn-icon" :src="gameIcon('journal')"   >
 				<span class="fr-btn-text">{{ $t('me.labGamePage.logTitle') }}</span>
 			</div>
-			<div class="fr-btn" @click="frOpen = true">
+			<div class="fr-btn" @click="frOpenTap">
 				<img class="fr-btn-icon" :src="gameIcon('friends')"   >
 				<span class="fr-btn-text">{{ $t('me.labGamePage.friendVillage') }}</span>
 			</div>
@@ -611,7 +614,7 @@
 							<span class="worker-sub">{{ $t('me.labGamePage.unassigned') }} {{ unassigned }} · {{ $t('me.labGamePage.villViewList') }}</span>
 						</div>
 						<div class="upgrade-btn" :class="{ 'upgrade-btn--disabled': !canTrain }" @click="trainVillager">
-							{{ $t('me.labGamePage.train') }}
+							{{ $t('me.labGamePage.train') }} <img class="inline-icon" :src="gameIcon('wheat')"  >×{{ trainWheat }}
 						</div>
 					</div>
 
@@ -623,6 +626,7 @@
 						<span class="res-name">{{ resName(r) }}</span>
 						<span class="res-th" :style="{ background: resThColor(r) }">TH{{ resTh(r) }}</span>
 						<span class="res-val">{{ floorRes(r) }}<span class="res-slot" v-if="resSlotCount(r) > 1"> · {{ $t('me.labGamePage.whNSlots', { n: resSlotCount(r) }) }}</span></span>
+						<span class="res-discard" @click="discardRes(r)">✕</span>
 					</div>
 
 					<div class="modal-close" @click="warehouseOpen = false">{{ $t('me.labGamePage.close') }}</div>
@@ -640,7 +644,7 @@
 					<div v-if="villagers.length === 0" class="empty-tip">{{ $t('me.labGamePage.villEmpty') }}</div>
 					<div v-for="v in villagers" :key="v.id" class="vill-card">
 						<div class="vill-head">
-							<span class="vill-avatar">{{ v.name.slice(0, 1) }}</span>
+							<img class="vill-avatar" :src="gameIcon('villager')"  >
 							<span class="vill-name">{{ v.name }}</span>
 							<span v-if="villJobs[v.id]" class="vill-job">{{ villJobs[v.id] }}</span>
 							<span v-if="v.onExp" class="vill-hunger vill-hunger--exp">{{ $t('me.labGamePage.expOnExp') }}</span>
@@ -757,7 +761,7 @@
 						<div class="exp-sec">{{ $t('me.labGamePage.expParty') }} {{ expPartyIds.length }}/{{ expPanelRoute.partyMax }}</div>
 						<div class="exp-vills">
 							<div v-for="v in villagers" :key="v.id" class="exp-vill" :class="{ 'exp-vill--on': expPartyIds.indexOf(v.id) >= 0 }" @click="expToggleVill(v.id)">
-								<span class="exp-vill-avatar" :style="{ background: resColor(v.equip[0] || 'log') }">{{ v.name.slice(0, 1) }}</span>
+								<img class="exp-vill-avatar" :src="gameIcon('villager')"  >
 								<span class="exp-vill-name">{{ v.name }}</span>
 								<span class="exp-vill-glv" :class="{ 'exp-vill-glv--on': trackLv(v, 'guard') > 1 }"><img class="inline-icon" :src="gameIcon('ironArmor')"   >{{ trackLv(v, 'guard') }}</span>
 							</div>
@@ -780,7 +784,7 @@
 						<div class="exp-remain"><img class="inline-icon" :src="gameIcon('clock')"   > {{ expRemainText }}</div>
 						<div class="exp-vills">
 							<div v-for="v in villagers" :key="v.id" class="exp-vill" :class="{ 'exp-vill--on': expedition.party.indexOf(v.id) >= 0, 'exp-vill--exp': v.onExp }">
-								<span class="exp-vill-avatar" :style="{ background: resColor(v.equip[0] || 'log') }">{{ v.name.slice(0, 1) }}</span>
+								<img class="exp-vill-avatar" :src="gameIcon('villager')"  >
 								<span class="exp-vill-name">{{ v.name }}</span>
 							</div>
 						</div>
@@ -910,14 +914,41 @@
 			<div v-if="frOpen" class="overlay" @click.self="frOpen = false">
 				<div class="modal">
 					<div class="modal-title">{{ $t('me.labGamePage.friendVillage') }}</div>
-					<div v-for="(f, fi) in friendVillages" :key="fi" class="fr-item" @click="openFriendVillage(fi)">
-						<span class="fr-char" :style="{ background: f.color }">{{ f.char }}</span>
+					<div class="upgrade-btn upgrade-btn--wide" @click="frAddTap">{{ $t('me.labGamePage.frAdd') }}</div>
+					<div class="wh-title">{{ $t('me.labGamePage.frListTitle') }}</div>
+					<div v-if="!friends || !friends.friends.length" class="empty-tip">{{ $t('me.labGamePage.frEmpty') }}</div>
+					<div v-for="f in (friends ? friends.friends : [])" :key="'f' + f.id" class="fr-item">
+						<span class="fr-char" :style="{ background: thColor(f.lv) }">{{ (f.baseName || f.name || '?').slice(0, 1) }}</span>
 						<div class="fr-main">
-							<div class="fr-name">{{ f.name }}</div>
-							<div class="fr-sub">{{ f.owner }} · Lv.{{ f.lv }}</div>
+							<div class="fr-name">{{ f.baseName || $t('me.labGamePage.frNoBase') }}</div>
+							<div class="fr-sub">{{ f.name }} · Lv.{{ f.lv }}</div>
 						</div>
-						<div class="fr-visit" @click.stop="openFriendVillage(fi)">{{ $t('me.labGamePage.fvVisit') }}</div>
+						<div class="fr-visit" @click="openFriendVillage(f)">{{ $t('me.labGamePage.fvVisit') }}</div>
+						<div class="fr-del" @click="frRemoveTap(f)">✕</div>
 					</div>
+					<template v-if="friends && friends.incoming.length">
+						<div class="wh-title">{{ $t('me.labGamePage.frIncoming') }}</div>
+						<div v-for="r in friends.incoming" :key="'i' + r.id" class="fr-item">
+							<span class="fr-char" style="background:#8d968c">{{ r.name.slice(0, 1) }}</span>
+							<div class="fr-main">
+								<div class="fr-name">{{ r.name }}</div>
+								<div class="fr-sub">ID {{ r.id }}</div>
+							</div>
+							<div class="fr-visit" @click="frAcceptTap(r)">{{ $t('me.labGamePage.frAccept') }}</div>
+							<div class="fr-del" @click="frDeclineTap(r)">✕</div>
+						</div>
+					</template>
+					<template v-if="friends && friends.outgoing.length">
+						<div class="wh-title">{{ $t('me.labGamePage.frOutgoing') }}</div>
+						<div v-for="r in friends.outgoing" :key="'o' + r.id" class="fr-item">
+							<span class="fr-char" style="background:#a5793f">{{ r.name.slice(0, 1) }}</span>
+							<div class="fr-main">
+								<div class="fr-name">{{ r.name }}</div>
+								<div class="fr-sub">ID {{ r.id }} · {{ $t('me.labGamePage.frPending') }}</div>
+							</div>
+							<div class="fr-del" @click="frDeclineTap(r)">✕</div>
+						</div>
+					</template>
 					<div class="modal-close" @click="frOpen = false">{{ $t('me.labGamePage.close') }}</div>
 				</div>
 			</div>
@@ -976,7 +1007,7 @@
 				</div>
 			</div>
 
-			<!-- 好友的村庄（进入后的村庄面板） -->
+			<!-- 好友的村庄（参观：服务端拉取好友真实存档，只读） -->
 			<div v-if="fvOpen" class="overlay" @click.self="fvOpen = false">
 				<div class="modal modal--tall">
 					<div class="modal-title">{{ fvVillage.name }}</div>
@@ -984,7 +1015,7 @@
 						<span class="fr-char" :style="{ background: fvVillage.color }">{{ fvVillage.char }}</span>
 						<div class="fr-main">
 							<div class="fr-name">{{ fvVillage.owner }}</div>
-							<div class="fr-sub">{{ $t('me.labGamePage.baseLevel') }} Lv.{{ fvVillage.lv }}</div>
+							<div class="fr-sub">{{ $t('me.labGamePage.baseLevel') }} Lv.{{ fvVillage.lv }}<span v-if="fvVillCount >= 0"> · {{ $t('me.labGamePage.villagers') }} ×{{ fvVillCount }}</span></div>
 						</div>
 					</div>
 					<div class="upgrade-btn upgrade-btn--wide" @click="openFriendMarket">{{ $t('me.labGamePage.market') }}</div>
@@ -996,6 +1027,7 @@
 			<div v-if="fmOpen" class="overlay" @click.self="fmOpen = false">
 				<div class="modal modal--tall">
 					<div class="modal-title">{{ $t('me.labGamePage.fvMarket', { name: fvVillage.name }) }}</div>
+					<div v-if="!fmListings.length" class="empty-tip">{{ $t('me.labGamePage.fmEmpty') }}</div>
 					<div v-for="(s, si) in fmListings" :key="si" class="fr-item">
 						<img class="fr-char" :src="gameIcon(s.id)"   >
 						<div class="fr-main">
@@ -1068,7 +1100,7 @@
 			<div v-if="mktEdit" class="overlay" @click.self="mktCancelEdit">
 				<div class="modal">
 					<div class="modal-title">{{ mktEdit.type === 'sell' ? $t('me.labGamePage.mktList') : $t('me.labGamePage.mktBuy') }}</div>
-					<picker class="dev-picker" :range="devResNames" @change="onMktResPick">
+					<picker class="dev-picker" :range="mktResNames" @change="onMktResPick">
 						<div class="dev-picker-val">{{ resName(mktResId) }}</div>
 					</picker>
 					<div class="mkt-form-row">
@@ -1098,6 +1130,7 @@ import {
 	EQUIP_SLOTS, EQUIP_ITEMS, EXPEDITION_ROUTES, expRoute, RAID_WAVES, CRAFT_RECIPES,
 	VILL_TRACKS, trackOfBuild, TRACK_LV_EXP, trackLevel, trackBonus, GUARD_EXPED,
 	SMITH_CRAFT, TRADER, FLINT_DUR, EQUIP_DUR, PORTAL_WORK,
+	PROD_RECIPES, ENCHANT_BONUS,
 	efficiency, collectCap, stackOf, whSlots, START_RESOURCES, QUICK_COLLECT_TH, TH_COLORS, RES_TH,
 	buildTimeSec, thBuildTimeSec, builderSlots,
 	FUEL_VALUE, FUEL_COST, FUEL_ADD_NUM, WALL, WALL_RING_NUM, STORAGE_COST
@@ -1111,8 +1144,8 @@ const MAX_OFFLINE_HOURS = 8
 // 开发者倍速档位：仅加速在线时的产出结算
 const DEV_SPEEDS = [1, 2, 5, 10, 30, 60]
 const START_VILLAGERS = 1
-// 村民默认名池（原木主题，取自树木名）
-const VILL_NAMES = ['阿橡', '阿松', '阿桦', '阿杨', '小杉', '阿榆', '小枫', '阿柳', '阿槐', '小柏', '阿楠', '小檀']
+// 村民默认名池（MC 风格：职业/物资味短名）
+const VILL_NAMES = ['阿砖', '铁蛋', '老麦', '小穗', '阿锄', '老木', '小炉', '阿弓', '老矿', '阿锤', '皮蛋', '阿桶']
 // 村民状态：每小时饱食消耗；饱食≥50回血 / 饱食归零掉血；心情向目标值漂移
 const SATIETY_DECAY = 4
 const HP_REGEN = 4
@@ -1227,8 +1260,11 @@ export default {
 			nowTs: Date.now(),
 			// 市场：好友村庄浏览 + 自己的市场管理（6 上架 + 3 收购）
 			fvOpen: false,
-			fvIdx: 0,
 			fmOpen: false,
+			// 好友体系：friends 为服务端好友列表（friends/incoming/outgoing），fvState 为参观中的好友存档快照
+			friends: null,
+			fvVillage: { name: '', owner: '', lv: 0, char: '村', color: '#6aa84f' },
+			fvState: null,
 			mktOpen: false,
 			marketListings: new Array(6).fill(null),
 			marketOrders: new Array(3).fill(null),
@@ -1272,7 +1308,11 @@ export default {
 			// 食物自动进食优先级（id 有序列表；空 = 默认 tier 升序、腐肉垫底）
 			foodPrio: [],
 			foodOpen: false,
-			flogOpen: false
+			flogOpen: false,
+			// 消息日志每日快照（北京时间凌晨 5 点换日；cur=今日首拍、prev=昨日末拍）
+			logSnap: null,
+			// 附魔台持续附魔中（驻守+青金石供给过半，produce 结算时刷新）
+			enchOn: false
 		}
 	},
 	computed: {
@@ -1305,6 +1345,9 @@ export default {
 		},
 		canTrain() {
 			return this.villagers.length < this.capacity && (this.resources.wheat || 0) >= TRAIN_WHEAT
+		},
+		trainWheat() {
+			return TRAIN_WHEAT
 		},
 		// 地上 + 地下全部建筑
 		allPlots() { return this.plots.concat(this.ugPlots) },
@@ -1561,6 +1604,13 @@ export default {
 		// 开发者控制台
 		devResIds() { return Object.keys(RESOURCES) },
 		devResNames() { return this.devResIds.map(id => this.resName(id) + ' · ' + id) },
+		// 市场编辑可选资源：上架只列持有数 >0 的；收购只列当前大本营等级已可达的（RES_TH 未达标则隐藏）
+		mktResIds() {
+			if (!this.mktEdit) return this.devResIds
+			if (this.mktEdit.type === 'sell') return this.devResIds.filter(id => this.floorRes(id) > 0)
+			return this.devResIds.filter(id => this.resTh(id) <= this.baseLevel)
+		},
+		mktResNames() { return this.mktResIds.map(id => this.resName(id) + ' · ' + id) },
 		devResLabel() { return this.resName(this.devResId) },
 		speedOptions() { return DEV_SPEEDS },
 		raidSimOptions() { return [0.5, 1, 2, 4, 8] },
@@ -1660,9 +1710,16 @@ export default {
 			})
 			this.villagers.forEach(v => {
 				const w = v.equip && v.equip[0] ? EQUIP_ITEMS[v.equip[0]] : null
-				if (w && w.slot === 'weapon') power += w.atk
+				if (w && w.slot === 'weapon') power += w.atk * (1 + this.enchBonus)
 			})
 			return power
+		},
+		// 附魔加成：附魔台驻守+供青金石时按建筑等级生效（武器攻击/盔甲防御 ×(1+加成)）
+		enchBonus() {
+			if (!this.enchOn) return 0
+			const p = this.allPlots.find(q => q && q.type === 'enchant')
+			if (!p || p.busy) return 0
+			return ENCHANT_BONUS[p.level] || 0
 		},
 		// 大本营当前防御力（随耐久折减）
 		baseDef() {
@@ -1889,58 +1946,53 @@ export default {
 		raidTempTotal() {
 			return this.raidTempList.reduce((s, r) => s + r.val, 0)
 		},
-		// 好友的村庄（占位数据，后续接后端好友体系）
-		friendVillages() {
-			return [{
-				char: this.$t('me.labGamePage.fvDemoName').slice(0, 1),
-				name: this.$t('me.labGamePage.fvDemoName'),
-				owner: this.$t('me.labGamePage.fvDemoOwner'),
-				lv: 3,
-				color: '#6aa84f'
-			}]
+		// 参观中的好友村民数（无存档返回 -1 不显示）
+		fvVillCount() {
+			return (this.fvState && Array.isArray(this.fvState.villagers)) ? this.fvState.villagers.length : -1
 		},
-		fvVillage() { return this.friendVillages[this.fvIdx] || this.friendVillages[0] },
-		// 好友村庄消息日志（演示数据）：以北京时间凌晨 5 点为一天边界，按日种子生成，
-		// 同一天内内容稳定，跨天（5 点后）自动刷新；后续接后端真实日志
+		// 好友村庄消息日志：每日统计/市场条目/偷窃均取自真实游戏数据（仓库快照增减、我方市场挂单、实际库存），
+		// 以北京时间凌晨 5 点为一天边界，同一天内偷窃条目随机内容稳定，跨天（5 点后）自动刷新
 		friendLogs() {
-			const day = 86400000
-			const dayIdx = Math.floor((this.bjNow() - 5 * 3600000) / day)
+			const dayIdx = this.logDayIdx()
 			// LCG 伪随机：同一天稳定，跨天变化
 			let s = (dayIdx * 2654435761 + 12345) % 4294967296
 			const rnd = () => { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296 }
-			const pool = ['log', 'stone', 'wheat', 'carrot', 'iron', 'bread', 'apple']
-			const pick = () => pool[Math.floor(rnd() * pool.length)]
 			const logs = []
-			// 1. 每日仓库增减统计（3~4 项，正负增量）
-			const parts = []
-			const nStat = 3 + Math.floor(rnd() * 2)
-			for (let i = 0; i < nStat; i++) {
-				const delta = Math.floor(rnd() * 220) - 90
-				if (delta === 0) continue
-				parts.push(this.resName(pick()) + (delta > 0 ? ' +' : ' −') + Math.abs(delta))
-			}
-			if (parts.length) logs.push({ type: 'stat', tkey: 'logTypeStat', text: parts.join(' · ') })
-			// 2. 市场收购/售出记录（1~3 条）
-			const nMkt = 1 + Math.floor(rnd() * 3)
-			for (let i = 0; i < nMkt; i++) {
-				const sell = rnd() > 0.5
-				logs.push({
-					type: 'market',
-					tkey: 'logTypeMarket',
-					text: this.$t(sell ? 'me.labGamePage.logSold' : 'me.labGamePage.logBought', {
-						item: this.resName(pick()),
-						n: 1 + Math.floor(rnd() * 20),
-						p: 1 + Math.floor(rnd() * 8)
-					})
+			// 1. 每日仓库增减统计（真实数据：现值 − 今日首拍快照）
+			const snap = (this.logSnap && this.logSnap.day === dayIdx) ? this.logSnap : null
+			if (snap) {
+				const now = {}
+				Object.keys(this.resources).forEach(id => {
+					const n = Math.floor(this.resources[id] || 0)
+					if (n > 0) now[id] = n
 				})
+				const ids = Object.keys(Object.assign({}, now, snap.cur))
+				const parts = ids.map(id => ({ id, d: (now[id] || 0) - (snap.cur[id] || 0) }))
+					.filter(x => x.d !== 0)
+					.sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
+					.slice(0, 4)
+					.map(x => this.resName(x.id) + (x.d > 0 ? ' +' : ' −') + Math.abs(x.d))
+				if (parts.length) logs.push({ type: 'stat', tkey: 'logTypeStat', text: parts.join(' · ') })
 			}
-			// 3. 好友偷取资源（约四成概率发生）
-			if (rnd() > 0.6) {
+			// 2. 市场挂单/收购（真实挂单，最多 3 条）
+			const mkt = []
+			this.marketListings.forEach(l => {
+				if (l && l.qty > 0) mkt.push({ type: 'market', tkey: 'logTypeMarket', text: this.$t('me.labGamePage.logSold', { item: this.resName(l.id), n: l.qty, p: l.price }) })
+			})
+			this.marketOrders.forEach(o => {
+				if (o && o.qty > 0) mkt.push({ type: 'market', tkey: 'logTypeMarket', text: this.$t('me.labGamePage.logBought', { item: this.resName(o.id), n: o.qty, p: o.price }) })
+			})
+			logs.push.apply(logs, mkt.slice(0, 3))
+			// 3. 好友偷取资源（约四成概率发生；物品/数量取自真实库存）
+			const owned = Object.keys(this.resources).filter(id => id !== 'emerald' && Math.floor(this.resources[id] || 0) > 0)
+			if (rnd() > 0.6 && owned.length) {
+				const item = owned[Math.floor(rnd() * owned.length)]
+				const stock = Math.floor(this.resources[item])
 				const thief = VILL_NAMES[Math.floor(rnd() * VILL_NAMES.length)]
 				logs.push({
 					type: 'steal',
 					tkey: 'logTypeSteal',
-					text: this.$t('me.labGamePage.logSteal', { name: thief, item: this.resName(pick()), n: 1 + Math.floor(rnd() * 30) })
+					text: this.$t('me.labGamePage.logSteal', { name: thief, item: this.resName(item), n: Math.max(1, Math.min(1 + Math.floor(rnd() * 30), stock)) })
 				})
 			} else {
 				logs.push({ type: 'steal', tkey: 'logTypeSteal', text: this.$t('me.labGamePage.logNoSteal') })
@@ -1949,13 +2001,10 @@ export default {
 			logs.push({ type: 'notice', tkey: 'logTypeNotice', text: this.$t('me.labGamePage.logNotice') })
 			return logs
 		},
-		// 好友市场演示挂单（后续接后端）
+		// 好友市场真实挂单（参观时从服务端拉取好友存档）
 		fmListings() {
-			return [
-				{ id: 'log', qty: 200, price: 1 },
-				{ id: 'stone', qty: 80, price: 2 },
-				{ id: 'bread', qty: 15, price: 4 }
-			]
+			const ml = this.fvState && Array.isArray(this.fvState.marketListings) ? this.fvState.marketListings : []
+			return ml.filter(Boolean)
 		},
 		// 市场编辑弹窗当前编辑的挂单/收购单（新建时为 null）
 		mktEditExisting() {
@@ -2062,6 +2111,8 @@ export default {
 				})
 				this.speed = DEV_SPEEDS.indexOf(s.speed) >= 0 ? s.speed : 1
 				this.foodPrio = Array.isArray(s.foodPrio) ? s.foodPrio.filter(id => Object.keys(FOODS).indexOf(id) >= 0) : []
+				this.enchOn = !!s.enchOn
+				this.logSnap = (s.logSnap && typeof s.logSnap.day === 'number' && s.logSnap.cur) ? { day: s.logSnap.day, cur: s.logSnap.cur, prev: s.logSnap.prev || null } : null
 				this.raidTemp = Object.assign({ rotten: 0, iron: 0, book: 0, flint: 0, lapis: 0 }, s.raidTemp || {})
 				// 打火石耐久（剩余远征次数）；流浪商人按本地日期刷新沙子库存
 				this.flintUses = (typeof s.flintUses === 'number' && isFinite(s.flintUses)) ? Math.max(0, s.flintUses) : 0
@@ -2196,6 +2247,8 @@ export default {
 					resources: this.resources,
 					speed: this.speed,
 					foodPrio: this.foodPrio,
+					logSnap: this.logSnap,
+					enchOn: this.enchOn,
 					raidTemp: this.raidTemp,
 					raidTempHours: this.raidTempHours,
 					flintUses: this.flintUses,
@@ -2231,7 +2284,7 @@ export default {
 					if (applySpeed && this.speed > 1) raidHours *= this.speed
 					if (raidHours > 1 / 120) this.settleRaid(raidHours)
 				}
-			} catch (e) {}
+			} catch (e) { console.error('[settleProduction]', e) }
 			this.persist()
 		},
 		// ---------- 僵尸夜袭 ----------
@@ -2440,7 +2493,7 @@ export default {
 				this.villagers.forEach(v => {
 					if (v.onExp) return
 					const a = v.equip && v.equip[1] ? EQUIP_ITEMS[v.equip[1]] : null
-					const ad = a && a.slot === 'armor' ? a.def : 0
+					const ad = a && a.slot === 'armor' ? a.def * (1 + this.enchBonus) : 0
 					v.hp = Math.max(0, v.hp - RAID.villDmg * press * (100 / (100 + ad)))
 				})
 			}
@@ -2557,7 +2610,7 @@ export default {
 					if (v.onExp) return
 					// 盔甲减免：受伤 × 100/(100+防御)，无甲全额
 					const a = v.equip && v.equip[1] ? EQUIP_ITEMS[v.equip[1]] : null
-					const ad = a && a.slot === 'armor' ? a.def : 0
+					const ad = a && a.slot === 'armor' ? a.def * (1 + this.enchBonus) : 0
 					v.hp = Math.max(0, v.hp - dmg * (100 / (100 + ad)))
 				})
 			}
@@ -2660,8 +2713,9 @@ export default {
 		},
 		equipEffectText(def) {
 			if (!def) return ''
-			if (def.atk) return this.$t('me.labGamePage.atk') + ' +' + def.atk
-			if (def.def) return this.$t('me.labGamePage.defLabel') + ' +' + def.def
+			const eb = 1 + this.enchBonus
+			if (def.atk) return this.$t('me.labGamePage.atk') + ' +' + Math.round(def.atk * eb) + (this.enchBonus ? this.$t('me.labGamePage.enchTag', { n: Math.round(this.enchBonus * 100) }) : '')
+			if (def.def) return this.$t('me.labGamePage.defLabel') + ' +' + Math.round(def.def * eb) + (this.enchBonus ? this.$t('me.labGamePage.enchTag', { n: Math.round(this.enchBonus * 100) }) : '')
 			if (def.heal) return this.$t('me.labGamePage.equipHeal') + ' +' + def.heal
 			return ''
 		},
@@ -2902,7 +2956,7 @@ export default {
 				const def = BUILDING_MAP[p.type]
 				if (!def) return
 				const cur = def.levels[p.level - 1]
-				if (!cur || !cur.prod) return
+				if (!cur) return
 				const slots = def.slots[p.level - 1]
 				// 职业轨道：当班村民的轨道等级为工位产出加效率（+5% ×（等级-1），按当班均值）
 				const track = trackOfBuild(p.type)
@@ -2920,7 +2974,33 @@ export default {
 						for (let si = 0; si < 2; si++) this.wearEquip(v, si, PORTAL_WORK.wearPerH * hours)
 					})
 				}
+				// 在岗经验：三条轨道按当班工作时长涨对应经验（药房/附魔台等早退分支之前结算，囤积满也算出工）
+				if (track && crew.length && VILL_TRACKS[track].expH > 0) {
+					crew.forEach(v => {
+						if (!v || v.onExp) return
+						const before = trackLevel(v.tracks[track] || 0)
+						v.tracks[track] = (v.tracks[track] || 0) + VILL_TRACKS[track].expH * hours
+						const after = trackLevel(v.tracks[track])
+						if (after > before) lvUps.push(v.name + ' Lv' + before + '→' + after)
+					})
+				}
 				// 部落冲突式：产出囤积在建筑内（上限 = 满编时产 × COLLECT_CAP_HOURS），收集后才入库
+				// 药房：消耗药水/金苹果为受伤村民回血（优先普通药水 30HP/剂，Lv3 起金苹果 50HP/个兜底）
+				if (p.type === 'heal' && cur.heal) {
+					this.runHealPlot(p, cur, eff, hours)
+					return
+				}
+				// 附魔台：驻守且青金石供给过半时持续附魔（耗 lapis/h，武器/盔甲效果加成见 enchBonus）
+				if (p.type === 'enchant' && cur.consumes && cur.consumes.lapis) {
+					const need = cur.consumes.lapis * eff * hours
+					if (need > 0) {
+						const stock = this.resources.lapis || 0
+						const real = Math.min(need, stock)
+						this.$set(this.resources, 'lapis', stock - real)
+						this.enchOn = real >= need * 0.5
+					}
+					return
+				}
 				const capRaw = collectCap(def, p.level)
 				const cap = capRaw ? Object.keys(capRaw).reduce((m, id) => { m[id] = capRaw[id] * cm; return m }, {}) : null
 				const buf = Object.assign({}, p.buf || {})
@@ -2960,32 +3040,35 @@ export default {
 						this.fuel = Math.max(0, this.fuel - avail)
 					}
 					Object.keys(gains).forEach(id => { if (gains[id] > 0) buf[id] = (buf[id] || 0) + gains[id] })
-				} else if (cur.consumes) {
-					const breadId = Object.keys(cur.prod)[0]
-					const room = Math.max(0, (cap[breadId] || 0) - (buf[breadId] || 0))
-					const wantBread = Math.min(cur.prod[breadId] * eff * hours, room)
-					const wheatNeed = cur.consumes.wheat / cur.prod[breadId] * wantBread
-					const wheatStock = this.resources.wheat || 0
-					const realBread = wheatStock >= wheatNeed ? wantBread : wheatStock / (cur.consumes.wheat / cur.prod[breadId])
-					this.resources.wheat = wheatStock - realBread * (cur.consumes.wheat / cur.prod[breadId])
-					buf[breadId] = (buf[breadId] || 0) + realBread
-				} else {
+				} else if (p.type === 'kitchen' || p.type === 'brew') {
+					// 厨房/酿造室：按 PROD_RECIPES 逐产物扣材料，材料不够该产物就停产该产物（其余照常）
 					Object.keys(cur.prod).forEach(id => {
-						const gain = cur.prod[id] * eff * hours
+						const room = Math.max(0, (cap[id] || 0) - (buf[id] || 0))
+						let real = Math.min(cur.prod[id] * eff * hours, room)
+						const rec = PROD_RECIPES[id]
+						if (rec && real > 0) {
+							let maxFromIng = Infinity
+							Object.keys(rec).forEach(ing => {
+								maxFromIng = Math.min(maxFromIng, (this.resources[ing] || 0) / rec[ing])
+							})
+							real = Math.min(real, maxFromIng)
+							Object.keys(rec).forEach(ing => {
+								this.$set(this.resources, ing, Math.max(0, (this.resources[ing] || 0) - real * rec[ing]))
+							})
+						}
+						if (real > 0) buf[id] = (buf[id] || 0) + real
+					})
+				} else {
+					// 下界传送门驻守产出随下界波动（±40%）；无产出建筑（住所/瞭望塔/地下室入口等）prod 为 null，直接跳过
+					if (!cur.prod) return
+					const rnd = p.type === 'portal' ? (0.6 + Math.random() * 0.8) : 1
+					Object.keys(cur.prod).forEach(id => {
+						const gain = cur.prod[id] * eff * hours * rnd
 						const room = Math.max(0, (cap[id] || 0) - (buf[id] || 0))
 						buf[id] = (buf[id] || 0) + Math.min(gain, room)
 					})
 				}
 				p.buf = buf
-				// 在岗经验：劳作/技工轨道按工作时长涨（护卫经验只在远征获取）；囤积满也算出工
-				if (track && crew.length && VILL_TRACKS[track].expH > 0) {
-					crew.forEach(v => {
-						const before = trackLevel(v.tracks[track] || 0)
-						v.tracks[track] = (v.tracks[track] || 0) + VILL_TRACKS[track].expH * hours
-						const after = trackLevel(v.tracks[track])
-						if (after > before) lvUps.push(v.name + ' Lv' + before + '→' + after)
-					})
-				}
 			})
 			if (lvUps.length) uni.showToast({ title: this.$t('me.labGamePage.trackUp', { names: lvUps.slice(0, 3).join('、') }), icon: 'none' })
 			// 村民状态演变：饱食消耗（饥饿buff额外消耗）→ 自动进食 → 饥饿掉血/吃饱回血 → 心情漂移
@@ -3015,6 +3098,51 @@ export default {
 			})
 			// 血量归零的村民死亡（含饥饿等非夜袭死因）
 			this.notifyDeaths(this.reapDead())
+		},
+		// 药房治疗：每小时最多 heal 名村民，每剂药水回 30HP（金苹果 50HP，Lv3 起且药水耗尽才用），血量最低者优先
+		runHealPlot(p, cur, eff, hours) {
+			const pool = cur.heal * eff * hours
+			if (pool <= 0) return
+			const injured = this.villagers.filter(v => !v.onExp && (v.hp || 0) < 100).sort((a, b) => (a.hp || 0) - (b.hp || 0))
+			if (!injured.length) return
+			const potStock = this.resources.potion || 0
+			let hpHeal = Math.min(pool * 30, potStock * 30)
+			const usePot = hpHeal / 30
+			let useGold = 0
+			if (p.level >= 3) {
+				const remain = pool * 30 - hpHeal
+				if (remain > 0) {
+					useGold = Math.min(remain, (this.resources.goldenApple || 0) * 50) / 50
+					hpHeal += useGold * 50
+				}
+			}
+			if (hpHeal <= 0) return
+			this.$set(this.resources, 'potion', Math.max(0, potStock - usePot))
+			if (useGold > 0) this.$set(this.resources, 'goldenApple', Math.max(0, (this.resources.goldenApple || 0) - useGold))
+			let left = hpHeal
+			injured.forEach(v => {
+				if (left <= 0) return
+				const g = Math.min(100 - (v.hp || 0), left)
+				v.hp = (v.hp || 0) + g
+				left -= g
+			})
+		},
+		// 消息日志「今日」边界：北京时间凌晨 5 点换日
+		logDayIdx() {
+			return Math.floor((this.bjNow() - 5 * 3600000) / 86400000)
+		},
+		// 换日后首次心跳拍当日快照（昨日末拍存为 prev），消息日志每日统计 = 现值 − 快照
+		syncLogSnap() {
+			const day = this.logDayIdx()
+			if (this.logSnap && this.logSnap.day === day) return
+			const res = {}
+			Object.keys(this.resources).forEach(id => {
+				const n = Math.floor(this.resources[id] || 0)
+				if (n > 0) res[id] = n
+			})
+			const prev = (this.logSnap && this.logSnap.day === day - 1) ? this.logSnap.cur : null
+			this.logSnap = { day, cur: res, prev }
+			this.persist()
 		},
 		// 本地日期串（流浪商人每日刷新用）
 		traderDay() {
@@ -3333,6 +3461,21 @@ export default {
 			this.$set(this.resources, id, (this.resources[id] || 0) + delta)
 			return delta
 		},
+		// 快捷丢弃：把某资源整仓丢弃（释放仓库格），确认后执行
+		discardRes(id) {
+			const n = Math.floor(this.resources[id] || 0)
+			if (n <= 0) return
+			uni.showModal({
+				title: this.$t('me.labGamePage.discard'),
+				content: this.$t('me.labGamePage.discardConfirm', { n, name: this.resName(id) }),
+				success: (res) => {
+					if (!res.confirm) return
+					this.$set(this.resources, id, 0)
+					this.persist()
+					uni.showToast({ title: this.$t('me.labGamePage.discardDone'), icon: 'none' })
+				}
+			})
+		},
 		costText(cost) {
 			return Object.keys(cost).map(id => this.resName(id) + '×' + cost[id]).join('、')
 		},
@@ -3353,15 +3496,68 @@ export default {
 		openMarket() {
 			this.mktOpen = true
 		},
-		openFriendVillage(fi) {
-			this.fvIdx = fi
-			this.frOpen = false
-			this.fvOpen = true
-		},
-		openFriendMarket() {
+			openFriendMarket() {
 			this.fvOpen = false
 			this.fmOpen = true
 		},
+		frOpenTap() {
+			this.frOpen = true
+			this.loadFriends()
+		},
+		async loadFriends() {
+			try { this.friends = await this.$root.api('friends') } catch (e) { uni.showToast({ title: e.message, icon: 'none' }) }
+		},
+		frAddTap() {
+			uni.showModal({
+				title: this.$t('me.labGamePage.frAdd'),
+				content: '',
+				editable: true,
+				placeholderText: this.$t('me.labGamePage.frAddPlaceholder'),
+				success: r => {
+					if (!r.confirm) return
+					const id = Number(r.content)
+					if (!Number.isSafeInteger(id) || id <= 0) { uni.showToast({ title: this.$t('me.labGamePage.frAddBad'), icon: 'none' }); return }
+					this.$root.api('friends/request', { method: 'POST', body: JSON.stringify({ id }) })
+						.then(() => { uni.showToast({ title: this.t('frReqSent'), icon: 'none' }); return this.loadFriends() })
+						.catch(e => uni.showToast({ title: e.message, icon: 'none' }))
+				}
+			})
+		},
+		t(key) { return this.$t('me.labGamePage.' + key) },
+		frAcceptTap(r) {
+			this.$root.api('friends/accept', { method: 'POST', body: JSON.stringify({ id: r.id }) })
+				.then(() => { uni.showToast({ title: this.t('frAccepted'), icon: 'none' }); return this.loadFriends() })
+				.catch(e => uni.showToast({ title: e.message, icon: 'none' }))
+		},
+		frDeclineTap(r) {
+			this.$root.api('friends/decline', { method: 'POST', body: JSON.stringify({ id: r.id }) })
+				.then(() => { uni.showToast({ title: this.t('frDeclined'), icon: 'none' }); return this.loadFriends() })
+				.catch(e => uni.showToast({ title: e.message, icon: 'none' }))
+		},
+		frRemoveTap(f) {
+			uni.showModal({
+				title: this.t('frRemove'),
+				content: this.$t('me.labGamePage.frRemoveConfirm', { name: f.name }),
+				success: r => {
+					if (!r.confirm) return
+					this.$root.api('friends/remove', { method: 'POST', body: JSON.stringify({ id: f.id }) })
+						.then(() => { uni.showToast({ title: this.t('frRemoved'), icon: 'none' }); return this.loadFriends() })
+						.catch(e => uni.showToast({ title: e.message, icon: 'none' }))
+				}
+			})
+		},
+		async openFriendVillage(f) {
+			try {
+				const v = await this.$root.api('friends/village?id=' + f.id)
+				const st = v.state
+				const name = v.baseName || this.t('frNoBase')
+				this.fvVillage = { name, owner: v.name, lv: st ? st.village.baseLevel : 0, char: name.slice(0, 1), color: TH_COLORS[st ? st.village.baseLevel : 0] || '#6aa84f' }
+				this.fvState = st
+				this.frOpen = false
+				this.fvOpen = true
+			} catch (e) { uni.showToast({ title: e.message, icon: 'none' }) }
+		},
+		thColor(lv) { return TH_COLORS[lv] || '#8d968c' },
 		mktBuySoon() {
 			uni.showToast({ title: this.$t('me.labGamePage.mktVisitSoon'), icon: 'none' })
 		},
@@ -3390,12 +3586,16 @@ export default {
 			this.mktQty = slot ? String(slot.qty) : ''
 			this.mktPrice = slot ? String(slot.price) : ''
 			this.mktEdit = { type, idx }
+			// 默认资源被过滤掉时（无库存/TH 未达标）改选过滤列表第一项
+			if (!slot && this.mktResIds.indexOf(this.mktResId) < 0) {
+				this.mktResId = this.mktResIds[0] || 'log'
+			}
 		},
 		mktCancelEdit() {
 			this.mktEdit = null
 		},
 		onMktResPick(e) {
-			this.mktResId = this.devResIds[Number(e.detail.value)] || 'log'
+			this.mktResId = this.mktResIds[Number(e.detail.value)] || this.mktResIds[0] || 'log'
 		},
 		mktSave() {
 			const qty = parseInt(this.mktQty, 10)
@@ -3507,6 +3707,8 @@ export default {
 		// 每秒心跳调用：到期即完工（含离线跨天，end 为墙钟时间戳）
 		checkBuilds() {
 			const now = Date.now()
+			// 消息日志换日：北京时间凌晨 5 点后首次心跳拍新快照
+			this.syncLogSnap()
 			// 原木娘雇佣到期：离岗（指派的地块工位空出，需手动重新派工）
 			if (this.hero && now >= this.hero.until) {
 				this.hero = null
@@ -4031,9 +4233,9 @@ export default {
 				uni.showToast({ title: this.$t('me.labGamePage.storeBusy'), icon: 'none' })
 				return
 			}
-			// 地下室入口：地下还有建筑时不能收纳
-			if (p.type === 'basement' && this.ugPlots.some(Boolean)) {
-				uni.showToast({ title: this.$t('me.labGamePage.ugNoDemolish'), icon: 'none' })
+			// 地下室入口：地下空间入口不可收纳（收纳会让地下建筑失去入口）
+			if (p.type === 'basement') {
+				uni.showToast({ title: this.$t('me.labGamePage.basementNoStore'), icon: 'none' })
 				return
 			}
 			if (this.isHeroIdx(this.selLayer, this.selIdx)) this.recallHero()
@@ -4469,6 +4671,12 @@ export default {
 			Object.keys(RESOURCES).forEach(id => {
 				this.$set(this.resources, id, 9999)
 			})
+			this.persist()
+			uni.showToast({ title: this.$t('me.labGamePage.devDone'), icon: 'none' })
+		},
+		// 资源清零：全部资源归 0（测试从零起步的获取链路）
+		devClearRes() {
+			Object.keys(this.resources).forEach(id => { this.$set(this.resources, id, 0) })
 			this.persist()
 			uni.showToast({ title: this.$t('me.labGamePage.devDone'), icon: 'none' })
 		},
@@ -5644,12 +5852,7 @@ const CAT_COLORS = {
 .vill-avatar {
 	width: 52rpx;
 	height: 52rpx;
-	line-height: 52rpx;
-	text-align: center;
-	border-radius: 50%;
-	background: #7BA05B;
-	color: #ffffff;
-	font-size: 26rpx;
+	image-rendering: pixelated;
 }
 
 .vill-name {
@@ -6130,35 +6333,42 @@ const CAT_COLORS = {
 	.dark-mode & { color: #acb7a9; }
 }
 
+.res-discard {
+	flex: 0 0 auto;
+	width: 36rpx;
+	height: 36rpx;
+	line-height: 32rpx;
+	text-align: center;
+	font-size: 22rpx;
+	font-weight: bold;
+	color: #b04a3a;
+	border: 2rpx solid #b04a3a;
+	border-radius: 8rpx;
+
+	.dark-mode & { color: #d97b6c; border-color: #d97b6c; }
+}
+
 /* 开发者控制台 */
-.dev-box {
-	width: 100%;
-	max-width: 640rpx;
-	margin-top: 20rpx;
-	padding: 16rpx 20rpx;
+/* 开发者控制台浮动按钮（右下角悬浮列第三档：好友/日志/DEV） */
+.dev-fab {
+	position: fixed;
+	right: 24rpx;
+	bottom: calc(196rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px)));
+	z-index: 9;
+	width: 72rpx;
+	height: 72rpx;
+	line-height: 68rpx;
+	text-align: center;
+	border-radius: 50%;
+	background: #3d3d3d;
+	border: 2rpx dashed rgba(224, 92, 52, 0.8);
+	color: #ff8a5c;
+	font-size: 20rpx;
+	font-weight: bold;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.25);
 	box-sizing: border-box;
-	border-radius: 16rpx;
-	border: 2rpx dashed rgba(224, 92, 52, 0.5);
-	background: rgba(224, 92, 52, 0.06);
-}
 
-.dev-head {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.dev-title {
-	font-size: 24rpx;
-	font-weight: bold;
-	color: #e05c34;
-}
-
-.dev-toggle {
-	font-size: 30rpx;
-	font-weight: bold;
-	color: #e05c34;
-	line-height: 1;
+	&:active { opacity: 0.85; }
 }
 
 .dev-row {
@@ -6510,14 +6720,9 @@ const CAT_COLORS = {
 }
 
 .exp-vill-avatar {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 	width: 40rpx;
 	height: 40rpx;
-	border-radius: 50%;
-	font-size: 22rpx;
-	color: #ffffff;
+	image-rendering: pixelated;
 }
 
 .exp-vill-name {
@@ -6773,6 +6978,21 @@ const CAT_COLORS = {
 	font-weight: bold;
 	color: #fff;
 	background: #4c8a3f;
+
+	&:active { opacity: 0.85; }
+}
+
+/* 好友条目右侧 ✕（移除好友 / 拒绝申请 / 取消申请） */
+.fr-del {
+	flex: 0 0 auto;
+	width: 48rpx;
+	height: 48rpx;
+	line-height: 44rpx;
+	text-align: center;
+	border-radius: 50%;
+	background: #b04a3a;
+	color: #fff;
+	font-size: 26rpx;
 
 	&:active { opacity: 0.85; }
 }

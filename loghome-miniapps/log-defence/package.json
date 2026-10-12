@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build.cjs",
-    "start": "node server/index.cjs",
+    "start": "node --env-file-if-exists=.env server/index.cjs",
     "test": "node --test test/*.test.cjs",
     "dev": "npm run build && node --watch --env-file-if-exists=.env.development scripts/dev.cjs"
   },
