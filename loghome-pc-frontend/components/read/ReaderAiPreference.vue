@@ -1,4 +1,4 @@
-<template><div class="ai-preference"><div><h2>AI 辅助功能</h2><p>在此浏览器中显示原木娘助读入口。作者关闭 AI 助读的作品会遵循作者设置。</p><p v-if="error" class="error" role="alert">{{ error }}</p></div><label><input type="checkbox" :checked="enabled" :disabled="!ready" @change="change($event.target.checked)" /> {{ enabled ? '已开启' : '已关闭' }}</label></div></template>
+<template><div class="ai-preference"><div><h2>AI 辅助功能</h2><p v-if="error" class="error" role="alert">{{ error }}</p></div><label><input type="checkbox" :checked="enabled" :disabled="!ready" @change="change($event.target.checked)" /> {{ enabled ? '已开启' : '已关闭' }}</label></div></template>
 <script>
 import { readerAiDisabled, setReaderAiDisabled, AI_PREFERENCE_EVENT } from '~/utils/reader-ai'
 export default {

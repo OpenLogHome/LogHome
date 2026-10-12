@@ -1,6 +1,7 @@
 // Explicit, idempotent registration; never replace an existing operator configuration.
 const {query} = require('../sql');
 const {createRegistry} = require('../bin/miniapps');
+const icons = require('./miniapp-icon-assets.json');
 (async () => {
   const registry = createRegistry(query);
   const existing = (await registry.all(true)).find(app => app.id === 'log-defence');
@@ -8,7 +9,7 @@ const {createRegistry} = require('../bin/miniapps');
     console.log(JSON.stringify({status: 'already-registered', app: existing}));
   } else {
     const app = await registry.save({
-      id: 'log-defence', name: '原木保卫战', icon: '/static/icons/enderman.png',
+      id: 'log-defence', name: '原木保卫战', icon: icons['log-defence'].url,
       description: '建设基地、安排村民、抵御僵尸突袭，进度与原木账号绑定。',
       debugUrl: process.env.LOG_DEFENCE_DEBUG_URL || 'http://127.0.0.1:8787/log-defence/',
       productionUrl: process.env.LOG_DEFENCE_PRODUCTION_URL || 'https://miniapps.loghome.ink/log-defence/',

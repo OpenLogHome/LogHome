@@ -2,7 +2,6 @@
   <writer-panel
     class="writer-ai"
     title="笔泡 · 写作助手"
-    subtitle="与你一起构思、润色与续写"
     :scrollable="false"
     @close="$emit('close')"
   >

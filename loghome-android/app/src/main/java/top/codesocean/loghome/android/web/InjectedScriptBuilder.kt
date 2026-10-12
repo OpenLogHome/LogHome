@@ -151,6 +151,7 @@ object InjectedScriptBuilder {
         val assignments = buildString {
             appendLine("window.jsBridge.statusBarHeight = $statusBarHeightDp;")
             appendLine("window.jsBridge.navigationBarHeight = $navigationBarHeightDp;")
+            appendLine("window.jsBridge.clientVersionCode = ${BuildConfig.VERSION_CODE};")
             appendLine("window.jsBridge.isDebugBuild = ${BuildConfig.DEBUG};")
             appendLine("window.jsBridge.appVersion = ${JSONObject.quote(assetVersion)};")
             // i18n：H5 读取生效语言；原生存在显式设置而 H5 尚未落库时播种本地偏好

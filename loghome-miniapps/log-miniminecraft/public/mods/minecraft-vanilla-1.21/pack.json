@@ -1,0 +1,355 @@
+{
+  "id": "minecraft_vanilla_1_21",
+  "revision": 1,
+  "name": "Minecraft 原版方块材质 · Java 1.21",
+  "description": "覆盖现有 17 种方块：草地、泥土、石头、木材等。使用 Mojang 官方 16×16 原版贴图；草叶与水按默认颜色着色。动画材质使用第一帧。",
+  "author": "Mojang Studios（原始材质） / 本地适配",
+  "source": {
+    "version": "1.21",
+    "client_sha1": "0e9a07b9bb3390602f977073aa12884a4ce12431",
+    "client_url": "https://piston-data.mojang.com/v1/objects/0e9a07b9bb3390602f977073aa12884a4ce12431/client.jar"
+  },
+  "original_texture_count": 1012,
+  "blocks": {
+    "grass": {
+      "top": [
+        "rendered/grass_top.png"
+      ],
+      "bottom": [
+        "textures/block/dirt.png"
+      ],
+      "front": [
+        "rendered/grass_side.png"
+      ],
+      "back": [
+        "rendered/grass_side.png"
+      ],
+      "left": [
+        "rendered/grass_side.png"
+      ],
+      "right": [
+        "rendered/grass_side.png"
+      ]
+    },
+    "dirt": {
+      "top": [
+        "textures/block/dirt.png"
+      ],
+      "bottom": [
+        "textures/block/dirt.png"
+      ],
+      "front": [
+        "textures/block/dirt.png"
+      ],
+      "back": [
+        "textures/block/dirt.png"
+      ],
+      "left": [
+        "textures/block/dirt.png"
+      ],
+      "right": [
+        "textures/block/dirt.png"
+      ]
+    },
+    "stone": {
+      "top": [
+        "textures/block/stone.png"
+      ],
+      "bottom": [
+        "textures/block/stone.png"
+      ],
+      "front": [
+        "textures/block/stone.png"
+      ],
+      "back": [
+        "textures/block/stone.png"
+      ],
+      "left": [
+        "textures/block/stone.png"
+      ],
+      "right": [
+        "textures/block/stone.png"
+      ]
+    },
+    "sand": {
+      "top": [
+        "textures/block/sand.png"
+      ],
+      "bottom": [
+        "textures/block/sand.png"
+      ],
+      "front": [
+        "textures/block/sand.png"
+      ],
+      "back": [
+        "textures/block/sand.png"
+      ],
+      "left": [
+        "textures/block/sand.png"
+      ],
+      "right": [
+        "textures/block/sand.png"
+      ]
+    },
+    "snow": {
+      "top": [
+        "textures/block/snow.png"
+      ],
+      "bottom": [
+        "textures/block/snow.png"
+      ],
+      "front": [
+        "textures/block/snow.png"
+      ],
+      "back": [
+        "textures/block/snow.png"
+      ],
+      "left": [
+        "textures/block/snow.png"
+      ],
+      "right": [
+        "textures/block/snow.png"
+      ]
+    },
+    "ice": {
+      "top": [
+        "textures/block/ice.png"
+      ],
+      "bottom": [
+        "textures/block/ice.png"
+      ],
+      "front": [
+        "textures/block/ice.png"
+      ],
+      "back": [
+        "textures/block/ice.png"
+      ],
+      "left": [
+        "textures/block/ice.png"
+      ],
+      "right": [
+        "textures/block/ice.png"
+      ]
+    },
+    "wood": {
+      "top": [
+        "textures/block/oak_log_top.png"
+      ],
+      "bottom": [
+        "textures/block/oak_log_top.png"
+      ],
+      "front": [
+        "textures/block/oak_log.png"
+      ],
+      "back": [
+        "textures/block/oak_log.png"
+      ],
+      "left": [
+        "textures/block/oak_log.png"
+      ],
+      "right": [
+        "textures/block/oak_log.png"
+      ]
+    },
+    "leaves": {
+      "top": [
+        "rendered/oak_leaves.png"
+      ],
+      "bottom": [
+        "rendered/oak_leaves.png"
+      ],
+      "front": [
+        "rendered/oak_leaves.png"
+      ],
+      "back": [
+        "rendered/oak_leaves.png"
+      ],
+      "left": [
+        "rendered/oak_leaves.png"
+      ],
+      "right": [
+        "rendered/oak_leaves.png"
+      ]
+    },
+    "oak_planks": {
+      "top": [
+        "textures/block/oak_planks.png"
+      ],
+      "bottom": [
+        "textures/block/oak_planks.png"
+      ],
+      "front": [
+        "textures/block/oak_planks.png"
+      ],
+      "back": [
+        "textures/block/oak_planks.png"
+      ],
+      "left": [
+        "textures/block/oak_planks.png"
+      ],
+      "right": [
+        "textures/block/oak_planks.png"
+      ]
+    },
+    "cactus": {
+      "top": [
+        "textures/block/cactus_top.png"
+      ],
+      "bottom": [
+        "textures/block/cactus_bottom.png"
+      ],
+      "front": [
+        "textures/block/cactus_side.png"
+      ],
+      "back": [
+        "textures/block/cactus_side.png"
+      ],
+      "left": [
+        "textures/block/cactus_side.png"
+      ],
+      "right": [
+        "textures/block/cactus_side.png"
+      ]
+    },
+    "crafting_table": {
+      "top": [
+        "textures/block/crafting_table_top.png"
+      ],
+      "bottom": [
+        "textures/block/oak_planks.png"
+      ],
+      "front": [
+        "textures/block/crafting_table_front.png"
+      ],
+      "back": [
+        "textures/block/crafting_table_side.png"
+      ],
+      "left": [
+        "textures/block/crafting_table_side.png"
+      ],
+      "right": [
+        "textures/block/crafting_table_side.png"
+      ]
+    },
+    "furnace": {
+      "top": [
+        "textures/block/furnace_top.png"
+      ],
+      "bottom": [
+        "textures/block/furnace_top.png"
+      ],
+      "front": [
+        "textures/block/furnace_front.png"
+      ],
+      "back": [
+        "textures/block/furnace_side.png"
+      ],
+      "left": [
+        "textures/block/furnace_side.png"
+      ],
+      "right": [
+        "textures/block/furnace_side.png"
+      ]
+    },
+    "barrel": {
+      "top": [
+        "textures/block/barrel_top.png"
+      ],
+      "bottom": [
+        "textures/block/barrel_bottom.png"
+      ],
+      "front": [
+        "textures/block/barrel_side.png"
+      ],
+      "back": [
+        "textures/block/barrel_side.png"
+      ],
+      "left": [
+        "textures/block/barrel_side.png"
+      ],
+      "right": [
+        "textures/block/barrel_side.png"
+      ]
+    },
+    "torch": {
+      "top": [
+        "textures/block/torch.png"
+      ],
+      "bottom": [
+        "textures/block/torch.png"
+      ],
+      "front": [
+        "textures/block/torch.png"
+      ],
+      "back": [
+        "textures/block/torch.png"
+      ],
+      "left": [
+        "textures/block/torch.png"
+      ],
+      "right": [
+        "textures/block/torch.png"
+      ]
+    },
+    "door": {
+      "top": [
+        "rendered/oak_door.png"
+      ],
+      "bottom": [
+        "rendered/oak_door.png"
+      ],
+      "front": [
+        "rendered/oak_door.png"
+      ],
+      "back": [
+        "rendered/oak_door.png"
+      ],
+      "left": [
+        "rendered/oak_door.png"
+      ],
+      "right": [
+        "rendered/oak_door.png"
+      ]
+    },
+    "bedrock": {
+      "top": [
+        "textures/block/bedrock.png"
+      ],
+      "bottom": [
+        "textures/block/bedrock.png"
+      ],
+      "front": [
+        "textures/block/bedrock.png"
+      ],
+      "back": [
+        "textures/block/bedrock.png"
+      ],
+      "left": [
+        "textures/block/bedrock.png"
+      ],
+      "right": [
+        "textures/block/bedrock.png"
+      ]
+    },
+    "water": {
+      "top": [
+        "rendered/water.png"
+      ],
+      "bottom": [
+        "rendered/water.png"
+      ],
+      "front": [
+        "rendered/water.png"
+      ],
+      "back": [
+        "rendered/water.png"
+      ],
+      "left": [
+        "rendered/water.png"
+      ],
+      "right": [
+        "rendered/water.png"
+      ]
+    }
+  }
+}

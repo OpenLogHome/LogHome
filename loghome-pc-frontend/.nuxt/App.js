@@ -10,6 +10,8 @@ import '../node_modules/element-ui/lib/theme-chalk/index.css'
 
 import '../assets/css/global.css'
 
+import '../assets/css/reading-theme.css'
+
 import _6f6c098b from '../layouts/default.vue'
 import _77430317 from '../layouts/empty.vue'
 

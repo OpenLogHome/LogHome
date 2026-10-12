@@ -18,11 +18,12 @@ export default {
  data() { return {miniapp:{name:'小程序',description:''},frameUrl:'',frameKey:0,loading:true,error:'',closeId:'',ready:false,closeAction:'exit'} },
  watch: {isDarkMode(){this.sendEnvironment()}, '$i18n.locale'(){this.sendEnvironment()}},
  async onLoad(options = {}) {
-  let url
-  try {this.miniapp=await getMiniapp(options.id,this.$baseUrl);if(this._unloaded)return;url=new URL(this.miniapp.url);if(!['https:','http:'].includes(url.protocol))throw new Error('地址必须使用 HTTPS 或 HTTP');this.frameUrl=url.href;this._origin=url.origin;}catch(e){this.error='小程序配置错误：'+(e.response?.data?.message||e.message);return;}
+  this._miniappId=options.id
   this._message=e=>this.onMiniappMessage(e);window.addEventListener('message',this._message)
   this._back=e=>{e.preventDefault();this.requestClose('back')};window.addEventListener('loghomeNativeBack',this._back)
   this._visibility=()=>this.send(document.hidden?'pause':'resume');document.addEventListener('visibilitychange',this._visibility)
+  let url
+  try {this.miniapp=await getMiniapp(options.id,this.$baseUrl);if(this._unloaded)return;url=new URL(this.miniapp.url);if(!['https:','http:'].includes(url.protocol))throw new Error('地址必须使用 HTTPS 或 HTTP');this.frameUrl=url.href;this._origin=url.origin;}catch(e){this.loading=false;this.error='小程序配置错误：'+(e.response?.data?.message||e.message);return;}
   this.startLoadingTimeout()
  },
  onShow(){this.send('resume');this.sendEnvironment()},
@@ -48,8 +49,16 @@ export default {
   exitMiniapp(){this._exiting=true;uni.navigateBack()},
   requestClose(type,action='exit'){if(this.closeId)return;this.closeAction=action;if(!this.ready||this.error){if(action==='reload')this.reload();else this.exitMiniapp();return;}this.closeId=Date.now()+':'+Math.random();this.send(type,{requestId:this.closeId});this._closeTimer=setTimeout(()=>this.confirmForceClose(),8000)},
   confirmForceClose(){uni.showModal({title:'存档尚未确认',content:'小程序未确认数据已保存。继续等待，或放弃本次未保存进度并退出？',confirmText:'退出',cancelText:'继续等待',success:res=>{this.closeId='';if(res.confirm)this.exitMiniapp();else{this.closeAction='exit';this.send('resume')}}})},
-  reload(){this.closeAction='exit';this.ready=false;this.loading=true;this.error='';this.closeId='';this.frameKey++;this.startLoadingTimeout()},
-  async openInBrowser(){try{const token=JSON.parse(window.localStorage.getItem('token')||'null');if(!token?.tk)throw new Error('请先登录');const res=await axios.get(this.$baseUrl+'/users/generate_cross_site_token',{headers:{Authorization:token.tk}});if(!res.data.crossSiteToken)throw new Error('获取登录票据失败');const url=new URL(this.frameUrl);url.hash=new URLSearchParams({ticket:res.data.crossSiteToken,theme:this.isDarkMode?'dark':'light',locale:this.$i18n.locale}).toString();if(window.jsBridge?.inApp)window.jsBridge.openInBrowser(url.href);else window.open(url.href,'_blank','noopener')}catch(e){uni.showToast({title:e.message,icon:'none'})}},
+  async reload(){
+   this.loading=true;this.error='';
+   try{
+    const app=await getMiniapp(this._miniappId,this.$baseUrl);if(this._unloaded)return;
+    const url=new URL(app.url);if(!['https:','http:'].includes(url.protocol))throw new Error('地址必须使用 HTTPS 或 HTTP');
+    this.miniapp=app;this.frameUrl=url.href;this._origin=url.origin;
+    this.closeAction='exit';this.ready=false;this.closeId='';this.frameKey++;this.startLoadingTimeout();
+   }catch(e){this.loading=false;this.error=e.response?.data?.message||e.message;this.frameUrl='';}
+  },
+  async openInBrowser(){try{await getMiniapp(this._miniappId,this.$baseUrl);if(!this.frameUrl||this.error)throw new Error('请先成功启动小程序');const token=JSON.parse(window.localStorage.getItem('token')||'null');if(!token?.tk)throw new Error('请先登录');const res=await axios.get(this.$baseUrl+'/users/generate_cross_site_token',{headers:{Authorization:token.tk}});if(!res.data.crossSiteToken)throw new Error('获取登录票据失败');const url=new URL(this.frameUrl);url.hash=new URLSearchParams({ticket:res.data.crossSiteToken,theme:this.isDarkMode?'dark':'light',locale:this.$i18n.locale}).toString();if(window.jsBridge?.inApp)window.jsBridge.openInBrowser(url.href);else window.open(url.href,'_blank','noopener')}catch(e){uni.showToast({title:e.message,icon:'none'})}},
   showMenu(){uni.showActionSheet({itemList:['重新加载','关于'+this.miniapp.name,'在浏览器打开'],success:res=>{if(res.tapIndex===0){uni.showModal({title:'重新加载',content:'将保存当前数据后重新加载小程序。',success:r=>{if(r.confirm){this.requestClose('close','reload');}}})}if(res.tapIndex===1)uni.showModal({title:this.miniapp.name,content:this.miniapp.description,showCancel:false});if(res.tapIndex===2)this.openInBrowser()}})}
  }
 }

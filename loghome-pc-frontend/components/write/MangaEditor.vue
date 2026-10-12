@@ -36,7 +36,7 @@
           $refs.files.click();
         "
       >
-        ＋ 添加页面</button
+        <i class="el-icon-plus" aria-hidden="true" /> 添加页面</button
       ><span>按文件名排序上传，条漫长图自动分段</span
       ><button v-if="uploading" @click="cancelAll">取消未完成上传</button
       ><input
@@ -102,19 +102,19 @@
             aria-label="前移"
             @click="move(index, index - 1)"
           >
-            ↑</button
+            <i class="el-icon-top" aria-hidden="true" /></button
           ><button
             :disabled="disabled || index === pages.length - 1"
             aria-label="后移"
             @click="move(index, index + 1)"
           >
-            ↓</button
+            <i class="el-icon-bottom" aria-hidden="true" /></button
           ><button
             :disabled="disabled"
             aria-label="移除页面"
             @click="remove(index)"
           >
-            ×
+            <i class="el-icon-close" aria-hidden="true" />
           </button>
         </footer>
       </article>

@@ -1,0 +1,24 @@
+{
+  "miniapps": [
+    {
+      "app_id": "log-defence",
+      "icon_url": "/static/icons/enderman.png"
+    },
+    {
+      "app_id": "log-miniminecraft",
+      "icon_url": "/static/icons/mini-minecraft.svg"
+    }
+  ],
+  "labEntries": [
+    {
+      "entry_id": "log-defence",
+      "miniapp_id": "log-defence",
+      "icon_url": "/static/icons/enderman.png"
+    },
+    {
+      "entry_id": "log-miniminecraft",
+      "miniapp_id": "log-miniminecraft",
+      "icon_url": "/static/icons/mini-minecraft.svg"
+    }
+  ]
+}

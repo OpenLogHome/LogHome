@@ -1,7 +1,55 @@
 import Paragraph from "@tiptap/extension-paragraph";
 import { Extension } from "@tiptap/vue-2";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
 const LegacyParagraph = Paragraph.extend({
+  priority: 1100,
+  addKeyboardShortcuts() {
+    return {
+      ...(this.parent ? this.parent() : {}),
+      Enter: () => {
+        if (this.editor.view.composing) return false;
+
+        // Keep the normal Enter behavior and indentation in one undoable edit.
+        return this.editor
+          .chain()
+          .command(({ commands, tr }) => {
+            const handled = commands.first(({ commands: enterCommands }) => [
+              () => enterCommands.newlineInCode(),
+              () => enterCommands.createParagraphNear(),
+              () => enterCommands.liftEmptyBlock(),
+              () => enterCommands.splitBlock(),
+            ]);
+            if (!handled) return false;
+
+            const { $from, empty } = tr.selection;
+            if (
+              !empty ||
+              $from.parent.type.name !== "paragraph" ||
+              $from.parentOffset !== 0
+            ) {
+              return true;
+            }
+
+            const indent = "　　";
+            const prefix = $from.parent.textBetween(
+              0,
+              Math.min(indent.length, $from.parent.content.size),
+              "",
+              ""
+            );
+            if (prefix === indent) {
+              tr.setSelection(
+                TextSelection.create(tr.doc, $from.pos + indent.length)
+              );
+            } else {
+              tr.insertText(indent, $from.pos);
+            }
+            return true;
+          })
+          .run();
+      },
+    };
+  },
   addAttributes() {
     return {
       ...(this.parent ? this.parent() : {}),

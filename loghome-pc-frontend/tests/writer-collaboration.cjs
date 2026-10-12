@@ -292,6 +292,26 @@ async function run() {
         "../../_tmp/writer-migration/writer-collaboration.png"
       ),
     });
+    // Block duplication must synchronize and allocate a distinct paragraph anchor.
+    const paragraphCount = await pages[0].locator(".ProseMirror p").count();
+    await pages[0].locator(".ProseMirror p").first().hover();
+    await pages[0]
+      .getByRole("button", { name: "段落操作与拖拽", exact: true })
+      .click();
+    await pages[0]
+      .getByRole("group", { name: "段落操作", exact: true })
+      .getByRole("button", { name: "复制一份", exact: true })
+      .click();
+    await pages[1].waitForFunction(
+      (count) =>
+        document.querySelectorAll(".ProseMirror p").length === count + 1,
+      paragraphCount
+    );
+    const blockIds = yDocToProsemirrorJSON(doc, "body")
+      .content.filter((node) => node.type === "paragraph")
+      .map((node) => node.attrs.legacyId);
+    assert.ok(blockIds.every((id) => Number.isInteger(id) && id > 0));
+    assert.equal(new Set(blockIds).size, blockIds.length);
     collaboration.can_edit = false;
     server.hocuspocus.closeConnections("article:10:v1");
     await Promise.all(
@@ -320,6 +340,7 @@ async function run() {
             "legacy paragraph anchors",
             "publish revision",
             "reconnect",
+            "collaborative block duplication and unique anchors",
             "revoked permissions",
           ],
           checkpoints,

@@ -431,3 +431,59 @@ test("catalog moves are complete permutations; chapters cross volumes and volume
   assert.equal(catalog.moveCatalog(catalogFixture, 99, 4, "after"), null);
   assert.equal(JSON.stringify(catalogFixture), before);
 });
+
+test("statistics use actual Shanghai dates and sort the latest 30 calendar days", () => {
+  const { statisticDate, normalizeStatistics } = load(
+    "utils/writer/statistics.js"
+  );
+  assert.equal(statisticDate("2026-09-10T16:00:00.000Z"), "2026-09-11");
+  assert.equal(statisticDate("2026-09-11 00:00:00"), "2026-09-11");
+  assert.equal(statisticDate("2026-02-30"), "");
+  const rows = Array.from({ length: 32 }, (_, index) => ({
+    date: new Date(Date.UTC(2026, 8, index + 1)).toISOString(),
+    clicks: String(index),
+  })).reverse();
+  const result = normalizeStatistics(rows);
+  assert.equal(result.length, 30);
+  assert.equal(result[0].date, "2026-09-03");
+  assert.equal(result[29].date, "2026-10-02");
+  assert.equal(result[29].clicks, 31);
+});
+test("statistics distinguish snapshot comparisons from yesterday and retain missing values", () => {
+  const { normalizeStatistics, metricChange } = load(
+    "utils/writer/statistics.js"
+  );
+  const rows = normalizeStatistics([
+    { date: "2026-10-01", clicks: 10 },
+    { date: "2026-10-04", clicks: 8, nices: "" },
+  ]);
+  assert.equal(rows[1].nices, null);
+  assert.deepEqual(plain(metricChange(rows, "clicks")), {
+    value: -2,
+    label: "较上次",
+  });
+  assert.equal(metricChange(rows, "nices"), null);
+  assert.equal(metricChange(rows.slice(0, 1), "clicks"), null);
+});
+test("statistics charts keep date spacing, break at missing metrics, and handle zero/single snapshots", () => {
+  const { normalizeStatistics, chartGeometry } = load(
+    "utils/writer/statistics.js"
+  );
+  const rows = normalizeStatistics([
+    { date: "2026-10-01", clicks: 0 },
+    { date: "2026-10-02" },
+    { date: "2026-10-05", clicks: 4 },
+  ]);
+  const chart = chartGeometry(rows, "clicks", 300);
+  assert.equal(
+    chart.points[1].x - chart.points[0].x,
+    (chart.right - chart.left) / 4
+  );
+  assert.equal(chart.points[1].y, null);
+  assert.equal((chart.path.match(/M/g) || []).length, 2);
+  assert.ok(!chart.path.includes("NaN"));
+  const single = chartGeometry(rows.slice(0, 1), "clicks", 210);
+  assert.equal(single.points[0].x, (single.left + single.right) / 2);
+  assert.equal(single.points[0].y, single.bottom);
+  assert.equal(chartGeometry([], "clicks").path, "");
+});

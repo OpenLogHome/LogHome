@@ -39,7 +39,10 @@
       class="vocabulary-picture"
     />
     <h3>
-      属性 <button :disabled="disabled" @click="addAttribute">＋ 添加</button>
+      属性
+      <button :disabled="disabled" @click="addAttribute">
+        <i class="el-icon-plus" aria-hidden="true" /> 添加
+      </button>
     </h3>
     <div
       v-for="(item, index) in model.attributes"
@@ -66,11 +69,14 @@
           changed();
         "
       >
-        ×
+        <i class="el-icon-close" aria-hidden="true" />
       </button>
     </div>
     <h3>
-      关系 <button :disabled="disabled" @click="addRelation">＋ 添加</button>
+      关系
+      <button :disabled="disabled" @click="addRelation">
+        <i class="el-icon-plus" aria-hidden="true" /> 添加
+      </button>
     </h3>
     <div
       v-for="(item, index) in model.relations"
@@ -105,7 +111,7 @@
           changed();
         "
       >
-        ×
+        <i class="el-icon-close" aria-hidden="true" />
       </button>
     </div>
     <section v-if="reverseRelations.length">

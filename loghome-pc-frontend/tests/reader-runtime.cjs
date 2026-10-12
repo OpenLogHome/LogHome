@@ -103,6 +103,31 @@ async function main() {
   await assert.rejects(fontLoader.loadReaderFont('retry',config,retryEnvironment),/下载失败/);fail=false;await fontLoader.loadReaderFont('retry',config,retryEnvironment)
   console.log('PASS font request deduplication, regular/bold registration, version invalidation and failure retry')
 
+  const progressA=[], progressB=[], gate=deferred();let streamFetches=0
+  const streamEnvironment={...fontEnvironment,fetch:async()=>{
+    streamFetches++;let step=0
+    return {ok:true,headers:{get:key=>key==='content-length'?'100':null},body:{getReader:()=>({read:async()=>{
+      if(step++===0)return {done:false,value:new Uint8Array(25)}
+      if(step===2){await gate.promise;return {done:false,value:new Uint8Array(75)}}
+      return {done:true}
+    }})}}
+  }}
+  const streamA=fontLoader.loadReaderFont('progress',config,streamEnvironment,state=>progressA.push(plain(state)))
+  const streamB=fontLoader.loadReaderFont('progress',config,streamEnvironment,state=>progressB.push(plain(state)))
+  await settle();assert.ok(progressA.some(state=>state.percent===25));assert.ok(progressB.some(state=>state.percent===25))
+  gate.resolve();await Promise.all([streamA,streamB]);assert.equal(streamFetches,1)
+  assert.equal(progressA.at(-1).phase,'ready');assert.equal(progressA.at(-1).percent,100)
+  const unknown=[]
+  await fontLoader.loadReaderFont('unknown-size',config,{...fontEnvironment,fetch:async()=>{
+    let step=0;return {ok:true,headers:{get:()=>null},body:{getReader:()=>({read:async()=>step++===0?{done:false,value:new Uint8Array(30)}:{done:true}})}}
+  }},state=>unknown.push(plain(state)))
+  assert.ok(unknown.some(state=>state.loaded===30&&state.percent===null));assert.equal(unknown.at(-1).percent,100)
+  const failed=[]
+  await assert.rejects(fontLoader.loadReaderFont('progress-error',config,{...fontEnvironment,fetch:async()=>{throw Error('offline')}},state=>failed.push(plain(state))),/下载失败/)
+  assert.equal(failed.at(-1).phase,'error')
+  console.log('PASS streamed font download progress, shared subscribers, unknown file size and failure state')
+
+
   const audio=load('utils/reader-audio.js');const spoken=[],voices=[{name:'中文',voiceURI:'zh',lang:'zh-CN',localService:true}],timers=[];let token='a'
   const synthesis={getVoices:()=>voices,addEventListener(){},removeEventListener(){},cancel(){},speak(utterance){spoken.push(utterance);utterance.onstart()}}
   const chapter=id=>({article_id:id,novel_id:7,title:`chapter ${id}`,content:[{id:1,value:'第一段。'},{id:2,value:'第二段。'},{type:'image',value:'https://x.invalid/i'},{id:3,value:''}]})

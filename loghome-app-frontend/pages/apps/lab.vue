@@ -8,15 +8,19 @@
 					<view class="desc">{{ $t('me.service.labPage.desc') }}</view>
 				</view>
 			</view>
-			<view class="list">
-				<navigator url="./miniapp?id=log-defence">
+			<view v-if="loading" class="state">{{ $t('me.service.labPage.loading') }}</view>
+			<view v-else-if="error" class="state state--error">
+				<view>{{ $t('me.service.labPage.loadFailed') }}</view>
+				<button class="retry-btn" @click="loadEntries">{{ $t('me.service.labPage.retry') }}</button>
+			</view>
+			<view v-else-if="!entries.length" class="state">{{ $t('me.service.labPage.empty') }}</view>
+			<view v-else class="list">
+				<navigator v-for="entry in entries" :key="entry.id" :url="'./miniapp?id=' + encodeURIComponent(entry.miniappId)">
 					<view class="li">
-						<view class="li-icon">
-							<img src="../../static/icons/enderman.png"></img>
-						</view>
+						<view class="li-icon"><img :src="entry.icon"></img></view>
 						<view class="li-main">
-							<view class="li-title">{{ $t('me.service.labGame') }}</view>
-							<view class="li-sub">{{ $t('me.labGamePage.intro') }}</view>
+							<view class="li-title">{{ entryName(entry) }}</view>
+							<view v-if="entryDescription(entry)" class="li-sub">{{ entryDescription(entry) }}</view>
 						</view>
 						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
 					</view>
@@ -28,12 +32,31 @@
 </template>
 
 <script>
+import { getLabEntries } from '@/common/lab.js'
 import darkModeMixin from '@/mixins/dark-mode.js'
 
 export default {
 	mixins: [darkModeMixin],
-	data() { return {} },
-	methods: {}
+	data() { return { entries: [], loading: true, error: false, requestVersion: 0 } },
+	onShow() { this.loadEntries() },
+	onUnload() { this.requestVersion++ },
+	methods: {
+		entryName(entry) { return this.$i18n.locale === 'en' && entry.nameEn ? entry.nameEn : entry.name },
+		entryDescription(entry) { return this.$i18n.locale === 'en' && entry.descriptionEn ? entry.descriptionEn : entry.description },
+		async loadEntries() {
+			const version = ++this.requestVersion
+			this.loading = true
+			this.error = false
+			try {
+				const entries = await getLabEntries(this.$baseUrl)
+				if (version === this.requestVersion) this.entries = entries
+			} catch (e) {
+				if (version === this.requestVersion) { this.entries = []; this.error = true }
+			} finally {
+				if (version === this.requestVersion) this.loading = false
+			}
+		}
+	}
 }
 </script>
 
@@ -117,4 +140,6 @@ export default {
 	line-height: 1.7;
 	.dark-mode & { color: #a1ae9b; }
 }
+.state { margin: 30rpx 0; padding: 40rpx 24rpx; text-align: center; font-size: 26rpx; color: #6d7267; line-height: 1.7; .dark-mode & { color: #b4c0b1; } }
+.retry-btn { margin: 20rpx auto 0; width: 200rpx; font-size: 26rpx; background: #eef2e7; color: #393d33; border-radius: 16rpx; &::after { border: none; } .dark-mode & { background: #344030; color: #eeeae0; } }
 </style>

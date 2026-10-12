@@ -229,13 +229,26 @@ async function syncAutoQueueIfNeeded(force = false) {
   console.log(`Auto queue synced. Active novels: ${candidates.length}.`);
 }
 
-async function workerLoop() {
-  console.log('Agent worker starting...');
-
+async function bootWorker() {
   await initMemoryTable();
   await initIndexQueueTable();
   await resetQueueOnStartup();
   await syncAutoQueueIfNeeded(true);
+}
+
+async function workerLoop() {
+  console.log('Agent worker starting...');
+
+  // Boot is idempotent; a DNS/network flap here must not end the worker.
+  while (!shuttingDown) {
+    try {
+      await bootWorker();
+      break;
+    } catch (error) {
+      console.error('Agent worker boot failed:', error);
+      await delay(IDLE_POLL_MS);
+    }
+  }
 
   while (!shuttingDown) {
     try {

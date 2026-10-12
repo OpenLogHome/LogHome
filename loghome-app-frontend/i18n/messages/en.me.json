@@ -28,7 +28,13 @@
 			"store": "Store",
 			"lab": "LogHome Lab",
 			"labGame": "Log Defense",
+			"labMinecraft": "LogHome Block World",
+			"labMinecraftIntro": "Explore and build your block world with account cloud saves",
 			"labPage": {
+				"loading": "Loading the lab…",
+				"empty": "No experiments are available yet.",
+				"loadFailed": "The lab could not be loaded. Please try again.",
+				"retry": "Retry",
 				"title": "Explore something new",
 				"desc": "Discover fresh community ideas and new ways to play.",
 				"hint": "Experimental features evolve over time. Try them and share your feedback."

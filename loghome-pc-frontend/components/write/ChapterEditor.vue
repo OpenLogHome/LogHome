@@ -1,72 +1,95 @@
 <template>
   <div class="native-editor">
-    <div class="editor-toolbar" aria-label="编辑工具">
-      <button
-        :disabled="disabled"
-        title="撤销 Ctrl / ⌘ Z"
-        @click="command('undo')"
+    <div class="editor-chrome">
+      <div class="editor-toolbar" aria-label="编辑工具">
+        <button
+          :disabled="disabled"
+          title="撤销 Ctrl / ⌘ Z"
+          @click="command('undo')"
+        >
+          <i aria-hidden="true" class="el-icon-refresh-left" /> 撤销
+        </button>
+        <button :disabled="disabled" title="重做" @click="command('redo')">
+          <i aria-hidden="true" class="el-icon-refresh-right" />
+        </button>
+        <span class="toolbar-divider" />
+        <button :disabled="disabled" @click="format">自动排版</button>
+        <button :disabled="disabled" @click="$refs.image.click()">
+          <i aria-hidden="true" class="el-icon-picture-outline" /> 图片
+        </button>
+        <button :aria-pressed="String(findOpen)" @click="toggleFind">
+          <i aria-hidden="true" class="el-icon-search" /> 查找替换
+        </button>
+        <button
+          :disabled="Boolean(realtime)"
+          :aria-pressed="String(sourceOpen)"
+          @click="toggleSource"
+        >
+          {{ sourceOpen ? "返回正文" : "JSON 源码" }}
+        </button>
+        <span class="toolbar-spacer" /><span
+          >{{ count.textCount.toLocaleString() }} 字 ·
+          {{ count.imageCount }} 图</span
+        >
+        <input
+          ref="image"
+          type="file"
+          accept="image/*"
+          hidden
+          @change="uploadImage"
+        />
+      </div>
+      <div
+        v-if="preferences.quickInputs"
+        class="quick-input-bar"
+        aria-label="快捷输入"
       >
-        <i aria-hidden="true" class="el-icon-refresh-left" /> 撤销
-      </button>
-      <button :disabled="disabled" title="重做" @click="command('redo')">
-        <i aria-hidden="true" class="el-icon-refresh-right" />
-      </button>
-      <span class="toolbar-divider" />
-      <button :disabled="disabled" @click="format">自动排版</button>
-      <button :disabled="disabled" @click="$refs.image.click()">
-        <i aria-hidden="true" class="el-icon-picture-outline" /> 图片
-      </button>
-      <button :aria-pressed="String(findOpen)" @click="findOpen = !findOpen">
-        <i aria-hidden="true" class="el-icon-search" /> 查找替换
-      </button>
-      <button
-        :disabled="Boolean(realtime)"
-        :aria-pressed="String(sourceOpen)"
-        @click="toggleSource"
+        <button
+          v-for="symbol in preferences.quickInputs.split('|').filter(Boolean)"
+          :key="symbol"
+          :title="symbolName(symbol)"
+          :disabled="disabled || sourceOpen"
+          @click="quickInput(symbol)"
+        >
+          {{ symbol }}
+        </button>
+      </div>
+      <div
+        v-if="findOpen"
+        class="find-bar"
+        role="search"
+        aria-label="查找替换"
+        @keydown.esc.stop.prevent="closeFind"
       >
-        {{ sourceOpen ? "返回正文" : "JSON 源码" }}
-      </button>
-      <span class="toolbar-spacer" /><span
-        >{{ count.textCount.toLocaleString() }} 字 ·
-        {{ count.imageCount }} 图</span
-      >
-      <input
-        ref="image"
-        type="file"
-        accept="image/*"
-        hidden
-        @change="uploadImage"
-      />
+        <input
+          ref="findInput"
+          v-model="findText"
+          aria-label="查找文本"
+          placeholder="查找文本"
+          @keydown.enter="findNext"
+        /><button @click="findNext">下一个</button>
+        <input
+          v-model="replacement"
+          aria-label="替换文本"
+          placeholder="替换为"
+        /><button :disabled="disabled" @click="replace(false)">替换</button
+        ><button :disabled="disabled" @click="replace(true)">全部替换</button>
+        <button
+          class="find-close"
+          aria-label="关闭查找替换"
+          title="关闭（Esc）"
+          @click="closeFind"
+        >
+          <i class="el-icon-close" aria-hidden="true" />
+        </button>
+      </div>
     </div>
     <div
-      v-if="preferences.quickInputs"
-      class="quick-input-bar"
-      aria-label="快捷输入"
+      class="editor-scroll"
+      :class="{ 'has-background-skin': Boolean(preferences.backgroundSkin) }"
+      :style="paperStyle"
+      @mousedown="focusImageTail"
     >
-      <button
-        v-for="symbol in preferences.quickInputs.split('|').filter(Boolean)"
-        :key="symbol"
-        :disabled="disabled || sourceOpen"
-        @click="quickInput(symbol)"
-      >
-        {{ symbol }}
-      </button>
-    </div>
-    <div v-if="findOpen" class="find-bar">
-      <input
-        v-model="findText"
-        aria-label="查找文本"
-        placeholder="查找文本"
-        @keydown.enter="findNext"
-      /><button @click="findNext">下一个</button>
-      <input
-        v-model="replacement"
-        aria-label="替换文本"
-        placeholder="替换为"
-      /><button :disabled="disabled" @click="replace(false)">替换</button
-      ><button :disabled="disabled" @click="replace(true)">全部替换</button>
-    </div>
-    <div class="editor-scroll" :style="paperStyle">
       <article class="writer-paper">
         <input
           class="chapter-title"
@@ -86,12 +109,29 @@
           /><button :disabled="disabled" @click="applySource">应用源码</button>
         </div>
         <editor-content v-show="!sourceOpen" v-if="editor" :editor="editor" />
+        <writer-block-controls
+          v-if="editor && !sourceOpen"
+          :editor="editor"
+          :disabled="disabled"
+        />
+        <button
+          v-if="endsWithImage && !sourceOpen && !disabled"
+          class="image-tail-input"
+          type="button"
+          aria-label="在图片后继续输入"
+          @mousedown.prevent="appendImageParagraph"
+          @click="appendImageParagraph"
+        >
+          <i class="el-icon-plus" aria-hidden="true" /> 继续输入
+        </button>
       </article>
     </div>
   </div>
 </template>
 <script>
+import WriterBlockControls from "./WriterBlockControls.vue";
 import writerDialogTheme from "~/mixins/writer-dialog-theme";
+import { WRITER_SYMBOLS } from "~/utils/writer/preferences";
 import { createBackgroundSkinStyle } from "~/utils/reader-backgrounds";
 import { Editor, EditorContent } from "@tiptap/vue-2";
 import StarterKit from "@tiptap/starter-kit";
@@ -114,7 +154,7 @@ import {
 import { writerRequest } from "~/utils/writer/api";
 export default {
   mixins: [writerDialogTheme],
-  components: { EditorContent },
+  components: { EditorContent, WriterBlockControls },
   props: {
     value: String,
     title: String,
@@ -124,6 +164,7 @@ export default {
   },
   data: () => ({
     editor: null,
+    endsWithImage: false,
     findOpen: false,
     findText: "",
     replacement: "",
@@ -134,8 +175,20 @@ export default {
   }),
   computed: {
     paperStyle() {
+      const skin = this.preferences.backgroundSkin;
+      const mode = this.preferences.resolvedTheme || this.preferences.theme;
       return {
-        ...createBackgroundSkinStyle(this.preferences.backgroundSkin),
+        ...createBackgroundSkinStyle(
+          skin && {
+            ...skin,
+            overlay_color:
+              mode === "dark"
+                ? "rgba(25, 25, 25, 0.90)"
+                : mode === "sepia"
+                ? "rgba(251, 245, 232, 0.90)"
+                : "rgba(255, 255, 255, 0.90)",
+          }
+        ),
         "--writer-font-size": `${this.preferences.fontSize}px`,
         "--writer-line-height": this.preferences.lineHeight,
         "--writer-font":
@@ -147,6 +200,9 @@ export default {
     },
   },
   watch: {
+    findOpen(value) {
+      this.$emit("chrome-lock", value);
+    },
     disabled(value) {
       if (this.editor) this.editor.setEditable(!value);
     },
@@ -211,7 +267,10 @@ export default {
       },
       onUpdate: () => this.changed(),
       onTransaction: ({ transaction }) => {
-        if (transaction.docChanged) this.$emit("transaction", transaction);
+        if (transaction.docChanged) {
+          this.endsWithImage = transaction.doc.lastChild?.type.name === "image";
+          this.$emit("transaction", transaction);
+        }
       },
       onSelectionUpdate: ({ editor }) =>
         this.$emit("selection", {
@@ -228,9 +287,74 @@ export default {
     if (this.realtime) this.realtime.setEditor(this.editor);
   },
   beforeDestroy() {
+    this.$emit("chrome-lock", false);
     if (this.editor) this.editor.destroy();
   },
   methods: {
+    appendImageParagraph() {
+      if (this.disabled || this.sourceOpen || !this.editor) return;
+      const doc = this.editor.state.doc;
+      if (!doc.lastChild || doc.lastChild.type.name !== "image") return;
+      const end = doc.content.size;
+      this.editor
+        .chain()
+        .focus()
+        .insertContentAt(end, {
+          type: "paragraph",
+          content: [{ type: "text", text: "　　" }],
+        })
+        .setTextSelection(end + 3)
+        .scrollIntoView()
+        .run();
+    },
+    focusImageTail(event) {
+      if (
+        event.button !== 0 ||
+        this.disabled ||
+        this.sourceOpen ||
+        !this.endsWithImage ||
+        !this.editor
+      )
+        return;
+      const body = this.editor.view.dom;
+      if (
+        ![
+          body,
+          body.parentElement,
+          event.currentTarget,
+          body.closest(".writer-paper"),
+        ].includes(event.target)
+      )
+        return;
+      const last = body.lastElementChild;
+      if (!last || event.clientY < last.getBoundingClientRect().bottom) return;
+      event.preventDefault();
+      this.appendImageParagraph();
+    },
+    symbolName(symbol) {
+      const item = WRITER_SYMBOLS.find((item) => item.value === symbol);
+      return item ? item.name : symbol;
+    },
+    openFind() {
+      this.findOpen = true;
+      this.$nextTick(() => {
+        // Tiptap restores editor focus on the next frame after toolbar actions.
+        requestAnimationFrame(() => {
+          if (this.findOpen && this.$refs.findInput) {
+            this.$refs.findInput.focus();
+            this.$refs.findInput.select();
+          }
+        });
+      });
+    },
+    closeFind() {
+      this.findOpen = false;
+      if (this.editor && !this.sourceOpen) this.editor.commands.focus();
+    },
+    toggleFind() {
+      if (this.findOpen) this.closeFind();
+      else this.openFind();
+    },
     quickInput(symbol) {
       if (this.disabled || !this.editor) return;
       const { from, to } = this.editor.state.selection;
@@ -241,6 +365,8 @@ export default {
         "【】",
         "「」",
         "『』",
+        "〈〉",
+        "〔〕",
         "()",
         "[]",
         "{}",
@@ -289,6 +415,8 @@ export default {
       }
     },
     refreshCount() {
+      this.endsWithImage =
+        this.editor.state.doc.lastChild?.type.name === "image";
       this.count = countLegacyContent(docToLegacyBlocks(this.editor.getJSON()));
     },
     changed() {
@@ -495,6 +623,13 @@ export default {
   min-height: 100%;
   background: var(--writer-bg);
 }
+.editor-scroll.has-background-skin .writer-paper {
+  background: transparent;
+}
+.find-bar .find-close {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
 .chapter-title {
   display: block;
   width: 100%;
@@ -526,6 +661,28 @@ export default {
 }
 .native-editor .ProseMirror-selectednode {
   outline: 2px solid var(--writer-focus);
+}
+.native-editor .image-tail-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 8px;
+  border: 1px dashed var(--writer-border);
+  border-radius: 4px;
+  color: var(--writer-muted);
+  background: transparent;
+  cursor: text;
+  font-size: 12px;
+}
+.native-editor .image-tail-input:hover,
+.native-editor .image-tail-input:focus-visible {
+  color: var(--writer-accent);
+  border-color: var(--writer-accent);
+  background: var(--writer-info-bg);
 }
 .native-editor .collaboration-cursor__caret {
   border-left: 1px solid;

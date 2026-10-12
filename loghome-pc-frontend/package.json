@@ -10,9 +10,17 @@
     "start": "nuxt start",
     "generate": "nuxt generate",
     "test:writer": "node tests/writer-runtime.cjs",
+    "generate:writer:icons": "node scripts/generate-writer-icons.cjs",
     "test:writer:catalog": "node tests/writer-catalog.cjs",
     "test:writer:ui": "node tests/writer-ui.cjs",
     "test:writer:browser": "node tests/writer-browser.cjs",
+    "test:writer:enter": "node tests/writer-enter.cjs",
+    "test:writer:image-tail": "node tests/writer-image-tail.cjs",
+    "test:writer:blocks": "node tests/writer-blocks.cjs",
+    "test:writer:focus": "node tests/writer-focus.cjs",
+    "test:writer:appearance": "node tests/writer-appearance.cjs",
+    "test:writer:panels": "node tests/writer-panels.cjs",
+    "test:writer:statistics": "node tests/writer-statistics.cjs",
     "test:writer:collaboration": "node tests/writer-collaboration.cjs"
   },
   "dependencies": {

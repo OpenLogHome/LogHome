@@ -39,13 +39,13 @@ location /log-defence/ {
 | --- | --- |
 | 小程序 ID | `log-defence`（注册后不可修改） |
 | 名称 | 原木保卫战 |
-| 图标 | `/static/icons/enderman.png` 或已上传图标的 HTTP/HTTPS 地址 |
+| 图标 | `https://storage.codesocean.top/image/179180557296520` |
 | 调试地址 | `http://127.0.0.1:8787/log-defence/` |
 | 生产地址 | `https://miniapps.loghome.ink/log-defence/`（待部署，须填写实际地址） |
 
 主程序后台在 MySQL `miniapps` 表保存注册信息，游戏玩家存档仍由独立游戏服务器保存为 JSON。主后端首次调用注册表接口会创建空表，不自动注册游戏；数据库账号无建表权限时先执行 `loghome-backend/sql/miniapps.sql`。
 
-实验室手动维护功能入口，不加载注册的小程序列表；后台注册与实验室列表独立。入口为 `/pages/apps/miniapp?id=log-defence`，通用页面仅按 ID 从主后端获取名字、图标和当前环境的地址，不接受任意 URL 获取账号票据。未注册、停用或查询失败时不创建 iframe，也不发放登录票据。游戏原来的 `logDefense` 路由已移除。
+实验室展示入口由后台独立的 `lab_entries` 表维护，不自动加载全部注册小程序；在 manage 的“原木实验室管理”中维护排序、文案与展示状态。入口为 `/pages/apps/miniapp?id=log-defence`，通用页面仅按 ID 从主后端获取名字、图标和当前环境的地址，不接受任意 URL 获取账号票据。未注册、停用或查询失败时不创建 iframe，也不发放登录票据。游戏原来的 `logDefense` 路由已移除。
 
 H5 开发构建、Android debug APK 使用后台的调试地址；Android release APK、H5 生产构建使用后台的生产地址。Android 注入的 `jsBridge.isDebugBuild` 决定 APK 环境，即使 APK 内置的是生产 H5 构建也能区分。旧客户端无该字段时按 H5 构建环境选择。可用 `VUE_APP_MINIAPP_ENV=debug` 或 `production` 显式覆盖环境判断，修改此构建变量后重新构建主应用。
 

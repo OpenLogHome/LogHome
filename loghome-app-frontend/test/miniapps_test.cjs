@@ -39,10 +39,33 @@ test('catalog fetches server registrations and detects mismatched IDs', async ()
   assert.equal((await app.getMiniapps('https://api.example'))[0].id, 'new-app')
   await assert.rejects(app.getMiniapp('log-defence', 'https://api.example'))
 })
-test('lab manually maintains its entries independently of backend registrations', () => {
+test('lab loads curated server entries and navigates by associated miniapp ID', () => {
   const lab = fs.readFileSync(path.join(root, 'pages/apps/lab.vue'), 'utf8')
-  assert.ok(lab.includes('url="./miniapp?id=log-defence"'))
-  assert.ok(lab.includes("$t('me.service.labGame')"))
-  assert.ok(lab.includes('static/icons/enderman.png'))
-  assert.ok(!lab.includes('getMiniapps')); assert.ok(!lab.includes('暂无已注册'))
+  assert.ok(lab.includes('getLabEntries'))
+  assert.ok(lab.includes('v-for="entry in entries"'))
+  assert.ok(lab.includes('encodeURIComponent(entry.miniappId)'))
+  assert.ok(!lab.includes('url="./miniapp?id=log-defence"'))
+  assert.ok(!lab.includes('getMiniapps'))
 })
+
+test('production blocks low versions, permits equal/newer versions and bypasses debug', () => {
+ const app={minClientVersion:320};
+ assert.throws(()=>registry({}, {inApp:true,clientVersionCode:319,appVersion:'999'}).assertMiniappVersion(app,'production'),/版本过低/);
+ registry({}, {inApp:true,clientVersionCode:320}).assertMiniappVersion(app,'production');
+ registry({}, {inApp:true,clientVersionCode:321}).assertMiniappVersion(app,'production');
+ registry({}, {inApp:true,clientVersionCode:1}).assertMiniappVersion(app,'debug');
+ registry({}, {inApp:true,appVersion:'320'}).assertMiniappVersion(app,'production');
+});
+test('production fails closed for unknown versions; zero and legacy config remain compatible', () => {
+ assert.throws(()=>registry().assertMiniappVersion({minClientVersion:320},'production'),/无法读取/);
+ assert.throws(()=>registry({}, {inApp:true,appVersion:'bad'}).assertMiniappVersion({minClientVersion:320},'production'),/无法读取/);
+ registry().assertMiniappVersion({minClientVersion:0},'production');
+ registry().assertMiniappVersion({},'production');
+ registry({VUE_APP_CLIENT_VERSION_CODE:'320'}).assertMiniappVersion({minClientVersion:320},'production');
+});
+test('metadata resolution rejects unsupported production clients before returning a launch URL', async () => {
+ const app=registry({NODE_ENV:'production'}, {inApp:true,isDebugBuild:false,clientVersionCode:319},async()=>({data:{data:{id:'log-defence',minClientVersion:320,url:'https://example.com/'}}}));
+ await assert.rejects(app.getMiniapp('log-defence','http://backend'),/版本过低/);
+ const debug=registry({}, {inApp:true,isDebugBuild:true,clientVersionCode:319},async()=>({data:{data:{id:'log-defence',minClientVersion:320,url:'http://localhost/'}}}));
+ assert.equal((await debug.getMiniapp('log-defence','http://backend')).url,'http://localhost/');
+});

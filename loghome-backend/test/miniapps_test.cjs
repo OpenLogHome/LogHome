@@ -7,15 +7,16 @@ const input = () => ({id:'log-defence',name:'原木保卫战',icon:'/static/icon
 function memory() {
   const rows = new Map();
   return createRegistry(async (sql, args=[]) => {
-    if (sql.startsWith('CREATE TABLE')) return {};
+    if (sql.startsWith('CREATE TABLE') || sql.startsWith('ALTER TABLE')) return {};
+    if (sql.startsWith('SHOW COLUMNS')) return [{Field:'min_client_version'}];
     if (sql.startsWith('INSERT')) {
       if (rows.has(args[0])) throw Object.assign(new Error('duplicate'), {code:'ER_DUP_ENTRY'});
-      const [app_id,name,icon_url,description,debug_url,production_url,enabled,sort_order]=args;
-      rows.set(app_id,{app_id,name,icon_url,description,debug_url,production_url,enabled,sort_order}); return {affectedRows:1};
+      const [app_id,name,icon_url,description,debug_url,production_url,enabled,sort_order,min_client_version]=args;
+      rows.set(app_id,{app_id,name,icon_url,description,debug_url,production_url,enabled,sort_order,min_client_version}); return {affectedRows:1};
     }
     if (sql.startsWith('UPDATE')) {
-      const [name,icon_url,description,debug_url,production_url,enabled,sort_order,id]=args;
-      Object.assign(rows.get(id),{name,icon_url,description,debug_url,production_url,enabled,sort_order}); return {affectedRows:1};
+      const [name,icon_url,description,debug_url,production_url,enabled,sort_order,min_client_version,id]=args;
+      Object.assign(rows.get(id),{name,icon_url,description,debug_url,production_url,enabled,sort_order,min_client_version}); return {affectedRows:1};
     }
     if (sql.startsWith('DELETE')) return {affectedRows:rows.delete(args[0])?1:0};
     if (sql.includes('WHERE app_id = ?')) {const row=rows.get(args[0]);return row&&(!sql.includes('enabled = 1')||row.enabled)?[{...row}]:[];}
@@ -56,4 +57,26 @@ test('HTTP registration management requires admin authorization; public launch r
     await fetch(base+'/manage/log-defence',{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'admin'},body:JSON.stringify({...input(),enabled:false})});
     assert.equal((await fetch(base+'/log-defence')).status,404);
   } finally {await new Promise(r=>server.close(r));}
+});
+
+test('minimum client version persists, resolves and survives old update payloads',async()=>{
+ const registry=memory();await registry.save({...input(),minClientVersion:320});
+ assert.equal((await registry.resolve('log-defence','production')).minClientVersion,320);
+ assert.equal((await registry.resolve('log-defence','debug')).minClientVersion,320);
+ await registry.save(input(),'log-defence');
+ assert.equal((await registry.all(true))[0].minClientVersion,320);
+ await registry.save({...input(),minClientVersion:0},'log-defence');
+ assert.equal((await registry.resolve('log-defence','production')).minClientVersion,0);
+ for(const minClientVersion of [-1,1.5,'320',2147483648,null]) assert.throws(()=>validate({...input(),minClientVersion}),e=>e.status===400);
+});
+test('existing registry schema upgrades once without changing registrations',async()=>{
+ let alterCount=0;
+ const registry=createRegistry(async sql=>{
+  if(sql.startsWith('SHOW COLUMNS'))return [];
+  if(sql.startsWith('ALTER TABLE')){alterCount++;return {};}
+  if(sql.startsWith('SELECT'))return [{app_id:'log-defence',enabled:1,sort_order:0}];
+  return {};
+ });
+ assert.equal((await registry.all(true))[0].minClientVersion,0);
+ await registry.all(true);assert.equal(alterCount,1);
 });

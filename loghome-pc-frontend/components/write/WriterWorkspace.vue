@@ -1,8 +1,33 @@
 <template>
   <div
     class="writer-workspace"
-    :class="['theme-' + preferences.theme, { focused: focusMode }]"
+    :class="[
+      'theme-' + resolvedTheme,
+      {
+        focused: focusMode,
+        'resizing-panel': resizingPanel,
+        'focus-top-visible': focusTopVisible || focusChromeLocked,
+        'focus-bottom-visible': focusBottomVisible,
+      },
+    ]"
+    @mousemove="focusEdgeMove"
+    @mouseleave="hideFocusChrome"
+    :style="panelStyle"
   >
+    <button
+      v-if="focusMode"
+      class="focus-edge-trigger focus-edge-top"
+      aria-label="显示顶部工具栏"
+      @focus="focusTopVisible = true"
+      @click="focusTopVisible = true"
+    />
+    <button
+      v-if="focusMode"
+      class="focus-edge-trigger focus-edge-bottom"
+      aria-label="显示底部状态栏"
+      @focus="focusBottomVisible = true"
+      @click="focusBottomVisible = true"
+    />
     <header class="workspace-header">
       <nuxt-link to="/write" class="workspace-back" aria-label="返回创作中心"
         ><i aria-hidden="true" class="el-icon-arrow-left"
@@ -66,12 +91,23 @@
         重新连接
       </button>
     </div>
-    <div class="workspace-body">
+    <div ref="workspaceBody" class="workspace-body">
       <aside
         v-show="!focusMode"
         class="workspace-catalog"
         aria-label="章节目录"
       >
+        <panel-resize-handle
+          ref="leftResize"
+          side="left"
+          :width="panelLayout.left"
+          :min="180"
+          :max="panelLayout.leftMax"
+          @resize="resizePanel('left', $event)"
+          @commit="savePanelWidths"
+          @reset="resetPanelWidth('left')"
+          @dragging="resizingPanel = $event"
+        />
         <div class="catalog-heading">
           <strong>作品目录</strong
           ><button
@@ -113,7 +149,7 @@
           {{ query ? "没有匹配章节" : "还没有章节，点击 ＋ 开始创作" }}
         </div>
         <div
-          v-if="sortSaving || catalogDrag"
+          v-show="sortSaving || catalogDrag"
           class="catalog-sort-status"
           role="status"
         >
@@ -122,6 +158,7 @@
           }}
         </div>
         <nav
+          key="catalog-list"
           ref="catalogList"
           class="catalog-list"
           :class="{ 'is-dragging': catalogDrag }"
@@ -182,11 +219,20 @@
             >
               <span class="catalog-number">{{ item.article_chapter }}</span
               ><span class="catalog-item-main"
-                ><strong>{{
-                  (article && article.article_id === item.article_id
-                    ? article.title
-                    : item.writer_title || item.title) || "未命名"
-                }}</strong
+                ><span class="catalog-item-heading"
+                  ><strong>{{
+                    (article && article.article_id === item.article_id
+                      ? article.title
+                      : item.writer_title || item.title) || "未命名"
+                  }}</strong
+                  ><span
+                    v-if="
+                      item.article_type !== 'spliter' &&
+                      item.collaboration_mode === 'realtime_crdt'
+                    "
+                    class="catalog-realtime-badge"
+                    >实时协作</span
+                  ></span
                 ><small
                   >{{ articleLabel(item.article_type) }} ·
                   {{ Number(item.is_draft) === 1 ? "草稿" : "已发布"
@@ -233,12 +279,12 @@
                 :disabled="sortSaving"
                 @pointerdown="startCatalogDrag($event, item)"
                 @click.capture="catalogHandleClick"
-                @keydown="catalogHandleKey($event, item)"
+                @keydown.capture="catalogHandleKey($event, item)"
               >
                 <i aria-hidden="true" class="el-icon-more" /></button
               ><el-dropdown-menu
                 slot="dropdown"
-                :class="['writer-popover', 'theme-' + preferences.theme]"
+                :class="['writer-popover', 'theme-' + resolvedTheme]"
                 ><el-dropdown-item
                   v-if="item.article_type === 'spliter'"
                   command="rename"
@@ -293,7 +339,7 @@
       </aside>
       <main class="workspace-editor">
         <div v-if="loadingArticle" class="workspace-empty" role="status">
-          <i aria-hidden="true" class="el-icon-loading" />
+          <writer-chapter-loading />
           <p>正在加载完整章节…</p>
         </div>
         <manga-editor
@@ -303,7 +349,7 @@
           :article="article"
           :novel="novel"
           :access="access"
-          :theme="preferences.theme"
+          :theme="resolvedTheme"
           @refresh="refreshArticles"
         />
         <vocabulary-editor
@@ -311,7 +357,7 @@
           :key="article.article_id"
           v-model="article.content"
           :title="article.title"
-          :theme="preferences.theme"
+          :theme="resolvedTheme"
           :disabled="!canEdit"
           :entries="vocabularyEntries"
           :article-id="article.article_id"
@@ -326,8 +372,9 @@
           :title="article.title"
           :disabled="!canEdit"
           :realtime="realtime"
-          :preferences="preferences"
+          :preferences="displayPreferences"
           @title="changeTitle"
+          @chrome-lock="focusChromeLocked = $event"
           @transaction="writingTransaction"
           @selection="selection = $event"
         />
@@ -344,7 +391,9 @@
             class="primary"
             @click="createOpen = true"
           >
-            ＋ 新建{{ isManga ? "话数" : "章节" }}
+            <i class="el-icon-plus" aria-hidden="true" /> 新建{{
+              isManga ? "话数" : "章节"
+            }}
           </button>
         </div>
         <footer class="editor-statusbar">
@@ -357,11 +406,22 @@
           ><span class="header-spacer" /><span>Ctrl / ⌘ S 保存</span
           ><button @click="setTool('appearance', $event)">
             {{ preferences.fontSize }}px ·
-            {{ preferences.theme === "dark" ? "深色" : "浅色" }}
+            {{ themeLabel }}
           </button>
         </footer>
       </main>
       <aside v-show="!focusMode && tool" class="workspace-tool-panel">
+        <panel-resize-handle
+          ref="rightResize"
+          side="right"
+          :width="panelLayout.right"
+          :min="260"
+          :max="panelLayout.rightMax"
+          @resize="resizePanel('right', $event)"
+          @commit="savePanelWidths"
+          @reset="resetPanelWidth('right')"
+          @dragging="resizingPanel = $event"
+        />
         <writer-ai
           v-if="
             tool === 'ai' &&
@@ -371,7 +431,7 @@
           "
           :key="article.article_id"
           :article="article"
-          :theme="preferences.theme"
+          :theme="resolvedTheme"
           :session-id="session ? session.sessionId : ''"
           :selection="selection"
           :can-edit="canEdit"
@@ -384,9 +444,6 @@
           v-else-if="tool === 'collaboration'"
           class="collaboration-panel"
           title="实时协作"
-          :subtitle="
-            realtime ? presence.length + ' 人在线 · 当前章节' : '共同编辑与讨论'
-          "
           :scrollable="false"
           @close="closeTool"
         >
@@ -453,20 +510,17 @@
           :article="article"
           :access="access"
           :can-edit="canEdit"
-          :preferences="preferences"
+          :preferences="displayPreferences"
           :skins="skins"
           :fonts="fonts"
+          :font-downloads="fontDownloads"
           @restore="restore"
           @export="exportCurrent"
           @refresh="loadWork(false)"
           @preferences="setPreferences"
           @close="closeTool"
         />
-        <writer-panel
-          v-else
-          title="笔泡 · 写作助手"
-          subtitle="与你一起构思故事"
-          @close="closeTool"
+        <writer-panel v-else title="笔泡 · 写作助手" @close="closeTool"
           ><writer-empty-state
             icon="el-icon-magic-stick"
             title="先选择一个文字章节"
@@ -504,8 +558,12 @@
         <label
           >类型<select v-model="newType">
             <option v-if="!isManga" value="richtext">章节</option>
-            <option v-if="!isManga" value="worldOutline">大纲</option>
-            <option v-if="!isManga" value="worldVocabulary">世界词条</option>
+            <option v-if="novel.novel_type === 'world'" value="worldOutline">
+              大纲
+            </option>
+            <option v-if="novel.novel_type === 'world'" value="worldVocabulary">
+              世界词条
+            </option>
             <option v-if="!isManga" value="spliter">分卷</option>
             <option v-if="isManga" value="mangaStrip">条漫</option>
             <option v-if="isManga" value="mangaPage">页漫</option>
@@ -583,7 +641,7 @@
       v-if="publishOpen && article"
       :article="article"
       :novel="novel"
-      :theme="preferences.theme"
+      :theme="resolvedTheme"
       :can-publish="Boolean(access.can_publish_article)"
       :busy="saving"
       @close="publishOpen = false"
@@ -599,8 +657,16 @@ import {
   moveCatalog,
 } from "~/utils/writer/catalog";
 import writerDialogTheme from "~/mixins/writer-dialog-theme";
+import {
+  DEFAULT_QUICK_INPUTS,
+  LEGACY_QUICK_INPUTS,
+  WRITER_THEMES,
+  resolveWriterTheme,
+} from "~/utils/writer/preferences";
 import ChapterEditor from "./ChapterEditor.vue";
+import WriterChapterLoading from "./WriterChapterLoading.vue";
 import WriterPanel from "./WriterPanel.vue";
+import PanelResizeHandle from "./PanelResizeHandle.vue";
 import WriterVersionPreview from "./WriterVersionPreview.vue";
 import WriterEmptyState from "./WriterEmptyState.vue";
 import VocabularyEditor from "./VocabularyEditor.vue";
@@ -652,10 +718,12 @@ export default {
   mixins: [writerDialogTheme],
   name: "WriterWorkspace",
   components: {
+    PanelResizeHandle,
     WriterPanel,
     WriterVersionPreview,
     WriterEmptyState,
     ChapterEditor,
+    WriterChapterLoading,
     VocabularyEditor,
     WriterTools,
     WriterAi,
@@ -684,19 +752,27 @@ export default {
     stateDetail: "",
     tool: "",
     focusMode: false,
+    focusTopVisible: false,
+    focusBottomVisible: false,
+    focusChromeLocked: false,
     query: "",
     filter: "all",
     searchRows: [],
     selection: { from: 0, to: 0, text: "" },
     skins: [],
     fonts,
+    fontDownloads: {},
+    systemDark: false,
+    workspaceWidth: 1440,
+    panelWidths: { left: null, right: null },
+    resizingPanel: false,
     preferences: {
-      theme: "light",
+      theme: "system",
       fontSize: 18,
       lineHeight: 1.9,
       paperWidth: 820,
       fontFamily: "sans-serif",
-      quickInputs: "　　|，|。|、|！|？|：|“”|《》",
+      quickInputs: DEFAULT_QUICK_INPUTS,
     },
     createOpen: false,
     creating: false,
@@ -731,6 +807,52 @@ export default {
     ],
   }),
   computed: {
+    panelLayout() {
+      const width = this.workspaceWidth;
+      const available = width - 58;
+      const overlay = width <= 900;
+      const defaultLeft = width <= 900 ? 200 : width <= 1180 ? 220 : 264;
+      const defaultRight = width <= 1180 ? 300 : 340;
+      const clamp = (value, min, max) =>
+        Math.round(Math.max(min, Math.min(max, value)));
+      const rightLimit = Math.max(
+        260,
+        Math.min(600, overlay ? available - 24 : available - 320 - 180)
+      );
+      const right = clamp(
+        this.panelWidths.right || defaultRight,
+        260,
+        rightLimit
+      );
+      const leftMax = Math.max(
+        180,
+        Math.min(480, available - 320 - (!overlay && this.tool ? right : 0))
+      );
+      const left = clamp(this.panelWidths.left || defaultLeft, 180, leftMax);
+      const rightMax = Math.max(
+        260,
+        Math.min(rightLimit, overlay ? rightLimit : available - 320 - left)
+      );
+      return { left, right: Math.min(right, rightMax), leftMax, rightMax };
+    },
+    panelStyle() {
+      return {
+        "--writer-catalog-width": this.panelLayout.left + "px",
+        "--writer-tool-width": this.panelLayout.right + "px",
+      };
+    },
+    resolvedTheme() {
+      return resolveWriterTheme(this.preferences.theme, this.systemDark);
+    },
+    displayPreferences() {
+      return { ...this.preferences, resolvedTheme: this.resolvedTheme };
+    },
+    themeLabel() {
+      const selected = WRITER_THEMES.find(
+        (item) => item.key === this.preferences.theme
+      );
+      return selected ? selected.name : "跟随系统";
+    },
     isManga() {
       return this.novel.novel_type === "manga";
     },
@@ -809,6 +931,19 @@ export default {
     },
   },
   watch: {
+    focusMode(value) {
+      this.focusTopVisible = false;
+      this.focusBottomVisible = false;
+      if (value)
+        this.$nextTick(() => this.$refs.editor?.editor.commands.focus());
+      if (value) {
+        if (this.$refs.leftResize) this.$refs.leftResize.cancel();
+        if (this.$refs.rightResize) this.$refs.rightResize.cancel();
+      }
+    },
+    tool(value) {
+      if (!value && this.$refs.rightResize) this.$refs.rightResize.cancel();
+    },
     "article.content"() {
       this.changed();
     },
@@ -817,11 +952,42 @@ export default {
     },
   },
   async mounted() {
+    this.measureWorkspace();
+    if (window.ResizeObserver) {
+      this._panelObserver = new ResizeObserver(this.measureWorkspace);
+      this._panelObserver.observe(this.$refs.workspaceBody);
+    }
+    window.addEventListener("resize", this.measureWorkspace);
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("loghome:writer:panel-widths") || "{}"
+      );
+      for (const side of ["left", "right"]) {
+        if (Number.isFinite(saved[side]))
+          this.panelWidths[side] = Math.max(
+            side === "left" ? 180 : 260,
+            Math.min(side === "left" ? 480 : 600, saved[side])
+          );
+      }
+    } catch (_) {}
+    if (window.matchMedia) {
+      this._themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+      this.systemDark = this._themeMedia.matches;
+      if (this._themeMedia.addEventListener)
+        this._themeMedia.addEventListener("change", this.systemThemeChanged);
+      else this._themeMedia.addListener(this.systemThemeChanged);
+    }
     try {
       const value = JSON.parse(
         localStorage.getItem("loghome:writer:preferences") || "null"
       );
-      if (value) this.preferences = { ...this.preferences, ...value };
+      if (value) {
+        this.preferences = { ...this.preferences, ...value };
+        if (!WRITER_THEMES.some((item) => item.key === this.preferences.theme))
+          this.preferences.theme = "system";
+        if (this.preferences.quickInputs === LEGACY_QUICK_INPUTS)
+          this.preferences.quickInputs = DEFAULT_QUICK_INPUTS;
+      }
     } catch (_) {}
     try {
       this.collapsedVolumes = JSON.parse(
@@ -849,6 +1015,13 @@ export default {
     }
   },
   beforeDestroy() {
+    if (this._panelObserver) this._panelObserver.disconnect();
+    window.removeEventListener("resize", this.measureWorkspace);
+    if (this._themeMedia) {
+      if (this._themeMedia.removeEventListener)
+        this._themeMedia.removeEventListener("change", this.systemThemeChanged);
+      else this._themeMedia.removeListener(this.systemThemeChanged);
+    }
     this.cancelCatalogDrag();
     clearTimeout(this.saveTimer);
     clearTimeout(this.searchTimer);
@@ -862,6 +1035,44 @@ export default {
     if (this.realtime) this.realtime.destroy();
   },
   methods: {
+    focusEdgeMove(event) {
+      if (!this.focusMode || event.buttons) return;
+      const bounds = this.$el.getBoundingClientRect();
+      const topHeight =
+        this.$el.querySelector(".workspace-header").offsetHeight +
+        (this.$el.querySelector(".editor-chrome")?.offsetHeight || 0);
+      this.focusTopVisible =
+        event.clientY - bounds.top <=
+        (this.focusTopVisible ? topHeight + 12 : 24);
+      this.focusBottomVisible =
+        bounds.bottom - event.clientY <= (this.focusBottomVisible ? 46 : 24);
+    },
+    hideFocusChrome() {
+      this.focusTopVisible = false;
+      this.focusBottomVisible = false;
+    },
+    measureWorkspace() {
+      if (this.$refs.workspaceBody)
+        this.workspaceWidth = this.$refs.workspaceBody.clientWidth;
+    },
+    resizePanel(side, width) {
+      this.panelWidths = { ...this.panelWidths, [side]: width };
+    },
+    resetPanelWidth(side) {
+      this.panelWidths = { ...this.panelWidths, [side]: null };
+      this.savePanelWidths();
+    },
+    savePanelWidths() {
+      try {
+        localStorage.setItem(
+          "loghome:writer:panel-widths",
+          JSON.stringify(this.panelWidths)
+        );
+      } catch (_) {}
+    },
+    systemThemeChanged(event) {
+      this.systemDark = event.matches;
+    },
     catalogStorageKey() {
       return `loghome:writer:catalog:${writerIdentity().id}:${this.workId}`;
     },
@@ -895,6 +1106,9 @@ export default {
     },
     startCatalogDrag(event, item) {
       if (event.button !== 0 || !this.catalogSortEnabled) return;
+      // Focusing a long-list handle must not scroll its ancestors.
+      event.preventDefault();
+      event.currentTarget.focus({ preventScroll: true });
       this.cancelCatalogDrag();
       this._catalogPointer = {
         id: item.article_id,
@@ -1025,6 +1239,7 @@ export default {
       if (result) this.saveCatalogOrder(result.rows);
     },
     cancelCatalogDrag() {
+      const scrollTop = this.$refs.catalogList?.scrollTop;
       if (this.catalogDrag) this._catalogIgnoreClickUntil = Date.now() + 400;
       const pointer = this._catalogPointer;
       if (pointer) {
@@ -1040,8 +1255,20 @@ export default {
       this._catalogPointer = null;
       this.catalogDrag = null;
       this.catalogDrop = null;
+      this.restoreCatalogScroll(scrollTop);
+    },
+    restoreCatalogScroll(scrollTop) {
+      if (scrollTop === undefined) return;
+      this.$nextTick(() => {
+        if (this.$refs.catalogList && !this.catalogDrag)
+          this.$refs.catalogList.scrollTop = scrollTop;
+      });
     },
     catalogHandleKey(event, item) {
+      if (this.catalogDrag?.keyboard && this.catalogDragKey(event)) {
+        event.stopImmediatePropagation();
+        return;
+      }
       if (!event.altKey || event.code !== "Space" || !this.catalogSortEnabled)
         return;
       event.preventDefault();
@@ -1123,12 +1350,14 @@ export default {
       )
         return;
       const original = this.articles;
+      const scrollTop = this.$refs.catalogList?.scrollTop;
       this._catalogRevision = (this._catalogRevision || 0) + 1;
       this.sortSaving = true;
       this.articles = rows.map((row, index) => ({
         ...row,
         article_chapter: index + 1,
       }));
+      this.restoreCatalogScroll(scrollTop);
       try {
         await writerPost("resort_article", {
           sortlist: JSON.stringify(
@@ -1142,6 +1371,7 @@ export default {
         this.writerMessage("success", "目录顺序已保存");
       } catch (error) {
         this.articles = original;
+        this.restoreCatalogScroll(scrollTop);
         this.catalogAnnouncement = "排序保存失败，已恢复原顺序";
         this.writerMessage("error", `${error.message}，已恢复原顺序`);
       } finally {
@@ -1470,6 +1700,13 @@ export default {
     },
     async createArticle() {
       if (this.creating) return;
+      if (
+        ["worldOutline", "worldVocabulary"].includes(this.newType) &&
+        this.novel.novel_type !== "world"
+      ) {
+        this.writerMessage("warning", "此作品类型不支持创建大纲或世界词条");
+        return;
+      }
       this.creating = true;
       try {
         const content =
@@ -1597,6 +1834,8 @@ export default {
         this.setPreferences(this.preferences);
     },
     async setPreferences(value) {
+      value = { ...value };
+      delete value.resolvedTheme;
       const skin = this.skins.find(
         (item) => item.skin_key === value.backgroundSkinKey && !item.is_locked
       );
@@ -1605,7 +1844,9 @@ export default {
         try {
           const family = await loadReaderFont(
             value.fontKey,
-            this.fonts[value.fontKey]
+            this.fonts[value.fontKey],
+            undefined,
+            (progress) => this.$set(this.fontDownloads, value.fontKey, progress)
           );
           if (this.preferences.fontKey === value.fontKey)
             this.preferences = {
@@ -1613,15 +1854,14 @@ export default {
               fontFamily: family || "serif",
             };
         } catch (error) {
-          this.writerMessage("error", error.message);
-          this.preferences = {
-            ...this.preferences,
-            fontKey: "",
-            fontFamily: "serif",
-          };
+          if (this.preferences.fontKey === value.fontKey) {
+            this.writerMessage("error", error.message);
+            this.preferences = { ...this.preferences, fontFamily: "serif" };
+          }
         }
       }
       value = { ...this.preferences, backgroundSkin: null };
+      delete value.resolvedTheme;
       try {
         localStorage.setItem(
           "loghome:writer:preferences",
@@ -1766,9 +2006,16 @@ export default {
         this.$refs.editor
       ) {
         event.preventDefault();
-        this.$refs.editor.findOpen = true;
+        this.$refs.editor.openFind();
       }
-      if (event.key === "Escape") this.focusMode = false;
+      if (event.key === "Escape") {
+        if (this.$refs.editor && this.$refs.editor.findOpen) {
+          event.preventDefault();
+          this.$refs.editor.closeFind();
+          return;
+        }
+        this.focusMode = false;
+      }
     },
     beforeUnload(event) {
       if (
@@ -1791,3 +2038,5 @@ export default {
 };
 </script>
 <style src="~/assets/css/writer-workspace.css"></style>
+
+<style src="~/assets/css/writer-pixel-icons.css"></style>

@@ -1,0 +1,13 @@
+{
+  "name": "loghome-log-miniminecraft",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "start": "node --env-file-if-exists=.env server/index.cjs",
+    "dev": "npm run build && node --watch --env-file-if-exists=.env.development scripts/dev.cjs",
+    "test": "node --test test/*.test.cjs"
+  },
+  "engines": { "node": ">=22.13" }
+}

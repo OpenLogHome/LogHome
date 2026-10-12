@@ -1,0 +1,12 @@
+{
+  "log-defence": {
+    "source": "loghome-app-frontend/static/icons/enderman.png",
+    "url": "https://storage.codesocean.top/image/179180557296520",
+    "sha256": "368512f844a9b0caaf4c0fab760b0b50c0c9634907688b44103a7948e368e48b"
+  },
+  "log-miniminecraft": {
+    "source": "loghome-app-frontend/static/icons/mini-minecraft.svg",
+    "url": "https://storage.codesocean.top/image/179180557442611",
+    "sha256": "a1e0b7682f75e70346127b6f730b8c55ecddcbc58c6cd42f7796dbc94572e24c"
+  }
+}

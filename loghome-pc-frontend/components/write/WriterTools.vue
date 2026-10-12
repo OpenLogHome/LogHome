@@ -2,7 +2,6 @@
   <writer-panel
     class="writer-tools"
     :title="labels[tab]"
-    :subtitle="descriptions[tab]"
     :loading="loading"
     :error="error"
     :busy="busy"
@@ -250,53 +249,7 @@
         </article>
       </div>
     </template>
-    <template v-if="tab === 'statistics'">
-      <writer-empty-state
-        v-if="!rows.length"
-        icon="el-icon-data-analysis"
-        title="暂无阅读统计"
-        description="作品产生阅读活动后，这里会显示阅读、收藏和互动数据。"
-      />
-      <template v-else
-        ><div class="tool-metrics">
-          <span v-for="metric in metrics" :key="metric.key"
-            ><strong>{{ formatNumber(latest[metric.key]) }}</strong
-            >{{ metric.label }}</span
-          >
-        </div>
-        <div class="tool-section-heading">
-          <span>统计明细</span><small>可横向滚动</small>
-        </div>
-        <div class="tool-table-scroll" tabindex="0" aria-label="阅读统计明细">
-          <table>
-            <thead>
-              <tr>
-                <th>日期</th>
-                <th v-for="metric in metrics" :key="metric.key">
-                  {{ metric.label }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in rows" :key="index">
-                <td>
-                  {{
-                    item.date ||
-                    item.statistic_date ||
-                    item.stat_date ||
-                    item.record_date ||
-                    index + 1
-                  }}
-                </td>
-                <td v-for="metric in metrics" :key="metric.key">
-                  {{ formatNumber(item[metric.key]) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div></template
-      >
-    </template>
+    <writer-statistics v-if="tab === 'statistics'" :rows="rows" />
     <template v-if="tab === 'calendar'">
       <div class="tool-metrics">
         <span
@@ -330,16 +283,47 @@
       />
       <template v-else
         ><div class="writing-calendar" tabindex="0" aria-label="写作活动日历">
-          <span
-            v-for="day in calendarDays"
-            :key="day.date"
-            :class="'level-' + day.level"
-            tabindex="0"
-            :aria-label="calendarLabel(day)"
-            :title="calendarLabel(day)"
-            @focus="calendarDay = day"
-            @mouseenter="calendarDay = day"
-          />
+          <section
+            v-for="month in calendarMonths"
+            :key="month.key"
+            class="calendar-month"
+            :aria-label="month.label"
+          >
+            <h4>{{ month.label }}</h4>
+            <div class="calendar-weekdays" aria-hidden="true">
+              <span
+                v-for="weekday in ['一', '二', '三', '四', '五', '六', '日']"
+                :key="weekday"
+                >{{ weekday }}</span
+              >
+            </div>
+            <div class="calendar-month-grid">
+              <span
+                v-for="blank in month.offset"
+                :key="'blank-' + blank"
+                class="calendar-blank"
+                aria-hidden="true"
+              />
+              <button
+                v-for="day in month.days"
+                :key="day.date"
+                :class="[
+                  'level-' + day.level,
+                  { selected: calendarDay && calendarDay.date === day.date },
+                ]"
+                :aria-label="calendarLabel(day)"
+                :aria-pressed="
+                  String(Boolean(calendarDay && calendarDay.date === day.date))
+                "
+                :title="calendarLabel(day)"
+                @click="calendarDay = day"
+                @focus="calendarDay = day"
+                @mouseenter="calendarDay = day"
+              >
+                {{ Number(day.date.slice(8)) }}
+              </button>
+            </div>
+          </section>
         </div>
         <div class="calendar-legend">
           <small>少</small
@@ -353,7 +337,7 @@
           {{
             calendarDay
               ? calendarLabel(calendarDay)
-              : "悬停或聚焦日期，查看当天的写作活动。"
+              : "点击、悬停或聚焦日期，查看当天的写作活动。"
           }}
         </p></template
       >
@@ -557,9 +541,8 @@
               :aria-label="'删除标签 ' + (tag.tag_name || tag.name)"
               @click="deleteTag(tag)"
             >
-              ×
-            </button></span
-          >
+              <i class="el-icon-close" aria-hidden="true" /></button
+          ></span>
         </div>
         <form
           v-if="access.is_owner"
@@ -601,48 +584,82 @@
     <template v-if="tab === 'appearance'">
       <section class="tool-section">
         <h3>阅读外观</h3>
-        <label
-          >主题<select
-            :value="preferences.theme"
-            @change="preference('theme', $event.target.value)"
-          >
-            <option value="light">浅色</option>
-            <option value="sepia">纸张</option>
-            <option value="dark">深色</option>
-          </select></label
-        ><label
-          >字体<select
-            :value="preferences.fontKey || preferences.fontFamily"
-            @change="fontPreference($event.target.value)"
-          >
-            <option value="serif">宋体 / 衬线</option>
-            <option value="sans-serif">系统无衬线</option>
-            <option value="monospace">等宽</option>
-            <option
-              v-for="(font, key) in fonts"
-              v-if="key !== 'default'"
-              :key="key"
-              :value="key"
+        <div class="preference-field">
+          <span class="preference-label">主题</span>
+          <div class="writer-theme-options" role="group" aria-label="写作主题">
+            <button
+              v-for="theme in themeOptions"
+              :key="theme.key"
+              :aria-pressed="String(preferences.theme === theme.key)"
+              @click="preference('theme', theme.key)"
             >
-              {{ font.name }}（下载字体）
-            </option>
-          </select></label
-        ><label
-          >背景皮肤<select
-            :value="preferences.backgroundSkinKey || ''"
-            @change="preference('backgroundSkinKey', $event.target.value)"
-          >
-            <option value="">纯色背景</option>
-            <option
-              v-for="skin in skins"
-              :key="skin.skin_key"
-              :value="skin.skin_key"
-              :disabled="skin.is_locked"
-            >
-              {{ skin.skin_name }}{{ skin.is_locked ? " · 需要通行证" : "" }}
-            </option>
-          </select></label
-        >
+              <i :class="theme.icon" aria-hidden="true" /><span>{{
+                theme.name
+              }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="preference-field">
+          <span class="preference-label">字体</span>
+          <details ref="fontPicker" class="writer-font-picker">
+            <summary>
+              <span
+                ><strong>{{ selectedFont.name }}</strong
+                ><small
+                  v-if="fontDownloadLabel(selectedFont.key)"
+                  role="status"
+                  >{{ fontDownloadLabel(selectedFont.key) }}</small
+                >
+                <small v-else :style="{ fontFamily: preferences.fontFamily }"
+                  >山川湖海，落笔成诗。</small
+                >
+                <progress
+                  v-if="fontDownloading(selectedFont.key)"
+                  class="font-download-progress"
+                  :value="fontDownloads[selectedFont.key].percent"
+                  max="100"
+                  aria-label="字体下载进度"
+                /> </span
+              ><i class="el-icon-arrow-down" aria-hidden="true" />
+            </summary>
+            <div class="writer-font-options" role="group" aria-label="正文字体">
+              <button
+                v-for="font in fontOptions"
+                :key="font.key"
+                :aria-pressed="String(selectedFont.key === font.key)"
+                @click="chooseFont(font.key)"
+              >
+                <span>{{ font.name }}</span
+                ><small :style="{ fontFamily: font.family }">{{
+                  fontDownloadLabel(font.key) ||
+                  (font.download
+                    ? "下载字体 · 山川湖海"
+                    : "山川湖海，落笔成诗。")
+                }}</small
+                ><progress
+                  v-if="fontDownloading(font.key)"
+                  class="font-download-progress"
+                  :value="fontDownloads[font.key].percent"
+                  max="100"
+                  :aria-label="font.name + '下载进度'"
+                />
+                <i
+                  v-if="selectedFont.key === font.key"
+                  class="el-icon-check"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          </details>
+        </div>
+        <div class="preference-field">
+          <span class="preference-label">背景皮肤</span>
+          <writer-background-picker
+            :preferences="preferences"
+            :skins="skins"
+            @preferences="$emit('preferences', $event)"
+          />
+        </div>
       </section>
       <section class="tool-section">
         <h3>正文排版</h3>
@@ -689,15 +706,37 @@
       </section>
       <section class="tool-section">
         <h3>快捷输入</h3>
+        <p class="tool-note">
+          选择小说常用、键盘不易输入的符号，显示在编辑器上方。
+        </p>
+        <div class="writer-symbol-options" role="group" aria-label="常用符号">
+          <button
+            v-for="symbol in symbolOptions"
+            :key="symbol.value"
+            :title="symbol.name"
+            :aria-label="symbol.name"
+            :aria-pressed="String(selectedSymbols.includes(symbol.value))"
+            @click="toggleSymbol(symbol.value)"
+          >
+            {{ symbol.value }}
+          </button>
+        </div>
         <label
-          >常用符号<input
+          >自定义符号<input
             :value="preferences.quickInputs"
             aria-label="自定义快捷输入"
+            placeholder="——|……|·|「」"
             @change="
               preference('quickInputs', $event.target.value.slice(0, 200))
             "
         /></label>
         <p class="tool-note">用 | 分隔。成对引号与括号可包裹选中文字。</p>
+        <button
+          class="symbol-reset"
+          @click="preference('quickInputs', defaultSymbols)"
+        >
+          恢复推荐符号
+        </button>
         <div class="shortcut-list">
           <span>保存<kbd>⌘ / Ctrl S</kbd></span
           ><span>查找<kbd>⌘ / Ctrl F</kbd></span
@@ -706,10 +745,10 @@
       </section>
     </template>
     <el-dialog
-      class="writer-dialog-wrapper"
+      class="writer-dialog-wrapper writer-history-wrapper"
       title="历史版本内容"
       :visible.sync="previewOpen"
-      :custom-class="writerDialogClass"
+      :custom-class="writerDialogClass + ' writer-history-dialog'"
       append-to-body
       width="760px"
       ><writer-version-preview :article="previewArticle" label="历史版本" />
@@ -718,6 +757,13 @@
 </template>
 <script>
 import WriterPanel from "./WriterPanel.vue";
+import WriterStatistics from "./WriterStatistics.vue";
+import WriterBackgroundPicker from "./WriterBackgroundPicker.vue";
+import {
+  WRITER_THEMES,
+  WRITER_SYMBOLS,
+  DEFAULT_QUICK_INPUTS,
+} from "~/utils/writer/preferences";
 import WriterVersionPreview from "./WriterVersionPreview.vue";
 import WriterEmptyState from "./WriterEmptyState.vue";
 import writerDialogTheme from "~/mixins/writer-dialog-theme";
@@ -731,7 +777,13 @@ import {
 import { listWriterBackups } from "~/utils/writer/drafts";
 export default {
   mixins: [writerDialogTheme],
-  components: { WriterPanel, WriterEmptyState, WriterVersionPreview },
+  components: {
+    WriterStatistics,
+    WriterPanel,
+    WriterEmptyState,
+    WriterVersionPreview,
+    WriterBackgroundPicker,
+  },
   props: {
     tab: String,
     novel: Object,
@@ -739,10 +791,14 @@ export default {
     access: Object,
     preferences: Object,
     fonts: { type: Object, default: () => ({}) },
+    fontDownloads: { type: Object, default: () => ({}) },
     skins: { type: Array, default: () => [] },
     canEdit: Boolean,
   },
   data: () => ({
+    themeOptions: WRITER_THEMES,
+    symbolOptions: WRITER_SYMBOLS,
+    defaultSymbols: DEFAULT_QUICK_INPUTS,
     loadVersion: 0,
     loading: false,
     busy: false,
@@ -757,19 +813,6 @@ export default {
     settings: {},
     calendarDay: null,
     settingsInitialized: false,
-    descriptions: {
-      history: "记录每次保存，让修改可以回溯",
-      backups: "保存在当前浏览器中的版本",
-      trash: "恢复移除的章节，管理旧稿",
-      schedule: "安排作品更新的时间",
-      feedback: "查看并处理当前章节的读者建议",
-      indexing: "同步作品内容，供助手检索",
-      statistics: "了解作品的阅读与互动",
-      calendar: "记录你的创作节奏",
-      collaborators: "邀请作者并分配编辑权限",
-      settings: "管理作品资料、访问与标签",
-      appearance: "调整适合自己的写作环境",
-    },
     previewOpen: false,
     previewItem: {},
     identity: writerIdentity(),
@@ -786,14 +829,6 @@ export default {
       settings: "作品设置",
       appearance: "写作偏好",
     },
-    metrics: [
-      { key: "clicks", label: "阅读" },
-      { key: "nices", label: "点赞" },
-      { key: "likes", label: "收藏" },
-      { key: "comments", label: "评论" },
-      { key: "shares", label: "分享" },
-      { key: "tippings", label: "打赏" },
-    ],
     permissions: [
       { key: "can_edit_article", label: "编辑" },
       { key: "can_add_article", label: "新增" },
@@ -803,8 +838,38 @@ export default {
     ],
   }),
   computed: {
-    latest() {
-      return this.rows[this.rows.length - 1] || {};
+    selectedSymbols() {
+      return String(this.preferences.quickInputs || "")
+        .split("|")
+        .filter(Boolean);
+    },
+    fontOptions() {
+      return [
+        {
+          key: "sans-serif",
+          name: "系统无衬线",
+          family: "var(--writer-ui-font)",
+        },
+        { key: "serif", name: "宋体 / 衬线", family: "serif" },
+        { key: "monospace", name: "等宽", family: "monospace" },
+        ...Object.entries(this.fonts)
+          .filter(([key]) => key !== "default")
+          .map(([key, font]) => ({
+            key,
+            name: font.name,
+            family: "serif",
+            download: true,
+          })),
+      ];
+    },
+    selectedFont() {
+      return (
+        this.fontOptions.find(
+          (font) =>
+            font.key ===
+            (this.preferences.fontKey || this.preferences.fontFamily)
+        ) || this.fontOptions[0]
+      );
     },
     previewArticle() {
       return {
@@ -856,6 +921,23 @@ export default {
       if (Number(queue.pending_chapters) > 0)
         return `待处理 ${queue.pending_chapters} 章`;
       return "";
+    },
+    calendarMonths() {
+      const months = new Map();
+      this.calendarDays.forEach((day) => {
+        const key = day.date.slice(0, 7);
+        if (!months.has(key)) {
+          const first = new Date(day.date + "T00:00:00Z");
+          months.set(key, {
+            key,
+            label: `${key.slice(0, 4)} 年 ${Number(key.slice(5))} 月`,
+            offset: (first.getUTCDay() + 6) % 7,
+            days: [],
+          });
+        }
+        months.get(key).days.push(day);
+      });
+      return [...months.values()].reverse();
     },
     calendarDays() {
       if (!this.data.from || !this.data.to) return [];
@@ -1226,6 +1308,31 @@ export default {
         if (error instanceof Error) this.writerMessage("error", error.message);
       }
     },
+    toggleSymbol(value) {
+      const symbols = this.selectedSymbols.includes(value)
+        ? this.selectedSymbols.filter((item) => item !== value)
+        : [...this.selectedSymbols, value];
+      this.preference("quickInputs", symbols.join("|").slice(0, 200));
+    },
+    fontDownloading(key) {
+      const state = this.fontDownloads[key];
+      return state && ["downloading", "loading"].includes(state.phase);
+    },
+    fontDownloadLabel(key) {
+      const state = this.fontDownloads[key];
+      if (!state) return "";
+      if (state.phase === "error") return "下载失败，点击重试";
+      if (state.phase === "loading") return "正在加载字体…";
+      if (state.phase !== "downloading") return "";
+      if (state.percent !== null) return `正在下载 ${state.percent}%`;
+      return state.loaded
+        ? `正在下载 · ${(state.loaded / 1024 / 1024).toFixed(1)} MB`
+        : "正在下载…";
+    },
+    chooseFont(value) {
+      this.fontPreference(value);
+      if (this.$refs.fontPicker) this.$refs.fontPicker.open = false;
+    },
     fontPreference(value) {
       this.$emit("preferences", {
         ...this.preferences,
@@ -1428,17 +1535,56 @@ export default {
   margin-bottom: 12px !important;
 }
 .writer-workspace .writer-tools .writing-calendar {
-  display: grid;
-  grid-template-rows: repeat(7, 12px);
-  grid-auto-flow: column;
-  grid-auto-columns: 12px;
-  justify-content: start;
-  gap: 4px;
-  overflow-x: auto;
-  max-width: 100%;
-  padding: 2px 2px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-height: clamp(200px, calc(100vh - 390px), 900px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--writer-active) transparent;
+  padding: 3px 6px 4px 3px;
 }
-.writer-workspace .writer-tools .writing-calendar span,
+.calendar-month {
+  flex: none;
+  min-width: 0;
+}
+.calendar-month h4 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.calendar-weekdays,
+.calendar-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+.calendar-weekdays {
+  margin-bottom: 7px;
+  text-align: center;
+  color: var(--writer-muted);
+  font-size: 11px;
+}
+.writer-workspace .writer-tools .calendar-month-grid button {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 30px;
+  padding: 0;
+  background: var(--writer-border);
+  color: var(--writer-text);
+  font-size: 11px;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.writer-workspace .writer-tools .calendar-month-grid button.selected,
+.writer-workspace .writer-tools .calendar-month-grid button:hover,
+.writer-workspace .writer-tools .calendar-month-grid button:focus-visible {
+  outline: 2px solid var(--writer-accent);
+  outline-offset: 1px;
+}
 .writer-workspace .writer-tools .calendar-legend span {
   width: 12px;
   height: 12px;
@@ -1460,6 +1606,9 @@ export default {
 .writer-workspace .writer-tools .writing-calendar .level-4,
 .writer-workspace .writer-tools .calendar-legend .level-4 {
   background: var(--writer-calendar-4);
+}
+.writer-workspace .writer-tools .calendar-month-grid .level-4 {
+  color: var(--writer-panel);
 }
 .writer-workspace .writer-tools .calendar-legend {
   display: flex;

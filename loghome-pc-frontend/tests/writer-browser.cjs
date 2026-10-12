@@ -248,13 +248,18 @@ async function api(route) {
         },
       ];
       break;
-    case "get_article_text_correction":
-      data = {
-        paragraph_results: [],
-        corrections: [],
-        errors: [],
-        summary: { paragraph_count: 1 },
-      };
+    case "writer_text_correction":
+      contentType = "application/x-ndjson";
+      data =
+        JSON.stringify({
+          type: "done",
+          result: {
+            paragraph_results: [],
+            corrections: [],
+            errors: [],
+            summary: { paragraph_count: 1 },
+          },
+        }) + "\n";
       break;
     case "writer_novel_ai_assist_stream":
       contentType = "application/x-ndjson";
@@ -367,10 +372,9 @@ async function run() {
       path: path.join(out, "writer-desktop.png"),
     });
     await page
-      .locator(".writer-tools")
-      .getByText("主题", { exact: false })
-      .locator("select")
-      .selectOption("dark");
+      .getByRole("group", { name: "写作主题", exact: true })
+      .getByRole("button", { name: "深色", exact: true })
+      .click();
     // Allow color-only feedback to settle before visual inspection.
     await page.waitForTimeout(200);
     const darkStyles = await page.evaluate(() => {
@@ -411,20 +415,18 @@ async function run() {
     });
     await darkDialog.locator(".el-dialog__headerbtn").click();
     await page
-      .locator(".writer-tools")
-      .getByText("主题", { exact: false })
-      .locator("select")
-      .selectOption("sepia");
+      .getByRole("group", { name: "写作主题", exact: true })
+      .getByRole("button", { name: "纸张", exact: true })
+      .click();
     await page.waitForTimeout(200);
     await page.screenshot({
       animations: "disabled",
       path: path.join(out, "writer-sepia.png"),
     });
     await page
-      .locator(".writer-tools")
-      .getByText("主题", { exact: false })
-      .locator("select")
-      .selectOption("light");
+      .getByRole("group", { name: "写作主题", exact: true })
+      .getByRole("button", { name: "浅色", exact: true })
+      .click();
     await page.waitForTimeout(200);
     await page.getByRole("button", { name: "新建章节", exact: true }).click();
     await page
@@ -478,7 +480,12 @@ async function run() {
       animations: "disabled",
       path: path.join(out, "writer-publish.png"),
     });
-    await page.getByRole("button", { name: "基础校对", exact: true }).click();
+    await page.getByRole("button", { name: "智能纠错", exact: true }).click();
+    await page
+      .locator(".el-message-box")
+      .getByRole("button", { name: "确定", exact: true })
+      .click();
+    await page.getByText("检查完成：0 段建议", { exact: true }).waitFor();
     await page.getByRole("button", { name: "确认发布", exact: true }).click();
     await page.waitForTimeout(300);
     assert.ok(
@@ -617,7 +624,7 @@ async function run() {
       .locator(".el-dialog__headerbtn")
       .click();
     await page.getByRole("button", { name: "写作日历", exact: true }).click();
-    await page.locator(".writing-calendar span").first().waitFor();
+    await page.locator(".calendar-month-grid button").first().waitFor();
     await page.getByRole("button", { name: "阅读统计", exact: true }).click();
     await page.locator(".writer-tools").getByText("暂无阅读统计").waitFor();
     await page.getByRole("button", { name: "作品索引", exact: true }).click();

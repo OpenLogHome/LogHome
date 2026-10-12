@@ -2,7 +2,7 @@
   <div class="miniapps-page">
     <div class="page-header">
       <div><h2>小程序管理</h2><p>提前注册小程序。客户端按 ID 获取名称、图标和对应环境的地址。</p></div>
-      <el-button type="primary" @click="edit()">注册小程序</el-button>
+      <div><el-button @click="$router.push('/lab')">原木实验室管理</el-button><el-button type="primary" @click="edit()">注册小程序</el-button></div>
     </div>
     <el-alert v-if="error" :title="error" type="error" :closable="false" show-icon />
     <el-table :data="list" v-loading="loading" border>
@@ -12,6 +12,7 @@
       <el-table-column prop="debugUrl" label="调试地址" min-width="220" show-overflow-tooltip />
       <el-table-column prop="productionUrl" label="生产地址" min-width="220" show-overflow-tooltip />
       <el-table-column label="状态" width="80"><template slot-scope="s"><el-tag :type="s.row.enabled ? 'success' : 'info'">{{ s.row.enabled ? '启用' : '停用' }}</el-tag></template></el-table-column>
+      <el-table-column prop="minClientVersion" label="最低版本号" width="110" />
       <el-table-column prop="sortOrder" label="排序" width="70" />
       <el-table-column label="操作" width="140" fixed="right"><template slot-scope="s"><el-button type="text" @click="edit(s.row)">编辑</el-button><el-button type="text" class="danger" @click="remove(s.row)">删除</el-button></template></el-table-column>
     </el-table>
@@ -22,6 +23,7 @@
         <el-form-item label="图标地址" prop="icon"><el-input v-model="form.icon" placeholder="图标的 HTTP/HTTPS 地址或主应用 /static/ 路径" /><el-image v-if="form.icon" :src="form.icon" fit="contain" class="app-icon" /></el-form-item>
         <el-form-item label="调试地址" prop="debugUrl"><el-input v-model="form.debugUrl" placeholder="http://127.0.0.1:8787/log-defence/" /></el-form-item>
         <el-form-item label="生产地址" prop="productionUrl"><el-input v-model="form.productionUrl" placeholder="https://miniapps.loghome.ink/log-defence/" /></el-form-item>
+        <el-form-item label="最低本体版本"><el-input-number v-model="form.minClientVersion" :min="0" :max="2147483647" :precision="0" /><div>填写内部版本号，如 320；0 表示不限制，仅生产模式检查。</div></el-form-item>
         <el-form-item label="说明"><el-input v-model="form.description" type="textarea" maxlength="500" /></el-form-item>
         <el-form-item label="状态"><el-switch v-model="form.enabled" active-text="启用" inactive-text="停用" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="form.sortOrder" :min="-100000" :max="100000" :precision="0" /></el-form-item>
@@ -31,7 +33,7 @@
   </div>
 </template>
 <script>
-const blank = () => ({id: '', name: '', icon: '', debugUrl: '', productionUrl: '', description: '', enabled: true, sortOrder: 0})
+const blank = () => ({id: '', name: '', icon: '', debugUrl: '', productionUrl: '', description: '', enabled: true, sortOrder: 0, minClientVersion: 0})
 export default {
   data() {
     const required = message => [{required: true, message, trigger: 'blur'}]
@@ -48,7 +50,7 @@ export default {
       catch (e) { this.error = this.message(e) }
       finally { this.loading = false }
     },
-    edit(row) { this.editing = !!row; this.form = row ? {...row} : blank(); this.dialog = true; this.$nextTick(() => this.$refs.form.clearValidate()) },
+    edit(row) { this.editing = !!row; this.form = row ? {...blank(), ...row} : blank(); this.dialog = true; this.$nextTick(() => this.$refs.form.clearValidate()) },
     save() {
       this.$refs.form.validate(async valid => {
         if (!valid || this.saving) return

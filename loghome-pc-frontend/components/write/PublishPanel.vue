@@ -26,16 +26,10 @@
         >
           <el-button
             size="small"
-            :loading="checking === 'standard'"
-            :disabled="Boolean(checking)"
-            @click="check(false)"
-            >基础校对</el-button
-          ><el-button
-            size="small"
             :loading="checking === 'smart'"
             :disabled="Boolean(checking)"
-            @click="check(true)"
-            >智能校对</el-button
+            @click="check"
+            >智能纠错</el-button
           >
         </div>
         <p v-if="error" role="alert">{{ error }}</p>
@@ -68,9 +62,6 @@
         ><label v-if="mode === 'schedule'"
           >北京时间<input v-model="time" type="datetime-local"
         /></label>
-        <p>
-          保存写作稿不会自动更新读者稿。发布时会再次校验当前内容及协作版本。
-        </p>
         <el-button
           type="primary"
           :loading="busy"
@@ -91,7 +82,6 @@
 <script>
 import writerDialogTheme from "~/mixins/writer-dialog-theme";
 import {
-  writerPost,
   writerRequest,
   writerEndpoints,
   writerIdentity,
@@ -152,23 +142,14 @@ export default {
       if (this.controller) this.controller.abort();
       this.$emit("close");
     },
-    async check(smart) {
+    async check() {
       this.error = "";
-      this.checking = smart ? "smart" : "standard";
+      this.checking = "smart";
       this.ignored = [];
       try {
-        if (!smart) {
-          this.result = await writerPost("get_article_text_correction", {
-            article_id: this.article.article_id,
-            title: this.article.title,
-            content: this.article.content,
-            paragraphs: buildCorrectionParagraphs(this.article.content),
-          });
-          return;
-        }
         await this.writerConfirm(
-          "智能校对会按服务端规则消耗红石。继续检查当前章节？",
-          "智能校对"
+          "智能纠错会按服务端规则消耗红石。继续检查当前章节？",
+          "智能纠错"
         );
         const paragraphs = buildCorrectionParagraphs(this.article.content),
           account = writerIdentity().id,
@@ -250,7 +231,7 @@ export default {
             p.paragraph_hash === item.paragraph_hash
         );
       if (!paragraph) {
-        this.writerMessage("warning", "正文已经变化，请重新校对");
+        this.writerMessage("warning", "正文已经变化，请重新纠错");
         return;
       }
       const block = blocks.find(
@@ -260,7 +241,7 @@ export default {
           block.value.trim() === item.original_text.trim()
       );
       if (!block) {
-        this.writerMessage("warning", "无法定位原段落，请重新校对");
+        this.writerMessage("warning", "无法定位原段落，请重新纠错");
         return;
       }
       const indent = (block.value.match(/^\s*/) || [""])[0];

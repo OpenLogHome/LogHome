@@ -292,11 +292,12 @@ async function run() {
       if (label === "阅读统计") {
         assert.equal(
           await page
-            .locator(".tool-metrics")
+            .locator(".statistics-summary")
             .evaluate((el) => getComputedStyle(el).display),
           "grid"
         );
-        const cards = page.locator(".tool-metrics > span");
+        const cards = page.locator(".statistics-metric");
+        assert.equal(await page.locator(".statistic-plot svg").count(), 6);
         const first = await cards.nth(0).boundingBox(),
           second = await cards.nth(1).boundingBox();
         assert.equal(first.y, second.y);
@@ -531,7 +532,7 @@ async function run() {
     );
     assert.equal(await page.locator(".writer-tools .panel-error").count(), 0);
     current.release();
-    await page.locator(".tool-metrics").waitFor();
+    await page.locator(".statistics-summary").waitFor();
     fail = false;
     empty = true;
     await tool("读者纠错");

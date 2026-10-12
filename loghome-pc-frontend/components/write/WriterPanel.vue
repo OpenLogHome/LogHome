@@ -7,7 +7,6 @@
     <header class="writer-panel-header">
       <div class="panel-heading">
         <h2>{{ title }}</h2>
-        <p v-if="subtitle">{{ subtitle }}</p>
       </div>
       <div class="panel-header-actions">
         <slot name="actions" />
@@ -59,7 +58,6 @@
 export default {
   props: {
     title: String,
-    subtitle: String,
     loading: Boolean,
     busy: Boolean,
     error: String,

@@ -99,7 +99,8 @@ async function run() {
     await page.waitForFunction(
       (count) =>
         document.querySelectorAll(".writer-notice").length &&
-        !document.querySelector(".catalog-sort-status"),
+        getComputedStyle(document.querySelector(".catalog-sort-status"))
+          .display === "none",
       count
     );
     assert.equal(writes.length, count);
@@ -112,7 +113,7 @@ async function run() {
       handle.y + handle.height / 2
     );
     await page.mouse.down();
-    // Starting the gesture reveals a hint above the list; re-read destination geometry.
+    // Re-read destination geometry after starting the gesture.
     await page.mouse.move(handle.x - 8, handle.y + handle.height / 2, {
       steps: 3,
     });
@@ -274,6 +275,74 @@ async function run() {
       ),
       false
     );
+    // Moving a chapter deep in the list must preserve the current viewport.
+    await row(240).evaluate((node) => node.scrollIntoView({ block: "center" }));
+    const scrollBefore = await page
+      .locator(".catalog-list")
+      .evaluate((node) => node.scrollTop);
+    assert.ok(scrollBefore > 1000);
+    await row(240).hover();
+    const deepHandle = await row(240).locator(".catalog-menu").boundingBox();
+    await page.mouse.move(deepHandle.x + 14, deepHandle.y + 14);
+    await page.mouse.down();
+    await page.mouse.move(deepHandle.x - 8, deepHandle.y + 14);
+    await page.waitForSelector(".catalog-drag-label");
+    assert.equal(
+      await page.locator(".catalog-list").evaluate((node) => node.scrollTop),
+      scrollBefore
+    );
+    const deepTarget = await row(239).boundingBox();
+    await page.mouse.move(deepTarget.x + 60, deepTarget.y + 8);
+    await page.mouse.up();
+    await saved(6);
+    assert.equal(
+      await page.locator(".catalog-list").evaluate((node) => node.scrollTop),
+      scrollBefore
+    );
+    fail = true;
+    await drag(240, 238, "before");
+    await saved(7);
+    assert.equal(
+      await page.locator(".catalog-list").evaluate((node) => node.scrollTop),
+      scrollBefore
+    );
+    fail = false;
+    // Creation offers world-only types only to world-setting books.
+    await page.getByRole("button", { name: "新建章节", exact: true }).click();
+    const types = page.locator(".create-form select").first();
+    assert.deepEqual(
+      await types
+        .locator("option")
+        .evaluateAll((nodes) => nodes.map((node) => node.value)),
+      ["richtext", "spliter"]
+    );
+    let additions = 0;
+    page.on("request", (request) => {
+      if (request.url().includes("/add_article")) additions++;
+    });
+    await page.evaluate(async () => {
+      const root = document.querySelector(".writer-workspace").__vue__;
+      root.newType = "worldOutline";
+      await root.createArticle();
+    });
+    assert.equal(additions, 0);
+    await page.evaluate(
+      () =>
+        (document.querySelector(".writer-workspace").__vue__.novel.novel_type =
+          "world")
+    );
+    assert.deepEqual(
+      await types
+        .locator("option")
+        .evaluateAll((nodes) => nodes.map((node) => node.value)),
+      ["richtext", "worldOutline", "worldVocabulary", "spliter"]
+    );
+    await page.evaluate(() => {
+      const root = document.querySelector(".writer-workspace").__vue__;
+      root.novel.novel_type = "fiction";
+      root.newType = "richtext";
+      root.createOpen = false;
+    });
     access.can_sort_article = false;
     await page.reload();
     await row(10).waitFor();
@@ -286,7 +355,7 @@ async function run() {
       steps: 8,
     });
     await page.mouse.up();
-    assert.equal(writes.length, 5);
+    assert.equal(writes.length, 7);
     assert.equal(await page.locator(".catalog-drag-label").count(), 0);
     assert.deepEqual(errors, []);
     console.log(

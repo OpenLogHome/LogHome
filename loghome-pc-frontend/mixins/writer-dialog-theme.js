@@ -3,7 +3,11 @@ export default {
   computed: {
     writerDialogClass() {
       const theme =
-        (this.preferences && this.preferences.theme) || this.theme || "light";
+        this.resolvedTheme ||
+        (this.preferences && this.preferences.resolvedTheme) ||
+        (this.preferences && this.preferences.theme) ||
+        this.theme ||
+        "light";
       return `writer-dialog theme-${theme}`;
     },
   },
