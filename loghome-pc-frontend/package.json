@@ -11,6 +11,7 @@
     "generate": "nuxt generate",
     "test:writer": "node tests/writer-runtime.cjs",
     "generate:writer:icons": "node scripts/generate-writer-icons.cjs",
+    "test:writer:modified": "node tests/writer-modified.cjs",
     "test:writer:catalog": "node tests/writer-catalog.cjs",
     "test:writer:ui": "node tests/writer-ui.cjs",
     "test:writer:browser": "node tests/writer-browser.cjs",

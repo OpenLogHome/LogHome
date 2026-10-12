@@ -308,7 +308,7 @@ async function run() {
     );
     fail = false;
     // Creation offers world-only types only to world-setting books.
-    await page.getByRole("button", { name: "新建章节", exact: true }).click();
+    await page.locator(".catalog-heading").getByRole("button", { name: "新建章节", exact: true }).click();
     const types = page.locator(".create-form select").first();
     assert.deepEqual(
       await types

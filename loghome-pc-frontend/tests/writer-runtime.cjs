@@ -487,3 +487,68 @@ test("statistics charts keep date spacing, break at missing metrics, and handle 
   assert.equal(single.points[0].y, single.bottom);
   assert.equal(chartGeometry([], "clicks").path, "");
 });
+
+test("catalog badges detect nested writer snapshots and title-only edits without marking drafts", () => {
+  const { normalizeCatalogArticle, hasUnpublishedCatalogChanges } = load(
+    "utils/writer/catalog.js"
+  );
+  const published = {
+    article_id: 18,
+    article_type: "richtext",
+    is_draft: 0,
+    title: "原题",
+    content_hash: "published",
+  };
+  const nested = {
+    ...published,
+    article_writer: { title: "修改后的题目", content_hash: "published" },
+  };
+  assert.equal(hasUnpublishedCatalogChanges(nested), true);
+  assert.equal(normalizeCatalogArticle(nested).writer_title, "修改后的题目");
+  assert.equal(
+    hasUnpublishedCatalogChanges({
+      ...published,
+      article_writer: { title: "原题", content_hash: "edited" },
+    }),
+    true
+  );
+  assert.equal(
+    hasUnpublishedCatalogChanges({
+      ...published,
+      article_writer: { title: "原题", content_hash: "published" },
+    }),
+    false
+  );
+  assert.equal(hasUnpublishedCatalogChanges({ ...nested, is_draft: 1 }), false);
+  assert.equal(
+    hasUnpublishedCatalogChanges({ ...nested, article_type: "spliter" }),
+    false
+  );
+  assert.equal(hasUnpublishedCatalogChanges(published), false);
+  assert.equal(
+    hasUnpublishedCatalogChanges({
+      ...published,
+      writer_content_hash: "edited",
+    }),
+    true
+  );
+  assert.equal(
+    hasUnpublishedCatalogChanges({ ...nested, local_writer_modified: false }),
+    false
+  );
+});
+test("saving and adopting author drafts preserve the separate published comparison baseline", async () => {
+  const f = fixture();
+  await f.session.open(10);
+  const published = f.session.publishedSignature;
+  f.session.article.title = "保存后的作者稿件";
+  await f.session.save();
+  assert.equal(f.session.publishedSignature, published);
+  assert.notEqual(f.session.baseline, published);
+  f.session.adoptRemote({
+    title: "另一位作者的编辑",
+    content: f.session.article.content,
+  });
+  assert.equal(f.session.publishedSignature, published);
+  await f.session.close();
+});
