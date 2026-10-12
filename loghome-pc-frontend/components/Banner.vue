@@ -8,7 +8,7 @@
         <div class="banner-item" 
           v-for="(banner, index) in banners" 
           :key="'banner-'+index"
-          @click="navigateToBanner(banner)">
+          role="link" tabindex="0" @keydown.enter="navigateToBanner(banner)" @click="navigateToBanner(banner)">
           <img :src="banner.image_url" :alt="banner.title || 'banner'" class="banner-image"/>
           <div class="banner-mask" v-if="banner.title">
             <div class="banner-title">{{banner.title}}</div>
@@ -38,6 +38,7 @@
 </template>
 
 <script>
+import { discoveryLink } from '~/utils/reading-discovery'
 export default {
   name: 'Banner',
   
@@ -81,7 +82,7 @@ export default {
     async getBanners() {
       try {
         const response = await this.$api.novels.getBanners(this.page)
-        this.banners = response || []
+        this.banners = response || []; this.startAutoPlay()
       } catch (error) {
         console.error('获取Banner数据失败:', error)
         this.banners = []
@@ -89,9 +90,11 @@ export default {
     },
     
     navigateToBanner(banner) {
-      if (banner.link_url_pc && banner.link_url_pc !== "None") {
-        this.$router.push(banner.link_url_pc)
-      }
+      const raw = banner.link_url_pc && banner.link_url_pc !== 'None' ? banner.link_url_pc : banner.link_url
+      const link = discoveryLink(raw, process.env.mobileUrl)
+      if (!link) return
+      if (link.external) window.open(link.href, '_blank', 'noopener,noreferrer')
+      else this.$router.push(link.href)
     },
     
     // 设置轮播图当前显示的slide

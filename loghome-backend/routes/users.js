@@ -1,6 +1,6 @@
 // 引入依赖包
 let express = require('express');
-let { query } = require('../sql.js');
+let { query, withTransaction } = require('../sql.js');
 let auth = require('../bin/auth.js');
 const jwt = require('jsonwebtoken');
 let axios = require('axios');
@@ -893,6 +893,8 @@ router.post('/update_push_time', auth, async (req, res) => {
         res.json(500, { msg: '服务器错误' });
     }
 });
+
+require('../bin/readerActivityMessages').registerReaderActivityMessages(router, { auth, withTransaction });
 
 router.get('/get_history_message', auth, async (req, res) => {
 	try {

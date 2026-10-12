@@ -1,5 +1,7 @@
 <template>
   <div class="fans-ranking">
+    <div class="fans-toolbar"><button :class="{ active: period === 'total' }" @click="period = 'total'">总榜</button><button :class="{ active: period === 'month' }" @click="period = 'month'">月榜</button><button :disabled="loading" @click="getFansList">刷新</button></div>
+    <p v-if="loadError" class="fans-error" role="alert">{{ loadError }} <button @click="getFansList">重试</button></p>
     <div v-if="loading" class="loading-wrapper">
       <div class="loading-spinner"></div>
       <p>正在加载粉丝榜...</p>
@@ -8,7 +10,7 @@
     <div v-else class="fans-list-wrapper">
       <!-- 粉丝列表 -->
       <div class="fans-list">
-        <div class="fan-item" v-for="(fan, index) in fanInfo" :key="fan.user_id">
+        <div class="fan-item" v-for="(fan, index) in visibleFans" :key="fan.user_id">
           <div class="fan-rank">
             <div :class="index <= 2 ? rankClasses[index] : 'rank-number'">
               {{ index + 1 }}
@@ -22,13 +24,15 @@
               <span class="fan-name" @click="gotoUserProfile(fan.user_id)">{{ fan.user_name }}</span>
               <span class="fan-value">{{ fan.fans_value }}</span>
             </div>
-            <div class="fan-message">
-              此书只应天上有，当赏当赏！
+            <div class="fan-message" v-if="fan.message || isMe(fan)">
+              {{ fan.message || '写下支持留言' }} <button v-if="isMe(fan)" @click="editMessage(fan)">编辑留言</button>
             </div>
           </div>
         </div>
       </div>
 
+      <p v-if="!fanInfo.length && !loadError" class="fans-empty">本{{ period === 'month' ? '月' : '作品' }}还没有粉丝上榜</p>
+      <button v-if="limit > 0 && fanInfo.length > limit" class="fans-more" @click="showAll = !showAll">{{ showAll ? '收起' : `完整粉丝榜（${fanInfo.length} 人）` }}</button>
       <!-- 当前用户信息条 -->
       <div class="my-info-wrapper" v-if="isLogin && myInfo.name">
         <div class="my-info-rank">
@@ -56,108 +60,39 @@
 </template>
 
 <script>
+import { readingToken } from '~/plugins/api/reading'
 export default {
-  props: {
-    novelId: {
-      type: [Number, String],
-      required: true
-    },
-    limit: {
-      type: Number,
-      default: 10
-    }
-  },
-  data() {
-    return {
-      loading: true,
-      fanInfo: [],
-      myInfo: {
-        rank: "未上榜",
-        fans_value: 0,
-        name: "",
-        avatar_url: ""
-      },
-      rankClasses: ['rank-first', 'rank-second', 'rank-third'],
-      isLogin: false,
-      userInfo: null
-    }
-  },
-  async mounted() {
-    this.checkLoginStatus()
-    await this.getFansList()
-  },
+  props: { novelId: { type: [Number, String], required: true }, limit: { type: Number, default: 10 } },
+  data() { return { loading: true, fanInfo: [], myInfo: { rank: '未上榜', fans_value: 0, name: '', avatar_url: '' }, rankClasses: ['rank-first', 'rank-second', 'rank-third'], isLogin: false, userInfo: null, period: 'total', showAll: false, loadError: '', version: 0, account: null } },
+  computed: { visibleFans() { return this.limit > 0 && !this.showAll ? this.fanInfo.slice(0, this.limit) : this.fanInfo } },
+  watch: { novelId() { this.fanInfo = []; this.showAll = false; this.getFansList() }, period() { this.fanInfo = []; this.showAll = false; this.getFansList() } },
+  mounted() { this.account = readingToken(); this.getFansList(); window.addEventListener('focus', this.checkAccount); window.addEventListener('storage', this.checkAccount) }, beforeDestroy() { this.version++; window.removeEventListener('focus', this.checkAccount); window.removeEventListener('storage', this.checkAccount) },
   methods: {
+    checkAccount() { const token = readingToken(); if (token !== this.account) { this.account = token; this.userInfo = null; this.isLogin = !!token; this.getFansList() } },
     async getFansList() {
-      this.loading = true
+      const version = ++this.version, token = readingToken(); this.account = token; this.loading = true; this.loadError = ''; this.isLogin = !!token; this.myInfo = { rank: '未上榜', fans_value: 0, name: '', avatar_url: '' }; this.userInfo = null
       try {
-        // 获取粉丝列表
-        const fans = await this.$api.novels.getNovelFans(this.novelId)
-        this.fanInfo = fans || []
-        
-        // 获取用户信息（如果已登录）
-        if (localStorage.getItem("token")) {
-          await this.getMyInfo()
-        }
-      } catch (error) {
-        console.error('获取粉丝榜失败', error)
-      } finally {
-        this.loading = false
-      }
+        const [fans, user] = await Promise.all([this.$api.reader.fans(this.novelId, this.period), token ? this.$api.reader.profile().catch(() => null) : Promise.resolve(null)])
+        if (version !== this.version || token !== readingToken()) return
+        this.fanInfo = Array.isArray(fans) ? fans : []; this.userInfo = user
+        if (user) { const index = this.fanInfo.findIndex(fan => String(fan.user_id) === String(user.user_id)); this.myInfo = { ...user, rank: index < 0 ? '未上榜' : `第 ${index + 1} 名`, fans_value: index < 0 ? 0 : this.fanInfo[index].fans_value } }
+      } catch (error) { if (version === this.version) this.loadError = error.message || '粉丝榜加载失败' }
+      finally { if (version === this.version) this.loading = false }
     },
-    
-    async getMyInfo() {
+    isMe(fan) { return this.account === readingToken() && this.userInfo && String(fan.user_id) === String(this.userInfo.user_id) },
+    async editMessage(fan) {
+      if (!this.isMe(fan)) return
+      const version = this.version, token = readingToken()
       try {
-        // 获取当前用户信息
-        if (!this.userInfo) {
-          this.userInfo = await this.$api.users.getUserProfile()
-        }
-        
-        if (!this.userInfo) return
-        
-        this.myInfo = {
-          ...this.myInfo,
-          ...this.userInfo,
-          avatar_url: this.userInfo.avatar_url,
-          name: this.userInfo.name || '用户'
-        }
-        
-        // 查找用户在粉丝榜中的排名
-        for (let i = 0; i < this.fanInfo.length; i++) {
-          if (this.fanInfo[i].user_id == this.userInfo.user_id) {
-            this.myInfo.rank = `第 ${i + 1} 名`
-            this.myInfo.fans_value = this.fanInfo[i].fans_value
-            break
-          }
-        }
-      } catch (error) {
-        console.error('获取当前用户粉丝信息失败', error)
-      }
+        const { value } = await this.$prompt('写下对作品的支持留言', '粉丝留言', { inputValue: fan.message || '', inputType: 'textarea', inputValidator: value => String(value || '').length <= 200 || '留言最多 200 字' })
+        if (version !== this.version || token !== readingToken()) return
+        const response = await this.$api.reader.fanMessage(this.novelId, String(value || '').trim())
+        if (version !== this.version || token !== readingToken()) return
+        if (!response.success) throw new Error(response.msg || '留言更新失败')
+        fan.message = String(value || '').trim(); this.$message.success('留言已更新')
+      } catch (error) { if (error !== 'cancel' && error !== 'close' && version === this.version) this.$message.error(error.message || '留言更新失败') }
     },
-    
-    gotoUserProfile(userId) {
-      this.$router.push(`/users/${userId}`)
-    },
-    
-    // 检查登录状态
-    checkLoginStatus() {
-      try {
-        const tokenData = localStorage.getItem('token');
-        if (tokenData) {
-          this.isLogin = true;
-          
-          // 尝试从本地缓存获取用户信息
-          const cachedUserInfo = localStorage.getItem('LogHomeUserInfo');
-          if (cachedUserInfo) {
-            this.userInfo = JSON.parse(cachedUserInfo);
-          }
-        } else {
-          this.isLogin = false;
-          this.userInfo = null;
-        }
-      } catch (e) {
-        console.error("检查登录状态错误", e);
-      }
-    }
+    gotoUserProfile(userId) { this.$router.push(`/users/${userId}`) }
   }
 }
 </script>
@@ -186,6 +121,7 @@ $border-light: #f5f5f5;
   to { transform: rotate(360deg); }
 }
 
+.fans-toolbar { display: flex; gap: 8px; margin-bottom: 14px; } .fans-toolbar button,.fan-message button,.fans-more { font: inherit; font-size: 12px; border: 1px solid #e5d8c9; border-radius: 5px; color: #947358; background: #fff; padding: 7px 12px; cursor: pointer; } .fans-toolbar button.active { background: #947358; color: #fff; } .fans-toolbar button:disabled { opacity: .5; } .fans-error { color: #ba6654; font-size: 13px; margin-bottom: 10px; } .fans-empty { color: #aaa; text-align: center; padding: 20px; } .fans-more { display: block; margin: 20px auto; }
 .fans-ranking {
   width: 100%;
   position: relative;

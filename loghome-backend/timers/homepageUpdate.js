@@ -5,7 +5,7 @@
 const { query } = require('../sql.js');
 
 async function updateBestCompletedNovels() {
-	await query('DELETE FROM library_recommend WHERE title = \'完本经典\'');
+	await query('DELETE FROM library_recommend WHERE title = \'入站必读\'');
 	let results = await query(
 		'SELECT novel_id FROM novels WHERE is_personal = 0 AND deleted = 0 AND is_complete = 1 ORDER BY clicks DESC LIMIT 0,100',
 	);
@@ -13,7 +13,7 @@ async function updateBestCompletedNovels() {
 	for (let item of results) {
 		await query('INSERT INTO library_recommend(novel_id,title) VALUES(?,?)', [
 			item.novel_id,
-			'完本经典',
+			'入站必读',
 		]);
 	}
 }
@@ -42,7 +42,7 @@ async function run() {
 	await updateBestCompletedNovels();
 	await updateBestWelcomedNovels();
 	console.log('数据更新操作执行成功。');
-	return { updated: ['完本经典', '原木力飙升'] };
+	return { updated: ['入站必读', '原木力飙升'] };
 }
 
 module.exports = {

@@ -19,6 +19,10 @@
 			</div>
 
 			<div class="certification">
+				<a class="certification-link" target="_blank" href="https://www.12377.cn/">
+					<img src="../../static/buliang.svg" alt="" />
+					<span>网上有害信息举报专区</span>
+				</a>
 				<a class="certification-link" target="_blank" href="https://beian.miit.gov.cn/#/Integrated/index">苏ICP备2021006745号-1</a>
 				<a class="certification-link" target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34010402703554">
 					<img src="../../static/batb.png" alt="" />

@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS lab_entries (
+  entry_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  miniapp_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  name VARCHAR(80) NOT NULL,
+  name_en VARCHAR(80) NOT NULL DEFAULT '',
+  icon_url VARCHAR(2048) NOT NULL,
+  description VARCHAR(500) NOT NULL DEFAULT '',
+  description_en VARCHAR(500) NOT NULL DEFAULT '',
+  enabled TINYINT NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_lab_miniapp (miniapp_id),
+  INDEX idx_lab_display (enabled, sort_order),
+  CONSTRAINT fk_lab_miniapp FOREIGN KEY (miniapp_id) REFERENCES miniapps(app_id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

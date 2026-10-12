@@ -5,6 +5,11 @@
       <nuxt-link to="/read" class="back-button">返回书库</nuxt-link>
     </div>
 
+    <div class="tag-toolbar">
+      <label>查找标签 <input v-model="keyword" type="search" placeholder="输入标签名称"></label>
+      <div class="tag-filters"><button v-for="filter in filters" :key="filter.key" :class="{ active: selected === filter.key }" :aria-pressed="selected === filter.key" @click="selected = filter.key">{{ filter.label }}</button></div>
+      <span>{{ filteredTags.length }} 个标签</span>
+    </div>
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
       <p>正在加载标签...</p>
@@ -15,48 +20,47 @@
       <button @click="getNovelTags" class="retry-button">重试</button>
     </div>
 
-    <div v-else-if="tags.length === 0" class="empty-container">
-      <p>暂无标签</p>
+    <div v-else-if="filteredTags.length === 0" class="empty-container">
+      <p>没有找到匹配的标签</p>
     </div>
 
     <div v-else class="tags-container">
       <div class="tags-grid">
-        <div 
-          v-for="(item, index) in tags" 
+        <nuxt-link
+          v-for="item in filteredTags"
           :key="item.tag_id"
           class="tag-item"
           :class="{
-            'activity': item.is_activity_tag, 
+            'activity': item.is_activity_tag,
             'suggested': item.is_suggested
           }"
-          @click="gotoTagNovels(item.tag_id)"
+          :to="`/tag/collections?tag_id=${item.tag_id}`"
         >
           <div class="tag-content">
             <h3 class="tag-name">{{ item.tag_name }}</h3>
             <div class="tag-count">{{ item.count }} 部作品</div>
             <div class="tag-badges">
               <span v-if="item.is_activity_tag" class="badge activity-badge">活动标签</span>
-              <span v-if="item.is_suggested" class="badge suggested-badge">推荐标签</span>
+              <span v-if="item.is_suggested" class="badge suggested-badge">官方标签</span>
             </div>
           </div>
-        </div>
+        </nuxt-link>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { asList, enabledFlag } from '~/utils/reading-discovery'
+import { readingHead } from '~/utils/reading-seo'
 export default {
   head() {
-    return {
-      title: '标签库 - 原木社区',
-      meta: [
-        { hid: 'description', name: 'description', content: '原木社区 - 浏览所有小说标签，发现更多精彩内容' }
-      ]
-    }
+    return readingHead({ title: '标签库 - 原木社区', description: '浏览原木社区所有作品标签，按活动、官方标签发现小说、漫画和世界设定。', path: '/tags' })
   },
   data() {
     return {
+      keyword: '', selected: 'all',
+      filters: [{ key: 'all', label: '全部' }, { key: 'activity', label: '活动标签' }, { key: 'suggested', label: '官方标签' }],
       tags: [],
       loading: true,
       error: null
@@ -64,9 +68,9 @@ export default {
   },
   async asyncData({ $api }) {
     try {
-      const tags = await $api.novels.getAllTags()
+      const tags = await $api.reading.getTags()
       return {
-        tags: tags || [],
+        tags: asList(tags).map(tag => ({ ...tag, is_activity_tag: enabledFlag(tag.is_activity_tag), is_suggested: enabledFlag(tag.is_suggested) })),
         loading: false
       }
     } catch (error) {
@@ -78,14 +82,21 @@ export default {
       }
     }
   },
+  computed: {
+    filteredTags() {
+      const keyword = this.keyword.trim().toLowerCase()
+      return this.tags.filter(tag => (!keyword || String(tag.tag_name).toLowerCase().includes(keyword)) &&
+        (this.selected !== 'activity' || tag.is_activity_tag) && (this.selected !== 'suggested' || tag.is_suggested))
+    }
+  },
   methods: {
     async getNovelTags() {
       this.loading = true
       this.error = null
-      
+
       try {
-        const tags = await this.$api.novels.getAllTags()
-        this.tags = tags || []
+        const tags = await this.$api.reading.getTags()
+        this.tags = asList(tags).map(tag => ({ ...tag, is_activity_tag: enabledFlag(tag.is_activity_tag), is_suggested: enabledFlag(tag.is_suggested) }))
       } catch (error) {
         console.error('获取标签失败:', error)
         this.error = '获取标签失败，请稍后重试'
@@ -93,7 +104,7 @@ export default {
         this.loading = false
       }
     },
-    
+
     gotoTagNovels(tagId) {
       this.$router.push(`/tag/collections?tag_id=${tagId}`)
     }
@@ -130,14 +141,14 @@ $card-background: #fff;
   margin-bottom: 30px;
   padding-bottom: 15px;
   border-bottom: 1px solid $border-color;
-  
+
   .page-title {
     font-size: 28px;
     font-weight: bold;
     color: $primary-color;
     margin: 0;
   }
-  
+
   .back-button {
     padding: 10px 20px;
     background-color: $primary-color;
@@ -146,7 +157,7 @@ $card-background: #fff;
     text-decoration: none;
     font-size: 14px;
     transition: all 0.3s ease;
-    
+
     &:hover {
       background-color: darken($primary-color, 10%);
       transform: translateY(-2px);
@@ -154,7 +165,7 @@ $card-background: #fff;
   }
 }
 
-.loading-container, 
+.loading-container,
 .error-container,
 .empty-container {
   display: flex;
@@ -162,7 +173,7 @@ $card-background: #fff;
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  
+
   p {
     margin-top: 20px;
     color: $text-light;
@@ -195,7 +206,7 @@ $card-background: #fff;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s ease;
-  
+
   &:hover {
     background-color: darken($primary-color, 10%);
     transform: translateY(-2px);
@@ -206,10 +217,18 @@ $card-background: #fff;
   margin-top: 20px;
 }
 
+.tag-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; font-size: 13px; color: #999; }
+.tag-toolbar label { display: flex; gap: 10px; align-items: center; }
+.tag-toolbar input { font: inherit; padding: 9px 12px; border: 1px solid #e0d7cc; border-radius: 6px; }
+.tag-filters { display: flex; gap: 6px; }
+.tag-filters button { font: inherit; padding: 8px 14px; border: 0; border-radius: 5px; cursor: pointer; color: #947358; background: #f5f2ed; }
+.tag-filters button.active { background: #947358; color: white; }
+.tag-item { text-decoration: none; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid #947358; outline-offset: 3px; }
 .tags-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
 }
 
 .tag-item {
@@ -225,26 +244,26 @@ $card-background: #fff;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     border-color: $primary-color;
   }
-  
+
   &.activity {
     border-color: $orange-color;
     background: linear-gradient(135deg, $card-background 0%, rgba($orange-light, 0.1) 100%);
-    
+
     .tag-name {
       color: $orange-color;
     }
   }
-  
+
   &.suggested {
     border-color: $orange-color;
     border-style: dashed;
-    
+
     .tag-name {
       color: $orange-color;
     }
@@ -257,7 +276,7 @@ $card-background: #fff;
 }
 
 .tag-name {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: bold;
   margin: 0 0 8px 0;
   color: $text-color;
@@ -281,12 +300,12 @@ $card-background: #fff;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
-  
+
   &.activity-badge {
     background-color: $orange-light;
     color: $orange-color;
   }
-  
+
   &.suggested-badge {
     background-color: rgba($orange-color, 0.1);
     color: $orange-color;
@@ -301,27 +320,27 @@ $card-background: #fff;
   .tags-page {
     padding: 15px;
   }
-  
+
   .page-header {
     flex-direction: column;
     gap: 15px;
     text-align: center;
-    
+
     .page-title {
       font-size: 24px;
     }
   }
-  
+
   .tags-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 15px;
   }
-  
+
   .tag-item {
     padding: 15px;
     min-height: 100px;
   }
-  
+
   .tag-name {
     font-size: 18px;
   }
@@ -331,7 +350,7 @@ $card-background: #fff;
   .tags-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .tag-item {
     min-height: 80px;
   }
@@ -343,41 +362,41 @@ $card-background: #fff;
     background-color: #1E1E1E;
     color: #CCCCCC;
   }
-  
+
   .page-header {
     border-bottom-color: #3C3C3C;
-    
+
     .page-title {
       color: #CCCCCC;
     }
   }
-  
+
   .tag-item {
     background-color: #2C2C2C;
     border-color: #3C3C3C;
-    
+
     &:hover {
       border-color: $primary-color;
     }
-    
+
     &.activity {
       background: linear-gradient(135deg, #2C2C2C 0%, rgba($orange-color, 0.1) 100%);
     }
   }
-  
+
   .tag-name {
     color: #CCCCCC;
-    
+
     .activity &,
     .suggested & {
       color: $orange-color;
     }
   }
-  
+
   .tag-count {
     color: #888888;
   }
-  
+
   .loading-container,
   .error-container,
   .empty-container {

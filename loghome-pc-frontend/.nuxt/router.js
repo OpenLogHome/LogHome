@@ -4,36 +4,51 @@ import { normalizeURL, decode } from 'ufo'
 import { interopDefault } from './utils'
 import scrollBehavior from './router.scrollBehavior.js'
 
-const _5bcb2864 = () => interopDefault(import('..\\pages\\community\\index.vue' /* webpackChunkName: "pages/community/index" */))
-const _6a755198 = () => interopDefault(import('..\\pages\\login.vue' /* webpackChunkName: "pages/login" */))
-const _7c86eaf6 = () => interopDefault(import('..\\pages\\me\\index.vue' /* webpackChunkName: "pages/me/index" */))
-const _110599f2 = () => interopDefault(import('..\\pages\\read\\index.vue' /* webpackChunkName: "pages/read/index" */))
-const _6350ae26 = () => interopDefault(import('..\\pages\\search.vue' /* webpackChunkName: "pages/search" */))
-const _2e37b8a4 = () => interopDefault(import('..\\pages\\tags\\index.vue' /* webpackChunkName: "pages/tags/index" */))
-const _c641e6d0 = () => interopDefault(import('..\\pages\\write\\index.vue' /* webpackChunkName: "pages/write/index" */))
-const _e150c318 = () => interopDefault(import('..\\pages\\agreement\\content.vue' /* webpackChunkName: "pages/agreement/content" */))
-const _5ce457e8 = () => interopDefault(import('..\\pages\\community\\chat.vue' /* webpackChunkName: "pages/community/chat" */))
-const _bdb6f1c2 = () => interopDefault(import('..\\pages\\community\\circles.vue' /* webpackChunkName: "pages/community/circles" */))
-const _f12211f0 = () => interopDefault(import('..\\pages\\me\\friends.vue' /* webpackChunkName: "pages/me/friends" */))
-const _1153e82e = () => interopDefault(import('..\\pages\\me\\messages.vue' /* webpackChunkName: "pages/me/messages" */))
-const _62cc8340 = () => interopDefault(import('..\\pages\\me\\settings.vue' /* webpackChunkName: "pages/me/settings" */))
-const _19559ef2 = () => interopDefault(import('..\\pages\\novel\\fans.vue' /* webpackChunkName: "pages/novel/fans" */))
-const _8e7326ec = () => interopDefault(import('..\\pages\\read\\collections.vue' /* webpackChunkName: "pages/read/collections" */))
-const _23cf2240 = () => interopDefault(import('..\\pages\\tag\\collections.vue' /* webpackChunkName: "pages/tag/collections" */))
-const _012d29e6 = () => interopDefault(import('..\\pages\\write\\new.vue' /* webpackChunkName: "pages/write/new" */))
-const _3cebdcde = () => interopDefault(import('..\\pages\\community\\post\\edit.vue' /* webpackChunkName: "pages/community/post/edit" */))
-const _4b4dfa8f = () => interopDefault(import('..\\pages\\write\\settings\\info\\_id.vue' /* webpackChunkName: "pages/write/settings/info/_id" */))
-const _e61758f8 = () => interopDefault(import('..\\pages\\write\\settings\\tags\\_id.vue' /* webpackChunkName: "pages/write/settings/tags/_id" */))
-const _626d1766 = () => interopDefault(import('..\\pages\\community\\circle\\_id.vue' /* webpackChunkName: "pages/community/circle/_id" */))
-const _5917ce96 = () => interopDefault(import('..\\pages\\community\\post\\_id.vue' /* webpackChunkName: "pages/community/post/_id" */))
-const _d30ec794 = () => interopDefault(import('..\\pages\\write\\edit\\_id.vue' /* webpackChunkName: "pages/write/edit/_id" */))
-const _6767d33d = () => interopDefault(import('..\\pages\\write\\settings\\_id.vue' /* webpackChunkName: "pages/write/settings/_id" */))
-const _767e00ae = () => interopDefault(import('..\\pages\\write\\activity-form\\_workId\\_tagId.vue' /* webpackChunkName: "pages/write/activity-form/_workId/_tagId" */))
-const _a6b65aee = () => interopDefault(import('..\\pages\\article\\_id.vue' /* webpackChunkName: "pages/article/_id" */))
-const _ec79a17a = () => interopDefault(import('..\\pages\\novel\\_id.vue' /* webpackChunkName: "pages/novel/_id" */))
-const _2bb2fcf7 = () => interopDefault(import('..\\pages\\users\\_id.vue' /* webpackChunkName: "pages/users/_id" */))
-const _6883eaa6 = () => interopDefault(import('..\\pages\\world\\_id.vue' /* webpackChunkName: "pages/world/_id" */))
-const _011db41d = () => interopDefault(import('..\\pages\\index.vue' /* webpackChunkName: "pages/index" */))
+const _d1066372 = () => interopDefault(import('../pages/community/index.vue' /* webpackChunkName: "pages/community/index" */))
+const _2f9620a0 = () => interopDefault(import('../pages/forgot-password.vue' /* webpackChunkName: "pages/forgot-password" */))
+const _3e9643c4 = () => interopDefault(import('../pages/login.vue' /* webpackChunkName: "pages/login" */))
+const _22cb0d90 = () => interopDefault(import('../pages/me/index.vue' /* webpackChunkName: "pages/me/index" */))
+const _47d5b0ce = () => interopDefault(import('../pages/read/index.vue' /* webpackChunkName: "pages/read/index" */))
+const _56b76346 = () => interopDefault(import('../pages/search.vue' /* webpackChunkName: "pages/search" */))
+const _39158391 = () => interopDefault(import('../pages/tags/index.vue' /* webpackChunkName: "pages/tags/index" */))
+const _79629786 = () => interopDefault(import('../pages/write/index.vue' /* webpackChunkName: "pages/write/index" */))
+const _7553b862 = () => interopDefault(import('../pages/agreement/content.vue' /* webpackChunkName: "pages/agreement/content" */))
+const _4b88be73 = () => interopDefault(import('../pages/community/chat.vue' /* webpackChunkName: "pages/community/chat" */))
+const _d10fa150 = () => interopDefault(import('../pages/community/circles.vue' /* webpackChunkName: "pages/community/circles" */))
+const _422e395a = () => interopDefault(import('../pages/me/friends.vue' /* webpackChunkName: "pages/me/friends" */))
+const _e1ccae04 = () => interopDefault(import('../pages/me/messages.vue' /* webpackChunkName: "pages/me/messages" */))
+const _0adfbf56 = () => interopDefault(import('../pages/me/settings.vue' /* webpackChunkName: "pages/me/settings" */))
+const _174bec68 = () => interopDefault(import('../pages/novel/fans.vue' /* webpackChunkName: "pages/novel/fans" */))
+const _ee25ffbe = () => interopDefault(import('../pages/read/activities.vue' /* webpackChunkName: "pages/read/activities" */))
+const _5af90266 = () => interopDefault(import('../pages/read/bookcase.vue' /* webpackChunkName: "pages/read/bookcase" */))
+const _1df58dde = () => interopDefault(import('../pages/read/collections.vue' /* webpackChunkName: "pages/read/collections" */))
+const _7e6c1de0 = () => interopDefault(import('../pages/read/rank.vue' /* webpackChunkName: "pages/read/rank" */))
+const _61ad7228 = () => interopDefault(import('../pages/read/redstone.vue' /* webpackChunkName: "pages/read/redstone" */))
+const _45f092a1 = () => interopDefault(import('../pages/read/resources.vue' /* webpackChunkName: "pages/read/resources" */))
+const _62b0c5c0 = () => interopDefault(import('../pages/read/rewards.vue' /* webpackChunkName: "pages/read/rewards" */))
+const _7afc588a = () => interopDefault(import('../pages/tag/collections.vue' /* webpackChunkName: "pages/tag/collections" */))
+const _2e3c76cb = () => interopDefault(import('../pages/write/new.vue' /* webpackChunkName: "pages/write/new" */))
+const _ad3404e4 = () => interopDefault(import('../pages/community/post/edit.vue' /* webpackChunkName: "pages/community/post/edit" */))
+const _6d7abeb0 = () => interopDefault(import('../pages/write/settings/info/_id.vue' /* webpackChunkName: "pages/write/settings/info/_id" */))
+const _77daf31b = () => interopDefault(import('../pages/write/settings/tags/_id.vue' /* webpackChunkName: "pages/write/settings/tags/_id" */))
+const _1c191756 = () => interopDefault(import('../pages/community/circle/_id.vue' /* webpackChunkName: "pages/community/circle/_id" */))
+const _0d025034 = () => interopDefault(import('../pages/community/post/_id.vue' /* webpackChunkName: "pages/community/post/_id" */))
+const _301e13cb = () => interopDefault(import('../pages/manga/read/_articleId.vue' /* webpackChunkName: "pages/manga/read/_articleId" */))
+const _24ea6b20 = () => interopDefault(import('../pages/read/ask/_id.vue' /* webpackChunkName: "pages/read/ask/_id" */))
+const _f4c371f4 = () => interopDefault(import('../pages/read/comment/_id.vue' /* webpackChunkName: "pages/read/comment/_id" */))
+const _b5a210fc = () => interopDefault(import('../pages/read/end/_id.vue' /* webpackChunkName: "pages/read/end/_id" */))
+const _778b36a8 = () => interopDefault(import('../pages/read/power/_id.vue' /* webpackChunkName: "pages/read/power/_id" */))
+const _32ec27bb = () => interopDefault(import('../pages/read/preview/_key.vue' /* webpackChunkName: "pages/read/preview/_key" */))
+const _44308200 = () => interopDefault(import('../pages/world/relations/_id.vue' /* webpackChunkName: "pages/world/relations/_id" */))
+const _1342719a = () => interopDefault(import('../pages/write/edit/_id.vue' /* webpackChunkName: "pages/write/edit/_id" */))
+const _194f2833 = () => interopDefault(import('../pages/write/settings/_id.vue' /* webpackChunkName: "pages/write/settings/_id" */))
+const _37fe1b8c = () => interopDefault(import('../pages/write/activity-form/_workId/_tagId.vue' /* webpackChunkName: "pages/write/activity-form/_workId/_tagId" */))
+const _1ce7eb3c = () => interopDefault(import('../pages/article/_id.vue' /* webpackChunkName: "pages/article/_id" */))
+const _764768ba = () => interopDefault(import('../pages/manga/_id.vue' /* webpackChunkName: "pages/manga/_id" */))
+const _23f6197c = () => interopDefault(import('../pages/novel/_id.vue' /* webpackChunkName: "pages/novel/_id" */))
+const _24ca9f0e = () => interopDefault(import('../pages/users/_id.vue' /* webpackChunkName: "pages/users/_id" */))
+const _08ec0298 = () => interopDefault(import('../pages/world/_id.vue' /* webpackChunkName: "pages/world/_id" */))
+const _74eea0ad = () => interopDefault(import('../pages/index.vue' /* webpackChunkName: "pages/index" */))
 
 const emptyFn = () => {}
 
@@ -48,123 +63,183 @@ export const routerOptions = {
 
   routes: [{
     path: "/community",
-    component: _5bcb2864,
+    component: _d1066372,
     name: "community"
   }, {
+    path: "/forgot-password",
+    component: _2f9620a0,
+    name: "forgot-password"
+  }, {
     path: "/login",
-    component: _6a755198,
+    component: _3e9643c4,
     name: "login"
   }, {
     path: "/me",
-    component: _7c86eaf6,
+    component: _22cb0d90,
     name: "me"
   }, {
     path: "/read",
-    component: _110599f2,
+    component: _47d5b0ce,
     name: "read"
   }, {
     path: "/search",
-    component: _6350ae26,
+    component: _56b76346,
     name: "search"
   }, {
     path: "/tags",
-    component: _2e37b8a4,
+    component: _39158391,
     name: "tags"
   }, {
     path: "/write",
-    component: _c641e6d0,
+    component: _79629786,
     name: "write"
   }, {
     path: "/agreement/content",
-    component: _e150c318,
+    component: _7553b862,
     name: "agreement-content"
   }, {
     path: "/community/chat",
-    component: _5ce457e8,
+    component: _4b88be73,
     name: "community-chat"
   }, {
     path: "/community/circles",
-    component: _bdb6f1c2,
+    component: _d10fa150,
     name: "community-circles"
   }, {
     path: "/me/friends",
-    component: _f12211f0,
+    component: _422e395a,
     name: "me-friends"
   }, {
     path: "/me/messages",
-    component: _1153e82e,
+    component: _e1ccae04,
     name: "me-messages"
   }, {
     path: "/me/settings",
-    component: _62cc8340,
+    component: _0adfbf56,
     name: "me-settings"
   }, {
     path: "/novel/fans",
-    component: _19559ef2,
+    component: _174bec68,
     name: "novel-fans"
   }, {
+    path: "/read/activities",
+    component: _ee25ffbe,
+    name: "read-activities"
+  }, {
+    path: "/read/bookcase",
+    component: _5af90266,
+    name: "read-bookcase"
+  }, {
     path: "/read/collections",
-    component: _8e7326ec,
+    component: _1df58dde,
     name: "read-collections"
   }, {
+    path: "/read/rank",
+    component: _7e6c1de0,
+    name: "read-rank"
+  }, {
+    path: "/read/redstone",
+    component: _61ad7228,
+    name: "read-redstone"
+  }, {
+    path: "/read/resources",
+    component: _45f092a1,
+    name: "read-resources"
+  }, {
+    path: "/read/rewards",
+    component: _62b0c5c0,
+    name: "read-rewards"
+  }, {
     path: "/tag/collections",
-    component: _23cf2240,
+    component: _7afc588a,
     name: "tag-collections"
   }, {
     path: "/write/new",
-    component: _012d29e6,
+    component: _2e3c76cb,
     name: "write-new"
   }, {
     path: "/community/post/edit",
-    component: _3cebdcde,
+    component: _ad3404e4,
     name: "community-post-edit"
   }, {
     path: "/write/settings/info/:id?",
-    component: _4b4dfa8f,
+    component: _6d7abeb0,
     name: "write-settings-info-id"
   }, {
     path: "/write/settings/tags/:id?",
-    component: _e61758f8,
+    component: _77daf31b,
     name: "write-settings-tags-id"
   }, {
     path: "/community/circle/:id?",
-    component: _626d1766,
+    component: _1c191756,
     name: "community-circle-id"
   }, {
     path: "/community/post/:id?",
-    component: _5917ce96,
+    component: _0d025034,
     name: "community-post-id"
   }, {
+    path: "/manga/read/:articleId?",
+    component: _301e13cb,
+    name: "manga-read-articleId"
+  }, {
+    path: "/read/ask/:id?",
+    component: _24ea6b20,
+    name: "read-ask-id"
+  }, {
+    path: "/read/comment/:id?",
+    component: _f4c371f4,
+    name: "read-comment-id"
+  }, {
+    path: "/read/end/:id?",
+    component: _b5a210fc,
+    name: "read-end-id"
+  }, {
+    path: "/read/power/:id?",
+    component: _778b36a8,
+    name: "read-power-id"
+  }, {
+    path: "/read/preview/:key?",
+    component: _32ec27bb,
+    name: "read-preview-key"
+  }, {
+    path: "/world/relations/:id?",
+    component: _44308200,
+    name: "world-relations-id"
+  }, {
     path: "/write/edit/:id?",
-    component: _d30ec794,
+    component: _1342719a,
     name: "write-edit-id"
   }, {
     path: "/write/settings/:id?",
-    component: _6767d33d,
+    component: _194f2833,
     name: "write-settings-id"
   }, {
     path: "/write/activity-form/:workId?/:tagId?",
-    component: _767e00ae,
+    component: _37fe1b8c,
     name: "write-activity-form-workId-tagId"
   }, {
     path: "/article/:id?",
-    component: _a6b65aee,
+    component: _1ce7eb3c,
     name: "article-id"
   }, {
+    path: "/manga/:id?",
+    component: _764768ba,
+    name: "manga-id"
+  }, {
     path: "/novel/:id?",
-    component: _ec79a17a,
+    component: _23f6197c,
     name: "novel-id"
   }, {
     path: "/users/:id?",
-    component: _2bb2fcf7,
+    component: _24ca9f0e,
     name: "users-id"
   }, {
     path: "/world/:id?",
-    component: _6883eaa6,
+    component: _08ec0298,
     name: "world-id"
   }, {
     path: "/",
-    component: _011db41d,
+    component: _74eea0ad,
     name: "index"
   }],
 

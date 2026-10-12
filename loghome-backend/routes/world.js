@@ -89,6 +89,19 @@ router.get('/get_my_worlds', auth, async function (req, res) {
 	}
 });
 
+// Public vocabulary data in one request: SSR relationship graphs never expose drafts.
+router.get('/vocabularies', async function (req, res) {
+ const id = Number(req.query.novel_id);
+ if (!Number.isSafeInteger(id) || id <= 0) return res.status(404).json({msg:'World not found'});
+ try {
+  const { PUBLIC_NOVEL, PUBLIC_ARTICLE } = require('../bin/readingVisibility');
+  const books = await query(`SELECT n.novel_id FROM novels n WHERE n.novel_id = ? AND n.novel_type = 'world' AND ${PUBLIC_NOVEL}`, [id]);
+  if (!books.length) return res.status(404).json({msg:'World not found or not public'});
+  const words = await query(`SELECT a.article_id,a.novel_id,a.title,a.content,a.article_type FROM articles a JOIN novels n ON n.novel_id = a.novel_id WHERE a.novel_id = ? AND a.article_type = 'worldVocabulary' AND ${PUBLIC_ARTICLE} ORDER BY a.article_chapter ASC`, [id]);
+  res.json(words);
+ } catch (_) { res.status(503).json({msg:'Vocabulary data unavailable'}); }
+});
+
 router.get('/get_world_by_id', async function (req, res) {
 	try {
 		let results = await query(`SELECT w.*, n.*, u.name user_name, u.avatar_url FROM world w, novels n, users u 

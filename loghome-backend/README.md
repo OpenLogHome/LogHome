@@ -47,7 +47,7 @@ module.exports = {
 | timer_loghome_scheduled_publish | `timers/scheduledPublish.js` | 定时发布到点章节并通知收藏用户 | 每分钟 |
 | timer_loghome_treeplant | `timers/treeplant.js` | 树场经验球过期清理与自动掉落 | 每 5 分钟 |
 | timer_loghome_membership | `timers/membershipRenewal.js` | 原木通行证自动续费、红石发放与到期清理 | 每 10 分钟 |
-| timer_loghome_homepage_update | `timers/homepageUpdate.js` | 首页「完本经典」「原木力飙升」榜单更新 | 每小时第 45 分钟 |
+| timer_loghome_homepage_update | `timers/homepageUpdate.js` | 首页「入站必读」「原木力飙升」榜单更新 | 每小时第 45 分钟 |
 | timer_loghome_search_keywords | `timers/searchKeywords.js` | 搜索关键词推荐、清理与自动分类 | 每天 04:30 |
 
 ### 配置运行周期

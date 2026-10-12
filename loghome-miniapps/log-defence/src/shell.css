@@ -1,0 +1,8 @@
+:root {--rpx:calc(100vw / 750);--loghome-safe-top:0px;--loghome-safe-bottom:0px;}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#fcf4e1;color:#25283d}html.dark-mode body{background:#171e19;color:#eeeae0}img{object-fit:contain}#status{position:fixed;z-index:1000;left:16px;right:16px;top:calc(70px + var(--loghome-safe-top));padding:16px;background:#fff7e5;border-radius:12px;text-align:center;color:#594426}#status[hidden]{display:none}#status.error{background:#fff0e9;color:#8c392c;cursor:pointer}.toast{position:fixed;z-index:2000;bottom:20%;left:50%;transform:translateX(-50%);max-width:90%;background:#202622e8;color:white;padding:12px 18px;border-radius:10px}.picker-adapter{position:relative;display:inline-block}.picker-adapter select{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}.outer>.content{padding-top:calc(64px + var(--loghome-safe-top))!important}html.dark-mode #status{background:#29352c;color:#d9e4d6}
+
+/* Keep one natural document scroll without a scrollbar gutter reducing game width. */
+html{width:100%;height:100%;overflow:hidden}
+body{width:100%;height:100%;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain}
+*{scrollbar-width:none}
+*::-webkit-scrollbar{display:none;width:0;height:0}

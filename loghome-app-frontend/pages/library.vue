@@ -25,8 +25,10 @@
 			</div>
 			<HorizontalTags ref="HorizontalTagsRef"></HorizontalTags>
 			<bookshelfHorizontal ref="bookshelfHorizontalRef"></bookshelfHorizontal>
-			<home-rank-board ref="homeRankBoardRef" v-show="keyword.length == 0" />
-			<div class="card" v-for="item in collections" v-show="keyword.length == 0" v-dark
+			<template v-for="item in collections">
+			<home-rank-board v-if="item.collection_title === '最近更新'" :key="item.collection_id" ref="homeRankBoardRef" v-show="keyword.length == 0" />
+			<banner v-else-if="item.collection_title === 'banner'" :key="item.collection_id" page="library" v-show="keyword.length == 0" />
+			<div v-else-if="item.novels.length" class="card" :key="item.collection_id" v-show="keyword.length == 0" v-dark
 				:class="{ 'is-refreshing': denseCardRefreshAnimating }">
 				<div class="head clickable" @click="gotoCollections(item.collection_title)">
 					<div class="title">
@@ -139,10 +141,10 @@
 							</view>
 						</swiper-item>
 					</view>
-					<swiper class="dense-card-swiper" v-show="!denseCardLoading" :indicator-dots="false" :autoplay="false" :interval="3000"
-						:duration="500" :circular="true" indicator-active-color="#FFD700"
+					<swiper class="dense-card-swiper" :style="{ height: (Math.min(3, item.novels.length) * 170 + 10) + 'rpx' }" v-show="!denseCardLoading" :indicator-dots="false" :autoplay="false" :interval="3000"
+						:duration="500" :circular="item.novels.length > 6" indicator-active-color="#FFD700"
 						indicator-color="rgba(255, 255, 255, 0.4)">
-						<swiper-item v-for="page in 2" :key="'page-' + page" class="dense-card-swiper-item">
+						<swiper-item v-for="page in Math.ceil(item.novels.length / 6)" :key="'page-' + page" class="dense-card-swiper-item">
 							<div class="dense-card-page">
 								<div class="dense-card-column">
 									<div class="dense-card-item clickable"
@@ -190,10 +192,9 @@
 				</div>
 
 			</div>
-			<!-- 使用Banner组件 -->
-			<banner page="library" v-show="keyword.length == 0" />
+			</template>
 
-			<div v-for="item in [...searchBooks, ...books]" :key="item.book_id">
+			<div v-for="item in [...searchBooks, ...books]" :key="item.novel_id">
 				<div @click="readBook(item, item.novel_id, $event)" class="books clickable" v-dark :id="'book-cover-' + item.novel_id">
 					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
 						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
@@ -233,7 +234,7 @@ import HaycraftMark from '@/components/haycraft-mark.vue'
 import HomeRankBoard from '@/components/home-rank-board.vue'
 
 const LIBRARY_FIRST_SCREEN_CACHE_KEY = 'loghome_library_first_screen_cache';
-const LIBRARY_FIRST_SCREEN_CACHE_VERSION = 3;
+const LIBRARY_FIRST_SCREEN_CACHE_VERSION = 4;
 
 export default {
 	components: {
@@ -261,6 +262,13 @@ export default {
 			denseCardRefreshTimer: null,
 			denseCardLoading: true,
 			mescrollUpOption: {
+				toTop: {
+					theme: 'minecraft',
+					width: 88,
+					right: 24,
+					bottom: 120,
+					radius: 0
+				},
 				page: {
 					size: 6
 				}
@@ -272,6 +280,7 @@ export default {
 	},
 	onShow() {
 		this.reloadComponents();
+		this.refreshFirstScreenRecommends({ silent: true });
 		this.checkSystem();
 		this.syncLibraryScrollAfterShow();
 	},
@@ -346,8 +355,15 @@ export default {
 			if (!sameContainers) {
 				this.teardownLibraryScrollTracking();
 				this._libraryScrollContainers = containers;
-				this._libraryScrollHandler = () => {
+				this._libraryScrollHandler = (event) => {
 					this.syncLibraryScrollPosition(this.getLibraryDocumentScrollTop());
+					// Android WebView may scroll uni-app instead of emitting the page bottom hook.
+					const target = event.target === document || event.target === window
+						? document.scrollingElement || document.documentElement : event.target;
+					if (target && target.clientHeight > 0 && target.scrollHeight > target.clientHeight &&
+						target.scrollHeight - target.clientHeight - target.scrollTop <= 150 && this.mescroll) {
+						this.mescroll.onReachBottom();
+					}
 				};
 				containers.forEach((container) => container.addEventListener('scroll', this._libraryScrollHandler, { passive: true }));
 			}
@@ -385,7 +401,8 @@ export default {
 					return;
 				}
 				const cachedCollections = (Array.isArray(cache.collections) ? cache.collections : [])
-					.filter((item) => item.collection_title !== '最近更新' && item.collection_title !== 'banner');
+					.filter((item) => Number(item.isValid) === 1)
+					.sort((a, b) => Number(a.collection_id) - Number(b.collection_id));
 				const cachedBooks = Array.isArray(cache.books) ? cache.books : [];
 				if (!cachedCollections.length && !cachedBooks.length) {
 					return;
@@ -429,17 +446,21 @@ export default {
 		},
 		async refreshFirstScreenRecommends(options = {}) {
 			const { silent = false } = options;
+			const requestId = (this._recommendRequestId || 0) + 1;
+			this._recommendRequestId = requestId;
 			this.denseCardLoading = true;
 			try {
 				const res = await axios.get(this.$baseUrl + '/library/recommand/get_library_collections', {});
-				// 「最近更新」已由 home-rank-board 替代；banner 集合由下方 <banner> 组件渲染
+				// All blocks, including Banner and the rank board, follow the enabled collection order.
 				const collections = (Array.isArray(res.data) ? res.data : [])
-					.filter((item) => item.collection_title !== '最近更新' && item.collection_title !== 'banner');
+					.filter((item) => Number(item.isValid) === 1)
+					.sort((a, b) => Number(a.collection_id) - Number(b.collection_id));
 				const collectionWithNovels = await Promise.all(collections.map(async (item) => {
+					if (item.collection_title === 'banner' || item.collection_title === '最近更新') return { ...item, novels: [] };
 					try {
-						const novelsRes = await axios.get(this.$baseUrl
-							+ '/library/recommand/get_library_recommend_titles?title='
-							+ item.collection_title + "&page=1&amount=10", {});
+						const novelsRes = await axios.get(this.$baseUrl + '/library/recommand/get_library_recommend_titles', {
+							params: { title: item.collection_title, page: 1, amount: 12 }
+						});
 						return {
 							...item,
 							novels: Array.isArray(novelsRes.data) ? novelsRes.data : []
@@ -452,6 +473,7 @@ export default {
 						};
 					}
 				}));
+				if (requestId !== this._recommendRequestId) return;
 				this.collections = collectionWithNovels;
 				this.persistFirstScreenCache();
 				this.denseCardLoading = false;
@@ -459,9 +481,10 @@ export default {
 					this.triggerDenseCardAnimation();
 				});
 			} catch (error) {
+				if (requestId !== this._recommendRequestId) return;
 				if (!silent && !this.hasLibraryCache) {
 					uni.showToast({
-						title: "绂荤嚎妯″紡",
+						title: "离线模式",
 						icon: 'none',
 						duration: 2000
 					});
@@ -474,7 +497,8 @@ export default {
 		reloadComponents() {
 			if (this.$refs.bookshelfHorizontalRef) this.$refs.bookshelfHorizontalRef.loadBooks();
 			if (this.$refs.HorizontalTagsRef) this.$refs.HorizontalTagsRef.loadTags();
-			if (this.$refs.homeRankBoardRef) this.$refs.homeRankBoardRef.reload();
+			const rankBoards = this.$refs.homeRankBoardRef;
+			(Array.isArray(rankBoards) ? rankBoards : rankBoards ? [rankBoards] : []).forEach(board => board.reload());
 		},
 		onPageScroll(ev) {
 			const scrollTop = ev && ev.scrollTop != null
@@ -512,11 +536,19 @@ export default {
 			//获取更多小说
 			const isFirstPage = !page || page.num === 1;
 			try {
-				const res = await axios.get(this.$baseUrl + '/library/get_novels_all', {});
+				const res = await axios.get(this.$baseUrl + '/library/get_novels_all', {
+					params: { page: page.num || 1, amount: page.size || this.mescrollUpOption.page.size }
+				});
 				const novels = Array.isArray(res.data) ? res.data : [];
-				this.books = isFirstPage ? novels : [...this.books, ...novels];
+				const combined = isFirstPage ? novels : [...this.books, ...novels];
+				const seen = new Set();
+				this.books = combined.filter(novel => {
+					if (seen.has(novel.novel_id)) return false;
+					seen.add(novel.novel_id);
+					return true;
+				});
 				this.persistFirstScreenCache();
-				const pageSize = this.mescrollUpOption.page.size;
+				const pageSize = page.size || this.mescrollUpOption.page.size;
 				const hasNext = novels.length >= pageSize;
 				this.mescroll.endSuccess(novels.length, hasNext);
 			} catch (error) {
@@ -551,39 +583,6 @@ export default {
 		//刷新推荐
 		async refreshRecommends(options = {}) {
 			return this.refreshFirstScreenRecommends(options);
-			// 获取所有推荐集合
-			let _this = this;
-			axios.get(this.$baseUrl + '/library/recommand/get_library_collections', {}).then((res) => {
-				_this.collections = res.data;
-				//获取每个推荐集合中的推荐作品
-				for (let item of _this.collections) {
-					_this.$set(item, 'novels', [])
-					axios.get(_this.$baseUrl
-						+ '/library/recommand/get_library_recommend_titles?title='
-						+ item.collection_title + "&page=1&amount=10", {}).then((res) => {
-							_this.$set(item, 'novels', res.data);
-						}).catch(function (error) {
-							uni.showToast({
-								title: error.toString(),
-								icon: 'none',
-								duration: 2000
-							});
-						}).then(function () {
-
-						})
-				}
-			}).catch(function (error) {
-				uni.switchTab({
-					url: './bookcase/index'
-				})
-				uni.showToast({
-					title: "离线模式",
-					icon: 'none',
-					duration: 2000
-				});
-			}).then(function () {
-
-			})
 		},
 		// 跳转到搜索页面
 		navigateToSearch() {
@@ -618,7 +617,7 @@ export default {
 		//前往推荐集合的详情界面
 		gotoCollections(title) {
 			uni.navigateTo({
-				url: './readers/collections?title=' + title
+				url: './readers/collections?title=' + encodeURIComponent(title)
 			})
 		},
 		//检查更新
@@ -792,15 +791,21 @@ export default {
 		.head {
 			margin: 0rpx 25rpx;
 			padding: 10rpx 0 10rpx 0;
-			height: 45rpx;
+			min-height: 45rpx;
+			display: flex;
+			align-items: center;
+			gap: 16rpx;
 
 			div.title {
-				float: left;
+				display: flex;
+				align-items: center;
+				gap: 12rpx;
+				min-width: 0;
 				font-size: 35rpx;
 				font-weight: bold;
 				color: rgb(45, 45, 45);
-				margin: 0 0 20rpx 0;
-				height: 45rpx;
+				margin: 0;
+				line-height: 45rpx;
 				position: relative;
 
 				.dark-mode & {
@@ -810,6 +815,8 @@ export default {
 				p {
 					position: relative;
 					z-index: 1;
+					margin: 0;
+					overflow-wrap: anywhere;
 				}
 
 				.lightLine {
@@ -817,8 +824,8 @@ export default {
 					height: 30rpx;
 					background-color: rgb(161, 255, 127);
 					border-radius: 20rpx;
-					position: relative;
-					top: -30rpx;
+					position: absolute;
+					bottom: 0;
 					z-index: 0;
 
 					&.dark-mode {
@@ -826,21 +833,20 @@ export default {
 					}
 				}
 
-				img.icon {
-					height: 65rpx;
+				.icon {
+					width: 55rpx;
+					height: 55rpx;
+					flex-shrink: 0;
 					border-radius: 20rpx;
-					position: absolute;
-					top: -5rpx;
-					right: -65rpx;
 					z-index: 0;
 					filter: drop-shadow(0px 2px 10rpx #17181944);
 				}
 			}
 
 			div.more {
-				float: right;
 				display: flex;
-				margin-top: 5rpx;
+				margin-left: auto;
+				flex-shrink: 0;
 
 				p {
 					color: rgb(142, 130, 109);
@@ -868,7 +874,7 @@ export default {
 				flex-direction: row;
 				overflow: auto;
 				font-size: 30rpx;
-				height: 370rpx;
+				align-items: flex-start;
 				overflow-y: hidden;
 			}
 		}
@@ -1194,8 +1200,8 @@ export default {
 
 .dense-card-swiper {
 	width: 100%;
-	height: calc(470rpx + 10rpx);
-	margin: 20rpx 0;
+	height: 520rpx;
+	margin: 10rpx 0;
 }
 
 .dense-card-swiper-item {

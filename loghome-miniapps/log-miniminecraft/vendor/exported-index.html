@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html data-framework="react" data-localstorage-bridge="kv-v1" data-version="11"><head><script>window.__flashAppLoadTraceId = "flash-app-load-1791622894904-yxp5tiqu";</script>
+<script>
+console.log('[FLASH APP] boot');
+(function() {
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--flash-app-safe-area-inset-top', '0px');
+    rootStyle.setProperty('--flash-app-safe-area-inset-right', '0px');
+    rootStyle.setProperty('--flash-app-safe-area-inset-bottom', '0px');
+    rootStyle.setProperty('--flash-app-safe-area-inset-left', '0px');
+    rootStyle.setProperty('--flash-app-safe-top', '0px');
+})();
+window.__fullscreen = false;
+window.__flashAppSafeAreaInsets = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+};
+window.addEventListener('message', function(event) {
+    const data = event && event.data;
+    console.log('[APP LOADER][MSG] [main] 收到 message, type=', data.type, 'data=', event.data)
+    if (!data) {
+        return;
+    }
+    if (data.type === 'FLASH_APP_SAFE_AREA') {
+        const insets = data.insets;
+        const isValidInset = function(value) {
+            return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+        };
+        if (
+            insets &&
+            typeof insets === 'object' &&
+            !Array.isArray(insets) &&
+            isValidInset(insets.top) &&
+            isValidInset(insets.right) &&
+            isValidInset(insets.bottom) &&
+            isValidInset(insets.left)
+        ) {
+            window.__flashAppSafeAreaInsets = {
+                top: insets.top,
+                right: insets.right,
+                bottom: insets.bottom,
+                left: insets.left,
+            };
+        }
+        return;
+    }
+    if (data.type === 'FLASH_APP_FULLSCREEN') {
+        if (typeof data.value === 'boolean') {
+            window.__fullscreen = data.value;
+            return;
+        }
+        if (data.action === 'zoomin') {
+            window.__fullscreen = true;
+            return;
+        }
+        if (data.action === 'zoomout') {
+            window.__fullscreen = false;
+            return;
+        }
+    }
+});
+</script>
+<meta content="https://render.lingguangcontent.com/p/lingguang/0a-6a4d3702661d167379c6115d/index.html" name="flash-app-html-url"/><script>window.__flashAppLocalStorageBridgeConfig = {"enabled":true,"mode":"kv-v1","storageKey":"__flash_app_localstorage_bridge_snapshot_v1__","storageNamespace":"flashapp-55eebbc702264857","artifactId":"flashapp-55eebbc702264857","artifactVersion":"93","htmlUrl":"https://render.lingguangcontent.com/p/lingguang/0a-6a4d3702661d167379c6115d/index.html","snapshot":{}};</script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Minecraft多人联机 - 灵光闪应用</title>
+<script>window.injectInfo = { env: "PROD" };</script><script>window.publicPath = "https://render.lingguangobjects.com/p/yuyan/200031800012861035/";</script><script id="app-manifest" type="application/json">
+{"navigationBar":{"visible":false,"title":"Minecraft多人联机","backgroundColor":"#1a1a2e","foregroundColor":"#FFFFFF"},"permissions":["pointer-lock"],"localStorage":true}
+    </script>
+
+<script src="./index_files/render.lingguangobjects.com/p/yuyan/200031800019708033/base/base.js" type="module"></script>
+<script src="./index_files/gw.alipayobjects.com/render/p/yuyan/180023180042934971/AudioContext2.js" type="module"></script>
+<script src="./index_files/render.lingguangobjects.com/p/yuyan/200031800015964669/voice-tts-simple.js" type="module"></script>
+<script crossorigin="" src="./index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/assets/index-B8uuzVI-.js" type="module"></script>
+<link crossorigin="" href="./index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/assets/index-k0PxXESl.css" rel="stylesheet"/>
+<!-- asap-vite-contract:a4167c51ba36d6fb9d742332 -->
+<meta content="a4167c51ba36d6fb9d742332" name="asap-vite-contract"/>
+<script>
+    window.artifactId = "flashapp-55eebbc702264857";
+    window.artifactVersion = "93";
+    window.trace_id = "0b44755b17834450711441024e34e8";
+</script>
+<meta content="
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *.alipay.com *.alipayobjects.com  *.amap.com *.lingguang.com *.lingguangcontent.com *.lingguangobjects.com;
+  frame-src 'self' data: blob: *.alipay.com *.alipayobjects.com *.amap.com *.lingguang.com *.lingguangcontent.com *.lingguangobjects.com;
+  connect-src 'self' data: blob: *.alipay.com *.alipayobjects.com  *.amap.com *.lingguang.com *.lingguangcontent.com *.lingguangobjects.com;
+  child-src 'self' data: blob: *.alipay.com *.alipayobjects.com  *.amap.com *.lingguang.com *.lingguangcontent.com *.lingguangobjects.com;
+  object-src 'self' data: blob: *.alipay.com *.alipayobjects.com  *.amap.com *.lingguang.com *.lingguangcontent.com *.lingguangobjects.com;
+  base-uri 'self' *.alipay.com *.alipayobjects.com *.amap.com *.lingguang.com *.lingguangcontent.com *.lingguangobjects.com;
+  form-action 'none';
+  upgrade-insecure-requests;
+" http-equiv="Content-Security-Policy"/>
+<link rel="stylesheet" href="./save-dialog.css">
+</head>
+<body>
+<div id="root"></div>
+</body></html>

@@ -1,0 +1,113 @@
+/* 创建存档弹窗：独立覆盖，保留原有表单与模组选择逻辑。 */
+[data-testid="create-save-dialog"] {
+  width: min(560px, calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100dvh - 32px);
+  padding: 24px !important;
+  border-radius: 16px !important;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  animation: none !important;
+  font-size: 14px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .5);
+}
+/* 应用会把竖屏容器旋转成横屏；填写表单时暂时使用竖屏布局。 */
+#container.portrait-mode:has([data-testid="create-save-dialog"]) {
+  transform: none !important;
+  transform-origin: center !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  top: 0 !important;
+  left: 0 !important;
+  margin: 0 !important;
+}
+[data-testid="create-save-dialog"] h3 {
+  font-size: 22px !important;
+  line-height: 1.4;
+  margin: 0 0 24px !important;
+}
+[data-testid="create-save-dialog"] > div {
+  margin-bottom: 18px !important;
+}
+[data-testid="create-save-dialog"] label {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px !important;
+  line-height: 1.5;
+  margin-bottom: 8px !important;
+}
+[data-testid="create-save-dialog"] input {
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px !important;
+  font-size: 16px !important;
+  border-radius: 8px !important;
+}
+[data-testid="create-save-dialog"] button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  line-height: 1.4;
+  border-radius: 8px !important;
+  gap: 8px !important;
+}
+[data-testid="create-save-dialog"] svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+[data-testid="create-save-dialog"] label + div {
+  gap: 10px !important;
+  min-width: 0;
+}
+/* 可选模组/光影/整合包用完整宽度列表，避免横向截断名称。 */
+[data-testid="create-save-dialog"] div[style*="flex-wrap"] {
+  display: flex !important;
+  flex-direction: column;
+  flex-wrap: nowrap !important;
+  max-height: 200px !important;
+  overflow-x: hidden;
+  padding: 10px !important;
+  gap: 8px !important;
+  border-radius: 10px !important;
+}
+[data-testid="create-save-dialog"] div[style*="flex-wrap"] button {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  flex-shrink: 0;
+}
+[data-testid="create-save-dialog"] div[style*="margin-top"] {
+  margin-top: 8px !important;
+  font-size: 13px !important;
+}
+[data-testid="create-save-dialog"] > div:last-child {
+  gap: 12px !important;
+  margin-top: 24px !important;
+  margin-bottom: 0 !important;
+}
+[data-testid="create-save-dialog"] :focus-visible {
+  outline: 2px solid #4fc3f7 !important;
+  outline-offset: 2px;
+}
+@media (max-width: 480px), (max-height: 540px) {
+  [data-testid="create-save-dialog"] {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+  [data-testid="create-save-dialog"] h3 {
+    font-size: 20px !important;
+    margin-bottom: 16px !important;
+  }
+  [data-testid="create-save-dialog"] > div {
+    margin-bottom: 14px !important;
+  }
+  [data-testid="create-save-dialog"] div[style*="flex-wrap"] {
+    max-height: 144px !important;
+  }
+}

@@ -64,7 +64,7 @@
 
       <!-- 空状态 -->
       <div class="empty-state" v-if="Object.keys(categoryCircles).length === 0 && loadingStatus !== 'loading'">
-        <div class="empty-icon">📭</div>
+        <div class="empty-icon" aria-hidden="true"><SiteIcon name="inbox" /></div>
         <p class="empty-text">暂无圈子</p>
         <p class="empty-desc">成为第一个创建圈子的人吧！</p>
         <button class="create-first-btn" @click="openCreateCircle">创建圈子</button>
@@ -74,7 +74,9 @@
 </template>
 
 <script>
+import SiteIcon from '~/components/ui/SiteIcon.vue'
 export default {
+  components: { SiteIcon },
   name: 'CirclesPage',
   data() {
     return {
@@ -487,7 +489,8 @@ export default {
   padding: 80px 20px;
 
   .empty-icon {
-    font-size: 64px;
+    color: #947358;
+    font-size: 48px;
     margin-bottom: 20px;
   }
 

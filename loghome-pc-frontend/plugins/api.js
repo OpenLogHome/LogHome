@@ -14,6 +14,9 @@ import resources from './api/resources.js';
 import users from './api/users.js';
 import essays from './api/essays.js';
 import popularity from './api/popularity.js';
+import manga from './api/manga.js';
+import reading from './api/reading.js';
+import reader from './api/reader.js';
 
 const apiService = {
   novels,
@@ -29,6 +32,9 @@ const apiService = {
   users,
   essays,
   popularity,
+  manga,
+  reading,
+  reader,
 };
 
 export default ({ app }, inject) => {

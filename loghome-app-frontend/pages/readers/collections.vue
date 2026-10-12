@@ -81,7 +81,7 @@
 				let _this = this;
 				this.loadingRequestCount += 1;
 				this.isLoading = true;
-				axios.get(_this.$baseUrl + '/library/recommand/get_library_recommend_titles?title='+this.title+"&page=1&amount=100", {}).then((res) => {
+				axios.get(_this.$baseUrl + '/library/recommand/get_library_recommend_titles?title='+encodeURIComponent(this.title)+"&page=1&amount=100", {}).then((res) => {
 					_this.books = res.data;
 					console.log(_this.books);
 					this.showList = true;

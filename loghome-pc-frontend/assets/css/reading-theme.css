@@ -1,0 +1,290 @@
+/* Reading UI: existing brand, native CSS, no changes to data loading or reader palettes.
+   Radius scale: panels 12px, controls 6px, covers 4px.
+   The site keeps its gray light theme; the reading canvas retains user-selected themes. */
+.reading-layout {
+  --reading-bg: #f5f5f5;
+  --reading-surface: #fff;
+  --reading-hover: #f5f4f0;
+  --reading-tint: #eee7de;
+  --reading-ink: #302f2a;
+  --reading-secondary: #615e57;
+  --reading-muted: #73716a;
+  --reading-line: #e4e3de;
+  --reading-accent: #79573c;
+  --site-footer-link: #79573c;
+  display: flow-root;
+  background: var(--reading-bg);
+  color: var(--reading-ink);
+  min-height: 100dvh;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  word-spacing: normal;
+}
+.outer.reading-layout .main-content {
+  max-width: 1440px;
+  width: 100%;
+  margin: 72px auto 0;
+  padding: 30px 40px 64px;
+  min-height: calc(100dvh - 160px);
+}
+.outer.reading-layout .navbar .nav-link-active { color: var(--reading-accent); }
+.outer.reading-layout .navbar .nav-link-active::after { background: var(--reading-accent); }
+.outer.reading-layout .site-footer { background: #eae9e5; color: var(--reading-secondary); font-size: 12px; line-height: 1.9; }
+.outer.reading-layout .site-footer a { color: var(--reading-accent); }
+.reading-skip-link { position: fixed; left: 24px; top: 8px; transform: translateY(-150%); padding: 10px 18px; z-index: 1100; background: #79573c; color: #fff; border-radius: 6px; text-decoration: none; }
+.reading-skip-link:focus { transform: translateY(0); outline: 2px solid #302f2a; outline-offset: 2px; }
+.outer.reading-layout .main-content button { font-family: inherit; }
+.outer.reading-layout .main-content :is(button, a, input, textarea, select, summary):focus-visible { outline: 2px solid var(--reading-accent); outline-offset: 3px; }
+.outer.reading-layout .main-content :is(input, textarea)::placeholder { color: var(--reading-muted); opacity: 1; }
+.outer.reading-layout .main-content button:not(:disabled):active { transform: translateY(1px); }
+
+/* Shared book detail composition. Covers anchor the page; information stays left aligned. */
+.outer.reading-layout .main-content :is(.novel-page, .manga-page, .world-page) { max-width: 1200px; padding: 0; margin: 0 auto; }
+.outer.reading-layout .main-content :is(.novel-container, .manga-container, .world-header, .world-content) { border: 1px solid var(--reading-line); border-radius: 12px; background: var(--reading-surface); box-shadow: none; }
+.outer.reading-layout .main-content :is(.novel-container, .manga-container) { padding: 36px; }
+.outer.reading-layout .main-content .novel-container .novel-header,
+.outer.reading-layout .main-content .manga-container .manga-header,
+.outer.reading-layout .main-content .world-header { display: grid; grid-template-columns: 188px minmax(0, 1fr); gap: 36px; align-items: start; text-align: left; }
+.outer.reading-layout .main-content .world-header { padding: 36px; }
+.outer.reading-layout .main-content .novel-container .novel-header .novel-cover,
+.outer.reading-layout .main-content .manga-container .manga-header .manga-cover,
+.outer.reading-layout .main-content .world-header .world-cover { width: 188px; height: 264px; margin: 0; border-radius: 4px; border: 0; box-shadow: 0 8px 20px #40362918; }
+.outer.reading-layout .main-content .novel-container .novel-header .novel-info .novel-title,
+.outer.reading-layout .main-content .manga-container .manga-header .manga-title,
+.outer.reading-layout .main-content .world-header .world-info h1 { font-size: clamp(24px, 2.2vw, 32px); font-weight: 600; letter-spacing: -.5px; line-height: 1.45; color: var(--reading-ink); margin: 0 0 16px; overflow-wrap: anywhere; }
+.outer.reading-layout .main-content .world-header .world-info h1 { margin-top: 12px; }
+.outer.reading-layout .main-content :is(.novel-header, .manga-header) .author-name { color: var(--reading-secondary); font-size: 14px; }
+.outer.reading-layout .main-content :is(.novel-header, .manga-header) .author-avatar { width: 28px; height: 28px; border-radius: 6px; }
+.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) { display: flex; flex-wrap: wrap; gap: 24px; margin: 22px 0; padding: 18px 0; background: none; border-top: 1px solid var(--reading-line); border-bottom: 1px solid var(--reading-line); }
+.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-item { gap: 5px; background: none; padding: 0; }
+.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-icon { display: none; }
+.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-value { color: var(--reading-ink); font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-label { color: var(--reading-muted); font-size: 12px; }
+.outer.reading-layout .main-content :is(.novel-tags, .manga-tags) .tag,
+.outer.reading-layout .main-content .world-type { background: var(--reading-hover); border: 0; border-radius: 4px; padding: 5px 9px; font-size: 12px; color: var(--reading-secondary); letter-spacing: normal; }
+.outer.reading-layout .main-content .novel-container .novel-actions .action-button.primary,
+.outer.reading-layout .main-content .manga-container .manga-actions .action-button.primary { background: var(--reading-accent); color: #fff; border-color: var(--reading-accent); border-radius: 6px; box-shadow: none; padding: 0 24px; height: 44px; min-width: 150px; font-size: 15px; font-weight: 600; }
+.outer.reading-layout .main-content .manga-container .manga-actions .action-button.primary:hover { background: #65452e; transform: none; }
+.outer.reading-layout .main-content :is(.novel-content, .manga-content) { margin-top: 32px; }
+.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) { display: flex; gap: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--reading-line); background: none; padding: 0; margin-bottom: 24px; }
+.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) :is(.tab-button, button) { border: 0; border-radius: 0; padding: 14px 0; color: var(--reading-muted); background: none; font-size: 14px; font-weight: 500; box-shadow: none; }
+.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) :is(.active, .tab-button.active) { color: var(--reading-accent); font-weight: 600; border-bottom: 2px solid var(--reading-accent); }
+.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) .active::after { display: none; }
+.outer.reading-layout .main-content .novel-container .tab-content { padding: 0; }
+.outer.reading-layout .main-content :is(.intro-content, .manga-description, .world-description) { color: var(--reading-secondary); font-size: 15px; line-height: 1.95; overflow-wrap: anywhere; }
+.outer.reading-layout .main-content .intro-content { max-width: 75ch; padding: 8px 0 24px; }
+.outer.reading-layout .main-content .world-updated { color: var(--reading-muted); font-size: 13px; line-height: 1.8; }
+.outer.reading-layout .main-content .world-content { padding: 12px 32px 32px; }
+.outer.reading-layout .main-content :is(.recommended-novels, .author-works) { margin-top: 32px; }
+.outer.reading-layout .main-content .recommended-novels { background: var(--reading-surface); border: 1px solid var(--reading-line); border-radius: 12px; padding: 28px 32px; box-shadow: none; }
+.outer.reading-layout .main-content :is(.section-title, .outline-header h2) { color: var(--reading-ink); font-size: 20px; font-weight: 600; }
+.outer.reading-layout .main-content .mini-novel-card { box-shadow: none; background: transparent; border: 0; }
+.outer.reading-layout .main-content :is(.mini-novel-title, .mini-work-title, .world-title) { color: var(--reading-ink); }
+.outer.reading-layout .main-content :is(.mini-novel-author, .mini-work-status, .world-author, .outline-grid small, .outline-header span) { color: var(--reading-muted); }
+.outer.reading-layout .main-content .outline-grid a { background: var(--reading-hover); border: 0; border-radius: 6px; padding: 18px 16px; }
+.outer.reading-layout .main-content .outline-grid strong { color: var(--reading-ink); font-size: 14px; }
+
+/* Immersive text reader: chrome is quiet, user typography and background stay in control. */
+.outer.reading-layout .main-content .article-page { background: transparent; }
+.outer.reading-layout .main-content .article-page .article-header { top: 60px; border: 1px solid var(--reading-line); border-radius: 10px; box-shadow: none; background: var(--reading-surface); z-index: 90; }
+.outer.reading-layout .main-content .article-page .article-header.sticky .header-content { padding: 14px 18px; gap: 18px; flex-wrap: wrap; }
+.outer.reading-layout .main-content .article-page .article-header .novel-info { gap: 16px; min-width: 0; }
+.outer.reading-layout .main-content .article-page .article-header .novel-title { font-size: 14px; font-weight: 600; color: var(--reading-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+.outer.reading-layout .main-content .article-page .reading-controls { margin-left: 0; gap: 6px; flex-wrap: wrap; }
+.outer.reading-layout .main-content .article-page .chapter-nav { gap: 6px; flex-wrap: wrap; }
+.outer.reading-layout .main-content .article-page .article-header :is(.reader-control-btn, .nav-btn, .chapter-btn) { font-size: 13px; padding: 8px 10px; border: 0; border-radius: 6px; color: var(--reading-secondary); background: transparent; line-height: 1.5; white-space: nowrap; }
+.outer.reading-layout .main-content .article-page .article-header :is(.reader-control-btn, .nav-btn, .chapter-btn):hover { color: var(--reading-accent); background: var(--reading-hover); }
+.outer.reading-layout .main-content .article-page .article-content-wrapper { margin-top: 22px; border-radius: 8px; box-shadow: 0 4px 24px #40362908; }
+.outer.reading-layout .main-content .article-page .article-title { font-size: 28px; font-weight: 600; letter-spacing: -.4px; line-height: 1.5; }
+.outer.reading-layout .main-content .article-page .article-meta { font-size: 12px; line-height: 1.8; flex-wrap: wrap; }
+.outer.reading-layout .main-content .article-page .chapter-reviews { max-width: 980px; margin: 28px auto 0; }
+
+/* Tags: category names lead, category badges are supporting information. */
+.outer.reading-layout .main-content .tags-page { padding: 32px; border: 1px solid var(--reading-line); border-radius: 12px; background: var(--reading-surface); min-height: 60vh; }
+.outer.reading-layout .main-content .tags-page .page-header { text-align: left; }
+.outer.reading-layout .main-content .tags-page .page-title { color: var(--reading-ink); font-weight: 600; font-size: 28px; }
+.outer.reading-layout .main-content .tags-page .back-button { color: var(--reading-accent); background: transparent; padding: 0; transform: none; }
+.outer.reading-layout .main-content .tag-toolbar { color: var(--reading-muted); }
+.outer.reading-layout .main-content .tag-filters button { color: var(--reading-secondary); background: var(--reading-hover); }
+.outer.reading-layout .main-content .tag-filters button.active { color: #fff; background: var(--reading-accent); }
+.outer.reading-layout .main-content .tags-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.outer.reading-layout .main-content .tags-page :is(.tag-item, .tag-item.activity, .tag-item.suggested) { background: var(--reading-hover); border: 1px solid transparent; border-radius: 8px; min-height: 110px; padding: 20px; box-shadow: none; transform: none; }
+.outer.reading-layout .main-content .tags-page .tag-item:hover { border-color: var(--reading-line); background: var(--reading-tint); }
+.outer.reading-layout .main-content .tags-page .tag-item .tag-name { color: var(--reading-ink); font-size: 16px; font-weight: 600; line-height: 1.5; }
+.outer.reading-layout .main-content .tags-page .tag-count { color: var(--reading-muted); font-size: 13px; }
+.outer.reading-layout .main-content .tags-page .tag-badges .badge { border: 0; border-radius: 3px; color: var(--reading-accent); background: var(--reading-tint); font-size: 11px; }
+
+/* The supporting reading journeys share the same page gutters and surface tokens. */
+.outer.reading-layout .main-content :is(.resources-guide, .reader-rewards, .redstone-center, .reader-ai, .power-page, .reading-end, .activity-inbox) { padding: 0; margin: 0 auto; color: var(--reading-ink); }
+.outer.reading-layout .main-content :is(.tree-card, .rewards-panel, .center-gate, .balance-overview, .center-panel, .power-card, .power-summary, .power-final, .end-summary, .end-recommendations, .ai-workspace, .ai-gate) { background: var(--reading-surface); border-color: var(--reading-line); border-radius: 12px; box-shadow: none; }
+.outer.reading-layout .main-content :is(.rewards-heading, .center-heading, .ai-page-head, .power-heading) h1 { font-size: 28px; font-weight: 600; letter-spacing: -.4px; color: var(--reading-ink); }
+.outer.reading-layout .main-content :is(.rewards-heading, .center-heading, .ai-page-head) p { color: var(--reading-muted); line-height: 1.8; }
+.outer.reading-layout .main-content :is(.rewards-panel, .channels, .resources-guide, .tree-card) p { color: var(--reading-secondary); }
+.outer.reading-layout .main-content .resources-guide .intro { margin-top: 24px; }
+.outer.reading-layout .main-content .resources-guide .intro img { background: var(--reading-hover); }
+.outer.reading-layout .main-content .resources-guide .channels article,
+.outer.reading-layout .main-content .resources-guide aside { border-color: var(--reading-line); border-radius: 12px; }
+.outer.reading-layout .main-content .resources-guide .channels ol { color: var(--reading-secondary); }
+.outer.reading-layout .main-content :is(.end-copy p, .recommend-note, .recommend-empty, .power-note, .power-summary p, .factor p) { color: var(--reading-muted); font-size: 13px; }
+.outer.reading-layout .main-content .reader-ai .ai-sidebar { background: var(--reading-hover); border-color: var(--reading-line); }
+.outer.reading-layout .main-content .reader-ai :is(.ai-metrics, .user-text, .thinking, .citations) { background: var(--reading-hover); border-color: var(--reading-line); }
+.outer.reading-layout .main-content .reader-ai :is(.quiet, .history-item small, .conversation-head p, .composer-hint) { color: var(--reading-muted); }
+.outer.reading-layout .main-content .reader-ai .history-row.selected { background: var(--reading-tint); }
+.outer.reading-layout .main-content .reader-ai .send { background: var(--reading-accent); border-color: var(--reading-accent); color: #fff; }
+
+@media (max-width: 1024px) {
+  .outer.reading-layout .main-content { padding: 24px 28px 48px; }
+  .outer.reading-layout .main-content .article-page .article-header .novel-info { flex-basis: 100%; }
+  .outer.reading-layout .main-content .article-page .article-header .novel-title { max-width: 45%; }
+}
+@media (max-width: 768px) {
+  .outer.reading-layout .main-content { margin-top: 80px; padding: 20px 16px 40px; }
+  .outer.reading-layout .main-content :is(.novel-container, .manga-container) { padding: 24px 20px; }
+  .outer.reading-layout .main-content .novel-container .novel-header,
+  .outer.reading-layout .main-content .manga-container .manga-header,
+  .outer.reading-layout .main-content .world-header { grid-template-columns: 112px minmax(0, 1fr); gap: 20px; }
+  .outer.reading-layout .main-content .world-header { padding: 24px 20px; }
+  .outer.reading-layout .main-content .novel-container .novel-header .novel-cover,
+  .outer.reading-layout .main-content .manga-container .manga-header .manga-cover,
+  .outer.reading-layout .main-content .world-header .world-cover { width: 112px; height: 158px; }
+  .outer.reading-layout .main-content :is(.novel-stats, .manga-stats) { gap: 14px; padding: 14px 0; margin: 16px 0; }
+  .outer.reading-layout .main-content :is(.novel-meta, .manga-meta, .novel-actions, .manga-actions) { justify-content: flex-start; }
+  .outer.reading-layout .main-content :is(.world-content, .tags-page, .recommended-novels) { padding: 20px; }
+  .outer.reading-layout .main-content .article-page .article-header { top: 60px; }
+  .outer.reading-layout .main-content .article-page .article-header.sticky .header-content { padding: 12px; gap: 12px; }
+  .outer.reading-layout .main-content .article-page .article-title { font-size: 24px; }
+  .outer.reading-layout .main-content .tags-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .outer.reading-layout .main-content { padding: 18px 12px 32px; }
+  .outer.reading-layout .main-content .novel-container .novel-header,
+  .outer.reading-layout .main-content .manga-container .manga-header,
+  .outer.reading-layout .main-content .world-header { grid-template-columns: minmax(0, 1fr); }
+  .outer.reading-layout .main-content .tags-grid { grid-template-columns: 1fr; }
+  .outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) { gap: 18px; }
+  .outer.reading-layout .main-content .article-page .article-header .novel-info { flex-wrap: wrap; }
+  .outer.reading-layout .main-content .article-page .article-header .novel-title { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .outer.reading-layout .main-content :is(button, a) { transition: none; }
+  .outer.reading-layout .main-content button:not(:disabled):active { transform: none; }
+}
+
+/* Body-mounted reading panels carry their own tokens instead of inheriting a page root. */
+.reading-drawer, .reading-dialog {
+  --reading-surface: #fff;
+  --reading-hover: #f5f4f0;
+  --reading-tint: #eee7de;
+  --reading-ink: #302f2a;
+  --reading-secondary: #615e57;
+  --reading-muted: #73716a;
+  --reading-line: #e4e3de;
+  --reading-accent: #79573c;
+  color: var(--reading-ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+}
+.el-drawer.reading-drawer .el-drawer__header { color: var(--reading-ink); margin: 0; padding: 24px; border-bottom: 1px solid var(--reading-line); font-size: 18px; font-weight: 600; }
+.el-drawer.reading-drawer .el-drawer__body { min-height: 0; padding-top: 24px; }
+.el-drawer.reading-settings-drawer .el-drawer__body { display: flex; flex-direction: column; overflow: hidden; }
+.reading-dialog { border-radius: 12px; }
+.reading-dialog .el-dialog__header { padding: 24px 26px 18px; }
+.reading-dialog .el-dialog__body { padding: 8px 26px 24px; }
+.reading-dialog .el-dialog__footer { border-top: 1px solid var(--reading-line); padding: 18px 26px; }
+.reading-dialog .el-button--primary { background: var(--reading-accent); border-color: var(--reading-accent); }
+:is(.reading-dialog, .reading-drawer) :is(button, a, input, textarea, select):focus-visible { outline: 2px solid var(--reading-accent); outline-offset: 3px; }
+:is(.reading-dialog, .reading-drawer) :is(input, textarea)::placeholder { color: var(--reading-muted); opacity: 1; }
+.el-drawer.reading-drawer .reader-settings { color: var(--reading-ink); padding: 0 28px 32px; }
+.el-drawer.reading-drawer .reader-settings section { border-color: var(--reading-line); padding-bottom: 26px; margin-bottom: 26px; }
+.el-drawer.reading-drawer .reader-settings h3 { font-size: 16px; font-weight: 600; }
+.el-drawer.reading-drawer .reader-settings button { border-color: var(--reading-line); font: inherit; font-size: 13px; border-radius: 6px; min-height: 38px; }
+.el-drawer.reading-drawer .reader-settings .font-grid button { padding: 16px 14px; gap: 10px; }
+.el-drawer.reading-drawer .reader-settings :is(.font-grid span, small) { color: var(--reading-muted); }
+.el-drawer.reading-drawer .reader-settings button[aria-pressed='true'] { border-color: var(--reading-accent); box-shadow: inset 0 0 0 1px var(--reading-accent); }
+.el-drawer.reading-drawer .reader-settings .reset { color: var(--reading-accent); padding: 12px; }
+.el-drawer.reading-drawer .reader-navigation { padding: 0 28px 32px; }
+.el-drawer.reading-drawer .reader-navigation .chapter-seek { border: 0; background: var(--reading-hover); color: var(--reading-secondary); padding: 22px; }
+.el-drawer.reading-drawer .reader-navigation .chapter-seek h3 { color: var(--reading-ink); line-height: 1.7; }
+.outer.reading-layout .main-content :is(.excerpts-content, .world-content) .book-excerpts { border: 0; padding: 0; }
+.outer.reading-layout .main-content .inline-comments { border-color: var(--reading-line); border-radius: 12px; }
+.outer.reading-layout .main-content .tab-content .inline-comments { border: 0; }
+.outer.reading-layout .main-content .inline-comments .inline-title { color: var(--reading-ink); font-weight: 600; }
+.outer.reading-layout .main-content .inline-comments .composer-input,
+.el-drawer.reading-drawer .composer-input { background: var(--reading-hover); border-color: var(--reading-line); padding: 14px; color: var(--reading-ink); line-height: 1.8; }
+.outer.reading-layout .main-content .inline-comments .submit-btn,
+.el-drawer.reading-drawer .submit-btn { border-radius: 6px; background: var(--reading-accent); padding: 10px 22px; }
+.outer.reading-layout .main-content .inline-comments .counter,
+.el-drawer.reading-drawer .counter { color: var(--reading-muted); }
+/* Details share one aligned primary row and a quieter utility row. */
+.outer.reading-layout .main-content :is(.novel-actions, .manga-actions) > .book-support { margin: 0; width: 100%; }
+.outer.reading-layout .main-content .book-support .support-actions > button,
+.outer.reading-layout .main-content .book-support .tip-trigger { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 44px; margin: 0; padding: 0 18px; border: 1px solid var(--reading-line); border-radius: 6px; background: var(--reading-surface); color: var(--reading-secondary); font-size: 14px; line-height: 1; white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s; }
+.outer.reading-layout .main-content .book-support .support-actions > button:not(.primary):hover,
+.outer.reading-layout .main-content .book-support .tip-trigger:hover { background: var(--reading-hover); border-color: #c8b9aa; }
+.outer.reading-layout .main-content .book-support .support-actions > button:disabled { cursor: default; }
+.outer.reading-layout .main-content .book-support .support-utilities { gap: 12px; }
+.outer.reading-layout .main-content .support-utilities .book-tools { display: flex; align-items: center; gap: 4px; }
+.outer.reading-layout .main-content .support-utilities .book-tools > :is(button, .power-link),
+.outer.reading-layout .main-content .support-utilities .reader-ai-entry { display: inline-flex; align-items: center; height: 32px; box-sizing: border-box; margin: 0; padding: 0 8px; border: 0; border-radius: 4px; background: none; color: var(--reading-muted); font-size: 13px; line-height: 1; white-space: nowrap; }
+.outer.reading-layout .main-content .support-utilities .book-tools > button:first-child { margin-left: -8px; }
+.outer.reading-layout .main-content .support-utilities .reader-ai-entry { color: var(--reading-accent); }
+.outer.reading-layout .main-content .support-utilities .book-tools > :is(button, .power-link):hover,
+.outer.reading-layout .main-content .support-utilities .reader-ai-entry:hover { background: var(--reading-hover); color: var(--reading-accent); }
+@media(max-width:640px) { .outer.reading-layout .main-content .book-support .support-actions { gap: 8px; } .outer.reading-layout .main-content .book-support .support-utilities { column-gap: 4px; row-gap: 4px; } }
+.outer.reading-layout .main-content .book-support .support-actions > button.active { color: var(--reading-accent); border-color: var(--reading-tint); background: var(--reading-tint); }
+@media(max-width:640px) {
+  .reading-drawer :is(.reader-navigation, .reader-settings) { padding: 0 18px 28px; }
+  .el-drawer.reading-drawer .el-drawer__header { padding: 20px 18px; }
+}
+
+/* Full-screen manga uses the same control scale, while keeping its reading background. */
+.manga-reader.manga-reader { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif; }
+.manga-reader.manga-reader .top-bar { padding: 0 20px; height: 64px; }
+.manga-reader.manga-reader .bar-title { align-items: flex-start; text-align: left; padding-left: 14px; }
+.manga-reader.manga-reader .bar-novel { color: #302f2a; font-weight: 600; }
+.manga-reader.manga-reader .bar-episode { color: #73716a; font-variant-numeric: tabular-nums; }
+.manga-reader.manga-reader .end-next { border-radius: 6px; background: #79573c; font-weight: 500; }
+.manga-reader.manga-reader.reader-black .bar-novel { color: #ece7e1; }
+.manga-reader.manga-reader.reader-black .bar-episode { color: #b6afa5; }
+.manga-reader.manga-reader button:focus-visible { outline: 2px solid #79573c; outline-offset: 3px; }
+.manga-reader.manga-reader.reader-black button:focus-visible { outline-color: #d2b497; }
+.outer.reading-layout .main-content .activity-inbox :is(.summary, .quiet, time, header p) { color: var(--reading-muted); }
+.outer.reading-layout .main-content .activity-inbox .message-grid article { border-color: var(--reading-line); }
+@media(max-width:640px) { .manga-reader.manga-reader .top-bar { height: 56px; padding: 0 10px; } .manga-reader.manga-reader .bar-title { padding-left: 8px; } }
+
+.outer.reading-layout .navbar-container { max-width: 1440px; padding: 0 40px; }
+.outer.reading-layout .navbar .nav-link { white-space: nowrap; }
+@media (max-width: 1024px) { .outer.reading-layout .navbar-container { padding: 0 28px; } }
+@media (max-width: 768px) {
+  .outer.reading-layout .navbar-container { height: auto; min-height: 60px; padding: 10px 16px; flex-wrap: wrap; gap: 10px; }
+  .outer.reading-layout .logo-img { height: 28px; }
+  .outer.reading-layout .navbar-center { margin-left: auto; }
+  .outer.reading-layout .nav-link { margin: 0 10px; font-size: 14px; padding: 6px 0; }
+  .outer.reading-layout .navbar-right { width: 100%; }
+  .outer.reading-layout .search-box { flex: 1; min-width: 0; padding: 0 14px; margin-right: 14px; }
+  .outer.reading-layout .search-input { width: 100%; min-width: 0; font-size: 13px; padding: 9px 0; }
+  .outer.reading-layout .main-content { margin-top: 112px; }
+  .outer.reading-layout .main-content .article-page .article-header { top: 104px; }
+}
+.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-stats .stat-item { margin: 0; align-items: flex-start; }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-tags .tag { border-radius: 4px; background: var(--reading-hover); color: var(--reading-secondary); }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .action-button.primary { display: inline-flex; align-items: center; justify-content: center; background: var(--reading-accent); color: #fff; height: 44px; min-width: 150px; padding: 0 24px; margin: 0; font-size: 15px; overflow: hidden; }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info { flex-direction: row; gap: 10px; }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info span { font-size: 15px; font-weight: 600; }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info small { margin: 0; font-size: 12px; }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .progress-indicator { height: 2px; }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .action-button.primary:hover { background: #65452e; transform: none; }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-content .content-tabs .tab-button { padding: 14px 0; margin-right: 0; color: var(--reading-muted); }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-content .content-tabs .tab-button.active { color: var(--reading-accent); border-bottom-color: var(--reading-accent); }
+.outer.reading-layout .main-content .novel-page .novel-container .novel-rank { background: var(--reading-hover); border-radius: 6px; }
+.outer.reading-layout .main-content .world-relations { padding: 0; }
+.outer.reading-layout .main-content .world-relations h1 { color: var(--reading-ink); font-weight: 600; }
+.outer.reading-layout .main-content .world-relations header p { color: var(--reading-muted); }
+.outer.reading-layout .main-content .world-browser :is(.search, .result-count, .graph-hint, .load-status) { color: var(--reading-muted); }
+.outer.reading-layout .main-content .world-browser :is(.filters button, .graph-tools button) { color: var(--reading-secondary); border-color: var(--reading-line); border-radius: 6px; }
+.outer.reading-layout .main-content .world-browser .filters button.active { background: var(--reading-tint); color: var(--reading-accent); border-color: var(--reading-tint); }
+.outer.reading-layout .main-content .world-browser :is(.vocabulary-list-header h3, .selected-vocabulary h3, .vocabulary-entry h4) { color: var(--reading-ink); font-weight: 600; }
+.outer.reading-layout .main-content .world-browser :is(.vocabulary-list-header a, .read-vocabulary, .selected-vocabulary li button),
+.outer.reading-layout .main-content :is(.world-tabs > a, .world-relations > header a) { color: var(--reading-accent); }
+.outer.reading-layout .main-content .world-browser :is(.vocabulary-entry p, .vocabulary-entry small, .selected-vocabulary p, .selected-vocabulary dt) { color: var(--reading-muted); }
+.outer.reading-layout .main-content .world-browser .vocabulary-entry { border: 0; background: var(--reading-hover); border-radius: 8px; }
+.outer.reading-layout .main-content .world-browser .entry-initial { color: var(--reading-accent); background: var(--reading-tint); border-radius: 6px; }
+.outer.reading-layout .main-content .world-browser .vocabulary-entry a:hover { background: var(--reading-tint); }

@@ -243,6 +243,20 @@
 			"style": {
 				"navigationBarTitleText": "关于我们"
 			}
+		},
+		{
+			"path": "pages/apps/lab",
+			"style": {
+				"navigationBarTitleText": "原木实验室"
+			}
+		},
+		{
+			"path": "pages/apps/miniapp",
+			"style": {
+				"navigationBarTitleText": "小程序",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
 		},{
             "path" : "pages/writers/newEssay",
             "style" :                                                                                    
@@ -683,6 +697,12 @@
                 "enablePullDownRefresh": false
             }
         },{
+            "path": "pages/payments/get_logs",
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "如何获取原木"
+            }
+        }, {
             "path" : "pages/payments/recharge",
             "style" :                                                                                    
             {

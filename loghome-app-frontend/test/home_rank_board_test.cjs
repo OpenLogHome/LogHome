@@ -96,20 +96,20 @@ test('完整榜单页：模板可编译，支持榜单/专区切换、分页与�
 	assert.match(source, /\/library\/rank\/get_rank_board\?board=' \+ this\.currentBoard/);
 	assert.match(source, /snapshot_date/);
 	assert.match(source, /loadMore/);
-	assert.match(source, /enablePullDownRefresh|onPullDownRefresh/);
+	assert.match(source, /@refresherrefresh=/, '使用列表局部下拉刷新');
 
 	const pagesJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'pages.json'), 'utf8'));
 	assert.ok(pagesJson.pages.some((page) => page.path === 'pages/readers/rankBoard'), 'pages.json 应注册 rankBoard');
 });
 
-test('首页：最近更新板块由 home-rank-board 替代且不再拉取其数据', () => {
+test('首页：最近更新与 Banner 按启用合集配置渲染，不重复拉取特殊合集作品', () => {
 	const library = readComponent('pages/library.vue');
-	assert.match(library, /<home-rank-board ref="homeRankBoardRef"/);
-	// 最近更新与 banner 集合在拉取/缓存恢复阶段被过滤，避免 banner 的 v-else 重复渲染
-	assert.match(library, /collection_title !== '最近更新' && item\.collection_title !== 'banner'/);
-	assert.match(library, /LIBRARY_FIRST_SCREEN_CACHE_VERSION = 3/);
-	assert.match(library, /<banner page="library" v-show="keyword\.length == 0" \/>/, 'banner 应无条件渲染一次');
-	assert.doesNotMatch(library, /banner page="library" v-else/);
+	assert.match(library, /<template v-for="item in collections">/);
+	assert.match(library, /<home-rank-board v-if="item.collection_title === '最近更新'"/);
+	assert.match(library, /<banner v-else-if="item.collection_title === 'banner'"/);
+	assert.match(library, /Number\(item.isValid\) === 1/);
+	assert.match(library, /LIBRARY_FIRST_SCREEN_CACHE_VERSION = 4/);
+	assert.match(library, /if \(item.collection_title === 'banner' \|\| item.collection_title === '最近更新'\) return/);
 });
 
 function homeInstance(sandbox = makeVm([])) {

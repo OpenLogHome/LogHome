@@ -80,6 +80,8 @@
 			},
 			"apps": {
 				"about": "关于我们",
+				"lab": "原木实验室",
+				"logDefense": "原木保卫战",
 				"audio_test": "有声书测试",
 				"faqs": {
 					"faq": "帮助中心",

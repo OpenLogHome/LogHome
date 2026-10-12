@@ -22,12 +22,22 @@ let router = express.Router();
 // 排行
 router.get('/get_library_recommend_titles', async function (req, res) {
 	try {
+		const page = Number(req.query.page || 1);
+		const amount = Number(req.query.amount || 10);
+		if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(amount) || amount < 1 || amount > 100 || !Number.isSafeInteger((page - 1) * amount)) {
+			return res.status(400).json({ msg: 'invalid pagination' });
+		}
+		const collections = await query('SELECT isValid FROM library_recommend_collections WHERE collection_title = ?', [req.query.title]);
+		if (collections.length && !collections.some(item => Number(item.isValid) === 1)) {
+			return res.json([]);
+		}
 		if (req.query.title == '原木力爆棚') {
 			const results = await query(
 				`SELECT n.*,users.name user_name,users.avatar_url,novel_type,
 					${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
 				 FROM novels n,users WHERE n.author_id = users.user_id AND n.deleted = 0
-				AND n.is_personal = 0 ORDER BY n.ranking DESC LIMIT 100`,
+				AND n.is_personal = 0 AND n.is_banned = 0 ORDER BY n.ranking DESC, n.novel_id DESC LIMIT ?, ?`,
+				[(page - 1) * amount, amount],
 			);
 			res.json(results);
 		}
@@ -37,26 +47,28 @@ router.get('/get_library_recommend_titles', async function (req, res) {
 					${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
 				 FROM novel_updates nu
 				LEFT JOIN novel_updates nu0 ON nu.novel_id = nu0.novel_id AND nu.time < nu0.time 
-				INNER JOIN novels n ON nu.novel_id = n.novel_id AND n.deleted = 0 AND n.is_personal = 0
-				LEFT JOIN users u ON n.author_id = u.user_id WHERE nu0.novel_id IS NULL ORDER BY nu.record_id DESC`
+				INNER JOIN novels n ON nu.novel_id = n.novel_id AND n.deleted = 0 AND n.is_personal = 0 AND n.is_banned = 0
+				LEFT JOIN users u ON n.author_id = u.user_id WHERE nu0.novel_id IS NULL ORDER BY nu.record_id DESC LIMIT ?, ?`,
+				[(page - 1) * amount, amount]
 			);
 			res.end(JSON.stringify(results));
 		}
 		else {
 			const results = await query(
-				`SELECT DISTINCT n.*,u.name user_name,u.avatar_url,n.novel_type,c.recommend_id,
+				`SELECT DISTINCT n.*,u.name user_name,u.avatar_url,n.novel_type,c.recommend_id,c.ranking,
 					${HAYCRAFT_TAG_FLAG_SQL} AS is_haycraft
 				 FROM novels n,library_recommend c,users u
 								WHERE c.novel_id = n.novel_id AND c.title = ? 
                                 AND u.user_id = n.author_id
 								AND n.deleted = 0
 								AND n.is_personal = 0
-								ORDER BY recommend_id DESC 
+								AND n.is_banned = 0
+								ORDER BY c.ranking DESC, c.recommend_id DESC
 								LIMIT ?,?`,
 				[
 					req.query.title,
-					(req.query.page - 1) * req.query.amount,
-					Number(req.query.amount),
+					(page - 1) * amount,
+					amount,
 				],
 			);
 			res.end(JSON.stringify(results));
@@ -69,7 +81,7 @@ router.get('/get_library_recommend_titles', async function (req, res) {
 
 router.get('/get_library_collections', async function (req, res) {
 	try {
-		let results = await query('SELECT * FROM library_recommend_collections');
+		let results = await query('SELECT * FROM library_recommend_collections WHERE isValid = 1 ORDER BY collection_id ASC');
 		res.end(JSON.stringify(results));
 	} catch (e) {
 		res.json(400, { msg: 'bad request' });
@@ -290,9 +302,9 @@ async function updateBestWelcomedNovels() {
 // 不要在服务器启动的时候自动更新原木力！
 // updateBestWelcomedNovels();
 
-//自动更新完本经典作品
+//自动更新完本经典作品（现已更名「入站必读」）
 async function updateBestCompletedNovels() {
-	await query('DELETE FROM library_recommend WHERE title = \'完本经典\'');
+	await query('DELETE FROM library_recommend WHERE title = \'入站必读\'');
 	let results = await query(
 		'SELECT novel_id FROM novels WHERE is_personal = 0 AND deleted = 0 AND is_complete = 1 ORDER BY clicks DESC LIMIT 0,100',
 	);
@@ -300,7 +312,7 @@ async function updateBestCompletedNovels() {
 	for (let item of results) {
 		await query('INSERT INTO library_recommend(novel_id,title) VALUES(?,?)', [
 			item.novel_id,
-			'完本经典',
+			'入站必读',
 		]);
 	}
 }

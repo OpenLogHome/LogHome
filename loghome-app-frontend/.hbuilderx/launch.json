@@ -15,6 +15,10 @@
             },
             "provider" : "aliyun",
             "type" : "uniCloud"
+        },
+        {
+            "openVueDevtools" : true,
+            "type" : "uni-app:h5"
         }
     ]
 }

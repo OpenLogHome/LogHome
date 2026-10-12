@@ -19241,3 +19241,6 @@ loghome-scf-timers/timer_loghome_text_check/node_modules/util-deprecate/node.js
 loghome-scf-timers/timer_loghome_text_check/node_modules/util-deprecate/package.json
 loghome-scf-timers/timer_loghome_text_check/node_modules/util-deprecate/README.md
 chat-module
+
+# Keep the independent game deployment ignore rules.
+!loghome-miniapps/log-defence/.gitignore

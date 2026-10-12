@@ -1,54 +1,28 @@
 <template>
   <div class="home-container">
-    <div class="hero-section">
-      <h1 class="hero-title">
-        <TypewriterText 
-          static-text="在 原木社区，"
-          :sentences="[
-            '发现异世界故事',
-            '创作无限可能', 
-            '分享阅读乐趣',
-            '与创作者连接',
-            '探索方块世界',
-            '找到游戏搭子'
-          ]"
-          :type-speed="120"
-          :delete-speed="60"
-          :pause-time="2500"
-        />
-      </h1>
-      <p class="hero-subtitle">让方块跃然纸上，Minecraft 的故事在此生长</p>
-      <div class="hero-buttons">
-        <nuxt-link to="/read" class="hero-button primary">开始阅读</nuxt-link>
-        <nuxt-link to="/write" class="hero-button secondary">开始创作</nuxt-link>
-      </div>
-      <div class="links">
-      </div>
-    </div>
-
-    <div class="features-section">
-      <h2 class="section-title">平台功能</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">📚</div>
-          <h3 class="feature-title">海量小说阅读</h3>
-          <p class="feature-desc">各类题材应有尽有，随时随地畅享阅读</p>
-          <nuxt-link to="/read" class="feature-link">去看看</nuxt-link>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">✍️</div>
-          <h3 class="feature-title">创作中心</h3>
-          <p class="feature-desc">提供专业写作工具，让创作更加轻松</p>
-          <nuxt-link to="/write" class="feature-link">去创作</nuxt-link>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">👥</div>
-          <h3 class="feature-title">活跃社区</h3>
-          <p class="feature-desc">与作者读者互动，分享阅读心得</p>
-          <nuxt-link to="/community" class="feature-link">去交流</nuxt-link>
+    <section class="home-hero" aria-labelledby="home-title">
+      <div class="home-intro">
+        <div class="home-eyebrow">原木社区 · Minecraft 同人二创社区</div>
+        <h1 id="home-title">方块跃然纸上，<br>故事<span class="title-highlight">在此生长<svg viewBox="0 0 240 12" aria-hidden="true"><path d="M3 8 Q90 0 237 6" /></svg></span>。</h1>
+        <p class="home-lead">我们因热爱而相聚，<br>共同搭建一个新的世界。</p>
+        <p class="home-description">在这里，读一段意想不到的冒险，写下属于你的方块故事，遇见和你一样热爱 Minecraft 的朋友。</p>
+        <div class="home-actions">
+          <nuxt-link to="/read" class="home-cta home-cta-primary">
+            <svg class="home-cta-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M1 3h5v1h1v1h2V4h1V3h5v10h-5v1H9v1H7v-1H6v-1H1V3zm2 2v6h3v1h1V7H6V6H5V5H3zm6 2v5h1v-1h3V5h-2v1h-1v1H9z" fill-rule="evenodd" />
+            </svg>
+            开始探索 <span aria-hidden="true">↗</span>
+          </nuxt-link>
+          <nuxt-link to="/write" class="home-cta home-cta-secondary">
+            <svg class="home-cta-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M1 4h6v2H3v7h8V9h2v6H1V4zm10-1h2v2h-1v1h-1v1h-1v1H9v1H8v1H6V8h1V7h1V6h1V5h1V4h1V3zm2-2h2v2h-2V1z" />
+            </svg>
+            写下故事 <span aria-hidden="true">↗</span>
+          </nuxt-link>
         </div>
       </div>
-    </div>
+      <HomeVoxelWorld />
+    </section>
 
     <div class="download-section">
       <h2 class="section-title">了解原木社区移动端</h2>
@@ -168,18 +142,19 @@
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue';
-import WindowOpenButton from '~/components/WindowOpenButton.vue'
-import TypewriterText from '~/components/TypewriterText.vue'
+import HomeVoxelWorld from '~/components/HomeVoxelWorld.vue'
 
 export default {
   components: {
-    Logo,
-    WindowOpenButton,
-    TypewriterText
+    HomeVoxelWorld
   },
   data() {
     return {
+      homeFeatures: [
+        { path: '/read', icon: 'el-icon-reading', english: 'READ', title: '在文字里，探索世界', description: '从熟悉的方块出发，去往未曾到达的地方。发现让你舍不得合上的故事。', action: '发现好故事' },
+        { path: '/write', icon: 'el-icon-edit-outline', english: 'CREATE', title: '让脑洞，有自己的形状', description: '一次冒险、一个角色、一个全新的世界。把心里的灵感，写给更多人看。', action: '开启创作之旅' },
+        { path: '/community', icon: 'el-icon-chat-dot-round', english: 'CONNECT', title: '热爱，让我们相遇', description: '和作者聊剧情，与读者分享感动。在这里，总有人懂你的奇思妙想。', action: '遇见你的同好' }
+      ],
       androidVersion: '',
       androidDownloadUrl: '',
       isWeixin: false
@@ -219,7 +194,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 // 变量定义
 $primary-color: #947358;
 $secondary-color: #704C35;
@@ -227,280 +202,82 @@ $text-color: #333;
 $text-light: #666;
 $text-lighter: #888;
 $border-color: #eee;
-$border-light: #f5f5f5;
-$background-color: #fff;
+$border-light: #e8e8e8;
+$background-color: #f5f5f5;
 $orange-color: #FB7D46;
 $orange-dark: #fa6c2e;
 
-// 混合器
-@mixin flex-center {
-  display: flex;
-  justify-content: center;
+.home-container { width: 100%; color: $text-color; }
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 42px;
+  padding: 25px 0 55px;
 }
-
-@mixin button-base {
-  padding: 12px 30px;
-  border-radius: 4px;
-  font-size: 18px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.3s ease;
+.home-intro { padding: 10px 0 10px 12px; }
+.home-eyebrow { display: flex; align-items: center; gap: 10px; color: #73805e; font-size: 11px; letter-spacing: 2px; line-height: 1.8; }
+.eyebrow-block { width: 11px; height: 11px; background: #8d9f67; box-shadow: 3px 3px 0 #cdd4b9; }
+.home-intro h1 { font-size: clamp(36px, 4.1vw, 55px); font-weight: 750; line-height: 1.42; letter-spacing: -2px; margin: 27px 0 24px; color: #35432d; }
+.title-highlight { position: relative; color: #657e45; display: inline-block; }
+.title-highlight svg { position: absolute; left: 0; bottom: -3px; width: 100%; height: 12px; fill: none; stroke: #bdcc99; stroke-width: 4; stroke-linecap: round; }
+.home-lead { color: #59634f; font-size: 20px; line-height: 1.8; letter-spacing: .4px; }
+.home-description { font-size: 14px; line-height: 2; color: #73796b; max-width: 365px; margin-top: 17px; }
+.home-actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+.home-cta { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 15px 22px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 9px; transition: transform .2s, box-shadow .2s, background .2s; }
+.home-cta-icon { width: 16px; height: 16px; flex-shrink: 0; fill: currentColor; shape-rendering: crispEdges; }
+.home-cta-primary { background: #788d55; color: #fffdf4; border: 1px solid #788d55; box-shadow: 0 5px 14px #788d5520; }
+.home-cta-primary > span { margin-left: 8px; font-size: 17px; }
+.home-cta-secondary { border: 1px solid #d5dacd; background: #fff; color: #58684a; }
+.home-cta:hover { transform: translateY(-3px); box-shadow: 0 7px 20px #788d5525; }
+.home-cta-primary:hover { background: #697f48; }
+.home-community { display: inline-flex; gap: 14px; color: #687858; font-size: 12px; margin-top: 20px; text-decoration: none; }
+.home-community:hover { color: #455e31; }
+.home-note { display: flex; align-items: center; gap: 10px; padding-top: 30px; margin-top: 28px; border-top: 1px solid #dfe2d9; max-width: 340px; font-size: 10px; color: #7c8372; letter-spacing: .6px; }
+.note-pixels { display: flex; align-items: end; gap: 3px; }
+.note-pixels i { width: 5px; height: 5px; background: #a3b37f; }
+.note-pixels i:nth-child(2) { height: 10px; background: #829565; }
+.note-pixels i:nth-child(3) { height: 7px; background: #bdc99f; }
+.home-paths { padding: 28px 0 60px; border-top: 1px solid #dfe2d9; }
+.paths-heading { text-align: center; margin-bottom: 30px; }
+.paths-heading .home-eyebrow { justify-content: center; font-size: 9px; letter-spacing: 2.5px; }
+.paths-heading h2 { font-size: 25px; color: #45543a; margin-top: 12px; font-weight: 600; }
+.paths-heading p { color: #747c69; font-size: 12px; margin-top: 12px; line-height: 1.8; }
+.paths-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.path-card { padding: 25px 26px; border: 1px solid #dde3d5; border-radius: 15px; background: #f0f3eb; text-decoration: none; transition: transform .25s, box-shadow .25s; }
+.path-card-1 { background: #f5efe6; border-color: #e6dccd; }
+.path-card-2 { background: #edf2ee; border-color: #d8e3dc; }
+.path-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px #6464420d; }
+.path-card-top { display: flex; align-items: center; gap: 12px; color: #738261; }
+.path-card-top > i { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 10px; font-size: 20px; background: #e3ebd8; color: #708750; }
+.path-card-1 .path-card-top > i { background: #eee0cd; color: #9c7950; }
+.path-card-2 .path-card-top > i { background: #dce9df; color: #62826a; }
+.path-card-top > span { font-size: 9px; letter-spacing: 1.5px; }
+.path-card-top .path-arrow { margin-left: auto; font-size: 20px; }
+.path-card h3 { font-size: 17px; margin-top: 23px; color: #46523a; font-weight: 600; }
+.path-card p { color: #747c6c; font-size: 12px; line-height: 1.9; margin-top: 12px; }
+.path-link { display: inline-flex; align-items: center; gap: 15px; font-size: 11px; color: #687e4f; margin-top: 20px; }
+.section-title { font-size: 28px; text-align: center; margin-bottom: 45px; color: $secondary-color; }
+a:focus-visible { outline: 2px solid #788d55; outline-offset: 4px; }
+@media (max-width: 1050px) {
+  .home-hero { gap: 24px; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); }
+  .home-intro { padding-left: 0; }
+  .home-intro h1 { font-size: 40px; }
+  .home-cta { padding: 13px 16px; }
+  .path-card { padding: 22px 20px; }
 }
-
-@mixin card-hover {
-  transform: translateY(-10px);
+@media (max-width: 720px) {
+  .home-hero { grid-template-columns: minmax(0, 1fr); gap: 30px; padding: 20px 0 40px; }
+  .home-intro { padding: 0 8px; }
+  .home-intro h1 { font-size: 44px; margin: 20px 0; }
+  .home-description { max-width: 480px; }
+  .home-note { padding-top: 18px; margin-top: 20px; max-width: 100%; }
+  .paths-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .home-paths { padding-bottom: 40px; }
+  .path-card h3 { margin-top: 18px; }
 }
-
-.home-container {
-  width: 100%;
-  
-  .hero-section {
-    text-align: center;
-    padding: 60px 20px;
-    background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
-    color: white;
-    border-radius: 8px;
-    margin-bottom: 40px;
-  }
-
-  .hero-title {
-    font-size: 48px;
-    margin-bottom: 20px;
-    font-weight: 700;
-  }
-
-  .hero-subtitle {
-    font-size: 20px;
-    margin-bottom: 30px;
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .hero-buttons {
-    @include flex-center;
-    gap: 20px;
-  }
-
-  .hero-button {
-    @include button-base;
-    
-    &.primary {
-      background-color: $orange-color;
-      color: #fff;
-      
-      &:hover {
-        background-color: $orange-dark;
-        transform: translateY(-2px);
-      }
-    }
-    
-    &.secondary {
-      background-color: transparent;
-      border: 2px solid white;
-      color: white;
-      
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        transform: translateY(-2px);
-      }
-    }
-  }
-
-  .section-title {
-    font-size: 32px;
-    text-align: center;
-    margin-bottom: 60px;
-    color: $secondary-color;
-  }
-
-  .features-section {
-    padding: 40px 20px;
-    margin-bottom: 40px;
-  }
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .feature-card {
-    background-color: white;
-    border-radius: 8px;
-    padding: 30px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    transition: transform 0.3s ease;
-    
-    &:hover {
-      @include card-hover;
-    }
-  }
-
-  .feature-icon {
-    font-size: 48px;
-    margin-bottom: 20px;
-  }
-
-  .feature-title {
-    font-size: 24px;
-    margin-bottom: 15px;
-    color: $primary-color;
-  }
-
-  .feature-desc {
-    color: $text-light;
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-
-  .feature-link {
-    display: inline-block;
-    color: $primary-color;
-    font-weight: 600;
-    text-decoration: none;
-    position: relative;
-    
-    &:after {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 2px;
-      bottom: -4px;
-      left: 0;
-      background-color: $primary-color;
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
-    }
-    
-    &:hover:after {
-      transform: scaleX(1);
-    }
-  }
-
-  .trending-section {
-    padding: 40px 20px;
-    background-color: $border-light;
-    border-radius: 8px;
-  }
-
-  .novel-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 25px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .novel-card {
-    background-color: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    
-    &:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-  }
-
-  .novel-cover {
-    height: 160px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(0, 0, 0, 0.5);
-    font-weight: bold;
-  }
-
-  .novel-category {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-  }
-
-  .novel-info {
-    padding: 15px;
-  }
-
-  .novel-title {
-    font-size: 18px;
-    margin-bottom: 5px;
-    color: $secondary-color;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .novel-author {
-    color: $text-light;
-    font-size: 14px;
-    margin-bottom: 10px;
-  }
-
-  .novel-stats {
-    display: flex;
-    justify-content: space-between;
-    color: $text-lighter;
-    font-size: 14px;
-  }
-
-  .view-more {
-    text-align: center;
-    margin-top: 40px;
-  }
-
-  .view-more-link {
-    display: inline-block;
-    background-color: $orange-color;
-    color: white;
-    padding: 10px 25px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-    
-    &:hover {
-      background-color: $orange-dark;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .hero-title {
-      font-size: 36px;
-      line-height: 1.2;
-    }
-    
-    .hero-subtitle {
-      font-size: 18px;
-    }
-    
-    .features-grid, .novel-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .hero-title {
-      font-size: 28px;
-      line-height: 1.3;
-    }
-    
-    .hero-subtitle {
-      font-size: 16px;
-    }
-  }
-}
+@media (max-width: 420px) { .home-intro h1 { font-size: 37px; } .home-eyebrow { letter-spacing: 1px; font-size: 10px; } .home-lead { font-size: 18px; } .paths-heading h2 { font-size: 22px; } }
+@media (prefers-reduced-motion: reduce) { .home-container * { transition: none !important; } }
 
   .download-section {
     padding: 20px 20px;
@@ -680,7 +457,7 @@ $orange-dark: #fa6c2e;
 
       strong {
         font-weight: bold;
-        color: #000;
+        color: #333;
       }
     }
   }
@@ -697,7 +474,7 @@ $orange-dark: #fa6c2e;
 
         strong {
           font-weight: bold;
-          color: #000;
+          color: #333;
         }
 
         a {
@@ -790,7 +567,7 @@ $orange-dark: #fa6c2e;
 
       strong {
         font-weight: bold;
-        color: #000;
+        color: #333;
       }
 
       a {
@@ -846,7 +623,7 @@ $orange-dark: #fa6c2e;
 
       strong {
         font-weight: bold;
-        color: #000;
+        color: #333;
       }
     }
 

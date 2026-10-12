@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-10",
+  "reference": "https://www.stylekit.top/zh/styles/notion-style",
+  "development_url": "http://localhost:3000",
+  "writer_runtime_tests": 16,
+  "writer_browser_flows": 16,
+  "reader_preview_regression": "passed",
+  "page_errors": 0,
+  "themes": ["light", "sepia", "dark"],
+  "viewports": [1440, 1024, 900],
+  "minimum_checked_text_contrast": 4.53,
+  "real_accounts_modified": false,
+  "deployed": false
+}

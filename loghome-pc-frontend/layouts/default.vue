@@ -1,5 +1,6 @@
 <template>
-  <div class="outer">
+  <div class="outer" :class="{ 'home-layout': $route.path === '/', 'reading-layout': isReadingRoute }">
+    <a v-if="isReadingRoute" class="reading-skip-link" href="#reading-main">跳到阅读内容</a>
     <nav class="navbar">
       <div class="navbar-container">
         <div class="navbar-left">
@@ -10,7 +11,7 @@
           </nuxt-link>
         </div>
         <div class="navbar-center">
-          <nuxt-link to="/read" class="nav-link" exact-active-class="nav-link-active">阅读</nuxt-link>
+          <nuxt-link to="/read" class="nav-link" :class="{ 'nav-link-active': isReadingRoute }" exact-active-class="nav-link-active">阅读</nuxt-link>
           <nuxt-link to="/write" class="nav-link" exact-active-class="nav-link-active">写作</nuxt-link>
           <nuxt-link to="/community" class="nav-link" exact-active-class="nav-link-active">社区</nuxt-link>
         </div>
@@ -65,7 +66,7 @@
                 </div>
                 <div class="book-results">
                   <div class="book-item" v-for="(book, index) in searchResults.books.slice(0, 3)" :key="'book-' + index"
-                    @click="navigateToBook(book.novel_id)">
+                    @click="navigateToBook(book.novel_id, book.novel_type)">
                     <img class="book-cover" :src="book.picUrl + '?thumbnail=1'" :alt="book.name">
                     <div class="book-info">
                       <div class="book-title">{{ book.name }}</div>
@@ -169,15 +170,15 @@
         </div>
       </div>
     </nav>
-    <main class="main-content">
+    <main class="main-content" :id="isReadingRoute ? 'reading-main' : undefined" :tabindex="isReadingRoute ? -1 : undefined">
       <nuxt />
     </main>
     <footer class="site-footer">
       <div class="footer-container">
         <p style="display: flex; justify-content: center; margin-bottom: 5px;">
-          <a href="https://beian.miit.gov.cn/" target="_blank" style="color:#FFEFD6; margin-right: 30px;">苏ICP备2021006745号</a><br>
-          <a href="https://beian.mps.gov.cn/" target="_blank" style="color:#FFEFD6; margin-right: 30px;">皖公安网备34010402703554号</a><br>
-          <a href="OpenSourcePlan.html" style="color:#FFEFD6">原木社区开源计划</a>
+          <a href="https://beian.miit.gov.cn/" target="_blank" style="color:var(--site-footer-link, #FFEFD6); margin-right: 30px;">苏ICP备2021006745号</a><br>
+          <a href="https://beian.mps.gov.cn/" target="_blank" style="color:var(--site-footer-link, #FFEFD6); margin-right: 30px;">皖公安网备34010402703554号</a><br>
+          <a href="OpenSourcePlan.html" style="color:var(--site-footer-link, #FFEFD6)">原木社区开源计划</a>
         </p>
         <p style="margin-bottom: 5px;">非 Minecraft 官方产品。未获 Mojang 许可，亦与 Mojang 无任何关联。</p>
         <p>© {{(new Date()).getFullYear()}} 原木社区 版权所有</p>
@@ -186,16 +187,19 @@
 
     <!-- 添加窗口管理器 -->
     <WindowManager />
+    <client-only><ReaderAudioPlayer /></client-only>
   </div>
 </template>
 
 <script>
+import { workUrl } from '~/utils/reading-discovery'
 import WindowManager from '~/components/WindowManager.vue'
+import ReaderAudioPlayer from '~/components/read/ReaderAudioPlayer.vue'
 
 export default {
   name: 'default',
   components: {
-    WindowManager
+    WindowManager, ReaderAudioPlayer
   },
   data() {
     return {
@@ -219,6 +223,9 @@ export default {
     }
   },
   computed: {
+    isReadingRoute() {
+      return /^\/(read|novel|article|manga|world|tags|tag)(\/|$)/.test(this.$route.path)
+    },
     noResults() {
       if (!this.searchKeyword) return false
       const { circles, posts, users, books } = this.searchResults
@@ -547,12 +554,7 @@ export default {
 
     // 导航方法
     navigateToBook(novelId, novelType) {
-      // 如果是世界设定类型，跳转到world页面，否则跳转到novel页面
-      if (novelType === 'world') {
-        this.$router.push(`/world/${novelId}`)
-      } else {
-        this.$router.push(`/novel/${novelId}`)
-      }
+      this.$router.push(workUrl({ novel_id: novelId, novel_type: novelType }))
       this.showSearchDropdown = false
     },
 
@@ -1102,6 +1104,33 @@ export default {
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.home-layout {
+  display: flow-root;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.home-layout .main-content {
+  max-width: 1320px;
+  padding: 20px 50px;
+}
+
+@media (max-width: 1050px) {
+  .home-layout .main-content { padding: 20px 28px; }
+}
+
+@media (max-width: 720px) {
+  .home-layout .main-content { padding: 16px 20px; margin-top: 114px; }
+  .home-layout .navbar-container { height: auto; padding: 10px 20px; flex-wrap: wrap; gap: 8px; }
+  .home-layout .logo-img { height: 27px; }
+  .home-layout .navbar-center { margin-left: auto; }
+  .home-layout .nav-link { margin: 0 8px; font-size: 13px; white-space: nowrap; padding: 5px 0; }
+  .home-layout .navbar-right { width: 100%; }
+  .home-layout .search-box { flex: 1; min-width: 0; padding: 0 14px; margin-right: 16px; }
+  .home-layout .search-input { width: 100%; min-width: 0; font-size: 13px; padding: 10px 0; }
+  .home-layout .user-actions { flex-shrink: 0; font-size: 13px; }
 }
 
 .site-footer {

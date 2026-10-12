@@ -1,0 +1,47 @@
+import {CloudStorage} from './cloud-storage.js';
+const base=new URL('./',location.href),host=document.getElementById('cloud-status');
+let session,cloud,parentOrigin,initialized=false;
+function status(text,error=false){host.textContent=text;host.dataset.error=String(error);}
+async function request(route,options={}){
+ const response=await fetch(new URL('api/'+route,base),{...options,headers:{'Content-Type':'application/json',...(session?{Authorization:'Bearer '+session.token}:{}),...options.headers},signal:AbortSignal.timeout(60000)});
+ const data=await response.json();if(!response.ok){const error=new Error(data.error||'请求失败');error.status=response.status;throw error;}return data;
+}
+function send(type,extra={}){if(window.parent!==window)window.parent.postMessage({namespace:'loghome-miniapp',version:1,type,...extra},parentOrigin&&parentOrigin!=='null'?parentOrigin:'*');}
+function environment(m){for(const side of ['top','bottom','left','right'])document.documentElement.style.setProperty('--flash-app-safe-area-inset-'+side,Math.max(0,Number(m.safeArea?.[side])||0)+'px');}
+function unsupported(){const error=new Error('此功能依赖灵光社区或 AI 服务，尚未接入原木；游戏和云存档可正常使用。');status(error.message,true);throw error;}
+function sdk(user){return {
+ _getArtifactId:()=> 'log-miniminecraft',_getArtifactVersion:()=> '1',
+ ai:{chat:unsupported,imageGeneration:unsupported,musicGeneration:unsupported},
+ chooseImage:unsupported,uploadImage:unsupported,
+ db:{async query({sql}){if(/FROM admin_settings/i.test(sql))return{success:true,data:[{setting_key:"auto_approve",setting_value:"false"}]};if(/FROM user_profiles/i.test(sql))return{success:true,data:[{id:String(user.id),displayName:user.name,avatarUrl:'',bio:'',banUntil:0,publishBanUntil:0}]};if(/FROM managed_user_profiles/i.test(sql))return{success:true,data:[{count:1}]};return{success:true,data:/COUNT\(/i.test(sql)?[{count:0}]:[]};},async execute(){return unsupported();}}
+ };}
+async function init(m){
+ if(initialized)return;initialized=true;environment(m);status('正在验证原木账号…');
+ try{
+  session=await request('session',{method:'POST',body:JSON.stringify({crossSiteToken:m.crossSiteToken})});
+  cloud=new CloudStorage(request,status);await cloud.load();window.logMinecraftStorage=cloud;window.lingguang=sdk(session.user);window.artifactId='log-miniminecraft';window.artifactVersion='1';window.__fullscreen=true;
+  window.publicPath=new URL('./index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/',base).href;
+  await import('./index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/assets/index-B8uuzVI-.js');
+  status('');send('loaded');
+ }catch(error){status('无法启动游戏：'+error.message+'。请从原木重新打开。',true);send('error',{message:error.message});}
+}
+try{
+ const config=await request('config');
+ window.addEventListener('message',async e=>{
+  const m=e.data;if(e.source!==window.parent||!config.allowedParents.includes(e.origin)||m?.namespace!=='loghome-miniapp'||m.version!==1)return;if(parentOrigin&&parentOrigin!==e.origin)return;parentOrigin=e.origin;
+  if(m.type==='init')return init(m);
+  if(m.type==='environment')environment(m);
+  if(m.type==='pause'){document.exitPointerLock?.();window.logMinecraftGame?.pause();await persistWorld().catch(()=>{});return;}
+  if(m.type==='back'&&window.logMinecraftGame?.back())return send('back-result',{requestId:m.requestId,consumed:true});
+  if(m.type==='back'&&document.pointerLockElement){document.exitPointerLock();return send('back-result',{requestId:m.requestId,consumed:true});}
+  if(m.type==='close'||m.type==='back'){try{await persistWorld(true);await cloud?.flush();send('close-ready',{requestId:m.requestId});}catch{send('close-failed',{requestId:m.requestId});}}
+ });
+ const params=new URLSearchParams(location.hash.slice(1)),ticket=params.get('ticket');
+ if(window.parent===window&&ticket){history.replaceState(null,'',location.pathname+location.search);await init({crossSiteToken:ticket});}
+ else{status(window.parent===window?'请从原木社区的小程序入口打开游戏。':'正在连接原木社区…');send('ready');}
+}catch(error){status('存档服务暂不可用：'+error.message,true);}
+
+let saving;
+async function persistWorld(exit=false){if(saving)await saving;const game=window.logMinecraftGame;if(!game)return;saving=exit?game.exit():game.save();try{await saving;}finally{saving=null;}}
+setInterval(()=>{if(session&&!document.hidden)persistWorld().catch(error=>status('自动保存失败：'+error.message,true));},60000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){window.logMinecraftGame?.pause();persistWorld().catch(()=>{});}});

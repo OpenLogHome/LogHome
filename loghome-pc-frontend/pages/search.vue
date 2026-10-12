@@ -142,7 +142,7 @@
                     class="book-item" 
                     v-for="(book, index) in searchResults.books.list.slice(0, 6)" 
                     :key="'book-' + index"
-                    @click="navigateToBook(book.novel_id)"
+                    @click="navigateToBook(book.novel_id, book.novel_type)"
                   >
                     <img class="book-cover" :src="book.picUrl + '?thumbnail=1'" :alt="book.name">
                     <div class="book-info">
@@ -243,7 +243,7 @@
                     class="book-item" 
                     v-for="(book, index) in searchResults.books.list" 
                     :key="'book-' + index"
-                    @click="navigateToBook(book.novel_id)"
+                    @click="navigateToBook(book.novel_id, book.novel_type)"
                   >
                     <img class="book-cover" :src="book.picUrl + '?thumbnail=1'" :alt="book.name">
                     <div class="book-info">
@@ -343,12 +343,14 @@
 </template>
 
 <script>
+import { workUrl } from '~/utils/reading-discovery'
 export default {
   name: 'SearchPage',
   head() {
     return {
       title: this.hasSearched ? `${this.currentKeyword} - 搜索结果` : '搜索 - LogHome',
       meta: [
+        { hid: 'robots', name: 'robots', content: 'noindex,follow' },
         {
           hid: 'description',
           name: 'description',
@@ -710,12 +712,7 @@ export default {
     
     // 导航方法
     navigateToBook(novelId, novelType) {
-      // 如果是世界设定类型，跳转到world页面，否则跳转到novel页面
-      if (novelType === 'world') {
-        this.$router.push(`/world/${novelId}`)
-      } else {
-        this.$router.push(`/novel/${novelId}`)
-      }
+      this.$router.push(workUrl({ novel_id: novelId, novel_type: novelType }))
     },
     
     navigateToPost(postId) {

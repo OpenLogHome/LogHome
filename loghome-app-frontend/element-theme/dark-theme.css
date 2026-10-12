@@ -10,6 +10,23 @@
   color: var(--text-color-primary);
 }
 
+.dark-mode .el-textarea__inner {
+  background-color: #2c2c2c;
+  border-color: var(--border-color);
+  color: var(--text-color-primary);
+}
+
+.dark-mode .el-input__inner::placeholder,
+.dark-mode .el-textarea__inner::placeholder {
+  color: var(--text-color-secondary);
+}
+
+.dark-mode .el-input__count,
+.dark-mode .el-input__count-inner {
+  background-color: transparent;
+  color: var(--text-color-secondary);
+}
+
 .dark-mode .el-select-dropdown {
   background-color: #2c2c2c;
   border-color: var(--border-color);

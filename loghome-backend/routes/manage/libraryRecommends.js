@@ -1,5 +1,5 @@
 let express = require('express');
-let { query } = require('../../sql.js');
+let { query, withTransaction } = require('../../sql.js');
 let auth = require('../../bin/adminAuth.js');
 
 let router = express.Router();
@@ -12,7 +12,9 @@ function toInt(value) {
 router.get('/titles', auth, async function (req, res) {
 	try {
 		let results = await query(
-			'SELECT title, COUNT(*) AS cnt FROM library_recommend GROUP BY title ORDER BY cnt DESC',
+			`SELECT titles.title, COUNT(r.recommend_id) AS cnt FROM
+			 (SELECT collection_title AS title FROM library_recommend_collections UNION SELECT title FROM library_recommend) titles
+			 LEFT JOIN library_recommend r ON r.title = titles.title GROUP BY titles.title ORDER BY cnt DESC, titles.title ASC`,
 		);
 		res.json(results);
 	} catch (e) {
@@ -33,7 +35,7 @@ router.get('/', auth, async function (req, res) {
 			 FROM library_recommend c
 			 LEFT JOIN novels n ON c.novel_id = n.novel_id
 			 WHERE c.title = ?
-			 ORDER BY c.recommend_id DESC
+			 ORDER BY c.ranking DESC, c.recommend_id DESC
 			 LIMIT 500`,
 			[title],
 		);
@@ -58,6 +60,10 @@ router.post('/', auth, async function (req, res) {
 		}
 		if (!Number.isInteger(novelId) || novelId <= 0) {
 			return res.status(400).json({ msg: '请选择小说' });
+		}
+
+		if (!Number.isFinite(ranking)) {
+			return res.status(400).json({ msg: '排序值必须为数字' });
 		}
 
 		let novel = await query('SELECT novel_id FROM novels WHERE novel_id = ?', [novelId]);
@@ -88,7 +94,7 @@ router.post('/', auth, async function (req, res) {
 router.delete('/:id', auth, async function (req, res) {
 	try {
 		let recommendId = Number(req.params.id);
-		if (!recommendId) {
+		if (!Number.isSafeInteger(recommendId) || recommendId <= 0) {
 			return res.status(400).json({ msg: 'invalid recommend id' });
 		}
 
@@ -127,9 +133,12 @@ router.post('/collections', auth, async function (req, res) {
 		let icon = String(req.body.icon || '').trim();
 		let isValid = toInt(req.body.isValid);
 
-		if (!collectionTitle || !collectionType) {
+		if (!collectionTitle || !['slide', 'cards', 'dense_card'].includes(collectionType)) {
 			return res.status(400).json({ msg: '合集名称与类型不能为空' });
 		}
+
+		const duplicate = await query('SELECT collection_id FROM library_recommend_collections WHERE collection_title = ?', [collectionTitle]);
+		if (duplicate.length) return res.status(409).json({ msg: '合集名称已存在' });
 
 		await query(
 			'INSERT INTO library_recommend_collections (isValid, collection_title, collection_type, icon) VALUES (?, ?, ?, ?)',
@@ -146,7 +155,7 @@ router.post('/collections', auth, async function (req, res) {
 router.put('/collections/:id', auth, async function (req, res) {
 	try {
 		let collectionId = Number(req.params.id);
-		if (!collectionId) {
+		if (!Number.isSafeInteger(collectionId) || collectionId <= 0) {
 			return res.status(400).json({ msg: 'invalid collection id' });
 		}
 
@@ -155,18 +164,23 @@ router.put('/collections/:id', auth, async function (req, res) {
 		let icon = String(req.body.icon || '').trim();
 		let isValid = toInt(req.body.isValid);
 
-		if (!collectionTitle || !collectionType) {
+		if (!collectionTitle || !['slide', 'cards', 'dense_card'].includes(collectionType)) {
 			return res.status(400).json({ msg: '合集名称与类型不能为空' });
 		}
 
-		let result = await query(
-			'UPDATE library_recommend_collections SET isValid = ?, collection_title = ?, collection_type = ?, icon = ? WHERE collection_id = ?',
-			[isValid, collectionTitle, collectionType, icon, collectionId],
-		);
-
-		if (!result.affectedRows) {
-			return res.status(404).json({ msg: 'collection not found' });
-		}
+		const outcome = await withTransaction(async trx => {
+			const rows = await trx('SELECT * FROM library_recommend_collections WHERE collection_id = ? FOR UPDATE', [collectionId]);
+			if (!rows.length) return { status: 404, msg: 'collection not found' };
+			const duplicates = await trx('SELECT collection_id FROM library_recommend_collections WHERE collection_title = ? AND collection_id <> ? FOR UPDATE', [collectionTitle, collectionId]);
+			if (duplicates.length) return { status: 409, msg: '合集名称已存在' };
+			// Titles are the legacy association key: migrate records atomically with the collection.
+			if (rows[0].collection_title !== collectionTitle) {
+				await trx('UPDATE library_recommend SET title = ? WHERE title = ?', [collectionTitle, rows[0].collection_title]);
+			}
+			await trx('UPDATE library_recommend_collections SET isValid = ?, collection_title = ?, collection_type = ?, icon = ? WHERE collection_id = ?', [isValid, collectionTitle, collectionType, icon, collectionId]);
+			return null;
+		});
+		if (outcome) return res.status(outcome.status).json({ msg: outcome.msg });
 
 		res.json({ msg: 'success' });
 	} catch (e) {
@@ -178,7 +192,7 @@ router.put('/collections/:id', auth, async function (req, res) {
 router.delete('/collections/:id', auth, async function (req, res) {
 	try {
 		let collectionId = Number(req.params.id);
-		if (!collectionId) {
+		if (!Number.isSafeInteger(collectionId) || collectionId <= 0) {
 			return res.status(400).json({ msg: 'invalid collection id' });
 		}
 
