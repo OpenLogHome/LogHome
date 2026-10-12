@@ -1,0 +1,13 @@
+{
+  "name": "loghome-miniapps",
+  "private": true,
+  "scripts": {
+    "start": "node start-all.js",
+    "dev": "node start-all.js --dev",
+    "status": "node start-all.js status",
+    "stop": "node start-all.js stop",
+    "restart": "node start-all.js restart",
+    "test": "node --test test/*.test.cjs"
+  },
+  "engines": {"node": ">=22.13"}
+}
