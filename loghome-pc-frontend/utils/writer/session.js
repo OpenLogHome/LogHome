@@ -22,6 +22,7 @@ export class WriterSession {
     this.sessionId = `pc_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     this.article = null;
     this.baseline = "";
+    this.publishedSignature = null;
     this.writable = false;
     this.closed = false;
     this.saving = null;
@@ -33,6 +34,7 @@ export class WriterSession {
     const reader = await this.api.get("get_article", { id });
     if (!reader || Number(reader.article_id) !== Number(id))
       throw new Error("章节不存在或无权访问");
+    this.publishedSignature = writerSignature(reader);
     let writer = await this.api.get("get_article_writer", { id });
     this.article = { ...reader, ...(writer || {}) };
     validateWriterContent(this.article);

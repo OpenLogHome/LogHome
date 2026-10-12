@@ -1723,3 +1723,26 @@
 @media (prefers-reduced-motion: reduce) {
   .focused .workspace-header, .focused .editor-chrome, .focused .editor-statusbar { transition: none; }
 }
+
+.catalog-item-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.catalog-item-details small {
+  flex: 1 1 110px;
+  min-width: 0;
+}
+.catalog-modified-badge {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--writer-warning-bg);
+  color: var(--writer-warning);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}

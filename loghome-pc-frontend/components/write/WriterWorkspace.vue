@@ -233,38 +233,38 @@
                     class="catalog-realtime-badge"
                     >实时协作</span
                   ></span
-                ><small
-                  >{{ articleLabel(item.article_type) }} ·
-                  {{ Number(item.is_draft) === 1 ? "草稿" : "已发布"
-                  }}<template v-if="item.active_lock_user_name">
-                    · {{ item.active_lock_user_name }} 编辑中</template
-                  ><template v-else>
-                    ·
-                    <template v-if="item.article_type === 'spliter'"
-                      >{{ count }} 篇<span
-                        v-if="
-                          volumeContainsCurrent(item.article_id) &&
-                          volumeCollapsed(item.article_id)
-                        "
-                      >
-                        · 正在编辑</span
+                ><span class="catalog-item-details"
+                  ><small
+                    >{{ articleLabel(item.article_type) }} ·
+                    {{ Number(item.is_draft) === 1 ? "草稿" : "已发布"
+                    }}<template v-if="item.active_lock_user_name">
+                      · {{ item.active_lock_user_name }} 编辑中</template
+                    ><template v-else>
+                      ·
+                      <template v-if="item.article_type === 'spliter'"
+                        >{{ count }} 篇<span
+                          v-if="
+                            volumeContainsCurrent(item.article_id) &&
+                            volumeCollapsed(item.article_id)
+                          "
+                        >
+                          · 正在编辑</span
+                        ></template
+                      ><template v-else
+                        >{{
+                          (item.text_count || 0).toLocaleString()
+                        }}
+                        字</template
                       ></template
-                    ><template v-else
-                      >{{
-                        (item.text_count || 0).toLocaleString()
-                      }}
-                      字</template
-                    ></template
-                  ></small
-                ></span
-              ><span
-                v-if="
-                  item.writer_content_hash &&
-                  item.writer_content_hash !== item.content_hash
-                "
-                class="draft-dot"
-                title="有未发布修改"
-              />
+                    ></small
+                  ><span
+                    v-if="catalogHasChanges(item)"
+                    class="catalog-modified-badge"
+                    title="发布后有编辑，读者仍看到上次发布的版本"
+                    >有修改</span
+                  >
+                </span></span
+              >
             </button>
             <el-dropdown trigger="click" @command="catalogAction($event, item)"
               ><button
@@ -652,6 +652,8 @@
 </template>
 <script>
 import {
+  normalizeCatalogArticle,
+  hasUnpublishedCatalogChanges,
   catalogGroups,
   catalogRows,
   moveCatalog,
@@ -1035,6 +1037,37 @@ export default {
     if (this.realtime) this.realtime.destroy();
   },
   methods: {
+    catalogHasChanges(item) {
+      if (Number(item.is_draft) !== 0 || item.article_type === "spliter")
+        return false;
+      if (
+        this.article &&
+        this.article.article_id === item.article_id &&
+        this.session &&
+        this.session.publishedSignature !== null
+      )
+        return (
+          writerSignature(this.article) !== this.session.publishedSignature
+        );
+      return hasUnpublishedCatalogChanges(item);
+    },
+    trackCatalogChanges() {
+      if (
+        !this.article ||
+        !this.session ||
+        this.session.publishedSignature === null
+      )
+        return;
+      const item = this.articles.find(
+        (row) => row.article_id === this.article.article_id
+      );
+      if (item)
+        this.$set(
+          item,
+          "local_writer_modified",
+          writerSignature(this.article) !== this.session.publishedSignature
+        );
+    },
     focusEdgeMove(event) {
       if (!this.focusMode || event.buttons) return;
       const bounds = this.$el.getBoundingClientRect();
@@ -1434,9 +1467,9 @@ export default {
       try {
         const rows = await writerGet("get_articles", { id: this.workId });
         if (revision !== this._catalogRevision || this.sortSaving) return;
-        this.articles = rows.sort(
-          (a, b) => a.article_chapter - b.article_chapter
-        );
+        this.articles = rows
+          .map(normalizeCatalogArticle)
+          .sort((a, b) => a.article_chapter - b.article_chapter);
         this.insertPosition = this.articles.length + 1;
       } catch (error) {
         this.error = error.message;
@@ -1459,6 +1492,7 @@ export default {
       }, 300);
     },
     async disposeChapter() {
+      this.trackCatalogChanges();
       clearTimeout(this.saveTimer);
       clearInterval(this.snapshotTimer);
       if (this.activity) {
@@ -1610,9 +1644,11 @@ export default {
         this.stateDetail = error.message;
       } finally {
         this.loadingArticle = false;
+        this.trackCatalogChanges();
       }
     },
     changed() {
+      this.trackCatalogChanges();
       if (this.loadingArticle || !this.session || !this.canEdit) return;
       this.session.article = this.article;
       this.session.backup().catch((error) => {
@@ -1935,17 +1971,23 @@ export default {
           ? await this.realtime.checkpoint()
           : null;
         if (!this.realtime) await this.session.save(true);
-        await writerPost("modify_article", {
+        const published = {
           article_id: this.article.article_id,
           title: this.article.title,
           content: this.article.content,
           is_draft: options.mode === "now" ? 0 : 1,
+        };
+        await writerPost("modify_article", {
+          ...published,
           schedule_time: options.mode === "schedule" ? options.time : null,
           clear_schedule: options.mode === "schedule" ? 0 : 1,
           edit_session_id: this.session.sessionId,
           collab_revision: checkpoint ? checkpoint.revision : undefined,
           writer_create_time: writerTime(),
         });
+        this.session.publishedSignature = writerSignature(published);
+        this.article.is_draft = published.is_draft;
+        this.trackCatalogChanges();
         this.publishOpen = false;
         this.writerMessage(
           "success",

@@ -71,3 +71,28 @@ export function moveCatalog(articles, sourceId, targetId, edge) {
     return null;
   return { rows: remaining, markerId: articles[boundary].article_id, edge };
 }
+
+// The list API nests writer metadata; older responses used the flat aliases.
+export function normalizeCatalogArticle(item) {
+  const writer = item.article_writer;
+  if (!writer) return item;
+  return {
+    ...item,
+    writer_title: writer.title,
+    writer_content_hash: writer.content_hash,
+  };
+}
+
+export function hasUnpublishedCatalogChanges(item) {
+  if (Number(item.is_draft) !== 0 || item.article_type === "spliter")
+    return false;
+  if (typeof item.local_writer_modified === "boolean")
+    return item.local_writer_modified;
+  const writer = item.article_writer || {};
+  const hash = writer.content_hash || item.writer_content_hash;
+  const title = writer.title == null ? item.writer_title : writer.title;
+  return Boolean(
+    (hash && hash !== item.content_hash) ||
+      (title != null && title !== item.title)
+  );
+}
