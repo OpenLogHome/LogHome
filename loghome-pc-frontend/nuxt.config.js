@@ -6,7 +6,7 @@ export default {
     writerWsUrl: process.env.WRITER_WS_URL || (process.env.NODE_ENV === 'production' ? 'wss://ai.loghome.ink' : 'ws://127.0.0.1:9102'),
     STATIC_URL: process.env.STATIC_URL || '',
     baseUrl: process.env.NODE_ENV === 'production'
-      ? 'https://loghomeservice.codesocean.top' // 生产环境API地址
+      ? 'https://api.loghome.ink' // 生产环境API地址
       : 'http://127.0.0.1:9000', // 开发环境API地址，与 APP 端一致（本地后端连同一数据库）
     // 移动端SPA应用的URL配置
     mobileUrl: process.env.NODE_ENV === 'production'
