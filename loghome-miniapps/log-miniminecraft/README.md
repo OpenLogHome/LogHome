@@ -55,6 +55,8 @@ npm start
 
 `npm start` 现在会先自动构建；服务启动时还会检查首页、启动脚本、样式及游戏模块是否存在且非空。不要把 `public/` 当作完整发布目录：游戏模块由 `vendor/game.bundle.js` 经过构建生成，只有完整 `dist/` 可以提供前端服务。使用 systemd/PM2 直接执行 `server/index.cjs` 时，需要先在发布目录执行 `npm run build`，再重启服务；缺少必要文件会拒绝启动。
 
+Windows 检出同样受支持：构建在应用源码补丁前统一 CRLF/LF 换行，项目 `.gitattributes` 也将 JS/CJS 源码指定为 LF。源码补丁全部完成后才替换 `dist/`，因此补丁匹配失败不会先删除已有发布文件。
+
 部署并重启后检查公网资源：
 
 ```sh
