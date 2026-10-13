@@ -4,6 +4,16 @@ const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('node:vm')
 const root = path.join(__dirname, '..')
+test('container reveals opt-in loading UI only for messages from its trusted frame',async()=>{
+ const source=fs.readFileSync(path.join(root,'pages/apps/miniapp.vue'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1].replace(/^import .*$/gm,'').replace('export default','this.component=');
+ const context={darkModeMixin:{},clearTimeout(){}};vm.createContext(context);vm.runInContext(source,context);
+ const frame={},state={...context.component.data(),$refs:{miniappFrame:{contentWindow:frame}},_origin:'https://game.test',resets:0,startLoadingTimeout(){this.resets++}};
+ const message={namespace:'loghome-miniapp',version:1,type:'loading',step:3,total:6};
+ const receive=(origin,source,data=message)=>context.component.methods.onMiniappMessage.call(state,{origin,source,data});
+ await receive('https://other.test',frame);await receive(state._origin,{});assert.equal(state.customLoading,false);
+ await receive(state._origin,frame);assert.equal(state.customLoading,true);assert.equal(state.loading,true);assert.equal(state.resets,1);
+ await receive(state._origin,frame,{...message,type:'loaded'});assert.equal(state.loading,false);
+});
 function registry(env = {}, bridge, get = async () => {throw new Error('not registered')}) {
   const context = {process: {env}, window: {jsBridge: bridge}, axios: {get}}
   vm.createContext(context)

@@ -55,11 +55,16 @@ function patchBundle(source){
  const hookMarker='Xr=reactExports.useCallback(()=>{i(!1)},[]);';
  if(!source.includes(hookMarker))throw Error('Game bridge boundary changed');
  source=source.replace(hookMarker,hookMarker+'reactExports.useEffect(()=>{const bridge={pause:dr,save:()=>n==="playing"?vr(true):Promise.resolve(),exit:()=>n==="playing"?vr(false):Promise.resolve(),back:()=>{if(n==="playing"&&!o){dr();return true}if(n!=="start"&&n!=="playing"){e("start");return true}return false}};window.logMinecraftGame=bridge;return()=>{if(window.logMinecraftGame===bridge)delete window.logMinecraftGame}},[n,o,vr,dr]);');
+ for(const [before,after]of [
+  ['function App(){','function App(){reactExports.useEffect(()=>{window.logMinecraftLoading?.ready()},[]);'],
+  ['await (await import("../../../../../../mods/minecraft-vanilla-1.21/install.js"))','window.logMinecraftLoading?.stage(4,"正在准备原版材质…","首次安装材质包时会同步到云存档，请稍候。");await (await import("../../../../../../mods/minecraft-vanilla-1.21/install.js"))'],
+  ['componentDidCatch(e,t){const r=t.componentStack','componentDidCatch(e,t){window.logMinecraftLoading?.fail(e.message);const r=t.componentStack']
+ ]){if(source.split(before).length!==2)throw Error('Loading bridge boundary changed: '+before);source=source.replace(before,after)}
  // Resolve exported URL literals against the files shipped with the game, when available.
  source=source.replace(/https?:\/\/[^\s"'<>`\\)]+/g,url=>{
   try{const u=new URL(url),local=path.join(root,'public/index_files',u.hostname,decodeURIComponent(u.pathname));if(fs.existsSync(local)&&fs.statSync(local).isFile())return './'+path.relative(path.dirname(path.join(root,'public',BUNDLE)),local).split(path.sep).join('/');}catch{}return url;
  });
  return require('./visual-quality.cjs').patchVisualQuality(require('./frame-rate.cjs').patchFrameRate(require('./fps-overlay.cjs').patchFpsOverlay(require('./performance-patches.cjs').patchPerformance(source))));
 }
-function build(outputDir=dist){const patched=patchBundle(fs.readFileSync(path.join(root,'vendor/game.bundle.js'),'utf8'));fs.rmSync(outputDir,{recursive:true,force:true});fs.cpSync(path.join(root,'public'),outputDir,{recursive:true});for(const name of ['bootstrap.js','cloud-storage.js'])fs.copyFileSync(path.join(root,'src',name),path.join(outputDir,name));const file=path.join(outputDir,BUNDLE);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,patched);validateStaticAssets(outputDir);console.log('Built Log MiniMinecraft → '+outputDir);}
+function build(outputDir=dist){const patched=patchBundle(fs.readFileSync(path.join(root,'vendor/game.bundle.js'),'utf8'));fs.rmSync(outputDir,{recursive:true,force:true});fs.cpSync(path.join(root,'public'),outputDir,{recursive:true});for(const name of ['bootstrap.js','cloud-storage.js','loading.js'])fs.copyFileSync(path.join(root,'src',name),path.join(outputDir,name));const file=path.join(outputDir,BUNDLE);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,patched);validateStaticAssets(outputDir);console.log('Built Log MiniMinecraft → '+outputDir);}
 if(require.main===module)build();module.exports={patchBundle,build,BUNDLE};

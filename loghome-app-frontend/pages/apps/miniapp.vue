@@ -6,7 +6,7 @@
    <view class="capsule-divider"></view>
    <button class="capsule-button" aria-label="关闭小程序" @tap="requestClose('close')"><view class="capsule-close-icon" aria-hidden="true"></view></button>
   </view>
-  <view v-if="loading || error" class="miniapp-status"><text>{{ error || ('正在启动' + miniapp.name + '…') }}</text><button v-if="error" @tap="reload">重新加载</button></view>
+  <view v-if="(loading && !customLoading) || error" class="miniapp-status"><text>{{ error || ('正在启动' + miniapp.name + '…') }}</text><button v-if="error" @tap="reload">重新加载</button></view>
  </view>
 </template>
 <script>
@@ -15,7 +15,7 @@ import darkModeMixin from '@/mixins/dark-mode.js'
 import { getMiniapp } from '@/common/miniapps.js'
 export default {
  mixins: [darkModeMixin],
- data() { return {miniapp:{name:'小程序',description:''},frameUrl:'',frameKey:0,loading:true,error:'',closeId:'',ready:false,closeAction:'exit'} },
+ data() { return {miniapp:{name:'小程序',description:''},frameUrl:'',frameKey:0,loading:true,customLoading:false,error:'',closeId:'',ready:false,closeAction:'exit'} },
  watch: {isDarkMode(){this.sendEnvironment()}, '$i18n.locale'(){this.sendEnvironment()}},
  async onLoad(options = {}) {
   this._miniappId=options.id
@@ -31,12 +31,13 @@ export default {
  onUnload(){this._unloaded=true;window.removeEventListener('message',this._message);window.removeEventListener('loghomeNativeBack',this._back);document.removeEventListener('visibilitychange',this._visibility);clearTimeout(this._loadTimer);clearTimeout(this._closeTimer)},
  onBackPress(){if(this._exiting)return false;this.requestClose('back');return true},
  methods: {
-  startLoadingTimeout(){clearTimeout(this._loadTimer);this._loadTimer=setTimeout(()=>{if(this.loading)this.error='小程序未能加载，请检查网络或服务。'},45000)},
+  startLoadingTimeout(){clearTimeout(this._loadTimer);this._loadTimer=setTimeout(()=>{if(this.loading)this.error='小程序未能加载，请检查网络或服务。'},this.customLoading?120000:45000)},
   send(type,extra={}) {const frame=this.$refs.miniappFrame;if(frame&&frame.contentWindow)frame.contentWindow.postMessage({namespace:'loghome-miniapp',version:1,type,...extra},this._origin)},
   environment(){const style=getComputedStyle(document.documentElement);return {theme:this.isDarkMode?'dark':'light',locale:this.$i18n.locale,safeArea:{top:parseFloat(style.getPropertyValue('--loghome-safe-top'))||parseFloat(style.getPropertyValue('--loghome-native-safe-top'))||0,bottom:parseFloat(style.getPropertyValue('--loghome-safe-bottom'))||0}}},
   sendEnvironment(){if(this.ready)this.send('environment',this.environment())},
   async onMiniappMessage(e){
    const frame=this.$refs.miniappFrame,m=e.data;if(!frame||e.source!==frame.contentWindow||e.origin!==this._origin||m?.namespace!=='loghome-miniapp'||m.version!==1)return
+   if(m.type==='loading'&&this.loading&&Number.isInteger(m.step)&&m.step>=0&&m.step<m.total&&m.total<=20){this.customLoading=true;this.startLoadingTimeout()}
    if(m.type==='ready'){
     if(this._authenticating)return;this._authenticating=true;const key=this.frameKey
     try{const token=JSON.parse(window.localStorage.getItem('token')||'null');if(!token?.tk)throw new Error('请先登录原木账号');const res=await axios.get(this.$baseUrl+'/users/generate_cross_site_token',{headers:{Authorization:token.tk}});if(!res.data?.crossSiteToken)throw new Error('获取登录票据失败');if(key!==this.frameKey)return;this.ready=true;this.send('init',{crossSiteToken:res.data.crossSiteToken,...this.environment()});}
@@ -50,7 +51,7 @@ export default {
   requestClose(type,action='exit'){if(this.closeId)return;this.closeAction=action;if(!this.ready||this.error){if(action==='reload')this.reload();else this.exitMiniapp();return;}this.closeId=Date.now()+':'+Math.random();this.send(type,{requestId:this.closeId});this._closeTimer=setTimeout(()=>this.confirmForceClose(),8000)},
   confirmForceClose(){uni.showModal({title:'存档尚未确认',content:'小程序未确认数据已保存。继续等待，或放弃本次未保存进度并退出？',confirmText:'退出',cancelText:'继续等待',success:res=>{this.closeId='';if(res.confirm)this.exitMiniapp();else{this.closeAction='exit';this.send('resume')}}})},
   async reload(){
-   this.loading=true;this.error='';
+   this.loading=true;this.customLoading=false;this.error='';
    try{
     const app=await getMiniapp(this._miniappId,this.$baseUrl);if(this._unloaded)return;
     const url=new URL(app.url);if(!['https:','http:'].includes(url.protocol))throw new Error('地址必须使用 HTTPS 或 HTTP');

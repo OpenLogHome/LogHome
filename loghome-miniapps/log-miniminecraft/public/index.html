@@ -11,6 +11,17 @@
 </head>
 <body>
 <div id="root"></div>
+<section id="game-loading" aria-labelledby="loading-title" aria-busy="true">
+ <div class="loading-card">
+  <div class="loading-block" aria-hidden="true"><span></span></div>
+  <p class="loading-eyebrow">LOGHOME · MINIMINECRAFT</p>
+  <h1 id="loading-title">原木方块世界</h1>
+  <p id="loading-stage" role="status" aria-live="polite">正在连接原木社区…</p>
+  <progress id="loading-progress" max="6" value="0" aria-label="启动阶段进度"></progress>
+  <div class="loading-meta"><span id="loading-count">步骤 1 / 6</span><span class="loading-dots" aria-hidden="true">···</span></div>
+  <p id="loading-hint">首次启动需要加载游戏资源，请稍候。</p>
+ </div>
+</section>
 <div id="cloud-status" role="status" aria-live="polite">正在连接原木账号…</div>
 <script type="module" src="./bootstrap.js"></script>
 </body>
