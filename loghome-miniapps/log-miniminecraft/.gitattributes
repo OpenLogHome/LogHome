@@ -1,0 +1,3 @@
+# Checked source patches and embedded Worker/shader templates use LF everywhere.
+*.js text eol=lf
+*.cjs text eol=lf

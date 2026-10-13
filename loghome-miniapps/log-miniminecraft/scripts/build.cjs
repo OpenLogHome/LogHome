@@ -3,6 +3,9 @@ const path=require('node:path');
 const root=path.join(__dirname,'..'),dist=path.join(root,'dist');
 const {GAME_BUNDLE:BUNDLE,validateStaticAssets}=require('../server/static-assets.cjs');
 function patchBundle(source){
+ // Windows Git checkouts can turn the embedded Worker/shader source into CRLF.
+ // All checked patch boundaries use LF; normalize before applying any patch.
+ source=source.replace(/\r\n?/g,'\n');
  function replaceFunction(name,body){
   const pattern=new RegExp('(?:async )?function '+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\('),match=pattern.exec(source);
   if(!match)throw Error('Missing export function: '+name);
@@ -58,5 +61,5 @@ function patchBundle(source){
  });
  return require('./visual-quality.cjs').patchVisualQuality(require('./frame-rate.cjs').patchFrameRate(require('./fps-overlay.cjs').patchFpsOverlay(require('./performance-patches.cjs').patchPerformance(source))));
 }
-function build(outputDir=dist){fs.rmSync(outputDir,{recursive:true,force:true});fs.cpSync(path.join(root,'public'),outputDir,{recursive:true});for(const name of ['bootstrap.js','cloud-storage.js'])fs.copyFileSync(path.join(root,'src',name),path.join(outputDir,name));const file=path.join(outputDir,BUNDLE);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,patchBundle(fs.readFileSync(path.join(root,'vendor/game.bundle.js'),'utf8')));validateStaticAssets(outputDir);console.log('Built Log MiniMinecraft → '+outputDir);}
+function build(outputDir=dist){const patched=patchBundle(fs.readFileSync(path.join(root,'vendor/game.bundle.js'),'utf8'));fs.rmSync(outputDir,{recursive:true,force:true});fs.cpSync(path.join(root,'public'),outputDir,{recursive:true});for(const name of ['bootstrap.js','cloud-storage.js'])fs.copyFileSync(path.join(root,'src',name),path.join(outputDir,name));const file=path.join(outputDir,BUNDLE);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,patched);validateStaticAssets(outputDir);console.log('Built Log MiniMinecraft → '+outputDir);}
 if(require.main===module)build();module.exports={patchBundle,build,BUNDLE};
