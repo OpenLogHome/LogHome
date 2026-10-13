@@ -1,6 +1,6 @@
 {
   "id": "minecraft_vanilla_1_21",
-  "revision": 1,
+  "revision": 2,
   "name": "Minecraft 原版方块材质 · Java 1.21",
   "description": "覆盖现有 17 种方块：草地、泥土、石头、木材等。使用 Mojang 官方 16×16 原版贴图；草叶与水按默认颜色着色。动画材质使用第一帧。",
   "author": "Mojang Studios（原始材质） / 本地适配",
@@ -133,16 +133,16 @@
     },
     "wood": {
       "top": [
-        "textures/block/oak_log_top.png"
+        "textures/block/oak_log.png"
       ],
       "bottom": [
-        "textures/block/oak_log_top.png"
+        "textures/block/oak_log.png"
       ],
       "front": [
-        "textures/block/oak_log.png"
+        "textures/block/oak_log_top.png"
       ],
       "back": [
-        "textures/block/oak_log.png"
+        "textures/block/oak_log_top.png"
       ],
       "left": [
         "textures/block/oak_log.png"
