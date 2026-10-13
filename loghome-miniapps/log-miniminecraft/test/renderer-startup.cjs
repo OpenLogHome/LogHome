@@ -3,9 +3,14 @@ const root=path.resolve(__dirname,'..');const source=require('../scripts/build.c
 const split=source.indexOf('/* LOCAL_VANILLA_MATERIAL_PACK */');const script=source.slice(0,split)+source.slice(source.indexOf('\nfunction logMarkAttribute',split))+`
 window.logMinecraftStorage={getItem:async()=>null,getAllItems:async()=>[],setItem:async()=>true};
 initializeBuiltinBlocks();initializeRegistry();initializeItemDefinitions();await generateTextureAtlas();
-window.startupResult={mounts:0,unmounts:0,frames:0};
+window.startupResult={mounts:0,unmounts:0,frames:0,motionFrames:0,reflectionFrames:0};
+let testBridge,testCamera,testPoses=[];
+const playerStateSetter=WorkerBridge.prototype.setOnPlayerStateUpdate;
+WorkerBridge.prototype.setOnPlayerStateUpdate=function(callback){testBridge=this;this.testPlayerState=callback;playerStateSetter.call(this,()=>{})};
 const startupQualityFactory=logCreateQualityPipeline;
-logCreateQualityPipeline=function(...args){const pipeline=startupQualityFactory(...args),render=pipeline.render;pipeline.render=function(){window.startupResult.frames++;return render.call(this)};return pipeline};
+logCreateQualityPipeline=function(...args){testCamera=args[2];const pipeline=startupQualityFactory(...args),render=pipeline.render;
+ const originalRender=args[0].render;args[0].render=function(scene,camera){if(scene===args[1]&&camera!==args[2]){window.startupResult.reflectionFrames++;if(Math.abs(camera.position.x-args[2].position.x)>1e-6)throw Error('Reflection camera diverged from displayed player')}return originalRender.call(this,scene,camera)};
+ pipeline.render=function(){window.startupResult.frames++;testPoses.push(args[2].position.x);return render.call(this)};return pipeline};
 const host=document.createElement('div');host.style.cssText='width:960px;height:640px';document.body.appendChild(host);
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 for(const enabled of [false,true]){
@@ -13,11 +18,17 @@ for(const enabled of [false,true]){
  logAdvancedSettings.value={enabled,preset:'balanced',bloom:true};
  const previousFrames=window.startupResult.frames;
  const root=clientExports.createRoot(host);
- root.render(jsxRuntimeExports.jsx(VoxelWorldRenderer,{seed:123,renderRadius:2,chunkLoadEnabled:false,chunkUnloadEnabled:false,isPaused:false,dayNightEnabled:false}));
+ root.render(jsxRuntimeExports.jsx(VoxelWorldRenderer,{seed:123,renderRadius:2,chunkLoadEnabled:false,chunkUnloadEnabled:false,isPaused:false,dayNightEnabled:false,waterReflectionEnabled:true}));
  await pause(1200);
  if(window.startupResult.frames<=previousFrames)throw Error('No rendered frame after mount');
  if(!host.querySelector('canvas'))throw Error('Renderer did not mount');
  if(logAdvancedSettings.error)throw Error(logAdvancedSettings.error);
+ testPoses=[];const sent=[],movementStart=performance.now();
+ testBridge.testPlayerState({positionX:0,positionY:64,positionZ:0,isFlying:false});
+ const move=setInterval(()=>{const x=(performance.now()-movementStart)*.004;sent.push(x);testBridge.testPlayerState({positionX:x,positionY:64,positionZ:0,isFlying:false})},16);
+ await pause(450);clearInterval(move);
+ if(!testPoses.some(x=>x>.1&&sent.every(sample=>Math.abs(sample-x)>.001)))throw Error('Player was rendered only at discrete Worker positions');
+ if(testCamera.position.x<=.1)throw Error('Displayed camera did not move');window.startupResult.motionFrames+=testPoses.length;
  window.startupResult.mounts++;root.unmount();await pause(100);
  if(host.querySelector('canvas'))throw Error('Canvas leaked after unmount');window.startupResult.unmounts++;
 }
