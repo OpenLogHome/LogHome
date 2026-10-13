@@ -5,12 +5,14 @@ const crypto=require('node:crypto');
 const net=require('node:net');
 const {SaveStore,HttpError}=require('./store.cjs');
 const {authorizeWithLoghome}=require('./auth.cjs');
+const {validateStaticAssets}=require('./static-assets.cjs');
 function createServer(options={}) {
  const basePath=(options.basePath??process.env.BASE_PATH??'/log-miniminecraft').replace(/\/$/,'');
  if(basePath&&!/^\/[a-zA-Z0-9/_-]+$/.test(basePath))throw Error('Invalid BASE_PATH');
  const maxBytes=options.maxBytes||Number(process.env.MAX_SAVE_BYTES)||50*1024*1024;
  const store=new SaveStore(options.dataDir||process.env.DATA_DIR||path.join(__dirname,'../data/players'),maxBytes);
  const publicDir=path.resolve(options.publicDir||path.join(__dirname,'../dist'));
+ validateStaticAssets(publicDir);
  const parents=(options.allowedParents||process.env.ALLOWED_PARENT_ORIGINS||'null,https://m.loghome.ink,https://loghome.ink').split(',').map(s=>s.trim());
  const authorize=options.authorize||((ticket)=>authorizeWithLoghome(ticket,process.env.LOGHOME_API_URL||'https://api.loghome.ink'));
  const sessions=new Map(),tickets=new Map(),attempts=new Map();

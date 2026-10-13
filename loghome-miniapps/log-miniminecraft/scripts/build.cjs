@@ -1,7 +1,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const root=path.join(__dirname,'..'),dist=path.join(root,'dist');
-const BUNDLE='index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/assets/index-B8uuzVI-.js';
+const {GAME_BUNDLE:BUNDLE,validateStaticAssets}=require('../server/static-assets.cjs');
 function patchBundle(source){
  function replaceFunction(name,body){
   const pattern=new RegExp('(?:async )?function '+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\('),match=pattern.exec(source);
@@ -58,5 +58,5 @@ function patchBundle(source){
  });
  return require('./visual-quality.cjs').patchVisualQuality(require('./frame-rate.cjs').patchFrameRate(require('./fps-overlay.cjs').patchFpsOverlay(require('./performance-patches.cjs').patchPerformance(source))));
 }
-function build(){fs.rmSync(dist,{recursive:true,force:true});fs.cpSync(path.join(root,'public'),dist,{recursive:true});for(const name of ['bootstrap.js','cloud-storage.js'])fs.copyFileSync(path.join(root,'src',name),path.join(dist,name));const file=path.join(dist,BUNDLE);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,patchBundle(fs.readFileSync(path.join(root,'vendor/game.bundle.js'),'utf8')));console.log('Built Log MiniMinecraft → dist/');}
+function build(outputDir=dist){fs.rmSync(outputDir,{recursive:true,force:true});fs.cpSync(path.join(root,'public'),outputDir,{recursive:true});for(const name of ['bootstrap.js','cloud-storage.js'])fs.copyFileSync(path.join(root,'src',name),path.join(outputDir,name));const file=path.join(outputDir,BUNDLE);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,patchBundle(fs.readFileSync(path.join(root,'vendor/game.bundle.js'),'utf8')));validateStaticAssets(outputDir);console.log('Built Log MiniMinecraft → '+outputDir);}
 if(require.main===module)build();module.exports={patchBundle,build,BUNDLE};

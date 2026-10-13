@@ -21,9 +21,16 @@ async function init(m){
   session=await request('session',{method:'POST',body:JSON.stringify({crossSiteToken:m.crossSiteToken})});
   cloud=new CloudStorage(request,status);await cloud.load();window.logMinecraftStorage=cloud;window.lingguang=sdk(session.user);window.artifactId='log-miniminecraft';window.artifactVersion='1';window.__fullscreen=true;
   window.publicPath=new URL('./index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/',base).href;
-  await import('./index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/assets/index-B8uuzVI-.js');
+  await import('./index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/assets/index-B8uuzVI-.js').catch(async error=>{
+   // Diagnose missing deployments only after an import fails; successful starts
+   // keep a single module request and the original exception for runtime errors.
+   const response=await fetch(new URL('./index_files/render.lingguangobjects.com/p/yuyan/200031800012861035/assets/index-B8uuzVI-.js',base),{method:'HEAD',signal:AbortSignal.timeout(15000)}).catch(()=>null);
+   if(response&&!response.ok)throw new Error('游戏文件加载失败（HTTP '+response.status+'），请管理员执行构建并部署完整 dist 目录');
+   if(response&&!/(?:java|ecma)script/i.test(response.headers.get('Content-Type')||''))throw new Error('游戏脚本响应类型错误，请管理员检查部署文件及反向代理配置');
+   throw error;
+  });
   status('');send('loaded');
- }catch(error){status('无法启动游戏：'+error.message+'。请从原木重新打开。',true);send('error',{message:error.message});}
+ }catch(error){status('无法启动游戏：'+error.message,true);send('error',{message:error.message});}
 }
 try{
  const config=await request('config');

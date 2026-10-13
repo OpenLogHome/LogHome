@@ -6,8 +6,11 @@
   "miniapp": {"port": 8788, "basePath": "/log-miniminecraft", "healthPath": "/api/health"},
   "scripts": {
     "build": "node scripts/build.cjs",
+    "prestart": "npm run build",
     "start": "node --env-file-if-exists=.env server/index.cjs",
+    "check:deployment": "node scripts/check-deployment.cjs",
     "dev": "npm run build && node --watch --env-file-if-exists=.env.development scripts/dev.cjs",
+    "pretest": "npm run build",
     "test": "node --test test/*.test.cjs"
   },
   "engines": { "node": ">=22.13" }
