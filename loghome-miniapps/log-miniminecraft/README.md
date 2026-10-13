@@ -53,6 +53,16 @@ npm run build
 npm start
 ```
 
+`npm start` 现在会先自动构建；服务启动时还会检查首页、启动脚本、样式及游戏模块是否存在且非空。不要把 `public/` 当作完整发布目录：游戏模块由 `vendor/game.bundle.js` 经过构建生成，只有完整 `dist/` 可以提供前端服务。使用 systemd/PM2 直接执行 `server/index.cjs` 时，需要先在发布目录执行 `npm run build`，再重启服务；缺少必要文件会拒绝启动。
+
+部署并重启后检查公网资源：
+
+```sh
+npm run check:deployment -- https://miniapps.loghome.ink/log-miniminecraft/
+```
+
+该检查同时验证各启动文件的 HTTP 状态及响应类型，能够发现游戏模块 404 和反向代理把 JavaScript 请求回退到 HTML 的情况。APP 显示 `Failed to fetch dynamically imported module` 时，应先检查报错中的脚本 URL；若返回 404，需要重新构建并发布完整目录，单纯刷新 APP 无法恢复缺失文件。
+
 前端与 API 同源，由同一独立服务提供。建议使用进程管理器或 systemd 保持服务运行。HTTPS 反向代理示例：
 
 ```nginx
