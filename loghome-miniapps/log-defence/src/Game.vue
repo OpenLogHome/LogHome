@@ -283,6 +283,22 @@
 					<div class="dev-row">
 						<div class="dev-btn dev-btn--gold dev-btn--wide" @click="devRefreshTrader">{{ $t('me.labGamePage.devTraderRefresh') }}</div>
 					</div>
+					<!-- 系统邮件发布：公告（无附件，全员可见）/ 物资邮件（附件领放入仓库） -->
+					<div class="dev-row">
+						<span class="dev-speed-label">{{ $t('me.labGamePage.devMailLabel') }}</span>
+					</div>
+					<div class="dev-row">
+						<input class="dev-input dev-input--sm" v-model="devMailTitle" :placeholder="$t('me.labGamePage.devMailTitlePh')" maxlength="60" />
+						<input class="dev-input dev-input--sm" v-model="devMailTo" :placeholder="$t('me.labGamePage.devMailToPh')" />
+					</div>
+					<div class="dev-row">
+						<input class="dev-input" v-model="devMailContent" :placeholder="$t('me.labGamePage.devMailContentPh')" maxlength="500" />
+					</div>
+					<div class="dev-row">
+						<input class="dev-input" v-model="devMailItems" :placeholder="$t('me.labGamePage.devMailItemsPh')" />
+						<div class="dev-btn dev-btn--gold" @click="devSendMail(true)">{{ $t('me.labGamePage.devMailSupply') }}</div>
+						<div class="dev-btn" @click="devSendMail(false)">{{ $t('me.labGamePage.devMailAnnounce') }}</div>
+					</div>
 					<!-- 重置 -->
 					<div class="dev-row">
 						<div class="dev-btn dev-btn--danger dev-btn--wide" @click="devReset">{{ $t('me.labGamePage.devReset') }}</div>
@@ -326,6 +342,13 @@
 			<div class="fr-btn" @click="frOpenTap">
 				<img class="fr-btn-icon" :src="gameIcon('friends')"   >
 				<span class="fr-btn-text">{{ $t('me.labGamePage.friendVillage') }}</span>
+			</div>
+
+			<!-- 系统邮箱（公告 + 物资附件领取），未读角标 -->
+			<div class="fr-btn fr-btn--mail" @click="mailOpenTap">
+				<img class="fr-btn-icon" :src="gameIcon('mail')"   >
+				<span class="fr-btn-text">{{ $t('me.labGamePage.mailTitle') }}</span>
+				<div v-if="mailUnread > 0" class="mail-dot">{{ mailUnread > 99 ? '99+' : mailUnread }}</div>
 			</div>
 
 			</div>
@@ -620,6 +643,15 @@
 
 					<!-- 仓库 -->
 					<div class="wh-title">{{ $t('me.labGamePage.warehouse') }}<span class="wh-slots">{{ $t('me.labGamePage.whSlots') }} {{ whUsed }}/{{ whSlotsTotal }}</span></div>
+					<!-- 仓库耐久：夜袭中僵尸摸入会损耗（未建城墙 ×3 且可能遗失物资），圆石修补 -->
+					<div class="vill-bar-row">
+						<span class="vill-bar-label">{{ $t('me.labGamePage.whDurTag') }}</span>
+						<div class="vill-bar"><div class="vill-bar-fill vill-bar-fill--dur" :style="{ width: whDur + '%' }"></div></div>
+						<span class="vill-bar-val">{{ Math.floor(whDur) }}</span>
+					</div>
+					<div v-if="whDur < MAX_DUR" class="upgrade-btn upgrade-btn--wide" :class="{ 'upgrade-btn--disabled': !canRepairWh }" @click="repairWh">
+						{{ $t('me.labGamePage.repair') }}（{{ resName('cobble') }}×{{ whRepairNeed() }}）
+					</div>
 					<div v-if="ownedList.length === 0" class="empty-tip">{{ $t('me.labGamePage.emptyWarehouse') }}</div>
 					<div v-for="r in ownedList" :key="r" class="res-row">
 						<img class="res-dot" :src="gameIcon(r)"  >
@@ -914,11 +946,32 @@
 			<div v-if="frOpen" class="overlay" @click.self="frOpen = false">
 				<div class="modal">
 					<div class="modal-title">{{ $t('me.labGamePage.friendVillage') }}</div>
-					<div class="upgrade-btn upgrade-btn--wide" @click="frAddTap">{{ $t('me.labGamePage.frAdd') }}</div>
+					<!-- 原木社区搜索加好友 -->
+					<div class="fr-search">
+						<input class="fr-search-input" v-model="frKeyword" :placeholder="$t('me.labGamePage.frSearchPlaceholder')" maxlength="40" />
+						<div class="fr-search-btn" @click="frSearch">{{ $t('me.labGamePage.frSearchBtn') }}</div>
+					</div>
+					<div v-if="frSearching" class="empty-tip">{{ $t('me.labGamePage.frSearching') }}</div>
+					<template v-if="frResults !== null">
+						<div v-if="!frResults.length" class="empty-tip">{{ $t('me.labGamePage.frSearchEmpty') }}</div>
+						<div v-for="u in frResults" :key="'s' + u.id" class="fr-item">
+							<img v-if="u.avatar" class="fr-avatar" :src="u.avatar"   >
+							<span v-else class="fr-char" style="background:#8d968c">{{ u.name.slice(0, 1) }}</span>
+							<div class="fr-main">
+								<div class="fr-name">{{ u.name }}</div>
+								<div class="fr-sub">ID {{ u.id }}</div>
+							</div>
+							<div v-if="u.friend" class="fr-tag">{{ $t('me.labGamePage.frAlready') }}</div>
+							<div v-else-if="u.incoming" class="fr-visit" @click="frAcceptTap(u)">{{ $t('me.labGamePage.frAccept') }}</div>
+							<div v-else-if="u.requested" class="fr-tag">{{ $t('me.labGamePage.frRequested') }}</div>
+							<div v-else class="fr-visit" @click="frAddResult(u)">{{ $t('me.labGamePage.frAddAction') }}</div>
+						</div>
+					</template>
+					<div class="fr-by-id" @click="frAddTap">{{ $t('me.labGamePage.frAddById') }}</div>
 					<div class="wh-title">{{ $t('me.labGamePage.frListTitle') }}</div>
 					<div v-if="!friends || !friends.friends.length" class="empty-tip">{{ $t('me.labGamePage.frEmpty') }}</div>
 					<div v-for="f in (friends ? friends.friends : [])" :key="'f' + f.id" class="fr-item">
-						<span class="fr-char" :style="{ background: thColor(f.lv) }">{{ (f.baseName || f.name || '?').slice(0, 1) }}</span>
+						<span class="fr-char" :style="{ background: thLvColor(f.lv) }">{{ (f.baseName || f.name || '?').slice(0, 1) }}</span>
 						<div class="fr-main">
 							<div class="fr-name">{{ f.baseName || $t('me.labGamePage.frNoBase') }}</div>
 							<div class="fr-sub">{{ f.name }} · Lv.{{ f.lv }}</div>
@@ -950,6 +1003,43 @@
 						</div>
 					</template>
 					<div class="modal-close" @click="frOpen = false">{{ $t('me.labGamePage.close') }}</div>
+				</div>
+			</div>
+
+			<!-- 系统邮箱：公告与物资邮件（附件领取入库） -->
+			<div v-if="mailOpen" class="overlay" @click.self="mailOpen = false">
+				<div class="modal">
+					<div class="modal-title"><img class="modal-title-char" :src="gameIcon('mail')"   > {{ $t('me.labGamePage.mailTitle') }}</div>
+					<div class="wh-title">{{ $t('me.labGamePage.mailBroadcasts') }}</div>
+					<div v-if="!broadcasts.length" class="empty-tip">{{ $t('me.labGamePage.mailEmpty') }}</div>
+					<div v-for="b in broadcasts" :key="'mb' + b.id" class="mail-item" :class="{ 'mail-item--unread': !b.read }">
+						<div class="mail-head">
+							<span class="mail-tag mail-tag--announce">{{ $t('me.labGamePage.mailTagAnnounce') }}</span>
+							<span class="mail-mtitle">{{ b.title }}</span>
+							<span class="mail-date">{{ mailDate(b.at) }}</span>
+						</div>
+						<div v-if="b.content" class="mail-content">{{ b.content }}</div>
+					</div>
+					<div class="wh-title">{{ $t('me.labGamePage.mailSupplies') }}</div>
+					<div v-if="!mails.length" class="empty-tip">{{ $t('me.labGamePage.mailEmpty') }}</div>
+					<div v-for="m in mails" :key="'mm' + m.id" class="mail-item" :class="{ 'mail-item--unread': !!(m.items && !m.claimed) }">
+						<div class="mail-head">
+							<span class="mail-tag" :class="m.items ? 'mail-tag--supply' : 'mail-tag--announce'">{{ m.items ? $t('me.labGamePage.mailTagSupply') : $t('me.labGamePage.mailTagNotice') }}</span>
+							<span class="mail-mtitle">{{ m.title }}</span>
+							<span class="mail-date">{{ mailDate(m.at) }}</span>
+						</div>
+						<div v-if="m.content" class="mail-content">{{ m.content }}</div>
+						<div v-if="m.items" class="mail-attach">
+							<span v-for="(v, k) in m.items" :key="k" class="cost-item">
+								<img class="inline-icon" :src="gameIcon(k)"   > {{ resName(k) }}×{{ v }}
+							</span>
+						</div>
+						<div v-if="m.items && !m.claimed" class="mail-claim" @click="claimMail(m)">{{ $t('me.labGamePage.mailClaim') }}</div>
+						<div v-else-if="m.claimed" class="mail-claimed">{{ $t('me.labGamePage.mailClaimed') }}</div>
+					</div>
+					<div v-if="mails.some(m => m.items && !m.claimed)" class="upgrade-btn upgrade-btn--wide" @click="claimAllMail">{{ $t('me.labGamePage.mailClaimAll') }}</div>
+					<div v-if="mails.some(m => !m.items || m.claimed)" class="mail-clear" @click="clearReadMail">{{ $t('me.labGamePage.mailClear') }}</div>
+					<div class="modal-close" @click="mailOpen = false">{{ $t('me.labGamePage.close') }}</div>
 				</div>
 			</div>
 
@@ -1018,6 +1108,54 @@
 							<div class="fr-sub">{{ $t('me.labGamePage.baseLevel') }} Lv.{{ fvVillage.lv }}<span v-if="fvVillCount >= 0"> · {{ $t('me.labGamePage.villagers') }} ×{{ fvVillCount }}</span></div>
 						</div>
 					</div>
+					<div v-if="fvWallText" class="fr-sub fv-wall-line"><img class="inline-icon" :src="gameIcon('wall')"   > {{ fvWallText }}</div>
+					<div v-if="fvStealLeft !== null" class="fr-sub fv-steal-hint">{{ $t('me.labGamePage.fvStealHint', { n: fvStealLeft }) }}</div>
+					<!-- 好友村庄只读视图：地上九宫格 -->
+					<div class="grid fv-grid">
+						<div v-for="(p, idx) in fvGround" :key="'fg' + idx" class="plot" :class="{ 'plot--odd': (Math.floor(idx / 3) + idx % 3) % 2 === 1, 'plot--center': idx === 4 }">
+							<template v-if="idx === 4">
+								<div class="base" :style="{ background: fvVillage.color }">
+									<img class="base-char" :src="gameIcon('base')"   >
+									<div class="building-lv">Lv.{{ fvVillage.lv }}</div>
+								</div>
+							</template>
+							<template v-else-if="p && p.extOf !== undefined">
+								<div class="building building--ext" :style="{ background: fvBColor(p.extType) }">
+									<img class="building-char building-char--ext" :src="gameIcon(p.extType)"   >
+								</div>
+							</template>
+							<template v-else-if="p">
+								<div class="building" :style="{ background: fvBColor(p.type) }">
+									<img class="building-char" :src="gameIcon(p.type)"   >
+									<div class="building-lv">Lv.{{ p.level }}</div>
+								</div>
+								<div v-if="fvBufFull(p)" class="steal-badge" @click.stop="fvSteal('ground', idx)">{{ $t('me.labGamePage.fvStealChar') }}</div>
+							</template>
+						</div>
+					</div>
+					<!-- 地下九宫格（好友建有地下建筑时展示） -->
+					<template v-if="fvUg">
+						<div class="wh-title">{{ $t('me.labGamePage.layerUnder') }}</div>
+						<div class="grid grid--under fv-grid">
+							<div v-for="(p, idx) in fvUg" :key="'fu' + idx" class="plot" :class="{ 'plot--odd': (Math.floor(idx / 3) + idx % 3) % 2 === 1 }">
+								<template v-if="p && p.extOf !== undefined">
+									<div class="building building--ext" :style="{ background: fvBColor(p.extType) }">
+										<img class="building-char building-char--ext" :src="gameIcon(p.extType)"   >
+									</div>
+								</template>
+								<template v-else-if="p">
+									<div class="building" :style="{ background: fvBColor(p.type) }">
+										<img class="building-char" :src="gameIcon(p.type)"   >
+										<div class="building-lv">Lv.{{ p.level }}</div>
+									</div>
+									<div v-if="fvBufFull(p)" class="steal-badge" @click.stop="fvSteal('ug', idx)">{{ $t('me.labGamePage.fvStealChar') }}</div>
+								</template>
+								<template v-else-if="!fvUgCleared(idx)">
+									<div class="locked-plot"><img class="locked-icon" :src="gameIcon('rock')"   ></div>
+								</template>
+							</div>
+						</div>
+					</template>
 					<div class="upgrade-btn upgrade-btn--wide" @click="openFriendMarket">{{ $t('me.labGamePage.market') }}</div>
 					<div class="modal-close" @click="fvOpen = false">{{ $t('me.labGamePage.close') }}</div>
 				</div>
@@ -1115,6 +1253,17 @@
 					<div class="modal-close" @click="mktCancelEdit">{{ $t('me.labGamePage.close') }}</div>
 				</div>
 			</div>
+			<div v-if="dlgOpen" class="overlay" @click.self="dlgCancel">
+				<div class="modal modal--dlg">
+					<div class="modal-title">{{ dlgTitle }}</div>
+					<div v-if="dlgContent" class="dlg-content">{{ dlgContent }}</div>
+					<input v-if="dlgEditable" ref="dlgInput" v-model="dlgValue" class="dlg-input" :placeholder="dlgPh" @keyup.enter="dlgConfirm" />
+					<div class="dlg-btns">
+						<div class="dlg-btn dlg-btn--ok" @click="dlgConfirm">{{ $t('me.labGamePage.dlgOk') }}</div>
+						<div class="dlg-btn dlg-btn--no" @click="dlgCancel">{{ $t('me.labGamePage.dlgCancel') }}</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -1196,6 +1345,7 @@ export default {
 			CENTER_IDX,
 			BASE_DEF,
 			MAX_DUR,
+			whDur: MAX_DUR,
 			WALL,
 			FUEL_VALUE,
 			FUEL_COST,
@@ -1263,8 +1413,30 @@ export default {
 			fmOpen: false,
 			// 好友体系：friends 为服务端好友列表（friends/incoming/outgoing），fvState 为参观中的好友存档快照
 			friends: null,
+			frKeyword: '',
+			frResults: null,
+			frSearching: false,
+			// 系统邮箱：broadcasts=公告 mails=物资邮件（服务端 mail.json，不入存档），unread 驱动入口红点
+			mailOpen: false,
+			mails: [],
+			broadcasts: [],
+			mailUnread: 0,
+			devMailTitle: '',
+			devMailTo: 'all',
+			devMailContent: '',
+			devMailItems: '',
+			// 通用确认/输入弹窗：uni.showModal 的游戏风格实现（main.js 委托到 gameModal）
+			dlgOpen: false,
+			dlgTitle: '',
+			dlgContent: '',
+			dlgValue: '',
+			dlgPh: '',
+			dlgEditable: false,
+			dlgCb: null,
 			fvVillage: { name: '', owner: '', lv: 0, char: '村', color: '#6aa84f' },
 			fvState: null,
+			fvFriendId: 0,
+			fvStealLeft: null,
 			mktOpen: false,
 			marketListings: new Array(6).fill(null),
 			marketOrders: new Array(3).fill(null),
@@ -1592,6 +1764,7 @@ export default {
 		},
 		// 仓库格子容量：每格一组，绿宝石为货币不占格
 		whSlotsTotal() { return whSlots(this.baseLevel) },
+		canRepairWh() { return Math.floor(this.resources.cobble || 0) >= this.whRepairNeed() },
 		whUsed() {
 			let used = 0
 			Object.keys(this.resources).forEach(id => {
@@ -1950,6 +2123,27 @@ export default {
 		fvVillCount() {
 			return (this.fvState && Array.isArray(this.fvState.villagers)) ? this.fvState.villagers.length : -1
 		},
+		// 好友村庄只读视图：地上/地下地块（无地下建筑时不展示地下层）
+		fvGround() {
+			const v = this.fvState && this.fvState.village
+			return (v && Array.isArray(v.plots)) ? v.plots.slice(0, 9) : new Array(9).fill(null)
+		},
+		fvUg() {
+			const v = this.fvState && this.fvState.village
+			if (!v || !Array.isArray(v.ugPlots) || !v.ugPlots.some(p => p)) return null
+			return v.ugPlots.slice(0, 9)
+		},
+		// 好友城墙摘要：已建段数 + 最高档材质名
+		fvWallText() {
+			const v = this.fvState && this.fvState.village
+			const walls = (v && Array.isArray(v.walls)) ? v.walls.filter(w => w) : []
+			if (!walls.length) return ''
+			let maxLv = 0
+			walls.forEach(w => { if (w.level > maxLv) maxLv = w.level })
+			const mat = WALL.levels[maxLv - 1]
+			const name = mat ? (this.$i18n.locale === 'en' ? (mat.nameEn || mat.name) : mat.name) : ''
+			return this.$t('me.labGamePage.fvWall', { n: walls.length, m: name })
+		},
 		// 好友村庄消息日志：每日统计/市场条目/偷窃均取自真实游戏数据（仓库快照增减、我方市场挂单、实际库存），
 		// 以北京时间凌晨 5 点为一天边界，同一天内偷窃条目随机内容稳定，跨天（5 点后）自动刷新
 		friendLogs() {
@@ -2020,9 +2214,11 @@ export default {
 		if (saved) this.baseName = saved
 	},
 	mounted() {
+		window.__gameModal = this.gameModal
 		this.resumeGame()
 	},
 	beforeDestroy() {
+		if (window.__gameModal === this.gameModal) delete window.__gameModal
 		this.teardown()
 	},
 	methods: {
@@ -2032,8 +2228,35 @@ export default {
 			this.settleProduction(false)
 			this.saveTimer = setInterval(() => this.settleProduction(true), 30000)
 			this.secTimer = setInterval(() => { this.nowTs = Date.now(); this.checkBuilds() }, 1000)
+			this.refreshMail()
 		},
 		gameIcon: defenseIcon,
+		// ---------- 通用确认/输入弹窗 ----------
+		gameModal(options = {}) {
+			this.dlgTitle = options.title || ''
+			this.dlgContent = options.content || ''
+			this.dlgEditable = !!options.editable
+			this.dlgValue = ''
+			this.dlgPh = options.placeholderText || ''
+			this.dlgCb = typeof options.success === 'function' ? options.success : null
+			this.dlgOpen = true
+			this.$nextTick(() => { const el = this.$refs.dlgInput; if (el) el.focus() })
+		},
+		dlgConfirm() {
+			if (!this.dlgOpen) return
+			const cb = this.dlgCb
+			const res = { confirm: true, cancel: false, content: this.dlgEditable ? this.dlgValue : '' }
+			this.dlgOpen = false
+			this.dlgCb = null
+			if (cb) cb(res)
+		},
+		dlgCancel() {
+			if (!this.dlgOpen) return
+			const cb = this.dlgCb
+			this.dlgOpen = false
+			this.dlgCb = null
+			if (cb) cb({ confirm: false, cancel: true, content: '' })
+		},
 		teardown() {
 			if (this.saveTimer) { clearInterval(this.saveTimer); this.saveTimer = null }
 			if (this.secTimer) { clearInterval(this.secTimer); this.secTimer = null }
@@ -2052,6 +2275,8 @@ export default {
 				const s = JSON.parse(raw)
 				this.baseLevel = (typeof s.baseLevel === 'number') ? s.baseLevel : 0
 				this.baseDur = normDur(s.baseDur)
+				// 仓库耐久：旧档无该字段视为满耐久
+				this.whDur = normDur(s.whDur)
 				// 大本营施工状态：旧档无该字段视为空闲
 				this.thBusy = (s.thBusy && typeof s.thBusy.end === 'number' && s.thBusy.to >= 1) ? s.thBusy : null
 				// 英雄原木娘：旧档无该字段视为未雇佣；到期的由 checkBuilds 清理
@@ -2262,6 +2487,7 @@ export default {
 					fuelType: this.fuelType,
 					walls: this.walls,
 					baseDur: this.baseDur,
+					whDur: this.whDur,
 					marketListings: this.marketListings,
 					marketOrders: this.marketOrders,
 					lastTick: Date.now()
@@ -2488,6 +2714,9 @@ export default {
 				const realDef = ((cur && cur.def) || 0) * (normDur(w.dur) / 100)
 				w.dur = normDur(w.dur - RAID.wearWall * mit(realDef))
 			})
+			// 挑战波次同样损耗仓库耐久（无城墙 ×3），但不触发物品遗失（挑战有独立的表现掉落机制）
+			const waveHasWall = this.walls.some(w => w)
+			this.whDur = normDur(this.whDur - (waveHasWall ? RAID.wearWh : RAID.wearWhNoWall))
 			const press = (power + defTotal) > 0 ? power / (power + defTotal) : 0
 			if (press > 0 && this.villagers.length) {
 				this.villagers.forEach(v => {
@@ -2534,6 +2763,39 @@ export default {
 			this.pushWaveLog(text, gains)
 			this.persist()
 			uni.showToast({ title: text, icon: 'none', duration: 3500 })
+		},
+		// 未建城墙夜袭：逐小时判定仓库遗失（随机一种非绿宝石资源，遗失其 10%~25% 向上取整）；返回描述数组
+		whLootLoss(hours) {
+			const whole = Math.floor(hours)
+			let checks = whole + (Math.random() < hours - whole ? 1 : 0)
+			const lost = []
+			while (checks-- > 0) {
+				if (Math.random() >= RAID.lootLossChance) continue
+				const ids = Object.keys(this.resources).filter(id => id !== 'emerald' && Math.floor(this.resources[id] || 0) >= 1)
+				if (!ids.length) break
+				const id = ids[Math.floor(Math.random() * ids.length)]
+				const n = Math.floor(this.resources[id])
+				const qty = Math.min(n, Math.ceil(n * (RAID.lootLossMin + Math.random() * (RAID.lootLossMax - RAID.lootLossMin))))
+				this.$set(this.resources, id, n - qty)
+				lost.push(this.resName(id) + '×' + qty)
+			}
+			return lost
+		},
+		// 僵尸夜袭（独立一行，含倒计时与临时仓库入口）面板与仓库面板的仓库耐久修补：圆石 1/点
+		whRepairNeed() {
+			return Math.ceil(MAX_DUR - this.whDur)
+		},
+		repairWh() {
+			const need = this.whRepairNeed()
+			if (need <= 0) return
+			if (Math.floor(this.resources.cobble || 0) < need) {
+				uni.showToast({ title: this.t('whRepairLack'), icon: 'none' })
+				return
+			}
+			this.$set(this.resources, 'cobble', Math.floor(this.resources.cobble || 0) - need)
+			this.whDur = MAX_DUR
+			this.persist()
+			uni.showToast({ title: this.t('whRepaired'), icon: 'none' })
 		},
 		// 战报入档（最新在前，最多 7 条）
 		pushWaveLog(text, gains, extra) {
@@ -2585,6 +2847,17 @@ export default {
 					hordeBreach = true
 				}
 			})
+			// 仓库：僵尸摸入损耗仓库耐久（仓库自身无防御不受减免）；未建城墙时僵尸长驱直入——耐久 ×3 损耗且每小时可能遗失一批物资
+			const hasWall = this.walls.some(w => w)
+			this.whDur = normDur(this.whDur - (hasWall ? RAID.wearWh : RAID.wearWhNoWall) * hours)
+			if (!hasWall && hours > 0) {
+				const lost = this.whLootLoss(hours)
+				if (lost.length) uni.showToast({
+					title: this.$t('me.labGamePage.whLost', { lost: lost.join('、') }),
+					icon: 'none',
+					duration: 3500
+				})
+			}
 			// 尸潮攻破预告侧城墙：一次性惩罚（建筑/大本营耐久削减 + 在村村民受伤 + 消极怠工）
 			if (hordeBreach) {
 				this.allPlots.forEach(p => { if (p) p.dur = normDur(this.durOf(p) - RAID.breachBuildDmg) })
@@ -3461,18 +3734,24 @@ export default {
 			this.$set(this.resources, id, (this.resources[id] || 0) + delta)
 			return delta
 		},
-		// 快捷丢弃：把某资源整仓丢弃（释放仓库格），确认后执行
+		// 快捷丢弃：默认丢一组（stackOf，不满一组按剩余整丢），可输入数量按需丢；数量超库存按库存钳制
 		discardRes(id) {
 			const n = Math.floor(this.resources[id] || 0)
 			if (n <= 0) return
+			const g = Math.max(1, stackOf(id) | 0)
 			uni.showModal({
 				title: this.$t('me.labGamePage.discard'),
-				content: this.$t('me.labGamePage.discardConfirm', { n, name: this.resName(id) }),
+				content: this.$t('me.labGamePage.discardStock', { n, g, name: this.resName(id) }),
+				editable: true,
+				placeholderText: this.$t('me.labGamePage.discardQtyPh', { g, n }),
 				success: (res) => {
 					if (!res.confirm) return
-					this.$set(this.resources, id, 0)
+					let qty = parseInt(res.content, 10)
+					if (!Number.isSafeInteger(qty) || qty <= 0) qty = Math.min(g, n)
+					if (qty > n) qty = n
+					this.$set(this.resources, id, n - qty)
 					this.persist()
-					uni.showToast({ title: this.$t('me.labGamePage.discardDone'), icon: 'none' })
+					uni.showToast({ title: this.$t('me.labGamePage.discardDone') + ' · ' + this.resName(id) + '×' + qty, icon: 'none' })
 				}
 			})
 		},
@@ -3502,10 +3781,28 @@ export default {
 		},
 		frOpenTap() {
 			this.frOpen = true
+			this.frResults = null
+			this.frKeyword = ''
 			this.loadFriends()
 		},
 		async loadFriends() {
 			try { this.friends = await this.$root.api('friends') } catch (e) { uni.showToast({ title: e.message, icon: 'none' }) }
+		},
+		async frSearch() {
+			const kw = this.frKeyword.trim()
+			if (!kw) { uni.showToast({ title: this.t('frSearchPlaceholder'), icon: 'none' }); return }
+			this.frSearching = true
+			this.frResults = null
+			try {
+				const r = await this.$root.api('friends/search?keyword=' + encodeURIComponent(kw))
+				this.frResults = r.users
+			} catch (e) { uni.showToast({ title: e.message, icon: 'none' }) }
+			finally { this.frSearching = false }
+		},
+		frAddResult(u) {
+			this.$root.api('friends/request', { method: 'POST', body: JSON.stringify({ id: u.id }) })
+				.then(() => { uni.showToast({ title: this.t('frReqSent'), icon: 'none' }); u.requested = true })
+				.catch(e => uni.showToast({ title: e.message, icon: 'none' }))
 		},
 		frAddTap() {
 			uni.showModal({
@@ -3524,9 +3821,99 @@ export default {
 			})
 		},
 		t(key) { return this.$t('me.labGamePage.' + key) },
+		// ---------- 系统邮箱 ----------
+		mailDate(at) {
+			const d = new Date(at)
+			const p = n => (n < 10 ? '0' + n : '' + n)
+			return (d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes())
+		},
+		async refreshMail() {
+			try {
+				const r = await this.$root.api('mail')
+				this.mails = r.mails
+				this.broadcasts = r.broadcasts
+				this.mailUnread = r.unread
+			} catch (e) { /* 未读角标拉取失败不打扰玩家，打开面板时会重试 */ }
+		},
+		mailOpenTap() {
+			this.mailOpen = true
+			this.refreshMail().then(() => {
+				this.broadcasts.forEach(b => {
+					if (b.read) return
+					b.read = true
+					this.mailUnread = Math.max(0, this.mailUnread - 1)
+					this.$root.api('mail/read', { method: 'POST', body: JSON.stringify({ id: b.id }) }).catch(() => {})
+				})
+			})
+		},
+		async claimMail(m) {
+			if (!m.items || m.claimed) return true
+			try {
+				const r = await this.$root.api('mail/claim', { method: 'POST', body: JSON.stringify({ id: m.id }) })
+				const got = []
+				let full = false
+				Object.keys(r.items).forEach(k => {
+					const n = this.addRes(k, r.items[k])
+					if (n < r.items[k]) full = true
+					if (n > 0) got.push(this.resName(k) + '×' + n)
+				})
+				m.claimed = 1
+				this.mailUnread = Math.max(0, this.mailUnread - 1)
+				this.persist()
+				let title = got.length ? got.join('、') : this.$t('me.labGamePage.whFull')
+				if (full && got.length) title += ' · ' + this.$t('me.labGamePage.whFull')
+				uni.showToast({ title, icon: 'none' })
+				return true
+			} catch (e) {
+				uni.showToast({ title: e.message, icon: 'none' })
+				return false
+			}
+		},
+		async claimAllMail() {
+			for (const m of this.mails) {
+				if (m.items && !m.claimed && !(await this.claimMail(m))) break
+			}
+		},
+		clearReadMail() {
+			uni.showModal({
+				title: this.t('mailClear'),
+				content: this.t('mailClearConfirm'),
+				success: async r => {
+					if (!r.confirm) return
+					try {
+						const res = await this.$root.api('mail/clear', { method: 'POST', body: '{}' })
+						uni.showToast({ title: this.t('mailCleared') + (res.removed ? ' ×' + res.removed : ''), icon: 'none' })
+						this.refreshMail()
+					} catch (e) { uni.showToast({ title: e.message, icon: 'none' }) }
+				}
+			})
+		},
+		async devSendMail(withItems) {
+			const title = this.devMailTitle.trim()
+			if (!title) { uni.showToast({ title: this.t('devMailTitlePh'), icon: 'none' }); return }
+			const to = (this.devMailTo || '').trim() || 'all'
+			const target = to === 'all' ? 'all' : Number(to)
+			if (target !== 'all' && (!Number.isSafeInteger(target) || target <= 0)) { uni.showToast({ title: this.t('devMailToPh'), icon: 'none' }); return }
+			const items = {}
+			if (withItems) {
+				this.devMailItems.split(/[，,]/).forEach(pair => {
+					const [k, v] = pair.split(':').map(s => (s || '').trim())
+					if (k && v && Number(v) > 0) items[k] = Math.floor(Number(v))
+				})
+				if (!Object.keys(items).length) { uni.showToast({ title: this.t('devMailItemsPh'), icon: 'none' }); return }
+			}
+			try {
+				await this.$root.api('mail/send', { method: 'POST', body: JSON.stringify({ target, title, content: this.devMailContent.trim(), items }) })
+				uni.showToast({ title: this.t('mailSent'), icon: 'none' })
+				this.devMailTitle = ''
+				this.devMailContent = ''
+				this.devMailItems = ''
+				this.refreshMail()
+			} catch (e) { uni.showToast({ title: e.message, icon: 'none' }) }
+		},
 		frAcceptTap(r) {
 			this.$root.api('friends/accept', { method: 'POST', body: JSON.stringify({ id: r.id }) })
-				.then(() => { uni.showToast({ title: this.t('frAccepted'), icon: 'none' }); return this.loadFriends() })
+				.then(() => { uni.showToast({ title: this.t('frAccepted'), icon: 'none' }); r.friend = true; return this.loadFriends() })
 				.catch(e => uni.showToast({ title: e.message, icon: 'none' }))
 		},
 		frDeclineTap(r) {
@@ -3553,11 +3940,40 @@ export default {
 				const name = v.baseName || this.t('frNoBase')
 				this.fvVillage = { name, owner: v.name, lv: st ? st.village.baseLevel : 0, char: name.slice(0, 1), color: TH_COLORS[st ? st.village.baseLevel : 0] || '#6aa84f' }
 				this.fvState = st
+				this.fvFriendId = f.id
+				this.fvStealLeft = (typeof v.stealLeft === 'number') ? v.stealLeft : null
 				this.frOpen = false
 				this.fvOpen = true
 			} catch (e) { uni.showToast({ title: e.message, icon: 'none' }) }
 		},
-		thColor(lv) { return TH_COLORS[lv] || '#8d968c' },
+		// 偷取：仅好友地块囤积已满时可偷 1/10（服务端校验+扣减），每日 3 次
+		fvBufFull(p) {
+			return !!p && this.bufRatio(p) >= 1
+		},
+		async fvSteal(layer, idx) {
+			try {
+				const r = await this.$root.api('friends/steal', { method: 'POST', body: JSON.stringify({ id: this.fvFriendId, layer, idx }) })
+				const parts = []
+				Object.keys(r.gains).forEach(id => {
+					const got = this.addRes(id, r.gains[id])
+					if (got > 0) parts.push(this.resName(id) + ' ×' + got)
+				})
+				this.persist()
+				const v = this.fvState && this.fvState.village
+				const plots = layer === 'ug' ? (v && v.ugPlots) : (v && v.plots)
+				if (plots && plots[idx]) plots[idx].buf = r.buf
+				this.fvStealLeft = r.stealLeft
+				uni.showToast({ title: parts.length ? this.$t('me.labGamePage.fvStealGain', { gains: parts.join(' · ') }) : this.$t('me.labGamePage.whFull'), icon: 'none' })
+			} catch (e) { uni.showToast({ title: e.message, icon: 'none' }) }
+		},
+		// 与 computed thColor（自己基地主题色）同名会被覆盖，好友列表按等级取色用独立方法名
+		thLvColor(lv) { return TH_COLORS[lv] || '#8d968c' },
+		// 好友存档里可能出现本版本未知的建筑类型，色值兜底防渲染崩溃
+		fvBColor(type) { const d = BUILDING_MAP[type]; return (d && d.color) || '#8d968c' },
+		fvUgCleared(idx) {
+			const v = this.fvState && this.fvState.village
+			return !!(v && v.ugCleared && v.ugCleared[idx])
+		},
 		mktBuySoon() {
 			uni.showToast({ title: this.$t('me.labGamePage.mktVisitSoon'), icon: 'none' })
 		},
@@ -5675,6 +6091,68 @@ const CAT_COLORS = {
 	&:active { opacity: 0.7; }
 }
 
+/* 通用确认/输入弹窗 */
+.modal--dlg {
+	width: 72%;
+	max-width: 520rpx;
+}
+
+.dlg-content {
+	font-size: 26rpx;
+	color: #6b6455;
+	line-height: 1.6;
+	text-align: center;
+	white-space: pre-wrap;
+	word-break: break-all;
+
+	.dark-mode & { color: #b9b2a0; }
+}
+
+.dlg-input {
+	width: 100%;
+	height: 68rpx;
+	padding: 0 20rpx;
+	box-sizing: border-box;
+	border-radius: 14rpx;
+	border: 3rpx solid #5c523c;
+	background: #fffdf4;
+	font-size: 26rpx;
+	color: #393d33;
+
+	.dark-mode & {
+		background: #3a3f36;
+		color: #eeeae0;
+		border-color: #8a8070;
+	}
+}
+
+.dlg-btns {
+	display: flex;
+	gap: 20rpx;
+	margin-top: 8rpx;
+}
+
+.dlg-btn {
+	flex: 1;
+	padding: 16rpx 0;
+	border-radius: 14rpx;
+	font-size: 26rpx;
+	font-weight: bold;
+	text-align: center;
+
+	&:active { opacity: 0.85; }
+}
+
+.dlg-btn--ok {
+	color: #fff;
+	background: #4c8a3f;
+}
+
+.dlg-btn--no {
+	color: #fff;
+	background: #a09a89;
+}
+
 .empty-tip {
 	font-size: 24rpx;
 	color: #a09a89;
@@ -6349,11 +6827,11 @@ const CAT_COLORS = {
 }
 
 /* 开发者控制台 */
-/* 开发者控制台浮动按钮（右下角悬浮列第三档：好友/日志/DEV） */
+/* 开发者控制台浮动按钮（右下角悬浮列第四档：好友/日志/邮箱/DEV） */
 .dev-fab {
 	position: fixed;
 	right: 24rpx;
-	bottom: calc(196rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px)));
+	bottom: calc(282rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px)));
 	z-index: 9;
 	width: 72rpx;
 	height: 72rpx;
@@ -6853,6 +7331,127 @@ const CAT_COLORS = {
 	background: #a5793f;
 }
 
+/* 系统邮箱按钮（消息日志上方，同款胶囊样式） */
+.fr-btn--mail {
+	bottom: calc(196rpx + var(--loghome-safe-bottom, env(safe-area-inset-bottom, 0px)));
+	background: #4fb3c4;
+}
+
+/* 未读角标（未领附件物资邮件 + 未读公告） */
+.mail-dot {
+	position: absolute;
+	top: -10rpx;
+	right: -10rpx;
+	min-width: 30rpx;
+	height: 30rpx;
+	padding: 0 8rpx;
+	box-sizing: border-box;
+	border-radius: 15rpx;
+	background: #c05650;
+	color: #fff;
+	font-size: 18rpx;
+	line-height: 30rpx;
+	text-align: center;
+	box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.3);
+}
+
+/* 邮件条目 */
+.mail-item {
+	padding: 16rpx 20rpx;
+	border-radius: 16rpx;
+	background: rgba(139, 94, 52, 0.08);
+	border: 3rpx solid transparent;
+}
+
+.mail-item--unread {
+	background: rgba(255, 243, 204, 0.85);
+	border-color: rgba(207, 154, 46, 0.65);
+}
+
+.mail-head {
+	display: flex;
+	align-items: center;
+	gap: 12rpx;
+	min-width: 0;
+}
+
+.mail-tag {
+	flex: 0 0 auto;
+	padding: 6rpx 12rpx;
+	border-radius: 8rpx;
+	font-size: 18rpx;
+	font-weight: bold;
+	color: #fff;
+}
+
+.mail-tag--announce { background: #8d968c; }
+.mail-tag--supply { background: #cf9a2e; }
+
+.mail-mtitle {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: 24rpx;
+	font-weight: bold;
+	color: #3b3a2e;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mail-date {
+	flex: 0 0 auto;
+	font-size: 18rpx;
+	color: #8a856f;
+}
+
+.mail-content {
+	margin-top: 8rpx;
+	font-size: 22rpx;
+	color: #5a564a;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.mail-attach {
+	margin-top: 10rpx;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8rpx 16rpx;
+}
+
+.mail-claim {
+	margin-top: 10rpx;
+	padding: 10rpx 0;
+	border-radius: 10rpx;
+	background: #cf9a2e;
+	color: #fff;
+	font-size: 22rpx;
+	font-weight: bold;
+	text-align: center;
+
+	&:active { opacity: 0.85; }
+}
+
+.mail-claimed {
+	margin-top: 10rpx;
+	font-size: 20rpx;
+	color: #9a9480;
+	text-align: center;
+}
+
+/* 删除已读邮件（清空公告外已领取/无附件的个人邮件） */
+.mail-clear {
+	margin-top: 12rpx;
+	padding: 10rpx 0;
+	border-radius: 10rpx;
+	background: rgba(139, 94, 52, 0.12);
+	color: #7a6a52;
+	font-size: 22rpx;
+	text-align: center;
+
+	&:active { opacity: 0.85; }
+}
+
 /* 日志面板：悬浮于日志按钮上方 */
 .fr-logbox {
 	position: fixed;
@@ -6915,6 +7514,117 @@ const CAT_COLORS = {
 	display: flex;
 	flex-direction: column;
 	gap: 4rpx;
+}
+
+/* 原木社区搜索加好友 */
+.fr-search {
+	display: flex;
+	gap: 12rpx;
+	align-items: center;
+}
+
+.fr-search-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 68rpx;
+	padding: 0 20rpx;
+	border-radius: 14rpx;
+	border: 3rpx solid #5c523c;
+	background: #fffdf4;
+	font-size: 26rpx;
+	color: #393d33;
+	box-sizing: border-box;
+
+	.dark-mode & {
+		background: #3a3f36;
+		color: #eeeae0;
+		border-color: #8a8070;
+	}
+}
+
+.fr-search-btn {
+	flex: 0 0 auto;
+	height: 68rpx;
+	line-height: 68rpx;
+	padding: 0 28rpx;
+	border-radius: 14rpx;
+	font-size: 26rpx;
+	font-weight: bold;
+	color: #fff;
+	background: #4c8a3f;
+
+	&:active { opacity: 0.85; }
+}
+
+.fr-avatar {
+	flex: 0 0 auto;
+	width: 64rpx;
+	height: 64rpx;
+	border-radius: 14rpx;
+	object-fit: cover;
+	background: #8d968c;
+}
+
+/* 搜索结果状态标签（已是好友 / 已申请） */
+.fr-tag {
+	flex: 0 0 auto;
+	padding: 10rpx 18rpx;
+	border-radius: 28rpx;
+	font-size: 22rpx;
+	color: #fff;
+	background: #a09a89;
+}
+
+/* 按 ID 添加兜底入口 */
+.fr-by-id {
+	margin-top: 14rpx;
+	font-size: 22rpx;
+	color: #4c8a3f;
+	text-decoration: underline;
+	text-align: center;
+
+	.dark-mode & { color: #7fb871; }
+}
+
+/* 好友村庄只读视图（参观） */
+.fv-grid {
+	max-width: 560rpx;
+	margin: 0 auto 16rpx;
+}
+
+.fv-wall-line {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	margin-bottom: 14rpx;
+}
+
+/* 偷取提示与地块角标（红底「偷」字，仅囤积已满地块显示） */
+.fv-steal-hint {
+	margin-bottom: 14rpx;
+	color: #b04a3a;
+
+	.dark-mode & { color: #d47b6d; }
+}
+
+.steal-badge {
+	position: absolute;
+	top: 6rpx;
+	right: 6rpx;
+	width: 44rpx;
+	height: 44rpx;
+	line-height: 44rpx;
+	text-align: center;
+	border-radius: 50%;
+	background: #b04a3a;
+	border: 3rpx solid #fff;
+	box-sizing: border-box;
+	color: #fff;
+	font-size: 24rpx;
+	font-weight: bold;
+	z-index: 2;
+
+	&:active { opacity: 0.85; }
 }
 
 .fr-name {
