@@ -32,3 +32,74 @@ test('upstream credential rejection is not retried; transient 503 recovers',asyn
  }});
  assert.equal(user.id,2);assert.equal(profileCalls,2);
 });
+
+test('friend search proxies the LogHome community and annotates relationship state',async t=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'log-defence-test-'));
+ await fs.writeFile(path.join(dir,'friends.json'),JSON.stringify({links:[[1,2]],reqs:[{from:3,to:1,name:'三号',at:1}],names:{2:'阿二'}}));
+ let searched;
+ const server=createGameServer({dataDir:dir,socialFile:path.join(dir,'friends.json'),basePath:'/game',authorize:async()=>({id:1,name:'玩家'}),
+  communityFetch:async url=>{searched=String(url);return new Response(JSON.stringify([
+   {user_id:2,name:'阿二',avatar_url:'http://img.example/2.png'},
+   {user_id:3,name:'三号'},
+   {user_id:1,name:'我自己'},
+   {user_id:'oops',name:'bad'}
+  ]));}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});});
+ const base=`http://127.0.0.1:${server.address().port}/game`;
+ const login=await (await fetch(base+'/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({crossSiteToken:'one00011'})})).json();
+ const get=route=>fetch(base+route,{headers:{Authorization:'Bearer '+login.token}});
+ const search=await (await get('/api/friends/search?keyword='+encodeURIComponent('阿'))).json();
+ assert.ok(searched.includes('/community/search/users'));
+ assert.ok(searched.includes('keyword='));
+ assert.deepEqual(search.users.map(u=>[u.id,u.friend,u.requested,u.incoming]),[[2,true,false,false],[3,false,false,true]]);
+ assert.equal(search.users[0].avatar,'http://img.example/2.png');
+ assert.equal((await get('/api/friends/search')).status,400);
+ assert.equal((await get('/api/friends/search?keyword='+encodeURIComponent('x'.repeat(41)))).status,400);
+ const dir2=await fs.mkdtemp(path.join(os.tmpdir(),'log-defence-test-'));
+ const server2=createGameServer({dataDir:dir2,socialFile:path.join(dir2,'friends.json'),basePath:'/game',authorize:async()=>({id:1,name:'玩家'}),communityFetch:async()=>new Response('{}',{status:500})});
+ await new Promise(r=>server2.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>server2.close(r));await fs.rm(dir2,{recursive:true,force:true});});
+ const base2=`http://127.0.0.1:${server2.address().port}/game`;
+ const login2=await (await fetch(base2+'/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({crossSiteToken:'one00011'})})).json();
+ const bad=await fetch(base2+'/api/friends/search?keyword=a',{headers:{Authorization:'Bearer '+login2.token}});
+ assert.equal(bad.status,502);
+});
+
+test('friend steal requires friendship, full buf, and caps at 3 per day',async t=>{
+ const VD=require('../src/game/village-data.js');
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'log-defence-test-'));
+ const server=createGameServer({dataDir:dir,socialFile:path.join(dir,'friends.json'),basePath:'/game',authorize:async ticket=>({id:ticket.startsWith('two')?2:1,name:'玩家'})});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});});
+ const base=`http://127.0.0.1:${server.address().port}/game`;
+ const login=async ticket=>(await (await fetch(base+'/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({crossSiteToken:ticket})})).json()).token;
+ const req=(route,token)=>fetch(base+route,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:'{}'});
+ const fullPlot=key=>{const def=VD.BUILDING_MAP[key];const cap=VD.collectCap(def,1);const buf={};Object.keys(cap).forEach(id=>{buf[id]=cap[id];});return{type:key,level:1,workers:0,dur:100,buf,busy:null,crew:[]};};
+ const empty=i=>i===4?null:{type:'dorm',level:1,workers:0,dur:100,buf:{},busy:null,crew:[]};
+ const victimState={baseName:'富农场',village:{baseLevel:2,plots:[fullPlot('farm'),fullPlot('lumber'),fullPlot('stonegen'),empty(3),empty(4),empty(5),empty(6),empty(7),empty(8)],ugPlots:Array(9).fill(null),villagers:[],resources:{}}};
+ await server.store.write(2,0,victimState);
+ await fs.writeFile(path.join(dir,'friends.json'),JSON.stringify({links:[[1,2],[1,3]],reqs:[],names:{},steals:{}}));
+ const thief=await login('one00021');
+ assert.equal((await req('/api/friends/steal',thief)).status,400); // 空 body → 400
+ // 未满：给好友3一个不满的地块
+ const poorState={baseName:'穷农场',village:{baseLevel:1,plots:[(p=>{const def=VD.BUILDING_MAP[p.type];const cap=VD.collectCap(def,1);p.buf={};Object.keys(cap).forEach((id,i)=>{p.buf[id]=Math.max(0,cap[id]-1);});return p;})(fullPlot('farm')),null,null,null,null,null,null,null,null],ugPlots:Array(9).fill(null),villagers:[],resources:{}}};
+ await server.store.write(3,0,poorState);
+ const steal=async(id,layer,idx)=>{const res=await fetch(base+'/api/friends/steal',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+thief},body:JSON.stringify({id,layer,idx})});return{status:res.status,data:await res.json()};};
+ assert.equal((await steal(3,'ground',0)).status,400);
+ // 非好友
+ await server.store.write(4,0,victimState);
+ assert.equal((await steal(4,'ground',0)).status,403);
+ // 好友满仓：三次成功，各偷 1/10
+ const farmDef=VD.BUILDING_MAP.farm,farmCap=VD.collectCap(farmDef,1);
+ const expectGains=Object.keys(farmCap).reduce((m,id)=>{m[id]=Math.max(1,Math.floor(farmCap[id]/10));return m;},{});
+ const s1=await steal(2,'ground',0);
+ assert.equal(s1.status,200);
+ assert.deepEqual(s1.data.gains,expectGains);
+ assert.equal(s1.data.stealLeft,2);
+ const s2=await steal(2,'ground',1);assert.equal(s2.status,200);assert.equal(s2.data.stealLeft,1);
+ const s3=await steal(2,'ground',2);assert.equal(s3.status,200);assert.equal(s3.data.stealLeft,0);
+ // 次数用尽
+ assert.equal((await steal(2,'ground',3)).status,429);
+ // 好友囤积被真实扣减且 revision 递增
+ const after=await server.store.read(2);
+ assert.equal(after.revision,4); // 初始写入 1 + 三次偷取各 bump 一次
+ Object.keys(farmCap).forEach(id=>{assert.equal(Math.floor(after.state.village.plots[0].buf[id]),farmCap[id]-expectGains[id]);});
+});
