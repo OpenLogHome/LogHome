@@ -1,0 +1,189 @@
+{
+  "hero": {
+    "eyebrow": "给热爱 Minecraft，也热爱故事的你",
+    "titleStart": "方块跃然纸上，",
+    "titleSecondLine": "故事",
+    "titleHighlight": "在此生长",
+    "lead": "一个属于 Minecraft 同好们的二创社区。",
+    "descriptionFirstLine": "在这里，",
+    "descriptionSecondLine": "拥抱天马行空的想象，让热爱与创作变得触手可及。",
+    "readAction": "发现新的故事",
+    "writeAction": "写下我的故事",
+    "communityAction": "或者……先来社区逛逛吧！",
+    "caption": "从一块原木，到一个故事。",
+    "titleEnd": "。",
+    "worldDescription": "史蒂夫阅读、艾利克斯写作，两人在方块森林中交流的循环动画"
+  },
+  "pathsLabel": "选择你的原木之旅",
+  "paths": [
+    {
+      "path": "/read",
+      "label": "READ",
+      "title": "去往新的世界。",
+      "description": "看看各种各样的小说、漫画与世界设定"
+    },
+    {
+      "path": "/write",
+      "label": "CREATE",
+      "title": "挥洒你的灵感。",
+      "description": "尝试创建自己的作品吧"
+    },
+    {
+      "path": "/community",
+      "label": "CONNECT",
+      "title": "或者……交些朋友？",
+      "description": "分享故事，交换想法，找到自己的伙伴"
+    }
+  ],
+  "stories": {
+    "eyebrow": "在文字里，探索世界",
+    "title": "站内经典",
+    "description": "所谓故事，在结成甘美的果实之前，也是一颗青涩的种子。",
+    "browseAction": "前往原木书库",
+    "loading": "正在寻找书库经典…",
+    "retry": "重新加载",
+    "untitled": "未命名作品",
+    "descriptionFallback": "翻开作品，探索作者笔下的世界。",
+    "error": "作品推荐暂时未能加载，你仍可以前往书库发现故事。",
+    "empty": "每一个世界，都在等待新的故事。来书库看看吧。",
+    "coverAlt": "{name}封面",
+    "source": "来自「{collection}」专题",
+    "types": {
+      "world": "世界设定",
+      "manga": "漫画",
+      "novel": "小说"
+    },
+    "authorFallback": "佚名"
+  },
+  "create": {
+    "eyebrow": "让想象绽放",
+    "titleFirstLine": "一直想讲的那个故事，",
+    "titleSecondLine": "不如就从此刻开始。",
+    "description": "让一个尚未成形的想法，长成属于你的参天大树。",
+    "action": "进入创作空间",
+    "previewTitle": "我的第一部作品",
+    "caption": "从一个念头开始 · 创作过程与文字示例",
+    "previewLabel": "创作过程示例",
+    "stagesLabel": "查看创作过程",
+    "steps": [
+      "无需踌躇犹豫，这没什么难的",
+      "就像你做过无数次的那样",
+      "再一次拥抱自己脑中的故事就好"
+    ],
+    "stages": [
+      {
+        "label": "记下灵感",
+        "eyebrow": "一个新的念头",
+        "title": "无名之人",
+        "text": "没有来处，亦无归途。"
+      },
+      {
+        "label": "创建章节",
+        "eyebrow": "第一章",
+        "title": "童话的前奏",
+        "text": "晨光穿林，他拿起地图，第一次走向了熟悉的村庄之外。"
+      },
+      {
+        "label": "介绍作品",
+        "eyebrow": "我的作品简介",
+        "title": "勇者年代记",
+        "text": "一封匿名来信，把一位从未离开村庄的少年带向地图之外。这是一个关于探索、相遇，以及寻找的故事。"
+      }
+    ]
+  },
+  "community": {
+    "eyebrow": "故事之外，也成方圆",
+    "titleFirstLine": "我说，",
+    "titleSecondLine": "交点朋友怎么样？",
+    "description": "聊聊喜欢的角色，交换有趣的设定，分享今天的灵感。关于 Minecraft 与你的故事，这里有更多话题。",
+    "action": "去社区聊聊",
+    "loading": "正在寻找社区里的新话题…",
+    "listLabel": "社区里的新话题",
+    "emptyTitle": "来这里，可以聊些什么？",
+    "retry": "重新加载社区话题",
+    "circleFallback": "社区交流",
+    "titleFallback": "来听听这个想法",
+    "authorFallback": "社区成员",
+    "ideas": [
+      {
+        "mark": "聊",
+        "title": "聊聊喜欢的角色与剧情",
+        "text": "交换不同的理解，发现故事的另一面。"
+      },
+      {
+        "mark": "想",
+        "title": "分享突然冒出的灵感",
+        "text": "把一个念头，交给更多想象。"
+      },
+      {
+        "mark": "写",
+        "title": "一起讨论世界设定",
+        "text": "从一个地名开始，让世界一点点清晰。"
+      }
+    ],
+    "showIdeas": false
+  },
+  "download": {
+    "eyebrow": "让好故事与你同行",
+    "titleFirstLine": "无论何处，",
+    "titleSecondLine": "原木都会陪伴在你身边。",
+    "description": "把社区装进口袋吧！",
+    "action": "下载 Android 版",
+    "readAction": "前往网页端",
+    "platform": "Android 客户端",
+    "loading": "正在获取下载信息…",
+    "error": "下载信息暂时不可用。",
+    "retry": "重试",
+    "weixinTip": "请点击微信右上角菜单，选择「在浏览器中打开」后下载。",
+    "imageAlt": "原木社区 Android 客户端书库与阅读界面",
+    "version": " · v{version}",
+    "caption": ""
+  },
+  "openSource": {
+    "eyebrow": "OpenLoghome · 开源共建",
+    "titleFirstLine": "社区的下一段故事，",
+    "titleSecondLine": "也可以由你来书写。",
+    "description": "原木社区由 OpenLoghome 开源项目驱动。提交问题、补充文档、贡献代码，或把这里介绍给兴趣于此的朋友，都是参与建设的方式。",
+    "githubAction": "前往 GitHub",
+    "letterAction": "阅读开源公开信",
+    "codeContribution": "贡献代码与文档",
+    "feedbackContribution": "问题反馈",
+    "shareContribution": "分享链接",
+    "note": "一个因热爱而生的地方。"
+  },
+  "faq": {
+    "eyebrow": "在出发之前",
+    "title": "你可能还想知道",
+    "questions": [
+      {
+        "title": "这里可以读到什么？",
+        "answer": "原木社区面向 Minecraft 及其衍生文化爱好者。你可以在书库里发现小说、漫画与世界设定。"
+      },
+      {
+        "title": "从哪里开始创作？",
+        "answer": "从「写作」进入个人创作空间，创建作品，再添加章节。需要登录时，按页面提示完成即可。"
+      },
+      {
+        "title": "一定要下载客户端吗？",
+        "answer": "不必。你可以通过网页端阅读、创作和参与社区讨论，Android 客户端只是一个选择。"
+      },
+      {
+        "title": "不会写代码，也能参与共建吗？",
+        "answer": "当然。反馈使用中的问题、补充文档，或向同好介绍原木社区，都是参与的方式。"
+      }
+    ],
+    "enabled": false
+  },
+  "ending": {
+    "eyebrow": "故事在此生长",
+    "title": "冒险的书页，就从这里翻开吧。",
+    "description": "先读一个故事，也许下一个故事就来自你。",
+    "writeAction": "我也想写",
+    "readAction": "发现好故事",
+    "showDetails": false
+  },
+  "seo": {
+    "title": "原木社区 - Minecraft 同人文学与创作社区",
+    "description": "在原木社区发现 Minecraft 同人小说、漫画与世界设定，写下自己的方块故事，与同好交流灵感。支持网页阅读与创作，并提供 Android 客户端。"
+  }
+}

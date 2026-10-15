@@ -1,0 +1,57 @@
+{
+  "accessibility": {
+    "skipHome": "跳到首页内容",
+    "skipReading": "跳到阅读内容"
+  },
+  "nav": {
+    "read": "阅读",
+    "write": "写作",
+    "community": "社区",
+    "mobileDownload": "下载移动端"
+  },
+  "search": {
+    "history": "搜索历史",
+    "hot": "热门搜索",
+    "books": "书籍",
+    "viewAll": "查看全部",
+    "posts": "帖子",
+    "circles": "圈子",
+    "users": "用户",
+    "empty": "没有找到相关内容",
+    "allResults": "在搜索页面中查看",
+    "placeholder": "全站搜索...",
+    "memberCount": "{count}人",
+    "fallbackKeywords": [
+      "修仙",
+      "都市",
+      "玄幻",
+      "言情",
+      "历史"
+    ]
+  },
+  "account": {
+    "login": "登录",
+    "profile": "个人中心",
+    "works": "创作中心",
+    "bookcase": "我的书架",
+    "logout": "退出登录",
+    "anonymous": "匿名用户",
+    "mottoFallback": "这个人很懒，还没有设置个性签名",
+    "nameFallback": "用户",
+    "logoutSuccess": "已退出登录"
+  },
+  "footer": {
+    "icp": "苏ICP备2021006745号",
+    "publicSecurity": "皖公安网备34010402703554号",
+    "openSource": "原木社区开源计划",
+    "disclaimer": "非 Minecraft 官方产品。未获 Mojang 许可，亦与 Mojang 无任何关联。",
+    "copyright": "© {year} 原木社区 版权所有"
+  },
+  "brand": "原木社区",
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{count}分钟前",
+    "hoursAgo": "{count}小时前",
+    "daysAgo": "{count}天前"
+  }
+}

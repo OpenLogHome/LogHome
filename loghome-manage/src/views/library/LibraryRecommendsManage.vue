@@ -80,23 +80,24 @@
     </el-tabs>
 
     <!-- 添加小说对话框 -->
-    <el-dialog title="添加小说到榜单" :visible.sync="addDialogVisible" width="640px">
+    <el-dialog title="添加小说到榜单" :visible.sync="addDialogVisible" width="640px" @close="resetNovelSearch">
       <el-form label-width="100px">
         <el-form-item label="榜单名称">
           <el-input :value="selectedTitle" disabled />
         </el-form-item>
         <el-form-item label="选择小说" required>
           <div class="novel-search-row">
-            <el-input v-model="novelKeyword" placeholder="搜索小说名称" clearable @keyup.enter.native="searchNovels">
-              <el-button slot="append" icon="el-icon-search" @click="searchNovels"></el-button>
+            <el-input v-model="novelKeyword" placeholder="输入小说名称或 ID" clearable @input="resetNovelSearch" @keyup.enter.native="searchNovels">
+              <el-button slot="append" icon="el-icon-search" aria-label="搜索小说" :loading="novelSearchLoading" @click="searchNovels"></el-button>
             </el-input>
           </div>
-          <el-table :data="novelSearchResults" border max-height="360" highlight-current-row @current-change="handleNovelSelect">
+          <el-alert v-if="novelSearchError" :title="novelSearchError" type="error" :closable="false" show-icon />
+          <el-table v-else :data="novelSearchResults" v-loading="novelSearchLoading" element-loading-text="正在搜索" :empty-text="novelSearchAttempted ? '未找到匹配的小说' : '输入小说名称或 ID 后搜索'" border max-height="360" highlight-current-row @current-change="handleNovelSelect">
             <el-table-column prop="novel_id" label="ID" width="80" />
             <el-table-column prop="name" label="小说名" min-width="160" show-overflow-tooltip />
             <el-table-column prop="author_name" label="作者" min-width="100" show-overflow-tooltip />
           </el-table>
-          <div class="form-tip">点击行选中，选中后自动填入</div>
+          <div v-if="novelSearchResults.length" class="form-tip">点击行选中，选中后自动填入</div>
         </el-form-item>
         <el-form-item v-if="selectedNovel" label="已选小说">
           <el-tag closable @close="selectedNovel = null">
@@ -168,6 +169,10 @@ export default {
       addLoading: false,
       novelKeyword: '',
       novelSearchResults: [],
+      novelSearchLoading: false,
+      novelSearchError: '',
+      novelSearchAttempted: false,
+      novelSearchRequestId: 0,
       selectedNovel: null,
       addRouter: '',
       // 合集
@@ -195,6 +200,9 @@ export default {
   created() {
     this.refreshTitles()
     this.fetchCollections()
+  },
+  beforeDestroy() {
+    this.resetNovelSearch()
   },
   methods: {
     handleTabClick(tab) {
@@ -234,30 +242,47 @@ export default {
     },
     openAddNovelDialog() {
       this.novelKeyword = ''
-      this.novelSearchResults = []
-      this.selectedNovel = null
+      this.resetNovelSearch()
       this.addRouter = ''
       this.addDialogVisible = true
-      this.searchNovels()
     },
-    searchNovels() {
-      if (!this.novelKeyword.trim()) {
-        this.novelSearchResults = []
+    resetNovelSearch() {
+      this.novelSearchRequestId++
+      this.novelSearchLoading = false
+      this.novelSearchError = ''
+      this.novelSearchAttempted = false
+      this.novelSearchResults = []
+      this.selectedNovel = null
+    },
+    async searchNovels() {
+      const keyword = this.novelKeyword.trim()
+      if (!keyword) {
+        this.resetNovelSearch()
         return
       }
-      this.axios.get(this.$baseUrl + '/manage/library/get_all_novels', {
-        params: {
-          keyword: this.novelKeyword.trim(),
-          page: 1,
-          pageSize: 10
+      if (this.novelSearchLoading) return
+      const requestId = ++this.novelSearchRequestId
+      this.novelSearchLoading = true
+      this.novelSearchAttempted = true
+      this.novelSearchError = ''
+      this.novelSearchResults = []
+      this.selectedNovel = null
+      try {
+        const response = await this.axios.get(this.$baseUrl + '/manage/library/get_all_novels', {
+          params: { keyword, page: 1, pageSize: 10 }
+        })
+        if (requestId !== this.novelSearchRequestId || !this.addDialogVisible) return
+        if (!response.data || !Array.isArray(response.data.data)) {
+          throw new Error('Invalid novel search response')
         }
-      }).then(response => {
-        const data = response.data || {}
-        this.novelSearchResults = data.list || data.results || []
-      }).catch(error => {
+        this.novelSearchResults = response.data.data
+      } catch (error) {
+        if (requestId !== this.novelSearchRequestId || !this.addDialogVisible) return
         console.error('搜索小说失败', error)
-        this.$message.error('搜索小说失败')
-      })
+        this.novelSearchError = '搜索失败，请稍后重试'
+      } finally {
+        if (requestId === this.novelSearchRequestId) this.novelSearchLoading = false
+      }
     },
     handleNovelSelect(row) {
       this.selectedNovel = row

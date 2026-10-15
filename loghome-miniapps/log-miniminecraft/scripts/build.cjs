@@ -6,6 +6,11 @@ function patchBundle(source){
  // Windows Git checkouts can turn the embedded Worker/shader source into CRLF.
  // All checked patch boundaries use LF; normalize before applying any patch.
  source=source.replace(/\r\n?/g,'\n');
+ // Defaults only: valid preferences already saved by the player keep priority.
+ for(const [before,after]of [
+  ['localStorage.getItem(RENDER_RADIUS_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=2&&Ge<=64)return Ge}return 5','localStorage.getItem(RENDER_RADIUS_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=2&&Ge<=64)return Ge}return 32'],
+  ['localStorage.getItem(CHUNKS_PER_BATCH_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=1&&Ge<=10)return Ge}return 1','localStorage.getItem(CHUNKS_PER_BATCH_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=1&&Ge<=10)return Ge}return 10']
+ ]){if(source.split(before).length!==2)throw Error('Game default boundary changed: '+before);source=source.replace(before,after)}
  function replaceFunction(name,body){
   const pattern=new RegExp('(?:async )?function '+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\('),match=pattern.exec(source);
   if(!match)throw Error('Missing export function: '+name);

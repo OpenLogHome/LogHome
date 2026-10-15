@@ -1,243 +1,251 @@
 <template>
-  <div class="user-profile-page">
-    <!-- 用户背景封面 -->
-    <div class="profile-header">
-      <div class="cover-container">
-        <img 
-          :src="user.top_pic_url || 'https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'" 
-          alt="背景封面" 
-          class="cover-image"
-          @click="previewCoverImage"
-        />
-        <div class="cover-overlay" v-if="isCurrentUser" @click="changeCoverImage">
-          <i class="el-icon-camera"></i>
-          <span>更换封面</span>
-        </div>
-      </div>
-      
-      <!-- 用户信息区域 -->
-      <div class="user-info-section">
-        <div class="user-basic-info">
-          <!-- 用户头像 -->
-          <div class="avatar-container">
-            <img 
-              :src="user.avatar_url || '/default-avatar.png'" 
-              alt="用户头像" 
-              class="user-avatar"
-              @click="previewAvatar"
-            />
-          </div>
-          
-          <!-- 用户详细信息 -->
-          <div class="user-details">
-            <div class="user-name-section">
-              <h1 class="user-name">{{ user.name }}</h1>
-              <span class="user-id">ID: {{ uid }}</span>
-              <div class="user-groups">
-                <span 
-                  v-for="group in userGroups" 
-                  :key="group" 
-                  class="user-group"
-                  :class="getGroupClass(group)"
-                >
-                  {{ group }}
-                </span>
-                <span class="admin-badge" v-if="user.is_admin">
-                  社区管理员
-                </span>
-              </div>
-            </div>
-            
-            <div class="user-motto">
-              {{ user.motto || '暂无简介' }}
-            </div>
-            
-            <!-- 关注数据 -->
-            <div class="follow-stats">
-              <div class="stat-item" @click="navigateToFriends(1)">
-                <span class="stat-number">{{ fans }}</span>
-                <span class="stat-label">粉丝</span>
-              </div>
-              <div class="stat-item" @click="navigateToFriends(0)">
-                <span class="stat-number">{{ follows }}</span>
-                <span class="stat-label">关注</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 操作按钮 -->
-        <div class="action-buttons">
-          <el-button 
-            v-if="!isCurrentUser" 
-            :type="isFollowing ? 'default' : 'primary'"
-            @click="toggleFollow"
-            :loading="followLoading"
-          >
-            {{ isFollowing ? '已关注' : '关注' }}
-          </el-button>
-          <el-button 
-            v-if="isCurrentUser" 
-            type="primary" 
-            @click="editProfile"
-          >
-            编辑资料
-          </el-button>
-          <el-button 
-            v-if="!isCurrentUser" 
-            @click="sendPrivateMessage"
-          >
-            私信
-          </el-button>
-        </div>
+<div class="user-profile-page">
+  <!-- 用户背景封面 -->
+  <div class="profile-header">
+    <div class="cover-container">
+      <img
+        :src="user.top_pic_url || 'https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'" :alt='$t("背景封面")'
+        class="cover-image"
+        @click="previewCoverImage"
+      />
+      <div class="cover-overlay" v-if="isCurrentUser" @click="changeCoverImage">
+        <i class="el-icon-camera"></i>
+        <span>{{ $t("更换封面") }}</span>
       </div>
     </div>
-    
-    <!-- 内容标签页 -->
-    <div class="content-tabs">
-      <div class="tab-header">
-        <div 
-          class="tab-item" 
-          :class="{ active: currentTab === 0 }"
-          @click="switchTab(0)"
-        >
-          作品
+
+    <!-- 用户信息区域 -->
+    <div class="user-info-section">
+      <div class="user-basic-info">
+        <!-- 用户头像 -->
+        <div class="avatar-container">
+          <Avatar :src="user.avatar_url" :frame="user.avatar_frame" :size="100" @click.native="previewAvatar" />
         </div>
-        <div 
-          class="tab-item" 
-          :class="{ active: currentTab === 1 }"
-          @click="switchTab(1)"
-        >
-          动态
-        </div>
-        <div 
-          class="tab-item" 
-          :class="{ active: currentTab === 2 }"
-          @click="switchTab(2)"
-        >
-          世界
+
+        <!-- 用户详细信息 -->
+        <div class="user-details">
+          <div class="user-name-section">
+            <h1 class="user-name">{{ user.name }}</h1><button v-if="user.selected_badge" class="profile-medal-button" :aria-label="$t(&quot;查看勋章：{p0}&quot;, {p0: (user.selected_badge.title)})" @click="badgeVisible = true"><img class="profile-medal" :src="user.selected_badge.badge_image_url || '/social/icons/icon_my_name_tag.png'" :alt="user.selected_badge.title" /></button><nuxt-link v-if="user.membership_type" to="/membership" class="profile-membership">{{ user.membership_type==='super'?$t("超级原木通行证"):$t("原木通行证") }}</nuxt-link>
+            <span class="user-id">ID: {{ uid }}</span>
+            <div class="user-groups">
+              <span
+                v-for="group in userGroups"
+                :key="group"
+                class="user-group"
+                :class="getGroupClass(group)"
+              >
+                {{ group }}
+              </span>
+              <span class="admin-badge" v-if="user.is_admin">
+                {{ $t("社区管理员") }}
+              </span>
+            </div>
+          </div>
+
+          <p v-if="user.display_title" class="profile-display-title">{{ user.display_title }}</p><div class="user-motto">
+            {{ user.motto || $t("暂无简介") }}
+          </div>
+
+          <!-- 关注数据 -->
+          <div class="follow-stats">
+            <div class="stat-item" @click="navigateToFriends(1)">
+              <span class="stat-number">{{ fans }}</span>
+              <span class="stat-label">{{ $t("粉丝") }}</span>
+            </div>
+            <div class="stat-item" @click="navigateToFriends(0)">
+              <span class="stat-number">{{ follows }}</span>
+              <span class="stat-label">{{ $t("关注") }}</span>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <!-- 标签页内容 -->
-      <div class="tab-content">
-        <!-- 作品列表 -->
-        <div class="works-content" v-show="currentTab === 0">
-          <div class="works-grid" v-if="userWorks.length > 0">
-            <div 
-              class="work-item" 
-              v-for="work in userWorks" 
-              :key="work.novel_id"
-              @click="navigateToWork(work.novel_id)"
-              v-show="!work.is_personal"
-            >
-              <img :src="work.picUrl" alt="作品封面" class="work-cover" />
-              <div class="work-info">
-                <h3 class="work-title">{{ work.name }}</h3>
-              </div>
+
+      <!-- 操作按钮 -->
+      <div class="action-buttons">
+        <el-button
+          v-if="!isCurrentUser"
+          :type="isFollowing ? 'default' : 'primary'"
+          @click="toggleFollow"
+          :loading="followLoading"
+        >
+          {{ isFollowing ? $t("已关注") : $t("关注") }}
+        </el-button>
+        <el-button
+          v-if="isCurrentUser"
+          type="primary"
+          @click="editProfile"
+        >
+          {{ $t("编辑资料") }}
+        </el-button>
+        <el-button
+          v-if="!isCurrentUser"
+          @click="sendPrivateMessage"
+        >
+          {{ $t("私信") }}
+        </el-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 内容标签页 -->
+  <div class="content-tabs">
+    <div class="tab-header">
+      <div
+        class="tab-item"
+        :class="{ active: currentTab === 0 }"
+        @click="switchTab(0)"
+      >
+        {{ $t("作品") }}
+      </div>
+      <div
+        class="tab-item"
+        :class="{ active: currentTab === 1 }"
+        @click="switchTab(1)"
+      >
+        {{ $t("动态") }}
+      </div>
+      <div
+        class="tab-item"
+        :class="{ active: currentTab === 2 }"
+        @click="switchTab(2)"
+      >
+        {{ $t("世界") }}
+      </div>
+    </div>
+
+    <!-- 标签页内容 -->
+    <div class="tab-content">
+      <!-- 作品列表 -->
+      <div class="works-content" v-show="currentTab === 0">
+        <div class="works-grid" v-if="userWorks.length > 0">
+          <div
+            class="work-item"
+            v-for="work in userWorks"
+            :key="work.novel_id"
+            @click="navigateToWork(work.novel_id)"
+            v-show="!work.is_personal"
+          >
+            <img :src="work.picUrl" :alt='$t("作品封面")' class="work-cover" />
+            <div class="work-info">
+              <h3 class="work-title">{{ work.name }}</h3>
             </div>
-          </div>
-          <div class="empty-state" v-else>
-            <i class="el-icon-document"></i>
-            <p>暂无作品</p>
           </div>
         </div>
-        
-        <!-- 动态列表 -->
-        <div class="posts-content" v-show="currentTab === 1">
-          <div class="posts-list" v-if="userPosts.length > 0">
-            <div 
-              class="post-item" 
-              v-for="post in userPosts" 
-              :key="post.post_id"
-              @click="navigateToPost(post.post_id)"
-            >
-              <div class="post-header">
-                <div class="post-circle" @click.stop="navigateToCircle(post.circle_id)">
-                  {{ post.circle_name }}
-                </div>
-                <div class="post-time">{{ formatTime(post.create_time) }}</div>
+        <div class="empty-state" v-else>
+          <i class="el-icon-document"></i>
+          <p>{{ $t("暂无作品") }}</p>
+        </div>
+      </div>
+
+      <!-- 动态列表 -->
+      <div class="posts-content" v-show="currentTab === 1">
+        <div class="posts-list" v-if="userPosts.length > 0">
+          <div
+            class="post-item"
+            v-for="post in userPosts"
+            :key="post.post_id"
+            @click="navigateToPost(post.post_id)"
+          >
+            <div class="post-header">
+              <div class="post-circle" @click.stop="navigateToCircle(post.circle_id)">
+                {{ post.circle_name }}
               </div>
-              <div class="post-content">
-                <h3 class="post-title">{{ post.title }}</h3>
-                <p class="post-text">{{ post.content }}</p>
-              </div>
-              <!-- 图片展示 -->
-              <div class="post-images" v-if="post.media_urls && post.media_urls.length > 0">
-                <div class="image-grid" :class="getImageGridClass(post.media_urls.length)">
-                  <img 
-                    v-for="(img, imgIndex) in post.media_urls.slice(0, 9)" 
-                    :key="imgIndex" 
-                    :src="img" 
-                    alt="帖子图片"
-                    class="post-image"
-                    @click.stop="previewPostImages(post.media_urls, imgIndex)"
-                  />
-                  <div class="image-count" v-if="post.media_urls.length > 9">
-                    +{{ post.media_urls.length - 9 }}
-                  </div>
-                </div>
-              </div>
-              <div class="post-footer">
-                <div class="post-action">
-                  <i class="el-icon-chat-dot-round"></i>
-                  <span>{{ post.comment_count || 0 }}</span>
-                </div>
-                <div class="post-action">
-                  <i class="el-icon-star-off"></i>
-                  <span>{{ post.like_count || 0 }}</span>
+              <div class="post-time">{{ formatTime(post.create_time) }}</div>
+            </div>
+            <div class="post-content">
+              <h3 class="post-title">{{ post.title }}</h3>
+              <p class="post-text">{{ post.content }}</p>
+            </div>
+            <!-- 图片展示 -->
+            <div class="post-images" v-if="post.media_urls && post.media_urls.length > 0">
+              <div class="image-grid" :class="getImageGridClass(post.media_urls.length)">
+                <img
+                  v-for="(img, imgIndex) in post.media_urls.slice(0, 9)"
+                  :key="imgIndex"
+                  :src="img" :alt='$t("帖子图片")'
+                  class="post-image"
+                  @click.stop="previewPostImages(post.media_urls, imgIndex)"
+                />
+                <div class="image-count" v-if="post.media_urls.length > 9">
+                  +{{ post.media_urls.length - 9 }}
                 </div>
               </div>
             </div>
-          </div>
-          <div class="empty-state" v-else>
-            <i class="el-icon-chat-dot-round"></i>
-            <p>暂无动态</p>
-          </div>
-          
-          <!-- 加载更多 -->
-          <div class="load-more" v-if="postsHasMore && userPosts.length > 0">
-            <el-button @click="loadMorePosts" :loading="postsLoading">
-              {{ postsLoading ? '加载中...' : '加载更多' }}
-            </el-button>
+            <div class="post-footer">
+              <div class="post-action">
+                <i class="el-icon-chat-dot-round"></i>
+                <span>{{ post.comment_count || 0 }}</span>
+              </div>
+              <div class="post-action">
+                <i class="el-icon-star-off"></i>
+                <span>{{ post.like_count || 0 }}</span>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <!-- 世界列表 -->
-        <div class="worlds-content" v-show="currentTab === 2">
-          <div class="worlds-grid" v-if="userWorlds.length > 0">
-            <div 
-              class="world-item" 
-              v-for="world in userWorlds" 
-              :key="world.world_id"
-              @click="navigateToWorld(world.world_id)"
-            >
-              <img :src="world.picUrl" alt="世界封面" class="world-cover" />
-              <div class="world-info">
-                <h3 class="world-title">{{ world.name }}</h3>
-              </div>
+        <div class="empty-state" v-else>
+          <i class="el-icon-chat-dot-round"></i>
+          <p>{{ $t("暂无动态") }}</p>
+        </div>
+
+        <!-- 加载更多 -->
+        <div class="load-more" v-if="postsHasMore && userPosts.length > 0">
+          <el-button @click="loadMorePosts" :loading="postsLoading">
+            {{ postsLoading ? $t("加载中...") : $t("加载更多") }}
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 世界列表 -->
+      <div class="worlds-content" v-show="currentTab === 2">
+        <div class="worlds-grid" v-if="userWorlds.length > 0">
+          <div
+            class="world-item"
+            v-for="world in userWorlds"
+            :key="world.world_id"
+            @click="navigateToWorld(world.world_id)"
+          >
+            <img :src="world.picUrl" :alt='$t("世界封面")' class="world-cover" />
+            <div class="world-info">
+              <h3 class="world-title">{{ world.name }}</h3>
             </div>
           </div>
-          <div class="empty-state" v-else>
-            <i class="el-icon-place"></i>
-            <p>暂无世界</p>
-          </div>
+        </div>
+        <div class="empty-state" v-else>
+          <i class="el-icon-place"></i>
+          <p>{{ $t("暂无世界") }}</p>
         </div>
       </div>
     </div>
   </div>
+  <el-dialog :title="user.selected_badge ? user.selected_badge.title : $t(&quot;勋章详情&quot;)" :visible.sync="badgeVisible" width="min(560px, 92vw)">
+    <div v-if="user.selected_badge" class="public-badge-detail">
+      <Medal :src="user.selected_badge.badge_image_url || '/social/icons/icon_my_name_tag.png'" :title="user.selected_badge.title" :shiny="!!user.selected_badge.badge_shine" />
+      <p>{{ user.selected_badge.description }}</p>
+      <p v-if="user.selected_badge.title_term_text">称号词条：{{ user.selected_badge.title_term_text }}</p>
+      <p v-if="user.selected_badge.granted_at">获得时间：{{ formatTime(user.selected_badge.granted_at) }}</p>
+      <p>{{ $t("点击勋章可翻转查看背面。") }}</p>
+      <nuxt-link v-if="isCurrentUser" to="/me/achievements">{{ $t("管理我的勋章与称号") }}</nuxt-link>
+    </div>
+  </el-dialog>
+</div>
 </template>
 
 <script>
+import Avatar from "~/components/social/Avatar.vue"
+import Medal from "~/components/social/Medal.vue"
 import axios from 'axios'
 import moment from 'moment'
+import { readingToken } from "~/plugins/api/reading"
 
 export default {
+  components:{Avatar, Medal},
   name: 'UserProfile',
   layout: 'default',
-  
+
   data() {
     return {
+      badgeVisible: false,
       uid: null,
       user: {},
       userGroups: [],
@@ -246,23 +254,23 @@ export default {
       follows: 0,
       isFollowing: false,
       followLoading: false,
-      
+
       // 标签页
       currentTab: 0,
-      
+
       // 作品数据
       userWorks: [],
-      
+
       // 动态数据
       userPosts: [],
       postsPage: 1,
       postsPageSize: 10,
       postsHasMore: true,
       postsLoading: false,
-      
+
       // 世界数据
       userWorlds: [],
-      
+
       // 用户组样式映射
       group2class: {
         "社区奠基人": "founder",
@@ -273,13 +281,13 @@ export default {
       }
     }
   },
-  
+
   computed: {
     isCurrentUser() {
       return this.myUserInfo.user_id && this.uid == this.myUserInfo.user_id
     }
   },
-  
+
   async mounted() {
     this.uid = this.$route.params.id
     await this.loadUserInfo()
@@ -288,7 +296,7 @@ export default {
     await this.loadUserWorks()
     await this.loadUserWorlds()
   },
-  
+
   methods: {
     // 加载用户信息
     async loadUserInfo() {
@@ -296,6 +304,7 @@ export default {
         const response = await this.$api.users.getUserInfo(this.uid)
         if (response.code === 0) {
           this.user = response.data
+          this.badgeVisible = this.$route.query.badge === "1" && !!this.user.selected_badge
           if (this.user.user_group) {
             this.userGroups = this.user.user_group.split(',')
           }
@@ -307,7 +316,7 @@ export default {
         this.$message.error('用户信息加载失败')
       }
     },
-    
+
     // 加载当前登录用户信息
     async loadMyUserInfo() {
       try {
@@ -318,14 +327,14 @@ export default {
         }
       }
     },
-    
+
     // 加载用户统计数据
     async loadUserStats() {
       try {
         const counts = await this.$api.users.getSocialCounts(this.uid)
         this.fans = Number(counts.fans)
         this.follows = Number(counts.follows)
-        
+
         // 检查是否已关注
         if (this.myUserInfo.user_id && !this.isCurrentUser) {
           this.checkFollowStatus()
@@ -334,7 +343,7 @@ export default {
         console.error('加载用户统计数据失败', error)
       }
     },
-    
+
     // 检查关注状态
     async checkFollowStatus() {
       try {
@@ -346,7 +355,7 @@ export default {
         console.error('检查关注状态失败', error)
       }
     },
-    
+
     // 加载用户作品
     async loadUserWorks() {
       try {
@@ -361,7 +370,7 @@ export default {
         this.$message.error('作品信息加载失败')
       }
     },
-    
+
     // 加载用户世界
     async loadUserWorlds() {
       try {
@@ -376,18 +385,18 @@ export default {
         this.$message.error('世界信息加载失败')
       }
     },
-    
+
     // 加载用户动态
     async loadUserPosts() {
       if (this.postsLoading || !this.postsHasMore) return
-      
+
       this.postsLoading = true
       try {
         const response = await this.$api.users.getUserPosts(this.uid, {
           page: this.postsPage,
           pageSize: this.postsPageSize
         })
-        
+
         if (response.code === 0 && response.data && response.data.list) {
           const newPosts = response.data.list.map(post => {
             if (post.media_urls && typeof post.media_urls === 'string') {
@@ -399,13 +408,13 @@ export default {
             }
             return post
           })
-          
+
           if (this.postsPage === 1) {
             this.userPosts = newPosts
           } else {
             this.userPosts = [...this.userPosts, ...newPosts]
           }
-          
+
           this.postsPage++
           this.postsHasMore = this.userPosts.length < response.data.total
         } else {
@@ -418,12 +427,12 @@ export default {
         this.postsLoading = false
       }
     },
-    
+
     // 加载更多动态
     loadMorePosts() {
       this.loadUserPosts()
     },
-    
+
     // 切换标签页
     switchTab(index) {
       this.currentTab = index
@@ -431,7 +440,7 @@ export default {
         this.loadUserPosts()
       }
     },
-    
+
     // 切换关注状态
     async toggleFollow() {
       if (!this.myUserInfo.user_id) {
@@ -439,12 +448,12 @@ export default {
         this.$router.push('/login')
         return
       }
-      
+
       if (this.uid == this.myUserInfo.user_id) {
         this.$message.warning('不能关注自己')
         return
       }
-      
+
       this.followLoading = true
       try {
         let response
@@ -453,7 +462,7 @@ export default {
         } else {
           response = await this.$api.users.followUser(this.uid)
         }
-        
+
         if (response.code === 0) {
           this.isFollowing = !this.isFollowing
           this.fans += this.isFollowing ? 1 : -1
@@ -468,7 +477,7 @@ export default {
         this.followLoading = false
       }
     },
-    
+
     // 发送私信
     sendPrivateMessage() {
       if (!this.myUserInfo.user_id) {
@@ -478,53 +487,53 @@ export default {
       }
       this.$router.push(`/community/chat?id=${this.uid}`)
     },
-    
+
     // 编辑资料
     editProfile() {
       this.$router.push('/users/change_user_info')
     },
-    
+
     // 更换封面
     changeCoverImage() {
       this.$router.push('/users/top_pic_upload?noneAnimation=1')
     },
-    
+
     // 预览封面图片
     previewCoverImage() {
       if (this.user.top_pic_url) {
         this.$preview([this.user.top_pic_url])
       }
     },
-    
+
     // 预览头像
     previewAvatar() {
       if (this.user.avatar_url) {
         this.$preview([this.user.avatar_url])
       }
     },
-    
+
     // 预览帖子图片
     previewPostImages(images, index) {
       this.$preview(images, index)
     },
-    
+
     // 导航到好友页面
     navigateToFriends(tab) {
       this.$router.push(`/me/friends?id=${this.uid}&tab=${tab}`)
     },
-    
+
     // 导航到作品
     navigateToWork(novelId) {
       if (novelId > 0) {
         this.$router.push(`/novel/${novelId}`)
       }
     },
-    
+
     // 导航到帖子
     navigateToPost(postId) {
       this.$router.push(`/community/post/${postId}`)
     },
-    
+
     // 导航到圈子
     navigateToCircle(circleId) {
       if (!circleId || circleId === 0) {
@@ -533,17 +542,17 @@ export default {
       }
       this.$router.push(`/community/circle/${circleId}`)
     },
-    
+
     // 导航到世界
     navigateToWorld(worldId) {
       this.$router.push(`/world/${worldId}`)
     },
-    
+
     // 获取用户组样式
     getGroupClass(group) {
       return this.group2class[group] || 'nonTitle'
     },
-    
+
     // 获取图片网格样式
     getImageGridClass(count) {
       if (count === 1) return 'grid-1'
@@ -551,29 +560,28 @@ export default {
       if (count === 3) return 'grid-3'
       return 'grid-multi'
     },
-    
+
     // 格式化时间
     formatTime(time) {
       const now = moment()
       const postTime = moment(time)
       const diff = now.diff(postTime, 'minutes')
-      
+
       if (diff < 1) return '刚刚'
       if (diff < 60) return `${diff}分钟前`
-      
+
       const hourDiff = now.diff(postTime, 'hours')
       if (hourDiff < 24) return `${hourDiff}小时前`
-      
+
       const dayDiff = now.diff(postTime, 'days')
       if (dayDiff < 30) return `${dayDiff}天前`
-      
+
       return postTime.format('YYYY-MM-DD')
     },
-    
+
     // 获取token
     getToken() {
-      const token = JSON.parse(localStorage.getItem('token') || '{}')
-      return token.tk || null
+      return readingToken()
     }
   }
 }
@@ -600,19 +608,19 @@ export default {
   position: relative;
   height: 300px;
   overflow: hidden;
-  
+
   .cover-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     cursor: pointer;
     transition: transform 0.3s ease;
-    
+
     &:hover {
       transform: scale(1.02);
     }
   }
-  
+
   .cover-overlay {
     position: absolute;
     top: 0;
@@ -628,16 +636,16 @@ export default {
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease;
-    
+
     &:hover {
       opacity: 1;
     }
-    
+
     i {
       font-size: 32px;
       margin-bottom: 8px;
     }
-    
+
     span {
       font-size: 16px;
     }
@@ -662,7 +670,7 @@ export default {
 
 .avatar-container {
   margin-right: 24px;
-  
+
   .user-avatar {
     width: 120px;
     height: 120px;
@@ -672,7 +680,7 @@ export default {
     cursor: pointer;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
-    
+
     &:hover {
       transform: scale(1.05);
     }
@@ -686,14 +694,14 @@ export default {
 
 .user-name-section {
   margin-bottom: 16px;
-  
+
   .user-name {
     font-size: 32px;
     font-weight: bold;
     color: #2c3e50;
     margin: 0 0 8px 0;
   }
-  
+
   .user-id {
     background: rgba(0, 0, 0, 0.1);
     color: #666;
@@ -710,28 +718,28 @@ export default {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
-  
+
   .user-group {
     padding: 4px 12px;
     border-radius: 16px;
     font-size: 12px;
     font-weight: 500;
-    
+
     &.founder {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: #fff;
     }
-    
+
     &.copemate {
       background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       color: #fff;
     }
-    
+
     &.nonTitle {
       display: none;
     }
   }
-  
+
   .admin-badge {
     background: #55aaff;
     color: #fff;
@@ -753,22 +761,22 @@ export default {
 .follow-stats {
   display: flex;
   gap: 32px;
-  
+
   .stat-item {
     cursor: pointer;
     transition: transform 0.2s ease;
-    
+
     &:hover {
       transform: translateY(-2px);
     }
-    
+
     .stat-number {
       display: block;
       font-size: 24px;
       font-weight: bold;
       color: #2c3e50;
     }
-    
+
     .stat-label {
       display: block;
       font-size: 14px;
@@ -796,7 +804,7 @@ export default {
 .tab-header {
   display: flex;
   border-bottom: 1px solid #eee;
-  
+
   .tab-item {
     flex: 1;
     padding: 20px;
@@ -807,12 +815,12 @@ export default {
     cursor: pointer;
     transition: all 0.3s ease;
     border-bottom: 3px solid transparent;
-    
+
     &:hover {
       color: #947358;
       background: #f8f9fa;
     }
-    
+
     &.active {
       color: #947358;
       border-bottom-color: #947358;
@@ -831,15 +839,15 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 24px;
-  
+
   .work-item {
     cursor: pointer;
     transition: transform 0.3s ease;
-    
+
     &:hover {
       transform: translateY(-4px);
     }
-    
+
     .work-cover {
       width: 100%;
       height: 280px;
@@ -847,10 +855,10 @@ export default {
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
-    
+
     .work-info {
       padding: 12px 0;
-      
+
       .work-title {
         font-size: 16px;
         font-weight: 500;
@@ -871,18 +879,18 @@ export default {
     margin-bottom: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
-    
+
     &:hover {
       background: #f0f1f3;
       transform: translateY(-2px);
     }
-    
+
     .post-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-      
+
       .post-circle {
         background: #947358;
         color: #fff;
@@ -890,28 +898,28 @@ export default {
         border-radius: 16px;
         font-size: 12px;
         cursor: pointer;
-        
+
         &:hover {
           background: #826347;
         }
       }
-      
+
       .post-time {
         color: #999;
         font-size: 14px;
       }
     }
-    
+
     .post-content {
       margin-bottom: 16px;
-      
+
       .post-title {
         font-size: 18px;
         font-weight: 600;
         color: #2c3e50;
         margin: 0 0 8px 0;
       }
-      
+
       .post-text {
         color: #666;
         line-height: 1.6;
@@ -922,52 +930,52 @@ export default {
         overflow: hidden;
       }
     }
-    
+
     .post-images {
       margin: 16px 0;
-      
+
       .image-grid {
         display: grid;
         gap: 8px;
-        
+
         &.grid-1 {
           grid-template-columns: 1fr;
           max-width: 400px;
-          
+
           .post-image {
             height: 300px;
           }
         }
-        
+
         &.grid-2 {
           grid-template-columns: repeat(2, 1fr);
-          
+
           .post-image {
             height: 200px;
           }
         }
-        
+
         &.grid-3,
         &.grid-multi {
           grid-template-columns: repeat(3, 1fr);
-          
+
           .post-image {
             height: 150px;
           }
         }
-        
+
         .post-image {
           width: 100%;
           object-fit: cover;
           border-radius: 8px;
           cursor: pointer;
           transition: transform 0.3s ease;
-          
+
           &:hover {
             transform: scale(1.02);
           }
         }
-        
+
         .image-count {
           position: absolute;
           right: 8px;
@@ -980,19 +988,19 @@ export default {
         }
       }
     }
-    
+
     .post-footer {
       display: flex;
       gap: 24px;
       padding-top: 16px;
       border-top: 1px solid #eee;
-      
+
       .post-action {
         display: flex;
         align-items: center;
         color: #666;
         font-size: 14px;
-        
+
         i {
           margin-right: 6px;
           font-size: 16px;
@@ -1007,15 +1015,15 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 24px;
-  
+
   .world-item {
     cursor: pointer;
     transition: transform 0.3s ease;
-    
+
     &:hover {
       transform: translateY(-4px);
     }
-    
+
     .world-cover {
       width: 100%;
       height: 280px;
@@ -1023,10 +1031,10 @@ export default {
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
-    
+
     .world-info {
       padding: 12px 0;
-      
+
       .world-title {
         font-size: 16px;
         font-weight: 500;
@@ -1043,13 +1051,13 @@ export default {
   text-align: center;
   padding: 60px 20px;
   color: #999;
-  
+
   i {
     font-size: 64px;
     margin-bottom: 16px;
     display: block;
   }
-  
+
   p {
     font-size: 16px;
     margin: 0;
@@ -1069,12 +1077,12 @@ export default {
     max-width: 1400px;
     padding: 30px;
   }
-  
+
   .works-grid,
   .worlds-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
-  
+
   .cover-container {
     height: 350px;
   }
@@ -1086,7 +1094,7 @@ export default {
     max-width: 100%;
     padding: 25px;
   }
-  
+
   .works-grid,
   .worlds-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -1098,26 +1106,26 @@ export default {
   .user-profile-page {
     padding: 20px;
   }
-  
+
   .user-info-section {
     padding: 25px;
   }
-  
+
   .user-name {
     font-size: 28px !important;
   }
-  
+
   .user-avatar {
     width: 100px !important;
     height: 100px !important;
   }
-  
+
   .works-grid,
   .worlds-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 20px;
   }
-  
+
   .cover-container {
     height: 250px;
   }
@@ -1128,70 +1136,70 @@ export default {
   .user-profile-page {
     padding: 10px;
   }
-  
+
   .user-info-section {
     flex-direction: column;
     align-items: stretch;
     padding: 20px;
     margin-top: -60px;
   }
-  
+
   .user-basic-info {
     flex-direction: column;
     align-items: center;
     text-align: center;
     margin-bottom: 20px;
   }
-  
+
   .avatar-container {
     margin-right: 0;
     margin-bottom: 16px;
-    
+
     .user-avatar {
       width: 80px;
       height: 80px;
     }
   }
-  
+
   .user-name {
     font-size: 24px !important;
   }
-  
+
   .action-buttons {
     justify-content: center;
     padding-top: 0;
     flex-wrap: wrap;
   }
-  
+
   .follow-stats {
     justify-content: center;
     gap: 20px;
   }
-  
+
   .works-grid,
   .worlds-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 16px;
   }
-  
+
   .tab-content {
     padding: 20px;
   }
-  
+
   .tab-header {
     .tab-item {
       padding: 16px 12px;
       font-size: 14px;
     }
   }
-  
+
   .cover-container {
     height: 200px;
   }
-  
+
   .post-item {
     padding: 16px;
-    
+
     .post-title {
       font-size: 16px !important;
     }
@@ -1203,21 +1211,21 @@ export default {
   .user-profile-page {
     padding: 8px;
   }
-  
+
   .user-info-section {
     padding: 16px;
   }
-  
+
   .works-grid,
   .worlds-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  
+
   .tab-content {
     padding: 16px;
   }
-  
+
   .action-buttons {
     .el-button {
       font-size: 12px;
@@ -1225,4 +1233,9 @@ export default {
     }
   }
 }
+.profile-medal{width:30px;height:30px;object-fit:contain;image-rendering:pixelated}.profile-membership{font-size:12px;color:#947358}.profile-display-title{font-size:14px;color:#947358;margin:8px 0}
+</style>
+
+<style scoped>
+.profile-medal-button{padding:0;border:0;background:none;cursor:pointer;display:inline-flex;align-items:center;border-radius:50%}.profile-medal-button:focus-visible{outline:2px solid #92704f;outline-offset:4px}.public-badge-detail{text-align:center;line-height:1.7}.public-badge-detail a{color:#795a3d}
 </style>

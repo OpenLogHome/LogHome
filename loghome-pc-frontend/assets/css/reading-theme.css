@@ -22,12 +22,10 @@
 .outer.reading-layout .main-content {
   max-width: 1440px;
   width: 100%;
-  margin: 72px auto 0;
+  margin: calc(var(--site-header-height, 60px) + 12px) auto 0;
   padding: 30px 40px 64px;
   min-height: calc(100dvh - 160px);
 }
-.outer.reading-layout .navbar .nav-link-active { color: var(--reading-accent); }
-.outer.reading-layout .navbar .nav-link-active::after { background: var(--reading-accent); }
 .outer.reading-layout .site-footer { background: #eae9e5; color: var(--reading-secondary); font-size: 12px; line-height: 1.9; }
 .outer.reading-layout .site-footer a { color: var(--reading-accent); }
 .reading-skip-link { position: fixed; left: 24px; top: 8px; transform: translateY(-150%); padding: 10px 18px; z-index: 1100; background: #79573c; color: #fff; border-radius: 6px; text-decoration: none; }
@@ -85,7 +83,7 @@
 
 /* Immersive text reader: chrome is quiet, user typography and background stay in control. */
 .outer.reading-layout .main-content .article-page { background: transparent; }
-.outer.reading-layout .main-content .article-page .article-header { top: 60px; border: 1px solid var(--reading-line); border-radius: 10px; box-shadow: none; background: var(--reading-surface); z-index: 90; }
+.outer.reading-layout .main-content .article-page .article-header { top: var(--site-header-height, 60px); border: 1px solid var(--reading-line); border-radius: 10px; box-shadow: none; background: var(--reading-surface); z-index: 90; }
 .outer.reading-layout .main-content .article-page .article-header.sticky .header-content { padding: 14px 18px; gap: 18px; flex-wrap: wrap; }
 .outer.reading-layout .main-content .article-page .article-header .novel-info { gap: 16px; min-width: 0; }
 .outer.reading-layout .main-content .article-page .article-header .novel-title { font-size: 14px; font-weight: 600; color: var(--reading-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
@@ -137,7 +135,7 @@
   .outer.reading-layout .main-content .article-page .article-header .novel-title { max-width: 45%; }
 }
 @media (max-width: 768px) {
-  .outer.reading-layout .main-content { margin-top: 80px; padding: 20px 16px 40px; }
+  .outer.reading-layout .main-content { padding: 20px 16px 40px; }
   .outer.reading-layout .main-content :is(.novel-container, .manga-container) { padding: 24px 20px; }
   .outer.reading-layout .main-content .novel-container .novel-header,
   .outer.reading-layout .main-content .manga-container .manga-header,
@@ -149,7 +147,7 @@
   .outer.reading-layout .main-content :is(.novel-stats, .manga-stats) { gap: 14px; padding: 14px 0; margin: 16px 0; }
   .outer.reading-layout .main-content :is(.novel-meta, .manga-meta, .novel-actions, .manga-actions) { justify-content: flex-start; }
   .outer.reading-layout .main-content :is(.world-content, .tags-page, .recommended-novels) { padding: 20px; }
-  .outer.reading-layout .main-content .article-page .article-header { top: 60px; }
+  .outer.reading-layout .main-content .article-page .article-header { top: var(--site-header-height, 60px); }
   .outer.reading-layout .main-content .article-page .article-header.sticky .header-content { padding: 12px; gap: 12px; }
   .outer.reading-layout .main-content .article-page .article-title { font-size: 24px; }
   .outer.reading-layout .main-content .tags-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -250,20 +248,6 @@
 .outer.reading-layout .main-content .activity-inbox .message-grid article { border-color: var(--reading-line); }
 @media(max-width:640px) { .manga-reader.manga-reader .top-bar { height: 56px; padding: 0 10px; } .manga-reader.manga-reader .bar-title { padding-left: 8px; } }
 
-.outer.reading-layout .navbar-container { max-width: 1440px; padding: 0 40px; }
-.outer.reading-layout .navbar .nav-link { white-space: nowrap; }
-@media (max-width: 1024px) { .outer.reading-layout .navbar-container { padding: 0 28px; } }
-@media (max-width: 768px) {
-  .outer.reading-layout .navbar-container { height: auto; min-height: 60px; padding: 10px 16px; flex-wrap: wrap; gap: 10px; }
-  .outer.reading-layout .logo-img { height: 28px; }
-  .outer.reading-layout .navbar-center { margin-left: auto; }
-  .outer.reading-layout .nav-link { margin: 0 10px; font-size: 14px; padding: 6px 0; }
-  .outer.reading-layout .navbar-right { width: 100%; }
-  .outer.reading-layout .search-box { flex: 1; min-width: 0; padding: 0 14px; margin-right: 14px; }
-  .outer.reading-layout .search-input { width: 100%; min-width: 0; font-size: 13px; padding: 9px 0; }
-  .outer.reading-layout .main-content { margin-top: 112px; }
-  .outer.reading-layout .main-content .article-page .article-header { top: 104px; }
-}
 .outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-stats .stat-item { margin: 0; align-items: flex-start; }
 .outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-tags .tag { border-radius: 4px; background: var(--reading-hover); color: var(--reading-secondary); }
 .outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .action-button.primary { display: inline-flex; align-items: center; justify-content: center; background: var(--reading-accent); color: #fff; height: 44px; min-width: 150px; padding: 0 24px; margin: 0; font-size: 15px; overflow: hidden; }

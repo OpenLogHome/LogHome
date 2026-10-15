@@ -1,807 +1,540 @@
 <template>
-  <div class="user-profile-container">
-    <div class="profile-header">
-      <div class="header-background">
-        <img 
-          :src="user.top_pic_url || 'https://i.loli.net/2021/11/29/BxFmtyrS7GolgqM.jpg'" 
-          alt="背景图片" 
-          class="cover-image"
+  <Workspace :title="$t('个人中心')" active="/me">
+    <template #actions
+      ><nuxt-link to="/me/settings"
+        ><el-button icon="el-icon-setting">{{ $t("编辑资料") }}</el-button></nuxt-link
+      ></template
+    >
+    <div v-if="error" class="social-panel social-state" role="alert">
+      {{ error }}<br /><el-button @click="load">{{ $t("重新加载") }}</el-button>
+    </div>
+    <el-skeleton v-else-if="loading" class="social-panel" :rows="8" animated />
+    <template v-else>
+      <section
+        class="profile-hero"
+        :style="{
+          backgroundImage: user.top_pic_url ? `url(${user.top_pic_url})` : '',
+        }"
+      >
+        <div class="profile-hero-shade" />
+        <div class="profile-hero-main">
+          <Avatar :src="user.avatar_url" :frame="user.avatar_frame" :size="86" />
+          <div>
+            <h2>
+              {{ user.name }} <span>ID {{ user.user_id }}</span>
+            </h2>
+            <p v-if="user.display_title" class="profile-title">
+              {{ user.display_title }}
+            </p>
+            <p v-if="user.motto">{{ user.motto }}</p>
+            <div class="profile-groups">
+              <span v-for="group in groups" :key="group">{{ group }}</span>
+            </div>
+          </div>
+          <nuxt-link :to="`/users/${user.user_id}`" class="profile-card-link">{{
+            $t("查看个人名片 →")
+          }}</nuxt-link>
+        </div>
+      </section>
+      <nuxt-link
+        to="/membership"
+        class="membership-banner"
+        :class="{ super: membership && membership.membership_type === 'super' }"
+        ><img
+          :src="
+            membership && membership.membership_type === 'super'
+              ? '/social/membership/loghome-super-pass.png'
+              : '/social/membership/loghome-pass.png'
+          "
+          alt=""
         />
-        <div class="edit-cover" @click="changeCoverImage">
-          <i class="el-icon-camera"></i> 更换封面
+        <div>
+          <strong>{{
+            $t(
+              membership
+                ? membership.membership_type === "super"
+                  ? "超级原木通行证"
+                  : "原木通行证"
+                : "原木通行证"
+            )
+          }}</strong>
+          <p>{{ membershipCaption }}</p>
         </div>
+        <span>{{ $t(membership ? "管理权益" : "了解权益") }} →</span></nuxt-link
+      >
+      <div
+        v-if="!user.email || user.email === 'unbind'"
+        class="social-panel account-security"
+      >
+        <i class="el-icon-warning-outline" />
+        <div>
+          <strong>{{ $t("保护你的账号") }}</strong>
+          <p>{{ $t("绑定邮箱，方便找回密码和接收重要通知。") }}</p>
+        </div>
+        <nuxt-link to="/me/security"
+          ><el-button size="small">{{ $t("绑定邮箱") }}</el-button></nuxt-link
+        >
       </div>
-      
-      <div class="user-info-box">
-        <div class="avatar-box">
-          <img 
-            :src="user.avatar_url || '/default-avatar.png'" 
-            alt="用户头像" 
-            class="avatar-image"
-          />
-          <div class="edit-avatar" @click="changeUserInfo">
-            <i class="el-icon-edit"></i>
+      <section class="personal-quick">
+        <nuxt-link v-for="item in quick" :key="item.to" :to="item.to" class="social-panel"
+          ><i :class="item.icon" />
+          <div>
+            <strong>{{ $t(item.label) }}</strong>
+            <p>{{ $t(item.description) }}</p>
           </div>
+          <i class="el-icon-arrow-right"
+        /></nuxt-link>
+      </section>
+      <div class="personal-columns">
+        <div>
+          <section class="social-panel">
+            <h2>{{ $t("我的服务") }}</h2>
+            <div class="personal-services">
+              <nuxt-link v-for="item in services" :key="item.to" :to="item.to"
+                ><i :class="item.icon" />
+                <div>
+                  <strong>{{ $t(item.label) }}</strong>
+                  <p>{{ $t(item.description) }}</p>
+                </div>
+                <span v-if="item.to === '/me/wallet'">{{
+                  $t("{p0} 原木", {
+                    p0: balances.log === undefined ? $t("暂无") : balances.log,
+                  })
+                }}</span
+                ><i class="el-icon-arrow-right"
+              /></nuxt-link>
+            </div>
+          </section>
+          <section class="social-panel">
+            <h2>{{ $t("更多") }}</h2>
+            <div class="personal-services">
+              <nuxt-link v-for="item in more" :key="item.to" :to="item.to"
+                ><i :class="item.icon" /><strong>{{ $t(item.label) }}</strong
+                ><i class="el-icon-arrow-right"
+              /></nuxt-link>
+            </div>
+          </section>
         </div>
-        
-        <div class="user-info">
-          <div class="user-name">
-            <span class="name">{{ user.name }}</span>
-            <span class="user-id">ID: {{ user.user_id }}</span>
-            <span v-for="group in userGroups" :key="group" class="user-group">{{ group }}</span>
-          </div>
-          <div class="user-motto">{{ user.motto || '这个人很懒，什么都没留下...' }}</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="profile-body">
-      <div class="left-panel">
-        <div class="card user-actions">
-          <div class="action-items">
-            <div class="action-item" @click="activate" v-if="user.email === 'unbind'">
-              <div class="action-icon warning">
-                <i class="el-icon-warning-outline"></i>
-              </div>
-              <div class="action-text warning">绑定邮箱</div>
+        <div>
+          <section class="social-panel personal-tree">
+            <span>{{ $t("原木树场") }}</span>
+            <h2>{{ $t(tree.treeState || "查看你的树场") }}</h2>
+            <nuxt-link to="/me/tree"
+              ><el-button type="primary">{{ $t("进入树场") }}</el-button></nuxt-link
+            >
+          </section>
+          <section class="social-panel">
+            <div class="social-toolbar">
+              <h2>{{ $t("我的作品") }}</h2>
+              <nuxt-link to="/write">{{ $t("创作中心 →") }}</nuxt-link>
             </div>
-            
-            <div class="action-item" @click="viewUserProfile">
-              <div class="action-icon">
-                <i class="el-icon-user"></i>
-              </div>
-              <div class="action-text">个人名片</div>
-            </div>
-            
-            <div class="action-item" @click="gotoMessages">
-              <div class="action-icon" :class="{'new-message': hasNewMessage || hasNewPrivateMessage}">
-                <i class="el-icon-message"></i>
-              </div>
-              <div class="action-text">我的消息</div>
-            </div>
-            
-            <div class="action-item" @click="gotoFriends">
-              <div class="action-icon">
-                <i class="el-icon-user-solid"></i>
-              </div>
-              <div class="action-text">我的好友</div>
-            </div>
-            
-            <div class="action-item" @click="gotoSettings">
-              <div class="action-icon">
-                <i class="el-icon-setting"></i>
-              </div>
-              <div class="action-text">账号设置</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="card tree-plant">
-          <div class="card-title">原木树场</div>
-          <div class="tree-status" :class="{'warning': treeState === '未种植' || treeState === '结果'}">
-            <i class="el-icon-tree"></i>
-            <span>当前状态：{{ treeState }}</span>
-          </div>
-          <el-button type="primary" @click="gotoTreePlant">进入树场</el-button>
-        </div>
-        
-        <div class="card balance">
-          <div class="card-title">账户余额</div>
-          <div class="balance-amount">{{ earningsMoney }} 元</div>
-          <el-button @click="gotoEarnings">余额提现</el-button>
-        </div>
-      </div>
-      
-      <div class="right-panel">
-        <div class="card">
-          <div class="card-title">社区功能</div>
-          <div class="function-list">
-            <div class="function-item" @click="gotoCredits">
-              <i class="el-icon-medal"></i>
-              <span>我的信誉</span>
-            </div>
-            
-            <div class="function-item" @click="gotoRecharge">
-              <i class="el-icon-coin"></i>
-              <span>支持社区</span>
-            </div>
-            
-            <div class="function-item" @click="gotoAbout">
-              <i class="el-icon-info"></i>
-              <span>关于社区</span>
-            </div>
-            
-            <div class="function-item" @click="gotoFeedback">
-              <i class="el-icon-document"></i>
-              <span>意见反馈</span>
-            </div>
-            
-            <div class="function-item" @click="gotoClientSet">
-              <i class="el-icon-setting"></i>
-              <span>设置</span>
-            </div>
-            
-            <div class="function-item" @click="gotoAdmin" v-if="user.is_admin === 1">
-              <i class="el-icon-s-tools"></i>
-              <span>平台管理</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-title">我的作品</div>
-          <div class="empty-works" v-if="!userWorks || userWorks.length === 0">
-            <i class="el-icon-document"></i>
-            <p>你还没有创作作品</p>
-            <el-button type="primary" @click="gotoWrite">开始创作</el-button>
-          </div>
-          <div class="works-grid" v-else>
-            <div 
-              class="work-item" 
-              v-for="work in userWorks" 
+            <nuxt-link
+              v-for="work in works.slice(0, 3)"
               :key="work.novel_id"
-              @click="navigateToWork(work.novel_id)"
-              v-show="!work.is_personal"
+              :to="`/write/settings/${work.novel_id}`"
+              class="social-list-row"
+              ><img :src="work.picUrl || '/default-book-cover.png'" alt="" />
+              <div class="row-main">
+                <strong>{{ work.name }}</strong>
+                <p>{{ work.content || $t("继续完善你的故事") }}</p>
+              </div></nuxt-link
             >
-              <img :src="work.picUrl || '/default-book-cover.png'" alt="作品封面" class="work-cover" />
-              <div class="work-info">
-                <h3 class="work-title">{{ work.name }}</h3>
-                <p class="work-desc">{{ work.content || '暂无简介' }}</p>
-              </div>
+            <p v-if="!works.length" class="social-muted">
+              {{ $t("暂无作品") }}
+            </p>
+          </section>
+          <section class="social-panel">
+            <h2>{{ $t("账户收益") }}</h2>
+            <div class="earnings">
+              {{ earnings }} <small>{{ $t("元") }}</small>
             </div>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-title">我的书架</div>
-          <div class="empty-bookcase" v-if="!userBookcase || userBookcase.length === 0">
-            <i class="el-icon-collection"></i>
-            <p>你的书架还是空的</p>
-            <el-button type="primary" @click="gotoLibrary">去看书</el-button>
-          </div>
-          <div class="bookcase-list" v-else>
-            <div
-              class="bookcase-item"
-              v-for="book in userBookcase"
-              :key="book.novel_id"
-              @click="navigateToWork(book.novel_id)"
-            >
-              <img
-                :src="book.picUrl || '/default-book-cover.png'"
-                :alt="book.name"
-                class="bookcase-cover"
-                @error="$event.target.src = '/default-book-cover.png'"
-              />
-              <div class="bookcase-info">
-                <h4 class="bookcase-title">{{ book.name }}</h4>
-                <p class="bookcase-author">{{ book.author_name || '佚名' }}</p>
-              </div>
-            </div>
-          </div>
+            <nuxt-link to="/me/wallet?tab=earnings">{{ $t("收益与提现 →") }}</nuxt-link>
+          </section>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </Workspace>
 </template>
-
 <script>
+import Workspace from "~/components/social/Workspace.vue";
+import Avatar from "~/components/social/Avatar.vue";
+import account from "~/plugins/api/account";
+import { readingToken } from "~/plugins/api/reading";
 export default {
-  layout: 'default',
-  data() {
-    return {
-      user: {},
-      userGroups: [],
-      hasNewMessage: false,
-      hasNewPrivateMessage: false,
-      treeState: "无",
-      earningsMoney: 0.00,
-      userWorks: [],
-      userBookcase: [],
-      worksLoading: false,
-      bookcaseLoading: false
-    }
+  components: { Workspace, Avatar },
+  data: () => ({
+    user: {},
+    balances: {},
+    membership: null,
+    tree: {},
+    works: [],
+    loading: true,
+    error: "",
+    quick: [
+      {
+        to: "/me/messages",
+        label: "我的消息",
+        description: "查看互动、私信和社区通知",
+        icon: "el-icon-message",
+      },
+      {
+        to: "/me/friends",
+        label: "好友与关注",
+        description: "与志同道合的朋友保持联系",
+        icon: "el-icon-user",
+      },
+    ],
+    services: [
+      {
+        to: "/me/tree",
+        label: "原木树场",
+        description: "每日签到与成长任务",
+        icon: "el-icon-pear",
+      },
+      {
+        to: "/me/achievements",
+        label: "我的勋章",
+        description: "记录成长，组合专属称号",
+        icon: "el-icon-medal",
+      },
+      {
+        to: "/me/frames",
+        label: "头像挂件",
+        description: "装点你的社区身份",
+        icon: "el-icon-picture-outline",
+      },
+      {
+        to: "/me/invite",
+        label: "邀请好友",
+        description: "分享原木社区，一起成长",
+        icon: "el-icon-share",
+      },
+      {
+        to: "/me/wallet",
+        label: "原木钱包",
+        description: "充值、兑换与消费记录",
+        icon: "el-icon-coin",
+      },
+      {
+        to: "/read/redstone",
+        label: "红石账户",
+        description: "管理 AI 服务的红石余额",
+        icon: "el-icon-magic-stick",
+      },
+      {
+        to: "/store",
+        label: "原木商城",
+        description: "发现社区周边与精选商品",
+        icon: "el-icon-shopping-bag-1",
+      },
+      {
+        to: "/me/lab",
+        label: "原木实验室",
+        description: "探索社区的新鲜玩法",
+        icon: "el-icon-s-opportunity",
+      },
+    ],
+    more: [
+      { to: "/me/credit", label: "我的信誉", icon: "el-icon-circle-check" },
+      { to: "/me/help", label: "帮助与反馈", icon: "el-icon-chat-line-round" },
+      { to: "/about/open-source", label: "关于原木社区", icon: "el-icon-info" },
+      { to: "/me/settings", label: "设置与隐私", icon: "el-icon-setting" },
+    ],
+  }),
+  computed: {
+    membershipCaption() {
+      if (!this.membership) return this.$t("专属身份、成长加速与更多个性体验");
+      return this.$t("有效期至 {date} · {status}", {
+        date: this.date(this.membership.expires_at),
+        status: this.$t(this.membership.auto_renew ? "自动续费已开启" : "自动续费已关闭"),
+      });
+    },
+    groups() {
+      return String(this.user.user_group || "")
+        .split(",")
+        .filter(Boolean);
+    },
+    earnings() {
+      return (Number(this.balances.cropped_log || 0) / 100).toFixed(2);
+    },
   },
-  async mounted() {
-    await this.loadUserInfo()
-    if (!this.user.user_id) return
-    this.checkMessages()
-    this.checkTreePlant()
-    this.refreshResources()
-    this.loadUserWorks()
-    this.loadUserBookcase()
+  mounted() {
+    if (!readingToken()) {
+      this.$router.replace({ path: "/login", query: { redirect: "/me" } });
+      return;
+    }
+    this.load();
   },
   methods: {
-    async loadUserInfo() {
-      // 先用本地缓存渲染，再向服务器取最新资料
-      const cachedUserInfo = localStorage.getItem('LogHomeUserInfo')
-      
-      if (cachedUserInfo) {
-        this.user = JSON.parse(cachedUserInfo)
-        if (this.user.user_group) {
-          this.userGroups = this.user.user_group.split(",")
-        }
-      }
-      
-      await this.fetchUserInfo()
+    date(value) {
+      return value
+        ? new Date(value).toLocaleDateString(this.$language.state.locale)
+        : "暂无";
     },
-    
-    async fetchUserInfo() {
+    async load() {
+      this.loading = true;
+      this.error = "";
       try {
-        // 使用API服务获取用户信息
-        this.user = await this.$api.users.getUserProfile()
-        
-        if (this.user.user_group) {
-          this.userGroups = this.user.user_group.split(",")
-        }
+        this.user = await account.profile();
+        localStorage.setItem("LogHomeUserInfo", JSON.stringify(this.user));
+        const results = await Promise.allSettled([
+          account.balances(),
+          account.membership(),
+          this.$api.treePlant.getTreePlantInfo(),
+          this.$api.users.getUserNovels(this.user.user_id),
+        ]);
+        if (results[0].status === "fulfilled") this.balances = results[0].value;
+        if (results[1].status === "fulfilled")
+          this.membership = results[1].value.subscription;
+        if (results[2].status === "fulfilled") this.tree = results[2].value;
+        if (results[3].status === "fulfilled") this.works = results[3].value.data || [];
       } catch (error) {
-        console.error('获取用户资料失败', error)
-        
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem('token')
-          this.$router.push('/login?msg=unAuthorized')
-        }
-      }
-    },
-    
-    getToken() {
-      const tk = JSON.parse(localStorage.getItem('token'))
-      return tk ? tk.tk : null
-    },
-    
-    async checkMessages() {
-      const [notifications, privateMessages] = await Promise.all([
-        this.$api.users.getUnreadSystemMessageCount(),
-        this.$api.community.getUnreadMessageCount()
-      ])
-      this.hasNewMessage = notifications.count > 0
-      this.hasNewPrivateMessage = privateMessages.count > 0
-    },
-    
-    async checkTreePlant() {
-      try {
-        const result = await this.$api.treePlant.getTreePlantInfo()
-        this.treeState = result.treeState
-      } catch (error) {
-        console.error('获取树场信息失败', error)
-      }
-    },
-    
-    async refreshResources() {
-      try {
-        const result = await this.$api.resources.getUserResources()
-        this.earningsMoney = result.earningsMoney
-      } catch (error) {
-        console.error('获取资源信息失败', error)
-      }
-    },
-    
-    // 加载用户作品
-    async loadUserWorks() {
-      this.worksLoading = true
-      try {
-        const response = await this.$api.users.getUserNovels(this.user.user_id)
-        if (response.code === 0) {
-          this.userWorks = response.data || []
-        } else {
-          throw new Error(response.message || '获取作品失败')
-        }
-      } catch (error) {
-        console.error('加载用户作品失败', error)
-        this.$message.error('作品信息加载失败')
+        this.error = error.message;
       } finally {
-        this.worksLoading = false
+        this.loading = false;
       }
     },
-    
-    bankNum(num) {
-      if (isNaN(num)) {
-        return num
-      } else {
-        const s = num.toFixed(2).toString()
-        return s.substring(0, s.indexOf(".") + 3)
-      }
-    },
-    
-    // 加载用户书架
-    async loadUserBookcase() {
-      this.bookcaseLoading = true
-      try {
-        const books = await this.$api.bookcase.getLikesOf()
-        this.userBookcase = Array.isArray(books) ? books : []
-      } catch (error) {
-        console.error('加载书架失败', error)
-      } finally {
-        this.bookcaseLoading = false
-      }
-    },
-    
-    // 低频功能页仍由移动端提供，用浮窗内嵌打开而不是整页跳转
-    openMobilePage(pagePath, title) {
-      return this.$openMobileWindow(pagePath, { title })
-    },
-    
-    changeCoverImage() {
-      this.$router.push("/me/settings")
-    },
-    
-    changeUserInfo() {
-      this.$router.push("/me/settings")
-    },
-    
-    viewUserProfile() {
-      this.$router.push(`/users/${this.user.user_id}`)
-    },
-    
-    gotoMessages() {
-      this.$router.push("/me/messages")
-      this.hasNewMessage = false
-      this.hasNewPrivateMessage = false
-    },
-    
-    gotoFriends() {
-      this.$router.push("/me/friends")
-    },
-    
-    gotoSettings() {
-      this.$router.push("/me/settings")
-    },
-    
-    activate() {
-      this.openMobilePage("/pages/users/activateAccount", "绑定邮箱")
-    },
-    
-    gotoTreePlant() {
-      this.openMobilePage("/pages/treePlant/treeplant", "原木树场")
-    },
-    
-    gotoEarnings() {
-      this.openMobilePage("/pages/payments/earnings", "余额提现")
-    },
-    
-    gotoCredits() {
-      this.openMobilePage("/pages/users/user_credit", "我的信誉")
-    },
-    
-    gotoRecharge() {
-      this.openMobilePage("/pages/payments/recharge", "支持社区")
-    },
-    
-    gotoAbout() {
-      this.openMobilePage("/pages/apps/about", "关于社区")
-    },
-    
-    gotoFeedback() {
-      this.openMobilePage("/pages/apps/faqs/faq", "意见反馈")
-    },
-    
-    gotoClientSet() {
-      this.$router.push("/me/settings")
-    },
-    
-    gotoAdmin() {
-      this.openMobilePage("/pages/manage/index", "平台管理")
-    },
-    
-    gotoWrite() {
-      this.$router.push("/write")
-    },
-    
-    gotoLibrary() {
-      this.$router.push("/read")
-    },
-    
-    // 导航到作品
-    navigateToWork(novelId) {
-      if (novelId > 0) {
-        this.$router.push(`/novel/${novelId}`)
-      }
-    }
-  }
-}
+  },
+  head: () => ({ title: "个人中心 - 原木社区" }),
+};
 </script>
-
-<style scoped lang="scss">
-.user-profile-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.profile-header {
-  background: #fff;
-  border-radius: 8px;
+<style scoped>
+.profile-hero {
+  position: relative;
+  min-height: 230px;
+  background: #86674c;
+  background-size: cover;
+  background-position: center;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  color: white;
+}
+.profile-hero-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, #30241ed9, #30241e40);
+}
+.profile-hero-main {
   position: relative;
-}
-
-.header-background {
-  height: 200px;
-  position: relative;
-  overflow: hidden;
-  
-  .cover-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .edit-cover {
-    position: absolute;
-    right: 20px;
-    bottom: 20px;
-    background: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    
-    &:hover {
-      background: rgba(0, 0, 0, 0.7);
-    }
-  }
-}
-
-.user-info-box {
-  padding: 20px;
-  display: flex;
-  align-items: flex-start;
-  margin-top: -50px;
-  position: relative;
-  z-index: 1;
-}
-
-.avatar-box {
-  position: relative;
-  margin-right: 20px;
-  
-  .avatar-image {
-    width: 100px;
-    height: 100px;
-    border-radius: 8px;
-    border: 4px solid #fff;
-    object-fit: cover;
-    background-color: #f5f5f5;
-  }
-  
-  .edit-avatar {
-    position: absolute;
-    right: -10px;
-    bottom: -10px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #947358;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    
-    &:hover {
-      background: #826347;
-    }
-  }
-}
-
-.user-info {
-  flex: 1;
-  padding-top: 10px;
-}
-
-.user-name {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  
-  .name {
-    font-size: 24px;
-    font-weight: bold;
-    margin-right: 10px;
-  }
-  
-  .user-id {
-    background: rgba(0, 0, 0, 0.1);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 14px;
-    margin-right: 10px;
-  }
-  
-  .user-group {
-    background: #947358;
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    margin-right: 5px;
-    margin-bottom: 5px;
-  }
+  gap: 22px;
+  padding: 46px 30px;
+  min-height: 230px;
 }
-
-.user-motto {
-  color: #666;
-  margin-top: 10px;
-  font-size: 14px;
+.profile-hero h2 {
+  font-size: 26px;
+  margin: 0 0 8px;
 }
-
-.profile-body {
+.profile-hero h2 span {
+  font-size: 11px;
+  color: #e3d5c3;
+  font-weight: 400;
+  margin-left: 12px;
+}
+.profile-hero p {
+  font-size: 13px;
+  color: #f0e6d9;
+}
+.profile-card-link {
+  margin-left: auto;
+  color: #fff3df;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.profile-groups {
   display: flex;
-  gap: 20px;
-  
-  .left-panel {
-    width: 300px;
-    flex-shrink: 0;
-  }
-  
-  .right-panel {
-    flex: 1;
-  }
+  gap: 6px;
 }
-
-.card {
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  padding: 20px;
-  
-  .card-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 15px;
-    color: #333;
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 10px;
-  }
+.profile-groups span {
+  font-size: 11px;
+  background: #ffffff26;
+  padding: 3px 7px;
+  border-radius: 4px;
 }
-
-.action-items {
+.membership-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 26px;
+  background: linear-gradient(110deg, #33241b, #704b2e);
+  border: 1px solid #ae8a52;
+  color: #f1cf94;
+  border-radius: 15px;
+  margin: 18px 0;
+}
+.membership-banner.super {
+  background: linear-gradient(110deg, #122734, #254d61);
+}
+.membership-banner img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.membership-banner strong {
+  font-size: 18px;
+}
+.membership-banner p {
+  font-size: 12px;
+  opacity: 0.75;
+  margin: 8px 0 0;
+}
+.membership-banner > span {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.personal-quick {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
 }
-
-.action-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  padding: 10px;
-  border-radius: 8px;
-  
-  &:hover {
-    background: #f9f9f9;
-  }
-  
-  .action-icon {
-    width: 48px;
-    height: 48px;
-    background: #f0f0f0;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 8px;
-    font-size: 24px;
-    color: #947358;
-    
-    &.warning {
-      color: #ff5500;
-      animation: pulse 1.5s infinite;
-    }
-    
-    &.new-message {
-      position: relative;
-      
-      &:after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 10px;
-        height: 10px;
-        background: #ff5500;
-        border-radius: 50%;
-      }
-    }
-  }
-  
-  .action-text {
-    font-size: 14px;
-    
-    &.warning {
-      color: #ff5500;
-      font-weight: bold;
-    }
-  }
-}
-
-.tree-status {
+.personal-quick a {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
-  font-size: 16px;
-  
-  i {
-    margin-right: 10px;
-    font-size: 20px;
-    color: #947358;
-  }
-  
-  &.warning {
-    color: #ff5500;
-    
-    i {
-      color: #ff5500;
-      animation: pulse 1.5s infinite;
-    }
-  }
-}
-
-.balance-amount {
-  font-size: 24px;
-  font-weight: bold;
-  color: #947358;
-  margin-bottom: 15px;
-}
-
-.function-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-}
-
-.function-item {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  
-  &:hover {
-    background: #f9f9f9;
-  }
-  
-  i {
-    font-size: 20px;
-    color: #947358;
-    margin-right: 10px;
-  }
-  
-  span {
-    font-size: 14px;
-  }
-}
-
-.empty-works, .empty-bookcase {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 30px 0;
-  color: #999;
-  
-  i {
-    font-size: 48px;
-    margin-bottom: 15px;
-  }
-  
-  p {
-    margin-bottom: 15px;
-  }
-}
-
-.works-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  margin-top: 15px;
-}
-
-.bookcase-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 16px;
-  margin-top: 15px;
+  color: var(--ink, #382d25);
 }
-
-.bookcase-item {
+.personal-quick a > i:first-child {
+  font-size: 25px;
+  color: var(--wood, #947358);
+}
+.personal-quick p {
+  font-size: 12px;
+  color: var(--muted, #82766c);
+  margin: 7px 0 0;
+}
+.personal-quick a > i:last-child {
+  margin-left: auto;
+  color: #baac9b;
+}
+.personal-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+}
+.personal-services a,
+.personal-services button {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 0;
+  color: var(--ink, #382d25);
+  border-bottom: 1px solid #eee6dc;
+}
+.personal-services a:last-child {
+  border: 0;
+}
+.personal-services a > i:first-child {
+  font-size: 20px;
+  color: var(--wood, #947358);
+}
+.personal-services p {
+  font-size: 12px;
+  color: var(--muted, #82766c);
+  margin: 6px 0 0;
+}
+.personal-services a > i:last-child {
+  margin-left: auto;
+  color: #baa891;
+}
+.personal-services span {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--wood, #947358);
+}
+.personal-services button {
+  background: none;
+  border: 0;
   cursor: pointer;
-
-  .bookcase-cover {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-    border-radius: 6px;
-    background-color: #f5f5f5;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .bookcase-info {
-    padding-top: 8px;
-
-    .bookcase-title {
-      font-size: 14px;
-      color: #333;
-      margin: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .bookcase-author {
-      font-size: 12px;
-      color: #999;
-      margin: 4px 0 0 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
+  width: 100%;
+  font: inherit;
 }
-
-.work-item {
-  background: #fff;
-  border-radius: 8px;
+.personal-services strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.personal-tree {
+  background: linear-gradient(130deg, #f1f2dc, #e0e8ca);
+}
+.personal-tree > span {
+  font-size: 12px;
+  color: #778453;
+}
+.personal-tree h2 {
+  margin: 14px 0;
+}
+.earnings {
+  font-size: 30px;
+  color: var(--wood, #947358);
+  margin: 18px 0;
+}
+.earnings small {
+  font-size: 13px;
+}
+.social-toolbar h2 {
+  margin: 0;
+}
+.social-toolbar a,
+.personal-columns a {
+  font-size: 13px;
+}
+.account-security {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.account-security > i {
+  font-size: 24px;
+  color: #cc8e3c;
+}
+.account-security p {
+  font-size: 12px;
+  color: var(--muted, #82766c);
+  margin: 5px 0;
+}
+.account-security > a {
+  margin-left: auto;
+}
+.row-main p {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+@media (max-width: 1100px) {
+  .personal-columns {
+    grid-template-columns: 1fr;
   }
-  
-  .work-cover {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    background-color: #f5f5f5;
+  .profile-hero-main {
+    flex-wrap: wrap;
   }
-  
-  .work-info {
-    padding: 15px;
-    
-    .work-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
-      margin: 0 0 8px 0;
-      line-height: 1.4;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    
-    .work-desc {
-      font-size: 14px;
-      color: #666;
-      margin: 0;
-      line-height: 1.4;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-    }
+  .profile-card-link {
+    margin-left: 108px;
   }
 }
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
+@media (max-width: 650px) {
+  .personal-quick {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
-  50% {
-    transform: scale(1.1);
+  .membership-banner {
+    padding: 18px;
+    flex-wrap: wrap;
   }
-  100% {
-    transform: scale(1);
+  .membership-banner strong {
+    font-size: 15px;
+  }
+  .profile-hero-main {
+    padding: 26px 20px;
+    gap: 14px;
+  }
+  .profile-card-link {
+    margin-left: 0;
+  }
+  .profile-hero h2 {
+    font-size: 22px;
   }
 }
 </style>

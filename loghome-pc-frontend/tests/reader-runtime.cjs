@@ -63,6 +63,9 @@ async function main() {
   storage.set(prefs.THEME_MEMORY_KEY,JSON.stringify({dark:{theme:'white'},light:{theme:'__proto__'},unknown:{theme:'yellow'}}))
   assert.equal(prefs.readReaderTheme(localStorage,'dark').theme,'black');assert.equal(prefs.readReaderTheme(localStorage,'light').theme,'white')
   assert.equal(prefs.rememberReaderTheme({getItem(){throw Error('denied')}},{theme:'yellow'}),false)
+  const followingStore=new Map(),followingStorage={getItem:key=>followingStore.get(key)||null,setItem:(key,value)=>followingStore.set(key,value)};assert.equal(prefs.readerFollowsSiteTheme(followingStorage),true);followingStore.set(prefs.PREFERENCE_KEY,'{}');assert.equal(prefs.readerFollowsSiteTheme(followingStorage),false);prefs.saveReaderThemeFollowing(followingStorage,true);assert.equal(prefs.readerFollowsSiteTheme(followingStorage),true);assert.equal(prefs.saveReaderThemeFollowing({setItem(){throw Error('denied')}},true),false);
+  const inherited=preferenceInstance({fonts:async()=>[],backgrounds:async()=>[],membership:async()=>null});inherited.$theme={resolved:'dark'};inherited.readerUsesSiteTheme=true;inherited.applySiteReaderTheme();assert.equal(inherited.readerPreferences.theme,'black');inherited.changeReaderPreferences({...inherited.readerPreferences,fontSize:26});assert.equal(inherited.readerUsesSiteTheme,true);inherited.$theme.resolved='light';inherited.applySiteReaderTheme();assert.equal(inherited.readerPreferences.theme,'white');inherited.selectReaderTheme('yellow');assert.equal(inherited.readerUsesSiteTheme,false);inherited.$theme.resolved='dark';inherited.applySiteReaderTheme();assert.equal(inherited.readerPreferences.theme,'yellow');
+  console.log('PASS global theme follows unsaved defaults and font changes, preserves chosen paper palette and handles denied storage')
   console.log('PASS independent day/night theme memory, invalid/corrupt records, reduced stored selection and denied storage')
 
   storage.delete(prefs.THEME_MEMORY_KEY)

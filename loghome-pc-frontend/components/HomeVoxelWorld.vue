@@ -1,11 +1,12 @@
 <template>
-  <div class="voxel-world" role="img" aria-label="史蒂夫阅读、艾利克斯写作，两人在方块森林中交流的循环动画">
+  <div class="voxel-world" role="img" :aria-label="description">
     <div ref="stage" class="world-canvas" @pointermove="movePointer" @pointerleave="resetPointer"></div>
   </div>
 </template>
 
 <script>
 export default {
+  props: { description: { type: String, required: true } },
   mounted() {
     this.destroyed = false
     this.frame = null

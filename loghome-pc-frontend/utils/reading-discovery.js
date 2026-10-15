@@ -1,3 +1,4 @@
+import {socialMessageTarget} from "./social-links"
 export const READING_BOARDS = [
   { key: 'update', label: '更新榜', description: '近 7 天更新的作品，按更新时间排序' },
   { key: 'logpower', label: '原木力榜', description: '根据阅读与互动贡献计算的原木力排行' },
@@ -85,6 +86,8 @@ export function discoveryLink(raw, mobileBase = 'https://m.loghome.ink') {
     const suffix = params.toString()
     return { href: target + (suffix ? (target.includes('?') ? '&' : '?') + suffix : ''), external: false }
   }
+  const social=path.startsWith('/pages/')?socialMessageTarget(value):null
+  if(social&&!social.mobile)return {href:social.path,external:false}
   if (path.startsWith('/pages/')) return { href: `${mobileBase.replace(/\/$/, '')}/#${value}`, external: true }
   return { href: value, external: false }
 }

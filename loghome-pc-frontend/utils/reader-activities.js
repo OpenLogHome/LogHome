@@ -1,3 +1,4 @@
+import {socialMessageTarget} from "./social-links"
 import { discoveryLink } from './reading-discovery'
 import { readingMessageTarget } from './reader-comment-links'
 import { SITE_ORIGIN } from './reading-seo'
@@ -37,6 +38,9 @@ export function activityMessageLink(router, mobileBase = 'https://m.loghome.ink'
   if (reading) return { href:reading.path, external:false }
   const post = route.match(/^community\/postDetail\?id=([1-9]\d*)(?:&|$)/)
   if (post) return { href:`/community/post/${Number(post[1])}`, external:false }
+  if(route==='community/activityMessages')return {href:'/read/activities',external:false}
+  const social=socialMessageTarget(route)
+  if(social&&!social.mobile)return {href:social.path,external:false}
   return safeLink(`/pages/${route}`, mobileBase)
 }
 export function activityMessagePage(result, page, amount = 20, mobileBase = 'https://m.loghome.ink') {

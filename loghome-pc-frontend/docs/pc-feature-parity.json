@@ -1,0 +1,210 @@
+{
+  "date": "2026-10-14",
+  "goal_complete": true,
+  "scope": "社区、个人中心与相关个人服务按移动端功能迁移到PC；采用桌面布局并保留原木社区视觉。平台管理明确排除。",
+  "design_reference": "https://github.com/leonxlnx/taste-skill",
+  "copy_requirement": "去掉重复品牌、装饰英文标题、口号和复述页面作用的文案；保留操作条件、限制、权限和错误。",
+  "source_pairs": [
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/index.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/index.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/search.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/search.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/circles.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/circles.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/circle.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/circle/_id.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/createCircle.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/circle/create.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/editCircle.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/circle/settings/_id.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/circleMembers.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/circle/members/_id.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/postDetail.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/post/_id.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/postEdit.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/post/edit.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/message.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/messages.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/chat.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/chat.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/send_mail.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/mail/new.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/read_mail.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/mail/_id.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/community/friends.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/friends.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/me.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/index.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/users/clientSet.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/settings.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/users/activateAccount.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/security.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/settings/pushSettings.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/notifications.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/users/storageManage.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/storage.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/users/achievements.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/achievements.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/users/avatar_frames.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/frames.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/users/user_credit.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/credit.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/apps/inviteCard.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/invite.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/apps/faqs/faq.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/help.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/treePlant/treeplant.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/tree.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/payments/recharge.vue",
+      "desktop_source": "loghome-pc-frontend/pages/me/wallet.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/membership/index.vue",
+      "desktop_source": "loghome-pc-frontend/pages/membership/index.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/membership/gift.vue",
+      "desktop_source": "loghome-pc-frontend/pages/membership/gift.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/membership/redeem.vue",
+      "desktop_source": "loghome-pc-frontend/pages/membership/redeem.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/membership/rules.vue",
+      "desktop_source": "loghome-pc-frontend/pages/membership/rules.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/store/index.vue",
+      "desktop_source": "loghome-pc-frontend/pages/store/index.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/store/detail.vue",
+      "desktop_source": "loghome-pc-frontend/pages/store/_id.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/store/address_list.vue",
+      "desktop_source": "loghome-pc-frontend/pages/store/addresses.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/store/orders.vue",
+      "desktop_source": "loghome-pc-frontend/pages/store/orders.vue"
+    },
+    {
+      "mobile_source": "loghome-app-frontend/pages/apps/miniapp.vue",
+      "desktop_source": "loghome-pc-frontend/pages/community/miniapp/_id.vue"
+    }
+  ],
+  "verification": {
+    "tests": [
+      "social-runtime",
+      "reader-activities",
+      "reader-rewards",
+      "reader-stickers",
+      "reading-discovery",
+      "reader-runtime",
+      "reader-redstone",
+      "home-landing",
+      "site-theme",
+      "language-runtime"
+    ],
+    "social": "45个Vue模板与脚本；实际Vue方法和API适配器的假传输回归。",
+    "browser": [
+      "公开社区动态桌面与390px无横向溢出",
+      "隔离数据个人中心、浅色/深色、会员、树场3D",
+      "隔离数据规格参数结算与地址参数编辑",
+      "隔离数据勋章与消息分类",
+      "中文/英文/跟随系统设置与刷新保持，昵称及签名保持原文；新页无Element UI错误。",
+      "圈主可管理管理员和成员，管理员仅管理成员，普通成员没有管理入口；禁言分钟单位表单。",
+      "离开发帖页确认、取消后标题仍保留；VM验证资料草稿在头像刷新后不被覆盖。",
+      "全局夜间状态跨首页、阅读、创作、个人中心保持；修复亮色残留、主按钮对比度与阅读导航遮挡。",
+      "夜间设置页刷新后data-theme=dark、切换图标sunny，表单、面板和下拉菜单同色板；新页无运行错误。"
+    ],
+    "screenshot": "output/pc-social-qa/community-clean.jpg",
+    "live_business_mutations": false,
+    "build": "Nuxt生产构建通过；保留现有Element UI/Babel体积提示。",
+    "screenshots": [
+      "output/pc-social-qa/community-clean.jpg",
+      "output/pc-social-qa/language-settings-en.png",
+      "output/pc-social-qa/personal-center-night.png"
+    ],
+    "limitations": "回归执行实际Vue方法和API适配器，浏览器使用隔离数据；没有执行真实支付、赠送、账号安全修改或平台管理操作。"
+  },
+  "remaining_audit": [],
+  "plan": [
+    {
+      "id": "language",
+      "task": "移动端语言偏好及相关英文界面迁移",
+      "state": "complete"
+    },
+    {
+      "id": "interaction-qa",
+      "task": "角色、操作链路、功能定义与核心视觉逐项验收",
+      "state": "complete"
+    },
+    {
+      "id": "global-theme-adaptation",
+      "task": "全站夜间模式样式适配与视觉验收",
+      "state": "complete",
+      "order": "last",
+      "note": "按用户要求最后执行。覆盖全局导航、主页/阅读/创作/社区/个人服务色板及Element UI浮层；默认阅读底色跟随全局，主动选择的阅读配色保留。修复SSR刷新后的控件图标和社区data-theme属性不同步。"
+    }
+  ],
+  "exclusions": [
+    {
+      "area": "平台管理",
+      "reason": "用户明确要求不接入PC前台，由专门的管理项目承载。"
+    }
+  ]
+}

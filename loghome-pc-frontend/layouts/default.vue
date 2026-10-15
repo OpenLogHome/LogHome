@@ -1,24 +1,24 @@
 <template>
-  <div class="outer" :class="{ 'home-layout': $route.path === '/', 'reading-layout': isReadingRoute }">
-    <a v-if="isReadingRoute" class="reading-skip-link" href="#reading-main">跳到阅读内容</a>
+  <div class="outer" :class="{ 'home-layout': $route.path === '/' || $route.path === '/about/open-source', 'reading-layout': isReadingRoute, 'social-layout': isSocialRoute }">
+    <a v-if="$route.path === '/'" class="home-skip-link" href="#home-main">{{ $t(copy.accessibility.skipHome) }}</a>
+    <a v-if="isReadingRoute" class="reading-skip-link" href="#reading-main">{{ $t(copy.accessibility.skipReading) }}</a>
+    <MobileDownloadButton />
     <nav class="navbar">
       <div class="navbar-container">
         <div class="navbar-left">
           <nuxt-link to="/" class="logo">
-            <img src="~/static/logo_new.png" alt="原木社区" class="logo-img">
-            <!-- <img src="~/static/logo_text.png" alt="原木社区" class="logo-text"> -->
-            <!-- <span class="logo-text">原木社区</span> -->
+            <img src="~/static/logo_new.png" :alt="$t(copy.brand)" class="logo-img">
           </nuxt-link>
         </div>
         <div class="navbar-center">
-          <nuxt-link to="/read" class="nav-link" :class="{ 'nav-link-active': isReadingRoute }" exact-active-class="nav-link-active">阅读</nuxt-link>
-          <nuxt-link to="/write" class="nav-link" exact-active-class="nav-link-active">写作</nuxt-link>
-          <nuxt-link to="/community" class="nav-link" exact-active-class="nav-link-active">社区</nuxt-link>
+          <nuxt-link to="/read" class="nav-link" :class="{ 'nav-link-active': isReadingRoute }" exact-active-class="nav-link-active">{{ $t(copy.nav.read) }}</nuxt-link>
+          <nuxt-link to="/write" class="nav-link" :class="{ 'nav-link-active': isWritingRoute }" exact-active-class="nav-link-active">{{ $t(copy.nav.write) }}</nuxt-link>
+          <nuxt-link to="/community" class="nav-link" :class="{ 'nav-link-active': $route.path.startsWith('/community') }" exact-active-class="nav-link-active">{{ $t(copy.nav.community) }}</nuxt-link>
         </div>
         <div class="navbar-right">
           <div class="search-box" :class="{ 'active': isSearchFocused }">
             <i class="el-icon-search search-icon"></i>
-            <input type="text" placeholder="全站搜索..." class="search-input" v-model="searchKeyword" @input="onSearchInput"
+            <input type="text" :placeholder="$t(copy.search.placeholder)" class="search-input" v-model="searchKeyword" @input="onSearchInput"
               @focus="onSearchFocus" @blur="onSearchBlur" @keyup.enter="handleSearch" ref="searchInput">
             <i v-if="searchKeyword" class="el-icon-close search-clear" @click="clearKeyword"></i>
           </div>
@@ -28,7 +28,7 @@
             <!-- 搜索历史 -->
             <div class="search-section" v-if="searchHistory.length > 0 && !searchKeyword">
               <div class="section-header">
-                <span class="section-title">搜索历史</span>
+                <span class="section-title">{{ $t(copy.search.history) }}</span>
                 <button class="clear-btn" @click="clearSearchHistory">
                   <i class="el-icon-delete"></i>
                 </button>
@@ -45,7 +45,7 @@
             <!-- 热门搜索 -->
             <div class="search-section" v-if="hotSearches.length > 0 && !searchKeyword">
               <div class="section-header">
-                <span class="section-title">热门搜索</span>
+                <span class="section-title">{{ $t(copy.search.hot) }}</span>
               </div>
               <div class="hot-list">
                 <span class="hot-item" v-for="(item, index) in hotSearches" :key="'hot-' + index"
@@ -61,8 +61,8 @@
               <!-- 书籍结果 -->
               <div class="result-section" v-if="searchResults.books.length > 0">
                 <div class="section-header">
-                  <span class="section-title">书籍</span>
-                  <span class="view-all" @click="viewAllResults('books')">查看全部</span>
+                  <span class="section-title">{{ $t(copy.search.books) }}</span>
+                  <span class="view-all" @click="viewAllResults('books')">{{ $t(copy.search.viewAll) }}</span>
                 </div>
                 <div class="book-results">
                   <div class="book-item" v-for="(book, index) in searchResults.books.slice(0, 3)" :key="'book-' + index"
@@ -79,8 +79,8 @@
               <!-- 帖子结果 -->
               <div class="result-section" v-if="searchResults.posts.length > 0">
                 <div class="section-header">
-                  <span class="section-title">帖子</span>
-                  <span class="view-all" @click="viewAllResults('posts')">查看全部</span>
+                  <span class="section-title">{{ $t(copy.search.posts) }}</span>
+                  <span class="view-all" @click="viewAllResults('posts')">{{ $t(copy.search.viewAll) }}</span>
                 </div>
                 <div class="post-results">
                   <div class="post-item" v-for="(post, index) in searchResults.posts.slice(0, 3)" :key="'post-' + index"
@@ -97,8 +97,8 @@
               <!-- 圈子结果 -->
               <div class="result-section" v-if="searchResults.circles.length > 0">
                 <div class="section-header">
-                  <span class="section-title">圈子</span>
-                  <span class="view-all" @click="viewAllResults('circles')">查看全部</span>
+                  <span class="section-title">{{ $t(copy.search.circles) }}</span>
+                  <span class="view-all" @click="viewAllResults('circles')">{{ $t(copy.search.viewAll) }}</span>
                 </div>
                 <div class="circle-results">
                   <div class="circle-item" v-for="(circle, index) in searchResults.circles.slice(0, 3)"
@@ -106,7 +106,7 @@
                     <img class="circle-icon" :src="circle.icon || '/default-avatar.png'" :alt="circle.name">
                     <div class="circle-info">
                       <div class="circle-name">{{ circle.name }}</div>
-                      <div class="circle-meta">{{ circle.member_count || 0 }}人</div>
+                      <div class="circle-meta">{{ $t(copy.search.memberCount, { count: circle.member_count || 0 }) }}</div>
                     </div>
                   </div>
                 </div>
@@ -115,16 +115,16 @@
               <!-- 用户结果 -->
               <div class="result-section" v-if="searchResults.users.length > 0">
                 <div class="section-header">
-                  <span class="section-title">用户</span>
-                  <span class="view-all" @click="viewAllResults('users')">查看全部</span>
+                  <span class="section-title">{{ $t(copy.search.users) }}</span>
+                  <span class="view-all" @click="viewAllResults('users')">{{ $t(copy.search.viewAll) }}</span>
                 </div>
                 <div class="user-results">
                   <div class="user-item" v-for="(user, index) in searchResults.users.slice(0, 3)" :key="'user-' + index"
                     @click="navigateToUser(user.user_id)">
                     <img class="user-avatar" :src="user.avatar_url || '/default-avatar.png'" :alt="user.name">
                     <div class="user-info">
-                      <div class="user-name">{{ user.name || '匿名用户' }}</div>
-                      <div class="user-motto">{{ user.motto || '这个人很懒，还没有设置个性签名' }}</div>
+                      <div class="user-name">{{ user.name || copy.account.anonymous }}</div>
+                      <div class="user-motto">{{ user.motto || copy.account.mottoFallback }}</div>
                     </div>
                   </div>
                 </div>
@@ -137,17 +137,19 @@
                 <i class="el-icon-search"></i>
               </div>
               <div class="no-results-text">
-                没有找到相关内容
+                {{ $t(copy.search.empty) }}
               </div>
               <div class="search-all-btn" @click="searchInPage">
-                在搜索页面中查看
+                {{ $t(copy.search.allResults) }}
               </div>
             </div>
           </div>
 
+          <GlobalThemeSwitch />
+
           <!-- 未登录状态 -->
           <div class="user-actions" v-if="!isLogin">
-            <nuxt-link to="/login" class="user-link">登录</nuxt-link>
+            <nuxt-link to="/login" class="user-link">{{ $t(copy.account.login) }}</nuxt-link>
           </div>
 
           <!-- 已登录状态 -->
@@ -156,32 +158,32 @@
               <div class="user-profile">
                 <img :src="userInfo && userInfo.avatar_url ? userInfo.avatar_url : '/default-avatar.png'"
                   class="user-avatar">
-                <span class="user-nickname">{{ userInfo ? userInfo.name || '用户' : '用户' }}</span>
+                <span class="user-nickname">{{ userInfo ? userInfo.name || copy.account.nameFallback : copy.account.nameFallback }}</span>
                 <i class="el-icon-arrow-down"></i>
               </div>
               <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                <el-dropdown-item command="myworks">创作中心</el-dropdown-item>
-                <el-dropdown-item command="bookcase">我的书架</el-dropdown-item>
-                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+                <el-dropdown-item command="profile">{{ $t(copy.account.profile) }}</el-dropdown-item>
+                <el-dropdown-item command="myworks">{{ $t(copy.account.works) }}</el-dropdown-item>
+                <el-dropdown-item command="bookcase">{{ $t(copy.account.bookcase) }}</el-dropdown-item>
+                <el-dropdown-item divided command="logout">{{ $t(copy.account.logout) }}</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
           </div>
         </div>
       </div>
     </nav>
-    <main class="main-content" :id="isReadingRoute ? 'reading-main' : undefined" :tabindex="isReadingRoute ? -1 : undefined">
+    <main class="main-content" :id="isReadingRoute ? 'reading-main' : $route.path === '/' ? 'home-main' : undefined" :tabindex="isReadingRoute || $route.path === '/' ? -1 : undefined">
       <nuxt />
     </main>
     <footer class="site-footer">
       <div class="footer-container">
         <p style="display: flex; justify-content: center; margin-bottom: 5px;">
-          <a href="https://beian.miit.gov.cn/" target="_blank" style="color:var(--site-footer-link, #FFEFD6); margin-right: 30px;">苏ICP备2021006745号</a><br>
-          <a href="https://beian.mps.gov.cn/" target="_blank" style="color:var(--site-footer-link, #FFEFD6); margin-right: 30px;">皖公安网备34010402703554号</a><br>
-          <a href="OpenSourcePlan.html" style="color:var(--site-footer-link, #FFEFD6)">原木社区开源计划</a>
+          <a href="https://beian.miit.gov.cn/" target="_blank" style="color:var(--site-footer-link, #FFEFD6); margin-right: 30px;">{{ copy.footer.icp }}</a><br>
+          <a href="https://beian.mps.gov.cn/" target="_blank" style="color:var(--site-footer-link, #FFEFD6); margin-right: 30px;">{{ copy.footer.publicSecurity }}</a><br>
+          <nuxt-link to="/about/open-source" style="color:var(--site-footer-link, #FFEFD6)">{{ $t(copy.footer.openSource) }}</nuxt-link>
         </p>
-        <p style="margin-bottom: 5px;">非 Minecraft 官方产品。未获 Mojang 许可，亦与 Mojang 无任何关联。</p>
-        <p>© {{(new Date()).getFullYear()}} 原木社区 版权所有</p>
+        <p style="margin-bottom: 5px;">{{ $t(copy.footer.disclaimer) }}</p>
+        <p>{{ $t(copy.footer.copyright, { year: new Date().getFullYear() }) }}</p>
       </div>
     </footer>
 
@@ -192,17 +194,23 @@
 </template>
 
 <script>
+import copy from '~/config/site-copy.json'
+import { formatCopy } from '~/utils/format-copy'
 import { workUrl } from '~/utils/reading-discovery'
+import MobileDownloadButton from '~/components/MobileDownloadButton.vue'
+import GlobalThemeSwitch from '~/components/GlobalThemeSwitch.vue'
 import WindowManager from '~/components/WindowManager.vue'
 import ReaderAudioPlayer from '~/components/read/ReaderAudioPlayer.vue'
 
 export default {
   name: 'default',
   components: {
-    WindowManager, ReaderAudioPlayer
+    GlobalThemeSwitch,
+    WindowManager, ReaderAudioPlayer, MobileDownloadButton
   },
   data() {
     return {
+      copy,
       isLogin: false,
       userInfo: null,
       checkTimer: null,
@@ -223,8 +231,14 @@ export default {
     }
   },
   computed: {
+    isSocialRoute() {
+      return /^\/(community|me|membership|store)(\/|$)/.test(this.$route.path)
+    },
     isReadingRoute() {
       return /^\/(read|novel|article|manga|world|tags|tag)(\/|$)/.test(this.$route.path)
+    },
+    isWritingRoute() {
+      return /^\/write(\/|$)/.test(this.$route.path)
     },
     noResults() {
       if (!this.searchKeyword) return false
@@ -265,6 +279,7 @@ export default {
     }
   },
   methods: {
+    formatCopy,
     // 从localStorage中检查登录状态
     checkLoginStatus() {
       try {
@@ -336,7 +351,7 @@ export default {
       localStorage.removeItem('LogHomeUserInfo');
       this.isLogin = false;
       this.userInfo = null;
-      this.$message.success('已退出登录');
+      this.$message.success(this.copy.account.logoutSuccess);
       this.$router.push('/');
     },
 
@@ -504,13 +519,7 @@ export default {
       } catch (error) {
         console.error('获取热门搜索失败:', error)
         // 设置默认热门搜索
-        this.hotSearches = [
-          { keyword: '修仙' },
-          { keyword: '都市' },
-          { keyword: '玄幻' },
-          { keyword: '言情' },
-          { keyword: '历史' }
-        ]
+        this.hotSearches = this.copy.search.fallbackKeywords.map(keyword => ({ keyword }))
       }
     },
 
@@ -521,13 +530,13 @@ export default {
       const diff = now - date
 
       if (diff < 60000) {
-        return '刚刚'
+        return this.copy.time.justNow
       } else if (diff < 3600000) {
-        return Math.floor(diff / 60000) + '分钟前'
+        return formatCopy(this.copy.time.minutesAgo, { count: Math.floor(diff / 60000) })
       } else if (diff < 86400000) {
-        return Math.floor(diff / 3600000) + '小时前'
+        return formatCopy(this.copy.time.hoursAgo, { count: Math.floor(diff / 3600000) })
       } else {
-        return Math.floor(diff / 86400000) + '天前'
+        return formatCopy(this.copy.time.daysAgo, { count: Math.floor(diff / 86400000) })
       }
     },
 
@@ -579,9 +588,16 @@ export default {
 <style scoped>
 /* 全局样式已移至 assets/css/global.css */
 
+.outer {
+  --site-header-height: 60px;
+}
+
 .navbar {
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--site-surface, #fffdf9);
+  color: var(--site-ink, #382d25);
+  box-shadow: 0 1px 0 var(--site-line, #e9e0d5);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  word-spacing: normal;
   position: fixed;
   top: 0;
   left: 0;
@@ -590,13 +606,13 @@ export default {
 }
 
 .navbar-container {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
+  gap: 32px;
   align-items: center;
-  padding: 0 20px;
-  height: 60px;
+  padding: 0 172px 0 28px;
+  height: var(--site-header-height);
 }
 
 .navbar-left,
@@ -606,16 +622,30 @@ export default {
   align-items: center;
 }
 
+.navbar-left,
+.navbar-center {
+  flex: none;
+}
+.navbar-center {
+  gap: 28px;
+}
+.navbar-right {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .logo {
   display: flex;
   align-items: center;
   text-decoration: none;
-  transition: transform 0.3s;
 }
 
 .logo-img {
-  height: 40px;
-  margin-right: 6px;
+  height: 36px;
+  display: block;
 }
 
 .logo-text {
@@ -629,27 +659,28 @@ export default {
   color: #947358;
 }
 
-.logo:hover {
-  transform: scale(1.05);
-}
-
 .nav-link {
-  margin: 0 15px;
-  font-size: 16px;
-  color: #333;
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  margin: 0;
+  font-size: 15px;
+  color: var(--site-muted, #776a5d);
   text-decoration: none;
   transition: color 0.3s;
   position: relative;
-  padding: 10px 0;
+  padding: 0;
+  white-space: nowrap;
+  line-height: 22px;
 }
 
 .nav-link:hover {
-  color: #947358;
+  color: var(--site-accent, #79573d);
   text-decoration: none;
 }
 
 .nav-link-active {
-  color: #947358;
+  color: var(--site-accent, #79573d);
   font-weight: 600;
 }
 
@@ -659,8 +690,13 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background-color: #947358;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--site-accent, #79573d);
+}
+.navbar :is(a, button):focus-visible {
+  outline: 2px solid var(--site-accent, #79573d);
+  outline-offset: 3px;
 }
 
 /* 搜索框样式 */
@@ -668,38 +704,45 @@ export default {
   position: relative;
   display: flex;
   align-items: center;
-  background: #f5f5f5;
-  border-radius: 25px;
-  padding: 0 20px;
-  transition: all 0.3s;
-  max-width: 800px;
-  margin-right: 20px;
+  flex: 1;
+  min-width: 100px;
+  max-width: 280px;
+  height: 40px;
+  background: var(--site-raised, #f2eee7);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 0 14px;
+  transition: border-color 0.2s, background-color 0.2s;
 }
 
 .search-box.active {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #947358;
+  background: var(--site-surface, #fffdf9);
+  border-color: var(--site-accent, #79573d);
 }
 
 .search-icon {
-  color: #999;
-  font-size: 18px;
-  margin-right: 10px;
+  color: var(--site-muted, #776a5d);
+  font-size: 16px;
+  margin-right: 8px;
+  flex: none;
 }
 
 .search-input {
   flex: 1;
+  min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
   outline: none;
-  padding: 12px 0;
-  font-size: 16px;
-  color: #0a0a0a;
+  padding: 0;
+  height: 100%;
+  font: inherit;
+  font-size: 14px;
+  color: var(--site-ink, #382d25);
 }
 
 .search-input::placeholder {
-  color: #999;
+  color: var(--site-muted, #776a5d);
 }
 
 .search-clear {
@@ -1052,16 +1095,18 @@ export default {
 .user-actions {
   display: flex;
   align-items: center;
+  flex: none;
+  font-size: 14px;
 }
 
 .user-link {
-  color: #333;
+  color: var(--site-ink, #382d25);
   text-decoration: none;
   transition: color 0.3s;
 }
 
 .user-link:hover {
-  color: #947358;
+  color: var(--site-accent, #79573d);
   text-decoration: none;
 }
 
@@ -1069,13 +1114,15 @@ export default {
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  height: 40px;
+  color: var(--site-muted, #776a5d);
   transition: background-color 0.3s;
 }
 
 .user-profile:hover {
-  background-color: #f5f5f5;
+  background: var(--site-raised, #f2eee7);
 }
 
 .user-avatar {
@@ -1086,10 +1133,16 @@ export default {
   margin-right: 8px;
 }
 
+.navbar-right > .global-theme-switch { margin: 0; }
+
 .user-nickname {
   font-size: 14px;
-  color: #333;
+  color: var(--site-ink, #382d25);
   margin-right: 5px;
+  max-width: 96px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .divider {
@@ -1097,8 +1150,10 @@ export default {
   color: #ddd;
 }
 
+.social-layout{display:flow-root;min-height:100dvh;background:var(--site-bg, #f5f5f5)}.social-layout .main-content { max-width: 1440px; padding: 0; }
+
 .main-content {
-  margin-top: 80px;
+  margin-top: calc(var(--site-header-height) + 20px);
   padding: 20px;
   min-height: calc(100vh - 143px);
   max-width: 1200px;
@@ -1109,8 +1164,13 @@ export default {
 .home-layout {
   display: flow-root;
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #faf8f3;
+  --site-footer-link: #79573c;
 }
+
+.home-layout .site-footer { background: #eeeae1; color: #687060; }
+.home-skip-link { position: fixed; top: 8px; left: 20px; z-index: 1200; padding: 10px 18px; background: #79573c; color: #fffdf7; border-radius: 6px; transform: translateY(-160%); }
+.home-skip-link:focus { transform: translateY(0); }
 
 .home-layout .main-content {
   max-width: 1320px;
@@ -1121,29 +1181,38 @@ export default {
   .home-layout .main-content { padding: 20px 28px; }
 }
 
-@media (max-width: 720px) {
-  .home-layout .main-content { padding: 16px 20px; margin-top: 114px; }
-  .home-layout .navbar-container { height: auto; padding: 10px 20px; flex-wrap: wrap; gap: 8px; }
-  .home-layout .logo-img { height: 27px; }
-  .home-layout .navbar-center { margin-left: auto; }
-  .home-layout .nav-link { margin: 0 8px; font-size: 13px; white-space: nowrap; padding: 5px 0; }
-  .home-layout .navbar-right { width: 100%; }
-  .home-layout .search-box { flex: 1; min-width: 0; padding: 0 14px; margin-right: 16px; }
-  .home-layout .search-input { width: 100%; min-width: 0; font-size: 13px; padding: 10px 0; }
-  .home-layout .user-actions { flex-shrink: 0; font-size: 13px; }
+/* One responsive header for reading, writing and community. */
+@media (max-width: 1100px) {
+  .outer { --site-header-height: 112px; }
+  .navbar-container {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 42px 40px;
+    gap: 10px 24px;
+    padding: 10px 172px 10px 28px;
+  }
+  .navbar-center { justify-content: flex-end; }
+  .navbar-center .nav-link { height: 40px; }
+  .navbar-right { grid-column: 1 / -1; width: 100%; }
+  .navbar-right .search-box { max-width: none; }
+}
+@media (max-width: 600px) {
+  .outer { --site-header-height: 154px; }
+  .navbar-container {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 42px 32px 40px;
+    gap: 10px;
+    padding: 10px 16px;
+  }
+  .navbar-left { padding-right: 144px; }
+  .logo-img { height: 28px; max-width: 100%; object-fit: contain; }
+  .navbar-center { justify-content: flex-start; gap: 28px; }
+  .navbar-center .nav-link { height: 32px; font-size: 14px; }
+  .navbar-right { gap: 8px; }
+  .user-nickname { max-width: 64px; }
+  .home-layout .main-content { padding: 16px 20px; }
 }
 
-.site-footer {
-  background-color: #947358;
-  color: #fff;
-  padding: 20px 0;
-  text-align: center;
-}
-
-.footer-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
 
 .button--green {
   display: inline-block;
@@ -1182,4 +1251,13 @@ a:hover {
   color: #fff;
   background-color: #704C35;
 }
+/* Page surfaces keep their own theme; navigation uses the global tokens above. */
+@media (prefers-color-scheme: dark) {
+  .social-layout { background: #211e19; color: #eee5d9; }
+  .social-layout .footer { background: #29251f; color: #c4b6a5; }
+}
+html[data-social-theme="light"] .social-layout { background: var(--site-bg, #f5f5f5); color: #382d25; }
+html[data-social-theme="light"] .social-layout .footer { background: #fdfbf7; color: #776a5d; border-color: #e9e0d5; }
+html[data-social-theme="dark"] .social-layout { background: #211e19; color: #eee5d9; }
+html[data-social-theme="dark"] .social-layout .footer { background: #29251f; color: #c4b6a5; border-color: #504536; }
 </style>

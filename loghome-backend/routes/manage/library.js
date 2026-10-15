@@ -205,7 +205,11 @@ router.get('/get_all_novels', auth, async function (req, res) {
 		const page = parseInt(req.query.page) || 1;
 		const pageSize = parseInt(req.query.pageSize) || 10;
 		const offset = (page - 1) * pageSize;
-		const keyword = req.query.keyword ? `%${req.query.keyword}%` : null;
+		const keywordText = String(req.query.keyword || '').trim();
+		const keyword = keywordText ? `%${keywordText}%` : null;
+		const numericKeyword = Number(keywordText);
+		const novelId = /^\d+$/.test(keywordText) && Number.isSafeInteger(numericKeyword) && numericKeyword > 0
+			? numericKeyword : null;
 		const authorName = req.query.authorName ? `%${req.query.authorName}%` : null;
 		
 		let sql = `SELECT n.*, u.name author_name FROM novels n 
@@ -219,10 +223,14 @@ router.get('/get_all_novels', auth, async function (req, res) {
 		
 		// 添加关键词搜索
 		if (keyword) {
-			sql += ` AND (n.name LIKE ? OR n.content LIKE ?)`;
-			countSql += ` AND (n.name LIKE ? OR n.content LIKE ?)`;
-			params.push(keyword, keyword);
-			countParams.push(keyword, keyword);
+			const condition = novelId === null
+				? ` AND (n.name LIKE ? OR n.content LIKE ?)`
+				: ` AND (n.novel_id = ? OR n.name LIKE ? OR n.content LIKE ?)`;
+			const keywordParams = novelId === null ? [keyword, keyword] : [novelId, keyword, keyword];
+			sql += condition;
+			countSql += condition;
+			params.push(...keywordParams);
+			countParams.push(...keywordParams);
 		}
 		
 		// 添加作者搜索
@@ -233,8 +241,13 @@ router.get('/get_all_novels', auth, async function (req, res) {
 			countParams.push(authorName);
 		}
 		
-		// 按创建时间排序
-		sql += ` ORDER BY n.update_time DESC, n.create_time DESC LIMIT ?, ?`;
+		// ID 精确命中优先展示，避免被名称或简介的匹配结果挤出第一页。
+		if (novelId !== null) {
+			sql += ` ORDER BY (n.novel_id = ?) DESC, n.update_time DESC, n.create_time DESC LIMIT ?, ?`;
+			params.push(novelId);
+		} else {
+			sql += ` ORDER BY n.update_time DESC, n.create_time DESC LIMIT ?, ?`;
+		}
 		params.push(offset, pageSize);
 		
 		const novels = await query(sql, params);

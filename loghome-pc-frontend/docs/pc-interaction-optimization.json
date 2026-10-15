@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-14",
+  "scope": "PC 社区、个人中心及相关服务的交互层级、配色、间距优化",
+  "status": "complete",
+  "constraints": {
+    "platform_management": "excluded",
+    "design_reference": "https://github.com/leonxlnx/taste-skill",
+    "copy": "仅保留功能名称、操作条件、限制及反馈",
+    "community_background": "#f5f5f5，使用全站 --site-bg；所有社区路由共用 default 布局"
+  },
+  "changes": [
+    {
+      "area": "交互层级",
+      "items": [
+        "账号设置、个性装扮、通行证、商城及圈子工具使用同级导航",
+        "圈子设置入口按管理员/圈主权限展示",
+        "结算内新增或编辑地址复用同一弹窗，保存后保留商品规格、地址选择和结算状态",
+        "减少重复的发帖、标题及返回入口",
+        "移除共享容器 isolation，修复弹窗被全局遮罩挡住的问题"
+      ]
+    },
+    {
+      "area": "配色",
+      "items": [
+        "统一 Element UI 按钮、选择器、级联、日期、单选、复选、分页、标签页、上传及加载指示的品牌色",
+        "浮层挂载到 body 时也使用全局色板",
+        "私信气泡与输入区使用站点色板",
+        "社区日间页面背景统一全站浅灰"
+      ]
+    },
+    {
+      "area": "间距",
+      "items": [
+        "共享布局 24px 栏间距、24px 顶部留白",
+        "表单字段 20px 间距，常用输入框 40px 高度",
+        "面板、列表及工具条间距统一",
+        "设置页桌面双列分组",
+        "弹窗限制宽度及内容高度，内容可滚动",
+        "私信高度基于视口，桌面首屏可见输入区"
+      ]
+    }
+  ],
+  "verification": {
+    "commands": [
+      "node tests/social-runtime.cjs",
+      "node tests/site-theme.cjs",
+      "node tests/language-runtime.cjs",
+      "WRITER_BUILD_DIR=.nuxt-interaction-check nuxt build",
+      "node tests/reader-runtime.cjs",
+      "node tests/writer-runtime.cjs"
+    ],
+    "browser": [
+      "localhost:3000/community 实际背景 rgb(245,245,245)",
+      "社区动态、发帖、圈子成员、圈子设置、私信共用背景与无横向溢出",
+      "圈子成员与设置直接切换",
+      "成员弹窗取消按钮命中并可点击",
+      "结算同页地址编辑与保存，仅使用内存测试 API；一次可见弹窗，规格和地址保留",
+      "地址级联已选项品牌色 rgb(121,87,61)",
+      "设置页桌面双列和同级导航",
+      "私信日夜配色与首屏输入区，控制台无错误"
+    ],
+    "artifacts": [
+      "output/pc-social-qa/community-gray-background.png",
+      "output/pc-interaction-qa/settings-day.png",
+      "output/pc-interaction-qa/checkout-address.png",
+      "output/pc-interaction-qa/chat-day.png",
+      "output/pc-interaction-qa/chat-night.png"
+    ],
+    "limitations": [
+      "浏览器 viewport override 没有改变实际 1280×720 页面尺寸；窄窗口仅完成响应式样式检查，未声称实测",
+      "未提交真实订单或执行真实账号、圈子操作",
+      "tests/writer-ui.cjs 未运行：项目缺少 playwright 依赖，未因此安装或改变依赖"
+    ]
+  },
+  "plan": [
+    {
+      "task": "减少子页面交互层级",
+      "state": "complete"
+    },
+    {
+      "task": "统一插件及页面配色",
+      "state": "complete"
+    },
+    {
+      "task": "统一间距并验证关键流程",
+      "state": "complete"
+    },
+    {
+      "task": "社区页面浅灰背景统一",
+      "state": "complete"
+    },
+    {
+      "task": "夜间兼容检查",
+      "state": "complete",
+      "order": "last"
+    }
+  ]
+}

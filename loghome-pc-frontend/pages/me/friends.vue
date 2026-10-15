@@ -1,239 +1,296 @@
 <template>
-  <div class="friends-page">
-    <div class="page-header">
-      <nuxt-link :to="backTarget" class="back-link">
-        <span class="back-icon">←</span> {{ isSelf ? '返回个人中心' : '返回用户主页' }}
-      </nuxt-link>
-      <h1 class="page-title">{{ isSelf ? '我的好友' : 'TA的关注关系' }}</h1>
-    </div>
-
-    <div class="friends-card">
-      <el-tabs v-model="activeTab">
-        <el-tab-pane label="好友" name="friends">
-          <div class="tab-body" v-loading="loading">
-            <div class="empty-state" v-if="!loading && friendsList.length === 0">
-              <img src="/nothing.png" alt="暂无内容" class="empty-image">
-              <p>{{ fansError || followsError || (isSelf ? '还没有互相关注的好友，去关注别人吧' : 'TA还没有互相关注的好友') }}</p>
-            </div>
-            <div class="user-grid">
-              <div class="user-card" v-for="item in friendsList" :key="item.user_id">
-                <img
-                  class="avatar"
-                  :src="item.avatar_url || '/default-avatar.png'"
-                  :alt="item.name"
-                  @click="gotoUserProfile(item.user_id)"
-                  @error="$event.target.src = '/default-avatar.png'"
-                >
-                <div class="user-meta">
-                  <span class="name" @click="gotoUserProfile(item.user_id)">{{ item.name }}</span>
-                  <span class="motto">{{ item.motto || '这个人很懒，什么都没留下...' }}</span>
-                </div>
-                <div class="user-actions">
-                  <el-button size="mini" @click="sendPrivateMessage(item.user_id)">私信</el-button>
-                  <el-button v-if="isSelf" size="mini" type="primary" plain :loading="followLoadingId === item.user_id" @click="toggleFollow(item)">已互关</el-button>
-                </div>
+  <Workspace :title="isSelf ? $t('我的好友') : $t('TA的关注关系')" active="/me/friends">
+    <div class="friends-page">
+      <div class="friends-card">
+        <el-tabs v-model="activeTab">
+          <el-tab-pane :label="$t('好友')" name="friends">
+            <div class="tab-body" v-loading="loading">
+              <div class="empty-state" v-if="!loading && friendsList.length === 0">
+                <img src="/nothing.png" :alt="$t('暂无内容')" class="empty-image" />
+                <p>
+                  {{
+                    fansError ||
+                    followsError ||
+                    (isSelf
+                      ? $t("还没有互相关注的好友，去关注别人吧")
+                      : $t("TA还没有互相关注的好友"))
+                  }}
+                </p>
               </div>
-            </div>
-          </div>
-        </el-tab-pane>
-
-        <el-tab-pane :label="fansError ? '粉丝' : `粉丝 (${fansList.length})`" name="fans">
-          <div class="tab-body" v-loading="loading">
-            <div class="empty-state" v-if="!loading && fansList.length === 0">
-              <img src="/nothing.png" alt="暂无内容" class="empty-image">
-              <p>{{ fansError || (isSelf ? '还没有人关注你' : '还没有人关注TA') }}</p>
-            </div>
-            <div class="user-grid">
-              <div class="user-card" v-for="item in fansList" :key="item.user_id">
-                <img
-                  class="avatar"
-                  :src="item.avatar_url || '/default-avatar.png'"
-                  :alt="item.name"
-                  @click="gotoUserProfile(item.user_id)"
-                  @error="$event.target.src = '/default-avatar.png'"
-                >
-                <div class="user-meta">
-                  <span class="name" @click="gotoUserProfile(item.user_id)">{{ item.name }}</span>
-                  <span class="motto">{{ item.motto || '这个人很懒，什么都没留下...' }}</span>
-                </div>
-                <div class="user-actions">
-                  <el-button size="mini" @click="sendPrivateMessage(item.user_id)">私信</el-button>
-                  <el-button
-                    v-if="isSelf"
-                    size="mini"
-                    :type="isFollowing(item.user_id) ? '' : 'primary'"
-                    :plain="isFollowing(item.user_id)"
-                    :loading="followLoadingId === item.user_id"
-                    @click="toggleFollow(item)"
+              <div class="user-grid">
+                <div class="user-card" v-for="item in friendsList" :key="item.user_id">
+                  <button
+                    class="friend-avatar-button"
+                    :aria-label="$t('查看 {p0} 的主页', { p0: item.name })"
+                    @click="gotoUserProfile(item.user_id)"
                   >
-                    {{ isFollowing(item.user_id) ? '互相关注' : '关注' }}
-                  </el-button>
+                    <Avatar
+                      :src="item.avatar_url"
+                      :frame="item.avatar_frame"
+                      :size="48"
+                    />
+                  </button>
+                  <div class="user-meta">
+                    <span class="name" @click="gotoUserProfile(item.user_id)">{{
+                      item.name
+                    }}</span>
+                    <span class="motto">{{ item.motto || $t("暂无简介") }}</span>
+                  </div>
+                  <div class="user-actions">
+                    <el-button size="mini" @click="sendPrivateMessage(item.user_id)">{{
+                      $t("私信")
+                    }}</el-button>
+                    <el-button
+                      v-if="isSelf"
+                      size="mini"
+                      type="primary"
+                      plain
+                      :loading="followLoadingId === item.user_id"
+                      @click="toggleFollow(item)"
+                      >{{ $t("已互关") }}</el-button
+                    >
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </el-tab-pane>
+          </el-tab-pane>
 
-        <el-tab-pane :label="followsError ? '关注' : `关注 (${followsList.length})`" name="follows">
-          <div class="tab-body" v-loading="loading">
-            <div class="empty-state" v-if="!loading && followsList.length === 0">
-              <img src="/nothing.png" alt="暂无内容" class="empty-image">
-              <p>{{ followsError || (isSelf ? '你还没有关注任何人' : 'TA还没有关注任何人') }}</p>
-            </div>
-            <div class="user-grid">
-              <div class="user-card" v-for="item in followsList" :key="item.user_id">
-                <img
-                  class="avatar"
-                  :src="item.avatar_url || '/default-avatar.png'"
-                  :alt="item.name"
-                  @click="gotoUserProfile(item.user_id)"
-                  @error="$event.target.src = '/default-avatar.png'"
-                >
-                <div class="user-meta">
-                  <span class="name" @click="gotoUserProfile(item.user_id)">{{ item.name }}</span>
-                  <span class="motto">{{ item.motto || '这个人很懒，什么都没留下...' }}</span>
-                </div>
-                <div class="user-actions">
-                  <el-button size="mini" @click="sendPrivateMessage(item.user_id)">私信</el-button>
-                  <el-button
-                    v-if="isSelf"
-                    size="mini"
-                    :plain="isFan(item.user_id)"
-                    :loading="followLoadingId === item.user_id"
-                    @click="toggleFollow(item)"
+          <el-tab-pane
+            :label="fansError ? $t('粉丝') : $t('粉丝 ({p0})', { p0: fansList.length })"
+            name="fans"
+          >
+            <div class="tab-body" v-loading="loading">
+              <div class="empty-state" v-if="!loading && fansList.length === 0">
+                <img src="/nothing.png" :alt="$t('暂无内容')" class="empty-image" />
+                <p>
+                  {{
+                    fansError || (isSelf ? $t("还没有人关注你") : $t("还没有人关注TA"))
+                  }}
+                </p>
+              </div>
+              <div class="user-grid">
+                <div class="user-card" v-for="item in fansList" :key="item.user_id">
+                  <button
+                    class="friend-avatar-button"
+                    :aria-label="$t('查看 {p0} 的主页', { p0: item.name })"
+                    @click="gotoUserProfile(item.user_id)"
                   >
-                    {{ isFan(item.user_id) ? '已互关' : '已关注' }}
-                  </el-button>
+                    <Avatar
+                      :src="item.avatar_url"
+                      :frame="item.avatar_frame"
+                      :size="48"
+                    />
+                  </button>
+                  <div class="user-meta">
+                    <span class="name" @click="gotoUserProfile(item.user_id)">{{
+                      item.name
+                    }}</span>
+                    <span class="motto">{{ item.motto || $t("暂无简介") }}</span>
+                  </div>
+                  <div class="user-actions">
+                    <el-button size="mini" @click="sendPrivateMessage(item.user_id)">{{
+                      $t("私信")
+                    }}</el-button>
+                    <el-button
+                      v-if="isSelf"
+                      size="mini"
+                      :type="isFollowing(item.user_id) ? '' : 'primary'"
+                      :plain="isFollowing(item.user_id)"
+                      :loading="followLoadingId === item.user_id"
+                      @click="toggleFollow(item)"
+                    >
+                      {{ isFollowing(item.user_id) ? $t("互相关注") : $t("关注") }}
+                    </el-button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </el-tab-pane>
-      </el-tabs>
+          </el-tab-pane>
+
+          <el-tab-pane
+            :label="
+              followsError ? $t('关注') : $t('关注 ({p0})', { p0: followsList.length })
+            "
+            name="follows"
+          >
+            <div class="tab-body" v-loading="loading">
+              <div class="empty-state" v-if="!loading && followsList.length === 0">
+                <img src="/nothing.png" :alt="$t('暂无内容')" class="empty-image" />
+                <p>
+                  {{
+                    followsError ||
+                    (isSelf ? $t("你还没有关注任何人") : $t("TA还没有关注任何人"))
+                  }}
+                </p>
+              </div>
+              <div class="user-grid">
+                <div class="user-card" v-for="item in followsList" :key="item.user_id">
+                  <button
+                    class="friend-avatar-button"
+                    :aria-label="$t('查看 {p0} 的主页', { p0: item.name })"
+                    @click="gotoUserProfile(item.user_id)"
+                  >
+                    <Avatar
+                      :src="item.avatar_url"
+                      :frame="item.avatar_frame"
+                      :size="48"
+                    />
+                  </button>
+                  <div class="user-meta">
+                    <span class="name" @click="gotoUserProfile(item.user_id)">{{
+                      item.name
+                    }}</span>
+                    <span class="motto">{{ item.motto || $t("暂无简介") }}</span>
+                  </div>
+                  <div class="user-actions">
+                    <el-button size="mini" @click="sendPrivateMessage(item.user_id)">{{
+                      $t("私信")
+                    }}</el-button>
+                    <el-button
+                      v-if="isSelf"
+                      size="mini"
+                      :plain="isFan(item.user_id)"
+                      :loading="followLoadingId === item.user_id"
+                      @click="toggleFollow(item)"
+                    >
+                      {{ isFan(item.user_id) ? $t("已互关") : $t("已关注") }}
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
     </div>
-  </div>
+  </Workspace>
 </template>
 
 <script>
+import Workspace from "~/components/social/Workspace.vue";
+import Avatar from "~/components/social/Avatar.vue";
 export default {
-  layout: 'default',
+  components: { Workspace, Avatar },
+  layout: "default",
   data() {
     return {
-      activeTab: 'friends',
+      activeTab: "friends",
       userId: null,
       isSelf: true,
       fansList: [],
       followsList: [],
-      fansError: '', followsError: '',
+      fansError: "",
+      followsError: "",
       loading: false,
-      followLoadingId: null
-    }
+      followLoadingId: null,
+    };
   },
   computed: {
     backTarget() {
-      return this.isSelf ? '/me' : `/users/${this.userId}`
+      return this.isSelf ? "/me" : `/users/${this.userId}`;
     },
     // 后端没有可靠的互关接口，用粉丝和关注两个列表求交集
     friendsList() {
-      const followIds = new Set(this.followsList.map(item => String(item.user_id)))
-      return this.fansList.filter(item => followIds.has(String(item.user_id)))
-    }
+      const followIds = new Set(this.followsList.map((item) => String(item.user_id)));
+      return this.fansList.filter((item) => followIds.has(String(item.user_id)));
+    },
   },
   async mounted() {
-    if (!localStorage.getItem('token')) {
-      this.$message.warning('请先登录')
-      this.$router.push('/login')
-      return
+    if (!localStorage.getItem("token")) {
+      this.$message.warning(this.$t("请先登录"));
+      this.$router.push("/login");
+      return;
     }
 
-    const queryTab = this.$route.query.tab
-    if (queryTab === '0') this.activeTab = 'follows'
-    else if (queryTab === '1') this.activeTab = 'fans'
-    else if (['friends', 'fans', 'follows'].includes(queryTab)) this.activeTab = queryTab
+    const queryTab = this.$route.query.tab;
+    if (queryTab === "0") this.activeTab = "follows";
+    else if (queryTab === "1") this.activeTab = "fans";
+    else if (["friends", "fans", "follows"].includes(queryTab)) this.activeTab = queryTab;
 
     try {
-      const myUserId = Number((await this.$api.users.getUserProfile()).user_id)
+      const myUserId = Number((await this.$api.users.getUserProfile()).user_id);
       // 支持从他人主页带入 id 查看 TA 的关注关系，默认看自己
-      this.userId = Number(this.$route.query.id) || myUserId
-      this.isSelf = this.userId === myUserId
+      this.userId = Number(this.$route.query.id) || myUserId;
+      this.isSelf = this.userId === myUserId;
     } catch (error) {
-      console.error('获取用户信息失败', error)
-      localStorage.removeItem('token')
-      this.$router.push('/login?msg=unAuthorized')
-      return
+      console.error("获取用户信息失败", error);
+      localStorage.removeItem("token");
+      this.$router.push("/login?msg=unAuthorized");
+      return;
     }
 
-    this.loadRelations()
+    this.loadRelations();
   },
   methods: {
     async loadRelations() {
-      this.loading = true
-      this.fansList = []
-      this.followsList = []
+      this.loading = true;
+      this.fansList = [];
+      this.followsList = [];
       try {
         const [fansResponse, followsResponse] = await Promise.all([
           this.$api.users.getUserFans(this.userId),
-          this.$api.users.getUserFollows(this.userId)
-        ])
-        this.fansError = fansResponse.code === 0 ? '' : fansResponse.message
-        this.followsError = followsResponse.code === 0 ? '' : followsResponse.message
-        this.fansList = (fansResponse.data || []).map(item => ({
+          this.$api.users.getUserFollows(this.userId),
+        ]);
+        this.fansError = fansResponse.code === 0 ? "" : fansResponse.message;
+        this.followsError = followsResponse.code === 0 ? "" : followsResponse.message;
+        this.fansList = (fansResponse.data || []).map((item) => ({
           ...item,
-          user_id: Number(item.user_id)
-        }))
+          user_id: Number(item.user_id),
+        }));
         // 关注列表返回的是 follow_id，统一成 user_id 供模板使用
-        this.followsList = (followsResponse.data || []).map(item => ({
+        this.followsList = (followsResponse.data || []).map((item) => ({
           ...item,
-          user_id: Number(item.follow_id)
-        }))
+          user_id: Number(item.follow_id),
+        }));
       } catch (error) {
-        console.error('获取关注关系失败', error)
-        this.$message.error('好友信息加载失败')
+        console.error("获取关注关系失败", error);
+        this.$message.error(this.$t("好友信息加载失败"));
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
     isFollowing(userId) {
-      return this.followsList.some(item => item.user_id === Number(userId))
+      return this.followsList.some((item) => item.user_id === Number(userId));
     },
     isFan(userId) {
-      return this.fansList.some(item => item.user_id === Number(userId))
+      return this.fansList.some((item) => item.user_id === Number(userId));
     },
     async toggleFollow(user) {
-      this.followLoadingId = user.user_id
+      this.followLoadingId = user.user_id;
       try {
-        const following = this.isFollowing(user.user_id)
+        const following = this.isFollowing(user.user_id);
         const response = following
           ? await this.$api.users.unfollowUser(user.user_id)
-          : await this.$api.users.followUser(user.user_id)
-        if (response.code !== 0) throw new Error(response.message || '操作失败')
+          : await this.$api.users.followUser(user.user_id);
+        if (response.code !== 0) throw new Error(response.message || "操作失败");
 
-        this.$message.success(following ? '已取消关注' : '关注成功')
-        await this.loadRelations()
+        this.$message.success(following ? this.$t("已取消关注") : this.$t("关注成功"));
+        await this.loadRelations();
       } catch (error) {
-        console.error('关注操作失败', error)
-        this.$message.error('操作失败，请重试')
+        console.error("关注操作失败", error);
+        this.$message.error(this.$t("操作失败，请重试"));
       } finally {
-        this.followLoadingId = null
+        this.followLoadingId = null;
       }
     },
     gotoUserProfile(userId) {
-      this.$router.push(`/users/${userId}`)
+      this.$router.push(`/users/${userId}`);
     },
     sendPrivateMessage(userId) {
-      this.$router.push(`/community/chat?id=${userId}`)
-    }
+      this.$router.push(`/community/chat?id=${userId}`);
+    },
   },
   head() {
     return {
-      title: (this.isSelf ? '我的好友' : 'TA的关注关系') + ' - 原木社区'
-    }
-  }
-}
+      title: (this.isSelf ? "我的好友" : "TA的关注关系") + " - 原木社区",
+    };
+  },
+};
 </script>
 
 <style lang="scss" scoped>
 .friends-page {
+  width: 100%;
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
@@ -244,7 +301,7 @@ export default {
 
   .back-link {
     font-size: 14px;
-    color: #947358;
+    color: var(--wood, #947358);
 
     .back-icon {
       margin-right: 4px;
@@ -344,5 +401,38 @@ export default {
     gap: 6px;
     flex-shrink: 0;
   }
+}
+
+/* These pages share the desktop workspace instead of adding another outer gutter. */
+.friends-page,
+.settings-page,
+.post-detail-page,
+.post-edit-container {
+  padding: 0 !important;
+  max-width: none !important;
+}
+.friends-card,
+.settings-card,
+.post-detail,
+.comments-section {
+  border: 1px solid var(--line, #e9e0d5) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  background: var(--surface, #fffdf9) !important;
+}
+.post-detail-container {
+  gap: 22px !important;
+}
+.post-detail-main {
+  min-width: 0;
+}
+.post-detail-page {
+  min-height: 0 !important;
+}
+.friend-avatar-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
 }
 </style>
