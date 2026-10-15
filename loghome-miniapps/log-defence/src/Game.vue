@@ -1937,10 +1937,10 @@ export default {
 			if (!this.wallNext) return false
 			return this.baseLevel >= this.wallNext.th && this.canAfford(this.wallNext.cost)
 		},
-		// 城墙修补材料随材质：木墙原木、石墙石头、铁墙铁锭（1 点耐久 = 1 材料）
+		// 城墙修补材料随材质：木墙原木、石墙石头、铁墙铁锭（1 点耐久 = 1 材料；level 为 1-based，索引需 -1）
 		wallRepairRes() {
-			const lv = this.wallCur ? this.wallCur.level : 0
-			return ['log', 'stone', 'iron'][lv] || 'log'
+			const lv = this.wallCur ? this.wallCur.level : 1
+			return ['log', 'stone', 'iron'][lv - 1] || 'log'
 		},
 		wallRepairCost() {
 			const c = {}
