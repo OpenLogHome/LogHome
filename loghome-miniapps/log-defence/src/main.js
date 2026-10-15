@@ -16,7 +16,7 @@ const base=new URL('./',location.href);
 const host=document.getElementById('status');
 function status(message,error=false){host.textContent=message;host.hidden=!message;host.classList.toggle('error',error);}
 function toast(title){const el=document.createElement('div');el.className='toast';el.textContent=title;document.body.append(el);setTimeout(()=>el.remove(),2500);}
-window.uni={showToast:({title})=>toast(title),showModal(options){const value=options.editable?window.prompt(options.title+'\n'+(options.content||''),options.placeholderText||''):window.confirm(options.title+'\n'+(options.content||''));options.success?.({confirm:options.editable?value!==null:value,cancel:options.editable?value===null:!value,content:options.editable?(value||''):''});}};
+window.uni={showToast:({title})=>toast(title),showModal(options){const g=window.__gameModal;if(g){g(options);return}const value=options.editable?window.prompt(options.title+'\n'+(options.content||''),options.placeholderText||''):window.confirm(options.title+'\n'+(options.content||''));options.success?.({confirm:options.editable?value!==null:value,cancel:options.editable?value===null:!value,content:options.editable?(value||''):''});}};
 async function api(route,options={}){const res=await fetch(new URL('api/'+route,base),{...options,headers:{'Content-Type':'application/json',...(session?{Authorization:'Bearer '+session.token}:{}),...options.headers}});const data=await res.json();if(!res.ok){const error=new Error(data.error||'请求失败');error.status=res.status;throw error;}return data;}
 function queueSave(){if(stopped)return;pending=true;clearTimeout(timer);timer=setTimeout(()=>flush().catch(()=>{}),500);}
 async function flush(){clearTimeout(timer);if(running){await running;if(!pending)return;}
