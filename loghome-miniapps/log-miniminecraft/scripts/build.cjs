@@ -69,7 +69,7 @@ function patchBundle(source){
  source=source.replace(/https?:\/\/[^\s"'<>`\\)]+/g,url=>{
   try{const u=new URL(url),local=path.join(root,'public/index_files',u.hostname,decodeURIComponent(u.pathname));if(fs.existsSync(local)&&fs.statSync(local).isFile())return './'+path.relative(path.dirname(path.join(root,'public',BUNDLE)),local).split(path.sep).join('/');}catch{}return url;
  });
- return require('./trees.cjs').patchTrees(require('./motion.cjs').patchMotion(require('./visual-quality.cjs').patchVisualQuality(require('./frame-rate.cjs').patchFrameRate(require('./fps-overlay.cjs').patchFpsOverlay(require('./performance-patches.cjs').patchPerformance(source))))));
+ return require('./population.cjs').patchPopulation(require('./trees.cjs').patchTrees(require('./motion.cjs').patchMotion(require('./visual-quality.cjs').patchVisualQuality(require('./frame-rate.cjs').patchFrameRate(require('./fps-overlay.cjs').patchFpsOverlay(require('./performance-patches.cjs').patchPerformance(source)))))));
 }
 function build(outputDir=dist){const patched=patchBundle(fs.readFileSync(path.join(root,'vendor/game.bundle.js'),'utf8'));fs.rmSync(outputDir,{recursive:true,force:true});fs.cpSync(path.join(root,'public'),outputDir,{recursive:true});for(const name of ['bootstrap.js','cloud-storage.js','loading.js'])fs.copyFileSync(path.join(root,'src',name),path.join(outputDir,name));const file=path.join(outputDir,BUNDLE);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,patched);validateStaticAssets(outputDir);console.log('Built Log MiniMinecraft → '+outputDir);}
 if(require.main===module)build();module.exports={patchBundle,build,BUNDLE};
