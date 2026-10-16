@@ -911,27 +911,65 @@ progress::-moz-progress-bar {
 .reader-rewards.embedded {
   padding: 0;
   max-width: none;
+  color: var(--ink, #30343b);
+}
+.embedded .primary {
+  background: #c65320;
+  border-color: #c65320;
+  color: #ffffff;
+}
+.embedded a {
+  color: var(--wood, #c65320);
+}
+.embedded :is(.quiet, .tree-label, .theme-label, .growth-row, .resource-balances dt, .task-list p, .task-list small) {
+  color: var(--muted, #6b7280);
+}
+.embedded :is(.growth-row strong, .task-reward, .resource-balances dd) {
+  color: var(--ink, #30343b);
+}
+.embedded :is(.tree-card, .rewards-panel, .resource-balances, .task-list article, button, select) {
+  border-color: var(--line, #e2e6eb);
+}
+.embedded .orb-grid button {
+  background: var(--soft, #f1f3f5);
+  color: var(--ink, #30343b);
+}
+.embedded progress::-webkit-progress-value {
+  background: var(--wood, #c65320);
+}
+.embedded progress::-moz-progress-bar {
+  background: var(--wood, #c65320);
 }
 .embedded .rewards-layout {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  align-items: start;
 }
-.embedded .tree-preview {
+.embedded .tree-pixel-art {
   display: none;
 }
-.embedded .tree-panel {
+.embedded .tree-card {
+  position: static;
   padding: 22px;
+}
+.embedded .rewards-main {
+  min-width: 0;
 }
 .embedded .rewards-panel {
   border-radius: 14px;
 }
-.embedded .tasks-column {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
+.embedded .orb-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr));
+}
+.embedded .rewards-panel > header {
+  flex-wrap: wrap;
+}
+.embedded .task-list article > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 1100px) {
-  .embedded .tasks-column {
-    grid-template-columns: 1fr;
+  .embedded .rewards-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

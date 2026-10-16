@@ -1,7 +1,7 @@
 <template>
   <Workspace :title="$t('原木树场')" active="/me"
     ><template #actions
-      ><el-switch v-model="night" :active-text="$t('夜景')" /><el-button
+      ><el-switch v-model="night" :active-text="$t('夜景')" :aria-label="$t('切换树场夜景')" /><el-button
         icon="el-icon-refresh"
         :loading="loading"
         @click="load"
@@ -86,6 +86,7 @@
             <el-switch
               v-model="highQuality"
               :active-text="$t('高质量 3D')"
+              :aria-label="$t('高质量 3D')"
               @change="saveQuality"
             />
             <p class="social-muted">{{ $t("关闭后使用经典视图，减少渲染开销。") }}</p>
@@ -93,6 +94,7 @@
               v-model="notificationsDisabled"
               :disabled="busy"
               :active-text="$t('关闭树场通知')"
+              :aria-label="$t('关闭树场通知')"
               @change="changeNotifications"
             />
             <p class="social-muted">{{ $t("关闭后不接收成长和好友串门通知。") }}</p>
@@ -367,6 +369,10 @@ export default {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
   gap: 24px;
+  align-items: start;
+}
+.tree-desktop-grid > * {
+  min-width: 0;
 }
 .tree-scene-panel {
   padding: 0;
@@ -374,14 +380,14 @@ export default {
   position: relative;
 }
 .tree-scene-panel .oak-tree-3d {
-  height: 420px;
+  height: clamp(340px, 34vw, 480px);
 }
 .tree-classic {
-  height: 420px;
+  height: clamp(340px, 34vw, 480px);
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #edf2d7;
+  background: var(--soft, #f1f3f5);
 }
 .tree-classic img {
   width: 70%;
@@ -390,6 +396,7 @@ export default {
 }
 .tree-scene-caption {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   padding: 20px;

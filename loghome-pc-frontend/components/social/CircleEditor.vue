@@ -282,7 +282,7 @@ export default {
 }
 .circle-preview {
   padding: 24px 14px;
-  background: #eee3d2;
+  background: var(--soft, #f1f3f5);
   background-size: cover;
   border-radius: 12px;
   display: flex;
@@ -298,7 +298,7 @@ export default {
   border-radius: 16px;
 }
 .circle-preview strong {
-  background: #fffdf9e6;
+  background: var(--surface, #ffffff);
   border-radius: 6px;
   padding: 6px 12px;
   max-width: 100%;

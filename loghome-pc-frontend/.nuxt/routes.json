@@ -3,504 +3,432 @@
     "name": "community",
     "path": "/community",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/index.vue",
-    "chunkName": "pages/community/index",
-    "_name": "_d1066372"
+    "chunkName": "pages/community/index"
   },
   {
     "name": "forgot-password",
     "path": "/forgot-password",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/forgot-password.vue",
-    "chunkName": "pages/forgot-password",
-    "_name": "_2f9620a0"
+    "chunkName": "pages/forgot-password"
   },
   {
     "name": "login",
     "path": "/login",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/login.vue",
-    "chunkName": "pages/login",
-    "_name": "_3e9643c4"
+    "chunkName": "pages/login"
   },
   {
     "name": "me",
     "path": "/me",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/index.vue",
-    "chunkName": "pages/me/index",
-    "_name": "_22cb0d90"
+    "chunkName": "pages/me/index"
   },
   {
     "name": "membership",
     "path": "/membership",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/membership/index.vue",
-    "chunkName": "pages/membership/index",
-    "_name": "_ac8db564"
+    "chunkName": "pages/membership/index"
   },
   {
     "name": "read",
     "path": "/read",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/index.vue",
-    "chunkName": "pages/read/index",
-    "_name": "_47d5b0ce"
+    "chunkName": "pages/read/index"
   },
   {
     "name": "search",
     "path": "/search",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/search.vue",
-    "chunkName": "pages/search",
-    "_name": "_56b76346"
+    "chunkName": "pages/search"
   },
   {
     "name": "store",
     "path": "/store",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/store/index.vue",
-    "chunkName": "pages/store/index",
-    "_name": "_b1690a82"
+    "chunkName": "pages/store/index"
   },
   {
     "name": "tags",
     "path": "/tags",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/tags/index.vue",
-    "chunkName": "pages/tags/index",
-    "_name": "_39158391"
+    "chunkName": "pages/tags/index"
   },
   {
     "name": "write",
     "path": "/write",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/write/index.vue",
-    "chunkName": "pages/write/index",
-    "_name": "_79629786"
+    "chunkName": "pages/write/index"
   },
   {
     "name": "about-open-source",
     "path": "/about/open-source",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/about/open-source.vue",
-    "chunkName": "pages/about/open-source",
-    "_name": "_6a6a3fd7"
+    "chunkName": "pages/about/open-source"
   },
   {
     "name": "agreement-content",
     "path": "/agreement/content",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/agreement/content.vue",
-    "chunkName": "pages/agreement/content",
-    "_name": "_7553b862"
+    "chunkName": "pages/agreement/content"
   },
   {
     "name": "community-chat",
     "path": "/community/chat",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/chat.vue",
-    "chunkName": "pages/community/chat",
-    "_name": "_4b88be73"
+    "chunkName": "pages/community/chat"
   },
   {
     "name": "community-circles",
     "path": "/community/circles",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/circles.vue",
-    "chunkName": "pages/community/circles",
-    "_name": "_d10fa150"
+    "chunkName": "pages/community/circles"
   },
   {
     "name": "community-search",
     "path": "/community/search",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/search.vue",
-    "chunkName": "pages/community/search",
-    "_name": "_03dbd403"
+    "chunkName": "pages/community/search"
   },
   {
     "name": "me-achievements",
     "path": "/me/achievements",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/achievements.vue",
-    "chunkName": "pages/me/achievements",
-    "_name": "_63b635d6"
+    "chunkName": "pages/me/achievements"
   },
   {
     "name": "me-credit",
     "path": "/me/credit",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/credit.vue",
-    "chunkName": "pages/me/credit",
-    "_name": "_29e89aaa"
+    "chunkName": "pages/me/credit"
   },
   {
     "name": "me-frames",
     "path": "/me/frames",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/frames.vue",
-    "chunkName": "pages/me/frames",
-    "_name": "_04cc2450"
+    "chunkName": "pages/me/frames"
   },
   {
     "name": "me-friends",
     "path": "/me/friends",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/friends.vue",
-    "chunkName": "pages/me/friends",
-    "_name": "_422e395a"
+    "chunkName": "pages/me/friends"
   },
   {
     "name": "me-help",
     "path": "/me/help",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/help.vue",
-    "chunkName": "pages/me/help",
-    "_name": "_9afddd1a"
+    "chunkName": "pages/me/help"
   },
   {
     "name": "me-invite",
     "path": "/me/invite",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/invite.vue",
-    "chunkName": "pages/me/invite",
-    "_name": "_5417aebb"
+    "chunkName": "pages/me/invite"
   },
   {
     "name": "me-lab",
     "path": "/me/lab",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/lab.vue",
-    "chunkName": "pages/me/lab",
-    "_name": "_e0657b6a"
+    "chunkName": "pages/me/lab"
   },
   {
     "name": "me-messages",
     "path": "/me/messages",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/messages.vue",
-    "chunkName": "pages/me/messages",
-    "_name": "_e1ccae04"
+    "chunkName": "pages/me/messages"
   },
   {
     "name": "me-notifications",
     "path": "/me/notifications",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/notifications.vue",
-    "chunkName": "pages/me/notifications",
-    "_name": "_7d53f8a6"
+    "chunkName": "pages/me/notifications"
   },
   {
     "name": "me-security",
     "path": "/me/security",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/security.vue",
-    "chunkName": "pages/me/security",
-    "_name": "_0ae304f2"
+    "chunkName": "pages/me/security"
   },
   {
     "name": "me-settings",
     "path": "/me/settings",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/settings.vue",
-    "chunkName": "pages/me/settings",
-    "_name": "_0adfbf56"
+    "chunkName": "pages/me/settings"
   },
   {
     "name": "me-storage",
     "path": "/me/storage",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/storage.vue",
-    "chunkName": "pages/me/storage",
-    "_name": "_6bcaf939"
+    "chunkName": "pages/me/storage"
   },
   {
     "name": "me-tree",
     "path": "/me/tree",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/tree.vue",
-    "chunkName": "pages/me/tree",
-    "_name": "_34333f50"
+    "chunkName": "pages/me/tree"
   },
   {
     "name": "me-wallet",
     "path": "/me/wallet",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/me/wallet.vue",
-    "chunkName": "pages/me/wallet",
-    "_name": "_c07848aa"
+    "chunkName": "pages/me/wallet"
   },
   {
     "name": "membership-gift",
     "path": "/membership/gift",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/membership/gift.vue",
-    "chunkName": "pages/membership/gift",
-    "_name": "_73651464"
+    "chunkName": "pages/membership/gift"
   },
   {
     "name": "membership-redeem",
     "path": "/membership/redeem",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/membership/redeem.vue",
-    "chunkName": "pages/membership/redeem",
-    "_name": "_5ef8d060"
+    "chunkName": "pages/membership/redeem"
   },
   {
     "name": "membership-rules",
     "path": "/membership/rules",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/membership/rules.vue",
-    "chunkName": "pages/membership/rules",
-    "_name": "_5e34aaf3"
+    "chunkName": "pages/membership/rules"
   },
   {
     "name": "novel-fans",
     "path": "/novel/fans",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/novel/fans.vue",
-    "chunkName": "pages/novel/fans",
-    "_name": "_174bec68"
+    "chunkName": "pages/novel/fans"
   },
   {
     "name": "read-activities",
     "path": "/read/activities",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/activities.vue",
-    "chunkName": "pages/read/activities",
-    "_name": "_ee25ffbe"
+    "chunkName": "pages/read/activities"
   },
   {
     "name": "read-bookcase",
     "path": "/read/bookcase",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/bookcase.vue",
-    "chunkName": "pages/read/bookcase",
-    "_name": "_5af90266"
+    "chunkName": "pages/read/bookcase"
   },
   {
     "name": "read-collections",
     "path": "/read/collections",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/collections.vue",
-    "chunkName": "pages/read/collections",
-    "_name": "_1df58dde"
+    "chunkName": "pages/read/collections"
   },
   {
     "name": "read-rank",
     "path": "/read/rank",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/rank.vue",
-    "chunkName": "pages/read/rank",
-    "_name": "_7e6c1de0"
+    "chunkName": "pages/read/rank"
   },
   {
     "name": "read-redstone",
     "path": "/read/redstone",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/redstone.vue",
-    "chunkName": "pages/read/redstone",
-    "_name": "_61ad7228"
+    "chunkName": "pages/read/redstone"
   },
   {
     "name": "read-resources",
     "path": "/read/resources",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/resources.vue",
-    "chunkName": "pages/read/resources",
-    "_name": "_45f092a1"
+    "chunkName": "pages/read/resources"
   },
   {
     "name": "read-rewards",
     "path": "/read/rewards",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/rewards.vue",
-    "chunkName": "pages/read/rewards",
-    "_name": "_62b0c5c0"
+    "chunkName": "pages/read/rewards"
   },
   {
     "name": "store-addresses",
     "path": "/store/addresses",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/store/addresses.vue",
-    "chunkName": "pages/store/addresses",
-    "_name": "_90a699e2"
+    "chunkName": "pages/store/addresses"
   },
   {
     "name": "store-orders",
     "path": "/store/orders",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/store/orders.vue",
-    "chunkName": "pages/store/orders",
-    "_name": "_465ccd48"
+    "chunkName": "pages/store/orders"
   },
   {
     "name": "tag-collections",
     "path": "/tag/collections",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/tag/collections.vue",
-    "chunkName": "pages/tag/collections",
-    "_name": "_7afc588a"
+    "chunkName": "pages/tag/collections"
   },
   {
     "name": "write-new",
     "path": "/write/new",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/write/new.vue",
-    "chunkName": "pages/write/new",
-    "_name": "_2e3c76cb"
+    "chunkName": "pages/write/new"
   },
   {
     "name": "community-circle-create",
     "path": "/community/circle/create",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/circle/create.vue",
-    "chunkName": "pages/community/circle/create",
-    "_name": "_7e6631e0"
+    "chunkName": "pages/community/circle/create"
   },
   {
     "name": "community-mail-new",
     "path": "/community/mail/new",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/mail/new.vue",
-    "chunkName": "pages/community/mail/new",
-    "_name": "_b6c7da3a"
+    "chunkName": "pages/community/mail/new"
   },
   {
     "name": "community-post-edit",
     "path": "/community/post/edit",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/post/edit.vue",
-    "chunkName": "pages/community/post/edit",
-    "_name": "_ad3404e4"
+    "chunkName": "pages/community/post/edit"
   },
   {
     "name": "community-circle-members-id",
     "path": "/community/circle/members/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/circle/members/_id.vue",
-    "chunkName": "pages/community/circle/members/_id",
-    "_name": "_0586b060"
+    "chunkName": "pages/community/circle/members/_id"
   },
   {
     "name": "community-circle-settings-id",
     "path": "/community/circle/settings/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/circle/settings/_id.vue",
-    "chunkName": "pages/community/circle/settings/_id",
-    "_name": "_211b41e2"
+    "chunkName": "pages/community/circle/settings/_id"
   },
   {
     "name": "write-settings-info-id",
     "path": "/write/settings/info/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/write/settings/info/_id.vue",
-    "chunkName": "pages/write/settings/info/_id",
-    "_name": "_6d7abeb0"
+    "chunkName": "pages/write/settings/info/_id"
   },
   {
     "name": "write-settings-tags-id",
     "path": "/write/settings/tags/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/write/settings/tags/_id.vue",
-    "chunkName": "pages/write/settings/tags/_id",
-    "_name": "_77daf31b"
+    "chunkName": "pages/write/settings/tags/_id"
   },
   {
     "name": "community-circle-id",
     "path": "/community/circle/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/circle/_id.vue",
-    "chunkName": "pages/community/circle/_id",
-    "_name": "_1c191756"
+    "chunkName": "pages/community/circle/_id"
   },
   {
     "name": "community-mail-id",
     "path": "/community/mail/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/mail/_id.vue",
-    "chunkName": "pages/community/mail/_id",
-    "_name": "_de338406"
+    "chunkName": "pages/community/mail/_id"
   },
   {
     "name": "community-miniapp-id",
     "path": "/community/miniapp/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/miniapp/_id.vue",
-    "chunkName": "pages/community/miniapp/_id",
-    "_name": "_c6d0426c"
+    "chunkName": "pages/community/miniapp/_id"
   },
   {
     "name": "community-post-id",
     "path": "/community/post/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/community/post/_id.vue",
-    "chunkName": "pages/community/post/_id",
-    "_name": "_0d025034"
+    "chunkName": "pages/community/post/_id"
   },
   {
     "name": "manga-read-articleId",
     "path": "/manga/read/:articleId?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/manga/read/_articleId.vue",
-    "chunkName": "pages/manga/read/_articleId",
-    "_name": "_301e13cb"
+    "chunkName": "pages/manga/read/_articleId"
   },
   {
     "name": "read-ask-id",
     "path": "/read/ask/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/ask/_id.vue",
-    "chunkName": "pages/read/ask/_id",
-    "_name": "_24ea6b20"
+    "chunkName": "pages/read/ask/_id"
   },
   {
     "name": "read-comment-id",
     "path": "/read/comment/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/comment/_id.vue",
-    "chunkName": "pages/read/comment/_id",
-    "_name": "_f4c371f4"
+    "chunkName": "pages/read/comment/_id"
   },
   {
     "name": "read-end-id",
     "path": "/read/end/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/end/_id.vue",
-    "chunkName": "pages/read/end/_id",
-    "_name": "_b5a210fc"
+    "chunkName": "pages/read/end/_id"
   },
   {
     "name": "read-power-id",
     "path": "/read/power/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/power/_id.vue",
-    "chunkName": "pages/read/power/_id",
-    "_name": "_778b36a8"
+    "chunkName": "pages/read/power/_id"
   },
   {
     "name": "read-preview-key",
     "path": "/read/preview/:key?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/read/preview/_key.vue",
-    "chunkName": "pages/read/preview/_key",
-    "_name": "_32ec27bb"
+    "chunkName": "pages/read/preview/_key"
   },
   {
     "name": "world-relations-id",
     "path": "/world/relations/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/world/relations/_id.vue",
-    "chunkName": "pages/world/relations/_id",
-    "_name": "_44308200"
+    "chunkName": "pages/world/relations/_id"
   },
   {
     "name": "write-edit-id",
     "path": "/write/edit/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/write/edit/_id.vue",
-    "chunkName": "pages/write/edit/_id",
-    "_name": "_1342719a"
+    "chunkName": "pages/write/edit/_id"
   },
   {
     "name": "write-settings-id",
     "path": "/write/settings/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/write/settings/_id.vue",
-    "chunkName": "pages/write/settings/_id",
-    "_name": "_194f2833"
+    "chunkName": "pages/write/settings/_id"
   },
   {
     "name": "write-activity-form-workId-tagId",
     "path": "/write/activity-form/:workId?/:tagId?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/write/activity-form/_workId/_tagId.vue",
-    "chunkName": "pages/write/activity-form/_workId/_tagId",
-    "_name": "_37fe1b8c"
+    "chunkName": "pages/write/activity-form/_workId/_tagId"
   },
   {
     "name": "article-id",
     "path": "/article/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/article/_id.vue",
-    "chunkName": "pages/article/_id",
-    "_name": "_1ce7eb3c"
+    "chunkName": "pages/article/_id"
   },
   {
     "name": "manga-id",
     "path": "/manga/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/manga/_id.vue",
-    "chunkName": "pages/manga/_id",
-    "_name": "_764768ba"
+    "chunkName": "pages/manga/_id"
   },
   {
     "name": "novel-id",
     "path": "/novel/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/novel/_id.vue",
-    "chunkName": "pages/novel/_id",
-    "_name": "_23f6197c"
+    "chunkName": "pages/novel/_id"
   },
   {
     "name": "store-id",
     "path": "/store/:id",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/store/_id.vue",
-    "chunkName": "pages/store/_id",
-    "_name": "_04a720e7"
+    "chunkName": "pages/store/_id"
   },
   {
     "name": "users-id",
     "path": "/users/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/users/_id.vue",
-    "chunkName": "pages/users/_id",
-    "_name": "_24ca9f0e"
+    "chunkName": "pages/users/_id"
   },
   {
     "name": "world-id",
     "path": "/world/:id?",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/world/_id.vue",
-    "chunkName": "pages/world/_id",
-    "_name": "_08ec0298"
+    "chunkName": "pages/world/_id"
   },
   {
     "name": "index",
     "path": "/",
     "component": "/Users/ricepastem/Projects/LogHome/loghome-pc-frontend/pages/index.vue",
-    "chunkName": "pages/index",
-    "_name": "_74eea0ad"
+    "chunkName": "pages/index"
   }
 ]

@@ -6,7 +6,11 @@
 node start-all.js
 ```
 
-脚本自动查找直属子目录中的 `package.json`，并行运行所有含 `scripts.start` 的小程序。目前启动原木保卫战（8787）和原木方块世界（8788）。管理器在前台运行，按 Ctrl+C 或发送 SIGTERM 会停止它管理的整组子进程，包括 npm、Node 服务和开发模式的 watch 进程。
+脚本自动查找直属子目录中的 `package.json`，并行运行所有含 `scripts.start` 的小程序。目前启动原木保卫战（8787）、原木方块世界（8788）、书籍封面生成器（高级版）（8789）和帖子封面生成器（8790）。管理器在前台运行，按 Ctrl+C 或发送 SIGTERM 会停止它管理的整组子进程，包括 npm、Node 服务和开发模式的 watch 进程。
+
+书籍封面生成器的运行、注册和部署说明见 [log-book-cover/README.md](log-book-cover/README.md)。
+
+帖子封面生成器的运行、注册和部署说明见 [log-post-cover/README.md](log-post-cover/README.md)。
 
 各小程序的工作目录独立，生产模式读取各自的 `.env`；开发模式读取各自的 `.env.development`。应用配置优先于终端环境变量。父终端中的 `PORT`、`BASE_PATH`、`DATA_DIR` 不向子服务传递，防止服务共用端口或存档目录。
 

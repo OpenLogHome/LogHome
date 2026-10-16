@@ -5,7 +5,7 @@
         <!-- <p class="home-eyebrow"><span aria-hidden="true"></span>{{ copy.hero.eyebrow }}</p> -->
         <h1 id="home-title">{{ copy.hero.titleStart }}<br>{{ copy.hero.titleSecondLine }}<span class="title-highlight">{{ copy.hero.titleHighlight }}</span>{{ copy.hero.titleEnd }}</h1>
         <p class="home-lead">{{ copy.hero.lead }}</p>
-        <p class="home-description">{{ copy.hero.descriptionFirstLine }}<br>{{ copy.hero.descriptionSecondLine }}</p>
+        <!-- <p class="home-description">{{ copy.hero.descriptionSecondLine }}</p> -->
         <div class="home-actions">
           <nuxt-link to="/read" class="home-cta home-cta-primary">{{ copy.hero.readAction }} <span aria-hidden="true">↗</span></nuxt-link>
           <nuxt-link to="/write" class="home-cta home-cta-secondary">{{ copy.hero.writeAction }} <span aria-hidden="true">↗</span></nuxt-link>

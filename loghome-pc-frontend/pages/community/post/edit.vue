@@ -367,10 +367,10 @@ export default {
 .settings-card,
 .post-detail,
 .comments-section {
-  border: 1px solid var(--line, #e9e0d5) !important;
+  border: 1px solid var(--line, #e2e6eb) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
-  background: var(--surface, #fffdf9) !important;
+  background: var(--surface, #ffffff) !important;
 }
 .post-detail-container {
   gap: 22px !important;

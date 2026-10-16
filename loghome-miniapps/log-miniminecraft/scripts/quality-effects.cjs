@@ -20,6 +20,6 @@ function patchQualityEffects(source){
   replace('this.currentConfig={...WEATHER_CONFIGS.sunny}', 'this.currentConfig=logCloneWeather(WEATHER_CONFIGS.sunny)');
   replace('this.targetConfig={...r},this.transitionProgress=0', 'this.targetConfig=logCloneWeather(r),this.logTransitionStart=logCloneWeather(this.currentConfig),this.transitionProgress=0');
   replace('this.interpolateConfig(this.currentConfig,this.targetConfig,this.transitionProgress)', 'this.currentConfig=logCloneWeather(this.logTransitionStart),this.interpolateConfig(this.currentConfig,this.targetConfig,this.transitionProgress)');
-  return require('./sky-quality.cjs').patchSkyQuality(source)+'\n'+fs.readFileSync(path.join(__dirname,'atmosphere-runtime.js'),'utf8')+'\n'+fs.readFileSync(path.join(__dirname,'advanced-shader-runtime.js'),'utf8')+'\n'+fs.readFileSync(path.join(__dirname,'quality-effects-runtime.js'),'utf8');
+  return require('./sky-quality.cjs').patchSkyQuality(source)+'\n'+fs.readFileSync(path.join(__dirname,'atmosphere-runtime.js'),'utf8')+'\n'+fs.readFileSync(path.join(__dirname,'advanced-shader-runtime.js'),'utf8')+'\n'+fs.readFileSync(path.join(__dirname,'underwater-runtime.js'),'utf8')+'\n'+fs.readFileSync(path.join(__dirname,'quality-effects-runtime.js'),'utf8');
 }
 module.exports={patchQualityEffects};

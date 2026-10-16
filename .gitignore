@@ -19245,6 +19245,10 @@ chat-module
 # Keep the independent game deployment ignore rules.
 !loghome-miniapps/log-defence/.gitignore
 !loghome-miniapps/.gitignore
+!loghome-miniapps/log-book-cover/.gitignore
 
 # Generated APP release packages
 /loghome-app-frontend/unpackage/dist/*.zip
+
+# Independent post cover generator deployment rules
+!loghome-miniapps/log-post-cover/.gitignore

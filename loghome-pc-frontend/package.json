@@ -25,6 +25,7 @@
     "test:writer:statistics": "node tests/writer-statistics.cjs",
     "test:writer:collaboration": "node tests/writer-collaboration.cjs",
     "test:theme": "node tests/site-theme.cjs",
+    "test:tree": "node tests/tree-scene-framing.cjs",
     "test:language": "node tests/language-runtime.cjs"
   },
   "dependencies": {

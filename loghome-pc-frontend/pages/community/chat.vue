@@ -467,15 +467,15 @@ export default {
   display: flex;
   flex-direction: column;
   background-color: #f5f5f5;
-  border: 1px solid var(--line, #e9e0d5);
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 12px;
   overflow: hidden;
 }
 
 .chat-header {
-  background: var(--surface, #fffdf9);
+  background: var(--surface, #ffffff);
   padding: 16px 20px;
-  border-bottom: 1px solid var(--line, #e9e0d5);
+  border-bottom: 1px solid var(--line, #e2e6eb);
   display: flex;
   align-items: center;
   flex: none;
@@ -514,7 +514,7 @@ export default {
         margin: 0;
         font-size: 16px;
         font-weight: 500;
-        color: var(--ink, #382d25);
+        color: var(--ink, #30343b);
       }
 
       .user-id {
@@ -539,7 +539,7 @@ export default {
     .load-more {
       text-align: center;
       font-size: 13px;
-      color: var(--wood, #947358);
+      color: var(--wood, #c65320);
       cursor: pointer;
 
       &:hover {
@@ -559,7 +559,7 @@ export default {
         align-items: flex-end;
 
         .message-bubble {
-          background-color: var(--wood, #79573d);
+          background-color: var(--wood, #c65320);
           color: var(--ui-primary-text, #fffdf9);
           .message-time {
             color: inherit;
@@ -587,8 +587,8 @@ export default {
       max-width: 60%;
 
       .message-bubble {
-        background-color: var(--surface, #fffdf9);
-        color: var(--ink, #382d25);
+        background-color: var(--surface, #ffffff);
+        color: var(--ink, #30343b);
         border-radius: 12px;
         padding: 12px 16px;
 
@@ -615,7 +615,7 @@ export default {
           max-width: 100%;
           padding: 8px;
           border-radius: 8px;
-          background: #faf8f5;
+          background: var(--soft, #f1f3f5);
           border: 1px solid #f0e8dd;
           cursor: pointer;
 
@@ -637,7 +637,7 @@ export default {
 
           .shared-book-tag {
             font-size: 11px;
-            color: var(--wood, #947358);
+            color: var(--wood, #c65320);
           }
 
           .shared-book-title {
@@ -690,8 +690,8 @@ export default {
 }
 
 .message-input-container {
-  background: var(--surface, #fffdf9);
-  border-top: 1px solid var(--line, #e9e0d5);
+  background: var(--surface, #ffffff);
+  border-top: 1px solid var(--line, #e2e6eb);
   padding: 16px 20px;
   flex: none;
 
@@ -860,10 +860,10 @@ export default {
 .settings-card,
 .post-detail,
 .comments-section {
-  border: 1px solid var(--line, #e9e0d5) !important;
+  border: 1px solid var(--line, #e2e6eb) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
-  background: var(--surface, #fffdf9) !important;
+  background: var(--surface, #ffffff) !important;
 }
 .post-detail-container {
   gap: 22px !important;

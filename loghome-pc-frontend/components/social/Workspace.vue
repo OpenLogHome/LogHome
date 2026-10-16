@@ -106,12 +106,12 @@ export default {
 </script>
 <style>
 .social-workspace {
-  --wood: #79573d;
-  --ink: #382d25;
-  --muted: #776a5d;
-  --line: #e9e0d5;
-  --surface: #fffdf9;
-  --soft: #f2e9dd;
+  --wood: #c65320;
+  --ink: #30343b;
+  --muted: #6b7280;
+  --line: #e2e6eb;
+  --surface: #ffffff;
+  --soft: #f1f3f5;
   max-width: 1440px;
   margin: auto;
   display: grid;
@@ -147,7 +147,7 @@ export default {
 .workspace-nav nav a.nuxt-link-active,
 .workspace-nav nav a.selected {
   background: var(--soft);
-  color: #704c35;
+  color: var(--wood);
 }
 .workspace-compose {
   display: flex;
@@ -218,7 +218,7 @@ export default {
   display: block;
   font-size: 34px;
   margin-bottom: 14px;
-  color: #b9a58c;
+  color: var(--muted);
 }
 .social-state button {
   margin-top: 12px;
@@ -244,7 +244,7 @@ export default {
 }
 .social-workspace a:focus-visible,
 .social-workspace button:focus-visible {
-  outline: 3px solid #bb9566;
+  outline: 3px solid var(--wood);
   outline-offset: 3px;
 }
 .social-list-row {
@@ -355,17 +355,17 @@ export default {
 .social-workspace .el-button--primary {
   background: var(--wood);
   border-color: var(--wood);
-  color: #fffdf9;
+  color: #ffffff;
 }
 .social-workspace .el-button--primary:hover,
 .social-workspace .el-button--primary:focus {
-  background: #67472f;
-  border-color: #67472f;
+  background: #ac4319;
+  border-color: #ac4319;
 }
 .social-workspace .el-button--primary.is-disabled {
-  background: #e4d9cb;
-  border-color: #e4d9cb;
-  color: #766858;
+  background: #e5e8ec;
+  border-color: #e5e8ec;
+  color: #6b7280;
 }
 .social-workspace .el-button--text {
   color: var(--wood);
@@ -373,18 +373,18 @@ export default {
 .social-workspace .el-input__inner,
 .social-workspace .el-textarea__inner {
   border-radius: 8px;
-  border-color: #c6b9a7;
+  border-color: var(--line);
   background: var(--surface);
   color: var(--ink);
 }
 .social-workspace .el-input__inner::placeholder,
 .social-workspace .el-textarea__inner::placeholder {
-  color: #776e63;
+  color: var(--muted);
 }
 .social-workspace .el-input__inner:focus,
 .social-workspace .el-textarea__inner:focus {
   border-color: var(--wood);
-  box-shadow: 0 0 0 2px #94735820;
+  box-shadow: 0 0 0 2px #c6532020;
 }
 .social-workspace .el-radio-button__orig-radio:checked + .el-radio-button__inner {
   background: var(--wood);
@@ -460,7 +460,7 @@ export default {
   --line: #504536;
   --surface: #2a2621;
   --soft: #383126;
-  --wood: #c8a782;
+  --wood: #f2a16d;
 }
 @media all {
   [data-theme="dark"].social-workspace {
@@ -469,7 +469,7 @@ export default {
     --line: #504536;
     --surface: #2a2621;
     --soft: #383126;
-    --wood: #c8a782;
+    --wood: #f2a16d;
     background: #211e19;
     border-radius: 16px;
   }
@@ -517,8 +517,8 @@ export default {
     color: #211e19;
   }
   [data-theme="dark"].social-workspace .el-button--primary:hover {
-    background: #d6b58e;
-    border-color: #d6b58e;
+    background: #ffb88a;
+    border-color: #ffb88a;
   }
   [data-theme="dark"].social-workspace .el-dialog {
     background: var(--surface);
@@ -588,10 +588,10 @@ export default {
   align-items: center;
 }
 .social-workspace .workspace-compose {
-  color: #fffdf9 !important;
+  color: #ffffff !important;
 }
 .social-workspace .el-button--primary {
-  color: #fffdf9;
+  color: #ffffff;
 }
 .social-workspace[data-theme="dark"] .workspace-compose,
 .social-workspace[data-theme="dark"] .el-button--primary {

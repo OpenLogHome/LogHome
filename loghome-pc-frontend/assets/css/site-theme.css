@@ -6,7 +6,16 @@
   --site-ink: #382d25;
   --site-muted: #776a5d;
   --site-line: #e9e0d5;
-  --site-accent: #79573d;
+  --site-accent: #c65320;
+}
+/* Light navigation uses neutral surfaces and the orange brand accent. */
+html:not([data-site-theme="dark"]) .navbar {
+  --site-surface: #ffffff;
+  --site-raised: #f1f3f5;
+  --site-ink: #30343b;
+  --site-muted: #6b7280;
+  --site-line: #e2e6eb;
+  --site-accent: #c65320;
 }
 html[data-site-theme="light"] {
   color-scheme: light;
@@ -19,8 +28,8 @@ html[data-site-theme="dark"] {
   --site-ink: #eee5d9;
   --site-muted: #c1b6a7;
   --site-line: #504536;
-  --site-accent: #d8b68f;
-  --site-footer-link: #d8b68f;
+  --site-accent: #f2a16d;
+  --site-footer-link: #f2a16d;
 }
 html[data-site-theme="dark"] body,
 html[data-site-theme="dark"] :is(.outer, .empty-layout) {
@@ -92,15 +101,26 @@ html[data-site-theme="dark"] :is(input, textarea)::placeholder {
   opacity: 1;
 }
 
-/* The home palette retains the wood and foliage identity. */
+/* Home content follows the resolved site theme. */
 html[data-site-theme="dark"] .home-container {
   --home-ink: var(--site-ink);
   --home-muted: var(--site-muted);
   --home-line: var(--site-line);
-  --home-green: #b5c49a;
+  --home-highlight: #f2a16d;
+  --home-accent: #f2a16d;
+  --home-accent-hover: #ffb88a;
 }
 html[data-site-theme="dark"] .home-lead {
-  color: #c7d1b4;
+  color: var(--site-muted);
+}
+html[data-site-theme="dark"] .home-cta-primary {
+  color: #1e1c19;
+}
+html[data-site-theme="dark"] :is(.writing-overline, .writing-page > p:not(.writing-overline)) {
+  color: var(--site-muted);
+}
+html[data-site-theme="dark"] .writing-rule {
+  background: var(--site-line);
 }
 html[data-site-theme="dark"]
   :is(
@@ -140,6 +160,16 @@ html[data-site-theme="dark"] .home-book-cover > span {
   color: var(--site-ink);
 }
 
+html[data-site-theme="dark"] .home-ending-sign {
+  border-color: var(--site-line);
+  box-shadow: none;
+}
+html[data-site-theme="dark"] .home-ending-sign h2 {
+  color: var(--site-ink);
+}
+html[data-site-theme="dark"] .writing-caption {
+  background: var(--site-raised);
+}
 /* Reading discovery and its account tools share these semantic colors. */
 html[data-site-theme="dark"] .reading-layout {
   --reading-bg: var(--site-bg);
@@ -508,13 +538,13 @@ html[data-site-theme="dark"]
   color-scheme: dark;
 }
 html[data-site-theme="dark"] .social-workspace .el-button--primary {
-  background: #c8a782;
-  border-color: #c8a782;
+  background: var(--wood);
+  border-color: var(--wood);
   color: #211e19;
 }
 html[data-site-theme="dark"] .social-workspace .el-button--primary:hover {
-  background: #d6b58e;
-  border-color: #d6b58e;
+  background: #ffb88a;
+  border-color: #ffb88a;
   color: #211e19;
 }
 html[data-site-theme="dark"] .social-workspace .el-button--primary.is-disabled {
@@ -782,7 +812,7 @@ html[data-site-theme="dark"] .personal-tree > span {
 }
 /* Apply before hydration too; workspace data attributes are refreshed after mount. */
 html[data-site-theme="dark"] .social-workspace {
-  --wood: #c8a782;
+  --wood: #f2a16d;
   --ink: var(--site-ink);
   --muted: var(--site-muted);
   --line: var(--site-line);

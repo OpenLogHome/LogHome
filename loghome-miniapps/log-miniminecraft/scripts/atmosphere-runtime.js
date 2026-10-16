@@ -39,7 +39,7 @@ function logCreateLeafMask(){
 function logAtmospherePost(source){
   source='uniform float logStage;uniform mat4 logCameraWorld;uniform vec3 logHorizon;uniform float logFogDensity;uniform float logFogNear,logFogFar;\n'+source;
   source=source.replace('if(aoEnabled>.5&&d<.999999)', 'if(aoEnabled>.5&&logStage<1.5&&d<.999999)');
-  source=source.replace('if(logAdvanced>.5&&logBloomStrength>0.)', `if(logAdvanced>.5&&logStage<1.5&&d<.999999){
+  source=source.replace('if(logAdvanced>.5&&logBloomStrength>0.)', `if(logAdvanced>.5&&logUnderwater<.001&&logStage<1.5&&d<.999999){
     vec3 view=viewPosition(screenUv,d);vec3 world=(logCameraWorld*vec4(view,1.)).xyz;
     float distanceFade=max(length(view)-48.,0.);
     float averageHeight=(world.y+logCameraWorld[3].y)*.5;
@@ -50,7 +50,7 @@ function logAtmospherePost(source){
   }
   if(logAdvanced>.5&&logStage>1.5&&logStage<2.5&&logBloomStrength>0.)`);
   source=source.replace('#include <tonemapping_fragment>', 'if(logStage==1.||logStage==3.){gl_FragDepth=d;return;}\n      #include <tonemapping_fragment>');
-  return source;
+  return logUnderwaterPost(source);
 }
 function logPrepareAtmosphereMaterials(scene){
   scene.traverse(object=>{if(!object.material)return;for(const material of(Array.isArray(object.material)?object.material:[object.material])){

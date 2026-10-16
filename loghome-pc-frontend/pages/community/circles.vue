@@ -203,15 +203,15 @@ export default {
   gap: 20px;
 }
 .circle-tile {
-  border: 1px solid var(--line, #e9e0d5);
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 14px;
   overflow: hidden;
-  background: var(--surface, #fffdf9);
-  color: var(--ink, #382d25);
+  background: var(--surface, #ffffff);
+  color: var(--ink, #30343b);
 }
 .circle-tile-cover {
   height: 112px;
-  background-color: #e8ddcc;
+  background-color: var(--soft, #f1f3f5);
   background-size: cover;
   background-position: center;
   position: relative;
@@ -223,7 +223,7 @@ export default {
   width: 64px;
   height: 64px;
   border-radius: 14px;
-  border: 4px solid var(--surface, #fffdf9);
+  border: 4px solid var(--surface, #ffffff);
   object-fit: cover;
 }
 .circle-tile-body {

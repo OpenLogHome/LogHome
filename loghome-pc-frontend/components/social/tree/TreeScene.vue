@@ -47,6 +47,7 @@ import {
   getCameraFraming,
   getSceneThemeDefinition,
   getSceneThemeStyle,
+  fitSceneCamera,
 } from "./sceneThemes";
 
 const PATH_CELLS = new Set(["0:4", "0:3", "0:2", "0:1", "-1:4", "1:4", "-1:3", "1:3"]);
@@ -468,6 +469,7 @@ function createRuntime(framing = getCameraFraming(1)) {
     camera: null,
     cameraTarget: new THREE.Vector3(0, framing.targetY || 2.6, 0),
     world: null,
+    terrain: null,
     host: null,
     materials: null,
     geometries: null,
@@ -1102,6 +1104,7 @@ function buildTerrain(runtime) {
   buildNightAtmosphere(runtime, terrain);
 
   runtime.world.add(terrain);
+  runtime.terrain = terrain;
 
   buildThemeClouds(runtime);
 }
@@ -2509,7 +2512,6 @@ export default {
       this.runtime = runtime;
 
       this.attachInteraction(runtime);
-      this.updateRendererSize();
       this.rebuildStage();
 
       if (window.ResizeObserver) {
@@ -2568,6 +2570,7 @@ export default {
 
       runtime.stage = buildStageForStatus(runtime, this.sceneStatus);
       runtime.world.add(runtime.stage.root);
+      this.updateRendererSize();
       runtime.renderer.shadowMap.needsUpdate = true;
     },
     updateRendererSize() {
@@ -2577,14 +2580,19 @@ export default {
       const rect = runtime.host.getBoundingClientRect();
       const width = Math.max(rect.width, 1);
       const height = Math.max(rect.height, 1);
-      const framing = getCameraFraming(
+      const preferredFraming = getCameraFraming(
         width / height,
         runtime.themeKey || this.themeDefinition.key,
         runtime.isNight
       );
+      const bounds = [runtime.terrain, runtime.stage && runtime.stage.root]
+        .filter(Boolean)
+        .map(object => new THREE.Box3().setFromObject(object))
+        .filter(box => !box.isEmpty());
+      const framing = fitSceneCamera(preferredFraming, width / height, bounds);
 
       runtime.radius = framing.radius;
-      runtime.cameraTarget.y = framing.targetY || 2.6;
+      runtime.cameraTarget.y = framing.targetY;
       runtime.camera.fov = framing.fov;
 
       if (!this.hasInteracted) {
@@ -2594,7 +2602,11 @@ export default {
       }
 
       runtime.camera.aspect = width / height;
+      runtime.camera.far = Math.max(60, framing.radius + 30);
       runtime.camera.updateProjectionMatrix();
+      const fogOffset = Math.max(0, framing.radius - preferredFraming.radius);
+      runtime.scene.fog.near = this.themeDefinition.fog.near + fogOffset;
+      runtime.scene.fog.far = this.themeDefinition.fog.far + fogOffset;
       runtime.renderer.setSize(width, height, false);
       runtime.renderer.shadowMap.needsUpdate = true;
     },
@@ -2819,7 +2831,7 @@ export default {
 .gesture-hint {
   position: absolute;
   left: 50%;
-  bottom: 105px;
+  bottom: 20px;
   transform: translateX(-50%);
   pointer-events: none;
   padding: 8px 12px;
@@ -2836,7 +2848,7 @@ export default {
 .scene-error {
   position: absolute;
   left: 50%;
-  bottom: 95px;
+  bottom: 20px;
   transform: translateX(-50%);
   max-width: 280px;
   padding: 8px 11px;

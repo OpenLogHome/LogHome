@@ -228,9 +228,9 @@ export default {
   gap: 8px;
   align-items: center;
   font-size: 13px;
-  color: var(--wood, #947358);
-  background: var(--surface, #fffdf9);
-  border: 1px solid var(--line, #e9e0d5);
+  color: var(--wood, #c65320);
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 10px;
   padding: 12px 16px;
 }
@@ -239,7 +239,7 @@ export default {
   gap: 10px;
   align-items: center;
   padding: 12px 0;
-  color: var(--ink, #382d25);
+  color: var(--ink, #30343b);
 }
 .feed-circle img {
   width: 42px;
@@ -258,7 +258,7 @@ export default {
 }
 .feed-more {
   display: block;
-  color: var(--wood, #947358);
+  color: var(--wood, #c65320);
   font-size: 13px;
   margin-top: 16px;
 }

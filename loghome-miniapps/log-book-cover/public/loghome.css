@@ -1,0 +1,29 @@
+html:root { --minitool-titlebar-height: 0px; }
+html:root.loghome-embedded { --minitool-titlebar-height: 64px; }
+html .home-header h1 { font-size: clamp(23px, 6.4vw, 32px); line-height: 1.2; }
+html .template-grid { min-height: 0; }
+html .template-choice .preview .preview-element span, html .template-panel-grid .preview .preview-element span { margin: 0; font-size: inherit; white-space: pre-line; line-height: inherit; }
+html .template-choice > .template-preview-wrap { border-radius: 3px; }
+html .preview, html .template-preview-wrap, html .blank-preview, html .history-thumb { aspect-ratio: 499 / 646; }
+html .create-sheet { width: min(100%, 680px); left: 50%; margin-left: max(-340px, -50%); }
+.book-template-filters { display: flex; gap: 8px; padding: 0 20px 14px; flex-shrink: 0; }
+.book-template-filters button { padding: 7px 14px; border: 1px solid #d8d8d1; border-radius: 20px; background: transparent; color: #72726b; font-size: 12px; }
+.book-template-filters button.active { background: #27372c; color: #fff; border-color: #27372c; }
+.book-canvas-controls { flex-shrink: 0; padding: 0 20px 8px; }
+.book-size-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; font-size: 13px; }
+.book-size-heading button { padding: 5px 9px; border: 1px solid #d8d8d1; border-radius: 5px; background: #fff; color: #435b48; font-size: 11px; }
+.book-size-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.book-size-field { min-width: 0; display: block; }
+.book-size-field span { display: block; font-size: 11px; color: #72726b; margin-bottom: 4px; }
+.book-size-field input { box-sizing: border-box; width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid #d8d8d1; border-radius: 5px; background: #fff; color: #171717; font-size: 16px; }
+.book-size-field input:focus { outline: 2px solid #709779; outline-offset: 1px; }
+.book-size-field input[aria-invalid="true"] { border-color: #b72e2a; }
+.book-size-hint, .book-size-error { margin: 6px 0 0; font-size: 10px; line-height: 1.4; }
+.book-size-hint { color: #72726b; }
+.book-size-error { color: #b72e2a; }
+html .editor-dock { grid-template-columns: repeat(5, 1fr); }
+.book-size-icon { font-size: 25px; line-height: 22px; }
+.book-size-panel { height: calc(100% - 60px); padding: 12px 16px 20px; }
+.book-size-panel .book-canvas-controls { padding: 0; }
+.book-size-panel > p { color: #72726b; font-size: 11px; line-height: 1.5; margin: 8px 0; }
+.book-size-panel .primary-button { width: 100%; min-height: 42px; }

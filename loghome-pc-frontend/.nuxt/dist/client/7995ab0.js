@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[39],{1012:function(n,e,t){"use strict";t.r(e);var l={components:{RankPanel:t(750).a},watchQuery:["board","zone","page"]},r=t(29),component=Object(r.a)(l,(function(){var n=this._self._c;return n("div",{staticClass:"reading-ranks-page"},[n("RankPanel",{attrs:{full:""}})],1)}),[],!1,null,null,null);e.default=component.exports}}]);

@@ -163,7 +163,7 @@ export default {
 
 <style scoped>
 .social-comment-composer {
-  border-top: 1px solid #f0e9e2;
+  border-top: 1px solid var(--line, #e2e6eb);
   padding-top: 12px;
 }
 .reply-hint {
@@ -171,7 +171,7 @@ export default {
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: var(--wood, #947358);
+  color: var(--wood, #c65320);
   margin-bottom: 8px;
 }
 .cancel-reply {
@@ -188,17 +188,17 @@ export default {
   width: 100%;
   box-sizing: border-box;
   resize: vertical;
-  border: 1px solid var(--line, #e9e0d5);
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 14px;
-  color: var(--ink, #382d25);
-  background: var(--surface, #fffdf9);
+  color: var(--ink, #30343b);
+  background: var(--surface, #ffffff);
   font-family: inherit;
   outline: none;
 }
 .composer-input:focus {
-  border-color: var(--wood, #947358);
+  border-color: var(--wood, #c65320);
 }
 .composer-images {
   display: flex;
@@ -239,7 +239,7 @@ export default {
   align-items: center;
   gap: 5px;
   font-size: 13px;
-  color: var(--wood, #947358);
+  color: var(--wood, #c65320);
   cursor: pointer;
   user-select: none;
 }
@@ -253,7 +253,7 @@ export default {
   margin-left: auto;
 }
 .submit-btn {
-  background: var(--wood, #947358);
+  background: var(--wood, #c65320);
   border: none;
   color: #fff;
   border-radius: 18px;
@@ -262,7 +262,7 @@ export default {
   cursor: pointer;
 }
 .submit-btn:hover {
-  background: #704c35;
+  background: #ac4319;
 }
 .submit-btn:disabled {
   opacity: 0.5;

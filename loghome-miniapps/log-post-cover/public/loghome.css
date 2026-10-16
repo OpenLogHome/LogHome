@@ -1,0 +1,11 @@
+.app-title{flex:0 0 auto;margin:0;padding:calc(12px + var(--safe-area-inset-top,env(safe-area-inset-top,0px))) 16px 0;font-size:16px;font-weight:700;color:#12384b}
+.stage{padding-top:10px}
+.loghome-embedded .app-title{padding-right:112px;min-height:calc(44px + var(--safe-area-inset-top,0px))}
+dialog{width:min(520px,calc(100% - 24px));max-height:calc(100dvh - 32px);padding:16px;border:0;border-radius:16px;overflow:auto;color:#12384b;background:#f7f8fa}
+dialog::backdrop{background:rgba(18,40,55,.68)}
+.export-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.export-toolbar h2{margin:0;font-size:18px}
+.export-toolbar button{border:0;border-radius:8px;padding:9px 12px;font:inherit;background:#e7eaee;color:#12384b}
+dialog p{font-size:13px;color:#66788a}
+#exportImage{display:block;width:100%;height:auto;-webkit-touch-callout:default;user-select:auto}
+#downloadImage{display:block;margin-top:14px;padding:12px;text-align:center;text-decoration:none;border-radius:12px;background:#12384b;color:#fff}

@@ -33,18 +33,18 @@ export default {
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 1px solid #e3dbcf;
+  border: 1px solid #e2e6eb;
   border-radius: 8px;
-  background: #fffdf9;
-  color: #79573d;
+  background: #ffffff;
+  color: #c65320;
   cursor: pointer;
   font-size: 16px;
 }
 .global-theme-switch:hover {
-  background: #f2e9dd;
+  background: #f1f3f5;
 }
 .global-theme-switch:focus-visible {
-  outline: 2px solid #947358;
+  outline: 2px solid #c65320;
   outline-offset: 3px;
 }
 html[data-site-theme="dark"] .global-theme-switch {
