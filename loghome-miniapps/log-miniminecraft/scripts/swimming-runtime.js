@@ -1,5 +1,6 @@
 // Shared by the game Worker and tests. Water occupancy is integrated over the
-// body rather than toggled at its centre, giving a stable resting waterline.
+// body rather than toggled at its centre. Animals paddle to a waterline; the
+// player has reduced gravity and sinks gently unless providing upward input.
 function logWaterBody(getBlock,x,y,z,box){
  const w=box.width*.4,d=box.depth*.4,h=box.height;
  let volume=0;
@@ -12,6 +13,10 @@ function logWaterBody(getBlock,x,y,z,box){
 }
 function logSwimVelocity(velocity,immersion,control,dt){
  const drag=4,force=(immersion-.65)*24+control*12,decay=Math.exp(-drag*dt);
+ return Math.max(-3,Math.min(3,velocity*decay+force/drag*(1-decay)));
+}
+function logPlayerWaterVelocity(velocity,control,dt){
+ const drag=3.2,force=-2+(control>0?8.5:control<0?-5.5:0),decay=Math.exp(-drag*dt);
  return Math.max(-3,Math.min(3,velocity*decay+force/drag*(1-decay)));
 }
 function logSwimSolid(block){
@@ -44,8 +49,7 @@ function logPlayerSwim(player,deltaTime,inputs=true){
  const blocked=player.checkCollision.bind(player);
  player.onGround=false;
  for(let i=0;i<steps;i++){
-  const immersion=logWaterBody(get,player.positionX,player.positionY,player.positionZ,box);
-  player.velocityY=logSwimVelocity(player.velocityY,immersion,(up?1:0)-(down?1:0),step);
+  player.velocityY=logPlayerWaterVelocity(player.velocityY,(up?1:0)-(down?1:0),step);
   const alpha=1-Math.exp(-7*step);player.velocityX+=(targetX-player.velocityX)*alpha;player.velocityZ+=(targetZ-player.velocityZ)*alpha;
   const newY=player.positionY+player.velocityY*step,hit=player.checkCollisionY(newY);
   if(hit!==null){player.onGround=player.velocityY<0;player.positionY=player.velocityY<0?hit:hit-PLAYER_COLLISION_HEIGHT;player.velocityY=0}else player.positionY=newY;

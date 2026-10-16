@@ -12,19 +12,19 @@ function fixture(blocks=pool){
  const player=new context.Player(()=>0,blocks);player.setPosition(.5,2,.5);
  return {context,player,blocks,step(dt=1/60,inputs=true){now+=dt*1000;if(inputs)player.updateMovement(dt);else player.updatePhysicsOnly(dt)},seconds(seconds,fps=60,inputs=true){for(let i=0;i<seconds*fps;i++){now+=1000/fps;if(inputs)player.updateMovement(1/fps);else player.updatePhysicsOnly(1/fps)}}};
 }
-test('player floats at a stable waterline, with the eye above water, at every target FPS',()=>{
+test('player sinks slowly without input at every target FPS and stops at the seabed',()=>{
  let reference;
  for(const fps of [30,60,90,120]){
-  const f=fixture();f.seconds(12,fps);const y=f.player.positionY;
-  assert.ok(Math.abs(y-(6-1.8*.65))<.005,'Waterline '+y);assert.ok(y+1.6>6);assert.equal(f.player.getState().isSwimming,true);
+  const f=fixture();f.seconds(2,fps);const y=f.player.positionY;
+  assert.ok(y>.8&&y<1.1,'Slow sinking '+y);assert.ok(f.player.velocityY<-.6&&f.player.velocityY>-.65);assert.equal(f.player.getState().isSwimming,true);
   if(reference!==undefined)assert.ok(Math.abs(y-reference)<.002);reference=y;
-  f.seconds(2,fps);assert.ok(Math.abs(f.player.positionY-y)<.001);
+  f.seconds(10,fps);assert.ok(Math.abs(f.player.positionY)<.001);assert.equal(f.player.velocityY,0);
  }
 });
 test('ascent, dive, idle physics, camera-relative movement and diagonal speed stay bounded',()=>{
- const f=fixture();f.seconds(8);f.player.keys.ShiftLeft=true;f.seconds(1);const deep=f.player.positionY;assert.ok(deep<4);
- f.player.keys.ShiftLeft=false;f.player.keys.Space=true;f.seconds(1);assert.ok(f.player.positionY>deep+1);
- f.player.keys.Space=false;f.seconds(10,60,false);assert.ok(Math.abs(f.player.positionY-4.83)<.01);
+ const f=fixture();f.player.setPosition(.5,4.8,.5);f.seconds(.5);f.player.keys.ShiftLeft=true;f.seconds(1);const deep=f.player.positionY;assert.ok(deep<4);
+ f.player.keys.ShiftLeft=false;f.player.keys.Space=true;f.seconds(2);assert.ok(f.player.positionY>deep+1);
+ f.player.keys.Space=false;f.seconds(1,60,false);const released=f.player.positionY;f.seconds(1,60,false);assert.ok(f.player.positionY<released-.5);
  const distances=[];
  for(const diagonal of [false,true]){
   const value=fixture();value.player.keys.KeyW=true;value.player.keys.KeyD=diagonal;value.seconds(2);
@@ -35,7 +35,7 @@ test('ascent, dive, idle physics, camera-relative movement and diagonal speed st
 test('swimming cannot pass through banks or ceilings; jump/auto-jump can climb an unobstructed shore',()=>{
  const wall=(x,y,z)=>x>=2||y===6?1:pool(x,y,z),f=fixture(wall);f.player.keys.KeyD=true;f.player.keys.Space=true;f.seconds(5);
  assert.ok(f.player.positionX<=1.701);assert.ok(f.player.positionY+1.8<=6.001);
- const bank=(x,y,z)=>x>=2&&y<6?1:pool(x,y,z),shore=fixture(bank);shore.player.keys.KeyD=true;shore.seconds(8);
+ const bank=(x,y,z)=>x>=2&&y<6?1:pool(x,y,z),shore=fixture(bank);shore.player.keys.KeyD=true;shore.player.keys.Space=true;shore.seconds(8);
  assert.ok(shore.player.positionX>3);assert.ok(shore.player.positionY>=6-.01);assert.equal(shore.player.getState().isSwimming,false);
 });
 test('dry-land movement, lava and creative flying do not acquire water buoyancy',()=>{
@@ -59,12 +59,21 @@ test('animals of different sizes float and paddle toward a nearby bank without c
  assert.ok(entity.position.y+config.boundingBox.height<=4.001);
 });
 test('camera water probe uses actual water voxels, including third-person cameras, and bounds pending requests',()=>{
- const context={BlockType:{WATER:9}};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../scripts/underwater-runtime.js'),'utf8'),context);
+ const context={BlockType:{WATER:5},getBlockTypeById:id=>id==='water'?17:undefined};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../scripts/underwater-runtime.js'),'utf8'),context);
  const requests=[],bridge={getBlocksAround:(x,y,z,r,callback)=>requests.push({x,y,z,r,callback})};
  const probe=context.logCreateWaterProbe(bridge),camera={position:{x:.5,y:5.5,z:.5}};
  assert.equal(probe.sample(0,camera),false);probe.sample(100,camera);assert.equal(requests.length,1);
- requests[0].callback([{x:0,y:5,z:0,blockType:9},{x:1,y:5,z:0,blockType:11}]);assert.equal(probe.sample(110,camera),true);
+ requests[0].callback([{x:0,y:5,z:0,blockType:17},{x:1,y:5,z:0,blockType:5}]);assert.equal(probe.sample(110,camera),true);
  camera.position.x=1.5;assert.equal(probe.sample(120,camera),false);
  camera.position.y=6.01;assert.equal(probe.sample(130,camera),false);
- probe.dispose();requests.at(-1).callback([{x:1,y:6,z:0,blockType:9}]);assert.equal(probe.sample(140,camera),false);
+ probe.dispose();requests.at(-1).callback([{x:1,y:6,z:0,blockType:17}]);assert.equal(probe.sample(140,camera),false);
+});
+test('underwater hand tint does not accumulate and restores ambient color after leaving water',()=>{
+ const context={};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../scripts/underwater-runtime.js'),'utf8'),context);
+ class Color{constructor(r=1,g=1,b=1){Object.assign(this,{r,g,b})}clone(){return new Color(this.r,this.g,this.b)}copy(other){Object.assign(this,other);return this}}
+ const hand={logUnderwater:1,light:{color:new Color(),intensity:1},ambientLight:{color:new Color(.9,.95,1),intensity:.5}};
+ function frame(){hand.light.color.copy(new Color());hand.light.intensity=1;hand.ambientLight.intensity=.5;context.logUnderwaterHand(hand)}
+ frame();const submerged=JSON.stringify(hand.ambientLight);
+ for(let i=0;i<300;i++)frame();assert.equal(JSON.stringify(hand.ambientLight),submerged);
+ hand.logUnderwater=0;frame();assert.deepEqual(hand.ambientLight.color,new Color(.9,.95,1));assert.equal(hand.ambientLight.intensity,.5);assert.deepEqual(hand.light.color,new Color());assert.equal(hand.light.intensity,1);
 });

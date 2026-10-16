@@ -86,8 +86,13 @@ if(probe[1]<40||probe[2]<40)throw Error('Unlit water transmission was darkened: 
 for(const [light,intensity]of sceneLights)light.intensity=intensity;scene.remove(testGround);testGround.geometry.dispose();testGround.material.dispose();logAdvancedSettings.value.enabled=false;pipeline.render();
 // Actual underside view: ordinary settings may all be off, but being immersed
 // must still have distance absorption. Leaving water must restore the air image.
-camera.position.set(4,1.2,5);camera.lookAt(4,1,-2);
+camera.position.set(4,1.2,5);camera.lookAt(4,1.2,-2);
 waterMesh.setMatrixAt(0,new Matrix4().compose(new Vector3(4,2.5,0),new Quaternion(),new Vector3(14,1,14)));waterMesh.instanceMatrix.needsUpdate=true;
+// Identical unlit white markers: nearby geometry must remain legible, whereas
+// a marker 40 blocks away must disappear into blue fog, not stay air-clear.
+const nearWaterMarker=new Mesh(new PlaneGeometry(.5,.5),new MeshBasicMaterial({color:0xffffff}));nearWaterMarker.position.set(3.2,1.2,2);
+const farWaterMarker=new Mesh(new PlaneGeometry(5,5),new MeshBasicMaterial({color:0xffffff}));farWaterMarker.position.set(9,1.2,-35);scene.add(nearWaterMarker,farWaterMarker);
+const sampleMarker=mesh=>{const projected=mesh.position.clone().project(camera),pixel=new Uint8Array(4),gl=canvasRenderer.getContext();gl.readPixels(Math.floor((projected.x*.5+.5)*960),Math.floor((projected.y*.5+.5)*640),1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);return Array.from(pixel)};
 let underwaterTime=0;const settleWater=wet=>{for(let i=0;i<60;i++){underwaterTime+=1000/60;pipeline.setUnderwater(wet,underwaterTime)}};
 const underwaterChanges=[];
 for(const enabled of [false,true]){
@@ -96,12 +101,15 @@ for(const enabled of [false,true]){
  settleWater(true);pipeline.render();const underwaterPixels=readPixels();let difference=0;
  for(let i=0;i<airPixels.length;i+=4)if(Math.abs(airPixels[i]-underwaterPixels[i])+Math.abs(airPixels[i+2]-underwaterPixels[i+2])>8)difference++;
  if(difference<1000)throw Error('Underwater absorption missing, advanced='+enabled);underwaterChanges.push(difference);
+ const nearWaterPixel=sampleMarker(nearWaterMarker),farWaterPixel=sampleMarker(farWaterMarker);
+ if(nearWaterPixel[0]<80||farWaterPixel[0]>nearWaterPixel[0]*.25||farWaterPixel[2]<farWaterPixel[0]+30)throw Error('Underwater visibility range failed: '+JSON.stringify({enabled,nearWaterPixel,farWaterPixel}));
  if(enabled)window.underwaterPreview=canvasRenderer.domElement.toDataURL();
  settleWater(false);pipeline.render();const exitPixels=readPixels();
  if(!enabled){let error=0;for(let i=0;i<exitPixels.length;i++)error=Math.max(error,Math.abs(exitPixels[i]-airPixels[i]));if(error)throw Error('Underwater effect persisted above water: '+error)}
  if(logAdvancedSettings.error)throw Error('Underwater shader fallback: '+logAdvancedSettings.error);
 }
 Object.assign(window.result,{underwaterChanges,glError:canvasRenderer.getContext().getError(),programs:canvasRenderer.info.programs.length});
+for(const marker of [nearWaterMarker,farWaterMarker]){scene.remove(marker);marker.geometry.dispose();marker.material.dispose()}
 // Unsupported HDR must return to the ordinary path without losing preferences.
 pipeline.dispose();const savedHas=canvasRenderer.extensions.has;canvasRenderer.extensions.has=()=>false;
 const fallbackPipeline=logCreateQualityPipeline(canvasRenderer,scene,camera,{getWaterContainers:()=>[]});
