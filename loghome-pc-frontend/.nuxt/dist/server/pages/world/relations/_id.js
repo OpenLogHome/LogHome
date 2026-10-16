@@ -1,57 +1,7 @@
-exports.ids = [38];
+exports.ids = [65];
 exports.modules = {
 
-/***/ 127:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(URLSearchParams) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return readingCommentId; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return readingCommentTarget; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return readingMessageTarget; });
-function readingCommentId(query = {}) {
-  const id = Number(query.preLoadCommentId || query.comment_id || query.commentId);
-  return Number.isSafeInteger(id) && id > 0 ? id : 0;
-}
-function readingCommentTarget(comment, book, anchor) {
-  if (!comment || !book || Number(comment.novelId) !== Number(book.novel_id)) return '';
-  const suffix = `preLoadCommentId=${Number(anchor) || Number(comment.commentId)}`;
-  if (Number(comment.articleId) > 0) {
-    if (book.novel_type === 'manga') return `/manga/read/${comment.articleId}?novelId=${book.novel_id}&${suffix}`;
-    return `/article/${comment.articleId}?${suffix}${Number(comment.paragraphId) > 0 ? `&paragraphId=${comment.paragraphId}` : ''}`;
-  }
-  return `/${book.novel_type === 'manga' ? 'manga' : book.novel_type === 'world' ? 'world' : 'novel'}/${book.novel_id}?${suffix}`;
-}
-function readingMessageTarget(router) {
-  const raw = String(router || '').trim();
-  if (!raw || /^[a-z][a-z\d+.-]*:|^\/\/|[\\\x00-\x1f]/i.test(raw)) return null;
-  const source = raw.replace(/^\/?(?:#\/)?(?:pages\/)?/, '');
-  const [path, search = ''] = source.split('?'),
-    query = new URLSearchParams(search);
-  const id = Number(query.get('id') || query.get('novelId') || query.get('novel_id'));
-  const anchor = readingCommentId(Object.fromEntries(query));
-  if (/^readers\/(?:bookInfo|bookComment|mangaInfo|mangaReader|bookEnd|bookExcerpts|newReader\/article)$/.test(path)) {
-    const workId = /(?:mangaReader|newReader\/article)$/.test(path) ? Number(query.get('novelId') || query.get('novel_id')) : id;
-    if (anchor) return {
-      path: `/read/comment/${anchor}${Number.isSafeInteger(workId) && workId > 0 ? `?novelId=${workId}` : ''}`
-    };
-    if (!Number.isSafeInteger(id) || id <= 0) return null;
-    if (path === 'readers/newReader/article') return {
-      path: `/article/${id}`
-    };
-    if (path === 'readers/mangaReader') return {
-      path: `/manga/read/${id}${Number(query.get('novelId')) > 0 ? `?novelId=${Number(query.get('novelId'))}` : ''}`
-    };
-    return {
-      path: `/${path === 'readers/mangaInfo' ? 'manga' : path === 'readers/bookEnd' ? 'read/end' : 'novel'}/${id}`
-    };
-  }
-  return null;
-}
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"]))
-
-/***/ }),
-
-/***/ 138:
+/***/ 173:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -61,7 +11,7 @@ function readingMessageTarget(router) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return filterWorldNodes; });
 /* unused harmony export loadWorldVocabularies */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return loadPublicWorld; });
-/* harmony import */ var _reader_comment_links__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(127);
+/* harmony import */ var _reader_comment_links__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(40);
 
 function worldImage(value) {
   if (typeof value !== 'string') return '';
@@ -229,45 +179,45 @@ async function loadPublicWorld({
     });
   }
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URL"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URL"]))
 
 /***/ }),
 
-/***/ 174:
+/***/ 221:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(210);
+var content = __webpack_require__(273);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("143ca612", content, true, context)
 };
 
 /***/ }),
 
-/***/ 209:
+/***/ 272:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WorldVocabularyBrowser_vue_vue_type_style_index_0_id_79e26019_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(174);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WorldVocabularyBrowser_vue_vue_type_style_index_0_id_79e26019_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(221);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WorldVocabularyBrowser_vue_vue_type_style_index_0_id_79e26019_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WorldVocabularyBrowser_vue_vue_type_style_index_0_id_79e26019_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WorldVocabularyBrowser_vue_vue_type_style_index_0_id_79e26019_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WorldVocabularyBrowser_vue_vue_type_style_index_0_id_79e26019_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 210:
+/***/ 273:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.world-browser[data-v-79e26019]{min-width:0}.vocabulary-toolbar[data-v-79e26019]{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:0 0 20px}.search[data-v-79e26019]{display:grid;gap:7px;flex:1;min-width:190px;max-width:360px;font-size:12px;color:#8c7a64}.search input[data-v-79e26019]{width:100%;box-sizing:border-box;border:1px solid #ded5c8;border-radius:7px;padding:10px 12px;font:inherit;font-size:14px;color:#655944;background:#fff}.filters[data-v-79e26019]{display:flex;gap:6px;flex-wrap:wrap}.filters button[data-v-79e26019],.graph-tools button[data-v-79e26019],.vocabulary-entry button[data-v-79e26019]{border:1px solid #e4ddcf;border-radius:6px;background:#fff;color:#8d7759;padding:8px 11px;font:inherit;font-size:12px;cursor:pointer}.filters .active[data-v-79e26019]{background:#eaf0dd;color:#738748;border-color:#d6e0bf}button[data-v-79e26019]:disabled{opacity:.45;cursor:default}.result-count[data-v-79e26019]{font-size:12px;color:#a09687;margin-left:auto;line-height:34px}.load-status[data-v-79e26019],.load-error[data-v-79e26019]{font-size:12px;line-height:1.8;margin:10px 0 16px;color:#a18e70}.load-error[data-v-79e26019]{color:#b3624c}.load-error button[data-v-79e26019]{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer}.network-layout[data-v-79e26019]{display:grid;grid-template-columns:minmax(0,1fr) 265px;border:1px solid #e5ddcd;border-radius:12px;overflow:hidden;margin-bottom:28px}.network-main[data-v-79e26019]{min-width:0;background:#faf9f5}.graph-tools[data-v-79e26019]{display:flex;align-items:center;gap:6px;padding:14px 18px;position:relative;z-index:1}.graph-tools span[data-v-79e26019]{margin-right:auto;font-size:12px;color:#a2927a}.world-network[data-v-79e26019]{display:block;width:100%;aspect-ratio:10/7;touch-action:none;background-image:radial-gradient(#ddd5c5 1px,transparent 1px);background-size:22px 22px}.dim[data-v-79e26019]{opacity:.15}.node-ring[data-v-79e26019]{stroke:#d5cab3;stroke-width:2}.selected .node-ring[data-v-79e26019]{stroke:#7e9655;stroke-width:4}.world-graph-node[data-v-79e26019]{cursor:grab}.world-graph-node[data-v-79e26019]:active{cursor:grabbing}.world-graph-node:focus .node-ring[data-v-79e26019]{stroke:#7e9655;stroke-width:4}.node-initial[data-v-79e26019]{font-size:22px;fill:#88765b}.node-title[data-v-79e26019]{font-size:16px;fill:#6e614e;paint-order:stroke;stroke:#faf9f5;stroke-width:5px}.relation-label[data-v-79e26019]{font-size:13px;fill:#9b896b;paint-order:stroke;stroke:#faf9f5;stroke-width:4px}.graph-hint[data-v-79e26019]{padding:0 18px 16px;font-size:11px;color:#aa9b83;line-height:1.8}.selected-vocabulary[data-v-79e26019]{padding:24px;border-left:1px solid #e5ddcd;min-width:0;max-height:650px;overflow:auto;background:#fff;overflow-wrap:anywhere}.eyebrow[data-v-79e26019]{font-size:11px;letter-spacing:2px;color:#a5967e}.selected-vocabulary h3[data-v-79e26019]{font-size:20px;margin:10px 0 16px;color:#665a45}.selected-vocabulary p[data-v-79e26019]{font-size:13px;line-height:1.8;color:#a09077;white-space:pre-wrap}.selected-vocabulary dl[data-v-79e26019]{font-size:12px;margin:18px 0}.selected-vocabulary dt[data-v-79e26019]{color:#a39378;margin-top:12px}.selected-vocabulary dd[data-v-79e26019]{margin:5px 0 0;color:#6f624b;white-space:pre-wrap}.read-vocabulary[data-v-79e26019]{display:inline-block;margin:18px 0;color:#7b9054;font-size:13px;text-decoration:none}.selected-vocabulary h4[data-v-79e26019]{font-size:13px;color:#938169;margin:16px 0}.selected-vocabulary ul[data-v-79e26019]{list-style:none;padding:0}.selected-vocabulary li[data-v-79e26019]{border-bottom:1px solid #eee8df;padding:9px 0;display:grid;gap:5px}.selected-vocabulary li button[data-v-79e26019]{text-align:left;border:0;background:none;color:#7c8d51;font:inherit;font-size:12px;cursor:pointer;padding:0}.selected-vocabulary li span[data-v-79e26019]{font-size:11px;color:#b09f83}.vocabulary-list-header[data-v-79e26019]{display:flex;justify-content:space-between;align-items:center;margin:12px 0 18px}.vocabulary-list-header h3[data-v-79e26019]{font-size:17px;color:#7a6850}.vocabulary-list-header a[data-v-79e26019]{font-size:13px;color:#859555;text-decoration:none}.vocabulary-grid[data-v-79e26019]{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.vocabulary-entry[data-v-79e26019]{min-width:0;border:1px solid #e7e0d5;border-radius:9px;background:#fff;overflow:hidden}.vocabulary-entry a[data-v-79e26019]{display:flex;gap:12px;padding:16px;text-decoration:none;min-width:0;color:inherit}.vocabulary-entry img[data-v-79e26019],.entry-initial[data-v-79e26019]{width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0}.entry-initial[data-v-79e26019]{display:flex;align-items:center;justify-content:center;background:#edf0e2;color:#8a9a60;font-size:20px}.vocabulary-entry a div[data-v-79e26019]{min-width:0}.vocabulary-entry h4[data-v-79e26019]{font-size:14px;color:#776247;margin:1px 0 7px;overflow-wrap:anywhere}.vocabulary-entry p[data-v-79e26019]{font-size:12px;color:#a79781;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0}.vocabulary-entry small[data-v-79e26019]{font-size:10px;color:#afa087;display:block;margin-top:8px}.vocabulary-entry>button[data-v-79e26019]{display:block;font-size:11px;margin:0 16px 14px}.empty[data-v-79e26019]{font-size:13px;text-align:center;padding:40px;color:#a69982}button[data-v-79e26019]:focus-visible,input[data-v-79e26019]:focus-visible,a[data-v-79e26019]:focus-visible,svg[data-v-79e26019]:focus-visible{outline:2px solid #8a9b62;outline-offset:3px}@media(max-width:1000px){.vocabulary-grid[data-v-79e26019]{grid-template-columns:repeat(2,minmax(0,1fr))}.network-layout[data-v-79e26019]{grid-template-columns:1fr}.selected-vocabulary[data-v-79e26019]{border-left:0;border-top:1px solid #e5ddcd;max-height:300px}.graph-hint[data-v-79e26019]{font-size:12px}}@media(max-width:600px){.vocabulary-grid[data-v-79e26019]{grid-template-columns:1fr}.result-count[data-v-79e26019]{margin-left:0}.vocabulary-toolbar[data-v-79e26019]{gap:10px}.vocabulary-entry a[data-v-79e26019]{padding:14px}}\r\n", ""]);
@@ -277,7 +227,7 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 218:
+/***/ 284:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -342,7 +292,7 @@ var staticRenderFns = [];
 // CONCATENATED MODULE: ./components/read/WorldVocabularyBrowser.vue?vue&type=template&id=79e26019&scoped=true
 
 // EXTERNAL MODULE: ./utils/reader-world.js
-var reader_world = __webpack_require__(138);
+var reader_world = __webpack_require__(173);
 
 // CONCATENATED MODULE: ./utils/world-graph-layout.js
 // Deterministic SVG layout; local-grid collision keeps each animation step bounded.
@@ -767,7 +717,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(209)
+  var style0 = __webpack_require__(272)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -789,41 +739,41 @@ var component = Object(componentNormalizer["a" /* default */])(
 
 /***/ }),
 
-/***/ 267:
+/***/ 357:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(368);
+var content = __webpack_require__(506);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("1fed04a1", content, true, context)
 };
 
 /***/ }),
 
-/***/ 367:
+/***/ 505:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3cd7436c_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(267);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3cd7436c_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(357);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3cd7436c_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3cd7436c_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3cd7436c_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_id_vue_vue_type_style_index_0_id_3cd7436c_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 368:
+/***/ 506:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, ".world-relations[data-v-3cd7436c]{max-width:1360px;box-sizing:border-box;margin:auto;padding:32px 40px 60px}.world-relations>header[data-v-3cd7436c]{margin-bottom:28px}.world-relations>header a[data-v-3cd7436c]{font-size:13px;color:#8d9d60;text-decoration:none}.world-relations h1[data-v-3cd7436c]{font-size:28px;font-weight:500;color:#776247;line-height:1.5;margin:18px 0 12px}.world-relations header p[data-v-3cd7436c]{font-size:13px;color:#a28e6f;line-height:1.8}@media(max-width:800px){.world-relations[data-v-3cd7436c]{padding:24px 20px}.world-relations h1[data-v-3cd7436c]{font-size:23px}}", ""]);
@@ -833,7 +783,7 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 443:
+/***/ 616:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -863,13 +813,13 @@ var staticRenderFns = [];
 // CONCATENATED MODULE: ./pages/world/relations/_id.vue?vue&type=template&id=3cd7436c&scoped=true
 
 // EXTERNAL MODULE: ./components/read/WorldVocabularyBrowser.vue + 5 modules
-var WorldVocabularyBrowser = __webpack_require__(218);
+var WorldVocabularyBrowser = __webpack_require__(284);
 
 // EXTERNAL MODULE: ./utils/reader-world.js
-var reader_world = __webpack_require__(138);
+var reader_world = __webpack_require__(173);
 
 // EXTERNAL MODULE: ./utils/reading-seo.js
-var reading_seo = __webpack_require__(34);
+var reading_seo = __webpack_require__(39);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./pages/world/relations/_id.vue?vue&type=script&lang=js
 
@@ -917,7 +867,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(367)
+  var style0 = __webpack_require__(505)
 if (style0.__inject__) style0.__inject__(context)
 
 }

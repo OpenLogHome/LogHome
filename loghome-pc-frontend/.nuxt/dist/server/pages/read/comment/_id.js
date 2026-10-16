@@ -1,7 +1,7 @@
-exports.ids = [24];
+exports.ids = [47];
 exports.modules = {
 
-/***/ 124:
+/***/ 153:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -17,7 +17,7 @@ exports.modules = {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return praiseMangaComment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return deleteMangaComment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() { return uploadMangaCommentImage; });
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(11);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12);
 /* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
 
 
@@ -303,57 +303,7 @@ async function uploadMangaCommentImage(file) {
 
 /***/ }),
 
-/***/ 127:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(URLSearchParams) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return readingCommentId; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return readingCommentTarget; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return readingMessageTarget; });
-function readingCommentId(query = {}) {
-  const id = Number(query.preLoadCommentId || query.comment_id || query.commentId);
-  return Number.isSafeInteger(id) && id > 0 ? id : 0;
-}
-function readingCommentTarget(comment, book, anchor) {
-  if (!comment || !book || Number(comment.novelId) !== Number(book.novel_id)) return '';
-  const suffix = `preLoadCommentId=${Number(anchor) || Number(comment.commentId)}`;
-  if (Number(comment.articleId) > 0) {
-    if (book.novel_type === 'manga') return `/manga/read/${comment.articleId}?novelId=${book.novel_id}&${suffix}`;
-    return `/article/${comment.articleId}?${suffix}${Number(comment.paragraphId) > 0 ? `&paragraphId=${comment.paragraphId}` : ''}`;
-  }
-  return `/${book.novel_type === 'manga' ? 'manga' : book.novel_type === 'world' ? 'world' : 'novel'}/${book.novel_id}?${suffix}`;
-}
-function readingMessageTarget(router) {
-  const raw = String(router || '').trim();
-  if (!raw || /^[a-z][a-z\d+.-]*:|^\/\/|[\\\x00-\x1f]/i.test(raw)) return null;
-  const source = raw.replace(/^\/?(?:#\/)?(?:pages\/)?/, '');
-  const [path, search = ''] = source.split('?'),
-    query = new URLSearchParams(search);
-  const id = Number(query.get('id') || query.get('novelId') || query.get('novel_id'));
-  const anchor = readingCommentId(Object.fromEntries(query));
-  if (/^readers\/(?:bookInfo|bookComment|mangaInfo|mangaReader|bookEnd|bookExcerpts|newReader\/article)$/.test(path)) {
-    const workId = /(?:mangaReader|newReader\/article)$/.test(path) ? Number(query.get('novelId') || query.get('novel_id')) : id;
-    if (anchor) return {
-      path: `/read/comment/${anchor}${Number.isSafeInteger(workId) && workId > 0 ? `?novelId=${workId}` : ''}`
-    };
-    if (!Number.isSafeInteger(id) || id <= 0) return null;
-    if (path === 'readers/newReader/article') return {
-      path: `/article/${id}`
-    };
-    if (path === 'readers/mangaReader') return {
-      path: `/manga/read/${id}${Number(query.get('novelId')) > 0 ? `?novelId=${Number(query.get('novelId'))}` : ''}`
-    };
-    return {
-      path: `/${path === 'readers/mangaInfo' ? 'manga' : path === 'readers/bookEnd' ? 'read/end' : 'novel'}/${id}`
-    };
-  }
-  return null;
-}
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"]))
-
-/***/ }),
-
-/***/ 441:
+/***/ 614:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -373,13 +323,13 @@ var staticRenderFns = [];
 // CONCATENATED MODULE: ./pages/read/comment/_id.vue?vue&type=template&id=6c929565
 
 // EXTERNAL MODULE: ./common/manga-comment-api.js
-var manga_comment_api = __webpack_require__(124);
+var manga_comment_api = __webpack_require__(153);
 
 // EXTERNAL MODULE: ./utils/reader-comment-links.js
-var reader_comment_links = __webpack_require__(127);
+var reader_comment_links = __webpack_require__(40);
 
 // EXTERNAL MODULE: ./utils/reading-seo.js
-var reading_seo = __webpack_require__(34);
+var reading_seo = __webpack_require__(39);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./pages/read/comment/_id.vue?vue&type=script&lang=js
 

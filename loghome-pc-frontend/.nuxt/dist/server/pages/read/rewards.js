@@ -1,92 +1,87 @@
-exports.ids = [32];
+exports.ids = [55];
 exports.modules = {
 
-/***/ 252:
+/***/ 210:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(336);
+var content = __webpack_require__(250);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
-  add("787562ea", content, true, context)
+  add("96b213fe", content, true, context)
 };
 
 /***/ }),
 
-/***/ 335:
+/***/ 249:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_455e93f7_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(252);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_455e93f7_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_455e93f7_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_455e93f7_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_455e93f7_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_173ef78a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(210);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_173ef78a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_173ef78a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_173ef78a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderRewards_vue_vue_type_style_index_0_id_173ef78a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 336:
+/***/ 250:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "\n.reader-rewards[data-v-455e93f7]{max-width:1180px;margin:0 auto;padding:112px 28px 65px;color:#52483c;font-size:14px}.rewards-heading[data-v-455e93f7]{display:flex;justify-content:space-between;align-items:center;gap:22px;margin-bottom:26px}.rewards-heading h1[data-v-455e93f7]{font-size:28px;margin:15px 0 10px}.rewards-heading p[data-v-455e93f7],.quiet[data-v-455e93f7]{font-size:13px;color:#998c7a;line-height:1.8}.rewards-heading>div[data-v-455e93f7]:last-child{display:flex;gap:18px;align-items:center}a[data-v-455e93f7]{color:#829355;text-decoration:none}button[data-v-455e93f7],select[data-v-455e93f7]{font:inherit;border:1px solid #e0d8cb;border-radius:7px;background:white;color:#8a7254;padding:8px 13px;cursor:pointer}button[data-v-455e93f7]:disabled,select[data-v-455e93f7]:disabled{opacity:.5;cursor:default}button[data-v-455e93f7]:focus-visible,select[data-v-455e93f7]:focus-visible,a[data-v-455e93f7]:focus-visible{outline:2px solid #8da35e;outline-offset:3px}.rewards-gate[data-v-455e93f7]{padding:36px;background:white;border:1px solid #e5e3dc;border-radius:13px;line-height:1.9}.rewards-layout[data-v-455e93f7]{display:grid;grid-template-columns:320px minmax(0,1fr);gap:22px}.tree-card[data-v-455e93f7],.rewards-panel[data-v-455e93f7]{border:1px solid #e5e5da;background:white;border-radius:13px;padding:24px;min-width:0}.tree-card[data-v-455e93f7]{align-self:start;position:sticky;top:84px;text-align:center}.tree-card h2[data-v-455e93f7]{font-size:19px;line-height:1.6;margin:10px 0 22px}.tree-label[data-v-455e93f7]{font-size:12px;color:#a19279}.growth-row[data-v-455e93f7]{display:flex;justify-content:space-between;margin:18px 0 10px;font-size:13px;color:#968775}.growth-row strong[data-v-455e93f7]{font-variant-numeric:tabular-nums;color:#7a8c50}progress[data-v-455e93f7]{appearance:none;height:9px;width:100%;border:0;border-radius:5px;overflow:hidden;background:#eeeee4}progress[data-v-455e93f7]::-webkit-progress-bar{background:#eeeee4}progress[data-v-455e93f7]::-webkit-progress-value{background:#8ba158}progress[data-v-455e93f7]::-moz-progress-bar{background:#8ba158}.primary[data-v-455e93f7]{width:100%;background:#879b59;border-color:#879b59;color:white;margin:14px 0;padding:12px}.resource-balances[data-v-455e93f7]{display:flex;border-top:1px solid #eee8dc;margin:23px 0 15px;padding-top:20px;gap:22px;justify-content:center}.resource-balances dt[data-v-455e93f7]{font-size:12px;color:#a3947d;margin-bottom:8px}.resource-balances dd[data-v-455e93f7]{margin:0;font-size:22px;font-weight:600;color:#8e744f}.tree-card>a[data-v-455e93f7]{font-size:12px}.theme-label[data-v-455e93f7]{display:grid;text-align:left;gap:8px;font-size:12px;color:#a1917a;margin-top:20px}.theme-label select[data-v-455e93f7]{width:100%}.rewards-panel[data-v-455e93f7]{margin-bottom:20px}.rewards-panel>header[data-v-455e93f7]{display:flex;justify-content:space-between;align-items:center;gap:15px}.rewards-panel h2[data-v-455e93f7]{font-size:17px;margin:0}.rewards-panel header p[data-v-455e93f7]{margin:8px 0}.orb-grid[data-v-455e93f7]{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:15px}.orb-grid button[data-v-455e93f7]{display:flex;align-items:center;flex-direction:column;gap:6px;background:#f8faef;border-color:#e2e9cc;padding:12px 4px;color:#819549}.orb-grid small[data-v-455e93f7]{font-size:10px}.orb-pixel[data-v-455e93f7]{display:block;width:18px;height:18px;box-shadow:4px 0 #acc656,-4px 0 #acc656,0 4px #acc656,0 -4px #acc656;background:#d6eb83;margin:5px}.task-list article[data-v-455e93f7]{display:grid;grid-template-columns:minmax(0,1fr) 75px 85px;gap:14px;align-items:center;padding:18px 0;border-bottom:1px solid #eeeade}.task-list article[data-v-455e93f7]:last-child{border-bottom:0}.task-list h3[data-v-455e93f7]{font-size:14px;font-weight:500;margin:0 0 7px}.task-list p[data-v-455e93f7]{margin:0;font-size:12px;color:#a0927e;line-height:1.7}.task-list small[data-v-455e93f7]{display:block;font-size:11px;color:#a59885;margin-top:7px}.task-reward[data-v-455e93f7]{font-size:12px;color:#8d9e60;text-align:right}.task-list a[data-v-455e93f7],.completed[data-v-455e93f7]{font-size:12px;text-align:right}.completed[data-v-455e93f7]{color:#aaa28d}.task-list button[data-v-455e93f7]{font-size:12px}.error[data-v-455e93f7]{font-size:13px;color:#b05d43;line-height:1.8}.notice[data-v-455e93f7]{padding:12px 16px;background:#edf3df;border:1px solid #dce6c5;border-radius:8px;color:#7c8d51}.rewards-footer[data-v-455e93f7]{display:flex;justify-content:space-between;gap:15px;margin-top:10px;font-size:13px}.tree-pixel-art[data-v-455e93f7]{width:190px;height:175px;position:relative;margin:0 auto 15px}.pixel-ground[data-v-455e93f7]{position:absolute;bottom:8px;left:12px;width:166px;height:18px;background:#a8bb72;box-shadow:0 8px #b2946b}.pixel-trunk[data-v-455e93f7]{position:absolute;bottom:26px;left:83px;width:24px;height:71px;background:#b08b5a;box-shadow:inset -7px 0 #957044}.pixel-leaves[data-v-455e93f7]{position:absolute;top:10px;left:28px;width:134px;height:80px;background:#a4b970;box-shadow:inset -18px -15px #91a65f,16px 20px #a4b970,-16px 20px #a4b970,0 -8px #bacb8b}.pixel-fruit[data-v-455e93f7]{position:absolute;left:55px;top:60px;width:12px;height:12px;background:#dda777;box-shadow:48px 18px #dda777,76px -10px #dda777}.tree-pixel-art.empty .pixel-trunk[data-v-455e93f7]{height:35px}.tree-pixel-art.empty .pixel-leaves[data-v-455e93f7]{transform:scale(.4);top:60px}.tree-pixel-art.mature .pixel-leaves[data-v-455e93f7]{background:#8ca651;box-shadow:inset -18px -15px #7f984c,16px 20px #8ca651,-16px 20px #8ca651,0 -8px #a5bb72}@media(max-width:1000px){.rewards-layout[data-v-455e93f7]{grid-template-columns:280px minmax(0,1fr)}.tree-card[data-v-455e93f7],.rewards-panel[data-v-455e93f7]{padding:20px}.orb-grid[data-v-455e93f7]{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:800px){.reader-rewards[data-v-455e93f7]{padding:100px 20px 50px}.rewards-heading[data-v-455e93f7]{align-items:flex-start;flex-direction:column}.rewards-layout[data-v-455e93f7]{grid-template-columns:minmax(0,1fr)}.tree-card[data-v-455e93f7]{position:static}.tree-pixel-art[data-v-455e93f7]{height:145px}.tree-pixel-art .pixel-leaves[data-v-455e93f7]{top:0}.orb-grid[data-v-455e93f7]{grid-template-columns:repeat(5,minmax(0,1fr))}}@media(max-width:500px){.reader-rewards[data-v-455e93f7]{padding-left:14px;padding-right:14px}.task-list article[data-v-455e93f7]{grid-template-columns:minmax(0,1fr) 65px 65px;gap:8px}.task-list button[data-v-455e93f7]{padding:8px}.orb-grid[data-v-455e93f7]{grid-template-columns:repeat(3,minmax(0,1fr))}.rewards-footer[data-v-455e93f7]{flex-direction:column}}\r\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.i, "\n.reader-rewards[data-v-173ef78a] {\r\n  max-width: 1180px;\r\n  margin: 0 auto;\r\n  padding: 112px 28px 65px;\r\n  color: #52483c;\r\n  font-size: 14px;\n}\n.rewards-heading[data-v-173ef78a] {\r\n  display: flex;\r\n  justify-content: space-between;\r\n  align-items: center;\r\n  gap: 22px;\r\n  margin-bottom: 26px;\n}\n.rewards-heading h1[data-v-173ef78a] {\r\n  font-size: 28px;\r\n  margin: 15px 0 10px;\n}\n.rewards-heading p[data-v-173ef78a],\r\n.quiet[data-v-173ef78a] {\r\n  font-size: 13px;\r\n  color: #998c7a;\r\n  line-height: 1.8;\n}\n.rewards-heading > div[data-v-173ef78a]:last-child {\r\n  display: flex;\r\n  gap: 18px;\r\n  align-items: center;\n}\na[data-v-173ef78a] {\r\n  color: #829355;\r\n  text-decoration: none;\n}\nbutton[data-v-173ef78a],\r\nselect[data-v-173ef78a] {\r\n  font: inherit;\r\n  border: 1px solid #e0d8cb;\r\n  border-radius: 7px;\r\n  background: white;\r\n  color: #8a7254;\r\n  padding: 8px 13px;\r\n  cursor: pointer;\n}\nbutton[data-v-173ef78a]:disabled,\r\nselect[data-v-173ef78a]:disabled {\r\n  opacity: 0.5;\r\n  cursor: default;\n}\nbutton[data-v-173ef78a]:focus-visible,\r\nselect[data-v-173ef78a]:focus-visible,\r\na[data-v-173ef78a]:focus-visible {\r\n  outline: 2px solid #8da35e;\r\n  outline-offset: 3px;\n}\n.rewards-gate[data-v-173ef78a] {\r\n  padding: 36px;\r\n  background: white;\r\n  border: 1px solid #e5e3dc;\r\n  border-radius: 13px;\r\n  line-height: 1.9;\n}\n.rewards-layout[data-v-173ef78a] {\r\n  display: grid;\r\n  grid-template-columns: 320px minmax(0, 1fr);\r\n  gap: 22px;\n}\n.tree-card[data-v-173ef78a],\r\n.rewards-panel[data-v-173ef78a] {\r\n  border: 1px solid #e5e5da;\r\n  background: white;\r\n  border-radius: 13px;\r\n  padding: 24px;\r\n  min-width: 0;\n}\n.tree-card[data-v-173ef78a] {\r\n  align-self: start;\r\n  position: sticky;\r\n  top: 84px;\r\n  text-align: center;\n}\n.tree-card h2[data-v-173ef78a] {\r\n  font-size: 19px;\r\n  line-height: 1.6;\r\n  margin: 10px 0 22px;\n}\n.tree-label[data-v-173ef78a] {\r\n  font-size: 12px;\r\n  color: #a19279;\n}\n.growth-row[data-v-173ef78a] {\r\n  display: flex;\r\n  justify-content: space-between;\r\n  margin: 18px 0 10px;\r\n  font-size: 13px;\r\n  color: #968775;\n}\n.growth-row strong[data-v-173ef78a] {\r\n  font-variant-numeric: tabular-nums;\r\n  color: #7a8c50;\n}\nprogress[data-v-173ef78a] {\r\n  appearance: none;\r\n  height: 9px;\r\n  width: 100%;\r\n  border: 0;\r\n  border-radius: 5px;\r\n  overflow: hidden;\r\n  background: #eeeee4;\n}\nprogress[data-v-173ef78a]::-webkit-progress-bar {\r\n  background: #eeeee4;\n}\nprogress[data-v-173ef78a]::-webkit-progress-value {\r\n  background: #8ba158;\n}\nprogress[data-v-173ef78a]::-moz-progress-bar {\r\n  background: #8ba158;\n}\n.primary[data-v-173ef78a] {\r\n  width: 100%;\r\n  background: #879b59;\r\n  border-color: #879b59;\r\n  color: white;\r\n  margin: 14px 0;\r\n  padding: 12px;\n}\n.resource-balances[data-v-173ef78a] {\r\n  display: flex;\r\n  border-top: 1px solid #eee8dc;\r\n  margin: 23px 0 15px;\r\n  padding-top: 20px;\r\n  gap: 22px;\r\n  justify-content: center;\n}\n.resource-balances dt[data-v-173ef78a] {\r\n  font-size: 12px;\r\n  color: #a3947d;\r\n  margin-bottom: 8px;\n}\n.resource-balances dd[data-v-173ef78a] {\r\n  margin: 0;\r\n  font-size: 22px;\r\n  font-weight: 600;\r\n  color: #8e744f;\n}\n.tree-card > a[data-v-173ef78a] {\r\n  font-size: 12px;\n}\n.theme-label[data-v-173ef78a] {\r\n  display: grid;\r\n  text-align: left;\r\n  gap: 8px;\r\n  font-size: 12px;\r\n  color: #a1917a;\r\n  margin-top: 20px;\n}\n.theme-label select[data-v-173ef78a] {\r\n  width: 100%;\n}\n.rewards-panel[data-v-173ef78a] {\r\n  margin-bottom: 20px;\n}\n.rewards-panel > header[data-v-173ef78a] {\r\n  display: flex;\r\n  justify-content: space-between;\r\n  align-items: center;\r\n  gap: 15px;\n}\n.rewards-panel h2[data-v-173ef78a] {\r\n  font-size: 17px;\r\n  margin: 0;\n}\n.rewards-panel header p[data-v-173ef78a] {\r\n  margin: 8px 0;\n}\n.orb-grid[data-v-173ef78a] {\r\n  display: grid;\r\n  grid-template-columns: repeat(5, minmax(0, 1fr));\r\n  gap: 10px;\r\n  margin-top: 15px;\n}\n.orb-grid button[data-v-173ef78a] {\r\n  display: flex;\r\n  align-items: center;\r\n  flex-direction: column;\r\n  gap: 6px;\r\n  background: #f8faef;\r\n  border-color: #e2e9cc;\r\n  padding: 12px 4px;\r\n  color: #819549;\n}\n.orb-grid small[data-v-173ef78a] {\r\n  font-size: 10px;\n}\n.orb-pixel[data-v-173ef78a] {\r\n  display: block;\r\n  width: 18px;\r\n  height: 18px;\r\n  box-shadow: 4px 0 #acc656, -4px 0 #acc656, 0 4px #acc656, 0 -4px #acc656;\r\n  background: #d6eb83;\r\n  margin: 5px;\n}\n.task-list article[data-v-173ef78a] {\r\n  display: grid;\r\n  grid-template-columns: minmax(0, 1fr) 75px 85px;\r\n  gap: 14px;\r\n  align-items: center;\r\n  padding: 18px 0;\r\n  border-bottom: 1px solid #eeeade;\n}\n.task-list article[data-v-173ef78a]:last-child {\r\n  border-bottom: 0;\n}\n.task-list h3[data-v-173ef78a] {\r\n  font-size: 14px;\r\n  font-weight: 500;\r\n  margin: 0 0 7px;\n}\n.task-list p[data-v-173ef78a] {\r\n  margin: 0;\r\n  font-size: 12px;\r\n  color: #a0927e;\r\n  line-height: 1.7;\n}\n.task-list small[data-v-173ef78a] {\r\n  display: block;\r\n  font-size: 11px;\r\n  color: #a59885;\r\n  margin-top: 7px;\n}\n.task-reward[data-v-173ef78a] {\r\n  font-size: 12px;\r\n  color: #8d9e60;\r\n  text-align: right;\n}\n.task-list a[data-v-173ef78a],\r\n.completed[data-v-173ef78a] {\r\n  font-size: 12px;\r\n  text-align: right;\n}\n.completed[data-v-173ef78a] {\r\n  color: #aaa28d;\n}\n.task-list button[data-v-173ef78a] {\r\n  font-size: 12px;\n}\n.error[data-v-173ef78a] {\r\n  font-size: 13px;\r\n  color: #b05d43;\r\n  line-height: 1.8;\n}\n.notice[data-v-173ef78a] {\r\n  padding: 12px 16px;\r\n  background: #edf3df;\r\n  border: 1px solid #dce6c5;\r\n  border-radius: 8px;\r\n  color: #7c8d51;\n}\n.rewards-footer[data-v-173ef78a] {\r\n  display: flex;\r\n  justify-content: space-between;\r\n  gap: 15px;\r\n  margin-top: 10px;\r\n  font-size: 13px;\n}\n.tree-pixel-art[data-v-173ef78a] {\r\n  width: 190px;\r\n  height: 175px;\r\n  position: relative;\r\n  margin: 0 auto 15px;\n}\n.pixel-ground[data-v-173ef78a] {\r\n  position: absolute;\r\n  bottom: 8px;\r\n  left: 12px;\r\n  width: 166px;\r\n  height: 18px;\r\n  background: #a8bb72;\r\n  box-shadow: 0 8px #b2946b;\n}\n.pixel-trunk[data-v-173ef78a] {\r\n  position: absolute;\r\n  bottom: 26px;\r\n  left: 83px;\r\n  width: 24px;\r\n  height: 71px;\r\n  background: #b08b5a;\r\n  box-shadow: inset -7px 0 #957044;\n}\n.pixel-leaves[data-v-173ef78a] {\r\n  position: absolute;\r\n  top: 10px;\r\n  left: 28px;\r\n  width: 134px;\r\n  height: 80px;\r\n  background: #a4b970;\r\n  box-shadow: inset -18px -15px #91a65f, 16px 20px #a4b970, -16px 20px #a4b970,\r\n    0 -8px #bacb8b;\n}\n.pixel-fruit[data-v-173ef78a] {\r\n  position: absolute;\r\n  left: 55px;\r\n  top: 60px;\r\n  width: 12px;\r\n  height: 12px;\r\n  background: #dda777;\r\n  box-shadow: 48px 18px #dda777, 76px -10px #dda777;\n}\n.tree-pixel-art.empty .pixel-trunk[data-v-173ef78a] {\r\n  height: 35px;\n}\n.tree-pixel-art.empty .pixel-leaves[data-v-173ef78a] {\r\n  transform: scale(0.4);\r\n  top: 60px;\n}\n.tree-pixel-art.mature .pixel-leaves[data-v-173ef78a] {\r\n  background: #8ca651;\r\n  box-shadow: inset -18px -15px #7f984c, 16px 20px #8ca651, -16px 20px #8ca651,\r\n    0 -8px #a5bb72;\n}\n@media (max-width: 1000px) {\n.rewards-layout[data-v-173ef78a] {\r\n    grid-template-columns: 280px minmax(0, 1fr);\n}\n.tree-card[data-v-173ef78a],\r\n  .rewards-panel[data-v-173ef78a] {\r\n    padding: 20px;\n}\n.orb-grid[data-v-173ef78a] {\r\n    grid-template-columns: repeat(4, minmax(0, 1fr));\n}\n}\n@media (max-width: 800px) {\n.reader-rewards[data-v-173ef78a] {\r\n    padding: 100px 20px 50px;\n}\n.rewards-heading[data-v-173ef78a] {\r\n    align-items: flex-start;\r\n    flex-direction: column;\n}\n.rewards-layout[data-v-173ef78a] {\r\n    grid-template-columns: minmax(0, 1fr);\n}\n.tree-card[data-v-173ef78a] {\r\n    position: static;\n}\n.tree-pixel-art[data-v-173ef78a] {\r\n    height: 145px;\n}\n.tree-pixel-art .pixel-leaves[data-v-173ef78a] {\r\n    top: 0;\n}\n.orb-grid[data-v-173ef78a] {\r\n    grid-template-columns: repeat(5, minmax(0, 1fr));\n}\n}\n@media (max-width: 500px) {\n.reader-rewards[data-v-173ef78a] {\r\n    padding-left: 14px;\r\n    padding-right: 14px;\n}\n.task-list article[data-v-173ef78a] {\r\n    grid-template-columns: minmax(0, 1fr) 65px 65px;\r\n    gap: 8px;\n}\n.task-list button[data-v-173ef78a] {\r\n    padding: 8px;\n}\n.orb-grid[data-v-173ef78a] {\r\n    grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n.rewards-footer[data-v-173ef78a] {\r\n    flex-direction: column;\n}\n}\n.reader-rewards.embedded[data-v-173ef78a] {\r\n  padding: 0;\r\n  max-width: none;\n}\n.embedded .rewards-layout[data-v-173ef78a] {\r\n  grid-template-columns: 1fr;\n}\n.embedded .tree-preview[data-v-173ef78a] {\r\n  display: none;\n}\n.embedded .tree-panel[data-v-173ef78a] {\r\n  padding: 22px;\n}\n.embedded .rewards-panel[data-v-173ef78a] {\r\n  border-radius: 14px;\n}\n.embedded .tasks-column[data-v-173ef78a] {\r\n  display: grid;\r\n  grid-template-columns: 1fr 1fr;\r\n  gap: 18px;\n}\n@media (max-width: 1100px) {\n.embedded .tasks-column[data-v-173ef78a] {\r\n    grid-template-columns: 1fr;\n}\n}\r\n", ""]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
 
-/***/ 408:
+/***/ 282:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-// ESM COMPAT FLAG
-__webpack_require__.r(__webpack_exports__);
 
-// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./pages/read/rewards.vue?vue&type=template&id=06d6438d
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderRewards.vue?vue&type=template&id=173ef78a&scoped=true
 var render = function render() {
-  var _vm = this,
-    _c = _vm._self._c;
-  return _c('ReaderRewards');
-};
-var staticRenderFns = [];
-
-// CONCATENATED MODULE: ./pages/read/rewards.vue?vue&type=template&id=06d6438d
-
-// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderRewards.vue?vue&type=template&id=455e93f7&scoped=true
-var ReaderRewardsvue_type_template_id_455e93f7_scoped_true_render = function render() {
   var _vm = this,
     _c = _vm._self._c;
   return _c('section', {
     staticClass: "reader-rewards",
+    class: {
+      embedded: _vm.embedded
+    },
     attrs: {
       "aria-labelledby": "reader-rewards-title"
     }
-  }, [_vm._ssrNode("<header class=\"rewards-heading\" data-v-455e93f7>", "</header>", [_vm._ssrNode("<div data-v-455e93f7>", "</div>", [_c('nuxt-link', {
+  }, [!_vm.embedded ? _vm._ssrNode("<header class=\"rewards-heading\" data-v-173ef78a>", "</header>", [_vm._ssrNode("<div data-v-173ef78a>", "</div>", [_c('nuxt-link', {
     attrs: {
       "to": "/read"
     }
-  }, [_vm._v("← 返回书库")]), _vm._ssrNode("<h1 id=\"reader-rewards-title\" data-v-455e93f7>阅读奖励与树场</h1><p data-v-455e93f7>阅读、分享与交流，让你的树慢慢长大。</p>")], 2), _vm._ssrNode("<div data-v-455e93f7>", "</div>", [_c('nuxt-link', {
+  }, [_vm._v(_vm._s(_vm.$t("← 返回书库")))]), _vm._ssrNode(" <h1 id=\"reader-rewards-title\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("阅读奖励与树场"))) + "</h1> <p data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("阅读、分享与交流，让你的树慢慢长大。"))) + "</p>")], 2), _vm._ssrNode(" "), _vm._ssrNode("<div data-v-173ef78a>", "</div>", [_c('nuxt-link', {
     attrs: {
       "to": "/read/resources"
     }
-  }, [_vm._v("如何获取原木")]), _vm._ssrNode("<button" + _vm._ssrAttr("disabled", _vm.loading || !!_vm.busy) + " data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.loading ? '刷新中…' : '刷新状态')) + "</button>")], 2)]), _vm._ssrNode(" "), !_vm.ready ? _vm._ssrNode("<div class=\"rewards-gate\" data-v-455e93f7>", "</div>", [_vm._ssrNode("正在确认账户…")], 2) : !_vm.token || _vm.authExpired ? _vm._ssrNode("<div class=\"rewards-gate\" data-v-455e93f7>", "</div>", [_vm._ssrNode("<h2 data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.authExpired ? '登录已失效' : '登录后培育你的树木')) + "</h2><p data-v-455e93f7>成长值、经验球、收获和余额由当前账号的树场记录决定。</p>"), _c('nuxt-link', {
+  }, [_vm._v(_vm._s(_vm.$t("如何获取原木")))]), _vm._ssrNode("<button" + _vm._ssrAttr("disabled", _vm.loading || !!_vm.busy) + " data-v-173ef78a>" + _vm._ssrEscape("\n        " + _vm._s(_vm.loading ? _vm.$t("刷新中…") : _vm.$t("刷新状态")) + "\n      ") + "</button>")], 2)], 2) : _vm._e(), _vm._ssrNode(" "), !_vm.ready ? _vm._ssrNode("<div class=\"rewards-gate\" data-v-173ef78a>", "</div>", [_vm._ssrNode(_vm._ssrEscape(_vm._s(_vm.$t("正在确认账户…"))))], 2) : !_vm.token || _vm.authExpired ? _vm._ssrNode("<div class=\"rewards-gate\" data-v-173ef78a>", "</div>", [_vm._ssrNode("<h2 data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.authExpired ? _vm.$t("登录已失效") : _vm.$t("登录后培育你的树木"))) + "</h2> <p data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("成长值、经验球、收获和余额由当前账号的树场记录决定。"))) + "</p> "), _c('nuxt-link', {
     attrs: {
       "to": _vm.loginUrl
     }
-  }, [_vm._v("登录后继续")])], 2) : [_vm._ssrNode((_vm.error ? "<p role=\"alert\" class=\"error\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.error) + " ") + "<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading) + " data-v-455e93f7>刷新核对</button></p>" : "<!---->") + (_vm.balanceError ? "<p role=\"alert\" class=\"error\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.balanceError)) + "</p>" : "<!---->") + (_vm.notice ? "<p role=\"status\" class=\"notice\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.notice)) + "</p>" : "<!---->") + (_vm.uncertain ? "<p role=\"alert\" class=\"error\" data-v-455e93f7>上次操作结果尚未确认，请先刷新树场和余额后再操作。</p>" : "<!---->") + " "), _vm._ssrNode("<div class=\"rewards-layout\" data-v-455e93f7>", "</div>", [_vm._ssrNode("<aside aria-label=\"我的树木\" class=\"tree-card\" data-v-455e93f7>", "</aside>", [_vm.tree ? [_vm._ssrNode("<div aria-hidden=\"true\"" + _vm._ssrClass("tree-pixel-art", {
+  }, [_vm._v(_vm._s(_vm.$t("登录后继续")))])], 2) : [_vm._ssrNode((_vm.error ? "<p role=\"alert\" class=\"error\" data-v-173ef78a>" + _vm._ssrEscape("\n      " + _vm._s(_vm.error) + "\n      ") + "<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading) + " data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("刷新核对"))) + "</button></p>" : "<!---->") + " " + (_vm.balanceError ? "<p role=\"alert\" class=\"error\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.balanceError)) + "</p>" : "<!---->") + " " + (_vm.notice ? "<p role=\"status\" class=\"notice\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.notice)) + "</p>" : "<!---->") + " " + (_vm.uncertain ? "<p role=\"alert\" class=\"error\" data-v-173ef78a>" + _vm._ssrEscape("\n      " + _vm._s(_vm.$t("上次操作结果尚未确认，请先刷新树场和余额后再操作。")) + "\n    ") + "</p>" : "<!---->") + " "), _vm._ssrNode("<div class=\"rewards-layout\" data-v-173ef78a>", "</div>", [_vm._ssrNode("<aside" + _vm._ssrAttr("aria-label", _vm.$t('我的树木')) + " class=\"tree-card\" data-v-173ef78a>", "</aside>", [_vm.tree ? [_vm._ssrNode("<div aria-hidden=\"true\"" + _vm._ssrClass("tree-pixel-art", {
     mature: _vm.tree.status === '结果',
     empty: !_vm.tree.active
-  }) + " data-v-455e93f7><div class=\"pixel-ground\" data-v-455e93f7></div><div class=\"pixel-trunk\" data-v-455e93f7></div><div class=\"pixel-leaves\" data-v-455e93f7></div>" + (_vm.tree.status === '结果' ? "<div class=\"pixel-fruit\" data-v-455e93f7></div>" : "<!---->") + "</div><span class=\"tree-label\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.themeName)) + "</span><h2 data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.tree.status === '未种植' ? _vm.tree.id ? '继续种下下一棵树' : '种下你的第一份期待' : _vm.tree.status === '结果' ? '这棵树可以收获了' : _vm.tree.status === '开花' ? '树木正在开花' : '树苗正在生长')) + "</h2><div class=\"growth-row\" data-v-455e93f7><span data-v-455e93f7>成长值</span><strong data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.tree.growth) + " / " + _vm._s(_vm.tree.maximum)) + "</strong></div><progress" + _vm._ssrAttr("max", _vm.tree.maximum) + " aria-label=\"树木成长进度\"" + _vm._ssrAttr("value", Math.min(_vm.tree.growth, _vm.tree.maximum)) + " data-v-455e93f7></progress>" + (_vm.tree.growth > _vm.tree.maximum ? "<p class=\"quiet\" data-v-455e93f7>" + _vm._ssrEscape("多出的 " + _vm._s(_vm.tree.growth - _vm.tree.maximum) + " 成长值在下次种植时继续保留。") + "</p>" : "<!---->") + "<p class=\"quiet\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.tree.benefits.name)) + (_vm.tree.benefits.multiplier > 1 ? _vm._ssrEscape(" · 任务成长值 " + _vm._s(_vm.tree.benefits.multiplier) + " 倍加成") : "<!---->") + "</p>"), !_vm.tree.active ? [_vm._ssrNode("<label class=\"theme-label\" data-v-455e93f7>", "</label>", [_vm._ssrNode("树苗主题"), _c('select', {
+  }) + " data-v-173ef78a><div class=\"pixel-ground\" data-v-173ef78a></div> <div class=\"pixel-trunk\" data-v-173ef78a></div> <div class=\"pixel-leaves\" data-v-173ef78a></div> " + (_vm.tree.status === '结果' ? "<div class=\"pixel-fruit\" data-v-173ef78a></div>" : "<!---->") + "</div> <span class=\"tree-label\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.themeName)) + "</span> <h2 data-v-173ef78a>" + _vm._ssrEscape("\n            " + _vm._s(_vm.tree.status === "未种植" ? _vm.tree.id ? _vm.$t("继续种下下一棵树") : _vm.$t("种下你的第一份期待") : _vm.tree.status === "结果" ? _vm.$t("这棵树可以收获了") : _vm.tree.status === "开花" ? _vm.$t("树木正在开花") : _vm.$t("树苗正在生长")) + "\n          ") + "</h2> <div class=\"growth-row\" data-v-173ef78a><span data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("成长值"))) + "</span><strong data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.tree.growth) + " / " + _vm._s(_vm.tree.maximum)) + "</strong></div> <progress" + _vm._ssrAttr("max", _vm.tree.maximum) + _vm._ssrAttr("aria-label", _vm.$t('树木成长进度')) + _vm._ssrAttr("value", Math.min(_vm.tree.growth, _vm.tree.maximum)) + " data-v-173ef78a></progress> " + (_vm.tree.growth > _vm.tree.maximum ? "<p class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape("\n            " + _vm._s(_vm.$t("多出的 {p0} 成长值在下次种植时继续保留。", {
+    p0: _vm.tree.growth - _vm.tree.maximum
+  })) + "\n          ") + "</p>" : "<!---->") + " <p class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape("\n            " + _vm._s(_vm.tree.benefits.name)) + (_vm.tree.benefits.multiplier > 1 ? _vm._ssrEscape(_vm._s(_vm.$t("· 任务成长值 {p0} 倍加成", {
+    p0: _vm.tree.benefits.multiplier
+  }))) : "<!---->") + "</p> "), !_vm.tree.active ? [_vm._ssrNode("<label class=\"theme-label\" data-v-173ef78a>", "</label>", [_vm._ssrNode(_vm._ssrEscape(_vm._s(_vm.$t("树苗主题")))), _c('select', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -113,34 +108,57 @@ var ReaderRewardsvue_type_template_id_455e93f7_scoped_true_render = function ren
       domProps: {
         "value": option.key
       }
-    }, [_vm._v(_vm._s(option.name))]);
-  }), 0)], 2), _vm._ssrNode("<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + " class=\"primary\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.busy === 'plant' ? '种植中…' : '种下树苗')) + "</button>")] : _vm.tree.status === '结果' ? _vm._ssrNode("<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + " class=\"primary\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.busy === 'harvest' ? '收获中…' : '收获原木与苹果')) + "</button>") : _vm._ssrNode("<p class=\"quiet\" data-v-455e93f7>完成任务、收集经验球，继续积累成长值。</p>")] : _vm._ssrNode("<p class=\"quiet\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.loading ? '正在读取树木信息…' : '树木信息暂不可用，请刷新重试。')) + "</p>"), _vm._ssrNode("<dl class=\"resource-balances\" data-v-455e93f7><div data-v-455e93f7><dt data-v-455e93f7>我的原木</dt><dd data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.balances ? _vm.balances.log.toLocaleString() : '—')) + "</dd></div><div data-v-455e93f7><dt data-v-455e93f7>我的苹果</dt><dd data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.balances ? _vm.balances.apple.toLocaleString() : '—')) + "</dd></div></dl>"), _c('nuxt-link', {
+    }, [_vm._v("\n                  " + _vm._s(option.name) + "\n                ")]);
+  }), 0)], 2), _vm._ssrNode("<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + " class=\"primary\" data-v-173ef78a>" + _vm._ssrEscape("\n              " + _vm._s(_vm.busy === "plant" ? _vm.$t("种植中…") : _vm.$t("种下树苗")) + "\n            ") + "</button>")] : _vm.tree.status === '结果' ? _vm._ssrNode("<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + " class=\"primary\" data-v-173ef78a>" + _vm._ssrEscape("\n            " + _vm._s(_vm.busy === "harvest" ? _vm.$t("收获中…") : _vm.$t("收获原木与苹果")) + "\n          ") + "</button>") : _vm._ssrNode("<p class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape("\n            " + _vm._s(_vm.$t("完成任务、收集经验球，继续积累成长值。")) + "\n          ") + "</p>")] : _vm._ssrNode("<p class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape("\n          " + _vm._s(_vm.loading ? _vm.$t("正在读取树木信息…") : _vm.$t("树木信息暂不可用，请刷新重试。")) + "\n        ") + "</p>"), _vm._ssrNode(" <dl class=\"resource-balances\" data-v-173ef78a><div data-v-173ef78a><dt data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("我的原木"))) + "</dt> <dd data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.balances ? _vm.balances.log.toLocaleString() : "—")) + "</dd></div> <div data-v-173ef78a><dt data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("我的苹果"))) + "</dt> <dd data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.balances ? _vm.balances.apple.toLocaleString() : "—")) + "</dd></div></dl> "), _c('nuxt-link', {
     attrs: {
       "to": "/read/resources"
     }
-  }, [_vm._v("获取原木的方法 →")])], 2), _vm._ssrNode(" "), _vm.tree ? _vm._ssrNode("<div class=\"rewards-main\" data-v-455e93f7>", "</div>", [_vm._ssrNode("<section aria-labelledby=\"orbs-title\" class=\"rewards-panel\" data-v-455e93f7><header data-v-455e93f7><div data-v-455e93f7><h2 id=\"orbs-title\" data-v-455e93f7>经验球</h2><p class=\"quiet\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.tree.orbs.length ? '待收集 ' + _vm.tree.orbs.length + ' 个 · 成长值 ' + _vm.orbTotal : _vm.tree.active ? '新的经验球出现后会显示在这里。' : '种下树苗后，开始积累成长值。')) + "</p></div>" + (_vm.tree.orbs.length ? "<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + " data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.busy === 'collect' ? '收集中…' : '一键收集')) + "</button>" : "<!---->") + "</header><div class=\"orb-grid\" data-v-455e93f7>" + _vm._ssrList(_vm.tree.orbs, function (orb) {
-    return "<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + _vm._ssrAttr("aria-label", `收集经验球 ${orb.orb_id}，成长值 ${orb.reward}`) + " data-v-455e93f7><span aria-hidden=\"true\" class=\"orb-pixel\" data-v-455e93f7></span><strong data-v-455e93f7>" + _vm._ssrEscape("+" + _vm._s(orb.reward)) + "</strong><small data-v-455e93f7>收集成长值</small></button>";
-  }) + "</div></section> "), _vm._ssrNode("<section aria-labelledby=\"daily-tasks-title\" class=\"rewards-panel\" data-v-455e93f7>", "</section>", [_vm._ssrNode("<header data-v-455e93f7><h2 id=\"daily-tasks-title\" data-v-455e93f7>日常任务</h2><span class=\"quiet\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.completedTasks) + " / " + _vm._s(_vm.tree.tasks.length) + " 已完成") + "</span></header>"), _vm._ssrNode("<div class=\"task-list\" data-v-455e93f7>", "</div>", _vm._l(_vm.tree.tasks, function (task) {
-    return _vm._ssrNode("<article data-v-455e93f7>", "</article>", [_vm._ssrNode("<div data-v-455e93f7><h3 data-v-455e93f7>" + _vm._ssrEscape(_vm._s(task.task_name)) + "</h3><p data-v-455e93f7>" + _vm._ssrEscape(_vm._s(task.task_desc)) + "</p>" + (task.multiplier > 1 && task.base != null ? "<small data-v-455e93f7>" + _vm._ssrEscape("基础 " + _vm._s(task.base) + " × " + _vm._s(task.multiplier)) + "</small>" : "<!---->") + "</div><strong class=\"task-reward\" data-v-455e93f7>" + _vm._ssrEscape("+" + _vm._s(task.reward) + " XP") + "</strong>"), task.completed ? _vm._ssrNode("<span class=\"completed\" data-v-455e93f7>", "</span>", [_vm._ssrNode("已完成")], 2) : _vm.isCheckin(task) ? _vm._ssrNode("<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + " data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.busy === task.task_code ? '领取中…' : '领取')) + "</button>") : _c('nuxt-link', {
+  }, [_vm._v(_vm._s(_vm.$t("获取原木的方法 →")))])], 2), _vm._ssrNode(" "), _vm.tree ? _vm._ssrNode("<div class=\"rewards-main\" data-v-173ef78a>", "</div>", [_vm._ssrNode("<section aria-labelledby=\"orbs-title\" class=\"rewards-panel\" data-v-173ef78a><header data-v-173ef78a><div data-v-173ef78a><h2 id=\"orbs-title\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("经验球"))) + "</h2> <p class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape("\n                " + _vm._s(_vm.tree.orbs.length ? _vm.$t("待收集 ") + _vm.tree.orbs.length + _vm.$t(" 个 · 成长值 ") + _vm.orbTotal : _vm.tree.active ? _vm.$t("新的经验球出现后会显示在这里。") : _vm.$t("种下树苗后，开始积累成长值。")) + "\n              ") + "</p></div> " + (_vm.tree.orbs.length ? "<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + " data-v-173ef78a>" + _vm._ssrEscape("\n              " + _vm._s(_vm.busy === "collect" ? _vm.$t("收集中…") : _vm.$t("一键收集")) + "\n            ") + "</button>" : "<!---->") + "</header> <div class=\"orb-grid\" data-v-173ef78a>" + _vm._ssrList(_vm.tree.orbs, function (orb) {
+    return "<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + _vm._ssrAttr("aria-label", _vm.$t('收集经验球 {p0}，成长值 {p1}', {
+      p0: orb.orb_id,
+      p1: orb.reward
+    })) + " data-v-173ef78a><span aria-hidden=\"true\" class=\"orb-pixel\" data-v-173ef78a></span><strong data-v-173ef78a>" + _vm._ssrEscape("+" + _vm._s(orb.reward)) + "</strong><small data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("收集成长值"))) + "</small></button>";
+  }) + "</div></section> "), _vm._ssrNode("<section aria-labelledby=\"daily-tasks-title\" class=\"rewards-panel\" data-v-173ef78a>", "</section>", [_vm._ssrNode("<header data-v-173ef78a><h2 id=\"daily-tasks-title\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("日常任务"))) + "</h2> <span class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("{p0} / {p1} 已完成", {
+    p0: _vm.completedTasks,
+    p1: _vm.tree.tasks.length
+  }))) + "</span></header> "), _vm._ssrNode("<div class=\"task-list\" data-v-173ef78a>", "</div>", _vm._l(_vm.tree.tasks, function (task) {
+    return _vm._ssrNode("<article data-v-173ef78a>", "</article>", [_vm._ssrNode("<div data-v-173ef78a><h3 data-v-173ef78a>" + _vm._ssrEscape(_vm._s(task.task_name)) + "</h3> <p data-v-173ef78a>" + _vm._ssrEscape(_vm._s(task.task_desc)) + "</p> " + (task.multiplier > 1 && task.base != null ? "<small data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("基础 {p0} × {p1}", {
+      p0: task.base,
+      p1: task.multiplier
+    }))) + "</small>" : "<!---->") + "</div> <strong class=\"task-reward\" data-v-173ef78a>" + _vm._ssrEscape("+" + _vm._s(task.reward) + " XP") + "</strong>"), task.completed ? _vm._ssrNode("<span class=\"completed\" data-v-173ef78a>", "</span>", [_vm._ssrNode(_vm._ssrEscape(_vm._s(_vm.$t("已完成"))))], 2) : _vm.isCheckin(task) ? _vm._ssrNode("<button" + _vm._ssrAttr("disabled", !!_vm.busy || _vm.loading || _vm.uncertain) + " data-v-173ef78a>" + _vm._ssrEscape("\n                " + _vm._s(_vm.busy === task.task_code ? _vm.$t("领取中…") : _vm.$t("领取"))) + "</button>") : _c('nuxt-link', {
       attrs: {
         "to": _vm.taskLink(task)
       }
-    }, [_vm._v("去完成 →")])], 2);
-  }), 0), _vm._ssrNode(!_vm.tree.tasks.length ? "<p class=\"quiet\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.tree.active ? '暂无日常任务' : '种植后查看今日任务')) + "</p>" : "<!---->")], 2), _vm._ssrNode(" "), _vm._ssrNode("<section aria-labelledby=\"exp-tasks-title\" class=\"rewards-panel\" data-v-455e93f7>", "</section>", [_vm._ssrNode("<header data-v-455e93f7><h2 id=\"exp-tasks-title\" data-v-455e93f7>经验任务</h2><span class=\"quiet\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.completedExpTasks) + " / " + _vm._s(_vm.tree.expTasks.length) + " 已完成") + "</span></header>"), _vm._ssrNode("<div class=\"task-list\" data-v-455e93f7>", "</div>", _vm._l(_vm.tree.expTasks, function (task) {
-    return _vm._ssrNode("<article data-v-455e93f7>", "</article>", [_vm._ssrNode("<div data-v-455e93f7><h3 data-v-455e93f7>" + _vm._ssrEscape(_vm._s(task.task_name)) + "</h3><p data-v-455e93f7>" + _vm._ssrEscape(_vm._s(task.task_desc)) + "</p><small data-v-455e93f7>" + _vm._ssrEscape(_vm._s(task.progress_text) + " · 已结算 " + _vm._s(task.completed_times) + " / " + _vm._s(task.daily_limit) + " 次") + "</small>" + (task.multiplier > 1 && task.base != null ? "<small data-v-455e93f7>" + _vm._ssrEscape("基础 " + _vm._s(task.base) + " × " + _vm._s(task.multiplier)) + "</small>" : "<!---->") + "</div><strong class=\"task-reward\" data-v-455e93f7>" + _vm._ssrEscape("+" + _vm._s(task.reward) + " XP") + "</strong>"), task.completed ? _vm._ssrNode("<span class=\"completed\" data-v-455e93f7>", "</span>", [_vm._ssrNode("已自动完成")], 2) : _c('nuxt-link', {
+    }, [_vm._v(_vm._s(_vm.$t("去完成 →")))])], 2);
+  }), 0), _vm._ssrNode(" " + (!_vm.tree.tasks.length ? "<p class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape("\n            " + _vm._s(_vm.tree.active ? _vm.$t("暂无日常任务") : _vm.$t("种植后查看今日任务")) + "\n          ") + "</p>" : "<!---->"))], 2), _vm._ssrNode(" "), _vm._ssrNode("<section aria-labelledby=\"exp-tasks-title\" class=\"rewards-panel\" data-v-173ef78a>", "</section>", [_vm._ssrNode("<header data-v-173ef78a><h2 id=\"exp-tasks-title\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("经验任务"))) + "</h2> <span class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("{p0} / {p1} 已完成", {
+    p0: _vm.completedExpTasks,
+    p1: _vm.tree.expTasks.length
+  }))) + "</span></header> "), _vm._ssrNode("<div class=\"task-list\" data-v-173ef78a>", "</div>", _vm._l(_vm.tree.expTasks, function (task) {
+    return _vm._ssrNode("<article data-v-173ef78a>", "</article>", [_vm._ssrNode("<div data-v-173ef78a><h3 data-v-173ef78a>" + _vm._ssrEscape(_vm._s(task.task_name)) + "</h3> <p data-v-173ef78a>" + _vm._ssrEscape(_vm._s(task.task_desc)) + "</p> <small data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("{p0} · 已结算 {p1} / {p2} 次", {
+      p0: task.progress_text,
+      p1: task.completed_times,
+      p2: task.daily_limit
+    }))) + "</small>" + (task.multiplier > 1 && task.base != null ? "<small data-v-173ef78a>" + _vm._ssrEscape(_vm._s(_vm.$t("基础 {p0} × {p1}", {
+      p0: task.base,
+      p1: task.multiplier
+    }))) + "</small>" : "<!---->") + "</div> <strong class=\"task-reward\" data-v-173ef78a>" + _vm._ssrEscape("+" + _vm._s(task.reward) + " XP") + "</strong>"), task.completed ? _vm._ssrNode("<span class=\"completed\" data-v-173ef78a>", "</span>", [_vm._ssrNode(_vm._ssrEscape(_vm._s(_vm.$t("已自动完成"))))], 2) : _c('nuxt-link', {
       attrs: {
         "to": _vm.taskLink(task)
       }
-    }, [_vm._v("去完成 →")])], 2);
-  }), 0), _vm._ssrNode(!_vm.tree.expTasks.length ? "<p class=\"quiet\" data-v-455e93f7>" + _vm._ssrEscape(_vm._s(_vm.tree.active ? '暂无经验任务' : '种植后查看阅读等经验任务')) + "</p>" : "<p class=\"quiet\" data-v-455e93f7>阅读等经验任务由服务端按实际进度自动结算，刷新可查看最新状态。</p>")], 2)], 2) : _vm._e()], 2), _vm._ssrNode(" "), _vm._ssrNode("<footer class=\"rewards-footer\" data-v-455e93f7>", "</footer>", [_vm._ssrNode("<a" + _vm._ssrAttr("href", _vm.fullTreeUrl) + " target=\"_blank\" rel=\"noopener\" data-v-455e93f7>完整树场与好友互动 ↗</a>"), _c('nuxt-link', {
+    }, [_vm._v(_vm._s(_vm.$t("去完成 →")))])], 2);
+  }), 0), _vm._ssrNode(" " + (!_vm.tree.expTasks.length ? "<p class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape("\n            " + _vm._s(_vm.tree.active ? _vm.$t("暂无经验任务") : _vm.$t("种植后查看阅读等经验任务")) + "\n          ") + "</p>" : "<p class=\"quiet\" data-v-173ef78a>" + _vm._ssrEscape("\n            " + _vm._s(_vm.$t("阅读等经验任务由服务端按实际进度自动结算，刷新可查看最新状态。")) + "\n          ") + "</p>"))], 2)], 2) : _vm._e()], 2), _vm._ssrNode(" "), !_vm.embedded ? _vm._ssrNode("<footer class=\"rewards-footer\" data-v-173ef78a>", "</footer>", [_c('nuxt-link', {
+    attrs: {
+      "to": "/me/tree"
+    }
+  }, [_vm._v(_vm._s(_vm.$t("完整树场与好友互动 →")))]), _c('nuxt-link', {
     attrs: {
       "to": "/read"
     }
-  }, [_vm._v("继续发现好作品 →")])], 2)]], 2);
+  }, [_vm._v(_vm._s(_vm.$t("继续发现好作品 →")))])], 1) : _vm._e()]], 2);
 };
-var ReaderRewardsvue_type_template_id_455e93f7_scoped_true_staticRenderFns = [];
+var staticRenderFns = [];
 
-// CONCATENATED MODULE: ./components/read/ReaderRewards.vue?vue&type=template&id=455e93f7&scoped=true
+// CONCATENATED MODULE: ./components/read/ReaderRewards.vue?vue&type=template&id=173ef78a&scoped=true
 
 // EXTERNAL MODULE: ./plugins/api/reading.js
 var reading = __webpack_require__(1);
@@ -284,18 +302,21 @@ function collectionReceipt(raw) {
 
 
 /* harmony default export */ var ReaderRewardsvue_type_script_lang_js = ({
+  props: {
+    embedded: Boolean
+  },
   data: () => ({
     ready: false,
     token: null,
     authExpired: false,
     tree: null,
     balances: null,
-    theme: 'oak_island',
+    theme: "oak_island",
     loading: false,
-    busy: '',
-    error: '',
-    balanceError: '',
-    notice: '',
+    busy: "",
+    error: "",
+    balanceError: "",
+    notice: "",
     uncertain: false,
     version: 0,
     epoch: 0,
@@ -304,9 +325,9 @@ function collectionReceipt(raw) {
   computed: {
     loginUrl() {
       return {
-        path: '/login',
+        path: "/login",
         query: {
-          redirect: '/read/rewards'
+          redirect: "/read/rewards"
         }
       };
     },
@@ -329,19 +350,19 @@ function collectionReceipt(raw) {
   mounted() {
     this.checkAccount();
     this.ready = true;
-    window.addEventListener('storage', this.checkAccount);
-    window.addEventListener('focus', this.checkAccount);
+    window.addEventListener("storage", this.checkAccount);
+    window.addEventListener("focus", this.checkAccount);
   },
   beforeDestroy() {
     this.epoch++;
     this.version++;
-    window.removeEventListener('storage', this.checkAccount);
-    window.removeEventListener('focus', this.checkAccount);
+    window.removeEventListener("storage", this.checkAccount);
+    window.removeEventListener("focus", this.checkAccount);
   },
   methods: {
     taskLink: rewardTaskLink,
     isCheckin(task) {
-      return task.task_name.includes('签到');
+      return task.task_name.includes("签到");
     },
     current(token, epoch) {
       return token === Object(reading["c" /* readingToken */])() && token === this.token && epoch === this.epoch;
@@ -356,12 +377,12 @@ function collectionReceipt(raw) {
         authExpired: false,
         tree: null,
         balances: null,
-        theme: 'oak_island',
+        theme: "oak_island",
         loading: false,
-        busy: '',
-        error: '',
-        balanceError: '',
-        notice: '',
+        busy: "",
+        error: "",
+        balanceError: "",
+        notice: "",
         uncertain: false
       });
       if (token) this.load();
@@ -379,25 +400,29 @@ function collectionReceipt(raw) {
         epoch = this.epoch,
         version = ++this.version;
       this.loading = true;
-      this.error = '';
-      this.balanceError = '';
+      this.error = "";
+      this.balanceError = "";
       const results = await Promise.allSettled([this.$api.reader.tree(), this.$api.reader.balances()]);
       if (!this.current(token, epoch) || version !== this.version) return;
       try {
-        if (results[0].status === 'rejected') throw results[0].reason;
+        if (results[0].status === "rejected") throw results[0].reason;
         this.tree = rewardTree(results[0].value);
         this.theme = this.tree.theme;
+        if (this.$emit) this.$emit("tree-updated", results[0].value[0] || {
+          tree_status: "未种植",
+          treeType: this.theme
+        });
       } catch (error) {
         this.tree = null;
-        this.error = error.message || '树场加载失败';
+        this.error = error.message || "树场加载失败";
         this.expire(error);
       }
       try {
-        if (results[1].status === 'rejected') throw results[1].reason;
+        if (results[1].status === "rejected") throw results[1].reason;
         this.balances = rewardBalances(results[1].value);
       } catch (error) {
         this.balances = null;
-        this.balanceError = error.message || '资源余额读取失败';
+        this.balanceError = error.message || "资源余额读取失败";
         this.expire(error);
       }
       if (!this.error && !this.balanceError) this.uncertain = false;
@@ -413,20 +438,20 @@ function collectionReceipt(raw) {
         epoch = this.epoch;
       this.busy = action;
       this.version++;
-      this.error = '';
-      this.notice = '';
+      this.error = "";
+      this.notice = "";
       try {
         const raw = await request();
         if (!this.current(token, epoch)) return;
         this.notice = receipt(raw);
       } catch (error) {
         if (!this.current(token, epoch)) return;
-        this.error = error.message || '操作失败，请刷新后重试';
+        this.error = error.message || "操作失败，请刷新后重试";
         this.uncertain = !error.status || error.status >= 500;
         this.expire(error);
       } finally {
         if (this.current(token, epoch)) {
-          this.busy = '';
+          this.busy = "";
           if (!this.uncertain) await this.load();
         }
       }
@@ -434,20 +459,20 @@ function collectionReceipt(raw) {
     plant() {
       if (!this.tree || this.tree.active) return;
       const theme = this.theme;
-      return this.mutate('plant', () => this.$api.reader.plantTree(theme), raw => {
-        if (!raw || raw.success !== true || !Number.isSafeInteger(Number(raw.plant_id)) || Number(raw.plant_id) <= 0) throw new Error('种植结果尚未确认，请刷新树场');
-        return '树苗已种下，开始积累成长值吧。';
+      return this.mutate("plant", () => this.$api.reader.plantTree(theme), raw => {
+        if (!raw || raw.success !== true || !Number.isSafeInteger(Number(raw.plant_id)) || Number(raw.plant_id) <= 0) throw new Error("种植结果尚未确认，请刷新树场");
+        return "树苗已种下，开始积累成长值吧。";
       });
     },
     collect(orbId) {
       if (!this.tree || !this.tree.active || !this.tree.orbs.length || orbId && !this.tree.orbs.some(orb => orb.orb_id === orbId)) return;
       const id = this.tree.id;
-      return this.mutate('collect', () => this.$api.reader.collectTreeOrbs(id, orbId), raw => `经验球已收集，成长值 +${collectionReceipt(raw)}。`);
+      return this.mutate("collect", () => this.$api.reader.collectTreeOrbs(id, orbId), raw => `经验球已收集，成长值 +${collectionReceipt(raw)}。`);
     },
     claim(task) {
       if (!this.tree || !this.tree.active || task.completed || !this.isCheckin(task) || !this.tree.tasks.some(row => row.task_code === task.task_code)) return;
       return this.mutate(task.task_code, () => this.$api.reader.treeTask(task.task_code), raw => {
-        if (!raw || raw.msg !== 'Task completed' || typeof raw.reward !== 'number' || !Number.isFinite(raw.reward) || raw.reward < 0) throw new Error('签到奖励尚未确认，请刷新状态');
+        if (!raw || raw.msg !== "Task completed" || typeof raw.reward !== "number" || !Number.isFinite(raw.reward) || raw.reward < 0) throw new Error("签到奖励尚未确认，请刷新状态");
         return `签到任务已完成，成长值 +${raw.reward}。`;
       });
     },
@@ -456,28 +481,28 @@ function collectionReceipt(raw) {
         this.checkAccount();
         return;
       }
-      if (!this.tree || this.tree.status !== '结果' || this.busy || this.loading || this.uncertain) return;
+      if (!this.tree || this.tree.status !== "结果" || this.busy || this.loading || this.uncertain) return;
       const token = this.token,
         epoch = this.epoch,
         id = this.tree.id;
-      this.busy = 'confirm';
+      this.busy = "confirm";
       try {
-        await this.$confirm(`收获当前树木的原木与苹果？${this.tree.orbs.length ? '剩余经验球会先一并收集，多出的成长值保留给下一棵树。' : ''}`, '确认收获', {
-          confirmButtonText: '收获',
-          cancelButtonText: '取消',
-          type: 'info'
+        await this.$confirm(`收获当前树木的原木与苹果？${this.tree.orbs.length ? "剩余经验球会先一并收集，多出的成长值保留给下一棵树。" : ""}`, "确认收获", {
+          confirmButtonText: "收获",
+          cancelButtonText: "取消",
+          type: "info"
         });
-        if (!this.current(token, epoch) || !this.tree || this.tree.id !== id || this.tree.status !== '结果') return;
-        this.busy = '';
-        await this.mutate('harvest', () => this.$api.reader.harvestTree(id), raw => {
+        if (!this.current(token, epoch) || !this.tree || this.tree.id !== id || this.tree.status !== "结果") return;
+        this.busy = "";
+        await this.mutate("harvest", () => this.$api.reader.harvestTree(id), raw => {
           const result = harvestReceipt(raw, id);
           this.balances = result.balances;
-          return result.replayed ? '已确认这棵树先前已收获，余额已更新。' : `收获成功：原木 +${result.rewards.log}${result.rewards.apple ? '，苹果 +' + result.rewards.apple : ''}。`;
+          return result.replayed ? "已确认这棵树先前已收获，余额已更新。" : `收获成功：原木 +${result.rewards.log}${result.rewards.apple ? "，苹果 +" + result.rewards.apple : ""}。`;
         });
       } catch (error) {
-        if (this.current(token, epoch) && error !== 'cancel' && error !== 'close') this.error = error.message || '收获确认未完成';
+        if (this.current(token, epoch) && error !== "cancel" && error !== "close") this.error = error.message || "收获确认未完成";
       } finally {
-        if (this.current(token, epoch) && this.busy === 'confirm') this.busy = '';
+        if (this.current(token, epoch) && this.busy === "confirm") this.busy = "";
       }
     }
   }
@@ -493,7 +518,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(335)
+  var style0 = __webpack_require__(249)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -502,25 +527,48 @@ if (style0.__inject__) style0.__inject__(context)
 
 var component = Object(componentNormalizer["a" /* default */])(
   read_ReaderRewardsvue_type_script_lang_js,
-  ReaderRewardsvue_type_template_id_455e93f7_scoped_true_render,
-  ReaderRewardsvue_type_template_id_455e93f7_scoped_true_staticRenderFns,
+  render,
+  staticRenderFns,
   false,
   injectStyles,
-  "455e93f7",
+  "173ef78a",
   "029fac5a"
   
 )
 
-/* harmony default export */ var ReaderRewards = (component.exports);
+/* harmony default export */ var ReaderRewards = __webpack_exports__["a"] = (component.exports);
+
+/***/ }),
+
+/***/ 601:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+// ESM COMPAT FLAG
+__webpack_require__.r(__webpack_exports__);
+
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./pages/read/rewards.vue?vue&type=template&id=06d6438d
+var render = function render() {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c('ReaderRewards');
+};
+var staticRenderFns = [];
+
+// CONCATENATED MODULE: ./pages/read/rewards.vue?vue&type=template&id=06d6438d
+
+// EXTERNAL MODULE: ./components/read/ReaderRewards.vue + 5 modules
+var ReaderRewards = __webpack_require__(282);
+
 // EXTERNAL MODULE: ./utils/reading-seo.js
-var reading_seo = __webpack_require__(34);
+var reading_seo = __webpack_require__(39);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./pages/read/rewards.vue?vue&type=script&lang=js
 
 
 /* harmony default export */ var rewardsvue_type_script_lang_js = ({
   components: {
-    ReaderRewards: ReaderRewards
+    ReaderRewards: ReaderRewards["a" /* default */]
   },
   head: () => Object(reading_seo["d" /* readingHead */])({
     title: '阅读奖励与树场 - 原木社区',
@@ -531,6 +579,9 @@ var reading_seo = __webpack_require__(34);
 });
 // CONCATENATED MODULE: ./pages/read/rewards.vue?vue&type=script&lang=js
  /* harmony default export */ var read_rewardsvue_type_script_lang_js = (rewardsvue_type_script_lang_js); 
+// EXTERNAL MODULE: ./node_modules/vue-loader/lib/runtime/componentNormalizer.js
+var componentNormalizer = __webpack_require__(2);
+
 // CONCATENATED MODULE: ./pages/read/rewards.vue
 
 
@@ -539,7 +590,7 @@ var reading_seo = __webpack_require__(34);
 
 /* normalize component */
 
-var rewards_component = Object(componentNormalizer["a" /* default */])(
+var component = Object(componentNormalizer["a" /* default */])(
   read_rewardsvue_type_script_lang_js,
   render,
   staticRenderFns,
@@ -550,7 +601,7 @@ var rewards_component = Object(componentNormalizer["a" /* default */])(
   
 )
 
-/* harmony default export */ var rewards = __webpack_exports__["default"] = (rewards_component.exports);
+/* harmony default export */ var rewards = __webpack_exports__["default"] = (component.exports);
 
 /***/ })
 

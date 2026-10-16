@@ -43,7 +43,7 @@ module.exports =
 /******/
 /******/ 		// "0" is the signal for "already loaded"
 /******/ 		if(installedChunks[chunkId] !== 0) {
-/******/ 			var chunk = require("./" + ({"1":"pages/agreement/content","2":"pages/article/_id","3":"pages/community/chat","4":"pages/community/circle/_id","5":"pages/community/circles","6":"pages/community/index","7":"pages/community/post/_id","8":"pages/community/post/edit","9":"pages/forgot-password","10":"pages/index","11":"pages/login","12":"pages/manga/_id","13":"pages/manga/read/_articleId","14":"pages/me/friends","15":"pages/me/index","16":"pages/me/messages","17":"pages/me/settings","18":"pages/novel/_id","19":"pages/novel/fans","20":"pages/read/activities","21":"pages/read/ask/_id","22":"pages/read/bookcase","23":"pages/read/collections","24":"pages/read/comment/_id","25":"pages/read/end/_id","26":"pages/read/index","27":"pages/read/power/_id","28":"pages/read/preview/_key","29":"pages/read/rank","30":"pages/read/redstone","31":"pages/read/resources","32":"pages/read/rewards","33":"pages/search","34":"pages/tag/collections","35":"pages/tags/index","36":"pages/users/_id","37":"pages/world/_id","38":"pages/world/relations/_id","39":"pages/write/activity-form/_workId/_tagId","40":"pages/write/edit/_id","41":"pages/write/index","42":"pages/write/new","43":"pages/write/settings/_id","44":"pages/write/settings/info/_id","45":"pages/write/settings/tags/_id"}[chunkId]||chunkId) + ".js");
+/******/ 			var chunk = require("./" + ({"1":"pages/about/open-source","2":"pages/agreement/content","3":"pages/article/_id","4":"pages/community/chat","5":"pages/community/circle/_id","6":"pages/community/circle/create","7":"pages/community/circle/members/_id","8":"pages/community/circle/settings/_id","9":"pages/community/circles","10":"pages/community/index","11":"pages/community/mail/_id","12":"pages/community/mail/new","13":"pages/community/miniapp/_id","14":"pages/community/post/_id","15":"pages/community/post/edit","16":"pages/community/search","17":"pages/forgot-password","18":"pages/index","19":"pages/login","20":"pages/manga/_id","21":"pages/manga/read/_articleId","22":"pages/me/achievements","23":"pages/me/credit","24":"pages/me/frames","25":"pages/me/friends","26":"pages/me/help","27":"pages/me/index","28":"pages/me/invite","29":"pages/me/lab","30":"pages/me/messages","31":"pages/me/notifications","32":"pages/me/security","33":"pages/me/settings","34":"pages/me/storage","35":"pages/me/tree","36":"pages/me/wallet","37":"pages/membership/gift","38":"pages/membership/index","39":"pages/membership/redeem","40":"pages/membership/rules","41":"pages/novel/_id","42":"pages/novel/fans","43":"pages/read/activities","44":"pages/read/ask/_id","45":"pages/read/bookcase","46":"pages/read/collections","47":"pages/read/comment/_id","48":"pages/read/end/_id","49":"pages/read/index","50":"pages/read/power/_id","51":"pages/read/preview/_key","52":"pages/read/rank","53":"pages/read/redstone","54":"pages/read/resources","55":"pages/read/rewards","56":"pages/search","57":"pages/store/_id","58":"pages/store/addresses","59":"pages/store/index","60":"pages/store/orders","61":"pages/tag/collections","62":"pages/tags/index","63":"pages/users/_id","64":"pages/world/_id","65":"pages/world/relations/_id","66":"pages/write/activity-form/_workId/_tagId","67":"pages/write/edit/_id","68":"pages/write/index","69":"pages/write/new","70":"pages/write/settings/_id","71":"pages/write/settings/info/_id","72":"pages/write/settings/tags/_id"}[chunkId]||chunkId) + ".js");
 /******/ 			var moreModules = chunk.modules, chunkIds = chunk.ids;
 /******/ 			for(var moduleId in moreModules) {
 /******/ 				modules[moduleId] = moreModules[moduleId];
@@ -115,7 +115,7 @@ module.exports =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 65);
+/******/ 	return __webpack_require__(__webpack_require__.s = 77);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -132,7 +132,7 @@ module.exports = require("vue");
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return readingToken; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return readingRequest; });
 /* unused harmony export saveReadingProgress */
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(11);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12);
 /* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
 
 
@@ -363,12 +363,6 @@ function normalizeComponent(
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports) {
-
-module.exports = require("ufo");
-
-/***/ }),
-/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -468,7 +462,7 @@ function toComment(sourceMap) {
 }
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -591,7 +585,19 @@ function renderStyles (styles) {
 
 
 /***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+module.exports = require("ufo");
+
+/***/ }),
 /* 6 */
+/***/ (function(module, exports) {
+
+module.exports = require("url");
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -612,7 +618,7 @@ exports.rafThrottle = rafThrottle;
 exports.objToArray = objToArray;
 var _vue = __webpack_require__(0);
 var _vue2 = _interopRequireDefault(_vue);
-var _types = __webpack_require__(48);
+var _types = __webpack_require__(58);
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {
     default: obj
@@ -840,7 +846,7 @@ var isMac = exports.isMac = function isMac() {
 };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -867,12 +873,52 @@ var isMac = exports.isMac = function isMac() {
     '/read/collections': '/pages/readers/collections',
     // 标签页面
     '/community/post/edit': '/pages/community/postEdit',
+    '/community/search': '/pages/community/search',
+    '/community/circles': '/pages/community/circles',
+    '/community/mail/new': '/pages/community/send_mail',
+    '/community/circle/create': '/pages/community/createCircle',
+    '/me/messages': '/pages/community/message',
+    '/me/friends': '/pages/community/friends',
+    '/me/settings': '/pages/users/clientSet',
+    '/me/security': '/pages/users/activateAccount_email',
+    '/me/notifications': '/pages/settings/pushSettings',
+    '/me/storage': '/pages/users/storageManage',
+    '/me/achievements': '/pages/users/achievements',
+    '/me/frames': '/pages/users/avatar_frames',
+    '/me/credit': '/pages/users/user_credit',
+    '/me/tree': '/pages/treePlant/treeplant',
+    '/me/invite': '/pages/apps/inviteCard',
+    '/me/lab': '/pages/apps/lab',
+    '/me/help': '/pages/apps/faqs/faq',
+    '/me/wallet': '/pages/payments/recharge',
+    '/membership': '/pages/membership/index',
+    '/membership/redeem': '/pages/membership/redeem',
+    '/membership/gift': '/pages/membership/gift',
+    '/membership/rules': '/pages/membership/rules',
+    '/store': '/pages/store/index',
+    '/store/addresses': '/pages/store/address_list',
+    '/store/orders': '/pages/store/orders',
     '/me': '/pages/me',
     '/write/new': '/pages/writers/newEssay',
     '/forgot-password': '/pages/users/forgottenPwd'
   },
   // 参数匹配规则 - 支持动态参数
   params: [{
+    pattern: /^\/community\/mail\/(\d+)$/,
+    replacement: '/pages/community/read_mail?id=$1'
+  }, {
+    pattern: /^\/community\/circle\/settings\/(\d+)$/,
+    replacement: '/pages/community/editCircle?id=$1'
+  }, {
+    pattern: /^\/community\/circle\/members\/(\d+)$/,
+    replacement: '/pages/community/circleMembers?id=$1'
+  }, {
+    pattern: /^\/community\/miniapp\/([a-z][a-z0-9-]*)$/,
+    replacement: '/pages/apps/miniapp?id=$1'
+  }, {
+    pattern: /^\/store\/(\d+)$/,
+    replacement: '/pages/store/detail?product_id=$1'
+  }, {
     pattern: /^\/read\/end\/(\d+)$/,
     replacement: '/pages/readers/bookEnd?novelId=$1'
   }, {
@@ -936,12 +982,6 @@ var isMac = exports.isMac = function isMac() {
     removeParams: ['utm_source', 'utm_medium', 'utm_campaign']
   }
 });
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports) {
-
-module.exports = require("url");
 
 /***/ }),
 /* 9 */
@@ -1180,6 +1220,30 @@ var isInContainer = exports.isInContainer = function isInContainer(el, container
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return responseList; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return responsePage; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return responseObject; });
+function responseList(value, label = "列表") {
+  if (!Array.isArray(value)) throw new Error(`${label}数据异常，请刷新重试`);
+  return value;
+}
+function responsePage(value, label = "列表") {
+  if (!value || !Array.isArray(value.list) || !Number.isFinite(Number(value.total)) || Number(value.total) < 0) throw new Error(`${label}数据异常，请刷新重试`);
+  return {
+    ...value,
+    total: Number(value.total)
+  };
+}
+function responseObject(value, label = "信息") {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label}数据异常，请刷新重试`);
+  return value;
+}
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return READING_BOARDS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return READING_ZONES; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() { return enabledFlag; });
@@ -1194,6 +1258,8 @@ var isInContainer = exports.isInContainer = function isInContainer(el, container
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return discoveryLink; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() { return mergeShelf; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "i", function() { return mergeReadingHistory; });
+/* harmony import */ var _social_links__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(44);
+
 const READING_BOARDS = [{
   key: 'update',
   label: '更新榜',
@@ -1276,7 +1342,7 @@ function discoveryLink(raw, mobileBase = 'https://m.loghome.ink') {
   };
   if (!value.startsWith('/') || value.startsWith('//') || /[\\\u0000-\u001f]/.test(value)) return null;
   const [path, query = ''] = value.split('?');
-  const QueryParams =  true ? __webpack_require__(8).URLSearchParams : undefined;
+  const QueryParams =  true ? __webpack_require__(6).URLSearchParams : undefined;
   const params = new QueryParams(query);
   const id = Number(params.get('id') || params.get('novel_id'));
   const exact = {
@@ -1314,6 +1380,11 @@ function discoveryLink(raw, mobileBase = 'https://m.loghome.ink') {
       external: false
     };
   }
+  const social = path.startsWith('/pages/') ? Object(_social_links__WEBPACK_IMPORTED_MODULE_0__[/* socialMessageTarget */ "a"])(value) : null;
+  if (social && !social.mobile) return {
+    href: social.path,
+    external: false
+  };
   if (path.startsWith('/pages/')) return {
     href: `${mobileBase.replace(/\/$/, '')}/#${value}`,
     external: true
@@ -1364,13 +1435,13 @@ function mergeReadingHistory(cloud, local) {
 }
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = require("axios");
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1409,7 +1480,202 @@ exports.default = {
 };
 
 /***/ }),
-/* 13 */
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+exports.__esModule = true;
+exports.i18n = exports.use = exports.t = undefined;
+var _zhCN = __webpack_require__(15);
+var _zhCN2 = _interopRequireDefault(_zhCN);
+var _vue = __webpack_require__(0);
+var _vue2 = _interopRequireDefault(_vue);
+var _deepmerge = __webpack_require__(115);
+var _deepmerge2 = _interopRequireDefault(_deepmerge);
+var _format = __webpack_require__(116);
+var _format2 = _interopRequireDefault(_format);
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : {
+    default: obj
+  };
+}
+var format = (0, _format2.default)(_vue2.default);
+var lang = _zhCN2.default;
+var merged = false;
+var i18nHandler = function i18nHandler() {
+  var vuei18n = Object.getPrototypeOf(this || _vue2.default).$t;
+  if (typeof vuei18n === 'function' && !!_vue2.default.locale) {
+    if (!merged) {
+      merged = true;
+      _vue2.default.locale(_vue2.default.config.lang, (0, _deepmerge2.default)(lang, _vue2.default.locale(_vue2.default.config.lang) || {}, {
+        clone: true
+      }));
+    }
+    return vuei18n.apply(this, arguments);
+  }
+};
+var t = exports.t = function t(path, options) {
+  var value = i18nHandler.apply(this, arguments);
+  if (value !== null && value !== undefined) return value;
+  var array = path.split('.');
+  var current = lang;
+  for (var i = 0, j = array.length; i < j; i++) {
+    var property = array[i];
+    value = current[property];
+    if (i === j - 1) return format(value, options);
+    if (!value) return '';
+    current = value;
+  }
+  return '';
+};
+var use = exports.use = function use(l) {
+  lang = l || lang;
+};
+var i18n = exports.i18n = function i18n(fn) {
+  i18nHandler = fn || i18nHandler;
+};
+exports.default = {
+  use: use,
+  t: t,
+  i18n: i18n
+};
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+exports.__esModule = true;
+exports.default = {
+  el: {
+    colorpicker: {
+      confirm: '确定',
+      clear: '清空'
+    },
+    datepicker: {
+      now: '此刻',
+      today: '今天',
+      cancel: '取消',
+      clear: '清空',
+      confirm: '确定',
+      selectDate: '选择日期',
+      selectTime: '选择时间',
+      startDate: '开始日期',
+      startTime: '开始时间',
+      endDate: '结束日期',
+      endTime: '结束时间',
+      prevYear: '前一年',
+      nextYear: '后一年',
+      prevMonth: '上个月',
+      nextMonth: '下个月',
+      year: '年',
+      month1: '1 月',
+      month2: '2 月',
+      month3: '3 月',
+      month4: '4 月',
+      month5: '5 月',
+      month6: '6 月',
+      month7: '7 月',
+      month8: '8 月',
+      month9: '9 月',
+      month10: '10 月',
+      month11: '11 月',
+      month12: '12 月',
+      // week: '周次',
+      weeks: {
+        sun: '日',
+        mon: '一',
+        tue: '二',
+        wed: '三',
+        thu: '四',
+        fri: '五',
+        sat: '六'
+      },
+      months: {
+        jan: '一月',
+        feb: '二月',
+        mar: '三月',
+        apr: '四月',
+        may: '五月',
+        jun: '六月',
+        jul: '七月',
+        aug: '八月',
+        sep: '九月',
+        oct: '十月',
+        nov: '十一月',
+        dec: '十二月'
+      }
+    },
+    select: {
+      loading: '加载中',
+      noMatch: '无匹配数据',
+      noData: '无数据',
+      placeholder: '请选择'
+    },
+    cascader: {
+      noMatch: '无匹配数据',
+      loading: '加载中',
+      placeholder: '请选择',
+      noData: '暂无数据'
+    },
+    pagination: {
+      goto: '前往',
+      pagesize: '条/页',
+      total: '共 {total} 条',
+      pageClassifier: '页'
+    },
+    messagebox: {
+      title: '提示',
+      confirm: '确定',
+      cancel: '取消',
+      error: '输入的数据不合法!'
+    },
+    upload: {
+      deleteTip: '按 delete 键可删除',
+      delete: '删除',
+      preview: '查看图片',
+      continue: '继续上传'
+    },
+    table: {
+      emptyText: '暂无数据',
+      confirmFilter: '筛选',
+      resetFilter: '重置',
+      clearFilter: '全部',
+      sumText: '合计'
+    },
+    tree: {
+      emptyText: '暂无数据'
+    },
+    transfer: {
+      noMatch: '无匹配数据',
+      noData: '无数据',
+      titles: ['列表 1', '列表 2'],
+      filterPlaceholder: '请输入搜索内容',
+      noCheckedFormat: '共 {total} 项',
+      hasCheckedFormat: '已选 {checked}/{total} 项'
+    },
+    image: {
+      error: '加载失败'
+    },
+    pageHeader: {
+      title: '返回'
+    },
+    popconfirm: {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消'
+    },
+    empty: {
+      description: '暂无数据'
+    }
+  }
+};
+
+/***/ }),
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1417,7 +1683,7 @@ exports.default = {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return buildMobileUrl; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return parseUrl; });
 /* unused harmony export validateUriMapping */
-/* harmony import */ var _config_uri_mapping_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
+/* harmony import */ var _config_uri_mapping_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8);
 /**
  * URI解析器工具函数
  * 用于将桌面端URI转换为移动端URI
@@ -1699,16 +1965,27 @@ function validateUriMapping() {
   parseUrl,
   validateUriMapping
 });
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URL"], __webpack_require__(8)["URLSearchParams"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URL"], __webpack_require__(6)["URLSearchParams"]))
 
 /***/ }),
-/* 14 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("vuex");
 
 /***/ }),
-/* 15 */
+/* 18 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return formatCopy; });
+// Interpolate named values as plain text. Vue remains responsible for escaping.
+function formatCopy(template, values = {}) {
+  return template.replace(/\{(\w+)\}/g, (token, key) => Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : token);
+}
+
+/***/ }),
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1717,13 +1994,13 @@ module.exports = require("vuex");
 exports.__esModule = true;
 var _vue = __webpack_require__(0);
 var _vue2 = _interopRequireDefault(_vue);
-var _popup = __webpack_require__(49);
+var _popup = __webpack_require__(59);
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {
     default: obj
   };
 }
-var PopperJS = _vue2.default.prototype.$isServer ? function () {} : __webpack_require__(98);
+var PopperJS = _vue2.default.prototype.$isServer ? function () {} : __webpack_require__(118);
 var stop = function stop(e) {
   return e.stopPropagation();
 };
@@ -1898,7 +2175,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 16 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1922,7 +2199,7 @@ exports.default = function (target) {
 ;
 
 /***/ }),
-/* 17 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1940,7 +2217,13 @@ function isKorean(text) {
 }
 
 /***/ }),
-/* 18 */
+/* 22 */
+/***/ (function(module) {
+
+module.exports = JSON.parse("{\"accessibility\":{\"skipHome\":\"跳到首页内容\",\"skipReading\":\"跳到阅读内容\"},\"nav\":{\"read\":\"阅读\",\"write\":\"写作\",\"community\":\"社区\",\"mobileDownload\":\"下载移动端\"},\"search\":{\"history\":\"搜索历史\",\"hot\":\"热门搜索\",\"books\":\"书籍\",\"viewAll\":\"查看全部\",\"posts\":\"帖子\",\"circles\":\"圈子\",\"users\":\"用户\",\"empty\":\"没有找到相关内容\",\"allResults\":\"在搜索页面中查看\",\"placeholder\":\"全站搜索...\",\"memberCount\":\"{count}人\",\"fallbackKeywords\":[\"修仙\",\"都市\",\"玄幻\",\"言情\",\"历史\"]},\"account\":{\"login\":\"登录\",\"profile\":\"个人中心\",\"works\":\"创作中心\",\"bookcase\":\"我的书架\",\"logout\":\"退出登录\",\"anonymous\":\"匿名用户\",\"mottoFallback\":\"这个人很懒，还没有设置个性签名\",\"nameFallback\":\"用户\",\"logoutSuccess\":\"已退出登录\"},\"footer\":{\"icp\":\"苏ICP备2021006745号\",\"publicSecurity\":\"皖公安网备34010402703554号\",\"openSource\":\"原木社区开源计划\",\"disclaimer\":\"非 Minecraft 官方产品。未获 Mojang 许可，亦与 Mojang 无任何关联。\",\"copyright\":\"© {year} 原木社区 版权所有\"},\"brand\":\"原木社区\",\"time\":{\"justNow\":\"刚刚\",\"minutesAgo\":\"{count}分钟前\",\"hoursAgo\":\"{count}小时前\",\"daysAgo\":\"{count}天前\"}}");
+
+/***/ }),
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(URL) {module.exports=/******/function(modules){// webpackBootstrap
@@ -1964,7 +2247,7 @@ function isKorean(text) {
 /******/__webpack_require__.n=function(module){/******/var getter=module&&module.__esModule?/******/function getDefault(){return module['default'];}:/******/function getModuleExports(){return module;};/******/__webpack_require__.d(getter,'a',getter);/******/return getter;/******/};/******//******/// Object.prototype.hasOwnProperty.call
 /******/__webpack_require__.o=function(object,property){return Object.prototype.hasOwnProperty.call(object,property);};/******//******/// __webpack_public_path__
 /******/__webpack_require__.p="/dist/";/******//******//******/// Load entry module and return exports
-/******/return __webpack_require__(__webpack_require__.s=46);/******/}/************************************************************************//******/([(/* 0 *//***/function(module,exports){module.exports=__webpack_require__(94);/***/}),(/* 1 *//***/function(module,exports){module.exports=__webpack_require__(9);/***/}),(/* 2 *//***/function(module,exports){module.exports=__webpack_require__(6);/***/}),(/* 3 *//***/function(module,exports){module.exports=__webpack_require__(12);/***/}),(/* 4 *//***/function(module,exports){module.exports=__webpack_require__(21);/***/}),(/* 5 *//***/function(module,exports){module.exports=__webpack_require__(15);/***/}),(/* 6 *//***/function(module,exports){module.exports=__webpack_require__(0);/***/}),(/* 7 *//***/function(module,exports){module.exports=__webpack_require__(16);/***/}),(/* 8 *//***/function(module,exports){module.exports=__webpack_require__(23);/***/}),(/* 9 *//***/function(module,exports){module.exports=__webpack_require__(50);/***/}),(/* 10 *//***/function(module,exports){module.exports=__webpack_require__(51);/***/}),(/* 11 *//***/function(module,exports){module.exports=__webpack_require__(49);/***/}),(/* 12 *//***/function(module,exports){module.exports=__webpack_require__(20);/***/}),(/* 13 *//***/function(module,exports){module.exports=__webpack_require__(99);/***/}),(/* 14 *//***/function(module,exports){module.exports=__webpack_require__(52);/***/}),(/* 15 *//***/function(module,exports){module.exports=__webpack_require__(24);/***/}),(/* 16 *//***/function(module,exports){module.exports=__webpack_require__(48);/***/}),(/* 17 *//***/function(module,exports){module.exports=__webpack_require__(25);/***/}),(/* 18 *//***/function(module,exports){module.exports=__webpack_require__(26);/***/}),(/* 19 *//***/function(module,exports){module.exports=__webpack_require__(17);/***/}),(/* 20 *//***/function(module,exports){module.exports=__webpack_require__(47);/***/}),(/* 21 *//***/function(module,exports){module.exports=__webpack_require__(101);/***/}),(/* 22 *//***/function(module,exports){module.exports=__webpack_require__(102);/***/}),(/* 23 *//***/function(module,exports){module.exports=__webpack_require__(27);/***/}),(/* 24 *//***/function(module,exports){module.exports=__webpack_require__(54);/***/}),(/* 25 *//***/function(module,exports){module.exports=__webpack_require__(103);/***/}),(/* 26 *//***/function(module,exports){module.exports=__webpack_require__(104);/***/}),(/* 27 *//***/function(module,exports){module.exports=__webpack_require__(28);/***/}),(/* 28 *//***/function(module,exports){module.exports=__webpack_require__(105);/***/}),(/* 29 *//***/function(module,exports){module.exports=__webpack_require__(107);/***/}),(/* 30 *//***/function(module,exports){module.exports=__webpack_require__(56);/***/}),(/* 31 *//***/function(module,exports){module.exports=__webpack_require__(22);/***/}),(/* 32 *//***/function(module,exports){module.exports=__webpack_require__(108);/***/}),(/* 33 *//***/function(module,exports){module.exports=__webpack_require__(109);/***/}),(/* 34 *//***/function(module,exports){module.exports=__webpack_require__(110);/***/}),(/* 35 *//***/function(module,exports){module.exports=__webpack_require__(29);/***/}),(/* 36 *//***/function(module,exports){module.exports=__webpack_require__(53);/***/}),(/* 37 *//***/function(module,exports){module.exports=__webpack_require__(111);/***/}),(/* 38 *//***/function(module,exports){module.exports=__webpack_require__(112);/***/}),(/* 39 *//***/function(module,exports){module.exports=__webpack_require__(113);/***/}),(/* 40 *//***/function(module,exports){module.exports=__webpack_require__(114);/***/}),(/* 41 *//***/function(module,exports){module.exports=__webpack_require__(115);/***/}),(/* 42 *//***/function(module,exports){module.exports=__webpack_require__(116);/***/}),(/* 43 *//***/function(module,exports){module.exports=__webpack_require__(117);/***/}),(/* 44 *//***/function(module,exports){module.exports=__webpack_require__(57);/***/}),(/* 45 *//***/function(module,exports){module.exports=__webpack_require__(118);/***/}),(/* 46 *//***/function(module,exports,__webpack_require__){module.exports=__webpack_require__(47);/***/}),(/* 47 *//***/function(module,__webpack_exports__,__webpack_require__){"use strict";__webpack_require__.r(__webpack_exports__);// CONCATENATED MODULE: ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./packages/pagination/src/pager.vue?vue&type=template&id=7274f267&
+/******/return __webpack_require__(__webpack_require__.s=46);/******/}/************************************************************************//******/([(/* 0 *//***/function(module,exports){module.exports=__webpack_require__(114);/***/}),(/* 1 *//***/function(module,exports){module.exports=__webpack_require__(9);/***/}),(/* 2 *//***/function(module,exports){module.exports=__webpack_require__(7);/***/}),(/* 3 *//***/function(module,exports){module.exports=__webpack_require__(13);/***/}),(/* 4 *//***/function(module,exports){module.exports=__webpack_require__(27);/***/}),(/* 5 *//***/function(module,exports){module.exports=__webpack_require__(19);/***/}),(/* 6 *//***/function(module,exports){module.exports=__webpack_require__(0);/***/}),(/* 7 *//***/function(module,exports){module.exports=__webpack_require__(20);/***/}),(/* 8 *//***/function(module,exports){module.exports=__webpack_require__(29);/***/}),(/* 9 *//***/function(module,exports){module.exports=__webpack_require__(60);/***/}),(/* 10 *//***/function(module,exports){module.exports=__webpack_require__(61);/***/}),(/* 11 *//***/function(module,exports){module.exports=__webpack_require__(59);/***/}),(/* 12 *//***/function(module,exports){module.exports=__webpack_require__(14);/***/}),(/* 13 *//***/function(module,exports){module.exports=__webpack_require__(119);/***/}),(/* 14 *//***/function(module,exports){module.exports=__webpack_require__(62);/***/}),(/* 15 *//***/function(module,exports){module.exports=__webpack_require__(30);/***/}),(/* 16 *//***/function(module,exports){module.exports=__webpack_require__(58);/***/}),(/* 17 *//***/function(module,exports){module.exports=__webpack_require__(31);/***/}),(/* 18 *//***/function(module,exports){module.exports=__webpack_require__(32);/***/}),(/* 19 *//***/function(module,exports){module.exports=__webpack_require__(21);/***/}),(/* 20 *//***/function(module,exports){module.exports=__webpack_require__(57);/***/}),(/* 21 *//***/function(module,exports){module.exports=__webpack_require__(121);/***/}),(/* 22 *//***/function(module,exports){module.exports=__webpack_require__(122);/***/}),(/* 23 *//***/function(module,exports){module.exports=__webpack_require__(33);/***/}),(/* 24 *//***/function(module,exports){module.exports=__webpack_require__(64);/***/}),(/* 25 *//***/function(module,exports){module.exports=__webpack_require__(123);/***/}),(/* 26 *//***/function(module,exports){module.exports=__webpack_require__(124);/***/}),(/* 27 *//***/function(module,exports){module.exports=__webpack_require__(34);/***/}),(/* 28 *//***/function(module,exports){module.exports=__webpack_require__(125);/***/}),(/* 29 *//***/function(module,exports){module.exports=__webpack_require__(127);/***/}),(/* 30 *//***/function(module,exports){module.exports=__webpack_require__(66);/***/}),(/* 31 *//***/function(module,exports){module.exports=__webpack_require__(28);/***/}),(/* 32 *//***/function(module,exports){module.exports=__webpack_require__(128);/***/}),(/* 33 *//***/function(module,exports){module.exports=__webpack_require__(129);/***/}),(/* 34 *//***/function(module,exports){module.exports=__webpack_require__(130);/***/}),(/* 35 *//***/function(module,exports){module.exports=__webpack_require__(35);/***/}),(/* 36 *//***/function(module,exports){module.exports=__webpack_require__(63);/***/}),(/* 37 *//***/function(module,exports){module.exports=__webpack_require__(131);/***/}),(/* 38 *//***/function(module,exports){module.exports=__webpack_require__(132);/***/}),(/* 39 *//***/function(module,exports){module.exports=__webpack_require__(133);/***/}),(/* 40 *//***/function(module,exports){module.exports=__webpack_require__(134);/***/}),(/* 41 *//***/function(module,exports){module.exports=__webpack_require__(135);/***/}),(/* 42 *//***/function(module,exports){module.exports=__webpack_require__(136);/***/}),(/* 43 *//***/function(module,exports){module.exports=__webpack_require__(137);/***/}),(/* 44 *//***/function(module,exports){module.exports=__webpack_require__(67);/***/}),(/* 45 *//***/function(module,exports){module.exports=__webpack_require__(138);/***/}),(/* 46 *//***/function(module,exports,__webpack_require__){module.exports=__webpack_require__(47);/***/}),(/* 47 *//***/function(module,__webpack_exports__,__webpack_require__){"use strict";__webpack_require__.r(__webpack_exports__);// CONCATENATED MODULE: ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./packages/pagination/src/pager.vue?vue&type=template&id=7274f267&
 var pagervue_type_template_id_7274f267_render=function(){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c("ul",{staticClass:"el-pager",on:{click:_vm.onPagerClick}},[_vm.pageCount>0?_c("li",{staticClass:"number",class:{active:_vm.currentPage===1,disabled:_vm.disabled}},[_vm._v("1")]):_vm._e(),_vm.showPrevMore?_c("li",{staticClass:"el-icon more btn-quickprev",class:[_vm.quickprevIconClass,{disabled:_vm.disabled}],on:{mouseenter:function($event){_vm.onMouseenter("left");},mouseleave:function($event){_vm.quickprevIconClass="el-icon-more";}}}):_vm._e(),_vm._l(_vm.pagers,function(pager){return _c("li",{key:pager,staticClass:"number",class:{active:_vm.currentPage===pager,disabled:_vm.disabled}},[_vm._v(_vm._s(pager))]);}),_vm.showNextMore?_c("li",{staticClass:"el-icon more btn-quicknext",class:[_vm.quicknextIconClass,{disabled:_vm.disabled}],on:{mouseenter:function($event){_vm.onMouseenter("right");},mouseleave:function($event){_vm.quicknextIconClass="el-icon-more";}}}):_vm._e(),_vm.pageCount>1?_c("li",{staticClass:"number",class:{active:_vm.currentPage===_vm.pageCount,disabled:_vm.disabled}},[_vm._v(_vm._s(_vm.pageCount))]):_vm._e()],2);};var staticRenderFns=[];pagervue_type_template_id_7274f267_render._withStripped=true;// CONCATENATED MODULE: ./packages/pagination/src/pager.vue?vue&type=template&id=7274f267&
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib!./node_modules/vue-loader/lib??vue-loader-options!./packages/pagination/src/pager.vue?vue&type=script&lang=js&
 //
@@ -6861,86 +7144,121 @@ var IconMap={success:'icon-success',warning:'icon-warning',error:'icon-error',in
 /* normalize component */var result_src_component=normalizeComponent(packages_result_srcvue_type_script_lang_js_,srcvue_type_template_id_3408b139_render,srcvue_type_template_id_3408b139_staticRenderFns,false,null,null,null);/* hot reload */if(false){ var result_src_api; }result_src_component.options.__file="packages/result/src/index.vue";/* harmony default export */var result_src=result_src_component.exports;// CONCATENATED MODULE: ./packages/result/index.js
 /* istanbul ignore next */result_src.install=function(Vue){Vue.component(result_src.name,result_src);};/* harmony default export */var packages_result=result_src;// CONCATENATED MODULE: ./src/index.js
 /* Automatically generated by './build/bin/build-entry.js' */var components=[packages_pagination,dialog,packages_autocomplete,packages_dropdown,packages_dropdown_menu,packages_dropdown_item,packages_menu,packages_submenu,packages_menu_item,packages_menu_item_group,packages_input,packages_input_number,packages_radio,packages_radio_group,packages_radio_button,packages_checkbox,packages_checkbox_button,packages_checkbox_group,packages_switch,packages_select,packages_option,packages_option_group,packages_button,packages_button_group,packages_table,packages_table_column,packages_date_picker,packages_time_select,packages_time_picker,popover,packages_tooltip,packages_breadcrumb,packages_breadcrumb_item,packages_form,packages_form_item,packages_tabs,packages_tab_pane,packages_tag,packages_tree,packages_alert,slider,packages_icon,packages_row,packages_col,packages_upload,packages_progress,packages_spinner,badge,card,packages_rate,packages_steps,packages_step,carousel,scrollbar,carousel_item,packages_collapse,packages_collapse_item,packages_cascader,color_picker,transfer,packages_container,header,aside,packages_main,footer,timeline,timeline_item,packages_link,divider,packages_image,calendar,backtop,page_header,packages_cascader_panel,avatar,drawer,statistic,popconfirm,skeleton,skeleton_item,empty,descriptions,packages_descriptions_item,packages_result,collapse_transition_default.a];var src_install=function install(Vue){var opts=arguments.length>1&&arguments[1]!==undefined?arguments[1]:{};lib_locale_default.a.use(opts.locale);lib_locale_default.a.i18n(opts.i18n);components.forEach(function(component){Vue.component(component.name,component);});Vue.use(infinite_scroll);Vue.use(packages_loading.directive);Vue.prototype.$ELEMENT={size:opts.size||'',zIndex:opts.zIndex||2000};Vue.prototype.$loading=packages_loading.service;Vue.prototype.$msgbox=message_box;Vue.prototype.$alert=message_box.alert;Vue.prototype.$confirm=message_box.confirm;Vue.prototype.$prompt=message_box.prompt;Vue.prototype.$notify=notification;Vue.prototype.$message=packages_message;};/* istanbul ignore if */if(typeof window!=='undefined'&&window.Vue){src_install(window.Vue);}/* harmony default export */var src_0=__webpack_exports__["default"]={version:'2.15.14',locale:lib_locale_default.a.use,i18n:lib_locale_default.a.i18n,install:src_install,CollapseTransition:collapse_transition_default.a,Loading:packages_loading,Pagination:packages_pagination,Dialog:dialog,Autocomplete:packages_autocomplete,Dropdown:packages_dropdown,DropdownMenu:packages_dropdown_menu,DropdownItem:packages_dropdown_item,Menu:packages_menu,Submenu:packages_submenu,MenuItem:packages_menu_item,MenuItemGroup:packages_menu_item_group,Input:packages_input,InputNumber:packages_input_number,Radio:packages_radio,RadioGroup:packages_radio_group,RadioButton:packages_radio_button,Checkbox:packages_checkbox,CheckboxButton:packages_checkbox_button,CheckboxGroup:packages_checkbox_group,Switch:packages_switch,Select:packages_select,Option:packages_option,OptionGroup:packages_option_group,Button:packages_button,ButtonGroup:packages_button_group,Table:packages_table,TableColumn:packages_table_column,DatePicker:packages_date_picker,TimeSelect:packages_time_select,TimePicker:packages_time_picker,Popover:popover,Tooltip:packages_tooltip,MessageBox:message_box,Breadcrumb:packages_breadcrumb,BreadcrumbItem:packages_breadcrumb_item,Form:packages_form,FormItem:packages_form_item,Tabs:packages_tabs,TabPane:packages_tab_pane,Tag:packages_tag,Tree:packages_tree,Alert:packages_alert,Notification:notification,Slider:slider,Icon:packages_icon,Row:packages_row,Col:packages_col,Upload:packages_upload,Progress:packages_progress,Spinner:packages_spinner,Message:packages_message,Badge:badge,Card:card,Rate:packages_rate,Steps:packages_steps,Step:packages_step,Carousel:carousel,Scrollbar:scrollbar,CarouselItem:carousel_item,Collapse:packages_collapse,CollapseItem:packages_collapse_item,Cascader:packages_cascader,ColorPicker:color_picker,Transfer:transfer,Container:packages_container,Header:header,Aside:aside,Main:packages_main,Footer:footer,Timeline:timeline,TimelineItem:timeline_item,Link:packages_link,Divider:divider,Image:packages_image,Calendar:calendar,Backtop:backtop,InfiniteScroll:infinite_scroll,PageHeader:page_header,CascaderPanel:packages_cascader_panel,Avatar:avatar,Drawer:drawer,Statistic:statistic,Popconfirm:popconfirm,Skeleton:skeleton,SkeletonItem:skeleton_item,Empty:empty,Descriptions:descriptions,DescriptionsItem:packages_descriptions_item,Result:packages_result};/***/}/******/)])["default"];
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URL"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URL"]))
 
 /***/ }),
-/* 19 */
+/* 24 */
 /***/ (function(module, exports) {
 
 module.exports = require("vue-no-ssr");
 
 /***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 25 */
+/***/ (function(module) {
 
-"use strict";
-
-
-exports.__esModule = true;
-exports.i18n = exports.use = exports.t = undefined;
-var _zhCN = __webpack_require__(30);
-var _zhCN2 = _interopRequireDefault(_zhCN);
-var _vue = __webpack_require__(0);
-var _vue2 = _interopRequireDefault(_vue);
-var _deepmerge = __webpack_require__(95);
-var _deepmerge2 = _interopRequireDefault(_deepmerge);
-var _format = __webpack_require__(96);
-var _format2 = _interopRequireDefault(_format);
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : {
-    default: obj
-  };
-}
-var format = (0, _format2.default)(_vue2.default);
-var lang = _zhCN2.default;
-var merged = false;
-var i18nHandler = function i18nHandler() {
-  var vuei18n = Object.getPrototypeOf(this || _vue2.default).$t;
-  if (typeof vuei18n === 'function' && !!_vue2.default.locale) {
-    if (!merged) {
-      merged = true;
-      _vue2.default.locale(_vue2.default.config.lang, (0, _deepmerge2.default)(lang, _vue2.default.locale(_vue2.default.config.lang) || {}, {
-        clone: true
-      }));
-    }
-    return vuei18n.apply(this, arguments);
-  }
-};
-var t = exports.t = function t(path, options) {
-  var value = i18nHandler.apply(this, arguments);
-  if (value !== null && value !== undefined) return value;
-  var array = path.split('.');
-  var current = lang;
-  for (var i = 0, j = array.length; i < j; i++) {
-    var property = array[i];
-    value = current[property];
-    if (i === j - 1) return format(value, options);
-    if (!value) return '';
-    current = value;
-  }
-  return '';
-};
-var use = exports.use = function use(l) {
-  lang = l || lang;
-};
-var i18n = exports.i18n = function i18n(fn) {
-  i18nHandler = fn || i18nHandler;
-};
-exports.default = {
-  use: use,
-  t: t,
-  i18n: i18n
-};
+module.exports = JSON.parse("{\"zh\":{\"common.confirm\":\"确定\",\"common.cancel\":\"取消\",\"common.submit\":\"提交\",\"common.save\":\"保存\",\"common.delete\":\"删除\",\"common.retry\":\"重试\",\"common.close\":\"关闭\",\"common.loading\":\"努力加载中\",\"common.processing\":\"处理中...\",\"common.prompt\":\"提示\",\"common.loadFailed\":\"加载失败\",\"common.needLogin\":\"请先登录\",\"common.operationFailed\":\"操作失败\",\"common.networkError\":\"网络错误，请稍后重试\",\"common.paramError\":\"参数错误\",\"common.deleteSuccess\":\"删除成功\",\"common.deleteFailed\":\"删除失败\",\"common.confirmDelete\":\"确认删除\",\"common.saveFailed\":\"保存失败\",\"common.settingSuccess\":\"设置成功\",\"common.uploading\":\"上传中\",\"common.uploadSuccess\":\"上传成功\",\"common.verifying\":\"验证中\",\"common.copied\":\"已复制\",\"common.inputTitle\":\"请输入标题\",\"common.inputContent\":\"请输入内容\",\"nav.tab.library\":\"阅读\",\"nav.tab.community\":\"社区\",\"nav.tab.writer\":\"创作\",\"nav.tab.me\":\"我的\",\"settings.ai.disable\":\"禁用人工智能辅助功能\",\"settings.ai.hint\":\"开启后隐藏红石中心及所有 AI 功能入口\",\"settings.ai.disabledNotice\":\"人工智能辅助已禁用，可在设置中重新开启\",\"settings.ai.saveFailed\":\"设置保存失败，请稍后重试\",\"settings.privacy.title\":\"隐私设置\",\"settings.privacy.intro\":\"管理你的账户隐私，设置会同步到所有设备。\",\"settings.privacy.listsTitle\":\"关注与粉丝列表\",\"settings.privacy.listsHint\":\"控制他人能否查看列表。本人始终可查看，关注和粉丝数量仍公开。\",\"settings.privacy.lists.public\":\"全部公开\",\"settings.privacy.lists.following_only\":\"仅公开关注列表\",\"settings.privacy.lists.fans_only\":\"仅公开粉丝列表\",\"settings.privacy.lists.private\":\"全部私密\",\"settings.privacy.messagesTitle\":\"谁可以私信我\",\"settings.privacy.messagesHint\":\"默认允许所有已登录用户私信；“我关注的人”指你已关注的发件人。修改不影响历史消息。\",\"settings.privacy.messages.default\":\"默认\",\"settings.privacy.messages.following\":\"我关注的人\",\"settings.privacy.messages.mutual\":\"互相关注的人\",\"settings.privacy.messages.none\":\"禁止私信\",\"settings.privacy.save\":\"保存设置\",\"settings.privacy.saved\":\"隐私设置已保存\",\"settings.privacy.savedHint\":\"保存后立即生效。\",\"settings.privacy.loading\":\"正在加载隐私设置…\",\"settings.privacy.loadFailed\":\"隐私设置加载失败，请重试\",\"settings.privacy.saveFailed\":\"保存失败，请稍后重试\",\"settings.privacy.retry\":\"重新加载\",\"settings.privacy.loginRequired\":\"请先登录后设置账户隐私\",\"settings.privacy.privateList\":\"该列表已设为私密\",\"settings.privacy.listLoadFailed\":\"列表加载失败，请稍后重试\",\"settings.privacy.messageForbidden\":\"对方的隐私设置不允许你发送私信\",\"settings.language.title\":\"语言\",\"settings.language.followSystem\":\"跟随系统\",\"settings.language.switched\":\"语言已切换\",\"settings.clientSet.pushQq\":\"消息推送与QQ绑定\",\"settings.clientSet.changePassword\":\"修改密码\",\"settings.clientSet.accountBinding\":\"账号绑定\",\"settings.clientSet.storageManage\":\"空间占用管理\",\"settings.clientSet.logout\":\"登出\",\"settings.clientSet.logoutConfirm\":\"确定要登出吗？\",\"settings.storageManage.title\":\"空间占用管理\",\"settings.storageManage.articleName\":\"阅读器数据库\",\"settings.storageManage.articleDesc\":\"存储已下载的小说和章节内容\",\"settings.storageManage.imgName\":\"图片缓存数据库\",\"settings.storageManage.imgDesc\":\"存储已缓存的图片数据\",\"settings.storageManage.writerName\":\"写作备份数据库\",\"settings.storageManage.writerDesc\":\"存储本地备份的章节历史记录\",\"settings.storageManage.clearAll\":\"清空全部\",\"settings.storageManage.warning\":\"警告\",\"settings.storageManage.clearConfirm\":\"确定要清空所有数据吗？此操作不可恢复！\",\"settings.storageManage.clearDone\":\"清理完成\",\"settings.storageManage.clearFailed\":\"清理失败\",\"settings.activate.welcome\":\"亲爱的朋友，欢迎你加入原木社区大家庭！\",\"settings.activate.mobilePolicyNotice\":\"我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持使用手机号作为验证方式，请尽快迁移至邮箱登录。\",\"settings.activate.activateIntro\":\"为了保证不间断的使用，请通过以下激活方式激活账号：\",\"settings.activate.bindByMobile\":\"通过手机号绑定\",\"settings.activate.bindByQq\":\"通过QQ号绑定\",\"settings.activate.bindByEmail\":\"通过邮箱绑定\",\"settings.activate.unbindNotice\":\"我们暂时不支持解绑账号，如有相关诉求请至反馈中心反馈，我们的客服将协助你解决相关问题。\",\"settings.activate.mobilePlaceholder\":\"输入手机号\",\"settings.activate.emailPlaceholder\":\"输入邮箱地址\",\"settings.activate.sendCode\":\"发送验证码\",\"settings.activate.waitSeconds\":\"等待{seconds}秒\",\"settings.activate.slideRight\":\"向右滑动\",\"settings.activate.codePlaceholder\":\"验证码\",\"settings.activate.slideVerifyRequired\":\"请滑动验证滑块\",\"settings.activate.invalidEmail\":\"请输入有效的电子邮箱地址\",\"settings.activate.sending\":\"发送中\",\"settings.activate.sendFailed\":\"发送失败，请稍后重试\",\"settings.activate.invalidCode\":\"请输入有效的验证码\",\"settings.activate.bindSuccess\":\"绑定成功\",\"settings.activate.emailBindSuccess\":\"邮箱绑定成功\",\"settings.activate.verifyCodeFailed\":\"验证失败，请检查验证码\",\"settings.activate.verifyFailed\":\"验证失败，请稍后重试\",\"settings.activate.oicqIntro\":\"你的账号尚待激活，为了保证不间断的使用，请按照以下步骤激活你的账号：\",\"settings.activate.oicqStep1\":\"1.点击下方验证框复制验证码\",\"settings.activate.oicqStep2\":\"2.加入原木社区任意用户QQ群\",\"settings.activate.oicqGroupList\":\"原木社区用户群列表：\",\"settings.activate.oicqGroupMain\":\"原木社区用户交流群：644467605\",\"settings.activate.oicqGroupBeta\":\"原木社区公测小组：931304998\",\"settings.activate.oicqGroupWriter\":\"原木文社总群：464239748\",\"settings.activate.oicqStep3Prefix\":\"3.将验证码\",\"settings.activate.oicqStep3Via\":\"通过私聊\",\"settings.activate.oicqStep3Suffix\":\"发送给群内我们的原木社区管理员“苦力怕君”\",\"settings.activate.oicqTip\":\"友情提示：切勿将验证码发送至公开群中，请务必通过私聊发送。\",\"settings.activate.oicqBindNote\":\"此操作会将你与发送验证消息的QQ号绑定，一个QQ号可绑定多个社区账号。\",\"settings.activate.getCodeFailed\":\"获取验证码失败\",\"settings.userInfo.changeAvatar\":\"更换头像\",\"settings.userInfo.chooseFrame\":\"选择头像挂件\",\"settings.userInfo.penNamePlaceholder\":\"笔名\",\"settings.userInfo.mottoPlaceholder\":\"个性签名\",\"settings.userInfo.requiredMissing\":\"必填项未填\",\"settings.userInfo.updateSuccess\":\"修改成功\",\"settings.userInfo.updateFailed\":\"修改失败\",\"settings.donate.intro\":\"原木巨树承载着一本又一本的书籍，快去给他浇点水、施点肥\",\"settings.donate.button\":\"捐助\",\"settings.credit.recordsTitle\":\"变更记录\",\"settings.credit.noRecords\":\"信誉良好，没有留下记录\",\"settings.credit.historyError\":\"历史信息出错\",\"settings.upload.chooseImage\":\"选择图片\",\"settings.upload.reselect\":\"重新选择\",\"settings.upload.rotate\":\"旋转\",\"settings.upload.preview\":\"预览\",\"settings.upload.upload\":\"上传\",\"settings.upload.rotating\":\"旋转中...\",\"settings.upload.cropping\":\"截取中...\",\"settings.upload.uploading\":\"上传中...\",\"settings.upload.rotatingWait\":\"旋转中，请稍等\",\"settings.upload.croppingWait\":\"截取中，请稍等\",\"settings.upload.uploadingWait\":\"上传中，请稍等\",\"settings.upload.uploadFailed\":\"上传失败\",\"settings.push.bindQqTitle\":\"绑定QQ\",\"settings.push.bindQqDesc\":\"您可以绑定QQ，从而接收系统消息推送。\",\"settings.push.bindingCodeLabel\":\"您的绑定码是：\",\"settings.push.copy\":\"复制\",\"settings.push.refresh\":\"刷新\",\"settings.push.bindHowto\":\"请将此绑定码发送至原木社区用户交流群（701928273）的原木娘（2917117044），即可自动完成账号绑定。\",\"settings.push.statusPrefix\":\"状态：\",\"settings.push.statusEnabled\":\"启用\",\"settings.push.statusDisabled\":\"停用\",\"settings.push.receiveWindow\":\"接收时间段\",\"settings.push.nextDay\":\"(次日)\",\"settings.push.copySuccess\":\"复制成功\",\"settings.push.refreshSuccess\":\"刷新成功\",\"settings.push.getCodeFailed\":\"获取绑定码失败\",\"settings.push.refreshConfirm\":\"确定要刷新绑定码吗？\",\"settings.push.settingFailed\":\"设置失败\",\"settings.push.enable\":\"启用\",\"settings.push.disable\":\"禁用\",\"settings.push.disableConfirm\":\"关闭后将无法及时收到重要消息通知，确定要关闭吗？\",\"settings.push.loadingCode\":\"加载中...\",\"settings.autoSave.aboutTitle\":\"关于本地备份：\",\"settings.autoSave.aboutDesc\":\"原木社区为您提供了强大的本地备份功能。在文章编辑器中进行文章撰写时，我们会以您设置的自动备份频率进行备份。\",\"settings.autoSave.interval\":\"自动备份间隔：{minutes} 分钟\",\"settings.autoSave.minutesOption\":\"{count} 分钟\",\"settings.autoSave.enable\":\"启用\",\"settings.autoSave.disable\":\"禁用\",\"settings.autoSave.restartNote\":\"新设置重启应用后生效。\",\"auth.brand.name\":\"原木社区\",\"auth.login.welcomePrefix\":\"在\",\"auth.login.welcomeSuffix\":\"，\",\"auth.login.typeCreate\":\"创作无限可能\",\"auth.login.typeStory\":\"书写方块故事\",\"auth.login.typeTalk\":\"与创作者对话\",\"auth.login.typeExplore\":\"探索方块世界\",\"auth.login.carouselLibrary\":\"海量故事任你挑选\",\"auth.login.carouselReading\":\"自由舒适的阅读体验\",\"auth.login.carouselCreate\":\"多端同步故事创作\",\"auth.login.carouselInteract\":\"与其他创作者互动\",\"auth.login.withEmail\":\"使用邮箱登录\",\"auth.login.agreePrefix\":\"我已经阅读并同意\",\"auth.login.agreeAccept\":\"我已经阅读并接受\",\"auth.login.privacyPolicy\":\"原木社区用户隐私政策\",\"auth.login.agreeRequired\":\"请先阅读并同意《原木社区用户隐私政策》\",\"auth.login.accountPlaceholder\":\"请输入账号\",\"auth.login.passwordPlaceholder\":\"请输入密码\",\"auth.login.codePlaceholder\":\"请输入验证码\",\"auth.login.signIn\":\"登录\",\"auth.login.next\":\"下一步\",\"auth.login.previous\":\"上一步\",\"auth.login.resend\":\"重新发送\",\"auth.login.waitSeconds\":\"等待{{seconds}}秒\",\"auth.login.codeSentTo\":\"验证码已发送至：\",\"auth.login.welcomeSetup\":\"欢迎来到原木社区，请设置你的账号和密码。\",\"auth.login.accountUsed\":\"该账号已被使用\",\"auth.login.forgotPassword\":\"忘记密码\",\"auth.login.invalidCredential\":\"账号或密码错误\",\"auth.login.sliderFirst\":\"请滑动验证滑块\",\"auth.login.bindSuccess\":\"绑定成功\",\"auth.login.passwordRequired\":\"请输入密码\",\"auth.login.passwordRule\":\"密码格式：6-20位字母、数字、下划线组合\",\"auth.login.accountRule\":\"账号格式：4-12位字母、数字、下划线组合\",\"auth.login.accountTaken\":\"账号已被注册\",\"auth.login.account.title\":\"原木通信证登录\",\"auth.login.account.appVersion\":\"APP版本：\",\"auth.login.account.accountPlaceholder\":\"请输入账号/手机号/QQ\",\"auth.login.account.agreeRequired\":\"请先阅读并接受《原木社区用户隐私政策》\",\"auth.login.account.signUp\":\"注册账号\",\"auth.login.account.reportZone\":\"网上有害信息举报专区\",\"auth.login.email.unregisteredTip\":\"未注册邮箱将自动创建账号\",\"auth.login.email.emailPlaceholder\":\"请输入电子邮箱\",\"auth.login.email.signInWith\":\"即将使用以下邮箱登录：\",\"auth.login.email.invalidEmail\":\"请输入有效的电子邮箱地址\",\"auth.login.email.accountRule\":\"账号格式：4-12位字母、数字组合\",\"auth.login.mobile.registeredOnlyTip\":\"仅支持已注册手机号登录\",\"auth.login.mobile.mobilePlaceholder\":\"请输入中国大陆手机号\",\"auth.login.mobile.policyNotice\":\"我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持新手机号注册，请尽快迁移至邮箱登录。\",\"auth.login.mobile.recoverContact\":\"如果您需要找回账号，请通过原木社区开源计划交流群联系我们：\",\"auth.login.mobile.signInWith\":\"即将使用以下手机号登录：\",\"auth.login.mobile.invalidMobile\":\"请输入11位数字的中国大陆手机号\",\"auth.register.accountPlaceholder\":\"请输入账号\",\"auth.register.passwordPlaceholder\":\"请输入密码\",\"auth.register.confirmPwdPlaceholder\":\"请重复密码\",\"auth.register.passwordRequired\":\"请输入原密码\",\"auth.register.passwordMismatch\":\"两次输入密码不同\",\"auth.register.passwordRule\":\"密码格式：6-20位字母、数字、下划线组合\",\"auth.register.accountRule\":\"账号格式：4-12位字母、数字、下划线组合\",\"auth.register.sliderFirst\":\"请滑动验证滑块\",\"auth.register.accountTaken\":\"账号已被注册\",\"auth.changePwd.oldPwdPlaceholder\":\"输入原密码\",\"auth.changePwd.newPwdPlaceholder\":\"输入新密码\",\"auth.changePwd.confirmPwdPlaceholder\":\"重复新密码\",\"auth.changePwd.sliderText\":\"向右滑动\",\"auth.changePwd.oldPwdRequired\":\"请输入原密码\",\"auth.changePwd.passwordMismatch\":\"两次输入密码不同\",\"auth.changePwd.sameAsOldPwd\":\"原密码不能与新密码相同\",\"auth.changePwd.passwordRule\":\"密码格式：6-20位字母、数字、下划线组合\",\"auth.changePwd.sliderFirst\":\"请滑动验证滑块\",\"auth.changePwd.changeSuccess\":\"密码修改成功\",\"auth.changePwd.wrongOldPwd\":\"原密码错误\",\"auth.external.loading\":\"登录中，请稍候...\",\"auth.external.success\":\"登录成功\",\"auth.external.failed\":\"登录失败\",\"auth.external.secondsLater\":\"{{seconds}}秒后\",\"auth.external.toTarget\":\"跳转到指定页面\",\"auth.external.toProfile\":\"返回个人中心\",\"auth.external.backToLogin\":\"返回登录页\",\"auth.external.noLoginInfo\":\"未接收到有效的登录信息\",\"auth.external.invalidToken\":\"登录令牌无效或已过期，请重新登录\",\"auth.forgot.contactUs\":\"如果你忘记了密码，请通过以下渠道联系我们：\",\"auth.forgot.joinAnyGroup\":\"1.加入原木社区任意用户QQ群\",\"auth.forgot.groupListTitle\":\"原木社区用户群列表：\",\"auth.forgot.groupExchange\":\"原木社区用户交流群：\",\"auth.forgot.groupBeta\":\"原木社区公测小组：\",\"auth.forgot.groupWriters\":\"原木文社总群：\",\"auth.forgot.contactAdminPrefix\":\"2.联系群内管理员\",\"auth.forgot.contactAdminVia\":\"通过私聊\",\"auth.forgot.contactAdminSuffix\":\"发送恢复账号的请求。\",\"auth.forgot.qqBoundTip\":\"如果你的账号此前绑定过QQ号，请使用绑定的QQ号进行账号恢复，将更有可能成功恢复你的账号。\",\"auth.forgot.needProof\":\"否则，我们需要你提供账号的其他信息，来证明你确实是账号的主人。\",\"redstone.aiDeclaration.title\":\"关于使用生成式人工智能的声明\",\"redstone.aiDeclaration.subtitle\":\"透明使用 · 保护创作 · 尊重选择\",\"redstone.aiDeclaration.models\":\"原木社区的所有 AI 辅助功能均使用市场上已有的模型提供服务。AI 是阅读与创作的辅助工具，不替代创作者的表达、判断与责任。\",\"redstone.aiDeclaration.promiseTitle\":\"用户资产绝不用于模型训练\",\"redstone.aiDeclaration.promise\":\"我们承诺：用户的作品、草稿、设定、图片、提示词、对话记录及其他相关资产，绝不会被用于任何形式的模型训练、微调、蒸馏或训练数据集构建；也不会被出售、共享或授权第三方用于模型训练。\",\"redstone.aiDeclaration.expand\":\"阅读完整声明与使用原则\",\"redstone.aiDeclaration.collapse\":\"收起完整声明\",\"redstone.aiDeclaration.settings\":\"管理 AI 使用偏好\",\"redstone.aiDeclaration.sections.data.title\":\"必要的推理传输与数据最小化\",\"redstone.aiDeclaration.sections.data.body\":\"为完成问答、纠错、图像生成或内容检索，系统可能向模型服务提供方发送所需的内容与上下文。这些处理用于服务推理或检索，不代表授权任何主体将内容用于模型训练。请勿提交密码、他人的敏感信息或你无权提供的内容。\",\"redstone.aiDeclaration.sections.providers.title\":\"第三方模型服务同样遵守不训练承诺\",\"redstone.aiDeclaration.sections.providers.body\":\"不训练承诺同样适用于第三方模型服务。模型服务的接入与使用须以禁止利用用户资产训练模型的数据条款和使用设置为前提；不得以改进模型、优化算法等名义绕过这一承诺。\",\"redstone.aiDeclaration.sections.rights.title\":\"尊重原创与内容权益\",\"redstone.aiDeclaration.sections.rights.body\":\"使用 AI 辅助不改变你已有作品及相关资产的权益归属。AI 输出不保证独创性或排他性；请核实是否过度复现他人作品，不将洗稿、冒用身份或侵犯他人权益的内容当作原创发布。\",\"redstone.aiDeclaration.sections.reliability.title\":\"透明标识与人工核验\",\"redstone.aiDeclaration.sections.reliability.body\":\"AI 可能产生事实错误、偏见或不恰当的表达，输出仅供辅助参考，不应被视为已核实的事实或专业意见。重要内容应由人审核；对外发布实质性 AI 生成的内容时，应说明 AI 的参与，避免误导读者。\",\"redstone.aiDeclaration.sections.safety.title\":\"安全、公平与负责任使用\",\"redstone.aiDeclaration.sections.safety.body\":\"请遵守社区规则，不利用生成式 AI 制作欺骗、骚扰、仇恨、歧视、侵犯隐私或其他有害内容，不伪造他人身份或散布虚假信息。尊重不同群体与观点，审慎对待模型可能存在的偏见。\",\"redstone.aiDeclaration.sections.choice.title\":\"自主选择与问题反馈\",\"redstone.aiDeclaration.sections.choice.body\":\"AI 辅助不是使用原木社区的必要条件。你可在“设置”中开启“禁用人工智能辅助”，隐藏红石中心和 AI 功能入口，普通阅读、写作与发布不受影响。如发现输出错误、安全风险或权益问题，可通过应用内反馈中心提出反馈。\",\"titles.pages.launch\":\"原木社区\",\"titles.pages.bookcase.index\":\"我的书架\",\"titles.pages.bookcase.manage\":\"我的书架\",\"titles.pages.library\":\"书库\",\"titles.pages.essays\":\"创作\",\"titles.pages.me\":\"我的\",\"titles.pages.membership.index\":\"原木通行证\",\"titles.pages.membership.redeem\":\"会员兑换码\",\"titles.pages.membership.gift\":\"赠送好友\",\"titles.pages.membership.rules\":\"通行证与红石规则\",\"titles.pages.redstone.index\":\"红石中心\",\"titles.pages.users.login_page\":\"登录\",\"titles.pages.users.login_page_mobile\":\"手机号登录\",\"titles.pages.users.login_page_email\":\"电子邮箱登录\",\"titles.pages.users.login\":\"登录\",\"titles.pages.users.changePwd\":\"修改密码\",\"titles.pages.users.clientSet\":\"设置\",\"titles.pages.users.donate\":\"捐助\",\"titles.pages.users.avater_upload\":\"上传头像\",\"titles.pages.users.change_user_info\":\"修改个人信息\",\"titles.pages.users.avatar_frames\":\"头像挂件\",\"titles.pages.users.achievements\":\"我的成就\",\"titles.pages.users.badgeDetail\":\"勋章详情\",\"titles.pages.users.personalPage\":\"个人主页\",\"titles.pages.users.top_pic_upload\":\"上传个人主页背景\",\"titles.pages.users.storageManage\":\"空间占用管理\",\"titles.pages.users.activateAccount\":\"绑定账号\",\"titles.pages.users.activateAccount_oicq\":\"绑定QQ\",\"titles.pages.users.activateAccount_mobile\":\"绑定手机\",\"titles.pages.users.activateAccount_email\":\"绑定邮箱\",\"titles.pages.users.register\":\"注册账户\",\"titles.pages.users.forgottenPwd\":\"忘记账号或密码\",\"titles.pages.users.user_credit\":\"我的信誉\",\"titles.pages.users.external_login\":\"外部登录\",\"titles.pages.readers.mangaInfo\":\"漫画详情\",\"titles.pages.readers.mangaReader\":\"漫画阅读\",\"titles.pages.readers.logPower\":\"原木力详情\",\"titles.pages.readers.logPowerRank\":\"原木力榜\",\"titles.pages.readers.allArticles\":\"所有章节\",\"titles.pages.readers.novel_fans\":\"书籍打赏\",\"titles.pages.readers.bookComment\":\"书籍评论\",\"titles.pages.readers.collections\":\"作品集合\",\"titles.pages.readers.tags\":\"标签广场\",\"titles.pages.readers.tagCollections\":\"标签合集\",\"titles.pages.readers.newReader.article\":\"新版阅读器\",\"titles.pages.readers.bookEnd\":\"书末\",\"titles.pages.writers.mangaEditor\":\"漫画话数管理\",\"titles.pages.writers.mangaSettings\":\"漫画作品设置\",\"titles.pages.writers.newEssay\":\"创建小说\",\"titles.pages.writers.changeEssayInfo\":\"修改小说信息\",\"titles.pages.writers.sortArticles\":\"章节排序\",\"titles.pages.writers.chapterTimeMachine\":\"章节时光机\",\"titles.pages.writers.cover_upload\":\"上传封面\",\"titles.pages.writers.localBackup\":\"本地备份\",\"titles.pages.writers.essaySet\":\"作品设置\",\"titles.pages.writers.essayCollaborationSettings\":\"多人协作\",\"titles.pages.writers.essayIndexing\":\"全文智能索引\",\"titles.pages.writers.novelCollaborators\":\"协作作者\",\"titles.pages.writers.changeNovelTags\":\"修改作品标签\",\"titles.pages.writers.novel_statistics\":\"作品数据\",\"titles.pages.writers.articleFeedbacks\":\"错误反馈\",\"titles.pages.writers.scheduledTasks\":\"定时发布任务\",\"titles.pages.writers.workPublish\":\"作品发布\",\"titles.pages.apps.about\":\"关于我们\",\"titles.pages.apps.lab\":\"原木实验室\",\"titles.pages.apps.logDefense\":\"原木保卫战\",\"titles.pages.apps.audio_test\":\"有声书测试\",\"titles.pages.apps.faqs.faq\":\"帮助中心\",\"titles.pages.apps.faqs.feedback\":\"反馈详情\",\"titles.pages.apps.faqs.user_feedback\":\"我要反馈\",\"titles.pages.apps.openInBrowser\":\"外部网页\",\"titles.pages.apps.badVersion\":\"版本提示\",\"titles.pages.apps.inviteCard\":\"邀请好友\",\"titles.pages.apps.enterInviteCode\":\"填写邀请码\",\"titles.pages.static.contentAgreement\":\"用户内容上传协议\",\"titles.pages.static.privacyAgreement\":\"用户隐私政策\",\"titles.pages.static.updateIntro\":\"社区更新机制\",\"titles.pages.static.grandUsers\":\"社区荣誉用户\",\"titles.pages.community.friends\":\"我的好友\",\"titles.pages.community.read_mail\":\"查看站内信\",\"titles.pages.community.send_mail\":\"写站内信\",\"titles.pages.community.message\":\"我的消息\",\"titles.pages.community.postEdit\":\"帖子编辑\",\"titles.pages.community.postView\":\"帖子内容\",\"titles.pages.community.privateMessages\":\"私信列表\",\"titles.pages.community.notifications\":\"通知消息\",\"titles.pages.community.chat\":\"聊天\",\"titles.pages.community.index\":\"社区\",\"titles.pages.community.circles\":\"圈子广场\",\"titles.pages.community.createCircle\":\"创建圈子\",\"titles.pages.community.circle\":\"圈子详情\",\"titles.pages.community.postDetail\":\"帖子详情\",\"titles.pages.community.editCircle\":\"圈子设置\",\"titles.pages.community.circleMembers\":\"圈子成员\",\"titles.pages.community.search\":\"搜索\",\"titles.pages.community.activityMessages\":\"活动消息\",\"titles.pages.settings.autoSaveSettings\":\"本地备份设置\",\"titles.pages.settings.pushSettings\":\"消息推送设置\",\"titles.pages.settings.privacySettings\":\"隐私设置\",\"titles.pages.treePlant.treeplant\":\"原木树场\",\"titles.pages.treePlant.treeSceneSettings\":\"树场设置\",\"titles.pages.payments.recharge\":\"支持社区\",\"titles.pages.payments.earnings\":\"余额提现\",\"titles.pages.payments.jump_to_pay\":\"支付\",\"titles.pages.payments.order_history\":\"历史订单\",\"titles.pages.payments.gift_code\":\"礼品卡兑换\",\"titles.pages.payments.exchange\":\"去皮原木兑换\",\"titles.pages.worlds.worldPage\":\"世界设定\",\"titles.pages.worlds.worldRelations\":\"世界关系树\",\"titles.pages.manage.index\":\"平台管理\",\"titles.pages.manage.audit.index\":\"文章审核\",\"titles.pages.manage.library.roulous\":\"图书馆轮播管理\",\"titles.pages.manage.posts.index\":\"帖子管理\",\"titles.pages.manage.users.index\":\"用户管理\",\"titles.pages.store.index\":\"原木商城\",\"titles.pages.store.detail\":\"商品详情\",\"titles.pages.store.checkout\":\"确认兑换\",\"titles.pages.store.orders\":\"我的订单\",\"titles.pages.store.logistics\":\"查看物流\",\"titles.pages.store.address_list\":\"收货地址\",\"titles.pages.store.address_form\":\"编辑地址\",\"titles.pages.update\":\"应用更新\",\"me.mottoDefault\":\"用文字记录生活与想象\",\"me.storeWebTitle\":\"原木购\",\"me.security.title\":\"绑定邮箱，保护账号安全\",\"me.security.desc\":\"完成绑定后可及时找回账号\",\"me.security.action\":\"去绑定 ›\",\"me.quick.card\":\"名片\",\"me.quick.cardSub\":\"个人主页与资料\",\"me.quick.message\":\"消息\",\"me.quick.messageSub\":\"私信与系统通知\",\"me.quick.friend\":\"好友\",\"me.quick.friendSub\":\"好友与关注动态\",\"me.quick.settings\":\"设置\",\"me.quick.settingsSub\":\"偏好与账号管理\",\"me.service.treeScene\":\"原木树场\",\"me.service.checkin\":\"可签到\",\"me.service.badges\":\"原木勋章墙\",\"me.service.invite\":\"邀请好友\",\"me.service.recharge\":\"原木充值\",\"me.service.redstone\":\"红石中心\",\"me.service.withdraw\":\"余额提现\",\"me.service.store\":\"原木商城\",\"me.service.lab\":\"原木实验室\",\"me.service.labGame\":\"原木保卫战\",\"me.service.labMinecraft\":\"原木方块世界\",\"me.service.labMinecraftIntro\":\"探索与建造你的方块世界，进度随账号保存\",\"me.service.labPage.loading\":\"正在加载实验室…\",\"me.service.labPage.empty\":\"暂时没有开放的实验功能\",\"me.service.labPage.loadFailed\":\"实验室暂时无法加载，请稍后重试\",\"me.service.labPage.retry\":\"重试\",\"me.service.labPage.title\":\"原木实验室正式开启\",\"me.service.labPage.desc\":\"体验开发中的功能 或 有趣的玩法\",\"me.service.labPage.hint\":\"实验功能会持续调整，欢迎体验与反馈。\",\"me.service.about\":\"关于社区\",\"me.service.manage\":\"平台管理\",\"me.unit.redstone\":\"红石\",\"me.unit.yuan\":\"元\",\"me.profile.editProfile\":\"编辑资料\",\"me.profile.sendDm\":\"私信\",\"me.profile.admin\":\"社区管理员\",\"me.profile.noMotto\":\"暂无简介\",\"me.profile.followers\":\"粉丝\",\"me.profile.following\":\"关注\",\"me.profile.tabWorks\":\"作品\",\"me.profile.tabPosts\":\"动态\",\"me.profile.tabWorlds\":\"世界\",\"me.profile.noPosts\":\"暂无动态\",\"me.profile.noWorks\":\"这里还什么都没有喔\",\"me.profile.noWorlds\":\"这里还什么都没有喔\",\"me.profile.userLoadFailed\":\"用户信息加载失败\",\"me.profile.worksLoadFailed\":\"作品信息加载失败\",\"me.profile.worldsLoadFailed\":\"世界信息加载失败\",\"me.profile.postsLoadFailed\":\"加载用户动态失败\",\"me.profile.circleGone\":\"圈子不存在\",\"me.frames.noneSelected\":\"不使用头像挂件\",\"me.frames.hint\":\"选择喜欢的装饰，让头像更有辨识度\",\"me.frames.loading\":\"头像挂件加载中…\",\"me.frames.none\":\"不使用\",\"me.frames.saving\":\"保存中…\",\"me.frames.useThis\":\"使用这个头像挂件\",\"me.frames.inUse\":\"正在使用\",\"me.frames.filter.all\":\"全部\",\"me.frames.filter.free\":\"免费\",\"me.frames.filter.standard\":\"原木通行证\",\"me.frames.filter.super\":\"超级通行证\",\"me.frames.lockedSuper\":\"超级通行证专属头像挂件\",\"me.frames.locked\":\"通行证专属头像挂件\",\"me.frames.lockedContent\":\"{{name}}需要{{tier}}才能使用。\",\"me.frames.needSuper\":\"超级原木通行证\",\"me.frames.needAny\":\"原木通行证或超级原木通行证\",\"me.frames.viewPass\":\"查看通行证\",\"me.frames.removed\":\"已取消头像挂件\",\"me.frames.applied\":\"头像挂件已生效\",\"me.frames.saveFailed\":\"头像挂件保存失败\",\"me.pass.inactiveTitle\":\"原木通行证\",\"me.pass.notActivated\":\"未开通\",\"me.pass.inactiveMeta\":\"两档会员可选\",\"me.pass.inactiveDesc\":\"专属标识、成长加速\",\"me.pass.activate\":\"立即开通\",\"me.pass.inactivePromo\":\"升级超级原木通行证，尊享全部权益\",\"me.pass.learnMore\":\"了解更多\",\"me.pass.permanent\":\"长期有效\",\"me.pass.expires\":\"有效期至 {{date}}\",\"me.pass.superTitle\":\"超级原木通行证\",\"me.pass.standardTitle\":\"原木通行证\",\"me.pass.activated\":\"已开通\",\"me.pass.superDesc\":\"双倍成长、全部权益\",\"me.pass.standardDesc\":\"成长加速、会员权益\",\"me.pass.viewBenefits\":\"查看权益\",\"me.pass.superPromo\":\"超级会员专属权益已全部生效\",\"me.pass.standardPromo\":\"升级超级原木通行证，解锁更多权益\",\"me.pass.benefitDetails\":\"权益详情\",\"me.pass.upgradeNow\":\"立即升级\"},\"en\":{\"common.confirm\":\"OK\",\"common.cancel\":\"Cancel\",\"common.submit\":\"Submit\",\"common.save\":\"Save\",\"common.delete\":\"Delete\",\"common.retry\":\"Retry\",\"common.close\":\"Close\",\"common.loading\":\"Loading...\",\"common.processing\":\"Processing...\",\"common.prompt\":\"Notice\",\"common.loadFailed\":\"Failed to load\",\"common.needLogin\":\"Please sign in first\",\"common.operationFailed\":\"Operation failed\",\"common.networkError\":\"Network error, please try again later\",\"common.paramError\":\"Invalid parameters\",\"common.deleteSuccess\":\"Deleted\",\"common.deleteFailed\":\"Failed to delete\",\"common.confirmDelete\":\"Confirm deletion\",\"common.saveFailed\":\"Failed to save\",\"common.settingSuccess\":\"Saved\",\"common.uploading\":\"Uploading\",\"common.uploadSuccess\":\"Uploaded\",\"common.verifying\":\"Verifying\",\"common.copied\":\"Copied\",\"common.inputTitle\":\"Please enter a title\",\"common.inputContent\":\"Please enter content\",\"nav.tab.library\":\"Reading\",\"nav.tab.community\":\"Community\",\"nav.tab.writer\":\"Create\",\"nav.tab.me\":\"Me\",\"settings.ai.disable\":\"Disable AI assistance\",\"settings.ai.hint\":\"Hide Redstone Center and all AI feature entry points. Saved on this device, effective immediately, and reversible.\",\"settings.ai.disabledNotice\":\"AI assistance is disabled. You can enable it again in Settings.\",\"settings.ai.saveFailed\":\"Could not save this setting. Please retry.\",\"settings.privacy.title\":\"Privacy settings\",\"settings.privacy.intro\":\"Manage your account privacy. These settings sync across devices.\",\"settings.privacy.listsTitle\":\"Following and followers\",\"settings.privacy.listsHint\":\"Choose which lists others can see. You can always view your own lists. Counts remain public.\",\"settings.privacy.lists.public\":\"Both public\",\"settings.privacy.lists.following_only\":\"Following list only\",\"settings.privacy.lists.fans_only\":\"Followers list only\",\"settings.privacy.lists.private\":\"Both private\",\"settings.privacy.messagesTitle\":\"Who can message me\",\"settings.privacy.messagesHint\":\"Default allows all signed-in users. “People I follow” means senders you follow. Existing messages are not affected.\",\"settings.privacy.messages.default\":\"Default\",\"settings.privacy.messages.following\":\"People I follow\",\"settings.privacy.messages.mutual\":\"Mutual follows\",\"settings.privacy.messages.none\":\"No one\",\"settings.privacy.save\":\"Save settings\",\"settings.privacy.saved\":\"Privacy settings saved\",\"settings.privacy.savedHint\":\"Changes take effect immediately after saving.\",\"settings.privacy.loading\":\"Loading privacy settings…\",\"settings.privacy.loadFailed\":\"Could not load privacy settings. Please retry.\",\"settings.privacy.saveFailed\":\"Could not save settings. Please retry.\",\"settings.privacy.retry\":\"Reload\",\"settings.privacy.loginRequired\":\"Sign in to manage account privacy\",\"settings.privacy.privateList\":\"This list is private\",\"settings.privacy.listLoadFailed\":\"Could not load this list. Please retry.\",\"settings.privacy.messageForbidden\":\"This user's privacy settings do not allow you to send messages\",\"settings.language.title\":\"Language\",\"settings.language.followSystem\":\"Follow system\",\"settings.language.switched\":\"Language updated\",\"settings.clientSet.pushQq\":\"Push notifications & QQ binding\",\"settings.clientSet.changePassword\":\"Change password\",\"settings.clientSet.accountBinding\":\"Account binding\",\"settings.clientSet.storageManage\":\"Storage usage\",\"settings.clientSet.logout\":\"Log out\",\"settings.clientSet.logoutConfirm\":\"Log out now?\",\"settings.storageManage.title\":\"Storage Usage\",\"settings.storageManage.articleName\":\"Reader database\",\"settings.storageManage.articleDesc\":\"Downloaded novels and chapter content\",\"settings.storageManage.imgName\":\"Image cache database\",\"settings.storageManage.imgDesc\":\"Cached image data\",\"settings.storageManage.writerName\":\"Writing backup database\",\"settings.storageManage.writerDesc\":\"Locally backed-up chapter history\",\"settings.storageManage.clearAll\":\"Clear all\",\"settings.storageManage.warning\":\"Warning\",\"settings.storageManage.clearConfirm\":\"Clear all data? This cannot be undone!\",\"settings.storageManage.clearDone\":\"Cleared\",\"settings.storageManage.clearFailed\":\"Failed to clear\",\"settings.activate.welcome\":\"Dear friend, welcome to the LogHome family!\",\"settings.activate.mobilePolicyNotice\":\"We're sorry to inform you that, due to MIIT policy changes, LogHome no longer supports phone-number verification. Please switch to email sign-in as soon as possible.\",\"settings.activate.activateIntro\":\"To keep using the app without interruption, please activate your account with one of the methods below:\",\"settings.activate.bindByMobile\":\"Bind with phone number\",\"settings.activate.bindByQq\":\"Bind with QQ number\",\"settings.activate.bindByEmail\":\"Bind with email\",\"settings.activate.unbindNotice\":\"Account unbinding is not supported for now. If you need help with this, please post in the feedback center and our support team will assist you.\",\"settings.activate.mobilePlaceholder\":\"Enter phone number\",\"settings.activate.emailPlaceholder\":\"Enter email address\",\"settings.activate.sendCode\":\"Send code\",\"settings.activate.waitSeconds\":\"Wait {seconds}s\",\"settings.activate.slideRight\":\"Slide to verify\",\"settings.activate.codePlaceholder\":\"Verification code\",\"settings.activate.slideVerifyRequired\":\"Please complete the slider verification first\",\"settings.activate.invalidEmail\":\"Please enter a valid email address\",\"settings.activate.sending\":\"Sending\",\"settings.activate.sendFailed\":\"Failed to send, please try again later\",\"settings.activate.invalidCode\":\"Please enter a valid verification code\",\"settings.activate.bindSuccess\":\"Bound successfully\",\"settings.activate.emailBindSuccess\":\"Email bound successfully\",\"settings.activate.verifyCodeFailed\":\"Verification failed, please check the code\",\"settings.activate.verifyFailed\":\"Verification failed, please try again later\",\"settings.activate.oicqIntro\":\"Your account still needs to be activated. To keep using the app without interruption, please follow the steps below:\",\"settings.activate.oicqStep1\":\"1. Tap the box below to copy your verification code\",\"settings.activate.oicqStep2\":\"2. Join any LogHome community QQ group\",\"settings.activate.oicqGroupList\":\"LogHome community QQ group list:\",\"settings.activate.oicqGroupMain\":\"LogHome user group: 644467605\",\"settings.activate.oicqGroupBeta\":\"LogHome beta group: 931304998\",\"settings.activate.oicqGroupWriter\":\"LogHome Writers main group: 464239748\",\"settings.activate.oicqStep3Prefix\":\"3. Send the verification code \",\"settings.activate.oicqStep3Via\":\"via private message\",\"settings.activate.oicqStep3Suffix\":\" to our LogHome community admin \\\"苦力怕君\\\" in the group\",\"settings.activate.oicqTip\":\"Friendly reminder: never send the code in a public group chat — it must be sent via private message.\",\"settings.activate.oicqBindNote\":\"This will bind your account to the QQ number that sends the code. One QQ number can bind multiple community accounts.\",\"settings.activate.getCodeFailed\":\"Failed to get the verification code\",\"settings.userInfo.changeAvatar\":\"Change avatar\",\"settings.userInfo.chooseFrame\":\"Choose avatar frame\",\"settings.userInfo.penNamePlaceholder\":\"Pen name\",\"settings.userInfo.mottoPlaceholder\":\"Bio\",\"settings.userInfo.requiredMissing\":\"Please fill in all required fields\",\"settings.userInfo.updateSuccess\":\"Updated\",\"settings.userInfo.updateFailed\":\"Failed to update\",\"settings.donate.intro\":\"The great LogHome tree carries book after book — go water it and give it some fertilizer!\",\"settings.donate.button\":\"Donate\",\"settings.credit.recordsTitle\":\"Change log\",\"settings.credit.noRecords\":\"Good standing — no records yet\",\"settings.credit.historyError\":\"Error in history entry\",\"settings.upload.chooseImage\":\"Choose image\",\"settings.upload.reselect\":\"Reselect\",\"settings.upload.rotate\":\"Rotate\",\"settings.upload.preview\":\"Preview\",\"settings.upload.upload\":\"Upload\",\"settings.upload.rotating\":\"Rotating...\",\"settings.upload.cropping\":\"Cropping...\",\"settings.upload.uploading\":\"Uploading...\",\"settings.upload.rotatingWait\":\"Rotating, please wait a moment\",\"settings.upload.croppingWait\":\"Cropping, please wait a moment\",\"settings.upload.uploadingWait\":\"Uploading, please wait a moment\",\"settings.upload.uploadFailed\":\"Upload failed\",\"settings.push.bindQqTitle\":\"Link QQ\",\"settings.push.bindQqDesc\":\"You can link your QQ account to receive system push notifications.\",\"settings.push.bindingCodeLabel\":\"Your binding code: \",\"settings.push.copy\":\"Copy\",\"settings.push.refresh\":\"Refresh\",\"settings.push.bindHowto\":\"Send this binding code to 原木娘 (2917117044) in the LogHome user QQ group (701928273), and the binding will complete automatically.\",\"settings.push.statusPrefix\":\"Status: \",\"settings.push.statusEnabled\":\"Enabled\",\"settings.push.statusDisabled\":\"Disabled\",\"settings.push.receiveWindow\":\"Receiving window\",\"settings.push.nextDay\":\"(next day)\",\"settings.push.copySuccess\":\"Copied\",\"settings.push.refreshSuccess\":\"Code refreshed\",\"settings.push.getCodeFailed\":\"Failed to get the binding code\",\"settings.push.refreshConfirm\":\"Refresh the binding code?\",\"settings.push.settingFailed\":\"Failed to update setting\",\"settings.push.enable\":\"Enable\",\"settings.push.disable\":\"Disable\",\"settings.push.disableConfirm\":\"Once turned off, you won't receive important message notifications in time. Turn it off?\",\"settings.push.loadingCode\":\"Loading...\",\"settings.autoSave.aboutTitle\":\"About local backup:\",\"settings.autoSave.aboutDesc\":\"LogHome provides powerful local backups. While you write in the article editor, your work is backed up automatically at the auto-backup interval you set.\",\"settings.autoSave.interval\":\"Auto-backup interval: {minutes} min\",\"settings.autoSave.minutesOption\":\"{count} min\",\"settings.autoSave.enable\":\"Enable\",\"settings.autoSave.disable\":\"Disable\",\"settings.autoSave.restartNote\":\"The new setting takes effect after you restart the app.\",\"auth.brand.name\":\"LogHome\",\"auth.login.welcomePrefix\":\"At \",\"auth.login.welcomeSuffix\":\",\",\"auth.login.typeCreate\":\"Create without limits\",\"auth.login.typeStory\":\"Write block-world stories\",\"auth.login.typeTalk\":\"Talk with creators\",\"auth.login.typeExplore\":\"Explore the block world\",\"auth.login.carouselLibrary\":\"Endless stories to browse\",\"auth.login.carouselReading\":\"Free, comfortable reading\",\"auth.login.carouselCreate\":\"Create in sync on every device\",\"auth.login.carouselInteract\":\"Connect with other creators\",\"auth.login.withEmail\":\"Sign in with email\",\"auth.login.agreePrefix\":\"I have read and agree to the \",\"auth.login.agreeAccept\":\"I have read and accept the \",\"auth.login.privacyPolicy\":\"LogHome Privacy Policy\",\"auth.login.agreeRequired\":\"Please read and agree to the LogHome Privacy Policy first\",\"auth.login.accountPlaceholder\":\"Enter an account name\",\"auth.login.passwordPlaceholder\":\"Enter your password\",\"auth.login.codePlaceholder\":\"Enter the verification code\",\"auth.login.signIn\":\"Sign in\",\"auth.login.next\":\"Next\",\"auth.login.previous\":\"Back\",\"auth.login.resend\":\"Resend\",\"auth.login.waitSeconds\":\"Wait {{seconds}}s\",\"auth.login.codeSentTo\":\"Verification code sent to:\",\"auth.login.welcomeSetup\":\"Welcome to LogHome! Please set up your account and password.\",\"auth.login.accountUsed\":\"This account name is already taken\",\"auth.login.forgotPassword\":\"Forgot password?\",\"auth.login.invalidCredential\":\"Incorrect account or password\",\"auth.login.sliderFirst\":\"Please complete the slider verification\",\"auth.login.bindSuccess\":\"Linked successfully\",\"auth.login.passwordRequired\":\"Please enter a password\",\"auth.login.passwordRule\":\"Password format: 6-20 letters, digits or underscores\",\"auth.login.accountRule\":\"Account format: 4-12 letters, digits or underscores\",\"auth.login.accountTaken\":\"This account name is already registered\",\"auth.login.account.title\":\"LogHome Pass Sign In\",\"auth.login.account.appVersion\":\"App version: \",\"auth.login.account.accountPlaceholder\":\"Account / mobile number / QQ\",\"auth.login.account.agreeRequired\":\"Please read and accept the LogHome Privacy Policy first\",\"auth.login.account.signUp\":\"Create an account\",\"auth.login.account.reportZone\":\"Online harmful information reporting\",\"auth.login.email.unregisteredTip\":\"An unregistered email will create an account automatically\",\"auth.login.email.emailPlaceholder\":\"Enter your email address\",\"auth.login.email.signInWith\":\"You are about to sign in with this email:\",\"auth.login.email.invalidEmail\":\"Please enter a valid email address\",\"auth.login.email.accountRule\":\"Account format: 4-12 letters or digits\",\"auth.login.mobile.registeredOnlyTip\":\"Only registered mobile numbers can sign in\",\"auth.login.mobile.mobilePlaceholder\":\"Enter your mainland China mobile number\",\"auth.login.mobile.policyNotice\":\"We're sorry: due to regulatory policy changes, LogHome no longer supports registering new mobile numbers. Please switch to email sign in as soon as possible.\",\"auth.login.mobile.recoverContact\":\"To recover an account, contact us in the LogHome open-source plan QQ group: \",\"auth.login.mobile.signInWith\":\"You are about to sign in with this mobile number:\",\"auth.login.mobile.invalidMobile\":\"Please enter an 11-digit mainland China mobile number\",\"auth.register.accountPlaceholder\":\"Enter an account name\",\"auth.register.passwordPlaceholder\":\"Enter your password\",\"auth.register.confirmPwdPlaceholder\":\"Repeat your password\",\"auth.register.passwordRequired\":\"Please enter a password\",\"auth.register.passwordMismatch\":\"The two passwords don't match\",\"auth.register.passwordRule\":\"Password format: 6-20 letters, digits or underscores\",\"auth.register.accountRule\":\"Account format: 4-12 letters, digits or underscores\",\"auth.register.sliderFirst\":\"Please complete the slider verification\",\"auth.register.accountTaken\":\"This account name is already registered\",\"auth.changePwd.oldPwdPlaceholder\":\"Enter your current password\",\"auth.changePwd.newPwdPlaceholder\":\"Enter a new password\",\"auth.changePwd.confirmPwdPlaceholder\":\"Repeat the new password\",\"auth.changePwd.sliderText\":\"Slide right\",\"auth.changePwd.oldPwdRequired\":\"Please enter your current password\",\"auth.changePwd.passwordMismatch\":\"The two passwords don't match\",\"auth.changePwd.sameAsOldPwd\":\"The new password cannot be the same as your current one\",\"auth.changePwd.passwordRule\":\"Password format: 6-20 letters, digits or underscores\",\"auth.changePwd.sliderFirst\":\"Please complete the slider verification\",\"auth.changePwd.changeSuccess\":\"Password changed\",\"auth.changePwd.wrongOldPwd\":\"Your current password is incorrect\",\"auth.external.loading\":\"Signing in, please wait...\",\"auth.external.success\":\"Signed in\",\"auth.external.failed\":\"Sign-in failed\",\"auth.external.secondsLater\":\"{{seconds}}s until you \",\"auth.external.toTarget\":\"are redirected\",\"auth.external.toProfile\":\"return to your profile\",\"auth.external.backToLogin\":\"Back to sign in\",\"auth.external.noLoginInfo\":\"No valid sign-in information received\",\"auth.external.invalidToken\":\"Sign-in token is invalid or expired, please sign in again\",\"auth.forgot.contactUs\":\"If you forgot your password, contact us through the channels below:\",\"auth.forgot.joinAnyGroup\":\"1. Join any LogHome user QQ group\",\"auth.forgot.groupListTitle\":\"List of LogHome user groups:\",\"auth.forgot.groupExchange\":\"LogHome user exchange group: \",\"auth.forgot.groupBeta\":\"LogHome public beta team: \",\"auth.forgot.groupWriters\":\"LogHome writers' main group: \",\"auth.forgot.contactAdminPrefix\":\"2. Contact a group admin \",\"auth.forgot.contactAdminVia\":\"by private message\",\"auth.forgot.contactAdminSuffix\":\" to send an account recovery request.\",\"auth.forgot.qqBoundTip\":\"If your account was previously bound to a QQ number, use that QQ number to recover it — you'll have a much better chance of success.\",\"auth.forgot.needProof\":\"Otherwise, we'll need other information about the account to confirm that it really belongs to you.\",\"redstone.aiDeclaration.title\":\"Statement on the use of generative AI\",\"redstone.aiDeclaration.subtitle\":\"Transparency · Creative rights · User choice\",\"redstone.aiDeclaration.models\":\"All AI assistance features in LogHome use models already available on the market. AI supports reading and writing; it does not replace a creator's expression, judgment, or responsibility.\",\"redstone.aiDeclaration.promiseTitle\":\"User assets are never used for model training\",\"redstone.aiDeclaration.promise\":\"Our commitment: users' works, drafts, settings, images, prompts, conversations, and other related assets will never be used for any form of model training, fine-tuning, distillation, or training dataset creation. They will not be sold, shared, or licensed to third parties for model training.\",\"redstone.aiDeclaration.expand\":\"Read the full statement and principles\",\"redstone.aiDeclaration.collapse\":\"Collapse the full statement\",\"redstone.aiDeclaration.settings\":\"Manage AI preferences\",\"redstone.aiDeclaration.sections.data.title\":\"Necessary inference transfers and data minimization\",\"redstone.aiDeclaration.sections.data.body\":\"To provide answers, corrections, image generation, or content retrieval, the system may send necessary content and context to model service providers. This processing supports inference or retrieval and does not authorize any party to use the content for model training. Do not submit passwords, others' sensitive information, or content you are not entitled to provide.\",\"redstone.aiDeclaration.sections.providers.title\":\"Third-party model services share the no-training commitment\",\"redstone.aiDeclaration.sections.providers.body\":\"The no-training commitment also applies to third-party model services. Integration and use must be conditional on data terms and usage settings that prohibit training models on user assets. Model improvement or algorithm optimization must not be used to circumvent this commitment.\",\"redstone.aiDeclaration.sections.rights.title\":\"Respect for originality and content rights\",\"redstone.aiDeclaration.sections.rights.body\":\"Using AI assistance does not change your existing rights in your works and related assets. AI output is not guaranteed to be original or exclusive. Check for excessive reproduction of others' works, and do not present plagiarism, impersonation, or content that violates others' rights as original work.\",\"redstone.aiDeclaration.sections.reliability.title\":\"Transparency and human review\",\"redstone.aiDeclaration.sections.reliability.body\":\"AI can produce factual errors, bias, or inappropriate language. Its output is assistance, not verified fact or professional advice. Important content should be reviewed by a person. When publishing substantially AI-generated content, disclose AI's involvement to avoid misleading readers.\",\"redstone.aiDeclaration.sections.safety.title\":\"Safety, fairness, and responsible use\",\"redstone.aiDeclaration.sections.safety.body\":\"Follow community rules. Do not use generative AI to create deceptive, harassing, hateful, discriminatory, privacy-invading, or otherwise harmful content, impersonate others, or spread false information. Respect diverse groups and viewpoints, and remain alert to potential model bias.\",\"redstone.aiDeclaration.sections.choice.title\":\"Choice and feedback\",\"redstone.aiDeclaration.sections.choice.body\":\"AI assistance is not required to use LogHome. In Settings, you can turn on Disable AI assistance to hide Redstone Center and AI entry points without affecting ordinary reading, writing, or publishing. Report output errors, safety risks, or rights concerns through the in-app feedback center.\",\"titles.pages.launch\":\"LogHome Community\",\"titles.pages.bookcase.index\":\"My Shelf\",\"titles.pages.bookcase.manage\":\"My Shelf\",\"titles.pages.library\":\"Library\",\"titles.pages.essays\":\"Create\",\"titles.pages.me\":\"Me\",\"titles.pages.membership.index\":\"LogHome Pass\",\"titles.pages.membership.redeem\":\"Membership Code\",\"titles.pages.membership.gift\":\"Gift to Friend\",\"titles.pages.membership.rules\":\"Pass & RedStone Rules\",\"titles.pages.redstone.index\":\"RedStone Center\",\"titles.pages.users.login_page\":\"Sign In\",\"titles.pages.users.login_page_mobile\":\"Sign in with Phone\",\"titles.pages.users.login_page_email\":\"Sign in with Email\",\"titles.pages.users.login\":\"Sign In\",\"titles.pages.users.changePwd\":\"Change Password\",\"titles.pages.users.clientSet\":\"Settings\",\"titles.pages.users.donate\":\"Donate\",\"titles.pages.users.avater_upload\":\"Upload Avatar\",\"titles.pages.users.change_user_info\":\"Edit Profile\",\"titles.pages.users.avatar_frames\":\"Avatar Frame\",\"titles.pages.users.achievements\":\"My Achievements\",\"titles.pages.users.badgeDetail\":\"Badge Details\",\"titles.pages.users.personalPage\":\"Profile\",\"titles.pages.users.top_pic_upload\":\"Upload Cover\",\"titles.pages.users.storageManage\":\"Storage Manager\",\"titles.pages.users.activateAccount\":\"Link Account\",\"titles.pages.users.activateAccount_oicq\":\"Link QQ\",\"titles.pages.users.activateAccount_mobile\":\"Link Phone\",\"titles.pages.users.activateAccount_email\":\"Link Email\",\"titles.pages.users.register\":\"Sign Up\",\"titles.pages.users.forgottenPwd\":\"Forgot Account\",\"titles.pages.users.user_credit\":\"My Credit\",\"titles.pages.users.external_login\":\"External Login\",\"titles.pages.readers.logPower\":\"LogPower Details\",\"titles.pages.readers.logPowerRank\":\"LogPower Rank\",\"titles.pages.readers.allArticles\":\"All Chapters\",\"titles.pages.readers.novel_fans\":\"Support This Book\",\"titles.pages.readers.bookComment\":\"Comments\",\"titles.pages.readers.collections\":\"Collections\",\"titles.pages.readers.tags\":\"Tags\",\"titles.pages.readers.tagCollections\":\"Tag Collections\",\"titles.pages.readers.newReader.article\":\"New Reader\",\"titles.pages.readers.bookEnd\":\"End of Book\",\"titles.pages.apps.about\":\"About Us\",\"titles.pages.apps.lab\":\"LogHome Lab\",\"titles.pages.apps.logDefense\":\"Log Defense\",\"titles.pages.apps.audio_test\":\"Audiobook Test\",\"titles.pages.apps.faqs.faq\":\"Help Center\",\"titles.pages.apps.faqs.feedback\":\"Feedback Details\",\"titles.pages.apps.faqs.user_feedback\":\"Send Feedback\",\"titles.pages.apps.openInBrowser\":\"External Page\",\"titles.pages.apps.badVersion\":\"Version Notice\",\"titles.pages.apps.inviteCard\":\"Invite Friends\",\"titles.pages.apps.enterInviteCode\":\"Enter Invite Code\",\"titles.pages.writers.newEssay\":\"New Novel\",\"titles.pages.writers.changeEssayInfo\":\"Edit Novel\",\"titles.pages.writers.sortArticles\":\"Reorder Chapters\",\"titles.pages.writers.chapterTimeMachine\":\"Chapter History\",\"titles.pages.writers.cover_upload\":\"Upload Cover\",\"titles.pages.writers.localBackup\":\"Local Backup\",\"titles.pages.writers.essaySet\":\"Work Settings\",\"titles.pages.writers.essayCollaborationSettings\":\"Collaboration\",\"titles.pages.writers.essayIndexing\":\"Smart Index\",\"titles.pages.writers.novelCollaborators\":\"Collaborators\",\"titles.pages.writers.changeNovelTags\":\"Edit Tags\",\"titles.pages.writers.novel_statistics\":\"Analytics\",\"titles.pages.writers.articleFeedbacks\":\"Report Issue\",\"titles.pages.writers.scheduledTasks\":\"Scheduled Posts\",\"titles.pages.writers.workPublish\":\"Publish\",\"titles.pages.static.contentAgreement\":\"Content Upload Terms\",\"titles.pages.static.privacyAgreement\":\"Privacy Policy\",\"titles.pages.static.updateIntro\":\"Update Policy\",\"titles.pages.static.grandUsers\":\"Honored Users\",\"titles.pages.community.friends\":\"Friends\",\"titles.pages.community.read_mail\":\"View Message\",\"titles.pages.community.send_mail\":\"Compose Message\",\"titles.pages.community.message\":\"My Messages\",\"titles.pages.community.postEdit\":\"Edit Post\",\"titles.pages.community.postView\":\"Post Content\",\"titles.pages.community.privateMessages\":\"Direct Messages\",\"titles.pages.community.notifications\":\"Notifications\",\"titles.pages.community.chat\":\"Chat\",\"titles.pages.community.index\":\"Community\",\"titles.pages.community.circles\":\"Circles\",\"titles.pages.community.createCircle\":\"Create Circle\",\"titles.pages.community.circle\":\"Circle\",\"titles.pages.community.postDetail\":\"Post\",\"titles.pages.community.editCircle\":\"Circle Settings\",\"titles.pages.community.circleMembers\":\"Members\",\"titles.pages.community.search\":\"Search\",\"titles.pages.community.activityMessages\":\"Activity\",\"titles.pages.settings.privacySettings\":\"Privacy Settings\",\"titles.pages.settings.autoSaveSettings\":\"Backup Settings\",\"titles.pages.settings.pushSettings\":\"Push Settings\",\"titles.pages.treePlant.treeplant\":\"Tree Scene\",\"titles.pages.treePlant.treeSceneSettings\":\"Scene Settings\",\"titles.pages.payments.recharge\":\"Support Us\",\"titles.pages.payments.earnings\":\"Withdraw\",\"titles.pages.payments.jump_to_pay\":\"Payment\",\"titles.pages.payments.order_history\":\"Order History\",\"titles.pages.payments.gift_code\":\"Redeem Gift Card\",\"titles.pages.payments.exchange\":\"Redeem Logs\",\"titles.pages.worlds.worldPage\":\"Worldbuilding\",\"titles.pages.worlds.worldRelations\":\"World Relations\",\"titles.pages.manage.index\":\"Admin\",\"titles.pages.manage.audit.index\":\"Review Articles\",\"titles.pages.manage.library.roulous\":\"Manage Carousel\",\"titles.pages.manage.posts.index\":\"Manage Posts\",\"titles.pages.manage.users.index\":\"Manage Users\",\"titles.pages.store.index\":\"Store\",\"titles.pages.store.detail\":\"Product\",\"titles.pages.store.checkout\":\"Confirm Exchange\",\"titles.pages.store.orders\":\"My Orders\",\"titles.pages.store.logistics\":\"Logistics\",\"titles.pages.store.address_list\":\"Addresses\",\"titles.pages.store.address_form\":\"Edit Address\",\"titles.pages.update\":\"App Update\",\"me.mottoDefault\":\"Record life and imagination in words\",\"me.storeWebTitle\":\"LogHome Store\",\"me.security.title\":\"Link your email to keep the account secure\",\"me.security.desc\":\"Link it now to recover your account in time\",\"me.security.action\":\"Link ›\",\"me.quick.card\":\"Card\",\"me.quick.cardSub\":\"Profile & info\",\"me.quick.message\":\"Messages\",\"me.quick.messageSub\":\"DMs & notifications\",\"me.quick.friend\":\"Friends\",\"me.quick.friendSub\":\"Friends & follows\",\"me.quick.settings\":\"Settings\",\"me.quick.settingsSub\":\"Preferences & account\",\"me.service.treeScene\":\"Tree Scene\",\"me.service.checkin\":\"Check in\",\"me.service.badges\":\"Medal Wall\",\"me.service.invite\":\"Invite Friends\",\"me.service.recharge\":\"Recharge\",\"me.service.redstone\":\"RedStone Center\",\"me.service.withdraw\":\"Withdraw\",\"me.service.store\":\"Store\",\"me.service.lab\":\"LogHome Lab\",\"me.service.labGame\":\"Log Defense\",\"me.service.labMinecraft\":\"LogHome Block World\",\"me.service.labMinecraftIntro\":\"Explore and build your block world with account cloud saves\",\"me.service.labPage.loading\":\"Loading the lab…\",\"me.service.labPage.empty\":\"No experiments are available yet.\",\"me.service.labPage.loadFailed\":\"The lab could not be loaded. Please try again.\",\"me.service.labPage.retry\":\"Retry\",\"me.service.labPage.title\":\"Explore something new\",\"me.service.labPage.desc\":\"Discover fresh community ideas and new ways to play.\",\"me.service.labPage.hint\":\"Experimental features evolve over time. Try them and share your feedback.\",\"me.service.about\":\"About\",\"me.service.manage\":\"Moderation\",\"me.unit.redstone\":\"RS\",\"me.unit.yuan\":\"CNY\",\"me.profile.editProfile\":\"Edit profile\",\"me.profile.sendDm\":\"Message\",\"me.profile.admin\":\"Admin\",\"me.profile.noMotto\":\"No bio yet\",\"me.profile.followers\":\"Followers\",\"me.profile.following\":\"Following\",\"me.profile.tabWorks\":\"Works\",\"me.profile.tabPosts\":\"Posts\",\"me.profile.tabWorlds\":\"Worlds\",\"me.profile.noPosts\":\"No posts yet\",\"me.profile.noWorks\":\"Nothing here yet\",\"me.profile.noWorlds\":\"Nothing here yet\",\"me.profile.userLoadFailed\":\"Failed to load profile\",\"me.profile.worksLoadFailed\":\"Failed to load works\",\"me.profile.worldsLoadFailed\":\"Failed to load worlds\",\"me.profile.postsLoadFailed\":\"Failed to load posts\",\"me.profile.circleGone\":\"Circle not found\",\"me.frames.noneSelected\":\"No frame\",\"me.frames.hint\":\"Pick a decoration to make your avatar stand out\",\"me.frames.loading\":\"Loading frames...\",\"me.frames.none\":\"None\",\"me.frames.saving\":\"Saving...\",\"me.frames.useThis\":\"Use this frame\",\"me.frames.inUse\":\"In use\",\"me.frames.filter.all\":\"All\",\"me.frames.filter.free\":\"Free\",\"me.frames.filter.standard\":\"LogHome Pass\",\"me.frames.filter.super\":\"Super Pass\",\"me.frames.lockedSuper\":\"Super Pass exclusive frame\",\"me.frames.locked\":\"Pass exclusive frame\",\"me.frames.lockedContent\":\"{{name}} requires {{tier}}.\",\"me.frames.needSuper\":\"Super LogHome Pass\",\"me.frames.needAny\":\"a LogHome Pass or Super Pass\",\"me.frames.viewPass\":\"View plans\",\"me.frames.removed\":\"Frame removed\",\"me.frames.applied\":\"Frame applied\",\"me.frames.saveFailed\":\"Failed to save frame\",\"me.pass.inactiveTitle\":\"LogHome Pass\",\"me.pass.notActivated\":\"Not activated\",\"me.pass.inactiveMeta\":\"Two membership tiers\",\"me.pass.inactiveDesc\":\"Exclusive badge, faster growth\",\"me.pass.activate\":\"Activate now\",\"me.pass.inactivePromo\":\"Upgrade to Super Pass for all benefits\",\"me.pass.learnMore\":\"Learn more\",\"me.pass.permanent\":\"No expiration\",\"me.pass.expires\":\"Valid until {{date}}\",\"me.pass.superTitle\":\"Super LogHome Pass\",\"me.pass.standardTitle\":\"LogHome Pass\",\"me.pass.activated\":\"Active\",\"me.pass.superDesc\":\"Double growth, all benefits\",\"me.pass.standardDesc\":\"Faster growth, member perks\",\"me.pass.viewBenefits\":\"View benefits\",\"me.pass.superPromo\":\"All super member benefits are active\",\"me.pass.standardPromo\":\"Upgrade to Super Pass to unlock more\",\"me.pass.benefitDetails\":\"Benefits\",\"me.pass.upgradeNow\":\"Upgrade now\"},\"sourceKeys\":{\"确定\":\"common.confirm\",\"取消\":\"common.cancel\",\"提交\":\"common.submit\",\"保存\":\"common.save\",\"删除\":\"common.delete\",\"重试\":\"me.service.labPage.retry\",\"关闭\":\"common.close\",\"努力加载中\":\"common.loading\",\"处理中...\":\"common.processing\",\"提示\":\"common.prompt\",\"加载失败\":\"common.loadFailed\",\"请先登录\":\"common.needLogin\",\"操作失败\":\"common.operationFailed\",\"网络错误，请稍后重试\":\"common.networkError\",\"参数错误\":\"common.paramError\",\"删除成功\":\"common.deleteSuccess\",\"删除失败\":\"common.deleteFailed\",\"确认删除\":\"common.confirmDelete\",\"保存失败\":\"common.saveFailed\",\"设置成功\":\"common.settingSuccess\",\"上传中\":\"common.uploading\",\"上传成功\":\"common.uploadSuccess\",\"验证中\":\"common.verifying\",\"已复制\":\"common.copied\",\"请输入标题\":\"common.inputTitle\",\"请输入内容\":\"common.inputContent\",\"阅读\":\"nav.tab.library\",\"社区\":\"titles.pages.community.index\",\"创作\":\"titles.pages.essays\",\"我的\":\"titles.pages.me\",\"禁用人工智能辅助功能\":\"settings.ai.disable\",\"开启后隐藏红石中心及所有 AI 功能入口\":\"settings.ai.hint\",\"人工智能辅助已禁用，可在设置中重新开启\":\"settings.ai.disabledNotice\",\"设置保存失败，请稍后重试\":\"settings.ai.saveFailed\",\"隐私设置\":\"titles.pages.settings.privacySettings\",\"管理你的账户隐私，设置会同步到所有设备。\":\"settings.privacy.intro\",\"关注与粉丝列表\":\"settings.privacy.listsTitle\",\"控制他人能否查看列表。本人始终可查看，关注和粉丝数量仍公开。\":\"settings.privacy.listsHint\",\"全部公开\":\"settings.privacy.lists.public\",\"仅公开关注列表\":\"settings.privacy.lists.following_only\",\"仅公开粉丝列表\":\"settings.privacy.lists.fans_only\",\"全部私密\":\"settings.privacy.lists.private\",\"谁可以私信我\":\"settings.privacy.messagesTitle\",\"默认允许所有已登录用户私信；“我关注的人”指你已关注的发件人。修改不影响历史消息。\":\"settings.privacy.messagesHint\",\"默认\":\"settings.privacy.messages.default\",\"我关注的人\":\"settings.privacy.messages.following\",\"互相关注的人\":\"settings.privacy.messages.mutual\",\"禁止私信\":\"settings.privacy.messages.none\",\"保存设置\":\"settings.privacy.save\",\"隐私设置已保存\":\"settings.privacy.saved\",\"保存后立即生效。\":\"settings.privacy.savedHint\",\"正在加载隐私设置…\":\"settings.privacy.loading\",\"隐私设置加载失败，请重试\":\"settings.privacy.loadFailed\",\"保存失败，请稍后重试\":\"settings.privacy.saveFailed\",\"重新加载\":\"settings.privacy.retry\",\"请先登录后设置账户隐私\":\"settings.privacy.loginRequired\",\"该列表已设为私密\":\"settings.privacy.privateList\",\"列表加载失败，请稍后重试\":\"settings.privacy.listLoadFailed\",\"对方的隐私设置不允许你发送私信\":\"settings.privacy.messageForbidden\",\"语言\":\"settings.language.title\",\"跟随系统\":\"settings.language.followSystem\",\"语言已切换\":\"settings.language.switched\",\"消息推送与QQ绑定\":\"settings.clientSet.pushQq\",\"修改密码\":\"titles.pages.users.changePwd\",\"账号绑定\":\"settings.clientSet.accountBinding\",\"空间占用管理\":\"titles.pages.users.storageManage\",\"登出\":\"settings.clientSet.logout\",\"确定要登出吗？\":\"settings.clientSet.logoutConfirm\",\"阅读器数据库\":\"settings.storageManage.articleName\",\"存储已下载的小说和章节内容\":\"settings.storageManage.articleDesc\",\"图片缓存数据库\":\"settings.storageManage.imgName\",\"存储已缓存的图片数据\":\"settings.storageManage.imgDesc\",\"写作备份数据库\":\"settings.storageManage.writerName\",\"存储本地备份的章节历史记录\":\"settings.storageManage.writerDesc\",\"清空全部\":\"settings.storageManage.clearAll\",\"警告\":\"settings.storageManage.warning\",\"确定要清空所有数据吗？此操作不可恢复！\":\"settings.storageManage.clearConfirm\",\"清理完成\":\"settings.storageManage.clearDone\",\"清理失败\":\"settings.storageManage.clearFailed\",\"亲爱的朋友，欢迎你加入原木社区大家庭！\":\"settings.activate.welcome\",\"我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持使用手机号作为验证方式，请尽快迁移至邮箱登录。\":\"settings.activate.mobilePolicyNotice\",\"为了保证不间断的使用，请通过以下激活方式激活账号：\":\"settings.activate.activateIntro\",\"通过手机号绑定\":\"settings.activate.bindByMobile\",\"通过QQ号绑定\":\"settings.activate.bindByQq\",\"通过邮箱绑定\":\"settings.activate.bindByEmail\",\"我们暂时不支持解绑账号，如有相关诉求请至反馈中心反馈，我们的客服将协助你解决相关问题。\":\"settings.activate.unbindNotice\",\"输入手机号\":\"settings.activate.mobilePlaceholder\",\"输入邮箱地址\":\"settings.activate.emailPlaceholder\",\"发送验证码\":\"settings.activate.sendCode\",\"等待{seconds}秒\":\"settings.activate.waitSeconds\",\"向右滑动\":\"auth.changePwd.sliderText\",\"验证码\":\"settings.activate.codePlaceholder\",\"请滑动验证滑块\":\"auth.changePwd.sliderFirst\",\"请输入有效的电子邮箱地址\":\"auth.login.email.invalidEmail\",\"发送中\":\"settings.activate.sending\",\"发送失败，请稍后重试\":\"settings.activate.sendFailed\",\"请输入有效的验证码\":\"settings.activate.invalidCode\",\"绑定成功\":\"auth.login.bindSuccess\",\"邮箱绑定成功\":\"settings.activate.emailBindSuccess\",\"验证失败，请检查验证码\":\"settings.activate.verifyCodeFailed\",\"验证失败，请稍后重试\":\"settings.activate.verifyFailed\",\"你的账号尚待激活，为了保证不间断的使用，请按照以下步骤激活你的账号：\":\"settings.activate.oicqIntro\",\"1.点击下方验证框复制验证码\":\"settings.activate.oicqStep1\",\"2.加入原木社区任意用户QQ群\":\"settings.activate.oicqStep2\",\"原木社区用户群列表：\":\"auth.forgot.groupListTitle\",\"原木社区用户交流群：644467605\":\"settings.activate.oicqGroupMain\",\"原木社区公测小组：931304998\":\"settings.activate.oicqGroupBeta\",\"原木文社总群：464239748\":\"settings.activate.oicqGroupWriter\",\"3.将验证码\":\"settings.activate.oicqStep3Prefix\",\"通过私聊\":\"auth.forgot.contactAdminVia\",\"发送给群内我们的原木社区管理员“苦力怕君”\":\"settings.activate.oicqStep3Suffix\",\"友情提示：切勿将验证码发送至公开群中，请务必通过私聊发送。\":\"settings.activate.oicqTip\",\"此操作会将你与发送验证消息的QQ号绑定，一个QQ号可绑定多个社区账号。\":\"settings.activate.oicqBindNote\",\"获取验证码失败\":\"settings.activate.getCodeFailed\",\"更换头像\":\"settings.userInfo.changeAvatar\",\"选择头像挂件\":\"settings.userInfo.chooseFrame\",\"笔名\":\"settings.userInfo.penNamePlaceholder\",\"个性签名\":\"settings.userInfo.mottoPlaceholder\",\"必填项未填\":\"settings.userInfo.requiredMissing\",\"修改成功\":\"settings.userInfo.updateSuccess\",\"修改失败\":\"settings.userInfo.updateFailed\",\"原木巨树承载着一本又一本的书籍，快去给他浇点水、施点肥\":\"settings.donate.intro\",\"捐助\":\"titles.pages.users.donate\",\"变更记录\":\"settings.credit.recordsTitle\",\"信誉良好，没有留下记录\":\"settings.credit.noRecords\",\"历史信息出错\":\"settings.credit.historyError\",\"选择图片\":\"settings.upload.chooseImage\",\"重新选择\":\"settings.upload.reselect\",\"旋转\":\"settings.upload.rotate\",\"预览\":\"settings.upload.preview\",\"上传\":\"settings.upload.upload\",\"旋转中...\":\"settings.upload.rotating\",\"截取中...\":\"settings.upload.cropping\",\"上传中...\":\"settings.upload.uploading\",\"旋转中，请稍等\":\"settings.upload.rotatingWait\",\"截取中，请稍等\":\"settings.upload.croppingWait\",\"上传中，请稍等\":\"settings.upload.uploadingWait\",\"上传失败\":\"settings.upload.uploadFailed\",\"绑定QQ\":\"titles.pages.users.activateAccount_oicq\",\"您可以绑定QQ，从而接收系统消息推送。\":\"settings.push.bindQqDesc\",\"您的绑定码是：\":\"settings.push.bindingCodeLabel\",\"复制\":\"settings.push.copy\",\"刷新\":\"settings.push.refresh\",\"请将此绑定码发送至原木社区用户交流群（701928273）的原木娘（2917117044），即可自动完成账号绑定。\":\"settings.push.bindHowto\",\"状态：\":\"settings.push.statusPrefix\",\"启用\":\"settings.autoSave.enable\",\"停用\":\"settings.push.statusDisabled\",\"接收时间段\":\"settings.push.receiveWindow\",\"(次日)\":\"settings.push.nextDay\",\"复制成功\":\"settings.push.copySuccess\",\"刷新成功\":\"settings.push.refreshSuccess\",\"获取绑定码失败\":\"settings.push.getCodeFailed\",\"确定要刷新绑定码吗？\":\"settings.push.refreshConfirm\",\"设置失败\":\"settings.push.settingFailed\",\"禁用\":\"settings.autoSave.disable\",\"关闭后将无法及时收到重要消息通知，确定要关闭吗？\":\"settings.push.disableConfirm\",\"加载中...\":\"settings.push.loadingCode\",\"关于本地备份：\":\"settings.autoSave.aboutTitle\",\"原木社区为您提供了强大的本地备份功能。在文章编辑器中进行文章撰写时，我们会以您设置的自动备份频率进行备份。\":\"settings.autoSave.aboutDesc\",\"自动备份间隔：{minutes} 分钟\":\"settings.autoSave.interval\",\"{count} 分钟\":\"settings.autoSave.minutesOption\",\"新设置重启应用后生效。\":\"settings.autoSave.restartNote\",\"原木社区\":\"titles.pages.launch\",\"在\":\"auth.login.welcomePrefix\",\"，\":\"auth.login.welcomeSuffix\",\"创作无限可能\":\"auth.login.typeCreate\",\"书写方块故事\":\"auth.login.typeStory\",\"与创作者对话\":\"auth.login.typeTalk\",\"探索方块世界\":\"auth.login.typeExplore\",\"海量故事任你挑选\":\"auth.login.carouselLibrary\",\"自由舒适的阅读体验\":\"auth.login.carouselReading\",\"多端同步故事创作\":\"auth.login.carouselCreate\",\"与其他创作者互动\":\"auth.login.carouselInteract\",\"使用邮箱登录\":\"auth.login.withEmail\",\"我已经阅读并同意\":\"auth.login.agreePrefix\",\"我已经阅读并接受\":\"auth.login.agreeAccept\",\"原木社区用户隐私政策\":\"auth.login.privacyPolicy\",\"请先阅读并同意《原木社区用户隐私政策》\":\"auth.login.agreeRequired\",\"请输入账号\":\"auth.register.accountPlaceholder\",\"请输入密码\":\"auth.register.passwordPlaceholder\",\"请输入验证码\":\"auth.login.codePlaceholder\",\"登录\":\"titles.pages.users.login\",\"下一步\":\"auth.login.next\",\"上一步\":\"auth.login.previous\",\"重新发送\":\"auth.login.resend\",\"等待{{seconds}}秒\":\"auth.login.waitSeconds\",\"验证码已发送至：\":\"auth.login.codeSentTo\",\"欢迎来到原木社区，请设置你的账号和密码。\":\"auth.login.welcomeSetup\",\"该账号已被使用\":\"auth.login.accountUsed\",\"忘记密码\":\"auth.login.forgotPassword\",\"账号或密码错误\":\"auth.login.invalidCredential\",\"密码格式：6-20位字母、数字、下划线组合\":\"auth.changePwd.passwordRule\",\"账号格式：4-12位字母、数字、下划线组合\":\"auth.register.accountRule\",\"账号已被注册\":\"auth.register.accountTaken\",\"原木通信证登录\":\"auth.login.account.title\",\"APP版本：\":\"auth.login.account.appVersion\",\"请输入账号/手机号/QQ\":\"auth.login.account.accountPlaceholder\",\"请先阅读并接受《原木社区用户隐私政策》\":\"auth.login.account.agreeRequired\",\"注册账号\":\"auth.login.account.signUp\",\"网上有害信息举报专区\":\"auth.login.account.reportZone\",\"未注册邮箱将自动创建账号\":\"auth.login.email.unregisteredTip\",\"请输入电子邮箱\":\"auth.login.email.emailPlaceholder\",\"即将使用以下邮箱登录：\":\"auth.login.email.signInWith\",\"账号格式：4-12位字母、数字组合\":\"auth.login.email.accountRule\",\"仅支持已注册手机号登录\":\"auth.login.mobile.registeredOnlyTip\",\"请输入中国大陆手机号\":\"auth.login.mobile.mobilePlaceholder\",\"我们非常抱歉地告知您，由于工信部政策调整，原木社区现已不支持新手机号注册，请尽快迁移至邮箱登录。\":\"auth.login.mobile.policyNotice\",\"如果您需要找回账号，请通过原木社区开源计划交流群联系我们：\":\"auth.login.mobile.recoverContact\",\"即将使用以下手机号登录：\":\"auth.login.mobile.signInWith\",\"请输入11位数字的中国大陆手机号\":\"auth.login.mobile.invalidMobile\",\"请重复密码\":\"auth.register.confirmPwdPlaceholder\",\"请输入原密码\":\"auth.changePwd.oldPwdRequired\",\"两次输入密码不同\":\"auth.changePwd.passwordMismatch\",\"输入原密码\":\"auth.changePwd.oldPwdPlaceholder\",\"输入新密码\":\"auth.changePwd.newPwdPlaceholder\",\"重复新密码\":\"auth.changePwd.confirmPwdPlaceholder\",\"原密码不能与新密码相同\":\"auth.changePwd.sameAsOldPwd\",\"密码修改成功\":\"auth.changePwd.changeSuccess\",\"原密码错误\":\"auth.changePwd.wrongOldPwd\",\"登录中，请稍候...\":\"auth.external.loading\",\"登录成功\":\"auth.external.success\",\"登录失败\":\"auth.external.failed\",\"{{seconds}}秒后\":\"auth.external.secondsLater\",\"跳转到指定页面\":\"auth.external.toTarget\",\"返回个人中心\":\"auth.external.toProfile\",\"返回登录页\":\"auth.external.backToLogin\",\"未接收到有效的登录信息\":\"auth.external.noLoginInfo\",\"登录令牌无效或已过期，请重新登录\":\"auth.external.invalidToken\",\"如果你忘记了密码，请通过以下渠道联系我们：\":\"auth.forgot.contactUs\",\"1.加入原木社区任意用户QQ群\":\"auth.forgot.joinAnyGroup\",\"原木社区用户交流群：\":\"auth.forgot.groupExchange\",\"原木社区公测小组：\":\"auth.forgot.groupBeta\",\"原木文社总群：\":\"auth.forgot.groupWriters\",\"2.联系群内管理员\":\"auth.forgot.contactAdminPrefix\",\"发送恢复账号的请求。\":\"auth.forgot.contactAdminSuffix\",\"如果你的账号此前绑定过QQ号，请使用绑定的QQ号进行账号恢复，将更有可能成功恢复你的账号。\":\"auth.forgot.qqBoundTip\",\"否则，我们需要你提供账号的其他信息，来证明你确实是账号的主人。\":\"auth.forgot.needProof\",\"关于使用生成式人工智能的声明\":\"redstone.aiDeclaration.title\",\"透明使用 · 保护创作 · 尊重选择\":\"redstone.aiDeclaration.subtitle\",\"原木社区的所有 AI 辅助功能均使用市场上已有的模型提供服务。AI 是阅读与创作的辅助工具，不替代创作者的表达、判断与责任。\":\"redstone.aiDeclaration.models\",\"用户资产绝不用于模型训练\":\"redstone.aiDeclaration.promiseTitle\",\"我们承诺：用户的作品、草稿、设定、图片、提示词、对话记录及其他相关资产，绝不会被用于任何形式的模型训练、微调、蒸馏或训练数据集构建；也不会被出售、共享或授权第三方用于模型训练。\":\"redstone.aiDeclaration.promise\",\"阅读完整声明与使用原则\":\"redstone.aiDeclaration.expand\",\"收起完整声明\":\"redstone.aiDeclaration.collapse\",\"管理 AI 使用偏好\":\"redstone.aiDeclaration.settings\",\"必要的推理传输与数据最小化\":\"redstone.aiDeclaration.sections.data.title\",\"为完成问答、纠错、图像生成或内容检索，系统可能向模型服务提供方发送所需的内容与上下文。这些处理用于服务推理或检索，不代表授权任何主体将内容用于模型训练。请勿提交密码、他人的敏感信息或你无权提供的内容。\":\"redstone.aiDeclaration.sections.data.body\",\"第三方模型服务同样遵守不训练承诺\":\"redstone.aiDeclaration.sections.providers.title\",\"不训练承诺同样适用于第三方模型服务。模型服务的接入与使用须以禁止利用用户资产训练模型的数据条款和使用设置为前提；不得以改进模型、优化算法等名义绕过这一承诺。\":\"redstone.aiDeclaration.sections.providers.body\",\"尊重原创与内容权益\":\"redstone.aiDeclaration.sections.rights.title\",\"使用 AI 辅助不改变你已有作品及相关资产的权益归属。AI 输出不保证独创性或排他性；请核实是否过度复现他人作品，不将洗稿、冒用身份或侵犯他人权益的内容当作原创发布。\":\"redstone.aiDeclaration.sections.rights.body\",\"透明标识与人工核验\":\"redstone.aiDeclaration.sections.reliability.title\",\"AI 可能产生事实错误、偏见或不恰当的表达，输出仅供辅助参考，不应被视为已核实的事实或专业意见。重要内容应由人审核；对外发布实质性 AI 生成的内容时，应说明 AI 的参与，避免误导读者。\":\"redstone.aiDeclaration.sections.reliability.body\",\"安全、公平与负责任使用\":\"redstone.aiDeclaration.sections.safety.title\",\"请遵守社区规则，不利用生成式 AI 制作欺骗、骚扰、仇恨、歧视、侵犯隐私或其他有害内容，不伪造他人身份或散布虚假信息。尊重不同群体与观点，审慎对待模型可能存在的偏见。\":\"redstone.aiDeclaration.sections.safety.body\",\"自主选择与问题反馈\":\"redstone.aiDeclaration.sections.choice.title\",\"AI 辅助不是使用原木社区的必要条件。你可在“设置”中开启“禁用人工智能辅助”，隐藏红石中心和 AI 功能入口，普通阅读、写作与发布不受影响。如发现输出错误、安全风险或权益问题，可通过应用内反馈中心提出反馈。\":\"redstone.aiDeclaration.sections.choice.body\",\"我的书架\":\"titles.pages.bookcase.manage\",\"书库\":\"titles.pages.library\",\"原木通行证\":\"me.pass.standardTitle\",\"会员兑换码\":\"titles.pages.membership.redeem\",\"赠送好友\":\"titles.pages.membership.gift\",\"通行证与红石规则\":\"titles.pages.membership.rules\",\"红石中心\":\"me.service.redstone\",\"手机号登录\":\"titles.pages.users.login_page_mobile\",\"电子邮箱登录\":\"titles.pages.users.login_page_email\",\"设置\":\"me.quick.settings\",\"上传头像\":\"titles.pages.users.avater_upload\",\"修改个人信息\":\"titles.pages.users.change_user_info\",\"头像挂件\":\"titles.pages.users.avatar_frames\",\"我的成就\":\"titles.pages.users.achievements\",\"勋章详情\":\"titles.pages.users.badgeDetail\",\"个人主页\":\"titles.pages.users.personalPage\",\"上传个人主页背景\":\"titles.pages.users.top_pic_upload\",\"绑定账号\":\"titles.pages.users.activateAccount\",\"绑定手机\":\"titles.pages.users.activateAccount_mobile\",\"绑定邮箱\":\"titles.pages.users.activateAccount_email\",\"注册账户\":\"titles.pages.users.register\",\"忘记账号或密码\":\"titles.pages.users.forgottenPwd\",\"我的信誉\":\"titles.pages.users.user_credit\",\"外部登录\":\"titles.pages.users.external_login\",\"原木力详情\":\"titles.pages.readers.logPower\",\"原木力榜\":\"titles.pages.readers.logPowerRank\",\"所有章节\":\"titles.pages.readers.allArticles\",\"书籍打赏\":\"titles.pages.readers.novel_fans\",\"书籍评论\":\"titles.pages.readers.bookComment\",\"作品集合\":\"titles.pages.readers.collections\",\"标签广场\":\"titles.pages.readers.tags\",\"标签合集\":\"titles.pages.readers.tagCollections\",\"新版阅读器\":\"titles.pages.readers.newReader.article\",\"书末\":\"titles.pages.readers.bookEnd\",\"创建小说\":\"titles.pages.writers.newEssay\",\"修改小说信息\":\"titles.pages.writers.changeEssayInfo\",\"章节排序\":\"titles.pages.writers.sortArticles\",\"章节时光机\":\"titles.pages.writers.chapterTimeMachine\",\"上传封面\":\"titles.pages.writers.cover_upload\",\"本地备份\":\"titles.pages.writers.localBackup\",\"作品设置\":\"titles.pages.writers.essaySet\",\"多人协作\":\"titles.pages.writers.essayCollaborationSettings\",\"全文智能索引\":\"titles.pages.writers.essayIndexing\",\"协作作者\":\"titles.pages.writers.novelCollaborators\",\"修改作品标签\":\"titles.pages.writers.changeNovelTags\",\"作品数据\":\"titles.pages.writers.novel_statistics\",\"错误反馈\":\"titles.pages.writers.articleFeedbacks\",\"定时发布任务\":\"titles.pages.writers.scheduledTasks\",\"作品发布\":\"titles.pages.writers.workPublish\",\"关于我们\":\"titles.pages.apps.about\",\"原木实验室\":\"me.service.lab\",\"原木保卫战\":\"me.service.labGame\",\"有声书测试\":\"titles.pages.apps.audio_test\",\"帮助中心\":\"titles.pages.apps.faqs.faq\",\"反馈详情\":\"titles.pages.apps.faqs.feedback\",\"我要反馈\":\"titles.pages.apps.faqs.user_feedback\",\"外部网页\":\"titles.pages.apps.openInBrowser\",\"版本提示\":\"titles.pages.apps.badVersion\",\"邀请好友\":\"me.service.invite\",\"填写邀请码\":\"titles.pages.apps.enterInviteCode\",\"用户内容上传协议\":\"titles.pages.static.contentAgreement\",\"用户隐私政策\":\"titles.pages.static.privacyAgreement\",\"社区更新机制\":\"titles.pages.static.updateIntro\",\"社区荣誉用户\":\"titles.pages.static.grandUsers\",\"我的好友\":\"titles.pages.community.friends\",\"查看站内信\":\"titles.pages.community.read_mail\",\"写站内信\":\"titles.pages.community.send_mail\",\"我的消息\":\"titles.pages.community.message\",\"帖子编辑\":\"titles.pages.community.postEdit\",\"帖子内容\":\"titles.pages.community.postView\",\"私信列表\":\"titles.pages.community.privateMessages\",\"通知消息\":\"titles.pages.community.notifications\",\"聊天\":\"titles.pages.community.chat\",\"圈子广场\":\"titles.pages.community.circles\",\"创建圈子\":\"titles.pages.community.createCircle\",\"圈子详情\":\"titles.pages.community.circle\",\"帖子详情\":\"titles.pages.community.postDetail\",\"圈子设置\":\"titles.pages.community.editCircle\",\"圈子成员\":\"titles.pages.community.circleMembers\",\"搜索\":\"titles.pages.community.search\",\"活动消息\":\"titles.pages.community.activityMessages\",\"本地备份设置\":\"titles.pages.settings.autoSaveSettings\",\"消息推送设置\":\"titles.pages.settings.pushSettings\",\"原木树场\":\"me.service.treeScene\",\"树场设置\":\"titles.pages.treePlant.treeSceneSettings\",\"支持社区\":\"titles.pages.payments.recharge\",\"余额提现\":\"me.service.withdraw\",\"支付\":\"titles.pages.payments.jump_to_pay\",\"历史订单\":\"titles.pages.payments.order_history\",\"礼品卡兑换\":\"titles.pages.payments.gift_code\",\"去皮原木兑换\":\"titles.pages.payments.exchange\",\"世界设定\":\"titles.pages.worlds.worldPage\",\"世界关系树\":\"titles.pages.worlds.worldRelations\",\"平台管理\":\"me.service.manage\",\"文章审核\":\"titles.pages.manage.audit.index\",\"图书馆轮播管理\":\"titles.pages.manage.library.roulous\",\"帖子管理\":\"titles.pages.manage.posts.index\",\"用户管理\":\"titles.pages.manage.users.index\",\"原木商城\":\"me.service.store\",\"商品详情\":\"titles.pages.store.detail\",\"确认兑换\":\"titles.pages.store.checkout\",\"我的订单\":\"titles.pages.store.orders\",\"查看物流\":\"titles.pages.store.logistics\",\"收货地址\":\"titles.pages.store.address_list\",\"编辑地址\":\"titles.pages.store.address_form\",\"应用更新\":\"titles.pages.update\",\"用文字记录生活与想象\":\"me.mottoDefault\",\"原木购\":\"me.storeWebTitle\",\"绑定邮箱，保护账号安全\":\"me.security.title\",\"完成绑定后可及时找回账号\":\"me.security.desc\",\"去绑定 ›\":\"me.security.action\",\"名片\":\"me.quick.card\",\"个人主页与资料\":\"me.quick.cardSub\",\"消息\":\"me.quick.message\",\"私信与系统通知\":\"me.quick.messageSub\",\"好友\":\"me.quick.friend\",\"好友与关注动态\":\"me.quick.friendSub\",\"偏好与账号管理\":\"me.quick.settingsSub\",\"可签到\":\"me.service.checkin\",\"原木勋章墙\":\"me.service.badges\",\"原木充值\":\"me.service.recharge\",\"原木方块世界\":\"me.service.labMinecraft\",\"探索与建造你的方块世界，进度随账号保存\":\"me.service.labMinecraftIntro\",\"正在加载实验室…\":\"me.service.labPage.loading\",\"暂时没有开放的实验功能\":\"me.service.labPage.empty\",\"实验室暂时无法加载，请稍后重试\":\"me.service.labPage.loadFailed\",\"原木实验室正式开启\":\"me.service.labPage.title\",\"体验开发中的功能 或 有趣的玩法\":\"me.service.labPage.desc\",\"实验功能会持续调整，欢迎体验与反馈。\":\"me.service.labPage.hint\",\"关于社区\":\"me.service.about\",\"红石\":\"me.unit.redstone\",\"元\":\"me.unit.yuan\",\"编辑资料\":\"me.profile.editProfile\",\"私信\":\"me.profile.sendDm\",\"社区管理员\":\"me.profile.admin\",\"暂无简介\":\"me.profile.noMotto\",\"粉丝\":\"me.profile.followers\",\"关注\":\"me.profile.following\",\"作品\":\"me.profile.tabWorks\",\"动态\":\"me.profile.tabPosts\",\"世界\":\"me.profile.tabWorlds\",\"暂无动态\":\"me.profile.noPosts\",\"这里还什么都没有喔\":\"me.profile.noWorlds\",\"用户信息加载失败\":\"me.profile.userLoadFailed\",\"作品信息加载失败\":\"me.profile.worksLoadFailed\",\"世界信息加载失败\":\"me.profile.worldsLoadFailed\",\"加载用户动态失败\":\"me.profile.postsLoadFailed\",\"圈子不存在\":\"me.profile.circleGone\",\"不使用头像挂件\":\"me.frames.noneSelected\",\"选择喜欢的装饰，让头像更有辨识度\":\"me.frames.hint\",\"头像挂件加载中…\":\"me.frames.loading\",\"不使用\":\"me.frames.none\",\"保存中…\":\"me.frames.saving\",\"使用这个头像挂件\":\"me.frames.useThis\",\"正在使用\":\"me.frames.inUse\",\"全部\":\"me.frames.filter.all\",\"免费\":\"me.frames.filter.free\",\"超级通行证\":\"me.frames.filter.super\",\"超级通行证专属头像挂件\":\"me.frames.lockedSuper\",\"通行证专属头像挂件\":\"me.frames.locked\",\"{{name}}需要{{tier}}才能使用。\":\"me.frames.lockedContent\",\"超级原木通行证\":\"me.pass.superTitle\",\"原木通行证或超级原木通行证\":\"me.frames.needAny\",\"查看通行证\":\"me.frames.viewPass\",\"已取消头像挂件\":\"me.frames.removed\",\"头像挂件已生效\":\"me.frames.applied\",\"头像挂件保存失败\":\"me.frames.saveFailed\",\"未开通\":\"me.pass.notActivated\",\"两档会员可选\":\"me.pass.inactiveMeta\",\"专属标识、成长加速\":\"me.pass.inactiveDesc\",\"立即开通\":\"me.pass.activate\",\"升级超级原木通行证，尊享全部权益\":\"me.pass.inactivePromo\",\"了解更多\":\"me.pass.learnMore\",\"长期有效\":\"me.pass.permanent\",\"有效期至 {{date}}\":\"me.pass.expires\",\"已开通\":\"me.pass.activated\",\"双倍成长、全部权益\":\"me.pass.superDesc\",\"成长加速、会员权益\":\"me.pass.standardDesc\",\"查看权益\":\"me.pass.viewBenefits\",\"超级会员专属权益已全部生效\":\"me.pass.superPromo\",\"升级超级原木通行证，解锁更多权益\":\"me.pass.standardPromo\",\"权益详情\":\"me.pass.benefitDetails\",\"立即升级\":\"me.pass.upgradeNow\"}}");
 
 /***/ }),
-/* 21 */
+/* 26 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return socialRequest; });
+/* harmony import */ var _utils_social_response__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10);
+/* harmony import */ var _reading__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1);
+
+
+function socialRequest(path, params = {}, method = "GET", body, auth = false) {
+  const token = Object(_reading__WEBPACK_IMPORTED_MODULE_1__[/* readingToken */ "c"])();
+  if (auth && !token) return Promise.reject(new Error("请先登录"));
+  return Object(_reading__WEBPACK_IMPORTED_MODULE_1__[/* readingRequest */ "b"])(path, params, {
+    method,
+    headers: {
+      ...(token ? {
+        Authorization: `Bearer ${token}`
+      } : {}),
+      ...(body ? {
+        "Content-Type": "application/json"
+      } : {})
+    },
+    ...(body ? {
+      body: JSON.stringify(body)
+    } : {})
+  }).then(data => {
+    if (auth && Object(_reading__WEBPACK_IMPORTED_MODULE_1__[/* readingToken */ "c"])() !== token) throw new Error("账号已切换，请刷新后重试");
+    if (data && (typeof data.code === "number" && data.code !== 0 && data.code !== 200 || data.success === false)) throw new Error(data.message || data.msg || "操作失败");
+    return data;
+  });
+}
+const circle = id => `/community/circles/${encodeURIComponent(id)}`;
+/* harmony default export */ __webpack_exports__["a"] = ({
+  sharePost: (id, message) => socialRequest("/community/posts/create_share_code", {}, "POST", {
+    post_id: id,
+    share_message: message,
+    expires_hours: 720
+  }, true).then(result => {
+    if (!result || result.success !== true || typeof result.share_text !== "string" || !result.share_text.trim()) throw new Error("分享口令创建失败，请重试");
+    return result.share_text;
+  }),
+  posts: params => socialRequest("/community/posts/recommend", params).then(value => Object(_utils_social_response__WEBPACK_IMPORTED_MODULE_0__[/* responsePage */ "c"])(value, "帖子列表")),
+  circlePosts: params => socialRequest("/community/posts/list", params).then(value => Object(_utils_social_response__WEBPACK_IMPORTED_MODULE_0__[/* responsePage */ "c"])(value, "圈子帖子")),
+  circleStatus: id => socialRequest(`${circle(id)}/my-status`, {}, "GET", null, true),
+  joinCircle: body => socialRequest("/community/circles/join", {}, "POST", body, true),
+  quitCircle: id => socialRequest("/community/circles/quit", {}, "POST", {
+    circle_id: Number(id)
+  }, true),
+  verification: id => socialRequest(`${circle(id)}/verification-questions`),
+  circles: params => socialRequest("/community/circles/list", params).then(value => Object(_utils_social_response__WEBPACK_IMPORTED_MODULE_0__[/* responsePage */ "c"])(value, "圈子列表")),
+  recommendedCircles: () => socialRequest("/community/circles/recommend", {
+    pageSize: 4,
+    sort: "random"
+  }),
+  myCircles: () => socialRequest("/community/circles/my-circles", {}, "GET", null, true).then(value => Object(_utils_social_response__WEBPACK_IMPORTED_MODULE_0__[/* responseList */ "a"])(value, "我的圈子")),
+  categories: () => socialRequest("/community/circles/categories").then(value => Object(_utils_social_response__WEBPACK_IMPORTED_MODULE_0__[/* responseList */ "a"])(value, "圈子分类")),
+  circle: id => socialRequest(`/community/circles/detail/${encodeURIComponent(id)}`),
+  circleSettings: id => socialRequest(`${circle(id)}/settings`, {}, "GET", null, true),
+  saveCircle: (id, data) => socialRequest(id ? circle(id) : "/community/circles/create", {}, id ? "PUT" : "POST", data, true),
+  saveCircleSettings: (id, data) => socialRequest(`${circle(id)}/settings`, {}, "PUT", data, true),
+  members: (id, params) => socialRequest(`${circle(id)}/members`, params),
+  requests: (id, params) => socialRequest(`${circle(id)}/join-requests`, {
+    status: 0,
+    ...params
+  }, "GET", null, true),
+  banned: (id, params) => socialRequest(`${circle(id)}/banned-users`, params, "GET", null, true),
+  memberAction: (id, action, data) => socialRequest(action === "set-admin" ? "/community/circles/set-admin" : `${circle(id)}/${action}`, {}, "POST", {
+    circle_id: Number(id),
+    ...data
+  }, true),
+  search: params => socialRequest("/community/search", params),
+  hotSearch: type => socialRequest("/community/search/hot", {
+    type
+  }).then(value => Object(_utils_social_response__WEBPACK_IMPORTED_MODULE_0__[/* responseList */ "a"])(value, "热门搜索")),
+  likeStatuses: ids => socialRequest("/community/interactions/like/status/batch", {}, "POST", {
+    target_ids: ids,
+    target_type: 1
+  }, true),
+  like: id => socialRequest("/community/interactions/like", {}, "POST", {
+    target_id: id,
+    target_type: 1
+  }, true),
+  messages: () => socialRequest("/users/get_history_message", {}, "GET", null, true).then(value => Object(_utils_social_response__WEBPACK_IMPORTED_MODULE_0__[/* responseList */ "a"])(value, "消息列表")),
+  archive: id => socialRequest("/users/hide_message", {}, "POST", {
+    message_id: id
+  }, true),
+  deduplicateMessages: () => socialRequest("/users/hide_duplicate_messages", {}, "POST", {}, true),
+  conversations: () => socialRequest("/community/chat_friends", {}, "GET", null, true),
+  unread: () => socialRequest("/community/unread_messages_count", {}, "GET", null, true)
+});
+
+/***/ }),
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 exports.__esModule = true;
-var _locale = __webpack_require__(20);
+var _locale = __webpack_require__(14);
 exports.default = {
   methods: {
     t: function t() {
@@ -6953,7 +7271,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 22 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6991,7 +7309,7 @@ var scrollBarWidth = void 0;
 ;
 
 /***/ }),
-/* 23 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -7224,17 +7542,17 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/11: (/***/function (module, exports) {
-    module.exports = __webpack_require__(50);
+    module.exports = __webpack_require__(60);
 
     /***/
   }),
   /***/21: (/***/function (module, exports) {
-    module.exports = __webpack_require__(17);
+    module.exports = __webpack_require__(21);
 
     /***/
   }),
   /***/4: (/***/function (module, exports) {
-    module.exports = __webpack_require__(12);
+    module.exports = __webpack_require__(13);
 
     /***/
   }),
@@ -7864,7 +8182,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/9: (/***/function (module, exports) {
-    module.exports = __webpack_require__(16);
+    module.exports = __webpack_require__(20);
 
     /***/
   })
@@ -7873,7 +8191,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 24 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7881,9 +8199,9 @@ module.exports = /******/function (modules) {
 
 exports.__esModule = true;
 exports.removeResizeListener = exports.addResizeListener = undefined;
-var _resizeObserverPolyfill = __webpack_require__(100);
+var _resizeObserverPolyfill = __webpack_require__(120);
 var _resizeObserverPolyfill2 = _interopRequireDefault(_resizeObserverPolyfill);
-var _throttleDebounce = __webpack_require__(53);
+var _throttleDebounce = __webpack_require__(63);
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {
     default: obj
@@ -7934,13 +8252,13 @@ var removeResizeListener = exports.removeResizeListener = function removeResizeL
 };
 
 /***/ }),
-/* 25 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = require("throttle-debounce/debounce");
 
 /***/ }),
-/* 26 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -8350,7 +8668,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/16: (/***/function (module, exports) {
-    module.exports = __webpack_require__(24);
+    module.exports = __webpack_require__(30);
 
     /***/
   }),
@@ -8360,12 +8678,12 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/3: (/***/function (module, exports) {
-    module.exports = __webpack_require__(6);
+    module.exports = __webpack_require__(7);
 
     /***/
   }),
   /***/39: (/***/function (module, exports) {
-    module.exports = __webpack_require__(22);
+    module.exports = __webpack_require__(28);
 
     /***/
   })
@@ -8374,7 +8692,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 27 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8393,7 +8711,7 @@ exports.default = function (ref) {
 ;
 
 /***/ }),
-/* 28 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8434,7 +8752,7 @@ function scrollIntoView(container, selected) {
 }
 
 /***/ }),
-/* 29 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8556,155 +8874,23 @@ aria.Utils.keys = {
 exports.default = aria.Utils;
 
 /***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-exports.__esModule = true;
-exports.default = {
-  el: {
-    colorpicker: {
-      confirm: '确定',
-      clear: '清空'
-    },
-    datepicker: {
-      now: '此刻',
-      today: '今天',
-      cancel: '取消',
-      clear: '清空',
-      confirm: '确定',
-      selectDate: '选择日期',
-      selectTime: '选择时间',
-      startDate: '开始日期',
-      startTime: '开始时间',
-      endDate: '结束日期',
-      endTime: '结束时间',
-      prevYear: '前一年',
-      nextYear: '后一年',
-      prevMonth: '上个月',
-      nextMonth: '下个月',
-      year: '年',
-      month1: '1 月',
-      month2: '2 月',
-      month3: '3 月',
-      month4: '4 月',
-      month5: '5 月',
-      month6: '6 月',
-      month7: '7 月',
-      month8: '8 月',
-      month9: '9 月',
-      month10: '10 月',
-      month11: '11 月',
-      month12: '12 月',
-      // week: '周次',
-      weeks: {
-        sun: '日',
-        mon: '一',
-        tue: '二',
-        wed: '三',
-        thu: '四',
-        fri: '五',
-        sat: '六'
-      },
-      months: {
-        jan: '一月',
-        feb: '二月',
-        mar: '三月',
-        apr: '四月',
-        may: '五月',
-        jun: '六月',
-        jul: '七月',
-        aug: '八月',
-        sep: '九月',
-        oct: '十月',
-        nov: '十一月',
-        dec: '十二月'
-      }
-    },
-    select: {
-      loading: '加载中',
-      noMatch: '无匹配数据',
-      noData: '无数据',
-      placeholder: '请选择'
-    },
-    cascader: {
-      noMatch: '无匹配数据',
-      loading: '加载中',
-      placeholder: '请选择',
-      noData: '暂无数据'
-    },
-    pagination: {
-      goto: '前往',
-      pagesize: '条/页',
-      total: '共 {total} 条',
-      pageClassifier: '页'
-    },
-    messagebox: {
-      title: '提示',
-      confirm: '确定',
-      cancel: '取消',
-      error: '输入的数据不合法!'
-    },
-    upload: {
-      deleteTip: '按 delete 键可删除',
-      delete: '删除',
-      preview: '查看图片',
-      continue: '继续上传'
-    },
-    table: {
-      emptyText: '暂无数据',
-      confirmFilter: '筛选',
-      resetFilter: '重置',
-      clearFilter: '全部',
-      sumText: '合计'
-    },
-    tree: {
-      emptyText: '暂无数据'
-    },
-    transfer: {
-      noMatch: '无匹配数据',
-      noData: '无数据',
-      titles: ['列表 1', '列表 2'],
-      filterPlaceholder: '请输入搜索内容',
-      noCheckedFormat: '共 {total} 项',
-      hasCheckedFormat: '已选 {checked}/{total} 项'
-    },
-    image: {
-      error: '加载失败'
-    },
-    pageHeader: {
-      title: '返回'
-    },
-    popconfirm: {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    },
-    empty: {
-      description: '暂无数据'
-    }
-  }
-};
-
-/***/ }),
-/* 31 */
+/* 36 */
 /***/ (function(module, exports) {
 
 module.exports = require("vue-client-only");
 
 /***/ }),
-/* 32 */
+/* 37 */
 /***/ (function(module, exports) {
 
 module.exports = require("vue-router");
 
 /***/ }),
-/* 33 */
+/* 38 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(URLSearchParams, URL) {/* harmony import */ var _utils_uri_resolver_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13);
+/* WEBPACK VAR INJECTION */(function(URLSearchParams, URL) {/* harmony import */ var _utils_uri_resolver_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(16);
 
 /* harmony default export */ __webpack_exports__["a"] = (({
   app
@@ -8825,10 +9011,10 @@ module.exports = require("vue-router");
   // 注入到Vue实例中
   inject('device', device);
 });
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"], __webpack_require__(8)["URL"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URLSearchParams"], __webpack_require__(6)["URL"]))
 
 /***/ }),
-/* 34 */
+/* 39 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -8840,7 +9026,7 @@ module.exports = require("vue-router");
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return readingHead; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return workListSchema; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return bookSchema; });
-/* harmony import */ var _reading_discovery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10);
+/* harmony import */ var _reading_discovery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(11);
 
 const SITE_ORIGIN = 'https://loghome.ink';
 function readingPage(value) {
@@ -8966,7 +9152,56 @@ function bookSchema(book, path) {
 }
 
 /***/ }),
-/* 35 */
+/* 40 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(URLSearchParams) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return readingCommentId; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return readingCommentTarget; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return readingMessageTarget; });
+function readingCommentId(query = {}) {
+  const id = Number(query.preLoadCommentId || query.comment_id || query.commentId);
+  return Number.isSafeInteger(id) && id > 0 ? id : 0;
+}
+function readingCommentTarget(comment, book, anchor) {
+  if (!comment || !book || Number(comment.novelId) !== Number(book.novel_id)) return '';
+  const suffix = `preLoadCommentId=${Number(anchor) || Number(comment.commentId)}`;
+  if (Number(comment.articleId) > 0) {
+    if (book.novel_type === 'manga') return `/manga/read/${comment.articleId}?novelId=${book.novel_id}&${suffix}`;
+    return `/article/${comment.articleId}?${suffix}${Number(comment.paragraphId) > 0 ? `&paragraphId=${comment.paragraphId}` : ''}`;
+  }
+  return `/${book.novel_type === 'manga' ? 'manga' : book.novel_type === 'world' ? 'world' : 'novel'}/${book.novel_id}?${suffix}`;
+}
+function readingMessageTarget(router) {
+  const raw = String(router || '').trim();
+  if (!raw || /^[a-z][a-z\d+.-]*:|^\/\/|[\\\x00-\x1f]/i.test(raw)) return null;
+  const source = raw.replace(/^\/?(?:#\/)?(?:pages\/)?/, '');
+  const [path, search = ''] = source.split('?'),
+    query = new URLSearchParams(search);
+  const id = Number(query.get('id') || query.get('novelId') || query.get('novel_id'));
+  const anchor = readingCommentId(Object.fromEntries(query));
+  if (/^readers\/(?:bookInfo|bookComment|mangaInfo|mangaReader|bookEnd|bookExcerpts|newReader\/article)$/.test(path)) {
+    const workId = /(?:mangaReader|newReader\/article)$/.test(path) ? Number(query.get('novelId') || query.get('novel_id')) : id;
+    if (anchor) return {
+      path: `/read/comment/${anchor}${Number.isSafeInteger(workId) && workId > 0 ? `?novelId=${workId}` : ''}`
+    };
+    if (!Number.isSafeInteger(id) || id <= 0) return null;
+    if (path === 'readers/newReader/article') return {
+      path: `/article/${id}`
+    };
+    if (path === 'readers/mangaReader') return {
+      path: `/manga/read/${id}${Number(query.get('novelId')) > 0 ? `?novelId=${Number(query.get('novelId'))}` : ''}`
+    };
+    return {
+      path: `/${path === 'readers/mangaInfo' ? 'manga' : path === 'readers/bookEnd' ? 'read/end' : 'novel'}/${id}`
+    };
+  }
+  return null;
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URLSearchParams"]))
+
+/***/ }),
+/* 41 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -8977,7 +9212,7 @@ function bookSchema(book, path) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return localReadingProgress; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return recordLocalReading; });
 /* harmony import */ var _plugins_api_reading__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var _reading_discovery__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
+/* harmony import */ var _reading_discovery__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(11);
 
 
 function readingAccountKey(token = Object(_plugins_api_reading__WEBPACK_IMPORTED_MODULE_0__[/* readingToken */ "c"])()) {
@@ -9034,7 +9269,7 @@ function recordLocalReading(work, progress = {}) {
 }
 
 /***/ }),
-/* 36 */
+/* 42 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -9062,7 +9297,7 @@ function recordLocalReading(work, progress = {}) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "k", function() { return fetchAiIndex; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "p", function() { return streamReaderAi; });
 /* harmony import */ var _plugins_api_reading__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var _reading_history__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(35);
+/* harmony import */ var _reading_history__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41);
 
 
 const AI_PREFERENCE_KEY = 'LogHomeAiAssistanceDisabled';
@@ -9397,7 +9632,142 @@ async function streamReaderAi(payload, {
 }
 
 /***/ }),
-/* 37 */
+/* 43 */
+/***/ (function(module, exports) {
+
+module.exports = require("moment");
+
+/***/ }),
+/* 44 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(URLSearchParams) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return socialMessageTarget; });
+/* harmony import */ var _reader_comment_links__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(40);
+
+function socialMessageTarget(raw) {
+  if (typeof raw !== "string" || !raw || raw === "None") return null;
+  const value = raw.replace(/^\.?\/?(?:pages\/)?/, "");
+  if (/^(?:https?:|javascript:|data:|\/\/)/i.test(raw)) return null;
+  const [path, query = ""] = value.split("?"),
+    params = new URLSearchParams(query);
+  const id = params.get("id") || params.get("product_id") || params.get("owner_id");
+  const numeric = id && /^\d+$/.test(id) ? id : null;
+  const exact = {
+    "community/index": "/community",
+    "community/circles": "/community/circles",
+    "community/search": "/community/search",
+    "community/message": "/me/messages",
+    "community/privateMessages": "/me/messages?tab=private",
+    "community/notifications": "/me/messages?tab=notification",
+    "community/activityMessages": "/me/messages?tab=activity",
+    "community/friends": "/me/friends",
+    "community/createCircle": "/community/circle/create",
+    "community/postEdit": "/community/post/edit",
+    "community/send_mail": "/community/mail/new",
+    me: "/me",
+    "users/achievements": "/me/achievements",
+    "users/avatar_frames": "/me/frames",
+    "users/badgeDetail": "/me/achievements",
+    "users/user_credit": "/me/credit",
+    "users/clientSet": "/me/settings",
+    "settings/privacySettings": "/me/settings",
+    "settings/pushSettings": "/me/notifications",
+    "users/storageManage": "/me/storage",
+    "users/change_user_info": "/me/settings",
+    "users/activateAccount": "/me/security",
+    "users/activateAccount_email": "/me/security",
+    "users/changePwd": "/me/security",
+    "users/top_pic_upload": "/me/settings",
+    "users/avater_upload": "/me/settings",
+    "treePlant/treeplant": "/me/tree",
+    "treePlant/treeSceneSettings": "/me/tree",
+    "apps/lab": "/me/lab",
+    "apps/inviteCard": "/me/invite",
+    "apps/enterInviteCode": "/me/invite",
+    "apps/about": "/about/open-source",
+    "apps/faqs/faq": "/me/help",
+    "apps/faqs/user_feedback": "/me/help",
+    "membership/index": "/membership",
+    "membership/redeem": "/membership/redeem",
+    "membership/gift": "/membership/gift",
+    "membership/rules": "/membership/rules",
+    "payments/recharge": "/me/wallet",
+    "payments/earnings": "/me/wallet?tab=earnings",
+    "payments/order_history": "/me/wallet?tab=orders",
+    "payments/exchange": "/me/wallet?tab=exchange",
+    "payments/gift_code": "/me/wallet?tab=gift",
+    "store/index": "/store",
+    "store/orders": "/store/orders",
+    "store/address_list": "/store/addresses",
+    "store/address_form": "/store/addresses"
+  };
+  if (path === "users/badgeDetail" && params.get("owner_id") && /^\d+$/.test(params.get("owner_id"))) return {
+    path: `/users/${params.get("owner_id")}?badge=1`
+  };
+  if (path === "apps/miniapp" && /^[a-z][a-z0-9-]*$/.test(params.get("id") || "")) return {
+    path: `/community/miniapp/${params.get("id")}`
+  };
+  if (exact[path]) {
+    const forwarded = new URLSearchParams();
+    const fields = {
+      "community/postEdit": ["post_id", "circle_id"],
+      "community/friends": ["id"],
+      "community/search": ["keyword", "type"],
+      "membership/index": ["tier"],
+      "membership/gift": ["tier"],
+      "community/send_mail": ["to_id"]
+    };
+    for (const key of fields[path] || []) {
+      const entry = params.get(key);
+      if (entry && (!/^(?:id|post_id|circle_id|to_id)$/.test(key) || /^[1-9]\d*$/.test(entry))) forwarded.set(key, entry);
+    }
+    if (path === "store/address_form") {
+      const edit = params.get("address_id");
+      if (edit && /^[1-9]\d*$/.test(edit)) forwarded.set("edit", edit);else forwarded.set("new", "1");
+    }
+    const suffix = forwarded.toString();
+    return {
+      path: exact[path] + (suffix ? `${exact[path].includes("?") ? "&" : "?"}${suffix}` : "")
+    };
+  }
+  if (numeric) {
+    const dynamic = {
+      "community/chat": `/community/chat?id=${numeric}`,
+      "community/read_mail": `/community/mail/${numeric}`,
+      "community/postDetail": `/community/post/${numeric}`,
+      "community/postView": `/community/post/${numeric}`,
+      "community/circle": `/community/circle/${numeric}`,
+      "community/editCircle": `/community/circle/settings/${numeric}`,
+      "community/circleMembers": `/community/circle/members/${numeric}`,
+      "users/personalPage": `/users/${numeric}`,
+      "store/detail": `/store/${numeric}`,
+      "store/checkout": `/store/${numeric}`
+    };
+    if (dynamic[path]) {
+      const forwarded = new URLSearchParams();
+      if (path === "store/detail" || path === "store/checkout") {
+        const variant = params.get("variant_id");
+        if (variant && /^[1-9]\d*$/.test(variant)) forwarded.set("variant_id", variant);
+        if (path === "store/checkout") forwarded.set("checkout", "1");
+      }
+      return {
+        path: dynamic[path] + (forwarded.toString() ? `?${forwarded}` : "")
+      };
+    }
+  }
+  const reading = Object(_reader_comment_links__WEBPACK_IMPORTED_MODULE_0__[/* readingMessageTarget */ "c"])(value);
+  if (reading && !reading.mobile) return reading;
+  if (!/^[a-zA-Z][a-zA-Z0-9_/-]*(?:\?[^\r\n]*)?$/.test(value) || value.includes("..")) return null;
+  return {
+    path: `/pages/${value}`,
+    mobile: true
+  };
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URLSearchParams"]))
+
+/***/ }),
+/* 45 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -9457,41 +9827,24 @@ function findReaderParagraph(article, paragraphId) {
 }
 
 /***/ }),
-/* 38 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(68);
+var content = __webpack_require__(80);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("27f098c0", content, true, context)
 };
 
 /***/ }),
-/* 39 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(70);
-if(content.__esModule) content = content.default;
-if(typeof content === 'string') content = [[module.i, content, '']];
-if(content.locals) module.exports = content.locals;
-// add CSS to SSR context
-var add = __webpack_require__(5).default
-module.exports.__inject__ = function (context) {
-  add("c3862072", content, true, context)
-};
-
-/***/ }),
-/* 40 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
@@ -9502,47 +9855,98 @@ if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
+module.exports.__inject__ = function (context) {
+  add("c3862072", content, true, context)
+};
+
+/***/ }),
+/* 48 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(98);
+if(content.__esModule) content = content.default;
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add CSS to SSR context
+var add = __webpack_require__(4).default
+module.exports.__inject__ = function (context) {
+  add("68a06c46", content, true, context)
+};
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(100);
+if(content.__esModule) content = content.default;
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add CSS to SSR context
+var add = __webpack_require__(4).default
+module.exports.__inject__ = function (context) {
+  add("17cc1eb5", content, true, context)
+};
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(102);
+if(content.__esModule) content = content.default;
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add CSS to SSR context
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("542f136a", content, true, context)
 };
 
 /***/ }),
-/* 41 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(84);
+var content = __webpack_require__(104);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("426beef3", content, true, context)
 };
 
 /***/ }),
-/* 42 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(86);
+var content = __webpack_require__(106);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("95a9f42e", content, true, context)
 };
 
 /***/ }),
-/* 43 */
+/* 53 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -9550,7 +9954,7 @@ module.exports.__inject__ = function (context) {
 /* unused harmony export speechChunk */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return createAudioState; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ReaderAudio; });
-/* harmony import */ var _reader_paragraphs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(37);
+/* harmony import */ var _reader_paragraphs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(45);
 
 function audioParagraphs(article) {
   return Object(_reader_paragraphs__WEBPACK_IMPORTED_MODULE_0__[/* readerParagraphs */ "a"])(article.content, article.article_type).filter(row => row.type === 'text' && row.value.trim());
@@ -10046,58 +10450,58 @@ class ReaderAudio {
 }
 
 /***/ }),
-/* 44 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(88);
+var content = __webpack_require__(108);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("719e6345", content, true, context)
 };
 
 /***/ }),
-/* 45 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(90);
+var content = __webpack_require__(110);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
-  add("5cf05c4e", content, true, context)
+  add("95be65ea", content, true, context)
 };
 
 /***/ }),
-/* 46 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(92);
+var content = __webpack_require__(112);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
-  add("2d584570", content, true, context)
+  add("dcf5cd58", content, true, context)
 };
 
 /***/ }),
-/* 47 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10451,7 +10855,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
 })(undefined);
 
 /***/ }),
-/* 48 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10506,7 +10910,7 @@ var isDefined = exports.isDefined = function isDefined(val) {
 };
 
 /***/ }),
-/* 49 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10516,11 +10920,11 @@ exports.__esModule = true;
 exports.PopupManager = undefined;
 var _vue = __webpack_require__(0);
 var _vue2 = _interopRequireDefault(_vue);
-var _merge = __webpack_require__(16);
+var _merge = __webpack_require__(20);
 var _merge2 = _interopRequireDefault(_merge);
-var _popupManager = __webpack_require__(97);
+var _popupManager = __webpack_require__(117);
 var _popupManager2 = _interopRequireDefault(_popupManager);
-var _scrollbarWidth = __webpack_require__(22);
+var _scrollbarWidth = __webpack_require__(28);
 var _scrollbarWidth2 = _interopRequireDefault(_scrollbarWidth);
 var _dom = __webpack_require__(9);
 function _interopRequireDefault(obj) {
@@ -10709,14 +11113,14 @@ exports.default = {
 exports.PopupManager = _popupManager2.default;
 
 /***/ }),
-/* 50 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 exports.__esModule = true;
-var _util = __webpack_require__(6);
+var _util = __webpack_require__(7);
 
 /**
  * Show migrating guide in browser console.
@@ -10777,7 +11181,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 51 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10854,7 +11258,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 52 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -11087,7 +11491,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/4: (/***/function (module, exports) {
-    module.exports = __webpack_require__(12);
+    module.exports = __webpack_require__(13);
 
     /***/
   }),
@@ -11452,19 +11856,19 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 53 */
+/* 63 */
 /***/ (function(module, exports) {
 
 module.exports = require("throttle-debounce");
 
 /***/ }),
-/* 54 */
+/* 64 */
 /***/ (function(module, exports) {
 
 module.exports = require("babel-helper-vue-jsx-merge-props");
 
 /***/ }),
-/* 55 */
+/* 65 */
 /***/ (function(module, exports) {
 
 /* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {/* globals __webpack_amd_options__ */
@@ -11473,7 +11877,7 @@ module.exports = __webpack_amd_options__;
 /* WEBPACK VAR INJECTION */}.call(this, {}))
 
 /***/ }),
-/* 56 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -11807,7 +12211,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 57 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -12040,7 +12444,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/4: (/***/function (module, exports) {
-    module.exports = __webpack_require__(12);
+    module.exports = __webpack_require__(13);
 
     /***/
   }),
@@ -12296,13 +12700,13 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 58 */
+/* 68 */
 /***/ (function(module, exports) {
 
 // This file is intentionally left empty for noop aliases
 
 /***/ }),
-/* 59 */
+/* 69 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12330,7 +12734,7 @@ var staticRenderFns = [];
 // CONCATENATED MODULE: ./components/read/ReaderAudioPlayer.vue?vue&type=template&id=4b74798a&scoped=true
 
 // EXTERNAL MODULE: ./utils/reader-audio.js
-var reader_audio = __webpack_require__(43);
+var reader_audio = __webpack_require__(53);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderAudioPlayer.vue?vue&type=script&lang=js
 
@@ -12408,7 +12812,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(87)
+  var style0 = __webpack_require__(107)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -12429,25 +12833,25 @@ var component = Object(componentNormalizer["a" /* default */])(
 /* harmony default export */ var ReaderAudioPlayer = __webpack_exports__["a"] = (component.exports);
 
 /***/ }),
-/* 60 */
+/* 70 */
 /***/ (function(module, exports) {
 
 module.exports = require("node-fetch");
 
 /***/ }),
-/* 61 */
+/* 71 */
 /***/ (function(module, exports) {
 
 module.exports = require("vue-meta");
 
 /***/ }),
-/* 62 */
+/* 72 */
 /***/ (function(module, exports) {
 
 module.exports = require("defu");
 
 /***/ }),
-/* 63 */
+/* 73 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12595,10 +12999,10 @@ const search = {
   }
 };
 /* harmony default export */ __webpack_exports__["a"] = (search);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URLSearchParams"]))
 
 /***/ }),
-/* 64 */
+/* 74 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13407,23 +13811,164 @@ const community = {
   }
 };
 /* harmony default export */ __webpack_exports__["a"] = (community);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URLSearchParams"]))
 
 /***/ }),
-/* 65 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(119);
+"use strict";
+
+
+exports.__esModule = true;
+exports.default = {
+  el: {
+    colorpicker: {
+      confirm: 'OK',
+      clear: 'Clear'
+    },
+    datepicker: {
+      now: 'Now',
+      today: 'Today',
+      cancel: 'Cancel',
+      clear: 'Clear',
+      confirm: 'OK',
+      selectDate: 'Select date',
+      selectTime: 'Select time',
+      startDate: 'Start Date',
+      startTime: 'Start Time',
+      endDate: 'End Date',
+      endTime: 'End Time',
+      prevYear: 'Previous Year',
+      nextYear: 'Next Year',
+      prevMonth: 'Previous Month',
+      nextMonth: 'Next Month',
+      year: '',
+      month1: 'January',
+      month2: 'February',
+      month3: 'March',
+      month4: 'April',
+      month5: 'May',
+      month6: 'June',
+      month7: 'July',
+      month8: 'August',
+      month9: 'September',
+      month10: 'October',
+      month11: 'November',
+      month12: 'December',
+      week: 'week',
+      weeks: {
+        sun: 'Sun',
+        mon: 'Mon',
+        tue: 'Tue',
+        wed: 'Wed',
+        thu: 'Thu',
+        fri: 'Fri',
+        sat: 'Sat'
+      },
+      months: {
+        jan: 'Jan',
+        feb: 'Feb',
+        mar: 'Mar',
+        apr: 'Apr',
+        may: 'May',
+        jun: 'Jun',
+        jul: 'Jul',
+        aug: 'Aug',
+        sep: 'Sep',
+        oct: 'Oct',
+        nov: 'Nov',
+        dec: 'Dec'
+      }
+    },
+    select: {
+      loading: 'Loading',
+      noMatch: 'No matching data',
+      noData: 'No data',
+      placeholder: 'Select'
+    },
+    cascader: {
+      noMatch: 'No matching data',
+      loading: 'Loading',
+      placeholder: 'Select',
+      noData: 'No data'
+    },
+    pagination: {
+      goto: 'Go to',
+      pagesize: '/page',
+      total: 'Total {total}',
+      pageClassifier: ''
+    },
+    messagebox: {
+      title: 'Message',
+      confirm: 'OK',
+      cancel: 'Cancel',
+      error: 'Illegal input'
+    },
+    upload: {
+      deleteTip: 'press delete to remove',
+      delete: 'Delete',
+      preview: 'Preview',
+      continue: 'Continue'
+    },
+    table: {
+      emptyText: 'No Data',
+      confirmFilter: 'Confirm',
+      resetFilter: 'Reset',
+      clearFilter: 'All',
+      sumText: 'Sum'
+    },
+    tree: {
+      emptyText: 'No Data'
+    },
+    transfer: {
+      noMatch: 'No matching data',
+      noData: 'No data',
+      titles: ['List 1', 'List 2'],
+      // to be translated
+      filterPlaceholder: 'Enter keyword',
+      // to be translated
+      noCheckedFormat: '{total} items',
+      // to be translated
+      hasCheckedFormat: '{checked}/{total} checked' // to be translated
+    },
+    image: {
+      error: 'FAILED'
+    },
+    pageHeader: {
+      title: 'Back' // to be translated
+    },
+    popconfirm: {
+      confirmButtonText: 'Yes',
+      cancelButtonText: 'No'
+    },
+    empty: {
+      description: 'No Data'
+    }
+  }
+};
+
+/***/ }),
+/* 76 */
+/***/ (function(module) {
+
+module.exports = JSON.parse("{\"阅读\":\"Read\",\"写作\":\"Write\",\"社区\":\"Community\",\"原木社区\":\"LogHome\",\"登录\":\"Log in\",\"下载移动端\":\"Get the mobile app\",\"全站搜索...\":\"Search LogHome…\",\"社区动态\":\"Community feed\",\"圈子广场\":\"Circles\",\"搜索社区\":\"Search community\",\"消息中心\":\"Messages\",\"好友与关注\":\"Friends & follows\",\"个人中心\":\"My LogHome\",\"账号设置\":\"Settings\",\"发布帖子\":\"New post\",\"跳转到页面内容\":\"Skip to content\",\"切换日间模式\":\"Switch to light mode\",\"切换夜间模式\":\"Switch to dark mode\",\"我的服务\":\"My services\",\"更多\":\"More\",\"我的消息\":\"My messages\",\"我的勋章\":\"My medals\",\"头像挂件\":\"Avatar frames\",\"邀请好友\":\"Invite friends\",\"原木钱包\":\"Log wallet\",\"红石账户\":\"Redstone account\",\"原木商城\":\"LogHome store\",\"原木实验室\":\"LogHome lab\",\"我的信誉\":\"My reputation\",\"帮助与反馈\":\"Help & feedback\",\"关于原木社区\":\"About LogHome\",\"设置与隐私\":\"Settings & privacy\",\"编辑资料\":\"Edit profile\",\"查看个人名片 →\":\"View profile →\",\"绑定邮箱\":\"Link email\",\"去绑定\":\"Link now\",\"我的作品\":\"My works\",\"创作中心 →\":\"Writing studio →\",\"账户收益\":\"Earnings\",\"收益与提现 →\":\"Earnings & withdrawals →\",\"进入树场\":\"Open tree scene\",\"查看你的树场\":\"View your tree scene\",\"每日签到与成长任务\":\"Daily check-in and growth tasks\",\"记录成长，组合专属称号\":\"Medals and custom titles\",\"装点你的社区身份\":\"Personalize your avatar\",\"分享原木社区，一起成长\":\"Invite friends to LogHome\",\"充值、兑换与消费记录\":\"Top-ups, exchanges and history\",\"管理 AI 服务的红石余额\":\"Manage your redstone balance\",\"发现社区周边与精选商品\":\"Community merchandise and rewards\",\"探索社区的新鲜玩法\":\"Explore new experiences\",\"查看互动、私信和社区通知\":\"Replies, messages and notifications\",\"与志同道合的朋友保持联系\":\"Keep in touch with friends\",\"个人资料\":\"Profile details\",\"昵称\":\"Nickname\",\"个性签名\":\"Bio\",\"保存资料\":\"Save profile\",\"头像与封面\":\"Avatar & cover\",\"头像\":\"Avatar\",\"更换头像\":\"Change avatar\",\"个人主页封面\":\"Profile cover\",\"更换封面\":\"Change cover\",\"隐私设置\":\"Privacy\",\"账户级设置，保存后立即生效，并同步到所有设备。\":\"Changes apply to your account across devices.\",\"关注与粉丝列表\":\"Follow and follower lists\",\"本人始终可查看自己的列表，关注和粉丝数量仍公开。\":\"You can always view your own lists. Follow and follower counts remain public.\",\"谁可以私信我\":\"Who can message me\",\"保存隐私设置\":\"Save privacy settings\",\"隐私设置读取失败，请重试\":\"Privacy settings could not be loaded. Try again.\",\"基本信息\":\"Account details\",\"用户ID\":\"User ID\",\"注册时间\":\"Joined\",\"邮箱\":\"Email\",\"未绑定\":\"Not linked\",\"更换邮箱\":\"Change email\",\"密码\":\"Password\",\"修改密码\":\"Change password\",\"更多设置\":\"More settings\",\"QQ 消息推送 →\":\"QQ notifications →\",\"本机存储管理 →\":\"Device storage →\",\"头像挂件 →\":\"Avatar frames →\",\"账号安全 →\":\"Account security →\",\"退出登录\":\"Log out\",\"请输入昵称\":\"Enter your nickname\",\"写点什么让别人认识你\":\"Tell others a little about yourself\",\"语言 / Language\":\"Language\",\"跟随系统\":\"Follow system\",\"简体中文\":\"简体中文\",\"语言已在此设备生效，账号同步失败。\":\"The language is active on this device, but could not be synced to your account.\",\"重试同步\":\"Retry sync\",\"所有人\":\"Everyone\",\"仅我关注的人\":\"People I follow\",\"仅我的粉丝\":\"My followers\",\"仅自己\":\"Only me\",\"默认（所有已登录用户）\":\"Everyone signed in\",\"我关注的人\":\"People I follow\",\"互相关注的好友\":\"Mutual friends\",\"不接收私信\":\"No one\",\"重试\":\"Retry\",\"返回\":\"Back\",\"保存\":\"Save\",\"取消\":\"Cancel\",\"确定\":\"Confirm\",\"暂无简介\":\"No bio yet\",\"原木\":\"Logs\",\"暂无\":\"Unavailable\",\"手机号\":\"Phone\",\"QQ 账号\":\"QQ account\",\"账号绑定\":\"Linked accounts\",\"账号安全\":\"Account security\",\"绑定邮箱，方便找回密码和接收重要通知。\":\"Link your email to recover your account and receive important notifications.\",\"重新加载\":\"Reload\",\"保护你的账号\":\"Protect your account\",\"暂无作品\":\"No works yet\",\"元\":\"CNY\",\"账号信息\":\"Account details\",\"用户 ID\":\"User ID\",\"图片会被压缩后上传，建议 JPG/PNG，单张不超过 5MB。\":\"JPG/PNG images, up to 5 MB each.\",\"默认允许所有已登录用户私信；“我关注的人”指你已关注的发件人。历史消息不受影响。\":\"Everyone signed in can message you by default. “People I follow” refers to senders you follow. Existing messages remain available.\",\"社区与个人中心导航\":\"Community and account navigation\",\"账号资料\":\"Account details\",\"原木通行证\":\"LogHome Pass\",\"超级原木通行证\":\"LogHome Super Pass\",\"有效期至 {date} · {status}\":\"Valid until {date} · {status}\",\"自动续费已开启\":\"Auto-renewal on\",\"自动续费已关闭\":\"Auto-renewal off\",\"管理权益\":\"Manage pass\",\"了解权益\":\"View benefits\",\"专属身份、成长加速与更多个性体验\":\"Profile perks, faster growth and more customization\",\"封面\":\"Cover\",\"AI 辅助功能\":\"AI assistance\",\"已开启\":\"On\",\"已关闭\":\"Off\",\"设置未能保存，请检查浏览器存储权限后重试。\":\"Could not save. Check browser storage permissions and try again.\",\"全部公开\":\"Both lists public\",\"仅公开关注列表\":\"Only follows public\",\"仅公开粉丝列表\":\"Only followers public\",\"全部私密\":\"Both lists private\",\"互相关注的人\":\"Mutual follows\",\"禁止私信\":\"No one\",\"隐私设置加载失败，请重试\":\"Privacy settings could not be loaded. Try again.\",\"1 去皮原木 = 1.25\\n          原木，小数部分舍去。去皮原木可用于提现，兑换后不可逆。\":\"1 stripped log = 1.25 logs, rounded down. Stripped logs can be withdrawn. Exchanges cannot be reversed.\",\"1 红石\":\"1 redstone\",\"10 原木\":\"10 logs\",\"10 原木 = 1 红石\":\"10 logs = 1 redstone\",\"10-200 个字符，介绍圈子的兴趣和主题\":\"10–200 characters describing your circle\",\"2-20 个字符\":\"2–20 characters\",\"6-20 位字母、数字或下划线\":\"6–20 letters, digits or underscores\",\"AI 创作：普通 1 红石，深度思考 2 红石\":\"AI writing: 1 redstone for standard, 2 for deep thinking\",\"AI 辅助已关闭\":\"AI assistance is off\",\"AI 辅助设置\":\"AI preferences\",\"QQ 推送绑定\":\"Link QQ notifications\",\"← 返回书库\":\"← Back to library\",\"上一页\":\"Previous\",\"上传中…\":\"Uploading…\",\"上传图片\":\"Upload image\",\"下一页\":\"Next\",\"不使用挂件\":\"No frame\",\"世界\":\"Worlds\",\"世界封面\":\"World cover\",\"串门\":\"Visit\",\"为阅读与创作补充一点灵感能量\":\"Resources for reading and writing\",\"主作者与一名协作者组成的双人协作作品免费；三人及以上协作需要主作者持有标准或超级原木通行证，否则协作者仅可预览作品，无法启用编辑、增删章节、排序和发布等其他权限。\":\"Collaboration with one co-author is free. For three or more contributors, the lead author needs a Pass or Super Pass. Without one, collaborators can only preview the work; editing, chapter creation, deletion, sorting and publishing are unavailable.\",\"了解通行证权益 →\":\"View Pass benefits →\",\"互相关注后，一起培育小树。\":\"Follow each other to grow trees together.\",\"交流规则\":\"Community rules\",\"以下规则适用于原木通行证、超级原木通行证及红石相关服务。\":\"These rules apply to the LogHome Pass, Super Pass and redstone services.\",\"会员专属功能\":\"Member features\",\"会员赠送与普通用户月赠\":\"Monthly redstone grants\",\"余额不足，请先充值原木\":\"Not enough logs. Top up to continue.\",\"余额提现\":\"Withdraw balance\",\"作品\":\"Works\",\"作品封面\":\"Work cover\",\"作品本地备份与离线协作内容由创作中心管理。请在对应作品中导出备份后处理。\":\"Work backups and offline collaboration data are managed in the writing studio. Export a backup from the relevant work first.\",\"你在此圈子中被禁言，暂时无法发布内容。\":\"You are muted in this circle and cannot post.\",\"你的充值将用于社区维护与运营。确认订单后前往支付页面，支付结果以订单状态为准。\":\"Top-ups support community maintenance. Confirm your order, then pay on the payment page. Check the order status for confirmation.\",\"保存密码\":\"Save password\",\"保存时间段\":\"Save time window\",\"保存称号\":\"Save title\",\"信件内容\":\"Letter\",\"信誉记录\":\"Reputation history\",\"充值原木\":\"Top up logs\",\"充值订单\":\"Top-up orders\",\"免费\":\"Free\",\"兑换原木\":\"Exchange for logs\",\"兑换原木礼品卡\":\"Redeem log gift card\",\"兑换成功后原木将直接计入余额，每张礼品卡只能使用一次。\":\"Redeemed logs are added to your balance. Each gift card can be used once.\",\"兑换所得红石永久有效，兑换后不可撤销。\":\"Exchanged redstone never expires. Exchanges cannot be reversed.\",\"兑换数量\":\"Quantity\",\"兑换码\":\"Redemption code\",\"兑换码需在有效状态下使用。同一兑换码不可重复使用，具体档位与时长以兑换确认结果为准。\":\"Use a valid code only once. The confirmed result determines the tier and duration.\",\"兑换红石\":\"Exchange for redstone\",\"兑换记录\":\"Exchange history\",\"兑换通行证\":\"Redeem Pass\",\"入圈验证\":\"Join approval\",\"全部商品已展示\":\"All products shown\",\"全部圈子\":\"All circles\",\"全部圈子已展示\":\"All circles shown\",\"关注\":\"Follows\",\"关闭后不接收成长和好友串门通知。\":\"Turn off to stop growth and friend-visit notifications.\",\"关闭后使用经典视图，减少渲染开销。\":\"Turn off to use the classic view and reduce rendering cost.\",\"关闭自动续费不会提前结束已生效权益，当前通行证仍可使用至到期日。\":\"Turning off auto-renewal keeps your current benefits until expiry.\",\"其他会员专属能力以对应功能页面标识为准；通行证到期后，未执行的新操作将不再享有会员权限。\":\"Other member features are marked on their pages. After expiry, new operations no longer have member privileges.\",\"具体消耗以使用页面提示为准。\":\"The price shown before use applies.\",\"内容\":\"Content\",\"再次输入新密码\":\"Confirm new password\",\"写一封信\":\"Write a letter\",\"写下想对好友说的话\":\"Write your message to your friend\",\"写下想对朋友说的话\":\"Write your message to your friend\",\"分享\":\"Share\",\"分享了作品\":\"Shared a work\",\"分享你的想法...\":\"Share your thoughts…\",\"分享帖子\":\"Share post\",\"创作数据\":\"Writing statistics\",\"创建后需要等待审核\":\"New circles require approval.\",\"创建订单并支付\":\"Create order & pay\",\"创建须知\":\"Before creating a circle\",\"删除\":\"Delete\",\"刷新地址\":\"Refresh addresses\",\"刷新状态\":\"Refresh status\",\"刷新绑定码\":\"Refresh linking code\",\"刷新统计\":\"Refresh statistics\",\"前往支付\":\"Continue to payment\",\"前往红石中心\":\"Open redstone account\",\"前往设置\":\"Open settings\",\"加载中...\":\"Loading…\",\"加载更多\":\"Load more\",\"加载更多动态\":\"Load more posts\",\"加载更多回复\":\"Load more replies\",\"加载更多评论\":\"Load more comments\",\"加载更早的消息\":\"Load earlier messages\",\"动态\":\"Posts\",\"升级与自动续费\":\"Upgrades & auto-renewal\",\"历史消息\":\"Archived messages\",\"原因（可选）\":\"Reason (optional)\",\"原木余额\":\"Log balance\",\"原木余额不足\":\"Not enough logs\",\"原木娘助读：快速 1 红石，深入 2 红石\":\"Reading assistant: 1 redstone for quick, 2 for deep analysis\",\"原木娘的小课堂\":\"LogHome classroom\",\"原木娘种树、充值和参与社区活动\":\"Tree rewards, top-ups and community events\",\"原木支出\":\"Logs spent\",\"原木树场\":\"Tree scene\",\"原木礼品卡兑换码\":\"Log gift card code\",\"原木通行证升级至超级原木通行证，仅收取剩余有效天数对应的档位差价，到期日保持不变。\":\"Upgrading to Super Pass charges only the tier difference for remaining days. Your expiry date stays the same.\",\"去商城看看\":\"Browse store\",\"去皮原木\":\"Stripped logs\",\"去皮原木兑换\":\"Exchange stripped logs\",\"去皮原木同价，优先扣除去皮原木。\":\"Stripped logs have the same value and are spent first.\",\"双方均可获得邀请奖励\":\"Both users can earn invitation rewards.\",\"反馈历史\":\"Feedback history\",\"发布到\":\"Post to\",\"发帖规范、交流约定与禁止内容\":\"Posting rules, conduct and prohibited content\",\"发现喜欢的作品 →\":\"Find works to read →\",\"发起付费 AI\\n            操作即按页面显示数量扣除红石；红石不足时不会创建付费任务。\":\"Starting a paid AI task deducts the shown amount of redstone. Tasks are not created if your balance is insufficient.\",\"发送\":\"Send\",\"发送信件\":\"Send letter\",\"取消订单\":\"Cancel order\",\"只有圈主或管理员可以编辑圈子。\":\"Only the circle owner or an administrator can edit this circle.\",\"可提现收益\":\"Withdrawable earnings\",\"可用原木\":\"Available logs\",\"同一任务断线重连或重复提交不会重复扣费。兑换、赠送与消费记录均可在红石中心查询。\":\"Reconnecting or resubmitting the same task does not charge twice. Exchanges, grants and spending appear in your redstone account.\",\"同档续费会从现有有效期末尾顺延；实际扣除和新到期日以确认页面及服务端结果为准。\":\"Renewing the same tier extends your current expiry date. Check the confirmation page and server result for the charge and new date.\",\"名词\":\"Noun\",\"商品介绍\":\"Product details\",\"商城订单\":\"Store orders\",\"回复\":\"Reply\",\"回复配图\":\"Reply image\",\"图像生成：5 红石；智能纠错普通用户 2 红石，通行证免费\":\"Image generation: 5 redstone. Smart correction: 2 redstone, or free with a Pass.\",\"图片\":\"Image\",\"图片消息\":\"Image message\",\"圈子公告\":\"Circle announcement\",\"圈子分类\":\"Category\",\"圈子名称\":\"Circle name\",\"圈子图标\":\"Circle icon\",\"圈子简介\":\"Circle description\",\"圈子规则\":\"Circle rules\",\"圈子里还没有帖子，分享第一条动态吧。\":\"No posts yet. Share the first one.\",\"圈子预览\":\"Circle preview\",\"场景设置\":\"Scene settings\",\"填写朋友的邀请码\":\"Enter a friend's invitation code\",\"复制分享链接\":\"Copy share link\",\"复制绑定码\":\"Copy linking code\",\"复制链接\":\"Copy link\",\"好友\":\"Friends\",\"好友串门暂未开放\":\"Friend visits are not available yet.\",\"好友树场\":\"Friends' tree scenes\",\"如页面展示与历史说明存在差异，以操作确认页、当前有效规则及服务端实际处理结果为准。\":\"If older descriptions differ, the confirmation page, current rules and server result apply.\",\"存储管理\":\"Device storage\",\"官方\":\"Official\",\"定时发布仅限原木通行证及超级原木通行证会员使用，创建任务时会校验会员状态。\":\"Scheduled publishing requires a Pass or Super Pass. Membership is checked when scheduling.\",\"客服答复\":\"Support reply\",\"密码修改成功后需要重新登录。\":\"Sign in again after changing your password.\",\"将绑定码发送给原木社区 QQ\\n        推送服务，绑定后可接收社区消息。绑定码用于识别你的账号。\":\"Send the linking code to the LogHome QQ notification service to receive community messages. The code identifies your account.\",\"展示勋章\":\"Display medal\",\"已上传图片\":\"Uploaded image\",\"已互关\":\"Mutual follows\",\"已兑换\":\"Redeemed\",\"已加入\":\"Joined\",\"已有通行证时，兑换权益会依据对应方案进行续期或升级。\":\"If you already have a Pass, redemption renews or upgrades it according to the plan.\",\"已经看完全部动态了\":\"All posts shown\",\"已经看完全部帖子了\":\"All posts shown\",\"希望申请者回答什么问题？\":\"What should applicants answer?\",\"帖子图片\":\"Post image\",\"常见问题\":\"Frequently asked questions\",\"年付 7200 原木\":\"7,200 logs / year\",\"年付 9600 原木\":\"9,600 logs / year\",\"开启 AI 辅助后，可以查看红石余额与兑换记录。\":\"Enable AI assistance to view redstone balance and exchanges.\",\"开启自动续费后，将在到期时按当前订阅周期自动扣除原木；余额不足时续费失败，权益到期终止。\":\"Auto-renewal deducts logs for your current billing cycle at expiry. If funds are insufficient, renewal fails and benefits expire.\",\"开始时间\":\"Start time\",\"开通价格与有效期\":\"Pricing & duration\",\"归档\":\"Archive\",\"当前信誉\":\"Current reputation\",\"当前密码\":\"Current password\",\"当前消息\":\"Current messages\",\"当前版本生效日期：2026 年 8 月 1 日\":\"Effective August 1, 2026\",\"当前环境无法启用高质量 3D 树场，已切回经典模式。\":\"3D is unavailable in this environment. The classic view is active.\",\"当前设备保存的社区搜索和全站搜索历史。\":\"Community and site search history saved on this device.\",\"形容词\":\"Adjective\",\"快递查询 ↗\":\"Track delivery ↗\",\"成员\":\"Members\",\"我已完成支付，查询结果\":\"I have paid — check status\",\"我的圈子\":\"My circles\",\"我的称号\":\"My title\",\"我的红石\":\"My redstone\",\"我的邀请数据\":\"Invitation statistics\",\"我的邀请码\":\"My invitation code\",\"所有变动均记录账单\":\"All changes are recorded\",\"打开创作中心 →\":\"Open writing studio →\",\"打开支付页面\":\"Open payment page\",\"找到好友，开始交流\":\"Find friends to chat with\",\"把原木送给喜欢的创作者\":\"Support a creator with logs\",\"拒绝\":\"Reject\",\"拖动旋转树场\":\"Drag to rotate\",\"接收时间段\":\"Notification time window\",\"接收设置\":\"Notification preferences\",\"提交反馈\":\"Submit feedback\",\"提交反馈与记录\":\"Feedback & history\",\"提现申请提交后，请保持微信畅通。最低提现金额 0.11 元。\":\"Keep WeChat available after requesting a withdrawal. Minimum amount: CNY 0.11.\",\"提现记录\":\"Withdrawal history\",\"提现金额（元）\":\"Amount (CNY)\",\"搜索\":\"Search\",\"搜索关键词\":\"Search keywords\",\"搜索圈子名称或描述\":\"Search circle names or descriptions\",\"搜索帖子、圈子、用户或作品\":\"Search posts, circles, users or works\",\"搜索常见问题\":\"Search questions\",\"搜索记录\":\"Search history\",\"攒一点原木，为喜欢的作品加油\":\"Collect logs to support your favorite works\",\"支付过程中遇到问题，请在帮助与反馈中联系我们。\":\"If payment fails, contact us through Help & feedback.\",\"收件人\":\"Recipient\",\"收藏为表情\":\"Save as sticker\",\"收货人\":\"Recipient\",\"收货地址\":\"Delivery address\",\"收集可获取成长值\":\"Collect to earn growth points\",\"文本纠错\":\"Text correction\",\"文本纠错缓存\":\"Correction cache\",\"新密码\":\"New password\",\"新用户加入\":\"New users\",\"时间\":\"Time\",\"普通 1 · 深度 2\":\"Standard 1 · Deep 2\",\"普通 1 · 深度 2 · 图像 5\":\"Standard 1 · Deep 2 · Image 5\",\"普通免费 · 通行证智能免费 · 普通 2\":\"Basic free · Smart: free with Pass, otherwise 2\",\"普通用户\":\"Standard users\",\"普通用户每个自然月赠送 6\\n            红石；当月存在有效通行证时不重复领取普通用户月赠。\":\"Standard users receive 6 redstone each calendar month. This grant is not duplicated when a Pass is active that month.\",\"普通用户每月首次访问时到账；通行证月付开通或续费到账，年付按月到账。\":\"Standard users receive the grant on their first monthly visit. Monthly Pass grants arrive on purchase or renewal; annual Pass grants arrive monthly.\",\"暂无世界\":\"No worlds yet\",\"暂无信誉变更记录\":\"No reputation changes\",\"暂无充值订单\":\"No top-up orders\",\"暂无兑换记录\":\"No exchanges yet\",\"暂无内容\":\"No content yet\",\"暂无动态\":\"No posts yet\",\"暂无反馈记录\":\"No feedback yet\",\"暂无提现记录\":\"No withdrawals yet\",\"暂无私信\":\"No messages yet\",\"暂无红石流水\":\"No redstone history yet\",\"暂无订单记录\":\"No orders yet\",\"暂无评论，快来发表第一条评论吧\":\"No comments yet. Be the first to reply.\",\"暂时没有可串门的好友树场\":\"No friends' tree scenes available\",\"暂时没有可选的收件人。\":\"No recipients available\",\"暂时没有开放的实验项目\":\"No experiments available\",\"最近搜索\":\"Recent searches\",\"月付 660 原木\":\"660 logs / month\",\"月付 880 原木\":\"880 logs / month\",\"月付按 30 天、年付按 365\\n            天计算权益有效期，支付成功后立即生效。\":\"Monthly plans last 30 days and annual plans 365 days. Benefits begin after successful payment.\",\"月付通行证在开通及每次续费成功后赠送；年付通行证开通时先赠送一次，之后按月到账。\":\"Monthly Pass grants arrive after purchase and each successful renewal. Annual Pass grants arrive once on purchase, then monthly.\",\"有效期 / 剩余\":\"Expiry / remaining\",\"朋友的邀请码\":\"Friend's invitation code\",\"权益发放至指定账号\":\"Benefits go to the selected account\",\"权益有效期间开放\":\"Available while your Pass is active\",\"权益清晰，消费有据可查\":\"Benefits and spending history\",\"查看全部\":\"View all\",\"查看原木通行证 →\":\"View LogHome Pass →\",\"查看好友\":\"View friends\",\"查看好友与关注\":\"View friends & follows\",\"查看服务规则\":\"View service rules\",\"查看物流\":\"Track delivery\",\"标准版升级超级版时，当期按两档赠送标准的差额补赠红石。\":\"Upgrading to Super Pass grants the redstone difference between tiers for the current cycle.\",\"标题\":\"Title\",\"树场动态\":\"Tree activity\",\"树场场景\":\"Tree scene\",\"树场场景，可拖动或使用左右方向键旋转\":\"Tree scene. Drag or use left and right arrow keys to rotate.\",\"树木成长阶段\":\"Growth stage\",\"正在加载帖子\":\"Loading posts\",\"正在读取账户状态…\":\"Loading account status…\",\"每个兑换码只能使用一次，兑换后无法转移到其他账号。已有会员的时长将按兑换码规则顺延或升级。\":\"Each code is single-use and cannot be transferred after redemption. Existing memberships are extended or upgraded according to the code.\",\"每月赠送\":\"Monthly grant\",\"没有找到相关问题，可以提交反馈。\":\"No answer found? Submit feedback.\",\"浏览器存储\":\"Browser storage\",\"消息分类\":\"Message categories\",\"消息推送\":\"Notifications\",\"消息推送设置\":\"Notification settings\",\"消费时优先使用最早到期的赠送红石，再使用永久有效的兑换红石；原木兑换所得红石不会过期。\":\"Grants expiring soonest are spent first, then permanent exchanged redstone. Redstone exchanged from logs never expires.\",\"添加收货地址\":\"Add delivery address\",\"清理标准纠错和智能纠错的缓存结果，下次使用时重新计算。忽略词条将保留。\":\"Clear basic and smart correction results. They will be recalculated next time. Ignored terms are kept.\",\"清理纠错缓存\":\"Clear correction cache\",\"清空\":\"Clear\",\"清空搜索历史\":\"Clear search history\",\"点击勋章可翻转查看背面。\":\"Select a medal to flip it.\",\"热门搜索\":\"Trending searches\",\"物流详情\":\"Delivery details\",\"状态随时可查、可管理\":\"View and manage status\",\"用于收款的微信号\":\"WeChat ID for payment\",\"申请提现\":\"Request withdrawal\",\"登录后继续\":\"Sign in to continue\",\"省市区\":\"Region\",\"确认兑换\":\"Confirm exchange\",\"确认收货\":\"Confirm delivery\",\"确认订单\":\"Confirm order\",\"确认赠送\":\"Confirm gift\",\"社区管理员\":\"Community administrator\",\"禁言\":\"Mute\",\"禁言成员\":\"Mute member\",\"禁言时长\":\"Mute duration\",\"私信\":\"Message\",\"私信回复\":\"Message replies\",\"种一棵树、补充余额，或参与社区活动，找到适合你的获取方式。\":\"Earn logs from trees or events, or top up your balance.\",\"移出圈子\":\"Remove from circle\",\"笔泡 AI 助手\":\"Writing assistant\",\"简要描述问题\":\"Briefly describe your issue\",\"管理\":\"Manage\",\"管理我的勋章与称号\":\"Manage medals & title\",\"管理收货地址 →\":\"Manage addresses →\",\"粉丝\":\"Followers\",\"红石\":\"Redstone\",\"红石 / 周期\":\"Redstone / cycle\",\"红石 / 月\":\"Redstone / month\",\"红石中心\":\"Redstone account\",\"红石兑换与消费\":\"Redstone exchanges & spending\",\"红石兑换比例和功能消耗如有调整，将以操作前页面展示为准。\":\"If rates or prices change, the amount displayed before the operation applies.\",\"红石变动\":\"Redstone change\",\"红石可以做什么？\":\"Redstone uses\",\"红石流水\":\"Redstone history\",\"红石流水分页\":\"Redstone history pagination\",\"红石用于原木娘助读、AI 创作等智能功能。\":\"Redstone powers reading assistance, AI writing and other smart features.\",\"红石赠送\":\"Redstone grants\",\"绑定作品\":\"Linked work\",\"结束时间\":\"End time\",\"结束时间在次日，可跨午夜接收推送。\":\"The end time falls on the following day. Notifications can span midnight.\",\"继续支付\":\"Continue payment\",\"编辑\":\"Edit\",\"老用户回归\":\"Returning users\",\"联系电话\":\"Phone number\",\"背景图片\":\"Background image\",\"背景封面\":\"Background cover\",\"至\":\"to\",\"获取原木后，回到作品页选择礼物，就能为喜欢的作品打赏。树场收益、充值额度及活动奖励以对应页面说明为准。\":\"Use logs to send gifts from a work's page. Tree earnings, top-up amounts and event rewards follow their respective pages.\",\"获得条件\":\"Unlock requirements\",\"街道、门牌号等\":\"Street, building and apartment\",\"订单已创建，请在支付页面完成付款，再回来查询到账状态。\":\"Order created. Complete payment, then return to check your balance.\",\"设为默认\":\"Set as default\",\"评论配图\":\"Comment image\",\"试试更短的关键词。\":\"Try a shorter keyword.\",\"详细地址\":\"Street address\",\"请描述发生步骤、预期结果和实际情况\":\"Describe the steps, expected result and what happened\",\"请输入原木礼品卡兑换码\":\"Enter a log gift card code\",\"请输入微信号\":\"Enter your WeChat ID\",\"请输入标题\":\"Enter a title\",\"请输入通行证兑换码\":\"Enter a Pass code\",\"请选择互相关注的好友\":\"Select a mutual friend\",\"请选择作品（可选）\":\"Select a work (optional)\",\"请选择圈子\":\"Select a circle\",\"请选择收货地址\":\"Select a delivery address\",\"请选择省市区\":\"Select a region\",\"账号注册满 30\\n          天且无违规记录。圈子名称不能重复，申请通过后你将成为圈主。\":\"Your account must be at least 30 days old with no violations. Circle names must be unique. You become the owner after approval.\",\"赠言（可选）\":\"Message (optional)\",\"赠送、兑换、到期与 AI 使用记录 · 时间均为北京时间\":\"Grants, exchanges, expiry and AI usage · Beijing time\",\"赠送不会为好友开启自动续费，权益发放后无法转移。\":\"Gifts do not enable auto-renewal for your friend. Benefits cannot be transferred after delivery.\",\"赠送与兑换码\":\"Gifts & redemption codes\",\"赠送好友\":\"Gift a friend\",\"赠送好友前请确认接收账号和通行证方案；赠送成功后，权益发放至所选好友账号。\":\"Confirm the recipient and plan before gifting. Benefits go to the selected friend's account.\",\"赠送时长\":\"Gift duration\",\"赠送通行证\":\"Gift a Pass\",\"超级原木通行证有效期内暂不支持降级；可在到期后重新选择通行证档位。\":\"Downgrades are unavailable while a Super Pass is active. Select a new tier after expiry.\",\"超级通行证\":\"Super Pass\",\"输入关键词，开始发现社区内容。\":\"Enter a keyword to search the community.\",\"输入朋友的邀请码\":\"Enter your friend's invitation code\",\"输入消息...\":\"Type a message…\",\"返回自己的树场\":\"Back to my tree scene\",\"还没有可以赠送的好友，先与朋友互相关注吧。\":\"No eligible friends yet. Follow each other first.\",\"还没有收货地址\":\"No delivery addresses yet\",\"还没有消息，开始聊天吧！\":\"No messages yet. Start a conversation.\",\"这个分类暂时没有商品，试试其他分类吧。\":\"No products in this category. Try another.\",\"进入实验室\":\"Open lab\",\"选择关注或粉丝中的收件人\":\"Select someone you follow or a follower\",\"选择分类\":\"Select category\",\"选择名词\":\"Select noun\",\"选择好友\":\"Select friend\",\"选择形容词\":\"Select adjective\",\"选择规格\":\"Select options\",\"通行证与红石规则\":\"Pass & redstone rules\",\"通行证方案\":\"Pass plan\",\"通行证档位\":\"Pass tier\",\"通行证赠送、升级补赠和普通用户月赠红石自到账日起 3\\n            个月内有效。\":\"Redstone from Pass grants, upgrade adjustments and standard monthly grants expires 3 months after receipt.\",\"通过\":\"Approve\",\"邀请类型\":\"Invitation type\",\"邮箱地址\":\"Email address\",\"重新读取兑换记录\":\"Reload exchange history\",\"问问原木娘\":\"Ask the reading assistant\",\"问题描述\":\"Issue details\",\"需要支付\":\"Amount due\",\"项目\":\"Item\",\"预览\":\"Preview\",\"预计获得\":\"You receive\",\"领取条件由系统验证，以社区邀请规则为准。\":\"Eligibility is checked against the community invitation rules.\",\"领取邀请奖励\":\"Claim invitation reward\",\"验证并兑换\":\"Validate & redeem\",\"验证码\":\"Verification code\",\"验证问题\":\"Verification question\",\" / 售罄\":\" / Sold out\",\" / 通行证专属\":\" / Pass only\",\" · 剩余 \":\" · Remaining \",\" · 赠送 \":\" · Grant \",\" 个月，使用时优先消耗临近到期的赠送红石。\":\" months. Grants expiring soonest are spent first.\",\"30 天\":\"30 days\",\"365 天\":\"365 days\",\"365 天，不自动续费\":\"365 days, no auto-renewal\",\"TA的关注关系\":\"Follow connections\",\"TA还没有互相关注的好友\":\"No mutual friends yet\",\"TA还没有关注任何人\":\"Not following anyone yet\",\"{p0} · 成员\":\"{p0} · Members\",\"{p0} 位成员\":\"{p0} members\",\"{p0} 的树场\":\"{p0}'s tree scene\",\"{p0} 秒后重发\":\"Resend in {p0}s\",\"不限\":\"Any\",\"互相关注\":\"Mutual follows\",\"你还没有关注任何人\":\"You are not following anyone yet\",\"使用此挂件\":\"Use frame\",\"保存地址\":\"Save address\",\"保存更改\":\"Save changes\",\"兑换处理中…\":\"Exchanging…\",\"全部可见勋章均已解锁。\":\"All available medals unlocked\",\"全量权益\":\"Full benefits\",\"关注 ({p0})\":\"Follows ({p0})\",\"关闭\":\"Close\",\"关闭树场通知\":\"Disable tree notifications\",\"关闭自动续费\":\"Turn off auto-renewal\",\"写下你的回复…\":\"Write a reply…\",\"写信\":\"Write letter\",\"创建圈子\":\"Create circle\",\"创建圈子 →\":\"Create circle →\",\"刷新\":\"Refresh\",\"刷新中…\":\"Refreshing…\",\"刷新余额\":\"Refresh balance\",\"刷新树场\":\"Refresh scene\",\"刷新流水\":\"Refresh history\",\"刷新消息\":\"Refresh messages\",\"刷新物流\":\"Refresh tracking\",\"加入圈子\":\"Join circle\",\"加入感兴趣的圈子，认识同好。\":\"Join a circle that interests you.\",\"加入时需要审核\":\"Approval required to join\",\"动态排序\":\"Sort posts\",\"勋章详情\":\"Medal details\",\"历史信件\":\"Archived letters\",\"原木社区荣誉\":\"LogHome honor\",\"双倍成长、限定身份与全部会员权益\":\"Double growth, exclusive profile perks and full member benefits\",\"发布\":\"Publish\",\"发布新帖\":\"New post\",\"发条友善的评论…\":\"Write a comment…\",\"发现圈子\":\"Discover circles\",\"发货后可查看物流动态\":\"Tracking is available after dispatch.\",\"发送中…\":\"Sending…\",\"发送验证码\":\"Send code\",\"取得账户信息后显示当前赠送标准。\":\"Grant details appear after loading your account.\",\"取消展示\":\"Hide medal\",\"取消移出\":\"Undo removal\",\"取消管理员\":\"Remove administrator\",\"启用 QQ 推送\":\"Enable QQ notifications\",\"商品详情\":\"Product details\",\"圈主\":\"Owner\",\"圈子推荐暂时为空\":\"No recommended circles\",\"圈子简介将显示在这里。\":\"Your circle description appears here.\",\"圈子设置\":\"Circle settings\",\"圈子详情\":\"Circle details\",\"在个人主页展示称号\":\"Show title on profile\",\"处理中\":\"In progress\",\"夜景\":\"Night scene\",\"实物周边\":\"Physical merchandise\",\"尊重圈友，友善交流。\":\"Treat circle members respectfully.\",\"尚未取得余额\":\"Balance unavailable\",\"尚未选择展示勋章\":\"No medal selected\",\"展示此勋章\":\"Display medal\",\"已使用约 {p0}，可用配额 {p1}\":\"About {p0} used, quota {p1}\",\"已关注\":\"Following\",\"已售罄\":\"Sold out\",\"已处理\":\"Handled\",\"已种植\":\"Planted\",\"已移出圈子\":\"Removed from circle\",\"已解决\":\"Resolved\",\"已达成\":\"Completed\",\"帖子详情\":\"Post details\",\"开启自动续费\":\"Turn on auto-renewal\",\"开始与对方聊天吧\":\"Start a conversation\",\"开通通行证\":\"Get a Pass\",\"当前浏览器暂不支持容量统计\":\"Storage estimates are unavailable in this browser.\",\"当前通行证\":\"Current Pass\",\"待回复\":\"Awaiting reply\",\"待解锁勋章\":\"Medals to unlock\",\"我的好友\":\"My friends\",\"我的树场\":\"My tree scene\",\"我的订单\":\"My orders\",\"提交创建申请\":\"Submit circle request\",\"提交后等待发货\":\"Await dispatch after ordering\",\"搜索帖子、圈子与创作者\":\"Search posts, circles and creators\",\"收藏中…\":\"Saving…\",\"收起\":\"Collapse\",\"新增地址\":\"Add address\",\"新增收货地址\":\"Add delivery address\",\"新窗口打开\":\"Open in new window\",\"暂不可用\":\"Unavailable\",\"暂无公告\":\"No announcements\",\"暂无成员\":\"No members\",\"暂无禁言或移出记录\":\"No moderation records\",\"暂时没有待审核申请\":\"No pending requests\",\"更快成长，获得更完整的社区体验\":\"Faster growth and member benefits\",\"未填写原因\":\"No reason given\",\"未填写验证信息\":\"No verification answer\",\"未种植\":\"Not planted\",\"权益与服务规则\":\"Benefits & service rules\",\"来这里与圈友交流吧。\":\"Chat with your circle here.\",\"查看 {p0} 条相同消息\":\"View {p0} similar messages\",\"查看 {p0} 的主页\":\"View {p0}'s profile\",\"查看关联作品\":\"View linked work\",\"查看勋章正面\":\"View medal front\",\"查看勋章详情\":\"View medal details\",\"查看勋章：{p0}\":\"View medal: {p0}\",\"查看第 {p0} 张图片\":\"View image {p0}\",\"查看获得条件\":\"View unlock requirements\",\"查看详情\":\"View details\",\"正在使用\":\"In use\",\"正在启动实验项目…\":\"Starting experiment…\",\"每 30 天，自动续费可关闭\":\"Every 30 days; auto-renewal can be disabled\",\"永久 \":\"Permanent \",\"永久有效\":\"Never expires\",\"永久禁言\":\"Permanently muted\",\"没有找到相关圈子，试试其他分类或关键词。\":\"No circles found. Try another category or keyword.\",\"浏览全部圈子 →\":\"Browse all circles →\",\"由官方授予，关注社区活动获取。\":\"Awarded by LogHome through community events.\",\"申请已提交\":\"Request submitted\",\"登录后查看我的红石\":\"Sign in to view redstone\",\"登录后，在这里查看你加入的圈子。\":\"Sign in to view your circles.\",\"登录已失效\":\"Session expired\",\"确认上次兑换结果\":\"Check previous exchange\",\"确认扣款并下单\":\"Confirm payment & order\",\"确认禁言\":\"Confirm mute\",\"禁言至 {p0}\":\"Muted until {p0}\",\"私信对话\":\"Conversation\",\"称号词条：{p0}\":\"Title term: {p0}\",\"立即购买\":\"Buy now\",\"等待确认…\":\"Awaiting confirmation…\",\"管理员\":\"Administrator\",\"粉丝 ({p0})\":\"Followers ({p0})\",\"组合你的专属称号\":\"Build your title\",\"继续完善你的故事\":\"Continue your story\",\"继续逛商城\":\"Keep browsing\",\"编辑帖子\":\"Edit post\",\"编辑收货地址\":\"Edit delivery address\",\"翻转查看勋章背面\":\"Flip medal\",\"虚拟权益\":\"Digital benefits\",\"补差价升级{p0}\":\"Upgrade for {p0}\",\"解除禁言\":\"Unmute\",\"设为管理员\":\"Make administrator\",\"设为默认收货地址\":\"Set as default address\",\"请选择规格\":\"Select options\",\"读取中…\":\"Loading…\",\"购买后自动发放\":\"Delivered automatically after purchase\",\"赠送红石有效期为 \":\"Granted redstone expires after \",\"轻享会员\":\"Pass\",\"返回商城\":\"Back to store\",\"返回圈子\":\"Back to circle\",\"返回消息中心\":\"Back to messages\",\"返回通行证\":\"Back to Pass\",\"还没有互相关注的好友，去关注别人吧\":\"No mutual friends yet. Follow someone to get started.\",\"还没有人关注TA\":\"No followers yet\",\"还没有人关注你\":\"You have no followers yet\",\"还没有加入圈子，去广场寻找同好吧。\":\"You haven't joined any circles. Browse circles to get started.\",\"还没有获得勋章，看看有哪些可以解锁吧。\":\"No medals yet. Explore medals you can unlock.\",\"这位圈友还没有填写签名\":\"No bio yet\",\"进行中\":\"In progress\",\"退出\":\"Leave\",\"问题已提交，客服正在处理。\":\"Your issue has been submitted to support.\",\"高质量 3D\":\"High quality 3D\",\"上传图片大小不能超过 2MB!\":\"Images must be under 2 MB.\",\"上传失败，请稍后重试\":\"Upload failed. Try again.\",\"下单成功\":\"Order placed\",\"了解通行证\":\"View Pass benefits\",\"保存失败，请稍后重试\":\"Could not save. Try again.\",\"信件尚未发送，确定离开？\":\"Your letter has not been sent. Leave this page?\",\"信件已发送\":\"Letter sent\",\"关注成功\":\"Following\",\"分享口令已复制\":\"Share code copied\",\"分享失败，请重试\":\"Could not share. Try again.\",\"删除失败，请稍后重试\":\"Could not delete. Try again.\",\"到期将自动扣除 {p0} 原木续费。\":\"Renewal will deduct {p0} logs at expiry.\",\"加载作品失败\":\"Could not load works\",\"加载圈子失败\":\"Could not load circles\",\"加载失败，请稍后重试\":\"Could not load. Try again.\",\"加载帖子详情失败\":\"Could not load post\",\"加载更早消息失败\":\"Could not load earlier messages\",\"加载消息失败\":\"Could not load messages\",\"升级报价暂不可用，请刷新后重试\":\"Upgrade pricing is unavailable. Refresh and try again.\",\"反馈已提交\":\"Feedback submitted\",\"发布失败，请重试\":\"Could not publish. Try again.\",\"发布成功，等待审核\":\"Submitted for review\",\"发送失败，请重试\":\"Could not send. Try again.\",\"可填写拒绝原因\":\"Rejection reason (optional)\",\"回复内容不能为空\":\"Enter a reply or add an image\",\"回复失败，请稍后重试\":\"Could not reply. Try again.\",\"回复成功\":\"Reply posted\",\"图片上传中，请稍候再发布\":\"Wait for images to finish uploading.\",\"图片上传失败\":\"Image upload failed\",\"图片上传失败，请稍后重试\":\"Image upload failed. Try again.\",\"图片上传失败，请重试\":\"Image upload failed. Try again.\",\"图片过大，请选择 5MB 以内的图片\":\"Choose an image under 5 MB.\",\"圈主需要先转让圈子，才能退出\":\"Transfer circle ownership before leaving.\",\"圈子设置已保存\":\"Circle settings saved\",\"圈子资料已保存，但入圈设置未保存：{p0}\":\"Circle details saved, but join settings failed: {p0}\",\"地址已保存\":\"Address saved\",\"复制口令与朋友分享\":\"Copy this code to share with friends\",\"复制此链接邀请好友\":\"Copy this link to invite friends\",\"头像已更新\":\"Avatar updated\",\"头像挂件已更新\":\"Avatar frame updated\",\"好友信息加载失败\":\"Could not load friend\",\"存档尚未确认\":\"Save not confirmed\",\"完成\":\"Done\",\"实验项目启动失败\":\"Experiment could not start\",\"实验项目未确认存档成功。退出可能丢失本次未保存进度。\":\"The experiment has not confirmed saving. Leaving may lose unsaved progress.\",\"实验项目未能加载，请检查网络后重试\":\"Experiment could not load. Check your connection and try again.\",\"容量统计暂不可用\":\"Storage estimates unavailable\",\"密码已修改，请重新登录\":\"Password changed. Sign in again.\",\"封面已更新\":\"Cover updated\",\"将扣除 {p0} 原木{p1}。\":\"This will deduct {p0} logs{p1}.\",\"尚有未发送的私信，离开后将丢失内容。\":\"You have an unsent message. Leaving will discard it.\",\"展示勋章已更新\":\"Displayed medal updated\",\"已加入圈子\":\"Circle joined\",\"已取消关注\":\"Unfollowed\",\"已向 ID {p0} 赠送通行证\":\"Pass gifted to ID {p0}\",\"已复制到剪贴板\":\"Copied to clipboard\",\"已添加到表情收藏\":\"Saved to stickers\",\"已确认收货\":\"Delivery confirmed\",\"已移入历史消息\":\"Archived\",\"已退出圈子\":\"Left circle\",\"帖子删除成功\":\"Post deleted\",\"开通{p0}\":\"Get {p0}\",\"当前权益保留至到期日，之后不再自动扣除原木。\":\"Your benefits remain until expiry. No logs will be deducted for renewal.\",\"恢复成员权限\":\"Restore member access\",\"您在该圈子中已被禁言{p0}，无法发布帖子\":\"You are muted in this circle{p0} and cannot post.\",\"您已被禁言，无法发布帖子\":\"You are muted and cannot post.\",\"拒绝入圈申请\":\"Reject join request\",\"挂件权益\":\"Frame requirements\",\"推送时间已保存\":\"Notification window saved\",\"推送状态已更新\":\"Notification preferences updated\",\"提现申请已提交，请保持微信畅通\":\"Withdrawal requested. Keep WeChat available.\",\"搜索历史已清空\":\"Search history cleared\",\"操作失败，请重试\":\"Operation failed. Try again.\",\"操作成功\":\"Done\",\"支付成功，原木已到账\":\"Payment confirmed. Logs added to your balance.\",\"收藏失败，请重试\":\"Could not save sticker. Try again.\",\"昵称不能为空\":\"Enter a nickname\",\"更改尚未保存，确定离开？\":\"You have unsaved changes. Leave this page?\",\"最多添加 1 张配图或表情包\":\"Add up to one image or sticker\",\"树场场景已更新\":\"Tree scene updated\",\"树场通知设置已更新\":\"Tree notifications updated\",\"此树场场景需要原木通行证或超级原木通行证。\":\"This scene requires a Pass or Super Pass.\",\"每篇帖子最多上传 9 张图片\":\"Add up to 9 images per post\",\"消息正在发送，请稍候\":\"Your message is sending. Please wait.\",\"申请加入圈子\":\"Request to join circle\",\"申请已提交，等待审核\":\"Request submitted for approval\",\"申请已提交，请等待审核\":\"Request submitted for approval\",\"确定{p0} {p1} 的管理员身份？\":\"Confirm {p0} administrator access for {p1}?\",\"确定{p0} {p1}？\":\"Confirm {p0} for {p1}?\",\"确定将 {p0} 移出圈子？可填写原因。\":\"Remove {p0} from this circle? You may enter a reason.\",\"确定清理可重新生成的纠错缓存？忽略词条和作品内容会保留。\":\"Clear correction cache? Ignored terms and your works will be kept.\",\"确定清空当前设备的搜索历史？\":\"Clear search history on this device?\",\"确定要删除该帖子吗？\":\"Delete this post?\",\"确定要删除这条评论吗？\":\"Delete this comment?\",\"确定退出当前账号？\":\"Log out of this account?\",\"确认删除\":\"Confirm deletion\",\"确认开通\":\"Confirm Pass purchase\",\"禁言提示\":\"Posting unavailable\",\"离开\":\"Leave\",\"离开写信\":\"Leave letter\",\"离开编辑\":\"Leave editor\",\"离开聊天\":\"Leave conversation\",\"称号已保存\":\"Title saved\",\"移出成员\":\"Remove member\",\"管理员设置\":\"Administrator settings\",\"纠错缓存已清理\":\"Correction cache cleared\",\"绑定码已刷新\":\"Linking code refreshed\",\"绑定码已复制\":\"Linking code copied\",\"继续浏览\":\"Keep browsing\",\"继续等待\":\"Keep waiting\",\"继续编辑\":\"Keep editing\",\"编辑失败，请重试\":\"Could not save changes. Try again.\",\"编辑成功\":\"Changes saved\",\"缺少用户ID参数\":\"User ID is missing\",\"自动续费设置已更新\":\"Auto-renewal updated\",\"获取用户信息失败\":\"Could not load account\",\"获得 {p0} 成长值\":\"Earned {p0} growth points\",\"补差价升级\":\"Confirm upgrade\",\"订单状态已更新\":\"Order status updated\",\"评论内容不能为空\":\"Enter a comment or add an image\",\"评论删除成功\":\"Comment deleted\",\"评论失败，请稍后重试\":\"Could not post comment. Try again.\",\"评论成功\":\"Comment posted\",\"评论最多 500 字\":\"Comments can contain up to 500 characters.\",\"该收货地址不存在\":\"Delivery address not found\",\"请允许弹出窗口后重试\":\"Allow pop-up windows and try again.\",\"请先登录后使用表情包\":\"Sign in to use stickers\",\"请先登录后再上传评论配图\":\"Sign in to upload a comment image\",\"请填写入圈验证信息\":\"Answer the join verification question\",\"请选择 5MB 以内的 JPG、PNG、WebP 或 GIF 图片\":\"Choose a JPG, PNG, WebP or GIF under 5 MB.\",\"请选择 JPG、PNG、WebP 或 GIF 图片\":\"Choose a JPG, PNG, WebP or GIF.\",\"请选择图片文件\":\"Choose an image\",\"请选择完整的省市区\":\"Select a complete region\",\"账号已切换，请刷新后重试\":\"Account changed. Refresh and try again.\",\"资料已更新\":\"Profile updated\",\"退出后将不再是圈子成员，确定退出？\":\"Leave this circle? You will no longer be a member.\",\"退出圈子\":\"Leave circle\",\"通知设置暂不可用，请刷新重试\":\"Notification settings unavailable. Refresh and try again.\",\"通行证专属场景\":\"Pass scene\",\"通行证兑换成功\":\"Pass redeemed\",\"通行证已生效\":\"Pass activated\",\"邀请奖励已领取\":\"Invitation reward claimed\",\"邀请链接已复制\":\"Invitation link copied\",\"邮箱已绑定\":\"Email linked\",\"隐私设置加载失败\":\"Could not load privacy settings\",\"隐私设置已保存\":\"Privacy settings saved\",\"需要{p0}才能使用此挂件。\":\"This frame requires {p0}.\",\"验证码已发送\":\"Verification code sent\",\"全部\":\"All\",\"帖子\":\"Posts\",\"圈子\":\"Circles\",\"用户\":\"Users\",\"最新\":\"Latest\",\"热门\":\"Trending\",\"最新动态\":\"Latest\",\"热门讨论\":\"Trending\",\"成员列表\":\"Members\",\"入圈申请\":\"Join requests\",\"禁言与移出记录\":\"Moderation history\",\"1 小时\":\"1 hour\",\"1 天\":\"1 day\",\"7 天\":\"7 days\",\"永久\":\"Permanent\",\"评论与回复\":\"Comments & replies\",\"新增关注\":\"New followers\",\"赞与收藏\":\"Likes & collections\",\"系统通知\":\"System notifications\",\"活动消息\":\"Event messages\",\"暂无{label}\":\"No {label} yet\",\"累计邀请新用户\":\"New users invited\",\"累计邀请回归\":\"Returning users invited\",\"本月新用户\":\"New users this month\",\"本月回归用户\":\"Returning users this month\",\"全部商品\":\"All products\",\"全部好物\":\"All categories\",\"写作灵感\":\"Writing inspiration\",\"全部订单\":\"All orders\",\"待发货\":\"Awaiting dispatch\",\"已发货\":\"Dispatched\",\"已完成\":\"Completed\",\"已取消\":\"Cancelled\",\"专属通行证标识\":\"Pass profile badge\",\"展示个人主页与社区会员身份\":\"Show your membership on your profile\",\"1.2 倍成长加速\":\"1.2× growth\",\"签到、阅读和创作获得 1.2 倍成长进度\":\"Earn 1.2× growth from check-in, reading and writing\",\"每月 100 红石\":\"100 redstone per month\",\"月付购买和续费赠送，年付每月到账；3 个月内有效\":\"Granted on monthly purchase and renewal, or monthly for annual plans. Expires in 3 months.\",\"阅读与创作增强\":\"Reading & writing extras\",\"更多个性设置与头像挂件\":\"More customization and avatar frames\",\"超级会员限定身份\":\"Exclusive Super Pass profile\",\"蓝金徽章、主页氛围与专属昵称样式\":\"Blue-gold badge, profile styling and nickname style\",\"双倍成长加速\":\"2× growth\",\"签到、阅读和创作获得 2 倍成长进度\":\"Earn 2× growth from check-in, reading and writing\",\"每月 200 红石\":\"200 redstone per month\",\"全部标准权益\":\"All standard benefits\",\"包含标准通行证权益及新功能优先体验\":\"Standard Pass benefits and early access to new features\",\"月付\":\"Monthly\",\"年付\":\"Annual\",\"橡树岛屿\":\"Oak island\",\"白桦花境\":\"Birch blossoms\",\"雪地针叶林\":\"Snowy forest\",\"沙漠绿洲\":\"Desert oasis\",\"樱花庭院\":\"Cherry garden\",\"暮色森林\":\"Twilight forest\",\"{p0} / {p1} 成长值\":\"{p0} / {p1} growth points\",\"{p0} · {p1} 原木\":\"{p0} · {p1} logs\",\"{p0} · {p1} 天\":\"{p0} · {p1} days\",\"{p0} 位成员 / {p1} 篇帖子\":\"{p0} members / {p1} posts\",\"{p0} 元\":\"CNY {p0}\",\"{p0} 原木\":\"{p0} logs\",\"{p0} 原木{p1}\":\"{p0} logs{p1}\",\"{p0} 已生效\":\"{p0} active\",\"{p0} 成长值\":\"{p0} growth points\",\"{p0} 收集了 {p1} 成长值\":\"{p0} collected {p1} growth points\",\"{p0} 邀请你加入原木社区\":\"{p0} invites you to LogHome\",\"上次 {p0} 红石兑换的结果尚待确认。重试会复用同一兑换编号，避免重复扣除原木。\":\"Your previous exchange of {p0} redstone is awaiting confirmation. Retrying uses the same reference to avoid duplicate charges.\",\"下单时间 {p0}\":\"Ordered {p0}\",\"创建于 {p0}\":\"Created {p0}\",\"到期时间 {p0}\":\"Expires {p0}\",\"原木余额 {p0}，去皮原木 {p1}\":\"{p0} logs, {p1} stripped logs\",\"回复 @{p0}\":\"Reply to @{p0}\",\"回复 {p0}：\":\"Reply to {p0}:\",\"回归用户奖励 {p0} 原木\":\"Returning user reward: {p0} logs\",\"已获得 {p0}\":\"Unlocked {p0}\",\"已获得 {p0} 枚勋章\":\"{p0} medals unlocked\",\"当前邮箱：{p0}\":\"Current email: {p0}\",\"待解锁 {p0}\":\"Locked {p0}\",\"提交于 {p0}\":\"Submitted {p0}\",\"支付 {p0} 去皮原木 + {p1} 原木\":\"Paid {p0} stripped logs + {p1} logs\",\"新用户奖励 {p0} 原木\":\"New user reward: {p0} logs\",\"暂无{p0}\":\"No {p0} yet\",\"最近到期：{p0}（北京时间）\":\"Next expiry: {p0} (Beijing time)\",\"有效时间：{p0} 至 {p1}\":\"Valid: {p0} to {p1}\",\"本月邀请上限 {p0} 人\":\"Monthly invitation limit: {p0}\",\"本次扣除 {p0} 去皮原木 + {p1} 原木\":\"This deducts {p0} stripped logs + {p1} logs\",\"查询时间 {p0}\":\"Checked {p0}\",\"没有找到“{p0}”的相关内容\":\"No results for “{p0}”\",\"第 {p0} / {p1} 页 · {p2} 条\":\"Page {p0} / {p1} · {p2} records\",\"续费价格 {p0} 原木\":\"Renewal: {p0} logs\",\"获得时间 {p0}\":\"Unlocked {p0}\",\"解锁称号词条：{p0}\":\"Unlocked title term: {p0}\",\"订单号 {p0}\":\"Order {p0}\",\"评论 ({p0})\":\"Comments ({p0})\",\"橡岛晴岚\":\"Oak island\",\"白桦花涧\":\"Birch blossoms\",\"雪杉云境\":\"Snowy spruce\",\"樱庭春晓\":\"Cherry garden\",\"金合旷野\":\"Acacia savanna\",\"红杉泽影\":\"Redwood swamp\",\"← 获取原木\":\"← Get logs\",\"一键收集\":\"Collect all\",\"上次操作结果尚未确认，请先刷新树场和余额后再操作。\":\"Your last operation is unconfirmed. Refresh the tree and balances before continuing.\",\"共 {p0} 条活动消息 · 最新消息在前\":\"{p0} event messages · Newest first\",\"刷新核对\":\"Refresh to verify\",\"前往登录 →\":\"Sign in →\",\"去完成 →\":\"Start task →\",\"如何获取原木\":\"How to get logs\",\"完成任务、收集经验球，继续积累成长值。\":\"Complete tasks and collect orbs to earn growth points.\",\"完整树场与好友互动 →\":\"Tree scene & friends →\",\"已自动完成\":\"Completed automatically\",\"成长值\":\"Growth points\",\"成长值、经验球、收获和余额由当前账号的树场记录决定。\":\"Growth, orbs, harvests and balances belong to your current account.\",\"我的原木\":\"My logs\",\"我的树木\":\"My tree\",\"我的苹果\":\"My apples\",\"收获中…\":\"Harvesting…\",\"收获原木与苹果\":\"Harvest logs & apples\",\"收集中…\":\"Collecting…\",\"收集成长值\":\"Collect growth points\",\"收集经验球 {p0}，成长值 {p1}\":\"Collect orb {p0}, worth {p1} growth points\",\"新的经验球出现后会显示在这里。\":\"New orbs will appear here.\",\"日常任务\":\"Daily tasks\",\"暂无日常任务\":\"No daily tasks\",\"暂无活动消息\":\"No event messages\",\"暂无经验任务\":\"No experience tasks\",\"查看活动详情 →\":\"View event →\",\"查看活动详情 ↗\":\"View event ↗\",\"树木信息暂不可用，请刷新重试。\":\"Tree details unavailable. Refresh and try again.\",\"树木成长进度\":\"Tree growth\",\"树木正在开花\":\"Your tree is flowering\",\"树苗主题\":\"Tree theme\",\"树苗正在生长\":\"Your sapling is growing\",\"正在准备消息列表…\":\"Preparing messages…\",\"正在确认账户…\":\"Checking account…\",\"正在读取树木信息…\":\"Loading tree…\",\"正在读取活动消息…\":\"Loading event messages…\",\"活动消息与账号关联，登录后可查看收到的通知。\":\"Sign in to view event notifications for your account.\",\"活动消息分页\":\"Event message pagination\",\"登录后培育你的树木\":\"Sign in to grow your tree\",\"登录后查看活动消息\":\"Sign in to view event messages\",\"登录状态已过期\":\"Session expired\",\"社区活动的参与条件、截止时间与奖励说明。\":\"Event eligibility, deadlines and rewards.\",\"种下你的第一份期待\":\"Plant your first sapling\",\"种下树苗\":\"Plant sapling\",\"种下树苗后，开始积累成长值。\":\"Plant a sapling to start earning growth points.\",\"种植中…\":\"Planting…\",\"种植后查看今日任务\":\"Plant a tree to view daily tasks\",\"种植后查看阅读等经验任务\":\"Plant a tree to view reading and experience tasks\",\"经验任务\":\"Experience tasks\",\"经验球\":\"Experience orbs\",\"继续发现好作品 →\":\"Explore works →\",\"继续种下下一棵树\":\"Plant your next tree\",\"获取原木的方法 →\":\"How to get logs →\",\"这条通知暂无详情链接\":\"No details link available\",\"这棵树可以收获了\":\"Your tree is ready to harvest\",\"阅读、分享与交流，让你的树慢慢长大。\":\"Reading and community participation help your tree grow.\",\"阅读奖励与树场\":\"Reading rewards & trees\",\"阅读等经验任务由服务端按实际进度自动结算，刷新可查看最新状态。\":\"Reading and other experience tasks are settled automatically. Refresh for the latest status.\",\"领取\":\"Claim\",\"领取中…\":\"Claiming…\",\" 个 · 成长值 \":\" orbs · Growth points \",\"待收集 \":\"To collect: \",\"{p0} / {p1} 已完成\":\"{p0} / {p1} completed\",\"{p0} · 已结算 {p1} / {p2} 次\":\"{p0} · Settled {p1} / {p2} times\",\"· 任务成长值 {p0} 倍加成\":\"· {p0}× task growth\",\"基础 {p0} × {p1}\":\"Base {p0} × {p1}\",\"多出的 {p0} 成长值在下次种植时继续保留。\":\"Your extra {p0} growth points carry over to the next tree.\",\"第 {p0} / {p1} 页\":\"Page {p0} / {p1}\",\"跳到首页内容\":\"Skip to home content\",\"跳到阅读内容\":\"Skip to reading content\",\"搜索历史\":\"Search history\",\"书籍\":\"Books\",\"没有找到相关内容\":\"No results found\",\"在搜索页面中查看\":\"View all search results\",\"{count}人\":\"{count} members\",\"原木社区开源计划\":\"LogHome open source\",\"非 Minecraft 官方产品。未获 Mojang 许可，亦与 Mojang 无任何关联。\":\"Not an official Minecraft product. Not approved by or associated with Mojang.\",\"© {year} 原木社区 版权所有\":\"© {year} LogHome. All rights reserved.\",\"帖子正在处理，请稍候\":\"Your post is being processed. Please wait.\",\"确认\":\"Confirm\",\"连续包月\":\"Monthly subscription\",\"购买年卡\":\"Annual plan\",\"请输入内容\":\"Enter content\",\"请输入有效的邮箱地址\":\"Enter a valid email address\",\"请输入验证码\":\"Enter the verification code\",\"请输入当前密码\":\"Enter your current password\",\"密码需要 6-20 位字母、数字或下划线\":\"Use 6–20 letters, digits or underscores.\",\"两次输入的密码不一致\":\"Passwords do not match.\",\"设置\":\"Enable\",\"设置正在保存，请稍候\":\"Settings are saving. Please wait.\",\"种植\":\"Growing\",\"开花\":\"Flowering\",\"结果\":\"Ready to harvest\",\"个性装扮\":\"Personalization\",\"勋章与称号\":\"Medals & title\",\"通行证权益\":\"Pass benefits\",\"服务规则\":\"Service rules\",\"商品\":\"Products\",\"请输入收货人\":\"Enter recipient name\",\"请输入 5-20 位联系电话\":\"Enter a 5–20 digit phone number\",\"请输入详细地址\":\"Enter a street address\",\"地址保存结果异常，请刷新核对\":\"Address save could not be confirmed. Refresh to verify.\",\"编辑所选地址\":\"Edit selected address\",\"返回结算\":\"Back to checkout\",\"保存并使用地址\":\"Save & use address\"}");
+
+/***/ }),
+/* 77 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(139);
 
 
 /***/ }),
-/* 66 */
+/* 78 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function(URLSearchParams) {/* harmony import */ var _utils_uri_resolver_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13);
-/* harmony import */ var _utils_reading_seo__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(34);
+/* WEBPACK VAR INJECTION */(function(URLSearchParams) {/* harmony import */ var _utils_uri_resolver_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(16);
+/* harmony import */ var _utils_reading_seo__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(39);
 
 
 /* harmony default export */ __webpack_exports__["default"] = (function ({
@@ -13473,25 +14018,25 @@ __webpack_require__.r(__webpack_exports__);
     }
   }
 });
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URLSearchParams"]))
 
 /***/ }),
-/* 67 */
+/* 79 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_error_vue_vue_type_style_index_0_id_5eb69f1c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(38);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_error_vue_vue_type_style_index_0_id_5eb69f1c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(46);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_error_vue_vue_type_style_index_0_id_5eb69f1c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_error_vue_vue_type_style_index_0_id_5eb69f1c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_error_vue_vue_type_style_index_0_id_5eb69f1c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_error_vue_vue_type_style_index_0_id_5eb69f1c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
-/* 68 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.__nuxt-error-page {\n  padding: 1rem;\n  background: #F7F8FB;\n  color: #47494E;\n  text-align: center;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  flex-direction: column;\n  font-family: sans-serif;\n  font-weight: 100 !important;\n  -ms-text-size-adjust: 100%;\n  -webkit-text-size-adjust: 100%;\n  -webkit-font-smoothing: antialiased;\n  position: absolute;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n}\n.__nuxt-error-page .error {\n  max-width: 450px;\n}\n.__nuxt-error-page .title {\n  font-size: 1.5rem;\n  margin-top: 15px;\n  color: #47494E;\n  margin-bottom: 8px;\n}\n.__nuxt-error-page .description {\n  color: #7F828B;\n  line-height: 21px;\n  margin-bottom: 10px;\n}\n.__nuxt-error-page a {\n  color: #7F828B !important;\n  text-decoration: none;\n}\n.__nuxt-error-page .logo {\n  position: fixed;\n  left: 12px;\n  bottom: 12px;\n}\n", ""]);
@@ -13500,22 +14045,22 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 69 */
+/* 81 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_loading_vue_vue_type_style_index_0_id_75aa414c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(39);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_loading_vue_vue_type_style_index_0_id_75aa414c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(47);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_loading_vue_vue_type_style_index_0_id_75aa414c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_loading_vue_vue_type_style_index_0_id_75aa414c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_loading_vue_vue_type_style_index_0_id_75aa414c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_nuxt_loading_vue_vue_type_style_index_0_id_75aa414c_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
-/* 70 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.nuxt-progress {\n  position: fixed;\n  top: 0px;\n  left: 0px;\n  right: 0px;\n  height: 6px;\n  width: 0%;\n  opacity: 1;\n  transition: width 0.1s, opacity 0.4s;\n  background-color: #947358;\n  z-index: 999999;\n}\n.nuxt-progress.nuxt-progress-notransition {\n  transition: none;\n}\n.nuxt-progress-failed {\n  background-color: red;\n}\n", ""]);
@@ -13524,27 +14069,27 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 71 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(72);
+var content = __webpack_require__(84);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
-__webpack_require__(5).default("6cce87ea", content, true)
+__webpack_require__(4).default("6cce87ea", content, true)
 
 /***/ }),
-/* 72 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
-var ___CSS_LOADER_GET_URL_IMPORT___ = __webpack_require__(73);
-var ___CSS_LOADER_URL_IMPORT_0___ = __webpack_require__(74);
-var ___CSS_LOADER_URL_IMPORT_1___ = __webpack_require__(75);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
+var ___CSS_LOADER_GET_URL_IMPORT___ = __webpack_require__(85);
+var ___CSS_LOADER_URL_IMPORT_0___ = __webpack_require__(86);
+var ___CSS_LOADER_URL_IMPORT_1___ = __webpack_require__(87);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 var ___CSS_LOADER_URL_REPLACEMENT_0___ = ___CSS_LOADER_GET_URL_IMPORT___(___CSS_LOADER_URL_IMPORT_0___);
 var ___CSS_LOADER_URL_REPLACEMENT_1___ = ___CSS_LOADER_GET_URL_IMPORT___(___CSS_LOADER_URL_IMPORT_1___);
@@ -13555,7 +14100,7 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 73 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13595,92 +14140,192 @@ module.exports = function (url, options) {
 };
 
 /***/ }),
-/* 74 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__.p + "fonts/element-icons.313f7da.woff";
 
 /***/ }),
-/* 75 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__.p + "fonts/element-icons.4520188.ttf";
 
 /***/ }),
-/* 76 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(77);
+var content = __webpack_require__(89);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
-__webpack_require__(5).default("028393d5", content, true)
+__webpack_require__(4).default("028393d5", content, true)
 
 /***/ }),
-/* 77 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "/* 全局样式文件 */\r\n\r\nhtml {\r\n  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,\r\n    'Helvetica Neue', Arial, sans-serif;\r\n  font-size: 16px;\r\n  word-spacing: 1px;\r\n  -ms-text-size-adjust: 100%;\r\n  -webkit-text-size-adjust: 100%;\r\n  -moz-osx-font-smoothing: grayscale;\r\n  -webkit-font-smoothing: antialiased;\r\n  box-sizing: border-box;\r\n}\r\n\r\n*,\r\n*:before,\r\n*:after {\r\n  box-sizing: border-box;\r\n  margin: 0;\r\n}\r\n\r\nbody {\r\n  margin: 0;\r\n  padding: 0;\r\n  background-color: #f5f5f5;\r\n}", ""]);
+___CSS_LOADER_EXPORT___.push([module.i, "/* 全局样式文件 */\r\n\r\nhtml {\r\n  scrollbar-gutter: stable;\r\n  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,\r\n    'Helvetica Neue', Arial, sans-serif;\r\n  font-size: 16px;\r\n  word-spacing: 1px;\r\n  -ms-text-size-adjust: 100%;\r\n  -webkit-text-size-adjust: 100%;\r\n  -moz-osx-font-smoothing: grayscale;\r\n  -webkit-font-smoothing: antialiased;\r\n  box-sizing: border-box;\r\n}\r\n\r\n*,\r\n*:before,\r\n*:after {\r\n  box-sizing: border-box;\r\n  margin: 0;\r\n}\r\n\r\nbody {\r\n  margin: 0;\r\n  padding: 0;\r\n  background-color: #f5f5f5;\r\n}\r\n", ""]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 78 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(79);
+var content = __webpack_require__(91);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
-__webpack_require__(5).default("ef9887ce", content, true)
+__webpack_require__(4).default("ef9887ce", content, true)
 
 /***/ }),
-/* 79 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "/* Reading UI: existing brand, native CSS, no changes to data loading or reader palettes.\r\n   Radius scale: panels 12px, controls 6px, covers 4px.\r\n   The site keeps its gray light theme; the reading canvas retains user-selected themes. */\r\n.reading-layout {\r\n  --reading-bg: #f5f5f5;\r\n  --reading-surface: #fff;\r\n  --reading-hover: #f5f4f0;\r\n  --reading-tint: #eee7de;\r\n  --reading-ink: #302f2a;\r\n  --reading-secondary: #615e57;\r\n  --reading-muted: #73716a;\r\n  --reading-line: #e4e3de;\r\n  --reading-accent: #79573c;\r\n  --site-footer-link: #79573c;\r\n  display: flow-root;\r\n  background: var(--reading-bg);\r\n  color: var(--reading-ink);\r\n  min-height: 100dvh;\r\n  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;\r\n  word-spacing: normal;\r\n}\r\n.outer.reading-layout .main-content {\r\n  max-width: 1440px;\r\n  width: 100%;\r\n  margin: 72px auto 0;\r\n  padding: 30px 40px 64px;\r\n  min-height: calc(100dvh - 160px);\r\n}\r\n.outer.reading-layout .navbar .nav-link-active { color: var(--reading-accent); }\r\n.outer.reading-layout .navbar .nav-link-active::after { background: var(--reading-accent); }\r\n.outer.reading-layout .site-footer { background: #eae9e5; color: var(--reading-secondary); font-size: 12px; line-height: 1.9; }\r\n.outer.reading-layout .site-footer a { color: var(--reading-accent); }\r\n.reading-skip-link { position: fixed; left: 24px; top: 8px; transform: translateY(-150%); padding: 10px 18px; z-index: 1100; background: #79573c; color: #fff; border-radius: 6px; text-decoration: none; }\r\n.reading-skip-link:focus { transform: translateY(0); outline: 2px solid #302f2a; outline-offset: 2px; }\r\n.outer.reading-layout .main-content button { font-family: inherit; }\r\n.outer.reading-layout .main-content :is(button, a, input, textarea, select, summary):focus-visible { outline: 2px solid var(--reading-accent); outline-offset: 3px; }\r\n.outer.reading-layout .main-content :is(input, textarea)::placeholder { color: var(--reading-muted); opacity: 1; }\r\n.outer.reading-layout .main-content button:not(:disabled):active { transform: translateY(1px); }\r\n\r\n/* Shared book detail composition. Covers anchor the page; information stays left aligned. */\r\n.outer.reading-layout .main-content :is(.novel-page, .manga-page, .world-page) { max-width: 1200px; padding: 0; margin: 0 auto; }\r\n.outer.reading-layout .main-content :is(.novel-container, .manga-container, .world-header, .world-content) { border: 1px solid var(--reading-line); border-radius: 12px; background: var(--reading-surface); box-shadow: none; }\r\n.outer.reading-layout .main-content :is(.novel-container, .manga-container) { padding: 36px; }\r\n.outer.reading-layout .main-content .novel-container .novel-header,\r\n.outer.reading-layout .main-content .manga-container .manga-header,\r\n.outer.reading-layout .main-content .world-header { display: grid; grid-template-columns: 188px minmax(0, 1fr); gap: 36px; align-items: start; text-align: left; }\r\n.outer.reading-layout .main-content .world-header { padding: 36px; }\r\n.outer.reading-layout .main-content .novel-container .novel-header .novel-cover,\r\n.outer.reading-layout .main-content .manga-container .manga-header .manga-cover,\r\n.outer.reading-layout .main-content .world-header .world-cover { width: 188px; height: 264px; margin: 0; border-radius: 4px; border: 0; box-shadow: 0 8px 20px #40362918; }\r\n.outer.reading-layout .main-content .novel-container .novel-header .novel-info .novel-title,\r\n.outer.reading-layout .main-content .manga-container .manga-header .manga-title,\r\n.outer.reading-layout .main-content .world-header .world-info h1 { font-size: clamp(24px, 2.2vw, 32px); font-weight: 600; letter-spacing: -.5px; line-height: 1.45; color: var(--reading-ink); margin: 0 0 16px; overflow-wrap: anywhere; }\r\n.outer.reading-layout .main-content .world-header .world-info h1 { margin-top: 12px; }\r\n.outer.reading-layout .main-content :is(.novel-header, .manga-header) .author-name { color: var(--reading-secondary); font-size: 14px; }\r\n.outer.reading-layout .main-content :is(.novel-header, .manga-header) .author-avatar { width: 28px; height: 28px; border-radius: 6px; }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) { display: flex; flex-wrap: wrap; gap: 24px; margin: 22px 0; padding: 18px 0; background: none; border-top: 1px solid var(--reading-line); border-bottom: 1px solid var(--reading-line); }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-item { gap: 5px; background: none; padding: 0; }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-icon { display: none; }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-value { color: var(--reading-ink); font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-label { color: var(--reading-muted); font-size: 12px; }\r\n.outer.reading-layout .main-content :is(.novel-tags, .manga-tags) .tag,\r\n.outer.reading-layout .main-content .world-type { background: var(--reading-hover); border: 0; border-radius: 4px; padding: 5px 9px; font-size: 12px; color: var(--reading-secondary); letter-spacing: normal; }\r\n.outer.reading-layout .main-content .novel-container .novel-actions .action-button.primary,\r\n.outer.reading-layout .main-content .manga-container .manga-actions .action-button.primary { background: var(--reading-accent); color: #fff; border-color: var(--reading-accent); border-radius: 6px; box-shadow: none; padding: 0 24px; height: 44px; min-width: 150px; font-size: 15px; font-weight: 600; }\r\n.outer.reading-layout .main-content .manga-container .manga-actions .action-button.primary:hover { background: #65452e; transform: none; }\r\n.outer.reading-layout .main-content :is(.novel-content, .manga-content) { margin-top: 32px; }\r\n.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) { display: flex; gap: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--reading-line); background: none; padding: 0; margin-bottom: 24px; }\r\n.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) :is(.tab-button, button) { border: 0; border-radius: 0; padding: 14px 0; color: var(--reading-muted); background: none; font-size: 14px; font-weight: 500; box-shadow: none; }\r\n.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) :is(.active, .tab-button.active) { color: var(--reading-accent); font-weight: 600; border-bottom: 2px solid var(--reading-accent); }\r\n.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) .active::after { display: none; }\r\n.outer.reading-layout .main-content .novel-container .tab-content { padding: 0; }\r\n.outer.reading-layout .main-content :is(.intro-content, .manga-description, .world-description) { color: var(--reading-secondary); font-size: 15px; line-height: 1.95; overflow-wrap: anywhere; }\r\n.outer.reading-layout .main-content .intro-content { max-width: 75ch; padding: 8px 0 24px; }\r\n.outer.reading-layout .main-content .world-updated { color: var(--reading-muted); font-size: 13px; line-height: 1.8; }\r\n.outer.reading-layout .main-content .world-content { padding: 12px 32px 32px; }\r\n.outer.reading-layout .main-content :is(.recommended-novels, .author-works) { margin-top: 32px; }\r\n.outer.reading-layout .main-content .recommended-novels { background: var(--reading-surface); border: 1px solid var(--reading-line); border-radius: 12px; padding: 28px 32px; box-shadow: none; }\r\n.outer.reading-layout .main-content :is(.section-title, .outline-header h2) { color: var(--reading-ink); font-size: 20px; font-weight: 600; }\r\n.outer.reading-layout .main-content .mini-novel-card { box-shadow: none; background: transparent; border: 0; }\r\n.outer.reading-layout .main-content :is(.mini-novel-title, .mini-work-title, .world-title) { color: var(--reading-ink); }\r\n.outer.reading-layout .main-content :is(.mini-novel-author, .mini-work-status, .world-author, .outline-grid small, .outline-header span) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .outline-grid a { background: var(--reading-hover); border: 0; border-radius: 6px; padding: 18px 16px; }\r\n.outer.reading-layout .main-content .outline-grid strong { color: var(--reading-ink); font-size: 14px; }\r\n\r\n/* Immersive text reader: chrome is quiet, user typography and background stay in control. */\r\n.outer.reading-layout .main-content .article-page { background: transparent; }\r\n.outer.reading-layout .main-content .article-page .article-header { top: 60px; border: 1px solid var(--reading-line); border-radius: 10px; box-shadow: none; background: var(--reading-surface); z-index: 90; }\r\n.outer.reading-layout .main-content .article-page .article-header.sticky .header-content { padding: 14px 18px; gap: 18px; flex-wrap: wrap; }\r\n.outer.reading-layout .main-content .article-page .article-header .novel-info { gap: 16px; min-width: 0; }\r\n.outer.reading-layout .main-content .article-page .article-header .novel-title { font-size: 14px; font-weight: 600; color: var(--reading-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }\r\n.outer.reading-layout .main-content .article-page .reading-controls { margin-left: 0; gap: 6px; flex-wrap: wrap; }\r\n.outer.reading-layout .main-content .article-page .chapter-nav { gap: 6px; flex-wrap: wrap; }\r\n.outer.reading-layout .main-content .article-page .article-header :is(.reader-control-btn, .nav-btn, .chapter-btn) { font-size: 13px; padding: 8px 10px; border: 0; border-radius: 6px; color: var(--reading-secondary); background: transparent; line-height: 1.5; white-space: nowrap; }\r\n.outer.reading-layout .main-content .article-page .article-header :is(.reader-control-btn, .nav-btn, .chapter-btn):hover { color: var(--reading-accent); background: var(--reading-hover); }\r\n.outer.reading-layout .main-content .article-page .article-content-wrapper { margin-top: 22px; border-radius: 8px; box-shadow: 0 4px 24px #40362908; }\r\n.outer.reading-layout .main-content .article-page .article-title { font-size: 28px; font-weight: 600; letter-spacing: -.4px; line-height: 1.5; }\r\n.outer.reading-layout .main-content .article-page .article-meta { font-size: 12px; line-height: 1.8; flex-wrap: wrap; }\r\n.outer.reading-layout .main-content .article-page .chapter-reviews { max-width: 980px; margin: 28px auto 0; }\r\n\r\n/* Tags: category names lead, category badges are supporting information. */\r\n.outer.reading-layout .main-content .tags-page { padding: 32px; border: 1px solid var(--reading-line); border-radius: 12px; background: var(--reading-surface); min-height: 60vh; }\r\n.outer.reading-layout .main-content .tags-page .page-header { text-align: left; }\r\n.outer.reading-layout .main-content .tags-page .page-title { color: var(--reading-ink); font-weight: 600; font-size: 28px; }\r\n.outer.reading-layout .main-content .tags-page .back-button { color: var(--reading-accent); background: transparent; padding: 0; transform: none; }\r\n.outer.reading-layout .main-content .tag-toolbar { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .tag-filters button { color: var(--reading-secondary); background: var(--reading-hover); }\r\n.outer.reading-layout .main-content .tag-filters button.active { color: #fff; background: var(--reading-accent); }\r\n.outer.reading-layout .main-content .tags-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }\r\n.outer.reading-layout .main-content .tags-page :is(.tag-item, .tag-item.activity, .tag-item.suggested) { background: var(--reading-hover); border: 1px solid transparent; border-radius: 8px; min-height: 110px; padding: 20px; box-shadow: none; transform: none; }\r\n.outer.reading-layout .main-content .tags-page .tag-item:hover { border-color: var(--reading-line); background: var(--reading-tint); }\r\n.outer.reading-layout .main-content .tags-page .tag-item .tag-name { color: var(--reading-ink); font-size: 16px; font-weight: 600; line-height: 1.5; }\r\n.outer.reading-layout .main-content .tags-page .tag-count { color: var(--reading-muted); font-size: 13px; }\r\n.outer.reading-layout .main-content .tags-page .tag-badges .badge { border: 0; border-radius: 3px; color: var(--reading-accent); background: var(--reading-tint); font-size: 11px; }\r\n\r\n/* The supporting reading journeys share the same page gutters and surface tokens. */\r\n.outer.reading-layout .main-content :is(.resources-guide, .reader-rewards, .redstone-center, .reader-ai, .power-page, .reading-end, .activity-inbox) { padding: 0; margin: 0 auto; color: var(--reading-ink); }\r\n.outer.reading-layout .main-content :is(.tree-card, .rewards-panel, .center-gate, .balance-overview, .center-panel, .power-card, .power-summary, .power-final, .end-summary, .end-recommendations, .ai-workspace, .ai-gate) { background: var(--reading-surface); border-color: var(--reading-line); border-radius: 12px; box-shadow: none; }\r\n.outer.reading-layout .main-content :is(.rewards-heading, .center-heading, .ai-page-head, .power-heading) h1 { font-size: 28px; font-weight: 600; letter-spacing: -.4px; color: var(--reading-ink); }\r\n.outer.reading-layout .main-content :is(.rewards-heading, .center-heading, .ai-page-head) p { color: var(--reading-muted); line-height: 1.8; }\r\n.outer.reading-layout .main-content :is(.rewards-panel, .channels, .resources-guide, .tree-card) p { color: var(--reading-secondary); }\r\n.outer.reading-layout .main-content .resources-guide .intro { margin-top: 24px; }\r\n.outer.reading-layout .main-content .resources-guide .intro img { background: var(--reading-hover); }\r\n.outer.reading-layout .main-content .resources-guide .channels article,\r\n.outer.reading-layout .main-content .resources-guide aside { border-color: var(--reading-line); border-radius: 12px; }\r\n.outer.reading-layout .main-content .resources-guide .channels ol { color: var(--reading-secondary); }\r\n.outer.reading-layout .main-content :is(.end-copy p, .recommend-note, .recommend-empty, .power-note, .power-summary p, .factor p) { color: var(--reading-muted); font-size: 13px; }\r\n.outer.reading-layout .main-content .reader-ai .ai-sidebar { background: var(--reading-hover); border-color: var(--reading-line); }\r\n.outer.reading-layout .main-content .reader-ai :is(.ai-metrics, .user-text, .thinking, .citations) { background: var(--reading-hover); border-color: var(--reading-line); }\r\n.outer.reading-layout .main-content .reader-ai :is(.quiet, .history-item small, .conversation-head p, .composer-hint) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .reader-ai .history-row.selected { background: var(--reading-tint); }\r\n.outer.reading-layout .main-content .reader-ai .send { background: var(--reading-accent); border-color: var(--reading-accent); color: #fff; }\r\n\r\n@media (max-width: 1024px) {\r\n  .outer.reading-layout .main-content { padding: 24px 28px 48px; }\r\n  .outer.reading-layout .main-content .article-page .article-header .novel-info { flex-basis: 100%; }\r\n  .outer.reading-layout .main-content .article-page .article-header .novel-title { max-width: 45%; }\r\n}\r\n@media (max-width: 768px) {\r\n  .outer.reading-layout .main-content { margin-top: 80px; padding: 20px 16px 40px; }\r\n  .outer.reading-layout .main-content :is(.novel-container, .manga-container) { padding: 24px 20px; }\r\n  .outer.reading-layout .main-content .novel-container .novel-header,\r\n  .outer.reading-layout .main-content .manga-container .manga-header,\r\n  .outer.reading-layout .main-content .world-header { grid-template-columns: 112px minmax(0, 1fr); gap: 20px; }\r\n  .outer.reading-layout .main-content .world-header { padding: 24px 20px; }\r\n  .outer.reading-layout .main-content .novel-container .novel-header .novel-cover,\r\n  .outer.reading-layout .main-content .manga-container .manga-header .manga-cover,\r\n  .outer.reading-layout .main-content .world-header .world-cover { width: 112px; height: 158px; }\r\n  .outer.reading-layout .main-content :is(.novel-stats, .manga-stats) { gap: 14px; padding: 14px 0; margin: 16px 0; }\r\n  .outer.reading-layout .main-content :is(.novel-meta, .manga-meta, .novel-actions, .manga-actions) { justify-content: flex-start; }\r\n  .outer.reading-layout .main-content :is(.world-content, .tags-page, .recommended-novels) { padding: 20px; }\r\n  .outer.reading-layout .main-content .article-page .article-header { top: 60px; }\r\n  .outer.reading-layout .main-content .article-page .article-header.sticky .header-content { padding: 12px; gap: 12px; }\r\n  .outer.reading-layout .main-content .article-page .article-title { font-size: 24px; }\r\n  .outer.reading-layout .main-content .tags-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }\r\n}\r\n@media (max-width: 480px) {\r\n  .outer.reading-layout .main-content { padding: 18px 12px 32px; }\r\n  .outer.reading-layout .main-content .novel-container .novel-header,\r\n  .outer.reading-layout .main-content .manga-container .manga-header,\r\n  .outer.reading-layout .main-content .world-header { grid-template-columns: minmax(0, 1fr); }\r\n  .outer.reading-layout .main-content .tags-grid { grid-template-columns: 1fr; }\r\n  .outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) { gap: 18px; }\r\n  .outer.reading-layout .main-content .article-page .article-header .novel-info { flex-wrap: wrap; }\r\n  .outer.reading-layout .main-content .article-page .article-header .novel-title { max-width: 100%; }\r\n}\r\n@media (prefers-reduced-motion: reduce) {\r\n  .outer.reading-layout .main-content :is(button, a) { transition: none; }\r\n  .outer.reading-layout .main-content button:not(:disabled):active { transform: none; }\r\n}\r\n\r\n/* Body-mounted reading panels carry their own tokens instead of inheriting a page root. */\r\n.reading-drawer, .reading-dialog {\r\n  --reading-surface: #fff;\r\n  --reading-hover: #f5f4f0;\r\n  --reading-tint: #eee7de;\r\n  --reading-ink: #302f2a;\r\n  --reading-secondary: #615e57;\r\n  --reading-muted: #73716a;\r\n  --reading-line: #e4e3de;\r\n  --reading-accent: #79573c;\r\n  color: var(--reading-ink);\r\n  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;\r\n}\r\n.el-drawer.reading-drawer .el-drawer__header { color: var(--reading-ink); margin: 0; padding: 24px; border-bottom: 1px solid var(--reading-line); font-size: 18px; font-weight: 600; }\r\n.el-drawer.reading-drawer .el-drawer__body { min-height: 0; padding-top: 24px; }\r\n.el-drawer.reading-settings-drawer .el-drawer__body { display: flex; flex-direction: column; overflow: hidden; }\r\n.reading-dialog { border-radius: 12px; }\r\n.reading-dialog .el-dialog__header { padding: 24px 26px 18px; }\r\n.reading-dialog .el-dialog__body { padding: 8px 26px 24px; }\r\n.reading-dialog .el-dialog__footer { border-top: 1px solid var(--reading-line); padding: 18px 26px; }\r\n.reading-dialog .el-button--primary { background: var(--reading-accent); border-color: var(--reading-accent); }\r\n:is(.reading-dialog, .reading-drawer) :is(button, a, input, textarea, select):focus-visible { outline: 2px solid var(--reading-accent); outline-offset: 3px; }\r\n:is(.reading-dialog, .reading-drawer) :is(input, textarea)::placeholder { color: var(--reading-muted); opacity: 1; }\r\n.el-drawer.reading-drawer .reader-settings { color: var(--reading-ink); padding: 0 28px 32px; }\r\n.el-drawer.reading-drawer .reader-settings section { border-color: var(--reading-line); padding-bottom: 26px; margin-bottom: 26px; }\r\n.el-drawer.reading-drawer .reader-settings h3 { font-size: 16px; font-weight: 600; }\r\n.el-drawer.reading-drawer .reader-settings button { border-color: var(--reading-line); font: inherit; font-size: 13px; border-radius: 6px; min-height: 38px; }\r\n.el-drawer.reading-drawer .reader-settings .font-grid button { padding: 16px 14px; gap: 10px; }\r\n.el-drawer.reading-drawer .reader-settings :is(.font-grid span, small) { color: var(--reading-muted); }\r\n.el-drawer.reading-drawer .reader-settings button[aria-pressed='true'] { border-color: var(--reading-accent); box-shadow: inset 0 0 0 1px var(--reading-accent); }\r\n.el-drawer.reading-drawer .reader-settings .reset { color: var(--reading-accent); padding: 12px; }\r\n.el-drawer.reading-drawer .reader-navigation { padding: 0 28px 32px; }\r\n.el-drawer.reading-drawer .reader-navigation .chapter-seek { border: 0; background: var(--reading-hover); color: var(--reading-secondary); padding: 22px; }\r\n.el-drawer.reading-drawer .reader-navigation .chapter-seek h3 { color: var(--reading-ink); line-height: 1.7; }\r\n.outer.reading-layout .main-content :is(.excerpts-content, .world-content) .book-excerpts { border: 0; padding: 0; }\r\n.outer.reading-layout .main-content .inline-comments { border-color: var(--reading-line); border-radius: 12px; }\r\n.outer.reading-layout .main-content .tab-content .inline-comments { border: 0; }\r\n.outer.reading-layout .main-content .inline-comments .inline-title { color: var(--reading-ink); font-weight: 600; }\r\n.outer.reading-layout .main-content .inline-comments .composer-input,\r\n.el-drawer.reading-drawer .composer-input { background: var(--reading-hover); border-color: var(--reading-line); padding: 14px; color: var(--reading-ink); line-height: 1.8; }\r\n.outer.reading-layout .main-content .inline-comments .submit-btn,\r\n.el-drawer.reading-drawer .submit-btn { border-radius: 6px; background: var(--reading-accent); padding: 10px 22px; }\r\n.outer.reading-layout .main-content .inline-comments .counter,\r\n.el-drawer.reading-drawer .counter { color: var(--reading-muted); }\r\n/* Details share one aligned primary row and a quieter utility row. */\r\n.outer.reading-layout .main-content :is(.novel-actions, .manga-actions) > .book-support { margin: 0; width: 100%; }\r\n.outer.reading-layout .main-content .book-support .support-actions > button,\r\n.outer.reading-layout .main-content .book-support .tip-trigger { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 44px; margin: 0; padding: 0 18px; border: 1px solid var(--reading-line); border-radius: 6px; background: var(--reading-surface); color: var(--reading-secondary); font-size: 14px; line-height: 1; white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s; }\r\n.outer.reading-layout .main-content .book-support .support-actions > button:not(.primary):hover,\r\n.outer.reading-layout .main-content .book-support .tip-trigger:hover { background: var(--reading-hover); border-color: #c8b9aa; }\r\n.outer.reading-layout .main-content .book-support .support-actions > button:disabled { cursor: default; }\r\n.outer.reading-layout .main-content .book-support .support-utilities { gap: 12px; }\r\n.outer.reading-layout .main-content .support-utilities .book-tools { display: flex; align-items: center; gap: 4px; }\r\n.outer.reading-layout .main-content .support-utilities .book-tools > :is(button, .power-link),\r\n.outer.reading-layout .main-content .support-utilities .reader-ai-entry { display: inline-flex; align-items: center; height: 32px; box-sizing: border-box; margin: 0; padding: 0 8px; border: 0; border-radius: 4px; background: none; color: var(--reading-muted); font-size: 13px; line-height: 1; white-space: nowrap; }\r\n.outer.reading-layout .main-content .support-utilities .book-tools > button:first-child { margin-left: -8px; }\r\n.outer.reading-layout .main-content .support-utilities .reader-ai-entry { color: var(--reading-accent); }\r\n.outer.reading-layout .main-content .support-utilities .book-tools > :is(button, .power-link):hover,\r\n.outer.reading-layout .main-content .support-utilities .reader-ai-entry:hover { background: var(--reading-hover); color: var(--reading-accent); }\r\n@media(max-width:640px) { .outer.reading-layout .main-content .book-support .support-actions { gap: 8px; } .outer.reading-layout .main-content .book-support .support-utilities { column-gap: 4px; row-gap: 4px; } }\r\n.outer.reading-layout .main-content .book-support .support-actions > button.active { color: var(--reading-accent); border-color: var(--reading-tint); background: var(--reading-tint); }\r\n@media(max-width:640px) {\r\n  .reading-drawer :is(.reader-navigation, .reader-settings) { padding: 0 18px 28px; }\r\n  .el-drawer.reading-drawer .el-drawer__header { padding: 20px 18px; }\r\n}\r\n\r\n/* Full-screen manga uses the same control scale, while keeping its reading background. */\r\n.manga-reader.manga-reader { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif; }\r\n.manga-reader.manga-reader .top-bar { padding: 0 20px; height: 64px; }\r\n.manga-reader.manga-reader .bar-title { align-items: flex-start; text-align: left; padding-left: 14px; }\r\n.manga-reader.manga-reader .bar-novel { color: #302f2a; font-weight: 600; }\r\n.manga-reader.manga-reader .bar-episode { color: #73716a; font-variant-numeric: tabular-nums; }\r\n.manga-reader.manga-reader .end-next { border-radius: 6px; background: #79573c; font-weight: 500; }\r\n.manga-reader.manga-reader.reader-black .bar-novel { color: #ece7e1; }\r\n.manga-reader.manga-reader.reader-black .bar-episode { color: #b6afa5; }\r\n.manga-reader.manga-reader button:focus-visible { outline: 2px solid #79573c; outline-offset: 3px; }\r\n.manga-reader.manga-reader.reader-black button:focus-visible { outline-color: #d2b497; }\r\n.outer.reading-layout .main-content .activity-inbox :is(.summary, .quiet, time, header p) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .activity-inbox .message-grid article { border-color: var(--reading-line); }\r\n@media(max-width:640px) { .manga-reader.manga-reader .top-bar { height: 56px; padding: 0 10px; } .manga-reader.manga-reader .bar-title { padding-left: 8px; } }\r\n\r\n.outer.reading-layout .navbar-container { max-width: 1440px; padding: 0 40px; }\r\n.outer.reading-layout .navbar .nav-link { white-space: nowrap; }\r\n@media (max-width: 1024px) { .outer.reading-layout .navbar-container { padding: 0 28px; } }\r\n@media (max-width: 768px) {\r\n  .outer.reading-layout .navbar-container { height: auto; min-height: 60px; padding: 10px 16px; flex-wrap: wrap; gap: 10px; }\r\n  .outer.reading-layout .logo-img { height: 28px; }\r\n  .outer.reading-layout .navbar-center { margin-left: auto; }\r\n  .outer.reading-layout .nav-link { margin: 0 10px; font-size: 14px; padding: 6px 0; }\r\n  .outer.reading-layout .navbar-right { width: 100%; }\r\n  .outer.reading-layout .search-box { flex: 1; min-width: 0; padding: 0 14px; margin-right: 14px; }\r\n  .outer.reading-layout .search-input { width: 100%; min-width: 0; font-size: 13px; padding: 9px 0; }\r\n  .outer.reading-layout .main-content { margin-top: 112px; }\r\n  .outer.reading-layout .main-content .article-page .article-header { top: 104px; }\r\n}\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-stats .stat-item { margin: 0; align-items: flex-start; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-tags .tag { border-radius: 4px; background: var(--reading-hover); color: var(--reading-secondary); }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .action-button.primary { display: inline-flex; align-items: center; justify-content: center; background: var(--reading-accent); color: #fff; height: 44px; min-width: 150px; padding: 0 24px; margin: 0; font-size: 15px; overflow: hidden; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info { flex-direction: row; gap: 10px; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info span { font-size: 15px; font-weight: 600; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info small { margin: 0; font-size: 12px; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .progress-indicator { height: 2px; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .action-button.primary:hover { background: #65452e; transform: none; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-content .content-tabs .tab-button { padding: 14px 0; margin-right: 0; color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-content .content-tabs .tab-button.active { color: var(--reading-accent); border-bottom-color: var(--reading-accent); }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-rank { background: var(--reading-hover); border-radius: 6px; }\r\n.outer.reading-layout .main-content .world-relations { padding: 0; }\r\n.outer.reading-layout .main-content .world-relations h1 { color: var(--reading-ink); font-weight: 600; }\r\n.outer.reading-layout .main-content .world-relations header p { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .world-browser :is(.search, .result-count, .graph-hint, .load-status) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .world-browser :is(.filters button, .graph-tools button) { color: var(--reading-secondary); border-color: var(--reading-line); border-radius: 6px; }\r\n.outer.reading-layout .main-content .world-browser .filters button.active { background: var(--reading-tint); color: var(--reading-accent); border-color: var(--reading-tint); }\r\n.outer.reading-layout .main-content .world-browser :is(.vocabulary-list-header h3, .selected-vocabulary h3, .vocabulary-entry h4) { color: var(--reading-ink); font-weight: 600; }\r\n.outer.reading-layout .main-content .world-browser :is(.vocabulary-list-header a, .read-vocabulary, .selected-vocabulary li button),\r\n.outer.reading-layout .main-content :is(.world-tabs > a, .world-relations > header a) { color: var(--reading-accent); }\r\n.outer.reading-layout .main-content .world-browser :is(.vocabulary-entry p, .vocabulary-entry small, .selected-vocabulary p, .selected-vocabulary dt) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .world-browser .vocabulary-entry { border: 0; background: var(--reading-hover); border-radius: 8px; }\r\n.outer.reading-layout .main-content .world-browser .entry-initial { color: var(--reading-accent); background: var(--reading-tint); border-radius: 6px; }\r\n.outer.reading-layout .main-content .world-browser .vocabulary-entry a:hover { background: var(--reading-tint); }\r\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.i, "/* Reading UI: existing brand, native CSS, no changes to data loading or reader palettes.\r\n   Radius scale: panels 12px, controls 6px, covers 4px.\r\n   The site keeps its gray light theme; the reading canvas retains user-selected themes. */\r\n.reading-layout {\r\n  --reading-bg: #f5f5f5;\r\n  --reading-surface: #fff;\r\n  --reading-hover: #f5f4f0;\r\n  --reading-tint: #eee7de;\r\n  --reading-ink: #302f2a;\r\n  --reading-secondary: #615e57;\r\n  --reading-muted: #73716a;\r\n  --reading-line: #e4e3de;\r\n  --reading-accent: #79573c;\r\n  --site-footer-link: #79573c;\r\n  display: flow-root;\r\n  background: var(--reading-bg);\r\n  color: var(--reading-ink);\r\n  min-height: 100dvh;\r\n  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;\r\n  word-spacing: normal;\r\n}\r\n.outer.reading-layout .main-content {\r\n  max-width: 1440px;\r\n  width: 100%;\r\n  margin: calc(var(--site-header-height, 60px) + 12px) auto 0;\r\n  padding: 30px 40px 64px;\r\n  min-height: calc(100dvh - 160px);\r\n}\r\n.outer.reading-layout .site-footer { background: #eae9e5; color: var(--reading-secondary); font-size: 12px; line-height: 1.9; }\r\n.outer.reading-layout .site-footer a { color: var(--reading-accent); }\r\n.reading-skip-link { position: fixed; left: 24px; top: 8px; transform: translateY(-150%); padding: 10px 18px; z-index: 1100; background: #79573c; color: #fff; border-radius: 6px; text-decoration: none; }\r\n.reading-skip-link:focus { transform: translateY(0); outline: 2px solid #302f2a; outline-offset: 2px; }\r\n.outer.reading-layout .main-content button { font-family: inherit; }\r\n.outer.reading-layout .main-content :is(button, a, input, textarea, select, summary):focus-visible { outline: 2px solid var(--reading-accent); outline-offset: 3px; }\r\n.outer.reading-layout .main-content :is(input, textarea)::placeholder { color: var(--reading-muted); opacity: 1; }\r\n.outer.reading-layout .main-content button:not(:disabled):active { transform: translateY(1px); }\r\n\r\n/* Shared book detail composition. Covers anchor the page; information stays left aligned. */\r\n.outer.reading-layout .main-content :is(.novel-page, .manga-page, .world-page) { max-width: 1200px; padding: 0; margin: 0 auto; }\r\n.outer.reading-layout .main-content :is(.novel-container, .manga-container, .world-header, .world-content) { border: 1px solid var(--reading-line); border-radius: 12px; background: var(--reading-surface); box-shadow: none; }\r\n.outer.reading-layout .main-content :is(.novel-container, .manga-container) { padding: 36px; }\r\n.outer.reading-layout .main-content .novel-container .novel-header,\r\n.outer.reading-layout .main-content .manga-container .manga-header,\r\n.outer.reading-layout .main-content .world-header { display: grid; grid-template-columns: 188px minmax(0, 1fr); gap: 36px; align-items: start; text-align: left; }\r\n.outer.reading-layout .main-content .world-header { padding: 36px; }\r\n.outer.reading-layout .main-content .novel-container .novel-header .novel-cover,\r\n.outer.reading-layout .main-content .manga-container .manga-header .manga-cover,\r\n.outer.reading-layout .main-content .world-header .world-cover { width: 188px; height: 264px; margin: 0; border-radius: 4px; border: 0; box-shadow: 0 8px 20px #40362918; }\r\n.outer.reading-layout .main-content .novel-container .novel-header .novel-info .novel-title,\r\n.outer.reading-layout .main-content .manga-container .manga-header .manga-title,\r\n.outer.reading-layout .main-content .world-header .world-info h1 { font-size: clamp(24px, 2.2vw, 32px); font-weight: 600; letter-spacing: -.5px; line-height: 1.45; color: var(--reading-ink); margin: 0 0 16px; overflow-wrap: anywhere; }\r\n.outer.reading-layout .main-content .world-header .world-info h1 { margin-top: 12px; }\r\n.outer.reading-layout .main-content :is(.novel-header, .manga-header) .author-name { color: var(--reading-secondary); font-size: 14px; }\r\n.outer.reading-layout .main-content :is(.novel-header, .manga-header) .author-avatar { width: 28px; height: 28px; border-radius: 6px; }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) { display: flex; flex-wrap: wrap; gap: 24px; margin: 22px 0; padding: 18px 0; background: none; border-top: 1px solid var(--reading-line); border-bottom: 1px solid var(--reading-line); }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-item { gap: 5px; background: none; padding: 0; }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-icon { display: none; }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-value { color: var(--reading-ink); font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }\r\n.outer.reading-layout .main-content :is(.novel-stats, .manga-stats) .stat-label { color: var(--reading-muted); font-size: 12px; }\r\n.outer.reading-layout .main-content :is(.novel-tags, .manga-tags) .tag,\r\n.outer.reading-layout .main-content .world-type { background: var(--reading-hover); border: 0; border-radius: 4px; padding: 5px 9px; font-size: 12px; color: var(--reading-secondary); letter-spacing: normal; }\r\n.outer.reading-layout .main-content .novel-container .novel-actions .action-button.primary,\r\n.outer.reading-layout .main-content .manga-container .manga-actions .action-button.primary { background: var(--reading-accent); color: #fff; border-color: var(--reading-accent); border-radius: 6px; box-shadow: none; padding: 0 24px; height: 44px; min-width: 150px; font-size: 15px; font-weight: 600; }\r\n.outer.reading-layout .main-content .manga-container .manga-actions .action-button.primary:hover { background: #65452e; transform: none; }\r\n.outer.reading-layout .main-content :is(.novel-content, .manga-content) { margin-top: 32px; }\r\n.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) { display: flex; gap: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--reading-line); background: none; padding: 0; margin-bottom: 24px; }\r\n.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) :is(.tab-button, button) { border: 0; border-radius: 0; padding: 14px 0; color: var(--reading-muted); background: none; font-size: 14px; font-weight: 500; box-shadow: none; }\r\n.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) :is(.active, .tab-button.active) { color: var(--reading-accent); font-weight: 600; border-bottom: 2px solid var(--reading-accent); }\r\n.outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) .active::after { display: none; }\r\n.outer.reading-layout .main-content .novel-container .tab-content { padding: 0; }\r\n.outer.reading-layout .main-content :is(.intro-content, .manga-description, .world-description) { color: var(--reading-secondary); font-size: 15px; line-height: 1.95; overflow-wrap: anywhere; }\r\n.outer.reading-layout .main-content .intro-content { max-width: 75ch; padding: 8px 0 24px; }\r\n.outer.reading-layout .main-content .world-updated { color: var(--reading-muted); font-size: 13px; line-height: 1.8; }\r\n.outer.reading-layout .main-content .world-content { padding: 12px 32px 32px; }\r\n.outer.reading-layout .main-content :is(.recommended-novels, .author-works) { margin-top: 32px; }\r\n.outer.reading-layout .main-content .recommended-novels { background: var(--reading-surface); border: 1px solid var(--reading-line); border-radius: 12px; padding: 28px 32px; box-shadow: none; }\r\n.outer.reading-layout .main-content :is(.section-title, .outline-header h2) { color: var(--reading-ink); font-size: 20px; font-weight: 600; }\r\n.outer.reading-layout .main-content .mini-novel-card { box-shadow: none; background: transparent; border: 0; }\r\n.outer.reading-layout .main-content :is(.mini-novel-title, .mini-work-title, .world-title) { color: var(--reading-ink); }\r\n.outer.reading-layout .main-content :is(.mini-novel-author, .mini-work-status, .world-author, .outline-grid small, .outline-header span) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .outline-grid a { background: var(--reading-hover); border: 0; border-radius: 6px; padding: 18px 16px; }\r\n.outer.reading-layout .main-content .outline-grid strong { color: var(--reading-ink); font-size: 14px; }\r\n\r\n/* Immersive text reader: chrome is quiet, user typography and background stay in control. */\r\n.outer.reading-layout .main-content .article-page { background: transparent; }\r\n.outer.reading-layout .main-content .article-page .article-header { top: var(--site-header-height, 60px); border: 1px solid var(--reading-line); border-radius: 10px; box-shadow: none; background: var(--reading-surface); z-index: 90; }\r\n.outer.reading-layout .main-content .article-page .article-header.sticky .header-content { padding: 14px 18px; gap: 18px; flex-wrap: wrap; }\r\n.outer.reading-layout .main-content .article-page .article-header .novel-info { gap: 16px; min-width: 0; }\r\n.outer.reading-layout .main-content .article-page .article-header .novel-title { font-size: 14px; font-weight: 600; color: var(--reading-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }\r\n.outer.reading-layout .main-content .article-page .reading-controls { margin-left: 0; gap: 6px; flex-wrap: wrap; }\r\n.outer.reading-layout .main-content .article-page .chapter-nav { gap: 6px; flex-wrap: wrap; }\r\n.outer.reading-layout .main-content .article-page .article-header :is(.reader-control-btn, .nav-btn, .chapter-btn) { font-size: 13px; padding: 8px 10px; border: 0; border-radius: 6px; color: var(--reading-secondary); background: transparent; line-height: 1.5; white-space: nowrap; }\r\n.outer.reading-layout .main-content .article-page .article-header :is(.reader-control-btn, .nav-btn, .chapter-btn):hover { color: var(--reading-accent); background: var(--reading-hover); }\r\n.outer.reading-layout .main-content .article-page .article-content-wrapper { margin-top: 22px; border-radius: 8px; box-shadow: 0 4px 24px #40362908; }\r\n.outer.reading-layout .main-content .article-page .article-title { font-size: 28px; font-weight: 600; letter-spacing: -.4px; line-height: 1.5; }\r\n.outer.reading-layout .main-content .article-page .article-meta { font-size: 12px; line-height: 1.8; flex-wrap: wrap; }\r\n.outer.reading-layout .main-content .article-page .chapter-reviews { max-width: 980px; margin: 28px auto 0; }\r\n\r\n/* Tags: category names lead, category badges are supporting information. */\r\n.outer.reading-layout .main-content .tags-page { padding: 32px; border: 1px solid var(--reading-line); border-radius: 12px; background: var(--reading-surface); min-height: 60vh; }\r\n.outer.reading-layout .main-content .tags-page .page-header { text-align: left; }\r\n.outer.reading-layout .main-content .tags-page .page-title { color: var(--reading-ink); font-weight: 600; font-size: 28px; }\r\n.outer.reading-layout .main-content .tags-page .back-button { color: var(--reading-accent); background: transparent; padding: 0; transform: none; }\r\n.outer.reading-layout .main-content .tag-toolbar { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .tag-filters button { color: var(--reading-secondary); background: var(--reading-hover); }\r\n.outer.reading-layout .main-content .tag-filters button.active { color: #fff; background: var(--reading-accent); }\r\n.outer.reading-layout .main-content .tags-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }\r\n.outer.reading-layout .main-content .tags-page :is(.tag-item, .tag-item.activity, .tag-item.suggested) { background: var(--reading-hover); border: 1px solid transparent; border-radius: 8px; min-height: 110px; padding: 20px; box-shadow: none; transform: none; }\r\n.outer.reading-layout .main-content .tags-page .tag-item:hover { border-color: var(--reading-line); background: var(--reading-tint); }\r\n.outer.reading-layout .main-content .tags-page .tag-item .tag-name { color: var(--reading-ink); font-size: 16px; font-weight: 600; line-height: 1.5; }\r\n.outer.reading-layout .main-content .tags-page .tag-count { color: var(--reading-muted); font-size: 13px; }\r\n.outer.reading-layout .main-content .tags-page .tag-badges .badge { border: 0; border-radius: 3px; color: var(--reading-accent); background: var(--reading-tint); font-size: 11px; }\r\n\r\n/* The supporting reading journeys share the same page gutters and surface tokens. */\r\n.outer.reading-layout .main-content :is(.resources-guide, .reader-rewards, .redstone-center, .reader-ai, .power-page, .reading-end, .activity-inbox) { padding: 0; margin: 0 auto; color: var(--reading-ink); }\r\n.outer.reading-layout .main-content :is(.tree-card, .rewards-panel, .center-gate, .balance-overview, .center-panel, .power-card, .power-summary, .power-final, .end-summary, .end-recommendations, .ai-workspace, .ai-gate) { background: var(--reading-surface); border-color: var(--reading-line); border-radius: 12px; box-shadow: none; }\r\n.outer.reading-layout .main-content :is(.rewards-heading, .center-heading, .ai-page-head, .power-heading) h1 { font-size: 28px; font-weight: 600; letter-spacing: -.4px; color: var(--reading-ink); }\r\n.outer.reading-layout .main-content :is(.rewards-heading, .center-heading, .ai-page-head) p { color: var(--reading-muted); line-height: 1.8; }\r\n.outer.reading-layout .main-content :is(.rewards-panel, .channels, .resources-guide, .tree-card) p { color: var(--reading-secondary); }\r\n.outer.reading-layout .main-content .resources-guide .intro { margin-top: 24px; }\r\n.outer.reading-layout .main-content .resources-guide .intro img { background: var(--reading-hover); }\r\n.outer.reading-layout .main-content .resources-guide .channels article,\r\n.outer.reading-layout .main-content .resources-guide aside { border-color: var(--reading-line); border-radius: 12px; }\r\n.outer.reading-layout .main-content .resources-guide .channels ol { color: var(--reading-secondary); }\r\n.outer.reading-layout .main-content :is(.end-copy p, .recommend-note, .recommend-empty, .power-note, .power-summary p, .factor p) { color: var(--reading-muted); font-size: 13px; }\r\n.outer.reading-layout .main-content .reader-ai .ai-sidebar { background: var(--reading-hover); border-color: var(--reading-line); }\r\n.outer.reading-layout .main-content .reader-ai :is(.ai-metrics, .user-text, .thinking, .citations) { background: var(--reading-hover); border-color: var(--reading-line); }\r\n.outer.reading-layout .main-content .reader-ai :is(.quiet, .history-item small, .conversation-head p, .composer-hint) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .reader-ai .history-row.selected { background: var(--reading-tint); }\r\n.outer.reading-layout .main-content .reader-ai .send { background: var(--reading-accent); border-color: var(--reading-accent); color: #fff; }\r\n\r\n@media (max-width: 1024px) {\r\n  .outer.reading-layout .main-content { padding: 24px 28px 48px; }\r\n  .outer.reading-layout .main-content .article-page .article-header .novel-info { flex-basis: 100%; }\r\n  .outer.reading-layout .main-content .article-page .article-header .novel-title { max-width: 45%; }\r\n}\r\n@media (max-width: 768px) {\r\n  .outer.reading-layout .main-content { padding: 20px 16px 40px; }\r\n  .outer.reading-layout .main-content :is(.novel-container, .manga-container) { padding: 24px 20px; }\r\n  .outer.reading-layout .main-content .novel-container .novel-header,\r\n  .outer.reading-layout .main-content .manga-container .manga-header,\r\n  .outer.reading-layout .main-content .world-header { grid-template-columns: 112px minmax(0, 1fr); gap: 20px; }\r\n  .outer.reading-layout .main-content .world-header { padding: 24px 20px; }\r\n  .outer.reading-layout .main-content .novel-container .novel-header .novel-cover,\r\n  .outer.reading-layout .main-content .manga-container .manga-header .manga-cover,\r\n  .outer.reading-layout .main-content .world-header .world-cover { width: 112px; height: 158px; }\r\n  .outer.reading-layout .main-content :is(.novel-stats, .manga-stats) { gap: 14px; padding: 14px 0; margin: 16px 0; }\r\n  .outer.reading-layout .main-content :is(.novel-meta, .manga-meta, .novel-actions, .manga-actions) { justify-content: flex-start; }\r\n  .outer.reading-layout .main-content :is(.world-content, .tags-page, .recommended-novels) { padding: 20px; }\r\n  .outer.reading-layout .main-content .article-page .article-header { top: var(--site-header-height, 60px); }\r\n  .outer.reading-layout .main-content .article-page .article-header.sticky .header-content { padding: 12px; gap: 12px; }\r\n  .outer.reading-layout .main-content .article-page .article-title { font-size: 24px; }\r\n  .outer.reading-layout .main-content .tags-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }\r\n}\r\n@media (max-width: 480px) {\r\n  .outer.reading-layout .main-content { padding: 18px 12px 32px; }\r\n  .outer.reading-layout .main-content .novel-container .novel-header,\r\n  .outer.reading-layout .main-content .manga-container .manga-header,\r\n  .outer.reading-layout .main-content .world-header { grid-template-columns: minmax(0, 1fr); }\r\n  .outer.reading-layout .main-content .tags-grid { grid-template-columns: 1fr; }\r\n  .outer.reading-layout .main-content :is(.content-tabs, .manga-tabs, .world-tabs) { gap: 18px; }\r\n  .outer.reading-layout .main-content .article-page .article-header .novel-info { flex-wrap: wrap; }\r\n  .outer.reading-layout .main-content .article-page .article-header .novel-title { max-width: 100%; }\r\n}\r\n@media (prefers-reduced-motion: reduce) {\r\n  .outer.reading-layout .main-content :is(button, a) { transition: none; }\r\n  .outer.reading-layout .main-content button:not(:disabled):active { transform: none; }\r\n}\r\n\r\n/* Body-mounted reading panels carry their own tokens instead of inheriting a page root. */\r\n.reading-drawer, .reading-dialog {\r\n  --reading-surface: #fff;\r\n  --reading-hover: #f5f4f0;\r\n  --reading-tint: #eee7de;\r\n  --reading-ink: #302f2a;\r\n  --reading-secondary: #615e57;\r\n  --reading-muted: #73716a;\r\n  --reading-line: #e4e3de;\r\n  --reading-accent: #79573c;\r\n  color: var(--reading-ink);\r\n  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;\r\n}\r\n.el-drawer.reading-drawer .el-drawer__header { color: var(--reading-ink); margin: 0; padding: 24px; border-bottom: 1px solid var(--reading-line); font-size: 18px; font-weight: 600; }\r\n.el-drawer.reading-drawer .el-drawer__body { min-height: 0; padding-top: 24px; }\r\n.el-drawer.reading-settings-drawer .el-drawer__body { display: flex; flex-direction: column; overflow: hidden; }\r\n.reading-dialog { border-radius: 12px; }\r\n.reading-dialog .el-dialog__header { padding: 24px 26px 18px; }\r\n.reading-dialog .el-dialog__body { padding: 8px 26px 24px; }\r\n.reading-dialog .el-dialog__footer { border-top: 1px solid var(--reading-line); padding: 18px 26px; }\r\n.reading-dialog .el-button--primary { background: var(--reading-accent); border-color: var(--reading-accent); }\r\n:is(.reading-dialog, .reading-drawer) :is(button, a, input, textarea, select):focus-visible { outline: 2px solid var(--reading-accent); outline-offset: 3px; }\r\n:is(.reading-dialog, .reading-drawer) :is(input, textarea)::placeholder { color: var(--reading-muted); opacity: 1; }\r\n.el-drawer.reading-drawer .reader-settings { color: var(--reading-ink); padding: 0 28px 32px; }\r\n.el-drawer.reading-drawer .reader-settings section { border-color: var(--reading-line); padding-bottom: 26px; margin-bottom: 26px; }\r\n.el-drawer.reading-drawer .reader-settings h3 { font-size: 16px; font-weight: 600; }\r\n.el-drawer.reading-drawer .reader-settings button { border-color: var(--reading-line); font: inherit; font-size: 13px; border-radius: 6px; min-height: 38px; }\r\n.el-drawer.reading-drawer .reader-settings .font-grid button { padding: 16px 14px; gap: 10px; }\r\n.el-drawer.reading-drawer .reader-settings :is(.font-grid span, small) { color: var(--reading-muted); }\r\n.el-drawer.reading-drawer .reader-settings button[aria-pressed='true'] { border-color: var(--reading-accent); box-shadow: inset 0 0 0 1px var(--reading-accent); }\r\n.el-drawer.reading-drawer .reader-settings .reset { color: var(--reading-accent); padding: 12px; }\r\n.el-drawer.reading-drawer .reader-navigation { padding: 0 28px 32px; }\r\n.el-drawer.reading-drawer .reader-navigation .chapter-seek { border: 0; background: var(--reading-hover); color: var(--reading-secondary); padding: 22px; }\r\n.el-drawer.reading-drawer .reader-navigation .chapter-seek h3 { color: var(--reading-ink); line-height: 1.7; }\r\n.outer.reading-layout .main-content :is(.excerpts-content, .world-content) .book-excerpts { border: 0; padding: 0; }\r\n.outer.reading-layout .main-content .inline-comments { border-color: var(--reading-line); border-radius: 12px; }\r\n.outer.reading-layout .main-content .tab-content .inline-comments { border: 0; }\r\n.outer.reading-layout .main-content .inline-comments .inline-title { color: var(--reading-ink); font-weight: 600; }\r\n.outer.reading-layout .main-content .inline-comments .composer-input,\r\n.el-drawer.reading-drawer .composer-input { background: var(--reading-hover); border-color: var(--reading-line); padding: 14px; color: var(--reading-ink); line-height: 1.8; }\r\n.outer.reading-layout .main-content .inline-comments .submit-btn,\r\n.el-drawer.reading-drawer .submit-btn { border-radius: 6px; background: var(--reading-accent); padding: 10px 22px; }\r\n.outer.reading-layout .main-content .inline-comments .counter,\r\n.el-drawer.reading-drawer .counter { color: var(--reading-muted); }\r\n/* Details share one aligned primary row and a quieter utility row. */\r\n.outer.reading-layout .main-content :is(.novel-actions, .manga-actions) > .book-support { margin: 0; width: 100%; }\r\n.outer.reading-layout .main-content .book-support .support-actions > button,\r\n.outer.reading-layout .main-content .book-support .tip-trigger { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 44px; margin: 0; padding: 0 18px; border: 1px solid var(--reading-line); border-radius: 6px; background: var(--reading-surface); color: var(--reading-secondary); font-size: 14px; line-height: 1; white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s; }\r\n.outer.reading-layout .main-content .book-support .support-actions > button:not(.primary):hover,\r\n.outer.reading-layout .main-content .book-support .tip-trigger:hover { background: var(--reading-hover); border-color: #c8b9aa; }\r\n.outer.reading-layout .main-content .book-support .support-actions > button:disabled { cursor: default; }\r\n.outer.reading-layout .main-content .book-support .support-utilities { gap: 12px; }\r\n.outer.reading-layout .main-content .support-utilities .book-tools { display: flex; align-items: center; gap: 4px; }\r\n.outer.reading-layout .main-content .support-utilities .book-tools > :is(button, .power-link),\r\n.outer.reading-layout .main-content .support-utilities .reader-ai-entry { display: inline-flex; align-items: center; height: 32px; box-sizing: border-box; margin: 0; padding: 0 8px; border: 0; border-radius: 4px; background: none; color: var(--reading-muted); font-size: 13px; line-height: 1; white-space: nowrap; }\r\n.outer.reading-layout .main-content .support-utilities .book-tools > button:first-child { margin-left: -8px; }\r\n.outer.reading-layout .main-content .support-utilities .reader-ai-entry { color: var(--reading-accent); }\r\n.outer.reading-layout .main-content .support-utilities .book-tools > :is(button, .power-link):hover,\r\n.outer.reading-layout .main-content .support-utilities .reader-ai-entry:hover { background: var(--reading-hover); color: var(--reading-accent); }\r\n@media(max-width:640px) { .outer.reading-layout .main-content .book-support .support-actions { gap: 8px; } .outer.reading-layout .main-content .book-support .support-utilities { column-gap: 4px; row-gap: 4px; } }\r\n.outer.reading-layout .main-content .book-support .support-actions > button.active { color: var(--reading-accent); border-color: var(--reading-tint); background: var(--reading-tint); }\r\n@media(max-width:640px) {\r\n  .reading-drawer :is(.reader-navigation, .reader-settings) { padding: 0 18px 28px; }\r\n  .el-drawer.reading-drawer .el-drawer__header { padding: 20px 18px; }\r\n}\r\n\r\n/* Full-screen manga uses the same control scale, while keeping its reading background. */\r\n.manga-reader.manga-reader { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif; }\r\n.manga-reader.manga-reader .top-bar { padding: 0 20px; height: 64px; }\r\n.manga-reader.manga-reader .bar-title { align-items: flex-start; text-align: left; padding-left: 14px; }\r\n.manga-reader.manga-reader .bar-novel { color: #302f2a; font-weight: 600; }\r\n.manga-reader.manga-reader .bar-episode { color: #73716a; font-variant-numeric: tabular-nums; }\r\n.manga-reader.manga-reader .end-next { border-radius: 6px; background: #79573c; font-weight: 500; }\r\n.manga-reader.manga-reader.reader-black .bar-novel { color: #ece7e1; }\r\n.manga-reader.manga-reader.reader-black .bar-episode { color: #b6afa5; }\r\n.manga-reader.manga-reader button:focus-visible { outline: 2px solid #79573c; outline-offset: 3px; }\r\n.manga-reader.manga-reader.reader-black button:focus-visible { outline-color: #d2b497; }\r\n.outer.reading-layout .main-content .activity-inbox :is(.summary, .quiet, time, header p) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .activity-inbox .message-grid article { border-color: var(--reading-line); }\r\n@media(max-width:640px) { .manga-reader.manga-reader .top-bar { height: 56px; padding: 0 10px; } .manga-reader.manga-reader .bar-title { padding-left: 8px; } }\r\n\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-stats .stat-item { margin: 0; align-items: flex-start; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-tags .tag { border-radius: 4px; background: var(--reading-hover); color: var(--reading-secondary); }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .action-button.primary { display: inline-flex; align-items: center; justify-content: center; background: var(--reading-accent); color: #fff; height: 44px; min-width: 150px; padding: 0 24px; margin: 0; font-size: 15px; overflow: hidden; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info { flex-direction: row; gap: 10px; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info span { font-size: 15px; font-weight: 600; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .reading-info small { margin: 0; font-size: 12px; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .progress-indicator { height: 2px; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-header .novel-info .novel-actions .action-button.primary:hover { background: #65452e; transform: none; }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-content .content-tabs .tab-button { padding: 14px 0; margin-right: 0; color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-content .content-tabs .tab-button.active { color: var(--reading-accent); border-bottom-color: var(--reading-accent); }\r\n.outer.reading-layout .main-content .novel-page .novel-container .novel-rank { background: var(--reading-hover); border-radius: 6px; }\r\n.outer.reading-layout .main-content .world-relations { padding: 0; }\r\n.outer.reading-layout .main-content .world-relations h1 { color: var(--reading-ink); font-weight: 600; }\r\n.outer.reading-layout .main-content .world-relations header p { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .world-browser :is(.search, .result-count, .graph-hint, .load-status) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .world-browser :is(.filters button, .graph-tools button) { color: var(--reading-secondary); border-color: var(--reading-line); border-radius: 6px; }\r\n.outer.reading-layout .main-content .world-browser .filters button.active { background: var(--reading-tint); color: var(--reading-accent); border-color: var(--reading-tint); }\r\n.outer.reading-layout .main-content .world-browser :is(.vocabulary-list-header h3, .selected-vocabulary h3, .vocabulary-entry h4) { color: var(--reading-ink); font-weight: 600; }\r\n.outer.reading-layout .main-content .world-browser :is(.vocabulary-list-header a, .read-vocabulary, .selected-vocabulary li button),\r\n.outer.reading-layout .main-content :is(.world-tabs > a, .world-relations > header a) { color: var(--reading-accent); }\r\n.outer.reading-layout .main-content .world-browser :is(.vocabulary-entry p, .vocabulary-entry small, .selected-vocabulary p, .selected-vocabulary dt) { color: var(--reading-muted); }\r\n.outer.reading-layout .main-content .world-browser .vocabulary-entry { border: 0; background: var(--reading-hover); border-radius: 8px; }\r\n.outer.reading-layout .main-content .world-browser .entry-initial { color: var(--reading-accent); background: var(--reading-tint); border-radius: 6px; }\r\n.outer.reading-layout .main-content .world-browser .vocabulary-entry a:hover { background: var(--reading-tint); }\r\n", ""]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 80 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__.p + "img/logo_new.d1ca1b4.png";
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(93);
+if(content.__esModule) content = content.default;
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+__webpack_require__(4).default("516f73d6", content, true)
 
 /***/ }),
-/* 81 */
+/* 93 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Imports
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
+var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
+// Module
+___CSS_LOADER_EXPORT___.push([module.i, "/* Global chrome and shared controls. Content artwork and explicit reading-paper palettes keep their original colors. */\r\n:root {\r\n  --site-bg: #f5f5f5;\r\n  --site-surface: #fffdf9;\r\n  --site-raised: #f2eee7;\r\n  --site-ink: #382d25;\r\n  --site-muted: #776a5d;\r\n  --site-line: #e9e0d5;\r\n  --site-accent: #79573d;\r\n}\r\nhtml[data-site-theme=\"light\"] {\r\n  color-scheme: light;\r\n}\r\nhtml[data-site-theme=\"dark\"] {\r\n  color-scheme: dark;\r\n  --site-bg: #1e1c19;\r\n  --site-surface: #28251f;\r\n  --site-raised: #353027;\r\n  --site-ink: #eee5d9;\r\n  --site-muted: #c1b6a7;\r\n  --site-line: #504536;\r\n  --site-accent: #d8b68f;\r\n  --site-footer-link: #d8b68f;\r\n}\r\nhtml[data-site-theme=\"dark\"] body,\r\nhtml[data-site-theme=\"dark\"] :is(.outer, .empty-layout) {\r\n  background: var(--site-bg);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.navbar, .site-footer, .footer),\r\nhtml[data-site-theme=\"dark\"] .empty-layout::before {\r\n  background: var(--site-surface);\r\n  color: var(--site-muted);\r\n  border-color: var(--site-line);\r\n  box-shadow: 0 1px 0 var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.nav-link, .user-nickname, .user-info, .user-link) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.nav-link-active, .nav-link:hover) {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .search-box,\r\n    .search-result-item:hover,\r\n    .history-item:hover,\r\n    .book-item:hover,\r\n    .post-item:hover,\r\n    .circle-item:hover,\r\n    .user-item:hover\r\n  ) {\r\n  background: var(--site-raised);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.search-input, .search-clear, .search-icon) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.search-dropdown, .dropdown-footer) {\r\n  background: var(--site-surface);\r\n  color: var(--site-ink);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .search-dropdown\r\n  :is(\r\n    .section-title,\r\n    .book-name,\r\n    .post-title,\r\n    .circle-name,\r\n    .user-name,\r\n    .dropdown-footer\r\n  ) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .search-dropdown\r\n  :is(\r\n    .book-author,\r\n    .post-meta,\r\n    .circle-meta,\r\n    .user-motto,\r\n    .empty-results,\r\n    .history-item\r\n  ) {\r\n  color: var(--site-muted);\r\n}\r\nhtml[data-site-theme=\"dark\"] .search-dropdown :is(.view-all, .hot-tag, .clear-btn) {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(input, textarea)::placeholder {\r\n  color: #aca090;\r\n  opacity: 1;\r\n}\r\n\r\n/* The home palette retains the wood and foliage identity. */\r\nhtml[data-site-theme=\"dark\"] .home-container {\r\n  --home-ink: var(--site-ink);\r\n  --home-muted: var(--site-muted);\r\n  --home-line: var(--site-line);\r\n  --home-green: #b5c49a;\r\n}\r\nhtml[data-site-theme=\"dark\"] .home-lead {\r\n  color: #c7d1b4;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .home-text-link,\r\n    .home-source,\r\n    .home-inline-button,\r\n    .path-arrow,\r\n    .home-faq summary > span,\r\n    .home-contributions > a > span:last-child\r\n  ) {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.home-create, .home-download, .home-ending, .home-topic, .home-weixin-tip) {\r\n  background: var(--site-raised);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.home-writing-preview, .home-cta-secondary) {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.writing-toolbar, .writing-document, .writing-comment, .writing-stats) {\r\n  border-color: var(--site-line);\r\n  color: var(--site-muted);\r\n}\r\nhtml[data-site-theme=\"dark\"] .writing-stage-buttons button[aria-pressed=\"true\"] {\r\n  background: var(--site-raised);\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .home-book-cover {\r\n  background: var(--site-raised);\r\n}\r\nhtml[data-site-theme=\"dark\"] .home-book-cover > span {\r\n  background: #28251fee;\r\n  color: var(--site-ink);\r\n}\r\n\r\n/* Reading discovery and its account tools share these semantic colors. */\r\nhtml[data-site-theme=\"dark\"] .reading-layout {\r\n  --reading-bg: var(--site-bg);\r\n  --reading-surface: var(--site-surface);\r\n  --reading-hover: var(--site-raised);\r\n  --reading-tint: #44382b;\r\n  --reading-ink: var(--site-ink);\r\n  --reading-secondary: #d3c8b9;\r\n  --reading-muted: var(--site-muted);\r\n  --reading-line: var(--site-line);\r\n  --reading-accent: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .reading-layout .site-footer {\r\n  background: var(--site-surface);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .reading-layout\r\n  .main-content\r\n  :is(.action-button.primary, .exchange-button, .primary) {\r\n  background: #79573d;\r\n  color: #fffdf9;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .reading-layout\r\n  .main-content\r\n  :is(\r\n    .empty-state,\r\n    .error-state,\r\n    .sidebar-hint,\r\n    .work-author,\r\n    .work-description,\r\n    .work-meta\r\n  ) {\r\n  color: var(--site-muted);\r\n}\r\n\r\n/* Existing social surfaces already consume local tokens; legacy profile/form text uses the same palette. */\r\nhtml[data-site-theme=\"dark\"]\r\n  .social-workspace\r\n  :is(\r\n    .section-title,\r\n    .info-row .value,\r\n    .profile-form .el-form-item__label,\r\n    .image-label,\r\n    .post-title,\r\n    .post-content,\r\n    .comment-content,\r\n    .reply-content\r\n  ) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .social-workspace\r\n  :is(.info-row .label, .tip, .comment-meta, .reply-meta) {\r\n  color: var(--site-muted);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .social-workspace\r\n  :is(.info-row, .post-footer, .comment-item, .reply-item) {\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"] .ai-preference :is(h2, label) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] .social-workspace .el-card {\r\n  background: var(--site-surface);\r\n  color: var(--site-ink);\r\n  border-color: var(--site-line);\r\n}\r\n\r\n/* Shared Element UI overlays are mounted outside page layouts. */\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-dialog,\r\n    .el-message-box,\r\n    .el-dropdown-menu,\r\n    .el-select-dropdown,\r\n    .el-picker-panel,\r\n    .el-popover,\r\n    .el-autocomplete-suggestion,\r\n    .el-cascader-panel,\r\n    .el-cascader__dropdown,\r\n    .el-tooltip__popper.is-light,\r\n    .el-card,\r\n    .el-collapse-item__header,\r\n    .el-collapse-item__wrap\r\n  ) {\r\n  background: var(--site-surface);\r\n  color: var(--site-ink);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-dialog__title,\r\n    .el-dialog__body,\r\n    .el-message-box__title,\r\n    .el-message-box__content,\r\n    .el-form-item__label,\r\n    .el-checkbox__label,\r\n    .el-radio__label,\r\n    .el-switch__label,\r\n    .el-collapse-item__header,\r\n    .el-collapse-item__content,\r\n    .el-dropdown-menu__item,\r\n    .el-select-dropdown__item,\r\n    .el-date-picker__header-label,\r\n    .el-picker-panel__icon-btn,\r\n    .el-table,\r\n    .el-table th.el-table__cell,\r\n    .el-table td.el-table__cell\r\n  ) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-input__inner,\r\n    .el-textarea__inner,\r\n    .el-input-group__append,\r\n    .el-input-group__prepend,\r\n    .el-checkbox__inner,\r\n    .el-radio__inner,\r\n    .el-upload--picture-card,\r\n    .el-upload-dragger,\r\n    .el-upload-list--picture-card .el-upload-list__item\r\n  ) {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.el-input__inner, .el-textarea__inner):focus {\r\n  border-color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-input.is-disabled .el-input__inner,\r\n    .el-textarea.is-disabled .el-textarea__inner\r\n  ) {\r\n  background: #211f1b;\r\n  color: #a99e90;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-input .el-input__count,\r\n    .el-input .el-input__count-inner,\r\n    .el-textarea .el-input__count\r\n  ) {\r\n  background: var(--site-surface);\r\n  color: var(--site-muted);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-dropdown-menu__item:hover,\r\n    .el-dropdown-menu__item:focus,\r\n    .el-select-dropdown__item.hover,\r\n    .el-select-dropdown__item:hover,\r\n    .el-cascader-node:not(.is-disabled):hover,\r\n    .el-cascader-node:not(.is-disabled):focus,\r\n    .el-autocomplete-suggestion li:hover,\r\n    .el-date-table td.available:hover\r\n  ) {\r\n  background: var(--site-raised);\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-select-dropdown__item.selected,\r\n    .el-tabs__item.is-active,\r\n    .el-tabs__item:hover,\r\n    .el-checkbox__input.is-checked + .el-checkbox__label,\r\n    .el-radio__input.is-checked + .el-radio__label\r\n  ) {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-button {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-button:hover {\r\n  background: var(--site-raised);\r\n  border-color: #8f7559;\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-button.is-disabled {\r\n  background: #211f1b;\r\n  border-color: #443c31;\r\n  color: #a09484;\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-button--primary {\r\n  background: #79573d;\r\n  border-color: #947358;\r\n  color: #fffdf9;\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-button--primary:hover {\r\n  background: #886548;\r\n  color: #fffdf9;\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-button--text {\r\n  background: transparent;\r\n  border-color: transparent;\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-button--danger.is-plain {\r\n  color: #f0a28e;\r\n  background: #422b25;\r\n  border-color: #815445;\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-tag {\r\n  color: #d8b68f;\r\n  background: #44382b;\r\n  border-color: #6b5841;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.el-tag--success, .el-alert--success.is-light, .el-message--success) {\r\n  color: #b9d4a8;\r\n  background: #2d3928;\r\n  border-color: #4b6340;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.el-tag--warning, .el-alert--warning.is-light, .el-message--warning) {\r\n  color: #efd09a;\r\n  background: #413624;\r\n  border-color: #79613e;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.el-tag--danger, .el-alert--error.is-light, .el-message--error) {\r\n  color: #f0ad9b;\r\n  background: #422b25;\r\n  border-color: #815445;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.el-tag--info, .el-alert--info.is-light, .el-message--info) {\r\n  color: var(--site-muted);\r\n  background: var(--site-raised);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.el-message__content, .el-alert__description) {\r\n  color: inherit;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.el-table, .el-table tr, .el-table th.el-table__cell, .el-table td.el-table__cell) {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell,\r\n    .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell\r\n  ) {\r\n  background: var(--site-raised);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.el-table::before, .el-tabs__nav-wrap::after, .el-divider) {\r\n  background: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-divider__text {\r\n  color: var(--site-muted);\r\n  background: var(--site-surface);\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-skeleton__item {\r\n  background: #39332a;\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-skeleton.is-animated .el-skeleton__item {\r\n  background: linear-gradient(90deg, #39332a 25%, #494133 37%, #39332a 63%);\r\n  background-size: 400% 100%;\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-loading-mask {\r\n  background: #28251fd9;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.el-pagination button, .el-pager li, .el-pagination .el-input__inner) {\r\n  background: var(--site-surface);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-pager li.active {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.el-scrollbar__thumb, .el-switch__core) {\r\n  background: #665d4f;\r\n  border-color: #665d4f;\r\n}\r\nhtml[data-site-theme=\"dark\"] .el-switch.is-checked .el-switch__core {\r\n  background: #947358;\r\n  border-color: #947358;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .el-checkbox__input.is-checked .el-checkbox__inner,\r\n    .el-radio__input.is-checked .el-radio__inner\r\n  ) {\r\n  background: #947358;\r\n  border-color: #947358;\r\n}\r\nhtml[data-site-theme=\"dark\"] .popper__arrow {\r\n  border-bottom-color: var(--site-line) !important;\r\n  border-top-color: var(--site-line) !important;\r\n}\r\nhtml[data-site-theme=\"dark\"] .popper__arrow::after {\r\n  border-bottom-color: var(--site-surface) !important;\r\n  border-top-color: var(--site-surface) !important;\r\n}\r\n\r\n/* Authentication and the legacy creation hub. Editor paper styles are independent. */\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.login-container, .forgot-password-container, .write-page) {\r\n  background: var(--site-bg);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .login-box,\r\n    .forgot-password-box,\r\n    .work-item,\r\n    .write-section,\r\n    .activity-card,\r\n    .stats-card\r\n  ) {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.login-input, .work-search, .input-group, .slide-verify-placeholder) {\r\n  background: var(--site-raised);\r\n  color: var(--site-ink);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.login-header h1, .verify-info, .work-title, .section-title, .stats-number) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.login-header p, .step-tip, .login-footer, .work-desc, .work-stats, .work-update) {\r\n  color: var(--site-muted);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.forgot-link, .resend-btn, .work-action, .work-action:hover, .cancel-btn) {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .cancel-btn {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.writer-workspace, .writer-dialog, .writer-notice, .writer-popover) {\r\n  --writer-bg: #1e1c19;\r\n  --writer-panel: #28251f;\r\n  --writer-sidebar: #28251f;\r\n  --writer-hover: #353027;\r\n  --writer-active: #44382b;\r\n  --writer-border: #504536;\r\n  --writer-text: #eee5d9;\r\n  --writer-muted: #c1b6a7;\r\n  --writer-accent: #9bc7df;\r\n  --writer-focus: #9bc7df;\r\n  --writer-primary: #eee5d9;\r\n  --writer-primary-hover: #fffdf9;\r\n  --writer-primary-text: #28251f;\r\n  --writer-success: #b9d4a8;\r\n  --writer-success-bg: #2d3928;\r\n  --writer-warning: #efd09a;\r\n  --writer-warning-bg: #413624;\r\n  --writer-danger: #f0ad9b;\r\n  --writer-danger-bg: #422b25;\r\n  --writer-info-bg: #2d3540;\r\n  color-scheme: dark;\r\n}\r\nhtml[data-site-theme=\"dark\"] .social-workspace .el-button--primary {\r\n  background: #c8a782;\r\n  border-color: #c8a782;\r\n  color: #211e19;\r\n}\r\nhtml[data-site-theme=\"dark\"] .social-workspace .el-button--primary:hover {\r\n  background: #d6b58e;\r\n  border-color: #d6b58e;\r\n  color: #211e19;\r\n}\r\nhtml[data-site-theme=\"dark\"] .social-workspace .el-button--primary.is-disabled {\r\n  background: #554938;\r\n  border-color: #665640;\r\n  color: #c4b6a5;\r\n}\r\nhtml[data-site-theme=\"dark\"] :is(.reading-dialog, .reading-drawer) {\r\n  --reading-surface: var(--site-surface);\r\n  --reading-hover: var(--site-raised);\r\n  --reading-tint: #44382b;\r\n  --reading-ink: var(--site-ink);\r\n  --reading-secondary: #d3c8b9;\r\n  --reading-muted: var(--site-muted);\r\n  --reading-line: var(--site-line);\r\n  --reading-accent: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.el-drawer, .reader-activity-inbox, .reader-rewards, .redstone-center) {\r\n  background: var(--site-bg);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .center-panel,\r\n    .center-gate,\r\n    .tree-card,\r\n    .rewards-panel,\r\n    .rewards-gate,\r\n    .balance-overview,\r\n    .activity-message\r\n  ) {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.reader-rewards, .redstone-center, .reader-activity-inbox)\r\n  :is(h1, h2, h3, strong, label, dt, dd, th, td) {\r\n  color: var(--site-ink);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.reader-rewards, .redstone-center, .reader-activity-inbox)\r\n  :is(\r\n    .quiet,\r\n    .center-heading p,\r\n    .balance-overview p,\r\n    .ai-uses,\r\n    .tree-label,\r\n    .theme-label,\r\n    .task-list p,\r\n    .task-list small\r\n  ) {\r\n  color: var(--site-muted);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.reader-rewards, .redstone-center, .reader-activity-inbox)\r\n  :is(a, summary) {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.reader-rewards, .redstone-center, .reader-activity-inbox)\r\n  :is(\r\n    input,\r\n    select,\r\n    button:not(.primary):not(.exchange-button),\r\n    .pending-note,\r\n    .orb-grid > button\r\n  ) {\r\n  color: var(--site-ink);\r\n  background: var(--site-raised);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.reader-rewards, .redstone-center)\r\n  :is(.primary, .exchange-button) {\r\n  color: #fffdf9;\r\n  background: #79573d;\r\n  border-color: #947358;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .cost-line,\r\n    .grant-list > div,\r\n    .resource-balances,\r\n    .task-list article,\r\n    .rewards-panel header,\r\n    .declaration-panel details section\r\n  ) {\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.reader-rewards, .redstone-center)\r\n  :is(.error, .record-amount.spent) {\r\n  color: #f0ad9b;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.reader-rewards, .redstone-center)\r\n  :is(.success, .notice, .completed, .record-amount) {\r\n  color: #b9d4a8;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .outer.reading-layout\r\n  .main-content\r\n  :is(.novel-container, .manga-container)\r\n  .action-button.primary {\r\n  background: #79573d;\r\n  color: #fffdf9;\r\n  border-color: #947358;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .outer.reading-layout\r\n  .main-content\r\n  .novel-page\r\n  .novel-container\r\n  .novel-header\r\n  .novel-info\r\n  .novel-actions\r\n  .action-button.primary {\r\n  background: #79573d;\r\n  color: #fffdf9;\r\n}\r\nhtml[data-site-theme=\"dark\"] .writer-workspace .el-button {\r\n  background: var(--writer-panel);\r\n  color: var(--writer-text);\r\n  border-color: var(--writer-border);\r\n}\r\nhtml[data-site-theme=\"dark\"] .writer-workspace .el-button--primary {\r\n  background: var(--writer-primary);\r\n  color: var(--writer-primary-text);\r\n}\r\n/* Layout-specific legacy rules carry scoped attributes, so match the layout explicitly. */\r\nhtml[data-site-theme=\"dark\"] .outer:is(.home-layout, .reading-layout, .social-layout) {\r\n  background: var(--site-bg);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .outer:is(.home-layout, .reading-layout, .social-layout)\r\n  :is(.navbar, .site-footer, .footer) {\r\n  background: var(--site-surface);\r\n  color: var(--site-muted);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .outer:is(.home-layout, .reading-layout, .social-layout)\r\n  .navbar\r\n  :is(.nav-link, .user-nickname, .user-info) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .outer:is(.home-layout, .reading-layout, .social-layout)\r\n  .navbar\r\n  .nav-link-active {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .outer:is(.home-layout, .reading-layout, .social-layout) {\r\n  --site-footer-link: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .write-page\r\n  :is(.work-empty, .sidebar-section, .loading-state, .error-state, .activity-info) {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .write-page\r\n  :is(.page-title, .sidebar-title, .stat-value, .empty-title, .error-title) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .write-page\r\n  :is(.tab-button, .stat-label, .empty-desc, .loading-text, .error-desc) {\r\n  color: var(--site-muted);\r\n}\r\nhtml[data-site-theme=\"dark\"] .write-page :is(.stat-item, .activity-item, .work-action) {\r\n  background: var(--site-raised);\r\n  color: var(--site-ink);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"] .write-page .tab-button.active {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .outer.reading-layout .main-content .reader-ai .send,\r\nhtml[data-site-theme=\"dark\"] .reading-dialog .el-button--primary,\r\nhtml[data-site-theme=\"dark\"] .el-drawer.reading-drawer .submit-btn {\r\n  background: #79573d;\r\n  border-color: #947358;\r\n  color: #fffdf9;\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .user-profile-page\r\n  :is(.profile-header, .content-tabs, .post-item, .world-item) {\r\n  background: var(--site-surface);\r\n  border-color: var(--site-line);\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .user-profile-page\r\n  :is(\r\n    .user-name,\r\n    .user-id,\r\n    .user-motto,\r\n    .stat-number,\r\n    .work-title,\r\n    .post-title,\r\n    .world-title,\r\n    .tab-item.active\r\n  ) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .user-profile-page\r\n  :is(\r\n    .stat-label,\r\n    .empty-state,\r\n    .tab-item,\r\n    .post-content,\r\n    .post-time,\r\n    .world-description\r\n  ) {\r\n  color: var(--site-muted);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  .user-profile-page\r\n  :is(.tab-item:hover, .tab-item.active, .post-novel) {\r\n  background: var(--site-raised);\r\n}\r\nhtml[data-site-theme=\"dark\"] .user-profile-page :is(.tab-header, .post-footer) {\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.profile-membership, .profile-display-title, .public-badge-detail a) {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .open-letter {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] .open-letter :is(a, .letter-eyebrow, time) {\r\n  color: var(--site-accent);\r\n}\r\nhtml[data-site-theme=\"dark\"] .archive-note {\r\n  background: var(--site-raised);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(\r\n    .agreement-container,\r\n    .agreement-content,\r\n    .search-header,\r\n    .search-results,\r\n    .search-content,\r\n    .search-page .result-item\r\n  ) {\r\n  background: var(--site-surface);\r\n  color: var(--site-ink);\r\n  border-color: var(--site-line);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.agreement-page, .search-page)\r\n  :is(h1, h2, h3, p, .tab-item, .result-title) {\r\n  color: var(--site-ink);\r\n}\r\nhtml[data-site-theme=\"dark\"] .personal-tree > span {\r\n  color: var(--site-muted);\r\n}\r\n/* Apply before hydration too; workspace data attributes are refreshed after mount. */\r\nhtml[data-site-theme=\"dark\"] .social-workspace {\r\n  --wood: #c8a782;\r\n  --ink: var(--site-ink);\r\n  --muted: var(--site-muted);\r\n  --line: var(--site-line);\r\n  --surface: var(--site-surface);\r\n  --soft: var(--site-raised);\r\n}\r\nhtml[data-site-theme=\"dark\"] .social-workspace .workspace-compose { color: #211e19 !important; }\r\nhtml[data-site-theme=\"dark\"] .social-workspace .workspace-nav nav a:is(.selected, .nuxt-link-active, :hover) { background: var(--soft); color: var(--wood); }\r\n", ""]);
+// Exports
+module.exports = ___CSS_LOADER_EXPORT___;
+
+
+/***/ }),
+/* 94 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(95);
+if(content.__esModule) content = content.default;
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+__webpack_require__(4).default("5bf96eed", content, true)
+
+/***/ }),
+/* 95 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Imports
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
+var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
+// Module
+___CSS_LOADER_EXPORT___.push([module.i, "/* Site-owned interaction tokens also theme overlays mounted outside page components. */\r\n:root {\r\n  --ui-brand: #79573d;\r\n  --ui-brand-soft: #f2e9dd;\r\n  --ui-primary-text: #fffdf9;\r\n  --ui-focus: #947358;\r\n}\r\nhtml[data-site-theme=\"dark\"] {\r\n  --ui-brand: #c8a782;\r\n  --ui-brand-soft: #353027;\r\n  --ui-primary-text: #211e19;\r\n  --ui-focus: #d8b68f;\r\n}\r\n.el-button--primary {\r\n  background: var(--ui-brand);\r\n  border-color: var(--ui-brand);\r\n  color: var(--ui-primary-text);\r\n}\r\n.el-button--primary:is(:hover, :focus) {\r\n  background: #67472f;\r\n  border-color: #67472f;\r\n  color: #fffdf9;\r\n}\r\n.el-button--primary.is-disabled,\r\n.el-button--primary.is-disabled:is(:hover, :focus) {\r\n  background: var(--ui-brand);\r\n  border-color: var(--ui-brand);\r\n  color: var(--ui-primary-text);\r\n  opacity: 0.6;\r\n}\r\n.el-button:not(.el-button--primary):not(.el-button--success):not(.el-button--warning):not(\r\n    .el-button--danger\r\n  ):not(.el-button--info):is(:hover, :focus) {\r\n  color: var(--ui-brand);\r\n  border-color: var(--ui-focus);\r\n  background: var(--ui-brand-soft);\r\n}\r\n.el-button--text {\r\n  color: var(--ui-brand);\r\n}\r\n.el-button--text:is(:hover, :focus) {\r\n  color: var(--ui-brand);\r\n  background: transparent;\r\n  border-color: transparent;\r\n}\r\n.el-input__inner:focus,\r\n.el-textarea__inner:focus,\r\n.el-select .el-input.is-focus .el-input__inner,\r\n.el-select .el-input__inner:focus,\r\n.el-cascader .el-input.is-focus .el-input__inner {\r\n  border-color: var(--ui-focus);\r\n}\r\n.el-input-number__decrease:hover,\r\n.el-input-number__increase:hover,\r\n.el-date-picker__header-label:hover,\r\n.el-picker-panel__icon-btn:hover,\r\n.el-date-table td.available:hover,\r\n.el-month-table td .cell:hover,\r\n.el-year-table td .cell:hover {\r\n  color: var(--ui-brand);\r\n}\r\n.el-dropdown-menu__item:not(.is-disabled):hover,\r\n.el-dropdown-menu__item:focus,\r\n.el-select-dropdown__item.hover,\r\n.el-autocomplete-suggestion li:hover,\r\n.el-cascader-node:not(.is-disabled):is(:hover, :focus) {\r\n  color: var(--ui-brand);\r\n  background: var(--ui-brand-soft);\r\n}\r\n.el-select-dropdown__item.selected,\r\n.el-cascader-node.in-active-path,\r\n.el-cascader-node.is-active,\r\n.el-cascader-node.is-selectable.in-checked-path,\r\n.el-tabs__item.is-active,\r\n.el-tabs__item:hover,\r\n.el-radio__input.is-checked + .el-radio__label,\r\n.el-checkbox__input.is-checked + .el-checkbox__label,\r\n.el-pagination .el-pager li.active,\r\n.el-pagination button:hover {\r\n  color: var(--ui-brand);\r\n}\r\n.el-tabs__active-bar {\r\n  background-color: var(--ui-brand);\r\n}\r\n.el-radio__input.is-checked .el-radio__inner,\r\n.el-checkbox__input.is-checked .el-checkbox__inner,\r\n.el-checkbox__input.is-indeterminate .el-checkbox__inner,\r\n.el-switch.is-checked .el-switch__core {\r\n  background: var(--ui-brand);\r\n  border-color: var(--ui-brand);\r\n}\r\n.el-radio__inner:hover,\r\n.el-checkbox__inner:hover,\r\n.el-checkbox__input.is-focus .el-checkbox__inner,\r\n.el-radio__input.is-focus .el-radio__inner {\r\n  border-color: var(--ui-focus);\r\n}\r\n.el-radio-button__orig-radio:checked + .el-radio-button__inner {\r\n  background: var(--ui-brand);\r\n  border-color: var(--ui-brand);\r\n  color: var(--ui-primary-text);\r\n  box-shadow: -1px 0 0 0 var(--ui-brand);\r\n}\r\n.el-radio-button__inner:hover {\r\n  color: var(--ui-brand);\r\n}\r\n.el-date-table td.today span,\r\n.el-date-table td.start-date span,\r\n.el-date-table td.end-date span,\r\n.el-month-table td.current:not(.disabled) .cell,\r\n.el-year-table td.current:not(.disabled) .cell {\r\n  color: var(--ui-brand);\r\n}\r\n.el-date-table td.current:not(.disabled) span,\r\n.el-date-table td.start-date span,\r\n.el-date-table td.end-date span {\r\n  color: var(--ui-primary-text);\r\n  background: var(--ui-brand);\r\n}\r\n.el-date-table td.in-range div {\r\n  background: var(--ui-brand-soft);\r\n}\r\n.el-loading-spinner .path {\r\n  stroke: var(--ui-brand);\r\n}\r\n.el-loading-spinner i,\r\n.el-loading-spinner .el-loading-text {\r\n  color: var(--ui-brand);\r\n}\r\n.el-upload-dragger:hover,\r\n.el-upload--picture-card:hover,\r\n.el-upload:focus {\r\n  border-color: var(--ui-focus);\r\n}\r\n.el-upload-dragger .el-upload__text em {\r\n  color: var(--ui-brand);\r\n}\r\n.el-tooltip__popper.is-light {\r\n  border-color: var(--site-line);\r\n}\r\n:is(.writer-workspace, .writer-dialog, .writer-notice, .writer-popover) {\r\n  --writer-accent: var(--ui-brand);\r\n  --writer-focus: var(--ui-focus);\r\n}\r\nhtml[data-site-theme=\"dark\"]\r\n  :is(.writer-workspace, .writer-dialog, .writer-notice, .writer-popover) {\r\n  --writer-accent: var(--ui-brand);\r\n  --writer-focus: var(--ui-focus);\r\n}\r\n\r\n/* Keep the functional hierarchy clear and use a consistent 8px-based rhythm. */\r\n.social-workspace {\r\n  gap: 24px;\r\n  padding: 24px 28px 48px;\r\n}\r\n.workspace-heading {\r\n  margin: 0 0 20px;\r\n  gap: 16px;\r\n}\r\n.workspace-heading h1 {\r\n  margin: 0;\r\n  font-size: 26px;\r\n  line-height: 1.4;\r\n}\r\n.workspace-heading p {\r\n  margin-top: 8px;\r\n}\r\n.workspace-actions {\r\n  flex-wrap: wrap;\r\n  gap: 8px;\r\n}\r\n.workspace-actions .el-button + .el-button {\r\n  margin-left: 0;\r\n}\r\n.workspace-sections {\r\n  display: flex;\r\n  gap: 24px;\r\n  align-items: center;\r\n  overflow-x: auto;\r\n  border-bottom: 1px solid var(--line);\r\n  margin-bottom: 24px;\r\n  scrollbar-width: thin;\r\n}\r\n.workspace-sections a {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  flex: none;\r\n  min-height: 44px;\r\n  padding: 10px 0;\r\n  color: var(--muted);\r\n  border-bottom: 2px solid transparent;\r\n  font-size: 14px;\r\n  line-height: 22px;\r\n  white-space: nowrap;\r\n}\r\n.workspace-sections a:is(.current, :hover) {\r\n  color: var(--wood);\r\n}\r\n.workspace-sections a.current {\r\n  border-bottom-color: var(--wood);\r\n  font-weight: 600;\r\n}\r\n.social-workspace .social-panel {\r\n  padding: 24px;\r\n  margin-bottom: 16px;\r\n  border-radius: 12px;\r\n}\r\n.social-workspace .social-state {\r\n  padding: 40px 24px;\r\n}\r\n.social-workspace .social-post {\r\n  padding: 24px;\r\n  margin-bottom: 16px;\r\n  border-radius: 12px;\r\n}\r\n.social-workspace .social-toolbar {\r\n  gap: 16px;\r\n  margin-bottom: 16px;\r\n  flex-wrap: wrap;\r\n}\r\n.social-workspace .social-toolbar > :is(h2, h3) {\r\n  margin: 0;\r\n}\r\n.social-workspace .social-toolbar .social-tabs {\r\n  margin-bottom: 0;\r\n}\r\n.social-workspace .social-tabs {\r\n  gap: 8px;\r\n  margin-bottom: 16px;\r\n}\r\n.social-workspace .social-tabs button {\r\n  min-height: 40px;\r\n  padding: 8px 16px;\r\n  line-height: 22px;\r\n  border-radius: 8px;\r\n}\r\n.social-workspace .social-list-row {\r\n  padding: 16px 0;\r\n  gap: 16px;\r\n}\r\n.social-workspace\r\n  :is(\r\n    .personal-columns,\r\n    .personal-quick,\r\n    .circle-content-grid,\r\n    .circle-editor-grid,\r\n    .product-detail\r\n  ) {\r\n  gap: 16px;\r\n}\r\n.social-workspace .personal-services :is(a, button) {\r\n  padding: 16px 0;\r\n  gap: 16px;\r\n}\r\n.social-workspace :is(.personal-services, .profile-hero-main, .row-main) {\r\n  overflow-wrap: anywhere;\r\n}\r\n.social-workspace .personal-services a > div {\r\n  min-width: 0;\r\n}\r\n.social-workspace .personal-services a > span {\r\n  flex: none;\r\n}\r\n.social-workspace .social-card-grid > .social-panel {\r\n  margin-bottom: 0;\r\n}\r\n.social-workspace .el-button {\r\n  min-height: 36px;\r\n}\r\n.social-workspace .el-button--text {\r\n  min-height: 32px;\r\n}\r\n.social-workspace .el-form .el-form-item,\r\n.el-dialog .el-form .el-form-item {\r\n  margin-bottom: 20px;\r\n}\r\n.social-workspace .el-form--label-top .el-form-item__label,\r\n.el-dialog .el-form--label-top .el-form-item__label {\r\n  line-height: 20px;\r\n  padding-bottom: 8px;\r\n}\r\n.social-workspace .el-form :is(.el-input__inner, .el-input__icon),\r\n.el-dialog .el-form :is(.el-input__inner, .el-input__icon) {\r\n  min-height: 40px;\r\n  line-height: 40px;\r\n}\r\n.social-workspace .el-form .el-select,\r\n.el-dialog .el-form .el-select {\r\n  max-width: 100%;\r\n}\r\n.social-workspace .el-textarea__inner,\r\n.el-dialog .el-textarea__inner {\r\n  padding: 10px 12px;\r\n  line-height: 1.65;\r\n}\r\n.social-workspace main .settings-card {\r\n  padding: 24px;\r\n  margin-bottom: 16px;\r\n  border-radius: 12px !important;\r\n}\r\n.settings-page .section-title {\r\n  margin-bottom: 16px;\r\n}\r\n.settings-page .image-settings {\r\n  gap: 24px;\r\n}\r\n.settings-page .cover-preview {\r\n  max-width: 100%;\r\n}\r\n.settings-page .tip {\r\n  margin-top: 8px;\r\n  line-height: 1.6;\r\n}\r\n.settings-appearance-heading {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  gap: 16px;\r\n  margin-bottom: 16px;\r\n}\r\n.settings-appearance-heading .section-title {\r\n  margin: 0;\r\n}\r\n.settings-appearance-heading a {\r\n  color: var(--wood);\r\n  font-size: 14px;\r\n}\r\n.el-dialog {\r\n  max-width: calc(100vw - 48px);\r\n  border-radius: 12px;\r\n}\r\n.el-dialog__header {\r\n  padding: 20px 24px 16px;\r\n}\r\n.el-dialog__headerbtn {\r\n  top: 20px;\r\n  right: 24px;\r\n}\r\n.el-dialog__body {\r\n  padding: 8px 24px 24px;\r\n  max-height: calc(100dvh - 210px);\r\n  overflow-y: auto;\r\n}\r\n.el-dialog__footer {\r\n  padding: 16px 24px 20px;\r\n  border-top: 1px solid var(--site-line);\r\n}\r\n.el-dialog__footer .el-button + .el-button {\r\n  margin-left: 8px;\r\n}\r\n.checkout-address-actions {\r\n  display: flex;\r\n  flex-wrap: wrap;\r\n  gap: 8px 16px;\r\n  margin-top: 8px;\r\n}\r\n.checkout-address-actions .el-button + .el-button {\r\n  margin-left: 0;\r\n}\r\nhtml[data-site-theme=\"dark\"] .social-workspace .chat-page {\r\n  background: var(--site-bg);\r\n}\r\n@media (min-width: 1120px) {\r\n  .settings-page {\r\n    display: grid;\r\n    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);\r\n    gap: 16px;\r\n    align-items: start;\r\n  }\r\n  .social-workspace main .settings-page > .settings-card {\r\n    margin-bottom: 0;\r\n    height: 100%;\r\n  }\r\n  .settings-profile {\r\n    grid-column: 1;\r\n    grid-row: 1 / span 2;\r\n  }\r\n  .settings-language {\r\n    grid-column: 2;\r\n    grid-row: 1;\r\n  }\r\n  .settings-ai {\r\n    grid-column: 2;\r\n    grid-row: 2;\r\n  }\r\n  .settings-appearance {\r\n    grid-column: 1 / -1;\r\n  }\r\n  .settings-page > :is(.el-alert, .el-button) {\r\n    grid-column: 1 / -1;\r\n  }\r\n}\r\n@media (max-width: 850px) {\r\n  .social-workspace {\r\n    padding: 20px 16px 32px;\r\n    gap: 20px;\r\n  }\r\n  .social-workspace .social-panel,\r\n  .social-workspace main .settings-card,\r\n  .social-workspace .social-post {\r\n    padding: 20px;\r\n  }\r\n  .workspace-sections {\r\n    gap: 20px;\r\n    margin-bottom: 20px;\r\n  }\r\n  .workspace-heading h1 {\r\n    font-size: 24px;\r\n  }\r\n  .social-workspace .personal-columns {\r\n    grid-template-columns: minmax(0, 1fr);\r\n  }\r\n}\r\n@media (max-width: 540px) {\r\n  .el-dialog {\r\n    max-width: calc(100vw - 24px);\r\n    margin-top: 8vh !important;\r\n  }\r\n  .el-dialog__header {\r\n    padding: 20px 20px 16px;\r\n  }\r\n  .el-dialog__body {\r\n    padding: 8px 20px 20px;\r\n    max-height: calc(100dvh - 170px);\r\n  }\r\n  .el-dialog__footer {\r\n    padding: 16px 20px;\r\n  }\r\n  .social-workspace .social-panel,\r\n  .social-workspace main .settings-card,\r\n  .social-workspace .social-post {\r\n    padding: 16px;\r\n  }\r\n  .social-workspace .personal-quick {\r\n    grid-template-columns: 1fr;\r\n    gap: 0;\r\n  }\r\n}\r\n.settings-session { display:flex; justify-content:flex-end; margin-top:24px; padding-top:16px; border-top:1px solid var(--line); }\r\n.circle-hero-content .circle-description { max-width:52em; margin-top:8px; line-height:1.6; font-size:14px; overflow-wrap:anywhere; }\r\n", ""]);
+// Exports
+module.exports = ___CSS_LOADER_EXPORT___;
+
+
+/***/ }),
+/* 96 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__.p + "img/logo_new.8cdba8a.png";
+
+/***/ }),
+/* 97 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_FloatingWindow_vue_vue_type_style_index_0_id_35419b22_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(40);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MobileDownloadButton_vue_vue_type_style_index_0_id_057fff3b_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(48);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MobileDownloadButton_vue_vue_type_style_index_0_id_057fff3b_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MobileDownloadButton_vue_vue_type_style_index_0_id_057fff3b_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MobileDownloadButton_vue_vue_type_style_index_0_id_057fff3b_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MobileDownloadButton_vue_vue_type_style_index_0_id_057fff3b_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+
+
+/***/ }),
+/* 98 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Imports
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
+var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
+// Module
+___CSS_LOADER_EXPORT___.push([module.i, "\n.mobile-download-button[data-v-057fff3b] { position:fixed; top:9px; right:16px; z-index:1100; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 16px; border:1px solid #79573c; border-radius:7px; background:#79573c; color:#fffdf7; font-size:14px; font-weight:600; line-height:1.5; text-decoration:none; box-sizing:border-box; white-space:nowrap;\n}\n.mobile-download-button[data-v-057fff3b]:hover { background:#65452e;\n}\n.mobile-download-button[data-v-057fff3b]:focus-visible { outline:2px solid #79573c; outline-offset:3px;\n}\n@media(max-width:720px) {\n.mobile-download-button[data-v-057fff3b] { right:12px; padding:0 12px; font-size:13px;\n}\n}\r\n", ""]);
+// Exports
+module.exports = ___CSS_LOADER_EXPORT___;
+
+
+/***/ }),
+/* 99 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_GlobalThemeSwitch_vue_vue_type_style_index_0_id_31b26f28_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(49);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_GlobalThemeSwitch_vue_vue_type_style_index_0_id_31b26f28_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_GlobalThemeSwitch_vue_vue_type_style_index_0_id_31b26f28_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_GlobalThemeSwitch_vue_vue_type_style_index_0_id_31b26f28_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_GlobalThemeSwitch_vue_vue_type_style_index_0_id_31b26f28_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+
+
+/***/ }),
+/* 100 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Imports
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
+var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
+// Module
+___CSS_LOADER_EXPORT___.push([module.i, "\n.global-theme-switch[data-v-31b26f28] {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  flex: none;\r\n  width: 36px;\r\n  height: 36px;\r\n  padding: 0;\r\n  border: 1px solid #e3dbcf;\r\n  border-radius: 8px;\r\n  background: #fffdf9;\r\n  color: #79573d;\r\n  cursor: pointer;\r\n  font-size: 16px;\n}\n.global-theme-switch[data-v-31b26f28]:hover {\r\n  background: #f2e9dd;\n}\n.global-theme-switch[data-v-31b26f28]:focus-visible {\r\n  outline: 2px solid #947358;\r\n  outline-offset: 3px;\n}\nhtml[data-site-theme=\"dark\"] .global-theme-switch[data-v-31b26f28] {\r\n  color: #eee5d9;\r\n  background: #29251f;\r\n  border-color: #504536;\n}\r\n", ""]);
+// Exports
+module.exports = ___CSS_LOADER_EXPORT___;
+
+
+/***/ }),
+/* 101 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_FloatingWindow_vue_vue_type_style_index_0_id_35419b22_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(50);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_FloatingWindow_vue_vue_type_style_index_0_id_35419b22_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_FloatingWindow_vue_vue_type_style_index_0_id_35419b22_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_FloatingWindow_vue_vue_type_style_index_0_id_35419b22_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_FloatingWindow_vue_vue_type_style_index_0_id_35419b22_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
-/* 82 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.floating-window[data-v-35419b22], .floating-window *[data-v-35419b22] {\r\n  box-sizing: border-box;\n}\n.floating-window[data-v-35419b22] {\r\n  position: absolute;\r\n  background-color: #fff;\r\n  border-radius: 8px;\r\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\r\n  display: flex;\r\n  flex-direction: column;\r\n  overflow: hidden;\r\n  will-change: transform, opacity;\r\n  transform-origin: center;\n}\n.floating-window.is-closing[data-v-35419b22] {\r\n  pointer-events: none;\n}\n.window-animation-enter-active[data-v-35419b22], \r\n.window-animation-leave-active[data-v-35419b22] {\r\n  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);\r\n  pointer-events: none;\n}\n.window-animation-enter[data-v-35419b22], \r\n.window-animation-leave-to[data-v-35419b22] {\r\n  opacity: 0;\r\n  transform: scale(0.8);\n}\n.window-header[data-v-35419b22] {\r\n  background-color: #947358;\r\n  height: 36px;\r\n  display: flex;\r\n  justify-content: space-between;\r\n  align-items: center;\r\n  padding: 0 12px;\r\n  cursor: move;\r\n  user-select: none;\n}\n.window-title[data-v-35419b22] {\r\n  color: #fff;\r\n  font-weight: bold;\r\n  font-size: 14px;\r\n  flex: 1;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\n}\n.window-controls[data-v-35419b22] {\r\n  display: flex;\r\n  align-items: center;\n}\n.control-btn[data-v-35419b22] {\r\n  border: none;\r\n  background: transparent;\r\n  color: #fff;\r\n  width: 24px;\r\n  height: 24px;\r\n  border-radius: 50%;\r\n  display: flex;\r\n  justify-content: center;\r\n  align-items: center;\r\n  margin-left: 6px;\r\n  cursor: pointer;\r\n  transition: background-color 0.2s;\n}\n.control-btn[data-v-35419b22]:hover {\r\n  background-color: rgba(255, 255, 255, 0.2);\n}\n.close-btn[data-v-35419b22]:hover {\r\n  background-color: #f56c6c;\n}\n.window-content[data-v-35419b22] {\r\n  flex: 1;\r\n  overflow: hidden;\r\n  position: relative;\r\n  display: flex;\n}\n.window-iframe[data-v-35419b22] {\r\n  border: none;\r\n  flex: 1;\r\n  display: block;\n}\n.iframe-overlay[data-v-35419b22] {\r\n  position: absolute;\r\n  top: 0;\r\n  left: 0;\r\n  right: 0;\r\n  bottom: 0;\r\n  background-color: rgba(255, 255, 255, 0.01);\r\n  z-index: 100;\n}\n.resize-handle[data-v-35419b22] {\r\n  position: absolute;\r\n  background-color: transparent;\r\n  z-index: 10;\n}\n.resize-handle-right[data-v-35419b22] {\r\n  right: 0;\r\n  top: 36px;\r\n  width: 6px;\r\n  height: calc(100% - 36px - 6px);\r\n  cursor: e-resize;\n}\n.resize-handle-bottom[data-v-35419b22] {\r\n  bottom: 0;\r\n  left: 6px;\r\n  height: 6px;\r\n  width: calc(100% - 12px);\r\n  cursor: s-resize;\n}\n.resize-handle-corner[data-v-35419b22] {\r\n  right: 0;\r\n  bottom: 0;\r\n  width: 12px;\r\n  height: 12px;\r\n  cursor: se-resize;\n}\r\n", ""]);
@@ -13689,22 +14334,22 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 83 */
+/* 103 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowMinimizedBar_vue_vue_type_style_index_0_id_7a62759e_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(41);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowMinimizedBar_vue_vue_type_style_index_0_id_7a62759e_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(51);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowMinimizedBar_vue_vue_type_style_index_0_id_7a62759e_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowMinimizedBar_vue_vue_type_style_index_0_id_7a62759e_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowMinimizedBar_vue_vue_type_style_index_0_id_7a62759e_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowMinimizedBar_vue_vue_type_style_index_0_id_7a62759e_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
-/* 84 */
+/* 104 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.minimized-bar[data-v-7a62759e] {\r\n  position: fixed;\r\n  left: 20px;\r\n  bottom: 20px;\r\n  display: flex;\r\n  gap: 10px;\r\n  z-index: 9999;\n}\n.minimized-window[data-v-7a62759e] {\r\n  width: 40px;\r\n  height: 40px;\r\n  background-color: #947358;\r\n  border-radius: 50%;\r\n  display: flex;\r\n  justify-content: center;\r\n  align-items: center;\r\n  cursor: pointer;\r\n  transition: transform 0.2s, box-shadow 0.2s;\r\n  color: white;\r\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);\r\n  animation: minimized-pulse-7a62759e 2s infinite alternate ease-in-out;\n}\n.minimized-window[data-v-7a62759e]:hover {\r\n  transform: scale(1.1);\r\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);\r\n  animation: none;\n}\r\n\r\n/* 动画效果 */\n.minimize-animation-enter-active[data-v-7a62759e],\r\n.minimize-animation-leave-active[data-v-7a62759e] {\r\n  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);\n}\n.minimize-animation-enter[data-v-7a62759e],\r\n.minimize-animation-leave-to[data-v-7a62759e] {\r\n  opacity: 0;\r\n  transform: scale(0.1);\n}\n.minimize-animation-move[data-v-7a62759e] {\r\n  transition: transform 0.3s;\n}\r\n\r\n/* 脉动动画更柔和 */\n@keyframes minimized-pulse-7a62759e {\n0% {\r\n    transform: scale(1);\r\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);\n}\n100% {\r\n    transform: scale(1.05);\r\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);\n}\n}\r\n", ""]);
@@ -13713,22 +14358,22 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 85 */
+/* 105 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowManager_vue_vue_type_style_index_0_id_0a2c6b19_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(42);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowManager_vue_vue_type_style_index_0_id_0a2c6b19_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(52);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowManager_vue_vue_type_style_index_0_id_0a2c6b19_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowManager_vue_vue_type_style_index_0_id_0a2c6b19_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowManager_vue_vue_type_style_index_0_id_0a2c6b19_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_WindowManager_vue_vue_type_style_index_0_id_0a2c6b19_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
-/* 86 */
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.window-manager[data-v-0a2c6b19] {\r\n  position: fixed;\r\n  top: 0;\r\n  left: 0;\r\n  width: 100%;\r\n  height: 100%;\r\n  pointer-events: none; /* 让事件穿透到下层内容 */\r\n  z-index: 1000;\n}\r\n\r\n/* 窗口本身需要接收事件 */\n.window-manager > *[data-v-0a2c6b19] {\r\n  pointer-events: auto;\n}\r\n", ""]);
@@ -13737,22 +14382,22 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 87 */
+/* 107 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderAudioPlayer_vue_vue_type_style_index_0_id_4b74798a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(44);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderAudioPlayer_vue_vue_type_style_index_0_id_4b74798a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(54);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderAudioPlayer_vue_vue_type_style_index_0_id_4b74798a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderAudioPlayer_vue_vue_type_style_index_0_id_4b74798a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderAudioPlayer_vue_vue_type_style_index_0_id_4b74798a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderAudioPlayer_vue_vue_type_style_index_0_id_4b74798a_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
-/* 88 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.audio-player[data-v-4b74798a] { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); width: min(1000px,calc(100% - 32px)); border: 1px solid #d8cdbb; border-radius: 12px; background: #fffdf9; color: #514535; box-shadow: 0 7px 35px #3b302530; padding: 14px 18px; z-index: 350; font-size: 13px;\n}.audio-main[data-v-4b74798a] { display: flex; gap: 16px; align-items: center;\n}.cover[data-v-4b74798a] { width: 35px; height: 47px; object-fit: cover; border-radius: 3px;\n}.audio-title[data-v-4b74798a] { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0;\n}.audio-title strong[data-v-4b74798a],.audio-title a[data-v-4b74798a] { white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\n}.audio-title a[data-v-4b74798a] { font-size: 12px; color: #8d7861; text-decoration: none;\n}.play-controls[data-v-4b74798a] { display: flex; gap: 4px; align-items: center;\n}button[data-v-4b74798a] { border: 0; background: none; padding: 7px; color: inherit; font-size: 13px; cursor: pointer;\n}button[data-v-4b74798a]:disabled { opacity: .35; cursor: default;\n}.play[data-v-4b74798a] { font-size: 26px; padding: 2px 9px;\n}.close[data-v-4b74798a] { font-size: 24px; line-height: 1;\n}.audio-progress[data-v-4b74798a] { display: flex; align-items: center; gap: 12px; padding-top: 9px; font-size: 11px; color: #8b7865;\n}.audio-progress input[data-v-4b74798a] { flex: 1; min-width: 30px; accent-color: #947358;\n}.audio-settings[data-v-4b74798a] { display: flex; flex-wrap: wrap; gap: 14px; padding-top: 14px; border-top: 1px solid #eae3d9; margin-top: 12px;\n}.audio-settings label[data-v-4b74798a] { display: flex; align-items: center; gap: 6px;\n}select[data-v-4b74798a] { border: 1px solid #d8cdbb; background: #fff; color: inherit; border-radius: 5px; padding: 7px; max-width: 215px;\n}input[type=checkbox][data-v-4b74798a] { accent-color: #947358;\n}.engine-note[data-v-4b74798a] { margin: 0; font-size: 11px; color: #9a8b7b; flex-basis: 100%;\n}.sleep-status[data-v-4b74798a] { font-size: 12px; margin: 0;\n}.audio-error[data-v-4b74798a] { margin: 6px 0 0; color: #a54434;\n}.audio-error button[data-v-4b74798a] { text-decoration: underline;\n}button[data-v-4b74798a]:focus-visible,select[data-v-4b74798a]:focus-visible,input[data-v-4b74798a]:focus-visible { outline: 2px solid #947358; outline-offset: 2px;\n}@media(max-width:700px) {\n.audio-player[data-v-4b74798a] { padding: 12px; bottom: 10px;\n}.audio-main[data-v-4b74798a] { gap: 6px; flex-wrap: wrap;\n}.cover[data-v-4b74798a] { display: none;\n}.audio-title[data-v-4b74798a] { flex-basis: calc(100% - 50px); order: 0;\n}.close[data-v-4b74798a] { order: 1;\n}.play-controls[data-v-4b74798a] { order: 2;\n}.details-toggle[data-v-4b74798a] { order: 3; margin-left: auto;\n}.audio-settings select[data-v-4b74798a] { max-width: 180px;\n}\n}\n.audio-resume[data-v-4b74798a]{position:fixed;bottom:18px;right:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:min(540px,calc(100% - 48px));padding:14px 18px;border:1px solid #d8cdbb;border-radius:12px;background:#fffdf9;color:#514535;box-shadow:0 7px 35px #3b302530;z-index:350;font-size:13px}.audio-resume>div[data-v-4b74798a]{flex:1;min-width:0}.audio-resume strong[data-v-4b74798a],.audio-resume span[data-v-4b74798a]{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.audio-resume span[data-v-4b74798a]{font-size:11px;color:#8b7865;margin-top:7px}.audio-resume p[data-v-4b74798a]{width:100%;margin:0;font-size:12px;color:#a54434}.audio-notice[data-v-4b74798a]{font-size:12px;color:#8b7865;margin:8px 0 0}\r\n", ""]);
@@ -13761,55 +14406,55 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 89 */
+/* 109 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_70076646_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(45);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_70076646_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_70076646_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_70076646_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_70076646_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_59fa9636_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(55);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_59fa9636_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_59fa9636_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_59fa9636_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_default_vue_vue_type_style_index_0_id_59fa9636_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
-/* 90 */
+/* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "\r\n/* 全局样式已移至 assets/css/global.css */\n.navbar[data-v-70076646] {\r\n  background-color: #fff;\r\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);\r\n  position: fixed;\r\n  top: 0;\r\n  left: 0;\r\n  right: 0;\r\n  z-index: 1000;\n}\n.navbar-container[data-v-70076646] {\r\n  max-width: 1200px;\r\n  margin: 0 auto;\r\n  display: flex;\r\n  justify-content: space-between;\r\n  align-items: center;\r\n  padding: 0 20px;\r\n  height: 60px;\n}\n.navbar-left[data-v-70076646],\r\n.navbar-center[data-v-70076646],\r\n.navbar-right[data-v-70076646] {\r\n  display: flex;\r\n  align-items: center;\n}\n.logo[data-v-70076646] {\r\n  display: flex;\r\n  align-items: center;\r\n  text-decoration: none;\r\n  transition: transform 0.3s;\n}\n.logo-img[data-v-70076646] {\r\n  height: 40px;\r\n  margin-right: 6px;\n}\n.logo-text[data-v-70076646] {\r\n  height: 36px;\r\n  transform: translateY(1px);\n}\n.logo-text[data-v-70076646] {\r\n  font-size: 20px;\r\n  font-weight: bold;\r\n  color: #947358;\n}\n.logo[data-v-70076646]:hover {\r\n  transform: scale(1.05);\n}\n.nav-link[data-v-70076646] {\r\n  margin: 0 15px;\r\n  font-size: 16px;\r\n  color: #333;\r\n  text-decoration: none;\r\n  transition: color 0.3s;\r\n  position: relative;\r\n  padding: 10px 0;\n}\n.nav-link[data-v-70076646]:hover {\r\n  color: #947358;\r\n  text-decoration: none;\n}\n.nav-link-active[data-v-70076646] {\r\n  color: #947358;\r\n  font-weight: 600;\n}\n.nav-link-active[data-v-70076646]:after {\r\n  content: '';\r\n  position: absolute;\r\n  bottom: 0;\r\n  left: 0;\r\n  right: 0;\r\n  height: 3px;\r\n  background-color: #947358;\n}\r\n\r\n/* 搜索框样式 */\n.search-box[data-v-70076646] {\r\n  position: relative;\r\n  display: flex;\r\n  align-items: center;\r\n  background: #f5f5f5;\r\n  border-radius: 25px;\r\n  padding: 0 20px;\r\n  transition: all 0.3s;\r\n  max-width: 800px;\r\n  margin-right: 20px;\n}\n.search-box.active[data-v-70076646] {\r\n  background: white;\r\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\r\n  border: 1px solid #947358;\n}\n.search-icon[data-v-70076646] {\r\n  color: #999;\r\n  font-size: 18px;\r\n  margin-right: 10px;\n}\n.search-input[data-v-70076646] {\r\n  flex: 1;\r\n  border: none;\r\n  background: transparent;\r\n  outline: none;\r\n  padding: 12px 0;\r\n  font-size: 16px;\r\n  color: #0a0a0a;\n}\n.search-input[data-v-70076646]::placeholder {\r\n  color: #999;\n}\n.search-clear[data-v-70076646] {\r\n  color: #999;\r\n  cursor: pointer;\r\n  font-size: 16px;\r\n  margin-left: 10px;\r\n  transition: color 0.3s;\n}\n.search-clear[data-v-70076646]:hover {\r\n  color: #666;\n}\r\n\r\n/* 搜索下拉框 */\n.search-dropdown[data-v-70076646] {\r\n  position: absolute;\r\n  top: 100%;\r\n  left: 0;\r\n  right: 0;\r\n  background: white;\r\n  border-radius: 8px;\r\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\r\n  z-index: 1000;\r\n  max-height: 500px;\r\n  overflow-y: auto;\r\n  margin-top: 5px;\n}\n.search-section[data-v-70076646] {\r\n  padding: 15px 20px;\r\n  border-bottom: 1px solid #f0f0f0;\n}\n.search-section[data-v-70076646]:last-child {\r\n  border-bottom: none;\n}\n.section-header[data-v-70076646] {\r\n  display: flex;\r\n  justify-content: space-between;\r\n  align-items: center;\r\n  margin-bottom: 12px;\n}\n.section-title[data-v-70076646] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\n}\n.clear-btn[data-v-70076646] {\r\n  background: none;\r\n  border: none;\r\n  color: #999;\r\n  cursor: pointer;\r\n  padding: 0;\r\n  font-size: 14px;\r\n  transition: color 0.3s;\n}\n.clear-btn[data-v-70076646]:hover {\r\n  color: #666;\n}\n.view-all[data-v-70076646] {\r\n  color: #947358;\r\n  font-size: 12px;\r\n  cursor: pointer;\r\n  transition: color 0.3s;\n}\n.view-all[data-v-70076646]:hover {\r\n  color: #704C35;\n}\r\n\r\n/* 搜索历史 */\n.history-list[data-v-70076646] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 8px;\n}\n.history-item[data-v-70076646] {\r\n  display: flex;\r\n  align-items: center;\r\n  padding: 8px 12px;\r\n  border-radius: 6px;\r\n  cursor: pointer;\r\n  transition: background-color 0.3s;\r\n  color: #666;\r\n  font-size: 14px;\n}\n.history-item[data-v-70076646]:hover {\r\n  background: #f5f2ef;\n}\n.history-item i[data-v-70076646] {\r\n  margin-right: 8px;\r\n  font-size: 12px;\n}\r\n\r\n/* 热门搜索 */\n.hot-list[data-v-70076646] {\r\n  display: flex;\r\n  flex-wrap: wrap;\r\n  gap: 8px;\n}\n.hot-item[data-v-70076646] {\r\n  background: #f5f2ef;\r\n  color: #947358;\r\n  padding: 6px 12px;\r\n  border-radius: 15px;\r\n  font-size: 13px;\r\n  cursor: pointer;\r\n  transition: all 0.3s;\r\n  border: 1px solid #e6d8cf;\n}\n.hot-item[data-v-70076646]:hover {\r\n  background: #947358;\r\n  color: white;\n}\r\n\r\n/* 搜索结果 */\n.result-section[data-v-70076646] {\r\n  padding: 15px 20px;\r\n  border-bottom: 1px solid #f0f0f0;\n}\n.result-section[data-v-70076646]:last-child {\r\n  border-bottom: none;\n}\r\n\r\n/* 书籍结果 */\n.book-results[data-v-70076646] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\n}\n.book-item[data-v-70076646] {\r\n  display: flex;\r\n  cursor: pointer;\r\n  padding: 8px;\r\n  border-radius: 6px;\r\n  transition: background-color 0.3s;\n}\n.book-item[data-v-70076646]:hover {\r\n  background: #f5f2ef;\n}\n.book-cover[data-v-70076646] {\r\n  width: 40px;\r\n  height: 56px;\r\n  border-radius: 4px;\r\n  object-fit: cover;\r\n  margin-right: 12px;\n}\n.book-info[data-v-70076646] {\r\n  flex: 1;\r\n  display: flex;\r\n  flex-direction: column;\r\n  justify-content: center;\n}\n.book-title[data-v-70076646] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\r\n  margin-bottom: 4px;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\n}\n.book-author[data-v-70076646] {\r\n  font-size: 12px;\r\n  color: #666;\n}\r\n\r\n/* 帖子结果 */\n.post-results[data-v-70076646] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\n}\n.post-item[data-v-70076646] {\r\n  cursor: pointer;\r\n  padding: 8px;\r\n  border-radius: 6px;\r\n  transition: background-color 0.3s;\n}\n.post-item[data-v-70076646]:hover {\r\n  background: #f5f2ef;\n}\n.post-title[data-v-70076646] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\r\n  margin-bottom: 4px;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\n}\n.post-meta[data-v-70076646] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 8px;\r\n  font-size: 12px;\r\n  color: #666;\n}\r\n\r\n/* 圈子结果 */\n.circle-results[data-v-70076646] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\n}\n.circle-item[data-v-70076646] {\r\n  display: flex;\r\n  cursor: pointer;\r\n  padding: 8px;\r\n  border-radius: 6px;\r\n  transition: background-color 0.3s;\n}\n.circle-item[data-v-70076646]:hover {\r\n  background: #f5f2ef;\n}\n.circle-icon[data-v-70076646] {\r\n  width: 40px;\r\n  height: 40px;\r\n  border-radius: 50%;\r\n  object-fit: cover;\r\n  margin-right: 12px;\n}\n.circle-info[data-v-70076646] {\r\n  flex: 1;\r\n  display: flex;\r\n  flex-direction: column;\r\n  justify-content: center;\n}\n.circle-name[data-v-70076646] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\r\n  margin-bottom: 4px;\n}\n.circle-meta[data-v-70076646] {\r\n  font-size: 12px;\r\n  color: #666;\n}\r\n\r\n/* 用户结果 */\n.user-results[data-v-70076646] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\n}\n.user-item[data-v-70076646] {\r\n  display: flex;\r\n  cursor: pointer;\r\n  padding: 8px;\r\n  border-radius: 6px;\r\n  transition: background-color 0.3s;\n}\n.user-item[data-v-70076646]:hover {\r\n  background: #f8f9fa;\n}\n.user-avatar[data-v-70076646] {\r\n  width: 40px;\r\n  height: 40px;\r\n  border-radius: 50%;\r\n  object-fit: cover;\r\n  margin-right: 12px;\n}\n.user-info[data-v-70076646] {\r\n  flex: 1;\r\n  display: flex;\r\n  flex-direction: column;\r\n  justify-content: center;\n}\n.user-name[data-v-70076646] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\r\n  margin-bottom: 4px;\n}\n.user-motto[data-v-70076646] {\r\n  font-size: 12px;\r\n  color: #666;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\n}\r\n\r\n/* 无结果 */\n.no-results[data-v-70076646] {\r\n  text-align: center;\r\n  padding: 30px 20px;\r\n  color: #999;\n}\n.no-results-icon[data-v-70076646] {\r\n  font-size: 32px;\r\n  margin-bottom: 10px;\r\n  opacity: 0.5;\n}\n.no-results-text[data-v-70076646] {\r\n  font-size: 14px;\r\n  margin-bottom: 15px;\n}\n.search-all-btn[data-v-70076646] {\r\n  background: #947358;\r\n  color: white;\r\n  border: none;\r\n  padding: 8px 16px;\r\n  border-radius: 15px;\r\n  cursor: pointer;\r\n  font-size: 12px;\r\n  transition: background-color 0.3s;\n}\n.search-all-btn[data-v-70076646]:hover {\r\n  background: #704C35;\n}\n.user-actions[data-v-70076646] {\r\n  display: flex;\r\n  align-items: center;\n}\n.user-link[data-v-70076646] {\r\n  color: #333;\r\n  text-decoration: none;\r\n  transition: color 0.3s;\n}\n.user-link[data-v-70076646]:hover {\r\n  color: #947358;\r\n  text-decoration: none;\n}\n.user-profile[data-v-70076646] {\r\n  display: flex;\r\n  align-items: center;\r\n  cursor: pointer;\r\n  padding: 5px 10px;\r\n  border-radius: 4px;\r\n  transition: background-color 0.3s;\n}\n.user-profile[data-v-70076646]:hover {\r\n  background-color: #f5f5f5;\n}\n.user-avatar[data-v-70076646] {\r\n  width: 32px;\r\n  height: 32px;\r\n  border-radius: 50%;\r\n  object-fit: cover;\r\n  margin-right: 8px;\n}\n.user-nickname[data-v-70076646] {\r\n  font-size: 14px;\r\n  color: #333;\r\n  margin-right: 5px;\n}\n.divider[data-v-70076646] {\r\n  margin: 0 10px;\r\n  color: #ddd;\n}\n.main-content[data-v-70076646] {\r\n  margin-top: 80px;\r\n  padding: 20px;\r\n  min-height: calc(100vh - 143px);\r\n  max-width: 1200px;\r\n  margin-left: auto;\r\n  margin-right: auto;\n}\n.home-layout[data-v-70076646] {\r\n  display: flow-root;\r\n  min-height: 100vh;\r\n  background: #f5f5f5;\n}\n.home-layout .main-content[data-v-70076646] {\r\n  max-width: 1320px;\r\n  padding: 20px 50px;\n}\n@media (max-width: 1050px) {\n.home-layout .main-content[data-v-70076646] { padding: 20px 28px;\n}\n}\n@media (max-width: 720px) {\n.home-layout .main-content[data-v-70076646] { padding: 16px 20px; margin-top: 114px;\n}\n.home-layout .navbar-container[data-v-70076646] { height: auto; padding: 10px 20px; flex-wrap: wrap; gap: 8px;\n}\n.home-layout .logo-img[data-v-70076646] { height: 27px;\n}\n.home-layout .navbar-center[data-v-70076646] { margin-left: auto;\n}\n.home-layout .nav-link[data-v-70076646] { margin: 0 8px; font-size: 13px; white-space: nowrap; padding: 5px 0;\n}\n.home-layout .navbar-right[data-v-70076646] { width: 100%;\n}\n.home-layout .search-box[data-v-70076646] { flex: 1; min-width: 0; padding: 0 14px; margin-right: 16px;\n}\n.home-layout .search-input[data-v-70076646] { width: 100%; min-width: 0; font-size: 13px; padding: 10px 0;\n}\n.home-layout .user-actions[data-v-70076646] { flex-shrink: 0; font-size: 13px;\n}\n}\n.site-footer[data-v-70076646] {\r\n  background-color: #947358;\r\n  color: #fff;\r\n  padding: 20px 0;\r\n  text-align: center;\n}\n.footer-container[data-v-70076646] {\r\n  max-width: 1200px;\r\n  margin: 0 auto;\n}\n.button--green[data-v-70076646] {\r\n  display: inline-block;\r\n  border-radius: 4px;\r\n  border: 1px solid #947358;\r\n  color: #947358;\r\n  text-decoration: none;\r\n  padding: 10px 30px;\n}\na[data-v-70076646] {\r\n  color: #947358;\r\n  text-decoration: none;\n}\na[data-v-70076646]:hover {\r\n  text-decoration: underline;\n}\n.button--green[data-v-70076646]:hover {\r\n  color: #fff;\r\n  background-color: #947358;\n}\n.button--grey[data-v-70076646] {\r\n  display: inline-block;\r\n  border-radius: 4px;\r\n  border: 1px solid #704C35;\r\n  color: #704C35;\r\n  text-decoration: none;\r\n  padding: 10px 30px;\r\n  margin-left: 15px;\n}\n.button--grey[data-v-70076646]:hover {\r\n  color: #fff;\r\n  background-color: #704C35;\n}\r\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.i, "\r\n/* 全局样式已移至 assets/css/global.css */\n.outer[data-v-59fa9636] {\r\n  --site-header-height: 60px;\n}\n.navbar[data-v-59fa9636] {\r\n  background: var(--site-surface, #fffdf9);\r\n  color: var(--site-ink, #382d25);\r\n  box-shadow: 0 1px 0 var(--site-line, #e9e0d5);\r\n  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;\r\n  word-spacing: normal;\r\n  position: fixed;\r\n  top: 0;\r\n  left: 0;\r\n  right: 0;\r\n  z-index: 1000;\n}\n.navbar-container[data-v-59fa9636] {\r\n  max-width: 1440px;\r\n  margin: 0 auto;\r\n  display: flex;\r\n  gap: 32px;\r\n  align-items: center;\r\n  padding: 0 172px 0 28px;\r\n  height: var(--site-header-height);\n}\n.navbar-left[data-v-59fa9636],\r\n.navbar-center[data-v-59fa9636],\r\n.navbar-right[data-v-59fa9636] {\r\n  display: flex;\r\n  align-items: center;\n}\n.navbar-left[data-v-59fa9636],\r\n.navbar-center[data-v-59fa9636] {\r\n  flex: none;\n}\n.navbar-center[data-v-59fa9636] {\r\n  gap: 28px;\n}\n.navbar-right[data-v-59fa9636] {\r\n  position: relative;\r\n  flex: 1;\r\n  min-width: 0;\r\n  justify-content: flex-end;\r\n  gap: 12px;\n}\n.logo[data-v-59fa9636] {\r\n  display: flex;\r\n  align-items: center;\r\n  text-decoration: none;\n}\n.logo-img[data-v-59fa9636] {\r\n  height: 36px;\r\n  display: block;\n}\n.logo-text[data-v-59fa9636] {\r\n  height: 36px;\r\n  transform: translateY(1px);\n}\n.logo-text[data-v-59fa9636] {\r\n  font-size: 20px;\r\n  font-weight: bold;\r\n  color: #947358;\n}\n.nav-link[data-v-59fa9636] {\r\n  display: inline-flex;\r\n  align-items: center;\r\n  height: 44px;\r\n  margin: 0;\r\n  font-size: 15px;\r\n  color: var(--site-muted, #776a5d);\r\n  text-decoration: none;\r\n  transition: color 0.3s;\r\n  position: relative;\r\n  padding: 0;\r\n  white-space: nowrap;\r\n  line-height: 22px;\n}\n.nav-link[data-v-59fa9636]:hover {\r\n  color: var(--site-accent, #79573d);\r\n  text-decoration: none;\n}\n.nav-link-active[data-v-59fa9636] {\r\n  color: var(--site-accent, #79573d);\r\n  font-weight: 600;\n}\n.nav-link-active[data-v-59fa9636]:after {\r\n  content: '';\r\n  position: absolute;\r\n  bottom: 0;\r\n  left: 0;\r\n  right: 0;\r\n  height: 2px;\r\n  border-radius: 2px;\r\n  background: var(--site-accent, #79573d);\n}\n.navbar[data-v-59fa9636] :is(a, button):focus-visible {\r\n  outline: 2px solid var(--site-accent, #79573d);\r\n  outline-offset: 3px;\n}\r\n\r\n/* 搜索框样式 */\n.search-box[data-v-59fa9636] {\r\n  position: relative;\r\n  display: flex;\r\n  align-items: center;\r\n  flex: 1;\r\n  min-width: 100px;\r\n  max-width: 280px;\r\n  height: 40px;\r\n  background: var(--site-raised, #f2eee7);\r\n  border: 1px solid transparent;\r\n  border-radius: 20px;\r\n  padding: 0 14px;\r\n  transition: border-color 0.2s, background-color 0.2s;\n}\n.search-box.active[data-v-59fa9636] {\r\n  background: var(--site-surface, #fffdf9);\r\n  border-color: var(--site-accent, #79573d);\n}\n.search-icon[data-v-59fa9636] {\r\n  color: var(--site-muted, #776a5d);\r\n  font-size: 16px;\r\n  margin-right: 8px;\r\n  flex: none;\n}\n.search-input[data-v-59fa9636] {\r\n  flex: 1;\r\n  min-width: 0;\r\n  width: 100%;\r\n  border: none;\r\n  background: transparent;\r\n  outline: none;\r\n  padding: 0;\r\n  height: 100%;\r\n  font: inherit;\r\n  font-size: 14px;\r\n  color: var(--site-ink, #382d25);\n}\n.search-input[data-v-59fa9636]::placeholder {\r\n  color: var(--site-muted, #776a5d);\n}\n.search-clear[data-v-59fa9636] {\r\n  color: #999;\r\n  cursor: pointer;\r\n  font-size: 16px;\r\n  margin-left: 10px;\r\n  transition: color 0.3s;\n}\n.search-clear[data-v-59fa9636]:hover {\r\n  color: #666;\n}\r\n\r\n/* 搜索下拉框 */\n.search-dropdown[data-v-59fa9636] {\r\n  position: absolute;\r\n  top: 100%;\r\n  left: 0;\r\n  right: 0;\r\n  background: white;\r\n  border-radius: 8px;\r\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);\r\n  z-index: 1000;\r\n  max-height: 500px;\r\n  overflow-y: auto;\r\n  margin-top: 5px;\n}\n.search-section[data-v-59fa9636] {\r\n  padding: 15px 20px;\r\n  border-bottom: 1px solid #f0f0f0;\n}\n.search-section[data-v-59fa9636]:last-child {\r\n  border-bottom: none;\n}\n.section-header[data-v-59fa9636] {\r\n  display: flex;\r\n  justify-content: space-between;\r\n  align-items: center;\r\n  margin-bottom: 12px;\n}\n.section-title[data-v-59fa9636] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\n}\n.clear-btn[data-v-59fa9636] {\r\n  background: none;\r\n  border: none;\r\n  color: #999;\r\n  cursor: pointer;\r\n  padding: 0;\r\n  font-size: 14px;\r\n  transition: color 0.3s;\n}\n.clear-btn[data-v-59fa9636]:hover {\r\n  color: #666;\n}\n.view-all[data-v-59fa9636] {\r\n  color: #947358;\r\n  font-size: 12px;\r\n  cursor: pointer;\r\n  transition: color 0.3s;\n}\n.view-all[data-v-59fa9636]:hover {\r\n  color: #704C35;\n}\r\n\r\n/* 搜索历史 */\n.history-list[data-v-59fa9636] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 8px;\n}\n.history-item[data-v-59fa9636] {\r\n  display: flex;\r\n  align-items: center;\r\n  padding: 8px 12px;\r\n  border-radius: 6px;\r\n  cursor: pointer;\r\n  transition: background-color 0.3s;\r\n  color: #666;\r\n  font-size: 14px;\n}\n.history-item[data-v-59fa9636]:hover {\r\n  background: #f5f2ef;\n}\n.history-item i[data-v-59fa9636] {\r\n  margin-right: 8px;\r\n  font-size: 12px;\n}\r\n\r\n/* 热门搜索 */\n.hot-list[data-v-59fa9636] {\r\n  display: flex;\r\n  flex-wrap: wrap;\r\n  gap: 8px;\n}\n.hot-item[data-v-59fa9636] {\r\n  background: #f5f2ef;\r\n  color: #947358;\r\n  padding: 6px 12px;\r\n  border-radius: 15px;\r\n  font-size: 13px;\r\n  cursor: pointer;\r\n  transition: all 0.3s;\r\n  border: 1px solid #e6d8cf;\n}\n.hot-item[data-v-59fa9636]:hover {\r\n  background: #947358;\r\n  color: white;\n}\r\n\r\n/* 搜索结果 */\n.result-section[data-v-59fa9636] {\r\n  padding: 15px 20px;\r\n  border-bottom: 1px solid #f0f0f0;\n}\n.result-section[data-v-59fa9636]:last-child {\r\n  border-bottom: none;\n}\r\n\r\n/* 书籍结果 */\n.book-results[data-v-59fa9636] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\n}\n.book-item[data-v-59fa9636] {\r\n  display: flex;\r\n  cursor: pointer;\r\n  padding: 8px;\r\n  border-radius: 6px;\r\n  transition: background-color 0.3s;\n}\n.book-item[data-v-59fa9636]:hover {\r\n  background: #f5f2ef;\n}\n.book-cover[data-v-59fa9636] {\r\n  width: 40px;\r\n  height: 56px;\r\n  border-radius: 4px;\r\n  object-fit: cover;\r\n  margin-right: 12px;\n}\n.book-info[data-v-59fa9636] {\r\n  flex: 1;\r\n  display: flex;\r\n  flex-direction: column;\r\n  justify-content: center;\n}\n.book-title[data-v-59fa9636] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\r\n  margin-bottom: 4px;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\n}\n.book-author[data-v-59fa9636] {\r\n  font-size: 12px;\r\n  color: #666;\n}\r\n\r\n/* 帖子结果 */\n.post-results[data-v-59fa9636] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\n}\n.post-item[data-v-59fa9636] {\r\n  cursor: pointer;\r\n  padding: 8px;\r\n  border-radius: 6px;\r\n  transition: background-color 0.3s;\n}\n.post-item[data-v-59fa9636]:hover {\r\n  background: #f5f2ef;\n}\n.post-title[data-v-59fa9636] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\r\n  margin-bottom: 4px;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\n}\n.post-meta[data-v-59fa9636] {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 8px;\r\n  font-size: 12px;\r\n  color: #666;\n}\r\n\r\n/* 圈子结果 */\n.circle-results[data-v-59fa9636] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\n}\n.circle-item[data-v-59fa9636] {\r\n  display: flex;\r\n  cursor: pointer;\r\n  padding: 8px;\r\n  border-radius: 6px;\r\n  transition: background-color 0.3s;\n}\n.circle-item[data-v-59fa9636]:hover {\r\n  background: #f5f2ef;\n}\n.circle-icon[data-v-59fa9636] {\r\n  width: 40px;\r\n  height: 40px;\r\n  border-radius: 50%;\r\n  object-fit: cover;\r\n  margin-right: 12px;\n}\n.circle-info[data-v-59fa9636] {\r\n  flex: 1;\r\n  display: flex;\r\n  flex-direction: column;\r\n  justify-content: center;\n}\n.circle-name[data-v-59fa9636] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\r\n  margin-bottom: 4px;\n}\n.circle-meta[data-v-59fa9636] {\r\n  font-size: 12px;\r\n  color: #666;\n}\r\n\r\n/* 用户结果 */\n.user-results[data-v-59fa9636] {\r\n  display: flex;\r\n  flex-direction: column;\r\n  gap: 12px;\n}\n.user-item[data-v-59fa9636] {\r\n  display: flex;\r\n  cursor: pointer;\r\n  padding: 8px;\r\n  border-radius: 6px;\r\n  transition: background-color 0.3s;\n}\n.user-item[data-v-59fa9636]:hover {\r\n  background: #f8f9fa;\n}\n.user-avatar[data-v-59fa9636] {\r\n  width: 40px;\r\n  height: 40px;\r\n  border-radius: 50%;\r\n  object-fit: cover;\r\n  margin-right: 12px;\n}\n.user-info[data-v-59fa9636] {\r\n  flex: 1;\r\n  display: flex;\r\n  flex-direction: column;\r\n  justify-content: center;\n}\n.user-name[data-v-59fa9636] {\r\n  font-size: 14px;\r\n  font-weight: 600;\r\n  color: #333;\r\n  margin-bottom: 4px;\n}\n.user-motto[data-v-59fa9636] {\r\n  font-size: 12px;\r\n  color: #666;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\n}\r\n\r\n/* 无结果 */\n.no-results[data-v-59fa9636] {\r\n  text-align: center;\r\n  padding: 30px 20px;\r\n  color: #999;\n}\n.no-results-icon[data-v-59fa9636] {\r\n  font-size: 32px;\r\n  margin-bottom: 10px;\r\n  opacity: 0.5;\n}\n.no-results-text[data-v-59fa9636] {\r\n  font-size: 14px;\r\n  margin-bottom: 15px;\n}\n.search-all-btn[data-v-59fa9636] {\r\n  background: #947358;\r\n  color: white;\r\n  border: none;\r\n  padding: 8px 16px;\r\n  border-radius: 15px;\r\n  cursor: pointer;\r\n  font-size: 12px;\r\n  transition: background-color 0.3s;\n}\n.search-all-btn[data-v-59fa9636]:hover {\r\n  background: #704C35;\n}\n.user-actions[data-v-59fa9636] {\r\n  display: flex;\r\n  align-items: center;\r\n  flex: none;\r\n  font-size: 14px;\n}\n.user-link[data-v-59fa9636] {\r\n  color: var(--site-ink, #382d25);\r\n  text-decoration: none;\r\n  transition: color 0.3s;\n}\n.user-link[data-v-59fa9636]:hover {\r\n  color: var(--site-accent, #79573d);\r\n  text-decoration: none;\n}\n.user-profile[data-v-59fa9636] {\r\n  display: flex;\r\n  align-items: center;\r\n  cursor: pointer;\r\n  padding: 4px;\r\n  border-radius: 8px;\r\n  height: 40px;\r\n  color: var(--site-muted, #776a5d);\r\n  transition: background-color 0.3s;\n}\n.user-profile[data-v-59fa9636]:hover {\r\n  background: var(--site-raised, #f2eee7);\n}\n.user-avatar[data-v-59fa9636] {\r\n  width: 32px;\r\n  height: 32px;\r\n  border-radius: 50%;\r\n  object-fit: cover;\r\n  margin-right: 8px;\n}\n.navbar-right > .global-theme-switch[data-v-59fa9636] { margin: 0;\n}\n.user-nickname[data-v-59fa9636] {\r\n  font-size: 14px;\r\n  color: var(--site-ink, #382d25);\r\n  margin-right: 5px;\r\n  max-width: 96px;\r\n  overflow: hidden;\r\n  white-space: nowrap;\r\n  text-overflow: ellipsis;\n}\n.divider[data-v-59fa9636] {\r\n  margin: 0 10px;\r\n  color: #ddd;\n}\n.social-layout[data-v-59fa9636]{display:flow-root;min-height:100dvh;background:var(--site-bg, #f5f5f5)}.social-layout .main-content[data-v-59fa9636] { max-width: 1440px; padding: 0;\n}\n.main-content[data-v-59fa9636] {\r\n  margin-top: calc(var(--site-header-height) + 20px);\r\n  padding: 20px;\r\n  min-height: calc(100vh - 143px);\r\n  max-width: 1200px;\r\n  margin-left: auto;\r\n  margin-right: auto;\n}\n.home-layout[data-v-59fa9636] {\r\n  display: flow-root;\r\n  min-height: 100vh;\r\n  background: #faf8f3;\r\n  --site-footer-link: #79573c;\n}\n.home-layout .site-footer[data-v-59fa9636] { background: #eeeae1; color: #687060;\n}\n.home-skip-link[data-v-59fa9636] { position: fixed; top: 8px; left: 20px; z-index: 1200; padding: 10px 18px; background: #79573c; color: #fffdf7; border-radius: 6px; transform: translateY(-160%);\n}\n.home-skip-link[data-v-59fa9636]:focus { transform: translateY(0);\n}\n.home-layout .main-content[data-v-59fa9636] {\r\n  max-width: 1320px;\r\n  padding: 20px 50px;\n}\n@media (max-width: 1050px) {\n.home-layout .main-content[data-v-59fa9636] { padding: 20px 28px;\n}\n}\r\n\r\n/* One responsive header for reading, writing and community. */\n@media (max-width: 1100px) {\n.outer[data-v-59fa9636] { --site-header-height: 112px;\n}\n.navbar-container[data-v-59fa9636] {\r\n    display: grid;\r\n    grid-template-columns: auto minmax(0, 1fr);\r\n    grid-template-rows: 42px 40px;\r\n    gap: 10px 24px;\r\n    padding: 10px 172px 10px 28px;\n}\n.navbar-center[data-v-59fa9636] { justify-content: flex-end;\n}\n.navbar-center .nav-link[data-v-59fa9636] { height: 40px;\n}\n.navbar-right[data-v-59fa9636] { grid-column: 1 / -1; width: 100%;\n}\n.navbar-right .search-box[data-v-59fa9636] { max-width: none;\n}\n}\n@media (max-width: 600px) {\n.outer[data-v-59fa9636] { --site-header-height: 154px;\n}\n.navbar-container[data-v-59fa9636] {\r\n    grid-template-columns: minmax(0, 1fr);\r\n    grid-template-rows: 42px 32px 40px;\r\n    gap: 10px;\r\n    padding: 10px 16px;\n}\n.navbar-left[data-v-59fa9636] { padding-right: 144px;\n}\n.logo-img[data-v-59fa9636] { height: 28px; max-width: 100%; object-fit: contain;\n}\n.navbar-center[data-v-59fa9636] { justify-content: flex-start; gap: 28px;\n}\n.navbar-center .nav-link[data-v-59fa9636] { height: 32px; font-size: 14px;\n}\n.navbar-right[data-v-59fa9636] { gap: 8px;\n}\n.user-nickname[data-v-59fa9636] { max-width: 64px;\n}\n.home-layout .main-content[data-v-59fa9636] { padding: 16px 20px;\n}\n}\n.button--green[data-v-59fa9636] {\r\n  display: inline-block;\r\n  border-radius: 4px;\r\n  border: 1px solid #947358;\r\n  color: #947358;\r\n  text-decoration: none;\r\n  padding: 10px 30px;\n}\na[data-v-59fa9636] {\r\n  color: #947358;\r\n  text-decoration: none;\n}\na[data-v-59fa9636]:hover {\r\n  text-decoration: underline;\n}\n.button--green[data-v-59fa9636]:hover {\r\n  color: #fff;\r\n  background-color: #947358;\n}\n.button--grey[data-v-59fa9636] {\r\n  display: inline-block;\r\n  border-radius: 4px;\r\n  border: 1px solid #704C35;\r\n  color: #704C35;\r\n  text-decoration: none;\r\n  padding: 10px 30px;\r\n  margin-left: 15px;\n}\n.button--grey[data-v-59fa9636]:hover {\r\n  color: #fff;\r\n  background-color: #704C35;\n}\r\n/* Page surfaces keep their own theme; navigation uses the global tokens above. */\n@media (prefers-color-scheme: dark) {\n.social-layout[data-v-59fa9636] { background: #211e19; color: #eee5d9;\n}\n.social-layout .footer[data-v-59fa9636] { background: #29251f; color: #c4b6a5;\n}\n}\nhtml[data-social-theme=\"light\"] .social-layout[data-v-59fa9636] { background: var(--site-bg, #f5f5f5); color: #382d25;\n}\nhtml[data-social-theme=\"light\"] .social-layout .footer[data-v-59fa9636] { background: #fdfbf7; color: #776a5d; border-color: #e9e0d5;\n}\nhtml[data-social-theme=\"dark\"] .social-layout[data-v-59fa9636] { background: #211e19; color: #eee5d9;\n}\nhtml[data-social-theme=\"dark\"] .social-layout .footer[data-v-59fa9636] { background: #29251f; color: #c4b6a5; border-color: #504536;\n}\r\n", ""]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 91 */
+/* 111 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_1813cdda_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(46);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_1813cdda_prod_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_1813cdda_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_1813cdda_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_1813cdda_prod_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_e36c7f86_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(56);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_e36c7f86_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_e36c7f86_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_e36c7f86_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_empty_vue_vue_type_style_index_0_id_e36c7f86_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
-/* 92 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "\r\n/* 空布局，不包含任何样式 */\r\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.i, "\n.empty-layout[data-v-e36c7f86] { padding-top:60px;\n}\n.empty-theme-switch[data-v-e36c7f86] { position:fixed; top:12px; left:16px; z-index:1002;\n}\n.empty-layout[data-v-e36c7f86]::before { content:''; position:fixed; inset:0 0 auto; height:60px; background:#faf8f3; border-bottom:1px solid #e3e4d9; z-index:1000;\n}\n.empty-layout[data-v-e36c7f86] .writer-page,\r\n.empty-layout[data-v-e36c7f86] .manga-reader { top:60px;\n}\r\n", ""]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
-/* 93 */
+/* 113 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13832,7 +14477,7 @@ const getters = {
 };
 
 /***/ }),
-/* 94 */
+/* 114 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13840,9 +14485,9 @@ const getters = {
 
 exports.__esModule = true;
 exports.validateRangeInOneMonth = exports.extractTimeFormat = exports.extractDateFormat = exports.nextYear = exports.prevYear = exports.nextMonth = exports.prevMonth = exports.changeYearMonthAndClampDate = exports.timeWithinRange = exports.limitTimeRange = exports.clearMilliseconds = exports.clearTime = exports.modifyWithTimeString = exports.modifyTime = exports.modifyDate = exports.range = exports.getRangeMinutes = exports.getMonthDays = exports.getPrevMonthLastDays = exports.getRangeHours = exports.getWeekNumber = exports.getStartDateOfMonth = exports.nextDate = exports.prevDate = exports.getFirstDayOfMonth = exports.getDayCountOfYear = exports.getDayCountOfMonth = exports.parseDate = exports.formatDate = exports.isDateObject = exports.isDate = exports.toDate = exports.getI18nSettings = undefined;
-var _date = __webpack_require__(47);
+var _date = __webpack_require__(57);
 var _date2 = _interopRequireDefault(_date);
-var _locale = __webpack_require__(20);
+var _locale = __webpack_require__(14);
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {
     default: obj
@@ -14101,13 +14746,13 @@ var validateRangeInOneMonth = exports.validateRangeInOneMonth = function validat
 };
 
 /***/ }),
-/* 95 */
+/* 115 */
 /***/ (function(module, exports) {
 
 module.exports = require("deepmerge");
 
 /***/ }),
-/* 96 */
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14153,7 +14798,7 @@ exports.default = function (Vue) {
   }
   return template;
 };
-var _util = __webpack_require__(6);
+var _util = __webpack_require__(7);
 var RE_NARGS = /(%|)\{([0-9a-zA-Z_]+)\}/g;
 /**
  *  String format template
@@ -14162,7 +14807,7 @@ var RE_NARGS = /(%|)\{([0-9a-zA-Z_]+)\}/g;
  */
 
 /***/ }),
-/* 97 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14345,7 +14990,7 @@ if (!_vue2.default.prototype.$isServer) {
 exports.default = PopupManager;
 
 /***/ }),
-/* 98 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15585,7 +16230,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 });
 
 /***/ }),
-/* 99 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -15964,13 +16609,13 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 100 */
+/* 120 */
 /***/ (function(module, exports) {
 
 module.exports = require("resize-observer-polyfill");
 
 /***/ }),
-/* 101 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16054,7 +16699,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 102 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16067,20 +16712,20 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 };
 exports.isVNode = isVNode;
-var _util = __webpack_require__(6);
+var _util = __webpack_require__(7);
 function isVNode(node) {
   return node !== null && (typeof node === 'undefined' ? 'undefined' : _typeof(node)) === 'object' && (0, _util.hasOwn)(node, 'componentOptions');
 }
 ;
 
 /***/ }),
-/* 103 */
+/* 123 */
 /***/ (function(module, exports) {
 
 module.exports = require("throttle-debounce/throttle");
 
 /***/ }),
-/* 104 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -16496,7 +17141,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/19: (/***/function (module, exports) {
-    module.exports = __webpack_require__(25);
+    module.exports = __webpack_require__(31);
 
     /***/
   }),
@@ -16506,12 +17151,12 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/3: (/***/function (module, exports) {
-    module.exports = __webpack_require__(6);
+    module.exports = __webpack_require__(7);
 
     /***/
   }),
   /***/5: (/***/function (module, exports) {
-    module.exports = __webpack_require__(15);
+    module.exports = __webpack_require__(19);
 
     /***/
   }),
@@ -16525,7 +17170,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 105 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25939,7 +26584,7 @@ LazyWrapper.prototype.clone=lazyClone;LazyWrapper.prototype.reverse=lazyReverse;
 lodash.prototype.at=wrapperAt;lodash.prototype.chain=wrapperChain;lodash.prototype.commit=wrapperCommit;lodash.prototype.next=wrapperNext;lodash.prototype.plant=wrapperPlant;lodash.prototype.reverse=wrapperReverse;lodash.prototype.toJSON=lodash.prototype.valueOf=lodash.prototype.value=wrapperValue;// Add lazy aliases.
 lodash.prototype.first=lodash.prototype.head;if(symIterator){lodash.prototype[symIterator]=wrapperToIterator;}return lodash;};/* --------------------------------------------------------------------------*/// Export lodash.
 var _=runInContext();// Some AMD build optimizers, like r.js, check for condition patterns like:
-if( true&&_typeof(__webpack_require__(55))==='object'&&__webpack_require__(55)){// Expose Lodash on the global object to prevent errors when Lodash is
+if( true&&_typeof(__webpack_require__(65))==='object'&&__webpack_require__(65)){// Expose Lodash on the global object to prevent errors when Lodash is
 // loaded by a script tag in the presence of an AMD loader.
 // See http://requirejs.org/docs/errors.html#mismatch for more details.
 // Use `_.noConflict` to remove Lodash from the global object.
@@ -25951,10 +26596,10 @@ else if(freeModule){// Export for Node.js.
 (freeModule.exports=_)._=_;// Export for CommonJS support.
 freeExports._=_;}else{// Export to the global object.
 root._=_;}}).call(undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(106)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(126)(module)))
 
 /***/ }),
-/* 106 */
+/* 126 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -25982,7 +26627,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 107 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -26278,7 +26923,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 108 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -26511,7 +27156,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/4: (/***/function (module, exports) {
-    module.exports = __webpack_require__(12);
+    module.exports = __webpack_require__(13);
 
     /***/
   }),
@@ -26611,7 +27256,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 109 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26649,7 +27294,7 @@ exports.default = function (instance, callback) {
    */
 
 /***/ }),
-/* 110 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -27233,7 +27878,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 111 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -27466,47 +28111,47 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/10: (/***/function (module, exports) {
-    module.exports = __webpack_require__(23);
+    module.exports = __webpack_require__(29);
 
     /***/
   }),
   /***/12: (/***/function (module, exports) {
-    module.exports = __webpack_require__(51);
+    module.exports = __webpack_require__(61);
 
     /***/
   }),
   /***/15: (/***/function (module, exports) {
-    module.exports = __webpack_require__(26);
+    module.exports = __webpack_require__(32);
 
     /***/
   }),
   /***/16: (/***/function (module, exports) {
-    module.exports = __webpack_require__(24);
+    module.exports = __webpack_require__(30);
 
     /***/
   }),
   /***/19: (/***/function (module, exports) {
-    module.exports = __webpack_require__(25);
+    module.exports = __webpack_require__(31);
 
     /***/
   }),
   /***/21: (/***/function (module, exports) {
-    module.exports = __webpack_require__(17);
+    module.exports = __webpack_require__(21);
 
     /***/
   }),
   /***/22: (/***/function (module, exports) {
-    module.exports = __webpack_require__(27);
+    module.exports = __webpack_require__(33);
 
     /***/
   }),
   /***/3: (/***/function (module, exports) {
-    module.exports = __webpack_require__(6);
+    module.exports = __webpack_require__(7);
 
     /***/
   }),
   /***/31: (/***/function (module, exports) {
-    module.exports = __webpack_require__(28);
+    module.exports = __webpack_require__(34);
 
     /***/
   }),
@@ -27729,22 +28374,22 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/38: (/***/function (module, exports) {
-    module.exports = __webpack_require__(56);
+    module.exports = __webpack_require__(66);
 
     /***/
   }),
   /***/4: (/***/function (module, exports) {
-    module.exports = __webpack_require__(12);
+    module.exports = __webpack_require__(13);
 
     /***/
   }),
   /***/5: (/***/function (module, exports) {
-    module.exports = __webpack_require__(15);
+    module.exports = __webpack_require__(19);
 
     /***/
   }),
   /***/6: (/***/function (module, exports) {
-    module.exports = __webpack_require__(21);
+    module.exports = __webpack_require__(27);
 
     /***/
   }),
@@ -29106,7 +29751,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 112 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -29339,7 +29984,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/3: (/***/function (module, exports) {
-    module.exports = __webpack_require__(6);
+    module.exports = __webpack_require__(7);
 
     /***/
   }),
@@ -29562,7 +30207,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/4: (/***/function (module, exports) {
-    module.exports = __webpack_require__(12);
+    module.exports = __webpack_require__(13);
 
     /***/
   }),
@@ -29588,13 +30233,13 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 113 */
+/* 133 */
 /***/ (function(module, exports) {
 
 module.exports = require("normalize-wheel");
 
 /***/ }),
-/* 114 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29606,7 +30251,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 } : function (obj) {
   return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 };
-var _ariaUtils = __webpack_require__(29);
+var _ariaUtils = __webpack_require__(35);
 var _ariaUtils2 = _interopRequireDefault(_ariaUtils);
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {
@@ -29696,13 +30341,13 @@ aria.Dialog.prototype.trapFocus = function (event) {
 exports.default = aria.Dialog;
 
 /***/ }),
-/* 115 */
+/* 135 */
 /***/ (function(module, exports) {
 
 module.exports = require("async-validator");
 
 /***/ }),
-/* 116 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -29935,7 +30580,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/10: (/***/function (module, exports) {
-    module.exports = __webpack_require__(23);
+    module.exports = __webpack_require__(29);
 
     /***/
   }),
@@ -29945,12 +30590,12 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/22: (/***/function (module, exports) {
-    module.exports = __webpack_require__(27);
+    module.exports = __webpack_require__(33);
 
     /***/
   }),
   /***/3: (/***/function (module, exports) {
-    module.exports = __webpack_require__(6);
+    module.exports = __webpack_require__(7);
 
     /***/
   }),
@@ -30424,7 +31069,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 117 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -30657,47 +31302,47 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/15: (/***/function (module, exports) {
-    module.exports = __webpack_require__(26);
+    module.exports = __webpack_require__(32);
 
     /***/
   }),
   /***/18: (/***/function (module, exports) {
-    module.exports = __webpack_require__(52);
+    module.exports = __webpack_require__(62);
 
     /***/
   }),
   /***/21: (/***/function (module, exports) {
-    module.exports = __webpack_require__(17);
+    module.exports = __webpack_require__(21);
 
     /***/
   }),
   /***/26: (/***/function (module, exports) {
-    module.exports = __webpack_require__(54);
+    module.exports = __webpack_require__(64);
 
     /***/
   }),
   /***/3: (/***/function (module, exports) {
-    module.exports = __webpack_require__(6);
+    module.exports = __webpack_require__(7);
 
     /***/
   }),
   /***/31: (/***/function (module, exports) {
-    module.exports = __webpack_require__(28);
+    module.exports = __webpack_require__(34);
 
     /***/
   }),
   /***/41: (/***/function (module, exports) {
-    module.exports = __webpack_require__(29);
+    module.exports = __webpack_require__(35);
 
     /***/
   }),
   /***/52: (/***/function (module, exports) {
-    module.exports = __webpack_require__(57);
+    module.exports = __webpack_require__(67);
 
     /***/
   }),
   /***/6: (/***/function (module, exports) {
-    module.exports = __webpack_require__(21);
+    module.exports = __webpack_require__(27);
 
     /***/
   }),
@@ -31840,7 +32485,7 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/9: (/***/function (module, exports) {
-    module.exports = __webpack_require__(16);
+    module.exports = __webpack_require__(20);
 
     /***/
   })
@@ -31849,7 +32494,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 118 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = /******/function (modules) {
@@ -32087,12 +32732,12 @@ module.exports = /******/function (modules) {
     /***/
   }),
   /***/3: (/***/function (module, exports) {
-    module.exports = __webpack_require__(6);
+    module.exports = __webpack_require__(7);
 
     /***/
   }),
   /***/5: (/***/function (module, exports) {
-    module.exports = __webpack_require__(15);
+    module.exports = __webpack_require__(19);
 
     /***/
   }),
@@ -32448,7 +33093,7 @@ module.exports = /******/function (modules) {
 });
 
 /***/ }),
-/* 119 */
+/* 139 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -32460,15 +33105,15 @@ var external_vue_ = __webpack_require__(0);
 var external_vue_default = /*#__PURE__*/__webpack_require__.n(external_vue_);
 
 // EXTERNAL MODULE: external "ufo"
-var external_ufo_ = __webpack_require__(3);
+var external_ufo_ = __webpack_require__(5);
 
 // EXTERNAL MODULE: external "node-fetch"
-var external_node_fetch_ = __webpack_require__(60);
+var external_node_fetch_ = __webpack_require__(70);
 var external_node_fetch_default = /*#__PURE__*/__webpack_require__.n(external_node_fetch_);
 
 // CONCATENATED MODULE: ./.nuxt/middleware.js
 const middleware = {};
-middleware['device-detect'] = __webpack_require__(66);
+middleware['device-detect'] = __webpack_require__(78);
 middleware['device-detect'] = middleware['device-detect'].default || middleware['device-detect'];
 /* harmony default export */ var _nuxt_middleware = (middleware);
 // CONCATENATED MODULE: ./.nuxt/utils.js
@@ -33090,23 +33735,23 @@ async function serverPrefetch() {
   }
 });
 // EXTERNAL MODULE: external "vuex"
-var external_vuex_ = __webpack_require__(14);
+var external_vuex_ = __webpack_require__(17);
 var external_vuex_default = /*#__PURE__*/__webpack_require__.n(external_vuex_);
 
 // EXTERNAL MODULE: external "vue-meta"
-var external_vue_meta_ = __webpack_require__(61);
+var external_vue_meta_ = __webpack_require__(71);
 var external_vue_meta_default = /*#__PURE__*/__webpack_require__.n(external_vue_meta_);
 
 // EXTERNAL MODULE: external "vue-client-only"
-var external_vue_client_only_ = __webpack_require__(31);
+var external_vue_client_only_ = __webpack_require__(36);
 var external_vue_client_only_default = /*#__PURE__*/__webpack_require__.n(external_vue_client_only_);
 
 // EXTERNAL MODULE: external "vue-no-ssr"
-var external_vue_no_ssr_ = __webpack_require__(19);
+var external_vue_no_ssr_ = __webpack_require__(24);
 var external_vue_no_ssr_default = /*#__PURE__*/__webpack_require__.n(external_vue_no_ssr_);
 
 // EXTERNAL MODULE: external "vue-router"
-var external_vue_router_ = __webpack_require__(32);
+var external_vue_router_ = __webpack_require__(37);
 var external_vue_router_default = /*#__PURE__*/__webpack_require__.n(external_vue_router_);
 
 // CONCATENATED MODULE: ./.nuxt/router.scrollBehavior.js
@@ -33178,51 +33823,78 @@ function shouldScrollToTop(route) {
 
 
 
-const _5bcb2864 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/index */ 6).then(__webpack_require__.bind(null, 418)));
-const _ab50afe0 = () => interopDefault(__webpack_require__.e(/* import() | pages/forgot-password */ 9).then(__webpack_require__.bind(null, 419)));
-const _6a755198 = () => interopDefault(__webpack_require__.e(/* import() | pages/login */ 11).then(__webpack_require__.bind(null, 410)));
-const _7c86eaf6 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/index */ 15).then(__webpack_require__.bind(null, 420)));
-const _110599f2 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/index */ 26).then(__webpack_require__.bind(null, 411)));
-const _6350ae26 = () => interopDefault(__webpack_require__.e(/* import() | pages/search */ 33).then(__webpack_require__.bind(null, 421)));
-const _2e37b8a4 = () => interopDefault(__webpack_require__.e(/* import() | pages/tags/index */ 35).then(__webpack_require__.bind(null, 422)));
-const _c641e6d0 = () => interopDefault(__webpack_require__.e(/* import() | pages/write/index */ 41).then(__webpack_require__.bind(null, 423)));
-const _e150c318 = () => interopDefault(__webpack_require__.e(/* import() | pages/agreement/content */ 1).then(__webpack_require__.bind(null, 424)));
-const _5ce457e8 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/chat */ 3).then(__webpack_require__.bind(null, 425)));
-const _bdb6f1c2 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/circles */ 5).then(__webpack_require__.bind(null, 426)));
-const _f12211f0 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/friends */ 14).then(__webpack_require__.bind(null, 427)));
-const _1153e82e = () => interopDefault(__webpack_require__.e(/* import() | pages/me/messages */ 16).then(__webpack_require__.bind(null, 428)));
-const _62cc8340 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/settings */ 17).then(__webpack_require__.bind(null, 412)));
-const _19559ef2 = () => interopDefault(__webpack_require__.e(/* import() | pages/novel/fans */ 19).then(__webpack_require__.bind(null, 429)));
-const _7e2a0cf0 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/activities */ 20).then(__webpack_require__.bind(null, 413)));
-const _2ea2b418 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/bookcase */ 22).then(__webpack_require__.bind(null, 430)));
-const _8e7326ec = () => interopDefault(__webpack_require__.e(/* import() | pages/read/collections */ 23).then(__webpack_require__.bind(null, 431)));
-const _b5c21ef2 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/rank */ 29).then(__webpack_require__.bind(null, 432)));
-const _77d8994f = () => interopDefault(__webpack_require__.e(/* import() | pages/read/redstone */ 30).then(__webpack_require__.bind(null, 416)));
-const _15ab5f4c = () => interopDefault(__webpack_require__.e(/* import() | pages/read/resources */ 31).then(__webpack_require__.bind(null, 433)));
-const _32777519 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/rewards */ 32).then(__webpack_require__.bind(null, 408)));
-const _23cf2240 = () => interopDefault(__webpack_require__.e(/* import() | pages/tag/collections */ 34).then(__webpack_require__.bind(null, 434)));
-const _012d29e6 = () => interopDefault(__webpack_require__.e(/* import() | pages/write/new */ 42).then(__webpack_require__.bind(null, 435)));
-const _3cebdcde = () => interopDefault(__webpack_require__.e(/* import() | pages/community/post/edit */ 8).then(__webpack_require__.bind(null, 436)));
-const _4b4dfa8f = () => interopDefault(__webpack_require__.e(/* import() | pages/write/settings/info/_id */ 44).then(__webpack_require__.bind(null, 437)));
-const _e61758f8 = () => interopDefault(__webpack_require__.e(/* import() | pages/write/settings/tags/_id */ 45).then(__webpack_require__.bind(null, 438)));
-const _626d1766 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/circle/_id */ 4).then(__webpack_require__.bind(null, 439)));
-const _5917ce96 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/post/_id */ 7).then(__webpack_require__.bind(null, 440)));
-const _eb526df2 = () => interopDefault(__webpack_require__.e(/* import() | pages/manga/read/_articleId */ 13).then(__webpack_require__.bind(null, 405)));
-const _615447bc = () => interopDefault(__webpack_require__.e(/* import() | pages/read/ask/_id */ 21).then(__webpack_require__.bind(null, 409)));
-const _3155fd16 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/comment/_id */ 24).then(__webpack_require__.bind(null, 441)));
-const _2cbd70cc = () => interopDefault(__webpack_require__.e(/* import() | pages/read/end/_id */ 25).then(__webpack_require__.bind(null, 442)));
-const _64535c20 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/power/_id */ 27).then(__webpack_require__.bind(null, 417)));
-const _7bad291d = () => interopDefault(__webpack_require__.e(/* import() | pages/read/preview/_key */ 28).then(__webpack_require__.bind(null, 406)));
-const _f2fc5d00 = () => interopDefault(__webpack_require__.e(/* import() | pages/world/relations/_id */ 38).then(__webpack_require__.bind(null, 443)));
-const _d30ec794 = () => interopDefault(__webpack_require__.e(/* import() | pages/write/edit/_id */ 40).then(__webpack_require__.bind(null, 444)));
-const _6767d33d = () => interopDefault(__webpack_require__.e(/* import() | pages/write/settings/_id */ 43).then(__webpack_require__.bind(null, 445)));
-const _767e00ae = () => interopDefault(__webpack_require__.e(/* import() | pages/write/activity-form/_workId/_tagId */ 39).then(__webpack_require__.bind(null, 446)));
-const _a6b65aee = () => interopDefault(__webpack_require__.e(/* import() | pages/article/_id */ 2).then(__webpack_require__.bind(null, 407)));
-const _09cf68cb = () => interopDefault(__webpack_require__.e(/* import() | pages/manga/_id */ 12).then(__webpack_require__.bind(null, 447)));
-const _ec79a17a = () => interopDefault(__webpack_require__.e(/* import() | pages/novel/_id */ 18).then(__webpack_require__.bind(null, 414)));
-const _2bb2fcf7 = () => interopDefault(__webpack_require__.e(/* import() | pages/users/_id */ 36).then(__webpack_require__.bind(null, 448)));
-const _6883eaa6 = () => interopDefault(__webpack_require__.e(/* import() | pages/world/_id */ 37).then(__webpack_require__.bind(null, 449)));
-const _011db41d = () => interopDefault(__webpack_require__.e(/* import() | pages/index */ 10).then(__webpack_require__.bind(null, 415)));
+const _5bcb2864 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/index */ 10).then(__webpack_require__.bind(null, 568)));
+const _ab50afe0 = () => interopDefault(__webpack_require__.e(/* import() | pages/forgot-password */ 17).then(__webpack_require__.bind(null, 569)));
+const _6a755198 = () => interopDefault(__webpack_require__.e(/* import() | pages/login */ 19).then(__webpack_require__.bind(null, 556)));
+const _7c86eaf6 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/index */ 27).then(__webpack_require__.bind(null, 570)));
+const _0b120af2 = () => interopDefault(__webpack_require__.e(/* import() | pages/membership/index */ 38).then(__webpack_require__.bind(null, 571)));
+const _110599f2 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/index */ 49).then(__webpack_require__.bind(null, 557)));
+const _6350ae26 = () => interopDefault(__webpack_require__.e(/* import() | pages/search */ 56).then(__webpack_require__.bind(null, 572)));
+const _387b1656 = () => interopDefault(__webpack_require__.e(/* import() | pages/store/index */ 59).then(__webpack_require__.bind(null, 573)));
+const _2e37b8a4 = () => interopDefault(__webpack_require__.e(/* import() | pages/tags/index */ 62).then(__webpack_require__.bind(null, 574)));
+const _c641e6d0 = () => interopDefault(__webpack_require__.e(/* import() | pages/write/index */ 68).then(__webpack_require__.bind(null, 575)));
+const _6fe23e56 = () => interopDefault(__webpack_require__.e(/* import() | pages/about/open-source */ 1).then(__webpack_require__.bind(null, 576)));
+const _e150c318 = () => interopDefault(__webpack_require__.e(/* import() | pages/agreement/content */ 2).then(__webpack_require__.bind(null, 577)));
+const _5ce457e8 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/chat */ 4).then(__webpack_require__.bind(null, 578)));
+const _bdb6f1c2 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/circles */ 9).then(__webpack_require__.bind(null, 579)));
+const _1cf1e75c = () => interopDefault(__webpack_require__.e(/* import() | pages/community/search */ 16).then(__webpack_require__.bind(null, 580)));
+const _803da97e = () => interopDefault(__webpack_require__.e(/* import() | pages/me/achievements */ 22).then(__webpack_require__.bind(null, 562)));
+const _2a49d456 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/credit */ 23).then(__webpack_require__.bind(null, 581)));
+const _3cd80f83 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/frames */ 24).then(__webpack_require__.bind(null, 582)));
+const _f12211f0 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/friends */ 25).then(__webpack_require__.bind(null, 583)));
+const _90bcbc44 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/help */ 26).then(__webpack_require__.bind(null, 584)));
+const _d9545f34 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/invite */ 28).then(__webpack_require__.bind(null, 585)));
+const _7f737880 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/lab */ 29).then(__webpack_require__.bind(null, 586)));
+const _1153e82e = () => interopDefault(__webpack_require__.e(/* import() | pages/me/messages */ 30).then(__webpack_require__.bind(null, 587)));
+const _b2f09eca = () => interopDefault(__webpack_require__.e(/* import() | pages/me/notifications */ 31).then(__webpack_require__.bind(null, 588)));
+const _731f67dd = () => interopDefault(__webpack_require__.e(/* import() | pages/me/security */ 32).then(__webpack_require__.bind(null, 589)));
+const _62cc8340 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/settings */ 33).then(__webpack_require__.bind(null, 558)));
+const _14510cee = () => interopDefault(__webpack_require__.e(/* import() | pages/me/storage */ 34).then(__webpack_require__.bind(null, 590)));
+const _3953cfbb = () => interopDefault(__webpack_require__.e(/* import() | pages/me/tree */ 35).then(__webpack_require__.bind(null, 591)));
+const _41fc0554 = () => interopDefault(__webpack_require__.e(/* import() | pages/me/wallet */ 36).then(__webpack_require__.bind(null, 623)));
+const _236b340b = () => interopDefault(__webpack_require__.e(/* import() | pages/membership/gift */ 37).then(__webpack_require__.bind(null, 592)));
+const _d0ff2c92 = () => interopDefault(__webpack_require__.e(/* import() | pages/membership/redeem */ 39).then(__webpack_require__.bind(null, 593)));
+const _a21affa8 = () => interopDefault(__webpack_require__.e(/* import() | pages/membership/rules */ 40).then(__webpack_require__.bind(null, 594)));
+const _19559ef2 = () => interopDefault(__webpack_require__.e(/* import() | pages/novel/fans */ 42).then(__webpack_require__.bind(null, 595)));
+const _7e2a0cf0 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/activities */ 43).then(__webpack_require__.bind(null, 596)));
+const _2ea2b418 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/bookcase */ 45).then(__webpack_require__.bind(null, 597)));
+const _8e7326ec = () => interopDefault(__webpack_require__.e(/* import() | pages/read/collections */ 46).then(__webpack_require__.bind(null, 598)));
+const _b5c21ef2 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/rank */ 52).then(__webpack_require__.bind(null, 599)));
+const _77d8994f = () => interopDefault(__webpack_require__.e(/* import() | pages/read/redstone */ 53).then(__webpack_require__.bind(null, 563)));
+const _15ab5f4c = () => interopDefault(__webpack_require__.e(/* import() | pages/read/resources */ 54).then(__webpack_require__.bind(null, 600)));
+const _32777519 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/rewards */ 55).then(__webpack_require__.bind(null, 601)));
+const _ac32a9b4 = () => interopDefault(__webpack_require__.e(/* import() | pages/store/addresses */ 58).then(__webpack_require__.bind(null, 602)));
+const _49beb6de = () => interopDefault(__webpack_require__.e(/* import() | pages/store/orders */ 60).then(__webpack_require__.bind(null, 564)));
+const _23cf2240 = () => interopDefault(__webpack_require__.e(/* import() | pages/tag/collections */ 61).then(__webpack_require__.bind(null, 603)));
+const _012d29e6 = () => interopDefault(__webpack_require__.e(/* import() | pages/write/new */ 69).then(__webpack_require__.bind(null, 604)));
+const _2bffa600 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/circle/create */ 6).then(__webpack_require__.bind(null, 605)));
+const _7b59ff76 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/mail/new */ 12).then(__webpack_require__.bind(null, 606)));
+const _3cebdcde = () => interopDefault(__webpack_require__.e(/* import() | pages/community/post/edit */ 15).then(__webpack_require__.bind(null, 607)));
+const _5ad89545 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/circle/members/_id */ 7).then(__webpack_require__.bind(null, 608)));
+const _de9b63ba = () => interopDefault(__webpack_require__.e(/* import() | pages/community/circle/settings/_id */ 8).then(__webpack_require__.bind(null, 609)));
+const _4b4dfa8f = () => interopDefault(__webpack_require__.e(/* import() | pages/write/settings/info/_id */ 71).then(__webpack_require__.bind(null, 610)));
+const _e61758f8 = () => interopDefault(__webpack_require__.e(/* import() | pages/write/settings/tags/_id */ 72).then(__webpack_require__.bind(null, 611)));
+const _626d1766 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/circle/_id */ 5).then(__webpack_require__.bind(null, 612)));
+const _a2c5a942 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/mail/_id */ 11).then(__webpack_require__.bind(null, 613)));
+const _979ee278 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/miniapp/_id */ 13).then(__webpack_require__.bind(null, 624)));
+const _5917ce96 = () => interopDefault(__webpack_require__.e(/* import() | pages/community/post/_id */ 14).then(__webpack_require__.bind(null, 559)));
+const _eb526df2 = () => interopDefault(__webpack_require__.e(/* import() | pages/manga/read/_articleId */ 21).then(__webpack_require__.bind(null, 552)));
+const _615447bc = () => interopDefault(__webpack_require__.e(/* import() | pages/read/ask/_id */ 44).then(__webpack_require__.bind(null, 555)));
+const _3155fd16 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/comment/_id */ 47).then(__webpack_require__.bind(null, 614)));
+const _2cbd70cc = () => interopDefault(__webpack_require__.e(/* import() | pages/read/end/_id */ 48).then(__webpack_require__.bind(null, 615)));
+const _64535c20 = () => interopDefault(__webpack_require__.e(/* import() | pages/read/power/_id */ 50).then(__webpack_require__.bind(null, 565)));
+const _7bad291d = () => interopDefault(__webpack_require__.e(/* import() | pages/read/preview/_key */ 51).then(__webpack_require__.bind(null, 553)));
+const _f2fc5d00 = () => interopDefault(__webpack_require__.e(/* import() | pages/world/relations/_id */ 65).then(__webpack_require__.bind(null, 616)));
+const _d30ec794 = () => interopDefault(__webpack_require__.e(/* import() | pages/write/edit/_id */ 67).then(__webpack_require__.bind(null, 617)));
+const _6767d33d = () => interopDefault(__webpack_require__.e(/* import() | pages/write/settings/_id */ 70).then(__webpack_require__.bind(null, 618)));
+const _767e00ae = () => interopDefault(__webpack_require__.e(/* import() | pages/write/activity-form/_workId/_tagId */ 66).then(__webpack_require__.bind(null, 619)));
+const _a6b65aee = () => interopDefault(__webpack_require__.e(/* import() | pages/article/_id */ 3).then(__webpack_require__.bind(null, 554)));
+const _09cf68cb = () => interopDefault(__webpack_require__.e(/* import() | pages/manga/_id */ 20).then(__webpack_require__.bind(null, 620)));
+const _ec79a17a = () => interopDefault(__webpack_require__.e(/* import() | pages/novel/_id */ 41).then(__webpack_require__.bind(null, 560)));
+const _4766b63e = () => interopDefault(__webpack_require__.e(/* import() | pages/store/_id */ 57).then(__webpack_require__.bind(null, 566)));
+const _2bb2fcf7 = () => interopDefault(__webpack_require__.e(/* import() | pages/users/_id */ 63).then(__webpack_require__.bind(null, 621)));
+const _6883eaa6 = () => interopDefault(__webpack_require__.e(/* import() | pages/world/_id */ 64).then(__webpack_require__.bind(null, 622)));
+const _011db41d = () => interopDefault(__webpack_require__.e(/* import() | pages/index */ 18).then(__webpack_require__.bind(null, 561)));
 const emptyFn = () => {};
 external_vue_default.a.use(external_vue_router_default.a);
 const routerOptions = {
@@ -33248,6 +33920,10 @@ const routerOptions = {
     component: _7c86eaf6,
     name: "me"
   }, {
+    path: "/membership",
+    component: _0b120af2,
+    name: "membership"
+  }, {
     path: "/read",
     component: _110599f2,
     name: "read"
@@ -33256,6 +33932,10 @@ const routerOptions = {
     component: _6350ae26,
     name: "search"
   }, {
+    path: "/store",
+    component: _387b1656,
+    name: "store"
+  }, {
     path: "/tags",
     component: _2e37b8a4,
     name: "tags"
@@ -33263,6 +33943,10 @@ const routerOptions = {
     path: "/write",
     component: _c641e6d0,
     name: "write"
+  }, {
+    path: "/about/open-source",
+    component: _6fe23e56,
+    name: "about-open-source"
   }, {
     path: "/agreement/content",
     component: _e150c318,
@@ -33276,17 +33960,77 @@ const routerOptions = {
     component: _bdb6f1c2,
     name: "community-circles"
   }, {
+    path: "/community/search",
+    component: _1cf1e75c,
+    name: "community-search"
+  }, {
+    path: "/me/achievements",
+    component: _803da97e,
+    name: "me-achievements"
+  }, {
+    path: "/me/credit",
+    component: _2a49d456,
+    name: "me-credit"
+  }, {
+    path: "/me/frames",
+    component: _3cd80f83,
+    name: "me-frames"
+  }, {
     path: "/me/friends",
     component: _f12211f0,
     name: "me-friends"
+  }, {
+    path: "/me/help",
+    component: _90bcbc44,
+    name: "me-help"
+  }, {
+    path: "/me/invite",
+    component: _d9545f34,
+    name: "me-invite"
+  }, {
+    path: "/me/lab",
+    component: _7f737880,
+    name: "me-lab"
   }, {
     path: "/me/messages",
     component: _1153e82e,
     name: "me-messages"
   }, {
+    path: "/me/notifications",
+    component: _b2f09eca,
+    name: "me-notifications"
+  }, {
+    path: "/me/security",
+    component: _731f67dd,
+    name: "me-security"
+  }, {
     path: "/me/settings",
     component: _62cc8340,
     name: "me-settings"
+  }, {
+    path: "/me/storage",
+    component: _14510cee,
+    name: "me-storage"
+  }, {
+    path: "/me/tree",
+    component: _3953cfbb,
+    name: "me-tree"
+  }, {
+    path: "/me/wallet",
+    component: _41fc0554,
+    name: "me-wallet"
+  }, {
+    path: "/membership/gift",
+    component: _236b340b,
+    name: "membership-gift"
+  }, {
+    path: "/membership/redeem",
+    component: _d0ff2c92,
+    name: "membership-redeem"
+  }, {
+    path: "/membership/rules",
+    component: _a21affa8,
+    name: "membership-rules"
   }, {
     path: "/novel/fans",
     component: _19559ef2,
@@ -33320,6 +34064,14 @@ const routerOptions = {
     component: _32777519,
     name: "read-rewards"
   }, {
+    path: "/store/addresses",
+    component: _ac32a9b4,
+    name: "store-addresses"
+  }, {
+    path: "/store/orders",
+    component: _49beb6de,
+    name: "store-orders"
+  }, {
     path: "/tag/collections",
     component: _23cf2240,
     name: "tag-collections"
@@ -33328,9 +34080,25 @@ const routerOptions = {
     component: _012d29e6,
     name: "write-new"
   }, {
+    path: "/community/circle/create",
+    component: _2bffa600,
+    name: "community-circle-create"
+  }, {
+    path: "/community/mail/new",
+    component: _7b59ff76,
+    name: "community-mail-new"
+  }, {
     path: "/community/post/edit",
     component: _3cebdcde,
     name: "community-post-edit"
+  }, {
+    path: "/community/circle/members/:id?",
+    component: _5ad89545,
+    name: "community-circle-members-id"
+  }, {
+    path: "/community/circle/settings/:id?",
+    component: _de9b63ba,
+    name: "community-circle-settings-id"
   }, {
     path: "/write/settings/info/:id?",
     component: _4b4dfa8f,
@@ -33343,6 +34111,14 @@ const routerOptions = {
     path: "/community/circle/:id?",
     component: _626d1766,
     name: "community-circle-id"
+  }, {
+    path: "/community/mail/:id?",
+    component: _a2c5a942,
+    name: "community-mail-id"
+  }, {
+    path: "/community/miniapp/:id?",
+    component: _979ee278,
+    name: "community-miniapp-id"
   }, {
     path: "/community/post/:id?",
     component: _5917ce96,
@@ -33399,6 +34175,10 @@ const routerOptions = {
     path: "/novel/:id?",
     component: _ec79a17a,
     name: "novel-id"
+  }, {
+    path: "/store/:id",
+    component: _4766b63e,
+    name: "store-id"
   }, {
     path: "/users/:id?",
     component: _2bb2fcf7,
@@ -33567,7 +34347,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(67)
+  var style0 = __webpack_require__(79)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -33831,7 +34611,7 @@ var nuxt_loading_render, nuxt_loading_staticRenderFns
 
 function nuxt_loading_injectStyles (context) {
   
-  var style0 = __webpack_require__(69)
+  var style0 = __webpack_require__(81)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -33851,25 +34631,32 @@ var nuxt_loading_component = Object(componentNormalizer["a" /* default */])(
 
 /* harmony default export */ var nuxt_loading = (nuxt_loading_component.exports);
 // EXTERNAL MODULE: ./node_modules/element-ui/lib/theme-chalk/index.css
-var theme_chalk = __webpack_require__(71);
+var theme_chalk = __webpack_require__(83);
 
 // EXTERNAL MODULE: ./assets/css/global.css
-var css_global = __webpack_require__(76);
+var css_global = __webpack_require__(88);
 
 // EXTERNAL MODULE: ./assets/css/reading-theme.css
-var reading_theme = __webpack_require__(78);
+var reading_theme = __webpack_require__(90);
 
-// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./layouts/default.vue?vue&type=template&id=70076646&scoped=true
-var defaultvue_type_template_id_70076646_scoped_true_render = function render() {
+// EXTERNAL MODULE: ./assets/css/site-theme.css
+var site_theme = __webpack_require__(92);
+
+// EXTERNAL MODULE: ./assets/css/interaction-ui.css
+var interaction_ui = __webpack_require__(94);
+
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./layouts/default.vue?vue&type=template&id=59fa9636&scoped=true
+var defaultvue_type_template_id_59fa9636_scoped_true_render = function render() {
   var _vm = this,
     _c = _vm._self._c;
   return _c('div', {
     staticClass: "outer",
     class: {
-      'home-layout': _vm.$route.path === '/',
-      'reading-layout': _vm.isReadingRoute
+      'home-layout': _vm.$route.path === '/' || _vm.$route.path === '/about/open-source',
+      'reading-layout': _vm.isReadingRoute,
+      'social-layout': _vm.isSocialRoute
     }
-  }, [_vm._ssrNode((_vm.isReadingRoute ? "<a href=\"#reading-main\" class=\"reading-skip-link\" data-v-70076646>跳到阅读内容</a>" : "<!---->") + " "), _vm._ssrNode("<nav class=\"navbar\" data-v-70076646>", "</nav>", [_vm._ssrNode("<div class=\"navbar-container\" data-v-70076646>", "</div>", [_vm._ssrNode("<div class=\"navbar-left\" data-v-70076646>", "</div>", [_c('nuxt-link', {
+  }, [_vm._ssrNode((_vm.$route.path === '/' ? "<a href=\"#home-main\" class=\"home-skip-link\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.accessibility.skipHome))) + "</a>" : "<!---->") + " " + (_vm.isReadingRoute ? "<a href=\"#reading-main\" class=\"reading-skip-link\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.accessibility.skipReading))) + "</a>" : "<!---->") + " "), _c('MobileDownloadButton'), _vm._ssrNode(" "), _vm._ssrNode("<nav class=\"navbar\" data-v-59fa9636>", "</nav>", [_vm._ssrNode("<div class=\"navbar-container\" data-v-59fa9636>", "</div>", [_vm._ssrNode("<div class=\"navbar-left\" data-v-59fa9636>", "</div>", [_c('nuxt-link', {
     staticClass: "logo",
     attrs: {
       "to": "/"
@@ -33877,10 +34664,10 @@ var defaultvue_type_template_id_70076646_scoped_true_render = function render() 
   }, [_c('img', {
     staticClass: "logo-img",
     attrs: {
-      "src": __webpack_require__(80),
-      "alt": "原木社区"
+      "src": __webpack_require__(96),
+      "alt": _vm.$t(_vm.copy.brand)
     }
-  })])], 1), _vm._ssrNode(" "), _vm._ssrNode("<div class=\"navbar-center\" data-v-70076646>", "</div>", [_c('nuxt-link', {
+  })])], 1), _vm._ssrNode(" "), _vm._ssrNode("<div class=\"navbar-center\" data-v-59fa9636>", "</div>", [_c('nuxt-link', {
     staticClass: "nav-link",
     class: {
       'nav-link-active': _vm.isReadingRoute
@@ -33889,40 +34676,48 @@ var defaultvue_type_template_id_70076646_scoped_true_render = function render() 
       "to": "/read",
       "exact-active-class": "nav-link-active"
     }
-  }, [_vm._v("阅读")]), _vm._ssrNode(" "), _c('nuxt-link', {
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.nav.read)))]), _vm._ssrNode(" "), _c('nuxt-link', {
     staticClass: "nav-link",
+    class: {
+      'nav-link-active': _vm.isWritingRoute
+    },
     attrs: {
       "to": "/write",
       "exact-active-class": "nav-link-active"
     }
-  }, [_vm._v("写作")]), _vm._ssrNode(" "), _c('nuxt-link', {
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.nav.write)))]), _vm._ssrNode(" "), _c('nuxt-link', {
     staticClass: "nav-link",
+    class: {
+      'nav-link-active': _vm.$route.path.startsWith('/community')
+    },
     attrs: {
       "to": "/community",
       "exact-active-class": "nav-link-active"
     }
-  }, [_vm._v("社区")])], 2), _vm._ssrNode(" "), _vm._ssrNode("<div class=\"navbar-right\" data-v-70076646>", "</div>", [_vm._ssrNode("<div" + _vm._ssrClass("search-box", {
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.nav.community)))])], 2), _vm._ssrNode(" "), _vm._ssrNode("<div class=\"navbar-right\" data-v-59fa9636>", "</div>", [_vm._ssrNode("<div" + _vm._ssrClass("search-box", {
     'active': _vm.isSearchFocused
-  }) + " data-v-70076646><i class=\"el-icon-search search-icon\" data-v-70076646></i> <input type=\"text\" placeholder=\"全站搜索...\"" + _vm._ssrAttr("value", _vm.searchKeyword) + " class=\"search-input\" data-v-70076646> " + (_vm.searchKeyword ? "<i class=\"el-icon-close search-clear\" data-v-70076646></i>" : "<!---->") + "</div> <div class=\"search-dropdown\"" + _vm._ssrStyle(null, null, {
+  }) + " data-v-59fa9636><i class=\"el-icon-search search-icon\" data-v-59fa9636></i> <input type=\"text\"" + _vm._ssrAttr("placeholder", _vm.$t(_vm.copy.search.placeholder)) + _vm._ssrAttr("value", _vm.searchKeyword) + " class=\"search-input\" data-v-59fa9636> " + (_vm.searchKeyword ? "<i class=\"el-icon-close search-clear\" data-v-59fa9636></i>" : "<!---->") + "</div> <div class=\"search-dropdown\"" + _vm._ssrStyle(null, null, {
     display: _vm.showSearchDropdown ? '' : 'none'
-  }) + " data-v-70076646>" + (_vm.searchHistory.length > 0 && !_vm.searchKeyword ? "<div class=\"search-section\" data-v-70076646><div class=\"section-header\" data-v-70076646><span class=\"section-title\" data-v-70076646>搜索历史</span> <button class=\"clear-btn\" data-v-70076646><i class=\"el-icon-delete\" data-v-70076646></i></button></div> <div class=\"history-list\" data-v-70076646>" + _vm._ssrList(_vm.searchHistory, function (item, index) {
-    return "<div class=\"history-item\" data-v-70076646><i class=\"el-icon-time\" data-v-70076646></i> <span data-v-70076646>" + _vm._ssrEscape(_vm._s(item)) + "</span></div>";
-  }) + "</div></div>" : "<!---->") + " " + (_vm.hotSearches.length > 0 && !_vm.searchKeyword ? "<div class=\"search-section\" data-v-70076646><div class=\"section-header\" data-v-70076646><span class=\"section-title\" data-v-70076646>热门搜索</span></div> <div class=\"hot-list\" data-v-70076646>" + _vm._ssrList(_vm.hotSearches, function (item, index) {
-    return "<span class=\"hot-item\" data-v-70076646>" + _vm._ssrEscape("\n                " + _vm._s(item.keyword) + "\n              ") + "</span>";
-  }) + "</div></div>" : "<!---->") + " " + (_vm.searchKeyword && (_vm.searchResults.books.length > 0 || _vm.searchResults.posts.length > 0 || _vm.searchResults.circles.length > 0 || _vm.searchResults.users.length > 0) ? "<div class=\"search-results\" data-v-70076646>" + (_vm.searchResults.books.length > 0 ? "<div class=\"result-section\" data-v-70076646><div class=\"section-header\" data-v-70076646><span class=\"section-title\" data-v-70076646>书籍</span> <span class=\"view-all\" data-v-70076646>查看全部</span></div> <div class=\"book-results\" data-v-70076646>" + _vm._ssrList(_vm.searchResults.books.slice(0, 3), function (book, index) {
-    return "<div class=\"book-item\" data-v-70076646><img" + _vm._ssrAttr("src", book.picUrl + '?thumbnail=1') + _vm._ssrAttr("alt", book.name) + " class=\"book-cover\" data-v-70076646> <div class=\"book-info\" data-v-70076646><div class=\"book-title\" data-v-70076646>" + _vm._ssrEscape(_vm._s(book.name)) + "</div> <div class=\"book-author\" data-v-70076646>" + _vm._ssrEscape(_vm._s(book.author_name)) + "</div></div></div>";
-  }) + "</div></div>" : "<!---->") + " " + (_vm.searchResults.posts.length > 0 ? "<div class=\"result-section\" data-v-70076646><div class=\"section-header\" data-v-70076646><span class=\"section-title\" data-v-70076646>帖子</span> <span class=\"view-all\" data-v-70076646>查看全部</span></div> <div class=\"post-results\" data-v-70076646>" + _vm._ssrList(_vm.searchResults.posts.slice(0, 3), function (post, index) {
-    return "<div class=\"post-item\" data-v-70076646><div class=\"post-title\" data-v-70076646>" + _vm._ssrEscape(_vm._s(post.title)) + "</div> <div class=\"post-meta\" data-v-70076646><span class=\"post-author\" data-v-70076646>" + _vm._ssrEscape(_vm._s(post.author_name)) + "</span> <span class=\"post-time\" data-v-70076646>" + _vm._ssrEscape(_vm._s(_vm.formatTime(post.create_time))) + "</span></div></div>";
-  }) + "</div></div>" : "<!---->") + " " + (_vm.searchResults.circles.length > 0 ? "<div class=\"result-section\" data-v-70076646><div class=\"section-header\" data-v-70076646><span class=\"section-title\" data-v-70076646>圈子</span> <span class=\"view-all\" data-v-70076646>查看全部</span></div> <div class=\"circle-results\" data-v-70076646>" + _vm._ssrList(_vm.searchResults.circles.slice(0, 3), function (circle, index) {
-    return "<div class=\"circle-item\" data-v-70076646><img" + _vm._ssrAttr("src", circle.icon || '/default-avatar.png') + _vm._ssrAttr("alt", circle.name) + " class=\"circle-icon\" data-v-70076646> <div class=\"circle-info\" data-v-70076646><div class=\"circle-name\" data-v-70076646>" + _vm._ssrEscape(_vm._s(circle.name)) + "</div> <div class=\"circle-meta\" data-v-70076646>" + _vm._ssrEscape(_vm._s(circle.member_count || 0) + "人") + "</div></div></div>";
-  }) + "</div></div>" : "<!---->") + " " + (_vm.searchResults.users.length > 0 ? "<div class=\"result-section\" data-v-70076646><div class=\"section-header\" data-v-70076646><span class=\"section-title\" data-v-70076646>用户</span> <span class=\"view-all\" data-v-70076646>查看全部</span></div> <div class=\"user-results\" data-v-70076646>" + _vm._ssrList(_vm.searchResults.users.slice(0, 3), function (user, index) {
-    return "<div class=\"user-item\" data-v-70076646><img" + _vm._ssrAttr("src", user.avatar_url || '/default-avatar.png') + _vm._ssrAttr("alt", user.name) + " class=\"user-avatar\" data-v-70076646> <div class=\"user-info\" data-v-70076646><div class=\"user-name\" data-v-70076646>" + _vm._ssrEscape(_vm._s(user.name || '匿名用户')) + "</div> <div class=\"user-motto\" data-v-70076646>" + _vm._ssrEscape(_vm._s(user.motto || '这个人很懒，还没有设置个性签名')) + "</div></div></div>";
-  }) + "</div></div>" : "<!---->") + "</div>" : "<!---->") + " " + (_vm.searchKeyword && _vm.noResults ? "<div class=\"no-results\" data-v-70076646><div class=\"no-results-icon\" data-v-70076646><i class=\"el-icon-search\" data-v-70076646></i></div> <div class=\"no-results-text\" data-v-70076646>\n              没有找到相关内容\n            </div> <div class=\"search-all-btn\" data-v-70076646>\n              在搜索页面中查看\n            </div></div>" : "<!---->") + "</div> "), !_vm.isLogin ? _vm._ssrNode("<div class=\"user-actions\" data-v-70076646>", "</div>", [_c('nuxt-link', {
+  }) + " data-v-59fa9636>" + (_vm.searchHistory.length > 0 && !_vm.searchKeyword ? "<div class=\"search-section\" data-v-59fa9636><div class=\"section-header\" data-v-59fa9636><span class=\"section-title\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.history))) + "</span> <button class=\"clear-btn\" data-v-59fa9636><i class=\"el-icon-delete\" data-v-59fa9636></i></button></div> <div class=\"history-list\" data-v-59fa9636>" + _vm._ssrList(_vm.searchHistory, function (item, index) {
+    return "<div class=\"history-item\" data-v-59fa9636><i class=\"el-icon-time\" data-v-59fa9636></i> <span data-v-59fa9636>" + _vm._ssrEscape(_vm._s(item)) + "</span></div>";
+  }) + "</div></div>" : "<!---->") + " " + (_vm.hotSearches.length > 0 && !_vm.searchKeyword ? "<div class=\"search-section\" data-v-59fa9636><div class=\"section-header\" data-v-59fa9636><span class=\"section-title\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.hot))) + "</span></div> <div class=\"hot-list\" data-v-59fa9636>" + _vm._ssrList(_vm.hotSearches, function (item, index) {
+    return "<span class=\"hot-item\" data-v-59fa9636>" + _vm._ssrEscape("\n                " + _vm._s(item.keyword) + "\n              ") + "</span>";
+  }) + "</div></div>" : "<!---->") + " " + (_vm.searchKeyword && (_vm.searchResults.books.length > 0 || _vm.searchResults.posts.length > 0 || _vm.searchResults.circles.length > 0 || _vm.searchResults.users.length > 0) ? "<div class=\"search-results\" data-v-59fa9636>" + (_vm.searchResults.books.length > 0 ? "<div class=\"result-section\" data-v-59fa9636><div class=\"section-header\" data-v-59fa9636><span class=\"section-title\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.books))) + "</span> <span class=\"view-all\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.viewAll))) + "</span></div> <div class=\"book-results\" data-v-59fa9636>" + _vm._ssrList(_vm.searchResults.books.slice(0, 3), function (book, index) {
+    return "<div class=\"book-item\" data-v-59fa9636><img" + _vm._ssrAttr("src", book.picUrl + '?thumbnail=1') + _vm._ssrAttr("alt", book.name) + " class=\"book-cover\" data-v-59fa9636> <div class=\"book-info\" data-v-59fa9636><div class=\"book-title\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(book.name)) + "</div> <div class=\"book-author\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(book.author_name)) + "</div></div></div>";
+  }) + "</div></div>" : "<!---->") + " " + (_vm.searchResults.posts.length > 0 ? "<div class=\"result-section\" data-v-59fa9636><div class=\"section-header\" data-v-59fa9636><span class=\"section-title\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.posts))) + "</span> <span class=\"view-all\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.viewAll))) + "</span></div> <div class=\"post-results\" data-v-59fa9636>" + _vm._ssrList(_vm.searchResults.posts.slice(0, 3), function (post, index) {
+    return "<div class=\"post-item\" data-v-59fa9636><div class=\"post-title\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(post.title)) + "</div> <div class=\"post-meta\" data-v-59fa9636><span class=\"post-author\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(post.author_name)) + "</span> <span class=\"post-time\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.formatTime(post.create_time))) + "</span></div></div>";
+  }) + "</div></div>" : "<!---->") + " " + (_vm.searchResults.circles.length > 0 ? "<div class=\"result-section\" data-v-59fa9636><div class=\"section-header\" data-v-59fa9636><span class=\"section-title\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.circles))) + "</span> <span class=\"view-all\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.viewAll))) + "</span></div> <div class=\"circle-results\" data-v-59fa9636>" + _vm._ssrList(_vm.searchResults.circles.slice(0, 3), function (circle, index) {
+    return "<div class=\"circle-item\" data-v-59fa9636><img" + _vm._ssrAttr("src", circle.icon || '/default-avatar.png') + _vm._ssrAttr("alt", circle.name) + " class=\"circle-icon\" data-v-59fa9636> <div class=\"circle-info\" data-v-59fa9636><div class=\"circle-name\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(circle.name)) + "</div> <div class=\"circle-meta\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.memberCount, {
+      count: circle.member_count || 0
+    }))) + "</div></div></div>";
+  }) + "</div></div>" : "<!---->") + " " + (_vm.searchResults.users.length > 0 ? "<div class=\"result-section\" data-v-59fa9636><div class=\"section-header\" data-v-59fa9636><span class=\"section-title\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.users))) + "</span> <span class=\"view-all\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.search.viewAll))) + "</span></div> <div class=\"user-results\" data-v-59fa9636>" + _vm._ssrList(_vm.searchResults.users.slice(0, 3), function (user, index) {
+    return "<div class=\"user-item\" data-v-59fa9636><img" + _vm._ssrAttr("src", user.avatar_url || '/default-avatar.png') + _vm._ssrAttr("alt", user.name) + " class=\"user-avatar\" data-v-59fa9636> <div class=\"user-info\" data-v-59fa9636><div class=\"user-name\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(user.name || _vm.copy.account.anonymous)) + "</div> <div class=\"user-motto\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(user.motto || _vm.copy.account.mottoFallback)) + "</div></div></div>";
+  }) + "</div></div>" : "<!---->") + "</div>" : "<!---->") + " " + (_vm.searchKeyword && _vm.noResults ? "<div class=\"no-results\" data-v-59fa9636><div class=\"no-results-icon\" data-v-59fa9636><i class=\"el-icon-search\" data-v-59fa9636></i></div> <div class=\"no-results-text\" data-v-59fa9636>" + _vm._ssrEscape("\n              " + _vm._s(_vm.$t(_vm.copy.search.empty)) + "\n            ") + "</div> <div class=\"search-all-btn\" data-v-59fa9636>" + _vm._ssrEscape("\n              " + _vm._s(_vm.$t(_vm.copy.search.allResults)) + "\n            ") + "</div></div>" : "<!---->") + "</div> "), _c('GlobalThemeSwitch'), _vm._ssrNode(" "), !_vm.isLogin ? _vm._ssrNode("<div class=\"user-actions\" data-v-59fa9636>", "</div>", [_c('nuxt-link', {
     staticClass: "user-link",
     attrs: {
       "to": "/login"
     }
-  }, [_vm._v("登录")])], 1) : _vm._ssrNode("<div class=\"user-actions\" data-v-70076646>", "</div>", [_c('el-dropdown', {
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.account.login)))])], 1) : _vm._ssrNode("<div class=\"user-actions\" data-v-59fa9636>", "</div>", [_c('el-dropdown', {
     attrs: {
       "trigger": "click"
     },
@@ -33938,7 +34733,7 @@ var defaultvue_type_template_id_70076646_scoped_true_render = function render() 
     }
   }), _vm._v(" "), _c('span', {
     staticClass: "user-nickname"
-  }, [_vm._v(_vm._s(_vm.userInfo ? _vm.userInfo.name || '用户' : '用户'))]), _vm._v(" "), _c('i', {
+  }, [_vm._v(_vm._s(_vm.userInfo ? _vm.userInfo.name || _vm.copy.account.nameFallback : _vm.copy.account.nameFallback))]), _vm._v(" "), _c('i', {
     staticClass: "el-icon-arrow-down"
   })]), _vm._v(" "), _c('el-dropdown-menu', {
     attrs: {
@@ -33949,28 +34744,183 @@ var defaultvue_type_template_id_70076646_scoped_true_render = function render() 
     attrs: {
       "command": "profile"
     }
-  }, [_vm._v("个人中心")]), _vm._v(" "), _c('el-dropdown-item', {
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.account.profile)))]), _vm._v(" "), _c('el-dropdown-item', {
     attrs: {
       "command": "myworks"
     }
-  }, [_vm._v("创作中心")]), _vm._v(" "), _c('el-dropdown-item', {
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.account.works)))]), _vm._v(" "), _c('el-dropdown-item', {
     attrs: {
       "command": "bookcase"
     }
-  }, [_vm._v("我的书架")]), _vm._v(" "), _c('el-dropdown-item', {
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.account.bookcase)))]), _vm._v(" "), _c('el-dropdown-item', {
     attrs: {
       "divided": "",
       "command": "logout"
     }
-  }, [_vm._v("退出登录")])], 1)], 1)], 1)], 2)], 2)]), _vm._ssrNode(" "), _vm._ssrNode("<main" + _vm._ssrAttr("id", _vm.isReadingRoute ? 'reading-main' : undefined) + _vm._ssrAttr("tabindex", _vm.isReadingRoute ? -1 : undefined) + " class=\"main-content\" data-v-70076646>", "</main>", [_c('nuxt')], 1), _vm._ssrNode(" <footer class=\"site-footer\" data-v-70076646><div class=\"footer-container\" data-v-70076646><p style=\"display: flex; justify-content: center; margin-bottom: 5px;\" data-v-70076646><a href=\"https://beian.miit.gov.cn/\" target=\"_blank\" style=\"color:var(--site-footer-link, #FFEFD6); margin-right: 30px;\" data-v-70076646>苏ICP备2021006745号</a><br data-v-70076646> <a href=\"https://beian.mps.gov.cn/\" target=\"_blank\" style=\"color:var(--site-footer-link, #FFEFD6); margin-right: 30px;\" data-v-70076646>皖公安网备34010402703554号</a><br data-v-70076646> <a href=\"OpenSourcePlan.html\" style=\"color:var(--site-footer-link, #FFEFD6)\" data-v-70076646>原木社区开源计划</a></p> <p style=\"margin-bottom: 5px;\" data-v-70076646>非 Minecraft 官方产品。未获 Mojang 许可，亦与 Mojang 无任何关联。</p> <p data-v-70076646>" + _vm._ssrEscape("© " + _vm._s(new Date().getFullYear()) + " 原木社区 版权所有") + "</p></div></footer> "), _c('WindowManager'), _vm._ssrNode(" "), _c('client-only', [_c('ReaderAudioPlayer')], 1)], 2);
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.account.logout)))])], 1)], 1)], 1)], 2)], 2)]), _vm._ssrNode(" "), _vm._ssrNode("<main" + _vm._ssrAttr("id", _vm.isReadingRoute ? 'reading-main' : _vm.$route.path === '/' ? 'home-main' : undefined) + _vm._ssrAttr("tabindex", _vm.isReadingRoute || _vm.$route.path === '/' ? -1 : undefined) + " class=\"main-content\" data-v-59fa9636>", "</main>", [_c('nuxt')], 1), _vm._ssrNode(" "), _vm._ssrNode("<footer class=\"site-footer\" data-v-59fa9636>", "</footer>", [_vm._ssrNode("<div class=\"footer-container\" data-v-59fa9636>", "</div>", [_vm._ssrNode("<p style=\"display: flex; justify-content: center; margin-bottom: 5px;\" data-v-59fa9636>", "</p>", [_vm._ssrNode("<a href=\"https://beian.miit.gov.cn/\" target=\"_blank\" style=\"color:var(--site-footer-link, #FFEFD6); margin-right: 30px;\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.copy.footer.icp)) + "</a><br data-v-59fa9636> <a href=\"https://beian.mps.gov.cn/\" target=\"_blank\" style=\"color:var(--site-footer-link, #FFEFD6); margin-right: 30px;\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.copy.footer.publicSecurity)) + "</a><br data-v-59fa9636> "), _c('nuxt-link', {
+    staticStyle: {
+      "color": "var(--site-footer-link, #FFEFD6)"
+    },
+    attrs: {
+      "to": "/about/open-source"
+    }
+  }, [_vm._v(_vm._s(_vm.$t(_vm.copy.footer.openSource)))])], 2), _vm._ssrNode(" <p style=\"margin-bottom: 5px;\" data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.footer.disclaimer))) + "</p> <p data-v-59fa9636>" + _vm._ssrEscape(_vm._s(_vm.$t(_vm.copy.footer.copyright, {
+    year: new Date().getFullYear()
+  }))) + "</p>")], 2)]), _vm._ssrNode(" "), _c('WindowManager'), _vm._ssrNode(" "), _c('client-only', [_c('ReaderAudioPlayer')], 1)], 2);
 };
-var defaultvue_type_template_id_70076646_scoped_true_staticRenderFns = [];
+var defaultvue_type_template_id_59fa9636_scoped_true_staticRenderFns = [];
 
-// CONCATENATED MODULE: ./layouts/default.vue?vue&type=template&id=70076646&scoped=true
+// CONCATENATED MODULE: ./layouts/default.vue?vue&type=template&id=59fa9636&scoped=true
+
+// EXTERNAL MODULE: ./config/site-copy.json
+var site_copy = __webpack_require__(22);
+
+// EXTERNAL MODULE: ./utils/format-copy.js
+var format_copy = __webpack_require__(18);
 
 // EXTERNAL MODULE: ./utils/reading-discovery.js
-var reading_discovery = __webpack_require__(10);
+var reading_discovery = __webpack_require__(11);
 
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./components/MobileDownloadButton.vue?vue&type=template&id=057fff3b&scoped=true
+var MobileDownloadButtonvue_type_template_id_057fff3b_scoped_true_render = function render() {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c('nuxt-link', {
+    staticClass: "mobile-download-button",
+    attrs: {
+      "to": "/#home-download"
+    }
+  }, [_c('svg', {
+    attrs: {
+      "width": "16",
+      "height": "16",
+      "viewBox": "0 0 24 24",
+      "fill": "none",
+      "stroke": "currentColor",
+      "stroke-width": "1.8",
+      "aria-hidden": "true"
+    }
+  }, [_c('rect', {
+    attrs: {
+      "x": "6",
+      "y": "2",
+      "width": "12",
+      "height": "20",
+      "rx": "2"
+    }
+  }), _c('path', {
+    attrs: {
+      "d": "M10 18h4"
+    }
+  })]), _vm._v("\n  " + _vm._s(_vm.$t(_vm.label)) + "\n")]);
+};
+var MobileDownloadButtonvue_type_template_id_057fff3b_scoped_true_staticRenderFns = [];
+
+// CONCATENATED MODULE: ./components/MobileDownloadButton.vue?vue&type=template&id=057fff3b&scoped=true
+
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/MobileDownloadButton.vue?vue&type=script&lang=js
+
+/* harmony default export */ var MobileDownloadButtonvue_type_script_lang_js = ({
+  computed: {
+    label() {
+      return site_copy.nav.mobileDownload;
+    }
+  }
+});
+// CONCATENATED MODULE: ./components/MobileDownloadButton.vue?vue&type=script&lang=js
+ /* harmony default export */ var components_MobileDownloadButtonvue_type_script_lang_js = (MobileDownloadButtonvue_type_script_lang_js); 
+// CONCATENATED MODULE: ./components/MobileDownloadButton.vue
+
+
+
+function MobileDownloadButton_injectStyles (context) {
+  
+  var style0 = __webpack_require__(97)
+if (style0.__inject__) style0.__inject__(context)
+
+}
+
+/* normalize component */
+
+var MobileDownloadButton_component = Object(componentNormalizer["a" /* default */])(
+  components_MobileDownloadButtonvue_type_script_lang_js,
+  MobileDownloadButtonvue_type_template_id_057fff3b_scoped_true_render,
+  MobileDownloadButtonvue_type_template_id_057fff3b_scoped_true_staticRenderFns,
+  false,
+  MobileDownloadButton_injectStyles,
+  "057fff3b",
+  "3f2060d8"
+  
+)
+
+/* harmony default export */ var MobileDownloadButton = (MobileDownloadButton_component.exports);
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./components/GlobalThemeSwitch.vue?vue&type=template&id=31b26f28&scoped=true
+var GlobalThemeSwitchvue_type_template_id_31b26f28_scoped_true_render = function render() {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c('button', {
+    staticClass: "global-theme-switch",
+    attrs: {
+      "type": "button",
+      "aria-label": _vm.label,
+      "title": _vm.label,
+      "aria-pressed": _vm.dark
+    },
+    on: {
+      "click": function ($event) {
+        return _vm.$theme.toggle();
+      }
+    }
+  }, [_vm._ssrNode("<i aria-hidden=\"true\"" + _vm._ssrClass(null, _vm.dark ? 'el-icon-sunny' : 'el-icon-moon') + " data-v-31b26f28></i>")]);
+};
+var GlobalThemeSwitchvue_type_template_id_31b26f28_scoped_true_staticRenderFns = [];
+
+// CONCATENATED MODULE: ./components/GlobalThemeSwitch.vue?vue&type=template&id=31b26f28&scoped=true
+
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/GlobalThemeSwitch.vue?vue&type=script&lang=js
+/* harmony default export */ var GlobalThemeSwitchvue_type_script_lang_js = ({
+  data: () => ({
+    ready: false
+  }),
+  mounted() {
+    this.ready = true;
+  },
+  computed: {
+    dark() {
+      return this.ready && this.$theme.resolved === "dark";
+    },
+    label() {
+      return this.$t(this.dark ? "切换日间模式" : "切换夜间模式");
+    }
+  }
+});
+// CONCATENATED MODULE: ./components/GlobalThemeSwitch.vue?vue&type=script&lang=js
+ /* harmony default export */ var components_GlobalThemeSwitchvue_type_script_lang_js = (GlobalThemeSwitchvue_type_script_lang_js); 
+// CONCATENATED MODULE: ./components/GlobalThemeSwitch.vue
+
+
+
+function GlobalThemeSwitch_injectStyles (context) {
+  
+  var style0 = __webpack_require__(99)
+if (style0.__inject__) style0.__inject__(context)
+
+}
+
+/* normalize component */
+
+var GlobalThemeSwitch_component = Object(componentNormalizer["a" /* default */])(
+  components_GlobalThemeSwitchvue_type_script_lang_js,
+  GlobalThemeSwitchvue_type_template_id_31b26f28_scoped_true_render,
+  GlobalThemeSwitchvue_type_template_id_31b26f28_scoped_true_staticRenderFns,
+  false,
+  GlobalThemeSwitch_injectStyles,
+  "31b26f28",
+  "256b2472"
+  
+)
+
+/* harmony default export */ var GlobalThemeSwitch = (GlobalThemeSwitch_component.exports);
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./components/WindowManager.vue?vue&type=template&id=0a2c6b19&scoped=true
 var WindowManagervue_type_template_id_0a2c6b19_scoped_true_render = function render() {
   var _vm = this,
@@ -34363,7 +35313,7 @@ var FloatingWindowvue_type_template_id_35419b22_scoped_true_staticRenderFns = []
 
 function FloatingWindow_injectStyles (context) {
   
-  var style0 = __webpack_require__(81)
+  var style0 = __webpack_require__(101)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -34437,7 +35387,7 @@ var WindowMinimizedBarvue_type_template_id_7a62759e_scoped_true_staticRenderFns 
 
 function WindowMinimizedBar_injectStyles (context) {
   
-  var style0 = __webpack_require__(83)
+  var style0 = __webpack_require__(103)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -34478,7 +35428,7 @@ var WindowMinimizedBar_component = Object(componentNormalizer["a" /* default */]
 
 function WindowManager_injectStyles (context) {
   
-  var style0 = __webpack_require__(85)
+  var style0 = __webpack_require__(105)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -34498,20 +35448,27 @@ var WindowManager_component = Object(componentNormalizer["a" /* default */])(
 
 /* harmony default export */ var WindowManager = (WindowManager_component.exports);
 // EXTERNAL MODULE: ./components/read/ReaderAudioPlayer.vue + 4 modules
-var ReaderAudioPlayer = __webpack_require__(59);
+var ReaderAudioPlayer = __webpack_require__(69);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./layouts/default.vue?vue&type=script&lang=js
+
+
+
+
 
 
 
 /* harmony default export */ var defaultvue_type_script_lang_js = ({
   name: 'default',
   components: {
+    GlobalThemeSwitch: GlobalThemeSwitch,
     WindowManager: WindowManager,
-    ReaderAudioPlayer: ReaderAudioPlayer["a" /* default */]
+    ReaderAudioPlayer: ReaderAudioPlayer["a" /* default */],
+    MobileDownloadButton: MobileDownloadButton
   },
   data() {
     return {
+      copy: site_copy,
       isLogin: false,
       userInfo: null,
       checkTimer: null,
@@ -34532,8 +35489,14 @@ var ReaderAudioPlayer = __webpack_require__(59);
     };
   },
   computed: {
+    isSocialRoute() {
+      return /^\/(community|me|membership|store)(\/|$)/.test(this.$route.path);
+    },
     isReadingRoute() {
       return /^\/(read|novel|article|manga|world|tags|tag)(\/|$)/.test(this.$route.path);
+    },
+    isWritingRoute() {
+      return /^\/write(\/|$)/.test(this.$route.path);
     },
     noResults() {
       if (!this.searchKeyword) return false;
@@ -34557,6 +35520,7 @@ var ReaderAudioPlayer = __webpack_require__(59);
     if (false) {}
   },
   methods: {
+    formatCopy: format_copy["a" /* formatCopy */],
     // 从localStorage中检查登录状态
     checkLoginStatus() {
       try {
@@ -34623,7 +35587,7 @@ var ReaderAudioPlayer = __webpack_require__(59);
       localStorage.removeItem('LogHomeUserInfo');
       this.isLogin = false;
       this.userInfo = null;
-      this.$message.success('已退出登录');
+      this.$message.success(this.copy.account.logoutSuccess);
       this.$router.push('/');
     },
     // 搜索相关方法
@@ -34769,17 +35733,9 @@ var ReaderAudioPlayer = __webpack_require__(59);
       } catch (error) {
         console.error('获取热门搜索失败:', error);
         // 设置默认热门搜索
-        this.hotSearches = [{
-          keyword: '修仙'
-        }, {
-          keyword: '都市'
-        }, {
-          keyword: '玄幻'
-        }, {
-          keyword: '言情'
-        }, {
-          keyword: '历史'
-        }];
+        this.hotSearches = this.copy.search.fallbackKeywords.map(keyword => ({
+          keyword
+        }));
       }
     },
     formatTime(timestamp) {
@@ -34788,13 +35744,19 @@ var ReaderAudioPlayer = __webpack_require__(59);
       const now = new Date();
       const diff = now - date;
       if (diff < 60000) {
-        return '刚刚';
+        return this.copy.time.justNow;
       } else if (diff < 3600000) {
-        return Math.floor(diff / 60000) + '分钟前';
+        return Object(format_copy["a" /* formatCopy */])(this.copy.time.minutesAgo, {
+          count: Math.floor(diff / 60000)
+        });
       } else if (diff < 86400000) {
-        return Math.floor(diff / 3600000) + '小时前';
+        return Object(format_copy["a" /* formatCopy */])(this.copy.time.hoursAgo, {
+          count: Math.floor(diff / 3600000)
+        });
       } else {
-        return Math.floor(diff / 86400000) + '天前';
+        return Object(format_copy["a" /* formatCopy */])(this.copy.time.daysAgo, {
+          count: Math.floor(diff / 86400000)
+        });
       }
     },
     // 查看全部结果
@@ -34848,7 +35810,7 @@ var ReaderAudioPlayer = __webpack_require__(59);
 
 function default_injectStyles (context) {
   
-  var style0 = __webpack_require__(89)
+  var style0 = __webpack_require__(109)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -34857,29 +35819,39 @@ if (style0.__inject__) style0.__inject__(context)
 
 var default_component = Object(componentNormalizer["a" /* default */])(
   layouts_defaultvue_type_script_lang_js,
-  defaultvue_type_template_id_70076646_scoped_true_render,
-  defaultvue_type_template_id_70076646_scoped_true_staticRenderFns,
+  defaultvue_type_template_id_59fa9636_scoped_true_render,
+  defaultvue_type_template_id_59fa9636_scoped_true_staticRenderFns,
   false,
   default_injectStyles,
-  "70076646",
+  "59fa9636",
   "48345d80"
   
 )
 
 /* harmony default export */ var layouts_default = (default_component.exports);
-// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./layouts/empty.vue?vue&type=template&id=1813cdda
-var emptyvue_type_template_id_1813cdda_render = function render() {
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./layouts/empty.vue?vue&type=template&id=e36c7f86&scoped=true
+var emptyvue_type_template_id_e36c7f86_scoped_true_render = function render() {
   var _vm = this,
     _c = _vm._self._c;
-  return _c('div', [_c('nuxt')], 1);
+  return _c('div', {
+    staticClass: "empty-layout"
+  }, [_c('GlobalThemeSwitch', {
+    staticClass: "empty-theme-switch"
+  }), _vm._ssrNode(" "), _c('MobileDownloadButton'), _vm._ssrNode(" "), _c('nuxt')], 2);
 };
-var emptyvue_type_template_id_1813cdda_staticRenderFns = [];
+var emptyvue_type_template_id_e36c7f86_scoped_true_staticRenderFns = [];
 
-// CONCATENATED MODULE: ./layouts/empty.vue?vue&type=template&id=1813cdda
+// CONCATENATED MODULE: ./layouts/empty.vue?vue&type=template&id=e36c7f86&scoped=true
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./layouts/empty.vue?vue&type=script&lang=js
+
+
 /* harmony default export */ var emptyvue_type_script_lang_js = ({
-  name: 'EmptyLayout'
+  name: 'EmptyLayout',
+  components: {
+    MobileDownloadButton: MobileDownloadButton,
+    GlobalThemeSwitch: GlobalThemeSwitch
+  }
 });
 // CONCATENATED MODULE: ./layouts/empty.vue?vue&type=script&lang=js
  /* harmony default export */ var layouts_emptyvue_type_script_lang_js = (emptyvue_type_script_lang_js); 
@@ -34889,7 +35861,7 @@ var emptyvue_type_template_id_1813cdda_staticRenderFns = [];
 
 function empty_injectStyles (context) {
   
-  var style0 = __webpack_require__(91)
+  var style0 = __webpack_require__(111)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -34898,17 +35870,19 @@ if (style0.__inject__) style0.__inject__(context)
 
 var empty_component = Object(componentNormalizer["a" /* default */])(
   layouts_emptyvue_type_script_lang_js,
-  emptyvue_type_template_id_1813cdda_render,
-  emptyvue_type_template_id_1813cdda_staticRenderFns,
+  emptyvue_type_template_id_e36c7f86_scoped_true_render,
+  emptyvue_type_template_id_e36c7f86_scoped_true_staticRenderFns,
   false,
   empty_injectStyles,
-  null,
+  "e36c7f86",
   "3bab280c"
   
 )
 
 /* harmony default export */ var layouts_empty = (empty_component.exports);
 // CONCATENATED MODULE: ./.nuxt/App.js
+
+
 
 
 
@@ -35072,7 +36046,7 @@ const layouts = {
 external_vue_default.a.use(external_vuex_default.a);
 let store_store = {};
 (function updateModules() {
-  store_store = normalizeRoot(__webpack_require__(93), 'store/index.js');
+  store_store = normalizeRoot(__webpack_require__(113), 'store/index.js');
 
   // If store is an exported method = classic mode (deprecated)
 
@@ -35111,11 +36085,11 @@ function normalizeModule(moduleData, filePath) {
   return moduleData;
 }
 // EXTERNAL MODULE: external "axios"
-var external_axios_ = __webpack_require__(11);
+var external_axios_ = __webpack_require__(12);
 var external_axios_default = /*#__PURE__*/__webpack_require__.n(external_axios_);
 
 // EXTERNAL MODULE: external "defu"
-var external_defu_ = __webpack_require__(62);
+var external_defu_ = __webpack_require__(72);
 var external_defu_default = /*#__PURE__*/__webpack_require__.n(external_defu_);
 
 // CONCATENATED MODULE: ./.nuxt/axios.js
@@ -35311,6 +36285,83 @@ const setupProgress = axios => {
   ctx.$axios = axios;
   inject('axios', axios);
 });
+// CONCATENATED MODULE: ./utils/site-theme.js
+const SITE_THEME_KEY = "loghome.theme";
+const valid = value => ["light", "dark", "system"].includes(value);
+function readThemePreference(storage) {
+  try {
+    const saved = storage.getItem(SITE_THEME_KEY);
+    if (valid(saved)) return saved;
+    const previous = storage.getItem("loghome.social.theme");
+    if (valid(previous)) return previous;
+  } catch (_) {}
+  return "system";
+}
+function resolvedSiteTheme(preference, systemDark) {
+  return preference === "dark" || preference === "system" && systemDark ? "dark" : "light";
+}
+function saveThemePreference(storage, value) {
+  const preference = valid(value) ? value : "system";
+  try {
+    storage.setItem(SITE_THEME_KEY, preference);
+  } catch (_) {}
+  return preference;
+}
+// CONCATENATED MODULE: ./plugins/site-theme.js
+
+
+
+// Create state per Nuxt app so SSR requests never share a user's preference.
+/* harmony default export */ var plugins_site_theme = ((_context, inject) => {
+  let storage = null;
+  if (typeof window !== "undefined") {
+    try {
+      storage = window.localStorage;
+    } catch (_) {}
+  }
+  const state = external_vue_default.a.observable({
+    preference: "system",
+    systemDark: false
+  });
+  const apply = () => {
+    if (typeof document === "undefined") return;
+    const theme = resolvedSiteTheme(state.preference, state.systemDark);
+    document.documentElement.setAttribute("data-site-theme", theme);
+    // Keep existing community palettes on the same global preference.
+    document.documentElement.setAttribute("data-social-theme", theme);
+  };
+  const theme = {
+    state,
+    get resolved() {
+      return resolvedSiteTheme(state.preference, state.systemDark);
+    },
+    set(preference) {
+      state.preference = saveThemePreference(storage, preference);
+      apply();
+    },
+    toggle() {
+      this.set(this.resolved === "dark" ? "light" : "dark");
+    }
+  };
+  inject("theme", theme);
+  if (typeof window === "undefined") return;
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  state.preference = readThemePreference(storage);
+  state.systemDark = media.matches;
+  apply();
+  const systemChanged = event => {
+    state.systemDark = event.matches;
+    apply();
+  };
+  const storageChanged = event => {
+    if (event.key !== SITE_THEME_KEY && event.key !== null) return;
+    state.preference = readThemePreference(window.localStorage);
+    apply();
+  };
+  if (media.addEventListener) media.addEventListener("change", systemChanged);else if (media.addListener) media.addListener(systemChanged);
+  window.addEventListener("storage", storageChanged);
+  if (false) {}
+});
 // CONCATENATED MODULE: ./plugins/api/novels.js
 // 拆分自 api.js
 const novels = {
@@ -35495,7 +36546,7 @@ const novels = {
 };
 /* harmony default export */ var api_novels = (novels);
 // EXTERNAL MODULE: ./plugins/api/search.js
-var search = __webpack_require__(63);
+var search = __webpack_require__(73);
 
 // CONCATENATED MODULE: ./plugins/api/articles.js
 // 拆分自 api.js
@@ -35570,7 +36621,7 @@ const statistics = {
 };
 /* harmony default export */ var api_statistics = (statistics);
 // EXTERNAL MODULE: ./plugins/api/community.js
-var community = __webpack_require__(64);
+var community = __webpack_require__(74);
 
 // CONCATENATED MODULE: ./plugins/api/bookcase.js
 // 拆分自 api.js
@@ -36896,7 +37947,7 @@ const manga = {
 var reading = __webpack_require__(1);
 
 // EXTERNAL MODULE: ./utils/reader-ai.js
-var reader_ai = __webpack_require__(36);
+var reader_ai = __webpack_require__(42);
 
 // CONCATENATED MODULE: ./plugins/api/reader.js
 
@@ -37115,18 +38166,18 @@ const apiService = {
   reading: reading["a" /* default */],
   reader: api_reader
 };
-/* harmony default export */ var api = (({
+/* harmony default export */ var plugins_api = (({
   app
 }, inject) => {
   inject('api', apiService);
 });
 external_vue_default.a.prototype.$api = apiService;
 // EXTERNAL MODULE: ./node_modules/element-ui/lib/element-ui.common.js
-var element_ui_common = __webpack_require__(18);
+var element_ui_common = __webpack_require__(23);
 var element_ui_common_default = /*#__PURE__*/__webpack_require__.n(element_ui_common);
 
 // EXTERNAL MODULE: ./node_modules/element-ui/lib/locale/lang/zh-CN.js
-var zh_CN = __webpack_require__(30);
+var zh_CN = __webpack_require__(15);
 var zh_CN_default = /*#__PURE__*/__webpack_require__.n(zh_CN);
 
 // CONCATENATED MODULE: ./plugins/element-ui.js
@@ -37138,11 +38189,170 @@ var zh_CN_default = /*#__PURE__*/__webpack_require__.n(zh_CN);
     locale: zh_CN_default.a
   });
 });
+// EXTERNAL MODULE: external "moment"
+var external_moment_ = __webpack_require__(43);
+var external_moment_default = /*#__PURE__*/__webpack_require__.n(external_moment_);
+
+// EXTERNAL MODULE: ./node_modules/element-ui/lib/locale/index.js
+var lib_locale = __webpack_require__(14);
+var locale_default = /*#__PURE__*/__webpack_require__.n(lib_locale);
+
+// EXTERNAL MODULE: ./node_modules/element-ui/lib/locale/lang/en.js
+var en = __webpack_require__(75);
+var en_default = /*#__PURE__*/__webpack_require__.n(en);
+
+// EXTERNAL MODULE: ./plugins/api/social.js
+var social = __webpack_require__(26);
+
+// EXTERNAL MODULE: ./config/i18n/mobile-messages.json
+var mobile_messages = __webpack_require__(25);
+
+// EXTERNAL MODULE: ./config/i18n/desktop-en.json
+var desktop_en = __webpack_require__(76);
+
+// CONCATENATED MODULE: ./utils/language.js
+
+
+const LANGUAGE_KEY = "loghome_language";
+const FOLLOW_SYSTEM = "follow-system";
+function normalizeLanguage(raw) {
+  const value = String(raw || "").trim().toLowerCase().replace(/_/g, "-");
+  if (/^en(?:-|$)/.test(value)) return "en";
+  if (/^zh(?:-|$)/.test(value)) return "zh-CN";
+  return null;
+}
+function savedLanguage(storage) {
+  try {
+    const value = storage.getItem(LANGUAGE_KEY);
+    if (["zh-CN", "en"].includes(value)) return value;
+  } catch (_) {}
+  return FOLLOW_SYSTEM;
+}
+function effectiveLanguage(preference, languages = []) {
+  return ["zh-CN", "en"].includes(preference) ? preference : normalizeLanguage(languages[0]) || "zh-CN";
+}
+function translateUI(value, params = {}, locale = "zh-CN") {
+  const key = mobile_messages.sourceKeys[value] || value;
+  const source = mobile_messages.zh[key] || value;
+  const text = locale === "en" ? desktop_en[value] || mobile_messages.en[key] || source : source;
+  return String(text).replace(/\{\{?(\w+)\}?\}/g, (match, name) => params[name] === undefined ? match : String(params[name]));
+}
+// CONCATENATED MODULE: ./plugins/language.js
+
+
+
+
+
+
+
+
+/* harmony default export */ var language = ((_context, inject) => {
+  // Element UI must use its own locale fallback rather than Nuxt's prototype injection getter.
+  locale_default.a.i18n(() => undefined);
+  const state = external_vue_default.a.observable({
+    preference: FOLLOW_SYSTEM,
+    locale: "zh-CN",
+    saving: false,
+    syncError: ""
+  });
+  let storage = null,
+    account = null,
+    version = 0;
+  if (typeof window !== "undefined") {
+    try {
+      storage = window.localStorage;
+    } catch (_) {}
+  }
+  const languages = () => typeof navigator === "undefined" ? [] : navigator.languages || [navigator.language];
+  const apply = preference => {
+    state.preference = ["zh-CN", "en"].includes(preference) ? preference : FOLLOW_SYSTEM;
+    state.locale = effectiveLanguage(state.preference, languages());
+    try {
+      storage.setItem(LANGUAGE_KEY, state.preference);
+    } catch (_) {}
+    if (typeof document !== "undefined") document.documentElement.lang = state.locale;
+    if (typeof window !== "undefined") {
+      locale_default.a.i18n(() => {
+        // Register the reactive dependency used by Element UI computed labels.
+        void state.locale;
+        return undefined;
+      });
+      external_moment_default.a.locale(state.locale === "en" ? "en" : "zh-cn");
+      locale_default.a.use(state.locale === "en" ? en_default.a : zh_CN_default.a);
+    }
+  };
+  const sync = async () => {
+    const token = Object(reading["c" /* readingToken */])(),
+      requestVersion = ++version;
+    account = token;
+    if (!token) return;
+    try {
+      const result = await Object(social["b" /* socialRequest */])("/users/language", {}, "GET", null, true);
+      if (requestVersion !== version || token !== Object(reading["c" /* readingToken */])()) return;
+      if (!result || !Object.prototype.hasOwnProperty.call(result, "language") || result.language !== null && !["zh-CN", "en"].includes(result.language)) throw new Error("语言偏好数据异常");
+      apply(result.language || FOLLOW_SYSTEM);
+      state.syncError = "";
+    } catch (_) {}
+  };
+  const api = {
+    state,
+    async set(preference) {
+      if (state.saving) return;
+      const requestVersion = ++version,
+        token = Object(reading["c" /* readingToken */])();
+      apply(preference);
+      state.syncError = "";
+      if (!token) return;
+      state.saving = true;
+      try {
+        const result = await Object(social["b" /* socialRequest */])("/users/language", {}, "POST", {
+          language: state.preference === FOLLOW_SYSTEM ? null : state.preference
+        }, true);
+        if (requestVersion !== version || token !== Object(reading["c" /* readingToken */])()) return;
+        if (!result || result.language !== (state.preference === FOLLOW_SYSTEM ? null : state.preference)) throw new Error("语言设置保存结果异常");
+      } catch (error) {
+        if (requestVersion === version) state.syncError = error.message || "账号语言同步失败";
+      } finally {
+        if (requestVersion === version) state.saving = false;
+      }
+    },
+    sync
+  };
+  inject("language", api);
+  inject("t", (value, params) => translateUI(value, params, state.locale));
+  if (typeof window === "undefined") return;
+  const initialize = () => {
+    apply(savedLanguage(storage));
+    sync();
+  };
+  // Match the SSR locale during hydration, then update text and accessible attributes together.
+  if (typeof window.onNuxtReady === "function") window.onNuxtReady(initialize);else initialize();
+  const accountChanged = () => {
+    if (account !== Object(reading["c" /* readingToken */])()) {
+      version++;
+      state.syncError = "";
+      state.saving = false;
+      sync();
+    }
+  };
+  const storageChanged = event => {
+    if (event.key === LANGUAGE_KEY || event.key === null) apply(savedLanguage(storage));
+    if (event.key === "token" || event.key === null) accountChanged();
+  };
+  const deviceChanged = () => {
+    if (state.preference === FOLLOW_SYSTEM) apply(FOLLOW_SYSTEM);
+  };
+  window.addEventListener("storage", storageChanged);
+  window.addEventListener("focus", accountChanged);
+  window.addEventListener("auth-state-changed", accountChanged);
+  window.addEventListener("languagechange", deviceChanged);
+  if (false) {}
+});
 // CONCATENATED MODULE: ./plugins/window-manager.js
 
 
 // 全局窗口管理状态
-const state = external_vue_default.a.observable({
+const window_manager_state = external_vue_default.a.observable({
   windows: [],
   activeWindowId: null,
   zIndex: 1000
@@ -37151,7 +38361,7 @@ const state = external_vue_default.a.observable({
 // 窗口管理器类
 class window_manager_WindowManager {
   constructor() {
-    this.state = state;
+    this.state = window_manager_state;
   }
 
   // 创建新窗口
@@ -37553,10 +38763,10 @@ const ImagePreview = {
 external_vue_default.a.use(ImagePreview);
 /* harmony default export */ var image_preview = (ImagePreview);
 // EXTERNAL MODULE: ./.nuxt/empty.js
-var _nuxt_empty = __webpack_require__(58);
+var _nuxt_empty = __webpack_require__(68);
 
 // EXTERNAL MODULE: ./plugins/device-detect.js
-var device_detect = __webpack_require__(33);
+var device_detect = __webpack_require__(38);
 
 // CONCATENATED MODULE: ./.nuxt/index.js
 
@@ -37575,8 +38785,10 @@ var device_detect = __webpack_require__(33);
 /* Plugins */
 
  // Source: .\\axios.js (mode: 'all')
+ // Source: ..\\plugins\\site-theme.js (mode: 'all')
  // Source: ..\\plugins\\api.js (mode: 'all')
  // Source: ..\\plugins\\element-ui.js (mode: 'all')
+ // Source: ..\\plugins\\language.js (mode: 'all')
  // Source: ..\\plugins\\window-manager.js (mode: 'all')
  // Source: ..\\plugins\\mobile-window.js (mode: 'all')
  // Source: ..\\plugins\\image-preview.js (mode: 'all')
@@ -37785,11 +38997,17 @@ async function createApp(ssrContext, config = {}) {
   if (typeof _nuxt_axios === 'function') {
     await _nuxt_axios(app.context, inject);
   }
-  if (typeof api === 'function') {
-    await api(app.context, inject);
+  if (typeof plugins_site_theme === 'function') {
+    await plugins_site_theme(app.context, inject);
+  }
+  if (typeof plugins_api === 'function') {
+    await plugins_api(app.context, inject);
   }
   if (typeof element_ui === 'function') {
     await element_ui(app.context, inject);
+  }
+  if (typeof language === 'function') {
+    await language(app.context, inject);
   }
   if (typeof window_manager === 'function') {
     await window_manager(app.context, inject);
@@ -38162,16 +39380,22 @@ const createNext = ssrContext => opts => {
 });
 
 /***/ }),
-/* 120 */
+/* 140 */
 /***/ (function(module, exports) {
 
-module.exports = require("moment");
+module.exports = require("moment/locale/zh-cn");
 
 /***/ }),
-/* 121 */
+/* 141 */
 /***/ (function(module, exports) {
 
 module.exports = require("three");
+
+/***/ }),
+/* 142 */
+/***/ (function(module, exports) {
+
+module.exports = require("dexie");
 
 /***/ })
 /******/ ]);

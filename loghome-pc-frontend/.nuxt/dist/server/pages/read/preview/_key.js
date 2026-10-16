@@ -1,7 +1,7 @@
-exports.ids = [28];
+exports.ids = [51];
 exports.modules = {
 
-/***/ 122:
+/***/ 150:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -74,7 +74,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(125)
+  var style0 = __webpack_require__(157)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -96,41 +96,41 @@ var component = Object(componentNormalizer["a" /* default */])(
 
 /***/ }),
 
-/***/ 123:
+/***/ 151:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(126);
+var content = __webpack_require__(158);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("ca2f1c12", content, true, context)
 };
 
 /***/ }),
 
-/***/ 125:
+/***/ 157:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SiteIcon_vue_vue_type_style_index_0_id_6a890970_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(123);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SiteIcon_vue_vue_type_style_index_0_id_6a890970_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(151);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SiteIcon_vue_vue_type_style_index_0_id_6a890970_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SiteIcon_vue_vue_type_style_index_0_id_6a890970_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SiteIcon_vue_vue_type_style_index_0_id_6a890970_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_SiteIcon_vue_vue_type_style_index_0_id_6a890970_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 126:
+/***/ 158:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.site-icon[data-v-6a890970] { display: inline-block; width: 1.125em; height: 1.125em; flex: none; vertical-align: -0.18em;\n}\r\n", ""]);
@@ -140,57 +140,7 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 127:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(URLSearchParams) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return readingCommentId; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return readingCommentTarget; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return readingMessageTarget; });
-function readingCommentId(query = {}) {
-  const id = Number(query.preLoadCommentId || query.comment_id || query.commentId);
-  return Number.isSafeInteger(id) && id > 0 ? id : 0;
-}
-function readingCommentTarget(comment, book, anchor) {
-  if (!comment || !book || Number(comment.novelId) !== Number(book.novel_id)) return '';
-  const suffix = `preLoadCommentId=${Number(anchor) || Number(comment.commentId)}`;
-  if (Number(comment.articleId) > 0) {
-    if (book.novel_type === 'manga') return `/manga/read/${comment.articleId}?novelId=${book.novel_id}&${suffix}`;
-    return `/article/${comment.articleId}?${suffix}${Number(comment.paragraphId) > 0 ? `&paragraphId=${comment.paragraphId}` : ''}`;
-  }
-  return `/${book.novel_type === 'manga' ? 'manga' : book.novel_type === 'world' ? 'world' : 'novel'}/${book.novel_id}?${suffix}`;
-}
-function readingMessageTarget(router) {
-  const raw = String(router || '').trim();
-  if (!raw || /^[a-z][a-z\d+.-]*:|^\/\/|[\\\x00-\x1f]/i.test(raw)) return null;
-  const source = raw.replace(/^\/?(?:#\/)?(?:pages\/)?/, '');
-  const [path, search = ''] = source.split('?'),
-    query = new URLSearchParams(search);
-  const id = Number(query.get('id') || query.get('novelId') || query.get('novel_id'));
-  const anchor = readingCommentId(Object.fromEntries(query));
-  if (/^readers\/(?:bookInfo|bookComment|mangaInfo|mangaReader|bookEnd|bookExcerpts|newReader\/article)$/.test(path)) {
-    const workId = /(?:mangaReader|newReader\/article)$/.test(path) ? Number(query.get('novelId') || query.get('novel_id')) : id;
-    if (anchor) return {
-      path: `/read/comment/${anchor}${Number.isSafeInteger(workId) && workId > 0 ? `?novelId=${workId}` : ''}`
-    };
-    if (!Number.isSafeInteger(id) || id <= 0) return null;
-    if (path === 'readers/newReader/article') return {
-      path: `/article/${id}`
-    };
-    if (path === 'readers/mangaReader') return {
-      path: `/manga/read/${id}${Number(query.get('novelId')) > 0 ? `?novelId=${Number(query.get('novelId'))}` : ''}`
-    };
-    return {
-      path: `/${path === 'readers/mangaInfo' ? 'manga' : path === 'readers/bookEnd' ? 'read/end' : 'novel'}/${id}`
-    };
-  }
-  return null;
-}
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"]))
-
-/***/ }),
-
-/***/ 138:
+/***/ 173:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -200,7 +150,7 @@ function readingMessageTarget(router) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return filterWorldNodes; });
 /* unused harmony export loadWorldVocabularies */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return loadPublicWorld; });
-/* harmony import */ var _reader_comment_links__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(127);
+/* harmony import */ var _reader_comment_links__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(40);
 
 function worldImage(value) {
   if (typeof value !== 'string') return '';
@@ -368,11 +318,11 @@ async function loadPublicWorld({
     });
   }
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URL"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URL"]))
 
 /***/ }),
 
-/***/ 156:
+/***/ 192:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -428,11 +378,11 @@ function textReaderResumeUrl(record) {
   } else params.set('pageIdx', position.pageIndex);
   return `/article/${id}?${params}`;
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URLSearchParams"]))
 
 /***/ }),
 
-/***/ 163:
+/***/ 201:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -443,67 +393,70 @@ function textReaderResumeUrl(record) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DEFAULT_PREFERENCES; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return normalizePreferences; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() { return readPreferences; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "n", function() { return savePreferences; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "k", function() { return readerThemeMode; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "o", function() { return savePreferences; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "l", function() { return readerThemeMode; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "i", function() { return readReaderTheme; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "l", function() { return rememberReaderTheme; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "m", function() { return rememberReaderTheme; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return membershipTier; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return canUseBackground; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "m", function() { return safeFontUrl; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() { return readerFonts; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "n", function() { return safeFontUrl; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "k", function() { return readerFonts; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return fontIdentity; });
-/* harmony import */ var _config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(170);
-var _config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0___namespace = /*#__PURE__*/__webpack_require__.t(170, 1);
-/* harmony reexport (default from named exports) */ __webpack_require__.d(__webpack_exports__, "o", function() { return _config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__; });
-/* harmony import */ var _config_reader_fonts_json__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(202);
-var _config_reader_fonts_json__WEBPACK_IMPORTED_MODULE_1___namespace = /*#__PURE__*/__webpack_require__.t(202, 1);
+/* unused harmony export READER_SITE_THEME_KEY */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() { return readerFollowsSiteTheme; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "p", function() { return saveReaderThemeFollowing; });
+/* harmony import */ var _config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(217);
+var _config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0___namespace = /*#__PURE__*/__webpack_require__.t(217, 1);
+/* harmony reexport (default from named exports) */ __webpack_require__.d(__webpack_exports__, "q", function() { return _config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__; });
+/* harmony import */ var _config_reader_fonts_json__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(265);
+var _config_reader_fonts_json__WEBPACK_IMPORTED_MODULE_1___namespace = /*#__PURE__*/__webpack_require__.t(265, 1);
 
 
 
-const MEMBER_THEMES = ['wavechaser', 'powderblue', 'qingyun', 'sunburst', 'thorncrown', 'chocolate'];
+const MEMBER_THEMES = ["wavechaser", "powderblue", "qingyun", "sunburst", "thorncrown", "chocolate"];
 const THEME_NAMES = {
-  white: '蛙鸣白',
-  yellow: '原木黄',
-  green: '草原绿',
-  blue: '晴空蓝',
-  purple: '末地紫',
-  pink: '桃花粉',
-  black: '虚空黑',
-  wavechaser: '追波',
-  powderblue: '粉蓝',
-  qingyun: '青云',
-  sunburst: '艳阳',
-  thorncrown: '荆棘冠',
-  chocolate: '巧克力',
-  blockepoch: '方块纪元'
+  white: "蛙鸣白",
+  yellow: "原木黄",
+  green: "草原绿",
+  blue: "晴空蓝",
+  purple: "末地紫",
+  pink: "桃花粉",
+  black: "虚空黑",
+  wavechaser: "追波",
+  powderblue: "粉蓝",
+  qingyun: "青云",
+  sunburst: "艳阳",
+  thorncrown: "荆棘冠",
+  chocolate: "巧克力",
+  blockepoch: "方块纪元"
 };
-const PREFERENCE_KEY = 'loghome:reader:preferences:v1';
-const THEME_MEMORY_KEY = 'loghome:reader:theme-memory:v1';
+const PREFERENCE_KEY = "loghome:reader:preferences:v1";
+const THEME_MEMORY_KEY = "loghome:reader:theme-memory:v1";
 const DEFAULT_PREFERENCES = Object.freeze({
-  mode: 'page',
-  theme: 'white',
-  font: 'default',
+  mode: "page",
+  theme: "white",
+  font: "default",
   fontSize: 22,
   lineHeight: 1.8,
-  backgroundSkinKey: '',
+  backgroundSkinKey: "",
   width: 860
 });
 const THEME_ALIASES = {
-  light: 'white',
-  sepia: 'yellow',
-  dark: 'black'
+  light: "white",
+  sepia: "yellow",
+  dark: "black"
 };
 function normalizePreferences(value = {}) {
-  if (!value || typeof value !== 'object') value = {};
+  if (!value || typeof value !== "object") value = {};
   const theme = THEME_ALIASES[value.theme] || value.theme;
-  const bounded = (input, min, max, fallback) => Number.isFinite(Number(input)) && input !== '' && input != null ? Math.max(min, Math.min(max, Number(input))) : fallback;
+  const bounded = (input, min, max, fallback) => Number.isFinite(Number(input)) && input !== "" && input != null ? Math.max(min, Math.min(max, Number(input))) : fallback;
   return {
-    mode: value.mode === 'text' ? 'text' : 'page',
-    theme: Object.prototype.hasOwnProperty.call(_config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__, theme) ? theme : 'white',
-    font: typeof value.font === 'string' && value.font.length <= 64 ? value.font : 'default',
+    mode: value.mode === "text" ? "text" : "page",
+    theme: Object.prototype.hasOwnProperty.call(_config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__, theme) ? theme : "white",
+    font: typeof value.font === "string" && value.font.length <= 64 ? value.font : "default",
     fontSize: Math.round(bounded(value.fontSize, 14, 36, DEFAULT_PREFERENCES.fontSize)),
     lineHeight: bounded(value.lineHeight, 1.3, 2.5, 1.8),
-    backgroundSkinKey: typeof value.backgroundSkinKey === 'string' ? value.backgroundSkinKey.slice(0, 64) : '',
+    backgroundSkinKey: typeof value.backgroundSkinKey === "string" ? value.backgroundSkinKey.slice(0, 64) : "",
     width: Math.round(bounded(value.width, 620, 1120, DEFAULT_PREFERENCES.width))
   };
 }
@@ -512,12 +465,12 @@ function readPreferences(storage) {
     const saved = storage.getItem(PREFERENCE_KEY);
     if (saved) return normalizePreferences(JSON.parse(saved));
     // Preserve existing desktop choices on upgrade; do not import mobile rpx as desktop pixels.
-    const oldFont = storage.getItem('reading_font_family');
+    const oldFont = storage.getItem("reading_font_family");
     return normalizePreferences({
-      mode: storage.getItem('readerProps'),
-      theme: storage.getItem('reading_theme'),
-      fontSize: storage.getItem('reading_font_size'),
-      font: ['serif', 'sans-serif'].includes(oldFont) ? oldFont : 'default'
+      mode: storage.getItem("readerProps"),
+      theme: storage.getItem("reading_theme"),
+      fontSize: storage.getItem("reading_font_size"),
+      font: ["serif", "sans-serif"].includes(oldFont) ? oldFont : "default"
     });
   } catch (_) {
     return {
@@ -535,27 +488,27 @@ function savePreferences(storage, value) {
 }
 function readerThemeMode(selection) {
   const theme = _config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__[selection && selection.theme] || _config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__.white;
-  if (typeof theme.isBlack === 'boolean') return theme.isBlack ? 'dark' : 'light';
-  const value = String(theme.backgroundColor || '').replace(/^#/, '');
-  const hex = value.length === 3 ? value.split('').map(char => char + char).join('') : value.slice(0, 6);
-  if (!/^[0-9a-f]{6}$/i.test(hex)) return 'light';
-  const channels = [0, 2, 4].map(index => parseInt(hex.slice(index, index + 2), 16) / 255).map(channel => channel <= .04045 ? channel / 12.92 : Math.pow((channel + .055) / 1.055, 2.4));
-  return .2126 * channels[0] + .7152 * channels[1] + .0722 * channels[2] < .35 ? 'dark' : 'light';
+  if (typeof theme.isBlack === "boolean") return theme.isBlack ? "dark" : "light";
+  const value = String(theme.backgroundColor || "").replace(/^#/, "");
+  const hex = value.length === 3 ? value.split("").map(char => char + char).join("") : value.slice(0, 6);
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return "light";
+  const channels = [0, 2, 4].map(index => parseInt(hex.slice(index, index + 2), 16) / 255).map(channel => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2] < 0.35 ? "dark" : "light";
 }
 function themeSelection(value) {
-  if (!value || typeof value !== 'object' || !Object.prototype.hasOwnProperty.call(_config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__, value.theme)) return null;
+  if (!value || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(_config_reader_themes_json__WEBPACK_IMPORTED_MODULE_0__, value.theme)) return null;
   return {
     theme: value.theme,
-    backgroundSkinKey: typeof value.backgroundSkinKey === 'string' ? value.backgroundSkinKey.slice(0, 64) : ''
+    backgroundSkinKey: typeof value.backgroundSkinKey === "string" ? value.backgroundSkinKey.slice(0, 64) : ""
   };
 }
 function readReaderTheme(storage, mode) {
   const fallback = {
-    theme: mode === 'dark' ? 'black' : 'white',
-    backgroundSkinKey: ''
+    theme: mode === "dark" ? "black" : "white",
+    backgroundSkinKey: ""
   };
   try {
-    const memory = JSON.parse(storage.getItem(THEME_MEMORY_KEY) || '{}');
+    const memory = JSON.parse(storage.getItem(THEME_MEMORY_KEY) || "{}");
     const selected = themeSelection(memory && memory[mode]);
     return selected && readerThemeMode(selected) === mode ? selected : fallback;
   } catch (_) {
@@ -568,13 +521,13 @@ function rememberReaderTheme(storage, selection) {
   try {
     let memory;
     try {
-      memory = JSON.parse(storage.getItem(THEME_MEMORY_KEY) || '{}');
+      memory = JSON.parse(storage.getItem(THEME_MEMORY_KEY) || "{}");
     } catch (_) {}
     const light = themeSelection(memory && memory.light),
       dark = themeSelection(memory && memory.dark);
     memory = {};
-    if (light && readerThemeMode(light) === 'light') memory.light = light;
-    if (dark && readerThemeMode(dark) === 'dark') memory.dark = dark;
+    if (light && readerThemeMode(light) === "light") memory.light = light;
+    if (dark && readerThemeMode(dark) === "dark") memory.dark = dark;
     memory[readerThemeMode(selected)] = selected;
     storage.setItem(THEME_MEMORY_KEY, JSON.stringify(memory));
     return true;
@@ -585,14 +538,14 @@ function rememberReaderTheme(storage, selection) {
 function membershipTier(response) {
   const status = response && response.data ? response.data : response;
   const tier = status && status.active && status.subscription && status.subscription.membership_type;
-  return ['standard', 'super'].includes(tier) ? tier : '';
+  return ["standard", "super"].includes(tier) ? tier : "";
 }
 function canUseBackground(required, tier) {
-  if (!required || required === 'none') return true;
-  return required === 'standard' ? ['standard', 'super'].includes(tier) : required === 'super' && tier === 'super';
+  if (!required || required === "none") return true;
+  return required === "standard" ? ["standard", "super"].includes(tier) : required === "super" && tier === "super";
 }
 function safeFontUrl(value) {
-  return typeof value === 'string' && /^https?:\/\/[^\s"\\]+$/i.test(value) ? value : '';
+  return typeof value === "string" && /^https?:\/\/[^\s"\\]+$/i.test(value) ? value : "";
 }
 function readerFonts(serverFonts) {
   if (!Array.isArray(serverFonts)) return JSON.parse(JSON.stringify(_config_reader_fonts_json__WEBPACK_IMPORTED_MODULE_1__));
@@ -603,10 +556,10 @@ function readerFonts(serverFonts) {
     if (!item || !item.font_key || !item.font_name || !safeFontUrl(item.regular_url)) return;
     // An enabled server list is authoritative, including an intentionally empty list.
     const key = String(item.font_key).slice(0, 64);
-    if (['__proto__', 'constructor', 'prototype', 'default'].includes(key)) return;
+    if (["__proto__", "constructor", "prototype", "default"].includes(key)) return;
     fonts[key] = {
       name: String(item.font_name).slice(0, 64),
-      version: String(item.font_version || '1'),
+      version: String(item.font_version || "1"),
       regular: {
         url: item.regular_url
       },
@@ -623,10 +576,28 @@ function fontIdentity(key, config) {
   for (let index = 0; index < source.length; index++) hash = Math.imul(hash ^ source.charCodeAt(index), 16777619);
   return `LogHomeReader${(hash >>> 0).toString(16)}`;
 }
+const READER_SITE_THEME_KEY = "loghome:reader:follow-site-theme";
+function readerFollowsSiteTheme(storage) {
+  try {
+    const marker = storage.getItem(READER_SITE_THEME_KEY);
+    if (marker === "1" || marker === "0") return marker === "1";
+    return !storage.getItem(PREFERENCE_KEY) && !storage.getItem("reading_theme");
+  } catch (_) {
+    return true;
+  }
+}
+function saveReaderThemeFollowing(storage, follows) {
+  try {
+    storage.setItem(READER_SITE_THEME_KEY, follows ? "1" : "0");
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
 
 /***/ }),
 
-/***/ 168:
+/***/ 215:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -635,7 +606,7 @@ function fontIdentity(key, config) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return readMangaPreferences; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return saveMangaPreferences; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return loadPublicManga; });
-/* harmony import */ var _reader_world__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(138);
+/* harmony import */ var _reader_world__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(173);
 
 function mangaPages(content) {
   let parsed = content;
@@ -756,106 +727,106 @@ async function loadPublicManga({
     });
   }
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URL"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URL"]))
 
 /***/ }),
 
-/***/ 169:
+/***/ 216:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(201);
+var content = __webpack_require__(264);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("3ab6a2e4", content, true, context)
 };
 
 /***/ }),
 
-/***/ 170:
+/***/ 217:
 /***/ (function(module) {
 
 module.exports = JSON.parse("{\"white\":{\"backgroundColor\":\"#FEFEFC\",\"fontColor\":\"#292927\",\"secondaryFontColor\":\"#757571\",\"lineColor\":\"#656560\",\"isBlack\":false},\"green\":{\"backgroundColor\":\"#F5FAF4\",\"fontColor\":\"#395744\",\"secondaryFontColor\":\"#708572\",\"lineColor\":\"#4F7C5B\",\"isBlack\":false},\"yellow\":{\"backgroundColor\":\"#FCF8EF\",\"fontColor\":\"#5C4B3B\",\"secondaryFontColor\":\"#867565\",\"lineColor\":\"#9B6E3B\",\"isBlack\":false},\"blue\":{\"backgroundColor\":\"#F4FAFC\",\"fontColor\":\"#27566B\",\"secondaryFontColor\":\"#64808E\",\"lineColor\":\"#356F88\",\"isBlack\":false},\"purple\":{\"backgroundColor\":\"#FAF7FC\",\"fontColor\":\"#57445F\",\"secondaryFontColor\":\"#827387\",\"lineColor\":\"#765983\",\"isBlack\":false},\"pink\":{\"backgroundColor\":\"#FBF6F8\",\"fontColor\":\"#664858\",\"secondaryFontColor\":\"#8A707B\",\"lineColor\":\"#9D6578\",\"isBlack\":false},\"black\":{\"backgroundColor\":\"#22272E\",\"fontColor\":\"#D9DEE7\",\"secondaryFontColor\":\"#B5BECB\",\"lineColor\":\"#E6CDA6\",\"isBlack\":true},\"wavechaser\":{\"backgroundColor\":\"#E84F89\",\"fontColor\":\"#32101F\",\"secondaryFontColor\":\"#6B2844\",\"lineColor\":\"#7A1F48\",\"isBlack\":false},\"powderblue\":{\"backgroundColor\":\"#ACE5E2\",\"fontColor\":\"#244244\",\"secondaryFontColor\":\"#547477\",\"lineColor\":\"#387A7B\",\"isBlack\":false},\"qingyun\":{\"backgroundColor\":\"#313B3E\",\"fontColor\":\"#E7EEEF\",\"secondaryFontColor\":\"#B8C4C6\",\"lineColor\":\"#86D2D1\",\"isBlack\":true},\"sunburst\":{\"backgroundColor\":\"#FCD23C\",\"fontColor\":\"#493900\",\"secondaryFontColor\":\"#705A00\",\"lineColor\":\"#8C6500\",\"isBlack\":false},\"thorncrown\":{\"backgroundColor\":\"#7D2120\",\"fontColor\":\"#F6E8E5\",\"secondaryFontColor\":\"#D8B7B2\",\"lineColor\":\"#F1BA80\",\"isBlack\":true},\"chocolate\":{\"backgroundColor\":\"#380001\",\"fontColor\":\"#F4E7E1\",\"secondaryFontColor\":\"#CDB7AF\",\"lineColor\":\"#D5A26A\",\"isBlack\":true},\"blockepoch\":{\"backgroundColor\":\"#DCE3C2\",\"fontColor\":\"#273421\",\"secondaryFontColor\":\"#58684D\",\"lineColor\":\"#A6382C\",\"isBlack\":false}}");
 
 /***/ }),
 
-/***/ 171:
+/***/ 218:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(204);
+var content = __webpack_require__(267);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("2426c898", content, true, context)
 };
 
 /***/ }),
 
-/***/ 172:
+/***/ 219:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(206);
+var content = __webpack_require__(269);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("112e4ff4", content, true, context)
 };
 
 /***/ }),
 
-/***/ 173:
+/***/ 220:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(208);
+var content = __webpack_require__(271);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("2c975779", content, true, context)
 };
 
 /***/ }),
 
-/***/ 200:
+/***/ 263:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaReaderImage_vue_vue_type_style_index_0_id_13417fc8_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(169);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaReaderImage_vue_vue_type_style_index_0_id_13417fc8_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(216);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaReaderImage_vue_vue_type_style_index_0_id_13417fc8_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaReaderImage_vue_vue_type_style_index_0_id_13417fc8_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaReaderImage_vue_vue_type_style_index_0_id_13417fc8_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaReaderImage_vue_vue_type_style_index_0_id_13417fc8_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 201:
+/***/ 264:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.reader-image[data-v-13417fc8] { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; user-select: none;\n}\n.zoom-img[data-v-13417fc8] { max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center center; will-change: transform; cursor: grab;\n}\n.reader-image:active .zoom-img[data-v-13417fc8] { cursor: grabbing;\n}\n.placeholder[data-v-13417fc8] { color: #999; font-size: 14px;\n}\n.image-state[data-v-13417fc8] { position:absolute; padding:12px 16px; border-radius:8px; background:#ffffffed; color:#80684e; font-size:13px;\n}\n.image-state button[data-v-13417fc8] { margin-left:8px; border:0; background:transparent; color:inherit; text-decoration:underline; cursor:pointer;\n}\n.reset-btn[data-v-13417fc8] { position: absolute; top: 16px; right: 16px; z-index: 2; padding: 6px 14px; border: none; border-radius: 16px; background: rgba(17, 17, 17, 0.8); color: #fff; font-size: 13px; cursor: pointer;\n}\n.reset-btn[data-v-13417fc8]:hover { background: rgba(17, 17, 17, 0.95);\n}\r\n", ""]);
@@ -865,30 +836,30 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 202:
+/***/ 265:
 /***/ (function(module) {
 
 module.exports = JSON.parse("{\"default\":{\"name\":\"系统默认\",\"family\":\"\",\"familyBold\":\"\",\"version\":\"1\"},\"方正书宋\":{\"name\":\"方正书宋\",\"family\":\"FangZhengShuSongJianTi\",\"familyBold\":\"FangZhengShuSongJianTi\",\"version\":\"20260318\",\"regular\":{\"url\":\"https://storage.codesocean.top/api/resource/download/177381841456048\",\"format\":\"ttf\"},\"bold\":{\"url\":\"https://storage.codesocean.top/api/resource/download/177381841456048\",\"format\":\"ttf\"}},\"思源黑体\":{\"name\":\"思源黑体\",\"family\":\"SourceHanSansSCRegular\",\"familyBold\":\"SourceHanSansSCBold\",\"version\":\"20260318\",\"regular\":{\"url\":\"https://storage.codesocean.top/api/resource/download/177381841455677\",\"format\":\"otf\"},\"bold\":{\"url\":\"https://storage.codesocean.top/api/resource/download/177381841453935\",\"format\":\"otf\"}},\"方正楷体\":{\"name\":\"方正楷体\",\"family\":\"FangZhengKaiTiJianTi\",\"familyBold\":\"FangZhengKaiTiJianTi\",\"version\":\"20260318\",\"regular\":{\"url\":\"https://storage.codesocean.top/api/resource/download/177381841453504\",\"format\":\"ttf\"},\"bold\":{\"url\":\"https://storage.codesocean.top/api/resource/download/177381841453504\",\"format\":\"ttf\"}},\"霞鹜文楷\":{\"name\":\"霞鹜文楷\",\"family\":\"LXGWWenKaiRegular\",\"familyBold\":\"LXGWWenKaiMedium\",\"version\":\"20260318\",\"regular\":{\"url\":\"https://storage.codesocean.top/api/resource/download/177381841453453\",\"format\":\"ttf\"},\"bold\":{\"url\":\"https://storage.codesocean.top/api/resource/download/177381841454916\",\"format\":\"ttf\"}}}");
 
 /***/ }),
 
-/***/ 203:
+/***/ 266:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderContent_vue_vue_type_style_index_0_id_a73249e0_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(171);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderContent_vue_vue_type_style_index_0_id_a73249e0_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(218);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderContent_vue_vue_type_style_index_0_id_a73249e0_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderContent_vue_vue_type_style_index_0_id_a73249e0_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderContent_vue_vue_type_style_index_0_id_a73249e0_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderContent_vue_vue_type_style_index_0_id_a73249e0_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 204:
+/***/ 267:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.reader-highlight[data-v-a73249e0] { text-decoration: underline; text-decoration-color: #b19158; text-underline-offset: 5px;\n}.reader-speaking[data-v-a73249e0] { background: #e5ecd7; border-radius: 3px;\n}.vocabulary-card[data-v-a73249e0] { margin: 20px 0;\n}.vocabulary-image[data-v-a73249e0] { max-width: 100%; max-height: 420px; object-fit: contain; display: block; margin: 0 auto 24px; cursor: zoom-in;\n}dl[data-v-a73249e0] { display: grid; grid-template-columns: minmax(70px, 160px) minmax(0,1fr); gap: 12px; border: 1px solid #dfd5c9; border-radius: 8px; padding: 20px; font-size: .8em;\n}dt[data-v-a73249e0] { font-weight: 600;\n}dd[data-v-a73249e0] { white-space: pre-wrap; overflow-wrap: anywhere;\n}.vocabulary-relations[data-v-a73249e0] { border-top: 1px solid #dfd5c9; padding-top: 20px;\n}.vocabulary-relations h3[data-v-a73249e0] { font-size: .85em; margin-bottom: 14px;\n}.vocabulary-relations a[data-v-a73249e0] { display: inline-flex; gap: 10px; margin: 5px; padding: 7px 12px; border: 1px solid #dfd5c9; border-radius: 6px; font-size: .8em; color: inherit; text-decoration: none;\n}.vocabulary-relations small[data-v-a73249e0] { opacity: .65;\n}button[data-v-a73249e0]:focus-visible,a[data-v-a73249e0]:focus-visible { outline: 2px solid #947358;\n}\n.reader-content .paragraph-comment-icon[data-v-a73249e0] { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 28px; padding: 4px 8px; margin-left: 8px; border: 1px solid transparent; border-radius: 6px; background: rgba(121, 87, 60, .08); color: var(--reader-secondary, #79573c); font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 12px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; vertical-align: middle; cursor: pointer; text-indent: 0; transition: background-color .15s;\n}\n.paragraph-comment-icon .site-icon[data-v-a73249e0] { width: 16px; height: 16px;\n}\n.reader-content .paragraph-comment-icon[data-v-a73249e0]:hover { background: rgba(121, 87, 60, .16); color: inherit;\n}\n.reader-content .paragraph-comment-icon[data-v-a73249e0]:focus-visible { outline: 2px solid var(--reader-secondary, #79573c); outline-offset: 2px;\n}\n@media(prefers-reduced-motion:reduce) {\n.reader-content .paragraph-comment-icon[data-v-a73249e0] { transition: none;\n}\n}\r\n", ""]);
@@ -898,23 +869,23 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 205:
+/***/ 268:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPager_vue_vue_type_style_index_0_id_1bdf15ee_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(172);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPager_vue_vue_type_style_index_0_id_1bdf15ee_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(219);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPager_vue_vue_type_style_index_0_id_1bdf15ee_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPager_vue_vue_type_style_index_0_id_1bdf15ee_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPager_vue_vue_type_style_index_0_id_1bdf15ee_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPager_vue_vue_type_style_index_0_id_1bdf15ee_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 206:
+/***/ 269:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.reader-viewport[data-v-1bdf15ee] { width: calc(100% - 80px); margin: 0 auto;\n}.reader-prose[data-v-1bdf15ee] { padding: 28px 0 45px !important; margin: 0 auto; overflow-wrap: anywhere;\n}.is-paged .reader-viewport[data-v-1bdf15ee] { overflow: hidden;\n}.is-paged .reader-prose[data-v-1bdf15ee] { padding: 0 !important; margin: 0; column-fill: auto; will-change: transform;\n}.reader-prose[data-v-1bdf15ee] .article-paragraph { orphans: 2; widows: 2;\n}.is-paged .reader-prose[data-v-1bdf15ee] .vocabulary-image { max-height: calc(var(--reader-page-height) * .5);\n}.is-paged .reader-prose[data-v-1bdf15ee] .article-image { margin: 0 0 12px !important; break-inside: avoid; display: flex; justify-content: center;\n}\n.is-paged .reader-prose[data-v-1bdf15ee] .article-image img { max-height: calc(var(--reader-page-height) - 50px); max-width: 100% !important; object-fit: contain; display: block; margin: 0;\n}.page-navigation[data-v-1bdf15ee] { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 22px 20px 8px;\n}button[data-v-1bdf15ee] { border: 1px solid #a7947b; border-radius: 5px; background: transparent; color: inherit; padding: 9px 18px; cursor: pointer; white-space: nowrap;\n}button[data-v-1bdf15ee]:disabled { opacity: .4; cursor: default;\n}.page-progress[data-v-1bdf15ee] { display: flex; gap: 10px; align-items: center; font-size: 12px;\n}.page-progress input[data-v-1bdf15ee] { width: 160px; accent-color: #947358;\n}.page-hint[data-v-1bdf15ee] { font-size: 11px; color: var(--reader-secondary); text-align: center; margin: 8px 15px 0; padding-bottom: 20px;\n}button[data-v-1bdf15ee]:focus-visible,input[data-v-1bdf15ee]:focus-visible { outline: 2px solid var(--reader-line); outline-offset: 2px;\n}@media(max-width:700px) {\n.reader-viewport[data-v-1bdf15ee] { width: calc(100% - 40px);\n}.page-navigation[data-v-1bdf15ee] { gap: 8px; padding: 16px 10px 8px;\n}.page-progress[data-v-1bdf15ee] { flex-direction: column; gap: 5px;\n}.page-progress input[data-v-1bdf15ee] { width: 100px;\n}button[data-v-1bdf15ee] { padding: 8px;\n}\n}\r\n", ""]);
@@ -924,23 +895,23 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 207:
+/***/ 270:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderSettings_vue_vue_type_style_index_0_id_1368486d_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(173);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderSettings_vue_vue_type_style_index_0_id_1368486d_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(220);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderSettings_vue_vue_type_style_index_0_id_1368486d_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderSettings_vue_vue_type_style_index_0_id_1368486d_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderSettings_vue_vue_type_style_index_0_id_1368486d_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderSettings_vue_vue_type_style_index_0_id_1368486d_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 208:
+/***/ 271:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.reader-settings-shell[data-v-1368486d] { display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; overflow: hidden;\n}\n.reader-settings[data-v-1368486d] { flex: 1; min-height: 0; padding: 0 24px 30px; overflow-y: auto; color: #433b35; font-size: 14px;\n}section[data-v-1368486d] { border-bottom: 1px solid #eae5df; padding-bottom: 22px; margin-bottom: 20px;\n}h3[data-v-1368486d] { font-size: 15px; display: flex; justify-content: space-between; align-items: center; margin: 5px 0 18px;\n}h3 small[data-v-1368486d] { font-weight: 400; font-size: 12px;\n}button[data-v-1368486d] { cursor: pointer; border: 1px solid #ded8cf; background: #fff; color: inherit; border-radius: 6px; padding: 8px 12px;\n}button[data-v-1368486d]:disabled { opacity: .5; cursor: default;\n}button[aria-pressed=\"true\"][data-v-1368486d] { border-color: #806649; box-shadow: inset 0 0 0 1px #806649;\n}.setting-row[data-v-1368486d] { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 14px 0;\n}.stepper[data-v-1368486d],.options[data-v-1368486d] { display: flex; align-items: center; gap: 6px;\n}output[data-v-1368486d] { font-variant-numeric: tabular-nums; font-size: 12px;\n}.stepper output[data-v-1368486d] { width: 58px; text-align: center;\n}.width-control[data-v-1368486d] { display: flex; align-items: center; gap: 10px; min-width: 0;\n}.width-control input[data-v-1368486d] { width: 130px; accent-color: #806649;\n}.font-grid[data-v-1368486d] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px;\n}.font-grid button[data-v-1368486d] { display: flex; flex-direction: column; gap: 8px; text-align: left; padding: 12px;\n}.font-grid span[data-v-1368486d],small[data-v-1368486d] { color: #85776b; font-size: 12px;\n}.themes[data-v-1368486d] { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px;\n}.themes button[data-v-1368486d] { display: flex; justify-content: space-between; align-items: center; padding: 12px 8px;\n}.skin-grid[data-v-1368486d] { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px;\n}.skin-grid button[data-v-1368486d] { padding: 0 0 8px; overflow: hidden; min-width: 0;\n}.skin-preview[data-v-1368486d] { width: 100%; height: 65px; object-fit: cover;\n}.plain[data-v-1368486d] { display: flex; align-items: center; justify-content: center; font-size: 22px; color: #6a624c;\n}.skin-grid span[data-v-1368486d],.skin-grid small[data-v-1368486d] { display: block; font-size: 12px; margin: 5px 2px 0;\n}.refresh[data-v-1368486d] { border: 0; padding: 4px; background: none; color: #806649; font-size: 12px; text-decoration: underline;\n}.error[data-v-1368486d] { color: #a44735; font-size: 12px; line-height: 1.7; margin: 12px 0;\n}.reset[data-v-1368486d] { width: 100%;\n}button[data-v-1368486d]:focus-visible,input[data-v-1368486d]:focus-visible { outline: 2px solid #806649; outline-offset: 2px;\n}@media(max-width:400px) {\n.reader-settings[data-v-1368486d] { padding: 0 14px 24px;\n}.themes[data-v-1368486d] { grid-template-columns: repeat(2,minmax(0,1fr));\n}.width-control input[data-v-1368486d] { width: 95px;\n}\n}\n.settings-feedback[data-v-1368486d] { flex: none; display: flex; align-items: center; gap: 12px; padding: 16px 24px calc(16px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--reading-line, #e4e3de); background: var(--reading-hover, #f5f4f0); color: var(--reading-ink, #302f2a);\n}\n.settings-feedback > i[data-v-1368486d] { align-self: flex-start; margin-top: 2px; color: var(--reading-accent, #79573c); font-size: 17px;\n}\n.feedback-copy[data-v-1368486d] { flex: 1; min-width: 0;\n}\n.feedback-copy strong[data-v-1368486d] { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 600;\n}\n.feedback-copy p[data-v-1368486d] { margin: 0; color: var(--reading-secondary, #615e57); font-size: 12px; line-height: 1.7; overflow-wrap: anywhere;\n}\n.membership-action[data-v-1368486d] { flex: none; min-height: 38px; padding: 8px 12px; border-color: var(--reading-line, #e4e3de); color: var(--reading-accent, #79573c); font: inherit; font-size: 13px; white-space: nowrap;\n}\n.membership-action[data-v-1368486d]:hover { border-color: var(--reading-accent, #79573c); background: var(--reading-surface, #fff);\n}\n@media(max-width:400px) {\n.settings-feedback[data-v-1368486d] { padding-left: 14px; padding-right: 14px; gap: 8px;\n}\n}\r\n", ""]);
@@ -950,7 +921,7 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 217:
+/***/ 281:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1022,10 +993,10 @@ var ReaderContentvue_type_template_id_a73249e0_scoped_true_staticRenderFns = [];
 // CONCATENATED MODULE: ./components/read/ReaderContent.vue?vue&type=template&id=a73249e0&scoped=true
 
 // EXTERNAL MODULE: ./components/ui/SiteIcon.vue + 5 modules
-var SiteIcon = __webpack_require__(122);
+var SiteIcon = __webpack_require__(150);
 
 // EXTERNAL MODULE: ./utils/reader-paragraphs.js
-var reader_paragraphs = __webpack_require__(37);
+var reader_paragraphs = __webpack_require__(45);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderContent.vue?vue&type=script&lang=js
 
@@ -1112,7 +1083,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(203)
+  var style0 = __webpack_require__(266)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -1132,7 +1103,7 @@ var component = Object(componentNormalizer["a" /* default */])(
 
 /* harmony default export */ var ReaderContent = (component.exports);
 // EXTERNAL MODULE: ./utils/reader-position.js
-var reader_position = __webpack_require__(156);
+var reader_position = __webpack_require__(192);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderPager.vue?vue&type=script&lang=js
 
@@ -1482,7 +1453,7 @@ var reader_position = __webpack_require__(156);
 
 function ReaderPager_injectStyles (context) {
   
-  var style0 = __webpack_require__(205)
+  var style0 = __webpack_require__(268)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -1504,7 +1475,7 @@ var ReaderPager_component = Object(componentNormalizer["a" /* default */])(
 
 /***/ }),
 
-/***/ 223:
+/***/ 291:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1531,7 +1502,7 @@ var staticRenderFns = [];
 // CONCATENATED MODULE: ./components/manga/MangaReaderImage.vue?vue&type=template&id=13417fc8&scoped=true
 
 // EXTERNAL MODULE: ./utils/manga-content.js
-var manga_content = __webpack_require__(168);
+var manga_content = __webpack_require__(215);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/manga/MangaReaderImage.vue?vue&type=script&lang=js
 
@@ -1705,7 +1676,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(200)
+  var style0 = __webpack_require__(263)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -1727,7 +1698,7 @@ var component = Object(componentNormalizer["a" /* default */])(
 
 /***/ }),
 
-/***/ 224:
+/***/ 292:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2002,7 +1973,7 @@ var staticRenderFns = [];
 // CONCATENATED MODULE: ./components/read/ReaderSettings.vue?vue&type=template&id=1368486d&scoped=true
 
 // EXTERNAL MODULE: ./utils/reader-preferences.js
-var reader_preferences = __webpack_require__(163);
+var reader_preferences = __webpack_require__(201);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderSettings.vue?vue&type=script&lang=js
 
@@ -2034,13 +2005,13 @@ var reader_preferences = __webpack_require__(163);
   },
   computed: {
     theme() {
-      return reader_preferences["o" /* themes */][this.value.theme] || reader_preferences["o" /* themes */].white;
+      return reader_preferences["q" /* themes */][this.value.theme] || reader_preferences["q" /* themes */].white;
     },
     options() {
-      return Object.keys(reader_preferences["o" /* themes */]).filter(key => key !== 'blockepoch').map(key => ({
+      return Object.keys(reader_preferences["q" /* themes */]).filter(key => key !== 'blockepoch').map(key => ({
         key,
         name: reader_preferences["c" /* THEME_NAMES */][key],
-        ...reader_preferences["o" /* themes */][key],
+        ...reader_preferences["q" /* themes */][key],
         locked: reader_preferences["b" /* MEMBER_THEMES */].includes(key) && !Object(reader_preferences["d" /* canUseBackground */])('standard', this.tier)
       }));
     },
@@ -2074,7 +2045,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(207)
+  var style0 = __webpack_require__(270)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -2096,7 +2067,7 @@ var component = Object(componentNormalizer["a" /* default */])(
 
 /***/ }),
 
-/***/ 228:
+/***/ 296:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2105,7 +2076,7 @@ var component = Object(componentNormalizer["a" /* default */])(
 var reading = __webpack_require__(1);
 
 // EXTERNAL MODULE: ./utils/reader-preferences.js
-var reader_preferences = __webpack_require__(163);
+var reader_preferences = __webpack_require__(201);
 
 // CONCATENATED MODULE: ./utils/reader-backgrounds.js
 const BACKGROUND_SIZE_VALUES = ["cover", "contain", "auto"];
@@ -2220,7 +2191,7 @@ async function cachedAsset(key, value) {
   });
 }
 async function loadAsset(identity, asset, weight, environment, downloads, report) {
-  const url = Object(reader_preferences["m" /* safeFontUrl */])(asset && asset.url);
+  const url = Object(reader_preferences["n" /* safeFontUrl */])(asset && asset.url);
   if (!url) throw new Error("字体资源地址无效");
   const cacheKey = `${identity}:${url}`;
   if (!downloads.has(cacheKey)) downloads.set(cacheKey, (async () => {
@@ -2391,15 +2362,16 @@ function loadReaderFont(key, config, environment = {
       readerPreferences: {
         ...reader_preferences["a" /* DEFAULT_PREFERENCES */]
       },
-      readerFonts: Object(reader_preferences["j" /* readerFonts */])(),
+      readerUsesSiteTheme: false,
+      readerFonts: Object(reader_preferences["k" /* readerFonts */])(),
       readerSkins: [],
-      readerTier: '',
+      readerTier: "",
       readerResourcesLoading: false,
-      readerResourceError: '',
-      readerFontError: '',
+      readerResourceError: "",
+      readerFontError: "",
       readerFontStates: {},
-      readerFontFamily: '',
-      readerLockedMessage: '',
+      readerFontFamily: "",
+      readerLockedMessage: "",
       readerStorageError: false,
       readerResourceVersion: 0,
       readerFontVersion: 0,
@@ -2408,29 +2380,29 @@ function loadReaderFont(key, config, environment = {
   },
   computed: {
     readerTheme() {
-      return reader_preferences["o" /* themes */][this.readerPreferences.theme] || reader_preferences["o" /* themes */].white;
+      return reader_preferences["q" /* themes */][this.readerPreferences.theme] || reader_preferences["q" /* themes */].white;
     },
     readerNightMode() {
-      return Object(reader_preferences["k" /* readerThemeMode */])(this.readerPreferences) === 'dark';
+      return Object(reader_preferences["l" /* readerThemeMode */])(this.readerPreferences) === "dark";
     },
     currentReaderSkin() {
       return this.readerSkins.find(skin => skin.skin_key === this.readerPreferences.backgroundSkinKey && !skin.is_locked) || null;
     },
     readerAppearance() {
       const skinStyle = createBackgroundSkinStyle(this.currentReaderSkin);
-      if (this.currentReaderSkin && ['obsidian_orbit', 'ember_library'].includes(this.currentReaderSkin.skin_key)) skinStyle.backgroundSize = '100% 100%';
+      if (this.currentReaderSkin && ["obsidian_orbit", "ember_library"].includes(this.currentReaderSkin.skin_key)) skinStyle.backgroundSize = "100% 100%";
       return {
         backgroundColor: this.readerTheme.backgroundColor,
         color: this.readerTheme.fontColor,
-        '--reader-secondary': this.readerTheme.secondaryFontColor,
-        '--reader-line': this.readerTheme.lineColor,
+        "--reader-secondary": this.readerTheme.secondaryFontColor,
+        "--reader-line": this.readerTheme.lineColor,
         ...skinStyle
       };
     },
     readerTypography() {
       const system = '"PingFang SC", "Helvetica Neue", "Microsoft YaHei", Arial, sans-serif';
       const font = this.readerPreferences.font;
-      const family = font === 'serif' ? '"Songti SC", SimSun, serif' : font === 'sans-serif' ? '"Heiti SC", "Microsoft YaHei", sans-serif' : this.readerFontFamily ? `"${this.readerFontFamily}", ${system}` : system;
+      const family = font === "serif" ? '"Songti SC", SimSun, serif' : font === "sans-serif" ? '"Heiti SC", "Microsoft YaHei", sans-serif' : this.readerFontFamily ? `"${this.readerFontFamily}", ${system}` : system;
       return {
         fontSize: `${this.readerPreferences.fontSize}px`,
         lineHeight: this.readerPreferences.lineHeight,
@@ -2439,30 +2411,48 @@ function loadReaderFont(key, config, environment = {
       };
     }
   },
+  watch: {
+    "$theme.resolved"() {
+      this.applySiteReaderTheme();
+    }
+  },
   mounted() {
     const restored = Object(reader_preferences["h" /* readPreferences */])({
       getItem: key => window.localStorage.getItem(key)
     });
     this.readerPreferences = {
       ...restored,
-      theme: reader_preferences["b" /* MEMBER_THEMES */].includes(restored.theme) || restored.theme === 'blockepoch' ? 'white' : restored.theme,
-      backgroundSkinKey: ''
+      theme: reader_preferences["b" /* MEMBER_THEMES */].includes(restored.theme) || restored.theme === "blockepoch" ? "white" : restored.theme,
+      backgroundSkinKey: ""
     };
-    this.refreshReaderResources(restored);
-    window.addEventListener('focus', this.onReaderAccountFocus);
-    window.addEventListener('storage', this.onReaderStorage);
-    window.addEventListener('auth-state-changed', this.onReaderAccountFocus);
+    this.readerUsesSiteTheme = Object(reader_preferences["j" /* readerFollowsSiteTheme */])(window.localStorage);
+    this.applySiteReaderTheme();
+    this.refreshReaderResources(this.readerUsesSiteTheme ? {
+      ...restored,
+      theme: this.readerPreferences.theme
+    } : restored);
+    window.addEventListener("focus", this.onReaderAccountFocus);
+    window.addEventListener("storage", this.onReaderStorage);
+    window.addEventListener("auth-state-changed", this.onReaderAccountFocus);
   },
   beforeDestroy() {
     this.readerResourceVersion++;
     this.readerFontVersion++;
-    window.removeEventListener('focus', this.onReaderAccountFocus);
-    window.removeEventListener('storage', this.onReaderStorage);
-    window.removeEventListener('auth-state-changed', this.onReaderAccountFocus);
+    window.removeEventListener("focus", this.onReaderAccountFocus);
+    window.removeEventListener("storage", this.onReaderStorage);
+    window.removeEventListener("auth-state-changed", this.onReaderAccountFocus);
   },
   methods: {
+    applySiteReaderTheme() {
+      if (!this.readerUsesSiteTheme || !this.$theme) return;
+      this.readerPreferences = {
+        ...this.readerPreferences,
+        theme: this.$theme.resolved === "dark" ? "black" : "white",
+        backgroundSkinKey: ""
+      };
+    },
     onReaderStorage(event) {
-      if (event.key === 'token') this.refreshReaderResources();
+      if (event.key === "token") this.refreshReaderResources();
     },
     onReaderAccountFocus() {
       this.refreshReaderResources();
@@ -2471,47 +2461,48 @@ function loadReaderFont(key, config, environment = {
       const version = ++this.readerResourceVersion,
         token = Object(reading["c" /* readingToken */])(),
         revision = this.readerPreferenceRevision;
-      const wanted = restored && typeof restored === 'object' && !restored.type ? restored : {
+      const wanted = restored && typeof restored === "object" && !restored.type ? restored : {
         ...this.readerPreferences
       };
-      this.readerTier = '';
+      this.readerTier = "";
       this.readerResourcesLoading = true;
-      this.readerResourceError = '';
-      this.readerLockedMessage = '';
+      this.readerResourceError = "";
+      this.readerLockedMessage = "";
       // Until the new account's permission is known, protected appearances are not rendered.
-      if (reader_preferences["b" /* MEMBER_THEMES */].includes(this.readerPreferences.theme) || this.readerPreferences.theme === 'blockepoch') this.readerPreferences = {
+      if (reader_preferences["b" /* MEMBER_THEMES */].includes(this.readerPreferences.theme) || this.readerPreferences.theme === "blockepoch") this.readerPreferences = {
         ...this.readerPreferences,
-        theme: 'white'
+        theme: "white"
       };
       this.readerSkins = this.readerSkins.map(skin => ({
         ...skin,
-        is_locked: !Object(reader_preferences["d" /* canUseBackground */])(skin.required_membership, '')
+        is_locked: !Object(reader_preferences["d" /* canUseBackground */])(skin.required_membership, "")
       }));
       const results = await Promise.allSettled([this.$api.reader.fonts(), this.$api.reader.backgrounds(), token ? this.$api.reader.membership() : Promise.resolve(null)]);
       if (version !== this.readerResourceVersion) return;
       if (token !== Object(reading["c" /* readingToken */])()) return this.refreshReaderResources();
       const [fontResult, skinResult, memberResult] = results;
-      this.readerTier = memberResult.status === 'fulfilled' ? Object(reader_preferences["f" /* membershipTier */])(memberResult.value) : '';
-      if (fontResult.status === 'fulfilled' && Array.isArray(fontResult.value)) this.readerFonts = Object(reader_preferences["j" /* readerFonts */])(fontResult.value);
-      if (skinResult.status === 'fulfilled' && Array.isArray(skinResult.value)) this.readerSkins = skinResult.value.map(skin => normalizeBackgroundSkin({
+      this.readerTier = memberResult.status === "fulfilled" ? Object(reader_preferences["f" /* membershipTier */])(memberResult.value) : "";
+      if (fontResult.status === "fulfilled" && Array.isArray(fontResult.value)) this.readerFonts = Object(reader_preferences["k" /* readerFonts */])(fontResult.value);
+      if (skinResult.status === "fulfilled" && Array.isArray(skinResult.value)) this.readerSkins = skinResult.value.map(skin => normalizeBackgroundSkin({
         ...skin,
         is_locked: !Object(reader_preferences["d" /* canUseBackground */])(skin.required_membership, this.readerTier)
-      }, key => Boolean(reader_preferences["o" /* themes */][key]))).filter(Boolean);else this.readerSkins = [];
+      }, key => Boolean(reader_preferences["q" /* themes */][key]))).filter(Boolean);else this.readerSkins = [];
       const failures = [];
-      if (fontResult.status === 'rejected') failures.push('字体配置暂不可用，使用内置配置。');
-      if (skinResult.status === 'rejected') failures.push('背景配置加载失败，请刷新重试。');
-      if (memberResult.status === 'rejected') failures.push('通行证权限暂不可用，请刷新重试。');
-      this.readerResourceError = failures.join(' ');
+      if (fontResult.status === "rejected") failures.push("字体配置暂不可用，使用内置配置。");
+      if (skinResult.status === "rejected") failures.push("背景配置加载失败，请刷新重试。");
+      if (memberResult.status === "rejected") failures.push("通行证权限暂不可用，请刷新重试。");
+      this.readerResourceError = failures.join(" ");
       this.readerResourcesLoading = false;
       const next = Object(reader_preferences["g" /* normalizePreferences */])(revision === this.readerPreferenceRevision ? wanted : this.readerPreferences);
-      if (reader_preferences["b" /* MEMBER_THEMES */].includes(next.theme) && !Object(reader_preferences["d" /* canUseBackground */])('standard', this.readerTier)) next.theme = 'white';
+      if (reader_preferences["b" /* MEMBER_THEMES */].includes(next.theme) && !Object(reader_preferences["d" /* canUseBackground */])("standard", this.readerTier)) next.theme = "white";
       const selectedSkin = this.readerSkins.find(skin => skin.skin_key === next.backgroundSkinKey && !skin.is_locked);
       if (selectedSkin) next.theme = selectedSkin.theme_key;else {
-        next.backgroundSkinKey = '';
-        if (next.theme === 'blockepoch') next.theme = 'white';
+        next.backgroundSkinKey = "";
+        if (next.theme === "blockepoch") next.theme = "white";
       }
-      if (!this.readerFonts[next.font] && !['serif', 'sans-serif'].includes(next.font)) next.font = 'default';
+      if (!this.readerFonts[next.font] && !["serif", "sans-serif"].includes(next.font)) next.font = "default";
       this.readerPreferences = next;
+      this.applySiteReaderTheme();
       // Failed configuration requests should not erase a saved appearance for the next online visit.
       if (!failures.length) this.persistReaderPreferences();
       await this.selectReaderFont(next.font, false);
@@ -2521,64 +2512,66 @@ function loadReaderFont(key, config, environment = {
         getItem: key => window.localStorage.getItem(key),
         setItem: (key, value) => window.localStorage.setItem(key, value)
       };
-      const saved = Object(reader_preferences["n" /* savePreferences */])(storage, this.readerPreferences),
-        remembered = Object(reader_preferences["l" /* rememberReaderTheme */])(storage, this.readerPreferences);
-      this.readerStorageError = !saved || !remembered;
+      const followed = Object(reader_preferences["p" /* saveReaderThemeFollowing */])(storage, this.readerUsesSiteTheme);
+      const saved = Object(reader_preferences["o" /* savePreferences */])(storage, this.readerPreferences),
+        remembered = Object(reader_preferences["m" /* rememberReaderTheme */])(storage, this.readerPreferences);
+      this.readerStorageError = !saved || !remembered || !followed;
     },
     toggleReaderNightMode() {
       const storage = {
         getItem: key => window.localStorage.getItem(key),
         setItem: (key, value) => window.localStorage.setItem(key, value)
       };
-      Object(reader_preferences["l" /* rememberReaderTheme */])(storage, this.readerPreferences);
-      const mode = this.readerNightMode ? 'light' : 'dark',
+      Object(reader_preferences["m" /* rememberReaderTheme */])(storage, this.readerPreferences);
+      const mode = this.readerNightMode ? "light" : "dark",
         selection = Object(reader_preferences["i" /* readReaderTheme */])(storage, mode);
       let skin = selection.backgroundSkinKey && this.readerSkins.find(item => item.skin_key === selection.backgroundSkinKey && !item.is_locked && Object(reader_preferences["d" /* canUseBackground */])(item.required_membership, this.readerTier));
-      if (skin && Object(reader_preferences["k" /* readerThemeMode */])({
+      if (skin && Object(reader_preferences["l" /* readerThemeMode */])({
         theme: skin.theme_key
       }) !== mode) skin = null;
-      if (skin) selection.theme = skin.theme_key;else selection.backgroundSkinKey = '';
-      if (selection.theme === 'blockepoch' && !skin || reader_preferences["b" /* MEMBER_THEMES */].includes(selection.theme) && !Object(reader_preferences["d" /* canUseBackground */])('standard', this.readerTier)) selection.theme = mode === 'dark' ? 'black' : 'white';
-      this.readerLockedMessage = '';
+      if (skin) selection.theme = skin.theme_key;else selection.backgroundSkinKey = "";
+      if (selection.theme === "blockepoch" && !skin || reader_preferences["b" /* MEMBER_THEMES */].includes(selection.theme) && !Object(reader_preferences["d" /* canUseBackground */])("standard", this.readerTier)) selection.theme = mode === "dark" ? "black" : "white";
+      this.readerLockedMessage = "";
       this.changeReaderPreferences({
         ...this.readerPreferences,
         ...selection
       });
     },
     changeReaderPreferences(value) {
+      if (value.theme !== this.readerPreferences.theme || value.backgroundSkinKey !== this.readerPreferences.backgroundSkinKey) this.readerUsesSiteTheme = false;
       this.readerPreferenceRevision++;
       this.readerPreferences = Object(reader_preferences["g" /* normalizePreferences */])(value);
       this.persistReaderPreferences();
     },
     selectReaderTheme(key) {
-      if (!reader_preferences["o" /* themes */][key] || key === 'blockepoch') return;
-      if (reader_preferences["b" /* MEMBER_THEMES */].includes(key) && !Object(reader_preferences["d" /* canUseBackground */])('standard', this.readerTier)) return this.explainReaderLock('standard');
-      this.readerLockedMessage = '';
+      if (!reader_preferences["q" /* themes */][key] || key === "blockepoch") return;
+      if (reader_preferences["b" /* MEMBER_THEMES */].includes(key) && !Object(reader_preferences["d" /* canUseBackground */])("standard", this.readerTier)) return this.explainReaderLock("standard");
+      this.readerLockedMessage = "";
       this.changeReaderPreferences({
         ...this.readerPreferences,
         theme: key,
-        backgroundSkinKey: ''
+        backgroundSkinKey: ""
       });
     },
     selectReaderSkin(key) {
       const skin = this.readerSkins.find(item => item.skin_key === key);
       if (key && !skin) return;
       if (skin && skin.is_locked) return this.explainReaderLock(skin.required_membership);
-      this.readerLockedMessage = '';
+      this.readerLockedMessage = "";
       this.changeReaderPreferences({
         ...this.readerPreferences,
-        backgroundSkinKey: skin ? key : '',
-        theme: skin ? skin.theme_key : this.readerPreferences.theme === 'blockepoch' ? 'white' : this.readerPreferences.theme
+        backgroundSkinKey: skin ? key : "",
+        theme: skin ? skin.theme_key : this.readerPreferences.theme === "blockepoch" ? "white" : this.readerPreferences.theme
       });
     },
     explainReaderLock(tier) {
-      this.readerLockedMessage = tier === 'super' ? '此背景需要有效的超级原木通行证。' : '此背景需要有效的原木通行证或超级原木通行证。';
+      this.readerLockedMessage = tier === "super" ? "此背景需要有效的超级原木通行证。" : "此背景需要有效的原木通行证或超级原木通行证。";
     },
     async selectReaderFont(key, persist = true) {
       const version = ++this.readerFontVersion;
-      this.readerFontError = '';
-      if (key === 'default' || ['serif', 'sans-serif'].includes(key)) {
-        this.readerFontFamily = '';
+      this.readerFontError = "";
+      if (key === "default" || ["serif", "sans-serif"].includes(key)) {
+        this.readerFontFamily = "";
         this.readerPreferences = {
           ...this.readerPreferences,
           font: key
@@ -2591,10 +2584,10 @@ function loadReaderFont(key, config, environment = {
       }
       const config = this.readerFonts[key];
       if (!config) return;
-      this.$set(this.readerFontStates, key, 'loading');
+      this.$set(this.readerFontStates, key, "loading");
       try {
         const family = await loadReaderFont(key, config);
-        this.$set(this.readerFontStates, key, 'ready');
+        this.$set(this.readerFontStates, key, "ready");
         if (version !== this.readerFontVersion) return;
         this.readerFontFamily = family;
         this.readerPreferences = {
@@ -2606,14 +2599,14 @@ function loadReaderFont(key, config, environment = {
           this.persistReaderPreferences();
         }
       } catch (error) {
-        this.$set(this.readerFontStates, key, 'failed');
+        this.$set(this.readerFontStates, key, "failed");
         if (version !== this.readerFontVersion) return;
         this.readerFontError = error.message;
         if (!persist) {
-          this.readerFontFamily = '';
+          this.readerFontFamily = "";
           this.readerPreferences = {
             ...this.readerPreferences,
-            font: 'default'
+            font: "default"
           };
         }
       }
@@ -2621,17 +2614,19 @@ function loadReaderFont(key, config, environment = {
     resetReaderPreferences() {
       this.readerFontVersion++;
       this.readerPreferenceRevision++;
-      this.readerFontFamily = '';
-      this.readerFontError = '';
-      this.readerLockedMessage = '';
+      this.readerFontFamily = "";
+      this.readerFontError = "";
+      this.readerLockedMessage = "";
       this.readerPreferences = {
         ...reader_preferences["a" /* DEFAULT_PREFERENCES */]
       };
+      this.readerUsesSiteTheme = true;
+      this.applySiteReaderTheme();
       this.persistReaderPreferences();
     },
     openReaderMembership() {
-      this.$openMobileWindow('/pages/membership/index', {
-        title: '原木通行证'
+      this.$openMobileWindow("/pages/membership/index", {
+        title: "原木通行证"
       });
     }
   }
@@ -2639,43 +2634,43 @@ function loadReaderFont(key, config, environment = {
 
 /***/ }),
 
-/***/ 265:
+/***/ 355:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(364);
+var content = __webpack_require__(502);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("045c06d3", content, true, context)
 };
 
 /***/ }),
 
-/***/ 266:
+/***/ 356:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(366);
+var content = __webpack_require__(504);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
   add("fcc03f10", content, true, context)
 };
 
 /***/ }),
 
-/***/ 362:
+/***/ 500:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2686,7 +2681,7 @@ module.exports.__inject__ = function (context) {
 /* unused harmony export storeReaderPreview */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return readReaderPreview; });
 /* unused harmony export trustedPreviewMessage */
-/* harmony import */ var _reading_history__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(35);
+/* harmony import */ var _reading_history__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(41);
 
 const PREVIEW_PREFIX = 'loghome:reader:preview:';
 const PREVIEW_MAX_AGE = 24 * 60 * 60 * 1000;
@@ -2764,27 +2759,27 @@ function trustedPreviewMessage(event, frameWindow, mobileUrl, workId) {
     return null;
   }
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URL"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URL"]))
 
 /***/ }),
 
-/***/ 363:
+/***/ 501:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaDraftPreview_vue_vue_type_style_index_0_id_a0e566a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(265);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaDraftPreview_vue_vue_type_style_index_0_id_a0e566a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(355);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaDraftPreview_vue_vue_type_style_index_0_id_a0e566a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaDraftPreview_vue_vue_type_style_index_0_id_a0e566a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaDraftPreview_vue_vue_type_style_index_0_id_a0e566a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_MangaDraftPreview_vue_vue_type_style_index_0_id_a0e566a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 364:
+/***/ 502:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, ".manga-draft[data-v-a0e566a2]{background:#fff;color:#765f48}.draft-warm[data-v-a0e566a2]{background:#f6efdf}.draft-black[data-v-a0e566a2]{background:#111315;color:#d7d1c9}.manga-draft header[data-v-a0e566a2]{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid #e5ddcf}.manga-draft header>div[data-v-a0e566a2]{flex:1}.manga-draft strong[data-v-a0e566a2]{font-size:17px}.manga-draft small[data-v-a0e566a2]{display:block;font-size:11px;margin-top:8px;color:#a2937f}.manga-draft button[data-v-a0e566a2]{border:1px solid #ddd3c6;border-radius:6px;background:#fff;color:#80684e;cursor:pointer;padding:8px 14px;font:inherit;font-size:12px}.draft-settings[data-v-a0e566a2]{display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:15px 20px;font-size:12px}.draft-settings select[data-v-a0e566a2],footer input[data-v-a0e566a2]{font:inherit;color:#80684e;border:1px solid #ddd3c6;border-radius:5px;background:#fff;padding:6px;margin-left:6px}footer input[data-v-a0e566a2]{width:60px}.draft-strip[data-v-a0e566a2]{height:65vh;overflow:auto;position:relative}.draft-strip-page[data-v-a0e566a2]{max-width:900px;margin:auto;position:relative}.draft-strip-page img[data-v-a0e566a2]{display:block;width:100%;height:auto}.draft-strip-page button[data-v-a0e566a2]{position:absolute;right:10px;top:10px;background:#fffe}.draft-paged[data-v-a0e566a2]{display:flex;height:65vh;min-height:300px}.draft-paged>button[data-v-a0e566a2]{border:0;background:transparent;font-size:36px;flex:none;width:55px}.manga-draft footer[data-v-a0e566a2]{display:flex;gap:24px;align-items:center;padding:16px 20px;font-size:12px}.manga-draft footer>span[data-v-a0e566a2]:last-child{margin-left:auto;color:#a2937f}.empty[data-v-a0e566a2]{text-align:center;padding:80px}.draft-image-dialog[data-v-a0e566a2]{height:76vh}.manga-draft button[data-v-a0e566a2]:disabled{opacity:.3;cursor:default}.manga-draft button[data-v-a0e566a2]:focus-visible{outline:2px solid #947358}@media(max-width:700px){.draft-settings[data-v-a0e566a2]{gap:10px}.manga-draft footer[data-v-a0e566a2]{flex-wrap:wrap;gap:12px}.manga-draft footer>span[data-v-a0e566a2]:last-child{margin-left:0}}\r\n", ""]);
@@ -2794,23 +2789,23 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 365:
+/***/ 503:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPreview_vue_vue_type_style_index_0_id_ba0fb2ae_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(266);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPreview_vue_vue_type_style_index_0_id_ba0fb2ae_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(356);
 /* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPreview_vue_vue_type_style_index_0_id_ba0fb2ae_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPreview_vue_vue_type_style_index_0_id_ba0fb2ae_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPreview_vue_vue_type_style_index_0_id_ba0fb2ae_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderPreview_vue_vue_type_style_index_0_id_ba0fb2ae_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 366:
+/***/ 504:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
 ___CSS_LOADER_EXPORT___.push([module.i, "\n.preview-reader[data-v-ba0fb2ae] { background: #f5f5f5; min-height: 100vh; color: #4c453c;\n}.preview-toolbar[data-v-ba0fb2ae] { display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff; border-bottom: 1px solid #e5ded4; position: sticky; top: 0; z-index: 5;\n}.preview-toolbar span[data-v-ba0fb2ae] { color: #9a8771; font-size: 13px; flex: 1;\n}.preview-body[data-v-ba0fb2ae] { max-width: 1200px; margin: 24px auto; padding-bottom: 100px;\n}.preview-title[data-v-ba0fb2ae] { text-align: center; padding: 22px 20px;\n}.preview-title h1[data-v-ba0fb2ae] { font-size: 26px;\n}.preview-title p[data-v-ba0fb2ae] { color: var(--reader-secondary); font-size: 13px; margin: 15px 0;\n}button[data-v-ba0fb2ae] { padding: 8px 14px; border: 1px solid #d2c4b2; background: #fff; color: #80644a; border-radius: 5px; margin: 0 4px; cursor: pointer;\n}button[data-v-ba0fb2ae]:focus-visible { outline: 2px solid #947358;\n}.preview-error[data-v-ba0fb2ae] { padding: 70px 25px; text-align: center;\n}.preview-body[data-v-ba0fb2ae] .article-paragraph { margin: 0 0 1.2em; white-space: pre-wrap;\n}.preview-body[data-v-ba0fb2ae] .article-image { text-align: center;\n}.preview-body[data-v-ba0fb2ae] .article-image img { max-width: 100%;\n}@media(max-width:700px) {\n.preview-toolbar[data-v-ba0fb2ae] { padding: 14px; gap: 8px; flex-wrap: wrap;\n}.preview-toolbar span[data-v-ba0fb2ae] { font-size: 11px;\n}.preview-body[data-v-ba0fb2ae] { margin: 12px auto;\n}\n}\r\n", ""]);
@@ -2820,7 +2815,7 @@ module.exports = ___CSS_LOADER_EXPORT___;
 
 /***/ }),
 
-/***/ 406:
+/***/ 553:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2925,16 +2920,16 @@ var ReaderPreviewvue_type_template_id_ba0fb2ae_scoped_true_staticRenderFns = [];
 // CONCATENATED MODULE: ./components/read/ReaderPreview.vue?vue&type=template&id=ba0fb2ae&scoped=true
 
 // EXTERNAL MODULE: ./utils/reader-preview.js
-var reader_preview = __webpack_require__(362);
+var reader_preview = __webpack_require__(500);
 
 // EXTERNAL MODULE: ./plugins/api/reading.js
 var reading = __webpack_require__(1);
 
 // EXTERNAL MODULE: ./utils/reader-audio.js
-var reader_audio = __webpack_require__(43);
+var reader_audio = __webpack_require__(53);
 
 // EXTERNAL MODULE: ./mixins/reader-preferences.js + 2 modules
-var reader_preferences = __webpack_require__(228);
+var reader_preferences = __webpack_require__(296);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./components/manga/MangaDraftPreview.vue?vue&type=template&id=a0e566a2&scoped=true
 var MangaDraftPreviewvue_type_template_id_a0e566a2_scoped_true_render = function render() {
@@ -3093,10 +3088,10 @@ var MangaDraftPreviewvue_type_template_id_a0e566a2_scoped_true_staticRenderFns =
 // CONCATENATED MODULE: ./components/manga/MangaDraftPreview.vue?vue&type=template&id=a0e566a2&scoped=true
 
 // EXTERNAL MODULE: ./components/manga/MangaReaderImage.vue + 4 modules
-var MangaReaderImage = __webpack_require__(223);
+var MangaReaderImage = __webpack_require__(291);
 
 // EXTERNAL MODULE: ./utils/manga-content.js
-var manga_content = __webpack_require__(168);
+var manga_content = __webpack_require__(215);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/manga/MangaDraftPreview.vue?vue&type=script&lang=js
 
@@ -3216,7 +3211,7 @@ var componentNormalizer = __webpack_require__(2);
 
 function injectStyles (context) {
   
-  var style0 = __webpack_require__(363)
+  var style0 = __webpack_require__(501)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -3236,13 +3231,13 @@ var component = Object(componentNormalizer["a" /* default */])(
 
 /* harmony default export */ var MangaDraftPreview = (component.exports);
 // EXTERNAL MODULE: ./components/read/ReaderPager.vue + 9 modules
-var ReaderPager = __webpack_require__(217);
+var ReaderPager = __webpack_require__(281);
 
 // EXTERNAL MODULE: ./components/read/ReaderSettings.vue + 4 modules
-var ReaderSettings = __webpack_require__(224);
+var ReaderSettings = __webpack_require__(292);
 
 // EXTERNAL MODULE: ./components/read/ReaderAudioPlayer.vue + 4 modules
-var ReaderAudioPlayer = __webpack_require__(59);
+var ReaderAudioPlayer = __webpack_require__(69);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderPreview.vue?vue&type=script&lang=js
 
@@ -3340,7 +3335,7 @@ var ReaderAudioPlayer = __webpack_require__(59);
 
 function ReaderPreview_injectStyles (context) {
   
-  var style0 = __webpack_require__(365)
+  var style0 = __webpack_require__(503)
 if (style0.__inject__) style0.__inject__(context)
 
 }
@@ -3360,7 +3355,7 @@ var ReaderPreview_component = Object(componentNormalizer["a" /* default */])(
 
 /* harmony default export */ var ReaderPreview = (ReaderPreview_component.exports);
 // EXTERNAL MODULE: ./utils/reading-seo.js
-var reading_seo = __webpack_require__(34);
+var reading_seo = __webpack_require__(39);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./pages/read/preview/_key.vue?vue&type=script&lang=js
 

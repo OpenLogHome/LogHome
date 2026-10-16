@@ -1,57 +1,7 @@
-exports.ids = [20];
+exports.ids = [43];
 exports.modules = {
 
-/***/ 127:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(URLSearchParams) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return readingCommentId; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return readingCommentTarget; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return readingMessageTarget; });
-function readingCommentId(query = {}) {
-  const id = Number(query.preLoadCommentId || query.comment_id || query.commentId);
-  return Number.isSafeInteger(id) && id > 0 ? id : 0;
-}
-function readingCommentTarget(comment, book, anchor) {
-  if (!comment || !book || Number(comment.novelId) !== Number(book.novel_id)) return '';
-  const suffix = `preLoadCommentId=${Number(anchor) || Number(comment.commentId)}`;
-  if (Number(comment.articleId) > 0) {
-    if (book.novel_type === 'manga') return `/manga/read/${comment.articleId}?novelId=${book.novel_id}&${suffix}`;
-    return `/article/${comment.articleId}?${suffix}${Number(comment.paragraphId) > 0 ? `&paragraphId=${comment.paragraphId}` : ''}`;
-  }
-  return `/${book.novel_type === 'manga' ? 'manga' : book.novel_type === 'world' ? 'world' : 'novel'}/${book.novel_id}?${suffix}`;
-}
-function readingMessageTarget(router) {
-  const raw = String(router || '').trim();
-  if (!raw || /^[a-z][a-z\d+.-]*:|^\/\/|[\\\x00-\x1f]/i.test(raw)) return null;
-  const source = raw.replace(/^\/?(?:#\/)?(?:pages\/)?/, '');
-  const [path, search = ''] = source.split('?'),
-    query = new URLSearchParams(search);
-  const id = Number(query.get('id') || query.get('novelId') || query.get('novel_id'));
-  const anchor = readingCommentId(Object.fromEntries(query));
-  if (/^readers\/(?:bookInfo|bookComment|mangaInfo|mangaReader|bookEnd|bookExcerpts|newReader\/article)$/.test(path)) {
-    const workId = /(?:mangaReader|newReader\/article)$/.test(path) ? Number(query.get('novelId') || query.get('novel_id')) : id;
-    if (anchor) return {
-      path: `/read/comment/${anchor}${Number.isSafeInteger(workId) && workId > 0 ? `?novelId=${workId}` : ''}`
-    };
-    if (!Number.isSafeInteger(id) || id <= 0) return null;
-    if (path === 'readers/newReader/article') return {
-      path: `/article/${id}`
-    };
-    if (path === 'readers/mangaReader') return {
-      path: `/manga/read/${id}${Number(query.get('novelId')) > 0 ? `?novelId=${Number(query.get('novelId'))}` : ''}`
-    };
-    return {
-      path: `/${path === 'readers/mangaInfo' ? 'manga' : path === 'readers/bookEnd' ? 'read/end' : 'novel'}/${id}`
-    };
-  }
-  return null;
-}
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URLSearchParams"]))
-
-/***/ }),
-
-/***/ 197:
+/***/ 208:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59,9 +9,11 @@ function readingMessageTarget(router) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return normalizeActivities; });
 /* unused harmony export activityMessageLink */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return activityMessagePage; });
-/* harmony import */ var _reading_discovery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10);
-/* harmony import */ var _reader_comment_links__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(127);
-/* harmony import */ var _reading_seo__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(34);
+/* harmony import */ var _social_links__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(44);
+/* harmony import */ var _reading_discovery__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(11);
+/* harmony import */ var _reader_comment_links__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(40);
+/* harmony import */ var _reading_seo__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(39);
+
 
 
 
@@ -73,11 +25,11 @@ function safeLink(raw, mobileBase) {
     try {
       const url = new URL(value);
       if (url.username || url.password) return null;
-      if (url.origin === _reading_seo__WEBPACK_IMPORTED_MODULE_2__[/* SITE_ORIGIN */ "a"]) return {
+      if (url.origin === _reading_seo__WEBPACK_IMPORTED_MODULE_3__[/* SITE_ORIGIN */ "a"]) return {
         href: url.pathname + url.search + url.hash,
         external: false
       };
-      if (url.origin === new URL(mobileBase).origin && url.hash.startsWith('#/pages/')) return Object(_reading_discovery__WEBPACK_IMPORTED_MODULE_0__[/* discoveryLink */ "g"])(url.hash.slice(1), mobileBase);
+      if (url.origin === new URL(mobileBase).origin && url.hash.startsWith('#/pages/')) return Object(_reading_discovery__WEBPACK_IMPORTED_MODULE_1__[/* discoveryLink */ "g"])(url.hash.slice(1), mobileBase);
       return {
         href: url.href,
         external: true
@@ -86,7 +38,7 @@ function safeLink(raw, mobileBase) {
       return null;
     }
   }
-  return Object(_reading_discovery__WEBPACK_IMPORTED_MODULE_0__[/* discoveryLink */ "g"])(value, mobileBase);
+  return Object(_reading_discovery__WEBPACK_IMPORTED_MODULE_1__[/* discoveryLink */ "g"])(value, mobileBase);
 }
 function activityNewsLink(news, mobileBase = 'https://m.loghome.ink') {
   return safeLink(news && news.pc_link, mobileBase) || safeLink(news && news.mobile_link, mobileBase);
@@ -112,7 +64,7 @@ function activityMessageLink(router, mobileBase = 'https://m.loghome.ink') {
   const raw = String(router || '').trim();
   if (!raw || raw === '/' || raw === 'None' || /^[a-z][a-z\d+.-]*:|^\/\/|[\\\u0000-\u001f]/i.test(raw)) return null;
   const route = raw.replace(/^(?:\.\.?\/)+/, '').replace(/^\/?(?:#\/)?(?:pages\/)?/, '');
-  const reading = Object(_reader_comment_links__WEBPACK_IMPORTED_MODULE_1__[/* readingMessageTarget */ "c"])(route);
+  const reading = Object(_reader_comment_links__WEBPACK_IMPORTED_MODULE_2__[/* readingMessageTarget */ "c"])(route);
   if (reading) return {
     href: reading.path,
     external: false
@@ -120,6 +72,15 @@ function activityMessageLink(router, mobileBase = 'https://m.loghome.ink') {
   const post = route.match(/^community\/postDetail\?id=([1-9]\d*)(?:&|$)/);
   if (post) return {
     href: `/community/post/${Number(post[1])}`,
+    external: false
+  };
+  if (route === 'community/activityMessages') return {
+    href: '/read/activities',
+    external: false
+  };
+  const social = Object(_social_links__WEBPACK_IMPORTED_MODULE_0__[/* socialMessageTarget */ "a"])(route);
+  if (social && !social.mobile) return {
+    href: social.path,
     external: false
   };
   return safeLink(`/pages/${route}`, mobileBase);
@@ -144,55 +105,249 @@ function activityMessagePage(result, page, amount = 20, mobileBase = 'https://m.
     messages
   };
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)["URL"]))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6)["URL"]))
 
 /***/ }),
 
-/***/ 249:
+/***/ 209:
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(329);
+var content = __webpack_require__(248);
 if(content.__esModule) content = content.default;
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add CSS to SSR context
-var add = __webpack_require__(5).default
+var add = __webpack_require__(4).default
 module.exports.__inject__ = function (context) {
-  add("89a71f52", content, true, context)
+  add("6acf16a5", content, true, context)
 };
 
 /***/ }),
 
-/***/ 328:
+/***/ 247:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_82d3fd12_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(249);
-/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_82d3fd12_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_82d3fd12_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_82d3fd12_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_82d3fd12_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_346ec8a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(209);
+/* harmony import */ var _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_346ec8a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_346ec8a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_346ec8a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_vue_style_loader_index_js_ref_3_oneOf_1_0_node_modules_css_loader_dist_cjs_js_ref_3_oneOf_1_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_vue_loader_lib_index_js_vue_loader_options_ReaderActivityInbox_vue_vue_type_style_index_0_id_346ec8a2_prod_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),
 
-/***/ 329:
+/***/ 248:
 /***/ (function(module, exports, __webpack_require__) {
 
 // Imports
-var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(4);
+var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(3);
 var ___CSS_LOADER_EXPORT___ = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, ".activity-inbox[data-v-82d3fd12]{max-width:1180px;margin:auto;padding:110px 28px 65px;color:#514739}header[data-v-82d3fd12]{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:30px}h1[data-v-82d3fd12]{font-size:28px;margin:18px 0 12px}header p[data-v-82d3fd12],.summary[data-v-82d3fd12],.quiet[data-v-82d3fd12]{color:#968978;font-size:13px;line-height:1.8}a[data-v-82d3fd12]{color:#788858;text-decoration:none}button[data-v-82d3fd12]{background:white;border:1px solid #dcd7cc;color:#7c674d;border-radius:6px;padding:9px 16px;cursor:pointer}button[data-v-82d3fd12]:disabled{opacity:.45;cursor:default}.message-grid[data-v-82d3fd12]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}.message-grid article[data-v-82d3fd12]{min-width:0;background:white;border:1px solid #e7e2d9;border-radius:12px;overflow:hidden}.message-grid img[data-v-82d3fd12]{width:100%;max-height:220px;object-fit:cover}.message-body[data-v-82d3fd12]{padding:22px}time[data-v-82d3fd12]{font-size:12px;color:#a09383}.message-body p[data-v-82d3fd12]{font-size:15px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;margin:16px 0}.message-body a[data-v-82d3fd12]{font-size:13px}.state[data-v-82d3fd12]{text-align:center;background:#fff;padding:55px 20px;border:1px solid #e7e2d9;border-radius:10px;color:#998978;font-size:14px}.state h2[data-v-82d3fd12]{color:#615442;font-size:20px}.state p[data-v-82d3fd12]{line-height:1.8;margin:16px 0}.error[data-v-82d3fd12]{color:#a14b39;font-size:13px;background:#fff5ed;padding:16px;border-radius:7px}.error button[data-v-82d3fd12]{margin-left:12px}nav[data-v-82d3fd12]{display:flex;justify-content:center;align-items:center;gap:20px;margin-top:30px;font-size:13px}a[data-v-82d3fd12]:focus-visible,button[data-v-82d3fd12]:focus-visible{outline:2px solid #8e9e69;outline-offset:3px}@media(max-width:760px){.activity-inbox[data-v-82d3fd12]{padding:100px 18px 45px}.message-grid[data-v-82d3fd12]{grid-template-columns:1fr}header[data-v-82d3fd12]{align-items:flex-start}h1[data-v-82d3fd12]{font-size:25px}.message-body[data-v-82d3fd12]{padding:18px}}", ""]);
+___CSS_LOADER_EXPORT___.push([module.i, "\n.activity-inbox[data-v-346ec8a2] {\r\n  max-width: 1180px;\r\n  margin: auto;\r\n  padding: 110px 28px 65px;\r\n  color: #514739;\n}\nheader[data-v-346ec8a2] {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  gap: 20px;\r\n  margin-bottom: 30px;\n}\nh1[data-v-346ec8a2] {\r\n  font-size: 28px;\r\n  margin: 18px 0 12px;\n}\nheader p[data-v-346ec8a2],\r\n.summary[data-v-346ec8a2],\r\n.quiet[data-v-346ec8a2] {\r\n  color: #968978;\r\n  font-size: 13px;\r\n  line-height: 1.8;\n}\na[data-v-346ec8a2] {\r\n  color: #788858;\r\n  text-decoration: none;\n}\nbutton[data-v-346ec8a2] {\r\n  background: white;\r\n  border: 1px solid #dcd7cc;\r\n  color: #7c674d;\r\n  border-radius: 6px;\r\n  padding: 9px 16px;\r\n  cursor: pointer;\n}\nbutton[data-v-346ec8a2]:disabled {\r\n  opacity: 0.45;\r\n  cursor: default;\n}\n.message-grid[data-v-346ec8a2] {\r\n  display: grid;\r\n  grid-template-columns: repeat(2, minmax(0, 1fr));\r\n  gap: 20px;\r\n  align-items: start;\n}\n.message-grid article[data-v-346ec8a2] {\r\n  min-width: 0;\r\n  background: white;\r\n  border: 1px solid #e7e2d9;\r\n  border-radius: 12px;\r\n  overflow: hidden;\n}\n.message-grid img[data-v-346ec8a2] {\r\n  width: 100%;\r\n  max-height: 220px;\r\n  object-fit: cover;\n}\n.message-body[data-v-346ec8a2] {\r\n  padding: 22px;\n}\ntime[data-v-346ec8a2] {\r\n  font-size: 12px;\r\n  color: #a09383;\n}\n.message-body p[data-v-346ec8a2] {\r\n  font-size: 15px;\r\n  line-height: 1.9;\r\n  white-space: pre-wrap;\r\n  overflow-wrap: anywhere;\r\n  margin: 16px 0;\n}\n.message-body a[data-v-346ec8a2] {\r\n  font-size: 13px;\n}\n.state[data-v-346ec8a2] {\r\n  text-align: center;\r\n  background: #fff;\r\n  padding: 55px 20px;\r\n  border: 1px solid #e7e2d9;\r\n  border-radius: 10px;\r\n  color: #998978;\r\n  font-size: 14px;\n}\n.state h2[data-v-346ec8a2] {\r\n  color: #615442;\r\n  font-size: 20px;\n}\n.state p[data-v-346ec8a2] {\r\n  line-height: 1.8;\r\n  margin: 16px 0;\n}\n.error[data-v-346ec8a2] {\r\n  color: #a14b39;\r\n  font-size: 13px;\r\n  background: #fff5ed;\r\n  padding: 16px;\r\n  border-radius: 7px;\n}\n.error button[data-v-346ec8a2] {\r\n  margin-left: 12px;\n}\nnav[data-v-346ec8a2] {\r\n  display: flex;\r\n  justify-content: center;\r\n  align-items: center;\r\n  gap: 20px;\r\n  margin-top: 30px;\r\n  font-size: 13px;\n}\na[data-v-346ec8a2]:focus-visible,\r\nbutton[data-v-346ec8a2]:focus-visible {\r\n  outline: 2px solid #8e9e69;\r\n  outline-offset: 3px;\n}\n@media (max-width: 760px) {\n.activity-inbox[data-v-346ec8a2] {\r\n    padding: 100px 18px 45px;\n}\n.message-grid[data-v-346ec8a2] {\r\n    grid-template-columns: 1fr;\n}\nheader[data-v-346ec8a2] {\r\n    align-items: flex-start;\n}\nh1[data-v-346ec8a2] {\r\n    font-size: 25px;\n}\n.message-body[data-v-346ec8a2] {\r\n    padding: 18px;\n}\n}\n.activity-inbox.embedded[data-v-346ec8a2] {\r\n  padding: 0;\r\n  max-width: none;\r\n  color: var(--ink, #52483c);\n}\n.embedded .message-grid[data-v-346ec8a2] {\r\n  grid-template-columns: 1fr;\n}\n.embedded .message-grid article[data-v-346ec8a2] {\r\n  background: var(--surface, #fffdf9);\r\n  border-color: var(--line, #e9e0d5);\n}\n.embedded .message-grid p[data-v-346ec8a2] {\r\n  color: var(--ink, #52483c);\n}\r\n", ""]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___;
 
 
 /***/ }),
 
-/***/ 413:
+/***/ 289:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderActivityInbox.vue?vue&type=template&id=346ec8a2&scoped=true
+var render = function render() {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c('section', {
+    staticClass: "activity-inbox",
+    class: {
+      embedded: _vm.embedded
+    }
+  }, [!_vm.embedded ? _vm._ssrNode("<header data-v-346ec8a2>", "</header>", [_vm._ssrNode("<div data-v-346ec8a2>", "</div>", [_c('nuxt-link', {
+    attrs: {
+      "to": "/read/resources"
+    }
+  }, [_vm._v(_vm._s(_vm.$t("← 获取原木")))]), _vm._ssrNode(" <h1 data-v-346ec8a2>" + _vm._ssrEscape(_vm._s(_vm.$t("活动消息"))) + "</h1> <p data-v-346ec8a2>" + _vm._ssrEscape(_vm._s(_vm.$t("社区活动的参与条件、截止时间与奖励说明。"))) + "</p>")], 2), _vm._ssrNode(" " + (_vm.token && !_vm.authExpired ? "<button" + _vm._ssrAttr("disabled", _vm.loading) + " data-v-346ec8a2>" + _vm._ssrEscape("\n      " + _vm._s(_vm.loading ? _vm.$t("刷新中…") : _vm.$t("刷新消息")) + "\n    ") + "</button>" : "<!---->"))], 2) : _vm._e(), _vm._ssrNode(" "), !_vm.ready ? _vm._ssrNode("<div class=\"state\" data-v-346ec8a2>", "</div>", [_vm._ssrNode(_vm._ssrEscape(_vm._s(_vm.$t("正在准备消息列表…"))))], 2) : !_vm.token || _vm.authExpired ? _vm._ssrNode("<div class=\"state\" data-v-346ec8a2>", "</div>", [_vm._ssrNode("<h2 data-v-346ec8a2>" + _vm._ssrEscape(_vm._s(_vm.authExpired ? _vm.$t("登录状态已过期") : _vm.$t("登录后查看活动消息"))) + "</h2> <p data-v-346ec8a2>" + _vm._ssrEscape(_vm._s(_vm.$t("活动消息与账号关联，登录后可查看收到的通知。"))) + "</p> "), _c('nuxt-link', {
+    attrs: {
+      "to": _vm.loginUrl
+    }
+  }, [_vm._v(_vm._s(_vm.$t("前往登录 →")))])], 2) : [_vm._ssrNode((_vm.error ? "<p role=\"alert\" class=\"error\" data-v-346ec8a2>" + _vm._ssrEscape("\n      " + _vm._s(_vm.error) + "\n      ") + "<button" + _vm._ssrAttr("disabled", _vm.loading) + " data-v-346ec8a2>" + _vm._ssrEscape(_vm._s(_vm.$t("重试"))) + "</button></p>" : "<!---->") + " <p aria-live=\"polite\" class=\"summary\" data-v-346ec8a2>" + _vm._ssrEscape("\n      " + _vm._s(_vm.loading ? _vm.$t("正在读取活动消息…") : _vm.$t("共 {p0} 条活动消息 · 最新消息在前", {
+    p0: _vm.total
+  })) + "\n    ") + "</p> "), _vm._ssrNode("<div" + _vm._ssrAttr("aria-busy", _vm.loading) + " class=\"message-grid\" data-v-346ec8a2>", "</div>", _vm._l(_vm.messages, function (item) {
+    return _vm._ssrNode("<article data-v-346ec8a2>", "</article>", [_vm._ssrNode((item.bg_url ? "<img" + _vm._ssrAttr("src", item.bg_url) + " alt loading=\"lazy\" data-v-346ec8a2>" : "<!---->") + " "), _vm._ssrNode("<div class=\"message-body\" data-v-346ec8a2>", "</div>", [_vm._ssrNode("<time" + _vm._ssrAttr("datetime", item.time) + " data-v-346ec8a2>" + _vm._ssrEscape(_vm._s(_vm.date(item.time))) + "</time> <p data-v-346ec8a2>" + _vm._ssrEscape(_vm._s(item.message_content)) + "</p> "), item.link && !item.link.external ? _c('nuxt-link', {
+      attrs: {
+        "to": item.link.href
+      }
+    }, [_vm._v(_vm._s(_vm.$t("查看活动详情 →")))]) : item.link ? _c('a', {
+      attrs: {
+        "href": item.link.href,
+        "target": "_blank",
+        "rel": "noopener noreferrer"
+      }
+    }, [_vm._v(_vm._s(_vm.$t("查看活动详情 ↗")))]) : _c('span', {
+      staticClass: "quiet"
+    }, [_vm._v(_vm._s(_vm.$t("这条通知暂无详情链接")))])], 2)], 2);
+  }), 0), _vm._ssrNode(" " + (!_vm.loading && !_vm.error && !_vm.messages.length ? "<p class=\"state\" data-v-346ec8a2>" + _vm._ssrEscape("\n      " + _vm._s(_vm.$t("暂无活动消息")) + "\n    ") + "</p>" : "<!---->") + " " + (_vm.totalPages > 1 ? "<nav" + _vm._ssrAttr("aria-label", _vm.$t('活动消息分页')) + " data-v-346ec8a2><button" + _vm._ssrAttr("disabled", _vm.loading || _vm.page <= 1) + " data-v-346ec8a2>" + _vm._ssrEscape("\n        " + _vm._s(_vm.$t("上一页"))) + "</button><span data-v-346ec8a2>" + _vm._ssrEscape(_vm._s(_vm.$t("第 {p0} / {p1} 页", {
+    p0: _vm.page,
+    p1: _vm.totalPages
+  }))) + "</span><button" + _vm._ssrAttr("disabled", _vm.loading || _vm.page >= _vm.totalPages) + " data-v-346ec8a2>" + _vm._ssrEscape("\n        " + _vm._s(_vm.$t("下一页")) + "\n      ") + "</button></nav>" : "<!---->"))]], 2);
+};
+var staticRenderFns = [];
+
+// CONCATENATED MODULE: ./components/read/ReaderActivityInbox.vue?vue&type=template&id=346ec8a2&scoped=true
+
+// EXTERNAL MODULE: ./plugins/api/reading.js
+var reading = __webpack_require__(1);
+
+// EXTERNAL MODULE: ./utils/reader-activities.js
+var reader_activities = __webpack_require__(208);
+
+// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderActivityInbox.vue?vue&type=script&lang=js
+
+
+/* harmony default export */ var ReaderActivityInboxvue_type_script_lang_js = ({
+  props: {
+    embedded: Boolean
+  },
+  data: () => ({
+    ready: false,
+    token: null,
+    authExpired: false,
+    messages: [],
+    page: 1,
+    total: 0,
+    loading: false,
+    error: "",
+    failedPage: 1,
+    version: 0,
+    epoch: 0
+  }),
+  computed: {
+    loginUrl() {
+      return {
+        path: "/login",
+        query: {
+          redirect: this.embedded ? "/me/messages?tab=activity" : "/read/activities"
+        }
+      };
+    },
+    totalPages() {
+      return Math.max(1, Math.ceil(this.total / 20));
+    }
+  },
+  mounted() {
+    this.ready = true;
+    this.checkAccount();
+    window.addEventListener("storage", this.storage);
+    window.addEventListener("focus", this.checkAccount);
+    window.addEventListener("auth-state-changed", this.checkAccount);
+  },
+  beforeDestroy() {
+    this.version++;
+    this.epoch++;
+    window.removeEventListener("storage", this.storage);
+    window.removeEventListener("focus", this.checkAccount);
+    window.removeEventListener("auth-state-changed", this.checkAccount);
+  },
+  methods: {
+    storage(event) {
+      if (event.key === "token") this.checkAccount();
+    },
+    checkAccount() {
+      const token = Object(reading["c" /* readingToken */])();
+      if (token === this.token) return;
+      this.epoch++;
+      this.version++;
+      Object.assign(this, {
+        token,
+        authExpired: false,
+        messages: [],
+        page: 1,
+        total: 0,
+        loading: false,
+        error: "",
+        failedPage: 1
+      });
+      if (token) this.load(1);
+    },
+    current(token, epoch, version) {
+      return token === Object(reading["c" /* readingToken */])() && token === this.token && epoch === this.epoch && version === this.version;
+    },
+    async load(page = 1) {
+      if (!this.token || this.authExpired) return;
+      const token = this.token,
+        epoch = this.epoch,
+        version = ++this.version;
+      this.loading = true;
+      this.error = "";
+      this.failedPage = page;
+      try {
+        const raw = await this.$api.reader.activityMessages(page);
+        if (!this.current(token, epoch, version)) return;
+        const result = Object(reader_activities["a" /* activityMessagePage */])(raw, page, 20, "https://m.loghome.ink");
+        if (page > 1 && !result.messages.length) return this.load(1);
+        this.messages = result.messages;
+        this.total = result.total;
+        this.page = page;
+      } catch (error) {
+        if (!this.current(token, epoch, version)) return;
+        this.error = error.message || "活动消息加载失败";
+        if ([401, 403].includes(error.status)) {
+          this.authExpired = true;
+          this.messages = [];
+          this.total = 0;
+        }
+      } finally {
+        if (this.current(token, epoch, version)) this.loading = false;
+      }
+    },
+    date(value) {
+      const date = new Date(value);
+      return Number.isFinite(date.getTime()) ? date.toLocaleString("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        hour12: false
+      }) : "时间未提供";
+    }
+  }
+});
+// CONCATENATED MODULE: ./components/read/ReaderActivityInbox.vue?vue&type=script&lang=js
+ /* harmony default export */ var read_ReaderActivityInboxvue_type_script_lang_js = (ReaderActivityInboxvue_type_script_lang_js); 
+// EXTERNAL MODULE: ./node_modules/vue-loader/lib/runtime/componentNormalizer.js
+var componentNormalizer = __webpack_require__(2);
+
+// CONCATENATED MODULE: ./components/read/ReaderActivityInbox.vue
+
+
+
+function injectStyles (context) {
+  
+  var style0 = __webpack_require__(247)
+if (style0.__inject__) style0.__inject__(context)
+
+}
+
+/* normalize component */
+
+var component = Object(componentNormalizer["a" /* default */])(
+  read_ReaderActivityInboxvue_type_script_lang_js,
+  render,
+  staticRenderFns,
+  false,
+  injectStyles,
+  "346ec8a2",
+  "47f196b4"
+  
+)
+
+/* harmony default export */ var ReaderActivityInbox = __webpack_exports__["a"] = (component.exports);
+
+/***/ }),
+
+/***/ 596:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -209,190 +364,18 @@ var staticRenderFns = [];
 
 // CONCATENATED MODULE: ./pages/read/activities.vue?vue&type=template&id=68bdef60
 
-// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib/loaders/templateLoader.js??ref--6!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderActivityInbox.vue?vue&type=template&id=82d3fd12&scoped=true
-var ReaderActivityInboxvue_type_template_id_82d3fd12_scoped_true_render = function render() {
-  var _vm = this,
-    _c = _vm._self._c;
-  return _c('section', {
-    staticClass: "activity-inbox"
-  }, [_vm._ssrNode("<header data-v-82d3fd12>", "</header>", [_vm._ssrNode("<div data-v-82d3fd12>", "</div>", [_c('nuxt-link', {
-    attrs: {
-      "to": "/read/resources"
-    }
-  }, [_vm._v("← 获取原木")]), _vm._ssrNode("<h1 data-v-82d3fd12>活动消息</h1><p data-v-82d3fd12>社区活动的参与条件、截止时间与奖励说明。</p>")], 2), _vm._ssrNode(_vm.token && !_vm.authExpired ? "<button" + _vm._ssrAttr("disabled", _vm.loading) + " data-v-82d3fd12>" + _vm._ssrEscape(_vm._s(_vm.loading ? '刷新中…' : '刷新消息')) + "</button>" : "<!---->")], 2), _vm._ssrNode(" "), !_vm.ready ? _vm._ssrNode("<div class=\"state\" data-v-82d3fd12>", "</div>", [_vm._ssrNode("正在准备消息列表…")], 2) : !_vm.token || _vm.authExpired ? _vm._ssrNode("<div class=\"state\" data-v-82d3fd12>", "</div>", [_vm._ssrNode("<h2 data-v-82d3fd12>" + _vm._ssrEscape(_vm._s(_vm.authExpired ? '登录状态已过期' : '登录后查看活动消息')) + "</h2><p data-v-82d3fd12>活动消息与账号关联，登录后可查看收到的通知。</p>"), _c('nuxt-link', {
-    attrs: {
-      "to": _vm.loginUrl
-    }
-  }, [_vm._v("前往登录 →")])], 2) : [_vm._ssrNode((_vm.error ? "<p role=\"alert\" class=\"error\" data-v-82d3fd12>" + _vm._ssrEscape(_vm._s(_vm.error) + " ") + "<button" + _vm._ssrAttr("disabled", _vm.loading) + " data-v-82d3fd12>重试</button></p>" : "<!---->") + "<p aria-live=\"polite\" class=\"summary\" data-v-82d3fd12>" + _vm._ssrEscape(_vm._s(_vm.loading ? '正在读取活动消息…' : `共 ${_vm.total} 条活动消息 · 最新消息在前`)) + "</p>"), _vm._ssrNode("<div" + _vm._ssrAttr("aria-busy", _vm.loading) + " class=\"message-grid\" data-v-82d3fd12>", "</div>", _vm._l(_vm.messages, function (item) {
-    return _vm._ssrNode("<article data-v-82d3fd12>", "</article>", [_vm._ssrNode(item.bg_url ? "<img" + _vm._ssrAttr("src", item.bg_url) + " alt loading=\"lazy\" data-v-82d3fd12>" : "<!---->"), _vm._ssrNode("<div class=\"message-body\" data-v-82d3fd12>", "</div>", [_vm._ssrNode("<time" + _vm._ssrAttr("datetime", item.time) + " data-v-82d3fd12>" + _vm._ssrEscape(_vm._s(_vm.date(item.time))) + "</time><p data-v-82d3fd12>" + _vm._ssrEscape(_vm._s(item.message_content)) + "</p>"), item.link && !item.link.external ? _c('nuxt-link', {
-      attrs: {
-        "to": item.link.href
-      }
-    }, [_vm._v("查看活动详情 →")]) : item.link ? _c('a', {
-      attrs: {
-        "href": item.link.href,
-        "target": "_blank",
-        "rel": "noopener noreferrer"
-      }
-    }, [_vm._v("查看活动详情 ↗")]) : _c('span', {
-      staticClass: "quiet"
-    }, [_vm._v("这条通知暂无详情链接")])], 2)], 2);
-  }), 0), _vm._ssrNode((!_vm.loading && !_vm.error && !_vm.messages.length ? "<p class=\"state\" data-v-82d3fd12>暂无活动消息</p>" : "<!---->") + (_vm.totalPages > 1 ? "<nav aria-label=\"活动消息分页\" data-v-82d3fd12><button" + _vm._ssrAttr("disabled", _vm.loading || _vm.page <= 1) + " data-v-82d3fd12>上一页</button><span data-v-82d3fd12>" + _vm._ssrEscape("第 " + _vm._s(_vm.page) + " / " + _vm._s(_vm.totalPages) + " 页") + "</span><button" + _vm._ssrAttr("disabled", _vm.loading || _vm.page >= _vm.totalPages) + " data-v-82d3fd12>下一页</button></nav>" : "<!---->"))]], 2);
-};
-var ReaderActivityInboxvue_type_template_id_82d3fd12_scoped_true_staticRenderFns = [];
+// EXTERNAL MODULE: ./components/read/ReaderActivityInbox.vue + 4 modules
+var ReaderActivityInbox = __webpack_require__(289);
 
-// CONCATENATED MODULE: ./components/read/ReaderActivityInbox.vue?vue&type=template&id=82d3fd12&scoped=true
-
-// EXTERNAL MODULE: ./plugins/api/reading.js
-var reading = __webpack_require__(1);
-
-// EXTERNAL MODULE: ./utils/reader-activities.js
-var reader_activities = __webpack_require__(197);
-
-// CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./components/read/ReaderActivityInbox.vue?vue&type=script&lang=js
-
-
-/* harmony default export */ var ReaderActivityInboxvue_type_script_lang_js = ({
-  data: () => ({
-    ready: false,
-    token: null,
-    authExpired: false,
-    messages: [],
-    page: 1,
-    total: 0,
-    loading: false,
-    error: '',
-    failedPage: 1,
-    version: 0,
-    epoch: 0
-  }),
-  computed: {
-    loginUrl() {
-      return {
-        path: '/login',
-        query: {
-          redirect: '/read/activities'
-        }
-      };
-    },
-    totalPages() {
-      return Math.max(1, Math.ceil(this.total / 20));
-    }
-  },
-  mounted() {
-    this.ready = true;
-    this.checkAccount();
-    window.addEventListener('storage', this.storage);
-    window.addEventListener('focus', this.checkAccount);
-    window.addEventListener('auth-state-changed', this.checkAccount);
-  },
-  beforeDestroy() {
-    this.version++;
-    this.epoch++;
-    window.removeEventListener('storage', this.storage);
-    window.removeEventListener('focus', this.checkAccount);
-    window.removeEventListener('auth-state-changed', this.checkAccount);
-  },
-  methods: {
-    storage(event) {
-      if (event.key === 'token') this.checkAccount();
-    },
-    checkAccount() {
-      const token = Object(reading["c" /* readingToken */])();
-      if (token === this.token) return;
-      this.epoch++;
-      this.version++;
-      Object.assign(this, {
-        token,
-        authExpired: false,
-        messages: [],
-        page: 1,
-        total: 0,
-        loading: false,
-        error: '',
-        failedPage: 1
-      });
-      if (token) this.load(1);
-    },
-    current(token, epoch, version) {
-      return token === Object(reading["c" /* readingToken */])() && token === this.token && epoch === this.epoch && version === this.version;
-    },
-    async load(page = 1) {
-      if (!this.token || this.authExpired) return;
-      const token = this.token,
-        epoch = this.epoch,
-        version = ++this.version;
-      this.loading = true;
-      this.error = '';
-      this.failedPage = page;
-      try {
-        const raw = await this.$api.reader.activityMessages(page);
-        if (!this.current(token, epoch, version)) return;
-        const result = Object(reader_activities["a" /* activityMessagePage */])(raw, page, 20, "https://m.loghome.ink");
-        if (page > 1 && !result.messages.length) return this.load(1);
-        this.messages = result.messages;
-        this.total = result.total;
-        this.page = page;
-      } catch (error) {
-        if (!this.current(token, epoch, version)) return;
-        this.error = error.message || '活动消息加载失败';
-        if ([401, 403].includes(error.status)) {
-          this.authExpired = true;
-          this.messages = [];
-          this.total = 0;
-        }
-      } finally {
-        if (this.current(token, epoch, version)) this.loading = false;
-      }
-    },
-    date(value) {
-      const date = new Date(value);
-      return Number.isFinite(date.getTime()) ? date.toLocaleString('zh-CN', {
-        timeZone: 'Asia/Shanghai',
-        hour12: false
-      }) : '时间未提供';
-    }
-  }
-});
-// CONCATENATED MODULE: ./components/read/ReaderActivityInbox.vue?vue&type=script&lang=js
- /* harmony default export */ var read_ReaderActivityInboxvue_type_script_lang_js = (ReaderActivityInboxvue_type_script_lang_js); 
-// EXTERNAL MODULE: ./node_modules/vue-loader/lib/runtime/componentNormalizer.js
-var componentNormalizer = __webpack_require__(2);
-
-// CONCATENATED MODULE: ./components/read/ReaderActivityInbox.vue
-
-
-
-function injectStyles (context) {
-  
-  var style0 = __webpack_require__(328)
-if (style0.__inject__) style0.__inject__(context)
-
-}
-
-/* normalize component */
-
-var component = Object(componentNormalizer["a" /* default */])(
-  read_ReaderActivityInboxvue_type_script_lang_js,
-  ReaderActivityInboxvue_type_template_id_82d3fd12_scoped_true_render,
-  ReaderActivityInboxvue_type_template_id_82d3fd12_scoped_true_staticRenderFns,
-  false,
-  injectStyles,
-  "82d3fd12",
-  "47f196b4"
-  
-)
-
-/* harmony default export */ var ReaderActivityInbox = (component.exports);
 // EXTERNAL MODULE: ./utils/reading-seo.js
-var reading_seo = __webpack_require__(34);
+var reading_seo = __webpack_require__(39);
 
 // CONCATENATED MODULE: ./node_modules/babel-loader/lib??ref--2-0!./node_modules/vue-loader/lib??vue-loader-options!./pages/read/activities.vue?vue&type=script&lang=js
 
 
 /* harmony default export */ var activitiesvue_type_script_lang_js = ({
   components: {
-    ReaderActivityInbox: ReaderActivityInbox
+    ReaderActivityInbox: ReaderActivityInbox["a" /* default */]
   },
   head: () => Object(reading_seo["d" /* readingHead */])({
     title: '活动消息 - 原木社区',
@@ -403,6 +386,9 @@ var reading_seo = __webpack_require__(34);
 });
 // CONCATENATED MODULE: ./pages/read/activities.vue?vue&type=script&lang=js
  /* harmony default export */ var read_activitiesvue_type_script_lang_js = (activitiesvue_type_script_lang_js); 
+// EXTERNAL MODULE: ./node_modules/vue-loader/lib/runtime/componentNormalizer.js
+var componentNormalizer = __webpack_require__(2);
+
 // CONCATENATED MODULE: ./pages/read/activities.vue
 
 
@@ -411,7 +397,7 @@ var reading_seo = __webpack_require__(34);
 
 /* normalize component */
 
-var activities_component = Object(componentNormalizer["a" /* default */])(
+var component = Object(componentNormalizer["a" /* default */])(
   read_activitiesvue_type_script_lang_js,
   render,
   staticRenderFns,
@@ -422,7 +408,7 @@ var activities_component = Object(componentNormalizer["a" /* default */])(
   
 )
 
-/* harmony default export */ var activities = __webpack_exports__["default"] = (activities_component.exports);
+/* harmony default export */ var activities = __webpack_exports__["default"] = (component.exports);
 
 /***/ })
 
