@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#1e5cb3"/>
+  <path d="M32 12 L50 19 V33 C50 44 42 50.5 32 54 C22 50.5 14 44 14 33 V19 Z" fill="#ffffff"/>
+  <path d="M32 17 L45 22 V33 C45 41 39 46 32 49 C25 46 19 41 19 33 V22 Z" fill="#1e5cb3"/>
+  <text x="32" y="41" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">举</text>
+</svg>

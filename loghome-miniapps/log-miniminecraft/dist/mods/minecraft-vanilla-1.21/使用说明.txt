@@ -1,0 +1,22 @@
+Minecraft 原版方块材质 · Java 1.21
+
+打开游戏后，模组会自动安装到当前浏览器的本地模组数据库。
+在主菜单“模组”中可查看；创建存档时在“模组包”列表中勾选本模组，
+然后创建并进入游戏。覆盖现有 17 种方块的 6 面材质与物品栏图标。
+已有存档可通过存档管理中的模组配置选择本模组。
+如果只想使用原版材质，可以取消其他可能覆盖同一方块的模组。
+
+素材来自 Mojang 官方 Minecraft Java 1.21 客户端：
+https://piston-data.mojang.com/v1/objects/0e9a07b9bb3390602f977073aa12884a4ce12431/client.jar
+客户端 SHA-1 已校验为 0e9a07b9bb3390602f977073aa12884a4ce12431。
+textures/block 保存 1012 张原始方块贴图及动画元数据，未经改动。
+rendered 保存为当前应用生成的草地/树叶/水着色版本和拼接后的橡木门。
+模组实际引用 27 张材质，覆盖草地、泥土、石头、沙子、雪、冰、原木、
+树叶、木板、仙人掌、工作台、熔炉、木桶、火把、门、基岩与水。
+水使用动画第一帧；当前应用不能直接使用 Minecraft 的 .mcmeta 动画。
+原始贴图版权属于 Mojang Studios。本地模组是此应用的数据格式，
+不是用于原版 Minecraft 客户端的 Forge/Fabric 模组。
+
+构建脚本：项目根目录 build_vanilla_mod.py
+安装器源文件：项目根目录 vanilla_mod_install.js
+程序修改前备份：项目 .runtime/minecraft-before-vanilla.js

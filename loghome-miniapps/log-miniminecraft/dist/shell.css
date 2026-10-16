@@ -1,0 +1,37 @@
+html,body,#root{width:100%;height:100%;margin:0;overflow:hidden;background:#111827}
+#game-loading{position:fixed;inset:0;z-index:100002;display:grid;place-items:center;box-sizing:border-box;padding:32px 24px;background:radial-gradient(ellipse at 50% 25%,#293e32 0,#15251e 50%,#101c17 100%);color:#edf3df;font-family:system-ui,-apple-system,sans-serif}
+#game-loading[hidden]{display:none}
+.loading-card{width:min(100%,380px);text-align:center}
+.loading-block{width:68px;height:62px;margin:0 auto 30px;position:relative;background:linear-gradient(#80a856 0 27%,#70503c 27%);border:4px solid #111c16;box-shadow:inset -12px 0 #0002,6px 6px #070f0b80;transform:rotate(-8deg);image-rendering:pixelated}
+.loading-block span{position:absolute;inset:27% 0 0;background:repeating-conic-gradient(#ffffff0c 0 25%,transparent 0 50%) 0 0/20px 20px}
+.loading-eyebrow{font-size:10px;letter-spacing:3px;color:#a2b49b;margin:0 0 12px}
+#loading-title{font-size:clamp(24px,5vw,32px);letter-spacing:3px;margin:0 0 26px}
+#loading-stage{min-height:24px;font-size:15px;margin:0 0 18px}
+#loading-progress{display:block;width:100%;height:12px;border:1px solid #8dba6650;border-radius:3px;overflow:hidden;background:#09150d;appearance:none}
+#loading-progress::-webkit-progress-bar{background:#09150d}
+#loading-progress::-webkit-progress-value{background:#91bc68;transition:width .25s}
+#loading-progress::-moz-progress-bar{background:#91bc68}
+.loading-meta{display:flex;justify-content:space-between;margin-top:9px;font-size:12px;color:#b8c6ad;font-variant-numeric:tabular-nums}
+.loading-dots{font-weight:bold;letter-spacing:4px;animation:loading-pulse 1.2s ease-in-out infinite}
+#loading-hint{font-size:12px;line-height:1.8;color:#9aad99;margin-top:24px;overflow-wrap:anywhere}
+#game-loading[data-error="true"] #loading-stage,#game-loading[data-error="true"] #loading-hint{color:#f1b2a5}
+#game-loading[data-error="true"] .loading-dots{display:none}
+@keyframes loading-pulse{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.loading-dots{animation:none}#loading-progress::-webkit-progress-value{transition:none}}
+@media(max-height:420px){.loading-block{width:40px;height:36px;margin-bottom:16px}#loading-title{margin-bottom:16px}#loading-hint{margin-top:12px}}
+#cloud-status{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:100000;color:#fff;background:#263449;padding:12px 16px;border:2px solid #70965f;border-radius:8px;font:14px/1.5 system-ui;box-shadow:3px 3px #070c14;cursor:pointer}
+#cloud-status[data-error="true"]{border-color:#f59d8d;background:#493037}
+#cloud-status:empty{display:none}
+
+/* Pause button: right 16px, width 48px. Leave a 12px gap to its left. */
+.log-minecraft-fps{position:fixed;top:calc(26px + max(env(safe-area-inset-top,0px),var(--flash-app-safe-area-inset-top,0px)));right:calc(76px + max(env(safe-area-inset-right,0px),var(--flash-app-safe-area-inset-right,0px)));z-index:10001;padding:5px 8px;min-width:58px;border:1px solid #ffffff30;border-radius:5px;background:#111827b8;color:#e5f6d5;font:600 12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums;text-align:right;pointer-events:none;user-select:none}
+.log-target-fps{margin:14px 0 4px;padding:10px 12px;background:rgba(79,195,247,.08);border-radius:12px;color:#e5edf5}
+.log-target-fps-title{font-size:13px;margin-bottom:8px}
+.log-target-fps-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.log-target-fps-options button{min-height:36px;padding:6px 2px;border:1px solid #ffffff30;border-radius:8px;background:#ffffff12;color:#e5edf5;font:600 12px/1.4 system-ui;cursor:pointer;touch-action:manipulation}
+.log-target-fps-options button[aria-pressed="true"]{background:#4fc3f7;border-color:#4fc3f7;color:#0f172a}
+.log-target-fps-options button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.log-target-fps p{margin:8px 0 0;font-size:11px;line-height:1.5;color:#a7b5c8}
+.log-quality-toggle{display:block;width:100%;margin:6px 0;min-height:36px;border:1px solid #ffffff30;border-radius:8px;background:#ffffff12;color:#e5edf5;text-align:left;padding:8px 10px;cursor:pointer}
+.log-quality-toggle[aria-pressed="true"]{border-color:#4fc3f7;color:#8cddff}
+.log-quality-toggle:focus-visible{outline:2px solid #fff;outline-offset:2px}
