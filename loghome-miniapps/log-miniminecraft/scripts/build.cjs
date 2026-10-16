@@ -8,7 +8,7 @@ function patchBundle(source){
  source=source.replace(/\r\n?/g,'\n');
  // Defaults only: valid preferences already saved by the player keep priority.
  for(const [before,after]of [
-  ['localStorage.getItem(RENDER_RADIUS_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=2&&Ge<=64)return Ge}return 5','localStorage.getItem(RENDER_RADIUS_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=2&&Ge<=64)return Ge}return 32'],
+  ['localStorage.getItem(RENDER_RADIUS_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=2&&Ge<=64)return Ge}return 5','localStorage.getItem(RENDER_RADIUS_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=2&&Ge<=64)return Ge}return 24'],
   ['localStorage.getItem(CHUNKS_PER_BATCH_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=1&&Ge<=10)return Ge}return 1','localStorage.getItem(CHUNKS_PER_BATCH_KEY);if(oe!==null){const Ge=Number(oe);if(!isNaN(Ge)&&Ge>=1&&Ge<=10)return Ge}return 10']
  ]){if(source.split(before).length!==2)throw Error('Game default boundary changed: '+before);source=source.replace(before,after)}
  function replaceFunction(name,body){
@@ -69,7 +69,8 @@ function patchBundle(source){
  source=source.replace(/https?:\/\/[^\s"'<>`\\)]+/g,url=>{
   try{const u=new URL(url),local=path.join(root,'public/index_files',u.hostname,decodeURIComponent(u.pathname));if(fs.existsSync(local)&&fs.statSync(local).isFile())return './'+path.relative(path.dirname(path.join(root,'public',BUNDLE)),local).split(path.sep).join('/');}catch{}return url;
  });
- return require('./trees.cjs').patchTrees(require('./motion.cjs').patchMotion(require('./visual-quality.cjs').patchVisualQuality(require('./frame-rate.cjs').patchFrameRate(require('./fps-overlay.cjs').patchFpsOverlay(require('./performance-patches.cjs').patchPerformance(source))))));
+ source=require('./inventory.cjs').patchInventory(source);
+ return require('./swimming.cjs').patchSwimming(require('./pixel-ui.cjs').patchPixelUi(require('./population.cjs').patchPopulation(require('./trees.cjs').patchTrees(require('./motion.cjs').patchMotion(require('./visual-quality.cjs').patchVisualQuality(require('./frame-rate.cjs').patchFrameRate(require('./fps-overlay.cjs').patchFpsOverlay(require('./performance-patches.cjs').patchPerformance(source)))))))));
 }
 function build(outputDir=dist){const patched=patchBundle(fs.readFileSync(path.join(root,'vendor/game.bundle.js'),'utf8'));fs.rmSync(outputDir,{recursive:true,force:true});fs.cpSync(path.join(root,'public'),outputDir,{recursive:true});for(const name of ['bootstrap.js','cloud-storage.js','loading.js'])fs.copyFileSync(path.join(root,'src',name),path.join(outputDir,name));const file=path.join(outputDir,BUNDLE);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,patched);validateStaticAssets(outputDir);console.log('Built Log MiniMinecraft → '+outputDir);}
 if(require.main===module)build();module.exports={patchBundle,build,BUNDLE};

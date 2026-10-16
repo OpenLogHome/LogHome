@@ -55,14 +55,14 @@ export default {
   position: relative;
   width: 112px;
   height: 112px;
-  border: 1px dashed #cbb79b;
+  border: 1px dashed var(--line, #e2e6eb);
   border-radius: 12px;
   overflow: hidden;
-  background: #f7f1e9;
+  background: var(--soft, #f1f3f5);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--wood, #947358);
+  color: var(--wood, #c65320);
   font-size: 13px;
 }
 .social-image-upload.wide .el-upload {
@@ -82,6 +82,6 @@ export default {
   inset: 0;
   display: grid;
   place-items: center;
-  background: #fffdf9cc;
+  background: var(--surface, #ffffff);
 }
 </style>

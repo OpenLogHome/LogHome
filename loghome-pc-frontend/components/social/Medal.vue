@@ -85,9 +85,9 @@ export default {
 }
 .medal-back {
   transform: rotateY(180deg);
-  background: var(--soft, #f2e9dd);
+  background: var(--soft, #f1f3f5);
   border: 2px solid #b99863;
-  color: var(--ink, #382d25);
+  color: var(--ink, #30343b);
   padding: 25px;
   flex-direction: column;
   gap: 16px;

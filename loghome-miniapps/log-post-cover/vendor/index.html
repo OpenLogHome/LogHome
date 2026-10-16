@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f8fa">
+<title>封面文字图生成器</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{touch-action:manipulation}
+html,body{margin:0;height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.5;color:#1b2733;background:#e7eaee;
+  overscroll-behavior:none;-webkit-text-size-adjust:100%;-webkit-touch-callout:none;
+}
+.app{height:100%;height:100dvh;display:flex;flex-direction:column;max-width:520px;margin:0 auto;background:#f7f8fa;overflow:hidden}
+
+/* ---- 预览 ---- */
+.stage{flex:0 1 auto;min-height:0;max-height:44dvh;display:flex;flex-direction:column;
+       align-items:center;justify-content:center;
+       padding:calc(12px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 16px 2px}
+canvas#cv{max-width:100%;max-height:100%;width:auto;height:auto;aspect-ratio:3/4;
+  border-radius:14px;box-shadow:0 8px 26px rgba(18,56,75,.15);touch-action:none;display:block;
+  background:#fff}
+.hint{flex:0 0 auto;text-align:center;font-size:11.5px;color:#93a1b0;padding:7px 16px 2px}
+.hint b{color:#c9a227;font-weight:700}
+
+/* ---- 分段控件 ---- */
+.tabs{flex:0 0 auto;display:flex;gap:5px;padding:5px;margin:6px 16px 0;background:#e9ecf1;border-radius:13px}
+.tabs button{flex:1;border:0;background:transparent;padding:9px 0;border-radius:9px;
+  font-size:14px;font-weight:600;color:#66788a;font-family:inherit}
+.tabs button.on{background:#fff;color:#12384b;box-shadow:0 1px 4px rgba(18,56,75,.13)}
+
+/* ---- 面板 ---- */
+.panels{flex:1 1 auto;min-height:64px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 4px}
+.panel{display:none}.panel.on{display:block}
+.row{margin-bottom:12px}
+.row>label{display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;font-weight:600;color:#8493a2;margin-bottom:8px;letter-spacing:.03em}
+.row>label span{color:#b6c1cc;font-weight:500}
+textarea{width:100%;height:84px;border:1px solid #dfe4ea;border-radius:12px;padding:11px 12px;
+  font-family:inherit;font-size:16px;line-height:1.6;resize:none;background:#fff;color:#1b2733;
+  outline:none;-webkit-appearance:none}
+textarea:focus{border-color:#12384b}
+input[type=text]{width:100%;border:1px solid #dfe4ea;border-radius:11px;padding:10px 12px;
+  font-family:inherit;font-size:16px;background:#fff;color:#1b2733;outline:none;-webkit-appearance:none}
+input[type=text]:focus{border-color:#12384b}
+
+.swatches{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.sw{width:38px;height:38px;border-radius:12px;border:2.5px solid transparent;padding:0;
+  box-shadow:inset 0 0 0 1px rgba(18,56,75,.09)}
+.sw.on{border-color:#12384b}
+.sw.custom{position:relative;overflow:hidden;
+  background:conic-gradient(from .25turn,#ff8a8a,#ffd66b,#8fe3a5,#7cc7f5,#b79bf0,#ff8a8a)}
+.sw.custom input{position:absolute;inset:-8px;opacity:0;border:0;padding:0}
+
+/* 横滑选择条：纹理缩略图 / 字体样张共用 */
+.fontlist{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:2px 16px 4px;margin:0 -16px}
+.fontlist::-webkit-scrollbar{display:none}
+.fontlist .chip{flex:0 0 auto;font-size:17px;padding:6px 16px;line-height:1.5}
+
+.texlist{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:2px 16px 4px;margin:0 -16px}
+.texlist::-webkit-scrollbar{display:none}
+.tex{flex:0 0 auto;border:0;background:transparent;padding:0;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:5px}
+.tex i{display:block;line-height:0;border:2.5px solid transparent;border-radius:12px}
+.tex canvas{width:52px;height:69px;border-radius:9px;display:block;
+  box-shadow:inset 0 0 0 1px rgba(18,56,75,.10)}
+.tex span{font-size:11px;font-weight:600;color:#93a1b0;white-space:nowrap}
+.tex.on i{border-color:#12384b}
+.tex.on span{color:#12384b}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid #dfe4ea;background:#fff;border-radius:999px;padding:7px 14px;
+  font-size:13px;font-weight:600;color:#66788a;font-family:inherit}
+.chip.on{background:#12384b;border-color:#12384b;color:#fff}
+.chip.g{min-width:44px;text-align:center;font-size:16px;padding:6px 10px}
+
+input[type=range]{width:100%;-webkit-appearance:none;background:transparent;margin:2px 0}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#dfe4ea}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 5px rgba(18,56,75,.3);margin-top:-8.5px;border:0}
+input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#dfe4ea}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:0;
+  box-shadow:0 1px 5px rgba(18,56,75,.3)}
+
+.switch{display:flex;align-items:center;justify-content:space-between;
+  background:#fff;border:1px solid #dfe4ea;border-radius:12px;padding:11px 13px;font-size:14px;font-weight:600;color:#3d4d5c}
+.switch i{width:44px;height:26px;border-radius:999px;background:#dfe4ea;position:relative;transition:background .18s;flex:0 0 auto}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.22);transition:transform .18s}
+.switch.on i{background:#12384b}
+.switch.on i::after{transform:translateX(18px)}
+
+/* ---- 底部按钮 ---- */
+.actions{flex:0 0 auto;display:flex;gap:10px;padding:10px 16px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  background:#f7f8fa;border-top:1px solid #ebeef2}
+.btn{flex:1;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:700;
+  background:#12384b;color:#fff;font-family:inherit}
+.btn:active{opacity:.85}
+.btn.ghost{flex:0 0 auto;background:#eceff3;color:#66788a;padding:14px 15px;font-size:14px;white-space:nowrap}
+
+/* ---- toast ---- */
+.toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,10px);background:rgba(18,40,55,.94);
+  color:#fff;font-size:13.5px;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;
+  transition:opacity .22s,transform .22s;z-index:60;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage"><canvas id="cv" width="1080" height="1440"></canvas></div>
+  <div class="hint">在图上<b>点一下</b>或<b>划一道</b> → 给文字加高亮底色</div>
+
+  <div class="tabs">
+    <button data-tab="t" class="on">文字</button>
+    <button data-tab="b">背景</button>
+    <button data-tab="s">贴纸</button>
+  </div>
+
+  <div class="panels">
+    <div class="panel on" data-panel="t">
+      <div class="row">
+        <label>字体<span id="fontNote"></span></label>
+        <div class="fontlist" id="fontlist"></div>
+      </div>
+      <div class="row">
+        <label>文案<span>换行 = 分行</span></label>
+        <textarea id="text" placeholder="输入文字，自己控制换行"></textarea>
+      </div>
+      <div class="row">
+        <label>高亮<span>颜色与笔触</span></label>
+        <div class="swatches" id="hlSwatches"></div>
+        <div class="chips" id="hlBrush" style="margin-top:9px"></div>
+      </div>
+      <div class="row"><div class="chips">
+        <button class="chip" id="clearHl">清除全部高亮</button>
+      </div></div>
+    </div>
+
+    <div class="panel" data-panel="b">
+      <div class="row">
+        <label>背景色<span>文字色与贴纸色自动匹配</span></label>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <div class="row">
+        <label>纹理<span>颜色随底色自动匹配</span></label>
+        <div class="texlist" id="texture"></div>
+      </div>
+    </div>
+
+    <div class="panel" data-panel="s">
+      <div class="row">
+        <label>贴纸内容<span>任意文字或 emoji</span></label>
+        <input type="text" id="skChar" maxlength="4" placeholder="? ！ ¥ ★ 🔥 …">
+        <div class="chips" id="skPresets" style="margin-top:9px"></div>
+      </div>
+      <div class="row">
+        <label>排布</label>
+        <div class="chips" id="skLayout"></div>
+      </div>
+      <div class="row">
+        <label>大小<span id="vSize">100%</span></label>
+        <input type="range" id="skSize" min="40" max="200" step="5">
+      </div>
+      <div class="row">
+        <label>旋转<span id="vRot">100%</span></label>
+        <input type="range" id="skRot" min="0" max="250" step="10">
+      </div>
+      <div class="row">
+        <label>浓度<span id="vOpa">100%</span></label>
+        <input type="range" id="skOpa" min="10" max="100" step="5">
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="save">保存图片</button>
+    <button class="btn ghost" id="reset">清空并恢复默认</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="./app.js"></script>
+</body>
+</html>

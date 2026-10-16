@@ -261,8 +261,8 @@ export default {
   margin-bottom: 22px;
 }
 .hot-words button {
-  background: #f3eadf;
-  color: #704c35;
+  background: var(--soft, #f1f3f5);
+  color: var(--wood, #c65320);
   border: 0;
   padding: 10px 16px;
   border-radius: 8px;

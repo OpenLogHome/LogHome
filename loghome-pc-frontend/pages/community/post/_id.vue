@@ -85,10 +85,12 @@
                 <span>{{ post.comment_count || 0 }}</span>
               </div>
               <div class="action-btn" @click="likePost" :class="{ liked: post.is_liked }">
-                <i
-                  :class="post.is_liked ? 'el-icon-star-on' : 'el-icon-star-off'"
+                <SiteIcon
+                  name="heart"
+                  :filled="!!post.is_liked"
+                  class="like-icon"
                   :style="{ color: post.is_liked ? '#EA7034' : '#666' }"
-                ></i>
+                />
                 <span :class="{ liked: post.is_liked }">{{ post.like_count || 0 }}</span>
               </div>
               <div class="action-btn" @click="sharePost">
@@ -192,10 +194,12 @@
                     @click="likeComment(comment)"
                     :class="{ liked: comment.is_liked }"
                   >
-                    <i
-                      :class="comment.is_liked ? 'el-icon-star-on' : 'el-icon-star-off'"
+                    <SiteIcon
+                      name="heart"
+                      :filled="!!comment.is_liked"
+                      class="like-icon"
                       :style="{ color: comment.is_liked ? '#EA7034' : '#666' }"
-                    ></i>
+                    />
                     <span :class="{ liked: comment.is_liked }">{{
                       comment.like_count || 0
                     }}</span>
@@ -280,12 +284,14 @@
                         @click="likeComment(reply)"
                         :class="{ liked: reply.is_liked }"
                       >
-                        <i
-                          :class="reply.is_liked ? 'el-icon-star-on' : 'el-icon-star-off'"
+                        <SiteIcon
+                          name="heart"
+                          :filled="!!reply.is_liked"
+                          class="like-icon"
                           :style="{
                             color: reply.is_liked ? '#EA7034' : '#666',
                           }"
-                        ></i>
+                        />
                         <span :class="{ liked: reply.is_liked }">{{
                           reply.like_count || 0
                         }}</span>
@@ -363,6 +369,7 @@
 import Workspace from "~/components/social/Workspace.vue";
 import Avatar from "~/components/social/Avatar.vue";
 import CommentComposer from "~/components/social/CommentComposer.vue";
+import SiteIcon from "~/components/ui/SiteIcon.vue";
 import { postShareMessage } from "~/utils/social";
 import social, { socialRequest } from "~/plugins/api/social";
 import moment from "moment";
@@ -370,7 +377,7 @@ import { readingToken } from "~/plugins/api/reading";
 import { saveImageAsReaderSticker } from "~/utils/reader-stickers";
 
 export default {
-  components: { Workspace, Avatar, CommentComposer },
+  components: { Workspace, Avatar, CommentComposer, SiteIcon },
   head() {
     return {
       title: this.post ? `${this.post.title} - LogHome社区` : "LogHome社区",
@@ -1357,6 +1364,10 @@ export default {
 .action-btn i {
   font-size: 20px;
 }
+.action-btn .like-icon {
+  width: 20px;
+  height: 20px;
+}
 
 .post-owner-actions {
   margin-left: auto;
@@ -1524,10 +1535,10 @@ export default {
 .settings-card,
 .post-detail,
 .comments-section {
-  border: 1px solid var(--line, #e9e0d5) !important;
+  border: 1px solid var(--line, #e2e6eb) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
-  background: var(--surface, #fffdf9) !important;
+  background: var(--surface, #ffffff) !important;
 }
 .post-detail-container {
   gap: 22px !important;

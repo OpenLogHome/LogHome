@@ -311,10 +311,10 @@ export default {
   height: calc(100dvh - 230px);
   min-height: 500px;
   position: relative;
-  border: 1px solid var(--line, #e9e0d5);
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 16px;
   overflow: hidden;
-  background: #f7f0e4;
+  background: var(--soft, #f1f3f5);
 }
 .miniapp-container iframe {
   width: 100%;

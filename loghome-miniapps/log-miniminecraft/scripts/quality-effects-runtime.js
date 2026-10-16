@@ -53,9 +53,11 @@ function logCreateEnvironment(day,weather,shadow) {
 }
 function logCreateQualityPipeline(renderer,scene,camera,manager) {
   const size=new Vector2();
-  const makeTarget=(depthOnly=false)=>{const t=new WebGLRenderTarget(1,1,{minFilter:LinearFilter,magFilter:LinearFilter,depthBuffer:true,type:depthOnly?UnsignedByteType:HalfFloatType});t.texture.colorSpace=LinearSRGBColorSpace;t.depthTexture=new DepthTexture(1,1,UnsignedIntType);t.samples=depthOnly?0:Math.min(4,renderer.capabilities.maxSamples);return t};
-  let target=null,opaque=null,advanced=null;
-  const uniforms={logStage:{value:0},logCameraWorld:{value:new Matrix4()},logHorizon:{value:new Color()},logFogDensity:{value:.00065},logFogNear:{value:1e8},logFogFar:{value:1e9},logAdvanced:{value:0},logSamples:{value:16},logBloom:{value:null},logBloomStrength:{value:0},image:{value:null},depthMap:{value:null},resolution:{value:size},nearClip:{value:camera.near},farClip:{value:camera.far},projectionInverse:{value:new Matrix4()},aoEnabled:{value:1}};
+  const colorType=renderer.extensions.has('EXT_color_buffer_float')?HalfFloatType:UnsignedByteType;
+  const makeTarget=(depthOnly=false)=>{const t=new WebGLRenderTarget(1,1,{minFilter:LinearFilter,magFilter:LinearFilter,depthBuffer:true,type:depthOnly?UnsignedByteType:colorType});t.texture.colorSpace=LinearSRGBColorSpace;t.depthTexture=new DepthTexture(1,1,UnsignedIntType);t.samples=depthOnly?0:Math.min(4,renderer.capabilities.maxSamples);return t};
+  let target=null,opaque=null,advanced=null,waterTime=null;
+  const waterLights=[];scene.traverse(object=>{if(object.isLight)waterLights.push(object)});
+  const uniforms={logUnderwater:{value:0},logUnderwaterLight:{value:1},logStage:{value:0},logCameraWorld:{value:new Matrix4()},logHorizon:{value:new Color()},logFogDensity:{value:.00065},logFogNear:{value:1e8},logFogFar:{value:1e9},logAdvanced:{value:0},logSamples:{value:16},logBloom:{value:null},logBloomStrength:{value:0},image:{value:null},depthMap:{value:null},resolution:{value:size},nearClip:{value:camera.near},farClip:{value:camera.far},projectionInverse:{value:new Matrix4()},aoEnabled:{value:1}};
   const material=new ShaderMaterial({depthTest:false,depthWrite:false,toneMapped:true,uniforms,vertexShader:'varying vec2 screenUv;void main(){screenUv=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:logAtmospherePost(logAdvancedPostFragment(`
     precision highp float;
     varying vec2 screenUv;uniform sampler2D image,depthMap;uniform vec2 resolution;uniform mat4 projectionInverse;uniform float nearClip,farClip,aoEnabled;
@@ -71,18 +73,25 @@ function logCreateQualityPipeline(renderer,scene,camera,manager) {
       #include <colorspace_fragment>
     }`))});
   const postScene=new Scene(),postCamera=new OrthographicCamera(-1,1,1,-1,0,1),quad=new Mesh(new PlaneGeometry(2,2),material);postScene.add(quad);
-  const waterUniforms={logOpaqueDepth:{value:null},logResolution:{value:size},logNear:{value:camera.near},logFar:{value:camera.far},logWaterEnabled:{value:0},logAdvancedWater:{value:0},logOpaqueColor:{value:null},logWaterTime:{value:0}};
+  const waterUniforms={logCameraUnderwater:{value:0},logOpaqueDepth:{value:null},logResolution:{value:size},logNear:{value:camera.near},logFar:{value:camera.far},logWaterEnabled:{value:0},logAdvancedWater:{value:0},logOpaqueColor:{value:null},logWaterTime:{value:0}};
   logCreateQualityPipeline.waterUniforms=waterUniforms;
-  return {render(){
+  return {isUnderwater(){return waterUniforms.logCameraUnderwater.value>.5},setUnderwater(wet,now=performance.now()){
+    const dt=waterTime===null?1/60:Math.max(0,Math.min(.1,(now-waterTime)/1000));waterTime=now;
+    const desired=wet?1:0;uniforms.logUnderwater.value+=(desired-uniforms.logUnderwater.value)*(1-Math.exp(-dt*14));
+    if(Math.abs(uniforms.logUnderwater.value-desired)<.001)uniforms.logUnderwater.value=desired;
+    waterUniforms.logCameraUnderwater.value=wet?1:0;
+    return uniforms.logUnderwater.value;
+  },render(){
     if(logAdvancedSettings().enabled&&!advanced&&!logAdvancedSettings.error){const error=logAdvancedCapability(renderer);if(error)logAdvancedError(error)}
-    const active=logAdvancedActive(),options=active?{ao:true,water:true}:logQualitySettings();renderer.getDrawingBufferSize(size);
+    const active=logAdvancedActive(),options=active?{ao:true,water:true}:logQualitySettings(),underwater=uniforms.logUnderwater.value>.001;
+    uniforms.logUnderwaterLight.value=Math.max(.06,Math.min(1,waterLights.reduce((sum,light)=>sum+light.intensity*(light.isDirectionalLight ? .4 : .3),0)));renderer.getDrawingBufferSize(size);
     if(!active&&advanced){advanced.dispose();advanced=null}
     if(opaque&&((opaque.texture.type===HalfFloatType)!==active)){opaque.dispose();opaque=null}
     uniforms.logStage.value=0;uniforms.logCameraWorld.value.copy(camera.matrixWorld);uniforms.logHorizon.value.copy(scene.fog?.color||new Color(0xadc6dc));
     logAtmosphereUniforms().logLeafEnabled.value=active?1:0;
     uniforms.logAdvanced.value=active?1:0;uniforms.logSamples.value=logAdvancedSettings().preset==='high'?24:16;uniforms.logBloomStrength.value=0;
     waterUniforms.logAdvancedWater.value=active?1:0;waterUniforms.logWaterTime.value=performance.now()*.001;
-    if(!options.ao&&!options.water){waterUniforms.logWaterEnabled.value=0;renderer.render(scene,camera);return}
+    if(!options.ao&&!options.water&&!underwater){waterUniforms.logWaterEnabled.value=0;renderer.render(scene,camera);return}
     if(!target)target=makeTarget();if(target.width!==size.x||target.height!==size.y)target.setSize(size.x,size.y);
     const waters=[];manager.getWaterContainers().forEach(list=>list.forEach(item=>{if(item?.mesh.visible)waters.push(item.mesh)}));
     const previous=renderer.getRenderTarget(),auto=renderer.autoClear,tone=renderer.toneMapping,exposure=renderer.toneMappingExposure,shaderError=renderer.debug.onShaderError;
@@ -94,9 +103,10 @@ function logCreateQualityPipeline(renderer,scene,camera,manager) {
         if(!advanced){advanced=logCreateAdvancedResources(renderer,scene,camera);advanced.shadows();advanced.prepare();renderer.compile(postScene,postCamera)}
         advanced.shadows();
       }
-      logAtmosphereUniforms().logBypassLegacyFog.value=active?1:0;
+      if(underwater)logPrepareAtmosphereMaterials(scene);
+      logAtmosphereUniforms().logBypassLegacyFog.value=active||underwater?1:0;
       waterUniforms.logWaterEnabled.value=0;
-      if(active||(options.water&&waters.length)){
+      if(active||((options.water||underwater)&&waters.length)){
         if(!opaque)opaque=makeTarget(!active);if(opaque.width!==size.x||opaque.height!==size.y)opaque.setSize(size.x,size.y);
         for(const mesh of waters)mesh.visible=false;
         renderer.setRenderTarget(opaque);renderer.render(scene,camera);
@@ -158,6 +168,6 @@ function logEnhanceWater(material) {
         diffuseColor.a=mix(.18,.68,deep)+fresnel*.12;
       }`);
   };
-  logAdvancedWaterShader(material);
-  material.customProgramCacheKey=()=> 'log-water-quality-v2';return material;
+  logAdvancedWaterShader(material);logUnderwaterSurface(material);
+  material.customProgramCacheKey=()=> 'log-water-quality-v3';return material;
 }

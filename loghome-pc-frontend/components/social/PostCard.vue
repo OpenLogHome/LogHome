@@ -44,10 +44,11 @@
       ><button
         :class="{ liked }"
         :aria-pressed="liked"
+        :aria-label="$t(liked ? '取消点赞' : '点赞')"
         :disabled="pending"
         @click="toggleLike"
       >
-        <i :class="liked ? 'el-icon-star-on' : 'el-icon-star-off'" />
+        <SiteIcon name="heart" :filled="liked" class="like-icon" />
         {{ count }}</button
       ><button :disabled="sharing" @click="share">
         <i class="el-icon-share" /> {{ $t("分享") }}
@@ -57,13 +58,14 @@
 </template>
 <script>
 import Avatar from "./Avatar.vue";
+import SiteIcon from "~/components/ui/SiteIcon.vue";
 import social from "~/plugins/api/social";
 import { postShareMessage, mediaUrls } from "~/utils/social";
 import { readingToken } from "~/plugins/api/reading";
 import moment from "moment";
 import "moment/locale/zh-cn";
 export default {
-  components: { Avatar },
+  components: { Avatar, SiteIcon },
   props: { post: { type: Object, required: true } },
   data() {
     return {
@@ -151,8 +153,8 @@ export default {
 </script>
 <style scoped>
 .social-post {
-  background: var(--surface, #fffdf9);
-  border: 1px solid var(--line, #e9e0d5);
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 16px;
   padding: 22px;
   margin-bottom: 16px;
@@ -168,7 +170,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--ink, #382d25);
+  color: var(--ink, #30343b);
 }
 .post-author img {
   width: 42px;
@@ -183,18 +185,18 @@ export default {
   display: block;
   margin-top: 5px;
   font-size: 11px;
-  color: #978a7c;
+  color: var(--muted, #6b7280);
 }
 .post-circle {
-  background: #f1e8dc;
-  color: var(--wood, #947358);
+  background: var(--soft, #f1f3f5);
+  color: var(--wood, #c65320);
   padding: 5px 9px;
   border-radius: 6px;
   font-size: 12px;
 }
 .post-body {
   display: block;
-  color: var(--ink, #382d25);
+  color: var(--ink, #30343b);
 }
 .post-body h2 {
   font-size: 19px;
@@ -210,7 +212,7 @@ export default {
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  color: var(--muted, #766858);
+  color: var(--muted, #6b7280);
 }
 .social-post-images {
   display: grid;
@@ -221,7 +223,7 @@ export default {
 }
 .social-post-images button {
   border: 0;
-  background: #f4eee6;
+  background: var(--soft, #f1f3f5);
   padding: 0;
   border-radius: 9px;
   overflow: hidden;
@@ -242,8 +244,8 @@ export default {
 .post-work {
   display: block;
   padding: 12px;
-  background: #f4eee6;
-  color: var(--wood, #947358);
+  background: var(--soft, #f1f3f5);
+  color: var(--wood, #c65320);
   border-radius: 8px;
   font-size: 13px;
   margin-top: 12px;
@@ -251,7 +253,7 @@ export default {
 .social-post footer {
   display: flex;
   gap: 26px;
-  border-top: 1px solid #eee6dc;
+  border-top: 1px solid var(--line, #e2e6eb);
   margin-top: 18px;
   padding-top: 14px;
 }
@@ -259,13 +261,17 @@ export default {
 .social-post footer a {
   background: none;
   border: 0;
-  color: var(--muted, #82766c);
+  color: var(--muted, #6b7280);
   font-size: 13px;
   padding: 4px;
   cursor: pointer;
 }
 .social-post footer .liked {
   color: #ea7034;
+}
+.social-post footer .like-icon {
+  width: 1em;
+  height: 1em;
 }
 .social-post footer button:disabled {
   opacity: 0.5;

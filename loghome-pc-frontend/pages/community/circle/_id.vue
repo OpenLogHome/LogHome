@@ -320,7 +320,7 @@ export default {
 <style scoped>
 .circle-hero {
   position: relative;
-  background-color: #8e7254;
+  background-color: #606773;
   background-size: cover;
   background-position: center;
   border-radius: 16px;
@@ -338,12 +338,12 @@ export default {
   align-items: center;
   gap: 22px;
   padding: 36px;
-  color: var(--surface, #fffdf9);
+  color: var(--surface, #ffffff);
 }
 .circle-hero-content > img {
   width: 90px;
   height: 90px;
-  border: 3px solid var(--surface, #fffdf9);
+  border: 3px solid var(--surface, #ffffff);
   border-radius: 18px;
   object-fit: cover;
 }

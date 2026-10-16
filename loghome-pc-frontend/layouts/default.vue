@@ -593,7 +593,7 @@ export default {
 }
 
 .navbar {
-  background: var(--site-surface, #fffdf9);
+  background: var(--site-surface, #ffffff);
   color: var(--site-ink, #382d25);
   box-shadow: 0 1px 0 var(--site-line, #e9e0d5);
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -608,10 +608,11 @@ export default {
 .navbar-container {
   max-width: 1440px;
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 32px;
   align-items: center;
-  padding: 0 172px 0 28px;
+  padding: 0 28px;
   height: var(--site-header-height);
 }
 
@@ -628,13 +629,16 @@ export default {
 }
 .navbar-center {
   gap: 28px;
+  justify-content: center;
 }
 .navbar-right {
   position: relative;
   flex: 1;
+  width: max-content;
   min-width: 0;
   justify-content: flex-end;
   gap: 12px;
+  margin-right: 144px;
 }
 
 .logo {
@@ -705,6 +709,7 @@ export default {
   display: flex;
   align-items: center;
   flex: 1;
+  width: 280px;
   min-width: 100px;
   max-width: 280px;
   height: 40px;
@@ -1150,7 +1155,8 @@ export default {
   color: #ddd;
 }
 
-.social-layout{display:flow-root;min-height:100dvh;background:var(--site-bg, #f5f5f5)}.social-layout .main-content { max-width: 1440px; padding: 0; }
+.social-layout{display:flow-root;min-height:100dvh;background:#f7f8fa;--site-footer-link:#c65320}.social-layout .main-content { max-width: 1440px; padding: 0; }
+.social-layout .site-footer { background: #ffffff; color: #6b7280; }
 
 .main-content {
   margin-top: calc(var(--site-header-height) + 20px);
@@ -1164,12 +1170,12 @@ export default {
 .home-layout {
   display: flow-root;
   min-height: 100vh;
-  background: #faf8f3;
-  --site-footer-link: #79573c;
+  background: #f7f8fa;
+  --site-footer-link: #c65320;
 }
 
-.home-layout .site-footer { background: #eeeae1; color: #687060; }
-.home-skip-link { position: fixed; top: 8px; left: 20px; z-index: 1200; padding: 10px 18px; background: #79573c; color: #fffdf7; border-radius: 6px; transform: translateY(-160%); }
+.home-layout .site-footer { background: #eef0f3; color: #6b7280; }
+.home-skip-link { position: fixed; top: 8px; left: 20px; z-index: 1200; padding: 10px 18px; background: #c65320; color: #ffffff; border-radius: 6px; transform: translateY(-160%); }
 .home-skip-link:focus { transform: translateY(0); }
 
 .home-layout .main-content {
@@ -1191,9 +1197,8 @@ export default {
     gap: 10px 24px;
     padding: 10px 172px 10px 28px;
   }
-  .navbar-center { justify-content: flex-end; }
   .navbar-center .nav-link { height: 40px; }
-  .navbar-right { grid-column: 1 / -1; width: 100%; }
+  .navbar-right { grid-column: 1 / -1; width: 100%; margin-right: 0; }
   .navbar-right .search-box { max-width: none; }
 }
 @media (max-width: 600px) {
@@ -1206,7 +1211,7 @@ export default {
   }
   .navbar-left { padding-right: 144px; }
   .logo-img { height: 28px; max-width: 100%; object-fit: contain; }
-  .navbar-center { justify-content: flex-start; gap: 28px; }
+  .navbar-center { gap: 28px; }
   .navbar-center .nav-link { height: 32px; font-size: 14px; }
   .navbar-right { gap: 8px; }
   .user-nickname { max-width: 64px; }
@@ -1256,8 +1261,8 @@ a:hover {
   .social-layout { background: #211e19; color: #eee5d9; }
   .social-layout .footer { background: #29251f; color: #c4b6a5; }
 }
-html[data-social-theme="light"] .social-layout { background: var(--site-bg, #f5f5f5); color: #382d25; }
-html[data-social-theme="light"] .social-layout .footer { background: #fdfbf7; color: #776a5d; border-color: #e9e0d5; }
+html[data-social-theme="light"] .social-layout { background: #f7f8fa; color: #30343b; }
+html[data-social-theme="light"] .social-layout .footer { background: #ffffff; color: #6b7280; border-color: #e2e6eb; }
 html[data-social-theme="dark"] .social-layout { background: #211e19; color: #eee5d9; }
 html[data-social-theme="dark"] .social-layout .footer { background: #29251f; color: #c4b6a5; border-color: #504536; }
 </style>

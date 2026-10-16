@@ -1,0 +1,15 @@
+{
+  "name": "loghome-book-cover",
+  "version": "0.1.0",
+  "private": true,
+  "miniapp": {"port": 8789, "basePath": "/log-book-cover", "healthPath": "/api/health"},
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "prestart": "npm run build",
+    "start": "node --env-file-if-exists=.env server/index.cjs",
+    "dev": "npm run build && node --watch --env-file-if-exists=.env.development server/index.cjs",
+    "pretest": "npm run build",
+    "test": "node --test test/*.test.cjs"
+  },
+  "engines": {"node": ">=22.13"}
+}

@@ -718,3 +718,39 @@ export function getSceneThemeStyle(themeKey, nightMode = false) {
     "--scene-moon-shade": backdrop.moonShade || "#aab7cf",
   };
 }
+
+// Include the underside of the island as well as the canopy in the camera frame.
+// Clouds and background fragments are decorative and do not determine the zoom.
+export function fitSceneCamera(framing, aspect, bounds) {
+  if (!bounds.length) return framing;
+  const targetY =
+    (Math.min(...bounds.map(box => box.min.y)) +
+      Math.max(...bounds.map(box => box.max.y))) / 2;
+  const verticalScale = Math.tan(framing.fov * Math.PI / 360) * 0.9;
+  const horizontalScale = verticalScale * Math.max(aspect, 0.1);
+  let radius = framing.radius;
+  for (const box of bounds) {
+    const extent = Math.hypot(
+      Math.max(Math.abs(box.min.x), Math.abs(box.max.x)),
+      Math.max(Math.abs(box.min.z), Math.abs(box.max.z))
+    );
+    for (const y of [box.min.y - targetY, box.max.y - targetY]) {
+      // Cover the full vertical drag range, with horizontal rotation unrestricted.
+      for (let step = 0; step <= 6; step++) {
+        const phi = 0.82 + step * 0.07;
+        const sin = Math.sin(phi), cos = Math.cos(phi);
+        radius = Math.max(
+          radius,
+          y * cos + extent * Math.hypot(sin, 1 / horizontalScale)
+        );
+        for (const z of [-extent, extent]) {
+          radius = Math.max(
+            radius,
+            y * cos + z * sin + Math.abs(y * sin - z * cos) / verticalScale
+          );
+        }
+      }
+    }
+  }
+  return { ...framing, radius, targetY };
+}

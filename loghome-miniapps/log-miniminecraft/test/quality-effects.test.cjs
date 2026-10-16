@@ -1,7 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const advancedRuntime=fs.readFileSync(path.join(__dirname,'../scripts/advanced-shader-runtime.js'),'utf8');
 const atmosphereRuntime=fs.readFileSync(path.join(__dirname,'../scripts/atmosphere-runtime.js'),'utf8');
-const runtime=atmosphereRuntime+'\n'+advancedRuntime+'\n'+fs.readFileSync(path.join(__dirname,'../scripts/quality-effects-runtime.js'),'utf8');
+const underwaterRuntime=fs.readFileSync(path.join(__dirname,'../scripts/underwater-runtime.js'),'utf8');
+const runtime=underwaterRuntime+'\n'+atmosphereRuntime+'\n'+advancedRuntime+'\n'+fs.readFileSync(path.join(__dirname,'../scripts/quality-effects-runtime.js'),'utf8');
 function context(storage){const ctx={localStorage:storage};vm.createContext(ctx);vm.runInContext(runtime,ctx);return ctx}
 test('fair-weather fog preserves midground contrast and the loaded-world boundary',()=>{
   const c=context(),clear=c.logFogProfile(80,240,.001),storm=c.logFogProfile(80,240,.004);

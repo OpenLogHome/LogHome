@@ -11,8 +11,8 @@ export default { computed: { label() { return copy.nav.mobileDownload } } }
 </script>
 
 <style scoped>
-.mobile-download-button { position:fixed; top:9px; right:16px; z-index:1100; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 16px; border:1px solid #79573c; border-radius:7px; background:#79573c; color:#fffdf7; font-size:14px; font-weight:600; line-height:1.5; text-decoration:none; box-sizing:border-box; white-space:nowrap; }
-.mobile-download-button:hover { background:#65452e; }
-.mobile-download-button:focus-visible { outline:2px solid #79573c; outline-offset:3px; }
+.mobile-download-button { position:fixed; top:9px; right:16px; z-index:1100; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 16px; border:1px solid #c65320; border-radius:7px; background:#c65320; color:#ffffff; font-size:14px; font-weight:600; line-height:1.5; text-decoration:none; box-sizing:border-box; white-space:nowrap; }
+.mobile-download-button:hover { background:#ac4319; }
+.mobile-download-button:focus-visible { outline:2px solid #c65320; outline-offset:3px; }
 @media(max-width:720px) { .mobile-download-button { right:12px; padding:0 12px; font-size:13px; } }
 </style>
