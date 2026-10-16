@@ -107,5 +107,8 @@ dist
 # (H5 bundle for web.zip). Negations must stay last to outrank root "**/build/".
 !unpackage/dist/
 !unpackage/dist/**
+
+# Keep release archives local while retaining the published H5 files above.
+unpackage/dist/*.zip
 unpackage/dist/.DS_Store
 unpackage/dist/**/.DS_Store
