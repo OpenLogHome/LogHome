@@ -25,7 +25,7 @@
       "noBuilding": "No buildings available — upgrade the base or demolish one",
       "wall": "Wall",
       "wallBuild": "Build Wall",
-      "wallDesc": "Stone walls around the village against night raids. Each segment upgrades separately; defense scales with durability, wears down in raids, repair with cobblestone",
+      "wallDesc": "Stone walls around the village against night raids. Each segment upgrades separately; defense scales with durability, wears down in raids; repair materials follow the tier (logs / stone / iron ingots)",
       "market": "Market",
       "raid": "Zombie Raid",
       "expedition": "Nether Expedition",
