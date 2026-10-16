@@ -1,22 +1,11 @@
 /**
  * 首页榜单更新定时任务
  * 移植自独立 SCF 定时函数 timer_loghome_homepage_update
+ *
+ * 「入站必读」已移除自动更新（不再自动按完本书籍重建），由运营在后台手动维护；
+ * 本任务仅刷新「原木力飙升」。
  */
 const { query } = require('../sql.js');
-
-async function updateBestCompletedNovels() {
-	await query('DELETE FROM library_recommend WHERE title = \'入站必读\'');
-	let results = await query(
-		'SELECT novel_id FROM novels WHERE is_personal = 0 AND deleted = 0 AND is_complete = 1 ORDER BY clicks DESC LIMIT 0,100',
-	);
-	results.reverse();
-	for (let item of results) {
-		await query('INSERT INTO library_recommend(novel_id,title) VALUES(?,?)', [
-			item.novel_id,
-			'入站必读',
-		]);
-	}
-}
 
 async function updateBestWelcomedNovels() {
 	// 计算原木力变化
@@ -39,14 +28,12 @@ async function updateBestWelcomedNovels() {
 }
 
 async function run() {
-	await updateBestCompletedNovels();
 	await updateBestWelcomedNovels();
 	console.log('数据更新操作执行成功。');
-	return { updated: ['入站必读', '原木力飙升'] };
+	return { updated: ['原木力飙升'] };
 }
 
 module.exports = {
 	run,
-	updateBestCompletedNovels,
 	updateBestWelcomedNovels,
 };
