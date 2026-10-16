@@ -74,7 +74,7 @@ function probe(config, timeout) {
 class Supervisor {
   constructor(root, options = {}) {
     this.root = path.resolve(root);
-    this.options = {mode:'start', build:false, restartDelay:1000, restartWindow:60000, maxRestarts:5,
+    this.options = {mode:'start', restartDelay:1000, restartWindow:60000, maxRestarts:5,
       healthInterval:5000, healthTimeout:2000, startupTimeout:60000, stopTimeout:5000, logLimit:10*1024*1024, ...options};
     this.runtime = options.runtime || path.join(this.root, '.runtime');
     this.token = crypto.randomBytes(32).toString('hex');
@@ -82,7 +82,7 @@ class Supervisor {
     this.closing = false;
     this.queue = Promise.resolve();
     this.apps = discover(this.root).map(app => ({...app, state:'stopped', desired:false, generation:0,
-      child:null, restarts:0, failures:[], failedChecks:0, prepared:false, lastError:null, lastExit:null}));
+      child:null, restarts:0, failures:[], failedChecks:0, lastError:null, lastExit:null}));
   }
   snapshot() {
     return {pid:process.pid, mode:this.options.mode, startedAt:this.startedAt, updatedAt:new Date().toISOString(), stopping:this.closing,
@@ -163,7 +163,7 @@ class Supervisor {
     await Promise.all(targets.map(async app => {
       if (action !== 'start') await this.stop(app);
       if (action !== 'stop') {
-        if (action === 'restart' || app.state === 'failed') { app.failures = []; app.prepared = false; }
+        if (action === 'restart' || app.state === 'failed') app.failures = [];
         app.desired = true; void this.launch(app);
       }
     }));
@@ -181,14 +181,13 @@ class Supervisor {
       if (!app.pkg.scripts[this.options.mode]) throw new Error(`缺少 scripts.${this.options.mode}`);
       await available(app.config.host, app.config.port);
       if (!current()) return;
-      if (this.options.mode === 'start' && !app.prepared && app.pkg.scripts.build &&
-          (this.options.build || !fs.existsSync(path.join(app.directory,'dist')))) {
+      // Existing output may belong to older source. Rebuild on every launch, including crash recovery.
+      if (this.options.mode === 'start' && app.pkg.scripts.build) {
         this.state(app,'building');
         const result = await this.child(app,'build',generation).closed;
         if (!current()) return;
         if (result.code !== 0) throw new Error(`构建失败：${result.signal || result.code || result.error}`);
       }
-      app.prepared = true;
       if (!current()) return;
       app.startedAt = new Date().toISOString(); app.startedMs = Date.now();
       this.state(app,app.config.port && app.config.healthPath ? 'starting' : 'running');
@@ -341,7 +340,7 @@ function printStatus(status) {
 }
 async function main(args = process.argv.slice(2)) {
   if (args.includes('--help') || args.includes('-h')) {
-    console.log('node start-all.js [--dev] [--build]\nnode start-all.js status [--json]\nnode start-all.js restart [小程序ID|all]\nnode start-all.js stop [小程序ID]\nnode start-all.js start 小程序ID\n\n默认在前台同时启动全部后端；Ctrl+C 停止所有子进程。'); return;
+    console.log('node start-all.js [--dev] [--build]\nnode start-all.js status [--json]\nnode start-all.js restart [小程序ID|all]\nnode start-all.js stop [小程序ID]\nnode start-all.js start 小程序ID\n\n默认每次启动前重新构建，并在前台同时启动全部后端；Ctrl+C 停止所有子进程。\n--build 保留兼容，默认已启用构建；--dev 由各应用 dev 脚本负责构建与监听。'); return;
   }
   const options = args.filter(value => value.startsWith('--'));
   if (options.some(value => !['--dev','--build','--json'].includes(value))) throw new Error('未知选项，请使用 --help');
@@ -349,7 +348,7 @@ async function main(args = process.argv.slice(2)) {
   if (extra.length || !['run','start','status','stop','restart'].includes(action)) throw new Error('未知命令，请使用 --help');
   const runtime = path.join(__dirname,'.runtime');
   if (action === 'run' || (action === 'start' && !id)) {
-    const supervisor = new Supervisor(__dirname,{mode:args.includes('--dev')?'dev':'start',build:args.includes('--build')});
+    const supervisor = new Supervisor(__dirname,{mode:args.includes('--dev')?'dev':'start'});
     await supervisor.start();
     const shutdown = () => { void supervisor.shutdown().catch(error => { console.error(error.message); process.exitCode = 1; }); };
     process.on('SIGINT',shutdown); process.on('SIGTERM',shutdown);

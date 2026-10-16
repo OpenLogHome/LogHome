@@ -28,6 +28,23 @@ http.createServer((req,res)=>{if(req.url.endsWith('/toggle'))unhealthy=true;res.
 `);
   if(build) fs.writeFileSync(path.join(dir,'build.cjs'),"require('fs').mkdirSync('dist',{recursive:true});require('fs').writeFileSync('dist/built','yes');");
 }
+function compiledFixture(root,id,number) {
+  fixture(root,id,number,{build:true});
+  const dir=path.join(root,id);
+  fs.mkdirSync(path.join(dir,'dist'));
+  fs.writeFileSync(path.join(dir,'dist/built'),'old build');
+  fs.writeFileSync(path.join(dir,'source.txt'),'updated source');
+  fs.writeFileSync(path.join(dir,'build.cjs'),`
+const fs=require('node:fs');
+if(fs.existsSync('fail-build'))process.exit(42);
+fs.writeFileSync('dist/built',fs.readFileSync('source.txt'));
+`);
+  fs.writeFileSync(path.join(dir,'server.cjs'),`
+const artifact=require('node:fs').readFileSync('dist/built');
+require('node:http').createServer((req,res)=>res.end(artifact)).listen(Number(process.env.PORT),'127.0.0.1');
+`);
+  return dir;
+}
 function temporary(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(),'loghome-supervisor-'));
   return root;
@@ -76,6 +93,43 @@ test('killing the npm wrapper cleans up descendants and restarts only that backe
   const one=manager.apps[0],twoPid=manager.apps[1].child.pid,old=one.child.pid;
   process.kill(old,'SIGKILL');await until(()=>one.state==='running'&&one.child.pid!==old);
   assert.equal(one.restarts,1);assert.equal(manager.apps[1].child.pid,twoPid);
+});
+
+test('serves fresh builds despite existing dist on startup, stop/start, manual restart and crash recovery', async t => {
+  const root=temporary(t),number=await port(),dir=compiledFixture(root,'one',number);
+  fixture(root,'two',await port());
+  const manager=await managed(t,root);await until(()=>manager.apps.every(app=>app.state==='running'));
+  const app=manager.apps[0],otherPid=manager.apps[1].child.pid;
+  const served=async()=>await(await fetch(`http://127.0.0.1:${number}/`)).text();
+  assert.equal(await served(),'updated source');
+  for(const action of ['start','restart','crash']) {
+    const oldPid=app.child.pid;
+    fs.writeFileSync(path.join(dir,'source.txt'),action);
+    if(action==='crash')process.kill(oldPid,'SIGKILL');
+    else {
+      if(action==='start')await control(manager.runtime,'stop','one');
+      await control(manager.runtime,action,'one');
+    }
+    await until(()=>app.state==='running'&&app.child.pid!==oldPid);
+    assert.equal(await served(),action);
+    assert.equal(manager.apps[1].child.pid,otherPid);
+  }
+  assert.equal(app.restarts,1);
+});
+
+test('a failed rebuild never serves stale output and can be retried without stopping other backends', async t => {
+  const root=temporary(t),number=await port(),dir=compiledFixture(root,'one',number);
+  fs.writeFileSync(path.join(dir,'fail-build'),'');fixture(root,'two',await port());
+  const manager=await managed(t,root);
+  await until(()=>manager.apps[0].state==='failed'&&manager.apps[1].state==='running');
+  const app=manager.apps[0],otherPid=manager.apps[1].child.pid;
+  assert.match(app.lastError,/构建失败/);assert.equal(app.child,null);
+  assert.equal(fs.readFileSync(path.join(dir,'dist/built'),'utf8'),'old build');
+  await assert.rejects(fetch(`http://127.0.0.1:${number}/`));
+  fs.rmSync(path.join(dir,'fail-build'));
+  await control(manager.runtime,'restart','one');await until(()=>app.state==='running');
+  assert.equal(await(await fetch(`http://127.0.0.1:${number}/`)).text(),'updated source');
+  assert.equal(manager.apps[1].child.pid,otherPid);
 });
 
 test('health failures restart a live but unresponsive backend', async t => {
