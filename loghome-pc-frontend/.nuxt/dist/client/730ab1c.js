@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[94],{808:function(n,r,e){"use strict";e.r(r),e.d(r,"textCorrectionDB",(function(){return o}));var o=new(e(681).a)("loghome-pc-text-correction");o.version(1).stores({standardCache:"id",standardIgnored:"id",smartCache:"id",smartIgnored:"id"})}}]);
