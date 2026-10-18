@@ -6,7 +6,11 @@ async function updateBestCompletedNovels() {
 	let results = await query(
 		'SELECT novel_id FROM novels WHERE is_personal = 0 AND deleted = 0 AND is_complete = 1 ORDER BY clicks DESC LIMIT 0,100',
 	);
-	results.reverse();
+	// 洗牌打乱顺序，让榜单每次刷新随机展示（recommend_id 仍严格递增，分页安全）
+	for (let i = results.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[results[i], results[j]] = [results[j], results[i]];
+	}
 	for (let item of results) {
 		await query('INSERT INTO library_recommend(novel_id,title) VALUES(?,?)', [
 			item.novel_id,
