@@ -214,7 +214,7 @@
                   ? 'page'
                   : null
               "
-              :disabled="loadingArticle || saving"
+              :disabled="loadingArticle || publishing"
               @click="openArticle(item)"
             >
               <span class="catalog-number">{{ item.article_chapter }}</span
@@ -252,7 +252,7 @@
                         ></template
                       ><template v-else
                         >{{
-                          (item.text_count || 0).toLocaleString()
+                          catalogTextCount(item).toLocaleString()
                         }}
                         字</template
                       ></template
@@ -653,6 +653,8 @@
 <script>
 import {
   normalizeCatalogArticle,
+  catalogTextCount,
+  writerTextCount,
   hasUnpublishedCatalogChanges,
   catalogGroups,
   catalogRows,
@@ -749,6 +751,7 @@ export default {
     loading: true,
     loadingArticle: false,
     saving: false,
+    publishing: false,
     error: "",
     status: "loading",
     stateDetail: "",
@@ -797,7 +800,7 @@ export default {
       syncing: "同步中",
       synced: "已同步",
       pending: "本机已保存 · 待同步",
-      saving: "保存中",
+      saving: "本机已保存 · 云端同步中",
       readonly: "只读",
       offline: "离线 · 本机已保存",
       conflict: "版本冲突",
@@ -1028,6 +1031,7 @@ export default {
     clearTimeout(this.saveTimer);
     clearTimeout(this.searchTimer);
     clearInterval(this.snapshotTimer);
+    clearTimeout(this.saveMaxTimer);
     window.removeEventListener("keydown", this.keydown);
     window.removeEventListener("beforeunload", this.beforeUnload);
     window.removeEventListener("pagehide", this.pagehide);
@@ -1037,6 +1041,7 @@ export default {
     if (this.realtime) this.realtime.destroy();
   },
   methods: {
+    catalogTextCount,
     catalogHasChanges(item) {
       if (Number(item.is_draft) !== 0 || item.article_type === "spliter")
         return false;
@@ -1052,16 +1057,14 @@ export default {
       return hasUnpublishedCatalogChanges(item);
     },
     trackCatalogChanges() {
-      if (
-        !this.article ||
-        !this.session ||
-        this.session.publishedSignature === null
-      )
-        return;
+      if (!this.article) return;
       const item = this.articles.find(
         (row) => row.article_id === this.article.article_id
       );
-      if (item)
+      if (!item) return;
+      this.$set(item, "local_writer_text_count", writerTextCount(this.article));
+      this.$set(item, "writer_title", this.article.title);
+      if (this.session && this.session.publishedSignature !== null)
         this.$set(
           item,
           "local_writer_modified",
@@ -1465,11 +1468,12 @@ export default {
       const revision = (this._catalogRevision || 0) + 1;
       this._catalogRevision = revision;
       try {
-        const rows = await writerGet("get_articles", { id: this.workId });
+        const rows = await writerGet("get_articles", { id: this.workId, catalog_only: 1 });
         if (revision !== this._catalogRevision || this.sortSaving) return;
         this.articles = rows
           .map(normalizeCatalogArticle)
           .sort((a, b) => a.article_chapter - b.article_chapter);
+        this.trackCatalogChanges();
         this.insertPosition = this.articles.length + 1;
       } catch (error) {
         this.error = error.message;
@@ -1494,9 +1498,13 @@ export default {
     async disposeChapter() {
       this.trackCatalogChanges();
       clearTimeout(this.saveTimer);
+      clearTimeout(this.saveMaxTimer);
+      this.saveMaxTimer = null;
       clearInterval(this.snapshotTimer);
       if (this.activity) {
-        await this.activity.stop();
+        // stop() enqueues the report synchronously; network reporting need not
+        // block switching chapters and remains retryable in local storage.
+        this.activity.stop().catch(() => {});
         this.activity = null;
       }
       if (this.session) {
@@ -1563,13 +1571,13 @@ export default {
       );
       if (group && this.collapsedVolumes.includes(group.id))
         this.toggleVolume(group.id);
-      if (this.loadingArticle || this.saving) return;
+      if (this.loadingArticle || this.publishing) return;
       if (this.article && this.article.article_id === item.article_id) return;
-      if (!(await this.leaveChapter())) return;
       this.loadingArticle = true;
-      this.stateDetail = "";
-      this.status = "loading";
       try {
+        if (!(await this.leaveChapter())) return;
+        this.stateDetail = "";
+        this.status = "loading";
         if (this.isManga) {
           const data = await writerGet("get_article", { id: item.article_id });
           if (!data) throw new Error("话数加载失败");
@@ -1584,6 +1592,7 @@ export default {
         }
         const session = new WriterSession({
           onState: (state) => {
+            if (this.session !== session) return;
             this.status = state.status;
             this.stateDetail = state.detail;
           },
@@ -1656,13 +1665,22 @@ export default {
       });
       if (!this.realtime) {
         if (writerSignature(this.article) === this.session.baseline) {
-          this.status = "synced";
+          clearTimeout(this.saveTimer);
+          clearTimeout(this.saveMaxTimer);
+          this.saveMaxTimer = null;
+          this.status = this.session.saving ? "saving" : "synced";
           return;
         }
-        this.status = "pending";
+        this.status = this.session.saving ? "saving" : "pending";
       }
       clearTimeout(this.saveTimer);
-      this.saveTimer = setTimeout(() => this.save(false), 2500);
+      this.saveTimer = setTimeout(() => this.save(false), 800);
+      if (!this.saveMaxTimer) {
+        this.saveMaxTimer = setTimeout(() => {
+          this.saveMaxTimer = null;
+          this.save(false);
+        }, 5000);
+      }
     },
     changeTitle(value) {
       this.article.title = value;
@@ -1684,12 +1702,16 @@ export default {
     },
     async save(snapshot = false) {
       if (!this.session || this.loadingArticle || this.saving) return;
+      clearTimeout(this.saveTimer);
+      clearTimeout(this.saveMaxTimer);
+      this.saveMaxTimer = null;
+      const session = this.session;
       this.saving = true;
       try {
         if (this.realtime) {
           await this.session.backup(snapshot);
           if (snapshot) await this.realtime.checkpoint();
-        } else await this.session.save(snapshot);
+        } else await session.save(snapshot);
       } catch (error) {
         if (error.remote) {
           this.conflictLocal = { ...this.article };
@@ -1698,6 +1720,12 @@ export default {
         } else this.stateDetail = error.message;
       } finally {
         this.saving = false;
+        // Edits made during a slow upload must not lose their autosave timer.
+        if (this.session === session && !this.loadingArticle && !this.realtime &&
+            this.status === "pending" && session.writable) {
+          clearTimeout(this.saveTimer);
+          this.saveTimer = setTimeout(() => this.save(false), 0);
+        }
       }
     },
     async reopen() {
@@ -1714,7 +1742,7 @@ export default {
         .catch((error) => this.writerMessage("error", error.message));
     },
     chooseLocal() {
-      this.session.baseline = writerSignature(this.conflictRemote);
+      this.session.setBaseline(this.conflictRemote);
       this.article = {
         ...this.article,
         title: this.conflictLocal.title,
@@ -1966,6 +1994,7 @@ export default {
     async publish(options) {
       if (this.saving) return;
       this.saving = true;
+      this.publishing = true;
       try {
         const checkpoint = this.realtime
           ? await this.realtime.checkpoint()
@@ -1997,12 +2026,12 @@ export default {
             ? "已退回草稿"
             : "已发布章节"
         );
-        await this.refreshArticles();
         await this.loadWork(false);
       } catch (error) {
         this.writerMessage("error", error.message);
       } finally {
         this.saving = false;
+        this.publishing = false;
       }
     },
     applyCorrections(content) {

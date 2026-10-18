@@ -466,7 +466,7 @@ export default {
   height: max(360px, calc(100dvh - 220px));
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  background-color: var(--soft, #f1f3f5);
   border: 1px solid var(--line, #e2e6eb);
   border-radius: 12px;
   overflow: hidden;
@@ -488,12 +488,12 @@ export default {
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: #f0f0f0;
+      background-color: var(--soft, #f1f3f5);
     }
 
     i {
       font-size: 20px;
-      color: #666;
+      color: var(--muted, #5b626d);
     }
   }
 
@@ -616,7 +616,7 @@ export default {
           padding: 8px;
           border-radius: 8px;
           background: var(--soft, #f1f3f5);
-          border: 1px solid #f0e8dd;
+          border: 1px solid var(--line, #e2e6eb);
           cursor: pointer;
 
           .shared-book-cover {
@@ -625,7 +625,7 @@ export default {
             object-fit: cover;
             border-radius: 4px;
             flex-shrink: 0;
-            background: #eee;
+            background: var(--soft, #f1f3f5);
           }
 
           .shared-book-info {
@@ -642,7 +642,7 @@ export default {
 
           .shared-book-title {
             font-size: 14px;
-            color: #333;
+            color: var(--ink, #30343b);
             font-weight: 500;
             margin-top: 2px;
             overflow: hidden;
@@ -652,7 +652,7 @@ export default {
 
           .shared-book-author {
             font-size: 12px;
-            color: #999;
+            color: var(--muted, #5b626d);
             margin-top: 2px;
           }
         }

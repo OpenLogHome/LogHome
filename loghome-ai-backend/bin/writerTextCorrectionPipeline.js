@@ -100,7 +100,8 @@ async function runCorrectionPlan(paragraphs, options) {
 		if (shouldStop()) return;
 		requestCount += 1;
 		try {
-			const batchResults = await analyzeBatch(batch, { batchIndex, batchCount: plan.batches.length });
+			// 每次模型请求（含缩小批次后的重试）都有独立标识，避免思考流相互混入。
+			const batchResults = await analyzeBatch(batch, { batchIndex, batchCount: plan.batches.length, streamId: requestCount });
 			if (shouldStop()) return;
 			if (!Array.isArray(batchResults) || batchResults.length !== batch.length) {
 				throw new Error('模型未返回完整的段落结果');

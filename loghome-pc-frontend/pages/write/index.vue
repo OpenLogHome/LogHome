@@ -79,7 +79,7 @@
                         <div v-for="news in activity.activity_news" :key="news.title" class="news-item" 
                           @click="openNewsLink(news)">
                           <div class="news-item-title">{{news.title}}</div>
-                          <i class="el-icon-arrow-right"></i>
+                          <i class="el-icon-arrow-right news-arrow" aria-hidden="true"></i>
                         </div>
                       </div>
                     </div>
@@ -534,7 +534,7 @@ $orange-dark: #fa6c2e;
 
   .page-title {
     font-size: 32px;
-    color: $secondary-color;
+    color: var(--site-ink, #704c35);
   }
 
   .write-container {
@@ -550,7 +550,7 @@ $orange-dark: #fa6c2e;
 
   .section-title {
     font-size: 24px;
-    color: $secondary-color;
+    color: var(--site-ink, #704c35);
     margin: 0;
   }
 
@@ -561,7 +561,7 @@ $orange-dark: #fa6c2e;
   .tabs {
     display: flex;
     margin-bottom: 20px;
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid var(--site-line, #eee);
   }
 
   .tab-button {
@@ -751,18 +751,19 @@ $orange-dark: #fa6c2e;
     
     .work-info {
       flex-grow: 1;
+      min-width: 0;
       padding: 20px;
     }
     
     .work-title {
       font-size: 20px;
-      color: $secondary-color;
+      color: var(--site-ink, #704c35);
       margin: 0 0 10px;
     }
     
     .work-stats {
       display: flex;
-      color: $text-light;
+      color: var(--site-muted, #666);
       font-size: 14px;
       margin-bottom: 10px;
       
@@ -772,14 +773,14 @@ $orange-dark: #fa6c2e;
     }
     
     .work-desc {
-      color: $text-light;
+      color: var(--site-muted, #666);
       font-size: 14px;
       line-height: 1.5;
       margin-bottom: 15px;
     }
     
     .work-update {
-      color: $text-lighter;
+      color: var(--site-muted, #999);
       font-size: 13px;
       margin-bottom: 15px;
     }
@@ -816,24 +817,24 @@ $orange-dark: #fa6c2e;
     .activity-section {
       margin-top: 16px;
       padding: 16px;
-      background: #f8f9fa;
+      background: var(--site-raised, #f8f9fa);
       border-radius: 8px;
-      border: 1px solid #e9ecef;
+      border: 1px solid var(--site-line, #e9ecef);
     }
     
     .activity-section-title {
       margin: 0 0 12px 0;
       font-size: 16px;
       font-weight: 600;
-      color: #333;
+      color: var(--site-ink, #333);
     }
     
     .activity-item {
-      background: white;
+      background: var(--site-surface, #fff);
       border-radius: 6px;
       padding: 12px;
       margin-bottom: 12px;
-      border: 1px solid #e9ecef;
+      border: 1px solid var(--site-line, #e9ecef);
       
       &:last-child {
         margin-bottom: 0;
@@ -844,25 +845,27 @@ $orange-dark: #fa6c2e;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
       margin-bottom: 8px;
     }
     
     .activity-name {
       font-weight: 600;
-      color: #333;
+      color: var(--site-ink, #333);
       font-size: 14px;
     }
     
     .activity-status {
-      background: #28a745;
+      background: #197348;
       color: white;
+      flex-shrink: 0;
       padding: 2px 8px;
       border-radius: 12px;
       font-size: 12px;
     }
     
     .activity-description {
-      color: #666;
+      color: var(--site-muted, #666);
       font-size: 13px;
       line-height: 1.4;
       margin-bottom: 12px;
@@ -875,7 +878,7 @@ $orange-dark: #fa6c2e;
     .news-title {
       font-size: 13px;
       font-weight: 600;
-      color: #333;
+      color: var(--site-ink, #333);
       margin-bottom: 6px;
     }
     
@@ -883,15 +886,16 @@ $orange-dark: #fa6c2e;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
       padding: 6px 8px;
-      background: #f8f9fa;
+      background: var(--site-raised, #f8f9fa);
       border-radius: 4px;
       margin-bottom: 4px;
       cursor: pointer;
       transition: background 0.2s;
       
       &:hover {
-        background: #e9ecef;
+        background: var(--site-line, #e9ecef);
       }
       
       &:last-child {
@@ -901,17 +905,19 @@ $orange-dark: #fa6c2e;
     
     .news-item-title {
       font-size: 12px;
-      color: #666;
+      color: var(--site-ink, #666);
       flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
     
     .news-arrow {
-      color: #999;
+      color: var(--site-muted, #999);
       font-size: 12px;
     }
     
     .activity-form {
-      border-top: 1px solid #e9ecef;
+      border-top: 1px solid var(--site-line, #e9ecef);
       padding-top: 12px;
     }
     
@@ -925,7 +931,7 @@ $orange-dark: #fa6c2e;
     .form-title {
       font-size: 13px;
       font-weight: 600;
-      color: #333;
+      color: var(--site-ink, #333);
     }
     
     .form-status-text {
@@ -971,9 +977,9 @@ $orange-dark: #fa6c2e;
     .sidebar-title {
       font-size: 18px;
       margin-bottom: 15px;
-      color: $secondary-color;
+      color: var(--site-ink, #704c35);
       padding-bottom: 10px;
-      border-bottom: 1px solid $border-color;
+      border-bottom: 1px solid var(--site-line, #eee);
     }
     
     .stats-grid {
@@ -984,19 +990,19 @@ $orange-dark: #fa6c2e;
       .stat-item {
         text-align: center;
         padding: 10px;
-        background-color: $border-light;
+        background-color: var(--site-raised, #f5f5f5);
         border-radius: 4px;
         
         .stat-value {
           font-size: 20px;
           font-weight: 600;
-          color: $primary-color;
+          color: var(--site-accent, #947358);
           margin-bottom: 5px;
         }
         
         .stat-label {
           font-size: 14px;
-          color: $text-light;
+          color: var(--site-muted, #666);
         }
       }
     }

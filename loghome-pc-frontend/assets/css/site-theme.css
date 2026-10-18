@@ -1,3 +1,4 @@
+/* Writer routes own their palette, including shared controls and body-mounted overlays. */
 /* Global chrome and shared controls. Content artwork and explicit reading-paper palettes keep their original colors. */
 :root {
   --site-bg: #f5f5f5;
@@ -20,7 +21,7 @@ html:not([data-site-theme="dark"]) .navbar {
 html[data-site-theme="light"] {
   color-scheme: light;
 }
-html[data-site-theme="dark"] {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) {
   color-scheme: dark;
   --site-bg: #1e1c19;
   --site-surface: #28251f;
@@ -31,25 +32,25 @@ html[data-site-theme="dark"] {
   --site-accent: #f2a16d;
   --site-footer-link: #f2a16d;
 }
-html[data-site-theme="dark"] body,
-html[data-site-theme="dark"] :is(.outer, .empty-layout) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) body,
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.outer, .empty-layout) {
   background: var(--site-bg);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] :is(.navbar, .site-footer, .footer),
-html[data-site-theme="dark"] .empty-layout::before {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.navbar, .site-footer, .footer),
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .empty-layout::before {
   background: var(--site-surface);
   color: var(--site-muted);
   border-color: var(--site-line);
   box-shadow: 0 1px 0 var(--site-line);
 }
-html[data-site-theme="dark"] :is(.nav-link, .user-nickname, .user-info, .user-link) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.nav-link, .user-nickname, .user-info, .user-link) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] :is(.nav-link-active, .nav-link:hover) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.nav-link-active, .nav-link:hover) {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .search-box,
     .search-result-item:hover,
@@ -61,15 +62,15 @@ html[data-site-theme="dark"]
   ) {
   background: var(--site-raised);
 }
-html[data-site-theme="dark"] :is(.search-input, .search-clear, .search-icon) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.search-input, .search-clear, .search-icon) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] :is(.search-dropdown, .dropdown-footer) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.search-dropdown, .dropdown-footer) {
   background: var(--site-surface);
   color: var(--site-ink);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .search-dropdown
   :is(
     .section-title,
@@ -81,7 +82,7 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .search-dropdown
   :is(
     .book-author,
@@ -93,16 +94,16 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-muted);
 }
-html[data-site-theme="dark"] .search-dropdown :is(.view-all, .hot-tag, .clear-btn) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .search-dropdown :is(.view-all, .hot-tag, .clear-btn) {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] :is(input, textarea)::placeholder {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(input, textarea)::placeholder {
   color: #aca090;
   opacity: 1;
 }
 
 /* Home content follows the resolved site theme. */
-html[data-site-theme="dark"] .home-container {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .home-container {
   --home-ink: var(--site-ink);
   --home-muted: var(--site-muted);
   --home-line: var(--site-line);
@@ -110,19 +111,19 @@ html[data-site-theme="dark"] .home-container {
   --home-accent: #f2a16d;
   --home-accent-hover: #ffb88a;
 }
-html[data-site-theme="dark"] .home-lead {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .home-lead {
   color: var(--site-muted);
 }
-html[data-site-theme="dark"] .home-cta-primary {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .home-cta-primary {
   color: #1e1c19;
 }
-html[data-site-theme="dark"] :is(.writing-overline, .writing-page > p:not(.writing-overline)) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.writing-overline, .writing-page > p:not(.writing-overline)) {
   color: var(--site-muted);
 }
-html[data-site-theme="dark"] .writing-rule {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .writing-rule {
   background: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .home-text-link,
     .home-source,
@@ -133,45 +134,45 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.home-create, .home-download, .home-ending, .home-topic, .home-weixin-tip) {
   background: var(--site-raised);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] :is(.home-writing-preview, .home-cta-secondary) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.home-writing-preview, .home-cta-secondary) {
   background: var(--site-surface);
   border-color: var(--site-line);
   color: var(--site-accent);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.writing-toolbar, .writing-document, .writing-comment, .writing-stats) {
   border-color: var(--site-line);
   color: var(--site-muted);
 }
-html[data-site-theme="dark"] .writing-stage-buttons button[aria-pressed="true"] {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .writing-stage-buttons button[aria-pressed="true"] {
   background: var(--site-raised);
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .home-book-cover {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .home-book-cover {
   background: var(--site-raised);
 }
-html[data-site-theme="dark"] .home-book-cover > span {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .home-book-cover > span {
   background: #28251fee;
   color: var(--site-ink);
 }
 
-html[data-site-theme="dark"] .home-ending-sign {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .home-ending-sign {
   border-color: var(--site-line);
   box-shadow: none;
 }
-html[data-site-theme="dark"] .home-ending-sign h2 {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .home-ending-sign h2 {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] .writing-caption {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .writing-caption {
   background: var(--site-raised);
 }
 /* Reading discovery and its account tools share these semantic colors. */
-html[data-site-theme="dark"] .reading-layout {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .reading-layout {
   --reading-bg: var(--site-bg);
   --reading-surface: var(--site-surface);
   --reading-hover: var(--site-raised);
@@ -182,17 +183,17 @@ html[data-site-theme="dark"] .reading-layout {
   --reading-line: var(--site-line);
   --reading-accent: var(--site-accent);
 }
-html[data-site-theme="dark"] .reading-layout .site-footer {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .reading-layout .site-footer {
   background: var(--site-surface);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .reading-layout
   .main-content
   :is(.action-button.primary, .exchange-button, .primary) {
   background: #79573d;
   color: #fffdf9;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .reading-layout
   .main-content
   :is(
@@ -207,7 +208,7 @@ html[data-site-theme="dark"]
 }
 
 /* Existing social surfaces already consume local tokens; legacy profile/form text uses the same palette. */
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .social-workspace
   :is(
     .section-title,
@@ -221,27 +222,27 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .social-workspace
   :is(.info-row .label, .tip, .comment-meta, .reply-meta) {
   color: var(--site-muted);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .social-workspace
   :is(.info-row, .post-footer, .comment-item, .reply-item) {
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"] .ai-preference :is(h2, label) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .ai-preference :is(h2, label) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] .social-workspace .el-card {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .social-workspace .el-card {
   background: var(--site-surface);
   color: var(--site-ink);
   border-color: var(--site-line);
 }
 
 /* Shared Element UI overlays are mounted outside page layouts. */
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-dialog,
     .el-message-box,
@@ -261,7 +262,7 @@ html[data-site-theme="dark"]
   color: var(--site-ink);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-dialog__title,
     .el-dialog__body,
@@ -283,7 +284,7 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-input__inner,
     .el-textarea__inner,
@@ -299,10 +300,10 @@ html[data-site-theme="dark"]
   border-color: var(--site-line);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] :is(.el-input__inner, .el-textarea__inner):focus {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.el-input__inner, .el-textarea__inner):focus {
   border-color: var(--site-accent);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-input.is-disabled .el-input__inner,
     .el-textarea.is-disabled .el-textarea__inner
@@ -310,7 +311,7 @@ html[data-site-theme="dark"]
   background: #211f1b;
   color: #a99e90;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-input .el-input__count,
     .el-input .el-input__count-inner,
@@ -319,7 +320,7 @@ html[data-site-theme="dark"]
   background: var(--site-surface);
   color: var(--site-muted);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-dropdown-menu__item:hover,
     .el-dropdown-menu__item:focus,
@@ -333,7 +334,7 @@ html[data-site-theme="dark"]
   background: var(--site-raised);
   color: var(--site-accent);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-select-dropdown__item.selected,
     .el-tabs__item.is-active,
@@ -343,119 +344,119 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .el-button {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-button {
   background: var(--site-surface);
   border-color: var(--site-line);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] .el-button:hover {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-button:hover {
   background: var(--site-raised);
   border-color: #8f7559;
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .el-button.is-disabled {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-button.is-disabled {
   background: #211f1b;
   border-color: #443c31;
   color: #a09484;
 }
-html[data-site-theme="dark"] .el-button--primary {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-button--primary {
   background: #79573d;
   border-color: #947358;
   color: #fffdf9;
 }
-html[data-site-theme="dark"] .el-button--primary:hover {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-button--primary:hover {
   background: #886548;
   color: #fffdf9;
 }
-html[data-site-theme="dark"] .el-button--text {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-button--text {
   background: transparent;
   border-color: transparent;
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .el-button--danger.is-plain {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-button--danger.is-plain {
   color: #f0a28e;
   background: #422b25;
   border-color: #815445;
 }
-html[data-site-theme="dark"] .el-tag {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-tag {
   color: #d8b68f;
   background: #44382b;
   border-color: #6b5841;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.el-tag--success, .el-alert--success.is-light, .el-message--success) {
   color: #b9d4a8;
   background: #2d3928;
   border-color: #4b6340;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.el-tag--warning, .el-alert--warning.is-light, .el-message--warning) {
   color: #efd09a;
   background: #413624;
   border-color: #79613e;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.el-tag--danger, .el-alert--error.is-light, .el-message--error) {
   color: #f0ad9b;
   background: #422b25;
   border-color: #815445;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.el-tag--info, .el-alert--info.is-light, .el-message--info) {
   color: var(--site-muted);
   background: var(--site-raised);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"] :is(.el-message__content, .el-alert__description) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.el-message__content, .el-alert__description) {
   color: inherit;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.el-table, .el-table tr, .el-table th.el-table__cell, .el-table td.el-table__cell) {
   background: var(--site-surface);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell,
     .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell
   ) {
   background: var(--site-raised);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.el-table::before, .el-tabs__nav-wrap::after, .el-divider) {
   background: var(--site-line);
 }
-html[data-site-theme="dark"] .el-divider__text {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-divider__text {
   color: var(--site-muted);
   background: var(--site-surface);
 }
-html[data-site-theme="dark"] .el-skeleton__item {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-skeleton__item {
   background: #39332a;
 }
-html[data-site-theme="dark"] .el-skeleton.is-animated .el-skeleton__item {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-skeleton.is-animated .el-skeleton__item {
   background: linear-gradient(90deg, #39332a 25%, #494133 37%, #39332a 63%);
   background-size: 400% 100%;
 }
-html[data-site-theme="dark"] .el-loading-mask {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-loading-mask {
   background: #28251fd9;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.el-pagination button, .el-pager li, .el-pagination .el-input__inner) {
   background: var(--site-surface);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] .el-pager li.active {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-pager li.active {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] :is(.el-scrollbar__thumb, .el-switch__core) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.el-scrollbar__thumb, .el-switch__core) {
   background: #665d4f;
   border-color: #665d4f;
 }
-html[data-site-theme="dark"] .el-switch.is-checked .el-switch__core {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-switch.is-checked .el-switch__core {
   background: #947358;
   border-color: #947358;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .el-checkbox__input.is-checked .el-checkbox__inner,
     .el-radio__input.is-checked .el-radio__inner
@@ -463,22 +464,22 @@ html[data-site-theme="dark"]
   background: #947358;
   border-color: #947358;
 }
-html[data-site-theme="dark"] .popper__arrow {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .popper__arrow {
   border-bottom-color: var(--site-line) !important;
   border-top-color: var(--site-line) !important;
 }
-html[data-site-theme="dark"] .popper__arrow::after {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .popper__arrow::after {
   border-bottom-color: var(--site-surface) !important;
   border-top-color: var(--site-surface) !important;
 }
 
 /* Authentication and the legacy creation hub. Editor paper styles are independent. */
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.login-container, .forgot-password-container, .write-page) {
   background: var(--site-bg);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .login-box,
     .forgot-password-box,
@@ -491,68 +492,44 @@ html[data-site-theme="dark"]
   border-color: var(--site-line);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.login-input, .work-search, .input-group, .slide-verify-placeholder) {
   background: var(--site-raised);
   color: var(--site-ink);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.login-header h1, .verify-info, .work-title, .section-title, .stats-number) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.login-header p, .step-tip, .login-footer, .work-desc, .work-stats, .work-update) {
   color: var(--site-muted);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.forgot-link, .resend-btn, .work-action, .work-action:hover, .cancel-btn) {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .cancel-btn {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .cancel-btn {
   background: var(--site-surface);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
-  :is(.writer-workspace, .writer-dialog, .writer-notice, .writer-popover) {
-  --writer-bg: #1e1c19;
-  --writer-panel: #28251f;
-  --writer-sidebar: #28251f;
-  --writer-hover: #353027;
-  --writer-active: #44382b;
-  --writer-border: #504536;
-  --writer-text: #eee5d9;
-  --writer-muted: #c1b6a7;
-  --writer-accent: #9bc7df;
-  --writer-focus: #9bc7df;
-  --writer-primary: #eee5d9;
-  --writer-primary-hover: #fffdf9;
-  --writer-primary-text: #28251f;
-  --writer-success: #b9d4a8;
-  --writer-success-bg: #2d3928;
-  --writer-warning: #efd09a;
-  --writer-warning-bg: #413624;
-  --writer-danger: #f0ad9b;
-  --writer-danger-bg: #422b25;
-  --writer-info-bg: #2d3540;
-  color-scheme: dark;
-}
-html[data-site-theme="dark"] .social-workspace .el-button--primary {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .social-workspace .el-button--primary {
   background: var(--wood);
   border-color: var(--wood);
   color: #211e19;
 }
-html[data-site-theme="dark"] .social-workspace .el-button--primary:hover {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .social-workspace .el-button--primary:hover {
   background: #ffb88a;
   border-color: #ffb88a;
   color: #211e19;
 }
-html[data-site-theme="dark"] .social-workspace .el-button--primary.is-disabled {
-  background: #554938;
-  border-color: #665640;
-  color: #c4b6a5;
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .social-workspace .el-button--primary.is-disabled {
+  background: var(--soft, var(--site-raised));
+  border-color: var(--line, var(--site-line));
+  color: var(--muted, var(--site-muted));
 }
-html[data-site-theme="dark"] :is(.reading-dialog, .reading-drawer) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) :is(.reading-dialog, .reading-drawer) {
   --reading-surface: var(--site-surface);
   --reading-hover: var(--site-raised);
   --reading-tint: #44382b;
@@ -562,12 +539,12 @@ html[data-site-theme="dark"] :is(.reading-dialog, .reading-drawer) {
   --reading-line: var(--site-line);
   --reading-accent: var(--site-accent);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.el-drawer, .reader-activity-inbox, .reader-rewards, .redstone-center) {
   background: var(--site-bg);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .center-panel,
     .center-gate,
@@ -581,13 +558,13 @@ html[data-site-theme="dark"]
   border-color: var(--site-line);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.reader-rewards, .redstone-center, .reader-activity-inbox)
   :is(h1, h2, h3, strong, label, dt, dd, th, td) {
   color: var(--site-ink);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.reader-rewards, .redstone-center, .reader-activity-inbox)
   :is(
     .quiet,
@@ -601,12 +578,12 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-muted);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.reader-rewards, .redstone-center, .reader-activity-inbox)
   :is(a, summary) {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.reader-rewards, .redstone-center, .reader-activity-inbox)
   :is(
     input,
@@ -619,14 +596,14 @@ html[data-site-theme="dark"]
   background: var(--site-raised);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.reader-rewards, .redstone-center)
   :is(.primary, .exchange-button) {
   color: #fffdf9;
   background: #79573d;
   border-color: #947358;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .cost-line,
     .grant-list > div,
@@ -637,17 +614,17 @@ html[data-site-theme="dark"]
   ) {
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.reader-rewards, .redstone-center)
   :is(.error, .record-amount.spent) {
   color: #f0ad9b;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.reader-rewards, .redstone-center)
   :is(.success, .notice, .completed, .record-amount) {
   color: #b9d4a8;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .outer.reading-layout
   .main-content
   :is(.novel-container, .manga-container)
@@ -656,7 +633,7 @@ html[data-site-theme="dark"]
   color: #fffdf9;
   border-color: #947358;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .outer.reading-layout
   .main-content
   .novel-page
@@ -668,81 +645,72 @@ html[data-site-theme="dark"]
   background: #79573d;
   color: #fffdf9;
 }
-html[data-site-theme="dark"] .writer-workspace .el-button {
-  background: var(--writer-panel);
-  color: var(--writer-text);
-  border-color: var(--writer-border);
-}
-html[data-site-theme="dark"] .writer-workspace .el-button--primary {
-  background: var(--writer-primary);
-  color: var(--writer-primary-text);
-}
 /* Layout-specific legacy rules carry scoped attributes, so match the layout explicitly. */
-html[data-site-theme="dark"] .outer:is(.home-layout, .reading-layout, .social-layout) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .outer:is(.home-layout, .reading-layout, .social-layout) {
   background: var(--site-bg);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .outer:is(.home-layout, .reading-layout, .social-layout)
   :is(.navbar, .site-footer, .footer) {
   background: var(--site-surface);
   color: var(--site-muted);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .outer:is(.home-layout, .reading-layout, .social-layout)
   .navbar
   :is(.nav-link, .user-nickname, .user-info) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .outer:is(.home-layout, .reading-layout, .social-layout)
   .navbar
   .nav-link-active {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .outer:is(.home-layout, .reading-layout, .social-layout) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .outer:is(.home-layout, .reading-layout, .social-layout) {
   --site-footer-link: var(--site-accent);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .write-page
   :is(.work-empty, .sidebar-section, .loading-state, .error-state, .activity-info) {
   background: var(--site-surface);
   border-color: var(--site-line);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .write-page
   :is(.page-title, .sidebar-title, .stat-value, .empty-title, .error-title) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .write-page
   :is(.tab-button, .stat-label, .empty-desc, .loading-text, .error-desc) {
   color: var(--site-muted);
 }
-html[data-site-theme="dark"] .write-page :is(.stat-item, .activity-item, .work-action) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .write-page :is(.stat-item, .activity-item, .work-action) {
   background: var(--site-raised);
   color: var(--site-ink);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"] .write-page .tab-button.active {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .write-page .tab-button.active {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .outer.reading-layout .main-content .reader-ai .send,
-html[data-site-theme="dark"] .reading-dialog .el-button--primary,
-html[data-site-theme="dark"] .el-drawer.reading-drawer .submit-btn {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .outer.reading-layout .main-content .reader-ai .send,
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .reading-dialog .el-button--primary,
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .el-drawer.reading-drawer .submit-btn {
   background: #79573d;
   border-color: #947358;
   color: #fffdf9;
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .user-profile-page
   :is(.profile-header, .content-tabs, .post-item, .world-item) {
   background: var(--site-surface);
   border-color: var(--site-line);
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .user-profile-page
   :is(
     .user-name,
@@ -756,7 +724,7 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .user-profile-page
   :is(
     .stat-label,
@@ -768,28 +736,28 @@ html[data-site-theme="dark"]
   ) {
   color: var(--site-muted);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   .user-profile-page
   :is(.tab-item:hover, .tab-item.active, .post-novel) {
   background: var(--site-raised);
 }
-html[data-site-theme="dark"] .user-profile-page :is(.tab-header, .post-footer) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .user-profile-page :is(.tab-header, .post-footer) {
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.profile-membership, .profile-display-title, .public-badge-detail a) {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .open-letter {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .open-letter {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] .open-letter :is(a, .letter-eyebrow, time) {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .open-letter :is(a, .letter-eyebrow, time) {
   color: var(--site-accent);
 }
-html[data-site-theme="dark"] .archive-note {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .archive-note {
   background: var(--site-raised);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(
     .agreement-container,
     .agreement-content,
@@ -802,16 +770,16 @@ html[data-site-theme="dark"]
   color: var(--site-ink);
   border-color: var(--site-line);
 }
-html[data-site-theme="dark"]
+html[data-site-theme="dark"]:where(:not(.writer-route-active))
   :is(.agreement-page, .search-page)
   :is(h1, h2, h3, p, .tab-item, .result-title) {
   color: var(--site-ink);
 }
-html[data-site-theme="dark"] .personal-tree > span {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .personal-tree > span {
   color: var(--site-muted);
 }
 /* Apply before hydration too; workspace data attributes are refreshed after mount. */
-html[data-site-theme="dark"] .social-workspace {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .social-workspace {
   --wood: #f2a16d;
   --ink: var(--site-ink);
   --muted: var(--site-muted);
@@ -819,5 +787,5 @@ html[data-site-theme="dark"] .social-workspace {
   --surface: var(--site-surface);
   --soft: var(--site-raised);
 }
-html[data-site-theme="dark"] .social-workspace .workspace-compose { color: #211e19 !important; }
-html[data-site-theme="dark"] .social-workspace .workspace-nav nav a:is(.selected, .nuxt-link-active, :hover) { background: var(--soft); color: var(--wood); }
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .social-workspace .workspace-compose { color: #211e19 !important; }
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .social-workspace .workspace-nav nav a:is(.selected, .nuxt-link-active, :hover) { background: var(--soft); color: var(--wood); }

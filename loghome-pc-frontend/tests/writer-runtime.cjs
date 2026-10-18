@@ -214,6 +214,69 @@ test("in-flight upload does not mark later keystrokes as synced", async () => {
   assert.notEqual(writerSignature(f.session.article), f.session.baseline);
   await f.session.close();
 });
+test("unchanged manual and periodic snapshots keep local history without cloud round trips", async () => {
+  const f = fixture();
+  await f.session.open(10);
+  f.api.get = async () => { throw new Error("unchanged saves must not download drafts"); };
+  await f.session.save(true);
+  await f.session.save(false);
+  assert.ok(!f.writes.some((w) => w.name === "upload_article_writer"));
+  assert.equal(f.backup.title, "第一章");
+  await f.session.close();
+});
+test("conditional saves send acknowledged metadata, avoid full preflight downloads, and advance their baseline", async () => {
+  const f = fixture({ reader: { content_hash: "old-hash", supports_conditional_save: true } });
+  await f.session.open(10);
+  f.api.get = async () => { throw new Error("save must use a single upload request"); };
+  const post = f.api.post;
+  f.api.post = async (name, body) => {
+    const result = await post(name, body);
+    return name === "upload_article_writer"
+      ? { writer_snapshot: { content_hash: "saved-hash", title: body.title } } : result;
+  };
+  f.session.article.title = "第一次修改";
+  await f.session.save();
+  f.session.article.title = "第二次修改";
+  await f.session.save();
+  const uploads = f.writes.filter((w) => w.name === "upload_article_writer");
+  assert.deepEqual(uploads[0].body.base_writer, { content_hash: "old-hash", title: "第一章" });
+  assert.deepEqual(uploads[1].body.base_writer, { content_hash: "saved-hash", title: "第一次修改" });
+  await f.session.close();
+});
+test("server-side revision conflict fetches the remote version only on conflict and retains local edits", async () => {
+  const f = fixture({ reader: { content_hash: "old-hash", supports_conditional_save: true } });
+  await f.session.open(10);
+  const post = f.api.post;
+  f.api.post = async (name, body) => {
+    if (name !== "upload_article_writer") return post(name, body);
+    const error = new Error("云端内容已变化");
+    error.data = { code: "writer_revision_conflict" };
+    throw error;
+  };
+  const remote = { ...f.session.article, title: "云端修改", content_hash: "remote-hash" };
+  f.setRemote(remote);
+  f.session.article.title = "本机修改";
+  await assert.rejects(f.session.save(), (error) => error.remote.title === "云端修改");
+  assert.equal(f.states.at(-1).status, "conflict");
+  assert.equal(f.backup.title, "本机修改");
+  f.session.adoptRemote(remote);
+  assert.equal(f.session.baseWriter.content_hash, "remote-hash");
+  await f.session.close();
+});
+test("overlapping saves serialize even while the local backup is pending", async () => {
+  const f = fixture();
+  await f.session.open(10);
+  const persist = f.session.drafts.persist;
+  let release;
+  const paused = new Promise((resolve) => { release = resolve; });
+  f.session.drafts.persist = async (...args) => { await paused; return persist(...args); };
+  f.session.article.title = "只上传一次";
+  const first = f.session.save(), second = f.session.save();
+  release();
+  await Promise.all([first, second]);
+  assert.equal(f.writes.filter((w) => w.name === "upload_article_writer").length, 1);
+  await f.session.close();
+});
 test("NDJSON stream survives split Unicode and missing final newline", async () => {
   const { consumeWriterStream } = load("utils/writer/ndjson.js"),
     encoded = new TextEncoder().encode(
@@ -536,6 +599,25 @@ test("catalog badges detect nested writer snapshots and title-only edits without
     hasUnpublishedCatalogChanges({ ...nested, local_writer_modified: false }),
     false
   );
+});
+test("catalog counts prefer live drafts, including empty drafts, without counting images or vocabulary metadata", () => {
+  const { normalizeCatalogArticle, catalogTextCount, writerTextCount } = load("utils/writer/catalog.js");
+  const article = { article_type: "richtext", text_count: 6000,
+    article_writer: { text_count: 10 } };
+  assert.equal(catalogTextCount(normalizeCatalogArticle(article)), 10);
+  assert.equal(catalogTextCount({ ...article, local_writer_text_count: 0 }), 0);
+  assert.equal(catalogTextCount({ text_count: 6000, article_writer: { text_count: 0 } }), 0);
+  assert.equal(catalogTextCount({ text_count: 6000 }), 6000);
+  assert.equal(catalogTextCount({ text_count: 6000, article_writer: { text_count: null } }), 6000);
+  assert.equal(writerTextCount({ article_type: "richtext", content: JSON.stringify([
+    { type: "text", value: "最新草稿" }, { type: "image", img: "https://fixture.test/image.png" },
+    { type: "text", value: "第二段" }
+  ]) }), 7);
+  assert.equal(writerTextCount({ article_type: "worldOutline", content: "[]" }), 0);
+  assert.equal(writerTextCount({ article_type: "worldVocabulary", content: JSON.stringify({
+    desc: "词条简介", attributes: [{ content: "属性不计入正文字数" }]
+  }) }), 4);
+  assert.equal(writerTextCount({ article_type: "richtext", content: "invalid" }), null);
 });
 test("saving and adopting author drafts preserve the separate published comparison baseline", async () => {
   const f = fixture();

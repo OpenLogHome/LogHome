@@ -168,6 +168,45 @@ test('repeated adjacent delta characters are not removed from model JSON', async
 	assert.equal(result.paragraph_results[0].corrected_text, '嘿嘿');
 });
 
+test('interleaved model streams carry distinct identities through retries', async () => {
+	const attempts = new Map();
+	const f = fixture(async (_, options) => {
+		const message = JSON.parse(options.body).messages[1].content;
+		const index = Number(message.match(/\[段落(\d+)\]/)[1]);
+		const attempt = (attempts.get(index) || 0) + 1;
+		attempts.set(index, attempt);
+		const line = (delta, finish_reason) => Buffer.from('data: ' + JSON.stringify({ choices: [{ delta, finish_reason }] }) + '\n');
+		return { ok: true, body: Readable.from((async function* () {
+			yield line({ reasoning_content: `批${index}尝试${attempt}：` });
+			await new Promise(resolve => setImmediate(resolve));
+			yield line({ reasoning_content: '思' });
+			await new Promise(resolve => setImmediate(resolve));
+			yield line({ reasoning_content: '思考' });
+			yield line({ content: index === 1 && attempt === 1 ? '{}' : '{"paragraphs":[]}' }, 'stop');
+		})()) };
+	}, {
+		paragraphs: [paragraph('正文甲'), paragraph('正文乙', 2)],
+		env: { WRITER_TEXT_CORRECTION_BATCH_PARAGRAPHS: '1' },
+	});
+	await f.run();
+	const starts = f.events.filter(event => event.type === 'status');
+	assert.deepEqual(starts.map(event => event.batch_index), [1, 2, 1]);
+	assert.deepEqual(starts.map(event => event.stream_id), [1, 2, 3]);
+	const reasoning = f.events.filter(event => event.type === 'reasoning_delta');
+	assert.deepEqual(reasoning.slice(0, 2).map(event => event.batch_index), [1, 2]);
+	for (const start of starts) {
+		const stream = f.events.filter(event => event.stream_id === start.stream_id);
+		assert(stream.every(event => event.batch_index === start.batch_index && event.batch_count === 2));
+		assert.equal(stream.filter(event => event.type === 'reasoning_delta').map(event => event.content).join(''),
+			`批${start.batch_index}尝试${start.stream_id === 3 ? 2 : 1}：思思考`);
+		assert.equal(stream.filter(event => event.type === 'delta').length, 1);
+	}
+	const result = f.events.find(event => event.type === 'done').result;
+	assert.equal(result.summary.error_count, 0);
+	assert.equal(result.summary.model_request_count, 3);
+	assert.equal(f.billingCalls(), 1);
+});
+
 test('unauthorized upstream errors do not retry and missing credentials do not bill', async () => {
 	let calls = 0;
 	const f = fixture(async () => { calls += 1; return { ok: false, status: 401, json: async () => ({ message: 'invalid key' }) }; });

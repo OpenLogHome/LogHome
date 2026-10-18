@@ -310,13 +310,13 @@ export default {
 
   .page-title {
     font-size: 22px;
-    color: #333;
+    color: var(--ink, #30343b);
     margin: 12px 0 0;
   }
 }
 
 .friends-card {
-  background: #fff;
+  background: var(--surface, #fff);
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   padding: 0 20px 20px;
@@ -331,7 +331,7 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 40px 0;
-  color: #999;
+  color: var(--muted, #5b626d);
 
   .empty-image {
     width: 120px;
@@ -351,12 +351,12 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 14px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 8px;
 
   &:hover {
-    border-color: #e0d5c8;
-    background: #faf8f5;
+    border-color: var(--wood, #c65320);
+    background: var(--soft, #f1f3f5);
   }
 
   .avatar {
@@ -366,7 +366,7 @@ export default {
     object-fit: cover;
     flex-shrink: 0;
     cursor: pointer;
-    background: #f5f5f5;
+    background: var(--soft, #f1f3f5);
   }
 
   .user-meta {
@@ -376,7 +376,7 @@ export default {
     .name {
       display: block;
       font-size: 15px;
-      color: #333;
+      color: var(--ink, #30343b);
       font-weight: 500;
       cursor: pointer;
       overflow: hidden;
@@ -387,7 +387,7 @@ export default {
     .motto {
       display: block;
       font-size: 12px;
-      color: #999;
+      color: var(--muted, #5b626d);
       margin-top: 4px;
       overflow: hidden;
       text-overflow: ellipsis;

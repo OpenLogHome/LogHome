@@ -501,13 +501,13 @@ export default {
 
   .page-title {
     font-size: 22px;
-    color: #333;
+    color: var(--ink, #30343b);
     margin: 12px 0 0;
   }
 }
 
 .settings-card {
-  background: #fff;
+  background: var(--surface, #fff);
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   padding: 20px;
@@ -516,7 +516,7 @@ export default {
 
 .section-title {
   font-size: 16px;
-  color: #333;
+  color: var(--ink, #30343b);
   margin: 0 0 16px;
   padding-left: 10px;
   border-left: 3px solid var(--wood, #947358);
@@ -541,7 +541,7 @@ export default {
 
   .image-label {
     font-size: 13px;
-    color: #666;
+    color: var(--muted, #5b626d);
   }
 
   .avatar-preview {
@@ -549,7 +549,7 @@ export default {
     height: 88px;
     border-radius: 50%;
     object-fit: cover;
-    background: #f5f5f5;
+    background: var(--soft, #f1f3f5);
   }
 
   &.cover .cover-preview {
@@ -557,21 +557,21 @@ export default {
     height: 120px;
     object-fit: cover;
     border-radius: 6px;
-    background: #f5f5f5;
+    background: var(--soft, #f1f3f5);
   }
 }
 
 .tip {
   margin: 16px 0 0;
   font-size: 12px;
-  color: #999;
+  color: var(--muted, #5b626d);
 }
 
 .info-row {
   display: flex;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid var(--line, #e2e6eb);
 
   &:last-child {
     border-bottom: none;
@@ -580,13 +580,13 @@ export default {
   .label {
     width: 90px;
     font-size: 14px;
-    color: #666;
+    color: var(--muted, #5b626d);
   }
 
   .value {
     flex: 1;
     font-size: 14px;
-    color: #333;
+    color: var(--ink, #30343b);
   }
 }
 

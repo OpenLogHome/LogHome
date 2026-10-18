@@ -139,3 +139,78 @@ test('publish page does not infer progress from reasoning or concatenate batch J
   event({ type: 'done', result: { summary: { paragraph_count: 4, error_count: 2 }, paragraph_results: [] } });
   assert.equal(context.smartCorrectionProgress.analyzed, 2);
 });
+
+function publishThinkingContext() {
+  const component = publishComponent();
+  const context = component.data();
+  Object.entries(component.methods).forEach(([name, method]) => { context[name] = method.bind(context); });
+  Object.entries(component.computed).forEach(([name, getter]) => {
+    Object.defineProperty(context, name, { get: () => getter.call(context) });
+  });
+  context.$nextTick = callback => callback.call(context);
+  return context;
+}
+
+test('publish page keeps interleaved batch reasoning in separate ordered blocks', async () => {
+  const context = publishThinkingContext();
+  const result = { summary: { paragraph_count: 2, error_count: 0 }, paragraph_results: complete };
+  const events = [
+    { type: 'meta', batched: true },
+    { type: 'status', batch_index: 2, batch_count: 2, stream_id: 2 },
+    { type: 'status', batch_index: 1, batch_count: 2, stream_id: 1 },
+    { type: 'reasoning_delta', batch_index: 2, batch_count: 2, stream_id: 2, content: '逐段' },
+    { type: 'reasoning_delta', batch_index: 1, batch_count: 2, stream_id: 1, content: '尽可能地平缓' },
+    { type: 'heartbeat' },
+    { type: 'thinking_delta', batch_index: 2, batch_count: 2, stream_id: 2, content: '检查文本。' },
+    { type: 'reasoning_delta', batch_index: 1, batch_count: 2, stream_id: 1, content: '，用法正确。' },
+    { type: 'delta', batch_index: 2, stream_id: 2, content: '{"paragraphs":[]}' },
+    { type: 'done', result },
+  ];
+  const actual = await readWriterCorrectionStream(response(events, { bytes: true }), {
+    paragraphs,
+    onEvent: event => context.processCorrectionStreamLine(JSON.stringify(event), null),
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(context.smartThinkingBlocks.map(stream => stream.text))), [
+    '尽可能地平缓，用法正确。', '逐段检查文本。',
+  ]);
+  assert.equal(context.smartCorrectionContentText, '');
+  assert.deepEqual(JSON.parse(JSON.stringify(actual)), result);
+});
+
+test('retries have independent reasoning even when they share a batch index', () => {
+  const context = publishThinkingContext();
+  const event = value => context.processCorrectionStreamLine(JSON.stringify({ batch_index: 1, batch_count: 1, ...value }), null);
+  event({ type: 'status', stream_id: 1 });
+  event({ type: 'reasoning_delta', stream_id: 1, content: '原请求的思考' });
+  event({ type: 'status', stream_id: 2 });
+  event({ type: 'reasoning_delta', stream_id: 2, content: '重' });
+  event({ type: 'reasoning_delta', stream_id: 2, content: '重' });
+  event({ type: 'reasoning_delta', stream_id: 1, content: '。' });
+  assert.deepEqual(JSON.parse(JSON.stringify(context.smartThinkingBlocks.map(stream => [stream.attempt, stream.text]))), [
+    [1, '原请求的思考。'], [2, '重重'],
+  ]);
+});
+
+test('older services group reasoning by batch and split retries at status events', () => {
+  const context = publishThinkingContext();
+  const event = value => context.processCorrectionStreamLine(JSON.stringify(value), null);
+  event({ type: 'status', batch_index: 1, batch_count: 2 });
+  event({ type: 'reasoning_delta', batch_index: 1, content: '第一批' });
+  event({ type: 'reasoning_delta', batch_index: 2, content: '第二批' });
+  event({ type: 'thinking_delta', batch_index: 1, content: '思考' });
+  event({ type: 'status', batch_index: 1, batch_count: 2 });
+  event({ type: 'reasoning_delta', batch_index: 1, content: '重试思考' });
+  assert.deepEqual(JSON.parse(JSON.stringify(context.smartThinkingBlocks.map(stream => stream.text))), [
+    '第一批思考', '重试思考', '第二批',
+  ]);
+});
+
+test('legacy model output remains available for parsing and stays out of the thinking panel', () => {
+  const context = publishThinkingContext();
+  const event = value => context.processCorrectionStreamLine(JSON.stringify(value), null);
+  event({ type: 'reasoning_delta', content: '思思考' });
+  event({ type: 'delta', content: '{"paragraphs":[]}' });
+  assert.equal(context.smartThinkingBlocks.length, 1);
+  assert.equal(context.smartThinkingBlocks[0].text, '思思考');
+  assert.equal(context.smartCorrectionContentText, '{"paragraphs":[]}');
+});

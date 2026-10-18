@@ -14,7 +14,7 @@
 </template>
 <script>
 export default {
-  layout: "empty",
+  layout: "writer",
   components: {
     // client-only hides SSR output, but static imports still execute on the server.
     WriterWorkspace: process.client
@@ -68,5 +68,6 @@ export default {
 html.writer-route-active,
 body.writer-route-active {
   overflow: hidden;
+  scrollbar-gutter: auto;
 }
 </style>
