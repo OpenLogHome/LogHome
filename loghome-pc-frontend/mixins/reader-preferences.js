@@ -68,6 +68,7 @@ export default {
         color: this.readerTheme.fontColor,
         "--reader-secondary": this.readerTheme.secondaryFontColor,
         "--reader-line": this.readerTheme.lineColor,
+        "--reader-speaking-bg": this.readerNightMode ? "#38483d" : "#e5ecd7",
         ...skinStyle,
       };
     },
