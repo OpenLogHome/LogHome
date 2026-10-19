@@ -134,6 +134,7 @@ import writerDialogTheme from "~/mixins/writer-dialog-theme";
 import { WRITER_SYMBOLS } from "~/utils/writer/preferences";
 import { createBackgroundSkinStyle } from "~/utils/reader-backgrounds";
 import { Editor, EditorContent } from "@tiptap/vue-2";
+import { ySyncPluginKey } from "y-prosemirror";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -269,7 +270,7 @@ export default {
       onTransaction: ({ transaction }) => {
         if (transaction.docChanged) {
           this.endsWithImage = transaction.doc.lastChild?.type.name === "image";
-          this.$emit("transaction", transaction);
+          this.$emit("transaction", transaction, Boolean(transaction.getMeta(ySyncPluginKey)));
         }
       },
       onSelectionUpdate: ({ editor }) =>

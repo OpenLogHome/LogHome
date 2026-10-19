@@ -14,6 +14,7 @@
     "generate:writer:icons": "node scripts/generate-writer-icons.cjs",
     "test:writer:modified": "node tests/writer-modified.cjs",
     "test:writer:save": "node tests/writer-save.cjs",
+    "test:writer:startup": "node tests/writer-startup.cjs",
     "test:writer:preview-theme": "node tests/writer-preview-theme.cjs",
     "test:writer:catalog": "node tests/writer-catalog.cjs",
     "test:writer:ui": "node tests/writer-ui.cjs",
@@ -30,6 +31,7 @@
     "test:theme": "node tests/site-theme.cjs",
     "test:theme:browser": "node tests/night-mode.cjs",
     "test:tree": "node tests/tree-scene-framing.cjs",
+    "test:tree:layout": "node tests/tree-layout.cjs",
     "test:language": "node tests/language-runtime.cjs"
   },
   "dependencies": {

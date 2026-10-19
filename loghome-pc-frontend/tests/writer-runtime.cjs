@@ -388,6 +388,13 @@ test("writer route renders on a server without crypto and defers editor imports 
       exports,
       process: { client, server: !client },
       require(specifier) {
+        if (specifier === "~/components/write/WriterStartup.vue") {
+          const startup = compiler.parseComponent(fs.readFileSync(path.join(root, "components/write/WriterStartup.vue"), "utf8"));
+          return { __esModule: true, default: { ...load("components/write/WriterStartup.vue").default,
+            ...compiler.compileToFunctions(startup.template.content) } };
+        }
+        if (specifier === "~/utils/writer/workspace-loader")
+          return { loadWriterWorkspace() { assert.fail("SSR must not start the editor download"); } };
         assert.fail(`Route eagerly loaded browser dependency: ${specifier}`);
       },
     });
@@ -408,7 +415,9 @@ test("writer route renders on a server without crypto and defers editor imports 
   });
   const html = await createRenderer().renderToString(app);
   assert.match(html, /正在准备写作工作台/);
-  assert.equal(typeof evaluate(true).components.WriterWorkspace, "function");
+  assert.match(html, /writer-startup/);
+  assert.equal(serverRoute.data().workspaceComponent, null);
+  assert.equal(typeof evaluate(true).methods.prepareWorkspace, "function");
 });
 
 test("version previews render stored prose and vocabulary without mutating snapshots or exposing malformed JSON", () => {

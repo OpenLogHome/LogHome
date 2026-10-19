@@ -57,7 +57,7 @@
               <p class="work-desc">{{work.description}}</p>
               <p class="work-update">最近更新: {{work.lastUpdate}}</p>
               <div class="work-actions">
-                <button class="work-action primary" @click="openEditPage(work.id)">开始写作</button>
+                <nuxt-link class="work-action primary" :to="`/write/edit/${work.id}`" target="_blank" rel="noopener" @mouseenter.native="warmWriter" @focus.native="warmWriter" @click.native="warmWriter">开始写作</nuxt-link>
                 <button class="work-action" @click="$router.push(`/write/edit/${work.id}?tool=settings`)">作品设置</button>
               </div>
               
@@ -125,6 +125,7 @@
 
 <script>
 import SiteIcon from '~/components/ui/SiteIcon.vue'
+import { preloadWriterWorkspace } from '~/utils/writer/workspace-loader'
 export default {
   components: { SiteIcon },
   head() {
@@ -340,13 +341,9 @@ export default {
       this.$router.push('/write/new')
     },
     
-    openEditPage(workId) {
-      // 在新窗口中打开编辑页面
-      const url = `/write/edit/${workId}`
-      window.open(url, '_blank')
+    warmWriter() {
+      preloadWriterWorkspace()
     },
-    
-    // 创作活动相关方法
     openNewsLink(news) {
       if (news.pc_link) {
         window.open(news.pc_link, '_blank')
@@ -791,6 +788,9 @@ $orange-dark: #fa6c2e;
     }
     
     .work-action {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
       padding: 8px 15px;
       border-radius: 4px;
       background-color: $border-light;

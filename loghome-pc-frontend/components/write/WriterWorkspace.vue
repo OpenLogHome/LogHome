@@ -667,18 +667,12 @@ import {
   WRITER_THEMES,
   resolveWriterTheme,
 } from "~/utils/writer/preferences";
-import ChapterEditor from "./ChapterEditor.vue";
 import WriterChapterLoading from "./WriterChapterLoading.vue";
+import WriterAsyncNotice from "./WriterAsyncNotice.vue";
 import WriterPanel from "./WriterPanel.vue";
 import PanelResizeHandle from "./PanelResizeHandle.vue";
 import WriterVersionPreview from "./WriterVersionPreview.vue";
 import WriterEmptyState from "./WriterEmptyState.vue";
-import VocabularyEditor from "./VocabularyEditor.vue";
-import WriterTools from "./WriterTools.vue";
-import WriterAi from "./WriterAi.vue";
-import MangaEditor from "./MangaEditor.vue";
-import PublishPanel from "./PublishPanel.vue";
-import ReaderPreview from "~/components/read/ReaderPreview.vue";
 import { storeReaderPreview } from "~/utils/reader-preview";
 import {
   writerRequest,
@@ -689,13 +683,11 @@ import {
   downloadWriterFile,
 } from "~/utils/writer/api";
 import { validateWriterContent } from "~/utils/writer/validate";
-import { ySyncPluginKey } from "y-prosemirror";
 import { normalizeBackgroundSkin } from "~/utils/reader-backgrounds";
 import { loadReaderFont } from "~/utils/reader-font-loader";
 import fonts from "~/config/reader/fonts.json";
 import { readerFonts } from "~/utils/reader-preferences";
 import { WriterSession } from "~/utils/writer/session";
-import { WriterRealtime } from "~/utils/writer/realtime";
 import { writerSignature, writerTime } from "~/utils/writer/drafts";
 import {
   createNovelWritingActivityReporter,
@@ -705,6 +697,15 @@ import {
   legacyBlocksToDoc,
   parseLegacyContent,
 } from "~/utils/writer/legacy-adapter";
+function lazyWriterView(loader) {
+  return () => ({
+    component: loader(),
+    loading: WriterAsyncNotice,
+    error: { render: (h) => h(WriterAsyncNotice, { props: { failed: true } }) },
+    delay: 0,
+    timeout: 30000,
+  });
+}
 const tools = [
   ["ai", "el-icon-magic-stick", "AI 助手", "助手"],
   ["history", "el-icon-time", "云端时间机器", "历史"],
@@ -726,14 +727,14 @@ export default {
     WriterPanel,
     WriterVersionPreview,
     WriterEmptyState,
-    ChapterEditor,
+    ChapterEditor: lazyWriterView(() => import(/* webpackChunkName: "writer-editor" */ "./ChapterEditor.vue")),
     WriterChapterLoading,
-    VocabularyEditor,
-    WriterTools,
-    WriterAi,
-    MangaEditor,
-    PublishPanel,
-    ReaderPreview,
+    VocabularyEditor: lazyWriterView(() => import(/* webpackChunkName: "writer-vocabulary" */ "./VocabularyEditor.vue")),
+    WriterTools: lazyWriterView(() => import(/* webpackChunkName: "writer-tools" */ "./WriterTools.vue")),
+    WriterAi: lazyWriterView(() => import(/* webpackChunkName: "writer-ai" */ "./WriterAi.vue")),
+    MangaEditor: lazyWriterView(() => import(/* webpackChunkName: "writer-manga" */ "./MangaEditor.vue")),
+    PublishPanel: lazyWriterView(() => import(/* webpackChunkName: "writer-publish" */ "./PublishPanel.vue")),
+    ReaderPreview: lazyWriterView(() => import(/* webpackChunkName: "writer-reader-preview" */ "~/components/read/ReaderPreview.vue")),
   },
   props: { workId: Number },
   data: () => ({
@@ -1602,6 +1603,7 @@ export default {
         this.article = result.article;
         const collaboration = this.article.collaboration;
         if (collaboration && collaboration.mode === "realtime_crdt") {
+          const { WriterRealtime } = await import(/* webpackChunkName: "writer-collaboration" */ "~/utils/writer/realtime");
           const realtime = new WriterRealtime(
             item.article_id,
             (state) => {
@@ -1687,12 +1689,12 @@ export default {
       if (this.realtime) this.realtime.setTitle(value);
       if (this.activity) this.activity.markActive();
     },
-    writingTransaction(transaction) {
+    writingTransaction(transaction, remote = false) {
       if (
         this.activity &&
         this.canEdit &&
         transaction.docChanged &&
-        !transaction.getMeta(ySyncPluginKey)
+        !remote
       ) {
         this.activity.markActive();
         this.activity.recordWrittenCharacters(
