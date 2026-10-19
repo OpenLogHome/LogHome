@@ -3281,7 +3281,7 @@ export default {
       return serverTime || buildClientSyncTime();
     },
     scheduleInputSync() {
-      if (this.isRealtimeCollaboration) {
+      if (this.isRealtimeCollaboration || this.publishHandoffActive) {
         return;
       }
       if (this.shouldSuppressEditorSyncForCompletedPublish()) {
@@ -3303,7 +3303,7 @@ export default {
         return;
       }
 
-      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+      if (this.publishHandoffActive || this.shouldSuppressEditorSyncForCompletedPublish()) {
         return;
       }
 
@@ -3435,7 +3435,7 @@ export default {
       }
     },
     markLockReconnecting(error) {
-      if (this.lockState === "lost") {
+      if (this.lockState === "lost" || !this.canMaintainEditLock()) {
         return;
       }
       this.currentEditLock = this.getErrorLockInfo(error) || this.currentEditLock;
@@ -3445,7 +3445,7 @@ export default {
       this.scheduleLockReconnect();
     },
     scheduleLockReconnect() {
-      if (this.leaveFinalized || document.visibilityState === "hidden") {
+      if (!this.canMaintainEditLock()) {
         return;
       }
       if (this.lockReconnectTimer || this.lockReconnectInFlight) {
@@ -3463,7 +3463,7 @@ export default {
       }, delay);
     },
     async recoverEditLock() {
-      if (this.leaveFinalized || document.visibilityState === "hidden") {
+      if (!this.canMaintainEditLock()) {
         return;
       }
       if (this.lockReconnectInFlight) {
@@ -3480,7 +3480,22 @@ export default {
         }
       }
     },
+    canMaintainEditLock() {
+      return !this.publishHandoffActive && !this.leaveFinalized &&
+        document.visibilityState !== "hidden";
+    },
     async claimEditLock(options = {}) {
+      if (!this.canMaintainEditLock()) return false;
+      if (this._editLockClaimPromise) return this._editLockClaimPromise;
+      const pending = this.requestEditLock(options);
+      this._editLockClaimPromise = pending;
+      try {
+        return await pending;
+      } finally {
+        if (this._editLockClaimPromise === pending) this._editLockClaimPromise = null;
+      }
+    },
+    async requestEditLock(options = {}) {
       const tk = this.getAuthToken();
       if (!tk || !this.chapterId || !this.editSessionId) return false;
 
@@ -3498,11 +3513,13 @@ export default {
             },
           }
         );
+        if (!this.canMaintainEditLock()) return false;
         this.currentEditLock = response.data.lock || null;
         this.markLockActive();
         this.startLockHeartbeat();
         return true;
       } catch (error) {
+        if (!this.canMaintainEditLock()) return false;
         if (this.isStaleSessionError(error)) {
           const staleAction = this.handleStaleSessionError(error);
           return staleAction === "reconnecting" && !options.fromReconnect;
@@ -3521,6 +3538,7 @@ export default {
     },
     startLockHeartbeat() {
       this.stopLockHeartbeat();
+      if (!this.canMaintainEditLock()) return;
       this.lockHeartbeatTimer = setInterval(() => {
         this.heartbeatEditLock();
       }, EDIT_LOCK_HEARTBEAT_MS);
@@ -3532,6 +3550,7 @@ export default {
       }
     },
     async heartbeatEditLock() {
+      if (!this.canMaintainEditLock()) return;
       const tk = this.getAuthToken();
       if (!tk || !this.chapterId || !this.editSessionId) return;
 
@@ -3549,9 +3568,11 @@ export default {
             },
           }
         );
+        if (!this.canMaintainEditLock()) return;
         this.currentEditLock = response.data.lock || null;
         this.markLockActive();
       } catch (error) {
+        if (!this.canMaintainEditLock()) return;
         if (this.isStaleSessionError(error)) {
           this.handleStaleSessionError(error);
           return;
@@ -3607,6 +3628,7 @@ export default {
       return this.isLockOwnedByCurrentUser(lockInfo);
     },
     handleStaleSessionError(error) {
+      if (this.publishHandoffActive) return "handoff";
       if (this.isRecoverableStaleSessionError(error)) {
         const syncTime = buildClientSyncTime();
         this.markSyncPending(syncTime, "stale_session_reconnecting");
@@ -3682,7 +3704,7 @@ export default {
         this.stopLockHeartbeat();
         this.stopSaveNotifyTimer();
         this.clearPendingEditorSyncTimers();
-        if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+        if (this.publishHandoffActive || this.shouldSuppressEditorSyncForCompletedPublish()) {
           return;
         }
         if (this.isRealtimeCollaboration) {
@@ -3788,7 +3810,7 @@ export default {
       forceSlowSave = false,
       waitForBusy = false,
     } = {}) {
-      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+      if (this.publishHandoffActive || this.shouldSuppressEditorSyncForCompletedPublish()) {
         return;
       }
       if (!this.loadComplete) return;
@@ -5525,7 +5547,7 @@ export default {
       isForce = false,
       snapshotVersion = this.contentVersion
     ) {
-      if (this.shouldSuppressEditorSyncForCompletedPublish()) {
+      if (this.publishHandoffActive || this.shouldSuppressEditorSyncForCompletedPublish()) {
         return null;
       }
 
@@ -5553,6 +5575,7 @@ export default {
             },
           }
         );
+        if (this.publishHandoffActive) return response;
         const writerSnapshot =
           (response &&
             response.data &&
@@ -5576,6 +5599,7 @@ export default {
 
         return response;
       } catch (error) {
+        if (this.publishHandoffActive) return null;
         if (this.isStaleSessionError(error)) {
           this.handleStaleSessionError(error);
           return null;
@@ -7413,6 +7437,7 @@ export default {
       });
     },
     async handlePublishAction() {
+      if (this.publishHandoffActive) return;
       if (!this.canPublishArticle) {
         this.save(1, "协作草稿已保存");
         return;
@@ -7436,10 +7461,26 @@ export default {
       }
 
       this.publishHandoffActive = true;
+      this.stopLockHeartbeat();
+      this.clearLockReconnectTimer();
+      this.clearPendingEditorSyncTimers();
+      // Finish any claim already sent before the publish page takes ownership.
+      await Promise.all([
+        this._editLockClaimPromise,
+        this.syncTaskPromise,
+      ].map(pending => Promise.resolve(pending).catch(() => {})));
       uni.navigateTo({
         url: `/pages/writers/workPublish?id=${this.chapterId}&sourceSessionId=${encodeURIComponent(
           this.editSessionId
         )}`,
+        fail: () => {
+          this.publishHandoffActive = false;
+          if (!this.isRealtimeCollaboration && this.canMaintainEditLock()) {
+            this.startLocalSaveTimer();
+            this.claimEditLock();
+          }
+          uni.showToast({ title: "打开发布页失败，请重试", icon: "none" });
+        },
       });
     },
     openReaderPreview() {

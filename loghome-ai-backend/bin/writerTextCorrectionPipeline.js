@@ -100,7 +100,7 @@ async function runCorrectionPlan(paragraphs, options) {
 		if (shouldStop()) return;
 		requestCount += 1;
 		try {
-			// 每次模型请求（含缩小批次后的重试）都有独立标识，避免思考流相互混入。
+			// 每次批次检查（含缩小后的重试）独立标识，两阶段共用此标识。
 			const batchResults = await analyzeBatch(batch, { batchIndex, batchCount: plan.batches.length, streamId: requestCount });
 			if (shouldStop()) return;
 			if (!Array.isArray(batchResults) || batchResults.length !== batch.length) {
@@ -111,7 +111,7 @@ async function runCorrectionPlan(paragraphs, options) {
 			if (shouldStop()) return;
 			// 鉴权或参数错误对后续批次同样有效，终止任务而非继续浪费请求。
 			if (error.retryable === false) throw error;
-			if (retryBudget > 0 && error.retryable !== false) {
+			if (retryBudget > 0 && !error.skipBatchRetry) {
 				// 大批次失败后缩小范围，重试仅发生在失败内容上。
 				const middle = Math.ceil(batch.length / 2);
 				await runBatch(batch.slice(0, middle), retryBudget - 1, batchIndex);
