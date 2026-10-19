@@ -280,7 +280,7 @@ function createNdjsonStreamWriter(res) {
 	};
 }
 
-async function streamCorrectionFromModel(paragraphs, writer, { signal, batchIndex, batchCount } = {}) {
+async function streamCorrectionFromModel(paragraphs, writer, { signal, batchIndex, batchCount, streamId } = {}) {
 	if (!TEXT_CORRECTION_API_KEY) {
 		const error = new Error('AI 配置尚未完成');
 		error.code = 'UNIFIED_API_KEY_MISSING';
@@ -323,7 +323,7 @@ async function streamCorrectionFromModel(paragraphs, writer, { signal, batchInde
 	const reasoningState = { text: '' };
 	const startedAt = Date.now();
 	let outcome = 'success';
-	const emit = payload => writer.write({ ...payload, batch_index: batchIndex, batch_count: batchCount });
+	const emit = payload => writer.write({ ...payload, batch_index: batchIndex, batch_count: batchCount, stream_id: streamId });
 	let response;
 
 	try {

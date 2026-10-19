@@ -8,6 +8,7 @@ const { chromium } = require(process.env.WRITER_PLAYWRIGHT_MODULE ||
 const base = process.env.WRITER_TEST_URL || "http://127.0.0.1:3117";
 process.env.WRITER_TEST_URL = base;
 const { api, reader, writers } = require("./writer-browser.cjs");
+const { articleTextCount } = require("../../loghome-backend/bin/articleTextCount");
 const seed = reader.get(11);
 for (const id of [13, 14]) {
   const article = {
@@ -25,6 +26,9 @@ writers.get(11).content = JSON.stringify([
 ]);
 reader.get(12).is_draft = 0;
 writers.get(12).title = "人物 · 修改后的青禾";
+// A published chapter whose latest author draft is empty must display zero.
+reader.set(15, { ...seed, article_id: 15, article_chapter: 6, title: "清空后的草稿" });
+writers.set(15, { ...reader.get(15), content: "[]" });
 const hash = (value) =>
   crypto
     .createHash("md5")
@@ -54,6 +58,7 @@ async function routeApi(route) {
                 article_id: row.article_id,
                 title: writer.title,
                 content_hash: hash(writer.content),
+                text_count: articleTextCount(writer.content, row.article_type),
                 create_time: writer.create_time,
               }
             : undefined,
@@ -106,6 +111,11 @@ async function run() {
   page.on("pageerror", (error) => errors.push(error.message));
   const row = (id) => page.locator(`.catalog-item[data-article-id="${id}"]`);
   const badge = (id) => row(id).locator(".catalog-modified-badge");
+  async function count(id, value) {
+    await page.waitForFunction(({ id, value }) =>
+      document.querySelector(`.catalog-item[data-article-id="${id}"] small`)?.textContent
+        .replace(/\s+/g, " ").includes(`· ${value.toLocaleString()} 字`), { id, value });
+  }
   const out = path.resolve(__dirname, "../../_tmp/writer-modified");
   fs.mkdirSync(out, { recursive: true });
   async function open(id) {
@@ -122,6 +132,9 @@ async function run() {
   try {
     await page.goto(base + "/write/edit/7");
     await row(14).waitFor();
+    await count(11, articleTextCount(writers.get(11).content, "richtext"));
+    await count(15, 0);
+    await count(14, seed.text_count); // No author draft: published fallback.
     assert.equal(await badge(11).count(), 1);
     assert.equal(await badge(12).count(), 1);
     assert.equal(await badge(10).count(), 0);
@@ -140,6 +153,11 @@ async function run() {
     await badge(13).waitFor({ state: "detached" });
     await page.locator(".ProseMirror").press("End");
     await page.locator(".ProseMirror").pressSequentially("新增内容");
+    const editedCount = articleTextCount(writers.get(13).content, "richtext") + 4;
+    await count(13, editedCount);
+    // Refreshing the list while editing must retain the current unsaved count.
+    await page.getByRole("button", { name: "刷新目录", exact: true }).click();
+    await count(13, editedCount);
     await badge(13).waitFor();
     await page
       .locator(".workspace-header")
@@ -148,9 +166,11 @@ async function run() {
     await page.getByText("已同步", { exact: true }).waitFor();
     assert.equal(await badge(13).count(), 1);
     await open(11);
+    await count(13, editedCount);
     assert.equal(await badge(13).count(), 1);
     await page.getByRole("button", { name: "刷新目录", exact: true }).click();
     await badge(13).waitFor();
+    await count(13, editedCount);
     await open(13);
     failPublish = true;
     await publish();
@@ -189,6 +209,8 @@ async function run() {
     await badge(13).waitFor({ state: "detached" });
     await page.reload();
     await row(14).waitFor();
+    await count(13, editedCount);
+    await count(15, 0);
     assert.equal(await badge(13).count(), 0);
     assert.equal(await badge(11).count(), 1);
     assert.equal(await badge(12).count(), 1);
@@ -207,7 +229,7 @@ async function run() {
     assert.deepEqual(errors, []);
     assert.equal(publishes.length, 4);
     console.log(
-      "PASS modified badges: real nested API, content/title-only edits, draft exclusion, immediate edit/undo, save/switch/refresh, failed/successful publish, in-flight edit, reload, dark + narrow layout"
+      "PASS modified badges + draft counts: nested API, unopened/empty drafts, published fallback, live edits, save/switch/refresh/reload, failed/successful publish, in-flight edit, dark + narrow layout"
     );
   } catch (error) {
     await page.screenshot({ path: path.join(out, "failure.png") });

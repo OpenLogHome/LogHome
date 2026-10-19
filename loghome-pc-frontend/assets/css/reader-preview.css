@@ -1,0 +1,49 @@
+/* The preview and its body-mounted settings follow the selected reading theme. */
+.preview-reader,
+.el-drawer.reading-drawer.reading-preview-settings {
+  --reading-bg: #f5f5f5;
+  --reading-surface: #fff;
+  --reading-hover: #f5f4f0;
+  --reading-ink: #302f2a;
+  --reading-secondary: #615e57;
+  --reading-muted: #73716a;
+  --reading-line: #e4e3de;
+  --reading-accent: #79573c;
+  --reading-danger: #a54434;
+  color-scheme: light;
+}
+.preview-reader.is-night,
+.el-drawer.reading-drawer.reading-preview-settings.is-night {
+  --reading-bg: #1b2026;
+  --reading-surface: #292f37;
+  --reading-hover: #343c46;
+  --reading-ink: #d9dee7;
+  --reading-secondary: #b5becb;
+  --reading-muted: #a7b2c1;
+  --reading-line: #46515e;
+  --reading-accent: #e6cda6;
+  --reading-danger: #f1a096;
+  color-scheme: dark;
+}
+.el-drawer.reading-drawer.reading-preview-settings {
+  background: var(--reading-surface);
+  color: var(--reading-ink);
+}
+.el-drawer.reading-preview-settings .reader-settings button:not(.themes button) {
+  background: var(--reading-surface);
+  color: var(--reading-ink);
+}
+.el-drawer.reading-preview-settings .reader-settings .refresh {
+  color: var(--reading-accent);
+}
+.el-drawer.reading-preview-settings .reader-settings .error {
+  color: var(--reading-danger);
+}
+.el-drawer.reading-preview-settings :is(button, input) {
+  accent-color: var(--reading-accent);
+}
+.preview-reader .preview-toolbar button:hover,
+.preview-reader .preview-title button:hover,
+.preview-reader .audio-player button:not(:disabled):hover {
+  background: var(--reading-hover);
+}

@@ -295,13 +295,13 @@ export default {
   text-align: left;
 }
 .message-categories button.active {
-  background: #f0e5d7;
-  color: #704c35;
+  background: var(--selection-bg, #f6e9dc);
+  color: var(--ink, #30343b);
   font-weight: 600;
 }
 .message-categories em {
   margin-left: auto;
-  background: #ea7034;
+  background: #c65320;
   border-radius: 9px;
   padding: 1px 5px;
   color: white;
@@ -314,7 +314,7 @@ export default {
 .message-meta {
   text-align: right;
   font-size: 11px;
-  color: #978a7c;
+  color: var(--muted, #5b626d);
 }
 .message-meta .el-badge {
   display: block;
@@ -328,7 +328,7 @@ export default {
 }
 .message-row-heading time {
   font-size: 11px;
-  color: #978a7c;
+  color: var(--muted, #5b626d);
 }
 .message-target {
   text-align: left;
@@ -356,7 +356,7 @@ export default {
 .group-history {
   margin-left: 60px;
   padding: 8px;
-  background: #f8f2ea;
+  background: var(--soft, #f1f3f5);
   border-radius: 8px;
 }
 .group-history button {

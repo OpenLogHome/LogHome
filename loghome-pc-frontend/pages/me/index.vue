@@ -123,7 +123,7 @@
               ><el-button type="primary">{{ $t("进入树场") }}</el-button></nuxt-link
             >
           </section>
-          <section class="social-panel">
+          <section class="social-panel personal-works">
             <div class="social-toolbar">
               <h2>{{ $t("我的作品") }}</h2>
               <nuxt-link to="/write">{{ $t("创作中心 →") }}</nuxt-link>
@@ -132,11 +132,11 @@
               v-for="work in works.slice(0, 3)"
               :key="work.novel_id"
               :to="`/write/settings/${work.novel_id}`"
-              class="social-list-row"
-              ><img :src="work.picUrl || '/default-book-cover.png'" alt="" />
+              class="social-list-row personal-work"
+              ><img class="personal-work-cover" :src="work.picUrl || '/default-book-cover.png'" alt="" />
               <div class="row-main">
-                <strong>{{ work.name }}</strong>
-                <p>{{ work.content || $t("继续完善你的故事") }}</p>
+                <strong class="personal-work-title" :title="work.name">{{ work.name }}</strong>
+                <p>{{ (work.content || $t("继续完善你的故事")).trim() }}</p>
               </div></nuxt-link
             >
             <p v-if="!works.length" class="social-muted">
@@ -421,7 +421,7 @@ export default {
   align-items: center;
   padding: 16px 0;
   color: var(--ink, #382d25);
-  border-bottom: 1px solid #eee6dc;
+  border-bottom: 1px solid var(--line, #e2e6eb);
 }
 .personal-services a:last-child {
   border: 0;
@@ -497,7 +497,48 @@ export default {
 .account-security > a {
   margin-left: auto;
 }
-.row-main p {
+.personal-works .social-toolbar {
+  margin-bottom: 4px;
+}
+.personal-works .social-toolbar > a {
+  flex-shrink: 0;
+  color: var(--wood, #c65320);
+}
+.personal-works .personal-work {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: start;
+  color: var(--ink, #30343b);
+}
+.personal-works .personal-work-cover {
+  display: block;
+  width: 48px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid var(--line, #e2e6eb);
+  border-radius: 4px;
+  background: var(--soft, #f1f3f5);
+}
+.personal-work-title {
+  display: block;
+  overflow: hidden;
+  color: var(--ink, #30343b);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.personal-work:hover .personal-work-title {
+  color: var(--wood, #c65320);
+}
+.personal-works .row-main p {
+  margin: 6px 0 0;
+  color: var(--muted, #6b7280);
+  font-size: 12px;
+  line-height: 1.6;
+  text-indent: 0;
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

@@ -1,5 +1,5 @@
 <template>
-  <el-drawer custom-class="reading-drawer reading-settings-drawer" title="阅读设置" :visible="visible" @update:visible="$emit('update:visible', $event)" size="min(480px, 100%)" append-to-body>
+  <el-drawer :custom-class="`reading-drawer reading-settings-drawer ${panelClass}`" title="阅读设置" :visible="visible" @update:visible="$emit('update:visible', $event)" size="min(480px, 100%)" append-to-body>
     <div class="reader-settings-shell">
       <div class="reader-settings">
         <section>
@@ -37,7 +37,7 @@
 <script>
 import { themes, THEME_NAMES, MEMBER_THEMES, canUseBackground } from '~/utils/reader-preferences'
 export default {
-  props: { visible: Boolean, value: { type: Object, required: true }, fonts: { type: Object, required: true }, skins: { type: Array, default: () => [] }, tier: String, fontStates: { type: Object, default: () => ({}) }, fontError: String, resourceError: String, lockedMessage: String, resourcesLoading: Boolean, storageError: Boolean },
+  props: { panelClass: { type: String, default: '' }, visible: Boolean, value: { type: Object, required: true }, fonts: { type: Object, required: true }, skins: { type: Array, default: () => [] }, tier: String, fontStates: { type: Object, default: () => ({}) }, fontError: String, resourceError: String, lockedMessage: String, resourcesLoading: Boolean, storageError: Boolean },
   computed: {
     theme() { return themes[this.value.theme] || themes.white },
     options() { return Object.keys(themes).filter(key => key !== 'blockepoch').map(key => ({ key, name: THEME_NAMES[key], ...themes[key], locked: MEMBER_THEMES.includes(key) && !canUseBackground('standard', this.tier) })) },

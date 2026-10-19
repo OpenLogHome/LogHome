@@ -70,6 +70,7 @@
               v-for="plan in tier.plans"
               :key="plan.billing_cycle"
               :class="{ selected: selected[tier.key] === plan.billing_cycle }"
+              :aria-pressed="selected[tier.key] === plan.billing_cycle"
               @click="$set(selected, tier.key, plan.billing_cycle)"
             >
               <span>{{ $t(plan.name) }}</span
@@ -285,19 +286,33 @@ export default {
 </script>
 <style scoped>
 .pass-grid {
+  --pass-standard-tint: #fbf5e9;
+  --pass-super-tint: #eaf1f2;
+  --pass-selected-bg: #f1e6d6;
+  --pass-muted: #5b626d;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 }
-.pass-card {
-  border: 1px solid #d9c6a5;
-  background: linear-gradient(145deg, #fbf5e9, var(--surface, #fffdf9));
+.social-workspace[data-theme="dark"] .pass-grid {
+  --pass-standard-tint: #352b20;
+  --pass-super-tint: #17303b;
+  --pass-selected-bg: #44382b;
+  --pass-muted: var(--muted, #c1b6a7);
+}
+.pass-grid .pass-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--ink, #30343b);
+  border: 1px solid var(--line, #d9c6a5);
+  background: linear-gradient(145deg, var(--pass-standard-tint), var(--surface, #fffdf9));
   border-radius: 16px;
   padding: 28px;
 }
-.pass-card.super {
-  border-color: #a7bcc2;
-  background: linear-gradient(145deg, #eaf1f2, var(--surface, #fffdf9));
+.pass-grid .pass-card.super {
+  border-color: var(--line, #a7bcc2);
+  background: linear-gradient(145deg, var(--pass-super-tint), var(--surface, #fffdf9));
 }
 .pass-heading {
   display: flex;
@@ -319,10 +334,11 @@ export default {
   margin: 6px 0;
 }
 .pass-summary {
-  color: var(--muted, #82766c);
+  color: var(--pass-muted);
   font-size: 13px;
 }
 .pass-card ul {
+  flex: 1;
   list-style: none;
   margin: 26px 0;
   padding: 0;
@@ -342,7 +358,7 @@ export default {
 .pass-card li p {
   font-size: 12px;
   line-height: 1.8;
-  color: var(--muted, #82766c);
+  color: var(--pass-muted);
   margin: 6px 0 0;
 }
 .pass-plans {
@@ -351,23 +367,32 @@ export default {
   gap: 10px;
   margin-bottom: 20px;
 }
-.pass-plans button {
+.pass-grid .pass-plans button {
+  min-width: 0;
   padding: 16px 10px;
   background: var(--surface, #fffdf9);
-  border: 1px solid #e0d5c5;
+  border: 1px solid var(--line, #e0d5c5);
   border-radius: 10px;
   text-align: left;
   cursor: pointer;
   color: var(--ink, #382d25);
 }
-.pass-plans button.selected {
+.pass-grid .pass-plans button.selected {
   border-color: var(--wood, #947358);
-  background: #f1e6d6;
+  background: var(--pass-selected-bg);
+  box-shadow: inset 0 0 0 1px var(--wood, #947358);
+}
+.pass-grid .pass-plans button:hover {
+  border-color: var(--wood, #947358);
+}
+.pass-grid .pass-plans button:focus-visible {
+  outline: 2px solid var(--wood, #947358);
+  outline-offset: 3px;
 }
 .pass-plans span {
   display: block;
   font-size: 11px;
-  color: var(--muted, #82766c);
+  color: var(--pass-muted);
 }
 .pass-plans strong {
   display: block;
@@ -380,6 +405,13 @@ export default {
 }
 .pass-card > .el-button {
   width: 100%;
+}
+.social-workspace .pass-card > .el-button.is-disabled {
+  background: var(--soft, #f1f3f5);
+  border-color: var(--line, #e2e6eb);
+  /* Override the shared primary-button text rule for disabled purchase actions. */
+  color: var(--pass-muted) !important;
+  opacity: 1;
 }
 .pass-bottom {
   display: flex;

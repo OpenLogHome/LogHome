@@ -26,19 +26,25 @@ export class WriterSession {
     this.writable = false;
     this.closed = false;
     this.saving = null;
+    this.baseWriter = null;
+    this.supportsConditionalSave = false;
   }
   state(status, detail = "") {
     if (!this.closed) this.onState({ status, detail });
   }
   async open(id) {
-    const reader = await this.api.get("get_article", { id });
+    const [reader, initialWriter] = await Promise.all([
+      this.api.get("get_article", { id }),
+      this.api.get("get_article_writer", { id }),
+    ]);
     if (!reader || Number(reader.article_id) !== Number(id))
       throw new Error("章节不存在或无权访问");
     this.publishedSignature = writerSignature(reader);
-    let writer = await this.api.get("get_article_writer", { id });
+    let writer = initialWriter;
+    this.supportsConditionalSave = writer?.supports_conditional_save === true;
     this.article = { ...reader, ...(writer || {}) };
     validateWriterContent(this.article);
-    this.baseline = writerSignature(this.article);
+    this.setBaseline(this.article);
     const access = this.article.current_access || {};
     const realtime =
       this.article.collaboration &&
@@ -57,8 +63,9 @@ export class WriterSession {
             create_time: writerTime(),
           });
           writer = await this.api.get("get_article_writer", { id });
+          this.supportsConditionalSave = writer?.supports_conditional_save === true;
           this.article = { ...this.article, ...writer };
-          this.baseline = writerSignature(this.article);
+          this.setBaseline(this.article);
         }
         this.heartbeat = setInterval(() => this.renew(), 20000);
       } catch (error) {
@@ -109,34 +116,42 @@ export class WriterSession {
       await this.saving;
       if (writerSignature(this.article) !== this.baseline)
         return this.save(snapshot);
+      if (snapshot) await this.backup(true);
       return;
     }
+    const pending = this.saveOnce(snapshot);
+    this.saving = pending;
+    try {
+      return await pending;
+    } finally {
+      if (this.saving === pending) this.saving = null;
+    }
+  }
+  async saveOnce(snapshot) {
     await this.backup(snapshot);
     if (!this.writable || this.closed)
       throw new Error("当前章节不可写入云端，本机草稿已保留");
     const captured = { ...this.article },
       signature = writerSignature(captured);
-    if (!snapshot && signature === this.baseline) {
+    if (signature === this.baseline) {
       this.state("synced");
       return;
     }
-    this.saving = this.upload(captured, signature, snapshot);
-    try {
-      return await this.saving;
-    } finally {
-      this.saving = null;
-    }
+    return this.upload(captured, signature, snapshot);
   }
   async upload(captured, signature, snapshot) {
     this.state("saving");
     try {
-      const remote = await this.api.get("get_article_writer", {
-        id: captured.article_id,
-      });
-      if (remote && writerSignature(remote) !== this.baseline) {
-        const error = new Error("云端内容已变化，请比较本机与云端版本后继续");
-        error.remote = remote;
-        throw error;
+      const baseWriter = this.supportsConditionalSave && this.baseWriter;
+      if (!baseWriter) {
+        const remote = await this.api.get("get_article_writer", {
+          id: captured.article_id,
+        });
+        if (remote && writerSignature(remote) !== this.baseline) {
+          const error = new Error("云端内容已变化，请比较本机与云端版本后继续");
+          error.remote = remote;
+          throw error;
+        }
       }
       const result = await this.api.post("upload_article_writer", {
         article_id: captured.article_id,
@@ -146,23 +161,39 @@ export class WriterSession {
         create_time: writerTime(),
         is_fast_save: !snapshot,
         edit_session_id: this.sessionId,
+        ...(baseWriter ? { base_writer: baseWriter } : {}),
       });
       this.baseline = signature;
+      const meta = result && result.writer_snapshot;
+      this.baseWriter = meta?.content_hash
+        ? { content_hash: meta.content_hash, title: meta.title ?? captured.title }
+        : null;
       await this.backup(false);
       this.state(
         writerSignature(this.article) === signature ? "synced" : "pending"
       );
       return result;
     } catch (error) {
+      if (error.data?.code === "writer_revision_conflict") {
+        error.remote = await this.api.get("get_article_writer", {
+          id: captured.article_id,
+        }).catch(() => null);
+      }
       this.state(error.remote ? "conflict" : "offline", error.message);
       throw error;
     }
   }
   adoptRemote(remote) {
     this.article = { ...this.article, ...remote };
-    this.baseline = writerSignature(this.article);
+    this.setBaseline(this.article);
     this.state("synced");
     return this.article;
+  }
+  setBaseline(article) {
+    this.baseline = writerSignature(article);
+    this.baseWriter = article.content_hash
+      ? { content_hash: article.content_hash, title: article.title || "" }
+      : null;
   }
   async close() {
     clearInterval(this.heartbeat);

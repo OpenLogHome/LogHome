@@ -321,6 +321,7 @@ async function run() {
   const browser = await chromium.launch({ headless: true }),
     context = await browser.newContext({
       viewport: { width: 1440, height: 960 },
+      locale: "zh-CN",
     }),
     page = await context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));

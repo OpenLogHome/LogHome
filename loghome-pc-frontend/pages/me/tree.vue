@@ -60,8 +60,8 @@
             >
           </div>
         </section>
-        <aside>
-          <section class="social-panel">
+        <aside class="tree-sidebar">
+          <section class="social-panel tree-settings-panel">
             <h2>{{ $t("场景设置") }}</h2>
             <el-select
               v-model="selectedTheme"
@@ -99,7 +99,7 @@
             />
             <p class="social-muted">{{ $t("关闭后不接收成长和好友串门通知。") }}</p>
           </section>
-          <section class="social-panel">
+          <section class="social-panel tree-friends-panel">
             <h2>{{ $t("好友树场") }}</h2>
             <p v-if="!dashboard.steal_feature_enabled" class="social-muted">
               {{ $t("好友串门暂未开放") }}
@@ -109,29 +109,36 @@
                 $t("互相关注后，一起培育小树。")
               }}</nuxt-link>
               <div
-                v-for="friend in dashboard.steal_targets || []"
-                :key="friend.user_id"
-                class="social-list-row"
+                class="tree-friends-list"
+                role="region"
+                :aria-label="$t('好友树场')"
+                tabindex="0"
               >
-                <Avatar
-                  :src="friend.avatar_url"
-                  :frame="friend.avatar_frame"
-                  :size="40"
-                />
-                <div class="row-main">
-                  <strong>{{ friend.name }}</strong>
-                  <p>{{ friend.has_active_tree ? $t("已种植") : $t("未种植") }}</p>
-                </div>
-                <el-button
-                  size="small"
-                  :disabled="busy || !friend.has_active_tree"
-                  @click="visit(friend)"
-                  >{{ $t("串门") }}</el-button
+                <div
+                  v-for="friend in dashboard.steal_targets || []"
+                  :key="friend.user_id"
+                  class="social-list-row"
                 >
-              </div>
-              <p v-if="!(dashboard.steal_targets || []).length" class="social-muted">
-                {{ $t("暂时没有可串门的好友树场") }}
-              </p></template
+                  <Avatar
+                    :src="friend.avatar_url"
+                    :frame="friend.avatar_frame"
+                    :size="40"
+                  />
+                  <div class="row-main">
+                    <strong>{{ friend.name }}</strong>
+                    <p>{{ friend.has_active_tree ? $t("已种植") : $t("未种植") }}</p>
+                  </div>
+                  <el-button
+                    size="small"
+                    :disabled="busy || !friend.has_active_tree"
+                    @click="visit(friend)"
+                    >{{ $t("串门") }}</el-button
+                  >
+                </div>
+                <p v-if="!(dashboard.steal_targets || []).length" class="social-muted">
+                  {{ $t("暂时没有可串门的好友树场") }}
+                </p>
+              </div></template
             >
           </section>
         </aside>
@@ -366,6 +373,7 @@ export default {
 </script>
 <style scoped>
 .tree-desktop-grid {
+  --tree-scene-height: clamp(340px, 34vw, 480px);
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
   gap: 24px;
@@ -374,16 +382,64 @@ export default {
 .tree-desktop-grid > * {
   min-width: 0;
 }
+.tree-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: calc(var(--tree-scene-height) + 76px);
+  min-height: 0;
+  gap: 18px;
+}
+.tree-sidebar > .social-panel {
+  margin-bottom: 0;
+  min-width: 0;
+}
+.tree-settings-panel {
+  flex: none;
+}
+.tree-settings-panel .social-muted {
+  margin: 6px 0 0;
+}
+.tree-settings-panel .el-divider {
+  margin: 18px 0;
+}
+.tree-friends-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.tree-friends-panel > h2,
+.tree-friends-panel > .social-muted {
+  flex: none;
+}
+.tree-friends-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+.tree-friends-list:focus-visible {
+  outline: 2px solid var(--wood);
+  outline-offset: 4px;
+}
+.tree-friends-list .row-main strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.tree-friends-list .el-button,
+.tree-friends-list .social-avatar {
+  flex-shrink: 0;
+}
 .tree-scene-panel {
   padding: 0;
   overflow: hidden;
   position: relative;
 }
 .tree-scene-panel .oak-tree-3d {
-  height: clamp(340px, 34vw, 480px);
+  height: var(--tree-scene-height);
 }
 .tree-classic {
-  height: clamp(340px, 34vw, 480px);
+  height: var(--tree-scene-height);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -432,9 +488,14 @@ export default {
     grid-template-columns: 1fr;
   }
   .tree-desktop-grid > aside {
+    height: auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    align-items: start;
+  }
+  .tree-friends-list {
+    max-height: 320px;
   }
 }
 @media (max-width: 650px) {

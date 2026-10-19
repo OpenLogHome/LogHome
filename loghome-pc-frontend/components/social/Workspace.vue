@@ -106,12 +106,13 @@ export default {
 </script>
 <style>
 .social-workspace {
-  --wood: #c65320;
+  --wood: #b94a18;
   --ink: #30343b;
-  --muted: #6b7280;
+  --muted: #5b626d;
   --line: #e2e6eb;
   --surface: #ffffff;
   --soft: #f1f3f5;
+  --selection-bg: #f6e9dc;
   max-width: 1440px;
   margin: auto;
   display: grid;
@@ -343,7 +344,11 @@ export default {
 }
 
 .social-workspace a {
+  color: var(--wood);
   text-decoration: none;
+}
+.social-workspace a.social-list-row {
+  color: var(--ink);
 }
 .social-workspace button {
   font-family: inherit;
@@ -362,10 +367,13 @@ export default {
   background: #ac4319;
   border-color: #ac4319;
 }
-.social-workspace .el-button--primary.is-disabled {
-  background: #e5e8ec;
-  border-color: #e5e8ec;
-  color: #6b7280;
+.social-workspace .el-button.is-disabled,
+.social-workspace .el-button.is-disabled:hover,
+.social-workspace .el-button.is-disabled:focus {
+  background: var(--soft);
+  border-color: var(--line);
+  color: var(--muted) !important;
+  opacity: 1;
 }
 .social-workspace .el-button--text {
   color: var(--wood);
@@ -381,6 +389,11 @@ export default {
 .social-workspace .el-textarea__inner::placeholder {
   color: var(--muted);
 }
+.social-workspace .el-input__count,
+.social-workspace .el-input__count-inner {
+  color: var(--muted);
+  background: var(--surface);
+}
 .social-workspace .el-input__inner:focus,
 .social-workspace .el-textarea__inner:focus {
   border-color: var(--wood);
@@ -390,6 +403,7 @@ export default {
   background: var(--wood);
   border-color: var(--wood);
   box-shadow: -1px 0 0 0 var(--wood);
+  color: var(--ui-primary-text, #fffdf9);
 }
 .social-workspace .el-switch.is-checked .el-switch__core {
   border-color: var(--wood);
@@ -455,6 +469,7 @@ export default {
   }
 }
 [data-theme="dark"].social-workspace {
+  --selection-bg: #44382b;
   --ink: #eee5d9;
   --muted: #c4b6a5;
   --line: #504536;
@@ -535,11 +550,6 @@ export default {
   [data-theme="dark"].social-workspace .store-intro,
   [data-theme="dark"].social-workspace .post-work,
   [data-theme="dark"].social-workspace .post-circle,
-  [data-theme="dark"].social-workspace .message-categories button.active,
-  [data-theme="dark"].social-workspace .frame-option.selected,
-  [data-theme="dark"].social-workspace .pass-plans button,
-  [data-theme="dark"].social-workspace .product-variants button,
-  [data-theme="dark"].social-workspace .recharge-plans button,
   [data-theme="dark"].social-workspace .rules-hero,
   [data-theme="dark"].social-workspace .rules-section,
   [data-theme="dark"].social-workspace .badge-detail-image,
@@ -590,11 +600,11 @@ export default {
 .social-workspace .workspace-compose {
   color: #ffffff !important;
 }
-.social-workspace .el-button--primary {
+.social-workspace .el-button--primary:not(.is-disabled) {
   color: #ffffff;
 }
 .social-workspace[data-theme="dark"] .workspace-compose,
-.social-workspace[data-theme="dark"] .el-button--primary {
+.social-workspace[data-theme="dark"] .el-button--primary:not(.is-disabled) {
   color: #211e19 !important;
 }
 .social-workspace[data-theme="dark"] .settings-card,

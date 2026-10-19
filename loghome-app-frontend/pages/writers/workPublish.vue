@@ -112,19 +112,24 @@
         </view>
       </view>
 
-      <view v-if="smartThinkingText && smartThinkingVisible" class="thinking-panel">
+      <view v-if="smartThinkingBlocks.length && smartThinkingVisible" class="thinking-panel">
         <view class="thinking-head" @click="smartThinkingVisible = false">
           <text class="thinking-head-text">模型思考过程</text>
           <text class="thinking-head-close">收起</text>
         </view>
         <scroll-view scroll-y class="thinking-body" :scroll-top="thinkingScrollTop">
           <view class="thinking-body-inner">
-            <text class="thinking-content">{{ smartThinkingText }}</text>
+            <view v-for="stream in smartThinkingBlocks" :key="stream.id" class="thinking-stream">
+              <text v-if="stream.batchIndex" class="thinking-stream-title">
+                第 {{ stream.batchIndex }}/{{ stream.batchCount }} 批<template v-if="stream.attempt > 1"> · 第 {{ stream.attempt }} 次检查</template>
+              </text>
+              <text class="thinking-content">{{ stream.text }}</text>
+            </view>
           </view>
         </scroll-view>
       </view>
       <view
-        v-else-if="smartCorrectionLoading && smartThinkingText"
+        v-else-if="smartCorrectionLoading && smartThinkingBlocks.length"
         class="thinking-collapsed"
         @click="smartThinkingVisible = true"
       >
@@ -432,11 +437,10 @@ export default {
       smartCorrectionError: "",
       smartCorrectionResult: createEmptyCorrectionResult(),
       smartCorrectionStarted: false,
-      smartThinkingText: "",
+      smartThinkingStreams: [],
       smartCorrectionContentText: "",
       smartCorrectionBatchMode: false,
       smartCorrectionStatusText: "正在检查正文，请稍候...",
-      smartCorrectionOutputStarted: false,
       smartCorrectionProgress: { analyzed: 0, total: 0 },
       smartThinkingVisible: false,
       thinkingScrollTop: 0,
@@ -462,6 +466,9 @@ export default {
     };
   },
   computed: {
+    smartThinkingBlocks() {
+      return this.smartThinkingStreams.filter(stream => stream.text);
+    },
     canMakeNovelPublic() {
       return this.article.novelOwnerId > 0 && this.article.novelOwnerId === this.getCurrentUserId();
     },
@@ -1236,11 +1243,10 @@ export default {
       this.smartCorrectionLoading = true;
       this.smartCorrectionError = "";
       this.smartCorrectionResult = createEmptyCorrectionResult();
-      this.smartThinkingText = "";
+      this.smartThinkingStreams = [];
       this.smartCorrectionContentText = "";
       this.smartCorrectionBatchMode = false;
       this.smartCorrectionStatusText = "正在检查正文，请稍候...";
-      this.smartCorrectionOutputStarted = false;
       this.smartCorrectionProgress = { analyzed: 0, total: 0 };
       this.smartThinkingVisible = true;
 
@@ -2060,6 +2066,26 @@ export default {
       );
       return value === undefined || value === null ? "" : String(value);
     },
+    getCorrectionThinkingStream(event, startNew = false) {
+      const batchIndex = Number(event.batch_index || 0);
+      const batchStreams = this.smartThinkingStreams.filter(stream => stream.batchIndex === batchIndex);
+      const id = event.stream_id == null ? null : `stream-${event.stream_id}`;
+      let stream = id
+        ? this.smartThinkingStreams.find(item => item.id === id)
+        : (!startNew ? batchStreams[batchStreams.length - 1] : null);
+      if (!stream) {
+        stream = {
+          id: id || `batch-${batchIndex}-${batchStreams.length + 1}`,
+          batchIndex,
+          batchCount: Number(event.batch_count || batchIndex),
+          attempt: batchStreams.length + 1,
+          text: "",
+        };
+        this.smartThinkingStreams.push(stream);
+        this.smartThinkingStreams.sort((left, right) => left.batchIndex - right.batchIndex || left.attempt - right.attempt);
+      }
+      return stream;
+    },
     processCorrectionStreamLine(rawLine, fallbackResult) {
       const normalizedLine = String(rawLine || "")
         .trim()
@@ -2084,6 +2110,7 @@ export default {
         this.smartCorrectionBatchMode = Boolean(event.batched);
       } else if (eventType === "status") {
         if (event.message) this.smartCorrectionStatusText = String(event.message);
+        if (event.batch_index || event.stream_id != null) this.getCorrectionThinkingStream(event, true);
       } else if (eventType === "progress") {
         const analyzed = Number(event.analyzed || 0);
         const total = Number(event.total || this.smartCorrectionProgress.total || 0);
@@ -2097,7 +2124,10 @@ export default {
         eventType === "reasoning_delta" ||
         eventType === "thinking_delta"
       ) {
-        this.smartThinkingText += this.getCorrectionStreamEventText(event);
+        const content = this.getCorrectionStreamEventText(event);
+        if (!content) return fallbackResult;
+        // delta 是增量；只追加到对应请求，保留相邻的重复字符。
+        this.getCorrectionThinkingStream(event).text += content;
         this.$nextTick(function () {
           this.thinkingScrollTop = this.thinkingScrollTop + 99999;
         });
@@ -2109,16 +2139,6 @@ export default {
         const content = this.getCorrectionStreamEventText(event);
         if (this.smartCorrectionBatchMode) return fallbackResult;
         this.smartCorrectionContentText += content;
-        if (content) {
-          if (!this.smartCorrectionOutputStarted) {
-            this.smartCorrectionOutputStarted = true;
-            this.smartThinkingText += "\n\n模型输出：\n";
-          }
-          this.smartThinkingText += content;
-          this.$nextTick(function () {
-            this.thinkingScrollTop = this.thinkingScrollTop + 99999;
-          });
-        }
       } else if (
         eventType === "done" ||
         eventType === "complete" ||
@@ -2462,6 +2482,20 @@ export default {
   padding: 20rpx 24rpx;
   box-sizing: border-box;
   min-height: 100%;
+}
+
+.thinking-stream + .thinking-stream {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1px solid var(--border-color);
+}
+
+.thinking-stream-title {
+  display: block;
+  margin-bottom: 10rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--text-color-secondary);
 }
 
 .thinking-content {

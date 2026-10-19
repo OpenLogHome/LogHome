@@ -60,13 +60,13 @@ export default {
 }
 .ai-preference h2 {
   font-size: 18px;
-  color: #6b553f;
+  color: var(--ink, var(--site-ink, #30343b));
   margin: 0 0 12px;
 }
 .ai-preference p {
   font-size: 13px;
   line-height: 1.8;
-  color: #978978;
+  color: var(--muted, var(--site-muted, #5b626d));
   margin: 0;
 }
 .ai-preference label {
@@ -75,11 +75,11 @@ export default {
   gap: 6px;
   flex-shrink: 0;
   font-size: 14px;
-  color: #839456;
+  color: var(--wood, var(--reading-accent, #79573c));
   cursor: pointer;
 }
 .ai-preference input {
-  accent-color: #839456;
+  accent-color: var(--wood, var(--reading-accent, #79573c));
 }
 .ai-preference p.error {
   color: #b65341;

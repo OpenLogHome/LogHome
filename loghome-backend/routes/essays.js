@@ -1,5 +1,6 @@
 const { ensureRankBadgeSchema } = require('../bin/rankBadgeSchema');
 const { recordFirstPublication } = require('../bin/novelPublication');
+const { articleTextCount } = require('../bin/articleTextCount');
 const { createMangaImageAssets, MAX_PIXELS } = require('../bin/mangaImageAssets');
 const { DEFAULT_UPLOAD_URL, uploadMangaImageFile } = require('../bin/mangaImageStorage');
 // 引入依赖包
@@ -672,6 +673,7 @@ function serializeArticleListRow(row) {
 		article.article_writer = {
 			article_id: row.writer_article_id,
 			content_hash: row.writer_content_hash,
+			text_count: articleTextCount(row.writer_content, row.article_type),
 			create_time: row.writer_create_time,
 			updated_at: row.writer_updated_at || null,
 			id: row.writer_id,
@@ -1894,14 +1896,17 @@ router.post('/request_novel_indexing', auth, async (req, res) => {
 router.get('/get_articles', auth, async function (req, res) {
 	const user = getCurrentUser(req);
 	const novelId = Number(req.query.id || 0);
+	const catalogOnly = req.query.catalog_only === '1';
 	try {
 		const access = await getNovelAccess(user.user_id, novelId);
 		if (!canViewArticles(access)) {
 			return res.status(403).json({ msg: 'access denied' });
 		}
 
-		await ensureAgentMemorySchema();
-		await expireArticleEditLocks();
+		if (!catalogOnly) {
+			await ensureAgentMemorySchema();
+			await expireArticleEditLocks();
+		}
 
 		let results = await query(
 			`SELECT 
@@ -1913,16 +1918,17 @@ router.get('/get_articles', auth, async function (req, res) {
 				a.is_draft,
 				a.deleted,
 				a.update_time,
-				am_raw.updated_at as index_update_time,
-				IF(am.memory_id IS NULL, 0, 1) as index_is_current,
+				${catalogOnly ? '' : `am_raw.updated_at as index_update_time,
+				IF(am.memory_id IS NULL, 0, 1) as index_is_current,`}
 				a.text_count,
 				a.article_type,
 				COALESCE(acm.mode, 'legacy_lock') as collaboration_mode,
 				acd.revision as collaboration_revision,
 				n.name as novel_name,
-				(SELECT COUNT(*) FROM article_feedback WHERE article_id = a.article_id AND status = 0) as feedback_count,
+				${catalogOnly ? '' : '(SELECT COUNT(*) FROM article_feedback WHERE article_id = a.article_id AND status = 0) as feedback_count,'}
 				aw.article_id as writer_article_id,
 				aw.content_hash as writer_content_hash,
+				aw.content as writer_content,
 				aw.create_time as writer_create_time,
 				aw.updated_at as writer_updated_at,
 				aw.id as writer_id,
@@ -1932,8 +1938,8 @@ router.get('/get_articles', auth, async function (req, res) {
 				writer_user.name as writer_editor_name,
 				writer_user.avatar_url as writer_editor_avatar_url,
 				aw.edit_session_id as writer_edit_session_id,
-				awm_raw.updated_at as writer_index_update_time,
-				IF(awm.memory_id IS NULL, 0, 1) as writer_index_is_current,
+				${catalogOnly ? '' : `awm_raw.updated_at as writer_index_update_time,
+				IF(awm.memory_id IS NULL, 0, 1) as writer_index_is_current,`}
 				al.lock_id as active_lock_id,
 				al.user_id as active_lock_user_id,
 				al.session_id as active_lock_session_id,
@@ -1950,7 +1956,7 @@ router.get('/get_articles', auth, async function (req, res) {
 			LEFT JOIN articles_writer aw
 				ON aw.id = ${buildLatestWriterIdSubquery('a.article_id', { includeNovelCheck: true })}
 			LEFT JOIN users writer_user ON writer_user.user_id = aw.editor_user_id
-			LEFT JOIN \`${memoryDatabase}\`.agent_memory am_raw ON a.article_id = am_raw.article_id
+			${catalogOnly ? '' : `LEFT JOIN \`${memoryDatabase}\`.agent_memory am_raw ON a.article_id = am_raw.article_id
 			LEFT JOIN \`${memoryDatabase}\`.agent_memory am
 				ON a.article_id = am.article_id
 				AND am.source_content_hash <=> a.content_hash
@@ -1962,7 +1968,7 @@ router.get('/get_articles', auth, async function (req, res) {
 				AND aw.id = awm.writer_id
 				AND awm.source_content_hash <=> aw.content_hash
 				AND awm.source_title <=> aw.title
-				AND awm.source_updated_at <=> aw.create_time
+				AND awm.source_updated_at <=> aw.create_time`}
 			LEFT JOIN (
 				SELECT
 					l1.lock_id,
@@ -2072,8 +2078,10 @@ router.get('/get_articles_deleted', auth, async function (req, res) {
 				a.update_time,
 				a.text_count,
 				n.name as novel_name,
+				a.article_type,
 				aw.article_id as writer_article_id,
 				aw.content_hash as writer_content_hash,
+				aw.content as writer_content,
 				aw.create_time as writer_create_time,
 				aw.updated_at as writer_updated_at,
 				aw.id as writer_id,
@@ -2210,7 +2218,7 @@ router.get('/get_article_writer', auth, async function (req, res) {
 			res.end("no data");
 			return;
 		}
-		res.end(JSON.stringify({ ...(readerResults[0] || {}), ...results[0] }));
+		res.end(JSON.stringify({ ...(readerResults[0] || {}), ...results[0], supports_conditional_save: true }));
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
@@ -2353,12 +2361,29 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 		}
 
 		const novelId = Number(access.novel_id);
+		// New clients send the acknowledged version instead of downloading the full
+		// draft before every save. Keep the existing edit-session validation above.
+		let acknowledgedWriter = null;
+		if (req.body.base_writer) {
+			const expected = req.body.base_writer;
+			const latest = await getLatestWriterSnapshotMeta(articleId);
+			if (!latest || latest.content_hash !== expected.content_hash || latest.title !== expected.title) {
+				return res.status(409).json({
+					msg: '云端内容已变化，请比较本机与云端版本后继续',
+					code: 'writer_revision_conflict',
+				});
+			}
+			acknowledgedWriter = latest;
+		}
 		req.body.content = ensureArticleParagraphIds(req.body.content);
 		const contentHash = calculateContentHash(req.body.content);
 
 		if(req.body.is_fast_save){
-			let article_writer = [];
-			if (sessionId) {
+			let article_writer = acknowledgedWriter && sessionId &&
+				acknowledgedWriter.editor_user_id === Number(user.user_id) &&
+				acknowledgedWriter.edit_session_id === sessionId
+				? [acknowledgedWriter] : [];
+			if (sessionId && article_writer.length === 0) {
 				article_writer = await query(
 					`SELECT *
 					FROM articles_writer
@@ -2444,7 +2469,11 @@ router.post('/upload_article_writer', auth, async (req, res) => {
 			);
 		} else {
 
-			if(!req.body.is_force){
+			if (!req.body.is_force && acknowledgedWriter &&
+				acknowledgedWriter.content_hash === contentHash && acknowledgedWriter.title === req.body.title) {
+				return res.status(200).json({ msg: 'content does not change', writer_snapshot: acknowledgedWriter });
+			}
+			if(!req.body.is_force && !acknowledgedWriter){
 				// 检查是否与上次记录不一样
 				let latestLocalArticle = await query(
 					`SELECT *

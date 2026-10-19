@@ -153,7 +153,7 @@ export default {
   padding: 5px;
 }
 .store-categories .active {
-  color: #704c35;
+  color: var(--wood, #c65320);
   font-weight: 600;
 }
 .product-grid {
@@ -204,7 +204,7 @@ export default {
 .product-card strong {
   font-size: 20px;
   font-weight: 500;
-  color: #704c35;
+  color: var(--wood, #b94a18);
 }
 .product-card small,
 .product-card footer > span {

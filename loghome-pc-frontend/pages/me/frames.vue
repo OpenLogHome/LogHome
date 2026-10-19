@@ -186,7 +186,8 @@ export default {
 }
 .frame-option.selected {
   border-color: var(--wood, #947358);
-  background: #f4ebdf;
+  background: var(--selection-bg, #f6e9dc);
+  box-shadow: inset 0 0 0 1px var(--wood, #947358);
 }
 .frame-option strong {
   font-size: 13px;
@@ -197,7 +198,7 @@ export default {
   color: var(--muted, #82766c);
 }
 .frame-option.locked {
-  background: #f5f2ed;
+  background: var(--soft, #f1f3f5);
 }
 .frame-preview {
   text-align: center;

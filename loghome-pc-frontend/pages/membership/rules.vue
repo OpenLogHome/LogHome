@@ -306,7 +306,7 @@ export default {
 };
 </script>
 <style scoped>
-.rules-page {
+.rules-content {
   color: var(--ink, #382d25);
 }
 .rules-hero,
@@ -366,7 +366,10 @@ export default {
 }
 .price-card {
   flex: 1;
-  background: #f5eddf;
+  min-width: 0;
+  background: var(--surface, #fffdf9);
+  color: var(--ink, #30343b);
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 10px;
   padding: 20px;
 }
@@ -379,6 +382,57 @@ export default {
   width: 40px;
   height: 40px;
   object-fit: contain;
+}
+.price-card__name {
+  font-weight: 600;
+}
+.grant-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.grant-grid > div {
+  padding: 18px;
+  border-radius: 10px;
+  background: var(--surface, #fffdf9);
+  border: 1px solid var(--line, #e2e6eb);
+}
+.grant-grid span {
+  display: block;
+  color: var(--muted, #5b626d);
+  font-size: 13px;
+}
+.grant-grid span:nth-child(2) {
+  margin: 10px 0;
+  color: var(--wood, #c65320);
+  font-size: 28px;
+  font-weight: 600;
+}
+.exchange-rate {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.exchange-rate img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+.usage-list > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line, #e2e6eb);
+}
+.usage-list span:last-child,
+.rules-note {
+  color: var(--muted, #5b626d);
+  font-size: 13px;
+  line-height: 1.8;
 }
 .rule-list > div {
   display: flex;
@@ -395,6 +449,9 @@ export default {
 @media (max-width: 600px) {
   .price-grid {
     flex-direction: column;
+  }
+  .grant-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

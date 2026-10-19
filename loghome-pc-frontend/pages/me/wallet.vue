@@ -524,9 +524,10 @@ export default {
   color: var(--ink, #382d25);
   cursor: pointer;
 }
-.recharge-plans button.selected {
+.social-workspace .recharge-plans button.selected {
   border-color: var(--wood, #947358);
-  background: #f3e9db;
+  background: var(--selection-bg, #f6e9dc);
+  box-shadow: inset 0 0 0 1px var(--wood, #947358);
 }
 .recharge-plans strong {
   font-size: 24px;
