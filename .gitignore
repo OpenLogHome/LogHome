@@ -23,7 +23,7 @@ loghome-agent-v3/
 _tmp/
 
 # Nuxt generated build output
-loghome-pc-frontend/.nuxt/dist/
+/loghome-pc-frontend/.nuxt/
 
 # Logs (may contain sensitive prompt data)
 **/logs/
