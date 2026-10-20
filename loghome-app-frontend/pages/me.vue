@@ -156,9 +156,9 @@
 					</view>
 				</navigator>
 				<navigator url="/pages/bookcase/index">
-					<view class="li li--collection">
+					<view class="li">
 						<view class="icon">
-							<img src="../static/icons/nether-star.svg"></img>
+							<img src="../static/icons/ender-chest.svg"></img>
 						</view>
 						<view class="text">{{ $t('me.service.collection') }}</view>
 						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
@@ -763,8 +763,6 @@
 		&:active { background: var(--me-line); }
 		&.noborder { border-bottom: 0; }
 		.icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 48rpx; height: 48rpx; img { width: 44rpx; height: 44rpx; object-fit: contain; image-rendering: pixelated; } }
-		&.li--collection { background: #faf1c4; &:active { background: #f3e8a8; } }
-		.dark-mode &.li--collection { background: #3d3826; &:active { background: #46402d; } }
 		.text { flex: 1; min-width: 0; padding-left: 20rpx; font-size: 27rpx; font-weight: 600; overflow-wrap: break-word; }
 		.service-balance { flex-shrink: 0; margin-left: 14rpx; font-size: 25rpx; font-weight: 500; color: var(--me-danger); white-space: nowrap; font-variant-numeric: tabular-nums; }
 		.to { display: flex; align-items: center; justify-content: center; flex: 0 0 26rpx; height: 32rpx; margin-left: 16rpx; color: #acafa6; }
