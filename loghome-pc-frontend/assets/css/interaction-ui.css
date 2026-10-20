@@ -1,151 +1,143 @@
-/* Site-owned interaction tokens also theme overlays mounted outside page components. */
+/* Site-owned interactions exclude writer routes, including overlays appended to body.
+   :where keeps the original selector specificity on other pages. */
 :root {
   --ui-brand: #79573d;
   --ui-brand-soft: #f2e9dd;
   --ui-primary-text: #fffdf9;
   --ui-focus: #947358;
 }
-html[data-site-theme="dark"] {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) {
   --ui-brand: #c8a782;
   --ui-brand-soft: #353027;
   --ui-primary-text: #211e19;
   --ui-focus: #d8b68f;
 }
-.el-button--primary {
+:where(html:not(.writer-route-active)) .el-button--primary {
   background: var(--ui-brand);
   border-color: var(--ui-brand);
   color: var(--ui-primary-text);
 }
-.el-button--primary:is(:hover, :focus) {
+:where(html:not(.writer-route-active)) .el-button--primary:is(:hover, :focus) {
   background: #67472f;
   border-color: #67472f;
   color: #fffdf9;
 }
-.el-button--primary.is-disabled,
-.el-button--primary.is-disabled:is(:hover, :focus) {
+:where(html:not(.writer-route-active)) .el-button--primary.is-disabled,
+:where(html:not(.writer-route-active)) .el-button--primary.is-disabled:is(:hover, :focus) {
   background: var(--ui-brand);
   border-color: var(--ui-brand);
   color: var(--ui-primary-text);
   opacity: 0.6;
 }
-.el-button:not(.el-button--primary):not(.el-button--success):not(.el-button--warning):not(
+:where(html:not(.writer-route-active)) .el-button:not(.el-button--primary):not(.el-button--success):not(.el-button--warning):not(
     .el-button--danger
   ):not(.el-button--info):is(:hover, :focus) {
   color: var(--ui-brand);
   border-color: var(--ui-focus);
   background: var(--ui-brand-soft);
 }
-.el-button--text {
+:where(html:not(.writer-route-active)) .el-button--text {
   color: var(--ui-brand);
 }
-.el-button--text:is(:hover, :focus) {
+:where(html:not(.writer-route-active)) .el-button--text:is(:hover, :focus) {
   color: var(--ui-brand);
   background: transparent;
   border-color: transparent;
 }
-.el-input__inner:focus,
-.el-textarea__inner:focus,
-.el-select .el-input.is-focus .el-input__inner,
-.el-select .el-input__inner:focus,
-.el-cascader .el-input.is-focus .el-input__inner {
+:where(html:not(.writer-route-active)) .el-input__inner:focus,
+:where(html:not(.writer-route-active)) .el-textarea__inner:focus,
+:where(html:not(.writer-route-active)) .el-select .el-input.is-focus .el-input__inner,
+:where(html:not(.writer-route-active)) .el-select .el-input__inner:focus,
+:where(html:not(.writer-route-active)) .el-cascader .el-input.is-focus .el-input__inner {
   border-color: var(--ui-focus);
 }
-.el-input-number__decrease:hover,
-.el-input-number__increase:hover,
-.el-date-picker__header-label:hover,
-.el-picker-panel__icon-btn:hover,
-.el-date-table td.available:hover,
-.el-month-table td .cell:hover,
-.el-year-table td .cell:hover {
+:where(html:not(.writer-route-active)) .el-input-number__decrease:hover,
+:where(html:not(.writer-route-active)) .el-input-number__increase:hover,
+:where(html:not(.writer-route-active)) .el-date-picker__header-label:hover,
+:where(html:not(.writer-route-active)) .el-picker-panel__icon-btn:hover,
+:where(html:not(.writer-route-active)) .el-date-table td.available:hover,
+:where(html:not(.writer-route-active)) .el-month-table td .cell:hover,
+:where(html:not(.writer-route-active)) .el-year-table td .cell:hover {
   color: var(--ui-brand);
 }
-.el-dropdown-menu__item:not(.is-disabled):hover,
-.el-dropdown-menu__item:focus,
-.el-select-dropdown__item.hover,
-.el-autocomplete-suggestion li:hover,
-.el-cascader-node:not(.is-disabled):is(:hover, :focus) {
+:where(html:not(.writer-route-active)) .el-dropdown-menu__item:not(.is-disabled):hover,
+:where(html:not(.writer-route-active)) .el-dropdown-menu__item:focus,
+:where(html:not(.writer-route-active)) .el-select-dropdown__item.hover,
+:where(html:not(.writer-route-active)) .el-autocomplete-suggestion li:hover,
+:where(html:not(.writer-route-active)) .el-cascader-node:not(.is-disabled):is(:hover, :focus) {
   color: var(--ui-brand);
   background: var(--ui-brand-soft);
 }
-.el-select-dropdown__item.selected,
-.el-cascader-node.in-active-path,
-.el-cascader-node.is-active,
-.el-cascader-node.is-selectable.in-checked-path,
-.el-tabs__item.is-active,
-.el-tabs__item:hover,
-.el-radio__input.is-checked + .el-radio__label,
-.el-checkbox__input.is-checked + .el-checkbox__label,
-.el-pagination .el-pager li.active,
-.el-pagination button:hover {
+:where(html:not(.writer-route-active)) .el-select-dropdown__item.selected,
+:where(html:not(.writer-route-active)) .el-cascader-node.in-active-path,
+:where(html:not(.writer-route-active)) .el-cascader-node.is-active,
+:where(html:not(.writer-route-active)) .el-cascader-node.is-selectable.in-checked-path,
+:where(html:not(.writer-route-active)) .el-tabs__item.is-active,
+:where(html:not(.writer-route-active)) .el-tabs__item:hover,
+:where(html:not(.writer-route-active)) .el-radio__input.is-checked + .el-radio__label,
+:where(html:not(.writer-route-active)) .el-checkbox__input.is-checked + .el-checkbox__label,
+:where(html:not(.writer-route-active)) .el-pagination .el-pager li.active,
+:where(html:not(.writer-route-active)) .el-pagination button:hover {
   color: var(--ui-brand);
 }
-.el-tabs__active-bar {
+:where(html:not(.writer-route-active)) .el-tabs__active-bar {
   background-color: var(--ui-brand);
 }
-.el-radio__input.is-checked .el-radio__inner,
-.el-checkbox__input.is-checked .el-checkbox__inner,
-.el-checkbox__input.is-indeterminate .el-checkbox__inner,
-.el-switch.is-checked .el-switch__core {
+:where(html:not(.writer-route-active)) .el-radio__input.is-checked .el-radio__inner,
+:where(html:not(.writer-route-active)) .el-checkbox__input.is-checked .el-checkbox__inner,
+:where(html:not(.writer-route-active)) .el-checkbox__input.is-indeterminate .el-checkbox__inner,
+:where(html:not(.writer-route-active)) .el-switch.is-checked .el-switch__core {
   background: var(--ui-brand);
   border-color: var(--ui-brand);
 }
-.el-radio__inner:hover,
-.el-checkbox__inner:hover,
-.el-checkbox__input.is-focus .el-checkbox__inner,
-.el-radio__input.is-focus .el-radio__inner {
+:where(html:not(.writer-route-active)) .el-radio__inner:hover,
+:where(html:not(.writer-route-active)) .el-checkbox__inner:hover,
+:where(html:not(.writer-route-active)) .el-checkbox__input.is-focus .el-checkbox__inner,
+:where(html:not(.writer-route-active)) .el-radio__input.is-focus .el-radio__inner {
   border-color: var(--ui-focus);
 }
-.el-radio-button__orig-radio:checked + .el-radio-button__inner {
+:where(html:not(.writer-route-active)) .el-radio-button__orig-radio:checked + .el-radio-button__inner {
   background: var(--ui-brand);
   border-color: var(--ui-brand);
   color: var(--ui-primary-text);
   box-shadow: -1px 0 0 0 var(--ui-brand);
 }
-.el-radio-button__inner:hover {
+:where(html:not(.writer-route-active)) .el-radio-button__inner:hover {
   color: var(--ui-brand);
 }
-.el-date-table td.today span,
-.el-date-table td.start-date span,
-.el-date-table td.end-date span,
-.el-month-table td.current:not(.disabled) .cell,
-.el-year-table td.current:not(.disabled) .cell {
+:where(html:not(.writer-route-active)) .el-date-table td.today span,
+:where(html:not(.writer-route-active)) .el-date-table td.start-date span,
+:where(html:not(.writer-route-active)) .el-date-table td.end-date span,
+:where(html:not(.writer-route-active)) .el-month-table td.current:not(.disabled) .cell,
+:where(html:not(.writer-route-active)) .el-year-table td.current:not(.disabled) .cell {
   color: var(--ui-brand);
 }
-.el-date-table td.current:not(.disabled) span,
-.el-date-table td.start-date span,
-.el-date-table td.end-date span {
+:where(html:not(.writer-route-active)) .el-date-table td.current:not(.disabled) span,
+:where(html:not(.writer-route-active)) .el-date-table td.start-date span,
+:where(html:not(.writer-route-active)) .el-date-table td.end-date span {
   color: var(--ui-primary-text);
   background: var(--ui-brand);
 }
-.el-date-table td.in-range div {
+:where(html:not(.writer-route-active)) .el-date-table td.in-range div {
   background: var(--ui-brand-soft);
 }
-.el-loading-spinner .path {
+:where(html:not(.writer-route-active)) .el-loading-spinner .path {
   stroke: var(--ui-brand);
 }
-.el-loading-spinner i,
-.el-loading-spinner .el-loading-text {
+:where(html:not(.writer-route-active)) .el-loading-spinner i,
+:where(html:not(.writer-route-active)) .el-loading-spinner .el-loading-text {
   color: var(--ui-brand);
 }
-.el-upload-dragger:hover,
-.el-upload--picture-card:hover,
-.el-upload:focus {
+:where(html:not(.writer-route-active)) .el-upload-dragger:hover,
+:where(html:not(.writer-route-active)) .el-upload--picture-card:hover,
+:where(html:not(.writer-route-active)) .el-upload:focus {
   border-color: var(--ui-focus);
 }
-.el-upload-dragger .el-upload__text em {
+:where(html:not(.writer-route-active)) .el-upload-dragger .el-upload__text em {
   color: var(--ui-brand);
 }
-.el-tooltip__popper.is-light {
+:where(html:not(.writer-route-active)) .el-tooltip__popper.is-light {
   border-color: var(--site-line);
-}
-:is(.writer-workspace, .writer-dialog, .writer-notice, .writer-popover) {
-  --writer-accent: var(--ui-brand);
-  --writer-focus: var(--ui-focus);
-}
-html[data-site-theme="dark"]
-  :is(.writer-workspace, .writer-dialog, .writer-notice, .writer-popover) {
-  --writer-accent: var(--ui-brand);
-  --writer-focus: var(--ui-focus);
 }
 
 /* Keep the functional hierarchy clear and use a consistent 8px-based rhythm. */
@@ -271,25 +263,25 @@ html[data-site-theme="dark"]
   min-height: 32px;
 }
 .social-workspace .el-form .el-form-item,
-.el-dialog .el-form .el-form-item {
+:where(html:not(.writer-route-active)) .el-dialog .el-form .el-form-item {
   margin-bottom: 20px;
 }
 .social-workspace .el-form--label-top .el-form-item__label,
-.el-dialog .el-form--label-top .el-form-item__label {
+:where(html:not(.writer-route-active)) .el-dialog .el-form--label-top .el-form-item__label {
   line-height: 20px;
   padding-bottom: 8px;
 }
 .social-workspace .el-form :is(.el-input__inner, .el-input__icon),
-.el-dialog .el-form :is(.el-input__inner, .el-input__icon) {
+:where(html:not(.writer-route-active)) .el-dialog .el-form :is(.el-input__inner, .el-input__icon) {
   min-height: 40px;
   line-height: 40px;
 }
 .social-workspace .el-form .el-select,
-.el-dialog .el-form .el-select {
+:where(html:not(.writer-route-active)) .el-dialog .el-form .el-select {
   max-width: 100%;
 }
 .social-workspace .el-textarea__inner,
-.el-dialog .el-textarea__inner {
+:where(html:not(.writer-route-active)) .el-dialog .el-textarea__inner {
   padding: 10px 12px;
   line-height: 1.65;
 }
@@ -325,27 +317,27 @@ html[data-site-theme="dark"]
   color: var(--wood);
   font-size: 14px;
 }
-.el-dialog {
+:where(html:not(.writer-route-active)) .el-dialog {
   max-width: calc(100vw - 48px);
   border-radius: 12px;
 }
-.el-dialog__header {
+:where(html:not(.writer-route-active)) .el-dialog__header {
   padding: 20px 24px 16px;
 }
-.el-dialog__headerbtn {
+:where(html:not(.writer-route-active)) .el-dialog__headerbtn {
   top: 20px;
   right: 24px;
 }
-.el-dialog__body {
+:where(html:not(.writer-route-active)) .el-dialog__body {
   padding: 8px 24px 24px;
   max-height: calc(100dvh - 210px);
   overflow-y: auto;
 }
-.el-dialog__footer {
+:where(html:not(.writer-route-active)) .el-dialog__footer {
   padding: 16px 24px 20px;
   border-top: 1px solid var(--site-line);
 }
-.el-dialog__footer .el-button + .el-button {
+:where(html:not(.writer-route-active)) .el-dialog__footer .el-button + .el-button {
   margin-left: 8px;
 }
 .checkout-address-actions {
@@ -357,7 +349,7 @@ html[data-site-theme="dark"]
 .checkout-address-actions .el-button + .el-button {
   margin-left: 0;
 }
-html[data-site-theme="dark"] .social-workspace .chat-page {
+html[data-site-theme="dark"]:where(:not(.writer-route-active)) .social-workspace .chat-page {
   background: var(--site-bg);
 }
 @media (min-width: 1120px) {
@@ -412,18 +404,18 @@ html[data-site-theme="dark"] .social-workspace .chat-page {
   }
 }
 @media (max-width: 540px) {
-  .el-dialog {
+  :where(html:not(.writer-route-active)) .el-dialog {
     max-width: calc(100vw - 24px);
     margin-top: 8vh !important;
   }
-  .el-dialog__header {
+  :where(html:not(.writer-route-active)) .el-dialog__header {
     padding: 20px 20px 16px;
   }
-  .el-dialog__body {
+  :where(html:not(.writer-route-active)) .el-dialog__body {
     padding: 8px 20px 20px;
     max-height: calc(100dvh - 170px);
   }
-  .el-dialog__footer {
+  :where(html:not(.writer-route-active)) .el-dialog__footer {
     padding: 16px 20px;
   }
   .social-workspace .social-panel,

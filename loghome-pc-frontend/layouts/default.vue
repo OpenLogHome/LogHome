@@ -1174,6 +1174,8 @@ export default {
   --site-footer-link: #c65320;
 }
 
+.site-footer { padding-top: 28px; }
+.site-footer .footer-container { text-align: center; }
 .home-layout .site-footer { background: #eef0f3; color: #6b7280; }
 .home-skip-link { position: fixed; top: 8px; left: 20px; z-index: 1200; padding: 10px 18px; background: #c65320; color: #ffffff; border-radius: 6px; transform: translateY(-160%); }
 .home-skip-link:focus { transform: translateY(0); }

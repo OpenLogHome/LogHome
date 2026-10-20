@@ -1,3 +1,5 @@
+import { countLegacyContent } from "./legacy-adapter";
+
 // Volumes own the consecutive chapters up to the next volume heading.
 export function catalogGroups(articles) {
   const groups = [];
@@ -80,7 +82,28 @@ export function normalizeCatalogArticle(item) {
     ...item,
     writer_title: writer.title,
     writer_content_hash: writer.content_hash,
+    writer_text_count: writer.text_count,
   };
+}
+
+export function writerTextCount(article) {
+  try {
+    const content = typeof article.content === "string"
+      ? JSON.parse(article.content) : article.content;
+    if (article.article_type === "worldVocabulary")
+      return content && typeof content.desc === "string" ? content.desc.length : null;
+    if (!["richtext", "worldOutline"].includes(article.article_type) || !Array.isArray(content))
+      return null;
+    return countLegacyContent(content).textCount;
+  } catch (_) {
+    return null;
+  }
+}
+
+export function catalogTextCount(item) {
+  const count = item.local_writer_text_count ?? item.article_writer?.text_count ??
+    item.writer_text_count ?? item.text_count ?? 0;
+  return Number(count);
 }
 
 export function hasUnpublishedCatalogChanges(item) {

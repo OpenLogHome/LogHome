@@ -6,20 +6,21 @@ import NuxtError from './components/nuxt-error.vue'
 import NuxtLoading from './components/nuxt-loading.vue'
 import NuxtBuildIndicator from './components/nuxt-build-indicator'
 
-import '..\\node_modules\\element-ui\\lib\\theme-chalk\\index.css'
+import '../node_modules/element-ui/lib/theme-chalk/index.css'
 
-import '..\\assets\\css\\global.css'
+import '../assets/css/global.css'
 
-import '..\\assets\\css\\reading-theme.css'
+import '../assets/css/reading-theme.css'
 
-import '..\\assets\\css\\site-theme.css'
+import '../assets/css/site-theme.css'
 
-import '..\\assets\\css\\interaction-ui.css'
+import '../assets/css/interaction-ui.css'
 
-import _6f6c098b from '..\\layouts\\default.vue'
-import _77430317 from '..\\layouts\\empty.vue'
+import _6f6c098b from '../layouts/default.vue'
+import _77430317 from '../layouts/empty.vue'
+import _dfd0402e from '../layouts/writer.vue'
 
-const layouts = { "_default": sanitizeComponent(_6f6c098b),"_empty": sanitizeComponent(_77430317) }
+const layouts = { "_default": sanitizeComponent(_6f6c098b),"_empty": sanitizeComponent(_77430317),"_writer": sanitizeComponent(_dfd0402e) }
 
 export default {
   render (h, props) {

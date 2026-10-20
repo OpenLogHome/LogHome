@@ -139,3 +139,126 @@ test('publish page does not infer progress from reasoning or concatenate batch J
   event({ type: 'done', result: { summary: { paragraph_count: 4, error_count: 2 }, paragraph_results: [] } });
   assert.equal(context.smartCorrectionProgress.analyzed, 2);
 });
+
+function publishThinkingContext() {
+  const component = publishComponent();
+  const context = component.data();
+  Object.entries(component.methods).forEach(([name, method]) => { context[name] = method.bind(context); });
+  Object.entries(component.computed).forEach(([name, getter]) => {
+    Object.defineProperty(context, name, { get: () => getter.call(context) });
+  });
+  context.$nextTick = callback => callback.call(context);
+  return context;
+}
+
+test('two-stage correction displays free answers per batch and keeps formatting status separate', async () => {
+  const context = publishThinkingContext();
+  const result = { summary: { paragraph_count: 2, error_count: 0 }, paragraph_results: complete };
+  const events = [
+    { type: 'meta', batched: true, stages: ['analysis', 'formatting'] },
+    { type: 'status', stage: 'analysis', batch_index: 2, batch_count: 2, stream_id: 2 },
+    { type: 'analysis_delta', stage: 'analysis', batch_index: 2, batch_count: 2, stream_id: 2, content: '第二批没有问题。' },
+    { type: 'status', stage: 'formatting', batch_index: 2, batch_count: 2, stream_id: 2, message: '正在整理第二批结果' },
+    { type: 'status', stage: 'analysis', batch_index: 1, batch_count: 2, stream_id: 1 },
+    { type: 'analysis_delta', stage: 'analysis', batch_index: 1, batch_count: 2, stream_id: 1, content: '第一批有错别字。' },
+    { type: 'status', stage: 'formatting', batch_index: 1, batch_count: 2, stream_id: 1, message: '正在整理第一批结果' },
+    { type: 'done', result },
+  ];
+  const actual = await readWriterCorrectionStream(response(events, { bytes: true }), {
+    paragraphs, onEvent: event => context.processCorrectionStreamLine(JSON.stringify(event), null),
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(context.smartThinkingBlocks.map(stream => [stream.attempt, stream.text]))), [
+    [1, '第一批有错别字。'], [1, '第二批没有问题。'],
+  ]);
+  assert.equal(context.smartCorrectionStatusText, '正在整理第一批结果');
+  assert.equal(context.smartCorrectionContentText, '');
+  assert.deepEqual(JSON.parse(JSON.stringify(actual)), result);
+  const file = fs.readFileSync(path.join(__dirname, '../pages/writers/workPublish.vue'), 'utf8');
+  assert.match(file, /class="thinking-head-text">纠错意见</);
+  assert.doesNotMatch(file, /模型思考过程/);
+});
+
+test('loop detection status is retained while completed paragraphs survive a failed batch', async () => {
+  const context = publishThinkingContext();
+  const failed = { ...complete[1], error: '检测到模型持续重复输出，已中止本批检查，请重试未完成的内容' };
+  const result = { summary: { paragraph_count: 2, error_count: 1 }, paragraph_results: [complete[0], failed] };
+  const events = [
+    { type: 'meta', batched: true },
+    { type: 'progress', analyzed: 0, total: 2 },
+    { type: 'paragraph_result', result: complete[0] },
+    { type: 'status', code: 'MODEL_OUTPUT_LOOP', stage: 'analysis', batch_index: 2, batch_count: 2, stream_id: 2, message: '重复输出，已中止该批检查' },
+    { type: 'paragraph_result', result: failed },
+    { type: 'done', result },
+  ];
+  const actual = await readWriterCorrectionStream(response(events), {
+    paragraphs, onEvent: event => context.processCorrectionStreamLine(JSON.stringify(event), null),
+  });
+  assert.equal(context.smartCorrectionLoopDetected, true);
+  assert.equal(context.smartCorrectionProgress.analyzed, 1);
+  assert.equal(actual.paragraph_results[0].error, null);
+  assert.match(actual.paragraph_results[1].error, /重复输出/);
+});
+
+test('publish page keeps interleaved batch reasoning in separate ordered blocks', async () => {
+  const context = publishThinkingContext();
+  const result = { summary: { paragraph_count: 2, error_count: 0 }, paragraph_results: complete };
+  const events = [
+    { type: 'meta', batched: true },
+    { type: 'status', batch_index: 2, batch_count: 2, stream_id: 2 },
+    { type: 'status', batch_index: 1, batch_count: 2, stream_id: 1 },
+    { type: 'reasoning_delta', batch_index: 2, batch_count: 2, stream_id: 2, content: '逐段' },
+    { type: 'reasoning_delta', batch_index: 1, batch_count: 2, stream_id: 1, content: '尽可能地平缓' },
+    { type: 'heartbeat' },
+    { type: 'thinking_delta', batch_index: 2, batch_count: 2, stream_id: 2, content: '检查文本。' },
+    { type: 'reasoning_delta', batch_index: 1, batch_count: 2, stream_id: 1, content: '，用法正确。' },
+    { type: 'delta', batch_index: 2, stream_id: 2, content: '{"paragraphs":[]}' },
+    { type: 'done', result },
+  ];
+  const actual = await readWriterCorrectionStream(response(events, { bytes: true }), {
+    paragraphs,
+    onEvent: event => context.processCorrectionStreamLine(JSON.stringify(event), null),
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(context.smartThinkingBlocks.map(stream => stream.text))), [
+    '尽可能地平缓，用法正确。', '逐段检查文本。',
+  ]);
+  assert.equal(context.smartCorrectionContentText, '');
+  assert.deepEqual(JSON.parse(JSON.stringify(actual)), result);
+});
+
+test('retries have independent reasoning even when they share a batch index', () => {
+  const context = publishThinkingContext();
+  const event = value => context.processCorrectionStreamLine(JSON.stringify({ batch_index: 1, batch_count: 1, ...value }), null);
+  event({ type: 'status', stream_id: 1 });
+  event({ type: 'reasoning_delta', stream_id: 1, content: '原请求的思考' });
+  event({ type: 'status', stream_id: 2 });
+  event({ type: 'reasoning_delta', stream_id: 2, content: '重' });
+  event({ type: 'reasoning_delta', stream_id: 2, content: '重' });
+  event({ type: 'reasoning_delta', stream_id: 1, content: '。' });
+  assert.deepEqual(JSON.parse(JSON.stringify(context.smartThinkingBlocks.map(stream => [stream.attempt, stream.text]))), [
+    [1, '原请求的思考。'], [2, '重重'],
+  ]);
+});
+
+test('older services group reasoning by batch and split retries at status events', () => {
+  const context = publishThinkingContext();
+  const event = value => context.processCorrectionStreamLine(JSON.stringify(value), null);
+  event({ type: 'status', batch_index: 1, batch_count: 2 });
+  event({ type: 'reasoning_delta', batch_index: 1, content: '第一批' });
+  event({ type: 'reasoning_delta', batch_index: 2, content: '第二批' });
+  event({ type: 'thinking_delta', batch_index: 1, content: '思考' });
+  event({ type: 'status', batch_index: 1, batch_count: 2 });
+  event({ type: 'reasoning_delta', batch_index: 1, content: '重试思考' });
+  assert.deepEqual(JSON.parse(JSON.stringify(context.smartThinkingBlocks.map(stream => stream.text))), [
+    '第一批思考', '重试思考', '第二批',
+  ]);
+});
+
+test('legacy model output remains available for parsing and stays out of the thinking panel', () => {
+  const context = publishThinkingContext();
+  const event = value => context.processCorrectionStreamLine(JSON.stringify(value), null);
+  event({ type: 'reasoning_delta', content: '思思考' });
+  event({ type: 'delta', content: '{"paragraphs":[]}' });
+  assert.equal(context.smartThinkingBlocks.length, 1);
+  assert.equal(context.smartThinkingBlocks[0].text, '思思考');
+  assert.equal(context.smartCorrectionContentText, '{"paragraphs":[]}');
+});

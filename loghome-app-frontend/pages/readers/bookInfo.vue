@@ -791,15 +791,8 @@ export default {
 									canHarvest: data.tree_status === '结果'
 								});
 							}
-						}).catch((err) => {
-							const message = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg);
-							if (message !== 'Task already completed today') {
-								uni.showToast({
-									title: err.toString(),
-									icon: 'none',
-									duration: 2000
-								});
-							}
+						}).catch(() => {
+							// 每日奖励已领取、未种树或树场暂不可用，不影响已经成功的点赞。
 						});
 					}
 					_this.getNices();
@@ -993,15 +986,8 @@ export default {
 								canHarvest: data.tree_status === '结果'
 							});
 						}
-					}).catch((err) => {
-						const message = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg);
-						if (message !== 'Task already completed today') {
-							uni.showToast({
-								title: err.toString(),
-								icon: 'none',
-								duration: 2000
-							});
-						}
+					}).catch(() => {
+						// 树场奖励是附加操作，领取失败不影响分享口令的创建和复制。
 					});
 
 				} else {

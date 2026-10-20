@@ -150,6 +150,9 @@
               >
               <p class="social-muted">{{ achievementRule(condition) }}</p>
               <el-progress
+                text-color="var(--muted, #5b626d)"
+                define-back-color="var(--line, #e2e6eb)"
+                color="var(--wood, #b94a18)"
                 :percentage="
                   Math.min(
                     100,
@@ -409,7 +412,7 @@ export default {
 }
 .badge-detail-image {
   text-align: center;
-  background: #f4ecdf;
+  background: var(--soft, #f1f3f5);
   border-radius: 12px;
   padding: 24px;
 }
@@ -420,7 +423,7 @@ export default {
   image-rendering: pixelated;
 }
 .badge-condition-group {
-  background: #f7f2e9;
+  background: var(--soft, #f1f3f5);
   border-radius: 10px;
   padding: 16px;
   margin: 12px 0;

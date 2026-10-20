@@ -249,23 +249,25 @@ export default {
 }
 .counter {
   font-size: 12px;
-  color: #bbb;
+  color: var(--muted, #5b626d);
   margin-left: auto;
 }
 .submit-btn {
   background: var(--wood, #c65320);
   border: none;
-  color: #fff;
+  color: var(--ui-primary-text, #fff);
   border-radius: 18px;
   padding: 8px 24px;
   font-size: 14px;
   cursor: pointer;
 }
-.submit-btn:hover {
+.submit-btn:hover:not(:disabled) {
   background: #ac4319;
 }
 .submit-btn:disabled {
-  opacity: 0.5;
+  background: var(--soft, #f1f3f5);
+  color: var(--muted, #5b626d);
+  opacity: 1;
   cursor: not-allowed;
 }
 </style>

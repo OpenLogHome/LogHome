@@ -434,7 +434,7 @@ export default {
 }
 .product-price {
   font-size: 36px;
-  color: #704c35;
+  color: var(--wood, #b94a18);
   margin: 24px 0 8px;
 }
 .product-price small {
@@ -465,12 +465,15 @@ export default {
   color: var(--muted, #82766c);
   margin-top: 5px;
 }
-.product-variants .selected {
-  background: #f2e8da;
+.social-workspace .product-variants .selected {
+  background: var(--selection-bg, #f6e9dc);
   border-color: var(--wood, #947358);
+  box-shadow: inset 0 0 0 1px var(--wood, #947358);
 }
 .product-variants button:disabled {
-  opacity: 0.4;
+  background: var(--soft, #f1f3f5);
+  color: var(--muted, #5b626d);
+  opacity: 1;
   cursor: not-allowed;
 }
 .product-summary > .el-button {

@@ -32,12 +32,14 @@
             >智能纠错</el-button
           >
         </div>
+        <p v-if="checking && checkStatus" role="status">{{ checkStatus }}</p>
         <p v-if="error" role="alert">{{ error }}</p>
         <p v-if="result">
           检查完成：{{ issues.length }} 段建议<template
             v-if="result.errors && result.errors.length"
             >，{{ result.errors.length }} 段失败（可重试）</template
           >
+          <template v-if="checkLoopDetected">，检测到模型重复输出，已中止相关批次</template>
         </p>
         <article
           v-for="(item, index) in issues"
@@ -112,6 +114,8 @@ export default {
     mode: "now",
     time: "",
     checking: "",
+    checkStatus: "",
+    checkLoopDetected: false,
     error: "",
     result: null,
     ignored: [],
@@ -145,6 +149,8 @@ export default {
     async check() {
       this.error = "";
       this.checking = "smart";
+      this.checkStatus = "正在准备纠错...";
+      this.checkLoopDetected = false;
       this.ignored = [];
       try {
         await this.writerConfirm(
@@ -190,6 +196,12 @@ export default {
         const result = await readWriterCorrectionStream(response, {
           paragraphs: missing,
           onEvent: (event) => {
+            if (event.type === "status" && event.message) {
+              this.checkStatus = event.message;
+            }
+            if (event.type === "status" && event.code === "MODEL_OUTPUT_LOOP") {
+              this.checkLoopDetected = true;
+            }
             if (
               ["done", "complete", "completed", "result"].includes(event.type)
             ) {

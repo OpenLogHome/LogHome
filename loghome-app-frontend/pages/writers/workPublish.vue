@@ -112,23 +112,28 @@
         </view>
       </view>
 
-      <view v-if="smartThinkingText && smartThinkingVisible" class="thinking-panel">
+      <view v-if="smartThinkingBlocks.length && smartThinkingVisible" class="thinking-panel">
         <view class="thinking-head" @click="smartThinkingVisible = false">
-          <text class="thinking-head-text">模型思考过程</text>
+          <text class="thinking-head-text">纠错意见</text>
           <text class="thinking-head-close">收起</text>
         </view>
         <scroll-view scroll-y class="thinking-body" :scroll-top="thinkingScrollTop">
           <view class="thinking-body-inner">
-            <text class="thinking-content">{{ smartThinkingText }}</text>
+            <view v-for="stream in smartThinkingBlocks" :key="stream.id" class="thinking-stream">
+              <text v-if="stream.batchIndex" class="thinking-stream-title">
+                第 {{ stream.batchIndex }}/{{ stream.batchCount }} 批<template v-if="stream.attempt > 1"> · 第 {{ stream.attempt }} 次检查</template>
+              </text>
+              <text class="thinking-content">{{ stream.text }}</text>
+            </view>
           </view>
         </scroll-view>
       </view>
       <view
-        v-else-if="smartCorrectionLoading && smartThinkingText"
+        v-else-if="smartCorrectionLoading && smartThinkingBlocks.length"
         class="thinking-collapsed"
         @click="smartThinkingVisible = true"
       >
-        <text class="thinking-collapsed-text">查看模型思考过程</text>
+        <text class="thinking-collapsed-text">查看纠错意见</text>
       </view>
 
       <view v-if="smartCorrectionLoading" class="status-box">
@@ -156,7 +161,7 @@
           v-if="(smartCorrectionResult.summary.error_count || 0) > 0"
           class="status-box error-box correction-status"
         >
-          部分内容尚未完成检查，已保留成功结果，可点击“重试未完成”继续。
+          {{ smartCorrectionLoopDetected ? "检测到模型重复输出，已中止相关批次。" : "部分内容尚未完成检查。" }}已保留成功结果，可点击“重试未完成”继续。
         </view>
 
         <view
@@ -415,6 +420,10 @@ export default {
       publishSessionId: "",
       currentEditLock: null,
       lockHeartbeatTimer: null,
+      lockPageActive: true,
+      lockLifecycleVersion: 0,
+      hasClaimedEditLock: false,
+      lockConflictShown: false,
       collaborationMode: "legacy_lock",
       collaborationRevision: 0,
       collaborationModeResolved: false,
@@ -429,14 +438,14 @@ export default {
       visibilityChanging: false,
       visibilityChecking: false,
       smartCorrectionLoading: false,
+      smartCorrectionLoopDetected: false,
       smartCorrectionError: "",
       smartCorrectionResult: createEmptyCorrectionResult(),
       smartCorrectionStarted: false,
-      smartThinkingText: "",
+      smartThinkingStreams: [],
       smartCorrectionContentText: "",
       smartCorrectionBatchMode: false,
       smartCorrectionStatusText: "正在检查正文，请稍候...",
-      smartCorrectionOutputStarted: false,
       smartCorrectionProgress: { analyzed: 0, total: 0 },
       smartThinkingVisible: false,
       thinkingScrollTop: 0,
@@ -462,6 +471,9 @@ export default {
     };
   },
   computed: {
+    smartThinkingBlocks() {
+      return this.smartThinkingStreams.filter(stream => stream.text);
+    },
     canMakeNovelPublic() {
       return this.article.novelOwnerId > 0 && this.article.novelOwnerId === this.getCurrentUserId();
     },
@@ -658,7 +670,44 @@ export default {
       return serverTime || buildClientSyncTime();
     },
     async claimEditLock() {
+      const version = this.lockLifecycleVersion;
+      const claimed = await this.maintainEditLock(true);
+      if (!claimed && version !== this.lockLifecycleVersion &&
+          this.isLockRequestCurrent(this.lockLifecycleVersion)) {
+        return this.maintainEditLock(false);
+      }
+      return claimed;
+    },
+    async heartbeatEditLock() {
+      // A temporary network failure must not end a long-running correction.
+      return this.maintainEditLock(false).catch(() => false);
+    },
+    isLockRequestCurrent(version) {
+      return this.lockPageActive && !this.lockConflictShown &&
+        version === this.lockLifecycleVersion;
+    },
+    pauseEditLock() {
+      this.lockPageActive = false;
+      this.lockLifecycleVersion += 1;
+      this.stopLockHeartbeat();
+    },
+    async maintainEditLock(claim = false) {
       if (this.isRealtimeCollaboration) return true;
+      const version = this.lockLifecycleVersion;
+      if (!this.isLockRequestCurrent(version)) return false;
+      if (this._lockRequest && this._lockRequest.version === version) {
+        return this._lockRequest.promise;
+      }
+      const request = { version, promise: null };
+      this._lockRequest = request;
+      request.promise = this.requestEditLock(claim, version);
+      try {
+        return await request.promise;
+      } finally {
+        if (this._lockRequest === request) this._lockRequest = null;
+      }
+    },
+    async requestEditLock(claim, version) {
       const tk = this.getAuthToken();
       if (!tk || !this.articleId || !this.publishSessionId) {
         return false;
@@ -666,7 +715,9 @@ export default {
 
       try {
         const response = await axios.post(
-          this.$baseUrl + "/essays/claim_article_edit_lock",
+          this.$baseUrl + (claim
+            ? "/essays/claim_article_edit_lock"
+            : "/essays/heartbeat_article_edit_lock"),
           {
             article_id: this.articleId,
             session_id: this.publishSessionId,
@@ -678,17 +729,33 @@ export default {
             },
           }
         );
+        this.hasClaimedEditLock = true;
+        if (!this.isLockRequestCurrent(version)) return false;
         this.currentEditLock = response.data.lock || null;
         this.startLockHeartbeat();
         return true;
       } catch (error) {
+        if (!this.isLockRequestCurrent(version)) return false;
         if (error.response && error.response.status === 409) {
-          if (error.response.data.code === "realtime_collaboration_enabled") {
-            this.adoptRealtimeCollaboration(error.response.data.collaboration);
+          const data = error.response.data || {};
+          if (data.code === "realtime_collaboration_enabled") {
+            this.adoptRealtimeCollaboration(data.collaboration);
             return true;
           }
-          this.currentEditLock = error.response.data.lock || null;
-          this.handleLockConflict(error.response.data.lock);
+          const lock = data.lock || null;
+          this.currentEditLock = lock;
+          const sameUser = lock && Number(lock.user_id) === this.getCurrentUserId();
+          const expectedSession = sameUser && (
+            lock.session_id === this.publishSessionId ||
+            (this.sourceSessionId && lock.session_id === this.sourceSessionId)
+          );
+          // Recover an expired lock or the known editor-to-publish handoff only.
+          // Never take the lock back from another tab of the same account.
+          if (!claim && (!lock || expectedSession)) {
+            return this.requestEditLock(true, version);
+          }
+          if (sameUser) this.handleStaleSessionInvalidation();
+          else if (lock) this.handleLockConflict(lock);
           return false;
         }
         throw error;
@@ -696,7 +763,7 @@ export default {
     },
     startLockHeartbeat() {
       this.stopLockHeartbeat();
-      if (this.isRealtimeCollaboration) return;
+      if (this.isRealtimeCollaboration || !this.lockPageActive || this.lockConflictShown) return;
       this.lockHeartbeatTimer = setInterval(() => {
         this.heartbeatEditLock();
       }, EDIT_LOCK_HEARTBEAT_MS);
@@ -707,39 +774,11 @@ export default {
         this.lockHeartbeatTimer = null;
       }
     },
-    async heartbeatEditLock() {
-      if (this.isRealtimeCollaboration) return;
-      const tk = this.getAuthToken();
-      if (!tk || !this.articleId || !this.publishSessionId) {
-        return;
-      }
-
-      try {
-        const response = await axios.post(
-          this.$baseUrl + "/essays/heartbeat_article_edit_lock",
-          {
-            article_id: this.articleId,
-            session_id: this.publishSessionId,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + tk,
-            },
-          }
-        );
-        this.currentEditLock = response.data.lock || null;
-      } catch (error) {
-        this.stopLockHeartbeat();
-        if (error.response && error.response.status === 409) {
-          if (error.response.data.code === "realtime_collaboration_enabled") {
-            this.adoptRealtimeCollaboration(error.response.data.collaboration);
-            return;
-          }
-          this.currentEditLock = error.response.data.lock || null;
-          this.handleLockConflict(error.response.data.lock);
-        }
-      }
+    async closeEditLock() {
+      this.pauseEditLock();
+      // A claim already in flight must finish before releasing its lock.
+      if (this._lockRequest) await this._lockRequest.promise.catch(() => {});
+      await this.releaseEditLock();
     },
     async releaseEditLock() {
       if (this.isRealtimeCollaboration) return;
@@ -776,6 +815,9 @@ export default {
       this.collaborationModeResolved = true;
     },
     handleLockConflict(lockInfo) {
+      if (!this.lockPageActive || this.lockConflictShown) return;
+      this.lockConflictShown = true;
+      this.stopLockHeartbeat();
       const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
       uni.showModal({
         title: "章节已被占用",
@@ -796,6 +838,8 @@ export default {
       );
     },
     handleStaleSessionInvalidation() {
+      if (!this.lockPageActive || this.lockConflictShown) return;
+      this.lockConflictShown = true;
       const syncTime = buildClientSyncTime();
       markWriterSyncInvalidated({
         userId: this.getCurrentUserId(),
@@ -1234,13 +1278,13 @@ export default {
       if (!this.aiAssistanceEnabled) return;
       const forceRefresh = Boolean(options.forceRefresh);
       this.smartCorrectionLoading = true;
+      this.smartCorrectionLoopDetected = false;
       this.smartCorrectionError = "";
       this.smartCorrectionResult = createEmptyCorrectionResult();
-      this.smartThinkingText = "";
+      this.smartThinkingStreams = [];
       this.smartCorrectionContentText = "";
       this.smartCorrectionBatchMode = false;
       this.smartCorrectionStatusText = "正在检查正文，请稍候...";
-      this.smartCorrectionOutputStarted = false;
       this.smartCorrectionProgress = { analyzed: 0, total: 0 };
       this.smartThinkingVisible = true;
 
@@ -2060,6 +2104,26 @@ export default {
       );
       return value === undefined || value === null ? "" : String(value);
     },
+    getCorrectionThinkingStream(event, startNew = false) {
+      const batchIndex = Number(event.batch_index || 0);
+      const batchStreams = this.smartThinkingStreams.filter(stream => stream.batchIndex === batchIndex);
+      const id = event.stream_id == null ? null : `stream-${event.stream_id}`;
+      let stream = id
+        ? this.smartThinkingStreams.find(item => item.id === id)
+        : (!startNew ? batchStreams[batchStreams.length - 1] : null);
+      if (!stream) {
+        stream = {
+          id: id || `batch-${batchIndex}-${batchStreams.length + 1}`,
+          batchIndex,
+          batchCount: Number(event.batch_count || batchIndex),
+          attempt: batchStreams.length + 1,
+          text: "",
+        };
+        this.smartThinkingStreams.push(stream);
+        this.smartThinkingStreams.sort((left, right) => left.batchIndex - right.batchIndex || left.attempt - right.attempt);
+      }
+      return stream;
+    },
     processCorrectionStreamLine(rawLine, fallbackResult) {
       const normalizedLine = String(rawLine || "")
         .trim()
@@ -2083,7 +2147,11 @@ export default {
       if (eventType === "meta") {
         this.smartCorrectionBatchMode = Boolean(event.batched);
       } else if (eventType === "status") {
+        if (event.code === "MODEL_OUTPUT_LOOP") this.smartCorrectionLoopDetected = true;
         if (event.message) this.smartCorrectionStatusText = String(event.message);
+        if (event.stage !== "formatting" && (event.batch_index || event.stream_id != null)) {
+          this.getCorrectionThinkingStream(event, true);
+        }
       } else if (eventType === "progress") {
         const analyzed = Number(event.analyzed || 0);
         const total = Number(event.total || this.smartCorrectionProgress.total || 0);
@@ -2094,10 +2162,14 @@ export default {
           };
         }
       } else if (
+        eventType === "analysis_delta" ||
         eventType === "reasoning_delta" ||
         eventType === "thinking_delta"
       ) {
-        this.smartThinkingText += this.getCorrectionStreamEventText(event);
+        const content = this.getCorrectionStreamEventText(event);
+        if (!content) return fallbackResult;
+        // delta 是增量；只追加到对应请求，保留相邻的重复字符。
+        this.getCorrectionThinkingStream(event).text += content;
         this.$nextTick(function () {
           this.thinkingScrollTop = this.thinkingScrollTop + 99999;
         });
@@ -2109,16 +2181,6 @@ export default {
         const content = this.getCorrectionStreamEventText(event);
         if (this.smartCorrectionBatchMode) return fallbackResult;
         this.smartCorrectionContentText += content;
-        if (content) {
-          if (!this.smartCorrectionOutputStarted) {
-            this.smartCorrectionOutputStarted = true;
-            this.smartThinkingText += "\n\n模型输出：\n";
-          }
-          this.smartThinkingText += content;
-          this.$nextTick(function () {
-            this.thinkingScrollTop = this.thinkingScrollTop + 99999;
-          });
-        }
       } else if (
         eventType === "done" ||
         eventType === "complete" ||
@@ -2142,8 +2204,7 @@ export default {
   },
   async beforeDestroy() {
     this._smartCorrectionAbortController?.abort();
-    this.stopLockHeartbeat();
-    await this.releaseEditLock();
+    await this.closeEditLock();
   },
   onLoad(params) {
     this.articleId = Number(params.id || 0);
@@ -2160,13 +2221,13 @@ export default {
   },
   async onUnload() {
     this._smartCorrectionAbortController?.abort();
-    this.stopLockHeartbeat();
-    await this.releaseEditLock();
+    await this.closeEditLock();
   },
   onHide() {
-    this.stopLockHeartbeat();
+    this.pauseEditLock();
   },
   onShow() {
+    this.lockPageActive = true;
 	this.loadMembershipStatus();
     if (this.article.novelId && !this.pageInitializationInProgress) {
       this.refreshNovelPublishState().catch(() => {});
@@ -2177,7 +2238,8 @@ export default {
       !this.pageInitializationInProgress &&
       !this.isRealtimeCollaboration
     ) {
-      this.claimEditLock();
+      if (this.hasClaimedEditLock) this.heartbeatEditLock();
+      else this.claimEditLock().catch(() => {});
     }
   },
 };
@@ -2462,6 +2524,20 @@ export default {
   padding: 20rpx 24rpx;
   box-sizing: border-box;
   min-height: 100%;
+}
+
+.thinking-stream + .thinking-stream {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1px solid var(--border-color);
+}
+
+.thinking-stream-title {
+  display: block;
+  margin-bottom: 10rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--text-color-secondary);
 }
 
 .thinking-content {

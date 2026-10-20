@@ -89,7 +89,7 @@
                   name="heart"
                   :filled="!!post.is_liked"
                   class="like-icon"
-                  :style="{ color: post.is_liked ? '#EA7034' : '#666' }"
+                  :style="{ color: post.is_liked ? 'var(--wood, #c65320)' : 'var(--muted, #5b626d)' }"
                 />
                 <span :class="{ liked: post.is_liked }">{{ post.like_count || 0 }}</span>
               </div>
@@ -198,7 +198,7 @@
                       name="heart"
                       :filled="!!comment.is_liked"
                       class="like-icon"
-                      :style="{ color: comment.is_liked ? '#EA7034' : '#666' }"
+                      :style="{ color: comment.is_liked ? 'var(--wood, #c65320)' : 'var(--muted, #5b626d)' }"
                     />
                     <span :class="{ liked: comment.is_liked }">{{
                       comment.like_count || 0
@@ -289,7 +289,7 @@
                           :filled="!!reply.is_liked"
                           class="like-icon"
                           :style="{
-                            color: reply.is_liked ? '#EA7034' : '#666',
+                            color: reply.is_liked ? 'var(--wood, #c65320)' : 'var(--muted, #5b626d)',
                           }"
                         />
                         <span :class="{ liked: reply.is_liked }">{{
@@ -1156,7 +1156,7 @@ export default {
   display: flex;
   justify-content: center;
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color: var(--soft, #f1f3f5);
 }
 
 .post-detail-container {
@@ -1177,14 +1177,14 @@ export default {
 }
 
 .post-detail {
-  background-color: #fff;
+  background-color: var(--surface, #fff);
   border-radius: 8px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .comments-section {
-  background-color: #fff;
+  background-color: var(--surface, #fff);
   border-radius: 8px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -1219,17 +1219,17 @@ export default {
 
 .user-name {
   font-weight: bold;
-  color: #333;
+  color: var(--ink, #30343b);
 }
 
 .post-time {
   font-size: 12px;
-  color: #999;
+  color: var(--muted, #5b626d);
 }
 
 .post-circle {
-  background-color: #f0f2f5;
-  color: #666;
+  background-color: var(--soft, #f1f3f5);
+  color: var(--muted, #5b626d);
   padding: 6px 12px;
   border-radius: 16px;
   font-size: 14px;
@@ -1238,7 +1238,7 @@ export default {
 }
 
 .post-circle:hover {
-  background-color: #e4e6e9;
+  background-color: var(--selection-bg, #f6e9dc);
 }
 
 /* 帖子内容 */
@@ -1250,13 +1250,13 @@ export default {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 16px;
-  color: #333;
+  color: var(--ink, #30343b);
 }
 
 .post-text {
   font-size: 16px;
   line-height: 1.8;
-  color: #555;
+  color: var(--ink, #30343b);
   white-space: pre-wrap;
 }
 
@@ -1292,8 +1292,8 @@ export default {
 
 .book-card {
   display: flex;
-  background-color: #f9f9f9;
-  border: 1px solid #eee;
+  background-color: var(--soft, #f1f3f5);
+  border: 1px solid var(--line, #e2e6eb);
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
@@ -1326,13 +1326,13 @@ export default {
 
 .book-author {
   font-size: 14px;
-  color: #666;
+  color: var(--muted, #5b626d);
   margin: 0 0 8px;
 }
 
 .book-desc {
   font-size: 14px;
-  color: #999;
+  color: var(--muted, #5b626d);
   margin: 0;
   line-height: 1.5;
 }
@@ -1342,7 +1342,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 24px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--line, #e2e6eb);
   padding-top: 16px;
 }
 
@@ -1350,7 +1350,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #666;
+  color: var(--muted, #5b626d);
   cursor: pointer;
   font-size: 14px;
   transition: color 0.3s;
@@ -1358,7 +1358,7 @@ export default {
 
 .action-btn:hover,
 .action-btn.liked {
-  color: #ea7034;
+  color: var(--wood, #c65320);
 }
 
 .action-btn i {
@@ -1378,7 +1378,7 @@ export default {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--line, #e2e6eb);
   padding-bottom: 10px;
 }
 
@@ -1400,7 +1400,7 @@ export default {
 
 .comment-item {
   padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--line, #e2e6eb);
 }
 .comment-item:last-child {
   border-bottom: none;
@@ -1423,13 +1423,13 @@ export default {
 .comment-time,
 .reply-time {
   font-size: 12px;
-  color: #999;
+  color: var(--muted, #5b626d);
 }
 
 .comment-content,
 .reply-content {
   font-size: 15px;
-  color: #555;
+  color: var(--ink, #30343b);
   line-height: 1.7;
   margin-left: 56px; /* 48px avatar + 8px margin */
   white-space: pre-wrap;
@@ -1440,7 +1440,7 @@ export default {
 }
 
 .reply-to {
-  color: #007bff;
+  color: var(--wood, #c65320);
   margin-right: 4px;
 }
 
@@ -1461,7 +1461,7 @@ export default {
   margin-top: 16px;
   margin-left: 56px;
   padding-left: 16px;
-  border-left: 2px solid #f0f0f0;
+  border-left: 2px solid var(--line, #e2e6eb);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1473,7 +1473,7 @@ export default {
 
 .load-more-replies {
   font-size: 14px;
-  color: #007bff;
+  color: var(--wood, #c65320);
   cursor: pointer;
   margin-top: 10px;
 }
@@ -1492,7 +1492,7 @@ export default {
 
 .no-comments {
   text-align: center;
-  color: #999;
+  color: var(--muted, #5b626d);
   padding: 40px 0;
 }
 
@@ -1515,7 +1515,7 @@ export default {
   white-space: pre-wrap;
   word-break: break-all;
   text-align: left;
-  background-color: #f5f5f5;
+  background-color: var(--soft, #f1f3f5);
   padding: 10px;
   border-radius: 4px;
 }
