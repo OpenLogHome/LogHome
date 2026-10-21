@@ -116,7 +116,7 @@
 					     'Authorization': tk //设置token 其中K名要和后端协调好
 					}
 				}).then((res) => {
-					if(res.data.msg == "登录成功")
+					if(res.data.code == 'BIND_SUCCESS')
 					{
 						uni.showToast({
 							title: _this.$t('settings.activate.bindSuccess'),

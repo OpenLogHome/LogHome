@@ -1,0 +1,7 @@
+书籍评论：点赞 / 点踩改为 16×16 网格像素 SVG，继承评论主题灰色和选中强调色。
+Vue template + Sass compile: PASS
+check-sfc.js: PASS
+git diff --check: PASS
+移动端 390px 本地模拟接口交互：点赞 0→1，切换点踩 1→0 并折叠评论，再次点踩取消并恢复内容；选中图标橙色，未选中灰色。
+预览：http://127.0.0.1:8920/preview
+未调用真实点赞接口。

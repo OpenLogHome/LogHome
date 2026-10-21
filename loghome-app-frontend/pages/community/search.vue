@@ -7,7 +7,7 @@
           <input 
             class="search-input" 
             v-model="keyword" 
-            placeholder="搜索书籍、圈子、帖子、用户" 
+            :placeholder="$t('community.search.placeholder')"
             confirm-type="search"
             @confirm="handleSearch"
             focus
@@ -20,7 +20,7 @@
             @click="clearKeyword"
           ></uni-icons>
         </view>
-        <view class="search-cancel" @tap="goBack">取消</view>
+        <view class="search-cancel" @tap="goBack">{{ $t('common.cancel') }}</view>
       </view>
   
       <!-- 搜索历史和热门搜索 -->
@@ -28,7 +28,7 @@
         <!-- 搜索历史 -->
         <view class="search-section" v-if="searchHistory.length > 0">
           <view class="section-header">
-            <text class="section-title">搜索历史</text>
+            <text class="section-title">{{ $t('community.search.historyTitle') }}</text>
             <uni-icons type="trash" size="18" :color="$store.state.isDarkMode ? '#b8b8b8' : '#999'" @click="clearSearchHistory"></uni-icons>
           </view>
           <view class="tag-list">
@@ -46,7 +46,7 @@
         <!-- 热门搜索 -->
         <view class="search-section">
           <view class="section-header">
-            <text class="section-title">热门搜索</text>
+            <text class="section-title">{{ $t('community.search.hotTitle') }}</text>
           </view>
           <view class="tag-list">
             <view 
@@ -70,35 +70,35 @@
             :class="{'active': searchType === 'all'}" 
             @tap="switchType('all')"
           >
-            全部
+            {{ $t('common.all') }}
           </view>
           <view 
             class="tab-item" 
             :class="{'active': searchType === 'books'}" 
             @tap="switchType('books')"
           >
-            书籍
+            {{ $t('community.search.books') }}
           </view>
           <view 
             class="tab-item" 
             :class="{'active': searchType === 'posts'}" 
             @tap="switchType('posts')"
           >
-            帖子
+            {{ $t('community.search.posts') }}
           </view>
           <view 
             class="tab-item" 
             :class="{'active': searchType === 'circles'}" 
             @tap="switchType('circles')"
           >
-            圈子
+            {{ $t('community.search.circles') }}
           </view>
           <view 
             class="tab-item" 
             :class="{'active': searchType === 'users'}" 
             @tap="switchType('users')"
           >
-            用户
+            {{ $t('community.search.users') }}
           </view>
         </view>
   
@@ -110,7 +110,7 @@
         >
           <!-- 书籍搜索结果 -->
           <view class="book-results" v-if="(searchType === 'all' && results.books && results.books.list.length > 0) || searchType === 'books'">
-            <view class="result-title" v-if="searchType === 'all'">书籍</view>
+            <view class="result-title" v-if="searchType === 'all'">{{ $t('community.search.books') }}</view>
             
             <navigator 
               v-for="(book, index) in getBookResults()" 
@@ -135,7 +135,7 @@
   
           <!-- 圈子搜索结果 -->
           <view class="circle-results" v-if="(searchType === 'all' && results.circles && results.circles.list.length > 0) || searchType === 'circles'">
-            <view class="result-title" v-if="searchType === 'all'">圈子</view>
+            <view class="result-title" v-if="searchType === 'all'">{{ $t('community.search.circles') }}</view>
             
             <view 
               class="circle-item" 
@@ -147,10 +147,10 @@
               <view class="circle-info">
                 <view class="circle-name">{{circle.name}}</view>
                 <view class="circle-meta">
-                  <text>{{circle.member_count || 0}}人</text>
-                  <text>{{circle.category_name || '未分类'}}</text>
+                  <text>{{ $t('community.search.memberCount', { count: circle.member_count || 0 }) }}</text>
+                  <text>{{ circle.category_name || $t('community.search.uncategorized') }}</text>
                 </view>
-                <view class="circle-desc">{{circle.description || '暂无描述'}}</view>
+                <view class="circle-desc">{{ circle.description || $t('community.search.noDescription') }}</view>
               </view>
             </view>
             
@@ -159,7 +159,7 @@
   
           <!-- 帖子搜索结果 -->
           <view class="post-results" v-if="(searchType === 'all' && results.posts && results.posts.list.length > 0) || searchType === 'posts'">
-            <view class="result-title" v-if="searchType === 'all'">帖子</view>
+            <view class="result-title" v-if="searchType === 'all'">{{ $t('community.search.posts') }}</view>
             
             <view 
               class="post-item" 
@@ -173,14 +173,14 @@
                     :visual-scale="post.author_avatar_frame ? 1.2 : 1" />
                   <view class="user-meta">
 					<view class="search-user-name-row">
-					  <text class="user-name">{{post.author_name || '匿名用户'}}</text>
+					  <text class="user-name">{{ post.author_name || $t('community.search.anonymousUser') }}</text>
 					  <membership-badge :tier="post.author_membership_type" size="xs" />
 					</view>
                     <view class="post-time">{{formatTime(post.create_time)}}</view>
                   </view>
                 </view>
                 <view class="post-circle" @tap.stop="navigateToCircle(post.circle_id)">
-                  {{post.circle_name || '未知圈子'}}
+                  {{ post.circle_name || $t('community.search.unknownCircle') }}
                 </view>
               </view>
               <view class="post-content">
@@ -208,7 +208,7 @@
   
           <!-- 用户搜索结果 -->
           <view class="user-results" v-if="(searchType === 'all' && results.users && results.users.list.length > 0) || searchType === 'users'">
-            <view class="result-title" v-if="searchType === 'all'">用户</view>
+            <view class="result-title" v-if="searchType === 'all'">{{ $t('community.search.users') }}</view>
             
             <view 
               class="user-item" 
@@ -219,10 +219,10 @@
               <user-avatar class="user-avatar" :src="user.avatar_url" :frame="user.avatar_frame" :visual-scale="user.avatar_frame ? 1.2 : 1" />
               <view class="user-info">
 				<view class="search-user-name-row">
-				  <view class="user-name">{{user.name || '匿名用户'}}</view>
+				  <view class="user-name">{{ user.name || $t('community.search.anonymousUser') }}</view>
 				  <membership-badge :tier="user.membership_type" size="xs" />
 				</view>
-                <view class="user-motto">{{user.motto || '这个人很懒，还没有设置个性签名'}}</view>
+                <view class="user-motto">{{ user.motto || $t('community.search.noMotto') }}</view>
               </view>
             </view>
             
@@ -232,7 +232,7 @@
           <!-- 无搜索结果 -->
           <view class="no-results" v-if="noResults">
             <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit"></image>
-            <text>没有找到相关内容</text>
+            <text>{{ $t('community.search.noResults') }}</text>
           </view>
         </scroll-view>
       </view>
@@ -241,8 +241,8 @@
   
   <script>
   import axios from 'axios';
-  import moment from 'moment';
 	import MembershipBadge from '@/components/membership-badge.vue';
+	import { postTimeText } from '@/common/datetime.js';
   
   export default {
 	components: { MembershipBadge },
@@ -347,7 +347,7 @@
       handleSearch() {
         if (!this.keyword.trim()) {
           uni.showToast({
-            title: '请输入搜索关键词',
+            title: this.$t('community.search.inputKeyword'),
             icon: 'none'
           });
           return;
@@ -393,8 +393,8 @@
       // 清空搜索历史
       clearSearchHistory() {
         uni.showModal({
-          title: '提示',
-          content: '确认清空搜索历史？',
+          title: this.$t('common.prompt'),
+          content: this.$t('community.search.clearHistoryConfirm'),
           success: (res) => {
             if (res.confirm) {
               this.searchHistory = [];
@@ -513,7 +513,7 @@
         } catch (error) {
           console.error('搜索失败', error);
           uni.showToast({
-            title: '搜索失败，请重试',
+            title: this.$t('community.search.searchFailed'),
             icon: 'none'
           });
         } finally {
@@ -580,20 +580,7 @@
       
       // 格式化时间
       formatTime(time) {
-        const now = moment();
-        const postTime = moment(time);
-        const diff = now.diff(postTime, 'minutes');
-        
-        if (diff < 1) return '刚刚';
-        if (diff < 60) return `${diff}分钟前`;
-        
-        const hourDiff = now.diff(postTime, 'hours');
-        if (hourDiff < 24) return `${hourDiff}小时前`;
-        
-        const dayDiff = now.diff(postTime, 'days');
-        if (dayDiff < 30) return `${dayDiff}天前`;
-        
-        return postTime.format('YYYY-MM-DD');
+        return postTimeText(time)
       },
       
       // 预览图片
@@ -608,7 +595,7 @@
       navigateToCircle(circleId) {
         if (!circleId || circleId === 0) {
           uni.showToast({
-            title: '圈子不存在',
+            title: this.$t('community.search.circleNotFound'),
             icon: 'none'
           });
           return;

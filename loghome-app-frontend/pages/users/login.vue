@@ -1,382 +1,301 @@
 <template>
-	<div class="outer" v-dark>
-		<!-- 后台按钮组件 -->
-		<zetank-backBar textcolor="#000" :showLeft="true" :showTitle="false" navTitle='标题'></zetank-backBar>
-		<div class="content-container">
-			<div class="welcome-section">
-				<div class="appTitle">
-					<div class="title">{{ $t('auth.login.welcomePrefix') }}<span style="color: #FF6000;">{{ $t('auth.brand.name') }}</span>{{ $t('auth.login.welcomeSuffix') }}</div>
-					<div class="title typewriter">{{ currentText }}</div>
-				</div>
-			</div>
+	<view class="login-page">
+		<view class="login-stage" :class="{ 'is-english': isEnglish }">
+			<image class="forest-scene" src="/static/login/forest-bookshop.webp" mode="aspectFill" aria-hidden="true" />
 
-			<!-- 轮播图部分 -->
-			<div class="carousel-section">
-				<swiper class="carousel-swiper"
-					:indicator-dots="true"
-					:autoplay="false"
-					:interval="3000"
-					:duration="500"
-					:circular="true"
-					@change="onSwiperChange">
-					<swiper-item v-for="(item, index) in carouselItems" :key="index">
-						<view class="carousel-item">
-							<image class="carousel-image" :src="item.image" mode="aspectFit"></image>
-							<text class="carousel-title">{{ $t(item.titleKey) }}</text>
-						</view>
-					</swiper-item>
-				</swiper>
-			</div>
+			<view class="login-header">
+				<button class="back-button" role="button" tabindex="0" :aria-label="$t('common.back')" @click="goBack" @keydown.enter.prevent="goBack" @keydown.space.prevent="goBack">
+					<uni-icons type="left" size="25" color="#fffdf0" />
+				</button>
+				<view class="brand" :aria-label="$t('auth.brand.name')">
+					<image class="brand-logo" src="/static/logo.png" mode="aspectFit" aria-hidden="true" />
+					<image class="brand-wordmark" src="/static/login/brand-wordmark.png" mode="aspectFit" aria-hidden="true" />
+				</view>
+			</view>
 
-			<div class="buttons-section">
-				<div class="loginBtn button" @click="gotoLoginEmail">
-					{{ $t('auth.login.withEmail') }}
-				</div>
-				<!-- <div class="loginBtn login2 button" @click="gotoLoginMobile">
-					使用手机号登录（旧）
-				</div> -->
-				<div class="checkBox" :class="{ shake: noActivated }">
-					<label style="display: flex;flex-direction: row;font-size: 22rpx; margin-top: 50rpx;
-					width:100%; justify-content: center;">
-						<checkbox-group  @change="selectCk">
-							<checkbox value="yes" color="rgb(180, 111, 88)"/>
-						</checkbox-group>
-						<span style="display: flex;flex-direction: row; ">{{ $t('auth.login.agreePrefix') }}
-							<navigator url="../static/privacyAgreement" open-type="navigate" style="color: #FF6000;border-bottom: 1px solid  #FF6000;">{{ $t('auth.login.privacyPolicy') }}
-							</navigator>
-						</span>
-					</label>
-				</div>
-			</div>
-		</div>
-	</div>
+			<view class="welcome-copy">
+				<view class="welcome-title" role="heading" aria-level="1">
+					<text class="headline-line">{{ $t('auth.login.headlineTop') }}</text>
+					<text class="headline-line">{{ $t('auth.login.headlinePrefix') }}<text class="growth-word">{{ $t('auth.login.headlineGrowth') }}</text>{{ $t('auth.login.headlineEnd') }}</text>
+				</view>
+				<text class="community-description">{{ $t('auth.login.communityDescription') }}</text>
+			</view>
+
+			<view class="login-actions">
+				<button class="email-login" role="button" tabindex="0" @click="gotoLoginEmail" @keydown.enter.prevent="gotoLoginEmail" @keydown.space.prevent="gotoLoginEmail">
+					<image class="button-skin" src="/static/login/pixel-login-button.webp" mode="scaleToFill" aria-hidden="true" />
+					<view class="button-content">
+						<uni-icons type="email-filled" size="26" color="#153d21" aria-hidden="true" />
+						<text>{{ $t('auth.login.withEmail') }}</text>
+					</view>
+					<view class="button-arrow" aria-hidden="true"><uni-icons type="right" size="22" color="#153d21" /></view>
+				</button>
+				<view class="privacy-row" :class="{ shake: noActivated }">
+					<checkbox-group class="privacy-checkbox" @change="selectCk">
+						<label class="privacy-choice" role="checkbox" tabindex="0" :aria-checked="checked ? 'true' : 'false'"
+							@keydown.enter.prevent="toggleAgreement" @keydown.space.prevent="toggleAgreement">
+							<checkbox value="yes" :checked="checked" color="#397a42" aria-hidden="true" tabindex="-1" />
+							<text>{{ $t('auth.login.agreeShort') }}</text>
+						</label>
+					</checkbox-group>
+					<navigator class="privacy-link" url="../static/privacyAgreement" open-type="navigate">{{ $t('auth.login.privacyShort') }}</navigator>
+				</view>
+			</view>
+		</view>
+	</view>
 </template>
 
 <script>
-	export default{
-		data(){
-			return {
-				checked:false,
-				noActivated:false,
-				currentText: '',
-				currentIndex: 0,
-				isDeleting: false,
-				typingSpeed: 150,
-				deletingSpeed: 50,
-				pauseTime: 2000,
-				// 轮播图数据
-				carouselItems: [
-					{
-						image: '/static/carousel/lib.png',
-						titleKey: 'auth.login.carouselLibrary'
-					},
-					{
-						image: '/static/carousel/read.png',
-						titleKey: 'auth.login.carouselReading'
-					},
-					{
-						image: '/static/carousel/write.png',
-						titleKey: 'auth.login.carouselCreate'
-					},
-					{
-						image: '/static/carousel/comm.png',
-						titleKey: 'auth.login.carouselInteract'
-					}
-				],
-				currentCarouselIndex: 0
+export default {
+	data() {
+		return { checked: false, noActivated: false, agreementTimer: null }
+	},
+	computed: {
+		isEnglish() { return String(this.$i18n.locale).startsWith('en') }
+	},
+	onLoad(params = {}) {
+		if (params.msg !== undefined) {
+			uni.showToast({ title: this.$t('common.needLogin'), icon: 'none', duration: 2000 })
+		}
+		if (typeof window !== 'undefined') window.sessionStorage.removeItem('uni_token')
+	},
+	onUnload() { this.clearAgreementTimer() },
+	beforeDestroy() { this.clearAgreementTimer() },
+	methods: {
+		goBack() {
+			const bridge = typeof window !== 'undefined' ? window.jsBridge : null
+			if ((bridge && bridge.inApp && bridge.nativeRouterAvailable) || getCurrentPages().length > 1) {
+				uni.navigateBack({ delta: 1 })
+			} else {
+				uni.reLaunch({ url: '/pages/library' })
 			}
 		},
-		computed:{
-			// 打字机文案移到 computed，切换语言时才能即时生效
-			textArray(){
-				return [
-					this.$t('auth.login.typeCreate'),
-					this.$t('auth.login.typeStory'),
-					this.$t('auth.login.typeTalk'),
-					this.$t('auth.login.typeExplore')
-				]
+		gotoLoginEmail() {
+			if (this.checked) {
+				uni.navigateTo({ url: './login_page_email' })
+				return
+			}
+			uni.showToast({ title: this.$t('auth.login.agreeRequired'), icon: 'none', duration: 2000 })
+			this.clearAgreementTimer()
+			this.noActivated = true
+			this.agreementTimer = setTimeout(() => {
+				this.noActivated = false
+				this.agreementTimer = null
+			}, 600)
+		},
+		selectCk(event) {
+			this.checked = event.detail.value.includes('yes')
+			if (this.checked) {
+				this.clearAgreementTimer()
+				this.noActivated = false
 			}
 		},
-		onLoad(params){
-			if(params.msg != undefined) {
-				uni.showToast({
-					title: this.$t('common.needLogin'),
-					icon:'none',
-					duration: 2000
-				});
-			}
-			window.sessionStorage.removeItem('uni_token')
-			// 启动打字机效果
-			this.typeText()
+		toggleAgreement() {
+			this.selectCk({ detail: { value: this.checked ? [] : ['yes'] } })
 		},
-		methods:{
-			// 打字机效果实现
-			typeText() {
-				const currentPhrase = this.textArray[this.currentIndex];
-
-				// 如果正在删除文字
-				if (this.isDeleting) {
-					// 删除一个字符
-					this.currentText = currentPhrase.substring(0, this.currentText.length - 1);
-
-					// 如果已经删除完毕，切换到下一个短语
-					if (this.currentText === '') {
-						this.isDeleting = false;
-						this.currentIndex = (this.currentIndex + 1) % this.textArray.length;
-						setTimeout(() => {
-							this.typeText();
-						}, 500); // 短暂停顿后开始输入新短语
-						return;
-					}
-				} else {
-					// 添加一个字符
-					this.currentText = currentPhrase.substring(0, this.currentText.length + 1);
-
-					// 如果已经输入完毕，等待一段时间后开始删除
-					if (this.currentText === currentPhrase) {
-						setTimeout(() => {
-							this.isDeleting = true;
-							this.typeText();
-						}, this.pauseTime);
-						return;
-					}
-				}
-
-				// 继续打字或删除
-				setTimeout(() => {
-					this.typeText();
-				}, this.isDeleting ? this.deletingSpeed : this.typingSpeed);
-			},
-			// 轮播图切换事件
-			onSwiperChange(e) {
-				this.currentCarouselIndex = e.detail.current;
-			},
-			gotoLoginMobile(){
-				if(this.checked){
-					uni.navigateTo({
-						url:"./login_page_mobile"
-					})
-				} else {
-					uni.showToast({
-						title: this.$t('auth.login.agreeRequired'),
-						icon: 'none',
-						duration: 2000
-					});
-					this.noActivated = true;
-					setTimeout(()=>{
-						this.noActivated = false;
-					},820)
-				}
-			},
-			gotoLoginEmail() {
-				if(this.checked){
-					uni.navigateTo({
-						url:"./login_page_email"
-					})
-				} else {
-					uni.showToast({
-						title: this.$t('auth.login.agreeRequired'),
-						icon: 'none',
-						duration: 2000
-					});
-					this.noActivated = true;
-					setTimeout(()=>{
-						this.noActivated = false;
-					},820)
-				}
-			},
-			selectCk(e){
-				if(e.detail.value.length != 0){
-					this.checked = true;
-				}else {
-					this.checked = false;
-				}
-			},
+		clearAgreementTimer() {
+			if (this.agreementTimer !== null) clearTimeout(this.agreementTimer)
+			this.agreementTimer = null
 		}
 	}
+}
 </script>
 
 <style scoped lang="scss">
-	.outer{
-		height:100vh;
-		position: relative;
-		overflow: hidden;
-		background: linear-gradient(135deg, #ffffff 0%, #f8dac6 50%, #ffe6dc 100%);
-		background-size: 200% 200%;
-		animation: gradientAnimation 15s ease infinite;
-
-		&.dark-mode {
-			background: linear-gradient(135deg, #151515 0%, #2d211d 50%, #241a18 100%);
-		}
-
-		.content-container{
-			height:100vh;
-			box-sizing: border-box;
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-			align-items: center;
-			padding-top: calc(50rpx + var(--loghome-safe-top, 0px));
-			padding-bottom: var(--loghome-safe-bottom, 0px);
-
-			.welcome-section {
-				width: 100%;
-				display: flex;
-				justify-content: flex-start;
-				margin-left: 15%;
-				margin-top: 5vh;
-				margin-bottom: 5vh;
-
-				div.appTitle{
-					text-align: left;
-					.title{
-						font-size: 60rpx;
-						font-weight: bold;
-						color: var(--text-color-primary);
-					}
-					.subtitle{
-						font-size: 42rpx;
-						color: var(--text-color-primary);
-						margin-top: 20rpx;
-					}
-				}
-			}
-
-			.carousel-section {
-				width: 100%;
-				height: 30vh;
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-
-				.carousel-swiper {
-					width: 90%;
-					height: 100%;
-				}
-
-				.carousel-item {
-					display: flex;
-					flex-direction: column;
-					align-items: center;
-					justify-content: center;
-					height: 100%;
-
-					.carousel-image {
-						width: 300rpx;
-						height: 300rpx;
-					}
-
-					.carousel-title {
-						margin-top: 20rpx;
-						font-size: 36rpx;
-						color: var(--text-color-primary);
-						font-weight: bold;
-					}
-				}
-			}
-
-			.buttons-section {
-				width: 100%;
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				margin-bottom: 10vh;
-
-				.loginBtn{
-					width: 80vw;
-					margin: 15rpx 0;
-					padding: 0;
-				}
-				.login2{
-					background-color: rgba(234, 112, 52,0) !important;
-					border: 0;
-					font-size: 32rpx;
-					box-sizing: border-box;
-					color: var(--brand-text-color);
-				}
-				.checkBox{
-					margin-top: 30rpx;
-				}
-			}
-		}
-		.button {
-			height: 100rpx;
-			width: 80vw;
-			font-size: 36rpx;
-			font-weight: bold;
-			line-height: 90rpx;
-			border-radius: 15rpx;
-			color: #ffffff;
-			text-align: center;
-			border: 5rpx rgb(180, 111, 88) solid;
-			box-sizing: border-box;
-			background-color: rgb(180, 111, 88);
-			transition: all .1s;
-		}
-
-		.button.long{
-			width: calc(80vw + 20px);
-		}
-
-		.button:not(.login2):active{
-			background-color: rgb(255, 170, 127) !important;
-			border-color: rgb(255, 170, 127);
-			transform: scale(.9);
-		}
-
-		.typewriter {
-			display: inline-block;
-			border-right: 3px solid #FF6000;
-			padding-right: 5px;
-			animation: blink 0.7s step-end infinite;
-			height: 90rpx;
-		}
-
-		@keyframes blink {
-			from, to { border-color: transparent }
-			50% { border-color: #FF6000; }
-		}
-	}
-
-	.shake {
-	  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-	  transform: translate3d(0, 0, 0);
-	  backface-visibility: hidden;
-	  perspective: 1000px;
-	}
-
-	@keyframes shake {
-	  10%,
-	  90% {
-	    transform: translate3d(-1px, 0, 0);
-	  }
-
-	  20%,
-	  80% {
-	    transform: translate3d(2px, 0, 0);
-	  }
-
-	  30%,
-	  50%,
-	  70% {
-	    transform: translate3d(-4px, 0, 0);
-	  }
-
-	  40%,
-	  60% {
-	    transform: translate3d(4px, 0, 0);
-	  }
-	}
-
-	@keyframes gradientAnimation {
-	  0% {
-	    background-position: 0% 50%;
-	  }
-	  50% {
-	    background-position: 100% 50%;
-	  }
-	  100% {
-	    background-position: 0% 50%;
-	  }
-	}
+.login-page {
+	min-height: 100vh;
+	background: #12342e;
+}
+.login-stage {
+	position: relative;
+	width: 100%;
+	max-width: 560px;
+	height: 100vh;
+	height: 100svh;
+	min-height: 640px;
+	margin: 0 auto;
+	overflow: hidden;
+	background: #f8f8f8;
+	color: #fffdf0;
+	font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+.forest-scene {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	animation: forest-glow 8s ease-in-out infinite;
+}
+.login-header {
+	position: absolute;
+	top: calc(3.5% + var(--loghome-safe-top, 0px));
+	left: 0;
+	right: 0;
+	height: 34px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.back-button {
+	position: absolute;
+	left: 4%;
+	top: -5px;
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border-radius: 8px;
+	line-height: 1;
+}
+.back-button::after, .email-login::after { border: 0; }
+.back-button:focus-visible, .email-login:focus-visible, .privacy-link:focus-visible, .privacy-choice:focus-visible {
+	outline: 2px solid #8fdf70;
+	outline-offset: 4px;
+}
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+.brand-logo { width: 30px; height: 30px; }
+.brand-wordmark {
+	width: 82px;
+	height: 27px;
+	// Supplied orange-on-white lettering: white ink on black, then screen out black.
+	filter: grayscale(1) invert(1) brightness(3);
+	mix-blend-mode: screen;
+}
+.welcome-copy {
+	position: absolute;
+	top: calc(10.1% + var(--loghome-safe-top, 0px));
+	left: 6.7%;
+	right: 6.7%;
+}
+.welcome-title {
+	font-size: clamp(29px, 9.9vw, 48px);
+	font-weight: 900;
+	letter-spacing: -0.035em;
+	line-height: 1.18;
+	text-shadow: 0 2px 8px rgba(5, 35, 27, 0.14);
+}
+.headline-line { display: block; white-space: nowrap; }
+.growth-word { color: #8fdf70; }
+.community-description {
+	display: block;
+	margin-top: 8px;
+	font-size: clamp(12px, 3.38vw, 17px);
+	font-weight: 600;
+	line-height: 1.6;
+	color: #d4f4b8;
+}
+.login-actions {
+	position: absolute;
+	left: 5.5%;
+	right: 5.5%;
+	bottom: calc(4.7% + var(--loghome-safe-bottom, 0px));
+}
+.email-login {
+	position: relative;
+	width: 100%;
+	height: 60px;
+	height: clamp(56px, 7.1svh, 64px);
+	padding: 0;
+	margin: 0;
+	overflow: hidden;
+	background: transparent;
+	border-radius: 0;
+	color: #153d21;
+	transition: transform 140ms ease;
+}
+.email-login:active { transform: translateY(3px) scale(0.99); }
+.button-skin {
+	position: absolute;
+	// Crop transparent padding using the generated skin's measured visible bounds.
+	width: 106.4%;
+	height: 194.1%;
+	left: -3.2%;
+	top: -45.9%;
+	pointer-events: none;
+}
+.button-content {
+	position: relative;
+	z-index: 1;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	padding-bottom: 3px;
+	box-sizing: border-box;
+	font-size: clamp(19px, 5.1vw, 26px);
+	font-weight: 800;
+	line-height: 1.25;
+}
+.button-arrow {
+	position: absolute;
+	z-index: 1;
+	right: 18px;
+	top: 0;
+	height: calc(100% - 3px);
+	display: flex;
+	align-items: center;
+}
+.privacy-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	min-height: 44px;
+	margin-top: 14px;
+	color: #70747a;
+	font-size: 12px;
+	line-height: 1.6;
+}
+.privacy-choice {
+	display: flex;
+	align-items: center;
+	min-height: 44px;
+	gap: 4px;
+}
+.privacy-choice checkbox {
+	transform: scale(0.75);
+	transform-origin: center;
+}
+.privacy-link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	color: #23633d;
+	font-weight: 500;
+}
+.is-english {
+	.welcome-title { font-size: clamp(23px, 6.3vw, 34px); letter-spacing: -0.035em; }
+	.headline-line { white-space: normal; }
+	.community-description { max-width: 300px; }
+	.button-content { font-size: 18px; gap: 12px; }
+	.privacy-row { column-gap: 4px; }
+}
+.shake { animation: agreement-shake 360ms ease-in-out; }
+@keyframes forest-glow {
+	0%, 100% { filter: brightness(1); }
+	50% { filter: brightness(1.035); }
+}
+@keyframes agreement-shake {
+	0%, 100% { transform: translateX(0); }
+	25%, 75% { transform: translateX(-4px); }
+	50% { transform: translateX(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.forest-scene, .shake { animation: none; }
+	.email-login { transition: none; }
+}
+@media (min-width: 560px) {
+	.welcome-title { font-size: 48px; }
+	.community-description { font-size: 17px; }
+}
 </style>

@@ -434,6 +434,7 @@ router.get('/register_with_email', async (req, res) => {
 		
 		if (validateCode.length > 0 && validateCode[0].code === req.query.vcode) {
 			response.data.msg = "登录成功";
+			response.data.code = "REGISTER_OK";
 			let userCheck = await query('SELECT * FROM users WHERE email = ?', [
 				req.query.email,
 			]);
@@ -651,17 +652,20 @@ router.get('/verify_email', auth, async (req, res) => {
 			if (userCheck.length > 0) {
 				// 邮箱已被使用，不能注册
 				response.data.msg = "该邮箱已被使用"
+				response.data.code = "EMAIL_TAKEN"
 			} else {
 				await query('UPDATE users SET email = ? WHERE user_id = ?', [
                     req.query.email,
                     user.user_id,
                 ]);
                 response.data.msg = "绑定成功"
+                response.data.code = "BIND_SUCCESS"
 			}
 			// 验证成功后删除验证码
 			await query('DELETE FROM user_validate_code WHERE email = ?', [req.query.email]);
 		} else {
 			response.data.msg = "验证码错误或已过期";
+			response.data.code = "CODE_INVALID";
 		}
 		res.end(JSON.stringify(response.data));
 	} catch (e) {

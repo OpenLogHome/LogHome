@@ -27,7 +27,8 @@ export const adminMenuGroups = [
       { path: '/app-updates', label: '版本管理', icon: 'el-icon-upload2' },
       { path: '/miniapps', label: '小程序管理', icon: 'el-icon-mobile-phone' },
       { path: '/lab', label: '原木实验室管理', icon: 'el-icon-discover' },
-      { path: '/site-settings', label: '站点设置', icon: 'el-icon-set-up' }
+      { path: '/site-settings', label: '站点设置', icon: 'el-icon-set-up' },
+      { path: '/todo-board', label: '协作待办', icon: 'el-icon-finished' }
     ]
   },
   {

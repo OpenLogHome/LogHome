@@ -79,6 +79,7 @@
 
 <script>
 import axios from 'axios';
+import { recentTimeText } from '@/common/datetime.js';
 
 export default {
   name: 'BookExcerpts',
@@ -175,29 +176,7 @@ export default {
     
     formatDate(dateString) {
       if (!dateString) return '';
-      
-      const date = new Date(dateString);
-      const now = new Date();
-      const diff = now - date;
-      
-      // 一天内显示"xx小时前"
-      if (diff < 24 * 60 * 60 * 1000) {
-        const hours = Math.floor(diff / (60 * 60 * 1000));
-        if (hours < 1) {
-          const minutes = Math.floor(diff / (60 * 1000));
-          return minutes <= 0 ? '刚刚' : `${minutes}分钟前`;
-        }
-        return `${hours}小时前`;
-      }
-      
-      // 一周内显示"x天前"
-      if (diff < 7 * 24 * 60 * 60 * 1000) {
-        const days = Math.floor(diff / (24 * 60 * 60 * 1000));
-        return `${days}天前`;
-      }
-      
-      // 其他情况显示具体日期
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      return recentTimeText(dateString);
     },
     
     navigateToArticle(articleId, paragraphId) {

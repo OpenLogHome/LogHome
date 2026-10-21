@@ -22,7 +22,7 @@
                                 mode="aspectFill"
                                 onerror="onerror=null;src='../../static/images/defaultBookCover.png'"></log-image>
                             <view class="shared-book-info">
-                                <text class="shared-book-tag">分享了作品</text>
+                                <text class="shared-book-tag">{{ $t('community.chat.sharedWork') }}</text>
                                 <text class="shared-book-title">{{ message.novel.name }}</text>
                                 <text class="shared-book-author">{{ message.novel.author_name }}</text>
                                 <text class="shared-book-desc">{{ getSharedNovelDescription(message.novel) }}</text>
@@ -44,7 +44,7 @@
 
         <view v-if="showNewMessageToast" class="new-message-toast" @click="scrollToBottom">
             <view class="toast-content">
-                <text>收到新消息</text>
+                <text>{{ $t('community.chat.newMessageToast') }}</text>
                 <i class="el-icon-arrow-down toast-arrow"></i>
             </view>
         </view>
@@ -53,25 +53,25 @@
             <view class="tool-row">
                 <view class="tool-button" :class="{ disabled: imageUploadState.uploading }" @click="chooseAndSendImage">
                     <i class="el-icon-picture-outline tool-button-icon"></i>
-                    <text>图片</text>
+                    <text>{{ $t('community.chat.image') }}</text>
                 </view>
                 <view class="tool-button" :class="{ disabled: isAnyBookTabLoading }" @click="openBookSelector">
                     <i class="el-icon-reading tool-button-icon"></i>
-                    <text>作品</text>
+                    <text>{{ $t('community.chat.works') }}</text>
                 </view>
                 <text v-if="imageUploadState.uploading" class="tool-tip">
-                    图片上传中 {{ imageUploadState.progress }}%
+                    {{ $t('community.chat.uploadingImage', { progress: imageUploadState.progress }) }}
                 </text>
                 <text v-else-if="isAnyBookTabLoading" class="tool-tip">
-                    作品列表加载中...
+                    {{ $t('community.chat.loadingWorksList') }}
                 </text>
             </view>
             <view class="input-row">
-                <input class="message-input" v-model="newMessage" placeholder="输入消息..." confirm-type="send"
+                <input class="message-input" v-model="newMessage" :placeholder="$t('community.chat.inputPlaceholder')" confirm-type="send"
                     @confirm="sendMessage" />
                 <view class="input-actions">
                     <emoji-picker class="chat-emoji-picker" @select="onEmojiSelect"></emoji-picker>
-                    <button class="send-button" @click="sendMessage">发送</button>
+                    <button class="send-button" @click="sendMessage">{{ $t('common.send') }}</button>
                 </view>
             </view>
         </view>
@@ -80,8 +80,8 @@
             @click="closeBookSelector">
             <view class="book-selector-panel" @click.stop>
                 <view class="book-selector-header">
-                    <text class="book-selector-title">分享作品</text>
-                    <text class="book-selector-close" @click="closeBookSelector">关闭</text>
+                    <text class="book-selector-title">{{ $t('community.chat.shareWorks') }}</text>
+                    <text class="book-selector-close" @click="closeBookSelector">{{ $t('common.close') }}</text>
                 </view>
                 <view class="book-selector-tabs">
                     <view v-for="tab in bookSelectorTabs" :key="tab.key" class="book-selector-tab"
@@ -151,24 +151,24 @@ export default {
             bookSelectorTabs: [
                 {
                     key: 'mine',
-                    label: '我的作品',
-                    searchPlaceholder: '搜索我的作品',
-                    emptyText: '暂无可分享的作品',
-                    loadingText: '正在加载我的作品...'
+                    label: this.$t('community.chat.tabs.mine'),
+                    searchPlaceholder: this.$t('community.chat.search.mine'),
+                    emptyText: this.$t('community.chat.empty.mine'),
+                    loadingText: this.$t('community.chat.loading.mine')
                 },
                 {
                     key: 'liked',
-                    label: '收藏作品',
-                    searchPlaceholder: '搜索收藏作品',
-                    emptyText: '暂无收藏作品',
-                    loadingText: '正在加载收藏作品...'
+                    label: this.$t('community.chat.tabs.liked'),
+                    searchPlaceholder: this.$t('community.chat.search.liked'),
+                    emptyText: this.$t('community.chat.empty.liked'),
+                    loadingText: this.$t('community.chat.loading.liked')
                 },
                 {
                     key: 'history',
-                    label: '阅读历史',
-                    searchPlaceholder: '搜索阅读历史',
-                    emptyText: '暂无阅读历史',
-                    loadingText: '正在加载阅读历史...'
+                    label: this.$t('community.chat.tabs.history'),
+                    searchPlaceholder: this.$t('community.chat.search.history'),
+                    emptyText: this.$t('community.chat.empty.history'),
+                    loadingText: this.$t('community.chat.loading.history')
                 }
             ],
             loadingBookTabs: {
@@ -209,13 +209,13 @@ export default {
             return this.bookSelectorTabs.find(tab => tab.key === this.activeBookTab) || this.bookSelectorTabs[0];
         },
         currentBookSearchPlaceholder() {
-            return this.currentBookTabConfig.searchPlaceholder || '搜索作品';
+            return this.currentBookTabConfig.searchPlaceholder || this.$t('community.chat.search.works');
         },
         currentBookEmptyText() {
-            return this.currentBookTabConfig.emptyText || '暂无可分享的作品';
+            return this.currentBookTabConfig.emptyText || this.$t('community.chat.empty.mine');
         },
         currentBookLoadingText() {
-            return this.currentBookTabConfig.loadingText || '正在加载作品...';
+            return this.currentBookTabConfig.loadingText || this.$t('community.chat.loading.works');
         },
         currentBookList() {
             return this.sharedNovelGroups[this.activeBookTab] || [];
@@ -243,7 +243,7 @@ export default {
         isMeaningfulText(value) {
             if (value === undefined || value === null) return false;
             const text = String(value).trim();
-            return !!text && text !== '未知作者' && text !== '匿名作者';
+            return !!text;
         },
         pickMeaningfulText(values = []) {
             const matched = values.find(value => this.isMeaningfulText(value));
@@ -300,9 +300,9 @@ export default {
             const authorId = Number(rawBook.author_id || rawBook.auther_id || rawBook.author_user_id || 0) || 0;
             return {
                 novel_id: novelId,
-                name: rawBook.name || '未命名作品',
+                name: rawBook.name || this.$t('community.chat.untitledWork'),
                 author_id: authorId,
-                author_name: authorName || '未知作者',
+                author_name: authorName || this.$t('community.chat.unknownAuthor'),
                 content: rawBook.content || rawBook.description || rawBook.intro || '',
                 picUrl: rawBook.picUrl || '',
                 avatar_url: rawBook.avatar_url || rawBook.auther_avatar || rawBook.author_avatar || '',
@@ -340,7 +340,7 @@ export default {
                 return {
                     type: PRIVATE_MESSAGE_TYPES.IMAGE,
                     text: '',
-                    previewText: '[图片]',
+                    previewText: this.$t('community.privateMessages.imagePreview'),
                     imageUrl: payload.url
                 };
             }
@@ -350,7 +350,7 @@ export default {
                 return {
                     type: PRIVATE_MESSAGE_TYPES.NOVEL_SHARE,
                     text: '',
-                    previewText: `分享了作品《${novel.name}》`,
+                    previewText: this.$t('community.privateMessages.novelSharePreview', { name: novel.name }),
                     novel
                 };
             }
@@ -379,8 +379,8 @@ export default {
             });
         },
         formatReadStatus(message) {
-            if (message.isTemp) return '发送中';
-            return message.is_read ? '已读' : '未读';
+            if (message.isTemp) return this.$t('community.chat.readStatus.sending');
+            return message.is_read ? this.$t('community.chat.readStatus.read') : this.$t('community.chat.readStatus.unread');
         },
         getSharedNovelCover(novel = {}) {
             const cover = novel.picUrl || (this.$backupResources && this.$backupResources.bookCover) || '../../static/images/defaultBookCover.png';
@@ -390,7 +390,7 @@ export default {
             return cover + '?thumbnail=1';
         },
         getSharedNovelDescription(novel = {}) {
-            const desc = novel.content || '点击查看作品详情';
+            const desc = novel.content || this.$t('community.chat.descriptionFallback');
             if (desc.length <= 48) return desc;
             return desc.substr(0, 48) + '...';
         },
@@ -493,7 +493,7 @@ export default {
                 if (!token) {
                     this.setBookTabBooks(tabKey, []);
                     uni.showToast({
-                        title: '请先登录',
+                        title: this.$t('common.needLogin'),
                         icon: 'none'
                     });
                     return;
@@ -510,7 +510,7 @@ export default {
             } catch (error) {
                 console.error('加载我的作品失败', error);
                 uni.showToast({
-                    title: '加载作品失败',
+                    title: this.$t('community.chat.loadMyWorksFailed'),
                     icon: 'none'
                 });
             } finally {
@@ -554,7 +554,7 @@ export default {
             } catch (error) {
                 console.error('加载收藏作品失败', error);
                 uni.showToast({
-                    title: '加载收藏失败',
+                    title: this.$t('community.chat.loadLikedFailed'),
                     icon: 'none'
                 });
             } finally {
@@ -598,7 +598,7 @@ export default {
             } catch (error) {
                 console.error('加载阅读历史失败', error);
                 uni.showToast({
-                    title: '加载历史失败',
+                    title: this.$t('community.chat.loadHistoryFailed'),
                     icon: 'none'
                 });
             } finally {
@@ -733,7 +733,7 @@ export default {
                 if (!error || !error.__privateMessageHandled) {
                     console.error('发送图片失败', error);
                     uni.showToast({
-                        title: '发送图片失败',
+                        title: this.$t('community.chat.sendImageFailed'),
                         icon: 'none',
                         duration: 2000
                     });
@@ -1051,7 +1051,7 @@ export default {
             // 当滚动到顶部时加载更多消息
             if (messagesContainer.scrollTop === 0 && !this.loading && !this.noMoreMessages) {
                 uni.showLoading({
-                    title: '努力加载中',
+                    title: this.$t('common.loading'),
                     mask: true
                 });
                 this.fetchMessages(true);
@@ -1109,7 +1109,7 @@ export default {
                 this.messages = this.messages.filter(m => m.id !== tempId);
                 uni.showToast({
                     title: error.response && error.response.data.code === 'PRIVATE_MESSAGE_FORBIDDEN'
-                        ? i18n.t('settings.privacy.messageForbidden') : '发送失败',
+                        ? i18n.t('settings.privacy.messageForbidden') : this.$t('community.chat.sendFailed'),
                     icon: 'none',
                     duration: 2000
                 });

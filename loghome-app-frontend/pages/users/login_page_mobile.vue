@@ -152,7 +152,7 @@
 					case 2:
 						axios.get(this.$baseUrl + '/users/register_with_mobile?mobile=' + this.mobile + "&vcode=" +
 						this.verifyCode, {}).then((res) => {
-							if(res.data.msg == "登录成功")
+							if(res.data.register_code)
 							{
 								this.registerVerify = res.data.register_code;
 								this.step = 3;
@@ -240,7 +240,7 @@
 					     'Authorization': tk //设置token 其中K名要和后端协调好
 					}
 				}).then((res) => {
-					if(res.data.msg == "登录成功")
+					if(res.data.code == 'BIND_SUCCESS')
 					{
 						uni.showToast({
 							title: this.$t('auth.login.bindSuccess'),

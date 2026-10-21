@@ -5,7 +5,7 @@
 			<view class="menu" :class="{'singleLine': isSingleLineDisplayPossible}">
 				<div style="display: flex;" class="realMenu">
 					<view class="watchMore" v-if="isLongContent" @click="watchMore">
-						{{ isWatchMore ? '收起' : '查看更多' }}
+						{{ isWatchMore ? $t('common.readMore.less') : $t('common.readMore.more') }}
 					</view>
 					<view class="more" v-if="showMenu" @click="$emit('menu')">
 						<i class="el-icon-more"></i>

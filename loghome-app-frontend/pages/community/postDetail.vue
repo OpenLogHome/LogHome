@@ -22,7 +22,7 @@
           <view v-else class="post-circle-icon post-circle-icon-fallback">
             <uni-icons type="home-filled" size="18" color="#EA7034"></uni-icons>
           </view>
-          <text class="post-circle-name">{{post.circle_name || '未知圈子'}}</text>
+          <text class="post-circle-name">{{post.circle_name || $t('community.postDetail.unknownCircle')}}</text>
         </view>
         <view class="post-header">
           <view class="user-info clickable" @tap="navigateToUser(post.user_id)">
@@ -61,7 +61,7 @@
               <view class="novel-info">
                 <text class="novel-title">《{{post.novel_info.name}}》</text>
                 <view class="novel-author">
-                  <text>作者: {{post.novel_info.author_name}}</text>
+                  <text>{{ $t('community.postDetail.author', { name: post.novel_info.author_name }) }}</text>
                 </view>
                 <text class="novel-desc">{{post.novel_info.content && post.novel_info.content.length > 100 ? post.novel_info.content.substring(0, 100) + '...' : post.novel_info.content}}</text>
               </view>
@@ -99,18 +99,24 @@
                 :key="'burst-' + likeAnimationTick"
                 class="pixel-heart-burst"
               >
-                <view
+                <image
                   v-for="burst in likeBurstParticles"
                   :key="burst.key"
                   class="pixel-heart pixel-heart-float"
+                  src="/static/icons/like-heart-pixel.svg"
+                  mode="aspectFit"
+                  aria-hidden="true"
                   :style="getLikeBurstStyle(burst)"
-                ></view>
+                ></image>
               </view>
-              <view
+              <image
                 v-if="postLikeAnimating"
                 :key="'core-' + likeAnimationTick"
                 class="pixel-heart pixel-heart-core"
-              ></view>
+                src="/static/icons/like-heart-pixel.svg"
+                mode="aspectFit"
+                aria-hidden="true"
+              ></image>
               <view class="heart-icon-shell">
                 <uni-icons :type="post.is_liked ? 'heart-filled' : 'heart'" size="24" :color="post.is_liked ? '#EA7034' : (isDarkMode ? '#b8b8b8' : '#666')"></uni-icons>
               </view>
@@ -123,14 +129,14 @@
           </view>
           <view class="action-btn clickable" @tap="sharePost">
             <uni-icons type="redo" size="24" :color="isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
-            <text>分享</text>
+            <text>{{ $t('common.share') }}</text>
           </view>
         </view>
       </view>
       
       <!-- 评论列表 -->
       <view class="comments-section">
-        <view class="section-title">评论 {{post.comment_count || 0}}</view>
+        <view class="section-title">{{ $t('community.postDetail.commentsCount', { count: post.comment_count || 0 }) }}</view>
         <view class="comments-list" v-if="comments.length > 0">
           <view v-for="comment in comments" :key="comment.comment_id" class="comment-item">
             <!-- 主评论 -->
@@ -172,8 +178,8 @@
                     <uni-icons :type="comment.is_liked ? 'heart-filled' : 'heart'" size="14" :color="comment.is_liked ? '#EA7034' : (isDarkMode ? '#b8b8b8' : '#999')"></uni-icons>
                     <text :class="{'liked': comment.is_liked}">{{comment.like_count || 0}}</text>
                   </view>
-                  <text class="comment-reply clickable" @tap="replyToComment(comment)">回复</text>
-                  <text v-if="canDeleteComment(comment)" class="comment-delete clickable" @tap="deleteComment(comment)">删除</text>
+                  <text class="comment-reply clickable" @tap="replyToComment(comment)">{{ $t('common.reply') }}</text>
+                  <text v-if="canDeleteComment(comment)" class="comment-delete clickable" @tap="deleteComment(comment)">{{ $t('common.delete') }}</text>
                 </view>
               </view>
             </view>
@@ -198,7 +204,7 @@
                         {{reply.user_title_text}}
                       </view>
                     </view>
-                    <text class="reply-target" v-if="reply.reply_user_name">回复 {{reply.reply_user_name}}</text>
+                    <text class="reply-target" v-if="reply.reply_user_name">{{ $t('community.postDetail.replyTo', { name: reply.reply_user_name }) }}</text>
                     <text class="reply-time">{{formatTime(reply.create_time)}}</text>
                   </view>
                   <text class="reply-text">{{reply.content}}</text>
@@ -219,29 +225,29 @@
                       <uni-icons :type="reply.is_liked ? 'heart-filled' : 'heart'" size="14" :color="reply.is_liked ? '#EA7034' : (isDarkMode ? '#b8b8b8' : '#999')"></uni-icons>
                       <text :class="{'liked': reply.is_liked}">{{reply.like_count || 0}}</text>
                     </view>
-                    <text class="reply-btn clickable" @tap="replyToComment(reply, comment)">回复</text>
-                    <text v-if="canDeleteComment(reply)" class="reply-delete clickable" @tap="deleteComment(reply, comment)">删除</text>
+                    <text class="reply-btn clickable" @tap="replyToComment(reply, comment)">{{ $t('common.reply') }}</text>
+                    <text v-if="canDeleteComment(reply)" class="reply-delete clickable" @tap="deleteComment(reply, comment)">{{ $t('common.delete') }}</text>
                   </view>
                 </view>
               </view>
               <text class="show-more clickable" v-if="comment.total_replies > comment.replies.length" @tap="loadMoreReplies(comment)">
-                展开更多回复
+                {{ $t('community.postDetail.showMoreReplies') }}
               </text>
             </view>
           </view>
         </view>
         
         <view class="no-comments" v-if="comments.length === 0 && !isLoading">
-          <text>暂无评论，快来发表第一条评论吧</text>
+          <text>{{ $t('community.postDetail.noComments') }}</text>
         </view>
         
         <!-- 加载状态提示 -->
         <view class="loading-more" v-if="loadingStatus === 'loading'">
           <view class="loading-spinner"></view>
-          <text>努力加载中...</text>
+          <text>{{ $t('community.postDetail.loadingMore') }}</text>
         </view>
         <view class="loading-more" v-if="loadingStatus === 'noMore'">
-          <text>没有更多数据了</text>
+          <text>{{ $t('common.noMore') }}</text>
         </view>
       </view>
     </scroll-view>
@@ -253,7 +259,7 @@
           <textarea
             class="comment-textarea"
             v-model="commentText"
-            :placeholder="replyTo ? `回复 ${replyTo.user_name}` : '写下你的评论...'"
+            :placeholder="replyTo ? $t('community.postDetail.replyTo', { name: replyTo.user_name }) : $t('community.postDetail.commentPlaceholder')"
             :auto-height="false"
             :maxlength="commentMaxLength"
             :focus="inputFocus"
@@ -272,7 +278,7 @@
             <uni-icons type="image" size="24" :color="isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
           </view>
           <button class="send-btn clickable" :disabled="isSubmitting || (!commentText && selectedImages.length === 0)" @tap="submitComment">
-            {{ isSubmitting ? '发送中...' : '发送' }}
+            {{ isSubmitting ? $t('community.postDetail.sending') : $t('common.send') }}
           </button>
         </view>
       </view>
@@ -295,10 +301,10 @@
       <view class="popup-content">
         <view class="popup-item" @tap="saveAsSticker">
           <uni-icons type="star" size="20" color="#EA7034"></uni-icons>
-          <text>收藏为表情</text>
+          <text>{{ $t('community.postDetail.saveAsSticker') }}</text>
         </view>
         <view class="popup-item cancel" @tap="hideImageOptions">
-          <text>取消</text>
+          <text>{{ $t('common.cancel') }}</text>
         </view>
       </view>
     </uni-popup>
@@ -312,13 +318,13 @@
 
 <script>
 import axios from 'axios'
-import moment from 'moment'
 import emojiPicker from '../../components/emoji-picker/emoji-picker.vue'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
 import HonorBadge from '../../components/honor-badge.vue'
 import MembershipBadge from '../../components/membership-badge.vue'
 import { settleAndNotifyExpTaskCompletion } from '../../lib/treeExpTaskNotifier.js'
 import darkModeMixin from '@/mixins/dark-mode.js'
+import { postTimeText } from '@/common/datetime.js'
 
 export default {
   components: {
@@ -351,12 +357,12 @@ export default {
       likeAnimationTick: 0,
       likeAnimationTimer: null,
       likeBurstParticles: [
-        { key: 'tl', left: '4rpx', top: '8rpx', driftX: '-14rpx', driftY: '-20rpx', delay: '0ms', duration: '520ms', scale: '0.72' },
-        { key: 'tm', left: '12rpx', top: '2rpx', driftX: '0rpx', driftY: '-28rpx', delay: '40ms', duration: '560ms', scale: '0.88' },
-        { key: 'tr', left: '22rpx', top: '8rpx', driftX: '14rpx', driftY: '-18rpx', delay: '80ms', duration: '520ms', scale: '0.72' },
-        { key: 'ml', left: '2rpx', top: '18rpx', driftX: '-18rpx', driftY: '-10rpx', delay: '30ms', duration: '500ms', scale: '0.64' },
-        { key: 'mr', left: '24rpx', top: '18rpx', driftX: '18rpx', driftY: '-10rpx', delay: '70ms', duration: '500ms', scale: '0.64' },
-        { key: 'bm', left: '12rpx', top: '24rpx', driftX: '0rpx', driftY: '-16rpx', delay: '110ms', duration: '480ms', scale: '0.58' }
+        { key: 'tl', left: '4rpx', top: '8rpx', driftX: '-28rpx', driftY: '-44rpx', delay: '0ms', duration: '520ms', scale: '0.72' },
+        { key: 'tm', left: '12rpx', top: '2rpx', driftX: '0rpx', driftY: '-58rpx', delay: '40ms', duration: '560ms', scale: '0.88' },
+        { key: 'tr', left: '22rpx', top: '8rpx', driftX: '28rpx', driftY: '-44rpx', delay: '80ms', duration: '520ms', scale: '0.72' },
+        { key: 'ml', left: '2rpx', top: '18rpx', driftX: '-38rpx', driftY: '-44rpx', delay: '30ms', duration: '500ms', scale: '0.64' },
+        { key: 'mr', left: '24rpx', top: '18rpx', driftX: '38rpx', driftY: '-44rpx', delay: '70ms', duration: '500ms', scale: '0.64' },
+        { key: 'bm', left: '12rpx', top: '24rpx', driftX: '0rpx', driftY: '-36rpx', delay: '110ms', duration: '480ms', scale: '0.58' }
       ]
     }
   },
@@ -383,29 +389,29 @@ export default {
   onNavigationBarButtonTap(e) {
 		let _this = this;
 		if(e.text=="\ue790 "){
-			let itemList = ["分享贴子"];
+			let itemList = [this.$t('community.postDetail.sharePostAction')];
       let user = localStorage.getItem("LogHomeUserInfo");
       if(user) {
         user = JSON.parse(user);
         // 管理员/圈主/作者可删除，作者可编辑
         const canDelete = user.is_admin == 1 || user.user_id == this.post.user_id || this.userRole == 1 || this.userRole == 2;
         const canEdit = user.user_id == this.post.user_id;
-        if(canDelete) itemList.push("删除帖子");
-        if(canEdit) itemList.push("编辑帖子");
+        if(canDelete) itemList.push(this.$t('community.postDetail.deletePostAction'));
+        if(canEdit) itemList.push(this.$t('community.postDetail.editPostAction'));
       }
       uni.showActionSheet({
           itemList,
           success: function (res) {
-              if(itemList[res.tapIndex] == '分享贴子') {
+              if(itemList[res.tapIndex] == _this.$t('community.postDetail.sharePostAction')) {
                 _this.sharePost();
-              } else if(itemList[res.tapIndex] == '编辑帖子') {
+              } else if(itemList[res.tapIndex] == _this.$t('community.postDetail.editPostAction')) {
                 uni.navigateTo({
                   url: `/pages/community/postEdit?post_id=${_this.post.post_id}`
                 });
-              } else if(itemList[res.tapIndex] == '删除帖子') {
+              } else if(itemList[res.tapIndex] == _this.$t('community.postDetail.deletePostAction')) {
                 uni.showModal({
-                  title: '确认删除',
-                  content: '确定要删除该帖子吗？',
+                  title: _this.$t('common.confirmDelete'),
+                  content: _this.$t('community.postDetail.deletePostConfirm'),
                   success: async (modalRes) => {
                     if(modalRes.confirm) {
                       try {
@@ -413,10 +419,10 @@ export default {
                         await axios.delete(_this.$baseUrl + `/community/posts/${_this.post.post_id}`, {
                           headers: { 'Authorization': 'Bearer ' + token }
                         });
-                        uni.showToast({ title: '删除成功', icon: 'success' });
+                        uni.showToast({ title: _this.$t('common.deleteSuccess'), icon: 'success' });
                         setTimeout(() => { uni.navigateBack(); }, 1200);
                       } catch (err) {
-                        uni.showToast({ title: '删除失败', icon: 'none' });
+                        uni.showToast({ title: _this.$t('common.deleteFailed'), icon: 'none' });
                       }
                     }
                   }
@@ -436,8 +442,9 @@ export default {
         top: burst.top,
         animationDelay: burst.delay,
         animationDuration: burst.duration,
-        '--drift-x': burst.driftX,
-        '--drift-y': burst.driftY,
+        // 自定义属性不会经过 rpx 编译，先换算为浏览器可识别的 px。
+        '--drift-x': uni.upx2px(parseFloat(burst.driftX)) + 'px',
+        '--drift-y': uni.upx2px(parseFloat(burst.driftY)) + 'px',
         '--heart-scale': burst.scale
       }
     },
@@ -471,7 +478,7 @@ export default {
         await this.getUserRole()
       } catch (error) {
         uni.showToast({
-          title: '加载失败',
+          title: this.$t('common.loadFailed'),
           icon: 'none'
         })
       }
@@ -549,7 +556,7 @@ export default {
       } catch (error) {
         this.loadingStatus = 'more';
         uni.showToast({
-          title: '加载失败',
+          title: this.$t('common.loadFailed'),
           icon: 'none'
         })
       } finally {
@@ -631,7 +638,7 @@ export default {
       } catch (error) {
         console.error('加载更多回复失败:', error);
         uni.showToast({
-          title: '加载失败',
+          title: this.$t('common.loadFailed'),
           icon: 'none'
         })
       }
@@ -663,7 +670,7 @@ export default {
       } catch (error) {
         console.error('点赞失败:', error);
         uni.showToast({
-          title: '操作失败',
+          title: this.$t('common.operationFailed'),
           icon: 'none'
         })
       }
@@ -686,7 +693,7 @@ export default {
       } catch (error) {
         console.error('点赞失败:', error);
         uni.showToast({
-          title: '操作失败',
+          title: this.$t('common.operationFailed'),
           icon: 'none'
         })
       }
@@ -710,14 +717,14 @@ export default {
       if (this.isSubmitting || (!this.commentText && this.selectedImages.length === 0)) return
       if (this.commentText.length > this.commentMaxLength) {
         uni.showToast({
-          title: `回复不能超过${this.commentMaxLength}字`,
+          title: this.$t('community.postDetail.commentTooLong', { count: this.commentMaxLength }),
           icon: 'none'
         })
         return
       }
       this.isSubmitting = true
       uni.showLoading({
-        title: '发送中...',
+        title: this.$t('community.postDetail.sending'),
         mask: true
       })
       try {
@@ -728,7 +735,7 @@ export default {
         let image_url = null;
         if (this.selectedImages.length > 0) {
           uni.showLoading({
-            title: '正在上传图片...',
+            title: this.$t('community.postDetail.uploadingImage'),
             mask: true
           })
           // 检查图片URL是否已经是完整的网络URL（表情包的情况）
@@ -828,7 +835,7 @@ export default {
         this.inputFocus = false
         
         uni.showToast({
-          title: '发送成功',
+          title: this.$t('community.postDetail.sendSuccess'),
           icon: 'success'
         })
 
@@ -848,7 +855,7 @@ export default {
           if (modal) {
             modal.show({
               reward: typeof data.reward === 'number' ? data.reward : 15,
-              taskName: '每日任务：首次回帖',
+              taskName: this.$t('community.postDetail.dailyTaskFirstReply'),
               icon: data.task_icon,
               currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
               maxGrowth: 100,
@@ -862,7 +869,7 @@ export default {
       } catch (error) {
         console.error('评论发送失败:', error);
         uni.showToast({
-          title: (error.response && error.response.data && (error.response.data.msg || error.response.data.message)) || '发送失败',
+          title: (error.response && error.response.data && (error.response.data.msg || error.response.data.message)) || this.$t('community.postDetail.sendFailed'),
           icon: 'none'
         })
       } finally {
@@ -880,7 +887,7 @@ export default {
     async uploadFile(filePath) {
       return new Promise((resolve, reject) => {
         uni.showToast({
-          title: "图片上传中",
+          title: this.$t('community.postDetail.imageUploading'),
           icon: 'loading',
           duration: 2000
         });
@@ -911,7 +918,7 @@ export default {
     chooseImage() {
       if (this.selectedImages.length >= 9) {
         uni.showToast({
-          title: '最多选择9张图片',
+          title: this.$t('community.postDetail.maxImages'),
           icon: 'none'
         })
         return
@@ -949,7 +956,7 @@ export default {
     
     async saveAsSticker() {
        try {
-         uni.showLoading({ title: '处理中...' });
+         uni.showLoading({ title: this.$t('common.processing') });
          const token = JSON.parse(window.localStorage.getItem('token')).tk;
          const userId = JSON.parse(window.localStorage.getItem('token')).id;
          
@@ -1014,13 +1021,13 @@ export default {
            
            uni.hideLoading();
            uni.showToast({
-             title: '已添加到表情收藏',
+             title: this.$t('community.postDetail.addedToStickerFavorites'),
              icon: 'success'
            });
          } else {
            uni.hideLoading();
            uni.showToast({
-             title: '收藏失败',
+             title: this.$t('community.postDetail.favoriteFailed'),
              icon: 'none'
            });
          }
@@ -1030,7 +1037,7 @@ export default {
          uni.hideLoading();
          console.error('收藏表情失败:', error);
          uni.showToast({
-           title: '收藏失败',
+           title: this.$t('community.postDetail.favoriteFailed'),
            icon: 'none'
          });
        }
@@ -1041,19 +1048,25 @@ export default {
     },
     
     traditionalShare() {
-      return `来自原木社区的分享：${this.post.title}\n${this.post.content.substring(0, 50)}${this.post.content.length > 50 ? '...' : ''}\n点击链接查看详情：https://loghome.ink/community/post/${this.post.post_id}`;
+      const snippet = this.post.content.substring(0, 50) + (this.post.content.length > 50 ? '...' : '');
+      return this.$t('community.postDetail.shareText', {
+        brand: this.$t('nav.brand'),
+        title: this.post.title,
+        snippet,
+        url: 'https://loghome.ink/community/post/' + this.post.post_id
+      });
     },
     
     createShareCode() {
       uni.showLoading({
-        title: '创建口令中...'
+        title: this.$t('community.postDetail.creatingShareCode')
       });
 
       let tk = JSON.parse(window.localStorage.getItem('token'));
       if (!tk || !tk.tk) {
         uni.hideLoading();
         uni.showToast({
-          title: '请先登录',
+          title: this.$t('common.needLogin'),
           icon: 'none',
           duration: 2000
         });
@@ -1078,16 +1091,16 @@ export default {
             data: res.data.share_text,
             success: () => {
               uni.showModal({
-                title: '口令创建成功',
-                content: `口令：${res.data.code}\n\n口令已复制到剪贴板，分享给好友即可！`,
+                title: this.$t('community.postDetail.shareCodeCreated'),
+                content: this.$t('community.postDetail.shareCodeCopied', { code: res.data.code }),
                 showCancel: false,
-                confirmText: '知道了'
+                confirmText: this.$t('common.gotIt')
               });
             }
           });
         } else {
           uni.showToast({
-            title: res.data.msg || '口令创建失败',
+            title: res.data.msg || this.$t('community.postDetail.shareCodeFailed'),
             icon: 'none',
             duration: 2000
           });
@@ -1096,7 +1109,7 @@ export default {
         uni.hideLoading();
         console.error('创建口令失败:', error);
         uni.showToast({
-          title: '网络错误，请稍后重试',
+          title: this.$t('common.networkError'),
           icon: 'none',
           duration: 2000
         });
@@ -1104,24 +1117,7 @@ export default {
     },
     
     formatTime(time) {
-      const now = moment();
-      const postTime = moment(time);
-      const diff = now.diff(postTime, 'minutes');
-      
-      if (diff < 1) return '刚刚';
-      if (diff < 60) return `${diff}分钟前`;
-      
-      const hourDiff = now.diff(postTime, 'hours');
-      if (hourDiff < 24) return `${hourDiff}小时前`;
-      
-      const dayDiff = now.diff(postTime, 'days');
-      if (dayDiff < 30) return `${dayDiff}天前`;
-      
-      const monthDiff = now.diff(postTime, 'months');
-      if (monthDiff < 12) return `${monthDiff}个月前`;
-      
-      const yearDiff = now.diff(postTime, 'years');
-      return `${yearDiff}年前`;
+      return postTimeText(time, { long: true });
     },
     
     navigateToUser(userId) {
@@ -1245,8 +1241,8 @@ export default {
     },
     async deleteComment(comment, parentComment = null) {
       uni.showModal({
-        title: '确认删除',
-        content: '确定要删除该评论吗？',
+        title: this.$t('common.confirmDelete'),
+        content: this.$t('community.postDetail.deleteCommentConfirm'),
         success: async (modalRes) => {
           if (modalRes.confirm) {
             try {
@@ -1254,7 +1250,7 @@ export default {
               await axios.delete(this.$baseUrl + `/community/comments/${comment.comment_id}`, {
                 headers: { 'Authorization': 'Bearer ' + token }
               });
-              uni.showToast({ title: '删除成功', icon: 'success' });
+              uni.showToast({ title: this.$t('common.deleteSuccess'), icon: 'success' });
               
               // 判断是主评论还是子评论
               if (comment.parent_id === 0) {
@@ -1300,7 +1296,7 @@ export default {
               }
             } catch (err) {
               console.error('删除评论失败:', err);
-              uni.showToast({ title: '删除失败', icon: 'none' });
+              uni.showToast({ title: this.$t('common.deleteFailed'), icon: 'none' });
             }
           }
         }
@@ -1577,7 +1573,7 @@ export default {
   padding: 10rpx 30rpx;
 }
 
-.action-btn text {
+.action-btn > text {
   display: inline-flex;
   align-items: center;
   font-size: 28rpx;
@@ -1629,45 +1625,27 @@ export default {
 .pixel-heart-burst {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 5;
   pointer-events: none;
 }
 
 .pixel-heart {
   position: absolute;
-  width: 4rpx;
-  height: 4rpx;
-  background: transparent;
-  // 5x5 像素心：顶行两个凸起（0,1 和 3,4），旧版缺右上凸起导致心形残缺
-  box-shadow:
-    0 0 #ff7a59,
-    4rpx 0 #ff7a59,
-    12rpx 0 #ff7a59,
-    16rpx 0 #ff7a59,
-    0 4rpx #ff7a59,
-    4rpx 4rpx #ff7a59,
-    8rpx 4rpx #ff7a59,
-    12rpx 4rpx #ff7a59,
-    16rpx 4rpx #ff7a59,
-    0 8rpx #ff7a59,
-    4rpx 8rpx #ff7a59,
-    8rpx 8rpx #ff7a59,
-    12rpx 8rpx #ff7a59,
-    16rpx 8rpx #ff7a59,
-    4rpx 12rpx #ff7a59,
-    8rpx 12rpx #ff7a59,
-    12rpx 12rpx #ff7a59,
-    8rpx 16rpx #ff7a59;
+  // 完整心形放在真实边界内，避免变换时裁切外溢的 box-shadow 像素。
+  width: 28rpx;
+  height: 24rpx;
   opacity: 0;
   pointer-events: none;
-  transform-origin: 10rpx 10rpx;
+  transform-origin: center;
+  image-rendering: pixelated;
   filter: drop-shadow(0 4rpx 0 rgba(217, 87, 46, 0.26));
 }
 
 .pixel-heart-core {
-  left: 12rpx;
-  top: 12rpx;
-  z-index: 1;
+  left: 8rpx;
+  top: 10rpx;
+  // 与浮动粒子一起显示在主图标上方，防止心形被遮去一半。
+  z-index: 4;
   animation: post-like-core-pop 540ms steps(4, end);
 }
 
@@ -1726,7 +1704,7 @@ export default {
   }
   25% {
     opacity: 1;
-    transform: translate3d(0, -4rpx, 0) scale(calc(var(--heart-scale, 0.7) + 0.08));
+    transform: translate3d(calc(var(--drift-x) * 0.65), calc(var(--drift-y) * 0.65), 0) scale(calc(var(--heart-scale, 0.7) + 0.08));
   }
   100% {
     opacity: 0;

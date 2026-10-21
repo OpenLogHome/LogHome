@@ -3,14 +3,14 @@
   <view class="members-container" v-dark>
     <!-- 顶部标签页 -->
     <view class="tabs">
-      <view class="tab" :class="{ active: currentTab === 'members' }" @tap="switchTab('members')">成员列表</view>
-      <view class="tab" :class="{ active: currentTab === 'banned' }" @tap="switchTab('banned')" v-if="userRole === 1 || userRole === 2">禁言名单</view>
+      <view class="tab" :class="{ active: currentTab === 'members' }" @tap="switchTab('members')">{{ $t('community.circleMembers.membersTab') }}</view>
+      <view class="tab" :class="{ active: currentTab === 'banned' }" @tap="switchTab('banned')" v-if="userRole === 1 || userRole === 2">{{ $t('community.circleMembers.bannedTab') }}</view>
     </view>
     
     <!-- 加入申请列表 - 只对圈主和管理员可见 -->
     <view class="join-requests" v-if="(userRole === 1 || userRole === 2) && joinRequests.length > 0 && currentTab === 'members'">
       <view class="role-group">
-        <view class="role-title">入圈申请 ({{joinRequests.length}})</view>
+        <view class="role-title">{{ $t('community.circleMembers.joinRequestsTitle', { count: joinRequests.length }) }}</view>
         <view class="member-list">
           <view class="member-item" v-for="(request, index) in joinRequests" :key="'req-'+index">
             <view class="member-info" @tap="navigateToUser(request.user_id)">
@@ -39,7 +39,7 @@
     <view class="members-list" v-if="currentTab === 'members'">
       <!-- 角色分组：管理组（包括圈主和管理员） -->
       <view class="role-group" v-if="managementMembers.length > 0">
-        <view class="role-title">管理组</view>
+        <view class="role-title">{{ $t('community.circleMembers.managementGroup') }}</view>
         <view class="member-list">
           <view class="member-item" v-for="(member, index) in managementMembers" :key="index" @tap="navigateToUser(member.user_id)">
             <view class="member-info">
@@ -51,7 +51,7 @@
               </view>
             </view>
             <view class="member-actions">
-              <view class="member-role-tag" :class="member.role === 2 ? 'owner' : 'admin'">{{member.role === 2 ? '圈主' : '管理员'}}</view>
+              <view class="member-role-tag" :class="member.role === 2 ? 'owner' : 'admin'">{{ member.role === 2 ? $t('community.circleMembers.roleOwner') : $t('community.circleMembers.roleAdmin') }}</view>
               <!-- 圈主可以取消管理员 -->
               <view v-if="isOwner && member.role === 1" class="action-btn" @tap.stop="showAdminActionSheet(member)">
                 <uni-icons type="more-filled" size="20" :color="$store.state.isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
@@ -63,7 +63,7 @@
       
       <!-- 角色分组：普通成员 -->
       <view class="role-group" v-if="normalMembers.length > 0">
-        <view class="role-title">成员</view>
+        <view class="role-title">{{ $t('community.circleMembers.membersGroup') }}</view>
         <view class="member-list">
           <view class="member-item" v-for="(member, index) in normalMembers" :key="index" @tap="navigateToUser(member.user_id)">
             <view class="member-info">
@@ -95,7 +95,7 @@
     <!-- 禁言名单 -->
     <view class="banned-list" v-if="currentTab === 'banned' && (userRole === 1 || userRole === 2)">
       <view class="role-group">
-        <view class="role-title">禁言成员</view>
+        <view class="role-title">{{ $t('community.circleMembers.bannedMembersTitle') }}</view>
         <view class="member-list">
           <view class="member-item" v-for="(member, index) in bannedMembers.filter(m => m.ban_type === 0)" :key="'ban-'+index">
             <view class="member-info" @tap="navigateToUser(member.user_id)">
@@ -105,16 +105,13 @@
                 <text class="member-name">{{member.name}}</text>
                 <text class="member-motto" v-if="member.motto">{{member.motto}}</text>
                 <!-- 禁言名单中的显示问题 -->
-                <text class="ban-info">
-                  禁言中 · 
-                  {{member.end_time ? formatBanEndTime(member.end_time) : '永久'}}
-                </text>
-                <text class="ban-reason" v-if="member.reason">原因：{{member.reason}}</text>
+                <text class="ban-info">{{ $t('community.circleMembers.mutedStatus', { time: member.end_time ? formatBanEndTime(member.end_time) : $t('community.circleMembers.permanent') }) }}</text>
+                <text class="ban-reason" v-if="member.reason">{{ $t('community.circleMembers.banReason', { reason: member.reason }) }}</text>
               </view>
             </view>
             <view class="member-actions">
               <view class="action-btn unban" @tap="unbanMember(member)">
-                <text>解除禁言</text>
+                <text>{{ $t('community.circleMembers.unban') }}</text>
               </view>
             </view>
           </view>
@@ -122,7 +119,7 @@
       </view>
       
       <view class="role-group" style="margin-top: 20rpx;">
-        <view class="role-title">踢出成员</view>
+        <view class="role-title">{{ $t('community.circleMembers.kickedMembersTitle') }}</view>
         <view class="member-list">
           <view class="member-item" v-for="(member, index) in bannedMembers.filter(m => m.ban_type === 1)" :key="'kick-'+index">
             <view class="member-info" @tap="navigateToUser(member.user_id)">
@@ -131,14 +128,14 @@
               <view class="member-details">
                 <text class="member-name">{{member.name}}</text>
                 <text class="member-motto" v-if="member.motto">{{member.motto}}</text>
-                <text class="ban-info">已被踢出</text>
-                <text class="ban-reason" v-if="member.reason">原因：{{member.reason}}</text>
-                <text class="ban-time">踢出时间：{{formatTime(member.create_time)}}</text>
+                <text class="ban-info">{{ $t('community.circleMembers.kicked') }}</text>
+                <text class="ban-reason" v-if="member.reason">{{ $t('community.circleMembers.banReason', { reason: member.reason }) }}</text>
+                <text class="ban-time">{{ $t('community.circleMembers.kickedTime', { time: formatTime(member.create_time) }) }}</text>
               </view>
             </view>
             <view class="member-actions">
               <view class="action-btn unban" @tap="cancelKick(member)">
-                <text>取消踢出</text>
+                <text>{{ $t('community.circleMembers.cancelKick') }}</text>
               </view>
             </view>
           </view>
@@ -148,14 +145,14 @@
       <!-- 空状态 -->
       <view class="empty-state" v-if="bannedMembers.length === 0">
         <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit" class="empty-image"></image>
-        <text class="empty-text">暂无禁言或踢出成员</text>
+        <text class="empty-text">{{ $t('community.circleMembers.emptyBanned') }}</text>
       </view>
     </view>
     
     <!-- 空状态 -->
     <view class="empty-state" v-if="allMembers.length === 0 && joinRequests.length === 0 && !isLoading && currentTab === 'members'">
       <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit" class="empty-image"></image>
-      <text class="empty-text">暂无成员</text>
+      <text class="empty-text">{{ $t('community.circleMembers.emptyMembers') }}</text>
     </view>
   </view>
 </template>
@@ -163,6 +160,7 @@
 <script>
 import axios from 'axios'
 import moment from 'moment'
+import { postTimeText } from '@/common/datetime.js'
 
 export default {
   data() {
@@ -179,19 +177,21 @@ export default {
       userInfo: null,
       userRole: -1, // -1: 未知, 0: 普通成员, 1: 管理员, 2: 圈主
       currentTab: 'members',
-      bannedMembers: [],
-      banDurations: [
-        { label: '1小时', value: 60 },
-        { label: '6小时', value: 360 },
-        { label: '12小时', value: 720 },
-        { label: '1天', value: 1440 },
-        { label: '3天', value: 4320 },
-        { label: '7天', value: 10080 },
-        { label: '永久', value: 0 }
-      ]
+      bannedMembers: []
     }
   },
   computed: {
+    banDurations() {
+      return [
+        { label: this.$t('community.circleMembers.duration1Hour'), value: 60 },
+        { label: this.$t('community.circleMembers.duration6Hours'), value: 360 },
+        { label: this.$t('community.circleMembers.duration12Hours'), value: 720 },
+        { label: this.$t('community.circleMembers.duration1Day'), value: 1440 },
+        { label: this.$t('community.circleMembers.duration3Days'), value: 4320 },
+        { label: this.$t('community.circleMembers.duration7Days'), value: 10080 },
+        { label: this.$t('community.circleMembers.permanent'), value: 0 }
+      ]
+    },
     // 按角色分组成员
     managementMembers() {
       // 合并圈主和管理员为管理组
@@ -214,14 +214,14 @@ export default {
       if (options.name) {
         this.circleName = decodeURIComponent(options.name);
         uni.setNavigationBarTitle({
-          title: this.circleName + ' - 成员'
+          title: this.$t('community.circleMembers.pageTitle', { name: this.circleName })
         });
       }
       this.getUserInfo();
       this.loadMembers();
     } else {
       uni.showToast({
-        title: '参数错误',
+        title: this.$t('common.paramError'),
         icon: 'none'
       });
       setTimeout(() => {
@@ -306,7 +306,7 @@ export default {
     // 审核入圈申请
     async reviewJoinRequest(requestId, status) {
       try {
-        uni.showLoading({ title: status === 1 ? '通过中...' : '拒绝中...' });
+        uni.showLoading({ title: status === 1 ? this.$t('community.circleMembers.approving') : this.$t('community.circleMembers.rejecting') });
         const token = JSON.parse(window.localStorage.getItem('token')).tk;
         
         let comment = '';
@@ -314,10 +314,10 @@ export default {
           // 如果是拒绝，可以输入拒绝原因
           const result = await new Promise((resolve) => {
             uni.showModal({
-              title: '拒绝原因',
+              title: this.$t('community.circleMembers.rejectReasonTitle'),
               content: '',
               editable: true,
-              placeholderText: '请输入拒绝原因（可选）',
+              placeholderText: this.$t('community.circleMembers.rejectReasonPlaceholder'),
               success: (res) => {
                 if (res.confirm) {
                   resolve(res.content);
@@ -344,7 +344,7 @@ export default {
         
         if (res.data) {
           uni.showToast({
-            title: status === 1 ? '已通过申请' : '已拒绝申请',
+            title: status === 1 ? this.$t('community.circleMembers.approved') : this.$t('community.circleMembers.rejected'),
             icon: 'success'
           });
           
@@ -362,7 +362,7 @@ export default {
       } catch (error) {
         uni.hideLoading();
         uni.showToast({
-          title: error.response?.data?.msg || '操作失败',
+          title: error.response?.data?.msg || this.$t('common.operationFailed'),
           icon: 'none'
         });
         console.error('审核申请失败', error);
@@ -432,7 +432,7 @@ export default {
     // 显示普通成员操作菜单
     showMemberActionSheet(member) {
       uni.showActionSheet({
-        itemList: ['设为管理员', '禁言', '移出圈子'],
+        itemList: [this.$t('community.circleMembers.setAdmin'), this.$t('community.circleMembers.ban'), this.$t('community.circleMembers.removeFromCircle')],
         success: res => {
           if (res.tapIndex === 0) {
             this.setAdmin(member.user_id, true);
@@ -447,7 +447,7 @@ export default {
     // 显示管理员操作菜单
     showAdminActionSheet(member) {
       uni.showActionSheet({
-        itemList: ['取消管理员', '移出圈子'],
+        itemList: [this.$t('community.circleMembers.cancelAdmin'), this.$t('community.circleMembers.removeFromCircle')],
         success: res => {
           if (res.tapIndex === 0) {
             this.setAdmin(member.user_id, false);
@@ -460,7 +460,7 @@ export default {
     // 显示踢出成员操作菜单
     showMemberKickActionSheet(member) {
       uni.showActionSheet({
-        itemList: ['移出圈子'],
+        itemList: [this.$t('community.circleMembers.removeFromCircle')],
         success: res => {
           if (res.tapIndex === 0) {
             this.confirmKickMember(member);
@@ -471,8 +471,8 @@ export default {
     // 确认踢出成员
     confirmKickMember(member) {
       uni.showModal({
-        title: '移出圈子',
-        content: `确定要将 ${member.name} 移出圈子吗？`,
+        title: this.$t('community.circleMembers.removeFromCircle'),
+        content: this.$t('community.circleMembers.kickConfirm', { name: member.name }),
         success: res => {
           if (res.confirm) {
             this.promptKickReason(member.user_id);
@@ -483,10 +483,10 @@ export default {
     // 提示输入踢出原因
     promptKickReason(userId) {
       uni.showModal({
-        title: '移出原因',
+        title: this.$t('community.circleMembers.kickReasonTitle'),
         content: '',
         editable: true,
-        placeholderText: '请输入移出原因（可选）',
+        placeholderText: this.$t('community.circleMembers.kickReasonPlaceholder'),
         success: res => {
           if (res.confirm) {
             this.kickMember(userId, res.content);
@@ -497,7 +497,7 @@ export default {
     // 踢出成员
     async kickMember(userId, reason) {
       try {
-        uni.showLoading({ title: '处理中...' });
+        uni.showLoading({ title: this.$t('common.processing') });
         const token = JSON.parse(window.localStorage.getItem('token')).tk;
         const res = await axios.post(this.$baseUrl + `/community/circles/${this.circleId}/kick-user`, {
           user_id: userId,
@@ -512,7 +512,7 @@ export default {
         
         if (res.data) {
           uni.showToast({
-            title: '已移出圈子',
+            title: this.$t('community.circleMembers.kickedSuccess'),
             icon: 'success'
           });
           
@@ -525,7 +525,7 @@ export default {
       } catch (error) {
         uni.hideLoading();
         uni.showToast({
-          title: error.response?.data?.msg || '操作失败',
+          title: error.response?.data?.msg || this.$t('common.operationFailed'),
           icon: 'none'
         });
         console.error('移出成员失败', error);
@@ -534,7 +534,7 @@ export default {
     // 设置或取消管理员
     async setAdmin(userId, isAdmin) {
       try {
-        uni.showLoading({ title: isAdmin ? '设置中...' : '取消中...' });
+        uni.showLoading({ title: isAdmin ? this.$t('community.circleMembers.settingAdmin') : this.$t('community.circleMembers.removingAdmin') });
         const token = JSON.parse(window.localStorage.getItem('token')).tk;
         const res = await axios.post(this.$baseUrl + `/community/circles/set-admin`, {
           circle_id: this.circleId,
@@ -550,7 +550,7 @@ export default {
         
         if (res.data) {
           uni.showToast({
-            title: isAdmin ? '已设为管理员' : '已取消管理员',
+            title: isAdmin ? this.$t('community.circleMembers.adminSet') : this.$t('community.circleMembers.adminRemoved'),
             icon: 'success'
           });
           
@@ -563,7 +563,7 @@ export default {
       } catch (error) {
         uni.hideLoading();
         uni.showToast({
-          title: error.response?.data?.msg || '操作失败',
+          title: error.response?.data?.msg || this.$t('common.operationFailed'),
           icon: 'none'
         });
         console.error('设置管理员失败', error);
@@ -571,20 +571,7 @@ export default {
     },
     // 格式化时间
     formatTime(time) {
-      const now = moment();
-      const postTime = moment(time);
-      const diff = now.diff(postTime, 'minutes');
-      
-      if (diff < 1) return '刚刚';
-      if (diff < 60) return `${diff}分钟前`;
-      
-      const hourDiff = now.diff(postTime, 'hours');
-      if (hourDiff < 24) return `${hourDiff}小时前`;
-      
-      const dayDiff = now.diff(postTime, 'days');
-      if (dayDiff < 30) return `${dayDiff}天前`;
-      
-      return postTime.format('YYYY-MM-DD');
+      return postTimeText(time)
     },
     
     // 切换标签页
@@ -616,7 +603,7 @@ export default {
     // 显示禁言对话框
     showBanDialog(member) {
       uni.showActionSheet({
-        itemList: ['禁言', '移出圈子'],
+        itemList: [this.$t('community.circleMembers.ban'), this.$t('community.circleMembers.removeFromCircle')],
         success: res => {
           if (res.tapIndex === 0) {
             this.showBanDurationDialog(member);
@@ -641,10 +628,10 @@ export default {
     // 提示输入禁言原因
     promptBanReason(userId, duration) {
       uni.showModal({
-        title: '禁言原因',
+        title: this.$t('community.circleMembers.banReasonTitle'),
         content: '',
         editable: true,
-        placeholderText: '请输入禁言原因（可选）',
+        placeholderText: this.$t('community.circleMembers.banReasonPlaceholder'),
         success: res => {
           if (res.confirm) {
             this.banMember(userId, duration, res.content);
@@ -656,7 +643,7 @@ export default {
     // 禁言成员
     async banMember(userId, duration, reason) {
       try {
-        uni.showLoading({ title: '处理中...' });
+        uni.showLoading({ title: this.$t('common.processing') });
         const token = JSON.parse(window.localStorage.getItem('token')).tk;
         const res = await axios.post(this.$baseUrl + `/community/circles/${this.circleId}/ban-user`, {
           user_id: userId,
@@ -672,7 +659,7 @@ export default {
         
         if (res.data) {
           uni.showToast({
-            title: '已禁言该成员',
+            title: this.$t('community.circleMembers.mutedSuccess'),
             icon: 'success'
           });
           
@@ -686,7 +673,7 @@ export default {
       } catch (error) {
         uni.hideLoading();
         uni.showToast({
-          title: error.response?.data?.msg || '操作失败',
+          title: error.response?.data?.msg || this.$t('common.operationFailed'),
           icon: 'none'
         });
         console.error('禁言成员失败', error);
@@ -697,11 +684,11 @@ export default {
     async unbanMember(member) {
       try {
         uni.showModal({
-          title: '解除禁言',
-          content: `确定要解除 ${member.name} 的禁言吗？`,
+          title: this.$t('community.circleMembers.unban'),
+          content: this.$t('community.circleMembers.unbanConfirm', { name: member.name }),
           success: async res => {
             if (res.confirm) {
-              uni.showLoading({ title: '处理中...' });
+              uni.showLoading({ title: this.$t('common.processing') });
               const token = JSON.parse(window.localStorage.getItem('token')).tk;
               const res = await axios.post(this.$baseUrl + `/community/circles/${this.circleId}/unban-user`, {
                 user_id: member.user_id
@@ -715,7 +702,7 @@ export default {
               
               if (res.data) {
                 uni.showToast({
-                  title: '已解除禁言',
+                  title: this.$t('community.circleMembers.unmutedSuccess'),
                   icon: 'success'
                 });
                 
@@ -728,7 +715,7 @@ export default {
       } catch (error) {
         uni.hideLoading();
         uni.showToast({
-          title: error.response?.data?.msg || '操作失败',
+          title: error.response?.data?.msg || this.$t('common.operationFailed'),
           icon: 'none'
         });
         console.error('解除禁言失败', error);
@@ -739,11 +726,11 @@ export default {
     async cancelKick(member) {
       try {
         uni.showModal({
-          title: '取消踢出',
-          content: `确定要允许 ${member.name} 重新加入圈子吗？`,
+          title: this.$t('community.circleMembers.cancelKick'),
+          content: this.$t('community.circleMembers.cancelKickConfirm', { name: member.name }),
           success: async res => {
             if (res.confirm) {
-              uni.showLoading({ title: '处理中...' });
+              uni.showLoading({ title: this.$t('common.processing') });
               const token = JSON.parse(window.localStorage.getItem('token')).tk;
               const res = await axios.post(this.$baseUrl + `/community/circles/${this.circleId}/cancel-kick`, {
                 user_id: member.user_id
@@ -757,7 +744,7 @@ export default {
               
               if (res.data) {
                 uni.showToast({
-                  title: '已取消踢出',
+                  title: this.$t('community.circleMembers.cancelKickSuccess'),
                   icon: 'success'
                 });
                 
@@ -770,7 +757,7 @@ export default {
       } catch (error) {
         uni.hideLoading();
         uni.showToast({
-          title: error.response?.data?.msg || '操作失败',
+          title: error.response?.data?.msg || this.$t('common.operationFailed'),
           icon: 'none'
         });
         console.error('取消踢出失败', error);
@@ -780,7 +767,7 @@ export default {
     // 修改成员操作菜单
     showMemberActionSheet(member) {
       uni.showActionSheet({
-        itemList: ['设为管理员', '禁言', '移出圈子'],
+        itemList: [this.$t('community.circleMembers.setAdmin'), this.$t('community.circleMembers.ban'), this.$t('community.circleMembers.removeFromCircle')],
         success: res => {
           if (res.tapIndex === 0) {
             this.setAdmin(member.user_id, true);
@@ -796,35 +783,35 @@ export default {
     },
     // 格式化禁言结束时间
     formatBanEndTime(time) {
-      if (!time) return '永久';
+      if (!time) return this.$t('community.circleMembers.permanent');
       
       const endTime = moment(time);
       const now = moment();
       
       // 如果结束时间已经过了，显示"已解除"
       if (endTime.isBefore(now)) {
-        return '已解除';
+        return this.$t('community.circleMembers.alreadyLifted');
       }
       
       // 计算剩余时间
       const diffMinutes = endTime.diff(now, 'minutes');
       
       if (diffMinutes < 60) {
-        return `${diffMinutes}分钟后解除`;
+        return this.$t('community.circleMembers.bannedEndMinutes', { count: diffMinutes });
       }
       
       const diffHours = Math.floor(diffMinutes / 60);
       if (diffHours < 24) {
-        return `${diffHours}小时后解除`;
+        return this.$t('community.circleMembers.bannedEndHours', { count: diffHours });
       }
       
       const diffDays = Math.floor(diffHours / 24);
       if (diffDays < 30) {
-        return `${diffDays}天后解除`;
+        return this.$t('community.circleMembers.bannedEndDays', { count: diffDays });
       }
       
       // 如果时间太长，直接显示具体日期
-      return endTime.format('YYYY-MM-DD HH:mm') + ' 解除';
+      return this.$t('community.circleMembers.bannedEndAt', { time: endTime.format('YYYY-MM-DD HH:mm') });
     }
   }
 }

@@ -441,9 +441,9 @@ export default {
 				user.membership_level || user.member_type || user.vip_level || '';
 			const level = String(rawLevel).toLowerCase();
 			if (rawLevel === 2 || level === '2' || level === 'super' || level === 'premium' ||
-				level === 'super_pass' || level.indexOf('超级') !== -1) return 'super';
+				level === 'super_pass') return 'super';
 			if (rawLevel === 1 || level === '1' || level === 'standard' || level === 'pass' ||
-				level === 'log_pass' || level.indexOf('原木通行证') !== -1) return 'standard';
+				level === 'log_pass') return 'standard';
 			return '';
 		},
 		showRules() {

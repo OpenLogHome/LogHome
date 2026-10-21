@@ -5,7 +5,7 @@
 			<div class="activity-card" v-for="item in displayMessages" :key="item.message_id" @click="navigateTo(item.router ? '../' + item.router : './')">
 				<!-- 背景图片 -->
 				<div class="card-image" v-if="item.bg_url">
-					<log-image :src="item.bg_url" alt="活动背景" mode="aspectFill" />
+					<log-image :src="item.bg_url" :alt="$t('community.activityMessages.bgAlt')" mode="aspectFill" />
 				</div>
 				<!-- 消息内容 -->
 				<div class="card-content">
@@ -16,13 +16,14 @@
 		</view>
 
 		<div class="nouser" v-if="activityMessages.length == 0">
-			暂无活动消息
+			{{ $t('community.activityMessages.empty') }}
 		</div>
 	</view>
 </template>
 
 <script>
 	import axios from 'axios'
+	import { relativeTime } from '@/common/datetime.js'
 	export default{
 		data(){
 			return{
@@ -57,7 +58,7 @@
 			}
 			//验活
 			uni.showLoading({
-				title: '努力加载中',
+				title: this.$t('common.loading'),
 				mask: true
 			});
 			axios.get( this.$baseUrl + '/users/userprofile', {
@@ -126,40 +127,7 @@
 			    return beijing_datetime; // 2017-03-31 16:02:06
 			},
 			timeConvert(date) {
-				// 计算相对时间
-				const now = new Date();
-				const diff = now - date; // 时间差（毫秒）
-				
-				// 转换为秒
-				const seconds = Math.floor(diff / 1000);
-				
-				// 小于1分钟
-				if (seconds < 60) {
-					return '刚刚';
-				}
-				
-				// 小于1小时
-				if (seconds < 3600) {
-					return Math.floor(seconds / 60) + '分钟前';
-				}
-				
-				// 小于24小时
-				if (seconds < 86400) {
-					return Math.floor(seconds / 3600) + '小时前';
-				}
-				
-				// 小于30天
-				if (seconds < 2592000) {
-					return Math.floor(seconds / 86400) + '天前';
-				}
-				
-				// 小于12个月
-				if (seconds < 31536000) {
-					return Math.floor(seconds / 2592000) + '个月前';
-				}
-				
-				// 大于等于12个月
-				return Math.floor(seconds / 31536000) + '年前';
+				return relativeTime(date, { weeks: false });
 			},
 			navigateTo(url) {
 				uni.navigateTo({

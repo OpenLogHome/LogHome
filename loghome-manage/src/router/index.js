@@ -40,6 +40,7 @@ import IndexTagsManage from '../views/library/IndexTagsManage.vue'
 import SiteSettingsManage from '../views/system/SiteSettingsManage.vue'
 import MiniappsManage from '../views/system/MiniappsManage.vue'
 import LabManage from '../views/system/LabManage.vue'
+import TodoBoard from '../views/system/TodoBoard.vue'
 import LibraryRecommendsManage from '../views/library/LibraryRecommendsManage.vue'
 import TagsManage from '../views/library/TagsManage.vue'
 import TreeConfigManage from '../views/operations/TreeConfigManage.vue'
@@ -438,6 +439,16 @@ const routes = [
         path: '/site-settings',
         component: SiteSettingsManage,
         name: '站点设置',
+        meta: {
+          requireAuth: true,
+          breadNumber: 1,
+          parentName: '系统管理'
+        }
+      },
+      {
+        path: '/todo-board',
+        component: TodoBoard,
+        name: '协作待办',
         meta: {
           requireAuth: true,
           breadNumber: 1,

@@ -48,8 +48,9 @@
 				"mangaReader": "漫画阅读",
 				"logPower": "原木力详情",
 				"logPowerRank": "原木力榜",
+				"rankBoard": "排行榜",
 				"allArticles": "所有章节",
-				"novel_fans": "书籍打赏",
+				"novel_fans": "粉丝贡献榜",
 				"bookComment": "书籍评论",
 				"collections": "作品集合",
 				"tags": "标签广场",
@@ -81,8 +82,7 @@
 			"apps": {
 				"about": "关于我们",
 				"lab": "原木实验室",
-				"logDefense": "原木保卫战",
-				"audio_test": "有声书测试",
+				"miniapp": "小程序",
 				"faqs": {
 					"faq": "帮助中心",
 					"feedback": "反馈详情",
@@ -129,6 +129,7 @@
 				"treeSceneSettings": "树场设置"
 			},
 			"payments": {
+				"get_logs": "如何获取原木",
 				"recharge": "支持社区",
 				"earnings": "余额提现",
 				"jump_to_pay": "支付",
@@ -153,6 +154,10 @@
 				},
 				"users": {
 					"index": "用户管理"
+				},
+				"community": {
+					"index": "社区管理",
+					"reports": "举报处理"
 				}
 			},
 			"store": {

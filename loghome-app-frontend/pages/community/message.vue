@@ -4,17 +4,17 @@
 		<view class="top-nav">
 			<div class="nav-button" @click="navigateToNotification">
 				<img src="../../static/user/bell.png" alt="" class="nav-button-icon" />
-				<text>系统通知</text>
+				<text>{{ $t('community.message.navSystem') }}</text>
 				<view v-if="unreadNotifications > 0" class="unread-badge">{{unreadNotifications}}</view>
 			</div>
 			<div class="nav-button" @click="navigateToPrivateMessage">
 				<img src="../../static/user/post.png" alt="" class="nav-button-icon" />
-				<text>私信</text>
+				<text>{{ $t('community.message.navPrivate') }}</text>
 				<view v-if="unreadPrivateMessages > 0" class="unread-badge">{{unreadPrivateMessages}}</view>
 			</div>
 			<div class="nav-button" @click="navigateToActivityMessage">
 				<img src="../../static/user/megaphone.png" alt="" class="nav-button-icon" />
-				<text>活动消息</text>
+				<text>{{ $t('community.message.navActivity') }}</text>
 				<view v-if="unreadActivityMessages > 0" class="unread-badge">{{unreadActivityMessages}}</view>
 			</div>
 		</view>
@@ -60,8 +60,8 @@
 					</view>
 					<view v-else class="empty-state">
 						<view class="empty-state-icon">◎</view>
-						<text class="empty-state-title">暂无消息</text>
-						<text class="empty-state-subtitle">新的互动消息会显示在这里</text>
+						<text class="empty-state-title">{{ $t('community.message.emptyTitle') }}</text>
+						<text class="empty-state-subtitle">{{ $t('community.message.emptySubtitle') }}</text>
 					</view>
 				</scroll-view>
 			</swiper-item>
@@ -76,7 +76,11 @@
 		mixins: [darkModeMixin],
 		data(){
 			return{
-				tabValue: ["评论", "关注", "赞与收藏"],
+				tabValue: [
+					this.$t('community.message.tabs.comment'),
+					this.$t('community.message.tabs.follow'),
+					this.$t('community.message.tabs.likeCollect')
+				],
 				firstTab: 0,
 				id: -1,
 				user: {},
@@ -112,7 +116,7 @@
 			}
 			//验活
 			uni.showLoading({
-				title: '努力加载中',
+				title: this.$t('common.loading'),
 				mask: true
 			});
 			axios.get( this.$baseUrl + '/users/userprofile', {

@@ -1,0 +1,139 @@
+{
+	"zhLines": 4006,
+	"translatedUsages": 907,
+	"files": 194,
+	"byDomain": {
+		"pages/writers": {
+			"lines": 873,
+			"files": 22
+		},
+		"pages/treePlant": {
+			"lines": 123,
+			"files": 2
+		},
+		"components/writer-ai": {
+			"lines": 87,
+			"files": 1
+		},
+		"pages/readers": {
+			"lines": 619,
+			"files": 19
+		},
+		"pages/membership": {
+			"lines": 193,
+			"files": 4
+		},
+		"pages/manage": {
+			"lines": 325,
+			"files": 12
+		},
+		"components": {
+			"lines": 374,
+			"files": 34
+		},
+		"pages/users": {
+			"lines": 164,
+			"files": 18
+		},
+		"pages/static": {
+			"lines": 87,
+			"files": 4
+		},
+		"pages/redstone": {
+			"lines": 53,
+			"files": 1
+		},
+		"pages/store": {
+			"lines": 247,
+			"files": 7
+		},
+		"pages": {
+			"lines": 81,
+			"files": 4
+		},
+		"pages/worlds": {
+			"lines": 51,
+			"files": 2
+		},
+		"components/essay_toolBox": {
+			"lines": 39,
+			"files": 1
+		},
+		"pages/index": {
+			"lines": 37,
+			"files": 1
+		},
+		"components/emoji-picker": {
+			"lines": 34,
+			"files": 1
+		},
+		"components/dl-review": {
+			"lines": 31,
+			"files": 1
+		},
+		"components/custom-list": {
+			"lines": 33,
+			"files": 2
+		},
+		"pages/apps": {
+			"lines": 96,
+			"files": 9
+		},
+		"pages/community": {
+			"lines": 203,
+			"files": 16
+		},
+		"pages/payments": {
+			"lines": 133,
+			"files": 7
+		},
+		"components/jin-edit": {
+			"lines": 19,
+			"files": 1
+		},
+		"common": {
+			"lines": 46,
+			"files": 13
+		},
+		"components/tipping": {
+			"lines": 17,
+			"files": 1
+		},
+		"pages/bookcase": {
+			"lines": 10,
+			"files": 2
+		},
+		"components/redstone-cost": {
+			"lines": 8,
+			"files": 1
+		},
+		"components/plantTrees": {
+			"lines": 12,
+			"files": 2
+		},
+		"components/t-color-picker": {
+			"lines": 4,
+			"files": 1
+		},
+		"components/FatFatMeng-Swiper": {
+			"lines": 3,
+			"files": 1
+		},
+		"pages/settings": {
+			"lines": 1,
+			"files": 1
+		},
+		"components/Xss-swiper": {
+			"lines": 1,
+			"files": 1
+		},
+		"components/c-ui": {
+			"lines": 1,
+			"files": 1
+		},
+		"components/refresh": {
+			"lines": 1,
+			"files": 1
+		}
+	}
+}

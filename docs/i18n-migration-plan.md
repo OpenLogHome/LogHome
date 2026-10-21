@@ -223,3 +223,227 @@ P0 目标：三端语言协议接通，UI 全部保持中文（en 目录稀疏�
 ### 生产库迁移记录
 - ✅ 已执行 `npm run migrate:users-language`（`sql.ricepastem.cafe:20345/loghome`）：`users.language VARCHAR(10) NULL` 已添加，216 名存量用户全部 NULL（= 跟随设备，零影响）；脚本幂等复跑验证通过。
 - 首跑遇生产库遗留列 `online_time TIMESTAMP DEFAULT '0000-00-00'` 触发严格模式整表校验失败；迁移脚本已加固为**会话级**摘除 `NO_ZERO_IN_DATE/NO_ZERO_DATE`（其余 sql_mode 保留、不改全局、不动任何既有列），后续环境可复用。
+
+## 附录 D：P1 二批规划（移动端用户界面全量）
+
+> 制定日期：2026-10-21。基线为 P0 + P1 一批已合入。本附录只规划 `loghome-app-frontend` 的剩余用户界面文案，不改变既有语言协议；后端/原生壳的配套仍在 P2。
+
+### D.1 实测基线
+
+| 指标 | 数值 | 说明 |
+|---|---|---|
+| 未迁移中文字面量 | 4,522 行 / 201 文件 | `npm run i18n:extract`，含注释外的数据/逻辑文案，属近似上界 |
+| `$t()` 使用 | 392 处 / 29 文件 | P1 一批结束后 |
+| 词条规模 | zh-CN 799 条 / en 792 条 | 6 个域文件：core、auth、settings、redstone、me、titles |
+| 页面标题 | 125 路由，9 条 en 缺失 | `npm run i18n:titles` 实测 |
+| 已覆盖域 | auth、settings、me 首批、users 大部分、redstone 部分 | 页面正文仍有零散残留 |
+| 完全空白域 | writers、community、readers、store、membership、payments、treePlant、worlds、apps、static、manage | 以及大部分共享组件 |
+
+按“剔除注释/style、剔除法律文本/管理页/AI 提示词后的唯一中文字符串”粗估，剩余可视 UI 文案约 **2,900 条唯一串**，去重并复用 `common` 后预计新增 **2,000 条左右 key**。其中 writers 约 790、readers 约 510、community 约 365、共享组件约 368、store/membership/payments 合计约 560、users 二批约 133。
+
+### D.2 范围边界
+
+**纳入**
+- 普通用户可见的全部界面文案：按钮、标签、占位符、空态、表单校验、toast/modal、分享文案、权限提示、系统菜单、`aria-label`/`alt`/`title`。
+- 相对时间、日期、数字/货币展示格式。
+- 导航标题、tabBar、H5 `document.title`。
+- 页面内由前端维护的枚举展示名（作品状态、圈子角色、订单状态等）；后端下发的状态码由前端映射。
+
+**不纳入**
+- UGC 内容：小说/章节正文、帖子/评论/私信、书名/章节名、用户名、圈子名、封面文字；内容语言不随 UI 语言变化。
+- 法律文本：`pages/static/privacyAgreement.vue`、`contentAgreement.vue`；需法务确认，二批不机翻。
+- 管理端：`pages/manage/*` 共 11 个路由，仅 `is_admin == 1` 可见；中文可接受，暂缓。
+- AI 提示词/模型指令：`components/writer-ai/WriterAiAssistant.vue`、`pages/readers/askLogGirl.vue` 等脚本内的 prompt 常量；只迁移可见 UI，提示词英化需单独评测。
+- 运营内容：FAQ、banner、公告、成就名/描述、历史站内信等 DB 内容（Phase 3）。
+- 第三方/内置组件：`uni_modules/*`、quill、echarts、mescroll、z-paging、`pca-code` 地址数据。
+- 未被路由引用的演示页：`pages/index/index.vue`。
+- 原生 Android 字符串、后端邮件/短信模板（P2 另做）。
+
+### D.3 批次拆分
+
+| 批次 | 范围 | 新增词条（估） | 净工期 |
+|---|---|---|---|
+| 2A | 共享地基：common 收敛、共享原语、相对时间、标题补齐、审计工具 | 120–180 | 3–4 天 |
+| 2B | 社区域 | 300–380 | 4–6 天 |
+| 2C | 阅读 + 漫画（含书评、目录、排行、评论区） | 500–650 | 6–8 天 |
+| 2D | 创作域（作品管理 + 编辑器，分两个 PR） | 600–750 | 8–10 天 |
+| 2E | 商业化（通行证/红石 + 商城/支付，分两个 PR） | 400–500 | 5–7 天 |
+| 2F | 外围与我的二批（创作首页/树场/世界/成就/书城/apps） | 300–400 | 4–6 天 |
+| 2G | 暂缓项（管理端/法律文本/AI 提示词/运营内容） | — | 另立项 |
+
+> 2B 与 2C 可按人力互换顺序；2D/2E 也可互换。建议先完成 2A + 2B 做一次端到端英文切片，校准术语和翻译质量后再放大。
+
+#### 2A — 共享地基与共享原语
+
+- `core`（`zh-CN.json`/`en.json`）扩充跨域通用词条，优先收敛现有重复串：
+  - 动作：取消、删除、全部、结果、知道了、重新加载、返回、上一页、下一页、复制、分享、收藏、回复、发送、收起、展开、编辑、更多、查看全部、搜索。
+  - 状态：没有更多、暂无内容、已删除、未知、公开、私密、已完结、审核中。
+  - 错误：操作失败、加载失败、请先登录、参数错误、保存失败、上传失败、删除失败、网络错误。
+  - 单位：部、章、字、人、天、小时、分钟；英文用 `$tc` 的 `|` 复数形式。
+- 迁移共享原语：`emoji-picker`、`ge-popup`、`conflictDialog`、`xzj-readMore`、`uni-load-more`、`chunLei-modal`、`refresh`、`helang-moveVerify`、`c-ui`、`Xss-swiper`。
+- 相对时间收敛：删除 `community/index`、`postDetail`、`circle`、`circleMembers`、`search`、`activityMessages`、`bookExcerpts`、`chapterEditorNew` 等页面内重复的 `formatTime`，统一走 `common/datetime.js` 的 `postTimeText`/`relativeTime`；zh 输出保持逐字一致，并补边界单测（<1 分钟、59 分钟、23 小时、29 天、30 天）。
+- 标题补齐：为 `mangaInfo`、`mangaReader`、`mangaEditor`、`mangaSettings`、`rankBoard`、`miniapp`、`payments.get_logs`、`manage.community.index`、`manage.community.reports` 补 en；`i18n:titles` 必须报 0 缺失。
+- H5 浏览器标题：在 `common/lang.js` 应用语言时同步 `document.title`（品牌 + 当前页标题）；`manifest.json` 的 `name`/`h5.title` 仍为品牌名，构建期不随语言变。
+- 工具链：
+  - 新增 `scripts/i18n-audit.js` + `npm run i18n:audit`：zh/en key 双向差集、en 中文残留（allowlist 例外）、插值变量一致性、裸花括号、同域重复、标题缺口、未引用 key（仅告警）。
+  - 扩展 `i18n-extract.js`：支持按域汇总与 `--diff` 模式，用于 PR 增量门禁（新增行禁止裸中文，允许注释/白名单）。
+  - 新增 `scripts/i18n-allowlist.json`：品牌/专名/QQ 昵称/法规编号等。
+- 协议化前置（与后端协同）：
+  - 4 处 `res.data.msg == "登录成功"` 改为 token/HTTP 状态判定。
+  - 3 处 `indexOf('超级')` 判会员等级改为 `membership.type`/等级码。
+  - `tree_status == '未种植'` 改为状态码（随 2F 落地）。
+  - `App.vue` 分享口令正则 `/【原木社区】([A-Z0-9]{8})，/` 改为语言无关的匹配（随 2B 落地）。
+
+**验收**：`i18n:audit` 全绿；125 路由标题 0 缺失；相对时间单测通过；zh 视觉零回归；en 下共享组件与设置/我的页可正常切换。
+
+#### 2B — 社区域
+
+- 文件：`pages/community/` 下 index、postDetail、postEdit、postView、chat、circle、circleMembers、circles、createCircle、editCircle、search、friends、notifications、message、privateMessages、send_mail、read_mail、activityMessages、frame/*。
+- 新词条文件：`zh-CN.community.json` / `en.community.json`，顶层 `community`。
+- key 分组：`community.post.*`、`community.comment.*`、`community.circle.*`、`community.chat.*`、`community.message.*`、`community.search.*`、`community.activity.*`。
+- 重点：帖子操作菜单、举报/拉黑、分享文案与口令解析、圈子角色（圈主/管理员/成员）、入圈/退圈确认、消息类型标签、空态与加载态。
+- 时间线一律走 `postTimeText`；UGC 正文、评论、昵称、圈子名不翻译。
+- 后端下发的系统消息/通知正文暂保持原样（P2 模板化后再按接收者语言渲染）。
+
+**验收**：en 下走通“发帖 → 评论 → 回复 → 分享 → 入圈/退圈”主链路；分享口令在 zh/en 下都能复制和识别；布局无截断。
+
+#### 2C — 阅读 + 漫画
+
+- 文件：`pages/readers/` 下 bookInfo、bookComment、bookEnd、bookExcerpts、collections、tags、tagCollections、article、article_rich、newReader/article、askLogGirl、rankBoard、logPower、logPowerRank、novel_fans、mangaInfo、mangaReader、allArticles；组件 `bookMenu`、`mangaPage`、`manga-comment-item`、`manga-comment-composer`、`dl-review/item`、`ReaderBackgroundPicker`、`ReaderTypeSwitch`、`article_tools`、`audiobook-player`、`FansContributionBoard`。
+- 新词条文件：`zh-CN.reader.json` / `en.reader.json`，以及 `zh-CN.manga.json` / `en.manga.json`。
+- key 分组：`reader.book.*`、`reader.chapter.*`、`reader.comment.*`、`reader.rank.*`、`manga.info.*`、`manga.reader.*`、`manga.comment.*`。
+- 重点：目录/上一章/下一章、字号/背景/夜间模式/翻页设置、书评与段评、排行榜、粉丝榜、空章/下架提示、漫画阅读器手势提示与无障碍标签。
+- `askLogGirl` 只迁移聊天 UI；prompt 与模型指令不动。
+- 内容边界：章节正文、书名、评论、粉丝昵称不翻译；匿名作者等前端默认展示文案要翻译。
+- TTS 音色名由原生壳回传 `nameKey` 后再本地化（P2 原生依赖）。
+
+**验收**：en 下打开一本真实书/一部漫画，完成阅读、评论、点赞、目录跳转；UGC 保持原文；阅读器工具栏与弹层不溢出。
+
+#### 2D — 创作域（两个 PR）
+
+**2D-1 作品管理**：`allArticles`、`workPublish`、`novelCollaborators`、`essaySet`、`changeEssayInfo`、`changeNovelTags`、`cover_upload`、`editNovelPics`、`essayCollaborationSettings`、`essayIndexing`、`articlesDustbin`、`sortArticles`、`scheduledTasks`、`localBackup`、`chapterTimeMachine`、`novel_statistics`、`articleFeedbacks`。
+
+**2D-2 编辑器**：`chapterEditorNew`、`chapterEditor`、`chapterToolbarSettings`、`worldVocabularyEditor`、`mangaEditor`、`mangaSettings`；组件 `editor.vue`、`essay_toolBox`、`jin-edit`、`custom-list`、`writer_helper`、`writing-activity-calendar`、`book-detail-view`（创作首页复用）。
+
+- 新词条文件：`zh-CN.writer.json` / `en.writer.json`；漫画部分复用 `manga` 域。
+- key 分组：`writer.work.*`、`writer.chapter.*`、`writer.editor.*`、`writer.collab.*`、`writer.essay.*`、`writer.ai.*`（仅 UI）。
+- 重点：编辑器工具栏/字号/弹层、保存/发布校验、分卷与排序、协作者邀请、草稿与回收站、定时任务、世界词汇表、漫画话数管理与作品设置。
+- `popupMenu` 等 data 内菜单文案改为 key 数组或 computed，避免切换语言后残留旧文案。
+- `WriterAiAssistant.vue` 只迁移可见 UI（会话菜单、思考过程、应用/复制/插入、空态等）；脚本内 prompt 常量加入 allowlist，不在本批翻译。
+- 漫画编辑器若存在画在 canvas/图片里的中文，登记为美术资源待办，不用文本 key 硬解。
+
+**验收**：en 下完成“新建作品 → 编辑章节 → 保存草稿 → 发布 → 协作者设置”主链路；编辑器中途切换语言不丢稿；工具栏、弹窗、校验提示无截断。
+
+#### 2E — 商业化（两个 PR）
+
+**2E-1 通行证/红石**：`membership/index`、`gift`、`redeem`、`rules`；`redstone/index` 残留；`membership-badge`。
+**2E-2 商城/支付**：`store/index`、`detail`、`checkout`、`orders`、`logistics`、`address_list`、`address_form`；`payments/recharge`、`exchange`、`earnings`、`get_logs`、`gift_code`、`order_history`、`jump_to_pay`；`StoreVariantSheet`、`StoreVariantPicker`、`TaskRewardModal`。
+
+- 新词条文件：`membership.json`、`store.json`、`payments.json`。
+- 重点：套餐名/权益、连续包月/自动续费、赠送与兑换、商品规格、库存/售罄、地址表单、订单状态、物流、充值/提现/收益记录。
+- 货币格式：符号恒为 `¥`，数字千分位跟随 locale，不做汇率换算；金额计算逻辑不动。
+- `membership/rules` 属产品规则文案，可翻译，但需产品确认；法律协议仍不在此批。
+- 订单/支付错误文案依赖后端 `X-Lang` + `code`，前端只做状态码到展示名的映射。
+
+**验收**：en 下走通商品浏览 → 选规格 → 下单/结算 → 订单列表 → 物流/地址；金额与 zh 完全一致；通行证/红石页无溢出。
+
+#### 2F — 外围与我的二批
+
+- 创作首页与书架：`pages/essays.vue`、`pages/library.vue`、`bookcase/*`、`bookshelf-horizontal`、`book_in_case`、`home-rank-board`。
+- 我的二批：`achievements`、`badgeDetail`、`me.vue` 残留；成就名/描述等后端内容仍走 P3，前端只迁移进度、获取状态、按钮、空态。
+- 树场/世界：`pages/treePlant/*`、`components/plantTrees`、`pages/worlds/*`、`components/worldsPage`；`tree_status` 改状态码。
+- apps/静态：`pages/apps/*`（FAQ 标题/正文为运营内容，不翻译）、`pages/static/grandUsers.vue`、`updateIntro.vue`（说明文案可译，更新日志内容可暂缓）。
+- 其他小组件：`honor-badge`、`horizontal-tags`、`nothing` 等。
+- 新词条文件：`tree.json`、`world.json`、`apps.json`；`me` 域扩展。
+
+**验收**：en 下写作首页、树场、世界页、个人成就页可正常浏览；后端未翻译的成就名/活动名按 zh 回退显示，不出现裸 key。
+
+#### 2G — 暂缓项
+
+- `pages/manage/*`：管理员专属，等用户侧全量完成后再评估。
+- 隐私政策/内容协议：建议“英文摘要 + 中文全文链接”或法务认证翻译，不做机翻。
+- AI 提示词：与模型评测绑定，单独立项。
+- DB 运营内容：FAQ、banner、公告、成就名/描述、历史通知。
+- 原生 Android 字符串、后端邮件/短信模板：P2 另做。
+- 图片内嵌中文（漫画编辑器、活动图等）：美术资源待办。
+
+### D.4 跨批技术约定
+
+1. **词条文件按域拆分**：每语言每域一个文件，顶层 key = 域名，互不重叠；`i18n/index.js` 的 `mergeMessages()` 负责合并。新增域文件时同步更新 import 列表。
+2. **key 命名**：`域.页面.含义`，共享词条进 `common.action.*`/`common.state.*`/`common.error.*`/`common.unit.*`；禁止运行时拼接 key，动态菜单用显式映射表。
+3. **插值**：词条统一写 `{{var}}`，由 `normalizeInterpolation()` 转 vue-i18n v8 的单括号；禁止裸花括号。
+4. **复数**：英文用 `$tc(key, n, { n })` + `|` 形式；中文单形式。仅用于作品数、章节数、人数、天数等真实可数场景。
+5. **响应式**：禁止 `data() { return { label: this.$t('...') } }`；改为 key 数组或 computed。tab 页常驻内存，切换语言后必须即时更新。
+6. **共享词条优先**：同一条文案跨 3 个以上域出现才进 `common`；单域文案留在域文件，避免 `common` 膨胀。
+7. **品牌与专名**：LogHome、Redstone、LogHome Pass、LogGirl、LogHome Power 等按既有术语表；不翻译用户名、法规编号、QQ 昵称、UGC 标题。
+8. **时间/数字/货币**：统一走 `common/datetime.js` 和 `Intl.NumberFormat`；不引入新依赖。
+9. **无障碍**：`aria-label`、`alt`、`title` 与可见文案同等对待；图像 alt 使用可翻译 key。
+10. **中文逻辑判定**：新增代码禁止用中文文案做分支；既有 4 处登录判断、3 处会员等级、1 处树状态在对应批次改为协议/状态码。
+11. **后端依赖**：前端英文 UI 完成后，toast/通知/订单等后端 msg 仍是中文，直到后端 P2 覆盖该域。en 公测门禁按域与后端对齐。
+12. **新增页面**：任何新增 `pages.json` 中文标题必须同时跑 `i18n:titles` 并补 en，否则审计失败。
+
+### D.5 质量门禁
+
+每个批次合入前执行：
+
+```bash
+npm run i18n:audit            # key 差集/en 中文/插值/标题缺口
+npm run i18n:extract          # 覆盖率前后对比
+npm run i18n:check-sfc -- <本批 .vue 文件>
+node --test test/i18n_*.cjs   # 词条结构与相对时间单测
+```
+
+- **zh 零回归**：zh 词条值必须与原文逐字节一致；改动前后截图对比。
+- **en 无中文**：allowlist 之外的 en 值不得含中文；品牌/专名例外集中维护。
+- **运行时**：设置页切换 zh/en/跟随系统，返回 tab 页检查标题、tabBar、动态标签、相对时间、空态；冷启动跟随系统；删除 en 某 key 验证回退 zh 不露 key。
+- **布局**：375×812 与 414×896 截图；重点检查按钮、导航、底部操作栏、编辑器工具栏、商品规格弹层。
+- **伪本地化**：每批至少对 3 个关键页做加长/变音巡检，抓硬编码与截断。
+- **后端联调**：`curl -H 'X-Lang: en'` 验证该域接口 msg；未覆盖的接口记录为已知限制，不阻塞 UI 批次但阻塞 en 公测。
+- **增量门禁**：`i18n-extract --diff` 对新增行中的裸中文报错（注释/白名单除外）；当前无 CI，先作为提交前手动检查。
+
+### D.6 依赖与发布节奏
+
+- **后端 P2 是 en 体验的硬依赖**：目前 `bin/locales` 仅 10 条骨架，`res.json` 中文 msg 约 364 行、站内通知 74 处 `sendMsg`、邮件/短信模板未英化。建议按前端批次同步推进：auth/common + community → reader → writer → store/payments → 通知/成就。
+- **Android P2**：原生听书播放器、上传/裁剪、热更新弹窗、物流输出等约 130 条；H5 文案走热更可先发，原生壳文案随 APK。en 发布说明中注明差异。
+- **en 发布策略**：先内部/管理员 → 小流量 beta → 公开；zh 保持默认。每个域在后端覆盖完成前不对外承诺“完整英文”。
+- **监控**：开发环境打开 vue-i18n missing 告警；生产保持回退 zh，不白屏。发布清单加入 `i18n:audit`。
+
+### D.7 2A/2B 实施记录（2026-10-21）
+
+| 批次 | 状态 | 说明 |
+|---|---|---|
+| 2A | 完成（静态 + 单元） | 共享词条/原语、标题、H5 title、相对时间、协议化、审计工具 |
+| 2B | 完成（词条 + 页面）；登录态 E2E 待测 | 19 个社区 SFC 已迁移，静态检查全绿；无可用测试账号，未走通登录后主链路 |
+
+**2A 落地**
+- `common` 域新增共享原语词条：`ge-popup` 的绑定微信/红包/版本更新弹窗、`Xss-swiper` 的“查看详情”；此前 `emoji-picker`、`conflictDialog`、`xzj-readMore`、`chunLei-modal`、`uni-load-more`、`helang-moveVerify` 已完成。
+- `common/datetime.js` 统一 `relativeTime` / `recentTimeText` / `postTimeText`；新增 `test/datetime_test.mjs` 覆盖 `<1 分钟、59 分钟、23 小时、29 天、30 天`、周档开关及 en 输出。
+- `common/nav-title.js` 同步 H5 `document.title`；`i18n:audit` 标题缺口为 0。
+- 协议化：登录注册使用 `register_code`，邮箱绑定使用 `BIND_SUCCESS`/`EMAIL_TAKEN`/`CODE_INVALID`，会员展示按 `membership.type`/等级码，分享口令正则改为语言无关的 `/【[^】]+】([A-Z0-9]{8})[，,]/`。
+- 后端配套：`loghome-backend/routes/users.js` 的注册/换绑响应新增 `code` 字段；**需与前端同批发布**，旧后端不会返回 `BIND_SUCCESS`。
+
+**2B 落地**
+- 新增 `i18n/messages/{zh-CN,en}.community.json`，顶层 `community`，329 条/语言；实际分组按页面命名（`postDetail`、`postEdit`、`index`、`circle`、`circleMembers`、`search`、`chat` 等），与 D.3 的 `post.*`/`comment.*` 草案不同，以落地文件为准。
+- 覆盖 `pages/community/` 下 19 个 SFC；帖子操作、圈子角色/入圈退圈、消息中心、私信/站内信、搜索、好友、分享文案与分享口令全部走 key。
+- 时间线统一走 `postTimeText`；`postDetail` 保留原“月/年”长区间行为（`{ long: true }`），zh 输出不变。
+- UGC（帖子/评论/昵称/圈子名/章节正文）与后端下发的系统消息正文不翻译，en 下按 zh 原样展示。
+
+**验证**
+- `npm run i18n:audit`：PASS，zh/en 各 1227 条；仅 334 条未引用告警（历史/动态拼接）。
+- `npm run test:i18n`：9/9 PASS（词典一致性、插值、en 中文残留、标题、相对时间边界）。
+- `npm run i18n:check-sfc -- pages/community/**/*.vue components/ge-popup.vue components/Xss-swiper/Xsuu-swiper.vue common/datetime.js`：全部通过。
+- `npm run i18n:extract`：未迁移中文行 3986（2A/2B 前 4522），`$t()` 923（前 392）。
+- H5 冒烟：`loghome_language=en` 下 tabBar 为 Reading/Community/Create/Me，登录页与浏览器标题为英文；社区页未登录时跳转登录页，登录后的发帖/评论/入圈链路尚未执行。
+
+**遗留**
+- 需要隔离测试账号完成 2B 端到端验收（发帖 → 评论 → 回复 → 分享 → 入圈/退圈、zh/en 口令互认、375/414 宽度无截断）。
+- 社区接口 toast/系统消息仍为后端中文，待 P2。
+- 当前改动未提交，与用户既有的 `postDetail`/`me`/`essays` 等 UI 改动同工作区，提交时需按文件核对。
+
+### D.8 工期与下一步
+
+- 净开发约 **7–9 周**（含每批截图回归）；AI 辅助充分、共享词条复用顺利时可压到 6 周。后端 P2 建议并行 2–3 周，en 公测以两边会合为准。
+- 建议先做 **2A + 2B 垂直切片**：完成共享地基与社区域，联动后端 community msg 英化，跑一轮真实英文用户走查，再决定 2C/2D 的具体节奏。
+- 提交状态：2A/2B 与既有未提交 UI 改动位于同一工作区（`bookshelf-horizontal`、`dl-review/item`、`postDetail`、`essays`、`me`、`manifest` 等），尚未提交；提交时按文件核对，避免把用户改动混入批次提交。
+- 下一步：先用隔离测试账号完成 2B 登录态走查与中英文截图回归，再启动 2C；若要先扩面，可并行准备 2C 的阅读域词条骨架。
+- 待拍板：法律文本处理方式、管理端是否纳入、AI 提示词是否立项、翻译由谁终审、后端 P2 的排期优先级。

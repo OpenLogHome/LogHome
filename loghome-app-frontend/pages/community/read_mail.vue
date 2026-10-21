@@ -19,13 +19,13 @@
 			return {
 				mail: {
 					id: 0,
-					title: "努力加载中",
+					title: this.$t('common.loading'),
 					from: {
 						user_id: -1,
-						user_name: "努力加载中",
+						user_name: this.$t('common.loading'),
 						avatar_url: ""
 					},
-					content: "努力加载中"
+					content: this.$t('common.loading')
 				}
 			}
 		},
@@ -56,7 +56,7 @@
 						_this.mail.from = res.data[0];
 					} else {
 						uni.showToast({
-							title: "消息获取失败",
+							title: _this.$t('community.readMail.loadFailed'),
 							icon: 'none',
 							duration: 2000
 						})
@@ -70,7 +70,7 @@
 						});
 					} else {
 						uni.showToast({
-							title: "消息获取失败",
+							title: _this.$t('community.readMail.loadFailed'),
 							icon: 'none',
 							duration: 2000
 						})

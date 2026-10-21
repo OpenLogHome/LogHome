@@ -25,7 +25,112 @@
 		"verifying": "Verifying",
 		"copied": "Copied",
 		"inputTitle": "Please enter a title",
-		"inputContent": "Please enter content"
+		"inputContent": "Please enter content",
+		"all": "All",
+		"back": "Back",
+		"prev": "Previous",
+		"next": "Next",
+		"more": "More",
+		"expand": "Expand",
+		"collapse": "Collapse",
+		"viewAll": "View all",
+		"search": "Search",
+		"share": "Share",
+		"favorite": "Favorite",
+		"reply": "Reply",
+		"send": "Send",
+		"edit": "Edit",
+		"result": "Results",
+		"unknown": "Unknown",
+		"reload": "Reload",
+		"gotIt": "Got it",
+		"noMore": "No more data",
+		"empty": "Nothing here yet",
+		"deleted": "Deleted",
+		"public": "Public",
+		"private": "Private",
+		"completed": "Completed",
+		"reviewing": "Under review",
+		"uploadFailed": "Upload failed",
+		"emoji": {
+			"sticker": "Stickers",
+			"favorite": "Favorites",
+			"loading": "Loading...",
+			"loadMore": "Load more",
+			"noMore": "No more stickers",
+			"empty": "No stickers yet",
+			"all": "All",
+			"myUploads": "My uploads",
+			"public": "Public",
+			"logwood": "Log Maiden Exclusive",
+			"emptyFavorites": "No favorite stickers yet. Long-press a sticker to favorite it.",
+			"unfavorite": "Remove favorite",
+			"setPublic": "Make public",
+			"setPrivate": "Make private",
+			"delete": "Delete",
+			"cancel": "Cancel",
+			"uploadTitle": "Upload sticker",
+			"selectImage": "Choose image",
+			"upload": "Upload",
+			"uploading": "Uploading...",
+			"uploadSuccess": "Uploaded",
+			"uploadFailed": "Upload failed, please try again",
+			"loadFailed": "Failed to load stickers",
+			"loadFavoritesFailed": "Failed to load favorite stickers",
+			"unfavorited": "Removed from favorites",
+			"favorited": "Added to favorites",
+			"operationFailed": "Operation failed, please try again",
+			"setPublicDone": "Now public",
+			"setPrivateDone": "Now private",
+			"setPrivateNotice": "This sticker is now private and only visible to you",
+			"setPublicNotice": "This sticker is now public and visible to everyone",
+			"setFailed": "Failed to update, please try again",
+			"deleteSuccess": "Deleted",
+			"deleteFailed": "Delete failed, please try again"
+		},
+		"loadMore": {
+			"more": "Pull up to load more",
+			"loading": "Loading...",
+			"noMore": "No more data"
+		},
+		"modal": {
+			"confirm": "Confirm",
+			"gotIt": "Got it"
+		},
+		"verify": {
+			"success": "Verified",
+			"drag": "Drag the slider to verify"
+		},
+		"readMore": {
+			"more": "View more",
+			"less": "Collapse"
+		},
+		"conflict": {
+			"title": "Version conflict",
+			"subtitle": "Choose which version to keep",
+			"localVersion": "Local version",
+			"cloudVersion": "Cloud version",
+			"newer": "Newer",
+			"wordCount": "{{count}} words",
+			"imageCount": "{{count}} images",
+			"selectLocal": "Keep local version",
+			"selectCloud": "Keep cloud version",
+			"cancel": "Cancel"
+		},
+		"viewDetails": "View details ➜",
+		"gePopup": {
+			"bindWechatTip": "For your account security, link WeChat for quick sign-in",
+			"bindNow": "Link now",
+			"creatorCongrats": "Congratulations, you've become a Creator!",
+			"redPacketReward": "You've received a reward red packet",
+			"claimRedPacket": "Claim red packet",
+			"updateFound": "New version {{version}}",
+			"updateFoundPrefix": "New version",
+			"updateContent": "What's new in this update:",
+			"updateContentShort": "What's new:",
+			"notNow": "Not now",
+			"updateNow": "Update now"
+		}
 	},
 	"nav": {
 		"tab": {
@@ -33,6 +138,7 @@
 			"community": "Community",
 			"writer": "Create",
 			"me": "Me"
-		}
+		},
+		"brand": "LogHome"
 	}
 }

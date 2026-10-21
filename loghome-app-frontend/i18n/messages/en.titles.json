@@ -55,13 +55,15 @@
 				"newReader": {
 					"article": "New Reader"
 				},
-				"bookEnd": "End of Book"
+				"bookEnd": "End of Book",
+				"mangaInfo": "Manga Details",
+				"mangaReader": "Manga Reader",
+				"rankBoard": "Rankings"
 			},
 			"apps": {
 				"about": "About Us",
 				"lab": "LogHome Lab",
-				"logDefense": "Log Defense",
-				"audio_test": "Audiobook Test",
+				"miniapp": "Mini App",
 				"faqs": {
 					"faq": "Help Center",
 					"feedback": "Feedback Details",
@@ -87,7 +89,9 @@
 				"novel_statistics": "Analytics",
 				"articleFeedbacks": "Report Issue",
 				"scheduledTasks": "Scheduled Posts",
-				"workPublish": "Publish"
+				"workPublish": "Publish",
+				"mangaEditor": "Manga Episodes",
+				"mangaSettings": "Manga Settings"
 			},
 			"static": {
 				"contentAgreement": "Content Upload Terms",
@@ -130,7 +134,8 @@
 				"jump_to_pay": "Payment",
 				"order_history": "Order History",
 				"gift_code": "Redeem Gift Card",
-				"exchange": "Redeem Logs"
+				"exchange": "Redeem Logs",
+				"get_logs": "How to Earn Logs"
 			},
 			"worlds": {
 				"worldPage": "Worldbuilding",
@@ -149,6 +154,10 @@
 				},
 				"users": {
 					"index": "Manage Users"
+				},
+				"community": {
+					"index": "Community Management",
+					"reports": "Report Handling"
 				}
 			},
 			"store": {

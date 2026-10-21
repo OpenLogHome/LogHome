@@ -1,0 +1,9 @@
+Built-in image_gen edit, 2026-10-21
+Reference: /Users/ricepastem/.codex/generated_images/01a15965-d847-7e32-9dce-87ace7262d7c/exec-412ebc66-1313-4cff-93b3-714f6925fe08.png
+Output: loghome-app-frontend/static/login/forest-bookshop.png
+
+Use case: precise-object-edit.
+Asset type: production mobile login background illustration only.
+Edit target: the attached portrait login mockup. Remove ONLY all interface overlays and inpaint their footprints with the uninterrupted scene: remove upper-left back arrow, top orange app logo and white wordmark, the large two-line white/green Chinese headline, the pale-green subtitle, the entire bottom green login button including its frame, shadow, envelope, text and arrow, and the bottom checkbox/privacy text.
+Keep the original illustration composition and character EXACTLY in place and at the same scale: cute brown-bob girl with green eyes and green creeper-style hair clip, pale green blazer and green necktie, dark pleated skirt, white socks, brown shoes, holding the brown sprout book and waving; warm timber forest bookshop on the right with its wooden carved 原木社区 sign and carved logo intact; steps, books, lanterns, block leaves, square floating lights, floating book pages, foreground foliage, flowers and mist. Do not redraw or change the mascot, pose, shop, perspective or framing.
+Restore continuous dark teal leafy forest canopy behind the removed top UI and headline, maintaining generous dark negative space across upper 25% for real HTML text. Restore a smooth pale #F8F8F8 mist gradient across the lower 20% behind the removed login and privacy UI, while retaining edge leaves and blurred foliage. This is illustration artwork, absolutely no interface controls, top logos, overlay text, headlines, subtitles or UI frames. The only allowed text is the existing carved wooden shop sign as part of the scene. Preserve portrait aspect ratio and exact framing. No border, no watermark.

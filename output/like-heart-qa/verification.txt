@@ -1,0 +1,26 @@
+社区点赞爱心特效修复
+
+Modified: loghome-app-frontend/pages/community/postDetail.vue
+Asset: loghome-app-frontend/static/icons/like-heart-pixel.svg
+
+Root causes:
+- 原像素爱心用 4rpx 小容器外溢的 box-shadow 拼接，且被更高层主图标覆盖。
+- 粒子 CSS 自定义属性中的 rpx 未转换；浏览器实际读到 -14rpx / -20rpx，无法正确计算 translate3d，粒子没有正常散开。
+- .action-btn text 把文字间距应用到嵌套字体图标，造成中心偏移。
+
+Fixes:
+- 7 × 6 网格完整 SVG 心形，真实 28rpx × 24rpx 边界。
+- 动画层显示于主图标上方；修正中心和文字选择器。
+- 通过 uni.upx2px 将移动距离转为有效 px。
+- 调整散开轨迹，在清晰显示阶段就离开主图标，避免粒子叠成残缺形状或覆盖计数。
+
+Verification:
+- SFC、Vue 模板、SCSS 编译以及 SVG XML 解析通过，git diff --check 通过。
+- Codex 内置浏览器，本地代理测试数据，未对真实帖子执行点赞。
+- 同一 220ms 动画帧对比 before-220ms.png 与 final-220ms.png。此截图模式只在 QA 注入脚本中暂停动画，不影响生产代码。
+- 浏览器读取确认像素素材加载成功，具有完整的宽高；自定义距离变为 px，并产生非零水平和向上位移。
+- 正常播放模式实测点赞、取消、重复点赞：计数 3 → 4 → 3 → 4。
+- 动画结束后 .pixel-heart 数量为 0，is-bursting 为 false，计数保持 4。
+- 最终正常播放预览 http://127.0.0.1:8918/preview
+
+Result: passed

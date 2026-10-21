@@ -22,14 +22,14 @@
 					:class="{active: activeTab === 'sticker'}"
 					@tap="activeTab = 'sticker'"
 				>
-					<text>表情包</text>
+					<text>{{ $t('common.emoji.sticker') }}</text>
 				</view>
 				<view 
 					class="emoji-tab" 
 					:class="{active: activeTab === 'favorite'}"
 					@tap="activeTab = 'favorite'"
 				>
-					<text>收藏</text>
+					<text>{{ $t('common.emoji.favorite') }}</text>
 				</view>
 			</view>
 			
@@ -80,19 +80,19 @@
 					</view>
 					<!-- 加载状态 -->
 					<view class="loading-more" v-if="isLoading">
-						<text>加载中...</text>
+						<text>{{ $t('common.emoji.loading') }}</text>
 					</view>
 					<!-- 加载更多按钮 -->
 					<view class="load-more" v-if="currentPage < totalPages && !isLoading">
-						<text @tap="loadMoreStickers">加载更多</text>
+						<text @tap="loadMoreStickers">{{ $t('common.emoji.loadMore') }}</text>
 					</view>
 					<!-- 无更多数据提示 -->
 					<view class="no-more" v-if="currentPage >= totalPages && stickerList.length > 0">
-						<text>没有更多了</text>
+						<text>{{ $t('common.emoji.noMore') }}</text>
 					</view>
 					<!-- 空数据提示 -->
 					<view class="empty-tip" v-if="stickerList.length === 0 && !isLoading">
-						<text>暂无表情包</text>
+						<text>{{ $t('common.emoji.empty') }}</text>
 					</view>
 				</scroll-view>
 				
@@ -105,28 +105,28 @@
 								:class="{active: activeCategory === 'all'}"
 								@tap="selectCategory('all')"
 							>
-								<text>全部</text>
+								<text>{{ $t('common.emoji.all') }}</text>
 							</view>
 							<view 
 								class="category-item" 
 								:class="{active: activeCategory === 'my'}"
 								@tap="selectCategory('my')"
 							>
-								<text>我上传的</text>
+								<text>{{ $t('common.emoji.myUploads') }}</text>
 							</view>
 							<view 
 								class="category-item" 
 								:class="{active: activeCategory === 'public'}"
 								@tap="selectCategory('public')"
 							>
-								<text>公开</text>
+								<text>{{ $t('common.emoji.public') }}</text>
 							</view>
 							<view 
 								class="category-item" 
 								:class="{active: activeCategory === 'logwood'}"
 								@tap="selectCategory('logwood')"
 							>
-								<text>原木娘专属</text>
+								<text>{{ $t('common.emoji.logwood') }}</text>
 							</view>
 						</view>
 					</scroll-view>
@@ -156,19 +156,19 @@
 					</view>
 					<!-- 加载状态 -->
 					<view class="loading-more" v-if="isLoading">
-						<text>加载中...</text>
+						<text>{{ $t('common.emoji.loading') }}</text>
 					</view>
 					<!-- 加载更多按钮 -->
 					<view class="load-more" v-if="favoriteCurrentPage < favoriteTotalPages && !isLoading">
-						<text @tap="loadMoreFavorites">加载更多</text>
+						<text @tap="loadMoreFavorites">{{ $t('common.emoji.loadMore') }}</text>
 					</view>
 					<!-- 无更多数据提示 -->
 					<view class="no-more" v-if="favoriteCurrentPage >= favoriteTotalPages && favoriteList.length > 0">
-						<text>没有更多了</text>
+						<text>{{ $t('common.emoji.noMore') }}</text>
 					</view>
 					<!-- 空数据提示 -->
 					<view class="empty-tip" v-if="favoriteList.length === 0 && !isLoading">
-						<text>暂无收藏表情，长按表情包可收藏</text>
+						<text>{{ $t('common.emoji.emptyFavorites') }}</text>
 					</view>
 				</view>
 			</scroll-view>
@@ -178,16 +178,16 @@
 		<uni-popup ref="stickerOptionsPopup" type="bottom" style="z-index: 2000;">
 			<view class="sticker-options">
 				<view class="option-item" @tap="toggleFavorite">
-					<text>{{ currentSticker.is_favorite ? '取消收藏' : '收藏' }}</text>
+					<text>{{ currentSticker.is_favorite ? $t('common.emoji.unfavorite') : $t('common.emoji.favorite') }}</text>
 				</view>
 				<view class="option-item" @tap="togglePrivate" v-if="currentSticker.user_id === userId">
-					<text>{{ currentSticker.is_private ? '设为公开' : '设为私密' }}</text>
+					<text>{{ currentSticker.is_private ? $t('common.emoji.setPublic') : $t('common.emoji.setPrivate') }}</text>
 				</view>
 				<view class="option-item delete" @tap="deleteSticker" v-if="currentSticker.user_id === userId">
-					<text>删除</text>
+					<text>{{ $t('common.emoji.delete') }}</text>
 				</view>
 				<view class="option-item cancel" @tap="hideStickerOptions">
-					<text>取消</text>
+					<text>{{ $t('common.emoji.cancel') }}</text>
 				</view>
 			</view>
 		</uni-popup>
@@ -196,7 +196,7 @@
 		<uni-popup ref="uploadPopup" type="bottom" style="z-index: 2000;">
 			<view class="upload-popup">
 				<view class="popup-header">
-					<text class="popup-title">上传表情包</text>
+					<text class="popup-title">{{ $t('common.emoji.uploadTitle') }}</text>
 					<view class="close-btn" @tap="hideUploadPopup">
 						<uni-icons type="closeempty" size="24" color="#999"></uni-icons>
 					</view>
@@ -210,13 +210,13 @@
 					</view>
 					<view class="upload-btn" @tap="chooseImage" v-else>
 						<uni-icons type="image" size="30" color="#999"></uni-icons>
-						<text>选择图片</text>
+						<text>{{ $t('common.emoji.selectImage') }}</text>
 					</view>
 					<view class="privacy-setting">
-						<text>设为私密</text>
+						<text>{{ $t('common.emoji.setPrivate') }}</text>
 						<switch :checked="isPrivate" @change="toggleUploadPrivacy" color="#EA7034" style="transform:scale(0.8)"/>
 					</view>
-					<button class="submit-btn" @tap="submitUpload" :disabled="!uploadImage">上传</button>
+					<button class="submit-btn" @tap="submitUpload" :disabled="!uploadImage">{{ $t('common.emoji.upload') }}</button>
 				</view>
 			</view>
 		</uni-popup>
@@ -451,7 +451,7 @@
 				} catch (error) {
 					console.error('加载表情包失败', error);
 					uni.showToast({
-						title: '加载表情包失败',
+						title: this.$t('common.emoji.loadFailed'),
 						icon: 'none'
 					});
 				} finally {
@@ -496,7 +496,7 @@
 				} catch (error) {
 					console.error('加载收藏表情包失败', error);
 					uni.showToast({
-						title: '加载收藏表情包失败',
+						title: this.$t('common.emoji.loadFavoritesFailed'),
 						icon: 'none'
 					});
 				} finally {
@@ -582,7 +582,7 @@
 							headers: { 'Authorization': 'Bearer ' + token }
 						});
 						uni.showToast({
-							title: '已取消收藏',
+							title: this.$t('common.emoji.unfavorited'),
 							icon: 'none'
 						});
 					} else {
@@ -593,7 +593,7 @@
 							headers: { 'Authorization': 'Bearer ' + token }
 						});
 						uni.showToast({
-							title: '收藏成功',
+							title: this.$t('common.emoji.favorited'),
 							icon: 'none'
 						});
 					}
@@ -604,7 +604,7 @@
 				} catch (error) {
 					console.error('操作失败', error);
 					uni.showToast({
-						title: '操作失败，请重试',
+						title: this.$t('common.emoji.operationFailed'),
 						icon: 'none'
 					});
 				}
@@ -627,7 +627,7 @@
 					this.currentSticker.is_private = newPrivateStatus;
 					
 					uni.showToast({
-						title: !newPrivateStatus ? '已设为公开' : '已设为私密',
+						title: newPrivateStatus ? this.$t('common.emoji.setPrivateDone') : this.$t('common.emoji.setPublicDone'),
 						icon: 'none'
 					});
 					
@@ -642,7 +642,7 @@
 					// 提示用户表情包的私密状态变更
 					setTimeout(() => {
 						uni.showToast({
-							title: newPrivateStatus ? '表情包已设为私密，仅自己可见' : '表情包已设为公开，所有人可见',
+							title: newPrivateStatus ? this.$t('common.emoji.setPrivateNotice') : this.$t('common.emoji.setPublicNotice'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -650,7 +650,7 @@
 				} catch (error) {
 					console.error('设置失败', error);
 					uni.showToast({
-						title: '设置失败，请重试',
+						title: this.$t('common.emoji.setFailed'),
 						icon: 'none'
 					});
 				}
@@ -664,7 +664,7 @@
 					});
 					
 					uni.showToast({
-						title: '删除成功',
+						title: this.$t('common.emoji.deleteSuccess'),
 						icon: 'none'
 					});
 					
@@ -675,7 +675,7 @@
 				} catch (error) {
 					console.error('删除失败', error);
 					uni.showToast({
-						title: '删除失败，请重试',
+						title: this.$t('common.emoji.deleteFailed'),
 						icon: 'none'
 					});
 				}
@@ -720,7 +720,7 @@
 				if (!this.uploadImage || this.isSubmitting) return;
 				
 				this.isSubmitting = true;
-				uni.showLoading({ title: '正在上传...' });
+				uni.showLoading({ title: this.$t('common.emoji.uploading') });
 				
 				try {
 					// 先上传图片
@@ -739,7 +739,7 @@
 					
 					uni.hideLoading();
 					uni.showToast({
-						title: '上传成功',
+						title: this.$t('common.emoji.uploadSuccess'),
 						icon: 'success'
 					});
 					
@@ -754,7 +754,7 @@
 					// 提示用户表情包的私密状态
 					setTimeout(() => {
 						uni.showToast({
-							title: this.isPrivate ? '表情包已设为私密，仅自己可见' : '表情包已设为公开，所有人可见',
+							title: this.isPrivate ? this.$t('common.emoji.setPrivateNotice') : this.$t('common.emoji.setPublicNotice'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -763,7 +763,7 @@
 					uni.hideLoading();
 					console.error('上传失败', error);
 					uni.showToast({
-						title: '上传失败，请重试',
+						title: this.$t('common.emoji.uploadFailed'),
 						icon: 'none'
 					});
 				} finally {

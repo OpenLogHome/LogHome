@@ -4,6 +4,13 @@
 			"name": "LogHome"
 		},
 		"login": {
+			"headlineTop": "Blocks leap off the page,",
+			"headlinePrefix": "Stories ",
+			"headlineGrowth": "take root",
+			"headlineEnd": ".",
+			"communityDescription": "A community for Minecraft fan creations",
+			"agreeShort": "I have read and agree to",
+			"privacyShort": "the Privacy Policy",
 			"welcomePrefix": "At\u00A0",
 			"welcomeSuffix": ",",
 			"typeCreate": "Create without limits",

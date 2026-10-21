@@ -1,0 +1,7 @@
+Tool: built-in image_gen.imagegen (transparent background, edit mode)
+Edit target: loghome-app-frontend/static/dig.png
+Identity references: static/loggirl-404-empty-chest.png; static/images/get-logs-guide.png
+Result: loghome-app-frontend/static/dig-loggirl.png
+
+Prompt:
+Replace only the orange-haired Alex in the original Minecraft voxel digging illustration with a cuboid version of 原木娘: chestnut-brown short bob, green eyes, green square Creeper hair clip, light sage blazer with cream trim, white collar, green tie, charcoal skirt with green hem, white knee socks and brown shoes. Preserve the leaning digging pose, both hands holding the brown-handled gray pixel shovel, original camera and lighting, bright grass island, red parrot, and composition. Keep the whole scene in the original Minecraft voxel style with a genuinely transparent background. No UI, text, watermark, extra characters or anime line art. Match the original landscape aspect ratio.

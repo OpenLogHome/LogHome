@@ -2,15 +2,15 @@
 	<view class="outer" v-dark>
 		<!-- 消息/历史消息切换 -->
 		<view class="tab-bar">
-			<view class="tab-item" :class="{ active: viewTab === 'current' }" @click="switchTab('current')">消息</view>
-			<view class="tab-item" :class="{ active: viewTab === 'history' }" @click="switchTab('history')">历史消息</view>
+			<view class="tab-item" :class="{ active: viewTab === 'current' }" @click="switchTab('current')">{{ $t('community.notifications.tabMessages') }}</view>
+			<view class="tab-item" :class="{ active: viewTab === 'history' }" @click="switchTab('history')">{{ $t('community.notifications.tabHistory') }}</view>
 		</view>
 
 		<!-- 系统消息筛选 -->
 		<view class="filter-bar" v-if="viewTab === 'current'">
-			<view class="filter-chip" :class="{ active: viewFilter === 'all' }" @click="viewFilter = 'all'">全部</view>
-			<view class="filter-chip" :class="{ active: viewFilter === 'system' }" @click="viewFilter = 'system'">仅看系统消息</view>
-			<view class="filter-chip" :class="{ active: viewFilter === 'other' }" @click="viewFilter = 'other'">其他</view>
+			<view class="filter-chip" :class="{ active: viewFilter === 'all' }" @click="viewFilter = 'all'">{{ $t('common.all') }}</view>
+			<view class="filter-chip" :class="{ active: viewFilter === 'system' }" @click="viewFilter = 'system'">{{ $t('community.notifications.filterSystem') }}</view>
+			<view class="filter-chip" :class="{ active: viewFilter === 'other' }" @click="viewFilter = 'other'">{{ $t('community.notifications.filterOther') }}</view>
 		</view>
 
 		<!-- 当前消息列表 -->
@@ -40,7 +40,7 @@
 										<div class="count-badge"
 											v-if="group.items.length > 1"
 											@click.stop="toggleGroup(group.key)">
-											{{ expandedGroups[group.key] ? '收起' : '共 ' + group.items.length + ' 条' }}
+											{{ expandedGroups[group.key] ? $t('common.collapse') : $t('community.notifications.groupCount', { count: group.items.length }) }}
 										</div>
 										<div class="time" style="margin-right: 20rpx;">{{utc2beijing(group.items[0].time)}}</div>
 									</div>
@@ -66,7 +66,7 @@
 				backgroundColor: $store.state.isDarkMode ? 'var(--background-color)' : '#F2F2F2',
 				color: $store.state.isDarkMode ? 'var(--text-color-regular)' : '#333'
 			}">
-				暂无消息
+				{{ $t('community.notifications.emptyCurrent') }}
 			</div>
 		</view>
 
@@ -86,7 +86,7 @@
 								<div class="name">{{group.items[0].name}}</div>
 								<div class="name_time_right">
 									<div class="count-badge" v-if="group.items.length > 1">
-										共 {{group.items.length}} 条
+											{{ $t('community.notifications.groupCount', { count: group.items.length }) }}
 									</div>
 									<div class="time" style="margin-right: 20rpx;">{{utc2beijing(group.items[0].time)}}</div>
 								</div>
@@ -105,7 +105,7 @@
 				backgroundColor: $store.state.isDarkMode ? 'var(--background-color)' : '#F2F2F2',
 				color: $store.state.isDarkMode ? 'var(--text-color-regular)' : '#333'
 			}">
-				暂无历史消息
+				{{ $t('community.notifications.emptyHistory') }}
 			</div>
 		</view>
 	</view>
@@ -338,9 +338,9 @@
 					item.is_read = 2;
 					this.historyNotifications.unshift(item);
 					this.swipeId = null;
-					uni.showToast({ title: '已移入历史消息', icon: 'none' });
+					uni.showToast({ title: this.$t('community.notifications.movedToHistory'), icon: 'none' });
 				}).catch(() => {
-					uni.showToast({ title: '操作失败', icon: 'none' });
+					uni.showToast({ title: this.$t('common.operationFailed'), icon: 'none' });
 				});
 			},
 			utc2beijing(utc_datetime) {

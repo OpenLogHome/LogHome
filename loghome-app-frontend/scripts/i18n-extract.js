@@ -1,14 +1,21 @@
-// i18n 覆盖率报告（P1 配套）：node scripts/i18n-extract.js
+// i18n 覆盖率报告（P1 配套）：node scripts/i18n-extract.js [--by-domain] [--diff] [--update-baseline]
 // 扫描 pages/ components/ 的 .vue/.js：
 //   - 剔除注释后统计仍含中文字面量的文件与处数（= 未迁移可见文案的近似上界）
 //   - 统计 $t()/i18n.t() 使用数（= 已迁移量）
 //   - 输出高频未迁移字符串 Top 30
+//   --by-domain       按域（pages/<域> 等）汇总剩余量
+//   --diff           与 scripts/i18n-baseline.json 对比（--update-baseline 写入当前值）
 const fs = require('fs')
 const path = require('path')
 
 const root = path.resolve(__dirname, '..')
 const SCAN_DIRS = ['pages', 'components', 'common', 'mixins']
 const HAN = /[\u4e00-\u9fff]/
+const args = process.argv.slice(2)
+const byDomain = args.includes('--by-domain')
+const showDiff = args.includes('--diff')
+const updateBaseline = args.includes('--update-baseline')
+const baselineFile = path.join(__dirname, 'i18n-baseline.json')
 
 function walk(dir, out = []) {
 	fs.readdirSync(dir).forEach(name => {
@@ -50,7 +57,12 @@ SCAN_DIRS.forEach(scan => {
 			const strings = line.match(/'[^'\n]*[\u4e00-\u9fff][^'\n]*'|"[^"\n]*[\u4e00-\u9fff][^"\n]*"|`[^`\n]*[\u4e00-\u9fff][^`\n]*`/g) || []
 			strings.forEach(s => stringCount.set(s, (stringCount.get(s) || 0) + 1))
 		})
-		if (hits > 0) rows.push({ file: path.relative(root, file), lines: hits, translated })
+		if (hits > 0) {
+			const relative = path.relative(root, file)
+			const segments = relative.split(path.sep)
+			const domain = segments.length > 2 ? segments.slice(0, 2).join('/') : segments[0]
+			rows.push({ file: relative, domain, lines: hits, translated })
+		}
 	})
 })
 
@@ -69,3 +81,49 @@ console.log('\n-- 高频未迁移字符串 Top 30（≥3 次）--')
 	.sort((a, b) => b[1] - a[1])
 	.slice(0, 30)
 	.forEach(([s, n]) => console.log(`${String(n).padStart(3)}× ${s}`))
+
+const domainStats = {}
+rows.forEach(row => {
+	const stat = (domainStats[row.domain] = domainStats[row.domain] || { files: 0, lines: 0, translated: 0 })
+	stat.files++
+	stat.lines += row.lines
+	stat.translated += row.translated
+})
+if (byDomain) {
+	console.log('\n-- 按域统计 --')
+	Object.entries(domainStats)
+		.sort((a, b) => b[1].lines - a[1].lines)
+		.forEach(([domain, stat]) => {
+			console.log(
+				`${domain.padEnd(32)} 中文 ${String(stat.lines).padStart(4)} 行 / ${String(stat.files).padStart(3)} 文件 · $t ${stat.translated}`
+			)
+		})
+}
+
+const snapshot = {
+	zhLines: totalLines,
+	translatedUsages,
+	files: rows.length,
+	byDomain: Object.fromEntries(
+		Object.entries(domainStats).map(([domain, stat]) => [domain, { lines: stat.lines, files: stat.files }]),
+	),
+}
+if (showDiff) {
+	const previous = fs.existsSync(baselineFile) ? JSON.parse(fs.readFileSync(baselineFile, 'utf8')) : null
+	if (!previous) {
+		console.log('\n-- 基线对比 --\n无 scripts/i18n-baseline.json，使用 --update-baseline 建立基线')
+	} else {
+		const delta = (now, before) => {
+			const value = now - before
+			return value > 0 ? `+${value}` : String(value)
+		}
+		console.log('\n-- 基线对比 --')
+		console.log(`中文行数: ${previous.zhLines} → ${totalLines} (${delta(totalLines, previous.zhLines)})`)
+		console.log(`$t 使用数: ${previous.translatedUsages} → ${translatedUsages} (${delta(translatedUsages, previous.translatedUsages)})`)
+		console.log(`含中文文件: ${previous.files} → ${rows.length} (${delta(rows.length, previous.files)})`)
+	}
+}
+if (updateBaseline) {
+	fs.writeFileSync(baselineFile, JSON.stringify(snapshot, null, '\t') + '\n')
+	console.log(`\n已更新基线 ${path.relative(root, baselineFile)}`)
+}
