@@ -6,59 +6,59 @@
       </view>
     </transition>
     <view class="nav-bar">
-      <button v-manga-a11y class="nav-back icon-button" type="button" aria-label="返回" @click="goBack"><manga-icon name="back" /></button>
-      <text class="nav-title">{{ isPreview ? '作者预览 · ' : '' }}{{ bookInfo.name || '漫画详情' }}</text>
-      <button v-manga-a11y v-if="!isPreview && !loading && !loadError" class="nav-report" type="button" @click="openReport"><image src="/static/icons/icon_report.png" mode="aspectFit" /><text>举报</text></button>
+      <button v-manga-a11y class="nav-back icon-button" type="button" :aria-label="$t('common.back')" @click="goBack"><manga-icon name="back" /></button>
+      <text class="nav-title">{{ isPreview ? $t('manga.info.previewPrefix') + ' · ' : '' }}{{ bookInfo.name || $t('manga.info.defaultTitle') }}</text>
+      <button v-manga-a11y v-if="!isPreview && !loading && !loadError" class="nav-report" type="button" @click="openReport"><image src="/static/icons/icon_report.png" mode="aspectFit" /><text>{{ $t('manga.info.report') }}</text></button>
     </view>
     <scroll-view class="body-scroll" scroll-y :scroll-into-view="catalogTarget" :scroll-with-animation="scrollWithAnimation">
       <view v-if="loading || loadError" class="load-state" role="status">
-        <text>{{ loading ? '正在加载漫画…' : loadError }}</text>
-        <button v-manga-a11y v-if="loadError" type="button" class="outline-button" @click="loadAll"><manga-icon name="retry" />重试</button>
+        <text>{{ loading ? $t('manga.info.loadingManga') : loadError }}</text>
+        <button v-manga-a11y v-if="loadError" type="button" class="outline-button" @click="loadAll"><manga-icon name="retry" />{{ $t('common.retry') }}</button>
       </view>
       <template v-else>
-        <view class="hero"><image class="poster" :src="bookInfo.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="bookInfo.name + '封面'" /><view class="poster-shade"></view></view>
+        <view class="hero"><image class="poster" :src="bookInfo.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="$t('manga.info.coverAlt', { name: bookInfo.name })" /><view class="poster-shade"></view></view>
         <view class="info-card">
           <text class="novel-name">{{ bookInfo.name }}</text>
-          <view class="meta-line"><text class="status-pill">{{ Number(bookInfo.is_complete) === 1 ? '已完结' : '连载中' }}</text><text>漫画</text><text class="meta-dot"></text><text>{{ isPreview ? '共' : '已更新' }} {{ articles.length }} 话</text></view>
-          <button v-manga-a11y class="author-row" type="button" @click="openAuthor"><image v-if="bookInfo.auther_avatar" class="author-avatar" :src="bookInfo.auther_avatar" mode="aspectFill" /><text>作者 {{ bookInfo.author_name || '匿名作者' }}</text><manga-icon name="next" /></button>
+          <view class="meta-line"><text class="status-pill">{{ Number(bookInfo.is_complete) === 1 ? $t('common.completed') : $t('manga.info.ongoing') }}</text><text>{{ $t('manga.info.mangaType') }}</text><text class="meta-dot"></text><text>{{ isPreview ? $t('manga.info.totalEpisodes', { count: articles.length }) : $t('manga.info.updatedEpisodes', { count: articles.length }) }}</text></view>
+          <button v-manga-a11y class="author-row" type="button" @click="openAuthor"><image v-if="bookInfo.auther_avatar" class="author-avatar" :src="bookInfo.auther_avatar" mode="aspectFill" /><text>{{ $t('manga.info.authorLabel', { name: bookInfo.author_name || $t('manga.info.anonymousAuthor') }) }}</text><manga-icon name="next" /></button>
           <view class="tag-row" v-if="tags.length"><text v-for="tag in tags" :key="tag.tag_id">{{ tag.tag_name }}</text></view>
-          <button v-manga-a11y v-if="latestEpisode" class="latest-row" type="button" @click="openChapter(latestEpisode)"><view class="latest-copy"><text class="eyebrow">最近更新</text><text class="latest-name">第 {{ latestEpisode.article_chapter }} 话 · {{ latestEpisode.title }}</text></view><manga-icon name="next" /></button>
-          <text v-if="isPreview" class="preview-note">预览包含草稿；读者只能看到已发布的话数</text>
+          <button v-manga-a11y v-if="latestEpisode" class="latest-row" type="button" @click="openChapter(latestEpisode)"><view class="latest-copy"><text class="eyebrow">{{ $t('manga.info.latestUpdate') }}</text><text class="latest-name">{{ $t('manga.info.episodeLabel', { chapter: latestEpisode.article_chapter, title: latestEpisode.title }) }}</text></view><manga-icon name="next" /></button>
+          <text v-if="isPreview" class="preview-note">{{ $t('manga.info.previewNote') }}</text>
         </view>
         <view class="section intro-section">
-          <view class="section-title"><text>作品简介</text><button v-manga-a11y type="button" class="text-action" :aria-expanded="introExpanded ? 'true' : 'false'" @click="introExpanded = !introExpanded">{{ introExpanded ? '收起' : '展开' }}</button></view>
-          <text class="intro-text" :class="{ collapsed: !introExpanded }">{{ bookInfo.content || '作者还没有填写简介' }}</text>
+          <view class="section-title"><text>{{ $t('manga.info.introTitle') }}</text><button v-manga-a11y type="button" class="text-action" :aria-expanded="introExpanded ? 'true' : 'false'" @click="introExpanded = !introExpanded">{{ introExpanded ? $t('common.collapse') : $t('common.expand') }}</button></view>
+          <text class="intro-text" :class="{ collapsed: !introExpanded }">{{ bookInfo.content || $t('manga.info.noIntro') }}</text>
         </view>
-        <view v-if="!isPreview" class="section quick-actions" aria-label="作品快捷操作">
-          <button v-manga-a11y="niceBusy" class="quick-action" :class="{ selected: niceStatus }" type="button" :disabled="niceBusy" :aria-pressed="niceStatus ? 'true' : 'false'" @click="toggleNice"><image :src="niceStatus ? '/static/icons/icon_niced.png' : '/static/icons/icon_nice.png'" mode="aspectFit" /><text>{{ niceCount }} 赞</text></button>
-          <button v-manga-a11y="shareBusy" class="quick-action" type="button" :disabled="shareBusy" @click="shareManga"><image src="/static/icons/icon_share.png" mode="aspectFit" /><text>{{ shareBusy ? '生成中…' : '分享' }}</text></button>
-          <button v-manga-a11y="favoriteBusy" class="quick-action" :class="{ selected: isInBookcase }" type="button" :disabled="favoriteBusy" :aria-pressed="isInBookcase ? 'true' : 'false'" @click="toggleBookcase"><image src="/static/icons/icon_add.png" mode="aspectFit" /><text>{{ isInBookcase ? '移出书架' : '加入书架' }}</text></button>
-          <button v-manga-a11y class="quick-action" type="button" @click="openCatalog"><image src="/static/icons/icon_index.png" mode="aspectFit" /><text>目录</text></button>
+        <view v-if="!isPreview" class="section quick-actions" :aria-label="$t('manga.info.quickActionsAria')">
+          <button v-manga-a11y="niceBusy" class="quick-action" :class="{ selected: niceStatus }" type="button" :disabled="niceBusy" :aria-pressed="niceStatus ? 'true' : 'false'" @click="toggleNice"><image :src="niceStatus ? '/static/icons/icon_niced.png' : '/static/icons/icon_nice.png'" mode="aspectFit" /><text>{{ $t('manga.info.likeCount', { count: niceCount }) }}</text></button>
+          <button v-manga-a11y="shareBusy" class="quick-action" type="button" :disabled="shareBusy" @click="shareManga"><image src="/static/icons/icon_share.png" mode="aspectFit" /><text>{{ shareBusy ? $t('manga.info.generating') : $t('common.share') }}</text></button>
+          <button v-manga-a11y="favoriteBusy" class="quick-action" :class="{ selected: isInBookcase }" type="button" :disabled="favoriteBusy" :aria-pressed="isInBookcase ? 'true' : 'false'" @click="toggleBookcase"><image src="/static/icons/icon_add.png" mode="aspectFit" /><text>{{ isInBookcase ? $t('manga.info.removeFromShelf') : $t('manga.info.addToShelf') }}</text></button>
+          <button v-manga-a11y class="quick-action" type="button" @click="openCatalog"><image src="/static/icons/icon_index.png" mode="aspectFit" /><text>{{ $t('manga.info.catalog') }}</text></button>
         </view>
         <view id="manga-catalog" class="section catalog-section">
-          <view class="section-title"><text>目录 <text class="catalog-count">{{ articles.length }} 话</text></text><button v-manga-a11y type="button" class="text-action sort-action" @click="catalogReversed = !catalogReversed"><manga-icon name="sort" />{{ catalogReversed ? '倒序' : '正序' }}</button></view>
-          <view v-if="!articles.length" class="catalog-empty">还没有{{ isPreview ? '' : '已发布的' }}话数</view>
+          <view class="section-title"><text>{{ $t('manga.info.catalog') }} <text class="catalog-count">{{ $t('manga.info.episodeCountInline', { count: articles.length }) }}</text></text><button v-manga-a11y type="button" class="text-action sort-action" @click="catalogReversed = !catalogReversed"><manga-icon name="sort" />{{ catalogReversed ? $t('manga.info.sortDesc') : $t('manga.info.sortAsc') }}</button></view>
+          <view v-if="!articles.length" class="catalog-empty">{{ isPreview ? $t('manga.info.emptyEpisodes') : $t('manga.info.emptyPublishedEpisodes') }}</view>
           <button v-manga-a11y class="chapter-row" type="button" v-for="item in visibleArticles" :key="item.article_id" @click="openChapter(item)">
-            <text class="chapter-index">{{ item.article_chapter }}</text><view class="chapter-main"><text class="chapter-title">{{ item.title }}</text><view class="chapter-meta"><text class="chapter-date">{{ formatDate(item.update_time) }} · {{ item.article_type === 'mangaPage' ? '页漫' : '条漫' }}</text><view v-if="articleCommentAmounts[item.article_id]" class="chapter-comments"><manga-icon name="comment" /><text>{{ articleCommentAmounts[item.article_id] }}</text></view></view></view><text v-if="Number(item.is_draft) === 1" class="chapter-badge">草稿</text><text v-else-if="isCurrentChapter(item)" class="chapter-badge">读至</text><manga-icon name="next" />
+            <text class="chapter-index">{{ item.article_chapter }}</text><view class="chapter-main"><text class="chapter-title">{{ item.title }}</text><view class="chapter-meta"><text class="chapter-date">{{ formatDate(item.update_time) }} · {{ item.article_type === 'mangaPage' ? $t('manga.info.typePage') : $t('manga.info.typeStrip') }}</text><view v-if="articleCommentAmounts[item.article_id]" class="chapter-comments"><manga-icon name="comment" /><text>{{ articleCommentAmounts[item.article_id] }}</text></view></view></view><text v-if="Number(item.is_draft) === 1" class="chapter-badge">{{ $t('manga.info.draft') }}</text><text v-else-if="isCurrentChapter(item)" class="chapter-badge">{{ $t('manga.info.readTo') }}</text><manga-icon name="next" />
           </button>
-          <button v-manga-a11y v-if="articles.length > 5" class="catalog-more" type="button" :aria-expanded="catalogExpanded ? 'true' : 'false'" @click="catalogExpanded = !catalogExpanded">{{ catalogExpanded ? '收起目录' : '查看全部 ' + articles.length + ' 话' }}</button>
+          <button v-manga-a11y v-if="articles.length > 5" class="catalog-more" type="button" :aria-expanded="catalogExpanded ? 'true' : 'false'" @click="catalogExpanded = !catalogExpanded">{{ catalogExpanded ? $t('manga.info.collapseCatalog') : $t('manga.info.viewAllEpisodes', { count: articles.length }) }}</button>
         </view>
         <view v-if="!isPreview" id="manga-comments" class="section comment-section">
-          <view class="section-title"><text>作品评论 <text class="catalog-count">{{ commentAmount }} 条</text></text><button v-manga-a11y v-if="previewComments.length" type="button" class="text-action" @click="openCommentSheet()"><manga-icon name="next" />全部</button></view>
-          <view v-if="!previewComments.length" class="comment-empty">还没有评论，来抢第一个沙发</view>
+          <view class="section-title"><text>{{ $t('manga.info.commentsTitle') }} <text class="catalog-count">{{ $t('manga.comment.count', { count: commentAmount }) }}</text></text><button v-manga-a11y v-if="previewComments.length" type="button" class="text-action" @click="openCommentSheet()"><manga-icon name="next" />{{ $t('common.all') }}</button></view>
+          <view v-if="!previewComments.length" class="comment-empty">{{ $t('manga.comment.empty') }}</view>
           <manga-comment-item v-for="item in previewComments" :key="item.commentId" :comment="item" @reply="openCommentSheet($event)" @praise="toggleCommentPraise" @remove="removeComment" @remove-reply="removeReply" />
-          <button v-manga-a11y class="comment-write" type="button" @click="writeComment"><manga-icon name="comment" />写评论</button>
+          <button v-manga-a11y class="comment-write" type="button" @click="writeComment"><manga-icon name="comment" />{{ $t('manga.comment.write') }}</button>
         </view>
         <view v-if="!isPreview" class="section fans-section">
-          <view class="section-title"><text>粉丝贡献榜</text><button v-manga-a11y type="button" class="text-action" @click="openFansBoard">完整榜单<manga-icon name="next" /></button></view>
+          <view class="section-title"><text>{{ $t('manga.info.fansBoardTitle') }}</text><button v-manga-a11y type="button" class="text-action" @click="openFansBoard">{{ $t('manga.info.fullRanking') }}<manga-icon name="next" /></button></view>
           <fans-contribution-board :fan-info="fanInfo" />
         </view>
-        <view v-if="authorWorks.length" class="section works-section"><view class="section-title">作者的其他漫画</view><view class="works-grid"><button v-manga-a11y v-for="work in authorWorks" :key="work.novel_id" class="work-item" type="button" @click="openWork(work)"><image lazy-load class="other-cover" :src="work.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="work.name + '封面'" /><text>{{ work.name }}</text><text class="work-status">{{ Number(work.is_complete) === 1 ? '已完结' : '连载中' }}</text></button></view></view>
+        <view v-if="authorWorks.length" class="section works-section"><view class="section-title">{{ $t('manga.info.otherWorks') }}</view><view class="works-grid"><button v-manga-a11y v-for="work in authorWorks" :key="work.novel_id" class="work-item" type="button" @click="openWork(work)"><image lazy-load class="other-cover" :src="work.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="$t('manga.info.coverAlt', { name: work.name })" /><text>{{ work.name }}</text><text class="work-status">{{ Number(work.is_complete) === 1 ? $t('common.completed') : $t('manga.info.ongoing') }}</text></button></view></view>
       </template>
       <view class="bottom-space"></view>
     </scroll-view>
     <view class="action-bar">
-      <button v-manga-a11y="loading || !!loadError" v-if="!isPreview" class="tip-btn" type="button" :disabled="loading || !!loadError" @click="openTipping">打赏</button>
+      <button v-manga-a11y="loading || !!loadError" v-if="!isPreview" class="tip-btn" type="button" :disabled="loading || !!loadError" @click="openTipping">{{ $t('manga.info.tip') }}</button>
       <button v-manga-a11y="loading || !!loadError || !articles.length" class="read-btn" type="button" :disabled="loading || !!loadError || !articles.length" @click="startReading">{{ readButtonText }}<manga-icon name="next" /></button>
     </view>
     <uni-popup v-if="!isPreview" ref="tippingPopup" type="bottom">
@@ -66,13 +66,13 @@
     </uni-popup>
     <uni-popup v-if="!isPreview" ref="commentPopup" type="bottom" @change="handleCommentSheetChange">
       <view class="comment-sheet">
-        <view class="sheet-head"><text class="sheet-title">作品评论 <text class="catalog-count">{{ commentAmount }} 条</text></text><button v-manga-a11y class="sheet-close" type="button" aria-label="关闭评论列表" @click="closeCommentSheet"><manga-icon name="close" /></button></view>
+        <view class="sheet-head"><text class="sheet-title">{{ $t('manga.info.commentsTitle') }} <text class="catalog-count">{{ $t('manga.comment.count', { count: commentAmount }) }}</text></text><button v-manga-a11y class="sheet-close" type="button" :aria-label="$t('manga.info.closeCommentsAria')" @click="closeCommentSheet"><manga-icon name="close" /></button></view>
         <scroll-view class="sheet-scroll" scroll-y :scroll-into-view="commentAnchor" :scroll-with-animation="scrollWithAnimation">
-          <view v-if="!comments.length && !commentLoading" class="comment-empty">还没有评论，来抢第一个沙发</view>
+          <view v-if="!comments.length && !commentLoading" class="comment-empty">{{ $t('manga.comment.empty') }}</view>
           <view v-for="item in comments" :id="'comment_' + item.commentId" :key="item.commentId">
             <manga-comment-item :comment="item" :highlight="String(highlightCommentId) === String(item.commentId)" @reply="setReplyTarget($event)" @praise="toggleCommentPraise" @remove="removeComment" @remove-reply="removeReply" />
           </view>
-          <button v-manga-a11y v-if="commentHasMore" class="comment-more" type="button" :disabled="commentLoading" @click="loadMoreComments">{{ commentLoading ? '加载中…' : '加载更多评论' }}</button>
+          <button v-manga-a11y v-if="commentHasMore" class="comment-more" type="button" :disabled="commentLoading" @click="loadMoreComments">{{ commentLoading ? $t('manga.comment.loading') : $t('manga.info.loadMoreComments') }}</button>
         </scroll-view>
         <manga-comment-composer ref="commentComposer" :reply-to="replyTarget" :submitting="commentSubmitting" @submit="submitComment" @cancel-reply="replyTarget = null" />
       </view>
@@ -131,14 +131,14 @@ export default {
 		previewComments() { return this.comments.slice(0, 3); },
 		scrollWithAnimation() { return !(typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); },
 		readButtonText() {
-			if (this.articles.length === 0) return '暂未发布';
+			if (this.articles.length === 0) return this.$t('manga.info.notPublished');
 			if (this.progress && this.progress.last_article_id) {
 				const target = this.articles.find(
 					(a) => String(a.article_id) === String(this.progress.last_article_id),
 				);
-				if (target) return '继续阅读 第' + target.article_chapter + '话';
+				if (target) return this.$t('manga.info.continueReading', { chapter: target.article_chapter });
 			}
-			return '开始阅读';
+			return this.$t('manga.info.startReading');
 		},
 
 	},
@@ -231,13 +231,13 @@ export default {
 				if (res.status == 200 && res.data && res.data.length > 0) {
 					this.bookInfo = res.data[0];
 					this.loadAuthorWorks();
-					uni.setNavigationBarTitle({ title: this.bookInfo.name || '漫画详情' });
+					uni.setNavigationBarTitle({ title: this.bookInfo.name || this.$t('manga.info.defaultTitle') });
 				} else {
-					this.loadError = '作品不存在或没有访问权限';
+					this.loadError = this.$t('manga.info.notFoundPermission');
 				}
 			} catch (e) {
 				console.error('getBookInfo failed', e);
-				this.loadError = '作品加载失败，请重试';
+				this.loadError = this.$t('manga.info.loadWorkFailed');
 			}
 		},
 		async getArticles() {
@@ -248,7 +248,7 @@ export default {
 					this.articles = (res.data || []).filter((a) => a.article_type === 'mangaStrip' || a.article_type === 'mangaPage');
 				}
 			} catch (e) {
-				this.loadError = '目录加载失败，请重试';
+				this.loadError = this.$t('manga.info.loadCatalogFailed');
 			}
 		},
 		async getTags() {
@@ -263,7 +263,7 @@ export default {
 		},
 		requireLogin() {
 			if (this.authHeaders()) return true;
-			uni.showToast({ title: '请先登录', icon: 'none' });
+			uni.showToast({ title: this.$t('common.needLogin'), icon: 'none' });
 			return false;
 		},
 		async loadComments(page = 1) {
@@ -354,11 +354,11 @@ export default {
 				}
 				this.$refs.commentComposer.reset();
 				this.replyTarget = null;
-				uni.showToast({ title: '发表成功', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.comment.publishSuccess'), icon: 'none' });
 				await Promise.all([this.loadComments(1), this.loadCommentAmount()]);
 				if (anchoredId) this.anchorComment(anchoredId);
 			} catch (e) {
-				uni.showToast({ title: getMangaCommentErrorMessage(e, '评论发送失败，请稍后重试'), icon: 'none' });
+				uni.showToast({ title: getMangaCommentErrorMessage(e, this.$t('manga.comment.sendFailed')), icon: 'none' });
 			} finally {
 				this.commentSubmitting = false;
 			}
@@ -372,39 +372,39 @@ export default {
 				comment.praiseType = type;
 				comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previousType === 0 ? -1 : 1));
 			} catch (e) {
-				uni.showToast({ title: getMangaCommentErrorMessage(e, '操作失败，请稍后重试'), icon: 'none' });
+				uni.showToast({ title: getMangaCommentErrorMessage(e, this.$t('manga.comment.operationFailed')), icon: 'none' });
 			}
 		},
 		removeComment(comment) {
 			uni.showModal({
-				title: '删除评论',
-				content: '确定删除这条评论吗？',
+				title: this.$t('manga.comment.deleteCommentTitle'),
+				content: this.$t('manga.comment.deleteCommentConfirm'),
 				success: async (result) => {
 					if (!result.confirm) return;
 					try {
 						await deleteMangaComment(this.$baseUrl, comment.commentId);
 						this.comments = this.comments.filter((item) => item.commentId !== comment.commentId);
 						this.commentAmount = Math.max(0, this.commentAmount - 1);
-						uni.showToast({ title: '已删除', icon: 'none' });
+						uni.showToast({ title: this.$t('common.deleted'), icon: 'none' });
 					} catch (e) {
-						uni.showToast({ title: getMangaCommentErrorMessage(e, '删除失败，请稍后重试'), icon: 'none' });
+						uni.showToast({ title: getMangaCommentErrorMessage(e, this.$t('manga.comment.deleteFailed')), icon: 'none' });
 					}
 				},
 			});
 		},
 		removeReply({ rootCommentId, reply }) {
 			uni.showModal({
-				title: '删除回复',
-				content: '确定删除这条回复吗？',
+				title: this.$t('manga.comment.deleteReplyTitle'),
+				content: this.$t('manga.comment.deleteReplyConfirm'),
 				success: async (result) => {
 					if (!result.confirm) return;
 					try {
 						await deleteMangaComment(this.$baseUrl, reply.commentId);
 						const root = this.comments.find((item) => item.commentId === rootCommentId);
 						if (root) root.replies = root.replies.filter((item) => item.commentId !== reply.commentId);
-						uni.showToast({ title: '已删除', icon: 'none' });
+						uni.showToast({ title: this.$t('common.deleted'), icon: 'none' });
 					} catch (e) {
-						uni.showToast({ title: getMangaCommentErrorMessage(e, '删除失败，请稍后重试'), icon: 'none' });
+						uni.showToast({ title: getMangaCommentErrorMessage(e, this.$t('manga.comment.deleteFailed')), icon: 'none' });
 					}
 				},
 			});
@@ -444,10 +444,10 @@ export default {
 		openTipping() {
 			if (this.isPreview || this.loading || this.loadError) return;
 			const token = this.getTokenInfo();
-			if (!token || !token.tk) { uni.showToast({ title: '请先登录', icon: 'none' }); return; }
+			if (!token || !token.tk) { uni.showToast({ title: this.$t('common.needLogin'), icon: 'none' }); return; }
 			const authorId = this.bookInfo.auther_id || this.bookInfo.author_id;
 			if (authorId && String(token.id) === String(authorId)) {
-				uni.showToast({ title: '不能给自己的漫画打赏哦', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.info.selfTipForbidden'), icon: 'none' });
 				return;
 			}
 			this.showTipping = true;
@@ -459,7 +459,7 @@ export default {
 		},
 		openReport() {
 			if (this.isPreview || this.loading || this.loadError) return;
-			if (!this.getToken()) { uni.showToast({ title: '请先登录', icon: 'none' }); return; }
+			if (!this.getToken()) { uni.showToast({ title: this.$t('common.needLogin'), icon: 'none' }); return; }
 			this.$refs.reportPopup.open(this.uid);
 		},
 		async completeDailyTask(code, name) {
@@ -476,28 +476,28 @@ export default {
 		async toggleNice() {
 			if (this.isPreview || this.niceBusy || this.loading || this.loadError) return;
 			const headers = this.authHeaders();
-			if (!headers) { uni.showToast({ title: '请先登录', icon: 'none' }); return; }
+			if (!headers) { uni.showToast({ title: this.$t('common.needLogin'), icon: 'none' }); return; }
 			this.niceBusy = true;
 			const wasLiked = this.niceStatus;
 			try {
 				await axios.get(this.$baseUrl + '/library/nice_novel?id=' + encodeURIComponent(this.uid), { headers });
 				this.niceStatus = !wasLiked;
 				this.niceCount = Math.max(0, this.niceCount + (wasLiked ? -1 : 1));
-				if (!wasLiked) this.completeDailyTask('daily_like_novel', '每日任务：为漫画点赞');
-			} catch (_) { uni.showToast({ title: '点赞失败，请稍后重试', icon: 'none' }); }
+				if (!wasLiked) this.completeDailyTask('daily_like_novel', this.$t('manga.info.dailyTaskLike'));
+			} catch (_) { uni.showToast({ title: this.$t('manga.info.likeFailed'), icon: 'none' }); }
 			finally { this.niceBusy = false; }
 		},
 		async shareManga() {
 			if (this.isPreview || this.shareBusy || this.loading || this.loadError) return;
 			const headers = this.authHeaders();
-			if (!headers) { uni.showToast({ title: '请先登录', icon: 'none' }); return; }
+			if (!headers) { uni.showToast({ title: this.$t('common.needLogin'), icon: 'none' }); return; }
 			this.shareBusy = true;
 			try {
 				const res = await axios.post(this.$baseUrl + '/library/create_share_code', {
 					share_type: 'book',
-					share_content: '漫画《' + this.bookInfo.name + '》· ' + (this.bookInfo.author_name || '匿名作者'),
+					share_content: this.$t('manga.info.shareContent', { name: this.bookInfo.name, author: this.bookInfo.author_name || this.$t('manga.info.anonymousAuthor') }),
 					target_url: '/pages/readers/mangaInfo?id=' + this.uid,
-					share_message: '我正在原木社区看漫画《' + this.bookInfo.name + '》，一起来看看吧！\nhttps://loghome.ink/novel/' + this.uid,
+					share_message: this.$t('manga.info.shareMessage', { brand: this.$t('nav.brand'), name: this.bookInfo.name, url: 'https://loghome.ink/novel/' + this.uid }),
 					expires_hours: 24 * 30,
 				}, { headers });
 				if (!res.data || !res.data.success || !res.data.share_text) throw new Error('share code unavailable');
@@ -507,9 +507,9 @@ export default {
 					try { copied = await new Promise(resolve => uni.setClipboardData({ data: res.data.share_text, success: () => resolve(true), fail: () => resolve(false) })); }
 					catch (_) { /* 口令已生成，仍可在弹窗中查看。 */ }
 				}
-				uni.showModal({ title: '漫画分享口令', content: '口令：' + res.data.code + (copied ? '\n已复制，发送给好友即可查看。' : '\n复制失败，请手动记录口令。'), showCancel: false, confirmText: '知道了' });
-				this.completeDailyTask('daily_share_work', '每日任务：分享作品');
-			} catch (_) { uni.showToast({ title: '分享失败，请稍后重试', icon: 'none' }); }
+				uni.showModal({ title: this.$t('manga.info.shareCodeTitle'), content: copied ? this.$t('manga.info.shareCodeCopied', { code: res.data.code }) : this.$t('manga.info.shareCodeCopyFailed', { code: res.data.code }), showCancel: false, confirmText: this.$t('common.gotIt') });
+				this.completeDailyTask('daily_share_work', this.$t('manga.info.dailyTaskShare'));
+			} catch (_) { uni.showToast({ title: this.$t('manga.info.shareFailed'), icon: 'none' }); }
 			finally { this.shareBusy = false; }
 		},
 		async loadProgress() {
@@ -543,7 +543,7 @@ export default {
 		startReading() {
 			if (this.loading || this.loadError) return;
 			if (this.articles.length === 0) {
-				uni.showToast({ title: '还没有可阅读的话数', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.info.noReadableEpisodes'), icon: 'none' });
 				return;
 			}
 			let target = this.articles[0];
@@ -563,7 +563,7 @@ export default {
 			if (this.favoriteBusy || this.loading || this.loadError) return;
 			const headers = this.authHeaders();
 			if (!headers) {
-				uni.showToast({ title: '请先登录', icon: 'none' });
+				uni.showToast({ title: this.$t('common.needLogin'), icon: 'none' });
 				return;
 			}
 			this.favoriteBusy = true;
@@ -576,7 +576,7 @@ export default {
 					);
 					this.isInBookcase = false;
 					if (Array.isArray(this.bookInfo.likes) && this.bookInfo.likes.length) this.bookInfo.likes.pop();
-					uni.showToast({ title: '已移出书架', icon: 'none' });
+					uni.showToast({ title: this.$t('manga.info.removedFromShelf'), icon: 'none' });
 				} else {
 					await axios.post(
 						this.$baseUrl + '/bookcase/like_novel',
@@ -585,11 +585,11 @@ export default {
 					);
 					this.isInBookcase = true;
 					if (Array.isArray(this.bookInfo.likes)) this.bookInfo.likes.push({});
-					uni.showToast({ title: '已加入书架', icon: 'none' });
+					uni.showToast({ title: this.$t('manga.info.addedToShelf'), icon: 'none' });
 				}
 			} catch (e) {
 				console.error('toggleBookcase failed', e);
-				uni.showToast({ title: '操作失败，请稍后重试', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.info.operationFailedRetry'), icon: 'none' });
 			} finally { this.favoriteBusy = false; }
 		},
 	},

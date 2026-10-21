@@ -2,22 +2,22 @@
   <view class="writing-calendar-section">
     <view class="calendar-head">
       <view>
-        <view class="calendar-title">创作日历</view>
+        <view class="calendar-title">{{ $t('writer.calendar.title') }}</view>
         <view class="calendar-summary" v-if="calendarData && calendarData.summary">
-          过去一年活跃 {{ calendarData.summary.active_days || 0 }} 天
+          {{ $t('writer.calendar.summaryActive', { count: calendarData.summary.active_days || 0 }) }}
           <text class="summary-separator">·</text>
-          连续 {{ calendarData.summary.current_streak || 0 }} 天
+          {{ $t('writer.calendar.summaryStreak', { count: calendarData.summary.current_streak || 0 }) }}
         </view>
-        <view class="calendar-summary" v-else>记录你在这部作品中的创作足迹</view>
+        <view class="calendar-summary" v-else>{{ $t('writer.calendar.summaryHint') }}</view>
       </view>
       <!-- <view class="calendar-goal">30 分钟或 3000 字满活跃</view> -->
     </view>
 
-    <view class="calendar-state" v-if="loading">正在加载创作日历...</view>
+    <view class="calendar-state" v-if="loading">{{ $t('writer.calendar.loading') }}</view>
     <view class="calendar-state error" v-else-if="calendarData && calendarData.error">
-      创作日历加载失败，请稍后重试
+      {{ $t('writer.calendar.loadFailed') }}
     </view>
-    <view class="calendar-state" v-else-if="!calendarData">暂无创作日历数据</view>
+    <view class="calendar-state" v-else-if="!calendarData">{{ $t('writer.calendar.empty') }}</view>
 
     <template v-else>
       <view class="calendar-layout">
@@ -60,12 +60,12 @@
 
       <view class="calendar-footer">
         <view class="tracking-note" v-if="trackingStartedOn">
-          {{ formatShortDate(trackingStartedOn) }} 起开始统计
+          {{ $t('writer.calendar.trackingSince', { date: formatShortDate(trackingStartedOn) }) }}
         </view>
-        <view class="legend" aria-label="活跃程度图例">
-          <text>少</text>
+        <view class="legend" :aria-label="$t('writer.calendar.legendAria')">
+          <text>{{ $t('writer.calendar.less') }}</text>
           <view v-for="level in [0, 1, 2, 3]" :key="level" class="legend-day" :class="'level-' + level"></view>
-          <text>多</text>
+          <text>{{ $t('writer.calendar.more') }}</text>
         </view>
       </view>
 
@@ -73,11 +73,11 @@
         <view class="selected-date">{{ formatLongDate(selectedDay.date) }}</view>
         <view class="selected-metrics" v-if="selectedDay.tracked">
           <text>{{ formatDuration(selectedDay.active_seconds) }}</text>
-          <text>{{ selectedDay.written_chars || 0 }} 字</text>
+          <text>{{ $t('writer.calendar.characters', { count: selectedDay.written_chars || 0 }) }}</text>
           <text class="selected-level">{{ levelText(selectedDay.level) }}</text>
         </view>
         <view class="selected-metrics" v-else>
-          <text>该日期尚未开始统计</text>
+          <text>{{ $t('writer.calendar.notTracked') }}</text>
         </view>
       </view>
     </template>
@@ -85,8 +85,23 @@
 </template>
 
 <script>
+import i18n from '@/i18n'
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_COLUMN_WIDTH = 20;
+
+const EN_SHORT_DATE_OPTIONS = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
+const EN_LONG_DATE_OPTIONS = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
+const EN_MONTH_OPTIONS = { month: 'short', timeZone: 'UTC' };
+
+let enShortDateFormatter = null;
+let enLongDateFormatter = null;
+let enMonthFormatter = null;
+try {
+  enShortDateFormatter = new Intl.DateTimeFormat('en-US', EN_SHORT_DATE_OPTIONS);
+  enLongDateFormatter = new Intl.DateTimeFormat('en-US', EN_LONG_DATE_OPTIONS);
+  enMonthFormatter = new Intl.DateTimeFormat('en-US', EN_MONTH_OPTIONS);
+} catch (error) {}
 
 function parseDateKey(dateKey) {
   const normalized = String(dateKey || "");
@@ -129,24 +144,47 @@ function getShanghaiTodayKey() {
 function formatShortDateValue(dateKey) {
   const date = parseDateKey(dateKey);
   if (!date) return dateKey;
+  if (i18n.locale === "en") {
+    return enShortDateFormatter
+      ? enShortDateFormatter.format(date)
+      : date.toISOString().slice(0, 10);
+  }
   return `${date.getUTCFullYear()}年${date.getUTCMonth() + 1}月${date.getUTCDate()}日`;
 }
 
 function formatLongDateValue(dateKey) {
   const date = parseDateKey(dateKey);
   if (!date) return dateKey;
+  if (i18n.locale === "en") {
+    return enLongDateFormatter
+      ? enLongDateFormatter.format(date)
+      : formatShortDateValue(dateKey);
+  }
   const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
   return `${formatShortDateValue(dateKey)} ${weekdays[date.getUTCDay()]}`;
 }
 
+function formatMonthLabelValue(dateKey) {
+  const month = Number(dateKey.slice(5, 7));
+  if (i18n.locale === "en") {
+    const date = parseDateKey(dateKey);
+    return date && enMonthFormatter
+      ? enMonthFormatter.format(date)
+      : String(month);
+  }
+  return month === 1 ? `${dateKey.slice(0, 4)}年1月` : `${month}月`;
+}
+
 function formatDurationValue(seconds) {
   const totalSeconds = Math.max(0, Number(seconds || 0));
-  if (totalSeconds > 0 && totalSeconds < 60) return "不足 1 分钟";
-  return `${Math.floor(totalSeconds / 60)} 分钟`;
+  if (totalSeconds > 0 && totalSeconds < 60) return i18n.t("writer.calendar.durationUnderMinute");
+  return i18n.t("writer.calendar.durationMinutes", { count: Math.floor(totalSeconds / 60) });
 }
 
 function levelTextValue(level) {
-  return ["无活跃", "低活跃", "较活跃", "满活跃"][Number(level || 0)];
+  const keys = ["levelNone", "levelLow", "levelMedium", "levelFull"];
+  const key = keys[Number(level || 0)];
+  return key ? i18n.t("writer.calendar." + key) : "";
 }
 
 export default {
@@ -165,10 +203,20 @@ export default {
     return {
       scrollLeft: 99999,
       selectedDateKey: "",
-      weekdayLabels: ["", "一", "", "三", "", "五", ""],
     };
   },
   computed: {
+    weekdayLabels() {
+      return [
+        "",
+        this.$t("writer.calendar.weekdayMon"),
+        "",
+        this.$t("writer.calendar.weekdayWed"),
+        "",
+        this.$t("writer.calendar.weekdayFri"),
+        "",
+      ];
+    },
     toDateKey() {
       return (this.calendarData && this.calendarData.to) || getShanghaiTodayKey();
     },
@@ -237,8 +285,13 @@ export default {
           if (inRange) {
             const longDate = formatLongDateValue(dateKey);
             ariaLabel = tracked
-              ? `${longDate}，${levelTextValue(level)}，${formatDurationValue(activeSeconds)}，${writtenChars} 字`
-              : `${longDate}，尚未开始统计`;
+              ? this.$t("writer.calendar.dayAria", {
+                  date: longDate,
+                  level: levelTextValue(level),
+                  duration: formatDurationValue(activeSeconds),
+                  count: writtenChars,
+                })
+              : this.$t("writer.calendar.dayAriaUntracked", { date: longDate });
           }
           days.push({
             key: `${weekIndex}-${dayIndex}-${dateKey}`,
@@ -254,8 +307,7 @@ export default {
 
           if (inRange && (!monthLabel || dateKey.slice(8, 10) === "01")) {
             if (weekIndex === 0 || dateKey.slice(8, 10) === "01") {
-              const month = Number(dateKey.slice(5, 7));
-              monthLabel = month === 1 ? `${dateKey.slice(0, 4)}年1月` : `${month}月`;
+              monthLabel = formatMonthLabelValue(dateKey);
             }
           }
           cursor = new Date(cursor.getTime() + DAY_MS);

@@ -5,24 +5,24 @@
 				<!-- <image class="hero-background" src="../../static/bg.png" mode="aspectFill"></image> -->
 				<view class="hero-mask"></view>
 				<view class="hero-content">
-					<view class="hero-pill">实时热度榜</view>
-					<view class="hero-title"><LogPowerWordmark />爆棚榜</view>
-					<view class="hero-subtitle">按<LogPowerWordmark />实时排序，越靠前说明作品越热。</view>
+					<view class="hero-pill">{{ $t('reader.rank.realtimePill') }}</view>
+					<view class="hero-title"><LogPowerWordmark />{{ $t('reader.rank.heroTitleSuffix') }}</view>
+					<view class="hero-subtitle">{{ $t('reader.rank.heroSubtitlePrefix') }}<LogPowerWordmark />{{ $t('reader.rank.heroSubtitleSuffix') }}</view>
 
 					<view class="hero-meta">
 						<view class="meta-chip">
-							<text class="meta-label">更新时间</text>
+							<text class="meta-label">{{ $t('reader.rank.updateTimeLabel') }}</text>
 							<text class="meta-value">{{ currentTime }}</text>
 						</view>
 						<view class="meta-chip">
-							<text class="meta-label">收录</text>
-							<text class="meta-value">{{ books.length }} 本</text>
+							<text class="meta-label">{{ $t('reader.rank.collectedLabel') }}</text>
+							<text class="meta-value">{{ $t('reader.rank.collectedCount', { count: books.length }) }}</text>
 						</view>
 					</view>
 
 					<view class="summary-row" v-if="books.length">
-						<view class="summary-card" v-for="item in summaryCards" :key="item.label">
-							<view class="summary-label"><template v-if="item.label === '榜首原木力'">榜首<LogPowerWordmark /></template><template v-else>{{ item.label }}</template></view>
+						<view class="summary-card" v-for="item in summaryCards" :key="item.key">
+							<view class="summary-label"><template v-if="item.key === 'top'">{{ $t('reader.rank.topPrefix') }}<LogPowerWordmark /></template><template v-else>{{ item.label }}</template></view>
 							<text class="summary-value">{{ item.value }}</text>
 						</view>
 					</view>
@@ -33,7 +33,7 @@
 		<view class="page-body">
 			<view class="feature-card" v-if="champion" @click="goBook(champion.novel_id)">
 				<view class="feature-head">
-					<view class="feature-tag">当前冠军</view>
+					<view class="feature-tag">{{ $t('reader.rank.currentChampion') }}</view>
 				</view>
 
 				<view class="feature-main">
@@ -50,16 +50,16 @@
 								<log-image :src="champion.avatar_url" class="rank-avatar-photo rank-avatar-photo-first"
 									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
 							</view>
-							<text>{{ champion.user_name || '匿名作者' }}</text>
+							<text>{{ champion.user_name || $t('reader.rank.anonymousAuthor') }}</text>
 						</view>
-						<view class="feature-desc">{{ champion.content || '这个作品还没有简介。' }}</view>
+						<view class="feature-desc">{{ champion.content || $t('reader.rank.noDescription') }}</view>
 
 						<view class="feature-footer">
 							<view class="feature-score">
 								<LogPowerWordmark class="feature-score-label" />
 								<text class="feature-score-value">{{ formatScore(champion.ranking) }}</text>
 							</view>
-							<view class="feature-action">点击查看详情</view>
+							<view class="feature-action">{{ $t('reader.rank.tapForDetails') }}</view>
 						</view>
 					</view>
 				</view>
@@ -67,7 +67,7 @@
 
 			<view class="section-card" v-if="runnerUps.length">
 				<view class="section-head">
-					<text class="section-title">头部梯队</text>
+					<text class="section-title">{{ $t('reader.rank.topTier') }}</text>
 					<text class="section-tip">Top 2 - 3</text>
 				</view>
 
@@ -85,7 +85,7 @@
 							<view class="podium-rank">TOP {{ index + 2 }}</view>
 						</view>
 						<view class="podium-name">{{ item.name }}</view>
-						<view class="podium-author">{{ item.user_name || '匿名作者' }}</view>
+						<view class="podium-author">{{ item.user_name || $t('reader.rank.anonymousAuthor') }}</view>
 						<view class="podium-score">{{ formatScore(item.ranking) }}</view>
 					</view>
 				</view>
@@ -93,8 +93,8 @@
 
 			<view class="section-card" v-if="remainingBooks.length">
 				<view class="section-head">
-					<text class="section-title">其余上榜作品</text>
-					<text class="section-tip">点击卡片进入详情页</text>
+					<text class="section-title">{{ $t('reader.rank.otherRankedWorks') }}</text>
+					<text class="section-tip">{{ $t('reader.rank.tapCardForDetails') }}</text>
 				</view>
 
 				<view class="rank-list">
@@ -112,9 +112,9 @@
 							<view class="book-author">
 								<log-image :src="item.avatar_url" class="author-avatar"
 									onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
-								<text>{{ item.user_name || '匿名作者' }}</text>
+								<text>{{ item.user_name || $t('reader.rank.anonymousAuthor') }}</text>
 							</view>
-							<view class="book-desc">{{ item.content || '这个作品还没有简介。' }}</view>
+							<view class="book-desc">{{ item.content || $t('reader.rank.noDescription') }}</view>
 						</view>
 
 						<view class="score-pill">
@@ -127,14 +127,14 @@
 
 			<view class="loading-state" v-if="showLoadingState">
 				<image class="state-icon" src="../../static/loading.gif" mode="aspectFit"></image>
-				<text class="state-title">正在生成榜单</text>
-				<view class="state-desc">正在通过<LogPowerWordmark />探测器搜索...</view>
+				<text class="state-title">{{ $t('reader.rank.generating') }}</text>
+				<view class="state-desc">{{ $t('reader.rank.generatingDescPrefix') }}<LogPowerWordmark />{{ $t('reader.rank.generatingDescSuffix') }}</view>
 			</view>
 
 			<view class="empty-state" v-else-if="showEmptyState">
 				<text class="empty-icon">🌲</text>
-				<text class="state-title">榜单暂时还没有数据</text>
-				<text class="state-desc">下拉刷新后再试一次</text>
+				<text class="state-title">{{ $t('reader.rank.emptyRankTitle') }}</text>
+				<text class="state-desc">{{ $t('reader.rank.emptyDescRefresh') }}</text>
 			</view>
 		</view>
 	</view>
@@ -182,13 +182,16 @@ import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 				const lastScore = this.normalizeScore(this.books[this.books.length - 1].ranking);
 
 				return [{
-					label: '榜首原木力',
+					key: 'top',
+					label: this.$t('reader.rank.topLabel'),
 					value: this.formatScore(this.champion.ranking)
 				}, {
-					label: '平均热度',
+					key: 'average',
+					label: this.$t('reader.rank.averageLabel'),
 					value: this.formatScore(averageScore)
 				}, {
-					label: '入榜门槛',
+					key: 'threshold',
+					label: this.$t('reader.rank.thresholdLabel'),
 					value: this.formatScore(lastScore)
 				}];
 			}
@@ -233,7 +236,7 @@ import LogPowerWordmark from '@/components/LogPowerWordmark.vue'
 					.catch(() => {
 						this.hasLoaded = true;
 						uni.showToast({
-							title: '获取榜单失败',
+							title: this.$t('reader.rank.fetchFailed'),
 							icon: 'none',
 							duration: 2000
 						});

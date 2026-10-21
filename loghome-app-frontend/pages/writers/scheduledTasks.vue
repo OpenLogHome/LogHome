@@ -4,17 +4,17 @@
 			<view class="task-item" v-for="task in tasks" :key="task.task_id">
 				<view class="task-info">
 					<view class="novel-name">《{{ task.novel_name }}》</view>
-					<view class="article-title">第{{ task.article_chapter }}章 {{ task.article_title }}</view>
-					<view class="publish-time">预定发布时间: {{ formatTime(task.publish_time) }}</view>
+					<view class="article-title">{{ $t('writer.work.scheduled.chapterLine', { chapter: task.article_chapter, title: task.article_title }) }}</view>
+					<view class="publish-time">{{ $t('writer.work.scheduled.scheduledTime', { time: formatTime(task.publish_time) }) }}</view>
 				</view>
 				<view class="task-actions">
-					<button size="mini" type="warn" @click="cancelTask(task)">取消发布</button>
+					<button size="mini" type="warn" @click="cancelTask(task)">{{ $t('writer.work.scheduled.cancelPublish') }}</button>
 				</view>
 			</view>
 		</view>
 
 		<view class="empty-state" v-else>
-			<text>暂无定时发布任务</text>
+			<text>{{ $t('writer.work.scheduled.empty') }}</text>
 		</view>
 	</view>
 </template>
@@ -51,7 +51,7 @@
 				} catch (error) {
 					console.error(error);
 					uni.showToast({
-						title: '获取任务列表失败',
+						title: this.$t('writer.work.scheduled.loadTasksFailed'),
 						icon: 'none'
 					});
 				}
@@ -61,8 +61,8 @@
 				if (tk) tk = tk.tk;
 
 				uni.showModal({
-					title: '确认取消',
-					content: `确定要取消发布《${task.novel_name}》的章节吗？`,
+					title: this.$t('writer.work.scheduled.confirmCancel'),
+					content: this.$t('writer.work.scheduled.cancelConfirm', { name: task.novel_name }),
 					success: async (res) => {
 						if (res.confirm) {
 							try {
@@ -76,14 +76,14 @@
 									}
 								);
 								uni.showToast({
-									title: '已取消',
+									title: this.$t('writer.work.scheduled.cancelled'),
 									icon: 'success'
 								});
 								this.fetchTasks();
 							} catch (error) {
 								console.error(error);
 								uni.showToast({
-									title: '取消失败',
+									title: this.$t('writer.work.scheduled.cancelFailed'),
 									icon: 'none'
 								});
 							}

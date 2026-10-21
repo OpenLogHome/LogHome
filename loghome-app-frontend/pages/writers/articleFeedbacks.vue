@@ -4,7 +4,7 @@
       <div class="article-info">
         <h3 class="article-title">{{ articleInfo.title }}</h3>
         <div class="feedback-count">
-          共有 <span class="count">{{ feedbacks.length }}</span> 条错误反馈
+          {{ $t('writer.work.feedback.countPrefix') }} <span class="count">{{ feedbacks.length }}</span> {{ $t('writer.work.feedback.countSuffix') }}
         </div>
       </div>
 
@@ -14,16 +14,16 @@
           size="mini"
           @change="filterFeedbacks"
         >
-          <el-radio-button label="all">全部</el-radio-button>
-          <el-radio-button label="0">未处理</el-radio-button>
-          <el-radio-button label="1">已处理</el-radio-button>
+          <el-radio-button label="all">{{ $t('common.all') }}</el-radio-button>
+          <el-radio-button label="0">{{ $t('writer.work.feedback.unhandled') }}</el-radio-button>
+          <el-radio-button label="1">{{ $t('writer.work.feedback.handled') }}</el-radio-button>
         </el-radio-group>
       </div>
     </div>
 
     <div class="feedback-list">
       <div v-if="filteredFeedbacks.length === 0" class="no-data">
-        暂无错误反馈
+        {{ $t('writer.work.feedback.empty') }}
       </div>
 
       <div
@@ -48,12 +48,12 @@
         </div>
 
         <div class="paragraph-content">
-          <div class="label">问题段落:</div>
+          <div class="label">{{ $t('writer.work.feedback.paragraphLabel') }}</div>
           <div class="text">{{ feedback.paragraph_text }}</div>
         </div>
 
         <div class="feedback-content">
-          <div class="label">反馈内容:</div>
+          <div class="label">{{ $t('writer.work.feedback.contentLabel') }}</div>
           <div class="text">{{ feedback.feedback_content }}</div>
         </div>
 
@@ -63,15 +63,15 @@
             :type="feedback.status === 0 ? 'primary' : 'success'"
             @click="handleFeedbackStatus(feedback)"
           >
-            {{ feedback.status === 0 ? "标记为已处理" : "标记为未处理" }}
+            {{ feedback.status === 0 ? $t('writer.work.feedback.markHandled') : $t('writer.work.feedback.markUnhandled') }}
           </el-button>
 
           <el-button size="mini" type="warning" @click="gotoEditor(feedback)">
-            编辑章节
+            {{ $t('writer.work.feedback.editChapter') }}
           </el-button>
         </div>
 
-        <div v-else class="feedback-readonly-hint">当前账号只有查看反馈权限</div>
+        <div v-else class="feedback-readonly-hint">{{ $t('writer.work.feedback.readonlyHint') }}</div>
       </div>
     </div>
   </view>
@@ -110,7 +110,7 @@ export default {
       this.loadFeedbacks();
     } else {
       uni.showToast({
-        title: "参数错误",
+        title: this.$t('common.paramError'),
         icon: "none",
       });
     }
@@ -160,7 +160,7 @@ export default {
       } catch (err) {
         console.error(err);
         uni.showToast({
-          title: "获取文章信息失败",
+          title: this.$t('writer.work.feedback.loadArticleFailed'),
           icon: "none",
         });
       }
@@ -185,7 +185,7 @@ export default {
       } catch (err) {
         console.error(err);
         uni.showToast({
-          title: "获取反馈列表失败",
+          title: this.$t('writer.work.feedback.loadFeedbacksFailed'),
           icon: "none",
         });
       }
@@ -222,14 +222,14 @@ export default {
         if (res.data) {
           feedback.status = newStatus;
           uni.showToast({
-            title: newStatus === 1 ? "已标记为处理完成" : "已标记为未处理",
+            title: newStatus === 1 ? this.$t('writer.work.feedback.markedHandled') : this.$t('writer.work.feedback.markedUnhandled'),
             icon: "none",
           });
         }
       } catch (err) {
         console.error(err);
         uni.showToast({
-          title: "操作失败",
+          title: this.$t('common.operationFailed'),
           icon: "none",
         });
       }

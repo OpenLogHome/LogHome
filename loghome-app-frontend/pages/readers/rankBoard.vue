@@ -1,9 +1,9 @@
 <template>
 	<view class="rank-board-page" v-dark>
 		<view class="rank-header">
-			<button class="back-button" aria-label="返回" @click="goBack"><uni-icons type="back" size="36rpx" :color="$store.state.isDarkMode ? '#dddddd' : '#777777'" /></button>
+			<button class="back-button" :aria-label="$t('common.back')" @click="goBack"><uni-icons type="back" size="36rpx" :color="$store.state.isDarkMode ? '#dddddd' : '#777777'" /></button>
 			<view class="zone-tabs">
-				<view class="zone-tab" v-for="zone in zones" :key="zone.key" :class="{ active: zone.key === currentZone }" @click="switchZone(zone.key)">{{ zone.label }}</view>
+				<view class="zone-tab" v-for="zone in zones" :key="zone.key" :class="{ active: zone.key === currentZone }" @click="switchZone(zone.key)">{{ $t(zone.labelKey) }}</view>
 			</view>
 		</view>
 
@@ -15,30 +15,30 @@
 		<view class="rank-layout">
 			<view class="board-tabs">
 				<view class="board-tab" v-for="board in boards" :key="board.key" :class="{ active: board.key === currentBoard }" @click="switchBoard(board.key)">
-					<template v-if="board.key === 'logpower'"><LogPowerWordmark class="rank-wordmark" /><text>榜</text></template>
-					<text v-else>{{ board.label }}</text>
+					<template v-if="board.key === 'logpower'"><LogPowerWordmark class="rank-wordmark" /><text>{{ $t('reader.rank.boardSuffix') }}</text></template>
+					<text v-else>{{ $t(board.labelKey) }}</text>
 				</view>
 			</view>
 
 			<swiper class="rank-swiper" :current="currentZoneIndex" :duration="240" @change="onZoneSwipe" :circular="false">
 				<swiper-item v-for="zone in zones" :key="zone.key">
 					<scroll-view class="rank-content" scroll-y :scroll-top="zone.key === currentZone ? listScrollTop : 0" :refresher-enabled="zone.key === currentZone" :refresher-triggered="zone.key === currentZone && refreshing" @refresherrefresh="zone.key === currentZone && refreshRank()" @scrolltolower="zone.key === currentZone && loadMore()">
-						<view class="meta-line" v-if="zone.key === currentZone && snapshotTimeText && items.length">更新于 {{ snapshotTimeText }} · 已上{{ items.length }}部</view>
+						<view class="meta-line" v-if="zone.key === currentZone && snapshotTimeText && items.length">{{ $t('reader.rank.metaLine', { time: snapshotTimeText, count: items.length }) }}</view>
 						<view class="rank-list">
 							<view class="rank-item" v-for="item in zoneItems(zone.key)" :key="item.novel_id" @click="goBook(item)">
 								<view class="rank-index" :class="{ 'rank-top': item.position <= 3 }">{{ item.position <= 3 ? item.position : String(item.position).padStart(2, '0') }}</view>
 								<view class="book-cover-box">
 									<log-image :src="item.picUrl + '?thumbnail=1'" class="book-cover" :onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
-									<text v-if="item.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
-									<text v-if="item.novel_type === 'world'" class="world-cover-badge">世界</text>
+									<text v-if="item.novel_type === 'manga'" class="manga-cover-badge">{{ $t('reader.rank.zoneManga') }}</text>
+									<text v-if="item.novel_type === 'world'" class="world-cover-badge">{{ $t('reader.rank.zoneWorld') }}</text>
 								</view>
 								<view class="book-info">
 									<rank-work-title class="book-name" :title="item.name" :badges="item.badges || []" :max-badges="2" />
 									<view class="book-details">
-										<view class="book-author">作者：{{ item.user_name || '匿名作者' }}</view>
-										<view class="book-category">{{ item.novel_type === 'manga' ? '漫画' : item.novel_type === 'world' ? '世界设定' : '小说' }} · {{ Number(item.is_complete) === 1 ? '已完结' : '连载中' }}</view>
-										<view v-if="currentBoard === 'logpower'" class="book-score">原木力 {{ formatScore(item.score) }}</view>
-										<view v-else class="book-update">更新于 {{ formatUpdateDate(item.update_time) }}</view>
+										<view class="book-author">{{ $t('reader.rank.author', { name: item.user_name || $t('reader.rank.anonymousAuthor') }) }}</view>
+										<view class="book-category">{{ novelTypeText(item.novel_type) }} · {{ Number(item.is_complete) === 1 ? $t('common.completed') : $t('reader.rank.serializing') }}</view>
+										<view v-if="currentBoard === 'logpower'" class="book-score">{{ $t('reader.rank.logPowerScore', { score: formatScore(item.score) }) }}</view>
+										<view v-else class="book-update">{{ $t('reader.rank.updatedOn', { date: formatUpdateDate(item.update_time) }) }}</view>
 									</view>
 								</view>
 							</view>
@@ -46,14 +46,14 @@
 
 						<view class="loading-state" v-if="zoneLoading(zone.key) && !zoneItems(zone.key).length">
 							<image class="state-icon" src="../../static/loading.gif" mode="aspectFit" />
-							<text class="state-title">正在加载榜单…</text>
+							<text class="state-title">{{ $t('reader.rank.loadingRank') }}</text>
 						</view>
 						<view class="empty-state" v-else-if="!zoneLoading(zone.key) && !zoneItems(zone.key).length">
-							<text class="state-title">暂时还没有上榜作品</text>
-							<text class="state-desc">换一个分类或榜单看看吧</text>
+							<text class="state-title">{{ $t('reader.rank.emptyTitle') }}</text>
+							<text class="state-desc">{{ $t('reader.rank.emptyDesc') }}</text>
 						</view>
-						<view class="more-button" v-if="zone.key === currentZone && hasMore" @click="loadMore">{{ loading ? '加载中…' : '加载更多' }}</view>
-						<view class="list-end" v-else-if="zone.key === currentZone && items.length && !loading">已经到底啦</view>
+						<view class="more-button" v-if="zone.key === currentZone && hasMore" @click="loadMore">{{ loading ? $t('reader.rank.loadingMore') : $t('reader.rank.loadMore') }}</view>
+						<view class="list-end" v-else-if="zone.key === currentZone && items.length && !loading">{{ $t('reader.rank.listEnd') }}</view>
 					</scroll-view>
 				</swiper-item>
 			</swiper>
@@ -75,16 +75,16 @@ export default {
 	data() {
 		return {
 			boards: [
-				{ key: 'update', label: '更新榜' },
-				{ key: 'logpower', label: '原木力榜' },
-				{ key: 'complete', label: '完结榜' },
-				{ key: 'new', label: '新作榜' },
+				{ key: 'update', labelKey: 'reader.rank.boards.update' },
+				{ key: 'logpower', labelKey: 'reader.rank.boards.logpower' },
+				{ key: 'complete', labelKey: 'reader.rank.boards.complete' },
+				{ key: 'new', labelKey: 'reader.rank.boards.new' },
 			],
 			zones: [
-				{ key: 'all', label: '全部' },
-				{ key: 'novel', label: '小说' },
-				{ key: 'manga', label: '漫画' },
-				{ key: 'world', label: '世界' },
+				{ key: 'all', labelKey: 'common.all' },
+				{ key: 'novel', labelKey: 'reader.rank.zoneNovel' },
+				{ key: 'manga', labelKey: 'reader.rank.zoneManga' },
+				{ key: 'world', labelKey: 'reader.rank.zoneWorld' },
 			],
 			currentBoard: 'update',
 			currentZone: 'all',
@@ -103,21 +103,20 @@ export default {
 	},
 	computed: {
 		currentZoneIndex() { return this.zones.findIndex(zone => zone.key === this.currentZone); },
-		currentBoardLabel() { return this.boards.find(board => board.key === this.currentBoard).label; },
+		currentBoardLabel() { return this.$t(this.boards.find(board => board.key === this.currentBoard).labelKey); },
 		boardDescription() {
-			return {
-				update: '近7天更新的作品，按更新时间排序',
-				logpower: '根据阅读与互动贡献计算的原木力排行',
-				complete: '已完结作品，按最近更新时间排序',
-				new: '近三个月上线的作品，按原木力排序',
-			}[this.currentBoard];
+			return this.$t('reader.rank.boardDesc.' + this.currentBoard);
 		},
 		snapshotTimeText() {
 			if (!this.snapshotDate) return '';
 			const date = new Date(this.snapshotDate);
 			if (isNaN(date.getTime())) return '';
 			const pad = (n) => String(n).padStart(2, '0');
-			return `${date.getMonth() + 1}月${date.getDate()}日 ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+			return this.$t('reader.rank.snapshotTime', {
+				month: date.getMonth() + 1,
+				day: date.getDate(),
+				time: `${pad(date.getHours())}:${pad(date.getMinutes())}`
+			});
 		},
 	},
 	onLoad(options) {
@@ -164,7 +163,12 @@ export default {
 		goBack() {
 			uni.navigateBack();
 		},
-		formatUpdateDate(value) { return value ? String(value).slice(0, 10) : '暂无更新'; },
+		formatUpdateDate(value) { return value ? String(value).slice(0, 10) : this.$t('reader.rank.noUpdate'); },
+		novelTypeText(type) {
+			if (type === 'manga') return this.$t('reader.rank.zoneManga');
+			if (type === 'world') return this.$t('reader.rank.worldSetting');
+			return this.$t('reader.rank.zoneNovel');
+		},
 		refreshRank() { this.refreshing = true; this.loadFirstPage(); },
 		resetListScroll() {
 			this.listScrollTop = 1;
@@ -202,7 +206,7 @@ export default {
 			} catch (error) {
 				if (version !== this.requestVersion) return;
 				console.error('rankBoard loadFirstPage failed:', error);
-				uni.showToast({ title: '获取榜单失败', icon: 'none', duration: 2000 });
+				uni.showToast({ title: this.$t('reader.rank.fetchFailed'), icon: 'none', duration: 2000 });
 			} finally {
 				if (version === this.requestVersion) { this.loading = false; this.refreshing = false; }
 			}
@@ -224,7 +228,7 @@ export default {
 				if (version !== this.requestVersion) return;
 				if (error.response && error.response.status === 410) { this.loading = false; this.resetListScroll(); return this.loadFirstPage(); }
 				console.error('rankBoard loadMore failed:', error);
-				uni.showToast({ title: '加载失败，请稍后重试', icon: 'none', duration: 2000 });
+				uni.showToast({ title: this.$t('reader.rank.loadMoreFailed'), icon: 'none', duration: 2000 });
 			} finally {
 				if (version === this.requestVersion) this.loading = false;
 			}

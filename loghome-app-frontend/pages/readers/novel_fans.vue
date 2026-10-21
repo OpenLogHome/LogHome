@@ -1,7 +1,7 @@
 <template>
 	<view class="fans-page" v-dark>
 		<view class="board-toolbar">
-			<view class="board-switch" role="tablist" aria-label="贡献榜周期">
+			<view class="board-switch" role="tablist" :aria-label="$t('reader.rank.boardCycleAria')">
 				<view
 					class="switch-highlight"
 					:class="{ 'is-total': isActive === 1 }"
@@ -20,17 +20,17 @@
 			</view>
 		</view>
 		<view v-if="loading" class="state-panel" role="status">
-			正在加载贡献榜…
+			{{ $t('reader.rank.fansLoading') }}
 		</view>
 		<view v-else-if="loadError" class="state-panel">
-			<text>贡献榜加载失败</text>
-			<view class="retry-button" @click="getStatistics">重新加载</view>
+			<text>{{ $t('reader.rank.fansLoadFailed') }}</text>
+			<view class="retry-button" @click="getStatistics">{{ $t('common.reload') }}</view>
 		</view>
 		<view v-else-if="!fanInfo.length" class="state-panel">
 			<text class="empty-title">
-				{{ isActive === 0 ? '本月暂无贡献记录' : '暂无贡献记录' }}
+				{{ isActive === 0 ? $t('reader.rank.emptyMonth') : $t('reader.rank.empty') }}
 			</text>
-			<text class="empty-hint">成为第一位支持这部作品的读者吧</text>
+			<text class="empty-hint">{{ $t('reader.rank.emptyHint') }}</text>
 		</view>
 		<view v-else class="fans-list">
 			<view
@@ -73,7 +73,7 @@
 						:class="{ editable: isMe(fan) }"
 						@click="editMessage(fan)"
 					>
-						<text>{{ fan.message || '写下支持留言' }}</text>
+						<text>{{ fan.message || $t('reader.rank.supportMessagePlaceholder') }}</text>
 						<text v-if="isMe(fan)" class="edit-icon">✎</text>
 					</view>
 				</view>
@@ -81,12 +81,12 @@
 					<text class="contribution-value">
 						{{ formatValue(fan.fans_value) }}
 					</text>
-					<text class="contribution-unit">贡献值</text>
+					<text class="contribution-unit">{{ $t('reader.rank.contributionUnit') }}</text>
 				</view>
 			</view>
 		</view>
 		<view class="my-contribution">
-			<text class="my-rank">{{ myInfo.rank }}</text>
+			<text class="my-rank">{{ myInfo.rank || $t('reader.rank.notRanked') }}</text>
 			<user-avatar
 				:src="myInfo.avatar_url"
 				:frame="myInfo.avatar_frame"
@@ -95,34 +95,34 @@
 			/>
 			<view class="my-summary">
 				<text class="my-name">
-					{{ myInfo.user_id ? myInfo.name : '登录查看我的排名' }}
+					{{ myInfo.user_id ? myInfo.name : $t('reader.rank.loginToSeeRank') }}
 				</text>
 				<text class="my-hint">
 					{{
 						myInfo.user_id
 							? myInfo.fans_value > 0
-								? '感谢你对作品的支持'
-								: '送出第一份礼物，支持这部作品'
-							: '与喜欢的作品一起成长'
+								? $t('reader.rank.thanksSupport')
+								: $t('reader.rank.sendFirstGift')
+							: $t('reader.rank.growTogether')
 					}}
 				</text>
 			</view>
 			<view class="my-actions">
 				<view class="gift-button" @click="openGift">
-					{{ myInfo.user_id ? '送礼物' : '登录' }}
+					{{ myInfo.user_id ? $t('reader.rank.sendGift') : $t('reader.rank.login') }}
 				</view>
 				<text class="my-value">
 					{{ formatValue(myInfo.fans_value) }}
-					{{ isActive === 0 ? '本月' : '累计' }}贡献值
+					{{ isActive === 0 ? $t('reader.rank.monthlyContribution') : $t('reader.rank.totalContribution') }}
 				</text>
 			</view>
 		</view>
 		<uni-popup ref="messagePopup" type="dialog">
 			<uni-popup-dialog
 				mode="input"
-				title="编辑留言"
+				:title="$t('reader.rank.editMessageTitle')"
 				:value="editingMessage"
-				placeholder="请输入留言内容"
+				:placeholder="$t('reader.rank.messageInputPlaceholder')"
 				@confirm="confirmEditMessage"
 			/>
 		</uni-popup>
@@ -142,10 +142,9 @@ export default {
 	mixins: [darkModeMixin],
 	data() {
 		return {
-			topTitle: ['月榜', '总榜'],
 			isActive: 0,
 			fanInfo: [],
-			myInfo: { rank: '未上榜', fans_value: 0 },
+			myInfo: { rank: '', fans_value: 0 },
 			uid: 0,
 			editingMessage: '',
 			currentEditingFan: null,
@@ -155,6 +154,11 @@ export default {
 			giftMounted: false,
 			giftOpening: false,
 		};
+	},
+	computed: {
+		topTitle() {
+			return [this.$t('reader.rank.monthlyRank'), this.$t('reader.rank.totalRank')];
+		},
 	},
 	methods: {
 		token() {
@@ -182,7 +186,7 @@ export default {
 			const index = this.fanInfo.findIndex(fan => this.isMe(fan));
 			this.myInfo = {
 				...this.myInfo,
-				rank: index < 0 ? '未上榜' : String(index + 1),
+				rank: index < 0 ? '' : String(index + 1),
 				fans_value: index < 0 ? 0 : Number(this.fanInfo[index].fans_value) || 0,
 			};
 		},
@@ -216,7 +220,7 @@ export default {
 				const res = await axios.get(this.$baseUrl + '/users/userprofile', {
 					headers: { Authorization: token.tk },
 				});
-				this.myInfo = { ...res.data, rank: '未上榜', fans_value: 0 };
+				this.myInfo = { ...res.data, rank: '', fans_value: 0 };
 				this.syncMyRank();
 			} catch (error) {
 				if (error.response && error.response.status === 401)
@@ -243,14 +247,14 @@ export default {
 					String(novel.auther_id || novel.author_id) ===
 					String(this.myInfo.user_id)
 				) {
-					uni.showToast({ title: '不能给自己的作品打赏哦', icon: 'none' });
+					uni.showToast({ title: this.$t('reader.rank.giftSelfForbidden'), icon: 'none' });
 					return;
 				}
 				this.giftMounted = true;
 				this.$nextTick(() => this.$refs.giftPopup.open('bottom'));
 			} catch (_) {
 				uni.showToast({
-					title: '暂时无法打开礼物菜单，请稍后重试',
+					title: this.$t('reader.rank.giftOpenFailed'),
 					icon: 'none',
 				});
 			} finally {
@@ -264,7 +268,7 @@ export default {
 		editMessage(fan) {
 			if (!this.isMe(fan)) return;
 			this.currentEditingFan = fan;
-			this.editingMessage = fan.message || '此书只应天上有，当赏当赏！';
+			this.editingMessage = fan.message || this.$t('reader.rank.defaultMessage');
 			this.$refs.messagePopup.open();
 		},
 		async confirmEditMessage(value) {
@@ -284,9 +288,9 @@ export default {
 				this.fanInfo.forEach(fan => {
 					if (this.isMe(fan)) fan.message = value;
 				});
-				uni.showToast({ title: '留言已更新', icon: 'success' });
+				uni.showToast({ title: this.$t('reader.rank.messageUpdated'), icon: 'success' });
 			} catch (_) {
-				uni.showToast({ title: '更新留言失败', icon: 'none' });
+				uni.showToast({ title: this.$t('reader.rank.messageUpdateFailed'), icon: 'none' });
 			}
 		},
 	},
@@ -296,7 +300,7 @@ export default {
 		this.getStatistics();
 	},
 	onReady() {
-		uni.setNavigationBarTitle({ title: '粉丝贡献榜' });
+		uni.setNavigationBarTitle({ title: this.$t('reader.rank.pageTitle') });
 	},
 	onUnload() {
 		this.requestVersion++;

@@ -1,31 +1,31 @@
 <template>
   <view class="manga-settings" v-dark>
-    <view class="nav-bar"><button v-manga-a11y class="nav-back" type="button" aria-label="返回" @click="back"><manga-icon name="back" /></button><text>漫画作品设置</text></view>
-    <view v-if="loading || loadError" class="empty" role="status"><text>{{ loading ? '正在加载作品…' : loadError }}</text><button v-manga-a11y v-if="loadError" type="button" @click="load"><manga-icon name="retry" />重试</button></view>
+    <view class="nav-bar"><button v-manga-a11y class="nav-back" type="button" :aria-label="$t('common.back')" @click="back"><manga-icon name="back" /></button><text>{{ $t('manga.settings.pageTitle') }}</text></view>
+    <view v-if="loading || loadError" class="empty" role="status"><text>{{ loading ? $t('manga.settings.loadingWork') : loadError }}</text><button v-manga-a11y v-if="loadError" type="button" @click="load"><manga-icon name="retry" />{{ $t('common.retry') }}</button></view>
     <scroll-view v-else class="content" scroll-y>
       <view class="cover-card">
-        <image lazy-load class="cover" :src="novel.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="novel.name + '封面'" />
-        <view class="cover-info"><text class="eyebrow">{{ owner ? '作品资料' : '协作作品' }}</text><text class="title">{{ novel.name }}</text><text class="muted">{{ Number(novel.is_personal) === 1 ? '私密作品' : '公开作品' }}</text><button v-manga-a11y v-if="owner" class="link" type="button" @click="changeCover"><manga-icon name="image" />更换封面</button></view>
+        <image lazy-load class="cover" :src="novel.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="$t('manga.settings.coverAlt', { name: novel.name })" />
+        <view class="cover-info"><text class="eyebrow">{{ owner ? $t('manga.settings.workInfo') : $t('manga.settings.collaborativeWork') }}</text><text class="title">{{ novel.name }}</text><text class="muted">{{ Number(novel.is_personal) === 1 ? $t('manga.settings.privateWork') : $t('manga.settings.publicWork') }}</text><button v-manga-a11y v-if="owner" class="link" type="button" @click="changeCover"><manga-icon name="image" />{{ $t('manga.settings.changeCover') }}</button></view>
       </view>
       <view class="card">
-        <text class="section-title">基本信息</text>
-        <label class="label" for="manga-title-input">作品名称</label><input id="manga-title-input" v-model="name" :disabled="!owner || saving" maxlength="50" placeholder="漫画名称" />
-        <label class="label" for="manga-intro-input">作品简介</label><textarea id="manga-intro-input" v-model="intro" :disabled="!owner || saving" maxlength="2000" auto-height placeholder="讲述一个怎样的故事…" />
+        <text class="section-title">{{ $t('manga.settings.basicInfo') }}</text>
+        <label class="label" for="manga-title-input">{{ $t('manga.settings.workName') }}</label><input id="manga-title-input" v-model="name" :disabled="!owner || saving" maxlength="50" :placeholder="$t('manga.settings.namePlaceholder')" />
+        <label class="label" for="manga-intro-input">{{ $t('manga.settings.introLabel') }}</label><textarea id="manga-intro-input" v-model="intro" :disabled="!owner || saving" maxlength="2000" auto-height :placeholder="$t('manga.settings.introPlaceholder')" />
         <text class="counter">{{ intro.length }} / 2000</text>
-        <button v-manga-a11y="saving || !name.trim() || !dirty" v-if="owner" class="primary" type="button" :disabled="saving || !name.trim() || !dirty" @click="saveInfo">{{ saving ? '保存中…' : '保存资料' }}</button>
+        <button v-manga-a11y="saving || !name.trim() || !dirty" v-if="owner" class="primary" type="button" :disabled="saving || !name.trim() || !dirty" @click="saveInfo">{{ saving ? $t('manga.settings.saving') : $t('manga.settings.saveInfo') }}</button>
       </view>
       <view class="card">
-        <text class="section-title">作品管理</text>
-        <view v-if="owner" class="setting-row"><view class="row-copy"><text class="row-title">公开状态</text><text class="hint">{{ Number(novel.is_personal) === 1 ? '当前私密，开启后设为公开' : '当前公开，关闭后设为私密' }}</text></view><switch aria-label="公开状态" color="#c14a16" :checked="Number(novel.is_personal) === 0" :disabled="changing" @change="setStatus('is_personal', $event.detail.value ? 0 : 1)" /></view>
-        <view v-if="owner" class="setting-row"><view class="row-copy"><text class="row-title">已完结</text><text class="hint">标记作品的更新状态</text></view><switch aria-label="已完结" color="#c14a16" :checked="Number(novel.is_complete) === 1" :disabled="changing" @change="setStatus('is_complete', $event.detail.value ? 1 : 0)" /></view>
-        <button v-manga-a11y v-if="owner" class="setting-row setting-row-button" type="button" @click="navigate('changeNovelTags')"><view class="row-copy"><text class="row-title">分类与标签</text><text class="hint">设置作品在漫画库中的分类</text></view><manga-icon name="next" /></button>
-        <button v-manga-a11y class="setting-row setting-row-button" type="button" @click="navigate('essayCollaborationSettings')"><view class="row-copy"><text class="row-title">协作与权限</text><text class="hint">管理共同创作者的权限</text></view><manga-icon name="next" /></button>
-        <button v-manga-a11y class="setting-row setting-row-button" type="button" @click="preview"><view class="row-copy"><text class="row-title">作者预览</text><text class="hint">包含未发布话数</text></view><manga-icon name="next" /></button>
-        <button v-manga-a11y v-if="Number(novel.is_personal) === 0" class="setting-row setting-row-button" type="button" @click="viewReaderDetail"><view class="row-copy"><text class="row-title">查看读者详情</text><text class="hint">以读者身份查看已发布内容</text></view><manga-icon name="next" /></button>
+        <text class="section-title">{{ $t('manga.settings.management') }}</text>
+        <view v-if="owner" class="setting-row"><view class="row-copy"><text class="row-title">{{ $t('manga.settings.publicStatus') }}</text><text class="hint">{{ Number(novel.is_personal) === 1 ? $t('manga.settings.statusPrivateHint') : $t('manga.settings.statusPublicHint') }}</text></view><switch :aria-label="$t('manga.settings.publicStatus')" color="#c14a16" :checked="Number(novel.is_personal) === 0" :disabled="changing" @change="setStatus('is_personal', $event.detail.value ? 0 : 1)" /></view>
+        <view v-if="owner" class="setting-row"><view class="row-copy"><text class="row-title">{{ $t('common.completed') }}</text><text class="hint">{{ $t('manga.settings.completedHint') }}</text></view><switch :aria-label="$t('common.completed')" color="#c14a16" :checked="Number(novel.is_complete) === 1" :disabled="changing" @change="setStatus('is_complete', $event.detail.value ? 1 : 0)" /></view>
+        <button v-manga-a11y v-if="owner" class="setting-row setting-row-button" type="button" @click="navigate('changeNovelTags')"><view class="row-copy"><text class="row-title">{{ $t('manga.settings.categoriesTags') }}</text><text class="hint">{{ $t('manga.settings.categoriesHint') }}</text></view><manga-icon name="next" /></button>
+        <button v-manga-a11y class="setting-row setting-row-button" type="button" @click="navigate('essayCollaborationSettings')"><view class="row-copy"><text class="row-title">{{ $t('manga.settings.collaboration') }}</text><text class="hint">{{ $t('manga.settings.collaborationHint') }}</text></view><manga-icon name="next" /></button>
+        <button v-manga-a11y class="setting-row setting-row-button" type="button" @click="preview"><view class="row-copy"><text class="row-title">{{ $t('manga.settings.authorPreview') }}</text><text class="hint">{{ $t('manga.settings.authorPreviewHint') }}</text></view><manga-icon name="next" /></button>
+        <button v-manga-a11y v-if="Number(novel.is_personal) === 0" class="setting-row setting-row-button" type="button" @click="viewReaderDetail"><view class="row-copy"><text class="row-title">{{ $t('manga.settings.viewReaderDetail') }}</text><text class="hint">{{ $t('manga.settings.viewReaderDetailHint') }}</text></view><manga-icon name="next" /></button>
       </view>
       <view v-if="owner" class="card danger-card">
-        <text class="section-title">删除作品</text>
-        <button v-manga-a11y="deleting" class="setting-row setting-row-button danger-action" type="button" :disabled="deleting" @click="deleteManga"><view class="row-copy"><text class="row-title">{{ deleting ? '删除中…' : '删除漫画' }}</text><text class="hint">删除后不可找回，将扣除 50 原木</text></view><manga-icon name="trash" /></button>
+        <text class="section-title">{{ $t('manga.settings.deleteTitle') }}</text>
+        <button v-manga-a11y="deleting" class="setting-row setting-row-button danger-action" type="button" :disabled="deleting" @click="deleteManga"><view class="row-copy"><text class="row-title">{{ deleting ? $t('manga.settings.deleting') : $t('manga.settings.deleteManga') }}</text><text class="hint">{{ $t('manga.settings.deleteHint') }}</text></view><manga-icon name="trash" /></button>
       </view>
       <view class="bottom-space"></view>
     </scroll-view>
@@ -48,22 +48,22 @@ export default {
     async load() {
       this.loading = true; this.loadError = '';
       try { const res = await axios.get(this.$baseUrl + '/essays/get_manga?id=' + this.id, { headers: this.headers() }); if (!res.data || !res.data[0]) throw new Error(); this.novel = res.data[0]; this.name = this.novel.name || ''; this.intro = this.novel.content || ''; this.baseline = JSON.stringify([this.name, this.intro]); }
-      catch (_) { this.loadError = '作品加载失败或没有访问权限'; } finally { this.loading = false; }
+      catch (_) { this.loadError = this.$t('manga.settings.loadFailedPermission'); } finally { this.loading = false; }
     },
     async saveInfo() {
       if (!this.owner || this.saving || !this.name.trim()) return;
       this.saving = true;
-      try { await axios.post(this.$baseUrl + '/essays/modify_novel', { novel_id: Number(this.id), name: this.name.trim(), content: this.intro.trim() }, { headers: this.headers() }); this.name = this.name.trim(); this.intro = this.intro.trim(); this.novel.name = this.name; this.baseline = JSON.stringify([this.name, this.intro]); uni.showToast({ title: '资料已保存', icon: 'none' }); }
-      catch (_) { uni.showToast({ title: '保存失败，请重试', icon: 'none' }); } finally { this.saving = false; }
+      try { await axios.post(this.$baseUrl + '/essays/modify_novel', { novel_id: Number(this.id), name: this.name.trim(), content: this.intro.trim() }, { headers: this.headers() }); this.name = this.name.trim(); this.intro = this.intro.trim(); this.novel.name = this.name; this.baseline = JSON.stringify([this.name, this.intro]); uni.showToast({ title: this.$t('manga.settings.saved'), icon: 'none' }); }
+      catch (_) { uni.showToast({ title: this.$t('manga.settings.saveFailed'), icon: 'none' }); } finally { this.saving = false; }
     },
     async setStatus(key, value) {
       if (!this.owner || this.changing) return;
       this.changing = true; const previous = this.novel[key]; this.$set(this.novel, key, value);
       try { await axios.post(this.$baseUrl + '/essays/' + (key === 'is_personal' ? 'set_novel_status' : 'set_novel_update_status'), { novel_id: Number(this.id), [key]: value }, { headers: this.headers() }); this.$set(this.novel, key, value); }
-      catch (e) { uni.showToast({ title: e.response && e.response.data && e.response.data.msg || '状态修改失败', icon: 'none' }); this.$set(this.novel, key, previous); } finally { this.changing = false; }
+      catch (e) { uni.showToast({ title: e.response && e.response.data && e.response.data.msg || this.$t('manga.settings.statusFailed'), icon: 'none' }); this.$set(this.novel, key, previous); } finally { this.changing = false; }
     },
-    back() { if (this.saving || this.changing || this.deleting) return; if (this.dirty) uni.showModal({ title: '资料尚未保存', content: '退出会丢失本次资料修改，是否退出？', success: r => { if (r.confirm) { this.baseline = JSON.stringify([this.name, this.intro]); uni.navigateBack(); } } }); else uni.navigateBack(); },
-    leaveFor(action) { if (this.saving || this.changing || this.deleting) return; if (this.dirty) { uni.showToast({ title: '请先保存资料', icon: 'none' }); return; } action(); },
+    back() { if (this.saving || this.changing || this.deleting) return; if (this.dirty) uni.showModal({ title: this.$t('manga.settings.unsavedTitle'), content: this.$t('manga.settings.unsavedContent'), success: r => { if (r.confirm) { this.baseline = JSON.stringify([this.name, this.intro]); uni.navigateBack(); } } }); else uni.navigateBack(); },
+    leaveFor(action) { if (this.saving || this.changing || this.deleting) return; if (this.dirty) { uni.showToast({ title: this.$t('manga.settings.saveFirst'), icon: 'none' }); return; } action(); },
     navigate(page) { this.leaveFor(() => uni.navigateTo({ url: '/pages/writers/' + page + '?id=' + this.id })); },
     changeCover() { if (this.owner) this.navigate('cover_upload'); },
     preview() { this.leaveFor(() => uni.navigateTo({ url: '/pages/readers/mangaInfo?id=' + this.id + '&preview=1' })); },
@@ -71,18 +71,18 @@ export default {
     deleteManga() {
       if (!this.owner) return;
       this.leaveFor(() => uni.showModal({
-        title: '删除漫画',
-        content: '确定删除《' + this.novel.name + '》吗？删除后不可找回，并将扣除 50 原木。',
+        title: this.$t('manga.settings.deleteManga'),
+        content: this.$t('manga.settings.deleteConfirm', { name: this.novel.name }),
         confirmColor: '#a4382b',
         success: async result => {
           if (!result.confirm || this.deleting) return;
           this.deleting = true;
           try {
             await axios.post(this.$baseUrl + '/essays/delete_novel', { id: Number(this.id) }, { headers: this.headers() });
-            uni.showToast({ title: '作品已删除', icon: 'none' });
+            uni.showToast({ title: this.$t('manga.settings.deleted'), icon: 'none' });
             uni.switchTab({ url: '/pages/essays' });
           } catch (error) {
-            uni.showToast({ title: error.response && error.response.data && error.response.data.msg || '删除失败，请重试', icon: 'none' });
+            uni.showToast({ title: error.response && error.response.data && error.response.data.msg || this.$t('manga.settings.deleteFailed'), icon: 'none' });
           } finally {
             this.deleting = false;
           }

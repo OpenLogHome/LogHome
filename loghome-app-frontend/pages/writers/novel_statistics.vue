@@ -3,32 +3,32 @@
 		<!-- 核心数据展示 -->
 		<view class="core-metrics">
 			<view class="metrics-title">
-				<text>核心数据</text>
+				<text>{{ $t('writer.work.stats.coreMetrics') }}</text>
 			</view>
 			<view class="metrics-grid">
 				<view class="metric-item">
 					<text class="metric-value">{{ coreData.views || 0 }}</text>
-					<text class="metric-label">阅读量</text>
+					<text class="metric-label">{{ $t('writer.work.stats.views') }}</text>
 				</view>
 				<view class="metric-item">
 					<text class="metric-value">{{ coreData.likes || 0 }}</text>
-					<text class="metric-label">点赞</text>
+					<text class="metric-label">{{ $t('writer.work.stats.likes') }}</text>
 				</view>
 				<view class="metric-item">
 					<text class="metric-value">{{ coreData.favorites || 0 }}</text>
-					<text class="metric-label">收藏</text>
+					<text class="metric-label">{{ $t('common.favorite') }}</text>
 				</view>
 				<view class="metric-item">
 					<text class="metric-value">{{ coreData.comments || 0 }}</text>
-					<text class="metric-label">评论</text>
+					<text class="metric-label">{{ $t('writer.work.stats.comments') }}</text>
 				</view>
 				<view class="metric-item">
 					<text class="metric-value">{{ coreData.shares || 0 }}</text>
-					<text class="metric-label">分享</text>
+					<text class="metric-label">{{ $t('common.share') }}</text>
 				</view>
 				<view class="metric-item">
 					<text class="metric-value">{{ coreData.tips || 0 }}</text>
-					<text class="metric-label">打赏</text>
+					<text class="metric-label">{{ $t('writer.work.stats.tips') }}</text>
 				</view>
 			</view>
 		</view>
@@ -36,8 +36,8 @@
 		<!-- 趋势图表 -->
 		<view class="trend-section">
 			<view class="trend-title">
-				<text>近30天阅读趋势</text>
-				<text class="trend-subtitle">每日更新</text>
+				<text>{{ $t('writer.work.stats.readTrend') }}</text>
+				<text class="trend-subtitle">{{ $t('writer.work.stats.dailyUpdate') }}</text>
 			</view>
 			<view class="chart-container">
 				<canvas canvas-id="readChart" id="readChart" class="charts"></canvas>
@@ -47,8 +47,8 @@
 		<!-- 互动数据趋势 -->
 		<view class="trend-section">
 			<view class="trend-title">
-				<text>点赞趋势</text>
-				<text class="trend-subtitle">每日更新</text>
+				<text>{{ $t('writer.work.stats.likesTrend') }}</text>
+				<text class="trend-subtitle">{{ $t('writer.work.stats.dailyUpdate') }}</text>
 			</view>
 			<view class="chart-container">
 				<canvas canvas-id="likesChart" id="likesChart" class="charts"></canvas>
@@ -57,8 +57,8 @@
 
 		<view class="trend-section">
 			<view class="trend-title">
-				<text>收藏趋势</text>
-				<text class="trend-subtitle">每日更新</text>
+				<text>{{ $t('writer.work.stats.favoritesTrend') }}</text>
+				<text class="trend-subtitle">{{ $t('writer.work.stats.dailyUpdate') }}</text>
 			</view>
 			<view class="chart-container">
 				<canvas canvas-id="favoritesChart" id="favoritesChart" class="charts"></canvas>
@@ -67,8 +67,8 @@
 
 	<view class="trend-section">
 		<view class="trend-title">
-			<text>评论趋势</text>
-			<text class="trend-subtitle">每日更新</text>
+			<text>{{ $t('writer.work.stats.commentsTrend') }}</text>
+			<text class="trend-subtitle">{{ $t('writer.work.stats.dailyUpdate') }}</text>
 		</view>
 		<view class="chart-container">
 			<canvas canvas-id="commentsChart" id="commentsChart" class="charts"></canvas>
@@ -77,8 +77,8 @@
 
 	<view class="trend-section">
 		<view class="trend-title">
-			<text>分享趋势</text>
-			<text class="trend-subtitle">每日更新</text>
+			<text>{{ $t('writer.work.stats.sharesTrend') }}</text>
+			<text class="trend-subtitle">{{ $t('writer.work.stats.dailyUpdate') }}</text>
 		</view>
 		<view class="chart-container">
 			<canvas canvas-id="sharesChart" id="sharesChart" class="charts"></canvas>
@@ -87,8 +87,8 @@
 
 	<view class="trend-section">
 		<view class="trend-title">
-			<text>打赏趋势</text>
-			<text class="trend-subtitle">每日更新</text>
+			<text>{{ $t('writer.work.stats.tipsTrend') }}</text>
+			<text class="trend-subtitle">{{ $t('writer.work.stats.dailyUpdate') }}</text>
 		</view>
 			<view class="chart-container">
 				<canvas canvas-id="tipsChart" id="tipsChart" class="charts"></canvas>
@@ -167,7 +167,7 @@ export default {
 			} catch (error) {
 				console.error(error)
 				uni.showToast({
-					title: '获取统计数据失败',
+					title: this.$t('writer.work.stats.loadStatsFailed'),
 					icon: 'none'
 				})
 			}
@@ -195,7 +195,7 @@ export default {
 				categories: categories,
 				dataLabel: false,
 				series: [{
-					name: '阅读量',
+					name: this.$t('writer.work.stats.views'),
 					data: data,
 					color: '#ea7034',
 					type: 'line',
@@ -272,7 +272,7 @@ export default {
 				categories: categories,
 				dataLabel: false,
 				series: [{
-					name: '点赞',
+					name: this.$t('writer.work.stats.likes'),
 					data: data,
 					color: '#ff6b6b',
 					type: 'line',
@@ -315,7 +315,7 @@ export default {
 				categories: categories,
 				dataLabel: false,
 				series: [{
-					name: '收藏',
+					name: this.$t('common.favorite'),
 					data: data,
 					color: '#ffd93d',
 					type: 'line',
@@ -358,7 +358,7 @@ export default {
 				categories: categories,
 				dataLabel: false,
 				series: [{
-					name: '评论',
+					name: this.$t('writer.work.stats.comments'),
 					data: data,
 					color: '#6c5ce7',
 					type: 'line',
@@ -401,7 +401,7 @@ export default {
 				categories: categories,
 				dataLabel: false,
 				series: [{
-					name: '分享',
+					name: this.$t('common.share'),
 					data: data,
 					color: '#74b9ff',
 					type: 'line',
@@ -444,7 +444,7 @@ export default {
 				categories: categories,
 				dataLabel: false,
 				series: [{
-					name: '打赏',
+					name: this.$t('writer.work.stats.tips'),
 					data: data,
 					color: '#a8e6cf',
 					type: 'line',

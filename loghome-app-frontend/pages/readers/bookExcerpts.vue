@@ -6,14 +6,14 @@
         :class="{ active: activeTab === 'my' }" 
         @click="activeTab = 'my'"
       >
-        我的书摘
+        {{ $t('reader.book.myExcerpts') }}
       </div>
       <div 
         class="tab" 
         :class="{ active: activeTab === 'hot' }" 
         @click="activeTab = 'hot'"
       >
-        热门书摘
+        {{ $t('reader.book.hotExcerpts') }}
       </div>
     </div>
     
@@ -21,12 +21,12 @@
       <!-- 我的书摘 -->
       <div v-if="activeTab === 'my'" class="my-excerpts">
         <div v-if="loading" class="loading">
-          <i class="el-icon-loading"></i> 努力加载中...
+          <i class="el-icon-loading"></i> {{ $t('reader.book.loadingEllipsis') }}
         </div>
         <div v-else-if="myExcerpts.length === 0" class="empty-state">
           <i class="el-icon-document"></i>
-          <p>还没有添加任何书摘</p>
-          <p class="tip">阅读时长按段落可添加书摘</p>
+          <p>{{ $t('reader.book.noExcerpts') }}</p>
+          <p class="tip">{{ $t('reader.book.excerptTip') }}</p>
         </div>
         <div v-else class="excerpts-list">
           <div 
@@ -37,7 +37,7 @@
           >
             <div class="excerpt-content">{{ excerpt.paragraph }}</div>
             <div class="excerpt-meta">
-              <span class="article-info">来自 第{{ excerpt.article_chapter }}章 {{ excerpt.title }}</span>
+              <span class="article-info">{{ $t('reader.book.fromChapter', { chapter: excerpt.article_chapter, title: excerpt.title }) }}</span>
               <span class="actions">
                 <i class="el-icon-delete" @click.stop="deleteExcerpt(excerpt.article_cento_id)"></i>
               </span>
@@ -49,11 +49,11 @@
       <!-- 热门书摘 -->
       <div v-if="activeTab === 'hot'" class="hot-excerpts">
         <div v-if="loadingHot" class="loading">
-          <i class="el-icon-loading"></i> 努力加载中...
+          <i class="el-icon-loading"></i> {{ $t('reader.book.loadingEllipsis') }}
         </div>
         <div v-else-if="hotExcerpts.length === 0" class="empty-state">
           <i class="el-icon-data-analysis"></i>
-          <p>暂无热门书摘</p>
+          <p>{{ $t('reader.book.noHotExcerpts') }}</p>
         </div>
         <div v-else class="excerpts-list">
           <div 
@@ -64,7 +64,7 @@
           >
             <div class="excerpt-content">{{ excerpt.paragraph }}</div>
             <div class="excerpt-meta">
-              <span class="article-info">来自 第{{ excerpt.article_chapter }}章 {{ excerpt.article_title }}</span>
+              <span class="article-info">{{ $t('reader.book.fromChapter', { chapter: excerpt.article_chapter, title: excerpt.article_title }) }}</span>
               <div class="stats">
                 <span class="stat"><i class="el-icon-edit"></i> {{ excerpt.highlight_count }}</span>
                 <span class="stat"><i class="el-icon-chat-line-round"></i> {{ excerpt.comment_count }}</span>
@@ -122,7 +122,7 @@ export default {
         const tk = JSON.parse(window.localStorage.getItem('token'));
         if (!tk) {
           uni.showToast({
-            title: '请先登录',
+            title: this.$t('common.needLogin'),
             icon: 'none'
           });
           this.loading = false;
@@ -142,7 +142,7 @@ export default {
       } catch (error) {
         console.error('获取我的书摘失败:', error);
         uni.showToast({
-          title: '获取书摘失败',
+          title: this.$t('reader.book.loadExcerptsFailed'),
           icon: 'none'
         });
       } finally {
@@ -166,7 +166,7 @@ export default {
       } catch (error) {
         console.error('获取热门书摘失败:', error);
         uni.showToast({
-          title: '获取热门书摘失败',
+          title: this.$t('reader.book.loadHotExcerptsFailed'),
           icon: 'none'
         });
       } finally {
@@ -223,8 +223,8 @@ export default {
         
         // 添加确认提示
         uni.showModal({
-          title: '确认删除',
-          content: '确定要删除这条书摘吗？',
+          title: this.$t('common.confirmDelete'),
+          content: this.$t('reader.book.confirmDeleteExcerpt'),
           confirmColor: '#F56C6C',
           success: async (res) => {
             if (res.confirm) {
@@ -241,13 +241,13 @@ export default {
                 this.myExcerpts = this.myExcerpts.filter(item => item.article_cento_id !== centoId);
                 
                 uni.showToast({
-                  title: '删除成功',
+                  title: this.$t('common.deleteSuccess'),
                   icon: 'success'
                 });
               } catch (error) {
                 console.error('删除书摘失败:', error);
                 uni.showToast({
-                  title: '删除失败',
+                  title: this.$t('common.deleteFailed'),
                   icon: 'none'
                 });
               }
@@ -257,7 +257,7 @@ export default {
       } catch (error) {
         console.error('删除书摘失败:', error);
         uni.showToast({
-          title: '删除失败',
+          title: this.$t('common.deleteFailed'),
           icon: 'none'
         });
       }

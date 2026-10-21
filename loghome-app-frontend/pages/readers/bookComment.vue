@@ -1,11 +1,11 @@
 <template>
 	<view class="commentOuter" :class="{ 'component-mode': componentMode }" :style="{ '--statusBarHeight': 0 + 'px' }" v-dark>
 		<z-paging ref="paging" v-model="reviews" @onRefresh="pullDown" @query="refreshPage"
-			:customOperationText="componentMode ? '收起' : '刷新'"
+			:customOperationText="componentMode ? $t('common.collapse') : $t('reader.book.refresh')"
 			:fixed="!componentMode"
 			:style="{ 'marginTop': '0px', 'height': componentMode ? '100%' : 'auto' }"
 			:default-page-size="componentMode ? 10 : 10">
-			<nothing :msg="'还没有评论哦\n快来抢沙发吧~'" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
+			<nothing :msg="$t('reader.book.noCommentsYet')" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
 			<div v-if="paragraphId !== undefined" class="cento-banner" @click="navToChapter">
 				<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1"
 					xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;">
@@ -30,7 +30,7 @@
 		<view class="reply">
 			<!-- 回复状态提示条 -->
 			<view class="reply-status" v-if="replyToId !== -1">
-				<text class="reply-status-text">回复 {{replyToUserName}}</text>
+				<text class="reply-status-text">{{ $t('reader.book.replyTo', { name: replyToUserName }) }}</text>
 				<view class="cancel-reply-btn" @tap="cancelReply">
 					<uni-icons type="closeempty" size="20" color="var(--manga-muted, #656c74)"></uni-icons>
 				</view>
@@ -47,7 +47,7 @@
 					<view class="image-icon" @tap="toggleImageUpload">
 						<uni-icons type="image" size="30" color="var(--manga-muted, #656c74)"></uni-icons>
 					</view>
-					<button class="send-btn" type="button" :disabled="isSubmitting || !commentText" @click="submitComment">{{ isSubmitting ? '发布中' : '发布' }}</button>
+					<button class="send-btn" type="button" :disabled="isSubmitting || !commentText" @click="submitComment">{{ isSubmitting ? $t('reader.book.publishing') : $t('reader.book.publish') }}</button>
 				</view>
 			</div>
 
@@ -102,7 +102,6 @@ export default {
 			preLoadCommentId: undefined,
 			reviews: [],
 			commentText: "",
-			commentPlaceholder: "发一条友善的评论",
 			replyToId: -1,
 			isFocus: false,
 			fatherId: -1,
@@ -127,6 +126,14 @@ export default {
 			default: {}
 		}
 	},
+	computed: {
+		commentPlaceholder() {
+			if (this.replyToId !== -1) {
+				return this.$t('reader.book.replyToPlaceholder', { name: this.replyToUserName });
+			}
+			return this.$t('reader.book.commentPlaceholder');
+		}
+	},
 	mounted() {
 		if (this.componentMode) {
 			this.applyCommentContext(this.componentData);
@@ -144,11 +151,11 @@ export default {
 			this.applyCommentContext(params);
 			if (params.articleId !== undefined) {
 				uni.setNavigationBarTitle({
-					title: "章节评论"
+					title: this.$t('reader.book.chapterComments')
 				})
 				if (params.paragraphId !== undefined) {
 					uni.setNavigationBarTitle({
-						title: "段落评论"
+						title: this.$t('reader.book.paragraphComments')
 					})
 				}
 			}
@@ -330,7 +337,7 @@ export default {
 			await this.delay();
 			if (this.$refs.paging == undefined) return;
 			uni.showLoading({
-				title: '努力加载中'
+				title: this.$t('common.loading')
 			});
 			let data = [];
 			// fast 接口单请求返回根评论 + 内嵌回复 + 点赞数 + 引文，避免逐条拉回复的瀑布
@@ -344,7 +351,7 @@ export default {
 					}
 				}).catch((err) => {
 					uni.showToast({
-						title: "评论信息获取失败",
+						title: this.$t('reader.book.loadCommentsFailed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -391,7 +398,7 @@ export default {
 			if (this.commentText == "" || this.isSubmitting) return;
 			this.isSubmitting = true;
 			uni.showLoading({
-				title: '发送中...',
+				title: this.$t('reader.book.sending'),
 				mask: true
 			});
 			let tk = JSON.parse(window.localStorage.getItem('token')); if (tk) tk = tk.tk;;
@@ -414,7 +421,7 @@ export default {
 					},
 					);
 					uni.showToast({
-						title: "发表成功",
+						title: this.$t('reader.book.publishSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -462,7 +469,7 @@ export default {
 					},
 					);
 					uni.showToast({
-						title: "发表成功",
+						title: this.$t('reader.book.publishSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -495,7 +502,7 @@ export default {
 			} catch (error) {
 				if (error) {
 					uni.showToast({
-						title: "发表失败",
+						title: this.$t('reader.book.publishFailed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -541,7 +548,6 @@ export default {
 			this.replyToId = item.review.comment_id;
 			this.fatherId = item.father;
 			this.replyToUserName = item.review.userName;
-			this.commentPlaceholder = "回复 " + item.review.userName + "：";
 			this.isFocus = true;
 			document.querySelector("textarea").focus();
 		},
@@ -549,7 +555,6 @@ export default {
 			this.replyToId = -1;
 			this.fatherId = -1;
 			this.replyToUserName = "";
-			this.commentPlaceholder = "发一条友善的评论";
 			if (this.media_urls.length === 0) {
 				this.isFocus = false;
 			}
@@ -608,7 +613,7 @@ export default {
 					sourceType: ['album', 'camera']
 				})
 
-				uni.showLoading({ title: '正在上传图片...' })
+				uni.showLoading({ title: this.$t('reader.book.uploadingImage') })
 
 				for (let tempFile of res[1].tempFilePaths) {
 					const uploadRes = await this.uploadFile(tempFile)
@@ -621,7 +626,7 @@ export default {
 				uni.hideLoading()
 				console.error('上传图片失败', error)
 				uni.showToast({
-					title: '上传图片失败',
+					title: this.$t('reader.book.uploadImageFailed'),
 					icon: 'none'
 				})
 			}
@@ -629,7 +634,7 @@ export default {
 		async uploadFile(filePath) {
 			return new Promise((resolve, reject) => {
 				uni.showToast({
-					title: "图片上传中",
+					title: this.$t('reader.book.imageUploading'),
 					icon: 'loading',
 					duration: 2000
 				});

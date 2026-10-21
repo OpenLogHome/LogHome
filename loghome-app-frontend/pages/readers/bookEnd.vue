@@ -1,14 +1,14 @@
 <template>
 	<view class="outer" v-dark>
 		<div class="container">
-			<div class="end-mark">{{bookInfo.is_complete ? '已完结，感谢陪伴' : '尚未完结 · 敬请期待'}}</div>
+			<div class="end-mark">{{bookInfo.is_complete ? $t('reader.book.finishedThanks') : $t('reader.book.notFinished')}}</div>
 
 			<div class="action-buttons">
 				<button class="btn comment-btn" @click="navtoComment">
-					写个书评
+					{{ $t('reader.book.writeReview') }}
 				</button>
 				<button class="btn subscribe-btn" @click="toggleSubscribe">
-					{{isInBookcase ? '已收藏' : '收藏作品'}}
+					{{isInBookcase ? $t('reader.book.collected') : $t('reader.book.collectWork')}}
 				</button>
 				<!-- 		            <button class="btn rate-btn" onclick="rateNovel()">
 		                <i class="fas fa-star"></i>评分
@@ -21,13 +21,13 @@
 			</div> -->
 
 			<div class="message">
-				作者没跑路！只是鸽了！<br />
+				{{ $t('reader.book.authorMessage') }}<br />
 				<!-- 当前收藏人数：<span id="subscribers">1</span> -->
 			</div>
 
 			<div class="navigation">
 				<button class="nav-btn" @click="goToCatalog">
-					<i class="fas fa-arrow-left"></i>返回详情
+					<i class="fas fa-arrow-left"></i>{{ $t('reader.book.backToDetails') }}
 				</button>
 			</div>
 		</div>
@@ -36,7 +36,7 @@
 		<div class="recommend-container">
 			<div class="recommend-section">
 				<div class="section-title">
-					<h3>猜你喜欢</h3>
+					<h3>{{ $t('reader.book.recommended') }}</h3>
 				</div>
 				<div class="recommend-books">
 					<div v-for="(book, index) in recommendBooks" :key="index" class="book-item" @click="readBook(book.novel_id)">
@@ -101,7 +101,7 @@
 					this.recommendBooks = res.data
 				} catch (error) {
 					uni.showToast({
-						title: '获取推荐书籍失败',
+						title: this.$t('reader.book.loadRecommendFailed'),
 						icon: 'none',
 						duration: 2000
 					})
@@ -147,7 +147,7 @@
 						}
 					);
 					uni.showToast({
-						title: "收藏成功",
+						title: this.$t('reader.book.collectSuccess'),
 						icon: 'success',
 						duration: 2000
 					});
@@ -160,7 +160,7 @@
 						});
 					} else {
 						uni.showToast({
-							title: "收藏失败",
+							title: this.$t('reader.book.collectFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -174,10 +174,10 @@
 				tk = tk.tk;
 				
 				uni.showModal({
-					title: '提示',
-					content: '确定取消收藏吗？',
-					cancelText: "我再想想",
-					confirmText: "狠心取消",
+					title: this.$t('common.prompt'),
+					content: this.$t('reader.book.confirmRemoveFromShelf'),
+					cancelText: this.$t('reader.book.thinkAgain'),
+					confirmText: this.$t('reader.book.confirmRemove'),
 					showCancel: true,
 					confirmColor: '#f59037',
 					cancelColor: '#343434',
@@ -194,7 +194,7 @@
 									}
 								);
 								uni.showToast({
-									title: "已从书架移除",
+									title: this.$t('reader.book.removedFromShelf'),
 									icon: 'success',
 									duration: 2000
 								});
@@ -207,7 +207,7 @@
 									});
 								} else {
 									uni.showToast({
-										title: "移除失败",
+										title: this.$t('reader.book.removeFromShelfFailed'),
 										icon: 'none',
 										duration: 2000
 									});
@@ -247,7 +247,7 @@
 					}
 				} catch (error) {
 					uni.showToast({
-						title: '获取小说信息失败',
+						title: this.$t('reader.book.loadBookFailed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -263,7 +263,7 @@
 				this.checkBookcaseStatus();
 			} else {
 				uni.showToast({
-					title: '获取小说ID失败',
+					title: this.$t('reader.book.missingBookId'),
 					icon: 'none',
 					duration: 2000
 				});

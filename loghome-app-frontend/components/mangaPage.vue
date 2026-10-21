@@ -1,36 +1,36 @@
 <template>
   <div class="mangaWrapper" v-dark>
-    <div class="outer"><button v-manga-a11y class="portal" type="button" @click="openCreateDialog"><span class="portal-kicker">漫画创作</span><span class="subtitle">分镜落笔，画面有声</span><span class="newManga">创建一部全新的漫画 <manga-icon name="next" /></span></button></div>
-    <div class="workspace-head"><span>我的漫画</span><span>{{ mangas.length }} 部作品</span></div>
-    <div v-if="loading" class="workspace-status" role="status">正在加载作品…</div>
-    <div v-else-if="loadError" class="workspace-status" role="alert">加载失败 <button v-manga-a11y type="button" @click="loadMangas"><manga-icon name="retry" />重试</button></div>
-    <div v-else-if="!mangas.length" class="empty-state"><manga-icon name="book" /><strong>漫画架还是空的</strong><span>创建你的第一部作品</span><button v-manga-a11y type="button" @click="openCreateDialog"><manga-icon name="add" />创建漫画</button></div>
+    <div class="outer"><button v-manga-a11y class="portal" type="button" @click="openCreateDialog"><span class="portal-kicker">{{ $t('manga.reader.workspace.kicker') }}</span><span class="subtitle">{{ $t('manga.reader.workspace.subtitle') }}</span><span class="newManga">{{ $t('manga.reader.workspace.createNewManga') }} <manga-icon name="next" /></span></button></div>
+    <div class="workspace-head"><span>{{ $t('manga.reader.workspace.myManga') }}</span><span>{{ $t('manga.reader.workspace.workCount', { count: mangas.length }) }}</span></div>
+    <div v-if="loading" class="workspace-status" role="status">{{ $t('manga.reader.workspace.loadingWorks') }}</div>
+    <div v-else-if="loadError" class="workspace-status" role="alert">{{ $t('common.loadFailed') }} <button v-manga-a11y type="button" @click="loadMangas"><manga-icon name="retry" />{{ $t('common.retry') }}</button></div>
+    <div v-else-if="!mangas.length" class="empty-state"><manga-icon name="book" /><strong>{{ $t('manga.reader.workspace.emptyTitle') }}</strong><span>{{ $t('manga.reader.workspace.emptyDesc') }}</span><button v-manga-a11y type="button" @click="openCreateDialog"><manga-icon name="add" />{{ $t('manga.reader.workspace.createManga') }}</button></div>
     <div class="mangaCard" v-for="manga in mangas" :key="manga.novel_id" v-dark>
-      <button v-manga-a11y class="card-body" type="button" :aria-label="'查看《' + manga.name + '》的读者详情'" @click="viewDetail(manga)">
-        <image lazy-load class="manga-cover" :src="manga.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="manga.name + '封面'" />
+      <button v-manga-a11y class="card-body" type="button" :aria-label="$t('manga.reader.workspace.viewDetailAria', { name: manga.name })" @click="viewDetail(manga)">
+        <image lazy-load class="manga-cover" :src="manga.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="$t('manga.reader.workspace.coverAlt', { name: manga.name })" />
         <div class="manga-info">
           <div class="manga-title">{{ manga.name }}</div>
-          <div class="manga-tags"><span class="status-chip">漫画</span><span class="status-chip" :class="{ private: Number(manga.is_personal) === 1 }">{{ Number(manga.is_personal) === 1 ? '私密' : '公开' }}</span><span class="status-chip" v-if="Number(manga.is_complete) === 1">已完结</span><span class="status-chip" v-if="hasActiveCollaborators(manga)">协作作品</span><span class="status-chip" v-if="manga.collaborator_role">协作成员</span><span class="status-chip banned" v-if="Number(manga.is_banned) === 1">作品异常</span><span class="status-chip reviewing" v-else-if="Number(manga.is_banned) === 2">重新审核中</span></div>
-          <div class="manga-intro">{{ manga.content || '还没有填写简介' }}</div>
-          <div class="manga-ban-reason" v-if="Number(manga.is_banned) >= 1 && (manga.ban_reason || manga.ban_review_comment)"><text class="ban-label">异常原因：</text><text>{{ manga.ban_reason || '违反社区规则' }}{{ manga.ban_review_comment ? '（' + manga.ban_review_comment + '）' : '' }}</text></div>
-          <div class="manga-date">更新于 {{ formatDate(manga.update_time) }}</div>
+          <div class="manga-tags"><span class="status-chip">{{ $t('manga.reader.workspace.typeLabel') }}</span><span class="status-chip" :class="{ private: Number(manga.is_personal) === 1 }">{{ Number(manga.is_personal) === 1 ? $t('common.private') : $t('common.public') }}</span><span class="status-chip" v-if="Number(manga.is_complete) === 1">{{ $t('common.completed') }}</span><span class="status-chip" v-if="hasActiveCollaborators(manga)">{{ $t('manga.reader.workspace.collaborativeWork') }}</span><span class="status-chip" v-if="manga.collaborator_role">{{ $t('manga.reader.workspace.collaborator') }}</span><span class="status-chip banned" v-if="Number(manga.is_banned) === 1">{{ $t('manga.reader.workspace.workAbnormal') }}</span><span class="status-chip reviewing" v-else-if="Number(manga.is_banned) === 2">{{ $t('manga.reader.workspace.reReviewing') }}</span></div>
+          <div class="manga-intro">{{ manga.content || $t('manga.reader.workspace.noIntro') }}</div>
+          <div class="manga-ban-reason" v-if="Number(manga.is_banned) >= 1 && (manga.ban_reason || manga.ban_review_comment)"><text class="ban-label">{{ $t('manga.reader.workspace.banReasonLabel') }}</text><text>{{ manga.ban_reason || $t('manga.reader.workspace.banReasonDefault') }}{{ manga.ban_review_comment ? $t('manga.reader.workspace.banReviewComment', { text: manga.ban_review_comment }) : '' }}</text></div>
+          <div class="manga-date">{{ $t('manga.reader.workspace.updatedAt', { date: formatDate(manga.update_time) }) }}</div>
         </div>
       </button>
       <div class="card-actions">
-        <button v-manga-a11y class="primary-action" type="button" @click="manageEpisodes(manga)"><manga-icon name="book" /><text>话数管理</text></button>
-        <button v-manga-a11y type="button" @click="openSettings(manga)"><manga-icon name="settings" /><text>{{ isOwner(manga) ? '作品设置' : '协作设置' }}</text></button>
-        <button v-manga-a11y type="button" @click="previewManga(manga)"><manga-icon name="preview" /><text>预览</text></button>
-        <button v-manga-a11y class="ban-action" v-if="Number(manga.is_banned) === 1" type="button" @click="resubmitReview(manga)"><manga-icon name="retry" /><text>重新提交审核</text></button>
+        <button v-manga-a11y class="primary-action" type="button" @click="manageEpisodes(manga)"><manga-icon name="book" /><text>{{ $t('manga.reader.workspace.manageEpisodes') }}</text></button>
+        <button v-manga-a11y type="button" @click="openSettings(manga)"><manga-icon name="settings" /><text>{{ isOwner(manga) ? $t('manga.reader.workspace.workSettings') : $t('manga.reader.workspace.collabSettings') }}</text></button>
+        <button v-manga-a11y type="button" @click="previewManga(manga)"><manga-icon name="preview" /><text>{{ $t('manga.reader.workspace.preview') }}</text></button>
+        <button v-manga-a11y class="ban-action" v-if="Number(manga.is_banned) === 1" type="button" @click="resubmitReview(manga)"><manga-icon name="retry" /><text>{{ $t('manga.reader.workspace.resubmitReview') }}</text></button>
       </div>
     </div>
     <view class="create-mask" v-if="showCreateDialog" v-manga-portal :class="{ 'dark-mode': isDarkMode }"
       @click.self="closeCreateDialog" @touchmove.self.prevent>
-      <view class="create-panel" role="dialog" aria-modal="true" aria-label="创建漫画">
-        <view class="create-header"><text class="create-title">创建漫画</text><button v-manga-a11y class="create-close" type="button" aria-label="关闭创建窗口" @click="closeCreateDialog"><manga-icon name="close" /></button></view>
-        <view class="create-field"><label class="field-label" for="new-manga-name">作品名称</label><input id="new-manga-name" class="field-input" v-model="createForm.name" maxlength="50" placeholder="给你的漫画起个名字" /></view>
-        <view class="create-field"><label class="field-label" for="new-manga-intro">简介</label><textarea id="new-manga-intro" class="field-textarea" v-model="createForm.content" maxlength="500" placeholder="一句话介绍这部漫画（稍后可修改）"></textarea></view>
-        <view class="create-tip">创建后即可上传条漫或页漫页面。</view>
-        <view class="create-actions"><button v-manga-a11y class="create-cancel" type="button" @click="closeCreateDialog">取消</button><button v-manga-a11y="creating || !createForm.name.trim()" class="create-confirm" type="button" :disabled="creating || !createForm.name.trim()" @click="createManga">{{ creating ? '创建中…' : '创建并开始' }}</button></view>
+      <view class="create-panel" role="dialog" aria-modal="true" :aria-label="$t('manga.reader.workspace.createManga')">
+        <view class="create-header"><text class="create-title">{{ $t('manga.reader.workspace.createManga') }}</text><button v-manga-a11y class="create-close" type="button" :aria-label="$t('manga.reader.workspace.closeCreateDialog')" @click="closeCreateDialog"><manga-icon name="close" /></button></view>
+        <view class="create-field"><label class="field-label" for="new-manga-name">{{ $t('manga.reader.workspace.workName') }}</label><input id="new-manga-name" class="field-input" v-model="createForm.name" maxlength="50" :placeholder="$t('manga.reader.workspace.namePlaceholder')" /></view>
+        <view class="create-field"><label class="field-label" for="new-manga-intro">{{ $t('manga.reader.workspace.introLabel') }}</label><textarea id="new-manga-intro" class="field-textarea" v-model="createForm.content" maxlength="500" :placeholder="$t('manga.reader.workspace.introPlaceholder')"></textarea></view>
+        <view class="create-tip">{{ $t('manga.reader.workspace.createTip') }}</view>
+        <view class="create-actions"><button v-manga-a11y class="create-cancel" type="button" @click="closeCreateDialog">{{ $t('common.cancel') }}</button><button v-manga-a11y="creating || !createForm.name.trim()" class="create-confirm" type="button" :disabled="creating || !createForm.name.trim()" @click="createManga">{{ creating ? $t('manga.reader.workspace.creating') : $t('manga.reader.workspace.createAndStart') }}</button></view>
       </view>
     </view>
     <div class="bottom"></div>
@@ -73,18 +73,18 @@ export default {
 		},
 		resubmitReview(manga) {
 			uni.showModal({
-				title: '重新提交审核',
-				content: '确定要将该漫画重新提交给管理员审核吗？通过后将恢复上架。',
+				title: this.$t('manga.reader.workspace.resubmitReview'),
+				content: this.$t('manga.reader.workspace.resubmitConfirm'),
 				success: (res) => {
 					if (!res.confirm) return;
 					const headers = this.authHeaders();
 					axios.post(this.$baseUrl + '/essays/resubmit_novel', {
 						novel_id: manga.novel_id
 					}, { headers: { ...headers, 'Content-Type': 'application/json' } }).then(() => {
-						uni.showToast({ title: '已提交审核，请等待管理员处理', icon: 'none' });
+						uni.showToast({ title: this.$t('manga.reader.workspace.resubmitSubmitted'), icon: 'none' });
 						this.loadMangas();
 					}).catch((e) => {
-						const msg = (e.response && e.response.data && e.response.data.msg) || '提交失败，请稍后重试';
+						const msg = (e.response && e.response.data && e.response.data.msg) || this.$t('manga.reader.workspace.submitFailed');
 						uni.showToast({ title: msg, icon: 'none' });
 					});
 				}
@@ -145,7 +145,7 @@ export default {
 			}, { headers: this.authHeaders() }).then((response) => {
 				this.creating = false;
 				this.showCreateDialog = false;
-				uni.showToast({ title: '漫画创建成功', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.reader.workspace.createSuccess'), icon: 'none' });
 				this.loadMangas();
 				this.$emit('refreshed');
 				const insertId = response.data && response.data.insertId;
@@ -157,7 +157,7 @@ export default {
 			}).catch((e) => {
 				console.error('createManga failed', e);
 				this.creating = false;
-				uni.showToast({ title: '创建失败，请稍后重试', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.reader.workspace.createFailed'), icon: 'none' });
 			});
 		},
 		manageEpisodes(manga) {

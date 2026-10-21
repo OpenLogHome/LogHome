@@ -2,7 +2,7 @@
 	<div class="outer" v-dark>
 		<el-input
 		  type="text"
-		  placeholder="小说名"
+		  :placeholder="$t('writer.work.newEssay.titlePlaceholder')"
 		  v-model="title"
 		  maxlength="25"
 		  show-word-limit
@@ -11,7 +11,7 @@
 		<div style="margin: 20rpx 0;"></div>
 		<el-input
 		  type="textarea"
-		  placeholder="小说介绍"
+		  :placeholder="$t('writer.work.newEssay.introPlaceholder')"
 		  v-model="content"
 		  :rows="4"
 		  :autosize="{ minRows: 4}"
@@ -20,7 +20,7 @@
 		>
 		</el-input>
 		<div style="margin: 20rpx 0;"></div>
-		<el-select v-model="tags" multiple placeholder="选择参加社区创作活动" style="width:100%;">
+		<el-select v-model="tags" multiple :placeholder="$t('writer.work.newEssay.activityTagPlaceholder')" style="width:100%;">
 			<el-option
 			  v-for="tag in suggested_tags"
 			  :key="tag.tag_id"
@@ -32,12 +32,12 @@
 			<checkbox-group  @change="selectCk">
 				<checkbox value="yes" color="rgb(234, 112, 52)"/>
 			</checkbox-group>
-			<span style="display: flex;flex-direction: row;">我已经阅读并接受
-				<navigator url="../static/contentAgreement" open-type="navigate" style="color: #FF6000;border-bottom: 1px solid  #FF6000;">原木社区用户内容上传协议
+			<span style="display: flex;flex-direction: row;">{{ $t('writer.work.newEssay.agreementPrefix') }}
+				<navigator url="../static/contentAgreement" open-type="navigate" style="color: #FF6000;border-bottom: 1px solid  #FF6000;">{{ $t('writer.work.newEssay.agreementLink') }}
 				</navigator>
 			</span>
 		</label>
-		<div class="button" @click="submit">创建小说</div>
+		<div class="button" @click="submit">{{ $t('writer.work.newEssay.createWork') }}</div>
 	</div>
 </template>
 
@@ -58,7 +58,7 @@
 			submit(){
 				if(!this.checked){
 					uni.showToast({
-						title: "请先阅读并接受《原木社区用户内容上传协议》",
+						title: this.$t('writer.work.newEssay.agreementRequired', { name: this.$t('writer.work.newEssay.agreementLink') }),
 						icon: 'none',
 						duration: 2000
 					});
@@ -83,7 +83,7 @@
 					)
 					.then(function(response) {
 						uni.showToast({
-							title: "小说创建成功",
+							title: _this.$t('writer.work.newEssay.createSuccess'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -102,7 +102,7 @@
 						//console.log(error);
 						if (error) {
 							uni.showToast({
-								title: "小说创建失败",
+								title: _this.$t('writer.work.newEssay.createFailed'),
 								icon: 'none',
 								duration: 2000
 							});

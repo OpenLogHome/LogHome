@@ -3,39 +3,39 @@
 			<view class="list-content">
 			<view class="list" v-if="aiAssistanceEnabled && novel.novel_type !== 'manga'">
 				<view class="li noborder" @click="gotoIndexing">
-					<view class="text">全文智能索引</view>
+					<view class="text">{{ $t('writer.essay.set.indexing') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 			<view class="list">
 				<view class="li noborder" @click="gotoCollaborationSettings">
-					<view class="text">多人协作</view>
+					<view class="text">{{ $t('writer.essay.set.collaboration') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 			<view class="list" v-if="isOwner">
 				<view class="li " @click="setPersonalBtn">
-					<view class="text">作品状态：{{novel.is_personal==0?"公开":"私密"}}</view>
+					<view class="text">{{ $t('writer.essay.set.statusLabel') }}{{novel.is_personal==0?$t('common.public'):$t('common.private')}}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 				<view class="li " @click="setUpdateBtn">
-					<view class="text">更新状态：{{novel.is_complete==0?"连载":"完结"}}</view>
+					<view class="text">{{ $t('writer.essay.set.updateStatusLabel') }}{{novel.is_complete==0?$t('writer.essay.set.ongoing'):$t('writer.essay.set.completed')}}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 				<view class="li" v-if="novel.novel_id && novel.novel_type !== 'manga' && novel.novel_type !== 'world'" @click="setReaderAiBtn">
-					<view class="text">原木娘提问：{{ Number(novel.disable_reader_ai) === 1 ? '已禁用' : '允许' }}</view>
+					<view class="text">{{ $t('writer.essay.set.readerAiLabel') }}{{ Number(novel.disable_reader_ai) === 1 ? $t('writer.essay.set.readerAiDisabled') : $t('writer.essay.set.readerAiAllowed') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 				<view class="li high" @click="gotoChangeNovelTags">
-					<view class="text">作品标签：
+					<view class="text">{{ $t('writer.essay.set.tagsLabel') }}
 						<div class="tag" v-for="(item,index) in tags" :key="item.tag_id" :class="{'activity':item.is_activity_tag}">
 							{{item.tag_name}}
 						</div>
-						<div class="nontag" v-show="tags.length == 0">无</div>
+						<div class="nontag" v-show="tags.length == 0">{{ $t('writer.essay.set.none') }}</div>
 					</view>
 				</view>
 				<view class="li " @click="gotoChangeBookInfo">
-					<view class="text">修改作品信息</view>
+					<view class="text">{{ $t('writer.essay.set.editWorkInfo') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 <!-- 				<view class="li " @click="gotoChangeNovelPic">
@@ -45,7 +45,7 @@
 			</view>
 			<view class="list" v-if="isOwner">
 				<view class="li noborder" @click="deleteEssay">
-					<view class="text" style="color:red">删除作品</view>
+					<view class="text" style="color:red">{{ $t('writer.essay.set.deleteWork') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
@@ -75,6 +75,11 @@
 		computed: {
 			isOwner() {
 				return this.access && this.access.access_role === 'owner';
+			},
+			restrictActivityNames() {
+				return this.restrictingActivities
+					.map((a) => this.$t('writer.essay.set.quotedName', { name: a.activity_name }))
+					.join(this.$t('writer.essay.set.nameSeparator'));
 			},
 		},
 		onLoad(params) {
@@ -160,8 +165,8 @@
 				let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
 				let _this = this;
 				uni.showModal({
-					title: '提示',
-					content: '删除后将无法找回，确定继续吗？\n（删除作品将消耗50原木）',
+					title: this.$t('common.prompt'),
+					content: this.$t('writer.essay.set.deleteConfirm'),
 					confirmColor:"#F00",
 					success: function (res) {
 						if (res.confirm) {
@@ -178,7 +183,7 @@
 							)
 							.then(function(response) {
 								uni.showToast({
-									title: "已删除小说",
+									title: _this.$t('writer.essay.set.deletedWork'),
 									icon: 'none',
 									duration: 2000
 								});
@@ -190,7 +195,7 @@
 								//console.log(error);
 								if (error) {
 									uni.showToast({
-										title: "小说删除失败",
+										title: _this.$t('writer.essay.set.deleteFailed'),
 										icon: 'none',
 										duration: 2000
 									});
@@ -234,7 +239,7 @@
 						//console.log(error);
 						if (error) {
 							uni.showToast({
-								title: "小说状态修改失败",
+								title: _this.$t('writer.essay.set.statusUpdateFailed'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -273,7 +278,7 @@
 						//console.log(error);
 						const msg = error.response && error.response.data && error.response.data.msg;
 						uni.showToast({
-							title: msg || "小说状态修改失败",
+							title: msg || _this.$t('writer.essay.set.statusUpdateFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -285,7 +290,7 @@
 			setPersonalBtn(){
 				let _this = this;
 				uni.showActionSheet({
-				    itemList: ['公开',"私密"],
+				    itemList: [_this.$t('common.public'), _this.$t('common.private')],
 				    success: function (res) {
 				        if(res.tapIndex == 0) {
 							_this.setPersonal(0);
@@ -302,7 +307,7 @@
 			setReaderAiBtn() {
 				if (this.readerAiSaving) return;
 				uni.showActionSheet({
-					itemList: ['允许读者向原木娘提问', '禁用读者向原木娘提问'],
+					itemList: [this.$t('writer.essay.set.readerAiAllow'), this.$t('writer.essay.set.readerAiDisable')],
 					success: ({ tapIndex }) => {
 						const disabled = tapIndex === 1 ? 1 : 0;
 						if (Number(this.novel.disable_reader_ai) === disabled) return;
@@ -320,10 +325,10 @@
 						headers: { 'Authorization': 'Bearer ' + this.getAuthToken() },
 					});
 					this.$set(this.novel, 'disable_reader_ai', Number(res.data.disable_reader_ai));
-					uni.showToast({ title: disabled ? '已禁用原木娘提问' : '已允许原木娘提问', icon: 'none' });
+					uni.showToast({ title: disabled ? this.$t('writer.essay.set.readerAiDisabledToast') : this.$t('writer.essay.set.readerAiAllowedToast'), icon: 'none' });
 				} catch (error) {
 					uni.showToast({
-						title: (error.response && error.response.data && error.response.data.msg) || '设置保存失败，请重试',
+						title: (error.response && error.response.data && error.response.data.msg) || this.$t('writer.essay.set.readerAiSaveFailed'),
 						icon: 'none',
 					});
 				} finally {
@@ -347,15 +352,15 @@
 				let _this = this;
 				const isComplete = Number(this.novel.is_complete) === 1;
 				const restricted = this.restrictingActivities.length > 0;
-				const restrictNames = this.restrictingActivities.map((a) => `「${a.activity_name}」`).join('、');
+				const restrictNames = _this.restrictActivityNames;
 				uni.showActionSheet({
-				    itemList: ['连载',"完结"],
+				    itemList: [_this.$t('writer.essay.set.ongoing'), _this.$t('writer.essay.set.completed')],
 				    success: function (res) {
 				        if(res.tapIndex == 0) {
 							if (isComplete && restricted) {
 								uni.showModal({
-									title: '无法退回连载',
-									content: `作品已完结并参与进行中的创作活动${restrictNames}，活动期间不可退回连载状态。`,
+									title: _this.$t('writer.essay.set.cannotRevert'),
+									content: _this.$t('writer.essay.set.revertRestrictedContent', { names: restrictNames }),
 									showCancel: false
 								});
 								return;
@@ -365,8 +370,8 @@
 						if(res.tapIndex == 1) {
 							if (restricted && !isComplete) {
 								uni.showModal({
-									title: '确认完结',
-									content: `完结后，在活动${restrictNames}期间将无法新增或编辑章节，也无法退回连载状态。确定完结吗？`,
+									title: _this.$t('writer.essay.set.confirmComplete'),
+									content: _this.$t('writer.essay.set.completeRestrictedContent', { names: restrictNames }),
 									success: function (m) {
 										if (m.confirm) _this.setUpdate(1);
 									}

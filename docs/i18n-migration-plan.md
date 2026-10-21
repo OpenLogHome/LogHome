@@ -408,12 +408,14 @@ node --test test/i18n_*.cjs   # 词条结构与相对时间单测
 - **en 发布策略**：先内部/管理员 → 小流量 beta → 公开；zh 保持默认。每个域在后端覆盖完成前不对外承诺“完整英文”。
 - **监控**：开发环境打开 vue-i18n missing 告警；生产保持回退 zh，不白屏。发布清单加入 `i18n:audit`。
 
-### D.7 2A/2B 实施记录（2026-10-21）
+### D.7 2A/2B/2C/2D 实施记录（2026-10-21）
 
 | 批次 | 状态 | 说明 |
 |---|---|---|
 | 2A | 完成（静态 + 单元） | 共享词条/原语、标题、H5 title、相对时间、协议化、审计工具 |
 | 2B | 完成（词条 + 页面）；登录态 E2E 待测 | 19 个社区 SFC 已迁移，静态检查全绿；无可用测试账号，未走通登录后主链路 |
+| 2C | 完成（词条 + 页面）；登录态 E2E 待测 | 阅读/漫画页面与共享组件迁移，新增 `reader` 393 条、`manga` 319 条；主题/榜单等动态枚举词条已覆盖 |
+| 2D | 完成（词条 + 页面）；登录态 E2E 待测 | 作品管理 + 编辑器迁移，新增 `writer` 832 条；协作/工具栏/快捷输入/世界词典/漫画编辑均已接入 |
 
 **2A 落地**
 - `common` 域新增共享原语词条：`ge-popup` 的绑定微信/红包/版本更新弹窗、`Xss-swiper` 的“查看详情”；此前 `emoji-picker`、`conflictDialog`、`xzj-readMore`、`chunLei-modal`、`uni-load-more`、`helang-moveVerify` 已完成。
@@ -428,22 +430,38 @@ node --test test/i18n_*.cjs   # 词条结构与相对时间单测
 - 时间线统一走 `postTimeText`；`postDetail` 保留原“月/年”长区间行为（`{ long: true }`），zh 输出不变。
 - UGC（帖子/评论/昵称/圈子名/章节正文）与后端下发的系统消息正文不翻译，en 下按 zh 原样展示。
 
-**验证**
-- `npm run i18n:audit`：PASS，zh/en 各 1227 条；仅 334 条未引用告警（历史/动态拼接）。
+**2C 落地**
+- 新增 `i18n/messages/{zh-CN,en}.reader.json`（393 条/语言）与 `.manga.json`（319 条/语言）。`reader` 分组为 `book/article/ask/rank/power/articleList/shelf/tag`，`manga` 分组为 `info/reader/comment/editor/settings`。
+- 覆盖 `pages/readers/` 下 19 个 SFC（含 `mangaInfo`/`mangaReader`）与 10 个共享组件：`article_tools`、`book-detail-view`、`bookMenu`、`custom-list` 及 `btn-list`、`dl-review/item`、`ReaderBackgroundPicker`、`ReaderTypeSwitch`、`audiobook-player`、`FansContributionBoard`。
+- 动态枚举全部走 key：阅读主题 13 种（`reader.article.themes.*`）、榜单 4 块说明（`reader.rank.boardDesc.*`）、阅读背景类型/皮肤、书架与标签空态；阅读器字号/翻页模式/背景选择器与有声书入口均已接入。
+- 漫画播放器、评论 composer/item、漫画编辑与设置复用 `manga` 域词条；评论正文、漫画文字、书名/章节名等 UGC 不翻译。
+- 有声书缺章/不支持/打开失败三类异常改为明确提示 key，不再静默失败。
+
+**2D 落地**
+- 新增 `i18n/messages/{zh-CN,en}.writer.json`，832 条/语言；分组 `work/essay/collab/chapter/editor/world/helper/calendar/bookDetail`。
+- 覆盖 `pages/writers/` 下 22 个 SFC（作品列表/统计/排序/回收站、章节编辑与工具栏、智能纠错与定时发布、协作设置、封面、标签、世界词典、本地备份、时间机器、漫画编辑/设置等）及 `editor.vue`、`jin-edit`、`essay_toolBox`、`writer_helper`、`writing-activity-calendar` 等共享组件。
+- 世界词典 22 个属性、17 组属性值、写作日历与章节状态等前端枚举展示名全部走 `writer.world.attrs.*` / `writer.world.attrValues.*` / `writer.calendar.*`。
+- 编辑器中 AI 提示词/模型指令、文章正文、章节内容、书名、标签名、角色名、词典词条内容保留原文（按 D.2 边界）。
+- 遗留的非可视残留：编辑器 legacy 原生导航占位 `"发布 ": "publish"` 仍以中文作内部键；主题/工具/快捷输入的中文默认值是内部哨兵/回退，展示均经 key 映射；隐藏的内部 `Error` 文案与自动插入内容（如“微信号”）不面向用户。
+
+**验证（2A–2D 全量）**
+- `npm run i18n:audit`：PASS，10 个域 zh/en 各 2771 条；未引用告警 328 条（动态拼接/历史词条）。
 - `npm run test:i18n`：9/9 PASS（词典一致性、插值、en 中文残留、标题、相对时间边界）。
-- `npm run i18n:check-sfc -- pages/community/**/*.vue components/ge-popup.vue components/Xss-swiper/Xsuu-swiper.vue common/datetime.js`：全部通过。
-- `npm run i18n:extract`：未迁移中文行 3986（2A/2B 前 4522），`$t()` 923（前 392）。
-- H5 冒烟：`loghome_language=en` 下 tabBar 为 Reading/Community/Create/Me，登录页与浏览器标题为英文；社区页未登录时跳转登录页，登录后的发帖/评论/入圈链路尚未执行。
+- `npm run i18n:check-sfc`：61 个改动 SFC 全部解析/语法/花括号检查通过；模板中仅剩 1 处有意保留的中文 `文本`（`pages/readers/newReader/article.vue:138` 的隐藏测量节点）。
+- writer/reader/manga 三域共 1626 处 key 引用，逐条比对词典 0 真实缺失；动态前缀（主题/榜单/世界属性/日历）已单独核验。
+- `npm run i18n:extract`：未迁移中文行 2331（2A/2B 前 3986，原始基线 4522），`$t()` 2740（2A/2B 前 923，原始 392）。
+- H5 冒烟：`loghome_language=en` 下 tabBar、登录页、浏览器标题、共享组件与设置/我的页正常切换；2B/2C/2D 登录后主链路尚未执行。
 
 **遗留**
-- 需要隔离测试账号完成 2B 端到端验收（发帖 → 评论 → 回复 → 分享 → 入圈/退圈、zh/en 口令互认、375/414 宽度无截断）。
-- 社区接口 toast/系统消息仍为后端中文，待 P2。
-- 当前改动未提交，与用户既有的 `postDetail`/`me`/`essays` 等 UI 改动同工作区，提交时需按文件核对。
+- 需要隔离测试账号完成 2B/2C/2D 端到端验收：2B 发帖/评论/入圈，2C 阅读器主题与背景切换、书架/书评/有声书，2D 章节编辑/发布/协作/封面；同时做 zh/en 截图回归与 375/414 宽度截断检查。
+- 后端下发的 toast、站内通知、作品/圈子状态文案仍为中文，待 P2；`collections`/`logPowerRank` 的列表标题作为中文请求参数回传，en 下会显示后端中文标题。
+- `bookInfo` 的 `tree_status === '结果'` 仍按中文字面量判定，待 2F 与种树状态码一并协议化。
+- 当前 2C/2D 改动未提交，且与用户既有的 `postDetail`/`me`/`essays`/`TodoBoard` 等改动同工作区；提交时需按文件核对，避免混入用户改动。
 
 ### D.8 工期与下一步
 
 - 净开发约 **7–9 周**（含每批截图回归）；AI 辅助充分、共享词条复用顺利时可压到 6 周。后端 P2 建议并行 2–3 周，en 公测以两边会合为准。
-- 建议先做 **2A + 2B 垂直切片**：完成共享地基与社区域，联动后端 community msg 英化，跑一轮真实英文用户走查，再决定 2C/2D 的具体节奏。
-- 提交状态：2A/2B 与既有未提交 UI 改动位于同一工作区（`bookshelf-horizontal`、`dl-review/item`、`postDetail`、`essays`、`me`、`manifest` 等），尚未提交；提交时按文件核对，避免把用户改动混入批次提交。
-- 下一步：先用隔离测试账号完成 2B 登录态走查与中英文截图回归，再启动 2C；若要先扩面，可并行准备 2C 的阅读域词条骨架。
+- 进度：2A–2D 已完成（静态 + 单元验收），净新增 `reader`/`manga`/`writer` 三个域共 1544 条/语言；剩余 2E（商业化）、2F（外围与我的二批）约占规划量的一半。
+- 提交状态：2A/2B 已提交（`06911e74`）；2C/2D 与既有未提交 UI 改动位于同一工作区（`bookshelf-horizontal`、`dl-review/item`、`postDetail`、`essays`、`me`、`TodoBoard` 等），尚未提交；提交时按文件核对，避免把用户改动混入批次提交。
+- 下一步：先用隔离测试账号完成 2B/2C/2D 登录态走查与中英文截图回归，再启动 2E；2E 可先拆「通行证/红石」与「商城/支付」两个 PR，并优先协议化订单/支付状态文案。
 - 待拍板：法律文本处理方式、管理端是否纳入、AI 提示词是否立项、翻译由谁终审、后端 P2 的排期优先级。

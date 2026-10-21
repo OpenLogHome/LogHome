@@ -1,19 +1,19 @@
 <template>
   <view class="manga-comment" :class="{ 'is-highlight': highlight, 'is-collapsed': isFolded }">
-    <button v-manga-a11y class="avatar-button" type="button" aria-label="查看用户主页" @click="openAuthor">
+    <button v-manga-a11y class="avatar-button" type="button" :aria-label="$t('manga.comment.viewProfileAria')" @click="openAuthor">
       <user-avatar class="comment-avatar" :src="comment.avatarUrl" :frame="comment.avatarFrame"
         :visual-scale="comment.avatarFrame ? 1.2 : 1" />
     </button>
     <view class="comment-main">
       <view class="comment-head">
         <text class="comment-name">{{ comment.userName }}</text>
-        <text v-if="isWorkAuthor" class="author-badge">作者</text>
+        <text v-if="isWorkAuthor" class="author-badge">{{ $t('manga.comment.authorBadge') }}</text>
       </view>
       <text class="comment-time">{{ comment.time }}</text>
-      <text v-if="isFolded" class="comment-folded">该评论已被收起</text>
+      <text v-if="isFolded" class="comment-folded">{{ $t('manga.comment.folded') }}</text>
       <template v-else>
         <text class="comment-body" :class="{ clamped: !isExpanded && needsClamp }">{{ comment.content }}</text>
-        <button v-manga-a11y v-if="needsClamp" class="comment-toggle" type="button" @click="isExpanded = !isExpanded">{{ isExpanded ? '收起' : '展开' }}</button>
+        <button v-manga-a11y v-if="needsClamp" class="comment-toggle" type="button" @click="isExpanded = !isExpanded">{{ isExpanded ? $t('common.collapse') : $t('common.expand') }}</button>
       </template>
       <view v-if="comment.images.length && !isFolded" class="comment-images">
         <button v-manga-a11y class="comment-image" type="button" v-for="(image, index) in comment.images" :key="image"
@@ -22,31 +22,31 @@
         </button>
       </view>
       <button v-manga-a11y v-if="comment.articleTitle && !isFolded" class="comment-source" type="button"
-        :aria-label="'跳转到章节：' + comment.articleTitle" @click="openSourceChapter">
-        <manga-icon name="book" />来自 {{ comment.articleTitle }}
+        :aria-label="$t('manga.comment.jumpToChapterAria', { title: comment.articleTitle })" @click="openSourceChapter">
+        <manga-icon name="book" />{{ $t('manga.comment.fromChapter', { title: comment.articleTitle }) }}
       </button>
       <view class="comment-actions" v-if="!isFolded">
         <button v-manga-a11y class="action-button" :class="{ liked: comment.praiseType === 0 }" type="button"
           :aria-pressed="comment.praiseType === 0 ? 'true' : 'false'" @click="$emit('praise', comment)">
-          <manga-icon :name="comment.praiseType === 0 ? 'heartFilled' : 'heart'" /><text>{{ comment.likeNum || '赞' }}</text>
+          <manga-icon :name="comment.praiseType === 0 ? 'heartFilled' : 'heart'" /><text>{{ comment.likeNum || $t('manga.comment.like') }}</text>
         </button>
         <button v-manga-a11y class="action-button" type="button" @click="$emit('reply', replyTarget)">
-          <manga-icon name="comment" /><text>回复</text>
+          <manga-icon name="comment" /><text>{{ $t('common.reply') }}</text>
         </button>
         <button v-manga-a11y class="action-button danger" type="button" v-if="comment.canModerate" @click="$emit('remove', comment)">
-          <manga-icon name="trash" /><text>删除</text>
+          <manga-icon name="trash" /><text>{{ $t('common.delete') }}</text>
         </button>
       </view>
       <view v-if="visibleReplies.length" class="comment-replies">
         <button v-manga-a11y class="reply-row" type="button" v-for="reply in visibleReplies" :key="reply.commentId"
           @click="onReplyClick(reply)" @longpress="onReplyLongpress(reply)">
           <text class="reply-name">{{ reply.userName }}</text>
-          <text v-if="reply.targetUserName" class="reply-target">回复 {{ reply.targetUserName }}</text>
-          <text class="reply-body">：{{ reply.content }}</text>
+          <text v-if="reply.targetUserName" class="reply-target">{{ $t('manga.comment.replyTo', { name: reply.targetUserName }) }}</text>
+          <text class="reply-body">{{ $t('manga.comment.replyBody', { content: reply.content }) }}</text>
         </button>
         <button v-manga-a11y v-if="comment.replies.length > collapsedReplyCount" class="reply-more" type="button"
           :aria-expanded="repliesExpanded ? 'true' : 'false'" @click="repliesExpanded = !repliesExpanded">
-          {{ repliesExpanded ? '收起回复' : '查看全部 ' + comment.replies.length + ' 条回复' }}
+          {{ repliesExpanded ? $t('manga.comment.collapseReplies') : $t('manga.comment.viewAllReplies', { count: comment.replies.length }) }}
         </button>
       </view>
     </view>
@@ -102,7 +102,7 @@ export default {
       this.lastLongpressAt = Date.now();
       if (!reply.canModerate) return;
       uni.showActionSheet({
-        itemList: ['删除'],
+        itemList: [this.$t('common.delete')],
         success: (result) => {
           if (result.tapIndex === 0) this.$emit('remove-reply', { rootCommentId: this.comment.commentId, reply });
         },

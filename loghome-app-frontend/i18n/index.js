@@ -14,6 +14,12 @@ import zhCommunity from './messages/zh-CN.community.json'
 import enCommunity from './messages/en.community.json'
 import zhTitles from './messages/zh-CN.titles.json'
 import enTitles from './messages/en.titles.json'
+import zhReader from './messages/zh-CN.reader.json'
+import enReader from './messages/en.reader.json'
+import zhManga from './messages/zh-CN.manga.json'
+import enManga from './messages/en.manga.json'
+import zhWriter from './messages/zh-CN.writer.json'
+import enWriter from './messages/en.writer.json'
 import { resolveEffectiveLanguage, DEFAULT_LANG } from './resolve.js'
 
 Vue.use(VueI18n)
@@ -55,8 +61,8 @@ const i18n = new VueI18n({
 	fallbackLocale: DEFAULT_LANG,
 	silentTranslationWarn: true,
 	messages: {
-		'zh-CN': mergeMessages([zhCore, zhAuth, zhSettings, zhRedstone, zhMe, zhCommunity, zhTitles]),
-		en: mergeMessages([enCore, enAuth, enSettings, enRedstone, enMe, enCommunity, enTitles])
+		'zh-CN': mergeMessages([zhCore, zhAuth, zhSettings, zhRedstone, zhMe, zhCommunity, zhTitles, zhReader, zhManga, zhWriter]),
+		en: mergeMessages([enCore, enAuth, enSettings, enRedstone, enMe, enCommunity, enTitles, enReader, enManga, enWriter])
 	}
 })
 

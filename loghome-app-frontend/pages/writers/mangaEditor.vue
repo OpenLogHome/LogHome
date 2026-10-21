@@ -2,8 +2,8 @@
 	<view class="manga-editor" v-dark>
 		<!-- 顶部导航 -->
 		<view class="nav-bar">
-			<button v-manga-a11y class="nav-back" type="button" aria-label="返回" @click="handleBack"><manga-icon name="back" /></button>
-			<text class="nav-title">{{ view === 'list' ? (novel.name || '话数管理') : (editingArticleId ? '编辑话数' : '新建话数') }}</text>
+			<button v-manga-a11y class="nav-back" type="button" :aria-label="$t('common.back')" @click="handleBack"><manga-icon name="back" /></button>
+			<text class="nav-title">{{ view === 'list' ? (novel.name || $t('manga.editor.episodeManagement')) : (editingArticleId ? $t('manga.editor.editEpisode') : $t('manga.editor.newEpisode')) }}</text>
 		</view>
 
 		<!-- ============ 话数列表 ============ -->
@@ -13,34 +13,34 @@
 				<view class="work-meta">
 					<text class="work-name">{{ novel.name }}</text>
 					<view class="work-tags">
-						<text class="status-chip">漫画</text><text class="status-chip" v-if="!novel.is_personal">公开</text><text class="status-chip" v-else>私密</text>
+						<text class="status-chip">{{ $t('manga.editor.mangaLabel') }}</text><text class="status-chip" v-if="!novel.is_personal">{{ $t('common.public') }}</text><text class="status-chip" v-else>{{ $t('common.private') }}</text>
 					</view>
-					<text class="work-count">共 {{ articles.length }} 话</text>
-					<view class="work-actions"><button v-manga-a11y class="secondary-btn" type="button" @click="openSettings"><manga-icon name="settings" />作品设置</button><button v-manga-a11y class="secondary-btn" type="button" @click="previewWork"><manga-icon name="preview" />作者预览</button></view>
+					<text class="work-count">{{ $t('manga.editor.episodeCount', { count: articles.length }) }}</text>
+					<view class="work-actions"><button v-manga-a11y class="secondary-btn" type="button" @click="openSettings"><manga-icon name="settings" />{{ $t('manga.editor.workSettings') }}</button><button v-manga-a11y class="secondary-btn" type="button" @click="previewWork"><manga-icon name="preview" />{{ $t('manga.editor.authorPreview') }}</button></view>
 				</view>
 			</view>
 
 			<view class="section-card">
 				<view class="section-head">
-					<text class="section-title">话数目录</text>
-					<button v-manga-a11y class="new-btn" v-if="canAdd" type="button" @click="startNewEpisode"><manga-icon name="add" />新建话数</button>
+					<text class="section-title">{{ $t('manga.editor.episodeCatalog') }}</text>
+					<button v-manga-a11y class="new-btn" v-if="canAdd" type="button" @click="startNewEpisode"><manga-icon name="add" />{{ $t('manga.editor.newEpisode') }}</button>
 				</view>
 
 				<view v-if="articles.length === 0" class="empty-tip">
-					<text>还没有话数。新建第一话后即可上传漫画页面。</text>
+					<text>{{ $t('manga.editor.emptyEpisodes') }}</text>
 				</view>
 
-				<view class="article-row" v-for="item in articles" :key="item.article_id" role="button" tabindex="0" :aria-label="'编辑第 ' + item.article_chapter + ' 话：' + item.title" @click="startEditEpisode(item)" @keydown.enter="startEditEpisode(item)" @keydown.space.prevent="startEditEpisode(item)">
+				<view class="article-row" v-for="item in articles" :key="item.article_id" role="button" tabindex="0" :aria-label="$t('manga.editor.editEpisodeAria', { chapter: item.article_chapter, title: item.title })" @click="startEditEpisode(item)" @keydown.enter="startEditEpisode(item)" @keydown.space.prevent="startEditEpisode(item)">
 					<view class="article-no">{{ item.article_chapter }}</view>
 					<view class="article-main">
 						<view class="article-title">
 							<text>{{ item.title }}</text>
-							<text v-if="Number(item.is_draft) === 1" class="draft-badge">草稿</text>
+							<text v-if="Number(item.is_draft) === 1" class="draft-badge">{{ $t('manga.editor.draft') }}</text>
 						</view>
 						<text class="article-date">{{ formatDate(item.update_time) }}</text>
 					</view>
-					<text class="type-badge">{{ item.article_type === 'mangaPage' ? '页漫' : '条漫' }}</text>
-					<button v-manga-a11y class="del-btn" v-if="canDelete" type="button" :aria-label="'删除第 ' + item.article_chapter + ' 话'" @click.stop="deleteEpisode(item)"><manga-icon name="trash" /></button>
+					<text class="type-badge">{{ item.article_type === 'mangaPage' ? $t('manga.editor.typePage') : $t('manga.editor.typeStrip') }}</text>
+					<button v-manga-a11y class="del-btn" v-if="canDelete" type="button" :aria-label="$t('manga.editor.deleteEpisodeAria', { chapter: item.article_chapter })" @click.stop="deleteEpisode(item)"><manga-icon name="trash" /></button>
 				</view>
 			</view>
 			<view class="bottom-space"></view>
@@ -48,22 +48,22 @@
 
 		<!-- ============ 话数编辑 ============ -->
 		<scroll-view v-else class="page-body" scroll-y>
-			<view class="empty-tip" v-if="loadingEditor">正在加载完整话数…</view>
-			<view class="empty-tip" v-else-if="!editorReady">话数加载失败，请返回列表后重试。当前内容不可保存。</view>
-			<view class="empty-tip" v-else>修改会自动备份到本机。{{ editingPublished ? '已发布话数存草稿会撤回发布。' : '' }}</view>
+			<view class="empty-tip" v-if="loadingEditor">{{ $t('manga.editor.loadingEpisode') }}</view>
+			<view class="empty-tip" v-else-if="!editorReady">{{ $t('manga.editor.editorLoadFailed') }}</view>
+			<view class="empty-tip" v-else>{{ $t('manga.editor.autosaveHint') }}{{ editingPublished ? $t('manga.editor.unpublishHint') : '' }}</view>
 			<view class="section-card">
 				<view class="field-row">
-					<label class="field-label" for="episode-title">话数标题</label>
-					<input id="episode-title" class="field-input" v-model="editorTitle" :disabled="saving || !editorReady" maxlength="60" placeholder="例如：第1话 命运的开始" />
+					<label class="field-label" for="episode-title">{{ $t('manga.editor.episodeTitle') }}</label>
+					<input id="episode-title" class="field-input" v-model="editorTitle" :disabled="saving || !editorReady" maxlength="60" :placeholder="$t('manga.editor.titlePlaceholder')" />
 				</view>
 				<view class="field-row">
-					<text class="field-label">漫画类型</text>
-					<view class="radio-row" role="radiogroup" aria-label="漫画类型">
+					<text class="field-label">{{ $t('manga.editor.mangaType') }}</text>
+					<view class="radio-row" role="radiogroup" :aria-label="$t('manga.editor.mangaType')">
 						<button v-manga-a11y class="radio-item" type="button" role="radio" :aria-checked="editorType === 'mangaStrip' ? 'true' : 'false'" :class="{ active: editorType === 'mangaStrip' }" @click="setEditorType('mangaStrip')">
-							<text>条漫（竖长图滚动）</text>
+							<text>{{ $t('manga.editor.typeStripDesc') }}</text>
 						</button>
 						<button v-manga-a11y class="radio-item" type="button" role="radio" :aria-checked="editorType === 'mangaPage' ? 'true' : 'false'" :class="{ active: editorType === 'mangaPage' }" @click="setEditorType('mangaPage')">
-							<text>页漫（左右翻页）</text>
+							<text>{{ $t('manga.editor.typePageDesc') }}</text>
 						</button>
 					</view>
 				</view>
@@ -71,37 +71,37 @@
 
 			<view class="section-card">
 				<view class="section-head">
-					<text class="section-title">页面（{{ pages.length }} 页）</text>
-					<button v-manga-a11y="saving || !editorReady" class="new-btn" type="button" :disabled="saving || !editorReady" @click="addPages"><manga-icon name="upload" />添加页面</button>
+					<text class="section-title">{{ $t('manga.editor.pagesTitle', { count: pages.length }) }}</text>
+					<button v-manga-a11y="saving || !editorReady" class="new-btn" type="button" :disabled="saving || !editorReady" @click="addPages"><manga-icon name="upload" />{{ $t('manga.editor.addPages') }}</button>
 				</view>
 
 				<view v-if="pages.length === 0 && !uploading" class="empty-tip">
-					<text>支持 jpg / png / webp / gif，一次最多选 9 张；高清图片上传可能较慢</text>
+					<text>{{ $t('manga.editor.uploadSupportTip') }}</text>
 				</view>
 
-				<view class="page-toolbar"><button v-manga-a11y="!pages.length" type="button" :disabled="!pages.length" @click="sortMode = !sortMode"><manga-icon name="sort" />{{ sortMode ? '完成排序' : '调整顺序' }}</button><button v-manga-a11y="!pages.length" type="button" :disabled="!pages.length" @click="previewEpisode"><manga-icon name="preview" />整话预览</button></view>
+				<view class="page-toolbar"><button v-manga-a11y="!pages.length" type="button" :disabled="!pages.length" @click="sortMode = !sortMode"><manga-icon name="sort" />{{ sortMode ? $t('manga.editor.doneSorting') : $t('manga.editor.reorder') }}</button><button v-manga-a11y="!pages.length" type="button" :disabled="!pages.length" @click="previewEpisode"><manga-icon name="preview" />{{ $t('manga.editor.fullEpisodePreview') }}</button></view>
                 <view class="upload-list" v-if="uploadQueue.length">
-                  <view class="queue-head"><text>上传队列</text><view class="queue-tools"><button v-manga-a11y type="button" @click="cancelAllUploads">取消未完成</button><button v-manga-a11y type="button" @click="clearCompletedUploads">清理记录</button></view></view>
+                  <view class="queue-head"><text>{{ $t('manga.editor.uploadQueue') }}</text><view class="queue-tools"><button v-manga-a11y type="button" @click="cancelAllUploads">{{ $t('manga.editor.cancelUnfinished') }}</button><button v-manga-a11y type="button" @click="clearCompletedUploads">{{ $t('manga.editor.clearRecords') }}</button></view></view>
                   <view v-for="task in uploadQueue" :key="task.id" class="upload-row">
-                    <view class="upload-info"><text class="upload-name">{{ task.replaceId !== null ? '替换 · ' : '' }}{{ task.name }}</text><text class="upload-status">{{ task.status === 'success' ? '完成' : task.status === 'error' ? task.error : task.status === 'cancelled' ? '已取消' : task.status === 'queued' ? '等待上传' : task.progress >= 95 ? '生成阅读图…' : task.progress + '%' }}</text><view class="upload-track"><view :style="{ width: task.progress + '%' }"></view></view></view>
-                    <button v-manga-a11y v-if="task.status === 'error'" type="button" class="queue-action" :aria-label="'重试上传' + task.name" @click="retryUpload(task)">重试</button>
-                    <button v-manga-a11y v-if="task.status !== 'success' && task.status !== 'cancelled'" type="button" class="queue-action" :aria-label="'取消上传' + task.name" @click="cancelUpload(task)">取消</button>
+                    <view class="upload-info"><text class="upload-name">{{ task.replaceId !== null ? $t('manga.editor.replacingPrefix') : '' }}{{ task.name }}</text><text class="upload-status">{{ task.status === 'success' ? $t('manga.editor.uploadDone') : task.status === 'error' ? task.error : task.status === 'cancelled' ? $t('manga.editor.uploadCancelled') : task.status === 'queued' ? $t('manga.editor.uploadQueued') : task.progress >= 95 ? $t('manga.editor.generatingReadingImage') : task.progress + '%' }}</text><view class="upload-track"><view :style="{ width: task.progress + '%' }"></view></view></view>
+                    <button v-manga-a11y v-if="task.status === 'error'" type="button" class="queue-action" :aria-label="$t('manga.editor.retryUploadAria', { name: task.name })" @click="retryUpload(task)">{{ $t('common.retry') }}</button>
+                    <button v-manga-a11y v-if="task.status !== 'success' && task.status !== 'cancelled'" type="button" class="queue-action" :aria-label="$t('manga.editor.cancelUploadAria', { name: task.name })" @click="cancelUpload(task)">{{ $t('common.cancel') }}</button>
                   </view>
-                  <text class="queue-note">成功的页面自动备份；未完成的上传需留在本页处理。文件按名称排序，条漫长图自动分段。</text>
+                  <text class="queue-note">{{ $t('manga.editor.queueNote') }}</text>
                 </view>
                 <manga-page-sorter v-if="sortMode" :pages="pages" :disabled="saving || uploading" @reorder="reorderPages" />
                 <view v-else class="page-grid">
 					<view class="page-cell" v-for="(page, idx) in pages" :key="page.id">
-						<button v-manga-a11y class="page-preview" type="button" :aria-label="'预览第 ' + (idx + 1) + ' 页'" @click="previewPage(idx)"><image lazy-load class="page-thumb" :src="page.thumb || page.url" mode="aspectFill" /></button>
+						<button v-manga-a11y class="page-preview" type="button" :aria-label="$t('manga.editor.previewPageAria', { page: idx + 1 })" @click="previewPage(idx)"><image lazy-load class="page-thumb" :src="page.thumb || page.url" mode="aspectFill" /></button>
 						<text class="page-no">{{ idx + 1 }}</text>
-						<button v-manga-a11y class="page-del" type="button" :aria-label="'删除第 ' + (idx + 1) + ' 页'" @click.stop="removePage(idx)"><manga-icon name="close" /></button>
+						<button v-manga-a11y class="page-del" type="button" :aria-label="$t('manga.editor.deletePageAria', { page: idx + 1 })" @click.stop="removePage(idx)"><manga-icon name="close" /></button>
 						<view class="page-moves">
-							<button v-manga-a11y class="move-btn" type="button" :aria-label="'替换第 ' + (idx + 1) + ' 页'" @click.stop="replacePage(page)">替换</button>
-							<button v-manga-a11y="idx === 0" class="move-btn" type="button" :disabled="idx === 0" :aria-label="'将第 ' + (idx + 1) + ' 页前移'" @click.stop="movePage(idx, -1)"><manga-icon name="previous" /></button>
-							<button v-manga-a11y="idx === pages.length - 1" class="move-btn" type="button" :disabled="idx === pages.length - 1" :aria-label="'将第 ' + (idx + 1) + ' 页后移'" @click.stop="movePage(idx, 1)"><manga-icon name="next" /></button>
+							<button v-manga-a11y class="move-btn" type="button" :aria-label="$t('manga.editor.replacePageAria', { page: idx + 1 })" @click.stop="replacePage(page)">{{ $t('manga.editor.replace') }}</button>
+							<button v-manga-a11y="idx === 0" class="move-btn" type="button" :disabled="idx === 0" :aria-label="$t('manga.editor.movePageUpAria', { page: idx + 1 })" @click.stop="movePage(idx, -1)"><manga-icon name="previous" /></button>
+							<button v-manga-a11y="idx === pages.length - 1" class="move-btn" type="button" :disabled="idx === pages.length - 1" :aria-label="$t('manga.editor.movePageDownAria', { page: idx + 1 })" @click.stop="movePage(idx, 1)"><manga-icon name="next" /></button>
 						</view>
 					</view>
-					<button v-manga-a11y class="page-cell add-cell" type="button" v-if="!uploading" @click="addPages"><manga-icon name="add" /><text>添加页面</text></button>
+					<button v-manga-a11y class="page-cell add-cell" type="button" v-if="!uploading" @click="addPages"><manga-icon name="add" /><text>{{ $t('manga.editor.addPages') }}</text></button>
 				</view>
 			</view>
 			<view class="bottom-space"></view>
@@ -109,9 +109,9 @@
 
 		<!-- 编辑模式底部操作栏 -->
 		<view class="action-bar" v-if="view === 'edit'">
-			<button v-manga-a11y class="act-btn ghost" type="button" @click="backToList">返回列表</button>
-			<button v-manga-a11y="saving || uploading || !editorReady" class="act-btn draft" type="button" :disabled="saving || uploading || !editorReady" @click="saveEpisode(1)">{{ editingPublished ? '转为草稿' : '存草稿' }}</button>
-			<button v-manga-a11y="saving || uploading || !editorReady" class="act-btn publish" type="button" :disabled="saving || uploading || !editorReady" @click="saveEpisode(0)">{{ editingArticleId ? '保存并发布' : '发布' }}</button>
+			<button v-manga-a11y class="act-btn ghost" type="button" @click="backToList">{{ $t('manga.editor.backToList') }}</button>
+			<button v-manga-a11y="saving || uploading || !editorReady" class="act-btn draft" type="button" :disabled="saving || uploading || !editorReady" @click="saveEpisode(1)">{{ editingPublished ? $t('manga.editor.convertToDraft') : $t('manga.editor.saveDraft') }}</button>
+			<button v-manga-a11y="saving || uploading || !editorReady" class="act-btn publish" type="button" :disabled="saving || uploading || !editorReady" @click="saveEpisode(0)">{{ editingArticleId ? $t('manga.editor.saveAndPublish') : $t('manga.editor.publish') }}</button>
 		</view>
 	</view>
 </template>
@@ -203,7 +203,7 @@ export default {
 				window.localStorage.setItem(this.draftKey(), JSON.stringify({ ...JSON.parse(this.editorSnapshot), revision: this.expectedRevision }));
 				return true;
 			} catch (_) {
-				uni.showToast({ title: '本机草稿备份失败，请及时保存', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.editor.draftBackupFailed'), icon: 'none' });
 				return false;
 			}
 		},
@@ -212,7 +212,7 @@ export default {
 			try { draft = JSON.parse(window.localStorage.getItem(this.draftKey())); } catch (_) { return; }
 			if (!draft || !Array.isArray(draft.pages)) return;
 			uni.showModal({
-				title: '恢复未保存的修改', content: '发现本机草稿，是否恢复？', confirmText: '恢复', cancelText: '不恢复',
+				title: this.$t('manga.editor.restoreDraftTitle'), content: this.$t('manga.editor.restoreDraftContent'), confirmText: this.$t('manga.editor.restore'), cancelText: this.$t('manga.editor.doNotRestore'),
 				success: (r) => {
 					if (!r.confirm || requestId !== this.editRequestId || this.view !== 'edit') return;
 					this.editorTitle = draft.title || '';
@@ -225,13 +225,13 @@ export default {
 			});
 		},
 		confirmLeave(action) {
-			if (this.uploading || this.saving) { uni.showToast({ title: '请等待上传或保存完成', icon: 'none' }); return; }
+			if (this.uploading || this.saving) { uni.showToast({ title: this.$t('manga.editor.waitUploadSave'), icon: 'none' }); return; }
 			if (!this.hasUnsavedChanges) { action(); return; }
 			if (this.leavePromptOpen) return;
 			const backedUp = this.persistDraft();
 			this.leavePromptOpen = true;
 			uni.showModal({
-				title: '尚有未保存的修改', content: backedUp ? '修改已备份到本机。退出后可恢复，是否退出？' : '本机备份失败，退出会丢失修改。是否仍要退出？', confirmText: '退出', cancelText: '继续编辑',
+				title: this.$t('manga.editor.unsavedTitle'), content: backedUp ? this.$t('manga.editor.unsavedBackedUp') : this.$t('manga.editor.unsavedBackupFailed'), confirmText: this.$t('manga.editor.exit'), cancelText: this.$t('manga.editor.continueEditing'),
 				success: (r) => { this.leavePromptOpen = false; if (r.confirm) action(); },
 			});
 		},
@@ -318,7 +318,7 @@ export default {
 			if (this.uploading || this.saving || this.loadingEditor) return;
 			const access = this.novel.current_access;
 			if (!access || !access.can_edit_draft || !access.can_publish_article) {
-				uni.showToast({ title: '没有编辑或发布权限', icon: 'none' }); return;
+				uni.showToast({ title: this.$t('manga.editor.noEditPermission'), icon: 'none' }); return;
 			}
 			const requestId = ++this.editRequestId;
 			this.editingArticleId = item.article_id;
@@ -345,7 +345,7 @@ export default {
 				this.baseline = this.editorSnapshot;
 				if (restore) this.restoreDraft(requestId);
 			} catch (e) {
-				if (requestId === this.editRequestId) uni.showToast({ title: '加载失败，已禁止保存，请重试', icon: 'none' });
+				if (requestId === this.editRequestId) uni.showToast({ title: this.$t('manga.editor.loadFailedNoSave'), icon: 'none' });
 			} finally {
 				if (requestId === this.editRequestId) this.loadingEditor = false;
 			}
@@ -374,7 +374,7 @@ export default {
 			});
 		},
 		uploadFiles(tempFiles, paths, replaceId = null) {
-			const selections = paths.map((path, i) => ({ path, meta: tempFiles[i] || {}, name: tempFiles[i] && (tempFiles[i].name || tempFiles[i].file && tempFiles[i].file.name) || '图片 ' + (i + 1) }));
+			const selections = paths.map((path, i) => ({ path, meta: tempFiles[i] || {}, name: tempFiles[i] && (tempFiles[i].name || tempFiles[i].file && tempFiles[i].file.name) || this.$t('manga.editor.defaultFileName', { index: i + 1 }) }));
 			selections.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN', { numeric: true }));
 			for (const item of selections) this.uploadQueue.push({ ...item, id: ++this.queueSequence, replaceId, status: 'queued', progress: 0, error: '', cancel: null, pageIds: [] });
 			return this.drainUploads();
@@ -399,10 +399,10 @@ export default {
 						});
 						if (task.status === 'cancelled' || epoch !== this.editRequestId) continue;
 						const incoming = res.data && (res.data.pages || (res.data.url ? [res.data] : []));
-						if (!incoming || !incoming.length || incoming.some(p => !/^https?:\/\//.test(p.url))) throw new Error('上传未返回有效图片');
+						if (!incoming || !incoming.length || incoming.some(p => !/^https?:\/\//.test(p.url))) throw new Error(this.$t('manga.editor.invalidUploadResponse'));
 						const replacementIdx = task.replaceId === null ? -1 : this.pages.findIndex(p => p.id === task.replaceId);
-						if (task.replaceId !== null && replacementIdx < 0) throw new Error('待替换页面已删除');
-						if (this.pages.length + incoming.length - (replacementIdx >= 0 ? 1 : 0) > 300) throw new Error('分段后超过单话 300 页上限');
+						if (task.replaceId !== null && replacementIdx < 0) throw new Error(this.$t('manga.editor.replaceTargetDeleted'));
+						if (this.pages.length + incoming.length - (replacementIdx >= 0 ? 1 : 0) > 300) throw new Error(this.$t('manga.editor.pageLimitExceeded'));
 						let id = Math.max(0, ...this.pages.map(p => Number(p.id) || 0));
 						const next = incoming.map(p => ({ id: ++id, url: p.url, thumb: p.thumb, readingUrl: p.readingUrl, width: p.width, height: p.height }));
 						if (replacementIdx >= 0) { next[0].id = task.replaceId; this.pages.splice(replacementIdx, 1, ...next); }
@@ -416,7 +416,7 @@ export default {
 						task.pageIds = next.map(p => p.id);
 						task.status = 'success'; task.progress = 100; this.persistDraft();
 					} catch (e) {
-						if (task.status !== 'cancelled') { task.status = 'error'; task.error = e.response && e.response.data && e.response.data.msg || e.message || '上传失败'; }
+						if (task.status !== 'cancelled') { task.status = 'error'; task.error = e.response && e.response.data && e.response.data.msg || e.message || this.$t('common.uploadFailed'); }
 					} finally { task.cancel = null; }
 					if (epoch !== this.editRequestId) break;
 				}
@@ -425,18 +425,18 @@ export default {
 		cancelUpload(task) { if (task.status === 'success') return; task.status = 'cancelled'; if (task.cancel) task.cancel('cancelled'); },
 		cancelAllUploads() { this.uploadQueue.forEach(task => this.cancelUpload(task)); },
 		retryUpload(task) { if (this.saving || task.status !== 'error') return; task.status = 'queued'; task.progress = 0; this.drainUploads(); },
-		clearCompletedUploads() { if (this.uploadQueue.some(task => ['queued', 'uploading', 'error'].includes(task.status))) { uni.showToast({ title: '请先完成、重试或取消上传', icon: 'none' }); return; } this.uploadQueue = this.uploadQueue.filter(task => ['queued', 'uploading', 'error'].includes(task.status)); },
+		clearCompletedUploads() { if (this.uploadQueue.some(task => ['queued', 'uploading', 'error'].includes(task.status))) { uni.showToast({ title: this.$t('manga.editor.finishUploadsFirst'), icon: 'none' }); return; } this.uploadQueue = this.uploadQueue.filter(task => ['queued', 'uploading', 'error'].includes(task.status)); },
 		reorderPages({ from, to }) {
 			if (this.saving || this.uploading || !this.editorReady) return;
 			const page = this.pages.splice(from, 1)[0]; if (page) this.pages.splice(to, 0, page);
 		},
 		previewEpisode() {
-			if (!this.pages.length) { uni.showToast({ title: '请先添加页面', icon: 'none' }); return; }
+			if (!this.pages.length) { uni.showToast({ title: this.$t('manga.editor.addPageFirst'), icon: 'none' }); return; }
 			const key = 'MangaPreview_' + Date.now() + '_' + Math.random().toString(36).slice(2);
 			try {
 				window.localStorage.setItem(key, this.editorSnapshot);
 				uni.navigateTo({ url: '/pages/readers/mangaReader?previewKey=' + key });
-			} catch (_) { uni.showToast({ title: '预览空间不足，请保存草稿后预览', icon: 'none' }); }
+			} catch (_) { uni.showToast({ title: this.$t('manga.editor.previewSpaceInsufficient'), icon: 'none' }); }
 		},
 		async prepareUpload(path, meta) {
 			// 浏览器 File/Blob 可直接作为请求体，避免 base64 膨胀和额外拷贝。
@@ -446,7 +446,7 @@ export default {
 			}
 			try {
 				const response = await fetch(path);
-				if (!response.ok) throw new Error('读取图片文件失败');
+				if (!response.ok) throw new Error(this.$t('manga.editor.readImageFailed'));
 				return { binary: true, blob: await response.blob() };
 			} catch (error) {
 				// 旧版 App-Plus 的 plus.io.FileReader 只支持 Data URL，保留兼容路径。
@@ -510,20 +510,20 @@ export default {
 		// ===== 保存 =====
 		saveEpisode(isDraft, confirmed = false) {
 			if (this.saving || this.uploading || !this.editorReady) return;
-			if (this.uploadQueue.some(task => task.status === 'error' || task.status === 'queued')) { uni.showToast({ title: '请重试或取消未完成的上传', icon: 'none' }); return; }
+			if (this.uploadQueue.some(task => task.status === 'error' || task.status === 'queued')) { uni.showToast({ title: this.$t('manga.editor.retryOrCancelUploads'), icon: 'none' }); return; }
 			if (!isDraft && !(this.novel.current_access && this.novel.current_access.can_publish_article)) {
-				uni.showToast({ title: '没有发布权限', icon: 'none' }); return;
+				uni.showToast({ title: this.$t('manga.editor.noPublishPermission'), icon: 'none' }); return;
 			}
 			if (isDraft && this.editingPublished && !confirmed) {
-				uni.showModal({ title: '转为草稿', content: '该话将从读者目录撤回，确定继续吗？', success: (r) => { if (r.confirm) this.saveEpisode(isDraft, true); } }); return;
+				uni.showModal({ title: this.$t('manga.editor.convertToDraft'), content: this.$t('manga.editor.convertToDraftConfirm'), success: (r) => { if (r.confirm) this.saveEpisode(isDraft, true); } }); return;
 			}
 			const title = (this.editorTitle || '').trim();
 			if (!title) {
-				uni.showToast({ title: '请填写话数标题', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.editor.titleRequired'), icon: 'none' });
 				return;
 			}
 			if (!isDraft && this.pages.length === 0) {
-				uni.showToast({ title: '发布前请至少上传一页', icon: 'none' });
+				uni.showToast({ title: this.$t('manga.editor.pageRequired'), icon: 'none' });
 				return;
 			}
 			this.saving = true;
@@ -558,35 +558,35 @@ export default {
 				clearTimeout(this.draftTimer);
 				try { window.localStorage.removeItem(this.draftKey()); } catch (_) {}
 				this.baseline = this.editorSnapshot;
-				uni.showToast({ title: isDraft ? '已存为草稿' : '已发布', icon: 'none' });
+				uni.showToast({ title: isDraft ? this.$t('manga.editor.draftSaved') : this.$t('manga.editor.published'), icon: 'none' });
 				this.view = 'list';
 				this.loadArticles();
 			}).catch((e) => {
 				console.error('saveEpisode failed', e);
 				this.saving = false;
 				const msg = e && e.response && e.response.data && e.response.data.msg;
-				uni.showToast({ title: msg || '保存失败，请稍后重试', icon: 'none' });
+				uni.showToast({ title: msg || this.$t('manga.editor.saveFailedRetry'), icon: 'none' });
 				if (e.response && e.response.status === 409) {
-					uni.showModal({ title: '话数版本冲突', content: '本机草稿已保留。可继续编辑，或重新加载服务器最新版本。', confirmText: '重新加载', cancelText: '继续编辑', success: (r) => { if (r.confirm) this.startEditEpisode({ article_id: this.editingArticleId }, false); } });
+					uni.showModal({ title: this.$t('manga.editor.versionConflict'), content: this.$t('manga.editor.versionConflictContent'), confirmText: this.$t('common.reload'), cancelText: this.$t('manga.editor.continueEditing'), success: (r) => { if (r.confirm) this.startEditEpisode({ article_id: this.editingArticleId }, false); } });
 				}
 			});
 		},
 		// ===== 删除话数 =====
 		deleteEpisode(item) {
 			uni.showModal({
-				title: '删除话数',
-				content: '确定删除《' + item.title + '》吗？删除后可在回收站找回。',
+				title: this.$t('manga.editor.deleteEpisodeTitle'),
+				content: this.$t('manga.editor.deleteEpisodeConfirm', { title: item.title }),
 				confirmColor: '#e05c3a',
 				success: (r) => {
 					if (!r.confirm) return;
 					axios.post(this.$baseUrl + '/essays/delete_article', {
 						id: item.article_id,
 					}, { headers: this.authHeaders() }).then(() => {
-						uni.showToast({ title: '已删除', icon: 'none' });
+						uni.showToast({ title: this.$t('common.deleted'), icon: 'none' });
 						this.loadArticles();
 					}).catch((e) => {
 						console.error('deleteEpisode failed', e);
-						uni.showToast({ title: '删除失败', icon: 'none' });
+						uni.showToast({ title: this.$t('common.deleteFailed'), icon: 'none' });
 					});
 				},
 			});

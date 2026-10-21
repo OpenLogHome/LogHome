@@ -10,7 +10,7 @@
 				+
 			</div>
 		</view>
-		<view class="title_bar">官方标签</view>
+		<view class="title_bar">{{ $t('writer.work.tags.officialTitle') }}</view>
 		<view class="suggested_tags">
 			<view class="tag" v-for="tag in suggested_tags" :key="tag.tag_id" :class="{'activity': tag.is_activity_tag, 'suggested': tag.is_suggested, 'chosen': tag.is_chosen}" @click="dealWithSuggested(tag.tag_id, tag.tag_name, tag.is_chosen)">
 				{{tag.tag_name}}
@@ -70,7 +70,7 @@
 					}
 				}).then((res) => {
 					uni.showToast({
-						title: "删除成功",
+						title: this.$t('common.deleteSuccess'),
 						icon:'none',
 						duration: 2000
 					});
@@ -100,7 +100,7 @@
 					}
 				}).then((res) => {
 					uni.showToast({
-						title: "添加成功",
+						title: this.$t('writer.work.tags.addSuccess'),
 						icon:'none',
 						duration: 2000
 					});
@@ -117,10 +117,10 @@
 			addCustomTag(){
 				let _this = this;
 				uni.showModal({
-				    title: '添加标签',
+				    title: this.$t('writer.work.tags.addTitle'),
 				    content: '',
 					editable:true,
-					placeholderText:"请输入标签",
+					placeholderText:this.$t('writer.work.tags.inputPlaceholder'),
 				    success: function (res) {
 				        if (res.confirm) {
 							_this.addTag(res.content)
@@ -135,7 +135,7 @@
 				else if(chosen===false&&this.tags.length<8) this.addTag(name);
 				else if(this.tags.length>=8) uni.showToast(
 					{
-						title: "最多只能使用8个标签",
+						title: this.$t('writer.work.tags.maxTags'),
 						icon:'none',
 						duration: 2000,
 					}
@@ -149,7 +149,7 @@
 				this.getSuggestedTags();
 			} else {
 				uni.showToast({
-					title: "出错",
+					title: this.$t('common.paramError'),
 					icon:'none',
 					duration: 2000
 				});

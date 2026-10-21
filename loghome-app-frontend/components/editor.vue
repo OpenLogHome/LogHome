@@ -2,10 +2,10 @@
 	<view>
 		<!-- 导航栏 -->
 		<statusBar>
-			<text slot="pageTitle" class="font-title mt-1">编辑器</text>
+			<text slot="pageTitle" class="font-title mt-1">{{ $t('writer.editor.simpleEditor.navTitle') }}</text>
 			<view v-if="!isWechat" slot="right-text" class="flex just-content-around">
 				<view @tap="saveValidation">
-					<text style="color: #59C65D; margin-top: 3rpx;" class="font-title">保存</text>
+					<text style="color: #59C65D; margin-top: 3rpx;" class="font-title">{{ $t('common.save') }}</text>
 				</view>
 			</view>
 		</statusBar>
@@ -18,13 +18,13 @@
 			<scroll-view scroll-y="true" style="width: 100%;" :style="{'bottom': this.absEditorH + 'px'}">
 				<editor @focus="editorFocus" id="editor" @ready="onEditorReady"
 				show-img-size show-img-resize show-img-toolbar 
-				:focus="true" placeholder="请输入..." class="h6" style="width: 100%;" :style="editorHeiht"></editor>
+				:focus="true" :placeholder="$t('writer.editor.simpleEditor.placeholder')" class="h6" style="width: 100%;" :style="editorHeiht"></editor>
 			</scroll-view>
 		</view>
 		
 		<!-- 键盘功能切换 -->
 		<view class="keywordOrFunction-box border bg-color-white" :style="{'bottom':keyWordMenuHeight}">
-			<view v-if="currentPopupType != '字号'" class="titleMenu w-100 flex just-content-around align-center">
+			<view v-if="currentPopupType != 'fontSize'" class="titleMenu w-100 flex just-content-around align-center">
 				<view v-for="(item,index) in popupMenu" :key="index" @tap.stop="tapMenu(index)">
 					<log-image :src="item.img" :style="{
 						'width': item.w + 'rpx',
@@ -32,14 +32,14 @@
 					}"></log-image>
 				</view>
 			</view>
-			<view v-if="currentPopupType == '字号'" class="titleMenu w-100 flex align-center">
+			<view v-if="currentPopupType == 'fontSize'" class="titleMenu w-100 flex align-center">
 				<view style="width: 100rpx;" class="flex align-center just-content-around">
 					<view><text class="icon iconfont h4 font-color-666" @tap="tapMenu(2,false)">&#xe635;</text></view>
 					<!-- <view><text class="icon iconfont font-title font-color-666">&#xe6c7;</text></view> -->
 					<view class="divider flex align-center" style="margin-top: 6rpx;"></view>
 				</view>
 				<view style="width: 650rpx;" class="flex just-content-center align-center">
-					<text class="h5">{{fontSizeOrTitleSize}}</text>
+					<text class="h5">{{fontSizeOrTitleSizeLabel}}</text>
 				</view>
 			</view>
 			
@@ -49,15 +49,15 @@
 		<cPopup ref="cPopup" :height="popupHeight" :isCircleAngle="false" :isShowMask="false">
 			<view slot="content">
 				<scroll-view scroll-y="true" style="height: 750rpx;">
-					<view v-if="currentPopupType == '字体'">
+					<view v-if="currentPopupType == 'font'">
 						<view class="fontSyle box px-4 w-100 flex align-center">
 							<view class="fontSize flex dire-column just-content-center align-center" @tap="selectFontSize">
-								<view><text class="font-color-9A font-small">字号</text></view>
+								<view><text class="font-color-9A font-small">{{ $t('writer.editor.simpleEditor.fontSize') }}</text></view>
 								<view><text class="font-title font-mian">{{currentFontSize}}</text></view>
 							</view>
 							<view class="ml-2" style="height: 180rpx;">
-								<view @tap.stop="selectTitleSize" class="flex fontFamily just-content-center align-center"><text class="h6 font-color-666">{{currentFontTitle}}</text></view>
-								<view @tap.stop="setFont" class="flex mt-2 fontFamily just-content-center align-center"><text class="h6 font-color-666">思源黑体</text></view>
+								<view @tap.stop="selectTitleSize" class="flex fontFamily just-content-center align-center"><text class="h6 font-color-666">{{ getFontTitleLabel(currentFontTitle) }}</text></view>
+								<view @tap.stop="setFont" class="flex mt-2 fontFamily just-content-center align-center"><text class="h6 font-color-666">{{ $t('writer.editor.simpleEditor.sourceHanSans') }}</text></view>
 							</view>
 						</view>
 						<!-- 分割线 -->
@@ -80,7 +80,7 @@
 						
 						<!-- 字体颜色 -->
 						<view class="px-4">
-							<view class="mb-2"><text class="font-color-9A font-small font-weight-bold">字体颜色</text></view>
+							<view class="mb-2"><text class="font-color-9A font-small font-weight-bold">{{ $t('writer.editor.simpleEditor.textColor') }}</text></view>
 							<view class="fontColor-box flex align-center just-content-around">
 								<view v-for="(item,index) in fontColor" :key="index" @tap="selectFontColor(index)">
 									<view v-if="index == 5"><log-image :src="item.img" style="margin-top: 12rpx;" :style="{
@@ -96,7 +96,7 @@
 						
 						<!-- 背景颜色 -->
 						<view class="px-4 mt-1">
-							<view class="mb-2"><text class="font-color-9A font-small font-weight-bold">背景颜色</text></view>
+							<view class="mb-2"><text class="font-color-9A font-small font-weight-bold">{{ $t('writer.editor.simpleEditor.backgroundColor') }}</text></view>
 							<view class="fontColor-box flex align-center just-content-around">
 								<view v-for="(item,index) in bgColor" :key="index" @tap="selectBGColor(index)">
 									<view v-if="index > 3"><log-image :src="item.img" style="margin-top: 12rpx;" :style="{
@@ -111,7 +111,7 @@
 						</view>
 					</view>
 					
-					<view v-if="currentPopupType == '对齐方式'">
+					<view v-if="currentPopupType == 'align'">
 						<view class="px-4 py-3 flex">
 							<view class="flex just-content-around align-center align-box-left">
 								<view v-for="(item,index) in alignWay" :key="index" class="flex align-center" @tap.stop="selectAlignMent(index)">
@@ -144,14 +144,14 @@
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
 									}"></log-image>
-									<view><text class="h5 font-color-666 ml-2">{{item.title}}</text></view>
+									<view><text class="h5 font-color-666 ml-2">{{ $t(item.titleKey) }}</text></view>
 								</view>
 								<view class="view-hr"></view>
 							</view>
 						</view>
 					</view>
 								
-					<view v-if="currentPopupType == '功能'">
+					<view v-if="currentPopupType == 'function'">
 						<view class="">
 							<view v-for="(item,index) in functionList" :key="index" @tap="selectFunction(index,item.value)">
 								<view class="py-3 pl-4 flex align-center">
@@ -159,7 +159,7 @@
 										'width': item.w + 'rpx',
 										'height': item.h + 'rpx'
 									}"></log-image>
-									<view><text class="h5 font-color-666 ml-2">{{item.title}}</text></view>
+									<view><text class="h5 font-color-666 ml-2">{{ $t(item.titleKey) }}</text></view>
 								</view>
 								<view class="hr20" v-if="index == 3 || index == 5"></view>
 								<view v-else class="hr-710 ml-4"></view>
@@ -167,7 +167,7 @@
 						</view>
 					</view>
 				
-					<view v-if="currentPopupType == '字号' && fontSizeOrTitleSize == '字号'">
+					<view v-if="currentPopupType == 'fontSize' && fontSizeOrTitleSize == 'fontSize'">
 						<!-- 缩进 -->
 						<view>
 							<view v-for="(item,index) in fontSizeData" :key="index" @tap.stop="confirmFontSize">
@@ -177,11 +177,11 @@
 						</view>
 					</view>
 					
-					<view v-if="currentPopupType == '字号' && fontSizeOrTitleSize == '标题'">
+					<view v-if="currentPopupType == 'fontSize' && fontSizeOrTitleSize == 'title'">
 						<!-- 缩进 -->
 						<view>
 							<view v-for="(item,index) in fontTitle" :key="index" @tap.stop="confirmFontSize">
-								<i data-name="header" :data-value="item.title" class="h5 py-3 font-color-666 ml-3">{{item.title}}</i>
+								<i data-name="header" :data-value="item.title" class="h5 py-3 font-color-666 ml-3">{{ getFontTitleLabel(item.title) }}</i>
 								<view class="view-hr"></view>
 							</view>
 						</view>
@@ -195,7 +195,7 @@
 		
 		<!-- #ifdef MP-WEIXIN -->
 			<view v-if="isWechat" @click="saveValidation" class="float-btn-box circle flex just-content-center align-center">
-				<text class="icon iconfont h6 font-white">保存</text>
+				<text class="icon iconfont h6 font-white">{{ $t('common.save') }}</text>
 			</view>
 		<!-- #endif -->
 		
@@ -221,11 +221,11 @@
 		watch: {
 			switchKeyword(newValue, oldValue) {
 				let keywordHeight = 0;
-				if (this.currentPopupType == '字体' || this.currentPopupType == '对齐方式' || this.currentPopupType == '功能' || this.currentPopupType == '字号' || this.currentPopupType == '格式') {
+				if (this.currentPopupType == 'font' || this.currentPopupType == 'align' || this.currentPopupType == 'function' || this.currentPopupType == 'fontSize' || this.currentPopupType == 'format') {
 					keywordHeight = uni.upx2px(this.popupHeight);
 				}
 				
-				if (this.currentPopupType == '软键盘') {
+				if (this.currentPopupType == 'keyboard') {
 					if (this.currentPlatform == 'android') {
 						keywordHeight = uni.upx2px(10);
 					}
@@ -258,6 +258,15 @@
 			}
 		},
 		computed: {
+			fontSizeOrTitleSizeLabel(){
+				if (this.fontSizeOrTitleSize == 'fontSize') {
+					return this.$t('writer.editor.simpleEditor.fontSize');
+				}
+				if (this.fontSizeOrTitleSize == 'title') {
+					return this.$t('writer.editor.simpleEditor.title');
+				}
+				return '';
+			},
 			editorHeiht(){
 				let height = "";
 				if (this.currentPlatform == 'ios') {
@@ -295,7 +304,7 @@
 				/* 弹出框高度 */
 				popupHeight: 0,
 				/* 当前popup类型 */
-				currentPopupType: '软键盘',
+				currentPopupType: 'keyboard',
 				
 				/* 菜单栏 */
 				popupMenu: [
@@ -353,21 +362,21 @@
 				
 				/* 缩进 */
 				indentition: [
-					{img:'/static/editor/align/add.png',title:'增加缩进',w:'41',h:'31',isSelect:false},
-					{img:'/static/editor/align/sub.png',title:'减少缩进',w:'41',h:'31',isSelect:false}
+					{img:'/static/editor/align/add.png',titleKey:'writer.editor.simpleEditor.increaseIndent',w:'41',h:'31',isSelect:false},
+					{img:'/static/editor/align/sub.png',titleKey:'writer.editor.simpleEditor.decreaseIndent',w:'41',h:'31',isSelect:false}
 				],
 				
 				/* 功能 */
 				functionList: [
-					// {img:'/static/editor/function/replace.png',title:'查找替换',w:'40',h:'40',isSelect:false},
-					{img:'/static/editor/function/img.png',title:'添加图片',w:'37',h:'33',isSelect:false},
-					{img:'/static/editor/function/weachat.png',title:'添加微信号',value:'微信号',w:'42',h:'35',isSelect:false},
-					{img:'/static/editor/function/qr.png',title:'添加微信二维码',value:'二维码',w:'37',h:'36',isSelect:false},
-					{img:'/static/editor/function/phone.png',title:'添加电话',value:'电话',w:'33',h:'48',isSelect:false},
-					{img:'/static/editor/function/qq.png',title:'添加QQ号',value:'qq',w:'43',h:'51',isSelect:false},
-					{img:'/static/editor/function/name.png',title:'添加昵称',value:'昵称',w:'43',h:'33',isSelect:false},
-					{img:'/static/editor/function/city.png',title:'添加城市',value:'城市',w:'39',h:'39',isSelect:false},
-					{img:'/static/editor/function/gender.png',title:'添加性别',value:'性别',w:'41',h:'41',isSelect:false}
+					// {img:'/static/editor/function/replace.png',titleKey:'writer.editor.simpleEditor.findReplace',w:'40',h:'40',isSelect:false},
+					{img:'/static/editor/function/img.png',titleKey:'writer.editor.simpleEditor.addImage',w:'37',h:'33',isSelect:false},
+					{img:'/static/editor/function/weachat.png',titleKey:'writer.editor.simpleEditor.addWechat',value:'微信号',w:'42',h:'35',isSelect:false},
+					{img:'/static/editor/function/qr.png',titleKey:'writer.editor.simpleEditor.addQr',value:'二维码',w:'37',h:'36',isSelect:false},
+					{img:'/static/editor/function/phone.png',titleKey:'writer.editor.simpleEditor.addPhone',value:'电话',w:'33',h:'48',isSelect:false},
+					{img:'/static/editor/function/qq.png',titleKey:'writer.editor.simpleEditor.addQq',value:'qq',w:'43',h:'51',isSelect:false},
+					{img:'/static/editor/function/name.png',titleKey:'writer.editor.simpleEditor.addNickname',value:'昵称',w:'43',h:'33',isSelect:false},
+					{img:'/static/editor/function/city.png',titleKey:'writer.editor.simpleEditor.addCity',value:'城市',w:'39',h:'39',isSelect:false},
+					{img:'/static/editor/function/gender.png',titleKey:'writer.editor.simpleEditor.addGender',value:'性别',w:'41',h:'41',isSelect:false}
 				],
 				
 				/* 字号大小还是标题大小 */
@@ -461,7 +470,7 @@
 			showKeyWord(){
 				this.isSwitchKeyWord = false;
 				this.popupHeight = 0;
-				this.currentPopupType = '软键盘';
+				this.currentPopupType = 'keyboard';
 				this.popupMenu[2] = {img:'/static/editor/A.png',w:'30',h:'37',isSelect:false},
 				this.popupMenu[3] = {img:'/static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
 				this.popupMenu[4] = {img:'/static/editor/function.png',w:'39',h:'39',isSelect:false}
@@ -488,19 +497,19 @@
 					this.redo();
 				};
 				if (index == 2) {
-					this.currentPopupType = '字体';
+					this.currentPopupType = 'font';
 					this.popupMenu[2] = {img:'/static/editor/keyword.png',w:'44',h:'44',isSelect:true},
 					this.popupMenu[3] = {img:'/static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
 					this.popupMenu[4] = {img:'/static/editor/function.png',w:'39',h:'39',isSelect:false}
 				};
 				if (index == 3) {
-					this.currentPopupType = '对齐方式';
+					this.currentPopupType = 'align';
 					this.popupMenu[2] = {img:'/static/editor/A.png',w:'30',h:'37',isSelect:false},
 					this.popupMenu[3] = {img:'/static/editor/keyword.png',w:'44',h:'44',isSelect:true},
 					this.popupMenu[4] = {img:'/static/editor/function.png',w:'39',h:'39',isSelect:false}
 				};
 				if (index == 4) {
-					this.currentPopupType = '功能';
+					this.currentPopupType = 'function';
 					this.popupMenu[2] = {img:'/static/editor/A.png',w:'30',h:'37',isSelect:false},
 					this.popupMenu[3] = {img:'/static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
 					this.popupMenu[4] = {img:'/static/editor/keyword.png',w:'44',h:'44',isSelect:true}
@@ -512,7 +521,7 @@
 			},
 			/* 选择字体颜色 */
 			selectFontColor(index){
-				this.currentColorType = '文字';
+				this.currentColorType = 'text';
 				this.fontColor.forEach((r,i)=>r.isSelect=i==index);
 				
 				if (index == 5) {
@@ -524,7 +533,7 @@
 			},
 			/* 选择背景颜色 */
 			selectBGColor(index){
-				this.currentColorType = '背景';
+				this.currentColorType = 'background';
 				this.bgColor.forEach((r,i)=>r.isSelect=i==index);
 				
 				if (index == 5) {
@@ -545,7 +554,7 @@
 				this.pickerColor = e.rgba;
 				
 				let color;
-				if (this.currentColorType == '文字') {
+				if (this.currentColorType == 'text') {
 					color = {target:{dataset:{name:'color',value:e.hex}}};
 				} else {
 					color = {target:{dataset:{name:'backgroundColor',value:e.hex}}};
@@ -560,15 +569,22 @@
 			
 			/* 选择字体大小 */
 			selectFontSize(){
-				this.currentPopupType = '字号';
-				this.fontSizeOrTitleSize = '字号';
+				this.currentPopupType = 'fontSize';
+				this.fontSizeOrTitleSize = 'fontSize';
 				this.showPopup();
 			},
 			/* 选择标题大小 */
 			selectTitleSize(){
-				this.currentPopupType = '字号';
-				this.fontSizeOrTitleSize = '标题';
+				this.currentPopupType = 'fontSize';
+				this.fontSizeOrTitleSize = 'title';
 				this.showPopup();
+			},
+			/* 标题样式显示文案（'(p)正文' 等取值仍需保持原样传给编辑器） */
+			getFontTitleLabel(title){
+				if (title === '(p)正文') {
+					return '(p)' + this.$t('writer.editor.simpleEditor.paragraph');
+				}
+				return title;
 			},
 			/* 确认字体大小 */
 			confirmFontSize(e){
@@ -720,7 +736,7 @@
 						success: (res) => {
 							this.editorCtx.insertImage({
 								src: res.tempFilePaths[0],
-								alt:'该图无法显示',
+								alt:this.$t('writer.editor.simpleEditor.imageUnavailable'),
 								data: {
 									id: 'abcd',
 									role: 'god'

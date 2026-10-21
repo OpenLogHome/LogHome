@@ -1,27 +1,27 @@
 <template>
   <view class="manga-composer">
     <view v-if="replyTo" class="reply-banner">
-      <text class="reply-banner-text">回复 {{ replyTo.userName }}</text>
-      <button v-manga-a11y class="banner-close" type="button" aria-label="取消回复" @click="$emit('cancel-reply')">
+      <text class="reply-banner-text">{{ $t('manga.comment.replyTo', { name: replyTo.userName }) }}</text>
+      <button v-manga-a11y class="banner-close" type="button" :aria-label="$t('manga.comment.cancelReply')" @click="$emit('cancel-reply')">
         <manga-icon name="close" />
       </button>
     </view>
     <view v-if="images.length" class="composer-images">
       <view class="composer-image" v-for="(image, index) in images" :key="image">
         <log-image :src="image" mode="aspectFill" style="width: 100%; height: 100%;" />
-        <button v-manga-a11y class="image-remove" type="button" aria-label="移除图片" @click="removeImage(index)">
+        <button v-manga-a11y class="image-remove" type="button" :aria-label="$t('manga.comment.removeImage')" @click="removeImage(index)">
           <manga-icon name="close" />
         </button>
       </view>
     </view>
     <view class="composer-row">
-      <textarea class="composer-input" v-model="content" :placeholder="placeholder" maxlength="300" auto-height />
+      <textarea class="composer-input" v-model="content" :placeholder="placeholder || $t('manga.comment.placeholder')" maxlength="300" auto-height />
       <view class="composer-side">
         <emoji-picker @select="appendEmoji" />
-        <button v-manga-a11y class="composer-tool" type="button" aria-label="添加图片"
+        <button v-manga-a11y class="composer-tool" type="button" :aria-label="$t('manga.comment.addImage')"
           :disabled="images.length >= maxImages" @click="chooseImage"><manga-icon name="image" /></button>
         <button v-manga-a11y="submitting" class="composer-send" type="button" :disabled="submitting || !hasContent"
-          @click="submit">{{ submitting ? '发布中' : '发布' }}</button>
+          @click="submit">{{ submitting ? $t('manga.comment.publishing') : $t('manga.comment.publish') }}</button>
       </view>
     </view>
     <text v-if="content.length >= 240" class="composer-count">{{ content.length }}/300</text>
@@ -38,7 +38,7 @@ export default {
   directives: { mangaA11y: MangaA11y },
   components: { MangaIcon, EmojiPicker },
   props: {
-    placeholder: { type: String, default: '发一条友善的评论' },
+    placeholder: { type: String, default: '' },
     replyTo: { type: Object, default: null },
     submitting: { type: Boolean, default: false },
   },
@@ -76,14 +76,14 @@ export default {
       // uni 的 chooseImage 在 H5 与 App 上返回结构不同，统一取 tempFilePaths
       const paths = (picked && picked.tempFilePaths) || (picked && picked[1] && picked[1].tempFilePaths) || [];
       if (!paths.length) return;
-      uni.showLoading({ title: '正在上传图片…', mask: true });
+      uni.showLoading({ title: this.$t('manga.comment.uploadingImage'), mask: true });
       try {
         for (const path of paths) {
           if (this.images.length >= this.maxImages) break;
           this.images.push(await uploadMangaCommentImage(path));
         }
       } catch (error) {
-        uni.showToast({ title: '图片上传失败', icon: 'none' });
+        uni.showToast({ title: this.$t('manga.comment.uploadFailed'), icon: 'none' });
       } finally {
         uni.hideLoading();
       }

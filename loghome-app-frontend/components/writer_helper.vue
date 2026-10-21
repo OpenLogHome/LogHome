@@ -1,49 +1,49 @@
 <template>
 	<div class="helper-box" v-show="!Object.values(problems).every((item)=>{return item == false})" v-dark>
 		<div class="head">
-			<div class="box-title">创作建议君</div>
+			<div class="box-title">{{ $t('writer.helper.title') }}</div>
 			<div class="more">
-				<p>为你的创作保驾护航</p>
+				<p>{{ $t('writer.helper.subtitle') }}</p>
 			</div>
 		</div>
 		<div class="helper-body">
 			<div class="card" v-show="problems.unPublic">
 				<navigator @click="$emit('close-book-detail')" :url="'../pages/writers/essaySet?id='+novel_id">
 					<p class="suggestion">
-						作品处于私有状态
+						{{ $t('writer.helper.privateTitle') }}
 					</p>
 					<p class="description">
-						新创建的作品默认为私有状态，只有将作品设置为公开才能让别人看到你的作品哦！
+						{{ $t('writer.helper.privateDesc') }}
 					</p>
 				</navigator>
 			</div>
 			<div class="card" v-show="problems.badDescription">
 				<navigator @click="$emit('close-book-detail')" :url="'../pages/writers/changeEssayInfo?id='+novel_id">
 					<p class="suggestion">
-						作品简介太短了
+						{{ $t('writer.helper.descTooShortTitle') }}
 					</p>
 					<p class="description">
-						好的作品简介可以吸引更多人来看你的作品哦，更长的简介会让大家感受到你的诚意。
+						{{ $t('writer.helper.descTooShortDesc') }}
 					</p>
 				</navigator>
 			</div>
 			<div class="card" v-show="problems.defaultCover">
 				<navigator @click="$emit('close-book-detail')" :url="'../pages/writers/changeEssayInfo?id='+novel_id">
 					<p class="suggestion">
-						没有上传封面
+						{{ $t('writer.helper.noCoverTitle') }}
 					</p>
 					<p class="description">
-						独特的封面可以让作品从众多作品中脱颖而出，上传一张封面试试吧！
+						{{ $t('writer.helper.noCoverDesc') }}
 					</p>
 				</navigator>
 			</div>
 			<div class="card" v-show="problems.noTags">
 				<navigator @click="$emit('close-book-detail')" :url="'../pages/writers/changeNovelTags?id='+novel_id">
 					<p class="suggestion">
-						没有设置标签
+						{{ $t('writer.helper.noTagsTitle') }}
 					</p>
 					<p class="description">
-						标签可以让喜欢相关类型的读者更容易找到你的作品，试着添加两个标签吧！
+						{{ $t('writer.helper.noTagsDesc') }}
 					</p>
 				</navigator>
 			</div>

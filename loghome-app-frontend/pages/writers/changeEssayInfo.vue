@@ -3,7 +3,7 @@
 		<log-image class="cover" :src="imgSrc" alt="" @click="changeCover"/>
 		<el-input
 		  type="text"
-		  placeholder="作品名"
+		  :placeholder="$t('writer.essay.changeInfo.titlePlaceholder')"
 		  v-model="title"
 		  maxlength="25"
 		  show-word-limit
@@ -12,7 +12,7 @@
 		<div style="margin: 20rpx 0;"></div>
 		<el-input
 		  type="textarea"
-		  placeholder="作品介绍"
+		  :placeholder="$t('writer.essay.changeInfo.introPlaceholder')"
 		  v-model="content"
 		  :rows="4"
 		  :autosize="{ minRows: 4}"
@@ -20,7 +20,7 @@
 		  show-word-limit
 		>
 		</el-input>
-		<div class="button" @click="submit">提交</div>
+		<div class="button" @click="submit">{{ $t('common.submit') }}</div>
 	</div>
 </template>
 
@@ -52,7 +52,7 @@
 					this.imgSrc = res.data[0].picUrl;
 					console.log(res.data[0]);
 					uni.setNavigationBarTitle({
-						title: "修改作品信息"
+						title: this.$t('writer.essay.changeInfo.navTitle')
 					});
 				}).catch(function(error) {
 					uni.showToast({
@@ -83,7 +83,7 @@
 					)
 					.then(function(response) {
 						uni.showToast({
-							title: "作品信息修改成功",
+							title: _this.$t('writer.essay.changeInfo.updateSuccess'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -97,7 +97,7 @@
 						//console.log(error);
 						if (error) {
 							uni.showToast({
-								title: "作品信息修改失败",
+								title: _this.$t('writer.essay.changeInfo.updateFailed'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -110,7 +110,7 @@
 			changeCover(){
 				let _this = this;
 				uni.showActionSheet({
-				    itemList: ['上传封面', '封面制作器'],
+				    itemList: [this.$t('writer.essay.changeInfo.uploadCover'), this.$t('writer.essay.changeInfo.coverMaker')],
 				    success: function (res) {
 				        if(res.tapIndex == 0) {
 							uni.navigateTo({
@@ -120,7 +120,7 @@
 						if(res.tapIndex == 1) {
 							let url = "https://m.loghome.ink/subtasks/cover-maker.html?novelid=" + _this.id;
 							uni.navigateTo({
-								url:`../apps/h5webview?url=${encodeURIComponent(url)}&title=封面制作器`
+								url:`../apps/h5webview?url=${encodeURIComponent(url)}&title=${encodeURIComponent(_this.$t('writer.essay.changeInfo.coverMaker'))}`
 							})
 						}
 				    },

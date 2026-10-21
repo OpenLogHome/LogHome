@@ -1,21 +1,21 @@
 <template>
   <view class="page" v-dark>
     <view class="card article-card">
-      <view class="eyebrow">当前章节</view>
-      <view class="article-title">{{ article.title || "未命名章节" }}</view>
+      <view class="eyebrow">{{ $t('writer.work.publish.currentChapter') }}</view>
+      <view class="article-title">{{ article.title || $t('writer.work.publish.untitledChapter') }}</view>
       <view class="article-meta">
-        <text>{{ article.novelName || "未命名作品" }}</text>
-        <text v-if="article.articleChapter">第{{ article.articleChapter }}章</text>
-        <text>{{ article.textCount }} 字</text>
-        <text>{{ article.imageCount }} 图</text>
+        <text>{{ article.novelName || $t('writer.work.publish.untitledNovel') }}</text>
+        <text v-if="article.articleChapter">{{ $t('writer.work.publish.chapterLabel', { chapter: article.articleChapter }) }}</text>
+        <text>{{ $t('writer.work.publish.charCount', { count: article.textCount }) }}</text>
+        <text>{{ $t('writer.work.publish.imageCount', { count: article.imageCount }) }}</text>
       </view>
     </view>
 
     <view v-if="article.isPersonal" class="card visibility-card">
-      <view class="visibility-label">发布前准备</view>
-      <view class="visibility-title">作品尚未公开</view>
+      <view class="visibility-label">{{ $t('writer.work.publish.prepLabel') }}</view>
+      <view class="visibility-title">{{ $t('writer.work.publish.notPublicTitle') }}</view>
       <view class="visibility-desc">
-        {{ canMakeNovelPublic ? "先将作品设为公开，才能发布章节。" : article.novelOwnerId ? "请联系作品作者将作品设为公开，之后才能发布章节。" : "暂时无法确认作品权限，请重新检查。" }}
+        {{ canMakeNovelPublic ? $t('writer.work.publish.makePublicDesc') : article.novelOwnerId ? $t('writer.work.publish.askOwnerDesc') : $t('writer.work.publish.checkPermissionDesc') }}
       </view>
       <button
         v-if="canMakeNovelPublic"
@@ -24,7 +24,7 @@
         :disabled="visibilityChanging || submitLoading"
         @click="makeNovelPublic"
       >
-        {{ visibilityChanging ? "正在公开…" : "设为公开" }}
+        {{ visibilityChanging ? $t('writer.work.publish.makingPublic') : $t('writer.work.publish.makePublic') }}
       </button>
       <button
         v-else-if="!article.novelOwnerId"
@@ -32,33 +32,33 @@
         :loading="visibilityChecking"
         :disabled="visibilityChecking"
         @click="retryNovelPublishState"
-      >重新检查</button>
+      >{{ $t('writer.work.publish.recheck') }}</button>
     </view>
 
     <view class="card">
-      <view class="section-title">发布方式</view>
+      <view class="section-title">{{ $t('writer.work.publish.publishModeTitle') }}</view>
       <view class="mode-grid">
         <view
           class="mode-card"
           :class="{ active: publishMode === 'now' }"
           @click="publishMode = 'now'"
         >
-          <view class="mode-title">立即发布</view>
-          <view class="mode-desc">当前内容立即上线</view>
+          <view class="mode-title">{{ $t('writer.work.publish.publishNow') }}</view>
+          <view class="mode-desc">{{ $t('writer.work.publish.publishNowDesc') }}</view>
         </view>
 		<view
 		  class="mode-card"
 		  :class="{ active: publishMode === 'schedule' }"
 		  @click="selectPublishMode('schedule')"
 		>
-		  <view class="mode-badge">通行证权益</view>
-          <view class="mode-title">定时发布</view>
-          <view class="mode-desc">按指定时间自动发布</view>
+		  <view class="mode-badge">{{ $t('writer.work.publish.passBenefit') }}</view>
+          <view class="mode-title">{{ $t('writer.work.publish.scheduledPublish') }}</view>
+          <view class="mode-desc">{{ $t('writer.work.publish.scheduledPublishDesc') }}</view>
         </view>
       </view>
 
       <view v-if="publishMode === 'schedule'" class="schedule-box">
-        <view class="schedule-label">发布时间</view>
+        <view class="schedule-label">{{ $t('writer.work.publish.publishTimeLabel') }}</view>
         <view class="schedule-picker-grid">
           <picker
             mode="date"
@@ -67,9 +67,9 @@
             @change="handleScheduleDateChange"
           >
             <view class="schedule-picker-card">
-              <view class="schedule-picker-caption">日期</view>
+              <view class="schedule-picker-caption">{{ $t('writer.work.publish.dateLabel') }}</view>
               <view class="schedule-picker-value">
-                {{ scheduleDate || "选择日期" }}
+                {{ scheduleDate || $t('writer.work.publish.chooseDate') }}
               </view>
             </view>
           </picker>
@@ -80,9 +80,9 @@
             @change="handleScheduleTimeChange"
           >
             <view class="schedule-picker-card">
-              <view class="schedule-picker-caption">时间</view>
+              <view class="schedule-picker-caption">{{ $t('writer.work.publish.timeLabel') }}</view>
               <view class="schedule-picker-value">
-                {{ scheduleClock || "选择时间" }}
+                {{ scheduleClock || $t('writer.work.publish.chooseTime') }}
               </view>
             </view>
           </picker>
@@ -96,7 +96,7 @@
     <view v-if="aiAssistanceEnabled" class="card">
       <view class="section-head">
         <view class="correction-title-group">
-          <view class="section-title correction-title">文本纠错</view>
+          <view class="section-title correction-title">{{ $t('writer.work.publish.textCorrection') }}</view>
         </view>
         <view class="correction-actions-group">
           <RedstoneCost :cost="2" :icon-only="true" :hide-cost-detail="true" />
@@ -107,21 +107,21 @@
             :disabled="smartCorrectionLoading"
             @click="rerunSmartCorrection"
           >
-            {{ smartCorrectionResult.summary.error_count > 0 ? "重试未完成" : (smartCorrectionStarted ? "重新分析" : "开始分析") }}
+            {{ smartCorrectionResult.summary.error_count > 0 ? $t('writer.work.publish.retryIncomplete') : (smartCorrectionStarted ? $t('writer.work.publish.reanalyze') : $t('writer.work.publish.startAnalysis')) }}
           </button>
         </view>
       </view>
 
       <view v-if="smartThinkingBlocks.length && smartThinkingVisible" class="thinking-panel">
         <view class="thinking-head" @click="smartThinkingVisible = false">
-          <text class="thinking-head-text">纠错意见</text>
-          <text class="thinking-head-close">收起</text>
+          <text class="thinking-head-text">{{ $t('writer.work.publish.correctionOpinions') }}</text>
+          <text class="thinking-head-close">{{ $t('writer.work.publish.collapse') }}</text>
         </view>
         <scroll-view scroll-y class="thinking-body" :scroll-top="thinkingScrollTop">
           <view class="thinking-body-inner">
             <view v-for="stream in smartThinkingBlocks" :key="stream.id" class="thinking-stream">
               <text v-if="stream.batchIndex" class="thinking-stream-title">
-                第 {{ stream.batchIndex }}/{{ stream.batchCount }} 批<template v-if="stream.attempt > 1"> · 第 {{ stream.attempt }} 次检查</template>
+                {{ $t('writer.work.publish.batchIndex', { index: stream.batchIndex, count: stream.batchCount }) }}<template v-if="stream.attempt > 1">{{ $t('writer.work.publish.checkAttempt', { attempt: stream.attempt }) }}</template>
               </text>
               <text class="thinking-content">{{ stream.text }}</text>
             </view>
@@ -133,14 +133,14 @@
         class="thinking-collapsed"
         @click="smartThinkingVisible = true"
       >
-        <text class="thinking-collapsed-text">查看纠错意见</text>
+        <text class="thinking-collapsed-text">{{ $t('writer.work.publish.viewCorrections') }}</text>
       </view>
 
       <view v-if="smartCorrectionLoading" class="status-box">
         <view class="correction-progress-head">
           <text>{{ smartCorrectionStatusText }}</text>
           <text v-if="smartCorrectionProgress.total > 0" class="correction-progress-count">
-            {{ smartCorrectionProgress.analyzed }}/{{ smartCorrectionProgress.total }} 段
+            {{ $t('writer.work.publish.progressParagraphs', { analyzed: smartCorrectionProgress.analyzed, total: smartCorrectionProgress.total }) }}
           </text>
         </view>
         <view
@@ -161,7 +161,7 @@
           v-if="(smartCorrectionResult.summary.error_count || 0) > 0"
           class="status-box error-box correction-status"
         >
-          {{ smartCorrectionLoopDetected ? "检测到模型重复输出，已中止相关批次。" : "部分内容尚未完成检查。" }}已保留成功结果，可点击“重试未完成”继续。
+          {{ smartCorrectionLoopDetected ? $t('writer.work.publish.loopNotice') : $t('writer.work.publish.partialNotice') }}
         </view>
 
         <view
@@ -172,13 +172,13 @@
           "
           class="status-box success-box correction-status"
         >
-          未发现明显文本纠错问题。
+          {{ $t('writer.work.publish.noIssues') }}
         </view>
         <view
           v-if="(smartCorrectionResult.summary.paragraph_count || 0) === 0"
           class="status-box success-box correction-status"
         >
-          暂无可检测的正文段落。
+          {{ $t('writer.work.publish.noParagraphs') }}
         </view>
         <view v-if="smartCorrectionResult.corrections.length" class="correction-list">
           <view
@@ -189,15 +189,15 @@
           >
             <view class="correction-item-head">
               <view class="correction-item-title">
-                <text class="paragraph-tag">第{{ item.paragraph_index }}段</text>
-                <text class="issue-tag">{{ item.fragments.length }}处修正建议</text>
+                <text class="paragraph-tag">{{ $t('writer.work.publish.paragraphTag', { index: item.paragraph_index }) }}</text>
+                <text class="issue-tag">{{ $t('writer.work.publish.issueCount', { count: item.fragments.length }) }}</text>
               </view>
               <button
                 size="mini"
                 class="ignore-button"
                 @click.stop="ignoreCorrection(item)"
               >
-                忽略
+                {{ $t('writer.work.publish.ignore') }}
               </button>
             </view>
             <view class="correction-markup">
@@ -227,14 +227,14 @@
                 class="apply-button"
                 @click.stop="applyCorrection(item)"
               >
-                应用
+                {{ $t('writer.work.publish.apply') }}
               </button>
             </view>
-            <view class="detail-entry">查看详情</view>
+            <view class="detail-entry">{{ $t('writer.work.publish.viewDetail') }}</view>
           </view>
         </view>
       </view>
-      <view class="card-footnote">AI可能会犯错，请仔细甄别。</view>
+      <view class="card-footnote">{{ $t('writer.work.publish.aiDisclaimer') }}</view>
     </view>
 
     <view class="footer-bar">
@@ -244,7 +244,7 @@
         :disabled="submitLoading || visibilityChanging"
         @click="saveAsDraft"
       >
-        退回草稿
+        {{ $t('writer.work.publish.backToDraft') }}
       </button>
       <button
         class="primary-button"
@@ -252,32 +252,32 @@
         :disabled="article.isPersonal || submitLoading || visibilityChanging"
         @click="submitPublish"
       >
-        {{ publishMode === "now" ? "立即发布" : "确认定时发布" }}
+        {{ publishMode === "now" ? $t('writer.work.publish.publishNow') : $t('writer.work.publish.confirmScheduledPublish') }}
       </button>
     </view>
 
     <uni-popup v-if="aiAssistanceEnabled" ref="detailPopup" type="bottom">
       <view v-if="activeCorrection" class="detail-panel">
         <view class="detail-head">
-          <view class="detail-title">纠错详情</view>
+          <view class="detail-title">{{ $t('writer.work.publish.correctionDetailTitle') }}</view>
           <view class="detail-head-actions">
             <button
               size="mini"
               class="ignore-button"
               @click="ignoreCorrection(activeCorrection)"
             >
-              忽略本条
+              {{ $t('writer.work.publish.ignoreThis') }}
             </button>
-            <view class="detail-close" @click="closeCorrectionDetail">关闭</view>
+            <view class="detail-close" @click="closeCorrectionDetail">{{ $t('writer.work.publish.close') }}</view>
           </view>
         </view>
         <scroll-view scroll-y class="detail-scroll">
           <view class="detail-section">
-            <view class="detail-label">第{{ activeCorrection.paragraph_index }}段</view>
+            <view class="detail-label">{{ $t('writer.work.publish.paragraphTag', { index: activeCorrection.paragraph_index }) }}</view>
           </view>
 
           <view class="detail-section">
-            <view class="detail-label">问题位置</view>
+            <view class="detail-label">{{ $t('writer.work.publish.problemLocation') }}</view>
             <view class="correction-markup detail-markup">
               <template v-for="segment in buildAnnotatedSegments(activeCorrection)">
                 <text
@@ -302,36 +302,36 @@
           </view>
 
           <view class="detail-section">
-            <view class="detail-label">原文</view>
+            <view class="detail-label">{{ $t('writer.work.publish.originalText') }}</view>
             <view class="detail-text">{{ activeCorrection.original_text }}</view>
           </view>
 
           <view class="detail-section">
             <view class="detail-label-row">
-              <view class="detail-label">修正后内容（可编辑）</view>
+              <view class="detail-label">{{ $t('writer.work.publish.correctedContentLabel') }}</view>
               <view
                 v-if="isCorrectionDraftChanged"
                 class="detail-reset"
                 @click="resetCorrectionDraft"
               >
-                恢复模型建议
+                {{ $t('writer.work.publish.resetToModel') }}
               </view>
             </view>
             <textarea
               v-model="correctionDraftText"
               class="correction-editor"
               maxlength="-1"
-              placeholder="请输入修正后的段落内容"
+              :placeholder="$t('writer.work.publish.correctionPlaceholder')"
               :show-confirm-bar="false"
             />
             <view class="correction-editor-meta">
-              <text>可在应用前继续调整模型给出的内容</text>
-              <text>{{ correctionDraftText.length }} 字</text>
+              <text>{{ $t('writer.work.publish.correctionEditableHint') }}</text>
+              <text>{{ $t('writer.work.publish.charCount', { count: correctionDraftText.length }) }}</text>
             </view>
           </view>
 
           <view class="detail-section">
-            <view class="detail-label">逐项建议</view>
+            <view class="detail-label">{{ $t('writer.work.publish.itemSuggestions') }}</view>
             <view
               v-for="fragment in activeCorrection.fragments"
               :key="fragment.id"
@@ -350,7 +350,7 @@
               :disabled="!isCorrectionDraftValid"
               @click="applyEditedCorrection"
             >
-              应用修正后内容
+              {{ $t('writer.work.publish.applyCorrectedContent') }}
             </button>
           </view>
         </scroll-view>
@@ -445,7 +445,7 @@ export default {
       smartThinkingStreams: [],
       smartCorrectionContentText: "",
       smartCorrectionBatchMode: false,
-      smartCorrectionStatusText: "正在检查正文，请稍候...",
+      smartCorrectionStatusText: "",
       smartCorrectionProgress: { analyzed: 0, total: 0 },
       smartThinkingVisible: false,
       thinkingScrollTop: 0,
@@ -489,9 +489,12 @@ export default {
     },
     scheduleTimeDisplay() {
       if (!this.scheduleDate || !this.scheduleClock) {
-        return "请选择具体的发布时间";
+        return this.$t('writer.work.publish.scheduleHint');
       }
-      return `将于 ${this.scheduleDate} ${this.scheduleClock} 自动发布`;
+      return this.$t('writer.work.publish.scheduleAt', {
+        date: this.scheduleDate,
+        clock: this.scheduleClock,
+      });
     },
     smartCorrectionProgressPercent() {
       const { analyzed, total } = this.smartCorrectionProgress;
@@ -548,9 +551,9 @@ export default {
 	  if (!this.membershipLoaded) await this.loadMembershipStatus();
 	  if (!this.membershipActive) {
 		uni.showModal({
-		  title: "通行证专属权益",
-		  content: "定时发布仅限原木通行证或超级原木通行证会员使用。",
-		  confirmText: "查看通行证",
+		  title: this.$t('writer.work.publish.passOnlyTitle'),
+		  content: this.$t('writer.work.publish.passOnlyContent'),
+		  confirmText: this.$t('writer.work.publish.viewPass'),
 		  success: (result) => {
 			if (result.confirm) uni.navigateTo({ url: "/pages/membership/index" });
 		  },
@@ -587,21 +590,21 @@ export default {
     },
     async refreshNovelPublishState() {
       const novelId = Number(this.article.novelId || 0);
-      if (!novelId) throw new Error("作品信息尚未加载");
+      if (!novelId) throw new Error(this.$t('writer.work.publish.stateNovelNotLoaded'));
       const response = await axios.get(
         this.$baseUrl + "/essays/get_novel_collaboration_info?novel_id=" + novelId,
         { headers: { Authorization: "Bearer " + this.getAuthToken() } }
       );
       let novel = response.data && response.data.novel;
-      if (!novel || Number(novel.novel_id) !== novelId) throw new Error("无法获取作品状态");
+      if (!novel || Number(novel.novel_id) !== novelId) throw new Error(this.$t('writer.work.publish.stateFetchFailed'));
       if (novel.is_personal == null) {
         // 兼容尚未重启的旧版后端；新版协作信息接口会直接返回此字段。
         const legacyResponse = await axios.get(this.$baseUrl + "/essays/get_novel_by_id?id=" + novelId);
         const legacyNovel = Array.isArray(legacyResponse.data) ? legacyResponse.data[0] : null;
-        if (!legacyNovel || Number(legacyNovel.novel_id) !== novelId) throw new Error("无法获取作品状态");
+        if (!legacyNovel || Number(legacyNovel.novel_id) !== novelId) throw new Error(this.$t('writer.work.publish.stateFetchFailed'));
         novel = { ...novel, is_personal: legacyNovel.is_personal };
       }
-      if (![0, 1].includes(Number(novel.is_personal))) throw new Error("无法获取作品状态");
+      if (![0, 1].includes(Number(novel.is_personal))) throw new Error(this.$t('writer.work.publish.stateFetchFailed'));
       this.article = {
         ...this.article,
         isPersonal: Number(novel.is_personal) === 1,
@@ -615,7 +618,7 @@ export default {
       try {
         await this.refreshNovelPublishState();
       } catch (_) {
-        uni.showToast({ title: "作品状态获取失败，请稍后重试", icon: "none", duration: 2000 });
+        uni.showToast({ title: this.$t('writer.work.publish.stateFetchRetryFailed'), icon: "none", duration: 2000 });
       } finally {
         this.visibilityChecking = false;
       }
@@ -623,9 +626,9 @@ export default {
     makeNovelPublic() {
       if (!this.article.isPersonal || !this.canMakeNovelPublic || this.visibilityChanging || this.submitLoading) return;
       uni.showModal({
-        title: "公开作品",
-        content: "公开后，作品及已发布章节将对所有读者可见。确定设为公开吗？",
-        confirmText: "设为公开",
+        title: this.$t('writer.work.publish.makePublicTitle'),
+        content: this.$t('writer.work.publish.makePublicConfirmContent'),
+        confirmText: this.$t('writer.work.publish.makePublic'),
         success: (result) => {
           if (result.confirm) this.confirmMakeNovelPublic();
         },
@@ -649,10 +652,10 @@ export default {
         try { this.persistCurrentPublishDraft(); } catch (_) {
           // 本地缓存失败不应掩盖服务端已公开的事实。
         }
-        uni.showToast({ title: "作品已公开，现在可以发布章节", icon: "none", duration: 2000 });
+        uni.showToast({ title: this.$t('writer.work.publish.makePublicSuccess'), icon: "none", duration: 2000 });
       } catch (error) {
         uni.showToast({
-          title: (error.response && error.response.data && error.response.data.msg) || "公开失败，请重试",
+          title: (error.response && error.response.data && error.response.data.msg) || this.$t('writer.work.publish.makePublicFailed'),
           icon: "none",
           duration: 2000,
         });
@@ -818,10 +821,10 @@ export default {
       if (!this.lockPageActive || this.lockConflictShown) return;
       this.lockConflictShown = true;
       this.stopLockHeartbeat();
-      const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
+      const lockName = lockInfo && lockInfo.name ? lockInfo.name : this.$t('writer.work.publish.otherAuthor');
       uni.showModal({
-        title: "章节已被占用",
-        content: `${lockName} 正在编辑这个章节，请稍后再试。`,
+        title: this.$t('writer.work.publish.lockConflictTitle'),
+        content: this.$t('writer.work.publish.lockConflictContent', { name: lockName }),
         showCancel: false,
         success: () => {
           uni.navigateBack({});
@@ -851,8 +854,8 @@ export default {
       });
       this.stopLockHeartbeat();
       uni.showModal({
-        title: "发布会话已失效",
-        content: "这个发布页面已经被新的操作接管，请重新进入后再试。",
+        title: this.$t('writer.work.publish.staleTitle'),
+        content: this.$t('writer.work.publish.staleContent'),
         showCancel: false,
         success: () => {
           uni.navigateBack({});
@@ -1106,7 +1109,7 @@ export default {
         this.isArticleContentEmpty()
       ) {
         uni.showToast({
-          title: "标题或文章内容不能为空",
+          title: this.$t('writer.work.publish.contentRequired'),
           icon: "none",
           duration: 2000,
         });
@@ -1136,7 +1139,7 @@ export default {
 
       if (!this.scheduleTime) {
         uni.showToast({
-          title: "请选择发布时间",
+          title: this.$t('writer.work.publish.scheduleRequired'),
           icon: "none",
           duration: 2000,
         });
@@ -1146,7 +1149,7 @@ export default {
       const scheduleDate = this.parseScheduleTime(this.scheduleTime);
       if (!scheduleDate) {
         uni.showToast({
-          title: "发布时间格式无效",
+          title: this.$t('writer.work.publish.scheduleInvalid'),
           icon: "none",
           duration: 2000,
         });
@@ -1155,7 +1158,7 @@ export default {
 
       if (scheduleDate.getTime() <= Date.now()) {
         uni.showToast({
-          title: "发布时间必须晚于当前时间",
+          title: this.$t('writer.work.publish.scheduleMustBeFuture'),
           icon: "none",
           duration: 2000,
         });
@@ -1284,7 +1287,7 @@ export default {
       this.smartThinkingStreams = [];
       this.smartCorrectionContentText = "";
       this.smartCorrectionBatchMode = false;
-      this.smartCorrectionStatusText = "正在检查正文，请稍候...";
+      this.smartCorrectionStatusText = this.$t('writer.work.publish.statusChecking');
       this.smartCorrectionProgress = { analyzed: 0, total: 0 };
       this.smartThinkingVisible = true;
 
@@ -1402,7 +1405,7 @@ export default {
               corrected_text: paragraph.text,
               has_issue: false,
               fragments: [],
-              error: "未获取到该段落的纠错结果",
+              error: this.$t('writer.work.publish.correctionParagraphMissing'),
             })
           );
         });
@@ -1443,7 +1446,7 @@ export default {
         };
       } catch (error) {
 		showInsufficientRedstoneOptions(error);
-        this.smartCorrectionError = error.message || "文本纠错结果整理失败，请稍后重试";
+        this.smartCorrectionError = error.message || this.$t('writer.work.publish.correctionResultBuildFailed');
       } finally {
         this.smartCorrectionLoading = false;
       }
@@ -1508,7 +1511,7 @@ export default {
     async applyCorrection(item, customCorrectedText = null) {
       if (this.isRealtimeCollaboration) {
         uni.showToast({
-          title: "实时协作章节请返回编辑器应用修改",
+          title: this.$t('writer.work.publish.liveCollaborationHint'),
           icon: "none",
           duration: 2200,
         });
@@ -1521,7 +1524,7 @@ export default {
       );
       if (!correctedText) {
         uni.showToast({
-          title: "修正后内容不能为空",
+          title: this.$t('writer.work.publish.correctedContentRequired'),
           icon: "none",
           duration: 2000,
         });
@@ -1557,7 +1560,7 @@ export default {
 
       if (!updated) {
         uni.showToast({
-          title: "应用失败，请重新检查",
+          title: this.$t('writer.work.publish.applyFailedRecheck'),
           icon: "none",
           duration: 2000,
         });
@@ -1637,7 +1640,7 @@ export default {
       }
 
       uni.showToast({
-        title: "已应用修改",
+        title: this.$t('writer.work.publish.correctedContentApplied'),
         icon: "none",
         duration: 1600,
       });
@@ -1670,11 +1673,11 @@ export default {
         try {
           await this.refreshNovelPublishState();
         } catch (error) {
-          uni.showToast({ title: "无法确认作品公开状态，请稍后重试", icon: "none", duration: 2000 });
+          uni.showToast({ title: this.$t('writer.work.publish.visibilityCheckFailed'), icon: "none", duration: 2000 });
           return;
         }
         if (this.article.isPersonal) {
-          uni.showToast({ title: "作品尚未公开，请先设为公开", icon: "none", duration: 2000 });
+          uni.showToast({ title: this.$t('writer.work.publish.workNotPublic'), icon: "none", duration: 2000 });
           return;
         }
         const tk = this.getAuthToken();
@@ -1710,7 +1713,9 @@ export default {
         this.markPublishCompleted(writerSnapshot);
         this.clearPublishDraft();
         uni.showToast({
-          title: this.publishMode === "schedule" ? "定时发布设置成功" : "发布成功",
+          title: this.publishMode === "schedule"
+            ? this.$t('writer.work.publish.scheduledSuccess')
+            : this.$t('writer.work.publish.publishSuccess'),
           icon: "none",
           duration: 2000,
         });
@@ -1723,7 +1728,7 @@ export default {
           return;
         }
         uni.showToast({
-		  title: (error.response && error.response.data && (error.response.data.msg || error.response.data.message)) || "提交失败，请重试",
+		  title: (error.response && error.response.data && (error.response.data.msg || error.response.data.message)) || this.$t('writer.work.publish.submitFailed'),
           icon: "none",
           duration: 2000,
         });
@@ -1733,8 +1738,8 @@ export default {
     },
     saveAsDraft() {
       uni.showModal({
-        title: "提示",
-        content: "退回章节为草稿会使已发布的章节下架，确定继续吗？",
+        title: this.$t('common.prompt'),
+        content: this.$t('writer.work.publish.revertToDraftConfirm'),
         success: async (res) => {
           if (!res.confirm) {
             return;
@@ -1774,7 +1779,7 @@ export default {
             this.markPublishCompleted(writerSnapshot);
             this.clearPublishDraft();
             uni.showToast({
-              title: "已退回草稿",
+              title: this.$t('writer.work.publish.revertedToDraft'),
               icon: "none",
               duration: 2000,
             });
@@ -1787,7 +1792,7 @@ export default {
               return;
             }
             uni.showToast({
-              title: "操作失败，请重试",
+              title: this.$t('writer.work.publish.operationFailed'),
               icon: "none",
               duration: 2000,
             });
@@ -1825,7 +1830,7 @@ export default {
             }),
           });
         } catch (error) {
-          if (headerTimedOut) throw new Error("纠错服务连接超时，请稍后重试");
+          if (headerTimedOut) throw new Error(this.$t('writer.work.publish.correctionTimeout'));
           throw error;
         } finally {
           clearTimeout(headerTimer);
@@ -1833,13 +1838,13 @@ export default {
         if (!response.ok) {
           let data = {};
           try { data = await response.json(); } catch (error) {}
-          const error = new Error(data.msg || data.message || "智能纠错请求失败");
+          const error = new Error(data.msg || data.message || this.$t('writer.work.publish.correctionRequestFailed'));
           error.code = data.code || "";
           error.statusCode = response.status;
           throw error;
         }
         if (!response.body || !response.body.getReader) {
-          throw new Error("智能纠错服务未返回流式响应");
+          throw new Error(this.$t('writer.work.publish.correctionStreamMissing'));
         }
         return await readWriterCorrectionStream(response, {
           paragraphs,
@@ -2196,7 +2201,7 @@ export default {
         }
         return completed;
       } else if (eventType === "error") {
-        throw new Error(event.message || "智能纠错请求失败");
+        throw new Error(event.message || this.$t('writer.work.publish.correctionRequestFailed'));
       }
 
       return fallbackResult;
@@ -2213,7 +2218,7 @@ export default {
     this.initializePage().catch(() => {
       this.pageInitializationInProgress = false;
       uni.showToast({
-        title: "加载发布页失败",
+        title: this.$t('writer.work.publish.loadPublishPageFailed'),
         icon: "none",
         duration: 2000,
       });

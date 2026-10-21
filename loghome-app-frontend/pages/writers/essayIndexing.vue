@@ -6,15 +6,15 @@
 					<view class="text index-progress-text">
 						<view class="index-progress-header">
 							<view class="index-progress-head">
-								<view class="index-progress-title">全文智能索引</view>
-								<view class="index-progress-state">{{ indexQueueStatusText }} <span v-if="indexQueueDetailText">，{{ indexQueueDetailText }}</span></view>
+								<view class="index-progress-title">{{ $t('writer.collab.indexing.title') }}</view>
+								<view class="index-progress-state">{{ indexQueueStatusText }} <span v-if="indexQueueDetailText">{{ $t('writer.collab.indexing.detailSeparator') }}{{ indexQueueDetailText }}</span></view>
 							</view>
 							<view
 								class="index-progress-action"
 								:class="{ disabled: indexingActionLoading }"
 								@click="requestNovelIndexingNow"
 							>
-								{{ indexingActionLoading ? '提交中' : '立即索引' }}
+								{{ indexingActionLoading ? $t('writer.collab.indexing.submitting') : $t('writer.collab.indexing.indexNow') }}
 							</view>
 						</view>
 						<view class="index-progress-bar" v-if="indexProgress.total > 0">
@@ -24,10 +24,10 @@
 							></view>
 						</view>
 						<view class="index-progress-meta" v-if="indexProgress.total > 0">
-							正式版：{{ indexProgress.outdated }} 章过期，{{ indexProgress.pending }} 章未索引
+							{{ $t('writer.collab.indexing.publishedProgress', { outdated: indexProgress.outdated, pending: indexProgress.pending }) }}
 						</view>
 						<view class="index-progress-meta" v-if="authorDraftIndexProgress.total > 0">
-							作者存稿版：{{ authorDraftIndexProgress.outdated }} 章过期，{{ authorDraftIndexProgress.pending }} 章未索引
+							{{ $t('writer.collab.indexing.authorDraftProgress', { outdated: authorDraftIndexProgress.outdated, pending: authorDraftIndexProgress.pending }) }}
 						</view>
 						<view class="index-progress-lists" v-if="indexIssueGroups.length > 0">
 							<view class="index-progress-list-group" v-for="group in indexIssueGroups" :key="group.key">
@@ -165,28 +165,28 @@
 				if (this.pendingIndexArticles.length > 0) {
 					groups.push({
 						key: 'reader-pending',
-						title: '正式版未索引章节',
+						title: this.$t('writer.collab.indexing.groupReaderPending'),
 						items: this.pendingIndexArticles,
 					});
 				}
 				if (this.outdatedIndexArticles.length > 0) {
 					groups.push({
 						key: 'reader-outdated',
-						title: '正式版过期章节',
+						title: this.$t('writer.collab.indexing.groupReaderOutdated'),
 						items: this.outdatedIndexArticles,
 					});
 				}
 				if (this.pendingAuthorDraftIndexArticles.length > 0) {
 					groups.push({
 						key: 'author-pending',
-						title: '作者存稿未索引章节',
+						title: this.$t('writer.collab.indexing.groupAuthorPending'),
 						items: this.pendingAuthorDraftIndexArticles,
 					});
 				}
 				if (this.outdatedAuthorDraftIndexArticles.length > 0) {
 					groups.push({
 						key: 'author-outdated',
-						title: '作者存稿过期章节',
+						title: this.$t('writer.collab.indexing.groupAuthorOutdated'),
 						items: this.outdatedAuthorDraftIndexArticles,
 					});
 				}
@@ -195,12 +195,12 @@
 			indexQueueStatusText() {
 				const status = this.indexingStatus && this.indexingStatus.status;
 				if (status === 'queued') {
-					return '排队中';
+					return this.$t('writer.collab.indexing.statusQueued');
 				}
 				if (status === 'indexing') {
-					return '正在索引';
+					return this.$t('writer.collab.indexing.statusIndexing');
 				}
-				return '无索引计划';
+				return this.$t('writer.collab.indexing.statusNone');
 			},
 			indexQueueDetailText() {
 				const queue = this.indexingStatus && this.indexingStatus.queue;
@@ -212,18 +212,18 @@
 
 				if (status === 'indexing') {
 					if (queue.current_article_title) {
-						return '当前章节：' + queue.current_article_title;
+						return this.$t('writer.collab.indexing.currentChapter', { title: queue.current_article_title });
 					}
 					if (queue.total_chapters > 0) {
-						return '本轮任务 ' + queue.completed_chapters + ' / ' + queue.total_chapters;
+						return this.$t('writer.collab.indexing.batchProgress', { completed: queue.completed_chapters, total: queue.total_chapters });
 					}
 				}
 
 				if (status === 'queued' && queue.pending_chapters > 0) {
 					if (Number(queue.ahead_count || 0) > 0) {
-						return '前方还有 ' + queue.ahead_count + ' 本作品，待处理 ' + queue.pending_chapters + ' 项';
+						return this.$t('writer.collab.indexing.ahead', { works: queue.ahead_count, pending: queue.pending_chapters });
 					}
-					return '即将开始，待处理 ' + queue.pending_chapters + ' 项';
+					return this.$t('writer.collab.indexing.starting', { pending: queue.pending_chapters });
 				}
 
 				return '';
@@ -321,7 +321,7 @@
 				if (title) {
 					return title;
 				}
-				return '未命名章节 ' + (index + 1);
+				return this.$t('writer.collab.indexing.untitledChapter', { index: index + 1 });
 			},
 			getAuthorDraftDisplayTitle(article, index) {
 				const writerArticle = article && article.article_writer ? article.article_writer : null;
@@ -387,7 +387,7 @@
 
 					this.indexingStatus = res.data || this.indexingStatus;
 					uni.showToast({
-						title: '已加入索引队列',
+						title: this.$t('writer.collab.indexing.queuedSuccess'),
 						icon: 'none',
 						duration: 2000
 					});

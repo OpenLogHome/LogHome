@@ -57,7 +57,7 @@ export default {
 		async openNativePlayer(startParagraphId = null) {
 			if (!window.jsBridge || !window.jsBridge.openNativeAudiobookPlayer) {
 				uni.showToast({
-					title: '当前版本不支持原生听书播放器',
+					title: this.$t('reader.book.audiobookUnsupported'),
 					icon: 'none'
 				});
 				return false;
@@ -67,7 +67,7 @@ export default {
 				.map(id => String(id))
 				.filter(Boolean);
 			if (articleIds.length === 0) {
-				uni.showToast({ title: '没有可播放的章节', icon: 'none' });
+				uni.showToast({ title: this.$t('reader.book.audiobookNoChapters'), icon: 'none' });
 				return false;
 			}
 
@@ -88,7 +88,7 @@ export default {
 			} catch (error) {
 				console.error('openNativeAudiobookPlayer failed', error);
 				uni.showToast({
-					title: '无法打开听书播放器，请稍后重试',
+					title: this.$t('reader.book.audiobookOpenFailed'),
 					icon: 'none'
 				});
 				return false;

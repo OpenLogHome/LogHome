@@ -21,7 +21,7 @@
 					<xzj-readMore class="textSendMsg" hideLineNum="3" showHeight="100"
 					:showMenu="false" @active="openFatherReview">
 						<span class="msg-text">
-							{{praiseType == 1 ? '该评论被折叠' : reviewMsg.sendMsg}}
+							{{praiseType == 1 ? $t('reader.book.commentFolded') : reviewMsg.sendMsg}}
 						</span>
 					</xzj-readMore>
 					
@@ -47,7 +47,7 @@
 							<path d="M544 472.896h341.344v341.344H544zM544 472.896L688.096 192h110.08l-144.128 280.896z"
 								fill="currentColor" p-id="2308"></path>
 						</svg>
-						<span class="comment-source-title">来自章节 {{ reviewMsg.article_title || article.title }}</span>
+						<span class="comment-source-title">{{ $t('reader.book.fromChapterTitle', { title: reviewMsg.article_title || article.title }) }}</span>
 						<div class="cento" v-if="reviewMsg.cento">
 							{{reviewMsg.cento.paragraph}}
 						</div>
@@ -64,9 +64,9 @@
 						</view>
 					</div>
 					<div class="right" v-show="!(praiseType == 1)">
-						<view @click="openFatherReview">回复</view>
+						<view @click="openFatherReview">{{ $t('common.reply') }}</view>
 						<view @click="handleDeleteReview(reviewMsg.comment_id)" 
-						v-show="reviewMsg.author_id == currentUserId||reviewMsg.userId == currentUserId">删除</view>
+						v-show="reviewMsg.author_id == currentUserId||reviewMsg.userId == currentUserId">{{ $t('common.delete') }}</view>
 					</div>
 				</view>
 				<view class="threeReviewContent" v-if="reviewMsg.reviewLess.length && praiseType != 1">
@@ -75,7 +75,7 @@
 							:showMenu="true" @active="openChildReview(key)"
 							@menu="openSubMenu($event, reKey.comment_id, reKey.userId, key)">
 							<span class="reply-name">{{reKey.userName}}</span>
-							<text class="reply-arrow">回复</text>
+							<text class="reply-arrow">{{ $t('common.reply') }}</text>
 							<span class="reply-name">{{reKey.targetUserName}}</span>
 							<span class="reply-body">:{{reKey.sendMsg}}</span>
 						</xzj-readMore>
@@ -94,7 +94,7 @@
 						</view>
 					</view>
 					<view class="reviewNumContent" v-if="reviewMsg.reviewNum > 3">
-						<text>查看{{reviewMsg.reviewNum}}条回复</text>
+						<text>{{ $t('reader.book.viewReplies', { count: reviewMsg.reviewNum }) }}</text>
 						<dnIcon type="tiaozhuan" size="12" style="margin-left: 5px;"></dnIcon>
 					</view>
 				</view>
@@ -106,10 +106,10 @@
 			<view class="popup-content">
 				<view class="popup-item" @tap="saveAsSticker">
 					<uni-icons type="star" size="20" color="#EA7034"></uni-icons>
-					<text>收藏为表情包</text>
+					<text>{{ $t('reader.book.saveAsSticker') }}</text>
 				</view>
 				<view class="popup-item cancel" @tap="hideImageOptionsMenu">
-					<text>取消</text>
+					<text>{{ $t('common.cancel') }}</text>
 				</view>
 			</view>
 		</uni-popup>
@@ -167,7 +167,7 @@
 					rank => rank.user_id === this.reviewMsg.userId
 				);
 				if (totalRankInfo && totalRankInfo.rank_num <= 10) {
-					totalRank = `粉丝总榜第${totalRankInfo.rank_num}名`;
+					totalRank = this.$t('reader.book.fanTotalRank', { rank: totalRankInfo.rank_num });
 				}
 				
 				// 查找月榜排名
@@ -175,7 +175,7 @@
 					rank => rank.user_id === this.reviewMsg.userId
 				);
 				if (monthlyRankInfo && monthlyRankInfo.rank_num <= 10) {
-					monthlyRank = `粉丝月榜第${monthlyRankInfo.rank_num}名`;
+					monthlyRank = this.$t('reader.book.fanMonthlyRank', { rank: monthlyRankInfo.rank_num });
 				}
 				
 				// 优先显示更高的排名
@@ -219,7 +219,7 @@
 			},
 			// 为评论回复设计的subMenu
 			openSubMenu(e, id, userId, idx) {
-				let itemList = ["回复"]
+				let itemList = [{ key: 'reply', label: this.$t('common.reply') }]
 				let _this = this;
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				var myUserId, token;
@@ -231,15 +231,16 @@
 					||
 					userId == myUserId) 
 				{
-					itemList.push("删除")
+					itemList.push({ key: 'delete', label: this.$t('common.delete') })
 				}
 				{
 					uni.showActionSheet({
-						itemList,
+						itemList: itemList.map(item => item.label),
 						success: function(res) {
-							if (itemList[res.tapIndex] == "删除") {
+							const action = itemList[res.tapIndex];
+							if (action && action.key == 'delete') {
 								_this.handleDeleteReview(id);
-							} else if(itemList[res.tapIndex] == "回复"){
+							} else if(action && action.key == 'reply'){
 								_this.openChildReview(idx);
 							}
 						},
@@ -252,11 +253,11 @@
 			handleDeleteReview(id) {
 				let _this = this;
 				uni.showLoading({
-					title: '删除中'
+					title: this.$t('reader.book.deleting')
 				});
 				uni.showModal({
-					title: '提示',
-					content: '要删除此评论吗？',
+					title: this.$t('common.prompt'),
+					content: this.$t('reader.book.confirmDeleteComment'),
 					confirmColor: "#EA7034",
 					success: function(res) {
 						if (res.confirm) {
@@ -274,7 +275,7 @@
 							)
 							.then(function(response) {
 								uni.showToast({
-									title: "删除成功",
+									title: this.$t('common.deleteSuccess'),
 									icon: 'none',
 									duration: 2000
 								});
@@ -287,7 +288,7 @@
 								uni.hideLoading();
 								if (error) {	
 									uni.showToast({
-							title: "操作失败",
+							title: this.$t('common.operationFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -339,19 +340,19 @@
 			async saveAsSticker() {
 				if (!this.currentImageUrl) {
 					uni.showToast({
-						title: '图片地址无效',
+						title: this.$t('reader.book.invalidImage'),
 						icon: 'none'
 					});
 					return;
 				}
 				
 				try {
-					uni.showLoading({ title: '收藏中...' });
+					uni.showLoading({ title: this.$t('reader.book.favoriting') });
 					
 					const token = JSON.parse(window.localStorage.getItem('token'))?.tk;
 					if (!token) {
 						uni.showToast({
-							title: '请先登录',
+							title: this.$t('common.needLogin'),
 							icon: 'none'
 						});
 						return;
@@ -418,12 +419,12 @@
 						}
 						
 						uni.showToast({
-							title: '已添加到表情收藏',
+							title: this.$t('reader.book.stickerAdded'),
 							icon: 'success'
 						});
 					} else {
 						uni.showToast({
-							title: '收藏失败',
+							title: this.$t('reader.book.collectFailed'),
 							icon: 'none'
 						});
 					}
@@ -431,7 +432,7 @@
 				} catch (error) {
 					console.error('收藏失败:', error);
 					uni.showToast({
-						title: '收藏失败',
+						title: this.$t('reader.book.collectFailed'),
 						icon: 'none'
 					});
 				} finally {
@@ -515,7 +516,7 @@
 					console.log(error);
 					if (error) {
 						uni.showToast({
-							title: "操作失败",
+							title: this.$t('common.operationFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -524,11 +525,11 @@
 			},
 			handleDeleteReview(id) {
 				uni.showLoading({
-					title: 'Deleting'
+					title: this.$t('reader.book.deleting')
 				});
 				uni.showModal({
-					title: 'Notice',
-					content: 'Delete this comment?',
+					title: this.$t('common.prompt'),
+					content: this.$t('reader.book.confirmDeleteComment'),
 					confirmColor: "#EA7034",
 					success: (res) => {
 						if (res.confirm) {
@@ -541,7 +542,7 @@
 								}
 							}).then(() => {
 								uni.showToast({
-									title: 'Deleted',
+									title: this.$t('common.deleteSuccess'),
 									icon: 'none',
 									duration: 2000
 								});
@@ -552,7 +553,7 @@
 								uni.hideLoading();
 								if (error) {
 									uni.showToast({
-									title: 'Failed',
+									title: this.$t('common.operationFailed'),
 										icon: 'none',
 										duration: 2000
 									});
