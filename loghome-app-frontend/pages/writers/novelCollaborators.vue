@@ -1,12 +1,12 @@
 <template>
 	<view class="page" v-dark>
 		<view class="panel">
-			<view class="sectionTitle">作品信息</view>
+			<view class="sectionTitle">{{ $t('writer.collab.novel.workInfo') }}</view>
 			<view class="ownerCard">
 				<img class="avatar" :src="collaborationInfo.novel.owner_avatar_url || '/static/user/defaultAvatar.jpg'" />
 				<view class="ownerInfo">
-					<view class="name">{{ collaborationInfo.novel.name || '协作作品' }}</view>
-					<view class="meta">所有者：{{ collaborationInfo.novel.owner_name || '未知' }}</view>
+					<view class="name">{{ collaborationInfo.novel.name || $t('writer.collab.novel.untitledCollaboration') }}</view>
+					<view class="meta">{{ $t('writer.collab.novel.ownerLabel', { name: collaborationInfo.novel.owner_name || $t('common.unknown') }) }}</view>
 				</view>
 			</view>
 		</view>
@@ -18,21 +18,21 @@
 				<view class="policyDescription">{{ policyDescription }}</view>
 			</view>
 			<view class="membershipButton" v-if="showMembershipAction" @click="openMembership">
-				开通通行证
+				{{ $t('writer.collab.novel.openPass') }}
 			</view>
 		</view>
 
 		<view class="panel" v-if="isOwner">
-			<view class="sectionTitle">邀请协作者</view>
+			<view class="sectionTitle">{{ $t('writer.collab.novel.inviteCollaborators') }}</view>
 			<uni-search-bar
 				bgColor="#ffffff"
 				:radius="8"
 				cancelButton="none"
-				placeholder="搜索用户名或账号"
+				:placeholder="$t('writer.collab.novel.searchPlaceholder')"
 				@input="searchUsers"
 			/>
 			<view class="emptyHint" v-if="searchKeyword && searchResults.length === 0 && !searching">
-				没有找到可邀请的用户
+				{{ $t('writer.collab.novel.noInvitableUsers') }}
 			</view>
 			<view class="userRow" v-for="item in searchResults" :key="item.user_id">
 				<img class="avatar" :src="item.avatar_url || '/static/user/defaultAvatar.jpg'" />
@@ -40,32 +40,32 @@
 					<view class="name">{{ item.name }}</view>
 					<view class="meta">ID: {{ item.user_id }}</view>
 				</view>
-				<view class="actionButton" @click="inviteUser(item)">邀请</view>
+				<view class="actionButton" @click="inviteUser(item)">{{ $t('writer.collab.novel.invite') }}</view>
 			</view>
 		</view>
 
 		<view class="panel" v-if="canRespondInvitation">
-			<view class="sectionTitle">待处理邀请</view>
+			<view class="sectionTitle">{{ $t('writer.collab.novel.pendingInvitations') }}</view>
 			<view class="inviteActions">
-				<view class="primaryButton" @click="acceptInvite">接受协作邀请</view>
-				<view class="dangerButton" @click="rejectInvite">拒绝邀请</view>
+				<view class="primaryButton" @click="acceptInvite">{{ $t('writer.collab.novel.acceptInvite') }}</view>
+				<view class="dangerButton" @click="rejectInvite">{{ $t('writer.collab.novel.rejectInvite') }}</view>
 			</view>
 		</view>
 
 		<view class="panel">
-			<view class="sectionTitle">当前协作者</view>
-			<view class="emptyHint" v-if="activeCollaborators.length === 0">暂无协作者</view>
+			<view class="sectionTitle">{{ $t('writer.collab.novel.currentCollaborators') }}</view>
+			<view class="emptyHint" v-if="activeCollaborators.length === 0">{{ $t('writer.collab.novel.noCollaborators') }}</view>
 			<view class="collaboratorCard" v-for="item in activeCollaborators" :key="`active-${item.user_id}`">
 				<view class="userRow">
 					<img class="avatar" :src="item.avatar_url || '/static/user/defaultAvatar.jpg'" />
 					<view class="userInfo">
 						<view class="name">{{ item.name }}</view>
-						<view class="meta">状态：协作中</view>
+						<view class="meta">{{ $t('writer.collab.novel.statusActive') }}</view>
 					</view>
-					<view class="dangerButton mini" v-if="isOwner" @click="removeCollaborator(item)">移除</view>
+					<view class="dangerButton mini" v-if="isOwner" @click="removeCollaborator(item)">{{ $t('writer.collab.novel.remove') }}</view>
 				</view>
 				<view class="permissionSummary">
-					<view class="permissionChip enabled">预览作品</view>
+					<view class="permissionChip enabled">{{ $t('writer.collab.novel.permissionPreview') }}</view>
 					<view
 						class="permissionChip"
 						v-for="permission in permissionOptions"
@@ -76,7 +76,7 @@
 					</view>
 				</view>
 				<view class="permissionLockedHint" v-if="item.permissions_locked">
-					三人及以上协作需主作者开通原木通行证，当前仅保留预览权限。
+					{{ $t('writer.collab.novel.permissionLockedHintActive') }}
 				</view>
 				<view class="permissionEditor" v-if="isOwner">
 					<view class="permissionToggle" v-for="permission in permissionOptions" :key="permission.key">
@@ -92,18 +92,18 @@
 		</view>
 
 		<view class="panel" v-if="isOwner && pendingCollaborators.length > 0">
-			<view class="sectionTitle">待接受邀请</view>
+			<view class="sectionTitle">{{ $t('writer.collab.novel.pendingAcceptTitle') }}</view>
 			<view class="collaboratorCard" v-for="item in pendingCollaborators" :key="`pending-${item.user_id}`">
 				<view class="userRow">
 					<img class="avatar" :src="item.avatar_url || '/static/user/defaultAvatar.jpg'" />
 					<view class="userInfo">
 						<view class="name">{{ item.name }}</view>
-						<view class="meta">状态：待接受</view>
+						<view class="meta">{{ $t('writer.collab.novel.statusPending') }}</view>
 					</view>
-					<view class="dangerButton mini" @click="removeCollaborator(item)">撤回</view>
+					<view class="dangerButton mini" @click="removeCollaborator(item)">{{ $t('writer.collab.novel.withdraw') }}</view>
 				</view>
 				<view class="permissionSummary">
-					<view class="permissionChip enabled">预览作品</view>
+					<view class="permissionChip enabled">{{ $t('writer.collab.novel.permissionPreview') }}</view>
 					<view
 						class="permissionChip"
 						v-for="permission in permissionOptions"
@@ -114,7 +114,7 @@
 					</view>
 				</view>
 				<view class="permissionLockedHint" v-if="item.permissions_locked">
-					接受邀请后作品将达到三人，未开通通行证时该协作者只能预览。
+					{{ $t('writer.collab.novel.permissionLockedHintPending') }}
 				</view>
 				<view class="permissionEditor">
 					<view class="permissionToggle" v-for="permission in permissionOptions" :key="permission.key">
@@ -130,8 +130,8 @@
 		</view>
 
 		<view class="panel" v-if="isCollaborator">
-			<view class="sectionTitle">协作操作</view>
-			<view class="dangerButton full" @click="quitCollaboration">退出协作</view>
+			<view class="sectionTitle">{{ $t('writer.collab.novel.collaborationActions') }}</view>
+			<view class="dangerButton full" @click="quitCollaboration">{{ $t('writer.collab.novel.quitCollaboration') }}</view>
 		</view>
 	</view>
 </template>
@@ -170,11 +170,11 @@ export default {
 	computed: {
 		permissionOptions() {
 			return [
-				{ key: 'can_edit_article', label: '编辑章节' },
-				{ key: 'can_add_article', label: '新增章节' },
-				{ key: 'can_delete_article', label: '删除章节' },
-				{ key: 'can_sort_article', label: '章节排序' },
-				{ key: 'can_publish_article', label: '发布章节' },
+				{ key: 'can_edit_article', label: this.$t('writer.collab.novel.permissions.editChapter') },
+				{ key: 'can_add_article', label: this.$t('writer.collab.novel.permissions.addChapter') },
+				{ key: 'can_delete_article', label: this.$t('writer.collab.novel.permissions.deleteChapter') },
+				{ key: 'can_sort_article', label: this.$t('writer.collab.novel.permissions.sortChapters') },
+				{ key: 'can_publish_article', label: this.$t('writer.collab.novel.permissions.publishChapter') },
 			];
 		},
 		isOwner() {
@@ -208,19 +208,19 @@ export default {
 				);
 		},
 		policyTitle() {
-			if (this.collaborationPolicy.permissions_restricted) return '协作者权限已限制为预览';
-			if (this.collaborationPolicy.owner_has_required_membership) return '多人协作权限已解锁';
-			return '双人协作免费';
+			if (this.collaborationPolicy.permissions_restricted) return this.$t('writer.collab.novel.policies.restrictedTitle');
+			if (this.collaborationPolicy.owner_has_required_membership) return this.$t('writer.collab.novel.policies.unlockedTitle');
+			return this.$t('writer.collab.novel.policies.freeTitle');
 		},
 		policyDescription() {
 			const count = Number(this.collaborationPolicy.participant_count || 1);
 			if (this.collaborationPolicy.permissions_restricted) {
-				return `当前共 ${count} 人协作。开通标准或超级原木通行证后，可为协作者开启编辑、增删、排序与发布权限。`;
+				return this.$t('writer.collab.novel.policies.restrictedDesc', { count });
 			}
 			if (this.collaborationPolicy.owner_has_required_membership) {
-				return `主作者的通行证有效，当前 ${count} 人协作可正常配置全部权限。`;
+				return this.$t('writer.collab.novel.policies.unlockedDesc', { count });
 			}
-			return '主作者与一名协作者可免费使用全部协作权限；从第三人开始需要主作者开通原木通行证。';
+			return this.$t('writer.collab.novel.policies.freeDesc');
 		},
 		activeCollaborators() {
 			return (this.collaborationInfo.collaborators || []).filter((item) => item.status === 'active');
@@ -339,10 +339,10 @@ export default {
 				Number(this.collaborationPolicy.active_collaborator_count || 0) >= 1;
 			if (willRequireMembership) {
 				uni.showModal({
-					title: '三人协作权限提示',
-					content: '邀请可以正常发送，但对方加入后，在主作者开通原木通行证前，所有协作者都只能预览作品。是否继续邀请？',
-					confirmText: '继续邀请',
-					cancelText: '暂不邀请',
+					title: this.$t('writer.collab.novel.threeMemberTitle'),
+					content: this.$t('writer.collab.novel.threeMemberContent'),
+					confirmText: this.$t('writer.collab.novel.continueInvite'),
+					cancelText: this.$t('writer.collab.novel.notNowInvite'),
 					success: (result) => {
 						if (result.confirm) this.performInvite(user);
 					},
@@ -366,7 +366,7 @@ export default {
 				}
 			).then(() => {
 				uni.showToast({
-					title: '邀请已发送',
+					title: this.$t('writer.collab.novel.inviteSent'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -382,9 +382,9 @@ export default {
 		},
 		showMembershipRequired() {
 			uni.showModal({
-				title: '需要原木通行证',
-				content: '三人及以上协作时，主作者需要开通标准或超级原木通行证，才能开启预览之外的权限。',
-				confirmText: '查看通行证',
+				title: this.$t('writer.collab.novel.membershipRequiredTitle'),
+				content: this.$t('writer.collab.novel.membershipRequiredContent'),
+				confirmText: this.$t('writer.collab.novel.viewPass'),
 				success: (result) => {
 					if (result.confirm) this.openMembership();
 				},
@@ -408,7 +408,7 @@ export default {
 				}
 			).then(() => {
 				uni.showToast({
-					title: '操作成功',
+					title: this.$t('writer.collab.novel.operationSuccess'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -435,7 +435,7 @@ export default {
 				}
 			).then(() => {
 				uni.showToast({
-					title: '已加入协作',
+					title: this.$t('writer.collab.novel.joinedCollaboration'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -462,7 +462,7 @@ export default {
 				}
 			).then(() => {
 				uni.showToast({
-					title: '已拒绝邀请',
+					title: this.$t('writer.collab.novel.inviteRejected'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -489,7 +489,7 @@ export default {
 				}
 			).then(() => {
 				uni.showToast({
-					title: '已退出协作',
+					title: this.$t('writer.collab.novel.quitDone'),
 					icon: 'none',
 					duration: 2000
 				});

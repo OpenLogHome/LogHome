@@ -1,14 +1,14 @@
 <template>
 	<view class="toolBoxOuter">
 		<div class="title">
-			创作工具箱
-			<p class="help">提示：选中对应文本打开工具箱即可使用相关工具（不选择默认为全文）。</p>
+			{{ $t('writer.editor.toolbox.title') }}
+			<p class="help">{{ $t('writer.editor.toolbox.help') }}</p>
 		</div>
-		<div class="item">目标文本：</div>
+		<div class="item">{{ $t('writer.editor.toolbox.targetText') }}</div>
 		<div class="selectedText">
 			{{selectText}}
 		</div>
-		<div class="item">可选工具：</div>
+		<div class="item">{{ $t('writer.editor.toolbox.availableTools') }}</div>
 		<div class="tool" v-for="tool in tools"
 		@click="execute(tool.func)">{{tool.name}}</div>
 		<div class="bottomBar"></div>
@@ -26,7 +26,7 @@
 		</el-dialog> -->
 		
 		<el-drawer
-		  title="结果预览"
+		  :title="$t('writer.editor.toolbox.resultPreview')"
 		  :visible.sync="dialogVisible"
 		  direction="btt"
 		  :modal="false"
@@ -34,7 +34,7 @@
 		  <div class="result">
 			  {{result}}
 		  </div>
-		  <div class="button" @click="stickBoard">复制到剪贴板</div>
+		  <div class="button" @click="stickBoard">{{ $t('writer.editor.toolbox.copyToClipboard') }}</div>
 		</el-drawer>
 
 		
@@ -45,35 +45,39 @@
 	import axios from "axios"
 	export default{
 		props:["selectText","articleTitle"],
-		data(){
-			return{
-				tools:[
+		computed:{
+			tools(){
+				return [
 					{
-						name:"快速提取文本摘要",
+						name:this.$t('writer.editor.toolbox.summary'),
 						func:this.文本摘要提取,
 					},
 					{
-						name:"快速中英文互译",
+						name:this.$t('writer.editor.toolbox.translate'),
 						func:this.快速中英文互译,
 					},
 					{
-						name:"获取舔狗日记",
+						name:this.$t('writer.editor.toolbox.simpDiary'),
 						func:this.获取舔狗日记,
 					},
 					{
-						name:"获取笑话",
+						name:this.$t('writer.editor.toolbox.joke'),
 						func:this.获取笑话,
 					},
 					{
-						name:"获取毒鸡汤",
+						name:this.$t('writer.editor.toolbox.darkHumor'),
 						func:this.获取毒鸡汤,
 					},
 					{
-						name:"获取彩虹屁",
+						name:this.$t('writer.editor.toolbox.compliments'),
 						func:this.获取彩虹屁,
 					}
 
-				],
+				]
+			}
+		},
+		data(){
+			return{
 				dialogVisible:false,
 				result:""
 			}
@@ -105,7 +109,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "提取成功",
+						title: _this.$t('writer.editor.toolbox.extractSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -114,7 +118,7 @@
 				.catch(function(error) {
 					if (error) {
 						uni.showToast({
-							title: "提取失败",
+							title: _this.$t('writer.editor.toolbox.extractFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -127,7 +131,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "获取成功",
+						title: _this.$t('writer.editor.toolbox.fetchSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -137,7 +141,7 @@
 				.catch(function(error) {
 					if (error) {
 						uni.showToast({
-							title: "获取失败",
+							title: _this.$t('writer.editor.toolbox.fetchFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -150,7 +154,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "翻译成功",
+						title: _this.$t('writer.editor.toolbox.translateSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -160,7 +164,7 @@
 				.catch(function(error) {
 					if (error) {
 						uni.showToast({
-							title: "翻译失败",
+							title: _this.$t('writer.editor.toolbox.translateFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -173,7 +177,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "获取成功",
+						title: _this.$t('writer.editor.toolbox.fetchSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -183,7 +187,7 @@
 				.catch(function(error) {
 					if (error) {
 						uni.showToast({
-							title: "获取失败",
+							title: _this.$t('writer.editor.toolbox.fetchFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -196,7 +200,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "获取成功",
+						title: _this.$t('writer.editor.toolbox.fetchSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -206,7 +210,7 @@
 				.catch(function(error) {
 					if (error) {
 						uni.showToast({
-							title: "获取失败",
+							title: _this.$t('writer.editor.toolbox.fetchFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -219,7 +223,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "获取成功",
+						title: _this.$t('writer.editor.toolbox.fetchSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -229,7 +233,7 @@
 				.catch(function(error) {
 					if (error) {
 						uni.showToast({
-							title: "获取失败",
+							title: _this.$t('writer.editor.toolbox.fetchFailed'),
 							icon: 'none',
 							duration: 2000
 						});

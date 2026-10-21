@@ -9,7 +9,7 @@
 					</view>
 				</view>
 				<view class="nav-center">
-					<text class="nav-title">问问原木娘</text>
+					<text class="nav-title">{{ $t('reader.ask.title') }}</text>
 				</view>
 				<view class="nav-right">
 					<view class="nav-history-btn" @tap="openHistoryPanel">
@@ -24,11 +24,11 @@
 				<image class="chat-badge" src="https://storage.codesocean.top/api/resource/get/177882044429077" mode="aspectFit"></image>
 				<view class="chat-header-main">
 					<view class="chat-subtitle">
-						<text>{{ effectiveNovelName || ('作品 ' + effectiveNovelId) }}</text>
-						<text class="active-novel-chip" v-if="!isActiveNovelOriginal">临时切换</text>
+						<text>{{ novelDisplayName(effectiveNovelName, effectiveNovelId) }}</text>
+						<text class="active-novel-chip" v-if="!isActiveNovelOriginal">{{ $t('reader.ask.tempSwitch') }}</text>
 					</view>
 					<view class="chat-active-origin" v-if="!isActiveNovelOriginal">
-						原作品：{{ novelName || ('作品 ' + novelId) }}
+						{{ $t('reader.ask.originalWork', { name: novelDisplayName(novelName, novelId) }) }}
 					</view>
 					<view class="chat-session-name">{{ currentSessionTitle }}</view>
 				</view>
@@ -74,7 +74,7 @@
 								v-if="canToggleThinking(message)"
 								@tap.stop="toggleThinkingExpanded(message)"
 							>
-								{{ message.thinkingExpanded ? '收起' : '展开' }}
+								{{ message.thinkingExpanded ? $t('common.collapse') : $t('common.expand') }}
 							</view>
 						</view>
 						<view class="chat-content" v-if="getVisibleMessageContent(message)">
@@ -90,7 +90,7 @@
 							class="chat-content chat-content-placeholder"
 							v-if="!getVisibleMessageContent(message) && message.role === 'assistant' && !shouldShowThinkingHint(message) && hasToolTrace(message)"
 						>
-							正在生成回答...
+							{{ $t('reader.ask.generatingAnswer') }}
 						</view>
 					</view>
 				</view>
@@ -101,7 +101,7 @@
 					class="chat-clear-icon-btn"
 					@tap.stop="clearConversation"
 					v-if="messages.length > 1 && !loading"
-					aria-label="清空上下文"
+					:aria-label="$t('reader.ask.clearContext')"
 				>
 					<i class="el-icon-brush chat-clear-icon"></i>
 				</view>
@@ -109,7 +109,7 @@
 					v-model="draft"
 					class="chat-textarea"
 					:class="{ 'with-clear-context': messages.length > 1 && !loading }"
-					placeholder="输入你想问的问题"
+					:placeholder="$t('reader.ask.inputPlaceholder')"
 					auto-height
 					maxlength="-1"
 					confirm-type="send"
@@ -134,10 +134,10 @@
 								@tap.stop
 							>
 								<view class="index-status-tooltip-arrow" :style="indexStatusTooltipArrowStyle"></view>
-								<view class="index-tooltip-title">全文智能索引</view>
+								<view class="index-tooltip-title">{{ $t('reader.ask.indexTitle') }}</view>
 								<view class="index-tooltip-percent">{{ novelIndexPercent }}%</view>
 								<view class="index-tooltip-text">{{ novelIndexStatusText }}</view>
-								<view class="index-tooltip-meta">索引进度会影响回答质量</view>
+								<view class="index-tooltip-meta">{{ $t('reader.ask.indexMeta') }}</view>
 							</view>
 						</view>
 						<view class="context-usage-wrap" @tap.stop="toggleContextUsageTooltip">
@@ -151,9 +151,9 @@
 								@tap.stop
 							>
 								<view class="context-usage-tooltip-arrow" :style="contextUsageTooltipArrowStyle"></view>
-								<view class="context-tooltip-title">背景信息窗口</view>
-								<view class="context-tooltip-percent">{{ contextUsagePercent }} % 已用</view>
-								<view class="context-tooltip-note">背景信息会自动压缩</view>
+								<view class="context-tooltip-title">{{ $t('reader.ask.contextTitle') }}</view>
+								<view class="context-tooltip-percent">{{ $t('reader.ask.contextPercentUsed', { percent: contextUsagePercent }) }}</view>
+								<view class="context-tooltip-note">{{ $t('reader.ask.contextNote') }}</view>
 							</view>
 						</view>
 					</view>
@@ -163,21 +163,21 @@
 							:class="{ active: retrieverMode === 'fast' }"
 							@tap="setRetrieverMode('fast')"
 						>
-							普通
+							{{ $t('reader.ask.modeFast') }}
 						</view>
 						<view
 							class="chat-mode-option"
 							:class="{ active: retrieverMode === 'deep' }"
 							@tap="setRetrieverMode('deep')"
 						>
-							深度思考
+							{{ $t('reader.ask.modeDeep') }}
 						</view>
 					</view>
 					<view v-if="loading" class="chat-send stop" @tap="stopReply">
-						停止
+						{{ $t('reader.ask.stop') }}
 					</view>
 					<view v-else class="chat-send" :class="{ disabled: !canSend }" @tap="submitQuestion">
-						发送
+						{{ $t('common.send') }}
 					</view>
 				</view>
 			</view>
@@ -191,7 +191,7 @@
 					<view class="history-drawer-handle-bar"></view>
 				</view>
 				<view class="history-drawer-header">
-					<text class="history-drawer-title">历史聊天记录</text>
+					<text class="history-drawer-title">{{ $t('reader.ask.historyTitle') }}</text>
 					<view class="history-drawer-close" @tap="closeHistoryPanel">
 						<uni-icons type="closeempty" size="20" :color="isDarkMode ? '#f4ebdb' : '#8a6c45'"></uni-icons>
 					</view>
@@ -204,7 +204,7 @@
 							class="history-search-input"
 							type="text"
 							confirm-type="search"
-							placeholder="搜索本书聊天内容"
+							:placeholder="$t('reader.ask.historySearchPlaceholder')"
 							placeholder-class="history-search-placeholder"
 						/>
 					</view>
@@ -216,7 +216,7 @@
 							v-for="book in historyBookGroups"
 							:key="'history-book-' + book.novelId"
 						>
-							<view class="history-book-title">{{ book.novelName || ('作品 ' + book.novelId) }}</view>
+							<view class="history-book-title">{{ novelDisplayName(book.novelName, book.novelId) }}</view>
 							<view
 								class="history-session-card"
 								v-for="session in book.sessions"
@@ -227,19 +227,19 @@
 								@touchmove="onHistoryCardTouchMove($event)"
 								@touchend="onHistoryCardTouchEnd($event, book, session)"
 							>
-								<view class="history-session-delete" @tap.stop="deleteHistorySession(book, session)">删除</view>
+								<view class="history-session-delete" @tap.stop="deleteHistorySession(book, session)">{{ $t('common.delete') }}</view>
 								<view class="history-session-content">
 									<view class="history-session-title">{{ session.title }}</view>
 									<view class="history-session-meta">
 										{{ formatHistoryTime(session.updatedAt) }}
 									</view>
-									<view class="history-session-preview">{{ session.preview || '暂无对话内容' }}</view>
+									<view class="history-session-preview">{{ session.preview || $t('reader.ask.noPreview') }}</view>
 								</view>
 							</view>
 						</view>
 					</block>
 					<view v-else class="history-empty">
-						{{ historyKeyword ? '没有找到匹配的历史记录' : '暂时还没有历史聊天记录' }}
+						{{ historyKeyword ? $t('reader.ask.noSearchResult') : $t('reader.ask.emptyHistory') }}
 					</view>
 				</scroll-view>
 			</view>
@@ -251,6 +251,7 @@
 import darkModeMixin from '@/mixins/dark-mode.js'
 import RedstoneCost from '@/components/redstone-cost/RedstoneCost.vue'
 import { showInsufficientRedstoneOptions } from '@/common/redstone-ui.js'
+import i18n from '@/i18n'
 
 const STREAM_ROUTE = '/library/reader_novel_ai_chat_stream'
 const INDEX_STATUS_ROUTE = '/library/reader_novel_summary_index_status'
@@ -261,10 +262,10 @@ function createTaskInstanceId() {
 	return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 const THINKING_HINT_TEXTS = [
-	'正在阅读中',
-	'正在整理中',
-	'正在誊写中',
-	'正在分析中',
+	'reader.ask.thinkingReading',
+	'reader.ask.thinkingOrganizing',
+	'reader.ask.thinkingTranscribing',
+	'reader.ask.thinkingAnalyzing',
 ]
 const DEFAULT_NOVEL_INDEX_STATUS = {
 	loading: false,
@@ -923,7 +924,7 @@ export default {
 		},
 		currentSessionTitle() {
 			const session = this.getCurrentSession()
-			return session && session.title ? session.title : '新会话'
+			return session && session.title ? session.title : this.$t('reader.ask.newSession')
 		},
 		historyBookGroups() {
 			return this.getFilteredHistoryBooks()
@@ -961,7 +962,7 @@ export default {
 		},
 		novelIndexStatusText() {
 			if (this.novelIndexStatus.loading && !this.novelIndexStatus.loaded) {
-				return '正在读取索引情况'
+				return this.$t('reader.ask.indexLoading')
 			}
 			if (this.novelIndexStatus.error) {
 				return this.novelIndexStatus.error
@@ -969,12 +970,13 @@ export default {
 			const indexed = Number(this.novelIndexStatus.indexedSummaryChapters || 0)
 			const total = Number(this.novelIndexStatus.totalChapters || 0)
 			if (!total) {
-				return '暂无可索引章节'
+				return this.$t('reader.ask.indexNoChapters')
 			}
-			return '已索引摘要 ' + indexed + ' / ' + total + ' 章'
+			return this.$t('reader.ask.indexSummary', { indexed, total })
 		},
 		currentThinkingHintText() {
-			return THINKING_HINT_TEXTS[this.thinkingHintIndex % THINKING_HINT_TEXTS.length] || THINKING_HINT_TEXTS[0]
+			const hints = THINKING_HINT_TEXTS.map((key) => i18n.t(key))
+			return hints[this.thinkingHintIndex % hints.length] || hints[0]
 		}
 	},
 	watch: {
@@ -1171,8 +1173,9 @@ export default {
 			return html
 		},
 		buildWelcomeMessage() {
-			const title = this.novelName ? `《${this.novelName}》` : '这本作品'
-			return `我是原木娘，你可以直接问我关于${title}的剧情、角色、章节细节、设定和读者评价。`
+			return this.novelName
+				? this.$t('reader.ask.welcomeWithNovel', { title: this.novelName })
+				: this.$t('reader.ask.welcomeGeneric')
 		},
 		createInitialMessages() {
 			return this.normalizeStoredMessages([
@@ -1299,7 +1302,7 @@ export default {
 				const content = stripCitationMarkers(firstUserMessage.content)
 				return content.length > 18 ? content.slice(0, 18) + '...' : content
 			}
-			return '新会话 ' + this.formatHistoryTime(fallbackTimestamp)
+			return this.$t('reader.ask.newSessionWithTime', { time: this.formatHistoryTime(fallbackTimestamp) })
 		},
 		getSessionPreview(messages) {
 			const sourceMessages = Array.isArray(messages) ? messages : []
@@ -2084,7 +2087,7 @@ export default {
 			if (error && error.name === 'AbortError') {
 				return
 			}
-			const fallbackMessage = error && error.message ? error.message : '原木娘暂时没有响应，请稍后再试'
+			const fallbackMessage = error && error.message ? error.message : this.$t('reader.ask.noResponse')
 			const target = this.getTargetMessageForTask(messageId)
 			if (target && !String(target.content || '').trim()) {
 				this.updateMessageContent(messageId, fallbackMessage)
@@ -2144,7 +2147,7 @@ export default {
 				})
 				const finalMessage = this.getTargetMessageForTask(task.messageId)
 				if (!finalMessage || !String(finalMessage.content || '').trim()) {
-					this.updateMessageContent(task.messageId, '这次我没有顺利组织出答案，你可以换个问法再试一次。')
+					this.updateMessageContent(task.messageId, this.$t('reader.ask.emptyAnswer'))
 				}
 			} catch (error) {
 				if (error && error.name === 'AbortError') {
@@ -2217,8 +2220,17 @@ export default {
 			}
 			this.retrieverMode = mode === 'fast' ? 'fast' : 'deep'
 		},
-		getMessageActionIndex(actionItems, actionText) {
-			return actionItems.findIndex((item) => item === actionText)
+		getActionLabel(actionKey) {
+			if (actionKey === 'copy') {
+				return this.$t('reader.ask.actionCopy')
+			}
+			if (actionKey === 'delete') {
+				return this.$t('common.delete')
+			}
+			return this.$t('reader.ask.actionRollback')
+		},
+		novelDisplayName(name, id) {
+			return name || this.$t('reader.ask.workWithId', { id })
 		},
 		getMessageIndex(message) {
 			return this.messages.findIndex((item) => item && message && item.id === message.id)
@@ -2231,27 +2243,27 @@ export default {
 			if (messageIndex === -1) {
 				return
 			}
-			const actionItems = ['复制']
+			const actionItems = ['copy']
 			const canMutateMessage = !this.loading && messageIndex > 0
 			if (canMutateMessage) {
-				actionItems.push('删除')
+				actionItems.push('delete')
 				if (message && message.role === 'user') {
-					actionItems.push('回滚')
+					actionItems.push('rollback')
 				}
 			}
 			uni.showActionSheet({
-				itemList: actionItems,
+				itemList: actionItems.map((actionKey) => this.getActionLabel(actionKey)),
 				success: (res) => {
-					const tapIndex = Number(res.tapIndex)
-					if (tapIndex === this.getMessageActionIndex(actionItems, '复制')) {
+					const actionKey = actionItems[Number(res.tapIndex)]
+					if (actionKey === 'copy') {
 						this.copyMessageContent(message)
 						return
 					}
-					if (tapIndex === this.getMessageActionIndex(actionItems, '删除')) {
+					if (actionKey === 'delete') {
 						this.deleteMessage(message)
 						return
 					}
-					if (tapIndex === this.getMessageActionIndex(actionItems, '回滚')) {
+					if (actionKey === 'rollback') {
 						this.rollbackToMessage(message)
 					}
 				},
@@ -2260,17 +2272,17 @@ export default {
 		copyMessageContent(message) {
 			const content = this.getCopyableMessageText(message)
 			if (!content) {
-				this.showToast('这条消息没有可复制的内容')
+				this.showToast(this.$t('reader.ask.nothingToCopy'))
 				return
 			}
 			if (typeof uni !== 'undefined' && typeof uni.setClipboardData === 'function') {
 				uni.setClipboardData({
 					data: content,
 					success: () => {
-						this.showToast('已复制')
+						this.showToast(this.$t('common.copied'))
 					},
 					fail: () => {
-						this.showToast('复制失败')
+						this.showToast(this.$t('reader.ask.copyFailed'))
 					},
 				})
 				return
@@ -2278,14 +2290,14 @@ export default {
 			if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
 				navigator.clipboard.writeText(content)
 					.then(() => {
-						this.showToast('已复制')
+						this.showToast(this.$t('common.copied'))
 					})
 					.catch(() => {
-						this.showToast('复制失败')
+						this.showToast(this.$t('reader.ask.copyFailed'))
 					})
 				return
 			}
-			this.showToast('当前环境不支持复制')
+			this.showToast(this.$t('reader.ask.copyUnsupported'))
 		},
 		commitMessageListChange() {
 			this.stopAllThinkingTypewriters()
@@ -2306,7 +2318,7 @@ export default {
 		},
 		deleteMessage(message) {
 			if (this.loading) {
-				this.showToast('回复生成中，稍后再试')
+				this.showToast(this.$t('reader.ask.replyInProgress'))
 				return
 			}
 			const messageIndex = this.getMessageIndex(message)
@@ -2315,11 +2327,11 @@ export default {
 			}
 			this.messages.splice(messageIndex, 1)
 			this.commitMessageListChange()
-			this.showToast('已删除')
+			this.showToast(this.$t('common.deleted'))
 		},
 		rollbackToMessage(message) {
 			if (this.loading) {
-				this.showToast('回复生成中，稍后再试')
+				this.showToast(this.$t('reader.ask.replyInProgress'))
 				return
 			}
 			if (!message || message.role !== 'user') {
@@ -2332,11 +2344,11 @@ export default {
 			const rollbackText = String(message.content || '').trim()
 			const removeCount = this.messages.length - messageIndex
 			uni.showModal({
-				title: '确认回滚',
-				content: '将删除这条消息及之后的 ' + removeCount + ' 条消息，并把这条消息放回输入框，确定继续吗？',
-				confirmText: '回滚',
+				title: this.$t('reader.ask.confirmRollbackTitle'),
+				content: this.$t('reader.ask.confirmRollbackContent', { count: removeCount }),
+				confirmText: this.$t('reader.ask.actionRollback'),
 				confirmColor: '#c0503a',
-				cancelText: '取消',
+				cancelText: this.$t('common.cancel'),
 				success: (res) => {
 					if (!res.confirm) {
 						return
@@ -2344,7 +2356,7 @@ export default {
 					this.messages = this.messages.slice(0, messageIndex)
 					this.draft = rollbackText
 					this.commitMessageListChange()
-					this.showToast('已回滚')
+					this.showToast(this.$t('reader.ask.rolledBack'))
 				},
 			})
 		},
@@ -2408,11 +2420,11 @@ export default {
 				return
 			}
 			uni.showModal({
-				title: '确认删除',
-				content: '确定要删除这条聊天记录吗？删除后无法恢复。',
-				confirmText: '删除',
+				title: this.$t('common.confirmDelete'),
+				content: this.$t('reader.ask.confirmDeleteHistory'),
+				confirmText: this.$t('common.delete'),
 				confirmColor: '#c0503a',
-				cancelText: '取消',
+				cancelText: this.$t('common.cancel'),
 				success: (res) => {
 					if (!res.confirm) {
 						return
@@ -2444,7 +2456,7 @@ export default {
 						storedBook.updatedAt = sessions[0] ? Number(sessions[0].updatedAt || Date.now()) : Date.now()
 					}
 					this.persistHistoryStore()
-					this.showToast('已删除该条记录')
+					this.showToast(this.$t('reader.ask.historyDeleted'))
 				}
 			})
 		},
@@ -2454,7 +2466,7 @@ export default {
 			}
 			this.contextUsageTooltipVisible = false
 			this.createNewSession()
-			this.showToast('已新建会话')
+			this.showToast(this.$t('reader.ask.sessionCreated'))
 		},
 		toggleContextUsageTooltip() {
 			const nextVisible = !this.contextUsageTooltipVisible
@@ -2775,7 +2787,7 @@ export default {
 			if (target) {
 				target.thinkingExpanded = false
 				if (target.role === 'assistant' && !String(target.content || '').trim()) {
-					this.updateMessageContent(messageId, '已停止回复')
+					this.updateMessageContent(messageId, this.$t('reader.ask.replyStopped'))
 				}
 			}
 			this.completeReplyTask(messageId, 'stopped')
@@ -2828,7 +2840,7 @@ export default {
 
 				xhr.onerror = () => {
 					finish(() => {
-						reject(new Error('请求失败，请稍后再试'))
+						reject(new Error(this.$t('reader.ask.requestFailed')))
 					})
 				}
 
@@ -2846,7 +2858,7 @@ export default {
 					}
 
 					if (xhr.status < 200 || xhr.status >= 300) {
-						let message = '请求失败，请稍后再试'
+						let message = this.$t('reader.ask.requestFailed')
 						let code = ''
 						try {
 							const data = JSON.parse(xhr.responseText || '{}')
@@ -2942,7 +2954,7 @@ export default {
 					...previousStatus,
 					loading: false,
 					loaded: true,
-					error: '索引情况暂时不可用',
+					error: this.$t('reader.ask.indexUnavailable'),
 				}, previousStatus)
 			}
 		},
@@ -2953,7 +2965,7 @@ export default {
 				return
 			}
 			if (!this.novelId) {
-				this.showToast('作品信息不完整')
+				this.showToast(this.$t('reader.ask.incompleteNovelInfo'))
 				return
 			}
 
@@ -2972,7 +2984,7 @@ export default {
 			})
 			this.activeReplyTask = this.createActiveReplyTask(assistantMessage.id)
 			this.loading = true
-			this.statusText = '原木娘正在整理这本书的资料'
+			this.statusText = this.$t('reader.ask.organizing')
 			this.persistConversation()
 
 			try {
@@ -2982,7 +2994,7 @@ export default {
 				})
 				const finalMessage = this.messages.find((message) => message.id === assistantMessage.id)
 				if (!finalMessage || !String(finalMessage.content || '').trim()) {
-					this.updateMessageContent(assistantMessage.id, '这次我没有顺利组织出答案，你可以换个问法再试一次。')
+					this.updateMessageContent(assistantMessage.id, this.$t('reader.ask.emptyAnswer'))
 				}
 			} catch (error) {
 				if (error && error.name === 'AbortError') {
@@ -3039,7 +3051,7 @@ export default {
 			})
 
 			if (!response.ok) {
-				let message = '请求失败，请稍后再试'
+				let message = this.$t('reader.ask.requestFailed')
 				let code = ''
 				try {
 					const data = await response.json()
@@ -3254,7 +3266,7 @@ export default {
 			}
 
 			if (event.type === 'error') {
-				this.streamErrorMessage = event.message || '原木娘暂时没有响应，请稍后再试'
+				this.streamErrorMessage = event.message || this.$t('reader.ask.noResponse')
 				this.clearCurrentThinkingText(messageId)
 				const target = this.getTargetMessageForTask(messageId)
 				if (target) {

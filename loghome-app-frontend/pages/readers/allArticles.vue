@@ -1,6 +1,6 @@
 <template>
 	<view class="content" v-dark>
-		<div class="articles-skeleton" v-if="isLoading" aria-label="章节加载中">
+		<div class="articles-skeleton" v-if="isLoading" :aria-label="$t('reader.articleList.loadingChapters')">
 			<div class="skeleton-volume-header">
 				<div class="skeleton-block skeleton-volume-title"></div>
 			</div>
@@ -8,10 +8,10 @@
 				<div class="skeleton-block skeleton-chapter-title" :class="`skeleton-width-${index % 3}`"></div>
 			</div>
 		</div>
-		<nothing :msg="'这本书还没有章节哦\n快去评论区催更~'" v-else-if="articles.length == 0"></nothing>
+		<nothing :msg="$t('reader.articleList.noChapters')" v-else-if="articles.length == 0"></nothing>
 		<div class="articles" ref="articlesContainer" v-else>
 			<div class="volume" v-for="(volume, vIndex) in volumeList" :key="vIndex">
-				<div class="volume-header" @click="toggleVolume(vIndex)" v-if="volumeList.length > 1 || volume.title !== '正文'">
+				<div class="volume-header" @click="toggleVolume(vIndex)" v-if="volumeList.length > 1 || !volume.isDefault">
 					<div class="volume-title">{{ volume.title }}</div>
 					<uni-icons :type="volume.isExpanded ? 'bottom' : 'right'" size="16" color="#666"></uni-icons>
 				</div>
@@ -21,7 +21,7 @@
 							   open-type="navigate">  
 						<div class="article" :class="{'is-last-read': item.article_chapter === lastReadChapter}" :data-chapter="item.article_chapter">
 							<div class="title">{{item.title}}</div>
-							<div class="last-read-tag" v-if="item.article_chapter === lastReadChapter">阅读到这里</div>
+							<div class="last-read-tag" v-if="item.article_chapter === lastReadChapter">{{ $t('reader.articleList.readUpToHere') }}</div>
 						</div>
 					</navigator>
 				</div>
@@ -29,7 +29,7 @@
 		</div>
 		<div class="jump-button" v-if="lastReadChapter && !isLastReadVisible" @click="scrollToLastRead">
 			<uni-icons type="bottom" size="16" color="#ffffff"></uni-icons>
-			<span>跳转到阅读进度</span>
+			<span>{{ $t('reader.articleList.jumpToProgress') }}</span>
 		</div>
 	</view>
 </template>
@@ -125,7 +125,8 @@ export default{
 		processVolumes() {
 			let volumes = [];
 			let currentVolume = {
-				title: '正文',
+				title: this.$t('reader.articleList.defaultVolume'),
+				isDefault: true,
 				isExpanded: true,
 				chapters: []
 			};
@@ -138,6 +139,7 @@ export default{
 					}
 					currentVolume = {
 						title: item.title,
+						isDefault: false,
 						isExpanded: true,
 						chapters: []
 					};

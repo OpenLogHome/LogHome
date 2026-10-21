@@ -1,13 +1,13 @@
 <template>
 	<view class="outer" v-dark>
 		<view class="search-container">
-			<uni-search-bar v-model="keyword" placeholder="搜索感兴趣的标签" @input="input" bgColor="#f5f5f5" radius="100" cancelButton="none"></uni-search-bar>
+			<uni-search-bar v-model="keyword" :placeholder="$t('reader.tag.searchPlaceholder')" @input="input" bgColor="#f5f5f5" radius="100" cancelButton="none"></uni-search-bar>
 		</view>
 		
 		<view class="tabs">
-			<view class="tab-item" :class="{active: currentFilter === 'all'}" @click="currentFilter = 'all'">全部</view>
-			<view class="tab-item" :class="{active: currentFilter === 'activity'}" @click="currentFilter = 'activity'">活动</view>
-			<view class="tab-item" :class="{active: currentFilter === 'suggested'}" @click="currentFilter = 'suggested'">官方</view>
+			<view class="tab-item" :class="{active: currentFilter === 'all'}" @click="currentFilter = 'all'">{{ $t('common.all') }}</view>
+			<view class="tab-item" :class="{active: currentFilter === 'activity'}" @click="currentFilter = 'activity'">{{ $t('reader.tag.activity') }}</view>
+			<view class="tab-item" :class="{active: currentFilter === 'suggested'}" @click="currentFilter = 'suggested'">{{ $t('reader.tag.official') }}</view>
 		</view>
 
 		<view class="tags">
@@ -18,7 +18,7 @@
 				<text class="tag-count">{{item.count}}</text>
 			</div>
 			<view v-if="filteredTags.length === 0" class="empty-state">
-				<text>没有找到相关标签</text>
+				<text>{{ $t('reader.tag.noTagsFound') }}</text>
 			</view>
 		</view>
 	</view>

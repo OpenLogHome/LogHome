@@ -1,7 +1,7 @@
 <template>
 	<transition name="fade" class="transition">
 		<div class="outer" v-dark v-if="showList || isLoading">
-			<div class="collectionsSkeleton" v-if="isLoading" aria-label="书籍列表加载中">
+			<div class="collectionsSkeleton" v-if="isLoading" :aria-label="$t('reader.shelf.loadingBooks')">
 				<div class="bookSkeleton" v-for="index in 5" :key="index">
 					<div class="skeletonBlock skeletonCover"></div>
 					<div class="skeletonInfo">

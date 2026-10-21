@@ -7,7 +7,7 @@
 					clearable
 					prefix-icon="el-icon-search"
 					maxlength="60"
-					:placeholder="'在 '+searchScopeText+' 中搜索...'"
+					:placeholder="$t('writer.work.search.placeholder', { scope: searchScopeText })"
 					@input="handleSearchInput"
 					@clear="clearSearch"
 				></el-input>
@@ -16,7 +16,7 @@
 					<span v-if="hasActiveSearch && !searchLoading && !searchError">{{ searchSummaryText }}</span>
 				</div>
 			</div>
-			<div class="articlesSkeleton" v-if="isLoading" aria-label="章节加载中">
+			<div class="articlesSkeleton" v-if="isLoading" :aria-label="$t('writer.work.search.chaptersLoading')">
 				<div class="articleSkeleton" v-for="index in 7" :key="index">
 					<div class="skeletonBlock skeletonTitle" :class="`skeletonWidth${index % 3}`"></div>
 					<div class="skeletonBlock skeletonMeta"></div>
@@ -33,7 +33,7 @@
 				</div>
 				<div class="searchStateCard empty" v-else-if="searchResults.length === 0">
 					<i class="el-icon-document"></i>
-					<span>没有找到相关章节，试试更短的关键词或切换分卷范围。</span>
+					<span>{{ $t('writer.work.search.empty') }}</span>
 				</div>
 				<div v-else class="searchResultList">
 					<div
@@ -70,13 +70,13 @@
 							<div class="title">
 								{{ item.title }}
 								<el-tag type="success" v-show="item.article_type == 'worldOutline'" effect="dark" disable-transitions
-									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">大纲</el-tag>
+									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.outline') }}</el-tag>
 								<el-tag type="success" v-show="item.article_type == 'worldVocabulary'" effect="dark" disable-transitions
-									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">词条</el-tag>
+									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.vocabulary') }}</el-tag>
 								<el-tag type="info" v-show="item.article_type == 'spliter'" effect="dark" disable-transitions
-									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">分卷</el-tag>
+									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.volume') }}</el-tag>
 								<el-tag type="danger" v-show="item.is_draft == true" effect="dark" disable-transitions
-									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">草稿</el-tag>
+									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.draft') }}</el-tag>
 								<el-tag
 									type="success"
 									v-if="item.collaboration_mode === 'realtime_crdt'"
@@ -84,11 +84,11 @@
 									disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)"
 									size="mini"
-								>实时协作</el-tag>
+								> {{ $t('writer.work.labels.realtimeCollaboration') }}</el-tag>
 								<div
 									v-if="item.collaboration_mode === 'realtime_crdt' && item.realtime_collaborators && item.realtime_collaborators.length"
 									class="realtimeCollaborators"
-									:aria-label="`${item.realtime_collaborators.length} 位作者正在编辑`"
+									:aria-label="$t('writer.work.labels.collaboratorsEditing', { count: item.realtime_collaborators.length })"
 									@click.stop="gotoEditor(item)"
 								>
 									<span
@@ -96,7 +96,7 @@
 										:key="participant.user_id"
 										class="realtimeCollaboratorAvatarWrap"
 										:style="{ borderColor: participant.color, zIndex: 20 - participantIndex }"
-										:title="participant.name + ' 正在编辑'"
+										:title="$t('writer.work.labels.editingNow', { name: participant.name })"
 									>
 										<img
 											class="realtimeCollaboratorAvatar"
@@ -113,14 +113,14 @@
 								</div>
 								<el-tag type="warning" v-if="item.feedback_count && item.feedback_count > 0" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)"
-									size="mini">{{ item.feedback_count }}处反馈</el-tag>
+									size="mini">{{ $t('writer.work.labels.feedbackCount', { count: item.feedback_count }) }}</el-tag>
 								<el-tag type="danger" v-if="item.hasWriterModify == true && item.is_draft == false" disable-transitions
-									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">发布后有编辑</el-tag>
+									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.publishedEdited') }}</el-tag>
 								<el-tag type="warning" v-if="item.collaboration_mode !== 'realtime_crdt' && item.isSyncing == true" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark">Syncing</el-tag>
 								<el-tag type="info" v-if="item.collaboration_mode !== 'realtime_crdt' && item.hasCloudCollision == true" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini" effect="dark" >
-									<i class="el-icon-warning-outline" style="margin-right: 5rpx;"></i>存在云冲突
+									<i class="el-icon-warning-outline" style="margin-right: 5rpx;"></i>{{ $t('writer.work.labels.cloudConflict') }}
 								</el-tag>
 								<el-tag
 									type="warning"
@@ -139,7 +139,7 @@
 										onerror="this.onerror=null;this.src='/static/user/defaultAvatar.jpg'"
 									/>
 									<span>
-										{{ Number(item.active_editor.user_id) === Number(currentUserId) ? '你正在编辑' : item.active_editor.name + ' 正在编辑' }}
+										{{ Number(item.active_editor.user_id) === Number(currentUserId) ? $t('writer.work.labels.youAreEditing') : $t('writer.work.labels.editingNow', { name: item.active_editor.name }) }}
 									</span>
 								</div>
 								<i class="el-icon-loading articleStatusLoading" v-if="item.isCheckingStatus"></i>
@@ -148,11 +148,11 @@
 							<div class="miniTitle">
 								<div
 									v-if="item.article_type != 'spliter' && item.hasWriterModify">
-									{{ item.modifiedTextCount }}字
+									{{ $t('writer.work.common.charCount', { count: item.modifiedTextCount }) }}
 									{{ item.modify_time }}
 								</div>
 								<div v-else-if="item.article_type != 'spliter'">
-									{{ item.text_count }}字
+									{{ $t('writer.work.common.charCount', { count: item.text_count }) }}
 									{{ utc2beijing(item.update_time) }}
 								</div>
 							</div>
@@ -161,28 +161,28 @@
 							<navigator @click="gotoEditor(item)">
 								<div class="subTitle">
 									<uni-icons type="compose" size="20" :color="actionIconColor" />
-									<span>编辑{{ item.article_type == 'spliter' ? "分卷信息" : "" }}</span>
+									<span>{{ item.article_type == 'spliter' ? $t('writer.work.actions.editVolumeInfo') : $t('writer.work.actions.edit') }}</span>
 								</div>
 							</navigator>
 							<navigator :url="'../readers/article?id=' + item.article_id" open-type="navigate"
 								v-show="item.is_draft == false && !frameInfo.isEnabled">
 								<div class="subTitle">
 									<uni-icons type="eye" size="20" :color="actionIconColor" />
-									<span>阅读</span>
+									<span>{{ $t('writer.work.actions.read') }}</span>
 								</div>
 							</navigator>
 							<navigator :url="'./chapterTimeMachine?id=' + item.article_id + '&novelId=' + item.novel_id"
 								open-type="navigate" v-show="item.article_type != 'spliter'">
 								<div class="subTitle">
 									<uni-icons type="loop" size="20" :color="actionIconColor" />
-									<span>章节时光机</span>
+									<span>{{ $t('writer.work.actions.chapterTimeMachine') }}</span>
 								</div>
 							</navigator>
 							<navigator :url="'./articleFeedbacks?id=' + item.article_id" open-type="navigate"
 								v-show="item.article_type != 'spliter' && item.feedback_count > 0">
 								<div class="subTitle">
 									<uni-icons type="help" size="20" :color="actionIconColor" />
-									<span>错误反馈 ({{ item.feedback_count }})</span>
+									<span>{{ $t('writer.work.actions.feedbacks', { count: item.feedback_count }) }}</span>
 								</div>
 							</navigator>
 							<div
@@ -208,37 +208,37 @@
 							</div>
 							<div class="subTitle" @click="deleteArticle(item.article_id)" v-show="canDeleteArticle">
 								<uni-icons type="trash" size="20" :color="actionIconColor" />
-								<span>删除{{ item.article_type == 'spliter' ? "分卷" : "" }}</span>
+								<span>{{ item.article_type == 'spliter' ? $t('writer.work.actions.deleteVolume') : $t('writer.work.actions.delete') }}</span>
 							</div>
 						</view>
 					</uni-collapse-item>
 				</uni-collapse>
 				<div class="newArticle" v-show="novel.novel_type != 'world' && canAddArticle">
-					<div class="tit">新增普通章节</div>
+					<div class="tit">{{ $t('writer.work.newArticle.normalTitle') }}</div>
 					<div class="share">
 						<div class="add richArticle" @click="addArticle('richtext')">
-							+ 章节
+							{{ $t('writer.work.newArticle.addChapter') }}
 						</div>
 					</div>
 					<div class="monopolize" v-show="bookPart.currentPart.id == -1">
 						<div class="add split" @click="addArticle('spliter')">
-							+ 分卷
+							{{ $t('writer.work.newArticle.addVolume') }}
 						</div>
 					</div>
 				</div>
 				<div class="newArticle" v-show="novel.novel_type == 'world' && canAddArticle">
-					<div class="tit">新增设定章节</div>
+					<div class="tit">{{ $t('writer.work.newArticle.settingsTitle') }}</div>
 					<div class="share">
 						<div class="add commonArticle" @click="addArticle('worldOutline')">
-							+ 世界大纲
+							{{ $t('writer.work.newArticle.addOutline') }}
 						</div>
 						<div class="add richArticle" @click="addArticle('worldVocabulary')">
-							+ 世界词条
+							{{ $t('writer.work.newArticle.addVocabulary') }}
 						</div>
 					</div>
 					<div class="monopolize" v-show="bookPart.currentPart.id == -1">
 						<div class="add split" @click="addArticle('spliter')">
-							+ 分卷
+							{{ $t('writer.work.newArticle.addVolume') }}
 						</div>
 					</div>
 				</div>
@@ -262,11 +262,11 @@
 			<view class="splitterRenameDialog">
 				<uni-popup-dialog
 					mode="input"
-					title="修改分卷名"
-					placeholder="输入分卷名"
+					:title="$t('writer.work.volume.renameTitle')"
+					:placeholder="$t('writer.work.volume.renamePlaceholder')"
 					:value="splitterRenameValue"
-					cancel-text="取消"
-					confirm-text="确定"
+					:cancel-text="$t('common.cancel')"
+					:confirm-text="$t('common.confirm')"
 					:before-close="true"
 					@confirm="confirmSplitterRename"
 					@close="closeSplitterRename"
@@ -275,19 +275,19 @@
 		</uni-popup>
 		<uni-popup ref="exportPopup" type="bottom" :background-color="popupBackground">
 			<view class="share-popup">
-				<view class="share-title">导出作品</view>
+				<view class="share-title">{{ $t('writer.work.export.title') }}</view>
 				<view class="share-content">
 					<view class="share-item" @click="exportSimple">
 						<image src="/static/simple_pack.png" mode=""></image>
-						<view class="share-text">仅打包</view>
+						<view class="share-text">{{ $t('writer.work.export.packageOnly') }}</view>
 					</view>
 					<view class="share-item" @click="exportAdvanced">
 						<image src="/static/e_book.png" mode=""></image>
-						<view class="share-text">导出电子书 <text style="font-size: 20rpx; color: #ff0000; border: 1rpx solid #ff0000; border-radius: 4rpx; padding: 0 4rpx; margin-left: 8rpx;">限免</text></view>
+						<view class="share-text">{{ $t('writer.work.export.ebook') }} <text style="font-size: 20rpx; color: #ff0000; border: 1rpx solid #ff0000; border-radius: 4rpx; padding: 0 4rpx; margin-left: 8rpx;">{{ $t('writer.work.export.freeForNow') }}</text></view>
 					</view>
 				</view>
 				<view class="share-bottom">
-					<view class="share-btn-cancel" @click="cancelExport">取消</view>
+					<view class="share-btn-cancel" @click="cancelExport">{{ $t('common.cancel') }}</view>
 				</view>
 			</view>
 		</uni-popup>
@@ -338,7 +338,7 @@ export default {
 			articles: [],
 			shownArticles: [],
 			bookPart: {
-				currentPart: { id: -1, name: "全部分卷" },
+				currentPart: { id: -1, name: "" },
 				parts: [],
 				btnOpened: false
 			},
@@ -356,7 +356,7 @@ export default {
 			searchResults: [],
 			searchLoading: false,
 			searchError: "",
-			searchStatusText: "正在搜索内容...",
+			searchStatusText: "",
 			searchSnapshotMap: {},
 			searchLocalLatestMap: {},
 			searchDocumentMap: {},
@@ -413,10 +413,15 @@ export default {
 			if (this.bookPart.currentPart && this.bookPart.currentPart.id !== -1) {
 				return `${this.bookPart.currentPart.name}`;
 			}
-			return "全部章节";
+			return this.$t('writer.work.search.allChapters');
 		},
 		searchSummaryText() {
-			return `找到 ${this.searchResults.length} 条结果`;
+			return this.$t('writer.work.search.summary', { count: this.searchResults.length });
+		},
+		currentPartDisplayName() {
+			return this.bookPart.currentPart.id === -1
+				? this.$t('writer.work.volume.all')
+				: this.bookPart.currentPart.name;
 		},
 	},
 	onLoad(option) {
@@ -556,37 +561,38 @@ export default {
 		},
 		getCollaborationModeActionText(article) {
 			if (this.isCollaborationModeSwitching(article)) {
-				return "正在切换协作模式...";
+				return this.$t('writer.work.collaboration.switchingMode');
 			}
 			return article && article.collaboration_mode === "realtime_crdt"
-				? "关闭实时协作"
-				: "开启实时协作（公测）";
+				? this.$t('writer.work.collaboration.disable')
+				: this.$t('writer.work.collaboration.enable');
 		},
 		getCollaborationModeErrorMessage(error) {
 			const data = error && error.response && error.response.data
 				? error.response.data
 				: {};
 			const messages = {
-				legacy_editor_active: "该章节仍有旧编辑器会话，请让编辑者退出后再开启。",
-				collaboration_disabled: "实时协作服务尚未启动，请先检查长连接服务。",
-				unsupported_article_type: "该章节类型暂不支持实时协作。",
+				legacy_editor_active: this.$t('writer.work.collaboration.legacyEditorActive'),
+				collaboration_disabled: this.$t('writer.work.collaboration.disabled'),
+				unsupported_article_type: this.$t('writer.work.collaboration.unsupportedType'),
 			};
-			return messages[data.code] || data.msg || "协作模式切换失败，请稍后重试。";
+			return messages[data.code] || data.msg || this.$t('writer.work.collaboration.switchFailed');
 		},
 		confirmCollaborationModeSwitch(article) {
 			if (!this.isOwner || !this.supportsRealtimeCollaboration(article)) {
-				this.showPermissionDenied("只有文章所有者可以切换实时协作模式");
+				this.showPermissionDenied(this.$t('writer.work.collaboration.ownerOnly'));
 				return;
 			}
 			if (this.collaborationModeSwitchingArticleId) return;
 
 			const enabling = article.collaboration_mode !== "realtime_crdt";
 			uni.showModal({
-				title: enabling ? "开启实时协作" : "关闭实时协作",
+				title: enabling ? this.$t('writer.work.collaboration.enableTitle') : this.$t('writer.work.collaboration.disableTitle'),
 				content: enabling
-					? "开启后，多位作者可以同时编辑本章；旧版整篇上传接口将停止写入。请先确认没有人仍在旧编辑器中编辑。该功能尚处于公测阶段，如出现问题请反馈。"
-					: "关闭前会自动创建协作检查点并断开在线协作连接，之后恢复为单人编辑锁。确定继续吗？",
-				confirmText: enabling ? "开启" : "关闭",
+					? this.$t('writer.work.collaboration.enableContent')
+					: this.$t('writer.work.collaboration.disableContent'),
+				confirmText: enabling ? this.$t('writer.work.collaboration.enableAction') : this.$t('writer.work.collaboration.disableAction'),
+				cancelText: this.$t('common.cancel'),
 				confirmColor: enabling ? "#409eff" : "#e6a23c",
 				success: (result) => {
 					if (result.confirm) this.switchArticleCollaborationMode(article, enabling);
@@ -614,7 +620,7 @@ export default {
 				this.$set(article, "collaboration_mode", nextMode);
 				this.$set(article, "active_editor", null);
 				uni.showToast({
-					title: enabling ? "已开启实时协作" : "已恢复单人编辑锁",
+					title: enabling ? this.$t('writer.work.collaboration.enabledToast') : this.$t('writer.work.collaboration.disabledToast'),
 					icon: "none",
 					duration: 2000,
 				});
@@ -648,9 +654,9 @@ export default {
 			this.novelAccess = response.data.access || this.novelAccess;
 			return response.data;
 		},
-		showPermissionDenied(title = "暂无此操作权限") {
+		showPermissionDenied(title) {
 			uni.showToast({
-				title,
+				title: title || this.$t('writer.work.permission.noPermission'),
 				icon: "none",
 				duration: 2000,
 			});
@@ -712,7 +718,7 @@ export default {
 			this.searchRequestId += 1;
 			this.searchLoading = false;
 			this.searchError = "";
-			this.searchStatusText = "正在搜索内容...";
+			this.searchStatusText = this.$t('writer.work.search.searching');
 			this.searchResults = [];
 			this.searchSnapshotMap = {};
 			this.searchLocalLatestMap = {};
@@ -740,7 +746,7 @@ export default {
 				this.searchRequestId += 1;
 				this.searchLoading = false;
 				this.searchError = "";
-				this.searchStatusText = "正在搜索内容...";
+				this.searchStatusText = this.$t('writer.work.search.searching');
 				this.searchResults = [];
 				return;
 			}
@@ -766,7 +772,7 @@ export default {
 			const requestId = ++this.searchRequestId;
 			this.searchLoading = true;
 			this.searchError = "";
-			this.searchStatusText = "正在搜索内容...";
+			this.searchStatusText = this.$t('writer.work.search.searching');
 
 			try {
 				await this.ensureSearchMaterials();
@@ -774,7 +780,7 @@ export default {
 					return;
 				}
 
-				this.searchStatusText = "正在搜索内容...";
+				this.searchStatusText = this.$t('writer.work.search.searching');
 				const results = this.buildSearchResults(query);
 				if (requestId !== this.searchRequestId) {
 					return;
@@ -785,7 +791,7 @@ export default {
 					return;
 				}
 				this.searchResults = [];
-				this.searchError = "搜索内容加载失败，请稍后重试";
+				this.searchError = this.$t('writer.work.search.loadFailed');
 			} finally {
 				if (requestId === this.searchRequestId) {
 					this.searchLoading = false;
@@ -801,7 +807,7 @@ export default {
 			}
 
 			this.searchMaterialsPromise = (async () => {
-				this.searchStatusText = "正在加载章节内容...";
+				this.searchStatusText = this.$t('writer.work.search.loadingContent');
 				const tk = this.getAuthToken();
 				const articleIdSet = new Set(
 					(this.articles || []).map((item) => Number(item.article_id || 0)).filter(Boolean)
@@ -872,10 +878,10 @@ export default {
 			const latestVersion = this.resolveLatestSearchVersion(article, snapshot, localLatest);
 			const publishedVersion = this.resolvePublishedSearchVersion(article, snapshot);
 			const latestDoc = latestVersion
-				? this.createSearchDocument(article, latestVersion, "latest", "最新稿", 0)
+				? this.createSearchDocument(article, latestVersion, "latest", this.$t('writer.work.search.latestDraft'), 0)
 				: null;
 			const publishedDoc = publishedVersion
-				? this.createSearchDocument(article, publishedVersion, "published", "已发布", 2)
+				? this.createSearchDocument(article, publishedVersion, "published", this.$t('writer.work.search.published'), 2)
 				: null;
 
 			if (latestDoc && publishedDoc && latestDoc.signature === publishedDoc.signature) {
@@ -883,7 +889,7 @@ export default {
 					{
 						...latestDoc,
 						versionKey: "current",
-						versionLabel: Number(article.is_draft) === 1 ? "最新稿" : "当前版本",
+						versionLabel: Number(article.is_draft) === 1 ? this.$t('writer.work.search.latestDraft') : this.$t('writer.work.search.currentVersion'),
 						versionPriority: 1,
 					},
 				];
@@ -1141,7 +1147,7 @@ export default {
 			const previewStartIndex = titleHit ? 0 : firstParagraphIndex;
 			const previewParagraphs = doc.paragraphs.length > 0
 				? doc.paragraphs.slice(previewStartIndex, previewStartIndex + 3)
-				: ["暂无正文内容"];
+				: [this.$t('writer.work.search.noBody')];
 			const previewText = previewParagraphs.join("\n");
 			const score =
 				(titleHit ? 300 : 0) +
@@ -1159,8 +1165,8 @@ export default {
 				versionTagType: this.getVersionTagType(doc.versionKey),
 				typeLabel: this.getArticleTypeLabel(doc.articleType),
 				chapterLabel: this.getArticleChapterLabel(doc.article),
-				matchLabel: titleHit && bodyHit ? "标题/正文命中" : titleHit ? "标题命中" : "正文命中",
-				highlightedTitle: this.highlightText(doc.title || "未命名章节", keywords),
+				matchLabel: titleHit && bodyHit ? this.$t('writer.work.search.matchBoth') : titleHit ? this.$t('writer.work.search.matchTitle') : this.$t('writer.work.search.matchBody'),
+				highlightedTitle: this.highlightText(doc.title || this.$t('writer.work.search.untitledChapter'), keywords),
 				highlightedPreview: this.highlightText(previewText, keywords),
 				score,
 			};
@@ -1185,28 +1191,28 @@ export default {
 		},
 		getArticleTypeLabel(articleType) {
 			if (articleType === "worldOutline") {
-				return "大纲";
+				return this.$t('writer.work.search.typeOutline');
 			}
 			if (articleType === "worldVocabulary") {
-				return "词条";
+				return this.$t('writer.work.search.typeVocabulary');
 			}
 			if (articleType === "richtext") {
-				return "章节";
+				return this.$t('writer.work.search.typeChapter');
 			}
 			return "";
 		},
 		getArticleChapterLabel(article) {
 			const chapter = Number(article && article.article_chapter ? article.article_chapter : 0);
 			if (article.article_type === "richtext") {
-				return `第${chapter}章`;
+				return this.$t('writer.work.search.chapterLabel', { chapter });
 			}
 			if (article.article_type === "worldOutline") {
-				return `大纲 · 序号 ${chapter}`;
+				return this.$t('writer.work.search.outlineIndex', { chapter });
 			}
 			if (article.article_type === "worldVocabulary") {
-				return `词条 · 序号 ${chapter}`;
+				return this.$t('writer.work.search.vocabularyIndex', { chapter });
 			}
-			return `序号 ${chapter}`;
+			return this.$t('writer.work.search.indexLabel', { chapter });
 		},
 		escapeHtml(text) {
 			return String(text || "")
@@ -1308,7 +1314,7 @@ export default {
 		},
 		addArticle(type) {
 			if (!this.canAddArticle) {
-				this.showPermissionDenied("你没有新增章节权限");
+				this.showPermissionDenied(this.$t('writer.work.permission.noAddPermission'));
 				return;
 			}
 			let _this = this;
@@ -1317,27 +1323,27 @@ export default {
 			if (type != undefined) {
 				let typeInfo = {
 					"richtext": {
-						title: "新章节",
+						title: this.$t('writer.work.defaults.newChapter'),
 						content: "[]",
-						name: "章节",
+						name: this.$t('writer.work.defaults.typeChapter'),
 						is_draft: 1
 					},
 					"spliter": {
-						title: "新分卷",
+						title: this.$t('writer.work.defaults.newVolume'),
 						content: "",
-						name: "分卷",
+						name: this.$t('writer.work.defaults.typeVolume'),
 						is_draft: 0
 					},
 					"worldOutline": {
-						title: "新世界大纲",
-						content: "新世界大纲",
-						name: "世界大纲",
+						title: this.$t('writer.work.defaults.newWorldOutline'),
+						content: this.$t('writer.work.defaults.newWorldOutline'),
+						name: this.$t('writer.work.defaults.typeWorldOutline'),
 						is_draft: 1
 					},
 					"worldVocabulary": {
-						title: "新世界词条",
+						title: this.$t('writer.work.defaults.newWorldVocabulary'),
 						content: "{}",
-						name: "世界词条",
+						name: this.$t('writer.work.defaults.typeWorldVocabulary'),
 						is_draft: 1
 					},
 				}
@@ -1360,7 +1366,7 @@ export default {
 					)
 						.then(function (response) {
 							uni.showToast({
-								title: typeInfo[type].name + "新增成功",
+								title: _this.$t('writer.work.addSuccess', { name: typeInfo[type].name }),
 								icon: 'none',
 								duration: 2000
 							});
@@ -1370,7 +1376,7 @@ export default {
 							if (error) {
 								const msg = error.response && error.response.data && error.response.data.msg;
 								uni.showToast({
-									title: msg || typeInfo[type].name + "新增失败",
+									title: msg || _this.$t('writer.work.addFailed', { name: typeInfo[type].name }),
 									icon: 'none',
 									duration: 2500
 								});
@@ -1385,14 +1391,14 @@ export default {
 		},
 		deleteArticle(article_id) {
 			if (!this.canDeleteArticle) {
-				this.showPermissionDenied("你没有删除章节权限");
+				this.showPermissionDenied(this.$t('writer.work.permission.noDeletePermission'));
 				return;
 			}
 			let tk = this.getAuthToken();
 			let _this = this;
 			uni.showModal({
-				title: '提示',
-				content: '删除后，可通过章节回收站找回。',
+				title: _this.$t('common.prompt'),
+				content: _this.$t('writer.work.deleteConfirm'),
 				confirmColor: "#EA7034",
 				success: function (res) {
 					if (res.confirm) {
@@ -1409,7 +1415,7 @@ export default {
 						)
 							.then(function (response) {
 								uni.showToast({
-									title: "已删除章节",
+									title: _this.$t('writer.work.chapterDeleted'),
 									icon: 'none',
 									duration: 2000
 								});
@@ -1419,7 +1425,7 @@ export default {
 								console.log(error);
 								if (error) {
 									uni.showToast({
-										title: "章节删除失败",
+										title: _this.$t('writer.work.chapterDeleteFailed'),
 										icon: 'none',
 										duration: 2000
 									});
@@ -1436,7 +1442,7 @@ export default {
 		},
 		changeSpliterName(id, content) {
 			if (!this.canSortArticle) {
-				this.showPermissionDenied("你没有章节排序权限");
+				this.showPermissionDenied(this.$t('writer.work.permission.noSortPermission'));
 				return;
 			}
 			let tk = this.getAuthToken();
@@ -1457,7 +1463,7 @@ export default {
 			)
 				.then(function (response) {
 					uni.showToast({
-						title: "修改成功",
+						title: _this.$t('writer.work.updateSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -1467,7 +1473,7 @@ export default {
 					//console.log(error);
 					if (error) {
 						uni.showToast({
-							title: "修改失败，请重试",
+							title: _this.$t('writer.work.updateFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -1479,7 +1485,7 @@ export default {
 			// 原有的跳转逻辑
 			if (item.article_type == "spliter") {
 				if (!this.canSortArticle) {
-					this.showPermissionDenied("你没有章节排序权限");
+					this.showPermissionDenied(this.$t('writer.work.permission.noSortPermission'));
 					return;
 				}
 				this.splitterRenameTargetId = item.article_id;
@@ -1488,7 +1494,7 @@ export default {
 					this.$refs.splitterRenamePopup.open();
 				});
 			} else if (!this.canEditDraft) {
-				this.showPermissionDenied("你没有编辑章节权限");
+				this.showPermissionDenied(this.$t('writer.work.permission.noEditPermission'));
 				return;
 			} else if (item.article_type == "worldVocabulary") {
 				uni.navigateTo({
@@ -1520,7 +1526,7 @@ export default {
 			if (targetId == null) return;
 			if (!nextName) {
 				uni.showToast({
-					title: "分卷名不能为空",
+					title: this.$t('writer.work.volumeNameRequired'),
 					icon: "none",
 					duration: 2000
 				});
@@ -1539,7 +1545,7 @@ export default {
 		refreshBookPart() {
 			this.bookPart.parts = [{
 				id: -1,
-				name: "全部分卷"
+				name: ""
 			}];
 			for (let item of this.articles) {
 				if (item.article_type == "spliter") {
@@ -1560,10 +1566,10 @@ export default {
 				if (exist) {
 					this.changeBookPart(this.bookPart.currentPart)
 				} else {
-					this.changeBookPart({ id: -1, name: "全部分卷" })
+					this.changeBookPart({ id: -1, name: "" })
 				}
 			} else {
-				this.changeBookPart({ id: -1, name: "全部分卷" })
+				this.changeBookPart({ id: -1, name: "" })
 			}
 		},
 		exportNovel() {
@@ -1574,13 +1580,13 @@ export default {
 		},
 		exportSimple() {
 			uni.navigateTo({
-				url: '../apps/h5webview?url=https://m.loghome.ink/subtasks/novel-export.html?novel_id=' + this.uid + '&title=仅打包导出作品'
+				url: '../apps/h5webview?url=https://m.loghome.ink/subtasks/novel-export.html?novel_id=' + this.uid + '&title=' + encodeURIComponent(this.$t('writer.work.export.packageTitle'))
 			});
 			this.cancelExport();
 		},
 		exportAdvanced() {
 			uni.navigateTo({
-				url: '../apps/h5webview?url=https://m.loghome.ink/subtasks/novel-export-vip.html?novel_id=' + this.uid + '&title=导出电子书'
+				url: '../apps/h5webview?url=https://m.loghome.ink/subtasks/novel-export-vip.html?novel_id=' + this.uid + '&title=' + encodeURIComponent(this.$t('writer.work.export.ebookTitle'))
 			});
 			this.cancelExport();
 		},
@@ -1916,7 +1922,7 @@ export default {
 				seen.add(uniqueKey);
 				editors.push({
 					user_id: editorId || null,
-					name: editorName || "未知作者",
+					name: editorName || this.$t('writer.work.unknownAuthor'),
 				});
 			}
 
@@ -1934,12 +1940,12 @@ export default {
 				return "";
 			}
 			if (names.length === 1) {
-				return `上次后${names[0]}编辑过`;
+				return this.$t('writer.work.remoteEditSummaryOne', { name: names[0] });
 			}
 			if (names.length === 2) {
-				return `上次后${names[0]}、${names[1]}编辑过`;
+				return this.$t('writer.work.remoteEditSummaryTwo', { a: names[0], b: names[1] });
 			}
-			return `上次后${names[0]}等${names.length}人编辑过`;
+			return this.$t('writer.work.remoteEditSummaryMany', { name: names[0], count: names.length });
 		},
 		countText(content) {
 			let textCount = 0;
@@ -2159,62 +2165,63 @@ export default {
 	onNavigationBarButtonTap(e) {
 		let _this = this;
 		if (e.text == "\ue790 ") {
-			const itemList = [];
+			const actions = [];
 			if (this.canSortArticle) {
-				itemList.push('章节排序');
+				actions.push({ key: 'sort', label: _this.$t('writer.work.menu.sortChapters') });
 			}
 			if (this.canDeleteArticle) {
-				itemList.push('章节回收站');
+				actions.push({ key: 'recycleBin', label: _this.$t('writer.work.menu.recycleBin') });
 			}
 			if (this.canPublishArticle) {
-				itemList.push('定时发布管理');
+				actions.push({ key: 'scheduledTasks', label: _this.$t('writer.work.menu.scheduledTasks') });
 			}
 			if (this.novel.novel_type == "world") {
-				itemList.push('查看世界');
-				itemList.push(this.isOwner ? '世界设置' : '协作设置');
+				actions.push({ key: 'viewWorld', label: _this.$t('writer.work.menu.viewWorld') });
+				actions.push({ key: 'settings', label: this.isOwner ? _this.$t('writer.work.menu.worldSettings') : _this.$t('writer.work.menu.collaborationSettings') });
 			} else {
-				itemList.push('阅读');
-				itemList.push(this.isOwner ? '作品设置' : '协作设置');
+				actions.push({ key: 'read', label: _this.$t('writer.work.menu.read') });
+				actions.push({ key: 'settings', label: this.isOwner ? _this.$t('writer.work.menu.workSettings') : _this.$t('writer.work.menu.collaborationSettings') });
 				if (this.isOwner) {
-					itemList.push('导出作品');
+					actions.push({ key: 'export', label: _this.$t('writer.work.menu.exportWork') });
 				}
 			}
 
 			uni.showActionSheet({
-				itemList,
+				itemList: actions.map((action) => action.label),
 				success: function (res) {
-					const item = itemList[res.tapIndex];
-					if (item == '章节排序') {
+					const action = actions[res.tapIndex];
+					if (!action) return;
+					if (action.key == 'sort') {
 						uni.navigateTo({
 							url: "./sortArticles?id=" + _this.uid
 						})
 					}
-					if (item == '章节回收站') {
+					if (action.key == 'recycleBin') {
 						uni.navigateTo({
 							url: "./articlesDustbin?id=" + _this.uid
 						})
 					}
-					if (item == '定时发布管理') {
+					if (action.key == 'scheduledTasks') {
 						uni.navigateTo({
 							url: "./scheduledTasks?id=" + _this.uid
 						})
 					}
-					if (item == '查看世界') {
+					if (action.key == 'viewWorld') {
 						uni.navigateTo({
 							url: "../worlds/worldPage?id=" + _this.worldId
 						})
 					}
-					if (item == '世界设置' || item == '作品设置' || item == '协作设置') {
+					if (action.key == 'settings') {
 						uni.navigateTo({
 							url: "./essaySet?id=" + _this.uid
 						})
 					}
-					if (item == '阅读') {
+					if (action.key == 'read') {
 						uni.navigateTo({
 							url: "../readers/bookInfo?id=" + _this.uid
 						})
 					}
-					if (item == '导出作品') {
+					if (action.key == 'export') {
 						_this.exportNovel();
 					}
 				},
@@ -2231,7 +2238,7 @@ export default {
 				// 仅在当前页面时，才设置标题
 				if (this.$router.history.current.meta.name == "pages-writers-allArticles") {
 					uni.setNavigationBarTitle({
-						title: _this.bookPart.currentPart.name + (_this.bookPart.btnOpened ? " ▴" : " ▾")
+						title: _this.currentPartDisplayName + (_this.bookPart.btnOpened ? " ▴" : " ▾")
 					});
 				}
 			},

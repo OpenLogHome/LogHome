@@ -7,17 +7,17 @@
 						<template v-slot:title>
 							<div class="title">{{item.article_title}}</div>
 							<div class="miniTitle">
-								{{item.text_count}}字 {{new Date(item.time).toLocaleString()}}
+								{{ $t('writer.work.common.charCount', { count: item.text_count }) }} {{new Date(item.time).toLocaleString()}}
 							</div>
 						</template>
 						<view class="menuContent">
 							<div class="subTitle" @click="restoreArticle(index)">
 								<uni-icons type="compose" size="20" color="rgb(113, 52, 24)"/>
-								<span>复制到剪贴板</span>
+								<span>{{ $t('writer.work.backup.copyToClipboard') }}</span>
 							</div>
 							<div class="subTitle" @click="deleteArticle(index)">
 								<uni-icons type="trash" size="20" color="rgb(113, 52, 24)"/>
-								<span>永久删除</span>
+								<span>{{ $t('writer.work.backup.deleteForever') }}</span>
 							</div>
 							<div class="content_view">
 								{{item.article_content}}
@@ -48,7 +48,7 @@ export default{
 	},
 	onLoad(option){
 		uni.showLoading({
-			title: '努力加载中'
+			title: this.$t('common.loading')
 		});
 		if(JSON.stringify(option) == "{}"){
 			uni.showToast({
@@ -135,8 +135,8 @@ export default{
 			let _this = this;
 
 			uni.showModal({
-				title: '提示',
-				content: '删除后将无法找回，确定继续吗？',
+				title: _this.$t('common.prompt'),
+				content: _this.$t('writer.work.backup.deleteConfirm'),
 				confirmColor:"#EA7034",
 				success: function (res) {
 
@@ -162,7 +162,7 @@ export default{
 
 						request.onsuccess = function (event) {
 							uni.showToast({
-								title: "删除成功",
+								title: _this.$t('common.deleteSuccess'),
 								icon: 'none',
 								duration: 2000
 							});

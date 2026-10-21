@@ -6,7 +6,7 @@
 				clearable
 				prefix-icon="el-icon-search"
 				maxlength="60"
-				placeholder="搜索整本小说"
+				:placeholder="$t('reader.book.searchWholeNovel')"
 				@input="handleSearchInput"
 				@clear="clearSearch"
 			></el-input>
@@ -27,7 +27,7 @@
 				</div>
 				<div class="searchStateCard empty" v-else-if="searchResults.length === 0">
 					<i class="el-icon-document"></i>
-					<span>没有找到已发布章节中的相关内容，试试更短的关键词。</span>
+					<span>{{ $t('reader.book.searchEmptyHint') }}</span>
 				</div>
 				<div v-else class="searchResultList">
 					<div
@@ -59,7 +59,7 @@
 			</div>
 			<div v-else class="volumeList">
 				<div class="volume" v-for="(volume, vIndex) in volumeList" :key="vIndex">
-					<div class="volume-header" @click="toggleVolume(vIndex)" v-if="volumeList.length > 1 || volume.title !== '正文'">
+					<div class="volume-header" @click="toggleVolume(vIndex)" v-if="volumeList.length > 1 || !volume.isDefault">
 						<div class="volume-title">{{ volume.title }}</div>
 						<uni-icons :type="volume.isExpanded ? 'bottom' : 'right'" size="16" color="#dddddd"></uni-icons>
 					</div>
@@ -103,7 +103,7 @@ export default {
 			searchResults: [],
 			searchLoading: false,
 			searchError: "",
-			searchStatusText: "正在搜索内容...",
+			searchStatusText: "",
 			searchDocumentMap: {},
 			searchPreparedNovelId: 0,
 			searchMaterialsPromise: null,
@@ -133,7 +133,7 @@ export default {
 			return this.normalizedSearchQuery.length > 0;
 		},
 		searchSummaryText() {
-			return `找到 ${this.searchResults.length} 条结果`;
+			return this.$t('reader.book.searchResultCount', { count: this.searchResults.length });
 		},
 	},
 	watch: {
@@ -170,7 +170,7 @@ export default {
 	methods: {
 		async loadArticles(uid) {
 			uni.showLoading({
-				title: "努力加载中",
+				title: this.$t('reader.book.loading'),
 			});
 			this.uid = Number(uid || 0);
 			this.resetSearchCache();
@@ -207,7 +207,7 @@ export default {
 			}
 			this.searchLoading = false;
 			this.searchError = "";
-			this.searchStatusText = "正在搜索内容...";
+			this.searchStatusText = this.$t('reader.book.searchingContent');
 			this.searchResults = [];
 			this.searchDocumentMap = {};
 			this.searchPreparedNovelId = 0;
@@ -230,7 +230,8 @@ export default {
 		processVolumes() {
 			const volumes = [];
 			let currentVolume = {
-				title: "正文",
+				title: this.$t('reader.book.defaultVolume'),
+				isDefault: true,
 				isExpanded: true,
 				chapters: [],
 			};
@@ -243,13 +244,14 @@ export default {
 					}
 					currentVolume = {
 						title: item.title,
+						isDefault: false,
 						isExpanded: true,
 						chapters: [],
 					};
 					hasSpliters = true;
 				} else {
 					item.originalIndex = index;
-					item.volumeTitle = currentVolume.title;
+					item.volumeTitle = currentVolume.isDefault ? "" : currentVolume.title;
 					currentVolume.chapters.push(item);
 				}
 			});
@@ -314,7 +316,7 @@ export default {
 				this.searchRequestId += 1;
 				this.searchLoading = false;
 				this.searchError = "";
-				this.searchStatusText = "正在搜索内容...";
+				this.searchStatusText = this.$t('reader.book.searchingContent');
 				this.searchResults = [];
 				return;
 			}
@@ -340,21 +342,21 @@ export default {
 			const requestId = ++this.searchRequestId;
 			this.searchLoading = true;
 			this.searchError = "";
-			this.searchStatusText = "正在搜索内容...";
+			this.searchStatusText = this.$t('reader.book.searchingContent');
 
 			try {
 				await this.ensureSearchMaterials();
 				if (requestId !== this.searchRequestId) {
 					return;
 				}
-				this.searchStatusText = "正在搜索内容...";
+				this.searchStatusText = this.$t('reader.book.searchingContent');
 				this.searchResults = this.buildSearchResults(query);
 			} catch (error) {
 				if (requestId !== this.searchRequestId) {
 					return;
 				}
 				this.searchResults = [];
-				this.searchError = "搜索内容加载失败，请稍后重试";
+				this.searchError = this.$t('reader.book.searchFailed');
 			} finally {
 				if (requestId === this.searchRequestId) {
 					this.searchLoading = false;
@@ -386,7 +388,7 @@ export default {
 			}
 
 			let loadedCount = 0;
-			this.searchStatusText = `正在加载章节内容（0/${total}）...`;
+			this.searchStatusText = this.$t('reader.book.searchLoadingProgress', { loaded: 0, total });
 
 			for (let index = 0; index < searchableArticles.length; index += SEARCH_BATCH_SIZE) {
 				const batch = searchableArticles.slice(index, index + SEARCH_BATCH_SIZE);
@@ -421,7 +423,7 @@ export default {
 					}
 
 					loadedCount += 1;
-					this.searchStatusText = `正在加载章节内容（${loadedCount}/${total}）...`;
+					this.searchStatusText = this.$t('reader.book.searchLoadingProgress', { loaded: loadedCount, total });
 				});
 			}
 
@@ -610,7 +612,7 @@ export default {
 			const previewStartIndex = titleHit && !bodyHit ? 0 : Math.max(firstParagraphIndex, 0);
 			const previewParagraphs = doc.paragraphs.length > 0
 				? doc.paragraphs.slice(previewStartIndex, previewStartIndex + 3)
-				: ["暂无正文内容"];
+				: [this.$t('reader.book.noContentPreview')];
 			const previewText = previewParagraphs.join("\n");
 
 			return {
@@ -622,8 +624,12 @@ export default {
 				typeLabel: this.getArticleTypeLabel(doc.articleType),
 				chapterLabel: this.getArticleChapterLabel(doc.article),
 				volumeLabel: this.getVolumeLabel(doc.article),
-				matchLabel: titleHit && bodyHit ? "标题/正文命中" : titleHit ? "标题命中" : "正文命中",
-				highlightedTitle: this.highlightText(doc.title || "未命名章节", keywords),
+				matchLabel: titleHit && bodyHit
+					? this.$t('reader.book.matchTitleBody')
+					: titleHit
+						? this.$t('reader.book.matchTitle')
+						: this.$t('reader.book.matchBody'),
+				highlightedTitle: this.highlightText(doc.title || this.$t('reader.book.untitledChapter'), keywords),
 				highlightedPreview: this.highlightText(previewText, keywords),
 				score: (titleHit ? 300 : 0) + (bodyHit ? 80 : 0) + titleHitCount * 25 + Math.max(0, 10 - previewStartIndex),
 			};
@@ -639,35 +645,31 @@ export default {
 		},
 		getArticleTypeLabel(articleType) {
 			if (articleType === "worldOutline") {
-				return "大纲";
+				return this.$t('reader.book.typeOutline');
 			}
 			if (articleType === "worldVocabulary") {
-				return "词条";
+				return this.$t('reader.book.typeVocabulary');
 			}
 			if (articleType === "richtext") {
-				return "章节";
+				return this.$t('reader.book.typeChapter');
 			}
 			return "";
 		},
 		getArticleChapterLabel(article) {
 			const chapter = Number(article && article.article_chapter ? article.article_chapter : 0);
 			if (article.article_type === "richtext") {
-				return `第${chapter}章`;
+				return this.$t('reader.book.chapterLabel', { chapter });
 			}
 			if (article.article_type === "worldOutline") {
-				return `大纲 · 序号 ${chapter}`;
+				return this.$t('reader.book.outlineIndexLabel', { chapter });
 			}
 			if (article.article_type === "worldVocabulary") {
-				return `词条 · 序号 ${chapter}`;
+				return this.$t('reader.book.vocabularyIndexLabel', { chapter });
 			}
-			return `序号 ${chapter}`;
+			return this.$t('reader.book.indexLabel', { chapter });
 		},
 		getVolumeLabel(article) {
-			const volumeTitle = String(article && article.volumeTitle ? article.volumeTitle : "");
-			if (!volumeTitle || volumeTitle === "正文") {
-				return "";
-			}
-			return volumeTitle;
+			return String(article && article.volumeTitle ? article.volumeTitle : "");
 		},
 		escapeHtml(text) {
 			return String(text || "")

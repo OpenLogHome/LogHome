@@ -10,7 +10,7 @@
         <button class="backButton" @click="goBack">
           <i class="el-icon-arrow-left"></i>
         </button>
-        <div class="pageTitle">编辑器快捷设置</div>
+        <div class="pageTitle">{{ $t('writer.chapter.settings.title') }}</div>
         <div class="headerSpacer"></div>
       </div>
       <div class="tabRow">
@@ -19,7 +19,7 @@
           :class="{ active: activeTab === 'nav' }"
           @click="activeTab = 'nav'"
         >
-          <span class="tabLabel">顶部导航</span>
+          <span class="tabLabel">{{ $t('writer.chapter.settings.tabNav') }}</span>
           <span class="tabIndicator"></span>
         </button>
         <button
@@ -27,7 +27,7 @@
           :class="{ active: activeTab === 'keyboard' }"
           @click="activeTab = 'keyboard'"
         >
-          <span class="tabLabel">键盘工具</span>
+          <span class="tabLabel">{{ $t('writer.chapter.settings.tabKeyboard') }}</span>
           <span class="tabIndicator"></span>
         </button>
         <button
@@ -35,7 +35,7 @@
           :class="{ active: activeTab === 'capsule' }"
           @click="activeTab = 'capsule'"
         >
-          <span class="tabLabel">悬浮胶囊</span>
+          <span class="tabLabel">{{ $t('writer.chapter.settings.tabCapsule') }}</span>
           <span class="tabIndicator"></span>
         </button>
       </div>
@@ -99,7 +99,7 @@
             <i v-else class="keyboardPreviewElementIcon" :class="item.iconClass"></i>
           </button>
           <div v-if="!selectedKeyboardTools.length" class="emptyKeyboardPreview">
-            暂无键盘工具
+            {{ $t('writer.chapter.settings.emptyKeyboard') }}
           </div>
         </div>
       </div>
@@ -116,18 +116,18 @@
             <span>{{ capsule.previewText }}</span>
           </div>
           <div v-if="!selectedStatusCapsules.length" class="emptyKeyboardPreview">
-            暂无悬浮胶囊
+            {{ $t('writer.chapter.settings.emptyCapsule') }}
           </div>
         </div>
       </div>
 
       <div class="sectionMeta">
         <div>
-          已添加
+          {{ $t('writer.chapter.settings.added') }}
           <span class="countText">{{ visibleSelectedTools.length }}/{{ selectedLimitText }}</span>
-          ，拖动排序
+          {{ $t('writer.chapter.settings.dragToSort') }}
         </div>
-        <button class="restoreButton" @click="resetCurrentTab">恢复默认</button>
+        <button class="restoreButton" @click="resetCurrentTab">{{ $t('writer.chapter.settings.restoreDefault') }}</button>
       </div>
 
       <div
@@ -183,12 +183,12 @@
           <div class="toolLabel">{{ getToolLabel(tool) }}</div>
         </div>
         <div v-if="!visibleSelectedTools.length" class="emptySelectedText">
-          点击下方工具添加到快捷栏
+          {{ $t('writer.chapter.settings.emptySelected') }}
         </div>
       </div>
 
       <template v-if="activeTab === 'nav'">
-        <div class="sectionTitle">点击添加导航栏功能</div>
+        <div class="sectionTitle">{{ $t('writer.chapter.settings.addNavTools') }}</div>
         <div class="allToolsGrid">
           <button
             v-for="tool in availableTools"
@@ -218,7 +218,7 @@
       </template>
 
       <template v-else-if="activeTab === 'keyboard'">
-        <div class="sectionTitle">功能</div>
+        <div class="sectionTitle">{{ $t('writer.chapter.settings.functions') }}</div>
         <div class="allToolsGrid">
           <button
             v-for="tool in keyboardFunctionTools"
@@ -246,7 +246,7 @@
           </button>
         </div>
 
-        <div class="sectionTitle">快捷输入</div>
+        <div class="sectionTitle">{{ $t('writer.chapter.settings.quickInput') }}</div>
         <div class="allToolsGrid">
           <button
             v-for="tool in keyboardQuickInputTools"
@@ -276,13 +276,13 @@
               </span>
               <i v-else class="toolIcon" :class="tool.iconClass"></i>
             </div>
-            <div class="toolLabel">{{ tool.label }}</div>
+            <div class="toolLabel">{{ getToolLabel(tool) }}</div>
           </button>
         </div>
       </template>
 
       <template v-else>
-        <div class="sectionTitle">点击添加悬浮胶囊</div>
+        <div class="sectionTitle">{{ $t('writer.chapter.settings.addCapsules') }}</div>
         <div class="allToolsGrid">
           <button
             v-for="tool in allStatusCapsules"
@@ -336,7 +336,7 @@
       <view class="quickInputDrawer">
         <div class="drawerHeader">
           <div class="drawerTitle">
-            {{ editingQuickInputId ? "编辑快捷输入" : "新建快捷输入" }}
+            {{ editingQuickInputId ? $t('writer.chapter.settings.editQuickInput') : $t('writer.chapter.settings.newQuickInput') }}
           </div>
           <button class="drawerClose" @click="closeQuickInputDrawer">
             <i class="el-icon-close"></i>
@@ -350,7 +350,7 @@
             tabindex="0"
             @click="quickInputDraft.type = 'punctuation'"
           >
-            标点输入
+            {{ $t('writer.chapter.settings.punctuationInput') }}
           </div>
           <div
             class="inputTypeOption"
@@ -359,24 +359,24 @@
             tabindex="0"
             @click="quickInputDraft.type = 'word'"
           >
-            词汇输入
+            {{ $t('writer.chapter.settings.wordInput') }}
           </div>
         </div>
         <input
           class="drawerInput"
           v-model="quickInputDraft.label"
-          placeholder="显示名称，留空则使用内容"
+          :placeholder="$t('writer.chapter.settings.labelPlaceholder')"
         />
         <input
           class="drawerInput"
           v-model="quickInputDraft.value"
-          placeholder="点击后插入的内容"
+          :placeholder="$t('writer.chapter.settings.valuePlaceholder')"
         />
         <div
           v-if="quickInputDraft.type === 'punctuation'"
           class="drawerToggleRow"
         >
-          <span>成对标点</span>
+          <span>{{ $t('writer.chapter.settings.pairedPunctuation') }}</span>
           <button
             class="drawerSwitch"
             :class="{ active: quickInputDraft.isPair }"
@@ -391,7 +391,7 @@
           tabindex="0"
           @click="saveQuickInput"
         >
-          {{ editingQuickInputId ? "保存修改" : "保存到备选区" }}
+          {{ editingQuickInputId ? $t('writer.chapter.settings.saveChanges') : $t('writer.chapter.settings.saveToShortcut') }}
         </div>
       </view>
     </uni-popup>
@@ -528,6 +528,47 @@ const STATUS_CAPSULE_DEFINITIONS = {
     label: "码字速度",
     iconClass: "el-icon-odometer",
     previewText: "36 字/分钟",
+  },
+};
+
+const TOOL_LABEL_KEYS = {
+  upload: "writer.chapter.tools.upload",
+  format: "writer.chapter.tools.format",
+  findReplace: "writer.chapter.tools.findReplace",
+  undo: "writer.chapter.tools.undo",
+  redo: "writer.chapter.tools.redo",
+  publish: "writer.chapter.tools.publish",
+  preview: "writer.chapter.tools.preview",
+  writerAi: "writer.chapter.tools.writerAi",
+  settings: "writer.chapter.tools.settings",
+  shortcutSettings: "writer.chapter.tools.shortcutSettings",
+  createQuickInput: "writer.chapter.tools.createQuickInput",
+};
+
+const QUICK_INPUT_LABEL_KEYS = {
+  indent: "writer.chapter.quick.indent",
+  comma: "writer.chapter.quick.comma",
+  period: "writer.chapter.quick.period",
+  pause: "writer.chapter.quick.pause",
+  exclamation: "writer.chapter.quick.exclamation",
+  question: "writer.chapter.quick.question",
+  colon: "writer.chapter.quick.colon",
+  quote: "writer.chapter.quick.quote",
+  "book-title": "writer.chapter.quick.bookTitle",
+};
+
+const STATUS_CAPSULE_KEYS = {
+  wordCount: {
+    label: "writer.chapter.capsule.wordCountLabel",
+    previewText: "writer.chapter.capsule.wordCountPreview",
+  },
+  sync: {
+    label: "writer.chapter.capsule.syncLabel",
+    previewText: "writer.chapter.capsule.syncPreview",
+  },
+  writingSpeed: {
+    label: "writer.chapter.capsule.writingSpeedLabel",
+    previewText: "writer.chapter.capsule.writingSpeedPreview",
   },
 };
 const DEFAULT_STATUS_CAPSULE_IDS = ["wordCount", "sync"];
@@ -817,7 +858,7 @@ export default {
     },
     allNavTools() {
       return normalizeToolIds(this.writerSettings.navToolIds, DEFAULT_NAV_TOOL_IDS)
-        .map((id) => ({ ...TOOL_DEFINITIONS[id] }));
+        .map((id) => this.getToolDefinitionDisplay(TOOL_DEFINITIONS[id]));
     },
     navShortcutLimit() {
       return calculateNavShortcutLimit(this.viewportWidth);
@@ -866,7 +907,9 @@ export default {
         .filter(Boolean);
     },
     allStatusCapsules() {
-      return Object.values(STATUS_CAPSULE_DEFINITIONS).map((item) => ({ ...item }));
+      return Object.values(STATUS_CAPSULE_DEFINITIONS).map((item) =>
+        this.getStatusCapsuleDisplay(item)
+      );
     },
     selectedStatusCapsuleIds() {
       return normalizeStatusCapsuleIds(this.writerSettings.statusCapsuleIds);
@@ -875,7 +918,7 @@ export default {
       return this.selectedStatusCapsuleIds
         .map((id) => STATUS_CAPSULE_DEFINITIONS[id])
         .filter(Boolean)
-        .map((item) => ({ ...item }));
+        .map((item) => this.getStatusCapsuleDisplay(item));
     },
     selectedTools() {
       if (this.activeTab === "nav") return this.selectedNavTools;
@@ -898,7 +941,7 @@ export default {
     },
     selectedLimitText() {
       if (this.activeTab === "nav") return String(this.navShortcutLimit);
-      if (this.activeTab === "keyboard") return "不限";
+      if (this.activeTab === "keyboard") return this.$t("writer.chapter.settings.unlimited");
       return String(MAX_STATUS_CAPSULES);
     },
     availableTools() {
@@ -912,7 +955,7 @@ export default {
     },
     keyboardQuickInputTools() {
       return [
-        QUICK_INPUT_CREATOR_TOOL,
+        this.getToolDefinitionDisplay(QUICK_INPUT_CREATOR_TOOL),
         ...this.quickInputDefinitions,
       ];
     },
@@ -1025,10 +1068,14 @@ export default {
         uni.showToast({
           title:
             this.activeTab === "nav"
-              ? `顶部导航最多添加${this.navShortcutLimit}个`
+              ? this.$t("writer.chapter.settings.limitNav", {
+                  count: this.navShortcutLimit,
+                })
               : this.activeTab === "capsule"
-                ? `最多添加${MAX_STATUS_CAPSULES}个悬浮胶囊`
-                : "键盘工具已达上限",
+                ? this.$t("writer.chapter.settings.limitCapsule", {
+                    count: MAX_STATUS_CAPSULES,
+                  })
+                : this.$t("writer.chapter.settings.limitKeyboard"),
           icon: "none",
           duration: 1600,
         });
@@ -1071,7 +1118,7 @@ export default {
           return;
         }
         uni.showActionSheet({
-          itemList: ["编辑", "删除"],
+          itemList: [this.$t("common.edit"), this.$t("common.delete")],
           success: (result) => {
             const tapIndex = Number(result && result.tapIndex);
             if (tapIndex === 0) {
@@ -1091,9 +1138,11 @@ export default {
         return;
       }
       uni.showModal({
-        title: "删除快捷输入",
-        content: `确认删除“${this.getToolLabel(tool)}”？`,
-        confirmText: "删除",
+        title: this.$t("writer.chapter.settings.deleteQuickInputTitle"),
+        content: this.$t("writer.chapter.settings.deleteQuickInputContent", {
+          name: this.getToolLabel(tool),
+        }),
+        confirmText: this.$t("common.delete"),
         confirmColor: "#d93026",
         success: (result) => {
           if (result && result.confirm) {
@@ -1395,7 +1444,7 @@ export default {
       const value = String(this.quickInputDraft.value || "");
       if (!value) {
         uni.showToast({
-          title: "请输入快捷内容",
+          title: this.$t("writer.chapter.settings.emptyValue"),
           icon: "none",
           duration: 1600,
         });
@@ -1432,12 +1481,38 @@ export default {
       if (value.trim()) return value;
       return String((item && item.label) || "");
     },
+    getToolDefinitionDisplay(tool) {
+      if (!tool) return tool;
+      const labelKey = TOOL_LABEL_KEYS[tool.id];
+      return {
+        ...tool,
+        label: labelKey ? this.$t(labelKey) : tool.label,
+      };
+    },
+    getStatusCapsuleDisplay(item) {
+      const keys = STATUS_CAPSULE_KEYS[item.id];
+      if (!keys) return { ...item };
+      return {
+        ...item,
+        label: this.$t(keys.label),
+        previewText: this.$t(keys.previewText),
+      };
+    },
     getToolLabel(tool) {
       if (!tool) return "";
       if (tool.isQuickInput) {
+        const defaultItem = DEFAULT_QUICK_INPUT_MAP[tool.id];
+        const isUntouchedDefault =
+          defaultItem &&
+          tool.type === defaultItem.type &&
+          String(tool.label || "") === defaultItem.label;
+        if (isUntouchedDefault && QUICK_INPUT_LABEL_KEYS[tool.id]) {
+          return this.$t(QUICK_INPUT_LABEL_KEYS[tool.id]);
+        }
         return String(tool.label || tool.value || "");
       }
-      return tool.label;
+      const labelKey = TOOL_LABEL_KEYS[tool.id];
+      return labelKey ? this.$t(labelKey) : tool.label;
     },
   },
 };

@@ -6,8 +6,8 @@
 				<log-image :src="content.pic" alt="" v-if="content.pic != undefined" />
 			</div>
 			<div class="right">
-				<div class="tit">词条名称</div>
-				<input class="input" placeholder="请输入词条名称" v-model="article.title" @input="handleTitleInput"
+				<div class="tit">{{ $t('writer.world.entryName') }}</div>
+				<input class="input" :placeholder="$t('writer.world.entryNamePlaceholder')" v-model="article.title" @input="handleTitleInput"
 					style="fontSize: 50rpx" />
 			</div>
 
@@ -20,20 +20,20 @@
 			<view class="settingBar">
 				<div class="line">
 					<div class="button blue theme" @click="changeTheme('blue')"
-						:class="{'selected':writerSettings.theme == 'blue'}">蓝</div>
+						:class="{'selected':writerSettings.theme == 'blue'}">{{ $t('writer.world.themeBlue') }}</div>
 					<div class="button yellow theme" @click="changeTheme('yellow')"
-						:class="{'selected':writerSettings.theme == 'yellow'}">黄</div>
+						:class="{'selected':writerSettings.theme == 'yellow'}">{{ $t('writer.world.themeYellow') }}</div>
 					<div class="button green theme" @click="changeTheme('green')"
-						:class="{'selected':writerSettings.theme == 'green'}">绿</div>
+						:class="{'selected':writerSettings.theme == 'green'}">{{ $t('writer.world.themeGreen') }}</div>
 					<div class="button purple theme" @click="changeTheme('purple')"
-						:class="{'selected':writerSettings.theme == 'purple'}">紫</div>
+						:class="{'selected':writerSettings.theme == 'purple'}">{{ $t('writer.world.themePurple') }}</div>
 					<div class="button black theme" @click="changeTheme('black')"
-						:class="{'selected':writerSettings.theme == 'black'}">黑</div>
+						:class="{'selected':writerSettings.theme == 'black'}">{{ $t('writer.world.themeBlack') }}</div>
 					<div class="button white theme" @click="changeTheme('white')"
-						:class="{'selected':writerSettings.theme == 'white'}">白</div>
+						:class="{'selected':writerSettings.theme == 'white'}">{{ $t('writer.world.themeWhite') }}</div>
 				</div>
 				<div class="lrLine" style="margin-top:40rpx;">
-					<div class="left">源代码模式（非高级用户请勿使用）</div>
+					<div class="left">{{ $t('writer.world.codeMode') }}</div>
 					<div class="right">
 						<el-switch v-model="writerSettings.codeMode" active-color="#ff4949" inactive-color="#13ce66"
 							@change="changeViewMode">
@@ -44,13 +44,13 @@
 		</uni-popup>
 		<div class="vocabularyEditor" v-show="!writerSettings.codeMode" :class="writerSettings.theme">
 			<div class="tit">
-				词条描述
+				{{ $t('writer.world.entryDescription') }}
 			</div>
-			<el-input type="textarea" placeholder="请输入内容" v-model="content.desc" maxlength="50000" show-word-limit
+			<el-input type="textarea" :placeholder="$t('common.inputContent')" v-model="content.desc" maxlength="50000" show-word-limit
 				style="margin-bottom: 20rpx;" :autosize="{ minRows: 5}">
 			</el-input>
 			<div class="tit">
-				词条属性
+				{{ $t('writer.world.entryAttributes') }}
 			</div>
 			<div class="attrs">
 				<el-card class="box-card" v-for="(item, index) in content.attributes" style="margin-bottom: 20rpx;">
@@ -71,7 +71,7 @@
 			</div>
 			<div class="enterButton" @click="vocabAttr.id = -1; vocabAttrVisible = true">+</div>
 			<div class="tit">
-				词条关系
+				{{ $t('writer.world.entryRelations') }}
 			</div>
 			<div class="attrs">
 				<el-card class="box-card" v-for="(item, index) in content.relations" style="margin-bottom: 20rpx;">
@@ -90,15 +90,15 @@
 			
 				<div v-if="suggestions.length > 0">
 					<div class="tit" style="font-size: 30rpx; margin-top: 20rpx; color: #666;">
-						关系建议
+						{{ $t('writer.world.relationSuggestions') }}
 					</div>
 					<el-card class="box-card" v-for="(item, index) in suggestions" style="margin-bottom: 20rpx; background-color: #f0f9eb">
 						<div style="display:flex; justify-content:space-between; align-items: center;">
 							<div class="attr" style="font-size: 28rpx;">
-								<span style="font-weight: bold;">{{item.name}}</span> 指向本词条关系为 "{{item.theirRelation}}"
+								<span style="font-weight: bold;">{{item.name}}</span> {{ $t('writer.world.relationSuggestion', { relation: item.theirRelation }) }}
 							</div>
 							<div class="btns">
-								<el-button type="success" size="mini" @click="acceptSuggestion(item)">添加逆向关系</el-button>
+								<el-button type="success" size="mini" @click="acceptSuggestion(item)">{{ $t('writer.world.addReverseRelation') }}</el-button>
 							</div>
 						</div>
 					</el-card>
@@ -107,52 +107,52 @@
 			<div class="enterButton" @click="vocabRela.id = -1;vocabRelaVisible = true">+</div>
 		</div>
 
-		<el-drawer :title="(vocabAttr.id == -1 ? '添加' : '编辑') +  '词条属性'" :visible.sync="vocabAttrVisible"
+		<el-drawer :title="attrDrawerTitle" :visible.sync="vocabAttrVisible"
 			direction="btt" size="60%">
 			<div class="drawerOuter" style="margin: 0 30rpx">
 				<div class="tit">
-					属性名
+					{{ $t('writer.world.attributeName') }}
 				</div>
-				<el-input type="text" placeholder="请输入属性名，如“性别”、“血型”等" v-model="vocabAttr.name" maxlength="10"
+				<el-input type="text" :placeholder="$t('writer.world.attributeNamePlaceholder')" v-model="vocabAttr.name" maxlength="10"
 					show-word-limit style="margin: 20rpx 0 0 0;">
 				</el-input>
 				<el-tag v-for="attr in defaultAttrs" style="margin-right: 20rpx; margin-top: 20rpx;"
 					@click="vocabAttr.name = attr" :key="attr">{{attr}}</el-tag>
 				<div class="tit" style="margin-top: 20rpx;">
-					属性内容
+					{{ $t('writer.world.attributeContent') }}
 				</div>
-				<el-input type="text" placeholder="请输入属性内容" v-model="vocabAttr.content" maxlength="20" show-word-limit
+				<el-input type="text" :placeholder="$t('writer.world.attributeContentPlaceholder')" v-model="vocabAttr.content" maxlength="20" show-word-limit
 					style="margin: 20rpx 0 0 0;">
 				</el-input>
 				<el-tag v-for="attrContent in defaultAttrContents[vocabAttr.name]"
 					style="margin-right: 20rpx; margin-top: 20rpx;" @click="vocabAttr.content = attrContent"
 					:key="attrContent">{{attrContent}}</el-tag>
-				<el-button type="primary" style="margin: 20rpx 0; width: 100%;" @click="confirmVocabAttr">确定</el-button>
+				<el-button type="primary" style="margin: 20rpx 0; width: 100%;" @click="confirmVocabAttr">{{ $t('common.confirm') }}</el-button>
 			</div>
 		</el-drawer>
 
-		<el-drawer :title="(vocabRela.id == -1 ? '添加' : '编辑') +  '词条关系'" :visible.sync="vocabRelaVisible"
+		<el-drawer :title="relaDrawerTitle" :visible.sync="vocabRelaVisible"
 			direction="btt" size="80%">
 			<div class="drawerOuter" style="margin: 0 30rpx">
 				<div class="tit">
-					目标词条
+					{{ $t('writer.world.targetEntry') }}
 				</div>
-				<el-select v-model="vocabRela.targetId" filterable placeholder="请选择词条" style="width: 100%; margin-top: 20rpx;">
+				<el-select v-model="vocabRela.targetId" filterable :placeholder="$t('writer.world.selectEntryPlaceholder')" style="width: 100%; margin-top: 20rpx;">
 					<el-option v-for="item in vocabularies" :key="item.article_id" :label="item.title"
 						:value="item.article_id">
 					</el-option>
 				</el-select>
 				<div class="tit" style="margin-top: 20rpx;">
-					关系描述 (单向)
+					{{ $t('writer.world.relationDescription') }}
 				</div>
-				<el-input type="text" placeholder="请输入关系，如“父亲”、“死敌”" v-model="vocabRela.relation" maxlength="20"
+				<el-input type="text" :placeholder="$t('writer.world.relationPlaceholder')" v-model="vocabRela.relation" maxlength="20"
 					show-word-limit style="margin: 20rpx 0 0 0;">
 				</el-input>
-				<el-button type="primary" style="margin: 20rpx 0; width: 100%;" @click="confirmVocabRela">确定</el-button>
+				<el-button type="primary" style="margin: 20rpx 0; width: 100%;" @click="confirmVocabRela">{{ $t('common.confirm') }}</el-button>
 			</div>
 		</el-drawer>
 
-		<el-drawer :title="'上传图像'" :visible.sync="imgUploadVisible" direction="btt" size="50%">
+		<el-drawer :title="$t('writer.world.uploadImage')" :visible.sync="imgUploadVisible" direction="btt" size="50%">
 			<div class="drawerOuter" style="margin: 0 30rpx">
 				<el-upload class="avatar-uploader" action="https://img.codesocean.top/upload/img"
 					name="img" :headers="{apikey: '45qEQfILCQ3tAXxmUJF8O562bJU2D0'}"
@@ -280,17 +280,6 @@
 					selectedColor: 'rgb(234, 171, 11)',
 					buttonColor: 'orange'
 				},
-				fab_content: [{
-						iconPath: '/static/icons/draft.png',
-						text: '存草稿',
-						active: false
-					},
-					{
-						iconPath: '/static/icons/upload.png',
-						text: '发布',
-						active: false
-					}
-				],
 				articleFocus: false,
 				articleCursor: 0,
 				editorCtx: undefined,
@@ -332,34 +321,6 @@
 					}
 				},
 				content: createEmptyVocabularyContent(),
-				defaultAttrs: [
-					"性别", "年龄", "身高", "体重", "血型", "生日", "学历", "性取向", "0/1",
-					"信息素", "力量", "敏捷", "智力", "种族", "发色", "瞳色", "职业",
-					"爱好", "人物特征", "优点", "缺点", "人设"
-				],
-				defaultAttrContents: {
-					"性别": [
-						"男", "女", "未知", "中性人"
-					],
-					"血型": [
-						"A", "B", "O", "AB", "稀有血型"
-					],
-					"学历": [
-						"幼儿园", "小学", "初中", "高中", "大学及以上"
-					],
-					"性取向": [
-						"男", "女", "双性", "无性"
-					],
-					"0/1": [
-						"攻", "受", "可攻可受"
-					],
-					"信息素": [
-						"Alpha", "Beta", "Omega"
-					],
-					"种族": [
-						"人族", "兽族", "虫族"
-					]
-				},
 				vocabAttrVisible: false,
 				vocabRelaVisible: false,
 				imgUploadVisible: false,
@@ -384,6 +345,45 @@
 			},
 			canPublishArticle() {
 				return !!(this.editorAccess && this.editorAccess.can_publish === true);
+			},
+			fabContent() {
+				return [{
+						iconPath: '/static/icons/draft.png',
+						text: this.$t('writer.world.saveDraft'),
+						active: false
+					},
+					{
+						iconPath: '/static/icons/upload.png',
+						text: this.$t('writer.world.publish'),
+						active: false
+					}
+				];
+			},
+			defaultAttrs() {
+				return [
+					'gender', 'age', 'height', 'weight', 'bloodType', 'birthday', 'education',
+					'sexualOrientation', 'zeroOne', 'pheromone', 'strength', 'agility', 'intelligence',
+					'race', 'hairColor', 'eyeColor', 'occupation', 'hobbies', 'features', 'strengths',
+					'weaknesses', 'persona'
+				].map(key => this.$t('writer.world.attrs.' + key));
+			},
+			defaultAttrContents() {
+				const value = key => this.$t('writer.world.attrValues.' + key);
+				return {
+					[this.$t('writer.world.attrs.gender')]: [value('male'), value('female'), this.$t('common.unknown'), value('neutral')],
+					[this.$t('writer.world.attrs.bloodType')]: ['A', 'B', 'O', 'AB', value('bloodRare')],
+					[this.$t('writer.world.attrs.education')]: [value('eduKindergarten'), value('eduPrimary'), value('eduMiddle'), value('eduHigh'), value('eduCollege')],
+					[this.$t('writer.world.attrs.sexualOrientation')]: [value('male'), value('female'), value('bisexual'), value('asexual')],
+					[this.$t('writer.world.attrs.zeroOne')]: [value('top'), value('bottom'), value('versatile')],
+					[this.$t('writer.world.attrs.pheromone')]: ['Alpha', 'Beta', 'Omega'],
+					[this.$t('writer.world.attrs.race')]: [value('human'), value('beastfolk'), value('insectoid')]
+				};
+			},
+			attrDrawerTitle() {
+				return this.$t(this.vocabAttr.id == -1 ? 'writer.world.addAttrTitle' : 'writer.world.editAttrTitle');
+			},
+			relaDrawerTitle() {
+				return this.$t(this.vocabRela.id == -1 ? 'writer.world.addRelaTitle' : 'writer.world.editRelaTitle');
 			}
 		},
 		onBackPress(e) {
@@ -398,10 +398,10 @@
 		},
 		methods: {
 			confirmNavigateBack() {
-				this.$nextTick(function() {
+				this.$nextTick(() => {
 					uni.showModal({
-						title: '提示',
-						content: '您的改动还没有保存，确定离开吗？',
+						title: this.$t('common.prompt'),
+						content: this.$t('writer.world.unsavedChangesContent'),
 						success: function(res) {
 							if (res.confirm) {
 								uni.navigateBack({});
@@ -620,10 +620,10 @@
 				} catch (error) {}
 			},
 			handleLockConflict(lockInfo) {
-				const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
+				const lockName = lockInfo && lockInfo.name ? lockInfo.name : this.$t('writer.world.otherAuthor');
 				uni.showModal({
-					title: "词条已被占用",
-					content: `${lockName} 正在编辑这个词条，请稍后再试。`,
+					title: this.$t('writer.world.entryLockedTitle'),
+					content: this.$t('writer.world.entryLockedContent', { name: lockName }),
 					showCancel: false,
 					success: () => {
 						uni.navigateBack({});
@@ -707,7 +707,7 @@
 					return true;
 				} catch (error) {
 					uni.showToast({
-						title: '源码模式内容不是合法 JSON',
+						title: this.$t('writer.world.invalidJson'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -716,7 +716,7 @@
 			},
 			async initializeArticle() {
 				uni.showLoading({
-					title: '编辑器初始化'
+					title: this.$t('writer.world.editorInit')
 				});
 
 				try {
@@ -737,7 +737,7 @@
 					if (this.editorAccess && this.editorAccess.can_edit_draft === false) {
 						uni.hideLoading();
 						uni.showToast({
-							title: '你没有编辑词条权限',
+							title: this.$t('writer.world.noEditPermission'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -801,7 +801,7 @@
 
 				if (this.article.title.replace(/(^\s*)|(\s*$)/g, "") == "" || this.isVocabularyContentEmpty()) {
 					uni.showToast({
-						title: "标题或文章内容不能为空",
+						title: this.$t('writer.world.emptyTitleOrContent'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -810,7 +810,7 @@
 
 				if (!this.canPublishArticle && Number(drafting) === 0) {
 					drafting = 1;
-					msg = "协作草稿已保存";
+					msg = this.$t('writer.world.collabDraftSaved');
 				}
 
 				let tk = this.getAuthToken();
@@ -845,7 +845,7 @@
 					.catch(function(error) {
 						if (error) {
 							uni.showToast({
-								title: "词条上传失败，请重试",
+								title: _this.$t('writer.world.entryUploadFailed'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -939,8 +939,8 @@
 											if (result.article_content != _this.article.content) {
 												_this.endLocalSaveTimer();
 												uni.showModal({
-													title: '提示',
-													content: '你有未保存的存稿，是否到上次退出时状态？',
+													title: _this.$t('common.prompt'),
+													content: _this.$t('writer.world.localDraftContent'),
 													success: function(res) {
 														if (res.confirm) {
 															_this.article.title = result.article_title;
@@ -1030,9 +1030,9 @@
 			},
 			changeViewMode(newValue) {
 				if (newValue) {
-					this.$confirm('您正在尝试启用源代码模式，这些设置仅供高级用户使用，修改不当可能造成词条内容丢失，您需要自行承担修改源代码造成的任何后果。', '警告', {
-						confirmButtonText: '启用源代码模式',
-						cancelButtonText: '取消',
+					this.$confirm(this.$t('writer.world.sourceModeWarning'), this.$t('writer.world.warningTitle'), {
+						confirmButtonText: this.$t('writer.world.enableSourceMode'),
+						cancelButtonText: this.$t('common.cancel'),
 						type: 'warning'
 					}).then(() => {
 						this.writerSettings.codeMode = true;
@@ -1117,10 +1117,10 @@
 				const isLt2M = file.size / 1024 / 1024 < 2;
 
 				if (!isLt2M) {
-					this.$message.error('上传头像图片大小不能超过 2MB!');
+					this.$message.error(this.$t('writer.world.imageTooLarge'));
 				}
 				uni.showToast({
-					title:"上传中..."
+					title: this.$t('writer.world.uploading')
 				})
 				return isLt2M;
 			},
@@ -1262,44 +1262,46 @@
 			}
 		},
 		onNavigationBarButtonTap(e) {
-			if (e.text == "\ue70f ") {
+			if (!e) return;
+			const isSettingsButton = e.index === 1 || e.text === "\ue70f ";
+			if (isSettingsButton) {
 				this.$refs.setPopup.open('bottom');
-			} else if (e.text == "完成 ") {
+			} else {
 				if (!this.canPublishArticle) {
-					this.save(1, "协作草稿已保存");
+					this.save(1, this.$t('writer.world.collabDraftSaved'));
 					return;
 				}
 
 				let _this = this;
 				uni.showActionSheet({
-					itemList: ['发布词条', "保存为草稿"],
+					itemList: [this.$t('writer.world.publishEntry'), this.$t('writer.world.saveAsDraft')],
 					success: function(res) {
 						if (res.tapIndex == 0) {
 							if (_this.article.novel_info.is_personal == 1) {
 								uni.showToast({
-									title: "小说尚未公开，无法发布文章",
+									title: _this.$t('writer.world.novelPrivateCannotPublish'),
 									icon: 'none',
 									duration: 2000
 								});
 								return;
 							}
-							_this.save(0, "发布成功")
+							_this.save(0, _this.$t('writer.world.publishSuccess'))
 						}
 						if (res.tapIndex == 1) {
 							if (_this.article.is_draft == 0) {
 								uni.showModal({
-									title: '提示',
-									content: '存草稿会使已发布的章节下架，确定继续吗？',
+									title: _this.$t('common.prompt'),
+									content: _this.$t('writer.world.draftUnpublishesContent'),
 									success: function(res) {
 										if (res.confirm) {
-											_this.save(1, "保存成功");
+											_this.save(1, _this.$t('writer.world.saveSuccess'));
 										} else if (res.cancel) {
 											return;
 										}
 									}
 								});
 							} else {
-								_this.save(1, "保存成功");
+								_this.save(1, _this.$t('writer.world.saveSuccess'));
 							}
 						}
 					},

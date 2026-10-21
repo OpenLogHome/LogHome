@@ -4,7 +4,7 @@
 	}"> 
 		<editor
 			class="ql-container"
-			:placeholder="placeholder"
+			:placeholder="placeholder || $t('writer.editor.jinEdit.placeholder')"
 			:show-img-size="true"
 			:show-img-toolbar="true"
 			:show-img-resize="true"
@@ -18,31 +18,31 @@
 		<!-- 操作工具 -->
 		<view class="tool-view" > 
 			<view class="tool">
-				<jinIcon class="single" type="&#xe6f3;" font-size="44rpx" title="插入图片" @click="insertImage"></jinIcon>
-				<jinIcon class="single" type="&#xe6f9;" font-size="44rpx" title="修改文字样式" @click="showMore" :color="showMoreTool ? activeColor : '#666666'"></jinIcon>
-				<jinIcon class="single" type="&#xe6eb;" font-size="44rpx" title="分割线" @click="insertDivider"></jinIcon>
-				<jinIcon class="single" type="&#xe6e8;" font-size="44rpx" title="撤销" @click="undo"></jinIcon>
-				<jinIcon class="single" type="&#xe705;" font-size="44rpx" title="重做" @click="redo"></jinIcon>
-				<jinIcon class="single" type="&#xeb8a;" font-size="44rpx" title="设置" @click="showSetting"></jinIcon>
+				<jinIcon class="single" type="&#xe6f3;" font-size="44rpx" :title="$t('writer.editor.jinEdit.insertImage')" @click="insertImage"></jinIcon>
+				<jinIcon class="single" type="&#xe6f9;" font-size="44rpx" :title="$t('writer.editor.jinEdit.textStyle')" @click="showMore" :color="showMoreTool ? activeColor : '#666666'"></jinIcon>
+				<jinIcon class="single" type="&#xe6eb;" font-size="44rpx" :title="$t('writer.editor.jinEdit.divider')" @click="insertDivider"></jinIcon>
+				<jinIcon class="single" type="&#xe6e8;" font-size="44rpx" :title="$t('writer.editor.jinEdit.undo')" @click="undo"></jinIcon>
+				<jinIcon class="single" type="&#xe705;" font-size="44rpx" :title="$t('writer.editor.jinEdit.redo')" @click="redo"></jinIcon>
+				<jinIcon class="single" type="&#xeb8a;" font-size="44rpx" :title="$t('writer.editor.jinEdit.settings')" @click="showSetting"></jinIcon>
 			</view>
 			<!-- 文字相关操作 -->
 			<view class="font-more" :style="{ height: showMoreTool ? '100rpx' : 0 }">
-				<jinIcon class="single" type="&#xe6e7;" font-size="44rpx" title="加粗" @click="setBold" :color="showBold ? activeColor : '#666666'"></jinIcon>
-				<jinIcon class="single" type="&#xe6fe;" font-size="44rpx" title="斜体" @click="setItalic" :color="showItalic ? activeColor : '#666666'"></jinIcon>
-				<jinIcon class="single" type="&#xe6f8;" font-size="44rpx" title="分割线" @click="setIns" :color="showIns ? activeColor : '#666666'"></jinIcon>
-				<jinIcon class="single" type="&#xe6e3;" font-size="44rpx" title="标题" @click="setHeader" :color="showHeader ? activeColor : '#666666'"></jinIcon>
-				<jinIcon class="single" type="&#xe6f1;" font-size="44rpx" title="居中" @click="setCenter" :color="showCenter ? activeColor : '#666666'"></jinIcon>
-				<jinIcon class="single" type="&#xe6ed;" font-size="44rpx" title="居右" @click="setRight" :color="showRight ? activeColor : '#666666'"></jinIcon>
+				<jinIcon class="single" type="&#xe6e7;" font-size="44rpx" :title="$t('writer.editor.jinEdit.bold')" @click="setBold" :color="showBold ? activeColor : '#666666'"></jinIcon>
+				<jinIcon class="single" type="&#xe6fe;" font-size="44rpx" :title="$t('writer.editor.jinEdit.italic')" @click="setItalic" :color="showItalic ? activeColor : '#666666'"></jinIcon>
+				<jinIcon class="single" type="&#xe6f8;" font-size="44rpx" :title="$t('writer.editor.jinEdit.divider')" @click="setIns" :color="showIns ? activeColor : '#666666'"></jinIcon>
+				<jinIcon class="single" type="&#xe6e3;" font-size="44rpx" :title="$t('writer.editor.jinEdit.heading')" @click="setHeader" :color="showHeader ? activeColor : '#666666'"></jinIcon>
+				<jinIcon class="single" type="&#xe6f1;" font-size="44rpx" :title="$t('writer.editor.jinEdit.center')" @click="setCenter" :color="showCenter ? activeColor : '#666666'"></jinIcon>
+				<jinIcon class="single" type="&#xe6ed;" font-size="44rpx" :title="$t('writer.editor.jinEdit.right')" @click="setRight" :color="showRight ? activeColor : '#666666'"></jinIcon>
 			</view>
 			<view class="setting-layer-mask" v-if="showSettingLayer" @click="showSetting"></view>
 			<view class="setting-layer" v-if="showSettingLayer">
 				<view class="single" @click="release(true)">
 					<jinIcon class="icon" type="&#xe639;" ></jinIcon>
-					<view>公开发布</view>
+					<view>{{ $t('writer.editor.jinEdit.publishPublic') }}</view>
 				</view>
 				<view class="single" @click="release(false)">
 					<jinIcon class="icon" type="&#xe655;" ></jinIcon>
-					<view>私密保存</view>
+					<view>{{ $t('writer.editor.jinEdit.savePrivate') }}</view>
 				</view>
 			</view>
 		</view>
@@ -71,7 +71,7 @@ export default {
 		// 占位符
 		placeholder: {
 			type: String,
-			default: '开始输入...'
+			default: ''
 		},
 		// 图片上传的地址
 		uploadFileUrl: {
@@ -142,7 +142,7 @@ export default {
 				success: async(res) => {
 					var tempFilePaths = res.tempFilePaths;
 					uni.showLoading({
-						title: '正在上传中...'
+						title: this.$t('writer.editor.jinEdit.uploading')
 					})
 					for (let temp of tempFilePaths) {
 						// 图片上传服务器
@@ -155,7 +155,7 @@ export default {
 								// 上传完成后处理
 								this.editorCtx.insertImage({
 									src: "http://img.codesocean.top" + JSON.parse(res.data).data,  // 此处需要将图片地址切换成服务器返回的真实图片地址
-									alt: '图片',
+									alt: this.$t('writer.editor.jinEdit.imageAlt'),
 									success: function(e) {}
 								});
 								uni.hideLoading()

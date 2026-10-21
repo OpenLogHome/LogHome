@@ -4,9 +4,9 @@
       <!-- 左侧列表区域 -->
       <view class="history-list">
         <view class="list-header">
-          <text class="header-title">历史记录</text>
+          <text class="header-title">{{ $t('writer.work.timeMachine.historyTitle') }}</text>
           <text class="record-count" v-if="historyRecords.length > 0"
-            >{{ historyRecords.length }} 条</text
+            >{{ $t('writer.work.timeMachine.recordCount', { count: historyRecords.length }) }}</text
           >
         </view>
         <scroll-view scroll-y class="record-list">
@@ -25,13 +25,13 @@
                 getRecordEditorLabel(item)
               }}</text>
               <text class="record-count"
-                >{{ getTextCount(item.content) }}字
-                {{ getImageCount(item.content) }}图</text
+                >{{ $t('writer.work.common.charCount', { count: getTextCount(item.content) }) }}
+                {{ $t('writer.work.common.imageCount', { count: getImageCount(item.content) }) }}</text
               >
             </view>
           </view>
           <view class="no-records" v-if="historyRecords.length === 0">
-            <text>暂无历史记录</text>
+            <text>{{ $t('writer.work.timeMachine.empty') }}</text>
           </view>
         </scroll-view>
       </view>
@@ -46,16 +46,16 @@
               getRecordEditorLabel(selectedRecord)
             }}</text>
             <text
-              >{{ getTextCount(selectedRecord.content) }}字
-              {{ getImageCount(selectedRecord.content) }}图</text
+              >{{ $t('writer.work.common.charCount', { count: getTextCount(selectedRecord.content) }) }}
+              {{ $t('writer.work.common.imageCount', { count: getImageCount(selectedRecord.content) }) }}</text
             >
           </view>
           <view class="action-buttons">
             <button class="action-btn copy-btn" @click="copyToClipboard">
-              复制到剪贴板
+              {{ $t('writer.work.timeMachine.copyToClipboard') }}
             </button>
             <button class="action-btn restore-btn" @click="restoreVersion">
-              恢复此版本
+              {{ $t('writer.work.timeMachine.restoreThisVersion') }}
             </button>
           </view>
         </view>
@@ -78,7 +78,7 @@
           </view>
         </scroll-view>
         <view class="no-selection" v-else>
-          <text>请从左侧选择一个历史版本</text>
+          <text>{{ $t('writer.work.timeMachine.selectVersionHint') }}</text>
         </view>
       </view>
     </view>
@@ -108,12 +108,12 @@ export default {
   },
   onLoad(option) {
     uni.showLoading({
-      title: "加载历史记录中",
+      title: this.$t('writer.work.timeMachine.loadingHistory'),
     });
 
     if (JSON.stringify(option) == "{}") {
       uni.showToast({
-        title: "参数错误",
+        title: this.$t('common.paramError'),
         icon: "none",
         duration: 2000,
       });
@@ -133,7 +133,7 @@ export default {
         return JSON.parse(this.selectedRecord.content);
       } catch (e) {
         console.error("解析内容失败:", e);
-        return [{ type: "text", value: "内容解析失败" }];
+        return [{ type: "text", value: this.$t('writer.work.timeMachine.parseFailed') }];
       }
     },
   },
@@ -150,11 +150,19 @@ export default {
     },
     getRecordSourceLabel(record) {
       if (!record) return "";
-      return record.source || "";
+      const source = record.source;
+      if (!source) return "";
+      const sourceKeys = {
+        local: 'writer.work.timeMachine.sources.local',
+        cloud: 'writer.work.timeMachine.sources.cloud',
+        both: 'writer.work.timeMachine.sources.both',
+        published: 'writer.work.timeMachine.sources.published',
+      };
+      return sourceKeys[source] ? this.$t(sourceKeys[source]) : source;
     },
     getRecordEditorLabel(record) {
       if (!record || !record.editor_name) return "";
-      return `提交人：${record.editor_name}`;
+      return this.$t('writer.work.timeMachine.editorPrefix', { name: record.editor_name });
     },
     buildRecordMergeKey(record) {
       return JSON.stringify([
@@ -218,7 +226,7 @@ export default {
         // 处理本地记录
         localRecords.forEach((localRecord) => {
           const key = this.buildRecordMergeKey(localRecord);
-          recordMap.set(key, { record: localRecord, sources: ["本地备份"] });
+          recordMap.set(key, { record: localRecord, sources: ["local"] });
         });
 
         // 处理云端记录，检查是否有相同记录
@@ -228,8 +236,8 @@ export default {
           if (recordMap.has(key)) {
             // 如果有相同记录，合并来源
             const existingEntry = recordMap.get(key);
-            existingEntry.sources.push("云端备份");
-            existingEntry.record.source = "本地&云端";
+            existingEntry.sources.push("cloud");
+            existingEntry.record.source = "both";
             existingEntry.record.content =
               cloudRecord.content || existingEntry.record.content;
             // 保留云端记录的is_slow_save标记
@@ -237,7 +245,7 @@ export default {
             this.mergeCloudRecordMeta(existingEntry.record, cloudRecord);
           } else {
             // 如果没有相同记录，添加到Map
-            recordMap.set(key, { record: cloudRecord, sources: ["云端备份"] });
+            recordMap.set(key, { record: cloudRecord, sources: ["cloud"] });
           }
         });
 
@@ -260,7 +268,7 @@ export default {
       } catch (error) {
         console.error("加载历史记录失败:", error);
         uni.showToast({
-          title: "加载历史记录失败",
+          title: this.$t('writer.work.timeMachine.loadHistoryFailed'),
           icon: "none",
           duration: 2000,
         });
@@ -289,7 +297,7 @@ export default {
         return response.data.map((record) => ({
           ...record,
           cloud_writer_id: record.id || null,
-          source: "发布版本",
+          source: "published",
           create_time: this.utc2beijing(record.update_time),
           is_slow_save: true, // 云端备份视为完整备份
         }));
@@ -310,7 +318,7 @@ export default {
         // 添加来源标记
         return records.map((record) => ({
           ...record,
-          source: "本地备份",
+          source: "local",
           id: record.id, // 确保有唯一ID
         }));
       } catch (error) {
@@ -338,7 +346,7 @@ export default {
         // 添加来源标记
         return response.data.map((record) => ({
           ...record,
-          source: "云端备份",
+          source: "cloud",
           create_time: record.create_time,
           is_slow_save: true, // 云端备份视为完整备份
           editor_user_id: record.editor_user_id || null,
@@ -404,14 +412,14 @@ export default {
           }
         });
       } catch (e) {
-        textContent = "内容解析失败";
+        textContent = this.$t('writer.work.timeMachine.parseFailed');
       }
 
       uni.setClipboardData({
         data: textContent,
         success: () => {
           uni.showToast({
-            title: "内容已复制到剪贴板",
+            title: this.$t('writer.work.timeMachine.copiedToClipboard'),
             icon: "success",
             duration: 2000,
           });
@@ -423,13 +431,13 @@ export default {
       if (!this.selectedRecord) return;
 
       uni.showModal({
-        title: "恢复版本",
-        content: "确定要恢复到此版本吗？",
+        title: this.$t('writer.work.timeMachine.restoreVersionTitle'),
+        content: this.$t('writer.work.timeMachine.restoreConfirm'),
         success: async (res) => {
           if (res.confirm) {
             try {
               uni.showLoading({
-                title: "正在恢复",
+                title: this.$t('writer.work.timeMachine.restoring'),
               });
 
               // 获取当前服务器时间
@@ -491,7 +499,7 @@ export default {
 
               uni.hideLoading();
               uni.showToast({
-                title: "版本已恢复",
+                title: this.$t('writer.work.timeMachine.restoreSuccess'),
                 icon: "success",
                 duration: 2000,
               });
@@ -503,7 +511,7 @@ export default {
               console.error("恢复版本失败:", error);
               uni.hideLoading();
               uni.showToast({
-                title: "恢复版本失败",
+                title: this.$t('writer.work.timeMachine.restoreFailed'),
                 icon: "none",
                 duration: 2000,
               });

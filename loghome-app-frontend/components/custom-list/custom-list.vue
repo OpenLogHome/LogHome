@@ -9,10 +9,10 @@
 							<view class="image_bg" v-if="addlist[index].type == 'text'">
 								<view style="margin-bottom: 40rpx;padding: 10rpx;">
 									<textarea v-if="movementButton" auto-height placeholder-style="color:#8a8a8a" :maxlength="textLength"
-										style="width:100%" placeholder="请输入文字" v-model="addlist[index].value" 
+										style="width:100%" :placeholder="$t('writer.editor.textPlaceholder')" v-model="addlist[index].value"
 										:style="{fontSize:fontSize.fontSize}"/>
 									<textarea v-else auto-height placeholder-style="color:#8a8a8a" :maxlength="textLength"
-										style="width:100%" placeholder="请输入文字" disabled
+										style="width:100%" :placeholder="$t('writer.editor.textPlaceholder')" disabled
 										v-model="addlist[index].value" :style="{fontSize:fontSize.fontSize}"/>
 								</view>
 								<!-- 移动 删除 begin -->
@@ -37,16 +37,16 @@
 											</img>
 											<view class="dazi">
 												<input v-model="addlist[index].name" maxlength="10"
-													placeholder="复制框提示文字" :disabled="!movementButton" />
+													:placeholder="$t('writer.editor.copyTitlePlaceholder')" :disabled="!movementButton" />
 											</view>
 										</view>
 										<view style="display: flex; align-items: center;justify-content: space-between;">
 											<view class="xiaozif">
-												<input v-model="addlist[index].content" :disabled="!movementButton"  placeholder="复制内容" />
+												<input v-model="addlist[index].content" :disabled="!movementButton"  :placeholder="$t('writer.editor.copyContentPlaceholder')" />
 											</view>
 											<button class="btnn_add" @click="fuzhi(item)"
 												style="background-color: #696969;">
-												一键复制
+												{{ $t('writer.editor.copyOneTap') }}
 											</button>
 										</view>
 									</view>
@@ -65,7 +65,7 @@
 														@click.native="changeBook(index)"></bookInCase>
 										</view>
 										<view>
-											<textarea v-model="addlist[index].content" :disabled="!movementButton"  placeholder="请输入描述"
+											<textarea v-model="addlist[index].content" :disabled="!movementButton"  :placeholder="$t('writer.editor.novelDescriptionPlaceholder')"
 											 style="height:80%; background-color: #bfbfbf; margin:25rpx 0; width:55vw; border-radius: 5px;"/>
 										</view>
 									</view>
@@ -86,11 +86,11 @@
 				<view class="operate">
 					<view class="operate_wu" @click="add('image')">
 						<img class="operate_img" src="./static/1234/tup.png" /></img>
-						<view>+图片</view>
+						<view>{{ $t('writer.editor.addImage') }}</view>
 					</view>
 					<view class="operate_wu" @click="add('text')">
 						<img class="operate_img" src="./static/1234/text.png"></img>
-						<view>+文字</view>
+						<view>{{ $t('writer.editor.addText') }}</view>
 					</view>
 <!-- 					<view class="operate_wu" @click="add('copy')">
 						<img class="operate_img" src="./static/1234/fuzhi.png"></img>
@@ -98,20 +98,20 @@
 					</view> -->
 					<view class="operate_wu" @click="add('novel')">
 						<img class="operate_img" src="./static/1234/novel.png"></img>
-						<view>+书链</view>
+						<view>{{ $t('writer.editor.addNovel') }}</view>
 					</view>
 				</view>
 			</view>
 		</view>
 		<el-drawer
-		  title="书籍选择"
+		  :title="$t('writer.editor.bookSelectTitle')"
 		  :visible.sync="bookSelectDrawer"
 		  :with-header="false"
 		  :direction="'btt'"
 		  size="80%">
 		  <div class="searchBar" style="position:absolute; background-color: #ffe6b4; width:100%; z-index:100;">
 		  	<uni-search-bar bgColor="#ffffff" :radius="0" @input="searchLibrary"
-		  					placeholder = "搜索书库" cancelButton="none">
+				:placeholder="$t('writer.editor.searchLibraryPlaceholder')" cancelButton="none">
 		  		<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;"/>
 		  		<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;"/>
 		  	</uni-search-bar>
@@ -142,6 +142,7 @@
 	import reloadimg from '../../lib/reload_img.js'
 	import bookInCase from '../book_in_case.vue'
 	import axios from "axios"
+	import i18n from '@/i18n'
 	export default {
 		name: 'custom-list',
 		components: {
@@ -182,7 +183,7 @@
 					},
 					novel: { //添加小程序跳转框
 						novel_id: undefined,
-						name:"未选择书籍",
+						name: i18n.t('writer.editor.noBookSelected'),
 						picUrl:"",
 						content: "",
 						type: 'novel',
@@ -250,7 +251,7 @@
 						sourceType: ['album'], //从相册选择
 						success: (res) => {
 							uni.showLoading({
-								title:"上传图片中"
+								title: this.$t('writer.editor.uploadingImage')
 							})
 							uni.uploadFile({
 								url: 'https://img.codesocean.top/upload/img', //直接上传到原木的图片后台
@@ -265,7 +266,7 @@
 										resolve(data.url);
 										uni.hideLoading();
 										uni.showToast({
-											title:"上传完毕，等待处理"
+											title: this.$t('writer.editor.uploadProcessing')
 										})
 									},1000)
 								}
@@ -288,7 +289,7 @@
 					success: function() {
 						// 添加下面的代码可以复写复制成功默认提示文本`内容已复制` 
 						uni.showToast({
-							title: '复制成功',
+							title: i18n.t('writer.editor.copySuccess'),
 							duration: 5000
 						})
 						uni.getClipboardData({

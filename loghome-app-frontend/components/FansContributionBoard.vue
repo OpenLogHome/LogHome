@@ -1,8 +1,8 @@
 <template>
 	<div class="fans_rank" :class="{ 'fans_rank--empty': fanInfo.length === 0, 'fans_rank--compact': fanInfo.length > 0 && fanInfo.length < 3 }" v-dark>
 		<view v-if="fanInfo.length === 0" class="fans-empty" role="status">
-			<text class="fans-empty-title">暂无贡献记录</text>
-			<text class="fans-empty-hint">成为第一位支持这部作品的读者吧</text>
+			<text class="fans-empty-title">{{ $t('reader.rank.empty') }}</text>
+			<text class="fans-empty-hint">{{ $t('reader.rank.emptyHint') }}</text>
 		</view>
 		<view v-else-if="fanInfo.length < 3" class="fans-compact-list">
 			<view v-for="(fan, index) in fanInfo" :key="fan.user_id || index" class="fans-compact-row" :class="'compact-medal-' + index">
@@ -18,7 +18,7 @@
 				</view>
 				<view class="compact-score">
 					<text class="compact-value">{{ fan.fans_value }}</text>
-					<text class="compact-unit">贡献值</text>
+					<text class="compact-unit">{{ $t('reader.rank.contributionUnit') }}</text>
 				</view>
 			</view>
 		</view>
@@ -30,7 +30,7 @@
 						:visual-scale="fanInfo[1].avatar_frame ? 1.15 : 1" />
 				</view>
 				<view class="podium-name">{{ fanInfo[1].user_name }}</view>
-				<view class="podium-score">{{ fanInfo[1].fans_value }}<text class="podium-score-unit">贡献值</text></view>
+				<view class="podium-score">{{ fanInfo[1].fans_value }}<text class="podium-score-unit">{{ $t('reader.rank.contributionUnit') }}</text></view>
 			</div>
 			<div class="podium-card podium-1" v-if="fanInfo[0]">
 				<view class="podium-badge"><text class="podium-badge-top">TOP</text><text class="podium-badge-no">1</text></view>
@@ -39,7 +39,7 @@
 						:visual-scale="fanInfo[0].avatar_frame ? 1.15 : 1" />
 				</view>
 				<view class="podium-name">{{ fanInfo[0].user_name }}</view>
-				<view class="podium-score">{{ fanInfo[0].fans_value }}<text class="podium-score-unit">贡献值</text></view>
+				<view class="podium-score">{{ fanInfo[0].fans_value }}<text class="podium-score-unit">{{ $t('reader.rank.contributionUnit') }}</text></view>
 			</div>
 			<div class="podium-card podium-3" v-if="fanInfo[2]">
 				<view class="podium-badge"><text class="podium-badge-top">TOP</text><text class="podium-badge-no">3</text></view>
@@ -48,15 +48,15 @@
 						:visual-scale="fanInfo[2].avatar_frame ? 1.15 : 1" />
 				</view>
 				<view class="podium-name">{{ fanInfo[2].user_name }}</view>
-				<view class="podium-score">{{ fanInfo[2].fans_value }}<text class="podium-score-unit">贡献值</text></view>
+				<view class="podium-score">{{ fanInfo[2].fans_value }}<text class="podium-score-unit">{{ $t('reader.rank.contributionUnit') }}</text></view>
 			</div>
 		</div>
 
 		<div class="fans-table" v-if="fanInfo.length > 3">
 			<div class="fans-table-head">
-				<text class="th-rank">排名</text>
-				<text class="th-name">用户名</text>
-				<text class="th-value">贡献值</text>
+				<text class="th-rank">{{ $t('reader.rank.tableRank') }}</text>
+				<text class="th-name">{{ $t('reader.rank.tableUser') }}</text>
+				<text class="th-value">{{ $t('reader.rank.contributionUnit') }}</text>
 			</div>
 			<div class="fans-list-item" v-for="(fan, index) in fanInfo.slice(3, 10)" :key="index">
 				<div class="fans-rank">{{ String(index + 4).padStart(2, '0') }}</div>

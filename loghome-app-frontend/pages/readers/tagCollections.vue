@@ -1,7 +1,7 @@
 <template>
 	<transition name="fade" class="transition">
 		<div class="outer" v-if="showList || isLoading" v-dark>
-			<div class="collectionsSkeleton" v-if="isLoading" aria-label="标签书籍加载中">
+			<div class="collectionsSkeleton" v-if="isLoading" :aria-label="$t('reader.tag.loadingBooks')">
 				<div class="bookSkeleton" v-for="index in 5" :key="index">
 					<div class="skeletonBlock skeletonCover"></div>
 					<div class="skeletonInfo">
@@ -61,7 +61,7 @@
 			}
 			if(params.title){
 				uni.setNavigationBarTitle({
-					title: "标签：" + params.title
+					title: this.$t('reader.tag.collectionTitle', { name: params.title })
 				})
 			}
 			this.refreshCollections();

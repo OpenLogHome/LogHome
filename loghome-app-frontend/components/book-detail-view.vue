@@ -7,52 +7,52 @@
         <view class="book-info">
           <view class="bookTitle">{{book.name}}</view>
           <view class="bookDescription">
-            <el-tag size="mini" v-show="book.is_personal==1" type="info" disable-transitions effect="dark">私有</el-tag>
-            <el-tag size="mini" v-show="book.is_personal==0" disable-transitions effect="dark">公开</el-tag>
-            <el-tag size="mini" v-if="showCollaborativeTag" type="warning" disable-transitions effect="dark">协作作品</el-tag>
-            <span> {{book.is_complete==1?"已完结":"连载中"}}</span>
-            <span>{{book.text_count}} 字</span>
+            <el-tag size="mini" v-show="book.is_personal==1" type="info" disable-transitions effect="dark">{{ $t('writer.bookDetail.private') }}</el-tag>
+            <el-tag size="mini" v-show="book.is_personal==0" disable-transitions effect="dark">{{ $t('common.public') }}</el-tag>
+            <el-tag size="mini" v-if="showCollaborativeTag" type="warning" disable-transitions effect="dark">{{ $t('writer.bookDetail.collaborative') }}</el-tag>
+            <span> {{ book.is_complete==1 ? $t('common.completed') : $t('writer.bookDetail.ongoing') }}</span>
+            <span>{{ $t('writer.bookDetail.wordCount', { count: book.text_count }) }}</span>
           </view>
           <div class="book-intro">
             <div class="book-content" :class="{ expanded: isDescriptionExpanded, empty: !hasDescription }">
               {{ introText }}
             </div>
             <div class="book-content-toggle" v-if="shouldShowIntroToggle" @click="toggleDescription">
-              {{ isDescriptionExpanded ? '收起简介' : '展开简介' }}
+              {{ introToggleText }}
             </div>
           </div>
         </view>
       </div>
       <view class="bookTitle" v-else>{{book.name}}</view>
       <view class="bookDescription" v-if="!isDrawerMode">
-        <el-tag size="mini" v-show="book.is_personal==1" type="info" disable-transitions effect="dark">私有</el-tag>
-        <el-tag size="mini" v-show="book.is_personal==0" disable-transitions effect="dark">公开</el-tag>
-        <el-tag size="mini" v-if="showCollaborativeTag" type="warning" disable-transitions effect="dark">协作作品</el-tag>
-        <span> {{book.is_complete==1?"已完结":"连载中"}}</span>
-        <span>总计 {{book.text_count}} 字</span>
+        <el-tag size="mini" v-show="book.is_personal==1" type="info" disable-transitions effect="dark">{{ $t('writer.bookDetail.private') }}</el-tag>
+        <el-tag size="mini" v-show="book.is_personal==0" disable-transitions effect="dark">{{ $t('common.public') }}</el-tag>
+        <el-tag size="mini" v-if="showCollaborativeTag" type="warning" disable-transitions effect="dark">{{ $t('writer.bookDetail.collaborative') }}</el-tag>
+        <span> {{ book.is_complete==1 ? $t('common.completed') : $t('writer.bookDetail.ongoing') }}</span>
+        <span>{{ $t('writer.bookDetail.totalWordCount', { count: book.text_count }) }}</span>
       </view>
       <div class="book-intro" v-if="!isDrawerMode">
         <div class="book-content" :class="{ expanded: isDescriptionExpanded, empty: !hasDescription }">
           {{ introText }}
         </div>
         <div class="book-content-toggle" v-if="shouldShowIntroToggle" @click="toggleDescription">
-          {{ isDescriptionExpanded ? '收起简介' : '展开简介' }}
+          {{ introToggleText }}
         </div>
       </div>
       <div class="buttons">
-        <div class="button" @click="$emit('goto-all-articles')">所有章节</div>
-        <div class="button" @click="$emit('read-novel', book.is_personal)">阅读</div>
-        <div class="button long" @click="$emit('goto-essay-set')">{{ isOwner ? '作品设置' : '协作设置' }}</div>
+        <div class="button" @click="$emit('goto-all-articles')">{{ $t('writer.bookDetail.allChapters') }}</div>
+        <div class="button" @click="$emit('read-novel', book.is_personal)">{{ $t('writer.bookDetail.read') }}</div>
+        <div class="button long" @click="$emit('goto-essay-set')">{{ settingsButtonText }}</div>
       </div>
 
       <div class="ban-alert" v-if="Number(book.is_banned) >= 1">
-        <div class="ban-title">{{ Number(book.is_banned) === 2 ? '重新审核中' : '作品异常' }}</div>
+        <div class="ban-title">{{ banTitle }}</div>
         <div class="ban-reason" v-if="book.ban_reason || book.ban_review_comment">
-          异常原因：{{ book.ban_reason || '违反社区规则' }}{{ book.ban_review_comment ? '（' + book.ban_review_comment + '）' : '' }}
+          {{ banReasonText }}
         </div>
-        <div class="ban-reason" v-else>该作品因违反社区规则已被下架，读者端暂不可见。</div>
-        <div class="ban-tip" v-if="Number(book.is_banned) === 2">管理员正在重新审核，请耐心等待。</div>
-        <div class="ban-action" v-if="Number(book.is_banned) === 1" @click="$emit('resubmit-novel')">重新提交审核</div>
+        <div class="ban-reason" v-else>{{ $t('writer.bookDetail.banRemoved') }}</div>
+        <div class="ban-tip" v-if="Number(book.is_banned) === 2">{{ $t('writer.bookDetail.banReviewingTip') }}</div>
+        <div class="ban-action" v-if="Number(book.is_banned) === 1" @click="$emit('resubmit-novel')">{{ $t('writer.bookDetail.resubmitReview') }}</div>
       </div>
 
       <!-- 添加Banner组件 -->
@@ -67,22 +67,22 @@
       <!-- 创作活动板块 -->
       <div class="statistic-box" v-if="isOwner && activityInfo && activityInfo.hasActivity">
         <div class="head">
-          <div class="box-title">创作活动</div>
+          <div class="box-title">{{ $t('writer.bookDetail.writingActivities') }}</div>
           <div class="more">
-            <p>参与创作活动，获得更多曝光</p>
+            <p>{{ $t('writer.bookDetail.writingActivitiesHint') }}</p>
           </div>
         </div>
         <div class="activity-content">
           <div v-for="activity in activityInfo.activities" :key="activity.tag_id" class="activity-item">
             <div class="activity-header">
               <div class="activity-name">{{activity.activity_name}}</div>
-              <el-tag size="mini" type="success" effect="dark">活动中</el-tag>
+              <el-tag size="mini" type="success" effect="dark">{{ $t('writer.bookDetail.activityOngoing') }}</el-tag>
             </div>
             <div class="activity-description">{{activity.activity_description}}</div>
             
             <!-- 活动资讯 -->
             <div class="activity-news" v-if="activity.activity_news && activity.activity_news.length > 0">
-              <div class="news-title">活动资讯</div>
+              <div class="news-title">{{ $t('writer.bookDetail.activityNews') }}</div>
               <div class="news-list">
                 <div v-for="news in activity.activity_news" :key="news.title" class="news-item" 
                   @click="openNewsLink(news)">
@@ -95,13 +95,13 @@
             <!-- 信息填写入口 -->
             <div class="activity-form" v-if="activity.required_fields && activity.required_fields.length > 0">
               <div class="form-status">
-                <div class="form-title">活动参与信息</div>
+                <div class="form-title">{{ $t('writer.bookDetail.activityParticipation') }}</div>
                 <div class="form-status-text" :class="getFormStatusClass(activity.tag_id)">
                   {{getFormStatusText(activity.tag_id, activity.required_fields)}}
                 </div>
               </div>
               <div class="form-button" @click="openActivityForm(activity)">
-                {{hasFilledForm(activity.tag_id) ? '修改信息' : '填写信息'}}
+                {{ activityFormButtonText(activity.tag_id) }}
               </div>
             </div>
           </div>
@@ -110,15 +110,15 @@
 
       <div class="statistic-box">
         <div class="head">
-          <div class="box-title">作品世界</div>
+          <div class="box-title">{{ $t('writer.bookDetail.workWorlds') }}</div>
           <div class="more">
-            <p>为你的作品关联世界设定</p>
+            <p>{{ $t('writer.bookDetail.worldsHint') }}</p>
           </div>
         </div>
         <div class="worlds">
           <div class="empty-state" v-if="worlds.length === 0">
-            <div class="empty-title">还没有关联作品世界</div>
-            <div class="empty-subtitle">点击下方“添加作品世界”，为当前作品关联世界设定</div>
+            <div class="empty-title">{{ $t('writer.bookDetail.noWorlds') }}</div>
+            <div class="empty-subtitle">{{ $t('writer.bookDetail.noWorldsHint') }}</div>
           </div>
           <div v-for="novel in worlds" :key="novel.novel_id" class="world-item">
             <navigator :url="'./readers/bookInfo?id=' +  novel.novel_id" open-type="navigate" class="books" 
@@ -130,7 +130,7 @@
                 <div class="world-title">
                   {{novel.name}}
                   <el-tag type="warning" v-show="novel.novel_type == 'world'" effect="dark" 
-                    class="world-tag" size="mini">世界设定</el-tag>
+                    class="world-tag" size="mini">{{ $t('writer.bookDetail.worldSetting') }}</el-tag>
                 </div>
                 <view class="author">
                   <log-image :src="novel.avatar_url" alt="" class="auther_avatar" 
@@ -142,66 +142,66 @@
             </navigator>
           </div>
         </div>
-        <div class="addButton" v-if="isOwner" @click="$emit('show-book-select')">添加作品世界</div>
+        <div class="addButton" v-if="isOwner" @click="$emit('show-book-select')">{{ $t('writer.bookDetail.addWorld') }}</div>
       </div>
 
       <!-- <writerHelper :novel_id="book.novel_id" @close-book-detail="$emit('close-book-detail')"></writerHelper> -->
 
       <div class="statistic-box">
         <div class="head">
-          <div class="box-title">作品数据盒</div>
+          <div class="box-title">{{ $t('writer.bookDetail.dataBox') }}</div>
           <div class="more">
-            <p>凌晨3点更新昨日数据</p>
+            <p>{{ $t('writer.bookDetail.dataBoxHint') }}</p>
           </div>
         </div>
         <div class="statistics-body no-statistic" v-if="statistics.length < 2">
           <div class="empty-state">
-            <div class="empty-title">暂无数据</div>
-            <div class="empty-subtitle">继续更新内容，次日凌晨 3:00 后可查看</div>
+            <div class="empty-title">{{ $t('writer.bookDetail.noData') }}</div>
+            <div class="empty-subtitle">{{ $t('writer.bookDetail.noDataHint') }}</div>
           </div>
         </div>
         <div class="statistics-body" v-if="statistics.length >= 2">
           <div class="card" @click="$emit('goto-statistics')">
             <p class="numeral">
               {{statistics[0].clicks}}
-              <span class="change">较昨日+{{statistics[0].clicks - statistics[1].clicks}}</span>
+              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].clicks - statistics[1].clicks }) }}</span>
             </p>
-            <p class="name">阅读量</p>
+            <p class="name">{{ $t('writer.bookDetail.views') }}</p>
           </div>
           <div class="card" @click="$emit('goto-statistics')">
             <p class="numeral">
               {{statistics[0].nices}}
-              <span class="change">较昨日+{{statistics[0].nices - statistics[1].nices}}</span>
+              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].nices - statistics[1].nices }) }}</span>
             </p>
-            <p class="name">点赞数</p>
+            <p class="name">{{ $t('writer.bookDetail.likes') }}</p>
           </div>
           <div class="card" @click="$emit('goto-statistics')">
             <p class="numeral">
               {{statistics[0].likes}}
-              <span class="change">较昨日+{{statistics[0].likes - statistics[1].likes}}</span>
+              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].likes - statistics[1].likes }) }}</span>
             </p>
-            <p class="name">收藏数</p>
+            <p class="name">{{ $t('writer.bookDetail.favorites') }}</p>
           </div>
           <div class="card" @click="$emit('goto-statistics')">
             <p class="numeral">
               {{statistics[0].comments}}
-              <span class="change">较昨日+{{statistics[0].comments - statistics[1].comments}}</span>
+              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].comments - statistics[1].comments }) }}</span>
             </p>
-            <p class="name">评论数</p>
+            <p class="name">{{ $t('writer.bookDetail.comments') }}</p>
           </div>
           <div class="card" @click="$emit('goto-statistics')">
             <p class="numeral">
               {{statistics[0].shares || 0}}
-              <span class="change">较昨日+{{(statistics[0].shares || 0) - (statistics[1].shares || 0)}}</span>
+              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: (statistics[0].shares || 0) - (statistics[1].shares || 0) }) }}</span>
             </p>
-            <p class="name">分享数</p>
+            <p class="name">{{ $t('writer.bookDetail.shares') }}</p>
           </div>
           <div class="card" @click="$emit('goto-statistics')">
             <p class="numeral">
               {{statistics[0].tippings}}
-              <span class="change">较昨日+{{statistics[0].tippings - statistics[1].tippings}}</span>
+              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].tippings - statistics[1].tippings }) }}</span>
             </p>
-            <p class="name">打赏值</p>
+            <p class="name">{{ $t('writer.bookDetail.tippings') }}</p>
           </div>
         </div>
       </div>
@@ -281,7 +281,38 @@ export default {
     },
     introText() {
       if (this.hasDescription) return this.book.content;
-      return '暂无作品简介，可在作品设置中补充。';
+      return this.$t('writer.bookDetail.noIntro');
+    },
+    introToggleText() {
+      return this.$t(
+        this.isDescriptionExpanded
+          ? 'writer.bookDetail.collapseIntro'
+          : 'writer.bookDetail.expandIntro'
+      );
+    },
+    settingsButtonText() {
+      return this.$t(
+        this.isOwner
+          ? 'writer.bookDetail.workSettings'
+          : 'writer.bookDetail.collabSettings'
+      );
+    },
+    banTitle() {
+      if (!this.book) return '';
+      return this.$t(
+        Number(this.book.is_banned) === 2
+          ? 'writer.bookDetail.banReviewing'
+          : 'writer.bookDetail.banAbnormal'
+      );
+    },
+    banReasonText() {
+      if (!this.book) return '';
+      const reason = this.book.ban_reason || this.$t('writer.bookDetail.banReasonDefault');
+      let text = this.$t('writer.bookDetail.banReason', { reason });
+      if (this.book.ban_review_comment) {
+        text += this.$t('writer.bookDetail.banReviewComment', { comment: this.book.ban_review_comment });
+      }
+      return text;
     },
     shouldShowIntroToggle() {
       return this.hasDescription && this.book.content.toString().trim().length > 40;
@@ -299,7 +330,7 @@ export default {
       }
       try {
         uni.showLoading({
-          title: '加载中',
+          title: this.$t('writer.bookDetail.loading'),
           mask: true
         });
         let tk = JSON.parse(window.localStorage.getItem('token'));
@@ -345,15 +376,25 @@ export default {
       if (!this.activityInfo || !this.activityInfo.userInfo) return false;
       return this.activityInfo.userInfo.some(info => info.tag_id === tagId);
     },
+    // 活动参与信息按钮文案
+    activityFormButtonText(tagId) {
+      return this.$t(
+        this.hasFilledForm(tagId)
+          ? 'writer.bookDetail.editInfo'
+          : 'writer.bookDetail.fillInfo'
+      );
+    },
     // 获取表单状态文本
     getFormStatusText(tagId, requiredFields) {
       if (!this.hasFilledForm(tagId)) {
         const requiredCount = requiredFields.filter(field => field.required).length;
-        return requiredCount > 0 ? `有${requiredCount}项必填信息未填写` : '信息未填写';
+        return requiredCount > 0
+          ? this.$t('writer.bookDetail.requiredFieldsUnfilled', { count: requiredCount })
+          : this.$t('writer.bookDetail.infoUnfilled');
       }
       
       const userInfo = this.activityInfo.userInfo.find(info => info.tag_id === tagId);
-      if (!userInfo) return '信息未填写';
+      if (!userInfo) return this.$t('writer.bookDetail.infoUnfilled');
       
       // 从 information_data 字段解析实际的表单数据
       let formData = {};
@@ -368,9 +409,9 @@ export default {
         field.required && (!formData[field.name] || formData[field.name].toString().trim() === '')
       );
       
-      return missingRequired.length > 0 
-        ? `还有${missingRequired.length}项必填信息未完善` 
-        : '信息已完善';
+      return missingRequired.length > 0
+        ? this.$t('writer.bookDetail.requiredFieldsIncomplete', { count: missingRequired.length })
+        : this.$t('writer.bookDetail.infoComplete');
     },
     // 获取表单状态样式类
     getFormStatusClass(tagId) {

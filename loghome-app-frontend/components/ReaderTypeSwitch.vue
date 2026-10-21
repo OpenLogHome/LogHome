@@ -1,14 +1,14 @@
 <template>
-	<div class="reader-type-switch" role="radiogroup" aria-label="阅读器类型">
+	<div class="reader-type-switch" role="radiogroup" :aria-label="$t('reader.book.readerType')">
 		<button type="default" class="type-option" :class="{ selected: value === 'page' }"
 			role="radio" :aria-checked="value === 'page'" @click="$emit('change', 'page')">
 			<i class="el-icon-reading"></i>
-			<span>翻页</span>
+			<span>{{ $t('reader.book.pageMode') }}</span>
 		</button>
 		<button type="default" class="type-option" :class="{ selected: value === 'text' }"
 			role="radio" :aria-checked="value === 'text'" @click="$emit('change', 'text')">
 			<i class="el-icon-document"></i>
-			<span>滚动</span>
+			<span>{{ $t('reader.book.scrollMode') }}</span>
 		</button>
 	</div>
 </template>

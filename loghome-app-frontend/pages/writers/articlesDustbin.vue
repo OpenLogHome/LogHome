@@ -6,30 +6,30 @@
 						:mainClick="function(){}" :clickInfo="item.article_id">
 						<template v-slot:title>
 							<div class="title">{{item.title}}
-								<span class="draft" v-show="item.is_draft == true">草稿</span>
+								<span class="draft" v-show="item.is_draft == true">{{ $t('writer.work.dustbin.draft') }}</span>
                                 <el-tag type="danger" v-if="item.hasWriterModify == true"
-                                    style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">有未发布的编辑</el-tag>
+                                    style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.dustbin.unpublishedEdits') }}</el-tag>
                                 <i class="el-icon-loading" v-if="item.isCheckingStatus"
                                     style="margin-left:10rpx; color:var(--text-color-primary);"></i>
 							</div>
 							<div class="miniTitle">
                                 <div v-if="item.hasWriterModify">
-                                    {{ item.modifiedTextCount }}字
+                                    {{ $t('writer.work.common.charCount', { count: item.modifiedTextCount }) }}
                                     {{ item.modify_time }}
                                 </div>
                                 <div v-else>
-                                    {{item.text_count}}字 {{utc2beijing(item.update_time)}}
+                                    {{ $t('writer.work.common.charCount', { count: item.text_count }) }} {{utc2beijing(item.update_time)}}
                                 </div>
 							</div>
 						</template>
 						<view class="menuContent">
 							<div class="subTitle" @click="restoreArticle(item.article_id)">
 								<uni-icons type="loop" size="20" color="rgb(113, 52, 24)"/>
-								<span>恢复</span>
+								<span>{{ $t('writer.work.dustbin.restore') }}</span>
 							</div>
 							<div class="subTitle" @click="deleteArticle(item.article_id)">
 								<uni-icons type="trash" size="20" color="rgb(113, 52, 24)"/>
-								<span>永久删除</span>
+								<span>{{ $t('writer.work.dustbin.deleteForever') }}</span>
 							</div>
 						</view>
 				    </uni-collapse-item>
@@ -61,7 +61,7 @@ export default{
 	},
 	onLoad(option){
 		uni.showLoading({
-			title: '努力加载中'
+			title: this.$t('common.loading')
 		});
 		if(JSON.stringify(option) == "{}"){
 			uni.showToast({
@@ -116,7 +116,7 @@ export default{
 			).then(async (res) => {
 				this.articles = res.data;
 				uni.setNavigationBarTitle({
-					title:"章节回收站"
+					title: this.$t('writer.work.dustbin.navTitle')
 				});
                 await this.checkArticleStatus();
 			}).catch(function (error) {
@@ -278,8 +278,8 @@ export default{
 			let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
 			let _this = this;
 			uni.showModal({
-				title: '提示',
-				content: '确认要恢复吗？',
+				title: _this.$t('common.prompt'),
+				content: _this.$t('writer.work.dustbin.restoreConfirm'),
 				confirmColor:"#EA7034",
 				success: function (res) {
 					if (res.confirm) {
@@ -296,7 +296,7 @@ export default{
 						)
 						.then(function(response) {
 							uni.showToast({
-								title: "已恢复",
+								title: _this.$t('writer.work.dustbin.restored'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -308,7 +308,7 @@ export default{
 							console.log(error);
 							if (error) {
 								uni.showToast({
-									title: "恢复失败",
+									title: _this.$t('writer.work.dustbin.restoreFailed'),
 									icon: 'none',
 									duration: 2000
 								});
@@ -327,8 +327,8 @@ export default{
 			let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
 			let _this = this;
 			uni.showModal({
-				title: '提示',
-				content: '删除后将无法找回，确定继续吗？',
+				title: _this.$t('common.prompt'),
+				content: _this.$t('writer.work.dustbin.deleteForeverConfirm'),
 				confirmColor:"#EA7034",
 				success: function (res) {
 					if (res.confirm) {
@@ -345,7 +345,7 @@ export default{
 						)
 						.then(function(response) {
 							uni.showToast({
-								title: "已删除",
+								title: _this.$t('common.deleted'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -357,7 +357,7 @@ export default{
 							console.log(error);
 							if (error) {
 								uni.showToast({
-									title: "删除失败",
+									title: _this.$t('common.deleteFailed'),
 									icon: 'none',
 									duration: 2000
 								});

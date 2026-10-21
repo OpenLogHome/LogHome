@@ -2,8 +2,8 @@
 	<view class="outer" v-dark>
 		<div class="lost" v-show="lostArticle">
 			<img src="../../static/faces/sad.png" alt="" class="icon"/>
-			<p class="des">哎呀，章节走丢了...</p>
-			<div class="button" @click="gotoAllArticles">查看其他章节</div>
+			<p class="des">{{ $t('reader.article.chapterLost') }}</p>
+			<div class="button" @click="gotoAllArticles">{{ $t('reader.article.viewOtherChapters') }}</div>
 		</div>
 	</view>
 </template>
@@ -22,7 +22,7 @@
 		},
 		onShow() {
 			uni.showLoading({
-				title: '努力加载中'
+				title: this.$t('common.loading')
 			});
 			let _this = this;
 			console.log(this.articleId)
@@ -42,7 +42,7 @@
 				})
 			} else {
 				uni.showToast({
-					title: "哎呀，章节走丢了...",
+					title: this.$t('reader.article.chapterLost'),
 					icon: 'none',
 					duration: 2000
 				});

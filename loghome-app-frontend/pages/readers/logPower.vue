@@ -4,86 +4,86 @@
             <view class="header">
                 <view class="novel-name">{{name}}</view>
                 <view class="total-score">
-                    <view class="label">当前<LogPowerWordmark /></view>
+                    <view class="label">{{ $t('reader.power.currentLabel') }}<LogPowerWordmark /></view>
                     <countTo :startVal="0" :endVal="ranking" :duration="1500" class="score-value"></countTo>
                 </view>
             </view>
             
             <view class="section card">
-                <view class="section-title">基础分计算</view>
+                <view class="section-title">{{ $t('reader.power.baseTitle') }}</view>
                 <view class="formula-box">
                     <view class="row">
-                        <text class="item">阅读 ({{clicks}})</text>
+                        <text class="item">{{ $t('reader.power.reads', { count: clicks }) }}</text>
                         <text class="calc">× 8 =</text>
                         <text class="val">{{clicks * 8}}</text>
                     </view>
                     <view class="row">
-                        <text class="item">收藏 ({{bookmarks}})</text>
+                        <text class="item">{{ $t('reader.power.bookmarks', { count: bookmarks }) }}</text>
                         <text class="calc">× 200 =</text>
                         <text class="val">{{bookmarks * 200}}</text>
                     </view>
                     <view class="row">
-                        <text class="item">评论 ({{comments}})</text>
+                        <text class="item">{{ $t('reader.power.comments', { count: comments }) }}</text>
                         <text class="calc">× 20 =</text>
                         <text class="val">{{comments * 20}}</text>
                     </view>
                     <view class="row">
-                        <text class="item">点赞 ({{nices}})</text>
+                        <text class="item">{{ $t('reader.power.likes', { count: nices }) }}</text>
                         <text class="calc">× 12 =</text>
                         <text class="val">{{nices * 12}}</text>
                     </view>
                     <view class="row">
-                        <text class="item">打赏及其他</text>
+                        <text class="item">{{ $t('reader.power.tips') }}</text>
                         <text class="calc">× 10 =</text>
                         <text class="val">{{tipsScore}}</text>
                     </view>
                     <view class="divider"></view>
                     <view class="row total">
-                        <text class="item">基础分总计</text>
+                        <text class="item">{{ $t('reader.power.baseTotal') }}</text>
                         <text class="val">{{baseScore}}</text>
                     </view>
                 </view>
             </view>
 
             <view class="section card">
-                <view class="section-title">咕咕惩罚</view>
+                <view class="section-title">{{ $t('reader.power.penaltyTitle') }}</view>
                 <view class="info-row">
-                    <text>最近更新</text>
+                    <text>{{ $t('reader.power.lastUpdated') }}</text>
                     <text>{{formatDate(update_time)}}</text>
                 </view>
                 <view class="info-row">
-                    <text>距今</text>
-                    <text>{{Math.abs(daysDiff)}} 天 {{daysDiff > 0 ? '后' : '前'}}</text>
+                    <text>{{ $t('reader.power.timeSince') }}</text>
+                    <text>{{ daysDiff > 0 ? $t('reader.power.daysAfter', { count: Math.abs(daysDiff) }) : $t('reader.power.daysBefore', { count: Math.abs(daysDiff) }) }}</text>
                 </view>
                 
                 <view class="formula-box" style="margin-top: 20rpx;">
                     <view class="row">
-                        <text class="item">修正系数 A</text>
+                        <text class="item">{{ $t('reader.power.factorA') }}</text>
                         <text class="val">{{factorA.toFixed(4)}}</text>
                     </view>
                     <view class="formula-desc">
-                        公式: 1 + ({{daysDiff}} + 5) * 0.066
-                        <text v-if="factorA == 0.4" class="limit-tip"> (已触底 0.4)</text>
+                        {{ $t('reader.power.formulaA', { days: daysDiff }) }}
+                        <text v-if="factorA == 0.4" class="limit-tip"> ({{ $t('reader.power.limitTip', { value: '0.4' }) }})</text>
                     </view>
 
                     <view class="row" style="margin-top: 20rpx;">
-                        <text class="item">修正系数 B</text>
+                        <text class="item">{{ $t('reader.power.factorB') }}</text>
                         <text class="val">{{factorB.toFixed(4)}}</text>
                     </view>
                      <view class="formula-desc">
-                        公式: 1 + {{daysDiff}} * 0.0035
-                        <text v-if="factorB == 0.6" class="limit-tip"> (已触底 0.6)</text>
+                        {{ $t('reader.power.formulaB', { days: daysDiff }) }}
+                        <text v-if="factorB == 0.6" class="limit-tip"> ({{ $t('reader.power.limitTip', { value: '0.6' }) }})</text>
                     </view>
                 </view>
             </view>
 
              <view class="section card">
-                <view class="section-title">最终公式</view>
+                <view class="section-title">{{ $t('reader.power.finalTitle') }}</view>
                 <view class="final-calc">
                     {{baseScore}} × {{factorA.toFixed(4)}} × {{factorB.toFixed(4)}} ≈ {{ranking}}
                 </view>
                 <view class="tips">
-                    注：<LogPowerWordmark />根据作品数据和更新频率实时计算，是衡量作品热度的重要指标。
+                    {{ $t('reader.power.notePrefix') }}<LogPowerWordmark />{{ $t('reader.power.noteSuffix') }}
                 </view>
             </view>
 
@@ -114,7 +114,7 @@ export default {
     },
     onLoad(options) {
         this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
-        this.name = options.name || '未知小说';
+        this.name = options.name || this.$t('reader.power.unknownNovel');
         this.clicks = parseInt(options.clicks || 0);
         this.nices = parseInt(options.nices || 0);
         this.bookmarks = parseInt(options.bookmarks || 0);

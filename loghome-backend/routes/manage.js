@@ -34,6 +34,7 @@ let worldsRouter = require('./manage/worlds');
 let articleFeedbacksRouter = require('./manage/articleFeedbacks');
 let writingActivitiesRouter = require('./manage/writingActivities');
 let userContentsRouter = require('./manage/userContents');
+let todoBoardRouter = require('./manage/todoBoard');
 
 router.use('/library', libraryRouter);
 router.use('/users', userRouter);
@@ -65,5 +66,6 @@ router.use('/worlds', worldsRouter);
 router.use('/article-feedbacks', articleFeedbacksRouter);
 router.use('/writing-activities', writingActivitiesRouter);
 router.use('/user-contents', userContentsRouter);
+router.use('/todo-board', todoBoardRouter);
 
 module.exports = router;

@@ -2,14 +2,14 @@
 	<view class="content" :class="[readerSettings.theme, { 'block-epoch-skin': isBlockEpochSkin }]"
 		:style="readerPageStyle" @tap="contentTapped">
 		<view v-if="currentBackgroundSkin" class="reader-background-layer" :style="readerBackgroundLayerStyle"></view>
-		<el-alert title="提示" type="info" close-text="知道了" :description="'经审核，本文' + article.warn_status + '，请酌情选读。'"
+		<el-alert :title="$t('common.prompt')" type="info" :close-text="$t('common.gotIt')" :description="$t('reader.article.warnAlert', { status: article.warn_status })"
 			show-icon v-show="article.warn_status && article.warn_status != 'None'" style="margin-bottom: 50rpx;"
 			effect="dark">
 		</el-alert>
 		<div class="tools" :class="{ opened: settingsOpened }" @click.self="toolsOuterClicked" ref="tools">
 			<div class="settings" :class="{ opened: settingsOpened, preview: isPreviewMode }" ref="settings">
 				<div class="readerTypeSettingRow">
-					<span class="settingLabel">阅读器</span>
+					<span class="settingLabel">{{ $t('reader.article.readerLabel') }}</span>
 					<ReaderTypeSwitch class="reader-type-switch-setting" value="text"
 						@change="switchReaderType" />
 				</div>
@@ -17,16 +17,16 @@
 					<div class="button" @click="changeFontSize(+1)">A+</div>
 					<div class="button" @click="changeFontSize(-1)">A-</div>
 					<div class="button" :class="{ 'selected': readerSettings.lineHeightMode == 0 }"
-						@click="changeLineHeight(0)">窄</div>
+						@click="changeLineHeight(0)">{{ $t('reader.article.lineHeightNarrow') }}</div>
 					<div class="button" :class="{ 'selected': readerSettings.lineHeightMode == 1 }"
-						@click="changeLineHeight(1)">中</div>
+						@click="changeLineHeight(1)">{{ $t('reader.article.lineHeightMedium') }}</div>
 					<div class="button" :class="{ 'selected': readerSettings.lineHeightMode == 2 }"
-						@click="changeLineHeight(2)">宽</div>
-					<div v-if="!isPreviewMode" class="button" @click="gotoMenu">目录</div>
-					<div class="button" @click.stop="openNativeAudiobookPlayer()">听书</div>
+						@click="changeLineHeight(2)">{{ $t('reader.article.lineHeightWide') }}</div>
+					<div v-if="!isPreviewMode" class="button" @click="gotoMenu">{{ $t('reader.article.tableOfContents') }}</div>
+					<div class="button" @click.stop="openNativeAudiobookPlayer()">{{ $t('reader.article.audiobook') }}</div>
 				</div>
 				<div class="backgroundSettingRow">
-					<span class="backgroundLabel">背景</span>
+					<span class="backgroundLabel">{{ $t('reader.article.background') }}</span>
 					<ReaderBackgroundPicker class="background-picker"
 						:theme-options="readerThemeOptions"
 						:skins="readerBackgroundSkins"
@@ -41,12 +41,12 @@
 					<button type="default" class="inTopBar"
 						:class="[{ enabled: article.article_chapter != firstArticleChapter }, readerSettings.theme]"
 						@click="changePage(-1)">
-						上一章<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg" />
+						{{ $t('reader.article.prevChapter') }}<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg" />
 					</button>
 					<button type="default" class="inTopBar"
 						:class="[{ enabled: article.article_chapter != lastArticleChapter }, readerSettings.theme]"
 						@click="changePage(+1)">
-						<img src="../../static/icons/icon_reader_pgdn.png" alt="" class="pageChangeImg" />下一章
+						<img src="../../static/icons/icon_reader_pgdn.png" alt="" class="pageChangeImg" />{{ $t('reader.article.nextChapter') }}
 					</button>
 				</div>
 			</div>
@@ -68,8 +68,8 @@
 					<log-image :src="article.content.pic" alt="" v-if="article.content.pic != undefined" />
 				</div>
 				<div class="right">
-					<div class="tit">词条名称</div>
-					<input class="input" placeholder="请输入词条名称" v-model="article.title" style="fontSize: 50rpx"
+					<div class="tit">{{ $t('reader.article.entryName') }}</div>
+					<input class="input" :placeholder="$t('reader.article.entryNamePlaceholder')" v-model="article.title" style="fontSize: 50rpx"
 						:style="{ fontSize: readerSettings.titleFontSize + 'rpx' }" disabled />
 				</div>
 			</div>
@@ -136,42 +136,42 @@
 			:style="{ left: panelPosition.x + 'px', top: panelPosition.y + 'px' }">
 			<div class="panel-button" @click="handleCopy">
 				<i class="el-icon-document-copy"></i>
-				<span>复制</span>
+				<span>{{ $t('reader.article.copy') }}</span>
 			</div>
 			<div class="panel-button" v-show="!isPreviewMode && selectedParagraph && !selectedParagraph.cento" @click="handleUnderline">
 				<i class="el-icon-edit"></i>
-				<span>划线</span>
+				<span>{{ $t('reader.article.underline') }}</span>
 			</div>
 			<div class="panel-button" v-show="!isPreviewMode && selectedParagraph && selectedParagraph.cento"
 				@click="handleRemoveUnderline">
 				<i class="el-icon-remove-outline"></i>
-				<span>移除划线</span>
+				<span>{{ $t('reader.article.removeUnderline') }}</span>
 			</div>
 			<div v-if="!isPreviewMode" class="panel-button" @click="gotoParagraphComment(selectedParagraph.id)">
 				<i class="el-icon-chat-line-round"></i>
-				<span>评论</span>
+				<span>{{ $t('reader.article.comment') }}</span>
 			</div>
 			<div class="panel-button" @click="handleFeedback">
 				<i class="el-icon-warning-outline"></i>
-				<span>反馈</span>
+				<span>{{ $t('reader.article.feedback') }}</span>
 			</div>
 		</div>
 
 		<div class="underBar">
 			<img src="../../static/icons/end.png" alt="" />
-			<div>已经到底了哦</div>
+			<div>{{ $t('reader.article.endOfArticle') }}</div>
 		</div>
 		<div v-if="!isPreviewMode" class="row" style="display: flex;">
 			<button type="default"
 				:class="[{ enabled: article.article_chapter != firstArticleChapter }, readerSettings.theme]"
 				@click="changePage(-1)"
 				style="margin-right: 80rpx;">
-				上一章<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg" />
+				{{ $t('reader.article.prevChapter') }}<img src="../../static/icons/icon_reader_pgup.png" alt="" class="pageChangeImg" />
 			</button>
 			<button type="default"
 				:class="[{ enabled: article.article_chapter != lastArticleChapter }, readerSettings.theme]"
 				@click="changePage(+1)">
-				<img src="../../static/icons/icon_reader_pgdn.png" alt="" class="pageChangeImg" />下一章
+				<img src="../../static/icons/icon_reader_pgdn.png" alt="" class="pageChangeImg" />{{ $t('reader.article.nextChapter') }}
 			</button>
 		</div>
 
@@ -188,7 +188,7 @@
 			:wrapperClosable="false" :append-to-body="true">
 			<div class="bookCommentDrawer" :style="commentDrawerThemeStyle">
 				<div class="drawerTitle">
-					段落评论
+					{{ $t('reader.article.paragraphComments') }}
 				</div>
 				<div class="closeBtn" @click="handleCloseCommentDraweraManually">
 					<i class="el-icon-close"></i>
@@ -198,22 +198,22 @@
 				</BookComment>
 			</div>
 		</el-drawer>
-		<el-dialog title="错误反馈" :visible.sync="feedbackDialogVisible" width="80%"
+		<el-dialog :title="$t('reader.article.feedbackTitle')" :visible.sync="feedbackDialogVisible" width="80%"
 			:before-close="handleCloseFeedbackDialog">
 			<div class="feedback-container">
 				<div class="paragraph-preview">
-					<p>选中的段落：</p>
+					<p>{{ $t('reader.article.selectedParagraph') }}</p>
 				<div class="paragraph-text">{{ feedbackParagraph ? feedbackParagraph.value : '' }}</div>
 				</div>
 				<div class="feedback-input">
-					<p>请描述您发现的错误：</p>
-					<el-input type="textarea" :rows="4" placeholder="请输入错误描述，如错别字、语法错误等" v-model="feedbackContent">
+					<p>{{ $t('reader.article.feedbackPrompt') }}</p>
+					<el-input type="textarea" :rows="4" :placeholder="$t('reader.article.feedbackPlaceholder')" v-model="feedbackContent">
 					</el-input>
 				</div>
 			</div>
 			<span slot="footer" class="dialog-footer">
-				<el-button @click="handleCloseFeedbackDialog">取消</el-button>
-				<el-button type="primary" @click="submitFeedback" :disabled="!feedbackContent">提交</el-button>
+				<el-button @click="handleCloseFeedbackDialog">{{ $t('common.cancel') }}</el-button>
+				<el-button type="primary" @click="submitFeedback" :disabled="!feedbackContent">{{ $t('common.submit') }}</el-button>
 			</span>
 		</el-dialog>
 		<AudiobookPlayer
@@ -227,8 +227,8 @@
 			@change="handleAudiobookProgress"
 		/>
 		<div class="lastProgress" v-show="showLastProgress">
-			已恢复上次阅读进度 <div class="textbutton" style="margin-left: 10px;"
-				@click="scrollToTop(true); showLastProgress = false">回到顶部</div>
+			{{ $t('reader.article.progressRestored') }} <div class="textbutton" style="margin-left: 10px;"
+				@click="scrollToTop(true); showLastProgress = false">{{ $t('reader.article.backToTop') }}</div>
 		</div>
 	</view>
 </template>
@@ -278,19 +278,19 @@ export default {
 			membershipTier: '',
 			backgroundSkinsLoaded: false,
 			readerSolidThemes: [
-				{ key: 'white', name: '蛙鸣白', required_membership: 'none' },
-				{ key: 'yellow', name: '原木黄', required_membership: 'none' },
-				{ key: 'green', name: '草原绿', required_membership: 'none' },
-				{ key: 'blue', name: '晴空蓝', required_membership: 'none' },
-				{ key: 'purple', name: '末地紫', required_membership: 'none' },
-				{ key: 'pink', name: '桃花粉', required_membership: 'none' },
-				{ key: 'black', name: '虚空黑', required_membership: 'none' },
-				{ key: 'wavechaser', name: '追波', required_membership: 'standard' },
-				{ key: 'powderblue', name: '粉蓝', required_membership: 'standard' },
-				{ key: 'qingyun', name: '青云', required_membership: 'standard' },
-				{ key: 'sunburst', name: '艳阳', required_membership: 'standard' },
-				{ key: 'thorncrown', name: '荆棘冠', required_membership: 'standard' },
-				{ key: 'chocolate', name: '巧克力', required_membership: 'standard' }
+				{ key: 'white', required_membership: 'none' },
+				{ key: 'yellow', required_membership: 'none' },
+				{ key: 'green', required_membership: 'none' },
+				{ key: 'blue', required_membership: 'none' },
+				{ key: 'purple', required_membership: 'none' },
+				{ key: 'pink', required_membership: 'none' },
+				{ key: 'black', required_membership: 'none' },
+				{ key: 'wavechaser', required_membership: 'standard' },
+				{ key: 'powderblue', required_membership: 'standard' },
+				{ key: 'qingyun', required_membership: 'standard' },
+				{ key: 'sunburst', required_membership: 'standard' },
+				{ key: 'thorncrown', required_membership: 'standard' },
+				{ key: 'chocolate', required_membership: 'standard' }
 			],
 			pageHead: null,
 			nativeNavigationBarVisible: null,
@@ -451,7 +451,7 @@ export default {
 		},
 		async openNativeAudiobookPlayer(startParagraphId = null) {
 			if (!this.isAudiobookArticle(this.article)) {
-				uni.showToast({ title: '当前内容暂不支持听书', icon: 'none' });
+				uni.showToast({ title: this.$t('reader.article.audiobookUnsupported'), icon: 'none' });
 				return false;
 			}
 			if (!Array.isArray(this.articles) || this.articles.length === 0) {
@@ -661,7 +661,7 @@ export default {
 		},
 		refreshPage(articleId) {
 			uni.showLoading({
-				title: "努力加载中"
+				title: this.$t('common.loading')
 			})
 			let _this = this;
 			const applyArticle = (loadedArticle) => {
@@ -799,12 +799,12 @@ export default {
 		handleLockedBackgroundSkin(skin) {
 			const superOnly = skin && skin.required_membership === 'super';
 			uni.showModal({
-				title: superOnly ? '超级典藏背景' : '原木典藏背景',
+				title: superOnly ? this.$t('reader.article.superBackgroundTitle') : this.$t('reader.article.premiumBackgroundTitle'),
 				content: superOnly
-					? '这款背景仅限超级原木通行证用户使用。'
-					: '这款背景仅限原木通行证或超级原木通行证用户使用。',
-				cancelText: '暂不',
-				confirmText: '查看通行证',
+					? this.$t('reader.article.superBackgroundOnly')
+					: this.$t('reader.article.premiumBackgroundOnly'),
+				cancelText: this.$t('reader.article.notNow'),
+				confirmText: this.$t('reader.article.viewPass'),
 				success: ({ confirm }) => {
 					if (confirm) uni.navigateTo({ url: '/pages/membership/index' });
 				}
@@ -871,13 +871,13 @@ export default {
 			let article = this.article;
 			if (this.article.article_chapter + dp == 0) {
 				uni.showToast({
-					title: "已经是第一章了",
+					title: this.$t('reader.article.firstChapter'),
 					icon: 'none',
 					duration: 2000
 				});
 			} else if (this.article.article_chapter + dp == articles.length + 1) {
 				uni.showToast({
-					title: "已经是最后一章了",
+					title: this.$t('reader.article.lastChapter'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -1074,7 +1074,7 @@ export default {
 			} catch (error) {
 				console.error(error);
 				uni.showToast({
-					title: '移除划线失败',
+					title: this.$t('reader.article.removeUnderlineFailed'),
 					icon: 'none'
 				});
 			}
@@ -1084,11 +1084,10 @@ export default {
 			uni.setClipboardData({
 				data: `${this.selectedParagraph.value}
 ===================
-版权声明：本文为原创文章，遵循 《原木社区用户内容上传协议》，转载请附上原文出处链接和本声明。 
-原文链接：http://loghome.ink/article/${this.articleId}`,
+${this.$t('reader.article.copyAttribution', { brand: this.$t('nav.brand'), url: 'http://loghome.ink/article/' + this.articleId })}`,
 				success: () => {
 					uni.showToast({
-						title: '已复制',
+						title: this.$t('common.copied'),
 						icon: 'none'
 					});
 					this.clearSelection();
@@ -1212,7 +1211,7 @@ export default {
 					}
 				});
 				uni.showToast({
-					title: '反馈提交成功',
+					title: this.$t('reader.article.feedbackSuccess'),
 					icon: 'none'
 				});
 				this.handleCloseFeedbackDialog();
@@ -1220,7 +1219,7 @@ export default {
 			} catch (error) {
 				console.error(error);
 				uni.showToast({
-					title: '反馈提交失败',
+					title: this.$t('reader.article.feedbackFailed'),
 					icon: 'none'
 				});
 			}
@@ -1237,7 +1236,7 @@ export default {
 		this.previewPayload = readReaderPreview(this.previewKey);
 		this.isPreviewMode = !!this.previewPayload;
 		if (this.previewKey && !this.previewPayload) {
-			uni.showToast({ title: '预览内容已失效', icon: 'none' });
+			uni.showToast({ title: this.$t('reader.article.previewExpired'), icon: 'none' });
 			setTimeout(() => uni.navigateBack(), 300);
 			return;
 		}
@@ -1270,7 +1269,7 @@ export default {
 			return;
 		}
 		uni.showLoading({
-			title: '努力加载中'
+			title: this.$t('common.loading')
 		});
 
 		// 导航栏在原生 WebView 中可能晚于页面组件挂载，滚动时会继续尝试解析。
@@ -1366,6 +1365,7 @@ export default {
 		readerThemeOptions() {
 			return this.readerSolidThemes.map(theme => ({
 				...theme,
+				name: this.$t('reader.article.themes.' + theme.key),
 				backgroundColor: this.themes[theme.key].backColor,
 				is_locked: !this.canUseBackgroundSkin(theme)
 			}));

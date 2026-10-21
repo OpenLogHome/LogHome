@@ -35,9 +35,9 @@
 		},
 		methods: {
 			del(index) {
-				this.$confirm('此操作不可撤销。', '是否确定删除段落？', {
-					  confirmButtonText: '确定',
-					  cancelButtonText: '取消',
+				this.$confirm(this.$t('writer.editor.paragraphDeleteContent'), this.$t('writer.editor.paragraphDeleteTitle'), {
+					  confirmButtonText: this.$t('common.confirm'),
+					  cancelButtonText: this.$t('common.cancel'),
 					  type: 'warning'
 					}).then(() => {
 					  let mobileList = this.list[index]
@@ -53,7 +53,7 @@
 			top(index) {
 				if (index == 0) {
 					uni.showToast({
-						title: '已经是第一个了！',
+						title: this.$t('writer.editor.firstParagraph'),
 						icon: 'none'
 					})
 					return
@@ -72,7 +72,7 @@
 				let arr = this.list
 				if (index == arr.length - 1) {
 					uni.showToast({
-						title: '已经是最后一个了！',
+						title: this.$t('writer.editor.lastParagraph'),
 						icon: 'none'
 					})
 					return

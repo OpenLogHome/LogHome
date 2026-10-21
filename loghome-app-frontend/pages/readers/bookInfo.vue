@@ -7,19 +7,19 @@
 		<view class="dispatch-loading" v-if="showDispatchLoading">
 			<view class="dispatch-loading-inner">
 				<img class="dispatch-loading-gif" src="../../static/loading.gif" alt="" />
-				<text class="dispatch-loading-text">加载中</text>
+				<text class="dispatch-loading-text">{{ $t('reader.book.loading') }}</text>
 			</view>
 		</view>
-		<nothing :msg="'这本书还没有发布哦'" v-show="!isPageLoading && (bookInfo.is_personal == undefined || bookInfo.is_personal == 1)"></nothing>
+		<nothing :msg="$t('reader.book.notPublished')" v-show="!isPageLoading && (bookInfo.is_personal == undefined || bookInfo.is_personal == 1)"></nothing>
 		<!-- 后台按钮组件 -->
 		<zetank-backBar :bgColor="currentTopColor" :textcolor="currentTopTextColor" :showLeft="scrollTop < 200" :showHome="scrollTop < 200" :showTitle="false"
-			navTitle='标题'></zetank-backBar>
+			:navTitle="$t('reader.book.navTitle')"></zetank-backBar>
 		<view class="report-entry" v-if="!isPageLoading && bookInfo.is_personal == 0" @click="openReport">
 			<image src="../../static/icons/icon_report.png" mode="aspectFit"></image>
-			<text>举报</text>
+			<text>{{ $t('reader.book.report') }}</text>
 		</view>
 		<view class="l-body" :class="{ 'is-loading': isPageLoading }">
-			<view v-if="isPageLoading && !isDispatching" class="book-info-skeleton" aria-label="书籍信息加载中">
+			<view v-if="isPageLoading && !isDispatching" class="book-info-skeleton" :aria-label="$t('reader.book.loadingBookInfo')">
 				<view class="skeleton-hero">
 					<view class="skeleton-block skeleton-cover"></view>
 					<view class="skeleton-meta">
@@ -85,30 +85,30 @@
 						</view>
 						<div class="notag" v-else>
 							<div class="tag">
-								作品未添加标签
+								{{ $t('reader.book.noTags') }}
 							</div>
 						</div>
 						<view class="l-dd-footer">
-							<span>共 {{ articleLength }} 章 总计 {{ bookInfo.text_count }} 字 </span>
+							<span>{{ $t('reader.book.chapterWordStats', { chapterCount: articleLength, wordCount: bookInfo.text_count }) }}</span>
 							<br />
-							<span>阅读：{{ bookInfo.clicks }}</span>
+							<span>{{ $t('reader.book.readCount', { count: bookInfo.clicks }) }}</span>
 
-							<span v-if="bookInfo.likes">收藏：{{ bookInfo.likes.length }}</span>
-							<span>{{ bookInfo.is_complete == 1 ? "已完结" : "连载中" }}</span>
+							<span v-if="bookInfo.likes">{{ $t('reader.book.favoriteCount', { count: bookInfo.likes.length }) }}</span>
+							<span>{{ bookInfo.is_complete == 1 ? $t('common.completed') : $t('reader.book.ongoing') }}</span>
 							<br />
 
-							<span v-if="bookInfo.is_complete == 0">最近更新 {{ utc2beijing(bookInfo.update_time) }}</span>
+							<span v-if="bookInfo.is_complete == 0">{{ $t('reader.book.lastUpdated', { time: utc2beijing(bookInfo.update_time) }) }}</span>
 						</view>
 					</view>
 				</view>
 
 				<div class="novel_Rank clickable" v-show="novelRank.onRank">
 					<navigator url="/pages/readers/rankBoard?board=logpower&zone=all">
-						实时<LogPowerWordmark />榜第
+						{{ $t('reader.book.realtimeRankPrefix') }}<LogPowerWordmark />{{ $t('reader.book.realtimeRankMiddle') }}
 						<span style="font-size: 40rpx; line-height: 100%; padding:0 10rpx;">
 							<countTo :startVal="999" :endVal="novelRank.rank" :duration="1500"></countTo>
 						</span>
-						位
+						{{ $t('reader.book.realtimeRankSuffix') }}
 					</navigator>
 					<navigator :url="`./logPower?name=${bookInfo.name}&clicks=${bookInfo.clicks}&nices=${nice_amount}&bookmarks=${bookInfo.likes ? bookInfo.likes.length : 0}&comments=${commentAmount}&update_time=${bookInfo.update_time}&ranking=${novelRank.ranking}`" style="font-size: 40rpx; transform: translateY(-5rpx);">
 						<countTo :startVal="0" :endVal="novelRank.ranking" :duration="1500"></countTo>
@@ -132,35 +132,35 @@
 						</transition>
 						<view class="l-body-tab" @tap="nice" v-show="!niceStatus">
 							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_nice.png" mode="">
-							</img>{{ nice_amount }} 赞
+							</img>{{ $t('reader.book.likeCount', { count: nice_amount }) }}
 						</view>
 						<view class="l-body-tab" @tap="nice" v-show="niceStatus">
 							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_niced.png" mode="">
-							</img>{{ nice_amount }} 赞
+							</img>{{ $t('reader.book.likeCount', { count: nice_amount }) }}
 						</view>
 						<view class="l-body-tab" :class="{ 'is-busy': isCreatingShareCode }" @tap="shareBook">
 							<view v-if="isCreatingShareCode" class="share-loading-dot"></view>
 							<img v-else class="l-icon-share l-icon-share-2" src="../../static/icons/icon_share.png" mode="">
-							</img>{{ isCreatingShareCode ? '生成中' : '分享' }}
+							</img>{{ isCreatingShareCode ? $t('reader.book.generating') : $t('common.share') }}
 						</view>
 						<view class="l-body-tab" @tap="addToBookcase" v-show="isInBookcase == false">
 							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
-							</img>加入书架
+							</img>{{ $t('reader.book.addToShelf') }}
 						</view>
 						<view class="l-body-tab" @tap="removeFromBookcase" v-show="isInBookcase == true">
 							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
-							</img>从书架中移除
+							</img>{{ $t('reader.book.removeFromShelf') }}
 						</view>
 						<view class="l-body-tab" @tap="navtoSection">
 							<img class="l-icon-share l-icon-share-4" src="../../static/icons/icon_index.png" mode="">
-							</img>目录
+							</img>{{ $t('reader.book.catalog') }}
 						</view>
 
 					</view>
 
 					<view class="l-list collaborator-authors" v-if="isCollaborativeWork">
 						<view class="l-h3">
-							<text class="l-h3-title">协作者</text>
+							<text class="l-h3-title">{{ $t('reader.book.collaborators') }}</text>
 						</view>
 						<scroll-view scroll-x class="collaborator-scroll" show-scrollbar="false">
 							<view class="collaborator-row">
@@ -177,7 +177,7 @@
 										onerror="onerror=null;src='../static/user/defaultAvatar.jpg'"
 									/>
 									<view class="collaborator-name">{{ author.name }}</view>
-									<view class="collaborator-badge" v-if="author.is_owner">所有者</view>
+									<view class="collaborator-badge" v-if="author.is_owner">{{ $t('reader.book.owner') }}</view>
 								</view>
 							</view>
 						</scroll-view>
@@ -185,7 +185,7 @@
 
 					<view class="l-list" @click="startReading" v-show="articleLength">
 						<view class="l-h3">
-							<text class="l-h3-title">正在阅读 - {{ Math.min((historyShown / articleLength * 100), 100).toFixed(0) }}%</text>
+							<text class="l-h3-title">{{ $t('reader.book.currentlyReading', { percent: Math.min((historyShown / articleLength * 100), 100).toFixed(0) }) }}</text>
 						</view>
 						<view class="processlist">
 							<view class="l-list-content">
@@ -194,10 +194,10 @@
 										{{ progressArticle.title }}
 									</view>
 									<view class="l-list-c-body" v-if="progressArticle.article_type == 'spliter'">
-										分卷
+										{{ $t('reader.book.volume') }}
 									</view>
 									<view class="l-list-c-body" v-else-if="!progressArticle.content">
-										努力加载中
+										{{ $t('common.loading') }}
 									</view>
 									<view class="l-list-c-body"
 										v-else-if="progressArticle.content && progressArticle.article_type == 'text'">
@@ -211,7 +211,7 @@
 									<view class="l-list-c-foot">
 										<view class="l-list-c-foot-l">
 											<text
-												class="l-list-c-foot-l-name">第{{ historyShown }}章，共{{ articleLength }}章</text>
+												class="l-list-c-foot-l-name">{{ $t('reader.book.chapterProgress', { current: historyShown, total: articleLength }) }}</text>
 										</view>
 									</view>
 								</view>
@@ -224,20 +224,20 @@
 
 					<view class="l-list">
 						<view class="l-h3">
-							<text class="l-h3-title">世界设定</text>
+							<text class="l-h3-title">{{ $t('reader.book.worldSetting') }}</text>
 						</view>
 						<div class="worlds">
 							<div class="nothing" v-show="worlds.length == 0"
 								style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 70rpx 0;">
 								<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
-								<div style="color:#777777; font-size: 25rpx;">这里还什么都没有喔</div>
+								<div style="color:#777777; font-size: 25rpx;">{{ $t('reader.book.emptyWorlds') }}</div>
 							</div>
 							<navigator v-for="novel in worlds" :key="novel.novel_id" :url="'./bookInfo?id=' + novel.novel_id" open-type="navigate" class="world-card">
 								<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="world-cover" :onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
 								<view class="world-info">
 									<view class="world-heading">
 										<text class="world-title">{{ novel.name }}</text>
-										<text class="world-type" v-if="novel.novel_type == 'world'">世界设定</text>
+										<text class="world-type" v-if="novel.novel_type == 'world'">{{ $t('reader.book.worldSetting') }}</text>
 									</view>
 									<view class="world-author">
 										<log-image :src="novel.avatar_url" alt="" class="world-author-avatar" onerror="onerror=null;src='../static/user/defaultAvatar.jpg'" />
@@ -252,13 +252,13 @@
 
 					<view class="l-list" v-if="activityNewsList.length > 0">
 						<view class="l-h3">
-							<text class="l-h3-title">创作活动</text>
+							<text class="l-h3-title">{{ $t('reader.book.creationActivities') }}</text>
 						</view>
 						<view class="activity-group" v-for="activity in activityNewsList" :key="activity.tag_id">
 							<view class="activity-group-head clickable" @click="gotoTag(activity.tag_id, activity.activity_name)">
 								<text class="activity-group-name">{{ activity.activity_name }}</text>
 								<text class="activity-group-status" :class="activity.is_active == 1 ? 'ongoing' : 'ended'">
-									{{ activity.is_active == 1 ? '进行中' : '已结束' }}
+									{{ activity.is_active == 1 ? $t('reader.book.ongoingActivity') : $t('reader.book.endedActivity') }}
 								</text>
 							</view>
 							<view class="activity-news-item clickable" v-for="(news, newsIndex) in activity.news"
@@ -268,7 +268,7 @@
 							</view>
 							<view class="activity-popularity" v-if="activity.popularity && activity.popularity.enabled">
 								<view class="activity-popularity-info">
-									<text class="activity-popularity-count">人气票 {{ activity.popularity.votes }}</text>
+									<text class="activity-popularity-count">{{ $t('reader.book.popularityVotes', { count: activity.popularity.votes }) }}</text>
 									<text class="activity-popularity-reason" v-if="popularityHint(activity)">{{ popularityHint(activity) }}</text>
 								</view>
 								<view class="activity-popularity-btn clickable" :class="{ disabled: popularityBtnDisabled(activity) }"
@@ -281,16 +281,16 @@
 
 					<view class="l-list">
 						<view class="l-h3">
-							<text class="l-h3-title">评论</text>
+							<text class="l-h3-title">{{ $t('reader.book.comments') }}</text>
 							<navigator :url="'./bookComment?id=' + uid">
-								<view class="l-h3-more">全部(共 {{ commentAmount }} 条)<img class="l-icon-more"
+								<view class="l-h3-more">{{ $t('reader.book.allComments', { count: commentAmount }) }}<img class="l-icon-more"
 										src="../../static/l-icon-more.png" mode="widthFix"></img>
 								</view>
 							</navigator>
 						</view>
 
 					<view class="comment-empty" v-show="commentInfo.length == 0" @tap="navtoComment">
-						这本书还没有评论哦，快去抢沙发
+						{{ $t('reader.book.noCommentsBeFirst') }}
 					</view>
 
 					<view class="comment-preview" v-for="item in commentInfo" :key="item.essay_comment_id" @tap="navtoComment">
@@ -312,9 +312,9 @@
 				</view>
 <view class="l-list">
 						<view class="l-h3">
-							<text class="l-h3-title">粉丝贡献榜</text>
+							<text class="l-h3-title">{{ $t('reader.book.fanLeaderboard') }}</text>
 							<navigator :url="'./novel_fans?id=' + uid">
-								<view class="l-h3-more">完整榜单<img class="l-icon-more" src="../../static/l-icon-more.png"
+								<view class="l-h3-more">{{ $t('reader.book.fullLeaderboard') }}<img class="l-icon-more" src="../../static/l-icon-more.png"
 										mode="widthFix"></img>
 								</view>
 							</navigator>
@@ -364,16 +364,16 @@
 		<view class="l-body-fixed" v-if="!isPageLoading && bookInfo.is_personal == 0">
 			<view v-if="aiAssistanceEnabled && Number(bookInfo.disable_reader_ai) !== 1" class="l-handle-btn l-ai-btn clickable" @tap="gotoAskLogGirl">
 				<image class="ai-entry-icon" src="https://storage.codesocean.top/api/resource/get/177882044429077" mode="aspectFit"></image>
-				<view class="ai-entry-text">问问原木娘</view>
+				<view class="ai-entry-text">{{ $t('reader.book.askLogGirl') }}</view>
 			</view>
 			<view class="l-handle-btn l-look-btn clickable" @tap="tip">
-				打赏
+				{{ $t('reader.book.tip') }}
 			</view>
 			<view class="l-handle-btn l-buy-btn clickable" v-show="this.history == 1" @tap="startReading">
-				立即阅读
+				{{ $t('reader.book.readNow') }}
 			</view>
 			<view class="l-handle-btn l-buy-btn clickable" v-show="this.history != 1" @tap="startReading">
-				继续阅读
+				{{ $t('reader.book.continueReading') }}
 			</view>
 		</view>
 		<uni-popup ref="popup" type="bottom">
@@ -686,7 +686,7 @@ export default {
 			},)
 				.then(function (response) {
 					uni.showToast({
-						title: "成功添加到书架",
+						title: this.$t('reader.book.addedToShelf'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -701,7 +701,7 @@ export default {
 					}
 					if (error) {
 						uni.showToast({
-							title: "添加失败",
+							title: this.$t('reader.book.addToShelfFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -784,7 +784,7 @@ export default {
 							if (modal) {
 								modal.show({
 									reward: typeof data.reward === 'number' ? data.reward : 10,
-									taskName: '每日任务：为小说点赞',
+									taskName: this.$t('reader.book.dailyLikeTaskName'),
 									icon: data.task_icon,
 									currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
 									maxGrowth: 100,
@@ -820,10 +820,10 @@ export default {
 			let tk = JSON.parse(window.localStorage.getItem('token'));
 			if (tk) tk = tk.tk;
 			uni.showModal({
-				title: '提示',
-				content: '确定取消收藏吗？',
-				cancelText: "我再想想", // 取消按钮的文字  
-				confirmText: "狠心取消", // 确认按钮的文字  
+				title: this.$t('common.prompt'),
+				content: this.$t('reader.book.confirmRemoveFromShelf'),
+				cancelText: this.$t('reader.book.thinkAgain'), // 取消按钮的文字
+				confirmText: this.$t('reader.book.confirmRemove'), // 确认按钮的文字
 				showCancel: true, // 是否显示取消按钮，默认为 true
 				confirmColor: '#f59037',
 				cancelColor: '#343434',
@@ -839,7 +839,7 @@ export default {
 						},)
 							.then(function (response) {
 								uni.showToast({
-									title: "已从书架移除",
+									title: this.$t('reader.book.removedFromShelf'),
 									icon: 'none',
 									duration: 2000
 								});
@@ -849,7 +849,7 @@ export default {
 								console.log(error);
 								if (error) {
 									uni.showToast({
-										title: "移除失败",
+										title: this.$t('reader.book.removeFromShelfFailed'),
 										icon: 'none',
 										duration: 2000
 									});
@@ -866,7 +866,7 @@ export default {
 			console.log(articles);
 			if (articles.length == 0) {
 				uni.showToast({
-					title: "本书还没有章节哦",
+					title: this.$t('reader.book.noChaptersInBook'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -905,7 +905,7 @@ export default {
 			uni.showModal({
 				content: content,
 				showCancel: false,
-				confirmText: '关闭',
+				confirmText: this.$t('common.close'),
 				confirmColor: "#EA7034"
 			});
 		},
@@ -913,9 +913,11 @@ export default {
 			this.createShareCode();
 		},
 		traditionalShare() {
-			let content = "我正在原木社区读《" + this.bookInfo.name + "》，你也一起来看看吧！\n" +
-				"https://loghome.ink/novel/" + this.uid +
-				"\n用浏览器打开链接，或复制这段文本打开原木社区APP即可查看哦！";
+			let content = this.$t('reader.book.shareText', {
+				brand: this.$t('nav.brand'),
+				book: this.bookInfo.name,
+				url: "https://loghome.ink/novel/" + this.uid
+			});
 			return content;
 		},
 		createShareCode() {
@@ -930,7 +932,7 @@ export default {
 			if (!tk || !tk.tk) {
 				this.isCreatingShareCode = false;
 				uni.showToast({
-					title: '请先登录',
+					title: this.$t('common.needLogin'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -957,10 +959,10 @@ export default {
 						data: res.data.share_text,
 						success: () => {
 							uni.showModal({
-								title: '口令创建成功',
-								content: `口令：${res.data.code}\n\n口令已复制到剪贴板，分享给好友即可！`,
+								title: this.$t('reader.book.shareCodeCreated'),
+								content: this.$t('reader.book.shareCodeContent', { code: res.data.code }),
 								showCancel: false,
-								confirmText: '知道了'
+								confirmText: this.$t('common.gotIt')
 							});
 						}
 					});
@@ -979,7 +981,7 @@ export default {
 						if (modal) {
 							modal.show({
 								reward: typeof data.reward === 'number' ? data.reward : 25,
-								taskName: '每日任务：分享作品',
+								taskName: this.$t('reader.book.dailyShareTaskName'),
 								icon: data.task_icon,
 								currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
 								maxGrowth: 100,
@@ -992,7 +994,7 @@ export default {
 
 				} else {
 					uni.showToast({
-						title: res.data.msg || '口令创建失败',
+						title: res.data.msg || this.$t('reader.book.shareCodeCreateFailed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -1003,7 +1005,7 @@ export default {
 				this.isCreatingShareCode = false;
 				console.error('创建口令失败:', error);
 				uni.showToast({
-					title: '网络错误，请稍后重试',
+					title: this.$t('common.networkError'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -1019,7 +1021,7 @@ export default {
 			if (tk) tk = tk.id;
 			if (tk == this.bookInfo.auther_id) {
 				uni.showToast({
-					title: "不能给自己的书打赏哦",
+					title: this.$t('reader.book.cannotTipOwnBook'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -1098,7 +1100,7 @@ export default {
 		},
 		popularityBtnText(activity) {
 			const status = this.popularityStatusOf(activity);
-			return status && status.voted_this_novel ? '已投' : '投人气票';
+			return status && status.voted_this_novel ? this.$t('reader.book.voted') : this.$t('reader.book.votePopularity');
 		},
 		popularityBtnDisabled(activity) {
 			const status = this.popularityStatusOf(activity);
@@ -1116,7 +1118,7 @@ export default {
 			if (!status.can_vote) {
 				return status.reason;
 			}
-			return '剩余 ' + status.remaining + ' 票';
+			return this.$t('reader.book.remainingVotes', { count: status.remaining });
 		},
 		voteActivity(activity) {
 			const tk = this.getPopularityToken();
@@ -1129,7 +1131,7 @@ export default {
 			const status = this.popularityStatusOf(activity);
 			if (status && !status.can_vote) {
 				uni.showToast({
-					title: status.reason || '暂时无法投票',
+					title: status.reason || this.$t('reader.book.voteUnavailable'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -1149,7 +1151,7 @@ export default {
 				}
 			}).then((res) => {
 				uni.showToast({
-					title: '已为本书投出 1 票',
+					title: this.$t('reader.book.voteSuccess'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -1165,7 +1167,7 @@ export default {
 				}
 				const msg = error && error.response && error.response.data && error.response.data.msg;
 				uni.showToast({
-					title: msg || '投票失败，请稍后重试',
+					title: msg || this.$t('reader.book.voteFailed'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -1192,11 +1194,11 @@ export default {
 				let richStr = "";
 				for (let item of richArr) {
 					if (item.type == "text") richStr = richStr + item.value + "\n";
-					if (item.type == "image") richStr = richStr + "[图片]\n";
+					if (item.type == "image") richStr = richStr + this.$t('reader.book.imagePlaceholder') + "\n";
 				}
 				return richStr;
 			} else {
-				return "努力加载中";
+				return this.$t('common.loading');
 			}
 		},
 		checkNovelRank() {
@@ -1209,7 +1211,7 @@ export default {
 				}
 			}).catch(function (error) {
 				uni.showToast({
-					title: "获取小说排位信息失败",
+					title: this.$t('reader.book.loadRankFailed'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -1278,7 +1280,7 @@ export default {
 					});
 				} else {
 					uni.showToast({
-						title: "获取关联世界设定失败",
+						title: this.$t('reader.book.loadWorldsFailed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -1509,7 +1511,7 @@ export default {
 				await this.getCollaborativeAuthors();
 
 				uni.setNavigationBarTitle({
-					title: "书籍详情"
+					title: this.$t('reader.book.bookDetails')
 				});
 				this.checkNovelRank();
 				this.addReaderHistory(bookInfo);
@@ -1572,11 +1574,11 @@ export default {
 						// console.log(_this.progressArticle)
 					}).catch(function (error) {
 						_this.progressArticle = {
-							title: "哎呀，章节走丢了...",
-							content: "哎呀，章节走丢了..."
+							title: this.$t('reader.book.chapterLost'),
+							content: this.$t('reader.book.chapterLost')
 						};
 						uni.showToast({
-							title: "哎呀，章节走丢了...",
+							title: this.$t('reader.book.chapterLost'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -1584,7 +1586,7 @@ export default {
 			}
 		}).catch(function (error) {
 			uni.showToast({
-				title: "章节走丢了...",
+				title: this.$t('reader.book.chapterLostToast'),
 				icon: 'none',
 				duration: 2000
 			});
@@ -1708,7 +1710,7 @@ export default {
 				? this.primaryAuthor.name
 				: this.bookInfo.author_name || '';
 			if (this.collaborationAuthors.length > 1) {
-				return `${ownerName} 等 ${this.collaborationAuthors.length} 位作者`;
+				return this.$t('reader.book.coAuthors', { name: ownerName, count: this.collaborationAuthors.length });
 			}
 			return ownerName;
 		},

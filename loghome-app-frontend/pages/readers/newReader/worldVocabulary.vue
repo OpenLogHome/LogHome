@@ -12,8 +12,8 @@
 				<log-image :src="article.content.pic" alt="" v-if="article.content.pic"/>
 			</div>
 			<div class="right">
-				<div class="tit" :style="{'color': themesData[readerSettings.theme].fontColor}">词条名称</div>
-				<input class="input" placeholder="请输入词条名称" v-model="article.title" 
+				<div class="tit" :style="{'color': themesData[readerSettings.theme].fontColor}">{{ $t('reader.article.entryName') }}</div>
+				<input class="input" :placeholder="$t('reader.article.entryNamePlaceholder')" v-model="article.title"
 					:style="{
                         fontSize:readerSettings.fontSize * 1.2 + 'rpx',
                         'color': themesData[readerSettings.theme].fontColor
@@ -42,7 +42,7 @@
 			<div v-if="article.content.relations && article.content.relations.length > 0">
 				<div style="margin: 30rpx 0 20rpx 0; font-weight: bold; font-size: 32rpx;"
 					:style="{color: themesData[readerSettings.theme].fontColor}">
-					词条关系
+					{{ $t('reader.article.entryRelations') }}
 				</div>
 				<el-card class="box-card" v-for="(item, index) in article.content.relations"
 					style="margin-bottom: 20rpx;" :key="'rela' + index"

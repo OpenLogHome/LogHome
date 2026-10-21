@@ -4,7 +4,7 @@
 			<img v-if="currentSkin" class="trigger-preview" :src="currentSkin.image_url" :alt="currentName" />
 			<span v-else class="trigger-preview" :style="{ backgroundColor: currentThemeColor }"></span>
 			<span class="trigger-name">{{ currentName }}</span>
-			<span class="trigger-action">选择 <i class="el-icon-arrow-right"></i></span>
+			<span class="trigger-action">{{ $t('reader.book.select') }} <i class="el-icon-arrow-right"></i></span>
 		</button>
 
 		<el-drawer
@@ -17,22 +17,22 @@
 			<div class="picker-panel" @click.stop @tap.stop>
 				<div class="picker-header">
 					<div>
-						<div class="picker-title">阅读背景</div>
-						<div class="picker-subtitle">选择后立即预览</div>
+						<div class="picker-title">{{ $t('reader.book.readingBackground') }}</div>
+						<div class="picker-subtitle">{{ $t('reader.book.previewHint') }}</div>
 					</div>
-					<button type="default" class="close-button" aria-label="关闭" @click="drawerVisible = false">
+					<button type="default" class="close-button" :aria-label="$t('common.close')" @click="drawerVisible = false">
 						<i class="el-icon-close"></i>
 					</button>
 				</div>
 
-				<div v-if="hasSkins" class="picker-tabs" role="tablist" aria-label="背景类型">
+				<div v-if="hasSkins" class="picker-tabs" role="tablist" :aria-label="$t('reader.book.backgroundType')">
 					<button type="default" class="picker-tab" :class="{ active: activeTab === 'theme' }"
 						role="tab" :aria-selected="activeTab === 'theme'" @click="activeTab = 'theme'">
-						纯色主题
+						{{ $t('reader.book.solidTheme') }}
 					</button>
 					<button type="default" class="picker-tab" :class="{ active: activeTab === 'skin' }"
 						role="tab" :aria-selected="activeTab === 'skin'" @click="activeTab = 'skin'">
-						背景皮肤
+						{{ $t('reader.book.backgroundSkin') }}
 					</button>
 				</div>
 
@@ -44,7 +44,7 @@
 							<span class="option-preview" :style="{ backgroundColor: theme.backgroundColor }"></span>
 							<span v-if="theme.required_membership !== 'none'" class="membership-badge"
 								:class="{ super: theme.required_membership === 'super' }">
-								{{ theme.required_membership === 'super' ? '超级' : '通行证' }}
+								{{ theme.required_membership === 'super' ? $t('reader.book.badgeSuper') : $t('reader.book.badgePass') }}
 							</span>
 							<span class="option-name">{{ theme.name }}</span>
 							<span v-if="isThemeSelected(theme.key)" class="selected-indicator">
@@ -63,7 +63,7 @@
 							<img class="option-preview" :src="skin.image_url" :alt="skin.skin_name" />
 							<span v-if="skin.required_membership !== 'none'" class="membership-badge"
 								:class="{ super: skin.required_membership === 'super' }">
-								{{ skin.required_membership === 'super' ? '超级' : '典藏' }}
+								{{ skin.required_membership === 'super' ? $t('reader.book.badgeSuper') : $t('reader.book.badgeCollection') }}
 							</span>
 							<span class="option-name">{{ skin.skin_name }}</span>
 							<span v-if="skinKey === skin.skin_key" class="selected-indicator">
@@ -119,7 +119,7 @@ export default {
 		},
 		currentName() {
 			if (this.currentSkin) return this.currentSkin.skin_name;
-			return this.currentTheme ? this.currentTheme.name : '选择背景';
+			return this.currentTheme ? this.currentTheme.name : this.$t('reader.book.selectBackground');
 		},
 		currentThemeColor() {
 			return this.currentTheme ? this.currentTheme.backgroundColor : '#f5f5f5';

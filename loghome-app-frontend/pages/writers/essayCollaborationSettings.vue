@@ -3,40 +3,40 @@
 		<view class="list-content">
 			<view class="list">
 				<view class="li">
-					<view class="text">当前身份：{{ roleText }}</view>
+					<view class="text">{{ $t('writer.collab.settings.identityLabel') }}{{ roleText }}</view>
 				</view>
 				<view class="li high">
 					<view class="text">
-						协作作者：
+						{{ $t('writer.collab.settings.collaboratorsLabel') }}
 						<div class="tag" v-for="item in activeCollaborators" :key="item.user_id">
 							{{ item.name }}
 						</div>
-						<div class="nontag" v-show="activeCollaborators.length == 0">暂无协作者</div>
+						<div class="nontag" v-show="activeCollaborators.length == 0">{{ $t('writer.collab.settings.noCollaborators') }}</div>
 					</view>
 				</view>
 				<view class="li noborder" @click="gotoCollaborators">
-					<view class="text">{{ isOwner ? "协作作者管理" : "查看协作信息" }}</view>
+					<view class="text">{{ isOwner ? $t('writer.collab.settings.manageCollaborators') : $t('writer.collab.settings.viewCollaboration') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 			<view class="list" v-if="canRespondInvitation">
 				<view class="li" @click="acceptInvite">
-					<view class="text">接受协作邀请</view>
+					<view class="text">{{ $t('writer.collab.settings.acceptInvite') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 				<view class="li noborder" @click="rejectInvite">
-					<view class="text" style="color:#d9534f">拒绝协作邀请</view>
+					<view class="text" style="color:#d9534f">{{ $t('writer.collab.settings.rejectInvite') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
 			<view class="list" v-if="isCollaborator">
 				<view class="li collaboration-notice" v-if="collaborationPolicy.permissions_restricted">
 					<view class="text">
-						当前为三人及以上协作，主作者尚未开通原木通行证，你目前只能预览作品。
+						{{ $t('writer.collab.settings.permissionsRestrictedNotice') }}
 					</view>
 				</view>
 				<view class="li noborder" @click="quitCollaboration">
-					<view class="text" style="color:#d9534f">退出协作</view>
+					<view class="text" style="color:#d9534f">{{ $t('writer.collab.settings.quitCollaboration') }}</view>
 					<img class="to" src="../../static/user/to.png"></img>
 				</view>
 			</view>
@@ -80,10 +80,10 @@
 				};
 			},
 			roleText() {
-				if (this.isOwner) return '所有者';
-				if (this.isCollaborator) return '协作者';
-				if (this.canRespondInvitation) return '待接受邀请';
-				return '访客';
+				if (this.isOwner) return this.$t('writer.collab.settings.roles.owner');
+				if (this.isCollaborator) return this.$t('writer.collab.settings.roles.collaborator');
+				if (this.canRespondInvitation) return this.$t('writer.collab.settings.roles.pendingInvite');
+				return this.$t('writer.collab.settings.roles.guest');
 			},
 		},
 		onLoad(params) {
@@ -139,7 +139,7 @@
 					}
 				).then(() => {
 					uni.showToast({
-						title: '已接受协作邀请',
+						title: this.$t('writer.collab.settings.inviteAccepted'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -166,7 +166,7 @@
 					}
 				).then(() => {
 					uni.showToast({
-						title: '已拒绝协作邀请',
+						title: this.$t('writer.collab.settings.inviteRejected'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -184,8 +184,8 @@
 			quitCollaboration() {
 				const tk = this.getAuthToken();
 				uni.showModal({
-					title: '提示',
-					content: '退出后将失去这本小说的编辑权限，确定继续吗？',
+					title: this.$t('common.prompt'),
+					content: this.$t('writer.collab.settings.quitConfirm'),
 					confirmColor:"#F00",
 					success: (modalRes) => {
 						if (!modalRes.confirm) return;
@@ -201,7 +201,7 @@
 							}
 						).then(() => {
 							uni.showToast({
-								title: '已退出协作',
+								title: this.$t('writer.collab.settings.quitDone'),
 								icon: 'none',
 								duration: 2000
 							});

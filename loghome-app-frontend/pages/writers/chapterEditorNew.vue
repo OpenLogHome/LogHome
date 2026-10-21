@@ -47,8 +47,8 @@
                 class="collaborationAvatarStack"
                 :class="{ active: collaborationParticipantsTooltipVisible }"
                 :aria-expanded="String(collaborationParticipantsTooltipVisible)"
-                :aria-label="`${collaborationParticipants.length} 位作者正在实时协作`"
-                title="查看实时协作作者"
+                :aria-label="$t('writer.chapter.collab.participantsAria', { count: collaborationParticipants.length })"
+                :title="$t('writer.chapter.collab.viewAuthors')"
                 @click.stop="toggleCollaborationParticipantsTooltip"
               >
                 <span
@@ -87,12 +87,12 @@
                   @click.stop
                 >
                   <div class="collaborationParticipantsTooltipHeader">
-                    <span>正在实时协作</span>
-                    <span>{{ collaborationParticipants.length }} 人在线</span>
+                    <span>{{ $t('writer.chapter.collab.title') }}</span>
+                    <span>{{ $t('writer.chapter.collab.onlineCount', { count: collaborationParticipants.length }) }}</span>
                   </div>
                   <div class="collaborationTooltipBody">
                     <section class="collaborationParticipantsPane">
-                      <div class="collaborationPaneTitle">协作者</div>
+                      <div class="collaborationPaneTitle">{{ $t('writer.chapter.collab.collaborators') }}</div>
                       <div class="collaborationParticipantsList">
                         <div
                           v-for="participant in collaborationParticipants"
@@ -119,7 +119,7 @@
                               <span
                                 v-if="participant.isCurrentUser"
                                 class="collaborationParticipantSelf"
-                              >你</span>
+                              >{{ $t('writer.chapter.collab.you') }}</span>
                             </span>
                             <button
                               v-if="participant.isCurrentUser"
@@ -130,8 +130,8 @@
                                   collaborationColorPickerParticipantKey === participant.key,
                               }"
                               :style="{ backgroundColor: participant.color }"
-                              aria-label="更改我的光标颜色"
-                              title="更改我的光标颜色"
+                              :aria-label="$t('writer.chapter.collab.changeMyColor')"
+                              :title="$t('writer.chapter.collab.changeMyColor')"
                               @click.stop="toggleCollaborationColorPicker(participant)"
                             ></button>
                             <button
@@ -141,8 +141,8 @@
                               :class="{ disabled: !participant.hasCursor }"
                               :style="{ backgroundColor: participant.color }"
                               :disabled="!participant.hasCursor"
-                              :aria-label="participant.hasCursor ? `定位到 ${participant.name} 的光标` : `${participant.name} 当前没有可定位的光标`"
-                              :title="participant.hasCursor ? '定位到协作者光标' : '协作者当前没有可定位的光标'"
+                              :aria-label="participant.hasCursor ? $t('writer.chapter.collab.locateCursorAria', { name: participant.name }) : $t('writer.chapter.collab.noCursorAria', { name: participant.name })"
+                              :title="participant.hasCursor ? $t('writer.chapter.collab.locateCursor') : $t('writer.chapter.collab.noCursor')"
                               @click.stop="locateRealtimeParticipantCursor(participant)"
                             ></button>
                           </div>
@@ -159,7 +159,7 @@
                                   class="collaborationColorOption"
                                   :class="{ selected: participant.color === colorOption }"
                                   :style="{ backgroundColor: colorOption }"
-                                  :aria-label="`选择颜色 ${colorOption}`"
+                                  :aria-label="$t('writer.chapter.collab.selectColorAria', { color: colorOption })"
                                   @click.stop="setCollaborationParticipantColor(
                                     participant,
                                     colorOption
@@ -172,7 +172,7 @@
                                 </button>
                               </div>
                               <div class="collaborationColorPaletteHint">
-                                你的颜色会同步给所有在线作者
+                                {{ $t('writer.chapter.collab.colorSyncHint') }}
                               </div>
                             </div>
                           </transition>
@@ -181,8 +181,8 @@
                     </section>
                     <section class="collaborationChatPane">
                       <div class="collaborationPaneTitle collaborationChatTitle">
-                        <span>群聊</span>
-                        <span>{{ collaborationChatMessages.length }} 条</span>
+                        <span>{{ $t('writer.chapter.collab.chatTitle') }}</span>
+                        <span>{{ $t('writer.chapter.collab.messageCount', { count: collaborationChatMessages.length }) }}</span>
                       </div>
                       <div
                         ref="collaborationChatMessages"
@@ -195,7 +195,7 @@
                           v-if="collaborationChatMessages.length === 0"
                           class="collaborationChatEmpty"
                         >
-                          暂无消息，和协作者打个招呼吧
+                          {{ $t('writer.chapter.collab.chatEmpty') }}
                         </div>
                         <div
                           v-for="message in collaborationChatMessages"
@@ -223,8 +223,8 @@
                           class="collaborationChatInput"
                           rows="2"
                           maxlength="300"
-                          placeholder="发送消息…"
-                          aria-label="实时协作群聊消息"
+                          :placeholder="$t('writer.chapter.collab.chatPlaceholder')"
+                          :aria-label="$t('writer.chapter.collab.chatInputAria')"
                           @keydown.enter.exact.prevent="sendRealtimeChatMessage"
                         ></textarea>
                         <button
@@ -232,7 +232,7 @@
                           class="collaborationChatSendButton"
                           :disabled="!canSendRealtimeChatMessage()"
                           @click.stop="sendRealtimeChatMessage"
-                        >发送</button>
+                        >{{ $t('common.send') }}</button>
                       </div>
                     </section>
                   </div>
@@ -261,7 +261,7 @@
             </button>
             <div
               class="customNavButton customToolbarTrigger"
-              title="工具栏"
+              :title="$t('writer.chapter.toolbar')"
               @click.stop="openToolbarPopup"
             >
               <i class="el-icon-menu customToolbarTriggerIcon"></i>
@@ -278,7 +278,7 @@
           :class="capsule.className"
         >
           <template v-if="capsule.id === 'wordCount'">
-            {{ textCount }}&nbsp;字 | {{ imageCount }}&nbsp;图
+            {{ textCount }}&nbsp;{{ $t('writer.chapter.wordCount') }} | {{ imageCount }}&nbsp;{{ $t('writer.chapter.imageCount') }}
             <!-- <span class="editorRole" v-if="editorRoleText">{{ editorRoleText }}</span> -->
           </template>
           <template v-else-if="capsule.id === 'sync'">
@@ -290,7 +290,7 @@
           </template>
           <template v-else-if="capsule.id === 'writingSpeed'">
             <i class="el-icon-odometer statusCapsuleIcon"></i>
-            {{ writingSpeed }}&nbsp;字/分钟
+            {{ writingSpeed }}&nbsp;{{ $t('writer.chapter.writingSpeed') }}
           </template>
         </div>
       </div>
@@ -322,7 +322,7 @@
           <input
             ref="titleInput"
             class="input chapterTitleInput"
-            placeholder="章节标题"
+            :placeholder="$t('writer.chapter.titlePlaceholder')"
             v-model="article.title"
             @input="handleTitleInput"
             @focus="handleTitleInputFocus"
@@ -408,7 +408,7 @@
     <uni-popup ref="setPopup" type="bottom">
       <view class="settingBar">
         <div class="backgroundSettingRow">
-          <div class="backgroundSettingLabel">背景</div>
+          <div class="backgroundSettingLabel">{{ $t('writer.chapter.background') }}</div>
           <ReaderBackgroundPicker
             class="backgroundPicker"
             :theme-options="writerThemeOptions"
@@ -422,7 +422,7 @@
           />
         </div>
         <div class="normalLine">
-          <div class="left">字体大小</div>
+          <div class="left">{{ $t('writer.chapter.fontSize') }}</div>
           <div class="right">
             <el-slider
               v-model="writerSettings.fontSize"
@@ -436,7 +436,7 @@
           </div>
         </div>
         <div class="normalLine fontFamilyLine" v-if="canSwitchFont">
-          <div class="left">字体</div>
+          <div class="left">{{ $t('writer.chapter.font') }}</div>
           <div class="right">
             <div class="fontSelectButton" @click="showFontsSelectDrawer = true">
               <span :style="{ fontFamily: currentFontFamilyStyleValue || 'inherit' }">
@@ -447,7 +447,7 @@
           </div>
         </div>
         <div class="lrLine">
-          <div class="left">显示输入快捷栏</div>
+          <div class="left">{{ $t('writer.chapter.showShortcutBar') }}</div>
           <div class="right">
             <el-switch
               v-model="writerSettings.showSymbols"
@@ -457,9 +457,9 @@
             ></el-switch>
           </div>
         </div>
-        <div class="line">自动排版设置</div>
+        <div class="line">{{ $t('writer.chapter.autoFormatSettings') }}</div>
         <div class="lrLine">
-          <div class="left">段间空行</div>
+          <div class="left">{{ $t('writer.chapter.paragraphSpacing') }}</div>
           <div class="right">
             <el-switch
               v-model="writerSettings.openTypeSet"
@@ -480,7 +480,7 @@
         @touchend.stop
       >
         <div class="toolbarPanelHeader">
-          <div class="toolbarPanelTitle">工具栏</div>
+          <div class="toolbarPanelTitle">{{ $t('writer.chapter.toolbar') }}</div>
           <button class="toolbarPanelClose" @click.stop="closeToolbarPopup">
             <i class="el-icon-close"></i>
           </button>
@@ -523,7 +523,7 @@
               ref="findReplaceQueryInput"
               v-model="findReplaceQuery"
               class="findReplaceInput"
-              placeholder="查找"
+              :placeholder="$t('writer.chapter.find')"
               confirm-type="next"
               @input="handleFindReplaceQueryInput"
               @keyup.enter="findNextMatch"
@@ -532,7 +532,7 @@
               v-if="findReplaceQuery"
               class="findReplaceClear"
               type="button"
-              title="清空查找内容"
+              :title="$t('writer.chapter.clearFind')"
               @click="clearFindReplaceQuery"
             >
               <i class="el-icon-circle-close"></i>
@@ -543,7 +543,7 @@
             <button
               class="findReplaceNavButton"
               type="button"
-              title="上一个匹配项"
+              :title="$t('writer.chapter.prevMatch')"
               :disabled="!findReplaceMatches.length"
               @click="findPreviousMatch"
             >
@@ -552,14 +552,14 @@
             <button
               class="findReplaceNavButton"
               type="button"
-              title="下一个匹配项"
+              :title="$t('writer.chapter.nextMatch')"
               :disabled="!findReplaceMatches.length"
               @click="findNextMatch"
             >
               <i class="el-icon-arrow-down"></i>
             </button>
           </div>
-          <button class="findReplaceClose" type="button" title="关闭" @click="closeFindReplace">
+          <button class="findReplaceClose" type="button" :title="$t('common.close')" @click="closeFindReplace">
             <i class="el-icon-close"></i>
           </button>
         </div>
@@ -569,7 +569,7 @@
             <input
               v-model="findReplaceValue"
               class="findReplaceInput"
-              placeholder="替换为（可留空）"
+              :placeholder="$t('writer.chapter.replacePlaceholder')"
               @keyup.enter="replaceCurrentMatch"
             />
           </div>
@@ -579,7 +579,7 @@
             :disabled="!findReplaceMatches.length"
             @click="replaceCurrentMatch"
           >
-            替换当前
+            {{ $t('writer.chapter.replaceCurrent') }}
           </button>
           <button
             class="findReplaceActionButton primary"
@@ -587,14 +587,14 @@
             :disabled="!findReplaceMatches.length"
             @click="replaceAllMatches"
           >
-            全部替换
+            {{ $t('writer.chapter.replaceAll') }}
           </button>
         </div>
     </view>
 
     <el-drawer
       v-if="canSwitchFont"
-      title="选择字体"
+      :title="$t('writer.chapter.selectFont')"
       :visible.sync="showFontsSelectDrawer"
       :direction="'btt'"
       size="55%"
@@ -615,14 +615,14 @@
                   v-if="fontDownloadState[key] === 'downloading'"
                   class="font-download-state"
                 >
-                  下载中...
+                  {{ $t('writer.chapter.downloading') }}
                 </span>
               </div>
               <div
                 class="font-preview"
                 :style="{ fontFamily: getFontFamilyStyleValue(font.family) || 'inherit' }"
               >
-                落霞与孤鹜齐飞，秋水共长天一色
+                {{ $t('writer.chapter.fontPreviewSample') }}
               </div>
             </div>
             <div class="select-indicator" v-if="writerSettings.font === key">
@@ -651,6 +651,7 @@
 
 <script>
 import axios from "axios";
+import i18n from "@/i18n";
 import { Editor, EditorContent, Extension } from "@tiptap/vue-2";
 import Paragraph from "@tiptap/extension-paragraph";
 import StarterKit from "@tiptap/starter-kit";
@@ -735,7 +736,8 @@ function renderRealtimeCollaborationCursor(user = {}) {
   const color = COLLABORATION_CURSOR_COLOR_PATTERN.test(String(user.color || ""))
     ? String(user.color)
     : "#2563eb";
-  const name = String(user.name || "协作者").trim() || "协作者";
+  const name = String(user.name || i18n.t("writer.chapter.collab.collaborator")).trim() ||
+    i18n.t("writer.chapter.collab.collaborator");
   const caret = document.createElement("span");
   caret.className = "collaboration-cursor__caret";
   caret.setAttribute("data-collaborator", name);
@@ -800,6 +802,21 @@ const WRITER_SOLID_THEMES = Object.freeze([
   { key: "thorncrown", name: "荆棘冠", required_membership: "standard" },
   { key: "chocolate", name: "巧克力", required_membership: "standard" },
 ]);
+const WRITER_THEME_LABEL_KEYS = {
+  white: "writer.chapter.themes.white",
+  yellow: "writer.chapter.themes.yellow",
+  green: "writer.chapter.themes.green",
+  blue: "writer.chapter.themes.blue",
+  purple: "writer.chapter.themes.purple",
+  pink: "writer.chapter.themes.pink",
+  black: "writer.chapter.themes.black",
+  wavechaser: "writer.chapter.themes.wavechaser",
+  powderblue: "writer.chapter.themes.powderblue",
+  qingyun: "writer.chapter.themes.qingyun",
+  sunburst: "writer.chapter.themes.sunburst",
+  thorncrown: "writer.chapter.themes.thorncrown",
+  chocolate: "writer.chapter.themes.chocolate",
+};
 const CHAPTER_EDITOR_THEME_MEMORY_KEY = "pageThemeMemory:chapterEditorNew";
 
 const NewParagraphSpace = Extension.create({
@@ -1073,6 +1090,20 @@ const TOOL_DEFINITIONS = {
     iconClass: "el-icon-s-operation",
     alwaysVisible: true,
   },
+};
+
+const TOOL_LABEL_KEYS = {
+  upload: "writer.chapter.tools.upload",
+  format: "writer.chapter.tools.format",
+  findReplace: "writer.chapter.tools.findReplace",
+  undo: "writer.chapter.tools.undo",
+  redo: "writer.chapter.tools.redo",
+  publish: "writer.chapter.tools.publish",
+  preview: "writer.chapter.tools.preview",
+  writerAi: "writer.chapter.tools.writerAi",
+  settings: "writer.chapter.tools.settings",
+  shortcutSettings: "writer.chapter.tools.shortcutSettings",
+  createQuickInput: "writer.chapter.tools.createQuickInput",
 };
 
 const DEFAULT_NAV_TOOL_IDS = [
@@ -1533,7 +1564,7 @@ export default {
       lastUploadTime: new Date(),
       hasNewInput: false,
       contentVersion: 0,
-      saveNotifyText: "尚未更改",
+      saveNotifyText: i18n.t("writer.chapter.status.unchanged"),
       saveNotifyInterval: undefined,
       notIncrementalChangeCount: 0,
       frameInfo: {
@@ -1766,6 +1797,9 @@ export default {
     writerThemeOptions() {
       return WRITER_SOLID_THEMES.map((theme) => ({
         ...theme,
+        name: WRITER_THEME_LABEL_KEYS[theme.key]
+          ? this.$t(WRITER_THEME_LABEL_KEYS[theme.key])
+          : theme.name,
         backgroundColor: this.themes[theme.key].pageBackColor,
         is_locked: !this.canUseMembershipRequirement(
           theme.required_membership
@@ -1808,11 +1842,17 @@ export default {
       );
     },
     selectableFonts() {
-      if (this.canSwitchFont) {
-        return this.fonts;
+      const defaultFont = this.fonts.default || { name: "", family: "" };
+      const translatedDefault = {
+        ...defaultFont,
+        name: this.$t('writer.chapter.systemDefaultFont'),
+      };
+      if (!this.canSwitchFont) {
+        return { default: translatedDefault };
       }
       return {
-        default: this.fonts.default || { name: "系统默认", family: "" },
+        ...this.fonts,
+        default: translatedDefault,
       };
     },
     canPublishArticle() {
@@ -1889,10 +1929,10 @@ export default {
     },
     editorRoleText() {
       if (this.isRealtimeCollaboration) {
-        return "实时协作";
+        return this.$t('writer.chapter.collab.modeRealtime');
       }
       if (this.editorAccess.access_role === "collaborator") {
-        return "协作草稿";
+        return this.$t('writer.chapter.collab.modeDraft');
       }
       return "";
     },
@@ -1980,9 +2020,15 @@ export default {
     },
     toolbarSettingsItems() {
       return normalizeNavToolIds(this.writerSettings.navToolIds)
-        .filter(id => this.aiAssistanceEnabled || id !== 'writerAi').map((id) => ({
-        ...TOOL_DEFINITIONS[id],
-      }));
+        .filter(id => this.aiAssistanceEnabled || id !== 'writerAi')
+        .map((id) => {
+          const tool = TOOL_DEFINITIONS[id];
+          const labelKey = TOOL_LABEL_KEYS[id];
+          return {
+            ...tool,
+            label: labelKey ? this.$t(labelKey) : tool.label,
+          };
+        });
     },
     toolbarPanelTools() {
       return this.toolbarSettingsItems;
@@ -2349,7 +2395,7 @@ export default {
         this.isArticleContentEmpty()
       ) {
         uni.showToast({
-          title: "标题或文章内容不能为空",
+          title: this.$t('writer.chapter.titleOrContentRequired'),
           icon: "none",
           duration: 2000,
         });
@@ -2466,19 +2512,23 @@ export default {
     },
     getCurrentFontConfig() {
       if (!this.writerSettings || !this.writerSettings.font) {
-        return this.fonts.default || { name: "系统默认", family: "" };
+        return this.fonts.default || { name: this.$t('writer.chapter.systemDefaultFont'), family: "" };
       }
       return (
         this.fonts[this.writerSettings.font] ||
         this.fonts.default ||
-        { name: "系统默认", family: "" }
+        { name: this.$t('writer.chapter.systemDefaultFont'), family: "" }
       );
     },
     getCurrentFontFamily() {
       return this.getCurrentFontConfig().family || "";
     },
     getCurrentFontName() {
-      return this.getCurrentFontConfig().name || "系统默认";
+      const configuredFont = this.writerSettings && this.writerSettings.font;
+      if (!configuredFont || configuredFont === "default") {
+        return this.$t('writer.chapter.systemDefaultFont');
+      }
+      return this.getCurrentFontConfig().name || this.$t('writer.chapter.systemDefaultFont');
     },
     getFontFamilyStyleValue(fontFamily) {
       if (!fontFamily) {
@@ -2641,7 +2691,7 @@ export default {
       const mergedFonts = {
         default:
           defaultFonts.default ||
-          { name: "系统默认", family: "", familyBold: "", version: "1" },
+          { name: this.$t('writer.chapter.systemDefaultFont'), family: "", familyBold: "", version: "1" },
       };
       if (!Array.isArray(serverFonts)) {
         this.fonts = mergedFonts;
@@ -2833,12 +2883,12 @@ export default {
     handleLockedBackgroundOption(option) {
       const superOnly = option && option.required_membership === "super";
       uni.showModal({
-        title: superOnly ? "超级典藏背景" : "原木典藏背景",
+        title: superOnly ? this.$t('writer.chapter.membership.superTitle') : this.$t('writer.chapter.membership.premiumTitle'),
         content: superOnly
-          ? "这款背景仅限超级原木通行证用户使用。"
-          : "这款背景仅限原木通行证或超级原木通行证用户使用。",
-        cancelText: "暂不",
-        confirmText: "查看通行证",
+          ? this.$t('writer.chapter.membership.superMessage')
+          : this.$t('writer.chapter.membership.premiumMessage'),
+        cancelText: this.$t('writer.chapter.membership.notNow'),
+        confirmText: this.$t('writer.chapter.membership.viewPass'),
         success: ({ confirm }) => {
           if (confirm) uni.navigateTo({ url: "/pages/membership/index" });
         },
@@ -3026,7 +3076,7 @@ export default {
         });
         this.$set(this.fontDownloadState, fontKey, "failed");
         uni.showToast({
-          title: "字体下载失败",
+          title: this.$t('writer.chapter.fontDownloadFailed'),
           icon: "none",
         });
         return false;
@@ -3037,7 +3087,7 @@ export default {
       if (!this.canSwitchFont) {
         const defaultFonts = this.getDefaultFonts();
         this.fonts = {
-          default: defaultFonts.default || { name: "系统默认", family: "" },
+          default: defaultFonts.default || { name: this.$t('writer.chapter.systemDefaultFont'), family: "" },
         };
         this.normalizeWriterFont();
         this.$nextTick(() => {
@@ -3668,8 +3718,8 @@ export default {
       }
 
       uni.showModal({
-        title: "编辑会话已失效",
-        content: "这个页面的编辑会话已经被新的操作接管，请重新进入章节继续编辑。",
+        title: this.$t('writer.chapter.sessionExpiredTitle'),
+        content: this.$t('writer.chapter.sessionExpiredContent'),
         showCancel: false,
         success: () => {
           uni.navigateBack({});
@@ -3771,10 +3821,10 @@ export default {
       this.stopLockHeartbeat();
       clearTimeout(this.inputSyncTimer);
       this.inputSyncTimer = undefined;
-      const lockName = lockInfo && lockInfo.name ? lockInfo.name : "其他作者";
+      const lockName = lockInfo && lockInfo.name ? lockInfo.name : this.$t('writer.chapter.otherAuthor');
       uni.showModal({
-        title: "章节已被占用",
-        content: `${lockName} 正在编辑这个章节，请稍后再试。`,
+        title: this.$t('writer.chapter.chapterLockedTitle'),
+        content: this.$t('writer.chapter.chapterLockedContent', { name: lockName }),
         showCancel: false,
         success: () => {
           uni.navigateBack();
@@ -4053,7 +4103,7 @@ export default {
         seen.add(uniqueKey);
         editors.push({
           user_id: editorId || null,
-          name: editorName || "未知作者",
+          name: editorName || this.$t('writer.chapter.unknownAuthor'),
         });
       }
 
@@ -4071,19 +4121,19 @@ export default {
         return "";
       }
       if (names.length === 1) {
-        return `${names[0]}编辑过本章`;
+        return this.$t('writer.chapter.versionEditedByOne', { name: names[0] });
       }
       if (names.length === 2) {
-        return `${names[0]}、${names[1]}编辑过本章`;
+        return this.$t('writer.chapter.versionEditedByTwo', { first: names[0], second: names[1] });
       }
-      return `${names[0]}等${names.length}人编辑过本章`;
+      return this.$t('writer.chapter.versionEditedByMany', { name: names[0], count: names.length });
     },
     buildConflictDialogSubtitle(editors) {
       const summary = this.formatConflictEditorsSummary(editors);
       if (summary) {
-        return `自从你上次保存后，${summary}。请选择要保留的版本。`;
+        return this.$t('writer.chapter.versionConflictSummary', { summary });
       }
-      return "检测到本地草稿和云端草稿不一致，请选择要保留的版本。";
+      return this.$t('writer.chapter.versionConflictGeneric');
     },
     buildArticle(raw) {
       const article = raw || {};
@@ -4518,7 +4568,9 @@ export default {
     async loadCurrentCollaborationUser() {
       const fallback = {
         id: Number(this.currentUserId || 0),
-        name: this.currentUserId ? `用户${this.currentUserId}` : "协作者",
+        name: this.currentUserId
+          ? this.$t('writer.chapter.collab.userFallback', { id: this.currentUserId })
+          : this.$t('writer.chapter.collab.collaborator'),
         avatarUrl: "",
         color: this.getCollaborationDisplayColor({
           id: this.currentUserId,
@@ -4580,8 +4632,8 @@ export default {
       if (!userId && !isCurrentUser) return null;
 
       const name = String(
-        currentUser.name || rawUser.name || (userId ? `用户${userId}` : "协作者")
-      ).trim() || "协作者";
+        currentUser.name || rawUser.name || (userId ? this.$t('writer.chapter.collab.userFallback', { id: userId }) : this.$t('writer.chapter.collab.collaborator'))
+      ).trim() || this.$t('writer.chapter.collab.collaborator');
       const avatarUrl = String(
         currentUser.avatarUrl ||
         rawUser.avatarUrl ||
@@ -4613,10 +4665,14 @@ export default {
     },
     formatRealtimePresenceParticipantNames(participants) {
       const names = (Array.isArray(participants) ? participants : [])
-        .map((participant) => String(participant.name || "协作者").trim())
+        .map((participant) => String(participant.name || this.$t('writer.chapter.collab.collaborator')).trim())
         .filter(Boolean);
-      if (names.length <= 2) return names.join("、");
-      return `${names.slice(0, 2).join("、")}等${names.length}人`;
+      const separator = this.$t('writer.chapter.collab.nameSeparator');
+      if (names.length <= 2) return names.join(separator);
+      return this.$t('writer.chapter.collab.presenceOthers', {
+        names: names.slice(0, 2).join(separator),
+        count: names.length,
+      });
     },
     showNextRealtimePresenceToast() {
       if (
@@ -4681,12 +4737,16 @@ export default {
       this.collaborationPresenceUsersByKey = nextUsersByKey;
       if (joinedParticipants.length) {
         this.enqueueRealtimePresenceToast(
-          `${this.formatRealtimePresenceParticipantNames(joinedParticipants)}加入了实时协作`
+          this.$t('writer.chapter.collab.presenceJoined', {
+            names: this.formatRealtimePresenceParticipantNames(joinedParticipants),
+          })
         );
       }
       if (leftParticipants.length) {
         this.enqueueRealtimePresenceToast(
-          `${this.formatRealtimePresenceParticipantNames(leftParticipants)}退出了实时协作`
+          this.$t('writer.chapter.collab.presenceLeft', {
+            names: this.formatRealtimePresenceParticipantNames(leftParticipants),
+          })
         );
       }
     },
@@ -4767,7 +4827,8 @@ export default {
       return {
         id,
         user_id: userId,
-        name: String(message.name || `用户${userId}`).trim() || `用户${userId}`,
+        name: String(message.name || this.$t('writer.chapter.collab.userFallback', { id: userId })).trim()
+          || this.$t('writer.chapter.collab.userFallback', { id: userId }),
         avatar_url: String(message.avatar_url || ""),
         color: this.getCollaborationDisplayColor({
           id: userId,
@@ -5194,7 +5255,7 @@ export default {
             provider: this.collaborationProvider,
             user: this.collaborationCurrentUser || {
               id: Number(this.currentUserId || 0),
-              name: "协作者",
+              name: this.$t('writer.chapter.collab.collaborator'),
               avatarUrl: "",
               color: getCollaborationUserColor(this.currentUserId),
             },
@@ -5620,7 +5681,7 @@ export default {
     },
     async initializeArticle() {
       uni.showLoading({
-        title: "编辑器初始化",
+        title: this.$t('writer.chapter.editorInit'),
       });
 
       try {
@@ -5659,7 +5720,7 @@ export default {
         if (currentAccess && currentAccess.can_edit_draft === false) {
           uni.hideLoading();
           uni.showToast({
-            title: "你没有编辑章节权限",
+            title: this.$t('writer.chapter.noEditPermission'),
             icon: "none",
             duration: 2000,
           });
@@ -5753,22 +5814,22 @@ export default {
 
             const action = await new Promise((resolve) => {
               this.$refs.conflictDialog.show({
-                title: "协作草稿有更新",
+                title: this.$t('writer.chapter.collabDraftUpdated'),
                 subtitle: this.buildConflictDialogSubtitle(remoteEditors),
                 type: "conflict",
                 local: {
-                  title: "本地草稿",
+                  title: this.$t('writer.chapter.localDraft'),
                   time: this.formatCreateTime(latestLocalArticle.create_time),
                   isNewer:
                     this.getVersionMarker(latestLocalArticle) >
                     this.getVersionMarker(res.data),
                   textCount: localStats.textCount,
                   imageCount: localStats.imageCount,
-                  editorLabel: "当前设备上的草稿",
-                  selectLabel: "保留本地草稿",
+                  editorLabel: this.$t('writer.chapter.localDraftDevice'),
+                  selectLabel: this.$t('writer.chapter.keepLocalDraft'),
                 },
                 cloud: {
-                  title: "云端草稿",
+                  title: this.$t('writer.chapter.cloudDraft'),
                   time: this.formatCreateTime(res.data.create_time),
                   isNewer:
                     this.getVersionMarker(res.data) >
@@ -5776,9 +5837,9 @@ export default {
                   textCount: cloudStats.textCount,
                   imageCount: cloudStats.imageCount,
                   editorLabel: latestCloudEditorName
-                    ? `最近提交：${latestCloudEditorName}`
-                    : "最近提交：云端协作草稿",
-                  selectLabel: "保留云端草稿",
+                    ? this.$t('writer.chapter.recentSubmitBy', { name: latestCloudEditorName })
+                    : this.$t('writer.chapter.recentSubmitCloud'),
+                  selectLabel: this.$t('writer.chapter.keepCloudDraft'),
                 },
                 callback: resolve,
               });
@@ -5880,7 +5941,7 @@ export default {
           realtimeCheckpoint = await this.checkpointRealtimeArticle();
         } catch (error) {
           uni.showToast({
-            title: "实时协作内容尚未同步，请检查网络后重试",
+            title: this.$t('writer.chapter.collabNotSyncedCheckNetwork'),
             icon: "none",
             duration: 2500,
           });
@@ -5891,7 +5952,7 @@ export default {
       if (!this.canPublishArticle) {
         if (drafting === 0 || scheduleTime) {
           uni.showToast({
-            title: "协作者不能直接发布章节",
+            title: this.$t('writer.chapter.collaboratorCannotPublish'),
             icon: "none",
             duration: 2000,
           });
@@ -5900,7 +5961,7 @@ export default {
 
         if (this.isRealtimeCollaboration) {
           uni.showToast({
-            title: "协作草稿已同步",
+            title: this.$t('writer.chapter.collabDraftSynced'),
             icon: "none",
             duration: 2000,
           });
@@ -5919,14 +5980,14 @@ export default {
           );
           if (!uploadResponse) {
             uni.showToast({
-              title: "网络不稳定，本地草稿已保存",
+              title: this.$t('writer.chapter.networkDraftSaved'),
               icon: "none",
               duration: 2000,
             });
             return;
           }
           uni.showToast({
-            title: "协作草稿已保存",
+            title: this.$t('writer.chapter.collabDraftSaved'),
             icon: "none",
             duration: 2000,
           });
@@ -5939,7 +6000,7 @@ export default {
           }, 1200);
         } catch (error) {
           uni.showToast({
-            title: "协作草稿保存失败，请重试",
+            title: this.$t('writer.chapter.collabDraftSaveFailed'),
             icon: "none",
             duration: 2000,
           });
@@ -5989,7 +6050,7 @@ export default {
             error.response.data &&
             error.response.data.msg;
           uni.showToast({
-            title: msg || "章节上传失败，请重试",
+            title: msg || this.$t('writer.chapter.chapterUploadFailed'),
             icon: "none",
             duration: 2500,
           });
@@ -6646,7 +6707,7 @@ export default {
 
       this.applyLegacyContentToEditor(formatted, false);
       uni.showToast({
-        title: "自动排版完成",
+        title: this.$t('writer.chapter.autoFormatDone'),
         icon: "none",
         duration: 2000,
       });
@@ -6962,7 +7023,7 @@ export default {
         );
         if (formatted) {
           uni.showToast({
-            title: "自动排版完成",
+            title: this.$t('writer.chapter.autoFormatDone'),
             icon: "none",
             duration: 2000,
           });
@@ -7072,7 +7133,10 @@ export default {
           event.stopPropagation();
 
           uni.showActionSheet({
-            itemList: ["删除图片", "在下方插入段"],
+            itemList: [
+              this.$t('writer.chapter.deleteImage'),
+              this.$t('writer.chapter.insertParagraphBelow'),
+            ],
             success: (res) => {
               const imagePos = this.editor.view.posAtDOM(img, 0);
               const imageNode = this.editor.state.doc.nodeAt(imagePos);
@@ -7127,29 +7191,29 @@ export default {
     formatSaveNotifyText() {
       if (this.isRealtimeCollaboration) {
         if (this.collaborationStatus === "authentication_failed") {
-          return "协作登录已失效";
+          return this.$t('writer.chapter.collabLoginExpired');
         }
         if (this.collaborationUnsyncedChanges > 0) {
-          return "正在实时同步";
+          return this.$t('writer.chapter.syncingRealtime');
         }
         if (this.collaborationStatus === "connected") {
-          return "已实时同步";
+          return this.$t('writer.chapter.syncedRealtime');
         }
-        return "离线编辑，等待重连";
+        return this.$t('writer.chapter.offlineWaiting');
       }
       if (this.lockState === "reconnecting") {
-        return "网络不稳定，本地已保存";
+        return this.$t('writer.chapter.networkLocalSaved');
       }
       if (this.lockState === "lost") {
-        return "编辑会话已失效";
+        return this.$t('writer.chapter.sessionExpiredShort');
       }
       if (!this.lastSaveNotifyTime) {
-        return "尚未更改";
+        return this.$t('writer.chapter.status.unchanged');
       }
 
       const savedAt = new Date(this.lastSaveNotifyTime).getTime();
       if (!Number.isFinite(savedAt)) {
-        return "尚未更改";
+        return this.$t('writer.chapter.status.unchanged');
       }
 
       const elapsedSeconds = Math.max(
@@ -7157,12 +7221,12 @@ export default {
         Math.floor((Date.now() - savedAt) / 1000)
       );
       if (elapsedSeconds < 5) {
-        return "刚刚";
+        return this.$t('writer.chapter.justNow');
       }
       if (elapsedSeconds < 60) {
-        return `${elapsedSeconds}秒前`;
+        return this.$t('writer.chapter.secondsAgo', { count: elapsedSeconds });
       }
-      return `${Math.floor(elapsedSeconds / 60)}分钟前`;
+      return this.$t('writer.chapter.minutesAgo', { count: Math.floor(elapsedSeconds / 60) });
     },
     refreshSaveNotifyText() {
       this.saveNotifyText = this.formatSaveNotifyText();
@@ -7344,7 +7408,7 @@ export default {
       const replacement = String(this.findReplaceValue || "");
       const keyword = String(this.findReplaceQuery || "");
       if (replacement === keyword) {
-        uni.showToast({ title: "替换内容相同", icon: "none" });
+        uni.showToast({ title: this.$t('writer.chapter.replaceSame'), icon: "none" });
         return;
       }
 
@@ -7360,7 +7424,7 @@ export default {
       const keyword = String(this.findReplaceQuery || "");
       const replacement = String(this.findReplaceValue || "");
       if (replacement === keyword) {
-        uni.showToast({ title: "替换内容相同", icon: "none" });
+        uni.showToast({ title: this.$t('writer.chapter.replaceSame'), icon: "none" });
         return;
       }
 
@@ -7373,7 +7437,7 @@ export default {
       this.editor.view.dispatch(transaction);
       this.refreshFindReplaceMatches();
       uni.showToast({
-        title: `已替换${matches.length}处`,
+        title: this.$t('writer.chapter.replacedCount', { count: matches.length }),
         icon: "none",
       });
     },
@@ -7409,7 +7473,7 @@ export default {
       uni.chooseImage({
         success: (chooseImageRes) => {
           uni.showToast({
-            title: "图片上传中",
+            title: this.$t('writer.chapter.imageUploading'),
             icon: "loading",
             duration: 2000,
           });
@@ -7427,7 +7491,7 @@ export default {
                 JSON.parse(uploadFileRes.data).data.resource_id;
               this.editor.chain().focus().setImage({ src: imageUrl }).run();
               uni.showToast({
-                title: "上传成功",
+                title: this.$t('writer.chapter.uploadSuccess'),
                 icon: "success",
                 duration: 2000,
               });
@@ -7439,7 +7503,7 @@ export default {
     async handlePublishAction() {
       if (this.publishHandoffActive) return;
       if (!this.canPublishArticle) {
-        this.save(1, "协作草稿已保存");
+        this.save(1, this.$t('writer.chapter.collabDraftSaved'));
         return;
       }
 
@@ -7448,7 +7512,7 @@ export default {
           await this.checkpointRealtimeArticle();
         } catch (error) {
           uni.showToast({
-            title: "实时协作内容尚未同步，请稍后重试",
+            title: this.$t('writer.chapter.collabNotSyncedRetry'),
             icon: "none",
             duration: 2500,
           });
@@ -7479,14 +7543,14 @@ export default {
             this.startLocalSaveTimer();
             this.claimEditLock();
           }
-          uni.showToast({ title: "打开发布页失败，请重试", icon: "none" });
+          uni.showToast({ title: this.$t('writer.chapter.openPublishFailed'), icon: "none" });
         },
       });
     },
     openReaderPreview() {
       if (!this.editor) {
         uni.showToast({
-          title: "编辑器尚未准备好",
+          title: this.$t('writer.chapter.editorNotReady'),
           icon: "none",
         });
         return;
@@ -7502,7 +7566,7 @@ export default {
         ...this.article,
         article_id: articleId,
         novel_id: novelId,
-        title: String(this.article.title || "未命名章节"),
+        title: String(this.article.title || this.$t('writer.chapter.untitledChapter')),
         article_type: this.article.article_type || "richtext",
         article_chapter: Number(this.article.article_chapter || 1),
         is_draft: 1,
@@ -7511,7 +7575,7 @@ export default {
       const previewNovel = {
         ...novelInfo,
         novel_id: novelId,
-        name: novelInfo.name || novelInfo.title || "作品预览",
+        name: novelInfo.name || novelInfo.title || this.$t('writer.chapter.workPreview'),
       };
 
       try {
@@ -7536,7 +7600,7 @@ export default {
       } catch (error) {
         console.error("store reader preview failed", error);
         uni.showToast({
-          title: "生成阅读预览失败",
+          title: this.$t('writer.chapter.previewFailed'),
           icon: "none",
         });
       }

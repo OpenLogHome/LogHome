@@ -9,48 +9,48 @@
 				}">
 				<div v-if="!isPreviewMode" class="line">
 					<div class="btn" style="width: 110rpx; margin: 0 30rpx 0 20rpx; font-size: 34rpx;" 
-						 @click="sliderTooltip.lastIdx=currentArticleIdx; gotoArticleIdx(currentArticleIdx - 1)">上一章</div>
+						 @click="sliderTooltip.lastIdx=currentArticleIdx; gotoArticleIdx(currentArticleIdx - 1)">{{ $t('reader.article.prevChapter') }}</div>
 					<el-slider v-model="currentArticleIdx" :min="0" :max="allArticles.length - 1" :step="1"
 						style="width: calc(100vw - 220rpx - 170rpx);" :show-tooltip='false' @touchstart.native="startSlideArticleIndex"
 						@change="handleCurrentPageChange" @input="handleSliderInput"></el-slider>
 					<div class="btn" style="width: 110rpx; margin: 0 20rpx 0 30rpx; font-size: 34rpx;"
-						 @click="sliderTooltip.lastIdx=currentArticleIdx; gotoArticleIdx(currentArticleIdx + 1)">下一章</div>
+						 @click="sliderTooltip.lastIdx=currentArticleIdx; gotoArticleIdx(currentArticleIdx + 1)">{{ $t('reader.article.nextChapter') }}</div>
 				</div>
 				<div class="line reader-shortcuts">
-					<div v-if="!isPreviewMode" class="iconBtn" role="button" aria-label="目录" @click="gotoMenu">
+					<div v-if="!isPreviewMode" class="iconBtn" role="button" :aria-label="$t('reader.article.tableOfContents')" @click="gotoMenu">
 						<i class="el-icon-tickets"></i>
-						<p>目录</p>
+						<p>{{ $t('reader.article.tableOfContents') }}</p>
 					</div>
-					<div v-if="!isPreviewMode" class="iconBtn" role="button" aria-label="书摘" @click="openExcerpts">
+					<div v-if="!isPreviewMode" class="iconBtn" role="button" :aria-label="$t('reader.article.excerpts')" @click="openExcerpts">
 						<i class="el-icon-collection"></i>
-						<p>书摘</p>
+						<p>{{ $t('reader.article.excerpts') }}</p>
 					</div>
-					<div class="iconBtn" role="button" :aria-label="themesData[readerSettings.theme].isBlack ? '日间' : '夜间'"
+					<div class="iconBtn" role="button" :aria-label="themesData[readerSettings.theme].isBlack ? $t('reader.article.dayMode') : $t('reader.article.nightMode')"
 						@click="toggleNightMode">
 						<i class="el-icon-moon"
 							v-show="!themesData[readerSettings.theme].isBlack"></i>
 						<p
-							v-show="!themesData[readerSettings.theme].isBlack">夜间</p>
+							v-show="!themesData[readerSettings.theme].isBlack">{{ $t('reader.article.nightMode') }}</p>
 						<i class="el-icon-sunny"
 							v-show="themesData[readerSettings.theme].isBlack"></i>
 						<p
-							v-show="themesData[readerSettings.theme].isBlack">日间</p>
+							v-show="themesData[readerSettings.theme].isBlack">{{ $t('reader.article.dayMode') }}</p>
 					</div>
-					<div class="iconBtn" :class="{ active: showReaderSetting }" role="button" aria-label="设置"
+					<div class="iconBtn" :class="{ active: showReaderSetting }" role="button" :aria-label="$t('reader.article.settings')"
 						@click="showReaderSetting = !showReaderSetting;">
 						<i class="el-icon-setting" v-show="!showReaderSetting"></i>
 						<i class="el-icon-s-tools" v-show="showReaderSetting"></i>
-						<p>设置</p>
+						<p>{{ $t('reader.article.settings') }}</p>
 					</div>
 				</div>
 				<div class="readerSettings">
 					<div class="line" style="margin-top: 40rpx;">
-						<span style="font-size: 30rpx;">阅读器</span>
+						<span style="font-size: 30rpx;">{{ $t('reader.article.readerLabel') }}</span>
 						<ReaderTypeSwitch class="reader-type-switch-setting" value="page"
 							@change="switchReaderType" />
 					</div>
 					<div class="line" style="margin-top: 40rpx;">
-						<span style="font-size: 30rpx;">背景</span>
+						<span style="font-size: 30rpx;">{{ $t('reader.article.background') }}</span>
 						<ReaderBackgroundPicker class="background-picker"
 							:theme-options="readerThemeOptions"
 							:skins="readerBackgroundSkins"
@@ -62,7 +62,7 @@
 							@select-locked-skin="handleLockedBackgroundSkin" />
 					</div>
 					<div class="line" style="margin-top: 40rpx;">
-						<span style="font-size: 30rpx;">字号</span>
+						<span style="font-size: 30rpx;">{{ $t('reader.article.fontSize') }}</span>
 						<div class="fontSize">
 							<div class="btn pad" @click="changeFontSize(-1)">
 								A<i class="el-icon-sort-down"></i>
@@ -79,23 +79,23 @@
 						</div>
 					</div>
 					<div class="line" style="margin-top: 40rpx;">
-						<span style="font-size: 30rpx;">行距</span>
+						<span style="font-size: 30rpx;">{{ $t('reader.article.lineSpacing') }}</span>
 						<div class="lineHeight">
 							<div class="btn" @click="changeLineHeight(1.5)"
 								:class="{ 'selected': readerSettings.lineHeight == 1.5 }">
-								小
+								{{ $t('reader.article.spacingSmall') }}
 							</div>
 							<div class="btn" @click="changeLineHeight(1.7)"
 								:class="{ 'selected': readerSettings.lineHeight == 1.7 }">
-								较小
+								{{ $t('reader.article.spacingSmaller') }}
 							</div>
 							<div class="btn" @click="changeLineHeight(1.8)"
 								:class="{ 'selected': readerSettings.lineHeight == 1.8 }">
-								适中
+								{{ $t('reader.article.spacingMedium') }}
 							</div>
 							<div class="btn" @click="changeLineHeight(2.0)"
 								:class="{ 'selected': readerSettings.lineHeight == 2.0 }">
-								大
+								{{ $t('reader.article.spacingLarge') }}
 							</div>
 						</div>
 					</div>
@@ -124,7 +124,7 @@
 						<i class="el-icon-refresh-left"></i>
 					</div>
 					<div class="t">
-						撤销
+						{{ $t('reader.article.undo') }}
 					</div>
 				</div>
 				<div class="text">
@@ -261,7 +261,7 @@
 			</div>
 		</div>
 
-		<el-drawer v-if="canSwitchFont" title="选择字体" :visible.sync="showFontsSelectDrawer" :direction="'btt'" size="55%">
+		<el-drawer v-if="canSwitchFont" :title="$t('reader.article.selectFont')" :visible.sync="showFontsSelectDrawer" :direction="'btt'" size="55%">
 			<div class="fonts-container">
 				<div class="fonts-grid">
 					<div v-for="(font, key) in selectableFonts" :key="key" class="font-item"
@@ -270,13 +270,13 @@
 							<div class="font-name">
 								{{ font.name }}
 								<span v-if="fontDownloadState[key] === 'downloading'" style="font-size: 22rpx; margin-left: 12rpx; color: #888;">
-									下载中...
+									{{ $t('reader.article.fontDownloading') }}
 								</span>
 							</div>
 							<div class="font-preview" :style="{
 								fontFamily: font.family || 'inherit'
 							}">
-								落霞与孤鹜齐飞，秋水共长天一色
+								{{ $t('reader.article.fontPreview') }}
 							</div>
 						</div>
 						<div class="select-indicator" v-if="readerSettings.font === key">
@@ -301,7 +301,7 @@
 			custom-class="commentDrawer" :destroy-on-close="true" :wrapperClosable="false">
 			<div class="bookCommentDrawer" :style="commentDrawerThemeStyle">
 				<div class="drawerTitle">
-					段落评论
+					{{ $t('reader.article.paragraphComments') }}
 				</div>
 				<div class="closeBtn" @click="handleCloseCommentDraweraManually">
 					<i class="el-icon-close"></i>
@@ -316,7 +316,7 @@
 			custom-class="commentDrawer" :destroy-on-close="true" :wrapperClosable="false">
 			<div class="bookCommentDrawer" :style="commentDrawerThemeStyle">
 				<div class="drawerTitle">
-					划线书摘
+					{{ $t('reader.article.underlinedExcerpts') }}
 				</div>
 				<div class="closeBtn" @click="handleCloseExcerptDrawerManually">
 					<i class="el-icon-close"></i>
@@ -340,28 +340,28 @@
 			:style="{ left: panelPosition.x + 'px', top: panelPosition.y + 'px' }">
 			<div class="panel-button" @click="handleCopy">
 				<i class="el-icon-document-copy"></i>
-				<span>复制</span>
+				<span>{{ $t('reader.article.copy') }}</span>
 			</div>
 			<div class="panel-button" v-show="!isPreviewMode && selectedParagraph && !selectedParagraph.cento" @click="handleUnderline">
 				<i class="el-icon-edit"></i>
-				<span>划线</span>
+				<span>{{ $t('reader.article.underline') }}</span>
 			</div>
 			<div class="panel-button" v-show="!isPreviewMode && selectedParagraph && selectedParagraph.cento"
 				@click="handleRemoveUnderline">
 				<i class="el-icon-remove-outline"></i>
-				<span>移除划线</span>
+				<span>{{ $t('reader.article.removeUnderline') }}</span>
 			</div>
 			<div v-if="!isPreviewMode" class="panel-button" @click="gotoParagraphComment(selectedParagraph.id)">
 				<i class="el-icon-chat-line-round"></i>
-				<span>评论</span>
+				<span>{{ $t('reader.article.comment') }}</span>
 			</div>
 			<div class="panel-button" @click="handleFeedback">
 				<i class="el-icon-warning-outline"></i>
-				<span>反馈</span>
+				<span>{{ $t('reader.article.feedback') }}</span>
 			</div>
 			<div class="panel-button" @click="listenFromParagraph(selectedParagraph.id)">
 				<i class="el-icon-video-play"></i>
-				<span>朗读</span>
+				<span>{{ $t('reader.article.readAloud') }}</span>
 			</div>
 		</div>
 		
@@ -383,28 +383,28 @@
 		</div>
 
 		<el-dialog
-			title="错误反馈"
+			:title="$t('reader.article.feedbackTitle')"
 			:visible.sync="feedbackDialogVisible"
 			width="80%"
 			:before-close="handleCloseFeedbackDialog">
 			<div class="feedback-container">
 				<div class="paragraph-preview">
-					<p>选中的段落：</p>
+					<p>{{ $t('reader.article.selectedParagraph') }}</p>
 					<div class="paragraph-text">{{ selectedParagraph ? selectedParagraph.value : '' }}</div>
 				</div>
 				<div class="feedback-input">
-					<p>请描述您发现的错误：</p>
+					<p>{{ $t('reader.article.feedbackPrompt') }}</p>
 					<el-input
 						type="textarea"
 						:rows="4"
-						placeholder="请输入错误描述，如错别字、语法错误等"
+						:placeholder="$t('reader.article.feedbackPlaceholder')"
 						v-model="feedbackContent">
 					</el-input>
 				</div>
 			</div>
 			<span slot="footer" class="dialog-footer">
-				<el-button @click="handleCloseFeedbackDialog">取消</el-button>
-				<el-button type="primary" @click="submitFeedback" :disabled="!feedbackContent">提交</el-button>
+				<el-button @click="handleCloseFeedbackDialog">{{ $t('common.cancel') }}</el-button>
+				<el-button type="primary" @click="submitFeedback" :disabled="!feedbackContent">{{ $t('common.submit') }}</el-button>
 			</span>
 		</el-dialog>
 	</div>
@@ -437,6 +437,21 @@ import { createBackgroundSkinStyle, normalizeBackgroundSkin } from "../../../com
 import { getMembershipStatus } from "../../../common/membership-api.js"
 import { getColorMode, getProjectThemeMode, readPageTheme, rememberPageTheme } from "../../../common/page-theme-memory.js"
 const MEMBERS_ONLY_THEME_KEYS = Object.freeze([
+	'wavechaser',
+	'powderblue',
+	'qingyun',
+	'sunburst',
+	'thorncrown',
+	'chocolate'
+]);
+const READER_THEME_KEYS = Object.freeze([
+	'white',
+	'yellow',
+	'green',
+	'blue',
+	'purple',
+	'pink',
+	'black',
 	'wavechaser',
 	'powderblue',
 	'qingyun',
@@ -645,15 +660,18 @@ export default {
 		},
 		getCurrentFontConfig() {
 			if (!this.readerSettings || !this.readerSettings.font) {
-				return this.fonts.default || { name: "系统默认", family: "" };
+				return this.fonts.default || { name: this.$t('reader.article.systemDefaultFont'), family: "" };
 			}
-			return this.fonts[this.readerSettings.font] || this.fonts.default || { name: "系统默认", family: "" };
+			return this.fonts[this.readerSettings.font] || this.fonts.default || { name: this.$t('reader.article.systemDefaultFont'), family: "" };
 		},
 		getCurrentFontFamily() {
 			return this.getCurrentFontConfig().family || "";
 		},
 		getCurrentFontName() {
-			return this.getCurrentFontConfig().name || "系统默认";
+			if (!this.readerSettings || !this.readerSettings.font || this.readerSettings.font === 'default') {
+				return this.$t('reader.article.systemDefaultFont');
+			}
+			return this.getCurrentFontConfig().name || this.$t('reader.article.systemDefaultFont');
 		},
 		normalizeReaderFont() {
 			if (!this.canSwitchFont) {
@@ -674,7 +692,7 @@ export default {
 		mergeServerFonts(serverFonts) {
 			let defaultFonts = this.getDefaultFonts();
 			let mergedFonts = {
-				default: defaultFonts.default || { name: "系统默认", family: "", familyBold: "", version: "1" }
+				default: defaultFonts.default || { name: this.$t('reader.article.systemDefaultFont'), family: "", familyBold: "", version: "1" }
 			};
 			if (!Array.isArray(serverFonts)) {
 				this.fonts = mergedFonts;
@@ -848,7 +866,7 @@ export default {
 				});
 				this.$set(this.fontDownloadState, fontKey, "failed");
 				uni.showToast({
-					title: "字体下载失败",
+					title: this.$t('reader.article.fontDownloadFailed'),
 					icon: "none"
 				});
 				return false;
@@ -871,7 +889,7 @@ export default {
 		loadAllPages() {
 			return new Promise(async (resolve, reject) => {
 				uni.showLoading({
-					title: '编排页面中'
+					title: this.$t('reader.article.organizingPages')
 				});
 				this.onRendering = true;
 				// 提前存储好当前章节的阅读页数
@@ -943,7 +961,7 @@ export default {
 			if (this.isPreviewMode) {
 				return JSON.parse(JSON.stringify(this.previewPayload.novel || {
 					novel_id: this.novelId,
-					name: '作品预览'
+					name: this.$t('reader.article.previewTitle')
 				}));
 			}
 			try {
@@ -1030,7 +1048,7 @@ export default {
 				let matchedArticles = await articleDB.articles.where("article_id").equals(Number(article_id)).toArray();
 				if(matchedArticles.length > 0) {
 					uni.showToast({
-						 title: "将使用离线模式加载此书",
+						 title: this.$t('reader.article.offlineMode'),
 						 icon: "loading"
 					})
 					return this.parseReaderArticleContent(matchedArticles[0]);
@@ -1398,12 +1416,12 @@ export default {
 		handleLockedBackgroundSkin(skin) {
 			const superOnly = skin && skin.required_membership === 'super';
 			uni.showModal({
-				title: superOnly ? '超级典藏背景' : '原木典藏背景',
+				title: superOnly ? this.$t('reader.article.superBackgroundTitle') : this.$t('reader.article.premiumBackgroundTitle'),
 				content: superOnly
-					? '这款背景仅限超级原木通行证用户使用。'
-					: '这款背景仅限原木通行证或超级原木通行证用户使用。',
-				cancelText: '暂不',
-				confirmText: '查看通行证',
+					? this.$t('reader.article.superBackgroundOnly')
+					: this.$t('reader.article.premiumBackgroundOnly'),
+				cancelText: this.$t('reader.article.notNow'),
+				confirmText: this.$t('reader.article.viewPass'),
 				success: ({ confirm }) => {
 					if (confirm) uni.navigateTo({ url: '/pages/membership/index' });
 				}
@@ -1433,21 +1451,9 @@ export default {
 			this.rememberCurrentReaderTheme();
 		},
 		getThemeName(themeKey) {
-			return {
-				white: '蛙鸣白',
-				yellow: '原木黄',
-				green: '草原绿',
-				blue: '晴空蓝',
-				purple: '末地紫',
-				pink: '桃花粉',
-				black: '虚空黑',
-				wavechaser: '追波',
-				powderblue: '粉蓝',
-				qingyun: '青云',
-				sunburst: '艳阳',
-				thorncrown: '荆棘冠',
-				chocolate: '巧克力'
-			}[themeKey] || themeKey;
+			return READER_THEME_KEYS.includes(themeKey)
+				? this.$t('reader.article.themes.' + themeKey)
+				: themeKey;
 		},
 		getLineShelterBackground(para) {
 			if (this.currentBackgroundSkin) return 'transparent';
@@ -1643,7 +1649,7 @@ export default {
 			} catch (error) {
 				console.error(error);
 				uni.showToast({
-					title: '移除划线失败',
+					title: this.$t('reader.article.removeUnderlineFailed'),
 					icon: 'none'
 				});
 			}
@@ -1653,11 +1659,10 @@ export default {
 			uni.setClipboardData({
 				data: `${this.selectedParagraph.value}
 ===================
-版权声明：本文为原创文章，遵循 《原木社区用户内容上传协议》，转载请附上原文出处链接和本声明。
-原文链接：http://loghome.ink/article/${this.articleId}`,
+${this.$t('reader.article.copyAttribution', { brand: this.$t('nav.brand'), url: 'http://loghome.ink/article/' + this.articleId })}`,
 				success: () => {
 					uni.showToast({
-						title: '已复制',
+						title: this.$t('common.copied'),
 						icon: 'none'
 					});
 					this.clearSelection();
@@ -1999,7 +2004,7 @@ export default {
 			if (!this.selectedParagraph) return;
 			// TODO: 实现评论功能
 			uni.showToast({
-				title: '评论功能开发中',
+				title: this.$t('reader.article.commentInDevelopment'),
 				icon: 'none'
 			});
 			this.clearSelection();
@@ -2221,7 +2226,7 @@ export default {
 					}
 				});
 				uni.showToast({
-					title: '反馈提交成功',
+					title: this.$t('reader.article.feedbackSuccess'),
 					icon: 'none'
 				});
 				this.handleCloseFeedbackDialog();
@@ -2229,7 +2234,7 @@ export default {
 			} catch (error) {
 				console.error(error);
 				uni.showToast({
-					title: '反馈提交失败',
+					title: this.$t('reader.article.feedbackFailed'),
 					icon: 'none'
 				});
 			}
@@ -2341,10 +2346,16 @@ export default {
 			return this.isAppEnv && !!(window.jsBridge && window.jsBridge.downloadFont);
 		},
 		selectableFonts() {
-			if (this.canSwitchFont) {
-				return this.fonts;
-			}
-			return { default: this.fonts.default || { name: "系统默认", family: "" } };
+			const fonts = this.canSwitchFont
+				? this.fonts
+				: { default: this.fonts.default || { name: this.$t('reader.article.systemDefaultFont'), family: "" } };
+			const selectable = {};
+			Object.keys(fonts).forEach(key => {
+				selectable[key] = key === 'default'
+					? { ...fonts[key], name: this.$t('reader.article.systemDefaultFont') }
+					: fonts[key];
+			});
+			return selectable;
 		}
 	},
 	async onLoad(option) {
@@ -2352,7 +2363,7 @@ export default {
 		this.previewPayload = readReaderPreview(this.previewKey);
 		this.isPreviewMode = !!this.previewPayload;
 		if (this.previewKey && !this.previewPayload) {
-			uni.showToast({ title: '预览内容已失效', icon: 'none' });
+			uni.showToast({ title: this.$t('reader.article.previewExpired'), icon: 'none' });
 			setTimeout(() => uni.navigateBack(), 300);
 			return;
 		}
@@ -2367,7 +2378,7 @@ export default {
 		this.loadReaderSettings();
 		await Promise.all([this.initReaderFonts(), this.loadReaderBackgroundSkins()]);
 		uni.showLoading({
-			title: '努力加载中'
+			title: this.$t('common.loading')
 		});
 		if (JSON.stringify(option) == "{}") {
 			uni.showToast({

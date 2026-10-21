@@ -5,8 +5,8 @@
 					<template slot="rowContent" slot-scope="{ row }">
 						<view class="row" :style="{'color': row.article_type == 'spliter' ? '#888888' : 'black'}">
 							<text class="text">
-                                {{row.article_type == 'spliter' ? "分卷符 - " : ""}}{{row.name}}
-                                <text v-if="row.hasWriterModify" style="color: #dd524d; font-size: 24rpx; margin-left: 10rpx;">(发布后有编辑)</text>
+                                {{row.article_type == 'spliter' ? $t('writer.work.sort.splitterPrefix') : ""}}{{row.name}}
+                                <text v-if="row.hasWriterModify" style="color: #dd524d; font-size: 24rpx; margin-left: 10rpx;">({{ $t('writer.work.sort.publishedEdited') }})</text>
                             </text>
 						</view>
 					</template>
@@ -36,7 +36,7 @@
 		},
 		onLoad(option){
 			uni.showLoading({
-				title: '努力加载中'
+				title: this.$t('common.loading')
 			});
 			if(JSON.stringify(option) == "{}"){
 				uni.showToast({
@@ -247,7 +247,7 @@
 				//console.log(error);
 				if (error) {
 					uni.showToast({
-						title: "操作失败",
+						title: _this.$t('common.operationFailed'),
 						icon: 'none',
 						duration: 2000
 					});
