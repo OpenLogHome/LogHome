@@ -181,7 +181,7 @@
           </div>
           <input ref="projectFile" type="file" multiple class="hidden-input" @change="onProjectFilePicked" />
           <div v-if="uploading && uploadTarget === 'project'" class="upload-status">
-            <span class="upload-spinner"></span>上传中 {{ uploadProgress }}%
+            <span class="upload-spinner"></span>{{ uploadProgress > 0 ? '上传中 ' + uploadProgress + '%' : '正在连接存储服务…' }}
           </div>
         </section>
       </div>
@@ -346,7 +346,7 @@
         </div>
         <input ref="taskFile" type="file" multiple class="hidden-input" @change="onTaskFilePicked" />
         <div v-if="uploading && uploadTarget === 'task'" class="upload-status">
-          <span class="upload-spinner"></span>上传中 {{ uploadProgress }}%
+          <span class="upload-spinner"></span>{{ uploadProgress > 0 ? '上传中 ' + uploadProgress + '%' : '正在连接存储服务…' }}
         </div>
       </div>
 
@@ -427,6 +427,8 @@ const STORAGE_UPLOAD_URL = 'https://storage.codesocean.top/api/resource/upload'
 const STORAGE_RESOURCE_URL = 'https://storage.codesocean.top/api/resource'
 const TODO_STORAGE_CONTAINER = '175221160113586'
 const MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024
+// 存储服务在代理异常时会挂起请求，超过该时长无任何上传进展就主动中断，避免界面永久停在 0%。
+const UPLOAD_STALL_TIMEOUT = 20000
 const MEMBER_COLORS = ['#8d6e63', '#a1887f', '#795548', '#9c7a63', '#6d4c41', '#b08968']
 const PRIORITY_LABELS = { high: '高', mid: '中', low: '低' }
 
@@ -867,6 +869,10 @@ export default {
       this.$message.info('打开任务详情或选中项目后，粘贴的图片/文件会作为附件上传')
     },
     async handleFiles(fileList, target, options = {}) {
+      if (this.uploading) {
+        this.$message.info('附件正在上传，请稍候')
+        return
+      }
       const files = Array.from(fileList || [])
       if (!files.length) return
       const projectId = options.projectId || this.projFilter
@@ -889,24 +895,27 @@ export default {
       this.uploading = true
       this.uploadTarget = target
       this.uploadProgress = 0
-      for (let i = 0; i < valid.length; i += 1) {
-        this.uploadProgress = Math.floor((i / valid.length) * 100)
-        try {
-          const record = await this.uploadOne(valid[i], Boolean(options.fromClipboard))
-          if (taskAttachments) {
-            taskAttachments.push(record)
-          } else if (projectId) {
-            await this.addProjectDoc(record, projectId)
-            projectChanged = true
+      try {
+        for (let i = 0; i < valid.length; i += 1) {
+          this.uploadProgress = Math.floor((i / valid.length) * 100)
+          try {
+            const record = await this.uploadOne(valid[i], Boolean(options.fromClipboard))
+            if (taskAttachments) {
+              taskAttachments.push(record)
+            } else if (projectId) {
+              await this.addProjectDoc(record, projectId)
+              projectChanged = true
+            }
+          } catch (error) {
+            console.error('附件上传失败', error)
+            this.$message.error(this.uploadErrorMessage(error, valid[i]))
           }
-        } catch (error) {
-          console.error('附件上传失败', error)
-          this.$message.error(this.errorMessage(error, `「${valid[i].name || '附件'}」上传失败，请重试`))
         }
+      } finally {
+        this.uploading = false
+        this.uploadTarget = ''
+        this.uploadProgress = 0
       }
-      this.uploading = false
-      this.uploadTarget = ''
-      this.uploadProgress = 0
       if (projectChanged) {
         await this.loadBoard()
       }
@@ -915,22 +924,42 @@ export default {
       const displayName = this.displayNameFor(file, fromClipboard)
       const formData = new FormData()
       formData.append('file', file, displayName)
-      return new Promise((resolve, reject) => {
-        this.axios.post(`${STORAGE_UPLOAD_URL}?container=${TODO_STORAGE_CONTAINER}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            ServiceKey: STORAGE_SERVICE_KEY
-          },
-          onUploadProgress: event => {
-            if (event.total) {
-              this.uploadProgress = Math.min(99, Math.floor((event.loaded / event.total) * 100))
-            }
+      const source = this.axios.CancelToken.source()
+      let stallTimer = null
+      let stalled = false
+      const settleStallTimer = () => {
+        if (stallTimer) {
+          clearTimeout(stallTimer)
+          stallTimer = null
+        }
+      }
+      const armStallTimer = () => {
+        settleStallTimer()
+        stallTimer = setTimeout(() => {
+          stalled = true
+          source.cancel('upload stalled')
+        }, UPLOAD_STALL_TIMEOUT)
+      }
+      armStallTimer()
+      return this.axios.post(`${STORAGE_UPLOAD_URL}?container=${TODO_STORAGE_CONTAINER}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ServiceKey: STORAGE_SERVICE_KEY
+        },
+        cancelToken: source.token,
+        onUploadProgress: event => {
+          armStallTimer()
+          if (file.size > 0 && event.loaded) {
+            this.uploadProgress = Math.min(99, Math.floor((event.loaded / file.size) * 100))
           }
-        }).then(response => {
+        }
+      }).then(
+        response => {
+          settleStallTimer()
           const resourceId = response.data && response.data.data && response.data.data.resource_id
           if (!resourceId) throw new Error('上传响应格式错误')
           const type = file.type || ''
-          resolve({
+          return {
             id: null,
             key: 'att-new-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
             resourceId,
@@ -940,9 +969,28 @@ export default {
             isImage: /^image\//.test(type) || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(displayName),
             inlineUrl: STORAGE_RESOURCE_URL + '/get/' + resourceId,
             url: STORAGE_RESOURCE_URL + '/download/' + resourceId
-          })
-        }).catch(reject)
-      })
+          }
+        },
+        error => {
+          settleStallTimer()
+          if (stalled) {
+            const stallError = new Error('存储服务无响应')
+            stallError.__stall = true
+            throw stallError
+          }
+          throw error
+        }
+      )
+    },
+    uploadErrorMessage(error, file) {
+      const name = (file && file.name) || '剪贴板文件'
+      if (error && error.__stall) {
+        return `「${name}」上传超时：存储服务长时间无响应，请检查网络或代理设置`
+      }
+      if (error && !error.response) {
+        return `「${name}」上传失败：无法连接存储服务，请检查网络或代理设置`
+      }
+      return this.errorMessage(error, `「${name}」上传失败，请重试`)
     },
     async addProjectDoc(record, projectId) {
       await this.axios.post(
