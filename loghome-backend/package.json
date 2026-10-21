@@ -59,6 +59,7 @@
 		"migrate:users-language": "node sql/execute_users_language_column.js",
 		"migrate:rank-badges": "node sql/execute_rank_badges.js",
 		"migrate:rank-snapshot": "node sql/execute_rank_snapshot_table.js",
+		"migrate:todo-board": "node sql/execute_todo_board_tables.js",
 		"migrate:novels-is-banned": "node sql/execute_novels_is_banned_column.js",
 		"test:i18n-lang": "node test/i18n_lang_test.js",
 		"timer:run": "node scripts/run_timer.js"
