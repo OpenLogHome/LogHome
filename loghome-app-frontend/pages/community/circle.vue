@@ -1,7 +1,7 @@
 <template>
   <view class="circle-container" v-dark>
     <!-- 添加后退导航栏 -->
-    <zetank-backBar textcolor="#fff" :showLeft="true" :showHome="true" :showTitle="false" navTitle="圈子详情"></zetank-backBar>
+    <zetank-backBar textcolor="#fff" :showLeft="true" :showHome="true" :showTitle="false" :navTitle="$t('community.circle.pageTitle')"></zetank-backBar>
     
     <!-- 圈子头部信息 -->
     <view class="circle-header">
@@ -14,11 +14,11 @@
           <view class="circle-meta">
             <view class="circle-name">
               {{circle.name}}
-              <view class="official-tag" v-if="circle.is_official">官方</view>
+              <view class="official-tag" v-if="circle.is_official">{{ $t('community.circle.official') }}</view>
             </view>
             <view class="circle-stats">
-              <text>{{circle.member_count}}成员</text>
-              <text>{{circle.post_count}}帖子</text>
+              <text>{{ $t('community.circle.memberCount', { count: circle.member_count }) }}</text>
+              <text>{{ $t('community.circle.postCount', { count: circle.post_count }) }}</text>
             </view>
             <view class="circle-description clickable" @click="showCircleInfo">{{circle.description}}</view>
           </view>
@@ -26,13 +26,13 @@
         
         <view class="action-bar">
           <view class="action-btn clickable" :class="{ 'active': isJoined }" @tap="toggleJoin">
-            {{ isJoined ? '已加入' : '加入圈子' }}
+            {{ isJoined ? $t('community.circle.joined') : $t('community.circle.join') }}
           </view>
           <view class="action-btn clickable" @tap="showCircleInfo">
-            圈子公告
+            {{ $t('community.circle.announcement') }}
           </view>
           <view class="action-btn clickable" v-if="isJoined && (userRole === 1 || userRole === 2)" @tap="editCircle">
-            圈子设置
+            {{ $t('community.circle.settings') }}
           </view>
         </view>
       </view>
@@ -58,9 +58,9 @@
     <!-- 圈子成员模块 -->
     <view class="circle-members">
       <view class="section-header">
-        <text class="section-title">成员 ({{circle.member_count || 0}})</text>
+        <text class="section-title">{{ $t('community.circle.membersTitle', { count: circle.member_count || 0 }) }}</text>
         <view class="more-btn clickable" @tap="navigateToMembers">
-          <text>更多</text>
+          <text>{{ $t('common.more') }}</text>
           <uni-icons type="right" size="14" :color="$store.state.isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
         </view>
       </view>
@@ -69,8 +69,8 @@
           <view class="member-item clickable" v-for="(member, index) in members" :key="index" @tap="navigateToUser(member.user_id)">
             <view class="member-avatar-wrapper">
               <user-avatar class="member-avatar" :src="member.avatar_url" :frame="member.avatar_frame" :visual-scale="member.avatar_frame ? 1.2 : 1" />
-              <view class="member-role" v-if="member.role === 2">圈主</view>
-              <view class="member-role admin" v-else-if="member.role === 1">管理员</view>
+              <view class="member-role" v-if="member.role === 2">{{ $t('community.circle.owner') }}</view>
+              <view class="member-role admin" v-else-if="member.role === 1">{{ $t('community.circle.admin') }}</view>
             </view>
             <text class="member-name">{{member.name}}</text>
           </view>
@@ -122,7 +122,7 @@
                 <text class="post-time">{{formatTime(post.create_time)}}</text>
               </view>
             </view>
-            <view class="post-tag" v-if="post.is_top">置顶</view>
+            <view class="post-tag" v-if="post.is_top">{{ $t('community.circle.pinned') }}</view>
           </view>
           <view class="post-content">
             <text class="post-title">{{post.title}}</text>
@@ -153,7 +153,7 @@
             </view>
             <view class="post-action clickable" @tap.stop="sharePost(post)">
               <uni-icons type="redo" size="18" :color="$store.state.isDarkMode ? '#b8b8b8' : '#666'"></uni-icons>
-              <text>分享</text>
+              <text>{{ $t('common.share') }}</text>
             </view>
           </view>
         </view>
@@ -187,7 +187,7 @@
       <!-- 空状态 -->
       <view class="empty-state" v-if="posts.length === 0 && loadingStatus !== 'loading'">
         <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit" class="empty-image"></image>
-        <text class="empty-text">暂无帖子</text>
+        <text class="empty-text">{{ $t('community.circle.emptyPosts') }}</text>
       </view>
       <view class="posts-list post-skeleton-list" v-else-if="loadingStatus === 'loading'">
         <el-skeleton animated>
@@ -237,24 +237,24 @@
     <uni-popup ref="infoPopup" type="center">
       <view class="info-popup">
         <view class="popup-header">
-          <text class="popup-title">圈子信息</text>
+          <text class="popup-title">{{ $t('community.circle.infoTitle') }}</text>
           <uni-icons type="closeempty" size="24" :color="$store.state.isDarkMode ? '#b8b8b8' : '#999'" class="clickable" @click="closeInfoPopup"></uni-icons>
         </view>
         <view class="popup-content">
           <view class="info-section">
-            <text class="info-title">圈子简介</text>
-            <text class="info-text">{{circle.description || '暂无圈子简介'}}</text>
+            <text class="info-title">{{ $t('community.circle.introTitle') }}</text>
+            <text class="info-text">{{ circle.description || $t('community.circle.noDescription') }}</text>
           </view>
           <view class="info-section">
-            <text class="info-title">圈子规则</text>
-            <text class="info-text">{{circle.rules || '暂无圈子规则'}}</text>
+            <text class="info-title">{{ $t('community.circle.rulesTitle') }}</text>
+            <text class="info-text">{{ circle.rules || $t('community.circle.noRules') }}</text>
           </view>
           <view class="info-section">
-            <text class="info-title">圈子公告</text>
-            <text class="info-text">{{circle.announcement || '暂无圈子公告'}}</text>
+            <text class="info-title">{{ $t('community.circle.announcement') }}</text>
+            <text class="info-text">{{ circle.announcement || $t('community.circle.noAnnouncement') }}</text>
           </view>
           <view class="info-section">
-            <text class="info-title">圈主</text>
+            <text class="info-title">{{ $t('community.circle.owner') }}</text>
             <view class="member-item clickable" @tap="navigateToUser(circle.creator_id)">
               <log-image class="member-avatar" :src="circle.creator_avatar" mode="aspectFill" onerror="onerror=null;src='../../static/user/defaultAvatar.jpg'"></log-image>
               <text class="member-name">{{circle.creator_name}}</text>
@@ -268,7 +268,7 @@
 
 <script>
 import axios from 'axios'
-import moment from 'moment'
+import { postTimeText } from '@/common/datetime.js'
 import MembershipBadge from '@/components/membership-badge.vue'
 
 export default {
@@ -282,11 +282,6 @@ export default {
       circleLoading: true,
       isJoined: false,
       userRole: 0, // 0-普通成员 1-管理员 2-圈主
-      filters: [
-        { name: '全部', value: 'all' },
-        { name: '最新', value: 'new' },
-        { name: '热门', value: 'hot' }
-      ],
       currentFilter: 'all',
       posts: [],
       members: [], // 圈子成员列表
@@ -303,6 +298,15 @@ export default {
       }
     }
   },
+  computed: {
+    filters() {
+      return [
+        { name: this.$t('common.all'), value: 'all' },
+        { name: this.$t('community.circle.latest'), value: 'new' },
+        { name: this.$t('community.circle.hot'), value: 'hot' }
+      ]
+    }
+  },
   onLoad(options) {
     if (options.id) {
       this.circleId = options.id;
@@ -312,7 +316,7 @@ export default {
       this.loadPosts();
     } else {
       uni.showToast({
-        title: '参数错误',
+        title: this.$t('common.paramError'),
         icon: 'none'
       });
       setTimeout(() => {
@@ -376,7 +380,7 @@ export default {
       } catch (error) {
         console.error('加载圈子信息失败', error);
         uni.showToast({
-          title: '加载圈子信息失败',
+          title: this.$t('community.circle.loadCircleFailed'),
           icon: 'none'
         });
       } finally {
@@ -522,7 +526,7 @@ export default {
           this.circle.member_count--;
           
           uni.showToast({
-            title: '已退出圈子',
+            title: this.$t('community.circle.leftCircle'),
             icon: 'success'
           });
         } else {
@@ -537,7 +541,7 @@ export default {
       } catch (error) {
         console.error('操作失败', error);
         uni.showToast({
-          title: error.response?.data?.msg || '操作失败，请重试',
+          title: error.response?.data?.msg || this.$t('community.circle.operationFailed'),
           icon: 'none'
         });
       }
@@ -545,10 +549,10 @@ export default {
     // 显示加入验证弹窗
     showJoinVerificationPopup() {
       uni.showModal({
-        title: '加入圈子',
-        content: '该圈子需要验证才能加入，是否继续？',
-        confirmText: '继续',
-        cancelText: '取消',
+        title: this.$t('community.circle.join'),
+        content: this.$t('community.circle.joinVerificationContent'),
+        confirmText: this.$t('community.circle.continueAction'),
+        cancelText: this.$t('common.cancel'),
         success: (res) => {
           if (res.confirm) {
             // 获取验证问题
@@ -563,7 +567,7 @@ export default {
         // 使用公开接口获取验证问题
         const res = await axios.get(this.$baseUrl + `/community/circles/${this.circleId}/verification-questions`);
         
-        let verificationPrompt = '请输入验证信息';
+        let verificationPrompt = this.$t('community.circle.enterVerification');
         if (res.data && res.data.verification_questions) {
           verificationPrompt = res.data.verification_questions;
         }
@@ -573,9 +577,9 @@ export default {
           title: verificationPrompt,
           content: '',
           editable: true,
-          placeholderText: '请输入...',
-          confirmText: '提交',
-          cancelText: '取消',
+          placeholderText: this.$t('community.circle.inputPlaceholder'),
+          confirmText: this.$t('common.submit'),
+          cancelText: this.$t('common.cancel'),
           success: async (res) => {
             if (res.confirm) {
               // 提交验证信息
@@ -587,12 +591,12 @@ export default {
         console.error('获取验证问题失败', error);
         // 如果获取失败，使用默认提示
         uni.showModal({
-          title: '入圈验证',
+          title: this.$t('community.circle.verificationTitle'),
           content: '',
           editable: true,
-          placeholderText: '请输入...',
-          confirmText: '提交',
-          cancelText: '取消',
+          placeholderText: this.$t('community.circle.inputPlaceholder'),
+          confirmText: this.$t('common.submit'),
+          cancelText: this.$t('common.cancel'),
           success: async (res) => {
             if (res.confirm) {
               // 提交验证信息
@@ -624,7 +628,7 @@ export default {
         // 如果需要验证，提示用户等待审核
         if (this.circle.need_verification) {
           uni.showToast({
-            title: '申请已提交，等待审核',
+            title: this.$t('community.circle.applicationSubmitted'),
             icon: 'none',
             duration: 2000
           });
@@ -634,14 +638,14 @@ export default {
           this.circle.member_count++;
           
           uni.showToast({
-            title: '已加入圈子',
+            title: this.$t('community.circle.joinedCircle'),
             icon: 'success'
           });
         }
       } catch (error) {
         console.error('加入圈子失败', error);
         uni.showToast({
-          title: error.response?.data?.msg || '操作失败，请重试',
+          title: error.response?.data?.msg || this.$t('community.circle.operationFailed'),
           icon: 'none'
         });
       }
@@ -685,7 +689,7 @@ export default {
       } catch (error) {
         console.error('点赞失败', error);
         uni.showToast({
-          title: '操作失败',
+          title: this.$t('common.operationFailed'),
           icon: 'none'
         });
       }
@@ -695,19 +699,26 @@ export default {
     },
     
     traditionalShare(post) {
-      return `来自原木社区「${this.circle.name}」圈子的分享：${post.title}\n${post.content.substring(0, 50)}${post.content.length > 50 ? '...' : ''}\n点击链接查看详情：${window.location.origin}/#/pages/community/postDetail?id=${post.post_id}`;
+      const snippet = post.content.substring(0, 50) + (post.content.length > 50 ? '...' : '');
+      return this.$t('community.circle.shareText', {
+        brand: this.$t('nav.brand'),
+        circle: this.circle.name,
+        title: post.title,
+        snippet,
+        url: window.location.origin + '/#/pages/community/postDetail?id=' + post.post_id
+      });
     },
     
     createShareCode(post) {
       uni.showLoading({
-        title: '创建口令中...'
+        title: this.$t('community.circle.creatingCode')
       });
 
       let tk = JSON.parse(window.localStorage.getItem('token'));
       if (!tk || !tk.tk) {
         uni.hideLoading();
         uni.showToast({
-          title: '请先登录',
+          title: this.$t('common.needLogin'),
           icon: 'none',
           duration: 2000
         });
@@ -732,16 +743,16 @@ export default {
             data: res.data.share_text,
             success: () => {
               uni.showModal({
-                title: '口令创建成功',
-                content: `口令：${res.data.code}\n\n口令已复制到剪贴板，分享给好友即可！`,
+                title: this.$t('community.circle.codeCreated'),
+                content: this.$t('community.circle.codeCreatedContent', { code: res.data.code }),
                 showCancel: false,
-                confirmText: '知道了'
+                confirmText: this.$t('common.gotIt')
               });
             }
           });
         } else {
           uni.showToast({
-            title: res.data.msg || '口令创建失败',
+            title: res.data.msg || this.$t('community.circle.createCodeFailed'),
             icon: 'none',
             duration: 2000
           });
@@ -750,7 +761,7 @@ export default {
         uni.hideLoading();
         console.error('创建口令失败:', error);
         uni.showToast({
-          title: '网络错误，请稍后重试',
+          title: this.$t('common.networkError'),
           icon: 'none',
           duration: 2000
         });
@@ -763,20 +774,7 @@ export default {
       });
     },
     formatTime(time) {
-      const now = moment();
-      const postTime = moment(time);
-      const diff = now.diff(postTime, 'minutes');
-      
-      if (diff < 1) return '刚刚';
-      if (diff < 60) return `${diff}分钟前`;
-      
-      const hourDiff = now.diff(postTime, 'hours');
-      if (hourDiff < 24) return `${hourDiff}小时前`;
-      
-      const dayDiff = now.diff(postTime, 'days');
-      if (dayDiff < 30) return `${dayDiff}天前`;
-      
-      return postTime.format('YYYY-MM-DD');
+      return postTimeText(time)
     },
     navigateToPost(postId) {
       uni.navigateTo({
@@ -803,7 +801,7 @@ export default {
       
       if (!this.isJoined) {
         uni.showToast({
-          title: '请先加入圈子',
+          title: this.$t('community.circle.joinFirst'),
           icon: 'none'
         });
         return;
@@ -840,13 +838,12 @@ export default {
         
         if (res.data && res.data.is_banned) {
           const banInfo = res.data.ban_info;
-          const endTimeText = banInfo.end_time ? 
-            `，将于 ${new Date(banInfo.end_time).toLocaleString()} 解除` : 
-            '，永久禁言';
-            
+
           uni.showModal({
-            title: '禁言提示',
-            content: `您在该圈子中已被禁言${endTimeText}，无法发布帖子`,
+            title: this.$t('community.circle.banNotice'),
+            content: banInfo.end_time
+              ? this.$t('community.circle.bannedContentWithEnd', { time: new Date(banInfo.end_time).toLocaleString() })
+              : this.$t('community.circle.bannedContentPermanent'),
             showCancel: false
           });
           

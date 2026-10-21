@@ -6,7 +6,7 @@
 			<input
 				class="title-input"
 				v-model="postData.title"
-				placeholder="标题（必填）"
+				:placeholder="$t('community.postEdit.titlePlaceholder')"
 				maxlength="50"
 				@input="updateTitleCount"
 			/>
@@ -16,7 +16,7 @@
 			<textarea
 				class="content-input"
 				v-model="postData.content"
-				placeholder="分享你的想法..."
+				:placeholder="$t('community.postEdit.contentPlaceholder')"
 				maxlength="2000"
 				@input="updateContentCount"
 			/>
@@ -41,7 +41,7 @@
 									backgroundColor="rgba(255,255,255,0.25)"
 									activeColor="#EA7034"
 								/>
-								<text class="progress-text" v-if="item.status === 'error'">上传失败，点图重试</text>
+								<text class="progress-text" v-if="item.status === 'error'">{{ $t('community.postEdit.uploadFailedRetry') }}</text>
 								<text class="progress-text" v-else>{{item.progress}}%</text>
 							</view>
 						</view>
@@ -61,17 +61,17 @@
 			
 			<!-- 选择圈子 -->
 			<view class="circle-selector" @tap="showCirclePopup">
-				<text class="label">发布到</text>
+				<text class="label">{{ $t('community.postEdit.publishTo') }}</text>
 				<text class="selected-circle" v-if="selectedCircle">{{selectedCircle.name}}</text>
-				<text class="placeholder" v-else>选择圈子</text>
+				<text class="placeholder" v-else>{{ $t('community.postEdit.selectCircle') }}</text>
 				<uni-icons type="right" size="16" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 			</view>
 			
 			<!-- 绑定作品 -->
 			<view class="book-selector" @tap="showBookPopup">
-				<text class="label">绑定作品（可选）</text>
+				<text class="label">{{ $t('community.postEdit.bindWork') }}</text>
 				<text class="selected-book" v-if="selectedBook">{{selectedBook.name}}</text>
-				<text class="placeholder" v-else>选择作品</text>
+				<text class="placeholder" v-else>{{ $t('community.postEdit.selectWork') }}</text>
 				<uni-icons type="right" size="16" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 			</view>
 			<!-- 如果已选择作品，显示作品卡片 -->
@@ -95,30 +95,30 @@
 		<uni-popup ref="circlePopup" type="bottom">
 			<view class="popup-content" v-dark>
 				<view class="popup-header">
-					<text class="popup-title">选择圈子</text>
+					<text class="popup-title">{{ $t('community.postEdit.selectCircle') }}</text>
 					<view class="close-btn" @tap="hideCirclePopup">
 						<uni-icons type="closeempty" size="24" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
 					</view>
 				</view>
 				<view v-if="circlesLoading" class="circle-state" role="status">
 					<uni-icons type="spinner-cycle" size="30" :color="isDarkMode ? '#b8b8b8' : '#999'" class="circle-loading-icon"></uni-icons>
-					<text class="circle-state-title">正在加载圈子</text>
-					<text class="circle-state-description">请稍等片刻</text>
+					<text class="circle-state-title">{{ $t('community.postEdit.loadingCircles') }}</text>
+					<text class="circle-state-description">{{ $t('community.postEdit.pleaseWait') }}</text>
 				</view>
 				<view v-else-if="circlesError" class="circle-state" role="status">
 					<uni-icons type="info" size="36" :color="isDarkMode ? '#b8b8b8' : '#999'"></uni-icons>
-					<text class="circle-state-title">暂时无法加载圈子</text>
-					<text class="circle-state-description">请检查网络连接，然后重试。</text>
-					<button class="circle-state-action" @tap="loadCircles">重新加载</button>
+					<text class="circle-state-title">{{ $t('community.postEdit.circlesLoadFailed') }}</text>
+					<text class="circle-state-description">{{ $t('community.postEdit.checkNetworkRetry') }}</text>
+					<button class="circle-state-action" @tap="loadCircles">{{ $t('common.reload') }}</button>
 				</view>
 				<view v-else-if="circles.length === 0" class="circle-state">
 					<view class="circle-empty-icon">
 						<uni-icons type="personadd" size="32" color="#b46f58"></uni-icons>
 					</view>
-					<text class="circle-state-title">你还没有加入圈子</text>
-					<text class="circle-state-description">加入感兴趣的圈子后，就可以在这里发布帖子。</text>
-					<button class="circle-state-action" @tap="discoverCircles">去发现圈子</button>
-					<text class="circle-draft-hint">已填写的帖子内容会保留，加入后返回即可选择。</text>
+					<text class="circle-state-title">{{ $t('community.postEdit.noCirclesTitle') }}</text>
+					<text class="circle-state-description">{{ $t('community.postEdit.noCirclesDesc') }}</text>
+					<button class="circle-state-action" @tap="discoverCircles">{{ $t('community.postEdit.discoverCircles') }}</button>
+					<text class="circle-draft-hint">{{ $t('community.postEdit.draftHint') }}</text>
 				</view>
 				<scroll-view v-else scroll-y class="circle-list">
 					<view 
@@ -130,7 +130,7 @@
 						<log-image class="circle-icon" :src="circle.icon" mode="aspectFill"></log-image>
 						<view class="circle-info">
 							<text class="circle-name">{{circle.name}}</text>
-							<text class="circle-desc">{{circle.member_count}}人</text>
+							<text class="circle-desc">{{ $t('community.postEdit.memberCount', { count: circle.member_count }) }}</text>
 						</view>
 						<uni-icons 
 							:type="selectedCircle && selectedCircle.circle_id === circle.circle_id ? 'checkbox-filled' : 'circle'"
@@ -152,7 +152,7 @@
 			custom-class="book-select-wrapper"
 			modal-class="book-select-overlay">
 			<div class="searchBar" v-dark :style="{ position: 'absolute', backgroundColor: isDarkMode ? 'var(--background-color-secondary)' : '#ffe6b4', width: '100%', zIndex: 100 }">
-				<uni-search-bar :bgColor="isDarkMode ? '#252525' : '#ffffff'" :radius="0" @input="searchLibrary" placeholder="搜索我的作品"
+				<uni-search-bar :bgColor="isDarkMode ? '#252525' : '#ffffff'" :radius="0" @input="searchLibrary" :placeholder="$t('community.postEdit.searchWorksPlaceholder')"
 					cancelButton="none">
 					<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;width:25px;"/>
 					<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;width:20px;"/>
@@ -312,7 +312,7 @@
 				} catch (error) {
 					console.error('加载作品失败', error)
 					uni.showToast({
-						title: '加载作品失败',
+						title: this.$t('community.postEdit.loadWorksFailed'),
 						icon: 'none'
 					})
 				}
@@ -376,7 +376,7 @@
 				} catch (error) {
 					console.error('上传图片失败', error)
 					uni.showToast({
-						title: '上传图片失败',
+						title: this.$t('community.postEdit.uploadImageFailed'),
 						icon: 'none'
 					})
 				}
@@ -518,7 +518,7 @@
 					fail: () => {
 						this.returningFromCircleDiscovery = false;
 						this.$refs.circlePopup.open();
-						uni.showToast({ title: '暂时无法打开圈子页面，请重试', icon: 'none' });
+						uni.showToast({ title: this.$t('community.postEdit.openCirclesPageFailed'), icon: 'none' });
 					}
 				});
 			},
@@ -541,13 +541,13 @@
 						
 						// 如果被禁言，显示提示
 						if (this.isBanned) {
-							const endTimeText = this.banInfo.end_time ? 
-								`，将于 ${this.formatBanEndTime(this.banInfo.end_time)} 解除` : 
-								'，永久禁言';
-								
+							const endTimeText = this.banInfo.end_time ?
+								this.$t('community.postEdit.banUntil', { time: this.formatBanEndTime(this.banInfo.end_time) }) :
+								this.$t('community.postEdit.banPermanent');
+
 							uni.showModal({
-								title: '禁言提示',
-								content: `您在该圈子中已被禁言${endTimeText}，无法发布帖子`,
+								title: this.$t('community.postEdit.banTitle'),
+								content: this.$t('community.postEdit.banContent', { endTimeText }),
 								showCancel: false,
 								success: () => {
 									uni.navigateBack();
@@ -562,7 +562,7 @@
 			
 			// 格式化禁言结束时间
 			formatBanEndTime(time) {
-				if (!time) return '永久';
+				if (!time) return this.$t('community.postEdit.permanent');
 				return new Date(time).toLocaleString();
 			},
 			
@@ -600,39 +600,39 @@
 						}
 					}
 				} catch (error) {
-					uni.showToast({ title: '加载帖子失败', icon: 'none' });
+					uni.showToast({ title: this.$t('community.postEdit.loadPostFailed'), icon: 'none' });
 				}
 			},
 			
 			async submitPost() {
 				if (this.isSubmitting) return
 				if ((this.uploadingImages || []).some((x) => x.status === 'uploading')) {
-					uni.showToast({ title: '图片上传中，请稍候', icon: 'none' })
+					uni.showToast({ title: this.$t('community.postEdit.imagesUploading'), icon: 'none' })
 					return
 				}
 				if ((this.uploadingImages || []).some((x) => x.status === 'error')) {
-					uni.showToast({ title: '有图片上传失败，请重试或删除', icon: 'none' })
+					uni.showToast({ title: this.$t('community.postEdit.imageUploadFailedRetryDelete'), icon: 'none' })
 					return
 				}
 				if (!this.postData.title.trim()) {
-					uni.showToast({ title: '请输入标题', icon: 'none' })
+					uni.showToast({ title: this.$t('common.inputTitle'), icon: 'none' })
 					return
 				}
 				if (!this.postData.content.trim()) {
-					uni.showToast({ title: '请输入内容', icon: 'none' })
+					uni.showToast({ title: this.$t('common.inputContent'), icon: 'none' })
 					return
 				}
 				if (!this.postData.media_urls || this.postData.media_urls.length === 0) {
-					uni.showToast({ title: '请至少上传一张图片', icon: 'none' })
+					uni.showToast({ title: this.$t('community.postEdit.atLeastOneImage'), icon: 'none' })
 					return
 				}
 				if (!this.postData.circle_id) {
-					uni.showToast({ title: '请选择圈子', icon: 'none' })
+					uni.showToast({ title: this.$t('community.postEdit.selectCircleRequired'), icon: 'none' })
 					return
 				}
 				if (this.isBanned) {
-					const endTimeText = this.banInfo && this.banInfo.end_time ? `，将于 ${this.formatBanEndTime(this.banInfo.end_time)} 解除` : '，永久禁言';
-					uni.showModal({ title: '禁言提示', content: `您在该圈子中已被禁言${endTimeText}，无法发布帖子`, showCancel: false });
+					const endTimeText = this.banInfo && this.banInfo.end_time ? this.$t('community.postEdit.banUntil', { time: this.formatBanEndTime(this.banInfo.end_time) }) : this.$t('community.postEdit.banPermanent');
+					uni.showModal({ title: this.$t('community.postEdit.banTitle'), content: this.$t('community.postEdit.banContent', { endTimeText }), showCancel: false });
 					return;
 				}
 				this.isSubmitting = true
@@ -664,7 +664,7 @@
 						})
 					}
 					uni.showToast({
-						title: res.data.status === 1 ? (this.isEdit ? '编辑成功' : '发布成功') : '提交成功，等待审核',
+						title: res.data.status === 1 ? (this.isEdit ? this.$t('community.postEdit.editSuccess') : this.$t('community.postEdit.publishSuccess')) : this.$t('community.postEdit.submitPendingReview'),
 						icon: 'none'
 					})
 					
@@ -685,7 +685,7 @@
 							if (modal) {
 								modal.show({
 									reward: typeof data.reward === 'number' ? data.reward : 25,
-									taskName: '每日任务：首次发帖',
+									taskName: this.$t('community.postEdit.dailyTaskFirstPost'),
 									icon: data.task_icon,
 									currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
 									maxGrowth: 100,
@@ -702,7 +702,7 @@
 					}, 1500)
 				} catch (error) {
 					console.error('发布失败', error)
-					uni.showToast({ title: this.isEdit ? '编辑失败，请重试' : '发布失败，请重试', icon: 'none' })
+					uni.showToast({ title: this.isEdit ? this.$t('community.postEdit.editFailedRetry') : this.$t('community.postEdit.publishFailedRetry'), icon: 'none' })
 				} finally {
 					this.isSubmitting = false
 				}

@@ -5,8 +5,8 @@
 				<view class="title">{{mData.title}}</view>
 				<view class="content word-break">{{mData.content}}</view>
 				<view class="btn">
-					<view class="cancel" @tap="tapCancel" :style="{color:mData.cancelColor?mData.cancelColor:''}">{{mData.cancelText?mData.cancelText:'取消'}}</view>
-					<view class="confirm" @tap="tapConfirm" :style="{color:mData.confirmColor?mData.confirmColor:''}">{{mData.confirmText?mData.confirmText:'确认'}}</view>
+					<view class="cancel" @tap="tapCancel" :style="{color:mData.cancelColor?mData.cancelColor:''}">{{mData.cancelText?mData.cancelText:$t('common.cancel')}}</view>
+					<view class="confirm" @tap="tapConfirm" :style="{color:mData.confirmColor?mData.confirmColor:''}">{{mData.confirmText?mData.confirmText:$t('common.modal.confirm')}}</view>
 				</view>
 			</view>
 		</block>
@@ -41,7 +41,7 @@
 				<view class="title" v-if="mData.title">{{mData.title}}</view>
 				<log-image class="image" :src="mData.src" v-if="mData.src"></log-image>
 				<view class="content word-break">{{mData.content}}</view>
-				<view class="cancel" @tap="tapCancel" :style="{color:mData.cancelColor?mData.cancelColor:''}">{{mData.cancelText?mData.cancelText:'我知道了'}}</view>
+				<view class="cancel" @tap="tapCancel" :style="{color:mData.cancelColor?mData.cancelColor:''}">{{mData.cancelText?mData.cancelText:$t('common.modal.gotIt')}}</view>
 			</view>
 		</block>
 		<block v-if="type=='share'">
@@ -75,8 +75,8 @@
 					</view>
 				</view>
 				<view class="btn">
-					<view class="cancel" @tap="tapCancel" :style="{color:mData.cancelColor?mData.cancelColor:''}">{{mData.cancelText?mData.cancelText:'取消'}}</view>
-					<view class="confirm" @tap="inputConfirm" :style="{color:mData.confirmColor?mData.confirmColor:''}">{{mData.confirmText?mData.confirmText:'确认'}}</view>
+					<view class="cancel" @tap="tapCancel" :style="{color:mData.cancelColor?mData.cancelColor:''}">{{mData.cancelText?mData.cancelText:$t('common.cancel')}}</view>
+					<view class="confirm" @tap="inputConfirm" :style="{color:mData.confirmColor?mData.confirmColor:''}">{{mData.confirmText?mData.confirmText:$t('common.modal.confirm')}}</view>
 				</view>
 				
 			</view>

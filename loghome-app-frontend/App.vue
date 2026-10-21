@@ -282,7 +282,8 @@ export default {
 		checkShareCode(clipboardText) {
 			if (!clipboardText) return;
 			
-			const shareCodeRegex = /【原木社区】([A-Z0-9]{8})，/;
+			// 品牌词随语言变化（zh 原木社区 / en LogHome），口令格式本身不变
+			const shareCodeRegex = /【[^】]+】([A-Z0-9]{8})[，,]/;
 			const match = clipboardText.match(shareCodeRegex);
 			
 			if (match && match[1]) {

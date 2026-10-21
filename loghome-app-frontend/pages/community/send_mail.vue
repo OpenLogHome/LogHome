@@ -11,9 +11,9 @@
 				</scroll-view>
 			</uni-drawer>
 			<button class="fake-input" @click="showDrawer">{{receiver.name}}</button>
-			<input class="mail_title" placeholder="标题" maxlength="20" v-model="title"/>
-			<textarea class="mail_content" placeholder="信件内容"  v-model="content"></textarea>
-			<button @click="post_mail" class="normal_button" v-show="!sended">发送信息</button>
+			<input class="mail_title" :placeholder="$t('community.sendMail.titlePlaceholder')" maxlength="20" v-model="title"/>
+			<textarea class="mail_content" :placeholder="$t('community.sendMail.contentPlaceholder')"  v-model="content"></textarea>
+			<button @click="post_mail" class="normal_button" v-show="!sended">{{ $t('community.sendMail.sendButton') }}</button>
 		</view>
 	</view>
 </template>
@@ -25,7 +25,7 @@
 		data() {
 			return {
 				users: [],
-				receiver:{name:"选择收件人",id:-1},
+				receiver:{name:this.$t('community.sendMail.selectRecipient'),id:-1},
 				title:"",
 				content:"",
 				sended:false
@@ -59,7 +59,7 @@
 					_this.users = res.data;
 				}).catch(function(error) {
 					uni.showToast({
-						title: "用户信息加载失败",
+						title: _this.$t('community.sendMail.loadUserFailed'),
 						icon: 'none',
 						duration: 2000
 					})
@@ -84,7 +84,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "发送成功",
+						title: _this.$t('community.sendMail.sentSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -98,7 +98,7 @@
 					if (error) {
 						uni.showToast({
 							title: error.response && error.response.data.code === 'PRIVATE_MESSAGE_FORBIDDEN'
-								? i18n.t('settings.privacy.messageForbidden') : "发送失败",
+								? i18n.t('settings.privacy.messageForbidden') : _this.$t('community.sendMail.sendFailed'),
 							icon: 'none',
 							duration: 2000
 						});

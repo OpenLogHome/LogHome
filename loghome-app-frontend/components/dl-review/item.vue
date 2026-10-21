@@ -55,12 +55,12 @@
 				</view>
 				<view class="iconRow">
 					<div class="left">
-						<view @click.prevent="praise(0)">
-							<dnIcon type="haoping" :color="praiseType == 0 ? 'var(--manga-accent, #c14a16)' : 'var(--manga-muted, #9aa1a9)'"></dnIcon>
+						<view class="praise-action" :class="{ selected: praiseType == 0 }" @click.prevent="praise(0)">
+							<pixel-thumb :active="praiseType == 0" />
 							<text class="like-count" :class="{ liked: praiseType == 0 }">{{reviewMsg.likeNum}}</text>
 						</view>
-						<view @click.prevent="praise(1)" style="transform: scaleY(-1);">
-							<dnIcon type="haoping" :color="praiseType == 1 ? 'var(--manga-accent, #c14a16)' : 'var(--manga-muted, #9aa1a9)'"></dnIcon>
+						<view class="praise-action" :class="{ selected: praiseType == 1 }" @click.prevent="praise(1)">
+							<pixel-thumb down :active="praiseType == 1" />
 						</view>
 					</div>
 					<div class="right" v-show="!(praiseType == 1)">
@@ -118,6 +118,7 @@
 
 <script>
 	import dnIcon from '../dn-icon/dn-icon.vue';
+	import PixelThumb from './pixel-thumb.vue';
 	import followBtn from '../follow.vue'
 	import axios from 'axios'
 	import darkModeMixin from '@/mixins/dark-mode.js'
@@ -141,6 +142,7 @@
 		mixins: [darkModeMixin],
 		components: {
 			dnIcon,
+			PixelThumb,
 			followBtn
 		},
 		data() {
@@ -775,6 +777,14 @@
 		&.liked {
 			color: var(--manga-accent);
 			font-weight: 600;
+		}
+	}
+
+	.praise-action {
+		color: var(--manga-muted);
+
+		&.selected {
+			color: var(--manga-accent);
 		}
 	}
 

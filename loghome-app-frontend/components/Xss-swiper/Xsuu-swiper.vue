@@ -17,7 +17,7 @@
 							{{item.Subtitle}}
 						</text>
 						<view class="Text-initialization" v-if="item.button == undefined || item.button == 1" :class="[index === enjoySiwper ? 'bt' : '']">
-							<text class="bt-ico">查看详情 ➜</text>
+							<text class="bt-ico">{{ $t('common.viewDetails') }}</text>
 						</view>
 					</view>
 				</view>

@@ -1,0 +1,7 @@
+{
+	"_comment": "en 词典中允许保留中文的 key：QQ 昵称专名（站内检索用途，不随 UI 语言翻译）",
+	"zhInEn": {
+		"settings.activate.oicqStep3Suffix": "QQ 昵称 苦力怕君",
+		"settings.push.bindHowto": "QQ 昵称 原木娘"
+	}
+}

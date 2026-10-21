@@ -10,31 +10,31 @@
 				<!-- 本地版本卡片 -->
 				<view class="version-card" :class="{ 'newer': local.isNewer }" @click="selectVersion('local')">
 					<view class="card-header">
-						<text class="card-title">{{ local.title || '本地版本' }}</text>
-						<text v-if="local.isNewer" class="newer-badge">更新</text>
+						<text class="card-title">{{ local.title || $t('common.conflict.localVersion') }}</text>
+						<text v-if="local.isNewer" class="newer-badge">{{ $t('common.conflict.newer') }}</text>
 					</view>
 					<view class="card-time">{{ local.time }}</view>
 					<view class="card-editor" v-if="local.editorLabel">{{ local.editorLabel }}</view>
 					<view class="card-stats">
-						<text class="stat-item">{{ local.textCount }} 字</text>
-						<text class="stat-item">{{ local.imageCount }} 图片</text>
+						<text class="stat-item">{{ $t('common.conflict.wordCount', { count: local.textCount }) }}</text>
+						<text class="stat-item">{{ $t('common.conflict.imageCount', { count: local.imageCount }) }}</text>
 					</view>
-					<view class="select-button local">{{ local.selectLabel || '选择本地版本' }}</view>
+					<view class="select-button local">{{ local.selectLabel || $t('common.conflict.selectLocal') }}</view>
 				</view>
 				
 				<!-- 云端版本卡片 -->
 				<view class="version-card" :class="{ 'newer': cloud.isNewer }" @click="selectVersion('cloud')">
 					<view class="card-header">
-						<text class="card-title">{{ cloud.title || '云端版本' }}</text>
-						<text v-if="cloud.isNewer" class="newer-badge">更新</text>
+						<text class="card-title">{{ cloud.title || $t('common.conflict.cloudVersion') }}</text>
+						<text v-if="cloud.isNewer" class="newer-badge">{{ $t('common.conflict.newer') }}</text>
 					</view>
 					<view class="card-time">{{ cloud.time }}</view>
 					<view class="card-editor" v-if="cloud.editorLabel">{{ cloud.editorLabel }}</view>
 					<view class="card-stats">
-						<text class="stat-item">{{ cloud.textCount }} 字</text>
-						<text class="stat-item">{{ cloud.imageCount }} 图片</text>
+						<text class="stat-item">{{ $t('common.conflict.wordCount', { count: cloud.textCount }) }}</text>
+						<text class="stat-item">{{ $t('common.conflict.imageCount', { count: cloud.imageCount }) }}</text>
 					</view>
-					<view class="select-button cloud">{{ cloud.selectLabel || '选择云端版本' }}</view>
+					<view class="select-button cloud">{{ cloud.selectLabel || $t('common.conflict.selectCloud') }}</view>
 				</view>
 			</view>
 			
@@ -63,8 +63,8 @@ export default {
 	},
 	data() {
 		return {
-			title: '版本冲突',
-			subtitle: '请选择要保留的版本',
+			title: '',
+			subtitle: '',
 			type: '',
 			local: {
 				title: '',
@@ -89,8 +89,8 @@ export default {
 	},
 	methods: {
 		show(options) {
-			this.title = options.title || '版本冲突';
-			this.subtitle = options.subtitle || '请选择要保留的版本';
+			this.title = options.title || this.$t('common.conflict.title');
+			this.subtitle = options.subtitle || this.$t('common.conflict.subtitle');
 			this.type = options.type || 'conflict';
 			this.local = {
 				...this.defaultCard,

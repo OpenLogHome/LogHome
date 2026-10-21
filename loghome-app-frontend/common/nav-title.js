@@ -11,6 +11,10 @@ export function applyLocalizedTitle() {
 		if (!route) return
 		const key = routeTitleKeys[route]
 		if (!key || !i18n.te(key)) return
-		uni.setNavigationBarTitle({ title: i18n.t(key) })
+		const title = i18n.t(key)
+		uni.setNavigationBarTitle({ title })
+		// #ifdef H5
+		document.title = title
+		// #endif
 	} catch (error) {}
 }

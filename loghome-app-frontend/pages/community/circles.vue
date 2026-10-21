@@ -4,7 +4,7 @@
     <!-- 搜索框 -->
     <view class="search-box">
       <uni-search-bar
-        placeholder="搜索圈子"
+        :placeholder="$t('community.circles.searchPlaceholder')"
         @confirm="searchCircles"
         @input="searchInput"
         :radius="100"
@@ -22,7 +22,7 @@
       <view class="category-section" v-for="(category, index) in categories" :key="index">
         <view class="category-header">
           <text class="category-name">{{category.name}}</text>
-          <text class="circle-count">{{category.circle_count}}个圈子</text>
+          <text class="circle-count">{{ $t('community.circles.circleCount', { count: category.circle_count }) }}</text>
         </view>
         <view class="circles-grid">
           <view 
@@ -35,19 +35,19 @@
             <view class="circle-info">
               <view class="circle-name">
                 {{circle.name}}
-                <view class="official-tag" v-if="circle.is_official">官方</view>
+                <view class="official-tag" v-if="circle.is_official">{{ $t('community.circles.official') }}</view>
               </view>
               <view class="circle-meta">
-                <text class="member-count">{{circle.member_count}}人</text>
-                <text class="post-count">{{circle.post_count}}帖子</text>
+                <text class="member-count">{{ $t('community.circles.memberCount', { count: circle.member_count }) }}</text>
+                <text class="post-count">{{ $t('community.circles.postCount', { count: circle.post_count }) }}</text>
               </view>
               <view class="circle-description">{{circle.description}}</view>
             </view>
             <view class="join-btn" @tap.stop="joinCircle(circle)" v-if="!circle.is_joined">
-              加入
+              {{ $t('community.circles.join') }}
             </view>
             <view class="joined-btn" v-else>
-              已加入
+              {{ $t('community.circles.joined') }}
             </view>
           </view>
         </view>
@@ -59,14 +59,14 @@
       <!-- 空状态 -->
       <view class="empty-state" v-if="Object.keys(categoryCircles).length === 0 && loadingStatus !== 'loading'">
         <image src="../../static/loggirl-404-empty-chest.png" mode="aspectFit" class="empty-image"></image>
-        <text class="empty-text">暂无圈子</text>
+        <text class="empty-text">{{ $t('community.circles.empty') }}</text>
       </view>
     </scroll-view>
     
     <!-- 创建圈子按钮 -->
     <view class="create-btn" @tap="createCircle">
       <uni-icons type="plusempty" size="24" color="#fff"></uni-icons>
-      <text>创建圈子</text>
+      <text>{{ $t('community.circles.create') }}</text>
     </view>
   </view>
 </template>
@@ -125,7 +125,7 @@ export default {
       } catch (error) {
         console.error('加载分类失败', error);
         uni.showToast({
-          title: '加载分类失败',
+          title: this.$t('community.circles.loadCategoriesFailed'),
           icon: 'none'
         });
       }
@@ -165,7 +165,7 @@ export default {
         console.error('加载圈子失败', error);
         this.loadingStatus = 'more';
         uni.showToast({
-          title: '加载圈子失败',
+          title: this.$t('community.circles.loadCirclesFailed'),
           icon: 'none'
         });
       }
@@ -235,13 +235,13 @@ export default {
         this.myJoinedCircles.push(circle);
         
         uni.showToast({
-          title: '加入成功',
+          title: this.$t('community.circles.joinSuccess'),
           icon: 'success'
         });
       } catch (error) {
         console.error('加入圈子失败', error);
         uni.showToast({
-          title: error.response?.data?.msg || '加入失败，请重试',
+          title: error.response?.data?.msg || this.$t('community.circles.joinFailed'),
           icon: 'none'
         });
       }

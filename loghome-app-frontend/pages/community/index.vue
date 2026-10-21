@@ -4,7 +4,7 @@
       <div class="searchBar" v-dark>
         <div class="search-input-wrapper clickable" @tap="navigateToSearch">
           <uni-icons type="search" size="18" color="#999"></uni-icons>
-          <view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
+          <view class="search-input-placeholder">{{ $t('community.index.searchPlaceholder') }}</view>
         </div>
         <uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'" class="messageIcon clickable" @click="gotoMessage"></uni-icons>
       </div>
@@ -48,11 +48,11 @@
       <view class="community-shortcuts">
         <button class="shortcut-button shortcut-post" @tap="navigateToCreatePost">
           <image class="shortcut-icon" src="/static/icons/community-publish-pixel.png" mode="aspectFit" aria-hidden="true" />
-          <text>发布帖子</text>
+          <text>{{ $t('community.index.publishPost') }}</text>
         </button>
         <button class="shortcut-button shortcut-circles" @tap="navigateToCircles">
           <image class="shortcut-icon" src="/static/icons/community-circles-pixel.png" mode="aspectFit" aria-hidden="true" />
-          <text>圈子广场</text>
+          <text>{{ $t('community.index.circlesSquare') }}</text>
         </button>
       </view>
 
@@ -62,10 +62,10 @@
       <!-- 帖子列表 -->
       <view class="section">
         <view class="section-header">
-          <text class="section-title">帖子</text>
+          <text class="section-title">{{ $t('community.index.postsTitle') }}</text>
           <view class="section-actions">
-            <text class="sort-btn clickable" :class="{active: sortType === 'hot'}" @tap="changeSort('hot')">热门</text>
-            <text class="sort-btn clickable" :class="{active: sortType === 'new'}" @tap="changeSort('new')">最新</text>
+            <text class="sort-btn clickable" :class="{active: sortType === 'hot'}" @tap="changeSort('hot')">{{ $t('community.index.sortHot') }}</text>
+            <text class="sort-btn clickable" :class="{active: sortType === 'new'}" @tap="changeSort('new')">{{ $t('community.index.sortNew') }}</text>
           </view>
         </view>
 
@@ -171,11 +171,11 @@
 
 <script>
 import axios from 'axios';
-import moment from 'moment';
 import banner from '@/components/banner.vue'
 import XsuuSwiper from "@/components/Xss-swiper/Xsuu-swiper.vue"
 import MembershipBadge from '@/components/membership-badge.vue'
 import darkModeMixin from '@/mixins/dark-mode.js'
+import { postTimeText } from '@/common/datetime.js'
 
 export default {
   components: {
@@ -410,20 +410,7 @@ export default {
     },
 
     formatTime(time) {
-      const now = moment();
-      const postTime = moment(time);
-      const diff = now.diff(postTime, 'minutes');
-      
-      if (diff < 1) return '刚刚';
-      if (diff < 60) return `${diff}分钟前`;
-      
-      const hourDiff = now.diff(postTime, 'hours');
-      if (hourDiff < 24) return `${hourDiff}小时前`;
-      
-      const dayDiff = now.diff(postTime, 'days');
-      if (dayDiff < 30) return `${dayDiff}天前`;
-      
-      return postTime.format('YYYY-MM-DD');
+      return postTimeText(time)
     },
 
     navigateToSearch() {
@@ -441,7 +428,7 @@ export default {
     navigateToCircle(circleId) {
       if (!circleId || circleId === 0) {
         uni.showToast({
-          title: '圈子不存在',
+          title: this.$t('community.index.circleNotFound'),
           icon: 'none'
         });
         return;
@@ -502,7 +489,7 @@ export default {
       } catch (error) {
         console.error('点赞失败', error);
         uni.showToast({
-          title: '操作失败',
+          title: this.$t('common.operationFailed'),
           icon: 'none'
         });
       }
@@ -513,19 +500,25 @@ export default {
     },
     
     traditionalShare(post) {
-      return `来自原木社区的分享：${post.title}\n${post.content.substring(0, 50)}${post.content.length > 50 ? '...' : ''}\n点击链接查看详情：${window.location.origin}/#/pages/community/postDetail?id=${post.post_id}`;
+      const snippet = post.content.substring(0, 50) + (post.content.length > 50 ? '...' : '');
+      return this.$t('community.index.shareText', {
+        brand: this.$t('nav.brand'),
+        title: post.title,
+        snippet,
+        url: window.location.origin + '/#/pages/community/postDetail?id=' + post.post_id
+      });
     },
     
     createShareCode(post) {
       uni.showLoading({
-        title: '创建口令中...'
+        title: this.$t('community.index.shareCodeLoading')
       });
 
       let tk = JSON.parse(window.localStorage.getItem('token'));
       if (!tk || !tk.tk) {
         uni.hideLoading();
         uni.showToast({
-          title: '请先登录',
+          title: this.$t('common.needLogin'),
           icon: 'none',
           duration: 2000
         });
@@ -550,16 +543,16 @@ export default {
             data: res.data.share_text,
             success: () => {
               uni.showModal({
-                title: '口令创建成功',
-                content: `口令：${res.data.code}\n\n口令已复制到剪贴板，分享给好友即可！`,
+                title: this.$t('community.index.shareCodeSuccessTitle'),
+                content: this.$t('community.index.shareCodeSuccessContent', { code: res.data.code }),
                 showCancel: false,
-                confirmText: '知道了'
+                confirmText: this.$t('common.gotIt')
               });
             }
           });
         } else {
           uni.showToast({
-            title: res.data.msg || '口令创建失败',
+            title: res.data.msg || this.$t('community.index.shareCodeFailed'),
             icon: 'none',
             duration: 2000
           });
@@ -568,7 +561,7 @@ export default {
         uni.hideLoading();
         console.error('创建口令失败:', error);
         uni.showToast({
-          title: '网络错误，请稍后重试',
+          title: this.$t('common.networkError'),
           icon: 'none',
           duration: 2000
         });

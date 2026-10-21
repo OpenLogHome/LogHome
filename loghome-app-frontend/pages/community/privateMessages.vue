@@ -74,13 +74,13 @@
 						return messageContent;
 					}
 					if (payload.type === 'image') {
-						return '[图片]';
+						return this.$t('community.privateMessages.imagePreview');
 					}
 					if (payload.type === 'novel_share' && payload.novel && payload.novel.name) {
-						return `分享了作品《${payload.novel.name}》`;
+						return this.$t('community.privateMessages.novelSharePreview', { name: payload.novel.name });
 					}
 					if (payload.type === 'novel_share') {
-						return '分享了作品';
+						return this.$t('community.privateMessages.novelSharePreviewNoName');
 					}
 				} catch (error) {
 					console.error('解析私信预览失败', error);

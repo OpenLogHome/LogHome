@@ -4,6 +4,13 @@
 			"name": "原木社区"
 		},
 		"login": {
+			"headlineTop": "方块跃然纸上，",
+			"headlinePrefix": "故事在此",
+			"headlineGrowth": "生长",
+			"headlineEnd": "。",
+			"communityDescription": "一个属于 Minecraft 同好们的二创社区",
+			"agreeShort": "我已阅读并同意",
+			"privacyShort": "《隐私政策》",
 			"welcomePrefix": "在",
 			"welcomeSuffix": "，",
 			"typeCreate": "创作无限可能",

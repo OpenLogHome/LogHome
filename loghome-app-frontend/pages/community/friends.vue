@@ -17,7 +17,7 @@
 			></view>
 		</view>
 		<view class="search-bar">
-			<input class="search-input" v-model="searchKeyword" placeholder="搜索好友..." placeholder-style="color:#999" />
+			<input class="search-input" v-model="searchKeyword" :placeholder="$t('community.friends.searchPlaceholder')" placeholder-style="color:#999" />
 			<text v-if="searchKeyword" class="search-clear" @tap="searchKeyword = ''">×</text>
 		</view>
 
@@ -35,7 +35,7 @@
 				<scroll-view class="friend-page" scroll-y :show-scrollbar="false">
 					<view class="list">
 						<view v-if="followsError" class="privacy-status">{{ followsError }}</view>
-						<view v-else class="friend-count">共有 {{ filteredFollows.length }} 个关注</view>
+						<view v-else class="friend-count">{{ $t('community.friends.followingCount', { count: filteredFollows.length }) }}</view>
 						<view v-if="!followsError" class="friend-row" v-for="item in filteredFollows" :key="item.follow_id">
 							<navigator class="user-link" :url="'../users/personalPage?id=' + item.follow_id">
 								<user-avatar class="friend-avatar" :src="item.avatar_url" :frame="item.avatar_frame" :visual-scale="item.avatar_frame ? 1.25 : 1" />
@@ -47,7 +47,7 @@
 							<followBtn class="follow-button" :targetId="item.follow_id"></followBtn>
 						</view>
 						<view class="empty-state" v-if="!followsError && filteredFollows.length === 0">
-							{{ searchKeyword ? '没有匹配的用户' : '暂无关注' }}
+							{{ searchKeyword ? $t('community.friends.noMatch') : $t('community.friends.noFollowing') }}
 						</view>
 					</view>
 				</scroll-view>
@@ -57,7 +57,7 @@
 				<scroll-view class="friend-page" scroll-y :show-scrollbar="false">
 					<view class="list">
 						<view v-if="fansError" class="privacy-status">{{ fansError }}</view>
-						<view v-else class="friend-count">共有 {{ filteredFans.length }} 个粉丝</view>
+						<view v-else class="friend-count">{{ $t('community.friends.fansCount', { count: filteredFans.length }) }}</view>
 						<view v-if="!fansError" class="friend-row" v-for="item in filteredFans" :key="item.user_id">
 							<navigator class="user-link" :url="'../users/personalPage?id=' + item.user_id">
 								<user-avatar class="friend-avatar" :src="item.avatar_url" :frame="item.avatar_frame" :visual-scale="item.avatar_frame ? 1.25 : 1" />
@@ -69,7 +69,7 @@
 							<followBtn class="follow-button" :targetId="item.user_id"></followBtn>
 						</view>
 						<view class="empty-state" v-if="!fansError && filteredFans.length === 0">
-							{{ searchKeyword ? '没有匹配的用户' : '暂无粉丝' }}
+							{{ searchKeyword ? $t('community.friends.noMatch') : $t('community.friends.noFans') }}
 						</view>
 					</view>
 				</scroll-view>
@@ -90,7 +90,8 @@
 			data(){
 			return{
 				tabValue:[
-					"我的关注","我的粉丝"
+					this.$t('community.friends.tabFollowing'),
+					this.$t('community.friends.tabFans')
 				],
 				id:-1,
 				user:{},
@@ -139,9 +140,12 @@
 				let _this = this;
 				axios.get(this.$baseUrl + '/users/user_profile_of?id=' + this.id, {}).then((res) => {
 					_this.user = JSON.parse(JSON.stringify(res.data))[0];
-					this.tabValue=["Ta的关注","Ta的粉丝"];
+					this.tabValue=[
+						_this.$t('community.friends.tabUserFollowing'),
+						_this.$t('community.friends.tabUserFans')
+					];
 					uni.setNavigationBarTitle({
-						title:_this.user.name + "的好友"
+						title:_this.$t('community.friends.friendOf', { name: _this.user.name })
 					})
 					//复检是不是本人
 					let tk = JSON.parse(window.localStorage.getItem('token'));if(tk) tk = tk.tk;;
@@ -155,9 +159,12 @@
 						}).then((res) => {
 							let data = JSON.parse(JSON.stringify(res.data));
 							if(_this.id != -1 && _this.id == data.user_id) {
-								_this.tabValue=["我的关注","我的粉丝"];
+								_this.tabValue=[
+									_this.$t('community.friends.tabFollowing'),
+									_this.$t('community.friends.tabFans')
+								];
 								uni.setNavigationBarTitle({
-									title:"我的好友"
+									title:_this.$t('community.friends.myFriends')
 								})
 								_this.isMe = true;
 							}
@@ -169,7 +176,7 @@
 					}
 				}).catch(function(error) {
 					uni.showToast({
-						title: "用户信息加载失败",
+						title: _this.$t('community.friends.userLoadFailed'),
 						icon: 'none',
 						duration: 2000
 					})
@@ -187,9 +194,12 @@
 					}).then((res) => {
 						let data = JSON.parse(JSON.stringify(res.data));
 						if(_this.id != -1 && _this.id == data.user_id) {
-							_this.tabValue=["我的关注","我的粉丝"];
+							_this.tabValue=[
+								_this.$t('community.friends.tabFollowing'),
+								_this.$t('community.friends.tabFans')
+							];
 							uni.setNavigationBarTitle({
-								title:"我的好友"
+								title:_this.$t('community.friends.myFriends')
 							})
 							_this.isMe = true;
 						}

@@ -6,35 +6,35 @@
     <scroll-view scroll-y class="form-scroll">
       <!-- 圈子图标 -->
       <view class="form-item">
-        <text class="form-label">圈子图标</text>
+        <text class="form-label">{{ $t('community.createCircle.iconLabel') }}</text>
         <view class="icon-upload" @tap="uploadIcon">
           <image v-if="formData.icon" :src="formData.icon" mode="aspectFill" class="preview-icon"></image>
           <view v-else class="upload-placeholder">
             <uni-icons type="camera" size="30" color="#999"></uni-icons>
-            <text>点击上传</text>
+            <text>{{ $t('community.createCircle.tapToUpload') }}</text>
           </view>
         </view>
       </view>
       
       <!-- 圈子背景 -->
       <view class="form-item">
-        <text class="form-label">圈子背景</text>
+        <text class="form-label">{{ $t('community.createCircle.bgLabel') }}</text>
         <view class="bg-upload" @tap="uploadBackground">
           <image v-if="formData.bg_url" :src="formData.bg_url" mode="aspectFill" class="preview-bg"></image>
           <view v-else class="upload-placeholder">
             <uni-icons type="image" size="30" color="#999"></uni-icons>
-            <text>点击上传</text>
+            <text>{{ $t('community.createCircle.tapToUpload') }}</text>
           </view>
         </view>
       </view>
       
       <!-- 圈子名称 -->
       <view class="form-item">
-        <text class="form-label">圈子名称</text>
+        <text class="form-label">{{ $t('community.createCircle.nameLabel') }}</text>
         <input 
           type="text" 
           v-model="formData.name"
-          placeholder="请输入圈子名称（2-20个字符）"
+          :placeholder="$t('community.createCircle.namePlaceholder')"
           class="form-input"
           maxlength="20"
         />
@@ -42,7 +42,7 @@
       
       <!-- 圈子分类 -->
       <view class="form-item">
-        <text class="form-label">圈子分类</text>
+        <text class="form-label">{{ $t('community.createCircle.categoryLabel') }}</text>
         <picker 
           :range="categories" 
           range-key="name"
@@ -50,7 +50,7 @@
           class="category-picker"
         >
           <view class="picker-value">
-            {{selectedCategory ? selectedCategory.name : '请选择圈子分类'}}
+            {{selectedCategory ? selectedCategory.name : $t('community.createCircle.categoryPlaceholder')}}
             <uni-icons type="right" size="16" color="#999"></uni-icons>
           </view>
         </picker>
@@ -58,10 +58,10 @@
       
       <!-- 圈子简介 -->
       <view class="form-item">
-        <text class="form-label">圈子简介</text>
+        <text class="form-label">{{ $t('community.createCircle.descriptionLabel') }}</text>
         <textarea 
           v-model="formData.description"
-          placeholder="请输入圈子简介（10-200个字符）"
+          :placeholder="$t('community.createCircle.descriptionPlaceholder')"
           class="form-textarea"
           maxlength="200"
         ></textarea>
@@ -70,10 +70,10 @@
       
       <!-- 圈子规则 -->
       <view class="form-item">
-        <text class="form-label">圈子规则</text>
+        <text class="form-label">{{ $t('community.createCircle.rulesLabel') }}</text>
         <textarea 
           v-model="formData.rules"
-          placeholder="请输入圈子规则（建议包含发帖规范、禁止内容等）"
+          :placeholder="$t('community.createCircle.rulesPlaceholder')"
           class="form-textarea"
           maxlength="500"
         ></textarea>
@@ -82,17 +82,17 @@
       
       <!-- 创建须知 -->
       <view class="notice-box">
-        <text class="notice-title">创建须知：</text>
-        <text class="notice-item">1. 账号注册满30天且无违规记录</text>
-        <text class="notice-item">2. 圈子名称不能重复</text>
-        <text class="notice-item">3. 圈子创建后需要等待审核</text>
-        <text class="notice-item">4. 创建成功后您将成为圈主</text>
+        <text class="notice-title">{{ $t('community.createCircle.noticeTitle') }}</text>
+        <text class="notice-item">{{ $t('community.createCircle.notice1') }}</text>
+        <text class="notice-item">{{ $t('community.createCircle.notice2') }}</text>
+        <text class="notice-item">{{ $t('community.createCircle.notice3') }}</text>
+        <text class="notice-item">{{ $t('community.createCircle.notice4') }}</text>
       </view>
     </scroll-view>
     
     <!-- 提交按钮 -->
     <view class="submit-btn" @tap="submitForm" :class="{ disabled: !isFormValid }">
-      提交申请
+      {{ $t('community.createCircle.submit') }}
     </view>
   </view>
 </template>
@@ -139,7 +139,7 @@ export default {
       } catch (error) {
         console.error('加载分类失败', error);
         uni.showToast({
-          title: '加载分类失败',
+          title: this.$t('community.createCircle.loadCategoriesFailed'),
           icon: 'none'
         });
       }
@@ -165,7 +165,7 @@ export default {
       } catch (error) {
         console.error('上传图标失败', error);
         uni.showToast({
-          title: '上传图标失败',
+          title: this.$t('community.createCircle.uploadIconFailed'),
           icon: 'none'
         });
       }
@@ -185,7 +185,7 @@ export default {
       } catch (error) {
         console.error('上传背景图失败', error);
         uni.showToast({
-          title: '上传背景图失败',
+          title: this.$t('community.createCircle.uploadBgFailed'),
           icon: 'none'
         });
       }
@@ -193,7 +193,7 @@ export default {
     async uploadFile(filePath) {
       return new Promise((resolve, reject) => {
         uni.showToast({
-          title: "图片上传中",
+          title: this.$t('community.createCircle.uploadingImage'),
           icon: 'loading',
           duration: 2000
         });
@@ -209,7 +209,7 @@ export default {
               const data = JSON.parse(uploadRes.data);
               const imageUrl = "http://storage.codesocean.top/api/resource/get/" + data.data.resource_id;
               uni.showToast({
-                title: "上传成功",
+                title: this.$t('common.uploadSuccess'),
                 icon: 'success',
                 duration: 2000
               });
@@ -220,7 +220,7 @@ export default {
           },
           fail: (error) => {
             uni.showToast({
-              title: "上传失败",
+              title: this.$t('common.uploadFailed'),
               icon: 'none',
               duration: 2000
             });
@@ -232,7 +232,7 @@ export default {
     async submitForm() {
       if (!this.isFormValid) {
         uni.showToast({
-          title: '请完善必填信息',
+          title: this.$t('community.createCircle.incompleteForm'),
           icon: 'none'
         });
         return;
@@ -248,7 +248,7 @@ export default {
         
         if (res.data) {
           uni.showToast({
-            title: '申请提交成功',
+            title: this.$t('community.createCircle.submitSuccess'),
             icon: 'success'
           });
           
@@ -259,7 +259,7 @@ export default {
       } catch (error) {
         console.error('创建圈子失败', error);
         uni.showToast({
-          title: error.response?.data?.msg || '创建失败，请重试',
+          title: error.response?.data?.msg || this.$t('community.createCircle.createFailed'),
           icon: 'none'
         });
       }

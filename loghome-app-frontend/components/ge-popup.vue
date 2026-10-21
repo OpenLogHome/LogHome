@@ -4,8 +4,8 @@
 		<view v-if="type==1"><!--绑定微信-->
 			<view class="wxbox">
 				<view class="weixin"><img src="../static/bind_wx.png"></img></view>
-				<view class="tips">为了您的账号安全，请绑定微信，绑定后可快捷登录</view>
-				<view class="btn" @click="eventClick">立即绑定</view>
+				<view class="tips">{{ $t('common.gePopup.bindWechatTip') }}</view>
+				<view class="btn" @click="eventClick">{{ $t('common.gePopup.bindNow') }}</view>
 				<view class="close" @click="close"><icon type="clear" size="26"/></view>
 			</view>
 		</view>
@@ -13,9 +13,9 @@
 			<view class="redbox">
 				<img src="../static/hongbao_bg.png"></img>
 				<view class="wrapBox">
-					<view class="tips">恭喜您升级为达人！<view>获得奖励红包</view></view>
+					<view class="tips">{{ $t('common.gePopup.creatorCongrats') }}<view>{{ $t('common.gePopup.redPacketReward') }}</view></view>
 					<view class="money">￥<text>{{money}}</text></view>
-					<view class="btn" @click="eventClick">收下红包</view>
+					<view class="btn" @click="eventClick">{{ $t('common.gePopup.claimRedPacket') }}</view>
 				</view>
 				<view class="close" @click="close"><icon type="clear" size="30" color="#fff"/></view>
 			</view>
@@ -27,7 +27,7 @@
 					<view class="desc">
 						<rich-text :nodes="content"></rich-text>
 					</view>
-					<view class="btn"  @click="close">我知道了</view>
+					<view class="btn"  @click="close">{{ $t('common.gotIt') }}</view>
 				</view>
 			</view>
 		</view>
@@ -35,13 +35,13 @@
 			<view class="updateBox">
 				<view class="tubiao"><log-image src="../static/ic_ar.png"></log-image></view>
 				<view class="wrapbox">
-					<view class="version">发现新版本{{version}}</view>
-					<view class="desc-t">本次更新内容：</view>
+					<view class="version">{{ $t('common.gePopup.updateFound', { version }) }}</view>
+					<view class="desc-t">{{ $t('common.gePopup.updateContent') }}</view>
 					<view class="desc">
 						<rich-text :nodes="content"></rich-text>
 					</view>
 					<view class="btnbox">
-						<view class="btnno" @click="close">暂不升级</view><view class="btnUp" @click="eventClick">立即升级</view>
+						<view class="btnno" @click="close">{{ $t('common.gePopup.notNow') }}</view><view class="btnUp" @click="eventClick">{{ $t('common.gePopup.updateNow') }}</view>
 					</view>
 				</view>
 			</view>
@@ -50,13 +50,13 @@
 			<view class="updateBox1">
 				<img src="../static/update_bg.png"></img>
 				<view class="wrapBox">
-					<view class="version">发现新版本<view>{{version}}</view></view>
-					<view class="desc-t">更新内容：</view>
+					<view class="version">{{ $t('common.gePopup.updateFoundPrefix') }}<view>{{version}}</view></view>
+					<view class="desc-t">{{ $t('common.gePopup.updateContentShort') }}</view>
 					<view class="desc">
 						<rich-text :nodes="content"></rich-text>
 					</view>
 					<view class="btnbox">
-						<view class="btnno" @click="close">暂不升级</view><view class="btnUp" @click="eventClick">立即升级</view>
+						<view class="btnno" @click="close">{{ $t('common.gePopup.notNow') }}</view><view class="btnUp" @click="eventClick">{{ $t('common.gePopup.updateNow') }}</view>
 					</view>
 				</view>
 			</view>

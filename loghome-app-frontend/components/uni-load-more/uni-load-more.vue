@@ -59,7 +59,7 @@
     <text
       :style="{ color: color }"
       class="uni-load-more__text">
-      {{ status === 'more' ? contentText.contentdown : status === 'loading' ? contentText.contentrefresh : contentText.contentnomore }}
+      {{ status === 'more' ? (contentText.contentdown || $t('common.loadMore.more')) : status === 'loading' ? (contentText.contentrefresh || $t('common.loadMore.loading')) : (contentText.contentnomore || $t('common.loadMore.noMore')) }}
     </text>
   </view>
 </template>
@@ -90,9 +90,9 @@ export default {
       type: Object,
       default () {
         return {
-          contentdown: '上拉显示更多',
-          contentrefresh: '正在加载...',
-          contentnomore: '没有更多数据了'
+          contentdown: '',
+          contentrefresh: '',
+          contentnomore: ''
         }
       }
     }

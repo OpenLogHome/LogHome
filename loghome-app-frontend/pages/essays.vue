@@ -49,7 +49,7 @@
 						@resubmit-novel="onResubmitNovel"></book-detail-view>
 					<transition name='fade'>
 						<view style="text-align: center;position:relative;" v-if="curBook === -1">
-							<img src="../static/dig.png" alt=""
+							<img src="../static/dig-loggirl.png" alt="原木娘和鹦鹉一起开个新坑"
 								style="position:absolute;width:70vw;top:-120px;left:50vw;transform: translateX(-50%); z-index:102" />
 							<p
 								style="color:#919191; font-weight: bold; font-size:40rpx; margin:20rpx; padding-top:130rpx;">

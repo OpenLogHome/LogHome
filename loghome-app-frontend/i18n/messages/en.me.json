@@ -407,6 +407,16 @@
 			"standardPromo": "Upgrade to Super Pass to unlock more",
 			"benefitDetails": "Benefits",
 			"upgradeNow": "Upgrade now"
+		},
+		"layout": {
+			"viewTree": "Visit",
+			"wallet": "My wallet",
+			"logBalance": "Log balance",
+			"logHint": "Top up & spend",
+			"redstoneHint": "Reading & writing AI",
+			"earningsHint": "Earnings & payouts",
+			"moreServices": "More services",
+			"orders": "My orders"
 		}
 	}
 }

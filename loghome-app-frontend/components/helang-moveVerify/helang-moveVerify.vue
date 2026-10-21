@@ -1,8 +1,8 @@
 <template>
 	<view class="pathway on-pathway" @touchend="onEnd">
 		<view class="tips">
-			<text v-if="isOk" style="color: #FFFFFF;">验证通过</text>
-			<text v-else>拖动滑块验证</text>
+			<text v-if="isOk" style="color: #FFFFFF;">{{ $t('common.verify.success') }}</text>
+			<text v-else>{{ $t('common.verify.drag') }}</text>
 		</view>
 		<view class="track" :style="{'transform':'translateX('+oldx+'px)'}"></view>
 		<movable-area :animation="true">

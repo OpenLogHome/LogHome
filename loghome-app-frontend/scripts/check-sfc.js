@@ -1,6 +1,6 @@
-// SFC 快速校验（i18n 批量迁移配套）：node scripts/check-sfc.js <file.vue>...
+// SFC 快速校验（i18n 批量迁移配套）：node scripts/check-sfc.js <file.vue|file.js>...
 // 1) vue/compiler-sfc parse 结构错误（模板未闭合、多 script 块等）
-// 2) <script> 块 ESM 语法（node --check）
+// 2) <script> 块 ESM 语法（node --check）；.js 文件整体按 ESM 校验
 // 3) 模板 mustache {{ }} 配对粗检
 const { execFileSync } = require('child_process')
 const fs = require('fs')
@@ -20,6 +20,25 @@ const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sfc-check-'))
 files.forEach(file => {
 	const problems = []
 	const source = fs.readFileSync(file, 'utf8')
+	if (!file.endsWith('.vue')) {
+		const tmpFile = path.join(tmpDir, path.basename(file) + '.' + Math.random().toString(36).slice(2) + '.mjs')
+		fs.writeFileSync(tmpFile, source)
+		try {
+			execFileSync(process.execPath, ['--check', tmpFile], { stdio: 'pipe' })
+		} catch (error) {
+			const detail = (error.stderr || Buffer.from('')).toString().split('\n').slice(0, 4).join(' | ')
+			problems.push('script 语法: ' + detail)
+		}
+		fs.unlinkSync(tmpFile)
+		if (problems.length) {
+			failed++
+			console.error('✗ ' + file)
+			problems.forEach(p => console.error('   - ' + p))
+		} else {
+			console.log('✓ ' + file)
+		}
+		return
+	}
 	let descriptor = null
 	try {
 		const parsed = sfc.parse({ source, filename: file })

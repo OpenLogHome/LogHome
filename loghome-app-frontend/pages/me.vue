@@ -78,200 +78,73 @@
 							</view>
 						</view>
 					</view>
-					<view class="security-banner" v-if="user.email == 'unbind'" @tap="gotoActivate">
-						<view class="security-banner__icon">!</view>
-						<view class="security-banner__content">
-							<text class="security-banner__title">{{ $t('me.security.title') }}</text>
-							<text class="security-banner__description">{{ $t('me.security.desc') }}</text>
-						</view>
-						<text class="security-banner__action">{{ $t('me.security.action') }}</text>
-					</view>
-					<view class="box-bd">
-						<view class="item" @tap="user_profile">
-							<view class="icon"><img src="../static/icons/icon_my_name_tag.png"/></view>
-							<view class="item-copy">
-								<view class="text"><text class="shortcut-title">{{ $t('me.quick.card') }}</text><text class="shortcut-arrow ui-chevron" aria-hidden="true"></text></view>
-								<view class="subtext">{{ $t('me.quick.cardSub') }}</view>
-							</view>
-						</view>
-						<view class="item" @tap="gotoMessages">
-							<view class="icon" :class="{'newMessage': hasNewMessage || hasNewPrivateMessage}">
-								<img src="../static/icons/icon_info.png"/>
-							</view>
-							<view class="item-copy">
-								<view class="text"><text class="shortcut-title">{{ $t('me.quick.message') }}</text><text class="shortcut-arrow ui-chevron" aria-hidden="true"></text></view>
-								<view class="subtext">{{ $t('me.quick.messageSub') }}</view>
-							</view>
-						</view>
-						<view class="item" @tap="gotoFriends">
-							<view class="icon"><img src="../static/icons/icon_friends.png"/></view>
-							<view class="item-copy">
-								<view class="text"><text class="shortcut-title">{{ $t('me.quick.friend') }}</text><text class="shortcut-arrow ui-chevron" aria-hidden="true"></text></view>
-								<view class="subtext">{{ $t('me.quick.friendSub') }}</view>
-							</view>
-						</view>
-						<view class="item" @tap="gotoSettings">
-							<view class="icon"><img
-									src="../static/icons/icon_setting.png"/></view>
-							<view class="item-copy">
-								<view class="text"><text class="shortcut-title">{{ $t('me.quick.settings') }}</text><text class="shortcut-arrow ui-chevron" aria-hidden="true"></text></view>
-								<view class="subtext">{{ $t('me.quick.settingsSub') }}</view>
-							</view>
-						</view>
-					</view>
 				</view>
 			</view>
 		</view>
-		<view class="list-content">
-			<!-- <view class="section-title">我的服务</view> -->
-			<view class="list">
-				<navigator url="./treePlant/treeplant">
-					<view class="li">
-						<el-badge is-dot :hidden="!((treeState == '未种植' || treeState == '结果') || !isSignedToday)">
-							<view class="icon">
-								<img src="../static/icons/icon_treecut1.png"/></img>
-							</view>
-						</el-badge>
-						<view class="text tree-growth-text">
-							<view class="title-row">
-								<text>{{ $t('me.service.treeScene') }}</text>
-								<text v-if="!isSignedToday" class="checkin-hint">{{ $t('me.service.checkin') }}</text>
-							</view>
-							<view
-								class="growth-bar-wrapper"
-								v-if="treeState && treeState !== '未种植' && treeMaxGrowth > 0"
-							>
-								<view class="growth-bar-track">
-									<view
-										class="growth-bar-inner"
-										:style="{ width: treeGrowthPercent + '%' }"
-									></view>
+
+		<view class="page-content">
+			<view v-if="user.email == 'unbind'" class="security-banner" role="button" @tap="gotoActivate">
+				<image src="/static/icons/icon_activate.png" mode="aspectFit" />
+				<view><text class="security-title">{{ $t('me.security.title') }}</text><text class="security-description">{{ $t('me.security.desc') }}</text></view>
+				<text>{{ $t('me.security.action') }}</text>
+			</view>
+
+			<view class="box-bd">
+				<view class="item" role="button" @tap="user_profile">
+					<view class="icon"><image src="/static/icons/icon_my_name_tag.png" mode="aspectFit" /></view>
+					<text>{{ $t('me.quick.card') }}</text>
+				</view>
+				<view class="item" role="button" @tap="gotoFriends">
+					<view class="icon"><image src="/static/icons/icon_friends.png" mode="aspectFit" /></view>
+					<text>{{ $t('me.quick.friend') }}</text>
+				</view>
+				<view class="item" role="button" @tap="gotoMessages">
+					<view class="icon" :class="{ 'newMessage': hasNewMessage || hasNewPrivateMessage }"><image src="/static/icons/icon_info.png" mode="aspectFit" /></view>
+					<text>{{ $t('me.quick.message') }}</text>
+				</view>
+				<view class="item" role="button" @tap="gotoSettings">
+					<view class="icon"><image src="/static/icons/icon_setting.png" mode="aspectFit" /></view>
+					<text>{{ $t('me.quick.settings') }}</text>
+				</view>
+			</view>
+
+			<view class="panel wallet-panel">
+				<view class="section-heading"><text class="section-title">{{ $t('me.layout.wallet') }}</text><navigator class="section-link" url="/pages/payments/recharge"><text>{{ $t('me.service.recharge') }}</text><uni-icons type="right" size="12" color="currentColor" /></navigator></view>
+				<view class="wallet-grid">
+					<navigator class="wallet-item" url="/pages/treePlant/treeplant">
+						<view class="wallet-value">
+							<view class="tree-progress-text" role="progressbar" :aria-label="$t('me.service.treeScene')" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="treeState === 'None' ? undefined : treeGrowthPercent">
+								<text>{{ treeState === 'None' ? '--' : Math.floor(treeGrowthPercent) }}</text><text v-if="treeState !== 'None'" class="wallet-unit">%</text>
+								<view v-if="treeState !== 'None'" class="tree-progress-fill" :style="{ clipPath: 'inset(' + (100 - treeGrowthPercent) + '% 0 0 0)' }" aria-hidden="true">
+									<text>{{ Math.floor(treeGrowthPercent) }}</text><text class="wallet-unit">%</text>
 								</view>
-								<text class="growth-val">
-									{{ Math.floor(treeGrowthVal) }}/{{ treeMaxGrowth }}
-								</text>
+								<view v-if="treeState !== 'None' && treeGrowthPercent > 0" class="tree-progress-particles" :style="{ top: (100 - treeGrowthPercent) + '%' }" aria-hidden="true">
+									<view v-for="particle in 5" :key="particle" class="tree-progress-particle"></view>
+								</view>
 							</view>
 						</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<navigator url="/pages/bookcase/index">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/ender-chest.svg"></img>
-						</view>
-						<view class="text">{{ $t('me.service.collection') }}</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<navigator url="./apps/lab">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/lab.svg"></img>
-						</view>
-						<view class="text">{{ $t('me.service.lab') }}</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<navigator url="./users/achievements">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/cridit_sys_icon.png"></img>
-						</view>
-						<view class="text">{{ $t('me.service.badges') }}</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<navigator url="./apps/inviteCard">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/icon_share.png"></img>
-						</view>
-						<view class="text">{{ $t('me.service.invite') }}</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<navigator url="./payments/recharge">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/cridit_icon.png"></img>
-						</view>
-						<view class="text">{{ $t('me.service.recharge') }}</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<navigator v-if="aiAssistanceEnabled" url="./redstone/index">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/redstone-muted.svg"></img>
-						</view>
-						<view class="text">{{ $t('me.service.redstone') }}</view>
-						<text class="service-balance service-balance--redstone">
-							{{ redstoneBalance === null ? '--' : redstoneBalance }} {{ $t('me.unit.redstone') }}
-						</text>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<navigator url="./payments/earnings">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/icon_sponsored.png"></img>
-						</view>
-						<view class="text">{{ $t('me.service.withdraw') }}</view>
-						<text class="service-balance service-balance--earnings">{{earningsMoney}} {{ $t('me.unit.yuan') }}</text>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<navigator url="./store/index">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/store.png"></img>
-						</view>
-						<view class="text">{{ $t('me.service.store') }}</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
+						<text class="wallet-label">{{ $t('me.service.treeScene') }}</text>
+						<text class="wallet-hint" :class="{ 'wallet-checkin': !isSignedToday }">{{ $t(isSignedToday ? 'me.layout.viewTree' : 'me.service.checkin') }}</text>
+					</navigator>
+					<navigator class="wallet-item" url="/pages/payments/recharge"><text class="wallet-value">{{ resources === null ? '--' : (resources.log || 0) }}</text><text class="wallet-label">{{ $t('me.layout.logBalance') }}</text><text class="wallet-hint">{{ $t('me.layout.logHint') }}</text></navigator>
+					<navigator v-if="aiAssistanceEnabled" class="wallet-item" url="/pages/redstone/index"><text class="wallet-value">{{ redstoneBalance === null ? '--' : redstoneBalance }}</text><text class="wallet-label">{{ $t('me.service.redstone') }}</text><text class="wallet-hint">{{ $t('me.layout.redstoneHint') }}</text></navigator>
+					<navigator class="wallet-item" url="/pages/payments/earnings"><view class="wallet-value">{{ earningsMoney === null ? '--' : earningsMoney }}<text class="wallet-unit">{{ $t('me.unit.yuan') }}</text></view><text class="wallet-label">{{ $t('me.service.withdraw') }}</text><text class="wallet-hint">{{ $t('me.layout.earningsHint') }}</text></navigator>
+				</view>
 			</view>
-			<!-- <view class="section-title">更多</view> -->
-			<view class="list">
-				<!-- <navigator url="./users/user_credit">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/icon_sponsored.png"></img>
-						</view>
-						<view class="text">我的信誉</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator> -->
-				<navigator url="./apps/about">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/icon_about_us.png"></img>
-						</view>
-						<view class="text">{{ $t('me.service.about') }}</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
-				<!-- <navigator url="./apps/faqs/faq">
-					<view class="li">
-						<view class="icon">
-							<img src="../static/icons/icon_report.png"></img>
-						</view>
-						<view class="text">意见反馈</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator> -->
-				<navigator url="./manage/index" v-if="user.is_admin == 1">
-					<view class="li noborder">
-						<view class="icon">
-							<img src="../static/icons/icon_treecut3.png"></img>
-						</view>
-						<view class="text">{{ $t('me.service.manage') }}</view>
-						<view class="to"><text class="ui-chevron" aria-hidden="true"></text></view>
-					</view>
-				</navigator>
+
+			<view class="panel services-panel">
+				<view class="section-heading"><text class="section-title">{{ $t('me.layout.moreServices') }}</text></view>
+				<view class="service-grid">
+					<navigator class="grid-item" url="/pages/bookcase/index"><image src="/static/icons/ender-chest.svg" mode="aspectFit" /><text>{{ $t('me.service.collection') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/users/achievements"><image src="/static/icons/cridit_sys_icon.png" mode="aspectFit" /><text>{{ $t('me.service.badges') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/store/index"><image src="/static/icons/store.png" mode="aspectFit" /><text>{{ $t('me.service.store') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/store/orders"><image src="/static/icons/icon_my_info.png" mode="aspectFit" /><text>{{ $t('me.layout.orders') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/apps/inviteCard"><image src="/static/icons/icon_share.png" mode="aspectFit" /><text>{{ $t('me.service.invite') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/apps/lab"><image src="/static/icons/lab.svg" mode="aspectFit" /><text>{{ $t('me.service.lab') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/apps/about"><image src="/static/icons/icon_about_us.png" mode="aspectFit" /><text>{{ $t('me.service.about') }}</text></navigator>
+					<navigator v-if="user.is_admin == 1" class="grid-item" url="/pages/manage/index"><image src="/static/icons/icon_treecut3.png" mode="aspectFit" /><text>{{ $t('me.service.manage') }}</text></navigator>
+				</view>
 			</view>
-			<view class="blank_box"></view>
 		</view>
 	</view>
 </template>
@@ -290,7 +163,8 @@
 				treeState: "None",
 				treeGrowthVal: 0,
 				treeMaxGrowth: 0,
-				earningsMoney: 0.00,
+				earningsMoney: null,
+				resources: null,
 				redstoneBalance: null,
 				isSignedToday: true
 			}
@@ -303,10 +177,10 @@
 				const rawLevel = membership.type || membership.level || this.user.membership_type ||
 					this.user.membership_level || this.user.member_type || this.user.vip_level || 0;
 				const normalizedLevel = String(rawLevel).toLowerCase();
-				const isSuper = rawLevel === 2 || normalizedLevel === '2' || normalizedLevel === 'super' || normalizedLevel === 'premium' ||
-					normalizedLevel === 'super_pass' || normalizedLevel.indexOf('超级') !== -1;
-				const isStandard = rawLevel === 1 || normalizedLevel === '1' || normalizedLevel === 'standard' || normalizedLevel === 'pass' ||
-					normalizedLevel === 'log_pass' || normalizedLevel.indexOf('原木通行证') !== -1;
+				const isSuper = rawLevel === 2 || normalizedLevel === '2' || normalizedLevel === 'super' ||
+					normalizedLevel === 'premium' || normalizedLevel === 'super_pass';
+				const isStandard = rawLevel === 1 || normalizedLevel === '1' || normalizedLevel === 'standard' ||
+					normalizedLevel === 'pass' || normalizedLevel === 'log_pass';
 				const expiry = membership.expire_at || membership.expires_at || membership.expired_at ||
 					this.user.membership_expire_at || this.user.member_expire_at || this.user.vip_expire_at;
 				let expiryTime = 0;
@@ -580,7 +454,7 @@
 						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 					}
 				}).then((res) => {
-					this.resources = res.data[0];
+					this.resources = res.data[0] || {};
 					console.log(this.resources)
 					this.earningsMoney = this.bankNum(this.resources.cropped_log / 100);
 					this.$forceUpdate();
@@ -611,7 +485,7 @@
 
 <style scoped lang="scss">
 .me-page {
-	--me-bg: #f8f5ee; --me-surface: #fff; --me-text: #302e28;
+	--me-bg: #F8F8F8; --me-surface: #fff; --me-text: #302e28;
 	--me-muted: #89857d; --me-line: #f0ede7; --me-danger: #c65e49;
 	--me-shadow: 0 10rpx 30rpx rgba(69,55,34,.045);
 	min-height: 100vh; background: var(--me-bg); color: var(--me-text);
@@ -635,7 +509,7 @@
 	.info-cover { object-fit: cover; object-position: center 38%; }
 	.box-shadow {
 		z-index: 1;
-		background: linear-gradient(180deg, rgba(248,245,238,.06), rgba(248,245,238,.2) 40%, rgba(248,245,238,.85) 82%, var(--me-bg));
+		background: linear-gradient(180deg, rgba(248,248,248,.06), rgba(248,248,248,.2) 40%, rgba(248,248,248,.85) 82%, var(--me-bg));
 		.dark-mode & { background: linear-gradient(180deg, rgba(30,30,30,.2), rgba(30,30,30,.45) 40%, rgba(30,30,30,.9) 82%, var(--me-bg)); }
 	}
 }
@@ -713,37 +587,16 @@
 	&__promo-link { display: flex; align-items: center; gap: 10rpx; flex-shrink: 0; opacity: .85; }
 }
 .box-bd {
-	display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14rpx; margin: 20rpx 28rpx 0;
+	display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+	padding: 24rpx 8rpx; border-radius: 18rpx; background: var(--me-surface);
 	.item {
-		display: flex; align-items: center; min-width: 0; min-height: 110rpx;
-		box-sizing: border-box; padding: 20rpx; border-radius: 22rpx;
-		background: var(--me-surface); box-shadow: var(--me-shadow);
-		&:active { background: var(--me-line); }
-		.icon { position: relative; flex: 0 0 60rpx; height: 60rpx; display: flex; align-items: center; justify-content: center; border-radius: 22rpx; background: #fcf3e5; img { width: 36rpx; height: 36rpx; image-rendering: pixelated; } }
-		&:nth-child(2) .icon { background: #fbefe8; }
-		&:nth-child(3) .icon { background: #eaf4e7; }
-		&:nth-child(4) .icon { background: #eaf0f6; }
-		.dark-mode & .icon { background: #323232; }
-		.icon.newMessage img { animation: mail-bounce 1s ease-in-out infinite; transform-origin: 50% 100%; }
-		@media (prefers-reduced-motion: reduce) { .icon.newMessage img { animation: none; } }
-		.item-copy { flex: 1; min-width: 0; margin-left: 16rpx; }
-		.text { display: flex; align-items: center; gap: 12rpx; font-size: 27rpx; font-weight: 600; }
-		.shortcut-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		.subtext { margin-top: 4rpx; font-size: 18rpx; color: var(--me-muted); }
-		.subtext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		.shortcut-arrow { width: 8rpx; height: 8rpx; color: #a4a79a; }
+		display: flex; flex-direction: column; align-items: center; justify-content: center;
+		min-width: 0; min-height: 100rpx; gap: 16rpx; text-align: center;
+		&:active { opacity: .65; }
+		.icon { width: 48rpx; height: 48rpx; image { display: block; width: 100%; height: 100%; image-rendering: pixelated; } }
+		.icon.newMessage image { animation: mail-bounce 1s ease-in-out infinite; transform-origin: 50% 100%; }
+		@media (prefers-reduced-motion: reduce) { .icon.newMessage image { animation: none; } }
 	}
-}
-.security-banner {
-	display: flex; align-items: center; gap: 14rpx; margin: 16rpx 28rpx 0; padding: 16rpx 20rpx;
-	border: 1rpx solid #ecd9b9; border-radius: 20rpx; color: #80552c; background: #fff5e2;
-	.dark-mode & { color: #e8c69c; background: #382e20; border-color: #514431; }
-	&__icon { flex: 0 0 36rpx; height: 36rpx; border-radius: 50%; text-align: center; line-height: 36rpx; font-weight: 700; color: #fff; background: #d9923d; }
-	&__content { flex: 1; min-width: 0; }
-	&__title, &__description { display: block; }
-	&__title { font-size: 23rpx; font-weight: 600; }
-	&__description { font-size: 19rpx; opacity: .8; }
-	&__action { flex-shrink: 0; font-size: 21rpx; font-weight: 600; }
 }
 @keyframes mail-bounce {
 	0%, 100% { transform: translateY(0) scale(1, 1); }
@@ -752,36 +605,65 @@
 	60% { transform: translateY(-4rpx) rotate(4deg); }
 	75% { transform: translateY(0) scale(1, 1); }
 }
-.list-content { position: relative; z-index: 2; padding-top: 0; background: var(--me-bg); }
-.blank_box { height: calc(160rpx + var(--loghome-safe-bottom, 0px)); }
-.list {
-	margin: 0 28rpx 24rpx; border-radius: 24rpx; overflow: hidden; background: var(--me-surface); box-shadow: var(--me-shadow);
-	> navigator:last-child .li { border-bottom: 0; }
-	.li {
-		display: flex; align-items: center; box-sizing: border-box; width: 100%; min-height: 86rpx;
-		padding: 14rpx 22rpx; border-bottom: 1rpx solid var(--me-line);
-		&:active { background: var(--me-line); }
-		&.noborder { border-bottom: 0; }
-		.icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 48rpx; height: 48rpx; img { width: 44rpx; height: 44rpx; object-fit: contain; image-rendering: pixelated; } }
-		.text { flex: 1; min-width: 0; padding-left: 20rpx; font-size: 27rpx; font-weight: 600; overflow-wrap: break-word; }
-		.service-balance { flex-shrink: 0; margin-left: 14rpx; font-size: 25rpx; font-weight: 500; color: var(--me-danger); white-space: nowrap; font-variant-numeric: tabular-nums; }
-		.to { display: flex; align-items: center; justify-content: center; flex: 0 0 26rpx; height: 32rpx; margin-left: 16rpx; color: #acafa6; }
-		.tree-growth-text { display: flex; flex-direction: column; padding-top: 4rpx; padding-bottom: 4rpx; }
-		.title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8rpx; }
-		.checkin-hint { font-size: 20rpx; color: var(--me-danger); font-weight: 400; }
-		.growth-bar-wrapper { display: flex; align-items: center; margin-top: 10rpx; }
-		.growth-bar-track { flex: 1; height: 12rpx; margin-right: 12rpx; border-radius: 999rpx; overflow: hidden; background: var(--me-line); }
-		.growth-bar-inner { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #81c792, #65b87b); transition: width .4s ease-out; }
-		.growth-val { flex-shrink: 0; font-size: 21rpx; font-weight: 400; color: var(--me-muted); font-variant-numeric: tabular-nums; }
-	}
-}
 .ui-chevron { display: inline-block; flex-shrink: 0; width: 10rpx; height: 10rpx; border-top: 2rpx solid currentColor; border-right: 2rpx solid currentColor; transform: rotate(45deg); }
+.page-content { padding: 0 28rpx; }
+.panel { display: block; margin-top: 18rpx; border-radius: 18rpx; background: var(--me-surface); overflow: hidden; }
+.service-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid-item { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; min-height: 110rpx; gap: 16rpx; text-align: center; image { width: 48rpx; height: 48rpx; object-fit: contain; image-rendering: pixelated; } text { padding: 0 4rpx; overflow-wrap: anywhere; } }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 24rpx 24rpx 0; }
+.section-title { font-size: 29rpx; font-weight: 600; }
+.section-link { display: flex; align-items: center; gap: 5rpx; font-size: 21rpx; color: var(--me-muted); }
+.wallet-grid { display: flex; padding: 30rpx 12rpx 28rpx; }
+.wallet-item { flex: 1; min-width: 0; text-align: center; padding: 0 6rpx; }
+.wallet-value { display: block; min-height: 54rpx; font-size: 37rpx; line-height: 1.4; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.wallet-unit { font-size: 20rpx; margin-left: 3rpx; font-weight: 400; }
+.tree-progress-text { position: relative; display: inline-block; isolation: isolate; }
+.tree-progress-text > text { position: relative; z-index: 1; }
+.tree-progress-fill {
+	position: absolute; inset: 0; z-index: 2; color: #8FDF70; pointer-events: none;
+}
+.tree-progress-particles {
+	position: absolute; left: 0; right: 0; height: 0; z-index: 0;
+	pointer-events: none;
+}
+.tree-progress-particle {
+	position: absolute; bottom: 0; width: 8rpx; height: 8rpx;
+	background: #8FDF70; opacity: 0;
+	animation: tree-progress-splash 1.6s linear infinite;
+	&:nth-child(1) { left: 12%; --splash-direction: -.8; animation-delay: -.2s; }
+	&:nth-child(2) { left: 32%; --splash-direction: -.4; width: 6rpx; height: 6rpx; animation-duration: 1.85s; animation-delay: -.95s; }
+	&:nth-child(3) { left: 50%; --splash-direction: .1; animation-duration: 1.5s; animation-delay: -.6s; }
+	&:nth-child(4) { left: 68%; --splash-direction: .8; width: 6rpx; height: 6rpx; animation-duration: 1.75s; animation-delay: -1.2s; }
+	&:nth-child(5) { left: 85%; --splash-direction: .3; animation-duration: 2s; animation-delay: -1.7s; }
+}
+@keyframes tree-progress-splash {
+	0% { opacity: 0; transform: translate3d(0, 0, 0) scale(1); }
+	12% { opacity: .9; }
+	70% { opacity: .65; }
+	100% { opacity: 0; transform: translate3d(calc(var(--splash-direction, 0) * 14rpx), -38rpx, 0) scale(.65); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.tree-progress-particles { display: none; }
+}
+.wallet-label { display: block; margin-top: 8rpx; }
+.box-bd .item > text, .wallet-label, .grid-item > text { font-size: 24rpx; font-weight: 400; line-height: 1.5; }
+.wallet-hint { display: block; margin-top: 7rpx; font-size: 20rpx; color: var(--me-muted); }
+.service-grid { padding: 12rpx 8rpx 18rpx; row-gap: 12rpx; .grid-item { padding: 14rpx 0; } }
+.security-banner { display: flex; align-items: center; gap: 14rpx; margin: 0 0 18rpx; padding: 18rpx; border-radius: 16rpx; background: var(--me-soft); color: var(--me-accent); font-size: 20rpx; image { width: 40rpx; height: 40rpx; flex-shrink: 0; } > view { flex: 1; min-width: 0; } > text { flex-shrink: 0; } }
+.security-title, .security-description { display: block; }
+.security-title { font-size: 22rpx; font-weight: 500; }
+.security-description { margin-top: 4rpx; font-size: 19rpx; opacity: .8; }
+
+.me-page { --me-accent: #805b35; --me-soft: #f8f1e5; padding-bottom: calc(160rpx + var(--loghome-safe-bottom, 0px)); }
+.me-page.dark-mode, .dark-mode .me-page { --me-accent: #e1c49e; --me-soft: #373127; }
+.box-bd { margin: 0; }
+.wallet-checkin { color: var(--me-danger); }
+.grid-item:active, .wallet-item:active { opacity: .65; }
 @media (max-width: 360px) {
 	.membership-card__mark { width: 52rpx; margin-right: 10rpx; }
 	.membership-card__title { font-size: 25rpx; }
 	.membership-card__action { padding: 12rpx 14rpx; font-size: 20rpx; }
 	.membership-card__promo { font-size: 18rpx; gap: 8rpx; }
-	.box-bd .item { padding: 18rpx 16rpx; .icon { flex-basis: 52rpx; height: 52rpx; } .item-copy { margin-left: 12rpx; } }
+	.wallet-value { font-size: 33rpx; }
 }
-@media (prefers-reduced-motion: reduce) { .list .li .growth-bar-inner { transition: none; } }
 </style>

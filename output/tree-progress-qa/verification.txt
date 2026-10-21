@@ -1,0 +1,21 @@
+树场百分比绿色遮罩及粒子动画
+
+Source: loghome-app-frontend/pages/me.vue
+Color: #8FDF70 (浏览器实测 rgb(143, 223, 112))
+
+进度文字使用正常文字和绿色文字两层；绿色层按 100 - treeGrowthPercent 从顶部裁切，实现由下向上的填充。小号百分号保留。重复视觉层及粒子层使用 aria-hidden。
+
+五个方块粒子从填充边缘发射，错开时间循环上升、横向轻微散射并淡出，位于文字后方，不拦截点击。全部使用 CSS transform 和 opacity，无 JavaScript 动画定时器。
+0% 或未加载状态不创建粒子。prefers-reduced-motion: reduce 时隐藏粒子，保留静态绿色填充。
+
+验证：
+- Vue SFC、Vue 模板、SCSS 编译以及 git diff --check 通过。
+- 本地代理测试数据，不修改真实账号。
+- 实测 0%：clip-path 为 inset(100% 0px 0px)，粒子数为 0。
+- 实测 50%：clip-path 为 inset(50% 0px 0px)，粒子动画 running，transform 有向上的负 Y 位移。
+- 实测 91%：百分比与绿色填充显示正常。
+- 实测 100% 深色：clip-path 为 inset(0% 0px 0px)，5 个粒子正常运行，绿色值符合指定色号。
+- 最新截图：particles-final-50.png；钱包局部：particles-wallet.png。
+
+预览：http://127.0.0.1:8919/preview?tier=super&growth=50
+Result: passed

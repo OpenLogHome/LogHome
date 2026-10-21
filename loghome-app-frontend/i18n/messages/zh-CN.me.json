@@ -407,6 +407,16 @@
 			"standardPromo": "升级超级原木通行证，解锁更多权益",
 			"benefitDetails": "权益详情",
 			"upgradeNow": "立即升级"
+		},
+		"layout": {
+			"viewTree": "去看看",
+			"wallet": "我的钱包",
+			"logBalance": "原木余额",
+			"logHint": "充值与消费",
+			"redstoneHint": "阅读与创作助手",
+			"earningsHint": "收益与提现",
+			"moreServices": "更多服务",
+			"orders": "我的订单"
 		}
 	}
 }

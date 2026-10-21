@@ -15,12 +15,13 @@
 							mode="aspectFill"
 							@error="handleImageError"
 						/>
-						<!-- 更新标签 -->
-						<view
-							v-if="book.updateInfo && book.updateInfo.has_updates"
-							class="update-badge"
-						>
-							<text class="update-text">更新{{ book.updateInfo.new_chapters_count }}章</text>
+						<view class="corner-badges">
+							<view v-if="book.updateInfo && book.updateInfo.has_updates" class="update-badge">
+								<text class="update-text">更新{{ book.updateInfo.new_chapters_count }}章</text>
+							</view>
+							<view v-if="book.shelfSource === 'history'" class="history-badge">
+								<text class="update-text">历史</text>
+							</view>
 						</view>
 						<!-- 类型角标：漫画 / 世界 -->
 						<text v-if="isMangaWork(book)" class="type-badge manga-badge">漫画</text>
@@ -119,7 +120,7 @@ export default {
 				if (Array.isArray(cachedHistoryBooks)) {
 					this.historyBooks = [...cachedHistoryBooks].reverse()
 				}
-				if (!restored && (this.likedBooks.length > 0 || this.historyBooks.length > 0)) {
+				if (this.likedBooks.length > 0 || this.historyBooks.length > 0) {
 					this.sortBooksByHistory()
 					restored = this.sortedBooks.length > 0
 				}
@@ -299,14 +300,16 @@ export default {
 			}
 		},
 		
-		// 根据阅读历史排序书籍
+		// 收藏优先，按阅读历史补足最多 10 本
 		sortBooksByHistory() {
 			let result = []
+			const seenBookIds = new Set()
 			
 			// 创建历史书籍的映射，用于快速查找
 			let historyMap = new Map()
 			this.historyBooks.forEach((book, index) => {
-				historyMap.set(book.novel_id, {
+				if (!book || !book.novel_id || historyMap.has(String(book.novel_id))) return
+				historyMap.set(String(book.novel_id), {
 					...book,
 					historyIndex: index // 历史顺序，越小越新
 				})
@@ -318,17 +321,20 @@ export default {
 			let booksWithUpdates = []
 			
 			this.likedBooks.forEach(book => {
+				if (!book || !book.novel_id || seenBookIds.has(String(book.novel_id))) return
+				seenBookIds.add(String(book.novel_id))
 				const updateInfo = this.updateInfo.get(book.novel_id)
 				const bookWithInfo = {
 					...book,
+					shelfSource: 'favorite',
 					updateInfo: updateInfo
 				}
 				
 				// 如果有更新，优先排序
 				if (updateInfo && updateInfo.has_updates) {
 					booksWithUpdates.push(bookWithInfo)
-				} else if (historyMap.has(book.novel_id)) {
-					let historyBook = historyMap.get(book.novel_id)
+				} else if (historyMap.has(String(book.novel_id))) {
+					let historyBook = historyMap.get(String(book.novel_id))
 					booksWithHistory.push({
 						...bookWithInfo,
 						historyIndex: historyBook.historyIndex
@@ -350,6 +356,14 @@ export default {
 			
 			// 合并结果：有更新的在最前，然后是有历史的，最后是没历史的
 			result = [...booksWithUpdates, ...booksWithHistory, ...booksWithoutHistory]
+
+			// 历史只补充空位，不挤占收藏；同一作品在收藏和历史中只显示一次
+			for (const book of this.historyBooks) {
+				if (result.length >= 10) break
+				if (!book || !book.novel_id || seenBookIds.has(String(book.novel_id))) continue
+				seenBookIds.add(String(book.novel_id))
+				result.push({ ...book, shelfSource: 'history', updateInfo: this.updateInfo.get(book.novel_id) })
+			}
 			
 			// 限制显示数量，避免横向滚动过长
 			this.sortedBooks = result.slice(0, 10)
@@ -453,15 +467,30 @@ export default {
 	background-color: #f5f5f5;
 }
 
-.update-badge {
+.corner-badges {
 	position: absolute;
-	top: 0rpx;
-	right: 0rpx;
-	background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-	// border-radius: 10.2rpx;
+	top: 0;
+	right: 0;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 4rpx;
+	pointer-events: none;
+}
+
+.update-badge, .history-badge {
 	padding: 3.4rpx 6.8rpx;
 	max-width: 122.4rpx;
 	overflow: hidden;
+}
+
+.update-badge {
+	background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+}
+
+.history-badge {
+	background: rgba(76, 94, 105, 0.92);
 }
 
 .update-text {

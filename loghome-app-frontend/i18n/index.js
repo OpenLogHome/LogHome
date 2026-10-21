@@ -10,6 +10,8 @@ import zhRedstone from './messages/zh-CN.redstone.json'
 import enRedstone from './messages/en.redstone.json'
 import zhMe from './messages/zh-CN.me.json'
 import enMe from './messages/en.me.json'
+import zhCommunity from './messages/zh-CN.community.json'
+import enCommunity from './messages/en.community.json'
 import zhTitles from './messages/zh-CN.titles.json'
 import enTitles from './messages/en.titles.json'
 import { resolveEffectiveLanguage, DEFAULT_LANG } from './resolve.js'
@@ -53,8 +55,8 @@ const i18n = new VueI18n({
 	fallbackLocale: DEFAULT_LANG,
 	silentTranslationWarn: true,
 	messages: {
-		'zh-CN': mergeMessages([zhCore, zhAuth, zhSettings, zhRedstone, zhMe, zhTitles]),
-		en: mergeMessages([enCore, enAuth, enSettings, enRedstone, enMe, enTitles])
+		'zh-CN': mergeMessages([zhCore, zhAuth, zhSettings, zhRedstone, zhMe, zhCommunity, zhTitles]),
+		en: mergeMessages([enCore, enAuth, enSettings, enRedstone, enMe, enCommunity, enTitles])
 	}
 })
 

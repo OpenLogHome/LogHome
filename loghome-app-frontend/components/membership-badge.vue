@@ -38,8 +38,8 @@ export default {
 				? this.tier.type || this.tier.membership_type || this.tier.level
 				: this.tier;
 			const value = String(source || '').trim().toLowerCase();
-			if (value === 'super' || value === '2' || value.indexOf('超级') !== -1) return 'super';
-			if (value === 'standard' || value === '1' || value.indexOf('原木') !== -1) return 'standard';
+			if (value === 'super' || value === '2' || value === 'super_pass' || value === 'premium') return 'super';
+			if (value === 'standard' || value === '1' || value === 'pass' || value === 'log_pass') return 'standard';
 			return '';
 		},
 		label() {

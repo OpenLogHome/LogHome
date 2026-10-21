@@ -101,7 +101,7 @@ export default {
                         });
                     } else {
                         uni.showToast({
-                            title: "获取跨站token失败",
+                            title: this.$t('community.frame.crossTokenFailed'),
                             icon: 'none',
                             duration: 2000
                         });

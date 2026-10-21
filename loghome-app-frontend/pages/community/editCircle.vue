@@ -6,48 +6,48 @@
       
       <!-- 圈子图标 -->
       <view class="form-item">
-        <text class="form-label">圈子图标</text>
+        <text class="form-label">{{ $t('community.editCircle.iconLabel') }}</text>
         <view class="icon-upload" @tap="uploadIcon">
           <image v-if="formData.icon" :src="formData.icon" mode="aspectFill" class="preview-icon"></image>
           <view v-else class="upload-placeholder">
             <uni-icons type="camera" size="30" color="#999"></uni-icons>
-            <text>点击上传</text>
+            <text>{{ $t('community.editCircle.tapToUpload') }}</text>
           </view>
         </view>
       </view>
       
       <!-- 圈子背景 -->
       <view class="form-item">
-        <text class="form-label">圈子背景</text>
+        <text class="form-label">{{ $t('community.editCircle.bgLabel') }}</text>
         <view class="bg-upload" @tap="uploadBackground">
           <image v-if="formData.bg_url" :src="formData.bg_url" mode="aspectFill" class="preview-bg"></image>
           <view v-else class="upload-placeholder">
             <uni-icons type="image" size="30" color="#999"></uni-icons>
-            <text>点击上传</text>
+            <text>{{ $t('community.editCircle.tapToUpload') }}</text>
           </view>
         </view>
       </view>
       
       <!-- 圈子名称 (仅圈主可编辑) -->
       <view class="form-item">
-        <text class="form-label">圈子名称</text>
+        <text class="form-label">{{ $t('community.editCircle.nameLabel') }}</text>
         <input 
           type="text" 
           v-model="formData.name"
-          placeholder="请输入圈子名称（2-20个字符）"
+          :placeholder="$t('community.editCircle.namePlaceholder')"
           class="form-input"
           maxlength="20"
           :disabled="userRole !== 2"
         />
-        <text v-if="userRole !== 2" class="tip-text">只有圈主可以修改圈子名称</text>
+        <text v-if="userRole !== 2" class="tip-text">{{ $t('community.editCircle.ownerOnlyName') }}</text>
       </view>
       
       <!-- 圈子简介 -->
       <view class="form-item">
-        <text class="form-label">圈子简介</text>
+        <text class="form-label">{{ $t('community.editCircle.descriptionLabel') }}</text>
         <textarea 
           v-model="formData.description"
-          placeholder="请输入圈子简介（10-200个字符）"
+          :placeholder="$t('community.editCircle.descriptionPlaceholder')"
           class="form-textarea"
           maxlength="200"
         ></textarea>
@@ -56,10 +56,10 @@
       
       <!-- 圈子规则 -->
       <view class="form-item">
-        <text class="form-label">圈子规则</text>
+        <text class="form-label">{{ $t('community.editCircle.rulesLabel') }}</text>
         <textarea 
           v-model="formData.rules"
-          placeholder="请输入圈子规则（建议包含发帖规范、禁止内容等）"
+          :placeholder="$t('community.editCircle.rulesPlaceholder')"
           class="form-textarea"
           maxlength="500"
         ></textarea>
@@ -68,10 +68,10 @@
       
       <!-- 圈子公告 -->
       <view class="form-item">
-        <text class="form-label">圈子公告</text>
+        <text class="form-label">{{ $t('community.editCircle.announcementLabel') }}</text>
         <textarea 
           v-model="formData.announcement"
-          placeholder="请输入圈子公告（可选）"
+          :placeholder="$t('community.editCircle.announcementPlaceholder')"
           class="form-textarea"
           maxlength="500"
         ></textarea>
@@ -80,26 +80,26 @@
       
       <!-- 圈子设置 (仅圈主可见) -->
       <view class="form-item" v-if="userRole === 2">
-        <text class="form-label">圈子设置</text>
+        <text class="form-label">{{ $t('community.editCircle.settingsLabel') }}</text>
         
         <!-- 加入验证设置 -->
         <view class="setting-item">
           <view class="setting-header">
-            <text class="setting-title">加入验证</text>
+            <text class="setting-title">{{ $t('community.editCircle.joinVerification') }}</text>
             <switch 
               :checked="circleSettings.need_verification === 1" 
               color="#EA7034" 
               @change="toggleVerification"
             />
           </view>
-          <text class="setting-desc">开启后，用户加入圈子需要经过审核</text>
+          <text class="setting-desc">{{ $t('community.editCircle.joinVerificationDesc') }}</text>
           
           <!-- 验证问题设置 -->
           <view class="verification-questions" v-if="circleSettings.need_verification === 1">
-            <text class="question-label">验证信息提示（可选）</text>
+            <text class="question-label">{{ $t('community.editCircle.verificationPromptLabel') }}</text>
             <textarea 
               v-model="circleSettings.verification_questions"
-              placeholder="请输入验证提示信息，例如：请简要介绍自己，以及为什么想加入本圈子"
+              :placeholder="$t('community.editCircle.verificationPromptPlaceholder')"
               class="form-textarea"
               maxlength="200"
             ></textarea>
@@ -111,7 +111,7 @@
     
     <!-- 提交按钮 -->
     <view class="submit-btn" @tap="submitForm" :class="{ disabled: !isFormValid }">
-      保存修改
+      {{ $t('community.editCircle.save') }}
     </view>
   </view>
 </template>
@@ -171,7 +171,7 @@ export default {
       }
     } else {
       uni.showToast({
-        title: '参数错误',
+        title: this.$t('common.paramError'),
         icon: 'none'
       });
       setTimeout(() => {
@@ -204,7 +204,7 @@ export default {
       } catch (error) {
         console.error('加载圈子信息失败', error);
         uni.showToast({
-          title: '加载圈子信息失败',
+          title: this.$t('community.editCircle.loadInfoFailed'),
           icon: 'none'
         });
       }
@@ -257,7 +257,7 @@ export default {
       } catch (error) {
         console.error('上传图标失败', error);
         uni.showToast({
-          title: '上传图标失败',
+          title: this.$t('community.editCircle.uploadIconFailed'),
           icon: 'none'
         });
       }
@@ -277,7 +277,7 @@ export default {
       } catch (error) {
         console.error('上传背景图失败', error);
         uni.showToast({
-          title: '上传背景图失败',
+          title: this.$t('community.editCircle.uploadBgFailed'),
           icon: 'none'
         });
       }
@@ -285,7 +285,7 @@ export default {
     async uploadFile(filePath) {
       return new Promise((resolve, reject) => {
         uni.showToast({
-          title: "图片上传中",
+          title: this.$t('community.editCircle.uploadingImage'),
           icon: 'loading',
           duration: 2000
         });
@@ -301,7 +301,7 @@ export default {
               const data = JSON.parse(uploadRes.data);
               const imageUrl = "http://storage.codesocean.top/api/resource/get/" + data.data.resource_id;
               uni.showToast({
-                title: "上传成功",
+                title: this.$t('common.uploadSuccess'),
                 icon: 'success',
                 duration: 2000
               });
@@ -312,7 +312,7 @@ export default {
           },
           fail: (error) => {
             uni.showToast({
-              title: "上传失败",
+              title: this.$t('common.uploadFailed'),
               icon: 'none',
               duration: 2000
             });
@@ -324,7 +324,7 @@ export default {
     async submitForm() {
       if (!this.isFormValid) {
         uni.showToast({
-          title: '请完善必填信息',
+          title: this.$t('community.editCircle.incompleteForm'),
           icon: 'none'
         });
         return;
@@ -332,7 +332,7 @@ export default {
       
       if (!this.hasChanges) {
         uni.showToast({
-          title: '未做任何修改',
+          title: this.$t('community.editCircle.noChanges'),
           icon: 'none'
         });
         return;
@@ -361,7 +361,7 @@ export default {
         }
         
         uni.showToast({
-          title: '修改成功',
+          title: this.$t('community.editCircle.updateSuccess'),
           icon: 'success'
         });
         
@@ -371,7 +371,7 @@ export default {
       } catch (error) {
         console.error('修改圈子信息失败', error);
         uni.showToast({
-          title: error.response?.data?.msg || '修改失败，请重试',
+          title: error.response?.data?.msg || this.$t('community.editCircle.updateFailed'),
           icon: 'none'
         });
       }
