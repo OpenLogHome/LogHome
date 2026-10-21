@@ -1,6 +1,6 @@
 {
     "name" : "原木社区",
-    "appid" : "__UNI__C10CBE3",
+    "appid" : "__UNI__D85AEF1",
     "description" : "方块人的文艺世界",
     "versionName" : "0.1.0",
     "versionCode" : 1,
@@ -124,7 +124,7 @@
             "enable" : true
         }
     },
-	"sassImplementationName": "node-sass"
+    "sassImplementationName" : "node-sass"
 }
 // "sassImplementationName": "node-sass"
 
