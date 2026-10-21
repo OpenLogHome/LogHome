@@ -1,27 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 16 16" shape-rendering="crispEdges">
-  <!-- light warm palette matched to lab.svg / treecut icons -->
-  <rect x="0" y="1" width="16" height="1" fill="#6b543a"/>
-  <rect x="0" y="2" width="1" height="12" fill="#6b543a"/>
-  <rect x="15" y="2" width="1" height="12" fill="#6b543a"/>
-  <rect x="0" y="14" width="16" height="1" fill="#6b543a"/>
-  <!-- lid -->
-  <rect x="1" y="2" width="14" height="4" fill="#d6c19b"/>
-  <rect x="1" y="2" width="13" height="1" fill="#e9dcbd"/>
-  <rect x="1" y="5" width="14" height="1" fill="#b89a72"/>
-  <!-- lid seam -->
-  <rect x="0" y="6" width="16" height="1" fill="#6b543a"/>
-  <!-- base -->
-  <rect x="1" y="7" width="14" height="7" fill="#c9b08a"/>
-  <rect x="12" y="7" width="3" height="6" fill="#ac8c64"/>
-  <rect x="1" y="13" width="14" height="1" fill="#98774f"/>
-  <!-- latch -->
-  <rect x="6" y="5" width="4" height="1" fill="#6b543a"/>
-  <rect x="6" y="6" width="1" height="3" fill="#6b543a"/>
-  <rect x="9" y="6" width="1" height="3" fill="#6b543a"/>
-  <rect x="7" y="6" width="2" height="3" fill="#e0cfa9"/>
-  <rect x="7" y="7" width="2" height="1" fill="#8a6f4d"/>
-  <!-- muted ender eye -->
-  <rect x="5" y="9" width="6" height="4" fill="#6d8f5c"/>
-  <rect x="6" y="10" width="4" height="2" fill="#8fae76"/>
-  <rect x="7" y="10" width="2" height="1" fill="#b5cf9a"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="2 3 19 19" shape-rendering="crispEdges">
+  <!-- Collection chest, using the service icons' parchment and soft brown palette. -->
+  <path fill="#93765c" d="M5 4h12v1h2v2h1v13h-2v1H4v-1H3V7h1V5h1z"/>
+  <path fill="#f3e8d0" d="M5 5h11v1h2v2H4V7h1z"/>
+  <path fill="#ddcdb1" d="M5 6h10v1h2v1H5z"/>
+  <path fill="#b29a7a" d="M17 7h2v3h-2z"/>
+  <path fill="#b49a7a" d="M4 9h13v1H4z"/>
+  <path fill="#f0e3c9" d="M4 11h13v8H4z"/>
+  <path fill="#ddc9a7" d="M5 12h11v6H5z"/>
+  <path fill="#c3ab8b" d="M17 11h2v8h-2z"/>
+  <path fill="#a88c6b" d="M18 11h1v8h-1zM5 19h12v1H5z"/>
+  <path fill="#f8f0df" d="M4 11h2v7H4zM6 11h4v1H6zM5 5h9v1H5z"/>
+  <path fill="#96795b" d="M10 9h3v5h-3z"/>
+  <path fill="#ede1bd" d="M11 10h1v2h-1z"/>
+  <path fill="#ae9270" d="M7 15h2v2H7zM13 15h2v2h-2z"/>
+  <path fill="#f5eacd" d="M7 15h1v1H7zM13 15h1v1h-1z"/>
 </svg>
