@@ -1539,6 +1539,13 @@ export default {
 		},
 		gotoMenu() {
 			if (this.isPreviewMode) return;
+			// #ifdef H5
+			// 移动端网页版用全屏目录页，避开底部抽屉显示不全/滚动受阻的问题
+			uni.navigateTo({
+				url: "/pages/readers/allArticles?id=" + this.novelId
+			});
+			return;
+			// #endif
 			this.menuDrawerVisible = true;
 		},
 		// 段落划线、段落评论相关功能

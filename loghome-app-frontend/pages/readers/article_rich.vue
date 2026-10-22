@@ -935,9 +935,13 @@ export default {
 		},
 		gotoMenu() {
 			if (this.isPreviewMode) return;
-			// uni.navigateTo({
-			// 	url:"./allArticles?id=" + this.article.novel_id
-			// })
+			// #ifdef H5
+			// 移动端网页版用全屏目录页，避开底部抽屉显示不全/滚动受阻的问题
+			uni.navigateTo({
+				url: "./allArticles?id=" + this.article.novel_id
+			});
+			return;
+			// #endif
 			this.menuDrawer = true;
 		},
 		articleTapped(event) {
