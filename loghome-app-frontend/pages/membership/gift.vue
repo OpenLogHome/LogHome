@@ -629,7 +629,7 @@ export default {
 }
 
 .friend-list {
-	height: min(650rpx, 55vh);
+	height: MIN(650rpx, 55vh);
 	margin-top: 14rpx;
 }
 

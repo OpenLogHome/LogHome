@@ -245,7 +245,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	padding: 34rpx 30rpx max(30rpx, var(--loghome-safe-bottom, 0px));
+	padding: 34rpx 30rpx MAX(30rpx, var(--loghome-safe-bottom, 0px));
 	background: #f8f8f6;
 	box-sizing: border-box;
 	color: #292927;
