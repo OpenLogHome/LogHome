@@ -2,8 +2,8 @@ let { query } = require('../sql.js');
 let { sendMsg } = require('../bin/message.js');
 
 const TIMER_AUTO_SPAWN_PROGRESS_CODE = '__exp_timer_auto_spawn__';
-const TIMER_PENDING_LIMIT_NOTICE_PREFIX = '__exp_timer_limit_notice__:';
-const TIMER_PENDING_LIMIT_NOTICE_DATE_KEY = '1970-01-01';
+const TIMER_PENDING_LIMIT_NOTICE_CODE = '__exp_timer_limit_notice__';
+const TIMER_PENDING_LIMIT_NOTICE_PREFIX = '__exp_timer_limit_notice__';
 const TIMER_PENDING_ORB_CAP = 5;
 const TREEPLANT_MESSAGE_ROUTE = 'treePlant/treeplant';
 
@@ -103,8 +103,26 @@ function getDateKeyByTimezone(timezone) {
 	return `${y}-${m}-${d}`;
 }
 
-function getPendingLimitNoticeTaskCode(plantId) {
-	return `${TIMER_PENDING_LIMIT_NOTICE_PREFIX}${plantId}`;
+// 满仓提醒按「用户+天」去重（不区分树），并利用 uniq_user_task_date 唯一键做
+// INSERT IGNORE 抢占：多进程同时跑定时任务时也只有一个能插入成功，避免同秒重复发送
+async function claimPendingLimitNotice(userId, dateKey, pendingCount) {
+	const result = await query(
+		`INSERT IGNORE INTO user_tree_exp_task_daily
+     (user_id, task_code, date_key, progress_value, completed_times, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 0, NOW(), NOW())`,
+		[userId, TIMER_PENDING_LIMIT_NOTICE_CODE, dateKey, toPositiveInt(pendingCount, 0)],
+	);
+	return result.affectedRows > 0;
+}
+
+// 经验球数回到上限以下时，只清理历史（含旧版按树去重）的占位行；
+// 当天的占位保留，保证同一天最多提醒一次
+async function clearStalePendingLimitNotices(userId, dateKey) {
+	await query(
+		`DELETE FROM user_tree_exp_task_daily
+     WHERE user_id = ? AND task_code LIKE ? AND date_key <> ?`,
+		[userId, TIMER_PENDING_LIMIT_NOTICE_PREFIX + '%', dateKey],
+	);
 }
 
 async function ensureExpSchemaReady() {
@@ -191,35 +209,6 @@ async function setLastAutoSpawnProgress(userId, dateKey, nowTs) {
 	}
 }
 
-async function hasPendingLimitNotice(userId, plantId) {
-	const rows = await query(
-		`SELECT id
-     FROM user_tree_exp_task_daily
-     WHERE user_id = ? AND task_code = ? AND date_key = ?
-     LIMIT 1`,
-		[userId, getPendingLimitNoticeTaskCode(plantId), TIMER_PENDING_LIMIT_NOTICE_DATE_KEY],
-	);
-	return rows.length > 0;
-}
-
-async function setPendingLimitNotice(userId, plantId, pendingCount) {
-	await query(
-		`INSERT INTO user_tree_exp_task_daily
-     (user_id, task_code, date_key, progress_value, completed_times, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 0, NOW(), NOW())
-     ON DUPLICATE KEY UPDATE progress_value = VALUES(progress_value), updated_at = NOW()`,
-		[userId, getPendingLimitNoticeTaskCode(plantId), TIMER_PENDING_LIMIT_NOTICE_DATE_KEY, pendingCount],
-	);
-}
-
-async function clearPendingLimitNotice(userId, plantId) {
-	await query(
-		`DELETE FROM user_tree_exp_task_daily
-     WHERE user_id = ? AND task_code = ? AND date_key = ?`,
-		[userId, getPendingLimitNoticeTaskCode(plantId), TIMER_PENDING_LIMIT_NOTICE_DATE_KEY],
-	);
-}
-
 async function isTreePlantNotificationDisabled(userId) {
 	try {
 		const rows = await query(
@@ -238,22 +227,20 @@ async function isTreePlantNotificationDisabled(userId) {
 	}
 }
 
-async function notifyPendingLimitReached(userId, plantId, pendingLimit, pendingCount) {
-	const notified = await hasPendingLimitNotice(userId, plantId);
-	if (notified) return false;
-
+async function notifyPendingLimitReached(userId, dateKey, pendingCount) {
 	const notificationDisabled = await isTreePlantNotificationDisabled(userId);
 	if (notificationDisabled) return false;
 
-	const safePendingCount = toPositiveInt(pendingCount, pendingLimit);
+	const claimed = await claimPendingLimitNotice(userId, dateKey, pendingCount);
+	if (!claimed) return false;
+
 	const content = '树场待收集经验球已经满啦！快来收集一下吧。';
 
 	try {
 		await sendMsg(-1, userId, content, TREEPLANT_MESSAGE_ROUTE, 'notification', true);
-		await setPendingLimitNotice(userId, plantId, safePendingCount);
 		return true;
 	} catch (err) {
-		console.log(`Tree Plant Timer: failed to send pending-limit notice for user=${userId}, plant=${plantId}`, err);
+		console.log(`Tree Plant Timer: failed to send pending-limit notice for user=${userId}`, err);
 		return false;
 	}
 }
@@ -278,10 +265,10 @@ async function tryAutoSpawnOrb(tree, settings) {
 	const pendingCount = toNumber(getFirstRowValue(pendingRows, 'count'), 0);
 
 	if (pendingCount < pendingLimit) {
-		await clearPendingLimitNotice(userId, plantId);
+		await clearStalePendingLimitNotices(userId, dateKey);
 	}
 	if (pendingCount >= pendingLimit) {
-		await notifyPendingLimitReached(userId, plantId, pendingLimit, pendingCount);
+		await notifyPendingLimitReached(userId, dateKey, pendingCount);
 		return { spawned: false, reason: 'pending_limit' };
 	}
 
@@ -310,7 +297,7 @@ async function tryAutoSpawnOrb(tree, settings) {
 
 	const nextPendingCount = pendingCount + 1;
 	if (nextPendingCount >= pendingLimit) {
-		await notifyPendingLimitReached(userId, plantId, pendingLimit, nextPendingCount);
+		await notifyPendingLimitReached(userId, dateKey, nextPendingCount);
 	}
 
 	await setLastAutoSpawnProgress(userId, dateKey, nowTs);
