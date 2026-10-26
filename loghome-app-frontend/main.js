@@ -52,7 +52,7 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;   // 在这里修改后端环境为本地/服务器版本  BASE_URL_DEV/BASE_URL_PRODUCTION
+Vue.prototype.$baseUrl = process.env.VUE_APP_API_BASE_URL || BASE_URL_PRODUCTION;
 Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_PRODUCTION;
 Vue.prototype.$collaborationWsUrl = COLLABORATION_WS_URL_PRODUCTION;
 // Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;

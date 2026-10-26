@@ -1586,7 +1586,7 @@ export default {
 		},
 		exportAdvanced() {
 			uni.navigateTo({
-				url: '../apps/h5webview?url=https://m.loghome.ink/subtasks/novel-export-vip.html?novel_id=' + this.uid + '&title=' + encodeURIComponent(this.$t('writer.work.export.ebookTitle'))
+				url: './exportNovel?id=' + encodeURIComponent(this.uid) + '&name=' + encodeURIComponent(this.novel.name || '')
 			});
 			this.cancelExport();
 		},
