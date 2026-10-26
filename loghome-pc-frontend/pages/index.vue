@@ -141,7 +141,7 @@ export default {
     async getAppVersion() {
       this.downloadLoading = true
       try {
-        const { data } = await axios.get('https://loghomeService.codesocean.top/app/get_app_update', { timeout: 12000 })
+        const { data } = await axios.get('https://api.loghome.ink/app/get_app_update', { timeout: 12000 })
         const release = downloadInfo(data)
         if (this.disposed) return
         this.androidDownloadUrl = release ? release.url : ''
