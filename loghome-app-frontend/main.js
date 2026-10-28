@@ -55,7 +55,7 @@ import store from './store'
 Vue.prototype.$store = store
 // Android 客户端统一读取 gradle.properties 的 backend_endpoint，其他环境使用前端配置。
 const nativeBackendEndpoint = typeof window !== 'undefined' && window.jsBridge && window.jsBridge.backendEndpoint;
-Vue.prototype.$baseUrl = nativeBackendEndpoint || BASE_URL_PRODUCTION;
+Vue.prototype.$baseUrl = nativeBackendEndpoint || process.env.VUE_APP_API_BASE_URL || BASE_URL_PRODUCTION;
 Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_PRODUCTION;
 Vue.prototype.$collaborationWsUrl = COLLABORATION_WS_URL_PRODUCTION;
 // Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;

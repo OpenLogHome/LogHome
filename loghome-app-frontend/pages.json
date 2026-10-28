@@ -288,6 +288,12 @@
 				}
             }
         },{
+            "path" : "pages/writers/exportNovel",
+            "style" : {
+                "navigationBarTitleText": "导出电子书",
+                "enablePullDownRefresh": false
+            }
+        },{
             "path" : "pages/writers/articlesDustbin",
             "style" :                                                                                    
             {

@@ -17,6 +17,8 @@ var MK_TOP = 0.90, MK_BOT = 0.15;    // 马克笔笔触相对基线的上下延�
 var STICKER_FS = 1000;   // 贴纸基准字号，1.0 档≈参考图里那只大问号
 var SANS_STACK = '"PingFang SC","PingFang HK","Hiragino Sans GB","Source Han Sans SC",' +
                  '"Noto Sans CJK SC","Noto Sans SC","Heiti SC","Microsoft YaHei",sans-serif';
+// 彩色 emoji 专用栈：Windows/macOS/Linux 各自的彩色 emoji 字体都兜住
+var EMOJI_STACK = '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Segoe UI Symbol",sans-serif';
 // probe = 用来判断本机到底装没装的具体字体名（不含 sans-serif 这种兜底名，
 // 否则安卓上每一项都会「可用」，实际全部回退成同一个思源黑体）
 var FONTS = [
@@ -91,6 +93,7 @@ var LAYOUT_POS = {
 var DEFAULT_STATE = {
   text : '写文字\n封面生成小工具\n想怎么生成\n就怎么生成🎉',
   hl   : [],
+  hlColors : {},
   font : 'sans',
   hlColor: '#FBEA54',
   brush: 'blob',
@@ -177,6 +180,12 @@ function load(){
         // 老版本只有「颗粒质感」开关，迁移到纹理
         if (typeof s.texture !== 'string') s.texture = s.grain === false ? '' : 'grain';
         if (typeof s.font !== 'string') s.font = 'sans';
+        // 老版本高亮共用一个颜色，迁移成逐字符颜色
+        if (Array.isArray(s.hl) && s.hl.length && (!s.hlColors || typeof s.hlColors !== 'object' || Array.isArray(s.hlColors))) {
+          var hc = {};
+          s.hl.forEach(function(i){ hc[i] = s.hlColor || '#FBEA54'; });
+          s.hlColors = hc;
+        }
         return Object.assign({}, DEFAULT_STATE, s);
       }
     }
@@ -340,10 +349,11 @@ function drawStickers(d){
   var t = (state.sk.ch || '').trim();
   if (!t) return;
   var colored = EMO.test(t);
+  // ★ ♥ 这类符号默认按文本呈现渲染成单色细线，补 VS16 强制走彩色 emoji 字体
+  if (colored && !/\uFE0F|\u200D/.test(t)) t += '\uFE0F';
   var items = stickerItems();
   ctx.save();
-  // emoji 自带高饱和，按水印强度压制，避免盖过文字
-  ctx.globalAlpha = state.sk.opa * (colored ? 0.25 : 1);
+  ctx.globalAlpha = state.sk.opa;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = d.sticker;
@@ -352,7 +362,9 @@ function drawStickers(d){
     ctx.save();
     ctx.translate(p[0] * W, p[1] * H);
     ctx.rotate(p[3] * state.sk.rot * Math.PI / 180);
-    ctx.font = (colored ? '400 ' : '900 ') + fs.toFixed(1) + 'px ' + SANS_STACK;
+    // emoji 字体放最前，彩色字符优先命中；非 emoji 仍走中文字体栈
+    ctx.font = (colored ? '400 ' + fs.toFixed(1) + 'px ' + EMOJI_STACK + ',' + SANS_STACK
+                        : '900 ' + fs.toFixed(1) + 'px ' + SANS_STACK);
     ctx.fillText(t, 0, 0);
     ctx.restore();
   }
@@ -561,17 +573,21 @@ function markerPath(c, x0, x1, yTop, h, seed){
 
 function drawHighlights(L){
   if (!state.hl.length) return;
+  var colors = state.hlColors || {};
   var set = new Set(state.hl);
   var marker = state.brush === 'marker';
   ctx.save();
-  ctx.fillStyle = state.hlColor;
   if (marker) ctx.globalAlpha = 0.9;   // 马克笔透一点，压到贴纸上更像真笔
   L.lines.forEach(function(line){
     var i = 0;
     while (i < line.length) {
       if (!set.has(line[i].idx)) { i++; continue; }
+      // 每段高亮用它被刷上时的颜色，同行连续同色才连成一片
+      var color = colors[line[i].idx] || state.hlColor;
       var j = i;
-      while (j + 1 < line.length && set.has(line[j + 1].idx)) j++;
+      while (j + 1 < line.length && set.has(line[j + 1].idx) &&
+             (colors[line[j + 1].idx] || state.hlColor) === color) j++;
+      ctx.fillStyle = color;
       ctx.beginPath();
       if (marker) {
         var a = line[i], z = line[j];
@@ -584,7 +600,7 @@ function drawHighlights(L){
                    L.fs * (HL_TOP + HL_BOT), c.idx * 9173 + 41);
         }
       }
-      ctx.fill();          // 同色子路径重叠自然融合
+      ctx.fill();
       i = j + 1;
     }
   });
@@ -650,9 +666,12 @@ function hitChar(x, y){
 var painting = false, paintTo = true;
 function applyPaint(c){
   var set = new Set(state.hl);
-  if (paintTo) set.add(c.idx); else set.delete(c.idx);
+  if (!state.hlColors || typeof state.hlColors !== 'object' || Array.isArray(state.hlColors)) state.hlColors = {};
+  var prevColor = state.hlColors[c.idx];
+  if (paintTo) { set.add(c.idx); state.hlColors[c.idx] = state.hlColor; }
+  else { set.delete(c.idx); delete state.hlColors[c.idx]; }
   var next = Array.from(set).sort(function(a, b){ return a - b; });
-  if (next.length !== state.hl.length || next.some(function(v, i){ return v !== state.hl[i]; })) {
+  if (next.length !== state.hl.length || next.some(function(v, i){ return v !== state.hl[i]; }) || state.hlColors[c.idx] !== prevColor) {
     state.hl = next;
     render();
   }
@@ -662,7 +681,9 @@ cv.addEventListener('pointerdown', function(e){
   if (!c) return;
   e.preventDefault();
   painting = true;
-  paintTo = state.hl.indexOf(c.idx) === -1;
+  // 未高亮 → 添加；同色再刷 → 擦除；异色再刷 → 用新颜色替换
+  paintTo = !(state.hl.indexOf(c.idx) !== -1 &&
+              String(state.hlColors[c.idx] || '').toUpperCase() === state.hlColor.toUpperCase());
   if (cv.setPointerCapture) { try { cv.setPointerCapture(e.pointerId); } catch (err) {} }
   applyPaint(c);
 });
@@ -681,17 +702,18 @@ cv.addEventListener('contextmenu', function(e){ e.preventDefault(); });
    编辑文本时平移高亮索引（公共前缀 / 后缀 diff）
    ========================================================== */
 function remapHighlight(oldText, newText, hl){
-  if (!hl.length) return hl;
+  if (!hl.length) { if (state.hlColors) state.hlColors = {}; return hl; }
   var o = graphemes(oldText), n = graphemes(newText);
   var p = 0;
   while (p < o.length && p < n.length && o[p] === n[p]) p++;
   var s = 0;
   while (s < o.length - p && s < n.length - p && o[o.length - 1 - s] === n[n.length - 1 - s]) s++;
-  var delta = n.length - o.length, out = [];
+  var delta = n.length - o.length, out = [], colors = state.hlColors || {}, outC = {};
   hl.forEach(function(i){
-    if (i < p) out.push(i);
-    else if (i >= o.length - s) out.push(i + delta);
+    if (i < p) { out.push(i); outC[i] = colors[i]; }
+    else if (i >= o.length - s) { out.push(i + delta); outC[i + delta] = colors[i]; }
   });
+  state.hlColors = outC;
   return out;
 }
 
@@ -772,7 +794,7 @@ ta.addEventListener('input', function(){
   render(); persist();
 });
 $('clearHl').addEventListener('click', function(){
-  state.hl = []; render(); persist(); toast('已清除高亮');
+  state.hl = []; state.hlColors = {}; render(); persist(); toast('已清除高亮');
 });
 
 // 色板（背景色与高亮色共用同一套控件）

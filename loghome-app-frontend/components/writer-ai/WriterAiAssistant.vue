@@ -4930,7 +4930,7 @@ export default {
 .selection-block-tooltip {
   position: absolute;
   z-index: 30060;
-  width: min(320px, calc(100% - 32px));
+  width: MIN(320px, calc(100% - 32px));
   max-height: 260px;
   padding: 14rpx 16rpx;
   border-radius: 0;

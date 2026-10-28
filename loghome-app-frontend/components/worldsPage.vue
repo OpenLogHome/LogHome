@@ -208,7 +208,7 @@
 		padding: calc(24rpx + var(--manga-safe-top)) 0 calc(24rpx + var(--manga-safe-bottom));
 		background: rgba(7, 10, 12, .55);
 	}
-	.create-panel { width: min(86%, 640rpx); max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 32rpx; border-radius: 24rpx; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 30rpx 90rpx rgba(0,0,0,.18); animation: world-panel-in .2s ease both; }
+	.create-panel { width: MIN(86%, 640rpx); max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 32rpx; border-radius: 24rpx; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 30rpx 90rpx rgba(0,0,0,.18); animation: world-panel-in .2s ease both; }
 	.create-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
 	.create-title { font-size: 31rpx; font-weight: 700; }
 	.create-close { display: grid; place-items: center; width: 76rpx; height: 76rpx; flex: none; font-size: 26rpx; }

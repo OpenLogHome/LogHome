@@ -211,7 +211,7 @@ button.card-body:active { background: var(--manga-tint); transform: scale(.985);
 .card-actions .manga-icon { font-size: 26rpx; }
 .card-actions text { display: block; line-height: 1.2; white-space: nowrap; }
 .create-mask { @include manga-theme; position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 3100; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: calc(24rpx + var(--manga-safe-top)) 0 calc(24rpx + var(--manga-safe-bottom)); background: rgba(7,10,12,.55); }
-.create-panel { width: min(86%, 640rpx); max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 32rpx; border-radius: 24rpx; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 30rpx 90rpx rgba(0,0,0,.18); animation: panel-in .2s ease both; }
+.create-panel { width: MIN(86%, 640rpx); max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 32rpx; border-radius: 24rpx; background: var(--manga-card); color: var(--manga-text); box-shadow: 0 30rpx 90rpx rgba(0,0,0,.18); animation: panel-in .2s ease both; }
 .create-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
 .create-title { font-size: 31rpx; font-weight: 700; }
 .create-close { display: grid; place-items: center; width: 76rpx; height: 76rpx; font-size: 26rpx; }

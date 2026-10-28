@@ -549,7 +549,7 @@ export default {
 }
 
 .theme-picker__scroll {
-    height: min(690rpx, 72vh);
+    height: MIN(690rpx, 72vh);
 }
 
 .theme-grid {
