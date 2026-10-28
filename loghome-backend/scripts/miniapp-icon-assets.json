@@ -8,5 +8,15 @@
     "source": "loghome-app-frontend/static/icons/mini-minecraft.svg",
     "url": "https://storage.codesocean.top/image/179180557442611",
     "sha256": "a1e0b7682f75e70346127b6f730b8c55ecddcbc58c6cd42f7796dbc94572e24c"
+  },
+  "log-book-cover": {
+    "source": "loghome-app-frontend/static/icons/book-cover.svg",
+    "url": "https://storage.codesocean.top/image/179318527427564",
+    "sha256": "667ae87909127ded982b51b66b0f5d56584aaf18bd6d4a4cb928692a2193a053"
+  },
+  "log-post-cover": {
+    "source": "loghome-app-frontend/static/icons/post-cover.svg",
+    "url": "https://storage.codesocean.top/image/179318527560325",
+    "sha256": "4d62bd8417b14caaf20b8ec497fa58ce827a374a90bd5e5c8e969b6465206cef"
   }
 }
