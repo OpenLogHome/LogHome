@@ -24,7 +24,7 @@
 			<el-option
 			  v-for="tag in suggested_tags"
 			  :key="tag.tag_id"
-			  :label="tag.tag_name"
+			  :label="displayTagName(tag.tag_name)"
 			  :value="tag.tag_name">
 			</el-option>
 		</el-select>
@@ -43,6 +43,7 @@
 
 <script>
 	import axios from 'axios'
+	import { getOfficialTagLabel } from '@/common/official-tag-labels.js'
 	export default{
 		data() {
 			return{
@@ -55,6 +56,9 @@
 			}
 		},
 		methods:{
+			displayTagName(tagName){
+				return getOfficialTagLabel(tagName, key => this.$t(key));
+			},
 			submit(){
 				if(!this.checked){
 					uni.showToast({

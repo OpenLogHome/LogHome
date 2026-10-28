@@ -1,6 +1,6 @@
 <template>
 	<view class="variant-picker">
-		<view v-if="!availableVariants.length" class="variant-empty">暂无可兑换规格</view>
+		<view v-if="!availableVariants.length" class="variant-empty">{{ $t('store.variant.empty') }}</view>
 		<view class="variant-grid">
 			<button
 				v-for="variant in availableVariants"
@@ -13,8 +13,8 @@
 			>
 				<text class="variant-label">{{ variant.label }}</text>
 				<text class="variant-price">
-					{{ variant.price }} 原木
-					<text v-if="Number(variant.stock) <= 0">· 已兑完</text>
+					{{ $t('store.variant.price', { price: variant.price }) }}
+					<text v-if="Number(variant.stock) <= 0">{{ $t('store.variant.soldOutSuffix') }}</text>
 				</text>
 				<store-icon
 					v-if="Number(selectedId) === Number(variant.id)"

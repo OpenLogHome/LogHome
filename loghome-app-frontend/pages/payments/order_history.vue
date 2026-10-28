@@ -2,17 +2,17 @@
   <view class="order-history" v-dark>
     <view class="content">
       <view v-if="loading" class="loading">
-        <text>努力加载中...</text>
+        <text>{{ $t('payments.orderHistory.loading') }}</text>
       </view>
       
       <view v-else-if="orders.length === 0" class="empty">
-        <text>暂无订单记录</text>
+        <text>{{ $t('payments.orderHistory.empty') }}</text>
       </view>
       
       <view v-else class="order-list">
         <view v-for="(order, index) in orders" :key="order.payment_id" class="order-item">
           <view class="order-header">
-            <text class="order-id">订单号: {{ order.payment_id }}</text>
+            <text class="order-id">{{ $t('payments.orderHistory.orderId', { id: order.payment_id }) }}</text>
             <text :class="['order-status', getStatusClass(order.status)]">{{ getStatusText(order.status) }}</text>
           </view>
           
@@ -26,17 +26,17 @@
             </view>
             
             <view class="time-info">
-              <text>创建时间: {{ formatTime(order.create_time) }}</text>
-              <text v-if="order.status === 'paid'">支付时间: {{ formatTime(order.update_time) }}</text>
+              <text>{{ $t('payments.orderHistory.createdAt', { time: formatTime(order.create_time) }) }}</text>
+              <text v-if="order.status === 'paid'">{{ $t('payments.orderHistory.paidAt', { time: formatTime(order.update_time) }) }}</text>
             </view>
 
             <!-- 添加订单操作按钮 -->
             <view v-if="order.status === 'created'" class="order-actions">
               <view class="action-btn pay-btn" @click="goToPay(order)">
-                <text>前往支付</text>
+                <text>{{ $t('payments.orderHistory.goPay') }}</text>
               </view>
               <view class="action-btn cancel-btn" @click="cancelOrder(order)">
-                <text>取消订单</text>
+                <text>{{ $t('payments.orderHistory.cancelOrder') }}</text>
               </view>
             </view>
           </view>
@@ -44,11 +44,11 @@
       </view>
       
       <view v-if="hasMore && !loading" class="load-more" @click="loadMore">
-        <text>加载更多</text>
+        <text>{{ $t('payments.orderHistory.loadMore') }}</text>
       </view>
       
       <view v-if="!hasMore && orders.length > 0" class="no-more">
-        <text>没有更多订单了</text>
+        <text>{{ $t('payments.orderHistory.noMore') }}</text>
       </view>
     </view>
   </view>
@@ -101,7 +101,7 @@ export default {
           this.hasMore = this.orders.length < this.total
         } else {
           uni.showToast({
-            title: '获取订单失败',
+            title: this.$t('payments.orderHistory.loadFailed'),
             icon: 'none'
           })
         }
@@ -126,12 +126,12 @@ export default {
     },
     getStatusText(status) {
       const statusMap = {
-        'created': '待支付',
-        'paid': '已支付',
-        'cancelled': '已取消',
-        'failed': '支付失败'
+        'created': 'payments.orderHistory.status.created',
+        'paid': 'payments.orderHistory.status.paid',
+        'cancelled': 'payments.orderHistory.status.cancelled',
+        'failed': 'payments.orderHistory.status.failed'
       }
-      return statusMap[status] || status
+      return statusMap[status] ? this.$t(statusMap[status]) : status
     },
     getStatusClass(status) {
       const classMap = {
@@ -167,7 +167,7 @@ export default {
         })
       } catch (error) {
         uni.showToast({
-          title: '获取支付链接失败',
+          title: this.$t('payments.orderHistory.payLinkFailed'),
           icon: 'none'
         })
       }
@@ -175,8 +175,8 @@ export default {
     // 取消订单
     cancelOrder(order) {
       uni.showModal({
-        title: '取消订单',
-        content: '确定要取消该订单吗？',
+        title: this.$t('payments.orderHistory.cancelOrder'),
+        content: this.$t('payments.orderHistory.cancelConfirm'),
         success: async (res) => {
           if (res.confirm) {
             try {
@@ -200,12 +200,12 @@ export default {
               this.getOrderHistory()
               
               uni.showToast({
-                title: '订单已取消',
+                title: this.$t('payments.orderHistory.cancelled'),
                 icon: 'success'
               })
             } catch (error) {
               uni.showToast({
-                title: '取消订单失败',
+                title: this.$t('payments.orderHistory.cancelFailed'),
                 icon: 'none'
               })
             }

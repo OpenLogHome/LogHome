@@ -3,6 +3,9 @@
 		"confirm": "确定",
 		"cancel": "取消",
 		"submit": "提交",
+		"done": "完成",
+		"manage": "管理",
+		"publish": "发布",
 		"save": "保存",
 		"delete": "删除",
 		"retry": "重试",
@@ -28,6 +31,10 @@
 		"inputContent": "请输入内容",
 		"all": "全部",
 		"back": "返回",
+		"theme": {
+			"switchToLight": "当前为暗色模式，点击切换为亮色模式",
+			"switchToDark": "当前为亮色模式，点击切换为暗色模式"
+		},
 		"prev": "上一页",
 		"next": "下一页",
 		"more": "更多",
@@ -52,6 +59,37 @@
 		"completed": "已完结",
 		"reviewing": "审核中",
 		"uploadFailed": "上传失败",
+		"officialTags": {
+			"novella": "中篇小说",
+			"reference": "工具书",
+			"esports": "电竞",
+			"genderSwap": "性转",
+			"rebirth": "重生",
+			"reincarnation": "转生",
+			"boysLove": "耽美",
+			"pureLove": "纯爱",
+			"thriller": "惊悚",
+			"mystery": "悬疑",
+			"lovecraftian": "克苏鲁",
+			"lore": "设定集",
+			"fanWorks": "同人二创",
+			"novel": "长篇小说",
+			"girlsLove": "百合",
+			"nonMinecraft": "非MC",
+			"sciFi": "科幻",
+			"lightNovel": "轻小说",
+			"transmigration": "穿越",
+			"easternFantasy": "玄幻",
+			"anthology": "作品集",
+			"snapshotsInTime": "时光剪影",
+			"creative": "创意",
+			"essays": "随笔",
+			"prose": "散文",
+			"collection": "文集",
+			"shortStory": "短篇小说",
+			"minecraft": "我的世界",
+			"fantasy": "奇幻"
+		},
 		"emoji": {
 			"sticker": "表情包",
 			"favorite": "收藏",
@@ -117,6 +155,12 @@
 			"selectCloud": "选择云端版本",
 			"cancel": "取消"
 		},
+		"colorPicker": {
+			"cancel": "取消",
+			"confirm": "确认",
+			"switch": "切换",
+			"mode": "模式"
+		},
 		"viewDetails": "查看详情 ➜",
 		"gePopup": {
 			"bindWechatTip": "为了您的账号安全，请绑定微信，绑定后可快捷登录",
@@ -130,7 +174,12 @@
 			"updateContentShort": "更新内容：",
 			"notNow": "暂不升级",
 			"updateNow": "立即升级"
-		}
+		},
+		"brand": {
+			"logPower": "原木力"
+		},
+		"emptyState": "空空如也",
+		"haycraftWork": "HayCraft 干草块文会作品"
 	},
 	"nav": {
 		"tab": {

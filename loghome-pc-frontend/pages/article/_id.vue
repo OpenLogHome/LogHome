@@ -251,7 +251,7 @@ export default {
       const paragraphs = [...document.querySelectorAll('[data-paragraph-id]')]
       const visible = paragraphs.find(element => element.getBoundingClientRect().bottom > 120 && element.getBoundingClientRect().top < window.innerHeight)
       const start = paragraphId == null ? Number(visible && visible.dataset.paragraphId) || this.paragraphs.find(row => row.type === 'text' && row.value.trim())?.id : paragraphId
-      this.$readerAudio.open(this.novel, this.chapters, this.article, start)
+      this.$readerAudio.open(this.novel, this.chapters, this.article, start, { forceSeek: paragraphId != null })
       this.clearSelection()
     },
     onReaderAudioProgress(state) {

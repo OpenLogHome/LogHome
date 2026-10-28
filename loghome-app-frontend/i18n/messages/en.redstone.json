@@ -1,40 +1,121 @@
 {
-	"redstone": {
-		"aiDeclaration": {
-			"title": "Statement on the use of generative AI",
-			"subtitle": "Transparency · Creative rights · User choice",
-			"models": "All AI assistance features in LogHome use models already available on the market. AI supports reading and writing; it does not replace a creator's expression, judgment, or responsibility.",
-			"promiseTitle": "User assets are never used for model training",
-			"promise": "Our commitment: users' works, drafts, settings, images, prompts, conversations, and other related assets will never be used for any form of model training, fine-tuning, distillation, or training dataset creation. They will not be sold, shared, or licensed to third parties for model training.",
-			"expand": "Read the full statement and principles",
-			"collapse": "Collapse the full statement",
-			"settings": "Manage AI preferences",
-			"sections": {
-				"data": {
-					"title": "Necessary inference transfers and data minimization",
-					"body": "To provide answers, corrections, image generation, or content retrieval, the system may send necessary content and context to model service providers. This processing supports inference or retrieval and does not authorize any party to use the content for model training. Do not submit passwords, others' sensitive information, or content you are not entitled to provide."
-				},
-				"providers": {
-					"title": "Third-party model services share the no-training commitment",
-					"body": "The no-training commitment also applies to third-party model services. Integration and use must be conditional on data terms and usage settings that prohibit training models on user assets. Model improvement or algorithm optimization must not be used to circumvent this commitment."
-				},
-				"rights": {
-					"title": "Respect for originality and content rights",
-					"body": "Using AI assistance does not change your existing rights in your works and related assets. AI output is not guaranteed to be original or exclusive. Check for excessive reproduction of others' works, and do not present plagiarism, impersonation, or content that violates others' rights as original work."
-				},
-				"reliability": {
-					"title": "Transparency and human review",
-					"body": "AI can produce factual errors, bias, or inappropriate language. Its output is assistance, not verified fact or professional advice. Important content should be reviewed by a person. When publishing substantially AI-generated content, disclose AI's involvement to avoid misleading readers."
-				},
-				"safety": {
-					"title": "Safety, fairness, and responsible use",
-					"body": "Follow community rules. Do not use generative AI to create deceptive, harassing, hateful, discriminatory, privacy-invading, or otherwise harmful content, impersonate others, or spread false information. Respect diverse groups and viewpoints, and remain alert to potential model bias."
-				},
-				"choice": {
-					"title": "Choice and feedback",
-					"body": "AI assistance is not required to use LogHome. In Settings, you can turn on Disable AI assistance to hide Redstone Center and AI entry points without affecting ordinary reading, writing, or publishing. Report output errors, safety risks, or rights concerns through the in-app feedback center."
-				}
-			}
-		}
-	}
+  "redstone": {
+    "aiDeclaration": {
+      "title": "Statement on the use of generative AI",
+      "subtitle": "Transparency · Creative rights · User choice",
+      "models": "All AI assistance features in LogHome use models already available on the market. AI supports reading and writing; it does not replace a creator's expression, judgment, or responsibility.",
+      "promiseTitle": "User assets are never used for model training",
+      "promise": "Our commitment: users' works, drafts, settings, images, prompts, conversations, and other related assets will never be used for any form of model training, fine-tuning, distillation, or training dataset creation. They will not be sold, shared, or licensed to third parties for model training.",
+      "expand": "Read the full statement and principles",
+      "collapse": "Collapse the full statement",
+      "settings": "Manage AI preferences",
+      "sections": {
+        "data": {
+          "title": "Necessary inference transfers and data minimization",
+          "body": "To provide answers, corrections, image generation, or content retrieval, the system may send necessary content and context to model service providers. This processing supports inference or retrieval and does not authorize any party to use the content for model training. Do not submit passwords, others' sensitive information, or content you are not entitled to provide."
+        },
+        "providers": {
+          "title": "Third-party model services share the no-training commitment",
+          "body": "The no-training commitment also applies to third-party model services. Integration and use must be conditional on data terms and usage settings that prohibit training models on user assets. Model improvement or algorithm optimization must not be used to circumvent this commitment."
+        },
+        "rights": {
+          "title": "Respect for originality and content rights",
+          "body": "Using AI assistance does not change your existing rights in your works and related assets. AI output is not guaranteed to be original or exclusive. Check for excessive reproduction of others' works, and do not present plagiarism, impersonation, or content that violates others' rights as original work."
+        },
+        "reliability": {
+          "title": "Transparency and human review",
+          "body": "AI can produce factual errors, bias, or inappropriate language. Its output is assistance, not verified fact or professional advice. Important content should be reviewed by a person. When publishing substantially AI-generated content, disclose AI's involvement to avoid misleading readers."
+        },
+        "safety": {
+          "title": "Safety, fairness, and responsible use",
+          "body": "Follow community rules. Do not use generative AI to create deceptive, harassing, hateful, discriminatory, privacy-invading, or otherwise harmful content, impersonate others, or spread false information. Respect diverse groups and viewpoints, and remain alert to potential model bias."
+        },
+        "choice": {
+          "title": "Choice and feedback",
+          "body": "AI assistance is not required to use LogHome. In Settings, you can turn on Disable AI assistance to hide Redstone Center and AI entry points without affecting ordinary reading, writing, or publishing. Report output errors, safety risks, or rights concerns through the in-app feedback center."
+        }
+      }
+    },
+    "page": {
+      "title": "Redstone Center",
+      "rules": "Rules",
+      "myRedstone": "My Redstone",
+      "reload": "Reload",
+      "balanceDesc": "For AI reading, AI writing, and other smart features",
+      "expiring": "Granted {{amount}}",
+      "permanent": "Permanent {{amount}}",
+      "nextExpiry": "Expires {{date}}",
+      "exchangeTitle": "Exchange Redstone",
+      "exchangeRate": "Fixed rate: 10 Log = 1 Redstone",
+      "logBalance": "Log {{amount}}",
+      "amountPlaceholder": "Enter Redstone amount",
+      "redstoneUnit": "Redstone",
+      "payLabel": "You pay",
+      "logUnit": "Log",
+      "exchanging": "Processing exchange…",
+      "confirmExchange": "Confirm exchange",
+      "enterAmount": "Enter an amount",
+      "insufficientLogs": "Not enough Log",
+      "monthlyTitle": "Monthly pass grants",
+      "monthlyDesc": "Regular users get 6 Redstone per month. Monthly passes grant on activation or renewal; annual passes grant monthly. Granted Redstone is valid for 3 months.",
+      "passStandardName": "LogHome Pass",
+      "passSuperName": "Super LogHome Pass",
+      "grantAmount": "{{amount}} Redstone",
+      "viewPass": "View LogHome Pass",
+      "aiTitle": "What can Redstone do?",
+      "aiSubtitle": "Redstone is the main currency for LogHome AI features",
+      "aiNote": "Actual costs for each feature are shown on its page.",
+      "aiUse": {
+        "ask": {
+          "icon": "R",
+          "title": "Ask LogGirl",
+          "desc": "Standard Q&A 1 Redstone, deep thinking 2 Redstone"
+        },
+        "write": {
+          "icon": "W",
+          "title": "Bipao AI Assistant",
+          "desc": "Standard 1 Redstone, deep thinking 2 Redstone"
+        },
+        "image": {
+          "icon": "I",
+          "title": "Image generation and smart correction",
+          "desc": "Image generation 5 Redstone; smart correction is free with a pass and 2 Redstone for regular users"
+        }
+      },
+      "recordsTitle": "Recent activity",
+      "recordsSubtitle": "Grants, exchanges, and AI spending",
+      "exchangeConfirmTitle": "Confirm Redstone exchange",
+      "exchangeConfirmContent": "This will spend {{cost}} Log for {{amount}} Redstone. Exchanged Redstone never expires and the exchange cannot be undone.",
+      "exchangeSuccess": "{{amount}} Redstone added",
+      "balanceLoadFailed": "Failed to load Redstone balance",
+      "accountFormatError": "Unexpected Redstone account data",
+      "tx": {
+        "membershipGrant": "Pass grant",
+        "upgradeGrant": "Pass upgrade top-up",
+        "annualRefresh": "Annual member monthly grant",
+        "monthlyFree": "Regular user monthly grant",
+        "logExchange": "Log exchange",
+        "aiUsage": "AI feature usage",
+        "adminAdjustment": "System adjustment",
+        "refund": "Refund",
+        "expiration": "Granted Redstone expired",
+        "default": "Redstone received",
+        "expiresMeta": "{{created}} · Expires {{date}}",
+        "permanentMeta": "{{created}} · Never expires"
+      }
+    },
+    "cost": {
+      "defaultPrefix": "Cost",
+      "amount": "{{prefix}} {{cost}} Redstone",
+      "myRedstone": "My Redstone",
+      "checking": "Checking…",
+      "unavailable": "Unavailable",
+      "balance": "{{balance}} Redstone",
+      "insufficient": "Not enough Redstone",
+      "willConsume": "This will cost {{cost}} Redstone",
+      "shortfall": "{{shortfall}} Redstone short",
+      "exchange": "Exchange Redstone",
+      "activatePass": "Get LogHome Pass"
+    }
+  }
 }

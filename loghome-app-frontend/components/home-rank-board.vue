@@ -1,18 +1,18 @@
 <template>
-	<view class="home-rank-board" role="group" aria-label="排行榜" v-dark>
+	<view class="home-rank-board" :class="{ 'home-rank-board--en': $i18n.locale === 'en' }"
+		role="group" :aria-label="$t('library.rank.ariaLabel')" v-dark>
 		<view class="rank-header">
 			<view class="board-tabs">
 				<view class="board-tab clickable" v-for="board in boards" :key="board.key"
-					:style="{ '--tab-units': board.key === 'logpower' ? 4.2 : 3 }"
 					:class="{ active: board.key === currentBoard }" @click="switchBoard(board.key)">
 					<span class="board-tab-label">
-						<template v-if="board.key === 'logpower'"><LogPowerWordmark class="rank-wordmark" /><text>榜</text></template>
-						<text v-else>{{ board.label }}</text>
+						<LogPowerWordmark v-if="board.key === 'logpower'" class="rank-wordmark" />
+						<text v-else>{{ $t(board.labelKey) }}</text>
 					</span>
 				</view>
 			</view>
 			<view class="more clickable" @click="gotoRankBoard">
-				<text>更多</text>
+				<text>{{ $t('library.rank.more') }}</text>
 				<uni-icons type="right" size="15" :color="$store.state.isDarkMode ? '#aaa' : '#777'"></uni-icons>
 			</view>
 		</view>
@@ -20,11 +20,11 @@
 		<view class="zone-chips">
 			<view class="zone-chip clickable" v-for="zone in zones" :key="zone.key"
 				:class="{ active: zone.key === currentZone }" @click="switchZone(zone.key)">
-				{{ zone.label }}
+				{{ $t(zone.labelKey) }}
 			</view>
 		</view>
 
-		<view class="rank-carousel" role="group" aria-label="按列滑动的排行榜"
+		<view class="rank-carousel" role="group" :aria-label="$t('library.rank.carouselAria')"
 			@touchstart="startGesture" @touchmove="moveGesture" @touchend="endGesture" @touchcancel="cancelGesture"
 			@mousedown="startGesture" @mousemove="moveGesture" @mouseup="endGesture" @mouseleave="cancelGesture"
 			@wheel="onWheel" @keydown.left.prevent="moveColumn(-1)" @keydown.right.prevent="moveColumn(1)"
@@ -41,8 +41,8 @@
 							<view class="dense-card-cover-box">
 								<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 									:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
-								<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
-								<text v-else-if="novel.novel_type === 'world'" class="world-cover-badge">世界</text>
+								<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">{{ $t('library.rank.badgeManga') }}</text>
+								<text v-else-if="novel.novel_type === 'world'" class="world-cover-badge">{{ $t('library.rank.badgeWorld') }}</text>
 								<haycraft-mark v-if="isHayCraftWork(novel)" class="dense-haycraft-mark" size="small" />
 							</view>
 							<text class="dense-card-rank" :class="{ 'rank-top': columnNumber * 4 + idx < 3 }">{{ columnNumber * 4 + idx + 1 }}</text>
@@ -79,16 +79,16 @@ export default {
 	data() {
 		return {
 			boards: [
-				{ key: 'update', label: '更新榜' },
-				{ key: 'logpower', label: '原木力榜' },
-				{ key: 'complete', label: '完结榜' },
-				{ key: 'new', label: '新作榜' },
+				{ key: 'update', labelKey: 'library.rank.boards.update' },
+				{ key: 'logpower', labelKey: 'library.rank.boards.logpower' },
+				{ key: 'complete', labelKey: 'library.rank.boards.complete' },
+				{ key: 'new', labelKey: 'library.rank.boards.new' },
 			],
 			zones: [
-				{ key: 'all', label: '全部' },
-				{ key: 'novel', label: '小说' },
-				{ key: 'manga', label: '漫画' },
-				{ key: 'world', label: '世界' },
+				{ key: 'all', labelKey: 'library.rank.zones.all' },
+				{ key: 'novel', labelKey: 'library.rank.zones.novel' },
+				{ key: 'manga', labelKey: 'library.rank.zones.manga' },
+				{ key: 'world', labelKey: 'library.rank.zones.world' },
 			],
 			currentBoard: 'update',
 			currentZone: 'all',
@@ -322,7 +322,7 @@ export default {
 
 .rank-header {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	gap: 12rpx;
 	height: 48rpx;
 	box-sizing: border-box;
@@ -332,47 +332,39 @@ export default {
 
 .board-tabs {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	gap: 24rpx;
-	flex-shrink: 0;
+	flex: 1;
+	min-width: 0;
 	height: 48rpx;
 }
 
 .board-tab {
-	// Keep font metrics fixed; animate width separately from the visual text scale.
 	position: relative;
-	display: block;
-	flex-shrink: 0;
-	width: calc(var(--tab-units) * 32rpx);
+	display: flex;
+	align-items: center;
+	min-width: 0;
 	height: 48rpx;
-	font-size: 36rpx;
 	line-height: 48rpx;
-	margin-right: 10rpx;
-	transition: width .24s cubic-bezier(.4, 0, .2, 1);
-	&.active { width: calc(var(--tab-units) * 36rpx); }
 }
 
 .board-tab-label {
-	position: absolute;
-	left: 0;
-	top: 0;
-	display: block;
-	width: max-content;
+	display: flex;
+	align-items: baseline;
+	min-width: 0;
 	color: #777;
-	font-size: 36rpx;
+	font-size: 32rpx;
 	line-height: 48rpx;
 	font-weight: 400;
-	transform: scale(.888888889);
-	// Scale around the shared text baseline, never the centre of the title bar.
-	transform-origin: left calc(24rpx + .35em);
 	transition:
-		transform .24s cubic-bezier(.4, 0, .2, 1),
+		font-size .24s cubic-bezier(.4, 0, .2, 1),
 		font-weight .24s cubic-bezier(.4, 0, .2, 1),
 		color .24s cubic-bezier(.4, 0, .2, 1);
+	white-space: nowrap;
 
 	.board-tab.active & {
 		color: var(--rank-text);
-		transform: scale(1);
+		font-size: 36rpx;
 		font-weight: 600;
 	}
 
@@ -429,6 +421,14 @@ export default {
 }
 .rank-wordmark { width: 3.2em; }
 .rank-carousel ::v-deep img { -webkit-user-drag: none; }
+
+.home-rank-board--en {
+	.board-tabs { gap: 14rpx; }
+	.board-tab-label { font-size: 27rpx; }
+	.board-tab.active .board-tab-label { font-size: 30rpx; }
+	.rank-wordmark { width: 5.2em; }
+	.more { font-size: 23rpx; }
+}
 
 
 .dense-card-page {
@@ -576,14 +576,15 @@ export default {
 @media (max-width: 360px) {
 	.rank-header { gap: 6rpx; }
 	.board-tabs { gap: 16rpx; }
-	.board-tab { font-size: 34rpx; width: calc(var(--tab-units) * 30rpx); }
-	.board-tab.active { width: calc(var(--tab-units) * 34rpx); }
-	.board-tab-label { font-size: 34rpx; transform: scale(.882352941); }
-	.board-tab.active .board-tab-label { transform: scale(1); }
+	.board-tab-label { font-size: 30rpx; }
+	.board-tab.active .board-tab-label { font-size: 34rpx; }
+	.home-rank-board--en .board-tabs { gap: 8rpx; }
+	.home-rank-board--en .board-tab-label { font-size: 24rpx; }
+	.home-rank-board--en .board-tab.active .board-tab-label { font-size: 27rpx; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.board-tab, .board-tab-label, .zone-chip, .dense-card-page { transition: none; }
+	.board-tab-label, .zone-chip, .dense-card-page { transition: none; }
 	.skeleton-cover::after, .skeleton-rank::after, .skeleton-title::after, .skeleton-author::after { animation: none; }
 }
 

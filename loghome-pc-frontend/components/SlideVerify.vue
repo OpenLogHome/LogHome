@@ -11,7 +11,7 @@
     
     <div class="verify-status" :class="{'success': isSuccess}">
       <i class="el-icon-success" v-if="isSuccess"></i>
-      <span v-else>{{ sliderText }}</span>
+      <span v-else>{{ visibleText }}</span>
     </div>
   </div>
 </template>
@@ -28,13 +28,18 @@ export default {
     // 滑块文本
     sliderText: {
       type: String,
-      default: '向右滑动完成验证'
+      default: ''
     }
   },
   data() {
     return {
       sliderValue: 0,
       isSuccess: false
+    }
+  },
+  computed: {
+    visibleText() {
+      return this.sliderText || this.$t('auth.verify.slide')
     }
   },
   methods: {
@@ -117,4 +122,4 @@ export default {
   content: 'OK';
   color: #67c23a;
 }
-</style> 
+</style>

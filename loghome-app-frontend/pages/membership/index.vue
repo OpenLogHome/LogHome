@@ -8,9 +8,9 @@
 				<view class="top-bar__back"></view>
 			</view>
 			<view class="top-bar__heading">
-				<text class="top-bar__title">原木通行证</text>
+				<text class="top-bar__title">{{ $t('membership.pass.title') }}</text>
 			</view>
-			<view class="top-bar__button top-bar__rules" @tap="showRules">规则</view>
+			<view class="top-bar__button top-bar__rules" @tap="showRules">{{ $t('membership.common.rules') }}</view>
 		</view>
 
 		<swiper
@@ -36,20 +36,20 @@
 						<view class="pass-card__brand">
 							<image class="pass-card__logo" :src="pass.logo" mode="aspectFit"></image>
 							<view>
-								<text class="pass-card__eyebrow">{{ pass.eyebrow }}</text>
-								<text class="pass-card__name">{{ pass.name }}</text>
+								<text class="pass-card__eyebrow">{{ $t(pass.eyebrowKey) }}</text>
+								<text class="pass-card__name">{{ $t(pass.nameKey) }}</text>
 							</view>
 						</view>
 						<text class="pass-card__status">
-							{{ memberTier === pass.key ? '当前会员' : pass.cardTag }}
+							{{ $t(memberTier === pass.key ? 'membership.pass.currentMember' : pass.cardTagKey) }}
 						</text>
 					</view>
 					<view class="pass-card__body">
-						<text class="pass-card__slogan">{{ pass.slogan }}</text>
-						<text class="pass-card__summary">{{ pass.summary }}</text>
+						<text class="pass-card__slogan">{{ $t(pass.sloganKey) }}</text>
+						<text class="pass-card__summary">{{ $t(pass.summaryKey) }}</text>
 					</view>
 					<view class="pass-card__features">
-						<text v-for="feature in pass.features" :key="feature">{{ feature }}</text>
+						<text v-for="featureKey in pass.featureKeys" :key="featureKey">{{ $t(featureKey) }}</text>
 					</view>
 				</view>
 			</swiper-item>
@@ -63,7 +63,7 @@
 				:class="{ 'swiper-indicator__dot--active': activeIndex === index }"
 				@tap="selectPass(index)"
 			></view>
-			<text>{{ activePass.name }}</text>
+			<text>{{ $t(activePass.nameKey) }}</text>
 		</view>
 
 		<view class="page-content" :key="activePass.key">
@@ -73,20 +73,20 @@
 						<image :src="activePass.logo" mode="aspectFit"></image>
 					</view>
 					<view class="panel-heading__copy">
-						<text class="panel-heading__title">{{ activePass.name }}权益</text>
-						<text class="panel-heading__subtitle">开通后立即生效</text>
+						<text class="panel-heading__title">{{ $t(activePass.benefitTitleKey) }}</text>
+						<text class="panel-heading__subtitle">{{ $t('membership.pass.benefitsSubtitle') }}</text>
 					</view>
-					<text class="panel-heading__count">{{ activePass.benefits.length }} 项</text>
+					<text class="panel-heading__count">{{ $t('membership.pass.benefitCount', { count: activePass.benefits.length }) }}</text>
 				</view>
 
 				<view class="benefit-list">
-					<view class="benefit-item" v-for="benefit in activePass.benefits" :key="benefit.title">
+					<view class="benefit-item" v-for="benefit in activePass.benefits" :key="benefit.titleKey">
 						<view class="benefit-item__check">✓</view>
 						<view class="benefit-item__copy">
-							<text class="benefit-item__title">{{ benefit.title }}</text>
-							<text class="benefit-item__description">{{ benefit.description }}</text>
+							<text class="benefit-item__title">{{ $t(benefit.titleKey) }}</text>
+							<text class="benefit-item__description">{{ $t(benefit.descriptionKey) }}</text>
 						</view>
-						<text v-if="benefit.tag" class="benefit-item__tag">{{ benefit.tag }}</text>
+						<text v-if="benefit.tagKey" class="benefit-item__tag">{{ $t(benefit.tagKey) }}</text>
 					</view>
 				</view>
 			</view>
@@ -106,31 +106,31 @@
 						<view class="upgrade-quote__top">
 							<view class="upgrade-quote__badge">UP</view>
 							<view class="upgrade-quote__copy">
-								<text class="upgrade-quote__title">按剩余有效时间补差价</text>
+								<text class="upgrade-quote__title">{{ $t('membership.pass.upgrade.title') }}</text>
 								<text class="upgrade-quote__description">
-									剩余约 {{ upgradeQuote.remaining_days }} 天，升级后到期日不变
+									{{ $t('membership.pass.upgrade.days', { days: upgradeQuote.remaining_days }) }}
 								</text>
 							</view>
 						</view>
 						<view class="upgrade-quote__details">
 							<view>
-								<text>本次补差</text>
-								<text class="upgrade-quote__value">{{ upgradeQuote.cost_log }} 原木</text>
+								<text>{{ $t('membership.pass.upgrade.difference') }}</text>
+								<text class="upgrade-quote__value">{{ $t('membership.pass.upgrade.logAmount', { amount: upgradeQuote.cost_log }) }}</text>
 							</view>
 							<view>
-								<text>权益有效期</text>
-								<text class="upgrade-quote__value">至 {{ formatMembershipDate(upgradeQuote.expires_at) }}</text>
+								<text>{{ $t('membership.pass.upgrade.period') }}</text>
+								<text class="upgrade-quote__value">{{ $t('membership.pass.upgrade.until', { date: formatMembershipDate(upgradeQuote.expires_at) }) }}</text>
 							</view>
 							<view>
-								<text>自动续费</text>
-								<text class="upgrade-quote__value">{{ upgradeQuote.auto_renew ? '保持开启' : '保持关闭' }}</text>
+								<text>{{ $t('membership.pass.upgrade.autoRenew') }}</text>
+								<text class="upgrade-quote__value">{{ $t(upgradeQuote.auto_renew ? 'membership.pass.upgrade.keepOn' : 'membership.pass.upgrade.keepOff') }}</text>
 							</view>
 						</view>
 						<text class="upgrade-quote__formula">
-							按{{ upgradeQuote.billing_cycle === 'monthly' ? '30 天' : '365 天' }}周期差价 {{ upgradeQuote.cycle_difference_log }} 原木折算
+							{{ $t('membership.pass.upgrade.formula', { period: $t(upgradeQuote.billing_cycle === 'monthly' ? 'membership.pass.upgrade.cycleMonth' : 'membership.pass.upgrade.cycleYear'), amount: upgradeQuote.cycle_difference_log }) }}
 						</text>
 					</template>
-					<view v-else class="upgrade-quote__loading">正在根据当前订阅计算升级差价…</view>
+					<view v-else class="upgrade-quote__loading">{{ $t('membership.pass.upgrade.loading') }}</view>
 				</view>
 
 				<view v-else-if="isViewingCurrentMembership" class="renewal-status">
@@ -142,7 +142,7 @@
 					</view>
 					<view class="renewal-status__copy">
 						<text class="renewal-status__title">
-							{{ currentSubscription.auto_renew ? '自动续费已开启' : '自动续费未开启' }}
+							{{ $t(currentSubscription.auto_renew ? 'membership.pass.renewal.on' : 'membership.pass.renewal.off') }}
 						</text>
 						<text class="renewal-status__description">
 							{{ renewalStatusDescription }}
@@ -158,37 +158,37 @@
 						:class="{ 'plan-card--selected': selectedPlanIndex === index }"
 						@tap="selectPlan(index)"
 					>
-						<text v-if="plan.tag" class="plan-card__tag">{{ plan.tag }}</text>
-						<text class="plan-card__name">{{ plan.name }}</text>
+						<text v-if="plan.tagKey" class="plan-card__tag">{{ $t(plan.tagKey) }}</text>
+						<text class="plan-card__name">{{ $t(plan.nameKey) }}</text>
 						<view class="plan-card__price">
 							<image class="plan-card__currency-icon" src="/static/resources/log.png" mode="aspectFit"></image>
 							<text class="plan-card__number">{{ plan.price }}</text>
-							<text class="plan-card__currency">原木</text>
+							<text class="plan-card__currency">{{ $t('membership.common.logUnit') }}</text>
 						</view>
-						<text class="plan-card__unit">{{ plan.unit }}</text>
-						<text class="plan-card__note">{{ plan.note }}</text>
+						<text class="plan-card__unit">{{ $t(plan.unitKey) }}</text>
+						<text class="plan-card__note">{{ $t(plan.noteKey) }}</text>
 					</view>
 				</view>
 			</view>
 
 			<view class="more-panel panel">
 				<view class="more-panel__heading">
-					<text class="more-panel__title">更多方式</text>
+					<text class="more-panel__title">{{ $t('membership.pass.more.title') }}</text>
 				</view>
 				<view class="more-panel__options">
 					<view class="more-option" @tap="gotoMembershipTool('redeem')">
 						<image class="more-option__icon" src="/static/membership/icons/redeem-ticket.svg" mode="aspectFit"></image>
-						<text>会员兑换码</text>
+						<text>{{ $t('membership.common.redeemCode') }}</text>
 					</view>
 					<view class="more-option" @tap="gotoMembershipTool('gift')">
 						<image class="more-option__icon" src="/static/membership/icons/gift-pass.svg" mode="aspectFit"></image>
-						<text>赠送好友</text>
+						<text>{{ $t('membership.common.giftFriend') }}</text>
 					</view>
 				</view>
 			</view>
 
 			<view class="agreement" @tap="showRules">
-				开通即表示同意《原木通行证服务协议》与《自动续费规则》
+				{{ $t('membership.pass.agreement') }}
 			</view>
 		</view>
 
@@ -236,46 +236,114 @@ export default {
 				{
 					key: 'standard',
 					theme: 'standard',
-					name: '原木通行证',
-					eyebrow: '轻享会员',
-					cardTag: '轻享版',
+					nameKey: 'membership.pass.tier.standard.name',
+					eyebrowKey: 'membership.pass.tier.standard.eyebrow',
+					cardTagKey: 'membership.pass.tier.standard.tag',
 					logo: '/static/membership/loghome-pass.png',
-					slogan: '陪伴每一次阅读与创作',
-					summary: '更快成长，也获得更完整的社区体验',
-					features: ['专属标识', '1.2 倍成长', '100 红石'],
+					sloganKey: 'membership.pass.tier.standard.slogan',
+					summaryKey: 'membership.pass.tier.standard.summary',
+					featureKeys: [
+						'membership.pass.tier.standard.features.badge',
+						'membership.pass.tier.standard.features.growth',
+						'membership.pass.tier.standard.features.redstone'
+					],
 					defaultPlan: 1,
+					benefitTitleKey: 'membership.pass.tier.standard.benefitTitle',
 					benefits: [
-						{ title: '专属通行证标识', description: '点亮个人主页与社区身份，展示会员徽章' },
-						{ title: '原木成长加速', description: '签到、阅读和创作获得 1.2 倍成长进度', tag: '1.2×' },
-						{ title: '红石赠送', description: '月付购买和续费赠送 100 红石，年付每月到账 100 红石；到账后 3 个月内有效', tag: '100' },
-						{ title: '阅读与创作增强', description: '开放更多个性设置与便捷能力' }
+						{
+							titleKey: 'membership.pass.tier.standard.benefits.badge.title',
+							descriptionKey: 'membership.pass.tier.standard.benefits.badge.desc'
+						},
+						{
+							titleKey: 'membership.pass.tier.standard.benefits.growth.title',
+							descriptionKey: 'membership.pass.tier.standard.benefits.growth.desc',
+							tagKey: 'membership.pass.tier.standard.benefits.growth.tag'
+						},
+						{
+							titleKey: 'membership.pass.tier.standard.benefits.redstone.title',
+							descriptionKey: 'membership.pass.tier.standard.benefits.redstone.desc',
+							tagKey: 'membership.pass.tier.standard.benefits.redstone.tag'
+						},
+						{
+							titleKey: 'membership.pass.tier.standard.benefits.enhance.title',
+							descriptionKey: 'membership.pass.tier.standard.benefits.enhance.desc'
+						}
 					],
 					plans: [
-						{ key: 'month', name: '连续包月', price: '660', unit: '每月自动续费', note: '可随时取消' },
-						{ key: 'year', name: '购买年卡', price: '7200', unit: '折合 600 原木/月', note: '比月付节省 720 原木', tag: '推荐' }
+						{
+							key: 'month',
+							nameKey: 'membership.pass.tier.standard.plan.month.name',
+							price: '660',
+							unitKey: 'membership.pass.tier.standard.plan.month.unit',
+							noteKey: 'membership.pass.tier.standard.plan.month.note'
+						},
+						{
+							key: 'year',
+							nameKey: 'membership.pass.tier.standard.plan.year.name',
+							price: '7200',
+							unitKey: 'membership.pass.tier.standard.plan.year.unit',
+							noteKey: 'membership.pass.tier.standard.plan.year.note',
+							tagKey: 'membership.pass.tier.standard.plan.year.tag'
+						}
 					]
 				},
 				{
 					key: 'super',
 					theme: 'super',
-					name: '超级原木通行证',
-					eyebrow: '全量权益',
-					cardTag: '旗舰版',
+					nameKey: 'membership.pass.tier.super.name',
+					eyebrowKey: 'membership.pass.tier.super.eyebrow',
+					cardTagKey: 'membership.pass.tier.super.tag',
 					logo: '/static/membership/loghome-super-pass.png',
-					slogan: '解锁原木社区的完整体验',
-					summary: '双倍成长、限定身份与全部会员权益',
-					features: ['限定身份', '双倍成长', '200 红石'],
+					sloganKey: 'membership.pass.tier.super.slogan',
+					summaryKey: 'membership.pass.tier.super.summary',
+					featureKeys: [
+						'membership.pass.tier.super.features.badge',
+						'membership.pass.tier.super.features.growth',
+						'membership.pass.tier.super.features.redstone'
+					],
 					defaultPlan: 1,
+					benefitTitleKey: 'membership.pass.tier.super.benefitTitle',
 					benefits: [
-						{ title: '超级会员限定身份', description: '升级蓝金徽章、主页氛围与专属昵称样式', tag: '限定' },
-						{ title: '双倍成长加速', description: '签到、阅读和创作获得 2 倍成长进度', tag: '2×' },
-						{ title: '更多红石赠送', description: '月付购买和续费赠送 200 红石，年付每月到账 200 红石；到账后 3 个月内有效', tag: '200' },
-						{ title: '包含全部标准权益', description: '原木通行证现有和后续权益全部生效' },
-						{ title: '新功能优先体验', description: '优先使用实验功能并参与产品共创' }
+						{
+							titleKey: 'membership.pass.tier.super.benefits.badge.title',
+							descriptionKey: 'membership.pass.tier.super.benefits.badge.desc',
+							tagKey: 'membership.pass.tier.super.benefits.badge.tag'
+						},
+						{
+							titleKey: 'membership.pass.tier.super.benefits.growth.title',
+							descriptionKey: 'membership.pass.tier.super.benefits.growth.desc',
+							tagKey: 'membership.pass.tier.super.benefits.growth.tag'
+						},
+						{
+							titleKey: 'membership.pass.tier.super.benefits.redstone.title',
+							descriptionKey: 'membership.pass.tier.super.benefits.redstone.desc',
+							tagKey: 'membership.pass.tier.super.benefits.redstone.tag'
+						},
+						{
+							titleKey: 'membership.pass.tier.super.benefits.standard.title',
+							descriptionKey: 'membership.pass.tier.super.benefits.standard.desc'
+						},
+						{
+							titleKey: 'membership.pass.tier.super.benefits.newFeatures.title',
+							descriptionKey: 'membership.pass.tier.super.benefits.newFeatures.desc'
+						}
 					],
 					plans: [
-						{ key: 'month', name: '连续包月', price: '880', unit: '每月自动续费', note: '可随时取消' },
-						{ key: 'year', name: '购买年卡', price: '9600', unit: '折合 800 原木/月', note: '比月付节省 960 原木', tag: '最划算' }
+						{
+							key: 'month',
+							nameKey: 'membership.pass.tier.super.plan.month.name',
+							price: '880',
+							unitKey: 'membership.pass.tier.super.plan.month.unit',
+							noteKey: 'membership.pass.tier.super.plan.month.note'
+						},
+						{
+							key: 'year',
+							nameKey: 'membership.pass.tier.super.plan.year.name',
+							price: '9600',
+							unitKey: 'membership.pass.tier.super.plan.year.unit',
+							noteKey: 'membership.pass.tier.super.plan.year.note',
+							tagKey: 'membership.pass.tier.super.plan.year.tag'
+						}
 					]
 				}
 			]
@@ -306,14 +374,16 @@ export default {
 			);
 		},
 		purchaseSectionTitle() {
-			if (this.isStandardToSuperUpgrade) return '升级超级原木通行证';
-			if (this.isViewingCurrentMembership) return '续费状态';
-			return '选择开通方式';
+			if (this.isStandardToSuperUpgrade) return this.$t('membership.pass.section.upgradeTitle');
+			if (this.isViewingCurrentMembership) return this.$t('membership.pass.section.renewalTitle');
+			return this.$t('membership.pass.section.chooseTitle');
 		},
 		purchaseSectionSubtitle() {
-			if (this.isStandardToSuperUpgrade) return '仅收取当前剩余有效时间对应的档位差价';
+			if (this.isStandardToSuperUpgrade) return this.$t('membership.pass.section.upgradeSubtitle');
 			if (this.isViewingCurrentMembership) {
-				return `当前权益有效至 ${this.formatMembershipDate(this.currentSubscription.expires_at)}`;
+				return this.$t('membership.pass.section.currentExpires', {
+					date: this.formatMembershipDate(this.currentSubscription.expires_at)
+				});
 			}
 			return '';
 		},
@@ -321,17 +391,21 @@ export default {
 			if (!this.currentSubscription) return '';
 			if (this.currentSubscription.auto_renew) {
 				const price = this.currentSubscription.renewal_cost_log || this.currentSubscription.cost_log;
-				return `到期后将自动扣除 ${price} 原木并续期`;
+				return this.$t('membership.pass.renewal.autoDesc', { price });
 			}
-			return `当前权益保留至 ${this.formatMembershipDate(this.currentSubscription.expires_at)}，到期后不会扣款`;
+			return this.$t('membership.pass.renewal.expiresDesc', {
+				date: this.formatMembershipDate(this.currentSubscription.expires_at)
+			});
 		},
 		purchaseDockLabel() {
-			if (this.isStandardToSuperUpgrade) return '升级补差价';
+			if (this.isStandardToSuperUpgrade) return this.$t('membership.pass.dock.upgrade');
 			if (this.isViewingCurrentMembership) {
-				return this.currentSubscription.auto_renew ? '下期自动续费价' : '重新开启后的续费价';
+				return this.currentSubscription.auto_renew
+					? this.$t('membership.pass.renewal.nextPrice')
+					: this.$t('membership.pass.renewal.reopenPrice');
 			}
-			if (this.isDowngradeBlocked) return '当前为超级原木通行证';
-			return this.selectedPlan.name;
+			if (this.isDowngradeBlocked) return this.$t('membership.pass.dock.downgradeBlocked');
+			return this.$t(this.selectedPlan.nameKey);
 		},
 		purchaseDockPrice() {
 			if (this.isStandardToSuperUpgrade) return this.upgradeQuote ? this.upgradeQuote.cost_log : '—';
@@ -341,16 +415,24 @@ export default {
 			return this.selectedPlan.price;
 		},
 		purchaseDockUnit() {
-			return this.isViewingCurrentMembership ? '原木/期' : '原木';
+			return this.isViewingCurrentMembership
+				? this.$t('membership.pass.dock.perPeriod')
+				: this.$t('membership.common.logUnit');
 		},
 		purchaseButtonText() {
-			if (this.submitting) return '处理中...';
-			if (this.isDowngradeBlocked) return '有效期内不可降级';
-			if (this.isStandardToSuperUpgrade) return this.upgradeQuote ? '确认补差价升级' : '正在计算差价';
-			if (this.isViewingCurrentMembership) {
-				return this.currentSubscription.auto_renew ? '关闭自动续费' : '开启自动续费';
+			if (this.submitting) return this.$t('membership.pass.button.processing');
+			if (this.isDowngradeBlocked) return this.$t('membership.pass.button.downgradeBlocked');
+			if (this.isStandardToSuperUpgrade) {
+				return this.upgradeQuote
+					? this.$t('membership.pass.button.confirmUpgrade')
+					: this.$t('membership.pass.button.calculating');
 			}
-			return '立即开通';
+			if (this.isViewingCurrentMembership) {
+				return this.currentSubscription.auto_renew
+					? this.$t('membership.pass.button.turnOffAuto')
+					: this.$t('membership.pass.button.turnOnAuto');
+			}
+			return this.$t('membership.pass.button.activateNow');
 		}
 	},
 	onLoad(options) {
@@ -469,25 +551,34 @@ export default {
 		async handlePurchase() {
 			if (this.submitting) return;
 			if (this.isDowngradeBlocked) {
-				uni.showToast({ title: '超级通行证有效期内不能降级', icon: 'none' });
+				uni.showToast({ title: this.$t('membership.pass.toast.downgradeBlocked'), icon: 'none' });
 				return;
 			}
 
 			if (this.isViewingCurrentMembership) {
 				const nextEnabled = !this.currentSubscription.auto_renew;
 				const confirmed = await this.showConfirm({
-					title: '管理自动续费',
+					title: this.$t('membership.pass.renewal.manageTitle'),
 					content: nextEnabled
-						? `开启后，到期将自动扣除${this.currentSubscription.renewal_cost_log || this.currentSubscription.cost_log}原木续费。`
-						: '关闭后，当前权益会持续到到期日，不再自动扣除原木。',
-					confirmText: nextEnabled ? '开启续费' : '关闭续费'
+						? this.$t('membership.pass.renewal.onContent', {
+							price: this.currentSubscription.renewal_cost_log || this.currentSubscription.cost_log
+						})
+						: this.$t('membership.pass.renewal.offContent'),
+					confirmText: nextEnabled
+						? this.$t('membership.pass.renewal.enable')
+						: this.$t('membership.pass.renewal.disable')
 				});
 				if (!confirmed) return;
 				this.submitting = true;
 				try {
 					const data = await updateMembershipAutoRenew(this.$baseUrl, nextEnabled);
 					this.currentSubscription = data.subscription;
-					uni.showToast({ title: nextEnabled ? '自动续费已开启' : '自动续费已关闭', icon: 'none' });
+					uni.showToast({
+						title: nextEnabled
+							? this.$t('membership.pass.renewal.enabledToast')
+							: this.$t('membership.pass.renewal.disabledToast'),
+						icon: 'none'
+					});
 				} catch (error) {
 					uni.showToast({ title: getMembershipErrorMessage(error), icon: 'none' });
 				} finally {
@@ -498,13 +589,19 @@ export default {
 
 			if (this.isStandardToSuperUpgrade) {
 				if (!this.upgradeQuote) {
-					uni.showToast({ title: '暂时无法计算升级差价，请稍后重试', icon: 'none' });
+					uni.showToast({ title: this.$t('membership.pass.upgrade.unavailable'), icon: 'none' });
 					return;
 				}
 				const confirmed = await this.showConfirm({
-					title: '补差价升级',
-					content: `剩余约${this.upgradeQuote.remaining_days}天，本次最多扣除${this.upgradeQuote.cost_log}原木。升级后到期日不变，自动续费设置保持${this.upgradeQuote.auto_renew ? '开启' : '关闭'}。`,
-					confirmText: '确认升级'
+					title: this.$t('membership.pass.upgrade.confirmTitle'),
+					content: this.$t('membership.pass.upgrade.confirmContent', {
+						days: this.upgradeQuote.remaining_days,
+						cost: this.upgradeQuote.cost_log,
+						state: this.upgradeQuote.auto_renew
+							? this.$t('membership.pass.upgrade.keepOn')
+							: this.$t('membership.pass.upgrade.keepOff')
+					}),
+					confirmText: this.$t('membership.pass.upgrade.confirm')
 				});
 				if (!confirmed) return;
 
@@ -523,7 +620,9 @@ export default {
 					const charged = data.upgrade ? data.upgrade.cost_log : data.subscription.cost_log;
 					const redstoneGift = Number(data.redstone_granted || 0);
 					uni.showToast({
-						title: `已补 ${charged} 原木，升级成功${redstoneGift ? `，赠送${redstoneGift}红石` : ''}`,
+						title: redstoneGift
+							? this.$t('membership.pass.upgrade.successGift', { amount: charged, redstone: redstoneGift })
+							: this.$t('membership.pass.upgrade.success', { amount: charged }),
 						icon: 'none',
 						duration: 2600
 					});
@@ -537,9 +636,11 @@ export default {
 
 			const autoRenew = this.selectedPlan.key === 'month';
 			const confirmed = await this.showConfirm({
-				title: `开通${this.activePass.name}`,
-				content: `将扣除${this.selectedPlan.price}原木${autoRenew ? '，并开启自动续费' : ''}。`,
-				confirmText: '确认开通'
+				title: this.$t('membership.pass.activate.title', { name: this.$t(this.activePass.nameKey) }),
+				content: autoRenew
+					? this.$t('membership.pass.activate.contentAuto', { price: this.selectedPlan.price })
+					: this.$t('membership.pass.activate.content', { price: this.selectedPlan.price }),
+				confirmText: this.$t('membership.pass.activate.confirm')
 			});
 			if (!confirmed) return;
 
@@ -556,7 +657,11 @@ export default {
 				this.logBalance = Number(data.log_balance || 0);
 				const redstoneGift = Number(data.redstone_granted || 0);
 				uni.showToast({
-					title: data.replayed ? '订阅已处理' : `开通成功${redstoneGift ? `，赠送${redstoneGift}红石` : ''}`,
+					title: data.replayed
+						? this.$t('membership.pass.activate.processed')
+						: (redstoneGift
+							? this.$t('membership.pass.activate.successGift', { redstone: redstoneGift })
+							: this.$t('membership.pass.activate.success')),
 					icon: 'none',
 					duration: 2400
 				});

@@ -7,7 +7,7 @@
 						<view class="icon">
 							<!-- <img src="../../static/icons/icon_audit.png"/> -->
 						</view>
-						<view class="text">文章审核</view>
+						<view class="text">{{ $t('manage.sections.audit') }}</view>
 						<img class="to" src="../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -17,7 +17,7 @@
 						<view class="icon">
 							<!-- <img src="../../static/icons/icon_faq.png"/> -->
 						</view>
-						<view class="text">FAQ管理</view>
+						<view class="text">{{ $t('manage.sections.faqs') }}</view>
 						<img class="to" src="../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -27,7 +27,7 @@
 						<view class="icon">
 							<!-- <img src="../../static/icons/icon_library.png"/> -->
 						</view>
-						<view class="text">图书馆轮播管理</view>
+						<view class="text">{{ $t('manage.sections.banners') }}</view>
 						<img class="to" src="../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -37,7 +37,7 @@
 						<view class="icon">
 							<!-- <img src="../../static/icons/icon_posts.png"/> -->
 						</view>
-						<view class="text">帖子管理</view>
+						<view class="text">{{ $t('manage.sections.posts') }}</view>
 						<img class="to" src="../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -47,7 +47,7 @@
 						<view class="icon">
 							<!-- <img src="../../static/icons/icon_community.png"/> -->
 						</view>
-						<view class="text">社区管理</view>
+						<view class="text">{{ $t('manage.sections.community') }}</view>
 						<img class="to" src="../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -57,7 +57,7 @@
 						<view class="icon">
 							<!-- <img src="../../static/icons/icon_users.png"/> -->
 						</view>
-						<view class="text">用户管理</view>
+						<view class="text">{{ $t('manage.sections.users') }}</view>
 						<img class="to" src="../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -78,7 +78,7 @@ export default {
 		if (tk) tk = tk.tk;
 		if (!tk) {
 			uni.showToast({
-				title: '请先登录',
+				title: this.$t('manage.access.signInRequired'),
 				icon: 'none'
 			});
 			setTimeout(() => {
@@ -93,7 +93,7 @@ export default {
 		let userInfo = JSON.parse(window.localStorage.getItem('LogHomeUserInfo'));
 		if (!userInfo || userInfo.is_admin != 1) {
 			uni.showToast({
-				title: '无权限访问',
+				title: this.$t('manage.access.forbidden'),
 				icon: 'none'
 			});
 			setTimeout(() => {

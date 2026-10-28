@@ -2,11 +2,11 @@
 	<view class="content" v-dark>
 		<div class="tabBar" v-dark>
 			<uni-icons type="left" size="27" color="310000" class="backBtn" @click="goBack" style="position: absolute; z-index: 10;"/>
-			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabValue" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
+			<lgd-tab class="tab" :firstTab="firstTab" :tabValue="tabLabels" @getIndex="changeTab" :textColor="$store.state.isDarkMode ? '#ffffff' : '#2d2d2d'"
 				ref="tabDom" :underBarBias="-0"/>
 		</div>
 		<div class="searchBar">
-			<uni-search-bar :bgColor="$store.state.isDarkMode ? '#2C2C2C' : 'rgb(211,211,211)'" :radius="5" @input="onSearchInput" placeholder="搜索书架"
+			<uni-search-bar :bgColor="$store.state.isDarkMode ? '#2C2C2C' : 'rgb(211,211,211)'" :radius="5" @input="onSearchInput" :placeholder="$t('library.bookcase.searchPlaceholder')"
 				cancelButton="none">
 				<img src="../../static/icons/icon_search.png" alt="" slot="searchIcon" style="height:25px;"/>
 				<img src="../../static/icons/icon_r_x.png" alt="" slot="clearIcon" style="height:20px;"/>
@@ -67,8 +67,9 @@
 				updateInfo: new Map(),
 				isOffline: false,
 				searchKeyword: '',
-				tabValue: [
-					"收藏", "历史"
+				tabs: [
+					{ key: 'favorites', labelKey: 'library.bookcase.tabs.favorites' },
+					{ key: 'history', labelKey: 'library.bookcase.tabs.history' }
 				],
 				curTabIndex: 0,
 				firstTab: 0,
@@ -95,6 +96,9 @@
 			}
 		},
 		computed: {
+			tabLabels() {
+				return this.tabs.map(tab => this.$t(tab.labelKey));
+			},
 			likedBooksOnShow() {
 				return this.filterBooks(this.likedBooksAll);
 			},
@@ -135,9 +139,9 @@
 			},
 			loadTabData(index) {
 				const showLoading = !this.tabLoaded[index];
-				if (this.tabValue[index] === '收藏') {
+				if (this.tabs[index].key === 'favorites') {
 					this.getLikedBooks(showLoading);
-				} else if (this.tabValue[index] === '历史') {
+				} else if (this.tabs[index].key === 'history') {
 					this.getHistoryBooks(showLoading);
 				}
 			},
@@ -206,7 +210,7 @@
 						})
 					} else {
 						uni.showToast({
-							title: "未缓存该书籍，无法阅读",
+							title: this.$t('library.bookcase.uncachedBook'),
 							icon: 'none'
 						})
 					}
@@ -282,7 +286,7 @@
 
 				// 跟手位移 + 边界阻尼（首页右滑/末页左滑有橡皮筋阻力）
 				const base = -this.curTabIndex * this.windowWidth;
-				const min = -(this.tabValue.length - 1) * this.windowWidth;
+				const min = -(this.tabs.length - 1) * this.windowWidth;
 				const max = 0;
 				const dragX = touch.clientX - this.dragLockX;
 				let target = this.dragBaseOffset + dragX;
@@ -327,7 +331,7 @@
 			settleSwipe() {
 				const dx = this.dragOffset; // 相对当前面板的位移（边界处已含阻尼）
 				const vx = this.computeVelocity();
-				const lastIndex = this.tabValue.length - 1;
+				const lastIndex = this.tabs.length - 1;
 				const distanceThreshold = this.windowWidth * SETTLE_RATIO;
 				let target = this.curTabIndex;
 
@@ -432,7 +436,7 @@
 				this.tabLoading[0] = true;
 				if (showLoading) {
 					uni.showLoading({
-						title: '努力加载中'
+						title: this.$t('library.bookcase.loading')
 					});
 				}
 				if (this.$isFromLogin) {
@@ -526,7 +530,7 @@
 				this.tabLoading[1] = true;
 				if (showLoading) {
 					uni.showLoading({
-						title: '努力加载中'
+						title: this.$t('library.bookcase.loading')
 					});
 				}
 				let tk = JSON.parse(window.localStorage.getItem('token'));

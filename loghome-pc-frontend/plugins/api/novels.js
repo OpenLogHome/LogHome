@@ -192,3 +192,4 @@ const novels = {
 };
 
 export default novels;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

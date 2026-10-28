@@ -54,7 +54,7 @@ export default {
 				console.warn('syncNativeAudiobookProgress failed', error);
 			}
 		},
-		async openNativePlayer(startParagraphId = null) {
+		async openNativePlayer(startParagraphId = null, options = {}) {
 			if (!window.jsBridge || !window.jsBridge.openNativeAudiobookPlayer) {
 				uni.showToast({
 					title: this.$t('reader.book.audiobookUnsupported'),
@@ -72,10 +72,14 @@ export default {
 			}
 
 			try {
+				const rawToken = uni.getStorageSync('token');
+				const login = typeof rawToken === 'string' ? JSON.parse(rawToken || 'null') : rawToken;
 				const payload = {
+					loginToken: login && login.tk || '',
 					articleIds,
 					startArticleId: String(this.startArticleId || articleIds[0]),
 					startParagraphId: startParagraphId == null ? null : String(startParagraphId),
+					forceSeek: options.forceSeek == null ? startParagraphId != null : Boolean(options.forceSeek),
 					bookTitle: this.bookTitle || '',
 					coverUrl: this.coverUrl || '',
 					playlistKey: this.playlistKey || ''

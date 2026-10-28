@@ -75,7 +75,8 @@
 </template>
 
 <script>
-import copy from '~/config/home-copy.json'
+import chineseCopy from '~/config/home-copy.json'
+import englishCopy from '~/config/i18n/home-copy.en.json'
 import { formatCopy } from '~/utils/format-copy'
 import axios from 'axios'
 import HomeVoxelWorld from '~/components/HomeVoxelWorld.vue'
@@ -94,7 +95,6 @@ export default {
   },
   data() {
     return {
-      copy,
       works: [], collection: '', worksLoading: true, worksError: false,
       posts: [], postsLoading: true, postsError: false,
       androidVersion: '', androidDownloadUrl: '', downloadLoading: true,
@@ -102,6 +102,7 @@ export default {
     }
   },
   computed: {
+    copy() { return this.$language.state.locale === 'en' ? englishCopy : chineseCopy },
     currentStage() { return this.copy.create.stages[this.writingStage] },
     showDiscussions() { return this.postsLoading || this.posts.length > 0 || this.postsError || this.copy.community.showIdeas }
   },
@@ -115,7 +116,7 @@ export default {
   methods: {
     workUrl, collectionUrl, plainText, formatCopy,
     workType(work) { return work.novel_type === 'world' ? this.copy.stories.types.world : work.novel_type === 'manga' ? this.copy.stories.types.manga : this.copy.stories.types.novel },
-    postDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('zh-CN') },
+    postDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(this.$language.state.locale) },
     coverError(event) { if (!event.target.src.endsWith('/default-book-cover.png')) event.target.src = '/default-book-cover.png' },
     async loadWorks() {
       this.worksLoading = true

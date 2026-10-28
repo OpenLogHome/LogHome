@@ -2,49 +2,49 @@
   <div class="manga-reader" :class="'reader-' + readerBackground">
     <!-- 顶栏 -->
     <div class="top-bar">
-      <button class="bar-icon" type="button" title="返回" @click="goBack">
+      <button class="bar-icon" type="button" :title="$t('返回')" @click="goBack">
         <manga-icon name="back" />
       </button>
       <div class="bar-title">
-        <h1 class="bar-novel">{{ novelName }} · {{ articleData ? articleData.title : '漫画阅读' }}</h1>
-        <span class="bar-episode">第 {{ currentEpisodeNo }} 话 / 共 {{ articles.length }} 话</span>
+        <h1 class="bar-novel">{{ novelName }} · {{ articleData ? articleData.title : $t('漫画阅读') }}</h1>
+        <span class="bar-episode">{{ $t("第 {p0} 话 / 共 {p1} 话", { p0: currentEpisodeNo, p1: articles.length }) }}</span>
       </div>
       <el-popover v-model="settingsVisible" placement="bottom-end" width="280" trigger="click" popper-class="reader-settings-pop">
         <div class="settings-panel">
-          <div class="setting-head">阅读设置</div>
-          <div class="setting-label">阅读方式</div>
+          <div class="setting-head">{{ $t("阅读设置") }}</div>
+          <div class="setting-label">{{ $t("阅读方式") }}</div>
           <el-radio-group v-model="mode" size="mini" @change="onModeChange">
-            <el-radio-button label="strip">上下滚动</el-radio-button>
-            <el-radio-button label="paged">左右翻页</el-radio-button>
+            <el-radio-button label="strip">{{ $t("上下滚动") }}</el-radio-button>
+            <el-radio-button label="paged">{{ $t("左右翻页") }}</el-radio-button>
           </el-radio-group>
           <template v-if="mode === 'paged'">
-            <div class="setting-label">翻页方向</div>
+            <div class="setting-label">{{ $t("翻页方向") }}</div>
             <el-radio-group v-model="readingDirection" size="mini" @change="savePreferences">
-              <el-radio-button label="ltr">从左到右</el-radio-button>
-              <el-radio-button label="rtl">从右到左</el-radio-button>
+              <el-radio-button label="ltr">{{ $t("从左到右") }}</el-radio-button>
+              <el-radio-button label="rtl">{{ $t("从右到左") }}</el-radio-button>
             </el-radio-group>
           </template>
-          <div class="setting-label">阅读背景</div>
+          <div class="setting-label">{{ $t("阅读背景") }}</div>
           <el-radio-group v-model="readerBackground" size="mini" @change="savePreferences">
-            <el-radio-button label="white">白色</el-radio-button>
-            <el-radio-button label="warm">暖色</el-radio-button>
-            <el-radio-button label="black">黑色</el-radio-button>
+            <el-radio-button label="white">{{ $t("白色") }}</el-radio-button>
+            <el-radio-button label="warm">{{ $t("暖色") }}</el-radio-button>
+            <el-radio-button label="black">{{ $t("黑色") }}</el-radio-button>
           </el-radio-group>
-          <div class="setting-label">图片清晰度</div>
+          <div class="setting-label">{{ $t("图片清晰度") }}</div>
           <el-radio-group v-model="imageQuality" size="mini" @change="onQualityChange">
-            <el-radio-button label="standard">流畅</el-radio-button>
-            <el-radio-button label="original">原图</el-radio-button>
+            <el-radio-button label="standard">{{ $t("流畅") }}</el-radio-button>
+            <el-radio-button label="original">{{ $t("原图") }}</el-radio-button>
           </el-radio-group>
-          <p v-if="preferenceError" class="reader-error" role="alert">偏好未能保存，当前设置仍可使用。</p>
+          <p v-if="preferenceError" class="reader-error" role="alert">{{ $t("偏好未能保存，当前设置仍可使用。") }}</p>
         </div>
-        <button slot="reference" class="bar-icon" type="button" title="阅读设置">
+        <button slot="reference" class="bar-icon" type="button" :title="$t('阅读设置')">
           <manga-icon name="settings" />
         </button>
       </el-popover>
     </div>
 
     <!-- 阅读区 -->
-    <div ref="stage" class="reader-stage" tabindex="0" aria-label="漫画阅读区，左右键翻页">
+    <div ref="stage" class="reader-stage" tabindex="0" :aria-label="$t('漫画阅读区，左右键翻页')">
       <!-- 条漫：原生滚动 + 懒加载 -->
       <div v-if="mode === 'strip'" ref="stripScroll" class="strip-scroll" @scroll.passive="onStripScroll">
         <div v-for="(page, idx) in pages" :key="articleId + '-' + idx" class="strip-page" :style="pageStyle(page)">
@@ -54,18 +54,18 @@
             :src="pageSrc(page, idx)"
             loading="lazy"
             draggable="false"
-            :alt="`${novelName} · ${articleData ? articleData.title : ''} · 第 ${idx + 1} 页`"
+            :alt="$t('{name} · {title} · 第 {page} 页', { name: novelName, title: articleData ? articleData.title : '', page: idx + 1 })"
             @error="onPageError(idx)" />
           <button v-else class="page-retry" type="button" @click="retryPage(idx)">
-            <manga-icon name="retry" /> 第 {{ idx + 1 }} 页加载失败，重试
+            <manga-icon name="retry" /> {{ $t("第 {p0} 页加载失败，重试", { p0: idx + 1 }) }}
           </button>
-          <button v-if="pageSrc(page,idx)" class="strip-zoom" :aria-label="`放大第 ${idx+1} 页`" @click="openStripPreview(idx)"><manga-icon name="zoom" /></button>
+          <button v-if="pageSrc(page,idx)" class="strip-zoom" :aria-label="$t('放大第 {p0} 页', { p0: idx + 1 })" @click="openStripPreview(idx)"><manga-icon name="zoom" /></button>
         </div>
         <div class="episode-end">
           <button v-if="hasNextEpisode" class="end-next" type="button" @click="nextEpisode">
-            阅读下一话 <manga-icon name="next" />
+            {{ $t("阅读下一话") }} <manga-icon name="next" />
           </button>
-          <span v-else class="end-tip">本话完 · 感谢阅读</span>
+          <span v-else class="end-tip">{{ $t("本话完 · 感谢阅读") }}</span>
         </div>
       </div>
 
@@ -75,7 +75,7 @@
           class="page-arrow left"
           type="button"
           :disabled="readingDirection==='rtl'?!canGoNext:!canGoPrev"
-          :aria-label="readingDirection==='rtl'?'下一页':'上一页'"
+          :aria-label="readingDirection==='rtl'?$t('下一页'):$t('上一页')"
           @click="stepPage(-1)">
           <manga-icon name="previous" />
         </button>
@@ -84,19 +84,19 @@
             v-if="currentPageObj"
             :key="articleId + '-' + currentPage + '-' + (retryCount[currentPage]||0)"
             :src="pageSrc(currentPageObj, currentPage)"
-            :alt="`${novelName} · ${articleData ? articleData.title : ''} · 第 ${currentPage + 1} 页`"
+            :alt="$t('{name} · {title} · 第 {page} 页', { name: novelName, title: articleData ? articleData.title : '', page: currentPage + 1 })"
             :reset-key="zoomResetKey"
             @interaction="zoomed = $event"
             @error="onPageError(currentPage)" />
           <button v-if="pageErrors[currentPage]" class="page-retry paged" type="button" @click="retryPage(currentPage)">
-            <manga-icon name="retry" /> 本页加载失败，重试
+            <manga-icon name="retry" /> {{ $t("本页加载失败，重试") }}
           </button>
         </div>
         <button
           class="page-arrow right"
           type="button"
           :disabled="readingDirection==='rtl'?!canGoPrev:!canGoNext"
-          :aria-label="readingDirection==='rtl'?'上一页':'下一页'"
+          :aria-label="readingDirection==='rtl'?$t('上一页'):$t('下一页')"
           @click="stepPage(1)">
           <manga-icon name="next" />
         </button>
@@ -121,7 +121,7 @@
           class="danmu-toggle"
           :class="{ off: !danmuEnabled }"
           type="button"
-          :aria-label="danmuEnabled ? '关闭弹幕' : '开启弹幕'"
+          :aria-label="danmuEnabled ? $t('关闭弹幕') : $t('开启弹幕')"
           @click="toggleDanmu">
           <manga-icon name="danmu" />
         </button>
@@ -130,39 +130,39 @@
           class="danmu-input"
           type="text"
           maxlength="100"
-          placeholder="发条弹幕见证此刻..."
+          :placeholder="$t('发条弹幕见证此刻...')"
           :disabled="danmuSending"
           @keyup.enter="submitDanmu" />
         <button
           class="danmu-sync"
           :class="{ on: danmuSyncComment }"
           type="button"
-          :aria-pressed="danmuSyncComment" aria-label="同时发送为本话评论"
+          :aria-pressed="danmuSyncComment" :aria-label="$t('同时发送为本话评论')"
           @click="danmuSyncComment = !danmuSyncComment">
-          同步评论
+          {{ $t("同步评论") }}
         </button>
-        <button class="danmu-send" type="button" :disabled="danmuSending || !danmuInput.trim()" @click="submitDanmu">发送</button>
+        <button class="danmu-send" type="button" :disabled="danmuSending || !danmuInput.trim()" @click="submitDanmu">{{ $t("发送") }}</button>
       </div>
 
-      <p v-if="danmuError" class="reader-error" role="alert">{{ danmuError }} <button :disabled="danmuLoading" @click="loadDanmus">刷新弹幕</button></p>
-      <p v-if="progressError" class="reader-error" role="alert">{{ progressError }} <button :disabled="progressWrites>0" @click="syncProgress(true)">重试保存</button></p>
+      <p v-if="danmuError" class="reader-error" role="alert">{{ danmuError }} <button :disabled="danmuLoading" @click="loadDanmus">{{ $t("刷新弹幕") }}</button></p>
+      <p v-if="progressError" class="reader-error" role="alert">{{ progressError }} <button :disabled="progressWrites>0" @click="syncProgress(true)">{{ $t("重试保存") }}</button></p>
       <div class="progress-row">
         <span class="progress-label">{{ progressLabel }}</span>
-        <input class="progress-slider" type="range" aria-label="漫画页码" min="1" :max="Math.max(1,pages.length)" :value="currentPage+1" :aria-valuetext="progressLabel" :disabled="pages.length<2" @input="onPageSlider($event.target.value)" />
+        <input class="progress-slider" type="range" :aria-label="$t('漫画页码')" min="1" :max="Math.max(1,pages.length)" :value="currentPage+1" :aria-valuetext="progressLabel" :disabled="pages.length<2" @input="onPageSlider($event.target.value)" />
       </div>
 
       <div class="reader-actions">
-        <button class="act-btn" type="button" @click="openCatalog = true"><manga-icon name="list" /><span>目录</span></button>
-        <button class="act-btn" type="button" @click="openCommentPanel"><manga-icon name="comment" /><span>{{ commentAmount ? '评论 ' + commentAmount : '评论' }}</span></button>
-        <nuxt-link v-if="hasPrevEpisode" class="act-btn" :to="`/manga/read/${articles[currentIdx - 1].article_id}?novelId=${novelId}`" rel="prev" @click.native.prevent="prevEpisode"><manga-icon name="previous" /><span>上一话</span></nuxt-link><button v-else class="act-btn" disabled><manga-icon name="previous" /><span>上一话</span></button>
-        <nuxt-link class="act-btn" :to="`/manga/${novelId}`"><manga-icon name="list" /><span>作品详情</span></nuxt-link>
-        <nuxt-link v-if="hasNextEpisode" class="act-btn" :to="`/manga/read/${articles[currentIdx + 1].article_id}?novelId=${novelId}`" rel="next" @click.native.prevent="nextEpisode"><manga-icon name="next" /><span>下一话</span></nuxt-link><button v-else class="act-btn" disabled><manga-icon name="next" /><span>下一话</span></button>
-        <button class="act-btn" type="button" @click="resetZoom"><manga-icon name="zoom" /><span>复位</span></button>
+        <button class="act-btn" type="button" @click="openCatalog = true"><manga-icon name="list" /><span>{{ $t("目录") }}</span></button>
+        <button class="act-btn" type="button" @click="openCommentPanel"><manga-icon name="comment" /><span>{{ commentAmount ? $t('评论 ({p0})', { p0: commentAmount }) : $t('评论') }}</span></button>
+        <nuxt-link v-if="hasPrevEpisode" class="act-btn" :to="`/manga/read/${articles[currentIdx - 1].article_id}?novelId=${novelId}`" rel="prev" @click.native.prevent="prevEpisode"><manga-icon name="previous" /><span>{{ $t("上一话") }}</span></nuxt-link><button v-else class="act-btn" disabled><manga-icon name="previous" /><span>{{ $t("上一话") }}</span></button>
+        <nuxt-link class="act-btn" :to="`/manga/${novelId}`"><manga-icon name="list" /><span>{{ $t("作品详情") }}</span></nuxt-link>
+        <nuxt-link v-if="hasNextEpisode" class="act-btn" :to="`/manga/read/${articles[currentIdx + 1].article_id}?novelId=${novelId}`" rel="next" @click.native.prevent="nextEpisode"><manga-icon name="next" /><span>{{ $t("下一话") }}</span></nuxt-link><button v-else class="act-btn" disabled><manga-icon name="next" /><span>{{ $t("下一话") }}</span></button>
+        <button class="act-btn" type="button" @click="resetZoom"><manga-icon name="zoom" /><span>{{ $t("复位") }}</span></button>
       </div>
     </div>
 
     <!-- 目录抽屉 -->
-    <el-drawer title="漫画目录" :visible.sync="openCatalog" direction="rtl" size="min(420px, 94vw)" custom-class="catalog-drawer">
+    <el-drawer :title="$t('漫画目录')" :visible.sync="openCatalog" direction="rtl" size="min(420px, 94vw)" custom-class="catalog-drawer">
       <div class="catalog-list">
         <nuxt-link
           v-for="(item, idx) in articles"
@@ -178,7 +178,7 @@
       </div>
     </el-drawer>
 
-    <el-dialog :visible="stripPreview!==null" title="漫画页面 · 滚轮缩放，拖动查看" width="94vw" top="3vh" append-to-body @update:visible="closeStripPreview"><div class="strip-zoom-surface"><MangaReaderImage v-if="stripPreview!==null && pages[stripPreview]" :src="pageSrc(pages[stripPreview],stripPreview)" :alt="`第 ${stripPreview+1} 页`" /></div></el-dialog>
+    <el-dialog :visible="stripPreview!==null" :title="$t('漫画页面 · 滚轮缩放，拖动查看')" width="94vw" top="3vh" append-to-body @update:visible="closeStripPreview"><div class="strip-zoom-surface"><MangaReaderImage v-if="stripPreview!==null && pages[stripPreview]" :src="pageSrc(pages[stripPreview],stripPreview)" :alt="$t('第 {p0} 页', { p0: stripPreview + 1 })" /></div></el-dialog>
     <!-- 本话评论 -->
     <manga-comment-panel
       :key="'cmt-' + articleId"
@@ -190,12 +190,12 @@
       @changed="loadCommentAmount" />
 
     <!-- 加载 / 错误遮罩 -->
-    <div v-if="loading" class="state-mask">正在加载漫画…</div>
+    <div v-if="loading" class="state-mask">{{ $t("正在加载漫画…") }}</div>
     <div v-else-if="loadError" class="state-mask">
       <span>{{ loadError }}</span>
       <div class="state-actions">
-        <button class="state-btn" type="button" @click="retryEpisode"><manga-icon name="retry" /> 重试</button>
-        <button class="state-btn" type="button" @click="goBack">返回</button>
+        <button class="state-btn" type="button" @click="retryEpisode"><manga-icon name="retry" /> {{ $t("重试") }}</button>
+        <button class="state-btn" type="button" @click="goBack">{{ $t("返回") }}</button>
       </div>
     </div>
   </div>
@@ -228,7 +228,7 @@ export default {
   components: { MangaIcon, MangaDanmuLayer, MangaReaderImage, MangaCommentPanel },
   layout: 'empty',
   async asyncData(context) { const result = await loadPublicManga(context); if (result && result.articleData) result.initialCommentId = readingCommentId(context.query); return result },
-  head() { return readingHead({ title: `${this.articleData ? this.articleData.title : '漫画阅读'} - ${this.novelName} - 原木社区`, description: this.workInfo && this.workInfo.content, path: `/manga/read/${this.articleId || this.$route.params.articleId}`, image: this.workInfo && this.workInfo.picUrl, type: 'article' }) },
+  head() { return readingHead({ title: `${this.articleData ? this.articleData.title : this.$t('漫画阅读')} - ${this.novelName} - ${this.$t('原木社区')}`, description: this.workInfo && this.workInfo.content, path: `/manga/read/${this.articleId || this.$route.params.articleId}`, image: this.workInfo && this.workInfo.picUrl, type: 'article' }) },
   data() {
     return {
       articleId: null,
@@ -236,7 +236,7 @@ export default {
       lastCountedArticleId: null,
       initialCommentId: 0,
       novelId: null,
-      novelName: '漫画',
+      novelName: this.$t('漫画'),
       workInfo: null,
       workAuthorId: null,
       articles: [],
@@ -287,7 +287,7 @@ export default {
     },
     progressLabel() {
       if (!this.pages.length) return '-'
-      return `${Math.min(this.currentPage, this.pages.length - 1) + 1} / ${this.pages.length} 页`
+      return this.$t('{p0} / {p1} 页', { p0: Math.min(this.currentPage, this.pages.length - 1) + 1, p1: this.pages.length })
     },
     currentPageObj() {
       return this.pages[this.currentPage] || null
@@ -355,7 +355,7 @@ export default {
       if(Number(articleId)===Number(this.articleId)){this.goToPage(pageIdx);return}
       const target=this.articles[episodeIdx];if(!target||Number(target.article_id)!==Number(articleId))return
       this.syncProgress(true);this.navigating=true
-      try{await this.$router.push({path:`/manga/read/${articleId}`,query:{novelId:this.novelId,...(edge?{edge}:{pageIdx})}})}catch(error){if(error.name!=='NavigationDuplicated')this.$message.error(error.message||'话数切换失败')}finally{this.navigating=false}
+      try{await this.$router.push({path:`/manga/read/${articleId}`,query:{novelId:this.novelId,...(edge?{edge}:{pageIdx})}})}catch(error){if(error.name!=='NavigationDuplicated')this.$message.error(error.message||this.$t('话数切换失败'))}finally{this.navigating=false}
     },
     retryEpisode() {this.$nuxt.refresh()},
     parseMangaContent:mangaPages,
@@ -405,7 +405,7 @@ export default {
       }
       if (idx >= this.pages.length) {
         if (this.hasNextEpisode) this.nextEpisode()
-        else this.$message.info('已是最后一页')
+        else this.$message.info(this.$t('已是最后一页'))
         return
       }
       this.currentPage = idx
@@ -422,7 +422,7 @@ export default {
     // ===== 话数切换 =====
     prevEpisode(fromEnd=false) {
       if (!this.hasPrevEpisode) {
-        this.$message.info('已经是第一话了')
+        this.$message.info(this.$t('已经是第一话了'))
         return
       }
       const idx = this.currentIdx - 1
@@ -430,7 +430,7 @@ export default {
     },
     nextEpisode() {
       if (!this.hasNextEpisode) {
-        this.$message.info('已经是最后一话了')
+        this.$message.info(this.$t('已经是最后一话了'))
         return
       }
       const idx = this.currentIdx + 1
@@ -456,7 +456,7 @@ export default {
       const token=readingToken(),version=this.identityVersion,id=this.articleId,payload={novel_id:Number(this.novelId),article_id:Number(id),article_chapter:Number(this.articles[this.currentIdx]?.article_chapter)||null,page_idx:Math.min(Math.max(0,Math.floor(this.currentPage)),this.pages.length-1)}
       recordLocalReading(this.workInfo||{novel_id:Number(this.novelId),name:this.novelName,novel_type:'manga'},{last_article_id:payload.article_id,last_article_chapter:payload.article_chapter,last_page_idx:payload.page_idx})
       if(!force)return;this.progressDirty=false;if(!token)return;this.progressWrites++
-      try{await this.$api.reading.saveProgress(payload);if(this.currentScope(version,token,id))this.progressError=''}catch(_){if(this.currentScope(version,token,id)){this.progressDirty=true;this.progressError='云端进度保存失败，本机进度已保留。'}}finally{if(version===this.identityVersion)this.progressWrites=Math.max(0,this.progressWrites-1)}
+      try{await this.$api.reading.saveProgress(payload);if(this.currentScope(version,token,id))this.progressError=''}catch(_){if(this.currentScope(version,token,id)){this.progressDirty=true;this.progressError=this.$t('云端进度保存失败，本机进度已保留。')}}finally{if(version===this.identityVersion)this.progressWrites=Math.max(0,this.progressWrites-1)}
     },
     // ===== 评论 =====
     openCommentPanel() {
@@ -469,7 +469,7 @@ export default {
     toggleDanmu() {this.danmuEnabled=!this.danmuEnabled;this.savePreferences()},
     async loadDanmus() {
       const version=++this.danmuVersion,id=this.articleId;this.danmuLoading=true;this.danmuError=''
-      try{const list=await fetchMangaDanmus(baseUrl,this.novelId,id);if(version===this.danmuVersion&&Number(id)===Number(this.articleId))this.danmuList=list}catch(error){if(version===this.danmuVersion)this.danmuError=getMangaDanmuErrorMessage(error,'弹幕加载失败')}finally{if(version===this.danmuVersion)this.danmuLoading=false}
+      try{const list=await fetchMangaDanmus(baseUrl,this.novelId,id);if(version===this.danmuVersion&&Number(id)===Number(this.articleId))this.danmuList=list}catch(error){if(version===this.danmuVersion)this.danmuError=getMangaDanmuErrorMessage(error,this.$t('弹幕加载失败'))}finally{if(version===this.danmuVersion)this.danmuLoading=false}
     },
     requireLogin() {this.checkAccount();if(readingToken())return true;this.$router.push({path:'/login',query:{redirect:loginReturnPath(this.$route.fullPath)}});return false},
     async submitDanmu() {
@@ -477,13 +477,13 @@ export default {
       const token=readingToken(),version=this.identityVersion,id=this.articleId,novelId=this.novelId,pageIdx=this.currentPage,epoch=this.loadRequestId,sync=this.danmuSyncComment;this.danmuSending=true;this.danmuError=''
       const current=()=>this.currentScope(version,token,id)&&epoch===this.loadRequestId
       try{const danmu=await sendMangaDanmu(baseUrl,{novelId,articleId:id,pageIdx,content},token);if(!current())return;this.danmuList=this.danmuList.filter(item=>item.danmuId!==danmu.danmuId).concat(danmu);this.danmuInput='';this.danmuReplayTick++
-        if(sync){try{if(!current())return;await publishMangaComment(baseUrl,{novelId,articleId:id,content,images:[]});if(!current())return;this.loadCommentAmount();this.$message.success('弹幕已发送，并同步为本话评论')}catch(error){if(current())this.danmuError='弹幕已发送；'+getMangaCommentErrorMessage(error,'同步评论失败')}}
+        if(sync){try{if(!current())return;await publishMangaComment(baseUrl,{novelId,articleId:id,content,images:[]});if(!current())return;this.loadCommentAmount();this.$message.success(this.$t('弹幕已发送，并同步为本话评论'))}catch(error){if(current())this.danmuError=this.$t('弹幕已发送；{p0}', { p0: getMangaCommentErrorMessage(error,this.$t('同步评论失败')) })}}
       }catch(error){if(current())this.danmuError=getMangaDanmuErrorMessage(error)}finally{if(current())this.danmuSending=false}
     },
     async removeDanmu(danmuId) {
       if(!this.requireLogin())return;const target=this.danmuList.find(item=>Number(item.danmuId)===Number(danmuId));if(!target||![target.userId,this.workAuthorId].some(id=>id!=null&&String(id)===String(this.currentUserId)))return
       const token=readingToken(),version=this.identityVersion,id=this.articleId,epoch=this.loadRequestId
-      try{await this.$confirm('确定删除这条弹幕吗？','删除弹幕',{type:'warning'});if(!this.currentScope(version,token,id)||epoch!==this.loadRequestId)return;await deleteMangaDanmu(baseUrl,danmuId,token);if(!this.currentScope(version,token,id)||epoch!==this.loadRequestId)return;this.danmuList=this.danmuList.filter(item=>item.danmuId!==danmuId);this.danmuReplayTick++;this.$message.success('已删除')}catch(error){if(error!=='cancel'&&error!=='close'&&this.currentScope(version,token,id))this.danmuError=getMangaDanmuErrorMessage(error,'删除失败')}
+      try{await this.$confirm(this.$t('确定删除这条弹幕吗？'),this.$t('删除弹幕'),{type:'warning'});if(!this.currentScope(version,token,id)||epoch!==this.loadRequestId)return;await deleteMangaDanmu(baseUrl,danmuId,token);if(!this.currentScope(version,token,id)||epoch!==this.loadRequestId)return;this.danmuList=this.danmuList.filter(item=>item.danmuId!==danmuId);this.danmuReplayTick++;this.$message.success(this.$t('已删除'))}catch(error){if(error!=='cancel'&&error!=='close'&&this.currentScope(version,token,id))this.danmuError=getMangaDanmuErrorMessage(error,this.$t('删除失败'))}
     },
     // ===== 交互 =====
     handleKeydown(e) {

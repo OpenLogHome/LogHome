@@ -3,23 +3,23 @@
     <div class="login-box">
       <div class="login-header">
         <img style="width: 100px; margin-bottom: 20px;" src="~/assets/images/logo.png" alt="">
-        <h1>找回密码</h1>
-        <p>如果你忘记了密码，请通过以下渠道联系我们：</p>
+        <h1>{{ $t("auth.recovery.title") }}</h1>
+        <p>{{ $t("auth.recovery.intro") }}</p>
       </div>
 
       <div class="forgot-body">
-        <p class="step-line">1. 加入原木社区任意用户QQ群</p>
+        <p class="step-line">{{ $t("auth.recovery.joinGroup") }}</p>
         <div class="bordered groups">
-          <p class="group-title">原木社区用户群列表：</p>
-          <p>原木社区用户交流群：644467605</p>
-          <p>原木文社总群：464239748</p>
+          <p class="group-title">{{ $t("auth.recovery.groupList") }}</p>
+          <p>{{ $t("auth.recovery.userGroup") }}</p>
+          <p>{{ $t("auth.recovery.clubGroup") }}</p>
         </div>
-        <p class="step-line">2. <strong>联系群内管理员</strong>，通过私聊发送恢复账号的请求。</p>
-        <p class="tip-line">如果你的账号此前绑定过QQ号，请使用绑定的QQ号进行账号恢复，将更有可能成功恢复你的账号。</p>
-        <p class="tip-line">否则，我们需要你提供账号的其他信息，来证明你确实是账号的主人。</p>
+        <p class="step-line">{{ $t("auth.recovery.contactAdmin") }}</p>
+        <p class="tip-line">{{ $t("auth.recovery.boundQQ") }}</p>
+        <p class="tip-line">{{ $t("auth.recovery.proof") }}</p>
       </div>
 
-      <button class="login-btn cancel-btn" @click="goBack">返回登录</button>
+      <button class="login-btn cancel-btn" @click="goBack">{{ $t("auth.recovery.back") }}</button>
     </div>
   </div>
 </template>
@@ -27,6 +27,9 @@
 <script>
 export default {
   layout: 'default',
+  head() {
+    return { title: `${this.$t("auth.recovery.title")} - ${this.$t("原木社区")}` }
+  },
   methods: {
     goBack() {
       this.$router.push('/login')

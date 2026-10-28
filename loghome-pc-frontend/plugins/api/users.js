@@ -132,7 +132,7 @@ const users = {
                     console.error('登录后获取用户信息失败:', err)
                 }
             } else {
-                throw error
+                throw new Error(data.msg || 'Login failed')
             }
 
             return data
@@ -538,3 +538,4 @@ const users = {
 };
 
 export default users;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

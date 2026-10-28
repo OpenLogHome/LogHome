@@ -5,8 +5,8 @@
 			<view class="page-caption">每一次热爱的兑换，都在这里。</view> -->
 		</view>
 		<view v-if="!isLoggedIn" class="page-state">
-			<text>登录后即可查看兑换记录与物流状态</text>
-			<view class="state-action" @tap="goLogin">去登录</view>
+			<text>{{ $t('store.orders.loginRequired') }}</text>
+			<view class="state-action" @tap="goLogin">{{ $t('store.common.goLogin') }}</view>
 		</view>
 
 		<template v-else>
@@ -17,17 +17,17 @@
 					:class="['tab-item', activeTab === index ? 'active' : '']"
 					@tap="changeTab(index)"
 				>
-					{{ tab.label }}
+					{{ $t(tab.labelKey) }}
 				</view>
 			</view>
 
 			<view v-if="loading && orders.length === 0" class="page-state">
-				<text>正在加载订单...</text>
+				<text>{{ $t('store.orders.loading') }}</text>
 			</view>
 
 			<view v-else-if="fetchError" class="page-state">
 				<text>{{ fetchError }}</text>
-				<view class="state-action" @tap="refreshOrders">重新加载</view>
+				<view class="state-action" @tap="refreshOrders">{{ $t('store.common.reload') }}</view>
 			</view>
 
 			<template v-else>
@@ -59,7 +59,7 @@
 								class="code-preview"
 								v-if="item.product_type === 'virtual' && item.tracking_number"
 							>
-								兑换码：{{ item.tracking_number }}
+								{{ $t('store.orders.codeLine', { code: item.tracking_number }) }}
 							</view>
 						</view>
 					</view>
@@ -72,14 +72,14 @@
 					<view class="order-footer">
 						<view class="amount">
 							<view class="price-row">
-								<text>合计</text>
+								<text>{{ $t('store.orders.total') }}</text>
 								<text class="order-price">
 									{{ item.price }}
-									<text class="currency-unit">原木</text>
+									<text class="currency-unit">{{ $t('store.common.logUnit') }}</text>
 								</text>
 							</view>
 							<text class="detail" v-if="item.pay_log !== undefined">
-								原木 {{ item.pay_log }} · 去皮原木 {{ item.pay_cropped_log }}
+								{{ $t('store.orders.payDetail', { log: item.pay_log, cropped: item.pay_cropped_log }) }}
 							</text>
 						</view>
 
@@ -89,34 +89,34 @@
 								class="btn"
 								@tap="copyCode(item)"
 							>
-								复制兑换码
+								{{ $t('store.orders.copyCode') }}
 							</view>
 							<view
 								v-if="item.product_type === 'physical' && item.status === 'pending'"
 								class="btn disabled"
 							>
-								等待发货
+								{{ $t('store.orders.awaitingShipment') }}
 							</view>
 							<view
 								v-if="item.product_type === 'physical' && ['shipped', 'completed'].includes(item.status)"
 								class="shipping-actions"
 							>
-								<view class="tracking">{{ item.shipping_company || '快递' }}：{{ item.tracking_number || '-' }}</view>
-								<view class="btn" @tap="viewLogistics(item)">查看物流</view>
-								<view class="btn" @tap="copyTracking(item)">复制单号</view>
+								<view class="tracking">{{ $t('store.orders.trackingLine', { company: item.shipping_company || $t('store.orders.courier'), number: item.tracking_number || '-' }) }}</view>
+								<view class="btn" @tap="viewLogistics(item)">{{ $t('store.orders.viewTracking') }}</view>
+								<view class="btn" @tap="copyTracking(item)">{{ $t('store.orders.copyTracking') }}</view>
 								<view
 									v-if="item.status === 'shipped'"
 									:class="['btn', 'primary', confirmingOrderId === item.id ? 'disabled' : '']"
 									@tap="confirmReceipt(item)"
 								>
-									{{ confirmingOrderId === item.id ? '确认中...' : '确认收货' }}
+									{{ confirmingOrderId === item.id ? $t('store.orders.confirming') : $t('store.common.confirmReceipt') }}
 								</view>
 							</view>
 							<view
 								v-if="item.product_type === 'physical' && item.status === 'completed'"
 								class="btn disabled"
 							>
-								已完成
+								{{ $t('store.orders.completed') }}
 							</view>
 						</view>
 					</view>
@@ -124,12 +124,12 @@
 
 				<view class="empty" v-if="!loading && orders.length === 0">
 					<text>{{ emptyText }}</text>
-					<view class="state-action" @tap="goShopping">去商城逛逛</view>
+					<view class="state-action" @tap="goShopping">{{ $t('store.orders.goShopping') }}</view>
 				</view>
 
 				<view class="list-status" v-if="orders.length > 0">
-					<text v-if="loading">加载更多订单中...</text>
-					<text v-else-if="finished">没有更多订单了</text>
+					<text v-if="loading">{{ $t('store.orders.loadingMore') }}</text>
+					<text v-else-if="finished">{{ $t('store.orders.noMore') }}</text>
 				</view>
 			</template>
 		</template>
@@ -148,9 +148,9 @@ export default {
 		return {
 			authToken: null,
 			tabs: [
-				{ label: '全部订单', value: 'all' },
-				{ label: '待发货', value: 'pending' },
-				{ label: '发货 / 完成', value: 'shipped' },
+				{ labelKey: 'store.orders.tabAll', value: 'all' },
+				{ labelKey: 'store.orders.tabPending', value: 'pending' },
+				{ labelKey: 'store.orders.tabShipped', value: 'shipped' },
 			],
 			activeTab: 0,
 			page: 1,
@@ -168,9 +168,9 @@ export default {
 			return !!this.authToken
 		},
 		emptyText() {
-			if (this.activeTab === 1) return '当前没有待发货或处理中订单'
-			if (this.activeTab === 2) return '当前没有已发货或已完成订单'
-			return '还没有兑换记录'
+			if (this.activeTab === 1) return this.$t('store.orders.emptyPending')
+			if (this.activeTab === 2) return this.$t('store.orders.emptyShipped')
+			return this.$t('store.orders.emptyAll')
 		},
 	},
 	onLoad() {
@@ -247,11 +247,11 @@ export default {
 						this.finished = this.orders.length >= this.total
 						this.fetchError = ''
 					} else {
-						this.fetchError = res.data.msg || '订单加载失败，请稍后重试'
+						this.fetchError = res.data.msg || this.$t('store.orders.loadFailed')
 					}
 				})
 				.catch((error) => {
-					this.fetchError = error.response?.data?.msg || '订单加载失败，请稍后重试'
+					this.fetchError = error.response?.data?.msg || this.$t('store.orders.loadFailed')
 				})
 				.finally(() => {
 					this.loading = false
@@ -259,10 +259,10 @@ export default {
 				})
 		},
 		statusText(status) {
-			if (status === 'pending') return '待发货'
-			if (status === 'shipped') return '已发货'
-			if (status === 'completed') return '已完成'
-			if (status === 'canceled' || status === 'cancelled') return '已取消'
+			if (status === 'pending') return this.$t('store.orders.statusPending')
+			if (status === 'shipped') return this.$t('store.orders.statusShipped')
+			if (status === 'completed') return this.$t('store.orders.statusCompleted')
+			if (status === 'canceled' || status === 'cancelled') return this.$t('store.orders.statusCanceled')
 			return status
 		},
 		statusClass(status) {
@@ -274,12 +274,14 @@ export default {
 		},
 		statusHint(item) {
 			if (item.product_type === 'virtual') {
-				return item.status === 'completed' ? '权益已自动发放，可直接复制兑换码' : '处理中'
+				return item.status === 'completed'
+					? this.$t('store.orders.hintVirtualDone')
+					: this.$t('store.orders.hintProcessing')
 			}
-			if (item.status === 'pending') return item.shipping_desc || '商家正在准备发货'
-			if (item.status === 'shipped') return '商品已发出，请留意物流动态'
-			if (item.status === 'completed') return '订单已完成，感谢支持'
-			return '订单状态已更新'
+			if (item.status === 'pending') return item.shipping_desc || this.$t('store.orders.hintPreparing')
+			if (item.status === 'shipped') return this.$t('store.orders.hintShipped')
+			if (item.status === 'completed') return this.$t('store.orders.hintCompleted')
+			return this.$t('store.orders.hintUpdated')
 		},
 		formatAddress(item) {
 			return [
@@ -291,13 +293,13 @@ export default {
 		},
 		copyCode(item) {
 			if (!item.tracking_number) {
-				uni.showToast({ title: '暂无兑换码', icon: 'none' })
+				uni.showToast({ title: this.$t('store.orders.noCode'), icon: 'none' })
 				return
 			}
 			uni.setClipboardData({
 				data: item.tracking_number,
 				success: () => {
-					uni.showToast({ title: '已复制', icon: 'success' })
+					uni.showToast({ title: this.$t('store.common.copied'), icon: 'success' })
 				},
 			})
 		},
@@ -306,13 +308,13 @@ export default {
 		},
 		copyTracking(item) {
 			if (!item.tracking_number) {
-				uni.showToast({ title: '暂无单号', icon: 'none' })
+				uni.showToast({ title: this.$t('store.orders.noTrackingNumber'), icon: 'none' })
 				return
 			}
 			uni.setClipboardData({
 				data: item.tracking_number,
 				success: () => {
-					uni.showToast({ title: '已复制', icon: 'success' })
+					uni.showToast({ title: this.$t('store.common.copied'), icon: 'success' })
 				},
 			})
 		},
@@ -324,8 +326,8 @@ export default {
 				return
 			}
 			uni.showModal({
-				title: '确认收货',
-				content: '确认已收到商品吗？',
+				title: this.$t('store.common.confirmReceipt'),
+				content: this.$t('store.orders.confirmReceiptContent'),
 				success: (result) => {
 					if (!result.confirm) return
 					this.confirmingOrderId = item.id
@@ -342,14 +344,14 @@ export default {
 						)
 						.then((res) => {
 							if (res.data && res.data.code === 200) {
-								uni.showToast({ title: '已确认', icon: 'success' })
+								uni.showToast({ title: this.$t('store.orders.confirmed'), icon: 'success' })
 								this.refreshOrders()
 							} else {
-								uni.showToast({ title: res.data.msg || '操作失败', icon: 'none' })
+								uni.showToast({ title: res.data.msg || this.$t('store.orders.actionFailed'), icon: 'none' })
 							}
 						})
 						.catch((error) => {
-							uni.showToast({ title: error.response?.data?.msg || '操作失败', icon: 'none' })
+							uni.showToast({ title: error.response?.data?.msg || this.$t('store.orders.actionFailed'), icon: 'none' })
 						})
 						.finally(() => {
 							this.confirmingOrderId = null

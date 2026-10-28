@@ -729,6 +729,7 @@
 		    "path": "pages/writers/worldVocabularyEditor",
 		    "style" :
 		    {
+				"navigationBarTitleText": "编辑世界词条",
 		        "enablePullDownRefresh": false,
 		    	"titleNView": {
 		    		"titleSize": "40rpx",
@@ -776,7 +777,7 @@
 		}, {
 			"path": "pages/manage/audit/detail",
 			"style": {
-				"navigationBarTitleText": ""
+				"navigationBarTitleText": "审核稿件"
 			}
 		}, {
 			"path": "pages/community/privateMessages",
@@ -801,7 +802,7 @@
 		}, {
 			"path": "pages/manage/faqs/detail",
 			"style": {
-				"navigationBarTitleText": ""
+				"navigationBarTitleText": "FAQ详情"
 			}
 		}, {
 			"path": "pages/manage/library/roulous",
@@ -816,7 +817,7 @@
 		}, {
 			"path": "pages/manage/posts/detail",
 			"style": {
-				"navigationBarTitleText": ""
+				"navigationBarTitleText": "帖子详情"
 			}
 		}, {
 			"path": "pages/manage/users/index",

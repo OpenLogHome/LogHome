@@ -96,7 +96,8 @@
 		},
 		"donate": {
 			"intro": "The great LogHome tree carries book after book — go water it and give it some fertilizer!",
-			"button": "Donate"
+			"button": "Donate",
+			"activityTitle": "HayCraft Event"
 		},
 		"credit": {
 			"recordsTitle": "Change log",

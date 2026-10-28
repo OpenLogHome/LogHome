@@ -202,6 +202,12 @@ export default {
 			}
 		},
 		getCollapseHeight(type, index = 0) {
+			// 收起时内容节点由 v-if 移除，查询它只会导致每项重复重试 11 次。
+			// 默认展开项先挂载内容，随后由 updated 钩子测量实际高度。
+			if (!this.isOpen) {
+				if (!type && this.open) this.onClick(true, 'init');
+				return;
+			}
 			const views = uni.createSelectorQuery().in(this)
 			views
 				.select(`#${this.elId}`)

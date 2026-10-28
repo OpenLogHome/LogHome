@@ -3,6 +3,9 @@
 		"confirm": "OK",
 		"cancel": "Cancel",
 		"submit": "Submit",
+		"done": "Done",
+		"manage": "Manage",
+		"publish": "Publish",
 		"save": "Save",
 		"delete": "Delete",
 		"retry": "Retry",
@@ -28,6 +31,10 @@
 		"inputContent": "Please enter content",
 		"all": "All",
 		"back": "Back",
+		"theme": {
+			"switchToLight": "Dark theme on. Switch to light theme",
+			"switchToDark": "Light theme on. Switch to dark theme"
+		},
 		"prev": "Previous",
 		"next": "Next",
 		"more": "More",
@@ -52,6 +59,37 @@
 		"completed": "Completed",
 		"reviewing": "Under review",
 		"uploadFailed": "Upload failed",
+		"officialTags": {
+			"novella": "Novella",
+			"reference": "Reference",
+			"esports": "Esports",
+			"genderSwap": "Gender Swap",
+			"rebirth": "Rebirth",
+			"reincarnation": "Reincarnation",
+			"boysLove": "Boys' Love",
+			"pureLove": "Pure Love",
+			"thriller": "Thriller",
+			"mystery": "Mystery",
+			"lovecraftian": "Lovecraftian",
+			"lore": "Lore",
+			"fanWorks": "Fan Works",
+			"novel": "Novel",
+			"girlsLove": "Girls' Love",
+			"nonMinecraft": "Non-Minecraft",
+			"sciFi": "Sci-Fi",
+			"lightNovel": "Light Novel",
+			"transmigration": "Transmigration",
+			"easternFantasy": "Eastern Fantasy",
+			"anthology": "Anthology",
+			"snapshotsInTime": "Snapshots in Time",
+			"creative": "Creative",
+			"essays": "Essays",
+			"prose": "Prose",
+			"collection": "Collection",
+			"shortStory": "Short Story",
+			"minecraft": "Minecraft",
+			"fantasy": "Fantasy"
+		},
 		"emoji": {
 			"sticker": "Stickers",
 			"favorite": "Favorites",
@@ -117,6 +155,12 @@
 			"selectCloud": "Keep cloud version",
 			"cancel": "Cancel"
 		},
+		"colorPicker": {
+			"cancel": "Cancel",
+			"confirm": "Apply",
+			"switch": "Switch",
+			"mode": "mode"
+		},
 		"viewDetails": "View details ➜",
 		"gePopup": {
 			"bindWechatTip": "For your account security, link WeChat for quick sign-in",
@@ -130,7 +174,12 @@
 			"updateContentShort": "What's new:",
 			"notNow": "Not now",
 			"updateNow": "Update now"
-		}
+		},
+		"brand": {
+			"logPower": "LogHome Power"
+		},
+		"emptyState": "Nothing here yet",
+		"haycraftWork": "HayCraft event entry"
 	},
 	"nav": {
 		"tab": {

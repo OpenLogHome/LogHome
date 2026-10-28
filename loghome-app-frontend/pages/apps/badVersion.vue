@@ -1,12 +1,12 @@
 <template>
 	<view class="outer" v-dark>
-		<el-result title="啊哦，这个版本有些过于古老了..." subTitle="你可以继续使用，但是我们无法确保这个版本能跑">
+		<el-result :title="$t('apps.badVersion.title')" :subTitle="$t('apps.badVersion.subtitle')">
 		  <template slot="icon">
 		    <img src="../../static/images/creeper.png" style="height:300rpx;"></img>
 		  </template>
 		  <template slot="extra">
-			<el-button type="primary" size="large" @click="checkUpdate">立即获取最新版本</el-button>
-		    <el-button size="large" @click="goBack">返回</el-button>
+			<el-button type="primary" size="large" @click="checkUpdate">{{ $t('apps.badVersion.getLatest') }}</el-button>
+		    <el-button size="large" @click="goBack">{{ $t('apps.badVersion.back') }}</el-button>
 		  </template>
 		</el-result>
 	</view>

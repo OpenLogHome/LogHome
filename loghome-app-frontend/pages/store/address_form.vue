@@ -1,43 +1,43 @@
 <template>
 	<view class="address-form-page" v-dark>
 		<view class="page-intro">
-			<view class="page-title">{{ addressId ? '编辑地址' : '新增地址' }}</view>
-			<view class="page-caption">请填写准确的收货信息，便于商品配送。</view>
+			<view class="page-title">{{ addressId ? $t('store.address.form.titleEdit') : $t('store.address.form.titleAdd') }}</view>
+			<view class="page-caption">{{ $t('store.address.form.caption') }}</view>
 		</view>
 		<view v-if="!isLoggedIn" class="page-state">
-			<text>登录后才能编辑收货地址</text>
-			<view class="state-action" @tap="goLogin">去登录</view>
+			<text>{{ $t('store.address.form.loginRequired') }}</text>
+			<view class="state-action" @tap="goLogin">{{ $t('store.common.goLogin') }}</view>
 		</view>
 
 		<template v-else>
 			<view v-if="loadingDetail" class="page-state">
-				<text>正在加载地址信息...</text>
+				<text>{{ $t('store.address.form.loading') }}</text>
 			</view>
 
 			<template v-else>
 				<view class="form-card">
 					<view class="form-item">
-						<text class="label">收货人</text>
+						<text class="label">{{ $t('store.address.form.receiverLabel') }}</text>
 						<input
 							class="input"
 							v-model.trim="form.receiver_name"
 							maxlength="20"
-							placeholder="请输入收货人姓名"
+							:placeholder="$t('store.address.form.receiverPlaceholder')"
 						/>
 					</view>
 					<view class="form-item">
-						<text class="label">手机号</text>
+						<text class="label">{{ $t('store.address.form.phoneLabel') }}</text>
 						<input
 							class="input"
 							v-model.trim="form.receiver_phone"
 							maxlength="20"
-							placeholder="请输入手机号"
+							:placeholder="$t('store.address.form.phonePlaceholder')"
 							type="text"
 							inputmode="tel"
 						/>
 					</view>
 					<view class="form-item">
-						<text class="label">省市区</text>
+						<text class="label">{{ $t('store.address.form.regionLabel') }}</text>
 						<picker
 							mode="multiSelector"
 							:range="regionColumns"
@@ -53,19 +53,19 @@
 						</picker>
 					</view>
 					<view class="form-item textarea-item">
-						<text class="label">详细地址</text>
+						<text class="label">{{ $t('store.address.form.detailLabel') }}</text>
 						<textarea
 							class="textarea"
 							v-model.trim="form.detail"
 							maxlength="120"
 							auto-height
-							placeholder="街道、楼栋、门牌号等"
+							:placeholder="$t('store.address.form.detailPlaceholder')"
 						/>
 					</view>
 					<view class="form-item switch-item">
 						<view>
-							<view class="label">设为默认地址</view>
-							<view class="field-hint">下次兑换时优先使用此地址</view>
+							<view class="label">{{ $t('store.address.form.defaultLabel') }}</view>
+							<view class="field-hint">{{ $t('store.address.form.defaultHint') }}</view>
 						</view>
 						<switch color="#264d3c" :checked="form.is_default" @change="onDefaultChange" />
 					</view>
@@ -73,7 +73,7 @@
 
 				<view class="bottom-bar">
 					<button class="save-btn" :disabled="submitting" @tap="saveAddress">
-						{{ submitting ? '保存中...' : '保存地址' }}
+						{{ submitting ? $t('store.address.form.saving') : $t('store.address.form.save') }}
 					</button>
 				</view>
 			</template>
@@ -120,7 +120,7 @@ export default {
 			return !!this.authToken
 		},
 		regionDisplay() {
-			if (!this.region || this.region.length === 0) return '请选择省市区'
+			if (!this.region || this.region.length === 0) return this.$t('store.address.form.regionPlaceholder')
 			return this.region.join('')
 		},
 	},
@@ -183,11 +183,11 @@ export default {
 						this.region = [data.province || '', data.city || '', data.district || '']
 						this.resetRegionPicker()
 					} else {
-						uni.showToast({ title: res.data.msg || '地址加载失败', icon: 'none' })
+						uni.showToast({ title: res.data.msg || this.$t('store.address.form.loadFailed'), icon: 'none' })
 					}
 				})
 				.catch((error) => {
-					uni.showToast({ title: error.response?.data?.msg || '地址加载失败', icon: 'none' })
+					uni.showToast({ title: error.response?.data?.msg || this.$t('store.address.form.loadFailed'), icon: 'none' })
 				})
 				.finally(() => {
 					this.loadingDetail = false
@@ -225,15 +225,15 @@ export default {
 				return
 			}
 			if (!this.form.receiver_name || !this.form.receiver_phone || !this.form.detail) {
-				uni.showToast({ title: '请完善地址信息', icon: 'none' })
+				uni.showToast({ title: this.$t('store.address.form.incomplete'), icon: 'none' })
 				return
 			}
 			if (this.region.length !== 3 || !this.region.every(Boolean)) {
-				uni.showToast({ title: '请选择省市区', icon: 'none' })
+				uni.showToast({ title: this.$t('store.address.form.regionPlaceholder'), icon: 'none' })
 				return
 			}
 			if (!/^\d{5,20}$/.test(this.form.receiver_phone)) {
-				uni.showToast({ title: '手机号格式不正确', icon: 'none' })
+				uni.showToast({ title: this.$t('store.address.form.invalidPhone'), icon: 'none' })
 				return
 			}
 			const tk = this.getToken()
@@ -264,16 +264,16 @@ export default {
 			request
 				.then((res) => {
 					if (res.data && res.data.code === 200) {
-						uni.showToast({ title: '保存成功', icon: 'success' })
+						uni.showToast({ title: this.$t('store.address.form.saveSuccess'), icon: 'success' })
 						setTimeout(() => {
 							uni.navigateBack()
 						}, 500)
 					} else {
-						uni.showToast({ title: res.data.msg || '保存失败', icon: 'none' })
+						uni.showToast({ title: res.data.msg || this.$t('store.address.form.saveFailed'), icon: 'none' })
 					}
 				})
 				.catch((error) => {
-					uni.showToast({ title: error.response?.data?.msg || '保存失败', icon: 'none' })
+					uni.showToast({ title: error.response?.data?.msg || this.$t('store.address.form.saveFailed'), icon: 'none' })
 				})
 				.finally(() => {
 					this.submitting = false

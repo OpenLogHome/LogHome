@@ -123,8 +123,8 @@
                     @click="navigateToUser(user.user_id)">
                     <img class="user-avatar" :src="user.avatar_url || '/default-avatar.png'" :alt="user.name">
                     <div class="user-info">
-                      <div class="user-name">{{ user.name || copy.account.anonymous }}</div>
-                      <div class="user-motto">{{ user.motto || copy.account.mottoFallback }}</div>
+                      <div class="user-name">{{ user.name || $t(copy.account.anonymous) }}</div>
+                      <div class="user-motto">{{ user.motto || $t(copy.account.mottoFallback) }}</div>
                     </div>
                   </div>
                 </div>
@@ -158,7 +158,7 @@
               <div class="user-profile">
                 <img :src="userInfo && userInfo.avatar_url ? userInfo.avatar_url : '/default-avatar.png'"
                   class="user-avatar">
-                <span class="user-nickname">{{ userInfo ? userInfo.name || copy.account.nameFallback : copy.account.nameFallback }}</span>
+                <span class="user-nickname">{{ userInfo ? userInfo.name || $t(copy.account.nameFallback) : $t(copy.account.nameFallback) }}</span>
                 <i class="el-icon-arrow-down"></i>
               </div>
               <el-dropdown-menu slot="dropdown">
@@ -196,6 +196,7 @@
 <script>
 import copy from '~/config/site-copy.json'
 import { formatCopy } from '~/utils/format-copy'
+import { formatRelativeTime } from '~/utils/i18n-format'
 import { workUrl } from '~/utils/reading-discovery'
 import MobileDownloadButton from '~/components/MobileDownloadButton.vue'
 import GlobalThemeSwitch from '~/components/GlobalThemeSwitch.vue'
@@ -351,7 +352,7 @@ export default {
       localStorage.removeItem('LogHomeUserInfo');
       this.isLogin = false;
       this.userInfo = null;
-      this.$message.success(this.copy.account.logoutSuccess);
+      this.$message.success(this.$t(this.copy.account.logoutSuccess));
       this.$router.push('/');
     },
 
@@ -524,20 +525,7 @@ export default {
     },
 
     formatTime(timestamp) {
-      if (!timestamp) return ''
-      const date = new Date(timestamp)
-      const now = new Date()
-      const diff = now - date
-
-      if (diff < 60000) {
-        return this.copy.time.justNow
-      } else if (diff < 3600000) {
-        return formatCopy(this.copy.time.minutesAgo, { count: Math.floor(diff / 60000) })
-      } else if (diff < 86400000) {
-        return formatCopy(this.copy.time.hoursAgo, { count: Math.floor(diff / 3600000) })
-      } else {
-        return formatCopy(this.copy.time.daysAgo, { count: Math.floor(diff / 86400000) })
-      }
+      return timestamp ? formatRelativeTime(timestamp, this.$language.state.locale) : ''
     },
 
     // 查看全部结果

@@ -15,6 +15,7 @@ import aiAssistanceMixin from './mixins/ai-assistance.js';
 import { relativeTime } from './common/datetime.js';
 import i18n from './i18n';
 import { resolveEffectiveLanguage } from './i18n/resolve.js';
+import { installI18nLayoutAudit } from './common/i18n-layout-audit.js';
 
 // 导入自定义指令
 import './plugins/directives'
@@ -52,7 +53,9 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = BASE_URL_PRODUCTION;   // 在这里修改后端环境为本地/服务器版本  BASE_URL_DEV/BASE_URL_PRODUCTION
+// Android 客户端统一读取 gradle.properties 的 backend_endpoint，其他环境使用前端配置。
+const nativeBackendEndpoint = typeof window !== 'undefined' && window.jsBridge && window.jsBridge.backendEndpoint;
+Vue.prototype.$baseUrl = nativeBackendEndpoint || BASE_URL_PRODUCTION;
 Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_PRODUCTION;
 Vue.prototype.$collaborationWsUrl = COLLABORATION_WS_URL_PRODUCTION;
 // Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;
@@ -348,6 +351,7 @@ Vue.mixin(localizedNavigationMixin);
 Vue.mixin(aiAssistanceMixin);
 
 Vue.config.productionTip = false;
+if (process.env.NODE_ENV === 'development') installI18nLayoutAudit();
 App.mpType = 'app'
 
 const app = new Vue({

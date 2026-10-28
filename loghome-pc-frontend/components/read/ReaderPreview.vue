@@ -1,11 +1,11 @@
 <template>
   <section class="preview-reader" :class="{ 'is-night': readerNightMode }">
-    <header class="preview-toolbar"><strong>阅读预览</strong><span>未保存草稿 · 仅本机可见</span><button @click="$emit('close')">返回编辑器</button></header>
+    <header class="preview-toolbar"><strong>阅读预览</strong><span>未保存草稿 · 不公开发布</span><button @click="$emit('close')">返回编辑器</button></header>
     <div v-if="failure" class="preview-error" role="alert"><h2>预览已失效</h2><p>{{ failure }}</p><button @click="$emit('close')">返回编辑器重新预览</button></div>
     <template v-else-if="payload">
       <MangaDraftPreview v-if="isManga" :article="payload.article" :novel-name="payload.novel.name" @close="$emit('close')" />
       <div v-else class="preview-body" :style="readerAppearance">
-        <div class="preview-title"><h1>{{ payload.article.title }}</h1><p>{{ payload.novel.name }} · 不计阅读量、经验或阅读进度</p><button @click="settingsVisible = true">阅读设置</button><button @click="listen">听书预览</button></div>
+        <div class="preview-title"><h1>{{ payload.article.title }}</h1><p>{{ payload.novel.name }} · 不计阅读量、经验或阅读进度</p><button @click="settingsVisible = true">阅读设置</button><button @click="listen">在线听书预览</button><p>听书需登录，正文将发送至原木 TTS 服务生成语音。</p></div>
         <ReaderPager ref="pager" :article="payload.article" :typography="readerTypography" :paged="ready && readerPreferences.mode === 'page'" :initial-position="{}" :navigation-blocked="settingsVisible" :speaking-id="audioState.paragraphId" :chapter-percent="100" />
       </div>
       <ReaderSettings :panel-class="`reading-preview-settings${readerNightMode ? ' is-night' : ''}`" v-if="!isManga && settingsVisible" :visible.sync="settingsVisible" :value="readerPreferences" :fonts="readerFonts" :font-states="readerFontStates" :skins="readerSkins" :tier="readerTier" :resources-loading="readerResourcesLoading" :resource-error="readerResourceError" :font-error="readerFontError" :locked-message="readerLockedMessage" :storage-error="readerStorageError" @input="changeReaderPreferences" @theme="selectReaderTheme" @membership="openReaderMembership" @reset="resetReaderPreferences" @font="selectReaderFont" @skin="selectReaderSkin" @refresh="refreshReaderResources" />
@@ -16,8 +16,8 @@
 </template>
 <script>
 import { readReaderPreview } from '~/utils/reader-preview'
-import { readingToken } from '~/plugins/api/reading'
 import { ReaderAudio, createAudioState } from '~/utils/reader-audio'
+import { createReaderAudioEnvironment } from '~/utils/reader-tts'
 import preferences from '~/mixins/reader-preferences'
 import MangaDraftPreview from '~/components/manga/MangaDraftPreview.vue'
 import ReaderPager from './ReaderPager.vue'
@@ -46,12 +46,16 @@ export default {
       if (!this.player) {
         // A separate queue prevents draft narration from writing real book progress.
         if (this.$readerAudio) this.$readerAudio.pause()
-        this.player = new ReaderAudio(this.audioState,{synthesis:window.speechSynthesis,Utterance:window.SpeechSynthesisUtterance,article:async()=>[],token:readingToken,privatePlayback:true,now:Date.now,setTimeout:(fn,ms)=>window.setTimeout(fn,ms),clearTimeout:id=>window.clearTimeout(id)})
-        this.player.saveSettings = () => {}
+        this.player = new ReaderAudio(this.audioState,createReaderAudioEnvironment(this,{article:async()=>[],privatePlayback:true}))
+        this.player.saveSettings = () => {
+          try { localStorage.setItem('loghome:reader:audio',JSON.stringify({rate:this.audioState.rate,voiceURI:this.audioState.voiceURI,follow:this.audioState.follow}));this.audioState.storageError='' }
+          catch (_) { this.audioState.storageError='听书偏好未能保存。' }
+        }
+        try { const saved=JSON.parse(localStorage.getItem('loghome:reader:audio')||'{}');this.player.configure({rate:saved.rate,voiceURI:saved.voiceURI});this.audioState.follow=saved.follow!==false } catch (_) {}
         this.player.subscribe(state => { if (state.follow && state.paragraphId && this.$refs.pager) this.$refs.pager.jump(state.paragraphId) })
       }
       const position = this.$refs.pager && this.$refs.pager.position
-      await this.player.open(this.payload.novel,[this.payload.article],this.payload.article,position && position.paragraphId || 1)
+      await this.player.open(this.payload.novel,[this.payload.article],this.payload.article,position && position.paragraphId || 1,{forceSeek:false})
     }
   }
 }

@@ -142,3 +142,4 @@ const library = {
 };
 
 export default library;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

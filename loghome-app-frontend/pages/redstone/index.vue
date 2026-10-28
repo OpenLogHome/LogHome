@@ -5,8 +5,8 @@
 
 		<view class="top-bar">
 			<view class="top-bar__back" @tap="goBack"><view class="top-bar__back-icon"></view></view>
-			<text class="top-bar__title">红石中心</text>
-			<view class="top-bar__rules" @tap="gotoRules">规则</view>
+			<text class="top-bar__title">{{ $t('redstone.page.title') }}</text>
+			<view class="top-bar__rules" @tap="gotoRules">{{ $t('redstone.page.rules') }}</view>
 		</view>
 
 		<view class="page-content">
@@ -18,30 +18,30 @@
 					</view>
 					<view>
 						<text class="balance-card__eyebrow">AI ENERGY</text>
-						<text class="balance-card__title">我的红石</text>
+						<text class="balance-card__title">{{ $t('redstone.page.myRedstone') }}</text>
 					</view>
 				</view>
 				<view class="balance-card__amount">
 					<text v-if="accountLoading">--</text>
-					<text v-else-if="accountLoadFailed" class="balance-card__retry" @tap="loadAccount">重新加载</text>
+					<text v-else-if="accountLoadFailed" class="balance-card__retry" @tap="loadAccount">{{ $t('redstone.page.reload') }}</text>
 					<text v-else>{{ account.redstone_balance }}</text>
-					<text v-if="!accountLoadFailed" class="balance-card__unit">红石</text>
+					<text v-if="!accountLoadFailed" class="balance-card__unit">{{ $t('redstone.page.redstoneUnit') }}</text>
 				</view>
-				<text class="balance-card__description">用于 AI 阅读、AI 创作及其他智能功能</text>
+				<text class="balance-card__description">{{ $t('redstone.page.balanceDesc') }}</text>
 				<view v-if="!accountLoading && !accountLoadFailed" class="balance-card__breakdown">
-					<text>赠送 {{ account.expiring_balance || 0 }}</text>
-					<text>永久 {{ account.permanent_balance || 0 }}</text>
-					<text v-if="account.next_expiration_at">最近 {{ formatDate(account.next_expiration_at) }} 到期</text>
+					<text>{{ $t('redstone.page.expiring', { amount: account.expiring_balance || 0 }) }}</text>
+					<text>{{ $t('redstone.page.permanent', { amount: account.permanent_balance || 0 }) }}</text>
+					<text v-if="account.next_expiration_at">{{ $t('redstone.page.nextExpiry', { date: formatDate(account.next_expiration_at) }) }}</text>
 				</view>
 			</view>
 
 			<view class="panel exchange-panel">
 				<view class="panel-heading">
 					<view>
-						<text class="panel-heading__title">兑换红石</text>
-						<text class="panel-heading__subtitle">固定汇率：10 原木 = 1 红石</text>
+						<text class="panel-heading__title">{{ $t('redstone.page.exchangeTitle') }}</text>
+						<text class="panel-heading__subtitle">{{ $t('redstone.page.exchangeRate') }}</text>
 					</view>
-					<text class="panel-heading__balance">原木 {{ account.log_balance }}</text>
+					<text class="panel-heading__balance">{{ $t('redstone.page.logBalance', { amount: account.log_balance }) }}</text>
 				</view>
 
 				<view class="amount-input" :class="{ 'amount-input--focused': focused }">
@@ -50,13 +50,13 @@
 						:value="amount"
 						type="number"
 						maxlength="6"
-						placeholder="输入红石数量"
+						:placeholder="$t('redstone.page.amountPlaceholder')"
 						placeholder-style="color:#826e6d"
 						@input="handleAmountInput"
 						@focus="focused = true"
 						@blur="focused = false"
 					/>
-					<text>红石</text>
+					<text>{{ $t('redstone.page.redstoneUnit') }}</text>
 				</view>
 
 				<view class="quick-grid">
@@ -72,11 +72,11 @@
 				</view>
 
 				<view class="exchange-summary">
-					<text>需要支付</text>
+					<text>{{ $t('redstone.page.payLabel') }}</text>
 					<view>
 						<image src="/static/resources/log.png" mode="aspectFit"></image>
 						<text>{{ logCost }}</text>
-						<text class="exchange-summary__unit">原木</text>
+						<text class="exchange-summary__unit">{{ $t('redstone.page.logUnit') }}</text>
 					</view>
 				</view>
 				<view
@@ -84,36 +84,36 @@
 					:class="{ 'primary-button--disabled': !canExchange || submitting }"
 					@tap="submitExchange"
 				>
-					{{ submitting ? '兑换处理中…' : canExchange ? '确认兑换' : '请输入兑换数量' }}
+					{{ submitting ? $t('redstone.page.exchanging') : canExchange ? $t('redstone.page.confirmExchange') : $t('redstone.page.enterAmount') }}
 				</view>
-				<text v-if="validAmount && !hasEnoughLogs" class="balance-warning">原木余额不足</text>
+				<text v-if="validAmount && !hasEnoughLogs" class="balance-warning">{{ $t('redstone.page.insufficientLogs') }}</text>
 			</view>
 
 			<view class="panel membership-panel">
 				<view class="panel-heading">
 					<view>
-						<text class="panel-heading__title">通行证每月赠送</text>
-						<text class="panel-heading__subtitle">普通用户每月 6 红石；通行证月付开通或续费到账，年付按月到账；赠送红石有效期 3 个月</text>
+						<text class="panel-heading__title">{{ $t('redstone.page.monthlyTitle') }}</text>
+						<text class="panel-heading__subtitle">{{ $t('redstone.page.monthlyDesc') }}</text>
 					</view>
 				</view>
 				<view class="membership-grants">
 					<view>
 						<image src="/static/membership/loghome-pass.png" mode="aspectFit"></image>
 						<view>
-							<text>原木通行证</text>
-							<text class="membership-grants__amount">100 红石</text>
+							<text>{{ $t('redstone.page.passStandardName') }}</text>
+							<text class="membership-grants__amount">{{ $t('redstone.page.grantAmount', { amount: 100 }) }}</text>
 						</view>
 					</view>
 					<view>
 						<image src="/static/membership/loghome-super-pass.png" mode="aspectFit"></image>
 						<view>
-							<text>超级原木通行证</text>
-							<text class="membership-grants__amount">200 红石</text>
+							<text>{{ $t('redstone.page.passSuperName') }}</text>
+							<text class="membership-grants__amount">{{ $t('redstone.page.grantAmount', { amount: 200 }) }}</text>
 						</view>
 					</view>
 				</view>
 				<view class="membership-link" @tap="gotoMembership">
-					<text>查看原木通行证</text>
+					<text>{{ $t('redstone.page.viewPass') }}</text>
 					<text class="ui-chevron" aria-hidden="true"></text>
 				</view>
 			</view>
@@ -121,20 +121,20 @@
 			<view class="panel ai-panel">
 				<view class="panel-heading">
 					<view>
-						<text class="panel-heading__title">红石可以做什么？</text>
-						<text class="panel-heading__subtitle">红石是原木社区 AI 功能的主要消耗资产</text>
+						<text class="panel-heading__title">{{ $t('redstone.page.aiTitle') }}</text>
+						<text class="panel-heading__subtitle">{{ $t('redstone.page.aiSubtitle') }}</text>
 					</view>
 				</view>
 				<view class="ai-list">
-					<view v-for="item in aiUses" :key="item.title" class="ai-item">
-						<view class="ai-item__icon">{{ item.icon }}</view>
+					<view v-for="item in aiUses" :key="item.titleKey" class="ai-item">
+						<view class="ai-item__icon">{{ $t(item.iconKey) }}</view>
 						<view>
-							<text class="ai-item__title">{{ item.title }}</text>
-							<text class="ai-item__description">{{ item.description }}</text>
+							<text class="ai-item__title">{{ $t(item.titleKey) }}</text>
+							<text class="ai-item__description">{{ $t(item.descriptionKey) }}</text>
 						</view>
 					</view>
 				</view>
-				<text class="ai-panel__note">各项功能的具体消耗以使用页面提示为准。</text>
+				<text class="ai-panel__note">{{ $t('redstone.page.aiNote') }}</text>
 			</view>
 
 			<view class="panel ai-declaration">
@@ -167,8 +167,8 @@
 			<view v-if="transactions.length" class="panel records-panel">
 				<view class="panel-heading">
 					<view>
-						<text class="panel-heading__title">最近记录</text>
-						<text class="panel-heading__subtitle">赠送、兑换与 AI 功能消费账单</text>
+						<text class="panel-heading__title">{{ $t('redstone.page.recordsTitle') }}</text>
+						<text class="panel-heading__subtitle">{{ $t('redstone.page.recordsSubtitle') }}</text>
 					</view>
 				</view>
 				<view class="record-list">
@@ -209,9 +209,21 @@ export default {
 			transactions: [],
 			aiDeclarationExpanded: false,
 			aiUses: [
-				{ icon: '阅', title: '问问原木娘', description: '普通问答 1 红石，深度思考 2 红石' },
-				{ icon: '写', title: '笔泡 AI 助手', description: '普通 1 红石，深度思考 2 红石' },
-				{ icon: '像', title: '图像生成与智能纠错', description: '图像生成 5 红石，智能纠错通行证免费、普通用户 2 红石' }
+				{
+					iconKey: 'redstone.page.aiUse.ask.icon',
+					titleKey: 'redstone.page.aiUse.ask.title',
+					descriptionKey: 'redstone.page.aiUse.ask.desc'
+				},
+				{
+					iconKey: 'redstone.page.aiUse.write.icon',
+					titleKey: 'redstone.page.aiUse.write.title',
+					descriptionKey: 'redstone.page.aiUse.write.desc'
+				},
+				{
+					iconKey: 'redstone.page.aiUse.image.icon',
+					titleKey: 'redstone.page.aiUse.image.title',
+					descriptionKey: 'redstone.page.aiUse.image.desc'
+				}
 			]
 		};
 	},
@@ -268,7 +280,7 @@ export default {
 			try {
 				const account = await getRedstoneAccount(this.$baseUrl);
 				if (!account || !Number.isFinite(Number(account.redstone_balance))) {
-					throw new Error('红石账户数据格式异常');
+					throw new Error(this.$t('redstone.page.accountFormatError'));
 				}
 				this.account = {
 					log_balance: Number(account.log_balance || 0),
@@ -280,7 +292,7 @@ export default {
 			} catch (error) {
 				console.log('加载红石账户失败。', error);
 				this.accountLoadFailed = true;
-				uni.showToast({ title: getRedstoneErrorMessage(error, '红石余额加载失败'), icon: 'none' });
+				uni.showToast({ title: getRedstoneErrorMessage(error, this.$t('redstone.page.balanceLoadFailed')), icon: 'none' });
 			} finally {
 				this.accountLoading = false;
 			}
@@ -297,9 +309,12 @@ export default {
 			if (this.submitting || !this.canExchange) return;
 			const confirmed = await new Promise((resolve) => {
 				uni.showModal({
-					title: '确认兑换红石',
-					content: `将消耗 ${this.logCost} 原木，兑换 ${Number(this.amount)} 红石。兑换所得红石永久有效，兑换后不可撤销。`,
-					confirmText: '确认兑换',
+					title: this.$t('redstone.page.exchangeConfirmTitle'),
+					content: this.$t('redstone.page.exchangeConfirmContent', {
+						cost: this.logCost,
+						amount: Number(this.amount)
+					}),
+					confirmText: this.$t('redstone.page.confirmExchange'),
 					success: (result) => resolve(Boolean(result.confirm)),
 					fail: () => resolve(false)
 				});
@@ -316,7 +331,7 @@ export default {
 				this.account.log_balance = result.log_balance;
 				this.account.redstone_balance = result.redstone_balance;
 				this.amount = '';
-				uni.showToast({ title: `已到账 ${result.redstone_amount} 红石`, icon: 'none' });
+				uni.showToast({ title: this.$t('redstone.page.exchangeSuccess', { amount: result.redstone_amount }), icon: 'none' });
 				this.loadData();
 			} catch (error) {
 				uni.showToast({ title: getRedstoneErrorMessage(error), icon: 'none', duration: 2200 });
@@ -327,25 +342,30 @@ export default {
 		transactionTitle(item) {
 			if (item.transaction_type === 'ai_usage' && item.description) return item.description;
 			const labels = {
-				membership_grant: '通行证赠送',
-				membership_upgrade_grant: '升级通行证补赠',
-				annual_refresh: '年付会员每月赠送',
-				monthly_free_grant: '普通用户每月赠送',
-				log_exchange: '原木兑换',
-				ai_usage: 'AI 功能消耗',
-				admin_adjustment: '系统调整',
-				refund: '退款返还',
-				expiration: '赠送红石过期'
+				membership_grant: 'redstone.page.tx.membershipGrant',
+				membership_upgrade_grant: 'redstone.page.tx.upgradeGrant',
+				annual_refresh: 'redstone.page.tx.annualRefresh',
+				monthly_free_grant: 'redstone.page.tx.monthlyFree',
+				log_exchange: 'redstone.page.tx.logExchange',
+				ai_usage: 'redstone.page.tx.aiUsage',
+				admin_adjustment: 'redstone.page.tx.adminAdjustment',
+				refund: 'redstone.page.tx.refund',
+				expiration: 'redstone.page.tx.expiration'
 			};
-			return labels[item.transaction_type] || item.description || '红石到账';
+			const key = labels[item.transaction_type];
+			if (key) return this.$t(key);
+			return item.description || this.$t('redstone.page.tx.default');
 		},
 		transactionMeta(item) {
 			const created = this.formatTime(item.created_at);
 			if (Number(item.amount) > 0 && item.expires_at) {
-				return `${created} · ${this.formatDate(item.expires_at)} 到期`;
+				return this.$t('redstone.page.tx.expiresMeta', {
+					created,
+					date: this.formatDate(item.expires_at)
+				});
 			}
 			if (Number(item.amount) > 0 && item.transaction_type === 'log_exchange') {
-				return `${created} · 永久有效`;
+				return this.$t('redstone.page.tx.permanentMeta', { created });
 			}
 			return created;
 		},

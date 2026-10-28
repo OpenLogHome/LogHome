@@ -36,7 +36,7 @@ class TtsRequestRegistry {
 
 class TtsDataSourceFactory(
     private val registry: TtsRequestRegistry,
-    private val ttsEngine: TtsEngineRouter,
+    private val ttsEngine: TtsSynthesizer,
 ) : DataSource.Factory {
     override fun createDataSource(): DataSource {
         return TtsDataSource(registry, ttsEngine)
@@ -45,7 +45,7 @@ class TtsDataSourceFactory(
 
 class TtsDataSource(
     private val registry: TtsRequestRegistry,
-    private val ttsEngine: TtsEngineRouter,
+    private val ttsEngine: TtsSynthesizer,
 ) : BaseDataSource(true) {
     private var currentUri: android.net.Uri? = null
     private var randomAccessFile: RandomAccessFile? = null
@@ -119,8 +119,8 @@ class TtsDataSource(
         private val cacheLocks = ConcurrentHashMap<String, Any>()
 
         @Throws(IOException::class)
-        internal fun ensureCachedAudio(request: TtsRequest, ttsEngine: TtsEngineRouter) {
-            if (request.cacheFile.exists()) {
+        internal fun ensureCachedAudio(request: TtsRequest, ttsEngine: TtsSynthesizer) {
+            if (request.cacheFile.isFile && request.cacheFile.length() > 0L) {
                 Log.d(
                     TTS_TAG,
                     "cache hit: file=${request.cacheFile.name}, size=${request.cacheFile.length()}",
@@ -130,7 +130,7 @@ class TtsDataSource(
 
             val lock = cacheLocks.getOrPut(request.cacheFile.absolutePath) { Any() }
             synchronized(lock) {
-                if (request.cacheFile.exists()) {
+                if (request.cacheFile.isFile && request.cacheFile.length() > 0L) {
                     Log.d(
                         TTS_TAG,
                         "cache filled by another request: file=${request.cacheFile.name}, size=${request.cacheFile.length()}",

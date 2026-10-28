@@ -1,11 +1,11 @@
 <template>
 	<view style="background-color: var(--card-background); padding-top: 8px;" v-dark>
-		<input class="feedback_title" placeholder="标题" maxlength="20" v-model="faq_title"/>
-		<textarea class="feedback_content" placeholder="在这里写下你遇到的问题"  v-model="faq_content" maxlength="500"></textarea>
-		<button @click="post_faq">提交反馈</button>
+		<input class="feedback_title" :placeholder="$t('apps.feedback.titlePlaceholder')" maxlength="20" v-model="faq_title"/>
+		<textarea class="feedback_content" :placeholder="$t('apps.feedback.contentPlaceholder')"  v-model="faq_content" maxlength="500"></textarea>
+		<button @click="post_faq">{{ $t('apps.feedback.submit') }}</button>
 		<view class="feedback_history">
 			<view class="title_bar">
-				<text>反馈历史</text>
+				<text>{{ $t('apps.feedback.history') }}</text>
 			</view>
 			<navigator v-for="record in records"
 			:url="'./feedback?id=' +  record.faq_id"
@@ -14,8 +14,8 @@
 					<view class="fb_title">{{record.faq_title}}</view>
 					<text class="fb_summary">{{record.faq_content}}</text>
 					<view class="fb_solved">
-						<text v-if="record.solved" style="color: #00FF00;">已解决</text>
-						<text v-else style="color: #FF0000;">未解决</text>
+						<text v-if="record.solved" style="color: #00FF00;">{{ $t('apps.feedback.solved') }}</text>
+						<text v-else style="color: #FF0000;">{{ $t('apps.feedback.unsolved') }}</text>
 					</view>
 				</view>
 			</navigator>
@@ -74,7 +74,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "发表成功",
+						title: _this.$t('apps.feedback.success'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -85,7 +85,7 @@
 				.catch(function(error) {
 					if (error) {
 						uni.showToast({
-							title: "发表失败",
+							title: _this.$t('apps.feedback.failure'),
 							icon: 'none',
 							duration: 2000
 						});

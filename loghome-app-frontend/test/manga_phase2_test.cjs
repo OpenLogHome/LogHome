@@ -7,6 +7,13 @@ const sharp = require(path.join(backend, 'node_modules/sharp'));
 const { createMangaImageAssets } = require(path.join(backend, 'bin/mangaImageAssets'));
 const clone = v => JSON.parse(JSON.stringify(v));
 const pages = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, url: 'https://test.invalid/' + i, readingUrl: 'https://test.invalid/read/' + i, width: 500, height: 700 }));
+const zhMessages = Object.assign({}, ...fs.readdirSync(path.resolve(__dirname, '../i18n/messages'))
+  .filter(name => name === 'zh-CN.json' || name.startsWith('zh-CN.'))
+  .map(name => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../i18n/messages', name), 'utf8'))));
+const translate = (key, params = {}) => {
+  const value = key.split('.').reduce((current, part) => current && current[part], zhMessages) || key;
+  return String(value).replace(/\{(\w+)\}/g, (_, name) => params[name] == null ? `{${name}}` : params[name]);
+};
 function component(file, axios = {}, t) {
   const source = fs.readFileSync(path.resolve(__dirname, '../', file), 'utf8');
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1].replace(/^import .*;?\s*$/gm, '').replace('export default', 'module.exports =');
@@ -16,7 +23,7 @@ function component(file, axios = {}, t) {
   const sandbox = { module: {}, axios, window, uni, Blob, MangaZoomImage: {}, MangaPageSorter: {}, MangaComicLoader: {}, FansContributionBoard: {}, MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, MangaDanmuLayer: {}, TaskRewardModal: {}, TippingBar: {}, MangaCommentItem: {}, MangaCommentComposer: {}, ReportNovelPopup: {}, darkModeMixin: {}, setTimeout, clearTimeout, console: { error() {} } };
   vm.runInNewContext(script, sandbox, { filename: file });
   const options = sandbox.module.exports;
-  const instance = new Vue({ ...options, beforeCreate() { this.$baseUrl = ''; this.$store = { state: { user_id: 1 } }; } });
+  const instance = new Vue({ ...options, beforeCreate() { this.$baseUrl = ''; this.$store = { state: { user_id: 1 } }; this.$t = translate; } });
   if (t) t.after(() => { clearTimeout(instance.draftTimer); clearTimeout(instance.progressTimer); instance.$destroy(); });
   return { instance, storage, navigation, messages, options, uni };
 }

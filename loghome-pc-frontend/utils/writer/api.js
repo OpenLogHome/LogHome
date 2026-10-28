@@ -1,3 +1,5 @@
+import { localizedFetch as fetch } from '../api-fetch'
+
 // Writing APIs must propagate failures: an empty success response would risk data loss.
 export function writerIdentity(storage = window.localStorage) {
   try {

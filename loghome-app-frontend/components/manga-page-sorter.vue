@@ -1,11 +1,11 @@
 <template>
   <view class="sort-list">
-    <text class="sort-tip">拖动手柄调整顺序，也可聚焦手柄后按上下方向键。</text>
+    <text class="sort-tip">{{ $t('manga.editor.reorderHint') }}</text>
     <view v-for="(page, idx) in pages" :key="page.id" class="sort-row" :class="{ dragging: dragIndex === idx, target: targetIndex === idx && dragIndex !== idx }"
       :draggable="true" @dragstart="start(idx)" @dragover.prevent="targetIndex = idx" @drop.prevent="finish" @dragend="cancel">
       <image :src="page.thumb || page.url" mode="aspectFill" />
-      <text class="sort-name">第 {{ idx + 1 }} 页</text>
-      <button v-manga-a11y="disabled" class="sort-handle" type="button" :disabled="disabled" :aria-label="'移动第 ' + (idx + 1) + ' 页；按上下方向键调整顺序'" @keydown.up.prevent="moveByKeyboard(idx, -1)" @keydown.down.prevent="moveByKeyboard(idx, 1)" @touchstart.stop.prevent="touchStart(idx)" @touchmove.stop.prevent="touchMove" @touchend.stop.prevent="finish" @touchcancel="cancel"><manga-icon name="drag" /></button>
+      <text class="sort-name">{{ $t('manga.editor.pageLabel', { page: idx + 1 }) }}</text>
+      <button v-manga-a11y="disabled" class="sort-handle" type="button" :disabled="disabled" :aria-label="$t('manga.editor.reorderHandleAria', { page: idx + 1 })" @keydown.up.prevent="moveByKeyboard(idx, -1)" @keydown.down.prevent="moveByKeyboard(idx, 1)" @touchstart.stop.prevent="touchStart(idx)" @touchmove.stop.prevent="touchMove" @touchend.stop.prevent="finish" @touchcancel="cancel"><manga-icon name="drag" /></button>
     </view>
   </view>
 </template>

@@ -4,16 +4,16 @@
 			<view class="welcome-tools">
 				<view class="welcome-brand">
 					<store-icon name="log" tone="brand" :size="36" />
-					<text>好物与灵感</text>
+					<text>{{ $t('store.index.brandTagline') }}</text>
 				</view>
 				<view class="welcome-actions">
 					<button class="header-action" @tap="handleHeaderAction">
 						<store-icon :name="isLoggedIn ? 'orders' : 'wallet'" :size="30" />
-						<text>{{ isLoggedIn ? '订单' : '登录' }}</text>
+						<text>{{ isLoggedIn ? $t('store.common.orders') : $t('store.common.login') }}</text>
 					</button>
 					<button v-if="isLoggedIn" class="header-action" @tap="goAddresses">
 						<store-icon name="pin" :size="30" />
-						<text>地址</text>
+						<text>{{ $t('store.index.addresses') }}</text>
 					</button>
 				</view>
 			</view>
@@ -22,28 +22,28 @@
 				<template v-if="isLoggedIn">
 					<view class="balance-label">
 						<store-icon name="wallet" :size="30" />
-						<text>可用余额</text>
+						<text>{{ $t('store.index.availableBalance') }}</text>
 					</view>
 					<view class="balance-main">
 						<text class="balance-value">{{ totalBalance }}</text>
-						<text class="balance-unit">原木</text>
+						<text class="balance-unit">{{ $t('store.common.logUnit') }}</text>
 					</view>
 					<view class="balance-detail">
 						<view>
-							<text>原木</text>
+							<text>{{ $t('store.common.logUnit') }}</text>
 							<text class="balance-subvalue">{{ resources.log || 0 }}</text>
 						</view>
 						<view>
-							<text>去皮原木</text>
+							<text>{{ $t('store.common.croppedLog') }}</text>
 							<text class="balance-subvalue">{{ resources.cropped_log || 0 }}</text>
 						</view>
 					</view>
 				</template>
 				<view v-else class="guest-balance" @tap="goLogin">
-					<view class="balance-label">让每一次创作，都有回响</view>
-					<view class="guest-title">把热爱，换成喜欢</view>
+					<view class="balance-label">{{ $t('store.index.guestSlogan') }}</view>
+					<view class="guest-title">{{ $t('store.index.guestTitle') }}</view>
 					<view class="guest-desc">
-						<text>登录查看原木余额</text>
+						<text>{{ $t('store.index.guestDesc') }}</text>
 						<store-icon name="arrow" :size="32" />
 					</view>
 				</view>
@@ -60,17 +60,17 @@
 						@tap="changeCategory(category.value)"
 					>
 						<view class="category-icon"><store-icon :name="category.icon" :size="44" /></view>
-						<text>{{ category.label }}</text>
+						<text>{{ $t(category.labelKey) }}</text>
 					</button>
 				</view>
 			</scroll-view>
 		</view>
 		<view class="catalog-heading">
 			<view>
-				<text class="section-title">发现好物</text>
-				<text class="catalog-subtitle">为日常添一点热爱</text>
+				<text class="section-title">{{ $t('store.index.discover') }}</text>
+				<text class="catalog-subtitle">{{ $t('store.index.discoverSubtitle') }}</text>
 			</view>
-			<text class="catalog-count">{{ total }} 件</text>
+			<text class="catalog-count">{{ $t('store.index.itemCount', { count: total }) }}</text>
 		</view>
 		<view class="tab-bar">
 			<view
@@ -79,7 +79,7 @@
 				:class="['tab-item', activeTab === index ? 'active' : '']"
 				@tap="changeTab(index)"
 			>
-				{{ tab.label }}
+				{{ $t(tab.labelKey) }}
 			</view>
 		</view>
 		<view v-if="loading && products.length === 0" class="loading-box">
@@ -103,11 +103,11 @@
 					/>
 					<view v-else class="cover empty-cover">
 						<store-icon name="package" :size="72" tone="muted" />
-						<text>原木好物</text>
+						<text>{{ $t('store.common.logGoods') }}</text>
 					</view>
-					<view class="cover-badge" v-if="isSoldOut(item)">暂时兑完</view>
+					<view class="cover-badge" v-if="isSoldOut(item)">{{ $t('store.index.soldOutBadge') }}</view>
 					<view class="cover-category" v-else>
-						{{ item.category || (item.type === 'physical' ? '实物周边' : '社区权益') }}
+						{{ item.category || (item.type === 'physical' ? $t('store.common.physicalCategory') : $t('store.common.virtualCategory')) }}
 					</view>
 				</view>
 				<view class="product-copy">
@@ -115,11 +115,11 @@
 					<view class="summary" v-if="item.summary">{{ item.summary }}</view>
 					<view class="price-row">
 						<text class="price">{{ item.price }}</text>
-						<text class="currency-unit">原木{{ item.has_variants ? '起' : '' }}</text>
+						<text class="currency-unit">{{ item.has_variants ? $t('store.common.logFrom') : $t('store.common.logUnit') }}</text>
 					</view>
 					<view class="card-bottom">
 						<text class="hint">
-							{{ showStockWarning(item) ? '仅剩 ' + item.stock + ' 件' : cardHint(item) }}
+							{{ showStockWarning(item) ? $t('store.index.stockLeft', { count: item.stock }) : cardHint(item) }}
 						</text>
 						<view class="card-arrow"><store-icon name="arrow" :size="26" /></view>
 					</view>
@@ -129,15 +129,15 @@
 		<view class="empty" v-else>
 			<view class="empty-icon"><store-icon name="package" :size="72" tone="muted" /></view>
 			<text>{{ emptyStateText }}</text>
-			<view v-if="loadError" class="empty-action" @tap="refreshProducts">重新加载</view>
+			<view v-if="loadError" class="empty-action" @tap="refreshProducts">{{ $t('store.common.reload') }}</view>
 		</view>
 		<view class="list-status" v-if="products.length > 0">
-			<text v-if="loading">加载更多商品中...</text>
+			<text v-if="loading">{{ $t('store.index.loadingMore') }}</text>
 			<view v-else-if="loadError">
 				<text>{{ loadError }}</text>
-				<view class="empty-action" @tap="fetchProducts(page + 1)">重试加载</view>
+				<view class="empty-action" @tap="fetchProducts(page + 1)">{{ $t('store.index.retryLoad') }}</view>
 			</view>
-			<text v-else-if="finished">已展示全部商品</text>
+			<text v-else-if="finished">{{ $t('store.index.allLoaded') }}</text>
 		</view>
 	</view>
 </template>
@@ -154,16 +154,16 @@ export default {
 		return {
 			authToken: null,
 			tabs: [
-				{ label: '全部', value: 'all' },
-				{ label: '虚拟权益', value: 'virtual' },
-				{ label: '实物周边', value: 'physical' },
+				{ labelKey: 'store.index.tabAll', value: 'all' },
+				{ labelKey: 'store.index.tabVirtual', value: 'virtual' },
+				{ labelKey: 'store.index.tabPhysical', value: 'physical' },
 			],
 			activeTab: 0,
 			activeCategory: '',
 			categories: [
-				{ label: '全部好物', value: '', icon: 'grid' },
-				{ label: 'Minecraft', value: 'Minecraft', icon: 'cube' },
-				{ label: '写作灵感', value: '写作', icon: 'pen' },
+				{ labelKey: 'store.index.categoryAll', value: '', icon: 'grid' },
+				{ labelKey: 'store.index.categoryMinecraft', value: 'Minecraft', icon: 'cube' },
+				{ labelKey: 'store.index.categoryWriting', value: '写作', icon: 'pen' },
 			],
 			requestVersion: 0,
 			page: 1,
@@ -189,8 +189,8 @@ export default {
 		emptyStateText() {
 			if (this.loadError) return this.loadError
 			return this.activeCategory || this.activeTab
-				? '这个分类暂时没有商品，试试其他分类吧。'
-				: '新商品准备中，稍后再来看看。'
+				? this.$t('store.index.emptyFiltered')
+				: this.$t('store.index.emptyAll')
 		},
 	},
 	onLoad() {
@@ -293,12 +293,12 @@ export default {
 						this.finished = this.products.length >= this.total
 						this.loadError = ''
 					} else {
-						this.loadError = res.data.msg || '商品加载失败，请下拉重试'
+						this.loadError = res.data.msg || this.$t('store.index.loadFailed')
 					}
 				})
 				.catch(() => {
 					if (version !== this.requestVersion) return
-					this.loadError = '商品加载失败，请下拉重试'
+					this.loadError = this.$t('store.index.loadFailed')
 				})
 				.finally(() => {
 					if (version !== this.requestVersion) return
@@ -313,9 +313,13 @@ export default {
 			return item.type === 'physical' && Number(item.stock) <= 0
 		},
 		cardHint(item) {
-			if (this.isSoldOut(item)) return '暂时售罄'
-			if (item.type === 'physical') return item.has_variants ? '多种规格可选' : '实物好物'
-			return '兑换后自动发放'
+			if (this.isSoldOut(item)) return this.$t('store.index.hintSoldOut')
+			if (item.type === 'physical') {
+				return item.has_variants
+					? this.$t('store.index.hintMultiVariant')
+					: this.$t('store.index.hintPhysical')
+			}
+			return this.$t('store.index.hintAutoDeliver')
 		},
 		goDetail(item) {
 			uni.navigateTo({

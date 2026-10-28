@@ -1,36 +1,36 @@
 <template>
   <writer-panel
     class="writer-ai"
-    title="笔泡 · 写作助手"
+    :title="$t('笔泡 · 写作助手')"
     :scrollable="false"
     @close="$emit('close')"
   >
-    <button slot="actions" :disabled="running" @click="clear">新对话</button>
+    <button slot="actions" :disabled="running" @click="clear">{{ $t('新对话') }}</button>
     <div class="ai-options">
-      <select v-model="thinking" aria-label="思考模式" :disabled="running">
-        <option value="fast">快速思考</option>
-        <option value="deep">深度思考</option></select
+      <select v-model="thinking" :aria-label="$t('思考模式')" :disabled="running">
+        <option value="fast">{{ $t('快速思考') }}</option>
+        <option value="deep">{{ $t('深度思考') }}</option></select
       ><label
         ><input
           v-model="generateImage"
           type="checkbox"
           :disabled="running"
-        />辅助生图</label
+        />{{ $t('辅助生图') }}</label
       >
     </div>
     <div v-if="generateImage" class="ai-options">
       <input
         v-model="imageStyle"
-        aria-label="图片风格"
-        placeholder="图片风格，例如水彩"
-      /><select v-model="imageRatio" aria-label="图片比例">
+        :aria-label="$t('图片风格')"
+        :placeholder="$t('图片风格，例如水彩')"
+      /><select v-model="imageRatio" :aria-label="$t('图片比例')">
         <option>1:1</option>
         <option>16:9</option>
         <option>9:16</option>
       </select>
     </div>
     <p class="ai-note">
-      回答会结合当前章节与作品索引。生成建议后可预览、插入或替换；请求按服务端规则消耗红石。
+      {{ $t('回答会结合当前章节与作品索引。生成建议后可预览、插入或替换；请求按服务端规则消耗红石。') }}
     </p>
     <div
       ref="messages"
@@ -41,26 +41,26 @@
       <writer-empty-state
         v-if="!messages.length"
         icon="el-icon-magic-stick"
-        title="从一个想法开始"
-        description="告诉笔泡你想写什么，或选中正文后一起打磨。"
+        :title="$t('从一个想法开始')"
+        :description="$t('告诉笔泡你想写什么，或选中正文后一起打磨。')"
       >
         <button
           :disabled="running"
-          @click="usePrompt('结合当前章节，续写接下来的情节。')"
+          @click="usePrompt($t('结合当前章节，续写接下来的情节。'))"
         >
-          续写情节
+          {{ $t('续写情节') }}
         </button>
         <button
           :disabled="running"
-          @click="usePrompt('润色选中的文字，保留原意与叙事风格。')"
+          @click="usePrompt($t('润色选中的文字，保留原意与叙事风格。'))"
         >
-          润色选段
+          {{ $t('润色选段') }}
         </button>
         <button
           :disabled="running"
-          @click="usePrompt('梳理当前章节的人物动机与关系。')"
+          @click="usePrompt($t('梳理当前章节的人物动机与关系。'))"
         >
-          梳理人物
+          {{ $t('梳理人物') }}
         </button>
       </writer-empty-state>
       <article
@@ -68,22 +68,22 @@
         :key="message.id"
         :class="message.role"
       >
-        <small>{{ message.role === "user" ? "你" : "笔泡" }}</small>
+        <small>{{ message.role === "user" ? $t('你') : $t('笔泡') }}</small>
         <details v-if="message.reasoning">
-          <summary>思考过程</summary>
+          <summary>{{ $t('思考过程') }}</summary>
           <p>{{ message.reasoning }}</p>
         </details>
-        <p>{{ message.content || (running ? "正在思考…" : "暂无正文建议") }}</p>
+        <p>{{ message.content || (running ? $t('正在思考…') : $t('暂无正文建议')) }}</p>
         <div
           v-for="image in message.images || []"
           :key="image.url"
           class="ai-image"
         >
-          <img :src="image.url" alt="笔泡生成的图片" /><button
+          <img :src="image.url" :alt="$t('笔泡生成的图片')" /><button
             :disabled="!canEdit"
             @click="$emit('image', image.url)"
           >
-            插入图片
+            {{ $t('插入图片') }}
           </button>
         </div>
         <div
@@ -91,63 +91,63 @@
           class="ai-actions"
         >
           <button :disabled="!canEdit" @click="previewText(message)">
-            预览采用</button
-          ><button @click="copy(message.content)">复制</button
+            {{ $t('预览采用') }}</button
+          ><button @click="copy(message.content)">{{ $t('复制') }}</button
           ><button :disabled="!canEdit" @click="smartApply(message)">
-            智能应用
+            {{ $t('智能应用') }}
           </button>
         </div>
       </article>
     </div>
     <p v-if="error" class="ai-error" role="alert">
-      {{ error }}<button v-if="task" @click="resume">继续接收</button>
+      {{ error }}<button v-if="task" @click="resume">{{ $t('继续接收') }}</button>
     </p>
     <p v-if="status" role="status">{{ status }}</p>
     <form slot="footer" @submit.prevent="send">
-      <small v-if="selection.text">已选择 {{ selection.text.length }} 字</small
+      <small v-if="selection.text">{{ $t('已选择 {count} 字', { count: selection.text.length }) }}</small
       ><textarea
         ref="prompt"
         v-model="prompt"
         rows="4"
-        aria-label="写作助手指令"
-        placeholder="讨论情节、润色选段，或续写故事…"
+        :aria-label="$t('写作助手指令')"
+        :placeholder="$t('讨论情节、润色选段，或续写故事…')"
         :disabled="running"
         @keydown.ctrl.enter.prevent="send"
         @keydown.meta.enter.prevent="send"
       />
       <div class="ai-composer-actions">
-        <small>⌘ / Ctrl Enter 发送</small>
-        <button v-if="running" type="button" @click="stop">停止接收</button
-        ><button v-else class="primary" :disabled="!prompt.trim()">发送</button>
+        <small>{{ $t('⌘ / Ctrl Enter 发送') }}</small>
+        <button v-if="running" type="button" @click="stop">{{ $t('停止接收') }}</button
+        ><button v-else class="primary" :disabled="!prompt.trim()">{{ $t('发送') }}</button>
       </div>
     </form>
     <el-dialog
       class="writer-dialog-wrapper"
-      title="采用 AI 建议"
+      :title="$t('采用 AI 建议')"
       :visible.sync="previewOpen"
       width="720px"
       :custom-class="writerDialogClass"
       append-to-body
-      ><p v-if="candidate.original">原文</p>
+      ><p v-if="candidate.original">{{ $t('原文') }}</p>
       <pre v-if="candidate.original" class="candidate-original">{{
         candidate.original
       }}</pre>
-      <p>建议文本</p>
+      <p>{{ $t('建议文本') }}</p>
       <textarea
         v-model="candidate.text"
         rows="12"
         class="candidate-input"
       /><span slot="footer"
-        ><el-button @click="previewOpen = false">取消</el-button
+        ><el-button @click="previewOpen = false">{{ $t('取消') }}</el-button
         ><el-button :disabled="!canEdit" @click="adopt(false)"
-          >插入到光标</el-button
+          >{{ $t('插入到光标') }}</el-button
         ><el-button
           type="primary"
           :disabled="
             !canEdit || !candidate.selection || !candidate.selection.text
           "
           @click="adopt(true)"
-          >替换选段</el-button
+          >{{ $t('替换选段') }}</el-button
         ></span
       ></el-dialog
     >
@@ -235,7 +235,7 @@ export default {
           })
         );
       } catch (_) {
-        this.error = "对话本机保存失败，可复制保留当前建议";
+        this.error = this.$t('对话本机保存失败，可复制保留当前建议');
       }
     },
     clear() {
@@ -248,8 +248,8 @@ export default {
       if (this.running || !this.prompt.trim()) return;
       try {
         await this.writerConfirm(
-          "写作助手会按所选思考和生图模式消耗红石，继续？",
-          "请求写作助手"
+          this.$t('写作助手会按所选思考和生图模式消耗红石，继续？'),
+          this.$t('请求写作助手')
         );
       } catch (_) {
         return;
@@ -338,7 +338,7 @@ export default {
         await consumeWriterStream(response, (event) => this.event(event), {
           signal: this.controller.signal,
         });
-        if (this.task) this.error = "连接已结束，任务尚未完成，可继续接收";
+        if (this.task) this.error = this.$t('连接已结束，任务尚未完成，可继续接收');
       } catch (error) {
         if (error.name !== "AbortError") this.error = error.message;
       } finally {
@@ -390,7 +390,7 @@ export default {
             message.images.push(image);
       }
       if (event.type === "error")
-        throw new Error(event.message || "写作助手请求失败");
+        throw new Error(event.message || this.$t('写作助手请求失败'));
       if (event.type === "done") this.task = null;
       this.persist();
       this.$nextTick(() => {
@@ -480,7 +480,7 @@ export default {
           }
         );
         if (JSON.stringify(baseline) !== JSON.stringify(editor.getJSON()))
-          throw new Error("正文已经变化，请重新生成智能预览");
+          throw new Error(this.$t('正文已经变化，请重新生成智能预览'));
         const decision = response.data || {};
         if (decision.action === "insert") {
           this.candidate = {
@@ -497,12 +497,12 @@ export default {
           last = blocks.find(
             (p) => p.index === Number(decision.end_paragraph_index)
           );
-        if (!first || !last) throw new Error("无法定位替换范围");
+        if (!first || !last) throw new Error(this.$t('无法定位替换范围'));
         const from = first.from + 1,
           to = last.to - 1,
           text = editor.state.doc.textBetween(from, to, "\n");
         if (text.trim() !== String(decision.original_text || "").trim())
-          throw new Error("智能建议与原文不匹配，请重新检查");
+          throw new Error(this.$t('智能建议与原文不匹配，请重新检查'));
         this.candidate = {
           text: decision.replacement_text || this.generatedText(message),
           original: text,
@@ -516,9 +516,9 @@ export default {
     async copy(text) {
       try {
         await navigator.clipboard.writeText(text);
-        this.writerMessage("success", "已复制");
+        this.writerMessage("success", this.$t('已复制'));
       } catch (_) {
-        this.writerMessage("error", "复制失败，请手动选择文本复制");
+        this.writerMessage("error", this.$t('复制失败，请手动选择文本复制'));
       }
     },
   },

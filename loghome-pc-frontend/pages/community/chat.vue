@@ -121,6 +121,7 @@ import Workspace from "~/components/social/Workspace.vue";
 import moment from "moment";
 import { readingToken } from "~/plugins/api/reading";
 import { normalizePrivateMessage } from "~/utils/private-message.js";
+import { localizedFetch as fetch } from "~/utils/api-fetch";
 
 export default {
   components: { Workspace },

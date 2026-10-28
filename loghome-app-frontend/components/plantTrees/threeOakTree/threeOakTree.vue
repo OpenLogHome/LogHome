@@ -22,11 +22,11 @@
     <view ref="sceneHost" class="scene-host"></view>
 
     <view class="gesture-hint" v-if="!hasInteracted">
-      <text>拖动旋转树场</text>
+      <text>{{ $t('tree.components.gestureHint') }}</text>
     </view>
 
     <view class="scene-error" v-if="initFailed">
-      <text>当前环境无法启用高质量 3D 树场，已切回经典模式。</text>
+      <text>{{ $t('tree.components.sceneError') }}</text>
     </view>
   </view>
 </template>

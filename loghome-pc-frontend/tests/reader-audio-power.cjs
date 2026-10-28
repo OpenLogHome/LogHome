@@ -1,54 +1,79 @@
-// Execute actual controllers, Nuxt plugin, public explanation page and storage helpers.
+// Actual cloud-audio controller, browser transport, persistence plugin, and public power page.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),babel=require('@babel/core'),compiler=require('vue-template-compiler/build.js')
-const root=path.resolve(__dirname,'..'),cache=new Map(),records=new Map(),events=new Map(),routeHooks=[]
-const storage={getItem:k=>records.get(k)||null,setItem:(k,v)=>records.set(k,v),removeItem:k=>records.delete(k)}
-let hotDispose,voiceList=[{name:'Chinese',lang:'zh-CN',voiceURI:'zh',localService:true}],spoken=[],token='a',time=1000
-const synth={speaking:false,paused:false,getVoices:()=>voiceList,addEventListener(){},removeEventListener(){},cancel(){this.speaking=false},resume(){this.paused=false},speak(u){this.speaking=true;spoken.push(u)}}
-const win={localStorage:storage,speechSynthesis:synth,SpeechSynthesisUtterance:class{constructor(text){this.text=text}},addEventListener:(key,fn)=>events.set('window:'+key,fn),removeEventListener:(key)=>events.delete('window:'+key)}
-win.setTimeout=function(fn,ms){assert.equal(this,win);return setTimeout(fn,ms)};win.clearTimeout=function(id){assert.equal(this,win);clearTimeout(id)}
-const doc={visibilityState:'visible',addEventListener:(key,fn)=>events.set('document:'+key,fn),removeEventListener:(key)=>events.delete('document:'+key)}
-function load(file){if(cache.has(file))return cache.get(file);let source=fs.readFileSync(path.join(root,file),'utf8');if(file.endsWith('.vue')){const c=compiler.parseComponent(source);assert.deepEqual(compiler.compile(c.template.content).errors,[],file);source=c.script.content}const exports={};vm.runInNewContext(babel.transformSync(source,{configFile:false,babelrc:false,plugins:[require('@babel/plugin-transform-modules-commonjs')]}).code,{exports,module:{hot:{dispose:fn=>hotDispose=fn}},process:{client:true,server:false,env:{}},console,window:win,document:doc,navigator:{},localStorage:storage,Date,URL,atob,setTimeout,clearTimeout,require(s){if(s==='vue')return{observable:s=>s};if(s==='axios')return{};if(s.endsWith('.vue'))return{};let f=s.startsWith('~/')?s.slice(2):path.posix.join(path.posix.dirname(file),s);if(!/\.js$/.test(f))f+='.js';return load(f)}});cache.set(file,exports);return exports}
-const plain=v=>JSON.parse(JSON.stringify(v)),defer=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return{promise,resolve,reject}},settle=async()=>{for(let i=0;i<8;i++)await Promise.resolve()},account=(tk='a')=>{token=tk;records.set('token',JSON.stringify({tk}))}
-const article=(id=11,bookId=7)=>({article_id:id,novel_id:bookId,title:'Chapter '+id,article_type:'richtext',content:[{id:1,type:'text',value:'字'.repeat(400)},{id:2,type:'text',value:'第二段😀故事。'.repeat(25)}]}),book={novel_id:7,name:'Public book',novel_type:'novel'},chapters=[{article_id:11,title:'11'},{article_id:12,title:'12'}]
+const {fixture,settle,deferred,article,book,chapters}=require('./helpers/reader-audio-fixture.cjs')
+const f=fixture(),root=path.resolve(__dirname,'..'),cache=new Map(),records=new Map(),events=new Map(),routeHooks=[]
+const storage={getItem:k=>records.get(k)||null,setItem:(k,v)=>records.set(k,String(v)),removeItem:k=>records.delete(k)}
+let hotDispose
+const win={localStorage:storage,Audio:f.Audio,URL:{createObjectURL:f.env.createObjectURL,revokeObjectURL:f.env.revokeObjectURL},addEventListener:(key,fn)=>events.set('window:'+key,fn),removeEventListener:key=>events.delete('window:'+key),fetch:async(_,options)=>({ok:true,blob:()=>f.speech({...JSON.parse(options.body),token:options.headers.Authorization.split(' ')[1],signal:options.signal})})}
+win.setTimeout=(fn,ms)=>setTimeout(fn,ms);win.clearTimeout=id=>clearTimeout(id)
+const doc={visibilityState:'visible',addEventListener:(key,fn)=>events.set('document:'+key,fn),removeEventListener:key=>events.delete('document:'+key)}
+function load(file){if(cache.has(file))return cache.get(file);let source=fs.readFileSync(path.join(root,file),'utf8');if(file.endsWith('.json'))return JSON.parse(source);if(file.endsWith('.vue')){const c=compiler.parseComponent(source);assert.deepEqual(compiler.compile(c.template.content).errors,[],file);source=c.script.content}const exports={};vm.runInNewContext(babel.transformSync(source,{configFile:false,babelrc:false,plugins:[require('@babel/plugin-transform-modules-commonjs')]}).code,{exports,module:{hot:{dispose:fn=>hotDispose=fn}},process:{client:true,server:false,env:{baseUrl:'https://api.example.test'}},console,window:win,document:doc,navigator:{},localStorage:storage,Date,URL,atob,AbortController,setTimeout,clearTimeout,require(s){if(s==='vue')return{observable:s=>s};if(s==='axios')return{request:async config=>({data:{code:200,data:await f.session(config.headers.Authorization.split(' ')[1])}})};if(s.endsWith('.vue'))return{};let target=s.startsWith('~/')?s.slice(2):path.posix.join(path.posix.dirname(file),s);if(!/\.(js|json)$/.test(target))target+='.js';return load(target)}},{filename:file});cache.set(file,exports);return exports}
+const plain=v=>JSON.parse(JSON.stringify(v)),account=tk=>{f.login=tk;storage.setItem('token',JSON.stringify({tk}))}
 async function main(){
- const audio=load('utils/reader-audio.js');let fetchArticle=async id=>[article(id)];const timers=[]
- const env={synthesis:synth,Utterance:win.SpeechSynthesisUtterance,article:id=>fetchArticle(id),token:()=>token,now:()=>time,setTimeout:(fn,ms)=>{timers.push({fn,ms});return timers.length},clearTimeout(){}}
- const player=new audio.ReaderAudio(audio.createAudioState(),env),state=player.state
- player.configure({voiceURI:'zh'})
- await player.open(book,chapters,article(),1);state.charOffset=40;const generation=player.generation;await player.open(book,chapters,article(),null);assert.equal(state.charOffset,40);assert.equal(player.generation,generation)
- player.measureTiming(100,10,1);assert.equal(state.charactersPerSecond,10);player.seekRelative(15);assert.equal(state.charOffset,190);player.configure({rate:1.5});player.seekRelative(-5);assert.equal(state.charOffset,115);player.configure({voiceURI:'unavailable'});assert.equal(state.voiceURI,'zh');voiceList.push({name:'English',lang:'en-US',voiceURI:'en'});player.updateVoices();player.configure({voiceURI:'en'});assert.equal(state.timingMeasured,false);player.configure({voiceURI:'zh'});assert.equal(state.charactersPerSecond,10)
- console.log('PASS same ordered queue keeps position; seek estimates use measured voice/rate, unavailable voice cannot replace selected voice')
- player.play();const immediate=spoken.at(-1);const beforeOffset=state.charOffset;immediate.onboundary({charIndex:70});immediate.onend({elapsedTime:0});assert.equal(state.status,'error');assert.equal(state.charOffset,beforeOffset)
- for (const endEvent of [undefined,{elapsedTime:15},{elapsedTime:.2}]) { player.play();spoken.at(-1).onend(endEvent);assert.equal(state.status,'error');assert.equal(state.charOffset,beforeOffset) }
- player.play();const completed=spoken.at(-1);completed.onstart();time+=3000;completed.onend({elapsedTime:3});const afterOffset=state.charOffset;completed.onend({elapsedTime:3});completed.onboundary({charIndex:99});assert.equal(state.charOffset,afterOffset);player.play();const stale=spoken.at(-1);player.seekParagraph(1);stale.onboundary({charIndex:50});assert.equal(state.charOffset,0);spoken.at(-1).onboundary({charIndex:12});assert.equal(state.charOffset,12);spoken.at(-1).onerror({error:'interrupted'});assert.equal(state.status,'paused');assert(state.notice);player.play();synth.speaking=false;player.wake();assert.equal(state.status,'paused');player.play();player.setSleep(5);time+=300001;player.wake();assert.equal(state.status,'paused');assert.equal(state.sleepUntil,0)
- console.log('PASS stale callbacks cannot move a new seek; external interruption/focus and overdue throttled sleep preserve stopped position')
- state.paragraphIndex=1;state.charOffset=state.paragraphs[1].value.length-4;player.play();player.setSleep('chapter');spoken.at(-1).onstart();spoken.at(-1).onend();assert.equal(state.status,'paused');assert.equal(state.paragraphIndex,1);assert.equal(state.charOffset,state.paragraphs[1].value.length);player.toggle();await settle();assert.equal(state.chapterId,12)
- player.cache.clear();const pending=defer();fetchArticle=()=>pending.promise;const changing=player.chapter(0);player.suspend();pending.resolve([article()]);await changing;assert.equal(state.status,'paused');fetchArticle=async()=>[article(99)];await player.chapter(0);assert.equal(state.status,'error');fetchArticle=async()=>[{...article(),is_draft:1}];await player.chapter(0);assert.equal(state.status,'error');player.play();const last=spoken.at(-1);token='b';last.onend();assert.equal(state.visible,false)
- console.log('PASS chapter-end sleep resumes next chapter; freeze cancels loading, wrong/draft chapter rejected, late account callback closes old queue')
- token='a';player.close()
- const startTimers=new Map();let timerId=0
- const probe=new audio.ReaderAudio(audio.createAudioState(),{...env,setTimeout(fn){const id=++timerId;startTimers.set(id,fn);return id},clearTimeout(id){startTimers.delete(id)}})
- await probe.open(book,chapters,article(),null);probe.play();assert.equal(spoken.at(-1).voice,null);assert.equal(probe.state.speechStarted,false)
- let queued=spoken.at(-1);time+=10000;queued.onstart();assert.equal(probe.state.speechStarted,true);assert.equal(startTimers.size,0);time+=11000;queued.onend({elapsedTime:11000});assert.equal(probe.state.charactersPerSecond,10);assert.equal(probe.state.charOffset,110)
- queued=spoken.at(-1);queued.onstart();time+=11000;queued.onend({elapsedTime:11});assert.equal(probe.state.charactersPerSecond,10)
- probe.pause();probe.configure({voiceURI:'zh'});probe.configure({voiceURI:''});probe.updateVoices();assert.equal(probe.state.voiceURI,'');probe.play();assert.equal(spoken.at(-1).voice,null)
- probe.pause();probe.seekParagraph(0,false);probe.state.paragraphs[0].value='短句';probe.play();queued=spoken.at(-1);time+=10000;queued.onend({elapsedTime:10000});assert.equal(probe.state.status,'error');assert.equal(probe.state.paragraphIndex,0);assert.equal(probe.state.charOffset,0)
- probe.play();queued=spoken.at(-1);const timeout=[...startTimers.values()][0];timeout();assert.equal(probe.state.status,'error');queued.onstart();assert.equal(probe.state.speechStarted,false);assert.equal(startTimers.size,0)
- probe.play();const staleStart=[...startTimers.values()][0];probe.pause();staleStart();assert.equal(probe.state.status,'paused');assert.equal(startTimers.size,0)
- const normalSpeak=synth.speak;synth.speak=()=>{throw Error('engine unavailable')};probe.play();assert.equal(probe.state.status,'error');assert.equal(startTimers.size,0);synth.speak=normalSpeak;probe.destroy()
- console.log('PASS system default stays selected; actual-start wall timing ignores queue delay and engine units; missing/late start, short false end and speak exception preserve position')
- const resume=load('utils/reader-audio-resume.js');records.clear();account();await player.open(book,chapters,article(),null);state.charOffset=44;const item=resume.saveAudioResume(storage,'a',player,time);assert.equal(item.charOffset,44);assert.equal(resume.readAudioResume(storage,'b',time),null);assert.equal(resume.readAudioResume(storage,'a',time).paragraphId,1);assert(!JSON.stringify(item).includes('字'));state.charOffset=0;assert.equal(resume.restoreAudioOffset(player,item),true);assert.equal(state.charOffset,44);state.paragraphs[0].value='Changed';assert.equal(resume.restoreAudioOffset(player,item),false);assert.equal(state.charOffset,0);assert.notEqual(resume.audioTextSignature('😀'),resume.audioTextSignature('😁'));assert.equal(resume.readAudioResume(storage,'a',time+31*86400000),null);assert.throws(()=>resume.readAudioResume({getItem(){throw Error('denied')}},'a',time),/denied/)
- const jwt=id=>'header.'+Buffer.from(JSON.stringify({user_id:id})).toString('base64url')+'.signature';assert.equal(resume.audioResumeKey(jwt(7)),resume.audioResumeKey(jwt(7)+'.renewed'));assert.notEqual(resume.audioResumeKey(jwt(7)),resume.audioResumeKey(jwt(8)));player.env.privatePlayback=true;assert.equal(resume.saveAudioResume(storage,'a',player,time),null);player.env.privatePlayback=false
- console.log('PASS bounded account/JWT-scoped metadata-only resume, signature resets changed text, surrogate precision, expiry/denied storage and draft exclusion')
- records.clear();account();player.close();await player.open(book,chapters,article(),null);state.charOffset=44;resume.saveAudioResume(storage,'a',player,Date.now());player.destroy()
- let cloudWrites=0,apiBook=async()=>[book];const app={$api:{reader:{book:id=>apiBook(id),chapters:async()=>chapters,article:async id=>[article(id)]},reading:{saveProgress:async()=>{cloudWrites++}}},router:{afterEach:fn=>{routeHooks.push(fn);return()=>{}}}};let installed
+ const audio=load('utils/reader-audio.js'),player=new audio.ReaderAudio(audio.createAudioState(),f.env),state=player.state
+ await player.open(book,chapters,article(),1);await settle()
+ assert.deepEqual(plain(state.voices.map(v=>v.name)),['温润君子','阳光少年','青春女神','软糯萝莉'])
+ assert.equal(state.status,'playing');assert.equal(f.sessions.length,1);assert(state.bufferedParagraphs>=3)
+ const active=player.audio;active.tick(9);const offset=state.charOffset
+ await player.open(book,chapters,article(),1);assert.equal(player.audio,active);assert.equal(player.audio.currentTime,9);assert.equal(state.charOffset,offset)
+ f.login='a-renewed';await player.open(book,chapters,article(),1);assert.equal(player.audio,active);assert.equal(player.audio.currentTime,9)
+ await player.open(book,chapters,article(),3,{forceSeek:true});assert.equal(state.paragraphId,3);assert.equal(player.audio.currentTime,0)
+ console.log('PASS four cloud voices, direct user session, next-three prefetch, ordinary reopen and JWT refresh retain exact media position')
+ const staleEnd=player.audio.onended;await player.seekParagraph(1,true);staleEnd();assert.equal(state.paragraphIndex,1)
+ const rateAudio=player.audio,count=f.speeches.length;player.configure({rate:1.5});assert.equal(rateAudio.playbackRate,1.5);assert.equal(f.speeches.length,count)
+ player.configure({voiceURI:'soft-girl'});await settle();assert.equal(state.voiceURI,'soft-girl');assert.equal(f.urls.get(player.audio.src).voice,'voice-soft-girl')
+ player.configure({voiceURI:'old-system-voice'});await settle();assert.equal(state.voiceURI,'warm-gentleman')
+ player.pause();assert.equal(state.status,'paused');await player.play();assert.equal(state.status,'playing');player.setSleep(5);f.time+=300001;await player.wake();assert.equal(state.status,'paused');assert.equal(state.sleepUntil,0)
+ console.log('PASS stale callbacks, local speed changes without synthesis, voice replacement, old voice migration, pause/resume and throttled sleep')
+ await player.seekParagraph(5,true);player.setSleep('chapter');player.audio.end();assert.equal(state.status,'paused');assert.equal(state.sleepAtChapterEnd,false);await player.toggle();await settle();assert.equal(state.chapterId,12)
+ const pending=deferred();player.cache.clear();f.article=()=>pending.promise;const loading=player.chapter(0);await settle();player.suspend();pending.resolve([article()]);await loading;assert.equal(state.status,'paused')
+ f.article=async()=>[article(99)];await player.chapter(0);assert.equal(state.status,'error')
+ f.article=async()=>[{...article(),is_draft:1}];await player.chapter(0);assert.equal(state.status,'error')
+ f.article=async id=>[article(id)];await player.chapter(0);f.login='b';await player.syncAccount();assert.equal(state.visible,false);assert.equal(player.audioCache.size,0)
+ const unicode='字'.repeat(299)+'😀尾';assert.equal(audio.speechChunk(unicode).length,299)
+ player.destroy()
+ console.log('PASS cross-chapter advance, chapter-end sleep, canceled body loads, wrong/draft chapters, logout and Unicode API limit')
+ // Revoked user keys are refreshed once; transient queue saturation is bounded.
+ const r=fixture(),retryPlayer=new audio.ReaderAudio(audio.createAudioState(),r.env);let rejected=false
+ const normalSpeech=r.speech;r.speech=async request=>{if(!rejected){rejected=true;throw Object.assign(Error('revoked'),{status:401})}return normalSpeech(request)}
+ await retryPlayer.open(book,chapters,article(),1);assert.equal(retryPlayer.state.status,'playing');assert.equal(r.sessions.length,2);retryPlayer.destroy()
+ const blocked=fixture(),blockedPlayer=new audio.ReaderAudio(audio.createAudioState(),blocked.env),play=blocked.Audio.prototype.play
+ blocked.Audio.prototype.play=function(){return Promise.reject(Object.assign(Error('blocked'),{name:'NotAllowedError'}))}
+ await blockedPlayer.open(book,chapters,article(),1);assert.equal(blockedPlayer.state.status,'paused');assert.match(blockedPlayer.state.notice,/浏览器/)
+ blocked.Audio.prototype.play=play;await blockedPlayer.play();assert.equal(blockedPlayer.state.status,'playing');blockedPlayer.destroy()
+ const delayed=fixture(),late=deferred();delayed.speech=()=>late.promise;const canceled=new audio.ReaderAudio(audio.createAudioState(),delayed.env),opening=canceled.open(book,chapters,article(),1)
+ await settle();canceled.close();late.resolve({size:100,type:'audio/mpeg'});await opening;await settle();assert.equal(canceled.state.visible,false);assert.equal(delayed.media.length,0);assert.equal(delayed.urls.size,0)
+ console.log('PASS revoked-key recovery, autoplay refusal with manual retry, and aborted late speech cannot resurrect a closed player')
+ const resume=load('utils/reader-audio-resume.js');account('a');const savedPlayer=new audio.ReaderAudio(audio.createAudioState(),f.env)
+ await savedPlayer.open(book,chapters,article(),1);savedPlayer.audio.tick(12);const savedOffset=savedPlayer.state.charOffset
+ const item=resume.saveAudioResume(storage,'a',savedPlayer,Date.now());assert.equal(item.audioOffset,12);assert.equal(item.charOffset,savedOffset);assert(!JSON.stringify(item).includes('sk-tts-'));assert(!JSON.stringify(item).includes('第一段'))
+ assert.equal(resume.readAudioResume(storage,'b'),null);assert.equal(resume.readAudioResume(storage,'a').charOffset,savedOffset)
+ savedPlayer.destroy()
+ let writes=0,installed
+ const app={$api:{reader:{book:async()=>[book],chapters:async()=>chapters,article:async id=>[article(id)]},reading:{saveProgress:async()=>{writes++}}},router:{afterEach:fn=>{routeHooks.push(fn);return()=>{}}}}
  load('plugins/reader-audio.client.js').default({app},(_,value)=>installed=value)
- assert(installed.state.resumeCandidate);const waiting=defer();apiBook=()=>waiting.promise;const restoring=installed.resumeLast();await installed.resumeLast();assert.equal(installed.state.resumeLoading,true);waiting.resolve([book]);await restoring;assert.equal(installed.state.status,'playing');assert.equal(installed.state.charOffset,44);assert.equal(installed.state.resumeCandidate,null);assert.equal(cloudWrites,0);spoken.at(-1).onstart();assert.equal(cloudWrites,1)
- events.get('document:freeze')();assert.equal(installed.state.status,'paused');assert(installed.state.notice);events.get('window:pageshow')();assert.equal(installed.state.status,'paused');const saved=resume.readAudioResume(storage,'a');assert.equal(saved.charOffset,44);account('b');events.get('window:storage')({key:'token'});assert.equal(installed.state.visible,false);assert.equal(installed.state.resumeCandidate,null);assert.equal(resume.readAudioResume(storage,'a').charOffset,44)
- console.log('PASS actual plugin re-fetches public content once for duplicate resume, preserves pagehide/freeze, never autoplay on return and isolates accounts')
- account('a');events.get('window:storage')({key:'token'});assert(installed.state.resumeCandidate);const old=defer();apiBook=()=>old.promise;const olderResume=installed.resumeLast();await installed.open({novel_id:8,name:'New book'},[{article_id:21}],article(21,8),null);old.resolve([book]);await olderResume;assert.equal(installed.state.bookId,8);assert.equal(installed.state.status,'ready');installed.configure({voiceURI:''});installed.saveSettings();assert.equal(JSON.parse(records.get('loghome:reader:audio')).voiceURI,'');installed.close();assert.equal(resume.readAudioResume(storage,'a'),null);hotDispose();assert.equal(events.size,0)
- load('plugins/reader-audio.client.js').default({app},(_,value)=>installed=value);assert.equal(installed.state.voiceURI,'');hotDispose()
- console.log('PASS explicit new queue invalidates late resume; close clears resume and HMR cleans every lifecycle listener')
+ assert(installed.state.resumeCandidate);await installed.resumeLast();await settle();assert.equal(installed.state.status,'playing');assert.equal(installed.audio.currentTime,12);assert(writes>=1)
+ const before=installed.audio;events.get('document:freeze')();assert.equal(installed.state.status,'paused');await events.get('window:pageshow')();assert.equal(installed.state.status,'paused');await installed.play();assert.equal(installed.audio,before)
+ account('a-renewed');await events.get('window:storage')({key:'token'});await settle();assert.equal(installed.audio,before);assert.equal(installed.state.visible,true)
+ account('b');await events.get('window:storage')({key:'token'});await settle();assert.equal(installed.state.visible,false)
+ assert(![...records.values()].some(value=>value.includes('sk-tts-')))
+ account('a');await events.get('window:storage')({key:'token'});await installed.open(book,chapters,article(),1);installed.configure({voiceURI:'sunny-boy'});installed.saveSettings();installed.close();assert.equal(resume.readAudioResume(storage,'a'),null);hotDispose();assert.equal(events.size,0)
+ load('plugins/reader-audio.client.js').default({app},(_,value)=>installed=value);assert.equal(installed.state.voiceURI,'sunny-boy');hotDispose()
+ console.log('PASS actual plugin precise media-time resume, metadata-only storage, freeze/pageshow, JWT rotation, account isolation, preference persistence and HMR cleanup')
+ const transport=load('utils/reader-tts.js'),requests=[]
+ const input={input:'真实请求格式检查',voice:'voice-warm-gentleman',token:'sk-tts-fixture'}
+ await transport.requestTtsSpeech(input,async(url,options)=>{requests.push({url,options});return{ok:true,blob:async()=>({size:100,type:'audio/mpeg'})}})
+ assert.equal(requests[0].url,'https://tts.codesocean.top/v1/audio/speech');assert.equal(requests[0].options.credentials,'omit');assert.equal(requests[0].options.headers.Authorization,'Bearer sk-tts-fixture')
+ const body=JSON.parse(requests[0].options.body);assert.equal(body.input,input.input);assert.equal(body.voice,input.voice);assert.equal(body.response_format,'mp3');assert.equal(body.model,undefined);assert(!JSON.stringify(requests).includes('Admin'))
+ await assert.rejects(transport.requestTtsSpeech(input,async()=>({ok:false,status:401})),error=>error.status===401)
+ await assert.rejects(transport.requestTtsSpeech(input,async()=>({ok:true,blob:async()=>({size:0,type:'audio/mpeg'})})),/无效音频/)
+ await assert.rejects(transport.requestTtsSpeech(input,async()=>{throw new TypeError('cors')}),/跨域/)
+ const bounded=fixture(),boundedPlayer=new audio.ReaderAudio(audio.createAudioState(),bounded.env),large=article()
+ large.content=Array.from({length:36},(_,i)=>({id:i+1,type:'text',value:'缓存验证段落'+i}))
+ await boundedPlayer.open(book,[chapters[0]],large,1);await settle()
+ for(let i=1;i<32;i++){await boundedPlayer.seekParagraph(i,true);await settle()}
+ assert(boundedPlayer.audioCache.size<=24);assert(bounded.revoked.length>0);assert(boundedPlayer.audioCache.has(boundedPlayer.active.key));boundedPlayer.destroy();assert.equal(bounded.urls.size,0)
+ console.log('PASS direct CORS transport, user-only Authorization, omitted default model, HTTP errors, invalid audio and bounded/revoked browser cache')
  const power=load('utils/reader-power.js'),raw={novel_id:7,novel_type:'novel',name:'Power',clicks:'10',nices:3,bookmarks:2,comments:4,tips:5,score:700,ranked_score:680,days_diff:-1000,generated_at:'2026-10-10T14:00:00+08:00',update_time:'2026-10-08T11:00:00Z'}
  const data=power.normalizePower(raw,7),breakdown=power.powerBreakdown(data);assert.deepEqual(plain(breakdown.rows.map(row=>row.weight)),[8,200,20,12,10]);assert.equal(breakdown.base,646);assert.equal(breakdown.factorA,.4);assert.equal(breakdown.factorB,.6);assert.equal(power.powerBreakdown({...data,days_diff:0}).factorA,1.33);assert.equal(power.powerBreakdown({...data,days_diff:null}).factorA,.4);assert.throws(()=>power.normalizePower({...raw,score:null},7));assert.throws(()=>power.normalizePower(raw,8));assert.match(power.powerDate(raw.update_time),/19:00:00/)
  console.log('PASS exact backend/mobile weights, independent real tip contribution, date floor/future handling and malformed/foreign breakdown rejection')

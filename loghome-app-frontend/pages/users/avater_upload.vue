@@ -579,17 +579,6 @@
 		opacity: 0;
 	}
 
-	#img.show:before {
-		content: "旋转中";
-		background: var(--card-background);
-		color: var(--text-color-primary);
-		font-size: 34rpx;
-		text-align: center;
-		display: block;
-		height: 100%;
-		opacity: 0.8;
-	}
-
 	#clipArea {
 		width: 458rpx;
 		height: 458rpx;

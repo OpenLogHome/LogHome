@@ -5,12 +5,12 @@
 				<view class="box1"></view>
 				<view class="flex_grow flex_col flex_center tab" v-dark>
 					<view v-for="(item, index) in topNavArr" :key="index" :class="{ 'active': topNavIndex == index }"
-						:data-index="index" @tap="changeTopNav">{{ item }}</view>
+						:data-index="index" @tap="changeTopNav">{{ $t(item.labelKey) }}</view>
 				</view>
 				<view class="box1 align_r">
 					<el-button :icon="viewMode === 'scroll' ? 'el-icon-s-help' : 'el-icon-s-grid'" circle size="mini"
-						@click="toggleViewMode" :title="viewMode === 'scroll' ? '切换到网格视图' : '切换到滚动视图'"
-						v-show="books.length > 0 && topNavArr[topNavIndex] == '小说'">
+						@click="toggleViewMode" :title="viewMode === 'scroll' ? $t('library.home.switchToGrid') : $t('library.home.switchToScroll')"
+						v-show="books.length > 0 && topNavArr[topNavIndex].key === 'novel'">
 					</el-button>
 				</view>
 			</view>
@@ -25,9 +25,9 @@
 					v-show="topNavIndex === 0 || swipePeek === 0 || paneHiding === 0">
 		<view class="noEssay" v-if="books.length == 0">
 			<img src="../static/images/icon_my_uplotolib.png" alt="" />
-			<p>方块跃然纸上，故事在此生长</p>
+			<p>{{ $t('library.home.emptyTagline') }}</p>
 			<navigator url="./writers/newEssay">
-				<img src="../static/images/icon_my_upload_new.png" alt="" />
+				<button class="uploadBtn">{{ $t('library.home.uploadWork') }}</button>
 			</navigator>
 		</view>
 
@@ -49,14 +49,15 @@
 						@resubmit-novel="onResubmitNovel"></book-detail-view>
 					<transition name='fade'>
 						<view style="text-align: center;position:relative;" v-if="curBook === -1">
-							<img src="../static/dig-loggirl.png" alt="原木娘和鹦鹉一起开个新坑"
+							<img src="../static/dig-loggirl.png" :alt="$t('library.home.newStoryAlt')"
 								style="position:absolute;width:70vw;top:-120px;left:50vw;transform: translateX(-50%); z-index:102" />
 							<p
 								style="color:#919191; font-weight: bold; font-size:40rpx; margin:20rpx; padding-top:130rpx;">
-								开个新坑
+								{{ $t('library.home.newStory') }}
 							</p>
-							<img src="../static/images/icon_my_upload_new.png" alt="" @click="gotoNewEssay"
-								style="border-radius: 10rpx;margin-top:150rpx;" class="uploadBtn" />
+							<button class="uploadBtn uploadBtn-spaced" @click="gotoNewEssay">
+								{{ $t('library.home.uploadWork') }}
+							</button>
 						</view>
 					</transition>
 				</view>
@@ -73,9 +74,9 @@
 							:onerror="`this.src='${$backupResources.bookCover}'`" />
 						<div class="book-title">{{ book.name }}</div>
 						<div class="book-ban-badge" v-if="Number(book.is_banned) === 1"
-							@click.stop="openBanDetail(index)">作品异常</div>
+							@click.stop="openBanDetail(index)">{{ $t('library.home.workAbnormal') }}</div>
 						<div class="book-ban-badge reviewing" v-else-if="Number(book.is_banned) === 2"
-							@click.stop="openBanDetail(index)">重新审核中</div>
+							@click.stop="openBanDetail(index)">{{ $t('library.home.reReviewing') }}</div>
 					</div>
 					<div class="book-item new-book" @click="gotoNewEssay">
 						+
@@ -122,16 +123,16 @@
 			@click="closeBookSelectDrawer">
 			<view class="world-select-panel" @click.stop>
 				<view class="world-select-header">
-					<text class="world-select-title">添加作品世界</text>
-					<text class="world-select-close" @click="closeBookSelectDrawer">关闭</text>
+					<text class="world-select-title">{{ $t('library.home.addWorkWorld') }}</text>
+					<text class="world-select-close" @click="closeBookSelectDrawer">{{ $t('library.home.close') }}</text>
 				</view>
 				<view class="world-search-row">
-					<input class="world-search-input" v-model="worldSearchKeyword" placeholder="搜索全站世界"
+					<input class="world-search-input" v-model="worldSearchKeyword" :placeholder="$t('library.home.searchAllWorlds')"
 						confirm-type="search" @input="handleWorldSearchInput" />
 				</view>
 				<scroll-view scroll-y class="world-select-list">
-					<view v-if="loadingWorlds" class="world-select-empty">正在加载世界...</view>
-					<view v-else-if="searchBooks.length === 0" class="world-select-empty">暂无可添加的世界</view>
+					<view v-if="loadingWorlds" class="world-select-empty">{{ $t('library.home.loadingWorlds') }}</view>
+					<view v-else-if="searchBooks.length === 0" class="world-select-empty">{{ $t('library.home.noWorlds') }}</view>
 					<view v-for="item in [...searchBooks]" :key="item.world_id || item.novel_id"
 						class="world-select-item" @click="selectWorldBook(item)">
 						<log-image class="world-select-cover" :src="getWorldCover(item)" mode="aspectFill"
@@ -156,7 +157,7 @@
 			custom-class="activity-form-wrapper">
 			<div class="activity-form-container">
 				<div class="form-header">
-					<h3>{{ currentActivity.activity_name || '活动信息填写' }}</h3>
+					<h3>{{ currentActivity.activity_name || $t('library.home.activity.fallbackTitle') }}</h3>
 					<el-button icon="el-icon-close" circle size="medium" @click="showActivityForm = false" type="text"></el-button>
 				</div>
 				
@@ -172,7 +173,7 @@
 							<!-- 文本输入框 -->
 							<el-input 
 								v-model="activityFormData[field.name]"
-								:placeholder="field.placeholder || '请输入' + field.name"
+								:placeholder="field.placeholder || $t('library.home.activity.fallbackPlaceholder', { name: field.name })"
 								:maxlength="field.maxLength"
 								show-word-limit>
 							</el-input>
@@ -180,8 +181,8 @@
 					</div>
 					
 					<div class="form-actions">
-						<el-button @click="showActivityForm = false">取消</el-button>
-						<el-button type="primary" @click="submitActivityForm">提交</el-button>
+						<el-button @click="showActivityForm = false">{{ $t('library.home.activity.cancel') }}</el-button>
+						<el-button type="primary" @click="submitActivityForm">{{ $t('library.home.activity.submit') }}</el-button>
 					</div>
 					<div class="blank" style="height: 110rpx;"></div>
 				</div>
@@ -208,7 +209,11 @@ export default {
 			viewMode: localStorage.getItem('loghome_essay_view_mode') || 'scroll', // 从本地存储获取上次的视图模式
 			showBookDetail: false,
 			topNavIndex: 0,
-			topNavArr: ['小说', '漫画', '世界'],
+			topNavArr: [
+				{ key: 'novel', labelKey: 'library.home.tabs.novel' },
+				{ key: 'manga', labelKey: 'library.home.tabs.manga' },
+				{ key: 'world', labelKey: 'library.home.tabs.world' },
+			],
 			swipeTrace: null, // 横向滑动手势追踪 {x, y, locked}
 			swipePeek: -1, // 滑动中临时预览的相邻栏目
 			paneHiding: -1, // 切换动画期间仍需保持显示的离场栏
@@ -268,7 +273,7 @@ export default {
 			return;
 		}
 		uni.showLoading({
-			title: '努力加载中'
+			title: this.$t('library.home.loading')
 		});
 		this.refreshPage();
 		if (this.$refs.worldPage) this.$refs.worldPage.refreshPage();
@@ -352,7 +357,7 @@ export default {
 					for (const field of this.currentActivity.required_fields) {
 						if (field.required && (!this.activityFormData[field.name] || this.activityFormData[field.name].toString().trim() === '')) {
 							uni.showToast({
-								title: `请填写${field.name}`,
+								title: this.$t('library.home.activity.fieldRequired', { name: field.name }),
 								icon: 'none'
 							});
 							return;
@@ -363,14 +368,14 @@ export default {
 				const token = JSON.parse(localStorage.getItem('token'))?.tk;
 				if (!token) {
 					uni.showToast({
-						title: '请先登录',
+						title: this.$t('library.home.activity.loginRequired'),
 						icon: 'none'
 					});
 					return;
 				}
 
 				uni.showLoading({
-					title: '提交中...'
+					title: this.$t('library.home.activity.submitting')
 				});
 
 				const response = await axios.post(this.$baseUrl + '/essays/submit_activity_info', {
@@ -386,7 +391,7 @@ export default {
 
 				uni.hideLoading();
 				uni.showToast({
-					title: '提交成功',
+					title: this.$t('library.home.activity.submitSuccess'),
 					icon: 'success'
 				});
 
@@ -404,7 +409,7 @@ export default {
 					});
 				} else {
 					uni.showToast({
-						title: error.response?.data?.message || '提交失败，请重试',
+						title: error.response?.data?.message || this.$t('library.home.activity.submitFailed'),
 						icon: 'none'
 					});
 				}
@@ -579,8 +584,8 @@ export default {
 			const book = this.books[this.curBook];
 			if (!book) return;
 			uni.showModal({
-				title: '重新提交审核',
-				content: '确定要将该作品重新提交给管理员审核吗？通过后将恢复上架。',
+				title: this.$t('library.home.activity.resubmitTitle'),
+				content: this.$t('library.home.activity.resubmitContent'),
 				success: (res) => {
 					if (!res.confirm) return;
 					let tk = JSON.parse(window.localStorage.getItem('token'));
@@ -592,10 +597,10 @@ export default {
 							'Authorization': 'Bearer ' + tk.tk
 						}
 					}).then(() => {
-						uni.showToast({ title: '已提交审核，请等待管理员处理', icon: 'none' });
+						uni.showToast({ title: this.$t('library.home.activity.resubmitted'), icon: 'none' });
 						this.refreshPage();
 					}).catch((e) => {
-						const msg = (e.response && e.response.data && e.response.data.msg) || '提交失败，请稍后重试';
+						const msg = (e.response && e.response.data && e.response.data.msg) || this.$t('library.home.activity.submitFailedLater');
 						uni.showToast({ title: msg, icon: 'none' });
 					});
 				}
@@ -618,7 +623,7 @@ export default {
 			axios.get(this.$baseUrl + '/articles/get_novel_statistics?novel_id=' + this.books[e].novel_id).then((
 				res) => {
 				this.novel_statistic = res.data;
-			}).catch(function (error) {
+			}).catch((error) => {
 				if (error.message == "Request failed with status code 401") {
 					window.localStorage.removeItem('token');
 					this.$isFromLogin = true;
@@ -627,7 +632,7 @@ export default {
 					});
 				} else {
 					uni.showToast({
-						title: "获取书籍数据失败",
+						title: this.$t('library.home.fetchBookFailed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -640,7 +645,7 @@ export default {
 				res) => {
 				console.log(res.data);
 				this.worlds = res.data;
-			}).catch(function (error) {
+			}).catch((error) => {
 				if (error.message == "Request failed with status code 401") {
 					window.localStorage.removeItem('token');
 					this.$isFromLogin = true;
@@ -649,7 +654,7 @@ export default {
 					});
 				} else {
 					uni.showToast({
-						title: "获取关联世界设定失败",
+						title: this.$t('library.home.fetchWorldsFailed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -756,7 +761,7 @@ export default {
 		readNovel(is_personal) {
 			if (is_personal == 1) {
 				uni.showToast({
-					title: "该作品还没有发布，不能阅读。",
+					title: this.$t('library.home.notPublished'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -820,10 +825,10 @@ export default {
 			return cover + '?thumbnail=1';
 		},
 		getWorldAuthorName(item = {}) {
-			return item.user_name || item.author_name || item.username || '未知作者';
+			return item.user_name || item.author_name || item.username || this.$t('library.home.unknownAuthor');
 		},
 		getWorldDescription(item = {}) {
-			const desc = item.content || item.description || '暂无简介';
+			const desc = item.content || item.description || this.$t('library.home.noDescription');
 			if (desc.length <= 58) return desc;
 			return desc.substr(0, 58) + '...';
 		},
@@ -855,7 +860,7 @@ export default {
 		deleteWorldNovelAsso(world_id) {
 			let _this = this;
 			uni.showActionSheet({
-				itemList: ["取消关联设定"],
+				itemList: [this.$t('library.home.unlinkWorld')],
 				success: function (res) {
 					if (res.tapIndex == 0) {
 						let tk = JSON.parse(window.localStorage.getItem('token'));
@@ -868,7 +873,7 @@ export default {
 							}
 						}).then((res) => {
 							uni.showToast({
-								title: "删除关联世界设定成功",
+								title: this.$t('library.home.unlinkWorldSuccess'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -923,7 +928,7 @@ export default {
 				}
 			}).then((res) => {
 				uni.showToast({
-					title: "添加关联世界设定成功",
+					title: this.$t('library.home.linkWorldSuccess'),
 					icon: 'none',
 					duration: 2000
 				});
@@ -1244,13 +1249,35 @@ view.outer {
 		background-color: #ffffff;
 	}
 
-	img.uploadBtn {
-		transform: scale(1.2);
-		transition: transform .3s;
+	.uploadBtn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 260rpx;
+		height: 84rpx;
+		padding: 0 42rpx;
+		border: 0;
+		border-radius: 12rpx;
+		background: linear-gradient(180deg, #ff9556, #ffc95e);
+		box-shadow: 0 8rpx 18rpx rgba(205, 119, 42, 0.22);
+		color: #fff;
+		font-size: 32rpx;
+		font-weight: 700;
+		line-height: 1;
+		transition: transform .2s, opacity .2s;
 	}
 
-	img.uploadBtn:active {
-		transform: scale(1.1);
+	.uploadBtn::after {
+		border: 0;
+	}
+
+	.uploadBtn:active {
+		transform: scale(.97);
+		opacity: .88;
+	}
+
+	.uploadBtn-spaced {
+		margin-top: 150rpx;
 	}
 
 	.fade-enter-active {

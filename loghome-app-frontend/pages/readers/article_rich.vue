@@ -468,10 +468,12 @@ export default {
 				? (this.getVisibleParagraphId() || -1)
 				: startParagraphId;
 			this.listeningArticleId = String(this.article.article_id || this.articleId);
-			this.listeningParagraphId = String(targetParagraphId);
+			if (startParagraphId != null || !this.listeningParagraphId) {
+				this.listeningParagraphId = String(targetParagraphId);
+			}
 			this.settingsOpened = false;
 			await this.$nextTick();
-			return this.$refs.audiobookPlayer.openNativePlayer(targetParagraphId);
+			return this.$refs.audiobookPlayer.openNativePlayer(targetParagraphId, { forceSeek: startParagraphId != null });
 		},
 		handleAudiobookProgress(data) {
 			if (!data || data.articleId == null || data.paragraphId == null) return;

@@ -3,8 +3,8 @@
     <div v-if="block && !disabled" class="block-handle" :style="handleStyle">
       <button
         type="button"
-        aria-label="在此段后新增段落"
-        title="新增段落"
+        :aria-label="$t('在此段后新增段落')"
+        :title="$t('新增段落')"
         @mousedown.prevent
         @click="act('after')"
       >
@@ -12,8 +12,8 @@
       </button>
       <button
         type="button"
-        aria-label="段落操作与拖拽"
-        title="拖动排序，点击打开段落操作"
+        :aria-label="$t('段落操作与拖拽')"
+        :title="$t('拖动排序，点击打开段落操作')"
         @pointerdown="startDrag"
         @click="toggleMenu"
       >
@@ -40,7 +40,7 @@
       class="block-action-menu"
       :style="menuStyle"
       role="group"
-      aria-label="段落操作"
+      :aria-label="$t('段落操作')"
       @keydown="menuKey"
     >
       <button
@@ -61,7 +61,7 @@
         >
           <path :d="actionIcons[item.key]" fill="currentColor" />
         </svg>
-        <span>{{ item.label }}</span>
+        <span>{{ $t(item.label) }}</span>
       </button>
     </div>
     <div

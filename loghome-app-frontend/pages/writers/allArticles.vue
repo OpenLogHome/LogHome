@@ -60,7 +60,7 @@
 			<template v-else>
 				<uni-collapse accordion @touchstart.native="touchstart" @touchend.native="touchend"
 					@touchmove.native="touchmove">
-					<uni-collapse-item class="titleOuter" v-for="item in shownArticles" :key="item.article_id"
+					<uni-collapse-item class="titleOuter" v-for="item in renderedArticles" :key="item.article_id"
 					:mainClick="gotoEditor" :clickInfo="item"
 					:class="{
 						'splitterRow': item.article_type == 'spliter',
@@ -69,13 +69,13 @@
 						<template v-slot:title>
 							<div class="title">
 								{{ item.title }}
-								<el-tag type="success" v-show="item.article_type == 'worldOutline'" effect="dark" disable-transitions
+								<el-tag type="success" v-if="item.article_type == 'worldOutline'" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.outline') }}</el-tag>
-								<el-tag type="success" v-show="item.article_type == 'worldVocabulary'" effect="dark" disable-transitions
+								<el-tag type="success" v-if="item.article_type == 'worldVocabulary'" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.vocabulary') }}</el-tag>
-								<el-tag type="info" v-show="item.article_type == 'spliter'" effect="dark" disable-transitions
+								<el-tag type="info" v-if="item.article_type == 'spliter'" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.volume') }}</el-tag>
-								<el-tag type="danger" v-show="item.is_draft == true" effect="dark" disable-transitions
+								<el-tag type="danger" v-if="item.is_draft == true" effect="dark" disable-transitions
 									style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('writer.work.labels.draft') }}</el-tag>
 								<el-tag
 									type="success"
@@ -213,6 +213,9 @@
 						</view>
 					</uni-collapse-item>
 				</uni-collapse>
+				<div v-if="renderedArticles.length < shownArticles.length" ref="moreArticles" class="moreArticles">
+					<button @click="loadMoreArticles">{{ $t('common.loadMore.more') }}</button>
+				</div>
 				<div class="newArticle" v-show="novel.novel_type != 'world' && canAddArticle">
 					<div class="tit">{{ $t('writer.work.newArticle.normalTitle') }}</div>
 					<div class="share">
@@ -312,6 +315,8 @@ const SEARCH_DEBOUNCE_MS = 250;
 const REALTIME_PRESENCE_POLL_MS = 10000;
 const REALTIME_PRESENCE_BATCH_SIZE = 100;
 const REALTIME_AVATAR_STACK_LIMIT = 4;
+const CATALOG_RENDER_BATCH_SIZE = 30;
+const CATALOG_STATUS_BATCH_SIZE = 30;
 const RECOVERABLE_SYNC_STATE_STATUSES = ["pending", "invalidated"];
 
 export default {
@@ -327,16 +332,18 @@ export default {
 			bookName: "",
 			novel: {},
 			novelAccess: {
-				access_role: "owner",
-				can_add_article: true,
-				can_delete_article: true,
-				can_sort_article: true,
-				can_manage_structure: true,
-				can_publish: true,
-				can_edit_draft: true,
+				access_role: "",
+				can_add_article: false,
+				can_delete_article: false,
+				can_sort_article: false,
+				can_manage_structure: false,
+				can_publish: false,
+				can_edit_draft: false,
 			},
 			articles: [],
 			shownArticles: [],
+			visibleArticleCount: CATALOG_RENDER_BATCH_SIZE,
+			pageVisible: true,
 			bookPart: {
 				currentPart: { id: -1, name: "" },
 				parts: [],
@@ -364,6 +371,13 @@ export default {
 			searchMaterialsPromise: null,
 			searchRequestId: 0,
 			isLoading: true,
+			hasLoadedPage: false,
+			refreshPromise: null,
+			refreshRequestId: 0,
+			statusCheckGeneration: 0,
+			statusCheckTimer: null,
+			feedbackCountsTimer: null,
+			feedbackCountsRequestId: 0,
 			searchDebounceTimer: null,
 			collaborationModeSwitchingArticleId: null,
 			realtimePresenceTimer: null,
@@ -373,6 +387,9 @@ export default {
 		}
 	},
 	computed: {
+		renderedArticles() {
+			return this.shownArticles.slice(0, this.visibleArticleCount);
+		},
 		actionIconColor() {
 			return this.isDarkMode ? '#e7b37d' : 'rgb(113, 52, 24)';
 		},
@@ -439,10 +456,12 @@ export default {
 		this.refreshPage(true);
 	},
 	onShow() {
+		this.pageVisible = true;
 		this.refreshPage();
 		this.startRealtimePresencePolling();
 		setTimeout(() => {
 			this.titleBtn = document.getElementsByClassName("uni-page-head__title")[0];
+			if (!this.titleBtn) return;
 			this.titleBtn.addEventListener("click", this.toggleTitleBtn);
 			this.titleBtn.style.fontSize = "17px";
 		}, 200)
@@ -451,10 +470,33 @@ export default {
 		this.checkFrameEnvironment();
 	},
 	onHide() {
+		this.pageVisible = false;
+		this.disconnectCatalogObserver();
 		this.stopRealtimePresencePolling();
+		this.statusCheckGeneration += 1;
+		this.feedbackCountsRequestId += 1;
+		if (this.statusCheckTimer) {
+			clearTimeout(this.statusCheckTimer);
+			this.statusCheckTimer = null;
+		}
+		if (this.feedbackCountsTimer) {
+			clearTimeout(this.feedbackCountsTimer);
+			this.feedbackCountsTimer = null;
+		}
 	},
 	beforeDestroy() {
+		this.pageVisible = false;
+		this.disconnectCatalogObserver();
 		this.stopRealtimePresencePolling();
+		this.refreshRequestId += 1;
+		this.statusCheckGeneration += 1;
+		this.feedbackCountsRequestId += 1;
+		if (this.statusCheckTimer) {
+			clearTimeout(this.statusCheckTimer);
+		}
+		if (this.feedbackCountsTimer) {
+			clearTimeout(this.feedbackCountsTimer);
+		}
 		if (this.titleBtn) {
 			this.titleBtn.removeEventListener("click", this.toggleTitleBtn);
 		}
@@ -468,6 +510,9 @@ export default {
 		}
 		this.statusRecheckTimers = {};
 		this.articleHistoryMetaCache = {};
+	},
+	onReachBottom() {
+		this.loadMoreArticles();
 	},
 	methods: {
 		getTokenInfo() {
@@ -494,7 +539,7 @@ export default {
 			return Math.max(0, count - REALTIME_AVATAR_STACK_LIMIT);
 		},
 		async refreshRealtimePresence() {
-			const articleIds = (Array.isArray(this.articles) ? this.articles : [])
+			const articleIds = this.renderedArticles
 				.filter((article) => article.collaboration_mode === "realtime_crdt")
 				.map((article) => Number(article.article_id || 0))
 				.filter((articleId) => articleId > 0);
@@ -654,6 +699,43 @@ export default {
 			this.novelAccess = response.data.access || this.novelAccess;
 			return response.data;
 		},
+		scheduleFeedbackCountsLoad() {
+			if (this.feedbackCountsTimer) {
+				clearTimeout(this.feedbackCountsTimer);
+			}
+			const requestId = ++this.feedbackCountsRequestId;
+			this.feedbackCountsTimer = setTimeout(() => {
+				this.feedbackCountsTimer = null;
+				this.loadFeedbackCounts(requestId);
+			}, 120);
+		},
+		async loadFeedbackCounts(requestId = this.feedbackCountsRequestId) {
+			try {
+				const response = await axios.get(
+					this.$baseUrl + "/essays/get_article_feedback_counts?id=" + this.uid,
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: "Bearer " + this.getAuthToken(),
+						},
+					}
+				);
+				if (requestId !== this.feedbackCountsRequestId) return;
+				const counts = {};
+				(response.data || []).forEach((item) => {
+					counts[Number(item.article_id)] = Number(item.feedback_count || 0);
+				});
+				(this.articles || []).forEach((article) => {
+					this.$set(
+						article,
+						"feedback_count",
+						counts[Number(article.article_id)] || 0
+					);
+				});
+			} catch (error) {
+				// 反馈数量只影响辅助徽标，不阻塞章节目录展示。
+			}
+		},
 		showPermissionDenied(title) {
 			uni.showToast({
 				title: title || this.$t('writer.work.permission.noPermission'),
@@ -748,6 +830,7 @@ export default {
 				this.searchError = "";
 				this.searchStatusText = this.$t('writer.work.search.searching');
 				this.searchResults = [];
+				this.observeMoreArticles();
 				return;
 			}
 
@@ -1253,64 +1336,88 @@ export default {
 			}
 		},
 		async refreshPage(changeToLastBookpart = false) {
-			this.isLoading = true;
+			if (!this.uid) return;
+			// onLoad 与首次 onShow 会连续触发；复用同一个请求，避免大目录被加载两次。
+			if (this.refreshPromise) return this.refreshPromise;
+
+			const shouldShowSkeleton = !this.hasLoadedPage && this.articles.length === 0;
+			if (shouldShowSkeleton) this.isLoading = true;
 			this.resolveCurrentUserId();
 			this.articleHistoryMetaCache = {};
 			this.resetSearchCache(true);
+			this.statusCheckGeneration += 1;
+			this.feedbackCountsRequestId += 1;
+			Object.values(this.statusRecheckTimers).forEach(clearTimeout);
+			this.statusRecheckTimers = {};
 
 			const uid = this.uid;
 			const tk = this.getAuthToken();
-
-			try {
-				const [novelRes, accessRes, articlesRes] = await Promise.all([
-					axios.get(this.$baseUrl + '/essays/get_novel_by_id?id=' + uid, {}),
-					this.loadCollaborationInfo(),
-					axios.get(this.$baseUrl + '/essays/get_articles?id=' + uid,
+			const requestId = ++this.refreshRequestId;
+			const refreshPromise = (async () => {
+				try {
+					const articlesRes = await axios.get(
+						this.$baseUrl + '/essays/get_articles?id=' + uid + '&catalog_only=1&defer_status=1',
 						{
 							headers: {
 								'Content-Type': 'application/json',
 								'Authorization': 'Bearer ' + tk
 							}
 						}
-					),
-				]);
+					);
+					if (requestId !== this.refreshRequestId) return;
 
-				this.novel = {
-					...(novelRes.data[0] || {}),
-					current_access: accessRes.access || this.novelAccess,
-				};
-				this.articles = articlesRes.data || [];
-				for (let item of this.articles) {
-					item.articleStatusChecked = false;
-				}
-				this.refreshBookPart();
-				this.refreshRealtimePresence();
-				if (changeToLastBookpart) {
-					let lastPartId = window.localStorage.getItem('lastPartId_' + this.uid);
-					if (lastPartId) {
-						for (let index = 0; index < this.bookPart.parts.length; index++) {
-							let item = this.bookPart.parts[index];
-							if (item.id == lastPartId) {
-								this.changeBookPart(item);
-								break;
-							}
-						}
-					} else if (this.bookPart.parts.length > 0) {
-						this.changeBookPart(this.bookPart.parts[this.bookPart.parts.length - 1]);
+					const catalog = articlesRes.data;
+					// 旧版服务返回数组，保留兼容；新版一次返回目录、类型和权限。
+					const deferredStatus = !Array.isArray(catalog);
+					if (deferredStatus) {
+						this.novelAccess = catalog.access;
+						this.novel = { ...catalog.novel, current_access: catalog.access };
+					}
+					this.articles = (deferredStatus ? catalog.articles : catalog).map((item) => ({
+						...item,
+						articleStatusChecked: false,
+						statusMetadataLoaded: !deferredStatus,
+						isCheckingStatus: false,
+						hasWriterModify: false,
+						hasCloudCollision: false,
+						isSyncing: false,
+						remoteEditSummary: '',
+					}));
+					this.refreshBookPart(changeToLastBookpart);
+					this.hasLoadedPage = true;
+					this.isLoading = false;
+					this.observeMoreArticles();
+					if (this.pageVisible) this.scheduleFeedbackCountsLoad();
+					if (this.hasActiveSearch) {
+						this.scheduleSearch(true);
+					}
+					if (!deferredStatus) {
+						// 兼容未升级的服务端，辅助请求失败不影响目录。
+						await Promise.all([
+							axios.get(this.$baseUrl + '/essays/get_novel_by_id?id=' + uid, {}).then((response) => {
+								if (requestId === this.refreshRequestId) this.novel = response.data[0] || {};
+							}).catch(() => {}),
+							this.loadCollaborationInfo().catch(() => {}),
+						]);
+					}
+				} catch (error) {
+					if (requestId === this.refreshRequestId) {
+						uni.showToast({
+							title: error.toString(),
+							icon: 'none',
+							duration: 2000
+						});
+						this.isLoading = false;
 					}
 				}
-				if (this.hasActiveSearch) {
-					this.scheduleSearch(true);
+			})().finally(() => {
+				if (requestId === this.refreshRequestId) {
+					this.refreshPromise = null;
 				}
-			} catch (error) {
-				uni.showToast({
-					title: error.toString(),
-					icon: 'none',
-					duration: 2000
-				});
-			} finally {
-				this.isLoading = false;
-			}
+			});
+
+			this.refreshPromise = refreshPromise;
+			return refreshPromise;
 		},
 		addArticle(type) {
 			if (!this.canAddArticle) {
@@ -1542,7 +1649,7 @@ export default {
 			this.splitterRenameTargetId = null;
 			this.splitterRenameValue = "";
 		},
-		refreshBookPart() {
+		refreshBookPart(changeToLastBookpart = false) {
 			this.bookPart.parts = [{
 				id: -1,
 				name: ""
@@ -1555,22 +1662,17 @@ export default {
 					});
 				}
 			}
-			if (this.bookPart.currentPart.id != -1) {
-				// 检查当前的bookPart是否还在，不在的话就转回默认
-				let exist = false;
-				for (let item of this.bookPart.parts) {
-					if (item.id == this.bookPart.currentPart.id) {
-						exist = true;
-					}
-				}
-				if (exist) {
-					this.changeBookPart(this.bookPart.currentPart)
-				} else {
-					this.changeBookPart({ id: -1, name: "" })
-				}
-			} else {
-				this.changeBookPart({ id: -1, name: "" })
+			let targetPart = this.bookPart.parts.find(
+				(item) => item.id == this.bookPart.currentPart.id
+			) || this.bookPart.parts[0];
+			if (changeToLastBookpart) {
+				const lastPartId = window.localStorage.getItem('lastPartId_' + this.uid);
+				targetPart = lastPartId == null
+					? this.bookPart.parts[this.bookPart.parts.length - 1]
+					: this.bookPart.parts.find((item) => item.id == lastPartId) || this.bookPart.parts[0];
 			}
+			// 一次性确定目标分卷，避免先渲染/扫描全书后又切换分卷。
+			this.changeBookPart(targetPart);
 		},
 		exportNovel() {
 			this.$refs.exportPopup.open();
@@ -1619,6 +1721,7 @@ export default {
 			clearInterval(this.Loop);
 		},
 		changeBookPart(bookPart, isManual = false) {
+			const previousPartId = this.bookPart.currentPart.id;
 			this.bookPart.currentPart = bookPart;
 			if (isManual) {
 				window.localStorage.setItem('lastPartId_' + this.uid, bookPart.id);
@@ -1641,25 +1744,106 @@ export default {
 			} else {
 				this.shownArticles = this.articles;
 			}
-			this.checkArticleStatus();
+			this.visibleArticleCount = previousPartId == bookPart.id
+				? Math.max(CATALOG_RENDER_BATCH_SIZE, this.visibleArticleCount)
+				: CATALOG_RENDER_BATCH_SIZE;
+			this.scheduleArticleStatusCheck();
+			this.observeMoreArticles();
 			this.bookPart.btnOpened = false;
-			this.$refs.setPopup.close();
+			if (this.$refs.setPopup) this.$refs.setPopup.close();
 			if (this.hasActiveSearch) {
 				this.scheduleSearch(true);
 			}
 			this.$forceUpdate();
 		},
-		async checkArticleStatus() {
-			// 10个10个地并行查询
-			const batchSize = 10;
-			for (let item of this.shownArticles) {
-				item.isCheckingStatus = true;
+		disconnectCatalogObserver() {
+			if (this._catalogObserver) {
+				this._catalogObserver.disconnect();
+				this._catalogObserver = null;
 			}
-			for (let i = 0; i < this.shownArticles.length; i += batchSize) {
-				const batch = this.shownArticles.slice(i, i + batchSize);
-				// 并行处理当前批次的文章
-				await Promise.all(batch.map(item => this._checkArticleStatusSingle(item)));
-				this.$forceUpdate();
+		},
+		observeMoreArticles() {
+			this.$nextTick(() => {
+				this.disconnectCatalogObserver();
+				if (!this.pageVisible || this.isLoading || this.hasActiveSearch ||
+					!this.$refs.moreArticles || !window.IntersectionObserver) return;
+				const observer = new window.IntersectionObserver((entries) => {
+					if (this._catalogObserver !== observer) return;
+					if (entries.some((entry) => entry.isIntersecting)) this.loadMoreArticles();
+				}, { rootMargin: '300px' });
+				this._catalogObserver = observer;
+				observer.observe(this.$refs.moreArticles);
+			});
+		},
+		loadMoreArticles() {
+			if (!this.pageVisible || this.isLoading || this.hasActiveSearch ||
+				this.visibleArticleCount >= this.shownArticles.length) return;
+			this.visibleArticleCount += CATALOG_RENDER_BATCH_SIZE;
+			this.scheduleArticleStatusCheck();
+			this.observeMoreArticles();
+		},
+		scheduleArticleStatusCheck() {
+			if (this.statusCheckTimer) {
+				clearTimeout(this.statusCheckTimer);
+			}
+			const generation = ++this.statusCheckGeneration;
+			this.$nextTick(() => {
+				if (!this.pageVisible || generation !== this.statusCheckGeneration) return;
+				this.statusCheckTimer = setTimeout(() => {
+					this.statusCheckTimer = null;
+					this.refreshRealtimePresence();
+					this.checkArticleStatus(generation);
+				}, 100);
+			});
+		},
+		async loadArticleStatusMetadata(articles, generation) {
+			const pending = articles.filter((item) => !item.statusMetadataLoaded &&
+				item.article_type !== 'spliter' && item.collaboration_mode !== 'realtime_crdt');
+			if (pending.length === 0) return;
+			const response = await axios.get(
+				this.$baseUrl + '/essays/get_articles?id=' + this.uid +
+				'&catalog_only=1&article_ids=' + pending.map((item) => Number(item.article_id)).join(','),
+				{ headers: { Authorization: 'Bearer ' + this.getAuthToken() } }
+			);
+			if (generation !== this.statusCheckGeneration) return;
+			const byId = new Map(response.data.map((item) => [Number(item.article_id), item]));
+			pending.forEach((item) => {
+				const metadata = byId.get(Number(item.article_id));
+				if (!metadata) return;
+				this.$set(item, 'article_writer', metadata.article_writer || null);
+				this.$set(item, 'active_editor', metadata.active_editor || null);
+				item.collaboration_mode = metadata.collaboration_mode;
+				item.statusMetadataLoaded = true;
+			});
+		},
+		async checkArticleStatus(generation = this.statusCheckGeneration) {
+			const articlesToCheck = this.renderedArticles.filter((item) => !item.articleStatusChecked);
+			for (let i = 0; i < articlesToCheck.length; i += CATALOG_STATUS_BATCH_SIZE) {
+				if (!this.pageVisible || generation !== this.statusCheckGeneration) return;
+				const batch = articlesToCheck.slice(i, i + CATALOG_STATUS_BATCH_SIZE);
+				try {
+					await this.loadArticleStatusMetadata(batch, generation);
+				} catch (error) {
+					// 元数据未加载时不能把“未知”误判为没有云端草稿。
+					return;
+				}
+				if (generation !== this.statusCheckGeneration) return;
+				for (let offset = 0; offset < batch.length; offset += 10) {
+					if (generation !== this.statusCheckGeneration) return;
+					await Promise.all(batch.slice(offset, offset + 10).map(async (item) => {
+						if (!item.statusMetadataLoaded && item.article_type !== 'spliter' &&
+							item.collaboration_mode !== 'realtime_crdt') return;
+						item.isCheckingStatus = true;
+						try {
+							await this._checkArticleStatusSingle(item);
+						} catch (error) {
+							item.articleStatusChecked = false;
+						} finally {
+							item.isCheckingStatus = false;
+						}
+					}));
+				}
+				if (generation === this.statusCheckGeneration) this.$forceUpdate();
 			}
 		},
 		async getArticleWriter(articleId) {
@@ -1813,13 +1997,23 @@ export default {
 			}
 			this.statusRecheckTimers[articleId] = setTimeout(async () => {
 				delete this.statusRecheckTimers[articleId];
-				const target = this.shownArticles.find(
+				const target = this.renderedArticles.find(
 					(item) => Number(item.article_id) === Number(articleId)
 				);
-				if (!target) return;
+				if (!this.pageVisible || !target) return;
+				const generation = this.statusCheckGeneration;
 				target.isCheckingStatus = true;
-				await this._checkArticleStatusSingle(target);
-				this.$forceUpdate();
+				try {
+					target.statusMetadataLoaded = false;
+					await this.loadArticleStatusMetadata([target], generation);
+					if (generation !== this.statusCheckGeneration || !target.statusMetadataLoaded) return;
+					await this._checkArticleStatusSingle(target);
+					this.$forceUpdate();
+				} catch (error) {
+					target.articleStatusChecked = false;
+				} finally {
+					target.isCheckingStatus = false;
+				}
 			}, SYNC_RECHECK_DELAY_MS);
 		},
 		async getArticle(articleId) {
@@ -1968,7 +2162,7 @@ export default {
 			article.isSyncing = false;
 			article.hasWriterModify = false;
 			article.remoteEditSummary = "";
-			if (article.collaboration_mode === "realtime_crdt") {
+			if (article.article_type === 'spliter' || article.collaboration_mode === "realtime_crdt") {
 				// 实时协作章节以 CRDT 检查点为唯一同步状态，不参与旧版的
 				// IndexedDB 草稿与 article_writer 哈希冲突判断。
 				article.active_editor = null;
@@ -2075,7 +2269,17 @@ export default {
 
 			if (writerArticle != null) {
 				if (writerArticle.content_hash != article.content_hash) {
-					if(!writerArticle.content) writerArticle.content = (await this.getArticleWriter(article.article_id)).data.content;
+					// 批量元数据已包含字数；仅在冲突比较或旧服务缺少字数时取正文。
+					let textCount = writerArticle.text_count;
+					if (textCount == null) {
+						if (!writerArticle.content) {
+							writerArticle = await this.getArticleWriterWithContent(article, writerArticle);
+						}
+						const content = JSON.parse(writerArticle.content || '[]');
+						textCount = article.article_type === 'worldVocabulary'
+							? String(content.desc || '').length
+							: this.countText(content).textCount;
+					}
 					article.hasWriterModify = true;
 					// 将writerArticle.create_time原本的YYYYMMDDhhmmss格式调整为YYYY/MM/DD hh:mm:ss
 					article.modify_time = Number(writerArticle.create_time.substring(0, 4)) + "/" +
@@ -2085,11 +2289,8 @@ export default {
 						writerArticle.create_time.substring(10, 12) + ":" +
 						writerArticle.create_time.substring(12, 14);
 
-					// 统计字数
-					let { textCount, imageCount } = this.countText(JSON.parse(writerArticle.content));
 					article.title = writerArticle.title;
 					article.modifiedTextCount = textCount;
-					article.modifiedImageCount = imageCount;
 				}
 			}
 
@@ -2250,6 +2451,15 @@ export default {
 </script>
 
 <style scoped lang="less">
+.moreArticles {
+	padding: 16rpx 24rpx;
+	button {
+		font-size: 26rpx;
+		color: var(--text-color-secondary);
+		background: var(--card-background);
+	}
+}
+
 .searchPanel {
 	padding: 0;
 	background: rgba(0, 0, 0, 0.04);

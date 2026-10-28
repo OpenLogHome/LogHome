@@ -2,7 +2,7 @@
 	<view class="buy" v-dark>
 		<view class="title" v-dark>
 			<img src="../../static/resources/log.png"></img>
-			<text class="text">余额：</text>
+			<text class="text">{{ $t('payments.recharge.balance') }}</text>
 			<text class="num">{{resources.log}}</text>
 		</view>
 
@@ -10,20 +10,20 @@
 			<navigator url="/pages/payments/order_history">
 				<view class="quick-link-item">
 					<!-- <image class="icon" src="../../static/icons/icon_history.png" mode="aspectFit"></image> -->
-					<text>历史订单</text>
+					<text>{{ $t('payments.recharge.orderHistory') }}</text>
 					<image class="to" src="../../static/user/to.png"></image>
 				</view>
 			</navigator>
 			<navigator url="/pages/payments/gift_code">
 				<view class="quick-link-item">
 					<!-- <image class="icon" src="../../static/icons/icon_gift.png" mode="aspectFit"></image> -->
-					<text>礼品码兑换</text>
+					<text>{{ $t('payments.recharge.giftCode') }}</text>
 					<image class="to" src="../../static/user/to.png"></image>
 				</view>
 			</navigator>
 			<navigator url="/pages/payments/exchange">
 				<view class="quick-link-item">
-					<text>去皮原木兑换</text>
+					<text>{{ $t('payments.recharge.peeledExchange') }}</text>
 					<image class="to" src="../../static/user/to.png"></image>
 				</view>
 			</navigator>
@@ -38,37 +38,37 @@
 							<text v-dark>{{ item.number }}</text>
 							<img src="../../static/resources/log.png"></img>
 						</view>
-						<text class="money" v-dark>{{ item.money }}元</text>
+						<text class="money" v-dark>{{ $t('payments.recharge.priceCny', { amount: item.money }) }}</text>
 					</view>
 					<view v-if="index === 2" class="recommend">
-						<text>推荐</text>
+						<text>{{ $t('payments.recharge.recommended') }}</text>
 					</view>
 				</view>
 			</view>
 			<view class="sure" @click="getPaymentUrl">
-				<text>确定捐赠</text>
+				<text>{{ $t('payments.recharge.donate') }}</text>
 			</view>
 		</view>
 
 		<view class="tip" v-dark>
-			<p class="titl" style="padding-bottom: 6rpx;" v-dark>温馨提示</p>
+			<p class="titl" style="padding-bottom: 6rpx;" v-dark>{{ $t('payments.recharge.tipsTitle') }}</p>
 			<view>
-				<text>1、捐赠对应数额，将获得社区给予的</text>
-				<text>原木</text>
+				<text>{{ $t('payments.recharge.tip1Prefix') }}</text>
+				<text>{{ $t('payments.recharge.tip1Log') }}</text>
 			</view>
 			<view>
-				<text>2、我们使用由 <span>
-					<img src="static/images/afdian_logo.png" alt="" style="width: 30rpx; height: 30rpx;" /> 爱发电
-				</span> 提供的支付服务来收取捐赠，请</text>
-				<text>不要修改跳转后的链接和订单号</text>
-				<text>，否则我们将无法收到捐赠</text>
+				<text>{{ $t('payments.recharge.tip2Prefix') }}<span>
+					<img src="static/images/afdian_logo.png" alt="" style="width: 30rpx; height: 30rpx;" /> {{ $t('payments.recharge.afdian') }}
+				</span>{{ $t('payments.recharge.tip2Suffix') }}</text>
+				<text>{{ $t('payments.recharge.tip2Warning') }}</text>
+				<text>{{ $t('payments.recharge.tip2Tail') }}</text>
 			</view>
 			<view>
-				<text>3、您的每笔捐赠我们都将记录在案，并用于</text>
-				<text>支持社区运营和发展</text>
+				<text>{{ $t('payments.recharge.tip3Prefix') }}</text>
+				<text>{{ $t('payments.recharge.tip3Suffix') }}</text>
 			</view>
 			<view>
-				<text>4、在支付过程中遇到任何问题（如原木未到账等问题），请联系官方微信客服：</text>
+				<text>{{ $t('payments.recharge.tip4') }}</text>
 				<text>CodesOcean</text>
 			</view>
 		</view>
@@ -162,7 +162,7 @@
 						}
 					});
 					if (!orderRes.data || orderRes.data.code !== 200) {
-						uni.showToast({ title: '订单创建失败', icon: 'none' });
+						uni.showToast({ title: this.$t('payments.recharge.createFailed'), icon: 'none' });
 						return;
 					}
 					const payment_id = orderRes.data.data.payment_id;

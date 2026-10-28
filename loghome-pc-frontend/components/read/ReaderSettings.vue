@@ -1,35 +1,35 @@
 <template>
-  <el-drawer :custom-class="`reading-drawer reading-settings-drawer ${panelClass}`" title="阅读设置" :visible="visible" @update:visible="$emit('update:visible', $event)" size="min(480px, 100%)" append-to-body>
+  <el-drawer :custom-class="`reading-drawer reading-settings-drawer ${panelClass}`" :title="$t('阅读设置')" :visible="visible" @update:visible="$emit('update:visible', $event)" size="min(480px, 100%)" append-to-body>
     <div class="reader-settings-shell">
       <div class="reader-settings">
         <section>
-          <h3>排版</h3>
-          <div class="setting-row"><span>阅读模式</span><div class="options"><button :aria-pressed="value.mode === 'page'" @click="change({ mode: 'page' })">翻页</button><button :aria-pressed="value.mode === 'text'" @click="change({ mode: 'text' })">滚动</button></div></div>
-          <div class="setting-row"><span>字号</span><div class="stepper"><button aria-label="减小字号" :disabled="value.fontSize <= 14" @click="change({ fontSize: value.fontSize - 1 })">A−</button><output>{{ value.fontSize }} px</output><button aria-label="增大字号" :disabled="value.fontSize >= 36" @click="change({ fontSize: value.fontSize + 1 })">A＋</button></div></div>
-          <div class="setting-row"><span>行距</span><div class="options"><button v-for="height in [1.5, 1.7, 1.8, 2]" :key="height" :aria-pressed="value.lineHeight === height" @click="change({ lineHeight: height })">{{ height }}</button></div></div>
-          <div class="setting-row"><label for="reader-width">正文宽度</label><div class="width-control"><input id="reader-width" type="range" min="620" max="1120" step="20" :value="value.width" @input="change({ width: Number($event.target.value) })"><output>{{ value.width }} px</output></div></div>
+          <h3>{{ $t("排版") }}</h3>
+          <div class="setting-row"><span>{{ $t("阅读模式") }}</span><div class="options"><button :aria-pressed="value.mode === 'page'" @click="change({ mode: 'page' })">{{ $t("翻页") }}</button><button :aria-pressed="value.mode === 'text'" @click="change({ mode: 'text' })">{{ $t("滚动") }}</button></div></div>
+          <div class="setting-row"><span>{{ $t("字号") }}</span><div class="stepper"><button :aria-label="$t('减小字号')" :disabled="value.fontSize <= 14" @click="change({ fontSize: value.fontSize - 1 })">A−</button><output>{{ value.fontSize }} px</output><button :aria-label="$t('增大字号')" :disabled="value.fontSize >= 36" @click="change({ fontSize: value.fontSize + 1 })">A＋</button></div></div>
+          <div class="setting-row"><span>{{ $t("行距") }}</span><div class="options"><button v-for="height in [1.5, 1.7, 1.8, 2]" :key="height" :aria-pressed="value.lineHeight === height" @click="change({ lineHeight: height })">{{ height }}</button></div></div>
+          <div class="setting-row"><label for="reader-width">{{ $t("正文宽度") }}</label><div class="width-control"><input id="reader-width" type="range" min="620" max="1120" step="20" :value="value.width" @input="change({ width: Number($event.target.value) })"><output>{{ value.width }} px</output></div></div>
         </section>
         <section>
-          <h3>字体 <small v-if="resourcesLoading">配置加载中…</small></h3>
-          <div class="font-grid"><button v-for="(font, key) in fonts" :key="key" :aria-pressed="value.font === key" :disabled="fontStates[key] === 'loading'" @click="$emit('font', key)"><strong>{{ font.name }}</strong><span>{{ fontStates[key] === 'loading' ? '正在下载…' : fontStates[key] === 'failed' ? '加载失败，点击重试' : value.font === key ? '当前字体' : '山川湖海，落笔成诗。' }}</span></button><button v-for="font in legacyFonts" :key="font.key" :aria-pressed="value.font === font.key" @click="$emit('font', font.key)"><strong>{{ font.name }}</strong><span>使用本机字体</span></button></div>
+          <h3>{{ $t("字体") }} <small v-if="resourcesLoading">{{ $t("配置加载中…") }}</small></h3>
+          <div class="font-grid"><button v-for="(font, key) in fonts" :key="key" :aria-pressed="value.font === key" :disabled="fontStates[key] === 'loading'" @click="$emit('font', key)"><strong>{{ font.name }}</strong><span>{{ fontStates[key] === 'loading' ? $t('正在下载…') : fontStates[key] === 'failed' ? $t('加载失败，点击重试') : value.font === key ? $t('当前字体') : $t('山川湖海，落笔成诗。') }}</span></button><button v-for="font in legacyFonts" :key="font.key" :aria-pressed="value.font === font.key" @click="$emit('font', font.key)"><strong>{{ font.name }}</strong><span>{{ $t("使用本机字体") }}</span></button></div>
           <p v-if="fontError" class="error" role="alert">{{ fontError }}</p>
         </section>
         <section>
-          <h3>纯色主题</h3>
-          <div class="themes"><button v-for="option in options" :key="option.key" :style="{ backgroundColor: option.backgroundColor, color: option.fontColor }" :aria-label="`${option.name}${option.locked ? '，通行证专享' : ''}`" :aria-pressed="value.theme === option.key && !value.backgroundSkinKey" @click="$emit('theme', option.key)"><span>{{ option.name }}</span><i v-if="option.locked" class="el-icon-lock" aria-hidden="true" /></button></div>
+          <h3>{{ $t("纯色主题") }}</h3>
+          <div class="themes"><button v-for="option in options" :key="option.key" :style="{ backgroundColor: option.backgroundColor, color: option.fontColor }" :aria-label="`${option.name}${option.locked ? $t('，通行证专享') : ''}`" :aria-pressed="value.theme === option.key && !value.backgroundSkinKey" @click="$emit('theme', option.key)"><span>{{ option.name }}</span><i v-if="option.locked" class="el-icon-lock" aria-hidden="true" /></button></div>
         </section>
         <section>
-          <h3>背景皮肤 <button class="refresh" :disabled="resourcesLoading" @click="$emit('refresh')">刷新配置</button></h3>
+          <h3>{{ $t("背景皮肤") }} <button class="refresh" :disabled="resourcesLoading" @click="$emit('refresh')">{{ $t("刷新配置") }}</button></h3>
           <p v-if="resourceError" class="error" role="alert">{{ resourceError }}</p>
-          <div class="skin-grid"><button :aria-pressed="!value.backgroundSkinKey" @click="$emit('skin', '')"><div class="skin-preview plain" :style="{ backgroundColor: theme.backgroundColor }">Aa</div><span>纯色背景</span></button><button v-for="skin in skins" :key="skin.skin_key" :aria-pressed="value.backgroundSkinKey === skin.skin_key" @click="$emit('skin', skin.skin_key)"><img :src="skin.image_url" alt="" loading="lazy" class="skin-preview"><span>{{ skin.skin_name }} <i v-if="skin.is_locked" class="el-icon-lock" aria-hidden="true" /></span><small v-if="skin.is_locked">{{ skin.required_membership === 'super' ? '超级通行证专享' : '通行证专享' }}</small></button></div>
+          <div class="skin-grid"><button :aria-pressed="!value.backgroundSkinKey" @click="$emit('skin', '')"><div class="skin-preview plain" :style="{ backgroundColor: theme.backgroundColor }">Aa</div><span>{{ $t("纯色背景") }}</span></button><button v-for="skin in skins" :key="skin.skin_key" :aria-pressed="value.backgroundSkinKey === skin.skin_key" @click="$emit('skin', skin.skin_key)"><img :src="skin.image_url" alt="" loading="lazy" class="skin-preview"><span>{{ skin.skin_name }} <i v-if="skin.is_locked" class="el-icon-lock" aria-hidden="true" /></span><small v-if="skin.is_locked">{{ skin.required_membership === 'super' ? $t('超级通行证专享') : $t('通行证专享') }}</small></button></div>
         </section>
-        <p v-if="storageError" class="error" role="status">浏览器无法保存设置，本次阅读仍可使用。</p>
-        <button class="reset" @click="$emit('reset')">恢复默认设置</button>
+        <p v-if="storageError" class="error" role="status">{{ $t("浏览器无法保存设置，本次阅读仍可使用。") }}</p>
+        <button class="reset" @click="$emit('reset')">{{ $t("恢复默认设置") }}</button>
       </div>
       <div v-if="lockedMessage" class="settings-feedback" role="status" aria-live="polite" aria-atomic="true">
         <i class="el-icon-lock" aria-hidden="true" />
-        <div class="feedback-copy"><strong>通行证专享</strong><p>{{ lockedMessage }}</p></div>
-        <button class="membership-action" @click="$emit('membership')">查看通行证</button>
+        <div class="feedback-copy"><strong>{{ $t("通行证专享") }}</strong><p>{{ lockedMessage }}</p></div>
+        <button class="membership-action" @click="$emit('membership')">{{ $t("查看通行证") }}</button>
       </div>
     </div>
   </el-drawer>
@@ -40,8 +40,8 @@ export default {
   props: { panelClass: { type: String, default: '' }, visible: Boolean, value: { type: Object, required: true }, fonts: { type: Object, required: true }, skins: { type: Array, default: () => [] }, tier: String, fontStates: { type: Object, default: () => ({}) }, fontError: String, resourceError: String, lockedMessage: String, resourcesLoading: Boolean, storageError: Boolean },
   computed: {
     theme() { return themes[this.value.theme] || themes.white },
-    options() { return Object.keys(themes).filter(key => key !== 'blockepoch').map(key => ({ key, name: THEME_NAMES[key], ...themes[key], locked: MEMBER_THEMES.includes(key) && !canUseBackground('standard', this.tier) })) },
-    legacyFonts() { return [{ key: 'serif', name: '本机宋体' }, { key: 'sans-serif', name: '本机黑体' }] }
+    options() { return Object.keys(themes).filter(key => key !== 'blockepoch').map(key => ({ key, name: this.$t(THEME_NAMES[key]), ...themes[key], locked: MEMBER_THEMES.includes(key) && !canUseBackground('standard', this.tier) })) },
+    legacyFonts() { return [{ key: 'serif', name: this.$t('本机宋体') }, { key: 'sans-serif', name: this.$t('本机黑体') }] }
   },
   methods: { change(patch) { this.$emit('input', { ...this.value, ...patch }) } }
 }

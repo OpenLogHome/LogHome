@@ -13,7 +13,7 @@ data class AudiobookPlaybackState(
     val paragraphCount: Int = 0,
     val canSkipPrevious: Boolean = false,
     val canSkipNext: Boolean = false,
-    val voiceId: String = SYSTEM_DEFAULT_VOICE_ID,
+    val voiceId: String = DEFAULT_TTS_VOICE_ID,
     val playbackSpeed: Float = 1.0f,
     val sleepTimerRemainingMs: Long = 0L,
 ) {

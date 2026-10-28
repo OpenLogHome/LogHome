@@ -113,7 +113,7 @@
 msg 目录分域替换、通知模板化、邮件/短信英文模板、Android 约 130 条资源 + values-en 发版。
 
 **Phase 3 — 运营内容与外延（另立项）**
-FAQ/banner/成就名等 DB 内容多语言 + loghome-manage 后台双语录入；loghome-pc-frontend、loghome-flutter、loghome-ai-backend 复用同一 X-Lang/code 协议按需接入。
+FAQ/banner/成就名等 DB 内容多语言 + loghome-manage 后台双语录入；loghome-pc-frontend、loghome-android、loghome-ai-backend 复用同一 X-Lang/code 协议按需接入。
 
 工作量量级：F 约 2,600 词条/190 文件；B 约 440 处；A 约 130 条 + 管线。建议 AI 辅助批量抽取，整体 1–2 人月量级，按域可并行。
 
@@ -291,7 +291,7 @@ P0 目标：三端语言协议接通，UI 全部保持中文（en 目录稀疏�
 - 协议化前置（与后端协同）：
   - 4 处 `res.data.msg == "登录成功"` 改为 token/HTTP 状态判定。
   - 3 处 `indexOf('超级')` 判会员等级改为 `membership.type`/等级码。
-  - `tree_status == '未种植'` 改为状态码（随 2F 落地）。
+  - `tree_status == '未种植'` 改为状态码：**2F 未执行**。后端仍存中文枚举（未种植/生长/开花/结果/收获），需后端加字段并迁移存量数据；前端暂保留字面量比较，详见 D.7 遗留。
   - `App.vue` 分享口令正则 `/【原木社区】([A-Z0-9]{8})，/` 改为语言无关的匹配（随 2B 落地）。
 
 **验收**：`i18n:audit` 全绿；125 路由标题 0 缺失；相对时间单测通过；zh 视觉零回归；en 下共享组件与设置/我的页可正常切换。
@@ -408,7 +408,7 @@ node --test test/i18n_*.cjs   # 词条结构与相对时间单测
 - **en 发布策略**：先内部/管理员 → 小流量 beta → 公开；zh 保持默认。每个域在后端覆盖完成前不对外承诺“完整英文”。
 - **监控**：开发环境打开 vue-i18n missing 告警；生产保持回退 zh，不白屏。发布清单加入 `i18n:audit`。
 
-### D.7 2A/2B/2C/2D 实施记录（2026-10-21）
+### D.7 2A–2F 实施记录（2026-10-21 起，2E/2F 于 2026-10-23 完成）
 
 | 批次 | 状态 | 说明 |
 |---|---|---|
@@ -416,6 +416,8 @@ node --test test/i18n_*.cjs   # 词条结构与相对时间单测
 | 2B | 完成（词条 + 页面）；登录态 E2E 待测 | 19 个社区 SFC 已迁移，静态检查全绿；无可用测试账号，未走通登录后主链路 |
 | 2C | 完成（词条 + 页面）；登录态 E2E 待测 | 阅读/漫画页面与共享组件迁移，新增 `reader` 393 条、`manga` 319 条；主题/榜单等动态枚举词条已覆盖 |
 | 2D | 完成（词条 + 页面）；登录态 E2E 待测 | 作品管理 + 编辑器迁移，新增 `writer` 832 条；协作/工具栏/快捷输入/世界词典/漫画编辑均已接入 |
+| 2E | 完成（词条 + 页面）；登录态 E2E 待测 | 通行证/红石 + 商城/支付迁移；新增 `membership` 239、`store` 232、`payments` 167，`redstone` 净增 67 |
+| 2F | 完成（词条 + 页面）；登录态 E2E 待测 | 树场/世界/创作首页/书架/apps/我的二批；新增 `tree` 102、`world` 63、`library` 76、`apps` 101，`me` 净增 102 |
 
 **2A 落地**
 - `common` 域新增共享原语词条：`ge-popup` 的绑定微信/红包/版本更新弹窗、`Xss-swiper` 的“查看详情”；此前 `emoji-picker`、`conflictDialog`、`xzj-readMore`、`chunLei-modal`、`uni-load-more`、`helang-moveVerify` 已完成。
@@ -444,24 +446,41 @@ node --test test/i18n_*.cjs   # 词条结构与相对时间单测
 - 编辑器中 AI 提示词/模型指令、文章正文、章节内容、书名、标签名、角色名、词典词条内容保留原文（按 D.2 边界）。
 - 遗留的非可视残留：编辑器 legacy 原生导航占位 `"发布 ": "publish"` 仍以中文作内部键；主题/工具/快捷输入的中文默认值是内部哨兵/回退，展示均经 key 映射；隐藏的内部 `Error` 文案与自动插入内容（如“微信号”）不面向用户。
 
-**验证（2A–2D 全量）**
-- `npm run i18n:audit`：PASS，10 个域 zh/en 各 2771 条；未引用告警 328 条（动态拼接/历史词条）。
+**2E 落地**
+- 新增 `i18n/messages/{zh-CN,en}.membership.json`（239 条/语言）、`.store.json`（232）、`.payments.json`（167）；`redstone` 在既有 20 条基础上净增 67 条（`redstone.page.*`、`redstone.cost.*`），共 87 条/语言。
+- 通行证：`pages/membership/` 下 4 个页面（首页/赠送/兑换/规则）与 `membership-badge.vue` 全部接入；档位名、计费周期、升级/续费、兑换记录、赠送方案、规则章节走 `membership.*`，动态数组用 `*Key` 字段并在 computed/template 中取词，切换语言即时生效。
+- 红石：`pages/redstone/index.vue` 与 `components/redstone-cost/RedstoneCost.vue` 接入；余额/不足/差额/兑换/开通通行证提示与明细流水走 key，余额文案支持 `{balance}` 插值。
+- 商城：`pages/store/` 7 个页面与 `StoreVariantSheet`/`StoreVariantPicker`；分类/排序、规格选择、库存/售罄、结算、订单状态、物流、地址增删改查全部走 key；`value: '写作'` 为请求参数契约，保留中文。
+- 支付：`pages/payments/` 7 个页面、`TaskRewardModal`、`tipping/tippingBar`；充值、原木获取、兑换、收益、礼品码、订单历史、跳转支付与打赏留言全部接入；订单状态以状态码映射展示，后端 `msg` 仍按原文兜底。
+- 品牌词统一为 LogHome Pass / Super LogHome Pass / Redstone / Log；会员协议与法律文本（`rules.vue` 内服务条款）按 D.2 边界不翻译。
+
+**2F 落地**
+- 新增 `i18n/messages/{zh-CN,en}.tree.json`（102 条）、`.world.json`（63）、`.library.json`（76）、`.apps.json`（101）；`me` 域净增 102 条（成就/我的勋章 + 共享组件），累计 498 条/语言。
+- 树场：`treeplant.vue`、`treeSceneSettings.vue`、`threeOakTree.vue` 接入；6 个树场主题统一映射 `tree.settings.themes.*`，成长值/经验球/每日与经验任务/串门偷取/收获弹窗/主题解锁提示全部走 key。`tree_status` 的比较值仍是后端中文枚举（见遗留）。
+- 世界：`worldPage.vue`、`worldRelations.vue`、`worldsPage.vue` 接入；世界大纲/词条/关联作品/收藏/打赏/分享口令/粉丝榜/评论/关系图与创建世界弹窗全部走 key，分享文案保留 `{name}`、`{id}` 插值。
+- 创作首页/书架：`essays.vue`、`library.vue`、`bookcase/index.vue`、`bookcase/manage.vue`、`bookshelf-horizontal.vue`、`book_in_case.vue`、`home-rank-board.vue` 接入；标签/空态/榜单区块/书架角标与更多入口走 key。
+- 外围与我：`apps/` 9 个页面、`static/grandUsers`、`static/updateIntro`、`users/achievements`、`users/badgeDetail` 接入；`honor-badge`、`nothing`、`LogPowerWordmark` 共享组件接入 `common.badge.officialHonor`、`common.emptyState`、`common.brand.logPower`。
+- 按边界保留：ICP/公网安备等备案信息、反馈页演示数据、后台 API 下发的作品/分类/成就标题与 `msg`、UGC 正文不翻译。
+
+**验证（2A–2F 全量）**
+- `npm run i18n:audit`：PASS，17 个域 zh/en 各 3922 条；未引用告警 328 条（动态拼接/历史词条）。
 - `npm run test:i18n`：9/9 PASS（词典一致性、插值、en 中文残留、标题、相对时间边界）。
-- `npm run i18n:check-sfc`：61 个改动 SFC 全部解析/语法/花括号检查通过；模板中仅剩 1 处有意保留的中文 `文本`（`pages/readers/newReader/article.vue:138` 的隐藏测量节点）。
-- writer/reader/manga 三域共 1626 处 key 引用，逐条比对词典 0 真实缺失；动态前缀（主题/榜单/世界属性/日历）已单独核验。
-- `npm run i18n:extract`：未迁移中文行 2331（2A/2B 前 3986，原始基线 4522），`$t()` 2740（2A/2B 前 923，原始 392）。
-- H5 冒烟：`loghome_language=en` 下 tabBar、登录页、浏览器标题、共享组件与设置/我的页正常切换；2B/2C/2D 登录后主链路尚未执行。
+- `npm run i18n:check-sfc`：54 个改动 SFC（不含用户正在修改的 `pages/writers/allArticles.vue`）全部解析/语法/花括号检查通过；模板中仅剩旧批次有意的隐藏测量节点中文。
+- 58 个改动 JS/Vue 文件逐条比对词典：所有字面量 `$t()` key 命中，0 真实缺失；动态前缀（树场主题 6 项、红石 AI 章节、会员 `*Key`、成就分类、商城/支付 `labelKey`）已单独核验。
+- vue-i18n v8 渲染：zh/en 全部 3922 条逐 key 渲染通过；en 下无中文残留（`reader.book.realtimeRankSuffix` 的空 en 值为有意省略量词）。
+- `npm run i18n:extract`：未迁移中文行 1222（2C/2D 后 2331，原始基线 4522），`$t()` 3927（2C/2D 后 2740，原始 392）。
+- H5 冒烟：2A/2B 已验证 tabBar、登录页、浏览器标题与设置/我的页；2E/2F 尚未运行登录态走查与 en 截图回归。
 
 **遗留**
-- 需要隔离测试账号完成 2B/2C/2D 端到端验收：2B 发帖/评论/入圈，2C 阅读器主题与背景切换、书架/书评/有声书，2D 章节编辑/发布/协作/封面；同时做 zh/en 截图回归与 375/414 宽度截断检查。
-- 后端下发的 toast、站内通知、作品/圈子状态文案仍为中文，待 P2；`collections`/`logPowerRank` 的列表标题作为中文请求参数回传，en 下会显示后端中文标题。
-- `bookInfo` 的 `tree_status === '结果'` 仍按中文字面量判定，待 2F 与种树状态码一并协议化。
-- 当前 2C/2D 改动未提交，且与用户既有的 `postDetail`/`me`/`essays`/`TodoBoard` 等改动同工作区；提交时需按文件核对，避免混入用户改动。
+- 需要隔离测试账号完成 2B–2F 端到端验收：2B 发帖/评论/入圈，2C 阅读器主题与背景切换、书架/书评/有声书，2D 章节编辑/发布/协作/封面，2E 通行证购买/赠送/兑换与商城下单/支付/物流，2F 树场主题/串门/偷取、世界创建/收藏/分享、成就与书架；同时做 zh/en 截图回归与 375/414 宽度截断检查。
+- 后端协议化待做：树场 `tree_status`（未种植/生长/开花/结果/收获）、任务名 `签到`、收获提示 `/原木 × n/`、`/苹果 × n/`；成就标题/分类按中文关键词判定；后端下发的 toast、站内通知、订单/作品状态文案仍为中文。
+- API 契约值保留中文：`collections.collection_title`（`最近更新`、`banner`、`原木力...`）、商城分类请求值 `写作`；en 下这些内容若来自后端仍显示中文。
+- 当前 2E/2F 改动未提交，且与用户既有的 `pages/writers/allArticles.vue`、`loghome-backend/routes/essays.js` 及新增测试同工作区；提交时需按文件核对，避免混入用户改动。
 
 ### D.8 工期与下一步
 
 - 净开发约 **7–9 周**（含每批截图回归）；AI 辅助充分、共享词条复用顺利时可压到 6 周。后端 P2 建议并行 2–3 周，en 公测以两边会合为准。
-- 进度：2A–2D 已完成（静态 + 单元验收），净新增 `reader`/`manga`/`writer` 三个域共 1544 条/语言；剩余 2E（商业化）、2F（外围与我的二批）约占规划量的一半。
-- 提交状态：2A/2B 已提交（`06911e74`）；2C/2D 与既有未提交 UI 改动位于同一工作区（`bookshelf-horizontal`、`dl-review/item`、`postDetail`、`essays`、`me`、`TodoBoard` 等），尚未提交；提交时按文件核对，避免把用户改动混入批次提交。
-- 下一步：先用隔离测试账号完成 2B/2C/2D 登录态走查与中英文截图回归，再启动 2E；2E 可先拆「通行证/红石」与「商城/支付」两个 PR，并优先协议化订单/支付状态文案。
+- 进度：2A–2F 全部完成（静态 + 单元验收），17 个域 zh/en 各 3922 条/语言；2E/2F 净增 1151 条（含 `common` 2 条），前端静态文案迁移已覆盖主线页面。剩余为登录态 E2E、截图回归与后端 P2 协议化。
+- 提交状态：2A/2B 已提交（`06911e74`）；2C/2D 已提交（`7654be2d`）；2E/2F 与既有未提交 UI/后端改动位于同一工作区，尚未提交；提交时按文件核对，避免把用户的 `pages/writers/allArticles.vue`、`loghome-backend/routes/essays.js` 与新增测试混入批次提交。
+- 下一步：用隔离测试账号完成 2B–2F 登录态走查与中英文截图回归；随后推进后端 P2（树场/成就/订单/支付状态码、系统消息本地化）与 en 公测前的法律文本、管理端范围确认。
 - 待拍板：法律文本处理方式、管理端是否纳入、AI 提示词是否立项、翻译由谁终审、后端 P2 的排期优先级。

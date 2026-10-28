@@ -17,20 +17,20 @@
 			</div>
 			<!--End密码输入框-->
 			<div class="button" @click="login">{{ $t('auth.login.signIn') }}</div>
-			<label style="margin-left:50vw; transform:translateX(-50%);
-			display: flex;flex-direction: row;font-size: 28upx; margin-top: 50rpx;
-			width:80vw">
+			<label class="agreement-row">
 				<checkbox-group  @change="selectCk">
 					<checkbox value="yes" color="rgb(180, 111, 88)"/>
 				</checkbox-group>
-				<span style="display: flex;flex-direction: row;">{{ $t('auth.login.agreeAccept') }}
-					<navigator url="../static/privacyAgreement" open-type="navigate" style="color: #FF6000;border-bottom: 1px solid  #FF6000;">{{ $t('auth.login.privacyPolicy') }}
+				<span class="agreement-copy">{{ $t('auth.login.agreeAccept') }}
+					<navigator class="agreement-link" url="../static/privacyAgreement" open-type="navigate">{{ $t('auth.login.privacyPolicy') }}
 					</navigator>
 				</span>
 			</label>
 
-			<div class="button-small" @click="forgotten">{{ $t('auth.login.forgotPassword') }}</div>
-			<div class="button-small" @click="register">{{ $t('auth.login.account.signUp') }}</div>
+			<div class="auth-actions">
+				<div class="button-small" @click="forgotten">{{ $t('auth.login.forgotPassword') }}</div>
+				<div class="button-small" @click="register">{{ $t('auth.login.account.signUp') }}</div>
+			</div>
 
 
 			<div class="certification" style="padding-top: 200rpx;">
@@ -45,7 +45,7 @@
 										color:#939393;
 										vertical-align: middle;
 										font-size: 30rpx;
-				                    "><img src="../../static/buliang.svg" alt="网上有害信息举报专区" style="
+					                    "><img src="../../static/buliang.svg" :alt="$t('auth.login.account.reportZone')" style="
 				                        margin-right: 5px;
 				                        width: 35rpx;
 				                        height: 35rpx;" />{{ $t('auth.login.account.reportZone') }}</a>
@@ -75,7 +75,6 @@
 	export default {
 		data() {
 			return {
-				title: '原木社区',
 				version:"Alpha 0.1.1",
 				account:"",
 				pwd:"",
@@ -246,6 +245,36 @@
 		background-color:rgb(225, 139, 110);
 	}
 
+	.agreement-row {
+		width: 80%;
+		margin: 50rpx auto 0;
+		display: flex;
+		align-items: center;
+		gap: 12rpx;
+		font-size: 28rpx;
+		text-align: left;
+	}
+
+	.agreement-copy {
+		display: flex;
+		align-items: baseline;
+		min-width: 0;
+	}
+
+	.agreement-link {
+		color: #FF6000;
+		border-bottom: 1px solid #FF6000;
+		white-space: nowrap;
+	}
+
+	.auth-actions {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 40rpx;
+		margin-top: 30rpx;
+	}
+
 
 	div.back{
 		position:absolute;
@@ -255,14 +284,12 @@
 
 
 	.button-small {
-		height: 20px;
-		width: 100%;
-		margin-top: 15px;
+		width: auto;
+		margin: 0;
 		font-size: 16px;
-
 		font-weight: bold;
 		text-align: center;
-		line-height: 38px;
+		line-height: 1.4;
 		border-radius: 5px;
 		color: var(--brand-text-color);
 

@@ -38,6 +38,9 @@ function makeVm(navigateTo) {
 
 test('home-rank-board：四榜四专区切换并调用榜单接口', async () => {
 	const source = readComponent('components/home-rank-board.vue');
+	assert.match(source, /home-rank-board--en/, '英文榜单标题应启用紧凑布局');
+	assert.doesNotMatch(source, /--tab-units/, '榜单标题宽度不应按中文字符数硬编码');
+	assert.doesNotMatch(source, /library\.rank\.boardSuffix/, '首页原木力榜标签只显示字标，不应追加 Rank');
 	assert.match(source, /key: 'update'[\s\S]*key: 'logpower'[\s\S]*key: 'complete'[\s\S]*key: 'new'/);
 	assert.match(source, /key: 'all'[\s\S]*key: 'novel'[\s\S]*key: 'manga'[\s\S]*key: 'world'/);
 	assert.match(source, /\/library\/rank\/get_rank_board\?board=' \+ board/);

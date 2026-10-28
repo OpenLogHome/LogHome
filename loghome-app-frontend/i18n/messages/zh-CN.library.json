@@ -1,0 +1,125 @@
+{
+  "library": {
+    "home": {
+      "tabs": {
+        "novel": "小说",
+        "manga": "漫画",
+        "world": "世界"
+      },
+      "switchToGrid": "切换到网格视图",
+      "switchToScroll": "切换到滚动视图",
+      "emptyTagline": "方块跃然纸上，故事在此生长",
+      "newStory": "开个新坑",
+      "newStoryAlt": "原木娘和鹦鹉一起开个新坑",
+	  "uploadWork": "上传作品",
+      "workAbnormal": "作品异常",
+      "reReviewing": "重新审核中",
+      "addWorkWorld": "添加作品世界",
+      "close": "关闭",
+      "searchAllWorlds": "搜索全站世界",
+      "loadingWorlds": "正在加载世界...",
+      "noWorlds": "暂无可添加的世界",
+      "unknownAuthor": "未知作者",
+      "noDescription": "暂无简介",
+      "activity": {
+        "fallbackTitle": "活动信息填写",
+        "fallbackPlaceholder": "请输入{{name}}",
+        "cancel": "取消",
+        "submit": "提交",
+        "fieldRequired": "请填写{{name}}",
+        "loginRequired": "请先登录",
+        "submitting": "提交中...",
+        "submitSuccess": "提交成功",
+        "submitFailed": "提交失败，请重试",
+        "resubmitTitle": "重新提交审核",
+        "resubmitContent": "确定要将该作品重新提交给管理员审核吗？通过后将恢复上架。",
+        "resubmitted": "已提交审核，请等待管理员处理",
+        "submitFailedLater": "提交失败，请稍后重试"
+      },
+      "loading": "努力加载中",
+      "fetchBookFailed": "获取书籍数据失败",
+      "fetchWorldsFailed": "获取关联世界设定失败",
+      "notPublished": "该作品还没有发布，不能阅读。",
+      "unlinkWorld": "取消关联设定",
+      "unlinkWorldSuccess": "删除关联世界设定成功",
+      "linkWorldSuccess": "添加关联世界设定成功"
+    },
+    "index": {
+      "searchPlaceholder": "搜索书籍、圈子、帖子、用户",
+      "recommendAppPrefix": "推荐您使用",
+      "recommendAppBrand": "原木社区 APP",
+      "recommendExperiencePrefix": "综合体验",
+      "recommendExperienceHighlight": "远胜",
+      "recommendExperienceSuffix": "浏览器直接访问",
+      "badgeManga": "漫画",
+      "badgeWorld": "世界",
+      "offlineMode": "离线模式"
+    },
+    "bookcase": {
+      "tabs": {
+        "favorites": "收藏",
+        "history": "历史"
+      },
+      "searchPlaceholder": "搜索书架",
+      "loading": "努力加载中",
+      "uncachedBook": "未缓存该书籍，无法阅读",
+      "removedFromShelf": "已从书架移除",
+      "removeFailed": "移除失败"
+    },
+    "shelf": {
+      "updateChapters": "更新{{count}}章",
+      "historyBadge": "历史",
+      "badgeManga": "漫画",
+      "badgeWorld": "世界",
+      "viewMore": "查看\\n更多",
+      "offlineMode": "离线模式，请检查网络"
+    },
+    "rank": {
+      "ariaLabel": "排行榜",
+      "carouselAria": "按列滑动的排行榜",
+      "more": "更多",
+      "boardSuffix": "榜",
+      "boards": {
+        "update": "更新榜",
+        "logpower": "原木力榜",
+        "complete": "完结榜",
+        "new": "新作榜"
+      },
+      "zones": {
+        "all": "全部",
+        "novel": "小说",
+        "manga": "漫画",
+        "world": "世界"
+      },
+      "badgeManga": "漫画",
+      "badgeWorld": "世界"
+    },
+    "bookInCase": {
+      "badgeManga": "漫画",
+      "badgeWorld": "世界",
+      "updateChapters": "更新{{count}}章"
+    },
+    "reportNovel": {
+      "title": "举报作品",
+      "subtitle": "请选择举报原因，管理员核实后将进行处理",
+      "reasons": {
+        "illegal": "违法违规",
+        "sexual": "色情低俗",
+        "plagiarism": "抄袭侵权",
+        "harassment": "人身攻击",
+        "spam": "垃圾广告",
+        "other": "其他"
+      },
+      "detailRequired": "请补充说明（必填）",
+      "detailOptional": "补充说明（选填）",
+      "submitting": "提交中…",
+      "submit": "提交举报",
+      "missingWork": "作品信息缺失",
+      "chooseReason": "请选择举报原因",
+      "detailRequiredToast": "请填写补充说明",
+      "loginRequired": "请先登录",
+      "success": "举报成功，感谢您的反馈",
+      "failed": "举报失败，请稍后重试"
+    }
+  }
+}

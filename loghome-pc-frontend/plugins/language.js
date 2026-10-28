@@ -8,20 +8,30 @@ import { readingToken } from "~/plugins/api/reading";
 import {
   LANGUAGE_KEY,
   FOLLOW_SYSTEM,
+  SUPPORTED_LANGUAGES,
+  acceptedLanguages,
+  parseLanguageCookie,
   savedLanguage,
   effectiveLanguage,
   translateUI,
 } from "~/utils/language";
 
-export default (_context, inject) => {
+export default (context, inject) => {
   // Element UI must use its own locale fallback rather than Nuxt's prototype injection getter.
   elementLocale.i18n(() => undefined);
+  const requestHeaders = (context.req && context.req.headers) || {};
+  const serverPreference = parseLanguageCookie(requestHeaders.cookie || "");
+  const serverLocale = effectiveLanguage(
+    serverPreference,
+    acceptedLanguages(requestHeaders["accept-language"] || "")
+  );
   const state = Vue.observable({
-    preference: FOLLOW_SYSTEM,
-    locale: "zh-CN",
+    preference: serverPreference,
+    locale: serverLocale,
     saving: false,
     syncError: "",
   });
+  if (context.$axios) context.$axios.setHeader("X-Lang", state.locale);
   let storage = null,
     account = null,
     version = 0;
@@ -33,13 +43,21 @@ export default (_context, inject) => {
   const languages = () =>
     typeof navigator === "undefined" ? [] : navigator.languages || [navigator.language];
   const apply = (preference) => {
-    state.preference = ["zh-CN", "en"].includes(preference) ? preference : FOLLOW_SYSTEM;
+    state.preference = SUPPORTED_LANGUAGES.includes(preference)
+      ? preference
+      : FOLLOW_SYSTEM;
     state.locale = effectiveLanguage(state.preference, languages());
     try {
       storage.setItem(LANGUAGE_KEY, state.preference);
     } catch (_) {}
-    if (typeof document !== "undefined") document.documentElement.lang = state.locale;
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = state.locale;
+      document.cookie = `${LANGUAGE_KEY}=${encodeURIComponent(
+        state.preference
+      )}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    }
     if (typeof window !== "undefined") {
+      if (context.$axios) context.$axios.setHeader("X-Lang", state.locale);
       elementLocale.i18n(() => {
         // Register the reactive dependency used by Element UI computed labels.
         void state.locale;
@@ -105,9 +123,18 @@ export default (_context, inject) => {
   };
   inject("language", api);
   inject("t", (value, params) => translateUI(value, params, state.locale));
+  if (context.app) {
+    context.app.head = context.app.head || {};
+    context.app.head.htmlAttrs = {
+      ...(context.app.head.htmlAttrs || {}),
+      lang: state.locale,
+    };
+  }
   if (typeof window === "undefined") return;
   const initialize = () => {
-    apply(savedLanguage(storage));
+    const stored = savedLanguage(storage);
+    const cookie = parseLanguageCookie(document.cookie);
+    apply(stored === FOLLOW_SYSTEM && cookie !== FOLLOW_SYSTEM ? cookie : stored);
     sync();
   };
   // Match the SSR locale during hydration, then update text and accessible attributes together.

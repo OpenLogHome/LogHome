@@ -1903,6 +1903,42 @@ router.get('/get_articles', auth, async function (req, res) {
 			return res.status(403).json({ msg: 'access denied' });
 		}
 
+		// App 首屏只需要目录；最新草稿、编辑锁等信息在显示后按章补齐。
+		if (catalogOnly && req.query.defer_status === '1') {
+			const rows = await query(
+				`SELECT n.novel_id AS catalog_novel_id, n.novel_type, n.name AS novel_name,
+					a.article_id, a.title, a.novel_id, a.article_chapter,
+					a.content_hash, a.is_draft, a.deleted, a.update_time,
+					a.text_count, a.article_type,
+					COALESCE(acm.mode, 'legacy_lock') AS collaboration_mode
+				FROM novels n
+				LEFT JOIN articles a ON a.novel_id = n.novel_id AND a.deleted = 0
+				LEFT JOIN article_collaboration_modes acm ON acm.article_id = a.article_id
+				WHERE n.novel_id = ? AND n.deleted = 0
+				ORDER BY a.article_chapter ASC`,
+				[novelId],
+			);
+			if (!rows.length) return res.status(404).json({ msg: 'novel not found' });
+			return res.json({
+				articles: rows.filter((row) => row.article_id != null).map(serializeArticleListRow),
+				novel: {
+					novel_id: novelId,
+					name: rows[0].novel_name,
+					novel_type: rows[0].novel_type,
+				},
+				access: serializeAccess(access),
+			});
+		}
+
+		let articleIds = null;
+		if (req.query.article_ids !== undefined) {
+			articleIds = String(req.query.article_ids).split(',').map(Number);
+			if (!catalogOnly || articleIds.length > 50 || articleIds.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
+				return res.status(400).json({ msg: 'article_ids must contain 1 to 50 positive ids in catalog mode' });
+			}
+			articleIds = [...new Set(articleIds)];
+		}
+
 		if (!catalogOnly) {
 			await ensureAgentMemorySchema();
 			await expireArticleEditLocks();
@@ -1988,6 +2024,7 @@ router.get('/get_articles', auth, async function (req, res) {
 					FROM article_edit_locks
 					WHERE status = 'active'
 						AND expires_at > CURRENT_TIMESTAMP
+						AND novel_id = ?
 					GROUP BY article_id
 				) latest_lock ON latest_lock.max_lock_id = l1.lock_id
 				INNER JOIN users u ON u.user_id = l1.user_id
@@ -1995,14 +2032,51 @@ router.get('/get_articles', auth, async function (req, res) {
 			WHERE a.novel_id = ? 
 				AND n.deleted = 0 
 				AND a.deleted = 0 
+				${articleIds ? `AND a.article_id IN (${articleIds.map(() => '?').join(',')})` : ''}
 			ORDER BY a.article_chapter ASC`,
-			[novelId],
+			[novelId, novelId, ...(articleIds || [])],
 		);
 
 		res.end(JSON.stringify(results.map(serializeArticleListRow)));
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/get_article_feedback_counts', auth, async function (req, res) {
+	const user = getCurrentUser(req);
+	const novelId = Number(req.query.id || req.query.novel_id || 0);
+	if (!novelId) {
+		return res.status(400).json({ msg: 'novel_id is required' });
+	}
+
+	try {
+		const access = await getNovelAccess(user.user_id, novelId);
+		if (!canViewArticles(access)) {
+			return res.status(403).json({ msg: 'access denied' });
+		}
+
+		const results = await query(
+			`SELECT
+				af.article_id,
+				COUNT(*) AS feedback_count
+			FROM article_feedback af
+			INNER JOIN articles a ON a.article_id = af.article_id
+			WHERE a.novel_id = ?
+				AND a.deleted = 0
+				AND af.status = 0
+			GROUP BY af.article_id`,
+			[novelId],
+		);
+
+		return res.json(results.map((row) => ({
+			article_id: Number(row.article_id),
+			feedback_count: Number(row.feedback_count || 0),
+		})));
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({ msg: 'bad request' });
 	}
 });
 

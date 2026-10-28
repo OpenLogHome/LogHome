@@ -2,14 +2,14 @@
 	<view class="container" v-dark>
 		<view class="content">
 			<view class="header">
-				<view class="title">帖子管理</view>
-				<view class="add-btn" @click="addPost">发布帖子</view>
+				<view class="title">{{ $t('manage.posts.title') }}</view>
+				<view class="add-btn" @click="addPost">{{ $t('manage.posts.publish') }}</view>
 			</view>
 
-			<view class="pagination" v-if="totalPages > 0">
-				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
+			<view class="pagination" v-if="posts.length > 0 && totalPages > 0">
+				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">{{ $t('common.prev') }}</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
-				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">{{ $t('common.next') }}</view>
 			</view>
 
 			<view class="post-list">
@@ -17,24 +17,24 @@
 					<view class="post-main">
 						<view class="post-title">{{post.title}}</view>
 						<view class="post-info">
-							<text class="author">作者: {{post.name}}</text>
+							<text class="author">{{ $t('manage.common.author', { name: post.name }) }}</text>
 						</view>
 					</view>
 					<view class="post-actions">
-						<view class="action-btn edit" @click.stop="editPost(post)">编辑</view>
-						<view class="action-btn delete" @click.stop="deletePost(post)">删除</view>
+						<view class="action-btn edit" @click.stop="editPost(post)">{{ $t('common.edit') }}</view>
+						<view class="action-btn delete" @click.stop="deletePost(post)">{{ $t('common.delete') }}</view>
 					</view>
 				</view>
 			</view>
 
-			<view class="pagination" v-if="totalPages > 0">
-				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
+			<view class="pagination" v-if="posts.length > 0 && totalPages > 0">
+				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">{{ $t('common.prev') }}</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
-				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">{{ $t('common.next') }}</view>
 			</view>
 
 			<view class="no-data" v-if="posts.length === 0">
-				暂无帖子数据
+				{{ $t('manage.posts.empty') }}
 			</view>
 		</view>
 
@@ -43,23 +43,23 @@
 			<view class="modal-mask" @click="closeModal"></view>
 			<view class="modal-content">
 				<view class="modal-header">
-					<view class="modal-title">{{currentPost.post_id ? '编辑帖子' : '发布帖子'}}</view>
+					<view class="modal-title">{{currentPost.post_id ? $t('manage.posts.editPost') : $t('manage.posts.publish')}}</view>
 					<view class="modal-close" @click="closeModal">×</view>
 				</view>
 				<view class="modal-body">
 					<view class="form-item">
-						<view class="label">标题</view>
+						<view class="label">{{ $t('manage.common.title') }}</view>
 						<view class="input">
-							<input type="text" v-model="currentPost.title" placeholder="请输入标题" />
+							<input type="text" v-model="currentPost.title" :placeholder="$t('common.inputTitle')" />
 						</view>
 					</view>
 					<view class="form-item">
-						<view class="label">内容</view>
+						<view class="label">{{ $t('manage.posts.postContent') }}</view>
 						<view class="input">
 							<view class="editor-container">
 								<editor id="editor-content" class="rich-editor" :read-only="false"
 									show-img-size show-img-toolbar show-img-resize
-									@ready="onEditorReady" placeholder="请输入内容..."></editor>
+									@ready="onEditorReady" :placeholder="$t('manage.posts.contentPlaceholder')"></editor>
 								<view class="editor-toolbar">
 									<view class="toolbar-item" @click="formatBold">
 										<text class="iconfont">B</text>
@@ -71,10 +71,10 @@
 										<text class="iconfont">H</text>
 									</view>
 									<view class="toolbar-item" @click="insertImage">
-										<text class="iconfont">图片</text>
+										<text class="iconfont">{{ $t('manage.posts.image') }}</text>
 									</view>
 									<view class="toolbar-item" @click="formatColor">
-										<text class="iconfont">颜色</text>
+										<text class="iconfont">{{ $t('manage.posts.color') }}</text>
 									</view>
 								</view>
 							</view>
@@ -82,8 +82,8 @@
 					</view>
 				</view>
 				<view class="modal-footer">
-					<view class="btn cancel" @click="closeModal">取消</view>
-					<view class="btn confirm" @click="savePost">保存</view>
+					<view class="btn cancel" @click="closeModal">{{ $t('common.cancel') }}</view>
+					<view class="btn confirm" @click="savePost">{{ $t('common.save') }}</view>
 				</view>
 			</view>
 		</view>
@@ -93,15 +93,15 @@
 			<view class="modal-mask" @click="closeDeleteConfirm"></view>
 			<view class="modal-content confirm-modal">
 				<view class="modal-header">
-					<view class="modal-title">确认删除</view>
+					<view class="modal-title">{{ $t('manage.posts.deleteTitle') }}</view>
 					<view class="modal-close" @click="closeDeleteConfirm">×</view>
 				</view>
 				<view class="modal-body">
-					<view class="confirm-text">确定要删除这篇帖子吗？此操作不可恢复。</view>
+					<view class="confirm-text">{{ $t('manage.posts.deleteConfirm') }}</view>
 				</view>
 				<view class="modal-footer">
-					<view class="btn cancel" @click="closeDeleteConfirm">取消</view>
-					<view class="btn delete" @click="confirmDelete">删除</view>
+					<view class="btn cancel" @click="closeDeleteConfirm">{{ $t('common.cancel') }}</view>
+					<view class="btn delete" @click="confirmDelete">{{ $t('common.delete') }}</view>
 				</view>
 			</view>
 		</view>
@@ -138,7 +138,7 @@ export default {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
 				uni.showLoading({
-					title: '努力加载中'
+					title: this.$t('common.loading')
 				})
 
 				// 获取总数
@@ -168,7 +168,7 @@ export default {
 			} catch (e) {
 				uni.hideLoading()
 				uni.showToast({
-					title: '加载失败',
+					title: this.$t('common.loadFailed'),
 					icon: 'none'
 				})
 			}
@@ -197,7 +197,7 @@ export default {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
 				uni.showLoading({
-					title: '努力加载中'
+					title: this.$t('common.loading')
 				})
 
 				const res = await axios.get(this.$baseUrl + '/manage/posts/get_post_by_id', {
@@ -225,7 +225,7 @@ export default {
 			} catch (e) {
 				uni.hideLoading()
 				uni.showToast({
-					title: '加载失败',
+					title: this.$t('common.loadFailed'),
 					icon: 'none'
 				})
 			}
@@ -247,7 +247,7 @@ export default {
 			// 表单验证
 			if (!this.currentPost.title.trim()) {
 				uni.showToast({
-					title: '请输入标题',
+					title: this.$t('common.inputTitle'),
 					icon: 'none'
 				})
 				return
@@ -258,7 +258,7 @@ export default {
 				const html = await this.getEditorContent()
 				if (!html) {
 					uni.showToast({
-						title: '请输入内容',
+						title: this.$t('common.inputContent'),
 						icon: 'none'
 					})
 					return
@@ -278,14 +278,14 @@ export default {
 				})
 
 				uni.showToast({
-					title: this.currentPost.post_id ? '编辑成功' : '发布成功'
+					title: this.currentPost.post_id ? this.$t('manage.posts.editSuccess') : this.$t('manage.posts.publishSuccess')
 				})
 
 				this.closeModal()
 				this.loadPosts()
 			} catch (e) {
 				uni.showToast({
-					title: '保存失败',
+					title: this.$t('manage.posts.saveFailed'),
 					icon: 'none'
 				})
 			} finally {
@@ -308,14 +308,14 @@ export default {
 				})
 
 				uni.showToast({
-					title: '删除成功'
+					title: this.$t('manage.posts.deleteSuccess')
 				})
 
 				this.closeDeleteConfirm()
 				this.loadPosts()
 			} catch (e) {
 				uni.showToast({
-					title: '删除失败',
+					title: this.$t('manage.posts.deleteFailed'),
 					icon: 'none'
 				})
 			}
@@ -361,14 +361,14 @@ export default {
 				count: 1,
 				success: (res) => {
 					uni.showLoading({
-						title: '上传中'
+						title: this.$t('common.uploading')
 					})
 					// 这里应该有上传图片的逻辑，上传成功后插入图片
 					// 示例仅作演示，实际应该上传到服务器
 					setTimeout(() => {
 						this.editorCtx.insertImage({
 							src: res.tempFilePaths[0],
-							alt: '图片',
+							alt: this.$t('manage.posts.image'),
 							width: '100%'
 						})
 						uni.hideLoading()

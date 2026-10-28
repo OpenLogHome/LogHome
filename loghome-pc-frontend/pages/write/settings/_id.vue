@@ -1,30 +1,30 @@
 <template>
   <div class="settings-page">
     <div class="page-header">
-      <h1 class="page-title">作品设置</h1>
-      <nuxt-link :to="`/write`" class="back-link">返回创作中心</nuxt-link>
+      <h1 class="page-title">{{ $t('作品设置') }}</h1>
+      <nuxt-link :to="`/write`" class="back-link">{{ $t('返回创作中心') }}</nuxt-link>
     </div>
 
     <div class="settings-container" v-if="novel">
       <div class="settings-card">
-        <h2 class="settings-section-title">基本设置</h2>
+        <h2 class="settings-section-title">{{ $t('基本设置') }}</h2>
         
         <div class="settings-item" @click="showStatusDialog('personal')">
-          <div class="settings-label">作品状态</div>
-          <div class="settings-value">{{ novel.is_personal == 0 ? "公开" : "私密" }}</div>
+          <div class="settings-label">{{ $t('作品状态') }}</div>
+          <div class="settings-value">{{ novel.is_personal == 0 ? $t('公开') : $t('私密') }}</div>
           <div class="settings-arrow">›</div>
         </div>
         
         <div class="settings-item" @click="showStatusDialog('update')">
-          <div class="settings-label">更新状态</div>
-          <div class="settings-value">{{ novel.is_complete == 0 ? "连载" : "完结" }}</div>
+          <div class="settings-label">{{ $t('更新状态') }}</div>
+          <div class="settings-value">{{ novel.is_complete == 0 ? $t('连载') : $t('完结') }}</div>
           <div class="settings-arrow">›</div>
         </div>
         
         <div class="settings-item" @click="goToTagsEdit">
-          <div class="settings-label">作品标签</div>
+          <div class="settings-label">{{ $t('作品标签') }}</div>
           <div class="settings-value tags-container">
-            <span v-if="tags.length === 0">无</span>
+            <span v-if="tags.length === 0">{{ $t('无') }}</span>
             <span 
               v-for="tag in tags" 
               :key="tag.tag_id" 
@@ -38,16 +38,16 @@
         </div>
         
         <div class="settings-item" @click="goToInfoEdit">
-          <div class="settings-label">修改作品信息</div>
+          <div class="settings-label">{{ $t('修改作品信息') }}</div>
           <div class="settings-arrow">›</div>
         </div>
       </div>
       
       <div class="settings-card danger-zone">
-        <h2 class="settings-section-title">危险操作</h2>
+        <h2 class="settings-section-title">{{ $t('危险操作') }}</h2>
         
         <div class="settings-item delete-item" @click="confirmDelete">
-          <div class="settings-label">删除作品</div>
+          <div class="settings-label">{{ $t('删除作品') }}</div>
           <div class="settings-arrow">›</div>
         </div>
       </div>
@@ -56,15 +56,15 @@
     <!-- 加载状态 -->
     <div class="loading-state" v-if="loading">
       <div class="loading-spinner"></div>
-      <p class="loading-text">正在加载作品信息...</p>
+      <p class="loading-text">{{ $t('正在加载作品信息...') }}</p>
     </div>
     
     <!-- 错误提示 -->
     <div class="error-state" v-else-if="error">
       <div class="error-icon" aria-hidden="true"><SiteIcon name="warning" /></div>
-      <h3 class="error-title">加载失败</h3>
+      <h3 class="error-title">{{ $t('加载失败') }}</h3>
       <p class="error-desc">{{error}}</p>
-      <button class="error-button" @click="fetchNovelData">重试</button>
+      <button class="error-button" @click="fetchNovelData">{{ $t('重试') }}</button>
     </div>
     
     <!-- 状态选择对话框 -->
@@ -88,17 +88,17 @@
     
     <!-- 删除确认对话框 -->
     <el-dialog
-      title="确认删除"
+      :title="$t('确认删除')"
       :visible.sync="deleteDialogVisible"
       width="30%"
     >
       <div class="delete-confirm-content">
-        <p>删除后将无法找回，确定继续吗？</p>
-        <p class="delete-warning">（删除作品将消耗50原木）</p>
+        <p>{{ $t('删除后将无法找回，确定继续吗？') }}</p>
+        <p class="delete-warning">{{ $t('（删除作品将消耗50原木）') }}</p>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="deleteDialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="deleteNovel">确认删除</el-button>
+        <el-button @click="deleteDialogVisible = false">{{ $t('取消') }}</el-button>
+        <el-button type="danger" @click="deleteNovel">{{ $t('确认删除') }}</el-button>
       </span>
     </el-dialog>
   </div>
@@ -110,7 +110,7 @@ export default {
   components: { SiteIcon },
   head() {
     return {
-      title: '作品设置 - 原木社区'
+      title: `${this.$t('作品设置')} - ${this.$t('原木社区')}`
     }
   },
   data() {
@@ -147,11 +147,11 @@ export default {
           // 获取作品关联的活动限制信息
           await this.fetchActivityRestrictions()
         } else {
-          this.error = '未找到作品信息'
+          this.error = this.$t('未找到作品信息')
         }
       } catch (error) {
         console.error('获取作品信息失败:', error)
-        this.error = '获取作品信息失败，请稍后重试'
+        this.error = this.$t('获取作品信息失败，请稍后重试')
       } finally {
         this.loading = false
       }
@@ -189,16 +189,16 @@ export default {
       this.dialogType = type
       
       if (type === 'personal') {
-        this.dialogTitle = '设置作品状态'
+        this.dialogTitle = this.$t('设置作品状态')
         this.dialogOptions = [
-          { label: '公开', value: 0 },
-          { label: '私密', value: 1 }
+          { label: this.$t('公开'), value: 0 },
+          { label: this.$t('私密'), value: 1 }
         ]
       } else if (type === 'update') {
-        this.dialogTitle = '设置更新状态'
+        this.dialogTitle = this.$t('设置更新状态')
         this.dialogOptions = [
-          { label: '连载', value: 0 },
-          { label: '完结', value: 1 }
+          { label: this.$t('连载'), value: 0 },
+          { label: this.$t('完结'), value: 1 }
         ]
       }
       
@@ -219,7 +219,7 @@ export default {
             novel_id: novelId
           })
 
-          this.$message.success('作品状态修改成功')
+          this.$message.success(this.$t('作品状态修改成功'))
           await this.fetchNovelData()
         } else if (this.dialogType === 'update') {
           this.dialogVisible = false
@@ -231,7 +231,7 @@ export default {
         await this.fetchNovelData()
       } catch (error) {
         console.error('修改状态失败:', error)
-        this.$message.error('修改状态失败，请稍后重试')
+        this.$message.error(this.$t('修改状态失败，请稍后重试'))
       } finally {
         this.dialogVisible = false
       }
@@ -271,12 +271,12 @@ export default {
         if (res && res.msg) {
           this.$message.error(res.msg)
         } else {
-          this.$message.success('更新状态修改成功')
+          this.$message.success(this.$t('更新状态修改成功'))
         }
         await this.fetchNovelData()
       } catch (error) {
         console.error('修改状态失败:', error)
-        this.$message.error('修改状态失败，请稍后重试')
+        this.$message.error(this.$t('修改状态失败，请稍后重试'))
       }
     },
 
@@ -299,13 +299,13 @@ export default {
           id: novelId
         })
         
-        this.$message.success('作品已删除')
+        this.$message.success(this.$t('作品已删除'))
         
         // 跳转回创作中心
         this.$router.push('/write')
       } catch (error) {
         console.error('删除作品失败:', error)
-        this.$message.error('删除作品失败，请稍后重试')
+        this.$message.error(this.$t('删除作品失败，请稍后重试'))
       } finally {
         this.deleteDialogVisible = false
       }

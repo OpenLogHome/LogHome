@@ -339,6 +339,16 @@
 			"shareCodeFailed": "口令创建失败",
 			"deleteCommentConfirm": "确定要删除该评论吗？"
 		},
+		"followControl": {
+			"follow": "关注",
+			"following": "已关注",
+			"mutual": "已互关",
+			"followed": "已关注",
+			"followFailed": "关注失败",
+			"unfollow": "取消关注",
+			"unfollowed": "已取消关注",
+			"unfollowFailed": "取消失败"
+		},
 		"postEdit": {
 			"titlePlaceholder": "标题（必填）",
 			"contentPlaceholder": "分享你的想法...",

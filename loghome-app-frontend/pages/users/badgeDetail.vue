@@ -6,7 +6,7 @@
 			:showLeft="scrollTop < 200"
 			:showHome="scrollTop < 200"
 			:showTitle="false"
-			navTitle="勋章详情"
+			:navTitle="$t('me.badgeDetail.navTitle')"
 		></zetank-backBar>
 
 		<view
@@ -75,9 +75,9 @@
 				{{ (badge && badge.description) || 'Official Honor Badge' }}
 			</view>
 			<view v-if="badge && badge.title_term_text" class="title-term-card">
-				<view class="title-term-label">解锁词条</view>
+				<view class="title-term-label">{{ $t('me.badgeDetail.termLabel') }}</view>
 				<view class="title-term-value">{{ formatTitleTermType(badge.title_term_type) }} · {{ badge.title_term_text }}</view>
-				<view class="title-term-desc">获得该勋章后，即可将这个词条加入你的个人称号组合。</view>
+				<view class="title-term-desc">{{ $t('me.badgeDetail.termDesc') }}</view>
 			</view>
 			<view class="info-divider">
 				<view class="divider-line"></view>
@@ -91,12 +91,12 @@
 				</view>
 
 				<view v-if="lockedProgressLoading" class="locked-loading">
-					正在计算当前进度...
+					{{ $t('me.badgeDetail.calculating') }}
 				</view>
 
 				<view v-else class="locked-sections">
 					<view class="locked-section">
-						<text class="locked-section-title">获得条件</text>
+						<text class="locked-section-title">{{ $t('me.badgeDetail.conditionsTitle') }}</text>
 
 						<view
 							v-for="(group, groupIndex) in lockedConditionGroups"
@@ -106,7 +106,7 @@
 							<view class="locked-group-head">
 								<text class="locked-group-title">{{ getLockedGroupTitle(groupIndex) }}</text>
 								<text class="locked-group-state" :class="{ matched: group.matched }">
-									{{ group.matched ? '已达成' : '进行中' }}
+									{{ group.matched ? $t('me.badgeDetail.matched') : $t('me.badgeDetail.inProgress') }}
 								</text>
 							</view>
 
@@ -136,7 +136,7 @@
 					</view>
 
 					<view class="locked-section">
-						<text class="locked-section-title">当前进度</text>
+						<text class="locked-section-title">{{ $t('me.badgeDetail.currentProgress') }}</text>
 						<view class="locked-progress-note">
 							{{ lockedProgressDetail }}
 						</view>
@@ -145,17 +145,17 @@
 			</view>
 			<view v-else class="info-meta">
 				<view class="meta-item">
-					<text class="meta-label">获得日期</text>
+					<text class="meta-label">{{ $t('me.badgeDetail.grantedAt') }}</text>
 					<text class="meta-value">{{ formatTime(badge.granted_at) }}</text>
 				</view>
 				<view class="meta-item">
-					<text class="meta-label">获得途径</text>
+					<text class="meta-label">{{ $t('me.badgeDetail.grantSource') }}</text>
 					<text class="meta-value">{{ formatGrantSource(badge.grant_source) }}</text>
 				</view>
 			</view>
 			<view class="badge-actions" v-if="canOperateBadge">
 				<view class="badge-action-hint">
-					{{ isSelected ? '该勋章当前正在展示' : '可将该勋章设为头像旁展示' }}
+					{{ isSelected ? $t('me.badgeDetail.showingHint') : $t('me.badgeDetail.showcaseHint') }}
 				</view>
 				<view
 					class="badge-action-btn"
@@ -351,8 +351,8 @@ export default {
 			return !!(this.isOwner && this.badge && this.badge.achievement_id && !this.isLockedBadge)
 		},
 		actionButtonText() {
-			if (this.actionLoading) return this.isSelected ? '取消中...' : '设置中...'
-			return this.isSelected ? '取消展示' : '设为展示'
+			if (this.actionLoading) return this.isSelected ? this.$t('me.badgeDetail.cancelling') : this.$t('me.badgeDetail.setting')
+			return this.isSelected ? this.$t('me.badgeDetail.unshowcase') : this.$t('me.badgeDetail.showcase')
 		},
 		lockedConditionGroups() {
 			if (!this.lockedProgress || !Array.isArray(this.lockedProgress.group_results)) return []
@@ -371,66 +371,69 @@ export default {
 		},
 		lockedStatusTag() {
 			if (this.lockedProgress && this.lockedProgress.matched) {
-				return this.badge && this.badge.grant_type === 'rule_review' ? '待审核发放' : '条件已满足'
+				return this.badge && this.badge.grant_type === 'rule_review' ? this.$t('me.badgeDetail.pendingReview') : this.$t('me.badgeDetail.conditionsMet')
 			}
-			return '未获得'
+			return this.$t('me.badgeDetail.notEarned')
 		},
 		lockedRequirementText() {
 			if (this.badge && this.badge.rule_summary) {
 				return this.badge.rule_summary
 			}
 			if (this.badge && this.badge.grant_type === 'manual') {
-				return '该勋章由官方根据活动、身份或贡献情况发放。'
+				return this.$t('me.badgeDetail.manualRequirement')
 			}
 			if (this.badge && this.badge.grant_type === 'rule_review') {
-				return '满足规则后，还需要等待审核通过后发放。'
+				return this.$t('me.badgeDetail.reviewRequirement')
 			}
-			return '满足对应规则后即可获得该勋章。'
+			return this.$t('me.badgeDetail.defaultRequirement')
 		},
 		lockedValidWindowText() {
 			const startText = this.badge && this.badge.valid_from ? this.formatTime(this.badge.valid_from) : ''
 			const endText = this.badge && this.badge.valid_to ? this.formatTime(this.badge.valid_to) : ''
-			if (startText && endText) return `${startText} 至 ${endText}`
-			if (startText) return `${startText} 起`
-			if (endText) return `截止 ${endText}`
-			return '当前有效时间范围'
+			if (startText && endText) return this.$t('me.badgeDetail.windowRange', { start: startText, end: endText })
+			if (startText) return this.$t('me.badgeDetail.windowFrom', { start: startText })
+			if (endText) return this.$t('me.badgeDetail.windowUntil', { end: endText })
+			return this.$t('me.badgeDetail.windowCurrent')
 		},
 		lockedProgressSummary() {
 			if (this.lockedProgressLoading) {
-				return '正在加载当前进度'
+				return this.$t('me.badgeDetail.progressLoadingSummary')
 			}
 			if (this.lockedProgress && this.lockedProgress.reason === 'out_of_valid_window') {
-				return `当前不在统计时间内，进度按 ${this.lockedValidWindowText} 统计`
+				return this.$t('me.badgeDetail.outOfWindowSummary', { window: this.lockedValidWindowText })
 			}
 			if (this.lockedProgress && this.lockedProgress.matched) {
 				if (this.badge && this.badge.grant_type === 'rule_review') {
-					return '你已满足获得条件，等待审核发放。'
+					return this.$t('me.badgeDetail.metReviewSummary')
 				}
-				return '你已满足获得条件，等待系统发放。'
+				return this.$t('me.badgeDetail.metSystemSummary')
 			}
 			if (this.lockedTotalConditionCount > 0) {
-				return `已完成 ${this.lockedMatchedConditionCount}/${this.lockedTotalConditionCount} 项条件`
+				return this.$t('me.badgeDetail.conditionsDoneSummary', {
+					done: this.lockedMatchedConditionCount,
+					total: this.lockedTotalConditionCount,
+				})
 			}
 			if (this.badge && this.badge.grant_type === 'manual') {
-				return '该勋章由官方发放，暂无可量化进度。'
+				return this.$t('me.badgeDetail.manualSummary')
 			}
-			return '暂时没有可展示的进度数据。'
+			return this.$t('me.badgeDetail.noProgressSummary')
 		},
 		lockedProgressDetail() {
 			if (this.lockedProgressLoading) {
-				return '正在根据你的当前数据计算解锁进度。'
+				return this.$t('me.badgeDetail.progressLoadingDetail')
 			}
 			if (this.lockedProgress && this.lockedProgress.reason === 'out_of_valid_window') {
-				return `当前页面展示的是 ${this.lockedValidWindowText} 这段有效时间内累计的进度。`
+				return this.$t('me.badgeDetail.outOfWindowDetail', { window: this.lockedValidWindowText })
 			}
 			if (this.lockedProgress && this.lockedProgress.matched) {
 				if (this.badge && this.badge.grant_type === 'rule_review') {
-					return '规则条件已经满足，当前处于等待审核或人工发放状态。'
+					return this.$t('me.badgeDetail.metReviewDetail')
 				}
-				return '规则条件已经满足，等待系统完成发放即可点亮。'
+				return this.$t('me.badgeDetail.metSystemDetail')
 			}
 			if (this.lockedTotalConditionCount > 0) {
-				return `继续完成剩余条件即可解锁，当前共满足 ${this.lockedMatchedConditionCount} 项。`
+				return this.$t('me.badgeDetail.remainingDetail', { done: this.lockedMatchedConditionCount })
 			}
 			return this.lockedRequirementText
 		},
@@ -566,12 +569,12 @@ export default {
 					this.badge.is_selected = this.isSelected
 				}
 				uni.showToast({
-					title: this.isSelected ? '已设为展示' : '已取消展示',
+					title: this.isSelected ? this.$t('me.badgeDetail.showcaseSet') : this.$t('me.badgeDetail.showcaseRemoved'),
 					icon: 'none',
 				})
 			} catch (e) {
 				uni.showToast({
-					title: '操作失败',
+					title: this.$t('me.badgeDetail.actionFailed'),
 					icon: 'none',
 				})
 			} finally {
@@ -803,32 +806,32 @@ export default {
 			momentumStep()
 		},
 		formatGrantSource(source) {
-			if (source === 'official_auto') return '官方自动发放'
-			if (source === 'legacy_user_group_migration') return '历史荣誉迁移'
-			return '官方发放'
+			if (source === 'official_auto') return this.$t('me.badgeDetail.sourceOfficialAuto')
+			if (source === 'legacy_user_group_migration') return this.$t('me.badgeDetail.sourceLegacy')
+			return this.$t('me.badgeDetail.sourceOfficial')
 		},
 		formatTitleTermType(type) {
-			if (type === 'adjective') return '形容词词条'
-			if (type === 'noun') return '名词词条'
-			return '称号词条'
+			if (type === 'adjective') return this.$t('me.achievements.adjectiveTerm')
+			if (type === 'noun') return this.$t('me.achievements.nounTerm')
+			return this.$t('me.badgeDetail.termGeneric')
 		},
 		formatMetric(metricCode) {
 			const metricMap = {
-				read_seconds: '累计阅读时长（秒）',
-				write_seconds: '累计写作时长（秒）',
-				community_post_count: '累计发帖数',
-				comment_count: '累计评论数',
+				read_seconds: this.$t('me.badgeDetail.metricReadSeconds'),
+				write_seconds: this.$t('me.badgeDetail.metricWriteSeconds'),
+				community_post_count: this.$t('me.badgeDetail.metricPostCount'),
+				comment_count: this.$t('me.badgeDetail.metricCommentCount'),
 			}
-			return metricMap[metricCode] || metricCode || '进度指标'
+			return metricMap[metricCode] || metricCode || this.$t('me.badgeDetail.metricFallback')
 		},
 		formatPeriod(periodType) {
 			const periodMap = {
-				lifetime: '累计',
-				month: '本月',
-				quarter: '本季度',
-				year: '本年',
+				lifetime: this.$t('me.badgeDetail.periodLifetime'),
+				month: this.$t('me.badgeDetail.periodMonth'),
+				quarter: this.$t('me.badgeDetail.periodQuarter'),
+				year: this.$t('me.badgeDetail.periodYear'),
 			}
-			return periodMap[periodType] || periodType || '累计'
+			return periodMap[periodType] || periodType || this.$t('me.badgeDetail.periodLifetime')
 		},
 		formatConditionNumber(value) {
 			const n = Number(value)
@@ -844,7 +847,12 @@ export default {
 		},
 		formatConditionRule(condition) {
 			if (!condition) return this.lockedRequirementText
-			return `${this.formatMetric(condition.metric_code)} / ${this.formatPeriod(condition.period_type)}，需 ${condition.comparator || '>='} ${this.formatConditionNumber(condition.threshold_value)}`
+			return this.$t('me.badgeDetail.conditionRule', {
+				metric: this.formatMetric(condition.metric_code),
+				period: this.formatPeriod(condition.period_type),
+				comparator: condition.comparator || '>=',
+				threshold: this.formatConditionNumber(condition.threshold_value),
+			})
 		},
 		formatProgressPercent(value) {
 			const ratio = Number(value)
@@ -854,18 +862,18 @@ export default {
 		},
 		getLockedGroupTitle(groupIndex) {
 			if (this.lockedConditionGroups.length > 1) {
-				return `解锁路径 ${groupIndex + 1}`
+				return this.$t('me.badgeDetail.pathTitle', { index: groupIndex + 1 })
 			}
-			return '解锁条件'
+			return this.$t('me.badgeDetail.conditionTitle')
 		},
 		formatTime(value) {
-			if (!value) return '未知'
+			if (!value) return this.$t('me.badgeDetail.unknownDate')
 			const d = new Date(value)
-			if (Number.isNaN(d.getTime())) return '未知'
+			if (Number.isNaN(d.getTime())) return this.$t('me.badgeDetail.unknownDate')
 			const y = d.getFullYear()
 			const m = String(d.getMonth() + 1).padStart(2, '0')
 			const day = String(d.getDate()).padStart(2, '0')
-			return `${y}年${m}月${day}日`
+			return this.$t('me.achievements.dateFormat', { y, m, day })
 		},
 		onMedalLongPress() {
 			this.isLongPressing = true

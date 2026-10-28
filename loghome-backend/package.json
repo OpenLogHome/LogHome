@@ -38,6 +38,9 @@
 		"prettier-eslint": "^15.0.1"
 	},
 	"scripts": {
+		"check:database-dns": "node scripts/check_database_dns.js",
+		"test:sql-connection": "node test/sql_connection_test.js",
+		"test:tts": "node test/tts_test.js",
 		"lint": "eslint --quiet .",
 		"lint:strict": "eslint .",
 		"dev": "nodemon main.js",

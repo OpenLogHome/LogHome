@@ -15,7 +15,7 @@
 			</div>
 		</view>
 
-		<div class="nouser" v-if="activityMessages.length == 0">
+		<div class="nouser" v-if="!isLoading && activityMessages.length == 0">
 			{{ $t('community.activityMessages.empty') }}
 		</div>
 	</view>
@@ -30,6 +30,7 @@
 				id: -1,
 				user: {},
 				activityMessages: [], // 活动消息列表
+				isLoading: false,
 				windowHeight: 0, // 窗口高度
 			}
 		},
@@ -57,6 +58,7 @@
 				return;
 			}
 			//验活
+			this.isLoading = true;
 			uni.showLoading({
 				title: this.$t('common.loading'),
 				mask: true
@@ -71,7 +73,7 @@
 				_this.id = _this.user.user_id;
 				
 				// 获取活动消息
-				axios.get( this.$baseUrl + '/users/get_history_message', {
+				return axios.get( this.$baseUrl + '/users/get_history_message', {
 					headers: { 
 					     'Content-Type': 'application/json',
 					     'Authorization': tk
@@ -94,7 +96,6 @@
 					
 					// 清除活动消息的小红点
 					window.localStorage.setItem('unreadActivityMessages', '0');
-					uni.hideLoading();
 				});
 			}).catch(function(error) {
 				if(error.message == "Request failed with status code 401"){
@@ -103,6 +104,9 @@
 						url: './users/login'
 					});
 				}
+			}).finally(function() {
+				_this.isLoading = false;
+				uni.hideLoading();
 			})
 		},
 		methods:{

@@ -2,7 +2,7 @@
 	<view class="membership-subpage" :class="{ 'membership-subpage--super': selectedTier === 'super' }">
 		<view class="subpage-header">
 			<view class="subpage-header__back" @tap="goBack"><view class="subpage-header__back-icon"></view></view>
-			<text class="subpage-header__title">赠送好友</text>
+			<text class="subpage-header__title">{{ $t('membership.common.giftFriend') }}</text>
 			<view class="subpage-header__spacer"></view>
 		</view>
 
@@ -13,13 +13,13 @@
 				</view>
 				<view class="subpage-hero__copy">
 					<text class="subpage-hero__eyebrow">GIFT A PASS</text>
-					<text class="subpage-hero__title">把成长送给好友</text>
-					<text class="subpage-hero__description">选择通行证与时长，权益将直接发放给对方</text>
+					<text class="subpage-hero__title">{{ $t('membership.gift.heroTitle') }}</text>
+					<text class="subpage-hero__description">{{ $t('membership.gift.heroDesc') }}</text>
 				</view>
 			</view>
 
 			<view class="subpage-panel">
-				<text class="panel-title">选择通行证</text>
+				<text class="panel-title">{{ $t('membership.gift.chooseTier') }}</text>
 				<view class="tier-grid">
 					<view
 						v-for="tier in tiers"
@@ -30,8 +30,8 @@
 					>
 						<image class="tier-card__logo" :src="tier.logo" mode="aspectFit"></image>
 						<view class="tier-card__copy">
-							<text class="tier-card__name">{{ tier.name }}</text>
-							<text class="tier-card__description">{{ tier.description }}</text>
+							<text class="tier-card__name">{{ $t(tier.nameKey) }}</text>
+							<text class="tier-card__description">{{ $t(tier.descriptionKey) }}</text>
 						</view>
 						<view class="tier-card__radio"><view></view></view>
 					</view>
@@ -39,8 +39,8 @@
 
 				<view class="field-group">
 					<view class="field-label">
-						<text>赠送时长</text>
-						<text class="field-label__hint">年卡更划算</text>
+						<text>{{ $t('membership.gift.duration') }}</text>
+						<text class="field-label__hint">{{ $t('membership.gift.durationHint') }}</text>
 					</view>
 					<view class="period-grid">
 						<view
@@ -50,11 +50,11 @@
 							:class="{ 'period-card--selected': selectedPeriod === period.key }"
 							@tap="selectedPeriod = period.key"
 						>
-							<text class="period-card__name">{{ period.name }}</text>
+							<text class="period-card__name">{{ $t(period.nameKey) }}</text>
 							<view class="period-card__price">
 								<image src="/static/resources/log.png" mode="aspectFit"></image>
 								<text>{{ period.price }}</text>
-								<text class="period-card__unit">原木</text>
+								<text class="period-card__unit">{{ $t('membership.common.logUnit') }}</text>
 							</view>
 						</view>
 					</view>
@@ -62,13 +62,13 @@
 			</view>
 
 			<view class="subpage-panel">
-				<text class="panel-title">选择好友</text>
-				<text class="panel-description">关注的人与关注你的粉丝都会显示在好友选择器中</text>
+				<text class="panel-title">{{ $t('membership.gift.chooseFriend') }}</text>
+				<text class="panel-description">{{ $t('membership.gift.chooseFriendDesc') }}</text>
 
 				<view class="field-group">
 					<view class="field-label">
-						<text>接收好友</text>
-						<text class="field-label__hint">必填</text>
+						<text>{{ $t('membership.gift.recipient') }}</text>
+						<text class="field-label__hint">{{ $t('membership.gift.required') }}</text>
 					</view>
 					<view class="friend-control" @tap="openFriendPicker">
 						<image
@@ -79,9 +79,9 @@
 						></image>
 						<view v-else class="friend-control__placeholder-icon">+</view>
 						<view class="friend-control__copy">
-							<text class="friend-control__name">{{ selectedFriend ? selectedFriend.name : '从好友列表中选择' }}</text>
+							<text class="friend-control__name">{{ selectedFriend ? selectedFriend.name : $t('membership.gift.selectFromList') }}</text>
 							<text class="friend-control__meta">
-								{{ selectedFriend ? `ID:${selectedFriend.user_id} · ${relationLabel(selectedFriend)}` : '关注与粉丝共 ' + friends.length + ' 人' }}
+								{{ selectedFriend ? `ID:${selectedFriend.user_id} · ${relationLabel(selectedFriend)}` : $t('membership.gift.friendCount', { count: friends.length }) }}
 							</text>
 						</view>
 						<text class="friend-control__arrow ui-chevron" aria-hidden="true"></text>
@@ -90,14 +90,14 @@
 
 				<view class="field-group">
 					<view class="field-label">
-						<text>赠言</text>
+						<text>{{ $t('membership.gift.messageLabel') }}</text>
 						<text class="field-label__hint">{{ message.length }}/60</text>
 					</view>
 					<textarea
 						class="gift-message"
 						v-model="message"
 						maxlength="60"
-						placeholder="写一句想对好友说的话"
+						:placeholder="$t('membership.gift.messagePlaceholder')"
 						placeholder-style="color:#7f7062"
 					></textarea>
 				</view>
@@ -105,20 +105,20 @@
 
 			<view class="gift-summary">
 				<view>
-					<text class="gift-summary__label">应付</text>
-					<text class="gift-summary__detail">{{ activeTier.name }} · {{ activePlan.name }}</text>
+					<text class="gift-summary__label">{{ $t('membership.gift.amountDue') }}</text>
+					<text class="gift-summary__detail">{{ $t(activeTier.nameKey) }} · {{ $t(activePlan.nameKey) }}</text>
 				</view>
 				<view class="gift-summary__price">
 					<image src="/static/resources/log.png" mode="aspectFit"></image>
 					<text>{{ activePlan.price }}</text>
-					<text class="gift-summary__unit">原木</text>
+					<text class="gift-summary__unit">{{ $t('membership.common.logUnit') }}</text>
 				</view>
 			</view>
 
 			<view class="primary-action" :class="{ 'primary-action--disabled': !canSubmit }" @tap="submitGift">
-				{{ submitting ? '处理中...' : '确认赠送' }}
+				{{ submitting ? $t('membership.common.processing') : $t('membership.common.confirmGift') }}
 			</view>
-			<text class="gift-agreement" @tap="gotoRules">赠送即表示同意《原木通行证赠送规则》</text>
+			<text class="gift-agreement" @tap="gotoRules">{{ $t('membership.gift.agreement') }}</text>
 		</view>
 
 		<view v-if="friendPickerVisible" class="friend-picker-mask" @tap="closeFriendPicker">
@@ -126,20 +126,20 @@
 				<view class="friend-picker__handle"></view>
 				<view class="friend-picker__header">
 					<view>
-						<text class="friend-picker__title">选择赠送好友</text>
-						<text class="friend-picker__count">共 {{ friends.length }} 人</text>
+						<text class="friend-picker__title">{{ $t('membership.gift.pickerTitle') }}</text>
+						<text class="friend-picker__count">{{ $t('membership.gift.pickerCount', { count: friends.length }) }}</text>
 					</view>
 					<view class="friend-picker__close" @tap="closeFriendPicker">×</view>
 				</view>
 				<view class="friend-search">
 					<text class="friend-search__icon">⌕</text>
-					<input v-model="friendKeyword" placeholder="搜索昵称或用户 ID" placeholder-style="color:#7f7062" />
+					<input v-model="friendKeyword" :placeholder="$t('membership.gift.searchPlaceholder')" placeholder-style="color:#7f7062" />
 					<text v-if="friendKeyword" class="friend-search__clear" @tap="friendKeyword = ''">×</text>
 				</view>
 				<scroll-view class="friend-list" scroll-y>
-					<view v-if="loadingFriends" class="friend-empty">正在加载好友...</view>
+					<view v-if="loadingFriends" class="friend-empty">{{ $t('membership.gift.loadingFriends') }}</view>
 					<view v-else-if="filteredFriends.length === 0" class="friend-empty">
-						<text>{{ friends.length ? '没有找到匹配的好友' : '关注或粉丝列表中还没有好友' }}</text>
+						<text>{{ friends.length ? $t('membership.gift.noMatch') : $t('membership.gift.noFriends') }}</text>
 					</view>
 					<view
 						v-for="friend in filteredFriends"
@@ -186,22 +186,22 @@ export default {
 			tiers: [
 				{
 					key: 'standard',
-					name: '原木通行证',
-					description: '轻享成长权益',
+					nameKey: 'membership.pass.tier.standard.name',
+					descriptionKey: 'membership.gift.tier.standardDesc',
 					logo: '/static/membership/loghome-pass.png',
 					plans: [
-						{ key: 'month', name: '一个月', price: 660 },
-						{ key: 'year', name: '一年', price: 7200 }
+						{ key: 'month', nameKey: 'membership.gift.period.month', price: 660 },
+						{ key: 'year', nameKey: 'membership.gift.period.year', price: 7200 }
 					]
 				},
 				{
 					key: 'super',
-					name: '超级原木通行证',
-					description: '完整会员权益',
+					nameKey: 'membership.pass.tier.super.name',
+					descriptionKey: 'membership.gift.tier.superDesc',
 					logo: '/static/membership/loghome-super-pass.png',
 					plans: [
-						{ key: 'month', name: '一个月', price: 880 },
-						{ key: 'year', name: '一年', price: 9600 }
+						{ key: 'month', nameKey: 'membership.gift.period.month', price: 880 },
+						{ key: 'year', nameKey: 'membership.gift.period.year', price: 9600 }
 					]
 				}
 			]
@@ -242,9 +242,9 @@ export default {
 			this.selectedTier = tier;
 		},
 		relationLabel(friend) {
-			if (friend && friend.is_following && friend.is_follower) return '互相关注';
-			if (friend && friend.is_following) return '我关注的';
-			return '关注我的';
+			if (friend && friend.is_following && friend.is_follower) return this.$t('membership.gift.relation.mutual');
+			if (friend && friend.is_following) return this.$t('membership.gift.relation.following');
+			return this.$t('membership.gift.relation.follower');
 		},
 		openFriendPicker() {
 			this.friendPickerVisible = true;
@@ -267,7 +267,7 @@ export default {
 					this.selectedFriend = this.friends.find((friend) => friend.user_id === this.selectedFriend.user_id) || null;
 				}
 			} catch (error) {
-				uni.showToast({ title: getMembershipErrorMessage(error, '好友列表加载失败'), icon: 'none' });
+				uni.showToast({ title: getMembershipErrorMessage(error, this.$t('membership.gift.loadFriendsFailed')), icon: 'none' });
 			} finally {
 				this.loadingFriends = false;
 			}
@@ -300,13 +300,19 @@ export default {
 		async submitGift() {
 			if (this.submitting) return;
 			if (!this.canSubmit) {
-				uni.showToast({ title: '请先选择赠送好友', icon: 'none' });
+				uni.showToast({ title: this.$t('membership.gift.selectFriendFirst'), icon: 'none' });
 				return;
 			}
 			const confirmed = await this.showConfirm({
-				title: '确认赠送',
-				content: `向 ${this.selectedFriend.name}（ID:${this.selectedFriend.user_id}）赠送${this.activeTier.name}（${this.activePlan.name}），将扣除${this.activePlan.price}原木。`,
-				confirmText: '确认赠送'
+				title: this.$t('membership.common.confirmGift'),
+				content: this.$t('membership.gift.confirmContent', {
+					name: this.selectedFriend.name,
+					id: this.selectedFriend.user_id,
+					tier: this.$t(this.activeTier.nameKey),
+					plan: this.$t(this.activePlan.nameKey),
+					price: this.activePlan.price
+				}),
+				confirmText: this.$t('membership.common.confirmGift')
 			});
 			if (!confirmed) return;
 
@@ -320,8 +326,15 @@ export default {
 					client_request_id: createMembershipRequestId('gift')
 				});
 				uni.showModal({
-					title: data.replayed ? '赠送已处理' : '赠送成功',
-					content: `会员权益已发放给 ID:${data.beneficiary.user_id}${data.redstone_granted ? `，并赠送${data.redstone_granted}红石` : ''}。`,
+					title: data.replayed
+						? this.$t('membership.gift.alreadyProcessed')
+						: this.$t('membership.gift.successTitle'),
+					content: data.redstone_granted
+						? this.$t('membership.gift.successContentGift', {
+							id: data.beneficiary.user_id,
+							redstone: data.redstone_granted
+						})
+						: this.$t('membership.gift.successContent', { id: data.beneficiary.user_id }),
 					showCancel: false,
 					success: () => uni.navigateBack({ delta: 1 })
 				});

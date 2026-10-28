@@ -33,7 +33,7 @@ export default {
       clearTimeout(this._startupTimer);
       this._startupTimer = setTimeout(() => {
         if (version === this._startupVersion && !this.workspaceMounted)
-          this.startupError = "资源加载时间较长，请检查网络后重试。";
+          this.startupError = this.$t("资源加载时间较长，请检查网络后重试。");
       }, 30000);
       try {
         const workspace = await loadWriterWorkspace();
@@ -42,7 +42,7 @@ export default {
       } catch (_) {
         if (version === this._startupVersion) {
           clearTimeout(this._startupTimer);
-          this.startupError = "编辑器资源加载失败，请检查网络后重试。";
+          this.startupError = this.$t("编辑器资源加载失败，请检查网络后重试。");
         }
       }
     },
@@ -52,11 +52,11 @@ export default {
       this.startupError = "";
     },
   },
-  head: () => ({
-    title: "写作工作台 - 原木社区",
+  head() { return {
+    title: `${this.$t('写作工作台')} - ${this.$t('原木社区')}`,
     htmlAttrs: { class: "writer-route-active" },
     bodyAttrs: { class: "writer-route-active" },
-  }),
+  } },
   async beforeRouteUpdate(to, from, next) {
     if (to.params.id === from.params.id) return next();
     try {

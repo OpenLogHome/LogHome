@@ -1,4 +1,4 @@
-// Mock manuscripts and speech so theme checks never save, publish or play audio.
+// Mock manuscripts, TTS sessions and audio so theme checks never publish or use real keys.
 const assert = require("node:assert/strict");
 const { chromium } = require(process.env.WRITER_PLAYWRIGHT_MODULE || "playwright");
 const base = process.env.WRITER_TEST_URL || "http://localhost:3000";
@@ -15,15 +15,26 @@ async function run() {
       localStorage.setItem("loghome:writer:preferences", JSON.stringify({ theme: "dark" }));
       localStorage.setItem("loghome:reader:preferences:v1", JSON.stringify({ theme: "black", mode: "text" }));
       localStorage.setItem("loghome:reader:follow-site-theme", "0");
-      Object.defineProperty(window, "SpeechSynthesisUtterance", { value: class { constructor(text) { this.text = text; } } });
-      Object.defineProperty(window, "speechSynthesis", { value: {
-        getVoices: () => [], addEventListener() {}, removeEventListener() {}, cancel() {},
-        speak(utterance) { setTimeout(() => utterance.onstart?.(), 0); },
+      Object.defineProperty(window, "Audio", { value: class {
+        constructor() { this.duration = 20; this.currentTime = 0; this.paused = true; this.ended = false; }
+        set src(value) { this.source = value; queueMicrotask(() => this.onloadedmetadata?.()); }
+        play() { this.paused = false; queueMicrotask(() => this.onplaying?.()); return Promise.resolve(); }
+        pause() { this.paused = true; this.onpause?.(); }
+        removeAttribute() {} load() {}
       } });
     });
     const mutations = [];
     await context.route("**/*", async (route) => {
-      if (route.request().method() === "POST") mutations.push(new URL(route.request().url()).pathname);
+      const request = route.request(), url = new URL(request.url());
+      if (request.method() !== "OPTIONS" && url.pathname === "/tts/session") return route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ code: 200, data: { user_id: 99, token: "sk-tts-preview-fixture", voices:
+          ["warm-gentleman", "sunny-boy", "youthful-goddess", "soft-girl"].map(id => ({ id, voice_id: id })) } }),
+      });
+      if (request.method() !== "OPTIONS" && url.origin === "https://tts.codesocean.top" && url.pathname === "/v1/audio/speech") return route.fulfill({
+        status: 200, contentType: "audio/mpeg", headers: { "access-control-allow-origin": "*" }, body: Buffer.from("fixture-audio"),
+      });
+      if (request.method() === "POST") mutations.push(url.pathname);
       return api(route);
     });
     const page = await context.newPage(), errors = [];
@@ -34,7 +45,7 @@ async function run() {
     await page.locator(".workspace-header").getByRole("button", { name: "预览", exact: true }).click();
     const preview = page.locator(".preview-reader");
     await page.locator(".preview-reader.is-night").waitFor();
-    await preview.getByRole("button", { name: "听书预览", exact: true }).click();
+    await preview.getByRole("button", { name: "在线听书预览", exact: true }).click();
     await preview.locator(".reader-speaking").waitFor();
     await preview.getByRole("button", { name: "音色与设置", exact: true }).click();
     async function appearance() {
@@ -50,11 +61,13 @@ async function run() {
     }
     const dark = await appearance();
     assert.equal(dark.shell.background, "rgb(27, 32, 38)");
-    for (const key of ["toolbar", "button", "player", "select"]) {
+    for (const key of ["toolbar", "button"]) {
       assert.equal(dark[key].background, "rgb(41, 47, 55)", key);
       assert.equal(dark[key].scheme, "dark", key);
     }
-    assert.equal(dark.player.color, "rgb(217, 222, 231)");
+    assert.equal(dark.player.background, "rgb(32, 38, 49)");
+    assert.equal(dark.player.color, "rgb(255, 255, 255)");
+    assert.equal(dark.select.background, "rgb(48, 52, 63)");
     assert.equal(dark.highlight.background, "rgb(56, 72, 61)");
     assert.equal(dark.highlight.color, "rgb(217, 222, 231)");
     await page.evaluate(() => window.$nuxt.$theme.set("dark"));
@@ -76,8 +89,8 @@ async function run() {
     await settings.getByRole("button", { name: "close 阅读设置" }).click();
     const light = await appearance();
     assert.equal(light.toolbar.background, "rgb(255, 255, 255)");
-    assert.equal(light.player.background, "rgb(255, 255, 255)");
-    assert.equal(light.player.color, "rgb(48, 47, 42)");
+    assert.equal(light.player.background, dark.player.background);
+    assert.equal(light.player.color, dark.player.color);
     assert.equal(light.highlight.background, "rgb(229, 236, 215)");
     await preview.getByRole("button", { name: "阅读设置", exact: true }).click();
     await settings.getByRole("button", { name: "虚空黑", exact: true }).click();

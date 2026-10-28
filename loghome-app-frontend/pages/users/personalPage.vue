@@ -1,7 +1,7 @@
 <template>
 	<view class="page-root" v-dark>
 		<!-- 后台按钮组件 -->
-		<zetank-backBar :textcolor="isDarkMode ? '#e5e5e5' : '#000'" :showLeft="topNum == 0" :showTitle="false" navTitle='标题'></zetank-backBar>
+		<zetank-backBar :textcolor="isDarkMode ? '#e5e5e5' : '#000'" :showLeft="topNum == 0" :showTitle="false" navTitle=""></zetank-backBar>
 		<!-- 用户背景封面（只保留内容面板上方的可见区域，避免面板内容较短时封面从下方露出） -->
 		<view class="info-cover-wrap" :style="coverWrapStyle" @tap="change_top_pic">
 			<log-image class="info-cover" :src="user.top_pic_url"

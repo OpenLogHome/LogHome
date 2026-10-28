@@ -29,6 +29,9 @@ export function saveAudioResume(storage, token, player, now = Date.now()) {
   const state = player.state, paragraph = state.paragraphs[state.paragraphIndex]
   if (!state.visible || state.status === 'ended' || !paragraph || player.env.privatePlayback) return null
   const item = { version:1, bookId:state.bookId, chapterId:state.chapterId, paragraphId:Number(paragraph.id), charOffset:Math.max(0,Math.floor(state.charOffset)), signature:audioTextSignature(paragraph.value), bookTitle:state.bookTitle, chapterTitle:state.chapterTitle, savedAt:now }
+  if(player.audio && player.active && Number.isFinite(player.audio.currentTime)) {
+    item.audioOffset=player.audio.currentTime;item.segmentStart=player.active.start;item.voiceURI=state.voiceURI
+  }
   storage.setItem(audioResumeKey(token),JSON.stringify(item))
   return item
 }
@@ -41,6 +44,9 @@ export function restoreAudioOffset(player, item) {
   if (unchanged) {
     state.charOffset = Math.min(item.charOffset,paragraph.value.length)
     if (/^[\uDC00-\uDFFF]/.test(paragraph.value.slice(state.charOffset))) state.charOffset = Math.max(0,state.charOffset-1)
+    if(Number.isFinite(item.audioOffset) && item.audioOffset>=0 && Number.isSafeInteger(item.segmentStart) && item.segmentStart>=0 && item.voiceURI===state.voiceURI) {
+      player.pendingResumeTime={audioOffset:item.audioOffset,segmentStart:item.segmentStart,voiceURI:item.voiceURI}
+    }
   }
   return Boolean(unchanged)
 }

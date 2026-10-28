@@ -1,15 +1,15 @@
 <template>
   <div class="manga-composer">
     <div class="reply-hint" v-if="replyTo">
-      回复 @{{ replyTo.targetUserName || '' }}
-      <button class="cancel-reply" @click="$emit('cancel-reply')">取消</button>
+      {{ $t('回复 @{name}', { name: replyTo.targetUserName || '' }) }}
+      <button class="cancel-reply" @click="$emit('cancel-reply')">{{ $t('取消') }}</button>
     </div>
     <div class="composer-row">
       <textarea
         ref="input"
         class="composer-input"
         v-model="content"
-        :placeholder="replyTo ? '写下你的回复…' : '发条友善的评论…'"
+        :placeholder="replyTo ? $t('写下你的回复…') : $t('发条友善的评论…')"
         maxlength="300"
         rows="3"></textarea>
     </div>
@@ -23,11 +23,11 @@
       <ReaderEmojiPicker :disabled="submitting || uploading" @select="appendEmoji" />
       <label class="upload-btn" :class="{ disabled: uploading }">
         <input type="file" accept="image/*" multiple hidden @change="onPickFiles" :disabled="uploading || images.length >= 3">
-        <SiteIcon name="image" /> <span>{{ uploading ? '上传中…' : '图片' }}</span>
+        <SiteIcon name="image" /> <span>{{ uploading ? $t('上传中…') : $t('图片') }}</span>
       </label>
       <span class="counter">{{ content.length }}/300</span>
       <button class="submit-btn" :disabled="submitting || !content.trim() || uploading" @click="submit">
-        {{ submitting ? '发送中…' : '发送' }}
+        {{ submitting ? $t('发送中…') : $t('发送') }}
       </button>
     </div>
   </div>
@@ -56,14 +56,14 @@ export default {
       if (this.submitting || this.uploading || !data) return
       if (data.type === 'sticker') {
         const url = stickerUrl(data.content)
-        if (!readingToken()) { this.$message.info('请先登录后使用表情包'); return }
-        if (this.images.length >= 3) { this.$message.info('最多添加 3 张配图或表情包'); return }
+        if (!readingToken()) { this.$message.info(this.$t('请先登录后使用表情包')); return }
+        if (this.images.length >= 3) { this.$message.info(this.$t('最多添加 3 张配图或表情包')); return }
         if (url) this.images.push(url)
         return
       }
       const input = this.$refs.input, start = input ? input.selectionStart : this.content.length, end = input ? input.selectionEnd : start
       const text = String(data.content || ''), value = this.content.slice(0,start) + text + this.content.slice(end)
-      if (value.length > 300) { this.$message.info('评论最多 300 字'); return }
+      if (value.length > 300) { this.$message.info(this.$t('评论最多 300 字')); return }
       this.content = value
       this.$nextTick(() => { if (input) { input.focus(); input.setSelectionRange(start + text.length,start + text.length) } })
     },
@@ -71,7 +71,7 @@ export default {
       const files = Array.from(e.target.files || [])
       e.target.value = ''
       if (!files.length || this.uploading || this.submitting) return
-      if (!readingToken()) { this.$message.info('请先登录后再上传评论配图'); return }
+      if (!readingToken()) { this.$message.info(this.$t('请先登录后再上传评论配图')); return }
       const version = ++this.uploadVersion, account = readingToken()
       this.uploading = true
       try {
@@ -82,7 +82,7 @@ export default {
           this.images.push(url)
         }
       } catch (err) {
-        if (version === this.uploadVersion && account === readingToken()) this.$message.error('图片上传失败，请稍后重试')
+        if (version === this.uploadVersion && account === readingToken()) this.$message.error(this.$t('图片上传失败，请稍后重试'))
       } finally {
         if (version === this.uploadVersion) this.uploading = false
       }

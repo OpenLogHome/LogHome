@@ -10,6 +10,7 @@
     "start": "nuxt start",
     "generate": "nuxt generate",
     "test:social": "node tests/social-runtime.cjs",
+    "test:reader-audio": "node tests/reader-audio-power.cjs",
     "test:writer": "node tests/writer-runtime.cjs",
     "generate:writer:icons": "node scripts/generate-writer-icons.cjs",
     "test:writer:modified": "node tests/writer-modified.cjs",
@@ -32,7 +33,9 @@
     "test:theme:browser": "node tests/night-mode.cjs",
     "test:tree": "node tests/tree-scene-framing.cjs",
     "test:tree:layout": "node tests/tree-layout.cjs",
-    "test:language": "node tests/language-runtime.cjs"
+    "test:language": "node tests/language-runtime.cjs",
+    "i18n:audit": "node scripts/i18n-audit.cjs",
+    "i18n:extract": "node scripts/i18n-extract.cjs"
   },
   "dependencies": {
     "@hocuspocus/provider": "4.5.0",

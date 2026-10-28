@@ -1,36 +1,36 @@
 <template>
   <div class="new-work-page">
     <div class="page-header">
-      <h1 class="page-title">创建新作品</h1>
+      <h1 class="page-title">{{ $t('创建新作品') }}</h1>
     </div>
 
     <div class="form-container">
       <div class="form-section">
         <div class="form-group">
-          <label class="form-label" for="work-type">作品类型</label>
+          <label class="form-label" for="work-type">{{ $t('作品类型') }}</label>
           <select id="work-type" v-model="novelType" class="form-input">
-            <option value="fiction">文字作品</option>
-            <option value="manga">漫画作品（条漫 / 页漫）</option>
+            <option value="fiction">{{ $t('文字作品') }}</option>
+            <option value="manga">{{ $t('漫画作品（条漫 / 页漫）') }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">作品名称</label>
+          <label class="form-label">{{ $t('作品名称') }}</label>
           <input 
             type="text" 
             class="form-input" 
             v-model="title" 
-            placeholder="请输入作品名称（不超过25个字符）"
+            :placeholder="$t('请输入作品名称（不超过25个字符）')"
             maxlength="25"
           >
           <div class="word-count">{{ title.length }}/25</div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">作品简介</label>
+          <label class="form-label">{{ $t('作品简介') }}</label>
           <textarea 
             class="form-textarea" 
             v-model="content" 
-            placeholder="请输入作品简介（不超过300个字符）" 
+            :placeholder="$t('请输入作品简介（不超过300个字符）')"
             maxlength="300"
             rows="4"
           ></textarea>
@@ -38,7 +38,7 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">选择标签</label>
+          <label class="form-label">{{ $t('选择标签') }}</label>
           <div class="tags-select">
             <div 
               v-for="tag in suggested_tags" 
@@ -48,9 +48,9 @@
               @click="toggleTag(tag.tag_name)"
             >
               {{ tag.tag_name }}
-              <span v-if="tag.is_activity_tag" class="activity-badge">活动</span>
+              <span v-if="tag.is_activity_tag" class="activity-badge">{{ $t('活动') }}</span>
             </div>
-            <div v-if="!suggested_tags.length" class="no-tags">暂无推荐标签</div>
+            <div v-if="!suggested_tags.length" class="no-tags">{{ $t('暂无推荐标签') }}</div>
           </div>
         </div>
 
@@ -58,26 +58,26 @@
           <label class="checkbox-container">
             <input type="checkbox" v-model="checked">
             <span class="checkmark"></span>
-            <span class="agreement-text">我已经阅读并接受
-              <nuxt-link to="/agreement/content" class="agreement-link">《原木社区用户内容上传协议》</nuxt-link>
+            <span class="agreement-text">{{ $t('我已经阅读并接受') }}
+              <nuxt-link to="/agreement/content" class="agreement-link">{{ $t('《原木社区用户内容上传协议》') }}</nuxt-link>
             </span>
           </label>
         </div>
 
         <div class="form-actions">
-          <button class="cancel-button" @click="$router.push('/write')">取消</button>
-          <button class="submit-button" @click="submit" :disabled="isSubmitting">{{ isSubmitting ? '创建中...' : '创建作品' }}</button>
+          <button class="cancel-button" @click="$router.push('/write')">{{ $t('取消') }}</button>
+          <button class="submit-button" @click="submit" :disabled="isSubmitting">{{ isSubmitting ? $t('创建中...') : $t('创建作品') }}</button>
         </div>
       </div>
 
       <div class="sidebar">
         <div class="sidebar-section">
-          <h3 class="sidebar-title">创作提示</h3>
+          <h3 class="sidebar-title">{{ $t('创作提示') }}</h3>
           <ul class="tips-list">
-            <li class="tip-item">作品名称简洁明了，容易记忆</li>
-            <li class="tip-item">作品简介应当概括故事核心，吸引读者</li>
-            <li class="tip-item">选择合适的标签有助于读者发现您的作品</li>
-            <li class="tip-item">创建后可以在设置中修改作品信息</li>
+            <li class="tip-item">{{ $t('作品名称简洁明了，容易记忆') }}</li>
+            <li class="tip-item">{{ $t('作品简介应当概括故事核心，吸引读者') }}</li>
+            <li class="tip-item">{{ $t('选择合适的标签有助于读者发现您的作品') }}</li>
+            <li class="tip-item">{{ $t('创建后可以在设置中修改作品信息') }}</li>
           </ul>
         </div>
       </div>
@@ -90,7 +90,7 @@ import { writerPost } from '~/utils/writer/api'
 export default {
   head() {
     return {
-      title: '创建新作品 - 原木社区'
+      title: `${this.$t('创建新作品')} - ${this.$t('原木社区')}`
     }
   },
   data() {
@@ -123,8 +123,8 @@ export default {
       } catch (error) {
         console.error('获取推荐标签失败:', error)
         this.$notify.error({
-          title: '错误',
-          message: '获取推荐标签失败'
+          title: this.$t('错误'),
+          message: this.$t('获取推荐标签失败')
         })
         this.suggested_tags = []
       }
@@ -145,8 +145,8 @@ export default {
       } catch (error) {
         console.error('添加标签失败:', error)
         this.$notify.error({
-          title: '错误',
-          message: '添加标签失败: ' + (error.message || '未知错误')
+          title: this.$t('错误'),
+          message: this.$t('添加标签失败: {message}', { message: error.message || this.$t('未知错误') })
         })
       }
     },
@@ -154,24 +154,24 @@ export default {
       // 表单验证
       if (!this.checked) {
         this.$notify.warning({
-          title: '提示',
-          message: '请先阅读并接受《原木社区用户内容上传协议》'
+          title: this.$t('提示'),
+          message: this.$t('请先阅读并接受《原木社区用户内容上传协议》')
         })
         return
       }
       
       if (!this.title.trim()) {
         this.$notify.warning({
-          title: '提示',
-          message: '请输入作品名称'
+          title: this.$t('提示'),
+          message: this.$t('请输入作品名称')
         })
         return
       }
       
       if (!this.content.trim()) {
         this.$notify.warning({
-          title: '提示',
-          message: '请输入作品简介'
+          title: this.$t('提示'),
+          message: this.$t('请输入作品简介')
         })
         return
       }
@@ -194,8 +194,8 @@ export default {
         }
         
         this.$notify.success({
-          title: '成功',
-          message: '作品创建成功'
+          title: this.$t('成功'),
+          message: this.$t('作品创建成功')
         })
         
         // 延迟跳转，让用户看到成功提示
@@ -205,8 +205,8 @@ export default {
       } catch (error) {
         console.error('创建作品失败:', error)
         this.$notify.error({
-          title: '错误',
-          message: '创建作品失败: ' + (error.message || '未知错误')
+          title: this.$t('错误'),
+          message: this.$t('创建作品失败: {message}', { message: error.message || this.$t('未知错误') })
         })
       } finally {
         this.isSubmitting = false

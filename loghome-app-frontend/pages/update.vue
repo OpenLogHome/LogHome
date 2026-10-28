@@ -4,38 +4,38 @@
     <view class="update-card" v-if="isLoaded">
       
       <view class="update-header">
-        <text class="update-title">发现新版本</text>
+        <text class="update-title">{{ $t('apps.update.title') }}</text>
         <view class="update-badges">
-          <text v-if="isForced" class="badge forced">强制更新</text>
-          <text v-if="allowHot" class="badge hot">支持极速更新</text>
+          <text v-if="isForced" class="badge forced">{{ $t('apps.update.required') }}</text>
+          <text v-if="allowHot" class="badge hot">{{ $t('apps.update.hotSupported') }}</text>
         </view>
       </view>
       
       <view class="update-version-info">
-        <text class="version-label">当前版本</text>
+        <text class="version-label">{{ $t('apps.update.currentVersion') }}</text>
         <text class="version-number">{{ currentVersion }}</text>
         <text class="version-arrow">→</text>
-        <text class="version-label">最新版本</text>
+        <text class="version-label">{{ $t('apps.update.latestVersion') }}</text>
         <text class="version-number new">{{ version }}</text>
       </view>
       
       <view class="divider"></view>
       
       <view class="update-desc-container">
-        <text class="desc-title">更新内容</text>
+        <text class="desc-title">{{ $t('apps.update.whatsNew') }}</text>
         <rich-text class="update-desc" :nodes="desc"></rich-text>
       </view>
       
       <view class="update-actions">
-        <button v-if="allowHot" class="btn-primary" @click="doHotUpdate">极速更新</button>
-        <button class="btn-secondary" @click="gotoDownload">下载全量包</button>
-        <button v-if="!isForced" class="btn-cancel" @click="goBack">暂不更新</button>
+        <button v-if="allowHot" class="btn-primary" @click="doHotUpdate">{{ $t('apps.update.hotUpdate') }}</button>
+        <button class="btn-secondary" @click="gotoDownload">{{ $t('apps.update.fullPackage') }}</button>
+        <button v-if="!isForced" class="btn-cancel" @click="goBack">{{ $t('apps.update.later') }}</button>
       </view>
     </view>
     
     <view class="loading-container" v-else>
       <view class="loading-spinner"></view>
-      <text class="loading-text">加载更新信息...</text>
+      <text class="loading-text">{{ $t('apps.update.loading') }}</text>
     </view>
   </view>
 </template>
@@ -91,7 +91,7 @@ export default {
       } catch (error) {
         console.error('获取更新信息失败:', error);
         uni.showToast({
-          title: '获取更新信息失败',
+          title: this.$t('apps.update.loadFailed'),
           icon: 'none'
         });
         
@@ -128,7 +128,7 @@ export default {
     doHotUpdate() {
       if (!window.jsBridge) {
         uni.showToast({
-          title: '当前环境不支持极速更新',
+          title: this.$t('apps.update.hotUnavailable'),
           icon: 'none'
         });
         return;
@@ -140,7 +140,7 @@ export default {
         
         // 显示Toast提示用户更新已开始
         uni.showToast({
-          title: '极速更新已开始，请稍候...',
+          title: this.$t('apps.update.hotStarted'),
           icon: 'none',
           duration: 2000
         });

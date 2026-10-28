@@ -28,3 +28,4 @@ const treePlant = {
 };
 
 export default treePlant;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

@@ -42,3 +42,4 @@ const manga = {
 }
 
 export default manga
+import { localizedFetch as fetch } from '~/utils/api-fetch'

@@ -6,32 +6,32 @@
 				<p>{{resources.cropped_log}}</p>
 			</div>
 			<div class="recordBtn" @click="recordDrawer = true">
-				服务记录
+				{{ $t('payments.earnings.serviceRecords') }}
 			</div>
 			<view class="txt-xh">
 				<view class="h3">
 					¥{{moneyEarnings}}
 				</view>
-				<text>可提现金额(元)</text>
+				<text>{{ $t('payments.earnings.withdrawable') }}</text>
 				<view class="s2" @click="showHelp">?</view>
 			</view>
 		</view>
 		<view class="boe">
 			<view class="m-about">
 				<view class="h3">
-					提现金额
+					{{ $t('payments.earnings.withdrawAmount') }}
 				</view>
 				<view class="num">
-					<view class="desc">￥</view> <text @click="moneyAmount = moneyEarnings">全部提现</text>
-					<input class="inp" placeholder="请输入金额" type="number" v-model="moneyAmount" />
+					<view class="desc">￥</view> <text @click="moneyAmount = moneyEarnings">{{ $t('payments.earnings.withdrawAll') }}</text>
+					<input class="inp" :placeholder="$t('payments.earnings.amountPlaceholder')" type="number" v-model="moneyAmount" />
 				</view>
 				<view class="num">
 					<text></text>
-					<input class="inp" placeholder="请输入微信号，客服将通过您留的微信号联系您" v-model="wechat" />
+					<input class="inp" :placeholder="$t('payments.earnings.wechatPlaceholder')" v-model="wechat" />
 				</view>
 				<view class="g-queding-kx">
 					<view class="txt">
-						<view class="s1" @click="sendRequest">提现</view>
+						<view class="s1" @click="sendRequest">{{ $t('payments.earnings.withdraw') }}</view>
 					</view>
 				</view>
 			</view>
@@ -40,34 +40,34 @@
 			<view class="txt-xh1">
 				<view class="tit">
 					<view class="h3">
-						说明：
+						{{ $t('payments.earnings.notes') }}
 					</view>
 					<view class="info">
-						1.<text>可提现金额</text>=去皮原木余额 / 100
+						1.<text>{{ $t('payments.earnings.noteWithdrawable') }}</text>{{ $t('payments.earnings.noteRate') }}
 					</view>
 					<view class="info">
-						2.<text>每次提现收取 </text> 2%手续费，如提现100元，实际到账98元，手续费最低0.1元
+						2.<text>{{ $t('payments.earnings.noteFeePrefix') }}</text>{{ $t('payments.earnings.noteFee') }}
 					</view>
 					<view class="info">
-						3.<text>请确保您留下的微信号畅通， </text> 客服将通过您留下的微信号在5个工作日内联系您
+						3.<text>{{ $t('payments.earnings.noteWechatPrefix') }}</text>{{ $t('payments.earnings.noteWechatRest') }}
 					</view>
 					<view class="info">
-						4.<text>如果遇到问题请联系官方微信客服，客服微信号： </text> LogHomeCommunity
+						4.<text>{{ $t('payments.earnings.noteSupportPrefix') }}</text>LogHomeCommunity
 					</view>
 				</view>
 			</view>
 		</view>
-		<el-drawer title="服务记录" :visible.sync="recordDrawer" direction="btt" size="90%">
+		<el-drawer :title="$t('payments.earnings.serviceRecords')" :visible.sync="recordDrawer" direction="btt" size="90%">
 			<div class="outer" style="margin: 0 30rpx" v-for="record in records" :key="record.service_id">
 				<el-card class="box-card" style="margin-bottom: 30rpx;">
 					<div slot="header" class="clearfix">
-						<span>提现 {{record.money_amount}} 元 {{utc2beijing(record.start_time)}}</span>
+						<span>{{ $t('payments.earnings.recordTitle', { amount: record.money_amount, time: utc2beijing(record.start_time) }) }}</span>
 					</div>
 					<div class="text">
-						微信账户：{{record.wechat}}
+						{{ $t('payments.earnings.wechatAccount', { wechat: record.wechat }) }}
 					</div>
 					<div class="text">
-						状态：{{record.result}}
+						{{ $t('payments.earnings.status', { status: record.result }) }}
 					</div>
 				</el-card>
 			</div>
@@ -167,8 +167,8 @@
 				if (!this.checkInputAmount(this.moneyAmount) || !this.checkAmountInRange(this.moneyAmount, 0.11, this
 						.moneyEarnings)) {
 					uni.showModal({
-						title: '提示',
-						content: '请输入正确的金额',
+						title: this.$t('payments.earnings.prompt'),
+						content: this.$t('payments.earnings.invalidAmount'),
 						confirmColor: "#ff6a5f",
 						showCancel: false
 					});
@@ -176,16 +176,16 @@
 				}
 				if (this.wechat == "") {
 					uni.showModal({
-						title: '提示',
-						content: '请输入用于提现的微信号',
+						title: this.$t('payments.earnings.prompt'),
+						content: this.$t('payments.earnings.wechatRequired'),
 						confirmColor: "#ff6a5f",
 						showCancel: false
 					});
 					return;
 				}
 				uni.showModal({
-					title: '确认发起提现',
-					content: `提现金额：${this.moneyAmount}，提现至微信：${this.wechat}，确认要发起提现吗？`,
+					title: this.$t('payments.earnings.confirmTitle'),
+					content: this.$t('payments.earnings.confirmContent', { amount: this.moneyAmount, wechat: this.wechat }),
 					confirmColor: "#ff6a5f",
 					showCancel: true,
 					success: (res) => {
@@ -199,7 +199,7 @@
 								}).then((res) => {
 								this.getRecords();
 								uni.showToast({
-									title: "提现服务已发起，请保持微信畅通",
+									title: this.$t('payments.earnings.submitted'),
 									icon: 'none',
 									duration: 2000
 								});
@@ -251,7 +251,7 @@
 			},
 			showHelp(){
 				uni.showToast({
-					title: "作者收到的作品打赏都将被转化为去皮原木，可用于提现",
+					title: this.$t('payments.earnings.help'),
 					icon: 'none',
 					duration: 2000
 				});

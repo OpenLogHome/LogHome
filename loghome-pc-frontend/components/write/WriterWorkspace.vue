@@ -17,26 +17,26 @@
     <button
       v-if="focusMode"
       class="focus-edge-trigger focus-edge-top"
-      aria-label="显示顶部工具栏"
+      :aria-label="$t('显示顶部工具栏')"
       @focus="focusTopVisible = true"
       @click="focusTopVisible = true"
     />
     <button
       v-if="focusMode"
       class="focus-edge-trigger focus-edge-bottom"
-      aria-label="显示底部状态栏"
+      :aria-label="$t('显示底部状态栏')"
       @focus="focusBottomVisible = true"
       @click="focusBottomVisible = true"
     />
     <header class="workspace-header">
-      <nuxt-link to="/write" class="workspace-back" aria-label="返回创作中心"
+      <nuxt-link to="/write" class="workspace-back" :aria-label="$t('返回创作中心')"
         ><i aria-hidden="true" class="el-icon-arrow-left"
       /></nuxt-link>
       <div class="workspace-identity">
-        <strong>{{ novel.name || "写作工作台" }}</strong
+        <strong>{{ novel.name || $t('写作工作台') }}</strong
         ><span
           >{{ typeLabel(novel.novel_type) }} · {{ articles.length }}
-          {{ isManga ? "话" : "篇" }}</span
+          {{ isManga ? $t('话') : $t('篇') }}</span
         >
       </div>
       <span
@@ -44,7 +44,7 @@
         :class="status"
         role="status"
         :title="stateDetail"
-        >{{ stateLabels[status] || status }}</span
+        >{{ $t(stateLabels[status] || status) }}</span
       >
       <div class="header-spacer" />
       <button
@@ -53,14 +53,14 @@
         title="Ctrl / ⌘ S"
         @click="save(true)"
       >
-        <i aria-hidden="true" class="el-icon-check" /> 保存
+        <i aria-hidden="true" class="el-icon-check" /> {{ $t('保存') }}
       </button>
       <button
         v-if="article && !isManga"
         :disabled="loadingArticle"
         @click="preview"
       >
-        <i aria-hidden="true" class="el-icon-view" /> 预览
+        <i aria-hidden="true" class="el-icon-view" /> {{ $t('预览') }}
       </button>
       <button
         v-if="article && !isManga"
@@ -68,19 +68,19 @@
         class="primary"
         @click="openPublish"
       >
-        发布
+        {{ $t('发布') }}
       </button>
       <button
         :aria-pressed="String(focusMode)"
-        title="专注模式，Esc 退出"
+        :title="$t('专注模式，Esc 退出')"
         @click="focusMode = !focusMode"
       >
         <i aria-hidden="true" class="el-icon-full-screen" />
-        {{ focusMode ? "退出专注" : "专注" }}
+        {{ focusMode ? $t('退出专注') : $t('专注') }}
       </button>
     </header>
     <div v-if="error" class="workspace-alert" role="alert">
-      {{ error }}<button @click="loadWork">重试</button>
+      {{ error }}<button @click="loadWork">{{ $t('重试') }}</button>
     </div>
     <div v-if="stateDetail" class="workspace-alert" role="alert">
       {{ stateDetail
@@ -88,14 +88,14 @@
         v-if="status === 'offline' || status === 'readonly'"
         @click="reopen"
       >
-        重新连接
+        {{ $t('重新连接') }}
       </button>
     </div>
     <div ref="workspaceBody" class="workspace-body">
       <aside
         v-show="!focusMode"
         class="workspace-catalog"
-        aria-label="章节目录"
+        :aria-label="$t('章节目录')"
       >
         <panel-resize-handle
           ref="leftResize"
@@ -109,17 +109,17 @@
           @dragging="resizingPanel = $event"
         />
         <div class="catalog-heading">
-          <strong>作品目录</strong
+          <strong>{{ $t('作品目录') }}</strong
           ><button
             :disabled="!access.can_add_article || loadingArticle || sortSaving"
-            title="新建章节"
-            aria-label="新建章节"
+            :title="$t('新建章节')"
+            :aria-label="$t('新建章节')"
             @click="createOpen = true"
           >
             <i aria-hidden="true" class="el-icon-plus" /></button
           ><button
             :disabled="sortSaving"
-            aria-label="刷新目录"
+            :aria-label="$t('刷新目录')"
             @click="refreshArticles"
           >
             <i aria-hidden="true" class="el-icon-refresh" />
@@ -128,8 +128,8 @@
         <div class="catalog-search">
           <i aria-hidden="true" class="el-icon-search" /><input
             v-model="query"
-            aria-label="搜索章节"
-            placeholder="搜索标题或正文"
+            :aria-label="$t('搜索章节')"
+            :placeholder="$t('搜索标题或正文')"
             @input="searchContent"
           />
         </div>
@@ -141,12 +141,12 @@
             :aria-pressed="String(filter === item.key)"
             @click="filter = item.key"
           >
-            {{ item.label }}
+            {{ $t(item.label) }}
           </button>
         </div>
-        <div v-if="loading" class="catalog-empty">正在加载目录…</div>
+        <div v-if="loading" class="catalog-empty">{{ $t('正在加载目录…') }}</div>
         <div v-else-if="!visibleArticles.length" class="catalog-empty">
-          {{ query ? "没有匹配章节" : "还没有章节，点击 ＋ 开始创作" }}
+          {{ query ? $t('没有匹配章节') : $t('还没有章节，点击 ＋ 开始创作') }}
         </div>
         <div
           v-show="sortSaving || catalogDrag"
@@ -154,7 +154,7 @@
           role="status"
         >
           {{
-            sortSaving ? "正在保存目录顺序…" : "拖至目标位置后松开 · Esc 取消"
+            sortSaving ? $t('正在保存目录顺序…') : $t('拖至目标位置后松开 · Esc 取消')
           }}
         </div>
         <nav
@@ -188,13 +188,12 @@
               v-if="item.article_type === 'spliter'"
               class="catalog-fold"
               :aria-label="
-                (volumeCollapsed(item.article_id) ? '展开 ' : '折叠 ') +
-                item.title
+                $t(volumeCollapsed(item.article_id) ? '展开 {title}' : '折叠 {title}', { title: item.title })
               "
               :aria-expanded="String(!volumeCollapsed(item.article_id))"
               :disabled="catalogFiltered || sortSaving || Boolean(catalogDrag)"
               :title="
-                catalogFiltered ? '搜索或筛选时自动展开分卷' : '折叠 / 展开分卷'
+                catalogFiltered ? $t('搜索或筛选时自动展开分卷') : $t('折叠 / 展开分卷')
               "
               @click="toggleVolume(item.article_id)"
             >
@@ -223,7 +222,7 @@
                   ><strong>{{
                     (article && article.article_id === item.article_id
                       ? article.title
-                      : item.writer_title || item.title) || "未命名"
+                      : item.writer_title || item.title) || $t('未命名')
                   }}</strong
                   ><span
                     v-if="
@@ -231,37 +230,37 @@
                       item.collaboration_mode === 'realtime_crdt'
                     "
                     class="catalog-realtime-badge"
-                    >实时协作</span
+                    >{{ $t('实时协作') }}</span
                   ></span
                 ><span class="catalog-item-details"
                   ><small
                     >{{ articleLabel(item.article_type) }} ·
-                    {{ Number(item.is_draft) === 1 ? "草稿" : "已发布"
+                    {{ Number(item.is_draft) === 1 ? $t('草稿') : $t('已发布')
                     }}<template v-if="item.active_lock_user_name">
-                      · {{ item.active_lock_user_name }} 编辑中</template
+                      · {{ $t('{name} 编辑中', { name: item.active_lock_user_name }) }}</template
                     ><template v-else>
                       ·
                       <template v-if="item.article_type === 'spliter'"
-                        >{{ count }} 篇<span
+                        >{{ $t('{count} 篇', { count }) }}<span
                           v-if="
                             volumeContainsCurrent(item.article_id) &&
                             volumeCollapsed(item.article_id)
                           "
                         >
-                          · 正在编辑</span
+                          · {{ $t('正在编辑') }}</span
                         ></template
                       ><template v-else
                         >{{
                           catalogTextCount(item).toLocaleString()
                         }}
-                        字</template
+                        {{ $t('字') }}</template
                       ></template
                     ></small
                   ><span
                     v-if="catalogHasChanges(item)"
                     class="catalog-modified-badge"
-                    title="发布后有编辑，读者仍看到上次发布的版本"
-                    >有修改</span
+                    :title="$t('发布后有编辑，读者仍看到上次发布的版本')"
+                    >{{ $t('有修改') }}</span
                   >
                 </span></span
               >
@@ -270,11 +269,11 @@
               ><button
                 class="catalog-menu"
                 :class="{ draggable: catalogSortEnabled }"
-                :aria-label="'管理 ' + item.title"
+                :aria-label="$t('管理 {title}', { title: item.title })"
                 :title="
                   catalogSortEnabled
-                    ? '点击管理；按住拖动排序（Alt + 空格可用键盘排序）'
-                    : '点击管理'
+                    ? $t('点击管理；按住拖动排序（Alt + 空格可用键盘排序）')
+                    : $t('点击管理')
                 "
                 :disabled="sortSaving"
                 @pointerdown="startCatalogDrag($event, item)"
@@ -289,7 +288,7 @@
                   v-if="item.article_type === 'spliter'"
                   command="rename"
                   :disabled="!access.can_sort_article"
-                  >重命名分卷</el-dropdown-item
+                  >{{ $t('重命名分卷') }}</el-dropdown-item
                 ><el-dropdown-item
                   command="realtime"
                   :disabled="
@@ -299,14 +298,14 @@
                   "
                   >{{
                     item.collaboration_mode === "realtime_crdt"
-                      ? "关闭实时协作"
-                      : "开启实时协作"
+                      ? $t('关闭实时协作')
+                      : $t('开启实时协作')
                   }}</el-dropdown-item
                 ><el-dropdown-item
                   command="delete"
                   :disabled="!access.can_delete_article"
                   divided
-                  >移到回收站</el-dropdown-item
+                  >{{ $t('移到回收站') }}</el-dropdown-item
                 ></el-dropdown-menu
               ></el-dropdown
             >
@@ -314,9 +313,9 @@
         </nav>
         <footer class="catalog-footer">
           <button @click="setTool('trash', $event)">
-            <i aria-hidden="true" class="el-icon-delete" /> 回收站</button
+            <i aria-hidden="true" class="el-icon-delete" /> {{ $t('回收站') }}</button
           ><button @click="setTool('settings', $event)">
-            <i aria-hidden="true" class="el-icon-setting" /> 作品设置
+            <i aria-hidden="true" class="el-icon-setting" /> {{ $t('作品设置') }}
           </button>
         </footer>
         <div
@@ -330,7 +329,7 @@
         >
           <i class="el-icon-rank" /> {{ catalogDrag.title
           }}<small v-if="dragSourceIds.length > 1"
-            >含 {{ dragSourceIds.length - 1 }} 篇章节</small
+            >{{ $t('含 {count} 篇章节', { count: dragSourceIds.length - 1 }) }}</small
           >
         </div>
         <span class="writer-sr-only" aria-live="polite">{{
@@ -340,7 +339,7 @@
       <main class="workspace-editor">
         <div v-if="loadingArticle" class="workspace-empty" role="status">
           <writer-chapter-loading />
-          <p>正在加载完整章节…</p>
+          <p>{{ $t('正在加载完整章节…') }}</p>
         </div>
         <manga-editor
           v-else-if="article && isManga"
@@ -382,28 +381,26 @@
           <div class="workspace-empty-icon">
             <i aria-hidden="true" class="el-icon-edit-outline" />
           </div>
-          <h1>{{ article ? "分卷目录" : "让故事从这里开始" }}</h1>
+          <h1>{{ article ? $t('分卷目录') : $t('让故事从这里开始') }}</h1>
           <p>
-            {{ article ? article.title : "从左侧选择章节，或创建新的章节。" }}
+            {{ article ? article.title : $t('从左侧选择章节，或创建新的章节。') }}
           </p>
           <button
             v-if="access.can_add_article"
             class="primary"
             @click="createOpen = true"
           >
-            <i class="el-icon-plus" aria-hidden="true" /> 新建{{
-              isManga ? "话数" : "章节"
-            }}
+            <i class="el-icon-plus" aria-hidden="true" /> {{ isManga ? $t('新建话数') : $t('新建章节') }}
           </button>
         </div>
         <footer class="editor-statusbar">
           <span
-            >{{ article ? articleLabel(article.article_type) : "写作工作台"
+            >{{ article ? articleLabel(article.article_type) : $t('写作工作台')
             }}<template v-if="article">
               · {{ article.article_id }}</template
             ></span
-          ><span v-if="realtime">{{ presence.length }} 人在线 · 实时协作</span
-          ><span class="header-spacer" /><span>Ctrl / ⌘ S 保存</span
+          ><span v-if="realtime">{{ $t('{count} 人在线 · 实时协作', { count: presence.length }) }}</span
+          ><span class="header-spacer" /><span>{{ $t('Ctrl / ⌘ S 保存') }}</span
           ><button @click="setTool('appearance', $event)">
             {{ preferences.fontSize }}px ·
             {{ themeLabel }}
@@ -443,15 +440,15 @@
         <writer-panel
           v-else-if="tool === 'collaboration'"
           class="collaboration-panel"
-          title="实时协作"
+          :title="$t('实时协作')"
           :scrollable="false"
           @close="closeTool"
         >
           <writer-empty-state
             v-if="!realtime"
             icon="el-icon-chat-dot-round"
-            title="让作者一起创作"
-            description="在当前章节的目录菜单中开启实时协作，即可同步正文、光标并在线讨论。"
+            :title="$t('让作者一起创作')"
+            :description="$t('在当前章节的目录菜单中开启实时协作，即可同步正文、光标并在线讨论。')"
           />
           <template v-else
             ><div class="presence-list">
@@ -464,15 +461,15 @@
                   :style="{
                     background: person.color || 'var(--writer-accent)',
                   }"
-                />{{ person.name || "协作者" }}
+                />{{ person.name || $t('协作者') }}
               </div>
             </div>
             <div class="collaboration-messages">
               <writer-empty-state
                 v-if="!chatMessages.length"
                 icon="el-icon-chat-line-round"
-                title="还没有讨论"
-                description="发送第一条消息，与在线作者交流想法。"
+                :title="$t('还没有讨论')"
+                :description="$t('发送第一条消息，与在线作者交流想法。')"
               />
               <article
                 v-for="(message, index) in chatMessages"
@@ -493,12 +490,12 @@
           >
             <textarea
               v-model="chatDraft"
-              aria-label="协作聊天"
-              placeholder="与在线作者讨论…"
+              :aria-label="$t('协作聊天')"
+              :placeholder="$t('与在线作者讨论…')"
               maxlength="2000"
               rows="3"
             /><button class="primary" :disabled="!chatDraft.trim()">
-              发送
+              {{ $t('发送') }}
             </button>
           </form>
         </writer-panel>
@@ -520,17 +517,17 @@
           @preferences="setPreferences"
           @close="closeTool"
         />
-        <writer-panel v-else title="笔泡 · 写作助手" @close="closeTool"
+        <writer-panel v-else :title="$t('笔泡 · 写作助手')" @close="closeTool"
           ><writer-empty-state
             icon="el-icon-magic-stick"
-            title="先选择一个文字章节"
-            description="打开正文或大纲后，即可讨论情节、润色选段或续写故事。"
+            :title="$t('先选择一个文字章节')"
+            :description="$t('打开正文或大纲后，即可讨论情节、润色选段或续写故事。')"
         /></writer-panel>
       </aside>
       <nav
         v-show="!focusMode"
         class="workspace-tool-rail"
-        aria-label="写作工具"
+        :aria-label="$t('写作工具')"
       >
         <button
           v-for="item in tools"
@@ -542,55 +539,55 @@
           @click="setTool(item.key, $event)"
         >
           <i aria-hidden="true" :class="item.icon" /><span>{{
-            item.short
+            $t(item.short)
           }}</span>
         </button>
       </nav>
     </div>
     <el-dialog
       class="writer-dialog-wrapper"
-      title="新建内容"
+      :title="$t('新建内容')"
       :visible.sync="createOpen"
       width="480px"
       :custom-class="writerDialogClass"
       append-to-body
       ><form class="create-form" @submit.prevent="createArticle">
         <label
-          >类型<select v-model="newType">
-            <option v-if="!isManga" value="richtext">章节</option>
+          >{{ $t('类型') }}<select v-model="newType">
+            <option v-if="!isManga" value="richtext">{{ $t('章节') }}</option>
             <option v-if="novel.novel_type === 'world'" value="worldOutline">
-              大纲
+              {{ $t('大纲') }}
             </option>
             <option v-if="novel.novel_type === 'world'" value="worldVocabulary">
-              世界词条
+              {{ $t('世界词条') }}
             </option>
-            <option v-if="!isManga" value="spliter">分卷</option>
-            <option v-if="isManga" value="mangaStrip">条漫</option>
-            <option v-if="isManga" value="mangaPage">页漫</option>
+            <option v-if="!isManga" value="spliter">{{ $t('分卷') }}</option>
+            <option v-if="isManga" value="mangaStrip">{{ $t('条漫') }}</option>
+            <option v-if="isManga" value="mangaPage">{{ $t('页漫') }}</option>
           </select></label
         ><label
-          >标题<input
+          >{{ $t('标题') }}<input
             v-model="newTitle"
             required
             maxlength="100"
             autofocus /></label
         ><label
-          >插入位置<select v-model="insertPosition">
-            <option :value="articles.length + 1">目录末尾</option>
+          >{{ $t('插入位置') }}<select v-model="insertPosition">
+            <option :value="articles.length + 1">{{ $t('目录末尾') }}</option>
             <option
               v-for="item in articles"
               :key="item.article_id"
               :value="item.article_chapter"
             >
-              在 {{ item.title }} 之前
+              {{ $t('在 {title} 之前', { title: item.title }) }}
             </option>
           </select></label
-        ><button class="primary" :disabled="creating">创建草稿</button>
+        ><button class="primary" :disabled="creating">{{ $t('创建草稿') }}</button>
       </form></el-dialog
     >
     <el-dialog
       class="writer-dialog-wrapper"
-      title="版本需要确认"
+      :title="$t('版本需要确认')"
       :visible.sync="conflictOpen"
       :close-on-click-modal="false"
       :show-close="false"
@@ -599,28 +596,28 @@
       :custom-class="writerDialogClass + ' writer-conflict-dialog'"
       append-to-body
       ><p class="conflict-intro">
-        本机稿件与云端不同。请比较内容后选择要继续使用的版本；选择前可先导出备份。
+        {{ $t('本机稿件与云端不同。请比较内容后选择要继续使用的版本；选择前可先导出备份。') }}
       </p>
       <div class="conflict-comparison">
         <section>
-          <h3>本机稿件</h3>
-          <writer-version-preview :article="conflictLocal" label="本机稿件" />
+          <h3>{{ $t('本机稿件') }}</h3>
+          <writer-version-preview :article="conflictLocal" :label="$t('本机稿件')" />
         </section>
         <section>
-          <h3>云端稿件</h3>
-          <writer-version-preview :article="conflictRemote" label="云端稿件" />
+          <h3>{{ $t('云端稿件') }}</h3>
+          <writer-version-preview :article="conflictRemote" :label="$t('云端稿件')" />
         </section>
       </div>
       <span slot="footer" class="conflict-actions"
-        ><el-button @click="exportConflict('local')">导出本机版本</el-button
-        ><el-button @click="exportConflict('remote')">导出云端版本</el-button
+        ><el-button @click="exportConflict('local')">{{ $t('导出本机版本') }}</el-button
+        ><el-button @click="exportConflict('remote')">{{ $t('导出云端版本') }}</el-button
         ><span class="conflict-action-spacer" />
-        <el-button @click="chooseRemote">使用云端版本</el-button
+        <el-button @click="chooseRemote">{{ $t('使用云端版本') }}</el-button
         ><el-button
           type="primary"
           :disabled="!session || !session.writable"
           @click="chooseLocal"
-          >继续编辑本机版本</el-button
+          >{{ $t('继续编辑本机版本') }}</el-button
         ></span
       ></el-dialog
     >
@@ -857,7 +854,7 @@ export default {
       const selected = WRITER_THEMES.find(
         (item) => item.key === this.preferences.theme
       );
-      return selected ? selected.name : "跟随系统";
+      return selected ? this.$t(selected.name) : this.$t('跟随系统');
     },
     isManga() {
       return this.novel.novel_type === "manga";
@@ -1180,7 +1177,7 @@ export default {
         try {
           pointer.handle.setPointerCapture(pointer.pointerId);
         } catch (_) {}
-        this.catalogAnnouncement = `正在移动 ${pointer.title}，松开保存，Esc 取消`;
+        this.catalogAnnouncement = this.$t('正在移动 {title}，松开保存，Esc 取消', { title: pointer.title });
         this._catalogScrollTime = 0;
         this._catalogScrollFrame = requestAnimationFrame(
           this.scrollCatalogDrag
@@ -1320,14 +1317,14 @@ export default {
         y: rect.top,
       };
       this._catalogKeyboardRows = this.articles;
-      this.catalogAnnouncement = `正在移动 ${item.title}，方向键调整位置，Enter 保存，Esc 取消`;
+      this.catalogAnnouncement = this.$t('正在移动 {title}，方向键调整位置，Enter 保存，Esc 取消', { title: item.title });
     },
     catalogDragKey(event) {
       if (!this.catalogDrag) return false;
       if (event.key === "Escape") {
         event.preventDefault();
         this.cancelCatalogDrag();
-        this.catalogAnnouncement = "已取消目录排序";
+        this.catalogAnnouncement = this.$t('已取消目录排序');
         return true;
       }
       if (!this.catalogDrag.keyboard) return false;
@@ -1363,11 +1360,9 @@ export default {
           `[data-article-id="${this.catalogDrop.markerId}"]`
         );
         if (marker) marker.scrollIntoView({ block: "nearest" });
-        this.catalogAnnouncement = `新位置：第 ${
-          result.rows.findIndex(
-            (row) => row.article_id === this.catalogDrag.id
-          ) + 1
-        } 项，Enter 保存`;
+        this.catalogAnnouncement = this.$t('新位置：第 {count} 项，Enter 保存', {
+          count: result.rows.findIndex((row) => row.article_id === this.catalogDrag.id) + 1,
+        });
       }
       return true;
     },
@@ -1404,20 +1399,20 @@ export default {
             }))
           ),
         });
-        this.catalogAnnouncement = "目录顺序已保存";
-        this.writerMessage("success", "目录顺序已保存");
+        this.catalogAnnouncement = this.$t('目录顺序已保存');
+        this.writerMessage("success", this.$t('目录顺序已保存'));
       } catch (error) {
         this.articles = original;
         this.restoreCatalogScroll(scrollTop);
-        this.catalogAnnouncement = "排序保存失败，已恢复原顺序";
-        this.writerMessage("error", `${error.message}，已恢复原顺序`);
+        this.catalogAnnouncement = this.$t('排序保存失败，已恢复原顺序');
+        this.writerMessage("error", this.$t('{message}，已恢复原顺序', { message: error.message }));
       } finally {
         this.sortSaving = false;
       }
     },
 
     typeLabel(type) {
-      return (
+      return this.$t(
         {
           world: "世界设定",
           poetry: "诗歌",
@@ -1427,7 +1422,7 @@ export default {
       );
     },
     articleLabel(type) {
-      return (
+      return this.$t(
         {
           richtext: "章节",
           text: "章节",
@@ -1534,8 +1529,8 @@ export default {
         } catch (error) {
           try {
             await this.writerConfirm(
-              "协作修改尚未获云端确认，本机备份已保留。离开后请重新连接此章节完成同步。继续？",
-              "协作同步未完成"
+              this.$t('协作修改尚未获云端确认，本机备份已保留。离开后请重新连接此章节完成同步。继续？'),
+              this.$t('协作同步未完成')
             );
           } catch (_) {
             return false;
@@ -1554,9 +1549,9 @@ export default {
         } catch (error) {
           try {
             await this.writerConfirm(
-              "云端保存未完成，本机备份已保留。是否切换章节？",
-              "保留本机稿件",
-              { confirmButtonText: "保留并切换", cancelButtonText: "继续编辑" }
+              this.$t('云端保存未完成，本机备份已保留。是否切换章节？'),
+              this.$t('保留本机稿件'),
+              { confirmButtonText: this.$t('保留并切换'), cancelButtonText: this.$t('继续编辑') }
             );
           } catch (_) {
             return false;
@@ -1581,7 +1576,7 @@ export default {
         this.status = "loading";
         if (this.isManga) {
           const data = await writerGet("get_article", { id: item.article_id });
-          if (!data) throw new Error("话数加载失败");
+          if (!data) throw new Error(this.$t('话数加载失败'));
           this.article = data;
           this.status = "synced";
           return;
@@ -1609,7 +1604,7 @@ export default {
             (state) => {
               this.status = state;
               this.stateDetail =
-                state === "readonly" ? "协作权限失效，请重新连接。" : "";
+                state === "readonly" ? this.$t('协作权限失效，请重新连接。') : "";
             },
             (people) => {
               this.presence = people;
@@ -1663,7 +1658,7 @@ export default {
       if (this.loadingArticle || !this.session || !this.canEdit) return;
       this.session.article = this.article;
       this.session.backup().catch((error) => {
-        this.stateDetail = `本机备份失败：${error.message}`;
+        this.stateDetail = this.$t('本机备份失败：{message}', { message: error.message });
       });
       if (!this.realtime) {
         if (writerSignature(this.article) === this.session.baseline) {
@@ -1760,7 +1755,7 @@ export default {
       const remote = source === "remote",
         article = remote ? this.conflictRemote : this.conflictLocal;
       downloadWriterFile(
-        `${article.title || "章节"}-${remote ? "云端" : "本机"}版本.json`,
+        `${article.title || this.$t('章节')}-${remote ? this.$t('云端') : this.$t('本机')}${this.$t('版本')}.json`,
         JSON.stringify(article, null, 2)
       );
     },
@@ -1770,7 +1765,7 @@ export default {
         ["worldOutline", "worldVocabulary"].includes(this.newType) &&
         this.novel.novel_type !== "world"
       ) {
-        this.writerMessage("warning", "此作品类型不支持创建大纲或世界词条");
+        this.writerMessage("warning", this.$t('此作品类型不支持创建大纲或世界词条'));
         return;
       }
       this.creating = true;
@@ -1806,10 +1801,10 @@ export default {
       if (this.sortSaving || this.catalogDrag) return;
       try {
         if (action === "rename" && item.article_type === "spliter") {
-          const { value } = await this.writerPrompt("分卷名称", "重命名分卷", {
+          const { value } = await this.writerPrompt(this.$t('分卷名称'), this.$t('重命名分卷'), {
             inputValue: item.title,
             inputValidator: (value) =>
-              Boolean(value && value.trim()) || "请输入名称",
+              Boolean(value && value.trim()) || this.$t('请输入名称'),
           });
           await writerPost("modify_article", {
             article_id: item.article_id,
@@ -1820,7 +1815,7 @@ export default {
           if (this.article && this.article.article_id === item.article_id)
             this.article.title = value.trim();
         } else if (action === "delete") {
-          await this.writerConfirm(`将“${item.title}”移到回收站？`, "删除章节");
+          await this.writerConfirm(this.$t('将“{title}”移到回收站？', { title: item.title }), this.$t('删除章节'));
           if (
             this.article &&
             this.article.article_id === item.article_id &&
@@ -1830,8 +1825,8 @@ export default {
           await writerPost("delete_article", { id: item.article_id });
         } else if (action === "realtime") {
           await this.writerConfirm(
-            "切换协作模式会改变该章节的保存协议。请确保所有作者已保存并退出。",
-            "切换实时协作"
+            this.$t('切换协作模式会改变该章节的保存协议。请确保所有作者已保存并退出。'),
+            this.$t('切换实时协作')
           );
           if (
             this.article &&
@@ -1934,7 +1929,7 @@ export default {
           JSON.stringify(value)
         );
       } catch (_) {
-        this.writerMessage("warning", "浏览器无法保存偏好，本次编辑仍可使用");
+        this.writerMessage("warning", this.$t('浏览器无法保存偏好，本次编辑仍可使用'));
       }
     },
     preview() {
@@ -1951,7 +1946,7 @@ export default {
     exportCurrent() {
       if (this.article)
         downloadWriterFile(
-          `${this.article.title || "章节"}.json`,
+          `${this.article.title || this.$t('章节')}.json`,
           JSON.stringify({ novel: this.novel, article: this.article }, null, 2)
         );
     },
@@ -1959,8 +1954,8 @@ export default {
       if (!this.canEdit) return;
       try {
         await this.writerConfirm(
-          "恢复该版本到写作稿？当前稿件会先保存为本机备份。",
-          "恢复版本"
+          this.$t('恢复该版本到写作稿？当前稿件会先保存为本机备份。'),
+          this.$t('恢复版本')
         );
         validateWriterContent({ ...this.article, content: item.content });
         await this.session.backup(true);
@@ -1976,7 +1971,7 @@ export default {
           this.session.article = this.article;
           await this.session.save(true);
         }
-        this.writerMessage("success", "已恢复到写作稿");
+        this.writerMessage("success", this.$t('已恢复到写作稿'));
       } catch (error) {
         if (error instanceof Error) this.writerMessage("error", error.message);
       }
@@ -2023,10 +2018,10 @@ export default {
         this.writerMessage(
           "success",
           options.mode === "schedule"
-            ? "已安排定时发布"
+            ? this.$t('已安排定时发布')
             : options.mode === "draft"
-            ? "已退回草稿"
-            : "已发布章节"
+            ? this.$t('已退回草稿')
+            : this.$t('已发布章节')
         );
         await this.loadWork(false);
       } catch (error) {

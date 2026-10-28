@@ -1,43 +1,43 @@
 <template>
   <div class="manga-comment-item" :class="{ highlight }">
     <div class="comment-main">
-      <nuxt-link class="comment-avatar" :to="`/users/${comment.userId}`" :aria-label="`查看 ${comment.userName || '读者'} 的主页`"><ReaderAvatar :src="comment.avatarUrl || ''" :frame="comment.avatarFrame" /></nuxt-link>
+      <nuxt-link class="comment-avatar" :to="`/users/${comment.userId}`" :aria-label="$t('查看 {name} 的主页', { name: comment.userName || $t('读者') })"><ReaderAvatar :src="comment.avatarUrl || ''" :frame="comment.avatarFrame" /></nuxt-link>
       <div class="comment-body">
         <div class="comment-head">
-          <nuxt-link class="comment-author" :to="`/users/${comment.userId}`">{{ comment.userName || '匿名' }}</nuxt-link>
-          <span class="author-badge" v-if="isWorkAuthor">作者</span>
+          <nuxt-link class="comment-author" :to="`/users/${comment.userId}`">{{ comment.userName || $t('匿名') }}</nuxt-link>
+          <span class="author-badge" v-if="isWorkAuthor">{{ $t('作者') }}</span>
           <span class="comment-time">{{ comment.time }}</span>
         </div>
-        <p v-if="isFolded" class="folded-comment">该评论已被收起</p>
+        <p v-if="isFolded" class="folded-comment">{{ $t('该评论已被收起') }}</p>
         <div class="comment-excerpt" v-if="!isFolded && comment.excerpt">「{{ comment.excerpt }}」</div>
         <div v-if="!isFolded" class="comment-text">{{ comment.content }}</div>
         <div class="comment-images" v-if="!isFolded && comment.images && comment.images.length">
-          <div v-for="(img, i) in comment.images" :key="i" class="image-entry"><button class="image-button" :aria-label="`查看配图 ${i + 1}`" @click="preview(comment.images, i)"><img :src="img" class="comment-image" alt="评论配图" loading="lazy"></button><button class="image-save" :disabled="!!savingSticker[img]" @click="saveSticker(img)">{{ savingSticker[img] ? '收藏中…' : '收藏为表情包' }}</button></div>
+          <div v-for="(img, i) in comment.images" :key="i" class="image-entry"><button class="image-button" :aria-label="$t('查看配图 {p0}', { p0: i + 1 })" @click="preview(comment.images, i)"><img :src="img" class="comment-image" :alt="$t('评论配图')" loading="lazy"></button><button class="image-save" :disabled="!!savingSticker[img]" @click="saveSticker(img)">{{ savingSticker[img] ? $t('收藏中…') : $t('收藏为表情包') }}</button></div>
         </div>
         <div class="comment-actions">
-          <button class="act" :class="{ liked: comment.praiseType === 0 }" :aria-pressed="comment.praiseType === 0" :aria-label="`${comment.praiseType === 0 ? '取消点赞评论' : '点赞评论'}，${comment.likeNum || 0} 个赞`" @click="$emit('praise', comment)">
+          <button class="act" :class="{ liked: comment.praiseType === 0 }" :aria-pressed="comment.praiseType === 0" :aria-label="$t('{action}，{count} 个赞', { action: comment.praiseType === 0 ? $t('取消点赞评论') : $t('点赞评论'), count: comment.likeNum || 0 })" @click="$emit('praise', comment)">
             <SiteIcon name="heart" :filled="comment.praiseType === 0" /> <span>{{ comment.likeNum || 0 }}</span>
           </button>
           <button class="act" @click="$emit('reply', { rootCommentId: comment.commentId, replyToCommentId: comment.commentId, targetUserName: comment.userName })">
-            回复
+            {{ $t('回复') }}
           </button>
-          <button class="act danger" v-if="comment.canModerate" @click="$emit('remove', comment)">删除</button>
+          <button class="act danger" v-if="comment.canModerate" @click="$emit('remove', comment)">{{ $t('删除') }}</button>
         </div>
 
         <div class="reply-list" v-if="comment.replies && comment.replies.length">
           <div class="reply-item" v-for="reply in comment.replies" :key="reply.commentId" :data-comment-id="reply.commentId" :class="{ 'reply-highlight': String(reply.commentId) === String(anchorId) }">
             <div class="reply-head">
-              <nuxt-link class="reply-author" :to="`/users/${reply.userId}`">{{ reply.userName || '匿名' }}</nuxt-link>
-              <span class="reply-target" v-if="reply.targetUserName">回复 {{ reply.targetUserName }}</span>
+              <nuxt-link class="reply-author" :to="`/users/${reply.userId}`">{{ reply.userName || $t('匿名') }}</nuxt-link>
+              <span class="reply-target" v-if="reply.targetUserName">{{ $t('回复 {name}', { name: reply.targetUserName }) }}</span>
               <span class="comment-time">{{ reply.time }}</span>
             </div>
             <div class="comment-text">{{ reply.content }}</div>
             <div class="comment-images" v-if="reply.images && reply.images.length">
-              <div v-for="(img, i) in reply.images" :key="i" class="image-entry"><button class="image-button" :aria-label="`查看回复配图 ${i + 1}`" @click="preview(reply.images, i)"><img :src="img" class="comment-image small" alt="回复配图" loading="lazy"></button><button class="image-save" :disabled="!!savingSticker[img]" @click="saveSticker(img)">收藏为表情包</button></div>
+              <div v-for="(img, i) in reply.images" :key="i" class="image-entry"><button class="image-button" :aria-label="$t('查看回复配图 {p0}', { p0: i + 1 })" @click="preview(reply.images, i)"><img :src="img" class="comment-image small" :alt="$t('回复配图')" loading="lazy"></button><button class="image-save" :disabled="!!savingSticker[img]" @click="saveSticker(img)">{{ $t('收藏为表情包') }}</button></div>
             </div>
             <div class="comment-actions">
-              <button class="act" @click="$emit('reply', { rootCommentId: comment.commentId, replyToCommentId: reply.commentId, targetUserName: reply.userName })">回复</button>
-              <button class="act danger" v-if="reply.canModerate" @click="$emit('remove-reply', { rootCommentId: comment.commentId, reply })">删除</button>
+              <button class="act" @click="$emit('reply', { rootCommentId: comment.commentId, replyToCommentId: reply.commentId, targetUserName: reply.userName })">{{ $t('回复') }}</button>
+              <button class="act danger" v-if="reply.canModerate" @click="$emit('remove-reply', { rootCommentId: comment.commentId, reply })">{{ $t('删除') }}</button>
             </div>
           </div>
         </div>
@@ -71,11 +71,11 @@ export default {
   methods: {
     async saveSticker(url) {
       const token = readingToken(), version = this.stickerVersion
-      if (!token) { this.$message.info('登录后可以收藏评论配图为表情包'); return }
+      if (!token) { this.$message.info(this.$t('登录后可以收藏评论配图为表情包')); return }
       if (this.savingSticker[url]) return
       this.$set(this.savingSticker,url,true)
-      try { await saveImageAsReaderSticker(url,token); if (version===this.stickerVersion && token===readingToken()) this.$message.success('已添加到表情包收藏') }
-      catch(error) { if(version===this.stickerVersion && token===readingToken())this.$message.error(error.message || '表情包收藏失败，请重试') }
+      try { await saveImageAsReaderSticker(url,token); if (version===this.stickerVersion && token===readingToken()) this.$message.success(this.$t('已添加到表情包收藏')) }
+      catch(error) { if(version===this.stickerVersion && token===readingToken())this.$message.error(error.message || this.$t('表情包收藏失败，请重试')) }
       finally { if(version===this.stickerVersion)this.$set(this.savingSticker,url,false) }
     },
     preview(images, index) {

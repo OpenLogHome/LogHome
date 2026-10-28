@@ -1,0 +1,77 @@
+{
+  "world": {
+    "components": {
+      "portalKicker": "Worldbuilding",
+      "portalSubtitle": "Open the gate to creation",
+      "createNewWorld": "Tap to create a brand-new world",
+      "myWorlds": "My Worlds",
+      "worldCount": "{count} worlds",
+      "loading": "Loading worlds…",
+      "emptyWorlds": "Nothing here yet",
+      "createFirstWorld": "Create your first world",
+      "createWorld": "Create World",
+      "createSuccess": "World created",
+      "createFailed": "Creation failed. Please try again later.",
+      "needLoginToCreate": "Please sign in before creating a world",
+      "creating": "Creating…",
+      "createTip": "After creating, you can edit the world's description, characters, and other settings.",
+      "nameLabel": "World name",
+      "namePlaceholder": "Name your world",
+      "closeCreateAria": "Close create dialog",
+      "editAria": "Edit settings for \"{name}\"",
+      "enterAria": "Enter \"{name}\"",
+      "allowFork": "Remixing allowed",
+      "collaborative": "Collaborative",
+      "noIntro": "No description yet",
+      "editSettings": "Edit Settings",
+      "collabSettings": "Collaborative Settings",
+      "enterSettings": "Enter Settings"
+    },
+    "page": {
+      "updatedAt": "Updated {time}",
+      "likes": "{count} likes",
+      "favorited": "Saved",
+      "favorite": "Save",
+      "tip": "Tip",
+      "share": "Share",
+      "editSettings": "Edit Settings",
+      "tabSettings": "World Settings",
+      "outlines": "World Outlines",
+      "empty": "Nothing here yet",
+      "vocabulary": "World Entries",
+      "viewRelations": "View Relations",
+      "relatedWorks": "Related Works",
+      "worldTag": "World Setting",
+      "fansRank": "Top Supporters",
+      "fullRank": "Full Ranking",
+      "comments": "Comments",
+      "allComments": "All ({count})",
+      "emptyComments": "No comments yet",
+      "confirmRemoveFavorite": "Remove this world from your bookshelf?",
+      "keepFavorite": "Keep it",
+      "confirmRemove": "Remove",
+      "creatingCode": "Creating share code...",
+      "codeCreatedTitle": "Share Code Created",
+      "codeCreatedContent": "Code: {code}\n\nThe code has been copied to your clipboard. Share it with friends!",
+      "shareMessage": "I'm exploring the world \"{name}\" on LogHome. Come take a look!\nhttps://loghome.ink/novel/{id}\nOpen the link in a browser, or copy this text and open the LogHome app to view it.",
+      "toast": {
+        "relatedWorldsFailed": "Failed to load related worlds",
+        "addedToBookcase": "Added to bookshelf",
+        "addFailed": "Failed to add",
+        "removedFromBookcase": "Removed from bookshelf",
+        "removeFailed": "Failed to remove",
+        "codeCreateFailed": "Failed to create share code",
+        "cannotTipSelf": "You can't tip your own work"
+      },
+      "task": {
+        "likeWorld": "Daily task: like a world",
+        "shareWork": "Daily task: share a work"
+      }
+    },
+    "relations": {
+      "loading": "Loading relations... {loaded}/{total}",
+      "empty": "No entries yet",
+      "chartTitle": "World Entry Relations"
+    }
+  }
+}

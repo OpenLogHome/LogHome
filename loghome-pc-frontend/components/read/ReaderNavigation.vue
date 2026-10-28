@@ -1,11 +1,11 @@
 <template>
-  <el-drawer custom-class="reading-drawer" title="目录与进度" :visible="visible" @update:visible="$emit('update:visible', $event)" size="min(720px, 100%)" append-to-body>
+  <el-drawer custom-class="reading-drawer" :title="$t('目录与进度')" :visible="visible" @update:visible="$emit('update:visible', $event)" size="min(720px, 100%)" append-to-body>
     <div class="reader-navigation">
       <section class="chapter-seek">
         <h3>{{ current.title }}</h3>
-        <div class="chapter-progress"><span>全书进度</span><span class="progress-value">{{ percentage }}%</span></div>
-        <p v-if="readable.length">第 {{ currentIndex + 1 }} / {{ readable.length }} 章</p>
-        <button v-if="canUndo" @click="$emit('undo')">撤销上次章节跳转</button>
+        <div class="chapter-progress"><span>{{ $t("全书进度") }}</span><span class="progress-value">{{ percentage }}%</span></div>
+        <p v-if="readable.length">{{ $t("第 {p0} / {p1} 章", { p0: currentIndex + 1, p1: readable.length }) }}</p>
+        <button v-if="canUndo" @click="$emit('undo')">{{ $t("撤销上次章节跳转") }}</button>
       </section>
       <ChapterCatalog :chapters="chapters" :novel-id="novelId" :current-chapter="current.article_chapter" @navigate="$emit('catalog-navigate', $event)" />
     </div>

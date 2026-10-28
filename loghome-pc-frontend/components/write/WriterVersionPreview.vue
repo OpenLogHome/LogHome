@@ -1,14 +1,14 @@
 <template>
-  <section class="version-preview" :aria-label="label + '内容'">
+  <section class="version-preview" :aria-label="$t('{label}内容', { label })">
     <header class="version-preview-heading">
-      <h4>{{ article.title || "未命名章节" }}</h4>
+      <h4>{{ article.title || $t('未命名章节') }}</h4>
       <div class="version-preview-meta" v-if="!preview.error">
-        <span>{{ preview.textCount.toLocaleString("zh-CN") }} 字</span>
-        <span v-if="preview.imageCount">{{ preview.imageCount }} 张图片</span>
+        <span>{{ $t('{p0} 字', { p0: preview.textCount.toLocaleString($language.state.locale === 'en' ? 'en-US' : 'zh-CN') }) }}</span>
+        <span v-if="preview.imageCount">{{ $t('{count} 张图片', { count: preview.imageCount }) }}</span>
         <span v-if="savedTime">{{ savedTime }}</span>
       </div>
     </header>
-    <div class="version-preview-body" tabindex="0" :aria-label="label + '正文'">
+    <div class="version-preview-body" tabindex="0" :aria-label="$t('{label}正文', { label })">
       <p v-if="preview.error" class="version-preview-message" role="status">
         {{ preview.error }}
       </p>
@@ -24,11 +24,11 @@
             <img
               v-if="safeImage(block.img) && !failedImages[block.img]"
               :src="safeImage(block.img)"
-              :alt="'稿件插图 ' + (index + 1)"
+              :alt="$t('稿件插图 {p0}', { p0: index + 1 })"
               loading="lazy"
               @error="$set(failedImages, block.img, true)"
             />
-            <figcaption v-else>图片暂时无法显示</figcaption>
+            <figcaption v-else>{{ $t('图片暂时无法显示') }}</figcaption>
           </figure>
         </template>
         <template v-if="preview.vocabulary">
@@ -42,7 +42,7 @@
             <template
               v-for="(attribute, index) in preview.vocabulary.attributes"
             >
-              <dt :key="'name-' + index">{{ attribute.name || "属性" }}</dt>
+              <dt :key="'name-' + index">{{ attribute.name || $t('属性') }}</dt>
               <dd :key="'value-' + index" v-text="attribute.content" />
             </template>
           </dl>
@@ -53,18 +53,18 @@
             "
             class="version-relations"
           >
-            <h5>关联词条</h5>
+            <h5>{{ $t('关联词条') }}</h5>
             <p
               v-for="(relation, index) in preview.vocabulary.relations"
               :key="index"
             >
-              {{ relation.name || "词条 " + relation.id
+              {{ relation.name || $t('词条 {id}', { id: relation.id })
               }}<span>{{ relation.relation }}</span>
             </p>
           </div>
         </template>
         <p v-if="empty" class="version-preview-message">
-          这个版本还没有正文内容
+          {{ $t('这个版本还没有正文内容') }}
         </p>
       </template>
     </div>

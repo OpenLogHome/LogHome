@@ -5,9 +5,6 @@ plugins {
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file("key.properties")
-if (!keystorePropertiesFile.exists()) {
-    keystorePropertiesFile = rootProject.file("../loghome-flutter/android/key.properties")
-}
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
@@ -36,16 +33,19 @@ def webviewEntryUrl = ((project.findProperty("loghomeWebviewEntryUrl")
 def escapedWebviewEntryUrl = webviewEntryUrl
         .replace("\\", "\\\\")
         .replace("\"", "\\\"")
-def ttsChaowenModelUrl = ((project.findProperty("loghomeTtsChaowenModelUrl")
-        ?: System.getenv("LOGHOME_TTS_CHAOWEN_MODEL_URL")
-        ?: "https://storage.codesocean.top/api/resource/download/178564613831492") as String).trim()
-def escapedTtsChaowenModelUrl = ttsChaowenModelUrl
-        .replace("\\", "\\\\")
-        .replace("\"", "\\\"")
-def ttsAishell3ModelUrl = ((project.findProperty("loghomeTtsAishell3ModelUrl")
-        ?: System.getenv("LOGHOME_TTS_AISHELL3_MODEL_URL")
-        ?: "https://storage.codesocean.top/api/resource/download/178598531385082") as String).trim()
-def escapedTtsAishell3ModelUrl = ttsAishell3ModelUrl
+def backendEndpoint = (project.findProperty("backend_endpoint") ?: "https://api.loghome.ink")
+        .toString().trim().replaceAll('/+$', '')
+def backendUri
+try {
+    backendUri = new URI(backendEndpoint)
+} catch (URISyntaxException ignored) {
+    throw new GradleException("backend_endpoint must be a valid HTTP or HTTPS backend URL")
+}
+if (!(backendUri.scheme in ["http", "https"]) || !backendUri.host ||
+        backendUri.userInfo || backendUri.query || backendUri.fragment) {
+    throw new GradleException("backend_endpoint must be an HTTP or HTTPS backend URL without credentials, query, or fragment")
+}
+def escapedBackendEndpoint = backendEndpoint
         .replace("\\", "\\\\")
         .replace("\"", "\\\"")
 android {
@@ -59,8 +59,7 @@ android {
         versionCode 321
         versionName "3.2.1"
 
-        buildConfigField "String", "TTS_CHAOWEN_MODEL_URL", "\"${escapedTtsChaowenModelUrl}\""
-        buildConfigField "String", "TTS_AISHELL3_MODEL_URL", "\"${escapedTtsAishell3ModelUrl}\""
+        buildConfigField "String", "BACKEND_ENDPOINT", "\"${escapedBackendEndpoint}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
@@ -125,7 +124,6 @@ dependencies {
     implementation "androidx.media3:media3-session:1.4.1"
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
-    implementation "org.apache.commons:commons-compress:1.28.0"
 
     testImplementation "junit:junit:4.13.2"
     androidTestImplementation "androidx.test.ext:junit:1.2.1"

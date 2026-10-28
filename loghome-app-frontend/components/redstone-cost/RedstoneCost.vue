@@ -2,20 +2,20 @@
 	<view v-if="aiAssistanceEnabled" class="redstone-cost" :class="{ 'redstone-cost--icon-only': iconOnly }">
 		<view class="redstone-cost__trigger" :class="{ 'redstone-cost__trigger--icon-only': iconOnly }" @tap.stop="toggleTooltip">
 			<image class="redstone-cost__icon" src="/static/icons/redstone.svg" mode="aspectFit"></image>
-			<text v-if="!iconOnly">{{ prefix }} {{ cost }} 红石</text>
+			<text v-if="!iconOnly">{{ $t('redstone.cost.amount', { prefix: prefix || $t('redstone.cost.defaultPrefix'), cost }) }}</text>
 		</view>
 		<view v-if="visible" class="redstone-cost__backdrop" @tap.stop="closeTooltip"></view>
 		<view v-if="visible" class="redstone-cost__tooltip" @tap.stop>
 			<view class="redstone-cost__tooltip-head">
-				<text>我的红石</text>
-				<text class="redstone-cost__balance">{{ loading ? '查询中…' : balanceText }}</text>
+				<text>{{ $t('redstone.cost.myRedstone') }}</text>
+				<text class="redstone-cost__balance">{{ loading ? $t('redstone.cost.checking') : balanceText }}</text>
 			</view>
 			<text v-if="!loading && (!hideCostDetail || !enough)" class="redstone-cost__tip">
-				{{ hideCostDetail ? '当前红石余额不足' : (enough ? `本次操作将消耗 ${cost} 红石` : `还差 ${shortfall} 红石`) }}
+				{{ hideCostDetail ? $t('redstone.cost.insufficient') : (enough ? $t('redstone.cost.willConsume', { cost }) : $t('redstone.cost.shortfall', { shortfall })) }}
 			</text>
 			<view v-if="!loading && !enough" class="redstone-cost__actions">
-				<view class="redstone-cost__action redstone-cost__action--primary" @tap.stop="gotoExchange">兑换红石</view>
-				<view class="redstone-cost__action" @tap.stop="gotoMembership">开通通行证</view>
+				<view class="redstone-cost__action redstone-cost__action--primary" @tap.stop="gotoExchange">{{ $t('redstone.cost.exchange') }}</view>
+				<view class="redstone-cost__action" @tap.stop="gotoMembership">{{ $t('redstone.cost.activatePass') }}</view>
 			</view>
 		</view>
 	</view>
@@ -29,7 +29,7 @@ export default {
 	name: 'RedstoneCost',
 	props: {
 		cost: { type: Number, default: 1 },
-		prefix: { type: String, default: '本次消耗' },
+		prefix: { type: String, default: '' },
 		iconOnly: { type: Boolean, default: false },
 		hideCostDetail: { type: Boolean, default: false },
 	},
@@ -38,7 +38,7 @@ export default {
 	},
 	computed: {
 		balanceText() {
-			return this.balance === null ? '暂时无法查询' : `${this.balance} 红石`;
+			return this.balance === null ? this.$t('redstone.cost.unavailable') : this.$t('redstone.cost.balance', { balance: this.balance });
 		},
 		enough() {
 			return this.balance === null || Number(this.balance) >= Number(this.cost || 0);

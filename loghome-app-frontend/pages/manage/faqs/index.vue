@@ -2,15 +2,15 @@
 	<view class="container" v-dark>
 		<view class="content">
 			<view class="filter-bar">
-				<view class="filter-item" :class="{active: filterType === 'all'}" @click="setFilter('all')">全部</view>
-				<view class="filter-item" :class="{active: filterType === 'unsolved'}" @click="setFilter('unsolved')">未解决</view>
-				<view class="filter-item" :class="{active: filterType === 'typical'}" @click="setFilter('typical')">典型问题</view>
+				<view class="filter-item" :class="{active: filterType === 'all'}" @click="setFilter('all')">{{ $t('manage.faqs.all') }}</view>
+				<view class="filter-item" :class="{active: filterType === 'unsolved'}" @click="setFilter('unsolved')">{{ $t('manage.faqs.unsolved') }}</view>
+				<view class="filter-item" :class="{active: filterType === 'typical'}" @click="setFilter('typical')">{{ $t('manage.faqs.typical') }}</view>
 			</view>
 
 			<view class="pagination" v-if="totalPages > 0">
-				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">{{ $t('common.prev') }}</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
-				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">{{ $t('common.next') }}</view>
 			</view>
 
 			<view class="faq-list">
@@ -18,27 +18,27 @@
 					<view class="faq-main">
 						<view class="faq-title">{{faq.faq_title}}</view>
 						<view class="faq-info">
-							<text class="user-name">提问者: {{faq.name}}</text>
+							<text class="user-name">{{ $t('manage.faqs.questioner', { name: faq.name }) }}</text>
 							<text class="time">{{formatTime(faq.create_time)}}</text>
 						</view>
 					</view>
 					<view class="faq-status">
 						<text class="status" :class="{solved: faq.solved === 1, unsolved: faq.solved === 0}">
-							{{faq.solved === 1 ? '已解决' : '未解决'}}
+							{{faq.solved === 1 ? $t('manage.faqs.solved') : $t('manage.faqs.unsolved')}}
 						</text>
-						<text class="typical" v-if="faq.is_typical === 1">典型</text>
+						<text class="typical" v-if="faq.is_typical === 1">{{ $t('manage.faqs.typicalTag') }}</text>
 					</view>
 				</view>
 			</view>
 
 			<view class="pagination" v-if="totalPages > 0">
-				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">{{ $t('common.prev') }}</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
-				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">{{ $t('common.next') }}</view>
 			</view>
 
 			<view class="no-data" v-if="faqs.length === 0">
-				暂无FAQ数据
+				{{ $t('manage.faqs.empty') }}
 			</view>
 		</view>
 	</view>
@@ -94,7 +94,7 @@ export default {
 				this.typicalFaqs = typicalRes.data[0].count
 			} catch (e) {
 				uni.showToast({
-					title: '加载统计数据失败',
+					title: this.$t('manage.faqs.countsFailed'),
 					icon: 'none'
 				})
 			}
@@ -103,7 +103,7 @@ export default {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
 				uni.showLoading({
-					title: '努力加载中'
+					title: this.$t('common.loading')
 				})
 
 				// 获取总数
@@ -148,7 +148,7 @@ export default {
 			} catch (e) {
 				uni.hideLoading()
 				uni.showToast({
-					title: '加载失败',
+					title: this.$t('common.loadFailed'),
 					icon: 'none'
 				})
 			}

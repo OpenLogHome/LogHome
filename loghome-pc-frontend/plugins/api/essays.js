@@ -283,3 +283,4 @@ const essays = {
 };
 
 export default essays;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

@@ -1,7 +1,7 @@
 <template>
 	<view class="outer" :style="{'height': height}">
 		<img src="../static/loggirl-404-empty-chest.png" alt=""/>
-		<p class="text">{{msg}}</p>
+		<p class="text">{{msg || $t('common.emptyState')}}</p>
 	</view>
 </template>
 
@@ -9,7 +9,7 @@
 	export default{
 		props:{
 			msg:{
-				default:"空空如也"
+				default:""
 			},
 			height: {
 				default: 'calc(100vh - 44px)'

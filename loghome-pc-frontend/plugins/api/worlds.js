@@ -100,3 +100,4 @@ const worlds = {
 };
 
 export default worlds;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

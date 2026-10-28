@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.os.SystemClock
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
@@ -18,6 +20,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import top.codesocean.loghome.android.SplashActivity
+import java.io.File
 import java.util.concurrent.CopyOnWriteArraySet
 
 class AudioPlaybackService : MediaSessionService() {
@@ -41,16 +44,11 @@ class AudioPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
 
-        val systemTtsEngine = SystemTtsEngine(this)
-        val modelManager = TtsModelManager(this)
-        val sherpaTtsEngine = SherpaOnnxTtsEngine(modelManager)
-        val edgeTtsEngine = EdgeOnlineTtsEngine()
-        ttsEngine = TtsEngineRouter(
-            systemTtsEngine = systemTtsEngine,
-            sherpaTtsEngine = sherpaTtsEngine,
-            edgeTtsEngine = edgeTtsEngine,
-            modelManager = modelManager,
-        )
+        ttsEngine = TtsEngineRouter()
+        serviceScope.launch(Dispatchers.IO) {
+            File(filesDir, "tts_models").deleteRecursively()
+            File(cacheDir, "audio_cache").deleteRecursively()
+        }
         player = ExoPlayer.Builder(this)
             .setMediaSourceFactory(
                 DefaultMediaSourceFactory(
@@ -59,6 +57,10 @@ class AudioPlaybackService : MediaSessionService() {
                         ttsEngine = ttsEngine,
                     ),
                 ),
+            )
+            .setAudioAttributes(
+                AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_SPEECH).build(),
+                true,
             )
             .setHandleAudioBecomingNoisy(true)
             .build()
@@ -119,6 +121,22 @@ class AudioPlaybackService : MediaSessionService() {
 
     fun isCurrentPlaylist(articleIds: List<String>, playlistKey: String = ""): Boolean =
         audioEngine.isCurrentPlaylist(articleIds, playlistKey)
+
+    suspend fun openPlaylist(
+        articleIds: List<String>,
+        startArticleId: String?,
+        inlineArticles: List<Article> = emptyList(),
+        playlistKey: String = "",
+        startParagraphId: String? = null,
+        forceSeek: Boolean = false,
+    ) {
+        audioEngine.openPlaylist(articleIds, startArticleId, inlineArticles, playlistKey, startParagraphId, forceSeek)
+        publishPlaybackState()
+    }
+
+    fun setBookMetadata(title: String, coverUrl: String) {
+        audioEngine.setBookMetadata(title, coverUrl)
+    }
 
     fun play() {
         audioEngine.play()
@@ -193,11 +211,25 @@ class AudioPlaybackService : MediaSessionService() {
         return ttsEngine.getAvailableVoicesJson()
     }
 
+    suspend fun configureTts(loginToken: String): Boolean {
+        if (ttsEngine.matchesLoginToken(loginToken)) return false
+        val resumePlayback = player.playWhenReady
+        audioEngine.pause()
+        return try {
+            val identityChanged = ttsEngine.configure(loginToken)
+            if (identityChanged) audioEngine.resetPlaylist()
+            else if (resumePlayback) audioEngine.play()
+            identityChanged
+        } catch (error: Exception) {
+            audioEngine.resetPlaylist()
+            throw error
+        }
+    }
+
     suspend fun setVoice(
         voice: String,
-        onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit = { _, _ -> },
     ) {
-        ttsEngine.prepareVoice(voice, onProgress)
+        ttsEngine.prepareVoice(voice)
         audioEngine.setVoice(voice)
         publishPlaybackState()
     }

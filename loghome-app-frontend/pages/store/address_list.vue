@@ -7,22 +7,22 @@
 			</view> -->
 		</view>
 		<view v-if="!isLoggedIn" class="page-state">
-			<text>登录后才能管理收货地址</text>
-			<view class="state-action" @tap="goLogin">去登录</view>
+			<text>{{ $t('store.address.loginRequired') }}</text>
+			<view class="state-action" @tap="goLogin">{{ $t('store.common.goLogin') }}</view>
 		</view>
 
 		<template v-else>
 			<view class="select-banner" v-if="selectMode">
-				<text>选择一个收货地址用于当前订单</text>
+				<text>{{ $t('store.address.selectBanner') }}</text>
 			</view>
 
 			<view v-if="loading && addresses.length === 0" class="page-state">
-				<text>正在加载地址...</text>
+				<text>{{ $t('store.address.loading') }}</text>
 			</view>
 
 			<view v-else-if="loadError" class="page-state">
 				<text>{{ loadError }}</text>
-				<view class="state-action" @tap="fetchAddresses">重新加载</view>
+				<view class="state-action" @tap="fetchAddresses">{{ $t('store.common.reload') }}</view>
 			</view>
 
 			<template v-else>
@@ -35,32 +35,32 @@
 					<view class="row">
 						<view class="name">{{ item.receiver_name }}</view>
 						<view class="phone">{{ item.receiver_phone }}</view>
-						<view class="default-tag" v-if="item.is_default">默认</view>
+						<view class="default-tag" v-if="item.is_default">{{ $t('store.address.defaultTag') }}</view>
 					</view>
 					<view class="detail">{{ formatAddress(item) }}</view>
 					<view class="actions">
 						<view class="action" @tap.stop="setDefault(item)" v-if="!item.is_default">
-							{{ processingAction === `default-${item.address_id}` ? '设置中...' : '设为默认' }}
+							{{ processingAction === `default-${item.address_id}` ? $t('store.address.settingDefault') : $t('store.address.setDefault') }}
 						</view>
 						<view class="action" @tap.stop="editAddress(item)">
 							<store-icon name="pen" :size="28" />
-							编辑
+							{{ $t('store.common.edit') }}
 						</view>
 						<view class="action danger" @tap.stop="deleteAddress(item)">
-							{{ processingAction === `delete-${item.address_id}` ? '删除中...' : '删除' }}
+							{{ processingAction === `delete-${item.address_id}` ? $t('store.common.deleting') : $t('store.common.delete') }}
 						</view>
 					</view>
 				</view>
 
 				<view class="empty" v-if="!loading && addresses.length === 0">
-					<text>{{ selectMode ? '先新增一个地址再完成下单' : '暂无收货地址' }}</text>
+					<text>{{ selectMode ? $t('store.address.emptySelect') : $t('store.address.empty') }}</text>
 				</view>
 			</template>
 
 			<view class="bottom-bar">
 				<button class="add-btn" @tap="addAddress">
 					<store-icon name="plus" :size="34" />
-					{{ selectMode ? '新增地址并继续' : '新增收货地址' }}
+					{{ selectMode ? $t('store.address.addAndContinue') : $t('store.address.addAddress') }}
 				</button>
 			</view>
 		</template>
@@ -140,11 +140,11 @@ export default {
 						this.addresses = res.data.data || []
 						this.loadError = ''
 					} else {
-						this.loadError = res.data.msg || '地址加载失败，请稍后重试'
+						this.loadError = res.data.msg || this.$t('store.address.loadFailed')
 					}
 				})
 				.catch((error) => {
-					this.loadError = error.response?.data?.msg || '地址加载失败，请稍后重试'
+					this.loadError = error.response?.data?.msg || this.$t('store.address.loadFailed')
 				})
 				.finally(() => {
 					this.loading = false
@@ -178,14 +178,14 @@ export default {
 				)
 				.then((res) => {
 					if (res.data && res.data.code === 200) {
-						uni.showToast({ title: '已设为默认地址', icon: 'success' })
+						uni.showToast({ title: this.$t('store.address.setDefaultSuccess'), icon: 'success' })
 						this.fetchAddresses()
 					} else {
-						uni.showToast({ title: res.data.msg || '设置失败', icon: 'none' })
+						uni.showToast({ title: res.data.msg || this.$t('store.address.setDefaultFailed'), icon: 'none' })
 					}
 				})
 				.catch((error) => {
-					uni.showToast({ title: error.response?.data?.msg || '设置失败', icon: 'none' })
+					uni.showToast({ title: error.response?.data?.msg || this.$t('store.address.setDefaultFailed'), icon: 'none' })
 				})
 				.finally(() => {
 					this.processingAction = ''
@@ -193,8 +193,8 @@ export default {
 		},
 		deleteAddress(item) {
 			uni.showModal({
-				title: '确认删除',
-				content: '确定删除该地址吗？',
+				title: this.$t('store.address.confirmDeleteTitle'),
+				content: this.$t('store.address.confirmDeleteContent'),
 				success: (result) => {
 					if (!result.confirm) return
 					const tk = this.getToken()
@@ -209,14 +209,14 @@ export default {
 						})
 						.then((res) => {
 							if (res.data && res.data.code === 200) {
-								uni.showToast({ title: '地址已删除', icon: 'success' })
+								uni.showToast({ title: this.$t('store.address.deleteSuccess'), icon: 'success' })
 								this.fetchAddresses()
 							} else {
-								uni.showToast({ title: res.data.msg || '删除失败', icon: 'none' })
+								uni.showToast({ title: res.data.msg || this.$t('store.common.deleteFailed'), icon: 'none' })
 							}
 						})
 						.catch((error) => {
-							uni.showToast({ title: error.response?.data?.msg || '删除失败', icon: 'none' })
+							uni.showToast({ title: error.response?.data?.msg || this.$t('store.common.deleteFailed'), icon: 'none' })
 						})
 						.finally(() => {
 							this.processingAction = ''

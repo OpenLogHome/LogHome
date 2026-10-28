@@ -1,5 +1,6 @@
 import { readingToken } from '~/plugins/api/reading'
 import { readingAccountKey } from './reading-history'
+import { localizedFetch as fetch } from './api-fetch'
 
 export const AI_PREFERENCE_KEY = 'LogHomeAiAssistanceDisabled'
 export const AI_PREFERENCE_EVENT = 'loghome-ai-preference'

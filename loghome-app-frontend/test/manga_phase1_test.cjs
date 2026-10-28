@@ -18,6 +18,13 @@ const deferred = () => {
 const pages = [{ id: 1, url: 'https://test.invalid/1.png', width: 800, height: 1200 }, { id: 2, url: 'https://test.invalid/2.png', width: 800, height: 1200 }];
 const article = { article_id: 10, novel_id: 3, title: '第一话', article_type: 'mangaStrip', is_draft: 0, content: JSON.stringify({ pages }), update_time: new Date('2026-10-04T00:00:00Z') };
 const rights = { access_role: 'owner', can_view_articles: true, can_edit_draft: true, can_publish_article: true, can_add_article: true, can_delete_article: true };
+const zhMessages = Object.assign({}, ...fs.readdirSync(path.resolve(__dirname, '../i18n/messages'))
+	.filter((name) => name === 'zh-CN.json' || name.startsWith('zh-CN.'))
+	.map((name) => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../i18n/messages', name), 'utf8'))));
+const translate = (key, params = {}) => {
+	const value = key.split('.').reduce((current, part) => current && current[part], zhMessages) || key;
+	return String(value).replace(/\{(\w+)\}/g, (_, name) => params[name] == null ? `{${name}}` : params[name]);
+};
 
 test('all changed Vue templates compile with the project Vue compiler', () => {
 	const sfc = require('vue/compiler-sfc');
@@ -40,7 +47,7 @@ function component(file, axios = {}, t) {
 	const sandbox = { module: {}, MangaZoomImage: {}, MangaPageSorter: {}, MangaIcon: {}, MangaA11y: {}, MangaPortal: {}, MangaDanmuLayer: {}, ReportNovelPopup: {}, MangaCommentItem: {}, MangaCommentComposer: {}, axios, uni, window, getCurrentPages: () => [{}], setTimeout, clearTimeout, console: quiet };
 	vm.runInNewContext(script, sandbox, { filename: file });
 	const options = sandbox.module.exports;
-	const instance = new Vue({ ...options, beforeCreate() { this.$store = { state: { user_id: 7 } }; this.$baseUrl = ''; } });
+	const instance = new Vue({ ...options, beforeCreate() { this.$store = { state: { user_id: 7 } }; this.$baseUrl = ''; this.$t = translate; } });
 	if (t) t.after(() => { clearTimeout(instance.draftTimer); clearTimeout(instance.progressTimer); instance.$destroy(); });
 	return { instance, options, storage, dialogs, navigations, window };
 }
@@ -54,7 +61,7 @@ function route(file, method, name, globals = {}) {
 	const next = source.indexOf('\nrouter.', start + marker.length);
 	let handler;
 	const router = { [method]: (...args) => { handler = args.at(-1); } };
-	vm.runInNewContext(source.slice(start, next < 0 ? undefined : next), { router, auth() {}, console: quiet, ensureRankBadgeSchema:async()=>{}, recordFirstPublication:async()=>{}, withTransaction:async work=>work(globals.query), ...visibility, ...revisions, ...globals });
+	vm.runInNewContext(source.slice(start, next < 0 ? undefined : next), { router, auth() {}, console: quiet, ensureRankBadgeSchema:async()=>{}, recordFirstPublication:async()=>{}, registerReaderExcerpts() {}, withTransaction:async work=>work(globals.query), ...visibility, ...revisions, ...globals });
 	return handler;
 }
 function response() {

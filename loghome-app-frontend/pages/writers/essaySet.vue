@@ -29,7 +29,7 @@
 				<view class="li high" @click="gotoChangeNovelTags">
 					<view class="text">{{ $t('writer.essay.set.tagsLabel') }}
 						<div class="tag" v-for="(item,index) in tags" :key="item.tag_id" :class="{'activity':item.is_activity_tag}">
-							{{item.tag_name}}
+							{{ displayTagName(item.tag_name) }}
 						</div>
 						<div class="nontag" v-show="tags.length == 0">{{ $t('writer.essay.set.none') }}</div>
 					</view>
@@ -55,6 +55,7 @@
 <script>
 	import axios from 'axios'
 	import darkModeMixin from '@/mixins/dark-mode.js'
+	import { getOfficialTagLabel } from '@/common/official-tag-labels.js'
 	export default {
 		data() {
 			return {
@@ -90,6 +91,9 @@
 			this.refreshPage();
 		},
 		methods: {
+			displayTagName(tagName) {
+				return getOfficialTagLabel(tagName, key => this.$t(key));
+			},
 			getTokenInfo() {
 				let token = JSON.parse(window.localStorage.getItem('token'));
 				return token || null;

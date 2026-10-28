@@ -1,13 +1,13 @@
 <template>
 	<view class="container" v-dark>
-		<zetank-backBar title="举报处理"></zetank-backBar>
+		<zetank-backBar :title="$t('manage.sections.reports')"></zetank-backBar>
 
 		<view class="filter-bar">
 			<view class="filter-tabs">
-				<view class="tab" :class="{ active: !reviewMode && status === 0 }" @click="switchStatus(0)">待处理</view>
-				<view class="tab" :class="{ active: !reviewMode && status === 1 }" @click="switchStatus(1)">已处理</view>
-				<view class="tab" :class="{ active: !reviewMode && status === 2 }" @click="switchStatus(2)">已忽略</view>
-				<view class="tab review" :class="{ active: reviewMode }" @click="switchReviewMode">重新审核</view>
+				<view class="tab" :class="{ active: !reviewMode && status === 0 }" @click="switchStatus(0)">{{ $t('manage.reports.pending') }}</view>
+				<view class="tab" :class="{ active: !reviewMode && status === 1 }" @click="switchStatus(1)">{{ $t('manage.reports.handled') }}</view>
+				<view class="tab" :class="{ active: !reviewMode && status === 2 }" @click="switchStatus(2)">{{ $t('manage.reports.ignored') }}</view>
+				<view class="tab review" :class="{ active: reviewMode }" @click="switchReviewMode">{{ $t('manage.reports.reviewAgain') }}</view>
 			</view>
 			<picker v-if="!reviewMode" :range="typeOptions" range-key="label" @change="onTypeChange">
 				<view class="type-picker">{{ currentTypeLabel }} ▾</view>
@@ -18,69 +18,69 @@
 			<view class="report-item" v-for="item in reports" :key="item.report_id">
 				<view class="report-head">
 					<text class="type-tag" :class="'type-' + item.target_type">{{ typeLabel(item.target_type) }}</text>
-					<text class="reporter">举报人：{{ item.reporter_name || '匿名' }}</text>
+					<text class="reporter">{{ $t('manage.reports.reporter', { name: item.reporter_name || $t('manage.reports.anonymous') }) }}</text>
 					<text class="time">{{ formatTime(item.create_time) }}</text>
 				</view>
-				<view class="reason">原因：{{ item.reason }}</view>
+				<view class="reason">{{ $t('manage.reports.reason', { reason: item.reason }) }}</view>
 				<view class="target" v-if="item.target_info">
 					<text class="target-label">{{ targetLabel(item.target_type) }}：</text>
 					<text class="target-content">{{ targetSummary(item) }}</text>
-					<text class="banned-tag" v-if="isWorkType(item.target_type) && Number(item.target_info.is_banned) === 1">已下架</text>
+					<text class="banned-tag" v-if="isWorkType(item.target_type) && Number(item.target_info.is_banned) === 1">{{ $t('manage.reports.removed') }}</text>
 				</view>
 				<view class="target" v-else>
 					<text class="target-label">{{ targetLabel(item.target_type) }}：</text>
-					<text class="target-content target-missing">内容不存在或已删除</text>
+					<text class="target-content target-missing">{{ $t('manage.reports.missing') }}</text>
 				</view>
 				<view class="review-info" v-if="item.status != 0">
-					处理人：{{ item.reviewer_name || '-' }} · {{ formatTime(item.review_time) }}
-					<text v-if="item.review_comment"> · 备注：{{ item.review_comment }}</text>
+					{{ $t('manage.reports.reviewedBy', { name: item.reviewer_name || '-', time: formatTime(item.review_time) }) }}
+					<text v-if="item.review_comment"> · {{ $t('manage.reports.note', { note: item.review_comment }) }}</text>
 				</view>
 				<view class="report-actions" v-if="item.status == 0">
-					<view class="action-btn ignore" @click="handleReport(item, 'ignore')">忽略</view>
+					<view class="action-btn ignore" @click="handleReport(item, 'ignore')">{{ $t('manage.reports.ignore') }}</view>
 					<view class="action-btn confirm" @click="handleReport(item, 'handle')">{{ handleActionLabel(item.target_type) }}</view>
 				</view>
 			</view>
 		</view>
 
-		<view class="no-data" v-if="!reviewMode && reports.length === 0">暂无举报记录</view>
+		<view class="no-data" v-if="!reviewMode && reports.length === 0">{{ $t('manage.reports.empty') }}</view>
 
 		<view class="pagination" v-if="!reviewMode && totalPages > 1">
-			<view class="page-btn" :class="{ disabled: currentPage === 1 }" @click="prevPage">上一页</view>
+			<view class="page-btn" :class="{ disabled: currentPage === 1 }" @click="prevPage">{{ $t('common.prev') }}</view>
 			<view class="page-num">{{ currentPage }} / {{ totalPages }}</view>
-			<view class="page-btn" :class="{ disabled: currentPage === totalPages }" @click="nextPage">下一页</view>
+			<view class="page-btn" :class="{ disabled: currentPage === totalPages }" @click="nextPage">{{ $t('common.next') }}</view>
 		</view>
 
 		<view class="report-list" v-if="reviewMode">
 			<view class="report-item" v-for="item in resubmits" :key="item.novel_id">
 				<view class="report-head">
-					<text class="type-tag">{{ item.novel_type === 'manga' ? '漫画' : '小说' }}</text>
-					<text class="reporter">作者：{{ item.author_name || '未知' }}</text>
+					<text class="type-tag">{{ item.novel_type === 'manga' ? $t('manage.reports.manga') : $t('manage.reports.novel') }}</text>
+					<text class="reporter">{{ $t('manage.reports.author', { name: item.author_name || $t('manage.reports.unknown') }) }}</text>
 					<text class="time">{{ formatTime(item.update_time) }}</text>
 				</view>
-				<view class="reason">《{{ item.name }}》申请恢复上架</view>
+				<view class="reason">{{ $t('manage.reports.appeal', { name: item.name }) }}</view>
 				<view class="target" v-if="item.ban_info">
-					<text class="target-label">当初下架原因：</text>
-					<text class="target-content">{{ item.ban_info.reason || '违反社区规则' }}{{ item.ban_info.review_comment ? '（' + item.ban_info.review_comment + '）' : '' }}</text>
+					<text class="target-label">{{ $t('manage.reports.originalReason') }}</text>
+					<text class="target-content">{{ item.ban_info.reason || $t('manage.reports.ruleViolation') }}{{ item.ban_info.review_comment ? ' (' + item.ban_info.review_comment + ')' : '' }}</text>
 				</view>
 				<view class="report-actions">
-					<view class="action-btn ignore" @click="rejectResubmit(item)">保持下架</view>
-					<view class="action-btn approve" @click="approveResubmit(item)">恢复上架</view>
+					<view class="action-btn ignore" @click="rejectResubmit(item)">{{ $t('manage.reports.keepRemoved') }}</view>
+					<view class="action-btn approve" @click="approveResubmit(item)">{{ $t('manage.reports.restore') }}</view>
 				</view>
 			</view>
 		</view>
 
-		<view class="no-data" v-if="reviewMode && resubmits.length === 0">暂无重新审核申请</view>
+		<view class="no-data" v-if="reviewMode && resubmits.length === 0">{{ $t('manage.reports.noAppeals') }}</view>
 
 		<view class="modal" v-if="rejectModal.show">
 			<view class="modal-mask" @click="closeRejectModal"></view>
 			<view class="modal-content">
-				<view class="modal-title">保持下架</view>
-				<view class="modal-text">驳回《{{ rejectModal.item.name }}》的重新上架申请，作品将保持下架状态。</view>
-				<textarea class="modal-input" v-model="rejectModal.reason" placeholder="驳回原因（将通知作者）"
+				<view class="modal-title">{{ $t('manage.reports.rejectTitle') }}</view>
+				<view class="modal-text">{{ $t('manage.reports.rejectText', { name: rejectModal.item.name }) }}</view>
+				<textarea class="modal-input" v-model="rejectModal.reason" :placeholder="$t('manage.reports.rejectPlaceholder')"
 					maxlength="200" />
 				<view class="modal-actions">
-					<view class="action-btn ignore" @click="closeRejectModal">取消</view>
-					<view class="action-btn confirm" @click="confirmReject">确认驳回</view>
+					<view class="action-btn ignore" @click="closeRejectModal">{{ $t('common.cancel') }}</view>
+					<view class="action-btn confirm" @click="confirmReject">{{ $t('manage.reports.reject') }}</view>
 				</view>
 			</view>
 		</view>
@@ -91,10 +91,10 @@
 				<view class="modal-title">{{ handleModal.title }}</view>
 				<view class="modal-text">{{ handleModal.text }}</view>
 				<textarea v-if="handleModal.action === 'handle'" class="modal-input" v-model="handleModal.reason"
-					placeholder="处理备注（选填）" maxlength="200" />
+					:placeholder="$t('manage.reports.reviewNote')" maxlength="200" />
 				<view class="modal-actions">
-					<view class="action-btn ignore" @click="closeHandleModal">取消</view>
-					<view class="action-btn confirm" @click="confirmHandle">{{ handleModal.action === 'ignore' ? '忽略' : '确认' }}</view>
+					<view class="action-btn ignore" @click="closeHandleModal">{{ $t('common.cancel') }}</view>
+					<view class="action-btn confirm" @click="confirmHandle">{{ handleModal.action === 'ignore' ? $t('manage.reports.ignore') : $t('manage.reports.confirm') }}</view>
 				</view>
 			</view>
 		</view>
@@ -103,14 +103,6 @@
 
 <script>
 import axios from 'axios'
-
-const TYPE_LABELS = {
-	post: '帖子',
-	comment: '评论',
-	user: '用户',
-	novel: '小说',
-	manga: '漫画'
-}
 
 export default {
 	data() {
@@ -128,14 +120,6 @@ export default {
 				item: null,
 				reason: ''
 			},
-			typeOptions: [
-				{ label: '全部类型', value: '' },
-				{ label: '帖子', value: 'post' },
-				{ label: '评论', value: 'comment' },
-				{ label: '用户', value: 'user' },
-				{ label: '小说', value: 'novel' },
-				{ label: '漫画', value: 'manga' }
-			],
 			handleModal: {
 				show: false,
 				action: 'ignore',
@@ -147,16 +131,26 @@ export default {
 		}
 	},
 	computed: {
+		typeOptions() {
+			return [
+				{ label: this.$t('manage.reports.allTypes'), value: '' },
+				{ label: this.$t('manage.reports.post'), value: 'post' },
+				{ label: this.$t('manage.reports.comment'), value: 'comment' },
+				{ label: this.$t('manage.reports.user'), value: 'user' },
+				{ label: this.$t('manage.reports.novel'), value: 'novel' },
+				{ label: this.$t('manage.reports.manga'), value: 'manga' }
+			]
+		},
 		currentTypeLabel() {
 			const option = this.typeOptions.find((item) => item.value === this.targetType)
-			return option ? option.label : '全部类型'
+			return option ? option.label : this.$t('manage.reports.allTypes')
 		}
 	},
 	onShow() {
 		let tk = JSON.parse(window.localStorage.getItem('token'));
 		if (tk) tk = tk.tk;
 		if (!tk) {
-			uni.showToast({ title: '请先登录', icon: 'none' });
+			uni.showToast({ title: this.$t('manage.access.signInRequired'), icon: 'none' });
 			setTimeout(() => {
 				uni.navigateTo({ url: '../../users/login' });
 			}, 1500);
@@ -165,7 +159,7 @@ export default {
 
 		let userInfo = JSON.parse(window.localStorage.getItem('LogHomeUserInfo'));
 		if (!userInfo || userInfo.is_admin != 1) {
-			uni.showToast({ title: '无权限访问', icon: 'none' });
+			uni.showToast({ title: this.$t('manage.access.forbidden'), icon: 'none' });
 			setTimeout(() => {
 				uni.navigateBack();
 			}, 1500);
@@ -196,7 +190,7 @@ export default {
 		},
 		async loadReports() {
 			try {
-				uni.showLoading({ title: '努力加载中' })
+				uni.showLoading({ title: this.$t('common.loading') })
 				const res = await axios.get(this.$baseUrl + '/manage/community/reports/list', {
 					params: {
 						status: this.status,
@@ -211,7 +205,7 @@ export default {
 				uni.hideLoading()
 			} catch (e) {
 				uni.hideLoading()
-				uni.showToast({ title: '加载失败', icon: 'none' })
+				uni.showToast({ title: this.$t('common.loadFailed'), icon: 'none' })
 			}
 		},
 		prevPage() {
@@ -226,7 +220,7 @@ export default {
 		},
 		async loadResubmits() {
 			try {
-				uni.showLoading({ title: '努力加载中' })
+				uni.showLoading({ title: this.$t('common.loading') })
 				const res = await axios.get(this.$baseUrl + '/manage/community/resubmits/list', {
 					headers: this.authHeaders()
 				})
@@ -234,13 +228,13 @@ export default {
 				uni.hideLoading()
 			} catch (e) {
 				uni.hideLoading()
-				uni.showToast({ title: '加载失败', icon: 'none' })
+				uni.showToast({ title: this.$t('common.loadFailed'), icon: 'none' })
 			}
 		},
 		approveResubmit(item) {
 			uni.showModal({
-				title: '恢复上架',
-				content: `确定要让《${item.name}》恢复上架吗？`,
+				title: this.$t('manage.reports.restoreTitle'),
+				content: this.$t('manage.reports.restoreConfirm', { name: item.name }),
 				success: (res) => {
 					if (!res.confirm) return
 					this.submitResubmit(item, 'approve', '')
@@ -260,47 +254,47 @@ export default {
 		},
 		async submitResubmit(item, action, reason) {
 			try {
-				uni.showLoading({ title: '提交中' })
+				uni.showLoading({ title: this.$t('common.processing') })
 				await axios.post(this.$baseUrl + '/manage/community/resubmits/' + action, {
 					novel_id: item.novel_id,
 					reason
 				}, { headers: this.authHeaders() })
 				uni.hideLoading()
-				uni.showToast({ title: '操作成功', icon: 'none' })
+				uni.showToast({ title: this.$t('manage.reports.actionSuccess'), icon: 'none' })
 				this.loadResubmits()
 			} catch (e) {
 				uni.hideLoading()
-				const msg = (e.response && e.response.data && e.response.data.msg) || '操作失败'
-				uni.showToast({ title: msg, icon: 'none' })
+				uni.showToast({ title: this.$t('common.operationFailed'), icon: 'none' })
 			}
 		},
 		typeLabel(type) {
-			return TYPE_LABELS[type] || type
+			const keys = { post: 'post', comment: 'comment', user: 'user', novel: 'novel', manga: 'manga' }
+			return keys[type] ? this.$t('manage.reports.' + keys[type]) : type
 		},
 		targetLabel(type) {
-			if (type === 'post') return '被举报帖子'
-			if (type === 'comment') return '被举报评论'
-			if (type === 'user') return '被举报用户'
-			return '被举报作品'
+			if (type === 'post') return this.$t('manage.reports.reportedPost')
+			if (type === 'comment') return this.$t('manage.reports.reportedComment')
+			if (type === 'user') return this.$t('manage.reports.reportedUser')
+			return this.$t('manage.reports.reportedWork')
 		},
 		isWorkType(type) {
 			return type === 'novel' || type === 'manga'
 		},
 		targetSummary(item) {
 			const info = item.target_info || {}
-			if (item.target_type === 'post') return info.title || '(无标题)'
+			if (item.target_type === 'post') return info.title || this.$t('manage.reports.untitled')
 			if (item.target_type === 'comment') return info.content || ''
 			if (this.isWorkType(item.target_type)) {
-				const name = info.name || '(未命名作品)'
-				return info.author_name ? `${name}（作者：${info.author_name}）` : name
+				const name = info.name || this.$t('manage.reports.unnamedWork')
+				return info.author_name ? `${name} (${this.$t('manage.common.author', { name: info.author_name })})` : name
 			}
 			return `ID ${item.target_id}`
 		},
 		handleActionLabel(type) {
-			if (type === 'post') return '删除帖子'
-			if (type === 'comment') return '删除评论'
-			if (this.isWorkType(type)) return '下架作品'
-			return '确认处理'
+			if (type === 'post') return this.$t('manage.reports.deletePost')
+			if (type === 'comment') return this.$t('manage.reports.deleteComment')
+			if (this.isWorkType(type)) return this.$t('manage.reports.removeWork')
+			return this.$t('manage.reports.handleReport')
 		},
 		formatTime(value) {
 			if (!value) return ''
@@ -308,13 +302,13 @@ export default {
 		},
 		handleReport(item, action) {
 			const texts = {
-				ignore: { title: '忽略举报', text: '忽略后该举报将被关闭，不会对目标内容做任何处理。' },
+				ignore: { title: this.$t('manage.reports.ignoreTitle'), text: this.$t('manage.reports.ignoreText') },
 				handle: {
-					post: { title: '删除帖子', text: '确定要删除被举报的帖子吗？删除后读者将无法再看到它。' },
-					comment: { title: '删除评论', text: '确定要删除被举报的评论吗？删除后读者将无法再看到它。' },
-					novel: { title: '下架作品', text: '确定要下架被举报的作品吗？下架后读者端将不再展示该作品。' },
-					manga: { title: '下架作品', text: '确定要下架被举报的漫画吗？下架后读者端将不再展示该漫画。' },
-					user: { title: '确认处理', text: '确定要将这条举报标记为已处理吗？' }
+					post: { title: this.$t('manage.reports.deletePost'), text: this.$t('manage.reports.deletePostText') },
+					comment: { title: this.$t('manage.reports.deleteComment'), text: this.$t('manage.reports.deleteCommentText') },
+					novel: { title: this.$t('manage.reports.removeWork'), text: this.$t('manage.reports.removeNovelText') },
+					manga: { title: this.$t('manage.reports.removeWork'), text: this.$t('manage.reports.removeMangaText') },
+					user: { title: this.$t('manage.reports.handleReport'), text: this.$t('manage.reports.handleUserText') }
 				}
 			}
 			const info = action === 'ignore' ? texts.ignore : texts.handle[item.target_type] || texts.handle.user
@@ -337,18 +331,18 @@ export default {
 		},
 		async submitHandle(item, action, reason) {
 			try {
-				uni.showLoading({ title: '提交中' })
+				uni.showLoading({ title: this.$t('common.processing') })
 				await axios.post(this.$baseUrl + '/manage/community/reports/handle', {
 					report_id: item.report_id,
 					action,
 					reason
 				}, { headers: this.authHeaders() })
 				uni.hideLoading()
-				uni.showToast({ title: '操作成功', icon: 'none' })
+				uni.showToast({ title: this.$t('manage.reports.actionSuccess'), icon: 'none' })
 				this.loadReports()
 			} catch (e) {
 				uni.hideLoading()
-				uni.showToast({ title: '操作失败', icon: 'none' })
+				uni.showToast({ title: this.$t('common.operationFailed'), icon: 'none' })
 			}
 		}
 	}
@@ -365,6 +359,7 @@ export default {
 
 .filter-bar {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	margin-top: 20rpx;
@@ -373,14 +368,18 @@ export default {
 
 .filter-tabs {
 	display: flex;
-	gap: 16rpx;
+	width: 100%;
+	gap: 8rpx;
 
 	.tab {
-		padding: 12rpx 28rpx;
+		flex: 1;
+		padding: 12rpx 10rpx;
 		border-radius: 100rpx;
 		background: var(--card-background);
 		color: var(--text-color-regular);
-		font-size: 26rpx;
+		font-size: 24rpx;
+		text-align: center;
+		white-space: nowrap;
 
 		&.active {
 			background: #8bc34a;
@@ -395,6 +394,7 @@ export default {
 }
 
 .type-picker {
+	margin-top: 16rpx;
 	padding: 12rpx 24rpx;
 	border-radius: 100rpx;
 	background: var(--card-background);

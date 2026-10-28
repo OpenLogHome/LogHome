@@ -806,3 +806,4 @@ const community = {
 };
 
 export default community;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

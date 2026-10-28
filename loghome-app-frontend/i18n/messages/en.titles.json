@@ -87,6 +87,7 @@
 				"novelCollaborators": "Collaborators",
 				"changeNovelTags": "Edit Tags",
 				"novel_statistics": "Analytics",
+				"worldVocabularyEditor": "World Entry",
 				"articleFeedbacks": "Report Issue",
 				"scheduledTasks": "Scheduled Posts",
 				"workPublish": "Publish",
@@ -144,13 +145,18 @@
 			"manage": {
 				"index": "Admin",
 				"audit": {
-					"index": "Review Articles"
+					"index": "Review Articles",
+					"detail": "Review Submission"
+				},
+				"faqs": {
+					"detail": "FAQ Details"
 				},
 				"library": {
 					"roulous": "Manage Carousel"
 				},
 				"posts": {
-					"index": "Manage Posts"
+					"index": "Manage Posts",
+					"detail": "Post Details"
 				},
 				"users": {
 					"index": "Manage Users"

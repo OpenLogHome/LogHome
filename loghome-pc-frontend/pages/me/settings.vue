@@ -43,17 +43,17 @@
       </div>
 
       <section class="settings-card settings-language">
-        <h2 class="section-title">{{ $t("语言 / Language") }}</h2>
+        <h2 class="section-title">{{ $t("common.language.title") }}</h2>
         <el-select
-          :aria-label="$t('语言 / Language')"
+          :aria-label="$t('common.language.title')"
           style="width: min(100%, 280px)"
           :value="$language.state.preference"
           :disabled="$language.state.saving"
           @change="$language.set"
         >
-          <el-option :label="$t('跟随系统')" value="follow-system" />
-          <el-option :label="$t('简体中文')" value="zh-CN" />
-          <el-option label="English" value="en" />
+          <el-option :label="$t('common.language.followSystem')" value="follow-system" />
+          <el-option :label="$t('common.language.chinese')" value="zh-CN" />
+          <el-option :label="$t('common.language.english')" value="en" />
         </el-select>
         <div v-if="$language.state.syncError" role="status">
           <p>{{ $t("语言已在此设备生效，账号同步失败。") }}</p>

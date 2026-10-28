@@ -129,6 +129,7 @@ app.use('/avatar-frames', avatarFramesRouter);
 app.use('/popularity', popularityRouter);
 app.use('/miniapps', require('./routes/miniapps'));
 app.use('/lab', require('./routes/lab'));
+app.use('/tts', require('./routes/tts'));
 
 let server = app.listen(9000, function () {
 	let host = server.address().address;

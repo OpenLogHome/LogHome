@@ -15,6 +15,7 @@ import android.graphics.Color
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
+import android.media.AudioManager
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
@@ -58,6 +59,7 @@ import top.codesocean.loghome.android.audio.AudiobookPlaybackState
 import top.codesocean.loghome.android.audio.Article
 import top.codesocean.loghome.android.audio.AudioPlaybackService
 import top.codesocean.loghome.android.audio.NativeAudiobookPlayerView
+import top.codesocean.loghome.android.audio.TtsVoiceCatalog
 import top.codesocean.loghome.android.databinding.ActivityWebviewBinding
 import top.codesocean.loghome.android.databinding.DialogHotUpdateBinding
 import top.codesocean.loghome.android.i18n.AppLanguage
@@ -381,6 +383,12 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val isVolumeKey = event.keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
+            event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || event.keyCode == KeyEvent.KEYCODE_VOLUME_MUTE
+        if (isVolumeKey && binding.nativeAudiobookPlayer.isVisible) {
+            volumeControlStream = AudioManager.STREAM_MUSIC
+            return super.dispatchKeyEvent(event)
+        }
         if (volumeKeyEnabled && event.action == KeyEvent.ACTION_DOWN) {
             when (event.keyCode) {
                 KeyEvent.KEYCODE_VOLUME_UP -> {
@@ -1146,7 +1154,7 @@ class WebViewActivity : AppCompatActivity() {
             }.onSuccess { result ->
                 resolveBridgeCall(callId, result)
             }.onFailure { error ->
-                Log.e(TAG, "Bridge call failed: name=$name, args=${args}", error)
+                Log.e(TAG, "Bridge call failed: name=$name", error)
                 rejectBridgeCall(callId, "bridge[$name] failed: ${error.message ?: "Unknown bridge error"}")
             }
         }
@@ -1221,7 +1229,10 @@ class WebViewActivity : AppCompatActivity() {
                     }
                 }
                 val startArticleId = args.opt(1)?.takeUnless { it == JSONObject.NULL }?.toString()
-                requireAudioService().replacePlaylist(articleIds, startArticleId)
+                requireAudioService().apply {
+                    configureTts(args.optString(2))
+                    replacePlaylist(articleIds, startArticleId)
+                }
                 true
             }
 
@@ -1748,6 +1759,8 @@ class WebViewActivity : AppCompatActivity() {
         binding.nativeAudiobookPlayer.showPlayer()
 
         val service = requireAudioService()
+        service.configureTts(payload.optString("loginToken"))
+        service.setBookMetadata(nativeAudiobookTitle, nativeAudiobookCoverUrl)
         val startArticleId = payload.optString("startArticleId").takeIf { it.isNotBlank() }
         val playlistKey = payload.optString("playlistKey")
         val inlineArticlesJson = payload.optJSONArray("articles") ?: JSONArray()
@@ -1758,18 +1771,15 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
         }
-        if (!service.isCurrentPlaylist(articleIds, playlistKey)) {
+        if (!service.isCurrentPlaylist(articleIds, playlistKey) || !service.getPlaybackState().hasContent) {
             lastDispatchedAudiobookParagraph = ""
-            service.replacePlaylist(articleIds, startArticleId, inlineArticles, playlistKey)
         }
 
         val startParagraphId = payload.opt("startParagraphId")
             ?.takeUnless { it == JSONObject.NULL }
             ?.toString()
             ?.takeIf { it.isNotBlank() }
-        if (startArticleId != null && startParagraphId != null) {
-            service.jumpToArticleParagraph(startArticleId, startParagraphId)
-        }
+        service.openPlaylist(articleIds, startArticleId, inlineArticles, playlistKey, startParagraphId, payload.optBoolean("forceSeek", false))
         return true
     }
 
@@ -1809,7 +1819,7 @@ class WebViewActivity : AppCompatActivity() {
         binding.nativeAudiobookPlayer.setBookTitle(nativeAudiobookTitle)
         binding.nativeAudiobookPlayer.render(
             state = state,
-            voiceName = audiobookVoiceNames[state.voiceId],
+            voiceName = audiobookVoiceNames[state.voiceId] ?: TtsVoiceCatalog.voices[state.voiceId],
         )
     }
 
@@ -1861,19 +1871,9 @@ class WebViewActivity : AppCompatActivity() {
                         Snackbar.LENGTH_INDEFINITE,
                     )
                     loading.show()
-                    binding.nativeAudiobookPlayer.hideModelDownloadProgress()
                     lifecycleScope.launch {
                         runCatching {
-                            service.setVoice(voiceId) { downloadedBytes, totalBytes ->
-                                binding.root.post {
-                                    if (!isFinishing && !isDestroyed) {
-                                        binding.nativeAudiobookPlayer.showModelDownloadProgress(
-                                            downloadedBytes,
-                                            totalBytes,
-                                        )
-                                    }
-                                }
-                            }
+                            service.setVoice(voiceId)
                         }
                             .onSuccess {
                                 Snackbar.make(binding.root, "音色已切换", Snackbar.LENGTH_SHORT).show()
@@ -1885,7 +1885,6 @@ class WebViewActivity : AppCompatActivity() {
                                     Snackbar.LENGTH_LONG,
                                 ).show()
                             }
-                        binding.nativeAudiobookPlayer.hideModelDownloadProgress()
                         loading.dismiss()
                     }
                 }

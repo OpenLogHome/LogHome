@@ -1,24 +1,24 @@
 <template>
 	<view class="page" v-dark>
 		<view class="hero-card">
-			<view class="hero-title">原木勋章墙</view>
+			<view class="hero-title">{{ $t('me.service.badges') }}</view>
 
 			<view class="hero-stat-row">
 				<view class="stat-item">
 					<text class="stat-value">{{summary.total_unlocked || 0}}</text>
-					<text class="stat-label">已解锁</text>
+					<text class="stat-label">{{ $t('me.achievements.unlocked') }}</text>
 				</view>
 				<view class="stat-divider"></view>
 				<view class="stat-item">
 					<text class="stat-value">{{list.length}}</text>
-					<text class="stat-label">可展示</text>
+					<text class="stat-label">{{ $t('me.achievements.showcaseable') }}</text>
 				</view>
 			</view>
 
 			<view class="selected-panel" @tap="goToBadgeDetail(summary.selected_badge)">
 				<view class="selected-header">
-					<view class="selected-title">当前名牌勋章</view>
-					<view class="selected-badge-count" v-if="summary.total_unlocked">共{{summary.total_unlocked}}枚</view>
+					<view class="selected-title">{{ $t('me.achievements.selectedTitle') }}</view>
+					<view class="selected-badge-count" v-if="summary.total_unlocked">{{ $t('me.achievements.selectedCount', { count: summary.total_unlocked }) }}</view>
 				</view>
 				<view class="selected-content">
 					<honor-badge
@@ -30,7 +30,7 @@
 					/>
 					<view v-else class="selected-empty">
 						<view class="selected-empty-icon">🏅</view>
-						<view class="selected-empty-text">你还没有设置展示勋章</view>
+						<view class="selected-empty-text">{{ $t('me.achievements.selectedEmpty') }}</view>
 					</view>
 				</view>
 			</view>
@@ -50,11 +50,11 @@
 		<view class="title-card">
 			<view class="title-card-head">
 				<view class="title-card-main">
-					<view class="title-card-title">我的称号</view>
-					<view class="title-card-hint">解锁带有词条的勋章后，可组合一个形容词词条和一个名词词条</view>
+					<view class="title-card-title">{{ $t('me.achievements.myTitle') }}</view>
+					<view class="title-card-hint">{{ $t('me.achievements.titleHint') }}</view>
 				</view>
 				<view class="title-visibility">
-					<text class="title-visibility-text">{{ titleForm.is_visible ? '展示中' : '默认不展示' }}</text>
+					<text class="title-visibility-text">{{ titleForm.is_visible ? $t('me.achievements.showing') : $t('me.achievements.hiddenByDefault') }}</text>
 					<switch
 						class="title-visibility-switch"
 						color="#c78742"
@@ -65,9 +65,9 @@
 			</view>
 
 			<view class="title-preview-box">
-				<view class="title-preview-label">称号预览</view>
+				<view class="title-preview-label">{{ $t('me.achievements.titlePreview') }}</view>
 				<view class="title-preview-text" :class="{ empty: !titlePreviewText }">
-					{{ titlePreviewText || '暂未组合称号' }}
+					{{ titlePreviewText || $t('me.achievements.titleEmpty') }}
 				</view>
 			</view>
 
@@ -80,12 +80,12 @@
 					@change="onAdjectiveChange"
 				>
 					<view class="title-picker-card" :class="{ disabled: adjectiveTermOptions.length <= 1 }">
-						<view class="title-picker-label">形容词词条</view>
+						<view class="title-picker-label">{{ $t('me.achievements.adjectiveTerm') }}</view>
 						<view class="title-picker-value">
-							{{ selectedAdjectiveOption.text || '不使用形容词' }}
+							{{ selectedAdjectiveOption.text || $t('me.achievements.noAdjective') }}
 						</view>
 						<view class="title-picker-source">
-							{{ selectedAdjectiveOption.sourceTitle || (adjectiveTermOptions.length > 1 ? '点击切换' : '暂无可用词条') }}
+							{{ selectedAdjectiveOption.sourceTitle || (adjectiveTermOptions.length > 1 ? $t('me.achievements.tapToChange') : $t('me.achievements.noTerms')) }}
 						</view>
 					</view>
 				</picker>
@@ -98,12 +98,12 @@
 					@change="onNounChange"
 				>
 					<view class="title-picker-card" :class="{ disabled: nounTermOptions.length <= 1 }">
-						<view class="title-picker-label">名词词条</view>
+						<view class="title-picker-label">{{ $t('me.achievements.nounTerm') }}</view>
 						<view class="title-picker-value">
-							{{ selectedNounOption.text || '不使用名词' }}
+							{{ selectedNounOption.text || $t('me.achievements.noNoun') }}
 						</view>
 						<view class="title-picker-source">
-							{{ selectedNounOption.sourceTitle || (nounTermOptions.length > 1 ? '点击切换' : '暂无可用词条') }}
+							{{ selectedNounOption.sourceTitle || (nounTermOptions.length > 1 ? $t('me.achievements.tapToChange') : $t('me.achievements.noTerms')) }}
 						</view>
 					</view>
 				</picker>
@@ -116,7 +116,7 @@
 				:class="{ loading: titleSaving }"
 				@tap="saveTitleProfile"
 			>
-				{{ titleSaving ? '保存中...' : '保存称号设置' }}
+				{{ titleSaving ? $t('me.achievements.saving') : $t('me.achievements.saveTitle') }}
 			</view>
 		</view>
 
@@ -131,7 +131,7 @@
 					<view class="list-hint">{{section.description}}</view>
 				</view>
 				<view class="category-count">
-					{{section.totalCount > 0 ? (section.unlocked.length + ' / ' + section.totalCount) : '未开放'}}
+					{{section.totalCount > 0 ? (section.unlocked.length + ' / ' + section.totalCount) : $t('me.achievements.notOpen')}}
 				</view>
 			</view>
 
@@ -148,7 +148,7 @@
 					</view>
 					<view class="wall-name">{{item.title}}</view>
 					<view class="wall-meta">
-						<view class="wall-selected" v-if="item.is_selected">展示中</view>
+						<view class="wall-selected" v-if="item.is_selected">{{ $t('me.achievements.showing') }}</view>
 						<view class="wall-time">{{formatTime(item.granted_at)}}</view>
 					</view>
 				</view>
@@ -160,7 +160,7 @@
 			</view>
 
 			<view class="subsection-head" v-if="section.locked.length > 0">
-				<view class="subsection-title">待解锁</view>
+				<view class="subsection-title">{{ $t('me.achievements.locked') }}</view>
 			</view>
 
 			<view v-if="section.locked.length > 0" class="wall-grid locked-grid">
@@ -175,7 +175,7 @@
 					</view>
 					<view class="wall-name locked-name">{{item.title}}</view>
 					<view class="wall-meta">
-						<view class="wall-locked-hint">待解锁 · 查看条件</view>
+						<view class="wall-locked-hint">{{ $t('me.achievements.lockedHint') }}</view>
 					</view>
 				</view>
 			</view>
@@ -189,27 +189,9 @@ import darkModeMixin from '@/mixins/dark-mode.js'
 import HonorBadge from '../../components/honor-badge.vue'
 
 const ACHIEVEMENT_CATEGORY_CONFIG = [
-	{
-		key: 'monthly',
-		title: '每月限定',
-		description: '每个月都会专门设计一个荣誉勋章，完成指定目标即可获得。',
-		emptyUnlockedTitle: '暂未获得每月限定勋章',
-		emptyUnlockedDesc: '每月限定勋章会按月更新，完成当月目标后即可点亮。',
-	},
-	{
-		key: 'official',
-		title: '官方发放',
-		description: '官方特别授予的身份荣誉，例如奠基人、体验官等。',
-		emptyUnlockedTitle: '暂未获得官方发放荣誉',
-		emptyUnlockedDesc: '持续参与社区建设，等待官方授予专属荣誉。',
-	},
-	{
-		key: 'growth',
-		title: '成长任务',
-		description: '通过累计阅读、写作、发帖、评论等成长行为逐步解锁。',
-		emptyUnlockedTitle: '暂未获得成长任务勋章',
-		emptyUnlockedDesc: '继续积累阅读、写作、发帖和评论数据，逐步解锁成长荣誉。',
-	},
+	{ key: 'monthly' },
+	{ key: 'official' },
+	{ key: 'growth' },
 ];
 
 export default {
@@ -233,10 +215,22 @@ export default {
 		}
 	},
 	computed: {
+		categorySections() {
+			return ACHIEVEMENT_CATEGORY_CONFIG.map((section) => {
+				const prefix = `me.achievements.category.${section.key}`;
+				return {
+					...section,
+					title: this.$t(`${prefix}.title`),
+					description: this.$t(`${prefix}.desc`),
+					emptyUnlockedTitle: this.$t(`${prefix}.emptyTitle`),
+					emptyUnlockedDesc: this.$t(`${prefix}.emptyDesc`),
+				};
+			});
+		},
 		categorizedSections() {
 			const unlockedMap = this.groupAchievementsByCategory(this.list);
 			const lockedMap = this.groupAchievementsByCategory(this.lockedList);
-			return ACHIEVEMENT_CATEGORY_CONFIG.map((section) => {
+			return this.categorySections.map((section) => {
 				const unlocked = unlockedMap[section.key] || [];
 				const locked = lockedMap[section.key] || [];
 				return {
@@ -261,7 +255,7 @@ export default {
 				achievement_id: null,
 				text: '',
 				sourceTitle: '',
-				label: '不使用形容词',
+				label: this.$t('me.achievements.noAdjective'),
 			}].concat(options);
 		},
 		nounTermOptions() {
@@ -277,7 +271,7 @@ export default {
 				achievement_id: null,
 				text: '',
 				sourceTitle: '',
-				label: '不使用名词',
+				label: this.$t('me.achievements.noNoun'),
 			}].concat(options);
 		},
 		adjectivePickerLabels() {
@@ -309,9 +303,9 @@ export default {
 			const adjectiveCount = Math.max(0, this.adjectiveTermOptions.length - 1);
 			const nounCount = Math.max(0, this.nounTermOptions.length - 1);
 			if (adjectiveCount === 0 && nounCount === 0) {
-				return '当前还没有可用词条，获得已配置词条的勋章后即可组合称号。';
+				return this.$t('me.achievements.noTermTip');
 			}
-			return `已解锁 ${adjectiveCount} 个形容词词条，${nounCount} 个名词词条。`;
+			return this.$t('me.achievements.termTip', { adjective: adjectiveCount, noun: nounCount });
 		},
 	},
 	onShow() {
@@ -396,7 +390,7 @@ export default {
 				}
 			} catch (e) {
 				uni.showToast({
-					title: '加载失败',
+					title: this.$t('me.achievements.loadFailed'),
 					icon: 'none',
 				});
 			} finally {
@@ -456,12 +450,12 @@ export default {
 				this.syncTitleForm(titleProfile);
 				this.persistUserTitleCache(titleProfile);
 				uni.showToast({
-					title: '称号已保存',
+					title: this.$t('me.achievements.titleSaved'),
 					icon: 'none',
 				});
 			} catch (e) {
 				uni.showToast({
-					title: '保存失败',
+					title: this.$t('me.achievements.saveFailed'),
 					icon: 'none',
 				});
 			} finally {
@@ -500,7 +494,7 @@ export default {
 			const y = d.getFullYear();
 			const m = String(d.getMonth() + 1).padStart(2, '0');
 			const day = String(d.getDate()).padStart(2, '0');
-			return `${y}年${m}月${day}日`;
+			return this.$t('me.achievements.dateFormat', { y, m, day });
 		},
 		groupAchievementsByCategory(list) {
 			return (list || []).reduce((acc, item) => {
@@ -585,12 +579,12 @@ export default {
 		formatSectionSummary(unlockedCount, lockedCount) {
 			const totalCount = unlockedCount + lockedCount;
 			if (totalCount === 0) {
-				return '暂未开放';
+				return this.$t('me.achievements.summaryNotOpen');
 			}
 			if (lockedCount === 0) {
-				return `已解锁 ${unlockedCount} 枚`;
+				return this.$t('me.achievements.summaryUnlocked', { unlocked: unlockedCount });
 			}
-			return `已解锁 ${unlockedCount} 枚，待解锁 ${lockedCount} 枚`;
+			return this.$t('me.achievements.summaryMixed', { unlocked: unlockedCount, locked: lockedCount });
 		},
 	},
 }

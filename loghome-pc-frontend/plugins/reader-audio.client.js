@@ -3,10 +3,11 @@ import { ReaderAudio, createAudioState } from '~/utils/reader-audio'
 import { readingToken } from '~/plugins/api/reading'
 import { recordLocalReading } from '~/utils/reading-history'
 import { audioResumeKey, readAudioResume, saveAudioResume, restoreAudioOffset } from '~/utils/reader-audio-resume'
+import { createReaderAudioEnvironment } from '~/utils/reader-tts'
 
 export default ({ app }, inject) => {
   const state = Vue.observable(createAudioState())
-  const player = new ReaderAudio(state, { synthesis:window.speechSynthesis, Utterance:window.SpeechSynthesisUtterance, article:id=>app.$api.reader.article(id), token:readingToken, now:Date.now, setTimeout:(fn,ms)=>window.setTimeout(fn,ms), clearTimeout:id=>window.clearTimeout(id) })
+  const player = new ReaderAudio(state, createReaderAudioEnvironment(app))
   let account = readingToken(), lastProgress = '', lastSaved = 0, lastSnapshot = 0, resumeVersion = 0, disposing = false
   const originalOpen = player.open.bind(player), originalClose = player.close.bind(player)
   const loadResume = () => {
@@ -36,7 +37,8 @@ export default ({ app }, inject) => {
       if (Date.now()-lastSaved>=10000) { lastSaved=Date.now(); app.$api.reading.saveProgress({novel_id:current.bookId,article_id:current.chapterId}).catch(()=>{}) }
     }
   })
-  player.open = (...args) => {
+  player.open = async (...args) => {
+    await checkAccount()
     resumeVersion++; state.resumeLoading=false; state.resumeCandidate=null
     player.book=args[0]; lastProgress=''; lastSaved=0; lastSnapshot=0
     return originalOpen(...args)
@@ -44,7 +46,7 @@ export default ({ app }, inject) => {
   player.dismissResume = () => { resumeVersion++; state.resumeLoading=false; removeResume() }
   player.close = () => { resumeVersion++; state.resumeLoading=false; if(!disposing && account===readingToken())removeResume(); originalClose() }
   player.resumeLast = async () => {
-    checkAccount()
+    await checkAccount()
     const candidate=state.resumeCandidate
     if (!candidate || state.resumeLoading) return
     const version=++resumeVersion, token=readingToken()
@@ -56,7 +58,7 @@ export default ({ app }, inject) => {
       const book=books&&books[0], article=articles&&articles[0]
       if (!book || Number(book.novel_id)!==candidate.bookId || !article || Number(article.article_id)!==candidate.chapterId || Number(article.novel_id)!==candidate.bookId || Number(article.is_draft)===1 || !Array.isArray(chapters) || !chapters.some(row=>Number(row.article_id)===candidate.chapterId && Number(row.is_draft)!==1)) throw Error('上次听书的作品或章节已不可阅读。')
       player.book=book; lastProgress=''; lastSaved=0; lastSnapshot=0
-      await originalOpen(book,chapters,article,null)
+      await originalOpen(book,chapters,article,null,{autoplay:false})
       if (version!==resumeVersion || token!==readingToken()) return
       if (state.status==='error') throw Error(state.error)
       const unchanged=restoreAudioOffset(player,candidate)
@@ -70,12 +72,19 @@ export default ({ app }, inject) => {
     catch (_) { state.storageError='听书偏好未能保存。' }
   }
   try { const saved=JSON.parse(localStorage.getItem('loghome:reader:audio')||'{}'); player.configure({rate:saved.rate,voiceURI:saved.voiceURI == null ? state.voiceURI : saved.voiceURI}); state.follow=saved.follow!==false } catch (_) {}
-  const checkAccount = () => {
+  const checkAccount = async () => {
     const token=readingToken()
-    if(token!==account){resumeVersion++;state.resumeLoading=false;originalClose();account=token;lastProgress='';lastSaved=0;lastSnapshot=0;loadResume()}
+    if(token!==account){
+      const previousKey=audioResumeKey(account)
+      resumeVersion++;state.resumeLoading=false;account=token;lastProgress='';lastSaved=0;lastSnapshot=0
+      if(state.visible)await player.syncAccount()
+      else {originalClose();player.session=null}
+      if(token!==readingToken() || disposing)return
+      if(previousKey!==audioResumeKey(token) || !state.visible)loadResume()
+    }
   }
   const storage = event => { if(event.key==='token')checkAccount() }
-  const wake = () => { checkAccount(); if(state.visible)player.wake() }
+  const wake = async () => { await checkAccount(); if(state.visible)await player.wake() }
   const freeze = () => { player.suspend(); snapshot(true) }
   const pagehide = () => { player.suspend(); snapshot(true) }
   const visibility = () => { if(document.visibilityState==='hidden')snapshot(true);else wake() }

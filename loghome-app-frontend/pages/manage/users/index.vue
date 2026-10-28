@@ -2,16 +2,16 @@
 	<view class="container" v-dark>
 		<view class="content">
 			<view class="header">
-				<view class="title">用户管理</view>
+				<view class="title">{{ $t('manage.users.title') }}</view>
 				<view class="stats">
-					<text>总用户数：{{totalUsers}}</text>
+					<text>{{ $t('manage.users.total', { count: totalUsers }) }}</text>
 				</view>
 			</view>
 
 			<view class="pagination" v-if="totalPages > 0">
-				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">{{ $t('common.prev') }}</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
-				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">{{ $t('common.next') }}</view>
 			</view>
 
 			<view class="user-list">
@@ -23,37 +23,37 @@
 						</view>
 						<view class="user-meta">
 							<view class="meta-item">
-								<text class="label">注册时间：</text>
+								<text class="label">{{ $t('manage.users.joined') }}: </text>
 								<text class="value">{{formatTime(user.create_time)}}</text>
 							</view>
 							<view class="meta-item">
-								<text class="label">最后登录：</text>
+								<text class="label">{{ $t('manage.users.lastLogin') }}: </text>
 								<text class="value">{{formatTime(user.last_login_time)}}</text>
 							</view>
 							<view class="meta-item">
-								<text class="label">身份：</text>
-								<text class="value">{{user.is_admin ? '管理员' : '普通用户'}}</text>
+								<text class="label">{{ $t('manage.users.role') }}: </text>
+								<text class="value">{{user.is_admin ? $t('manage.users.admin') : $t('manage.users.member')}}</text>
 							</view>
 						</view>
 					</view>
 					<view class="user-actions">
 						<view class="action-btn" :class="user.activated ? 'disable' : 'enable'" @click="toggleUserStatus(user)">
-							{{user.activated ? '禁用' : '启用'}}
+							{{user.activated ? $t('manage.common.disable') : $t('manage.common.enable')}}
 						</view>
-						<view class="action-btn honor" @click="grantAchievement(user)">发成就</view>
-						<view class="action-btn message" @click="sendMessage(user)">发消息</view>
+						<view class="action-btn honor" @click="grantAchievement(user)">{{ $t('manage.users.grantAchievement') }}</view>
+						<view class="action-btn message" @click="sendMessage(user)">{{ $t('manage.users.message') }}</view>
 					</view>
 				</view>
 			</view>
 
 			<view class="pagination" v-if="totalPages > 0">
-				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">上一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === 1}" @click="prevPage">{{ $t('common.prev') }}</view>
 				<view class="page-num">{{currentPage}} / {{totalPages}}</view>
-				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">下一页</view>
+				<view class="page-btn" :class="{disabled: currentPage === totalPages}" @click="nextPage">{{ $t('common.next') }}</view>
 			</view>
 
 			<view class="no-data" v-if="users.length === 0">
-				暂无用户数据
+				{{ $t('manage.users.empty') }}
 			</view>
 		</view>
 
@@ -62,27 +62,27 @@
 			<view class="modal-mask" @click="closeMessageModal"></view>
 			<view class="modal-content">
 				<view class="modal-header">
-					<view class="modal-title">发送消息</view>
+					<view class="modal-title">{{ $t('manage.users.sendMessage') }}</view>
 					<view class="modal-close" @click="closeMessageModal">×</view>
 				</view>
 				<view class="modal-body">
 					<view class="form-item">
-						<view class="label">收件人</view>
+						<view class="label">{{ $t('manage.users.recipient') }}</view>
 						<view class="input">
 							<input type="text" :value="currentUser ? currentUser.name : ''" disabled />
 						</view>
 					</view>
 					<view class="form-item">
-						<view class="label">消息内容</view>
+						<view class="label">{{ $t('manage.users.messageContent') }}</view>
 						<view class="input">
-							<textarea v-model="messageContent" placeholder="请输入消息内容" maxlength="500" />
+							<textarea v-model="messageContent" :placeholder="$t('manage.users.messagePlaceholder')" maxlength="500" />
 							<view class="word-count">{{messageContent.length}}/500</view>
 						</view>
 					</view>
 				</view>
 				<view class="modal-footer">
-					<view class="btn cancel" @click="closeMessageModal">取消</view>
-					<view class="btn confirm" @click="submitMessage">发送</view>
+					<view class="btn cancel" @click="closeMessageModal">{{ $t('common.cancel') }}</view>
+					<view class="btn confirm" @click="submitMessage">{{ $t('common.send') }}</view>
 				</view>
 			</view>
 		</view>
@@ -121,7 +121,7 @@ export default {
 			try {
 				let tk = this.getToken()
 				uni.showLoading({
-					title: '努力加载中'
+					title: this.$t('common.loading')
 				})
 
 				// 获取总数
@@ -152,7 +152,7 @@ export default {
 			} catch (e) {
 				uni.hideLoading()
 				uni.showToast({
-					title: '加载失败',
+					title: this.$t('common.loadFailed'),
 					icon: 'none'
 				})
 			}
@@ -171,7 +171,7 @@ export default {
 				})
 
 				uni.showToast({
-					title: user.activated ? '已禁用' : '已启用',
+					title: user.activated ? this.$t('manage.common.disabled') : this.$t('manage.common.enabled'),
 					icon: 'none'
 				})
 
@@ -179,7 +179,7 @@ export default {
 				user.activated = !user.activated
 			} catch (e) {
 				uni.showToast({
-					title: '操作失败',
+					title: this.$t('common.operationFailed'),
 					icon: 'none'
 				})
 			}
@@ -199,7 +199,7 @@ export default {
 
 			if (!this.messageContent.trim()) {
 				uni.showToast({
-					title: '请输入消息内容',
+					title: this.$t('manage.users.enterMessage'),
 					icon: 'none'
 				})
 				return
@@ -213,7 +213,7 @@ export default {
 				await axios.post(this.$baseUrl + '/manage/users/send_message', {
 					from_id: userInfo.user_id,
 					to_id: this.currentUser.user_id,
-					msg: "通过管理员通道向您发送了消息：" + this.messageContent,
+					msg: this.$t('manage.users.adminMessagePrefix') + this.messageContent,
 					navigate_to: ''
 				}, {
 					headers: {
@@ -222,13 +222,13 @@ export default {
 				})
 
 				uni.showToast({
-					title: '发送成功'
+					title: this.$t('manage.common.sent')
 				})
 
 				this.closeMessageModal()
 			} catch (e) {
 				uni.showToast({
-					title: '发送失败',
+					title: this.$t('manage.common.sendFailed'),
 					icon: 'none'
 				})
 			} finally {
@@ -248,7 +248,7 @@ export default {
 			}
 		},
 		formatTime(time) {
-			if (!time) return '未知'
+			if (!time) return this.$t('common.unknown')
 			const date = new Date(time)
 			return date.getFullYear() + '-' +
 				   (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
@@ -283,7 +283,7 @@ export default {
 
 			if (!Array.isArray(this.achievementDefs) || this.achievementDefs.length === 0) {
 				uni.showToast({
-					title: '暂无可发放成就',
+					title: this.$t('manage.users.noAchievements'),
 					icon: 'none',
 				})
 				return
@@ -310,15 +310,15 @@ export default {
 							},
 						)
 						const msg = grantRes && grantRes.data && grantRes.data.already_granted
-							? '该成就已拥有'
-							: '发放成功'
+							? this.$t('manage.users.alreadyHasAchievement')
+							: this.$t('manage.users.achievementGranted')
 						uni.showToast({
 							title: msg,
 							icon: 'none',
 						})
 					} catch (e) {
 						uni.showToast({
-							title: '发放失败',
+							title: this.$t('manage.users.achievementFailed'),
 							icon: 'none',
 						})
 					} finally {

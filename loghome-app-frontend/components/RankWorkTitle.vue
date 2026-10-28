@@ -34,7 +34,8 @@ export default {
 				.filter(
 					b => !b.expires_at || new Date(b.expires_at).getTime() > this.now,
 				)
-				.slice(0, this.maxBadges);
+				.slice(0, this.maxBadges)
+				.map(badge => ({ ...badge, text: this.localizedBadgeText(badge) }));
 		},
 	},
 	watch: {
@@ -50,6 +51,17 @@ export default {
 		clearTimeout(this.expiryTimer);
 	},
 	methods: {
+		localizedBadgeText(badge) {
+			if (!badge || !badge.code) return (badge && badge.text) || '';
+			const evidence = badge.evidence || {};
+			const params = {
+				count: evidence.days || evidence.completed_years ||
+					(Number(evidence.previous_position) - Number(evidence.position)) || 0,
+			};
+			const key = `reader.rank.badges.${badge.code}`;
+			const translated = this.$t(key, params);
+			return translated === key ? (badge.text || '') : translated;
+		},
 		scheduleExpiry() {
 			clearTimeout(this.expiryTimer);
 			const next = Math.min(

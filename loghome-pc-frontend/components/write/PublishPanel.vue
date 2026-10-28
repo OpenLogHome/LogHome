@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     class="writer-dialog-wrapper"
-    title="检查与发布"
+    :title="$t('检查与发布')"
     :visible="true"
     :before-close="close"
     width="860px"
@@ -14,11 +14,10 @@
       <section>
         <h3>{{ article.title }}</h3>
         <p>
-          {{ count.textCount.toLocaleString() }} 字 ·
-          {{ count.imageCount }} 张图片
+          {{ $t('{characters} 字 · {images} 张图片', { characters: count.textCount.toLocaleString(), images: count.imageCount }) }}
         </p>
         <p v-if="Number(novel.is_personal) === 1" class="publish-note">
-          当前作品为私密。章节发布后仍按作品访问权限开放，可在作品设置中公开。
+          {{ $t('当前作品为私密。章节发布后仍按作品访问权限开放，可在作品设置中公开。') }}
         </p>
         <div
           v-if="article.article_type !== 'worldVocabulary'"
@@ -29,40 +28,40 @@
             :loading="checking === 'smart'"
             :disabled="Boolean(checking)"
             @click="check"
-            >智能纠错</el-button
+            >{{ $t('智能纠错') }}</el-button
           >
         </div>
         <p v-if="checking && checkStatus" role="status">{{ checkStatus }}</p>
         <p v-if="error" role="alert">{{ error }}</p>
         <p v-if="result">
-          检查完成：{{ issues.length }} 段建议<template
+          {{ $t('检查完成：{count} 段建议', { count: issues.length }) }}<template
             v-if="result.errors && result.errors.length"
-            >，{{ result.errors.length }} 段失败（可重试）</template
+            >{{ $t('，{count} 段失败（可重试）', { count: result.errors.length }) }}</template
           >
-          <template v-if="checkLoopDetected">，检测到模型重复输出，已中止相关批次</template>
+          <template v-if="checkLoopDetected">{{ $t('，检测到模型重复输出，已中止相关批次') }}</template>
         </p>
         <article
           v-for="(item, index) in issues"
           :key="item.paragraph_hash || index"
           class="correction-item"
         >
-          <small>段落 {{ item.paragraph_index }}</small>
+          <small>{{ $t('段落 {p0}', { p0: item.paragraph_index }) }}</small>
           <p class="original-text">{{ item.original_text }}</p>
           <p class="corrected-text">{{ item.corrected_text }}</p>
           <el-button size="mini" :disabled="busy" @click="apply(item)"
-            >采用建议</el-button
-          ><el-button size="mini" @click="ignore(item)">忽略</el-button>
+            >{{ $t('采用建议') }}</el-button
+          ><el-button size="mini" @click="ignore(item)">{{ $t('忽略') }}</el-button>
         </article>
       </section>
       <aside>
         <label
-          >发布方式<el-radio-group v-model="mode" :disabled="busy"
-            ><el-radio label="now">立即发布</el-radio
-            ><el-radio label="schedule">定时发布</el-radio
-            ><el-radio label="draft">退回草稿</el-radio></el-radio-group
+          >{{ $t('发布方式') }}<el-radio-group v-model="mode" :disabled="busy"
+            ><el-radio label="now">{{ $t('立即发布') }}</el-radio
+            ><el-radio label="schedule">{{ $t('定时发布') }}</el-radio
+            ><el-radio label="draft">{{ $t('退回草稿') }}</el-radio></el-radio-group
           ></label
         ><label v-if="mode === 'schedule'"
-          >北京时间<input v-model="time" type="datetime-local"
+          >{{ $t('北京时间') }}<input v-model="time" type="datetime-local"
         /></label>
         <el-button
           type="primary"
@@ -71,10 +70,10 @@
           @click="submit"
           >{{
             mode === "now"
-              ? "确认发布"
+              ? $t('确认发布')
               : mode === "schedule"
-              ? "设置定时发布"
-              : "确认退回草稿"
+              ? $t('设置定时发布')
+              : $t('确认退回草稿')
           }}</el-button
         >
       </aside>
@@ -149,13 +148,13 @@ export default {
     async check() {
       this.error = "";
       this.checking = "smart";
-      this.checkStatus = "正在准备纠错...";
+      this.checkStatus = this.$t('正在准备纠错...');
       this.checkLoopDetected = false;
       this.ignored = [];
       try {
         await this.writerConfirm(
-          "智能纠错会按服务端规则消耗红石。继续检查当前章节？",
-          "智能纠错"
+          this.$t('智能纠错会按服务端规则消耗红石。继续检查当前章节？'),
+          this.$t('智能纠错')
         );
         const paragraphs = buildCorrectionParagraphs(this.article.content),
           account = writerIdentity().id,
@@ -243,7 +242,7 @@ export default {
             p.paragraph_hash === item.paragraph_hash
         );
       if (!paragraph) {
-        this.writerMessage("warning", "正文已经变化，请重新纠错");
+        this.writerMessage("warning", this.$t('正文已经变化，请重新纠错'));
         return;
       }
       const block = blocks.find(
@@ -253,7 +252,7 @@ export default {
           block.value.trim() === item.original_text.trim()
       );
       if (!block) {
-        this.writerMessage("warning", "无法定位原段落，请重新纠错");
+        this.writerMessage("warning", this.$t('无法定位原段落，请重新纠错'));
         return;
       }
       const indent = (block.value.match(/^\s*/) || [""])[0];
@@ -266,14 +265,14 @@ export default {
         this.mode === "schedule" &&
         (!this.time || new Date(this.time + "+08:00").getTime() <= Date.now())
       ) {
-        this.writerMessage("warning", "请选择未来的北京时间");
+        this.writerMessage("warning", this.$t('请选择未来的北京时间'));
         return;
       }
       if (this.mode === "draft") {
         try {
           await this.writerConfirm(
-            "退回草稿将撤下读者正在阅读的章节，并取消定时发布。继续？",
-            "退回草稿"
+            this.$t('退回草稿将撤下读者正在阅读的章节，并取消定时发布。继续？'),
+            this.$t('退回草稿')
           );
         } catch (_) {
           return;
