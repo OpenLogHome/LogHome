@@ -42,3 +42,4 @@ const popularity = {
 };
 
 export default popularity;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

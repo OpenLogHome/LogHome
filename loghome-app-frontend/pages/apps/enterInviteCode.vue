@@ -1,18 +1,18 @@
 <template>
 	<view class="enter-code-container" v-dark>
 		<view class="header">
-			<view class="title">填写邀请码</view>
-			<view class="subtitle">填写好友的邀请码，双方都将获得奖励</view>
+			<view class="title">{{ $t('apps.invite.enterTitle') }}</view>
+			<view class="subtitle">{{ $t('apps.invite.enterSubtitle') }}</view>
 		</view>
 		
 		<view class="form-card" :class="{ 'loading-overlay': isLoading }">
 			<view class="form-item">
-				<view class="label">邀请码</view>
-				<input class="input" type="text" v-model="inviteCode" placeholder="请输入6位邀请码" maxlength="6" />
+				<view class="label">{{ $t('apps.invite.codeLabel') }}</view>
+				<input class="input" type="text" v-model="inviteCode" :placeholder="$t('apps.invite.codePlaceholder')" maxlength="6" />
 			</view>
 			
 			<view class="form-item">
-				<view class="label">邀请类型</view>
+				<view class="label">{{ $t('apps.invite.typeLabel') }}</view>
 				<view class="radio-group">
 					<view class="radio-item" 
 						:class="{ active: inviteType === 'new', disabled: !eligibility.newUserEligible }" 
@@ -20,8 +20,8 @@
 						<view class="radio-circle">
 							<view class="radio-inner" v-if="inviteType === 'new'"></view>
 						</view>
-						<text>我是新用户</text>
-						<text class="status-text" v-if="!eligibility.newUserEligible">(无资格)</text>
+						<text>{{ $t('apps.invite.newUser') }}</text>
+						<text class="status-text" v-if="!eligibility.newUserEligible">{{ $t('apps.invite.ineligible') }}</text>
 					</view>
 					<view class="radio-item" 
 						:class="{ active: inviteType === 'return', disabled: !eligibility.returnUserEligible }" 
@@ -29,42 +29,42 @@
 						<view class="radio-circle">
 							<view class="radio-inner" v-if="inviteType === 'return'"></view>
 						</view>
-						<text>我是回归用户</text>
-						<text class="status-text" v-if="!eligibility.returnUserEligible">(无资格)</text>
+						<text>{{ $t('apps.invite.returnUser') }}</text>
+						<text class="status-text" v-if="!eligibility.returnUserEligible">{{ $t('apps.invite.ineligible') }}</text>
 					</view>
 				</view>
 			</view>
 			
 			<view class="submit-btn" :class="{ disabled: !isFormValid || isLoading }" @click="submitInviteCode">
-				{{ isLoading ? '检查资格中...' : '提交邀请码' }}
+				{{ isLoading ? $t('apps.invite.checking') : $t('apps.invite.submit') }}
 			</view>
 		</view>
 		
 		<view class="info-card">
-			<view class="info-title">填写说明</view>
+			<view class="info-title">{{ $t('apps.invite.instructions') }}</view>
 			<view class="info-content">
 				<view class="info-item">
 					<uni-icons type="checkmarkempty" size="16" color="#67C23A"></uni-icons>
-					<text>新用户：首次注册原木社区且在注册后14天内的用户</text>
+					<text>{{ $t('apps.invite.newUserRule') }}</text>
 				</view>
 				<view class="info-item">
 					<uni-icons type="checkmarkempty" size="16" color="#67C23A"></uni-icons>
-					<text>回归用户：90天以上未登录的老用户</text>
+					<text>{{ $t('apps.invite.returnUserRule') }}</text>
 				</view>
 				<view class="info-item">
 					<uni-icons type="checkmarkempty" size="16" color="#67C23A"></uni-icons>
-					<text>新用户填写邀请码：双方各获得{{newUserReward}}原木</text>
+					<text>{{ $t('apps.invite.newUserReward', { amount: newUserReward }) }}</text>
 				</view>
 				<view class="info-item">
 					<uni-icons type="checkmarkempty" size="16" color="#67C23A"></uni-icons>
-					<text>回归用户填写邀请码：双方各获得{{returnUserReward}}原木</text>
+					<text>{{ $t('apps.invite.returnUserReward', { amount: returnUserReward }) }}</text>
 				</view>
 			</view>
 		</view>
 		
 		<view class="get-code-section">
 			<view class="get-code-btn" @click="navigateToInviteCard">
-				获取我的邀请码
+				{{ $t('apps.invite.getMyCode') }}
 			</view>
 		</view>
 	</view>
@@ -129,7 +129,7 @@ export default {
 				// 如果都没有资格，显示提示
 				if (!this.eligibility.newUserEligible && !this.eligibility.returnUserEligible) {
 					uni.showToast({
-						title: '您目前没有使用邀请码的资格',
+						title: this.$t('apps.invite.noEligibility'),
 						icon: 'none',
 						duration: 3000
 					});
@@ -137,7 +137,7 @@ export default {
 			} catch (error) {
 				console.error('检查邀请资格失败', error);
 				uni.showToast({
-					title: '检查邀请资格失败',
+					title: this.$t('apps.invite.checkFailed'),
 					icon: 'none'
 				});
 			} finally {
@@ -152,9 +152,9 @@ export default {
 				this.inviteType = 'return';
 			} else {
 				// 显示无资格提示
-				const typeText = type === 'new' ? '新用户' : '回归用户';
+				const typeText = type === 'new' ? this.$t('apps.invite.newUserType') : this.$t('apps.invite.returnUserType');
 				uni.showToast({
-					title: `您没有${typeText}资格`,
+					title: this.$t('apps.invite.noEligibilityForType', { type: typeText }),
 					icon: 'none'
 				});
 			}
@@ -180,7 +180,7 @@ export default {
 				
 				if (res.data.success) {
 					uni.showToast({
-						title: '邀请码使用成功',
+						title: this.$t('apps.invite.success'),
 						icon: 'success'
 					})
 					
@@ -192,13 +192,13 @@ export default {
 					}, 1500)
 				} else {
 					uni.showToast({
-						title: res.data.msg || '邀请码使用失败',
+						title: res.data.msg || this.$t('apps.invite.failed'),
 						icon: 'none'
 					})
 				}
 			} catch (error) {
 				console.error('使用邀请码失败', error)
-				let errorMsg = '邀请码使用失败'
+				let errorMsg = this.$t('apps.invite.failed')
 				
 				if (error.response && error.response.data && error.response.data.msg) {
 					errorMsg = error.response.data.msg
@@ -379,26 +379,6 @@ export default {
 		margin-bottom: 30rpx;
 		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 		
-		&.loading {
-			position: relative;
-			min-height: 200rpx;
-			
-			&::after {
-				content: "检查资格中...";
-				position: absolute;
-				left: 0;
-				top: 0;
-				width: 100%;
-				height: 100%;
-				background-color: rgba(255,255,255,0.7);
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				font-size: 30rpx;
-				color: #666;
-			}
-		}
-		
 		.info-title {
 			font-size: 32rpx;
 			font-weight: bold;
@@ -502,4 +482,4 @@ export default {
 		}
 	}
 }
-</style> 
+</style>

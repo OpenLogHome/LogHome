@@ -2,7 +2,7 @@
 	<view class="outer" v-dark>
 		<view class="tags">
 			<div class="tag" v-for="(item,index) in tags" :key="item.tag_id" :class="{'activity':item.is_activity_tag, 'suggested': item.is_suggested}">
-				{{item.tag_name}}
+				{{ displayTagName(item.tag_name) }}
 				<img src="../../static/icons/icon_r_x.png" alt="" class="deletePoint"
 				@click="deleteTag(item.tag_id)" />
 			</div>
@@ -13,7 +13,7 @@
 		<view class="title_bar">{{ $t('writer.work.tags.officialTitle') }}</view>
 		<view class="suggested_tags">
 			<view class="tag" v-for="tag in suggested_tags" :key="tag.tag_id" :class="{'activity': tag.is_activity_tag, 'suggested': tag.is_suggested, 'chosen': tag.is_chosen}" @click="dealWithSuggested(tag.tag_id, tag.tag_name, tag.is_chosen)">
-				{{tag.tag_name}}
+				{{ displayTagName(tag.tag_name) }}
 			</view>
 		</view>
 		<view class="addTag">
@@ -25,6 +25,7 @@
 <script>
 	import axios from "axios"
 	import darkModeMixin from '@/mixins/dark-mode.js'
+	import { getOfficialTagLabel } from '@/common/official-tag-labels.js'
 	export default{
 		mixins: [darkModeMixin],
 		data(){
@@ -35,6 +36,9 @@
 			}
 		},
 		methods:{
+			displayTagName(tagName){
+				return getOfficialTagLabel(tagName, key => this.$t(key));
+			},
 			getNovelTags(){
 				let _this = this;
 				axios.get(_this.$baseUrl + '/library/get_novel_tags?novel_id=' + this.novel_id, {}).then((res) => {

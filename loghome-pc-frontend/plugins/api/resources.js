@@ -52,3 +52,4 @@ const resources = {
 };
 
 export default resources;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

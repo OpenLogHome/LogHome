@@ -63,6 +63,13 @@
       "startReading": "开始阅读"
     },
     "reader": {
+	  "loaderStart": "出发！",
+	  "loaderFootsteps": "哒哒哒…",
+	  "loaderDeliveredLine1": "漫画",
+	  "loaderDeliveredLine2": "送达！",
+	  "loaderCaption": "原木娘正在搬运漫画",
+	  "imageLoading": "图片加载中",
+	  "zoomResetAria": "当前放大 {{zoom}} 倍，复位图片",
       "pageLoadFailed": "第 {{page}} 页加载失败，重试",
       "readNextEpisode": "阅读下一话",
       "episodeEnd": "本话完 · 感谢阅读",
@@ -230,6 +237,9 @@
       "uploadSupportTip": "支持 jpg / png / webp / gif，一次最多选 9 张；高清图片上传可能较慢",
       "doneSorting": "完成排序",
       "reorder": "调整顺序",
+	  "reorderHint": "拖动手柄调整顺序，也可聚焦手柄后按上下方向键。",
+	  "pageLabel": "第 {{page}} 页",
+	  "reorderHandleAria": "移动第 {{page}} 页；按上下方向键调整顺序",
       "fullEpisodePreview": "整话预览",
       "uploadQueue": "上传队列",
       "cancelUnfinished": "取消未完成",

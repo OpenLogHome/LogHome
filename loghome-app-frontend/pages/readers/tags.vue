@@ -14,7 +14,7 @@
 			<div class="tag" v-for="(item,index) in filteredTags" :key="item.tag_id"
 			:class="{'activity':item.is_activity_tag, 'suggested': item.is_suggested}"
 			@click="gotoTagNovels(item.tag_id, item.tag_name)">
-				<text class="tag-name">{{item.tag_name}}</text>
+				<text class="tag-name">{{ displayTagName(item.tag_name) }}</text>
 				<text class="tag-count">{{item.count}}</text>
 			</div>
 			<view v-if="filteredTags.length === 0" class="empty-state">
@@ -27,6 +27,7 @@
 <script>
 	import axios from "axios"
 	import uniSearchBar from '../../uni_modules/uni-search-bar/components/uni-search-bar/uni-search-bar.vue'
+	import { getOfficialTagLabel, matchesOfficialTag } from '@/common/official-tag-labels.js'
 	
 	export default{
 		components: {
@@ -46,7 +47,7 @@
 				// 搜索过滤
 				if (this.keyword) {
 					const lowerKeyword = this.keyword.toLowerCase();
-					result = result.filter(tag => tag.tag_name.toLowerCase().includes(lowerKeyword));
+					result = result.filter(tag => matchesOfficialTag(tag.tag_name, lowerKeyword, key => this.$t(key)));
 				}
 				
 				// 类型过滤
@@ -60,6 +61,9 @@
 			}
 		},
 		methods:{
+			displayTagName(tagName){
+				return getOfficialTagLabel(tagName, key => this.$t(key));
+			},
 			getNovelTags(){
 				let _this = this;
 				axios.get(_this.$baseUrl + '/library/get_all_tags', {}).then((res) => {
@@ -74,7 +78,7 @@
 			},
 			gotoTagNovels(tag_id, tag_name){
 				uni.navigateTo({
-					url:"./tagCollections?tag_id=" + tag_id + "&title=" + tag_name
+					url:"./tagCollections?tag_id=" + tag_id + "&title=" + encodeURIComponent(this.displayTagName(tag_name))
 				})
 			},
 			input(e) {

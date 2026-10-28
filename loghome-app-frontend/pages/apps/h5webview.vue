@@ -95,7 +95,7 @@ export default {
 					break;
 				default:
 					uni.showToast({
-						title: "错误500：未知页面指令",
+						title: this.$t('apps.webview.unknownCommand'),
 						icon:'none',
 						duration: 2000
 					});

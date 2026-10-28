@@ -1,0 +1,179 @@
+{
+  "tree": {
+    "components": {
+      "gestureHint": "拖动旋转树场",
+      "sceneError": "当前环境无法启用高质量 3D 树场，已切回经典模式。"
+    },
+    "farm": {
+      "title": "树场",
+      "loadingScene": "树场加载中",
+      "visitEntry": "串门",
+      "growthValue": "成长值",
+      "friendFallback": "好友",
+      "avatarFallback": "友",
+      "friendFarmTitle": "{name}的树场",
+      "dailyTasks": "📋 每日任务",
+      "expTasks": "🪄 经验任务",
+      "emptyTasks": "💤 暂无任务，休息一下吧~",
+      "emptyExpTasks": "🫧 暂无经验任务",
+      "expOrbs": "经验球",
+      "baseReward": "基础 {base} × {multiplier}",
+      "expStatus": {
+        "completed": "已自动完成",
+        "settled": "已自动结算 {completed}/{limit}",
+        "pendingSettle": "待自动结算",
+        "inProgress": "进行中"
+      },
+      "membership": {
+        "defaultName": "普通用户",
+        "boostActive": "每日任务与经验任务成长值均享 {multiplier} 加成",
+        "boostInactive": "开通通行证可享每日任务与经验任务 1.2× / 2× 加成"
+      },
+      "task": {
+        "progress": "{progress} · {completed}/{limit} 次",
+        "durationProgress": "{current}/{required} 分钟",
+        "growthReward": "成长值 +{reward}",
+        "completed": "已完成",
+        "claim": "领取"
+      },
+      "taskCatalog": {
+        "daily_signin": {
+          "name": "每日签到",
+          "description": "每天签到获得成长值"
+        },
+        "daily_like_novel": {
+          "name": "每日点赞",
+          "description": "为任意作品点赞获得成长值"
+        },
+        "daily_share_work": {
+          "name": "分享作品",
+          "description": "每日首次分享任意作品或世界设定"
+        },
+        "daily_post": {
+          "name": "社区发帖",
+          "description": "在社区发帖获得成长值"
+        },
+        "daily_reply": {
+          "name": "社区回帖",
+          "description": "在社区回帖获得成长值"
+        },
+        "exp_comm_post": {
+          "name": "社区发帖",
+          "description": "每日每发 1 帖可领取 1 个经验球，最多 3 次"
+        },
+        "exp_comm_reply": {
+          "name": "社区回帖",
+          "description": "每日每回帖 1 次可领取 1 个经验球，最多 5 次"
+        },
+        "exp_read_time": {
+          "name": "阅读累计",
+          "description": "每阅读 10 分钟可领取 1 个经验球"
+        },
+        "exp_write_time": {
+          "name": "写作累计",
+          "description": "每写作 10 分钟可领取 1 个经验球"
+        }
+      },
+      "friendStatus": {
+        "unplanted": "未种植",
+        "switching": "切换中"
+      },
+      "action": {
+        "plant": "🌱 种下树苗",
+        "harvest": "🪓 收获"
+      },
+      "actions": {
+        "backToMyFarm": "返回我的树场",
+        "collectAllExp": "一键收集经验"
+      },
+      "harvest": {
+        "title": "🎉 收获颇丰 🎉",
+        "log": "原木 x {count}",
+        "apple": "苹果 x {count}",
+        "accept": "开心收下"
+      },
+      "time": {
+        "justNow": "刚刚",
+        "minutesAgo": "{count} 分钟前",
+        "hoursAgo": "{count} 小时前"
+      },
+      "visit": {
+        "defaultTip": "点击树上的经验球即可偷取，也可以点一键偷取。",
+        "pendingGrowth": "待偷成长值",
+        "remainingSteal": "剩余可偷",
+        "stealing": "偷取中",
+        "plantFirstShort": "先种树",
+        "todayStealDone": "今日已偷完",
+        "noOrbs": "没有可偷经验球",
+        "stealAll": "⚡ 一键偷取"
+      },
+      "visitPanel": {
+        "title": "树场串门",
+        "friendList": "好友列表",
+        "friendCount": "{count} 位好友",
+        "friendMeta": "未收成长值 {growth} · 经验球 {orbs}",
+        "stealable": "可偷 {count}",
+        "emptyFriends": "🌿 暂时还没有可串门的好友树场",
+        "logTitle": "📜 串门记录",
+        "logCount": "{count} 条记录",
+        "logDesc": "顺走了你 {reward} 点成长值，动了 {orbs} 个经验球",
+        "emptyLogs": "🛡️ 还没有新的串门记录"
+      },
+      "loading": {
+        "visiting": "串门中",
+        "returning": "返回中",
+        "claiming": "领取中",
+        "planting": "播种中",
+        "harvesting": "收获中",
+        "loading": "加载中"
+      },
+      "toast": {
+        "friendNoTree": "对方还没种树，暂时没有可串门的树场",
+        "planted": "已种下树苗",
+        "systemBusy": "系统繁忙",
+        "harvestFailed": "收获失败",
+        "quality3dFallback": "当前环境无法启用高质量 3D，已切回经典模式",
+        "doTaskElsewhere": "请前往对应功能区完成任务",
+        "plantOwnFirst": "先种下自己的树苗，再来好友树场串门",
+        "stealQuotaFull": "今天在这位好友树场已经偷满了",
+        "gainExp": "+{reward} 经验",
+        "stolenFrom": "从{name}那顺走 {reward} 点成长值",
+        "collectedOrbs": "收集 {count} 个经验球"
+      },
+      "burst": {
+        "steal": "偷取",
+        "stolen": "偷走 {reward}"
+      }
+    },
+    "settings": {
+      "themeLabel": "树场主题",
+      "freeBadge": "2款免费",
+      "lowPerformance": "低性能树场",
+      "notificationsOff": "关闭树场提醒",
+      "notificationsOffDesc": "开启后不再推送树场相关消息通知",
+      "pickerTitle": "选择树场主题",
+      "pickerSubtitle": "预览并选择你喜欢的树场风景",
+      "free": "免费",
+      "pass": "通行证",
+      "membershipActiveTip": "原木通行证权益已生效，全部主题均可使用",
+      "membershipInactiveTip": "开通原木通行证或超级原木通行证，解锁更多树场主题",
+      "viewPass": "查看通行证",
+      "passThemeTitle": "通行证专属主题",
+      "passThemeContent": "{theme}仅限原木通行证或超级原木通行证用户使用。",
+      "switchingScene": "切换场景中",
+      "switchedTo": "已切换为{theme}",
+      "classicEnabled": "树场已切换为经典模式",
+      "highQualityEnabled": "树场已切换为高质量 3D 模式",
+      "notificationsDisabledToast": "已关闭树场提醒",
+      "notificationsEnabledToast": "已开启树场提醒",
+      "themes": {
+        "oak_island": "橡岛晴岚",
+        "birch_blossom": "白桦花涧",
+        "snow_spruce": "雪杉云境",
+        "sakura_grove": "樱庭春晓",
+        "savanna_acacia": "金合旷野",
+        "swamp_redwood": "红杉泽影"
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@
           <i class="el-icon-search search-icon"></i>
           <input 
             type="text" 
-            placeholder="搜索小说、作者、帖子、用户..." 
+            :placeholder="$t('search.placeholder')"
             class="search-input"
             v-model="searchKeyword"
             @input="onSearchInput"
@@ -17,7 +17,7 @@
           <i v-if="searchKeyword" class="el-icon-close search-clear" @click="clearSearch"></i>
         </div>
         <button class="search-btn" @click="handleSearch" :disabled="!searchKeyword.trim()">
-          搜索
+          {{ $t("search.title") }}
         </button>
       </div>
     </div>
@@ -29,10 +29,10 @@
         <!-- 搜索历史 -->
         <div class="search-section" v-if="searchHistory.length > 0">
           <div class="section-header">
-            <h3 class="section-title">搜索历史</h3>
+            <h3 class="section-title">{{ $t("search.history") }}</h3>
             <button class="clear-btn" @click="clearSearchHistory">
               <i class="el-icon-delete"></i>
-              清空
+              {{ $t("search.clear") }}
             </button>
           </div>
           <div class="tag-list">
@@ -50,7 +50,7 @@
         <!-- 热门搜索 -->
         <div class="search-section">
           <div class="section-header">
-            <h3 class="section-title">热门搜索</h3>
+            <h3 class="section-title">{{ $t("search.hot") }}</h3>
           </div>
           <div class="tag-list">
             <span 
@@ -70,7 +70,7 @@
         <!-- 搜索结果统计 -->
         <div class="search-stats">
           <span class="search-keyword">"{{currentKeyword}}"</span>
-          <span class="search-count">找到 {{totalResults}} 个结果</span>
+          <span class="search-count">{{ $t("search.found", { count: totalResults }) }}</span>
         </div>
 
         <!-- 搜索类型切换 -->
@@ -80,7 +80,7 @@
             :class="{'active': searchType === 'all'}" 
             @click="switchSearchType('all')"
           >
-            <span class="tab-name">全部</span>
+            <span class="tab-name">{{ $t("search.tabs.all") }}</span>
             <span class="tab-count" v-if="totalResults > 0">({{totalResults}})</span>
           </div>
           <div 
@@ -88,7 +88,7 @@
             :class="{'active': searchType === 'books'}" 
             @click="switchSearchType('books')"
           >
-            <span class="tab-name">书籍</span>
+            <span class="tab-name">{{ $t("search.tabs.books") }}</span>
             <span class="tab-count" v-if="searchResults.books.total > 0">({{searchResults.books.total}})</span>
           </div>
           <div 
@@ -96,7 +96,7 @@
             :class="{'active': searchType === 'posts'}" 
             @click="switchSearchType('posts')"
           >
-            <span class="tab-name">帖子</span>
+            <span class="tab-name">{{ $t("search.tabs.posts") }}</span>
             <span class="tab-count" v-if="searchResults.posts.total > 0">({{searchResults.posts.total}})</span>
           </div>
           <div 
@@ -104,7 +104,7 @@
             :class="{'active': searchType === 'circles'}" 
             @click="switchSearchType('circles')"
           >
-            <span class="tab-name">圈子</span>
+            <span class="tab-name">{{ $t("search.tabs.circles") }}</span>
             <span class="tab-count" v-if="searchResults.circles.total > 0">({{searchResults.circles.total}})</span>
           </div>
           <div 
@@ -112,7 +112,7 @@
             :class="{'active': searchType === 'users'}" 
             @click="switchSearchType('users')"
           >
-            <span class="tab-name">用户</span>
+            <span class="tab-name">{{ $t("search.tabs.users") }}</span>
             <span class="tab-count" v-if="searchResults.users.total > 0">({{searchResults.users.total}})</span>
           </div>
         </div>
@@ -122,7 +122,7 @@
           <!-- 加载状态 -->
           <div class="loading" v-if="isSearching">
             <i class="el-icon-loading"></i>
-            <span>搜索中...</span>
+            <span>{{ $t("search.searching") }}</span>
           </div>
 
           <!-- 搜索结果 -->
@@ -132,9 +132,9 @@
               <!-- 书籍结果 -->
               <div class="result-section" v-if="searchResults.books.list.length > 0">
                 <div class="section-title">
-                  <h4>书籍</h4>
+                  <h4>{{ $t("search.tabs.books") }}</h4>
                   <nuxt-link :to="`/search?type=books&keyword=${currentKeyword}`" class="more-link">
-                    查看更多 <i class="el-icon-arrow-right"></i>
+                    {{ $t("search.more") }} <i class="el-icon-arrow-right"></i>
                   </nuxt-link>
                 </div>
                 <div class="book-grid">
@@ -157,9 +157,9 @@
               <!-- 帖子结果 -->
               <div class="result-section" v-if="searchResults.posts.list.length > 0">
                 <div class="section-title">
-                  <h4>帖子</h4>
+                  <h4>{{ $t("search.tabs.posts") }}</h4>
                   <nuxt-link :to="`/search?type=posts&keyword=${currentKeyword}`" class="more-link">
-                    查看更多 <i class="el-icon-arrow-right"></i>
+                    {{ $t("search.more") }} <i class="el-icon-arrow-right"></i>
                   </nuxt-link>
                 </div>
                 <div class="post-list">
@@ -172,7 +172,7 @@
                     <div class="post-header">
                       <img class="user-avatar" :src="post.author_avatar || '/default-avatar.png'" :alt="post.author_name">
                       <div class="post-meta">
-                        <span class="user-name">{{post.author_name || '匿名用户'}}</span>
+                        <span class="user-name">{{post.author_name || $t('search.anonymous')}}</span>
                         <span class="post-time">{{formatTime(post.create_time)}}</span>
                       </div>
                     </div>
@@ -187,9 +187,9 @@
               <!-- 圈子结果 -->
               <div class="result-section" v-if="searchResults.circles.list.length > 0">
                 <div class="section-title">
-                  <h4>圈子</h4>
+                  <h4>{{ $t("search.tabs.circles") }}</h4>
                   <nuxt-link :to="`/search?type=circles&keyword=${currentKeyword}`" class="more-link">
-                    查看更多 <i class="el-icon-arrow-right"></i>
+                    {{ $t("search.more") }} <i class="el-icon-arrow-right"></i>
                   </nuxt-link>
                 </div>
                 <div class="circle-list">
@@ -202,8 +202,8 @@
                     <img class="circle-icon" :src="circle.icon || '/default-avatar.png'" :alt="circle.name">
                     <div class="circle-info">
                       <div class="circle-name">{{circle.name}}</div>
-                      <div class="circle-meta">{{circle.member_count || 0}}人 · {{circle.category_name || '未分类'}}</div>
-                      <div class="circle-desc">{{circle.description || '暂无描述'}}</div>
+                      <div class="circle-meta">{{ $t("search.memberCategory", { count: circle.member_count || 0, category: circle.category_name || $t("search.uncategorized") }) }}</div>
+                      <div class="circle-desc">{{circle.description || $t('search.noDescription')}}</div>
                     </div>
                   </div>
                 </div>
@@ -212,9 +212,9 @@
               <!-- 用户结果 -->
               <div class="result-section" v-if="searchResults.users.list.length > 0">
                 <div class="section-title">
-                  <h4>用户</h4>
+                  <h4>{{ $t("search.tabs.users") }}</h4>
                   <nuxt-link :to="`/search?type=users&keyword=${currentKeyword}`" class="more-link">
-                    查看更多 <i class="el-icon-arrow-right"></i>
+                    {{ $t("search.more") }} <i class="el-icon-arrow-right"></i>
                   </nuxt-link>
                 </div>
                 <div class="user-list">
@@ -226,8 +226,8 @@
                   >
                     <img class="user-avatar" :src="user.avatar_url || '/default-avatar.png'" :alt="user.name">
                     <div class="user-info">
-                      <div class="user-name">{{user.name || '匿名用户'}}</div>
-                      <div class="user-motto">{{user.motto || '这个人很懒，还没有设置个性签名'}}</div>
+                      <div class="user-name">{{user.name || $t('search.anonymous')}}</div>
+                      <div class="user-motto">{{user.motto || $t('暂无简介')}}</div>
                     </div>
                   </div>
                 </div>
@@ -267,7 +267,7 @@
                     <div class="post-header">
                       <img class="user-avatar" :src="post.author_avatar || '/default-avatar.png'" :alt="post.author_name">
                       <div class="post-meta">
-                        <span class="user-name">{{post.author_name || '匿名用户'}}</span>
+                        <span class="user-name">{{post.author_name || $t('search.anonymous')}}</span>
                         <span class="post-time">{{formatTime(post.create_time)}}</span>
                       </div>
                     </div>
@@ -291,8 +291,8 @@
                     <img class="circle-icon" :src="circle.icon || '/default-avatar.png'" :alt="circle.name">
                     <div class="circle-info">
                       <div class="circle-name">{{circle.name}}</div>
-                      <div class="circle-meta">{{circle.member_count || 0}}人 · {{circle.category_name || '未分类'}}</div>
-                      <div class="circle-desc">{{circle.description || '暂无描述'}}</div>
+                      <div class="circle-meta">{{ $t("search.memberCategory", { count: circle.member_count || 0, category: circle.category_name || $t("search.uncategorized") }) }}</div>
+                      <div class="circle-desc">{{circle.description || $t('search.noDescription')}}</div>
                     </div>
                   </div>
                 </div>
@@ -309,8 +309,8 @@
                   >
                     <img class="user-avatar" :src="user.avatar_url || '/default-avatar.png'" :alt="user.name">
                     <div class="user-info">
-                      <div class="user-name">{{user.name || '匿名用户'}}</div>
-                      <div class="user-motto">{{user.motto || '这个人很懒，还没有设置个性签名'}}</div>
+                      <div class="user-name">{{user.name || $t('search.anonymous')}}</div>
+                      <div class="user-motto">{{user.motto || $t('暂无简介')}}</div>
                     </div>
                   </div>
                 </div>
@@ -321,7 +321,7 @@
             <div class="load-more" v-if="canLoadMore && searchType !== 'all'">
               <button class="load-more-btn" @click="loadMore" :disabled="isLoadingMore">
                 <i v-if="isLoadingMore" class="el-icon-loading"></i>
-                {{isLoadingMore ? '加载中...' : '加载更多'}}
+                {{isLoadingMore ? $t('common.states.loading') : $t('common.actions.loadMore')}}
               </button>
             </div>
 
@@ -331,8 +331,8 @@
                 <i class="el-icon-search"></i>
               </div>
               <div class="no-results-text">
-                <h3>没有找到相关内容</h3>
-                <p>试试其他关键词或检查拼写</p>
+                <h3>{{ $t("search.noResults") }}</h3>
+                <p>{{ $t("search.tryOther") }}</p>
               </div>
             </div>
           </div>
@@ -344,17 +344,18 @@
 
 <script>
 import { workUrl } from '~/utils/reading-discovery'
+import { formatRelativeTime } from '~/utils/i18n-format'
 export default {
   name: 'SearchPage',
   head() {
     return {
-      title: this.hasSearched ? `${this.currentKeyword} - 搜索结果` : '搜索 - LogHome',
+      title: this.hasSearched ? `${this.currentKeyword} - ${this.$t("search.resultsTitle")}` : `${this.$t("search.title")} - LogHome`,
       meta: [
         { hid: 'robots', name: 'robots', content: 'noindex,follow' },
         {
           hid: 'description',
           name: 'description',
-          content: this.hasSearched ? `搜索"${this.currentKeyword}"的结果` : 'LogHome搜索页面'
+          content: this.hasSearched ? this.$t("search.resultsDescription", { keyword: this.currentKeyword }) : this.$t("search.description")
         }
       ]
     }
@@ -540,7 +541,7 @@ export default {
         }
       } catch (error) {
         console.error('搜索失败:', error)
-        this.$message.error('搜索失败，请稍后重试')
+        this.$message.error(this.$t('search.failed'))
       } finally {
         this.isSearching = false
       }
@@ -569,7 +570,7 @@ export default {
         }
       } catch (error) {
         console.error('加载更多失败:', error)
-        this.$message.error('加载失败，请稍后重试')
+        this.$message.error(this.$t('common.errors.loadFailed'))
         this.currentPage[this.searchType]--
       } finally {
         this.isLoadingMore = false
@@ -671,7 +672,7 @@ export default {
     clearSearchHistory() {
       localStorage.removeItem('searchHistory')
       this.searchHistory = []
-      this.$message.success('搜索历史已清空')
+      this.$message.success(this.$t('search.historyCleared'))
     },
     
     async getHotSearches() {
@@ -694,20 +695,7 @@ export default {
     },
     
     formatTime(timestamp) {
-      if (!timestamp) return ''
-      const date = new Date(timestamp)
-      const now = new Date()
-      const diff = now - date
-      
-      if (diff < 60000) {
-        return '刚刚'
-      } else if (diff < 3600000) {
-        return Math.floor(diff / 60000) + '分钟前'
-      } else if (diff < 86400000) {
-        return Math.floor(diff / 3600000) + '小时前'
-      } else {
-        return Math.floor(diff / 86400000) + '天前'
-      }
+      return timestamp ? formatRelativeTime(timestamp, this.$language.state.locale) : ''
     },
     
     // 导航方法

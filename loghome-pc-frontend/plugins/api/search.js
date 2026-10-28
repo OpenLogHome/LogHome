@@ -96,3 +96,4 @@ const search = {
   };
 
 export default search;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

@@ -6,7 +6,7 @@
 		</div>
 		<div class="top">
 			<zetank-backBar :textcolor="isDarkMode ? '#ffffff' : '#000000'" :showLeft="true" :showHome="true" :showTitle="false"
-				navTitle='标题'></zetank-backBar>
+				navTitle=""></zetank-backBar>
 			<div class="title">
 				{{world.name}}
 			</div>
@@ -19,7 +19,7 @@
 						:color="isDarkMode ? '#b8b8b8' : '#888888'"></uni-icons>
 				</view>
 				<div class="recentUpdate">
-					最近更新：{{utc2beijing(world.update_time)}}
+					{{ $t('world.page.updatedAt', { time: utc2beijing(world.update_time) }) }}
 				</div>
 			</div>
 			<div class="desc">
@@ -29,33 +29,33 @@
 				<div class="button" @click="nice()">
 					<img v-if="niceStatus" src="../../static/icons/icon_niced.png" mode="widthFix" />
 					<img v-else src="../../static/icons/icon_nice.png" mode="widthFix" />
-					<div class="text">{{nice_amount}} 赞</div>
+					<div class="text">{{ $t('world.page.likes', { count: nice_amount }) }}</div>
 				</div>
 				<div class="button" @click="isInBookcase?removeFromBookcase():addToBookcase()">
 					<img v-if="isInBookcase" src="../../static/icons/icon_add.png" mode="widthFix" />
 					<img v-else src="../../static/icons/icon_add.png" mode="widthFix" />
-					<div class="text">{{isInBookcase?'已收藏':'收藏'}}</div>
+					<div class="text">{{isInBookcase?$t('world.page.favorited'):$t('world.page.favorite')}}</div>
 				</div>
 				<div class="button" @click="tip()">
 					<img src="../../static/icons/icon_sponsored.png" mode="widthFix" />
-					<div class="text">打赏</div>
+					<div class="text">{{ $t('world.page.tip') }}</div>
 				</div>
 				<div class="button" @click="shareBook()">
 					<img src="../../static/icons/icon_share.png" mode="widthFix" />
-					<div class="text">分享</div>
+					<div class="text">{{ $t('world.page.share') }}</div>
 				</div>
 			</div>
 			<div class="enterButton" @click="editWorld(world.novel_id)"
-				v-show="this.myUserInfo.user_id == world.creator_id">编辑设定</div>
+				v-show="this.myUserInfo.user_id == world.creator_id">{{ $t('world.page.editSettings') }}</div>
 		</div>
 		<div class="content">
 			<el-tabs :lazy="true">
 				<el-tab-pane>
-					<span class="paneLabel" slot="label">世界设定</span>
+					<span class="paneLabel" slot="label">{{ $t('world.page.tabSettings') }}</span>
 					<div class="worldContent">
 						<div class="title" style="margin-top: 10rpx;">
 							<div class="line"></div>
-							<span>世界大纲</span>
+							<span>{{ $t('world.page.outlines') }}</span>
 						</div>
 						<el-collapse style="margin-top: 20rpx;" :accordion="true" :value="''"
 							v-show="worldOutlines.length != 0" class="collapse2list">
@@ -66,16 +66,16 @@
 						<div class="nothing" v-show="worldOutlines.length == 0"
 							style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
 							<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
-							<div class="emptyText" style="font-size: 25rpx;">这里还什么都没有喔</div>
+							<div class="emptyText" style="font-size: 25rpx;">{{ $t('world.page.empty') }}</div>
 						</div>
 						<div class="title" style="margin-top: 30rpx; display: flex; justify-content: space-between; align-items: center;">
 							<div style="display: flex; align-items: center;">
 								<div class="line"></div>
-								<span>世界词条</span>
+								<span>{{ $t('world.page.vocabulary') }}</span>
 							</div>
-							<div class="relationLink" @click="gotoRelations()" style="font-size: 26rpx; margin-right: 20rpx; font-weight: bold;">
-								查看关系网
-							</div>
+								<div class="relationLink" @click="gotoRelations()" style="font-size: 26rpx; margin-right: 20rpx; font-weight: bold;">
+									{{ $t('world.page.viewRelations') }}
+								</div>
 						</div>
 						<div class="vocabs" style="margin-top: 20rpx;">
 							<el-tag v-for="item of worldVoabs" style="margin-right: 20rpx; margin-bottom: 20rpx;"
@@ -84,12 +84,12 @@
 						<div class="nothing" v-show="worldVoabs.length == 0"
 							style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 100rpx 0;">
 							<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
-							<div class="emptyText" style="font-size: 25rpx;">这里还什么都没有喔</div>
+							<div class="emptyText" style="font-size: 25rpx;">{{ $t('world.page.empty') }}</div>
 						</div>
 					</div>
 				</el-tab-pane>
 				<el-tab-pane>
-					<span class="paneLabel" slot="label">关联作品</span>
+					<span class="paneLabel" slot="label">{{ $t('world.page.relatedWorks') }}</span>
 					<div v-for="novel in assoNovels" :key="novel.novel_id" v-show="assoNovels.length != 0">
 						<navigator :url="'../readers/bookInfo?id=' +  novel.novel_id" open-type="navigate" class="books">
 							<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
@@ -99,7 +99,7 @@
 								<div class="title">
 									{{novel.name}}
 									<el-tag type="warning" v-show="novel.novel_type == 'world'" effect="dark"
-										style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">世界设定</el-tag>
+										style="margin-left:10rpx; transform:translateY(-5rpx)" size="mini">{{ $t('world.page.worldTag') }}</el-tag>
 								</div>
 								<view class="author">
 									<log-image :src="novel.avatar_url" alt="" class="auther_avatar"
@@ -113,7 +113,7 @@
 					<div class="nothing" v-show="assoNovels.length == 0"
 						style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 30rpx 0;">
 						<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 200rpx; max-width: 50%; margin: 25rpx 0;" />
-						<div class="emptyText">这里还什么都没有喔</div>
+						<div class="emptyText">{{ $t('world.page.empty') }}</div>
 					</div>
 				</el-tab-pane>
 			</el-tabs>
@@ -122,9 +122,9 @@
 		<div class="content" style="padding-bottom: 50rpx;">
 			<view class="l-list" style="margin-bottom: 30rpx;">
 				<view class="l-h3">
-					<text class="l-h3-title">粉丝贡献榜</text>
+					<text class="l-h3-title">{{ $t('world.page.fansRank') }}</text>
 					<navigator :url="'../readers/novel_fans?id=' + world.novel_id">
-						<view class="l-h3-more">完整榜单<img class="l-icon-more" src="../../static/l-icon-more.png"
+						<view class="l-h3-more">{{ $t('world.page.fullRank') }}<img class="l-icon-more" src="../../static/l-icon-more.png"
 								mode="widthFix"></img>
 						</view>
 					</navigator>
@@ -134,9 +134,9 @@
 			</view>
 
 			<view class="l-h3">
-				<text class="l-h3-title">评论</text>
+				<text class="l-h3-title">{{ $t('world.page.comments') }}</text>
 				<view @click="navtoComment()">
-					<view class="l-h3-more">全部(共 {{ commentAmount }} 条)<img class="l-icon-more"
+					<view class="l-h3-more">{{ $t('world.page.allComments', { count: commentAmount }) }}<img class="l-icon-more"
 							src="../../static/l-icon-more.png" mode="widthFix"></img>
 					</view>
 				</view>
@@ -145,7 +145,7 @@
 				<div class="nothing" v-show="commentInfo.length == 0"
 					style="display:flex; flex-direction: column; align-items: center; justify-content: center; margin: 30rpx 0;">
 					<img src="../../static/loggirl-404-empty-chest.png" alt="" style="width: 160rpx; max-width: 50%; margin: 25rpx 0;" />
-					<div class="emptyText" style="font-size: 25rpx;">还没有人评论哦</div>
+					<div class="emptyText" style="font-size: 25rpx;">{{ $t('world.page.emptyComments') }}</div>
 				</div>
 				<view class="l-comment-list" v-for="(item, index) in commentInfo" :key="index">
 					<view class="l-comment-list-header">
@@ -298,7 +298,7 @@
 					for (let item of res.data) {
 						if (item.article_type == "worldOutline") {
 							_this.worldOutlines.push(item);
-							item.content = "努力加载中"
+							item.content = _this.$t('common.loading')
 						} else if (item.article_type == "worldVocabulary") {
 							_this.worldVoabs.push(item);
 						}
@@ -321,7 +321,7 @@
 					res) => {
 					console.log(res.data);
 					this.assoNovels = res.data;
-				}).catch(function(error) {
+				}).catch((error) => {
 					if (error.message == "Request failed with status code 401") {
 						window.localStorage.removeItem('token');
 						this.$isFromLogin = true;
@@ -330,7 +330,7 @@
 						});
 					} else {
 						uni.showToast({
-							title: "获取关联世界设定失败",
+							title: this.$t('world.page.toast.relatedWorldsFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -401,15 +401,15 @@
 						'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 					}
 				},)
-					.then(function (response) {
+					.then((response) => {
 						uni.showToast({
-							title: "成功添加到书架",
+							title: this.$t('world.page.toast.addedToBookcase'),
 							icon: 'none',
 							duration: 2000
 						});
 						_this.isInBookcase = true;
 					})
-					.catch(function (error) {
+					.catch((error) => {
 						if (error.message == "Request failed with status code 401") {
 							window.localStorage.removeItem('token');
 							uni.navigateTo({
@@ -418,7 +418,7 @@
 						}
 						if (error) {
 							uni.showToast({
-								title: "添加失败",
+								title: this.$t('world.page.toast.addFailed'),
 								icon: 'none',
 								duration: 2000
 							});
@@ -501,7 +501,7 @@
 								if (modal) {
 									modal.show({
 										reward: typeof data.reward === 'number' ? data.reward : 10,
-										taskName: '每日任务：为世界设定点赞',
+										taskName: this.$t('world.page.task.likeWorld'),
 										icon: data.task_icon,
 										currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
 										maxGrowth: 100,
@@ -535,10 +535,10 @@
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;
 				uni.showModal({
-					title: '提示',
-					content: '确定取消收藏吗？',
-					cancelText: "我再想想", // 取消按钮的文字  
-					confirmText: "狠心取消", // 确认按钮的文字  
+					title: this.$t('common.prompt'),
+					content: this.$t('world.page.confirmRemoveFavorite'),
+					cancelText: this.$t('world.page.keepFavorite'),
+					confirmText: this.$t('world.page.confirmRemove'),
 					showCancel: true, // 是否显示取消按钮，默认为 true
 					confirmColor: '#f59037',
 					cancelColor: '#343434',
@@ -552,19 +552,19 @@
 									'Authorization': 'Bearer ' + tk //设置token 其中K名要和后端协调好
 								}
 							},)
-								.then(function (response) {
+								.then((response) => {
 									uni.showToast({
-										title: "已从书架移除",
+										title: this.$t('world.page.toast.removedFromBookcase'),
 										icon: 'none',
 										duration: 2000
 									});
 									_this.isInBookcase = false;
 								})
-								.catch(function (error) {
+								.catch((error) => {
 									console.log(error);
 									if (error) {
 										uni.showToast({
-											title: "移除失败",
+											title: this.$t('world.page.toast.removeFailed'),
 											icon: 'none',
 											duration: 2000
 										});
@@ -578,14 +578,15 @@
 				this.createShareCode();
 			},
 			traditionalShare() {
-				let content = "我正在原木社区浏览世界《" + this.world.name + "》，你也一起来看看吧！\n" +
-					"https://loghome.ink/novel/" + this.world.novel_id +
-					"\n用浏览器打开链接，或复制这段文本打开原木社区APP即可查看哦！";
+				let content = this.$t('world.page.shareMessage', {
+					name: this.world.name,
+					id: this.world.novel_id,
+				});
 				return content;
 			},
 			createShareCode() {
 				uni.showLoading({
-					title: '创建口令中...'
+					title: this.$t('world.page.creatingCode')
 				});
 
 				const shareContent = `《${this.world.name}》- ${this.world.user_name}`;
@@ -595,7 +596,7 @@
 				if (!tk || !tk.tk) {
 					uni.hideLoading();
 					uni.showToast({
-						title: '请先登录',
+						title: this.$t('common.needLogin'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -622,10 +623,10 @@
 							data: res.data.share_text,
 							success: () => {
 								uni.showModal({
-									title: '口令创建成功',
-									content: `口令：${res.data.code}\n\n口令已复制到剪贴板，分享给好友即可！`,
+									title: this.$t('world.page.codeCreatedTitle'),
+									content: this.$t('world.page.codeCreatedContent', { code: res.data.code }),
 									showCancel: false,
-									confirmText: '知道了'
+									confirmText: this.$t('common.gotIt')
 								});
 							}
 						});
@@ -645,7 +646,7 @@
 							if (modal) {
 								modal.show({
 									reward: typeof data.reward === 'number' ? data.reward : 15,
-									taskName: '每日任务：分享作品',
+									taskName: this.$t('world.page.task.shareWork'),
 									icon: data.task_icon,
 									currentGrowth: typeof data.growth_val === 'number' ? data.growth_val : 0,
 									maxGrowth: 100,
@@ -658,7 +659,7 @@
 
 					} else {
 						uni.showToast({
-							title: res.data.msg || '口令创建失败',
+							title: res.data.msg || this.$t('world.page.toast.codeCreateFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -667,7 +668,7 @@
 					uni.hideLoading();
 					console.error('创建口令失败:', error);
 					uni.showToast({
-						title: '网络错误，请稍后重试',
+						title: this.$t('common.networkError'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -678,7 +679,7 @@
 				if (tk) tk = tk.id;
 				if (tk == this.world.creator_id) {
 					uni.showToast({
-						title: "不能给自己的书打赏哦",
+						title: this.$t('world.page.toast.cannotTipSelf'),
 						icon: 'none',
 						duration: 2000
 					});

@@ -20,6 +20,22 @@ import zhManga from './messages/zh-CN.manga.json'
 import enManga from './messages/en.manga.json'
 import zhWriter from './messages/zh-CN.writer.json'
 import enWriter from './messages/en.writer.json'
+import zhMembership from './messages/zh-CN.membership.json'
+import enMembership from './messages/en.membership.json'
+import zhStore from './messages/zh-CN.store.json'
+import enStore from './messages/en.store.json'
+import zhPayments from './messages/zh-CN.payments.json'
+import enPayments from './messages/en.payments.json'
+import zhTree from './messages/zh-CN.tree.json'
+import enTree from './messages/en.tree.json'
+import zhWorld from './messages/zh-CN.world.json'
+import enWorld from './messages/en.world.json'
+import zhLibrary from './messages/zh-CN.library.json'
+import enLibrary from './messages/en.library.json'
+import zhApps from './messages/zh-CN.apps.json'
+import enApps from './messages/en.apps.json'
+import zhManage from './messages/zh-CN.manage.json'
+import enManage from './messages/en.manage.json'
 import { resolveEffectiveLanguage, DEFAULT_LANG } from './resolve.js'
 
 Vue.use(VueI18n)
@@ -61,8 +77,8 @@ const i18n = new VueI18n({
 	fallbackLocale: DEFAULT_LANG,
 	silentTranslationWarn: true,
 	messages: {
-		'zh-CN': mergeMessages([zhCore, zhAuth, zhSettings, zhRedstone, zhMe, zhCommunity, zhTitles, zhReader, zhManga, zhWriter]),
-		en: mergeMessages([enCore, enAuth, enSettings, enRedstone, enMe, enCommunity, enTitles, enReader, enManga, enWriter])
+		'zh-CN': mergeMessages([zhCore, zhAuth, zhSettings, zhRedstone, zhMe, zhCommunity, zhTitles, zhReader, zhManga, zhWriter, zhMembership, zhStore, zhPayments, zhTree, zhWorld, zhLibrary, zhApps, zhManage]),
+		en: mergeMessages([enCore, enAuth, enSettings, enRedstone, enMe, enCommunity, enTitles, enReader, enManga, enWriter, enMembership, enStore, enPayments, enTree, enWorld, enLibrary, enApps, enManage])
 	}
 })
 

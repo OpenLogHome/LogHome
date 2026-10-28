@@ -108,7 +108,7 @@
 				</view>
 			</view>
 
-			<view class="panel wallet-panel">
+			<view class="panel wallet-panel" :class="{ 'wallet-panel--en': $i18n.locale === 'en' }">
 				<view class="section-heading"><text class="section-title">{{ $t('me.layout.wallet') }}</text><navigator class="section-link" url="/pages/payments/recharge"><text>{{ $t('me.service.recharge') }}</text><uni-icons type="right" size="12" color="currentColor" /></navigator></view>
 				<view class="wallet-grid">
 					<navigator class="wallet-item" url="/pages/treePlant/treeplant">
@@ -648,6 +648,11 @@
 .wallet-label { display: block; margin-top: 8rpx; }
 .box-bd .item > text, .wallet-label, .grid-item > text { font-size: 24rpx; font-weight: 400; line-height: 1.5; }
 .wallet-hint { display: block; margin-top: 7rpx; font-size: 20rpx; color: var(--me-muted); }
+.wallet-panel--en {
+	.wallet-item { display: flex; flex-direction: column; align-items: center; }
+	.wallet-value { width: 100%; }
+	.wallet-label, .wallet-hint { width: 100%; min-height: 0; line-height: 1.35; }
+}
 .service-grid { padding: 12rpx 8rpx 18rpx; row-gap: 12rpx; .grid-item { padding: 14rpx 0; } }
 .security-banner { display: flex; align-items: center; gap: 14rpx; margin: 0 0 18rpx; padding: 18rpx; border-radius: 16rpx; background: var(--me-soft); color: var(--me-accent); font-size: 20rpx; image { width: 40rpx; height: 40rpx; flex-shrink: 0; } > view { flex: 1; min-width: 0; } > text { flex-shrink: 0; } }
 .security-title, .security-description { display: block; }

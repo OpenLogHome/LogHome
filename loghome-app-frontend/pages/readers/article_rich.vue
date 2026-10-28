@@ -468,10 +468,12 @@ export default {
 				? (this.getVisibleParagraphId() || -1)
 				: startParagraphId;
 			this.listeningArticleId = String(this.article.article_id || this.articleId);
-			this.listeningParagraphId = String(targetParagraphId);
+			if (startParagraphId != null || !this.listeningParagraphId) {
+				this.listeningParagraphId = String(targetParagraphId);
+			}
 			this.settingsOpened = false;
 			await this.$nextTick();
-			return this.$refs.audiobookPlayer.openNativePlayer(targetParagraphId);
+			return this.$refs.audiobookPlayer.openNativePlayer(targetParagraphId, { forceSeek: startParagraphId != null });
 		},
 		handleAudiobookProgress(data) {
 			if (!data || data.articleId == null || data.paragraphId == null) return;
@@ -935,9 +937,13 @@ export default {
 		},
 		gotoMenu() {
 			if (this.isPreviewMode) return;
-			// uni.navigateTo({
-			// 	url:"./allArticles?id=" + this.article.novel_id
-			// })
+			// #ifdef H5
+			// 移动端网页版用全屏目录页，避开底部抽屉显示不全/滚动受阻的问题
+			uni.navigateTo({
+				url: "./allArticles?id=" + this.article.novel_id
+			});
+			return;
+			// #endif
 			this.menuDrawer = true;
 		},
 		articleTapped(event) {

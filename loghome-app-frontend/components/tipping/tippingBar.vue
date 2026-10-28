@@ -2,14 +2,14 @@
 	<view class="outer" v-dark>
 		<div class="balance">
 			<div class="balance-item">
-				<img src="../../static/resources/log.png" alt="">
+				<img src="../../static/resources/log.png" alt="" />
 				<span>{{resources.log}}</span>
 			</div>
 			<div class="balance-item">
-				<img src="../../static/resources/apple.png" alt="">
+				<img src="../../static/resources/apple.png" alt="" />
 				<span>{{resources.apple}}</span>
 			</div>
-			<button class="get-logs-btn" @click="openLogGuide">? 如何获取原木</button>
+			<button class="get-logs-btn" @click="openLogGuide">{{ $t('payments.tipping.howToGetLog') }}</button>
 		</div>
 		<div class="gifts">
 			<div class="gift" v-for="item in tippingList"
@@ -19,21 +19,21 @@
 				<log-image :src="item.img_url" alt="" class="gift-img" />
 				<div class="cost">
 					<img src="../../static/resources/log.png" alt=""
-					v-show="!item.is_log_free" class="cost-icon">
+					v-show="!item.is_log_free" class="cost-icon" />
 					<img src="../../static/resources/apple.png" alt=""
-					v-show="item.is_log_free" class="cost-icon">
+					v-show="item.is_log_free" class="cost-icon" />
 					<p>{{item.item_cost}}</p>
 				</div>
 			</div>
 		</div>
 		
 		<div class="message-area">
-			<textarea v-model="tippingMessage" placeholder="添加留言..." maxlength="50" class="message-input"></textarea>
+			<textarea v-model="tippingMessage" :placeholder="$t('payments.tipping.messagePlaceholder')" maxlength="50" class="message-input"></textarea>
 			<div class="message-counter">{{tippingMessage.length}}/50</div>
 		</div>
 		
 		<div class="amount-selector">
-			<div class="amount-label">数量：</div>
+			<div class="amount-label">{{ $t('payments.tipping.amountLabel') }}</div>
 			<div class="amount-stepper">
 				<div class="amount-btn" @click="decreaseAmount">-</div>
 				<div class="amount-value" @click="selectAmount">{{tippingAmount}}</div>
@@ -42,18 +42,18 @@
 		</div>
 		
 		<div class="total-cost">
-			<div class="total-label">总计：</div>
+			<div class="total-label">{{ $t('payments.tipping.totalLabel') }}</div>
 			<div class="total-value">
 				<img v-show="selectedTippingItem && selectedTippingItem.is_log_free" src="../../static/resources/apple.png" 
-					 alt="" class="total-icon">
+					 alt="" class="total-icon" />
 				<img v-show="selectedTippingItem && !selectedTippingItem.is_log_free" src="../../static/resources/log.png" 
-					 alt="" class="total-icon">
+					 alt="" class="total-icon" />
 				<span>{{totalCost}}</span>
 			</div>
 		</div>
 		
 		<div class="tip-button" @click="tipping">
-			<span>打 赏</span>
+			<span>{{ $t('payments.tipping.submit') }}</span>
 		</div>
 		
 		<chunLei-modal v-model="showModal" :mData="inputData" type="input" @onConfirm="onModalConfirm">
@@ -73,19 +73,32 @@
 				tippingList:[],
 				selectedTippingItem:undefined,
 				tippingAmount:1,
-				tippingMessage: "此书只应天上有，当赏当赏！",
+				tippingMessage: "",
 				showModal:false,
-				inputData:{
-				  title:'自定义数量(<=9999)',
-				  content:[
-				  {title:'数量',content:'',type:'number',placeholder:'请输入数量'},
-				  ]
-				}
 			}
 		},
 		props:["novel_id"],
 		mixins: [darkModeMixin],
 		computed: {
+			inputData(){
+				return {
+					title: this.$t('payments.tipping.customAmountTitle'),
+					content: [
+						{ title: this.$t('payments.tipping.quantityLabel'), content: '', type: 'number', placeholder: this.$t('payments.tipping.quantityPlaceholder') }
+					]
+				};
+			},
+			amountOptions(){
+				return [
+					this.$t('payments.tipping.customOption'),
+					this.$t('payments.tipping.confession520'),
+					this.$t('payments.tipping.forever99'),
+					this.$t('payments.tipping.smooth66'),
+					this.$t('payments.tipping.perfect10'),
+					this.$t('payments.tipping.blessing5'),
+					this.$t('payments.tipping.oneHeart1')
+				];
+			},
 			totalCost(){
 				if (!this.selectedTippingItem) return 0;
 				return this.selectedTippingItem.item_cost * Number(this.tippingAmount);
@@ -108,7 +121,7 @@
 					this.tippingAmount++;
 				} else {
 					uni.showToast({
-						title: "数量不能超过9999",
+						title: this.$t('payments.tipping.amountTooLarge'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -203,7 +216,7 @@
 			selectAmount(){
 				let _this = this;
 				uni.showActionSheet({
-				    itemList: ['自定义 (<=9999)','爱的告白 ×520','天长地久 ×99','六六大顺 ×66',"十全十美 ×10","五福临门 ×5","一心一意 ×1"],
+				    itemList: _this.amountOptions,
 				    success: function (res) {
 				        if(res.tapIndex == 0) {
 							_this.showModal = true;
@@ -238,7 +251,7 @@
 			tipping(){
 				if (!this.selectedTippingItem) {
 					uni.showToast({
-						title: "请选择打赏物品",
+						title: this.$t('payments.tipping.selectItem'),
 						icon:'none',
 						duration: 2000
 					});
@@ -259,7 +272,7 @@
 						resource_name = "apple";
 					} else{
 						uni.showToast({
-							title: "余额不足",
+							title: this.$t('payments.tipping.insufficientBalance'),
 							icon:'none',
 							duration: 2000
 						});
@@ -273,7 +286,7 @@
 						resource_name = "log";
 					} else{
 						uni.showToast({
-							title: "余额不足",
+							title: this.$t('payments.tipping.insufficientBalance'),
 							icon:'none',
 							duration: 2000
 						});
@@ -301,9 +314,9 @@
 						}
 					},
 				)
-				.then(async function(response) {
+				.then(async (response) => {
 					uni.showToast({
-						title: "打赏成功",
+						title: this.$t('payments.tipping.tipSuccess'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -319,11 +332,11 @@
 					});
 					_this.tippingMessage = ""; // 清空留言
 				})
-				.catch(function(error) {
+				.catch((error) => {
 					if (error) {
 						console.log(error);
 						uni.showToast({
-							title: "打赏失败",
+							title: this.$t('payments.tipping.tipFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -335,6 +348,7 @@
 			}
 		},
 		mounted(){
+			this.tippingMessage = this.$t('payments.tipping.defaultMessage');
 			this.refreshResources();
 			this.refreshTippingList();
 			this.getUserFanMessage(); // 获取用户留言

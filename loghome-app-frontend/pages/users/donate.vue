@@ -6,11 +6,6 @@
 </template>
 <script>
 	export default {
-		data() {
-			return {
-				title: '原木社区',
-			}
-		},
 		onLoad() {
 
 		},
@@ -18,7 +13,7 @@
 			gotoDonate(){
 				console.log("nononono");
 				uni.navigateTo({
-					url:"apps/h5webview?url=https://loghome.ink/activities/novelcraft&title=干草块杯活动页面&baseUrl=loghome.ink/activities/novelcraft"
+					url:"apps/h5webview?url=https://loghome.ink/activities/novelcraft&title=" + encodeURIComponent(this.$t('settings.donate.activityTitle')) + "&baseUrl=loghome.ink/activities/novelcraft"
 				})
 			},
 		}

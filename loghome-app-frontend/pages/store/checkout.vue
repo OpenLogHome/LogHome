@@ -1,12 +1,12 @@
 <template>
 	<view class="checkout-page" v-dark>
 		<view v-if="loadingProduct && !product.id" class="page-state">
-			<text>正在加载结算信息...</text>
+			<text>{{ $t('store.checkout.loading') }}</text>
 		</view>
 
 		<view v-else-if="loadError && !product.id" class="page-state">
 			<text>{{ loadError }}</text>
-			<view class="state-action" @tap="refreshCheckout">重新加载</view>
+			<view class="state-action" @tap="refreshCheckout">{{ $t('store.common.reload') }}</view>
 		</view>
 
 		<template v-else>
@@ -14,8 +14,8 @@
 				<text>{{ loadError }}</text>
 			</view>
 			<view class="notice-card" v-if="!isLoggedIn">
-				<text>登录后才能提交兑换订单，地址和余额也会在登录后自动加载。</text>
-				<view class="notice-action" @tap="goLogin">去登录</view>
+				<text>{{ $t('store.checkout.loginNotice') }}</text>
+				<view class="notice-action" @tap="goLogin">{{ $t('store.common.goLogin') }}</view>
 			</view>
 			<view
 				class="address-card"
@@ -24,7 +24,7 @@
 			>
 				<view class="address-icon"><store-icon name="pin" :size="38" tone="brand" /></view>
 				<view class="address-copy">
-					<view class="section-title">收货地址</view>
+					<view class="section-title">{{ $t('store.checkout.shippingAddress') }}</view>
 					<view v-if="address">
 						<view class="address-line">
 							<text class="name">{{ address.receiver_name }}</text>
@@ -35,7 +35,7 @@
 						</view>
 					</view>
 					<view v-else class="address-empty">
-						{{ isLoggedIn ? '请添加收货地址' : '登录后选择收货地址' }}
+						{{ isLoggedIn ? $t('store.checkout.addAddress') : $t('store.checkout.loginForAddress') }}
 					</view>
 				</view>
 				<store-icon class="address-arrow" name="chevron" :size="30" tone="muted" />
@@ -53,22 +53,22 @@
 							selectedVariant
 								? selectedVariant.label
 								: product.has_variants
-								? '请选择商品规格'
-								: '默认规格'
+								? $t('store.common.selectVariant')
+								: $t('store.common.defaultVariant')
 						}}
 					</view>
 					<view class="product-subtotal">
 						<view class="price-row">
 							<text class="price">{{ displayPrice }}</text>
-							<text class="currency-unit">原木{{ needsVariant ? '起' : '' }}</text>
+							<text class="currency-unit">{{ needsVariant ? $t('store.common.logFrom') : $t('store.common.logUnit') }}</text>
 						</view>
 						<text class="quantity">× 1</text>
 					</view>
 				</view>
 			</view>
 			<view class="spec-change" v-if="product.has_variants" @tap="openVariantSheet">
-				<text>商品规格</text>
-				<text class="spec-change-action">{{ needsVariant ? '请选择' : '更换规格' }}</text>
+				<text>{{ $t('store.common.productVariant') }}</text>
+				<text class="spec-change-action">{{ needsVariant ? $t('store.checkout.selectVariantShort') : $t('store.checkout.changeVariant') }}</text>
 				<store-icon name="chevron" :size="28" tone="muted" />
 			</view>
 			<store-variant-sheet
@@ -83,56 +83,55 @@
 			/>
 
 			<view class="summary-card" v-if="product.id">
-				<view class="section-title">兑换明细</view>
+				<view class="section-title">{{ $t('store.checkout.summaryTitle') }}</view>
 				<view class="row">
-					<text>商品价格</text>
+					<text>{{ $t('store.checkout.productPrice') }}</text>
 					<view class="price-row-small">
-						<text>{{ needsVariant ? '待选择规格' : displayPrice + ' 原木' }}</text>
+						<text>{{ needsVariant ? $t('store.checkout.pricePending') : $t('store.checkout.priceValue', { price: displayPrice }) }}</text>
 					</view>
 				</view>
 
 				<view class="row">
-					<text>订单说明</text>
-					<text>{{ product.type === 'physical' ? '提交后等待发货' : '提交后自动发放' }}</text>
+					<text>{{ $t('store.checkout.orderNote') }}</text>
+					<text>{{ product.type === 'physical' ? $t('store.checkout.notePhysical') : $t('store.checkout.noteVirtual') }}</text>
 				</view>
 				<view class="row" v-if="product.shipping_desc">
-					<text>发放说明</text>
+					<text>{{ $t('store.checkout.deliveryNote') }}</text>
 					<text>{{ product.shipping_desc }}</text>
 				</view>
 			</view>
 			<view class="summary-card payment-card" v-if="product.id">
-				<view class="section-title">原木支付</view>
+				<view class="section-title">{{ $t('store.checkout.paymentTitle') }}</view>
 				<view class="payment-method">
 					<view class="payment-icon"><store-icon name="wallet" :size="38" tone="brand" /></view>
 					<view class="payment-copy">
-						<view>优先使用去皮原木</view>
+						<view>{{ $t('store.checkout.priorityCropped') }}</view>
 						<view class="payment-caption">
 							{{
 								isLoggedIn
-									? '可用 ' +
-									  (resources.cropped_log || 0) +
-									  ' 去皮原木 · ' +
-									  (resources.log || 0) +
-									  ' 原木'
-									: '登录后查看可用余额'
+									? $t('store.checkout.balanceDetail', {
+											cropped: resources.cropped_log || 0,
+											log: resources.log || 0,
+									  })
+									: $t('store.checkout.loginToViewBalance')
 							}}
 						</view>
 					</view>
 					<store-icon name="check-circle" :size="38" tone="brand" />
 				</view>
 				<view class="row payment-total" v-if="displayPrice && !needsVariant">
-					<text>本次扣除</text>
-					<text>{{ payCropped }} 去皮 + {{ payLog }} 原木</text>
+					<text>{{ $t('store.checkout.deduction') }}</text>
+					<text>{{ $t('store.checkout.deductionValue', { cropped: payCropped, log: payLog }) }}</text>
 				</view>
-				<view class="payment-caption" v-else>选择规格后计算扣款明细</view>
+				<view class="payment-caption" v-else>{{ $t('store.checkout.deductionHint') }}</view>
 			</view>
 
 			<view class="bottom-bar">
 				<view class="bottom-copy">
-					<view class="bottom-label">合计 · 1 件商品</view>
+					<view class="bottom-label">{{ $t('store.checkout.totalLine') }}</view>
 					<view class="bottom-price">
 						{{ needsVariant ? '--' : displayPrice }}
-						<text class="currency-unit">原木</text>
+						<text class="currency-unit">{{ $t('store.common.logUnit') }}</text>
 					</view>
 				</view>
 				<button class="confirm-btn" :disabled="submitDisabled" @tap="submitOrder">
@@ -222,15 +221,15 @@ export default {
 			return !this.canSubmit
 		},
 		submitButtonText() {
-			if (this.submitting) return '提交中...'
-			if (this.loadError) return '商品不可下单'
-			if (this.needsVariant) return '请选择规格'
-			if (this.displayStock <= 0) return '已兑完'
-			if (!this.displayPrice) return '商品信息加载中'
-			if (!this.isLoggedIn) return '登录后下单'
-			if (this.product.type === 'physical' && !this.address) return '请选择地址'
-			if (this.totalBalance < Number(this.displayPrice)) return '余额不足'
-			return '确认兑换'
+			if (this.submitting) return this.$t('store.checkout.actionSubmitting')
+			if (this.loadError) return this.$t('store.checkout.actionUnavailable')
+			if (this.needsVariant) return this.$t('store.common.selectOption')
+			if (this.displayStock <= 0) return this.$t('store.checkout.actionSoldOut')
+			if (!this.displayPrice) return this.$t('store.checkout.actionLoading')
+			if (!this.isLoggedIn) return this.$t('store.checkout.actionLogin')
+			if (this.product.type === 'physical' && !this.address) return this.$t('store.checkout.actionSelectAddress')
+			if (this.totalBalance < Number(this.displayPrice)) return this.$t('store.common.insufficientBalance')
+			return this.$t('store.checkout.actionConfirm')
 		},
 	},
 	onLoad(options) {
@@ -323,13 +322,13 @@ export default {
 					} else {
 						this.product = {}
 						this.address = null
-						this.loadError = res.data.msg || '商品不存在或已下架'
+						this.loadError = res.data.msg || this.$t('store.common.notFound')
 					}
 				})
 				.catch((error) => {
 					this.product = {}
 					this.address = null
-					this.loadError = error.response?.data?.msg || '商品不存在或已下架'
+					this.loadError = error.response?.data?.msg || this.$t('store.common.notFound')
 				})
 				.finally(() => {
 					this.loadingProduct = false
@@ -401,7 +400,7 @@ export default {
 			const requestId = this.submitRequestId || this.createRequestId()
 			this.submitRequestId = requestId
 			this.submitting = true
-			uni.showLoading({ title: '下单中...' })
+			uni.showLoading({ title: this.$t('store.checkout.submitting') })
 			axios
 				.post(
 					this.$baseUrl + '/store/orders',
@@ -420,16 +419,16 @@ export default {
 				)
 				.then((res) => {
 					if (res.data && res.data.code === 200) {
-						uni.showToast({ title: '下单成功', icon: 'success' })
+						uni.showToast({ title: this.$t('store.checkout.submitSuccess'), icon: 'success' })
 						uni.redirectTo({
 							url: '/pages/store/orders',
 						})
 					} else {
-						uni.showToast({ title: res.data.msg || '下单失败', icon: 'none' })
+						uni.showToast({ title: res.data.msg || this.$t('store.checkout.submitFailed'), icon: 'none' })
 					}
 				})
 				.catch((error) => {
-					uni.showToast({ title: error.response?.data?.msg || '下单失败', icon: 'none' })
+					uni.showToast({ title: error.response?.data?.msg || this.$t('store.checkout.submitFailed'), icon: 'none' })
 				})
 				.finally(() => {
 					this.submitting = false

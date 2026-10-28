@@ -1,0 +1,125 @@
+{
+  "library": {
+    "home": {
+      "tabs": {
+        "novel": "Novel",
+        "manga": "Manga",
+        "world": "World"
+      },
+      "switchToGrid": "Switch to grid view",
+      "switchToScroll": "Switch to scroll view",
+      "emptyTagline": "Blocks leap off the page, stories take root here.",
+      "newStory": "Start a new story",
+      "newStoryAlt": "LogGirl and her parrot starting a new story",
+	  "uploadWork": "Upload a work",
+      "workAbnormal": "Work flagged",
+      "reReviewing": "Under review again",
+      "addWorkWorld": "Add a world to this work",
+      "close": "Close",
+      "searchAllWorlds": "Search all worlds",
+      "loadingWorlds": "Loading worlds...",
+      "noWorlds": "No worlds available to add",
+      "unknownAuthor": "Unknown author",
+      "noDescription": "No description yet",
+      "activity": {
+        "fallbackTitle": "Activity details",
+        "fallbackPlaceholder": "Enter {{name}}",
+        "cancel": "Cancel",
+        "submit": "Submit",
+        "fieldRequired": "Please fill in {{name}}",
+        "loginRequired": "Please sign in first",
+        "submitting": "Submitting...",
+        "submitSuccess": "Submitted successfully",
+        "submitFailed": "Submission failed. Please try again.",
+        "resubmitTitle": "Resubmit for review",
+        "resubmitContent": "Resubmit this work to the moderators for review? It will be relisted once approved.",
+        "resubmitted": "Submitted for review. Please wait for a moderator.",
+        "submitFailedLater": "Submission failed. Please try again later."
+      },
+      "loading": "Loading...",
+      "fetchBookFailed": "Failed to load work data",
+      "fetchWorldsFailed": "Failed to load linked worlds",
+      "notPublished": "This work hasn't been published yet and can't be read.",
+      "unlinkWorld": "Unlink world setting",
+      "unlinkWorldSuccess": "World setting unlinked",
+      "linkWorldSuccess": "World setting linked"
+    },
+    "index": {
+      "searchPlaceholder": "Search books, circles, posts, and users",
+      "recommendAppPrefix": "Try the",
+      "recommendAppBrand": "LogHome App",
+      "recommendExperiencePrefix": "A ",
+      "recommendExperienceHighlight": "much better",
+      "recommendExperienceSuffix": " experience than browsing directly",
+      "badgeManga": "Manga",
+      "badgeWorld": "World",
+      "offlineMode": "Offline mode"
+    },
+    "bookcase": {
+      "tabs": {
+        "favorites": "Favorites",
+        "history": "History"
+      },
+      "searchPlaceholder": "Search bookshelf",
+      "loading": "Loading...",
+      "uncachedBook": "This book isn't cached and can't be read",
+      "removedFromShelf": "Removed from bookshelf",
+      "removeFailed": "Failed to remove"
+    },
+    "shelf": {
+      "updateChapters": "+{{count}} ch.",
+      "historyBadge": "History",
+      "badgeManga": "Manga",
+      "badgeWorld": "World",
+      "viewMore": "View more",
+      "offlineMode": "Offline mode. Please check your network."
+    },
+    "rank": {
+      "ariaLabel": "Rankings",
+      "carouselAria": "Rankings, scroll by column",
+      "more": "More",
+      "boardSuffix": " Rank",
+      "boards": {
+        "update": "Updates",
+        "logpower": "LogPower",
+        "complete": "Completed",
+        "new": "New"
+      },
+      "zones": {
+        "all": "All",
+        "novel": "Novel",
+        "manga": "Manga",
+        "world": "World"
+      },
+      "badgeManga": "Manga",
+      "badgeWorld": "World"
+    },
+    "bookInCase": {
+      "badgeManga": "Manga",
+      "badgeWorld": "World",
+      "updateChapters": "{{count}} new chapters"
+    },
+    "reportNovel": {
+      "title": "Report this work",
+      "subtitle": "Choose a reason. Moderators will review your report.",
+      "reasons": {
+        "illegal": "Illegal content",
+        "sexual": "Sexual content",
+        "plagiarism": "Plagiarism",
+        "harassment": "Harassment",
+        "spam": "Spam",
+        "other": "Other"
+      },
+      "detailRequired": "Add details (required)",
+      "detailOptional": "Add details (optional)",
+      "submitting": "Submitting…",
+      "submit": "Submit report",
+      "missingWork": "Work information is missing",
+      "chooseReason": "Choose a report reason",
+      "detailRequiredToast": "Add details for this report",
+      "loginRequired": "Sign in first",
+      "success": "Report submitted. Thank you.",
+      "failed": "Couldn't submit the report. Try again later."
+    }
+  }
+}

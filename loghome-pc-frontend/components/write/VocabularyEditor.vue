@@ -1,14 +1,14 @@
 <template>
   <div class="vocabulary-editor">
     <label
-      >词条名称<input
+      >{{ $t('词条名称') }}<input
         :value="title"
         :disabled="disabled"
         maxlength="100"
         @input="$emit('title', $event.target.value)"
     /></label>
     <label
-      >简介<textarea
+      >{{ $t('简介') }}<textarea
         v-model="model.desc"
         :disabled="disabled"
         rows="7"
@@ -17,14 +17,14 @@
       />
     </label>
     <label
-      >图片地址<input
+      >{{ $t('图片地址') }}<input
         v-model="model.pic"
         :disabled="disabled"
         placeholder="https://…"
         @input="changed"
     /></label>
     <button :disabled="disabled || uploading" @click="$refs.picture.click()">
-      {{ uploading ? "正在上传…" : "上传词条图片" }}</button
+      {{ uploading ? $t('正在上传…') : $t('上传词条图片') }}</button
     ><input
       ref="picture"
       type="file"
@@ -35,13 +35,13 @@
     <img
       v-if="model.pic"
       :src="model.pic"
-      alt="词条图片"
+      :alt="$t('词条图片')"
       class="vocabulary-picture"
     />
     <h3>
-      属性
+      {{ $t('属性') }}
       <button :disabled="disabled" @click="addAttribute">
-        <i class="el-icon-plus" aria-hidden="true" /> 添加
+        <i class="el-icon-plus" aria-hidden="true" /> {{ $t('添加') }}
       </button>
     </h3>
     <div
@@ -51,19 +51,19 @@
     >
       <input
         v-model="item.name"
-        aria-label="属性名称"
+        :aria-label="$t('属性名称')"
         :disabled="disabled"
-        placeholder="属性名称"
+        :placeholder="$t('属性名称')"
         @input="changed"
       /><input
         v-model="item.content"
-        aria-label="属性内容"
+        :aria-label="$t('属性内容')"
         :disabled="disabled"
-        placeholder="属性内容"
+        :placeholder="$t('属性内容')"
         @input="changed"
       /><button
         :disabled="disabled"
-        aria-label="删除属性"
+        :aria-label="$t('删除属性')"
         @click="
           model.attributes.splice(index, 1);
           changed();
@@ -73,9 +73,9 @@
       </button>
     </div>
     <h3>
-      关系
+      {{ $t('关系') }}
       <button :disabled="disabled" @click="addRelation">
-        <i class="el-icon-plus" aria-hidden="true" /> 添加
+        <i class="el-icon-plus" aria-hidden="true" /> {{ $t('添加') }}
       </button>
     </h3>
     <div
@@ -85,11 +85,11 @@
     >
       <select
         v-model="item.id"
-        aria-label="关联词条"
+        :aria-label="$t('关联词条')"
         :disabled="disabled"
         @change="relationChanged(item)"
       >
-        <option :value="null">选择词条</option>
+        <option :value="null">{{ $t('选择词条') }}</option>
         <option
           v-for="entry in entries"
           :key="entry.article_id"
@@ -99,13 +99,13 @@
         </option></select
       ><input
         v-model="item.relation"
-        aria-label="词条关系"
+        :aria-label="$t('词条关系')"
         :disabled="disabled"
-        placeholder="例如：盟友"
+        :placeholder="$t('例如：盟友')"
         @input="changed"
       /><button
         :disabled="disabled"
-        aria-label="删除关系"
+        :aria-label="$t('删除关系')"
         @click="
           model.relations.splice(index, 1);
           changed();
@@ -115,23 +115,23 @@
       </button>
     </div>
     <section v-if="reverseRelations.length">
-      <h3>反向关系建议</h3>
+      <h3>{{ $t('反向关系建议') }}</h3>
       <p v-for="item in reverseRelations" :key="item.article_id">
-        {{ item.title }} 已将本词条关联为“{{ item.relation }}”<button
+        {{ $t('{title} 已将本词条关联为“{relation}”', { title: item.title, relation: item.relation }) }}<button
           :disabled="disabled"
           @click="addReverse(item)"
         >
-          补充关系
+          {{ $t('补充关系') }}
         </button>
       </p>
     </section>
     <details>
-      <summary>JSON 源码</summary>
+      <summary>{{ $t('JSON 源码') }}</summary>
       <textarea
         :value="value"
         :disabled="disabled"
         rows="12"
-        aria-label="词条 JSON"
+        :aria-label="$t('词条 JSON')"
         @change="setJson($event.target.value)"
       />
     </details>
@@ -182,7 +182,7 @@ export default {
             relations: model.relations || [],
           };
         } catch (_) {
-          this.$emit("error", "词条格式无效，不能保存。请检查源数据。");
+          this.$emit("error", this.$t('词条格式无效，不能保存。请检查源数据。'));
         }
       },
     },

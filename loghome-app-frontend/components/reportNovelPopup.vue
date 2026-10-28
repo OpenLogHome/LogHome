@@ -1,18 +1,18 @@
 <template>
 	<uni-popup ref="popup" type="bottom" :safe-area="false">
 		<view class="report-sheet" v-dark>
-			<view class="report-title">举报作品</view>
-			<view class="report-sub">请选择举报原因，管理员核实后将进行处理</view>
+			<view class="report-title">{{ $t('library.reportNovel.title') }}</view>
+			<view class="report-sub">{{ $t('library.reportNovel.subtitle') }}</view>
 			<view class="reason-list">
-				<view class="reason-item" v-for="item in reasons" :key="item" :class="{ active: reason === item }"
-					@click="reason = item">
-					{{ item }}
+				<view class="reason-item" v-for="item in reasons" :key="item.value" :class="{ active: reason === item.value }"
+					@click="reason = item.value">
+					{{ $t(item.labelKey) }}
 				</view>
 			</view>
 			<textarea class="report-textarea" v-model="detail" :placeholder="detailPlaceholder" maxlength="200" />
 			<view class="report-count">{{ detail.length }}/200</view>
 			<button class="report-submit" :disabled="submitting" @click="submit">
-				{{ submitting ? '提交中…' : '提交举报' }}
+				{{ submitting ? $t('library.reportNovel.submitting') : $t('library.reportNovel.submit') }}
 			</button>
 		</view>
 	</uni-popup>
@@ -29,12 +29,21 @@ export default {
 			reason: '',
 			detail: '',
 			submitting: false,
-			reasons: ['违法违规', '色情低俗', '抄袭侵权', '人身攻击', '垃圾广告', '其他']
+			reasons: [
+				{ value: '违法违规', labelKey: 'library.reportNovel.reasons.illegal' },
+				{ value: '色情低俗', labelKey: 'library.reportNovel.reasons.sexual' },
+				{ value: '抄袭侵权', labelKey: 'library.reportNovel.reasons.plagiarism' },
+				{ value: '人身攻击', labelKey: 'library.reportNovel.reasons.harassment' },
+				{ value: '垃圾广告', labelKey: 'library.reportNovel.reasons.spam' },
+				{ value: '其他', labelKey: 'library.reportNovel.reasons.other' }
+			]
 		}
 	},
 	computed: {
 		detailPlaceholder() {
-			return this.reason === '其他' ? '请补充说明（必填）' : '补充说明（选填）'
+			return this.reason === '其他'
+				? this.$t('library.reportNovel.detailRequired')
+				: this.$t('library.reportNovel.detailOptional')
 		}
 	},
 	methods: {
@@ -62,20 +71,20 @@ export default {
 		submit() {
 			if (this.submitting) return
 			if (!this.novelId) {
-				uni.showToast({ title: '作品信息缺失', icon: 'none' })
+				uni.showToast({ title: this.$t('library.reportNovel.missingWork'), icon: 'none' })
 				return
 			}
 			if (!this.reason) {
-				uni.showToast({ title: '请选择举报原因', icon: 'none' })
+				uni.showToast({ title: this.$t('library.reportNovel.chooseReason'), icon: 'none' })
 				return
 			}
 			if (this.reason === '其他' && !this.detail.trim()) {
-				uni.showToast({ title: '请填写补充说明', icon: 'none' })
+				uni.showToast({ title: this.$t('library.reportNovel.detailRequiredToast'), icon: 'none' })
 				return
 			}
 			const headers = this.getAuthHeaders()
 			if (!headers) {
-				uni.showToast({ title: '请先登录', icon: 'none' })
+				uni.showToast({ title: this.$t('library.reportNovel.loginRequired'), icon: 'none' })
 				return
 			}
 			this.submitting = true
@@ -84,11 +93,11 @@ export default {
 				reason: this.reason,
 				detail: this.detail.trim()
 			}, { headers: { ...headers, 'Content-Type': 'application/json' } }).then(() => {
-				uni.showToast({ title: '举报成功，感谢您的反馈', icon: 'none' })
+				uni.showToast({ title: this.$t('library.reportNovel.success'), icon: 'none' })
 				this.$emit('reported')
 				this.close()
 			}).catch((e) => {
-				const msg = (e.response && e.response.data && e.response.data.msg) || '举报失败，请稍后重试'
+				const msg = (e.response && e.response.data && e.response.data.msg) || this.$t('library.reportNovel.failed')
 				uni.showToast({ title: msg, icon: 'none' })
 			}).finally(() => {
 				this.submitting = false

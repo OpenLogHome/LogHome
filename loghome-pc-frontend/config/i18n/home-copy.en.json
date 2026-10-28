@@ -1,0 +1,127 @@
+{
+  "hero": {
+    "eyebrow": "For everyone who loves Minecraft and stories",
+    "titleStart": "Blocks leap onto the page,",
+    "titleSecondLine": "stories ",
+    "titleHighlight": "take root here",
+    "lead": "A creative community made for fellow Minecraft fans.",
+    "descriptionFirstLine": "",
+    "descriptionSecondLine": "Let imagination run free and bring your passion and creativity within reach.",
+    "readAction": "Discover new stories",
+    "writeAction": "Write my story",
+    "communityAction": "Or take a look around the community",
+    "caption": "",
+    "titleEnd": ".",
+    "worldDescription": "A looping scene of Steve reading and Alex writing together in a blocky forest"
+  },
+  "pathsLabel": "Choose your LogHome journey",
+  "paths": [
+    { "path": "/read", "label": "READ", "title": "Travel to new worlds.", "description": "Explore novels, manga, and worldbuilding" },
+    { "path": "/write", "label": "CREATE", "title": "Set your imagination free.", "description": "Start creating a work of your own" },
+    { "path": "/community", "label": "CONNECT", "title": "Or make a few friends?", "description": "Share stories, exchange ideas, and find your people" }
+  ],
+  "stories": {
+    "eyebrow": "Explore worlds through words",
+    "title": "Community classics",
+    "description": "Every story begins as a seed before it bears its sweetest fruit.",
+    "browseAction": "Open the LogHome library",
+    "loading": "Finding library classics…",
+    "retry": "Reload",
+    "untitled": "Untitled work",
+    "descriptionFallback": "Open this work and explore the author's world.",
+    "error": "Recommendations are temporarily unavailable. You can still explore the library.",
+    "empty": "Every world is waiting for a new story. Take a look in the library.",
+    "coverAlt": "Cover of {name}",
+    "source": "From the “{collection}” collection",
+    "types": { "world": "World", "manga": "Manga", "novel": "Novel" },
+    "authorFallback": "Anonymous"
+  },
+  "create": {
+    "eyebrow": "Let imagination bloom",
+    "titleFirstLine": "That story you have always wanted to tell—",
+    "titleSecondLine": "why not begin now?",
+    "description": "Let an unformed idea grow into a tree that is entirely your own.",
+    "action": "Enter the writing studio",
+    "previewTitle": "My first work",
+    "caption": "From one idea · A sample writing journey",
+    "previewLabel": "Writing process example",
+    "stagesLabel": "View the writing process",
+    "steps": ["No need to hesitate—this is easier than it looks", "Just as you have done countless times before", "Embrace the story in your mind once more"],
+    "stages": [
+      { "label": "Capture an idea", "eyebrow": "A new thought", "title": "The Nameless One", "text": "From nowhere, bound for nowhere." },
+      { "label": "Create a chapter", "eyebrow": "Chapter One", "title": "Prelude to a Fairytale", "text": "Morning light filtered through the trees. Map in hand, he stepped beyond the familiar village for the first time." },
+      { "label": "Introduce the work", "eyebrow": "About my work", "title": "Chronicles of the Brave", "text": "An anonymous letter draws a boy who has never left his village beyond the edge of the map—a story of exploration, encounters, and finding one's way." }
+    ]
+  },
+  "community": {
+    "eyebrow": "Stories bring us together",
+    "titleFirstLine": "How about",
+    "titleSecondLine": "making a few friends?",
+    "description": "Talk about favorite characters, trade worldbuilding ideas, and share today's inspiration. There is always more to discuss about Minecraft and your stories.",
+    "action": "Join the conversation",
+    "loading": "Finding new community topics…",
+    "listLabel": "New in the community",
+    "emptyTitle": "What can we talk about here?",
+    "retry": "Reload community topics",
+    "circleFallback": "Community",
+    "titleFallback": "Come hear this idea",
+    "authorFallback": "Community member",
+    "ideas": [
+      { "mark": "CHAT", "title": "Discuss favorite characters and plots", "text": "Compare perspectives and discover another side of the story." },
+      { "mark": "IDEA", "title": "Share a sudden spark of inspiration", "text": "Offer one idea to many more imaginations." },
+      { "mark": "BUILD", "title": "Build a world together", "text": "Start with a place name and let the world come into focus." }
+    ],
+    "showIdeas": false
+  },
+  "download": {
+    "eyebrow": "Take good stories with you",
+    "titleFirstLine": "Wherever you go,",
+    "titleSecondLine": "LogHome can go with you.",
+    "description": "Put the community in your pocket.",
+    "action": "Download for Android",
+    "readAction": "Continue on the web",
+    "platform": "Android app",
+    "loading": "Getting download information…",
+    "error": "Download information is temporarily unavailable.",
+    "retry": "Retry",
+    "weixinTip": "Open the menu in the top-right corner of WeChat, then choose “Open in browser” to download.",
+    "imageAlt": "The library and reader in the LogHome Android app",
+    "version": " · v{version}",
+    "caption": ""
+  },
+  "openSource": {
+    "eyebrow": "OpenLogHome · Built in the open",
+    "titleFirstLine": "The community's next chapter",
+    "titleSecondLine": "can be written by you.",
+    "description": "LogHome is powered by the OpenLogHome open-source project. Report an issue, improve the docs, contribute code, or introduce the community to an interested friend—every contribution helps.",
+    "githubAction": "Visit GitHub",
+    "letterAction": "Read our open-source letter",
+    "codeContribution": "Contribute code and docs",
+    "feedbackContribution": "Report an issue",
+    "shareContribution": "Share LogHome",
+    "note": "A place born from shared passion."
+  },
+  "faq": {
+    "eyebrow": "Before you set out",
+    "title": "You may be wondering",
+    "questions": [
+      { "title": "What can I read here?", "answer": "LogHome is made for fans of Minecraft and its creative culture. The library includes novels, manga, and worldbuilding." },
+      { "title": "Where do I start writing?", "answer": "Open Write to enter your personal studio, create a work, and add chapters. Follow the page if you need to log in." },
+      { "title": "Do I have to download the app?", "answer": "No. You can read, write, and join discussions on the web. The Android app is simply another option." },
+      { "title": "Can I contribute without writing code?", "answer": "Absolutely. Reporting issues, improving documentation, and introducing LogHome to other fans are all valuable contributions." }
+    ],
+    "enabled": false
+  },
+  "ending": {
+    "eyebrow": "Stories take root here",
+    "title": "Turn the first page of your adventure.",
+    "description": "Read one story first. Perhaps the next one will be yours.",
+    "writeAction": "I want to write",
+    "readAction": "Discover stories",
+    "showDetails": false
+  },
+  "seo": {
+    "title": "LogHome — Minecraft fanfiction and creative community",
+    "description": "Discover Minecraft fanfiction, manga, and worldbuilding on LogHome. Write your own blocky adventures and share inspiration with fellow fans on the web or Android."
+  }
+}

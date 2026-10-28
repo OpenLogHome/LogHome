@@ -2,8 +2,8 @@
 	<view class="container" v-dark>
 		<view class="content">
 			<view class="header">
-				<view class="title">图书馆轮播管理</view>
-				<view class="add-btn" @click="addBanner">添加轮播</view>
+				<view class="title">{{ $t('manage.banners.title') }}</view>
+				<view class="add-btn" @click="addBanner">{{ $t('manage.banners.add') }}</view>
 			</view>
 
 			<view class="banner-list">
@@ -14,22 +14,22 @@
 					<view class="banner-info">
 						<view class="banner-title">{{banner.title}}</view>
 						<view class="banner-name">{{banner.name}}</view>
-						<view class="banner-link">跳转链接: {{banner.navigate_to}}</view>
+						<view class="banner-link">{{ $t('manage.banners.link', { link: banner.navigate_to }) }}</view>
 						<view class="banner-status">
-							状态: <text :class="{active: banner.isValid == 1}">{{banner.isValid == 1 ? '启用' : '禁用'}}</text>
+							{{ $t('manage.common.status') }}: <text :class="{active: banner.isValid == 1}">{{banner.isValid == 1 ? $t('manage.common.enabled') : $t('manage.common.disabled')}}</text>
 						</view>
 					</view>
 					<view class="banner-actions">
-						<view class="action-btn edit" @click="editBanner(banner)">编辑</view>
+						<view class="action-btn edit" @click="editBanner(banner)">{{ $t('common.edit') }}</view>
 						<view class="action-btn" :class="banner.isValid == 1 ? 'disable' : 'enable'" @click="toggleStatus(banner)">
-							{{banner.isValid == 1 ? '禁用' : '启用'}}
+							{{banner.isValid == 1 ? $t('manage.common.disable') : $t('manage.common.enable')}}
 						</view>
 					</view>
 				</view>
 			</view>
 
 			<view class="no-data" v-if="banners.length === 0">
-				暂无轮播数据
+				{{ $t('manage.banners.empty') }}
 			</view>
 		</view>
 
@@ -38,45 +38,45 @@
 			<view class="modal-mask" @click="closeModal"></view>
 			<view class="modal-content">
 				<view class="modal-header">
-					<view class="modal-title">{{currentBanner.id ? '编辑轮播' : '添加轮播'}}</view>
+					<view class="modal-title">{{currentBanner.id ? $t('manage.banners.edit') : $t('manage.banners.add')}}</view>
 					<view class="modal-close" @click="closeModal">×</view>
 				</view>
 				<view class="modal-body">
 					<view class="form-item">
-						<view class="label">标题</view>
+						<view class="label">{{ $t('manage.common.title') }}</view>
 						<view class="input">
-							<input type="text" v-model="currentBanner.title" placeholder="请输入标题" />
+							<input type="text" v-model="currentBanner.title" :placeholder="$t('common.inputTitle')" />
 						</view>
 					</view>
 					<view class="form-item">
-						<view class="label">名称</view>
+						<view class="label">{{ $t('manage.banners.name') }}</view>
 						<view class="input">
-							<input type="text" v-model="currentBanner.name" placeholder="请输入名称" />
+							<input type="text" v-model="currentBanner.name" :placeholder="$t('manage.banners.enterName')" />
 						</view>
 					</view>
 					<view class="form-item">
-						<view class="label">图片链接</view>
+						<view class="label">{{ $t('manage.banners.imageUrl') }}</view>
 						<view class="input">
-							<input type="text" v-model="currentBanner.image" placeholder="请输入图片链接" />
+							<input type="text" v-model="currentBanner.image" :placeholder="$t('manage.banners.enterImageUrl')" />
 						</view>
 					</view>
 					<view class="form-item">
-						<view class="label">跳转链接</view>
+						<view class="label">{{ $t('manage.banners.targetUrl') }}</view>
 						<view class="input">
-							<input type="text" v-model="currentBanner.navigate_to" placeholder="请输入跳转链接" />
+							<input type="text" v-model="currentBanner.navigate_to" :placeholder="$t('manage.banners.enterTargetUrl')" />
 						</view>
 					</view>
 					<view class="form-item">
-						<view class="label">状态</view>
+						<view class="label">{{ $t('manage.common.status') }}</view>
 						<view class="input">
 							<switch :checked="currentBanner.isValid == 1" @change="handleStatusChange" color="#007AFF" />
-							<text class="status-text">{{currentBanner.isValid == 1 ? '启用' : '禁用'}}</text>
+							<text class="status-text">{{currentBanner.isValid == 1 ? $t('manage.common.enabled') : $t('manage.common.disabled')}}</text>
 						</view>
 					</view>
 				</view>
 				<view class="modal-footer">
-					<view class="btn cancel" @click="closeModal">取消</view>
-					<view class="btn confirm" @click="saveBanner">保存</view>
+					<view class="btn cancel" @click="closeModal">{{ $t('common.cancel') }}</view>
+					<view class="btn confirm" @click="saveBanner">{{ $t('common.save') }}</view>
 				</view>
 			</view>
 		</view>
@@ -110,7 +110,7 @@ export default {
 			try {
 				let tk = JSON.parse(window.localStorage.getItem('token')).tk
 				uni.showLoading({
-					title: '努力加载中'
+					title: this.$t('common.loading')
 				})
 
 				const res = await axios.get(this.$baseUrl + '/manage/library/get_library_roulous_chart', {
@@ -124,7 +124,7 @@ export default {
 			} catch (e) {
 				uni.hideLoading()
 				uni.showToast({
-					title: '加载失败',
+					title: this.$t('common.loadFailed'),
 					icon: 'none'
 				})
 			}
@@ -164,7 +164,7 @@ export default {
 				})
 
 				uni.showToast({
-					title: banner.isValid == 1 ? '已禁用' : '已启用',
+					title: banner.isValid == 1 ? this.$t('manage.common.disabled') : this.$t('manage.common.enabled'),
 					icon: 'none'
 				})
 
@@ -172,7 +172,7 @@ export default {
 				banner.isValid = banner.isValid == 1 ? 0 : 1
 			} catch (e) {
 				uni.showToast({
-					title: '操作失败',
+					title: this.$t('common.operationFailed'),
 					icon: 'none'
 				})
 			}
@@ -183,7 +183,7 @@ export default {
 			// 表单验证
 			if (!this.currentBanner.title.trim()) {
 				uni.showToast({
-					title: '请输入标题',
+					title: this.$t('common.inputTitle'),
 					icon: 'none'
 				})
 				return
@@ -191,7 +191,7 @@ export default {
 
 			if (!this.currentBanner.name.trim()) {
 				uni.showToast({
-					title: '请输入名称',
+					title: this.$t('manage.banners.enterName'),
 					icon: 'none'
 				})
 				return
@@ -199,7 +199,7 @@ export default {
 
 			if (!this.currentBanner.image.trim()) {
 				uni.showToast({
-					title: '请输入图片链接',
+					title: this.$t('manage.banners.enterImageUrl'),
 					icon: 'none'
 				})
 				return
@@ -207,7 +207,7 @@ export default {
 
 			if (!this.currentBanner.navigate_to.trim()) {
 				uni.showToast({
-					title: '请输入跳转链接',
+					title: this.$t('manage.banners.enterTargetUrl'),
 					icon: 'none'
 				})
 				return
@@ -231,14 +231,14 @@ export default {
 				})
 
 				uni.showToast({
-					title: this.currentBanner.id ? '编辑成功' : '添加成功'
+					title: this.currentBanner.id ? this.$t('manage.common.updated') : this.$t('manage.common.added')
 				})
 
 				this.closeModal()
 				this.loadBanners()
 			} catch (e) {
 				uni.showToast({
-					title: '保存失败',
+					title: this.$t('common.saveFailed'),
 					icon: 'none'
 				})
 			} finally {

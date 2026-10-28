@@ -2,7 +2,7 @@
 	<view style="background-color: var(--card-background);" v-dark>
 		<view v-for="qtype in faqs">
 			<view class="title">
-				<text>{{qtype.title}}</text>
+				<text>{{ $t(qtype.titleKey) }}</text>
 			</view>
 			<navigator v-for="qna in qtype.content"
 			:url="'./feedback?id=' +  qna.faq_id"
@@ -14,7 +14,7 @@
 			<div style="height:150rpx;"></div>
 		</view>
 		<view class="under_bar">
-			<button @click="newFeedBack">我的问题</button>
+			<button @click="newFeedBack">{{ $t('apps.faq.myQuestions') }}</button>
 		</view>
 	</view>
 </template>
@@ -26,11 +26,11 @@
 			return {
 				faqs:[
 					{
-						title: "常见问题",
+						titleKey: "apps.faq.common",
 						content: undefined
 					},
 					{
-						title: "最新问题",
+						titleKey: "apps.faq.newest",
 						content: undefined
 					}
 				]

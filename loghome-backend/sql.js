@@ -7,7 +7,18 @@ let pool = mysql.createPool({
 	charset: 'utf8mb4',
 });
 
-const getConnection = function () {
+const TRANSIENT_CONNECT_CODES = new Set([
+	'ENOTFOUND',
+	'EAI_AGAIN',
+	'ECONNREFUSED',
+	'ECONNRESET',
+	'EPIPE',
+	'ETIMEDOUT',
+	'PROTOCOL_CONNECTION_LOST',
+]);
+const CONNECT_MAX_ATTEMPTS = 4;
+
+const acquireConnection = function () {
 	return new Promise((resolve, reject) => {
 		pool.getConnection((err, connection) => {
 			if (err) {
@@ -17,6 +28,23 @@ const getConnection = function () {
 			resolve(connection);
 		});
 	});
+};
+
+// Retry only before a connection is handed to the caller. Never replay SQL,
+// transaction callbacks, or commits, whose effects may already have occurred.
+const getConnection = async function () {
+	for (let attempt = 1; attempt <= CONNECT_MAX_ATTEMPTS; attempt += 1) {
+		try {
+			return await acquireConnection();
+		} catch (error) {
+			if (!TRANSIENT_CONNECT_CODES.has(error.code) || attempt === CONNECT_MAX_ATTEMPTS) {
+				throw error;
+			}
+			const delayMs = 300 * 2 ** (attempt - 1) + Math.floor(Math.random() * 150);
+			console.warn(`[sql] connection ${error.code}: retry ${attempt}/${CONNECT_MAX_ATTEMPTS - 1} in ${delayMs}ms (host=${config.database.host})`);
+			await new Promise((resolve) => setTimeout(resolve, delayMs));
+		}
+	}
 };
 
 const runQuery = function (connection, sql, values) {

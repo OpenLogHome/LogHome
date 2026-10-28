@@ -80,7 +80,7 @@
 						<view class="tags" v-if="tags.length > 0">
 							<div class="tag clickable" v-for="(item, index) in tags" :key="item.tag_id"
 								:class="{ 'activity': item.is_activity_tag }" @click="gotoTag(item.tag_id, item.tag_name)">
-								{{ item.tag_name }}
+								{{ displayTagName(item.tag_name) }}
 							</div>
 						</view>
 						<div class="notag" v-else>
@@ -400,6 +400,7 @@ import html2canvas from 'html2canvas'
 import countTo from "vue-count-to"
 import darkModeMixin from '@/mixins/dark-mode.js'
 import { openActivityNewsLink } from '@/common/activity-news-navigation.js'
+import { getOfficialTagLabel } from '@/common/official-tag-labels.js'
 import TaskRewardModal from "../../components/TaskRewardModal.vue"
 import reportNovelPopup from "../../components/reportNovelPopup.vue"
 
@@ -569,6 +570,9 @@ export default {
 		}
 	},
 	methods: {
+		displayTagName(tagName) {
+			return getOfficialTagLabel(tagName, key => this.$t(key))
+		},
 		updatePageScrollTop(scrollTop) {
 			const nextScrollTop = Math.max(0, Number(scrollTop) || 0)
 			if (this.scrollTop !== nextScrollTop) {
@@ -1427,7 +1431,7 @@ export default {
 		},
 		gotoTag(tag_id, title) {
 			uni.navigateTo({
-				url: "/pages/readers/tagCollections?tag_id=" + tag_id + "&title=" + title
+				url: "/pages/readers/tagCollections?tag_id=" + tag_id + "&title=" + encodeURIComponent(this.displayTagName(title))
 			})
 		},
 		applyPageSystemUiStyle(color = this.currentTopColor, textColor = this.currentTopTextColor, force = false) {
@@ -2305,9 +2309,10 @@ export default {
 }
 
 .tags {
-	overflow-x: auto;
+	flex-wrap: wrap;
 	align-items: center;
-	height: 60rpx;
+	height: auto;
+	min-height: 60rpx;
 	flex-shrink: 0;
 }
 
@@ -2319,7 +2324,7 @@ export default {
 	line-height: 40rpx;
 	padding: 0 16rpx;
 	border-radius: 20rpx;
-	margin-right: 12rpx;
+	margin: 4rpx 12rpx 4rpx 0;
 	flex-shrink: 0;
 	transition: all 0.2s ease;
 	cursor: pointer;

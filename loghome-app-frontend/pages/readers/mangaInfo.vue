@@ -21,7 +21,7 @@
           <text class="novel-name">{{ bookInfo.name }}</text>
           <view class="meta-line"><text class="status-pill">{{ Number(bookInfo.is_complete) === 1 ? $t('common.completed') : $t('manga.info.ongoing') }}</text><text>{{ $t('manga.info.mangaType') }}</text><text class="meta-dot"></text><text>{{ isPreview ? $t('manga.info.totalEpisodes', { count: articles.length }) : $t('manga.info.updatedEpisodes', { count: articles.length }) }}</text></view>
           <button v-manga-a11y class="author-row" type="button" @click="openAuthor"><image v-if="bookInfo.auther_avatar" class="author-avatar" :src="bookInfo.auther_avatar" mode="aspectFill" /><text>{{ $t('manga.info.authorLabel', { name: bookInfo.author_name || $t('manga.info.anonymousAuthor') }) }}</text><manga-icon name="next" /></button>
-          <view class="tag-row" v-if="tags.length"><text v-for="tag in tags" :key="tag.tag_id">{{ tag.tag_name }}</text></view>
+          <view class="tag-row" v-if="tags.length"><text v-for="tag in tags" :key="tag.tag_id">{{ displayTagName(tag.tag_name) }}</text></view>
           <button v-manga-a11y v-if="latestEpisode" class="latest-row" type="button" @click="openChapter(latestEpisode)"><view class="latest-copy"><text class="eyebrow">{{ $t('manga.info.latestUpdate') }}</text><text class="latest-name">{{ $t('manga.info.episodeLabel', { chapter: latestEpisode.article_chapter, title: latestEpisode.title }) }}</text></view><manga-icon name="next" /></button>
           <text v-if="isPreview" class="preview-note">{{ $t('manga.info.previewNote') }}</text>
         </view>
@@ -93,6 +93,7 @@ import MangaCommentItem from '@/components/manga-comment-item.vue';
 import MangaCommentComposer from '@/components/manga-comment-composer.vue';
 import ReportNovelPopup from '@/components/reportNovelPopup.vue';
 import { deleteMangaComment, fetchMangaArticleCommentAmounts, fetchMangaCommentAmount, fetchMangaCommentById, fetchMangaComments, getMangaCommentErrorMessage, praiseMangaComment, publishMangaComment, replyMangaComment } from '@/common/manga-comment-api.js';
+import { getOfficialTagLabel } from '@/common/official-tag-labels.js';
 
 const COMMENT_PAGE_SIZE = 10;
 
@@ -152,6 +153,7 @@ export default {
 		if (this.uid && !this.isPreview) this.loadProgress();
 	},
 	methods: {
+		displayTagName(tagName) { return getOfficialTagLabel(tagName, key => this.$t(key)); },
 		openFansBoard() { uni.navigateTo({ url: '/pages/readers/novel_fans?id=' + this.uid }); },
 		async loadFansStatistics() {
 			if (this.isPreview) return;

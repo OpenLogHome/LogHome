@@ -3,7 +3,7 @@
     <!-- 添加顶部余额显示 -->
     <view class="title">
       <img src="../../static/resources/log.png"></img>
-      <text class="text">余额：</text>
+      <text class="text">{{ $t('payments.giftCode.balance') }}</text>
       <text class="num">{{resources.log}}</text>
     </view>
 
@@ -14,15 +14,15 @@
         </view>
         
         <view class="input-area">
-          <view class="input-label">请输入礼品码</view>
+          <view class="input-label">{{ $t('payments.giftCode.inputLabel') }}</view>
           <input 
             class="code-input" 
             v-model="codeValue" 
-            placeholder="请输入您的礼品码" 
+            :placeholder="$t('payments.giftCode.placeholder')"
             maxlength="16"
             @input="formatCode"
           />
-          <text class="input-tips">礼品码由16位字母和数字组成</text>
+          <text class="input-tips">{{ $t('payments.giftCode.inputTips') }}</text>
         </view>
         
         <button 
@@ -31,27 +31,27 @@
           :class="{ 'disabled': !isValidCode || loading }"
           @click="redeemCode"
         >
-          {{ loading ? '兑换中...' : '立即兑换' }}
+          {{ loading ? $t('payments.giftCode.redeeming') : $t('payments.giftCode.redeemNow') }}
         </button>
       </view>
       
       <view class="tips">
-        <view class="tip-title">使用说明</view>
+        <view class="tip-title">{{ $t('payments.giftCode.usageTitle') }}</view>
         <view class="tip-item">
           <text class="tip-num">1</text>
-          <text class="tip-text">输入正确的礼品码，点击"立即兑换"</text>
+          <text class="tip-text">{{ $t('payments.giftCode.tip1') }}</text>
         </view>
         <view class="tip-item">
           <text class="tip-num">2</text>
-          <text class="tip-text">系统验证后将自动为您的账户添加相应的原木</text>
+          <text class="tip-text">{{ $t('payments.giftCode.tip2') }}</text>
         </view>
         <view class="tip-item">
           <text class="tip-num">3</text>
-          <text class="tip-text">每个礼品码只能使用一次</text>
+          <text class="tip-text">{{ $t('payments.giftCode.tip3') }}</text>
         </view>
         <view class="tip-item">
           <text class="tip-num">4</text>
-          <text class="tip-text">如遇问题，请联系官方微信客服：CodesOcean</text>
+          <text class="tip-text">{{ $t('payments.giftCode.tip4') }}</text>
         </view>
       </view>
     </view>
@@ -62,13 +62,13 @@
         <view class="success-icon">
           <!-- <image src="../../static/resources/success.png" mode="aspectFit"></image> -->
         </view>
-        <view class="success-title">兑换成功</view>
+        <view class="success-title">{{ $t('payments.giftCode.successTitle') }}</view>
         <view class="success-desc">
-          <text>您已成功兑换</text>
+          <text>{{ $t('payments.giftCode.successDesc') }}</text>
           <text class="log-amount">{{redeemAmount}}</text>
           <image class="log-icon" src="../../static/resources/log.png"></image>
         </view>
-        <button class="confirm-btn" @click="confirmSuccess">确定</button>
+        <button class="confirm-btn" @click="confirmSuccess">{{ $t('payments.giftCode.confirm') }}</button>
       </view>
     </view>
   </view>
@@ -131,7 +131,7 @@ export default {
           this.refreshResources(); // 刷新资源显示
         } else {
           uni.showToast({
-            title: res.data.msg || '兑换失败',
+            title: res.data.msg || this.$t('payments.giftCode.failed'),
             icon: 'none'
           });
         }
@@ -139,7 +139,7 @@ export default {
         console.error(error);
         
         // 处理特定错误
-        let errorMsg = '兑换失败，请稍后重试';
+        let errorMsg = this.$t('payments.giftCode.failedRetry');
         if (error.response && error.response.data && error.response.data.msg) {
           errorMsg = error.response.data.msg;
         }

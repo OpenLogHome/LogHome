@@ -2,7 +2,7 @@
   <div class="manga-page">
     <div v-if="error" class="error-container">
       <p>{{ error }}</p>
-      <nuxt-link to="/read" class="back-button">返回书库</nuxt-link>
+      <nuxt-link to="/read" class="back-button">{{ $t("返回书库") }}</nuxt-link>
     </div>
 
     <div class="manga-container" v-else>
@@ -15,29 +15,29 @@
           <h1 class="manga-title">{{ novel.name }}</h1>
           <div class="manga-meta">
             <nuxt-link class="author-info" :to="`/users/${novel.auther_id || novel.author_id}`">
-              <img v-if="novel.auther_avatar" :src="novel.auther_avatar" class="author-avatar" alt="作者头像">
-              <div v-else class="author-avatar-placeholder">{{ novel.author_name ? novel.author_name.charAt(0) : '作' }}</div>
-              <span class="author-name">{{ novel.author_name || '佚名' }}</span>
+              <img v-if="novel.auther_avatar" :src="novel.auther_avatar" class="author-avatar" :alt="$t('作者头像')">
+              <div v-else class="author-avatar-placeholder">{{ novel.author_name ? novel.author_name.charAt(0) : $t('作') }}</div>
+              <span class="author-name">{{ novel.author_name || $t('佚名') }}</span>
             </nuxt-link>
-            <span class="type-pill">漫画</span>
+            <span class="type-pill">{{ $t("漫画") }}</span>
           </div>
 
           <div class="manga-stats">
             <div class="stat-item">
               <span class="stat-value">{{ formatNumber(novel.clicks || 0) }}</span>
-              <span class="stat-label">阅读量</span>
+              <span class="stat-label">{{ $t("阅读量") }}</span>
             </div>
             <div class="stat-item">
               <span class="stat-value">{{ formatNumber(nice_amount || 0) }}</span>
-              <span class="stat-label">喜欢</span>
+              <span class="stat-label">{{ $t("喜欢") }}</span>
             </div>
             <div class="stat-item">
               <span class="stat-value">{{ chapters.length }}</span>
-              <span class="stat-label">话数</span>
+              <span class="stat-label">{{ $t("话数") }}</span>
             </div>
             <div class="stat-item">
-              <span class="stat-value">{{ novel.is_complete == 1 ? '已完结' : '连载中' }}</span>
-              <span class="stat-label">状态</span>
+              <span class="stat-value">{{ novel.is_complete == 1 ? $t('已完结') : $t('连载中') }}</span>
+              <span class="stat-label">{{ $t("状态") }}</span>
             </div>
           </div>
 
@@ -58,38 +58,38 @@
       <CollaborativeAuthors :novel-id="novel.novel_id" />
       <div class="manga-content">
         <div class="content-tabs">
-          <button class="tab-button" :class="{ active: activeTab === 'intro' }" @click="activeTab = 'intro'">作品简介</button>
-          <button class="tab-button" :class="{ active: activeTab === 'chapters' }" @click="activeTab = 'chapters'">目录 ({{ chapters.length }})</button>
-          <button class="tab-button" :class="{ active: activeTab === 'comments' }" @click="activeTab = 'comments'">读者评论 ({{ commentAmount }})</button>
-          <button class="tab-button" :class="{ active: activeTab === 'fans' }" @click="activeTab = 'fans'">粉丝榜</button>
-          <button class="tab-button" :class="{ active: activeTab === 'author' }" @click="activeTab = 'author'" v-if="authorWorks.length || authorWorksError">作者的其他漫画<template v-if="authorWorks.length"> ({{ authorWorks.length }})</template></button>
+          <button class="tab-button" :class="{ active: activeTab === 'intro' }" @click="activeTab = 'intro'">{{ $t("作品简介") }}</button>
+          <button class="tab-button" :class="{ active: activeTab === 'chapters' }" @click="activeTab = 'chapters'">{{ $t("目录 ({p0})", { p0: chapters.length }) }}</button>
+          <button class="tab-button" :class="{ active: activeTab === 'comments' }" @click="activeTab = 'comments'">{{ $t("读者评论 ({p0})", { p0: commentAmount }) }}</button>
+          <button class="tab-button" :class="{ active: activeTab === 'fans' }" @click="activeTab = 'fans'">{{ $t("粉丝榜") }}</button>
+          <button class="tab-button" :class="{ active: activeTab === 'author' }" @click="activeTab = 'author'" v-if="authorWorks.length || authorWorksError">{{ $t("作者的其他漫画") }}<template v-if="authorWorks.length"> ({{ authorWorks.length }})</template></button>
         </div>
 
         <div class="tab-content">
           <!-- 作品简介 -->
           <div v-show="activeTab === 'intro'" class="intro-content">
             <p v-if="novel.content" class="intro-text">{{ novel.content }}</p>
-            <p v-else class="empty-content">作者还没有填写简介</p>
+            <p v-else class="empty-content">{{ $t("作者还没有填写简介") }}</p>
           </div>
 
           <!-- 目录 -->
           <div v-show="activeTab === 'chapters'" class="chapters-content">
             <div class="chapters-toolbar" v-if="chapters.length">
-              <span class="chapters-count">共 {{ chapters.length }} 话</span>
+              <span class="chapters-count">{{ $t("共 {p0} 话", { p0: chapters.length }) }}</span>
               <button class="sort-toggle" @click="catalogReversed = !catalogReversed">
-                {{ catalogReversed ? '倒序' : '正序' }}
+                {{ catalogReversed ? $t('倒序') : $t('正序') }}
               </button>
             </div>
-            <div v-if="!chapters.length" class="empty-content">还没有已发布的话数</div>
+            <div v-if="!chapters.length" class="empty-content">{{ $t("还没有已发布的话数") }}</div>
             <div v-else class="chapter-list">
               <nuxt-link v-for="chapter in orderedChapters" :key="chapter.article_id" :to="`/manga/read/${chapter.article_id}?novelId=${novel.novel_id}`" class="chapter-item" @click.native.prevent="openChapter(chapter)">
                 <span class="chapter-number">{{ chapter.article_chapter }}</span>
                 <span class="chapter-title">{{ chapter.title }}</span>
-                <span class="chapter-type">{{ chapter.article_type === 'mangaPage' ? '页漫' : '条漫' }}</span>
-                <span class="chapter-comments" v-if="articleCommentAmounts[chapter.article_id]" :aria-label="`${articleCommentAmounts[chapter.article_id]} 条评论`">
+                <span class="chapter-type">{{ chapter.article_type === 'mangaPage' ? $t('页漫') : $t('条漫') }}</span>
+                <span class="chapter-comments" v-if="articleCommentAmounts[chapter.article_id]" :aria-label="$t('{p0} 条评论', { p0: articleCommentAmounts[chapter.article_id] })">
                   <SiteIcon name="comment" /> {{ articleCommentAmounts[chapter.article_id] }}
                 </span>
-                <span class="chapter-badge" v-if="isCurrentChapter(chapter)">读至</span>
+                <span class="chapter-badge" v-if="isCurrentChapter(chapter)">{{ $t("读至") }}</span>
                 <span class="chapter-date">{{ formatDate(chapter.update_time) }}</span>
               </nuxt-link>
             </div>
@@ -105,14 +105,14 @@
 
           <!-- 作者的其他漫画 -->
           <div v-show="activeTab === 'author'" class="author-content">
-            <p v-if="authorWorksError" class="author-works-notice" role="alert">作者作品暂时未能加载。<button :disabled="authorWorksLoading" @click="loadAuthorWorks">{{ authorWorksLoading ? '加载中…' : '重试' }}</button></p>
+            <p v-if="authorWorksError" class="author-works-notice" role="alert">{{ $t("作者作品暂时未能加载。") }}<button :disabled="authorWorksLoading" @click="loadAuthorWorks">{{ authorWorksLoading ? $t('加载中…') : $t('重试') }}</button></p>
             <div class="works-grid">
               <nuxt-link class="mini-work-card" v-for="work in authorWorks" :key="work.novel_id" :to="`/manga/${work.novel_id}`">
                 <div class="mini-work-cover" v-if="work.picUrl" :style="`background-image: url(${work.picUrl})`"></div>
                 <div class="mini-work-cover" v-else :style="`background-color: hsl(${work.novel_id * 30 % 360}, 70%, 80%)`"></div>
                 <div class="mini-work-info">
                   <h3 class="mini-work-title">{{ work.name }}</h3>
-                  <p class="mini-work-status">{{ Number(work.is_complete) === 1 ? '已完结' : '连载中' }}</p>
+                  <p class="mini-work-status">{{ Number(work.is_complete) === 1 ? $t('已完结') : $t('连载中') }}</p>
                 </div>
               </nuxt-link>
             </div>
@@ -148,11 +148,11 @@ function otherAuthorMangas(works, novelId) {
 export default {
   name: 'MangaDetail',
   components: { SiteIcon, NovelFansList, MangaCommentPanel, CollaborativeAuthors, BookSupport },
-  async asyncData({ params, $api, error, redirect }) {
+  async asyncData({ params, $api, $t, error, redirect }) {
     try {
       const novel = await $api.reader.book(params.id)
       if (!novel || novel.length === 0) {
-        return error({ statusCode: 404, message: '找不到该漫画' })
+        return error({ statusCode: 404, message: $t('找不到该漫画') })
       }
       const novelData = novel[0]
       // 非漫画作品交回对应的详情页
@@ -171,7 +171,7 @@ export default {
       return { error: null, novel: novelData, chapters, tags: tags || [], ...authorResult }
     } catch (err) {
       console.error('服务端获取漫画数据失败', err)
-      return error({ statusCode: err.status || 503, message: err.status === 404 ? '作品不存在或不可阅读' : '加载漫画数据失败，请稍后重试' })
+      return error({ statusCode: err.status || 503, message: err.status === 404 ? $t('作品不存在或不可阅读') : $t('加载漫画数据失败，请稍后重试') })
     }
   },
   data() {
@@ -193,7 +193,7 @@ export default {
     }
   },
   head() {
-    return readingHead({ title: `${this.novel.name} - 漫画 - 原木社区`, description: this.novel.content, path: `/manga/${this.novel.novel_id}`, image: this.novel.picUrl, type: 'book', schema: bookSchema(this.novel, `/manga/${this.novel.novel_id}`) })
+    return readingHead({ title: `${this.novel.name} - ${this.$t('漫画')} - ${this.$t('原木社区')}`, description: this.novel.content, path: `/manga/${this.novel.novel_id}`, image: this.novel.picUrl, type: 'book', schema: bookSchema(this.novel, `/manga/${this.novel.novel_id}`) })
   },
   computed: {
     commentAnchor() { return readingCommentId(this.$route.query) },
@@ -201,12 +201,12 @@ export default {
       return this.catalogReversed ? this.chapters.slice().reverse() : this.chapters
     },
     readButtonText() {
-      if (!this.chapters.length) return '暂未发布'
+      if (!this.chapters.length) return this.$t('暂未发布')
       if (this.progress && this.progress.last_article_id) {
         const target = this.chapters.find(a => String(a.article_id) === String(this.progress.last_article_id))
-        if (target) return `继续阅读 第${target.article_chapter}话`
+        if (target) return this.$t('继续阅读 第{p0}话', { p0: target.article_chapter })
       }
-      return '开始阅读'
+      return this.$t('开始阅读')
     }
   },
   watch: { commentAnchor(id) { if (id) this.activeTab = 'comments' } },
@@ -337,19 +337,19 @@ export default {
           this.$message.success('已从书架移除')
         } else {
           await this.$api.bookcase.likeNovel(this.novel.novel_id)
-          this.$message.success('成功添加到书架')
+          this.$message.success(this.$t('成功添加到书架'))
         }
         this.isInBookcase = !this.isInBookcase
       } catch (e) {
-        this.$message.error('操作失败，请稍后重试')
+        this.$message.error(this.$t('操作失败，请稍后重试'))
       }
     },
     shareBook() {
-      const content = `我正在原木社区看漫画《${this.novel.name}》，你也一起来看看吧！\nhttps://loghome.ink/novel/${this.novel.novel_id}`
+      const content = this.$t('我正在原木社区看漫画《{name}》，你也一起来看看吧！\n{url}', { name: this.novel.name, url: `https://loghome.ink/manga/${this.novel.novel_id}` })
       if (navigator.clipboard) {
         navigator.clipboard.writeText(content)
-          .then(() => this.$message.success('分享链接已复制到剪贴板'))
-          .catch(() => this.$message.error('复制失败，请手动复制'))
+          .then(() => this.$message.success(this.$t('分享链接已复制到剪贴板')))
+          .catch(() => this.$message.error(this.$t('复制失败，请手动复制')))
       } else {
         const textarea = document.createElement('textarea')
         textarea.value = content
@@ -357,12 +357,12 @@ export default {
         textarea.select()
         document.execCommand('copy')
         document.body.removeChild(textarea)
-        this.$message.success('分享链接已复制到剪贴板')
+        this.$message.success(this.$t('分享链接已复制到剪贴板'))
       }
     },
     report() {
       // Phase 1：举报复用移动端浮窗（移动端漫画详情页内含举报入口）
-      this.$openMobileWindow(`/pages/readers/mangaInfo?id=${this.novel.novel_id}`, { title: '举报作品' })
+      this.$openMobileWindow(`/pages/readers/mangaInfo?id=${this.novel.novel_id}`, { title: this.$t('举报作品') })
     },
     previewImage(url) {
       if (this.$preview) this.$preview([url], 0)
@@ -376,14 +376,12 @@ export default {
     },
     addReaderHistory(book) { recordLocalReading(book) },
     formatNumber(num) {
-      if (num >= 10000) return (num / 10000).toFixed(1) + '万'
-      if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
-      return num
+      return new Intl.NumberFormat(this.$language.state.locale, { notation: 'compact', maximumFractionDigits: 1 }).format(Number(num) || 0)
     },
     formatDate(dateStr) {
       if (!dateStr) return ''
       const date = new Date(dateStr)
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      return new Intl.DateTimeFormat(this.$language.state.locale, { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
     }
   }
 }

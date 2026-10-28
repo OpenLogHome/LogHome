@@ -1,7 +1,7 @@
 <template>
   <writer-panel
     class="writer-tools"
-    :title="labels[tab]"
+    :title="$t(labels[tab])"
     :loading="loading"
     :error="error"
     :busy="busy"
@@ -15,44 +15,44 @@
         class="secondary full-width"
         @click="$emit('export')"
       >
-        <i aria-hidden="true" class="el-icon-download" /> 导出当前稿件
+        <i aria-hidden="true" class="el-icon-download" /> {{ $t('导出当前稿件') }}
       </button>
       <writer-empty-state
         v-if="!article"
         icon="el-icon-document"
-        title="先选择一个章节"
-        description="选择章节后，即可查看它的历史版本与本机备份。"
+        :title="$t('先选择一个章节')"
+        :description="$t('选择章节后，即可查看它的历史版本与本机备份。')"
       />
       <writer-empty-state
         v-else-if="!rows.length"
         icon="el-icon-time"
-        :title="'暂无' + labels[tab]"
-        description="开始创作并保存后，版本记录会出现在这里。"
+        :title="$t('暂无{label}', { label: $t(labels[tab]) })"
+        :description="$t('开始创作并保存后，版本记录会出现在这里。')"
       />
       <div v-else class="tool-list">
         <div class="tool-section-heading">
-          <span>版本记录</span><small>{{ rows.length }} 个版本</small>
+          <span>{{ $t('版本记录') }}</span><small>{{ $t('{count} 个版本', { count: rows.length }) }}</small>
         </div>
         <article
           v-for="(item, index) in rows"
           :key="item.id || index"
           class="tool-card"
         >
-          <strong>{{ item.title || "未命名章节" }}</strong>
+          <strong>{{ item.title || $t('未命名章节') }}</strong>
           <small class="tool-meta"
             ><i aria-hidden="true" class="el-icon-time" />{{
               formatTime(item.updatedAt || item.updated_at || item.create_time)
             }}</small
           >
-          <small class="tool-meta">{{ item.editor_name || "本机备份" }}</small>
+          <small class="tool-meta">{{ item.editor_name || $t('本机备份') }}</small>
           <div class="tool-actions">
-            <button class="secondary" @click="preview(item)">查看版本</button
+            <button class="secondary" @click="preview(item)">{{ $t('查看版本') }}</button
             ><button
               :disabled="!canEdit || busy"
               @click="$emit('restore', item)"
             >
-              恢复</button
-            ><button @click="exportVersion(item)">导出</button>
+              {{ $t('恢复') }}</button
+            ><button @click="exportVersion(item)">{{ $t('导出') }}</button>
           </div>
         </article>
       </div>
@@ -61,26 +61,26 @@
       <writer-empty-state
         v-if="!rows.length"
         icon="el-icon-delete"
-        title="回收站为空"
-        description="移入回收站的章节可以在这里恢复。永久删除前请先确认备份。"
+        :title="$t('回收站为空')"
+        :description="$t('移入回收站的章节可以在这里恢复。永久删除前请先确认备份。')"
       />
       <div v-else class="tool-list">
         <article v-for="item in rows" :key="item.article_id" class="tool-card">
           <strong>{{ item.title }}</strong
-          ><small>章节已移入回收站</small>
+          ><small>{{ $t('章节已移入回收站') }}</small>
           <div class="tool-actions">
             <button
               class="secondary"
               :disabled="!access.can_delete_article || busy"
               @click="mutate('restore_deleted', { id: item.article_id })"
             >
-              恢复</button
+              {{ $t('恢复') }}</button
             ><button
               class="danger"
               :disabled="!access.can_delete_article || busy"
               @click="removeForever(item)"
             >
-              永久删除
+              {{ $t('永久删除') }}
             </button>
           </div>
         </article>
@@ -90,26 +90,26 @@
       <writer-empty-state
         v-if="!rows.length"
         icon="el-icon-alarm-clock"
-        title="没有待发布任务"
-        description="在章节的发布窗口选择定时发布，即可安排下一次更新。"
+        :title="$t('没有待发布任务')"
+        :description="$t('在章节的发布窗口选择定时发布，即可安排下一次更新。')"
       />
       <div v-else class="tool-list">
         <article v-for="item in rows" :key="item.task_id" class="tool-card">
           <div class="tool-card-heading">
             <strong>{{ item.article_title }}</strong
-            ><span class="tool-badge warning">待发布</span>
+            ><span class="tool-badge warning">{{ $t('待发布') }}</span>
           </div>
           <small class="tool-meta"
             ><i aria-hidden="true" class="el-icon-time" />{{
               formatTime(item.publish_time)
             }}
-            · 北京时间</small
+            · {{ $t('北京时间') }}</small
           ><button
             class="secondary"
             :disabled="!access.can_publish_article || busy"
             @click="cancelSchedule(item)"
           >
-            取消定时发布
+            {{ $t('取消定时发布') }}
           </button>
         </article>
       </div>
@@ -118,23 +118,23 @@
       <writer-empty-state
         v-if="!article"
         icon="el-icon-chat-line-square"
-        title="选择章节查看反馈"
-        description="读者提交的纠错建议会按章节显示在这里。"
+        :title="$t('选择章节查看反馈')"
+        :description="$t('读者提交的纠错建议会按章节显示在这里。')"
       />
       <writer-empty-state
         v-else-if="!rows.length"
         icon="el-icon-chat-line-square"
-        title="当前章节暂无纠错反馈"
-        description="收到读者建议后，可以在这里查看原文并标记处理状态。"
+        :title="$t('当前章节暂无纠错反馈')"
+        :description="$t('收到读者建议后，可以在这里查看原文并标记处理状态。')"
       />
       <div v-else class="tool-list">
         <article v-for="item in rows" :key="item.feedback_id" class="tool-card">
           <div class="tool-card-heading">
-            <strong>{{ item.username || "读者反馈" }}</strong
+            <strong>{{ item.username || $t('读者反馈') }}</strong
             ><span
               class="tool-badge"
               :class="Number(item.status) === 0 ? 'warning' : 'success'"
-              >{{ Number(item.status) === 0 ? "待处理" : "已处理" }}</span
+              >{{ Number(item.status) === 0 ? $t('待处理') : $t('已处理') }}</span
             >
           </div>
           <p>{{ item.content || item.feedback_content || item.description }}</p>
@@ -154,7 +154,7 @@
               })
             "
           >
-            {{ Number(item.status) === 0 ? "标记已处理" : "重新打开" }}
+            {{ Number(item.status) === 0 ? $t('标记已处理') : $t('重新打开') }}
           </button>
         </article>
       </div>
@@ -162,18 +162,18 @@
     <template v-if="tab === 'indexing'">
       <div class="index-overview">
         <div class="tool-section-heading">
-          <strong>读者稿索引</strong
+          <strong>{{ $t('读者稿索引') }}</strong
           ><small
-            >{{ indexedCount }} / {{ indexablePublished.length }} 章</small
+            >{{ $t('{indexed} / {total} 章', { indexed: indexedCount, total: indexablePublished.length }) }}</small
           >
         </div>
         <progress
           v-if="indexablePublished.length"
           :value="indexedCount"
           :max="indexablePublished.length"
-          aria-label="读者稿索引进度"
+          :aria-label="$t('读者稿索引进度')"
         />
-        <p class="tool-note">索引使写作助手能够检索作品的最新内容。</p>
+        <p class="tool-note">{{ $t('索引使写作助手能够检索作品的最新内容。') }}</p>
         <div class="tool-task-state" role="status">
           <i
             aria-hidden="true"
@@ -193,18 +193,18 @@
             mutate('request_novel_indexing', { novel_id: novel.novel_id })
           "
         >
-          {{ busy ? "正在提交…" : "更新作品索引" }}
+          {{ busy ? $t('正在提交…') : $t('更新作品索引') }}
         </button>
       </div>
       <writer-empty-state
         v-if="!indexableRows.length"
         icon="el-icon-connection"
-        title="还没有可索引的文字章节"
-        description="创建并保存文字章节后，在这里检查索引状态。"
+        :title="$t('还没有可索引的文字章节')"
+        :description="$t('创建并保存文字章节后，在这里检查索引状态。')"
       />
       <div v-else class="tool-list">
         <div class="tool-section-heading">
-          <span>章节状态</span><small>{{ indexableRows.length }} 章</small>
+          <span>{{ $t('章节状态') }}</span><small>{{ $t('{count} 章', { count: indexableRows.length }) }}</small>
         </div>
         <article
           v-for="item in indexableRows"
@@ -213,7 +213,7 @@
         >
           <strong>{{ item.title }}</strong>
           <div class="index-status-row">
-            <span>读者稿</span
+            <span>{{ $t('读者稿') }}</span
             ><span
               class="tool-badge"
               :class="
@@ -225,15 +225,15 @@
               "
               >{{
                 Number(item.is_draft) === 1
-                  ? "未发布"
+                  ? $t('未发布')
                   : Number(item.index_is_current) === 1
-                  ? "已同步"
-                  : "待更新"
+                  ? $t('已同步')
+                  : $t('待更新')
               }}</span
             >
           </div>
           <div class="index-status-row">
-            <span>写作稿</span
+            <span>{{ $t('写作稿') }}</span
             ><span
               class="tool-badge"
               :class="
@@ -242,7 +242,7 @@
                   : 'warning'
               "
               >{{
-                Number(item.writer_index_is_current) === 1 ? "已同步" : "待更新"
+                Number(item.writer_index_is_current) === 1 ? $t('已同步') : $t('待更新')
               }}</span
             >
           </div>
@@ -256,21 +256,21 @@
           ><strong>{{
             formatNumber(data.summary && data.summary.active_days)
           }}</strong
-          >活跃天数</span
+          >{{ $t('活跃天数') }}</span
         ><span
           ><strong>{{
             formatNumber(data.summary && data.summary.current_streak)
           }}</strong
-          >连续天数</span
+          >{{ $t('连续天数') }}</span
         ><span
           ><strong>{{
             formatNumber(data.summary && data.summary.total_written_chars)
           }}</strong
-          >新增字数</span
+          >{{ $t('新增字数') }}</span
         >
       </div>
       <div class="tool-section-heading">
-        <span>写作活动</span><small>北京时间</small>
+        <span>{{ $t('写作活动') }}</span><small>{{ $t('北京时间') }}</small>
       </div>
       <p class="tool-note calendar-range" v-if="data.from">
         {{ data.from }} — {{ data.to }}
@@ -278,11 +278,11 @@
       <writer-empty-state
         v-if="!calendarDays.length"
         icon="el-icon-date"
-        title="尚无写作活动"
-        description="开始输入正文后，写作活动会自动记录在这里。"
+        :title="$t('尚无写作活动')"
+        :description="$t('开始输入正文后，写作活动会自动记录在这里。')"
       />
       <template v-else
-        ><div class="writing-calendar" tabindex="0" aria-label="写作活动日历">
+        ><div class="writing-calendar" tabindex="0" :aria-label="$t('写作活动日历')">
           <section
             v-for="month in calendarMonths"
             :key="month.key"
@@ -294,7 +294,7 @@
               <span
                 v-for="weekday in ['一', '二', '三', '四', '五', '六', '日']"
                 :key="weekday"
-                >{{ weekday }}</span
+                >{{ $t(weekday) }}</span
               >
             </div>
             <div class="calendar-month-grid">
@@ -326,18 +326,18 @@
           </section>
         </div>
         <div class="calendar-legend">
-          <small>少</small
+          <small>{{ $t('少') }}</small
           ><span
             v-for="level in 5"
             :key="level"
             :class="'level-' + (level - 1)"
-          /><small>多</small>
+          /><small>{{ $t('多') }}</small>
         </div>
         <p class="calendar-detail">
           {{
             calendarDay
               ? calendarLabel(calendarDay)
-              : "点击、悬停或聚焦日期，查看当天的写作活动。"
+              : $t('点击、悬停或聚焦日期，查看当天的写作活动。')
           }}
         </p></template
       >
@@ -349,9 +349,9 @@
         /></span>
         <div>
           <strong>{{
-            (data.novel && data.novel.owner_name) || "作品作者"
+            (data.novel && data.novel.owner_name) || $t('作品作者')
           }}</strong
-          ><small>主作者</small>
+          ><small>{{ $t('主作者') }}</small>
         </div>
       </div>
       <form
@@ -359,28 +359,28 @@
         class="tool-form tool-section"
         @submit.prevent="invite"
       >
-        <h3>邀请作者</h3>
+        <h3>{{ $t('邀请作者') }}</h3>
         <label
-          >协作者用户 ID<input
+          >{{ $t('协作者用户 ID') }}<input
             v-model="inviteUser"
             type="number"
             min="1"
             required
-            placeholder="输入对方的用户 ID"
+            :placeholder="$t('输入对方的用户 ID')"
             :disabled="busy" /></label
         ><button class="secondary full-width" :disabled="busy || !inviteUser">
-          {{ busy ? "正在发送…" : "发送邀请" }}
+          {{ busy ? $t('正在发送…') : $t('发送邀请') }}
         </button>
       </form>
       <writer-empty-state
         v-if="!(data.collaborators || []).length"
         icon="el-icon-user"
-        title="还没有协作者"
-        description="邀请其他作者，共同编辑作品并按需分配权限。"
+        :title="$t('还没有协作者')"
+        :description="$t('邀请其他作者，共同编辑作品并按需分配权限。')"
       />
       <div v-else class="tool-list">
         <div class="tool-section-heading">
-          <span>协作者</span><small>{{ data.collaborators.length }} 人</small>
+          <span>{{ $t('协作者') }}</span><small>{{ $t('{count} 人', { count: data.collaborators.length }) }}</small>
         </div>
         <article
           v-for="item in data.collaborators || []"
@@ -389,7 +389,7 @@
         >
           <div class="tool-card-heading">
             <strong>{{
-              item.name || item.user_name || "作者 " + item.user_id
+              item.name || item.user_name || $t('作者 {id}', { id: item.user_id })
             }}</strong
             ><span
               class="tool-badge"
@@ -401,7 +401,7 @@
             v-if="access.can_manage_collaborators"
             class="permission-details"
           >
-            <summary>编辑权限</summary>
+            <summary>{{ $t('编辑权限') }}</summary>
             <div class="permission-list">
               <label v-for="permission in permissions" :key="permission.key"
                 ><input
@@ -411,7 +411,7 @@
                   @change="
                     setPermission(item, permission.key, $event.target.checked)
                   "
-                />{{ permission.label }}</label
+                />{{ $t(permission.label) }}</label
               >
             </div>
             <button
@@ -419,7 +419,7 @@
               :disabled="busy"
               @click="removeCollaborator(item)"
             >
-              移除协作者
+              {{ $t('移除协作者') }}
             </button>
           </details>
           <div
@@ -435,7 +435,7 @@
                 })
               "
             >
-              接受邀请</button
+              {{ $t('接受邀请') }}</button
             ><button
               :disabled="busy"
               @click="
@@ -444,7 +444,7 @@
                 })
               "
             >
-              拒绝
+              {{ $t('拒绝') }}
             </button>
           </div>
         </article>
@@ -455,20 +455,20 @@
         :disabled="busy"
         @click="quitCollaboration"
       >
-        退出协作
+        {{ $t('退出协作') }}
       </button>
     </template>
     <template v-if="tab === 'settings'">
       <form class="tool-form tool-section" @submit.prevent="saveSettings">
-        <h3>作品资料</h3>
+        <h3>{{ $t('作品资料') }}</h3>
         <label
-          >作品名<input
+          >{{ $t('作品名') }}<input
             v-model="settings.name"
             :disabled="!access.is_owner || busy"
             required
             maxlength="60" /></label
         ><label
-          >简介<textarea
+          >{{ $t('简介') }}<textarea
             v-model="settings.content"
             :disabled="!access.is_owner || busy"
             rows="5"
@@ -477,15 +477,15 @@
           class="primary full-width"
           :disabled="!access.is_owner || busy || !settingsDirty"
         >
-          {{ busy ? "正在保存…" : "保存资料" }}
+          {{ busy ? $t('正在保存…') : $t('保存资料') }}
         </button>
       </form>
       <section class="tool-section">
-        <h3>访问与状态</h3>
+        <h3>{{ $t('访问与状态') }}</h3>
         <label class="setting-row"
           ><span
-            ><strong>作品公开</strong
-            ><small>允许读者访问已发布章节</small></span
+            ><strong>{{ $t('作品公开') }}</strong
+            ><small>{{ $t('允许读者访问已发布章节') }}</small></span
           ><input
             class="writer-switch"
             type="checkbox"
@@ -494,7 +494,7 @@
             @change="setStatus('is_personal', $event)" /></label
         ><label class="setting-row"
           ><span
-            ><strong>已经完结</strong><small>在作品页显示完结状态</small></span
+            ><strong>{{ $t('已经完结') }}</strong><small>{{ $t('在作品页显示完结状态') }}</small></span
           ><input
             class="writer-switch"
             type="checkbox"
@@ -503,8 +503,8 @@
             @change="setStatus('is_complete', $event)" /></label
         ><label class="setting-row"
           ><span
-            ><strong>读者 AI 助手</strong
-            ><small>读者可围绕作品提问</small></span
+            ><strong>{{ $t('读者 AI 助手') }}</strong
+            ><small>{{ $t('读者可围绕作品提问') }}</small></span
           ><input
             class="writer-switch"
             type="checkbox"
@@ -514,23 +514,23 @@
         /></label>
       </section>
       <section class="tool-section">
-        <h3>封面与标签</h3>
+        <h3>{{ $t('封面与标签') }}</h3>
         <label
           class="cover-picker"
           :class="{ disabled: !access.is_owner || busy }"
-          ><span>作品封面</span
+          ><span>{{ $t('作品封面') }}</span
           ><span class="cover-upload"
             ><i
               aria-hidden="true"
               class="el-icon-upload2"
-            />选择图片更换封面</span
+            />{{ $t('选择图片更换封面') }}</span
           ><input
             type="file"
-            aria-label="更换作品封面"
+            :aria-label="$t('更换作品封面')"
             accept="image/*"
             :disabled="!access.is_owner || busy"
             @change="changeCover"
-          /><small>选择图片后上传并更新封面</small></label
+          /><small>{{ $t('选择图片后上传并更新封面') }}</small></label
         >
         <div v-if="tags.length" class="tag-list">
           <span v-for="tag in tags" :key="tag.tag_id"
@@ -538,7 +538,7 @@
             }}<button
               v-if="access.is_owner"
               :disabled="busy"
-              :aria-label="'删除标签 ' + (tag.tag_name || tag.name)"
+              :aria-label="$t('删除标签 {name}', { name: tag.tag_name || tag.name })"
               @click="deleteTag(tag)"
             >
               <i class="el-icon-close" aria-hidden="true" /></button
@@ -551,42 +551,42 @@
         >
           <input
             v-model="tagName"
-            aria-label="新标签"
-            placeholder="添加标签"
+            :aria-label="$t('新标签')"
+            :placeholder="$t('添加标签')"
             maxlength="30"
             required
             :disabled="busy"
           /><button class="secondary" :disabled="busy || !tagName.trim()">
-            添加
+            {{ $t('添加') }}
           </button>
         </form>
       </section>
       <section class="tool-section">
-        <h3>备份与管理</h3>
+        <h3>{{ $t('备份与管理') }}</h3>
         <button
           class="secondary full-width"
           :disabled="busy"
           @click="exportWork"
         >
-          <i aria-hidden="true" class="el-icon-download" /> 导出整部作品
+          <i aria-hidden="true" class="el-icon-download" /> {{ $t('导出整部作品') }}
         </button>
-        <p class="tool-note">包含作品资料、章节正文与写作稿。</p>
+        <p class="tool-note">{{ $t('包含作品资料、章节正文与写作稿。') }}</p>
         <button
           v-if="access.is_owner"
           class="danger"
           :disabled="busy"
           @click="deleteWork"
         >
-          删除作品
+          {{ $t('删除作品') }}
         </button>
       </section>
     </template>
     <template v-if="tab === 'appearance'">
       <section class="tool-section">
-        <h3>阅读外观</h3>
+        <h3>{{ $t('阅读外观') }}</h3>
         <div class="preference-field">
-          <span class="preference-label">主题</span>
-          <div class="writer-theme-options" role="group" aria-label="写作主题">
+          <span class="preference-label">{{ $t('主题') }}</span>
+          <div class="writer-theme-options" role="group" :aria-label="$t('写作主题')">
             <button
               v-for="theme in themeOptions"
               :key="theme.key"
@@ -594,54 +594,54 @@
               @click="preference('theme', theme.key)"
             >
               <i :class="theme.icon" aria-hidden="true" /><span>{{
-                theme.name
+                $t(theme.name)
               }}</span>
             </button>
           </div>
         </div>
         <div class="preference-field">
-          <span class="preference-label">字体</span>
+          <span class="preference-label">{{ $t('字体') }}</span>
           <details ref="fontPicker" class="writer-font-picker">
             <summary>
               <span
-                ><strong>{{ selectedFont.name }}</strong
+                ><strong>{{ $t(selectedFont.name) }}</strong
                 ><small
                   v-if="fontDownloadLabel(selectedFont.key)"
                   role="status"
                   >{{ fontDownloadLabel(selectedFont.key) }}</small
                 >
                 <small v-else :style="{ fontFamily: preferences.fontFamily }"
-                  >山川湖海，落笔成诗。</small
+                  >{{ $t('山川湖海，落笔成诗。') }}</small
                 >
                 <progress
                   v-if="fontDownloading(selectedFont.key)"
                   class="font-download-progress"
                   :value="fontDownloads[selectedFont.key].percent"
                   max="100"
-                  aria-label="字体下载进度"
+                  :aria-label="$t('字体下载进度')"
                 /> </span
               ><i class="el-icon-arrow-down" aria-hidden="true" />
             </summary>
-            <div class="writer-font-options" role="group" aria-label="正文字体">
+            <div class="writer-font-options" role="group" :aria-label="$t('正文字体')">
               <button
                 v-for="font in fontOptions"
                 :key="font.key"
                 :aria-pressed="String(selectedFont.key === font.key)"
                 @click="chooseFont(font.key)"
               >
-                <span>{{ font.name }}</span
+                <span>{{ $t(font.name) }}</span
                 ><small :style="{ fontFamily: font.family }">{{
                   fontDownloadLabel(font.key) ||
                   (font.download
-                    ? "下载字体 · 山川湖海"
-                    : "山川湖海，落笔成诗。")
+                    ? $t('下载字体 · 山川湖海')
+                    : $t('山川湖海，落笔成诗。'))
                 }}</small
                 ><progress
                   v-if="fontDownloading(font.key)"
                   class="font-download-progress"
                   :value="fontDownloads[font.key].percent"
                   max="100"
-                  :aria-label="font.name + '下载进度'"
+                  :aria-label="$t('{name}下载进度', { name: $t(font.name) })"
                 />
                 <i
                   v-if="selectedFont.key === font.key"
@@ -653,7 +653,7 @@
           </details>
         </div>
         <div class="preference-field">
-          <span class="preference-label">背景皮肤</span>
+          <span class="preference-label">{{ $t('背景皮肤') }}</span>
           <writer-background-picker
             :preferences="preferences"
             :skins="skins"
@@ -662,10 +662,10 @@
         </div>
       </section>
       <section class="tool-section">
-        <h3>正文排版</h3>
+        <h3>{{ $t('正文排版') }}</h3>
         <label class="range-field"
           ><span
-            >字号<output
+            >{{ $t('字号') }}<output
               >{{ preferences.fontSize }}<small> px</small></output
             ></span
           ><input
@@ -678,8 +678,8 @@
             " /></label
         ><label class="range-field"
           ><span
-            >行距<output
-              >{{ preferences.lineHeight }}<small> 倍</small></output
+            >{{ $t('行距') }}<output
+              >{{ preferences.lineHeight }}<small> {{ $t('倍') }}</small></output
             ></span
           ><input
             type="range"
@@ -692,7 +692,7 @@
             " /></label
         ><label class="range-field"
           ><span
-            >正文宽度<output
+            >{{ $t('正文宽度') }}<output
               >{{ preferences.paperWidth }}<small> px</small></output
             ></span
           ><input
@@ -705,11 +705,11 @@
         /></label>
       </section>
       <section class="tool-section">
-        <h3>快捷输入</h3>
+        <h3>{{ $t('快捷输入') }}</h3>
         <p class="tool-note">
-          选择小说常用、键盘不易输入的符号，显示在编辑器上方。
+          {{ $t('选择小说常用、键盘不易输入的符号，显示在编辑器上方。') }}
         </p>
-        <div class="writer-symbol-options" role="group" aria-label="常用符号">
+        <div class="writer-symbol-options" role="group" :aria-label="$t('常用符号')">
           <button
             v-for="symbol in symbolOptions"
             :key="symbol.value"
@@ -722,36 +722,36 @@
           </button>
         </div>
         <label
-          >自定义符号<input
+          >{{ $t('自定义符号') }}<input
             :value="preferences.quickInputs"
-            aria-label="自定义快捷输入"
+            :aria-label="$t('自定义快捷输入')"
             placeholder="——|……|·|「」"
             @change="
               preference('quickInputs', $event.target.value.slice(0, 200))
             "
         /></label>
-        <p class="tool-note">用 | 分隔。成对引号与括号可包裹选中文字。</p>
+        <p class="tool-note">{{ $t('用 | 分隔。成对引号与括号可包裹选中文字。') }}</p>
         <button
           class="symbol-reset"
           @click="preference('quickInputs', defaultSymbols)"
         >
-          恢复推荐符号
+          {{ $t('恢复推荐符号') }}
         </button>
         <div class="shortcut-list">
-          <span>保存<kbd>⌘ / Ctrl S</kbd></span
-          ><span>查找<kbd>⌘ / Ctrl F</kbd></span
-          ><span>退出专注<kbd>Esc</kbd></span>
+          <span>{{ $t('保存') }}<kbd>⌘ / Ctrl S</kbd></span
+          ><span>{{ $t('查找') }}<kbd>⌘ / Ctrl F</kbd></span
+          ><span>{{ $t('退出专注') }}<kbd>Esc</kbd></span>
         </div>
       </section>
     </template>
     <el-dialog
       class="writer-dialog-wrapper writer-history-wrapper"
-      title="历史版本内容"
+      :title="$t('历史版本内容')"
       :visible.sync="previewOpen"
       :custom-class="writerDialogClass + ' writer-history-dialog'"
       append-to-body
       width="760px"
-      ><writer-version-preview :article="previewArticle" label="历史版本" />
+      ><writer-version-preview :article="previewArticle" :label="$t('历史版本')" />
     </el-dialog>
   </writer-panel>
 </template>
@@ -863,7 +863,7 @@ export default {
       ];
     },
     selectedFont() {
-      return (
+      return this.$t(
         this.fontOptions.find(
           (font) =>
             font.key ===
@@ -913,13 +913,11 @@ export default {
     indexStatusDetail() {
       const queue = this.data.queue || {};
       if (queue.current_article_title)
-        return "当前章节：" + queue.current_article_title;
+        return this.$t('当前章节：{title}', { title: queue.current_article_title });
       if (Number(queue.total_chapters) > 0)
-        return `本轮已处理 ${queue.completed_chapters || 0} / ${
-          queue.total_chapters
-        } 章`;
+        return this.$t('本轮已处理 {completed} / {total} 章', { completed: queue.completed_chapters || 0, total: queue.total_chapters });
       if (Number(queue.pending_chapters) > 0)
-        return `待处理 ${queue.pending_chapters} 章`;
+        return this.$t('待处理 {count} 章', { count: queue.pending_chapters });
       return "";
     },
     calendarMonths() {
@@ -930,7 +928,7 @@ export default {
           const first = new Date(day.date + "T00:00:00Z");
           months.set(key, {
             key,
-            label: `${key.slice(0, 4)} 年 ${Number(key.slice(5))} 月`,
+            label: this.$t('{year} 年 {month} 月', { year: key.slice(0, 4), month: Number(key.slice(5)) }),
             offset: (first.getUTCDay() + 6) % 7,
             days: [],
           });
@@ -992,8 +990,8 @@ export default {
       if (this.settingsDirty) {
         try {
           await this.writerConfirm(
-            "重新加载会放弃尚未保存的作品资料，继续？",
-            "重新加载资料"
+            this.$t('重新加载会放弃尚未保存的作品资料，继续？'),
+            this.$t('重新加载资料')
           );
         } catch (_) {
           return;
@@ -1002,15 +1000,13 @@ export default {
       return this.load({ discardSettings: true });
     },
     formatNumber(value) {
-      return Number(value || 0).toLocaleString("zh-CN");
+      return Number(value || 0).toLocaleString(this.$language.state.locale === 'en' ? 'en-US' : 'zh-CN');
     },
     calendarLabel(day) {
-      return `${day.date} · ${day.written_chars || 0} 字 · ${Math.floor(
-        (day.active_seconds || 0) / 60
-      )} 分钟`;
+      return this.$t('{date} · {characters} 字 · {minutes} 分钟', { date: day.date, characters: day.written_chars || 0, minutes: Math.floor((day.active_seconds || 0) / 60) });
     },
     collaboratorStatus(status) {
-      return (
+      return this.$t(
         {
           pending: "待接受",
           accepted: "协作中",
@@ -1119,7 +1115,7 @@ export default {
       this.busy = true;
       try {
         await writerPost(name, body);
-        this.writerMessage("success", "操作成功");
+        this.writerMessage("success", this.$t('操作成功'));
         await this.load();
         this.$emit("refresh");
       } catch (error) {
@@ -1134,15 +1130,15 @@ export default {
     },
     exportVersion(item) {
       downloadWriterFile(
-        `${item.title || "章节"}-备份.json`,
+        `${item.title || this.$t('章节')}-${this.$t('备份')}.json`,
         JSON.stringify(item, null, 2)
       );
     },
     async removeForever(item) {
       try {
         await this.writerConfirm(
-          `永久删除“${item.title}”？此操作无法撤销。`,
-          "永久删除",
+          this.$t('永久删除“{title}”？此操作无法撤销。', { title: item.title }),
+          this.$t('永久删除'),
           { type: "warning" }
         );
         await this.mutate("delete_forever", { id: item.article_id });
@@ -1151,8 +1147,8 @@ export default {
     async cancelSchedule(item) {
       try {
         await this.writerConfirm(
-          `取消“${item.article_title}”的定时发布？`,
-          "取消任务"
+          this.$t('取消“{title}”的定时发布？', { title: item.article_title }),
+          this.$t('取消任务')
         );
         await this.mutate("cancel_scheduled_task", { task_id: item.task_id });
       } catch (_) {}
@@ -1173,8 +1169,8 @@ export default {
     async removeCollaborator(item) {
       try {
         await this.writerConfirm(
-          `移除协作者 ${item.name || item.user_id}？`,
-          "移除协作者"
+          this.$t('移除协作者 {name}？', { name: item.name || item.user_id }),
+          this.$t('移除协作者')
         );
         await this.mutate("remove_novel_collaborator", {
           novel_id: this.novel.novel_id,
@@ -1184,7 +1180,7 @@ export default {
     },
     async quitCollaboration() {
       try {
-        await this.writerConfirm("退出该作品协作？", "退出协作");
+        await this.writerConfirm(this.$t('退出该作品协作？'), this.$t('退出协作'));
         await this.mutate("quit_novel_collaboration", {
           novel_id: this.novel.novel_id,
         });
@@ -1215,10 +1211,10 @@ export default {
           await this.writerConfirm(
             key === "is_personal"
               ? value === 0
-                ? "公开作品后，已发布章节将对读者可见。"
-                : "将作品设为私密？"
-              : "更新作品完结状态？",
-            "作品状态"
+                ? this.$t('公开作品后，已发布章节将对读者可见。')
+                : this.$t('将作品设为私密？')
+              : this.$t('更新作品完结状态？'),
+            this.$t('作品状态')
           );
         }
         const endpoint = {
@@ -1288,7 +1284,7 @@ export default {
           articles.push({ ...reader, ...(writer || {}) });
         }
         downloadWriterFile(
-          `${this.novel.name}-完整备份.json`,
+          `${this.novel.name}-${this.$t('完整备份')}.json`,
           JSON.stringify({ version: 1, novel: this.novel, articles }, null, 2)
         );
       } catch (error) {
@@ -1298,8 +1294,8 @@ export default {
     async deleteWork() {
       try {
         await this.writerConfirm(
-          `删除作品“${this.novel.name}”？请先导出备份。`,
-          "删除作品",
+          this.$t('删除作品“{name}”？请先导出备份。', { name: this.novel.name }),
+          this.$t('删除作品'),
           { type: "warning" }
         );
         await writerPost("delete_novel", { id: this.novel.novel_id });
@@ -1321,13 +1317,13 @@ export default {
     fontDownloadLabel(key) {
       const state = this.fontDownloads[key];
       if (!state) return "";
-      if (state.phase === "error") return "下载失败，点击重试";
-      if (state.phase === "loading") return "正在加载字体…";
+      if (state.phase === "error") return this.$t('下载失败，点击重试');
+      if (state.phase === "loading") return this.$t('正在加载字体…');
       if (state.phase !== "downloading") return "";
-      if (state.percent !== null) return `正在下载 ${state.percent}%`;
+      if (state.percent !== null) return this.$t('正在下载 {percent}%', { percent: state.percent });
       return state.loaded
-        ? `正在下载 · ${(state.loaded / 1024 / 1024).toFixed(1)} MB`
-        : "正在下载…";
+        ? this.$t('正在下载 · {size} MB', { size: (state.loaded / 1024 / 1024).toFixed(1) })
+        : this.$t('正在下载…');
     },
     chooseFont(value) {
       this.fontPreference(value);

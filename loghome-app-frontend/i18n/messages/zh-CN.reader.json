@@ -299,6 +299,18 @@
         "new": "近三个月上线的作品，按原木力排序"
       },
       "boardSuffix": "榜",
+      "badges": {
+        "haycraft_work": "干草块文会作品",
+        "champion": "蝉联榜首",
+        "rank_rise": "飙升{{count}}名",
+        "new_entry": "新作上榜",
+        "update_burst": "疯狂爆更",
+        "interaction_hot": "互动火热",
+        "nice_milestone": "点赞过千",
+        "read_milestone": "阅读过万",
+        "old_work": "{{count}}年老作",
+        "appearance": "上榜{{count}}天"
+      },
       "boards": {
         "update": "更新榜",
         "logpower": "原木力榜",
@@ -400,6 +412,7 @@
     "articleList": {
       "loadingChapters": "章节加载中",
       "noChapters": "这本书还没有章节哦\n快去评论区催更~",
+      "bookRequired": "请先选择作品",
       "readUpToHere": "阅读到这里",
       "jumpToProgress": "跳转到阅读进度",
       "defaultVolume": "正文"

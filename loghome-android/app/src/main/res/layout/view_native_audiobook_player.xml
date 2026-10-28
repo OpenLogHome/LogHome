@@ -1,15 +1,29 @@
 <?xml version="1.0" ?>
-<ScrollView
+<FrameLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
         android:background="@drawable/audiobook_player_background"
-        android:clipToPadding="false">
-    <LinearLayout
+        android:clickable="true"
+        android:focusable="true">
+    <ImageView
+        android:id="@+id/backgroundImage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:importantForAccessibility="no"
+        android:contentDescription="@null" />
+    <View
+        android:id="@+id/backgroundScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/audiobook_background_scrim"
+        android:importantForAccessibility="no" />
+    <LinearLayout
+        android:id="@+id/playerContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingHorizontal="20dp"
         android:paddingTop="12dp"
@@ -49,12 +63,17 @@
         android:maxLines="1"
         android:ellipsize="end"/>
         </LinearLayout>
+        <FrameLayout
+        android:id="@+id/coverArea"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="12dp">
         <com.google.android.material.card.MaterialCardView
         android:id="@+id/coverCard"
         android:layout_width="280dp"
         android:layout_height="280dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="18dp"
+        android:layout_gravity="center"
         app:cardCornerRadius="20dp"
         app:cardElevation="0dp"
         app:strokeWidth="0dp"
@@ -87,11 +106,12 @@
         android:ellipsize="end"/>
             </FrameLayout>
         </com.google.android.material.card.MaterialCardView>
+        </FrameLayout>
         <TextView
         android:id="@+id/paragraphText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="22dp"
+        android:layout_marginTop="12dp"
         android:minLines="2"
         android:maxLines="3"
         android:ellipsize="end"
@@ -99,37 +119,6 @@
         android:text="正在加载听书内容…"
         android:textColor="#F2EEF8"
         android:textSize="17sp"/>
-        <LinearLayout
-        android:id="@+id/modelDownloadContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="vertical"
-        android:visibility="gone">
-            <TextView
-        android:id="@+id/modelDownloadStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="正在下载离线语音…"
-        android:textSize="13sp"
-        android:textColor="#F2EEF8"/>
-            <TextView
-        android:id="@+id/modelDownloadProgressText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="0%"
-        android:textSize="12sp"
-        android:textColor="#DCD5E9"/>
-            <ProgressBar
-        android:id="@+id/modelDownloadProgressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="6dp"
-        android:layout_marginTop="6dp"
-        android:max="1000"
-        android:progressBackgroundTint="#665778"
-        android:progressTint="#FFFFFF"/>
-        </LinearLayout>
         <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -335,11 +324,11 @@
         android:layout_gravity="center"
         android:indeterminateTint="#FFFFFF"
         android:visibility="gone"/>
-        <Space android:layout_width="1dp" android:layout_height="20dp" android:layout_weight="1"/>
+        <Space android:layout_width="1dp" android:layout_height="8dp"/>
         <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="12dp"
         android:gravity="center_vertical">
             <com.google.android.material.button.MaterialButton
         android:id="@+id/voiceButton"
@@ -386,4 +375,4 @@
         app:backgroundTint="#26FFFFFF"/>
         </LinearLayout>
     </LinearLayout>
-</ScrollView>
+</FrameLayout>

@@ -5,7 +5,7 @@
 
 		<view class="rules-header">
 			<view class="rules-header__back" @tap="goBack"><view class="rules-header__back-icon"></view></view>
-			<text class="rules-header__title">通行证与红石规则</text>
+			<text class="rules-header__title">{{ $t('membership.rules.title') }}</text>
 			<view class="rules-header__spacer"></view>
 		</view>
 
@@ -16,92 +16,92 @@
 					<image src="/static/icons/redstone.svg" mode="aspectFit"></image>
 				</view>
 				<text class="rules-hero__eyebrow">LOGHOME PASS · SERVICE RULES</text>
-				<text class="rules-hero__title">权益清晰，消费有据可查</text>
-				<text class="rules-hero__description">以下规则适用于原木通行证、超级原木通行证及红石相关服务。</text>
-				<text class="rules-hero__date">当前版本生效日期：2026 年 8 月 1 日</text>
+				<text class="rules-hero__title">{{ $t('membership.rules.heroTitle') }}</text>
+				<text class="rules-hero__description">{{ $t('membership.rules.heroDesc') }}</text>
+				<text class="rules-hero__date">{{ $t('membership.rules.heroDate') }}</text>
 			</view>
 
 			<view class="rules-section">
-				<view class="rules-section__heading"><text>01</text><view><text>通行证方案</text><text>开通价格与有效期</text></view></view>
+				<view class="rules-section__heading"><text>01</text><view><text>{{ $t('membership.rules.sections.plans.title') }}</text><text>{{ $t('membership.rules.sections.plans.subtitle') }}</text></view></view>
 				<view class="price-grid">
 					<view class="price-card">
 						<image src="/static/membership/loghome-pass.png" mode="aspectFit"></image>
-						<text class="price-card__name">原木通行证</text>
-						<text>月付 660 原木</text><text>年付 7200 原木</text>
+						<text class="price-card__name">{{ $t('membership.pass.tier.standard.name') }}</text>
+						<text>{{ $t('membership.rules.sections.plans.monthly') }}</text><text>{{ $t('membership.rules.sections.plans.annual') }}</text>
 					</view>
 					<view class="price-card price-card--super">
 						<image src="/static/membership/loghome-super-pass.png" mode="aspectFit"></image>
-						<text class="price-card__name">超级原木通行证</text>
-						<text>月付 880 原木</text><text>年付 9600 原木</text>
+						<text class="price-card__name">{{ $t('membership.pass.tier.super.name') }}</text>
+						<text>{{ $t('membership.rules.sections.plans.superMonthly') }}</text><text>{{ $t('membership.rules.sections.plans.superAnnual') }}</text>
 					</view>
 				</view>
 				<view class="rule-list">
-					<view><text>•</text><text>月付按 30 天、年付按 365 天计算权益有效期，支付成功后立即生效。</text></view>
-					<view><text>•</text><text>同档续费会从现有有效期末尾顺延；实际扣除和新到期日以确认页面及服务端结果为准。</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.plans.rule1') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.plans.rule2') }}</text></view>
 				</view>
 			</view>
 
 			<view class="rules-section">
-				<view class="rules-section__heading"><text>02</text><view><text>升级与自动续费</text><text>状态随时可查、可管理</text></view></view>
+				<view class="rules-section__heading"><text>02</text><view><text>{{ $t('membership.rules.sections.upgrade.title') }}</text><text>{{ $t('membership.rules.sections.upgrade.subtitle') }}</text></view></view>
 				<view class="rule-list">
-					<view><text>•</text><text>原木通行证升级至超级原木通行证，仅收取剩余有效天数对应的档位差价，到期日保持不变。</text></view>
-					<view><text>•</text><text>超级原木通行证有效期内暂不支持降级；可在到期后重新选择通行证档位。</text></view>
-					<view><text>•</text><text>开启自动续费后，将在到期时按当前订阅周期自动扣除原木；余额不足时续费失败，权益到期终止。</text></view>
-					<view><text>•</text><text>关闭自动续费不会提前结束已生效权益，当前通行证仍可使用至到期日。</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.upgrade.rule1') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.upgrade.rule2') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.upgrade.rule3') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.upgrade.rule4') }}</text></view>
 				</view>
 			</view>
 
 			<view class="rules-section">
-				<view class="rules-section__heading"><text>03</text><view><text>红石赠送</text><text>会员赠送与普通用户月赠</text></view></view>
+				<view class="rules-section__heading"><text>03</text><view><text>{{ $t('membership.rules.sections.grant.title') }}</text><text>{{ $t('membership.rules.sections.grant.subtitle') }}</text></view></view>
 				<view class="grant-grid">
-					<view><text>普通用户</text><text>6</text><text>红石 / 月</text></view>
-					<view><text>原木通行证</text><text>100</text><text>红石 / 周期</text></view>
-					<view><text>超级通行证</text><text>200</text><text>红石 / 周期</text></view>
+					<view><text>{{ $t('membership.rules.sections.grant.regular') }}</text><text>6</text><text>{{ $t('membership.rules.sections.grant.perMonth') }}</text></view>
+					<view><text>{{ $t('membership.pass.tier.standard.name') }}</text><text>100</text><text>{{ $t('membership.rules.sections.grant.perCycle') }}</text></view>
+					<view><text>{{ $t('membership.rules.sections.grant.superShort') }}</text><text>200</text><text>{{ $t('membership.rules.sections.grant.perCycle') }}</text></view>
 				</view>
 				<view class="rule-list">
-					<view><text>•</text><text>普通用户每个自然月赠送 6 红石；当月存在有效通行证时不重复领取普通用户月赠。</text></view>
-					<view><text>•</text><text>月付通行证在开通及每次续费成功后赠送；年付通行证开通时先赠送一次，之后按月到账。</text></view>
-					<view><text>•</text><text>标准版升级超级版时，当期按两档赠送标准的差额补赠红石。</text></view>
-					<view><text>•</text><text>通行证赠送、升级补赠和普通用户月赠红石自到账日起 3 个月内有效。</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.grant.rule1') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.grant.rule2') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.grant.rule3') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.grant.rule4') }}</text></view>
 				</view>
 			</view>
 
 			<view class="rules-section rules-section--redstone">
-				<view class="rules-section__heading"><text>04</text><view><text>红石兑换与消费</text><text>所有变动均记录账单</text></view></view>
-				<view class="exchange-rate"><image src="/static/resources/log.png" mode="aspectFit"></image><text>10 原木</text><text>=</text><image src="/static/icons/redstone.svg" mode="aspectFit"></image><text>1 红石</text></view>
+				<view class="rules-section__heading"><text>04</text><view><text>{{ $t('membership.rules.sections.exchange.title') }}</text><text>{{ $t('membership.rules.sections.exchange.subtitle') }}</text></view></view>
+				<view class="exchange-rate"><image src="/static/resources/log.png" mode="aspectFit"></image><text>{{ $t('membership.rules.sections.exchange.tenLog') }}</text><text>=</text><image src="/static/icons/redstone.svg" mode="aspectFit"></image><text>{{ $t('membership.rules.sections.exchange.oneRedstone') }}</text></view>
 				<view class="usage-list">
-					<view><text>问问原木娘</text><text>普通 1 · 深度 2</text></view>
-					<view><text>笔泡 AI 助手</text><text>普通 1 · 深度 2 · 图像 5</text></view>
-					<view><text>文本纠错</text><text>普通免费 · 通行证智能免费 · 普通 2</text></view>
+					<view><text>{{ $t('membership.rules.sections.exchange.askTitle') }}</text><text>{{ $t('membership.rules.sections.exchange.askCost') }}</text></view>
+					<view><text>{{ $t('membership.rules.sections.exchange.bipaoTitle') }}</text><text>{{ $t('membership.rules.sections.exchange.bipaoCost') }}</text></view>
+					<view><text>{{ $t('membership.rules.sections.exchange.correctionTitle') }}</text><text>{{ $t('membership.rules.sections.exchange.correctionCost') }}</text></view>
 				</view>
 				<view class="rule-list">
-					<view><text>•</text><text>发起付费 AI 操作即按页面显示数量扣除红石；红石不足时不会创建付费任务。</text></view>
-					<view><text>•</text><text>消费时优先使用最早到期的赠送红石，再使用永久有效的兑换红石；原木兑换所得红石不会过期。</text></view>
-					<view><text>•</text><text>同一任务断线重连或重复提交不会重复扣费。兑换、赠送与消费记录均可在红石中心查询。</text></view>
-					<view><text>•</text><text>红石兑换比例和功能消耗如有调整，将以操作前页面展示为准。</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.exchange.rule1') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.exchange.rule2') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.exchange.rule3') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.exchange.rule4') }}</text></view>
 				</view>
-				<view v-if="aiAssistanceEnabled" class="section-link" @tap="gotoRedstone"><text>前往红石中心</text><text class="ui-chevron" aria-hidden="true"></text></view>
+				<view v-if="aiAssistanceEnabled" class="section-link" @tap="gotoRedstone"><text>{{ $t('membership.rules.sections.exchange.goto') }}</text><text class="ui-chevron" aria-hidden="true"></text></view>
 			</view>
 
 			<view class="rules-section">
-				<view class="rules-section__heading"><text>05</text><view><text>赠送与兑换码</text><text>权益发放至指定账号</text></view></view>
+				<view class="rules-section__heading"><text>05</text><view><text>{{ $t('membership.rules.sections.gifts.title') }}</text><text>{{ $t('membership.rules.sections.gifts.subtitle') }}</text></view></view>
 				<view class="rule-list">
-					<view><text>•</text><text>赠送好友前请确认接收账号和通行证方案；赠送成功后，权益发放至所选好友账号。</text></view>
-					<view><text>•</text><text>兑换码需在有效状态下使用。同一兑换码不可重复使用，具体档位与时长以兑换确认结果为准。</text></view>
-					<view><text>•</text><text>已有通行证时，兑换权益会依据对应方案进行续期或升级。</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.gifts.rule1') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.gifts.rule2') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.gifts.rule3') }}</text></view>
 				</view>
 			</view>
 
 			<view class="rules-section">
-				<view class="rules-section__heading"><text>06</text><view><text>会员专属功能</text><text>权益有效期间开放</text></view></view>
+				<view class="rules-section__heading"><text>06</text><view><text>{{ $t('membership.rules.sections.exclusive.title') }}</text><text>{{ $t('membership.rules.sections.exclusive.subtitle') }}</text></view></view>
 				<view class="rule-list">
-					<view><text>•</text><text>定时发布仅限原木通行证及超级原木通行证会员使用，创建任务时会校验会员状态。</text></view>
-					<view><text>•</text><text>主作者与一名协作者组成的双人协作作品免费；三人及以上协作需要主作者持有标准或超级原木通行证，否则协作者仅可预览作品，无法启用编辑、增删章节、排序和发布等其他权限。</text></view>
-					<view><text>•</text><text>其他会员专属能力以对应功能页面标识为准；通行证到期后，未执行的新操作将不再享有会员权限。</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.exclusive.rule1') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.exclusive.rule2') }}</text></view>
+					<view><text>•</text><text>{{ $t('membership.rules.sections.exclusive.rule3') }}</text></view>
 				</view>
 			</view>
 
-			<view class="rules-note">如页面展示与历史说明存在差异，以操作确认页、当前有效规则及服务端实际处理结果为准。</view>
+			<view class="rules-note">{{ $t('membership.rules.note') }}</view>
 		</view>
 	</view>
 </template>

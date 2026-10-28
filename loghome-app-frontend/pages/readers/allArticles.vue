@@ -58,7 +58,7 @@ export default{
 		if(JSON.stringify(option) == "{}"){
 			this.isLoading = false;
 			uni.showToast({
-				title: "undefined",
+				title: this.$t('reader.articleList.bookRequired'),
 				icon:'none',
 				duration: 2000
 			});
@@ -70,9 +70,6 @@ export default{
 			this.articles = res.data;
 			this.processVolumes();
 			console.log(this.articles)
-			uni.setNavigationBarTitle({
-				title:this.bookInfo.name
-			});
 			this.$nextTick(() => {
 				this.checkLastReadVisibility();
 			});

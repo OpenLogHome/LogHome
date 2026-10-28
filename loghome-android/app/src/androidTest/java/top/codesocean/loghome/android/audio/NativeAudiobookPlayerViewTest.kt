@@ -3,9 +3,15 @@ package top.codesocean.loghome.android.audio
 import androidx.test.core.app.ActivityScenario
 import top.codesocean.loghome.android.WebViewActivity
 import android.graphics.Bitmap
+import android.graphics.Rect
+import android.graphics.drawable.BitmapDrawable
+import android.media.AudioManager
 import java.io.File
 import android.view.ContextThemeWrapper
 import android.view.View
+import android.view.KeyEvent
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.TextView
@@ -16,12 +22,57 @@ import com.google.android.material.button.MaterialButton
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 import top.codesocean.loghome.android.R
 
 @RunWith(AndroidJUnit4::class)
 class NativeAudiobookPlayerViewTest {
+    @Test
+    fun compactPlayerFitsWithoutScrollingAndUsesCoverBackdrop() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val application = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val view = NativeAudiobookPlayerView(ContextThemeWrapper(application, R.style.Theme_LogHome))
+            val cover = Bitmap.createBitmap(120, 180, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFFC56936.toInt()) }
+            view.setCoverBitmap(cover)
+            val density = application.resources.displayMetrics.density
+            val width = (360 * density).toInt()
+            val height = (640 * density).toInt()
+            repeat(2) {
+                view.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY))
+                view.layout(0, 0, width, height)
+            }
+            assertTrue(view.findViewById<View>(R.id.playerContent).parent is FrameLayout)
+            assertFalse(view.canScrollVertically(1))
+            assertFalse(view.canScrollVertically(-1))
+            val button = view.findViewById<View>(R.id.readButton)
+            val rect = Rect()
+            button.getDrawingRect(rect)
+            view.offsetDescendantRectToMyCoords(button, rect)
+            assertTrue("bottom controls fit in compact screen", rect.bottom <= height && rect.top >= 0)
+            val image = view.findViewById<ImageView>(R.id.coverImage).drawable as BitmapDrawable
+            val background = view.findViewById<ImageView>(R.id.backgroundImage).drawable as BitmapDrawable
+            assertSame(cover, image.bitmap)
+            assertEquals(0xFFC56936.toInt(), background.bitmap.getPixel(0, 0))
+            view.setCoverBitmap(null)
+            assertEquals(null, view.findViewById<ImageView>(R.id.backgroundImage).drawable)
+        }
+    }
+
+    @Test
+    fun volumeKeysUseMusicStreamEvenWhenReaderCapturesVolumeKeys() {
+        ActivityScenario.launch(WebViewActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val field = WebViewActivity::class.java.getDeclaredField("volumeKeyEnabled").apply { isAccessible = true }
+                field.setBoolean(activity, true)
+                activity.findViewById<NativeAudiobookPlayerView>(R.id.nativeAudiobookPlayer).showPlayer()
+                activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_VOLUME_UP))
+                activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_VOLUME_UP))
+                assertEquals(AudioManager.STREAM_MUSIC, activity.volumeControlStream)
+            }
+        }
+    }
     @Test
     fun rendersNativePlaybackControlsFromServiceState() {
         lateinit var view: NativeAudiobookPlayerView
@@ -47,28 +98,22 @@ class NativeAudiobookPlayerViewTest {
                     playbackSpeed = 1.5f,
                     sleepTimerRemainingMs = 30L * 60_000L,
                 ),
-                voiceName = "超文（离线）",
+                voiceName = "温润君子",
             )
-            view.showModelDownloadProgress(
-                downloadedBytes = 7_005_649L,
-                totalBytes = 14_011_298L,
-            )
+
         }
 
         assertEquals("测试小说", view.findViewById<TextView>(R.id.bookTitle).text.toString())
         assertEquals("第一章", view.findViewById<TextView>(R.id.chapterTitle).text.toString())
         assertEquals("暂停", view.findViewById<MaterialButton>(R.id.playPauseButton).contentDescription.toString())
         assertEquals("语速 1.5×", view.findViewById<MaterialButton>(R.id.speedButton).text.toString())
-        assertEquals("超文（离线）", view.findViewById<MaterialButton>(R.id.voiceButton).text.toString())
+        assertEquals("温润君子", view.findViewById<MaterialButton>(R.id.voiceButton).text.toString())
         assertEquals(250, view.findViewById<SeekBar>(R.id.progressSeekBar).progress)
         assertEquals(View.VISIBLE, view.findViewById<ProgressBar>(R.id.bufferingIndicator).visibility)
         assertTrue(view.findViewById<MaterialButton>(R.id.previousButton).isEnabled)
         assertTrue(view.findViewById<MaterialButton>(R.id.nextButton).isEnabled)
         assertFalse(view.findViewById<MaterialButton>(R.id.sleepTimerButton).text.isBlank())
-        assertEquals(View.VISIBLE, view.findViewById<View>(R.id.modelDownloadContainer).visibility)
-        assertEquals(500, view.findViewById<ProgressBar>(R.id.modelDownloadProgressBar).progress)
-        assertTrue(view.findViewById<TextView>(R.id.modelDownloadProgressText).text.contains("50%"))
-        assertFalse(view.findViewById<MaterialButton>(R.id.voiceButton).isEnabled)
+        assertTrue(view.findViewById<MaterialButton>(R.id.voiceButton).isEnabled)
     }
     @Test
     fun shortcutSeekingClampsAndReadingCollapsesWithoutStoppingPlayback() {
@@ -108,7 +153,10 @@ class NativeAudiobookPlayerViewTest {
                 val view = NativeAudiobookPlayerView(activity)
                 activity.setContentView(view)
                 view.setBookTitle("原木听书")
-                view.render(AudiobookPlaybackState(chapterTitle = "第一章 · 开始", paragraphText = "夜幕降临，星光点点，故事从这里开始。", positionMs = 15_000L, durationMs = 60_000L, isPlaying = true, canSkipPrevious = true, canSkipNext = true), "超文（离线）")
+                view.setCoverBitmap(Bitmap.createBitmap(300, 400, Bitmap.Config.ARGB_8888).apply {
+                    eraseColor(0xFFC56936.toInt())
+                })
+                view.render(AudiobookPlaybackState(chapterTitle = "第一章 · 开始", paragraphText = "夜幕降临，星光点点，故事从这里开始。", positionMs = 15_000L, durationMs = 60_000L, isPlaying = true, canSkipPrevious = true, canSkipNext = true), "温润君子")
             }
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()
             Thread.sleep(500)

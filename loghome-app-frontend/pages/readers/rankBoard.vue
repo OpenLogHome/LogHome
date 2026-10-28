@@ -14,7 +14,7 @@
 
 		<view class="rank-layout">
 			<view class="board-tabs">
-				<view class="board-tab" v-for="board in boards" :key="board.key" :class="{ active: board.key === currentBoard }" @click="switchBoard(board.key)">
+				<view class="board-tab" v-for="board in boards" :key="board.key" :class="{ active: board.key === currentBoard, 'logpower-tab': board.key === 'logpower' }" @click="switchBoard(board.key)">
 					<template v-if="board.key === 'logpower'"><LogPowerWordmark class="rank-wordmark" /><text>{{ $t('reader.rank.boardSuffix') }}</text></template>
 					<text v-else>{{ $t(board.labelKey) }}</text>
 				</view>
@@ -348,7 +348,13 @@ export default {
 		&::before { content: ''; position: absolute; left: 0; top: 34rpx; bottom: 34rpx; width: 5rpx; background: var(--accent); border-radius: 0 4rpx 4rpx 0; }
 	}
 }
-.rank-wordmark { width: 3.2em; }
+.logpower-tab {
+	flex-direction: column;
+	gap: 7rpx;
+	font-size: 22rpx;
+	line-height: 1;
+}
+.rank-wordmark { width: 4em; }
 .rank-swiper { flex: 1; min-width: 0; height: 100%; }
 .rank-content { width: 100%; height: 100%; }
 .meta-line { padding: 6rpx 20rpx 24rpx; font-size: 20rpx; line-height: 30rpx; color: var(--text-muted); }

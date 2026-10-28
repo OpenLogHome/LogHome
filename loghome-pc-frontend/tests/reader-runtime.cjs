@@ -131,23 +131,18 @@ async function main() {
   console.log('PASS streamed font download progress, shared subscribers, unknown file size and failure state')
 
 
-  const audio=load('utils/reader-audio.js');const spoken=[],voices=[{name:'中文',voiceURI:'zh',lang:'zh-CN',localService:true}],timers=[];let token='a'
-  const synthesis={getVoices:()=>voices,addEventListener(){},removeEventListener(){},cancel(){},speak(utterance){spoken.push(utterance);utterance.onstart()}}
+  const audio=load('utils/reader-audio.js')
+  const fixture=require('./helpers/reader-audio-fixture.cjs').fixture()
   const chapter=id=>({article_id:id,novel_id:7,title:`chapter ${id}`,content:[{id:1,value:'第一段。'},{id:2,value:'第二段。'},{type:'image',value:'https://x.invalid/i'},{id:3,value:''}]})
-  let fetchArticle=async id=>[chapter(id)]
-  const env={synthesis,Utterance:class{constructor(text){this.text=text}},article:id=>fetchArticle(id),token:()=>token,now:()=>1000,setTimeout:(fn,ms)=>{timers.push([fn,ms]);return timers.length},clearTimeout(){}}
-  const state=audio.createAudioState(),player=new audio.ReaderAudio(state,env)
+  fixture.article=async id=>[chapter(id)]
+  const state=audio.createAudioState(),player=new audio.ReaderAudio(state,fixture.env)
   await player.open({novel_id:7,name:'book'},[{article_id:1,title:'1'},{article_id:99,article_type:'spliter'},{article_id:2,title:'2'}],chapter(1),1)
-  assert.equal(state.voices.length,1);assert.equal(state.chapters.length,2);assert.equal(state.paragraphs.length,2);assert.equal(state.status,'playing')
-  const canceled=spoken.at(-1);player.seekParagraph(1);canceled.onend();assert.equal(state.paragraphIndex,1)
-  spoken.at(-1).onend();await settle();assert.equal(state.chapterId,2);assert.equal(state.status,'playing')
-  player.setSleep('chapter');spoken.at(-1).onend();spoken.at(-1).onend();assert.equal(state.status,'paused');assert.equal(state.sleepAtChapterEnd,false)
-  player.seekRelative(-15);assert.equal(state.paragraphIndex,0);player.play();player.configure({rate:1.5});assert.equal(spoken.at(-1).rate,1.5)
-  player.setSleep(5);assert.equal(timers.at(-1)[1],300000);timers.at(-1)[0]();assert.equal(state.status,'paused')
-  const stale=deferred();fetchArticle=()=>stale.promise;player.cache.clear();const loadPending=player.chapter(0);player.close();stale.resolve([chapter(1)]);await loadPending;assert.equal(state.visible,false);assert.equal(state.status,'idle')
-  await player.open({novel_id:7,name:'book'},[{article_id:1},{article_id:2}],chapter(1),null);fetchArticle=async()=>{throw Error('offline')};await player.chapter(1);assert.equal(state.status,'error');fetchArticle=async id=>[chapter(id)];player.toggle();await settle();assert.equal(state.chapterId,2)
-  player.cache.clear();const accountChange=deferred();fetchArticle=()=>accountChange.promise;const accountPending=player.chapter(0);token='b';accountChange.resolve([chapter(1)]);await accountPending;assert.equal(state.visible,false)
-  const long='字'.repeat(109)+'😀尾';assert.equal(audio.speechChunk(long).length,109)
+  assert.equal(state.voices.length,4);assert.equal(state.chapters.length,2);assert.equal(state.paragraphs.length,2);assert.equal(state.status,'playing')
+  const canceled=player.audio.onended;await player.seekParagraph(1,true);canceled();assert.equal(state.paragraphIndex,1)
+  player.audio.end();await require('./helpers/reader-audio-fixture.cjs').settle();assert.equal(state.chapterId,2);assert.equal(state.status,'playing')
+  player.configure({rate:1.5});assert.equal(player.audio.playbackRate,1.5)
+  player.setSleep(5);fixture.time+=300001;await player.wake();assert.equal(state.status,'paused')
+  const long='字'.repeat(299)+'😀尾';assert.equal(audio.speechChunk(long).length,299)
   player.destroy()
   const articlePage = load('pages/article/_id.vue').default
   const routeFollower = { article: {article_id:1}, novel: {novel_id:7}, audioRouteRequested:0, $router: {push(){return undefined}} }

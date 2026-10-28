@@ -3,6 +3,9 @@ package top.codesocean.loghome.android.audio
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
+import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -47,6 +50,9 @@ class NativeAudiobookPlayerView @JvmOverloads constructor(
     private var userSeeking = false
     private var currentPositionMs = 0L
     private var previousLightStatusBar: Boolean? = null
+    private var previousLightNavigationBar: Boolean? = null
+    private var previousNavigationBarColor: Int? = null
+    private var previousNavigationBarContrast: Boolean? = null
     private var motionVersion = 0L
     private var isClosing = false
 
@@ -57,13 +63,17 @@ class NativeAudiobookPlayerView @JvmOverloads constructor(
         ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
             val safe = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
-            binding.root.setPadding(safe.left, safe.top, safe.right, maxOf(safe.bottom, keyboard.bottom))
+            val density = resources.displayMetrics.density
+            binding.playerContent.setPadding(
+                safe.left + (20 * density).toInt(), safe.top + (12 * density).toInt(),
+                safe.right + (20 * density).toInt(), maxOf(safe.bottom, keyboard.bottom) + (24 * density).toInt(),
+            )
             insets
         }
         setCardBackgroundColor(0xFF191330.toInt())
-        // Keep a large square cover while fitting narrow screens.
-        binding.coverCard.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            val size = minOf((resources.displayMetrics.density * 280).toInt(), (width - resources.displayMetrics.density * 64).toInt()).coerceAtLeast(1)
+        // The cover absorbs height changes so all controls fit without scrolling.
+        binding.coverArea.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val size = minOf((resources.displayMetrics.density * 280).toInt(), binding.coverArea.width, binding.coverArea.height).coerceAtLeast(1)
             if (binding.coverCard.layoutParams.width != size) {
                 binding.coverCard.layoutParams = binding.coverCard.layoutParams.apply { width = size; height = size }
             }
@@ -122,15 +132,34 @@ class NativeAudiobookPlayerView @JvmOverloads constructor(
         val activity = context as? Activity ?: return
         if (!isShown) { restoreStatusBarAppearance(); return }
         val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-        if (previousLightStatusBar == null) previousLightStatusBar = controller.isAppearanceLightStatusBars
+        if (previousLightStatusBar == null) {
+            previousLightStatusBar = controller.isAppearanceLightStatusBars
+            previousLightNavigationBar = controller.isAppearanceLightNavigationBars
+            previousNavigationBarColor = activity.window.navigationBarColor
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                previousNavigationBarContrast = activity.window.isNavigationBarContrastEnforced
+            }
+        }
         controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightNavigationBars = false
+        activity.window.navigationBarColor = Color.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) activity.window.isNavigationBarContrastEnforced = false
     }
 
     private fun restoreStatusBarAppearance() {
         val previous = previousLightStatusBar ?: return
         val activity = context as? Activity ?: return
-        WindowInsetsControllerCompat(activity.window, activity.window.decorView).isAppearanceLightStatusBars = previous
+        val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+        controller.isAppearanceLightStatusBars = previous
+        previousLightNavigationBar?.let { controller.isAppearanceLightNavigationBars = it }
+        previousNavigationBarColor?.let { activity.window.navigationBarColor = it }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            previousNavigationBarContrast?.let { activity.window.isNavigationBarContrastEnforced = it }
+        }
         previousLightStatusBar = null
+        previousLightNavigationBar = null
+        previousNavigationBarColor = null
+        previousNavigationBarContrast = null
     }
 
     fun showPlayer() {
@@ -182,42 +211,23 @@ class NativeAudiobookPlayerView @JvmOverloads constructor(
     fun setCoverBitmap(bitmap: Bitmap?) {
         if (bitmap == null) {
             binding.coverImage.setImageResource(R.mipmap.ic_launcher)
+            binding.backgroundImage.setImageDrawable(null)
         } else {
             binding.coverImage.setImageBitmap(bitmap)
+            // A tiny, filtered thumbnail gives a soft cover-derived backdrop on
+            // every supported Android version without a full-size blur buffer.
+            val thumbnail = Bitmap.createScaledBitmap(bitmap, 24, 24, true)
+            binding.backgroundImage.setImageDrawable(BitmapDrawable(resources, thumbnail).apply {
+                isFilterBitmap = true
+            })
         }
-    }
-
-    fun showModelDownloadProgress(downloadedBytes: Long, totalBytes: Long) {
-        val safeTotal = totalBytes.coerceAtLeast(1L)
-        val safeDownloaded = downloadedBytes.coerceIn(0L, safeTotal)
-        val progress = (safeDownloaded * 1000L / safeTotal).toInt()
-        val percent = (safeDownloaded * 100L / safeTotal).toInt()
-        binding.modelDownloadContainer.isVisible = true
-        binding.modelDownloadProgressBar.progress = progress
-        binding.modelDownloadStatus.text = if (safeDownloaded >= safeTotal) {
-            "正在校验并安装语音模型…"
-        } else {
-            "正在下载离线语音…"
-        }
-        binding.modelDownloadProgressText.text = String.format(
-            Locale.getDefault(),
-            "%d%% · %.1f/%.1f MB",
-            percent,
-            safeDownloaded / 1024f / 1024f,
-            safeTotal / 1024f / 1024f,
-        )
-        binding.voiceButton.isEnabled = false
-    }
-
-    fun hideModelDownloadProgress() {
-        binding.modelDownloadContainer.isVisible = false
-        binding.voiceButton.isEnabled = true
     }
 
     fun render(
         state: AudiobookPlaybackState,
         voiceName: String? = null,
     ) {
+        updateStatusBarAppearance()
         currentDurationMs = state.durationMs
         currentPositionMs = state.positionMs
         binding.chapterTitle.text = state.chapterTitle.ifBlank {

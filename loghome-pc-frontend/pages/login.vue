@@ -3,35 +3,35 @@
     <div class="login-box">
       <div class="login-header">
         <img style="width: 100px; margin-bottom: 20px;" src="~/assets/images/logo.png" alt="">
-        <h1>原木社区</h1>
-        <p>方块跃然纸上，故事在此生长。</p>
+        <h1>{{ $t("原木社区") }}</h1>
+        <p>{{ $t("auth.brand.tagline") }}</p>
       </div>
       
       <!-- 步骤0：输入邮箱 -->
       <div v-if="step == 0" class="login-step">
-        <p class="step-tip">未注册邮箱将自动创建账号</p>
+        <p class="step-tip">{{ $t("auth.login.unregisteredEmail") }}</p>
         <div class="input-group">
           <div class="input-icon">
-            <img src="~/assets/images/icon_user.png" alt="用户" class="icon">
+            <img src="~/assets/images/icon_user.png" :alt="$t('auth.fields.user')" class="icon">
           </div>
-          <input type="email" placeholder="请输入电子邮箱" v-model="email" class="login-input">
+          <input type="email" :placeholder="$t('auth.fields.email')" v-model="email" class="login-input">
         </div>
-        <button class="login-btn" @click="nextStep()">下一步</button>
-        <nuxt-link to="/forgot-password" class="forgot-link">忘记密码？</nuxt-link>
+        <button class="login-btn" @click="nextStep()">{{ $t("common.actions.next") }}</button>
+        <nuxt-link to="/forgot-password" class="forgot-link">{{ $t("auth.login.forgotPassword") }}</nuxt-link>
       </div>
 
       <!-- 步骤1：滑动验证 -->
       <transition name="fade">
         <div v-if="step == 1" class="login-step">
-          <p class="step-tip">滑动验证以发送验证码到 {{email}}</p>
+          <p class="step-tip">{{ $t("auth.login.sendCodeTo", { email }) }}</p>
           <div class="verify-container">
             <slide-verify
               :w="380"
-              slider-text="向右滑动完成验证"
+              :slider-text="$t('auth.verify.slide')"
               @success="verifyResult"
             ></slide-verify>
           </div>
-          <button class="login-btn cancel-btn" @click="step = 0">上一步</button>
+          <button class="login-btn cancel-btn" @click="step = 0">{{ $t("common.actions.previous") }}</button>
         </div>
       </transition>
       
@@ -40,46 +40,46 @@
         <div v-if="step == 2" class="login-step">
           <div class="verify-info">
             <div>
-              <div>验证码已发送至：</div>
+              <div>{{ $t("auth.login.codeSentTo") }}</div>
               <div>{{email}}</div>
             </div>
             <div>
-              <span class="resend-btn" v-show="!isWaiting" @click="sendCode">重新发送</span>
-              <span class="wait-timer" v-show="isWaiting">等待{{waitTime}}秒</span>
+              <span class="resend-btn" v-show="!isWaiting" @click="sendCode">{{ $t("auth.login.resend") }}</span>
+              <span class="wait-timer" v-show="isWaiting">{{ $t("auth.login.waitSeconds", { seconds: waitTime }) }}</span>
             </div>
           </div>
           <div class="input-group">
             <div class="input-icon">
-              <img src="~/assets/images/icon_password.png" alt="验证码" class="icon">
+              <img src="~/assets/images/icon_password.png" :alt="$t('auth.fields.code')" class="icon">
             </div>
-            <input type="text" placeholder="请输入验证码" v-model="verifyCode" class="login-input">
+            <input type="text" :placeholder="$t('auth.fields.codePlaceholder')" v-model="verifyCode" class="login-input">
           </div>
-          <button class="login-btn" @click="nextStep()">下一步</button>
-          <button class="login-btn cancel-btn" @click="step = 0">上一步</button>
+          <button class="login-btn" @click="nextStep()">{{ $t("common.actions.next") }}</button>
+          <button class="login-btn cancel-btn" @click="step = 0">{{ $t("common.actions.previous") }}</button>
         </div>
       </transition>
       
       <!-- 步骤3：设置账号和密码 -->
       <transition name="fade">
         <div v-if="step == 3" class="login-step">
-          <p class="step-tip">欢迎来到原木社区，请设置你的账号和密码。</p>
+          <p class="step-tip">{{ $t("auth.login.welcome") }}</p>
           <div class="input-group">
             <div class="input-icon">
-              <img src="~/assets/images/icon_user.png" alt="用户" class="icon">
+              <img src="~/assets/images/icon_user.png" :alt="$t('auth.fields.user')" class="icon">
             </div>
-            <input type="text" placeholder="请输入账号" v-model="account" @input="checkAccount" class="login-input">
+            <input type="text" :placeholder="$t('auth.fields.account')" v-model="account" @input="checkAccount" class="login-input">
           </div>
-          <div class="warning-text" v-show="accountUsed">该账号已被使用</div>
+          <div class="warning-text" v-show="accountUsed">{{ $t("auth.login.accountUsed") }}</div>
           
           <div class="input-group">
             <div class="input-icon">
-              <img src="~/assets/images/icon_password.png" alt="密码" class="icon">
+              <img src="~/assets/images/icon_password.png" :alt="$t('auth.fields.password')" class="icon">
             </div>
-            <input type="password" placeholder="请输入密码" v-model="pwd" class="login-input">
+            <input type="password" :placeholder="$t('auth.fields.passwordPlaceholder')" v-model="pwd" class="login-input">
           </div>
           
-          <button class="login-btn" @click="nextStep()">下一步</button>
-          <button class="login-btn cancel-btn" @click="step = 0">上一步</button>
+          <button class="login-btn" @click="nextStep()">{{ $t("common.actions.next") }}</button>
+          <button class="login-btn cancel-btn" @click="step = 0">{{ $t("common.actions.previous") }}</button>
         </div>
       </transition>
       
@@ -88,26 +88,26 @@
         <div v-if="step == 5" class="login-step">
           <div class="verify-info">
             <div>
-              <div>即将使用以下邮箱登录：</div>
+              <div>{{ $t("auth.login.withEmail") }}</div>
               <div>{{email}}</div>
             </div>
           </div>
           
           <div class="input-group">
             <div class="input-icon">
-              <img src="~/assets/images/icon_password.png" alt="密码" class="icon">
+              <img src="~/assets/images/icon_password.png" :alt="$t('auth.fields.password')" class="icon">
             </div>
-            <input type="password" placeholder="请输入密码" v-model="pwd" class="login-input">
+            <input type="password" :placeholder="$t('auth.fields.passwordPlaceholder')" v-model="pwd" class="login-input">
           </div>
           
-          <button class="login-btn" @click="nextStep()">登录</button>
-          <nuxt-link to="/forgot-password" class="forgot-link">忘记密码？</nuxt-link>
-          <button class="login-btn cancel-btn" @click="step = 0">上一步</button>
+          <button class="login-btn" @click="nextStep()">{{ $t("登录") }}</button>
+          <nuxt-link to="/forgot-password" class="forgot-link">{{ $t("auth.login.forgotPassword") }}</nuxt-link>
+          <button class="login-btn cancel-btn" @click="step = 0">{{ $t("common.actions.previous") }}</button>
         </div>
       </transition>
       
       <div class="login-footer">
-        <p>注册即表明同意《原木社区用户隐私政策》</p>
+        <p>{{ $t("auth.login.agreement") }}</p>
       </div>
     </div>
   </div>
@@ -119,6 +119,9 @@ import { loginReturnPath } from '~/utils/login-return'
 
 export default {
   layout: 'default',
+  head() {
+    return { title: `${this.$t("登录")} - ${this.$t("原木社区")}` }
+  },
   components: {
     SlideVerify
   },
@@ -143,7 +146,7 @@ export default {
       try {
         this.accountUsed = await this.$api.users.checkAccount(this.account);
       } catch (error) {
-        alert(error.toString());
+        this.$message.error(error.message || this.$t("common.errors.requestFailed"));
       }
     },
     verifyResult(res) {
@@ -157,7 +160,7 @@ export default {
           // 验证邮箱格式
           const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
           if (!emailPattern.test(this.email)) {
-            this.$message.error("请输入有效的电子邮箱地址");
+            this.$message.error(this.$t("auth.validation.email"));
             return;
           }
           
@@ -169,21 +172,22 @@ export default {
               this.step = 1;
             }
           } catch (error) {
-            console.log(error);
+            console.error(error);
+            this.$message.error(error.message || this.$t("auth.messages.checkEmailFailed"));
           }
           break;
         
         case 2:
           try {
             const result = await this.$api.users.registerWithEmail(this.email, this.verifyCode);
-            if (result.msg == "登录成功") {
+            if (result && result.register_code) {
               this.registerVerify = result.register_code;
               this.step = 3;
             } else {
-              this.$message.error(result.msg);
+              this.$message.error((result && result.msg) || this.$t("auth.messages.codeFailed"));
             }
           } catch (error) {
-            this.$message.error(error.toString());
+            this.$message.error(error.message || this.$t("auth.messages.codeFailed"));
           }
           break;
         
@@ -199,7 +203,7 @@ export default {
     async sendCode() {
       try {
         const response = await this.$api.users.sendEmailVerifyCode(this.email);
-        this.$message.success(response.msg);
+        this.$message.success((response && response.msg) || this.$t("auth.messages.codeSent"));
         this.waitTime = 60;
         this.isWaiting = true;
         this.waitTimer = setInterval(() => {
@@ -211,17 +215,18 @@ export default {
           }
         }, 1000);
       } catch (error) {
-        console.log(error);
+        console.error(error);
+        this.$message.error(error.message || this.$t("auth.messages.sendCodeFailed"));
       }
     },
     async login() {
       try {
         await this.$api.users.login(this.email, this.pwd);
-        this.$message.success('登录成功');
+        this.$message.success(this.$t("auth.messages.loginSuccess"));
         this.$router.push(loginReturnPath(this.$route.query.redirect));
       } catch (error) {
-        console.log(error);
-        this.$message.error("账号或密码错误");
+        console.error(error);
+        this.$message.error(this.$t("auth.messages.loginFailed"));
         this.pwd = "";
       }
     },
@@ -233,17 +238,17 @@ export default {
     },
     async register() {
       if (this.pwd == "") {
-        this.$message.error("请输入密码");
+        this.$message.error(this.$t("auth.validation.passwordRequired"));
         return;
       }
       if (this.isPasswd(this.pwd) != true) {
-        this.$message.error("密码格式：6-20位字母、数字、下划线组合");
+        this.$message.error(this.$t("auth.validation.passwordFormat"));
         return;
       }
       //账号格式4-12位字母数字
       let accountPattern = /^[a-zA-Z0-9]{4,12}$/;
       if (!accountPattern.test(this.account)) {
-        this.$message.error("账号格式：4-12位字母、数字组合");
+        this.$message.error(this.$t("auth.validation.accountFormat"));
         return;
       }
       
@@ -255,10 +260,10 @@ export default {
           this.registerVerify
         );
         
-        this.$message.success('登录成功');
+        this.$message.success(this.$t("auth.messages.loginSuccess"));
         this.$router.push('/');
       } catch (error) {
-        this.$message.error("注册失败");
+        this.$message.error(error.message || this.$t("auth.messages.registerFailed"));
       }
     }
   }

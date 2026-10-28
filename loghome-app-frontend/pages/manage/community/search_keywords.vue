@@ -1,35 +1,35 @@
 <template>
   <view class="keyword-manage-container" v-dark>
-    <view class="section-title">搜索关键词管理</view>
+    <view class="section-title">{{ $t('manage.keywords.title') }}</view>
     
     <!-- 添加关键词表单 -->
     <view class="add-keyword-form">
-      <view class="form-header">添加推荐关键词</view>
+      <view class="form-header">{{ $t('manage.keywords.addTitle') }}</view>
       <view class="form-row">
-        <view class="form-label">关键词:</view>
-        <input class="form-input" v-model="newKeyword.keyword" placeholder="输入关键词" />
+        <view class="form-label">{{ $t('manage.keywords.keyword') }}:</view>
+        <input class="form-input" v-model="newKeyword.keyword" :placeholder="$t('manage.keywords.keywordPlaceholder')" />
       </view>
       <view class="form-row">
-        <view class="form-label">分类:</view>
+        <view class="form-label">{{ $t('manage.keywords.category') }}:</view>
         <picker class="form-picker" :range="categoryOptions" @change="onCategoryChange">
           <view class="picker-value">{{categoryOptions[selectedCategoryIndex]}}</view>
         </picker>
       </view>
       <view class="form-row">
-        <view class="form-label">推荐:</view>
+        <view class="form-label">{{ $t('manage.keywords.recommended') }}:</view>
         <switch :checked="newKeyword.is_recommended" @change="onRecommendedChange" />
       </view>
-      <button class="form-button" @tap="addRecommendKeyword">添加</button>
+      <button class="form-button" @tap="addRecommendKeyword">{{ $t('manage.keywords.add') }}</button>
     </view>
 
     <!-- 关键词列表 -->
     <view class="keyword-list">
       <view class="list-header">
-        <view class="header-item">关键词</view>
-        <view class="header-item">搜索次数</view>
-        <view class="header-item">分类</view>
-        <view class="header-item">推荐</view>
-        <view class="header-item">操作</view>
+        <view class="header-item keyword">{{ $t('manage.keywords.keyword') }}</view>
+        <view class="header-item">{{ $t('manage.keywords.searches') }}</view>
+        <view class="header-item">{{ $t('manage.keywords.category') }}</view>
+        <view class="header-item">{{ $t('manage.keywords.recommended') }}</view>
+        <view class="header-item">{{ $t('manage.keywords.actions') }}</view>
       </view>
       <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMoreKeywords">
         <view class="list-row" v-for="(keyword, index) in keywords" :key="index">
@@ -40,8 +40,8 @@
             <checkbox :checked="keyword.is_recommended === 1" disabled />
           </view>
           <view class="row-item actions">
-            <view class="action-button edit" @tap="editKeyword(keyword)">编辑</view>
-            <view class="action-button delete" @tap="deleteKeyword(keyword)">删除</view>
+            <view class="action-button edit" @tap="editKeyword(keyword)">{{ $t('common.edit') }}</view>
+            <view class="action-button delete" @tap="deleteKeyword(keyword)">{{ $t('common.delete') }}</view>
           </view>
         </view>
         <uni-load-more :status="loadingStatus"></uni-load-more>
@@ -51,24 +51,24 @@
     <!-- 编辑弹窗 -->
     <uni-popup ref="editPopup" type="dialog">
       <view class="edit-popup">
-        <view class="popup-title">编辑关键词</view>
+        <view class="popup-title">{{ $t('manage.keywords.edit') }}</view>
         <view class="form-row">
-          <view class="form-label">关键词:</view>
-          <input class="form-input" v-model="editingKeyword.keyword" placeholder="关键词" disabled />
+          <view class="form-label">{{ $t('manage.keywords.keyword') }}:</view>
+          <input class="form-input" v-model="editingKeyword.keyword" :placeholder="$t('manage.keywords.keyword')" disabled />
         </view>
         <view class="form-row">
-          <view class="form-label">分类:</view>
+          <view class="form-label">{{ $t('manage.keywords.category') }}:</view>
           <picker class="form-picker" :range="categoryOptions" :value="getEditingCategoryIndex()" @change="onEditingCategoryChange">
             <view class="picker-value">{{getCategoryName(editingKeyword.category)}}</view>
           </picker>
         </view>
         <view class="form-row">
-          <view class="form-label">推荐:</view>
+          <view class="form-label">{{ $t('manage.keywords.recommended') }}:</view>
           <switch :checked="editingKeyword.is_recommended === 1" @change="onEditingRecommendedChange" />
         </view>
         <view class="popup-buttons">
-          <button class="cancel-button" @tap="closeEditPopup">取消</button>
-          <button class="confirm-button" @tap="saveEditingKeyword">保存</button>
+          <button class="cancel-button" @tap="closeEditPopup">{{ $t('common.cancel') }}</button>
+          <button class="confirm-button" @tap="saveEditingKeyword">{{ $t('common.save') }}</button>
         </view>
       </view>
     </uni-popup>
@@ -86,7 +86,6 @@ export default {
       pageSize: 20,
       hasMore: true,
       loadingStatus: 'more',
-      categoryOptions: ['全部', '书籍', '帖子', '圈子', '用户'],
       categoryValues: ['all', 'books', 'posts', 'circles', 'users'],
       selectedCategoryIndex: 0,
       newKeyword: {
@@ -105,6 +104,18 @@ export default {
   
   onLoad() {
     this.loadKeywords();
+  },
+
+  computed: {
+    categoryOptions() {
+      return [
+        this.$t('manage.keywords.all'),
+        this.$t('manage.keywords.books'),
+        this.$t('manage.keywords.posts'),
+        this.$t('manage.keywords.circles'),
+        this.$t('manage.keywords.users')
+      ];
+    }
   },
   
   methods: {
@@ -141,7 +152,7 @@ export default {
       } catch (error) {
         console.error('加载关键词失败', error);
         uni.showToast({
-          title: '加载失败，请检查权限',
+          title: this.$t('manage.keywords.loadFailed'),
           icon: 'none'
         });
         this.loadingStatus = 'more';
@@ -159,7 +170,7 @@ export default {
     async addRecommendKeyword() {
       if (!this.newKeyword.keyword.trim()) {
         uni.showToast({
-          title: '关键词不能为空',
+          title: this.$t('manage.keywords.required'),
           icon: 'none'
         });
         return;
@@ -178,7 +189,7 @@ export default {
         });
         
         uni.showToast({
-          title: '添加成功',
+          title: this.$t('manage.keywords.addSuccess'),
           icon: 'success'
         });
         
@@ -194,7 +205,7 @@ export default {
       } catch (error) {
         console.error('添加关键词失败', error);
         uni.showToast({
-          title: '添加失败，请检查权限',
+          title: this.$t('manage.keywords.addFailed'),
           icon: 'none'
         });
       }
@@ -203,8 +214,8 @@ export default {
     // 删除关键词
     deleteKeyword(keyword) {
       uni.showModal({
-        title: '确认删除',
-        content: `确定要删除关键词"${keyword.keyword}"吗？`,
+        title: this.$t('manage.keywords.deleteTitle'),
+        content: this.$t('manage.keywords.deleteText', { keyword: keyword.keyword }),
         success: async (res) => {
           if (res.confirm) {
             try {
@@ -216,7 +227,7 @@ export default {
               });
               
               uni.showToast({
-                title: '删除成功',
+                title: this.$t('common.deleteSuccess'),
                 icon: 'success'
               });
               
@@ -225,7 +236,7 @@ export default {
             } catch (error) {
               console.error('删除关键词失败', error);
               uni.showToast({
-                title: '删除失败，请检查权限',
+                title: this.$t('manage.keywords.deleteFailed'),
                 icon: 'none'
               });
             }
@@ -260,7 +271,7 @@ export default {
         });
         
         uni.showToast({
-          title: '更新成功',
+          title: this.$t('manage.keywords.updateSuccess'),
           icon: 'success'
         });
         
@@ -274,7 +285,7 @@ export default {
       } catch (error) {
         console.error('更新关键词失败', error);
         uni.showToast({
-          title: '更新失败，请检查权限',
+          title: this.$t('manage.keywords.updateFailed'),
           icon: 'none'
         });
       }
@@ -305,7 +316,7 @@ export default {
     // 获取分类名称
     getCategoryName(category) {
       const index = this.categoryValues.indexOf(category);
-      return index !== -1 ? this.categoryOptions[index] : '全部';
+      return index !== -1 ? this.categoryOptions[index] : this.$t('manage.keywords.all');
     },
     
     // 获取编辑中的分类索引
@@ -407,7 +418,8 @@ export default {
 
 .header-item {
   flex: 1;
-  font-size: 28rpx;
+  min-width: 0;
+  font-size: 22rpx;
   font-weight: bold;
   text-align: center;
 }
@@ -424,7 +436,8 @@ export default {
 
 .row-item {
   flex: 1;
-  font-size: 28rpx;
+  min-width: 0;
+  font-size: 24rpx;
   text-align: center;
   display: flex;
   align-items: center;
@@ -437,12 +450,13 @@ export default {
 
 .actions {
   display: flex;
+  flex-direction: column;
   justify-content: center;
 }
 
 .action-button {
-  padding: 6rpx 16rpx;
-  margin: 0 10rpx;
+  padding: 6rpx 8rpx;
+  margin: 3rpx 0;
   border-radius: 6rpx;
   font-size: 24rpx;
 }

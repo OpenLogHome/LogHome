@@ -47,6 +47,7 @@
 		data(){
 			return{
 				tag_id:0,
+				title:'',
 				books:[],
 				showList:false,
 				isLoading:true,
@@ -60,16 +61,19 @@
 				this.tag_id = params.tag_id;
 			}
 			if(params.title){
-				uni.setNavigationBarTitle({
-					title: this.$t('reader.tag.collectionTitle', { name: params.title })
-				})
+				this.title = this.$t('reader.tag.collectionTitle', { name: params.title });
+				this.applyCollectionTitle();
 			}
 			this.refreshCollections();
 		},
 		onShow(){
+			this.applyCollectionTitle();
 			this.refreshCollections();
 		},
 		methods:{
+			applyCollectionTitle(){
+				if (this.title) uni.setNavigationBarTitle({ title: this.title });
+			},
 			refreshCollections(){
 				let _this = this;
 				this.loadingRequestCount += 1;

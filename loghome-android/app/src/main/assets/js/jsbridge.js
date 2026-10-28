@@ -1,3 +1,15 @@
+function loghomeAudiobookLoginToken() {
+    try {
+        const raw = typeof uni !== 'undefined' && uni.getStorageSync
+            ? uni.getStorageSync('token') : window.localStorage.getItem('token');
+        let value = typeof raw === 'string' ? JSON.parse(raw || 'null') : raw;
+        if (value && value.data && !value.tk) {
+            value = typeof value.data === 'string' ? JSON.parse(value.data) : value.data;
+        }
+        return value && value.tk || '';
+    } catch (error) { return ''; }
+}
+
 console.log('JS injection successful');
 
 function withCurrentThemeBackground(payload) {
@@ -99,11 +111,11 @@ window.jsBridge = {
     /**
      * 打开由 Android 原生层管理的听书播放器。
      * H5 只需监听 loghome:audiobook-progress 事件进行段落高亮。
-     * @param {{articleIds: string[], articles?: Array<object>, playlistKey?: string, startArticleId?: string, startParagraphId?: string, bookTitle?: string, coverUrl?: string}} payload
+     * @param {{articleIds: string[], articles?: Array<object>, playlistKey?: string, startArticleId?: string, startParagraphId?: string, forceSeek?: boolean, bookTitle?: string, coverUrl?: string}} payload
      * @returns {Promise<boolean>}
      */
     openNativeAudiobookPlayer(payload) {
-        return window.flutter_inappwebview.callHandler('openNativeAudiobookPlayer', payload || {});
+        return window.flutter_inappwebview.callHandler('openNativeAudiobookPlayer', Object.assign({}, payload || {}, {loginToken: loghomeAudiobookLoginToken() || (payload && payload.loginToken) || ''}));
     },
 
     /**
@@ -113,11 +125,11 @@ window.jsBridge = {
      * @returns {Promise<boolean>} - 替换是否成功
      */
     replacePlaylist(articleIds, startArticleId) {
-        return window.flutter_inappwebview.callHandler('replacePlaylist', articleIds, startArticleId);
+        return window.flutter_inappwebview.callHandler('replacePlaylist', articleIds, startArticleId, loghomeAudiobookLoginToken());
     },
 
     /**
-     * 获取系统语音及可按需下载的内嵌离线语音
+     * 获取四个免费在线音色
      * @returns {Promise<Array<{id: string, name: string, description: string, engine: string, installed: boolean, requiresDownload: boolean, downloadSizeBytes?: number}>>}
      */
     getAvailableVoices() {
@@ -126,8 +138,8 @@ window.jsBridge = {
 
     /**
      * 设置TTS语音
-     * 选择尚未安装的内嵌语音时会先下载并校验模型。
-     * @param {string} voice - 语音标识符，例如 'system-default'、系统 voice name 或 sherpa voice id
+     * 通过新 TTS 服务的默认模型合成。
+     * @param {string} voice - 语音标识符，例如 'warm-gentleman'
      * @returns {Promise<boolean>} - 设置是否成功
      */
     setVoice(voice) {

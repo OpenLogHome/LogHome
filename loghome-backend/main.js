@@ -76,7 +76,8 @@ app.get('/get_online_amount', async function (req, res) {
 //客户端请求版本和设备处理中间件
 app.use(async (req, res, next) => {
 	if(req.method != 'OPTIONS'){
-		console.log(req.url,req.headers.appversion,req.method);
+		const logUrl = req.path.startsWith('/essays/download_export/') ? '/essays/download_export/[redacted]' : req.url;
+		console.log(logUrl,req.headers.appversion,req.method);
 	}
 	next();
 });
@@ -129,6 +130,7 @@ app.use('/avatar-frames', avatarFramesRouter);
 app.use('/popularity', popularityRouter);
 app.use('/miniapps', require('./routes/miniapps'));
 app.use('/lab', require('./routes/lab'));
+app.use('/tts', require('./routes/tts'));
 
 let server = app.listen(9000, function () {
 	let host = server.address().address;

@@ -74,6 +74,7 @@
 		},
 		onShow(){
 			if (this.title === '原木力爆棚') return;
+			if (this.title) uni.setNavigationBarTitle({ title: this.title });
 			this.refreshCollections();
 		},
 		methods:{

@@ -2,7 +2,7 @@
 	<view class="membership-subpage">
 		<view class="subpage-header">
 			<view class="subpage-header__back" @tap="goBack"><view class="subpage-header__back-icon"></view></view>
-			<text class="subpage-header__title">会员兑换码</text>
+			<text class="subpage-header__title">{{ $t('membership.common.redeemCode') }}</text>
 			<view class="subpage-header__spacer"></view>
 		</view>
 
@@ -13,20 +13,20 @@
 				</view>
 				<view class="subpage-hero__copy">
 					<text class="subpage-hero__eyebrow">REDEEM PASS</text>
-					<text class="subpage-hero__title">兑换通行证</text>
-					<text class="subpage-hero__description">输入有效兑换码，会员权益将发放到当前账号</text>
+					<text class="subpage-hero__title">{{ $t('membership.redeem.heroTitle') }}</text>
+					<text class="subpage-hero__description">{{ $t('membership.redeem.heroDesc') }}</text>
 				</view>
 			</view>
 
 			<view class="subpage-panel redeem-panel">
-				<text class="panel-title">填写兑换码</text>
-				<text class="panel-description">兑换码不区分大小写，短横线可以省略</text>
+				<text class="panel-title">{{ $t('membership.redeem.formTitle') }}</text>
+				<text class="panel-description">{{ $t('membership.redeem.formDesc') }}</text>
 
 				<view class="redeem-input" :class="{ 'redeem-input--focused': focused }">
 					<input
 						:value="code"
 						maxlength="32"
-						placeholder="例如 LOGPASS-2026-XXXX"
+						:placeholder="$t('membership.redeem.placeholder')"
 						placeholder-style="color:#7f7062"
 						@input="handleCodeInput"
 						@focus="focused = true"
@@ -37,54 +37,54 @@
 
 				<view class="code-status" v-if="code">
 					<text :class="{ 'code-status--valid': canRedeem }">
-						{{ canRedeem ? '格式正确，可以继续兑换' : '兑换码至少需要 8 个字符' }}
+						{{ canRedeem ? $t('membership.redeem.valid') : $t('membership.redeem.tooShort') }}
 					</text>
 					<text>{{ normalizedLength }}/32</text>
 				</view>
 
 				<view class="primary-action" :class="{ 'primary-action--disabled': !canRedeem || submitting }" @tap="submitRedeem">
-					{{ submitting ? '正在兑换...' : '验证并兑换' }}
+					{{ submitting ? $t('membership.redeem.submitting') : $t('membership.redeem.submit') }}
 				</view>
 			</view>
 
 			<view class="subpage-panel">
-				<text class="panel-title">兑换说明</text>
+				<text class="panel-title">{{ $t('membership.redeem.instructionsTitle') }}</text>
 				<view class="info-list">
 					<view class="info-item">
 						<text class="info-item__index">1</text>
-						<text>每个兑换码只能使用一次，兑换后无法转移到其他账号。</text>
+						<text>{{ $t('membership.redeem.instructions.oneTime') }}</text>
 					</view>
 					<view class="info-item">
 						<text class="info-item__index">2</text>
-						<text>如当前已有会员，兑换时长会根据兑换码规则顺延或升级。</text>
+						<text>{{ $t('membership.redeem.instructions.extend') }}</text>
 					</view>
 					<view class="info-item">
 						<text class="info-item__index">3</text>
-						<text>请通过原木社区官方活动或可信赠送者获取兑换码。</text>
+						<text>{{ $t('membership.redeem.instructions.source') }}</text>
 					</view>
 				</view>
 			</view>
 
 			<view class="subpage-panel redeem-records">
 				<view class="redeem-records__heading">
-					<text class="panel-title">兑换记录</text>
-					<text class="redeem-records__count">{{ redeemHistory.length }} 条</text>
+					<text class="panel-title">{{ $t('membership.redeem.historyTitle') }}</text>
+					<text class="redeem-records__count">{{ $tc('membership.redeem.historyCount', redeemHistory.length, { count: redeemHistory.length }) }}</text>
 				</view>
 				<view v-if="loadingHistory" class="record-empty">
-					<text class="record-empty__title">正在加载兑换记录...</text>
+					<text class="record-empty__title">{{ $t('membership.redeem.loadingHistory') }}</text>
 				</view>
 				<view v-else-if="redeemHistory.length === 0" class="record-empty">
-					<text class="record-empty__title">暂无兑换记录</text>
-					<text class="record-empty__description">成功兑换后的通行证会显示在这里</text>
+					<text class="record-empty__title">{{ $t('membership.redeem.emptyTitle') }}</text>
+					<text class="record-empty__description">{{ $t('membership.redeem.emptyDesc') }}</text>
 				</view>
 				<view v-else class="record-list">
 					<view v-for="item in redeemHistory" :key="item.redemption_id" class="record-item">
 						<view class="record-item__badge">{{ item.membership_type === 'super' ? 'S' : 'L' }}</view>
 						<view class="record-item__copy">
-							<text class="record-item__title">{{ tierName(item.membership_type) }} · {{ item.duration_days }}天</text>
+							<text class="record-item__title">{{ $t('membership.redeem.recordTitle', { tier: tierName(item.membership_type), days: item.duration_days }) }}</text>
 							<text class="record-item__meta">{{ item.code_hint }} · {{ formatDate(item.redeemed_at) }}</text>
 						</view>
-						<text class="record-item__status">已兑换</text>
+						<text class="record-item__status">{{ $t('membership.redeem.statusRedeemed') }}</text>
 					</view>
 				</view>
 			</view>
@@ -135,7 +135,9 @@ export default {
 			return this.code;
 		},
 		tierName(type) {
-			return type === 'super' ? '超级原木通行证' : '原木通行证';
+			return type === 'super'
+				? this.$t('membership.pass.tier.super.name')
+				: this.$t('membership.pass.tier.standard.name');
 		},
 		formatDate(value) {
 			if (!value) return '';
@@ -157,7 +159,7 @@ export default {
 		async submitRedeem() {
 			if (this.submitting) return;
 			if (!this.canRedeem) {
-				uni.showToast({ title: '请填写有效兑换码', icon: 'none' });
+				uni.showToast({ title: this.$t('membership.redeem.invalidToast'), icon: 'none' });
 				return;
 			}
 			this.submitting = true;
@@ -166,13 +168,18 @@ export default {
 				this.code = '';
 				await this.loadRedeemHistory();
 				uni.showModal({
-					title: data.replayed ? '兑换已处理' : '兑换成功',
-					content: `${this.tierName(data.membership_type)}已增加${data.duration_days}天有效期。`,
+					title: data.replayed
+						? this.$t('membership.redeem.alreadyProcessed')
+						: this.$t('membership.redeem.successTitle'),
+					content: this.$t('membership.redeem.successContent', {
+						tier: this.tierName(data.membership_type),
+						days: data.duration_days
+					}),
 					showCancel: false,
-					confirmText: '知道了'
+					confirmText: this.$t('membership.redeem.gotIt')
 				});
 			} catch (error) {
-				uni.showToast({ title: getMembershipErrorMessage(error, '兑换失败，请稍后重试'), icon: 'none', duration: 2400 });
+				uni.showToast({ title: getMembershipErrorMessage(error, this.$t('membership.redeem.failed')), icon: 'none', duration: 2400 });
 			} finally {
 				this.submitting = false;
 			}

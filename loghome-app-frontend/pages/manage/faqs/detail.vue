@@ -4,43 +4,43 @@
 			<view class="faq-info">
 				<view class="title">{{faq.faq_title}}</view>
 				<view class="meta">
-					<text class="user">提问者: {{faq.user_name || '未知用户'}}</text>
+					<text class="user">{{ $t('manage.faqs.questioner', { name: faq.user_name || $t('manage.faqs.unknownUser') }) }}</text>
 					<text class="time">{{formatTime(faq.create_time)}}</text>
 				</view>
 			</view>
 
 			<view class="faq-content">
-				<view class="content-title">问题内容</view>
+				<view class="content-title">{{ $t('manage.faqs.question') }}</view>
 				<view class="text-content">{{faq.faq_content}}</view>
 			</view>
 
 			<view class="faq-answer" v-if="faq.solved === 1">
-				<view class="content-title">回复内容</view>
+				<view class="content-title">{{ $t('manage.faqs.answer') }}</view>
 				<view class="text-content">{{faq.answer}}</view>
 				<view class="answer-info">
-					<text class="admin">回复者: 管理员</text>
+					<text class="admin">{{ $t('manage.faqs.answeredBy') }}</text>
 					<text class="time">{{formatTime(faq.answer_time)}}</text>
 				</view>
 			</view>
 
 			<view class="handle-form">
 				<view class="form-item">
-					<view class="label">设为典型问题</view>
+					<view class="label">{{ $t('manage.faqs.markTypical') }}</view>
 					<view class="input">
 						<switch :checked="isTypical" @change="handleTypicalChange" color="#007AFF" />
 					</view>
 				</view>
 
 				<view class="form-item">
-					<view class="label">回复内容</view>
+					<view class="label">{{ $t('manage.faqs.replyContent') }}</view>
 					<view class="input">
-						<textarea v-model="answerContent" placeholder="请输入回复内容" maxlength="2000" />
+						<textarea v-model="answerContent" :placeholder="$t('manage.faqs.replyPlaceholder')" maxlength="2000" />
 						<view class="word-count">{{answerContent.length}}/2000</view>
 					</view>
 				</view>
 
 				<view class="submit">
-					<button @click="submitAnswer" :disabled="submitting || !answerContent.trim()">提交回复</button>
+					<button @click="submitAnswer" :disabled="submitting || !answerContent.trim()">{{ $t('manage.faqs.submitReply') }}</button>
 				</view>
 			</view>
 		</view>
@@ -105,7 +105,7 @@ export default {
 				}
 			} catch (e) {
 				uni.showToast({
-					title: '加载失败',
+					title: this.$t('common.loadFailed'),
 					icon: 'none'
 				})
 			}
@@ -128,12 +128,12 @@ export default {
 				})
 
 				uni.showToast({
-					title: this.isTypical ? '已设为典型问题' : '已取消典型问题',
+					title: this.isTypical ? this.$t('manage.faqs.markedTypical') : this.$t('manage.faqs.unmarkedTypical'),
 					icon: 'none'
 				})
 			} catch (e) {
 				uni.showToast({
-					title: '操作失败',
+					title: this.$t('common.operationFailed'),
 					icon: 'none'
 				})
 			}
@@ -157,7 +157,7 @@ export default {
 				})
 
 				uni.showToast({
-					title: '回复成功'
+					title: this.$t('manage.faqs.replySuccess')
 				})
 
 				// 更新本地数据
@@ -171,7 +171,7 @@ export default {
 
 			} catch (e) {
 				uni.showToast({
-					title: '提交失败',
+					title: this.$t('manage.common.submitFailed'),
 					icon: 'none'
 				})
 			} finally {

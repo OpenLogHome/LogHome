@@ -2,12 +2,12 @@
   <div class="tags-edit-container">
     <el-card class="tags-card">
       <div slot="header" class="card-header">
-        <span>作品标签</span>
-        <el-button type="text" @click="goBack">返回</el-button>
+        <span>{{ $t('作品标签') }}</span>
+        <el-button type="text" @click="goBack">{{ $t('返回') }}</el-button>
       </div>
       
       <div class="current-tags">
-        <h3>当前标签 <span class="tag-count">({{ tags && tags.length || 0 }}/8)</span></h3>
+        <h3>{{ $t('当前标签') }} <span class="tag-count">({{ tags && tags.length || 0 }}/8)</span></h3>
         <div class="tags-wrapper">
           <el-tag
             v-for="tag in tags || []"
@@ -25,13 +25,13 @@
             size="small" 
             icon="el-icon-plus" 
             @click="showAddTagDialog">
-            添加标签
+            {{ $t('添加标签') }}
           </el-button>
         </div>
       </div>
       
       <div class="suggested-tags">
-        <h3>官方标签</h3>
+        <h3>{{ $t('官方标签') }}</h3>
         <div class="tags-wrapper">
           <el-tag
             v-for="tag in suggested_tags || []"
@@ -48,19 +48,19 @@
     
     <!-- 添加自定义标签对话框 -->
     <el-dialog
-      title="添加标签"
+      :title="$t('添加标签')"
       :visible.sync="addTagDialogVisible"
       width="30%"
       center>
       <el-input 
         v-model="newTagName" 
-        placeholder="请输入标签名称"
+        :placeholder="$t('请输入标签名称')"
         maxlength="15"
         show-word-limit>
       </el-input>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="addTagDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addCustomTag">确 定</el-button>
+        <el-button @click="addTagDialogVisible = false">{{ $t('取消') }}</el-button>
+        <el-button type="primary" @click="addCustomTag">{{ $t('确定') }}</el-button>
       </span>
     </el-dialog>
   </div>
@@ -97,7 +97,7 @@ export default {
       await this.getNovelTags()
       await this.getSuggestedTags()
     } catch (err) {
-      this.error = err.message || '加载标签失败'
+      this.error = err.message || this.$t('加载标签失败')
       this.$message.error(this.error)
     } finally {
       this.loading = false
@@ -111,7 +111,7 @@ export default {
         console.log('获取标签成功:', this.tags)
       } catch (error) {
         console.error('获取作品标签失败:', error)
-        this.$message.error(error.response?.data?.msg || '获取作品标签失败')
+        this.$message.error(error.response?.data?.msg || this.$t('获取作品标签失败'))
         this.tags = []
         throw error
       }
@@ -123,7 +123,7 @@ export default {
         console.log('获取推荐标签成功:', this.suggested_tags)
       } catch (error) {
         console.error('获取推荐标签失败:', error)
-        this.$message.error(error.response?.data?.msg || '获取推荐标签失败')
+        this.$message.error(error.response?.data?.msg || this.$t('获取推荐标签失败'))
         this.suggested_tags = []
         throw error
       }
@@ -131,28 +131,28 @@ export default {
     async deleteTag(tag_id) {
       try {
         await this.$api.library.deleteNovelTag(this.novel_id, tag_id)
-        this.$message.success('删除标签成功')
+        this.$message.success(this.$t('删除标签成功'))
         await this.getNovelTags()
         await this.getSuggestedTags()
       } catch (error) {
-        this.$message.error(error.response?.data?.msg || '删除标签失败')
+        this.$message.error(error.response?.data?.msg || this.$t('删除标签失败'))
       }
     },
     async addTag(tagName) {
       if (!tagName || tagName.trim() === '') {
-        this.$message.warning('标签名称不能为空')
+        this.$message.warning(this.$t('标签名称不能为空'))
         return
       }
       
       try {
         await this.$api.library.addNovelTag(this.novel_id, tagName.trim())
-        this.$message.success('添加标签成功')
+        this.$message.success(this.$t('添加标签成功'))
         this.newTagName = ''
         this.addTagDialogVisible = false
         await this.getNovelTags()
         await this.getSuggestedTags()
       } catch (error) {
-        this.$message.error(error.response?.data?.msg || '添加标签失败')
+        this.$message.error(error.response?.data?.msg || this.$t('添加标签失败'))
       }
     },
     showAddTagDialog() {
@@ -169,7 +169,7 @@ export default {
       } else if (chosen === false && tagsLength < 8) {
         this.addTag(name)
       } else if (tagsLength >= 8) {
-        this.$message.warning('最多只能使用8个标签')
+        this.$message.warning(this.$t('最多只能使用8个标签'))
       }
     },
     goBack() {

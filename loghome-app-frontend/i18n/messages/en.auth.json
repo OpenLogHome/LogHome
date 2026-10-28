@@ -23,8 +23,8 @@
 			"carouselInteract": "Connect with other creators",
 			"withEmail": "Sign in with email",
 			"agreePrefix": "I have read and agree to\u00A0the\u00A0",
-			"agreeAccept": "I have read and accept\u00A0the\u00A0",
-			"privacyPolicy": "LogHome Privacy Policy",
+			"agreeAccept": "I accept\u00A0",
+			"privacyPolicy": "Privacy Policy",
 			"agreeRequired": "Please read and agree to the LogHome Privacy Policy first",
 			"accountPlaceholder": "Enter an account name",
 			"passwordPlaceholder": "Enter your password",
@@ -61,8 +61,8 @@
 				"accountRule": "Account format: 4-12 letters or digits"
 			},
 			"mobile": {
-				"registeredOnlyTip": "Only registered mobile numbers can sign in",
-				"mobilePlaceholder": "Enter your mainland China mobile number",
+				"registeredOnlyTip": "Use a registered mobile number",
+				"mobilePlaceholder": "Mainland China mobile number",
 				"policyNotice": "We're sorry: due to regulatory policy changes, LogHome no longer supports registering new mobile numbers. Please switch to email sign in as soon as possible.",
 				"recoverContact": "To recover an account, contact us in the LogHome open-source plan QQ group: ",
 				"signInWith": "You are about to sign in with this mobile number:",

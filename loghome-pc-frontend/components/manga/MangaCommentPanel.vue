@@ -14,9 +14,9 @@
     <div class="panel-body">
       <div class="panel-scroll" ref="scroll">
         <blockquote v-if="paragraphText" class="scope-excerpt">{{ paragraphText }}</blockquote>
-        <p v-if="error" class="load-error" role="alert">{{ error }} <button @click="load(failedPage)">重试</button></p>
-        <p v-if="loading && !comments.length" class="empty" role="status">正在加载评论…</p>
-        <div v-if="!comments.length && !loading && !error" class="empty">还没有评论，来抢第一个沙发</div>
+        <p v-if="error" class="load-error" role="alert">{{ error }} <button @click="load(failedPage)">{{ $t('重试') }}</button></p>
+        <p v-if="loading && !comments.length" class="empty" role="status">{{ $t('正在加载评论…') }}</p>
+        <div v-if="!comments.length && !loading && !error" class="empty">{{ $t('还没有评论，来抢第一个沙发') }}</div>
         <manga-comment-item
           v-for="item in comments"
           :key="item.commentId"
@@ -30,7 +30,7 @@
           @remove="removeComment"
           @remove-reply="removeReply" />
         <button v-if="hasMore" class="load-more" :disabled="loading" @click="loadMore">
-          {{ loading ? '加载中…' : '加载更多' }}
+          {{ loading ? $t('加载中…') : $t('加载更多') }}
         </button>
       </div>
       <div class="panel-composer">
@@ -78,8 +78,8 @@ export default {
   },
   computed: {
     title() {
-      const scope = this.scopeTitle || (Number(this.paragraphId) > 0 ? '段落评论' : Number(this.articleId) > 0 ? '章节评论' : '作品评论')
-      return this.amount ? `${scope} · ${this.amount} 条` : scope
+      const scope = this.scopeTitle || (Number(this.paragraphId) > 0 ? this.$t('段落评论') : Number(this.articleId) > 0 ? this.$t('章节评论') : this.$t('作品评论'))
+      return this.amount ? this.$t('{scope} · {amount} 条', { scope, amount: this.amount }) : scope
     }
   },
   watch: {
@@ -118,7 +118,7 @@ export default {
         const token = JSON.parse(localStorage.getItem('token'))
         if (token && token.tk) return true
       } catch (e) {}
-      this.$message.info('请先登录')
+      this.$message.info(this.$t('请先登录'))
       return false
     },
     async load(page = 1) {
@@ -141,7 +141,7 @@ export default {
           }
           this.$nextTick(() => { if(version!==this.version || scope!==this.scopeKey())return; const target = this.$refs.scroll && this.$refs.scroll.querySelector(`[data-comment-id="${Number(this.anchorId)}"]`); if (target) target.scrollIntoView({ block: 'nearest' }) })
         }
-      } catch (e) { if (version === this.version && scope === this.scopeKey()) this.error = getMangaCommentErrorMessage(e, '评论加载失败，请重试') }
+      } catch (e) { if (version === this.version && scope === this.scopeKey()) this.error = getMangaCommentErrorMessage(e, this.$t('评论加载失败，请重试')) }
       finally { if (version === this.version) this.loading = false }
     },
     async loadAmount() {
@@ -186,11 +186,11 @@ export default {
         if (scope !== this.scopeKey()) return
         this.$refs.composer.reset()
         this.replyTarget = null
-        this.$message.success('发表成功')
+        this.$message.success(this.$t('发表成功'))
         await Promise.all([this.load(1), this.loadAmount()])
         this.$emit('changed')
       } catch (e) {
-        if (scope === this.scopeKey()) this.$message.error(getMangaCommentErrorMessage(e, '评论发送失败，请稍后重试'))
+        if (scope === this.scopeKey()) this.$message.error(getMangaCommentErrorMessage(e, this.$t('评论发送失败，请稍后重试')))
       } finally {
         this.submitting = false
       }
@@ -207,12 +207,12 @@ export default {
         comment.praiseType = type
         comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previous === 0 ? -1 : 1))
       } catch (e) {
-        if (scope === this.scopeKey()) this.$message.error(getMangaCommentErrorMessage(e, '操作失败，请稍后重试'))
+        if (scope === this.scopeKey()) this.$message.error(getMangaCommentErrorMessage(e, this.$t('操作失败，请稍后重试')))
       } finally { this.$set(this.praisePending, comment.commentId, false) }
     },
     removeComment(comment) {
       const scope = this.scopeKey()
-      this.$confirm('确定删除这条评论吗？', '删除评论', { type: 'warning' })
+      this.$confirm(this.$t('确定删除这条评论吗？'), this.$t('删除评论'), { type: 'warning' })
         .then(async () => {
           try {
             if (scope !== this.scopeKey()) return
@@ -220,17 +220,17 @@ export default {
             if (scope !== this.scopeKey()) return
             this.comments = this.comments.filter(item => item.commentId !== comment.commentId)
             this.amount = Math.max(0, this.amount - 1)
-            this.$message.success('已删除')
+            this.$message.success(this.$t('已删除'))
             this.$emit('changed')
           } catch (e) {
-            this.$message.error(getMangaCommentErrorMessage(e, '删除失败，请稍后重试'))
+            this.$message.error(getMangaCommentErrorMessage(e, this.$t('删除失败，请稍后重试')))
           }
         })
         .catch(() => {})
     },
     removeReply({ rootCommentId, reply }) {
       const scope = this.scopeKey()
-      this.$confirm('确定删除这条回复吗？', '删除回复', { type: 'warning' })
+      this.$confirm(this.$t('确定删除这条回复吗？'), this.$t('删除回复'), { type: 'warning' })
         .then(async () => {
           try {
             if (scope !== this.scopeKey()) return
@@ -238,10 +238,10 @@ export default {
             if (scope !== this.scopeKey()) return
             const root = this.comments.find(item => item.commentId === rootCommentId)
             if (root) root.replies = root.replies.filter(item => item.commentId !== reply.commentId)
-            this.$message.success('已删除')
+            this.$message.success(this.$t('已删除'))
             this.$emit('changed')
           } catch (e) {
-            this.$message.error(getMangaCommentErrorMessage(e, '删除失败，请稍后重试'))
+            this.$message.error(getMangaCommentErrorMessage(e, this.$t('删除失败，请稍后重试')))
           }
         })
         .catch(() => {})

@@ -4,28 +4,28 @@
       <div>
         <input
           v-model="title"
-          aria-label="话数标题"
+          :aria-label="$t('话数标题')"
           maxlength="100"
           :disabled="disabled"
         /><small
-          >{{ dirty ? "本机草稿已保存" : "已同步" }} ·
-          {{ pages.length }} 页</small
+          >{{ dirty ? $t('本机草稿已保存') : $t('已同步') }} ·
+          {{ $t('{count} 页', { count: pages.length }) }}</small
         >
       </div>
       <select
         v-model="type"
-        aria-label="漫画类型"
+        :aria-label="$t('漫画类型')"
         :disabled="disabled || uploading"
       >
-        <option value="mangaStrip">条漫 · 纵向滚动</option>
-        <option value="mangaPage">页漫 · 翻页阅读</option></select
+        <option value="mangaStrip">{{ $t('条漫 · 纵向滚动') }}</option>
+        <option value="mangaPage">{{ $t('页漫 · 翻页阅读') }}</option></select
       ><button :disabled="!pages.length" @click="previewOpen = true">
-        整话预览
+        {{ $t('整话预览') }}
       </button>
     </header>
     <p v-if="error" class="manga-error" role="alert">
-      {{ error }}<button @click="exportDraft">导出本机稿件</button
-      ><button v-if="conflict" @click="reload">重新加载云端</button>
+      {{ error }}<button @click="exportDraft">{{ $t('导出本机稿件') }}</button
+      ><button v-if="conflict" @click="reload">{{ $t('重新加载云端') }}</button>
     </p>
     <div class="manga-upload-toolbar">
       <button
@@ -36,9 +36,9 @@
           $refs.files.click();
         "
       >
-        <i class="el-icon-plus" aria-hidden="true" /> 添加页面</button
-      ><span>按文件名排序上传，条漫长图自动分段</span
-      ><button v-if="uploading" @click="cancelAll">取消未完成上传</button
+        <i class="el-icon-plus" aria-hidden="true" /> {{ $t('添加页面') }}</button
+      ><span>{{ $t('按文件名排序上传，条漫长图自动分段') }}</span
+      ><button v-if="uploading" @click="cancelAll">{{ $t('取消未完成上传') }}</button
       ><input
         ref="files"
         type="file"
@@ -53,22 +53,22 @@
         <span>{{ task.file.name }}</span
         ><small>{{
           task.status === "success"
-            ? "上传完成"
+            ? $t('上传完成')
             : task.status === "error"
             ? task.error
             : task.status === "cancelled"
-            ? "已取消"
+            ? $t('已取消')
             : task.status === "uploading"
-            ? "上传并生成阅读图…"
-            : "等待上传"
+            ? $t('上传并生成阅读图…')
+            : $t('等待上传')
         }}</small
         ><button v-if="task.status === 'error'" @click="retry(task)">
-          重试</button
+          {{ $t('重试') }}</button
         ><button
           v-if="task.status === 'queued' || task.status === 'uploading'"
           @click="cancel(task)"
         >
-          取消
+          {{ $t('取消') }}
         </button>
       </article>
     </div>
@@ -83,7 +83,7 @@
       >
         <button
           class="manga-page-image"
-          :aria-label="'预览第 ' + (index + 1) + ' 页'"
+          :aria-label="$t('预览第 {p0} 页', { p0: index + 1 })"
           @click="
             previewIndex = index;
             previewOpen = true;
@@ -91,27 +91,27 @@
         >
           <img
             :src="page.thumb || page.url"
-            :alt="'第 ' + (index + 1) + ' 页'"
+            :alt="$t('第 {p0} 页', { p0: index + 1 })"
           />
         </button>
         <footer>
           <strong>{{ index + 1 }}</strong
-          ><button :disabled="disabled" @click="replacePage(page)">替换</button
+          ><button :disabled="disabled" @click="replacePage(page)">{{ $t('替换') }}</button
           ><button
             :disabled="disabled || index === 0"
-            aria-label="前移"
+            :aria-label="$t('前移')"
             @click="move(index, index - 1)"
           >
             <i class="el-icon-top" aria-hidden="true" /></button
           ><button
             :disabled="disabled || index === pages.length - 1"
-            aria-label="后移"
+            :aria-label="$t('后移')"
             @click="move(index, index + 1)"
           >
             <i class="el-icon-bottom" aria-hidden="true" /></button
           ><button
             :disabled="disabled"
-            aria-label="移除页面"
+            :aria-label="$t('移除页面')"
             @click="remove(index)"
           >
             <i class="el-icon-close" aria-hidden="true" />
@@ -126,24 +126,24 @@
           $refs.files.click();
         "
       >
-        <i aria-hidden="true" class="el-icon-plus" />添加页面
+        <i aria-hidden="true" class="el-icon-plus" />{{ $t('添加页面') }}
       </button>
     </div>
     <footer class="manga-writer-footer">
-      <span>发布前至少需要一页；保存草稿会撤回已发布话数。</span
+      <span>{{ $t('发布前至少需要一页；保存草稿会撤回已发布话数。') }}</span
       ><button :disabled="disabled || uploading" @click="save(true)">
-        保存草稿</button
+        {{ $t('保存草稿') }}</button
       ><button
         class="primary"
         :disabled="disabled || uploading || !pages.length"
         @click="save(false)"
       >
-        保存并发布
+        {{ $t('保存并发布') }}
       </button>
     </footer>
     <el-dialog
       class="writer-dialog-wrapper"
-      title="漫画预览"
+      :title="$t('漫画预览')"
       :visible.sync="previewOpen"
       width="88vw"
       top="4vh"
@@ -152,7 +152,7 @@
       ><MangaDraftPreview
         v-if="previewOpen"
         :article="{ title, article_type: type, content: { pages } }"
-        :novel-name="novel ? novel.name : '漫画'"
+        :novel-name="novel ? novel.name : $t('漫画')"
         :initial-page="previewIndex"
         @close="previewOpen = false"
     /></el-dialog>
@@ -229,11 +229,11 @@ export default {
     if (local && writerSignature(local) !== writerSignature(this.draft())) {
       try {
         await this.writerConfirm(
-          "本机有不同的漫画草稿，是否恢复到编辑区？",
-          "恢复本机草稿",
+          this.$t('本机有不同的漫画草稿，是否恢复到编辑区？'),
+          this.$t('恢复本机草稿'),
           {
-            confirmButtonText: "恢复本机稿件",
-            cancelButtonText: "使用云端版本",
+            confirmButtonText: this.$t('恢复本机稿件'),
+            cancelButtonText: this.$t('使用云端版本'),
           }
         );
         const parsed = JSON.parse(local.content);
@@ -261,7 +261,7 @@ export default {
           !content ||
           !Array.isArray(content.pages)
         )
-          throw new Error("漫画数据无效，请重新加载");
+          throw new Error(this.$t('漫画数据无效，请重新加载'));
         this.title = article.title;
         this.type = article.article_type;
         this.pages = content.pages.map((page, index) => ({
@@ -291,7 +291,7 @@ export default {
         this.draft(),
         this.baseline
       ).catch((error) => {
-        this.error = `本机备份失败：${error.message}`;
+        this.error = this.$t('本机备份失败：{message}', { message: error.message });
       });
     },
     enqueue(event) {
@@ -334,12 +334,12 @@ export default {
               !incoming.length ||
               incoming.some((page) => !/^https?:\/\//.test(page.url || ""))
             )
-              throw new Error("服务未返回有效图片");
+              throw new Error(this.$t('服务未返回有效图片'));
             if (
               this.pages.length + incoming.length - (task.replaceId ? 1 : 0) >
               300
             )
-              throw new Error("分段后超过单话 300 页上限");
+              throw new Error(this.$t('分段后超过单话 300 页上限'));
             let id = Math.max(
               0,
               ...this.pages.map((page) => Number(page.id) || 0)
@@ -349,7 +349,7 @@ export default {
               const index = this.pages.findIndex(
                 (p) => p.id === task.replaceId
               );
-              if (index < 0) throw new Error("待替换页面已删除");
+              if (index < 0) throw new Error(this.$t('待替换页面已删除'));
               pages[0].id = task.replaceId;
               this.pages.splice(index, 1, ...pages);
             } else {
@@ -418,21 +418,21 @@ export default {
     },
     async remove(index) {
       try {
-        await this.writerConfirm(`移除第 ${index + 1} 页？`, "移除页面");
+        await this.writerConfirm(this.$t('移除第 {p0} 页？', { p0: index + 1 }), this.$t('移除页面'));
         this.pages.splice(index, 1);
       } catch (_) {}
     },
     async save(draft) {
       if (this.disabled || this.uploading) return;
       if (!this.title.trim()) {
-        this.writerMessage("warning", "请输入话数标题");
+        this.writerMessage("warning", this.$t('请输入话数标题'));
         return;
       }
       if (draft && Number(this.article.is_draft) === 0) {
         try {
           await this.writerConfirm(
-            "保存为草稿会撤下已发布话数。继续？",
-            "退回草稿"
+            this.$t('保存为草稿会撤下已发布话数。继续？'),
+            this.$t('退回草稿')
           );
         } catch (_) {
           return;
@@ -455,7 +455,7 @@ export default {
         });
         this.initialize(remote);
         await this.persist();
-        this.writerMessage("success", draft ? "已保存草稿" : "已发布话数");
+        this.writerMessage("success", draft ? this.$t('已保存草稿') : this.$t('已发布话数'));
         this.$emit("refresh");
       } catch (error) {
         this.error = error.message;
@@ -467,8 +467,8 @@ export default {
     async reload() {
       try {
         await this.writerConfirm(
-          "云端版本将替换编辑区。本机草稿请先导出。",
-          "重新加载"
+          this.$t('云端版本将替换编辑区。本机草稿请先导出。'),
+          this.$t('重新加载')
         );
         await this.persist();
         this.initialize(
@@ -481,21 +481,21 @@ export default {
     },
     exportDraft() {
       downloadWriterFile(
-        `${this.title || "漫画"}-本机稿件.json`,
+        `${this.title || this.$t('漫画')}-${this.$t('本机稿件')}.json`,
         JSON.stringify(this.draft(), null, 2)
       );
     },
     async canLeave() {
       if (this.saving) {
-        this.writerMessage("warning", "正在保存，请稍候");
+        this.writerMessage("warning", this.$t('正在保存，请稍候'));
         return false;
       }
       await this.persist();
       if (this.uploading || this.dirty) {
         try {
           await this.writerConfirm(
-            "本机漫画草稿已保留，离开将取消未完成上传。继续？",
-            "保留漫画草稿"
+            this.$t('本机漫画草稿已保留，离开将取消未完成上传。继续？'),
+            this.$t('保留漫画草稿')
           );
           this.cancelAll();
         } catch (_) {

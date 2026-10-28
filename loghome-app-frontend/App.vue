@@ -716,7 +716,7 @@ uni-page2 {
 
 .uni-tabbar {
 	/* Keep controls above the gesture indicator while the background remains edge-to-edge. */
-	padding-bottom: max(5px, var(--loghome-safe-bottom, 0px)) !important;
+	padding-bottom: MAX(5px, var(--loghome-safe-bottom, 0px)) !important;
 	// backdrop-filter: blur(100px) !important;
 }
 

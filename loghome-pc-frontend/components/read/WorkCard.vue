@@ -2,23 +2,23 @@
   <nuxt-link :to="destination || workUrl(book)" class="reading-work" :class="{ compact }">
     <span v-if="rank" class="work-rank" :class="{ podium: rank <= 3 }">{{ String(rank).padStart(2, '0') }}</span>
     <div class="work-cover">
-      <img :src="book.picUrl || '/default-book-cover.png'" :alt="book.name || '作品封面'" loading="lazy" @error="coverError">
-      <span v-if="book.novel_type === 'manga' || book.novel_type === 'world'" class="work-kind" :class="book.novel_type">{{ book.novel_type === 'manga' ? '漫画' : '世界' }}</span>
+      <img :src="book.picUrl || '/default-book-cover.png'" :alt="book.name || $t('作品封面')" loading="lazy" @error="coverError">
+      <span v-if="book.novel_type === 'manga' || book.novel_type === 'world'" class="work-kind" :class="book.novel_type">{{ book.novel_type === 'manga' ? $t('漫画') : $t('世界') }}</span>
     </div>
     <div class="work-copy">
-      <h3 :title="book.name">{{ book.name || '未命名作品' }}</h3>
+      <h3 :title="book.name">{{ book.name || $t('未命名作品') }}</h3>
       <div class="work-author">{{ book.author_name }}</div>
       <div v-if="visibleBadges.length || book.is_haycraft" class="work-badges">
-        <span v-if="book.is_haycraft" class="work-badge tone-gold" title="HayCraft 干草块文会作品">HayCraft</span>
+        <span v-if="book.is_haycraft" class="work-badge tone-gold" :title="$t('HayCraft 干草块文会作品')">HayCraft</span>
         <span v-for="badge in visibleBadges" :key="badge.code" class="work-badge" :class="'tone-' + badge.tone">{{ badge.text }}</span>
       </div>
       <p v-if="!compact && book.content" class="work-description">{{ plainDescription }}</p>
-      <div v-if="book.updateInfo && book.updateInfo.has_updates" class="work-updates">更新 {{ book.updateInfo.new_chapters_count }} 章</div>
-      <div v-else-if="book.last_article_chapter" class="work-progress">读至第 {{ book.last_article_chapter }} 章</div>
-      <div v-if="showScore" class="work-meta work-score">原木力 {{ numberText(book.score == null ? book.ranking : book.score) }}</div>
+      <div v-if="book.updateInfo && book.updateInfo.has_updates" class="work-updates">{{ $t("更新 {p0} 章", { p0: book.updateInfo.new_chapters_count }) }}</div>
+      <div v-else-if="book.last_article_chapter" class="work-progress">{{ $t("读至第 {p0} 章", { p0: book.last_article_chapter }) }}</div>
+      <div v-if="showScore" class="work-meta work-score">{{ $t("原木力 {p0}", { p0: numberText(book.score == null ? book.ranking : book.score) }) }}</div>
       <div v-else class="work-meta">
-        <span>{{ book.novel_type === 'world' ? '世界设定' : book.is_complete ? '已完结' : '连载中' }}</span>
-        <span v-if="!compact && book.text_count">{{ numberText(book.text_count) }} 字</span>
+        <span>{{ book.novel_type === 'world' ? $t('世界设定') : book.is_complete ? $t('已完结') : $t('连载中') }}</span>
+        <span v-if="!compact && book.text_count">{{ $t("{p0} 字", { p0: numberText(book.text_count) }) }}</span>
       </div>
       <div v-if="!compact" class="work-date">{{ dateText(book.update_time) }}</div>
     </div>
@@ -36,7 +36,7 @@ export default {
   data: () => ({ now: Date.now(), expiryTimer: null }),
   computed: {
     book() { return normalizeWork(this.work) },
-    plainDescription() { return String(this.book.content || '暂无简介').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ') },
+    plainDescription() { return String(this.book.content || this.$t('暂无简介')).replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ') },
     visibleBadges() {
       return asList(this.book.badges).filter(badge => badge.code !== 'haycraft_work' && (!badge.expires_at || new Date(badge.expires_at).getTime() > this.now)).slice(0, this.compact ? 1 : 2)
     }

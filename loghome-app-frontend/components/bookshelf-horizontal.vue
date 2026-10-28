@@ -17,15 +17,15 @@
 						/>
 						<view class="corner-badges">
 							<view v-if="book.updateInfo && book.updateInfo.has_updates" class="update-badge">
-								<text class="update-text">更新{{ book.updateInfo.new_chapters_count }}章</text>
+								<text class="update-text">{{ $t('library.shelf.updateChapters', { count: book.updateInfo.new_chapters_count }) }}</text>
 							</view>
 							<view v-if="book.shelfSource === 'history'" class="history-badge">
-								<text class="update-text">历史</text>
+								<text class="update-text">{{ $t('library.shelf.historyBadge') }}</text>
 							</view>
 						</view>
 						<!-- 类型角标：漫画 / 世界 -->
-						<text v-if="isMangaWork(book)" class="type-badge manga-badge">漫画</text>
-						<text v-else-if="isWorldWork(book)" class="type-badge world-badge">世界</text>
+						<text v-if="isMangaWork(book)" class="type-badge manga-badge">{{ $t('library.shelf.badgeManga') }}</text>
+						<text v-else-if="isWorldWork(book)" class="type-badge world-badge">{{ $t('library.shelf.badgeWorld') }}</text>
 						<haycraft-mark
 							v-if="isHayCraftWork(book)"
 							class="bookshelf-haycraft-mark"
@@ -37,7 +37,7 @@
 				<!-- 查看更多按钮 -->
 				<view class="more-item" @click="gotoBookcase">
 					<view class="more-cover">
-						<text class="more-text">查看\n更多</text>
+						<text class="more-text">{{ $t('library.shelf.viewMore') }}</text>
 					</view>
 					<!-- <text class="book-title">更多书籍</text> -->
 				</view>
@@ -382,7 +382,7 @@ export default {
 					}
 					// 这里需要根据实际情况处理离线阅读
 					uni.showToast({
-						title: "离线模式，请检查网络",
+						title: this.$t('library.shelf.offlineMode'),
 						icon: 'none'
 					})
 				} else {
@@ -470,18 +470,22 @@ export default {
 .corner-badges {
 	position: absolute;
 	top: 0;
+	left: 0;
 	right: 0;
 	z-index: 2;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-end;
 	gap: 4rpx;
+	width: 100%;
+	box-sizing: border-box;
 	pointer-events: none;
 }
 
 .update-badge, .history-badge {
 	padding: 3.4rpx 6.8rpx;
-	max-width: 122.4rpx;
+	max-width: 100%;
+	box-sizing: border-box;
 	overflow: hidden;
 }
 
@@ -494,6 +498,8 @@ export default {
 }
 
 .update-text {
+	display: block;
+	max-width: 100%;
 	color: white;
 	font-size: 17rpx;
 	font-weight: 600;

@@ -33,7 +33,7 @@
                 @scene-unavailable="handleThreeTreeUnavailable"
             ></view>
             <view v-else class="scene-loading">
-                <view class="scene-loading-pill">树场加载中</view>
+                <view class="scene-loading-pill">{{ $t('tree.farm.loadingScene') }}</view>
             </view>
             <view class="orb-layer" v-if="isTreeSceneResolved && (expOrbs.length > 0 || orbBursts.length > 0)">
                 <view
@@ -68,8 +68,7 @@
 		<view class="visit-entry-btn" :style="{top: 'calc(250rpx + var(--loghome-safe-top, 0px))'}" @tap.stop.prevent="handleVisitEntryTap">
             <!-- <text class="entry-emoji">🦝</text> -->
             <view class="entry-text">
-                <text>串</text>
-                <text>门</text>
+                <text>{{ $t('tree.farm.visitEntry') }}</text>
             </view>
             <view class="entry-badge" v-if="canStealTargetCount > 0">{{canStealTargetCount}}</view>
         </view>
@@ -89,10 +88,10 @@
 				{{btnText}}
 			</button>
             <view class="orb-actions visit-actions" v-if="isViewingFriendTree">
-                <button class="small-btn back" @click="leaveFriendVisit">返回我的树场</button>
+                <button class="small-btn back" @click="leaveFriendVisit">{{ $t('tree.farm.actions.backToMyFarm') }}</button>
             </view>
             <view class="orb-actions" v-else-if="state.tree_status != '未种植'">
-                <button class="small-btn collect" @click="collectAllExpOrbs" :disabled="isCollectingOrbs || expOrbs.length === 0">一键收集经验</button>
+                <button class="small-btn collect" @click="collectAllExpOrbs" :disabled="isCollectingOrbs || expOrbs.length === 0">{{ $t('tree.farm.actions.collectAllExp') }}</button>
             </view>
 		</view>
 
@@ -103,7 +102,7 @@
                     <view class="growth-header">
                         <view class="growth-title">
                             <text class="icon">🌲</text>
-                            <text class="label">成长值</text>
+                            <text class="label">{{ $t('tree.farm.growthValue') }}</text>
                         </view>
                         <text class="val">{{Math.floor(growth_val)}}/{{max_growth}}</text>
                     </view>
@@ -129,24 +128,24 @@
                                 />
                                 <view v-else class="visit-avatar placeholder">{{getUserInitial(visitScene.target_name)}}</view>
                                 <view class="visit-copy">
-                                    <text class="visit-name">{{visitScene.target_name || '好友'}}</text>
+                                    <text class="visit-name">{{visitScene.target_name || $t('tree.farm.friendFallback')}}</text>
                                 </view>
                             </view>
                             <view class="visit-scene-stats">
                                 <view class="visit-stat">
                                     <text class="num">{{visitScene.pending_reward_total || 0}}</text>
-                                    <text class="label">待偷成长值</text>
+                                    <text class="label">{{ $t('tree.farm.visit.pendingGrowth') }}</text>
                                 </view>
                                 <view class="visit-stat">
                                     <text class="num">{{visitScene.remaining_steal_reward || 0}}</text>
-                                    <text class="label">剩余可偷</text>
+                                    <text class="label">{{ $t('tree.farm.visit.remainingSteal') }}</text>
                                 </view>
                                 <view class="visit-stat">
                                     <text class="num">{{expOrbs.length}}</text>
-                                    <text class="label">经验球</text>
+                                    <text class="label">{{ $t('tree.farm.expOrbs') }}</text>
                                 </view>
                             </view>
-                            <view class="visit-scene-tip">{{visitScene.steal_tip || '点击树上的经验球即可偷取，也可以点一键偷取。'}}</view>
+                            <view class="visit-scene-tip">{{visitScene.steal_tip || $t('tree.farm.visit.defaultTip')}}</view>
                         </view>
                     </template>
 
@@ -159,14 +158,14 @@
                         ></image>
                         <view class="membership-boost-icon" v-else>🌱</view>
                         <view class="membership-boost-copy">
-                            <text class="membership-boost-title">{{rewardBenefits.membership_name || '普通用户'}}</text>
-                            <text class="membership-boost-desc" v-if="hasTaskRewardBoost">每日任务与经验任务成长值均享 {{taskRewardMultiplierText}} 加成</text>
-                            <text class="membership-boost-desc" v-else>开通通行证可享每日任务与经验任务 1.2× / 2× 加成</text>
+                            <text class="membership-boost-title">{{getMembershipName()}}</text>
+                            <text class="membership-boost-desc" v-if="hasTaskRewardBoost">{{ $t('tree.farm.membership.boostActive', { multiplier: taskRewardMultiplierText }) }}</text>
+                            <text class="membership-boost-desc" v-else>{{ $t('tree.farm.membership.boostInactive') }}</text>
                         </view>
                         <text class="membership-boost-rate" v-if="hasTaskRewardBoost">{{taskRewardMultiplierText}}</text>
                     </view>
                     <view class="sheet-header">
-                        <text class="title">📋 每日任务</text>
+                        <text class="title">{{ $t('tree.farm.dailyTasks') }}</text>
                         <view class="task-summary" v-if="tasks.length > 0">{{completedTaskCount}}/{{tasks.length}}</view>
                     </view>
                     <view class="task-list">
@@ -176,29 +175,29 @@
                                 <text v-else>🌱</text>
                             </view>
                             <view class="task-content">
-                                <view class="task-name">{{task.task_name}}</view>
-                                <view class="task-desc">{{task.task_desc}}</view>
+                                <view class="task-name">{{getTaskName(task)}}</view>
+                                <view class="task-desc">{{getTaskDescription(task)}}</view>
                             </view>
                             <view class="task-action">
                                 <view class="reward-tag">+{{task.growth_reward}} XP</view>
-                                <view class="reward-boost-detail" v-if="Number(task.reward_multiplier || 1) > 1">基础 {{task.base_growth_reward}} × {{task.reward_multiplier}}</view>
+                                <view class="reward-boost-detail" v-if="Number(task.reward_multiplier || 1) > 1">{{ $t('tree.farm.baseReward', { base: task.base_growth_reward, multiplier: task.reward_multiplier }) }}</view>
                                 <button
-                                    v-if="task.task_name.includes('签到')"
+                                    v-if="isCheckinTask(task)"
                                     class="do-btn"
                                     size="mini"
                                     :disabled="task.status == 'completed'"
                                     @click="doTask(task)"
                                 >
-                                    {{task.status == 'completed' ? '已完成' : '领取'}}
+                                    {{task.status == 'completed' ? $t('tree.farm.task.completed') : $t('tree.farm.task.claim')}}
                                 </button>
-                                <button v-else-if="task.status == 'completed'" class="do-btn" size="mini" disabled>已完成</button>
+                                <button v-else-if="task.status == 'completed'" class="do-btn" size="mini" disabled>{{ $t('tree.farm.task.completed') }}</button>
                             </view>
                         </view>
-                        <view class="empty-tip" v-if="tasks.length === 0"><text>💤 暂无任务，休息一下吧~</text></view>
+                        <view class="empty-tip" v-if="tasks.length === 0"><text>{{ $t('tree.farm.emptyTasks') }}</text></view>
                     </view>
 
                     <view class="sheet-header exp-header">
-                        <text class="title">🪄 经验任务</text>
+                        <text class="title">{{ $t('tree.farm.expTasks') }}</text>
                         <view class="task-summary" v-if="expTasks.length > 0">{{completedExpTaskCount}}/{{expTasks.length}}</view>
                     </view>
                     <view class="task-list exp-task-list">
@@ -208,17 +207,17 @@
                                 <image v-else :src="task.icon" mode="aspectFit"></image>
                             </view>
                             <view class="task-content">
-                                <view class="task-name">{{task.task_name}}</view>
-                                <view class="task-desc">{{task.task_desc}}</view>
-                                <view class="task-progress">{{task.progress_text}} · {{task.completed_times}}/{{task.daily_limit}} 次</view>
+                                <view class="task-name">{{getTaskName(task)}}</view>
+                                <view class="task-desc">{{getTaskDescription(task)}}</view>
+                                <view class="task-progress">{{ $t('tree.farm.task.progress', { progress: getTaskProgressText(task), completed: task.completed_times, limit: task.daily_limit }) }}</view>
                             </view>
                             <view class="task-action">
-                                <view class="reward-tag">成长值 +{{task.exp_reward}}</view>
-                                <view class="reward-boost-detail" v-if="Number(task.reward_multiplier || 1) > 1">基础 {{task.base_exp_reward}} × {{task.reward_multiplier}}</view>
+                                <view class="reward-tag">{{ $t('tree.farm.task.growthReward', { reward: task.exp_reward }) }}</view>
+                                <view class="reward-boost-detail" v-if="Number(task.reward_multiplier || 1) > 1">{{ $t('tree.farm.baseReward', { base: task.base_exp_reward, multiplier: task.reward_multiplier }) }}</view>
                                 <view class="auto-status" :class="{ done: task.status === 'completed' }">{{getExpTaskStatusText(task)}}</view>
                             </view>
                         </view>
-                        <view class="empty-tip" v-if="expTasks.length === 0"><text>🫧 暂无经验任务</text></view>
+                        <view class="empty-tip" v-if="expTasks.length === 0"><text>{{ $t('tree.farm.emptyExpTasks') }}</text></view>
                     </view>
                     </template>
                 </scroll-view>
@@ -227,18 +226,18 @@
 
         <view class="result-modal-mask" v-if="showResultModal" @click="closeResultModal">
             <view class="result-modal" @click.stop>
-                <view class="result-header"><text>🎉 收获颇丰 🎉</text></view>
+                <view class="result-header"><text>{{ $t('tree.farm.harvest.title') }}</text></view>
                 <view class="result-body">
                     <view class="reward-item" v-if="harvestResult.log > 0">
                         <image src="../../static/resources/log.png" mode="aspectFit"></image>
-                        <text>原木 x {{harvestResult.log}}</text>
+                        <text>{{ $t('tree.farm.harvest.log', { count: harvestResult.log }) }}</text>
                     </view>
                     <view class="reward-item" v-if="harvestResult.apple > 0">
                         <image src="../../static/resources/apple.png" mode="aspectFit"></image>
-                        <text>苹果 x {{harvestResult.apple}}</text>
+                        <text>{{ $t('tree.farm.harvest.apple', { count: harvestResult.apple }) }}</text>
                     </view>
                 </view>
-                <button class="confirm-btn" @click="closeResultModal">开心收下</button>
+                <button class="confirm-btn" @click="closeResultModal">{{ $t('tree.farm.harvest.accept') }}</button>
             </view>
         </view>
 
@@ -247,16 +246,16 @@
                 <view class="visit-panel-header">
                     <view class="visit-panel-title">
                         <!-- <text class="emoji">🦝</text> -->
-                        <text class="title">树场串门</text>
+                        <text class="title">{{ $t('tree.farm.visitPanel.title') }}</text>
                     </view>
-                    <button class="visit-close-btn" @click="closeVisitPanel">收起</button>
+                    <button class="visit-close-btn" @click="closeVisitPanel">{{ $t('common.collapse') }}</button>
                 </view>
 
                 <view class="visit-panel-scroll">
                     <view class="visit-section">
                         <view class="sheet-header steal-header">
-                            <text class="title">好友列表</text>
-                            <view class="task-summary" v-if="stealTargets.length > 0">{{stealTargets.length}} 位好友</view>
+                            <text class="title">{{ $t('tree.farm.visitPanel.friendList') }}</text>
+                            <view class="task-summary" v-if="stealTargets.length > 0">{{ $t('tree.farm.visitPanel.friendCount', { count: stealTargets.length }) }}</view>
                         </view>
                         <view class="steal-list">
                             <view class="steal-item" v-for="friend in stealTargets" :key="friend.user_id">
@@ -270,10 +269,10 @@
                                     <view class="friend-name-row">
                                         <text class="friend-name">{{friend.name}}</text>
                                     </view>
-                                    <view class="friend-meta">未收成长值 {{friend.pending_reward_total}} · 经验球 {{friend.pending_orb_count}}</view>
+                                    <view class="friend-meta">{{ $t('tree.farm.visitPanel.friendMeta', { growth: friend.pending_reward_total, orbs: friend.pending_orb_count }) }}</view>
                                 </view>
                                 <view class="friend-action">
-                                    <view class="steal-reward-chip" v-if="friend.remaining_steal_reward > 0">可偷 {{friend.remaining_steal_reward}}</view>
+                                    <view class="steal-reward-chip" v-if="friend.remaining_steal_reward > 0">{{ $t('tree.farm.visitPanel.stealable', { count: friend.remaining_steal_reward }) }}</view>
                                     <button
                                         class="steal-btn"
                                         size="mini"
@@ -285,14 +284,14 @@
                                     </button>
                                 </view>
                             </view>
-                            <view class="empty-tip" v-if="stealTargets.length === 0"><text>🌿 暂时还没有可串门的好友树场</text></view>
+                            <view class="empty-tip" v-if="stealTargets.length === 0"><text>{{ $t('tree.farm.visitPanel.emptyFriends') }}</text></view>
                         </view>
                     </view>
 
                     <view class="visit-section">
                         <view class="sheet-header steal-log-header">
-                            <text class="title">📜 串门记录</text>
-                            <view class="task-summary" v-if="stolenLogs.length > 0">{{stolenLogs.length}} 条记录</view>
+                            <text class="title">{{ $t('tree.farm.visitPanel.logTitle') }}</text>
+                            <view class="task-summary" v-if="stolenLogs.length > 0">{{ $t('tree.farm.visitPanel.logCount', { count: stolenLogs.length }) }}</view>
                         </view>
                         <view class="steal-log-list">
                             <view class="steal-log-item" v-for="log in stolenLogs" :key="log.record_id">
@@ -300,13 +299,13 @@
                                 <view v-else class="log-avatar placeholder">{{getUserInitial(log.thief_name)}}</view>
                                 <view class="log-content">
                                     <view class="log-title">
-                                        <text class="log-name">{{log.thief_name || '好友'}}</text>
+                                        <text class="log-name">{{log.thief_name || $t('tree.farm.friendFallback')}}</text>
                                         <text class="log-time">{{formatStealTime(log.created_at)}}</text>
                                     </view>
-                                    <view class="log-desc">顺走了你 {{log.reward}} 点成长值，动了 {{log.orb_count_affected}} 个经验球</view>
+                                    <view class="log-desc">{{ $t('tree.farm.visitPanel.logDesc', { reward: log.reward, orbs: log.orb_count_affected }) }}</view>
                                 </view>
                             </view>
-                            <view class="empty-tip" v-if="stolenLogs.length === 0"><text>🛡️ 还没有新的串门记录</text></view>
+                            <view class="empty-tip" v-if="stolenLogs.length === 0"><text>{{ $t('tree.farm.visitPanel.emptyLogs') }}</text></view>
                         </view>
                     </view>
                 </view>
@@ -403,7 +402,7 @@ export default {
             max_growth: 100,
             rewardBenefits: {
                 membership_type: '',
-                membership_name: '普通用户',
+                membership_name: '',
                 multiplier: 1,
                 active: false,
             },
@@ -446,15 +445,16 @@ export default {
         },
         navTitleText() {
             if (this.isViewingFriendTree) {
-                const targetName = this.visitScene.target_name || '好友'
-                return `${targetName}的树场`
+                const targetName = this.visitScene.target_name || this.$t('tree.farm.friendFallback')
+                return this.$t('tree.farm.friendFarmTitle', { name: targetName })
             }
             return this.treeSceneThemeLabel
         },
         treeSceneThemeLabel() {
-            if (!this.isTreeSceneResolved) return '树场'
+            if (!this.isTreeSceneResolved) return this.$t('tree.farm.title')
             const currentTheme = TREE_PLANT_SCENE_THEMES.find((item) => item.key === this.treeSceneTheme)
-            return currentTheme ? currentTheme.label : '橡岛晴岚'
+            const themeKey = currentTheme ? currentTheme.key : 'oak_island'
+            return this.$t('tree.settings.themes.' + themeKey)
         },
         completedTaskCount() {
             return this.tasks.filter((t) => t.status === 'completed').length
@@ -485,11 +485,11 @@ export default {
         },
         visitPrimaryButtonText() {
             if (!this.isViewingFriendTree) return ''
-            if (this.isCollectingOrbs) return '偷取中'
-            if (this.visitScene.need_own_tree) return '先种树'
-            if (Number(this.visitScene.remaining_steal_reward || 0) <= 0) return '今日已偷完'
-            if (this.expOrbs.length === 0) return '没有可偷经验球'
-            return '⚡ 一键偷取'
+            if (this.isCollectingOrbs) return this.$t('tree.farm.visit.stealing')
+            if (this.visitScene.need_own_tree) return this.$t('tree.farm.visit.plantFirstShort')
+            if (Number(this.visitScene.remaining_steal_reward || 0) <= 0) return this.$t('tree.farm.visit.todayStealDone')
+            if (this.expOrbs.length === 0) return this.$t('tree.farm.visit.noOrbs')
+            return this.$t('tree.farm.visit.stealAll')
         },
     },
     methods: {
@@ -633,10 +633,41 @@ export default {
         getExpTaskStatusText(task) {
             const completedTimes = Number(task && task.completed_times ? task.completed_times : 0)
             const dailyLimit = Number(task && task.daily_limit ? task.daily_limit : 0)
-            if (task && task.status === 'completed') return '已自动完成'
-            if (completedTimes > 0 && dailyLimit > 0) return `已自动结算 ${completedTimes}/${dailyLimit}`
-            if (task && Number(task.available_claim_times || 0) > 0) return '待自动结算'
-            return '进行中'
+            if (task && task.status === 'completed') return this.$t('tree.farm.expStatus.completed')
+            if (completedTimes > 0 && dailyLimit > 0) {
+                return this.$t('tree.farm.expStatus.settled', { completed: completedTimes, limit: dailyLimit })
+            }
+            if (task && Number(task.available_claim_times || 0) > 0) return this.$t('tree.farm.expStatus.pendingSettle')
+            return this.$t('tree.farm.expStatus.inProgress')
+        },
+        getMembershipName() {
+            const membershipType = String(this.rewardBenefits && this.rewardBenefits.membership_type || '')
+            if (membershipType === 'standard' || membershipType === 'super') {
+                return this.$t(`membership.pass.tier.${membershipType}.name`)
+            }
+            return this.rewardBenefits.membership_name || this.$t('tree.farm.membership.defaultName')
+        },
+        getTaskName(task) {
+            const taskCode = String(task && task.task_code || '')
+            const key = `tree.farm.taskCatalog.${taskCode}.name`
+            return taskCode && this.$te(key) ? this.$t(key) : (task && task.task_name || '')
+        },
+        getTaskDescription(task) {
+            const taskCode = String(task && task.task_code || '')
+            const key = `tree.farm.taskCatalog.${taskCode}.description`
+            return taskCode && this.$te(key) ? this.$t(key) : (task && task.task_desc || '')
+        },
+        getTaskProgressText(task) {
+            const sourceCode = String(task && task.source_code || '')
+            if (sourceCode === 'read_seconds' || sourceCode === 'write_seconds') {
+                const current = Math.floor(Number(task.progress_value || 0) / 60)
+                const required = Math.max(1, Math.floor(Number(task.required_value || 0) / 60))
+                return this.$t('tree.farm.task.durationProgress', { current, required })
+            }
+            return task && task.progress_text || ''
+        },
+        isCheckinTask(task) {
+            return ['daily_signin', 'daily_checkin'].includes(String(task && task.task_code || ''))
         },
         syncStealDashboard(payload) {
             const data = payload && typeof payload === 'object' ? payload : {}
@@ -665,7 +696,7 @@ export default {
                 this.tasks = data.tasks || []
                 this.expTasks = data.exp_tasks || []
                 this.rewardBenefits = data.reward_benefits || {
-                    membership_type: '', membership_name: '普通用户', multiplier: 1, active: false,
+                    membership_type: '', membership_name: '', multiplier: 1, active: false,
                 }
                 this.syncExpOrbs(data.exp_orbs || [], { animateNew: false })
                 this.growth_val = data.growth_val || 0
@@ -681,7 +712,7 @@ export default {
                 this.tasks = []
                 this.expTasks = []
                 this.rewardBenefits = {
-                    membership_type: '', membership_name: '普通用户', multiplier: 1, active: false,
+                    membership_type: '', membership_name: '', multiplier: 1, active: false,
                 }
                 this.syncExpOrbs([], { animateNew: false })
                 this.growth_val = 0
@@ -723,7 +754,7 @@ export default {
             this.tasks = []
             this.expTasks = []
             this.rewardBenefits = {
-                membership_type: '', membership_name: '普通用户', multiplier: 1, active: false,
+                membership_type: '', membership_name: '', multiplier: 1, active: false,
             }
             this.syncExpOrbs(tree && Array.isArray(tree.exp_orbs) ? tree.exp_orbs : [], { animateNew: false })
             this.growth_val = tree && typeof tree.growth_val === 'number' ? tree.growth_val : 0
@@ -751,22 +782,26 @@ export default {
             return !!friend.has_active_tree
         },
         getStealButtonText(friend) {
-            if (!friend || !friend.has_active_tree) return '未种植'
-            if (this.isStealing) return '切换中'
-            return '串门'
+            if (!friend || !friend.has_active_tree) return this.$t('tree.farm.friendStatus.unplanted')
+            if (this.isStealing) return this.$t('tree.farm.friendStatus.switching')
+            return this.$t('tree.farm.visitEntry')
         },
         getUserInitial(name) {
-            if (!name) return '友'
+            if (!name) return this.$t('tree.farm.avatarFallback')
             return String(name).trim().slice(0, 1).toUpperCase()
         },
         formatStealTime(value) {
-            if (!value) return '刚刚'
+            if (!value) return this.$t('tree.farm.time.justNow')
             const ts = new Date(value).getTime()
             if (!Number.isFinite(ts)) return String(value)
             const diff = Date.now() - ts
-            if (diff < 60 * 1000) return '刚刚'
-            if (diff < 60 * 60 * 1000) return Math.max(Math.floor(diff / (60 * 1000)), 1) + ' 分钟前'
-            if (diff < 24 * 60 * 60 * 1000) return Math.max(Math.floor(diff / (60 * 60 * 1000)), 1) + ' 小时前'
+            if (diff < 60 * 1000) return this.$t('tree.farm.time.justNow')
+            if (diff < 60 * 60 * 1000) {
+                return this.$t('tree.farm.time.minutesAgo', { count: Math.max(Math.floor(diff / (60 * 1000)), 1) })
+            }
+            if (diff < 24 * 60 * 60 * 1000) {
+                return this.$t('tree.farm.time.hoursAgo', { count: Math.max(Math.floor(diff / (60 * 60 * 1000)), 1) })
+            }
             const date = new Date(ts)
             const month = String(date.getMonth() + 1).padStart(2, '0')
             const day = String(date.getDate()).padStart(2, '0')
@@ -795,7 +830,7 @@ export default {
             if (options.closePanel !== false) {
                 this.closeVisitPanel()
             }
-            uni.showLoading({ title: options.loadingTitle || '串门中' })
+            uni.showLoading({ title: options.loadingTitle || this.$t('tree.farm.loading.visiting') })
             axios
                 .get(this.$baseUrl + '/treePlant/visit_friend_tree?target_user_id=' + targetUserId, { headers: this.getAuthHeaders() })
                 .then((res) => {
@@ -816,7 +851,7 @@ export default {
             if (!this.isViewingFriendTree) return
             this.isTreeSceneResolved = false
             this.resetVisitScene()
-            uni.showLoading({ title: '返回中' })
+            uni.showLoading({ title: this.$t('tree.farm.loading.returning') })
             this.refreshPage({ forceOwn: true })
         },
         openVisitPanel() {
@@ -848,7 +883,7 @@ export default {
         handleStealFriend(friend) {
             if (!friend) return
             if (!friend.has_active_tree) {
-                uni.showToast({ title: '对方还没种树，暂时没有可串门的树场', icon: 'none' })
+                uni.showToast({ title: this.$t('tree.farm.toast.friendNoTree'), icon: 'none' })
                 return
             }
             if (this.isStealing) return
@@ -879,18 +914,18 @@ export default {
                 return
             }
             if (this.state.tree_status == '未种植') {
-                this.btnText = '🌱 种下树苗'
+                this.btnText = this.$t('tree.farm.action.plant')
             } else if (this.state.tree_status == '结果') {
-                this.btnText = '🪓 收获'
+                this.btnText = this.$t('tree.farm.action.harvest')
             } else {
                 this.btnText = ''
             }
         },
         handleMainBtnClick() {
             if (!this.btnText) return
-            if (this.btnText.includes('种下树苗')) {
+            if (this.btnText.includes(this.$t('tree.farm.action.plant'))) {
                 this.plantTree()
-            } else if (this.btnText.includes('收获')) {
+            } else if (this.btnText.includes(this.$t('tree.farm.action.harvest'))) {
                 this.gotTree()
             }
         },
@@ -907,19 +942,19 @@ export default {
             } catch (e) {}
             this.useThreeTreeScene = false
             uni.showToast({
-                title: '当前环境无法启用高质量 3D，已切回经典模式',
+                title: this.$t('tree.farm.toast.quality3dFallback'),
                 icon: 'none',
                 duration: 2200,
             })
         },
         doTask(task) {
             if (task.status == 'completed') return
-            if (!task.task_name.includes('签到')) {
-                uni.showToast({ title: '请前往对应功能区完成任务', icon: 'none' })
+            if (!this.isCheckinTask(task)) {
+                uni.showToast({ title: this.$t('tree.farm.toast.doTaskElsewhere'), icon: 'none' })
                 return
             }
 
-            uni.showLoading({ title: '领取中' })
+            uni.showLoading({ title: this.$t('tree.farm.loading.claiming') })
             axios
                 .post(this.$baseUrl + '/treePlant/do_task', { task_code: task.task_code }, { headers: this.getAuthHeaders() })
                 .then((res) => {
@@ -929,7 +964,7 @@ export default {
                     if (this.$refs.taskRewardModal) {
                         this.$refs.taskRewardModal.show({
                             reward,
-                            taskName: task.task_name,
+                            taskName: this.getTaskName(task),
                             icon: task.icon,
                             currentGrowth: growth,
                             maxGrowth: this.max_growth || 100,
@@ -970,7 +1005,7 @@ export default {
                     )
                     this.emitOrbBurst(orb, `+${reward} XP`)
                     this.refreshStealDashboard()
-                    uni.showToast({ title: `+${reward} 经验`, icon: 'none' })
+                    uni.showToast({ title: this.$t('tree.farm.toast.gainExp', { reward }), icon: 'none' })
                     this.handleData()
                 })
                 .catch((error) => {
@@ -986,11 +1021,11 @@ export default {
             if (!orb || this.isCollectingOrbs || orb.uiState === 'collecting') return
             if (!this.isViewingFriendTree || !this.visitScene.target_user_id) return
             if (this.visitScene.need_own_tree) {
-                uni.showToast({ title: '先种下自己的树苗，再来好友树场串门', icon: 'none' })
+                uni.showToast({ title: this.$t('tree.farm.toast.plantOwnFirst'), icon: 'none' })
                 return
             }
             if (Number(this.visitScene.remaining_steal_reward || 0) <= 0) {
-                uni.showToast({ title: '今天在这位好友树场已经偷满了', icon: 'none' })
+                uni.showToast({ title: this.$t('tree.farm.toast.stealQuotaFull'), icon: 'none' })
                 return
             }
 
@@ -1017,9 +1052,12 @@ export default {
                     } else {
                         this.refreshStealDashboard()
                     }
-                    this.emitOrbBurst(orb, `偷走 ${reward}`)
+                    this.emitOrbBurst(orb, this.$t('tree.farm.burst.stolen', { reward }))
                     uni.showToast({
-                        title: `从${res.data.target_name || this.visitScene.target_name || '好友'}那顺走 ${reward} 点成长值`,
+                        title: this.$t('tree.farm.toast.stolenFrom', {
+                            name: res.data.target_name || this.visitScene.target_name || this.$t('tree.farm.friendFallback'),
+                            reward,
+                        }),
                         icon: 'none',
                         duration: 2200,
                     })
@@ -1061,7 +1099,7 @@ export default {
                     this.state.tree_status = res.data && res.data.tree_status ? res.data.tree_status : this.state.tree_status
                     this.syncExpOrbs(res.data && Array.isArray(res.data.exp_orbs) ? res.data.exp_orbs : [], { animateNew: false })
                     this.refreshStealDashboard()
-                    uni.showToast({ title: `收集 ${res.data.collect_count || 0} 个经验球`, icon: 'none' })
+                    uni.showToast({ title: this.$t('tree.farm.toast.collectedOrbs', { count: res.data.collect_count || 0 }), icon: 'none' })
                     this.handleData()
                 })
                 .catch((error) => {
@@ -1080,11 +1118,11 @@ export default {
         stealAllVisitedOrbs() {
             if (this.isCollectingOrbs || !this.isViewingFriendTree || this.expOrbs.length === 0) return
             if (this.visitScene.need_own_tree) {
-                uni.showToast({ title: '先种下自己的树苗，再来好友树场串门', icon: 'none' })
+                uni.showToast({ title: this.$t('tree.farm.toast.plantOwnFirst'), icon: 'none' })
                 return
             }
             if (Number(this.visitScene.remaining_steal_reward || 0) <= 0) {
-                uni.showToast({ title: '今天在这位好友树场已经偷满了', icon: 'none' })
+                uni.showToast({ title: this.$t('tree.farm.toast.stealQuotaFull'), icon: 'none' })
                 return
             }
 
@@ -1118,7 +1156,7 @@ export default {
             ])
                 .then(([res]) => {
                     animateOrbs.forEach((item, index) => {
-                        this.emitOrbBurst(item, `偷取`, index * 60)
+                        this.emitOrbBurst(item, this.$t('tree.farm.burst.steal'), index * 60)
                     })
                     if (res.data && res.data.visit_scene) {
                         this.applyVisitScenePayload(res.data.visit_scene)
@@ -1129,7 +1167,10 @@ export default {
                         this.refreshStealDashboard()
                     }
                     uni.showToast({
-                        title: `从${res.data.target_name || this.visitScene.target_name || '好友'}那顺走 ${res.data.reward || 0} 点成长值`,
+                        title: this.$t('tree.farm.toast.stolenFrom', {
+                            name: res.data.target_name || this.visitScene.target_name || this.$t('tree.farm.friendFallback'),
+                            reward: res.data.reward || 0,
+                        }),
                         icon: 'none',
                         duration: 2200,
                     })
@@ -1151,7 +1192,7 @@ export default {
             this.gotTree()
         },
         plantTree() {
-            uni.showLoading({ title: '播种中' })
+            uni.showLoading({ title: this.$t('tree.farm.loading.planting') })
             axios
                 .get(
                     this.$baseUrl + '/treePlant/plant_tree?tree_type=' + encodeURIComponent(this.treeSceneTheme),
@@ -1159,17 +1200,17 @@ export default {
                 )
                 .then(() => {
                     this.refreshPage()
-                    uni.showToast({ title: '已种下树苗', icon: 'none', duration: 2000 })
+                    uni.showToast({ title: this.$t('tree.farm.toast.planted'), icon: 'none', duration: 2000 })
                 })
                 .catch(() => {
-                    uni.showToast({ title: '系统繁忙', icon: 'none', duration: 2000 })
+                    uni.showToast({ title: this.$t('tree.farm.toast.systemBusy'), icon: 'none', duration: 2000 })
                 })
                 .then(() => {
                     uni.hideLoading()
                 })
         },
         gotTree() {
-            uni.showLoading({ title: '收获中' })
+            uni.showLoading({ title: this.$t('tree.farm.loading.harvesting') })
             const collectPendingOrbs = this.expOrbs.length > 0
                 ? axios
                     .post(this.$baseUrl + '/treePlant/collect_all_exp_orbs', {}, { headers: this.getAuthHeaders() })
@@ -1193,7 +1234,7 @@ export default {
                     this.refreshResources()
                 })
                 .catch(() => {
-                    uni.showToast({ title: '收获失败', icon: 'none', duration: 2000 })
+                    uni.showToast({ title: this.$t('tree.farm.toast.harvestFailed'), icon: 'none', duration: 2000 })
                 })
                 .then(() => {
                     uni.hideLoading()
@@ -1268,13 +1309,13 @@ export default {
         this.useThreeTreeScene = treeSceneDiagnostics.shouldUse3D
         this.treeSceneTheme = DEFAULT_TREE_PLANT_SCENE_THEME
         this.isTreeSceneResolved = false
-        uni.showLoading({ title: '加载中' })
+        uni.showLoading({ title: this.$t('tree.farm.loading.loading') })
         const res = uni.getSystemInfoSync()
         this.screenHeight = res.windowHeight
         this.panelHeight = this.screenHeight * 0.4
         this.scenePanelHeight = this.panelHeight
         if (this.isViewingFriendTree && this.visitScene.target_user_id) {
-            this.loadVisitScene(this.visitScene, { closePanel: false, loadingTitle: '加载中' })
+            this.loadVisitScene(this.visitScene, { closePanel: false, loadingTitle: this.$t('tree.farm.loading.loading') })
         } else {
             this.refreshPage()
         }

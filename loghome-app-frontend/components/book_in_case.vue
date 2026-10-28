@@ -3,14 +3,14 @@
 		<div class="book">
 			<log-image :src="picUrl  + '?thumbnail=1' " alt="" :style="{display: picUrl=='' ? 'none' : 'block'}"
 			onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"/>
-			<text v-if="manga" class="manga-badge">漫画</text>
-			<text v-if="world" class="world-badge">世界</text>
+			<text v-if="manga" class="manga-badge">{{ $t('library.bookInCase.badgeManga') }}</text>
+			<text v-if="world" class="world-badge">{{ $t('library.bookInCase.badgeWorld') }}</text>
 			<!-- 更新标签 -->
 			<div 
 				v-if="updateInfo && updateInfo.has_updates" 
 				class="update-badge"
 			>
-				<text class="update-text">更新{{ updateInfo.new_chapters_count }}章</text>
+				<text class="update-text">{{ $t('library.bookInCase.updateChapters', { count: updateInfo.new_chapters_count }) }}</text>
 			</div>
 		</div>
 		<div :class="{nameTag:true, empty:bookName==''}" v-dark>

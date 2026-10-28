@@ -1,34 +1,34 @@
 <template>
 	<view class="log-guide" :class="{ 'log-guide--dark': isDarkMode }">
 		<view class="guide-nav">
-			<button class="back-button" aria-label="返回" @click="goBack"><uni-icons type="back" size="26rpx" :color="isDarkMode ? '#eee8dd' : '#403a31'" /></button>
-			<text class="nav-title">如何获取原木</text>
+			<button class="back-button" :aria-label="$t('payments.logs.back')" @click="goBack"><uni-icons type="back" size="26rpx" :color="isDarkMode ? '#eee8dd' : '#403a31'" /></button>
+			<text class="nav-title">{{ $t('payments.logs.title') }}</text>
 			<view class="nav-spacer"></view>
 		</view>
 		<scroll-view class="guide-scroll" scroll-y :show-scrollbar="false">
 		<view class="guide-body">
 			<view class="guide-intro">
-				<text class="eyebrow">原木娘的小课堂</text>
-				<text class="intro-title">攒一点原木，为喜欢的作品加油</text>
-				<text class="intro-copy">种一棵树、补充余额，或参与社区活动，找到适合你的获取方式。</text>
-				<image class="guide-illustration" src="/static/images/get-logs-guide.png" mode="aspectFit" aria-label="原木娘种树、充值和参与社区活动的配图" />
-				<view class="illustration-labels"><text>种树收获</text><text>原木充值</text><text>活动奖励</text></view>
+				<text class="eyebrow">{{ $t('payments.logs.eyebrow') }}</text>
+				<text class="intro-title">{{ $t('payments.logs.introTitle') }}</text>
+				<text class="intro-copy">{{ $t('payments.logs.introCopy') }}</text>
+				<image class="guide-illustration" src="/static/images/get-logs-guide.png" mode="aspectFit" :aria-label="$t('payments.logs.illustrationAlt')" />
+				<view class="illustration-labels"><text>{{ $t('payments.logs.labelHarvest') }}</text><text>{{ $t('payments.logs.labelTopUp') }}</text><text>{{ $t('payments.logs.labelRewards') }}</text></view>
 			</view>
 
 			<view class="channel-card" v-for="channel in channels" :key="channel.id" :class="'channel-' + channel.id">
 				<view class="channel-heading">
 					<text class="channel-number">{{ channel.number }}</text>
-					<text class="channel-title">{{ channel.title }}</text>
-					<text class="channel-tag">{{ channel.tag }}</text>
+					<text class="channel-title">{{ $t(channel.titleKey) }}</text>
+					<text class="channel-tag">{{ $t(channel.tagKey) }}</text>
 				</view>
-				<text class="channel-description">{{ channel.description }}</text>
-				<view class="channel-steps"><text v-for="(step, index) in channel.steps" :key="step">{{ index + 1 }}. {{ step }}</text></view>
-				<button class="channel-action" @click="openChannel(channel)"><text>{{ channel.action }}</text><uni-icons type="right" size="26rpx" :color="isDarkMode ? '#e8e0d1' : '#526846'" /></button>
+				<text class="channel-description">{{ $t(channel.descriptionKey) }}</text>
+				<view class="channel-steps"><text v-for="(stepKey, index) in channel.stepKeys" :key="stepKey">{{ index + 1 }}. {{ $t(stepKey) }}</text></view>
+				<button class="channel-action" @click="openChannel(channel)"><text>{{ $t(channel.actionKey) }}</text><uni-icons type="right" size="26rpx" :color="isDarkMode ? '#e8e0d1' : '#526846'" /></button>
 			</view>
 
 			<view class="guide-note">
 				<image src="/static/resources/log.png" class="note-log" mode="aspectFit" />
-				<view><text class="note-title">把原木送给喜欢的创作者</text><text class="note-copy">获取原木后，回到作品页选择礼物，就能为喜欢的作品打赏。树场收益、充值额度及活动奖励以对应页面说明为准。</text></view>
+				<view><text class="note-title">{{ $t('payments.logs.noteTitle') }}</text><text class="note-copy">{{ $t('payments.logs.noteCopy') }}</text></view>
 			</view>
 		</view>
 		</scroll-view>
@@ -44,22 +44,25 @@ export default {
 		return {
 			channels: [
 				{
-					id: 'tree', number: '01', title: '原木树场种树', tag: '日常积累',
-					description: '从一棵小树苗开始，在自己的树场里培育树木，成熟后收获原木。',
-					steps: ['进入原木树场，种下树苗', '根据树场提示培育树木，等待成熟', '收获树木，原木会加入你的余额'],
-					action: '去树场种树', url: '/pages/treePlant/treeplant'
+					id: 'tree', number: '01',
+					titleKey: 'payments.logs.tree.title', tagKey: 'payments.logs.tree.tag',
+					descriptionKey: 'payments.logs.tree.description',
+					stepKeys: ['payments.logs.tree.step1', 'payments.logs.tree.step2', 'payments.logs.tree.step3'],
+					actionKey: 'payments.logs.tree.action', url: '/pages/treePlant/treeplant'
 				},
 				{
-					id: 'recharge', number: '02', title: '原木充值', tag: '直接补充',
-					description: '想及时支持喜欢的作品，可以通过充值补充原木余额。',
-					steps: ['进入充值页面，选择合适的原木额度', '确认订单并按照页面提示完成支付', '支付成功后，查看原木余额及订单记录', '你的充值也将被用于社区维护与运营'],
-					action: '前往原木充值', url: '/pages/payments/recharge'
+					id: 'recharge', number: '02',
+					titleKey: 'payments.logs.recharge.title', tagKey: 'payments.logs.recharge.tag',
+					descriptionKey: 'payments.logs.recharge.description',
+					stepKeys: ['payments.logs.recharge.step1', 'payments.logs.recharge.step2', 'payments.logs.recharge.step3', 'payments.logs.recharge.step4'],
+					actionKey: 'payments.logs.recharge.action', url: '/pages/payments/recharge'
 				},
 				{
-					id: 'activity', number: '03', title: '参与社区活动', tag: '一起参与',
-					description: '关注社区活动公告，参与设有原木奖励的活动，收获创作与交流的乐趣。',
-					steps: ['查看活动消息，了解正在开展的活动', '阅读参与条件、截止时间及奖励说明', '按照活动规则参与，奖励以活动公告为准'],
-					action: '查看活动消息', url: '/pages/community/activityMessages'
+					id: 'activity', number: '03',
+					titleKey: 'payments.logs.activity.title', tagKey: 'payments.logs.activity.tag',
+					descriptionKey: 'payments.logs.activity.description',
+					stepKeys: ['payments.logs.activity.step1', 'payments.logs.activity.step2', 'payments.logs.activity.step3'],
+					actionKey: 'payments.logs.activity.action', url: '/pages/community/activityMessages'
 				}
 			]
 		};

@@ -2,8 +2,8 @@
 	<view
 		class="haycraft-mark"
 		:class="`haycraft-mark--${size}`"
-		title="HayCraft 干草块文会作品"
-		aria-label="HayCraft 干草块文会作品"
+		:title="$t('common.haycraftWork')"
+		:aria-label="$t('common.haycraftWork')"
 	>
 		<image
 			class="haycraft-mark__image"

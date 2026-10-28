@@ -1,0 +1,337 @@
+{
+  "membership": {
+    "common": {
+      "rules": "Rules",
+      "logUnit": "Log",
+      "redeemCode": "Membership code",
+      "giftFriend": "Gift a friend",
+      "processing": "Processing...",
+      "confirmGift": "Confirm gift"
+    },
+    "pass": {
+      "title": "LogHome Pass",
+      "currentMember": "Current plan",
+      "benefitsSubtitle": "Active immediately after activation",
+      "benefitCount": "{{count}} items",
+      "tier": {
+        "standard": {
+          "name": "LogHome Pass",
+          "eyebrow": "Lite member",
+          "tag": "Lite",
+          "slogan": "With you through every read and creation",
+          "summary": "Grow faster with a fuller community experience",
+          "features": {
+            "badge": "Exclusive badge",
+            "growth": "1.2× growth",
+            "redstone": "100 Redstone"
+          },
+          "benefitTitle": "LogHome Pass benefits",
+          "benefits": {
+            "badge": {
+              "title": "Exclusive pass badge",
+              "desc": "Light up your profile and community identity with a member badge"
+            },
+            "growth": {
+              "title": "Log growth boost",
+              "desc": "Earn 1.2× growth from check-ins, reading, and writing",
+              "tag": "1.2×"
+            },
+            "redstone": {
+              "title": "Redstone bonus",
+              "desc": "Get 100 Redstone with monthly purchase and renewal; annual plans receive 100 Redstone each month, valid for 3 months after arrival",
+              "tag": "100"
+            },
+            "enhance": {
+              "title": "Enhanced reading and writing",
+              "desc": "Unlock more personalization settings and handy tools"
+            }
+          },
+          "plan": {
+            "month": {
+              "name": "Monthly",
+              "unit": "Auto-renews monthly",
+              "note": "Cancel anytime"
+            },
+            "year": {
+              "name": "Annual",
+              "unit": "Equivalent to 600 Log/month",
+              "note": "Save 720 Log vs. monthly",
+              "tag": "Recommended"
+            }
+          }
+        },
+        "super": {
+          "name": "Super LogHome Pass",
+          "eyebrow": "All benefits",
+          "tag": "Flagship",
+          "slogan": "Unlock the full LogHome experience",
+          "summary": "Double growth, exclusive status, and every member benefit",
+          "features": {
+            "badge": "Exclusive status",
+            "growth": "2× growth",
+            "redstone": "200 Redstone"
+          },
+          "benefitTitle": "Super LogHome Pass benefits",
+          "benefits": {
+            "badge": {
+              "title": "Super member status",
+              "desc": "Upgrade to a blue-gold badge, profile aura, and exclusive name styling",
+              "tag": "Limited"
+            },
+            "growth": {
+              "title": "Double growth boost",
+              "desc": "Earn 2× growth from check-ins, reading, and writing",
+              "tag": "2×"
+            },
+            "redstone": {
+              "title": "More Redstone",
+              "desc": "Get 200 Redstone with monthly purchase and renewal; annual plans receive 200 Redstone each month, valid for 3 months after arrival",
+              "tag": "200"
+            },
+            "standard": {
+              "title": "All standard benefits included",
+              "desc": "Every current and future LogHome Pass benefit applies"
+            },
+            "newFeatures": {
+              "title": "Early access to new features",
+              "desc": "Try experimental features first and help shape the product"
+            }
+          },
+          "plan": {
+            "month": {
+              "name": "Monthly",
+              "unit": "Auto-renews monthly",
+              "note": "Cancel anytime"
+            },
+            "year": {
+              "name": "Annual",
+              "unit": "Equivalent to 800 Log/month",
+              "note": "Save 960 Log vs. monthly",
+              "tag": "Best value"
+            }
+          }
+        }
+      },
+      "section": {
+        "upgradeTitle": "Upgrade to Super LogHome Pass",
+        "upgradeSubtitle": "Only the tier difference for your remaining time is charged",
+        "renewalTitle": "Renewal status",
+        "chooseTitle": "Choose a plan",
+        "currentExpires": "Your benefits are valid until {{date}}"
+      },
+      "upgrade": {
+        "title": "Pay the difference for your remaining time",
+        "days": "About {{days}} days left; your expiry date stays the same",
+        "difference": "Difference due",
+        "logAmount": "{{amount}} Log",
+        "period": "Benefit period",
+        "until": "Until {{date}}",
+        "autoRenew": "Auto-renewal",
+        "keepOn": "Stays on",
+        "keepOff": "Stays off",
+        "formula": "Tier difference for a {{period}} cycle: {{amount}} Log",
+        "cycleMonth": "30-day",
+        "cycleYear": "365-day",
+        "loading": "Calculating your upgrade price…",
+        "unavailable": "Can't calculate the upgrade price right now. Please try again later.",
+        "confirmTitle": "Upgrade by paying the difference",
+        "confirmContent": "About {{days}} days remain. Up to {{cost}} Log will be charged now. Your expiry date stays the same and auto-renewal stays {{state}}.",
+        "confirm": "Confirm upgrade",
+        "success": "{{amount}} Log charged. Upgrade complete.",
+        "successGift": "{{amount}} Log charged. Upgrade complete, and {{redstone}} Redstone added."
+      },
+      "renewal": {
+        "on": "Auto-renewal is on",
+        "off": "Auto-renewal is off",
+        "autoDesc": "{{price}} Log will be charged automatically at expiry to renew",
+        "expiresDesc": "Benefits remain until {{date}}; no charge after expiry",
+        "manageTitle": "Manage auto-renewal",
+        "onContent": "Once on, {{price}} Log will be charged automatically at expiry.",
+        "offContent": "Once off, benefits last until the expiry date and no Log will be charged.",
+        "enable": "Turn on renewal",
+        "disable": "Turn off renewal",
+        "enabledToast": "Auto-renewal turned on",
+        "disabledToast": "Auto-renewal turned off",
+        "nextPrice": "Next auto-renewal price",
+        "reopenPrice": "Renewal price after reactivating"
+      },
+      "dock": {
+        "upgrade": "Upgrade difference",
+        "downgradeBlocked": "You have Super LogHome Pass",
+        "perPeriod": "Log/term"
+      },
+      "button": {
+        "processing": "Processing...",
+        "downgradeBlocked": "Can't downgrade while active",
+        "confirmUpgrade": "Confirm upgrade",
+        "calculating": "Calculating difference",
+        "turnOffAuto": "Stop renewal",
+        "turnOnAuto": "Turn on auto-renewal",
+        "activateNow": "Activate now"
+      },
+      "activate": {
+        "title": "Activate {{name}}",
+        "content": "{{price}} Log will be charged.",
+        "contentAuto": "{{price}} Log will be charged and auto-renewal will be turned on.",
+        "confirm": "Confirm activation",
+        "success": "Activated successfully",
+        "successGift": "Activated successfully, {{redstone}} Redstone added",
+        "processed": "Subscription already processed"
+      },
+      "more": {
+        "title": "More options"
+      },
+      "agreement": "By activating, you agree to the LogHome Pass Service Agreement and Auto-Renewal Rules",
+      "toast": {
+        "downgradeBlocked": "You can't downgrade while your Super Pass is active"
+      }
+    },
+    "gift": {
+      "heroTitle": "Give growth to a friend",
+      "heroDesc": "Choose a pass and duration; benefits go straight to your friend",
+      "chooseTier": "Choose a pass",
+      "tier": {
+        "standardDesc": "Light growth benefits",
+        "superDesc": "Full member benefits"
+      },
+      "duration": "Duration",
+      "durationHint": "Annual is better value",
+      "period": {
+        "month": "One month",
+        "year": "One year"
+      },
+      "chooseFriend": "Choose a friend",
+      "chooseFriendDesc": "People you follow and your followers appear in the friend picker",
+      "recipient": "Recipient",
+      "required": "Required",
+      "selectFromList": "Select from your friends",
+      "friendCount": "{{count}} friends and followers",
+      "messageLabel": "Message",
+      "messagePlaceholder": "Write a message for your friend",
+      "amountDue": "Total",
+      "agreement": "By gifting, you agree to the LogHome Pass Gift Rules",
+      "pickerTitle": "Choose a friend",
+      "pickerCount": "{{count}} people",
+      "searchPlaceholder": "Search by name or user ID",
+      "loadingFriends": "Loading friends...",
+      "noMatch": "No matching friends",
+      "noFriends": "No friends in your following or followers yet",
+      "selectFriendFirst": "Select a friend first",
+      "confirmContent": "Gift {{tier}} ({{plan}}) to {{name}} (ID:{{id}}). {{price}} Log will be charged.",
+      "alreadyProcessed": "Gift already processed",
+      "successTitle": "Gift sent",
+      "successContent": "Membership benefits have been sent to ID:{{id}}.",
+      "successContentGift": "Membership benefits have been sent to ID:{{id}}, along with {{redstone}} Redstone.",
+      "loadFriendsFailed": "Failed to load friends",
+      "relation": {
+        "mutual": "Mutual",
+        "following": "Following",
+        "follower": "Follower"
+      }
+    },
+    "redeem": {
+      "heroTitle": "Redeem a pass",
+      "heroDesc": "Enter a valid code and membership benefits will be added to this account",
+      "formTitle": "Enter your code",
+      "formDesc": "Codes are case-insensitive; hyphens are optional",
+      "placeholder": "e.g. LOGPASS-2026-XXXX",
+      "valid": "Valid format. You can redeem now.",
+      "tooShort": "Codes must be at least 8 characters",
+      "submitting": "Redeeming...",
+      "submit": "Verify and redeem",
+      "instructionsTitle": "How it works",
+      "instructions": {
+        "oneTime": "Each code can be used only once and cannot be transferred to another account.",
+        "extend": "If you already have a membership, the redeemed time will be extended or upgraded according to the code rules.",
+        "source": "Get codes from official LogHome events or someone you trust."
+      },
+      "historyTitle": "Redemption history",
+      "historyCount": "{{count}} record | {{count}} records",
+      "loadingHistory": "Loading redemption history...",
+      "emptyTitle": "No redemptions yet",
+      "emptyDesc": "Passes you redeem will appear here",
+      "recordTitle": "{{tier}} · {{days}} days",
+      "statusRedeemed": "Redeemed",
+      "invalidToast": "Enter a valid code",
+      "alreadyProcessed": "Redemption already processed",
+      "successTitle": "Redeemed successfully",
+      "successContent": "{{days}} days added to your {{tier}}.",
+      "gotIt": "Got it",
+      "failed": "Redemption failed. Please try again later."
+    },
+    "rules": {
+      "title": "Pass and Redstone rules",
+      "heroTitle": "Clear benefits, transparent spending",
+      "heroDesc": "These rules apply to LogHome Pass, Super LogHome Pass, and Redstone services.",
+      "heroDate": "Effective date of this version: August 1, 2026",
+      "sections": {
+        "plans": {
+          "title": "Pass plans",
+          "subtitle": "Pricing and validity",
+          "monthly": "Monthly 660 Log",
+          "annual": "Annual 7200 Log",
+          "superMonthly": "Monthly 880 Log",
+          "superAnnual": "Annual 9600 Log",
+          "rule1": "Monthly plans last 30 days and annual plans 365 days; benefits start immediately after payment.",
+          "rule2": "Renewing the same tier extends from your current expiry date. The actual charge and new expiry date are subject to the confirmation page and server response."
+        },
+        "upgrade": {
+          "title": "Upgrades and auto-renewal",
+          "subtitle": "Check and manage anytime",
+          "rule1": "Upgrading from LogHome Pass to Super LogHome Pass charges only the tier difference for the remaining days; the expiry date stays the same.",
+          "rule2": "Downgrades are not supported while a Super LogHome Pass is active; you can choose a new tier after it expires.",
+          "rule3": "With auto-renewal on, Log is deducted automatically at expiry for the current billing cycle. If your balance is insufficient, renewal fails and benefits end at expiry.",
+          "rule4": "Turning off auto-renewal does not end active benefits early; your pass remains usable until the expiry date."
+        },
+        "grant": {
+          "title": "Redstone grants",
+          "subtitle": "Member grants and monthly grants for regular users",
+          "regular": "Regular users",
+          "perMonth": "Redstone / month",
+          "superShort": "Super Pass",
+          "perCycle": "Redstone / cycle",
+          "rule1": "Regular users receive 6 Redstone each calendar month. If you have an active pass that month, you won't receive the regular monthly grant as well.",
+          "rule2": "Monthly passes grant Redstone on activation and after each successful renewal. Annual passes grant once at activation, then monthly.",
+          "rule3": "When upgrading from Standard to Super, the difference between the two tiers' grant amounts is added for the current period.",
+          "rule4": "Redstone from pass grants, upgrade top-ups, and regular monthly grants is valid for 3 months from the date it arrives."
+        },
+        "exchange": {
+          "title": "Redstone exchange and spending",
+          "subtitle": "Every change is recorded",
+          "tenLog": "10 Log",
+          "oneRedstone": "1 Redstone",
+          "askTitle": "Ask LogGirl",
+          "askCost": "Standard 1 · Deep 2",
+          "bipaoTitle": "Bipao AI Assistant",
+          "bipaoCost": "Standard 1 · Deep 2 · Image 5",
+          "correctionTitle": "Text correction",
+          "correctionCost": "Free for standard · Smart correction free with a pass · Standard 2",
+          "rule1": "Paid AI actions deduct the amount of Redstone shown on the page. If you don't have enough Redstone, no paid task is created.",
+          "rule2": "Spending uses the earliest-expiring granted Redstone first, then permanent exchanged Redstone. Redstone from Log exchanges never expires.",
+          "rule3": "Reconnecting or resubmitting the same task won't charge you twice. Exchange, gift, and spending records are all available in Redstone Center.",
+          "rule4": "If exchange rates or feature costs change, the amounts shown on the page before you act apply.",
+          "goto": "Go to Redstone Center"
+        },
+        "gifts": {
+          "title": "Gifts and codes",
+          "subtitle": "Benefits go to the chosen account",
+          "rule1": "Before gifting, check the recipient and pass plan. Once sent, benefits go to the selected friend's account.",
+          "rule2": "Codes must be valid to use. A code cannot be reused; the tier and duration are subject to the redemption confirmation.",
+          "rule3": "If you already have a pass, redeemed benefits extend or upgrade it according to the plan."
+        },
+        "exclusive": {
+          "title": "Member-only features",
+          "subtitle": "Available while benefits are active",
+          "rule1": "Scheduled publishing is available only to LogHome Pass and Super LogHome Pass members; membership is checked when you create a task.",
+          "rule2": "Two-person collaborations (the owner plus one collaborator) are free. For three or more collaborators, the owner needs a Standard or Super LogHome Pass; otherwise collaborators can only preview the work and cannot edit, add or delete chapters, reorder, or publish.",
+          "rule3": "Other member-only features are marked on their feature pages. After your pass expires, new actions no longer include member privileges."
+        }
+      },
+      "note": "If this page differs from earlier descriptions, the confirmation page, current rules, and actual server results prevail."
+    },
+    "badge": {
+      "super": "Super Pass member",
+      "standard": "Pass member"
+    }
+  }
+}

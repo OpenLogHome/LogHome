@@ -3,7 +3,7 @@
 		<div class="searchBar" :class="{ top: scrollTop <= 5 }" v-dark>
 			<div class="search-input-wrapper clickable" @tap="navigateToSearch">
 				<uni-icons type="search" size="18" color="#999"></uni-icons>
-				<view class="search-input-placeholder">搜索书籍、圈子、帖子、用户</view>
+				<view class="search-input-placeholder">{{ $t('library.index.searchPlaceholder') }}</view>
 			</div>
 			<uni-icons type="chat" size="26" :color="$store.state.isDarkMode ? '#e5e5e5' : '#2d2d2d'"
 				class="messageIcon clickable" @click="gotoMessage"></uni-icons>
@@ -13,10 +13,10 @@
 			<div class="appRecommendInfo clickable" @click="gotoUpdate" v-show="showAppRecommendInfo == 'android'">
 				<div class="left">
 					<view class="desc">
-						推荐您使用 <span style="color: rgb(234, 112, 52);">原木社区 APP</span>
+						{{ $t('library.index.recommendAppPrefix') }} <span style="color: rgb(234, 112, 52);">{{ $t('library.index.recommendAppBrand') }}</span>
 					</view>
 					<view class="desc">
-						综合体验<span style="color: rgb(234, 112, 52);">远胜</span>浏览器直接访问 <uni-icons type="right" size="15"></uni-icons>
+						{{ $t('library.index.recommendExperiencePrefix') }}<span style="color: rgb(234, 112, 52);">{{ $t('library.index.recommendExperienceHighlight') }}</span>{{ $t('library.index.recommendExperienceSuffix') }} <uni-icons type="right" size="15"></uni-icons>
 					</view>
 				</div>
 				<div class="right">
@@ -62,8 +62,8 @@
 								<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
 									:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`"
 									style="border-radius: 10rpx; transform:scale(.90)" />
-								<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
-								<text v-if="novel.novel_type === 'world'" class="world-cover-badge">世界</text>
+								<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">{{ $t('library.index.badgeManga') }}</text>
+								<text v-if="novel.novel_type === 'world'" class="world-cover-badge">{{ $t('library.index.badgeWorld') }}</text>
 								<div class="bookInfo" style="margin-left:10rpx;">
 									<div class="title title-with-haycraft">
 										<text class="book-title-text">{{ novel.name }}</text>
@@ -155,8 +155,8 @@
 											{{ (page - 1) * 6 + index + 1 }}</div>
 										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 											:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
-										<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
-										<text v-else-if="novel.novel_type === 'world'" class="world-cover-badge">世界</text>
+										<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">{{ $t('library.index.badgeManga') }}</text>
+										<text v-else-if="novel.novel_type === 'world'" class="world-cover-badge">{{ $t('library.index.badgeWorld') }}</text>
 										<div class="dense-card-info">
 											<div class="dense-card-title title-with-haycraft">
 												<text class="dense-title-text">{{ novel.name }}</text>
@@ -175,8 +175,8 @@
 											{{ (page - 1) * 6 + 3 + index + 1 }}</div>
 										<log-image :src="novel.picUrl + '?thumbnail=1'" alt="" class="dense-card-cover"
 											:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
-										<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
-										<text v-else-if="novel.novel_type === 'world'" class="world-cover-badge">世界</text>
+										<text v-if="novel.novel_type === 'manga'" class="manga-cover-badge">{{ $t('library.index.badgeManga') }}</text>
+										<text v-else-if="novel.novel_type === 'world'" class="world-cover-badge">{{ $t('library.index.badgeWorld') }}</text>
 										<div class="dense-card-info">
 											<div class="dense-card-title title-with-haycraft">
 												<text class="dense-title-text">{{ novel.name }}</text>
@@ -198,8 +198,8 @@
 				<div @click="readBook(item, item.novel_id, $event)" class="books clickable" v-dark :id="'book-cover-' + item.novel_id">
 					<log-image :src="item.picUrl + '?thumbnail=1'" alt=""
 						:onerror="`onerror=null;src='` + $backupResources.bookCover + `'`" />
-					<text v-if="item.novel_type === 'manga'" class="manga-cover-badge">漫画</text>
-					<text v-else-if="item.novel_type === 'world'" class="world-cover-badge">世界</text>
+					<text v-if="item.novel_type === 'manga'" class="manga-cover-badge">{{ $t('library.index.badgeManga') }}</text>
+					<text v-else-if="item.novel_type === 'world'" class="world-cover-badge">{{ $t('library.index.badgeWorld') }}</text>
 					<div class="bookInfo">
 					<div class="title title-with-haycraft">
 						<text class="book-title-text">{{ item.name }}</text>
@@ -484,7 +484,7 @@ export default {
 				if (requestId !== this._recommendRequestId) return;
 				if (!silent && !this.hasLibraryCache) {
 					uni.showToast({
-						title: "离线模式",
+						title: this.$t('library.index.offlineMode'),
 						icon: 'none',
 						duration: 2000
 					});

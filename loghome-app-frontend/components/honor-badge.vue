@@ -14,7 +14,7 @@
 			</view>
 		</view>
 		<view v-if="showTitle" class="badge-text">
-			<text class="badge-title">{{badge.title || '官方荣誉'}}</text>
+			<text class="badge-title">{{badge.title || $t('me.badge.officialHonor')}}</text>
 		</view>
 	</view>
 </template>

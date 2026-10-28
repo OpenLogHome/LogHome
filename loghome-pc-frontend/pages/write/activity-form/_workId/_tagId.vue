@@ -1,8 +1,8 @@
 <template>
   <div class="activity-form-page">
     <div class="form-header">
-      <button class="back-button" @click="goBack">返回</button>
-      <h1 class="form-title">{{ currentActivity ? currentActivity.activity_name : '活动信息填写' }}</h1>
+      <button class="back-button" @click="goBack">{{ $t('返回') }}</button>
+      <h1 class="form-title">{{ currentActivity ? currentActivity.activity_name : $t('活动信息填写') }}</h1>
     </div>
 
     <div class="form-container" v-if="currentActivity && currentActivity.required_fields">
@@ -18,16 +18,16 @@
             <input 
               class="form-input"
               v-model="activityFormData[field.name]"
-              :placeholder="field.placeholder || '请输入' + field.name"
+              :placeholder="field.placeholder || $t('请输入{field}', { field: field.name })"
               :maxlength="field.maxLength"
             />
           </div>
         </div>
         
         <div class="form-actions">
-          <button type="button" class="cancel-button" @click="goBack">取消</button>
+          <button type="button" class="cancel-button" @click="goBack">{{ $t('取消') }}</button>
           <button type="button" class="submit-button" @click="submitActivityForm" :disabled="submitting">
-            {{ submitting ? '提交中...' : '提交' }}
+            {{ submitting ? $t('提交中...') : $t('提交') }}
           </button>
         </div>
       </div>
@@ -35,14 +35,14 @@
 
     <div class="loading-state" v-else-if="loading">
       <div class="loading-spinner"></div>
-      <p>正在加载活动信息...</p>
+      <p>{{ $t('正在加载活动信息...') }}</p>
     </div>
 
     <div class="error-state" v-else-if="error">
       <div class="error-icon" aria-hidden="true"><SiteIcon name="warning" /></div>
-      <h3>加载失败</h3>
+      <h3>{{ $t('加载失败') }}</h3>
       <p>{{error}}</p>
-      <button @click="loadActivityInfo">重试</button>
+      <button @click="loadActivityInfo">{{ $t('重试') }}</button>
     </div>
   </div>
 </template>
@@ -95,14 +95,14 @@ export default {
               this.activityFormData = {}
             }
           } else {
-            this.error = '未找到对应的活动信息'
+            this.error = this.$t('未找到对应的活动信息')
           }
         } else {
-          this.error = '加载活动信息失败'
+          this.error = this.$t('加载活动信息失败')
         }
       } catch (error) {
         console.error('加载活动信息失败:', error)
-        this.error = '网络错误，请重试'
+        this.error = this.$t('网络错误，请重试')
       } finally {
         this.loading = false
       }
@@ -114,7 +114,7 @@ export default {
         if (this.currentActivity?.required_fields) {
           for (const field of this.currentActivity.required_fields) {
             if (field.required && (!this.activityFormData[field.name] || this.activityFormData[field.name].toString().trim() === '')) {
-              this.$message.error(`请填写${field.name}`)
+              this.$message.error(this.$t('请填写{field}', { field: field.name }))
               return
             }
           }
@@ -128,14 +128,14 @@ export default {
         const response = await this.$api.essays.submitActivityInfo(workId, tagId, this.activityFormData)
         
         if (response.success === true) {
-          this.$message.success('提交成功！')
+          this.$message.success(this.$t('提交成功！'))
           this.goBack()
         } else {
-          this.$message.error(response.message || '提交失败，请重试')
+          this.$message.error(response.message || this.$t('提交失败，请重试'))
         }
       } catch (error) {
         console.error('提交表单失败:', error)
-        this.$message.error('网络错误，请重试')
+        this.$message.error(this.$t('网络错误，请重试'))
       } finally {
         this.submitting = false
       }

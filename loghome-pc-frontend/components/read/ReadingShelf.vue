@@ -1,30 +1,30 @@
 <template>
-  <section class="reading-shelf" :class="{ full }" aria-label="我的书架">
+  <section class="reading-shelf" :class="{ full }" :aria-label="$t('我的书架')">
     <header class="shelf-header">
-      <h2>我的书架</h2>
-      <nuxt-link v-if="!full" to="/read/bookcase">全部 →</nuxt-link>
-      <nuxt-link v-else to="/read">返回书库</nuxt-link>
+      <h2>{{ $t("我的书架") }}</h2>
+      <nuxt-link v-if="!full" to="/read/bookcase">{{ $t("全部 →") }}</nuxt-link>
+      <nuxt-link v-else to="/read">{{ $t("返回书库") }}</nuxt-link>
     </header>
     <div class="shelf-toolbar">
       <div class="shelf-tabs">
-        <button v-for="item in tabs" :key="item.key" :class="{ active: tab === item.key }" :aria-pressed="tab === item.key" @click="tab = item.key">{{ item.label }}</button>
+        <button v-for="item in tabs" :key="item.key" :class="{ active: tab === item.key }" :aria-pressed="tab === item.key" @click="tab = item.key">{{ $t(item.label) }}</button>
       </div>
-      <button class="shelf-refresh" :disabled="loading" @click="load">{{ loading ? '同步中…' : '刷新' }}</button>
+      <button class="shelf-refresh" :disabled="loading" @click="load">{{ loading ? $t('同步中…') : $t('刷新') }}</button>
     </div>
-    <label v-if="full" class="shelf-search">查找书架作品 <input v-model="keyword" type="search" placeholder="书名或作者"></label>
-    <p v-if="!loggedIn" class="shelf-hint"><nuxt-link to="/login">登录</nuxt-link>后同步收藏与阅读进度。</p>
-    <p v-if="error" class="shelf-error" role="alert">{{ error }} <nuxt-link v-if="authExpired" :to="loginUrl">重新登录</nuxt-link><button v-else @click="load">重试</button></p>
+    <label v-if="full" class="shelf-search">{{ $t("查找书架作品") }} <input v-model="keyword" type="search" :placeholder="$t('书名或作者')"></label>
+    <p v-if="!loggedIn" class="shelf-hint"><nuxt-link to="/login">{{ $t("登录") }}</nuxt-link>{{ $t("后同步收藏与阅读进度。") }}</p>
+    <p v-if="error" class="shelf-error" role="alert">{{ error }} <nuxt-link v-if="authExpired" :to="loginUrl">{{ $t("重新登录") }}</nuxt-link><button v-else @click="load">{{ $t("重试") }}</button></p>
     <div v-if="visibleBooks.length" class="shelf-grid">
       <div v-for="book in visibleBooks" :key="book.novel_id" class="shelf-item">
         <WorkCard :work="book" :compact="!full" :destination="resumeUrl(book)" />
         <div v-if="full" class="shelf-item-actions">
-          <nuxt-link :to="workUrl(book)">作品详情</nuxt-link>
-          <button v-if="book.inShelf && loggedIn" :disabled="loading || !!removing || authExpired" @click="remove(book)">{{ removing === book.novel_id ? '处理中…' : '移出书架' }}</button>
+          <nuxt-link :to="workUrl(book)">{{ $t("作品详情") }}</nuxt-link>
+          <button v-if="book.inShelf && loggedIn" :disabled="loading || !!removing || authExpired" @click="remove(book)">{{ removing === book.novel_id ? $t('处理中…') : $t('移出书架') }}</button>
         </div>
       </div>
     </div>
-    <div v-else class="shelf-empty">{{ loading ? '正在整理书架…' : keyword ? '没有找到匹配的作品。' : tab === 'history' ? '阅读过的作品会显示在这里。' : '收藏喜欢的作品，随时回来接着读。' }}</div>
-    <p v-if="!full && filteredBooks.length > 4" class="shelf-count">还有 {{ filteredBooks.length - 4 }} 部作品在书架中</p>
+    <div v-else class="shelf-empty">{{ loading ? $t('正在整理书架…') : keyword ? $t('没有找到匹配的作品。') : tab === 'history' ? $t('阅读过的作品会显示在这里。') : $t('收藏喜欢的作品，随时回来接着读。') }}</div>
+    <p v-if="!full && filteredBooks.length > 4" class="shelf-count">{{ $t("还有 {p0} 部作品在书架中", { p0: filteredBooks.length - 4 }) }}</p>
   </section>
 </template>
 
@@ -63,7 +63,7 @@ export default {
     checkAccount() { if (this.account === readingToken()) return false; this.load(); return true },
     expired(error) { return [401, 403].includes(Number(error && (error.status || error.response && error.response.status))) },
     clearExpiredShelf(token) {
-      this.authExpired = true; this.books = []; this.error = '登录状态已过期，请重新登录后同步书架。'
+      this.authExpired = true; this.books = []; this.error = this.$t('登录状态已过期，请重新登录后同步书架。')
       try { localStorage.removeItem(`loghome_pc_shelf_${readingAccountKey(token)}`) } catch (_) {}
     },
     onStorage(event) { if (event.key === 'token' || event.key === 'loghomeReaderHistory' || (event.key || '').startsWith('loghome_pc_history_')) this.load() },
@@ -85,12 +85,12 @@ export default {
       const results = await Promise.allSettled([this.$api.reading.getShelf(), this.$api.reading.getHistory()])
       if (version !== this.version || token !== readingToken()) return
       if (results.some(result => result.status === 'rejected' && this.expired(result.reason))) { this.clearExpiredShelf(token); this.loading = false; return }
-      if (results.some(result => result.status === 'fulfilled' && !Array.isArray(result.value))) { this.error = '部分书架数据暂不可用，请重试。' }
+      if (results.some(result => result.status === 'fulfilled' && !Array.isArray(result.value))) { this.error = this.$t('部分书架数据暂不可用，请重试。') }
       const likes = results[0].status === 'fulfilled' && Array.isArray(results[0].value) ? results[0].value : this.books.filter(book => book.inShelf)
       const cloudHistory = results[1].status === 'fulfilled' && Array.isArray(results[1].value) ? results[1].value : this.books.filter(book => book.historyIndex != null)
       const history = mergeReadingHistory(cloudHistory, localHistory)
       this.books = mergeShelf(likes, history)
-      if (results.some(result => result.status === 'rejected')) this.error = '部分书架数据未能同步，已保留可用记录。'
+      if (results.some(result => result.status === 'rejected')) this.error = this.$t('部分书架数据未能同步，已保留可用记录。')
       try {
         const checked = uniqueWorks(likes).map(book => {
           const record = history.find(item => item.novel_id === book.novel_id)
@@ -102,7 +102,7 @@ export default {
         if (version !== this.version || token !== readingToken()) return
         this.books = mergeShelf(likes, history, updates.updates)
         localStorage.setItem(key, JSON.stringify({ version: 1, books: this.books }))
-      } catch (_) { if (version === this.version && !this.error) this.error = '更新提示暂时不可用，作品仍可正常打开。' }
+      } catch (_) { if (version === this.version && !this.error) this.error = this.$t('更新提示暂时不可用，作品仍可正常打开。') }
       finally { if (version === this.version) this.loading = false }
     },
     async remove(book) {
@@ -114,12 +114,12 @@ export default {
       const current = () => identity === this.identityVersion && operation === this.removeVersion && token === this.account && token === readingToken()
       this.removing = id
       try {
-        await this.$confirm('确定将这部作品移出书架？', '取消收藏', { type: 'warning' })
+        await this.$confirm(this.$t('确定将这部作品移出书架？'), this.$t('取消收藏'), { type: 'warning' })
         if (!current() || !this.books.some(row => Number(row.novel_id) === id && row.inShelf)) return
         await this.$api.reading.removeFavorite(id)
         if (current()) await this.load()
       }
-      catch (error) { if (current() && error !== 'cancel' && error !== 'close') { if (this.expired(error)) this.clearExpiredShelf(token); else this.error = '未能移出书架，请重试。' } }
+      catch (error) { if (current() && error !== 'cancel' && error !== 'close') { if (this.expired(error)) this.clearExpiredShelf(token); else this.error = this.$t('未能移出书架，请重试。') } }
       finally { if (current()) this.removing = null }
     }
   }
