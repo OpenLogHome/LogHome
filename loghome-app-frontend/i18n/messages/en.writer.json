@@ -119,9 +119,8 @@
       "export": {
         "ebook": "Export eBook",
         "ebookTitle": "Export eBook",
-        "freeForNow": "Free for now",
+        "membershipOnly": "Pass",
         "packageOnly": "Package only",
-        "packageTitle": "Export work package",
         "title": "Export work"
       },
       "labels": {

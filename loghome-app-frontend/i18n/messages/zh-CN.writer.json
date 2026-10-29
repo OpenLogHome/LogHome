@@ -119,9 +119,8 @@
       "export": {
         "ebook": "导出电子书",
         "ebookTitle": "导出电子书",
-        "freeForNow": "限免",
+        "membershipOnly": "通行证",
         "packageOnly": "仅打包",
-        "packageTitle": "仅打包导出作品",
         "title": "导出作品"
       },
       "labels": {

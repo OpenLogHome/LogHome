@@ -286,7 +286,7 @@
 					</view>
 					<view class="share-item" @click="exportAdvanced">
 						<image src="/static/e_book.png" mode=""></image>
-						<view class="share-text">{{ $t('writer.work.export.ebook') }} <text style="font-size: 20rpx; color: #ff0000; border: 1rpx solid #ff0000; border-radius: 4rpx; padding: 0 4rpx; margin-left: 8rpx;">{{ $t('writer.work.export.freeForNow') }}</text></view>
+						<view class="share-text">{{ $t('writer.work.export.ebook') }} <text style="font-size: 20rpx; color: #ff0000; border: 1rpx solid #ff0000; border-radius: 4rpx; padding: 0 4rpx; margin-left: 8rpx;">{{ $t('writer.work.export.membershipOnly') }}</text></view>
 					</view>
 				</view>
 				<view class="share-bottom">
@@ -1682,7 +1682,7 @@ export default {
 		},
 		exportSimple() {
 			uni.navigateTo({
-				url: '../apps/h5webview?url=https://m.loghome.ink/subtasks/novel-export.html?novel_id=' + this.uid + '&title=' + encodeURIComponent(this.$t('writer.work.export.packageTitle'))
+				url: './exportNovel?id=' + encodeURIComponent(this.uid) + '&name=' + encodeURIComponent(this.novel.name || '') + '&mode=pack'
 			});
 			this.cancelExport();
 		},

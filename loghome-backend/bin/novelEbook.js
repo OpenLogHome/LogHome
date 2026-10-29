@@ -200,4 +200,50 @@ async function createNovelEbook({ novel, articles, format, loadImage = downloadI
 	return format === 'epub' ? createEpub(novel, chapters, images) : createPdf(novel, chapters);
 }
 
-module.exports = { createNovelEbook };
+function packSafeName(value) {
+	return Array.from(value.replace(/[\\/:*?"<>|\x00-\x1f\x7f]/g, '_')).slice(0, 60).join('') || '未命名';
+}
+
+function createZip(entries) {
+	return new Promise((resolve, reject) => {
+		const archive = new ZipFile();
+		const chunks = [];
+		archive.outputStream.on('data', chunk => chunks.push(chunk));
+		archive.on('error', reject);
+		archive.outputStream.on('error', reject);
+		archive.outputStream.on('end', () => resolve(Buffer.concat(chunks)));
+		try {
+			entries.forEach(([relativePath, data]) => archive.addBuffer(
+				Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8'), relativePath,
+			));
+			archive.end();
+		} catch (error) {
+			archive.outputStream.destroy();
+			reject(error);
+		}
+	});
+}
+
+// 免费打包导出：按章节输出 UTF-8（带 BOM）文本文件，图片以占位链接形式保留。
+async function createNovelPack({ novel, articles }) {
+	const entries = [
+		['作品信息.txt', '\uFEFF' + [
+			`书名：${plainText(novel.name) || '未命名作品'}`,
+			`作者：${plainText(novel.author_name) || '未知作者'}`,
+			`章节数：${articles.length}`,
+			`导出时间：${new Date().toISOString()}`,
+		].join('\r\n') + '\r\n'],
+	];
+	for (const [index, article] of articles.entries()) {
+		await new Promise(resolve => setImmediate(resolve));
+		const title = plainText(article.title) || `第 ${index + 1} 章`;
+		const body = normalizeBlocks(article.content)
+			.map(block => block.type === 'image' ? imagePlaceholder(block) : block.text)
+			.join('\r\n\r\n');
+		entries.push([`chapters/${String(index + 1).padStart(3, '0')}-${packSafeName(title)}.txt`,
+			`\uFEFF${title}\r\n\r\n${body}\r\n`]);
+	}
+	return createZip(entries);
+}
+
+module.exports = { createNovelEbook, createNovelPack };
