@@ -6705,7 +6705,7 @@ export default {
         }
       );
 
-      this.applyLegacyContentToEditor(formatted, false);
+      this.applyLegacyContentToEditor(formatted, true);
       uni.showToast({
         title: this.$t('writer.chapter.autoFormatDone'),
         icon: "none",
