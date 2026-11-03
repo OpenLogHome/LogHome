@@ -256,7 +256,7 @@
 			<div class="bookParts">
 				<navigator v-for="(item, index) in bookPart.parts" :key="index" @click="changeBookPart(item, true)">
 					<div class="part" :class="{ 'selected': item.id == bookPart.currentPart.id }">
-						<div class="partTitle">{{ item.name }}</div>
+						<div class="partTitle">{{ item.id == -1 ? $t('writer.work.volume.all') : item.name }}</div>
 					</div>
 				</navigator>
 			</div>
@@ -3280,5 +3280,12 @@ export default {
 			}
 		}
 	}
+}
+</style>
+
+<style lang="less">
+/* 桌面 H5 下 uni-popup 的顶部弹层被 fixforpc-top 强制 top:0，会盖住导航栏，把分卷列表压到导航栏下方 */
+.uni-popup.fixforpc-top .bookParts {
+	margin-top: var(--window-top, 0px);
 }
 </style>
