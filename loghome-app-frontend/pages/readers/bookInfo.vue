@@ -132,28 +132,28 @@
 						</transition>
 						<view class="l-body-tab" @tap="nice" v-show="!niceStatus">
 							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_nice.png" mode="">
-							</img>{{ $t('reader.book.likeCount', { count: nice_amount }) }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.likeCount', { count: nice_amount }) }}</text>
 						</view>
 						<view class="l-body-tab" @tap="nice" v-show="niceStatus">
 							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_niced.png" mode="">
-							</img>{{ $t('reader.book.likeCount', { count: nice_amount }) }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.likeCount', { count: nice_amount }) }}</text>
 						</view>
 						<view class="l-body-tab" :class="{ 'is-busy': isCreatingShareCode }" @tap="shareBook">
 							<view v-if="isCreatingShareCode" class="share-loading-dot"></view>
 							<img v-else class="l-icon-share l-icon-share-2" src="../../static/icons/icon_share.png" mode="">
-							</img>{{ isCreatingShareCode ? $t('reader.book.generating') : $t('common.share') }}
+							</img><text class="l-body-tab-label">{{ isCreatingShareCode ? $t('reader.book.generating') : $t('common.share') }}</text>
 						</view>
 						<view class="l-body-tab" @tap="addToBookcase" v-show="isInBookcase == false">
 							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
-							</img>{{ $t('reader.book.addToShelf') }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.addToShelf') }}</text>
 						</view>
 						<view class="l-body-tab" @tap="removeFromBookcase" v-show="isInBookcase == true">
 							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
-							</img>{{ $t('reader.book.removeFromShelf') }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.removeFromShelf') }}</text>
 						</view>
 						<view class="l-body-tab" @tap="navtoSection">
 							<img class="l-icon-share l-icon-share-4" src="../../static/icons/icon_index.png" mode="">
-							</img>{{ $t('reader.book.catalog') }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.catalog') }}</text>
 						</view>
 
 					</view>
@@ -2423,6 +2423,14 @@ export default {
 	margin-right: 18rpx;
 	width: 60rpx;
 	height: 60rpx;
+	flex-shrink: 0;
+}
+
+/* 长文案（如英文 Remove from shelf）在图标右侧自行换行，不允许整块被 flex-wrap 挤到图标下方 */
+.l-body-tab-label {
+	flex: 1;
+	min-width: 0;
+	line-height: 1.35;
 }
 
 .l-body-select {
