@@ -20,7 +20,7 @@
 					</view>
 				</div>
 				<div class="right">
-					<img src="/static/apprecommend/android.png" alt="" />
+					<img :src="'./static/apprecommend/android.png'" alt="" />
 				</div>
 			</div>
 			<HorizontalTags ref="HorizontalTagsRef"></HorizontalTags>
@@ -574,7 +574,7 @@ export default {
 				// 漫画直接进漫画详情，避免先经小说详情页再重定向
 				const url = novel && novel.novel_type === 'manga'
 					? '/pages/readers/mangaInfo?id=' + novel_id
-					: './readers/bookInfo?id=' + novel_id;
+					: './readers/bookInfo?id=' + novel_id + '&from=library';
 				uni.navigateTo({
 					url
 				})

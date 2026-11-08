@@ -103,7 +103,7 @@
                   v-for="burst in likeBurstParticles"
                   :key="burst.key"
                   class="pixel-heart pixel-heart-float"
-                  src="/static/icons/like-heart-pixel.svg"
+                  :src="'./static/icons/like-heart-pixel.svg'"
                   mode="aspectFit"
                   aria-hidden="true"
                   :style="getLikeBurstStyle(burst)"
@@ -113,7 +113,7 @@
                 v-if="postLikeAnimating"
                 :key="'core-' + likeAnimationTick"
                 class="pixel-heart pixel-heart-core"
-                src="/static/icons/like-heart-pixel.svg"
+                :src="'./static/icons/like-heart-pixel.svg'"
                 mode="aspectFit"
                 aria-hidden="true"
               ></image>
@@ -645,6 +645,19 @@ export default {
     },
     
     async likePost() {
+      // 乐观更新：先当作点赞成功，仅请求失败时回退
+      const nextLiked = !this.post.is_liked
+      const currentLikeCount = Number(this.post.like_count) || 0
+
+      this.post.is_liked = nextLiked
+      this.post.like_count = Math.max(0, currentLikeCount + (nextLiked ? 1 : -1))
+
+      if (nextLiked) {
+        this.triggerPostLikeAnimation()
+      } else {
+        this.clearPostLikeAnimation()
+      }
+
       try {
         const token = JSON.parse(window.localStorage.getItem('token')).tk
         await axios.post(this.$baseUrl + '/community/interactions/like', {
@@ -655,19 +668,14 @@ export default {
             'Authorization': 'Bearer ' + token
           }
         })
-        
-        const nextLiked = !this.post.is_liked
-        const currentLikeCount = Number(this.post.like_count) || 0
-
-        this.post.is_liked = nextLiked
-        this.post.like_count = Math.max(0, currentLikeCount + (nextLiked ? 1 : -1))
-
-        if (nextLiked) {
+      } catch (error) {
+        this.post.is_liked = !nextLiked
+        this.post.like_count = Math.max(0, (Number(this.post.like_count) || 0) + (nextLiked ? -1 : 1))
+        if (this.post.is_liked) {
           this.triggerPostLikeAnimation()
         } else {
           this.clearPostLikeAnimation()
         }
-      } catch (error) {
         console.error('点赞失败:', error);
         uni.showToast({
           title: this.$t('common.operationFailed'),
@@ -675,8 +683,13 @@ export default {
         })
       }
     },
-    
+
     async likeComment(comment) {
+      // 乐观更新：先当作点赞成功，仅请求失败时回退
+      const nextLiked = !comment.is_liked
+      comment.is_liked = nextLiked
+      comment.like_count = Math.max(0, (Number(comment.like_count) || 0) + (nextLiked ? 1 : -1))
+
       try {
         const token = JSON.parse(window.localStorage.getItem('token')).tk
         await axios.post(this.$baseUrl + '/community/interactions/like', {
@@ -687,10 +700,9 @@ export default {
             'Authorization': 'Bearer ' + token
           }
         })
-        
-        comment.is_liked = !comment.is_liked
-        comment.like_count += comment.is_liked ? 1 : -1
       } catch (error) {
+        comment.is_liked = !nextLiked
+        comment.like_count = Math.max(0, (Number(comment.like_count) || 0) + (nextLiked ? -1 : 1))
         console.error('点赞失败:', error);
         uni.showToast({
           title: this.$t('common.operationFailed'),
@@ -1163,7 +1175,7 @@ export default {
     
     navigateToNovel(novelId) {
       uni.navigateTo({
-        url: '/pages/readers/bookInfo?id=' + novelId
+        url: '/pages/readers/bookInfo?id=' + novelId + '&from=post'
       })
     },
     

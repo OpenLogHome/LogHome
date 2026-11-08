@@ -56,8 +56,8 @@ android {
         applicationId "top.codesocean.loghome"
         minSdk 24
         targetSdk 34
-        versionCode 322
-        versionName "3.2.2"
+        versionCode 323
+        versionName "3.2.3"
 
         buildConfigField "String", "BACKEND_ENDPOINT", "\"${escapedBackendEndpoint}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

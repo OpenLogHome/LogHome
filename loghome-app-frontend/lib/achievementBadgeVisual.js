@@ -1,4 +1,4 @@
-const DEFAULT_MEDAL_IMAGE = '/static/icons/icon_my_name_tag.png'
+const DEFAULT_MEDAL_IMAGE = './static/icons/icon_my_name_tag.png'
 
 function toBool(value, fallback = false) {
 	if (typeof value === 'boolean') return value

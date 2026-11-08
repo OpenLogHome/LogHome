@@ -431,7 +431,7 @@
 			readBook(novel_id) {
 				if(novel_id > 0) {
 					uni.navigateTo({
-						url:'../readers/bookInfo?id=' +  novel_id
+						url:'../readers/bookInfo?id=' +  novel_id + '&from=personal'
 					})
 				}
 			},

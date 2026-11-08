@@ -24,6 +24,9 @@ private fun createTtsHttpClient() = OkHttpClient.Builder()
 
 /** All synthesis goes directly to the deployed TTS service using a per-user key. */
 class TtsEngineRouter(private val http: OkHttpClient = createTtsHttpClient()) : TtsSynthesizer {
+    // Provisioning credentials should not inherit the four-minute synthesis timeout.
+    private val sessionHttp = http.newBuilder().readTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(45, TimeUnit.SECONDS).build()
     private data class Session(val loginToken: String, val userId: Long, val token: String, val voices: Map<String, String>)
     private val sessionLock = Any()
     @Volatile private var session: Session? = null
@@ -51,8 +54,12 @@ class TtsEngineRouter(private val http: OkHttpClient = createTtsHttpClient()) : 
         val request = Request.Builder().url("${BuildConfig.BACKEND_ENDPOINT}/tts/session")
             .header("Authorization", "Bearer $loginToken")
             .post("{}".toRequestBody("application/json".toMediaType())).build()
-        return http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException(if (response.code == 401) "登录已失效，请重新登录" else "听书服务暂时不可用（${response.code}）")
+        return sessionHttp.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException(when (response.code) {
+                401, 403 -> "登录已失效，请重新登录后使用听书"
+                404 -> "后端尚未部署听书接口，请更新后端服务"
+                else -> "听书凭证获取失败（${response.code}），请稍后重试"
+            })
             val data = JSONObject(response.body?.string().orEmpty()).getJSONObject("data")
             val voices = data.getJSONArray("voices")
             val resolved = mutableMapOf<String, String>()
@@ -139,5 +146,6 @@ class TtsEngineRouter(private val http: OkHttpClient = createTtsHttpClient()) : 
     fun release() {
         session = null
         http.dispatcher.cancelAll()
+        sessionHttp.dispatcher.cancelAll()
     }
 }

@@ -655,11 +655,57 @@ export default {
 		},
 		updatePageProgress() {
 			if (this.isPreviewMode) return;
+			let tick = 0;
 			this.pageProgressInterval = setInterval(() => {
 				let scrollTop = this.getDocumentScrollTop();
 				this.scrollTop = scrollTop;
 				localStorage.setItem(`articleProgress_${this.articleId}`, scrollTop);
+				// 阅读深度埋点：记录本会话最大进度，每 30 秒上报一次
+				const progress = this.computeReadProgress();
+				if (progress > (this._maxReadProgress || 0)) this._maxReadProgress = progress;
+				tick++;
+				if (tick % 15 === 0) this.reportReadingProgress(false);
 			}, 2000);
+		},
+		computeReadProgress() {
+			try {
+				const doc = document.scrollingElement || document.documentElement;
+				const total = (doc.scrollHeight || 0) - (window.innerHeight || 0);
+				if (total <= 0) return 0;
+				return Math.min(1, Math.max(0, this.getDocumentScrollTop() / total));
+			} catch (e) {
+				return 0;
+			}
+		},
+		reportReadingProgress(final) {
+			if (this.isPreviewMode) return;
+			const articleId = Number(this.articleId);
+			if (!articleId) return;
+			if (final && this._finalReported) return;
+			if (final) this._finalReported = true;
+			const progress = Math.max(this._maxReadProgress || 0, this.computeReadProgress());
+			const duration = this._readSessionStart
+				? Math.min(21600, Math.round((Date.now() - this._readSessionStart) / 1000))
+				: 0;
+			if (!final && progress <= 0 && duration < 60) return; // 未形成有效阅读不打扰后端
+			let tk = null;
+			try {
+				const tokenObj = JSON.parse(window.localStorage.getItem('token'));
+				tk = tokenObj ? tokenObj.tk : null;
+			} catch (e) {
+				tk = null;
+			}
+			if (!tk) return; // 未登录无法按人上报，静默跳过
+			axios.post(this.$baseUrl + '/articles/report_reading_progress', {
+				article_id: articleId,
+				progress: Math.round(progress * 1000) / 1000,
+				duration: duration
+			}, {
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + tk
+				}
+			}).catch(() => {});
 		},
 		refreshPage(articleId) {
 			uni.showLoading({
@@ -1295,12 +1341,18 @@ ${this.$t('reader.article.copyAttribution', { brand: this.$t('nav.brand'), url: 
 		window.addEventListener('loghomeNativeBack', this.handleNativeBack)
 
 		// 启动页面滚动日志记录
-		if (!this.isPreviewMode) this.updatePageProgress();
+		if (!this.isPreviewMode) {
+			this._readSessionStart = Date.now();
+			this._maxReadProgress = 0;
+			this._finalReported = false;
+			this.updatePageProgress();
+		}
 	},
 	beforeDestroy() {
 		if (this.readExpReporter) {
 			this.readExpReporter.stop();
 		}
+		this.reportReadingProgress(true);
 		clearInterval(this.pageProgressInterval);
 		clearInterval(this.updateCommentDisplayTimer);
 		// #ifdef H5
@@ -1318,6 +1370,11 @@ ${this.$t('reader.article.copyAttribution', { brand: this.$t('nav.brand'), url: 
 			this.readExpReporter.start();
 			this.readExpReporter.markActive();
 		}
+		// 回到页面时开启新的阅读会话，时长按会话累计
+		if (!this.isPreviewMode) {
+			this._readSessionStart = Date.now();
+			this._finalReported = false;
+		}
 		this.updateNavigationBarVisibility();
 		if (this.backgroundSkinsLoaded) this.loadReaderBackgroundSkins();
 	},
@@ -1325,6 +1382,7 @@ ${this.$t('reader.article.copyAttribution', { brand: this.$t('nav.brand'), url: 
 		if (this.readExpReporter) {
 			await this.readExpReporter.stop();
 		}
+		this.reportReadingProgress(true);
 		this.setNativeNavigationBarVisible(true, true);
 	},
 	async onUnload() {

@@ -620,9 +620,10 @@ export default {
 			// 给轮换组件的缩放/位移动画留出时间，避免日历的大批量节点同时提交。
 			this.writingCalendarTransitionUntil = Date.now() + 350;
 			this.fetchWritingCalendar(this.books[e].novel_id);
-			axios.get(this.$baseUrl + '/articles/get_novel_statistics?novel_id=' + this.books[e].novel_id).then((
+			axios.get(this.$baseUrl + '/articles/get_novel_specific_statistics?novel_id=' + this.books[e].novel_id + '&days=7').then((
 				res) => {
-				this.novel_statistic = res.data;
+				// 接口按日期升序返回，倒序后 statistics[0] 为最新（今天实时数据）
+				this.novel_statistic = (res.data || []).slice().reverse();
 			}).catch((error) => {
 				if (error.message == "Request failed with status code 401") {
 					window.localStorage.removeItem('token');
@@ -768,7 +769,7 @@ export default {
 			} else {
 				this.showBookDetail = false;
 				uni.navigateTo({
-					url: "./readers/bookInfo?id=" + this.books[this.curBook].novel_id
+					url: "./readers/bookInfo?id=" + this.books[this.curBook].novel_id + "&from=works"
 				})
 			}
 		},
@@ -778,10 +779,12 @@ export default {
 				url: "./writers/essaySet?id=" + this.books[this.curBook].novel_id
 			})
 		},
-		gotoStatistics() {
+		gotoStatistics(metric) {
 			this.showBookDetail = false;
+			let url = './writers/novel_statistics?id=' + this.books[this.curBook].novel_id;
+			if (metric) url += '&metric=' + metric;
 			uni.navigateTo({
-				url: './writers/novel_statistics?id=' + this.books[this.curBook].novel_id
+				url
 			})
 		},
 		openBookSelectDrawer() {

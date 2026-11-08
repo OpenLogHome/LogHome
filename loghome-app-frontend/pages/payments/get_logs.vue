@@ -11,7 +11,7 @@
 				<text class="eyebrow">{{ $t('payments.logs.eyebrow') }}</text>
 				<text class="intro-title">{{ $t('payments.logs.introTitle') }}</text>
 				<text class="intro-copy">{{ $t('payments.logs.introCopy') }}</text>
-				<image class="guide-illustration" src="/static/images/get-logs-guide.png" mode="aspectFit" :aria-label="$t('payments.logs.illustrationAlt')" />
+				<image class="guide-illustration" :src="'./static/images/get-logs-guide.png'" mode="aspectFit" :aria-label="$t('payments.logs.illustrationAlt')" />
 				<view class="illustration-labels"><text>{{ $t('payments.logs.labelHarvest') }}</text><text>{{ $t('payments.logs.labelTopUp') }}</text><text>{{ $t('payments.logs.labelRewards') }}</text></view>
 			</view>
 
@@ -27,7 +27,7 @@
 			</view>
 
 			<view class="guide-note">
-				<image src="/static/resources/log.png" class="note-log" mode="aspectFit" />
+				<image :src="'./static/resources/log.png'" class="note-log" mode="aspectFit" />
 				<view><text class="note-title">{{ $t('payments.logs.noteTitle') }}</text><text class="note-copy">{{ $t('payments.logs.noteCopy') }}</text></view>
 			</view>
 		</view>

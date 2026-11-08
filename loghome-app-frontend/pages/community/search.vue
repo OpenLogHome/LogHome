@@ -115,7 +115,7 @@
             <navigator 
               v-for="(book, index) in getBookResults()" 
               :key="'book-' + index"
-              :url="'../readers/bookInfo?id=' + book.novel_id"
+              :url="'../readers/bookInfo?id=' + book.novel_id + '&from=search'"
               class="book-item"
             >
               <image class="book-cover" :src="book.picUrl + '?thumbnail=1'" mode="aspectFill" 

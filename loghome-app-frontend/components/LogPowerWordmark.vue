@@ -18,8 +18,8 @@ export default {
         },
         wordmarkSrc() {
             return this.isEnglish
-                ? '/static/brand/log-power-wordmark-en.png'
-                : '/static/brand/log-power-wordmark.png'
+                ? './static/brand/log-power-wordmark-en.png'
+                : './static/brand/log-power-wordmark.png'
         }
     },
     watch: {

@@ -121,7 +121,7 @@
             <div class="empty-subtitle">{{ $t('writer.bookDetail.noWorldsHint') }}</div>
           </div>
           <div v-for="novel in worlds" :key="novel.novel_id" class="world-item">
-            <navigator :url="'./readers/bookInfo?id=' +  novel.novel_id" open-type="navigate" class="books" 
+            <navigator :url="'./readers/bookInfo?id=' +  novel.novel_id + '&from=detail'" open-type="navigate" class="books" 
               @longpress="isOwner ? $emit('delete-world-novel-asso', novel.world_id) : null" @click="$emit('goto-world-novel')">
               <log-image :src="novel.picUrl + '?thumbnail=1'" alt="" 
                 :onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`" 
@@ -154,54 +154,22 @@
             <p>{{ $t('writer.bookDetail.dataBoxHint') }}</p>
           </div>
         </div>
-        <div class="statistics-body no-statistic" v-if="statistics.length < 2">
+        <div class="statistics-body no-statistic" v-if="!statistics.length">
           <div class="empty-state">
             <div class="empty-title">{{ $t('writer.bookDetail.noData') }}</div>
             <div class="empty-subtitle">{{ $t('writer.bookDetail.noDataHint') }}</div>
           </div>
         </div>
-        <div class="statistics-body" v-if="statistics.length >= 2">
-          <div class="card" @click="$emit('goto-statistics')">
+        <div class="statistics-body" v-else>
+          <div class="card" v-for="m in boxMetrics" :key="m.key" @click="$emit('goto-statistics', m.key)">
             <p class="numeral">
-              {{statistics[0].clicks}}
-              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].clicks - statistics[1].clicks }) }}</span>
+              {{ m.totalText }}
+              <span class="change" :class="m.changeClass" v-if="m.changeText">{{ m.changeText }}</span>
             </p>
-            <p class="name">{{ $t('writer.bookDetail.views') }}</p>
-          </div>
-          <div class="card" @click="$emit('goto-statistics')">
-            <p class="numeral">
-              {{statistics[0].nices}}
-              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].nices - statistics[1].nices }) }}</span>
-            </p>
-            <p class="name">{{ $t('writer.bookDetail.likes') }}</p>
-          </div>
-          <div class="card" @click="$emit('goto-statistics')">
-            <p class="numeral">
-              {{statistics[0].likes}}
-              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].likes - statistics[1].likes }) }}</span>
-            </p>
-            <p class="name">{{ $t('writer.bookDetail.favorites') }}</p>
-          </div>
-          <div class="card" @click="$emit('goto-statistics')">
-            <p class="numeral">
-              {{statistics[0].comments}}
-              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].comments - statistics[1].comments }) }}</span>
-            </p>
-            <p class="name">{{ $t('writer.bookDetail.comments') }}</p>
-          </div>
-          <div class="card" @click="$emit('goto-statistics')">
-            <p class="numeral">
-              {{statistics[0].shares || 0}}
-              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: (statistics[0].shares || 0) - (statistics[1].shares || 0) }) }}</span>
-            </p>
-            <p class="name">{{ $t('writer.bookDetail.shares') }}</p>
-          </div>
-          <div class="card" @click="$emit('goto-statistics')">
-            <p class="numeral">
-              {{statistics[0].tippings}}
-              <span class="change">{{ $t('writer.bookDetail.comparedToYesterday', { count: statistics[0].tippings - statistics[1].tippings }) }}</span>
-            </p>
-            <p class="name">{{ $t('writer.bookDetail.tippings') }}</p>
+            <div class="spark" v-if="m.spark.length">
+              <view class="spark-bar" v-for="(h, i) in m.spark" :key="i" :style="{ height: h + '%' }"></view>
+            </div>
+            <p class="name">{{ m.label }}</p>
           </div>
         </div>
       </div>
@@ -263,6 +231,53 @@ export default {
     isOwner() {
       return !!(this.book && (this.book.is_owner === true || this.book.access_role === 'owner' || !this.book.access_role));
     },
+    boxMetrics() {
+      const defs = [
+        { key: 'views', field: 'clicks', label: 'writer.bookDetail.views' },
+        { key: 'likes', field: 'nices', label: 'writer.bookDetail.likes' },
+        { key: 'favorites', field: 'likes', label: 'writer.bookDetail.favorites' },
+        { key: 'comments', field: 'comments', label: 'writer.bookDetail.comments' },
+        { key: 'shares', field: 'shares', label: 'writer.bookDetail.shares' },
+        { key: 'tips', field: 'tippings', label: 'writer.bookDetail.tippings' }
+      ];
+      const stats = Array.isArray(this.statistics) ? this.statistics : [];
+      if (!stats.length) return [];
+      const latest = stats[0] || {};
+      const prev = stats.length > 1 ? stats[1] : null;
+      // sparkline 数据按时间正序（旧 → 新），最多取 7 天
+      const chrono = stats.slice(0, 7).slice().reverse();
+      return defs.map(def => {
+        const total = Number(latest[def.field]) || 0;
+        const prevVal = prev ? (Number(prev[def.field]) || 0) : null;
+        const diff = prevVal === null ? null : total - prevVal;
+        let changeClass = 'flat';
+        let changeText = '';
+        if (diff !== null && diff !== 0) {
+          if (diff > 0) {
+            changeClass = 'up';
+            changeText = this.$t('writer.bookDetail.changeUp', { count: this.formatStatNumber(diff) });
+          } else {
+            changeClass = 'down';
+            changeText = this.$t('writer.bookDetail.changeDown', { count: this.formatStatNumber(Math.abs(diff)) });
+          }
+        } else if (diff === 0) {
+          changeText = this.$t('writer.bookDetail.changeFlat');
+        }
+        const series = chrono.map(item => Number(item[def.field]) || 0);
+        const max = Math.max.apply(null, series);
+        const min = Math.min.apply(null, series);
+        const span = max - min;
+        const spark = series.map(v => span > 0 ? Math.round(((v - min) / span) * 80) + 20 : 50);
+        return {
+          key: def.key,
+          totalText: this.formatStatNumber(total),
+          label: this.$t(def.label),
+          changeClass,
+          changeText,
+          spark
+        };
+      });
+    },
     showCollaborativeTag() {
       if (!this.book) return false;
       return (
@@ -319,6 +334,20 @@ export default {
     }
   },
   methods: {
+    formatStatNumber(value) {
+      let n = Number(value) || 0;
+      if (!Number.isInteger(n)) n = Math.round(n * 100) / 100;
+      const locale = (this.$i18n && this.$i18n.locale) || 'zh-CN';
+      const abs = Math.abs(n);
+      if (locale.indexOf('zh') === 0) {
+        if (abs >= 100000000) return (n / 100000000).toFixed(1).replace(/\.0$/, '') + '亿';
+        if (abs >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, '') + '万';
+      } else {
+        if (abs >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+        if (abs >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      }
+      return String(n);
+    },
     toggleDescription() {
       this.isDescriptionExpanded = !this.isDescriptionExpanded;
     },
@@ -778,6 +807,34 @@ export default {
               margin-top: 8rpx;
               font-size: 24rpx;
               color: #FF9B17;
+
+              &.up {
+                color: #20bf6b;
+              }
+
+              &.down {
+                color: #e74c3c;
+              }
+
+              &.flat {
+                color: var(--text-secondary);
+              }
+            }
+          }
+
+          .spark {
+            display: flex;
+            align-items: flex-end;
+            gap: 6rpx;
+            height: 48rpx;
+            margin-top: 14rpx;
+
+            .spark-bar {
+              flex: 1;
+              min-height: 4rpx;
+              border-radius: 4rpx 4rpx 0 0;
+              background-color: #ea703455;
+              transition: height 0.3s ease;
             }
           }
 

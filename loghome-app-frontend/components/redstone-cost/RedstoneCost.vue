@@ -1,7 +1,7 @@
 <template>
 	<view v-if="aiAssistanceEnabled" class="redstone-cost" :class="{ 'redstone-cost--icon-only': iconOnly }">
 		<view class="redstone-cost__trigger" :class="{ 'redstone-cost__trigger--icon-only': iconOnly }" @tap.stop="toggleTooltip">
-			<image class="redstone-cost__icon" src="/static/icons/redstone.svg" mode="aspectFit"></image>
+			<image class="redstone-cost__icon" :src="'./static/icons/redstone.svg'" mode="aspectFit"></image>
 			<text v-if="!iconOnly">{{ $t('redstone.cost.amount', { prefix: prefix || $t('redstone.cost.defaultPrefix'), cost }) }}</text>
 		</view>
 		<view v-if="visible" class="redstone-cost__backdrop" @tap.stop="closeTooltip"></view>

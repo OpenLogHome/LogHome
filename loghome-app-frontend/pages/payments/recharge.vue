@@ -58,7 +58,7 @@
 			</view>
 			<view>
 				<text>{{ $t('payments.recharge.tip2Prefix') }}<span>
-					<img src="static/images/afdian_logo.png" alt="" style="width: 30rpx; height: 30rpx;" /> {{ $t('payments.recharge.afdian') }}
+					<img :src="'./static/images/afdian_logo.png'" alt="" style="width: 30rpx; height: 30rpx;" /> {{ $t('payments.recharge.afdian') }}
 				</span>{{ $t('payments.recharge.tip2Suffix') }}</text>
 				<text>{{ $t('payments.recharge.tip2Warning') }}</text>
 				<text>{{ $t('payments.recharge.tip2Tail') }}</text>

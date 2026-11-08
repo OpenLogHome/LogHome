@@ -404,7 +404,7 @@ export default {
         openSharedNovel(novel) {
             if (!novel || !novel.novel_id) return;
             uni.navigateTo({
-                url: '/pages/readers/bookInfo?id=' + novel.novel_id
+                url: '/pages/readers/bookInfo?id=' + novel.novel_id + '&from=chat'
             });
         },
         setBookTabLoading(tabKey, loading) {

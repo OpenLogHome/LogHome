@@ -56,7 +56,7 @@
 					<image
 						v-if="index < 3"
 						class="medal-frame"
-						:src="'/static/fans/medal-' + index + '.svg'"
+						:src="'./static/fans/medal-' + index + '.svg'"
 						mode="aspectFit"
 					/>
 				</navigator>

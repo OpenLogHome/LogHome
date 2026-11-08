@@ -3,7 +3,7 @@
 		<view class="panel">
 			<view class="sectionTitle">{{ $t('writer.collab.novel.workInfo') }}</view>
 			<view class="ownerCard">
-				<img class="avatar" :src="collaborationInfo.novel.owner_avatar_url || '/static/user/defaultAvatar.jpg'" />
+				<img class="avatar" :src="collaborationInfo.novel.owner_avatar_url || './static/user/defaultAvatar.jpg'" />
 				<view class="ownerInfo">
 					<view class="name">{{ collaborationInfo.novel.name || $t('writer.collab.novel.untitledCollaboration') }}</view>
 					<view class="meta">{{ $t('writer.collab.novel.ownerLabel', { name: collaborationInfo.novel.owner_name || $t('common.unknown') }) }}</view>
@@ -35,7 +35,7 @@
 				{{ $t('writer.collab.novel.noInvitableUsers') }}
 			</view>
 			<view class="userRow" v-for="item in searchResults" :key="item.user_id">
-				<img class="avatar" :src="item.avatar_url || '/static/user/defaultAvatar.jpg'" />
+				<img class="avatar" :src="item.avatar_url || './static/user/defaultAvatar.jpg'" />
 				<view class="userInfo">
 					<view class="name">{{ item.name }}</view>
 					<view class="meta">ID: {{ item.user_id }}</view>
@@ -57,7 +57,7 @@
 			<view class="emptyHint" v-if="activeCollaborators.length === 0">{{ $t('writer.collab.novel.noCollaborators') }}</view>
 			<view class="collaboratorCard" v-for="item in activeCollaborators" :key="`active-${item.user_id}`">
 				<view class="userRow">
-					<img class="avatar" :src="item.avatar_url || '/static/user/defaultAvatar.jpg'" />
+					<img class="avatar" :src="item.avatar_url || './static/user/defaultAvatar.jpg'" />
 					<view class="userInfo">
 						<view class="name">{{ item.name }}</view>
 						<view class="meta">{{ $t('writer.collab.novel.statusActive') }}</view>
@@ -95,7 +95,7 @@
 			<view class="sectionTitle">{{ $t('writer.collab.novel.pendingAcceptTitle') }}</view>
 			<view class="collaboratorCard" v-for="item in pendingCollaborators" :key="`pending-${item.user_id}`">
 				<view class="userRow">
-					<img class="avatar" :src="item.avatar_url || '/static/user/defaultAvatar.jpg'" />
+					<img class="avatar" :src="item.avatar_url || './static/user/defaultAvatar.jpg'" />
 					<view class="userInfo">
 						<view class="name">{{ item.name }}</view>
 						<view class="meta">{{ $t('writer.collab.novel.statusPending') }}</view>

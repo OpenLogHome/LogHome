@@ -387,7 +387,7 @@ export default {
 					})
 				} else {
 					uni.navigateTo({
-						url: '/pages/readers/bookInfo?id=' + novel_id
+						url: '/pages/readers/bookInfo?id=' + novel_id + '&from=bookshelf'
 					})
 				}
 			}

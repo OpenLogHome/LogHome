@@ -46,7 +46,10 @@ export default {
 			return this.$t('apps.about.title')
 		},
 		aboutBackground() {
-			return this.isDarkMode ? '/static/about_bg-night.png' : '/static/about_bg.jpg'
+			// 原生 <img> 按文档地址相对解析（不走 uni 的路径改写）：统一用 ./static/，
+			// dev、http 生产与 Android file:// 打包环境均可解析；
+			// /static/ 根绝对路径在 file:// 下会指向 file:///static/... 导致背景丢失
+			return this.isDarkMode ? './static/about_bg-night.png' : './static/about_bg.jpg'
 		}
 	},
 	watch: {

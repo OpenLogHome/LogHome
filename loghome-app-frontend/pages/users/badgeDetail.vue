@@ -302,7 +302,7 @@ export default {
 					this.badge.badge_image_url ||
 					this.badge.medal_image ||
 					this.badge.badge_image ||
-					'/static/icons/icon_my_name_tag.png',
+					'./static/icons/icon_my_name_tag.png',
 				shine: this.badge.badge_shine === true || this.badge.badge_shine === 1,
 			}
 		},

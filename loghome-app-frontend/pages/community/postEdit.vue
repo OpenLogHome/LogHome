@@ -258,6 +258,10 @@
 				this.postId = options.post_id;
 				this.loadPostDetail(options.post_id);
 			}
+			// 从数据盒/里程碑等入口带过来的预填内容
+			if (options.prefill_title) this.postData.title = decodeURIComponent(options.prefill_title);
+			if (options.prefill_content) this.postData.content = decodeURIComponent(options.prefill_content);
+			if (options.prefill_novel_id) this.postData.novel_id = Number(options.prefill_novel_id);
 			this.loadCircles();
 			this.loadMyNovels(); // 加载用户的作品
 		},

@@ -4,14 +4,14 @@
       <view class="comic-panel panel-start">
         <view class="panel-ink">
           <text class="speech speech-start">{{ $t('manga.reader.loaderStart') }}</text>
-          <view class="pose pose-start"><image class="pose-atlas" src="/static/manga/loggirl-loading-poses.png" @error="assetFailed = true" /></view>
+          <view class="pose pose-start"><image class="pose-atlas" :src="'./static/manga/loggirl-loading-poses.png'" @error="assetFailed = true" /></view>
           <view class="ground"></view>
         </view>
       </view>
       <view class="comic-panel panel-run">
         <view class="panel-ink">
           <view class="speed-lines"></view>
-          <view class="run-bounce"><view class="pose pose-run"><image class="pose-atlas" src="/static/manga/loggirl-loading-poses.png" @error="assetFailed = true" /></view></view>
+          <view class="run-bounce"><view class="pose pose-run"><image class="pose-atlas" :src="'./static/manga/loggirl-loading-poses.png'" @error="assetFailed = true" /></view></view>
           <text class="footsteps">{{ $t('manga.reader.loaderFootsteps') }}</text>
         </view>
       </view>
@@ -19,12 +19,12 @@
         <view class="panel-ink">
           <view class="delivery-rays"></view>
           <text class="speech speech-deliver">{{ $t('manga.reader.loaderDeliveredLine1') }}<br />{{ $t('manga.reader.loaderDeliveredLine2') }}</text>
-          <view class="delivery-flight"><view class="pose pose-deliver"><image class="pose-atlas" src="/static/manga/loggirl-loading-poses.png" @error="assetFailed = true" /></view></view>
+          <view class="delivery-flight"><view class="pose pose-deliver"><image class="pose-atlas" :src="'./static/manga/loggirl-loading-poses.png'" @error="assetFailed = true" /></view></view>
           <text class="spark spark-one">✦</text><text class="spark spark-two">✦</text>
         </view>
       </view>
     </view>
-    <image v-else class="fallback-runner" src="/static/loading.gif" mode="aspectFit" aria-hidden="true" />
+    <image v-else class="fallback-runner" :src="'./static/loading.gif'" mode="aspectFit" aria-hidden="true" />
     <text class="loading-caption">{{ $t('manga.reader.loaderCaption') }}</text>
     <!-- <view class="loading-dots" aria-hidden="true"><view class="dot dot-start"></view><view class="dot dot-run"></view><view class="dot dot-deliver"></view></view> -->
   </view>

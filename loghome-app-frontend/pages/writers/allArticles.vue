@@ -101,7 +101,7 @@
 										<img
 											class="realtimeCollaboratorAvatar"
 											:src="participant.avatar_url"
-											onerror="this.onerror=null;this.src='/static/user/defaultAvatar.jpg'"
+											onerror="this.onerror=null;this.src='./static/user/defaultAvatar.jpg'"
 										/>
 									</span>
 									<span
@@ -136,7 +136,7 @@
 									<img
 										class="activeEditorAvatar"
 										:src="item.active_editor.avatar_url"
-										onerror="this.onerror=null;this.src='/static/user/defaultAvatar.jpg'"
+										onerror="this.onerror=null;this.src='./static/user/defaultAvatar.jpg'"
 									/>
 									<span>
 										{{ Number(item.active_editor.user_id) === Number(currentUserId) ? $t('writer.work.labels.youAreEditing') : $t('writer.work.labels.editingNow', { name: item.active_editor.name }) }}
@@ -281,11 +281,11 @@
 				<view class="share-title">{{ $t('writer.work.export.title') }}</view>
 				<view class="share-content">
 					<view class="share-item" @click="exportSimple">
-						<image src="/static/simple_pack.png" mode=""></image>
+						<image :src="'./static/simple_pack.png'" mode=""></image>
 						<view class="share-text">{{ $t('writer.work.export.packageOnly') }}</view>
 					</view>
 					<view class="share-item" @click="exportAdvanced">
-						<image src="/static/e_book.png" mode=""></image>
+						<image :src="'./static/e_book.png'" mode=""></image>
 						<view class="share-text">{{ $t('writer.work.export.ebook') }} <text style="font-size: 20rpx; color: #ff0000; border: 1rpx solid #ff0000; border-radius: 4rpx; padding: 0 4rpx; margin-left: 8rpx;">{{ $t('writer.work.export.membershipOnly') }}</text></view>
 					</view>
 				</view>
@@ -2419,7 +2419,7 @@ export default {
 					}
 					if (action.key == 'read') {
 						uni.navigateTo({
-							url: "../readers/bookInfo?id=" + _this.uid
+							url: "../readers/bookInfo?id=" + _this.uid + "&from=works"
 						})
 					}
 					if (action.key == 'export') {

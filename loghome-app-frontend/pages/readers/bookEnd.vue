@@ -84,13 +84,13 @@
 			goToCatalog() {
 				// 跳转到书籍详情页
 				uni.redirectTo({
-					url: `/pages/readers/bookInfo?id=${this.novelId}`
+					url: `/pages/readers/bookInfo?id=${this.novelId}&from=reader`
 				});
 			},
 			readBook(novel_id) {
 				if(novel_id > 0) {
 					uni.navigateTo({
-						url:'./bookInfo?id=' + novel_id
+						url:'./bookInfo?id=' + novel_id + '&from=reader'
 					})
 				}
 			},

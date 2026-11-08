@@ -766,15 +766,21 @@ export default {
 			let tk = JSON.parse(window.localStorage.getItem('token'));
 			if (tk) tk = tk.tk;;
 			if (tk) {
+				// 乐观更新：先当作点赞成功，仅请求失败时回退
+				const wasLiked = _this.niceStatus;
+				_this.niceStatus = !wasLiked;
+				_this.nice_amount = Math.max(0, (Number(_this.nice_amount) || 0) + (wasLiked ? -1 : 1));
+				if (!wasLiked) {
+					_this.showNiubeeAnimation = true;
+				}
 				axios.get(this.$baseUrl + '/library/nice_novel?id=' + this.uid, {
 					headers: {
 						'Content-Type': 'application/json', //设置请求头请求格式为JSON
 						'Authorization': "Bearer " + tk //设置token 其中K名要和后端协调好
 					}
 				}).then((res) => {
-					if (!_this.niceStatus) {
-						_this.showNiubeeAnimation = true;
-						axios.post(_this.$baseUrl + '/treePlant/do_task', 
+					if (!wasLiked) {
+						axios.post(_this.$baseUrl + '/treePlant/do_task',
 							{ task_code: 'daily_like_novel' },
 							{
 								headers: {
@@ -801,6 +807,9 @@ export default {
 					}
 					_this.getNices();
 				}).catch(function (error) {
+					// 回滚本地乐观更新的状态和计数
+					_this.niceStatus = wasLiked;
+					_this.nice_amount = Math.max(0, (Number(_this.nice_amount) || 0) + (wasLiked ? 1 : -1));
 					if (error.message == "Request failed with status code 401") {
 						window.localStorage.removeItem('token');
 						uni.navigateTo({
@@ -1477,6 +1486,16 @@ export default {
 	},
 	async onShow(option) {
 		this.uid = this.options.id;
+
+		// 站内来源埋点：每次进入详情页上报一次入口来源，供作者「数据来源」分析
+		if (!this._sourceReported && this.uid) {
+			this._sourceReported = true;
+			const from = (this.options && this.options.from) || 'other';
+			axios.post(this.$baseUrl + '/articles/report_book_source', {
+				novel_id: this.uid,
+				source: String(from).slice(0, 20)
+			}).catch(() => {});
+		}
 
 		let bookInfo = await this.getBookInfo();
 		if (!bookInfo) {

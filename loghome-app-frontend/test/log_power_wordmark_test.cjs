@@ -24,8 +24,8 @@ test('LogPower 字标按语言切换素材并保留中文版本', () => {
 	english.isEnglish = options.computed.isEnglish.call(english);
 	chinese.isEnglish = options.computed.isEnglish.call(chinese);
 
-	assert.equal(options.computed.wordmarkSrc.call(english), '/static/brand/log-power-wordmark-en.png');
-	assert.equal(options.computed.wordmarkSrc.call(chinese), '/static/brand/log-power-wordmark.png');
+	assert.equal(options.computed.wordmarkSrc.call(english), './static/brand/log-power-wordmark-en.png');
+	assert.equal(options.computed.wordmarkSrc.call(chinese), './static/brand/log-power-wordmark.png');
 	assert.ok(fs.existsSync(path.join(root, 'static/brand/log-power-wordmark-en.png')));
 	assert.match(source, /:key="wordmarkSrc"/, '语言切换时应强制重新创建图片节点');
 });

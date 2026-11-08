@@ -282,7 +282,7 @@ export default {
 			if (Date.now() < this.suppressClickUntil || !novel || !(novel.novel_id > 0)) return;
 			const url = novel.novel_type === 'manga'
 				? '/pages/readers/mangaInfo?id=' + novel.novel_id
-				: '/pages/readers/bookInfo?id=' + novel.novel_id;
+				: '/pages/readers/bookInfo?id=' + novel.novel_id + '&from=rank';
 			uni.navigateTo({ url });
 		},
 		gotoRankBoard() {

@@ -1,15 +1,15 @@
 <template>
 	<view class="login-page">
 		<view class="login-stage" :class="{ 'is-english': isEnglish }">
-			<image class="forest-scene" src="/static/login/forest-bookshop.webp" mode="aspectFill" aria-hidden="true" />
+			<image class="forest-scene" :src="'./static/login/forest-bookshop.webp'" mode="aspectFill" aria-hidden="true" />
 
 			<view class="login-header">
 				<button class="back-button" role="button" tabindex="0" :aria-label="$t('common.back')" @click="goBack" @keydown.enter.prevent="goBack" @keydown.space.prevent="goBack">
 					<uni-icons type="left" size="25" color="#fffdf0" />
 				</button>
 				<view class="brand" :aria-label="$t('auth.brand.name')">
-					<image class="brand-logo" src="/static/logo.png" mode="aspectFit" aria-hidden="true" />
-					<image class="brand-wordmark" src="/static/login/brand-wordmark.png" mode="aspectFit" aria-hidden="true" />
+					<image class="brand-logo" :src="'./static/logo.png'" mode="aspectFit" aria-hidden="true" />
+					<image class="brand-wordmark" :src="'./static/login/brand-wordmark.png'" mode="aspectFit" aria-hidden="true" />
 				</view>
 			</view>
 
@@ -23,7 +23,7 @@
 
 			<view class="login-actions">
 				<button class="email-login" role="button" tabindex="0" @click="gotoLoginEmail" @keydown.enter.prevent="gotoLoginEmail" @keydown.space.prevent="gotoLoginEmail">
-					<image class="button-skin" src="/static/login/pixel-login-button.webp" mode="scaleToFill" aria-hidden="true" />
+					<image class="button-skin" :src="'./static/login/pixel-login-button.webp'" mode="scaleToFill" aria-hidden="true" />
 					<view class="button-content">
 						<uni-icons type="email-filled" size="26" color="#153d21" aria-hidden="true" />
 						<text>{{ $t('auth.login.withEmail') }}</text>

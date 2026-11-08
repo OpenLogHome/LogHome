@@ -91,7 +91,7 @@
 				<el-tab-pane>
 					<span class="paneLabel" slot="label">{{ $t('world.page.relatedWorks') }}</span>
 					<div v-for="novel in assoNovels" :key="novel.novel_id" v-show="assoNovels.length != 0">
-						<navigator :url="'../readers/bookInfo?id=' +  novel.novel_id" open-type="navigate" class="books">
+						<navigator :url="'../readers/bookInfo?id=' +  novel.novel_id + '&from=world'" open-type="navigate" class="books">
 							<log-image :src="novel.picUrl + '?thumbnail=1'" alt=""
 								:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"
 								style="border-radius: 10rpx; transform:scale(.90)" />
@@ -479,15 +479,19 @@
 				let tk = JSON.parse(window.localStorage.getItem('token'));
 				if (tk) tk = tk.tk;;
 				if (tk) {
+					// 乐观更新：先当作点赞成功，仅请求失败时回退
+					const wasLiked = _this.niceStatus;
+					_this.niceStatus = !wasLiked;
+					_this.nice_amount = Math.max(0, (Number(_this.nice_amount) || 0) + (wasLiked ? -1 : 1));
 					axios.get(this.$baseUrl + '/library/nice_novel?id=' + this.world.novel_id, {
 						headers: {
 							'Content-Type': 'application/json', //设置请求头请求格式为JSON
 							'Authorization': "Bearer " + tk //设置token 其中K名要和后端协调好
 						}
 					}).then((res) => {
-						if (!_this.niceStatus) {
+						if (!wasLiked) {
 							// 点赞任务
-							axios.post(_this.$baseUrl + '/treePlant/do_task', 
+							axios.post(_this.$baseUrl + '/treePlant/do_task',
 								{ task_code: 'daily_like_novel' },
 								{
 									headers: {
@@ -517,6 +521,9 @@
 						}
 						_this.getNices();
 					}).catch(function (error) {
+						// 回滚本地乐观更新的状态和计数
+						_this.niceStatus = wasLiked;
+						_this.nice_amount = Math.max(0, (Number(_this.nice_amount) || 0) + (wasLiked ? 1 : -1));
 						if (error.message == "Request failed with status code 401") {
 							window.localStorage.removeItem('token');
 							uni.navigateTo({
