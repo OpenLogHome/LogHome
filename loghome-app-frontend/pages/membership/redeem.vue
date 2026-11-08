@@ -9,7 +9,7 @@
 		<view class="subpage-content">
 			<view class="subpage-hero">
 				<view class="subpage-hero__icon">
-					<image src="/static/membership/icons/redeem-ticket.svg" mode="aspectFit"></image>
+					<image :src="'./static/membership/icons/redeem-ticket.svg'" mode="aspectFit"></image>
 				</view>
 				<view class="subpage-hero__copy">
 					<text class="subpage-hero__eyebrow">REDEEM PASS</text>

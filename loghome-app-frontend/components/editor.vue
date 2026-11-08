@@ -74,7 +74,7 @@
 								</view>
 							</view>
 							<view class="fontFamily-right ml-2 flex just-content-center align-center" @tap.stop="removeFormat">
-								<img src="/static/editor/I-d.png" style="width: 32rpx;height: 38rpx;"></img>
+								<img :src="'./static/editor/I-d.png'" style="width: 32rpx;height: 38rpx;"></img>
 							</view>
 						</view>
 						
@@ -308,19 +308,19 @@
 				
 				/* 菜单栏 */
 				popupMenu: [
-					{img:'/static/editor/undo.png',w:'42',h:'33',isSelect:false},
-					{img:'/static/editor/return.png',w:'42',h:'33',isSelect:false},
-					{img:'/static/editor/A.png',w:'30',h:'37',isSelect:false},
-					{img:'/static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
-					{img:'/static/editor/function.png',w:'39',h:'39',isSelect:false}
+					{img:'./static/editor/undo.png',w:'42',h:'33',isSelect:false},
+					{img:'./static/editor/return.png',w:'42',h:'33',isSelect:false},
+					{img:'./static/editor/A.png',w:'30',h:'37',isSelect:false},
+					{img:'./static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
+					{img:'./static/editor/function.png',w:'39',h:'39',isSelect:false}
 				],
 				
 				/* 字体功能 */
 				fontFamily: [
-					{img:'/static/editor/B.png',w:'26',h:'37',isSelect:true},
-					{img:'/static/editor/I.png',w:'23',h:'37',isSelect:false},
-					{img:'/static/editor/U.png',w:'34',h:'38',isSelect:false},
-					{img:'/static/editor/S.png',w:'32',h:'37',isSelect:false}
+					{img:'./static/editor/B.png',w:'26',h:'37',isSelect:true},
+					{img:'./static/editor/I.png',w:'23',h:'37',isSelect:false},
+					{img:'./static/editor/U.png',w:'34',h:'38',isSelect:false},
+					{img:'./static/editor/S.png',w:'32',h:'37',isSelect:false}
 				],
 				
 				/* 当前picker颜色 */
@@ -335,7 +335,7 @@
 					{img:'FF0000',w:'34',h:'38',isSelect:false},
 					{img:'FFFF00',w:'32',h:'37',isSelect:false},
 					{img:'0000FF',w:'34',h:'38',isSelect:false},
-					{img:'/static/editor/colorful.png',w:'50',h:'50',isSelect:false}
+					{img:'./static/editor/colorful.png',w:'50',h:'50',isSelect:false}
 				],
 				/* 背景颜色 */
 				bgColor: [
@@ -343,40 +343,40 @@
 					{img:'EE82EE',w:'23',h:'37',isSelect:false},
 					{img:'00FFFF',w:'34',h:'38',isSelect:false},
 					{img:'FF5E5E',w:'32',h:'37',isSelect:false},
-					{img:'/static/editor/delete.png',w:'50',h:'50',isSelect:false},
-					{img:'/static/editor/colorful.png',w:'50',h:'50',isSelect:false}
+					{img:'./static/editor/delete.png',w:'50',h:'50',isSelect:false},
+					{img:'./static/editor/colorful.png',w:'50',h:'50',isSelect:false}
 				],
 				
 				/* 对齐方式 */
 				alignWay: [
-					{img:'/static/editor/align/left.png',w:'36',h:'32',isSelect:false},
-					{img:'/static/editor/align/center.png',w:'36',h:'32',isSelect:false},
-					{img:'/static/editor/align/right.png',w:'36',h:'32',isSelect:false},
+					{img:'./static/editor/align/left.png',w:'36',h:'32',isSelect:false},
+					{img:'./static/editor/align/center.png',w:'36',h:'32',isSelect:false},
+					{img:'./static/editor/align/right.png',w:'36',h:'32',isSelect:false},
 				],
 				
 				/* 排序样式 */
 				sortStyle: [
-					{img:'/static/editor/align/number.png',w:'39',h:'38',isSelect:false},
-					{img:'/static/editor/align/point.png',w:'39',h:'38',isSelect:false}
+					{img:'./static/editor/align/number.png',w:'39',h:'38',isSelect:false},
+					{img:'./static/editor/align/point.png',w:'39',h:'38',isSelect:false}
 				],
 				
 				/* 缩进 */
 				indentition: [
-					{img:'/static/editor/align/add.png',titleKey:'writer.editor.simpleEditor.increaseIndent',w:'41',h:'31',isSelect:false},
-					{img:'/static/editor/align/sub.png',titleKey:'writer.editor.simpleEditor.decreaseIndent',w:'41',h:'31',isSelect:false}
+					{img:'./static/editor/align/add.png',titleKey:'writer.editor.simpleEditor.increaseIndent',w:'41',h:'31',isSelect:false},
+					{img:'./static/editor/align/sub.png',titleKey:'writer.editor.simpleEditor.decreaseIndent',w:'41',h:'31',isSelect:false}
 				],
 				
 				/* 功能 */
 				functionList: [
-					// {img:'/static/editor/function/replace.png',titleKey:'writer.editor.simpleEditor.findReplace',w:'40',h:'40',isSelect:false},
-					{img:'/static/editor/function/img.png',titleKey:'writer.editor.simpleEditor.addImage',w:'37',h:'33',isSelect:false},
-					{img:'/static/editor/function/weachat.png',titleKey:'writer.editor.simpleEditor.addWechat',value:'微信号',w:'42',h:'35',isSelect:false},
-					{img:'/static/editor/function/qr.png',titleKey:'writer.editor.simpleEditor.addQr',value:'二维码',w:'37',h:'36',isSelect:false},
-					{img:'/static/editor/function/phone.png',titleKey:'writer.editor.simpleEditor.addPhone',value:'电话',w:'33',h:'48',isSelect:false},
-					{img:'/static/editor/function/qq.png',titleKey:'writer.editor.simpleEditor.addQq',value:'qq',w:'43',h:'51',isSelect:false},
-					{img:'/static/editor/function/name.png',titleKey:'writer.editor.simpleEditor.addNickname',value:'昵称',w:'43',h:'33',isSelect:false},
-					{img:'/static/editor/function/city.png',titleKey:'writer.editor.simpleEditor.addCity',value:'城市',w:'39',h:'39',isSelect:false},
-					{img:'/static/editor/function/gender.png',titleKey:'writer.editor.simpleEditor.addGender',value:'性别',w:'41',h:'41',isSelect:false}
+					// {img:'./static/editor/function/replace.png',titleKey:'writer.editor.simpleEditor.findReplace',w:'40',h:'40',isSelect:false},
+					{img:'./static/editor/function/img.png',titleKey:'writer.editor.simpleEditor.addImage',w:'37',h:'33',isSelect:false},
+					{img:'./static/editor/function/weachat.png',titleKey:'writer.editor.simpleEditor.addWechat',value:'微信号',w:'42',h:'35',isSelect:false},
+					{img:'./static/editor/function/qr.png',titleKey:'writer.editor.simpleEditor.addQr',value:'二维码',w:'37',h:'36',isSelect:false},
+					{img:'./static/editor/function/phone.png',titleKey:'writer.editor.simpleEditor.addPhone',value:'电话',w:'33',h:'48',isSelect:false},
+					{img:'./static/editor/function/qq.png',titleKey:'writer.editor.simpleEditor.addQq',value:'qq',w:'43',h:'51',isSelect:false},
+					{img:'./static/editor/function/name.png',titleKey:'writer.editor.simpleEditor.addNickname',value:'昵称',w:'43',h:'33',isSelect:false},
+					{img:'./static/editor/function/city.png',titleKey:'writer.editor.simpleEditor.addCity',value:'城市',w:'39',h:'39',isSelect:false},
+					{img:'./static/editor/function/gender.png',titleKey:'writer.editor.simpleEditor.addGender',value:'性别',w:'41',h:'41',isSelect:false}
 				],
 				
 				/* 字号大小还是标题大小 */
@@ -448,10 +448,10 @@
 			/* 去除样式 */
 			removeFormat() {
 				this.fontFamily = [
-					{img:'/static/editor/B.png',w:'26',h:'37',isSelect:true},
-					{img:'/static/editor/I.png',w:'23',h:'37',isSelect:false},
-					{img:'/static/editor/U.png',w:'34',h:'38',isSelect:false},
-					{img:'/static/editor/S.png',w:'32',h:'37',isSelect:false}
+					{img:'./static/editor/B.png',w:'26',h:'37',isSelect:true},
+					{img:'./static/editor/I.png',w:'23',h:'37',isSelect:false},
+					{img:'./static/editor/U.png',w:'34',h:'38',isSelect:false},
+					{img:'./static/editor/S.png',w:'32',h:'37',isSelect:false}
 				];
 				this.fontColor.forEach(r=>r.isSelect=false);
 				this.bgColor.forEach(r=>r.isSelect=false);
@@ -471,9 +471,9 @@
 				this.isSwitchKeyWord = false;
 				this.popupHeight = 0;
 				this.currentPopupType = 'keyboard';
-				this.popupMenu[2] = {img:'/static/editor/A.png',w:'30',h:'37',isSelect:false},
-				this.popupMenu[3] = {img:'/static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
-				this.popupMenu[4] = {img:'/static/editor/function.png',w:'39',h:'39',isSelect:false}
+				this.popupMenu[2] = {img:'./static/editor/A.png',w:'30',h:'37',isSelect:false},
+				this.popupMenu[3] = {img:'./static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
+				this.popupMenu[4] = {img:'./static/editor/function.png',w:'39',h:'39',isSelect:false}
 				this.hidePopup();
 			},
 			/* 点击菜单栏 */
@@ -498,21 +498,21 @@
 				};
 				if (index == 2) {
 					this.currentPopupType = 'font';
-					this.popupMenu[2] = {img:'/static/editor/keyword.png',w:'44',h:'44',isSelect:true},
-					this.popupMenu[3] = {img:'/static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
-					this.popupMenu[4] = {img:'/static/editor/function.png',w:'39',h:'39',isSelect:false}
+					this.popupMenu[2] = {img:'./static/editor/keyword.png',w:'44',h:'44',isSelect:true},
+					this.popupMenu[3] = {img:'./static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
+					this.popupMenu[4] = {img:'./static/editor/function.png',w:'39',h:'39',isSelect:false}
 				};
 				if (index == 3) {
 					this.currentPopupType = 'align';
-					this.popupMenu[2] = {img:'/static/editor/A.png',w:'30',h:'37',isSelect:false},
-					this.popupMenu[3] = {img:'/static/editor/keyword.png',w:'44',h:'44',isSelect:true},
-					this.popupMenu[4] = {img:'/static/editor/function.png',w:'39',h:'39',isSelect:false}
+					this.popupMenu[2] = {img:'./static/editor/A.png',w:'30',h:'37',isSelect:false},
+					this.popupMenu[3] = {img:'./static/editor/keyword.png',w:'44',h:'44',isSelect:true},
+					this.popupMenu[4] = {img:'./static/editor/function.png',w:'39',h:'39',isSelect:false}
 				};
 				if (index == 4) {
 					this.currentPopupType = 'function';
-					this.popupMenu[2] = {img:'/static/editor/A.png',w:'30',h:'37',isSelect:false},
-					this.popupMenu[3] = {img:'/static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
-					this.popupMenu[4] = {img:'/static/editor/keyword.png',w:'44',h:'44',isSelect:true}
+					this.popupMenu[2] = {img:'./static/editor/A.png',w:'30',h:'37',isSelect:false},
+					this.popupMenu[3] = {img:'./static/editor/alignMent.png',w:'35',h:'32',isSelect:false},
+					this.popupMenu[4] = {img:'./static/editor/keyword.png',w:'44',h:'44',isSelect:true}
 				};
 				if (index == 2 || index == 3 || index == 4) {
 					uni.hideKeyboard();
@@ -600,44 +600,44 @@
 				
 				if (index == 0) {
 					if (this.fontFamily[0].isSelect) {
-						this.fontFamily[0].img = '/static/editor/B-active.png';
+						this.fontFamily[0].img = './static/editor/B-active.png';
 						e.target.dataset.name = 'bold';
 						e.target.dataset.value = '';
 					} else {
-						this.fontFamily[0].img = '/static/editor/B.png';
+						this.fontFamily[0].img = './static/editor/B.png';
 					};
 					this.format(e);
 				}
 				
 				if (index == 1) {
 					if (this.fontFamily[1].isSelect) {
-						this.fontFamily[1].img = '/static/editor/I-active.png';
+						this.fontFamily[1].img = './static/editor/I-active.png';
 						e.target.dataset.name = 'italic';
 						e.target.dataset.value = '';
 					} else {
-						this.fontFamily[1].img = '/static/editor/I.png';
+						this.fontFamily[1].img = './static/editor/I.png';
 					};
 					this.format(e);
 				}
 				
 				if (index == 2) {
 					if (this.fontFamily[2].isSelect) {
-						this.fontFamily[2].img = '/static/editor/U-active.png';
+						this.fontFamily[2].img = './static/editor/U-active.png';
 						e.target.dataset.name = 'underline';
 						e.target.dataset.value = '';
 					} else {
-						this.fontFamily[2].img = '/static/editor/U.png';
+						this.fontFamily[2].img = './static/editor/U.png';
 					};
 					this.format(e);
 				}
 				
 				if (index == 3) {
 					if (this.fontFamily[3].isSelect) {
-						this.fontFamily[3].img = '/static/editor/S-active.png';
+						this.fontFamily[3].img = './static/editor/S-active.png';
 						e.target.dataset.name = 'strike';
 						e.target.dataset.value = '';
 					} else {
-						this.fontFamily[3].img = '/static/editor/S.png';
+						this.fontFamily[3].img = './static/editor/S.png';
 					};
 					this.format(e);
 				}
@@ -658,27 +658,27 @@
 				
 				
 				if (this.alignWay[0].isSelect) {
-					this.alignWay[0].img = '/static/editor/align/left-action.png';
+					this.alignWay[0].img = './static/editor/align/left-action.png';
 					e.target.dataset.name = 'align';
 					e.target.dataset.value = 'left';
 				} else {
-					this.alignWay[0].img = '/static/editor/align/left.png';
+					this.alignWay[0].img = './static/editor/align/left.png';
 				};
 				
 				if (this.alignWay[1].isSelect) {
-					this.alignWay[1].img = '/static/editor/align/center-action.png';
+					this.alignWay[1].img = './static/editor/align/center-action.png';
 					e.target.dataset.name = 'align';
 					e.target.dataset.value = 'center';
 				} else {
-					this.alignWay[1].img = '/static/editor/align/center.png';
+					this.alignWay[1].img = './static/editor/align/center.png';
 				};
 			
 				if (this.alignWay[2].isSelect) {
-					this.alignWay[2].img = '/static/editor/align/right-action.png';
+					this.alignWay[2].img = './static/editor/align/right-action.png';
 					e.target.dataset.name = 'align';
 					e.target.dataset.value = 'right';
 				} else {
-					this.alignWay[2].img = '/static/editor/align/right.png';
+					this.alignWay[2].img = './static/editor/align/right.png';
 				};
 				
 				this.format(e);
@@ -698,19 +698,19 @@
 				let e = {target:{dataset:{name:'',value:''}}};
 				
 				if (this.sortStyle[0].isSelect) {
-					this.sortStyle[0].img = '/static/editor/align/number-action.png';
+					this.sortStyle[0].img = './static/editor/align/number-action.png';
 					e.target.dataset.name = 'list';
 					e.target.dataset.value = 'ordered';
 				} else {
-					this.sortStyle[0].img = '/static/editor/align/number.png';
+					this.sortStyle[0].img = './static/editor/align/number.png';
 				};
 			
 				if (this.sortStyle[1].isSelect) {
-					this.sortStyle[1].img = '/static/editor/align/point-action.png';
+					this.sortStyle[1].img = './static/editor/align/point-action.png';
 					e.target.dataset.name = 'list';
 					e.target.dataset.value = 'bullet';
 				} else {
-					this.sortStyle[1].img = '/static/editor/align/point.png';
+					this.sortStyle[1].img = './static/editor/align/point.png';
 				};
 				this.format(e);
 			},

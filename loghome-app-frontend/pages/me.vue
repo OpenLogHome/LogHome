@@ -84,26 +84,26 @@
 
 		<view class="page-content">
 			<view v-if="user.email == 'unbind'" class="security-banner" role="button" @tap="gotoActivate">
-				<image src="/static/icons/icon_activate.png" mode="aspectFit" />
+				<image :src="'./static/icons/icon_activate.png'" mode="aspectFit" />
 				<view><text class="security-title">{{ $t('me.security.title') }}</text><text class="security-description">{{ $t('me.security.desc') }}</text></view>
 				<text>{{ $t('me.security.action') }}</text>
 			</view>
 
 			<view class="box-bd">
 				<view class="item" role="button" @tap="user_profile">
-					<view class="icon"><image src="/static/icons/icon_my_name_tag.png" mode="aspectFit" /></view>
+					<view class="icon"><image :src="'./static/icons/icon_my_name_tag.png'" mode="aspectFit" /></view>
 					<text>{{ $t('me.quick.card') }}</text>
 				</view>
 				<view class="item" role="button" @tap="gotoFriends">
-					<view class="icon"><image src="/static/icons/icon_friends.png" mode="aspectFit" /></view>
+					<view class="icon"><image :src="'./static/icons/icon_friends.png'" mode="aspectFit" /></view>
 					<text>{{ $t('me.quick.friend') }}</text>
 				</view>
 				<view class="item" role="button" @tap="gotoMessages">
-					<view class="icon" :class="{ 'newMessage': hasNewMessage || hasNewPrivateMessage }"><image src="/static/icons/icon_info.png" mode="aspectFit" /></view>
+					<view class="icon" :class="{ 'newMessage': hasNewMessage || hasNewPrivateMessage }"><image :src="'./static/icons/icon_info.png'" mode="aspectFit" /></view>
 					<text>{{ $t('me.quick.message') }}</text>
 				</view>
 				<view class="item" role="button" @tap="gotoSettings">
-					<view class="icon"><image src="/static/icons/icon_setting.png" mode="aspectFit" /></view>
+					<view class="icon"><image :src="'./static/icons/icon_setting.png'" mode="aspectFit" /></view>
 					<text>{{ $t('me.quick.settings') }}</text>
 				</view>
 			</view>
@@ -135,14 +135,14 @@
 			<view class="panel services-panel">
 				<view class="section-heading"><text class="section-title">{{ $t('me.layout.moreServices') }}</text></view>
 				<view class="service-grid">
-					<navigator class="grid-item" url="/pages/bookcase/index"><image src="/static/icons/ender-chest.svg" mode="aspectFit" /><text>{{ $t('me.service.collection') }}</text></navigator>
-					<navigator class="grid-item" url="/pages/users/achievements"><image src="/static/icons/cridit_sys_icon.png" mode="aspectFit" /><text>{{ $t('me.service.badges') }}</text></navigator>
-					<navigator class="grid-item" url="/pages/store/index"><image src="/static/icons/store.png" mode="aspectFit" /><text>{{ $t('me.service.store') }}</text></navigator>
-					<navigator class="grid-item" url="/pages/store/orders"><image src="/static/icons/icon_my_info.png" mode="aspectFit" /><text>{{ $t('me.layout.orders') }}</text></navigator>
-					<navigator class="grid-item" url="/pages/apps/inviteCard"><image src="/static/icons/icon_share.png" mode="aspectFit" /><text>{{ $t('me.service.invite') }}</text></navigator>
-					<navigator class="grid-item" url="/pages/apps/lab"><image src="/static/icons/lab.svg" mode="aspectFit" /><text>{{ $t('me.service.lab') }}</text></navigator>
-					<navigator class="grid-item" url="/pages/apps/about"><image src="/static/icons/icon_about_us.png" mode="aspectFit" /><text>{{ $t('me.service.about') }}</text></navigator>
-					<navigator v-if="user.is_admin == 1" class="grid-item" url="/pages/manage/index"><image src="/static/icons/icon_treecut3.png" mode="aspectFit" /><text>{{ $t('me.service.manage') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/bookcase/index"><image :src="'./static/icons/ender-chest.svg'" mode="aspectFit" /><text>{{ $t('me.service.collection') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/users/achievements"><image :src="'./static/icons/cridit_sys_icon.png'" mode="aspectFit" /><text>{{ $t('me.service.badges') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/store/index"><image :src="'./static/icons/store.png'" mode="aspectFit" /><text>{{ $t('me.service.store') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/store/orders"><image :src="'./static/icons/icon_my_info.png'" mode="aspectFit" /><text>{{ $t('me.layout.orders') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/apps/inviteCard"><image :src="'./static/icons/icon_share.png'" mode="aspectFit" /><text>{{ $t('me.service.invite') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/apps/lab"><image :src="'./static/icons/lab.svg'" mode="aspectFit" /><text>{{ $t('me.service.lab') }}</text></navigator>
+					<navigator class="grid-item" url="/pages/apps/about"><image :src="'./static/icons/icon_about_us.png'" mode="aspectFit" /><text>{{ $t('me.service.about') }}</text></navigator>
+					<navigator v-if="user.is_admin == 1" class="grid-item" url="/pages/manage/index"><image :src="'./static/icons/icon_treecut3.png'" mode="aspectFit" /><text>{{ $t('me.service.manage') }}</text></navigator>
 				</view>
 			</view>
 		</view>
@@ -197,7 +197,7 @@
 						theme: 'inactive',
 						title: this.$t('me.pass.inactiveTitle'),
 						status: this.$t('me.pass.notActivated'),
-						logo: '/static/membership/loghome-pass.png',
+						logo: './static/membership/loghome-pass.png',
 						meta: this.$t('me.pass.inactiveMeta'),
 						description: this.$t('me.pass.inactiveDesc'),
 						action: this.$t('me.pass.activate'),
@@ -220,7 +220,7 @@
 					theme: isSuper ? 'super' : 'standard',
 					title: isSuper ? this.$t('me.pass.superTitle') : this.$t('me.pass.standardTitle'),
 					status: this.$t('me.pass.activated'),
-					logo: isSuper ? '/static/membership/loghome-super-pass.png' : '/static/membership/loghome-pass.png',
+					logo: isSuper ? './static/membership/loghome-super-pass.png' : './static/membership/loghome-pass.png',
 					meta: expiryText,
 					description: isSuper ? this.$t('me.pass.superDesc') : this.$t('me.pass.standardDesc'),
 					action: this.$t('me.pass.viewBenefits'),

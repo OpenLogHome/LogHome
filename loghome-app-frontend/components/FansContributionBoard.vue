@@ -10,7 +10,7 @@
 				<view class="compact-avatar-wrap">
 					<user-avatar :src="fan.avatar_url" :frame="fan.avatar_frame" class="compact-avatar"
 						:visual-scale="fan.avatar_frame ? 1.15 : 1" />
-					<image class="compact-medal" :src="'/static/fans/medal-' + index + '.svg'" mode="aspectFit" />
+					<image class="compact-medal" :src="'./static/fans/medal-' + index + '.svg'" mode="aspectFit" />
 				</view>
 				<view class="compact-info">
 					<text class="compact-name">{{ fan.user_name }}</text>

@@ -3,6 +3,7 @@ package top.codesocean.loghome.android.audio
 import androidx.test.core.app.ActivityScenario
 import top.codesocean.loghome.android.WebViewActivity
 import android.graphics.Bitmap
+import android.content.Intent
 import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.media.AudioManager
@@ -24,11 +25,70 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertSame
 import org.junit.Test
+import org.junit.Assume.assumeTrue
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.runner.RunWith
 import top.codesocean.loghome.android.R
 
 @RunWith(AndroidJUnit4::class)
 class NativeAudiobookPlayerViewTest {
+    private fun launchPlayerActivity(): ActivityScenario<WebViewActivity> {
+        val app = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val page = File(app.cacheDir, "native-player-test.html").apply {
+            writeText("<!doctype html><html><body>Native player test</body></html>")
+        }
+        return ActivityScenario.launch(Intent(app, WebViewActivity::class.java)
+            .putExtra(WebViewActivity.EXTRA_LOCAL_PATH, page.path)
+            .putExtra(WebViewActivity.EXTRA_SUPPRESS_LOADING_OVERLAY, true)
+            .putExtra(WebViewActivity.EXTRA_USE_WARM_WEBVIEW, false))
+    }
+
+    @Test
+    fun rejectedProductionLoginShowsErrorInsteadOfPreparingForever() {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("verifyProductionTts") == "true")
+        assumeTrue(top.codesocean.loghome.android.BuildConfig.BACKEND_ENDPOINT == "https://api.loghome.ink")
+        launchPlayerActivity().use { scenario ->
+            scenario.onActivity { activity ->
+                val payload = JSONObject().put("articleIds", JSONArray().put("101"))
+                    .put("bookTitle", "听书故障验证").put("loginToken", "invalid-test-login")
+                val call = JSONObject().put("id", "startup-test").put("name", "openNativeAudiobookPlayer")
+                    .put("args", JSONArray().put(payload))
+                WebViewActivity::class.java.getDeclaredMethod("handleBridgeMessage", String::class.java)
+                    .apply { isAccessible = true }.invoke(activity, call.toString())
+            }
+            val deadline = System.currentTimeMillis() + 60_000
+            var message = ""
+            while (System.currentTimeMillis() < deadline) {
+                scenario.onActivity { message = it.findViewById<TextView>(R.id.paragraphText).text.toString() }
+                if (message.contains("登录已失效")) break
+                Thread.sleep(50)
+            }
+            assertTrue("Actual production 401 is shown in the native player; actual: $message", message.contains("登录已失效"))
+            scenario.onActivity {
+                assertEquals("听书加载失败", it.findViewById<TextView>(R.id.chapterTitle).text.toString())
+                assertTrue(it.findViewById<View>(R.id.playPauseButton).isEnabled)
+                assertFalse(it.findViewById<ProgressBar>(R.id.bufferingIndicator).visibility == View.VISIBLE)
+            }
+        }
+    }
+    @Test
+    fun preparationFailuresReplaceTheSpinnerWithAnActionableRetry() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val application = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val view = NativeAudiobookPlayerView(ContextThemeWrapper(application, R.style.Theme_LogHome))
+            view.render(AudiobookPlaybackState(isPreparing = true, preparationMessage = "正在获取听书凭证…"))
+            assertEquals("正在获取听书凭证…", view.findViewById<TextView>(R.id.chapterTitle).text.toString())
+            assertTrue(view.findViewById<ProgressBar>(R.id.bufferingIndicator).visibility == View.VISIBLE)
+            assertFalse(view.findViewById<View>(R.id.playPauseButton).isEnabled)
+            view.render(AudiobookPlaybackState(errorMessage = "登录已失效，请重新登录后使用听书"))
+            assertEquals("听书加载失败", view.findViewById<TextView>(R.id.chapterTitle).text.toString())
+            assertTrue(view.findViewById<TextView>(R.id.paragraphText).text.contains("重新登录"))
+            assertTrue(view.findViewById<TextView>(R.id.paragraphText).text.contains("重试"))
+            assertFalse(view.findViewById<ProgressBar>(R.id.bufferingIndicator).visibility == View.VISIBLE)
+            assertTrue(view.findViewById<View>(R.id.playPauseButton).isEnabled)
+        }
+    }
     @Test
     fun compactPlayerFitsWithoutScrollingAndUsesCoverBackdrop() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -62,7 +122,7 @@ class NativeAudiobookPlayerViewTest {
 
     @Test
     fun volumeKeysUseMusicStreamEvenWhenReaderCapturesVolumeKeys() {
-        ActivityScenario.launch(WebViewActivity::class.java).use { scenario ->
+        launchPlayerActivity().use { scenario ->
             scenario.onActivity { activity ->
                 val field = WebViewActivity::class.java.getDeclaredField("volumeKeyEnabled").apply { isAccessible = true }
                 field.setBoolean(activity, true)
@@ -148,7 +208,7 @@ class NativeAudiobookPlayerViewTest {
 
     @Test
     fun capturesAttachedPlayerPreview() {
-        ActivityScenario.launch(WebViewActivity::class.java).use { scenario ->
+        launchPlayerActivity().use { scenario ->
             scenario.onActivity { activity ->
                 val view = NativeAudiobookPlayerView(activity)
                 activity.setContentView(view)
@@ -169,7 +229,7 @@ class NativeAudiobookPlayerViewTest {
 
     @Test
     fun playerSlidesInOutAndReopeningCancelsPendingDismissal() {
-        ActivityScenario.launch(WebViewActivity::class.java).use { scenario ->
+        launchPlayerActivity().use { scenario ->
             lateinit var view: NativeAudiobookPlayerView
             scenario.onActivity { activity ->
                 view = NativeAudiobookPlayerView(activity)

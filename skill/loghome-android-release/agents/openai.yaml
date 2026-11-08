@@ -1,0 +1,4 @@
+interface:
+  display_name: "原木 Android 发布"
+  short_description: "通过 HBuilderX 发行前端、校验生产后端地址并生成签名 APK"
+  default_prompt: "使用 $loghome-android-release 完成原木社区前端与 Android 安装包的发布准备。"

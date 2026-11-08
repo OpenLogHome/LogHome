@@ -9,7 +9,7 @@
 		<view class="subpage-content">
 			<view class="subpage-hero">
 				<view class="subpage-hero__icon">
-					<image src="/static/membership/icons/gift-pass.svg" mode="aspectFit"></image>
+					<image :src="'./static/membership/icons/gift-pass.svg'" mode="aspectFit"></image>
 				</view>
 				<view class="subpage-hero__copy">
 					<text class="subpage-hero__eyebrow">GIFT A PASS</text>
@@ -52,7 +52,7 @@
 						>
 							<text class="period-card__name">{{ $t(period.nameKey) }}</text>
 							<view class="period-card__price">
-								<image src="/static/resources/log.png" mode="aspectFit"></image>
+								<image :src="'./static/resources/log.png'" mode="aspectFit"></image>
 								<text>{{ period.price }}</text>
 								<text class="period-card__unit">{{ $t('membership.common.logUnit') }}</text>
 							</view>
@@ -109,7 +109,7 @@
 					<text class="gift-summary__detail">{{ $t(activeTier.nameKey) }} · {{ $t(activePlan.nameKey) }}</text>
 				</view>
 				<view class="gift-summary__price">
-					<image src="/static/resources/log.png" mode="aspectFit"></image>
+					<image :src="'./static/resources/log.png'" mode="aspectFit"></image>
 					<text>{{ activePlan.price }}</text>
 					<text class="gift-summary__unit">{{ $t('membership.common.logUnit') }}</text>
 				</view>
@@ -180,7 +180,7 @@ export default {
 			friendPickerVisible: false,
 			friendKeyword: '',
 			loadingFriends: false,
-			defaultAvatar: '/static/user/defaultAvatar.jpg',
+			defaultAvatar: './static/user/defaultAvatar.jpg',
 			message: '',
 			submitting: false,
 			tiers: [
@@ -188,7 +188,7 @@ export default {
 					key: 'standard',
 					nameKey: 'membership.pass.tier.standard.name',
 					descriptionKey: 'membership.gift.tier.standardDesc',
-					logo: '/static/membership/loghome-pass.png',
+					logo: './static/membership/loghome-pass.png',
 					plans: [
 						{ key: 'month', nameKey: 'membership.gift.period.month', price: 660 },
 						{ key: 'year', nameKey: 'membership.gift.period.year', price: 7200 }
@@ -198,7 +198,7 @@ export default {
 					key: 'super',
 					nameKey: 'membership.pass.tier.super.name',
 					descriptionKey: 'membership.gift.tier.superDesc',
-					logo: '/static/membership/loghome-super-pass.png',
+					logo: './static/membership/loghome-super-pass.png',
 					plans: [
 						{ key: 'month', nameKey: 'membership.gift.period.month', price: 880 },
 						{ key: 'year', nameKey: 'membership.gift.period.year', price: 9600 }

@@ -153,7 +153,7 @@
                     <view class="membership-boost-card" :class="{ active: hasTaskRewardBoost }">
                         <image
                             v-if="hasTaskRewardBoost"
-                            :src="rewardBenefits.membership_type === 'super' ? '/static/membership/loghome-super-pass.png' : '/static/membership/loghome-pass.png'"
+                            :src="rewardBenefits.membership_type === 'super' ? './static/membership/loghome-super-pass.png' : './static/membership/loghome-pass.png'"
                             mode="aspectFit"
                         ></image>
                         <view class="membership-boost-icon" v-else>🌱</view>

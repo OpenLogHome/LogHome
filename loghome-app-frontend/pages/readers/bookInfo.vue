@@ -132,28 +132,28 @@
 						</transition>
 						<view class="l-body-tab" @tap="nice" v-show="!niceStatus">
 							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_nice.png" mode="">
-							</img>{{ $t('reader.book.likeCount', { count: nice_amount }) }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.likeCount', { count: nice_amount }) }}</text>
 						</view>
 						<view class="l-body-tab" @tap="nice" v-show="niceStatus">
 							<img class="l-icon-share l-icon-share-2" src="../../static/icons/icon_niced.png" mode="">
-							</img>{{ $t('reader.book.likeCount', { count: nice_amount }) }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.likeCount', { count: nice_amount }) }}</text>
 						</view>
 						<view class="l-body-tab" :class="{ 'is-busy': isCreatingShareCode }" @tap="shareBook">
 							<view v-if="isCreatingShareCode" class="share-loading-dot"></view>
 							<img v-else class="l-icon-share l-icon-share-2" src="../../static/icons/icon_share.png" mode="">
-							</img>{{ isCreatingShareCode ? $t('reader.book.generating') : $t('common.share') }}
+							</img><text class="l-body-tab-label">{{ isCreatingShareCode ? $t('reader.book.generating') : $t('common.share') }}</text>
 						</view>
 						<view class="l-body-tab" @tap="addToBookcase" v-show="isInBookcase == false">
 							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
-							</img>{{ $t('reader.book.addToShelf') }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.addToShelf') }}</text>
 						</view>
 						<view class="l-body-tab" @tap="removeFromBookcase" v-show="isInBookcase == true">
 							<img class="l-icon-share l-icon-share-3" src="../../static/icons/icon_add.png" mode="">
-							</img>{{ $t('reader.book.removeFromShelf') }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.removeFromShelf') }}</text>
 						</view>
 						<view class="l-body-tab" @tap="navtoSection">
 							<img class="l-icon-share l-icon-share-4" src="../../static/icons/icon_index.png" mode="">
-							</img>{{ $t('reader.book.catalog') }}
+							</img><text class="l-body-tab-label">{{ $t('reader.book.catalog') }}</text>
 						</view>
 
 					</view>
@@ -766,15 +766,21 @@ export default {
 			let tk = JSON.parse(window.localStorage.getItem('token'));
 			if (tk) tk = tk.tk;;
 			if (tk) {
+				// 乐观更新：先当作点赞成功，仅请求失败时回退
+				const wasLiked = _this.niceStatus;
+				_this.niceStatus = !wasLiked;
+				_this.nice_amount = Math.max(0, (Number(_this.nice_amount) || 0) + (wasLiked ? -1 : 1));
+				if (!wasLiked) {
+					_this.showNiubeeAnimation = true;
+				}
 				axios.get(this.$baseUrl + '/library/nice_novel?id=' + this.uid, {
 					headers: {
 						'Content-Type': 'application/json', //设置请求头请求格式为JSON
 						'Authorization': "Bearer " + tk //设置token 其中K名要和后端协调好
 					}
 				}).then((res) => {
-					if (!_this.niceStatus) {
-						_this.showNiubeeAnimation = true;
-						axios.post(_this.$baseUrl + '/treePlant/do_task', 
+					if (!wasLiked) {
+						axios.post(_this.$baseUrl + '/treePlant/do_task',
 							{ task_code: 'daily_like_novel' },
 							{
 								headers: {
@@ -801,6 +807,9 @@ export default {
 					}
 					_this.getNices();
 				}).catch(function (error) {
+					// 回滚本地乐观更新的状态和计数
+					_this.niceStatus = wasLiked;
+					_this.nice_amount = Math.max(0, (Number(_this.nice_amount) || 0) + (wasLiked ? 1 : -1));
 					if (error.message == "Request failed with status code 401") {
 						window.localStorage.removeItem('token');
 						uni.navigateTo({
@@ -1477,6 +1486,16 @@ export default {
 	},
 	async onShow(option) {
 		this.uid = this.options.id;
+
+		// 站内来源埋点：每次进入详情页上报一次入口来源，供作者「数据来源」分析
+		if (!this._sourceReported && this.uid) {
+			this._sourceReported = true;
+			const from = (this.options && this.options.from) || 'other';
+			axios.post(this.$baseUrl + '/articles/report_book_source', {
+				novel_id: this.uid,
+				source: String(from).slice(0, 20)
+			}).catch(() => {});
+		}
 
 		let bookInfo = await this.getBookInfo();
 		if (!bookInfo) {
@@ -2423,6 +2442,14 @@ export default {
 	margin-right: 18rpx;
 	width: 60rpx;
 	height: 60rpx;
+	flex-shrink: 0;
+}
+
+/* 长文案（如英文 Remove from shelf）在图标右侧自行换行，不允许整块被 flex-wrap 挤到图标下方 */
+.l-body-tab-label {
+	flex: 1;
+	min-width: 0;
+	line-height: 1.35;
 }
 
 .l-body-select {

@@ -21,7 +21,7 @@
 <script>
 	import avatarFrameAssets from '../common/avatar-frame-assets.json';
 
-	const DEFAULT_AVATAR = '/static/user/defaultAvatar.jpg';
+	const DEFAULT_AVATAR = './static/user/defaultAvatar.jpg';
 
 	function publicFrameSource(source) {
 		if (!source) return '';

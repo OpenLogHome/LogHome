@@ -80,7 +80,7 @@ export default {
 				case "NovelDetail":
 					console.log("跳转到书籍详情页面",msgSplit[1]);
 					uni.navigateTo({
-						url:'../readers/bookInfo?id=' +  msgSplit[1]
+						url:'../readers/bookInfo?id=' +  msgSplit[1] + '&from=webview'
 					})
 					break;
 				case "OpenInBrowser":

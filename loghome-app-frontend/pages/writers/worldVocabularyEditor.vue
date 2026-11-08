@@ -348,12 +348,12 @@
 			},
 			fabContent() {
 				return [{
-						iconPath: '/static/icons/draft.png',
+						iconPath: './static/icons/draft.png',
 						text: this.$t('writer.world.saveDraft'),
 						active: false
 					},
 					{
-						iconPath: '/static/icons/upload.png',
+						iconPath: './static/icons/upload.png',
 						text: this.$t('writer.world.publish'),
 						active: false
 					}

@@ -941,9 +941,18 @@ router.get('/export_novel', auth, async function (req, res) {
 	const exportType = req.query.export_type || 'published';
 	const format = req.query.export_format || 'epub';
 	if (!Number.isSafeInteger(novelId) || novelId <= 0 ||
-		!['published', 'draft'].includes(exportType) || !['pdf', 'epub'].includes(format) ||
+		!['published', 'draft'].includes(exportType) || !['pdf', 'epub', 'zip'].includes(format) ||
 		(req.query.download_mode !== undefined && req.query.download_mode !== 'url')) {
 		return res.status(400).json({ msg: '导出参数无效' });
+	}
+	if (format !== 'zip') {
+		const activeMembership = await membership.getCurrentSubscription(user.user_id);
+		if (!activeMembership) {
+			return res.status(403).json({
+				code: 'MEMBERSHIP_REQUIRED',
+				msg: '导出 PDF/EPUB 电子书仅限原木通行证或超级原木通行证会员使用，打包导出对所有用户开放',
+			});
+		}
 	}
 	if (activeNovelExports.has(user.user_id) || activeNovelExports.size >= 2) {
 		return res.status(429).json({ msg: '导出任务正在处理中，请稍后重试' });
@@ -983,14 +992,17 @@ router.get('/export_novel', auth, async function (req, res) {
 		if (!articles.length) {
 			return res.status(400).json({ msg: exportType === 'published' ? '暂无已发布章节可导出' : '暂无存稿章节可导出' });
 		}
-		const { createNovelEbook } = require('../bin/novelEbook');
-		const buffer = await createNovelEbook({ novel: novels[0], articles, format });
+		const { createNovelEbook, createNovelPack } = require('../bin/novelEbook');
+		const buffer = format === 'zip'
+			? await createNovelPack({ novel: novels[0], articles })
+			: await createNovelEbook({ novel: novels[0], articles, format });
 		const name = Array.from(String(novels[0].name || '未命名作品')
 			.replace(/[<>:"/\\|?*\x00-\x1f\x7f]/g, '_'))
 			.filter(character => character.codePointAt(0) < 0xd800 || character.codePointAt(0) > 0xdfff)
 			.slice(0, 80).join('') || '未命名作品';
 		const filename = `${name}-${exportType === 'draft' ? '存稿版' : '读者版'}.${format}`;
-		const contentType = format === 'pdf' ? 'application/pdf' : 'application/epub+zip';
+		const contentType = format === 'pdf' ? 'application/pdf'
+			: format === 'zip' ? 'application/zip' : 'application/epub+zip';
 		if (req.query.download_mode === 'url') {
 			const { downloads } = require('../bin/novelExportDownloads');
 			return res.json(downloads.put(buffer, filename, contentType));

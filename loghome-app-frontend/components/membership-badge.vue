@@ -49,8 +49,8 @@ export default {
 		},
 		icon() {
 			return this.normalizedTier === 'super'
-				? '/static/membership/loghome-super-pass.png'
-				: '/static/membership/loghome-pass.png';
+				? './static/membership/loghome-super-pass.png'
+				: './static/membership/loghome-pass.png';
 		},
 	},
 	methods: {

@@ -25,6 +25,16 @@ import kotlinx.coroutines.withContext
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Assume.assumeTrue
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Response
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
+import org.json.JSONObject
 
 @RunWith(AndroidJUnit4::class)
 class AudioEngineExperienceTest {
@@ -46,10 +56,16 @@ class AudioEngineExperienceTest {
         val blocked = CountDownLatch(1)
         val unblock = CountDownLatch(1)
         var blockText: String? = null
+        var capturedWave: ByteArray? = null
         val registry = TtsRequestRegistry()
         val synthesis = object : TtsSynthesizer {
             override fun cacheIdentity(voice: String) = "test-${directory.name}-$voice"
             override fun synthesizeToFile(text: String, requestedVoiceId: String, outputFile: File) {
+                capturedWave?.let { bytes ->
+                    TtsWaveWriter(outputFile).use { it.append(bytes) }
+                    completed += text
+                    return
+                }
                 if (text == blockText) {
                     blocked.countDown()
                     check(unblock.await(8, TimeUnit.SECONDS))
@@ -65,12 +81,12 @@ class AudioEngineExperienceTest {
         }
         lateinit var player: ExoPlayer
         lateinit var engine: AudioEngine
-        fun create() {
+        fun create(httpClient: OkHttpClient = OkHttpClient()) {
             storage.edit().putString("voice_id", "sunny-boy").commit()
             player = ExoPlayer.Builder(context)
                 .setLoadControl(DefaultLoadControl.Builder().setBufferDurationsMs(500, 1000, 100, 100).build())
                 .setMediaSourceFactory(DefaultMediaSourceFactory(TtsDataSourceFactory(registry, synthesis))).build()
-            engine = AudioEngine(context, player, scope, registry, synthesis) {}
+            engine = AudioEngine(context, player, scope, registry, synthesis, httpClient = httpClient) {}
         }
         suspend fun load() {
             val article = Article("test-chapter", "测试章节", (0..9).map { "paragraph-$it" }, (0..9).map(Int::toString))
@@ -159,5 +175,93 @@ class AudioEngineExperienceTest {
                 assertEquals("1", fixture.engine.getPlaybackState().paragraphId)
             }
         } finally { fixture.close() }
+    }
+
+    @Test fun failedChapterIsReportedAndCanBeRetriedInsteadOfStayingInPreparation() {
+        val fixture = Fixture()
+        val fail = AtomicBoolean(true)
+        val client = OkHttpClient.Builder().addInterceptor { chain ->
+            assertEquals("true", chain.request().url.queryParameter("isCaching"))
+            val body = JSONObject().put("article_id", "101").put("title", "章节")
+                .put("article_type", "richtext").put("content", "[]")
+            Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1)
+                .code(if (fail.get()) 404 else 200).message("fixture")
+                .body((if (fail.get()) "{}" else "[$body]").toResponseBody("application/json".toMediaType())).build()
+        }.build()
+        try {
+            onMain { fixture.create(client) }
+            assertThrows(IOException::class.java) {
+                onMain { fixture.engine.openPlaylist(listOf("101"), "101") }
+            }
+            onMain {
+                val state = fixture.engine.getPlaybackState()
+                assertFalse(state.isPreparing)
+                assertTrue(state.errorMessage.contains("章节不存在"))
+                assertEquals(0, state.paragraphCount)
+            }
+            fail.set(false)
+            onMain {
+                fixture.engine.openPlaylist(listOf("101"), "101")
+                assertEquals("101", fixture.engine.getPlaybackState().articleId)
+                assertEquals("", fixture.engine.getPlaybackState().errorMessage)
+                assertTrue(fixture.player.playWhenReady)
+            }
+        } finally { fixture.close() }
+    }
+
+    @Test fun unsupportedFirstChapterDoesNotPreventLoadingTheNextReadableChapter() {
+        val fixture = Fixture()
+        val client = OkHttpClient.Builder().addInterceptor { chain ->
+            val id = chain.request().url.queryParameter("id")!!
+            val body = JSONObject().put("article_id", id).put("title", "章节")
+                .put("article_type", if (id == "1") "worldVocabulary" else "richtext").put("content", "[]")
+            Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("fixture")
+                .body("[$body]".toResponseBody("application/json".toMediaType())).build()
+        }.build()
+        try {
+            onMain {
+                fixture.create(client)
+                fixture.engine.openPlaylist(listOf("1", "2"), "1")
+                assertEquals("2", fixture.engine.getPlaybackState().articleId)
+                assertTrue(fixture.player.mediaItemCount > 0)
+                assertFalse(fixture.engine.getPlaybackState().isPreparing)
+            }
+        } finally { fixture.close() }
+    }
+
+    @Test fun chapterTimeoutLeavesAnActionableErrorAndReleasesTheLoadingGuard() {
+        val fixture = Fixture()
+        val client = OkHttpClient.Builder().addInterceptor { throw SocketTimeoutException("fixture timeout") }.build()
+        try {
+            onMain { fixture.create(client) }
+            assertThrows(IOException::class.java) {
+                onMain { fixture.engine.openPlaylist(listOf("101"), "101") }
+            }
+            onMain {
+                assertTrue(fixture.engine.getPlaybackState().errorMessage.contains("超时"))
+                assertFalse(fixture.engine.getPlaybackState().isPreparing)
+            }
+        } finally { fixture.close() }
+    }
+
+    @Test fun capturedDefaultModelWaveCanBeNormalizedBufferedAndPlayed() {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("verifyCapturedTtsWave") == "true")
+        val fixture = Fixture()
+        val wave = File(fixture.app.getExternalFilesDir(null), "tts-startup-test.wav")
+        assertTrue("Captured production WAV fixture must be provided", wave.isFile)
+        try {
+            fixture.capturedWave = wave.readBytes()
+            onMain { fixture.create(); fixture.load(); fixture.engine.play() }
+            var playing = false
+            await("Actual default-model WAV reaches playable media state") {
+                onMain { playing = fixture.player.isPlaying && fixture.player.duration > 0 }
+                playing
+            }
+            onMain {
+                assertTrue(fixture.player.duration > 0)
+                assertEquals("", fixture.engine.getPlaybackState().errorMessage)
+                fixture.engine.pause()
+            }
+        } finally { fixture.close(); wave.delete() }
     }
 }

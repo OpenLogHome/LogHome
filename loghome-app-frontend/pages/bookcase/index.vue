@@ -216,7 +216,7 @@
 					}
 				} else {
 					uni.navigateTo({
-						url: '../readers/bookInfo?id=' + novel_id
+						url: '../readers/bookInfo?id=' + novel_id + '&from=bookcase'
 					})
 				}
 			},

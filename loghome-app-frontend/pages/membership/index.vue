@@ -161,7 +161,7 @@
 						<text v-if="plan.tagKey" class="plan-card__tag">{{ $t(plan.tagKey) }}</text>
 						<text class="plan-card__name">{{ $t(plan.nameKey) }}</text>
 						<view class="plan-card__price">
-							<image class="plan-card__currency-icon" src="/static/resources/log.png" mode="aspectFit"></image>
+							<image class="plan-card__currency-icon" :src="'./static/resources/log.png'" mode="aspectFit"></image>
 							<text class="plan-card__number">{{ plan.price }}</text>
 							<text class="plan-card__currency">{{ $t('membership.common.logUnit') }}</text>
 						</view>
@@ -177,11 +177,11 @@
 				</view>
 				<view class="more-panel__options">
 					<view class="more-option" @tap="gotoMembershipTool('redeem')">
-						<image class="more-option__icon" src="/static/membership/icons/redeem-ticket.svg" mode="aspectFit"></image>
+						<image class="more-option__icon" :src="'./static/membership/icons/redeem-ticket.svg'" mode="aspectFit"></image>
 						<text>{{ $t('membership.common.redeemCode') }}</text>
 					</view>
 					<view class="more-option" @tap="gotoMembershipTool('gift')">
-						<image class="more-option__icon" src="/static/membership/icons/gift-pass.svg" mode="aspectFit"></image>
+						<image class="more-option__icon" :src="'./static/membership/icons/gift-pass.svg'" mode="aspectFit"></image>
 						<text>{{ $t('membership.common.giftFriend') }}</text>
 					</view>
 				</view>
@@ -196,7 +196,7 @@
 			<view class="purchase-dock__copy">
 				<text class="purchase-dock__label">{{ purchaseDockLabel }}</text>
 				<view class="purchase-dock__price">
-					<image class="purchase-dock__currency-icon" src="/static/resources/log.png" mode="aspectFit"></image>
+					<image class="purchase-dock__currency-icon" :src="'./static/resources/log.png'" mode="aspectFit"></image>
 					<text class="purchase-dock__number">{{ purchaseDockPrice }}</text>
 					<text class="purchase-dock__unit">{{ purchaseDockUnit }}</text>
 				</view>
@@ -239,7 +239,7 @@ export default {
 					nameKey: 'membership.pass.tier.standard.name',
 					eyebrowKey: 'membership.pass.tier.standard.eyebrow',
 					cardTagKey: 'membership.pass.tier.standard.tag',
-					logo: '/static/membership/loghome-pass.png',
+					logo: './static/membership/loghome-pass.png',
 					sloganKey: 'membership.pass.tier.standard.slogan',
 					summaryKey: 'membership.pass.tier.standard.summary',
 					featureKeys: [
@@ -293,7 +293,7 @@ export default {
 					nameKey: 'membership.pass.tier.super.name',
 					eyebrowKey: 'membership.pass.tier.super.eyebrow',
 					cardTagKey: 'membership.pass.tier.super.tag',
-					logo: '/static/membership/loghome-super-pass.png',
+					logo: './static/membership/loghome-super-pass.png',
 					sloganKey: 'membership.pass.tier.super.slogan',
 					summaryKey: 'membership.pass.tier.super.summary',
 					featureKeys: [

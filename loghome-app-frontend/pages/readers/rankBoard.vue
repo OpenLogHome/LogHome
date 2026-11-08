@@ -253,7 +253,7 @@ export default {
 			if (!item || !(item.novel_id > 0)) return;
 			const url = item.novel_type === 'manga'
 				? '/pages/readers/mangaInfo?id=' + item.novel_id
-				: '/pages/readers/bookInfo?id=' + item.novel_id;
+				: '/pages/readers/bookInfo?id=' + item.novel_id + '&from=rank';
 			uni.navigateTo({ url });
 		},
 	},

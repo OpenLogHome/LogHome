@@ -230,16 +230,23 @@ class NativeAudiobookPlayerView @JvmOverloads constructor(
         updateStatusBarAppearance()
         currentDurationMs = state.durationMs
         currentPositionMs = state.positionMs
-        binding.chapterTitle.text = state.chapterTitle.ifBlank {
-            if (state.isBuffering) "正在生成语音…" else "正在准备章节…"
+        binding.chapterTitle.text = when {
+            state.errorMessage.isNotBlank() -> "听书加载失败"
+            state.chapterTitle.isNotBlank() -> state.chapterTitle
+            state.isPreparing -> state.preparationMessage.ifBlank { "正在准备章节…" }
+            state.isBuffering -> "正在生成语音…"
+            else -> "尚未加载章节"
         }
-        binding.paragraphText.text = state.paragraphText.ifBlank { "听书内容加载后将在这里显示" }
+        binding.paragraphText.text = state.errorMessage.takeIf { it.isNotBlank() }
+            ?.let { "$it\n点击播放按钮重试" }
+            ?: state.paragraphText.ifBlank { "听书内容加载后将在这里显示" }
+        binding.playPauseButton.isEnabled = !state.isPreparing
         binding.playPauseButton.setIconResource(if (state.isPlaying) R.drawable.audiobook_pause else R.drawable.audiobook_play)
         binding.playPauseButton.contentDescription = if (state.isPlaying) "暂停" else "播放"
         binding.playPauseButton.iconSize = (resources.displayMetrics.density * 36).toInt()
         binding.rewindButton.isEnabled = state.durationMs > 0L
         binding.forwardButton.isEnabled = state.durationMs > 0L
-        binding.bufferingIndicator.isVisible = state.isBuffering
+        binding.bufferingIndicator.isVisible = state.errorMessage.isBlank() && (state.isBuffering || state.isPreparing)
         binding.previousButton.isEnabled = state.canSkipPrevious
         binding.nextButton.isEnabled = state.canSkipNext
         binding.progressSeekBar.isEnabled = state.durationMs > 0L

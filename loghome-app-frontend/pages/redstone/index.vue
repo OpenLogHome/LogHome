@@ -14,7 +14,7 @@
 				<view class="balance-card__shine"></view>
 				<view class="balance-card__heading">
 					<view class="balance-card__icon">
-						<image src="/static/icons/redstone.svg" mode="aspectFit"></image>
+						<image :src="'./static/icons/redstone.svg'" mode="aspectFit"></image>
 					</view>
 					<view>
 						<text class="balance-card__eyebrow">AI ENERGY</text>
@@ -45,7 +45,7 @@
 				</view>
 
 				<view class="amount-input" :class="{ 'amount-input--focused': focused }">
-					<image src="/static/icons/redstone.svg" mode="aspectFit"></image>
+					<image :src="'./static/icons/redstone.svg'" mode="aspectFit"></image>
 					<input
 						:value="amount"
 						type="number"
@@ -74,7 +74,7 @@
 				<view class="exchange-summary">
 					<text>{{ $t('redstone.page.payLabel') }}</text>
 					<view>
-						<image src="/static/resources/log.png" mode="aspectFit"></image>
+						<image :src="'./static/resources/log.png'" mode="aspectFit"></image>
 						<text>{{ logCost }}</text>
 						<text class="exchange-summary__unit">{{ $t('redstone.page.logUnit') }}</text>
 					</view>
@@ -98,14 +98,14 @@
 				</view>
 				<view class="membership-grants">
 					<view>
-						<image src="/static/membership/loghome-pass.png" mode="aspectFit"></image>
+						<image :src="'./static/membership/loghome-pass.png'" mode="aspectFit"></image>
 						<view>
 							<text>{{ $t('redstone.page.passStandardName') }}</text>
 							<text class="membership-grants__amount">{{ $t('redstone.page.grantAmount', { amount: 100 }) }}</text>
 						</view>
 					</view>
 					<view>
-						<image src="/static/membership/loghome-super-pass.png" mode="aspectFit"></image>
+						<image :src="'./static/membership/loghome-super-pass.png'" mode="aspectFit"></image>
 						<view>
 							<text>{{ $t('redstone.page.passSuperName') }}</text>
 							<text class="membership-grants__amount">{{ $t('redstone.page.grantAmount', { amount: 200 }) }}</text>

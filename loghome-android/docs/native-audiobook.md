@@ -105,3 +105,25 @@ Backend deployment and the response contract are documented in
 - While the player is visible, volume keys bypass the H5 reader listener and use
   the system media volume controls. Collapsing the player restores the reader's
   existing key handling.
+
+## Startup failures and retry
+
+The native player reports credential acquisition and chapter loading separately.
+An HTTP failure, rejected login, invalid chapter or network timeout replaces the
+preparation message with an actionable error instead of leaving an empty queue
+looking busy. Service binding is bounded to 10 seconds, session calls to 45
+seconds, and chapter calls to 30 seconds. Synthesis keeps its longer timeout.
+
+The play button retries a failed startup using the current WebView login; retry
+metadata does not retain a JWT. Chapter failure does not consume the failed
+chapter index. Unsupported non-text entries are skipped within the same loading
+loop, rather than recursing into a still-held loading guard. Background chapter
+reads use `isCaching=true` to avoid blocking on duplicate reading-statistic writes.
+
+`AudioEngineExperienceTest` covers chapter rejection/retry, timeout recovery and
+skipping non-text entries. `NativeAudiobookPlayerViewTest` checks preparation/error
+rendering. Optional instrumentation arguments `verifyProductionTts=true` and
+`verifyCapturedTtsWave=true` check a rejected production login and native playback
+of a captured WAV respectively. The latter requires a public-text test WAV at
+the target app's external-files path `tts-startup-test.wav`; it is removed after
+the test. No real login token or TTS key is placed in the test APK or arguments.

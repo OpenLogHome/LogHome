@@ -12,8 +12,8 @@
 		<view class="rules-content">
 			<view class="rules-hero">
 				<view class="rules-hero__marks">
-					<image src="/static/membership/loghome-pass.png" mode="aspectFit"></image>
-					<image src="/static/icons/redstone.svg" mode="aspectFit"></image>
+					<image :src="'./static/membership/loghome-pass.png'" mode="aspectFit"></image>
+					<image :src="'./static/icons/redstone.svg'" mode="aspectFit"></image>
 				</view>
 				<text class="rules-hero__eyebrow">LOGHOME PASS · SERVICE RULES</text>
 				<text class="rules-hero__title">{{ $t('membership.rules.heroTitle') }}</text>
@@ -25,12 +25,12 @@
 				<view class="rules-section__heading"><text>01</text><view><text>{{ $t('membership.rules.sections.plans.title') }}</text><text>{{ $t('membership.rules.sections.plans.subtitle') }}</text></view></view>
 				<view class="price-grid">
 					<view class="price-card">
-						<image src="/static/membership/loghome-pass.png" mode="aspectFit"></image>
+						<image :src="'./static/membership/loghome-pass.png'" mode="aspectFit"></image>
 						<text class="price-card__name">{{ $t('membership.pass.tier.standard.name') }}</text>
 						<text>{{ $t('membership.rules.sections.plans.monthly') }}</text><text>{{ $t('membership.rules.sections.plans.annual') }}</text>
 					</view>
 					<view class="price-card price-card--super">
-						<image src="/static/membership/loghome-super-pass.png" mode="aspectFit"></image>
+						<image :src="'./static/membership/loghome-super-pass.png'" mode="aspectFit"></image>
 						<text class="price-card__name">{{ $t('membership.pass.tier.super.name') }}</text>
 						<text>{{ $t('membership.rules.sections.plans.superMonthly') }}</text><text>{{ $t('membership.rules.sections.plans.superAnnual') }}</text>
 					</view>
@@ -68,7 +68,7 @@
 
 			<view class="rules-section rules-section--redstone">
 				<view class="rules-section__heading"><text>04</text><view><text>{{ $t('membership.rules.sections.exchange.title') }}</text><text>{{ $t('membership.rules.sections.exchange.subtitle') }}</text></view></view>
-				<view class="exchange-rate"><image src="/static/resources/log.png" mode="aspectFit"></image><text>{{ $t('membership.rules.sections.exchange.tenLog') }}</text><text>=</text><image src="/static/icons/redstone.svg" mode="aspectFit"></image><text>{{ $t('membership.rules.sections.exchange.oneRedstone') }}</text></view>
+				<view class="exchange-rate"><image :src="'./static/resources/log.png'" mode="aspectFit"></image><text>{{ $t('membership.rules.sections.exchange.tenLog') }}</text><text>=</text><image :src="'./static/icons/redstone.svg'" mode="aspectFit"></image><text>{{ $t('membership.rules.sections.exchange.oneRedstone') }}</text></view>
 				<view class="usage-list">
 					<view><text>{{ $t('membership.rules.sections.exchange.askTitle') }}</text><text>{{ $t('membership.rules.sections.exchange.askCost') }}</text></view>
 					<view><text>{{ $t('membership.rules.sections.exchange.bipaoTitle') }}</text><text>{{ $t('membership.rules.sections.exchange.bipaoCost') }}</text></view>

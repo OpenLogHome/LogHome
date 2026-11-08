@@ -1,7 +1,7 @@
 <template>
 	<div class="outer" v-dark>
 		<div class="content">
-			<img class="logo" src="/static/logo.png"></img>
+			<img class="logo" :src="'./static/logo.png'"></img>
 			<view class="text-area">
 				<div class="title">{{ $t('auth.login.account.title') }}</div>
 				<div class="version" v-show="$store.state.appVersion">{{ $t('auth.login.account.appVersion') }}{{this.$store.state.appVersion}}</div>
