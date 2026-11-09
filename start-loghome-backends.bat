@@ -10,8 +10,8 @@ echo  LogHome local services launcher
 echo  each service opens in its own window
 echo ============================================
 
-rem main backend :9000 (nodemon, auto reload)
-start "loghome-backend :9000" cmd /k "cd /d %ROOT%loghome-backend && call npx nodemon main.js"
+rem main backend :9000 (nodemon, auto reload; timers off locally to avoid double-firing against shared DB)
+start "loghome-backend :9000" cmd /k "cd /d %ROOT%loghome-backend && set "TIMERS_ENABLED=false" && call npx nodemon main.js"
 
 rem log-defence miniapp :8787
 start "log-defence :8787" cmd /k "cd /d %ROOT%loghome-miniapps\log-defence && call npm run dev"
