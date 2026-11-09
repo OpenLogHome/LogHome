@@ -9,7 +9,9 @@ const root = path.resolve(__dirname, '../..');
 const manifestPath = path.join(__dirname, 'miniapp-icon-assets.json');
 const assets = {
   'log-defence': 'loghome-app-frontend/static/icons/enderman.png',
-  'log-miniminecraft': 'loghome-app-frontend/static/icons/mini-minecraft.svg'
+  'log-miniminecraft': 'loghome-app-frontend/static/icons/mini-minecraft.svg',
+  'log-book-cover': 'loghome-app-frontend/static/icons/book-cover.svg',
+  'log-post-cover': 'loghome-app-frontend/static/icons/post-cover.svg'
 };
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, 'utf8')) : {};
@@ -34,10 +36,16 @@ async function verify(entry) {
 }
 
 async function main() {
-  for (const [id, source] of Object.entries(assets)) {
+  const only = process.argv.find(arg => arg.startsWith('--only='));
+  const ids = only ? [...new Set(only.slice('--only='.length).split(','))] : Object.keys(assets);
+  if (!ids.length || ids.some(id => !Object.hasOwn(assets,id))) throw new Error('Unknown miniapp icon ID in --only');
+  for (const id of ids) {
+    const source = assets[id];
     const sourceBytes = fs.readFileSync(path.join(root,source));
     // Rasterize the code-native block icon at its pixel grid, then enlarge without blur.
-    const bytes = source.endsWith('.svg')
+    const bytes = ['log-book-cover','log-post-cover'].includes(id)
+      ? await require('sharp')(sourceBytes,{density:192}).resize(256,256).png().toBuffer()
+      : source.endsWith('.svg')
       ? await require('sharp')(await require('sharp')(sourceBytes).png().toBuffer()).resize(256,256,{kernel:'nearest'}).png().toBuffer()
       : sourceBytes;
     const sha256 = hash(bytes);
@@ -70,9 +78,8 @@ async function main() {
   const query = (sql,values=[]) => new Promise((resolve,reject) => connection.query(sql,values,(error,rows) => error ? reject(error) : resolve(rows)));
   try {
     await query('START TRANSACTION');
-    const ids = Object.keys(assets);
     const apps = await query('SELECT app_id,icon_url FROM miniapps WHERE app_id IN (?) FOR UPDATE',[ids]);
-    if (apps.length !== ids.length) throw new Error('Both miniapps must be registered before applying icons');
+    if (apps.length !== ids.length) throw new Error('Selected miniapps must be registered before applying icons');
     const entries = await query('SELECT entry_id,miniapp_id,icon_url FROM lab_entries WHERE miniapp_id IN (?) FOR UPDATE',[ids]);
     const backupDir = path.join(root,'_tmp');
     fs.mkdirSync(backupDir,{recursive:true});

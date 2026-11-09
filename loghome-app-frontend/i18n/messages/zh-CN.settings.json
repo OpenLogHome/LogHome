@@ -96,7 +96,8 @@
 		},
 		"donate": {
 			"intro": "原木巨树承载着一本又一本的书籍，快去给他浇点水、施点肥",
-			"button": "捐助"
+			"button": "捐助",
+			"activityTitle": "干草块杯活动页面"
 		},
 		"credit": {
 			"recordsTitle": "变更记录",

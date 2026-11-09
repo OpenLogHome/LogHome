@@ -2,11 +2,11 @@
   <div class="writer-startup" :class="`theme-${theme}`" :aria-busy="!error">
     <div class="startup-content" :role="error ? 'alert' : 'status'" aria-live="polite">
       <span v-if="!error" class="startup-spinner" aria-hidden="true" />
-      <h1>{{ error ? '工作台暂时未能打开' : '正在准备写作工作台…' }}</h1>
-      <p>{{ error || '正在加载编辑器资源，加载完成后即可开始创作。' }}</p>
+      <h1>{{ error ? $t('工作台暂时未能打开') : $t('正在准备写作工作台…') }}</h1>
+      <p>{{ error || $t('正在加载编辑器资源，加载完成后即可开始创作。') }}</p>
       <div class="startup-actions">
-        <button v-if="error" @click="$emit('retry')">重新加载</button>
-        <a href="/write">返回创作中心</a>
+        <button v-if="error" @click="$emit('retry')">{{ $t('重新加载') }}</button>
+        <a href="/write">{{ $t('返回创作中心') }}</a>
       </div>
     </div>
   </div>

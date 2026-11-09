@@ -1,80 +1,80 @@
 <template>
   <div class="write-page">
     <div class="page-header">
-      <h1 class="page-title">创作中心</h1>
+      <h1 class="page-title">{{ $t('创作中心') }}</h1>
     </div>
 
     <div class="write-container">
       <div class="works-section">
         <div class="section-header">
-          <h2 class="section-title">我的作品</h2>
-          <input v-model="workQuery" class="work-search" aria-label="搜索作品" placeholder="搜索作品名或简介" />
-          <button class="new-button" @click="createNewWork">+ 创建新作品</button>
+          <h2 class="section-title">{{ $t('我的作品') }}</h2>
+          <input v-model="workQuery" class="work-search" :aria-label="$t('搜索作品')" :placeholder="$t('搜索作品名或简介')" />
+          <button class="new-button" @click="createNewWork">{{ $t('+ 创建新作品') }}</button>
         </div>
 
         <div class="tabs">
-          <button class="tab-button" :class="{ active: activeTab === 'all' }" @click="activeTab = 'all'">全部作品</button>
-          <button class="tab-button" :class="{ active: activeTab === 'ongoing' }" @click="activeTab = 'ongoing'">连载中</button>
-          <button class="tab-button" :class="{ active: activeTab === 'completed' }" @click="activeTab = 'completed'">已完结</button>
-          <button class="tab-button" :class="{ active: activeTab === 'draft' }" @click="activeTab = 'draft'">草稿箱</button>
+          <button class="tab-button" :class="{ active: activeTab === 'all' }" @click="activeTab = 'all'">{{ $t('全部作品') }}</button>
+          <button class="tab-button" :class="{ active: activeTab === 'ongoing' }" @click="activeTab = 'ongoing'">{{ $t('连载中') }}</button>
+          <button class="tab-button" :class="{ active: activeTab === 'completed' }" @click="activeTab = 'completed'">{{ $t('已完结') }}</button>
+          <button class="tab-button" :class="{ active: activeTab === 'draft' }" @click="activeTab = 'draft'">{{ $t('草稿箱') }}</button>
         </div>
 
         <div class="works-list">
           <!-- 加载状态 -->
           <div class="loading-state" v-if="loading">
             <div class="loading-spinner"></div>
-            <p class="loading-text">正在加载作品列表...</p>
+            <p class="loading-text">{{ $t('正在加载作品列表...') }}</p>
           </div>
           
           <!-- 错误提示 -->
           <div class="error-state" v-else-if="error">
             <div class="error-icon" aria-hidden="true"><SiteIcon name="warning" /></div>
-            <h3 class="error-title">加载失败</h3>
+            <h3 class="error-title">{{ $t('加载失败') }}</h3>
             <p class="error-desc">{{error}}</p>
-            <button class="error-button" @click="fetchWorks">重试</button>
+            <button class="error-button" @click="fetchWorks">{{ $t('重试') }}</button>
           </div>
           
           <!-- 空状态 -->
           <div class="work-empty" v-else-if="!filteredWorks.length">
             <div class="empty-icon" aria-hidden="true"><SiteIcon name="edit" /></div>
-            <h3 class="empty-title">{{activeTab === 'all' ? '您还没有创建任何作品' : '没有符合条件的作品'}}</h3>
-            <p class="empty-desc" v-if="activeTab === 'all'">点击"创建新作品"按钮开始您的创作之旅</p>
-            <button class="empty-button" @click="createNewWork" v-if="activeTab === 'all'">+ 立即创建</button>
+            <h3 class="empty-title">{{ activeTab === 'all' ? $t('您还没有创建任何作品') : $t('没有符合条件的作品') }}</h3>
+            <p class="empty-desc" v-if="activeTab === 'all'">{{ $t('点击“创建新作品”按钮开始您的创作之旅') }}</p>
+            <button class="empty-button" @click="createNewWork" v-if="activeTab === 'all'">{{ $t('+ 立即创建') }}</button>
           </div>
 
           <!-- 作品列表 -->
           <div class="work-item" v-for="work in filteredWorks" :key="work.id">
             <div class="work-cover" :style="work.picUrl ? `background-image: url(${work.picUrl}); background-size: cover; background-position: center;` : `background-color: ${work.color}`" @error="work.picUrl = null">
-              <span class="work-category">{{work.category}}</span>
-              <span class="work-status" :class="{'status-completed': work.status === '已完结', 'status-draft': work.status === '草稿'}">{{work.status}}</span>
+              <span class="work-category">{{ $t(work.category) }}</span>
+              <span class="work-status" :class="{'status-completed': work.status === '已完结', 'status-draft': work.status === '草稿'}">{{ $t(work.status) }}</span>
             </div>
             <div class="work-info">
               <h3 class="work-title">{{work.title}}</h3>
               <p class="work-stats">
-                <span>{{work.status}}</span>
-                <span>{{work.wordCount}}字</span>
+                <span>{{ $t(work.status) }}</span>
+                <span>{{ $t('{p0} 字', { p0: work.wordCount }) }}</span>
               </p>
               <p class="work-desc">{{work.description}}</p>
-              <p class="work-update">最近更新: {{work.lastUpdate}}</p>
+              <p class="work-update">{{ $t('最近更新: {date}', { date: work.lastUpdate }) }}</p>
               <div class="work-actions">
-                <nuxt-link class="work-action primary" :to="`/write/edit/${work.id}`" target="_blank" rel="noopener" @mouseenter.native="warmWriter" @focus.native="warmWriter" @click.native="warmWriter">开始写作</nuxt-link>
-                <button class="work-action" @click="$router.push(`/write/edit/${work.id}?tool=settings`)">作品设置</button>
+                <nuxt-link class="work-action primary" :to="`/write/edit/${work.id}`" target="_blank" rel="noopener" @mouseenter.native="warmWriter" @focus.native="warmWriter" @click.native="warmWriter">{{ $t('开始写作') }}</nuxt-link>
+                <button class="work-action" @click="$router.push(`/write/edit/${work.id}?tool=settings`)">{{ $t('作品设置') }}</button>
               </div>
               
               <!-- 创作活动板块 -->
               <div class="activity-section" v-if="work.activityInfo && work.activityInfo.hasActivity">
-                <h4 class="activity-section-title">创作活动</h4>
+                <h4 class="activity-section-title">{{ $t('创作活动') }}</h4>
                 <div class="activity-list">
                   <div v-for="activity in work.activityInfo.activities" :key="activity.tag_id" class="activity-item">
                     <div class="activity-header">
                       <div class="activity-name">{{activity.activity_name}}</div>
-                      <span class="activity-status">活动中</span>
+                      <span class="activity-status">{{ $t('活动中') }}</span>
                     </div>
                     <div class="activity-description">{{activity.activity_description}}</div>
                     
                     <!-- 活动资讯 -->
                     <div class="activity-news" v-if="activity.activity_news && activity.activity_news.length > 0">
-                      <div class="news-title">活动资讯</div>
+                      <div class="news-title">{{ $t('活动资讯') }}</div>
                       <div class="news-list">
                         <div v-for="news in activity.activity_news" :key="news.title" class="news-item" 
                           @click="openNewsLink(news)">
@@ -87,13 +87,13 @@
                     <!-- 信息填写入口 -->
                     <div class="activity-form" v-if="activity.required_fields && activity.required_fields.length > 0">
                       <div class="form-status">
-                        <div class="form-title">活动参与信息</div>
+                        <div class="form-title">{{ $t('活动参与信息') }}</div>
                         <div class="form-status-text" :class="getFormStatusClass(work.id, activity.tag_id)">
                           {{getFormStatusText(work.id, activity.tag_id, activity.required_fields)}}
                         </div>
                       </div>
                       <button class="form-button" @click="openActivityForm(work.id, activity)">
-                        {{hasFilledForm(work.id, activity.tag_id) ? '修改信息' : '填写信息'}}
+                        {{ hasFilledForm(work.id, activity.tag_id) ? $t('修改信息') : $t('填写信息') }}
                       </button>
                     </div>
                   </div>
@@ -106,15 +106,15 @@
 
       <div class="sidebar">
         <div class="sidebar-section">
-          <h3 class="sidebar-title">创作数据</h3>
+          <h3 class="sidebar-title">{{ $t('创作数据') }}</h3>
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-value">{{stats.totalWorks}}</div>
-              <div class="stat-label">作品总数</div>
+              <div class="stat-label">{{ $t('作品总数') }}</div>
             </div>
             <div class="stat-item">
               <div class="stat-value">{{stats.totalWords}}</div>
-              <div class="stat-label">总字数</div>
+              <div class="stat-label">{{ $t('总字数') }}</div>
             </div>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default {
   components: { SiteIcon },
   head() {
     return {
-      title: '创作中心 - 原木社区'
+      title: `${this.$t('创作中心')} - ${this.$t('原木社区')}`
     }
   },
   data() {
@@ -177,7 +177,7 @@ export default {
     checkLoginStatus() {
       const token = localStorage.getItem('token');
       if (!token) {
-        this.$message.warning('请先登录');
+        this.$message.warning(this.$t('请先登录'));
         this.$router.push('/login');
       }
     },
@@ -217,7 +217,7 @@ export default {
             const picUrl = novel.picUrl || null
             
             // 格式化最后更新时间
-            const lastUpdate = novel.update_time ? this.formatDate(novel.update_time) : '未知'
+            const lastUpdate = novel.update_time ? this.formatDate(novel.update_time) : this.$t('未知')
             
             // 格式化字数
             const wordCount = novel.text_count ? this.formatNumber(novel.text_count) : (novel.word_count ? this.formatNumber(novel.word_count) : '0')
@@ -228,7 +228,7 @@ export default {
               category,
               wordCount,
               chapterCount: novel.article_count || 0,
-              description: novel.content || '暂无简介',
+              description: novel.content || this.$t('暂无简介'),
               lastUpdate,
               color,
               picUrl
@@ -243,7 +243,7 @@ export default {
         }
       } catch (error) {
         console.error('获取作品列表失败:', error)
-        this.error = '获取作品列表失败，请稍后重试'
+        this.error = this.$t('获取作品列表失败，请稍后重试')
         
         // 尝试从缓存获取数据
         const cachedWorks = localStorage.getItem('LogHomeUserEssay')
@@ -287,7 +287,7 @@ export default {
         const picUrl = novel.picUrl || null
         
         // 格式化最后更新时间
-        const lastUpdate = novel.update_time ? this.formatDate(novel.update_time) : '未知'
+        const lastUpdate = novel.update_time ? this.formatDate(novel.update_time) : this.$t('未知')
         
         // 格式化字数
         const wordCount = novel.text_count ? this.formatNumber(novel.text_count) : (novel.word_count ? this.formatNumber(novel.word_count) : '0')
@@ -299,7 +299,7 @@ export default {
           category,
           wordCount,
           chapterCount: novel.article_count || 0,
-          description: novel.content || '暂无简介',
+          description: novel.content || this.$t('暂无简介'),
           lastUpdate,
           color,
           picUrl
@@ -328,7 +328,7 @@ export default {
         const date = new Date(dateString)
         return date.toISOString().split('T')[0]
       } catch (error) {
-        return '未知'
+        return this.$t('未知')
       }
     },
     
@@ -365,14 +365,14 @@ export default {
     getFormStatusText(workId, tagId, requiredFields) {
       if (!this.hasFilledForm(workId, tagId)) {
         const requiredCount = requiredFields.filter(field => field.required).length
-        return requiredCount > 0 ? `有${requiredCount}项必填信息未填写` : '信息未填写'
+        return requiredCount > 0 ? this.$t('有{count}项必填信息未填写', { count: requiredCount }) : this.$t('信息未填写')
       }
       
       const work = this.works.find(w => w.id === workId)
-      if (!work || !work.activityInfo || !work.activityInfo.userInfo) return '信息未填写'
+      if (!work || !work.activityInfo || !work.activityInfo.userInfo) return this.$t('信息未填写')
       
       const userInfo = work.activityInfo.userInfo.find(info => info.tag_id === tagId)
-      if (!userInfo) return '信息未填写'
+      if (!userInfo) return this.$t('信息未填写')
       
       // 从 information_data 字段解析实际的表单数据
       let formData = {}
@@ -388,8 +388,8 @@ export default {
       )
       
       return missingRequired.length > 0 
-        ? `还有${missingRequired.length}项必填信息未完善` 
-        : '信息已完善'
+        ? this.$t('还有{count}项必填信息未完善', { count: missingRequired.length })
+        : this.$t('信息已完善')
     },
     
     getFormStatusClass(workId, tagId) {

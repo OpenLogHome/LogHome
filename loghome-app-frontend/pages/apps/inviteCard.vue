@@ -1,8 +1,8 @@
 <template>
 	<view class="invite-card-container" v-dark>
 		<view class="header">
-			<view class="title">邀请好友加入原木社区</view>
-			<view class="subtitle">每邀请一位好友加入，双方均可获得奖励</view>
+			<view class="title">{{ $t('apps.invite.cardTitle') }}</view>
+			<view class="subtitle">{{ $t('apps.invite.cardSubtitle') }}</view>
 		</view>
 		
 		<view class="card">
@@ -12,69 +12,69 @@
 						:visual-scale="userInfo.avatar_frame ? 1.2 : 1" />
 					<view class="name">{{userInfo.name}}</view>
 				</view>
-				<view class="slogan">邀请你加入原木社区</view>
+				<view class="slogan">{{ $t('apps.invite.cardSlogan') }}</view>
 			</view>
 			
 			<view class="code-section">
-				<view class="code-label">我的邀请码</view>
+				<view class="code-label">{{ $t('apps.invite.myCode') }}</view>
 				<view class="code-value">{{inviteCode}}</view>
 			</view>
 			
 			<view class="share-section">
 				<view class="share-btn" @click="copyShareLink">
 					<uni-icons type="paperplane" size="20"></uni-icons>
-					<text>复制分享链接</text>
+					<text>{{ $t('apps.invite.copyShare') }}</text>
 				</view>
 			</view>
 		</view>
 		
 		<view class="stats-card">
-			<view class="stats-title">我的邀请数据</view>
+			<view class="stats-title">{{ $t('apps.invite.myStats') }}</view>
 			<view class="stats-grid">
 				<view class="stats-item">
 					<view class="stats-value">{{inviteStats.totalNew || 0}}</view>
-					<view class="stats-label">累计邀请新用户</view>
+					<view class="stats-label">{{ $t('apps.invite.statTotalNew') }}</view>
 				</view>
 				<view class="stats-item">
 					<view class="stats-value">{{inviteStats.totalReturn || 0}}</view>
-					<view class="stats-label">累计邀请回归</view>
+					<view class="stats-label">{{ $t('apps.invite.statTotalReturn') }}</view>
 				</view>
 				<view class="stats-item">
 					<view class="stats-value">{{inviteStats.monthNew || 0}}/{{monthlyLimit}}</view>
-					<view class="stats-label">本月新用户</view>
+					<view class="stats-label">{{ $t('apps.invite.statMonthNew') }}</view>
 				</view>
 				<view class="stats-item">
 					<view class="stats-value">{{inviteStats.monthReturn || 0}}/{{monthlyLimit}}</view>
-					<view class="stats-label">本月回归用户</view>
+					<view class="stats-label">{{ $t('apps.invite.statMonthReturn') }}</view>
 				</view>
 			</view>
 		</view>
 		
 		<view class="rewards-card">
-			<view class="rewards-title">邀请奖励</view>
+			<view class="rewards-title">{{ $t('apps.invite.rewardsTitle') }}</view>
 			<view class="rewards-content">
 				<view class="reward-item">
 					<uni-icons type="checkmarkempty" size="18" color="#67C23A"></uni-icons>
-					<text>邀请新用户：双方各获得{{newUserReward}}原木</text>
+					<text>{{ $t('apps.invite.rewardNew', { amount: newUserReward }) }}</text>
 				</view>
 				<view class="reward-item">
 					<uni-icons type="checkmarkempty" size="18" color="#67C23A"></uni-icons>
-					<text>邀请老用户回归：双方各获得{{returnUserReward}}原木</text>
+					<text>{{ $t('apps.invite.rewardReturn', { amount: returnUserReward }) }}</text>
 				</view>
 				<view class="reward-item">
 					<uni-icons type="info" size="18" color="#E6A23C"></uni-icons>
-					<text>每位用户最多可填写两次邀请码</text>
+					<text>{{ $t('apps.invite.rewardTwice') }}</text>
 				</view>
 				<view class="reward-item">
 					<uni-icons type="info" size="18" color="#E6A23C"></uni-icons>
-					<text>每月邀请上限：{{monthlyLimit}}位新用户 + {{monthlyLimit}}位回归用户</text>
+					<text>{{ $t('apps.invite.rewardMonthlyLimit', { limit: monthlyLimit }) }}</text>
 				</view>
 			</view>
 		</view>
 		
 		<view class="enter-code-section">
 			<view class="enter-code-btn" @click="navigateToEnterCode">
-				我有邀请码，立即填写
+				{{ $t('apps.invite.enterCode') }}
 			</view>
 		</view>
 	</view>
@@ -126,7 +126,7 @@ export default {
 			} catch (error) {
 				console.error('获取用户信息失败', error)
 				uni.showToast({
-					title: '获取用户信息失败',
+					title: this.$t('apps.invite.loadUserFailed'),
 					icon: 'none'
 				})
 			}
@@ -160,18 +160,18 @@ export default {
 			} catch (error) {
 				console.error('获取邀请码失败', error)
 				uni.showToast({
-					title: '获取邀请码失败',
+					title: this.$t('apps.invite.loadCodeFailed'),
 					icon: 'none'
 				})
 			}
 		},
 		copyShareLink() {
-			const shareText = `我邀请你加入原木社区，邀请码是${this.inviteCode}`
+			const shareText = this.$t('apps.invite.shareText', { code: this.inviteCode })
 			uni.setClipboardData({
 				data: shareText,
 				success: () => {
 					uni.showToast({
-						title: '分享链接已复制',
+						title: this.$t('apps.invite.shareCopied'),
 						icon: 'success'
 					})
 				}

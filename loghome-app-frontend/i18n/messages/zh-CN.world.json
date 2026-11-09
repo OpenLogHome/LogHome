@@ -1,0 +1,77 @@
+{
+  "world": {
+    "components": {
+      "portalKicker": "世界设定",
+      "portalSubtitle": "共启创世之门",
+      "createNewWorld": "点击创建一个全新的世界",
+      "myWorlds": "我的世界",
+      "worldCount": "{count} 个世界",
+      "loading": "正在加载世界…",
+      "emptyWorlds": "这里还什么都没有喔",
+      "createFirstWorld": "创建你的第一个世界",
+      "createWorld": "创建世界",
+      "createSuccess": "创建成功",
+      "createFailed": "创建失败，请稍后重试",
+      "needLoginToCreate": "请先登录后再创建世界",
+      "creating": "创建中…",
+      "createTip": "创建后即可编辑世界简介、角色与其他设定。",
+      "nameLabel": "世界名称",
+      "namePlaceholder": "给你的世界起个名字",
+      "closeCreateAria": "关闭创建窗口",
+      "editAria": "编辑《{name}》的设定",
+      "enterAria": "进入《{name}》",
+      "allowFork": "允许二创",
+      "collaborative": "协作作品",
+      "noIntro": "还没有填写简介",
+      "editSettings": "编辑设定",
+      "collabSettings": "协作设定",
+      "enterSettings": "进入设定"
+    },
+    "page": {
+      "updatedAt": "最近更新：{time}",
+      "likes": "{count} 赞",
+      "favorited": "已收藏",
+      "favorite": "收藏",
+      "tip": "打赏",
+      "share": "分享",
+      "editSettings": "编辑设定",
+      "tabSettings": "世界设定",
+      "outlines": "世界大纲",
+      "empty": "这里还什么都没有喔",
+      "vocabulary": "世界词条",
+      "viewRelations": "查看关系网",
+      "relatedWorks": "关联作品",
+      "worldTag": "世界设定",
+      "fansRank": "粉丝贡献榜",
+      "fullRank": "完整榜单",
+      "comments": "评论",
+      "allComments": "全部(共 {count} 条)",
+      "emptyComments": "还没有人评论哦",
+      "confirmRemoveFavorite": "确定取消收藏吗？",
+      "keepFavorite": "我再想想",
+      "confirmRemove": "狠心取消",
+      "creatingCode": "创建口令中...",
+      "codeCreatedTitle": "口令创建成功",
+      "codeCreatedContent": "口令：{code}\n\n口令已复制到剪贴板，分享给好友即可！",
+      "shareMessage": "我正在原木社区浏览世界《{name}》，你也一起来看看吧！\nhttps://loghome.ink/novel/{id}\n用浏览器打开链接，或复制这段文本打开原木社区APP即可查看哦！",
+      "toast": {
+        "relatedWorldsFailed": "获取关联世界设定失败",
+        "addedToBookcase": "成功添加到书架",
+        "addFailed": "添加失败",
+        "removedFromBookcase": "已从书架移除",
+        "removeFailed": "移除失败",
+        "codeCreateFailed": "口令创建失败",
+        "cannotTipSelf": "不能给自己的书打赏哦"
+      },
+      "task": {
+        "likeWorld": "每日任务：为世界设定点赞",
+        "shareWork": "每日任务：分享作品"
+      }
+    },
+    "relations": {
+      "loading": "加载关系数据中... {loaded}/{total}",
+      "empty": "暂无词条",
+      "chartTitle": "世界词条关系图"
+    }
+  }
+}

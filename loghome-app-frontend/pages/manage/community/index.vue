@@ -1,6 +1,6 @@
 <template>
 	<view class="container" v-dark>
-		<zetank-backBar title="社区管理"></zetank-backBar>
+		<zetank-backBar :title="$t('manage.sections.community')"></zetank-backBar>
 		
 		<view class="list-content">
 			<view class="list">
@@ -9,7 +9,7 @@
 						<view class="icon">
 							<!-- <img src="../../../static/icons/icon_circle.png"/> -->
 						</view>
-						<view class="text">圈子管理</view>
+						<view class="text">{{ $t('manage.sections.circles') }}</view>
 						<img class="to" src="../../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -19,7 +19,7 @@
 						<view class="icon">
 							<!-- <img src="../../../static/icons/icon_posts.png"/> -->
 						</view>
-						<view class="text">帖子管理</view>
+						<view class="text">{{ $t('manage.sections.posts') }}</view>
 						<img class="to" src="../../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -29,7 +29,7 @@
 						<view class="icon">
 							<!-- <img src="../../../static/icons/icon_report.png"/> -->
 						</view>
-						<view class="text">举报处理</view>
+						<view class="text">{{ $t('manage.sections.reports') }}</view>
 						<img class="to" src="../../../static/user/to.png"/>
 					</view>
 				</navigator>
@@ -50,7 +50,7 @@ export default {
 		if (tk) tk = tk.tk;
 		if (!tk) {
 			uni.showToast({
-				title: '请先登录',
+				title: this.$t('manage.access.signInRequired'),
 				icon: 'none'
 			});
 			setTimeout(() => {
@@ -65,7 +65,7 @@ export default {
 		let userInfo = JSON.parse(window.localStorage.getItem('LogHomeUserInfo'));
 		if (!userInfo || userInfo.is_admin != 1) {
 			uni.showToast({
-				title: '无权限访问',
+				title: this.$t('manage.access.forbidden'),
 				icon: 'none'
 			});
 			setTimeout(() => {

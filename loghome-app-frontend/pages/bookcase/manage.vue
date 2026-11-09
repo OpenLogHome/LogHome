@@ -73,9 +73,9 @@ export default {
 						}
 					},
 				)
-				.then(function(response) {
+				.then((response) => {
 					uni.showToast({
-						title: "已从书架移除",
+						title: this.$t('library.bookcase.removedFromShelf'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -84,11 +84,11 @@ export default {
 						_this.booksOnShow.splice(index,1);
 					},500);
 				})
-				.catch(function(error) {
+				.catch((error) => {
 					console.log(error);
 					if (error) {
 						uni.showToast({
-							title: "移除失败",
+							title: this.$t('library.bookcase.removeFailed'),
 							icon: 'none',
 							duration: 2000
 						});

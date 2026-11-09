@@ -6,7 +6,7 @@
 			style="width: 700rpx;padding-left: 25rpx;padding-right: 25rpx;height: 80rpx;background-color: #FFFFFF;">
 				<view class="flex align-center" :class="isSearch ? 'leftReturn2' : 'leftReturn'" @tap="clickLeft">
 					<text class="icon iconfont font-title" :class="isSearch?'font-title':'h5 mb-1'" :style="'color:'+ leftRightColor">&#xe635;</text>
-					<text v-if="isSearch == false" class="h4 mb-1 ml-1" :style="'color:'+ leftRightColor">返回</text>
+					<text v-if="isSearch == false" class="h4 mb-1 ml-1" :style="'color:'+ leftRightColor">{{ $t('common.back') }}</text>
 				</view>
 				<view class="flex centerTitle just-content-center text-ellipsis pl-2" :style="'color:'+ titleColor">
 					<slot name="pageTitle"></slot>

@@ -2,14 +2,16 @@
 	<view class="export-page" v-dark>
 		<view class="export-card">
 			<view class="book-name">{{ novelName || '作品' }}</view>
-			<view class="description">将作品保存为电子书，方便离线阅读和备份。</view>
-			<view class="field-label">导出格式</view>
-			<view class="format-options">
-				<button v-for="format in ['pdf', 'epub']" :key="format" class="format-option"
-					:class="{ selected: exportFormat === format }" :disabled="exporting"
-					@click="exportFormat = format">{{ format.toUpperCase() }}</button>
-			</view>
-			<view class="description">PDF 保留固定排版，EPUB 适合电子书阅读器。</view>
+			<view class="description">{{ packMode ? '将章节导出为 ZIP 文本包，方便备份和迁移，对所有用户开放。' : '将作品保存为电子书，方便离线阅读和备份。' }}</view>
+			<template v-if="!packMode">
+				<view class="field-label">导出格式</view>
+				<view class="format-options">
+					<button v-for="format in ['pdf', 'epub']" :key="format" class="format-option"
+						:class="{ selected: exportFormat === format }" :disabled="exporting"
+						@click="exportFormat = format">{{ format.toUpperCase() }}</button>
+				</view>
+				<view class="description">PDF 保留固定排版，EPUB 适合电子书阅读器。导出电子书需原木通行证或超级原木通行证。</view>
+			</template>
 			<view class="export-actions">
 				<button class="primary-button" :disabled="exporting || !novelId" :loading="exporting && activeType === 'published'"
 					@click="exportNovel('published')">导出读者版本</button>
@@ -18,7 +20,7 @@
 					@click="exportNovel('draft')">导出存稿版本</button>
 				<view class="version-hint">包含草稿及已发布章节，使用已保存到云端的最新内容。</view>
 			</view>
-			<view v-if="exporting" class="status-message" role="status">正在生成电子书，请稍候。内容较多时可能需要几分钟。</view>
+			<view v-if="exporting" class="status-message" role="status">正在生成导出文件，请稍候。内容较多时可能需要几分钟。</view>
 			<view v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</view>
 			<view v-if="downloadUrl && !exporting" class="download-result">
 				<view class="download-name">{{ downloadFileName }}</view>
@@ -37,6 +39,8 @@ export default {
 		return {
 			novelId: 0,
 			novelName: '',
+			packMode: false,
+			isMember: null,
 			exportFormat: 'pdf',
 			exporting: false,
 			activeType: '',
@@ -53,6 +57,8 @@ export default {
 			return
 		}
 		this.novelId = id
+		this.packMode = params.mode === 'pack'
+		uni.setNavigationBarTitle({ title: this.packMode ? '打包导出作品' : '导出电子书' })
 		if (params.name) {
 			try { this.novelName = decodeURIComponent(params.name) } catch (_) { this.novelName = params.name }
 		}
@@ -79,6 +85,20 @@ export default {
 				// The export request still checks the work and author permissions.
 			}
 		},
+		async ensureMembership(token) {
+			if (this.packMode) return true
+			if (this.isMember !== null) return this.isMember
+			try {
+				const response = await axios.get(this.$baseUrl + '/membership/subscription', {
+					headers: { Authorization: 'Bearer ' + token },
+					timeout: 15000,
+				})
+				this.isMember = Boolean(response.data && response.data.data && response.data.data.active)
+			} catch (_) {
+				this.isMember = false
+			}
+			return this.isMember
+		},
 		async getErrorMessage(error) {
 			const response = error && error.response
 			let data = response && response.data
@@ -96,11 +116,15 @@ export default {
 			if (this.exporting || !this.novelId || !['published', 'draft'].includes(exportType)) return
 			const token = this.getAuthToken()
 			if (!token) {
-				this.errorMessage = '请先登录后再导出电子书。'
+				this.errorMessage = '请先登录后再导出。'
 				return
 			}
-			const format = this.exportFormat
-			if (!['pdf', 'epub'].includes(format)) return
+			const format = this.packMode ? 'zip' : this.exportFormat
+			if (!['pdf', 'epub', 'zip'].includes(format)) return
+			if (!this.packMode && !await this.ensureMembership(token)) {
+				this.errorMessage = '导出电子书仅限原木通行证或超级原木通行证会员使用，可先使用「仅打包」导出。'
+				return
+			}
 			const novelName = this.novelName || '作品' + this.novelId
 			this.exporting = true
 			this.activeType = exportType

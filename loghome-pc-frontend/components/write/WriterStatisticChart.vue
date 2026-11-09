@@ -3,9 +3,9 @@
     class="statistic-chart"
     :style="{ '--statistic-color': metric.color }"
   >
-    <h3>{{ metric.label }}趋势</h3>
+    <h3>{{ $t('{metric}趋势', { metric: $t(metric.label) }) }}</h3>
     <div class="statistic-readout">
-      <span>{{ current ? current.date : "暂无数据" }}</span
+      <span>{{ current ? current.date : $t('暂无数据') }}</span
       ><strong>{{ current ? format(current.value) : "—" }}</strong>
     </div>
     <div
@@ -19,15 +19,13 @@
         :viewBox="`0 0 ${width} 174`"
         role="img"
         :aria-label="
-          metric.label +
-          '累计趋势，' +
-          (current ? current.date + '：' + format(current.value) : '暂无数据')
+          $t('{metric}累计趋势，{value}', { metric: $t(metric.label), value: current ? current.date + '：' + format(current.value) : $t('暂无数据') })
         "
         tabindex="0"
         @keydown="navigate"
         @blur="activeIndex = null"
       >
-        <title>{{ metric.label }}累计趋势；左右方向键查看日期</title>
+        <title>{{ $t('{metric}累计趋势；左右方向键查看日期', { metric: $t(metric.label) }) }}</title>
         <g
           v-for="(tick, index) in geometry.ticks"
           :key="'tick-' + index"

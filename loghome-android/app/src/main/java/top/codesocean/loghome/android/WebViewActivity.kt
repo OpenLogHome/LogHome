@@ -15,6 +15,7 @@ import android.graphics.Color
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
+import android.media.AudioManager
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
@@ -43,12 +44,15 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
 import org.json.JSONObject
 import okhttp3.OkHttpClient
@@ -58,6 +62,7 @@ import top.codesocean.loghome.android.audio.AudiobookPlaybackState
 import top.codesocean.loghome.android.audio.Article
 import top.codesocean.loghome.android.audio.AudioPlaybackService
 import top.codesocean.loghome.android.audio.NativeAudiobookPlayerView
+import top.codesocean.loghome.android.audio.TtsVoiceCatalog
 import top.codesocean.loghome.android.databinding.ActivityWebviewBinding
 import top.codesocean.loghome.android.databinding.DialogHotUpdateBinding
 import top.codesocean.loghome.android.i18n.AppLanguage
@@ -117,6 +122,9 @@ class WebViewActivity : AppCompatActivity() {
     private val serviceWaiters = mutableListOf<CancellableContinuation<AudioPlaybackService>>()
     private var nativeAudiobookTitle = ""
     private var nativeAudiobookCoverUrl = ""
+    private var audiobookPreparationMessage = ""
+    private var audiobookStartupError = ""
+    private var audiobookRetryPayload: JSONObject? = null
     private var audiobookCoverJob: Job? = null
     private val audiobookCoverHttpClient = OkHttpClient()
     private var lastDispatchedAudiobookParagraph = ""
@@ -381,6 +389,12 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val isVolumeKey = event.keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
+            event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || event.keyCode == KeyEvent.KEYCODE_VOLUME_MUTE
+        if (isVolumeKey && binding.nativeAudiobookPlayer.isVisible) {
+            volumeControlStream = AudioManager.STREAM_MUSIC
+            return super.dispatchKeyEvent(event)
+        }
         if (volumeKeyEnabled && event.action == KeyEvent.ACTION_DOWN) {
             when (event.keyCode) {
                 KeyEvent.KEYCODE_VOLUME_UP -> {
@@ -1146,7 +1160,7 @@ class WebViewActivity : AppCompatActivity() {
             }.onSuccess { result ->
                 resolveBridgeCall(callId, result)
             }.onFailure { error ->
-                Log.e(TAG, "Bridge call failed: name=$name, args=${args}", error)
+                Log.e(TAG, "Bridge call failed: name=$name", error)
                 rejectBridgeCall(callId, "bridge[$name] failed: ${error.message ?: "Unknown bridge error"}")
             }
         }
@@ -1221,7 +1235,10 @@ class WebViewActivity : AppCompatActivity() {
                     }
                 }
                 val startArticleId = args.opt(1)?.takeUnless { it == JSONObject.NULL }?.toString()
-                requireAudioService().replacePlaylist(articleIds, startArticleId)
+                requireAudioService().apply {
+                    configureTts(args.optString(2))
+                    replacePlaylist(articleIds, startArticleId)
+                }
                 true
             }
 
@@ -1685,6 +1702,9 @@ class WebViewActivity : AppCompatActivity() {
                 return@suspendCancellableCoroutine
             }
             serviceWaiters += continuation
+            continuation.invokeOnCancellation {
+                binding.root.post { serviceWaiters.remove(continuation) }
+            }
         }
     }
 
@@ -1692,6 +1712,11 @@ class WebViewActivity : AppCompatActivity() {
         binding.nativeAudiobookPlayer.setListener(
             object : NativeAudiobookPlayerView.Listener {
                 override fun onPlayPause() {
+                    if (audiobookStartupError.isNotBlank() ||
+                        audioService?.getPlaybackState()?.let { !it.hasContent && it.errorMessage.isNotBlank() } == true) {
+                        retryNativeAudiobook()
+                        return
+                    }
                     val service = audioService ?: return
                     if (service.getPlaybackState().isPlaying) {
                         service.pause()
@@ -1732,6 +1757,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private suspend fun openNativeAudiobookPlayer(payload: JSONObject): Boolean {
+        if (audiobookPreparationMessage.isNotBlank()) return false
         val articleIdsJson = payload.optJSONArray("articleIds") ?: JSONArray()
         val articleIds = buildList {
             for (index in 0 until articleIdsJson.length()) {
@@ -1746,31 +1772,65 @@ class WebViewActivity : AppCompatActivity() {
         loadNativeAudiobookCover(payload.optString("coverUrl"))
         binding.nativeAudiobookPlayer.setBookTitle(nativeAudiobookTitle)
         binding.nativeAudiobookPlayer.showPlayer()
-
-        val service = requireAudioService()
-        val startArticleId = payload.optString("startArticleId").takeIf { it.isNotBlank() }
-        val playlistKey = payload.optString("playlistKey")
-        val inlineArticlesJson = payload.optJSONArray("articles") ?: JSONArray()
-        val inlineArticles = buildList {
-            for (index in 0 until inlineArticlesJson.length()) {
-                inlineArticlesJson.optJSONObject(index)?.let { articleJson ->
-                    add(Article.fromJson(articleJson))
+        // Keep retry metadata, but always obtain the CURRENT login from the
+        // WebView when retrying rather than retaining a previous account's JWT.
+        audiobookRetryPayload = JSONObject(payload.toString()).apply { remove("loginToken") }
+        audiobookStartupError = ""
+        audiobookPreparationMessage = "正在获取听书凭证…"
+        renderNativeAudiobookState(audioService?.getPlaybackState() ?: AudiobookPlaybackState())
+        try {
+            val service = withTimeout(10_000) { requireAudioService() }
+            service.configureTts(payload.optString("loginToken"))
+            audiobookPreparationMessage = "正在加载章节…"
+            service.setBookMetadata(nativeAudiobookTitle, nativeAudiobookCoverUrl)
+            val startArticleId = payload.optString("startArticleId").takeIf { it.isNotBlank() }
+            val playlistKey = payload.optString("playlistKey")
+            val inlineArticlesJson = payload.optJSONArray("articles") ?: JSONArray()
+            val inlineArticles = buildList {
+                for (index in 0 until inlineArticlesJson.length()) {
+                    inlineArticlesJson.optJSONObject(index)?.let { articleJson ->
+                        add(Article.fromJson(articleJson))
+                    }
                 }
             }
-        }
-        if (!service.isCurrentPlaylist(articleIds, playlistKey)) {
-            lastDispatchedAudiobookParagraph = ""
-            service.replacePlaylist(articleIds, startArticleId, inlineArticles, playlistKey)
-        }
+            if (!service.isCurrentPlaylist(articleIds, playlistKey) || !service.getPlaybackState().hasContent) {
+                lastDispatchedAudiobookParagraph = ""
+            }
 
-        val startParagraphId = payload.opt("startParagraphId")
-            ?.takeUnless { it == JSONObject.NULL }
-            ?.toString()
-            ?.takeIf { it.isNotBlank() }
-        if (startArticleId != null && startParagraphId != null) {
-            service.jumpToArticleParagraph(startArticleId, startParagraphId)
+            val startParagraphId = payload.opt("startParagraphId")
+                ?.takeUnless { it == JSONObject.NULL }
+                ?.toString()
+                ?.takeIf { it.isNotBlank() }
+            service.openPlaylist(articleIds, startArticleId, inlineArticles, playlistKey, startParagraphId, payload.optBoolean("forceSeek", false))
+            return true
+        } catch (error: Exception) {
+            if (error is CancellationException && error !is TimeoutCancellationException) throw error
+            audiobookStartupError = when (error) {
+                is TimeoutCancellationException -> "连接播放服务超时，请重试"
+                is java.net.UnknownHostException -> "无法连接听书服务，请检查网络或代理设置"
+                is java.io.InterruptedIOException -> "获取听书凭证超时，请检查网络后重试"
+                is java.io.IOException -> error.message ?: "听书加载失败，请重试"
+                else -> "听书初始化失败，请重试"
+            }
+            throw error
+        } finally {
+            audiobookPreparationMessage = ""
+            renderNativeAudiobookState(audioService?.getPlaybackState() ?: AudiobookPlaybackState())
         }
-        return true
+    }
+
+    private fun retryNativeAudiobook() {
+        val previous = audiobookRetryPayload ?: return
+        if (audiobookPreparationMessage.isNotBlank()) return
+        activeWebView.evaluateJavascript(
+            "typeof loghomeAudiobookLoginToken === 'function' ? loghomeAudiobookLoginToken() : ''",
+        ) { raw ->
+            val token = runCatching { JSONArray("[$raw]").optString(0) }.getOrDefault("")
+            lifecycleScope.launch {
+                runCatching { openNativeAudiobookPlayer(JSONObject(previous.toString()).put("loginToken", token)) }
+                    .onFailure { Log.w(TAG, "Audiobook retry failed", it) }
+            }
+        }
     }
 
     private fun loadNativeAudiobookCover(coverUrl: String) {
@@ -1808,8 +1868,12 @@ class WebViewActivity : AppCompatActivity() {
         }
         binding.nativeAudiobookPlayer.setBookTitle(nativeAudiobookTitle)
         binding.nativeAudiobookPlayer.render(
-            state = state,
-            voiceName = audiobookVoiceNames[state.voiceId],
+            state = state.copy(
+                isPreparing = audiobookPreparationMessage.isNotBlank() || state.isPreparing,
+                preparationMessage = audiobookPreparationMessage,
+                errorMessage = audiobookStartupError.ifBlank { state.errorMessage },
+            ),
+            voiceName = audiobookVoiceNames[state.voiceId] ?: TtsVoiceCatalog.voices[state.voiceId],
         )
     }
 
@@ -1861,19 +1925,9 @@ class WebViewActivity : AppCompatActivity() {
                         Snackbar.LENGTH_INDEFINITE,
                     )
                     loading.show()
-                    binding.nativeAudiobookPlayer.hideModelDownloadProgress()
                     lifecycleScope.launch {
                         runCatching {
-                            service.setVoice(voiceId) { downloadedBytes, totalBytes ->
-                                binding.root.post {
-                                    if (!isFinishing && !isDestroyed) {
-                                        binding.nativeAudiobookPlayer.showModelDownloadProgress(
-                                            downloadedBytes,
-                                            totalBytes,
-                                        )
-                                    }
-                                }
-                            }
+                            service.setVoice(voiceId)
                         }
                             .onSuccess {
                                 Snackbar.make(binding.root, "音色已切换", Snackbar.LENGTH_SHORT).show()
@@ -1885,7 +1939,6 @@ class WebViewActivity : AppCompatActivity() {
                                     Snackbar.LENGTH_LONG,
                                 ).show()
                             }
-                        binding.nativeAudiobookPlayer.hideModelDownloadProgress()
                         loading.dismiss()
                     }
                 }

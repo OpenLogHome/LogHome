@@ -47,11 +47,11 @@
 
       <view class="community-shortcuts">
         <button class="shortcut-button shortcut-post" @tap="navigateToCreatePost">
-          <image class="shortcut-icon" src="/static/icons/community-publish-pixel.png" mode="aspectFit" aria-hidden="true" />
+          <image class="shortcut-icon" :src="'./static/icons/community-publish-pixel.png'" mode="aspectFit" aria-hidden="true" />
           <text>{{ $t('community.index.publishPost') }}</text>
         </button>
         <button class="shortcut-button shortcut-circles" @tap="navigateToCircles">
-          <image class="shortcut-icon" src="/static/icons/community-circles-pixel.png" mode="aspectFit" aria-hidden="true" />
+          <image class="shortcut-icon" :src="'./static/icons/community-circles-pixel.png'" mode="aspectFit" aria-hidden="true" />
           <text>{{ $t('community.index.circlesSquare') }}</text>
         </button>
       </view>
@@ -464,9 +464,15 @@ export default {
     },
 
     async likePost(post) {
+      // 乐观更新：先当作点赞成功，仅请求失败时回退
+      const nextLiked = !post.is_liked;
+      post.is_liked = nextLiked;
+      post.like_count = Math.max(0, (Number(post.like_count) || 0) + (nextLiked ? 1 : -1));
+      console.log(`帖子 ${post.post_id} 点赞状态更新为: ${post.is_liked}`);
+
       try {
         const token = JSON.parse(window.localStorage.getItem('token')).tk
-        const res = await axios.post(this.$baseUrl + '/community/interactions/like', {
+        await axios.post(this.$baseUrl + '/community/interactions/like', {
           target_id: post.post_id,
           target_type: 1
         }, {
@@ -474,19 +480,9 @@ export default {
             'Authorization': 'Bearer ' + token
           }
         });
-        
-        // 根据后端返回的结果更新点赞状态
-        if (res.data && res.data.liked !== undefined) {
-          post.is_liked = res.data.liked;
-          post.like_count += post.is_liked ? 1 : -1;
-        } else {
-          // 如果后端没有返回明确状态，则切换当前状态
-          post.is_liked = !post.is_liked;
-          post.like_count += post.is_liked ? 1 : -1;
-        }
-        
-        console.log(`帖子 ${post.post_id} 点赞状态更新为: ${post.is_liked}`);
       } catch (error) {
+        post.is_liked = !nextLiked;
+        post.like_count = Math.max(0, (Number(post.like_count) || 0) + (nextLiked ? -1 : 1));
         console.error('点赞失败', error);
         uni.showToast({
           title: this.$t('common.operationFailed'),

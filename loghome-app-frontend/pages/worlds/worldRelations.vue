@@ -8,8 +8,8 @@
 			@touchmove.stop.prevent
 			@touchend.stop
 		></div>
-		<div class="back-btn" @tap="goBack">返回</div>
-        <div class="loading" v-if="loading">加载关系数据中... {{loadedCount}}/{{totalCount}}</div>
+		<div class="back-btn" @tap="goBack">{{ $t('common.back') }}</div>
+        <div class="loading" v-if="loading">{{ $t('world.relations.loading', { loaded: loadedCount, total: totalCount }) }}</div>
 	</div>
 </template>
 
@@ -81,7 +81,7 @@ export default {
 
                 if (this.totalCount === 0) {
                     this.loading = false;
-                    uni.showToast({title: '暂无词条', icon: 'none'});
+                    uni.showToast({title: this.$t('world.relations.empty'), icon: 'none'});
                     return;
                 }
 
@@ -109,7 +109,7 @@ export default {
                 this.loading = false;
             } catch (e) {
                 console.error(e);
-                uni.showToast({title: '加载失败', icon: 'none'});
+                uni.showToast({title: this.$t('common.loadFailed'), icon: 'none'});
                 this.loading = false;
             }
         },
@@ -209,7 +209,7 @@ export default {
 			const tooltipBackground = this.isDarkMode ? 'rgba(37,37,37,.96)' : 'rgba(255,255,255,.96)';
 			const option = {
 				title: {
-					text: '世界词条关系图',
+					text: this.$t('world.relations.chartTitle'),
 					left: 'center',
 					top: 20,
 					textStyle: { color: textColor }

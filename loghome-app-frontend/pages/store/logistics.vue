@@ -1,15 +1,15 @@
 <template>
 	<view class="logistics-page" v-dark>
 		<view v-if="!isLoggedIn" class="page-state">
-			<text>登录后即可查看订单物流</text
-			><view class="state-action" @tap="goLogin">去登录</view>
+			<text>{{ $t('store.logistics.loginRequired') }}</text
+			><view class="state-action" @tap="goLogin">{{ $t('store.common.goLogin') }}</view>
 		</view>
 		<view v-else-if="loading && !order" class="page-state"
-			>正在加载物流信息...</view
+			>{{ $t('store.logistics.loading') }}</view
 		>
 		<view v-else-if="error" class="page-state">
 			<text>{{ error }}</text
-			><view class="state-action" @tap="loadLogistics">重新加载</view>
+			><view class="state-action" @tap="loadLogistics">{{ $t('store.common.reload') }}</view>
 		</view>
 		<template v-else-if="order">
 			<view class="shipment-card">
@@ -19,25 +19,25 @@
 					><view
 						><view class="shipment-title">{{ shipmentTitle }}</view
 						><view class="shipment-caption">{{
-							order.shipping_company || '快递公司待补充'
+							order.shipping_company || $t('store.logistics.courierPending')
 						}}</view></view
 					></view
 				>
 				<view class="tracking-row"
 					><text class="tracking-number">{{
-						order.tracking_number || '待生成快递单号'
+						order.tracking_number || $t('store.logistics.trackingPending')
 					}}</text
 					><button
 						v-if="order.tracking_number"
 						class="copy-btn"
 						@tap="copyTracking"
 					>
-						复制
+						{{ $t('store.common.copy') }}
 					</button></view
 				>
-				<view class="shipment-meta">订单号 {{ order.order_no }}</view>
+				<view class="shipment-meta">{{ $t('store.logistics.orderNo', { no: order.order_no }) }}</view>
 				<view v-if="order.shipped_at" class="shipment-meta"
-					>发货时间 {{ formatTime(order.shipped_at) }}</view
+					>{{ $t('store.logistics.shippedAt', { time: formatTime(order.shipped_at) }) }}</view
 				>
 			</view>
 			<view class="product-card"
@@ -49,15 +49,15 @@
 				/><view class="product-info"
 					><view class="product-title">{{ order.product_title }}</view
 					><view class="product-variant">{{
-						order.variant_label || '默认规格'
+						order.variant_label || $t('store.common.defaultVariant')
 					}}</view></view
 				></view
 			>
 			<view class="trace-card">
 				<view class="trace-heading"
-					><text>物流动态</text
+					><text>{{ $t('store.logistics.traceTitle') }}</text
 					><button class="refresh-btn" :disabled="loading" @tap="refreshQuery">
-						{{ loading ? '更新中' : '刷新' }}
+						{{ loading ? $t('store.logistics.updating') : $t('store.logistics.refresh') }}
 					</button></view
 				>
 				<view v-if="logistics.message" class="trace-notice">{{
@@ -81,29 +81,29 @@
 					}}</text></view
 				>
 				<view v-if="logistics.checked_at" class="update-note"
-					>查询时间 {{ formatTime(logistics.checked_at)
-					}}<text v-if="logistics.cached"> · 已缓存</text></view
+					>{{ $t('store.logistics.checkedAt', { time: formatTime(logistics.checked_at) })
+					}}<text v-if="logistics.cached">{{ $t('store.logistics.cachedSuffix') }}</text></view
 				>
 				<view v-if="logistics.next_query_at" class="update-note"
-					>下次更新 {{ formatTime(logistics.next_query_at) }}</view
+					>{{ $t('store.logistics.nextUpdate', { time: formatTime(logistics.next_query_at) }) }}</view
 				>
 				<view v-if="logistics.stale && logistics.last_success_at" class="update-note"
-					>上次取得记录 {{ formatTime(logistics.last_success_at) }}</view
+					>{{ $t('store.logistics.lastSuccess', { time: formatTime(logistics.last_success_at) }) }}</view
 				>
 			</view>
 			<view
 				v-if="order.product_type === 'physical' && order.tracking_number"
 				class="public-card"
 			>
-				<view class="public-title">查件入口</view>
+				<view class="public-title">{{ $t('store.logistics.lookupTitle') }}</view>
 				<view class="public-caption"
-					>查询链接已携带本单单号与快递公司，无需重新输入。部分快递需验证码或手机号核验。</view
+					>{{ $t('store.logistics.lookupDesc') }}</view
 				>
 				<button
 					class="public-btn"
 					@tap="openPublic"
 				>
-					在浏览器中查件 <store-icon name="arrow" :size="28" />
+					{{ $t('store.logistics.lookupAction') }} <store-icon name="arrow" :size="28" />
 				</button>
 			</view>
 		</template>
@@ -136,19 +136,19 @@ export default {
 			return getTrackingLinks(this.order || {})
 		},
 		emptyMessage() {
-			if (this.logistics.status === 'not_shipped') return '发货后可查看物流动态'
+			if (this.logistics.status === 'not_shipped') return this.$t('store.logistics.emptyNotShipped')
 			if (this.logistics.status === 'no_records')
-				return '服务方暂未查到记录，可能尚未揽收'
+				return this.$t('store.logistics.emptyNoRecords')
 			if (this.logistics.status === 'unavailable')
-				return '本次查询未成功，请在浏览器中查件'
-			return '请在浏览器中查看物流'
+				return this.$t('store.logistics.emptyUnavailable')
+			return this.$t('store.logistics.emptyBrowser')
 		},
 		shipmentTitle() {
-			if (this.order.product_type !== 'physical') return '虚拟商品无需配送'
-			if (!this.order.tracking_number) return '等待商家发货'
+			if (this.order.product_type !== 'physical') return this.$t('store.logistics.virtualNoShipping')
+			if (!this.order.tracking_number) return this.$t('store.logistics.awaitingShipment')
 			return this.logistics.status === 'ok'
 				? this.logistics.state_text
-				: '商品已发货'
+				: this.$t('store.logistics.shipped')
 		},
 	},
 	onLoad(options) {
@@ -181,7 +181,7 @@ export default {
 				return
 			}
 			if (!Number.isSafeInteger(this.orderId) || this.orderId <= 0) {
-				this.error = '订单不存在'
+				this.error = this.$t('store.logistics.orderNotFound')
 				uni.stopPullDownRefresh()
 				return
 			}
@@ -199,7 +199,7 @@ export default {
 				this.logistics = data.logistics
 			} catch (e) {
 				this.error =
-					e.response?.data?.msg || e.message || '物流信息加载失败，请稍后重试'
+					e.response?.data?.msg || e.message || this.$t('store.logistics.loadFailed')
 			} finally {
 				this.loading = false
 				uni.stopPullDownRefresh()
@@ -221,7 +221,7 @@ export default {
 			uni.setClipboardData({
 				data: this.order.tracking_number,
 				fail: () =>
-					uni.showToast({ title: '复制失败，请手动复制单号', icon: 'none' }),
+					uni.showToast({ title: this.$t('store.logistics.copyFailed'), icon: 'none' }),
 			})
 		},
 		refreshQuery() {

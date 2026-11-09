@@ -15,6 +15,7 @@ import aiAssistanceMixin from './mixins/ai-assistance.js';
 import { relativeTime } from './common/datetime.js';
 import i18n from './i18n';
 import { resolveEffectiveLanguage } from './i18n/resolve.js';
+import { installI18nLayoutAudit } from './common/i18n-layout-audit.js';
 
 // 导入自定义指令
 import './plugins/directives'
@@ -52,9 +53,16 @@ import Vue from 'vue'
 import store from './store'
 //把vuex定义成全局组件
 Vue.prototype.$store = store
-Vue.prototype.$baseUrl = process.env.VUE_APP_API_BASE_URL || BASE_URL_PRODUCTION;
-Vue.prototype.$readerAiBaseUrl = READER_AI_BASE_URL_PRODUCTION;
-Vue.prototype.$collaborationWsUrl = COLLABORATION_WS_URL_PRODUCTION;
+const nativeBackendEndpoint = typeof window !== 'undefined' && window.jsBridge && window.jsBridge.backendEndpoint;
+// 后端地址选择规则：
+// 1. 原生客户端（Android）统一读取 gradle.properties 注入的 backend_endpoint，优先级最高；
+// 2. 其余环境按构建环境取默认值：开发环境默认本地后端，生产环境默认线上后端；
+// 3. 可通过环境变量强行覆写为远程（或任意）后端：
+//    VUE_APP_API_BASE_URL / VUE_APP_READER_AI_BASE_URL / VUE_APP_COLLABORATION_WS_URL
+const isDevBuild = process.env.NODE_ENV === 'development';
+Vue.prototype.$baseUrl = nativeBackendEndpoint || process.env.VUE_APP_API_BASE_URL || (isDevBuild ? BASE_URL_DEV : BASE_URL_PRODUCTION);
+Vue.prototype.$readerAiBaseUrl = process.env.VUE_APP_READER_AI_BASE_URL || (isDevBuild ? READER_AI_BASE_URL_DEV : READER_AI_BASE_URL_PRODUCTION);
+Vue.prototype.$collaborationWsUrl = process.env.VUE_APP_COLLABORATION_WS_URL || (isDevBuild ? COLLABORATION_WS_URL_DEV : COLLABORATION_WS_URL_PRODUCTION);
 // Vue.prototype.$storeBaseUrl = STORE_BASE_URL_PRODUCTION;
 Vue.prototype.$isFromLogin = false; 
 Vue.prototype.$backupResources = {
@@ -348,6 +356,7 @@ Vue.mixin(localizedNavigationMixin);
 Vue.mixin(aiAssistanceMixin);
 
 Vue.config.productionTip = false;
+if (process.env.NODE_ENV === 'development') installI18nLayoutAudit();
 App.mpType = 'app'
 
 const app = new Vue({

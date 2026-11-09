@@ -1,5 +1,5 @@
 <template>
-  <div class="danmu-layer" aria-label="本页弹幕">
+  <div class="danmu-layer" :aria-label="$t('本页弹幕')">
     <span
       v-for="item in items"
       :key="item.key"
@@ -9,7 +9,7 @@
       @mouseenter="hoverId = item.key"
       @mouseleave="hoverId = null" @focusin="focusId=item.key" @focusout="focusId=null">
       {{ item.content }}
-      <button v-if="item.moderatable" class="danmu-del" :aria-label="`删除弹幕：${item.content}`" @click.stop="$emit('remove', item.danmuId)">&times;</button>
+      <button v-if="item.moderatable" class="danmu-del" :aria-label="$t('删除弹幕：{content}', { content: item.content })" @click.stop="$emit('remove', item.danmuId)">&times;</button>
     </span>
   </div>
 </template>

@@ -1,28 +1,28 @@
 <template>
 	<view v-if="visible" class="variant-overlay">
 		<view class="variant-mask" @tap="$emit('close')" @touchmove.stop.prevent @wheel.stop.prevent />
-		<view class="variant-sheet" role="dialog" aria-modal="true" aria-label="选择商品规格" @tap.stop>
+		<view class="variant-sheet" role="dialog" aria-modal="true" :aria-label="$t('store.variant.selectAria')" @tap.stop>
 			<view class="sheet-handle" />
-			<button class="sheet-close" aria-label="关闭规格选择" @tap="$emit('close')">
+			<button class="sheet-close" :aria-label="$t('store.variant.closeAria')" @tap="$emit('close')">
 				<store-icon name="close" :size="34" tone="muted" />
 			</button>
 			<view class="sheet-product">
 				<image v-if="cover" class="sheet-cover" :src="cover" mode="aspectFit" />
-				<view v-else class="sheet-cover sheet-placeholder">原木好物</view>
+				<view v-else class="sheet-cover sheet-placeholder">{{ $t('store.common.logGoods') }}</view>
 				<view class="sheet-copy">
 					<view class="sheet-price">
 						{{ selected ? selected.price : product.price }}
-						<text class="sheet-price-unit">原木{{ selected ? '' : '起' }}</text>
+						<text class="sheet-price-unit">{{ selected ? $t('store.common.logUnit') : $t('store.common.logFrom') }}</text>
 					</view>
 					<view class="sheet-stock">
-						{{ selected ? '库存 ' + selected.stock + ' 件' : '价格随规格变化' }}
+						{{ selected ? $t('store.variant.stock', { count: selected.stock }) : $t('store.variant.priceVaries') }}
 					</view>
 					<view class="sheet-selected">
-						{{ selected ? '已选：' + selected.label : '请选择商品规格' }}
+						{{ selected ? $t('store.variant.selected', { label: selected.label }) : $t('store.common.selectVariant') }}
 					</view>
 				</view>
 			</view>
-			<view class="sheet-heading">选择规格</view>
+			<view class="sheet-heading">{{ $t('store.variant.heading') }}</view>
 			<scroll-view
 				class="sheet-options"
 				scroll-y
@@ -36,8 +36,8 @@
 				/>
 			</scroll-view>
 			<view class="sheet-quantity">
-				<text>本次兑换</text>
-				<text>1 件</text>
+				<text>{{ $t('store.variant.quantityLabel') }}</text>
+				<text>{{ $t('store.common.oneItem') }}</text>
 			</view>
 			<view class="sheet-footer">
 				<button
@@ -45,7 +45,7 @@
 					:disabled="disabled || !selected || Number(selected.stock) <= 0"
 					@tap="$emit('confirm')"
 				>
-					{{ selected ? confirmText : '请选择规格' }}
+					{{ selected ? (confirmText || $t('store.variant.confirm')) : $t('store.common.selectOption') }}
 				</button>
 			</view>
 		</view>
@@ -64,7 +64,7 @@ export default {
 		variants: { type: Array, default: () => [] },
 		selectedId: { type: [Number, String], default: null },
 		disabled: { type: Boolean, default: false },
-		confirmText: { type: String, default: '确认规格' },
+		confirmText: { type: String, default: '' },
 	},
 	computed: {
 		selected() {

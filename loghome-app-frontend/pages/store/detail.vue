@@ -1,12 +1,12 @@
 <template>
 	<view class="detail-page" v-dark>
 		<view v-if="loadingProduct && !product.id" class="page-state">
-			<text>正在加载商品详情...</text>
+			<text>{{ $t('store.detail.loading') }}</text>
 		</view>
 
 		<view v-else-if="loadError" class="page-state">
 			<text>{{ loadError }}</text>
-			<view class="state-action" @tap="retryLoad">重新加载</view>
+			<view class="state-action" @tap="retryLoad">{{ $t('store.common.reload') }}</view>
 		</view>
 
 		<template v-else>
@@ -30,7 +30,7 @@
 				</swiper>
 				<view v-else class="banner banner-empty">
 					<store-icon name="package" :size="84" tone="muted" />
-					<text>暂无商品图片</text>
+					<text>{{ $t('store.detail.noImages') }}</text>
 				</view>
 
 				<view v-if="mediaList.length" class="gallery-count">
@@ -40,85 +40,85 @@
 			<view class="product-info">
 				<view class="price-row">
 					<text class="price">{{ displayPrice }}</text>
-					<text class="currency-unit">原木{{ needsVariant ? '起' : '' }}</text>
-					<text class="price-note">去皮原木同价</text>
+					<text class="currency-unit">{{ needsVariant ? $t('store.common.logFrom') : $t('store.common.logUnit') }}</text>
+					<text class="price-note">{{ $t('store.detail.samePriceCropped') }}</text>
 				</view>
 				<view class="product-eyebrow">
-					{{ product.category || (product.type === 'physical' ? '实物周边' : '社区权益') }}
+					{{ product.category || (product.type === 'physical' ? $t('store.common.physicalCategory') : $t('store.common.virtualCategory')) }}
 				</view>
 				<view class="title-row">
 					<view class="title">{{ product.title }}</view>
-					<view class="status-tag" v-if="isSoldOut">已兑完</view>
+					<view class="status-tag" v-if="isSoldOut">{{ $t('store.common.soldOut') }}</view>
 				</view>
 				<view class="summary" v-if="product.summary">{{ product.summary }}</view>
 			</view>
 			<view class="selection-card">
 				<view v-if="product.has_variants" class="selection-row" @tap="openVariantSheet">
-					<text class="meta-label">已选</text>
+					<text class="meta-label">{{ $t('store.detail.selectedLabel') }}</text>
 					<view class="selection-copy">
-						<view>{{ selectedVariant ? selectedVariant.label : '请选择商品规格' }}</view>
+						<view>{{ selectedVariant ? selectedVariant.label : $t('store.common.selectVariant') }}</view>
 						<view class="selection-hint">
-							{{ availableVariantCount }} 种规格可选 · 本次兑换 1 件
+							{{ $t('store.detail.variantHint', { count: availableVariantCount }) }}
 						</view>
 					</view>
 					<store-icon class="selection-arrow" name="chevron" :size="30" tone="muted" />
 				</view>
 				<view v-else class="selection-row">
-					<text class="meta-label">数量</text>
-					<view class="selection-copy">1 件</view>
+					<text class="meta-label">{{ $t('store.detail.quantityLabel') }}</text>
+					<view class="selection-copy">{{ $t('store.common.oneItem') }}</view>
 				</view>
 				<view class="selection-row">
-					<text class="meta-label">{{ product.type === 'physical' ? '发货' : '发放' }}</text>
+					<text class="meta-label">{{ product.type === 'physical' ? $t('store.detail.shippingLabel') : $t('store.detail.deliveryLabel') }}</text>
 					<view class="selection-copy">
 						{{
 							product.shipping_desc ||
-							(product.type === 'physical' ? '兑换后由管理员安排发货' : '兑换成功后自动发放')
+							(product.type === 'physical' ? $t('store.detail.shippingFallbackPhysical') : $t('store.detail.shippingFallbackVirtual'))
 						}}
 					</view>
 				</view>
 				<view v-if="product.type === 'physical' && selectedVariant" class="selection-row">
-					<text class="meta-label">库存</text>
+					<text class="meta-label">{{ $t('store.detail.stockLabel') }}</text>
 					<view class="selection-copy">
-						{{ displayStock > 0 ? displayStock + ' 件' : '已兑完' }}
+						{{ displayStock > 0 ? $t('store.common.stockCount', { count: displayStock }) : $t('store.common.soldOut') }}
 					</view>
 				</view>
 			</view>
 			<view class="balance-card">
 				<template v-if="isLoggedIn">
 					<view class="balance-head">
-						<text class="balance-label">可用 {{ totalBalance }} 原木</text>
+						<text class="balance-label">{{ $t('store.detail.availableBalance', { count: totalBalance }) }}</text>
 						<text class="balance-tip">{{ balanceTip }}</text>
 					</view>
-					<view class="balance-detail">优先扣除去皮原木，不足部分由原木补齐</view>
+					<view class="balance-detail">{{ $t('store.detail.balanceOrder') }}</view>
 				</template>
 				<view v-else class="balance-head" @tap="goLogin">
-					<text class="balance-label">登录查看余额，兑换心仪好物</text>
+					<text class="balance-label">{{ $t('store.detail.loginToViewBalance') }}</text>
 					<view class="balance-tip login-action">
-						<text>去登录</text>
+						<text>{{ $t('store.common.goLogin') }}</text>
 						<store-icon name="chevron" :size="26" />
 					</view>
 				</view>
 			</view>
 
 			<view class="section-card" v-if="product.description">
-				<view class="section-title">商品详情</view>
+				<view class="section-title">{{ $t('store.detail.sectionTitle') }}</view>
 				<rich-text class="rich-content" :nodes="product.description"></rich-text>
 			</view>
 
 			<view class="section-card" v-else>
-				<view class="section-title">商品详情</view>
-				<view class="empty-copy">暂未补充更多说明</view>
+				<view class="section-title">{{ $t('store.detail.sectionTitle') }}</view>
+				<view class="empty-copy">{{ $t('store.detail.noDescription') }}</view>
 			</view>
 
 			<view class="bottom-bar detail-actions">
 				<button class="order-shortcut" @tap="goOrders">
 					<store-icon name="orders" :size="38" />
-					<text>订单</text>
+					<text>{{ $t('store.common.orders') }}</text>
 				</button>
 				<view class="bottom-copy">
 					<view class="bottom-price">
 						{{ displayPrice || '--' }}
-						<text class="currency-unit">原木{{ needsVariant ? '起' : '' }}</text>
+						<text class="currency-unit">{{ needsVariant ? $t('store.common.logFrom') : $t('store.common.logUnit') }}</text>
 					</view>
 				</view>
 				<button class="exchange-btn" :disabled="actionDisabled" @tap="goCheckout">
@@ -132,7 +132,11 @@
 				:selected-id="variantId"
 				:disabled="loadingProduct"
 				:confirm-text="
-					isLoggedIn ? (hasEnoughBalance ? '确认规格并兑换' : '余额不足') : '登录后兑换'
+					isLoggedIn
+						? hasEnoughBalance
+							? $t('store.detail.confirmVariant')
+							: $t('store.common.insufficientBalance')
+						: $t('store.common.loginToRedeem')
 				"
 				@select="chooseVariant"
 				@close="variantSheetVisible = false"
@@ -222,30 +226,32 @@ export default {
 			return !this.hasEnoughBalance
 		},
 		actionText() {
-			if (this.loadingProduct) return '加载中...'
-			if (!this.product.id) return '商品不可用'
-			if (this.product.status !== 'on') return '商品已下架'
-			if (this.isSoldOut) return '已兑完'
-			if (this.needsVariant) return '请选择规格'
-			if (!this.isLoggedIn) return '登录后兑换'
-			if (!this.hasEnoughBalance) return '余额不足'
-			return '立即兑换'
+			if (this.loadingProduct) return this.$t('store.detail.actionLoading')
+			if (!this.product.id) return this.$t('store.detail.actionUnavailable')
+			if (this.product.status !== 'on') return this.$t('store.detail.actionOffline')
+			if (this.isSoldOut) return this.$t('store.common.soldOut')
+			if (this.needsVariant) return this.$t('store.common.selectOption')
+			if (!this.isLoggedIn) return this.$t('store.common.loginToRedeem')
+			if (!this.hasEnoughBalance) return this.$t('store.common.insufficientBalance')
+			return this.$t('store.detail.actionRedeem')
 		},
 		actionHint() {
-			if (!this.product.id) return '商品信息暂不可用'
-			if (this.needsVariant) return '请选择具体规格，兑换价和库存随规格变化'
+			if (!this.product.id) return this.$t('store.detail.hintUnavailable')
+			if (this.needsVariant) return this.$t('store.detail.hintSelectVariant')
 			if (this.product.type === 'physical') {
-				if (this.isSoldOut) return '库存兑完后将无法继续下单'
-				return '下单后请确认收货地址'
+				if (this.isSoldOut) return this.$t('store.detail.hintSoldOut')
+				return this.$t('store.detail.hintConfirmAddress')
 			}
-			if (!this.isLoggedIn) return '登录后可直接完成兑换'
-			return '兑换完成后会自动发放'
+			if (!this.isLoggedIn) return this.$t('store.detail.hintLogin')
+			return this.$t('store.detail.hintAutoDeliver')
 		},
 		balanceTip() {
-			if (!this.product.id) return '加载中'
-			if (this.needsVariant) return '请选择规格'
-			if (this.hasEnoughBalance) return '余额充足'
-			return `还差 ${Math.max(Number(this.displayPrice || 0) - this.totalBalance, 0)} 原木`
+			if (!this.product.id) return this.$t('store.detail.balanceLoading')
+			if (this.needsVariant) return this.$t('store.common.selectOption')
+			if (this.hasEnoughBalance) return this.$t('store.detail.balanceEnough')
+			return this.$t('store.detail.balanceShort', {
+				amount: Math.max(Number(this.displayPrice || 0) - this.totalBalance, 0),
+			})
 		},
 	},
 	onLoad(options) {
@@ -276,7 +282,7 @@ export default {
 		confirmVariant() {
 			if (!this.selectedVariant || this.isSoldOut) return
 			if (this.isLoggedIn && !this.hasEnoughBalance) {
-				uni.showToast({ title: '余额不足，可选择其他规格', icon: 'none' })
+				uni.showToast({ title: this.$t('store.detail.insufficientVariantBalance'), icon: 'none' })
 				return
 			}
 			this.variantSheetVisible = false
@@ -357,13 +363,13 @@ export default {
 					} else {
 						this.product = {}
 						this.mediaList = []
-						this.loadError = res.data.msg || '商品不存在或已下架'
+						this.loadError = res.data.msg || this.$t('store.common.notFound')
 					}
 				})
 				.catch((error) => {
 					this.product = {}
 					this.mediaList = []
-					this.loadError = error.response?.data?.msg || '商品加载失败，请稍后重试'
+					this.loadError = error.response?.data?.msg || this.$t('store.detail.loadFailed')
 				})
 				.finally(() => {
 					this.loadingProduct = false
@@ -386,7 +392,7 @@ export default {
 				return
 			}
 			if (!this.canExchange) {
-				uni.showToast({ title: '余额不足', icon: 'none' })
+				uni.showToast({ title: this.$t('store.common.insufficientBalance'), icon: 'none' })
 				return
 			}
 			uni.navigateTo({

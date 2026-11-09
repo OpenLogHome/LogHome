@@ -489,6 +489,24 @@
 				}
 				let tk = JSON.parse(window.localStorage.getItem('token') || 'null');
 				if (tk) tk = tk.tk;
+
+				// 乐观更新：先当作点赞成功，仅请求失败时回退
+				const previousType = this.praiseType;
+				let changeNum = 0;
+				if (this.praiseType == 0) {
+					changeNum = -1;
+				} else if (this.praiseType == 1) {
+					if (submitType == 3) {
+						changeNum = 0;
+					} else {
+						changeNum = (submitType == 0 ? 1 : -1);
+					}
+				} else {
+					changeNum = (submitType == 0 ? 1 : 0);
+				}
+				this.praiseType = submitType == 3 ? 3 : submitType;
+				this.$emit('changePraise', { id: this.reviewMsg.comment_id, changeNum: changeNum });
+
 				axios.post(this.$baseUrl + '/community/praise_on_comment', {
 					essay_comment_id: this.reviewMsg.comment_id,
 					type: submitType
@@ -497,22 +515,10 @@
 						'Content-Type': 'application/json',
 						'Authorization': 'Bearer ' + tk
 					}
-				}).then(() => {
-					let changeNum = 0;
-					if (this.praiseType == 0) {
-						changeNum = -1;
-					} else if (this.praiseType == 1) {
-						if (submitType == 3) {
-							changeNum = 0;
-						} else {
-							changeNum = (submitType == 0 ? 1 : -1);
-						}
-					} else {
-						changeNum = (submitType == 0 ? 1 : 0);
-					}
-					this.praiseType = submitType == 3 ? 3 : submitType;
-					this.$emit('changePraise', { id: this.reviewMsg.comment_id, changeNum: changeNum });
 				}).catch((error) => {
+					// 回滚本地乐观更新的状态和计数
+					this.praiseType = previousType;
+					this.$emit('changePraise', { id: this.reviewMsg.comment_id, changeNum: -changeNum });
 					console.log(error);
 					if (error) {
 						uni.showToast({

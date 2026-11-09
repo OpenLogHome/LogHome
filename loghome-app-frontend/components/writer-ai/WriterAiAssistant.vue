@@ -5,7 +5,7 @@
       class="selection-add-button"
       :class="theme"
       :style="selectionAddButtonStyle"
-      title="添加到对话"
+      :title="$t('writer.ai.addSelection')"
       @mousedown.stop.prevent="noop"
       @touchstart.stop="noop"
       @click.stop="addSelectionToPrompt"
@@ -38,7 +38,7 @@
     >
       <view class="smart-replace-preview-head">
         <i class="el-icon-magic-stick"></i>
-        <text>智能预览</text>
+        <text>{{ $t('writer.ai.smartPreview') }}</text>
       </view>
       <scroll-view
         scroll-y
@@ -59,14 +59,14 @@
           size="mini"
           @click="discardSmartReplacePreview"
         >
-          取消
+          {{ $t('common.cancel') }}
         </button>
         <button
           class="primary-button smart-replace-keep"
           size="mini"
           @click="keepSmartReplacePreview"
         >
-          保留
+          {{ $t('writer.ai.keep') }}
         </button>
       </view>
     </view>
@@ -80,15 +80,15 @@
           <button
             class="panel-menu-button"
             size="mini"
-            title="会话菜单"
+            :title="$t('writer.ai.conversationMenu')"
             @click.stop="toggleConversationSidebar"
           >
             <span></span>
             <span></span>
             <span></span>
           </button>
-          <view class="panel-brand" title="笔泡">
-            <img class="panel-brand-logo" src="../../static/bipao_ai.png" alt="笔泡" />
+          <view class="panel-brand" :title="$t('writer.ai.brand')">
+            <text class="panel-brand-text">{{ $t('writer.ai.brand') }}</text>
           </view>
           <view class="panel-close" @click="close">
             <uni-icons type="closeempty" size="20" :color="panelTextColor"></uni-icons>
@@ -112,15 +112,15 @@
             :disabled="loading"
             @click="startNewConversation"
           >
-            新建会话
+            {{ $t('writer.ai.newConversation') }}
           </button>
-          <view class="conversation-sidebar-title">当前章节</view>
+          <view class="conversation-sidebar-title">{{ $t('writer.ai.currentChapter') }}</view>
           <scroll-view scroll-y class="conversation-list">
             <view
               v-if="!conversationSessions.length"
               class="conversation-empty"
             >
-              暂无历史会话
+              {{ $t('writer.ai.noHistory') }}
             </view>
             <view
               v-for="session in conversationSessions"
@@ -183,7 +183,7 @@
                     class="reasoning-toggle"
                     @click.stop="toggleAssistantReasoning(message)"
                   >
-                    <text class="reasoning-toggle-title">思考过程</text>
+                    <text class="reasoning-toggle-title">{{ $t('writer.ai.reasoning') }}</text>
                     <i
                       class="reasoning-toggle-icon"
                       :class="isAssistantReasoningCollapsed(message) ? 'el-icon-arrow-down' : 'el-icon-arrow-up'"
@@ -220,7 +220,7 @@
                         @click="applyDraftText(segment.content, message)"
                       >
                         <i class="draft-action-icon el-icon-magic-stick"></i>
-                        <text>应用</text>
+                        <text>{{ $t('writer.ai.apply') }}</text>
                       </button>
                       <button
                         class="mini-action-button"
@@ -228,7 +228,7 @@
                         @click="copyDraftText(segment.content)"
                       >
                         <i class="draft-action-icon el-icon-document-copy"></i>
-                        <text>复制</text>
+                        <text>{{ $t('common.copy') }}</text>
                       </button>
                     </view>
                   </view>
@@ -266,7 +266,7 @@
                         @click="insertGeneratedImageAtCursor(image)"
                       >
                         <i class="draft-action-icon el-icon-picture-outline"></i>
-                        <text>插入</text>
+                        <text>{{ $t('writer.ai.insert') }}</text>
                       </button>
                     </view>
                   </view>
@@ -275,7 +275,7 @@
                   v-if="!message.content && !message.reasoningOutput && !getAssistantGeneratedImages(message).length && !isAssistantImageGenerating(message) && loading && activeAssistantMessageId === message.id"
                   class="chat-text assistant-text placeholder"
                 >
-                  正在思考...
+                  {{ $t('writer.ai.thinking') }}
                 </text>
               </block>
             </view>
@@ -298,7 +298,7 @@
               @click="startNewConversation"
             >
               <i class="feature-tool-icon el-icon-plus"></i>
-              <text>开启新会话</text>
+              <text>{{ $t('writer.ai.startNewConversation') }}</text>
             </button>
             <button
               class="feature-tool-button feature-toggle-button"
@@ -308,7 +308,7 @@
               @click="toggleImageGeneration"
             >
               <i class="feature-tool-icon el-icon-picture-outline"></i>
-              <text>图片生成</text>
+              <text>{{ $t('writer.ai.imageGeneration') }}</text>
             </button>
             <button
               class="feature-tool-button feature-toggle-button"
@@ -325,7 +325,7 @@
                 <path d="M17 8.5c-.8 0-1.5.5-1.9 1.1" />
                 <path d="M18.8 15.1c-.7-.5-1.5-.7-2.3-.5" />
               </svg>
-              <text>深度思考</text>
+              <text>{{ $t('writer.ai.deepThinking') }}</text>
             </button>
           </view>
 		  <RedstoneCost :cost="imageGenerationEnabled ? 5 : (thinkingMode === 'deep' ? 2 : 1)" />
@@ -391,7 +391,7 @@
                   size="mini"
                   @click="stopAssist"
                 >
-                  停止
+                  {{ $t('writer.ai.stop') }}
                 </button>
                 <button
                   v-else
@@ -400,7 +400,7 @@
                   :disabled="!canRun"
                   @click="submitChat"
                 >
-                  发送
+                  {{ $t('common.send') }}
                 </button>
               </view>
             </view>
@@ -408,7 +408,7 @@
         </view>
 
         <view class="panel-note">
-          AI 可能会犯错，请确认后再应用到草稿。
+          {{ $t('writer.ai.disclaimer') }}
         </view>
 
         <view
@@ -488,14 +488,14 @@ function createTaskInstanceId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 const IMAGE_STYLE_OPTIONS = [
-  { label: "风格", value: "" },
-  { label: "写实", value: "写实细腻，电影感光影" },
-  { label: "国风", value: "东方国风插画，雅致含蓄" },
-  { label: "二次元", value: "精致二次元角色插画" },
-  { label: "厚涂", value: "厚涂概念设定，质感丰富" },
-  { label: "漫画", value: "漫画分镜感，线条清晰" },
-  { label: "水彩", value: "水彩插画，柔和通透" },
-  { label: "电影感", value: "电影剧照感，戏剧化构图" },
+  { labelKey: "style", value: "" },
+  { labelKey: "realistic", value: "写实细腻，电影感光影" },
+  { labelKey: "chinese", value: "东方国风插画，雅致含蓄" },
+  { labelKey: "anime", value: "精致二次元角色插画" },
+  { labelKey: "painted", value: "厚涂概念设定，质感丰富" },
+  { labelKey: "comic", value: "漫画分镜感，线条清晰" },
+  { labelKey: "watercolor", value: "水彩插画，柔和通透" },
+  { labelKey: "cinematic", value: "电影剧照感，戏剧化构图" },
 ];
 const IMAGE_ASPECT_RATIO_OPTIONS = [
   { label: "1:1", value: "1:1" },
@@ -1002,7 +1002,7 @@ export default {
   },
   computed: {
     currentPlaceholder() {
-      return "输入问题";
+      return this.$t('writer.ai.placeholder');
     },
     canRun() {
       return !!(
@@ -1024,7 +1024,7 @@ export default {
       });
     },
     imageStyleLabels() {
-      return IMAGE_STYLE_OPTIONS.map((item) => item.label);
+      return IMAGE_STYLE_OPTIONS.map((item) => this.$t(`writer.ai.styles.${item.labelKey}`));
     },
     imageAspectRatioLabels() {
       return IMAGE_ASPECT_RATIO_OPTIONS.map((item) => item.label);
@@ -1036,15 +1036,21 @@ export default {
       return IMAGE_ASPECT_RATIO_OPTIONS[this.imageAspectRatioIndex] || IMAGE_ASPECT_RATIO_OPTIONS[0];
     },
     selectedImageStyleLabel() {
-      return this.selectedImageStyleOption.label || "风格";
+      return this.$t(`writer.ai.styles.${this.selectedImageStyleOption.labelKey || 'style'}`);
     },
     selectedImageAspectRatioLabel() {
       return this.selectedImageAspectRatioOption.label || "1:1";
     },
     imageOptionMenuOptions() {
-      return this.imageOptionMenu.type === "ratio"
+      const options = this.imageOptionMenu.type === "ratio"
         ? IMAGE_ASPECT_RATIO_OPTIONS
         : IMAGE_STYLE_OPTIONS;
+      return options.map((option) => ({
+        ...option,
+        label: option.labelKey
+          ? this.$t(`writer.ai.styles.${option.labelKey}`)
+          : option.label,
+      }));
     },
     imageOptionMenuStyle() {
       return {
@@ -1382,7 +1388,7 @@ export default {
       }
     },
     getConversationSessionTitle(session) {
-      return String((session && session.title) || "").trim() || "未命名会话";
+      return String((session && session.title) || "").trim() || this.$t('writer.ai.untitledConversation');
     },
     formatConversationSessionTime(timestamp) {
       const date = new Date(Number(timestamp || 0));
@@ -1417,7 +1423,7 @@ export default {
         return clampText(blockText, 24);
       }
 
-      return "新会话";
+      return this.$t('writer.ai.newConversation');
     },
     ensureCurrentConversationId() {
       if (!this.currentConversationId) {
@@ -1576,7 +1582,7 @@ export default {
     startNewConversation() {
       if (this.loading || this.hasRunningAssistTask()) {
         uni.showToast({
-          title: "当前回复完成后再新建会话",
+          title: this.$t('writer.ai.waitBeforeNew'),
           icon: "none",
           duration: 1800,
         });
@@ -1590,7 +1596,7 @@ export default {
     loadConversationSession(sessionId) {
       if (this.loading || this.hasRunningAssistTask()) {
         uni.showToast({
-          title: "当前回复完成后再切换会话",
+          title: this.$t('writer.ai.waitBeforeSwitch'),
           icon: "none",
           duration: 1800,
         });
@@ -1627,7 +1633,7 @@ export default {
       if (this.activeAssistTask && this.activeAssistTask.status === "running") {
         this.activeAssistantMessageId = Number(this.activeAssistTask.messageId);
         this.loading = true;
-        this.statusText = "正在续接写作助手";
+        this.statusText = this.$t('writer.ai.resuming');
         this.startTypewriter(this.activeAssistantMessageId);
         this.startReasoningTypewriter(this.activeAssistantMessageId);
         this.$nextTick(() => {
@@ -1994,7 +2000,7 @@ export default {
       const selectedText = buildSelectionBlockText(this.selectionText);
       if (!selectedText) {
         uni.showToast({
-          title: "请先选中段落",
+          title: this.$t('writer.ai.selectParagraphFirst'),
           icon: "none",
           duration: 1600,
         });
@@ -2004,7 +2010,7 @@ export default {
       const availableSlots = MAX_SELECTION_BLOCKS - this.pendingSelectionBlocks.length;
       if (availableSlots <= 0) {
         uni.showToast({
-          title: "段落块已达上限",
+          title: this.$t('writer.ai.selectionLimit'),
           icon: "none",
           duration: 1600,
         });
@@ -2041,7 +2047,7 @@ export default {
         this.resumePendingAssistIfNeeded();
       }
       uni.showToast({
-        title: "已添加段落",
+        title: this.$t('writer.ai.selectionAdded'),
         icon: "none",
         duration: 1400,
       });
@@ -2053,7 +2059,10 @@ export default {
       this.hideSelectionBlockTooltip();
     },
     getSelectionBlockLabel(block, blockIndex = 0) {
-      return `段落${Number(blockIndex || 0) + 1}：${summarizeSelectionBlockText(block && block.text)}`;
+      return this.$t('writer.ai.selectionLabel', {
+        index: Number(blockIndex || 0) + 1,
+        text: summarizeSelectionBlockText(block && block.text),
+      });
     },
     getElementRect(element) {
       const target = element && element.$el ? element.$el : element;
@@ -2116,7 +2125,7 @@ export default {
 
       this.selectionBlockTooltip = {
         visible: true,
-        title: `段落${blockIndex + 1}`,
+        title: this.$t('writer.ai.selectionTitle', { index: blockIndex + 1 }),
         text,
         left,
         top,
@@ -2367,9 +2376,9 @@ export default {
         && !String(target.reasoningOutput || "").trim()
         && !this.getAssistantGeneratedImages(target).length
       ) {
-        target.content = "已停止生成";
+        target.content = this.$t('writer.ai.generationStopped');
       }
-      this.appendProcessStep("stopped", "已停止生成");
+      this.appendProcessStep("stopped", this.$t('writer.ai.generationStopped'));
       this.completeAssistTask(messageId, "stopped");
     },
     hasRunningAssistTask() {
@@ -2427,7 +2436,7 @@ export default {
       const task = this.activeAssistTask;
       const reconnectAttempts = Number(task && task.reconnectAttempts || 0);
       if (reconnectAttempts >= MAX_ASSIST_RECONNECT_ATTEMPTS) {
-        const message = "写作助手连接多次中断，请重新发送本次问题";
+        const message = this.$t('writer.ai.reconnectFailed');
         this.errorMessage = message;
         this.appendProcessStep("reconnect_failed", message);
         this.setActiveAssistantImageGenerationState(false);
@@ -2438,7 +2447,10 @@ export default {
         reconnectAttempts: reconnectAttempts + 1,
       });
       this.loading = true;
-      this.statusText = `连接中断，正在尝试续接（${reconnectAttempts + 1}/${MAX_ASSIST_RECONNECT_ATTEMPTS}）`;
+      this.statusText = this.$t('writer.ai.reconnecting', {
+        current: reconnectAttempts + 1,
+        total: MAX_ASSIST_RECONNECT_ATTEMPTS,
+      });
       this.appendProcessStep("reconnect", this.statusText);
       this.assistReconnectTimer = setTimeout(() => {
         this.assistReconnectTimer = null;
@@ -2514,7 +2526,9 @@ export default {
     },
     isImageGenerationStatusText(text) {
       const value = String(text || "");
-      return !!value && /生成图片|图片生成|图片工具/.test(value) && !/失败|已生成/.test(value);
+      return !!value
+        && /生成图片|图片生成|图片工具|generating image|image generation|image tool/i.test(value)
+        && !/失败|已生成|failed|generated/i.test(value);
     },
     setAssistantImageGenerationState(messageId, generating, statusText = "") {
       const target = this.messages.find((message) => {
@@ -2523,7 +2537,7 @@ export default {
       if (!target || target.role !== "assistant") {
         return;
       }
-      const text = String(statusText || (generating ? "正在生成图片" : "")).trim();
+      const text = String(statusText || (generating ? this.$t('writer.ai.generatingImage') : "")).trim();
       if (this.$set) {
         this.$set(target, "imageGenerating", generating === true);
         this.$set(target, "imageStatusText", text);
@@ -2620,7 +2634,7 @@ export default {
       return !!(message && message.role === "assistant" && message.imageGenerating === true);
     },
     getAssistantImageStatus(message) {
-      return String((message && message.imageStatusText) || "正在生成图片");
+      return String((message && message.imageStatusText) || this.$t('writer.ai.generatingImage'));
     },
     isAssistantReasoningCollapsible(message) {
       if (!message || message.role !== "assistant") {
@@ -2869,7 +2883,7 @@ export default {
       if (this.loading || !this.canRun) {
         if (!this.canRun) {
           uni.showToast({
-            title: "请先输入问题或添加段落",
+            title: this.$t('writer.ai.inputRequired'),
             icon: "none",
             duration: 1800,
           });
@@ -2890,14 +2904,14 @@ export default {
       this.output = "";
       this.reasoningOutput = "";
       this.errorMessage = "";
-      this.statusText = "正在连接写作助手";
+      this.statusText = this.$t('writer.ai.connecting');
       this.closeImageOptionMenu();
       this.processSteps = [];
       this.processExpanded = true;
       this.reasoningExpanded = true;
       this.resultScrollTop = 0;
       this.streamOutputChars = 0;
-      this.appendProcessStep("client_start", "正在连接写作助手");
+      this.appendProcessStep("client_start", this.$t('writer.ai.connecting'));
       const userMessage = this.appendChatMessage("user", promptText, {
         selectionBlocks,
       });
@@ -2930,7 +2944,7 @@ export default {
           return;
         }
 		showInsufficientRedstoneOptions(error);
-        this.errorMessage = error.message || "写作助手暂时没有响应";
+        this.errorMessage = error.message || this.$t('writer.ai.noResponse');
         this.appendProcessStep("error", this.errorMessage);
         this.completeAssistTask(assistantMessage.id, "error");
         this.scheduleConversationPersist();
@@ -2963,7 +2977,7 @@ export default {
       });
 
       if (!response.ok) {
-        let message = "写作助手请求失败";
+        let message = this.$t('writer.ai.requestFailed');
 		let code = "";
         try {
           const data = await response.json();
@@ -3020,7 +3034,7 @@ export default {
       this.resumeTaskInProgress = true;
       this.loading = true;
       this.activeAssistantMessageId = Number(task.messageId);
-      this.statusText = "正在续接写作助手";
+      this.statusText = this.$t('writer.ai.resuming');
       this.startTypewriter(task.messageId);
       this.startReasoningTypewriter(task.messageId);
       try {
@@ -3040,7 +3054,7 @@ export default {
           return;
         }
 		showInsufficientRedstoneOptions(error);
-        this.errorMessage = error.message || "写作助手暂时没有响应";
+        this.errorMessage = error.message || this.$t('writer.ai.noResponse');
         this.appendProcessStep("error", this.errorMessage);
         this.completeAssistTask(task.messageId, "error");
       } finally {
@@ -3134,7 +3148,7 @@ export default {
         if (event.stage === "image_generation_start") {
           this.setActiveAssistantImageGenerationState(
             true,
-            event.message || event.text || "正在生成图片"
+            event.message || event.text || this.$t('writer.ai.generatingImage')
           );
         }
         if (
@@ -3154,7 +3168,7 @@ export default {
         if (content) {
           const activeMessage = this.getActiveAssistantMessage();
           if (!this.reasoningOutput) {
-            this.appendProcessStep("reasoning", "正在展示模型原始推理");
+            this.appendProcessStep("reasoning", this.$t('writer.ai.receivingReasoning'));
           }
           const previousReasoning = activeMessage
             ? activeMessage.reasoningOutput
@@ -3187,7 +3201,7 @@ export default {
         if (content) {
           const activeMessage = this.getActiveAssistantMessage();
           if (!this.output) {
-            this.appendProcessStep("answer", "正在接收正文建议");
+            this.appendProcessStep("answer", this.$t('writer.ai.receivingSuggestion'));
           }
           const previousOutput = activeMessage
             ? activeMessage.content
@@ -3228,14 +3242,14 @@ export default {
             ? this.$set(activeMessage, "generatedImages", nextImages)
             : (activeMessage.generatedImages = nextImages);
           this.setAssistantImageGenerationState(activeMessage.id, false);
-          this.appendProcessStep("image", "图片已生成");
+          this.appendProcessStep("image", this.$t('writer.ai.imageGenerated'));
           this.queueResultAutoScroll();
           this.scheduleConversationPersist();
         }
         return;
       }
       if (event.type === "error") {
-        this.errorMessage = event.message || "写作助手暂时没有响应";
+        this.errorMessage = event.message || this.$t('writer.ai.noResponse');
         this.appendProcessStep("error", this.errorMessage);
         this.queueResultAutoScroll();
         this.setActiveAssistantImageGenerationState(false);
@@ -3249,7 +3263,7 @@ export default {
       }
       if (event.type === "done") {
         this.statusText = "";
-        this.appendProcessStep("done", "生成完成");
+        this.appendProcessStep("done", this.$t('writer.ai.generationComplete'));
         this.setActiveAssistantImageGenerationState(false);
         this.setAssistantReasoningComplete(
           event.message_id || this.activeAssistantMessageId,
@@ -3928,7 +3942,7 @@ export default {
       }
       if (!range) {
         uni.showToast({
-          title: isInsertPreview ? "插入位置已变化，请重新点击应用" : "正文已变化，请重新点击应用",
+          title: this.$t(isInsertPreview ? 'writer.ai.insertPositionChanged' : 'writer.ai.contentChanged'),
           icon: "none",
           duration: 2200,
         });
@@ -3947,7 +3961,7 @@ export default {
       const to = Math.min(Math.max(Number(range.to), 0), docSize);
       if (!Number.isFinite(from) || !Number.isFinite(to)) {
         uni.showToast({
-          title: isInsertPreview ? "插入位置已变化，请重新点击应用" : "正文已变化，请重新点击应用",
+          title: this.$t(isInsertPreview ? 'writer.ai.insertPositionChanged' : 'writer.ai.contentChanged'),
           icon: "none",
           duration: 2200,
         });
@@ -3963,7 +3977,7 @@ export default {
       );
       if (!content) {
         uni.showToast({
-          title: "没有可应用的内容",
+          title: this.$t('writer.ai.nothingToApply'),
           icon: "none",
           duration: 1800,
         });
@@ -3996,7 +4010,7 @@ export default {
       }
       if (!isApplied) {
         uni.showToast({
-          title: "应用失败，请重试",
+          title: this.$t('writer.ai.applyFailed'),
           icon: "none",
           duration: 1800,
         });
@@ -4031,13 +4045,13 @@ export default {
     },
     getGeneratedImageTitle(image, index = 0) {
       const prompt = normalizeGeneratedText(image && image.prompt).replace(/\s+/g, " ");
-      return prompt ? clampText(prompt, 28) : `生成图片 ${Number(index || 0) + 1}`;
+      return prompt ? clampText(prompt, 28) : this.$t('writer.ai.generatedImageTitle', { index: Number(index || 0) + 1 });
     },
     insertGeneratedImageAtCursor(image) {
       const imageUrl = this.getGeneratedImageUrl(image);
       if (!this.editor || !imageUrl) {
         uni.showToast({
-          title: "没有可插入的图片",
+          title: this.$t('writer.ai.noImageToInsert'),
           icon: "none",
           duration: 1600,
         });
@@ -4046,14 +4060,14 @@ export default {
       try {
         this.editor.chain().focus().setImage({ src: imageUrl }).run();
         uni.showToast({
-          title: "图片已插入",
+          title: this.$t('writer.ai.imageInserted'),
           icon: "none",
           duration: 1600,
         });
         this.$emit("generated-image-inserted", { url: imageUrl, image });
       } catch (error) {
         uni.showToast({
-          title: "图片插入失败",
+          title: this.$t('writer.ai.imageInsertFailed'),
           icon: "none",
           duration: 1800,
         });
@@ -4088,7 +4102,7 @@ export default {
       const draftText = normalizeGeneratedText(text);
       if (!draftText) {
         uni.showToast({
-          title: "没有可应用的内容",
+          title: this.$t('writer.ai.nothingToApply'),
           icon: "none",
           duration: 1600,
         });
@@ -4099,7 +4113,7 @@ export default {
       }
       this.smartReplacingMessageId = message && message.id ? message.id : -1;
       uni.showToast({
-        title: "正在生成智能预览",
+        title: this.$t('writer.ai.generatingPreview'),
         icon: "none",
         duration: 1400,
       });
@@ -4115,19 +4129,19 @@ export default {
         });
         const responseData = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(responseData.msg || responseData.message || "智能应用失败");
+          throw new Error(responseData.msg || responseData.message || this.$t('writer.ai.smartApplyFailed'));
         }
         const decision = responseData.data || {};
         const replacementText = normalizeGeneratedText(decision.replacement_text) || draftText;
         if (!replacementText) {
-          throw new Error("模型没有返回可应用正文");
+          throw new Error(this.$t('writer.ai.noApplicableText'));
         }
         const action = decision.action === "insert" ? "insert" : "replace";
         const range = action === "insert"
           ? this.resolveSmartInsertRange(decision, message)
           : this.resolveSmartReplaceRange(decision);
         if (!range) {
-          throw new Error(action === "insert" ? "未能定位插入位置" : "正文已变化，请重新点击应用");
+          throw new Error(this.$t(action === "insert" ? 'writer.ai.cannotLocateInsert' : 'writer.ai.contentChanged'));
         }
         this.showSmartReplacePreview(decision, range, replacementText, { action });
         this.$nextTick(() => {
@@ -4138,13 +4152,13 @@ export default {
           }, 260);
         });
         uni.showToast({
-          title: "已生成智能预览",
+          title: this.$t('writer.ai.previewReady'),
           icon: "none",
           duration: 1600,
         });
       } catch (error) {
         uni.showToast({
-          title: error.message || "智能应用失败",
+          title: error.message || this.$t('writer.ai.smartApplyFailed'),
           icon: "none",
           duration: 2200,
         });
@@ -4156,7 +4170,7 @@ export default {
       const content = normalizeGeneratedText(text);
       if (!content) {
         uni.showToast({
-          title: "没有可复制的内容",
+          title: this.$t('writer.ai.nothingToCopy'),
           icon: "none",
           duration: 1600,
         });
@@ -4166,10 +4180,10 @@ export default {
         uni.setClipboardData({
           data: content,
           success: () => {
-            uni.showToast({ title: "已复制", icon: "none", duration: 1400 });
+            uni.showToast({ title: this.$t('common.copied'), icon: "none", duration: 1400 });
           },
           fail: () => {
-            uni.showToast({ title: "复制失败", icon: "none", duration: 1600 });
+            uni.showToast({ title: this.$t('writer.ai.copyFailed'), icon: "none", duration: 1600 });
           },
         });
         return;
@@ -4177,10 +4191,10 @@ export default {
       if (typeof navigator !== "undefined" && navigator.clipboard) {
         navigator.clipboard.writeText(content)
           .then(() => {
-            uni.showToast({ title: "已复制", icon: "none", duration: 1400 });
+            uni.showToast({ title: this.$t('common.copied'), icon: "none", duration: 1400 });
           })
           .catch(() => {
-            uni.showToast({ title: "复制失败", icon: "none", duration: 1600 });
+            uni.showToast({ title: this.$t('writer.ai.copyFailed'), icon: "none", duration: 1600 });
           });
       }
     },
@@ -4194,7 +4208,7 @@ export default {
       }
       this.editor.chain().focus().insertContent(content).run();
       uni.showToast({
-        title: "已插入草稿",
+        title: this.$t('writer.ai.draftInserted'),
         icon: "none",
         duration: 1600,
       });
@@ -4210,7 +4224,7 @@ export default {
         .trim();
       if (text && currentSelectedText && currentSelectedText !== text) {
         uni.showToast({
-          title: "选区已变化，请重新生成",
+          title: this.$t('writer.ai.selectionChanged'),
           icon: "none",
           duration: 1800,
         });
@@ -4229,7 +4243,7 @@ export default {
       this.selectionSnapshot = null;
       this.selectionText = "";
       uni.showToast({
-        title: "已替换选区",
+        title: this.$t('writer.ai.selectionReplaced'),
         icon: "none",
         duration: 1600,
       });
@@ -4557,17 +4571,11 @@ export default {
   color: #f2e8d8;
 }
 
-.panel-brand-logo {
-  display: block;
-  width: 148rpx;
-  height: 62rpx;
-  object-fit: contain;
-  filter: brightness(0);
-}
-
-.black .panel-brand-logo {
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
+.panel-brand-text {
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 1rpx;
 }
 
 .panel-subtitle {

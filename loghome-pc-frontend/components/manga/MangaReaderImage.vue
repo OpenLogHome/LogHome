@@ -14,10 +14,10 @@
       draggable="false"
       @load="onLoad"
       @error="onError">
-    <div v-if="!src" class="placeholder">图片资料不可用</div>
-    <div v-else-if="failed" class="image-state" role="alert">图片加载失败 <button @click.stop="retry">重新加载</button></div>
-    <div v-else-if="loading" class="image-state" role="status">图片加载中…</div>
-    <button v-if="zoom > 1" class="reset-btn" @click.stop="reset">{{ zoom.toFixed(1) }}× · 复位</button>
+    <div v-if="!src" class="placeholder">{{ $t('图片资料不可用') }}</div>
+    <div v-else-if="failed" class="image-state" role="alert">{{ $t('图片加载失败') }} <button @click.stop="retry">{{ $t('重新加载') }}</button></div>
+    <div v-else-if="loading" class="image-state" role="status">{{ $t('图片加载中…') }}</div>
+    <button v-if="zoom > 1" class="reset-btn" @click.stop="reset">{{ $t('{zoom}× · 复位', { zoom: zoom.toFixed(1) }) }}</button>
   </div>
 </template>
 
@@ -29,7 +29,7 @@ export default {
   name: 'MangaReaderImage',
   props: {
     src: { type: String, default: '' },
-    alt: { type: String, default: '漫画页面' },
+    alt: { type: String, default: '' },
     resetKey: { type: [Number, String], default: 0 }
   },
   data() {

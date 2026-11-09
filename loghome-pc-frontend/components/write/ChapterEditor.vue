@@ -1,35 +1,34 @@
 <template>
   <div class="native-editor">
     <div class="editor-chrome">
-      <div class="editor-toolbar" aria-label="编辑工具">
+      <div class="editor-toolbar" :aria-label="$t('编辑工具')">
         <button
           :disabled="disabled"
-          title="撤销 Ctrl / ⌘ Z"
+          :title="$t('撤销 Ctrl / ⌘ Z')"
           @click="command('undo')"
         >
-          <i aria-hidden="true" class="el-icon-refresh-left" /> 撤销
+          <i aria-hidden="true" class="el-icon-refresh-left" /> {{ $t('撤销') }}
         </button>
-        <button :disabled="disabled" title="重做" @click="command('redo')">
+        <button :disabled="disabled" :title="$t('重做')" @click="command('redo')">
           <i aria-hidden="true" class="el-icon-refresh-right" />
         </button>
         <span class="toolbar-divider" />
-        <button :disabled="disabled" @click="format">自动排版</button>
+        <button :disabled="disabled" @click="format">{{ $t('自动排版') }}</button>
         <button :disabled="disabled" @click="$refs.image.click()">
-          <i aria-hidden="true" class="el-icon-picture-outline" /> 图片
+          <i aria-hidden="true" class="el-icon-picture-outline" /> {{ $t('图片') }}
         </button>
         <button :aria-pressed="String(findOpen)" @click="toggleFind">
-          <i aria-hidden="true" class="el-icon-search" /> 查找替换
+          <i aria-hidden="true" class="el-icon-search" /> {{ $t('查找替换') }}
         </button>
         <button
           :disabled="Boolean(realtime)"
           :aria-pressed="String(sourceOpen)"
           @click="toggleSource"
         >
-          {{ sourceOpen ? "返回正文" : "JSON 源码" }}
+          {{ sourceOpen ? $t('返回正文') : $t('JSON 源码') }}
         </button>
         <span class="toolbar-spacer" /><span
-          >{{ count.textCount.toLocaleString() }} 字 ·
-          {{ count.imageCount }} 图</span
+          >{{ $t('{characters} 字 · {images} 图', { characters: count.textCount.toLocaleString(), images: count.imageCount }) }}</span
         >
         <input
           ref="image"
@@ -42,7 +41,7 @@
       <div
         v-if="preferences.quickInputs"
         class="quick-input-bar"
-        aria-label="快捷输入"
+        :aria-label="$t('快捷输入')"
       >
         <button
           v-for="symbol in preferences.quickInputs.split('|').filter(Boolean)"
@@ -58,26 +57,26 @@
         v-if="findOpen"
         class="find-bar"
         role="search"
-        aria-label="查找替换"
+        :aria-label="$t('查找替换')"
         @keydown.esc.stop.prevent="closeFind"
       >
         <input
           ref="findInput"
           v-model="findText"
-          aria-label="查找文本"
-          placeholder="查找文本"
+          :aria-label="$t('查找文本')"
+          :placeholder="$t('查找文本')"
           @keydown.enter="findNext"
-        /><button @click="findNext">下一个</button>
+        /><button @click="findNext">{{ $t('下一个') }}</button>
         <input
           v-model="replacement"
-          aria-label="替换文本"
-          placeholder="替换为"
-        /><button :disabled="disabled" @click="replace(false)">替换</button
-        ><button :disabled="disabled" @click="replace(true)">全部替换</button>
+          :aria-label="$t('替换文本')"
+          :placeholder="$t('替换为')"
+        /><button :disabled="disabled" @click="replace(false)">{{ $t('替换') }}</button
+        ><button :disabled="disabled" @click="replace(true)">{{ $t('全部替换') }}</button>
         <button
           class="find-close"
-          aria-label="关闭查找替换"
-          title="关闭（Esc）"
+          :aria-label="$t('关闭查找替换')"
+          :title="$t('关闭（Esc）')"
           @click="closeFind"
         >
           <i class="el-icon-close" aria-hidden="true" />
@@ -95,18 +94,18 @@
           class="chapter-title"
           :value="title"
           :disabled="disabled"
-          aria-label="章节标题"
-          placeholder="输入章节标题"
+          :aria-label="$t('章节标题')"
+          :placeholder="$t('输入章节标题')"
           maxlength="100"
           @input="$emit('title', $event.target.value)"
         />
         <div v-if="sourceOpen" class="source-editor">
           <textarea
             v-model="sourceText"
-            aria-label="章节 JSON 源码"
+            :aria-label="$t('章节 JSON 源码')"
             rows="20"
             :disabled="disabled"
-          /><button :disabled="disabled" @click="applySource">应用源码</button>
+          /><button :disabled="disabled" @click="applySource">{{ $t('应用源码') }}</button>
         </div>
         <editor-content v-show="!sourceOpen" v-if="editor" :editor="editor" />
         <writer-block-controls
@@ -118,11 +117,11 @@
           v-if="endsWithImage && !sourceOpen && !disabled"
           class="image-tail-input"
           type="button"
-          aria-label="在图片后继续输入"
+          :aria-label="$t('在图片后继续输入')"
           @mousedown.prevent="appendImageParagraph"
           @click="appendImageParagraph"
         >
-          <i class="el-icon-plus" aria-hidden="true" /> 继续输入
+          <i class="el-icon-plus" aria-hidden="true" /> {{ $t('继续输入') }}
         </button>
       </article>
     </div>
@@ -261,7 +260,7 @@ export default {
         : { content: legacyBlocksToDoc(parseLegacyContent(this.value)) }),
       editorProps: {
         attributes: {
-          "aria-label": "章节正文",
+          "aria-label": this.$t('章节正文'),
           role: "textbox",
           "aria-multiline": "true",
         },
@@ -412,7 +411,7 @@ export default {
         );
         this.sourceOpen = false;
       } catch (_) {
-        this.writerMessage("error", "源码必须是合法的文字／图片段落数组");
+        this.writerMessage("error", this.$t('源码必须是合法的文字／图片段落数组'));
       }
     },
     refreshCount() {
@@ -465,7 +464,7 @@ export default {
           "\n"
         ) !== selection.text
       )
-        throw new Error("选中内容已经变化，请重新选择");
+        throw new Error(this.$t('选中内容已经变化，请重新选择'));
       this.editor
         .chain()
         .focus()
@@ -501,7 +500,7 @@ export default {
       const match =
         matches.find((item) => item.from >= this.nextPosition) || matches[0];
       if (!match) {
-        this.writerMessage("info", "没有找到匹配文本");
+        this.writerMessage("info", this.$t('没有找到匹配文本'));
         return;
       }
       this.nextPosition = match.to;

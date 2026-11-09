@@ -1,7 +1,7 @@
 <template>
   <div class="writer-async-notice" :role="failed ? 'alert' : 'status'">
-    <p>{{ failed ? '功能加载失败，请重新加载后再试。' : '正在加载…' }}</p>
-    <button v-if="failed" @click="reload">重新加载页面</button>
+    <p>{{ failed ? $t('功能加载失败，请重新加载后再试。') : $t('正在加载…') }}</p>
+    <button v-if="failed" @click="reload">{{ $t('重新加载页面') }}</button>
   </div>
 </template>
 <script>

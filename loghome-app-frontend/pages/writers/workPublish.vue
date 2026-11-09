@@ -2411,8 +2411,8 @@ export default {
 
 .mode-badge {
   position: absolute;
-  top: 18rpx;
-  right: 18rpx;
+  top: -16rpx;
+  right: 12rpx;
   padding: 4rpx 12rpx;
   border-radius: 999rpx;
   background: #dc2626;

@@ -9,6 +9,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -16,11 +18,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
+import top.codesocean.loghome.android.BuildConfig
 import java.util.UUID
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 private const val EXTRA_ARTICLE_ID = "articleId"
 private const val EXTRA_PARAGRAPH_ID = "paragraphId"
@@ -107,18 +113,25 @@ class AudioEngine(
     private val player: ExoPlayer,
     private val serviceScope: CoroutineScope,
     private val requestRegistry: TtsRequestRegistry,
-    private val ttsEngine: TtsEngineRouter,
+    private val ttsEngine: TtsSynthesizer,
+    private val httpClient: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS).readTimeout(25, TimeUnit.SECONDS)
+        .callTimeout(30, TimeUnit.SECONDS).build(),
     private val onStopService: () -> Unit,
 ) {
-    private val httpClient = OkHttpClient()
     private val queueEntries = mutableListOf<QueueEntry>()
 
-    private var voice = SYSTEM_DEFAULT_VOICE_ID
+    private val preferences = AudiobookPreferences(context)
+    private var voice = preferences.voiceId
+    private var bookTitle = "原木社区"
+    private var coverUri: Uri? = null
     private var activePlaylistArticleIds = emptyList<String>()
     private var activePlaylistKey = ""
     private var inlineArticles = emptyMap<String, Article>()
     private var pendingArticleIds = mutableListOf<String>()
     private var isLoadingArticle = false
+    private var errorMessage = ""
+    private var playlistGeneration = 0L
     private var currentArticleIndex = 0
     private var dismissJob: Job? = null
     private var onlinePrefetchJob: Job? = null
@@ -160,6 +173,8 @@ class AudioEngine(
 
         override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
             Log.e(AUDIO_TAG, "onPlayerError: ${error.errorCodeName}", error)
+            errorMessage = (error.cause?.cause as? IOException)?.message
+                ?: "语音生成或播放失败，请检查网络后重试"
         }
     }
 
@@ -182,6 +197,9 @@ class AudioEngine(
             AUDIO_TAG,
             "replacePlaylist: articleIds=$articleIds, startArticleId=$startArticleId",
         )
+        onlinePrefetchJob?.cancel()
+        onlinePrefetchJob = null
+        playlistGeneration++
         player.stop()
         player.clearMediaItems()
         requestRegistry.clear()
@@ -195,6 +213,7 @@ class AudioEngine(
         pendingArticleIds = articleIds.toMutableList()
         currentArticleIndex = 0
         isLoadingArticle = false
+        errorMessage = ""
 
         if (!startArticleId.isNullOrBlank()) {
             val index = pendingArticleIds.indexOf(startArticleId)
@@ -206,13 +225,49 @@ class AudioEngine(
         loadNextArticle()
     }
 
+    fun setBookMetadata(title: String, coverUrl: String) {
+        val artwork = coverUrl.takeIf { it.isNotBlank() }?.let(Uri::parse)
+        val album = title.ifBlank { "原木社区" }
+        if (album == bookTitle && artwork == coverUri) return
+        bookTitle = album
+        coverUri = artwork
+        for (index in queueEntries.indices) {
+            val entry = queueEntries[index]
+            val metadata = entry.mediaItem.mediaMetadata.buildUpon()
+                .setAlbumTitle(bookTitle).setArtworkUri(coverUri).build()
+            val item = entry.mediaItem.buildUpon().setMediaMetadata(metadata).build()
+            queueEntries[index] = entry.copy(mediaItem = item)
+            player.replaceMediaItem(index, item)
+        }
+    }
+
     fun isCurrentPlaylist(articleIds: List<String>, playlistKey: String = ""): Boolean =
         activePlaylistArticleIds == articleIds && activePlaylistKey == playlistKey
+
+    suspend fun openPlaylist(
+        articleIds: List<String>,
+        startArticleId: String?,
+        inlineArticles: List<Article> = emptyList(),
+        playlistKey: String = "",
+        startParagraphId: String? = null,
+        forceSeek: Boolean = false,
+    ) {
+        val reuseQueue = isCurrentPlaylist(articleIds, playlistKey) && player.mediaItemCount > 0
+        if (!reuseQueue) replacePlaylist(articleIds, startArticleId, inlineArticles, playlistKey)
+        if (player.mediaItemCount == 0) throw IOException(errorMessage.ifBlank { "没有可播放的章节，请重试" })
+        if ((!reuseQueue || forceSeek) && startArticleId != null && startParagraphId != null) {
+            jumpToArticleParagraph(startArticleId, startParagraphId)
+        }
+        play()
+    }
 
     fun play() {
         Log.d(AUDIO_TAG, "play")
         cancelDismissTimer()
+        errorMessage = ""
+        if (player.playbackState == Player.STATE_IDLE && player.mediaItemCount > 0) player.prepare()
         player.play()
+        prefetchUpcomingOnlineAudio()
     }
 
     fun pause() {
@@ -278,6 +333,8 @@ class AudioEngine(
             durationMs = duration,
             isPlaying = player.isPlaying,
             isBuffering = player.playbackState == Player.STATE_BUFFERING,
+            isPreparing = isLoadingArticle && player.mediaItemCount == 0,
+            errorMessage = errorMessage,
             currentParagraphIndex = currentIndex,
             paragraphCount = player.mediaItemCount,
             canSkipPrevious = currentIndex > 0 || player.currentPosition > 0L,
@@ -306,6 +363,7 @@ class AudioEngine(
     }
 
     suspend fun setVoice(newVoice: String) {
+        require(TtsVoiceCatalog.contains(newVoice))
         if (voice == newVoice) {
             Log.d(AUDIO_TAG, "setVoice ignored because voice is unchanged: $newVoice")
             return
@@ -314,15 +372,16 @@ class AudioEngine(
         Log.d(AUDIO_TAG, "setVoice: $voice -> $newVoice")
         onlinePrefetchJob?.cancel()
         onlinePrefetchJob = null
-        val oldVoice = voice
+        playlistGeneration++
+        isLoadingArticle = false
         voice = newVoice
-        AudioCacheUtils.clearVoiceCache(context, oldVoice)
+        preferences.voiceId = newVoice
 
         val currentMediaItem = player.currentMediaItem ?: return
         val extras = currentMediaItem.mediaMetadata.extras ?: return
         val articleId = extras.getString(EXTRA_ARTICLE_ID) ?: return
         val paragraphId = extras.getString(EXTRA_PARAGRAPH_ID) ?: return
-        val wasPlaying = player.isPlaying
+        val wasPlaying = player.playWhenReady
         val position = player.currentPosition
 
         player.pause()
@@ -341,7 +400,7 @@ class AudioEngine(
         isLoadingArticle = false
 
         loadNextArticle()
-        val jumped = jumpToArticleParagraph(articleId, paragraphId)
+        val jumped = jumpToArticleParagraph(articleId, paragraphId, playWhenReady = wasPlaying)
         if (jumped && position > 0) {
             player.seekTo(position)
         }
@@ -354,6 +413,7 @@ class AudioEngine(
         articleId: String,
         paragraphId: String,
         attempt: Int = 0,
+        playWhenReady: Boolean = true,
     ): Boolean {
         Log.d(
             AUDIO_TAG,
@@ -373,9 +433,7 @@ class AudioEngine(
         if (targetIndex >= 0) {
             Log.d(AUDIO_TAG, "jumpToArticleParagraph found queue index=$targetIndex")
             player.seekTo(targetIndex, 0)
-            if (!player.isPlaying) {
-                player.play()
-            }
+            if (playWhenReady) player.play() else player.pause()
             return true
         }
 
@@ -396,7 +454,7 @@ class AudioEngine(
             delay(500)
         }
 
-        return jumpToArticleParagraph(articleId, paragraphId, attempt + 1)
+        return jumpToArticleParagraph(articleId, paragraphId, attempt + 1, playWhenReady)
     }
 
     fun release() {
@@ -405,34 +463,64 @@ class AudioEngine(
         player.removeListener(playerListener)
     }
 
+    fun resetPlaylist() {
+        errorMessage = ""
+        playlistGeneration++
+        isLoadingArticle = false
+        onlinePrefetchJob?.cancel()
+        onlinePrefetchJob = null
+        player.stop()
+        player.clearMediaItems()
+        requestRegistry.clear()
+        queueEntries.clear()
+        activePlaylistArticleIds = emptyList()
+        activePlaylistKey = ""
+        pendingArticleIds.clear()
+        inlineArticles = emptyMap()
+        currentArticleIndex = 0
+        voice = preferences.voiceId
+    }
+
     private suspend fun loadNextArticle(resumeIfNeeded: Boolean = false) {
         if (isLoadingArticle || currentArticleIndex >= pendingArticleIds.size) {
             return
         }
 
         isLoadingArticle = true
+        val generation = playlistGeneration
         try {
-            val articleId = pendingArticleIds[currentArticleIndex]
-            Log.d(
-                AUDIO_TAG,
-                "loadNextArticle: articleId=$articleId, currentArticleIndex=$currentArticleIndex, pending=${pendingArticleIds.size}",
-            )
-            val article = fetchArticle(articleId)
-            if (article != null) {
+            errorMessage = ""
+            // Iterate while holding the loading guard. Recursing here used to
+            // return immediately because isLoadingArticle was still true.
+            while (currentArticleIndex < pendingArticleIds.size) {
+                val articleId = pendingArticleIds[currentArticleIndex]
+                Log.d(AUDIO_TAG, "loadNextArticle: articleId=$articleId")
+                val article = fetchArticle(articleId)
+                if (generation != playlistGeneration) return
+                if (article.paragraphs.isEmpty()) {
+                    currentArticleIndex++
+                    continue
+                }
                 addArticleToPlaylist(article, resumeIfNeeded)
-            } else {
-                Log.w(AUDIO_TAG, "loadNextArticle failed to fetch articleId=$articleId")
+                if (generation != playlistGeneration) return
+                currentArticleIndex++
+                return
             }
-            currentArticleIndex += 1
-            if (queueEntries.isEmpty() && currentArticleIndex < pendingArticleIds.size) {
-                loadNextArticle(resumeIfNeeded)
+            if (queueEntries.isEmpty()) errorMessage = "章节中没有可朗读的正文"
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            if (generation == playlistGeneration) {
+                errorMessage = error.message ?: "章节加载失败，请重试"
+                Log.w(AUDIO_TAG, "Chapter loading failed", error)
             }
         } finally {
-            isLoadingArticle = false
+            if (generation == playlistGeneration) isLoadingArticle = false
         }
     }
 
     private suspend fun addArticleToPlaylist(article: Article, resumeIfNeeded: Boolean) {
+        val generation = playlistGeneration
         val mediaItems = mutableListOf<MediaItem>()
         val wasEnded = player.playbackState == Player.STATE_ENDED
         val oldItemCount = player.mediaItemCount
@@ -449,7 +537,8 @@ class AudioEngine(
             }
 
             val paragraphId = article.paragraphIds.getOrElse(index) { index.toString() }
-            val cacheFile = AudioCacheUtils.getCachedFile(context, article.id, paragraph, voice)
+            val cacheFile = AudioCacheUtils.getCachedFile(context, article.id, paragraph, ttsEngine.cacheIdentity(voice))
+            if (generation != playlistGeneration) return
             val itemUri = Uri.parse(
                 "loghome-tts://${Uri.encode(article.id)}/${Uri.encode(paragraphId)}?voice=${Uri.encode(voice)}&token=${UUID.randomUUID()}",
             )
@@ -462,7 +551,8 @@ class AudioEngine(
             requestRegistry.put(itemUri.toString(), ttsRequest)
 
             val metadata = MediaMetadata.Builder()
-                .setAlbumTitle("原木社区")
+                .setAlbumTitle(bookTitle)
+                .setArtworkUri(coverUri)
                 .setTitle(article.title)
                 .setArtist(paragraph)
                 .setExtras(
@@ -527,43 +617,53 @@ class AudioEngine(
     }
 
     private fun prefetchUpcomingOnlineAudio() {
-        if (!EdgeTtsVoiceCatalog.isEdgeVoice(voice) || onlinePrefetchJob?.isActive == true) {
-            return
-        }
-        val startIndex = player.currentMediaItemIndex.takeIf { it != C.INDEX_UNSET } ?: 0
-        val requests = queueEntries
-            .drop(startIndex.coerceAtLeast(0))
-            .asSequence()
-            .map(QueueEntry::ttsRequest)
-            .filter { !it.cacheFile.exists() && EdgeTtsVoiceCatalog.isEdgeVoice(it.voice) }
-            .take(3)
-            .toList()
-        if (requests.isEmpty()) return
-
-        onlinePrefetchJob = serviceScope.launch(Dispatchers.IO) {
-            requests.forEach { request ->
-                runCatching { TtsDataSource.ensureCachedAudio(request, ttsEngine) }
-                    .onFailure { Log.w(AUDIO_TAG, "Online TTS prefetch failed", it) }
+        if (onlinePrefetchJob?.isActive == true) return
+        val generation = playlistGeneration
+        // Keep one worker. Re-read the current position after every download so
+        // seeking or moving to another paragraph cannot leave a stale snapshot.
+        onlinePrefetchJob = serviceScope.launch {
+            val failedPaths = mutableSetOf<String>()
+            while (isActive && generation == playlistGeneration) {
+                val start = player.currentMediaItemIndex.takeIf { it != C.INDEX_UNSET } ?: 0
+                val request = queueEntries.drop(start.coerceAtLeast(0)).take(4)
+                    .map(QueueEntry::ttsRequest)
+                    .firstOrNull {
+                        (!it.cacheFile.isFile || it.cacheFile.length() == 0L) &&
+                            it.cacheFile.absolutePath !in failedPaths
+                    } ?: break
+                try {
+                    withContext(Dispatchers.IO) { TtsDataSource.ensureCachedAudio(request, ttsEngine) }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    failedPaths += request.cacheFile.absolutePath
+                    Log.w(AUDIO_TAG, "Online TTS prefetch failed", error)
+                }
             }
         }
     }
 
-    private suspend fun fetchArticle(id: String): Article? {
+    private suspend fun fetchArticle(id: String): Article {
         inlineArticles[id]?.let { article ->
             Log.d(AUDIO_TAG, "fetchArticle: using inline content for id=$id")
             return article
         }
         return withContext(Dispatchers.IO) {
-            runCatching {
+            try {
                 Log.d(AUDIO_TAG, "fetchArticle: id=$id")
                 val request = Request.Builder()
-                    .url("https://loghomeservice.codesocean.top/articles/get_article?id=$id")
+                    .url("${BuildConfig.BACKEND_ENDPOINT}/articles/get_article".toHttpUrl().newBuilder()
+                        .addQueryParameter("id", id).addQueryParameter("isCaching", "true").build())
                     .build()
 
                 httpClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
                         Log.w(AUDIO_TAG, "fetchArticle failed: id=$id, code=${response.code}")
-                        return@use null
+                        throw IOException(when (response.code) {
+                            404 -> "章节不存在、未发布或已不可阅读"
+                            401, 403 -> "当前账号无权读取此章节"
+                            else -> "章节加载失败（${response.code}），请稍后重试"
+                        })
                     }
 
                     val body = response.body?.string().orEmpty()
@@ -573,11 +673,18 @@ class AudioEngine(
                         is JSONObject -> data
                         else -> null
                     }
-                    firstObject?.let { Article.fromJson(it) }
+                    if (firstObject == null || firstObject.opt("article_id")?.toString() != id) {
+                        throw IOException("后端返回的章节数据无效，请重试")
+                    }
+                    Article.fromJson(firstObject)
                 }
-            }.onFailure { error ->
-                Log.e(AUDIO_TAG, "fetchArticle exception: id=$id", error)
-            }.getOrNull()
+            } catch (error: java.net.SocketTimeoutException) {
+                throw IOException("章节加载超时，请检查网络后重试", error)
+            } catch (error: java.io.InterruptedIOException) {
+                throw IOException("章节加载超时，请检查网络后重试", error)
+            } catch (error: java.net.UnknownHostException) {
+                throw IOException("无法连接后端，请检查网络或代理设置", error)
+            }
         }
     }
 

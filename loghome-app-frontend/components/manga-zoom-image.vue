@@ -3,8 +3,8 @@
     @touchstart="touchStart" @touchmove="touchMove" @touchend="touchEnd" @touchcancel="touchCancel" @click="mouseTap">
     <image v-if="src" class="zoom-image" :src="src" :mode="mode" :style="imageStyle"
       @load="$emit('load', $event)" @error="$emit('error', $event)" />
-    <view v-else class="image-placeholder">{{ placeholder }}</view>
-    <button v-manga-a11y v-if="zoom > 1" class="zoom-reset" type="button" :aria-label="'当前放大 ' + zoom.toFixed(1) + ' 倍，复位图片'" @touchstart.stop @touchend.stop @click.stop="reset">{{ zoom.toFixed(1) }}× · 复位</button>
+    <view v-else class="image-placeholder">{{ placeholderText }}</view>
+    <button v-manga-a11y v-if="zoom > 1" class="zoom-reset" type="button" :aria-label="$t('manga.reader.zoomResetAria', { zoom: zoom.toFixed(1) })" @touchstart.stop @touchend.stop @click.stop="reset">{{ zoom.toFixed(1) }}× · {{ $t('manga.reader.resetZoom') }}</button>
   </view>
 </template>
 <script>
@@ -18,10 +18,11 @@ export default {
   props: {
     src: { type: String, default: '' }, mode: { type: String, default: 'aspectFit' },
     height: { type: Number, default: 0 }, resetKey: { type: [Number, String], default: 0 },
-    placeholder: { type: String, default: '图片加载中' },
+    placeholder: { type: String, default: '' },
   },
   data() { return { zoom: 1, x: 0, y: 0, rect: null, gesture: null, moved: false, multiTouch: false, lastTouchAt: 0, lastTapAt: 0, tapTimer: null, gestureVersion: 0 }; },
   computed: {
+    placeholderText() { return this.placeholder || this.$t('manga.reader.imageLoading'); },
     surfaceStyle() { return { height: this.height ? this.height + 'px' : '100%', touchAction: this.zoom > 1 ? 'none' : 'pan-y' }; },
     imageStyle() { return { transform: `translate3d(${this.x}px, ${this.y}px, 0) scale(${this.zoom})` }; },
   },

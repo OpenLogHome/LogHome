@@ -23,7 +23,7 @@
 							:visual-scale="item.avatar_frame ? 1.25 : 1" />
 						<div class="personInfo">
 							<div class="name">{{item.name}}</div>
-							<div class="motto">官方荣誉用户</div>
+							<div class="motto">{{ $t('apps.grandUsers.officialHonor') }}</div>
 						</div>
 					</navigator>
 					<followBtn class="button" :targetId="item.user_id"></followBtn>
@@ -42,9 +42,6 @@
 		},
 		data(){
 			return{
-				tabValue:[
-					"内/公测参与用户","重大贡献用户"
-				],
 				id:-1,
 				user:{},
 				isMe:false,
@@ -54,6 +51,13 @@
 				firstTab:0
 			}
 		},
+		computed:{
+			tabValue(){
+				return [
+					this.$t('apps.grandUsers.tabPublicBeta'), this.$t('apps.grandUsers.tabMajorContributors')
+				]
+			}
+		},
 		onLoad(params){
 			let _this = this;
 			// console.log(_this.id)
@@ -61,7 +65,7 @@
 				_this.grandUsers = JSON.parse(JSON.stringify(res.data));
 			}).catch(function(error) {
 				uni.showToast({
-					title: "用户信息加载失败",
+					title: _this.$t('apps.grandUsers.loadFailed'),
 					icon: 'none',
 					duration: 2000
 				})
@@ -70,7 +74,7 @@
 				_this.greatUsers = JSON.parse(JSON.stringify(res.data));
 			}).catch(function(error) {
 				uni.showToast({
-					title: "用户信息加载失败",
+					title: _this.$t('apps.grandUsers.loadFailed'),
 					icon: 'none',
 					duration: 2000
 				})

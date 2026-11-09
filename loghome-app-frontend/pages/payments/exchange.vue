@@ -2,61 +2,61 @@
 	<view class="exchange" v-dark>
 		<view class="title" v-dark>
 			<img src="../../static/resources/log.png"></img>
-			<text class="text">余额：</text>
+			<text class="text">{{ $t('payments.exchange.balance') }}</text>
 			<text class="num">{{resources.log}}</text>
 		</view>
         
         <view class="title peeled-balance" v-dark>
 			<img src="../../static/resources/cropped_log.webp"></img>
-			<text class="text">去皮原木：</text>
+			<text class="text">{{ $t('payments.exchange.peeledLog') }}</text>
 			<text class="num">{{resources.cropped_log || 0}}</text>
 		</view>
 
 		<view class="exchange-card" v-dark>
-            <view class="card-title">去皮原木兑换</view>
+            <view class="card-title">{{ $t('payments.exchange.cardTitle') }}</view>
             <view class="exchange-form">
                 <view class="input-group">
-                    <text class="label">兑换数量：</text>
+                    <text class="label">{{ $t('payments.exchange.amountLabel') }}</text>
                     <input 
                         type="number" 
                         v-model="exchangeAmount" 
                         class="input" 
-                        placeholder="请输入要兑换的去皮原木数量"
+                        :placeholder="$t('payments.exchange.amountPlaceholder')"
                     />
                 </view>
                 
                 <view class="info-row">
-                    <text class="info-text">兑换比例：1去皮原木 = 1.25原木（小数部分舍去）</text>
+                    <text class="info-text">{{ $t('payments.exchange.rate') }}</text>
                 </view>
                 
                 <view class="result-row">
-                    <text class="result-label">预计获得：</text>
-                    <text class="result-value">{{calculatedResult}} 原木</text>
+                    <text class="result-label">{{ $t('payments.exchange.estimated') }}</text>
+                    <text class="result-value">{{ $t('payments.exchange.resultLogs', { amount: calculatedResult }) }}</text>
                 </view>
             </view>
             
             <button class="exchange-btn" @tap="exchangeLogs" :disabled="!canExchange">
-                确认兑换
+                {{ $t('payments.exchange.confirm') }}
             </button>
             
             <view class="exchange-notice">
-                <text>* 去皮原木是高级资源，兑换后不可逆，请谨慎操作</text>
+                <text>{{ $t('payments.exchange.notice') }}</text>
             </view>
 		</view>
 
 		<view class="tip" v-dark>
-			<p class="titl" v-dark>温馨提示</p>
+			<p class="titl" v-dark>{{ $t('payments.exchange.tipsTitle') }}</p>
 			<view>
-				<text>1、去皮原木是社区高级资源，由用户打赏获得，可用于提现</text>
+				<text>{{ $t('payments.exchange.tip1') }}</text>
 			</view>
 			<view>
-				<text>2、兑换比例为 1:1.25，即1个去皮原木可兑换1.25个普通原木（不足1原木的部分将被舍去）</text>
+				<text>{{ $t('payments.exchange.tip2') }}</text>
 			</view>
 			<view>
-				<text>3、兑换操作不可逆，请合理规划资源使用</text>
+				<text>{{ $t('payments.exchange.tip3') }}</text>
 			</view>
 			<view>
-				<text>4、如有任何问题，请联系官方微信客服：</text>
+				<text>{{ $t('payments.exchange.tip4') }}</text>
 				<text>CodesOcean</text>
 			</view>
 		</view>
@@ -114,7 +114,7 @@
                 const amount = parseFloat(this.exchangeAmount);
                 if (!amount || amount <= 0) {
                     uni.showToast({
-                        title: '请输入有效的兑换数量',
+                        title: this.$t('payments.exchange.invalidAmount'),
                         icon: 'none'
                     });
                     return;
@@ -122,15 +122,15 @@
                 
                 if (amount > (this.resources.cropped_log || 0)) {
                     uni.showToast({
-                        title: '去皮原木余额不足',
+                        title: this.$t('payments.exchange.insufficient'),
                         icon: 'none'
                     });
                     return;
                 }
                 
                 uni.showModal({
-                    title: '确认兑换',
-                    content: `确定要将 ${amount} 去皮原木兑换为 ${Math.floor(amount * 1.25)} 原木吗？不足1原木的部分将被舍去。兑换后不可撤销。`,
+                    title: this.$t('payments.exchange.confirm'),
+                    content: this.$t('payments.exchange.confirmContent', { amount, logs: Math.floor(amount * 1.25) }),
                     success: (res) => {
                         if (res.confirm) {
                             this.submitExchange(amount);
@@ -140,7 +140,7 @@
             },
             submitExchange(amount) {
                 uni.showLoading({
-                    title: '兑换中...'
+                    title: this.$t('payments.exchange.redeeming')
                 });
                 
                 let tk = JSON.parse(window.localStorage.getItem('token'));
@@ -157,21 +157,21 @@
                     uni.hideLoading();
                     if (res.data.code === 200) {
                         uni.showToast({
-                            title: '兑换成功',
+                            title: this.$t('payments.exchange.success'),
                             icon: 'success'
                         });
                         this.exchangeAmount = '';
                         this.refreshResources();
                     } else {
                         uni.showToast({
-                            title: res.data.msg || '兑换失败',
+                            title: res.data.msg || this.$t('payments.exchange.failed'),
                             icon: 'none'
                         });
                     }
                 }).catch((error) => {
                     uni.hideLoading();
                     uni.showToast({
-                        title: error.response?.data?.msg || '兑换失败',
+                        title: error.response?.data?.msg || this.$t('payments.exchange.failed'),
                         icon: 'none'
                     });
                 });

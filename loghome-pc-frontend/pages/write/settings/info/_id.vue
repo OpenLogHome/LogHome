@@ -1,8 +1,8 @@
 <template>
   <div class="info-edit-page">
     <div class="page-header">
-      <h1 class="page-title">修改作品信息</h1>
-      <nuxt-link :to="`/write/settings/${$route.params.id}`" class="back-link">返回作品设置</nuxt-link>
+      <h1 class="page-title">{{ $t('修改作品信息') }}</h1>
+      <nuxt-link :to="`/write/settings/${$route.params.id}`" class="back-link">{{ $t('返回作品设置') }}</nuxt-link>
     </div>
 
     <div class="info-edit-container" v-if="!loading && !error">
@@ -14,27 +14,27 @@
         >
           <div class="cover-overlay">
             <i class="el-icon-camera"></i>
-            <span>点击更换封面</span>
+            <span>{{ $t('点击更换封面') }}</span>
           </div>
         </div>
       </div>
       
       <div class="form-section">
         <el-form :model="novelForm" label-position="top">
-          <el-form-item label="作品名称" :rules="[{ required: true, message: '请输入作品名称', trigger: 'blur' }]">
+          <el-form-item :label="$t('作品名称')" :rules="[{ required: true, message: $t('请输入作品名称'), trigger: 'blur' }]">
             <el-input
               v-model="novelForm.title"
-              placeholder="请输入作品名称"
+              :placeholder="$t('请输入作品名称')"
               maxlength="25"
               show-word-limit
             ></el-input>
           </el-form-item>
           
-          <el-form-item label="作品简介" :rules="[{ required: true, message: '请输入作品简介', trigger: 'blur' }]">
+          <el-form-item :label="$t('作品简介')" :rules="[{ required: true, message: $t('请输入作品简介'), trigger: 'blur' }]">
             <el-input 
               type="textarea" 
               v-model="novelForm.content" 
-              placeholder="请输入作品简介" 
+              :placeholder="$t('请输入作品简介')"
               :rows="6"
               maxlength="300"
               show-word-limit
@@ -42,8 +42,8 @@
           </el-form-item>
           
           <el-form-item>
-            <el-button type="primary" @click="submitForm" :loading="submitting">保存修改</el-button>
-            <el-button @click="$router.push(`/write/settings/${$route.params.id}`)">取消</el-button>
+            <el-button type="primary" @click="submitForm" :loading="submitting">{{ $t('保存修改') }}</el-button>
+            <el-button @click="$router.push(`/write/settings/${$route.params.id}`)">{{ $t('取消') }}</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -52,20 +52,20 @@
     <!-- 加载状态 -->
     <div class="loading-state" v-if="loading">
       <div class="loading-spinner"></div>
-      <p class="loading-text">正在加载作品信息...</p>
+      <p class="loading-text">{{ $t('正在加载作品信息...') }}</p>
     </div>
     
     <!-- 错误提示 -->
     <div class="error-state" v-else-if="error">
       <div class="error-icon" aria-hidden="true"><SiteIcon name="warning" /></div>
-      <h3 class="error-title">加载失败</h3>
+      <h3 class="error-title">{{ $t('加载失败') }}</h3>
       <p class="error-desc">{{error}}</p>
-      <button class="error-button" @click="fetchNovelData">重试</button>
+      <button class="error-button" @click="fetchNovelData">{{ $t('重试') }}</button>
     </div>
     
     <!-- 封面上传对话框 -->
     <el-dialog
-      title="上传封面"
+      :title="$t('上传封面')"
       :visible.sync="coverDialogVisible"
       width="50%"
     >
@@ -79,12 +79,12 @@
         >
           <img v-if="coverPreview" :src="coverPreview" class="cover-preview-image">
           <i v-else class="el-icon-plus cover-uploader-icon"></i>
-          <div class="upload-tip">点击上传封面图片<br>建议尺寸: 741×962</div>
+          <div class="upload-tip">{{ $t('点击上传封面图片') }}<br>{{ $t('建议尺寸: 741×962') }}</div>
         </el-upload>
         
         <div class="upload-actions">
-          <el-button @click="coverDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="confirmCoverUpload" :disabled="!coverFile">确认上传</el-button>
+          <el-button @click="coverDialogVisible = false">{{ $t('取消') }}</el-button>
+          <el-button type="primary" @click="confirmCoverUpload" :disabled="!coverFile">{{ $t('确认上传') }}</el-button>
         </div>
       </div>
     </el-dialog>
@@ -97,7 +97,7 @@ export default {
   components: { SiteIcon },
   head() {
     return {
-      title: '修改作品信息 - 原木社区'
+      title: `${this.$t('修改作品信息')} - ${this.$t('原木社区')}`
     }
   },
   data() {
@@ -153,11 +153,11 @@ export default {
           this.novelForm.content = novel.content
           this.coverUrl = novel.picUrl
         } else {
-          this.error = '未找到作品信息'
+          this.error = this.$t('未找到作品信息')
         }
       } catch (error) {
         console.error('获取作品信息失败:', error)
-        this.error = '获取作品信息失败，请稍后重试'
+        this.error = this.$t('获取作品信息失败，请稍后重试')
       } finally {
         this.loading = false
       }
@@ -174,12 +174,12 @@ export default {
       const isLt2M = file.size / 1024 / 1024 < 2
       
       if (!isImage) {
-        this.$message.error('只能上传图片文件!')
+        this.$message.error(this.$t('只能上传图片文件!'))
         return false
       }
       
       if (!isLt2M) {
-        this.$message.error('图片大小不能超过 2MB!')
+        this.$message.error(this.$t('图片大小不能超过 2MB!'))
         return false
       }
       
@@ -204,7 +204,7 @@ export default {
     
     async confirmCoverUpload() {
       if (!this.coverFile) {
-        this.$message.warning('请先选择图片')
+        this.$message.warning(this.$t('请先选择图片'))
         return
       }
       
@@ -225,7 +225,7 @@ export default {
             novel_id: novelId
           })
           
-          this.$message.success('封面上传成功')
+          this.$message.success(this.$t('封面上传成功'))
           this.coverUrl = base64Data // 临时显示，实际应该重新获取作品信息
           this.coverDialogVisible = false
           this.submitting = false
@@ -235,7 +235,7 @@ export default {
         }
       } catch (error) {
         console.error('上传封面失败:', error)
-        this.$message.error('上传封面失败，请稍后重试')
+        this.$message.error(this.$t('上传封面失败，请稍后重试'))
         this.submitting = false
       }
     },
@@ -243,12 +243,12 @@ export default {
     async submitForm() {
       // 表单验证
       if (!this.novelForm.title.trim()) {
-        this.$message.warning('请输入作品名称')
+        this.$message.warning(this.$t('请输入作品名称'))
         return
       }
       
       if (!this.novelForm.content.trim()) {
-        this.$message.warning('请输入作品简介')
+        this.$message.warning(this.$t('请输入作品简介'))
         return
       }
       
@@ -259,13 +259,13 @@ export default {
         // 调用API修改作品信息
         await this.$api.essays.modifyNovel(novelId, this.novelForm.title, this.novelForm.content)
         
-        this.$message.success('作品信息修改成功')
+        this.$message.success(this.$t('作品信息修改成功'))
         
         // 返回作品设置页面
         this.$router.push(`/write/settings/${novelId}`)
       } catch (error) {
         console.error('修改作品信息失败:', error)
-        this.$message.error('修改作品信息失败，请稍后重试')
+        this.$message.error(this.$t('修改作品信息失败，请稍后重试'))
       } finally {
         this.submitting = false
       }

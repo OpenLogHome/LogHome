@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { languageHeaders } from '~/utils/language'
 
 // Discovery requests reject on failure so callers can distinguish an empty list from an outage.
 export function readingToken() {
@@ -10,8 +11,8 @@ export function readingToken() {
 export async function readingRequest(path, params = {}, options = {}) {
   try {
     const response = await axios.request({
-      url: `${process.env.baseUrl}${path}`, params, timeout: 12000,
-      method: options.method || 'GET', headers: options.headers || {}, data: options.body
+      url: `${process.env.baseUrl}${path}`, params, timeout: options.timeout || 12000,
+      method: options.method || 'GET', headers: languageHeaders(options.headers || {}), data: options.body
     })
     return response.data
   } catch (failure) {

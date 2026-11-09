@@ -1,0 +1,179 @@
+{
+  "tree": {
+    "components": {
+      "gestureHint": "Drag to rotate the farm",
+      "sceneError": "High-quality 3D is unavailable in this environment. Switched back to classic mode."
+    },
+    "farm": {
+      "title": "Tree Farm",
+      "loadingScene": "Loading tree farm",
+      "visitEntry": "Visit",
+      "growthValue": "Growth",
+      "friendFallback": "Friend",
+      "avatarFallback": "F",
+      "friendFarmTitle": "{name}'s Tree Farm",
+      "dailyTasks": "📋 Daily Tasks",
+      "expTasks": "🪄 XP Tasks",
+      "emptyTasks": "💤 No tasks right now. Take a break~",
+      "emptyExpTasks": "🫧 No XP tasks yet",
+      "expOrbs": "XP orbs",
+      "baseReward": "Base {base} × {multiplier}",
+      "expStatus": {
+        "completed": "Auto-completed",
+        "settled": "Auto-settled {completed}/{limit}",
+        "pendingSettle": "Pending auto-settle",
+        "inProgress": "In progress"
+      },
+      "membership": {
+        "defaultName": "Standard user",
+        "boostActive": "Daily and XP task growth rewards get a {multiplier} boost",
+        "boostInactive": "Get 1.2× / 2× growth on daily and XP tasks with LogHome Pass"
+      },
+      "task": {
+        "progress": "{progress} · {completed}/{limit} times",
+        "durationProgress": "{current}/{required} min",
+        "growthReward": "Growth +{reward}",
+        "completed": "Completed",
+        "claim": "Claim"
+      },
+      "taskCatalog": {
+        "daily_signin": {
+          "name": "Daily Check-in",
+          "description": "Check in each day to earn growth"
+        },
+        "daily_like_novel": {
+          "name": "Daily Like",
+          "description": "Like any work to earn growth"
+        },
+        "daily_share_work": {
+          "name": "Share a Work",
+          "description": "Share a work or world once per day"
+        },
+        "daily_post": {
+          "name": "Community Post",
+          "description": "Post in the community to earn growth"
+        },
+        "daily_reply": {
+          "name": "Community Reply",
+          "description": "Reply in the community to earn growth"
+        },
+        "exp_comm_post": {
+          "name": "Community Posts",
+          "description": "Earn one XP orb per post, up to 3 daily"
+        },
+        "exp_comm_reply": {
+          "name": "Community Replies",
+          "description": "Earn one XP orb per reply, up to 5 daily"
+        },
+        "exp_read_time": {
+          "name": "Reading Time",
+          "description": "Earn an XP orb every 10 minutes of reading"
+        },
+        "exp_write_time": {
+          "name": "Writing Time",
+          "description": "Earn an XP orb every 10 minutes of writing"
+        }
+      },
+      "friendStatus": {
+        "unplanted": "Not planted",
+        "switching": "Switching"
+      },
+      "action": {
+        "plant": "🌱 Plant a sapling",
+        "harvest": "🪓 Harvest"
+      },
+      "actions": {
+        "backToMyFarm": "Back to My Farm",
+        "collectAllExp": "Collect All XP"
+      },
+      "harvest": {
+        "title": "🎉 Great Harvest 🎉",
+        "log": "Log × {count}",
+        "apple": "Apple × {count}",
+        "accept": "Accept"
+      },
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "{count} min ago",
+        "hoursAgo": "{count} h ago"
+      },
+      "visit": {
+        "defaultTip": "Tap the XP orbs on the tree to steal them, or use Steal All.",
+        "pendingGrowth": "Stealable growth",
+        "remainingSteal": "Steal quota left",
+        "stealing": "Stealing",
+        "plantFirstShort": "Plant first",
+        "todayStealDone": "Daily steal limit reached",
+        "noOrbs": "No XP orbs to steal",
+        "stealAll": "⚡ Steal All"
+      },
+      "visitPanel": {
+        "title": "Farm Visits",
+        "friendList": "Friends",
+        "friendCount": "{count} friends",
+        "friendMeta": "Uncollected growth {growth} · XP orbs {orbs}",
+        "stealable": "Stealable {count}",
+        "emptyFriends": "🌿 No friend farms to visit yet",
+        "logTitle": "📜 Visit History",
+        "logCount": "{count} records",
+        "logDesc": "Took {reward} growth and touched {orbs} XP orbs",
+        "emptyLogs": "🛡️ No visit records yet"
+      },
+      "loading": {
+        "visiting": "Visiting",
+        "returning": "Returning",
+        "claiming": "Claiming",
+        "planting": "Planting",
+        "harvesting": "Harvesting",
+        "loading": "Loading"
+      },
+      "toast": {
+        "friendNoTree": "They haven't planted a tree yet, so there's no farm to visit",
+        "planted": "Sapling planted",
+        "systemBusy": "System busy",
+        "harvestFailed": "Harvest failed",
+        "quality3dFallback": "High-quality 3D is unavailable. Switched back to classic mode",
+        "doTaskElsewhere": "Go to the relevant section to complete this task",
+        "plantOwnFirst": "Plant your own sapling before visiting a friend's farm",
+        "stealQuotaFull": "You've reached today's steal limit at this farm",
+        "gainExp": "+{reward} XP",
+        "stolenFrom": "Stole {reward} growth from {name}",
+        "collectedOrbs": "Collected {count} XP orbs"
+      },
+      "burst": {
+        "steal": "Steal",
+        "stolen": "Stole {reward}"
+      }
+    },
+    "settings": {
+      "themeLabel": "Tree farm theme",
+      "freeBadge": "2 free",
+      "lowPerformance": "Low-performance mode",
+      "notificationsOff": "Disable tree farm alerts",
+      "notificationsOffDesc": "Stop receiving tree farm notifications",
+      "pickerTitle": "Choose a tree farm theme",
+      "pickerSubtitle": "Preview and pick your favorite scenery",
+      "free": "Free",
+      "pass": "LogHome Pass",
+      "membershipActiveTip": "Your LogHome Pass is active — all themes are unlocked",
+      "membershipInactiveTip": "Get LogHome Pass or Super LogHome Pass to unlock more tree farm themes",
+      "viewPass": "View LogHome Pass",
+      "passThemeTitle": "LogHome Pass theme",
+      "passThemeContent": "{theme} is available to LogHome Pass and Super LogHome Pass members.",
+      "switchingScene": "Switching scene",
+      "switchedTo": "Switched to {theme}",
+      "classicEnabled": "Tree farm switched to classic mode",
+      "highQualityEnabled": "Tree farm switched to high-quality 3D",
+      "notificationsDisabledToast": "Tree farm alerts disabled",
+      "notificationsEnabledToast": "Tree farm alerts enabled",
+      "themes": {
+        "oak_island": "Oak Isle",
+        "birch_blossom": "Birch Blossom",
+        "snow_spruce": "Snow Spruce",
+        "sakura_grove": "Sakura Grove",
+        "savanna_acacia": "Savanna Acacia",
+        "swamp_redwood": "Swamp Redwood"
+      }
+    }
+  }
+}

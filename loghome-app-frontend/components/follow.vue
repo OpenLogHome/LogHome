@@ -5,15 +5,15 @@
 		</div>
 		<div class="btn not" v-show="status == 0" @click.prevent="follow($event)">
 			<uni-icons color="#ffffff" :type="'personadd'" size="15"></uni-icons>
-			关注
+			{{ $t('community.followControl.follow') }}
 		</div>
 		<div class="btn" v-show="status == 1" @click.prevent="unfollow($event)">
 			<uni-icons color="#929292" :type="'checkmarkempty'" size="15"></uni-icons>
-			已关注
+			{{ $t('community.followControl.following') }}
 		</div>
 		<div class="btn" v-show="status == 2" @click.prevent="unfollow($event)">
 			<uni-icons color="#929292" :type="'staff'" size="15"></uni-icons>
-			已互关
+			{{ $t('community.followControl.mutual') }}
 		</div>
 	</view>
 </template>
@@ -78,7 +78,7 @@
 				)
 				.then(function(response) {
 					uni.showToast({
-						title: "已关注",
+						title: _this.$t('community.followControl.followed'),
 						icon: 'none',
 						duration: 2000
 					});
@@ -89,7 +89,7 @@
 					console.log(error);
 					if (error) {
 						uni.showToast({
-							title: "关注失败",
+							title: _this.$t('community.followControl.followFailed'),
 							icon: 'none',
 							duration: 2000
 						});
@@ -99,7 +99,7 @@
 			unfollow(e){
 				let _this = this;
 				uni.showActionSheet({
-				    itemList: ['取消关注'],
+				    itemList: [this.$t('community.followControl.unfollow')],
 				    success: function (res) {
 				        if(res.tapIndex == 0) {
 							e.stopPropagation();
@@ -117,7 +117,7 @@
 							)
 							.then(function(response) {
 								uni.showToast({
-									title: "已取消关注",
+									title: _this.$t('community.followControl.unfollowed'),
 									icon: 'none',
 									duration: 2000
 								});
@@ -128,7 +128,7 @@
 								console.log(error);
 								if (error) {
 									uni.showToast({
-										title: "取消失败",
+										title: _this.$t('community.followControl.unfollowFailed'),
 										icon: 'none',
 										duration: 2000
 									});

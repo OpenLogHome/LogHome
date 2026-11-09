@@ -43,12 +43,14 @@ export default {
 			return '';
 		},
 		label() {
-			return this.normalizedTier === 'super' ? '超级通行证会员' : '通行证会员';
+			return this.normalizedTier === 'super'
+				? this.$t('membership.badge.super')
+				: this.$t('membership.badge.standard');
 		},
 		icon() {
 			return this.normalizedTier === 'super'
-				? '/static/membership/loghome-super-pass.png'
-				: '/static/membership/loghome-pass.png';
+				? './static/membership/loghome-super-pass.png'
+				: './static/membership/loghome-pass.png';
 		},
 	},
 	methods: {

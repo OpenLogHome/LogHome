@@ -138,7 +138,7 @@
 			'lineHeight': readerSettings.fontSize * readerSettings.lineHeight + 'rpx'
 		}">
 			<span id="vText">
-				文本
+				M
 			</span>
 		</div>
 		<div id="vPage" :style="{

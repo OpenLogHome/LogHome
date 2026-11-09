@@ -1,22 +1,22 @@
 <template>
   <div class="worldWrapper" v-dark>
-    <div class="outer"><button v-manga-a11y class="portal" type="button" @click="createNewWorld"><span class="portal-kicker">世界设定</span><span class="subtitle">共启创世之门</span><span class="newWorld">点击创建一个全新的世界 <manga-icon name="next" /></span></button></div>
-    <div class="workspace-head"><span>我的世界</span><span>{{ worlds.length }} 个世界</span></div>
-    <div v-if="loading" class="workspace-status" role="status">正在加载世界…</div>
-    <div v-else-if="loadError" class="workspace-status" role="alert">加载失败 <button v-manga-a11y type="button" @click="refreshPage"><manga-icon name="retry" />重试</button></div>
-    <div v-else-if="!worlds.length" class="empty-state"><manga-icon name="book" /><strong>这里还什么都没有喔</strong><span>创建你的第一个世界</span><button v-manga-a11y type="button" @click="createNewWorld"><manga-icon name="add" />创建世界</button></div>
+    <div class="outer"><button v-manga-a11y class="portal" type="button" @click="createNewWorld"><span class="portal-kicker">{{ $t('world.components.portalKicker') }}</span><span class="subtitle">{{ $t('world.components.portalSubtitle') }}</span><span class="newWorld">{{ $t('world.components.createNewWorld') }} <manga-icon name="next" /></span></button></div>
+    <div class="workspace-head"><span>{{ $t('world.components.myWorlds') }}</span><span>{{ $t('world.components.worldCount', { count: worlds.length }) }}</span></div>
+    <div v-if="loading" class="workspace-status" role="status">{{ $t('world.components.loading') }}</div>
+    <div v-else-if="loadError" class="workspace-status" role="alert">{{ $t('common.loadFailed') }} <button v-manga-a11y type="button" @click="refreshPage"><manga-icon name="retry" />{{ $t('common.retry') }}</button></div>
+    <div v-else-if="!worlds.length" class="empty-state"><manga-icon name="book" /><strong>{{ $t('world.components.emptyWorlds') }}</strong><span>{{ $t('world.components.createFirstWorld') }}</span><button v-manga-a11y type="button" @click="createNewWorld"><manga-icon name="add" />{{ $t('world.components.createWorld') }}</button></div>
     <div class="worldCard" v-for="world in worlds" :key="world.world_id || world.novel_id" v-dark>
-      <button v-manga-a11y class="card-body" type="button" :aria-label="(world.is_personal ? '编辑《' + world.name + '》的设定' : '进入《' + world.name + '》')" @click="openWorld(world)">
+      <button v-manga-a11y class="card-body" type="button" :aria-label="(world.is_personal ? $t('world.components.editAria', { name: world.name }) : $t('world.components.enterAria', { name: world.name }))" @click="openWorld(world)">
         <image lazy-load class="world-cover" :src="world.picUrl || $backupResources.bookCover" mode="aspectFill" :alt="world.name" />
         <div class="world-info">
           <div class="world-title">{{ world.name }}</div>
-          <div class="world-tags"><span class="status-chip" :class="{ private: world.is_personal }">{{ world.is_personal ? '私密' : '公开' }}</span><span class="status-chip" v-if="!world.is_personal && world.allow_fork">允许二创</span><span class="status-chip" v-if="showCollaborativeTag(world)">协作作品</span></div>
-          <div class="world-intro">{{ world.content || '还没有填写简介' }}</div>
+          <div class="world-tags"><span class="status-chip" :class="{ private: world.is_personal }">{{ world.is_personal ? $t('common.private') : $t('common.public') }}</span><span class="status-chip" v-if="!world.is_personal && world.allow_fork">{{ $t('world.components.allowFork') }}</span><span class="status-chip" v-if="showCollaborativeTag(world)">{{ $t('world.components.collaborative') }}</span></div>
+          <div class="world-intro">{{ world.content || $t('world.components.noIntro') }}</div>
         </div>
       </button>
       <div class="card-actions">
         <button v-manga-a11y class="primary-action" type="button" @click="editWorld(world.novel_id, world.world_id)"><manga-icon name="book" /><text>{{ getEditButtonText(world) }}</text></button>
-        <button v-manga-a11y v-if="!world.is_personal" type="button" @click="enterWorld(world.world_id)"><manga-icon name="preview" /><text>进入设定</text></button>
+        <button v-manga-a11y v-if="!world.is_personal" type="button" @click="enterWorld(world.world_id)"><manga-icon name="preview" /><text>{{ $t('world.components.enterSettings') }}</text></button>
       </div>
     </div>
     <div class="bottom"></div>
@@ -25,18 +25,18 @@
 			@touchstart.stop @touchmove.self.prevent @touchend.stop>
 			<view class="create-panel" role="dialog" aria-modal="true" aria-labelledby="create-world-title" :aria-busy="String(creating)">
 				<view class="create-header">
-					<text id="create-world-title" class="create-title">创建世界</text>
-					<button v-manga-a11y="creating" class="create-close" type="button" aria-label="关闭创建窗口" :disabled="creating" @click="closeCreateDialog"><manga-icon name="close" /></button>
+					<text id="create-world-title" class="create-title">{{ $t('world.components.createWorld') }}</text>
+					<button v-manga-a11y="creating" class="create-close" type="button" :aria-label="$t('world.components.closeCreateAria')" :disabled="creating" @click="closeCreateDialog"><manga-icon name="close" /></button>
 				</view>
 				<view class="create-field">
-					<label class="field-label" for="new-world-name">世界名称</label>
+					<label class="field-label" for="new-world-name">{{ $t('world.components.nameLabel') }}</label>
 					<input id="new-world-name" class="field-input" v-model="createForm.name" maxlength="50" :disabled="creating"
-						placeholder="给你的世界起个名字" confirm-type="done" @confirm="createWorld" />
+						:placeholder="$t('world.components.namePlaceholder')" confirm-type="done" @confirm="createWorld" />
 				</view>
-				<view class="create-tip">创建后即可编辑世界简介、角色与其他设定。</view>
+				<view class="create-tip">{{ $t('world.components.createTip') }}</view>
 				<view class="create-actions">
-					<button v-manga-a11y="creating" class="create-cancel" type="button" :disabled="creating" @click="closeCreateDialog">取消</button>
-					<button v-manga-a11y="creating || !createForm.name.trim()" class="create-confirm" type="button" :disabled="creating || !createForm.name.trim()" @click="createWorld">{{ creating ? '创建中…' : '创建世界' }}</button>
+					<button v-manga-a11y="creating" class="create-cancel" type="button" :disabled="creating" @click="closeCreateDialog">{{ $t('common.cancel') }}</button>
+					<button v-manga-a11y="creating || !createForm.name.trim()" class="create-confirm" type="button" :disabled="creating || !createForm.name.trim()" @click="createWorld">{{ creating ? $t('world.components.creating') : $t('world.components.createWorld') }}</button>
 				</view>
 			</view>
 		</view>
@@ -77,7 +77,9 @@
 				);
 			},
 			getEditButtonText(world) {
-				return this.isWorldOwner(world) ? '编辑设定' : '协作设定';
+				return this.isWorldOwner(world)
+					? this.$t('world.components.editSettings')
+					: this.$t('world.components.collabSettings');
 			},
 			openWorld(world) {
 				if (world.is_personal) {
@@ -102,7 +104,7 @@
 				try {
 					const token = JSON.parse(window.localStorage.getItem('token'));
 					if (!token || !token.tk) {
-						uni.showToast({ title: '请先登录后再创建世界', icon: 'none' });
+						uni.showToast({ title: this.$t('world.components.needLoginToCreate'), icon: 'none' });
 						return;
 					}
 					await axios.get(this.$baseUrl + '/world/create_world', {
@@ -110,10 +112,10 @@
 						headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token.tk },
 					});
 					this.showCreateDialog = false;
-					uni.showToast({ title: '创建成功', icon: 'none', duration: 2000 });
+					uni.showToast({ title: this.$t('world.components.createSuccess'), icon: 'none', duration: 2000 });
 					this.refreshPage();
 				} catch (error) {
-					uni.showToast({ title: '创建失败，请稍后重试', icon: 'none', duration: 2000 });
+					uni.showToast({ title: this.$t('world.components.createFailed'), icon: 'none', duration: 2000 });
 				} finally {
 					this.creating = false;
 				}

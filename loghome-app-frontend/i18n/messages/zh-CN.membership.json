@@ -1,0 +1,337 @@
+{
+  "membership": {
+    "common": {
+      "rules": "规则",
+      "logUnit": "原木",
+      "redeemCode": "会员兑换码",
+      "giftFriend": "赠送好友",
+      "processing": "处理中...",
+      "confirmGift": "确认赠送"
+    },
+    "pass": {
+      "title": "原木通行证",
+      "currentMember": "当前会员",
+      "benefitsSubtitle": "开通后立即生效",
+      "benefitCount": "{{count}} 项",
+      "tier": {
+        "standard": {
+          "name": "原木通行证",
+          "eyebrow": "轻享会员",
+          "tag": "轻享版",
+          "slogan": "陪伴每一次阅读与创作",
+          "summary": "更快成长，也获得更完整的社区体验",
+          "features": {
+            "badge": "专属标识",
+            "growth": "1.2 倍成长",
+            "redstone": "100 红石"
+          },
+          "benefitTitle": "原木通行证权益",
+          "benefits": {
+            "badge": {
+              "title": "专属通行证标识",
+              "desc": "点亮个人主页与社区身份，展示会员徽章"
+            },
+            "growth": {
+              "title": "原木成长加速",
+              "desc": "签到、阅读和创作获得 1.2 倍成长进度",
+              "tag": "1.2×"
+            },
+            "redstone": {
+              "title": "红石赠送",
+              "desc": "月付购买和续费赠送 100 红石，年付每月到账 100 红石；到账后 3 个月内有效",
+              "tag": "100"
+            },
+            "enhance": {
+              "title": "阅读与创作增强",
+              "desc": "开放更多个性设置与便捷能力"
+            }
+          },
+          "plan": {
+            "month": {
+              "name": "连续包月",
+              "unit": "每月自动续费",
+              "note": "可随时取消"
+            },
+            "year": {
+              "name": "购买年卡",
+              "unit": "折合 600 原木/月",
+              "note": "比月付节省 720 原木",
+              "tag": "推荐"
+            }
+          }
+        },
+        "super": {
+          "name": "超级原木通行证",
+          "eyebrow": "全量权益",
+          "tag": "旗舰版",
+          "slogan": "解锁原木社区的完整体验",
+          "summary": "双倍成长、限定身份与全部会员权益",
+          "features": {
+            "badge": "限定身份",
+            "growth": "双倍成长",
+            "redstone": "200 红石"
+          },
+          "benefitTitle": "超级原木通行证权益",
+          "benefits": {
+            "badge": {
+              "title": "超级会员限定身份",
+              "desc": "升级蓝金徽章、主页氛围与专属昵称样式",
+              "tag": "限定"
+            },
+            "growth": {
+              "title": "双倍成长加速",
+              "desc": "签到、阅读和创作获得 2 倍成长进度",
+              "tag": "2×"
+            },
+            "redstone": {
+              "title": "更多红石赠送",
+              "desc": "月付购买和续费赠送 200 红石，年付每月到账 200 红石；到账后 3 个月内有效",
+              "tag": "200"
+            },
+            "standard": {
+              "title": "包含全部标准权益",
+              "desc": "原木通行证现有和后续权益全部生效"
+            },
+            "newFeatures": {
+              "title": "新功能优先体验",
+              "desc": "优先使用实验功能并参与产品共创"
+            }
+          },
+          "plan": {
+            "month": {
+              "name": "连续包月",
+              "unit": "每月自动续费",
+              "note": "可随时取消"
+            },
+            "year": {
+              "name": "购买年卡",
+              "unit": "折合 800 原木/月",
+              "note": "比月付节省 960 原木",
+              "tag": "最划算"
+            }
+          }
+        }
+      },
+      "section": {
+        "upgradeTitle": "升级超级原木通行证",
+        "upgradeSubtitle": "仅收取当前剩余有效时间对应的档位差价",
+        "renewalTitle": "续费状态",
+        "chooseTitle": "选择开通方式",
+        "currentExpires": "当前权益有效至 {{date}}"
+      },
+      "upgrade": {
+        "title": "按剩余有效时间补差价",
+        "days": "剩余约 {{days}} 天，升级后到期日不变",
+        "difference": "本次补差",
+        "logAmount": "{{amount}} 原木",
+        "period": "权益有效期",
+        "until": "至 {{date}}",
+        "autoRenew": "自动续费",
+        "keepOn": "保持开启",
+        "keepOff": "保持关闭",
+        "formula": "按{{period}}周期差价 {{amount}} 原木折算",
+        "cycleMonth": "30 天",
+        "cycleYear": "365 天",
+        "loading": "正在根据当前订阅计算升级差价…",
+        "unavailable": "暂时无法计算升级差价，请稍后重试",
+        "confirmTitle": "补差价升级",
+        "confirmContent": "剩余约{{days}}天，本次最多扣除{{cost}}原木。升级后到期日不变，自动续费设置保持{{state}}。",
+        "confirm": "确认升级",
+        "success": "已补 {{amount}} 原木，升级成功",
+        "successGift": "已补 {{amount}} 原木，升级成功，赠送{{redstone}}红石"
+      },
+      "renewal": {
+        "on": "自动续费已开启",
+        "off": "自动续费未开启",
+        "autoDesc": "到期后将自动扣除 {{price}} 原木并续期",
+        "expiresDesc": "当前权益保留至 {{date}}，到期后不会扣款",
+        "manageTitle": "管理自动续费",
+        "onContent": "开启后，到期将自动扣除{{price}}原木续费。",
+        "offContent": "关闭后，当前权益会持续到到期日，不再自动扣除原木。",
+        "enable": "开启续费",
+        "disable": "关闭续费",
+        "enabledToast": "自动续费已开启",
+        "disabledToast": "自动续费已关闭",
+        "nextPrice": "下期自动续费价",
+        "reopenPrice": "重新开启后的续费价"
+      },
+      "dock": {
+        "upgrade": "升级补差价",
+        "downgradeBlocked": "当前为超级原木通行证",
+        "perPeriod": "原木/期"
+      },
+      "button": {
+        "processing": "处理中...",
+        "downgradeBlocked": "有效期内不可降级",
+        "confirmUpgrade": "确认补差价升级",
+        "calculating": "正在计算差价",
+        "turnOffAuto": "关闭自动续费",
+        "turnOnAuto": "开启自动续费",
+        "activateNow": "立即开通"
+      },
+      "activate": {
+        "title": "开通{{name}}",
+        "content": "将扣除{{price}}原木。",
+        "contentAuto": "将扣除{{price}}原木，并开启自动续费。",
+        "confirm": "确认开通",
+        "success": "开通成功",
+        "successGift": "开通成功，赠送{{redstone}}红石",
+        "processed": "订阅已处理"
+      },
+      "more": {
+        "title": "更多方式"
+      },
+      "agreement": "开通即表示同意《原木通行证服务协议》与《自动续费规则》",
+      "toast": {
+        "downgradeBlocked": "超级通行证有效期内不能降级"
+      }
+    },
+    "gift": {
+      "heroTitle": "把成长送给好友",
+      "heroDesc": "选择通行证与时长，权益将直接发放给对方",
+      "chooseTier": "选择通行证",
+      "tier": {
+        "standardDesc": "轻享成长权益",
+        "superDesc": "完整会员权益"
+      },
+      "duration": "赠送时长",
+      "durationHint": "年卡更划算",
+      "period": {
+        "month": "一个月",
+        "year": "一年"
+      },
+      "chooseFriend": "选择好友",
+      "chooseFriendDesc": "关注的人与关注你的粉丝都会显示在好友选择器中",
+      "recipient": "接收好友",
+      "required": "必填",
+      "selectFromList": "从好友列表中选择",
+      "friendCount": "关注与粉丝共 {{count}} 人",
+      "messageLabel": "赠言",
+      "messagePlaceholder": "写一句想对好友说的话",
+      "amountDue": "应付",
+      "agreement": "赠送即表示同意《原木通行证赠送规则》",
+      "pickerTitle": "选择赠送好友",
+      "pickerCount": "共 {{count}} 人",
+      "searchPlaceholder": "搜索昵称或用户 ID",
+      "loadingFriends": "正在加载好友...",
+      "noMatch": "没有找到匹配的好友",
+      "noFriends": "关注或粉丝列表中还没有好友",
+      "selectFriendFirst": "请先选择赠送好友",
+      "confirmContent": "向 {{name}}（ID:{{id}}）赠送{{tier}}（{{plan}}），将扣除{{price}}原木。",
+      "alreadyProcessed": "赠送已处理",
+      "successTitle": "赠送成功",
+      "successContent": "会员权益已发放给 ID:{{id}}。",
+      "successContentGift": "会员权益已发放给 ID:{{id}}，并赠送{{redstone}}红石。",
+      "loadFriendsFailed": "好友列表加载失败",
+      "relation": {
+        "mutual": "互相关注",
+        "following": "我关注的",
+        "follower": "关注我的"
+      }
+    },
+    "redeem": {
+      "heroTitle": "兑换通行证",
+      "heroDesc": "输入有效兑换码，会员权益将发放到当前账号",
+      "formTitle": "填写兑换码",
+      "formDesc": "兑换码不区分大小写，短横线可以省略",
+      "placeholder": "例如 LOGPASS-2026-XXXX",
+      "valid": "格式正确，可以继续兑换",
+      "tooShort": "兑换码至少需要 8 个字符",
+      "submitting": "正在兑换...",
+      "submit": "验证并兑换",
+      "instructionsTitle": "兑换说明",
+      "instructions": {
+        "oneTime": "每个兑换码只能使用一次，兑换后无法转移到其他账号。",
+        "extend": "如当前已有会员，兑换时长会根据兑换码规则顺延或升级。",
+        "source": "请通过原木社区官方活动或可信赠送者获取兑换码。"
+      },
+      "historyTitle": "兑换记录",
+      "historyCount": "{{count}} 条 | {{count}} 条",
+      "loadingHistory": "正在加载兑换记录...",
+      "emptyTitle": "暂无兑换记录",
+      "emptyDesc": "成功兑换后的通行证会显示在这里",
+      "recordTitle": "{{tier}} · {{days}}天",
+      "statusRedeemed": "已兑换",
+      "invalidToast": "请填写有效兑换码",
+      "alreadyProcessed": "兑换已处理",
+      "successTitle": "兑换成功",
+      "successContent": "{{tier}}已增加{{days}}天有效期。",
+      "gotIt": "知道了",
+      "failed": "兑换失败，请稍后重试"
+    },
+    "rules": {
+      "title": "通行证与红石规则",
+      "heroTitle": "权益清晰，消费有据可查",
+      "heroDesc": "以下规则适用于原木通行证、超级原木通行证及红石相关服务。",
+      "heroDate": "当前版本生效日期：2026 年 8 月 1 日",
+      "sections": {
+        "plans": {
+          "title": "通行证方案",
+          "subtitle": "开通价格与有效期",
+          "monthly": "月付 660 原木",
+          "annual": "年付 7200 原木",
+          "superMonthly": "月付 880 原木",
+          "superAnnual": "年付 9600 原木",
+          "rule1": "月付按 30 天、年付按 365 天计算权益有效期，支付成功后立即生效。",
+          "rule2": "同档续费会从现有有效期末尾顺延；实际扣除和新到期日以确认页面及服务端结果为准。"
+        },
+        "upgrade": {
+          "title": "升级与自动续费",
+          "subtitle": "状态随时可查、可管理",
+          "rule1": "原木通行证升级至超级原木通行证，仅收取剩余有效天数对应的档位差价，到期日保持不变。",
+          "rule2": "超级原木通行证有效期内暂不支持降级；可在到期后重新选择通行证档位。",
+          "rule3": "开启自动续费后，将在到期时按当前订阅周期自动扣除原木；余额不足时续费失败，权益到期终止。",
+          "rule4": "关闭自动续费不会提前结束已生效权益，当前通行证仍可使用至到期日。"
+        },
+        "grant": {
+          "title": "红石赠送",
+          "subtitle": "会员赠送与普通用户月赠",
+          "regular": "普通用户",
+          "perMonth": "红石 / 月",
+          "superShort": "超级通行证",
+          "perCycle": "红石 / 周期",
+          "rule1": "普通用户每个自然月赠送 6 红石；当月存在有效通行证时不重复领取普通用户月赠。",
+          "rule2": "月付通行证在开通及每次续费成功后赠送；年付通行证开通时先赠送一次，之后按月到账。",
+          "rule3": "标准版升级超级版时，当期按两档赠送标准的差额补赠红石。",
+          "rule4": "通行证赠送、升级补赠和普通用户月赠红石自到账日起 3 个月内有效。"
+        },
+        "exchange": {
+          "title": "红石兑换与消费",
+          "subtitle": "所有变动均记录账单",
+          "tenLog": "10 原木",
+          "oneRedstone": "1 红石",
+          "askTitle": "问问原木娘",
+          "askCost": "普通 1 · 深度 2",
+          "bipaoTitle": "笔泡 AI 助手",
+          "bipaoCost": "普通 1 · 深度 2 · 图像 5",
+          "correctionTitle": "文本纠错",
+          "correctionCost": "普通免费 · 通行证智能免费 · 普通 2",
+          "rule1": "发起付费 AI 操作即按页面显示数量扣除红石；红石不足时不会创建付费任务。",
+          "rule2": "消费时优先使用最早到期的赠送红石，再使用永久有效的兑换红石；原木兑换所得红石不会过期。",
+          "rule3": "同一任务断线重连或重复提交不会重复扣费。兑换、赠送与消费记录均可在红石中心查询。",
+          "rule4": "红石兑换比例和功能消耗如有调整，将以操作前页面展示为准。",
+          "goto": "前往红石中心"
+        },
+        "gifts": {
+          "title": "赠送与兑换码",
+          "subtitle": "权益发放至指定账号",
+          "rule1": "赠送好友前请确认接收账号和通行证方案；赠送成功后，权益发放至所选好友账号。",
+          "rule2": "兑换码需在有效状态下使用。同一兑换码不可重复使用，具体档位与时长以兑换确认结果为准。",
+          "rule3": "已有通行证时，兑换权益会依据对应方案进行续期或升级。"
+        },
+        "exclusive": {
+          "title": "会员专属功能",
+          "subtitle": "权益有效期间开放",
+          "rule1": "定时发布仅限原木通行证及超级原木通行证会员使用，创建任务时会校验会员状态。",
+          "rule2": "主作者与一名协作者组成的双人协作作品免费；三人及以上协作需要主作者持有标准或超级原木通行证，否则协作者仅可预览作品，无法启用编辑、增删章节、排序和发布等其他权限。",
+          "rule3": "其他会员专属能力以对应功能页面标识为准；通行证到期后，未执行的新操作将不再享有会员权限。"
+        }
+      },
+      "note": "如页面展示与历史说明存在差异，以操作确认页、当前有效规则及服务端实际处理结果为准。"
+    },
+    "badge": {
+      "super": "超级通行证会员",
+      "standard": "通行证会员"
+    }
+  }
+}

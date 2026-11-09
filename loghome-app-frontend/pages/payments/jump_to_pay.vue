@@ -1,12 +1,12 @@
 <template>
 	<view class="jump-pay" v-dark>
     <view v-if="loading" class="loading">
-      <text>正在查询订单状态...</text>
+      <text>{{ $t('payments.jumpToPay.checking') }}</text>
     </view>
     <view class="tips">
-      <text>请点击下方按钮前往支付</text>
-      <button class="pay-btn" @click="openPaymentPage">前往支付页面</button>
-      <button @click="checkOrder" :disabled="loading">{{loading ? '查询中...' : '我已完成支付'}}</button>
+      <text>{{ $t('payments.jumpToPay.proceed') }}</text>
+      <button class="pay-btn" @click="openPaymentPage">{{ $t('payments.jumpToPay.goPay') }}</button>
+      <button @click="checkOrder" :disabled="loading">{{ loading ? $t('payments.jumpToPay.checkingShort') : $t('payments.jumpToPay.paidButton') }}</button>
     </view>
     <view class="auto-check">
       <text>{{countdownText}}</text>
@@ -27,8 +27,12 @@ export default {
       loading: false,
       timer: null,
       countdown: 5,
-      countdownText: '系统将在5秒后自动查询',
       paid: false
+    }
+  },
+  computed: {
+    countdownText() {
+      return this.$t('payments.jumpToPay.autoCheck', { seconds: this.countdown });
     }
   },
   async onLoad(options) {
@@ -61,21 +65,16 @@ export default {
       
       // 设置倒计时
       this.countdown = 5;
-      this.updateCountdownText();
       
       // 创建倒计时定时器
       this.countdownTimer = setInterval(() => {
         this.countdown--;
-        this.updateCountdownText();
         
         if (this.countdown <= 0) {
           clearInterval(this.countdownTimer);
           this.checkOrder();
         }
       }, 1000);
-    },
-    updateCountdownText() {
-      this.countdownText = `系统将在${this.countdown}秒后自动查询`;
     },
     clearTimers() {
       if (this.countdownTimer) {
@@ -116,7 +115,7 @@ export default {
             this.paid = true;
             // 订单已支付，跳转到支付成功页面
             uni.showToast({
-              title: '支付成功！',
+              title: this.$t('payments.jumpToPay.paymentSuccess'),
               icon: 'success'
             });
             
@@ -132,7 +131,7 @@ export default {
         
         // 订单未支付，继续轮询
         uni.showToast({
-          title: '订单未支付',
+          title: this.$t('payments.jumpToPay.orderUnpaid'),
           icon: 'none'
         });
         
@@ -140,7 +139,7 @@ export default {
         this.startAutoCheck();
       } catch (error) {
         uni.showToast({
-          title: '查询订单失败，请稍后重试',
+          title: this.$t('payments.jumpToPay.checkFailed'),
           icon: 'none'
         });
         console.error(error);

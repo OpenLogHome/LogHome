@@ -33,7 +33,7 @@
 								<view class="center1">
 									<view class="bgcolor">
 										<view style="display: flex; align-items: center;">
-											<img src="./static/fuzhikuang.png" style="width: 50rpx; height: 50rpx;">
+											<img :src="'./static/fuzhikuang.png'" style="width: 50rpx; height: 50rpx;">
 											</img>
 											<view class="dazi">
 												<input v-model="addlist[index].name" maxlength="10"
@@ -85,19 +85,19 @@
 			<view class="buy-wrapper">
 				<view class="operate">
 					<view class="operate_wu" @click="add('image')">
-						<img class="operate_img" src="./static/1234/tup.png" /></img>
+						<img class="operate_img" :src="'./static/1234/tup.png'" /></img>
 						<view>{{ $t('writer.editor.addImage') }}</view>
 					</view>
 					<view class="operate_wu" @click="add('text')">
-						<img class="operate_img" src="./static/1234/text.png"></img>
+						<img class="operate_img" :src="'./static/1234/text.png'"></img>
 						<view>{{ $t('writer.editor.addText') }}</view>
 					</view>
 <!-- 					<view class="operate_wu" @click="add('copy')">
-						<img class="operate_img" src="./static/1234/fuzhi.png"></img>
+						<img class="operate_img" :src="'./static/1234/fuzhi.png'"></img>
 						<view>+复制框</view>
 					</view> -->
 					<view class="operate_wu" @click="add('novel')">
-						<img class="operate_img" src="./static/1234/novel.png"></img>
+						<img class="operate_img" :src="'./static/1234/novel.png'"></img>
 						<view>{{ $t('writer.editor.addNovel') }}</view>
 					</view>
 				</view>

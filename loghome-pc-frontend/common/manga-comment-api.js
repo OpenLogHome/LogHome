@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { localizedFetch as fetch } from '~/utils/api-fetch';
+import { languageHeaders } from '~/utils/language';
 
 // 漫画作品与话数在数据模型上就是 novels / articles，评论直接复用社区的书评接口，
 // 作品级评论 article_id 传 0、话评传对应的 article_id，paragraph_id 固定 -1（漫画没有划线段落）。
@@ -24,6 +26,7 @@ function authHeaders() {
 	const token = readStoredSession().tk;
 	if (!token) throw new Error('请先登录后再操作');
 	return {
+		...languageHeaders(),
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${token}`,
 	};
@@ -32,7 +35,11 @@ function authHeaders() {
 function optionalAuthHeaders() {
 	const token = readStoredSession().tk;
 	if (!token) return null;
-	return { Authorization: `Bearer ${token}` };
+	return { ...languageHeaders(), Authorization: `Bearer ${token}` };
+}
+
+function localizedConfig(config = {}) {
+	return { ...config, headers: { ...languageHeaders(), ...(config.headers || {}) } };
 }
 
 export function currentCommentUserId() {
@@ -138,7 +145,7 @@ export async function fetchMangaComments(baseUrl, options) {
 	const params = { id: novelId, page, pageSize };
 	if (articleId !== undefined && articleId !== null && articleId !== 0) params.articleId = articleId;
 	if (Number(articleId) > 0 && Number(paragraphId) > 0) params.paragraphId = Number(paragraphId);
-	const response = await axios.get(`${baseUrl}/community/novel_commonts_all_fast`, { params });
+	const response = await axios.get(`${baseUrl}/community/novel_commonts_all_fast`, localizedConfig({ params }));
 	const rows = Array.isArray(response.data) ? response.data : [];
 	const praiseTypeMap = await fetchPraiseTypeMap(baseUrl, rows.map((item) => item.essay_comment_id));
 	return rows.map((item) => toCommentViewModel(item, praiseTypeMap));
@@ -148,11 +155,12 @@ export async function fetchMangaComments(baseUrl, options) {
 export async function fetchMangaCommentById(baseUrl, commentId) {
 	const response = await axios.get(`${baseUrl}/community/novel_comment_from_comment_id`, {
 		params: { comment_id: commentId },
+		headers: languageHeaders(),
 	});
 	const item = (response.data || [])[0];
 	if (!item) return null;
 	const replies = await axios
-		.get(`${baseUrl}/community/novel_commonts_reply_to`, { params: { id: item.essay_comment_id } })
+		.get(`${baseUrl}/community/novel_commonts_reply_to`, localizedConfig({ params: { id: item.essay_comment_id } }))
 		.then((replyResponse) => (Array.isArray(replyResponse.data) ? replyResponse.data : []));
 	item.replies = replies;
 	const praiseTypeMap = await fetchPraiseTypeMap(baseUrl, [item.essay_comment_id]);
@@ -163,7 +171,7 @@ export async function fetchMangaCommentAmount(baseUrl, novelId, articleId, parag
 	const params = { id: novelId };
 	if (articleId !== undefined && articleId !== null && articleId !== 0) params.articleId = articleId;
 	if (Number(articleId) > 0 && Number(paragraphId) > 0) params.paragraphId = Number(paragraphId);
-	const response = await axios.get(`${baseUrl}/community/novel_commonts_amount`, { params });
+	const response = await axios.get(`${baseUrl}/community/novel_commonts_amount`, localizedConfig({ params }));
 	const row = (response.data || [])[0] || {};
 	return Number(row['COUNT(*)']) || 0;
 }
@@ -172,6 +180,7 @@ export async function fetchMangaCommentAmount(baseUrl, novelId, articleId, parag
 export async function fetchMangaArticleCommentAmounts(baseUrl, novelId) {
 	const response = await axios.get(`${baseUrl}/community/novel_articles_comment_amounts`, {
 		params: { id: novelId },
+		headers: languageHeaders(),
 	});
 	const amounts = {};
 	for (const row of response.data || []) amounts[row.article_id] = Number(row.amount) || 0;

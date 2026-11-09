@@ -293,12 +293,24 @@
       "averageLabel": "Average score",
       "boardCycleAria": "Contribution board period",
       "boardDesc": {
-        "update": "Works updated in the past 7 days, sorted by update time",
-        "logpower": "LogPower ranking based on reading and engagement",
-        "complete": "Completed works, sorted by latest update",
-        "new": "Works launched in the past three months, sorted by LogPower"
+        "update": "Updated in the past 7 days",
+        "logpower": "Ranked by reading and engagement",
+        "complete": "Completed works by latest update",
+        "new": "Past 3 months, ranked by LogPower"
       },
-      "boardSuffix": " Ranking",
+      "boardSuffix": "Rank",
+      "badges": {
+        "haycraft_work": "HayCraft",
+        "champion": "No. 1 Streak",
+        "rank_rise": "Up {{count}}",
+        "new_entry": "New",
+        "update_burst": "Fast Updates",
+        "interaction_hot": "Trending",
+        "nice_milestone": "1K Likes",
+        "read_milestone": "10K Reads",
+        "old_work": "{{count}}y Classic",
+        "appearance": "Ranked {{count}}d"
+      },
       "boards": {
         "update": "Updates",
         "logpower": "LogPower",
@@ -399,7 +411,8 @@
     },
     "articleList": {
       "loadingChapters": "Loading chapters",
-      "noChapters": "This book has no chapters yet.\nGo nudge the author in the comments~",
+      "noChapters": "No chapters yet.\nAsk the author for an update.",
+      "bookRequired": "Choose a book first",
       "readUpToHere": "Read up to here",
       "jumpToProgress": "Jump to reading progress",
       "defaultVolume": "Main text"

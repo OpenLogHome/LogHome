@@ -8,7 +8,7 @@
     <view class="nav-bar">
       <button v-manga-a11y class="nav-back icon-button" type="button" :aria-label="$t('common.back')" @click="goBack"><manga-icon name="back" /></button>
       <text class="nav-title">{{ isPreview ? $t('manga.info.previewPrefix') + ' · ' : '' }}{{ bookInfo.name || $t('manga.info.defaultTitle') }}</text>
-      <button v-manga-a11y v-if="!isPreview && !loading && !loadError" class="nav-report" type="button" @click="openReport"><image src="/static/icons/icon_report.png" mode="aspectFit" /><text>{{ $t('manga.info.report') }}</text></button>
+      <button v-manga-a11y v-if="!isPreview && !loading && !loadError" class="nav-report" type="button" @click="openReport"><image :src="'./static/icons/icon_report.png'" mode="aspectFit" /><text>{{ $t('manga.info.report') }}</text></button>
     </view>
     <scroll-view class="body-scroll" scroll-y :scroll-into-view="catalogTarget" :scroll-with-animation="scrollWithAnimation">
       <view v-if="loading || loadError" class="load-state" role="status">
@@ -21,7 +21,7 @@
           <text class="novel-name">{{ bookInfo.name }}</text>
           <view class="meta-line"><text class="status-pill">{{ Number(bookInfo.is_complete) === 1 ? $t('common.completed') : $t('manga.info.ongoing') }}</text><text>{{ $t('manga.info.mangaType') }}</text><text class="meta-dot"></text><text>{{ isPreview ? $t('manga.info.totalEpisodes', { count: articles.length }) : $t('manga.info.updatedEpisodes', { count: articles.length }) }}</text></view>
           <button v-manga-a11y class="author-row" type="button" @click="openAuthor"><image v-if="bookInfo.auther_avatar" class="author-avatar" :src="bookInfo.auther_avatar" mode="aspectFill" /><text>{{ $t('manga.info.authorLabel', { name: bookInfo.author_name || $t('manga.info.anonymousAuthor') }) }}</text><manga-icon name="next" /></button>
-          <view class="tag-row" v-if="tags.length"><text v-for="tag in tags" :key="tag.tag_id">{{ tag.tag_name }}</text></view>
+          <view class="tag-row" v-if="tags.length"><text v-for="tag in tags" :key="tag.tag_id">{{ displayTagName(tag.tag_name) }}</text></view>
           <button v-manga-a11y v-if="latestEpisode" class="latest-row" type="button" @click="openChapter(latestEpisode)"><view class="latest-copy"><text class="eyebrow">{{ $t('manga.info.latestUpdate') }}</text><text class="latest-name">{{ $t('manga.info.episodeLabel', { chapter: latestEpisode.article_chapter, title: latestEpisode.title }) }}</text></view><manga-icon name="next" /></button>
           <text v-if="isPreview" class="preview-note">{{ $t('manga.info.previewNote') }}</text>
         </view>
@@ -30,10 +30,10 @@
           <text class="intro-text" :class="{ collapsed: !introExpanded }">{{ bookInfo.content || $t('manga.info.noIntro') }}</text>
         </view>
         <view v-if="!isPreview" class="section quick-actions" :aria-label="$t('manga.info.quickActionsAria')">
-          <button v-manga-a11y="niceBusy" class="quick-action" :class="{ selected: niceStatus }" type="button" :disabled="niceBusy" :aria-pressed="niceStatus ? 'true' : 'false'" @click="toggleNice"><image :src="niceStatus ? '/static/icons/icon_niced.png' : '/static/icons/icon_nice.png'" mode="aspectFit" /><text>{{ $t('manga.info.likeCount', { count: niceCount }) }}</text></button>
-          <button v-manga-a11y="shareBusy" class="quick-action" type="button" :disabled="shareBusy" @click="shareManga"><image src="/static/icons/icon_share.png" mode="aspectFit" /><text>{{ shareBusy ? $t('manga.info.generating') : $t('common.share') }}</text></button>
-          <button v-manga-a11y="favoriteBusy" class="quick-action" :class="{ selected: isInBookcase }" type="button" :disabled="favoriteBusy" :aria-pressed="isInBookcase ? 'true' : 'false'" @click="toggleBookcase"><image src="/static/icons/icon_add.png" mode="aspectFit" /><text>{{ isInBookcase ? $t('manga.info.removeFromShelf') : $t('manga.info.addToShelf') }}</text></button>
-          <button v-manga-a11y class="quick-action" type="button" @click="openCatalog"><image src="/static/icons/icon_index.png" mode="aspectFit" /><text>{{ $t('manga.info.catalog') }}</text></button>
+          <button v-manga-a11y="niceBusy" class="quick-action" :class="{ selected: niceStatus }" type="button" :disabled="niceBusy" :aria-pressed="niceStatus ? 'true' : 'false'" @click="toggleNice"><image :src="niceStatus ? './static/icons/icon_niced.png' : './static/icons/icon_nice.png'" mode="aspectFit" /><text>{{ $t('manga.info.likeCount', { count: niceCount }) }}</text></button>
+          <button v-manga-a11y="shareBusy" class="quick-action" type="button" :disabled="shareBusy" @click="shareManga"><image :src="'./static/icons/icon_share.png'" mode="aspectFit" /><text>{{ shareBusy ? $t('manga.info.generating') : $t('common.share') }}</text></button>
+          <button v-manga-a11y="favoriteBusy" class="quick-action" :class="{ selected: isInBookcase }" type="button" :disabled="favoriteBusy" :aria-pressed="isInBookcase ? 'true' : 'false'" @click="toggleBookcase"><image :src="'./static/icons/icon_add.png'" mode="aspectFit" /><text>{{ isInBookcase ? $t('manga.info.removeFromShelf') : $t('manga.info.addToShelf') }}</text></button>
+          <button v-manga-a11y class="quick-action" type="button" @click="openCatalog"><image :src="'./static/icons/icon_index.png'" mode="aspectFit" /><text>{{ $t('manga.info.catalog') }}</text></button>
         </view>
         <view id="manga-catalog" class="section catalog-section">
           <view class="section-title"><text>{{ $t('manga.info.catalog') }} <text class="catalog-count">{{ $t('manga.info.episodeCountInline', { count: articles.length }) }}</text></text><button v-manga-a11y type="button" class="text-action sort-action" @click="catalogReversed = !catalogReversed"><manga-icon name="sort" />{{ catalogReversed ? $t('manga.info.sortDesc') : $t('manga.info.sortAsc') }}</button></view>
@@ -93,6 +93,7 @@ import MangaCommentItem from '@/components/manga-comment-item.vue';
 import MangaCommentComposer from '@/components/manga-comment-composer.vue';
 import ReportNovelPopup from '@/components/reportNovelPopup.vue';
 import { deleteMangaComment, fetchMangaArticleCommentAmounts, fetchMangaCommentAmount, fetchMangaCommentById, fetchMangaComments, getMangaCommentErrorMessage, praiseMangaComment, publishMangaComment, replyMangaComment } from '@/common/manga-comment-api.js';
+import { getOfficialTagLabel } from '@/common/official-tag-labels.js';
 
 const COMMENT_PAGE_SIZE = 10;
 
@@ -152,6 +153,7 @@ export default {
 		if (this.uid && !this.isPreview) this.loadProgress();
 	},
 	methods: {
+		displayTagName(tagName) { return getOfficialTagLabel(tagName, key => this.$t(key)); },
 		openFansBoard() { uni.navigateTo({ url: '/pages/readers/novel_fans?id=' + this.uid }); },
 		async loadFansStatistics() {
 			if (this.isPreview) return;
@@ -367,11 +369,14 @@ export default {
 			if (!this.requireLogin()) return;
 			const type = comment.praiseType === 0 ? 3 : 0;
 			const previousType = comment.praiseType;
+			// 乐观更新：先当作点赞成功，仅请求失败时回退
+			comment.praiseType = type;
+			comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previousType === 0 ? -1 : 1));
 			try {
 				await praiseMangaComment(this.$baseUrl, comment.commentId, type);
-				comment.praiseType = type;
-				comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previousType === 0 ? -1 : 1));
 			} catch (e) {
+				comment.praiseType = previousType;
+				comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previousType === 0 ? 1 : -1));
 				uni.showToast({ title: getMangaCommentErrorMessage(e, this.$t('manga.comment.operationFailed')), icon: 'none' });
 			}
 		},
@@ -479,12 +484,17 @@ export default {
 			if (!headers) { uni.showToast({ title: this.$t('common.needLogin'), icon: 'none' }); return; }
 			this.niceBusy = true;
 			const wasLiked = this.niceStatus;
+			// 乐观更新：先当作点赞成功，仅请求失败时回退
+			this.niceStatus = !wasLiked;
+			this.niceCount = Math.max(0, this.niceCount + (wasLiked ? -1 : 1));
 			try {
 				await axios.get(this.$baseUrl + '/library/nice_novel?id=' + encodeURIComponent(this.uid), { headers });
-				this.niceStatus = !wasLiked;
-				this.niceCount = Math.max(0, this.niceCount + (wasLiked ? -1 : 1));
 				if (!wasLiked) this.completeDailyTask('daily_like_novel', this.$t('manga.info.dailyTaskLike'));
-			} catch (_) { uni.showToast({ title: this.$t('manga.info.likeFailed'), icon: 'none' }); }
+			} catch (_) {
+				this.niceStatus = wasLiked;
+				this.niceCount = Math.max(0, this.niceCount + (wasLiked ? 1 : -1));
+				uni.showToast({ title: this.$t('manga.info.likeFailed'), icon: 'none' });
+			}
 			finally { this.niceBusy = false; }
 		},
 		async shareManga() {

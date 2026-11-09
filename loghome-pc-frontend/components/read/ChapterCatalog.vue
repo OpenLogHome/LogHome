@@ -1,11 +1,11 @@
 <template>
   <section class="chapter-catalog">
-    <header><label>查找章节 <input v-model="keyword" type="search" placeholder="章节名或章节号"></label><div><button @click="reversed = !reversed">{{ reversed ? '倒序 ↓' : '正序 ↑' }}</button><button v-if="currentChapter" @click="locate">定位续读</button><span>{{ readable.length }} 章</span></div></header>
-    <p v-if="!readable.length" class="empty">暂无已发布章节</p>
-    <p v-else-if="!groups.length" class="empty">没有匹配的章节</p>
+    <header><label>{{ $t("查找章节") }} <input v-model="keyword" type="search" :placeholder="$t('章节名或章节号')"></label><div><button @click="reversed = !reversed">{{ reversed ? $t('倒序 ↓') : $t('正序 ↑') }}</button><button v-if="currentChapter" @click="locate">{{ $t("定位续读") }}</button><span>{{ $t("{p0} 章", { p0: readable.length }) }}</span></div></header>
+    <p v-if="!readable.length" class="empty">{{ $t("暂无已发布章节") }}</p>
+    <p v-else-if="!groups.length" class="empty">{{ $t("没有匹配的章节") }}</p>
     <section v-for="group in groups" :key="group.key" class="volume">
-      <button class="volume-title" :aria-expanded="!collapsed[group.key]" @click="$set(collapsed, group.key, !collapsed[group.key])">{{ collapsed[group.key] ? '▸' : '▾' }} {{ group.title }} <small>{{ group.chapters.length }} 章</small></button>
-      <div v-show="!collapsed[group.key]" class="chapter-grid"><nuxt-link v-for="chapter in group.chapters" :key="chapter.article_id" :ref="String(chapter.article_chapter) === String(currentChapter) ? 'current' : undefined" :to="`/article/${chapter.article_id}?start=1`" @click.native="$emit('navigate', chapter)" :class="{ current: String(chapter.article_chapter) === String(currentChapter) }"><span class="chapter-label">{{ chapter.article_chapter }} · {{ chapter.title }}</span><span class="chapter-detail"><time>{{ dateText(chapter.update_time) }}</time><small v-if="amounts[chapter.article_id]">{{ amounts[chapter.article_id] }} 条评论</small><small v-if="String(chapter.article_chapter) === String(currentChapter)">续读</small></span></nuxt-link></div>
+      <button class="volume-title" :aria-expanded="!collapsed[group.key]" @click="$set(collapsed, group.key, !collapsed[group.key])">{{ collapsed[group.key] ? '▸' : '▾' }} {{ group.title }} <small>{{ $t("{p0} 章", { p0: group.chapters.length }) }}</small></button>
+      <div v-show="!collapsed[group.key]" class="chapter-grid"><nuxt-link v-for="chapter in group.chapters" :key="chapter.article_id" :ref="String(chapter.article_chapter) === String(currentChapter) ? 'current' : undefined" :to="`/article/${chapter.article_id}?start=1`" @click.native="$emit('navigate', chapter)" :class="{ current: String(chapter.article_chapter) === String(currentChapter) }"><span class="chapter-label">{{ chapter.article_chapter }} · {{ chapter.title }}</span><span class="chapter-detail"><time>{{ dateText(chapter.update_time) }}</time><small v-if="amounts[chapter.article_id]">{{ $t("{p0} 条评论", { p0: amounts[chapter.article_id] }) }}</small><small v-if="String(chapter.article_chapter) === String(currentChapter)">{{ $t("续读") }}</small></span></nuxt-link></div>
     </section>
   </section>
 </template>
@@ -18,7 +18,7 @@ export default {
   computed: {
     readable() { return this.chapters.filter(chapter => chapter.article_type !== 'spliter') },
     groups() {
-      const groups = []; let group = { key: 'main', title: '正文', chapters: [] }
+      const groups = []; let group = { key: 'main', title: this.$t('正文'), chapters: [] }
       for (const chapter of this.chapters) {
         if (chapter.article_type === 'spliter') { if (group.chapters.length) groups.push(group); group = { key: String(chapter.article_id), title: chapter.title, chapters: [] } }
         else group.chapters.push(chapter)

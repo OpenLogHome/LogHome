@@ -642,11 +642,14 @@ export default {
 			if (!this.requireLogin()) return;
 			const type = comment.praiseType === 0 ? 3 : 0;
 			const previousType = comment.praiseType;
+			// 乐观更新：先当作点赞成功，仅请求失败时回退
+			comment.praiseType = type;
+			comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previousType === 0 ? -1 : 1));
 			try {
 				await praiseMangaComment(this.$baseUrl, comment.commentId, type);
-				comment.praiseType = type;
-				comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previousType === 0 ? -1 : 1));
 			} catch (e) {
+				comment.praiseType = previousType;
+				comment.likeNum = Math.max(0, (Number(comment.likeNum) || 0) + (previousType === 0 ? 1 : -1));
 				uni.showToast({ title: getMangaCommentErrorMessage(e, this.$t('manga.comment.operationFailed')), icon: 'none' });
 			}
 		},

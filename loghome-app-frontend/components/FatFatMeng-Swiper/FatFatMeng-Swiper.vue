@@ -24,7 +24,7 @@
 					class="Imges" :src="item.image" mode="aspectFill"
 					></log-image>
 					<!-- #ifdef APP-NVUE || APP-PLUS-NVUE -->
-					<img class="ImagesTextbg" src="/static/FatFatMeng-apps/FatFatMeng-image/FatFatMeng-style/FatFatMeng-SwiperTextbg2.png" mode="widthFix"></img>
+					<img class="ImagesTextbg" :src="'./static/FatFatMeng-apps/FatFatMeng-image/FatFatMeng-style/FatFatMeng-SwiperTextbg2.png'" mode="widthFix"></img>
 					<!-- #endif -->
 					<view class="title">
 						<text class="text">{{item.title}}</text>

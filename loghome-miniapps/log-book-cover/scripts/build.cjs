@@ -84,6 +84,27 @@ editor = patch(editor, 'C(`div`,null,[d(le,{document:', 'C(`div`,{style:{aspectR
 editor = patch(editor, 'resizeTo(e,t){let n=', 'resizeTo(e,t,force=!1){let n=');
 editor = patch(editor, '(!this.lastAvailableWidth||n)&&', '(!this.lastAvailableWidth||n||force)&&');
 editor = patch(editor, 'k.value.document=i,Ve.value=t,gt()', 'k.value.document=i,Ve.value=t,loghomeRefit(r,i),gt()');
+// Undo/redo used to drop the selection while leaving the bottom properties panel open (empty ELEMENT shell).
+// Keep the selection when the element still exists after the restore, otherwise close the panel.
+editor = patch(editor, 'async function W(){if(!k.value)return;let e=Ze.undo(k.value.document);e&&await U(e,null,!1)}',
+  'async function W(){if(!k.value)return;let e=Ze.undo(k.value.document);if(!e)return;let t=Ve.value&&e.elements.some(n=>n.id===Ve.value)?Ve.value:null;await U(e,t,!1);t||(A.value=null),clearTimeout(loghomeLiveTimer),loghomeLiveBase=null}');
+editor = patch(editor, 'async function vt(){if(!k.value)return;let e=Ze.redo(k.value.document);e&&await U(e,null,!1)}',
+  'async function vt(){if(!k.value)return;let e=Ze.redo(k.value.document);if(!e)return;let t=Ve.value&&e.elements.some(n=>n.id===Ve.value)?Ve.value:null;await U(e,t,!1);t||(A.value=null),clearTimeout(loghomeLiveTimer),loghomeLiveBase=null}');
+// Property edits apply live on `input` events; a continuous gesture (typing, slider drag, color picking)
+// is coalesced into a single history entry pushed 400ms after the gesture ends.
+editor = patch(editor, 'async function K(e){if(!k.value||!H.value)return;let t=pe(k.value.document),n=t.elements.find(e=>e.id===H.value?.id);n&&(Object.assign(n,e),await U(t,n.id))}',
+`let loghomeLiveBase=null,loghomeLiveTimer=null,loghomeLiveFocus=null;
+function loghomeRecordFocus(){let ael=document.activeElement;if(!ael||!ael.closest||!ael.closest(\`.tool-panel\`))return loghomeLiveFocus=null;let start=null,end=null;try{start=ael.selectionStart,end=ael.selectionEnd}catch{}const controls=Array.from(document.querySelectorAll(\`.tool-panel textarea,.tool-panel input,.tool-panel select\`));loghomeLiveFocus={index:controls.indexOf(ael),start,end}}
+function loghomeRestoreFocus(){let f=loghomeLiveFocus;if(!f||f.index<0)return;let ael=document.activeElement;if(ael&&ael!==document.body&&ael.closest&&ael.closest(\`.tool-panel\`))return;const controls=document.querySelectorAll(\`.tool-panel textarea,.tool-panel input,.tool-panel select\`);const target=controls[f.index];if(!target)return;target.focus({preventScroll:!0});try{f.start!=null&&target.setSelectionRange&&target.setSelectionRange(f.start,f.end)}catch{}}
+// The panel subtree gets re-created after each commit (including the debounced save that follows),
+// so keep re-anchoring focus/caret for a short window instead of a single restore.
+function loghomeKeepFocus(){loghomeRestoreFocus();let n=0;const iv=setInterval(()=>{loghomeRestoreFocus();if(++n>=12)clearInterval(iv)},50)}
+async function K(e){if(!k.value||!H.value)return;let t=pe(k.value.document),n=t.elements.find(e=>e.id===H.value?.id);if(!n)return;loghomeLiveBase||(loghomeLiveBase=x(k.value.document)),loghomeRecordFocus(),Object.assign(n,e),await U(t,n.id,!1),loghomeKeepFocus(),clearTimeout(loghomeLiveTimer),loghomeLiveTimer=setTimeout(()=>{loghomeLiveBase&&(Ze.push(loghomeLiveBase),P.value++,loghomeLiveBase=null)},400)}`);
+editor = patch(editor, 'n&&Ze.push(r),P.value++,k.value.document=i',
+  'n&&(clearTimeout(loghomeLiveTimer),loghomeLiveBase=null,Ze.push(r)),P.value++,k.value.document=i');
+for (const handler of [20, 21, 22, 23, 24, 26, 27, 31, 32, 33, 34, 35]) {
+  editor = patch(editor, `onChange:a[${handler}]||=e=>K(`, `onInput:a[${handler}]||=e=>K(`);
+}
 editor = patch(editor, '__name:`EditorView`,props:{id:{}},setup(n){let f=n',
   '__name:`EditorView`,props:{id:{}},setup(n){const bookSettings=loghomeCanvasControls(d,loghomeBookFormat),bookEditWidth=s(998),bookEditHeight=s(1292),bookSizeError=p(()=>loghomeBookFormat.sizeError(bookEditWidth.value,bookEditHeight.value));let f=n');
 editor = patch(editor, 'C(`nav`,Hc,[',

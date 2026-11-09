@@ -5,24 +5,24 @@
 			<view class="icon-container" v-if="icon">
 				<image class="icon-image" :src="icon" mode="aspectFit"></image>
 			</view>
-			<view class="title">任务完成!</view>
+			<view class="title">{{ $t('payments.reward.taskComplete') }}</view>
 			<view class="task-name" v-if="taskName">{{taskName}}</view>
 			<view class="reward-content">
-				<text class="label">成长值</text>
+				<text class="label">{{ $t('payments.reward.growthValue') }}</text>
 				<text class="value">+{{reward}}</text>
 			</view>
 			<view class="growth-line">
 				<view class="growth-label-row">
-					<text class="label">当前成长值</text>
+					<text class="label">{{ $t('payments.reward.currentGrowth') }}</text>
 					<text class="value">{{currentGrowth}}/{{maxGrowth}}</text>
 				</view>
 				<view class="growth-bar">
 					<view class="growth-bar-inner" :style="{ width: progressPercent + '%' }"></view>
 				</view>
 			</view>
-			<button class="harvest-btn" v-if="canHarvest" @click.stop="handleHarvest">前往收获</button>
+			<button class="harvest-btn" v-if="canHarvest" @click.stop="handleHarvest">{{ $t('payments.reward.harvest') }}</button>
 			<button class="confirm-btn" v-else @click="close">
-				太棒了<text v-if="countdown > 0">({{countdown}})</text>
+				{{ $t('payments.reward.awesome') }}<text v-if="countdown > 0">({{countdown}})</text>
 			</button>
 		</view>
 	</view>

@@ -31,8 +31,8 @@
 			},
 			themeLabel() {
 				return this.themeMode === 'dark'
-					? '当前为暗色模式，点击切换为亮色模式'
-					: '当前为亮色模式，点击切换为暗色模式';
+					? this.$t('common.theme.switchToLight')
+					: this.$t('common.theme.switchToDark');
 			},
 			celestialTexture() {
 				return this.themeMode === 'dark' ? MINECRAFT_FULL_MOON : MINECRAFT_SUN;

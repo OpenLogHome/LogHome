@@ -2,7 +2,7 @@
 	<view class="outer" v-dark>
 		<view class="content">
 			<view class="header">
-				<view class="icon-wrap"><image class="icon" src="/static/icons/lab.svg" mode="aspectFit" /></view>
+				<view class="icon-wrap"><image class="icon" :src="'./static/icons/lab.svg'" mode="aspectFit" /></view>
 				<view class="header-copy">
 					<view class="title">{{ $t('me.service.labPage.title') }}</view>
 					<view class="desc">{{ $t('me.service.labPage.desc') }}</view>

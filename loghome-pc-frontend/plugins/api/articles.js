@@ -46,3 +46,4 @@ const articles = {
 };
 
 export default articles;
+import { localizedFetch as fetch } from '~/utils/api-fetch'

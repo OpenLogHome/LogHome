@@ -18,6 +18,6 @@ test('首页各类书卡仅为漫画作品显示封面标签', () => {
 	assert.match(library, /:manga="novel\.novel_type === 'manga'"/);
 	assert.equal((library.match(/v-if="novel\.novel_type === 'manga'" class="manga-cover-badge"/g) || []).length, 3);
 	assert.match(library, /v-if="item\.novel_type === 'manga'" class="manga-cover-badge"/);
-	assert.match(bookInCase, /<text v-if="manga" class="manga-badge">漫画<\/text>/);
+	assert.match(bookInCase, /<text v-if="manga" class="manga-badge">\{\{ \$t\('library\.bookInCase\.badgeManga'\) \}\}<\/text>/);
 	assert.match(bookInCase, /manga:\s*\{\s*type: Boolean,\s*default: false/);
 });

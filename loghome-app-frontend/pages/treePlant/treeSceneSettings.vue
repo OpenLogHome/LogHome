@@ -4,8 +4,8 @@
             <view class="setting-item" @click="openTreeSceneThemePicker">
                 <view class="setting-main">
                     <view class="setting-title-row">
-                        <text class="setting-title">树场主题</text>
-                        <text class="limited-badge">2款免费</text>
+                        <text class="setting-title">{{ $t('tree.settings.themeLabel') }}</text>
+                        <text class="limited-badge">{{ $t('tree.settings.freeBadge') }}</text>
                     </view>
                 </view>
                 <view class="setting-side">
@@ -21,15 +21,15 @@
 
             <view class="setting-item switch-item">
                 <view class="setting-main">
-                    <text class="setting-title">低性能树场</text>
+                    <text class="setting-title">{{ $t('tree.settings.lowPerformance') }}</text>
                 </view>
                 <switch :checked="treePlantLowPerformance" color="#6aa84f" @change="handleTreePlantPerformanceChange" />
             </view>
 
             <view class="setting-item switch-item">
                 <view class="setting-main">
-                    <text class="setting-title">关闭树场提醒</text>
-                    <text class="setting-desc">开启后不再推送树场相关消息通知</text>
+                    <text class="setting-title">{{ $t('tree.settings.notificationsOff') }}</text>
+                    <text class="setting-desc">{{ $t('tree.settings.notificationsOffDesc') }}</text>
                 </view>
                 <switch
                     :checked="treePlantNotificationsDisabled"
@@ -44,8 +44,8 @@
                 <view class="theme-picker__handle"></view>
                 <view class="theme-picker__header">
                     <view>
-                        <text class="theme-picker__title">选择树场主题</text>
-                        <text class="theme-picker__subtitle">预览并选择你喜欢的树场风景</text>
+                        <text class="theme-picker__title">{{ $t('tree.settings.pickerTitle') }}</text>
+                        <text class="theme-picker__subtitle">{{ $t('tree.settings.pickerSubtitle') }}</text>
                     </view>
                     <view class="theme-picker__close" @tap="closeTreeSceneThemePicker">×</view>
                 </view>
@@ -78,17 +78,17 @@
                                 </view>
                                 <view v-if="theme.locked" class="theme-card__lock"><text>🔒</text></view>
                                 <view v-else-if="theme.key === treeSceneTheme" class="theme-card__check">✓</view>
+                                <text v-if="theme.free" class="theme-card__badge theme-card__badge--free">{{ $t('tree.settings.free') }}</text>
+                                <text v-else class="theme-card__badge">{{ $t('tree.settings.pass') }}</text>
                             </view>
                             <view class="theme-card__meta">
                                 <text class="theme-card__name">{{theme.label}}</text>
-                                <text v-if="theme.free" class="theme-card__badge theme-card__badge--free">免费</text>
-                                <text v-else class="theme-card__badge">通行证</text>
                             </view>
                         </view>
                     </view>
                     <view class="theme-picker__membership-tip">
-                        <text>{{membershipActive ? '原木通行证权益已生效，全部主题均可使用' : '开通原木通行证或超级原木通行证，解锁更多树场主题'}}</text>
-                        <text v-if="!membershipActive" class="theme-picker__membership-link" @tap="goToMembership">查看通行证</text>
+                        <text>{{membershipActive ? $t('tree.settings.membershipActiveTip') : $t('tree.settings.membershipInactiveTip')}}</text>
+                        <text v-if="!membershipActive" class="theme-picker__membership-link" @tap="goToMembership">{{ $t('tree.settings.viewPass') }}</text>
                     </view>
                 </scroll-view>
             </view>
@@ -151,13 +151,15 @@ export default {
     computed: {
         treeSceneThemeLabel() {
             const currentTheme = TREE_PLANT_SCENE_THEMES.find((item) => item.key === this.treeSceneTheme)
-            return currentTheme ? currentTheme.label : '橡岛晴岚'
+            const themeKey = currentTheme ? currentTheme.key : 'oak_island'
+            return this.$t('tree.settings.themes.' + themeKey)
         },
         themeOptions() {
             return TREE_PLANT_SCENE_THEMES.map((theme) => {
                 const free = FREE_TREE_SCENE_THEME_KEYS.includes(theme.key)
                 return {
                     ...theme,
+                    label: this.$t('tree.settings.themes.' + theme.key),
                     free,
                     locked: !free && !this.membershipActive,
                     preview: TREE_SCENE_THEME_PREVIEWS[theme.key] || TREE_SCENE_THEME_PREVIEWS.oak_island,
@@ -253,9 +255,9 @@ export default {
             }
             if (!isFreeTheme && !this.membershipActive) {
                 uni.showModal({
-                    title: '通行证专属主题',
-                    content: `${selectedTheme.label}仅限原木通行证或超级原木通行证用户使用。`,
-                    confirmText: '查看通行证',
+                    title: this.$t('tree.settings.passThemeTitle'),
+                    content: this.$t('tree.settings.passThemeContent', { theme: selectedTheme.label }),
+                    confirmText: this.$t('tree.settings.viewPass'),
                     success: (result) => {
                         if (result.confirm) this.goToMembership()
                     },
@@ -270,7 +272,7 @@ export default {
             }
 
             this.isUpdatingTheme = true
-            uni.showLoading({ title: '切换场景中' })
+            uni.showLoading({ title: this.$t('tree.settings.switchingScene') })
             axios
                 .post(
                     this.$baseUrl + '/treePlant/set_tree_scene_theme',
@@ -283,7 +285,9 @@ export default {
                     this.treeSceneTheme = resolvedTheme
                     this.themePickerVisible = false
                     uni.showToast({
-                        title: `已切换为${currentTheme ? currentTheme.label : selectedTheme.label}`,
+                        title: this.$t('tree.settings.switchedTo', {
+                            theme: this.$t('tree.settings.themes.' + (currentTheme ? currentTheme.key : selectedTheme.key)),
+                        }),
                         icon: 'none',
                         duration: 1800,
                     })
@@ -306,7 +310,7 @@ export default {
             this.treePlantLowPerformance = enabled
             setTreePlantLowPerformanceMode(enabled)
             uni.showToast({
-                title: enabled ? '树场已切换为经典模式' : '树场已切换为高质量 3D 模式',
+                title: enabled ? this.$t('tree.settings.classicEnabled') : this.$t('tree.settings.highQualityEnabled'),
                 icon: 'none',
                 duration: 1800,
             })
@@ -329,7 +333,9 @@ export default {
                     const resolvedDisabled = !!(res.data && res.data.notifications_disabled)
                     this.treePlantNotificationsDisabled = resolvedDisabled
                     uni.showToast({
-                        title: resolvedDisabled ? '已关闭树场提醒' : '已开启树场提醒',
+                        title: resolvedDisabled
+                            ? this.$t('tree.settings.notificationsDisabledToast')
+                            : this.$t('tree.settings.notificationsEnabledToast'),
                         icon: 'none',
                         duration: 1800,
                     })
@@ -775,7 +781,10 @@ export default {
 }
 
 .theme-card__badge {
-    flex-shrink: 0;
+    position: absolute;
+    right: 12rpx;
+    bottom: 10rpx;
+    z-index: 4;
     padding: 4rpx 10rpx;
     border-radius: 999rpx;
     background: var(--background-color-tertiary);

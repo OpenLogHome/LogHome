@@ -75,6 +75,7 @@
 				"novelCollaborators": "协作作者",
 				"changeNovelTags": "修改作品标签",
 				"novel_statistics": "作品数据",
+				"worldVocabularyEditor": "编辑世界词条",
 				"articleFeedbacks": "错误反馈",
 				"scheduledTasks": "定时发布任务",
 				"workPublish": "作品发布"
@@ -144,13 +145,18 @@
 			"manage": {
 				"index": "平台管理",
 				"audit": {
-					"index": "文章审核"
+					"index": "文章审核",
+					"detail": "审核稿件"
+				},
+				"faqs": {
+					"detail": "FAQ详情"
 				},
 				"library": {
 					"roulous": "图书馆轮播管理"
 				},
 				"posts": {
-					"index": "帖子管理"
+					"index": "帖子管理",
+					"detail": "帖子详情"
 				},
 				"users": {
 					"index": "用户管理"

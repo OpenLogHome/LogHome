@@ -941,9 +941,18 @@ router.get('/export_novel', auth, async function (req, res) {
 	const exportType = req.query.export_type || 'published';
 	const format = req.query.export_format || 'epub';
 	if (!Number.isSafeInteger(novelId) || novelId <= 0 ||
-		!['published', 'draft'].includes(exportType) || !['pdf', 'epub'].includes(format) ||
+		!['published', 'draft'].includes(exportType) || !['pdf', 'epub', 'zip'].includes(format) ||
 		(req.query.download_mode !== undefined && req.query.download_mode !== 'url')) {
 		return res.status(400).json({ msg: '导出参数无效' });
+	}
+	if (format !== 'zip') {
+		const activeMembership = await membership.getCurrentSubscription(user.user_id);
+		if (!activeMembership) {
+			return res.status(403).json({
+				code: 'MEMBERSHIP_REQUIRED',
+				msg: '导出 PDF/EPUB 电子书仅限原木通行证或超级原木通行证会员使用，打包导出对所有用户开放',
+			});
+		}
 	}
 	if (activeNovelExports.has(user.user_id) || activeNovelExports.size >= 2) {
 		return res.status(429).json({ msg: '导出任务正在处理中，请稍后重试' });
@@ -983,14 +992,17 @@ router.get('/export_novel', auth, async function (req, res) {
 		if (!articles.length) {
 			return res.status(400).json({ msg: exportType === 'published' ? '暂无已发布章节可导出' : '暂无存稿章节可导出' });
 		}
-		const { createNovelEbook } = require('../bin/novelEbook');
-		const buffer = await createNovelEbook({ novel: novels[0], articles, format });
+		const { createNovelEbook, createNovelPack } = require('../bin/novelEbook');
+		const buffer = format === 'zip'
+			? await createNovelPack({ novel: novels[0], articles })
+			: await createNovelEbook({ novel: novels[0], articles, format });
 		const name = Array.from(String(novels[0].name || '未命名作品')
 			.replace(/[<>:"/\\|?*\x00-\x1f\x7f]/g, '_'))
 			.filter(character => character.codePointAt(0) < 0xd800 || character.codePointAt(0) > 0xdfff)
 			.slice(0, 80).join('') || '未命名作品';
 		const filename = `${name}-${exportType === 'draft' ? '存稿版' : '读者版'}.${format}`;
-		const contentType = format === 'pdf' ? 'application/pdf' : 'application/epub+zip';
+		const contentType = format === 'pdf' ? 'application/pdf'
+			: format === 'zip' ? 'application/zip' : 'application/epub+zip';
 		if (req.query.download_mode === 'url') {
 			const { downloads } = require('../bin/novelExportDownloads');
 			return res.json(downloads.put(buffer, filename, contentType));
@@ -1953,6 +1965,42 @@ router.get('/get_articles', auth, async function (req, res) {
 			return res.status(403).json({ msg: 'access denied' });
 		}
 
+		// App 首屏只需要目录；最新草稿、编辑锁等信息在显示后按章补齐。
+		if (catalogOnly && req.query.defer_status === '1') {
+			const rows = await query(
+				`SELECT n.novel_id AS catalog_novel_id, n.novel_type, n.name AS novel_name,
+					a.article_id, a.title, a.novel_id, a.article_chapter,
+					a.content_hash, a.is_draft, a.deleted, a.update_time,
+					a.text_count, a.article_type,
+					COALESCE(acm.mode, 'legacy_lock') AS collaboration_mode
+				FROM novels n
+				LEFT JOIN articles a ON a.novel_id = n.novel_id AND a.deleted = 0
+				LEFT JOIN article_collaboration_modes acm ON acm.article_id = a.article_id
+				WHERE n.novel_id = ? AND n.deleted = 0
+				ORDER BY a.article_chapter ASC`,
+				[novelId],
+			);
+			if (!rows.length) return res.status(404).json({ msg: 'novel not found' });
+			return res.json({
+				articles: rows.filter((row) => row.article_id != null).map(serializeArticleListRow),
+				novel: {
+					novel_id: novelId,
+					name: rows[0].novel_name,
+					novel_type: rows[0].novel_type,
+				},
+				access: serializeAccess(access),
+			});
+		}
+
+		let articleIds = null;
+		if (req.query.article_ids !== undefined) {
+			articleIds = String(req.query.article_ids).split(',').map(Number);
+			if (!catalogOnly || articleIds.length > 50 || articleIds.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
+				return res.status(400).json({ msg: 'article_ids must contain 1 to 50 positive ids in catalog mode' });
+			}
+			articleIds = [...new Set(articleIds)];
+		}
+
 		if (!catalogOnly) {
 			await ensureAgentMemorySchema();
 			await expireArticleEditLocks();
@@ -2038,6 +2086,7 @@ router.get('/get_articles', auth, async function (req, res) {
 					FROM article_edit_locks
 					WHERE status = 'active'
 						AND expires_at > CURRENT_TIMESTAMP
+						AND novel_id = ?
 					GROUP BY article_id
 				) latest_lock ON latest_lock.max_lock_id = l1.lock_id
 				INNER JOIN users u ON u.user_id = l1.user_id
@@ -2045,14 +2094,51 @@ router.get('/get_articles', auth, async function (req, res) {
 			WHERE a.novel_id = ? 
 				AND n.deleted = 0 
 				AND a.deleted = 0 
+				${articleIds ? `AND a.article_id IN (${articleIds.map(() => '?').join(',')})` : ''}
 			ORDER BY a.article_chapter ASC`,
-			[novelId],
+			[novelId, novelId, ...(articleIds || [])],
 		);
 
 		res.end(JSON.stringify(results.map(serializeArticleListRow)));
 	} catch (e) {
 		console.log(e);
 		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.get('/get_article_feedback_counts', auth, async function (req, res) {
+	const user = getCurrentUser(req);
+	const novelId = Number(req.query.id || req.query.novel_id || 0);
+	if (!novelId) {
+		return res.status(400).json({ msg: 'novel_id is required' });
+	}
+
+	try {
+		const access = await getNovelAccess(user.user_id, novelId);
+		if (!canViewArticles(access)) {
+			return res.status(403).json({ msg: 'access denied' });
+		}
+
+		const results = await query(
+			`SELECT
+				af.article_id,
+				COUNT(*) AS feedback_count
+			FROM article_feedback af
+			INNER JOIN articles a ON a.article_id = af.article_id
+			WHERE a.novel_id = ?
+				AND a.deleted = 0
+				AND af.status = 0
+			GROUP BY af.article_id`,
+			[novelId],
+		);
+
+		return res.json(results.map((row) => ({
+			article_id: Number(row.article_id),
+			feedback_count: Number(row.feedback_count || 0),
+		})));
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({ msg: 'bad request' });
 	}
 });
 

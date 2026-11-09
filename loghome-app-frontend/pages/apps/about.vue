@@ -6,22 +6,22 @@
 				<view class="text-area">
 					<div class="title">{{ title }}</div>
 					<!-- <div class="version">公测版本，不提供长期支持</div> -->
-					<div class="version" v-show="$store.state.appVersion">APP版本：{{ this.$store.state.appVersion }}</div>
+					<div class="version" v-show="$store.state.appVersion">{{ $t('apps.about.version', { version: this.$store.state.appVersion }) }}</div>
 				</view>
 				<div class="team">
 
 				</div>
 				<!-- 			<div class="button" @click="gotoUpdateIntro">社区更新机制</div> -->
-				<div class="button" @click="gotoContentAgreement">用户内容上传协议</div>
-				<div class="button" @click="gotoPrivacyAgreement">用户隐私政策</div>
-				<div class="button" @click="gotoGrandUsers">社区荣誉用户</div>
-				<div class="button" @click="showDevInfo">显示调试信息</div>
+				<div class="button" @click="gotoContentAgreement">{{ $t('apps.about.contentAgreement') }}</div>
+				<div class="button" @click="gotoPrivacyAgreement">{{ $t('apps.about.privacyAgreement') }}</div>
+				<div class="button" @click="gotoGrandUsers">{{ $t('apps.about.honorUsers') }}</div>
+				<div class="button" @click="showDevInfo">{{ $t('apps.about.devInfo') }}</div>
 			</div>
 
 			<div class="certification">
 				<a class="certification-link" target="_blank" href="https://www.12377.cn/">
 					<img src="../../static/buliang.svg" alt="" />
-					<span>网上有害信息举报专区</span>
+					<span>{{ $t('apps.about.reportHarmful') }}</span>
 				</a>
 				<a class="certification-link" target="_blank" href="https://beian.miit.gov.cn/#/Integrated/index">苏ICP备2021006745号-1</a>
 				<a class="certification-link" target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34010402703554">
@@ -42,8 +42,14 @@ import darkModeMixin from '@/mixins/dark-mode.js'
 export default {
 	mixins: [darkModeMixin],
 	computed: {
+		title() {
+			return this.$t('apps.about.title')
+		},
 		aboutBackground() {
-			return this.isDarkMode ? '/static/about_bg-night.png' : '/static/about_bg.jpg'
+			// 原生 <img> 按文档地址相对解析（不走 uni 的路径改写）：统一用 ./static/，
+			// dev、http 生产与 Android file:// 打包环境均可解析；
+			// /static/ 根绝对路径在 file:// 下会指向 file:///static/... 导致背景丢失
+			return this.isDarkMode ? './static/about_bg-night.png' : './static/about_bg.jpg'
 		}
 	},
 	watch: {
@@ -51,11 +57,6 @@ export default {
 	},
 	onShow() { this.updateAboutNavigation() },
 	onReady() { this.updateAboutNavigation() },
-	data() {
-		return {
-			title: '原木社区',
-		}
-	},
 	onLoad() {
 
 	},
@@ -90,7 +91,7 @@ export default {
 			console.log(window.jsBridge)
 			if (window.jsBridge && window.jsBridge.inApp) {
 				uni.showModal({
-					title: "调试信息",
+					title: this.$t('apps.about.devInfoTitle'),
 					content: JSON.stringify(window.jsBridge),
 					showCancel: false
 				})

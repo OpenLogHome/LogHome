@@ -1,14 +1,14 @@
 <template>
   <section class="reader-pager" :class="{ 'is-paged': paged }" :data-paragraph-anchor="position.paragraphId" :data-char-offset="position.charOffset" :data-page-index="index">
-    <div ref="viewport" class="reader-viewport" tabindex="0" role="region" aria-label="章节正文" :style="viewportStyle" @touchstart.passive="touchStart" @touchend="touchEnd">
+    <div ref="viewport" class="reader-viewport" tabindex="0" role="region" :aria-label="$t('章节正文')" :style="viewportStyle" @touchstart.passive="touchStart" @touchend="touchEnd">
       <div ref="prose" class="article-content reader-prose" :style="proseStyle">
         <ReaderContent :article="article" :highlights="highlights" :counts="counts" :speaking-id="speakingId" @paragraph-menu="$emit('paragraph-menu', $event)" @comment="$emit('comment', $event)" @layout="scheduleLayout" />
       </div>
     </div>
-    <nav v-if="paged" class="page-navigation" aria-label="正文翻页">
-      <button :disabled="index <= 0 && !hasPrevious" @click="turn(-1)">← 上一页</button>
-      <div class="page-progress"><span aria-live="polite">{{ index + 1 }} / {{ total }} 页</span><input aria-label="本章阅读进度" type="range" min="0" :max="total - 1" :value="index" @change="goPage(Number($event.target.value))"></div>
-      <button :disabled="index >= total - 1 && !hasNext && !canFinish" @click="turn(1)">{{ index >= total - 1 && !hasNext && canFinish ? '已读至最后 →' : '下一页 →' }}</button>
+    <nav v-if="paged" class="page-navigation" :aria-label="$t('正文翻页')">
+      <button :disabled="index <= 0 && !hasPrevious" @click="turn(-1)">{{ $t("← 上一页") }}</button>
+      <div class="page-progress"><span aria-live="polite">{{ $t("第 {p0} / {p1} 页", { p0: index + 1, p1: total }) }}</span><input :aria-label="$t('本章阅读进度')" type="range" min="0" :max="total - 1" :value="index" @change="goPage(Number($event.target.value))"></div>
+      <button :disabled="index >= total - 1 && !hasNext && !canFinish" @click="turn(1)">{{ index >= total - 1 && !hasNext && canFinish ? $t('已读至最后 →') : $t('下一页 →') }}</button>
     </nav>
     <p v-if="paged" class="page-hint"></p>
   </section>

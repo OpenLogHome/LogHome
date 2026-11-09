@@ -5,8 +5,8 @@
 				<view class="title">{{article.title}}</view>
 				<view class="meta">
 					<text class="novel">{{novelInfo.name}}</text>
-					<text class="author">作者: {{novelInfo.author_name}}</text>
-					<text class="word-count">字数: {{article.text_count}}</text>
+					<text class="author">{{ $t('manage.common.author', { name: novelInfo.author_name }) }}</text>
+					<text class="word-count">{{ $t('manage.common.wordCount', { count: article.text_count || 0 }) }}</text>
 				</view>
 			</view>
 
@@ -26,32 +26,32 @@
 
 			<view class="audit-form">
 				<view class="form-item">
-					<view class="label">审核结果</view>
+					<view class="label">{{ $t('manage.audit.result') }}</view>
 					<view class="input">
 						<radio-group @change="handleMethodChange">
 							<label class="radio">
-								<radio value="通过" :checked="handleMethod === '通过'"/>通过
+								<radio value="通过" :checked="handleMethod === '通过'"/>{{ $t('manage.audit.approve') }}
 							</label>
 							<label class="radio">
-								<radio value="打回草稿" :checked="handleMethod === '打回草稿'"/>退回稿件
+								<radio value="打回草稿" :checked="handleMethod === '打回草稿'"/>{{ $t('manage.audit.returnDraft') }}
 							</label>
 						</radio-group>
 					</view>
 				</view>
 
 				<view class="form-item" v-if="handleMethod === '通过'">
-					<view class="label">警告信息</view>
+					<view class="label">{{ $t('manage.audit.warning') }}</view>
 					<view class="input">
 						<radio-group @change="handleWarnChange">
 							<label class="radio-warn" v-for="(warn, index) in warnOptions" :key="index">
-								<radio :value="warn" :checked="warnInfo === warn"/>{{warn === 'None' ? '无' : warn}}
+								<radio :value="warn" :checked="warnInfo === warn"/>{{warnLabel(warn)}}
 							</label>
 						</radio-group>
 					</view>
 				</view>
 
 				<view class="submit">
-					<button @click="submitAudit" :disabled="submitting">提交审核</button>
+					<button @click="submitAudit" :disabled="submitting">{{ $t('manage.audit.submit') }}</button>
 				</view>
 			</view>
 		</view>
@@ -106,7 +106,7 @@ export default {
 				this.novelInfo = res.data[0]
 			} catch (e) {
 				uni.showToast({
-					title: '获取作品信息失败',
+					title: this.$t('manage.audit.novelLoadFailed'),
 					icon: 'none'
 				})
 			}
@@ -130,7 +130,7 @@ export default {
 				}
 			} catch (e) {
 				uni.showToast({
-					title: '加载失败',
+					title: this.$t('common.loadFailed'),
 					icon: 'none'
 				})
 			}
@@ -140,6 +140,17 @@ export default {
 		},
 		handleWarnChange(e) {
 			this.warnInfo = e.detail.value
+		},
+		warnLabel(warn) {
+			const keys = {
+				'该稿件疑似使用人工智能合成，请仔细甄别。': 'ai',
+				'该稿件含有危险行为，请勿轻易模仿。': 'danger',
+				'该稿件内容仅供娱乐，请勿过分解读。': 'entertainment',
+				'该稿件内容可能引人不适，请谨慎阅读。': 'disturbing',
+				'请理性适度消费。': 'spending',
+				'该稿件包含的个人观点仅供参考。': 'opinion'
+			}
+			return warn === 'None' ? this.$t('manage.audit.none') : this.$t('manage.audit.warnings.' + keys[warn])
 		},
 		async submitAudit() {
 			if (this.submitting) return
@@ -159,7 +170,7 @@ export default {
 				})
 
 				uni.showToast({
-					title: '审核成功'
+					title: this.$t('manage.audit.success')
 				})
 
 				setTimeout(() => {
@@ -168,7 +179,7 @@ export default {
 
 			} catch (e) {
 				uni.showToast({
-					title: '提交失败',
+					title: this.$t('manage.common.submitFailed'),
 					icon: 'none'
 				})
 			} finally {
