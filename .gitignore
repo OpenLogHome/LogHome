@@ -27,6 +27,7 @@ _tmp/
 
 # Logs (may contain sensitive prompt data)
 **/logs/
+/*-run.log
 
 chat-module
 

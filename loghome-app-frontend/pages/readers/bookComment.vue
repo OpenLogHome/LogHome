@@ -6,6 +6,30 @@
 			:style="{ 'marginTop': '0px', 'height': componentMode ? '100%' : 'auto' }"
 			:default-page-size="componentMode ? 10 : 10">
 			<nothing :msg="$t('reader.book.noCommentsYet')" slot="empty" height="calc(80vh - 55rpx - 124px)"></nothing>
+			<view v-if="showChapterFilter" slot="top" class="chapter-filter">
+				<view class="chapter-filter-bar" :class="{ filtered: articleId !== undefined }">
+					<view class="chapter-filter-btn chapter-all-btn" :class="{ active: articleId === undefined }"
+						@tap="selectAllChapters">{{ $t('reader.book.allChaptersFilter') }}</view>
+					<view class="chapter-filter-btn chapter-picker-btn" :class="{ active: articleId !== undefined }"
+						@tap="toggleChapterPanel">
+						<text class="chapter-picker-label" :key="articleId === undefined ? 'placeholder' : articleId">{{ selectedChapterTitle }}</text>
+						<text class="chapter-picker-caret" :class="{ open: chapterPanelOpen }">▾</text>
+					</view>
+				</view>
+				<view class="chapter-panel-wrap" :style="{ height: chapterPanelWrapHeight }">
+					<view class="chapter-panel" :class="{ open: chapterPanelOpen }">
+						<scroll-view scroll-y class="chapter-panel-scroll" :style="{ height: chapterPanelHeight }"
+							:scroll-into-view="chapterScrollIntoView" :scroll-with-animation="true">
+							<view v-for="chapter in chapterOptions" :key="chapter.article_id" :id="'chapter_' + chapter.article_id"
+								class="chapter-panel-item" :class="{ active: articleId == chapter.article_id }"
+								@tap="selectChapter(chapter.article_id)">
+								<text class="chapter-panel-title">{{ chapter.title }}</text>
+								<text v-if="articleId == chapter.article_id" class="chapter-panel-check">✓</text>
+							</view>
+						</scroll-view>
+					</view>
+				</view>
+			</view>
 			<div v-if="paragraphId !== undefined" class="cento-banner" @click="navToChapter">
 				<svg t="1708145570940" class="icon" viewBox="0 0 1024 1024" version="1.1"
 					xmlns="http://www.w3.org/2000/svg" p-id="2306" width="14" height="14" style="margin: 0 5px 0 0;">
@@ -112,6 +136,9 @@ export default {
 			extraCommentId: undefined,
 			isSubmitting: false,
 			media_urls: [], // 存储图片URL
+			chapterOptions: [],
+			chapterPanelOpen: false,
+			chapterScrollIntoView: '',
 			fanRanks: {
 				totalRanks: [],
 				monthlyRanks: []
@@ -127,6 +154,22 @@ export default {
 		}
 	},
 	computed: {
+		showChapterFilter() {
+			return !this.componentMode && this.paragraphId === undefined && this.chapterOptions.length > 0;
+		},
+		selectedChapterTitle() {
+			const chapter = this.chapterOptions.find((item) => item.article_id == this.articleId);
+			return chapter ? chapter.title : this.$t('reader.book.selectChapterFilter');
+		},
+		chapterPanelHeight() {
+			const itemHeight = uni.upx2px(76);
+			const winHeight = typeof window !== 'undefined' ? window.innerHeight : 667;
+			return Math.min(this.chapterOptions.length * itemHeight, Math.round(winHeight * 0.55)) + 'px';
+		},
+		chapterPanelWrapHeight() {
+			if (!this.chapterPanelOpen) return '0px';
+			return 'calc(' + this.chapterPanelHeight + ' + ' + uni.upx2px(12) + 'px)';
+		},
 		commentPlaceholder() {
 			if (this.replyToId !== -1) {
 				return this.$t('reader.book.replyToPlaceholder', { name: this.replyToUserName });
@@ -161,6 +204,9 @@ export default {
 			}
 			if (params.extraId !== undefined) {
 				this.extraCommentId = params.extraId;
+			}
+			if (this.paragraphId === undefined && this.novelId) {
+				this.fetchChapterOptions();
 			}
 			// 获取粉丝排名
 			if (this.novelId) {
@@ -228,6 +274,35 @@ export default {
 			// 时间戳转为时间
 			var beijing_datetime = this.timeConvert(new Date(parseInt(timestamp) * 1000))
 			return beijing_datetime; // 2017-03-31 16:02:06
+		},
+		fetchChapterOptions() {
+			axios.get(this.$baseUrl + '/library/get_articles?id=' + this.novelId)
+				.then((res) => {
+					this.chapterOptions = (res.data || []).filter((item) => item.article_type !== 'spliter');
+				})
+				.catch(() => {});
+		},
+		toggleChapterPanel() {
+			this.chapterPanelOpen = !this.chapterPanelOpen;
+			if (this.chapterPanelOpen && this.articleId !== undefined) {
+				this.chapterScrollIntoView = '';
+				this.$nextTick(() => {
+					this.chapterScrollIntoView = 'chapter_' + this.articleId;
+				});
+			}
+		},
+		selectAllChapters() {
+			this.chapterPanelOpen = false;
+			this.selectChapter(undefined);
+		},
+		selectChapter(articleId) {
+			this.chapterPanelOpen = false;
+			this.chapterScrollIntoView = '';
+			if (this.articleId == articleId) return;
+			this.articleId = articleId;
+			if (this.$refs.paging) {
+				this.$refs.paging.reload();
+			}
 		},
 		// 获取粉丝排名数据
 		fetchFanRanks() {
@@ -726,6 +801,196 @@ export default {
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 3;
+	}
+
+	.chapter-filter {
+		padding: 16rpx 24rpx 8rpx;
+		background: var(--manga-bg);
+
+		.chapter-filter-bar {
+			display: flex;
+			gap: 12rpx;
+		}
+
+		.chapter-filter-btn {
+			flex: 1 1 0;
+			min-width: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8rpx;
+			padding: 12rpx 24rpx;
+			border-radius: 999rpx;
+			border: 1rpx solid var(--manga-line);
+			background: var(--manga-card);
+			color: var(--manga-muted);
+			font-size: 24rpx;
+			line-height: 1.4;
+			transition: flex-grow 0.4s cubic-bezier(0.25, 1.25, 0.4, 1), padding 0.4s cubic-bezier(0.25, 1.25, 0.4, 1),
+				background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.15s ease;
+
+			&:active {
+				transform: scale(0.97);
+			}
+
+			&.active {
+				border-color: var(--manga-accent);
+				background: var(--manga-accent);
+				color: #fff;
+				font-weight: 600;
+			}
+		}
+
+		.chapter-all-btn {
+			white-space: nowrap;
+		}
+
+		.chapter-filter-bar.filtered .chapter-all-btn {
+			flex-grow: 0.25;
+			padding: 12rpx 16rpx;
+		}
+
+		.chapter-picker-btn {
+			position: relative;
+
+			.chapter-picker-label {
+				flex: 1;
+				min-width: 0;
+				box-sizing: border-box;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				text-align: center;
+				padding: 0 28rpx;
+				animation: chapter-label-in 0.3s ease;
+			}
+
+			.chapter-picker-caret {
+				position: absolute;
+				right: 24rpx;
+				top: 50%;
+				transform: translateY(-50%);
+				flex: none;
+				font-size: 20rpx;
+				transition: transform 0.2s ease;
+
+				&.open {
+					transform: translateY(-50%) rotate(180deg);
+				}
+			}
+		}
+
+		.chapter-filter-bar.filtered .chapter-picker-btn {
+			.chapter-picker-label {
+				text-align: left;
+				padding: 0;
+			}
+
+			.chapter-picker-caret {
+				position: static;
+				transform: none;
+
+				&.open {
+					transform: rotate(180deg);
+				}
+			}
+		}
+
+		.chapter-panel-wrap {
+			overflow: hidden;
+			transition: height 0.38s cubic-bezier(0.3, 1.15, 0.4, 1);
+		}
+
+		.chapter-panel {
+			margin-top: 12rpx;
+			border: 1rpx solid var(--manga-line);
+			border-radius: 16rpx;
+			background: var(--manga-card);
+			overflow: hidden;
+			opacity: 0;
+			transition: opacity 0.25s ease;
+
+			&.open {
+				opacity: 1;
+			}
+
+			.chapter-panel-scroll {
+				width: 100%;
+
+				::-webkit-scrollbar {
+					width: 6px;
+				}
+
+				::-webkit-scrollbar-track {
+					background: transparent;
+				}
+
+				::-webkit-scrollbar-thumb {
+					border-radius: 3px;
+					background: var(--manga-line);
+				}
+			}
+
+			.chapter-panel-item {
+				display: flex;
+				align-items: center;
+				gap: 12rpx;
+				height: 76rpx;
+				box-sizing: border-box;
+				padding: 0 24rpx;
+				border-bottom: 1rpx solid var(--manga-line);
+				font-size: 26rpx;
+				color: var(--manga-text);
+
+				&:last-child {
+					border-bottom: none;
+				}
+
+				.chapter-panel-title {
+					flex: 1;
+					min-width: 0;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+				}
+
+				.chapter-panel-check {
+					flex: none;
+					color: var(--manga-accent);
+					font-weight: 700;
+				}
+
+				&.active {
+					background: var(--manga-bg);
+					color: var(--manga-accent);
+					font-weight: 600;
+				}
+			}
+		}
+
+		@keyframes chapter-label-in {
+			from {
+				opacity: 0;
+				transform: translateY(6rpx);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.chapter-filter-btn,
+			.chapter-panel-wrap,
+			.chapter-panel,
+			.chapter-picker-caret {
+				transition: none;
+			}
+
+			.chapter-picker-label {
+				animation: none;
+			}
+		}
 	}
 
 	.reply {
