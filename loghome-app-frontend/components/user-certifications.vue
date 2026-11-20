@@ -2,7 +2,6 @@
 	<view v-if="certifications && certifications.length" class="certifications-row">
 		<view v-for="(cert, idx) in certifications" :key="idx" class="cert-badge" :class="'cert-' + (cert.variant || 'gold')">
 			<view class="cert-shine-wrap"><view class="cert-shine"></view></view>
-			<text class="cert-prefix">{{ $t('me.profile.certifiedPrefix') }}</text>
 			<text class="cert-title">{{ cert.title }}</text>
 		</view>
 	</view>
@@ -66,14 +65,6 @@ export default {
 		bottom: -8rpx;
 		left: 18rpx;
 		animation-delay: 1.1s;
-	}
-
-	.cert-prefix {
-		position: relative;
-		z-index: 2;
-		font-size: 22rpx;
-		color: var(--cert-text);
-		opacity: 0.75;
 	}
 
 	.cert-title {
