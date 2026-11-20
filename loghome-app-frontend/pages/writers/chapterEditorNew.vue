@@ -1025,7 +1025,6 @@ const DEFAULT_QUICK_INPUTS = [
   { id: "question", type: "punctuation", label: "问号", value: "？" },
   { id: "colon", type: "punctuation", label: "冒号", value: "：" },
   { id: "quote", type: "punctuation", label: "双引号", value: "“”", isPair: true },
-  { id: "book-title", type: "punctuation", label: "书名号", value: "《》", isPair: true },
 ];
 
 const TOOL_DEFINITIONS = {
@@ -1321,6 +1320,8 @@ function normalizeQuickInputs(rawItems) {
       const rawId = item.id === undefined || item.id === null
         ? ""
         : String(item.id);
+      // 书名号内置符号已下架，丢弃旧设置中的残留条目
+      if (rawId === "book-title") return null;
       const defaultItem = DEFAULT_QUICK_INPUT_MAP[rawId];
       const normalizedType = item.type === "word" ? "word" : "punctuation";
       const trimmedLabel = labelSource.trim();
@@ -9424,9 +9425,8 @@ export default {
       }
 
       .quickInputToolbarButton {
-        flex: 0 0 auto;
+        flex: 1 0 auto;
         min-width: 72rpx;
-        max-width: 168rpx;
         height: 80rpx;
         box-sizing: border-box;
         padding: 0 12rpx;

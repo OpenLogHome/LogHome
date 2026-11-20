@@ -420,7 +420,6 @@ const DEFAULT_QUICK_INPUTS = [
   { id: "question", type: "punctuation", label: "问号", value: "？" },
   { id: "colon", type: "punctuation", label: "冒号", value: "：" },
   { id: "quote", type: "punctuation", label: "双引号", value: "“”", isPair: true },
-  { id: "book-title", type: "punctuation", label: "书名号", value: "《》", isPair: true },
 ];
 
 const TOOL_DEFINITIONS = {
@@ -554,7 +553,6 @@ const QUICK_INPUT_LABEL_KEYS = {
   question: "writer.chapter.quick.question",
   colon: "writer.chapter.quick.colon",
   quote: "writer.chapter.quick.quote",
-  "book-title": "writer.chapter.quick.bookTitle",
 };
 
 const STATUS_CAPSULE_KEYS = {
@@ -617,6 +615,8 @@ function normalizeQuickInputs(rawItems) {
       const rawId = item.id === undefined || item.id === null
         ? ""
         : String(item.id);
+      // 书名号内置符号已下架，丢弃旧设置中的残留条目
+      if (rawId === "book-title") return null;
       const defaultItem = DEFAULT_QUICK_INPUT_MAP[rawId];
       const normalizedType = item.type === "word" ? "word" : "punctuation";
       const trimmedLabel = labelSource.trim();
