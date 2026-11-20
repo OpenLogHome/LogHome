@@ -12,6 +12,7 @@ const UniCloud = require('../bin/unicloud.js');
 const achievements = require('../bin/achievements.js');
 const membership = require('../bin/membership.js');
 const avatarFrames = require('../bin/avatarFrames.js');
+const certifications = require('../bin/certifications.js');
 const { normalizeLang, t: tLang } = require('../bin/lang.js');
 
 // 发送邮件的函数
@@ -123,6 +124,7 @@ router.get('/user_profile_of', async function (req, res) {
 			results[0].membership_type = currentMembership
 				? currentMembership.membership_type
 				: '';
+			results[0].certifications = certifications.getCertifications(req.query.id);
 		}
 		res.end(JSON.stringify(results));
 	} catch (e) {

@@ -48,6 +48,8 @@
 				</view>
 			</view>
 
+			<user-certifications :certifications="user.certifications" />
+
 			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx; display: flex;align-items: center;">
 				<span class="user_id">ID:{{uid}}</span>
 				<view
@@ -182,13 +184,14 @@
 	import springBack from '../../components/springBack.vue'
 	import HonorBadge from '../../components/honor-badge.vue'
 	import MembershipBadge from '../../components/membership-badge.vue'
+	import UserCertifications from '../../components/user-certifications.vue'
 	import darkModeMixin from '@/mixins/dark-mode.js'
 	import axios from 'axios'
 	import { postTimeText } from '@/common/datetime.js'
 	import i18n from '@/i18n/index.js'
 	export default {
 		components:{
-			bookInCase,followBtn,springBack,HonorBadge,MembershipBadge
+			bookInCase,followBtn,springBack,HonorBadge,MembershipBadge,UserCertifications
 		},
 		mixins: [darkModeMixin],
 		data() {

@@ -345,6 +345,7 @@
       "yuan": "元"
     },
     "profile": {
+      "certifiedPrefix": "原木社区认证：",
       "editProfile": "编辑资料",
       "sendDm": "私信",
       "admin": "社区管理员",
