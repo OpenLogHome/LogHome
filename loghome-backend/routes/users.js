@@ -104,6 +104,10 @@ router.get('/all_users', async function (req, res) {
 	}
 });
 
+router.get('/certifications_map', function (req, res) {
+	res.end(JSON.stringify(certifications.getTopVariantMap()));
+});
+
 router.get('/user_profile_of', async function (req, res) {
 	try {
 		let results = await query(

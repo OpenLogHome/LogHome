@@ -1,6 +1,7 @@
 <template>
 	<div class="outer">
-		<div class="book">
+		<div class="book" :class="certShell ? 'cert-shell cert-shell-' + certShell : ''">
+			<cert-emblem v-if="certShell" class="cert-emblem-slot" :variant="certShell" />
 			<log-image :src="picUrl  + '?thumbnail=1' " alt="" :style="{display: picUrl=='' ? 'none' : 'block'}"
 			onerror="onerror=null;src='https://s2.loli.net/2021/12/06/iTkPD6cudGrsEKR.png'"/>
 			<text v-if="manga" class="manga-badge">{{ $t('library.bookInCase.badgeManga') }}</text>
@@ -23,10 +24,12 @@
 
 <script>
 	import HaycraftMark from './haycraft-mark.vue'
+	import CertEmblem from './cert-emblem.vue'
 
 	export default{
 		components: {
-			HaycraftMark
+			HaycraftMark,
+			CertEmblem
 		},
 		props:{
 			bookName:{
@@ -52,6 +55,10 @@
 			world: {
 				type: Boolean,
 				default: false
+			},
+			certShell: {
+				type: String,
+				default: ""
 			}
 		}
 	}
@@ -143,6 +150,48 @@
 			width:180rpx;
 			background-color: #d3d3d3;
 			border-radius: 7rpx;
+		}
+		div.book.cert-shell{
+			border: 4rpx solid var(--shell-edge);
+			animation: cert-shell-pulse 2.8s ease-in-out infinite;
+		}
+		.cert-emblem-slot{
+			position: absolute;
+			top: -18rpx;
+			left: -18rpx;
+			z-index: 3;
+		}
+		@keyframes cert-shell-pulse {
+			0%, 100% {
+				box-shadow: 0 0 10rpx var(--shell-glow);
+			}
+			50% {
+				box-shadow: 0 0 24rpx var(--shell-glow);
+			}
+		}
+		.cert-shell-gold{
+			--shell-edge: #d4a017;
+			--shell-glow: rgba(255, 196, 64, 0.45);
+		}
+		.cert-shell-silver{
+			--shell-edge: #9aa4ad;
+			--shell-glow: rgba(190, 205, 220, 0.4);
+		}
+		.cert-shell-bronze{
+			--shell-edge: #b06a2a;
+			--shell-glow: rgba(220, 140, 60, 0.4);
+		}
+		.cert-shell-green{
+			--shell-edge: #2f9e44;
+			--shell-glow: rgba(80, 200, 120, 0.4);
+		}
+		.cert-shell-blue{
+			--shell-edge: #2f7fd4;
+			--shell-glow: rgba(80, 160, 255, 0.4);
+		}
+		.cert-shell-purple{
+			--shell-edge: #7048e8;
+			--shell-glow: rgba(150, 110, 255, 0.4);
 		}
 	}
 </style>

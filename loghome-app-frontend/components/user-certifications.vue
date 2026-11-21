@@ -141,13 +141,6 @@ export default {
 	--cert-glow: rgba(220, 140, 60, 0.4);
 }
 
-.cert-stone {
-	--cert-edge: #7f8878;
-	--cert-bright: #cfd8c6;
-	--cert-text: #e4ead9;
-	--cert-glow: rgba(150, 170, 140, 0.28);
-}
-
 .cert-blue {
 	--cert-edge: #2f7fd4;
 	--cert-bright: #7cc4ff;

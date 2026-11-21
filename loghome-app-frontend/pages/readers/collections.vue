@@ -20,7 +20,8 @@
 					<navigator :url="'./bookInfo?id=' +  item.novel_id"
 							   open-type="navigate">    
 						<div class="books">
-							<log-image :src="item.picUrl" alt=""
+							<cert-emblem v-if="certShellFor(item)" class="cover-emblem" :variant="certShellFor(item)" />
+							<log-image :src="item.picUrl" alt="" :class="certShellFor(item) ? 'cert-shell cert-shell-' + certShellFor(item) : ''"
 							:onerror="`onerror=null;src='`+ $backupResources.bookCover +`'`"/>
 							<div class="bookInfo">
 								<div class="title">{{item.name}}</div>
@@ -41,14 +42,24 @@
 
 <script>
 	import axios from 'axios'
+	import CertEmblem from '../../components/cert-emblem.vue'
 	export default{
+		components: {
+			CertEmblem
+		},
 		data(){
 			return{
 				title:"",
 				books:[],
+				certMap:null,
 				showList:false,
 				isLoading:true,
 				loadingRequestCount:0
+			}
+		},
+		computed:{
+			isSpecial(){
+				return this.title.includes('干草块文会') && this.title.includes('特辑');
 			}
 		},
 		onLoad(params){
@@ -70,6 +81,13 @@
 			uni.setNavigationBarTitle({
 				title:this.title
 			})
+			if (this.isSpecial && this.certMap === null) {
+				axios.get(this.$baseUrl + '/users/certifications_map', {}).then((res) => {
+					this.certMap = res.data && typeof res.data === 'object' ? res.data : {};
+				}).catch(() => {
+					this.certMap = {};
+				});
+			}
 			this.refreshCollections();
 		},
 		onShow(){
@@ -78,6 +96,10 @@
 			this.refreshCollections();
 		},
 		methods:{
+			certShellFor(item){
+				if (!this.certMap || !this.isSpecial) return '';
+				return this.certMap[String(item.author_id)] || '';
+			},
 			refreshCollections(){
 				let _this = this;
 				this.loadingRequestCount += 1;
@@ -195,6 +217,7 @@
 		}
 		
 		.books {
+			position: relative;
 			height: 260rpx;
 			width: calc(100vw - 40rpx);
 			margin:20rpx;
@@ -208,6 +231,43 @@
 				border-radius: 10rpx 0 0 10rpx;
 				margin:0rpx;
 				flex-shrink: 0;
+
+				&.cert-shell {
+					box-sizing: border-box;
+					border: 4rpx solid var(--shell-edge);
+					border-radius: 10rpx 0 0 10rpx;
+					animation: cert-shell-pulse 2.8s ease-in-out infinite;
+				}
+			}
+			.cert-shell-gold {
+				--shell-edge: #d4a017;
+				--shell-glow: rgba(255, 196, 64, 0.45);
+			}
+			.cert-shell-silver {
+				--shell-edge: #9aa4ad;
+				--shell-glow: rgba(190, 205, 220, 0.4);
+			}
+			.cert-shell-bronze {
+				--shell-edge: #b06a2a;
+				--shell-glow: rgba(220, 140, 60, 0.4);
+			}
+			.cert-shell-green {
+				--shell-edge: #2f9e44;
+				--shell-glow: rgba(80, 200, 120, 0.4);
+			}
+			.cert-shell-blue {
+				--shell-edge: #2f7fd4;
+				--shell-glow: rgba(80, 160, 255, 0.4);
+			}
+			.cert-shell-purple {
+				--shell-edge: #7048e8;
+				--shell-glow: rgba(150, 110, 255, 0.4);
+			}
+			.cover-emblem {
+				position: absolute;
+				top: 12rpx;
+				left: 12rpx;
+				z-index: 3;
 			}
 			.bookInfo {
 				margin-left:30rpx;
@@ -267,6 +327,15 @@
 	@keyframes collections-skeleton-shimmer {
 		100% {
 			left: 100%;
+		}
+	}
+
+	@keyframes cert-shell-pulse {
+		0%, 100% {
+			box-shadow: 0 0 10rpx var(--shell-glow);
+		}
+		50% {
+			box-shadow: 0 0 24rpx var(--shell-glow);
 		}
 	}
 	

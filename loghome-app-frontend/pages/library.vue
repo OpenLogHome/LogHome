@@ -48,6 +48,7 @@
 					<transition-group name="fade" class="transition" type="in-out">
 						<bookInCase v-for="novel in item['novels']" :bookName="novel.name" :picUrl="novel.picUrl"
 							:haycraft="isHayCraftWork(novel)"
+							:certShell="specialCertShell(item, novel)"
 							:manga="novel.novel_type === 'manga'"
 							:world="novel.novel_type === 'world'"
 							:key="novel.novel_id" @click.native="readBook(novel, novel.novel_id, $event)"
@@ -247,6 +248,7 @@ export default {
 			scrollTop: 0,
 			books: [],
 			collections: [],
+			certMap: null,
 			timer: undefined,
 			searchBooks: [],
 			keyword: "",
@@ -309,6 +311,23 @@ export default {
 			return tags.some((tag) => {
 				const name = tag && typeof tag === 'object' ? tag.tag_name || tag.name : tag;
 				return String(name || '').toLowerCase().includes('haycraft');
+			});
+		},
+		isHayCraftSpecialCollection(item) {
+			const title = (item && item.collection_title) || '';
+			return title.includes('干草块文会') && title.includes('特辑');
+		},
+		specialCertShell(item, novel) {
+			if (!this.certMap || !this.isHayCraftSpecialCollection(item)) return '';
+			return this.certMap[String(novel.author_id)] || '';
+		},
+		ensureCertMap(collections) {
+			if (this.certMap !== null) return;
+			if (!(collections || []).some(this.isHayCraftSpecialCollection)) return;
+			axios.get(this.$baseUrl + '/users/certifications_map', {}).then((res) => {
+				this.certMap = res.data && typeof res.data === 'object' ? res.data : {};
+			}).catch(() => {
+				this.certMap = {};
 			});
 		},
 		getLibraryDocumentScrollTop() {
@@ -410,6 +429,7 @@ export default {
 				this.collections = cachedCollections;
 				this.books = cachedBooks;
 				this.hasLibraryCache = true;
+				this.ensureCertMap(cachedCollections);
 			} catch (error) {
 				console.error('restoreFirstScreenCache failed:', error);
 			}
@@ -476,6 +496,7 @@ export default {
 				if (requestId !== this._recommendRequestId) return;
 				this.collections = collectionWithNovels;
 				this.persistFirstScreenCache();
+				this.ensureCertMap(collectionWithNovels);
 				this.denseCardLoading = false;
 				this.$nextTick(() => {
 					this.triggerDenseCardAnimation();
