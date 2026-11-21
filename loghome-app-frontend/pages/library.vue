@@ -47,7 +47,7 @@
 				<div class="novels-slide" v-if="item.collection_type == 'slide'" style="min-height: 200rpx;">
 					<transition-group name="fade" class="transition" type="in-out">
 						<bookInCase v-for="novel in item['novels']" :bookName="novel.name" :picUrl="novel.picUrl"
-							:haycraft="isHayCraftWork(novel)"
+							:haycraft="isHayCraftWork(novel) && !isHayCraftSpecialCollection(item)"
 							:certShell="specialCertShell(item, novel)"
 							:manga="novel.novel_type === 'manga'"
 							:world="novel.novel_type === 'world'"
