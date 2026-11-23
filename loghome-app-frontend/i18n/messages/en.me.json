@@ -345,6 +345,7 @@
       "yuan": "CNY"
     },
     "profile": {
+      "certPopupTitle": "Earned certifications",
       "editProfile": "Edit profile",
       "sendDm": "Message",
       "admin": "Admin",
@@ -427,6 +428,13 @@
       "myTitle": "My Title",
       "titleHint": "Unlock badges with title terms to combine one adjective term and one noun term",
       "showing": "Shown",
+      "certCardTitle": "Certification display",
+      "certCardHint": "When you hold several certifications, choose which one shows on your profile",
+      "certCardSingle": "You have one certification; it is shown by default",
+      "certCardNone": "No community certifications yet",
+      "saveCert": "Save displayed certification",
+      "certSaved": "Certification display saved",
+      "certSaveFailed": "Save failed",
       "hiddenByDefault": "Hidden by default",
       "titlePreview": "Title preview",
       "titleEmpty": "No title composed yet",

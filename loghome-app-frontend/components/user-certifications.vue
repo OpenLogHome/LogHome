@@ -1,9 +1,28 @@
 <template>
 	<view v-if="certifications && certifications.length" class="certifications-row">
-		<view v-for="(cert, idx) in certifications" :key="idx" class="cert-badge" :class="'cert-' + (cert.variant || 'gold')">
-			<view class="cert-shine-wrap"><view class="cert-shine"></view></view>
-			<view class="cert-particles"></view>
-			<text class="cert-title">{{ cert.title }}</text>
+		<view class="cert-slot" :class="'cert-' + (selectedCert.variant || 'gold')">
+			<view class="cert-badge" :class="badgeClass(selectedCert)" @click="onBadgeTap">
+				<view class="cert-shine-wrap"><view class="cert-shine"></view></view>
+				<view class="cert-particles"></view>
+				<view v-if="isEnder(selectedCert)" class="cert-eyes">
+					<view class="cert-eye"></view>
+					<view class="cert-eye"></view>
+				</view>
+				<text class="cert-title">{{ selectedCert.title }}</text>
+			</view>
+			<view v-if="popupOpen" class="cert-popup-mask" @click="closePopup"></view>
+			<view v-if="popupOpen" class="cert-popup">
+				<view class="cert-popup-title">{{ $t('me.profile.certPopupTitle') }}</view>
+				<view v-for="(cert, idx) in certifications" :key="idx" class="cert-badge cert-mini" :class="'cert-' + (cert.variant || 'gold')">
+					<view class="cert-shine-wrap"><view class="cert-shine"></view></view>
+					<view class="cert-particles"></view>
+					<view v-if="isEnder(cert)" class="cert-eyes">
+						<view class="cert-eye"></view>
+						<view class="cert-eye"></view>
+					</view>
+					<text class="cert-title">{{ cert.title }}</text>
+				</view>
+			</view>
 		</view>
 	</view>
 </template>
@@ -15,17 +34,65 @@ export default {
 		certifications: {
 			type: Array,
 			default: () => []
+		},
+		displayIndex: {
+			type: Number,
+			default: 0
+		}
+	},
+	data() {
+		return {
+			popupOpen: false
+		};
+	},
+	computed: {
+		selectedCert() {
+			return this.certifications[this.displayIndex] || this.certifications[0];
+		},
+		hasMultiple() {
+			return this.certifications.length > 1;
+		}
+	},
+	watch: {
+		certifications() {
+			this.popupOpen = false;
+		}
+	},
+	methods: {
+		badgeClass(cert) {
+			return ['cert-' + ((cert && cert.variant) || 'gold'), { 'cert-clickable': this.hasMultiple }];
+		},
+		isEnder(cert) {
+			return cert && cert.variant === 'ender';
+		},
+		onBadgeTap() {
+			if (!this.hasMultiple) return;
+			this.popupOpen = !this.popupOpen;
+		},
+		closePopup() {
+			this.popupOpen = false;
 		}
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@property --cert-melt {
+	syntax: '<percentage>';
+	inherits: false;
+	initial-value: -30%;
+}
+
 .certifications-row {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 12rpx;
 	margin: 14rpx 50rpx 0;
+}
+
+.cert-slot {
+	position: relative;
+	display: inline-flex;
 }
 
 .cert-badge {
@@ -107,6 +174,10 @@ export default {
 	}
 }
 
+.cert-clickable {
+	cursor: pointer;
+}
+
 @keyframes cert-shine {
 	0% {
 		transform: translateX(-150%) skewX(-18deg);
@@ -136,6 +207,8 @@ export default {
 	--cert-bright: #ffd76a;
 	--cert-text: #ffe9a8;
 	--cert-glow: rgba(255, 196, 64, 0.45);
+	--cert-popup-bg: rgba(42, 33, 18, 0.96);
+	--cert-popup-edge: rgba(212, 160, 23, 0.5);
 }
 
 .cert-silver {
@@ -143,6 +216,8 @@ export default {
 	--cert-bright: #e6ecf2;
 	--cert-text: #e8eef4;
 	--cert-glow: rgba(190, 205, 220, 0.4);
+	--cert-popup-bg: rgba(30, 34, 39, 0.96);
+	--cert-popup-edge: rgba(154, 164, 173, 0.5);
 }
 
 .cert-bronze {
@@ -150,6 +225,8 @@ export default {
 	--cert-bright: #e8a860;
 	--cert-text: #ffd9ae;
 	--cert-glow: rgba(220, 140, 60, 0.4);
+	--cert-popup-bg: rgba(44, 30, 18, 0.96);
+	--cert-popup-edge: rgba(176, 106, 42, 0.5);
 }
 
 .cert-blue {
@@ -157,6 +234,8 @@ export default {
 	--cert-bright: #7cc4ff;
 	--cert-text: #cfe8ff;
 	--cert-glow: rgba(80, 160, 255, 0.4);
+	--cert-popup-bg: rgba(20, 30, 44, 0.96);
+	--cert-popup-edge: rgba(47, 127, 212, 0.5);
 }
 
 .cert-green {
@@ -164,6 +243,8 @@ export default {
 	--cert-bright: #8ce99a;
 	--cert-text: #d3f9d8;
 	--cert-glow: rgba(80, 200, 120, 0.4);
+	--cert-popup-bg: rgba(22, 38, 26, 0.96);
+	--cert-popup-edge: rgba(47, 158, 68, 0.5);
 }
 
 .cert-purple {
@@ -171,24 +252,173 @@ export default {
 	--cert-bright: #b197fc;
 	--cert-text: #e5dbff;
 	--cert-glow: rgba(150, 110, 255, 0.4);
+	--cert-popup-bg: rgba(34, 26, 52, 0.96);
+	--cert-popup-edge: rgba(112, 72, 232, 0.5);
 
 	.cert-particles {
 		display: block;
 		background-image:
-			radial-gradient(circle, rgba(214, 191, 255, 0.9) 0 1.6rpx, transparent 2.6rpx),
-			radial-gradient(circle, rgba(177, 151, 252, 0.7) 0 1.2rpx, transparent 2rpx),
-			radial-gradient(circle, rgba(140, 100, 255, 0.55) 0 1rpx, transparent 1.6rpx);
-		background-size: 84rpx 40rpx, 60rpx 34rpx, 46rpx 28rpx;
-		animation: cert-particle-flow 7s linear infinite;
+			radial-gradient(circle, rgba(235, 215, 255, 1) 0 2.2rpx, rgba(160, 104, 255, 0.4) 3.6rpx, transparent 5.2rpx),
+			radial-gradient(circle, rgba(200, 150, 255, 0.95) 0 1.8rpx, transparent 3.4rpx),
+			radial-gradient(circle, rgba(130, 80, 230, 0.85) 0 1.5rpx, transparent 2.8rpx),
+			radial-gradient(circle, rgba(225, 200, 255, 0.9) 0 1.2rpx, transparent 2.4rpx);
+		background-size: 60rpx 30rpx, 44rpx 26rpx, 72rpx 34rpx, 36rpx 20rpx;
+		animation: cert-particle-flow 2.4s linear infinite;
 	}
 }
 
 @keyframes cert-particle-flow {
 	from {
-		background-position: 0 0, 0 0, 0 0;
+		background-position: 0 0, 0 0, 0 0, 0 0;
 	}
 	to {
-		background-position: -84rpx 8rpx, -60rpx -6rpx, -46rpx 4rpx;
+		background-position: -60rpx 6rpx, 44rpx -4rpx, -72rpx -6rpx, 36rpx 5rpx;
+	}
+}
+
+.cert-ender {
+	--cert-edge: #8a5cf6;
+	--cert-bright: #d0b3ff;
+	--cert-text: #efe6ff;
+	--cert-glow: rgba(160, 104, 255, 0.55);
+	--cert-popup-bg: rgba(36, 26, 56, 0.96);
+	--cert-popup-edge: rgba(138, 92, 246, 0.55);
+
+	.cert-title {
+		text-shadow: 0 0 8rpx rgba(10, 6, 20, 0.9), 0 1rpx 2rpx rgba(0, 0, 0, 0.8);
+		--cert-melt: -30%;
+		-webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 var(--cert-melt), rgba(0, 0, 0, 0.35) calc(var(--cert-melt) + 14%), #000 calc(var(--cert-melt) + 34%));
+		mask-image: radial-gradient(circle at 50% 50%, transparent 0 var(--cert-melt), rgba(0, 0, 0, 0.35) calc(var(--cert-melt) + 14%), #000 calc(var(--cert-melt) + 34%));
+		animation: cert-melt 11s ease-in-out infinite;
+	}
+}
+
+.cert-eyes {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10rpx;
+	pointer-events: none;
+	animation: cert-eyes-flood 11s ease-in-out infinite;
+
+	.cert-eye {
+		width: 26rpx;
+		height: 10rpx;
+		border-radius: 3rpx;
+		background: radial-gradient(ellipse at center, #ffffff 0 30%, #e6d4ff 55%, #b48cf0 82%, #9a6cf0 100%);
+		animation: cert-eye-glow 11s ease-in-out infinite, cert-eye-blink 11s ease-in-out infinite;
+	}
+}
+
+@keyframes cert-eyes-flood {
+	0%,
+	40% {
+		opacity: 0.3;
+	}
+	52%,
+	80% {
+		opacity: 0.95;
+	}
+	92%,
+	100% {
+		opacity: 0.3;
+	}
+}
+
+@keyframes cert-eye-glow {
+	0%,
+	42% {
+		box-shadow: 0 0 4rpx rgba(190, 140, 255, 0.3);
+	}
+	54%,
+	78% {
+		box-shadow:
+			0 0 10rpx 8rpx rgba(210, 175, 250, 0.75),
+			0 0 30rpx 18rpx rgba(225, 200, 255, 0.55),
+			0 0 60rpx 30rpx rgba(160, 104, 255, 0.4);
+	}
+	90%,
+	100% {
+		box-shadow: 0 0 4rpx rgba(190, 140, 255, 0.3);
+	}
+}
+
+@keyframes cert-eye-blink {
+	0%,
+	38% {
+		transform: scaleY(0.12);
+	}
+	44%,
+	86% {
+		transform: scaleY(1);
+	}
+	91%,
+	100% {
+		transform: scaleY(0.12);
+	}
+}
+
+@keyframes cert-melt {
+	0%,
+	46% {
+		--cert-melt: -30%;
+		opacity: 1;
+		filter: blur(0);
+	}
+	62%,
+	78% {
+		--cert-melt: 175%;
+		opacity: 0;
+		filter: blur(6rpx);
+	}
+	92%,
+	100% {
+		--cert-melt: -30%;
+		opacity: 1;
+		filter: blur(0);
+	}
+}
+
+.cert-popup-mask {
+	position: fixed;
+	inset: 0;
+	z-index: 25;
+}
+
+.cert-popup {
+	position: absolute;
+	left: calc(100% + 16rpx);
+	top: -10rpx;
+	z-index: 26;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12rpx;
+	min-width: 280rpx;
+	max-width: 440rpx;
+	padding: 18rpx;
+	border-radius: 16rpx;
+	background: var(--cert-popup-bg, rgba(30, 24, 44, 0.96));
+	border: 2rpx solid var(--cert-popup-edge, rgba(160, 120, 255, 0.5));
+	box-shadow: 0 0 16rpx var(--cert-glow), 0 12rpx 32rpx rgba(0, 0, 0, 0.35);
+}
+
+.cert-popup-title {
+	font-size: 22rpx;
+	color: var(--cert-bright, #cbb8ff);
+}
+
+.cert-mini {
+	.cert-title {
+		font-size: 22rpx;
+	}
+
+	.cert-eye {
+		width: 22rpx;
+		height: 8rpx;
 	}
 }
 
@@ -196,8 +426,21 @@ export default {
 	.cert-badge::before,
 	.cert-badge::after,
 	.cert-shine,
-	.cert-purple .cert-particles {
+	.cert-purple .cert-particles,
+	.cert-eyes,
+	.cert-eye,
+	.cert-ender .cert-title {
 		animation: none;
+	}
+
+	.cert-eyes {
+		opacity: 0.85;
+	}
+
+	.cert-ender .cert-title {
+		-webkit-mask-image: none;
+		mask-image: none;
+		opacity: 1;
 	}
 
 	.cert-badge::before,

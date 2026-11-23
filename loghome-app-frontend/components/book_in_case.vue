@@ -193,5 +193,9 @@
 			--shell-edge: #7048e8;
 			--shell-glow: rgba(150, 110, 255, 0.4);
 		}
+		.cert-shell-ender{
+			--shell-edge: #8a5cf6;
+			--shell-glow: rgba(160, 104, 255, 0.55);
+		}
 	}
 </style>

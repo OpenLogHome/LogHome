@@ -48,7 +48,7 @@
 				</view>
 			</view>
 
-			<user-certifications :certifications="user.certifications" />
+			<user-certifications :certifications="user.certifications" :display-index="user.display_cert_index" />
 
 			<view class="moreInfo" style="margin-left: 50rpx;margin-top: 18rpx; display: flex;align-items: center;">
 				<span class="user_id">ID:{{uid}}</span>

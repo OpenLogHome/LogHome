@@ -11,7 +11,8 @@ const ICONS = {
 	bronze: '🥉',
 	green: '🌾',
 	blue: '🎖️',
-	purple: '🏅'
+	purple: '🏅',
+	ender: '👁️'
 };
 export default {
 	name: 'CertEmblem',
@@ -78,6 +79,11 @@ export default {
 .emblem-purple {
 	--em-edge: #7048e8;
 	--em-glow: rgba(150, 110, 255, 0.45);
+}
+
+.emblem-ender {
+	--em-edge: #8a5cf6;
+	--em-glow: rgba(160, 104, 255, 0.6);
 }
 
 @keyframes emblem-bob {

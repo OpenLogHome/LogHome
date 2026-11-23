@@ -13,6 +13,7 @@ const achievements = require('../bin/achievements.js');
 const membership = require('../bin/membership.js');
 const avatarFrames = require('../bin/avatarFrames.js');
 const certifications = require('../bin/certifications.js');
+const certificationDisplay = require('../bin/certificationDisplay.js');
 const { normalizeLang, t: tLang } = require('../bin/lang.js');
 
 // 发送邮件的函数
@@ -108,6 +109,35 @@ router.get('/certifications_map', function (req, res) {
 	res.end(JSON.stringify(certifications.getTopVariantMap()));
 });
 
+router.get('/my_certifications', auth, async function (req, res) {
+	try {
+		const userId = req.user[0].user_id;
+		const list = certifications.getCertifications(userId);
+		const saved = list.length > 1 ? await certificationDisplay.getDisplayIndex(userId) : 0;
+		res.end(JSON.stringify({
+			certifications: list,
+			display_index: saved >= 0 && saved < list.length ? saved : 0,
+		}));
+	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
+router.post('/certification_display', auth, async function (req, res) {
+	try {
+		const userId = req.user[0].user_id;
+		const list = certifications.getCertifications(userId);
+		const index = Number(req.body && req.body.index);
+		if (!Number.isSafeInteger(index) || index < 0 || index >= list.length) {
+			return res.status(422).json({ msg: '认证序号无效' });
+		}
+		await certificationDisplay.setDisplayIndex(userId, index);
+		res.end(JSON.stringify({ display_index: index }));
+	} catch (e) {
+		res.json(400, { msg: 'bad request' });
+	}
+});
+
 router.get('/user_profile_of', async function (req, res) {
 	try {
 		let results = await query(
@@ -129,6 +159,13 @@ router.get('/user_profile_of', async function (req, res) {
 				? currentMembership.membership_type
 				: '';
 			results[0].certifications = certifications.getCertifications(req.query.id);
+			const certList = results[0].certifications;
+			let displayCertIndex = 0;
+			if (certList.length > 1) {
+				const saved = await certificationDisplay.getDisplayIndex(req.query.id);
+				displayCertIndex = saved >= 0 && saved < certList.length ? saved : 0;
+			}
+			results[0].display_cert_index = displayCertIndex;
 		}
 		res.end(JSON.stringify(results));
 	} catch (e) {

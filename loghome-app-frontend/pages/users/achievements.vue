@@ -120,6 +120,40 @@
 			</view>
 		</view>
 
+		<view class="title-card" v-if="certList.length > 0">
+			<view class="title-card-head">
+				<view class="title-card-main">
+					<view class="title-card-title">{{ $t('me.achievements.certCardTitle') }}</view>
+					<view class="title-card-hint">
+						{{ certList.length > 1 ? $t('me.achievements.certCardHint') : $t('me.achievements.certCardSingle') }}
+					</view>
+				</view>
+			</view>
+
+			<view v-if="certList.length > 1" class="cert-option-list">
+				<view
+					v-for="(cert, idx) in certList"
+					:key="idx"
+					class="cert-option"
+					:class="{ active: idx === certDisplayIndex }"
+					@tap="certDisplayIndex = idx"
+				>
+					<view class="cert-option-dot" :class="'cert-dot-' + (cert.variant || 'gold')"></view>
+					<text class="cert-option-name">{{ cert.title }}</text>
+					<text v-if="idx === certDisplayIndex" class="cert-option-showing">{{ $t('me.achievements.showing') }}</text>
+				</view>
+			</view>
+
+			<view
+				v-if="certList.length > 1"
+				class="title-save-btn"
+				:class="{ loading: certSaving }"
+				@tap="saveCertDisplay"
+			>
+				{{ certSaving ? $t('me.achievements.saving') : $t('me.achievements.saveCert') }}
+			</view>
+		</view>
+
 		<view
 			v-for="section in categorizedSections"
 			:key="section.key"
@@ -207,6 +241,9 @@ export default {
 			loading: false,
 			currentUserId: 0,
 			titleSaving: false,
+			certList: [],
+			certDisplayIndex: 0,
+			certSaving: false,
 			titleForm: {
 				adjective_achievement_id: null,
 				noun_achievement_id: null,
@@ -366,6 +403,15 @@ export default {
 				this.summary = summaryRes.data || {};
 				this.list = (listRes.data && listRes.data.list) || [];
 				this.syncTitleForm(this.summary.title_profile);
+				try {
+					const certRes = await axios.get(this.$baseUrl + '/users/my_certifications', {
+						headers: this.getAuthHeaders(),
+					});
+					this.certList = (certRes.data && certRes.data.certifications) || [];
+					this.certDisplayIndex = (certRes.data && Number(certRes.data.display_index)) || 0;
+				} catch (e) {
+					this.certList = [];
+				}
 				const allDefinitions = (definitionsRes.data && definitionsRes.data.list) || [];
 				const unlockedIds = new Set(this.list.map(item => item.achievement_id));
 				this.lockedList = allDefinitions
@@ -460,6 +506,28 @@ export default {
 				});
 			} finally {
 				this.titleSaving = false;
+			}
+		},
+		async saveCertDisplay() {
+			if (this.certSaving) return;
+			this.certSaving = true;
+			try {
+				await axios.post(
+					this.$baseUrl + '/users/certification_display',
+					{ index: this.certDisplayIndex },
+					{ headers: this.getAuthHeaders() },
+				);
+				uni.showToast({
+					title: this.$t('me.achievements.certSaved'),
+					icon: 'none',
+				});
+			} catch (e) {
+				uni.showToast({
+					title: this.$t('me.achievements.certSaveFailed'),
+					icon: 'none',
+				});
+			} finally {
+				this.certSaving = false;
 			}
 		},
 		goToBadgeDetail(badge) {
@@ -909,6 +977,67 @@ export default {
 
 .title-save-btn.loading {
 	opacity: 0.7;
+}
+
+.cert-option-list {
+	margin-top: 16rpx;
+	display: flex;
+	flex-direction: column;
+	gap: 12rpx;
+}
+
+.cert-option {
+	display: flex;
+	align-items: center;
+	gap: 14rpx;
+	padding: 18rpx 20rpx;
+	border-radius: 16rpx;
+	background: #fff;
+	border: 2rpx solid rgba(173, 131, 85, 0.16);
+
+	.dark-mode & {
+		background: #212831;
+		border-color: rgba(255, 210, 150, 0.14);
+	}
+}
+
+.cert-option.active {
+	border-color: #8a5cf6;
+	box-shadow: 0 8rpx 18rpx rgba(138, 92, 246, 0.18);
+}
+
+.cert-option-dot {
+	width: 20rpx;
+	height: 20rpx;
+	border-radius: 6rpx;
+	flex-shrink: 0;
+}
+
+.cert-dot-gold { background: #d4a017; }
+.cert-dot-silver { background: #9aa4ad; }
+.cert-dot-bronze { background: #b06a2a; }
+.cert-dot-blue { background: #2f7fd4; }
+.cert-dot-green { background: #2f9e44; }
+.cert-dot-purple { background: #7048e8; }
+.cert-dot-ender { background: linear-gradient(135deg, #8a5cf6 0%, #d0b3ff 100%); }
+
+.cert-option-name {
+	flex: 1;
+	font-size: 25rpx;
+	font-weight: 600;
+	color: #2f241a;
+
+	.dark-mode & {
+		color: #eee0ce;
+	}
+}
+
+.cert-option-showing {
+	font-size: 20rpx;
+	color: #fff;
+	background: linear-gradient(120deg, #8f5cf6 0%, #6a3fd0 100%);
+	padding: 6rpx 14rpx;
+	border-radius: 999rpx;
 }
 
 .category-summary-item {

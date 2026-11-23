@@ -345,6 +345,7 @@
       "yuan": "元"
     },
     "profile": {
+      "certPopupTitle": "获得的认证",
       "editProfile": "编辑资料",
       "sendDm": "私信",
       "admin": "社区管理员",
@@ -427,6 +428,13 @@
       "myTitle": "我的称号",
       "titleHint": "解锁带有词条的勋章后，可组合一个形容词词条和一个名词词条",
       "showing": "展示中",
+      "certCardTitle": "认证标识展示",
+      "certCardHint": "拥有多个认证时，选择个人主页对外展示的那一个",
+      "certCardSingle": "当前仅有一个认证标识，将默认展示",
+      "certCardNone": "你还没有获得社区认证标识",
+      "saveCert": "保存展示认证",
+      "certSaved": "展示认证已保存",
+      "certSaveFailed": "保存失败",
       "hiddenByDefault": "默认不展示",
       "titlePreview": "称号预览",
       "titleEmpty": "暂未组合称号",
