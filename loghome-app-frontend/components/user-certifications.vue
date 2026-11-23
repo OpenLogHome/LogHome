@@ -4,6 +4,7 @@
 			<view class="cert-badge" :class="badgeClass(selectedCert)" @click="onBadgeTap">
 				<view class="cert-shine-wrap"><view class="cert-shine"></view></view>
 				<view class="cert-particles"></view>
+				<view class="cert-scene"><text v-if="selectedCert.variant === 'silver'" class="fx-falcon">🦅</text></view>
 				<view v-if="isEnder(selectedCert)" class="cert-eyes">
 					<view class="cert-eye"></view>
 					<view class="cert-eye"></view>
@@ -16,6 +17,7 @@
 				<view v-for="(cert, idx) in certifications" :key="idx" class="cert-badge cert-mini" :class="'cert-' + (cert.variant || 'gold')">
 					<view class="cert-shine-wrap"><view class="cert-shine"></view></view>
 					<view class="cert-particles"></view>
+					<view class="cert-scene"><text v-if="cert.variant === 'silver'" class="fx-falcon">🦅</text></view>
 					<view v-if="isEnder(cert)" class="cert-eyes">
 						<view class="cert-eye"></view>
 						<view class="cert-eye"></view>
@@ -293,6 +295,298 @@ export default {
 	}
 }
 
+.cert-scene {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	border-radius: inherit;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.cert-badge.cert-gold > .cert-scene {
+	&::before {
+		content: '';
+		position: absolute;
+		left: -40rpx;
+		top: 10rpx;
+		width: 4rpx;
+		height: 4rpx;
+		background: transparent;
+		filter: drop-shadow(0 0 4rpx rgba(255, 215, 106, 0.75));
+		box-shadow:
+			/* 杯口 */
+			0 0 #d4a017,
+			4rpx 0 #ffe08a,
+			8rpx 0 #ffe08a,
+			12rpx 0 #ffe08a,
+			16rpx 0 #ffe08a,
+			20rpx 0 #ffe08a,
+			24rpx 0 #d4a017,
+			/* 双耳 + 杯身 */
+			0 4rpx #8a5a10,
+			4rpx 4rpx #d4a017,
+			8rpx 4rpx #ffe08a,
+			12rpx 4rpx #d4a017,
+			16rpx 4rpx #ffe08a,
+			20rpx 4rpx #d4a017,
+			24rpx 4rpx #8a5a10,
+			0 8rpx #d4a017,
+			4rpx 8rpx #d4a017,
+			8rpx 8rpx #ffe08a,
+			12rpx 8rpx #d4a017,
+			16rpx 8rpx #ffe08a,
+			20rpx 8rpx #d4a017,
+			24rpx 8rpx #d4a017,
+			/* 杯身收腰 */
+			4rpx 12rpx #d4a017,
+			8rpx 12rpx #ffe08a,
+			12rpx 12rpx #d4a017,
+			16rpx 12rpx #ffe08a,
+			20rpx 12rpx #d4a017,
+			/* 杯柄 */
+			12rpx 16rpx #d4a017,
+			12rpx 20rpx #8a5a10,
+			/* 底座 */
+			8rpx 24rpx #d4a017,
+			12rpx 24rpx #ffe08a,
+			16rpx 24rpx #d4a017,
+			4rpx 28rpx #8a5a10,
+			8rpx 28rpx #d4a017,
+			12rpx 28rpx #d4a017,
+			16rpx 28rpx #d4a017,
+			20rpx 28rpx #8a5a10;
+		animation: cert-trophy-run 5s linear infinite;
+	}
+
+	&::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 34%;
+		bottom: 0;
+		background-image:
+			radial-gradient(circle, rgba(233, 200, 130, 0.8) 0 1.6rpx, transparent 3.2rpx),
+			radial-gradient(circle, rgba(214, 172, 96, 0.6) 0 1.2rpx, transparent 2.6rpx);
+		background-size: 30rpx 24rpx, 22rpx 20rpx;
+		animation: cert-dust-fall 5s linear infinite;
+	}
+}
+
+@keyframes cert-trophy-run {
+	0% {
+		left: -40rpx;
+		transform: translateY(0) rotate(0deg);
+	}
+	12% {
+		transform: translateY(-3rpx) rotate(24deg);
+	}
+	25% {
+		transform: translateY(0) rotate(-18deg);
+	}
+	37% {
+		transform: translateY(-3rpx) rotate(36deg);
+	}
+	50% {
+		transform: translateY(0) rotate(-26deg);
+	}
+	62% {
+		transform: translateY(-3rpx) rotate(42deg);
+	}
+	75% {
+		transform: translateY(0) rotate(-32deg);
+	}
+	87% {
+		transform: translateY(-3rpx) rotate(20deg);
+	}
+	100% {
+		left: 100%;
+		transform: translateY(0) rotate(0deg);
+	}
+}
+
+@keyframes cert-dust-fall {
+	0% {
+		background-position: 0 0, 6rpx -4rpx;
+		opacity: 0.85;
+	}
+	70% {
+		opacity: 0.85;
+	}
+	100% {
+		background-position: 0 26rpx, 6rpx 20rpx;
+		opacity: 0;
+	}
+}
+
+.cert-badge.cert-silver > .cert-scene {
+	&::before,
+	&::after {
+		content: '🦅';
+		position: absolute;
+		left: 50%;
+		top: 46%;
+		font-size: 28rpx;
+		line-height: 1;
+		filter: grayscale(1) brightness(1.5) contrast(1.7) drop-shadow(0 0 5rpx rgba(225, 238, 250, 0.85));
+	}
+
+	&::before {
+		animation: cert-falcon-a 6s ease-in-out infinite;
+	}
+
+	&::after {
+		font-size: 26rpx;
+		animation: cert-falcon-b 6s ease-in-out infinite;
+	}
+
+	.fx-falcon {
+		position: absolute;
+		left: 50%;
+		top: 46%;
+		font-size: 22rpx;
+		line-height: 1;
+		filter: grayscale(1) brightness(1.4) contrast(1.6) drop-shadow(0 0 4rpx rgba(225, 238, 250, 0.7));
+		animation: cert-falcon-c 7s ease-in-out infinite;
+	}
+}
+
+@keyframes cert-falcon-a {
+	0%,
+	100% {
+		transform: translate(calc(-50% - 46rpx), calc(-50% + 6rpx)) rotate(-8deg);
+	}
+	25% {
+		transform: translate(calc(-50% - 10rpx), calc(-50% - 8rpx)) rotate(6deg);
+	}
+	40% {
+		transform: translate(calc(-50% + 8rpx), calc(-50% - 2rpx)) rotate(-16deg);
+	}
+	46% {
+		transform: translate(calc(-50% + 14rpx), calc(-50% - 6rpx)) rotate(14deg);
+	}
+	62% {
+		transform: translate(calc(-50% + 34rpx), calc(-50% + 6rpx)) rotate(-6deg);
+	}
+	80% {
+		transform: translate(calc(-50% + 10rpx), calc(-50% + 10rpx)) rotate(8deg);
+	}
+}
+
+@keyframes cert-falcon-b {
+	0%,
+	100% {
+		transform: translate(calc(-50% + 44rpx), calc(-50% - 6rpx)) rotate(8deg);
+	}
+	25% {
+		transform: translate(calc(-50% + 16rpx), calc(-50% + 8rpx)) rotate(-6deg);
+	}
+	40% {
+		transform: translate(calc(-50% + 2rpx), calc(-50% + 3rpx)) rotate(16deg);
+	}
+	46% {
+		transform: translate(calc(-50% - 4rpx), calc(-50% + 8rpx)) rotate(-14deg);
+	}
+	62% {
+		transform: translate(calc(-50% - 36rpx), calc(-50% - 4rpx)) rotate(6deg);
+	}
+	80% {
+		transform: translate(calc(-50% - 12rpx), calc(-50% - 10rpx)) rotate(-8deg);
+	}
+}
+
+@keyframes cert-falcon-c {
+	0%,
+	100% {
+		transform: translate(calc(-50% - 52rpx), calc(-50% - 10rpx)) rotate(0deg) scale(0.9);
+	}
+	30% {
+		transform: translate(calc(-50% - 20rpx), calc(-50% + 8rpx)) rotate(10deg) scale(0.95);
+	}
+	50% {
+		transform: translate(calc(-50% + 2rpx), calc(-50% - 1rpx)) rotate(-18deg) scale(1);
+	}
+	70% {
+		transform: translate(calc(-50% + 30rpx), calc(-50% + 8rpx)) rotate(8deg) scale(0.95);
+	}
+}
+
+.cert-badge.cert-bronze > .cert-scene::before {
+	content: '🌹';
+	position: absolute;
+	left: -40rpx;
+	bottom: 2rpx;
+	font-size: 30rpx;
+	line-height: 1;
+	filter: grayscale(1) sepia(1) saturate(2.6) hue-rotate(-20deg) brightness(1.05) contrast(1.5) drop-shadow(0 0 5rpx rgba(232, 160, 90, 0.85));
+	animation: cert-rose-roll 4s linear infinite;
+}
+
+@keyframes cert-rose-roll {
+	0% {
+		left: -40rpx;
+		transform: rotate(0deg);
+	}
+	100% {
+		left: 100%;
+		transform: rotate(360deg);
+	}
+}
+
+.cert-badge.cert-bronze > .cert-title {
+	animation: cert-title-tilt 4s ease-in-out infinite;
+}
+
+@keyframes cert-title-tilt {
+	0%,
+	100% {
+		transform: rotate(0deg);
+	}
+	25% {
+		transform: rotate(1.8deg) translateY(-1rpx);
+	}
+	50% {
+		transform: rotate(0deg);
+	}
+	75% {
+		transform: rotate(-1.8deg) translateY(-1rpx);
+	}
+}
+
+.cert-badge.cert-green > .cert-scene {
+	&::before,
+	&::after {
+		content: '';
+		position: absolute;
+		left: -12%;
+		right: -12%;
+		bottom: 0;
+		height: 18rpx;
+		background: repeating-linear-gradient(87deg, transparent 0 5rpx, rgba(70, 190, 90, 0.6) 5rpx 7rpx);
+		transform-origin: 50% 100%;
+		animation: cert-grass-sway 2.8s ease-in-out infinite;
+	}
+
+	&::after {
+		height: 11rpx;
+		opacity: 0.6;
+		background: repeating-linear-gradient(93deg, transparent 0 7rpx, rgba(140, 225, 160, 0.55) 7rpx 9rpx);
+		animation-delay: 0.6s;
+		animation-direction: reverse;
+	}
+}
+
+@keyframes cert-grass-sway {
+	0%,
+	100% {
+		transform: skewX(7deg) scaleY(1);
+	}
+	50% {
+		transform: skewX(-9deg) scaleY(0.9);
+	}
+}
+
 .cert-eyes {
 	position: absolute;
 	inset: 0;
@@ -430,6 +724,14 @@ export default {
 	.cert-eyes,
 	.cert-eye,
 	.cert-ender .cert-title {
+		animation: none;
+	}
+
+	.cert-scene {
+		display: none;
+	}
+
+	.cert-badge.cert-bronze > .cert-title {
 		animation: none;
 	}
 
