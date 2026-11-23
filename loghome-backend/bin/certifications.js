@@ -1,7 +1,12 @@
 // 运营配置的原木社区认证标识：userId -> [{ variant, title }]
-// 档位示例：gold 冠军 / silver 亚军 / bronze 季军 / green 未入围参赛
+// 档位示例：gold 冠军 / silver 亚军 / bronze 季军 / green 未入围参赛 / purple 评委
+const JUDGE = { variant: 'purple', title: '2025干草块杯评委' };
 const certifications = {
-  12: [],
+  1: [JUDGE],
+  2: [JUDGE],
+  4: [JUDGE],
+  12: [JUDGE],
+  13: [JUDGE],
   22: [{ variant: 'gold', title: '2025干草块杯冠军选手' }],
   34: [{ variant: 'bronze', title: '2025干草块杯季军选手' }],
   37: [{ variant: 'green', title: '2025干草块杯参赛选手' }],

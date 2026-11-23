@@ -2,6 +2,7 @@
 	<view v-if="certifications && certifications.length" class="certifications-row">
 		<view v-for="(cert, idx) in certifications" :key="idx" class="cert-badge" :class="'cert-' + (cert.variant || 'gold')">
 			<view class="cert-shine-wrap"><view class="cert-shine"></view></view>
+			<view class="cert-particles"></view>
 			<text class="cert-title">{{ cert.title }}</text>
 		</view>
 	</view>
@@ -94,6 +95,16 @@ export default {
 		transform: translateX(-150%) skewX(-18deg);
 		animation: cert-shine 3.4s ease-in-out infinite;
 	}
+
+	.cert-particles {
+		display: none;
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		overflow: hidden;
+		pointer-events: none;
+		z-index: 1;
+	}
 }
 
 @keyframes cert-shine {
@@ -160,12 +171,32 @@ export default {
 	--cert-bright: #b197fc;
 	--cert-text: #e5dbff;
 	--cert-glow: rgba(150, 110, 255, 0.4);
+
+	.cert-particles {
+		display: block;
+		background-image:
+			radial-gradient(circle, rgba(214, 191, 255, 0.9) 0 1.6rpx, transparent 2.6rpx),
+			radial-gradient(circle, rgba(177, 151, 252, 0.7) 0 1.2rpx, transparent 2rpx),
+			radial-gradient(circle, rgba(140, 100, 255, 0.55) 0 1rpx, transparent 1.6rpx);
+		background-size: 84rpx 40rpx, 60rpx 34rpx, 46rpx 28rpx;
+		animation: cert-particle-flow 7s linear infinite;
+	}
+}
+
+@keyframes cert-particle-flow {
+	from {
+		background-position: 0 0, 0 0, 0 0;
+	}
+	to {
+		background-position: -84rpx 8rpx, -60rpx -6rpx, -46rpx 4rpx;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.cert-badge::before,
 	.cert-badge::after,
-	.cert-shine {
+	.cert-shine,
+	.cert-purple .cert-particles {
 		animation: none;
 	}
 
