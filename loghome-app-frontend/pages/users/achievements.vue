@@ -130,7 +130,7 @@
 				</view>
 			</view>
 
-			<view v-if="certList.length > 1" class="cert-option-list">
+			<view class="cert-option-list">
 				<view
 					v-for="(cert, idx) in certList"
 					:key="idx"
@@ -145,7 +145,6 @@
 			</view>
 
 			<view
-				v-if="certList.length > 1"
 				class="title-save-btn"
 				:class="{ loading: certSaving }"
 				@tap="saveCertDisplay"
